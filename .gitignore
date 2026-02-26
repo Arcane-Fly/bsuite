@@ -1,0 +1,45 @@
+# Environment files with secrets
+.env.local
+.env.*.local
+.env.production.local
+
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+*/dist/
+.vercel/
+*/.vercel/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache
+.cache/
+*.tsbuildinfo
+
+# Supabase local
+supabase/.temp/
+*/supabase/.temp/
+
+# Windsurf / AI
+.windsurf/
+
+# Scratch files
+clinework.txt

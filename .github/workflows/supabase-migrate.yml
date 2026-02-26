@@ -1,0 +1,111 @@
+# Supabase Migration Workflow
+# Automatically applies database migrations when changes are pushed/merged to main.
+# Detects which submodule's migrations changed and applies only those.
+#
+# Required GitHub Secrets:
+#   SUPABASE_ACCESS_TOKEN  - Personal access token from supabase.com/dashboard/account/tokens
+#   SUPABASE_DB_PASSWORD   - Database password for the linked project
+#
+# Required GitHub Variables:
+#   SUPABASE_PROJECT_ID    - Project ref (e.g. tuybltdrdefjblnplpqo)
+
+name: Supabase Migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crm7/supabase/migrations/**'
+      - 'R80.3/supabase/migrations/**'
+      - 'braden/supabase/migrations/**'
+      - 'business-suite-unified/supabase/migrations/**'
+  workflow_dispatch:
+    inputs:
+      submodule:
+        description: 'Which submodule to apply migrations for (or "all")'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - crm7
+          - R80.3
+          - braden
+          - business-suite-unified
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+jobs:
+  detect-changes:
+    name: Detect changed migrations
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 2
+
+      - id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT="${{ github.event.inputs.submodule }}"
+            if [ "$INPUT" = "all" ]; then
+              echo 'matrix=["crm7","R80.3","braden","business-suite-unified"]' >> "$GITHUB_OUTPUT"
+            else
+              echo "matrix=[\"$INPUT\"]" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            CHANGED=()
+            for dir in crm7 R80.3 braden business-suite-unified; do
+              if git diff --name-only HEAD~1 HEAD -- "$dir/supabase/migrations/" | grep -q .; then
+                CHANGED+=("\"$dir\"")
+              fi
+            done
+            if [ ${#CHANGED[@]} -eq 0 ]; then
+              echo 'matrix=[]' >> "$GITHUB_OUTPUT"
+            else
+              JOINED=$(IFS=,; echo "${CHANGED[*]}")
+              echo "matrix=[$JOINED]" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+  apply-migrations:
+    name: Apply migrations (${{ matrix.submodule }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        submodule: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase project
+        working-directory: ${{ matrix.submodule }}
+        run: |
+          supabase link --project-ref ${{ vars.SUPABASE_PROJECT_ID }}
+
+      - name: Apply migrations
+        working-directory: ${{ matrix.submodule }}
+        run: |
+          supabase db push
+
+      - name: Verify migration status
+        working-directory: ${{ matrix.submodule }}
+        run: |
+          echo "=== Migration status for ${{ matrix.submodule }} ==="
+          supabase migration list

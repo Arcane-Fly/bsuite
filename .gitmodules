@@ -1,0 +1,12 @@
+[submodule "crm7"]
+	path = crm7
+	url = https://github.com/GaryOcean428/crm7.git
+[submodule "R80.3"]
+	path = R80.3
+	url = https://github.com/GaryOcean428/R80.3.git
+[submodule "braden"]
+	path = braden
+	url = https://github.com/GaryOcean428/braden.git
+[submodule "business-suite-unified"]
+	path = business-suite-unified
+	url = https://github.com/GaryOcean428/business-suite-unified.git
