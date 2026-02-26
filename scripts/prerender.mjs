@@ -9,8 +9,12 @@
  */
 
 import { createServer } from 'http'
+import { createRequire } from 'module'
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname, extname } from 'path'
+
+// Resolve packages from the caller's cwd (where puppeteer is installed)
+const require = createRequire(join(process.cwd(), 'package.json'))
 
 // Parse CLI args
 const args = Object.fromEntries(
@@ -71,14 +75,14 @@ function createStaticServer(dir) {
 }
 
 async function prerender() {
-  const puppeteer = await import('puppeteer')
+  const puppeteer = require('puppeteer')
   const server = createStaticServer(distDir)
 
   await new Promise(resolve => server.listen(0, resolve))
   const port = server.address().port
   console.log(`Static server running on port ${port}`)
 
-  const browser = await puppeteer.default.launch({
+  const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
   })
