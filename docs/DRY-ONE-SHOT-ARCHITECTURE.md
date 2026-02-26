@@ -1,6 +1,6 @@
 # DRY Principles & One-Shot Data Entry Architecture
 
-**Applies to:** CRM7 • R8 • BSU • All future modules
+**Applies to:** CRM7 • R8 • BSU • Conduit • All future modules
 **Source of truth:** Unified Supabase schema (`business-suite-unified/database/`)
 **Last updated:** 2026-02-25
 
@@ -46,6 +46,16 @@ Other apps may READ the entity but NEVER create or edit it independently.
 | **Compliance Records** | CRM7 | Compliance form | BSU (audit) | `compliance_records` |
 | **Timesheets** | CRM7 | Timesheet entry | R8 (hours→charges) | `timesheets` |
 | **Funding Claims** | CRM7 | Claims form | BSU (revenue tracking) | `funding_claims` |
+| **Candidates** | Conduit | Candidate form | CRM7 (placement ref) | `r7_candidates` |
+| **Talent Pools** | Conduit | Pool manager | — | `r7_talent_pools` |
+| **Jobs (Sourcing)** | Conduit | Job posting form | CRM7 (placement ref) | `r7_jobs` |
+| **Applications** | Conduit | Application tracker | — | `r7_applications` |
+| **Pipeline Stages** | Conduit | Pipeline settings | — | `r7_pipeline_stages` |
+| **Pipeline Entries** | Conduit | Kanban board | — | `r7_pipeline_entries` |
+| **Onboarding (R7)** | Conduit | Onboarding wizard | CRM7 (apprentice conversion) | `r7_onboarding_*` |
+| **Compliance Checks** | Conduit | Compliance dashboard | CRM7 (compliance records) | `r7_compliance_checks` |
+| **Comms (Sourcing)** | Conduit | Comms panel | — | `r7_communications` |
+| **Documents (R7)** | Conduit | Document upload | CRM7 (document ref) | `r7_documents` |
 
 ---
 
@@ -127,7 +137,7 @@ CRM7: User enters a person ONCE as a contact
 
 That same person can then be:
   → An apprentice (apprentices.contact_id → contacts.id)
-  → A supervisor (supervisors.contact_id → contacts.id)  
+  → A supervisor (supervisors.contact_id → contacts.id)
   → A client contact (client_contacts.contact_id → contacts.id)
   → A project member (project_members.user_id → users.id → contacts)
 
@@ -199,6 +209,7 @@ When a user selects an entity in a form, related fields auto-populate.
 **Implementation:** Each EntitySelector component fetches with a JOIN/select that includes related display fields. No second query needed.
 
 Example Supabase query for apprentice selector:
+
 ```typescript
 supabase
   .from('apprentices')
