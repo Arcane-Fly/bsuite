@@ -1,20 +1,21 @@
 'use client'
 
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useTenantId } from '@/hooks/useTenantId'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { useJobDistributionStore } from '@/stores/jobDistributionStore'
 import type { Job, JobDistribution } from '@/types/entities'
 import {
-  ArrowLeft,
-  Check,
-  ExternalLink,
-  Globe,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-  X,
-  XCircle,
+    ArrowLeft,
+    Check,
+    ExternalLink,
+    Globe,
+    MoreHorizontal,
+    Plus,
+    Trash2,
+    X,
+    XCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
@@ -44,6 +45,7 @@ export default function JobDistributePage() {
   const router = useRouter()
   const { tenantId } = useTenantId()
   const { distributions, loading, error, fetchDistributions, createDistribution, markPosted, markExpired, deleteDistribution } = useJobDistributionStore()
+  const { requestConfirm, dialogProps } = useConfirmDialog()
 
   const [job, setJob] = useState<Job | null>(null)
   const [jobLoading, setJobLoading] = useState(true)
@@ -89,11 +91,12 @@ export default function JobDistributePage() {
     setActiveMenu(null)
   }
 
-  async function handleDelete(id: string) {
-    if (confirm('Remove this distribution record?')) {
-      await deleteDistribution(id)
-    }
+  function handleDelete(id: string) {
     setActiveMenu(null)
+    requestConfirm(
+      { title: 'Remove Distribution', description: 'Remove this distribution record?' },
+      async () => { await deleteDistribution(id) },
+    )
   }
 
   if (jobLoading) {
@@ -288,6 +291,7 @@ export default function JobDistributePage() {
           onClose={() => setShowCreateDialog(false)}
         />
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

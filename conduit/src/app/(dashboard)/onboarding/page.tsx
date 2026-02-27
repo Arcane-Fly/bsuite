@@ -1,5 +1,6 @@
 'use client'
 
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useTenantId } from '@/hooks/useTenantId'
 import { cn } from '@/lib/utils'
 import { useOnboardingStore } from '@/stores/onboardingStore'
@@ -33,6 +34,7 @@ const INSTANCE_STATUS_COLOR: Record<string, string> = {
 }
 
 export default function OnboardingPage() {
+  const { requestConfirm, dialogProps } = useConfirmDialog()
   const { tenantId } = useTenantId()
   const {
     templates,
@@ -76,11 +78,15 @@ export default function OnboardingPage() {
     }
   }
 
-  async function handleDeleteTemplate(id: string, name: string) {
-    if (!confirm(`Delete template "${name}"?`)) return
-    const ok = await deleteTemplate(id)
-    if (ok) toast.success('Template deleted')
-    else toast.error('Failed to delete')
+  function handleDeleteTemplate(id: string, name: string) {
+    requestConfirm(
+      { title: 'Delete Template', description: `Delete template "${name}"?` },
+      async () => {
+        const ok = await deleteTemplate(id)
+        if (ok) toast.success('Template deleted')
+        else toast.error('Failed to delete')
+      },
+    )
   }
 
   return (
@@ -284,6 +290,7 @@ export default function OnboardingPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

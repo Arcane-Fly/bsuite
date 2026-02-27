@@ -1,5 +1,6 @@
 'use client'
 
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useTenantId } from '@/hooks/useTenantId'
 import { cn } from '@/lib/utils'
 import { useCandidateStore } from '@/stores/candidateStore'
@@ -52,6 +53,7 @@ const STATUS_TABS: Array<{ value: InterviewStatus | 'all' | 'upcoming'; label: s
 
 export default function InterviewsPage() {
   const { tenantId } = useTenantId()
+  const { requestConfirm, dialogProps } = useConfirmDialog()
   const {
     interviews,
     loading,
@@ -136,18 +138,20 @@ export default function InterviewsPage() {
     return new Date(iso) < new Date()
   }
 
-  async function handleCancel(id: string) {
-    if (confirm('Cancel this interview?')) {
-      await cancelInterview(id)
-    }
+  function handleCancel(id: string) {
     setActiveMenu(null)
+    requestConfirm(
+      { title: 'Cancel Interview', description: 'Cancel this interview?', confirmLabel: 'Cancel Interview', variant: 'warning' },
+      async () => { await cancelInterview(id) },
+    )
   }
 
-  async function handleDelete(id: string) {
-    if (confirm('Delete this interview? This cannot be undone.')) {
-      await deleteInterview(id)
-    }
+  function handleDelete(id: string) {
     setActiveMenu(null)
+    requestConfirm(
+      { title: 'Delete Interview', description: 'Delete this interview? This cannot be undone.' },
+      async () => { await deleteInterview(id) },
+    )
   }
 
   return (
@@ -391,6 +395,7 @@ export default function InterviewsPage() {
           onClose={() => setFeedbackDialog(null)}
         />
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

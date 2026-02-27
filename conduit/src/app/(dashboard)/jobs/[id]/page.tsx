@@ -1,5 +1,6 @@
 'use client'
 
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 import { CommunicationTimeline, ComposeDialog } from '@/components/communications'
 import { useTenantId } from '@/hooks/useTenantId'
 import { createClient } from '@/lib/supabase/client'
@@ -50,6 +51,7 @@ export default function JobDetailPage() {
   const router = useRouter()
   const { tenantId } = useTenantId()
   const { updateJob, deleteJob } = useJobStore()
+  const { requestConfirm, dialogProps } = useConfirmDialog()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [composeOpen, setComposeOpen] = useState(false)
@@ -89,14 +91,18 @@ export default function JobDetailPage() {
     }
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!job) return
-    if (!confirm('Delete this job posting? This cannot be undone.')) return
-    const ok = await deleteJob(job.id)
-    if (ok) {
-      toast.success('Job deleted')
-      router.push('/jobs')
-    }
+    requestConfirm(
+      { title: 'Delete Job', description: 'Delete this job posting? This cannot be undone.' },
+      async () => {
+        const ok = await deleteJob(job.id)
+        if (ok) {
+          toast.success('Job deleted')
+          router.push('/jobs')
+        }
+      },
+    )
   }
 
   if (loading || !job) {
@@ -297,6 +303,7 @@ export default function JobDetailPage() {
           onOpenChange={setComposeOpen}
         />
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useTenantId } from '@/hooks/useTenantId'
 import { cn } from '@/lib/utils'
 import { useCandidateStore } from '@/stores/candidateStore'
@@ -43,6 +44,7 @@ export default function OffersPage() {
   const { offers, loading, error, fetchOffers, createOffer, sendOffer, withdrawOffer, respondToOffer, deleteOffer } = useOfferStore()
   const { candidates, fetchCandidates } = useCandidateStore()
   const { jobs, fetchJobs } = useJobStore()
+  const { requestConfirm, dialogProps } = useConfirmDialog()
 
   const [statusFilter, setStatusFilter] = useState<OfferStatus | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -103,11 +105,12 @@ export default function OffersPage() {
     setActiveMenu(null)
   }
 
-  async function handleDelete(id: string) {
-    if (confirm('Delete this offer? This cannot be undone.')) {
-      await deleteOffer(id)
-    }
+  function handleDelete(id: string) {
     setActiveMenu(null)
+    requestConfirm(
+      { title: 'Delete Offer', description: 'Delete this offer? This cannot be undone.' },
+      async () => { await deleteOffer(id) },
+    )
   }
 
   function formatCurrency(amount?: number, type?: string) {
@@ -337,6 +340,7 @@ export default function OffersPage() {
           onClose={() => { setShowCreateDialog(false); setEditingOffer(null) }}
         />
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

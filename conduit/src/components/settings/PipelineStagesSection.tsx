@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { PipelineStage } from '@/types/entities'
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 
 const STAGE_COLORS = [
   '#3b82f6',
@@ -35,6 +36,7 @@ interface PipelineStagesSectionProps {
 
 export function PipelineStagesSection({ tenantId }: PipelineStagesSectionProps) {
   const { stages, saving, createStage, updateStage, deleteStage, reorderStages } = useSettingsStore()
+  const { requestConfirm, dialogProps } = useConfirmDialog()
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
@@ -91,16 +93,18 @@ export function PipelineStagesSection({ tenantId }: PipelineStagesSectionProps) 
     }
   }
 
-  async function handleDelete(stage: PipelineStage) {
-    if (!confirm(`Delete stage "${stage.name}"? Candidates in this stage will need to be reassigned.`)) {
-      return
-    }
-    const ok = await deleteStage(stage.id)
-    if (ok) {
-      toast.success(`Stage "${stage.name}" deleted`)
-    } else {
-      toast.error('Failed to delete stage. It may have candidates assigned.')
-    }
+  function handleDelete(stage: PipelineStage) {
+    requestConfirm(
+      { title: 'Delete Stage', description: `Delete stage "${stage.name}"? Candidates in this stage will need to be reassigned.` },
+      async () => {
+        const ok = await deleteStage(stage.id)
+        if (ok) {
+          toast.success(`Stage "${stage.name}" deleted`)
+        } else {
+          toast.error('Failed to delete stage. It may have candidates assigned.')
+        }
+      },
+    )
   }
 
   async function handleDrop(targetId: string) {
@@ -325,6 +329,7 @@ export function PipelineStagesSection({ tenantId }: PipelineStagesSectionProps) 
           </button>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

@@ -1,20 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useTalentPoolStore } from '@/stores/talentPoolStore'
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useTenantId } from '@/hooks/useTenantId'
-import Link from 'next/link'
-import {
-  Plus,
-  Users,
-  Trash2,
-  Edit,
-  FolderOpen,
-  MapPin,
-  GraduationCap,
-  Wrench,
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTalentPoolStore } from '@/stores/talentPoolStore'
+import {
+    Edit,
+    FolderOpen,
+    GraduationCap,
+    MapPin,
+    Plus,
+    Trash2,
+    Users,
+    Wrench,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 const POOL_COLORS = [
@@ -27,6 +28,7 @@ export default function TalentPoolsPage() {
   const { pools, loading, fetchPools, createPool, updatePool, deletePool } = useTalentPoolStore()
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const { requestConfirm, dialogProps } = useConfirmDialog()
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -75,11 +77,15 @@ export default function TalentPoolsPage() {
     resetForm()
   }
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? Candidates will be removed from this pool.`)) return
-    const ok = await deletePool(id)
-    if (ok) toast.success('Pool deleted')
-    else toast.error('Failed to delete pool')
+  function handleDelete(id: string, name: string) {
+    requestConfirm(
+      { title: 'Delete Pool', description: `Delete "${name}"? Candidates will be removed from this pool.` },
+      async () => {
+        const ok = await deletePool(id)
+        if (ok) toast.success('Pool deleted')
+        else toast.error('Failed to delete pool')
+      },
+    )
   }
 
   return (
@@ -270,6 +276,7 @@ export default function TalentPoolsPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

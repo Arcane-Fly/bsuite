@@ -1,5 +1,6 @@
 'use client'
 
+import { ConfirmDialog, useConfirmDialog } from '@/components/common/ConfirmDialog'
 import { CommunicationTimeline, ComposeDialog } from '@/components/communications'
 import { useTenantId } from '@/hooks/useTenantId'
 import { createClient } from '@/lib/supabase/client'
@@ -42,6 +43,7 @@ export default function CandidateProfilePage() {
   const params = useParams()
   const router = useRouter()
   const { tenantId } = useTenantId()
+  const { requestConfirm, dialogProps } = useConfirmDialog()
   const { updateCandidate, deleteCandidate } = useCandidateStore()
   const [candidate, setCandidate] = useState<Candidate | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,14 +84,18 @@ export default function CandidateProfilePage() {
     }
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!candidate) return
-    if (!confirm('Delete this candidate? This cannot be undone.')) return
-    const ok = await deleteCandidate(candidate.id)
-    if (ok) {
-      toast.success('Candidate deleted')
-      router.push('/candidates')
-    }
+    requestConfirm(
+      { title: 'Delete Candidate', description: 'Delete this candidate? This cannot be undone.' },
+      async () => {
+        const ok = await deleteCandidate(candidate.id)
+        if (ok) {
+          toast.success('Candidate deleted')
+          router.push('/candidates')
+        }
+      },
+    )
   }
 
   if (loading || !candidate) {
@@ -274,6 +280,7 @@ export default function CandidateProfilePage() {
           onOpenChange={setComposeOpen}
         />
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }
