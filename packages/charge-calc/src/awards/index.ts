@@ -45,3 +45,12 @@ export {
 
 export { fetchCompleteAward } from './mapd-client';
 export type { MAPDDataSource } from './mapd-client';
+
+export {
+  registerAward,
+  getAward,
+  listAwards,
+  validateAward,
+  clearAwardCache,
+  loadAwardFromMAPD,
+} from './registry';
