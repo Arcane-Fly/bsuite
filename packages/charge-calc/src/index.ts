@@ -3,5 +3,4 @@
 
 export * from './types';
 
-// TODO(task-3): uncomment when calculate.ts is created
-// export * from './calculate';
+export * from './calculate';
