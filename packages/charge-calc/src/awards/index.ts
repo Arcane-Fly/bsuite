@@ -54,3 +54,6 @@ export {
   clearAwardCache,
   loadAwardFromMAPD,
 } from './registry';
+
+export { awardToCalcConfig } from './converter';
+export type { EmployeeAwardContext, CalcOverrides } from './converter';
