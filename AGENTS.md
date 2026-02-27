@@ -144,24 +144,89 @@ Each entity has a single owning app for create/edit. See `docs/DRY-ONE-SHOT-ARCH
 ## Project-Specific Notes
 
 ### conduit (Next.js)
+
 - App Router with server components by default
 - `'use client'` only when client interactivity is needed
 - TanStack React Query for client data, server actions for mutations
 - `@supabase/ssr` for server-side auth
 
 ### crm7 (AI Features)
+
 - `@ai-sdk/react` for AI capabilities
 - Never commit API keys
 - AI-generated content must be labeled in UI
 - Rate limiting on AI endpoints
 
 ### R80.3 (Compliance)
+
 - Wage calculations are legally compliance-critical
 - Extra test coverage on calculation logic
 - Fair Work API responses must be cached
 - PDF exports must be print-friendly and data-accurate
 
 ### braden (Security)
+
 - CSP headers configured and enforced
 - Bot protection active
 - Do not weaken security headers without approval
+
+---
+
+## Environment Variables
+
+All projects use `.env.example` → `.env.local` pattern. Key conventions:
+
+| Project | Prefix | Auth |
+|---------|--------|------|
+| **business-suite-unified** | `VITE_` | Supabase Auth |
+| **crm7** | `VITE_` | Supabase Auth |
+| **conduit** | `NEXT_PUBLIC_` | Supabase SSR Auth |
+| **braden** | `VITE_` | Supabase Auth |
+| **R80.3** | `VITE_` | Supabase Auth |
+
+- Never commit `.env` / `.env.local` files
+- All client-side vars: `VITE_` (Vite) or `NEXT_PUBLIC_` (Next.js)
+- Server-only vars (API keys): no prefix, access via `process.env`
+
+---
+
+## Package Manager
+
+**pnpm** is the standard package manager for all 5 projects. Lock file: `pnpm-lock.yaml`.
+
+```bash
+corepack enable && corepack prepare pnpm@latest --activate
+pnpm install
+```
+
+---
+
+## Branch Strategy
+
+- **Working branch**: `development` (all projects)
+- **Default branch**: `main` (most projects), `master` (business-suite-unified)
+- Solo dev workflow: single `development` branch per project
+- Merge to main/master when ready for production
+
+---
+
+## Multi-Agent Orchestration
+
+When multiple AI agents work simultaneously:
+
+1. **Scope isolation** — each agent works on one project or one clearly defined task
+2. **No overlapping files** — agents must not edit the same files concurrently
+3. **Build verification** — every agent must verify build passes before committing
+4. **Conventional commits** — all agents follow `type(scope): description`
+5. **Protected files** — listed in each project's `CONTRIBUTING.md`
+
+---
+
+## Recent Changes (2025-02-27)
+
+- **Conduit**: Replaced all native `confirm()` with `ConfirmDialog` component + `useConfirmDialog` hook
+- **Conduit**: Added `Breadcrumbs` component to dashboard layout
+- **CRM7**: Replaced 260+ raw `console.*` calls with centralized `logger` utility
+- **All projects**: Fixed Tailwind v4 deprecation (`flex-shrink-0` → `shrink-0`)
+- **BSU**: Removed stale Auth0 references from `.env.example`
+- **braden**: Fixed CONTRIBUTING.md (was referencing yarn, now correctly pnpm)
