@@ -2,18 +2,17 @@
  * Icon component type — compatible with Lucide, HeroIcons, and any
  * React component that renders an SVG.
  *
- * Deliberately avoids importing from `react` to prevent type conflicts
- * when consumed by projects using different React versions (18 vs 19)
- * in a pnpm workspace. The `@types/react` ReactNode definition changed
- * between versions, making any transitive React type reference fail
- * across version boundaries.
+ * Uses a **structural type** instead of importing from `react` to
+ * prevent type conflicts when consumed by projects using different
+ * React versions (18 vs 19) in a pnpm workspace. The `@types/react`
+ * ReactNode definition changed between versions, making any transitive
+ * React type reference fail across version boundaries.
  *
- * Type safety for icons is enforced at each project's nav config file
- * where Lucide/HeroIcon types are properly resolved against the
- * project's own React version.
+ * The structural signature `(props) => unknown` is wide enough that
+ * Lucide, HeroIcons, and plain `(props) => JSX.Element` all satisfy
+ * it, while still enforcing the expected prop shape.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type IconComponent = any;
+export type IconComponent = (props: { className?: string; size?: number | string }) => unknown;
 
 /** A single navigation item (leaf node). */
 export interface NavItem {

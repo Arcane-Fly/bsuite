@@ -27,11 +27,11 @@
 .dark {
   --sidebar-background: 222 47% 7%;        /* #0a0e1a  deep navy          */
   --sidebar-foreground: 213 20% 75%;       /* #b0bec5  light slate        */
-  --sidebar-primary: 174 100% 40%;         /* #00cec9  electric cyan      */
+  --sidebar-primary: 178 100% 40%;         /* #00cec9  electric cyan      */
   --sidebar-primary-foreground: 222 47% 7%;/* #0a0e1a  deep navy          */
-  --sidebar-accent: 174 100% 8%;           /* #002626  cyan tint on dark  */
+  --sidebar-accent: 174 100% 8%;           /* #001f1e  cyan tint on dark  */
   --sidebar-accent-foreground: 174 100% 60%;/* #33e8e4 bright cyan        */
   --sidebar-border: 220 30% 14%;           /* #1a2332  subtle border      */
-  --sidebar-ring: 174 100% 40%;            /* #00cec9  cyan ring          */
+  --sidebar-ring: 178 100% 40%;            /* #00cec9  cyan ring          */
   --sidebar-muted-foreground: 215 15% 45%; /* #64748b  muted text         */
 }

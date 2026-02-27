@@ -11,9 +11,11 @@
     "./tokens/corporate-sidebar.css": "./src/tokens/corporate-sidebar.css"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "typescript": "~5.5.4"
+    "typescript": "~5.5.4",
+    "vitest": "^3.2.4"
   }
 }

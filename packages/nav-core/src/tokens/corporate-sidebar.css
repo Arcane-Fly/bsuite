@@ -24,3 +24,5 @@
   --sidebar-ring: 44 49% 60%;              /* #cbb26a  gold ring          */
   --sidebar-muted-foreground: 0 0% 75%;    /* #bfbfbf  muted text         */
 }
+
+/* No .dark variant: corporate sidebar is always red-branded */
