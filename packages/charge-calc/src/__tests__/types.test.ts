@@ -8,6 +8,8 @@ import {
   type BillingModel,
   AllowanceTypeSchema,
   PenaltyCategory,
+  BILLING_MODEL_WEEKS,
+  getSuperRate,
 } from '../types';
 
 describe('Type definitions', () => {
@@ -25,15 +27,23 @@ describe('Type definitions', () => {
     expect(PenaltyCategory.Penalty).toBe('penalty');
   });
 
-  it('BillingModel presets map to correct weeks', () => {
-    const models: Record<BillingModel, number> = {
-      Standard: 39,
-      ALEX48: 48,
-      W52: 52,
-    };
-    expect(models.Standard).toBe(39);
-    expect(models.ALEX48).toBe(48);
-    expect(models.W52).toBe(52);
+  it('BILLING_MODEL_WEEKS maps to correct weeks', () => {
+    expect(BILLING_MODEL_WEEKS.Standard).toBe(39);
+    expect(BILLING_MODEL_WEEKS.ALEX48).toBe(48);
+    expect(BILLING_MODEL_WEEKS.W52).toBe(52);
+    // Type-level check: exhaustive BillingModel coverage
+    const _check: Record<BillingModel, number> = BILLING_MODEL_WEEKS;
+    expect(Object.keys(_check)).toHaveLength(3);
+  });
+
+  it('getSuperRate returns 11.5% before July 2025', () => {
+    expect(getSuperRate(new Date('2025-06-30'))).toBe(0.115);
+    expect(getSuperRate(new Date('2024-07-01'))).toBe(0.115);
+  });
+
+  it('getSuperRate returns 12% from July 2025 onwards', () => {
+    expect(getSuperRate(new Date('2025-07-01'))).toBe(0.12);
+    expect(getSuperRate(new Date('2026-01-15'))).toBe(0.12);
   });
 
   it('core interfaces are structurally valid', () => {

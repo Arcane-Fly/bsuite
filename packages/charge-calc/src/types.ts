@@ -46,10 +46,6 @@ export const BILLING_MODEL_WEEKS: Record<BillingModel, number> = {
 
 // ─── Funding ───
 export type FundingMethod = 'reduce' | 'passThrough' | 'passPercent';
-export type FundingApplicationMethod =
-  | 'even'
-  | 'first_year'
-  | 'weighted_over_term';
 
 export interface FundingMilestone {
   id: string | number;
