@@ -95,7 +95,7 @@ export default function TalentPoolsPage() {
           onClick={() => { resetForm(); setShowCreate(true) }}
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           New Pool
         </button>
       </div>
@@ -108,8 +108,9 @@ export default function TalentPoolsPage() {
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Name *</label>
+              <label htmlFor="pool-name" className="text-sm font-medium">Name *</label>
               <input
+                id="pool-name"
                 required
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
@@ -118,8 +119,9 @@ export default function TalentPoolsPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Region</label>
+              <label htmlFor="pool-region" className="text-sm font-medium">Region</label>
               <input
+                id="pool-region"
                 value={form.region}
                 onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}
                 placeholder="e.g. Sydney Metro"
@@ -127,8 +129,9 @@ export default function TalentPoolsPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Qualification Area</label>
+              <label htmlFor="pool-qualification" className="text-sm font-medium">Qualification Area</label>
               <input
+                id="pool-qualification"
                 value={form.qualification_area}
                 onChange={(e) => setForm((p) => ({ ...p, qualification_area: e.target.value }))}
                 placeholder="e.g. Cert III"
@@ -136,8 +139,9 @@ export default function TalentPoolsPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Trade</label>
+              <label htmlFor="pool-trade" className="text-sm font-medium">Trade</label>
               <input
+                id="pool-trade"
                 value={form.trade}
                 onChange={(e) => setForm((p) => ({ ...p, trade: e.target.value }))}
                 placeholder="e.g. Plumbing"
@@ -146,8 +150,9 @@ export default function TalentPoolsPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Description</label>
+            <label htmlFor="pool-description" className="text-sm font-medium">Description</label>
             <textarea
+              id="pool-description"
               value={form.description}
               onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
               rows={2}
@@ -155,8 +160,8 @@ export default function TalentPoolsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Color</label>
-            <div className="flex gap-2">
+            <label id="pool-color-label" className="text-sm font-medium">Color</label>
+            <div className="flex gap-2" role="group" aria-labelledby="pool-color-label">
               {POOL_COLORS.map((c) => (
                 <button
                   key={c}
@@ -167,6 +172,8 @@ export default function TalentPoolsPage() {
                     form.color === c && 'scale-125 ring-2 ring-offset-2 ring-primary'
                   )}
                   style={{ backgroundColor: c }}
+                  aria-label={`Select color ${c}`}
+                  aria-pressed={form.color === c}
                 />
               ))}
             </div>
@@ -196,7 +203,7 @@ export default function TalentPoolsPage() {
         </div>
       ) : pools.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-          <FolderOpen className="h-12 w-12 text-muted-foreground/50" />
+          <FolderOpen className="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
           <h3 className="mt-4 text-lg font-medium">No talent pools yet</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Create pools to organize candidates by trade, region, or qualification.
@@ -222,14 +229,16 @@ export default function TalentPoolsPage() {
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); startEdit(pool) }}
                     className="rounded p-1 hover:bg-muted"
+                    aria-label={`Edit ${pool.name}`}
                   >
-                    <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Edit className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                   </button>
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(pool.id, pool.name) }}
                     className="rounded p-1 hover:bg-destructive/10"
+                    aria-label={`Delete ${pool.name}`}
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -239,22 +248,22 @@ export default function TalentPoolsPage() {
               <div className="mt-3 flex flex-wrap gap-2">
                 {pool.trade && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs">
-                    <Wrench className="h-3 w-3" /> {pool.trade}
+                    <Wrench className="h-3 w-3" aria-hidden="true" /> {pool.trade}
                   </span>
                 )}
                 {pool.region && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs">
-                    <MapPin className="h-3 w-3" /> {pool.region}
+                    <MapPin className="h-3 w-3" aria-hidden="true" /> {pool.region}
                   </span>
                 )}
                 {pool.qualification_area && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs">
-                    <GraduationCap className="h-3 w-3" /> {pool.qualification_area}
+                    <GraduationCap className="h-3 w-3" aria-hidden="true" /> {pool.qualification_area}
                   </span>
                 )}
               </div>
               <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
-                <Users className="h-3 w-3" />
+                <Users className="h-3 w-3" aria-hidden="true" />
                 <span>View candidates</span>
               </div>
             </Link>

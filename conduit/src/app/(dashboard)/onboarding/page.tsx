@@ -97,7 +97,7 @@ export default function OnboardingPage() {
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             New Template
           </button>
         )}
@@ -135,8 +135,9 @@ export default function OnboardingPage() {
           <h2 className="text-sm font-semibold">New Onboarding Template</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Name *</label>
+              <label htmlFor="onboarding-template-name" className="text-sm font-medium">Name *</label>
               <input
+                id="onboarding-template-name"
                 required
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
@@ -145,8 +146,9 @@ export default function OnboardingPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Entity Type</label>
+              <label htmlFor="onboarding-entity-type" className="text-sm font-medium">Entity Type</label>
               <select
+                id="onboarding-entity-type"
                 value={form.entity_type}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, entity_type: e.target.value as 'candidate' | 'employer' }))
@@ -159,8 +161,9 @@ export default function OnboardingPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Description</label>
+            <label htmlFor="onboarding-template-desc" className="text-sm font-medium">Description</label>
             <textarea
+              id="onboarding-template-desc"
               value={form.description}
               onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
               rows={2}
@@ -193,7 +196,7 @@ export default function OnboardingPage() {
       ) : tab === 'instances' ? (
         instances.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-            <ClipboardCheck className="h-12 w-12 text-muted-foreground/50" />
+            <ClipboardCheck className="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
             <h3 className="mt-4 text-lg font-medium">No active onboarding</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Onboarding instances will appear here when candidates are hired.
@@ -205,7 +208,7 @@ export default function OnboardingPage() {
               const StatusIcon = INSTANCE_STATUS_ICON[inst.status] ?? Clock
               return (
                 <div key={inst.id} className="flex items-center gap-4 p-4">
-                  <StatusIcon className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <StatusIcon className="h-5 w-5 text-muted-foreground shrink-0" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">
@@ -242,7 +245,7 @@ export default function OnboardingPage() {
         )
       ) : templates.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-          <FileText className="h-12 w-12 text-muted-foreground/50" />
+          <FileText className="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
           <h3 className="mt-4 text-lg font-medium">No templates yet</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Create onboarding templates to standardize your process.
@@ -254,14 +257,15 @@ export default function OnboardingPage() {
             <div key={tmpl.id} className="group rounded-lg border p-4 space-y-2">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <h3 className="font-medium">{tmpl.name}</h3>
                 </div>
                 <button
                   onClick={() => handleDeleteTemplate(tmpl.id, tmpl.name)}
                   className="rounded p-1 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-opacity"
+                  aria-label={`Delete ${tmpl.name}`}
                 >
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />
                 </button>
               </div>
               {tmpl.description && (
@@ -269,7 +273,7 @@ export default function OnboardingPage() {
               )}
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs">
-                  <Users className="h-3 w-3" />
+                  <Users className="h-3 w-3" aria-hidden="true" />
                   {tmpl.entity_type}
                 </span>
                 <span className="text-xs text-muted-foreground">
