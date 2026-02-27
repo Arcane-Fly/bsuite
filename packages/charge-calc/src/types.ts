@@ -96,6 +96,10 @@ export interface CalcConfig {
   superOnOT: boolean;
   wcRate: number;
   payrollTaxRate: number;
+  /** OT oncost factor (default 0.12) */
+  otOncostFactor: number;
+  /** Penalty oncost adder per hour (default 0.15) */
+  penaltyOncostAdder: number;
 
   // Overheads
   overheadType: OverheadType;

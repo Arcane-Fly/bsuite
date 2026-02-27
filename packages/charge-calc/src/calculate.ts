@@ -116,8 +116,11 @@ export function calculate(cfg: CalcConfig): CalcResult {
   // --- Overheads (line 78) ---
   const oh = ohType === 'percent' ? totAnnPay * (ohVal / 100) : ohVal;
 
+  // --- Payroll tax ---
+  const payrollTaxAmt = totAnnPay * cfg.payrollTaxRate;
+
   // --- Total cost (line 80) ---
-  const totCost = annPkg + study + ppe + wc + oh;
+  const totCost = annPkg + study + ppe + wc + oh + payrollTaxAmt;
 
   // --- Hours (lines 82-86) ---
   const bHrs = billableWk * hpw;
@@ -134,13 +137,12 @@ export function calculate(cfg: CalcConfig): CalcResult {
   const quoted = ordCost + marginPH;
 
   // --- OT base (lines 96-101) ---
-  const otOncFactor = 0.12;
-  const otOnc = (totAnnPay * otOncFactor) / bHrs;
+  const otOnc = (totAnnPay * cfg.otOncostFactor) / bHrs;
   const otSuperPH = superOnOT ? superBearingRate * superRate : 0;
   const ot1x = recv + marginPH + otOnc;
 
   // --- Penalty oncosts (line 103) ---
-  const penOnc = (study + ppe + wc) / bHrs + 0.15;
+  const penOnc = (study + ppe + wc) / bHrs + cfg.penaltyOncostAdder;
 
   // --- Funding (lines 105-113) ---
   const fundingTotal = funding.enabled
@@ -166,6 +168,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
   const oncSuper = superAmt / bHrs;
   const oncWC = wc / bHrs;
   const oncOH = oh / bHrs;
+  const oncPayrollTax = payrollTaxAmt / bHrs;
   const totOnc =
     oncAL +
     oncPH +
@@ -175,7 +178,8 @@ export function calculate(cfg: CalcConfig): CalcResult {
     oncPPE +
     oncSuper +
     oncWC +
-    oncOH;
+    oncOH +
+    oncPayrollTax;
 
   // --- Build rates (lines 127-142) ---
   const rates: Record<string, RateResult> = {};
@@ -212,7 +216,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
     superannuation: oncSuper,
     workersComp: oncWC,
     overhead: oncOH,
-    payrollTax: 0, // Payroll tax is rolled into overhead in gold standard
+    payrollTax: oncPayrollTax,
     total: totOnc,
   };
 

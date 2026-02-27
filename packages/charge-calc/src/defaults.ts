@@ -37,6 +37,8 @@ export const DEFAULT_CONFIG: CalcConfig = {
   superOnOT: false,
   wcRate: 0.047,
   payrollTaxRate: 0.0485,
+  otOncostFactor: 0.12,
+  penaltyOncostAdder: 0.15,
   overheadType: 'percent',
   overheadValue: 6.5,
   studyCost: 850,

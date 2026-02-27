@@ -19,6 +19,8 @@ const BASE_CONFIG: CalcConfig = {
   superOnOT: false,
   wcRate: 0.047,
   payrollTaxRate: 0.0485,
+  otOncostFactor: 0.12,
+  penaltyOncostAdder: 0.15,
   overheadType: 'percent',
   overheadValue: 6.5,
   studyCost: 850,
@@ -171,14 +173,15 @@ describe('calculate()', () => {
   });
 
   describe('total annual cost', () => {
-    it('sums all cost components', () => {
+    it('sums all cost components including payroll tax', () => {
       const res = calculate(BASE_CONFIG);
       // annPkg = totalAnnPay + super = 64,083.20 + 7,089.20 = 71,172.40
       // wc = 2,514.69
       // oh = 64,083.20 x 0.065 = 4,165.41
-      // totCost = annPkg + study + ppe + wc + oh
-      //         = 71,172.40 + 850 + 350 + 2,514.69 + 4,165.41 = 79,052.50
-      expect(res.totalAnnualCost).toBeCloseTo(79052.50, 0);
+      // payrollTax = 64,083.20 x 0.0485 = 3,108.04
+      // totCost = annPkg + study + ppe + wc + oh + payrollTax
+      //         = 71,172.40 + 850 + 350 + 2,514.69 + 4,165.41 + 3,108.04 = 82,160.54
+      expect(res.totalAnnualCost).toBeCloseTo(82160.54, 0);
     });
   });
 
@@ -195,7 +198,8 @@ describe('calculate()', () => {
   describe('charge rate', () => {
     it('calculates cost per billable hour', () => {
       const res = calculate(BASE_CONFIG);
-      expect(res.costPerHour).toBeCloseTo(79052.50 / 1482, 2);
+      // totalAnnualCost = 82,160.54 (includes payroll tax)
+      expect(res.costPerHour).toBeCloseTo(82160.54 / 1482, 2);
     });
 
     it('applies flat margin', () => {
@@ -299,6 +303,68 @@ describe('calculate()', () => {
       // but should be within 1% across billing models (same employer cost).
       const pctDiff = Math.abs(r39.totalAnnualCost - r48.totalAnnualCost) / r39.totalAnnualCost;
       expect(pctDiff).toBeLessThan(0.01);
+    });
+  });
+
+  describe('payroll tax (D-2)', () => {
+    it('computes payroll tax from totalAnnualPay * payrollTaxRate', () => {
+      const res = calculate(BASE_CONFIG);
+      // totalAnnualPay = 64,083.20
+      // payrollTaxAmt = 64,083.20 * 0.0485 = 3,108.0352
+      const expectedPayrollTax = 64083.20 * 0.0485;
+      // payrollTax is added to totalAnnualCost
+      expect(res.totalAnnualCost).toBeCloseTo(
+        // annPkg(71172.40) + study(850) + ppe(350) + wc(2514.69) + oh(4165.41) + payrollTax(3108.04)
+        79052.50 + expectedPayrollTax,
+        0,
+      );
+    });
+
+    it('includes payroll tax in oncost breakdown per-hour', () => {
+      const res = calculate(BASE_CONFIG);
+      // payrollTaxAmt / bHrs = (64,083.20 * 0.0485) / 1482
+      const expectedPH = (64083.20 * 0.0485) / 1482;
+      expect(res.oncosts.payrollTax).toBeCloseTo(expectedPH, 2);
+    });
+
+    it('adds payroll tax to oncost total', () => {
+      const res = calculate(BASE_CONFIG);
+      const summedOncosts =
+        res.oncosts.annualLeave +
+        res.oncosts.publicHolidays +
+        res.oncosts.sickLeave +
+        res.oncosts.training +
+        res.oncosts.study +
+        res.oncosts.ppe +
+        res.oncosts.superannuation +
+        res.oncosts.workersComp +
+        res.oncosts.overhead +
+        res.oncosts.payrollTax;
+      expect(res.oncosts.total).toBeCloseTo(summedOncosts, 2);
+    });
+
+    it('payroll tax is zero when payrollTaxRate is zero', () => {
+      const cfg = { ...BASE_CONFIG, payrollTaxRate: 0 };
+      const res = calculate(cfg);
+      expect(res.oncosts.payrollTax).toBe(0);
+    });
+  });
+
+  describe('configurable OT/penalty oncost factors (D-1)', () => {
+    it('uses cfg.otOncostFactor instead of hardcoded 0.12', () => {
+      const resDefault = calculate(BASE_CONFIG);
+      const cfgCustom = { ...BASE_CONFIG, otOncostFactor: 0.15 };
+      const resCustom = calculate(cfgCustom);
+      // Higher OT oncost factor should increase the OT oncost per hour
+      expect(resCustom.otOncostPerHour).toBeGreaterThan(resDefault.otOncostPerHour);
+    });
+
+    it('uses cfg.penaltyOncostAdder instead of hardcoded 0.15', () => {
+      const resDefault = calculate(BASE_CONFIG);
+      const cfgCustom = { ...BASE_CONFIG, penaltyOncostAdder: 0.25 };
+      const resCustom = calculate(cfgCustom);
+      // Higher penalty oncost adder should increase penalty oncost per hour
+      expect(resCustom.penaltyOncostPerHour).toBeGreaterThan(resDefault.penaltyOncostPerHour);
     });
   });
 });
