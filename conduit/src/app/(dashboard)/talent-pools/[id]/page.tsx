@@ -1,23 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { useTalentPoolStore } from '@/stores/talentPoolStore'
-import { useCandidateStore } from '@/stores/candidateStore'
 import { useTenantId } from '@/hooks/useTenantId'
+import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
+import { useCandidateStore } from '@/stores/candidateStore'
+import { useTalentPoolStore } from '@/stores/talentPoolStore'
 import type { TalentPool } from '@/types/entities'
 import {
-  ArrowLeft,
-  UserPlus,
-  X,
-  Mail,
-  Star,
-  Search,
-  Users,
+    ArrowLeft,
+    Mail,
+    Search,
+    Star,
+    UserPlus,
+    Users,
+    X,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 export default function TalentPoolDetailPage() {
@@ -35,7 +35,7 @@ export default function TalentPoolDetailPage() {
     async function load() {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('r7_talent_pools')
+        .from('conduit_talent_pools')
         .select('*')
         .eq('id', params.id as string)
         .single()

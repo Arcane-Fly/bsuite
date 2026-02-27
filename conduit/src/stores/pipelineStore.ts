@@ -1,8 +1,8 @@
 'use client'
 
-import { create } from 'zustand'
 import { createClient } from '@/lib/supabase/client'
-import type { PipelineStage, PipelineEntry } from '@/types/entities'
+import type { PipelineEntry, PipelineStage } from '@/types/entities'
+import { create } from 'zustand'
 
 interface PipelineState {
   stages: PipelineStage[]
@@ -27,13 +27,13 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
 
     const [stagesRes, entriesRes] = await Promise.all([
       supabase
-        .from('r7_pipeline_stages')
+        .from('conduit_pipeline_stages')
         .select('*')
         .eq('tenant_id', tenantId)
         .order('order', { ascending: true }),
       supabase
-        .from('r7_pipeline_entries')
-        .select('*, candidate:r7_candidates(id, first_name, last_name, email, avatar_url, rating), stage:r7_pipeline_stages(id, name, color, "order")')
+        .from('conduit_pipeline_entries')
+        .select('*, candidate:conduit_candidates(id, first_name, last_name, email, avatar_url, rating), stage:conduit_pipeline_stages(id, name, color, "order")')
         .eq('tenant_id', tenantId)
         .order('entered_at', { ascending: false }),
     ])
@@ -53,7 +53,7 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
   moveEntry: async (entryId: string, newStageId: string, userId?: string) => {
     const supabase = createClient()
     const { error } = await supabase
-      .from('r7_pipeline_entries')
+      .from('conduit_pipeline_entries')
       .update({ stage_id: newStageId, entered_at: new Date().toISOString(), moved_by: userId })
       .eq('id', entryId)
 
@@ -73,14 +73,14 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
   addEntry: async (tenantId: string, candidateId: string, stageId: string, jobId?: string) => {
     const supabase = createClient()
     const { data, error } = await supabase
-      .from('r7_pipeline_entries')
+      .from('conduit_pipeline_entries')
       .insert({
         tenant_id: tenantId,
         candidate_id: candidateId,
         stage_id: stageId,
         job_id: jobId ?? null,
       })
-      .select('*, candidate:r7_candidates(id, first_name, last_name, email, avatar_url, rating), stage:r7_pipeline_stages(id, name, color, "order")')
+      .select('*, candidate:conduit_candidates(id, first_name, last_name, email, avatar_url, rating), stage:conduit_pipeline_stages(id, name, color, "order")')
       .single()
 
     if (error) {

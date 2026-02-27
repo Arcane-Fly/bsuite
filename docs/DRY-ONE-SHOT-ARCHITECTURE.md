@@ -46,16 +46,16 @@ Other apps may READ the entity but NEVER create or edit it independently.
 | **Compliance Records** | CRM7 | Compliance form | BSU (audit) | `compliance_records` |
 | **Timesheets** | CRM7 | Timesheet entry | R8 (hours→charges) | `timesheets` |
 | **Funding Claims** | CRM7 | Claims form | BSU (revenue tracking) | `funding_claims` |
-| **Candidates** | Conduit | Candidate form | CRM7 (placement ref) | `r7_candidates` |
-| **Talent Pools** | Conduit | Pool manager | — | `r7_talent_pools` |
-| **Jobs (Sourcing)** | Conduit | Job posting form | CRM7 (placement ref) | `r7_jobs` |
-| **Applications** | Conduit | Application tracker | — | `r7_applications` |
-| **Pipeline Stages** | Conduit | Pipeline settings | — | `r7_pipeline_stages` |
-| **Pipeline Entries** | Conduit | Kanban board | — | `r7_pipeline_entries` |
-| **Onboarding (R7)** | Conduit | Onboarding wizard | CRM7 (apprentice conversion) | `r7_onboarding_*` |
-| **Compliance Checks** | Conduit | Compliance dashboard | CRM7 (compliance records) | `r7_compliance_checks` |
-| **Comms (Sourcing)** | Conduit | Comms panel | — | `r7_communications` |
-| **Documents (R7)** | Conduit | Document upload | CRM7 (document ref) | `r7_documents` |
+| **Candidates** | Conduit | Candidate form | CRM7 (placement ref) | `conduit_candidates` |
+| **Talent Pools** | Conduit | Pool manager | — | `conduit_talent_pools` |
+| **Jobs (Sourcing)** | Conduit | Job posting form | CRM7 (placement ref) | `conduit_jobs` |
+| **Applications** | Conduit | Application tracker | — | `conduit_applications` |
+| **Pipeline Stages** | Conduit | Pipeline settings | — | `conduit_pipeline_stages` |
+| **Pipeline Entries** | Conduit | Kanban board | — | `conduit_pipeline_entries` |
+| **Onboarding** | Conduit | Onboarding wizard | CRM7 (apprentice conversion) | `conduit_onboarding_*` |
+| **Compliance Checks** | Conduit | Compliance dashboard | CRM7 (compliance records) | `conduit_compliance_checks` |
+| **Comms (Sourcing)** | Conduit | Comms panel | — | `conduit_communications` |
+| **Documents** | Conduit | Document upload | CRM7 (document ref) | `conduit_documents` |
 
 ---
 

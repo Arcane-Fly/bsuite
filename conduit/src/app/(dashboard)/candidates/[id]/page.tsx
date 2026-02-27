@@ -1,26 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { useTenantId } from '@/hooks/useTenantId'
+import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 import { useCandidateStore } from '@/stores/candidateStore'
 import type { Candidate } from '@/types/entities'
 import {
-  ArrowLeft,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Star,
-  Briefcase,
-  Edit,
-  Trash2,
-  Clock,
-  User,
+    ArrowLeft,
+    Briefcase,
+    Calendar,
+    Clock,
+    Edit,
+    Mail,
+    MapPin,
+    Phone,
+    Star,
+    Trash2,
+    User,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -50,7 +50,7 @@ export default function CandidateProfilePage() {
     async function load() {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('r7_candidates')
+        .from('conduit_candidates')
         .select('*')
         .eq('id', params.id as string)
         .single()

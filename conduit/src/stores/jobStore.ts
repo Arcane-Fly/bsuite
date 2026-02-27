@@ -1,8 +1,8 @@
 'use client'
 
-import { create } from 'zustand'
 import { createClient } from '@/lib/supabase/client'
 import type { Job, JobStatus } from '@/types/entities'
+import { create } from 'zustand'
 
 interface JobFilters {
   search: string
@@ -39,7 +39,7 @@ export const useJobStore = create<JobState>((set, get) => ({
     const { filters } = get()
 
     let query = supabase
-      .from('r7_jobs')
+      .from('conduit_jobs')
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)
       .order('updated_at', { ascending: false })
@@ -63,7 +63,7 @@ export const useJobStore = create<JobState>((set, get) => ({
   createJob: async (tenantId, data) => {
     const supabase = createClient()
     const { data: created, error } = await supabase
-      .from('r7_jobs')
+      .from('conduit_jobs')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
@@ -75,7 +75,7 @@ export const useJobStore = create<JobState>((set, get) => ({
 
   updateJob: async (id, data) => {
     const supabase = createClient()
-    const { error } = await supabase.from('r7_jobs').update(data).eq('id', id)
+    const { error } = await supabase.from('conduit_jobs').update(data).eq('id', id)
     if (error) { set({ error: error.message }); return false }
     set((s) => ({ jobs: s.jobs.map((j) => (j.id === id ? { ...j, ...data } : j)) }))
     return true
@@ -83,7 +83,7 @@ export const useJobStore = create<JobState>((set, get) => ({
 
   deleteJob: async (id) => {
     const supabase = createClient()
-    const { error } = await supabase.from('r7_jobs').delete().eq('id', id)
+    const { error } = await supabase.from('conduit_jobs').delete().eq('id', id)
     if (error) { set({ error: error.message }); return false }
     set((s) => ({ jobs: s.jobs.filter((j) => j.id !== id), totalCount: s.totalCount - 1 }))
     return true

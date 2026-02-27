@@ -1,25 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 import { useJobStore } from '@/stores/jobStore'
 import type { Job } from '@/types/entities'
 import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  Globe,
-  Archive,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Briefcase,
-  Users,
-  Clock,
+    Archive,
+    ArrowLeft,
+    Briefcase,
+    Calendar,
+    Clock,
+    DollarSign,
+    Edit,
+    Globe,
+    MapPin,
+    Trash2,
+    Users,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -52,7 +52,7 @@ export default function JobDetailPage() {
     async function load() {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('r7_jobs')
+        .from('conduit_jobs')
         .select('*')
         .eq('id', params.id as string)
         .single()

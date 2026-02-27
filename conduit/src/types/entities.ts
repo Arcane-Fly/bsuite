@@ -1,4 +1,4 @@
-// Conduit entity types — prefixed r7_ in database
+// Conduit entity types — prefixed conduit_ in database
 
 export interface BaseEntity {
   id: string

@@ -1,8 +1,8 @@
 'use client'
 
-import { create } from 'zustand'
 import { createClient } from '@/lib/supabase/client'
 import type { ComplianceCheck } from '@/types/entities'
+import { create } from 'zustand'
 
 interface ComplianceFilters {
   search: string
@@ -37,7 +37,7 @@ export const useComplianceStore = create<ComplianceState>((set, get) => ({
     const { filters } = get()
 
     let query = supabase
-      .from('r7_compliance_checks')
+      .from('conduit_compliance_checks')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('expires_at', { ascending: true, nullsFirst: false })
@@ -58,7 +58,7 @@ export const useComplianceStore = create<ComplianceState>((set, get) => ({
   createCheck: async (tenantId, data) => {
     const supabase = createClient()
     const { data: created, error } = await supabase
-      .from('r7_compliance_checks')
+      .from('conduit_compliance_checks')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
@@ -70,7 +70,7 @@ export const useComplianceStore = create<ComplianceState>((set, get) => ({
 
   updateCheck: async (id, data) => {
     const supabase = createClient()
-    const { error } = await supabase.from('r7_compliance_checks').update(data).eq('id', id)
+    const { error } = await supabase.from('conduit_compliance_checks').update(data).eq('id', id)
     if (error) { set({ error: error.message }); return false }
     set((s) => ({ checks: s.checks.map((c) => (c.id === id ? { ...c, ...data } : c)) }))
     return true
