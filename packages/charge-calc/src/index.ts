@@ -7,3 +7,5 @@ export * from './calculate';
 export * from './defaults';
 
 export * from './billing';
+
+export * from './utils';
