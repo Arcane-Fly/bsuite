@@ -181,6 +181,35 @@ export interface Offer extends BaseEntity {
 
 export type OfferStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'withdrawn'
 
+// ─── Interviews ──────────────────────────────────────────────────────
+
+export interface Interview extends BaseEntity {
+  candidate_id: string
+  job_id?: string
+  title: string
+  interview_type: InterviewType
+  status: InterviewStatus
+  scheduled_at: string
+  duration_minutes: number
+  location?: string
+  meeting_url?: string
+  notes?: string
+  interviewer_names?: string[]
+  interviewer_emails?: string[]
+  calendar_event_id?: string
+  calendar_provider?: string
+  calendar_integration_id?: string
+  feedback?: string
+  rating?: number
+  created_by?: string
+  // Joined
+  candidate?: Pick<Candidate, 'id' | 'first_name' | 'last_name' | 'email' | 'avatar_url'>
+  job?: Pick<Job, 'id' | 'title' | 'location'>
+}
+
+export type InterviewStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
+export type InterviewType = 'in_person' | 'phone' | 'video' | 'panel' | 'technical' | 'group'
+
 // ─── Onboarding ───────────────────────────────────────────────────────
 
 export interface OnboardingTemplate extends BaseEntity {

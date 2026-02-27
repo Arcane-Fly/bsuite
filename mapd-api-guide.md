@@ -252,7 +252,7 @@ b. the distribution of requests across modern awards,
 c. peak transaction periods
 ```
 
-2. Implement an appropriate caching mechanism for Modern Awards Pay Database API data, we suggest
+1. Implement an appropriate caching mechanism for Modern Awards Pay Database API data, we suggest
     at least to 24 hours for high frequency API calls.
 2. Leverage cache optimised queries where possible.
 3. Subscribe to Modern Awards Pay Database Webhooks to be notified of data changes. The following
@@ -592,3 +592,101 @@ Pay Database API will be backwards compatible.
 However, it has committed to an N-1 support model where the current version of the API plus the version
 immediately prior will be supported. API users using an older version of the Modern Awards Pay Database API
 may find they have inconsistent experiences.
+
+# Modern Awards Pay Database — Data dictionary
+
+## Award dictionary
+
+| Field Name | Data type | Description |
+| --- | --- | --- |
+| award_fixed_id | Integer | A unique code for this instance of the modern award resource that remains identical year on year. |
+| award_id | Integer | Unique identification number of award |
+| award_operative_from | Date | The date when the award came into operation |
+| award_operative_to NULLABLE | Date | The date when the award ceased to be in effect (was revoked). |
+| code | String | The code assigned to the modern award. Also known as the award number. |
+| name | String | The human readable title of the award |
+| last_modified_datetime | DateTime | This is the date and time that the resource was last modified. |
+| published_year | String | Year in which the minimum rates of pay were determined in the annual wage review. |
+| version_number | Integer | This number indicates the version of the award resource. It is incremented by one each time the resource is updated. |
+
+## Classification data dictionary
+
+| Field name | Data type | Description |
+| --- | --- | --- |
+| award_fixed_id | Integer | A unique code for this instance of the modern award resource that remains identical year on year. |
+| base_pay_rate_id | Integer | A unique identification number of the base pay rate resource. Values have the prefix (BR). |
+| classification | String | Classification title taken from the award |
+| classification_fixed_id | Integer | Unique identification number of classifications that remains identical year on year. |
+| clause_fixed_id | Integer | Unique identification number of clauses that remains identical year on year. |
+| clauses | String | Clause number |
+| code | String | The code assigned to the modern award. Also known as the award number. |
+| employee_rate_type_code NULLABLE | String | An indicator if the rate is for an adult or otherwise: AD - Adult JN - Junior AP - Apprentice AA - Adult apprentice TN - Trainee rates XT - Exited from trainee-ship but not an Adult CA - Cadet |
+| last_modified_datetime | DateTime | This is the date and time that the resource was last modified. |
+| name | String | The human readable title of the award |
+| operative_from | Date | The date when the classification came into operation |
+| operative_to NULLABLE | Date | The date when the classification ceased to be in effect (was revoked). |
+| parent_classification NULLABLE | String | Classification grouping title, as found in the award. |
+| published_year | Integer | The year in which the minimum rates of pay were determined in the annual wage review. For example, for the published year 2019 the rates in the annual wage review were determined on 30 May 2019. It includes all data that came into operation between 1 July 2019 and 30 June 2020. |
+| version_number | Integer | This number indicates the version of the classification resource. It is incremented by one each time the resource is updated. |
+
+## Wage allowance
+
+| Field name | Data type | Description |
+| --- | --- | --- |
+| allowance | String | Description of allowance, taken from the summary of monetary allowances table in the award if the award contains one. Otherwise the allowance description is taken from the allowance sheets. |
+| allowance_amount NULLABLE | Decimal | Contains calculated allowance value ($) for the current year. |
+| award_fixed_id | Integer | A unique code for this instance of the modern award resource that remains identical year on year. |
+| base_pay_rate_id | Integer | A unique identification number of the base pay rate resource. Values have the prefix (BR). |
+| clause_fixed_id | Integer | Unique identification number of clauses that remains identical year on year. |
+| clauses | String | Clause number |
+| code | String | The code assigned to the modern award. Also known as the award number. |
+| employee_rate_type_code NULLABLE | String | An indicator if the rate is for an adult or otherwise: AD - Adult JN - Junior AP - Apprentice AA - Adult apprentice TN - Trainee rates XT - Exited from trainee-ship but not an Adult CA - Cadet |
+| last_modified_datetime | DateTime | This is the date and time that the resource was last modified. |
+| name | String | The human readable title of the award |
+| operative_from | Date | The date when the allowance came into operation. For a particular employee, this will only take effect from the beginning of that employee's first full pay period that starts on or after that date. |
+| operative_to NULLABLE | Date | The date on which the allowance ceased to be in effect. |
+| parent_allowance NULLABLE | String | Description of parent allowance often used for a title of a group such as "meal allowances" for a group of breakfast, lunch and dinner allowances. |
+| payment_frequency NULLABLE | String | Denotes when the payment of an allowance is made, eg - per week, per hour, per meal etc. |
+| published_year | Integer | The year in which the minimum rates of pay were determined in the annual wage review. For example, for the published year 2019 the rates in the annual wage review were determined on 30 May 2019. It includes all data that came into operation between 1 July 2019 and 30 June 2020. |
+| version_number | integer | This number indicates the version of the allowance resource. It is incremented by one each time the resource is updated. |
+
+## Expense allowance
+
+| Field name | Data type | Description |
+| --- | --- | --- |
+| allowance | String | Description of allowance, taken from the summary of monetary allowances table in the award if the award contains one. Otherwise the allowance description is taken from the allowance sheets. |
+| allowance_amount NULLABLE | Decimal | Contains calculated allowance value ($) for the current year. |
+| award_fixed_id | Integer | A unique code for this instance of the modern award resource that remains identical year on year. |
+| base_pay_rate_id | Integer | A unique identification number of the base pay rate resource. Values have the prefix (BR). |
+| clause_fixed_id | Integer | Unique identification number of clauses that remains identical year on year. |
+| clauses | String | Clause number |
+| code | String | The code assigned to the modern award. Also known as the award number. |
+| employee_rate_type_code NULLABLE | String | An indicator if the rate is for an adult or otherwise: AD - Adult JN - Junior AP - Apprentice AA - Adult apprentice TN - Trainee rates XT - Exited from trainee-ship but not an Adult CA - Cadet |
+| last_modified_datetime | DateTime | This is the date and time that the resource was last modified. |
+| name | String | The human readable title of the award |
+| operative_from | Date | The date when the allowance came into operation. For a particular employee, this will only take effect from the beginning of that employee's first full pay period that starts on or after that date. |
+| operative_to NULLABLE | Date | The date on which the allowance ceased to be in effect. |
+| parent_allowance NULLABLE | String | Description of parent allowance often used for a title of a group such as "meal allowances" for a group of breakfast, lunch and dinner allowances. |
+| payment_frequency NULLABLE | String | Denotes when the payment of an allowance is made, eg - per week, per hour, per meal etc. |
+| published_year | Integer | The year in which the minimum rates of pay were determined in the annual wage review. For example, for the published year 2019 the rates in the annual wage review were determined on 30 May 2019. It includes all data that came into operation between 1 July 2019 and 30 June 2020. |
+| version_number | integer | This number indicates the version of the allowance resource. It is incremented by one each time the resource is updated. |
+
+## Penalty
+
+| Field name | Data type | Description |
+| --- | --- | --- |
+| award_fixed_id | Integer | A unique code for this instance of the modern award resource that remains identical year on year. |
+| base_pay_rate_id | Integer | A unique identification number of the base pay rate resource. Values have the prefix (BR). |
+| clause_fixed_id | Integer | Unique identification number of clauses that remains identical year on year. |
+| clauses | String | Clause number |
+| code | String | The code assigned to the modern award. Also known as the award number. |
+| employee_rate_type_code NULLABLE | String | An indicator if the rate is for an adult or otherwise: AD - Adult JN - Junior AP - Apprentice AA - Adult apprentice TN - Trainee rates XT - Exited from trainee-ship but not an Adult CA - Cadet |
+| last_modified_date_time | DateTime | This is the date and time that the resource was last modified. |
+| operative_from | Date | The date when the record comes into operation. For a particular employee, this will only take effect from the beginning of that employe's first full pay period that starts on or after that date. |
+| operative_to NULLABLE | Date | The date on which the penalty rate ceased to be in effect. |
+| penalty_calculated_value NULLABLE | Decimal | Calculated value of penalty |
+| penalty_description | String | Penalty description from the relevant clause in the award. |
+| penalty_fixed_id | Integer | Unique identification number of the penalty that remains identical year on year. |
+| published_year | Integer | The year in which the minimum rates of pay were determined in the annual wage review. For example, for the published year 2019 the rates in the annual wage review were determined on 30 May 2019. It includes all data that came into operation between 1 July 2019 and 30 June 2020. |
+| rate | Decimal | The value of penalty that is applied as a percentage to the minimum/ordinary hourly rate. |
+| version_number | integer | This number indicates the version of the penalty resource. It is incremented by one each time the resource is updated. |

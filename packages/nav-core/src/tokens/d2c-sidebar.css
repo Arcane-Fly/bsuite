@@ -1,0 +1,37 @@
+/*
+ * D2C Neon Electric — Sidebar Design Tokens
+ * ──────────────────────────────────────────
+ * Uses shadcn/ui's --sidebar-* CSS variable contract.
+ * Import this file in any D2C-themed BSuite app:
+ *   CRM7 · Conduit · R80.3 · business-suite-unified
+ *
+ * Values are HSL channel triplets (H S% L%) consumed by
+ * Tailwind's hsl() utility wrappers.
+ */
+
+/* ── Light mode (default) ─────────────────────────────── */
+:root,
+.light {
+  --sidebar-background: 220 20% 98%;       /* #fafbfd  off-white          */
+  --sidebar-foreground: 215 25% 27%;       /* #334155  slate-700          */
+  --sidebar-primary: 217 91% 60%;          /* #2563eb  electric blue      */
+  --sidebar-primary-foreground: 0 0% 100%; /* #ffffff  white              */
+  --sidebar-accent: 217 91% 95%;           /* #eff6ff  blue-50 tint       */
+  --sidebar-accent-foreground: 217 91% 40%;/* #1e40af  blue-800           */
+  --sidebar-border: 214 20% 92%;           /* #e5e9f0  cool gray border   */
+  --sidebar-ring: 217 91% 60%;             /* #2563eb  electric blue ring */
+  --sidebar-muted-foreground: 215 15% 55%; /* #7c8aa0  muted text         */
+}
+
+/* ── Dark mode ────────────────────────────────────────── */
+.dark {
+  --sidebar-background: 222 47% 7%;        /* #0a0e1a  deep navy          */
+  --sidebar-foreground: 213 20% 75%;       /* #b0bec5  light slate        */
+  --sidebar-primary: 174 100% 40%;         /* #00cec9  electric cyan      */
+  --sidebar-primary-foreground: 222 47% 7%;/* #0a0e1a  deep navy          */
+  --sidebar-accent: 174 100% 8%;           /* #002626  cyan tint on dark  */
+  --sidebar-accent-foreground: 174 100% 60%;/* #33e8e4 bright cyan        */
+  --sidebar-border: 220 30% 14%;           /* #1a2332  subtle border      */
+  --sidebar-ring: 174 100% 40%;            /* #00cec9  cyan ring          */
+  --sidebar-muted-foreground: 215 15% 45%; /* #64748b  muted text         */
+}

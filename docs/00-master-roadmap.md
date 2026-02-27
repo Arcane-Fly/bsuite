@@ -315,10 +315,10 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | ~~10~~ | ~~Lead capture wiring (Braden contact form → Edge Function → CRM)~~ | braden/bsu | ✅ Done |
 | ~~11~~ | ~~Confirmation email after Braden form submission~~ | braden | ✅ Done |
 | ~~12~~ | ~~Conduit interview scheduling (calendar integration)~~ | conduit | ✅ Done |
-| 13 | AU Funding Claims Enhancement | crm7 | 1w |
+| ~~13~~ | ~~AU Funding Claims Enhancement~~ | crm7 | ✅ Done |
 | 14 | R80.3 offline mode (service worker + IndexedDB) | R80.3 | 3d |
-| 15 | Conduit AI tools (candidate search, pipeline mgmt) | conduit | 1w |
-| 16 | BSU project switching with session handoff | bsu | 2d |
+| 15 | Conduit AI tools (candidate search, pipeline mgmt) ([plan](./plans/20260228-conduit-ai-tools-plan-v1.00W.md)) | conduit | 1w |
+| 16 | BSU project switching with session handoff ([plan](./plans/20260228-bsu-project-switching-plan-v1.00W.md)) | bsu | 2d |
 | 17 | Biped marketplace integration into BSuite (shared auth, billing, analytics) | braden/bsu | 2w |
 
 ### P2 — Enhancement & Polish
@@ -344,9 +344,10 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 34 | Compliance automation workflows | crm7 | 1w |
 | 35 | Advanced reporting with predictive analytics | crm7 | 2w |
 | 36 | Test coverage push (all projects, 70% target) | all | ongoing |
-| 37 | Biped BSuite integration — shared auth, unified billing, analytics | braden/bsu/biped | 2w |
 
 ---
+
+> **Future:** Integrate Biped marketplace platform into BSuite ecosystem (shared auth, unified billing, cross-product analytics). Related project: `biped/` in the Braden business directory.
 
 ## Related Documents
 
