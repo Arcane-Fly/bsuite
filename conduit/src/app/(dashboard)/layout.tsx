@@ -1,9 +1,9 @@
 'use client'
 
-import { isActivePath } from '@bsuite/nav-core'
 import { AIProvider } from '@/components/ai/AIProvider'
 import { AppSwitcher } from '@/components/AppSwitcher'
 import { NAV_CONFIG } from '@/config/navigation'
+import { isActivePath } from '@/lib/nav-utils'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { LogOut, Menu, X } from 'lucide-react'

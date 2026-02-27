@@ -14,7 +14,6 @@
     "@ai-sdk/anthropic": "^3.0.48",
     "@ai-sdk/google": "^3.0.33",
     "@ai-sdk/react": "^3.0.105",
-    "@bsuite/nav-core": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.1.3",

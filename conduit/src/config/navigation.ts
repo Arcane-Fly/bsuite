@@ -1,15 +1,15 @@
-import type { NavConfig } from '@bsuite/nav-core';
+import type { NavConfig } from '@/lib/nav-utils';
 import {
-  BarChart3,
-  Briefcase,
-  CalendarDays,
-  ClipboardCheck,
-  FileText,
-  FolderOpen,
-  KanbanSquare,
-  Settings,
-  ShieldCheck,
-  Users,
+    BarChart3,
+    Briefcase,
+    CalendarDays,
+    ClipboardCheck,
+    FileText,
+    FolderOpen,
+    KanbanSquare,
+    Settings,
+    ShieldCheck,
+    Users,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
