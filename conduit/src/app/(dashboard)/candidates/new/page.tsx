@@ -60,8 +60,9 @@ export default function NewCandidatePage() {
         <Link
           href="/candidates"
           className="rounded-md p-2 hover:bg-muted"
+          aria-label="Back to candidates"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">New Candidate</h1>
@@ -77,8 +78,9 @@ export default function NewCandidatePage() {
           <legend className="px-2 text-sm font-medium">Personal Information</legend>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">First Name *</label>
+              <label htmlFor="candidate-first-name" className="text-sm font-medium">First Name *</label>
               <input
+                id="candidate-first-name"
                 required
                 value={form.first_name}
                 onChange={(e) => updateField('first_name', e.target.value)}
@@ -86,8 +88,9 @@ export default function NewCandidatePage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Last Name *</label>
+              <label htmlFor="candidate-last-name" className="text-sm font-medium">Last Name *</label>
               <input
+                id="candidate-last-name"
                 required
                 value={form.last_name}
                 onChange={(e) => updateField('last_name', e.target.value)}
@@ -97,8 +100,9 @@ export default function NewCandidatePage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Email</label>
+              <label htmlFor="candidate-email" className="text-sm font-medium">Email</label>
               <input
+                id="candidate-email"
                 type="email"
                 value={form.email}
                 onChange={(e) => updateField('email', e.target.value)}
@@ -107,8 +111,9 @@ export default function NewCandidatePage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Phone</label>
+              <label htmlFor="candidate-phone" className="text-sm font-medium">Phone</label>
               <input
+                id="candidate-phone"
                 type="tel"
                 value={form.phone}
                 onChange={(e) => updateField('phone', e.target.value)}
@@ -118,8 +123,9 @@ export default function NewCandidatePage() {
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Date of Birth</label>
+            <label htmlFor="candidate-dob" className="text-sm font-medium">Date of Birth</label>
             <input
+              id="candidate-dob"
               type="date"
               value={form.date_of_birth}
               onChange={(e) => updateField('date_of_birth', e.target.value)}
@@ -132,8 +138,9 @@ export default function NewCandidatePage() {
         <fieldset className="space-y-4 rounded-lg border p-4">
           <legend className="px-2 text-sm font-medium">Address</legend>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Street Address</label>
+            <label htmlFor="candidate-address" className="text-sm font-medium">Street Address</label>
             <input
+              id="candidate-address"
               value={form.address_line1}
               onChange={(e) => updateField('address_line1', e.target.value)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -141,16 +148,18 @@ export default function NewCandidatePage() {
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Suburb</label>
+              <label htmlFor="candidate-suburb" className="text-sm font-medium">Suburb</label>
               <input
+                id="candidate-suburb"
                 value={form.suburb}
                 onChange={(e) => updateField('suburb', e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">State</label>
+              <label htmlFor="candidate-state" className="text-sm font-medium">State</label>
               <select
+                id="candidate-state"
                 value={form.state}
                 onChange={(e) => updateField('state', e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -162,8 +171,9 @@ export default function NewCandidatePage() {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Postcode</label>
+              <label htmlFor="candidate-postcode" className="text-sm font-medium">Postcode</label>
               <input
+                id="candidate-postcode"
                 value={form.postcode}
                 onChange={(e) => updateField('postcode', e.target.value)}
                 maxLength={4}
@@ -178,8 +188,9 @@ export default function NewCandidatePage() {
           <legend className="px-2 text-sm font-medium">Source & Notes</legend>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Source</label>
+              <label htmlFor="candidate-source" className="text-sm font-medium">Source</label>
               <select
+                id="candidate-source"
                 value={form.source}
                 onChange={(e) => updateField('source', e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -196,8 +207,9 @@ export default function NewCandidatePage() {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Availability</label>
+              <label htmlFor="candidate-availability" className="text-sm font-medium">Availability</label>
               <select
+                id="candidate-availability"
                 value={form.availability}
                 onChange={(e) => updateField('availability', e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -212,8 +224,9 @@ export default function NewCandidatePage() {
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Notes</label>
+            <label htmlFor="candidate-notes" className="text-sm font-medium">Notes</label>
             <textarea
+              id="candidate-notes"
               value={form.notes}
               onChange={(e) => updateField('notes', e.target.value)}
               rows={3}
@@ -229,7 +242,7 @@ export default function NewCandidatePage() {
             disabled={saving || !form.first_name || !form.last_name}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            <Save className="h-4 w-4" />
+            <Save className="h-4 w-4" aria-hidden="true" />
             {saving ? 'Saving...' : 'Create Candidate'}
           </button>
           <Link

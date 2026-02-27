@@ -92,7 +92,7 @@ export default function CandidatesPage() {
           href="/candidates/new"
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           Add Candidate
         </Link>
       </div>
@@ -100,8 +100,10 @@ export default function CandidatesPage() {
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <label htmlFor="candidate-search" className="sr-only">Search candidates</label>
           <input
+            id="candidate-search"
             type="text"
             placeholder="Search by name or email..."
             value={searchInput}
@@ -110,7 +112,7 @@ export default function CandidatesPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Filter className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <div className="flex gap-1 overflow-x-auto">
             {STATUS_OPTIONS.map((opt) => (
               <button
@@ -137,7 +139,7 @@ export default function CandidatesPage() {
         </div>
       ) : candidates.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-          <Users className="h-12 w-12 text-muted-foreground/50" />
+          <Users className="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
           <h3 className="mt-4 text-lg font-medium">No candidates yet</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Add your first candidate to get started.
@@ -146,7 +148,7 @@ export default function CandidatesPage() {
             href="/candidates/new"
             className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             Add Candidate
           </Link>
         </div>
@@ -180,7 +182,7 @@ export default function CandidatesPage() {
                   </span>
                   {candidate.rating && (
                     <span className="flex items-center gap-0.5 text-xs text-amber-600">
-                      <Star className="h-3 w-3 fill-current" />
+                      <Star className="h-3 w-3 fill-current" aria-hidden="true" />
                       {candidate.rating}
                     </span>
                   )}
@@ -188,19 +190,19 @@ export default function CandidatesPage() {
                 <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
                   {candidate.email && (
                     <span className="flex items-center gap-1">
-                      <Mail className="h-3 w-3" />
+                      <Mail className="h-3 w-3" aria-hidden="true" />
                       {candidate.email}
                     </span>
                   )}
                   {candidate.phone && (
                     <span className="flex items-center gap-1">
-                      <Phone className="h-3 w-3" />
+                      <Phone className="h-3 w-3" aria-hidden="true" />
                       {candidate.phone}
                     </span>
                   )}
                   {candidate.suburb && (
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
+                      <MapPin className="h-3 w-3" aria-hidden="true" />
                       {candidate.suburb}, {candidate.state}
                     </span>
                   )}
@@ -214,8 +216,9 @@ export default function CandidatesPage() {
                   e.stopPropagation()
                 }}
                 className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                aria-label="More options"
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </button>
             </Link>
           ))}

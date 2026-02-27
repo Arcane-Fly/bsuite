@@ -113,8 +113,8 @@ export default function JobDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/jobs" className="rounded-md p-2 hover:bg-muted">
-            <ArrowLeft className="h-5 w-5" />
+          <Link href="/jobs" className="rounded-md p-2 hover:bg-muted" aria-label="Back to jobs">
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </Link>
           <div>
             <div className="flex items-center gap-3">
@@ -130,7 +130,7 @@ export default function JobDetailPage() {
             </div>
             {job.location && (
               <p className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                <MapPin className="h-3.5 w-3.5" /> {job.location}
+                <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> {job.location}
               </p>
             )}
           </div>
@@ -141,7 +141,7 @@ export default function JobDetailPage() {
               onClick={() => handleStatusChange('open')}
               className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
             >
-              <Globe className="h-4 w-4" />
+              <Globe className="h-4 w-4" aria-hidden="true" />
               Publish
             </button>
           )}
@@ -150,7 +150,7 @@ export default function JobDetailPage() {
               onClick={() => handleStatusChange('closed')}
               className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
             >
-              <Archive className="h-4 w-4" />
+              <Archive className="h-4 w-4" aria-hidden="true" />
               Close
             </button>
           )}
@@ -158,14 +158,15 @@ export default function JobDetailPage() {
             href={`/jobs/${job.id}/edit`}
             className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4" aria-hidden="true" />
             Edit
           </Link>
           <button
             onClick={handleDelete}
             className="inline-flex items-center gap-2 rounded-md border border-destructive/30 bg-background px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
+            aria-label="Delete job"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -203,7 +204,7 @@ export default function JobDetailPage() {
               </span>
             </div>
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Users className="h-8 w-8 text-muted-foreground/50" />
+              <Users className="h-8 w-8 text-muted-foreground/50" aria-hidden="true" />
               <p className="mt-2 text-sm text-muted-foreground">
                 Applications will appear here when candidates apply
               </p>
@@ -264,7 +265,7 @@ export default function JobDetailPage() {
                 onClick={() => setComposeOpen(true)}
                 className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
               >
-                <MessageSquarePlus className="h-3 w-3" />
+                <MessageSquarePlus className="h-3 w-3" aria-hidden="true" />
                 New
               </button>
             </div>
@@ -303,7 +304,7 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground" />
+      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground" aria-hidden="true" />
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-medium capitalize">{value}</p>

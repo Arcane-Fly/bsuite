@@ -105,8 +105,8 @@ export default function CandidateProfilePage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/candidates" className="rounded-md p-2 hover:bg-muted">
-            <ArrowLeft className="h-5 w-5" />
+          <Link href="/candidates" className="rounded-md p-2 hover:bg-muted" aria-label="Back to candidates">
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </Link>
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-semibold">
             {candidate.first_name[0]}{candidate.last_name[0]}
@@ -133,14 +133,15 @@ export default function CandidateProfilePage() {
             onClick={() => setEditing(!editing)}
             className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4" aria-hidden="true" />
             {editing ? 'Cancel' : 'Edit'}
           </button>
           <button
             onClick={handleDelete}
             className="inline-flex items-center gap-2 rounded-md border border-destructive/30 bg-background px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
+            aria-label="Delete candidate"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -170,9 +171,10 @@ export default function CandidateProfilePage() {
             </div>
             {candidate.notes && (
               <div className="pt-2 border-t">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Notes</p>
+                <label htmlFor="candidate-notes-edit" className="text-sm font-medium text-muted-foreground mb-1">Notes</label>
                 {editing ? (
                   <textarea
+                    id="candidate-notes-edit"
                     value={editForm.notes ?? ''}
                     onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))}
                     rows={3}
@@ -243,7 +245,7 @@ export default function CandidateProfilePage() {
                 onClick={() => setComposeOpen(true)}
                 className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
               >
-                <MessageSquarePlus className="h-3 w-3" />
+                <MessageSquarePlus className="h-3 w-3" aria-hidden="true" />
                 New
               </button>
             </div>
@@ -295,14 +297,15 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground" />
+      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground" id={`info-label-${label.toLowerCase().replace(/\s+/g, '-')}`}>{label}</p>
         {editing && field && form && setForm ? (
           <input
             value={(form[field as keyof Candidate] as string) ?? ''}
             onChange={(e) => setForm((p) => ({ ...p, [field]: e.target.value }))}
             className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-labelledby={`info-label-${label.toLowerCase().replace(/\s+/g, '-')}`}
           />
         ) : (
           <p className="text-sm font-medium truncate">{value || '—'}</p>

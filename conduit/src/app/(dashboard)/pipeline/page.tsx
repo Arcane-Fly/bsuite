@@ -136,7 +136,7 @@ export default function PipelinePage() {
                       )}
                     >
                       <div className="flex items-start gap-2">
-                        <GripVertical className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/40" />
+                        <GripVertical className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/40" aria-hidden="true" />
                         <div className="min-w-0 flex-1">
                           <Link
                             href={`/candidates/${c.id}`}
@@ -146,13 +146,13 @@ export default function PipelinePage() {
                           </Link>
                           {c.email && (
                             <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                              <Mail className="h-3 w-3" />
+                              <Mail className="h-3 w-3" aria-hidden="true" />
                               <span className="truncate">{c.email}</span>
                             </div>
                           )}
                           {c.rating && (
                             <div className="flex items-center gap-0.5 mt-1 text-xs text-amber-600">
-                              <Star className="h-3 w-3 fill-current" />
+                              <Star className="h-3 w-3 fill-current" aria-hidden="true" />
                               {c.rating}
                             </div>
                           )}

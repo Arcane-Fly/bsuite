@@ -64,7 +64,7 @@ export function CommunicationItem({
           config.color
         )}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-4 w-4" aria-hidden="true" />
       </div>
 
       {/* Content */}
@@ -78,6 +78,7 @@ export function CommunicationItem({
                 ? 'text-blue-500'
                 : 'text-emerald-500'
             )}
+            aria-hidden="true"
           />
           <span className="text-xs text-muted-foreground">{timeAgo}</span>
           {communication.delivered_at && (

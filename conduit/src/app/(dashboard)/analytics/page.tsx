@@ -12,7 +12,7 @@ export default function AnalyticsPage() {
         </p>
       </div>
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-        <BarChart3 className="h-12 w-12 text-muted-foreground/50" />
+        <BarChart3 className="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
         <h3 className="mt-4 text-lg font-medium">Analytics coming soon</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Add candidates and jobs to start seeing sourcing and pipeline analytics.

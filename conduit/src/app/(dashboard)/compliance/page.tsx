@@ -106,7 +106,9 @@ export default function CompliancePage() {
             </button>
           ))}
         </div>
+        <label htmlFor="compliance-check-type" className="sr-only">Filter by check type</label>
         <select
+          id="compliance-check-type"
           value={filters.check_type}
           onChange={(e) => setFilters({ check_type: e.target.value })}
           className="flex h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -124,7 +126,7 @@ export default function CompliancePage() {
         </div>
       ) : checks.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-          <ShieldCheck className="h-12 w-12 text-muted-foreground/50" />
+          <ShieldCheck className="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
           <h3 className="mt-4 text-lg font-medium">No compliance checks</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Compliance checks will appear here as candidates progress through the pipeline.
@@ -140,7 +142,7 @@ export default function CompliancePage() {
 
             return (
               <div key={check.id} className="flex items-center gap-4 p-4">
-                <StatusIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <StatusIcon className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium uppercase text-sm">
@@ -151,7 +153,7 @@ export default function CompliancePage() {
                     </span>
                     {isExpiringSoon && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
-                        <AlertTriangle className="h-3 w-3" />
+                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                         {days}d left
                       </span>
                     )}
@@ -192,7 +194,7 @@ function SummaryCard({
   return (
     <div className="rounded-lg border p-4">
       <div className="flex items-center gap-2">
-        <Icon className={cn('h-4 w-4', color)} />
+        <Icon className={cn('h-4 w-4', color)} aria-hidden="true" />
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
       </div>
       <p className={cn('mt-1 text-2xl font-bold', color)}>{value}</p>

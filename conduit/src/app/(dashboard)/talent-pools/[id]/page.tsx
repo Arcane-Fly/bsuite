@@ -92,8 +92,8 @@ export default function TalentPoolDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/talent-pools" className="rounded-md p-2 hover:bg-muted">
-            <ArrowLeft className="h-5 w-5" />
+          <Link href="/talent-pools" className="rounded-md p-2 hover:bg-muted" aria-label="Back to talent pools">
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </Link>
           <div className="flex items-center gap-3">
             <div
@@ -112,7 +112,7 @@ export default function TalentPoolDetailPage() {
           onClick={() => setShowAddPanel(!showAddPanel)}
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          <UserPlus className="h-4 w-4" />
+          <UserPlus className="h-4 w-4" aria-hidden="true" />
           Add Candidates
         </button>
       </div>
@@ -122,13 +122,15 @@ export default function TalentPoolDetailPage() {
         <div className="rounded-lg border p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Add Candidates</h2>
-            <button onClick={() => setShowAddPanel(false)} className="rounded p-1 hover:bg-muted">
-              <X className="h-4 w-4" />
+            <button onClick={() => setShowAddPanel(false)} className="rounded p-1 hover:bg-muted" aria-label="Close add candidates panel">
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <label htmlFor="pool-candidate-search" className="sr-only">Search candidates to add</label>
             <input
+              id="pool-candidate-search"
               type="text"
               placeholder="Search candidates..."
               value={searchInput}
@@ -173,7 +175,7 @@ export default function TalentPoolDetailPage() {
         </h2>
         {memberships.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12">
-            <Users className="h-10 w-10 text-muted-foreground/50" />
+            <Users className="h-10 w-10 text-muted-foreground/50" aria-hidden="true" />
             <p className="mt-3 text-sm text-muted-foreground">
               No candidates in this pool yet. Click &quot;Add Candidates&quot; above.
             </p>
@@ -203,13 +205,13 @@ export default function TalentPoolDetailPage() {
                       </span>
                       {c.rating && (
                         <span className="flex items-center gap-0.5 text-xs text-amber-600">
-                          <Star className="h-3 w-3 fill-current" /> {c.rating}
+                          <Star className="h-3 w-3 fill-current" aria-hidden="true" /> {c.rating}
                         </span>
                       )}
                     </div>
                     {c.email && (
                       <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
-                        <Mail className="h-3 w-3" /> {c.email}
+                        <Mail className="h-3 w-3" aria-hidden="true" /> {c.email}
                       </div>
                     )}
                   </div>
@@ -219,8 +221,9 @@ export default function TalentPoolDetailPage() {
                   <button
                     onClick={() => handleRemove(m.id)}
                     className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label={`Remove ${c.first_name} ${c.last_name} from pool`}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               )

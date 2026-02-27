@@ -73,7 +73,7 @@ export default function JobsPage() {
           href="/jobs/new"
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           Post Job
         </Link>
       </div>
@@ -81,8 +81,10 @@ export default function JobsPage() {
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <label htmlFor="job-search" className="sr-only">Search jobs</label>
           <input
+            id="job-search"
             type="text"
             placeholder="Search by title or location..."
             value={searchInput}
@@ -115,7 +117,7 @@ export default function JobsPage() {
         </div>
       ) : jobs.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-          <Briefcase className="h-12 w-12 text-muted-foreground/50" />
+          <Briefcase className="h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
           <h3 className="mt-4 text-lg font-medium">No jobs posted yet</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Create your first job posting to start sourcing candidates.
@@ -124,7 +126,7 @@ export default function JobsPage() {
             href="/jobs/new"
             className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             Post Job
           </Link>
         </div>
@@ -152,23 +154,23 @@ export default function JobsPage() {
                   )}
                   {job.location && (
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {job.location}
+                      <MapPin className="h-3 w-3" aria-hidden="true" /> {job.location}
                     </span>
                   )}
                   {formatSalary(job.salary_min, job.salary_max, job.salary_type) && (
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3" />
+                      <DollarSign className="h-3 w-3" aria-hidden="true" />
                       {formatSalary(job.salary_min, job.salary_max, job.salary_type)}
                     </span>
                   )}
                   {job.closing_date && (
                     <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
+                      <Calendar className="h-3 w-3" aria-hidden="true" />
                       Closes {new Date(job.closing_date).toLocaleDateString('en-AU')}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
+                    <Users className="h-3 w-3" aria-hidden="true" />
                     {job.application_count ?? 0} applicants
                   </span>
                 </div>
@@ -176,8 +178,9 @@ export default function JobsPage() {
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
                 className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                aria-label="More options"
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </button>
             </Link>
           ))}

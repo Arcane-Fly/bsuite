@@ -79,8 +79,8 @@ export default function NewJobPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/jobs" className="rounded-md p-2 hover:bg-muted">
-          <ArrowLeft className="h-5 w-5" />
+        <Link href="/jobs" className="rounded-md p-2 hover:bg-muted" aria-label="Back to jobs">
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">New Job Posting</h1>
@@ -95,8 +95,9 @@ export default function NewJobPage() {
         <fieldset className="space-y-4 rounded-lg border p-4">
           <legend className="px-2 text-sm font-medium">Job Details</legend>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Job Title *</label>
+            <label htmlFor="job-title" className="text-sm font-medium">Job Title *</label>
             <input
+              id="job-title"
               required
               value={form.title}
               onChange={(e) => updateField('title', e.target.value)}
@@ -105,8 +106,9 @@ export default function NewJobPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Short Description</label>
+            <label htmlFor="job-short-desc" className="text-sm font-medium">Short Description</label>
             <input
+              id="job-short-desc"
               value={form.short_description}
               onChange={(e) => updateField('short_description', e.target.value)}
               placeholder="Brief one-liner for listing cards"
@@ -114,8 +116,9 @@ export default function NewJobPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Full Description</label>
+            <label htmlFor="job-description" className="text-sm font-medium">Full Description</label>
             <textarea
+              id="job-description"
               value={form.description}
               onChange={(e) => updateField('description', e.target.value)}
               rows={6}
@@ -130,8 +133,9 @@ export default function NewJobPage() {
           <legend className="px-2 text-sm font-medium">Employment & Location</legend>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Employment Type</label>
+              <label htmlFor="job-employment-type" className="text-sm font-medium">Employment Type</label>
               <select
+                id="job-employment-type"
                 value={form.employment_type}
                 onChange={(e) => updateField('employment_type', e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -143,8 +147,9 @@ export default function NewJobPage() {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Location</label>
+              <label htmlFor="job-location" className="text-sm font-medium">Location</label>
               <input
+                id="job-location"
                 value={form.location}
                 onChange={(e) => updateField('location', e.target.value)}
                 placeholder="e.g. Sydney CBD"
@@ -153,8 +158,9 @@ export default function NewJobPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Award Code</label>
+            <label htmlFor="job-award-code" className="text-sm font-medium">Award Code</label>
             <input
+              id="job-award-code"
               value={form.award_code}
               onChange={(e) => updateField('award_code', e.target.value)}
               placeholder="e.g. MA000027"
@@ -162,8 +168,9 @@ export default function NewJobPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Closing Date</label>
+            <label htmlFor="job-closing-date" className="text-sm font-medium">Closing Date</label>
             <input
+              id="job-closing-date"
               type="date"
               value={form.closing_date}
               onChange={(e) => updateField('closing_date', e.target.value)}
@@ -177,8 +184,9 @@ export default function NewJobPage() {
           <legend className="px-2 text-sm font-medium">Salary</legend>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Minimum ($)</label>
+              <label htmlFor="job-salary-min" className="text-sm font-medium">Minimum ($)</label>
               <input
+                id="job-salary-min"
                 type="number"
                 step="0.01"
                 value={form.salary_min}
@@ -188,8 +196,9 @@ export default function NewJobPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Maximum ($)</label>
+              <label htmlFor="job-salary-max" className="text-sm font-medium">Maximum ($)</label>
               <input
+                id="job-salary-max"
                 type="number"
                 step="0.01"
                 value={form.salary_max}
@@ -199,8 +208,9 @@ export default function NewJobPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Rate Type</label>
+              <label htmlFor="job-salary-type" className="text-sm font-medium">Rate Type</label>
               <select
+                id="job-salary-type"
                 value={form.salary_type}
                 onChange={(e) => updateField('salary_type', e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -220,7 +230,7 @@ export default function NewJobPage() {
             disabled={saving || !form.title}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            <Save className="h-4 w-4" />
+            <Save className="h-4 w-4" aria-hidden="true" />
             {saving ? 'Saving...' : 'Save as Draft'}
           </button>
           <Link
