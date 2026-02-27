@@ -9,3 +9,7 @@ export * from './defaults';
 export * from './billing';
 
 export * from './utils';
+
+export * from './awards';
+
+export * from './boot';
