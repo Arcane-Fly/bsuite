@@ -3,8 +3,10 @@
  * Inlined from @bsuite/nav-core for standalone Vercel deployment.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type IconComponent = any;
+export type IconComponent = (props: {
+  className?: string
+  size?: number | string
+}) => React.ReactNode;
 
 export interface NavItem {
   label: string;
@@ -37,8 +39,19 @@ export interface NavConfig {
 }
 
 export function isActivePath(currentPath: string, itemHref: string): boolean {
-  if (currentPath === itemHref) return true;
-  return currentPath.startsWith(itemHref + '/');
+  if (!currentPath || !itemHref) return false;
+
+  // Normalise trailing slashes for comparison
+  const norm = (s: string) => (s.length > 1 && s.endsWith('/') ? s.slice(0, -1) : s);
+  const current = norm(currentPath);
+  const href = norm(itemHref);
+
+  if (current === href) return true;
+
+  // Root path should only match exactly, not as a prefix
+  if (href === '/') return false;
+
+  return current.startsWith(href + '/');
 }
 
 export function isSectionActive(
