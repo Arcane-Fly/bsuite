@@ -34,6 +34,21 @@ describe('Integration: full pipeline smoke test', () => {
     expect(rate).toBeLessThanOrEqual(0.15); // Sanity upper bound
   });
 
+  it('calculateBillableWeeks output feeds into calculate()', () => {
+    const weeks = calculateBillableWeeks({
+      billingModel: 'Standard',
+      annualLeaveDays: 20,
+      publicHolidayDays: 10,
+      sickLeaveDays: 10,
+      trainingWeeks: 5,
+      daysPerWeek: 5,
+    });
+    expect(weeks).toBe(39);
+    const res = calculate({ ...DEFAULT_CONFIG, billableWeeks: weeks });
+    expect(res.quotedChargeRate).toBeGreaterThan(0);
+    expect(res.billableHours).toBe(weeks * DEFAULT_CONFIG.hoursPerWeek);
+  });
+
   it('exports all expected symbols', () => {
     expect(calculate).toBeDefined();
     expect(DEFAULT_CONFIG).toBeDefined();

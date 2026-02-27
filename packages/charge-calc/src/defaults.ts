@@ -21,7 +21,7 @@ export function getPayrollTaxRate(state: AustralianState): number {
 }
 
 // ─── Default Training Weeks Per Year ───
-export const DEFAULT_TRAINING_WEEKS_PER_YEAR = [8, 6, 5, 4];
+export const DEFAULT_TRAINING_WEEKS_PER_YEAR: readonly number[] = [8, 6, 5, 4] as const;
 
 export const DEFAULT_PENALTIES: PenaltyRate[] = [
   { id: 'ot15', label: 'Time & a Half', mult: 1.5, cat: 'overtime' },

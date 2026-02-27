@@ -45,7 +45,7 @@ export interface PenaltyRate {
 // ─── Billing model ───
 export type BillingModel = 'Standard' | 'ALEX48' | 'W52' | 'Custom';
 export const BILLING_MODEL_WEEKS: Record<BillingModel, number | null> = {
-  Standard: 39,  // typical, but calculateBillableWeeks derives the actual value
+  Standard: 39,  // fallback only — call calculateBillableWeeks() for leave-adjusted value
   ALEX48: 48,
   W52: 52,
   Custom: null,  // user-provided

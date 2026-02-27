@@ -58,6 +58,9 @@ export function calculate(cfg: CalcConfig): CalcResult {
     superRate,
     superOnOT,
     wcRate,
+    payrollTaxRate,
+    otOncostFactor,
+    penaltyOncostAdder,
     overheadType: ohType,
     overheadValue: ohVal,
     studyCost: study,
@@ -126,7 +129,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
   const oh = ohType === 'percent' ? totAnnPay * (ohVal / 100) : ohVal;
 
   // --- Payroll tax ---
-  const payrollTaxAmt = totAnnPay * cfg.payrollTaxRate;
+  const payrollTaxAmt = totAnnPay * payrollTaxRate;
 
   // --- Total cost (line 80) ---
   const totCost = annPkg + study + ppe + wc + oh + payrollTaxAmt;
@@ -146,12 +149,12 @@ export function calculate(cfg: CalcConfig): CalcResult {
   const quoted = ordCost + marginPH;
 
   // --- OT base (lines 96-101) ---
-  const otOnc = (totAnnPay * cfg.otOncostFactor) / bHrs;
+  const otOnc = (totAnnPay * otOncostFactor) / bHrs;
   const otSuperPH = superOnOT ? superBearingRate * superRate : 0;
   const ot1x = recv + marginPH + otOnc;
 
   // --- Penalty oncosts (line 103) ---
-  const penOnc = (study + ppe + wc) / bHrs + cfg.penaltyOncostAdder;
+  const penOnc = (study + ppe + wc) / bHrs + penaltyOncostAdder;
 
   // --- Funding (lines 105-113) ---
   const fundingTotal = funding.enabled
