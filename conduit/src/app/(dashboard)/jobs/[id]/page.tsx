@@ -1,5 +1,7 @@
 'use client'
 
+import { CommunicationTimeline, ComposeDialog } from '@/components/communications'
+import { useTenantId } from '@/hooks/useTenantId'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { useJobStore } from '@/stores/jobStore'
@@ -14,6 +16,7 @@ import {
     Edit,
     Globe,
     MapPin,
+    MessageSquarePlus,
     Trash2,
     Users,
 } from 'lucide-react'
@@ -44,9 +47,11 @@ function formatSalary(min?: number | null, max?: number | null, type?: string | 
 export default function JobDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { tenantId } = useTenantId()
   const { updateJob, deleteJob } = useJobStore()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
+  const [composeOpen, setComposeOpen] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -249,17 +254,40 @@ export default function JobDetailPage() {
             </div>
           </div>
 
-          {/* Distribution placeholder */}
+          {/* Communications */}
           <div className="rounded-lg border p-4 space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Distribution
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Multi-channel job distribution coming soon.
-            </p>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                Communications
+              </h2>
+              <button
+                onClick={() => setComposeOpen(true)}
+                className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                <MessageSquarePlus className="h-3 w-3" />
+                New
+              </button>
+            </div>
+            {tenantId && (
+              <CommunicationTimeline
+                tenantId={tenantId}
+                employerId={job.employer_id ?? undefined}
+              />
+            )}
           </div>
         </div>
       </div>
+
+      {/* Compose dialog */}
+      {tenantId && (
+        <ComposeDialog
+          tenantId={tenantId}
+          employerId={job.employer_id ?? undefined}
+          recipientName={job.title}
+          open={composeOpen}
+          onOpenChange={setComposeOpen}
+        />
+      )}
     </div>
   )
 }

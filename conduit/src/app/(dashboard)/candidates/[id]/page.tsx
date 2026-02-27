@@ -1,5 +1,6 @@
 'use client'
 
+import { CommunicationTimeline, ComposeDialog } from '@/components/communications'
 import { useTenantId } from '@/hooks/useTenantId'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -13,6 +14,7 @@ import {
     Edit,
     Mail,
     MapPin,
+    MessageSquarePlus,
     Phone,
     Star,
     Trash2,
@@ -45,6 +47,7 @@ export default function CandidateProfilePage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState<Partial<Candidate>>({})
+  const [composeOpen, setComposeOpen] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -232,18 +235,43 @@ export default function CandidateProfilePage() {
             )}
           </div>
 
-          {/* Timeline placeholder */}
+          {/* Communications */}
           <div className="rounded-lg border p-4 space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Activity</h2>
-            <p className="text-sm text-muted-foreground">
-              Created {new Date(candidate.created_at).toLocaleDateString('en-AU')}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Updated {new Date(candidate.updated_at).toLocaleDateString('en-AU')}
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Communications</h2>
+              <button
+                onClick={() => setComposeOpen(true)}
+                className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                <MessageSquarePlus className="h-3 w-3" />
+                New
+              </button>
+            </div>
+            {tenantId && (
+              <CommunicationTimeline
+                tenantId={tenantId}
+                candidateId={candidate.id}
+              />
+            )}
+            <p className="text-xs text-muted-foreground border-t pt-2">
+              Created {new Date(candidate.created_at).toLocaleDateString('en-AU')} · Updated {new Date(candidate.updated_at).toLocaleDateString('en-AU')}
             </p>
           </div>
         </div>
       </div>
+
+      {/* Compose dialog */}
+      {tenantId && (
+        <ComposeDialog
+          tenantId={tenantId}
+          candidateId={candidate.id}
+          recipientEmail={candidate.email ?? undefined}
+          recipientPhone={candidate.phone ?? undefined}
+          recipientName={`${candidate.first_name} ${candidate.last_name}`}
+          open={composeOpen}
+          onOpenChange={setComposeOpen}
+        />
+      )}
     </div>
   )
 }

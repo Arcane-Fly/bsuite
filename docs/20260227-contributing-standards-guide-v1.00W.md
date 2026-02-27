@@ -23,17 +23,20 @@ Universal quality, documentation, and code standards for all BSuite projects. Ea
 ### No-Regex-by-Default Policy
 
 Regex is permitted **only** for tiny, fully-anchored literals:
+
 - Maximum 30 characters
 - No quantifiers (`*`, `+`, `{n,m}`)
 - Must be anchored (`^...$`)
 
 **Allowed examples:**
+
 ```typescript
 const STATUS = /^(OK|FAIL)$/;
 const HEX_COLOR = /^#[A-Fa-f0-9]{6}$/;
 ```
 
 **For everything else, use typed parsers:**
+
 - URLs → `new URL()`, `URLSearchParams`
 - JSON → `JSON.parse()` with Zod validation
 - HTML → `cheerio` or DOM APIs
@@ -79,6 +82,7 @@ type(scope): short description
 Use the project name as scope: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 
 **Examples:**
+
 ```bash
 feat(conduit): add candidate pipeline drag-and-drop
 fix(crm7): resolve contact search pagination
@@ -117,6 +121,7 @@ chore(bsu): upgrade Supabase client to v2.50
 **Document types:** `architecture`, `guide`, `plan`, `decision`, `changelog`, `roadmap`, `reference`, `migration`
 
 **Examples:**
+
 ```
 20260227-auth-flow-architecture-v1.00F.md
 20260215-deployment-guide-v2.01W.md
@@ -126,6 +131,7 @@ chore(bsu): upgrade Supabase client to v2.50
 ### Indexing Requirement
 
 Every project's `docs/` folder **must** have a `README.md` index listing all documents with:
+
 - Filename
 - Status code
 - One-line description
@@ -158,6 +164,7 @@ All webapp projects must use the Universal D2C Theme System defined in `Theme-be
 - **Typography:** Inter (display/body), JetBrains Mono (code)
 
 **Key colors:**
+
 | Color | Hex | Use |
 |-------|-----|-----|
 | Electric Blue | `#2563eb` | Primary actions |
@@ -230,3 +237,11 @@ Uses company branding colors and does not follow the D2C theme. See braden proje
 | conduit | yarn |
 | braden | yarn |
 | R80.3 | pnpm |
+
+---
+
+## 8. Roadmap
+
+The unified BSuite roadmap lives at [`docs/00-master-roadmap.md`](./00-master-roadmap.md). All project planning is centralized there. Per-project roadmaps have been archived to `docs/archive/<project>/` and replaced with stubs pointing to the master roadmap.
+
+Plans and design documents are stored in `docs/plans/` with the standard naming convention (`YYYYMMDD-name-type-vMAJOR.MINOR[STATUS].md`).

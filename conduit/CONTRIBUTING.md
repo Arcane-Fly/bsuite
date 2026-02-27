@@ -122,3 +122,14 @@ feat(conduit): add candidate pipeline drag-and-drop
 fix(conduit): resolve talent pool filter persistence
 docs(conduit): add onboarding workflow architecture
 ```
+
+---
+
+## Roadmap
+
+The unified BSuite roadmap lives at [`bsuite/docs/00-master-roadmap.md`](../docs/00-master-roadmap.md). It covers all projects including Conduit-specific milestones.
+
+Key plans relevant to Conduit:
+
+- [Email Capabilities Plan](../docs/plans/20260227-email-capabilities-plan-v1.00W.md) — shared email infrastructure used by `conduit_communications`
+- [AI Assistant Plan](../docs/plans/20260227-ai-assistant-plugin-system-plan-v1.00W.md) — includes Conduit-specific AI tools and integration
