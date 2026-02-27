@@ -225,4 +225,48 @@ export const DEFAULT_RECONCILIATION: ReconciliationClause = {
   penaltyMultiplier: 1.05,
 };
 
+// ─── GTO Multi-Placement Types ───
+
+export const GTOPlacementZ = z.object({
+  hostEmployerId: z.string(),
+  hostEmployerName: z.string(),
+  applicableAwards: z.array(AwardScheduleZ),
+  scenarios: z.array(RosterScenarioZ),
+  /** Fraction of time at this placement (0-1). All placements should sum to 1. */
+  timeAllocation: z.number().min(0).max(1),
+});
+export type GTOPlacement = z.infer<typeof GTOPlacementZ>;
+
+export const GTOPlacementScheduleZ = z.object({
+  apprenticeId: z.string(),
+  currentYear: z.number(),
+  placements: z.array(GTOPlacementZ),
+});
+export type GTOPlacementSchedule = z.infer<typeof GTOPlacementScheduleZ>;
+
+export const GTOPlacementResultZ = z.object({
+  hostEmployerId: z.string(),
+  hostEmployerName: z.string(),
+  timeAllocation: z.number(),
+  bootResult: BOOTResultZ,
+});
+export type GTOPlacementResult = z.infer<typeof GTOPlacementResultZ>;
+
+export const GTOBOOTResultZ = z.object({
+  apprenticeId: z.string(),
+  currentYear: z.number(),
+  placements: z.array(GTOPlacementResultZ),
+  /** Overall verdict: fails if ANY placement fails (per s.193 — every employee must individually pass) */
+  overallVerdict: BOOTVerdictZ,
+  /** The placement that performs worst */
+  weakestPlacement: GTOPlacementResultZ.nullable(),
+  /** Weighted aggregate delta (sum of worstDelta * timeAllocation) */
+  weightedAggregateDelta: z.number(),
+  warnings: z.array(BOOTWarningZ),
+  humanReviewRequired: z.literal(true),
+  assessedAt: z.string(),
+  engineVersion: z.string(),
+});
+export type GTOBOOTResult = z.infer<typeof GTOBOOTResultZ>;
+
 export const ENGINE_VERSION = '2.0.0';
