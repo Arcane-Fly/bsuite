@@ -9,9 +9,9 @@ BSuite is a multi-project workspace of five web applications sharing Supabase, T
 | Project | Role | Tech | PM | Deployment |
 |---------|------|------|----|------------|
 | **business-suite-unified** | Portal & entry point | React + Vite + Stripe | pnpm | Vercel |
-| **crm7** | CRM with AI insights | React + Vite + AI SDK | npm | Vercel |
-| **conduit** | Recruitment ATS | Next.js 16 App Router | yarn | Vercel |
-| **braden** | Corporate site (braden.com.au) | React + Vite | yarn | Vercel/Railway |
+| **crm7** | CRM with AI insights | React + Vite + AI SDK | pnpm | Vercel |
+| **conduit** | Recruitment ATS | Next.js 16 App Router | pnpm | Vercel |
+| **braden** | Corporate site (braden.com.au) | React + Vite | pnpm | Vercel/Railway |
 | **R80.3** | Wage calculator | React + Vite | pnpm | Vercel |
 
 ### Common Stack
@@ -30,17 +30,15 @@ BSuite is a multi-project workspace of five web applications sharing Supabase, T
 ```bash
 cd <project-directory>
 
-# Install (use the project's package manager)
-pnpm install    # bsu, R80.3
-npm install     # crm7
-yarn install    # conduit, braden
+# Install (pnpm is standard across all projects)
+pnpm install
 
 # Development
-<pm> dev        # Start dev server
-<pm> build      # Production build
-<pm> test       # Run tests
-<pm> lint       # Lint check
-<pm> typecheck  # Type checking
+pnpm dev        # Start dev server
+pnpm build      # Production build
+pnpm test       # Run tests
+pnpm lint       # Lint check
+pnpm typecheck  # Type checking
 ```
 
 Environment variables: copy `.env.example` to `.env.local` and fill in Supabase credentials.

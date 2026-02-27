@@ -35,7 +35,7 @@ export default function TalentPoolDetailPage() {
     async function load() {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('conduit_talent_pools')
+        .from('r7_talent_pools')
         .select('*')
         .eq('id', params.id as string)
         .single()

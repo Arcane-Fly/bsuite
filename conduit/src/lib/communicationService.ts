@@ -1,7 +1,6 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import type { Communication } from '@/types/entities'
 
 export interface SendEmailPayload {
   to: string
@@ -32,7 +31,7 @@ export interface EmailTemplate {
 
 /**
  * Send an email via the shared email-dispatcher Edge Function.
- * Records the communication in conduit_communications.
+ * Records the communication in r7_communications.
  */
 export async function sendEmail(
   tenantId: string,
@@ -59,7 +58,7 @@ export async function sendEmail(
 
   // Record the communication
   const { data: comm, error: recordError } = await supabase
-    .from('conduit_communications')
+    .from('r7_communications')
     .insert({
       tenant_id: tenantId,
       candidate_id: payload.candidate_id ?? null,
@@ -85,7 +84,7 @@ export async function sendEmail(
 
 /**
  * Send an SMS via the shared sms-dispatcher Edge Function.
- * Records the communication in conduit_communications.
+ * Records the communication in r7_communications.
  */
 export async function sendSms(
   tenantId: string,
@@ -107,7 +106,7 @@ export async function sendSms(
   }
 
   const { data: comm, error: recordError } = await supabase
-    .from('conduit_communications')
+    .from('r7_communications')
     .insert({
       tenant_id: tenantId,
       candidate_id: payload.candidate_id ?? null,
@@ -145,7 +144,7 @@ export async function recordNote(
   const supabase = createClient()
 
   const { data: comm, error } = await supabase
-    .from('conduit_communications')
+    .from('r7_communications')
     .insert({
       tenant_id: tenantId,
       candidate_id: data.candidate_id ?? null,
@@ -176,7 +175,7 @@ export async function fetchEmailTemplates(
   const supabase = createClient()
 
   const { data, error } = await supabase
-    .from('conduit_email_templates')
+    .from('email_templates')
     .select('*')
     .eq('tenant_id', tenantId)
     .order('name', { ascending: true })

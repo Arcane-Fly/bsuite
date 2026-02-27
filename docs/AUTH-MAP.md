@@ -472,7 +472,71 @@ These serve **different purposes** (admin access vs SSO) but share no state. A u
 
 ---
 
-## 10. Recommendations
+## 10. Platform Developer Role System
+
+> **Added:** 27 Feb 2026 · **Scope:** CRM7 (migration `20260227_platform_developer_role_system.sql`)
+
+### Overview
+
+A **platform-level role system** operates above org/tenant roles to provide special access for the platform owner and designated testers.
+
+| Platform Role | Description | Subscription | Permissions |
+|--------------|-------------|--------------|-------------|
+| `developer` | Platform owner (Braden's emails) | Free — bypasses all billing | Universal — bypasses all permission checks |
+| `tester` | Free tester license holder | Free — bypasses all billing | Full access — same as admin |
+| `user` | Standard user | Subject to subscription tier | Subject to org role permissions |
+
+### Database Schema
+
+| Table | Purpose |
+|-------|---------|
+| `profiles.platform_role` | TEXT column (`developer` / `tester` / `user`), default `'user'` |
+| `tester_licenses` | Tracks granted tester emails, status (active/expired/converted/revoked), expiry |
+| `developer_impersonation_sessions` | Audit trail for developer org impersonation (timestamps, reason, duration) |
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `is_platform_developer()` | Check if current user is a developer — used in RLS bypass policies |
+| `is_platform_tester()` | Check if current user is a tester |
+| `get_platform_role()` | Return current user's platform role |
+| `grant_tester_license(email, notes, expires_at)` | Grant a free tester license |
+| `revoke_tester_license(license_id)` | Revoke a tester license |
+| `convert_tester_to_paid(license_id)` | Convert tester to paid subscription |
+
+### Auto-Configuration Triggers
+
+- `trg_auto_configure_platform_role` — On profile INSERT, checks `tester_licenses` for matching email and auto-sets `platform_role = 'tester'`
+- `trg_auto_link_developer_tenant` — On profile INSERT, if email matches developer emails, auto-links to "Braden Group" tenant as owner
+
+### Developer Impersonation
+
+Developers can **impersonate any organization** for troubleshooting. Key features:
+- Impersonation sessions are logged in `developer_impersonation_sessions` with timestamps and reasons
+- All actions during impersonation are logged to `super_admin_action_audit`
+- **Organization admins can see all impersonation sessions** — full transparency
+- Amber warning banner displayed during active impersonation
+
+### Frontend Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `usePlatformRole` | `crm7/src/hooks/usePlatformRole.ts` | Hook for role, impersonation, tenant switching |
+| `DeveloperToolbar` | `crm7/src/components/platform/DeveloperToolbar.tsx` | Floating toolbar (role badge, impersonation, quick-nav) |
+| `ImpersonationDialog` | `crm7/src/components/platform/ImpersonationDialog.tsx` | Tenant picker + reason + transparency notice |
+| `GrantLicenseDialog` | `crm7/src/components/platform/GrantLicenseDialog.tsx` | Email-based license granting |
+| `LicenseRow` | `crm7/src/components/platform/LicenseRow.tsx` | Status-badged license table row |
+| `platformService` | `crm7/src/services/platformService.ts` | Tester license CRUD, audit log queries |
+
+### Seeded Data
+
+- **Tenant:** "Braden Group" (slug: `braden-group`)
+- **Developer emails:** `braden.lang77@gmail.com`, `braden@braden.com.au` — both linked as `developer` + `owner` role
+
+---
+
+## 11. Recommendations
 
 ### Immediate (Fix Dead Code / Bugs) — ✅ ALL COMPLETED 25 Feb 2026
 

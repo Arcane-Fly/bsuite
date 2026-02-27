@@ -44,7 +44,7 @@ export const useCandidateStore = create<CandidateState>((set, get) => ({
     const { filters } = get()
 
     let query = supabase
-      .from('conduit_candidates')
+      .from('r7_candidates')
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)
       .order('updated_at', { ascending: false })
@@ -76,7 +76,7 @@ export const useCandidateStore = create<CandidateState>((set, get) => ({
   createCandidate: async (tenantId, data) => {
     const supabase = createClient()
     const { data: created, error } = await supabase
-      .from('conduit_candidates')
+      .from('r7_candidates')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
@@ -96,7 +96,7 @@ export const useCandidateStore = create<CandidateState>((set, get) => ({
   updateCandidate: async (id, data) => {
     const supabase = createClient()
     const { error } = await supabase
-      .from('conduit_candidates')
+      .from('r7_candidates')
       .update(data)
       .eq('id', id)
 
@@ -115,7 +115,7 @@ export const useCandidateStore = create<CandidateState>((set, get) => ({
 
   deleteCandidate: async (id) => {
     const supabase = createClient()
-    const { error } = await supabase.from('conduit_candidates').delete().eq('id', id)
+    const { error } = await supabase.from('r7_candidates').delete().eq('id', id)
 
     if (error) {
       set({ error: error.message })

@@ -53,7 +53,7 @@ export default function CandidateProfilePage() {
     async function load() {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('conduit_candidates')
+        .from('r7_candidates')
         .select('*')
         .eq('id', params.id as string)
         .single()

@@ -46,7 +46,7 @@ export const useTalentPoolStore = create<TalentPoolState>((set, get) => ({
     set({ loading: true, error: null })
     const supabase = createClient()
     const { data, error } = await supabase
-      .from('conduit_talent_pools')
+      .from('r7_talent_pools')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('name', { ascending: true })
@@ -61,7 +61,7 @@ export const useTalentPoolStore = create<TalentPoolState>((set, get) => ({
   createPool: async (tenantId, data) => {
     const supabase = createClient()
     const { data: created, error } = await supabase
-      .from('conduit_talent_pools')
+      .from('r7_talent_pools')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
@@ -77,7 +77,7 @@ export const useTalentPoolStore = create<TalentPoolState>((set, get) => ({
   updatePool: async (id, data) => {
     const supabase = createClient()
     const { error } = await supabase
-      .from('conduit_talent_pools')
+      .from('r7_talent_pools')
       .update(data)
       .eq('id', id)
 
@@ -93,7 +93,7 @@ export const useTalentPoolStore = create<TalentPoolState>((set, get) => ({
 
   deletePool: async (id) => {
     const supabase = createClient()
-    const { error } = await supabase.from('conduit_talent_pools').delete().eq('id', id)
+    const { error } = await supabase.from('r7_talent_pools').delete().eq('id', id)
 
     if (error) {
       set({ error: error.message })
@@ -107,8 +107,8 @@ export const useTalentPoolStore = create<TalentPoolState>((set, get) => ({
     set({ loading: true, error: null })
     const supabase = createClient()
     const { data, error } = await supabase
-      .from('conduit_candidate_pool_memberships')
-      .select('*, candidate:conduit_candidates(id, first_name, last_name, email, status, avatar_url, rating)')
+      .from('r7_candidate_pool_memberships')
+      .select('*, candidate:r7_candidates(id, first_name, last_name, email, status, avatar_url, rating)')
       .eq('pool_id', poolId)
       .order('added_at', { ascending: false })
 
@@ -122,7 +122,7 @@ export const useTalentPoolStore = create<TalentPoolState>((set, get) => ({
   addCandidate: async (candidateId, poolId, notes) => {
     const supabase = createClient()
     const { error } = await supabase
-      .from('conduit_candidate_pool_memberships')
+      .from('r7_candidate_pool_memberships')
       .insert({ candidate_id: candidateId, pool_id: poolId, notes: notes ?? null })
 
     if (error) {
@@ -138,7 +138,7 @@ export const useTalentPoolStore = create<TalentPoolState>((set, get) => ({
     const supabase = createClient()
     const membership = get().memberships.find((m) => m.id === membershipId)
     const { error } = await supabase
-      .from('conduit_candidate_pool_memberships')
+      .from('r7_candidate_pool_memberships')
       .delete()
       .eq('id', membershipId)
 

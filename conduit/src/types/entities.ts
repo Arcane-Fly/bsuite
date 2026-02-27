@@ -1,4 +1,4 @@
-// Conduit entity types — prefixed conduit_ in database
+// Conduit entity types — prefixed r7_ in database
 
 export interface BaseEntity {
   id: string
@@ -157,6 +157,29 @@ export interface PipelineEntry extends BaseEntity {
   candidate?: Pick<Candidate, 'id' | 'first_name' | 'last_name' | 'email' | 'avatar_url' | 'rating'>
   stage?: Pick<PipelineStage, 'id' | 'name' | 'color' | 'order'>
 }
+
+// ─── Offers ──────────────────────────────────────────────────────────
+
+export interface Offer extends BaseEntity {
+  candidate_id: string
+  job_id?: string
+  status: OfferStatus
+  position_title: string
+  salary_amount?: number
+  salary_type?: 'hourly' | 'weekly' | 'annual'
+  start_date?: string
+  expiry_date?: string
+  terms?: string
+  notes?: string
+  sent_at?: string
+  responded_at?: string
+  created_by?: string
+  // Joined
+  candidate?: Pick<Candidate, 'id' | 'first_name' | 'last_name' | 'email' | 'avatar_url'>
+  job?: Pick<Job, 'id' | 'title' | 'location'>
+}
+
+export type OfferStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'withdrawn'
 
 // ─── Onboarding ───────────────────────────────────────────────────────
 

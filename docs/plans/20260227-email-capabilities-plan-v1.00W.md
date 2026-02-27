@@ -18,6 +18,30 @@
 
 ---
 
+## Implementation Status (Updated 2026-02-27)
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 1 | Database Schema (`email_messages`, `email_templates`, `email_audit_log`, `email_integrations` enhancements) | ✅ Migrated |
+| Phase 2 | OAuth Edge Functions (`oauth-google-email` v2, `oauth-microsoft-email` v2 — now with calendar scopes) | ✅ Deployed |
+| Phase 2.3 | Token Refresh Cron (`email-token-refresh`) | ✅ Deployed |
+| Phase 3 | Email Dispatcher (`email-dispatcher` — multi-provider: Resend, Gmail, Graph, SMTP) | ✅ Deployed |
+| Phase 4 | CRM7 Frontend — `emailStore.ts`, `EmailComposeDialog`, `EmailHistory`, `EmailTemplateSelector` | ✅ Built |
+| Phase 5 | Conduit Frontend — `communicationStore.ts`, `communicationService.ts`, `ComposeDialog`, `CommunicationTimeline` | ✅ Built |
+| Phase 6 | Frontend ↔ Edge Function wiring (OAuth flow trigger, dispatcher calls from UI) | 🔶 Not wired |
+| Phase 7 | Braden lead capture (contact form → `lead-capture` Edge Function → CRM sync) | 🔲 Not started |
+| Phase 8 | Embeddable lead capture widget | 🔲 Not started |
+
+**Blocking items:**
+
+- CRM7 email UI needs to call `oauth-google-email/authorize` and `oauth-microsoft-email/authorize` to initiate OAuth
+- After OAuth, compose dialog needs to call `email-dispatcher` with `source: "user"` and `integration_id`
+- Conduit `communicationService.ts` needs same Edge Function wiring
+- Google Cloud Console: enable Calendar API, update OAuth consent screen scopes
+- Azure AD: add `Calendars.ReadWrite` permission to app registration
+
+---
+
 ## Credentials Status
 
 ### Google OAuth (Gmail API)
@@ -61,16 +85,24 @@ MICROSOFT_TENANT_ID=common
 | `email_integrations` table | `packages/db/migrations/0003_crm_cms_email.sql` | ✅ Schema exists |
 | Settings UI | `/settings/integrations` | ✅ Form exists |
 
-### Placeholder/Missing
+### Now Deployed (previously missing)
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| `email-dispatcher` | `supabase/functions/email-dispatcher/index.ts` | ❌ Logs only |
-| Gmail API sending | Not implemented | ❌ Missing |
-| Microsoft Graph sending | Not implemented | ❌ Missing |
-| SMTP sending | Not implemented | ❌ Missing |
-| Token refresh | Not implemented | ❌ Missing |
-| Email compose UI | Not implemented | ❌ Missing |
+| `email-dispatcher` | `supabase/functions/email-dispatcher/index.ts` | ✅ Deployed (multi-provider) |
+| `email-token-refresh` | `supabase/functions/email-token-refresh/index.ts` | ✅ Deployed (cron) |
+| `calendar-integration` | `supabase/functions/calendar-integration/index.ts` | ✅ Deployed v1 |
+| `send-notification` | `supabase/functions/send-notification/index.ts` | ✅ Deployed v1 |
+| CRM7 Email UI | `crm7/src/components/email/` | ✅ Built (not wired to Edge Functions) |
+| Conduit Comms UI | `conduit/src/components/communications/` | ✅ Built (not wired to Edge Functions) |
+
+### Still Missing
+
+| Component | Status |
+|-----------|--------|
+| Frontend ↔ Edge Function OAuth wiring | 🔶 Not wired |
+| Braden lead capture integration | 🔲 Not started |
+| Embeddable lead capture widget | 🔲 Not started |
 
 ---
 

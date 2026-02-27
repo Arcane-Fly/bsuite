@@ -302,8 +302,8 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | ~~4~~ | ~~Set up Stripe keys + webhook for BSU billing~~ | bsu | ✅ Done |
 | ~~5~~ | ~~Create `/auth/register` page in Conduit~~ | conduit | ✅ Done |
 | ~~6~~ | ~~Create `/jobs/[id]/edit` page in Conduit~~ | conduit | ✅ Done |
-| 7 | Google Cloud Console: add Gmail + Calendar scopes to consent screen, add redirect URI | infra | 15m |
-| 8 | Azure AD: verify Mail + Calendar permissions, grant admin consent, add redirect URI | infra | 15m |
+| ~~7~~ | ~~Google Cloud Console: add Gmail + Calendar scopes to consent screen, add redirect URI~~ | infra | ✅ Done |
+| ~~8~~ | ~~Azure AD: verify Mail + Calendar permissions, grant admin consent, add redirect URI~~ | infra | ✅ Done |
 
 ### P1 — High Value Features
 
@@ -312,7 +312,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | ~~9~~ | ~~Calendar UI components (event list, create, availability)~~ | crm7 | ✅ Done |
 | ~~10~~ | ~~Lead capture wiring (Braden contact form → Edge Function → CRM)~~ | braden/bsu | ✅ Done |
 | ~~11~~ | ~~Confirmation email after Braden form submission~~ | braden | ✅ Done |
-| 12 | Conduit interview scheduling (calendar integration) | conduit | 3d |
+| ~~12~~ | ~~Conduit interview scheduling (calendar integration)~~ | conduit | ✅ Done |
 | 13 | AU Funding Claims Enhancement | crm7 | 1w |
 | 14 | R80.3 offline mode (service worker + IndexedDB) | R80.3 | 3d |
 | 15 | Conduit AI tools (candidate search, pipeline mgmt) | conduit | 1w |

@@ -7,9 +7,9 @@ BSuite is a multi-project workspace containing five web applications sharing a c
 | Project | Purpose | Stack | Package Manager |
 |---------|---------|-------|----------------|
 | business-suite-unified | Portal connecting all services | React + Vite + Stripe | pnpm |
-| crm7 | CRM with AI insights | React + Vite + AI SDK | npm |
-| conduit | Recruitment ATS | React + Next.js 16 | yarn |
-| braden | Corporate website (braden.com.au) | React + Vite | yarn |
+| crm7 | CRM with AI insights | React + Vite + AI SDK | pnpm |
+| conduit | Recruitment ATS | React + Next.js 16 | pnpm |
+| braden | Corporate website (braden.com.au) | React + Vite | pnpm |
 | R80.3 | Wage calculator | React + Vite | pnpm |
 
 ## Critical Rules

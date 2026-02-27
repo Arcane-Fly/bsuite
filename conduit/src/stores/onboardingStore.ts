@@ -39,7 +39,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({ loading: true, error: null })
     const supabase = createClient()
     const { data, error } = await supabase
-      .from('conduit_onboarding_templates')
+      .from('r7_onboarding_templates')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
@@ -51,7 +51,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   createTemplate: async (tenantId, data) => {
     const supabase = createClient()
     const { data: created, error } = await supabase
-      .from('conduit_onboarding_templates')
+      .from('r7_onboarding_templates')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
@@ -63,7 +63,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   updateTemplate: async (id, data) => {
     const supabase = createClient()
-    const { error } = await supabase.from('conduit_onboarding_templates').update(data).eq('id', id)
+    const { error } = await supabase.from('r7_onboarding_templates').update(data).eq('id', id)
     if (error) { set({ error: error.message }); return false }
     set((s) => ({ templates: s.templates.map((t) => (t.id === id ? { ...t, ...data } : t)) }))
     return true
@@ -71,7 +71,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   deleteTemplate: async (id) => {
     const supabase = createClient()
-    const { error } = await supabase.from('conduit_onboarding_templates').delete().eq('id', id)
+    const { error } = await supabase.from('r7_onboarding_templates').delete().eq('id', id)
     if (error) { set({ error: error.message }); return false }
     set((s) => ({ templates: s.templates.filter((t) => t.id !== id) }))
     return true
@@ -81,8 +81,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({ loading: true, error: null })
     const supabase = createClient()
     const { data, error } = await supabase
-      .from('conduit_onboarding_instances')
-      .select('*, template:conduit_onboarding_templates(id, name, entity_type)')
+      .from('r7_onboarding_instances')
+      .select('*, template:r7_onboarding_templates(id, name, entity_type)')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -94,7 +94,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   createInstance: async (tenantId, data) => {
     const supabase = createClient()
     const { data: created, error } = await supabase
-      .from('conduit_onboarding_instances')
+      .from('r7_onboarding_instances')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
@@ -106,7 +106,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   updateInstance: async (id, data) => {
     const supabase = createClient()
-    const { error } = await supabase.from('conduit_onboarding_instances').update(data).eq('id', id)
+    const { error } = await supabase.from('r7_onboarding_instances').update(data).eq('id', id)
     if (error) { set({ error: error.message }); return false }
     set((s) => ({ instances: s.instances.map((i) => (i.id === id ? { ...i, ...data } : i)) }))
     return true
@@ -116,7 +116,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({ loading: true, error: null })
     const supabase = createClient()
     const { data, error } = await supabase
-      .from('conduit_onboarding_tasks')
+      .from('r7_onboarding_tasks')
       .select('*')
       .eq('instance_id', instanceId)
       .order('created_at', { ascending: true })
@@ -127,7 +127,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   updateTask: async (id, data) => {
     const supabase = createClient()
-    const { error } = await supabase.from('conduit_onboarding_tasks').update(data).eq('id', id)
+    const { error } = await supabase.from('r7_onboarding_tasks').update(data).eq('id', id)
     if (error) { set({ error: error.message }); return false }
     set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...data } : t)) }))
     return true

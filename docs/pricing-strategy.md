@@ -222,6 +222,8 @@ bsuite is the **only GTO-first** platform combining charge rates + CRM + WHS + V
 
 ## 9. Access Levels & Role Gating
 
+### Subscription-Based Roles
+
 | Role | Essentials | Professional | Enterprise | Type |
 |------|-----------|-------------|------------|------|
 | Admin | ✅ | ✅ | ✅ | Full app |
@@ -230,6 +232,29 @@ bsuite is the **only GTO-first** platform combining charge rates + CRM + WHS + V
 | Worker/Apprentice | ❌ | ✅ portal | ✅ portal | Free portal |
 | RTO/Training Provider | ❌ | ❌ | ✅ portal | Free portal |
 | Viewer (read-only) | ✅ | ✅ | ✅ | Full (read) |
+
+### Platform-Level Roles (above subscription tiers)
+
+These roles bypass subscription checks entirely and are managed via the Platform Developer Role System (`profiles.platform_role` column).
+
+| Platform Role | Access | Billing | How Assigned | UI |
+|--------------|--------|---------|-------------|-----|
+| **Developer** | Universal — all features, all orgs, all permissions | Free — never charged | Hardcoded emails (`braden.lang77@gmail.com`, `braden@braden.com.au`), auto-set on profile creation | Purple "Developer" badge, floating DeveloperToolbar, org impersonation |
+| **Tester** | Full — equivalent to Enterprise admin | Free — active tester license bypasses billing | Granted via Tester License system (`/settings/tester-licenses`), convertible to paid | Blue "Tester" badge, floating toolbar |
+| **User** | Standard — subject to org subscription tier | Per-seat pricing applies | Default for all signups | No toolbar |
+
+**Developer capabilities beyond standard admin:**
+- Org impersonation with full audit transparency (org admins see all sessions)
+- Tenant switching across all organizations
+- Tester license management (grant, revoke, convert to paid)
+- Audit log visibility across all tenants
+
+**Tester license lifecycle:**
+1. Developer grants license by email → status: `active`
+2. Tester signs up with that email → auto-assigned `platform_role = 'tester'`
+3. Tester evaluates product with full Enterprise-level access at no cost
+4. Developer converts to paid → status: `converted`, user becomes standard `user`
+5. Or developer revokes → status: `revoked`, access downgraded
 
 ---
 
@@ -247,6 +272,8 @@ bsuite is the **only GTO-first** platform combining charge rates + CRM + WHS + V
 - [x] Legacy USD products archived
 - [x] pricing-data.ts source of truth
 - [x] Pricing page with per-user cards, team slider, AI toggle
+- [x] Platform Developer Role System — `platform_role` column, tester licenses, org impersonation, DeveloperToolbar, subscription bypass (27 Feb 2026)
+- [x] Permission integration — `use-permissions.ts` checks `isPrivileged` for billing/access bypass
 - [ ] Stripe Checkout Edge Function
 - [ ] Subscription management (Customer Portal)
 - [ ] Feature flags by subscription tier

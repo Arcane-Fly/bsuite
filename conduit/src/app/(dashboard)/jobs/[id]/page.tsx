@@ -17,6 +17,7 @@ import {
     Globe,
     MapPin,
     MessageSquarePlus,
+    Share2,
     Trash2,
     Users,
 } from 'lucide-react'
@@ -57,7 +58,7 @@ export default function JobDetailPage() {
     async function load() {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('conduit_jobs')
+        .from('r7_jobs')
         .select('*')
         .eq('id', params.id as string)
         .single()
@@ -154,6 +155,13 @@ export default function JobDetailPage() {
               Close
             </button>
           )}
+          <Link
+            href={`/jobs/${job.id}/distribute`}
+            className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+          >
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+            Distribute
+          </Link>
           <Link
             href={`/jobs/${job.id}/edit`}
             className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"

@@ -10,7 +10,7 @@ describe('Integration: full pipeline smoke test', () => {
   });
 
   it('all three billing models produce valid results', () => {
-    for (const [model, weeks] of Object.entries(BILLING_MODEL_WEEKS)) {
+    for (const [_model, weeks] of Object.entries(BILLING_MODEL_WEEKS)) {
       const res = calculate({ ...DEFAULT_CONFIG, billableWeeks: weeks });
       expect(res.quotedChargeRate).toBeGreaterThan(0);
       expect(res.billableHours).toBe(weeks * DEFAULT_CONFIG.hoursPerWeek);

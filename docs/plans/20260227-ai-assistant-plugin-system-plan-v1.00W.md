@@ -25,6 +25,24 @@ Implement an in-app AI assistant using **Vercel AI SDK** that can automate all u
 
 ---
 
+## Implementation Status (Updated 2026-02-27)
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 1 | Core AI Infrastructure (tool registry, API endpoint) | ✅ Complete — 54 tools in `inputSchema` format, `api/ai/chat.ts` built |
+| Phase 2 | UI Components (chat panel, tool confirmations) | ✅ Complete — `AIAssistant`, `AISheet`, `AIMessage`, `AIInputArea`, `AIToolCard`, `AICommandPalette` |
+| Phase 3 | Model Integration (router, persona, skills) | ✅ Complete — `model-router.ts`, `jodie-persona.ts`, `jodie-skills.ts`, `useAIChat.ts` |
+| Phase 4 | Plugin System (Activepieces) | 🔲 Not started |
+| Phase 5 | Workflow Automation Engine | 🔲 Not started |
+
+**Blocking items:**
+
+- CRM7 AI chat endpoint needs Vercel deployment with `AI_GATEWAY_API_KEY` env var
+- Conduit AI tools not yet implemented (see Conduit Integration section below)
+- Cost tracking (`cost-tracker.ts`) not yet implemented
+
+---
+
 ## Conduit Integration
 
 > **Added 2026-02-27** — This section describes how the AI assistant and plugin system extends to the Conduit recruitment ATS.
@@ -112,10 +130,12 @@ See the original plan source for the full system architecture diagram, including
 **Dependencies:** `ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`
 
 **AI Configuration** (`src/lib/ai/config.ts`):
+
 - Claude Sonnet 4.5 (primary), Claude Opus 4 (complex), Claude Haiku 4 (quick)
 - Model routing imported from monkey-projects
 
 **AI Chat API Route** (`src/pages/api/ai/chat.ts`):
+
 - `streamText` with tool registry
 - Permission-filtered tools per user
 - System prompt with user context, permissions, portal, tenant
@@ -124,6 +144,7 @@ See the original plan source for the full system architecture diagram, including
 ### 1.2 Tool Registry System
 
 **80+ tools** organized by category:
+
 - **CRUD Operations:** `create_apprentice`, `approve_timesheet`, etc.
 - **Report Generation:** `generate_report` with date range and filters
 - **Workflow Creation:** `create_workflow` with triggers and actions

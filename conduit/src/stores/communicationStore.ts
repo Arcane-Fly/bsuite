@@ -56,7 +56,7 @@ export const useCommunicationStore = create<CommunicationState>((set, get) => ({
     const { filters } = get()
 
     let query = supabase
-      .from('conduit_communications')
+      .from('r7_communications')
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
@@ -102,7 +102,7 @@ export const useCommunicationStore = create<CommunicationState>((set, get) => ({
     const supabase = createClient()
 
     const { data, error, count } = await supabase
-      .from('conduit_communications')
+      .from('r7_communications')
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)
       .eq('candidate_id', candidateId)
@@ -126,7 +126,7 @@ export const useCommunicationStore = create<CommunicationState>((set, get) => ({
     const supabase = createClient()
 
     const { data, error, count } = await supabase
-      .from('conduit_communications')
+      .from('r7_communications')
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)
       .eq('employer_id', employerId)
@@ -148,7 +148,7 @@ export const useCommunicationStore = create<CommunicationState>((set, get) => ({
   createCommunication: async (tenantId, data) => {
     const supabase = createClient()
     const { data: created, error } = await supabase
-      .from('conduit_communications')
+      .from('r7_communications')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
@@ -168,7 +168,7 @@ export const useCommunicationStore = create<CommunicationState>((set, get) => ({
   updateCommunication: async (id, data) => {
     const supabase = createClient()
     const { error } = await supabase
-      .from('conduit_communications')
+      .from('r7_communications')
       .update(data)
       .eq('id', id)
 
@@ -188,7 +188,7 @@ export const useCommunicationStore = create<CommunicationState>((set, get) => ({
   deleteCommunication: async (id) => {
     const supabase = createClient()
     const { error } = await supabase
-      .from('conduit_communications')
+      .from('r7_communications')
       .delete()
       .eq('id', id)
 

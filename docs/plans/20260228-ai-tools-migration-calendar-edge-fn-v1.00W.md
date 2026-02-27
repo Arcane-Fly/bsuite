@@ -1,8 +1,8 @@
 # AI Tools Migration & Calendar Edge Function Implementation Plan
 
-**Version:** 1.00W
+**Version:** 1.00A
 **Date:** 2026-02-28
-**Status:** Working
+**Status:** Approved (Complete)
 **Applies to:** CRM7 (AI tools), business-suite-unified (Edge Functions)
 
 ---
@@ -214,6 +214,7 @@ calendar-integration/
 ```
 
 The function will:
+
 1. Parse the route from the URL path
 2. Verify the user's JWT via Supabase auth
 3. Look up the `email_integrations` record for the given `integration_id`
@@ -228,11 +229,13 @@ The function will:
 ### Google OAuth (`oauth-google-email`)
 
 Current scopes:
+
 ```
 gmail.send, gmail.readonly, userinfo.email
 ```
 
 Add calendar scopes:
+
 ```
 calendar.events, calendar.readonly
 ```
@@ -242,11 +245,13 @@ calendar.events, calendar.readonly
 ### Microsoft OAuth (`oauth-microsoft-email`)
 
 Current scopes:
+
 ```
 Mail.Send, Mail.Read, User.Read, offline_access
 ```
 
 Add calendar scopes:
+
 ```
 Calendars.ReadWrite, Calendars.Read.Shared
 ```
@@ -272,9 +277,11 @@ Calendars.ReadWrite, Calendars.Read.Shared
 ### Part B: Calendar Edge Function
 
 1. **Local test** (via Supabase CLI):
+
    ```bash
    supabase functions serve calendar-integration --env-file .env.local
    ```
+
 2. **Manual test**: Use `curl` to hit `/list-events` with a valid integration
 3. **Error cases**: Invalid JWT, expired token, missing integration_id
 
