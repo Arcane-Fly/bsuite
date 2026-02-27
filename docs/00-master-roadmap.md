@@ -35,6 +35,7 @@ Platform-level (Resend) and user-level (Gmail, Microsoft Graph, SMTP) email send
 - **Braden:** Contact form → CRM lead sync; confirmation emails via dispatcher
 
 **Phases:**
+
 1. Database migration + Edge Functions (schema, OAuth, dispatcher)
 2. Frontend services + Zustand store
 3. UI components (compose dialog, email history, template selector)
@@ -52,6 +53,7 @@ In-app AI assistant with Vercel AI SDK, 80+ tools, plugin architecture, and work
 - **Shared:** Tool registry pattern, model router, cost tracking, Activepieces integration
 
 **Phases:**
+
 1. Core AI infrastructure (Vercel AI SDK, tool registry) — 2 weeks
 2. UI components (chat panel, tool confirmations) — 1 week
 3. Model integration (monkey-projects routing, cost tracking) — 1 week
@@ -78,17 +80,20 @@ Each entity has a single owning app for create/edit operations. Schema changes v
 ### CRM7
 
 **Current Sprint Focus:**
+
 - AI assistant Phase 1 (core infrastructure)
 - Email capabilities (Edge Functions + frontend services)
 - Document storage QA fixes (see [`crm7/docs/00-roadmap/20260226-document-storage-issues.md`](../crm7/docs/00-roadmap/20260226-document-storage-issues.md))
 
 **Upcoming:**
+
 - AU Funding Claims Enhancement (see [`docs/plans/20260226-au-funding-claims-enhancement-implementation-plan-1.00W.md`](./plans/20260226-au-funding-claims-enhancement-implementation-plan-1.00W.md))
 - Compliance automation workflows
 - Advanced reporting with predictive analytics
 - Activepieces integration (Xero, ADMS, Gmail)
 
 **Completed:**
+
 - Multi-tenant architecture with RLS
 - Offline-first SQLite + IndexedDB sync
 - WHS incident management
@@ -99,11 +104,13 @@ Each entity has a single owning app for create/edit operations. Schema changes v
 ### Conduit
 
 **Current Sprint Focus:**
+
 - Communications infrastructure (`communicationStore.ts`, `communicationService.ts`)
 - Communications UI components (compose, history, templates)
 - Integration into candidate and job pages
 
 **Upcoming:**
+
 - AI assistant integration (Conduit-specific tools)
 - Advanced pipeline analytics
 - Interview scheduling
@@ -111,26 +118,30 @@ Each entity has a single owning app for create/edit operations. Schema changes v
 - Compliance tracking for recruitment
 
 **Completed:**
+
 - Next.js 16 App Router setup
 - Candidate management (CRUD, search)
 - Job management
 - Pipeline Kanban board
 - Talent pool management
 - Onboarding workflow scaffolding
-- Database table prefix migration (r7_ → conduit_)
+- Database table prefix migration (r7_→ conduit_)
 
 ### Braden
 
 **Current Sprint Focus:**
+
 - Contact form → CRM lead sync via email dispatcher
 - Confirmation email templates
 
 **Upcoming:**
+
 - Visual customization system foundation
 - Advanced editing features
 - SEO and marketing optimization (see [`docs/plans/20260226-prerender-seo-marketing-plan-v1.0.0.md`](./plans/20260226-prerender-seo-marketing-plan-v1.0.0.md))
 
 **Completed:**
+
 - Corporate site with Braden branding
 - CSP headers and bot protection
 - Contact form implementation
@@ -138,16 +149,19 @@ Each entity has a single owning app for create/edit operations. Schema changes v
 ### R80.3
 
 **Current Sprint Focus:**
+
 - Fair Work API integration refinements
 - Offline capabilities
 
 **Upcoming:**
+
 - Performance optimizations
 - Enhanced testing coverage for wage calculations
 - PDF export improvements
 - User experience refinements
 
 **Completed:**
+
 - Apprentice charge calculator core
 - Fair Work API integration
 - Basic PDF export
@@ -155,6 +169,7 @@ Each entity has a single owning app for create/edit operations. Schema changes v
 ### business-suite-unified
 
 **Upcoming:**
+
 - Stripe billing integration
 - Project switching portal
 - Unified settings management
