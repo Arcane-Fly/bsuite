@@ -32,3 +32,16 @@ export type {
   AwardSupplement,
   AwardSchema,
 } from './schema';
+
+export {
+  mapClassification,
+  mapPenalty,
+  mapIsAllPurpose,
+  mapPaymentFrequency,
+  mapWageAllowance,
+  mapExpenseAllowance,
+  filterApprenticeClassifications,
+} from './mapd-mapper';
+
+export { fetchCompleteAward } from './mapd-client';
+export type { MAPDDataSource } from './mapd-client';
