@@ -7,7 +7,6 @@ import type {
   RosterScenario,
   MonetaryTerms,
   NonMonetaryTerms,
-  BOOTResult,
 } from '../../boot/types';
 
 // ─── Shared Fixtures: Building Award MA000020 ───

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { compareBOOT } from '../../boot/compare';
 import { detectFailurePatterns } from '../../boot/failure-detector';
 import { generateRecommendations } from '../../boot/recommender';
-import type { AwardSchedule, EATerms, RosterScenario, BOOTResult } from '../../boot/types';
+import type { EATerms, RosterScenario } from '../../boot/types';
 import { BUILDING_AWARD } from './fixtures/building-award';
 import { PASSING_EA } from './fixtures/sample-ea-pass';
 import { FAILING_EA } from './fixtures/sample-ea-fail';
@@ -63,25 +63,6 @@ const CASUAL_SCENARIO: RosterScenario = {
     nightShift: 0,
     afternoonShift: 0,
     casualLoading: 20,
-  },
-  weeksPerYear: 48,
-};
-
-const PEAK_DEMAND_SCENARIO: RosterScenario = {
-  scenarioType: 'peakDemand',
-  label: 'Busy Period',
-  employmentType: 'fullTime',
-  ordinaryHoursPerWeek: 38,
-  weeklyBreakdown: {
-    ordinaryDay: 30,
-    saturdayOrdinary: 8,
-    sundayOrdinary: 0,
-    publicHoliday: 0,
-    overtime15x: 4,
-    overtime2x: 0,
-    nightShift: 0,
-    afternoonShift: 0,
-    casualLoading: 0,
   },
   weeksPerYear: 48,
 };

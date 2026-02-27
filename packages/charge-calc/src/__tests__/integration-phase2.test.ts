@@ -14,7 +14,6 @@ import {
   detectFailurePatterns,
   generateRecommendations,
   // Types
-  type AwardSchema,
   type MAPDDataSource,
   type MAPDClassification,
   type MAPDPenalty,

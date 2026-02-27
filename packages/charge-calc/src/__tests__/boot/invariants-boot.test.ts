@@ -5,8 +5,6 @@ import type {
   EATerms,
   RosterScenario,
   MonetaryTerms,
-  NonMonetaryTerms,
-  BOOTResult,
 } from '../../boot/types';
 import { BUILDING_AWARD } from './fixtures/building-award';
 
@@ -21,7 +19,7 @@ function awardToIdenticalEA(award: AwardSchedule): EATerms {
   return {
     agreementName: `${award.awardName} (mirror EA)`,
     lodgementDate: '2026-01-15',
-    classifications: award.classifications.map((cls, idx) => ({
+    classifications: award.classifications.map((cls) => ({
       id: `mirror-${cls.classificationFixedId}`,
       name: cls.name,
       awardClassificationId: cls.classificationFixedId,
@@ -416,7 +414,7 @@ describe('BOOT Property-Based Invariants', () => {
         },
       ];
 
-      for (const { label, ea } of testEAs) {
+      for (const { ea } of testEAs) {
         const result = compareBOOT([BUILDING_AWARD], ea, ALL_SCENARIOS);
 
         for (const cr of result.classResults) {

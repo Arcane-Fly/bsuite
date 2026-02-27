@@ -616,8 +616,10 @@ describe('fetchCompleteAward', () => {
     const result = await fetchCompleteAward(source, 'MA000003');
 
     expect(result).not.toBeNull();
-    // supplement should be the empty object {} which gets defaults from AwardSupplementZ
-    expect(result!.supplement).toEqual({});
+    // AwardSupplementZ.parse({}) fills in all defaults
+    expect(result!.supplement.hoursProvisions.ordinaryHoursPerWeek).toBe(38);
+    expect(result!.supplement.leaveProvisions.annualLeaveDays).toBe(20);
+    expect(result!.supplement.shiftLoadings).toEqual([]);
   });
 
   it('merges provided supplement', async () => {
@@ -636,6 +638,9 @@ describe('fetchCompleteAward', () => {
       ordinaryHoursPerWeek: 36,
       ordinaryHoursPerDay: 7.2,
       ordinaryDaysPerWeek: 5,
+      dailyMaxOrdinary: null,
+      weeklyMaxOrdinary: null,
+      spanOfHours: { start: '06:00', end: '18:00' },
     });
   });
 

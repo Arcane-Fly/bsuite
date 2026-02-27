@@ -1,8 +1,5 @@
 import type {
-  AwardSchedule,
   EATerms,
-  RosterScenario,
-  BOOTResult,
   BOOTVerdict,
   BOOTWarning,
   MarginalConfig,

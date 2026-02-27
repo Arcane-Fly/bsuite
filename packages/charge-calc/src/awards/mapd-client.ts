@@ -13,7 +13,8 @@ import type {
   MAPDWageAllowance,
   MAPDExpenseAllowance,
 } from './mapd-types';
-import type { AwardSchema, AwardSupplement } from './schema';
+import type { AwardSchema } from './schema';
+import { AwardSupplementZ } from './schema';
 import {
   mapClassification,
   mapPenalty,
@@ -34,7 +35,7 @@ export interface MAPDDataSource {
 export async function fetchCompleteAward(
   source: MAPDDataSource,
   awardCode: string,
-  supplement?: Partial<AwardSupplement>,
+  supplement?: Record<string, unknown>,
 ): Promise<AwardSchema | null> {
   const award = await source.fetchAward(awardCode);
   if (!award) return null;
@@ -59,6 +60,6 @@ export async function fetchCompleteAward(
     penalties: penalties.map(mapPenalty),
     wageAllowances: wageAllowances.map(mapWageAllowance),
     expenseAllowances: expenseAllowances.map(mapExpenseAllowance),
-    supplement: supplement ?? {}, // AwardSupplementZ has defaults for all fields
+    supplement: AwardSupplementZ.parse(supplement ?? {}),
   };
 }
