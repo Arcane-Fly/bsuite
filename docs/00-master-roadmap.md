@@ -15,9 +15,9 @@
 | Project | Role | Tech | PM | Deploy | Status |
 |---------|------|------|----|--------|--------|
 | **business-suite-unified** | Portal, OAuth provider, shared DB | React + Vite + Stripe | pnpm | Vercel | Active |
-| **crm7** | CRM + apprenticeship management | React + Vite + AI SDK | npm | Vercel | Active |
-| **conduit** | Recruitment ATS | Next.js 16 App Router | yarn | Vercel | Active |
-| **braden** | Corporate site (braden.com.au) | React + Vite | yarn | Vercel | Active |
+| **crm7** | CRM + apprenticeship management | React + Vite + AI SDK | pnpm | Vercel | Active |
+| **conduit** | Recruitment ATS | Next.js 16 App Router | pnpm | Vercel | Active |
+| **braden** | Corporate site (braden.com.au) | React + Vite | pnpm | Vercel | Active |
 | **R80.3** | Apprentice charge calculator | React + Vite | pnpm | Vercel | Active |
 
 ---
@@ -224,8 +224,10 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 **Remaining:**
 
+- ✅ **Products page & CMS** — `/products` page, homepage BSuite teaser, CMS-managed dynamic pages (privacy, terms)
 - 🔶 **Lead capture wiring** — contact form → `lead-capture` Edge Function → CRM lead sync
 - 🔶 **Confirmation email** — send via `email-dispatcher` after form submission
+- 🔶 **Biped marketplace integration** — shared auth, unified billing, cross-product analytics with BSuite ecosystem
 - 🔲 Visual customization system foundation
 - 🔲 Advanced editing features (WYSIWYG blocks)
 - 🔲 SEO/marketing optimization ([plan](./plans/20260226-prerender-seo-marketing-plan-v1.0.0.md))
@@ -317,30 +319,32 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 14 | R80.3 offline mode (service worker + IndexedDB) | R80.3 | 3d |
 | 15 | Conduit AI tools (candidate search, pipeline mgmt) | conduit | 1w |
 | 16 | BSU project switching with session handoff | bsu | 2d |
+| 17 | Biped marketplace integration into BSuite (shared auth, billing, analytics) | braden/bsu | 2w |
 
 ### P2 — Enhancement & Polish
 
 | # | Task | Project | Effort |
 |---|------|---------|--------|
-| 17 | AI plugin system (Activepieces) | crm7 | 1w |
-| 18 | AI workflow automation engine | crm7 | 2w |
-| 19 | AI cost tracking per tenant | crm7/bsu | 2d |
-| ~~20~~ | ~~Conduit analytics dashboard~~ | conduit | ✅ Done |
-| ~~21~~ | ~~Conduit offer management workflow~~ | conduit | ✅ Done |
-| ~~22~~ | ~~Conduit job distribution (board posting)~~ | conduit | ✅ Done |
-| ~~23~~ | ~~Conduit settings page (pipeline stages, integrations)~~ | conduit | ✅ Done |
-| ~~24~~ | ~~Conduit mobile sidebar (hamburger menu)~~ | conduit | ✅ Done |
-| 25 | Braden visual customization system | braden | 1w |
-| 26 | Braden SEO/prerender optimization | braden | 3d |
-| 27 | R80.3 PDF export improvements | R80.3 | 2d |
-| 28 | R80.3 enhanced wage calculation test coverage | R80.3 | 2d |
-| 29 | BSU billing portal (plan management, invoices) | bsu | 1w |
-| 30 | BSU cross-app notification system | bsu | 3d |
-| 31 | BSU usage analytics dashboard | bsu | 3d |
-| 32 | Document storage QA fixes (CRM7) | crm7 | 2d |
-| 33 | Compliance automation workflows | crm7 | 1w |
-| 34 | Advanced reporting with predictive analytics | crm7 | 2w |
-| 35 | Test coverage push (all projects, 70% target) | all | ongoing |
+| 18 | AI plugin system (Activepieces) | crm7 | 1w |
+| 19 | AI workflow automation engine | crm7 | 2w |
+| 20 | AI cost tracking per tenant | crm7/bsu | 2d |
+| ~~21~~ | ~~Conduit analytics dashboard~~ | conduit | ✅ Done |
+| ~~22~~ | ~~Conduit offer management workflow~~ | conduit | ✅ Done |
+| ~~23~~ | ~~Conduit job distribution (board posting)~~ | conduit | ✅ Done |
+| ~~24~~ | ~~Conduit settings page (pipeline stages, integrations)~~ | conduit | ✅ Done |
+| ~~25~~ | ~~Conduit mobile sidebar (hamburger menu)~~ | conduit | ✅ Done |
+| 26 | Braden visual customization system | braden | 1w |
+| 27 | Braden SEO/prerender optimization | braden | 3d |
+| 28 | R80.3 PDF export improvements | R80.3 | 2d |
+| 29 | R80.3 enhanced wage calculation test coverage | R80.3 | 2d |
+| 30 | BSU billing portal (plan management, invoices) | bsu | 1w |
+| 31 | BSU cross-app notification system | bsu | 3d |
+| 32 | BSU usage analytics dashboard | bsu | 3d |
+| 33 | Document storage QA fixes (CRM7) | crm7 | 2d |
+| 34 | Compliance automation workflows | crm7 | 1w |
+| 35 | Advanced reporting with predictive analytics | crm7 | 2w |
+| 36 | Test coverage push (all projects, 70% target) | all | ongoing |
+| 37 | Biped BSuite integration — shared auth, unified billing, analytics | braden/bsu/biped | 2w |
 
 ---
 
