@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { calculate } from '../calculate';
 import type { CalcConfig } from '../types';
+import type { AustralianState } from '../types';
+import { PAYROLL_TAX_RATES, getPayrollTaxRate } from '../defaults';
 
 /** Standard GTO config matching charge-calculator.jsx defaults */
 const BASE_CONFIG: CalcConfig = {
@@ -365,6 +367,112 @@ describe('calculate()', () => {
       const resCustom = calculate(cfgCustom);
       // Higher penalty oncost adder should increase penalty oncost per hour
       expect(resCustom.penaltyOncostPerHour).toBeGreaterThan(resDefault.penaltyOncostPerHour);
+    });
+  });
+
+  describe('state payroll tax lookup (Part A)', () => {
+    it('returns correct rate for each Australian state', () => {
+      const expected: Record<AustralianState, number> = {
+        NSW: 0.0545,
+        VIC: 0.0485,
+        QLD: 0.0475,
+        SA: 0.0495,
+        WA: 0.055,
+        TAS: 0.04,
+        NT: 0.055,
+        ACT: 0.0685,
+      };
+      for (const [state, rate] of Object.entries(expected)) {
+        expect(getPayrollTaxRate(state as AustralianState)).toBe(rate);
+      }
+    });
+
+    it('PAYROLL_TAX_RATES covers all 8 states/territories', () => {
+      expect(Object.keys(PAYROLL_TAX_RATES)).toHaveLength(8);
+    });
+
+    it('returned rate can be used directly in CalcConfig.payrollTaxRate', () => {
+      const nswRate = getPayrollTaxRate('NSW');
+      const cfg = { ...BASE_CONFIG, payrollTaxRate: nswRate };
+      const res = calculate(cfg);
+      // Verify the payroll tax oncost reflects NSW rate
+      const expectedPayrollTaxPerHour = (res.totalAnnualPay * nswRate) / res.billableHours;
+      expect(res.oncosts.payrollTax).toBeCloseTo(expectedPayrollTaxPerHour, 2);
+    });
+  });
+
+  describe('training weeks per year (Part B)', () => {
+    it('uses trainingWeeksPerYear with currentYear to override trainingWeeks', () => {
+      const cfg: CalcConfig = {
+        ...BASE_CONFIG,
+        trainingWeeks: 5,
+        trainingWeeksPerYear: [8, 6, 5, 4],
+        currentYear: 1,
+      };
+      const res = calculate(cfg);
+      // Year 1 = 8 training weeks (instead of default 5)
+      expect(res.trainingHours).toBe(8 * BASE_CONFIG.hoursPerWeek);
+    });
+
+    it('uses year 4 training weeks when currentYear is 4', () => {
+      const cfg: CalcConfig = {
+        ...BASE_CONFIG,
+        trainingWeeks: 5,
+        trainingWeeksPerYear: [8, 6, 5, 4],
+        currentYear: 4,
+      };
+      const res = calculate(cfg);
+      // Year 4 = 4 training weeks
+      expect(res.trainingHours).toBe(4 * BASE_CONFIG.hoursPerWeek);
+    });
+
+    it('falls back to trainingWeeks when trainingWeeksPerYear is not provided', () => {
+      const cfg: CalcConfig = {
+        ...BASE_CONFIG,
+        trainingWeeks: 5,
+      };
+      const res = calculate(cfg);
+      expect(res.trainingHours).toBe(5 * BASE_CONFIG.hoursPerWeek);
+    });
+
+    it('falls back to trainingWeeks when currentYear is not provided', () => {
+      const cfg: CalcConfig = {
+        ...BASE_CONFIG,
+        trainingWeeks: 5,
+        trainingWeeksPerYear: [8, 6, 5, 4],
+      };
+      const res = calculate(cfg);
+      // No currentYear => falls back to trainingWeeks (5)
+      expect(res.trainingHours).toBe(5 * BASE_CONFIG.hoursPerWeek);
+    });
+
+    it('falls back to trainingWeeks when currentYear is out of bounds', () => {
+      const cfg: CalcConfig = {
+        ...BASE_CONFIG,
+        trainingWeeks: 5,
+        trainingWeeksPerYear: [8, 6, 5, 4],
+        currentYear: 6, // out of bounds
+      };
+      const res = calculate(cfg);
+      // Out of bounds => falls back to trainingWeeks (5)
+      expect(res.trainingHours).toBe(5 * BASE_CONFIG.hoursPerWeek);
+    });
+
+    it('uses per-year training weeks in week allocation and pay calculations', () => {
+      const cfgYear1: CalcConfig = {
+        ...BASE_CONFIG,
+        trainingWeeks: 5,
+        trainingWeeksPerYear: [8, 6, 5, 4],
+        currentYear: 1,
+      };
+      const cfgDefault: CalcConfig = {
+        ...BASE_CONFIG,
+        trainingWeeks: 5,
+      };
+      const resYear1 = calculate(cfgYear1);
+      const resDefault = calculate(cfgDefault);
+      // More training weeks = more training pay, different week allocation
+      expect(resYear1.trainingPay).toBeGreaterThan(resDefault.trainingPay);
     });
   });
 });

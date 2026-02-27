@@ -47,7 +47,9 @@ export function calculate(cfg: CalcConfig): CalcResult {
     hoursPerDay: _hpd,
     daysPerWeek: dpw,
     billableWeeks: billableWk,
-    trainingWeeks: trainWk,
+    trainingWeeks: _rawTrainWk,
+    trainingWeeksPerYear,
+    currentYear,
     apprenticeshipYears: appYears,
     annualLeaveDays: alDays,
     publicHolidayDays: phDays,
@@ -70,6 +72,13 @@ export function calculate(cfg: CalcConfig): CalcResult {
   // Suppress unused variable lint — _hpd is destructured for completeness
   // but the per-day conversion uses hpw/dpw directly.
   void _hpd;
+
+  // Resolve effective training weeks: per-year override takes precedence
+  // when both trainingWeeksPerYear and currentYear are provided.
+  const trainWk =
+    trainingWeeksPerYear && currentYear
+      ? (trainingWeeksPerYear[currentYear - 1] ?? _rawTrainWk)
+      : _rawTrainWk;
 
   const leaveLoad = leaveLoadingPercent / 100;
 

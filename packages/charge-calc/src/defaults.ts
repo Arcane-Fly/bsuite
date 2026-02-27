@@ -1,4 +1,27 @@
-import type { CalcConfig, PenaltyRate } from './types';
+import type { CalcConfig, PenaltyRate, AustralianState } from './types';
+
+// ─── State Payroll Tax Rates ───
+export const PAYROLL_TAX_RATES: Record<AustralianState, number> = {
+  NSW: 0.0545,
+  VIC: 0.0485,
+  QLD: 0.0475,
+  SA: 0.0495,
+  WA: 0.055,
+  TAS: 0.04,
+  NT: 0.055,
+  ACT: 0.0685,
+};
+
+/**
+ * Returns the payroll tax rate for a given Australian state or territory.
+ * Use this to populate CalcConfig.payrollTaxRate from state selection.
+ */
+export function getPayrollTaxRate(state: AustralianState): number {
+  return PAYROLL_TAX_RATES[state];
+}
+
+// ─── Default Training Weeks Per Year ───
+export const DEFAULT_TRAINING_WEEKS_PER_YEAR = [8, 6, 5, 4];
 
 export const DEFAULT_PENALTIES: PenaltyRate[] = [
   { id: 'ot15', label: 'Time & a Half', mult: 1.5, cat: 'overtime' },

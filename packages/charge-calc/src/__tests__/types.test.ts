@@ -6,7 +6,9 @@ import {
   type CalcResult,
   type FundingConfig,
   type BillingModel,
+  type AustralianState,
   AllowanceTypeSchema,
+  AustralianStateSchema,
   PenaltyCategory,
   BILLING_MODEL_WEEKS,
   getSuperRate,
@@ -31,9 +33,19 @@ describe('Type definitions', () => {
     expect(BILLING_MODEL_WEEKS.Standard).toBe(39);
     expect(BILLING_MODEL_WEEKS.ALEX48).toBe(48);
     expect(BILLING_MODEL_WEEKS.W52).toBe(52);
+    expect(BILLING_MODEL_WEEKS.Custom).toBeNull();
     // Type-level check: exhaustive BillingModel coverage
-    const _check: Record<BillingModel, number> = BILLING_MODEL_WEEKS;
-    expect(Object.keys(_check)).toHaveLength(3);
+    const _check: Record<BillingModel, number | null> = BILLING_MODEL_WEEKS;
+    expect(Object.keys(_check)).toHaveLength(4);
+  });
+
+  it('AustralianStateSchema validates all 8 states/territories', () => {
+    const states: AustralianState[] = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
+    for (const state of states) {
+      expect(AustralianStateSchema.safeParse(state).success).toBe(true);
+    }
+    expect(AustralianStateSchema.safeParse('XX').success).toBe(false);
+    expect(AustralianStateSchema.safeParse('').success).toBe(false);
   });
 
   it('getSuperRate returns 11.5% before July 2025', () => {

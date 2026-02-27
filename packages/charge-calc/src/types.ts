@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+// ─── Australian States ───
+export const AustralianStateSchema = z.enum([
+  'NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT',
+]);
+export type AustralianState = z.infer<typeof AustralianStateSchema>;
+
 // ─── Allowances ───
 export const AllowanceTypeSchema = z.enum([
   'perHour',
@@ -37,11 +43,12 @@ export interface PenaltyRate {
 }
 
 // ─── Billing model ───
-export type BillingModel = 'Standard' | 'ALEX48' | 'W52';
-export const BILLING_MODEL_WEEKS: Record<BillingModel, number> = {
-  Standard: 39,
+export type BillingModel = 'Standard' | 'ALEX48' | 'W52' | 'Custom';
+export const BILLING_MODEL_WEEKS: Record<BillingModel, number | null> = {
+  Standard: 39,  // typical, but calculateBillableWeeks derives the actual value
   ALEX48: 48,
   W52: 52,
+  Custom: null,  // user-provided
 };
 
 // ─── Funding ───
@@ -83,6 +90,11 @@ export interface CalcConfig {
   // Billing
   billableWeeks: number;
   trainingWeeks: number;
+  /** Per-year training weeks override (e.g. [8, 6, 5, 4] for a 4-year apprenticeship).
+   *  When provided with currentYear, overrides trainingWeeks. */
+  trainingWeeksPerYear?: number[];
+  /** Which apprentice year this calc is for (1-indexed). Used with trainingWeeksPerYear. */
+  currentYear?: number;
   apprenticeshipYears: number;
 
   // Leave (in days)
