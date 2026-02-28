@@ -15,4 +15,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `pricing-strategy.md` | Pricing and subscription strategy — per-seat pricing with AI add-on tiers |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps superseded by the master roadmap |
+| [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity |
 | [`plans/`](plans/README.md) | Implementation plans for upcoming features and enhancements |
+| `20260228-crm7-page-inventory-v1.00W.md` | CRM7 page inventory — 148 pages audited with data source and status |
+| `20260228-crm7-rbac-matrix-v1.00W.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |

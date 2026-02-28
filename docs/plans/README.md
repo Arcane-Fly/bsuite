@@ -19,3 +19,5 @@ Implementation plans for upcoming BSuite features and enhancements. Each plan fo
 | `20260228-conduit-ai-tools-plan-v1.00W.md` | Conduit AI tools — candidate search and pipeline management |
 | `20260228-r80-crm7-shared-calc-engine-v1.00W.md` | R80.3/CRM7 shared calculation engine (`@bsuite/charge-calc`) implementation plan |
 | `20260228-ux-ui-competitor-analysis-plan-v1.00W.md` | UX/UI competitor analysis and enhancement plan for CRM7 and Conduit |
+| `20260228-crm7-comprehensive-remediation-plan-v2.00W.md` | Comprehensive CRM7 remediation — 5 phases, 28 tasks, ~112 hours |
+| `20260228-crm7-red-team-remediation-plan-v1.00W.md` | Initial red-team remediation plan (superseded by v2) |
