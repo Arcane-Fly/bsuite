@@ -7,9 +7,10 @@ Parent repository for the Business Suite platform. Each application lives in its
 | App | Repo | Description | URL |
 |-----|------|-------------|-----|
 | **CRM7** | `crm7/` | CRM & apprenticeship management | [crm.crm7.app](https://crm.crm7.app) |
+| **Conduit** | `conduit/` | Recruitment ATS | [conduit.crm7.app](https://conduit.crm7.app) |
 | **R8** | `R80.3/` | Calculation engine (charge rates, payroll) | [r8.crm7.app](https://r8.crm7.app) |
 | **BSU** | `business-suite-unified/` | Admin dashboard & OAuth provider | [suite.crm7.app](https://suite.crm7.app) |
-| **Braden** | `braden/` | Personal site | [braden.com.au](https://www.braden.com.au) |
+| **Braden** | `braden/` | Corporate website | [braden.com.au](https://www.braden.com.au) |
 
 ## Getting Started
 
@@ -28,7 +29,7 @@ git submodule update --remote --merge
 
 - **Environment**: Root `.env.local` is the single source of truth for all Supabase credentials. Each submodule's `vite.config.ts` reads from `../` via `envDir`.
 - **Supabase Project**: `tuybltdrdefjblnplpqo`
-- **Package Manager**: Yarn 4.9.1 (per-submodule)
+- **Package Manager**: pnpm (per-submodule)
 
 ## CI/CD
 
@@ -60,9 +61,10 @@ bsuite/
 ├── .env.local              # Shared environment variables (gitignored)
 ├── .github/workflows/      # CI/CD for the parent repo
 ├── crm7/                   # CRM7 submodule
+├── conduit/                # Conduit recruitment ATS submodule
 ├── R80.3/                  # R8 calculation engine submodule
 ├── business-suite-unified/ # BSU admin dashboard submodule
-├── braden/                 # Personal site submodule
+├── braden/                 # Corporate website submodule
 ├── docs/                   # Cross-project documentation
 └── supabase/               # Shared Supabase config (if any)
 ```

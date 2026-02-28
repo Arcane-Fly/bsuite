@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 2.00W
+**Version:** 3.00W
 **Date:** 2026-02-27
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
@@ -132,7 +132,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ### CRM7
 
-**Zustand Stores (13):** `apprenticeStore`, `awardStore`, `clientStore`, `contactStore`, `contractStore`, `emailStore`, `fundingClaimStore`, `fundingSourceStore`, `hostEmployerStore`, `hostSiteStore`, `leadStore`, `placementStore`, `timesheetStore`, `qualificationStore`, `trainingPlanStore`, `aiStore`
+**Zustand Stores (16):** `apprenticeStore`, `awardStore`, `clientStore`, `contactStore`, `contractStore`, `emailStore`, `fundingClaimStore`, `fundingSourceStore`, `hostEmployerStore`, `hostSiteStore`, `leadStore`, `placementStore`, `timesheetStore`, `qualificationStore`, `trainingPlanStore`, `aiStore`, `mentorStore`, `competencyStore`, `complianceStore`
 
 **AI Tools (54):** crud (15), report (7), timesheet (8), search (5), vacancy (4), screening (4), scheduling (4), email (7)
 
@@ -147,25 +147,39 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ Contact and employer management
 - ✅ Portal system (GTO, host employer, apprentice views)
 - ✅ AI assistant Phase 1–8 (Jodie: tools, persona, skills, chat UI, API endpoint)
+- ✅ AI SDK v3 migration (`useAIChat.ts` rewritten for `@ai-sdk/react` v3 — `sendMessage`, local input state, status-derived loading)
+- ✅ Cookie URI fix (`readCookieRaw` in `removeItem` — eliminates `URIError: URI malformed` spam)
 - ✅ Email capabilities (store, compose dialog, history, templates)
+- ✅ Calendar UI components (event list, create, availability) calling `calendar-integration` Edge Function
 - ✅ AI tool migration (`parameters` → `inputSchema`)
-- ✅ SEC-004: RLS role validation — database-backed `has_tenant_role()` replaces JWT claim trust (commit `39eac97`)
-- ✅ Platform Developer Role System — `platform_role` column (developer/tester/user), tester licenses, org impersonation with audit trail, DeveloperToolbar, subscription bypass for privileged roles
+- ✅ AU Funding Claims Enhancement ([plan](./plans/20260226-au-funding-claims-enhancement-implementation-plan-1.00W.md))
+- ✅ SEC-004: RLS role validation — database-backed `has_tenant_role()` replaces JWT claim trust
+- ✅ Platform Developer Role System — `platform_role`, tester licenses, impersonation with audit, DeveloperToolbar
 - ✅ DataTable component with clickable rows/cells
 - ✅ Accessibility controls
 - ✅ Fair Work award selector
+- ✅ Tier 1 page wiring — 6 pages (leads, opportunities, tasks, clients, deals, apprentices) wired to Zustand stores with Supabase CRUD
+- ✅ 5-pass red team on all wired pages:
+  - Pass 1: Fixed silent-failure bug in 14 CRUD handlers (store returns null/false, not throws)
+  - Pass 2: Fixed missing `tenant_id` injection in `createEntityStore.create()` + `getCurrentTenantId` utility
+  - Pass 3: Fixed leads page render-time setState anti-pattern → proper `useEffect`
+  - Pass 4: Verified `useMemo`/`useCallback` usage, shared store cache
+  - Pass 5: Zero unused imports, consistent patterns across all 6 pages
 
 **Remaining:**
 
-- ~~🔶 **AI chat endpoint deployment**~~ — ✅ Done (Vercel env vars set)
-- ~~🔶 **Email integration wiring**~~ — ✅ Done (email UI already calls Edge Functions: OAuth flow + dispatcher)
-- 🔶 **Calendar UI** — frontend components to call `calendar-integration` Edge Function
-- 🔲 AU Funding Claims Enhancement ([plan](./plans/20260226-au-funding-claims-enhancement-implementation-plan-1.00W.md))
+- ✅ **Tier 2 page wiring** — 3 new stores (mentorStore, competencyStore, complianceStore), 2 stores fixed (timesheetStore, placementStore), 5 pages rewired (mentors, competencies, compliance, timesheets, placements), Placement + Timesheet entity types aligned to DB schema
+- 🔶 **PWA** — `vite-plugin-pwa`, service worker, mobile UI, offline IndexedDB, install prompt ([prompt](./claude-code-prompts.md#prompt-1))
+- 🔶 **Kanban pipeline board** — @dnd-kit, drag-and-drop deal management (critical UX gap vs competitors)
+- 🔲 Tier 3-4 page wiring — financial, compliance, field officers, WHS, comms, reports (~15 more stores)
+- 🔲 AI plugin system + workflow automation ([plan](./plans/20260227-ai-assistant-plugin-system-plan-v1.00W.md))
+- 🔲 Xero integration (OAuth2 + 6 AI tools) + Google Calendar (OAuth2 + 4 AI tools)
+- 🔲 AI cost tracking per tenant
+- 🔲 Enterprise Agreement processing + BOAT validation (AI extraction, rate schedules)
+- 🔲 `@bsuite/charge-calc` shared package ([plan](./plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md))
+- 🔲 Data management: Excel import/export, audit logging, admin data wipe, bulk operations
 - 🔲 Compliance automation workflows
 - 🔲 Advanced reporting with predictive analytics
-- 🔲 Activepieces integration (Xero, ADMS, Gmail)
-- 🔲 AI plugin system and workflow automation
-- 🔲 AI cost tracking per tenant
 - 🔲 Document storage QA fixes ([report](./archive/crm7/20260226-document-storage-qa-report.md))
 - 🔲 Test coverage (Vitest) — 70% target for critical paths
 
@@ -194,19 +208,12 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 **Remaining:**
 
-- ~~🔶 **Communications service wiring**~~ — ✅ Done (`communicationService.ts` already calls `email-dispatcher` and `sms-dispatcher` Edge Functions)
+- 🔶 **AI assistant "Scout"** — 12 recruitment-specific tools, API route (Next.js Edge), chat UI, persona ([plan](./plans/20260228-conduit-ai-tools-plan-v1.00W.md), [prompt](./claude-code-prompts.md#prompt-2))
 - 🔶 **Candidate [id] edit page** — inline edit works, but no dedicated edit route
-- ~~🔶 **Job [id] edit page**~~ — ✅ Done (`/jobs/[id]/edit/page.tsx` created)
-- ~~🔶 **Auth register page**~~ — ✅ Done (`/auth/register/page.tsx` created)
-- 🔶 **Missing stores/hooks** — some imports reference stores not yet created (e.g. `useTenantId` may need server-side tenant resolution)
-- 🔲 AI assistant integration (Conduit-specific tools)
+- 🔶 **Missing stores/hooks** — some imports reference stores not yet created
 - 🔲 Advanced pipeline analytics (Analytics page is placeholder)
-- 🔲 Interview scheduling
-- 🔲 Offer management workflow
-- 🔲 Job distribution (board posting)
 - 🔲 Document management for candidates
-- 🔲 Settings page (pipeline stages, templates, integrations)
-- 🔲 Mobile responsive sidebar (hamburger menu)
+- 🔲 @dnd-kit migration for pipeline Kanban (accessibility improvement)
 - 🔲 Test coverage (Jest) — 70% target for critical paths
 
 ### Braden
@@ -224,14 +231,11 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 **Remaining:**
 
-- ✅ **Products page & CMS** — `/products` page, homepage BSuite teaser, CMS-managed dynamic pages (privacy, terms)
-- 🔶 **Lead capture wiring** — contact form → `lead-capture` Edge Function → CRM lead sync
+- 🔶 **SEO + lead capture** — prerender for social sharing, JSON-LD structured data, contact form → CRM7 wiring, GA4 analytics, performance optimization ([plan](./plans/20260226-prerender-seo-marketing-plan-v1.0.0.md), [prompt](./claude-code-prompts.md#prompt-6))
 - 🔶 **Confirmation email** — send via `email-dispatcher` after form submission
-- 🔶 **Biped marketplace integration** — shared auth, unified billing, cross-product analytics with BSuite ecosystem
 - 🔲 Visual customization system foundation
 - 🔲 Advanced editing features (WYSIWYG blocks)
-- 🔲 SEO/marketing optimization ([plan](./plans/20260226-prerender-seo-marketing-plan-v1.0.0.md))
-- 🔲 Prerender for social sharing
+- 🔲 Biped marketplace integration (P4 — deferred until core 5 projects are best-in-class)
 - 🔲 Test coverage (Vitest)
 
 ### R80.3
@@ -255,11 +259,12 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 **Remaining:**
 
-- 🔶 **Offline capabilities** — service worker and IndexedDB caching
+- 🔶 **PWA + offline** — `vite-plugin-pwa`, service worker, IndexedDB for award rates, install prompt ([prompt](./claude-code-prompts.md#prompt-4))
+- � **Wage calculation test suite** — 90%+ Vitest coverage for legally-critical calc logic + logger migration (173 `console.*` calls)
+- 🔶 **`@bsuite/charge-calc` shared package** — unify 3 divergent calc engines with CRM7 ([plan](./plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md))
+- 🔲 Enterprise Agreement processing + BOAT validation
 - 🔲 Performance optimizations (large dataset handling)
-- 🔲 Enhanced testing coverage for wage calculations (legally critical)
 - 🔲 PDF export improvements (print-friendly, multi-page)
-- 🔲 UX refinements
 - 🔲 Fair Work API update notifications (real-time)
 
 ### business-suite-unified
@@ -283,71 +288,88 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 **Remaining:**
 
-- ~~🔶 **Stripe billing integration**~~ — ✅ Done (Stripe keys + webhook configured)
-- 🔶 **Project switching** — service cards link to external apps but no unified session handoff
+- 🔶 **Stripe billing portal** — Checkout Edge Function, Webhook Edge Function, Customer Portal, billing page UI, `useSubscription` hook, subscription gating, R80 standalone checkout ([prompt](./claude-code-prompts.md#prompt-3))
+- 🔶 **Session handoff + AppSwitcher** — shared domain cookie config, AppSwitcher dropdown in all apps, Conduit `@supabase/ssr` wiring ([plan](./plans/20260228-bsu-project-switching-plan-v1.00W.md), [prompt](./claude-code-prompts.md#prompt-7))
+- � **Cross-app notifications** — Supabase Realtime pub/sub, notification center UI, notification preferences
 - 🔲 Unified settings management
-- 🔲 Cross-app notification system
 - 🔲 Usage analytics dashboard
-- 🔲 Billing portal (plan management, invoices)
+- 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
 
 ---
 
 ## Remaining Work Summary (Priority Order)
 
-### P0 — Critical Path (blocks production use)
+> **Consolidated Feb 28, 2026** from: Windsurf plan (`bsuite-feature-gap-closure`), Claude plans (9 BSuite-related), `claude-code-prompts.md` (7 prompts), and `docs/plans/` (6 formal plans).
 
-| # | Task | Project | Effort |
-|---|------|---------|--------|
-| ~~1~~ | ~~Deploy CRM7 AI chat endpoint to Vercel + set `AI_GATEWAY_API_KEY`~~ | crm7 | ✅ Done |
-| ~~2~~ | ~~Wire email compose UI to Supabase OAuth flow + dispatcher~~ | crm7 | ✅ Done |
-| ~~3~~ | ~~Wire Conduit communications to Edge Function email/SMS~~ | conduit | ✅ Done |
-| ~~4~~ | ~~Set up Stripe keys + webhook for BSU billing~~ | bsu | ✅ Done |
-| ~~5~~ | ~~Create `/auth/register` page in Conduit~~ | conduit | ✅ Done |
-| ~~6~~ | ~~Create `/jobs/[id]/edit` page in Conduit~~ | conduit | ✅ Done |
-| ~~7~~ | ~~Google Cloud Console: add Gmail + Calendar scopes to consent screen, add redirect URI~~ | infra | ✅ Done |
-| ~~8~~ | ~~Azure AD: verify Mail + Calendar permissions, grant admin consent, add redirect URI~~ | infra | ✅ Done |
+### P0 — Blockers (unblocks everything else)
 
-### P1 — High Value Features
+| # | Task | Project | Effort | Notes |
+|---|------|---------|--------|-------|
+| 1 | ~~Fix Azure AD OAuth~~ | crm7 | 15m | ✅ **Done** — `xms_edov` + `email` optional claims added to Azure manifest |
+| 2 | ~~Create `ai_sessions` + `ai_messages` tables~~ | crm7 | — | ✅ **Already exist** in Supabase |
+| 3 | ~~Create 4 platform admin tables~~ | bsu | — | ✅ **Already exist** in Supabase |
 
-| # | Task | Project | Effort |
-|---|------|---------|--------|
-| ~~9~~ | ~~Calendar UI components (event list, create, availability)~~ | crm7 | ✅ Done |
-| ~~10~~ | ~~Lead capture wiring (Braden contact form → Edge Function → CRM)~~ | braden/bsu | ✅ Done |
-| ~~11~~ | ~~Confirmation email after Braden form submission~~ | braden | ✅ Done |
-| ~~12~~ | ~~Conduit interview scheduling (calendar integration)~~ | conduit | ✅ Done |
-| ~~13~~ | ~~AU Funding Claims Enhancement~~ | crm7 | ✅ Done |
-| 14 | R80.3 offline mode (service worker + IndexedDB) | R80.3 | 3d |
-| 15 | Conduit AI tools (candidate search, pipeline mgmt) ([plan](./plans/20260228-conduit-ai-tools-plan-v1.00W.md)) | conduit | 1w |
-| 16 | BSU project switching with session handoff ([plan](./plans/20260228-bsu-project-switching-plan-v1.00W.md)) | bsu | 2d |
-| 17 | Biped marketplace integration into BSuite (shared auth, billing, analytics) | braden/bsu | 2w |
+### P1 — Revenue & Competitive Differentiation
+
+| # | Task | Project | Effort | Agent | Source |
+|---|------|---------|--------|-------|--------|
+| 4 | BSU Stripe billing portal (Edge Functions + UI + gating) | bsu | 1w | Claude Code | Prompt 3 |
+| 5 | CRM7 PWA (vite-plugin-pwa + offline + mobile UI) | crm7 | 1w | Claude Code | Prompt 1A |
+| 6 | R80.3 PWA + 90% wage calc tests + logger migration | R80.3 | 5d | Claude Code | Prompt 4 |
+| 7 | Conduit AI "Scout" (12 tools + API + chat UI + persona) | conduit | 1w | Claude Code | Prompt 2 |
+| 8 | ~~CRM7 Tier 2 page wiring~~ (5 pages + 3 stores + 2 fixes) | crm7 | ✅ Done | Windsurf | Feature gap §3 |
+| 9 | Braden SEO + lead capture (prerender, JSON-LD, GA4) | braden | 3d | Claude Code | Prompt 6 |
+| 10 | BSU session handoff + AppSwitcher | bsu + all | 2d | Claude Code | Prompt 7 |
+| 11 | CRM7 Kanban pipeline board (@dnd-kit) | crm7 | 3d | — | UX gap |
 
 ### P2 — Enhancement & Polish
 
-| # | Task | Project | Effort |
-|---|------|---------|--------|
-| 18 | AI plugin system (Activepieces) | crm7 | 1w |
-| 19 | AI workflow automation engine | crm7 | 2w |
-| 20 | AI cost tracking per tenant | crm7/bsu | 2d |
-| ~~21~~ | ~~Conduit analytics dashboard~~ | conduit | ✅ Done |
-| ~~22~~ | ~~Conduit offer management workflow~~ | conduit | ✅ Done |
-| ~~23~~ | ~~Conduit job distribution (board posting)~~ | conduit | ✅ Done |
-| ~~24~~ | ~~Conduit settings page (pipeline stages, integrations)~~ | conduit | ✅ Done |
-| ~~25~~ | ~~Conduit mobile sidebar (hamburger menu)~~ | conduit | ✅ Done |
-| 26 | Braden visual customization system | braden | 1w |
-| 27 | Braden SEO/prerender optimization | braden | 3d |
-| 28 | R80.3 PDF export improvements | R80.3 | 2d |
-| 29 | R80.3 enhanced wage calculation test coverage | R80.3 | 2d |
-| 30 | BSU billing portal (plan management, invoices) | bsu | 1w |
-| 31 | BSU cross-app notification system | bsu | 3d |
-| 32 | BSU usage analytics dashboard | bsu | 3d |
-| 33 | Document storage QA fixes (CRM7) | crm7 | 2d |
-| 34 | Compliance automation workflows | crm7 | 1w |
-| 35 | Advanced reporting with predictive analytics | crm7 | 2w |
-| 36 | Test coverage push (all projects, 70% target) | all | ongoing |
+| # | Task | Project | Effort | Source |
+|---|------|---------|--------|--------|
+| 12 | Unified navigation (`@bsuite/nav-core` + shadcn sidebar) | all | 1w | Claude plan `atomic-hopping-ocean` |
+| 13 | `@bsuite/charge-calc` shared package (3 engines → 1) | R80↔CRM7 | 1w | `r80-crm7-shared-calc-engine` plan |
+| 14 | Enterprise Agreement + BOAT validation | CRM7 | 1w | Claude plans `warm-moseying-liskov` + `velvety-giggling-curry` |
+| 15 | Data management (Excel import/export, audit log, wipe, bulk) | crm7 | 1w | Feature gap §2A-2D |
+| 16 | Cross-project UX (AI icon, @dnd-kit Conduit, view toggles) | multi | 3d | Claude plan `prancy-seeking-dijkstra` + `cross-project-ux-improvements` |
+| 17 | Cross-app notifications (Supabase Realtime) | bsu | 3d | Prompt 7 |
+| 18 | CRM7 Tier 3-4 wiring (financial, compliance, WHS, comms, reports) | crm7 | 2w | Feature gap §3 Tier 3-4 |
+| 19 | AI cost tracking per tenant | crm7/bsu | 2d | — |
+| 20 | Document storage QA fixes | crm7 | 2d | [report](./archive/crm7/20260226-document-storage-qa-report.md) |
+| 21 | Doc cleanup (22 missing READMEs, broken links) | all | 1d | Claude plan `prancy-seeking-dijkstra` |
+| 22 | Braden visual customization | braden | 1w | — |
+| 23 | R80.3 PDF export improvements | R80.3 | 2d | — |
+| 24 | Test coverage push (70% target all projects) | all | ongoing | — |
+
+### P3 — Future
+
+| # | Task | Project | Effort | Source |
+|---|------|---------|--------|--------|
+| 25 | AI plugin system + Xero + Calendar + workflow automation | crm7 | 3w | Prompt 5 |
+| 26 | BSuite Mobile native (Expo → Google Play) | new `mobile/` | 2w | Prompt 1B |
+| 27 | Org → Tenant hierarchy | bsu/crm7 | 1w | Feature gap §1C |
+| 28 | BSU Idea Hub | bsu | 3d | Feature gap §5 |
+| 29 | Customizable module visibility | crm7 | 2d | Feature gap §2F |
+| 30 | Demo seed data | all | 2d | Feature gap §6 |
+| 31 | Compliance automation workflows | crm7 | 1w | — |
+| 32 | Advanced reporting with predictive analytics | crm7 | 2w | — |
+| 33 | BSU usage analytics dashboard | bsu | 3d | — |
+| 34 | Biped marketplace integration (P4 deferred) | braden/bsu | 2w | Deferred until core 5 are best-in-class |
 
 ---
 
-> **Future:** Integrate Biped marketplace platform into BSuite ecosystem (shared auth, unified billing, cross-product analytics). Related project: `biped/` in the Braden business directory.
+### Agent Assignment Matrix
+
+| Agent | Focus | Items |
+|-------|-------|-------|
+| **Windsurf** | CRM7 page wiring + DB migrations + red team | P0 #2-3, P1 #8, P2 #15-18 |
+| **Claude Code Instance 1** | CRM7 PWA | P1 #5 |
+| **Claude Code Instance 2** | Conduit AI "Scout" | P1 #7 |
+| **Claude Code Instance 3** | BSU Stripe billing | P1 #4 |
+| **Claude Code Instance 4** | R80.3 PWA + tests | P1 #6 |
+| **Claude Code Instance 5** | Braden SEO + lead capture | P1 #9 |
+| **User (manual)** | Azure Portal OAuth fix | P0 #1 |
+
+> **P4 Future:** Biped marketplace platform integration (shared auth, unified billing, cross-product analytics). Repo: `https://github.com/GaryOcean428/biped.git`. Deferred until core 5 BSuite projects are best-in-class.
 
 ## Related Documents
 
@@ -362,6 +384,11 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | SEO/Marketing Plan | [`docs/plans/20260226-prerender-seo-marketing-plan-v1.0.0.md`](./plans/20260226-prerender-seo-marketing-plan-v1.0.0.md) |
 | Auth Architecture | [`docs/AUTH-MAP.md`](./AUTH-MAP.md) |
 | DRY Architecture | [`docs/DRY-ONE-SHOT-ARCHITECTURE.md`](./DRY-ONE-SHOT-ARCHITECTURE.md) |
+| Conduit AI Tools Plan | [`docs/plans/20260228-conduit-ai-tools-plan-v1.00W.md`](./plans/20260228-conduit-ai-tools-plan-v1.00W.md) |
+| BSU Project Switching Plan | [`docs/plans/20260228-bsu-project-switching-plan-v1.00W.md`](./plans/20260228-bsu-project-switching-plan-v1.00W.md) |
+| R80↔CRM7 Shared Calc Engine | [`docs/plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md`](./plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md) |
+| Cross-Project UX Improvements | [`docs/plans/2026-02-28-cross-project-ux-improvements.md`](./plans/2026-02-28-cross-project-ux-improvements.md) |
+| Claude Code Prompts (7 agents) | [`docs/claude-code-prompts.md`](./claude-code-prompts.md) |
 | Pricing Strategy | [`docs/pricing-strategy.md`](./pricing-strategy.md) |
 | Theme Best Practice | [`Theme-best-practice.md`](../Theme-best-practice.md) |
 | AI Feature Map | [`docs/ai/features/20260227-feature-map-complete-v1.0.0.md`](./ai/features/20260227-feature-map-complete-v1.0.0.md) |

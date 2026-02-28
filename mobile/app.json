@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "BSuite",
+    "slug": "bsuite-mobile",
+    "version": "1.0.0",
+    "scheme": "bsuite",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0e1a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "au.com.bsuite.mobile"
+    },
+    "android": {
+      "package": "au.com.bsuite.mobile",
+      "targetSdkVersion": 35,
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0e1a",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "BSuite needs camera access to capture documents and WHS incident photos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BSuite needs photo library access to attach documents and images."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#2563eb"
+        }
+      ],
+      "expo-local-authentication",
+      "expo-font"
+    ]
+  }
+}

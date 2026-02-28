@@ -55,7 +55,7 @@ curl http://localhost:5173/api/ai/chat \
   }'
 ```
 
-For detailed setup, see [Setup Guide](development/20260227-setup-guide-v1.0.0.md).
+For detailed setup, see Setup Guide *(planned)*.
 
 ## Project Structure
 
@@ -657,7 +657,7 @@ body: JSON.stringify(data)
 If you have questions about contributing:
 
 1. Check this CONTRIBUTING.md
-2. Review [Setup Guide](development/20260227-setup-guide-v1.0.0.md)
+2. Review Setup Guide *(planned)*
 3. Search existing [GitHub Issues](https://github.com/bsuite/crm7/issues)
 4. Ask in #ai-development Slack channel
 5. Open a new issue with the `ai-question` label

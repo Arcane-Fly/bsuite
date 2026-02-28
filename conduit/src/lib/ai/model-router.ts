@@ -2,7 +2,7 @@
  * Model Router for Conduit AI
  *
  * Routes requests to the appropriate model based on task complexity.
- * Uses approved models only per docs/ai-models.md.
+ * Uses approved models only per AI configuration standards.
  */
 
 import { createGoogleGenerativeAI } from '@ai-sdk/google';

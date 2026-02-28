@@ -234,8 +234,8 @@ Uses company branding colors and does not follow the D2C theme. See braden proje
 |---------|----------------|
 | business-suite-unified | pnpm |
 | crm7 | pnpm |
-| conduit | yarn |
-| braden | yarn |
+| conduit | pnpm |
+| braden | pnpm |
 | R80.3 | pnpm |
 
 ---

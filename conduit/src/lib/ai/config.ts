@@ -2,7 +2,7 @@
  * AI Configuration for Conduit
  *
  * Model definitions, rate limits, and shared AI configuration.
- * Uses only approved models per docs/ai-models.md.
+ * Uses only approved models per AI configuration standards.
  */
 
 export const AI_CONFIG = {

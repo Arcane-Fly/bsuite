@@ -48,7 +48,7 @@ graph TB
 
     subgraph "Execution Layer"
         Router[Model Router<br/>Complexity Analysis]
-        ToolReg[Tool Registry<br/>80+ tools]
+        ToolReg[Tool Registry<br/>49 tools]
         PermCheck[Permission Guard<br/>RLS + Portal Context]
         PluginSys[Plugin System<br/>Extensible Tools]
     end
@@ -193,13 +193,13 @@ sequenceDiagram
 
 ---
 
-## 3. Complete Tool Registry (80+ Tools)
+## 3. Complete Tool Registry (49 Tools)
 
 Comprehensive mind map of all available AI tools organized by category:
 
 ```mermaid
 mindmap
-  root((Tool Registry<br/>80+ Tools))
+  root((Tool Registry<br/>49 Tools))
     CRUD Operations
       Apprentices
         create_apprentice
@@ -330,7 +330,7 @@ mindmap
 | **Communication** | 8+ | Emails, SMS, notifications, alerts |
 | **Integration** | 6+ | External system sync, webhooks, file operations |
 
-**Total: 80+ tools across 8 categories**
+**Total: 49 tools across 8 categories**
 
 ---
 
@@ -703,7 +703,7 @@ graph LR
 
 ## Next Steps
 
-1. **Complete Tool Registry** - Implement all 80+ tools (Week 3-4)
+1. **Complete Tool Registry** - Implement all 49 tools (Week 3-4)
 2. **Build UI Components** - AI chat panel and tool confirmations (Week 2-3)
 3. **Workflow Engine** - Implement automation engine (Week 4-5)
 4. **Plugin System** - Build extensibility layer (Week 5-6)
@@ -713,12 +713,12 @@ graph LR
 
 ## Related Documentation
 
-- [System Architecture](../architecture/20260227-ai-system-overview-v1.0.0.md)
-- [Tool Registry Specification](20260227-tool-registry-spec-v1.0.0.md)
-- [Workflow Automation Guide](20260227-workflow-automation-v1.0.0.md)
-- [Plugin System Guide](20260227-plugin-system-v1.0.0.md)
-- [Model Pricing](../pricing/20260227-model-pricing-verified-v1.0.0.md)
-- [Activepieces Integration](../integrations/20260227-activepieces-integration-v1.0.0.md)
+- System Architecture *(planned)* — see [architecture/](../architecture/)
+- Tool Registry Specification *(planned)*
+- Workflow Automation Guide *(planned)*
+- Plugin System Guide *(planned)*
+- Model Pricing *(planned)* — see [pricing/](../pricing/)
+- Activepieces Integration *(planned)* — see [integrations/](../integrations/)
 
 ---
 

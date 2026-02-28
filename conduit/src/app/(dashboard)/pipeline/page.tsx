@@ -1,61 +1,166 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import type {
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  Modifier,
+} from '@dnd-kit/core'
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { usePipelineStore } from '@/stores/pipelineStore'
 import { useTenantId } from '@/hooks/useTenantId'
 import type { PipelineEntry } from '@/types/entities'
-import { Mail, Star, GripVertical, Users } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Users } from 'lucide-react'
 import { toast } from 'sonner'
-import Link from 'next/link'
 import { EmptyState } from '@/components/common/EmptyState'
-import { StatusBadge } from '@/components/common/StatusBadge'
+import { KanbanColumn, KanbanCard } from '@/components/pipeline'
+
+/** Restrict drag movement to within the browser window edges. */
+const restrictToWindowEdges: Modifier = ({ transform }) => {
+  return {
+    ...transform,
+    x: Math.max(
+      -window.scrollX,
+      Math.min(transform.x, document.documentElement.clientWidth - window.scrollX)
+    ),
+    y: Math.max(
+      -window.scrollY,
+      Math.min(transform.y, document.documentElement.clientHeight - window.scrollY)
+    ),
+  }
+}
 
 export default function PipelinePage() {
   const { tenantId } = useTenantId()
-  const { stages, entries, loading, fetchPipeline, moveEntry } = usePipelineStore()
-  const [draggedEntry, setDraggedEntry] = useState<string | null>(null)
-  const [dragOverStage, setDragOverStage] = useState<string | null>(null)
+  const { stages, entries, loading, fetchPipeline, moveEntry } =
+    usePipelineStore()
+
+  const [activeId, setActiveId] = useState<string | null>(null)
+  // Track local entry-to-stage mapping for optimistic cross-column moves
+  const [localEntries, setLocalEntries] = useState<PipelineEntry[]>([])
+  const moveInFlight = useRef(false)
 
   useEffect(() => {
     if (tenantId) fetchPipeline(tenantId)
   }, [tenantId, fetchPipeline])
 
-  function getEntriesForStage(stageId: string): PipelineEntry[] {
-    return entries.filter((e) => e.stage_id === stageId)
+  // Keep local entries in sync with store
+  useEffect(() => {
+    setLocalEntries(entries)
+  }, [entries])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const getEntriesForStage = useCallback(
+    (stageId: string): PipelineEntry[] =>
+      localEntries.filter((e) => e.stage_id === stageId),
+    [localEntries]
+  )
+
+  const activeEntry = useMemo(
+    () => (activeId ? localEntries.find((e) => e.id === activeId) ?? null : null),
+    [activeId, localEntries]
+  )
+
+  /** Find which stage an entry currently belongs to */
+  function findStageForEntry(entryId: string): string | undefined {
+    return localEntries.find((e) => e.id === entryId)?.stage_id
   }
 
-  function handleDragStart(entryId: string) {
-    setDraggedEntry(entryId)
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string)
   }
 
-  function handleDragOver(e: React.DragEvent, stageId: string) {
-    e.preventDefault()
-    setDragOverStage(stageId)
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event
+    if (!over) return
+
+    const activeEntryId = active.id as string
+    const overId = over.id as string
+
+    // Determine the target stage: either the column itself or the column
+    // that contains the entry we're hovering over
+    const overData = over.data.current
+    const targetStageId =
+      overData?.type === 'column'
+        ? (overData.stageId as string)
+        : findStageForEntry(overId)
+
+    if (!targetStageId) return
+
+    const sourceStageId = findStageForEntry(activeEntryId)
+    if (sourceStageId === targetStageId) return
+
+    // Optimistic cross-column movement during drag
+    setLocalEntries((prev) =>
+      prev.map((e) =>
+        e.id === activeEntryId ? { ...e, stage_id: targetStageId } : e
+      )
+    )
   }
 
-  function handleDragLeave() {
-    setDragOverStage(null)
-  }
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    setActiveId(null)
 
-  async function handleDrop(stageId: string) {
-    if (!draggedEntry) return
-    setDragOverStage(null)
+    if (!over || moveInFlight.current) return
 
-    const entry = entries.find((e) => e.id === draggedEntry)
-    if (!entry || entry.stage_id === stageId) {
-      setDraggedEntry(null)
-      return
-    }
+    const activeEntryId = active.id as string
+    const overId = over.id as string
 
-    const ok = await moveEntry(draggedEntry, stageId)
+    // Determine target stage
+    const overData = over.data.current
+    const targetStageId =
+      overData?.type === 'column'
+        ? (overData.stageId as string)
+        : findStageForEntry(overId)
+
+    if (!targetStageId) return
+
+    // Check if the entry actually moved to a different stage from the store
+    const originalEntry = entries.find((e) => e.id === activeEntryId)
+    if (!originalEntry || originalEntry.stage_id === targetStageId) return
+
+    // Persist the move
+    moveInFlight.current = true
+    const ok = await moveEntry(activeEntryId, targetStageId)
+    moveInFlight.current = false
+
     if (ok) {
-      const stage = stages.find((s) => s.id === stageId)
+      const stage = stages.find((s) => s.id === targetStageId)
       toast.success(`Moved to ${stage?.name ?? 'stage'}`)
     } else {
+      // Revert optimistic update
+      setLocalEntries(entries)
       toast.error('Failed to move candidate')
     }
-    setDraggedEntry(null)
+  }
+
+  function handleDragCancel() {
+    setActiveId(null)
+    // Revert any optimistic changes
+    setLocalEntries(entries)
   }
 
   if (loading) {
@@ -88,90 +193,31 @@ export default function PipelinePage() {
         </p>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {stages.map((stage) => {
-          const stageEntries = getEntriesForStage(stage.id)
-          const isDragOver = dragOverStage === stage.id
-
-          return (
-            <div
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        modifiers={[restrictToWindowEdges]}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {stages.map((stage) => (
+            <KanbanColumn
               key={stage.id}
-              className={cn(
-                'flex w-72 shrink-0 flex-col rounded-lg border bg-muted/30',
-                isDragOver && 'ring-2 ring-primary'
-              )}
-              onDragOver={(e) => handleDragOver(e, stage.id)}
-              onDragLeave={handleDragLeave}
-              onDrop={() => handleDrop(stage.id)}
-            >
-              {/* Stage Header */}
-              <div className="flex items-center justify-between border-b px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: stage.color ?? '#6b7280' }}
-                  />
-                  <span className="text-sm font-semibold">{stage.name}</span>
-                </div>
-                <StatusBadge
-                  variant="neutral"
-                  label={stageEntries.length.toString()}
-                />
-              </div>
+              stage={stage}
+              entries={getEntriesForStage(stage.id)}
+            />
+          ))}
+        </div>
 
-              {/* Cards */}
-              <div className="flex-1 space-y-2 p-2 min-h-[120px]">
-                {stageEntries.map((entry) => {
-                  const c = entry.candidate
-                  if (!c) return null
-
-                  return (
-                    <div
-                      key={entry.id}
-                      draggable
-                      onDragStart={() => handleDragStart(entry.id)}
-                      className={cn(
-                        'cursor-grab rounded-md border bg-background p-3 shadow-sm transition-all hover:shadow-md active:cursor-grabbing',
-                        draggedEntry === entry.id && 'opacity-50'
-                      )}
-                    >
-                      <div className="flex items-start gap-2">
-                        <GripVertical className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/40" aria-hidden="true" />
-                        <div className="min-w-0 flex-1">
-                          <Link
-                            href={`/candidates/${c.id}`}
-                            className="text-sm font-medium hover:underline"
-                          >
-                            {c.first_name} {c.last_name}
-                          </Link>
-                          {c.email && (
-                            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                              <Mail className="h-3 w-3" aria-hidden="true" />
-                              <span className="truncate">{c.email}</span>
-                            </div>
-                          )}
-                          {c.rating && (
-                            <div className="flex items-center gap-0.5 mt-1 text-xs text-amber-600">
-                              <Star className="h-3 w-3 fill-current" aria-hidden="true" />
-                              {c.rating}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-
-                {stageEntries.length === 0 && (
-                  <div className="flex h-20 items-center justify-center rounded border border-dashed text-xs text-muted-foreground">
-                    Drop here
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+        <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
+          {activeEntry ? (
+            <KanbanCard entry={activeEntry} isDragOverlay />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   )
 }

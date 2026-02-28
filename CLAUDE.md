@@ -74,11 +74,11 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 
 ### business-suite-unified
 - Entry point portal, Stripe integration
-- Protected: `backend/tables/`, `src/lib/supabase.ts`, `src/lib/stripe.ts`
+- Protected: `src/lib/supabase.ts`, `src/lib/stripeService.ts`
 
 ### crm7
 - AI-powered features via `@ai-sdk/react` — never commit API keys
-- Protected: `src/lib/supabase.ts`, `src/ai/`
+- Protected: `src/lib/supabase.ts`, `src/lib/ai/`
 
 ### conduit
 - **Next.js 16 App Router** — not Vite. Use server components by default, `'use client'` only when needed
@@ -88,7 +88,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 ### braden
 - Corporate website — uses company branding, NOT D2C theme
 - Security-sensitive: CSP headers, bot protection
-- Protected: CSP config, `src/lib/supabase.ts`
+- Protected: CSP config, `src/integrations/supabase/`
 
 ### R80.3
 - Wage calculations are compliance-critical — extra test coverage required

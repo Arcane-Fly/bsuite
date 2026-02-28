@@ -52,6 +52,7 @@ Included free in Professional & Enterprise. Land-and-expand entry product.
 ## 2. Feature Tiers
 
 ### Essentials — $29/user/mo
+
 **Target:** Micro GTOs (1–100 apprentices, 2–5 staff)
 
 - Apprentice management (100 cap)
@@ -65,6 +66,7 @@ Included free in Professional & Enterprise. Land-and-expand entry product.
 **Not included:** VET & training, funding claims, portals, integrations, custom fields
 
 ### Professional — $59/user/mo ⭐ Recommended
+
 **Target:** Growing GTOs (100–500 apprentices, 5–20 staff)
 
 - Everything in Essentials
@@ -82,6 +84,7 @@ Included free in Professional & Enterprise. Land-and-expand entry product.
 - Phone + email support
 
 ### Enterprise — $99/user/mo
+
 **Target:** Large GTOs & labour hire (500+ apprentices, 20+ staff)
 
 - Everything in Professional
@@ -142,12 +145,14 @@ All products are **live AUD per-seat** prices.
 ## 4. Market Context
 
 ### 4.1 TAM
+
 - ~150 registered GTOs nationally
 - ~4,000 RTOs (ASQA register)
 - ~50,000+ host employers using GTO services
 - ~100,000+ active apprentices/trainees under GTO management
 
 ### 4.2 Key Insight
+
 GTO-employed apprentices are **18% more likely to complete** than direct-employed. In priority industries, completion rates are **40%+ higher**.
 
 ---
@@ -163,8 +168,11 @@ GTO-employed apprentices are **18% more likely to complete** than direct-employe
 | **RTOSafe** | Per-user tiers | $295–$995 | RTO compliance only |
 | **Arlo** | Per-admin + per-reg | $125–$285/admin | No apprenticeships |
 | **Workit** | Per-employee | $5/employee | Generic HR |
+| **WorkforceOne (Codehouse)** | Per-user | ~$135/user | Direct GTO+Labour Hire competitor, 30yr history, no AI |
+| **ReadyTech** | Enterprise POA | $50k+/yr | Market leader, STAs+AASNs, legacy UI |
+| **PeopleTray** | Per-user SaaS | POA | Mining/FIFO WHS, mobile offline, not GTO-specific |
 
-bsuite is the **only GTO-first** platform combining charge rates + CRM + WHS + VET + portals.
+bsuite is the **only GTO-first** platform combining charge rates + CRM + WHS + VET + portals + AI.
 
 ---
 
@@ -244,12 +252,14 @@ These roles bypass subscription checks entirely and are managed via the Platform
 | **User** | Standard — subject to org subscription tier | Per-seat pricing applies | Default for all signups | No toolbar |
 
 **Developer capabilities beyond standard admin:**
+
 - Org impersonation with full audit transparency (org admins see all sessions)
 - Tenant switching across all organizations
 - Tester license management (grant, revoke, convert to paid)
 - Audit log visibility across all tenants
 
 **Tester license lifecycle:**
+
 1. Developer grants license by email → status: `active`
 2. Tester signs up with that email → auto-assigned `platform_role = 'tester'`
 3. Tester evaluates product with full Enterprise-level access at no cost
@@ -270,10 +280,10 @@ These roles bypass subscription checks entirely and are managed via the Platform
 
 - [x] Stripe products & prices created (AUD, per-seat, live)
 - [x] Legacy USD products archived
-- [x] pricing-data.ts source of truth
-- [x] Pricing page with per-user cards, team slider, AI toggle
-- [x] Platform Developer Role System — `platform_role` column, tester licenses, org impersonation, DeveloperToolbar, subscription bypass (27 Feb 2026)
-- [x] Permission integration — `use-permissions.ts` checks `isPrivileged` for billing/access bypass
+- [ ] pricing-data.ts source of truth
+- [ ] Pricing page with per-user cards, team slider, AI toggle
+- [x] Platform Developer Role System — `platform_role` column, tester licenses, org impersonation, DeveloperToolbar, subscription bypass (27 Feb 2026) *(CRM7 only)*
+- [x] Permission integration — `use-permissions.ts` checks `isPrivileged` for billing/access bypass *(CRM7 only, not yet in BSU)*
 - [ ] Stripe Checkout Edge Function
 - [ ] Subscription management (Customer Portal)
 - [ ] Feature flags by subscription tier

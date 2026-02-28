@@ -1,6 +1,6 @@
 'use client'
 
-import { AIProvider } from '@/components/ai/AIProvider'
+import { AIAssistant } from '@/components/ai/AIAssistant'
 import { AppSwitcher } from '@/components/AppSwitcher'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
 import { NAV_CONFIG } from '@/config/navigation'
@@ -151,7 +151,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <AIProvider>
+    <>
       <div className="flex h-screen overflow-hidden bg-background">
         {/* Desktop Sidebar */}
         <aside
@@ -227,6 +227,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
-    </AIProvider>
+
+      {/* Scout AI Assistant — available on all dashboard pages */}
+      <AIAssistant />
+    </>
   )
 }

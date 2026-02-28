@@ -1,17 +1,29 @@
 /**
- * Conduit AI Chat API Route
+ * Conduit AI Chat API Route — Scout
  *
- * Edge Runtime streaming endpoint for Jodie (AI assistant).
+ * Next.js App Router streaming endpoint for Scout (AI recruitment assistant).
  * Handles authentication, tenant isolation, model routing, and tool execution.
+ *
+ * Uses streamText().toUIMessageStreamResponse() for full-featured AI SDK streaming
+ * with tool calls, usage info, and finish reasons.
  */
 
-import { JODIE_SYSTEM_PROMPT } from '@/lib/ai/jodie-persona';
-import { classifyComplexity, createModelInstance, getModelSelection } from '@/lib/ai/model-router';
-import { createToolRegistry, type ToolExecutionContext } from '@/lib/ai/tools';
+import { SCOUT_SYSTEM_PROMPT } from '@/lib/ai/jodie-persona';
+import {
+    classifyComplexity,
+    createModelInstance,
+    getModelSelection,
+} from '@/lib/ai/model-router';
+import { checkRateLimit } from '@/lib/ai/rate-limiter';
+import {
+    createToolRegistry,
+    type ToolExecutionContext,
+} from '@/lib/ai/tools';
 import { createClient } from '@supabase/supabase-js';
-import { stepCountIs, streamText } from 'ai';
+import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from 'ai';
 
 export const runtime = 'edge';
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
@@ -33,7 +45,10 @@ export async function POST(req: Request) {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
@@ -42,7 +57,8 @@ export async function POST(req: Request) {
     }
 
     // Get tenant ID from user metadata
-    const tenantId = (user.user_metadata?.tenant_id as string) ||
+    const tenantId =
+      (user.user_metadata?.tenant_id as string) ||
       (user.app_metadata?.tenant_id as string);
 
     if (!tenantId) {
@@ -52,8 +68,23 @@ export async function POST(req: Request) {
       });
     }
 
+    // Enforce rate limiting
+    const rateLimit = checkRateLimit(user.id);
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimit.reason }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil((rateLimit.retryAfterMs ?? 60_000) / 1000)),
+          },
+        },
+      );
+    }
+
     // Parse request body
-    const { messages } = await req.json();
+    const { messages }: { messages: UIMessage[] } = await req.json();
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'Invalid messages' }), {
         status: 400,
@@ -62,8 +93,15 @@ export async function POST(req: Request) {
     }
 
     // Route model based on last user message complexity
-    const lastUserMessage = [...messages].reverse().find((m: { role: string }) => m.role === 'user');
-    const complexity = classifyComplexity(lastUserMessage?.content ?? '', 0);
+    // UIMessage v6 uses parts[] not .content — extract text from parts
+    const lastUserMessage = [...messages]
+      .reverse()
+      .find((m) => m.role === 'user');
+    const lastUserText = lastUserMessage?.parts
+      ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text' && 'text' in p)
+      .map((p) => p.text)
+      .join('') ?? '';
+    const complexity = classifyComplexity(lastUserText, 0);
     const modelSelection = getModelSelection(complexity);
     const model = createModelInstance(modelSelection);
 
@@ -78,18 +116,18 @@ export async function POST(req: Request) {
     // Create tool registry
     const tools = createToolRegistry(toolContext);
 
-    // Stream the response
+    // Stream the response with tool support
     const result = streamText({
       model,
-      system: JODIE_SYSTEM_PROMPT,
-      messages,
+      system: SCOUT_SYSTEM_PROMPT,
+      messages: await convertToModelMessages(messages),
       tools,
       stopWhen: stepCountIs(5),
       temperature: modelSelection.temperature,
       maxOutputTokens: modelSelection.maxTokens,
     });
 
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (err) {
     console.error('[Conduit AI] Chat error:', err);
     return new Response(
