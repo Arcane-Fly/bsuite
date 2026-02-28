@@ -1,12 +1,14 @@
 # CRM7 Feature Parity Rebuild — Implementation Plan
 
+**subagent driven develpment** red team all implementations. always see donar projects in /mnt/wwn-0x5000c500c05cd06f-part1/sDev/* for reference and to harvest. /mnt/wwn-0x5000c500c05cd06f-part1/sDev/apprenticetracker is another good donar.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
 **Goal:** Close 25 feature gaps between CRM7 and CRM13 spec across 4 parallel workstreams by mining donor code and converting types.
 
 **Architecture:** 4 independent domain streams dispatched to parallel agents. Each stream owns its DB migrations, types, stores, and pages. All new entities extend `BaseEntity`, use `createEntityStore<T>()` factory, and include Zod schemas. R80.3 `@bsuite/charge-calc` is the single calculation source of truth.
 
-**Tech Stack:** React 18 + Vite 6 + TypeScript strict + Zustand 5 + TanStack React Query 5 + Supabase + Zod 4 + Radix UI + Tailwind + Wouter
+**Tech Stack:** React 19 + Vite 6 + TypeScript strict + Zustand 5 + TanStack React Query 5 + Supabase + Zod 4 + Radix UI + Tailwind + Wouter
 
 ---
 

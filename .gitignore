@@ -43,3 +43,6 @@ supabase/.temp/
 
 # Scratch files
 clinework.txt
+
+# Git worktrees
+.worktrees/

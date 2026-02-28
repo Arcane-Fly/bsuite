@@ -370,6 +370,270 @@ git checkout development
 
 **Delegate to:** Claude Code 2 (~6 hours)
 
+### 3.4: Worker Type Model + Rate Source Selection Pipeline
+
+> **Added by:** Claude Code session (multi-apprentice financial pipeline)
+> **Depends on:** 1.1 (Fair Work API), 2.5 (calc consolidation)
+
+**Problem:** System only models apprentices. GTOs also employ trainees, labour hire (FT/PT/casual), and manage ABN contractors. Rates must come from Fair Work API, enterprise agreements, or custom input — never hardcoded. Billing models (Standard/ALEX48/W52) are **templates with customizable variables** — all fields are adjustable so long as they don't fall below award/BOOT minimums.
+
+**Worker Types:**
+
+| Type | Employment | Linked To | On-Costs | Leave | Training | BOOT |
+|------|-----------|-----------|----------|-------|----------|------|
+| Apprentice | Full-time | Trade + Qualification | Full | Full entitlements (min 4 wks AL per award) | Yes | Required for custom only (EBAs already FWC-approved) |
+| Trainee | FT / PT | Qualification (shorter) | Full | Full (pro-rata PT) | Yes (shorter) | Required for custom only (EBAs already FWC-approved) |
+| Labour Hire FT | Full-time | Job / Position | Full | Full entitlements | None | N/A |
+| Labour Hire PT | Part-time | Job / Position | Full (pro-rata) | Pro-rata | None | N/A |
+| Labour Hire Casual | Casual | Job / Position | Super + WC only | Casual loading (from award/EA/input) replaces leave | None | N/A |
+| ABN Contractor | Contractor | Job / Position | **None** (own insurance/super) | None | None | N/A |
+
+**Rate Source Hierarchy:**
+1. Fair Work API (award rates) — authoritative for award-covered workers
+2. Enterprise Agreement (parsed by Jodie AI → structured rate schedule) — already FWC-approved, BOOT already passed, no re-test needed
+3. Custom arrangement (parsed by Jodie AI → structured rate schedule) — must pass BOOT test for apprentices/trainees; labour hire at employer discretion
+4. AI-assisted lookup (Jodie) — suggests rates, never authoritative
+
+**EA/Custom → Structured Rate Schedule Lifecycle:**
+Once an EBA or custom arrangement is uploaded:
+1. **Upload:** PDF/DOCX uploaded to document store
+2. **AI Parse:** Jodie extracts structured data — classifications, base rates, penalty multipliers, allowances, leave entitlements, casual loading rate, and **scheduled increase dates** (e.g., "3% annual increase on 1 July each year")
+3. **Human Review:** Parsed schedule presented for review + correction. BOOT run automatically.
+4. **Activation:** Once approved, the EA/custom arrangement becomes a **selectable rate source** — treated identically to a Fair Work award in the rate source dropdown. Workers can be linked to it.
+5. **Scheduled Increases:** When a rate increase date triggers:
+   - All charge rates linked to this schedule are **automatically recalculated**
+   - Host employers receive **billing rate change notification** (new charge rates effective from date)
+   - Payroll is **notified of wage adjustment** (new base rates for affected workers)
+   - BOOT is re-run automatically to confirm the new rates still pass
+   - Audit trail records: old rate, new rate, effective date, trigger source
+
+**Rate Schedule Entity** (shared structure for awards, EAs, and custom):
+- `id`, `tenant_id`, `name`, `source_type` ('award' | 'enterprise_agreement' | 'custom')
+- `source_document_id` (link to uploaded document, null for Fair Work API)
+- `award_code` (for Fair Work awards, null for EA/custom)
+- `classifications[]` — { level, name, baseRate, apprenticePercentages }
+- `penalties[]` — { name, multiplier, conditions }
+- `allowances[]` — { name, type, amount, superApplicable }
+- `leave_entitlements` — { annualLeaveDays, personalLeaveDays, casualLoading }
+- `increase_schedule[]` — { effectiveDate, increaseType ('percent' | 'flat'), value, applied }
+- `boot_assessment_id` (link to most recent BOOT result)
+- `status` ('draft' | 'active' | 'superseded' | 'expired')
+- `effective_from`, `effective_to`
+
+**Billing Model Templates (all variables customizable):**
+- **Standard:** Default 39 billable weeks. Template starts with NES minimums (4 weeks AL, 10 days personal, 10 PH, training weeks per year). Employer/EA can provide MORE (e.g. 5 weeks AL) but not less than award minimum.
+- **ALEX48:** 48 billable weeks, 80% training cost multiplier. Same variable customization.
+- **W52:** 52 billable weeks, full training cost. Same variable customization.
+- All variables (leave days, training weeks, hours/week, on-cost rates) are user-editable. BOOT gate (3.5) blocks saving if any value drops below award/NES minimum for apprentices/trainees.
+
+**Files:**
+- Create: `crm7/src/types/workerTypes.ts` — WorkerType enum, type-specific config templates
+- Create: `crm7/src/types/rateSchedule.ts` — RateSchedule entity (shared structure for awards/EA/custom)
+- Create: `crm7/src/lib/rates/rateSourceResolver.ts` — rate hierarchy logic + rate schedule lookup
+- Create: `crm7/src/lib/rates/rateScheduleParser.ts` — Jodie AI parsing pipeline for EA/custom documents
+- Create: `crm7/src/lib/rates/increaseScheduler.ts` — scheduled rate increase detection + recalculation trigger
+- Create: `crm7/src/schemas/rateSchedule.ts` — Zod schema for rate schedule
+- Create: `crm7/src/stores/rateScheduleStore.ts` — CRUD + filters by source_type, status
+- Modify: `crm7/src/utils/crmCalcBridge.ts` — add `workerType` to `CrmChargeRateInput`, build config per type
+- Modify: `crm7/src/pages/charge-rates/create.tsx` — rate source selector UI, worker type selector
+
+**Steps:**
+1. Define `WorkerType` enum and config template per type:
+   - Apprentice/Trainee: full on-costs, training weeks, funding, award progression
+   - Labour hire FT: full on-costs, zero training, no funding
+   - Labour hire PT: same as FT, `hoursPerWeek` from placement
+   - Casual: casual loading (from award/EA/input) replaces leave loading/entitlements, super + WC only
+   - ABN: rate + margin only — zero on-costs
+2. Create `RateSchedule` entity + Zod schema + store — unified structure for awards, EAs, custom arrangements
+3. Create `rateScheduleParser.ts`: Jodie AI pipeline to extract structured rate data from uploaded EA/custom PDFs
+   - Uses AI SDK to parse document → extract classifications, rates, penalties, allowances, increase schedule
+   - Human review step before activation
+4. Create `rateSourceResolver.ts`: given worker + rate schedule → resolved pay rate, penalties, allowances
+5. Update `CrmChargeRateInput` with `workerType` and `rateScheduleId` fields
+6. Build config factory: `workerType` + rate schedule → pre-populated `CalcConfig` template (all fields editable)
+7. Add `casualLoading` field to `@bsuite/charge-calc` CalcConfig — sourced from rate schedule (not hardcoded). Engine should show it in oncost breakdown
+8. Create `increaseScheduler.ts`: daily check for upcoming rate increases
+   - When increase date ≤ today: recalculate all linked charge rates
+   - Notify host employers of new billing rates
+   - Notify payroll of wage adjustments
+   - Re-run BOOT for apprentice/trainee rates
+   - Record audit trail
+9. UI: worker type selector, rate source dropdown (shows all active rate schedules — awards, EAs, custom), all config fields editable
+10. UI: EA/custom upload flow — upload → Jodie parses → review → BOOT → activate
+
+**Key rule:** Billing model templates set starting values only. Every variable is editable. The only constraint is that apprentice/trainee values cannot go below award/NES minimums — enforced by BOOT gate (3.5). Once an EA/custom is parsed and activated, it behaves identically to a Fair Work award — same selection, same rate resolution, same increase handling.
+
+**Delegate to:** Claude Code 2 (~8 hours — expanded scope for rate schedule entity + AI parsing + increase scheduler)
+
+### 3.5: BOOT Validation Gate on Charge Rates
+
+> **Added by:** Claude Code session (multi-apprentice financial pipeline)
+> **Depends on:** 1.2 (BOOT schema), 3.4 (rate source), `@bsuite/charge-calc/boot` module (already built)
+
+**Problem:** When using EA or custom rates for apprentices/trainees, the Better Off Overall Test must pass per Fair Work Act s.193. The shared engine has `compareGTOBOOT()` ready but is not wired into CRM7.
+
+**Scope:** BOOT applies ONLY to apprentices and trainees on EA or custom rates. Labour hire and ABN workers are exempt. Fair Work award rates are by definition compliant.
+
+**Files:**
+- Create: `crm7/src/lib/rates/bootGate.ts` — BOOT validation wrapper
+- Modify: `crm7/src/pages/charge-rates/create.tsx` — BOOT result panel
+- Reference: `packages/charge-calc/src/boot/` — `compareBOOT()`, `compareGTOBOOT()`
+
+**Steps:**
+1. Wire `compareGTOBOOT()` from `@bsuite/charge-calc/boot` into CRM7
+2. Create `bootGate.ts`:
+   - Input: worker type, rate source, resolved config
+   - If `workerType` is apprentice/trainee AND rate source is EA/custom → run BOOT
+   - If any billing model variable is below award/NES minimum → fail with specific field flagged
+   - `humanReviewRequired: true` always (red-team L-1 requirement)
+3. Store BOOT assessment linked to `charge_rate_quote` record
+4. UI: BOOT result panel — verdict badge (pass/fail/marginal), per-class breakdown, warnings
+5. Block quote approval if verdict = 'fail'
+6. Document BOOT results for union/FWC audit trail (F16/F17 form reference)
+
+**Key rule:** `humanReviewRequired` is always `true`. The engine advises, humans decide. This is a legal compliance tool, not an autopilot.
+
+**Delegate to:** Claude Code 2 (~4 hours)
+
+### 3.6: Multi-Worker Batch Calculation + Quoting
+
+> **Added by:** Claude Code session (multi-apprentice financial pipeline)
+> **Depends on:** 3.4 (worker types + rate source), 3.5 (BOOT gate)
+> **Reference:** Donor project `generateQuote()` pattern at `/mnt/.../apprenticetracker/.../charge-rate-calculator.ts`
+
+**Problem:** Current calc is single-worker only. GTOs quote host employers for multiple workers at once — different types, different years, different rates.
+
+**Files:**
+- Create: `crm7/src/utils/batchCalcBridge.ts` — multi-worker wrapper
+- Modify: `crm7/src/pages/charge-rates/create.tsx` — multi-select UI (form already has `selectedApprentices` and `isBulkOperation` stubs)
+- Modify: `crm7/src/stores/chargeRateStore.ts` — batch quote storage
+
+**Steps:**
+1. Create `calculateBatch()`:
+   ```ts
+   function calculateBatch(workers: BatchWorkerInput[]): BatchCalcResult
+   // Loops individual calculate() per worker, aggregates into single quote
+   // Each worker has: id, name, workerType, payRate, year, config overrides
+   ```
+2. Quote output: per-worker line items + aggregate totals
+   - Line item: `"{Name} — {WorkerType} Year {N} ({BillingModel})"`, weekly charge, annual total
+   - Summary: total workers, total annual cost, total charge, blended margin
+3. Wire BOOT gate (3.5) for each apprentice/trainee in batch — any BOOT fail blocks entire quote
+4. UI: Multi-select workers from placement list, select billing model template, customize variables, calculate all, review per-worker breakdown
+5. Save as `charge_rate_quote` with status workflow (draft → reviewed → approved)
+
+**Donor pattern to harvest:** `generateQuote(hostEmployerId, apprenticeIds[], billingModelType)` from ApprenticeTracker — iterate → calculate → line items → single quote with `totalAmount`.
+
+**Delegate to:** Claude Code 2 (~6 hours)
+
+### 3.7: Charge Rate → Payroll Push-Through
+
+> **Added by:** Claude Code session (multi-apprentice financial pipeline)
+> **Depends on:** 3.6 (batch calc), 3.3 (Xero completion)
+
+**Problem:** Approved charge rates must feed payroll. Currently charge-rates and payroll are disconnected.
+
+**Scope by worker type:**
+- **Apprentice/Trainee/FT/PT** → standard payroll employee via `PayrollAdapter.submitPayRun()`
+- **Casual** → casual pay run items (casual loading as separate earnings line, no leave accrual)
+- **ABN** → NOT in payroll (contractors invoice the GTO; appears in billing only as cost + margin pass-through)
+
+**Files:**
+- Create: `crm7/src/lib/pipelines/chargeToPayroll.ts`
+- Modify: `crm7/src/types/payroll.ts` — add `workerType` to `PayRunItemInput`
+- Modify: `crm7/src/lib/payroll/xeroAdapter.ts` — handle casual loading earnings line
+
+**Mid-Period Rate Adjustment Handling:**
+Rate increases don't always align — e.g. super goes up 1 July, EA wage increase on 1 January, WC premium renewal in March. Two strategies:
+1. **Pre-billing:** When a known increase is upcoming (e.g. legislated super increase), the charge rate can factor it in early — spread the cost increase across the billing period rather than a sudden jump. Configurable per tenant.
+2. **Adjustment on trigger:** When an on-cost change takes effect mid-billing-period (super, WC, payroll tax, award rate), the system:
+   - Recalculates charge rate from the effective date
+   - Generates a **billing adjustment** (credit note for old rate period + new invoice at new rate, or a single adjustment line item)
+   - Sends **payroll adjustment notification** (new base rate / super rate / allowance from effective date)
+   - Records audit trail: what changed, old value, new value, effective date, who triggered it
+
+**Steps:**
+1. Create `chargeToPayroll()`: approved charge rate quote → `PayRunSubmission`
+   - Map each worker's charge rate to `PayRunItemInput`:
+     - `baseRate` from calc result
+     - `superGuarantee` from calc result
+     - `allowances` mapped from charge rate allowances
+     - `overtimeHours` from approved timesheets
+   - Skip ABN workers (they're not payrolled)
+   - Flag casual workers for casual loading treatment
+2. Payday super compliance (effective 1 July 2026): super included in each pay run, 3-day allocation window
+3. STP Phase 2: disaggregated gross reporting (overtime, allowances, bonuses, leave reported separately)
+4. Handle mid-period on-cost changes:
+   - Monitor known increase dates: super (1 July annually), WC (renewal date), payroll tax (threshold changes), EA scheduled increases
+   - When triggered: recalculate affected charge rates, generate payroll adjustment, notify billing
+   - Option: pre-bill at anticipated rate (configurable per tenant — `tenant_settings.prebill_known_increases`)
+5. UI: "Push to Payroll" button on approved charge rate quotes + rate adjustment history panel
+
+**Delegate to:** Claude Code 2 (~5 hours — expanded for mid-period adjustment logic)
+
+### 3.8: Charge Rate → Host Employer Billing
+
+> **Added by:** Claude Code session (multi-apprentice financial pipeline)
+> **Depends on:** 3.6 (batch calc), 3.1 (invoice generation)
+
+**Problem:** Approved charge rates + approved timesheets must generate host employer invoices. Currently billing and charge-rates are disconnected.
+
+**All worker types are billed to host employer**, but line items differ:
+- **Apprentice/Trainee/FT/PT:** charge rate × hours — includes all on-costs in rate
+- **Casual:** charge rate × hours — casual loading baked into rate, noted in description
+- **ABN:** contractor rate + GTO margin — no on-costs, line item shows "Contractor — {Name}"
+
+**Files:**
+- Create: `crm7/src/lib/pipelines/chargeToBilling.ts`
+- Modify: `crm7/src/lib/billingEngine.ts` — accept worker type for line item description
+- Modify: invoice template — worker type labelling
+
+**Steps:**
+1. Create `chargeToBilling()`: approved quote + approved timesheets → invoice draft
+   - Per-worker line items: `"{Name} — {WorkerType} Year {N} ({BillingModel})"`
+   - Quantity = billable weeks (from billing model template, customized)
+   - Unit price = weekly charge (chargeRate × hoursPerWeek)
+   - GST at 10% (configurable per `tenant_settings`)
+   - Payment terms from `tenant_settings` (default 30 days)
+2. Wire to existing `billingEngine.generateInvoiceFromTimesheets()`
+3. Billing model determines invoiced scope:
+   - Standard: productive weeks only (template default 39w, customizable)
+   - ALEX48: 48 weeks at 80% training cost multiplier
+   - W52: all 52 weeks at full rate
+4. Handle mid-period rate adjustments from 3.7:
+   - When charge rate is recalculated due to on-cost change (super, WC, EA increase):
+     - Generate **adjustment line item** on next invoice: "Rate Adjustment — {Name} ({Reason}, effective {Date})"
+     - OR generate credit note for prior period + new invoice at new rate (configurable per tenant)
+   - Host employer notified of rate change before adjusted invoice is sent
+5. UI: "Generate Invoice" button on approved quotes, shows preview before creating
+6. UI: Rate change notification template — sent to host employer with old rate, new rate, reason, effective date
+
+**Delegate to:** Claude Code 2 (~5 hours — expanded for mid-period billing adjustments)
+
+---
+
+### Phase 3 Pipeline Architecture (3.4–3.8)
+
+```
+Fair Work API / EA / Custom
+         ↓
+   Rate Source Selection (3.4) + Worker Type
+         ↓
+   BOOT Validation Gate (3.5)  ←── only for apprentices/trainees on EA/custom
+         ↓ (pass/marginal + human review)
+   Multi-Worker Batch Calc (3.6)  ←── calculate() per worker, aggregate quote
+         ↓
+   Approved Charge Rate Quote
+        ↓                    ↓
+   Payroll (3.7)          Billing (3.8)
+   PayRunItem              Invoice Line Items
+   per worker              per worker per host
+   (skip ABN)              (all types including ABN)
+        ↓                    ↓
+   Xero Adapter           billingEngine
+   (existing A5)          (existing A3)
+```
+
 ---
 
 ## Phase 4: External Integrations (Weeks 13-16)
@@ -583,14 +847,19 @@ Harvest ABN, TFN, phone, postcode validators from CRM7-Standalone donor. Place i
 | 2.5 | 4 hours | Consolidate charge-calc |
 | 3.1 | 8 hours | Invoice generation |
 | 3.3 | 6 hours | Xero payroll completion |
+| 3.4 | 8 hours | Worker type model + rate source pipeline + EA/custom AI parsing + increase scheduler |
+| 3.5 | 4 hours | BOOT validation gate on charge rates |
+| 3.6 | 6 hours | Multi-worker batch calculation + quoting |
+| 3.7 | 5 hours | Charge rate → payroll push-through + mid-period adjustments |
+| 3.8 | 5 hours | Charge rate → host employer billing + adjustment invoicing |
 | 4.1 | 4 hours | training.gov.au integration |
 | 4.2 | 6 hours | ADMS HTTP implementation |
 | 4.3 | 8 hours | GTO Standards compliance evidence system |
 | 4.4 | 8 hours | AASS + DTWD (WA STA) + ADMS integration |
 | 5.2 | 3 hours | FK naming normalization |
-| **Total** | **~97 hours** | |
+| **Total** | **~126 hours** | |
 
-### Combined Total: ~112 hours
+### Combined Total: ~141 hours
 
 ---
 
@@ -618,3 +887,6 @@ Every task must pass before merge:
 4. New pages: PermissionGate applied
 5. API integrations: error handling + retry logic + fallback
 6. Donor harvesting: converted to TypeScript strict, no leftover `any`
+7. **No hardcoded rates** — all wages, on-costs, casual loading, leave entitlements sourced from Fair Work API, enterprise agreement, or explicit user input. No hidden engine defaults for financial values.
+8. **Billing model variables are templates** — all fields (leave days, training weeks, hours, on-cost rates) are user-editable. Only constraint: apprentice/trainee values cannot drop below award/NES minimums (enforced by BOOT gate).
+9. **BOOT required for EA/custom rates** on apprentices/trainees — `humanReviewRequired: true` always
