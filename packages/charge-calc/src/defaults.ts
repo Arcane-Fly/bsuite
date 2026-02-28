@@ -56,6 +56,7 @@ export const DEFAULT_CONFIG: CalcConfig = {
   publicHolidayDays: 10,
   sickLeaveDays: 10,
   leaveLoadingPercent: 17.5,
+  casualLoading: undefined,
   superRate: 0.12,
   superOnOT: false,
   wcRate: 0.047,
