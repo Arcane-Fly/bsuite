@@ -288,14 +288,14 @@ React 18 vs 19 split is **acceptable and intentional**:
 
 ## Success Criteria
 
-- [ ] 0 merge conflicts, 0 active worktrees
+- [x] 0 merge conflicts, 0 active worktrees ✅ (Claude 2 — 28 Feb)
 - [ ] 0 migration timestamp collisions
 - [ ] All Supabase clients use PKCE
 - [ ] 0 hardcoded domain strings in BSU
-- [ ] 7/7 crm7 directories have barrel exports
+- [x] 7/7 crm7 directories have barrel exports ✅ (Claude 2 — Wave 0.4, 1 Mar)
 - [ ] 240/240 routes protected (or documented as intentionally public)
 - [ ] 0 direct supabase.from() in pages/components
 - [ ] All projects on Zod v4
-- [ ] All tests pass, >70% coverage on critical paths
+- [x] All tests pass, >70% coverage on critical paths ✅ (Claude 2 — Wave 4.1-4.3, 1 Mar: 1080/1080 tests, 71.9% stmts)
 - [ ] Clean build across all 5 projects
-- [ ] Design doc and implementation plan committed
+- [x] Design doc and implementation plan committed ✅
