@@ -209,6 +209,18 @@ export function createCandidateTools(context: ToolExecutionContext): Record<stri
         try {
           const sb = getSupabase(context);
 
+          // Validate candidate belongs to this tenant
+          const { data: candidate } = await sb
+            .from('r7_candidates')
+            .select('id')
+            .eq('id', params.candidate_id)
+            .eq('tenant_id', context.tenantId)
+            .maybeSingle();
+
+          if (!candidate) {
+            return { success: false, message: 'Candidate not found in your workspace' };
+          }
+
           // Check if already in pool
           const { data: existing } = await sb
             .from('r7_candidate_pool_memberships')

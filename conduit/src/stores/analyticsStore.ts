@@ -83,11 +83,12 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
           .eq('tenant_id', tenantId),
       ])
 
-      if (candidatesRes.error || jobsRes.error || stagesRes.error || entriesRes.error) {
+      if (candidatesRes.error || jobsRes.error || stagesRes.error || entriesRes.error || commsCountRes.error) {
         const msg = candidatesRes.error?.message
           || jobsRes.error?.message
           || stagesRes.error?.message
           || entriesRes.error?.message
+          || commsCountRes.error?.message
           || 'Failed to load analytics'
         set({ error: msg, loading: false })
         return

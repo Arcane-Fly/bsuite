@@ -42,6 +42,7 @@ git checkout development
 **Problem:** 356 .md files, 78 outside `/docs/`, no naming convention, no indexing.
 
 **Steps:**
+
 1. Inventory all .md files across repo (done — see audit above)
 2. For each subproject root (braden/, bsu/, crm7/, R80.3/, conduit/):
    - Keep: README.md, CLAUDE.md, AGENTS.md, CONTRIBUTING.md (standard files)
@@ -61,6 +62,7 @@ git checkout development
 **Problem:** 93 files in `docs/crm13-docs/`, no README, no import markers, duplicates with `docs/`.
 
 **Steps:**
+
 1. Create `docs/crm13-docs/README.md` with table of all 93 files, organized by category
 2. Add `> [IMPORTED FROM CRM13] — Reference only, not canonical` header to each file
 3. Identify duplicates between `docs/` and `docs/crm13-docs/` — remove from `docs/` if CRM13 version is more complete
@@ -73,6 +75,7 @@ git checkout development
 **Problem:** 174 pages, no inventory, can't prioritize remediation without knowing what exists.
 
 **Steps:**
+
 1. List all files in `crm7/src/pages/` with:
    - Page name and route
    - Entity/store it uses (or "direct Supabase" if no store)
@@ -87,6 +90,7 @@ git checkout development
 **Problem:** No permission spec for CRM7. 174 pages accessible to all users.
 
 **Steps:**
+
 1. Harvest permission constants from `crm7/src/lib/permissions.ts`
 2. Cross-reference with portal role detection in `src/pages/portal/index.tsx`
 3. Map against DRY-ONE-SHOT-ARCHITECTURE.md data access table
@@ -104,12 +108,14 @@ git checkout development
 **Problem:** R80.3 `fairworkApi.ts` returns hardcoded 2022-2025 rates instead of calling the real API. Award rates become stale every July.
 
 **Files:**
+
 - Fix: `R80.3/src/services/fairworkApi.ts` (lines 304-342 — fallback logic)
 - Fix: `R80.3/supabase/functions/sync-award-rates/index.ts` (lines 170-180 — uses test data)
 - Reference: `R80.3/docs/fairwork-api.md` (API spec from user)
 - Reference: `R80.3/supabase/functions/auth-fairwork/index.ts` (working auth pattern)
 
 **Steps:**
+
 1. Read user-provided Fair Work API docs at `R80.3/docs/fairwork-api.md`
 2. In `fairworkApi.ts`: Change fallback from "return hardcoded data" to "call edge function, fall back to cached DB data only if API fails"
 3. In `sync-award-rates`: Replace test fixture data with actual API call using `auth-fairwork` pattern
@@ -124,6 +130,7 @@ git checkout development
 **Problem:** 0% implemented. BOOT is the competitive differentiator. Unions drill down on this.
 
 **Files:**
+
 - Reference: `.claude/projects/.../memory/boot-test-research.md` (legal framework)
 - Reference: `.claude/projects/.../memory/r80-crm7-audit.md` (BOOT engine design)
 - Reference: `docs/plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md` (Phase 2 BOOT tasks)
@@ -133,6 +140,7 @@ git checkout development
 - Create: `crm7/supabase/migrations/YYYYMMDD_create_boot_assessment.sql`
 
 **Steps:**
+
 1. Define BootAssessment entity:
    - `apprentice_id`, `award_code`, `ea_reference` (if enterprise agreement)
    - `assessment_type`: 'global' | 'per_class' | 'per_employee'
@@ -155,11 +163,13 @@ git checkout development
 **Problem:** Alerts are manual-only. No scheduled scanning for expiring documents, overdue visits, training deadlines.
 
 **Files:**
+
 - Modify: `crm7/src/stores/complianceAlertStore.ts`
 - Create: Edge function `compliance-scanner` (or Supabase cron)
 - Reference: existing ComplianceAlert entity
 
 **Steps:**
+
 1. Create edge function `compliance-alert-scanner`:
    - Scan `document_records` for `expires_at < NOW() + INTERVAL '30 days'` → create document_expiry alert
    - Scan `site_visits` for hosts with no visit in 28+ days → create overdue_visit alert
@@ -177,18 +187,22 @@ git checkout development
 **Problem:** 35% implemented. No workflow from matching → approval → active → monitoring → completion.
 
 **Files:**
+
 - Modify: `crm7/src/types/entities.ts` — enhance Placement entity
 - Create: `crm7/src/lib/workflows/placementWorkflow.ts`
 - Modify: `crm7/src/pages/placements/` — add workflow UI
 - Create: migration for placement_status_history table
 
 **Steps:**
+
 1. Define placement status machine:
+
    ```
    draft → matching → offered → accepted → active → monitoring → completing → completed
                     ↘ rejected    ↘ declined         ↘ suspended → resumed
                                                       ↘ terminated
    ```
+
 2. Create `placement_status_history` table (placement_id, from_status, to_status, changed_by, changed_at, reason)
 3. Add validation: Can't go active without WHS induction complete, training plan approved, host agreement current
 4. Add UI: Status timeline, transition buttons with reason capture, validation error display
@@ -200,12 +214,14 @@ git checkout development
 **Problem:** 15% implemented. No classification → rate mapping, no penalty calculation, no progression tracking.
 
 **Files:**
+
 - Reference: `R80.3/docs/fairwork-api.md` (API endpoints for classifications, penalties, allowances)
 - Modify: `crm7/src/types/entities.ts` — enhance Award, Classification entities
 - Create: `crm7/src/lib/awards/awardInterpreter.ts`
 - Create: `crm7/src/lib/awards/penaltyCalculator.ts`
 
 **Steps:**
+
 1. Fetch classifications endpoint from Fair Work API: `GET /api/v1/awards/{id}/classifications`
 2. Map apprentice year + trade area → classification level → base rate
 3. Implement penalty multiplier logic: weekend × 1.5, public holiday × 2.5, late night × 1.25 (configurable per award)
@@ -220,12 +236,15 @@ git checkout development
 **Problem:** 35% implemented. Entities exist but no eligibility rules, no milestone auto-generation, no state-specific logic.
 
 **Files:**
+
 - Modify: `crm7/src/lib/funding/admsAdapter.ts` (507 lines of stubs)
 - Create: `crm7/src/lib/funding/eligibilityEngine.ts`
 - Create: `crm7/src/lib/funding/milestoneGenerator.ts`
 
 **Steps:**
+
 1. Define eligibility rules as data (not code):
+
    ```ts
    const ELIGIBILITY_RULES: EligibilityRule[] = [
      { program: 'boosting_apprenticeships', conditions: { year: 1, fullTime: true, qualLevel: ['III', 'IV'] } },
@@ -233,6 +252,7 @@ git checkout development
      ...
    ];
    ```
+
 2. Implement milestone generator: Given apprentice + funding source → generate milestones at 0%, 25%, 50%, 75%, 100%
 3. Wire ADMS adapter HTTP calls (replace TODO stubs with actual fetch + error handling)
 4. Add claim submission workflow UI
@@ -248,6 +268,7 @@ git checkout development
 **Problem:** 174 pages accessible to all users. No permission checks.
 
 **Files:**
+
 - Reference: CRM7-Standalone donor (`/mnt/.../CRM7-Standalone/src/lib/permissions.ts`)
 - Reference: CRM7-Standalone donor (`/mnt/.../CRM7-Standalone/src/hooks/use-permissions.ts`)
 - Create: `crm7/src/hooks/usePermissions.ts` (harvest from donor)
@@ -255,6 +276,7 @@ git checkout development
 - Modify: All page components (wrap with PermissionGate)
 
 **Steps:**
+
 1. Harvest from donor: `Permission` enum (40+ constants), `rolePermissions` map, `checkPermission`/`checkAny`/`checkAll` functions
 2. Convert to TypeScript strict (donor may have loose types)
 3. Create `usePermissions()` hook: `const { can, canAny, canAll } = usePermissions()`
@@ -268,12 +290,14 @@ git checkout development
 **Problem:** 10% implemented. Hosts can't approve timesheets, view apprentices, or request placements.
 
 **Files:**
+
 - Create: `crm7/src/pages/portal/host/dashboard.tsx`
 - Create: `crm7/src/pages/portal/host/apprentices.tsx`
 - Create: `crm7/src/pages/portal/host/timesheets.tsx`
 - Create: `crm7/src/pages/portal/host/placements.tsx`
 
 **Steps:**
+
 1. Host dashboard: Active apprentices count, pending timesheets, next site visit, compliance status
 2. Apprentice roster: List of apprentices placed at this host with progress bars
 3. Timesheet approvals: View submitted timesheets, approve/reject with comments
@@ -286,12 +310,14 @@ git checkout development
 **Problem:** 10% implemented. Apprentices can't view progress, submit timesheets, or access documents.
 
 **Files:**
+
 - Create: `crm7/src/pages/portal/apprentice/dashboard.tsx`
 - Create: `crm7/src/pages/portal/apprentice/training.tsx`
 - Create: `crm7/src/pages/portal/apprentice/timesheets.tsx`
 - Create: `crm7/src/pages/portal/apprentice/documents.tsx`
 
 **Steps:**
+
 1. Dashboard: Qualification progress, next assessment, field officer contact, WHS alerts
 2. Training plan view: Units of competency with status badges, RPL indicators
 3. Timesheet submission: Weekly hours entry, overtime flagging, submission to host for approval
@@ -304,11 +330,13 @@ git checkout development
 **Problem:** 35% implemented. No unit-to-plan mapping, no progress tracking by unit, no RTO reporting.
 
 **Files:**
+
 - Modify: `crm7/src/pages/training/` module
 - Create: `crm7/src/pages/training/plans/[id].tsx` (plan detail with unit mapping)
 - Create: `crm7/src/components/training/UnitMapper.tsx`
 
 **Steps:**
+
 1. Training plan detail page: Show apprentice, qualification, RTO, dates, status
 2. Unit mapper component: Drag/drop or checkbox to assign units to plan
 3. Progress tracker: For each unit, show status (not started → in progress → competent), assessment dates
@@ -321,11 +349,13 @@ git checkout development
 **Problem:** `crm7/src/pages/charge-rates/create.tsx` (1,295 lines) duplicates R80.3 logic. `@bsuite/charge-calc` package exists but isn't used.
 
 **Files:**
+
 - Delete most of: `crm7/src/pages/charge-rates/create.tsx`
 - Import from: `packages/charge-calc/`
 - Reference: R80.3 `charge-calculator.jsx` (gold standard)
 
 **Steps:**
+
 1. Audit `@bsuite/charge-calc` package — what's exported, what's missing
 2. Replace inline calculations in charge-rates page with `@bsuite/charge-calc` imports
 3. Keep CRM7-specific form UI, replace calculation engine only
@@ -340,6 +370,7 @@ git checkout development
 ### 3.1: Invoice generation from approved timesheets
 
 **Steps:**
+
 1. Create Invoice entity (line items, tax, total, due date, status)
 2. Auto-generate: When timesheet status → 'processed', create invoice line item
 3. GST calculation (10% for Australian entities)
@@ -351,6 +382,7 @@ git checkout development
 ### 3.2: Payment tracking and aging
 
 **Steps:**
+
 1. Create Payment entity (invoice_id, amount, payment_date, method, reference)
 2. Aging report: 0-30, 31-60, 61-90, 90+ days outstanding
 3. Payment reconciliation dashboard
@@ -362,6 +394,7 @@ git checkout development
 **Problem:** 5 major TODO blocks in `crm7/src/lib/payroll/xeroAdapter.ts`.
 
 **Steps:**
+
 1. Complete employee sync to Supabase workers table (lines 305-325)
 2. Implement earnings rate field mapping (lines 380-391)
 3. Complete payslip update logic (line 405)
@@ -389,6 +422,7 @@ git checkout development
 | ABN Contractor | Contractor | Job / Position | **None** (own insurance/super) | None | None | N/A |
 
 **Rate Source Hierarchy:**
+
 1. Fair Work API (award rates) — authoritative for award-covered workers
 2. Enterprise Agreement (parsed by Jodie AI → structured rate schedule) — already FWC-approved, BOOT already passed, no re-test needed
 3. Custom arrangement (parsed by Jodie AI → structured rate schedule) — must pass BOOT test for apprentices/trainees; labour hire at employer discretion
@@ -396,6 +430,7 @@ git checkout development
 
 **EA/Custom → Structured Rate Schedule Lifecycle:**
 Once an EBA or custom arrangement is uploaded:
+
 1. **Upload:** PDF/DOCX uploaded to document store
 2. **AI Parse:** Jodie extracts structured data — classifications, base rates, penalty multipliers, allowances, leave entitlements, casual loading rate, and **scheduled increase dates** (e.g., "3% annual increase on 1 July each year")
 3. **Human Review:** Parsed schedule presented for review + correction. BOOT run automatically.
@@ -408,6 +443,7 @@ Once an EBA or custom arrangement is uploaded:
    - Audit trail records: old rate, new rate, effective date, trigger source
 
 **Rate Schedule Entity** (shared structure for awards, EAs, and custom):
+
 - `id`, `tenant_id`, `name`, `source_type` ('award' | 'enterprise_agreement' | 'custom')
 - `source_document_id` (link to uploaded document, null for Fair Work API)
 - `award_code` (for Fair Work awards, null for EA/custom)
@@ -421,12 +457,14 @@ Once an EBA or custom arrangement is uploaded:
 - `effective_from`, `effective_to`
 
 **Billing Model Templates (all variables customizable):**
+
 - **Standard:** Default 39 billable weeks. Template starts with NES minimums (4 weeks AL, 10 days personal, 10 PH, training weeks per year). Employer/EA can provide MORE (e.g. 5 weeks AL) but not less than award minimum.
 - **ALEX48:** 48 billable weeks, 80% training cost multiplier. Same variable customization.
 - **W52:** 52 billable weeks, full training cost. Same variable customization.
 - All variables (leave days, training weeks, hours/week, on-cost rates) are user-editable. BOOT gate (3.5) blocks saving if any value drops below award/NES minimum for apprentices/trainees.
 
 **Files:**
+
 - Create: `crm7/src/types/workerTypes.ts` — WorkerType enum, type-specific config templates
 - Create: `crm7/src/types/rateSchedule.ts` — RateSchedule entity (shared structure for awards/EA/custom)
 - Create: `crm7/src/lib/rates/rateSourceResolver.ts` — rate hierarchy logic + rate schedule lookup
@@ -438,6 +476,7 @@ Once an EBA or custom arrangement is uploaded:
 - Modify: `crm7/src/pages/charge-rates/create.tsx` — rate source selector UI, worker type selector
 
 **Steps:**
+
 1. Define `WorkerType` enum and config template per type:
    - Apprentice/Trainee: full on-costs, training weeks, funding, award progression
    - Labour hire FT: full on-costs, zero training, no funding
@@ -475,11 +514,13 @@ Once an EBA or custom arrangement is uploaded:
 **Scope:** BOOT applies ONLY to apprentices and trainees on EA or custom rates. Labour hire and ABN workers are exempt. Fair Work award rates are by definition compliant.
 
 **Files:**
+
 - Create: `crm7/src/lib/rates/bootGate.ts` — BOOT validation wrapper
 - Modify: `crm7/src/pages/charge-rates/create.tsx` — BOOT result panel
 - Reference: `packages/charge-calc/src/boot/` — `compareBOOT()`, `compareGTOBOOT()`
 
 **Steps:**
+
 1. Wire `compareGTOBOOT()` from `@bsuite/charge-calc/boot` into CRM7
 2. Create `bootGate.ts`:
    - Input: worker type, rate source, resolved config
@@ -504,17 +545,21 @@ Once an EBA or custom arrangement is uploaded:
 **Problem:** Current calc is single-worker only. GTOs quote host employers for multiple workers at once — different types, different years, different rates.
 
 **Files:**
+
 - Create: `crm7/src/utils/batchCalcBridge.ts` — multi-worker wrapper
 - Modify: `crm7/src/pages/charge-rates/create.tsx` — multi-select UI (form already has `selectedApprentices` and `isBulkOperation` stubs)
 - Modify: `crm7/src/stores/chargeRateStore.ts` — batch quote storage
 
 **Steps:**
+
 1. Create `calculateBatch()`:
+
    ```ts
    function calculateBatch(workers: BatchWorkerInput[]): BatchCalcResult
    // Loops individual calculate() per worker, aggregates into single quote
    // Each worker has: id, name, workerType, payRate, year, config overrides
    ```
+
 2. Quote output: per-worker line items + aggregate totals
    - Line item: `"{Name} — {WorkerType} Year {N} ({BillingModel})"`, weekly charge, annual total
    - Summary: total workers, total annual cost, total charge, blended margin
@@ -534,17 +579,20 @@ Once an EBA or custom arrangement is uploaded:
 **Problem:** Approved charge rates must feed payroll. Currently charge-rates and payroll are disconnected.
 
 **Scope by worker type:**
+
 - **Apprentice/Trainee/FT/PT** → standard payroll employee via `PayrollAdapter.submitPayRun()`
 - **Casual** → casual pay run items (casual loading as separate earnings line, no leave accrual)
 - **ABN** → NOT in payroll (contractors invoice the GTO; appears in billing only as cost + margin pass-through)
 
 **Files:**
+
 - Create: `crm7/src/lib/pipelines/chargeToPayroll.ts`
 - Modify: `crm7/src/types/payroll.ts` — add `workerType` to `PayRunItemInput`
 - Modify: `crm7/src/lib/payroll/xeroAdapter.ts` — handle casual loading earnings line
 
 **Mid-Period Rate Adjustment Handling:**
 Rate increases don't always align — e.g. super goes up 1 July, EA wage increase on 1 January, WC premium renewal in March. Two strategies:
+
 1. **Pre-billing:** When a known increase is upcoming (e.g. legislated super increase), the charge rate can factor it in early — spread the cost increase across the billing period rather than a sudden jump. Configurable per tenant.
 2. **Adjustment on trigger:** When an on-cost change takes effect mid-billing-period (super, WC, payroll tax, award rate), the system:
    - Recalculates charge rate from the effective date
@@ -553,6 +601,7 @@ Rate increases don't always align — e.g. super goes up 1 July, EA wage increas
    - Records audit trail: what changed, old value, new value, effective date, who triggered it
 
 **Steps:**
+
 1. Create `chargeToPayroll()`: approved charge rate quote → `PayRunSubmission`
    - Map each worker's charge rate to `PayRunItemInput`:
      - `baseRate` from calc result
@@ -579,16 +628,19 @@ Rate increases don't always align — e.g. super goes up 1 July, EA wage increas
 **Problem:** Approved charge rates + approved timesheets must generate host employer invoices. Currently billing and charge-rates are disconnected.
 
 **All worker types are billed to host employer**, but line items differ:
+
 - **Apprentice/Trainee/FT/PT:** charge rate × hours — includes all on-costs in rate
 - **Casual:** charge rate × hours — casual loading baked into rate, noted in description
 - **ABN:** contractor rate + GTO margin — no on-costs, line item shows "Contractor — {Name}"
 
 **Files:**
+
 - Create: `crm7/src/lib/pipelines/chargeToBilling.ts`
 - Modify: `crm7/src/lib/billingEngine.ts` — accept worker type for line item description
 - Modify: invoice template — worker type labelling
 
 **Steps:**
+
 1. Create `chargeToBilling()`: approved quote + approved timesheets → invoice draft
    - Per-worker line items: `"{Name} — {WorkerType} Year {N} ({BillingModel})"`
    - Quantity = billable weeks (from billing model template, customized)
@@ -641,6 +693,7 @@ Fair Work API / EA / Custom
 ### 4.1: training.gov.au API integration
 
 **Steps:**
+
 1. Wire `tga-search` edge function to real REST API (`https://training.gov.au/api`)
 2. Search qualifications by name/code
 3. Verify RTO registration status
@@ -654,6 +707,7 @@ Fair Work API / EA / Custom
 ### 4.2: ADMS HTTP implementation
 
 **Steps:**
+
 1. Implement OAuth2 token exchange in `admsAdapter.ts` (line 491)
 2. Wire `registerApprenticeship()` HTTP POST (line 231)
 3. Wire `submitClaim()` HTTP POST (line 328)
@@ -669,6 +723,7 @@ Fair Work API / EA / Custom
 **Note:** AVETMISS is for RTO compliance, NOT GTO compliance. GTOs follow the National Standards for Group Training Organisations (2017). See `GTO-Standards.md`.
 
 **GTO Standards structure:**
+
 1. **Standard 1: Recruitment, Employment and Induction** (1.1–1.4)
    - Pre-contract information provision to apprentice/trainee
    - Induction program with sign-off
@@ -682,6 +737,7 @@ Fair Work API / EA / Custom
 3. **Standard 3: Sustainable Business, Governance and Administration**
 
 **Steps:**
+
 1. Create GTO compliance evidence schema: `GtoComplianceEvidence` entity
    - `standard_ref` (e.g., '1.1', '2.3'), `apprentice_id` or `host_employer_id`
    - `evidence_type` (document, sign-off, site_visit_record, feedback_analysis, review_record)
@@ -702,6 +758,7 @@ Fair Work API / EA / Custom
 3. **australianapprenticeships.gov.au** — Federal portal. Funding source through ADMS system.
 
 **Apprentice registration flow:**
+
 ```
 GTO recruits apprentice → AASS officially registers apprentice (federal)
                         → STA registers training contract (state)
@@ -729,6 +786,7 @@ GTO recruits apprentice → AASS officially registers apprentice (federal)
 **Steps:**
 
 **A. AASS integration (federal apprentice registration):**
+
 1. Create `crm7/src/lib/integrations/aass/aassAdapter.ts`
 2. Define integration points:
    - New apprentice sign-up request → AASS (they do the official registration)
@@ -738,6 +796,7 @@ GTO recruits apprentice → AASS officially registers apprentice (federal)
 4. Add AASS registration status to apprentice profile
 
 **B. DTWD / STA integration (state training contract + funding):**
+
 1. Research DTWD Apprenticeship Office API/portal (<https://www.dtwd.wa.gov.au/apprenticeship-office>)
 2. Define integration points:
    - Training contract registration (new apprentice → DTWD)
@@ -752,11 +811,13 @@ GTO recruits apprentice → AASS officially registers apprentice (federal)
 7. Add GovtIntegrationLog entries for all submissions
 
 **C. ADMS integration (federal funding through STAs):**
+
 - Wire existing `admsAdapter.ts` (507 lines of stubs) to actual HTTP calls
 - ADMS submissions go through STAs — STA is the funding intermediary
 - See Task 4.2 for ADMS HTTP implementation details
 
 **Note:** DTWD and AASS may use manual portal submission rather than API. If so, create:
+
 - Export function to generate submission-format documents
 - Checklist of manual steps with auto-populated form fields
 - Status tracking (submitted, acknowledged, registered, rejected)
@@ -766,6 +827,7 @@ GTO recruits apprentice → AASS officially registers apprentice (federal)
 ### 4.5: USI Registry validation
 
 **Steps:**
+
 1. Create USI validation service (verify format: 10-char alphanumeric)
 2. If USI Registry API available: wire lookup endpoint
 3. Block training plan enrollment if USI invalid/missing
@@ -881,6 +943,7 @@ Harvest ABN, TFN, phone, postcode validators from CRM7-Standalone donor. Place i
 ## Quality Gates
 
 Every task must pass before merge:
+
 1. `npx tsc --noEmit` — zero type errors
 2. New migrations: tested in local Supabase
 3. New stores: at least one unit test

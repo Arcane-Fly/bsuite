@@ -14,13 +14,6 @@ import { persist } from 'zustand/middleware';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
-export interface AIMessage {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: string;
-}
-
 export interface ToolExecution {
   id: string;
   toolName: string;
@@ -52,11 +45,8 @@ interface AIStore {
   setIsOpen: (open: boolean) => void;
   toggleOpen: () => void;
 
-  // Messages (persisted)
-  messages: AIMessage[];
-  addMessage: (message: AIMessage) => void;
-  setMessages: (messages: AIMessage[]) => void;
-  clearMessages: () => void;
+  // Conversation Reset
+  clearConversation: () => void;
 
   // Loading State
   isLoading: boolean;
@@ -109,12 +99,8 @@ export const useAIStore = create<AIStore>()(
       setIsOpen: (open) => set({ isOpen: open }),
       toggleOpen: () => set((s) => ({ isOpen: !s.isOpen })),
 
-      // Messages
-      messages: [],
-      addMessage: (message) =>
-        set((s) => ({ messages: [...s.messages, message] })),
-      setMessages: (messages) => set({ messages }),
-      clearMessages: () => set({ messages: [], toolExecutions: [] }),
+      // Conversation Reset
+      clearConversation: () => set({ toolExecutions: [] }),
 
       // Loading
       isLoading: false,
@@ -177,7 +163,6 @@ export const useAIStore = create<AIStore>()(
     {
       name: 'conduit-ai-store',
       partialize: (state) => ({
-        messages: state.messages,
         usageQuota: state.usageQuota,
         quotaRemaining: state.quotaRemaining,
         userTier: state.userTier,

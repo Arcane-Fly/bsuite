@@ -4,10 +4,10 @@
  * 3 tools for recruitment summaries, source effectiveness, and compliance overview.
  */
 
+import { createClient } from '@supabase/supabase-js';
 import type { Tool } from 'ai';
 import { tool } from 'ai';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
 import type { ToolExecutionContext, ToolResult } from './index';
 
 function getSupabase(ctx: ToolExecutionContext) {
@@ -39,6 +39,7 @@ export function createAnalyticsTools(context: ToolExecutionContext): Record<stri
             sb
               .from('r7_applications')
               .select('id, status, applied_at')
+              .eq('tenant_id', context.tenantId)
               .gte('applied_at', since),
             sb
               .from('r7_interviews')
@@ -155,6 +156,7 @@ export function createAnalyticsTools(context: ToolExecutionContext): Record<stri
           const { data: checks } = await sb
             .from('r7_compliance_checks')
             .select('id, check_type, status, expires_at, candidate_id, candidate:r7_candidates(first_name, last_name)')
+            .eq('tenant_id', context.tenantId)
             .order('expires_at', { ascending: true });
 
           const allChecks = checks ?? [];

@@ -34,7 +34,7 @@ export function AIAssistant() {
     aiEnabled,
     userTier,
     usageQuota,
-    clearMessages: clearStoreMessages,
+    clearConversation,
   } = useAIStore();
 
   // ─── Chat Hook ─────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export function AIAssistant() {
 
   const handleNewConversation = () => {
     setMessages([]);
-    clearStoreMessages();
+    clearConversation();
   };
 
   const handleUpgrade = () => {

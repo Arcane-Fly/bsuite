@@ -20,7 +20,6 @@ export const AI_CONFIG = {
   /** Rate limiting */
   rateLimits: {
     maxRequestsPerMinute: 20,
-    maxTokensPerMinute: 100_000,
     maxRequestsPerDay: 500,
   },
 

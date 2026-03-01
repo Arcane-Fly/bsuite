@@ -4,10 +4,10 @@
  * 4 tools for searching jobs, viewing applications, drafting descriptions, and metrics.
  */
 
+import { createClient } from '@supabase/supabase-js';
 import type { Tool } from 'ai';
 import { tool } from 'ai';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
 import type { ToolExecutionContext, ToolResult } from './index';
 
 function getSupabase(ctx: ToolExecutionContext) {
@@ -72,6 +72,7 @@ export function createJobTools(context: ToolExecutionContext): Record<string, To
           let query = sb
             .from('r7_applications')
             .select('id, status, applied_at, candidate:r7_candidates(id, first_name, last_name, email, rating)')
+            .eq('tenant_id', context.tenantId)
             .eq('job_id', params.job_id);
 
           if (params.status) query = query.eq('status', params.status);

@@ -11,6 +11,7 @@
 **Gold Standard Reference:** `/home/braden/Desktop/Dev/bsuite/charge-calculator.jsx` — the `calculate()` function (lines 26–156). All formulas must match this file's output.
 
 **Entity Ownership (per DRY-ONE-SHOT-ARCHITECTURE.md):**
+
 - Award Rates → Owned by R80.3
 - Charge Calculations → Owned by R80.3
 - Contacts/Clients/Apprentices → Owned by CRM7
@@ -23,6 +24,7 @@
 ### Task 1: Create shared package directory structure
 
 **Files:**
+
 - Create: `packages/charge-calc/package.json`
 - Create: `packages/charge-calc/tsconfig.json`
 - Create: `packages/charge-calc/vitest.config.ts`
@@ -133,6 +135,7 @@ git commit -m "chore(shared): scaffold @bsuite/charge-calc package"
 ### Task 2: Define core types (ported from charge-calculator.jsx + best of calculationUtils.ts)
 
 **Files:**
+
 - Create: `packages/charge-calc/src/types.ts`
 
 **Step 1: Write the failing test**
@@ -448,6 +451,7 @@ git commit -m "feat(charge-calc): define core types with Zod validation"
 ### Task 3: Implement core `calculate()` function — allowances + annual pay
 
 **Files:**
+
 - Create: `packages/charge-calc/src/calculate.ts`
 - Create: `packages/charge-calc/src/__tests__/calculate.test.ts`
 
@@ -1057,6 +1061,7 @@ git commit -m "feat(charge-calc): implement core calculate() matching gold stand
 ### Task 4: Cross-verification test — charge-calculator.jsx golden outputs
 
 **Files:**
+
 - Create: `packages/charge-calc/src/__tests__/golden.test.ts`
 
 This test runs both the JSX reference and the new TypeScript engine with identical inputs and asserts identical outputs. This is the compliance-critical verification.
@@ -1287,6 +1292,7 @@ git commit -m "test(charge-calc): add golden output tests verified against Excel
 ### Task 5: Property-based invariant tests
 
 **Files:**
+
 - Create: `packages/charge-calc/src/__tests__/invariants.test.ts`
 
 These tests verify mathematical properties that must always hold regardless of input values.
@@ -1410,6 +1416,7 @@ git commit -m "test(charge-calc): add property-based invariant tests for complia
 ### Task 6: Wire R80.3 to consume @bsuite/charge-calc
 
 **Files:**
+
 - Modify: `R80.3/package.json` — add workspace dependency
 - Modify: `R80.3/vite.config.ts` — add alias
 - Create: `R80.3/src/utils/calcBridge.ts` — adapter layer
@@ -1581,6 +1588,7 @@ git commit -m "feat(r80): wire @bsuite/charge-calc via adapter bridge"
 ### Task 7: Wire CRM7 to consume @bsuite/charge-calc
 
 **Files:**
+
 - Modify: `crm7/package.json` — add dependency
 - Modify: `crm7/src/pages/charge-rates/create.tsx` — replace inline calc
 
@@ -1679,6 +1687,7 @@ git commit -m "refactor(crm7): replace inline calc with @bsuite/charge-calc"
 ### Task 8: Add default configs export to shared package
 
 **Files:**
+
 - Modify: `packages/charge-calc/src/index.ts`
 - Create: `packages/charge-calc/src/defaults.ts`
 
@@ -1755,6 +1764,7 @@ git commit -m "feat(charge-calc): add DEFAULT_CONFIG and DEFAULT_PENALTIES expor
 ### Task 9: Deprecate r8Calc.ts and old calculatorStore calculation path
 
 **Files:**
+
 - Modify: `R80.3/src/lib/r8Calc.ts` — add deprecation notice
 - Modify: `R80.3/src/stores/index.ts` — update re-exports
 
@@ -1819,6 +1829,7 @@ git add -A && git commit -m "fix(shared): resolve test/type issues from integrat
 ### Task 11: Create Supabase Edge Function wrapper
 
 **Files:**
+
 - Create: `supabase/functions/charge-calc/index.ts`
 
 This provides server-side calculation for audit trails and compliance verification.
@@ -1890,6 +1901,7 @@ git commit -m "feat(edge): scaffold charge-calc Supabase Edge Function"
 ### Task 12: Phase 1 completion — integration smoke test
 
 **Files:**
+
 - Create: `packages/charge-calc/src/__tests__/integration.test.ts`
 
 **Step 1: Write integration test that exercises the full pipeline**

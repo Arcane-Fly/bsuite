@@ -28,15 +28,16 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
 
           const { data: stages, error: stageErr } = await sb
             .from('r7_pipeline_stages')
-            .select('id, name, position, color')
+            .select('id, name, "order", color')
             .eq('tenant_id', context.tenantId)
-            .order('position', { ascending: true });
+            .order('order', { ascending: true });
 
           if (stageErr) return { success: false, message: 'Failed to fetch stages', error: stageErr.message };
 
           let entryQuery = sb
             .from('r7_pipeline_entries')
-            .select('id, stage_id, candidate_id, moved_at, created_at');
+            .select('id, stage_id, candidate_id, moved_at, created_at')
+            .eq('tenant_id', context.tenantId);
 
           if (params.job_id) {
             entryQuery = entryQuery.eq('job_id', params.job_id);
@@ -53,7 +54,7 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
           const overview = (stages ?? []).map((s) => ({
             stage_id: s.id,
             stage_name: s.name,
-            position: s.position,
+            order: s.order,
             color: s.color,
             candidate_count: entriesByStage.get(s.id) ?? 0,
           }));
@@ -88,6 +89,7 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
               moved_at: new Date().toISOString(),
             })
             .eq('id', params.entry_id)
+            .eq('tenant_id', context.tenantId)
             .select('id, stage_id, candidate_id, candidate:r7_candidates(first_name, last_name), stage:r7_pipeline_stages(name)')
             .single();
 
@@ -119,6 +121,7 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
           const { data: existing } = await sb
             .from('r7_pipeline_entries')
             .select('id')
+            .eq('tenant_id', context.tenantId)
             .eq('candidate_id', params.candidate_id)
             .eq('job_id', params.job_id)
             .maybeSingle();
@@ -130,6 +133,7 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
           const { data, error } = await sb
             .from('r7_pipeline_entries')
             .insert({
+              tenant_id: context.tenantId,
               candidate_id: params.candidate_id,
               job_id: params.job_id,
               stage_id: params.stage_id,
@@ -165,6 +169,7 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
           let query = sb
             .from('r7_pipeline_entries')
             .select('id, moved_at, created_at, candidate:r7_candidates(id, first_name, last_name, email, status, rating), job:r7_jobs(id, title)')
+            .eq('tenant_id', context.tenantId)
             .eq('stage_id', params.stage_id);
 
           if (params.job_id) query = query.eq('job_id', params.job_id);
@@ -199,13 +204,14 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
 
           const { data: stages } = await sb
             .from('r7_pipeline_stages')
-            .select('id, name, position')
+            .select('id, name, "order"')
             .eq('tenant_id', context.tenantId)
-            .order('position', { ascending: true });
+            .order('order', { ascending: true });
 
           let entryQuery = sb
             .from('r7_pipeline_entries')
-            .select('id, stage_id, moved_at, created_at');
+            .select('id, stage_id, moved_at, created_at')
+            .eq('tenant_id', context.tenantId);
 
           if (params.job_id) entryQuery = entryQuery.eq('job_id', params.job_id);
 
@@ -238,7 +244,7 @@ export function createPipelineTools(context: ToolExecutionContext): Record<strin
               return {
                 stage_name: s.name,
                 stage_id: s.id,
-                position: s.position,
+                order: s.order,
                 total_candidates: stats.total,
                 stuck_candidates: stats.stuck,
                 avg_dwell_days: Math.round(stats.avgDwellDays * 10) / 10,
