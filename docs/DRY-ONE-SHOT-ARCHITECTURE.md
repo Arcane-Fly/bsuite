@@ -2,7 +2,7 @@
 
 **Applies to:** CRM7 • R8 • BSU • Conduit • All future modules
 **Source of truth:** Unified Supabase schema (`business-suite-unified/database/`)
-**Last updated:** 2026-02-25
+**Last updated:** 2026-03-01
 
 ---
 
@@ -398,6 +398,34 @@ Before building any new page or component, verify:
 | Route paths | `kebab-case` | `/charge-rates/:id` |
 | CSS variables | `--{category}-{name}` | `--primary-foreground` |
 | API responses | `snake_case` (Supabase native) | All Supabase data |
+
+---
+
+## 10. Barrel Export Structure (added 1 Mar 2026)
+
+Directories with 3+ exports use barrel `index.ts` files for cleaner imports.
+
+### CRM7 Barrel Exports
+
+| Directory | Barrel File | Exports |
+|-----------|------------|---------|
+| `src/types/` | `index.ts` | All entity types, enums, interfaces |
+| `src/lib/` | `index.ts` | Supabase client, utilities |
+| `src/utils/` | `index.ts` | Helper functions |
+| `src/hooks/` | `index.ts` | All custom hooks |
+| `src/stores/` | `index.ts` | All Zustand stores |
+| `src/schemas/` | `index.ts` | All Zod validation schemas |
+| `src/lib/compliance/` | `index.ts` | Alert engine, scanner |
+| `src/lib/ai/` | `index.ts` | AI client, config, tools, plugins |
+| `src/components/` | `index.ts` | Re-exports from subdirectories |
+
+### Shared Calculation Package
+
+| Package | Path | Used By |
+|---------|------|---------|
+| `@bsuite/charge-calc` | `packages/charge-calc/` | CRM7 (`file:../packages/charge-calc`), R80.3 (`workspace:*`) |
+
+**Single source of truth** for all charge rate calculations. Both projects delegate to this package — no duplicated calc logic.
 
 ---
 

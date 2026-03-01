@@ -1,7 +1,7 @@
 # Auth Map — Business Suite Ecosystem
 
-> **Generated**: 25 Feb 2026 · **Fixes Applied**: 25 Feb 2026 · **Cookie Hardening**: 25 Feb 2026  
-> **Scope**: BSU · CRM7 · R80.3 · Braden  
+> **Generated**: 25 Feb 2026 · **Fixes Applied**: 25 Feb 2026 · **Cookie Hardening**: 25 Feb 2026 · **PKCE Hardening**: 1 Mar 2026
+> **Scope**: BSU · CRM7 · R80.3 · Braden · Conduit
 > **Supabase Project**: `tuybltdrdefjblnplpqo`
 
 ---
@@ -106,7 +106,7 @@ The ecosystem uses **two distinct auth mechanisms** that coexist:
 
 | File | Purpose | Auth Type |
 |------|---------|-----------|
-| `src/services/supabaseClient.ts` | Supabase client with **cookieStorage** (`domain=.crm7.app`), storageKey `business_suite_auth` ✅ **FIXED 25 Feb 2026**. Includes CRUD helpers | Native + Cookie |
+| `src/services/supabaseClient.ts` | Supabase client with **cookieStorage** (`domain=.crm7.app`), storageKey `business_suite_auth`, PKCE flow ✅ **FIXED 25 Feb 2026, PKCE 1 Mar 2026**. Includes CRUD helpers | Native + Cookie |
 | `src/stores/authStore.ts` | Zustand auth store (canonical): `signIn`, `signUp`, `signOut`, `resetPassword` + `tenantId` from `user_tenants`. Selector hooks ✅ **AuthLite.tsx removed 25 Feb 2026** | Native |
 | `src/lib/business-suite-oauth.ts` | BS OAuth 2.1 PKCE client. Client ID: `5d804d20-cd1b-4724-9107-86d2a9e51e09`. JWKS verification via `jose` | BS OAuth |
 | `src/pages/AuthCallback.tsx` | BS OAuth callback only — exchanges code for tokens, stores in localStorage, redirects to `/` | BS OAuth |
@@ -136,9 +136,32 @@ The ecosystem uses **two distinct auth mechanisms** that coexist:
 | `src/components/auth/AdminLoginForm.tsx` | Admin login form UI | Native |
 | `src/components/auth/AuthLoadingState.tsx` | Loading spinner during auth checks | UI |
 
-**Token storage**:  
-- Native Supabase: localStorage (default)  
+**Token storage**:
+- Native Supabase: localStorage (default)
 - BS OAuth: localStorage (`bs_access_token`, `bs_refresh_token`, `bs_user`, `bs_id_token`)
+
+---
+
+### 2.5 Conduit (ATS)
+
+**Role**: Standard Supabase Auth consumer (no BS OAuth)
+**Domain**: `conduit.crm7.app`
+**Stack**: Next.js 16 App Router with `@supabase/ssr`
+
+| File | Purpose | Auth Type |
+|------|---------|-----------|
+| `src/lib/supabase/client.ts` | Browser Supabase client with PKCE ✅ **Added 1 Mar 2026** | Native (Browser) |
+| `src/lib/supabase/server.ts` | Server-side Supabase client with PKCE ✅ **Added 1 Mar 2026** | Native (Server) |
+| `src/lib/supabase/middleware.ts` | Middleware session refresh with PKCE ✅ **Added 1 Mar 2026** | Native (Middleware) |
+| `src/middleware.ts` | Next.js middleware — redirects unauthenticated users to `/auth/login` | Router |
+| `src/app/auth/login/page.tsx` | Login page | Native |
+| `src/app/auth/register/page.tsx` | Registration page | Native |
+| `src/app/auth/callback/route.ts` | Auth callback handler | Native |
+
+**Token storage**: Server-managed cookies via `@supabase/ssr` (no localStorage)
+**PKCE**: ✅ All three Supabase client creation points configured with `flowType: 'pkce'`
+
+**Public routes** (no auth required): `/auth/*`, `/portal/careers/*`, `/portal/candidate/*`
 
 ---
 
@@ -599,13 +622,22 @@ bsuite/
 │   ├── src/components/LoginModal.tsx            # Login modal
 │   └── src/components/SettingsPage.tsx          # Settings + signout
 │
-└── braden/
-    ├── src/integrations/supabase/client.ts      # Supabase client (no cookies — different domain)
-    ├── src/lib/business-suite-oauth.ts          # BS OAuth client
-    ├── src/hooks/useAdminAuth.ts                # Admin auth hook
-    ├── src/hooks/useAuth.ts                     # Generic auth hook
-    ├── src/pages/auth/AuthCallback.tsx          # BS OAuth callback
-    ├── src/pages/auth/AdminAuth.tsx             # Admin login page
-    ├── src/components/auth/AdminLoginForm.tsx   # Admin login form
-    └── src/components/auth/AuthLoadingState.tsx # ✅ OAuthConsent.tsx deleted
+├── braden/
+│   ├── src/integrations/supabase/client.ts      # Supabase client (no cookies — different domain)
+│   ├── src/lib/business-suite-oauth.ts          # BS OAuth client
+│   ├── src/hooks/useAdminAuth.ts                # Admin auth hook
+│   ├── src/hooks/useAuth.ts                     # Generic auth hook
+│   ├── src/pages/auth/AuthCallback.tsx          # BS OAuth callback
+│   ├── src/pages/auth/AdminAuth.tsx             # Admin login page
+│   ├── src/components/auth/AdminLoginForm.tsx   # Admin login form
+│   └── src/components/auth/AuthLoadingState.tsx # ✅ OAuthConsent.tsx deleted
+│
+└── conduit/                                     # ✅ Added 1 Mar 2026
+    ├── src/lib/supabase/client.ts               # Browser client — PKCE ✅
+    ├── src/lib/supabase/server.ts               # Server client — PKCE ✅
+    ├── src/lib/supabase/middleware.ts            # Middleware session refresh — PKCE ✅
+    ├── src/middleware.ts                         # Next.js middleware (auth redirect)
+    ├── src/app/auth/login/page.tsx               # Login page
+    ├── src/app/auth/register/page.tsx            # Registration page
+    └── src/app/auth/callback/route.ts            # Auth callback
 ```
