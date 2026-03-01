@@ -48,7 +48,7 @@
 | **Placements** | CRU | CRUD | R | CRU | R (own) | R | R (self) |
 | **Host Employers** | CRU | CRUD | R | R | R (self) | — | R (own host) |
 | **Training Plans** | RU (negotiate) | CRUD | R | R | R + request reschedule | CRU (set & adjust) | R + submit query |
-| **Training Schedules** | RU (coordinate) | CRUD | R | R | R (absence dates) | CRU | R (own) |
+| **Training Schedules** | CRU (populate from RTO advice) | CRUD | R | R | R (absence dates) | CRU (if onboarded) | R (own) |
 | **Competency Records** | CRU | CRUD | R | R | R (hosted) | CRU (sign-off) | R (self) |
 | **RTO Assignments** | CRU | CRUD | R | CRU | R | R (self) | R (own) |
 | **Site Inspections** | CRU (conduct) | CRUD | R | R | R (own sites) | — | — |
@@ -168,8 +168,15 @@ STAGE 2: SIGN-UP & PLACEMENT (CRM7)
 
 STAGE 3: ACTIVE TRAINING (CRM7 + R80.3)
   RTO:
-    → Sets training plan for the year (largely fixed)
-    → Delivers training blocks, feeds dates back to GTO
+    → Advises training plan for the year (largely fixed)
+    → Delivers training blocks, advises dates to GTO
+    → Typically via email — does NOT directly enter data (uptake-dependent)
+    → Some RTOs may enter directly if onboarded to portal (optional)
+
+  GTO Admin / Field Officer:
+    → Default path: receives RTO email/advice → manually populates training_schedules
+    → Portal path: RTO enters directly (requires RTO portal onboarding)
+    → Future: email ingestion pipeline to auto-populate from RTO comms
 
   System → notifies host: "Apprentice absent [dates] for training"
 

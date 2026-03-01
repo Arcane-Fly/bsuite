@@ -185,6 +185,110 @@ ls crm7/supabase/migrations/20260301*.sql | wc -l
 
 ---
 
+## Cleanup Step
+
+After all tasks pass verification:
+
+1. **Remove dead code / unused imports** introduced during implementation
+2. **Lint check** — run ESLint + Prettier on all changed files:
+   ```bash
+   cd crm7 && npx eslint src/lib/roleMappingService.ts src/schemas/ --fix
+   cd ../business-suite-unified && npx eslint src/lib/permissionsService.ts --fix
+   ```
+3. **Typecheck all 5 projects** (BSU, CRM7, Conduit, R80.3, Braden)
+4. **Build all 5 projects** — no regressions
+5. **Review git status** — no untracked files, no uncommitted changes
+6. **Squash fixup commits** if any (interactive rebase within feature scope only)
+
+---
+
+## Merge Back to Development
+
+All work is on `development` branch already. Final steps:
+
+1. **CC commits parent repo** (Task 7) with updated submodule refs
+2. **Push all submodules** to origin/development
+3. **Push parent repo** to origin/development
+4. **Verify CI** — if any CI checks exist, wait for green
+
+```bash
+# Push order: submodules first, then parent
+cd /home/braden/Desktop/Dev/bsuite/crm7 && git push origin development
+cd /home/braden/Desktop/Dev/bsuite/business-suite-unified && git push origin development
+cd /home/braden/Desktop/Dev/bsuite && git push origin development
+```
+
+---
+
+## Sweep Step
+
+After merge, systematic sweep to verify nothing was missed:
+
+### Migration Sweep
+- [ ] Count all `20260301*` migrations — verify expected count
+- [ ] Every new table has: `id UUID PK`, `tenant_id`, `RLS ENABLED`, tenant isolation policy, indexes
+- [ ] `welfare_reports` has RESTRICTIVE confidential block policy
+- [ ] `user_tenant_links` has unique constraint on (user_id, tenant_id, link_type, linked_entity_id)
+- [ ] `tenant_role_permissions` has unique constraint on (tenant_id, role, entity)
+- [ ] No migration references tables that don't exist yet (ordering)
+
+### Schema Sweep
+- [ ] Every Zod schema field name matches its migration column name exactly
+- [ ] All schemas exported from `crm7/src/schemas/index.ts`
+- [ ] All schema tests pass
+- [ ] create vs full schema distinction maintained (full includes id, tenant_id, timestamps)
+
+### Permission Sweep
+- [ ] BSU `ROLE_PERMISSIONS` includes all 3 external roles
+- [ ] BSU `ROLE_HIERARCHY` has external roles below viewer
+- [ ] CRM7 `DEFAULT_ROLE_MAPPING` covers all portal roles
+- [ ] `mapPortalRoleToOperational()` handles unknown roles gracefully (returns 'viewer')
+
+### Auth Sweep (VERIFY UNCHANGED)
+- [ ] `conduit/src/lib/supabase/client.ts` — still has `flowType: 'pkce'`
+- [ ] `conduit/src/lib/supabase/server.ts` — still has `flowType: 'pkce'`
+- [ ] `conduit/src/lib/supabase/middleware.ts` — still has `flowType: 'pkce'`
+- [ ] `business-suite-unified/src/lib/supabase.ts` — unchanged (cookie storage, PKCE)
+- [ ] `business-suite-unified/src/pages/oauth/OAuthConsent.tsx` — unchanged
+- [ ] `crm7/src/lib/supabase.ts` — unchanged
+- [ ] No new auth-related files created
+
+### Cross-Reference Sweep
+- [ ] Design doc and implementation plan are consistent
+- [ ] Coordination plan task list matches what was actually implemented
+- [ ] No version downgrades in any package.json
+
+---
+
+## Red Team Step
+
+After sweep, each agent red-teams the other's work:
+
+### CC Red-Teams C2's Work (TypeScript)
+Dispatch a red-team subagent to review:
+1. **BSU permissionsService.ts** — are external roles truly read-only? Can a host_employer escalate to admin via any code path?
+2. **CRM7 roleMappingService.ts** — does `mapPortalRoleToOperational()` handle edge cases? What if `tenantOverrides` maps a role to something not in `OperationalRole` type?
+3. **Zod schemas** — do CHECK constraints in SQL match Zod enums exactly? Any mismatch = runtime bugs.
+4. **Test coverage** — are there negative tests? (invalid input, missing required fields, boundary values)
+
+### C2 Red-Teams CC's Work (Migrations + RLS)
+Dispatch a red-team subagent to review:
+1. **RLS policy correctness** — do RESTRICTIVE policies actually block what they claim? Walk through each policy with a concrete user scenario.
+2. **Welfare reports** — can a host_employer see confidential reports through ANY join path? What about aggregates? Views?
+3. **Entity-scoping RLS** — does `user_tenant_links` correctly prevent cross-host data leakage? What if a user has multiple link_types?
+4. **tenant_role_permissions** — can a non-admin modify this table? Is the admin-write policy correct?
+5. **Migration ordering** — do scoping policies (200700) reference tables from earlier migrations (200100-200600)? Will they fail if run in isolation?
+
+### Red Team Output
+Each agent produces a findings report:
+- **CRITICAL**: Must fix before merge (security holes, data leakage, broken RLS)
+- **IMPORTANT**: Should fix (missing edge cases, incomplete tests)
+- **MINOR**: Nice to fix (naming, comments, style)
+
+Fix all CRITICAL and IMPORTANT findings. MINOR findings can be deferred to Phase 2.
+
+---
+
 ## After Phase 1
 
 Phase 2 tasks (planned but not yet detailed):
@@ -197,3 +301,4 @@ Phase 2 tasks (planned but not yet detailed):
 - BSU auth UI upgrade (add Google + MS social login — CRM7 as reference)
 - Organisation Settings → Permissions UI
 - Field officer workload partitioning
+- RTO email ingestion pipeline (auto-populate training schedules from RTO comms)
