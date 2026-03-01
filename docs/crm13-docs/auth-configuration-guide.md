@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Authentication Configuration Guide for CRM13
 
 ## Table of Contents

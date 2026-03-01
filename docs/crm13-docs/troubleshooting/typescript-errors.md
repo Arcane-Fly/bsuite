@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # TypeScript Errors Troubleshooting
 
 This document provides solutions for common TypeScript errors in the project.

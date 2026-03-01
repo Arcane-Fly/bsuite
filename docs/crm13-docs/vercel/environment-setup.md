@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Vercel Environment Variable Setup
 
 This document explains the proper way to set up environment variables for the CRM13 application, ensuring no credentials are hardcoded in the codebase.

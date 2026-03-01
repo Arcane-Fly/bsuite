@@ -31,7 +31,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 ### Theme System
 
 - **D2C Neon Electric theme** for: business-suite-unified, crm7, conduit, R80.3
-  - See `Theme-best-practice.md` for full palette and implementation
+  - See `docs/20260228-d2c-theme-specification-v1.00W.md` for full palette and implementation
   - Primary: Electric Blue `#2563eb`, Accent: Electric Cyan `#00cec9`
   - Dark mode: deep navy `#0a0e1a`, Light mode: off-white `#fefefe`
 - **Corporate branding** for: braden (braden.com.au)
@@ -66,7 +66,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 ## Key Files
 
 - `docs/20260227-contributing-standards-guide-v1.00W.md` — full quality standards
-- `Theme-best-practice.md` — D2C theme specification
+- `docs/20260228-d2c-theme-specification-v1.00W.md` — D2C theme specification
 - `docs/DRY-ONE-SHOT-ARCHITECTURE.md` — entity ownership and DRY patterns
 - `docs/AUTH-MAP.md` — authentication architecture
 

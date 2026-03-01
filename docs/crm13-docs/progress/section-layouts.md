@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Section Layouts Implementation
 
 This document outlines the implementation of consistent section layouts across the CRM13 application.

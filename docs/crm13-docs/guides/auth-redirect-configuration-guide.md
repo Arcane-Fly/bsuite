@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Auth Redirect Configuration Guide for CRM13
 
 This guide provides detailed instructions for setting up and maintaining redirect URL configurations for authentication in the CRM13 application. It covers both Supabase dashboard configuration and code implementation.

@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Vercel Environment Variables Implementation Guide
 
 This guide provides practical instructions for implementing and using Vercel environment variables in our application. It covers configuration, access patterns, and best practices specific to our project architecture.

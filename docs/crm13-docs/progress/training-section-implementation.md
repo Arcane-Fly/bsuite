@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Training Section Implementation
 
 This document outlines the implementation of the Training & Development section of the CRM13 application.

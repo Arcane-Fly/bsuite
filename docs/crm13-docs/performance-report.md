@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Technical Performance Optimization Report
 
 ## 1. Recent Performance Improvements

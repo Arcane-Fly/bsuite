@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Understanding Module Export Errors in TypeScript/React
 
 ## Default Exports: A Quick Overview

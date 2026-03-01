@@ -9,6 +9,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `00-master-roadmap.md` | Single source of truth for BSuite project planning across all projects |
 | `20260227-bsuite-deep-audit-report-v1.00W.md` | Deep audit report covering CRM7, BSU, Conduit, braden.com.au, and R80.3 |
 | `20260227-contributing-standards-guide-v1.00W.md` | Universal quality, documentation, and code standards for all BSuite projects |
+| `20260228-d2c-theme-specification-v1.00W.md` | D2C Neon Electric theme specification (palette, Tailwind config, CSS variables) |
+| `20260228-gto-standards-reference-v1.00W.md` | National Standards for Group Training Organisations evidence guide |
 | `AUTH-MAP.md` | Authentication map for the Business Suite ecosystem (BSU, CRM7, R80.3, Braden) |
 | `DRY-ONE-SHOT-ARCHITECTURE.md` | DRY principles and one-shot data entry architecture for all modules |
 | `claude-code-prompts.md` | Self-contained prompts for Claude Code to execute remaining roadmap items |
@@ -19,3 +21,10 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | [`plans/`](plans/README.md) | Implementation plans for upcoming features and enhancements |
 | `20260228-crm7-page-inventory-v1.00W.md` | CRM7 page inventory — 148 pages audited with data source and status |
 | `20260228-crm7-rbac-matrix-v1.00W.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
+| `compliance.md` | Compliance documentation |
+| `matrix.md` | Requirements/feature matrix |
+| `mermaid-ui-builder.md` | Mermaid UI builder guide |
+| `navigation-guide.md` | Navigation guide |
+| `navigation.md` | Navigation structure |
+| `performance-report.md` | Performance report |
+| `ui.md` | UI documentation |

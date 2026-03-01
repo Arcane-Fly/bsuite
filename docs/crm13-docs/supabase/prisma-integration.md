@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Supabase + Prisma Integration
 
 This guide documents how to properly connect Prisma with Supabase in our application, including best practices and troubleshooting steps.

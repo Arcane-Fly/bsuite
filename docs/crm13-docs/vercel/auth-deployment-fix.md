@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Vercel Deployment Fix
 
 This document explains the recent fixes made to the Vercel deployment scripts to address ES module compatibility issues.

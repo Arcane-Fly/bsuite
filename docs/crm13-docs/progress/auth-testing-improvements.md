@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Authentication Testing Improvements
 
 This document outlines the improvements made to the authentication testing system to ensure robust type safety, isolated tests, and reliable behavior.

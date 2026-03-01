@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Navigation Path Audit
 
 This document provides an audit of the navigation paths defined in the Sidebar against the actual routes and page components available in the application.

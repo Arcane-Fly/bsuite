@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Navigation and Routing Audit - Updated Status
 
 This document provides a comprehensive audit of all navigation elements and routing configurations in the CRM13 application, with an updated status reflecting recent implementations.
