@@ -350,8 +350,8 @@ CREATE POLICY "apprentices_host_scoped" ON public.apprentices
           AND ut.role = 'host_employer'
       )
       AND NOT EXISTS (
-        SELECT 1 FROM public.placements p
-        JOIN public.user_tenant_links utl ON utl.entity_id = p.host_employer_id
+        SELECT 1 FROM public.apprentice_placements p
+        JOIN public.user_tenant_links utl ON utl.linked_entity_id = p.host_employer_id
         WHERE p.apprentice_id = apprentices.id
           AND utl.user_id = auth.uid()
           AND p.status IN ('active', 'suspended')

@@ -17,6 +17,7 @@
 The `user_tenants.role` column currently has a CHECK constraint limiting to `owner, admin, manager, staff, guest`. We need three new external portal roles.
 
 **Files:**
+
 - Create: `crm7/supabase/migrations/20260301200000_expand_user_tenants_roles.sql`
 
 **Step 1: Write the migration**
@@ -69,6 +70,7 @@ git commit -m "feat(crm7): expand user_tenants role constraint for portal + oper
 Add the three new external roles to BSU's permission matrix so the portal recognizes them.
 
 **Files:**
+
 - Modify: `business-suite-unified/src/lib/permissionsService.ts`
 - Test: `business-suite-unified/src/lib/__tests__/permissionsService.test.ts`
 
@@ -86,8 +88,8 @@ describe('permissionsService', () => {
       expect(ROLE_PERMISSIONS).toHaveProperty('owner');
       expect(ROLE_PERMISSIONS).toHaveProperty('admin');
       expect(ROLE_PERMISSIONS).toHaveProperty('manager');
-      expect(ROLE_PERMISSIONS).toHaveProperty('member');
-      expect(ROLE_PERMISSIONS).toHaveProperty('viewer');
+      expect(ROLE_PERMISSIONS).toHaveProperty('staff');
+      expect(ROLE_PERMISSIONS).toHaveProperty('guest');
     });
 
     it('includes external portal roles', () => {
@@ -118,9 +120,9 @@ describe('permissionsService', () => {
       expect(isRoleAtLeast('owner', 'manager')).toBe(true);
     });
 
-    it('external roles are below viewer in hierarchy', () => {
-      expect(isRoleAtLeast('host_employer', 'viewer')).toBe(false);
-      expect(isRoleAtLeast('apprentice', 'viewer')).toBe(false);
+    it('external roles are below guest in hierarchy', () => {
+      expect(isRoleAtLeast('host_employer', 'guest')).toBe(false);
+      expect(isRoleAtLeast('apprentice', 'guest')).toBe(false);
     });
 
     it('external roles are at least themselves', () => {
@@ -140,15 +142,17 @@ Expected: FAIL — external roles not in ROLE_PERMISSIONS
 Open `business-suite-unified/src/lib/permissionsService.ts` and add:
 
 1. Add external roles to `ROLE_PERMISSIONS`:
+
 ```typescript
 host_employer: ['read'],
 training_provider: ['read'],
 apprentice: ['read'],
 ```
 
-2. Add external roles to the `ROLE_HIERARCHY` array (below `viewer`):
+2. Add external roles to the `ROLE_HIERARCHY` array (below `guest`):
+
 ```typescript
-const ROLE_HIERARCHY = ['owner', 'admin', 'manager', 'member', 'viewer', 'host_employer', 'training_provider', 'apprentice'];
+const ROLE_HIERARCHY = ['owner', 'admin', 'manager', 'staff', 'guest', 'host_employer', 'training_provider', 'apprentice'];
 ```
 
 3. Export `isRoleAtLeast` and `canPerform` if not already exported.
@@ -173,6 +177,7 @@ git commit -m "feat(bsu): add external portal roles to permissions service"
 Create a mapping service that translates BSU portal roles to CRM7 operational roles. This is per-tenant configurable.
 
 **Files:**
+
 - Create: `crm7/src/lib/roleMappingService.ts`
 - Create: `crm7/src/lib/__tests__/roleMappingService.test.ts`
 
@@ -300,6 +305,7 @@ git commit -m "feat(crm7): add portal-to-operational role mapping service"
 Conduit already has BSU SSO inline in its login page using `NEXT_PUBLIC_BSU_OAUTH_CLIENT_ID`. Verify it works and ensure the shared cookie is configured.
 
 **Files:**
+
 - Read: `conduit/src/app/auth/login/page.tsx` (verify OAuth flow)
 - Read: `conduit/src/app/auth/callback/route.ts` (verify code exchange)
 - Modify: `conduit/src/lib/supabase/client.ts` (verify shared cookie domain if needed)
@@ -346,6 +352,7 @@ git add -A && git commit -m "fix(conduit): [describe fix]"
 Create 6 new tables for GTO operations: training_providers, rto_assignments, site_inspections, training_schedules, escalation_log, welfare_reports.
 
 **Files:**
+
 - Create: `crm7/supabase/migrations/20260301200100_create_training_providers.sql`
 - Create: `crm7/supabase/migrations/20260301200200_create_rto_assignments.sql`
 - Create: `crm7/supabase/migrations/20260301200300_create_site_inspections.sql`
@@ -701,6 +708,7 @@ git commit -m "feat(crm7): add GTO operations tables — training providers, ins
 External parties (host_employer, training_provider, apprentice) should only see records related to them — not all records in the tenant. Internal permissions (who can update wages, charges) should be configurable per-tenant.
 
 **Files:**
+
 - Create: `crm7/supabase/migrations/20260301200700_entity_scoping_rls.sql`
 - Create: `crm7/supabase/migrations/20260301200800_create_tenant_role_permissions.sql`
 
@@ -795,7 +803,7 @@ CREATE POLICY "escalation_log_host_scoped" ON public.escalation_log
           AND ut.role = 'host_employer'
       )
       AND placement_id NOT IN (
-        SELECT p.id FROM public.placements p
+        SELECT p.id FROM public.apprentice_placements p
         JOIN public.user_tenant_links utl ON utl.linked_entity_id = p.host_employer_id
         WHERE utl.user_id = auth.uid() AND utl.link_type = 'host_employer'
       )
@@ -893,6 +901,7 @@ git commit -m "feat(crm7): add entity-scoping RLS for external roles + configura
 Create Zod v4 validation schemas for all 6 new entities.
 
 **Files:**
+
 - Create: `crm7/src/schemas/trainingProvider.ts`
 - Create: `crm7/src/schemas/rtoAssignment.ts`
 - Create: `crm7/src/schemas/siteInspection.ts`
@@ -1027,6 +1036,7 @@ Expected: FAIL — schemas not exported from index
 Each schema should follow the pattern established by existing schemas in the project (e.g. `crm7/src/schemas/award.ts`). Use Zod v4 (`import { z } from 'zod'`).
 
 See the migration SQL for exact field names, types, and constraints. Each schema should have:
+
 - A `create` schema (for form validation — required fields only)
 - A `full` schema (for DB records — includes id, tenant_id, timestamps)
 - Exported as `{entity}Schema` (the create schema) and `{entity}FullSchema`
@@ -1085,6 +1095,7 @@ cd .. && git push origin development
 ## Phase 2 Preview (Future Plan)
 
 After Phase 1 is complete, Phase 2 covers:
+
 - Task 9: Request/mediation workflow engine (generic)
 - Task 10: Conduit custom fields infrastructure
 - Task 11: BSU Field Sharing admin panel
