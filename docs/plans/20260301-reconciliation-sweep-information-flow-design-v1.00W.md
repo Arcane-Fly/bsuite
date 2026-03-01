@@ -308,6 +308,77 @@ Host employers, RTOs, and apprentices access scoped views:
 - PermissionGate enforces role — only own data visible
 - Welfare reports with `confidential: true` invisible to host_employer and training_provider (RLS-enforced at DB level, not just UI)
 
+### Data Scoping: Three Isolation Layers
+
+Data visibility is enforced at three levels, each narrower than the last:
+
+```
+Layer 1: Tenant Isolation (all tables)
+  └── RLS: tenant_id IN (SELECT ut.tenant_id FROM user_tenants ut WHERE ut.user_id = auth.uid())
+
+Layer 2: Entity-Level Scoping (external portal roles)
+  └── host_employer → only sees apprentices/workers placed with them
+  └── training_provider → only sees apprentices assigned to them
+  └── apprentice → only sees own records
+  └── field_officer → sees all OR partitioned workload (org configurable)
+
+Layer 3: Field-Level Permissions (configurable internal)
+  └── Who can UPDATE wages, charge rates, funding claims, etc.
+  └── Configured per-tenant in org/super admin section
+  └── Stored in tenant_role_permissions table
+```
+
+**Layer 2 — External party isolation:** A host employer sharing an apprentice with another host CANNOT see the other host's details, charges, or placements. An RTO cannot see apprentices trained by other RTOs within the same GTO. This is enforced via RLS policies that JOIN through placement/assignment records, not just tenant_id.
+
+Example RLS for host_employer viewing apprentices:
+```sql
+-- Host sees apprentices placed with them (via placements table)
+CREATE POLICY "apprentices_host_scoped" ON public.apprentices
+  AS RESTRICTIVE FOR SELECT USING (
+    NOT (
+      EXISTS (
+        SELECT 1 FROM public.user_tenants ut
+        WHERE ut.user_id = auth.uid()
+          AND ut.tenant_id = apprentices.tenant_id
+          AND ut.role = 'host_employer'
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM public.placements p
+        JOIN public.user_tenant_links utl ON utl.entity_id = p.host_employer_id
+        WHERE p.apprentice_id = apprentices.id
+          AND utl.user_id = auth.uid()
+          AND p.status IN ('active', 'suspended')
+      )
+    )
+  );
+```
+
+**Layer 2 — Team/workload partitioning (internal):** Some GTOs partition field officer workloads (officer A handles apprentices 1-50, officer B handles 51-100). Others use filters or a combination. Admin vs payroll may also be separated by function. This is handled via optional `assigned_to` or `team_id` columns + org-configurable filter preferences (not hard RLS — internal staff can override with sufficient role).
+
+**Layer 3 — Configurable internal permissions:** Who can update wages, charge rates, funding claims, etc. is set per-tenant. A `tenant_role_permissions` table stores overrides:
+
+```
+tenant_role_permissions:
+  tenant_id  UUID
+  role       TEXT (operational role)
+  entity     TEXT (e.g. 'charge_rates', 'payroll', 'funding_claims')
+  actions    TEXT[] (e.g. ['read', 'update'] or ['read', 'create', 'update', 'delete'])
+```
+
+Org admins / super admins configure this in the **Organisation Settings → Permissions** section. Defaults are set by `DEFAULT_ROLE_MAPPING` + hardcoded permission matrix; overrides are per-tenant.
+
+### Auth Sign-In State
+
+| App | Current Auth UI | Social Login | Notes |
+|-----|----------------|:---:|-------|
+| CRM7 | Best looking sign-in | Google, MS | Reference implementation |
+| BSU | Basic/minimal | Missing Google + MS buttons | Needs upgrade to match CRM7 |
+| Conduit | Next.js server-managed | TBC | Has BSU OAuth inline |
+| R80.3 | TBC | TBC | Uses BS OAuth |
+| Braden | TBC | TBC | Corporate branding |
+
+**Target:** BSU sign-in should be the canonical auth UI (as the portal/identity provider). Bring it up to CRM7's quality level including Google and Microsoft social login buttons.
+
 ---
 
 ## 5. Pass 4: Custom Fields & Extensibility
@@ -338,24 +409,29 @@ Host employers, RTOs, and apprentices access scoped views:
 
 ## 6. Pass 5: Auth/SSO Mesh
 
+### Tech Stack Note
+
+Only Conduit is Next.js (App Router, server components). All other apps (BSU, CRM7, R80.3, Braden) are React + Vite SPAs. This affects auth implementation: Conduit uses `@supabase/ssr` with server-managed cookies; the others use client-side `@supabase/supabase-js` with `getCookieDomain()` for shared cookie on `.crm7.app`.
+
 ### Current State
 
-| App | SSO to BSU | Cookie Sharing | External Portal |
-|-----|:---:|:---:|:---:|
-| BSU | N/A (provider) | Sets `.crm7.app` cookie | N/A |
-| CRM7 | BS OAuth | Shared cookie | Not implemented |
-| R80.3 | BS OAuth | Shared cookie | N/A |
-| Conduit | **No BS OAuth** | **Standalone** | `/portal/careers` (public) |
-| Braden | BS OAuth | Different TLD (expected) | N/A |
+| App | Stack | SSO to BSU | Cookie Sharing | External Portal |
+|-----|-------|:---:|:---:|:---:|
+| BSU | React+Vite | N/A (provider) | Sets `.crm7.app` cookie | N/A |
+| CRM7 | React+Vite | BS OAuth | Shared cookie | Not implemented |
+| R80.3 | React+Vite | BS OAuth | Shared cookie | N/A |
+| Conduit | **Next.js** | Has BSU OAuth inline | `@supabase/ssr` (server cookies) | `/portal/careers` (public) |
+| Braden | React+Vite | BS OAuth | Different TLD (expected) | N/A |
 
 ### Target State
 
 | Change | What | Why |
 |--------|------|-----|
-| Connect Conduit to SSO | Add BS OAuth + shared cookie on `.crm7.app` | HR Coordinator seamless transition Conduit↔CRM7 |
+| Verify Conduit SSO works | BSU OAuth already inline in login page | HR Coordinator seamless transition Conduit↔CRM7 |
 | External portal auth | Magic link invites for host/RTO/apprentice | External users get direct links, no BSU knowledge needed |
 | Role in JWT claims | BSU includes `portal_role` + `app_roles` | Apps read role from session, no extra DB query |
-| Conduit ↔ CRM7 session | Shared cookie = one login | HR workflow spans both apps |
+| Conduit ↔ CRM7 session | Shared cookie domain on `.crm7.app` | HR workflow spans both apps |
+| BSU auth UI upgrade | Add Google + MS social login buttons | Currently basic — CRM7 is the reference |
 
 ---
 
