@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start --port 5680",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.48",
