@@ -10,7 +10,7 @@
     "dev": "next dev --port 5680",
     "build": "next build",
     "start": "next start --port 5680",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
@@ -54,9 +54,13 @@
     "zustand": "^5.0.11"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.4",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^22.19.13",
     "@types/react": "^19.2.14",

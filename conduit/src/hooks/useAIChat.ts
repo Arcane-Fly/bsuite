@@ -96,6 +96,7 @@ export function useAIChat() {
   const quotaExceeded = isQuotaExceeded();
 
   // Map UIMessages to stable format with timestamps
+  // eslint-disable-next-line react-hooks/refs -- timestampsRef is an intentional stable cache, not a DOM ref
   const mappedMessages = useMemo(() => {
     return chat.messages.map((msg) => {
       if (!timestampsRef.current.has(msg.id)) {

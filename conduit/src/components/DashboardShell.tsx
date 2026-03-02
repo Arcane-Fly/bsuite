@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { LogOut, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -18,8 +18,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   // Close mobile sidebar on route change
+  const prevPathname = useRef(pathname)
   useEffect(() => {
-    setMobileOpen(false)
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname
+      setMobileOpen(false)
+    }
   }, [pathname])
 
   // Prevent body scroll when mobile sidebar is open
