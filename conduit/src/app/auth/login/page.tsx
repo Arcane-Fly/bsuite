@@ -40,6 +40,16 @@ export default function LoginPage() {
     })
   }
 
+  async function handleMicrosoftLogin() {
+    const supabase = createClient()
+    await supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+  }
+
   function handleBsuSso() {
     const clientId = process.env.NEXT_PUBLIC_BSU_OAUTH_CLIENT_ID
     const bsuUrl = process.env.NEXT_PUBLIC_BSU_URL ?? 'https://suite.crm7.app'
@@ -144,6 +154,19 @@ export default function LoginPage() {
               />
             </svg>
             Continue with Google
+          </button>
+
+          <button
+            onClick={handleMicrosoftLogin}
+            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 21 21" aria-hidden="true">
+              <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+              <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+            </svg>
+            Continue with Microsoft
           </button>
 
           <button

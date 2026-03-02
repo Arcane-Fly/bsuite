@@ -1,0 +1,61 @@
+# BSuite — Windsurf Cascade Rules
+
+## Agent Skills
+
+Before starting any task in this workspace, read and apply relevant skills from `/home/braden/.agents/skills/`.
+
+**Start every task by reading:** `/home/braden/.agents/skills/master-orchestration/SKILL.md`
+
+### Required Skills by Project
+
+#### All Projects (React + Vite + Supabase)
+- `/home/braden/.agents/skills/vercel-react-best-practices/SKILL.md` — 40+ React perf rules from Vercel Engineering
+- `/home/braden/.agents/skills/vercel-composition-patterns/SKILL.md` — Compound components, state lifting, composition patterns
+- `/home/braden/.agents/skills/vercel-web-design-guidelines/SKILL.md` — 100+ accessibility, UX, performance rules
+- `/home/braden/.agents/skills/bsuite-brand-system/SKILL.md` — D2C Neon Electric vs Corporate branding (NEVER mix)
+
+#### conduit (Next.js 16 App Router)
+- `/home/braden/.agents/skills/vercel-next-best-practices/SKILL.md` — RSC boundaries, data patterns, file conventions, async APIs
+- `/home/braden/.agents/skills/vercel-next-cache-components/SKILL.md` — PPR, `use cache`, cacheLife, cacheTag
+- `/home/braden/.agents/skills/vercel-next-upgrade/SKILL.md` — Migration guides and codemods
+
+#### conduit + crm7 (AI SDK)
+- `/home/braden/.agents/skills/vercel-ai-sdk/SKILL.md` — generateText, streamText, useChat, tools, structured output
+
+#### mobile (React Native / Expo)
+- `/home/braden/.agents/skills/vercel-react-native-skills/SKILL.md` — Performance, animations, gestures, platform patterns
+
+### Mandatory Workflow Skills
+- `/home/braden/.agents/skills/brainstorming/SKILL.md` — MANDATORY before any new feature or creative work
+- `/home/braden/.agents/skills/best-practice-research/SKILL.md` — Research official docs before implementing
+- `/home/braden/.agents/skills/test-driven-development/SKILL.md` — Write tests before code
+- `/home/braden/.agents/skills/code-quality-enforcement/SKILL.md` — DRY, naming, architecture
+- `/home/braden/.agents/skills/security-audit/SKILL.md` — Secrets, injection, XSS
+- `/home/braden/.agents/skills/qa-and-verification/SKILL.md` — Prove changes work
+- `/home/braden/.agents/skills/verification-before-completion/SKILL.md` — NEVER claim done without evidence
+- `/home/braden/.agents/skills/multi-agent-red-team-implementation/SKILL.md` — Red-team all implementations
+
+## Project Reference
+
+See AGENTS.md at project root for full project overview, quality standards, and per-project notes.
+
+## Tech Stack Summary
+
+| Project | Framework | Key Tech |
+|---------|-----------|----------|
+| business-suite-unified | React + Vite | Stripe, Radix UI |
+| crm7 | React + Vite | AI SDK, PWA, sql.js |
+| conduit | Next.js 16 | AI SDK, TanStack Query, SSR |
+| braden | React + Vite | Corporate branding, CSP |
+| R80.3 | React + Vite | PWA, PDF export, Fair Work API |
+| mobile | Expo / React Native | Camera, biometrics, notifications |
+
+## Critical Rules
+
+- TypeScript strict mode everywhere
+- pnpm as package manager (never npm/yarn)
+- Vitest for Vite projects, Jest for conduit (Next.js)
+- D2C Neon Electric theme for all projects EXCEPT braden (uses Corporate branding)
+- Never commit API keys or secrets
+- Conventional commits: `type(scope): description`
+- @bsuite/* packages are on npm — NEVER use `workspace:*` in consumer projects
