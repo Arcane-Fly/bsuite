@@ -75,7 +75,7 @@ export const NAV_CONFIG: NavConfig = {
   ],
   suiteLinks: [
     { label: 'BSuite Portal', href: 'https://suite.crm7.app', external: true },
-    { label: 'CRM7', href: 'https://crm7.app', external: true },
-    { label: 'R80 Calculator', href: 'https://r80.crm7.app', external: true },
+    { label: 'CRM7', href: 'https://crm.crm7.app', external: true },
+    { label: 'R80 Calculator', href: 'https://r8.crm7.app', external: true },
   ],
 };

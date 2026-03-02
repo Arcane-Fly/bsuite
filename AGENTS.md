@@ -227,7 +227,7 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
 **pnpm** is the standard package manager for all 5 projects. Lock file: `pnpm-lock.yaml`.
 
 ```bash
-corepack enable && corepack prepare pnpm@latest --activate
+corepack enable && corepack prepare pnpm@10.30.3 --activate
 pnpm install
 ```
 
