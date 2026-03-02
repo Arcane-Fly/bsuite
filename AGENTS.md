@@ -233,6 +233,33 @@ pnpm install
 
 ---
 
+## Shared Packages (npm)
+
+**CRITICAL — DO NOT REVERT**: The following `@bsuite/*` packages are published to npm under the `@bsuite` org. Each submodule project deploys independently on Vercel from its own GitHub repo. Vercel clones **only** that repo — the parent monorepo's `packages/` directory does NOT exist in the Vercel build context.
+
+### Published Packages
+
+| Package | npm | Consumers | Source |
+|---------|-----|-----------|--------|
+| `@bsuite/charge-calc` | `^0.1.0` | CRM7, R80.3 | `packages/charge-calc/` |
+| `@bsuite/nav-core` | `^0.1.0` | braden | `packages/nav-core/` |
+
+### Rules (all agents MUST follow)
+
+1. **NEVER use `workspace:*`** for `@bsuite/*` dependencies in consumer projects. Always use the npm version (e.g., `"^0.1.0"`).
+2. **NEVER use `file:../packages/*`** — this also fails on Vercel since the parent directory doesn't exist.
+3. **When modifying a shared package** (e.g., `packages/charge-calc/`):
+   - Build locally: `pnpm build` in the package directory
+   - Bump version in `package.json` (follow semver)
+   - Publish: `cd packages/charge-calc && npm publish --access public`
+   - Update consumers: change version in CRM7/R80.3/braden `package.json`
+   - Run `pnpm install` in each consumer to update lockfile
+4. **`pnpm-workspace.yaml`** in submodule repos (e.g., `crm7/pnpm-workspace.yaml`) references `'../packages/*'` for **local development only**. This does NOT work on Vercel.
+5. **Version pinning**: `packageManager: "pnpm@10.30.3"` and `.node-version: 24` — do not change without coordinating across all projects.
+6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
+
+---
+
 ## Branch Strategy
 
 - **Working branch**: `development` (all projects)

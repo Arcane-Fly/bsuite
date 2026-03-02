@@ -2,6 +2,16 @@
   "name": "@bsuite/nav-core",
   "version": "0.1.0",
   "type": "module",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "directory": "packages/nav-core"
+  },
+  "files": [
+    "dist",
+    "src/tokens"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

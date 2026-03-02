@@ -63,6 +63,26 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 - Follow Expand → Migrate → Contract pattern
 - PRs with DB changes must include deployment notes
 
+## Shared Packages (npm)
+
+**CRITICAL — DO NOT REVERT**: The following `@bsuite/*` packages are published to npm under the `@bsuite` org. Each submodule project deploys independently on Vercel from its own GitHub repo. Vercel clones **only** that repo — the parent monorepo's `packages/` directory does NOT exist in the Vercel build context.
+
+| Package | npm | Consumers | Source |
+|---------|-----|-----------|--------|
+| `@bsuite/charge-calc` | `^0.1.0` | CRM7, R80.3 | `packages/charge-calc/` |
+| `@bsuite/nav-core` | `^0.1.0` | braden | `packages/nav-core/` |
+
+### Rules
+
+1. **NEVER use `workspace:*`** for `@bsuite/*` dependencies in consumer projects. Always use the npm version (e.g., `"^0.1.0"`).
+2. **NEVER use `file:../packages/*`** — this also fails on Vercel since the parent directory doesn't exist.
+3. **When modifying a shared package**: build → bump version → `npm publish --access public` → update consumers → `pnpm install`.
+4. **`pnpm-workspace.yaml`** in submodule repos references `'../packages/*'` for **local development only**. This does NOT work on Vercel.
+5. **Version pinning**: `packageManager: "pnpm@10.30.3"` and `.node-version: 24` — do not change without coordinating across all projects.
+6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
+
+---
+
 ## Key Files
 
 - `docs/20260227-contributing-standards-guide-v1.00W.md` — full quality standards
@@ -73,24 +93,29 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 ## Per-Project Notes
 
 ### business-suite-unified
+
 - Entry point portal, Stripe integration
 - Protected: `src/lib/supabase.ts`, `src/lib/stripeService.ts`
 
 ### crm7
+
 - AI-powered features via `@ai-sdk/react` — never commit API keys
 - Protected: `src/lib/supabase.ts`, `src/lib/ai/`
 
 ### conduit
+
 - **Next.js 16 App Router** — not Vite. Use server components by default, `'use client'` only when needed
 - TanStack React Query for client data, server actions for mutations
 - Protected: `next.config.ts`, `src/types/entities.ts`
 
 ### braden
+
 - Corporate website — uses company branding, NOT D2C theme
 - Security-sensitive: CSP headers, bot protection
 - Protected: CSP config, `src/integrations/supabase/`
 
 ### R80.3
+
 - Wage calculations are compliance-critical — extra test coverage required
 - Fair Work API integration — cache responses, respect rate limits
 - Protected: `src/utils/` (calculation engine), Fair Work API modules
