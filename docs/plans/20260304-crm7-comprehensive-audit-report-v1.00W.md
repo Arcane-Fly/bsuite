@@ -500,6 +500,322 @@ Claude Code (Opus 4.6) performed a comprehensive multi-pass audit and remediatio
 
 ---
 
+## Donor Repository Audit — Arcane-Fly/crm7 & Arcane-Fly/CRM7A
+
+**Date:** 2026-03-05
+**Author:** Cascade (Windsurf)
+**Sources:** `https://github.com/Arcane-Fly/crm7.git` (cloned to `/tmp/donor-repos/arcane-crm7`) and `https://github.com/Arcane-Fly/CRM7A.git` (cloned to `/tmp/donor-repos/arcane-crm7a`)
+
+### Executive Summary
+
+Arcane-Fly/crm7 is a **moderately sized** Next.js app (~600+ files) with GTO-relevant domain code — apprentice management, host employers, qualifications, funding claims, Fair Work integration, LMS, charge calculations, and a rich Supabase-generated database schema. Several patterns and schemas are **directly portable** to CRM7.
+
+Arcane-Fly/CRM7A is a **tiny dashboard scaffold** (18 files) with no domain-specific code. **Nothing salvageable.**
+
+### Arcane-Fly/crm7 — File Inventory
+
+| Area | Files Reviewed | Key Files |
+|------|---------------|-----------|
+| Apprentices | 3 | `(sections)/apprentices/columns.tsx`, `components/apprentices-data-table.tsx`, `components/apprentice-progress.tsx` |
+| Host Employers | 1 | `(sections)/host-employers/columns.tsx` |
+| Qualifications | 2 | `(sections)/qualifications/columns.tsx`, `components/qualifications-data-table.tsx` |
+| Funding Claims | 2 | `components/funding-claims-data-table.tsx`, `components/funding/claim-form.tsx` |
+| Fair Work | 10+ | `lib/services/fairwork/*` (api-client, cache, fairwork-service, fairwork.types.ts, allowances) |
+| Charge Calculation | 2 | `lib/services/charge-calculation/charge-calculation-service.ts`, `types.ts` |
+| Rates | 15+ | `lib/services/rates/*` (index, enhanced-service, lifecycle-hooks, metrics, rate-cache, etc.) |
+| LMS | 1 | `lib/services/lms.ts` |
+| Funding Service | 1 | `lib/services/funding.ts` |
+| Database Types | 1 | `lib/types/database.ts` (~1000 lines, Supabase-generated) |
+| App Types | 1 | `lib/types.ts` (Apprentice, Training, TrainingModule, TrainingEnrollment, etc.) |
+| Navigation | 1 | `config/navigation.ts` |
+
+### HIGH VALUE — Port or Adapt
+
+#### D1. Fair Work Zod Schemas (`lib/services/fairwork/fairwork.types.ts`)
+
+Comprehensive Zod-validated schemas for Australian Fair Work data:
+
+- **ClassificationSchema** — code, name, level, grade, yearOfExperience, qualifications, baseRate, validFrom/To
+- **AwardSchema** — code, name, industry, occupation, effectiveFrom/To, classifications array
+- **RateTemplateSchema** — 14 rate components: baseRate, baseMargin, superRate, leaveLoading, workersCompRate, payrollTaxRate, trainingCostRate, otherCostsRate, casualLoading, fundingOffset, effectiveFrom/To
+- **PayCalculationSchema** — base + loading + penalties + allowances = total, with metadata (calculatedAt, effectiveDate, source: fairwork|cached)
+- **PenaltySchema, AllowanceSchema, LeaveEntitlementSchema, PublicHolidaySchema**
+
+**Action:** Cross-reference with `@bsuite/charge-calc` and R80.3's Fair Work implementation. Port the Zod validation patterns — CRM7 currently lacks Zod-validated rate schemas.
+**Effort:** 2 days to integrate schemas into `@bsuite/charge-calc`.
+
+#### D2. Training Contract Database Schema
+
+From `lib/types/database.ts`, the `training_contracts` table:
+
+```typescript
+{
+  aqf_level: string | null;
+  contract_end_date: string | null;
+  contract_start_date: string;
+  contract_status: string | null;
+  employee_id: string;
+  gto_id: string | null;         // ← GTO-specific
+  host_employer_id: string | null; // ← GTO-specific
+  notes: string | null;
+}
+```
+
+**Action:** CRM7's contracts module should include `gto_id` and `host_employer_id` FKs if not already present. The `aqf_level` field is essential for AQF-aligned training contract tracking.
+**Effort:** 1 migration + type update.
+
+#### D3. Apprentice Allowances Schema
+
+```typescript
+apprentice_allowances: {
+  apprentice_id: string | null;
+  effective_from: string;
+  effective_to: string | null;
+  expense_allowance_id: string | null;
+  wage_allowance_id: string | null;
+}
+```
+
+**Action:** Links apprentices to specific wage/expense allowances with date ranges. Useful for tracking allowance entitlements per training contract period.
+**Effort:** 1 migration + service layer.
+
+#### D4. Fair Work Service Suite (`lib/services/fairwork/`)
+
+10+ files implementing a full Fair Work API client:
+
+- **api-client.ts** — HTTP client for Fair Work REST API
+- **cache-middleware.ts** — Response caching layer
+- **cache-warming.ts** — Pre-fetches commonly accessed awards/rates
+- **fairwork-client.ts** — High-level client wrapping api-client + cache
+- **fairwork-service.ts** — Business logic layer (rate validation, calculations)
+- **allowances.ts** — Allowance-specific logic
+- **fairwork.config.ts** — API endpoints and configuration
+
+**Action:** R80.3 already has Fair Work API integration. Compare implementations and cherry-pick the cache-warming and allowance calculation patterns.
+**Effort:** 3 days for cross-referencing and selective porting.
+
+### MODERATE VALUE — UX / Pattern Reference
+
+#### D5. Apprentice Progress Component
+
+`components/apprentice-progress.tsx` — Tabs-based UI showing:
+
+- **Modules tab:** Table with module name, progress bar (0-100%), status badge (completed/in_progress/not_started), last activity date
+- **Assessments tab:** Table with assessment name, score, date, feedback
+
+**Action:** Adapt this progress visualization pattern for CRM7's training delivery tracking (VET module). CRM7 has training routes but no progress visualization.
+**Effort:** 1 day.
+
+#### D6. Funding Claim Form with Document Upload
+
+`components/funding/claim-form.tsx` — Form with:
+
+- Program selector, Employee selector, Host Employer selector
+- Amount + Reference Number fields
+- Notes textarea
+- **FileUploader** for supporting documents (PDF, DOC, DOCX, JPG, PNG)
+- Uploads via Supabase Storage to `funding-documents/{claimId}/{filename}`
+
+**Action:** Port the document attachment pattern into CRM7's claims module. The FileUploader + Storage upload workflow is clean and reusable.
+**Effort:** 1 day.
+
+#### D7. LMS Service Enrollment Pattern
+
+`lib/services/lms.ts` — Clean course enrollment lifecycle:
+
+```
+getCourses(filters) → enrollUser(userId, courseId) → updateProgress(enrollmentId, progress)
+→ submitAssessment(params) → auto-complete if grade >= passing_grade
+```
+
+Types: Course, Enrollment, Assessment, Unit with proper status enums.
+
+**Action:** Reference for CRM7's VET training delivery module. The auto-completion-on-passing-grade pattern is particularly useful.
+**Effort:** Pattern reference only — no direct port needed.
+
+#### D8. Charge Calculation Component Breakdown
+
+`lib/services/charge-calculation/charge-calculation-service.ts`:
+
+```typescript
+components = {
+  base: template.baseRate * hours,
+  margin: template.baseRate * (template.baseMargin / 100) * hours,
+  super: template.baseRate * (template.superRate / 100) * hours,
+  leave: template.baseRate * (template.leaveLoading / 100) * hours,
+  workersComp: template.baseRate * (template.workersCompRate / 100) * hours,
+  payrollTax: template.baseRate * (template.payrollTaxRate / 100) * hours,
+  training: template.baseRate * (template.trainingCostRate / 100) * hours,
+  other: template.baseRate * (template.otherCostsRate / 100) * hours,
+  casual: template.baseRate * (template.casualLoading / 100) * hours,
+};
+totalComponents - fundingOffset = chargeRate;
+```
+
+**Action:** Verify `@bsuite/charge-calc` covers all 9 components + funding offset. This breakdown is a useful cross-check.
+**Effort:** Comparison only.
+
+#### D9. Australian Qualification Reference Data
+
+Mock data in `qualifications-data-table.tsx` with real TGA codes:
+
+| Code | Title | Sector | Duration |
+|------|-------|--------|----------|
+| MEM30205 | Certificate III in Engineering - Mechanical Trade | Engineering | 48 months |
+| CPC30211 | Certificate III in Carpentry | Construction | 48 months |
+| UEE30811 | Certificate III in Electrotechnology Electrician | Electrotechnology | 48 months |
+| AUR30616 | Certificate III in Light Vehicle Mechanical Technology | Automotive | 42 months |
+| SIT30816 | Certificate III in Commercial Cookery | Hospitality | 36 months |
+
+And funding programs: AAIP-2023, NSW-AWS-2023, QLD-ATB-2023, VIC-JSI-2023, RRSSI-2023.
+
+**Action:** Use as seed/test data for CRM7's qualification and funding modules.
+**Effort:** Fixtures only.
+
+### LOW VALUE — Already Surpassed
+
+| Item | Reason |
+|------|--------|
+| Apprentice/Host/Qualification data tables | CRM7 has `EnhancedDataTable` with more features |
+| Rates service (15+ files) | Over-engineered; `@bsuite/charge-calc` is more focused |
+| Navigation config | CRM7 has 195+ routes vs ~10 |
+| FundingService | CRM7's claims module is more comprehensive |
+| `lib/types.ts` types | CRM7's `types/entities.ts` is more mature |
+| Entire CRM7A repo | No domain code — just a dashboard scaffold with recharts |
+
+### Arcane-Fly/CRM7A — Verdict: Nothing Salvageable
+
+18 files total. A Next.js + shadcn/ui + recharts dashboard with:
+
+- 4 stat cards (Total Leads, New Leads, Avg Throughput, Conversion Rate)
+- Lead line chart + Throughput bar chart
+- 4-item sidebar (Dashboard, Leads, Campaigns, Settings)
+- No Supabase, no domain logic, no GTO/apprentice/TGA code
+
+### Donor Audit Priority Summary
+
+| Priority | Items | Action | Effort |
+|----------|-------|--------|--------|
+| **HIGH** | D1 Fair Work Zod schemas | Port to `@bsuite/charge-calc` | 2d |
+| **HIGH** | D2 Training contract schema (gto_id, host_employer_id, aqf_level) | Migration + types | 0.5d |
+| **HIGH** | D3 Apprentice allowances schema | Migration + service | 1d |
+| **HIGH** | D4 Fair Work service suite | Cross-ref with R80.3, cherry-pick | 3d |
+| **MODERATE** | D5 Apprentice progress visualization | Adapt for VET module | 1d |
+| **MODERATE** | D6 Document upload for claims | Port FileUploader pattern | 1d |
+| **MODERATE** | D8 Charge calc component breakdown | Verify `@bsuite/charge-calc` | 0.5d |
+| **LOW** | D9 Australian qualification seed data | Test fixtures | 0.5d |
+| **Total HIGH** | 4 items | | **~6.5 days** |
+| **Total MODERATE** | 3 items | | **~2.5 days** |
+
+### Relationship to Existing CRM7 Work
+
+The donor code confirms CRM7 is on the right track. Key validations:
+
+1. **AASS Adapter** — CRM7's `aassAdapter.ts` already handles AASS registration lifecycle with status transitions. The donor repos have no AASS code at all, making CRM7's implementation unique.
+2. **TGA Integration** — CRM7's `tgaService.ts` + `QualificationSelector` with TGA fallback search is more advanced than anything in the donor repos (which only have static qualification lists).
+3. **Host Employer Unification** — CRM7's `is_host_employer` toggle on clients is a cleaner pattern than the donor's separate `host-employers` section.
+4. **Charge Calculation** — `@bsuite/charge-calc` is already published to npm. The donor's charge calculation service validates the same component breakdown pattern.
+
+---
+
+## Vercel Deployment Capacity Assessment
+
+**Date:** 2026-03-05
+**Author:** Cascade (Windsurf)
+**Method:** Vercel MCP API (list_teams, list_projects, get_project, list_deployments, get_deployment, get_deployment_build_logs)
+
+### Team & Plan
+
+- **Team:** braden-pty-ltd (`team_ML7jNl1dZwSwgkKksx1pAOO9`)
+- **Plan:** Vercel Pro ($20/deploying seat/month)
+- **Total projects on team:** 41 (5 core BSuite + 36 legacy/experiment projects)
+
+### BSuite Project Inventory
+
+| Project | Vercel ID | Framework | Lambdas | Domains | Build Time | Region |
+|---------|-----------|-----------|---------|---------|------------|--------|
+| **crm7** | `prj_ZcvIEwYIBFQBfbJafOjGuc2THSbA` | Vite (SPA) | 1 | 7 (crm7.app, crm.crm7.app, <www.crm7.app>, etc.) | ~52s | iad1 |
+| **conduit** | `prj_EpTqQLe4muwr0E18AZoWcMRgUuT7` | Next.js 16 | 5 | 4 (conduit.crm7.app, etc.) | ~42s | iad1 |
+| **business-suite** | `prj_OYfvQ2LzwnSFdV2DzxKHCl1H7ZBu` | Vite (SPA) | — | 5 (suite.crm7.app, etc.) | ~30s | iad1 |
+| **r8** (R80.3) | `prj_rYA6cjcjZYnHGJ0y366x4Xzyb9Ps` | Vite (SPA) | — | 5 (r8.crm7.app, etc.) | ~25s | iad1 |
+| **braden** | `prj_RZNnolfS4LOzO8Wg4JEyudHUjMXJ` | Vite (SPA) | — | 6 (braden.com.au, <www.braden.com.au>, etc.) | ~20s | iad1 |
+
+### Pro Plan Limits vs Current Usage
+
+| Resource | Pro Limit | BSuite Current | Headroom | Risk |
+|----------|-----------|---------------|----------|------|
+| **Projects** | Unlimited | 41 total (5 core) | ∞ | ✅ None |
+| **Concurrent Builds** | 12 | 5 active repos × 2 branches | 2 spare | ✅ Comfortable |
+| **Daily Deployments** | 6,000 | ~30-50/day (multi-agent dev) | 5,950+ | ✅ Massive headroom |
+| **Bandwidth** | 1 TB/month | Pre-production, <1 GB/month | ~999 GB | ✅ No concern |
+| **Build Time/Deploy** | 45 min max | CRM7: 52s, Conduit: 42s | 44+ min | ✅ No concern |
+| **Serverless Functions** | Unlimited per deploy | CRM7: 1, Conduit: 5 | ∞ | ✅ No concern |
+| **Max Function Duration** | 300s (800s w/ Fluid Compute) | AI routes: 30s | 270s+ | ✅ Comfortable |
+| **Serverless Invocations** | Pay-as-you-go (1M included) | Pre-production, minimal | ~1M | ✅ Fine for now |
+| **Edge Requests** | 10M/month | Pre-production | ~10M | ✅ Fine for now |
+| **Build Minutes/month** | Pay-as-you-go ($20 credit) | ~150 builds × ~1 min = ~150 min | Credit covers | ✅ Fine |
+
+### CRM7 Build Profile (Latest: `dpl_8pnZuNyu9iHJiN13vHihdwaz5PyH`)
+
+- **Build machine:** Turbo Build Machine — 30 cores, 60 GB RAM
+- **Vite version:** 6.4.1
+- **Modules transformed:** 4,110
+- **Chunks:** 348 → merged to ~167
+- **pnpm install:** 1.9s (lockfile up-to-date, cache restored)
+- **Total build:** ~52 seconds
+- **Node.js:** 24.x with `--max-old-space-size=6144`
+- **Build command:** `pnpm run build:noprerender` (prisma:generate placeholder + vite build)
+- **Warning:** Puppeteer build scripts ignored (expected — no headless browser needed in prod)
+- **Warning:** Next.js `pages/api` directory hint (false positive — CRM7 is Vite, not Next.js)
+
+### Conduit Build Profile (Latest: `dpl_ALuy6hbF9ZedkH3RWLqjDYfQYsd9`)
+
+- **Framework:** Next.js 16 App Router with **Turbopack bundler**
+- **Lambdas:** 5 serverless functions
+- **Total build:** ~42 seconds
+- **Note:** 2 recent ERROR deployments (`dpl_DABArAtstD2joYodygwhF5UJLTEG`, `dpl_HkvRQoSdPvd5HLkB1obeBUfdb1DE`) — both resolved in subsequent deploys
+
+### Deployment Velocity (Last 24 Hours)
+
+| Project | Deploys (24h) | Branch Split | All READY? |
+|---------|--------------|--------------|------------|
+| **crm7** | ~20 | development: ~18, main: ~2 | ✅ All READY |
+| **conduit** | ~20 | development: ~15, main: ~5 | ⚠️ 2 ERRORs (resolved) |
+| **business-suite** | ~2 | development + main | ✅ All READY |
+| **r8** | ~1 | production | ✅ READY |
+| **braden** | ~1 | production | ✅ READY |
+
+### Verdict: NO SPLITTING NEEDED
+
+**The current deployment topology is well within Vercel Pro limits.** Specific findings:
+
+1. **No project splitting required.** All 5 BSuite projects fit comfortably as separate Vercel projects. CRM7 (Vite SPA with 1 lambda) and Conduit (Next.js with 5 lambdas) are the heaviest, but both build in under 1 minute.
+
+2. **Concurrent build capacity is fine.** With 12 concurrent builds on Pro, even if all 5 projects push to both `development` and `main` simultaneously (10 builds), there's still room for 2 more.
+
+3. **Build minutes are not a concern.** At ~1 min per build and ~50 deploys/day, that's ~1,500 min/month. The $20 monthly credit covers this easily at pay-as-you-go rates.
+
+4. **Bandwidth headroom is massive.** Pre-production usage is negligible. Even at launch, 5 SPAs + 1 Next.js app serving a GTO business (~50-200 internal users) won't approach 1 TB/month.
+
+5. **Serverless functions are minimal.** CRM7 has 1 lambda (API proxy), Conduit has 5 (SSR routes). No risk of hitting invocation limits for a B2B internal tool.
+
+### Recommendations
+
+1. **Clean up legacy projects.** 36 non-BSuite projects (gary8, cebus, spix, crm13, crm8, execute, block, etc.) consume no plan limits but clutter the dashboard. Consider archiving inactive ones.
+
+2. **Enable Ignored Build Step for `development` on braden and r8.** These projects rarely push to development. Adding a `vercel.json` ignored build step for non-production branches would save ~2 builds/day.
+
+3. **Monitor post-launch.** Once CRM7 and Conduit go live with real users, track:
+   - Serverless invocation count (AI chat endpoints could spike)
+   - Bandwidth (especially if serving large PDF exports from R80.3)
+   - Edge request count (Conduit SSR pages)
+
+4. **AI Gateway costs are separate.** The Vercel AI Gateway (grok-4.1-fast-reasoning, claude-sonnet-4.6) bills per token, not per invocation. Monitor this independently from hosting costs.
+
+5. **Consider Fluid Compute for Conduit AI routes** if streaming AI responses exceed the default 300s timeout. Currently configured at 30s which is fine, but complex agent workflows may need more.
+
+---
+
 ## Companion Documents
 
 - **Audit Corrections & Task Assignments:** `20260304-crm7-audit-corrections-task-assignments-v1.00W.md` (GTO/RTO corrections, Cascade completed work, agent assignments)
@@ -509,3 +825,4 @@ Claude Code (Opus 4.6) performed a comprehensive multi-pass audit and remediatio
 - **DRY Architecture:** `DRY-ONE-SHOT-ARCHITECTURE.md`
 - **GTO Standards:** `20260228-gto-standards-reference-v1.00W.md`
 - **Master Roadmap:** `00-master-roadmap.md`
+- **Master Orchestration Plan (Red-Team Validated):** `20260305-master-orchestration-plan-v1.00W.md` (fairwork-enhanced audit, CRM7 sprint plan, BSuite-wide wave ordering)
