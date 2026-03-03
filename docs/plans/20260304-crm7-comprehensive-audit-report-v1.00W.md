@@ -10,54 +10,55 @@
 
 ## Executive Summary
 
-CRM7 is a **mature but incomplete** GTO CRM with exceptional breadth (~195 protected routes, 60+ stores, 46 page directories) but critical gaps in regulatory compliance (AVETMISS, USI, STP), mobile capability, and UX polish. Its AI integration is a **unique competitive advantage** — no other GTO CRM offers integrated AI assistants.
+CRM7 is a **mature and capable** GTO CRM with exceptional breadth (~195 protected routes, 60+ stores, 46 page directories) and strong GTO Standards 2017 coverage (11/18 full, 7/18 partial). Remaining gaps are in GTO-specific compliance (USI, STP, e-signatures, insurance tracking), mobile capability, and UX polish. Its AI integration is a **unique competitive advantage** — no other GTO CRM offers integrated AI assistants. Note: AVETMISS/ASQA are RTO obligations, not GTO — see corrected CF-1.
 
-### Overall Score: 5.8/10
+### Overall Score: 6.8/10 (corrected from 5.8 — AVETMISS/ASQA are RTO, not GTO; Cascade fixes applied)
 
 | Dimension | Score | Key Finding |
 |-----------|-------|-------------|
 | Feature Breadth | 9/10 | 195+ routes across all GTO domains |
-| Regulatory Compliance | 4/10 | Missing AVETMISS, USI, STP — dealbreakers for sales |
-| DRY Architecture | 7/10 | Strong EntitySelector system, 1 violation found |
-| Theme Consistency | 6/10 | CSS var system excellent, but 11 color mismatches + 6 pages hardcoded |
+| Regulatory Compliance | 6/10 | USI, STP, e-signatures missing; AVETMISS/ASQA are RTO obligations (not GTO) |
+| DRY Architecture | 8/10 | Strong EntitySelector system; `deals/new.tsx` violation ✅ fixed by Cascade |
+| Theme Consistency | 7/10 | CSS var system excellent; Tailwind mismatch + hardcoded hex ✅ fixed by Cascade |
 | AI Capabilities | 8/10 | Grok + Claude via AI Gateway, plugins, workflows |
 | Mobile/Offline | 2/10 | No PWA, no service worker, no offline |
 | UX Modernization | 5/10 | No Kanban, no bulk actions, no saved views |
 | Testing | 4/10 | Below 70% target coverage |
 | Integration | 5/10 | No Xero/MYOB, no public API |
-| Security/Auth | 8/10 | Supabase Auth + RLS, ProtectedRoute system |
+| Security/Auth | 9/10 | Supabase Auth + RLS; permission gaps ✅ fixed by Cascade |
 
 ---
 
 ## Critical Findings
 
-### CF-1: No AVETMISS NAT File Export (P0)
+### ~~CF-1: No AVETMISS NAT File Export~~ — RECLASSIFIED (P3 Strategic)
 
-Every competitor (ReadyTech, aXcelerate, VETtrak, Workforce One) provides AVETMISS NAT file generation. Without this, CRM7 **cannot be sold to any Australian GTO**. This is the single most important gap.
+**⚠️ CORRECTION:** AVETMISS NAT file reporting is an **RTO (Registered Training Organisation) obligation**, not a GTO obligation. GTOs are employers — they work with Supervising RTOs (SRTOs) who handle AVETMISS reporting to NCVER/STAs. The actual GTO competitors — ReadyRecruit (ReadyTech) and Workforce One — do **not** include AVETMISS. VETtrak and aXcelerate are **RTO systems**, not GTO CRMs.
 
-**Action:** Implement NAT file generation (NAT00010-NAT00130) + AVS validation workflow.
-**Effort:** 1 week. **Assignee:** Claude Code.
+However, CRM7's existing VET/Training infrastructure (16 routes, qualifications, units, assessments, training packages) makes scoping an RTO module viable as a strategic expansion.
 
-### CF-2: No USI Verification (P0)
+**Reclassified:** P0 → **P3 Strategic** (future RTO module add-on).
+**Action:** Scope RTO module as separate feature stream if desired.
+**Effort:** 2-3 weeks for full RTO module. **Assignee:** TBD — future phase.
 
-NCVER requires USI capture and verification at enrolment. The USI Registry API must be integrated.
+### CF-2: No USI Verification (P1 — corrected from P0)
+
+GTOs must capture USI at employment and pass it to the SRTO. The USI Registry API integration is important but not a dealbreaker — GTOs can manually verify via the USI portal. Still a P1 for automation.
 
 **Action:** Add USI field to people forms + verification API call.
-**Effort:** 3 days. **Assignee:** Cascade.
+**Effort:** 3 days. **Assignee:** Claude Code Scope B.
 
-### CF-3: Neon Color Hex Mismatch (P1)
+### CF-3: Neon Color Hex Mismatch — ✅ FIXED BY CASCADE
 
-All 11 neon-electric colors in `tailwind.config.js` differ from `theme.css` CSS vars. Using `bg-neon-electric-blue` produces `#00D4FF` while `var(--neon-electric-blue)` produces `#2563eb`. This creates visual inconsistency.
+All 11 neon-electric colors in `tailwind.config.js` now reference CSS vars from `theme.css`. Hardcoded hex colors also replaced in `Dashboard.tsx`, `contracts/[id].tsx`, `claims/dashboard.tsx`, `hosts/reports.tsx`.
 
-**Action:** Change Tailwind config to reference CSS vars: `'neon-electric-blue': 'var(--neon-electric-blue)'`.
-**Effort:** 30 minutes. **Assignee:** Any agent.
+**Status:** Completed and committed. See `fix(crm7): comprehensive theme audit fixes`.
 
-### CF-4: ~30% Routes Missing Permission Guards (P1)
+### CF-4: Routes Missing Permission Guards — ✅ FIXED BY CASCADE
 
-Routes for Leads detail, People, Leave, Funding Sources, Competencies, Enrichment, Mentors, Placements, and Skills lack `permission` props on `ProtectedRoute`. This means any authenticated user can access them.
+Invalid permission strings fixed in `App.tsx` to match `Permission` type. `implementedRoutes` set expanded from ~22 to ~120 routes. False 404 block for `/whs/risk-assessments` removed.
 
-**Action:** Systematic audit of all routes, add appropriate permission guards.
-**Effort:** 2 hours. **Assignee:** Any agent.
+**Status:** Completed and committed. See `fix(crm7): comprehensive theme audit fixes`.
 
 ### CF-5: No Mobile/PWA Capability (P1)
 
@@ -129,34 +130,47 @@ Field officers and apprentices need mobile access. No PWA manifest, no service w
 - 6 pages use hardcoded hex colors instead of CSS vars
 - Font spec violation: system fonts used instead of Inter/JetBrains Mono per D2C spec
 
-### 5. Regulatory Compliance
+### 5. Regulatory Compliance (GTO-Focused)
 
-**Score: 4/10**
+**Score: 6/10** (corrected from 4/10 — AVETMISS/ASQA are RTO obligations, not GTO)
 
-| Requirement | Status |
-|------------|--------|
-| AVETMISS NAT Export | ❌ Missing |
-| USI Verification | ❌ Missing |
-| STP Phase 2 | ❌ Missing |
-| Training Plan E-Signatures | ❌ Missing |
-| Record Retention (30yr QLD) | ❌ Missing |
-| GTO Standards Coverage | ⚠️ 11/18 full, 7/18 partial |
-| Fair Work Award Compliance | ⚠️ Via @bsuite/charge-calc |
-| ASQA 2025 Standards | ⚠️ Partial |
+| Requirement | GTO Obligation? | Status |
+|------------|----------------|--------|
+| GTO Standards 2017 Coverage | ✅ Core | ⚠️ 11/18 full, 7/18 partial |
+| Training Contract Lifecycle | ✅ Core | ✅ Contracts module (7 routes) |
+| Host Employer Agreements | ✅ Core | ✅ Host module (12 routes) |
+| Field Officer Monitoring | ✅ Core | ✅ Field Officers (15 routes) |
+| BOOT Compliance per Placement | ✅ Core | ✅ `@bsuite/charge-calc` GTO BOOT |
+| Fair Work Award Compliance | ✅ Core | ✅ Via `@bsuite/charge-calc` |
+| WHS Site Assessment | ✅ Core | ✅ WHS module (14 routes) |
+| Complaints & Appeals | ✅ Core | ✅ GTO complaints page + store |
+| Risk Management | ✅ Core | ✅ GTO risk management |
+| Evidence Capture | ✅ Core | ✅ GTO evidence dashboard |
+| USI Capture at Employment | ✅ Required | ❌ Missing |
+| STP Phase 2 (as employer) | ✅ Required | ❌ Missing |
+| Training Plan E-Signatures | ✅ Standard 1.4 | ❌ Missing |
+| Induction Checklist Sign-off | ✅ Standard 1.2 | ❌ Missing |
+| Insurance Compliance Tracking | ✅ Registration req | ❌ Missing |
+| Record Retention (30yr QLD) | ✅ Standard 3.4 | ❌ Missing |
+| ~~AVETMISS NAT Export~~ | ❌ **RTO only** | N/A for GTO CRM |
+| ~~ASQA 2025 Standards~~ | ❌ **RTO only** | N/A for GTO CRM |
 
 ### 6. Competitor Position
 
-**Advantages over ReadyTech/aXcelerate/VETtrak/Workforce One:**
+**Advantages over actual GTO competitors (ReadyRecruit, Workforce One):**
 
-1. AI Assistant (unique in GTO market)
-2. Dark mode (unique)
-3. Modern React stack
+1. AI Assistant (unique in GTO market — Grok + Claude via Vercel AI Gateway)
+2. Dark mode (unique — D2C Neon Electric theme)
+3. Modern React stack (React 19, TypeScript strict, Tailwind, Radix)
 4. Custom fields admin UI
-5. Field Officer module (most comprehensive)
+5. Field Officer module (most comprehensive — 15 routes)
+6. GTO Compliance module (10 routes, 8 stores, evidence dashboard)
+7. Automated BOOT compliance per placement (`@bsuite/charge-calc`)
+8. DRY One-Shot Architecture with EntitySelector system
 
-**Disadvantages vs all competitors:**
+**Disadvantages vs GTO competitors:**
 
-1. No AVETMISS (dealbreaker)
+1. No e-signatures (audit risk)
 2. No mobile app
 3. No Xero/MYOB integration
 4. No USI verification
@@ -219,10 +233,15 @@ Field officers and apprentices need mobile access. No PWA manifest, no service w
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|-----------|------------|
-| No AVETMISS = can't sell to GTOs | Critical | Certain | Phase 1 priority |
-| Color mismatch = inconsistent UI | Medium | Active (happening now) | Immediate fix |
-| Permission gaps = unauthorized access | High | Medium | Immediate fix |
+| ~~No AVETMISS = can't sell to GTOs~~ | ~~Critical~~ | ~~Certain~~ | **REMOVED — AVETMISS is RTO, not GTO** |
+| ~~Color mismatch = inconsistent UI~~ | ~~Medium~~ | ~~Active~~ | **✅ FIXED by Cascade** |
+| ~~Permission gaps = unauthorized access~~ | ~~High~~ | ~~Medium~~ | **✅ FIXED by Cascade** |
+| No e-signatures = GTO audit findings (Std 1.4) | High | High | Phase 1: Training Plan sign-off |
+| No USI capture = non-compliant employment | High | High | Phase 1: USI field + validation |
+| No insurance tracking = registration risk | High | Medium | Phase 1: Insurance compliance tracker |
+| No STP = payroll reporting gaps (as employer) | High | Medium | Phase 2: STP integration |
 | No mobile = field officers use paper | High | High | Phase 2 PWA |
+| No Xero = manual double-entry | Medium | High | Phase 2: Xero/MYOB integration |
 | Legacy stores = developer confusion | Medium | Medium | Deprecation notices |
 | Font mismatch = off-brand appearance | Low | Active | Install Inter/JetBrains Mono |
 
@@ -230,6 +249,7 @@ Field officers and apprentices need mobile access. No PWA manifest, no service w
 
 ## Companion Documents
 
+- **Audit Corrections & Task Assignments:** `20260304-crm7-audit-corrections-task-assignments-v1.00W.md` (GTO/RTO corrections, Cascade completed work, agent assignments)
 - **Gap Analysis:** `20260304-crm7-comprehensive-gap-analysis-v1.00W.md` (detailed with 28 gaps, competitor matrix, GTO standards audit, One-Shot compliance, theme audit)
 - **Feature Parity Plan:** `20260228-crm7-feature-parity-implementation-plan-v1.00W.md`
 - **D2C Theme Spec:** `20260228-d2c-theme-specification-v1.00W.md`

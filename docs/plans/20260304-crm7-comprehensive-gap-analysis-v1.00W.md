@@ -10,9 +10,9 @@
 
 ## Executive Summary
 
-CRM7 is a React + Vite SPA with **~195 active protected routes**, **60+ Zustand stores**, and **46 page directories**. This analysis compares current state against industry competitors (ReadyTech, aXcelerate, VETtrak, Workforce One), modern CRM UX (HubSpot, Salesforce, Zoho), and Australian regulatory requirements (GTO Standards 2017, AVETMISS, STP Phase 2, Fair Work, ASQA 2025).
+CRM7 is a React + Vite SPA with **~195 active protected routes**, **60+ Zustand stores**, and **46 page directories**. This analysis compares current state against GTO competitors (ReadyRecruit, Workforce One), modern CRM UX (HubSpot, Salesforce, Zoho), and Australian regulatory requirements (GTO National Standards 2017, STP Phase 2, Fair Work). **Note:** AVETMISS/ASQA are RTO obligations, not GTO — see corrections in `20260304-crm7-audit-corrections-task-assignments-v1.00W.md`.
 
-### Overall Maturity: 5.8/10
+### Overall Maturity: 6.8/10 (corrected from 5.8 — RTO items removed, Cascade fixes applied)
 
 | Category | Score | Notes |
 |----------|-------|-------|
@@ -68,8 +68,8 @@ CRM7 is a React + Vite SPA with **~195 active protected routes**, **60+ Zustand 
 
 | # | Gap | Current State | Industry Standard | Pri | Effort |
 |---|-----|--------------|-------------------|-----|--------|
-| G1 | **AVETMISS NAT File Export** | No export found | All competitors produce NAT files; NCVER AVS validation required | P0 | 1w |
-| G2 | **USI Verification at Enrolment** | No USI validation | NCVER requires USI capture + verification via USI Registry API | P0 | 3d |
+| ~~G1~~ | ~~**AVETMISS NAT File Export**~~ | ~~No export found~~ | **RECLASSIFIED: AVETMISS is an RTO obligation, not GTO.** GTOs work with SRTOs who handle AVETMISS. ReadyRecruit & Workforce One don't have it. | ~~P0~~ → **P3** | 2-3w (RTO module) |
+| G2 | **USI Capture at Employment** | No USI field/validation | GTOs must capture USI and pass to SRTO. Manual portal fallback exists. | ~~P0~~ → **P1** | 3d |
 | G3 | **Training Plan Versioning + E-Signatures** | Plans exist, no versioning/signatures | ACT Standards: versioned plans, electronic signatures, endorsement tracking | P1 | 1w |
 | G4 | **STP Phase 2 Data Integration** | No STP integration | ATO requires STP Phase 2 reporting; payroll must integrate | P1 | 2w |
 | G5 | **Record Retention Enforcement (30yr QLD)** | No retention policy | QLD: 30-year retention for training records; 5yr financial | P1 | 3d |
@@ -111,26 +111,29 @@ CRM7 is a React + Vite SPA with **~195 active protected routes**, **60+ Zustand 
 
 ## 3. Competitor Comparison Matrix
 
-| Feature | CRM7 | Ready Apprentice | aXcelerate | VETtrak | Workforce One | HubSpot |
-|---------|-------|-------------------|------------|---------|---------------|---------|
-| Apprentice Lifecycle | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ❌ N/A |
-| Host Employer Mgmt | ✅ Full | ✅ Full | ⚠️ Partial | ⚠️ Partial | ✅ Full | ❌ N/A |
-| AVETMISS NAT Export | ❌ Missing | ✅ Built-in | ✅ Built-in | ✅ Built-in | ✅ Built-in | ❌ N/A |
-| USI Verification | ❌ Missing | ✅ API | ✅ API | ✅ API | ⚠️ Unknown | ❌ N/A |
-| STP Integration | ❌ Missing | ⚠️ Partial | ⚠️ Via partner | ❌ External | ✅ Built-in | ❌ N/A |
-| Xero/MYOB | ❌ Stub only | ✅ Via Ready Contracts | ✅ Built-in | ✅ Built-in | ✅ Built-in | ✅ Marketplace |
-| GTO Standards | ⚠️ Partial | ✅ Full | ⚠️ Partial | ⚠️ Partial | ✅ Full | ❌ N/A |
-| Claims Forecasting | ❌ Missing | ✅ Built-in | ⚠️ Reporting | ⚠️ Reporting | ⚠️ Reporting | ❌ N/A |
-| Training Plan E-Sign | ❌ Missing | ✅ Electronic | ⚠️ Unknown | ⚠️ Unknown | ⚠️ Unknown | ❌ N/A |
-| Mobile App | ❌ No PWA | ⚠️ Responsive | ✅ Mobile app | ✅ Trainer App | ⚠️ Unknown | ✅ Full |
-| Offline Capability | ❌ None | ⚠️ Unknown | ⚠️ Unknown | ⚠️ Unknown | ❌ Unknown | ❌ No |
-| Kanban Board | ❌ No | ⚠️ Unknown | ⚠️ Unknown | ❌ No | ❌ No | ✅ Full |
-| AI Assistant | ✅ Grok/Claude | ❌ No | ❌ No | ❌ No | ⚠️ "Smart AI" | ✅ HubSpot AI |
-| Custom Fields | ✅ Admin UI | ⚠️ Config | ✅ Yes | ✅ Yes | ⚠️ Unknown | ✅ Full |
-| Bulk Actions | ❌ Missing | ⚠️ Unknown | ✅ Yes | ✅ Yes | ⚠️ Unknown | ✅ Full |
-| Public API | ❌ None | ✅ REST | ✅ REST | ✅ API | ⚠️ Unknown | ✅ Full |
-| Dark Mode | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
-| Per-Seat Pricing | ✅ 3 tiers | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+**⚠️ Note:** aXcelerate and VETtrak are **RTO Student Management Systems**, not GTO CRMs. The actual GTO competitors are **ReadyRecruit** (ReadyTech) and **Workforce One**. Ready Apprentice is RTO-focused with some GTO overlap.
+
+| Feature | CRM7 | ReadyRecruit (ReadyTech) | Workforce One | HubSpot (generic CRM) |
+|---------|-------|--------------------------|---------------|------------------------|
+| Apprentice Lifecycle | ✅ Full | ✅ Full | ✅ Full | ❌ N/A |
+| Host Employer Mgmt | ✅ Full (12 routes) | ✅ Full | ✅ Full | ❌ N/A |
+| ~~AVETMISS NAT Export~~ | N/A (RTO only) | N/A (RTO only) | N/A (RTO only) | ❌ N/A |
+| USI Capture | ❌ Missing | ✅ Yes | ⚠️ Unknown | ❌ N/A |
+| STP Integration | ❌ Missing | ⚠️ Partial | ✅ Built-in | ❌ N/A |
+| Xero/MYOB | ❌ Stub only | ✅ Via Ready Contracts | ✅ Built-in | ✅ Marketplace |
+| GTO Standards Module | ✅ 10 routes, 8 stores | ⚠️ Unknown | ✅ Full | ❌ N/A |
+| BOOT Compliance | ✅ Automated (`charge-calc`) | ⚠️ Unknown | ⚠️ Unknown | ❌ N/A |
+| Claims Forecasting | ❌ Missing | ✅ Built-in | ⚠️ Reporting | ❌ N/A |
+| Training Plan E-Sign | ❌ Missing | ✅ Electronic | ⚠️ Unknown | ❌ N/A |
+| Mobile App | ❌ No PWA | ⚠️ Responsive | ⚠️ Unknown | ✅ Full |
+| Kanban Board | ❌ No | ⚠️ Unknown | ❌ No | ✅ Full |
+| AI Assistant | ✅ Grok/Claude | ❌ No | ⚠️ "Smart AI" | ✅ HubSpot AI |
+| Custom Fields | ✅ Admin UI | ⚠️ Config | ⚠️ Unknown | ✅ Full |
+| Bulk Actions | ❌ Missing | ⚠️ Unknown | ⚠️ Unknown | ✅ Full |
+| Public API | ❌ None | ✅ REST | ⚠️ Unknown | ✅ Full |
+| Dark Mode | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Field Officer Module | ✅ 15 routes (best) | ⚠️ Basic | ⚠️ Basic | ❌ N/A |
+| WHS Module | ✅ 14 routes | ⚠️ Basic | ⚠️ Unknown | ❌ N/A |
 
 ### CRM7 Competitive Advantages
 
@@ -145,7 +148,7 @@ CRM7 is a React + Vite SPA with **~195 active protected routes**, **60+ Zustand 
 
 ### CRM7 Competitive Disadvantages
 
-1. **No AVETMISS** — Every competitor has it; hard requirement for GTO sales
+1. ~~**No AVETMISS**~~ — **REMOVED: AVETMISS is RTO, not GTO.** Scoped as P3 RTO module add-on.
 2. **No mobile/offline** — Field officers and apprentices need mobile access
 3. **No Xero/MYOB** — Every competitor integrates with Australian accounting packages
 4. **No USI verification** — Regulatory requirement for all RTOs/GTOs
@@ -213,11 +216,12 @@ CRM7 is a React + Vite SPA with **~195 active protected routes**, **60+ Zustand 
 
 | Week | Task | Gap Ref | Assignee |
 |------|------|---------|----------|
-| 1-2 | AVETMISS NAT file generation + AVS validation workflow | G1 | Claude Code |
-| 1 | USI capture field + verification API integration | G2 | Cascade |
-| 2-3 | Training plan versioning + e-signature integration | G3 | Claude Code |
-| 3 | Employer capacity evidence upload workflow on host pages | G8 | Cascade |
-| 3-4 | Record retention policy engine + archival flags | G5 | Cascade |
+| ~~1-2~~ | ~~AVETMISS NAT file generation~~ | ~~G1~~ | **REMOVED — RTO, not GTO. Reclassified P3.** |
+| 1 | USI capture field + verification API integration | G2 | Claude Code Scope B |
+| 1-2 | Induction checklist with digital sign-off (Std 1.2) | NEW | Claude Code Scope B |
+| 2-3 | Training plan versioning + e-signature integration | G3 | Claude Code Scope B |
+| 3 | Employer capacity evidence + insurance tracking on host pages | G8 | Claude Code Scope B |
+| 3-4 | Record retention policy engine + archival flags | G5 | Claude Code Scope A |
 
 ### Phase 2: Integration & Mobile (Weeks 3-8)
 
@@ -274,16 +278,37 @@ These can be tackled immediately to improve quality:
 
 ## 8. Regulatory Compliance Checklist
 
-### AVETMISS / NCVER
+### GTO National Standards 2017 (Core GTO Obligations)
 
-- [ ] Capture USI at enrolment (field + validation)
-- [ ] USI Registry API verification
+- [ ] USI capture at employment (field + format validation)
+- [ ] USI Registry API verification (or manual portal fallback)
+- [ ] Induction checklist with digital sign-off (Std 1.2)
+- [ ] Parent/guardian acknowledgement for <18 apprentices (Std 1.2)
+- [ ] Host Employer Agreement review cycle + signed acknowledgement (Std 1.3)
+- [ ] Training Plan sign-off tracking: GTO + apprentice + RTO + host (Std 1.4)
+- [ ] Support services log (LLN, mentoring, special equipment) (Std 2.1)
+- [ ] Training Plan progress vs milestones visual tracker (Std 2.2)
+- [ ] Economic downturn/stand-down management workflow (Std 2.3)
+- [ ] Performance issue management with structured outcomes (Std 2.5)
+- [ ] Insurance compliance tracking (PI/PL/WorkCover) with expiry alerts (Std 3.5)
+- [ ] Multi-jurisdiction STA awareness (QLD/NSW/VIC/SA/WA/TAS/NT/ACT) (Std 3.1)
+- [ ] Complaints register with outcomes + STA escalation (Std 3.8)
+- [ ] Continuous improvement feedback → analysis → action loop (Std 3.7)
+- [ ] Apprentice Connect Australia Provider (ACAP) integration
+- [ ] STA at-risk Training Contract notification within 14 days
+
+### ~~AVETMISS / NCVER~~ — RTO Only (P3 Strategic Add-on)
+
+> **Note:** These are RTO obligations, not GTO. Scoped as future RTO module.
+
 - [ ] NAT file generation (NAT00010-NAT00130)
-- [ ] AVS validation workflow (upload, validate, correct, resubmit)
+- [ ] AVS validation workflow
 - [ ] Submission to state training authorities
 - [ ] Periodic submission scheduling
 
-### ASQA 2025 Standards
+### ~~ASQA 2025 Standards~~ — RTO Only (P3 Strategic Add-on)
+
+> **Note:** ASQA regulates RTOs, not GTOs. GTOs register with STAs against National Standards.
 
 - [ ] Assessment mapping documentation
 - [ ] Trainer/assessor competency records
