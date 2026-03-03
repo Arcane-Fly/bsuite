@@ -15,16 +15,6 @@ export default function CareersPage() {
         </p>
       </div>
 
-      <div className="relative">
-        <input
-          type="search"
-          disabled
-          placeholder="Search positions by title, location, or trade area..."
-          className="w-full rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground placeholder:text-muted-foreground/60 cursor-not-allowed"
-          aria-label="Search positions"
-        />
-      </div>
-
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
           <svg
@@ -34,6 +24,7 @@ export default function CareersPage() {
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={1.5}
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

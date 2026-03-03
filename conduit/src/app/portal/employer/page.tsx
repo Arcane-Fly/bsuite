@@ -10,17 +10,14 @@ export default function EmployerPortalPage() {
     {
       title: 'Job Listings',
       description: 'Create and manage job postings visible to candidates across the platform.',
-      icon: 'Briefcase',
     },
     {
       title: 'Candidates',
       description: 'Review candidate applications, shortlist talent, and track hiring pipelines.',
-      icon: 'Users',
     },
     {
       title: 'Interviews',
       description: 'Schedule and manage interviews with integrated calendar and notifications.',
-      icon: 'Calendar',
     },
   ];
 

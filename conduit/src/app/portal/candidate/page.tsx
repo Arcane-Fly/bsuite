@@ -10,17 +10,14 @@ export default function CandidatePortalPage() {
     {
       title: 'Application Status',
       description: 'Track the progress of your submitted applications in real time.',
-      icon: 'ClipboardList',
     },
     {
       title: 'Documents',
       description: 'Upload and manage required documents such as IDs, qualifications, and references.',
-      icon: 'FileText',
     },
     {
       title: 'Onboarding Checklist',
       description: 'Complete your onboarding tasks step by step before your start date.',
-      icon: 'CheckSquare',
     },
   ];
 

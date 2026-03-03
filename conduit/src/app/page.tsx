@@ -1,5 +1,6 @@
-import { redirect } from 'next/navigation'
+import ConduitLanding from '@/components/marketing/ConduitLanding'
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -9,5 +10,5 @@ export default async function Home() {
     redirect('/candidates')
   }
 
-  redirect('/auth/login')
+  return <ConduitLanding />
 }
