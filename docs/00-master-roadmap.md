@@ -166,14 +166,14 @@ Each entity has a single owning app for create/edit. Schema changes via versione
   - Nav gating: 6 sections hidden (WHS, VET, Communication, Portal, Financial, Analytics) via `filterSectionsByPermission`
   - Kill list: 4 settings pages made read-only (24+ mutations disabled), host reports emptied, financial summary hidden
   - 2 red-team rounds: 16 issues found, 13 fixed, 3 deferred (low risk)
-  - 48 new tests (2254 total passing)
+  - 48 new tests (2254 total passing, now 2261 after Phases 2-4)
 
 **Remaining:**
 
 - ✅ **Tier 2 page wiring** — 3 new stores (mentorStore, competencyStore, complianceStore), 2 stores fixed (timesheetStore, placementStore), 5 pages rewired (mentors, competencies, compliance, timesheets, placements), Placement + Timesheet entity types aligned to DB schema
-- 🔶 **Launch-Ready Phase 2** — Empty states on all list pages, consolidate duplicate EmptyState component (Tasks 11-12)
-- 🔶 **Launch-Ready Phase 3** — Dashboard real data, onboarding wizard improvements (Tasks 13-14)
-- 🔶 **Launch-Ready Phase 4** — Cmd+K command palette, activity timeline (Tasks 15-16)
+- ✅ **Launch-Ready Phase 2** — EmptyState consolidation (deleted duplicate, 2 pages fixed), 8+ broken export buttons disabled across 10 files (Tasks 10-12)
+- ✅ **Launch-Ready Phase 3** — Dashboard mock widgets replaced with EmptyState + CTAs, onboarding wizard confirmed launch-ready (Tasks 13-14)
+- ✅ **Launch-Ready Phase 4** — Cmd+K command palette with permission filtering + 6 tests, activity timeline deferred (no activities table). AI shortcut moved to Cmd+J. 2 red-team rounds: 30 issues found, 12 fixed, rest deferred low-risk. (Tasks 15-16)
 - 🔶 **PWA** — `vite-plugin-pwa`, service worker, mobile UI, offline IndexedDB, install prompt ([prompt](./claude-code-prompts.md#prompt-1))
 - 🔶 **Kanban pipeline board** — @dnd-kit, drag-and-drop deal management (critical UX gap vs competitors)
 - 🔲 Tier 3-4 page wiring — financial, compliance, field officers, WHS, comms, reports (~15 more stores)
