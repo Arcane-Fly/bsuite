@@ -11,7 +11,7 @@ import {
     ShieldCheck,
     ShieldX,
 } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const CHECK_TYPES = [
   { value: 'all', label: 'All Types' },
@@ -55,8 +55,8 @@ export default function CompliancePage() {
     if (tenantId) fetchChecks(tenantId)
   }, [tenantId, filters.status, filters.check_type, fetchChecks])
 
+  const [now] = useState(() => Date.now())
   const summary = useMemo(() => {
-    const now = Date.now()
     const thirtyDays = 30 * 24 * 60 * 60 * 1000
     return {
       total: checks.length,
@@ -68,7 +68,7 @@ export default function CompliancePage() {
         (c) => c.expires_at && c.status === 'passed' && new Date(c.expires_at).getTime() - now < thirtyDays && new Date(c.expires_at).getTime() > now
       ).length,
     }
-  }, [checks])
+  }, [checks, now])
 
   return (
     <div className="space-y-6">

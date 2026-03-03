@@ -4,18 +4,20 @@ import {
     GeneralSection,
     IntegrationsSection,
     PipelineStagesSection,
+    TeamSection,
 } from '@/components/settings'
 import { useTenantId } from '@/hooks/useTenantId'
 import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/settingsStore'
 import * as Tabs from '@radix-ui/react-tabs'
-import { KanbanSquare, Loader2, Plug, Settings, Sliders } from 'lucide-react'
+import { KanbanSquare, Loader2, Plug, Settings, Sliders, Users } from 'lucide-react'
 import { useEffect } from 'react'
 
 const tabs = [
   { value: 'pipeline', label: 'Pipeline Stages', icon: KanbanSquare },
   { value: 'integrations', label: 'Integrations', icon: Plug },
   { value: 'general', label: 'General', icon: Sliders },
+  { value: 'team', label: 'Team', icon: Users },
 ] as const
 
 export default function SettingsPage() {
@@ -89,6 +91,10 @@ export default function SettingsPage() {
 
         <Tabs.Content value="general" className="focus-visible:outline-none">
           <GeneralSection tenantId={tenantId} />
+        </Tabs.Content>
+
+        <Tabs.Content value="team" className="focus-visible:outline-none">
+          <TeamSection tenantId={tenantId} />
         </Tabs.Content>
       </Tabs.Root>
     </div>

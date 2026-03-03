@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Vercel Build Optimizations
 
 This document outlines optimizations made to the build process to eliminate warnings and ensure clean deployments on Vercel.

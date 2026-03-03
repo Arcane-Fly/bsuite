@@ -73,9 +73,12 @@ export function AIAssistant() {
   };
 
   const handleUpgrade = () => {
-    // Navigate to billing/upgrade page
-    // TODO: Implement upgrade flow
-    console.info('[Scout] Upgrade clicked, current tier:', userTier);
+    const bsuUrl =
+      process.env.NEXT_PUBLIC_BSU_URL ||
+      (window.location.hostname === 'localhost'
+        ? 'http://localhost:5675'
+        : 'https://suite.crm7.app');
+    window.open(`${bsuUrl}/billing`, '_blank', 'noopener');
   };
 
   // ─── Render ────────────────────────────────────────────────────

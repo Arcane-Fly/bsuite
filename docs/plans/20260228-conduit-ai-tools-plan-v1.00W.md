@@ -21,7 +21,7 @@ Add an AI assistant to Conduit (recruitment ATS) that can search candidates, man
 |----------|--------|-----------|
 | **Runtime** | Next.js Edge Runtime (App Router API route) | Conduit is Next.js 16; Edge Runtime for streaming |
 | **AI SDK** | `@ai-sdk/react` + `ai` (Vercel AI SDK v6) | Same as CRM7, consistent DX |
-| **Model** | `gemini-2.5-flash-preview-05-20` default, route to `claude-4-sonnet` for complex tasks | Fast for search, smart for reasoning |
+| **Model** | `xai/grok-4.1-fast-reasoning` default, route to `anthropic/claude-sonnet-4.6` for complex tasks | Fast for search, smart for reasoning |
 | **Tool pattern** | Factory with `ToolExecutionContext` | Mirrors CRM7 `createToolRegistry` |
 | **DB access** | Direct Supabase client (server-side) | Next.js server components; no need for `/api/db` proxy |
 | **Table prefix** | `r7_` (Conduit tables use this prefix) | Existing schema |
@@ -39,17 +39,20 @@ pnpm add ai @ai-sdk/react @ai-sdk/google @ai-sdk/anthropic
 ### 1b. AI config & model router
 
 Create `src/lib/ai/config.ts`:
+
 - Model definitions (approved models only)
 - `routeModel(complexity)` function
 - Rate limit constants
 
 Create `src/lib/ai/model-router.ts`:
+
 - Complexity classification (simple/medium/complex)
 - Token budget management
 
 ### 1c. Persona
 
 Create `src/lib/ai/conduit-persona.ts`:
+
 - Name: **"Scout"** — Conduit's recruitment AI assistant
 - Role: Recruitment specialist, ATS navigator, pipeline advisor
 - Tone: Professional but approachable, recruitment-domain language
@@ -123,6 +126,7 @@ Create `src/lib/ai/conduit-persona.ts`:
 ### 3a. Chat API route
 
 Create `src/app/api/ai/chat/route.ts`:
+
 - Edge Runtime
 - Auth validation via `@supabase/ssr`
 - Tenant isolation
@@ -133,6 +137,7 @@ Create `src/app/api/ai/chat/route.ts`:
 ### 3b. useChat hook
 
 Create `src/hooks/useAIChat.ts`:
+
 - Wraps `@ai-sdk/react` `useChat`
 - Passes tenant context
 - Handles tool result display

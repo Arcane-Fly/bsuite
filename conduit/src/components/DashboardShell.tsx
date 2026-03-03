@@ -3,23 +3,47 @@
 import { AIAssistant } from '@/components/ai/AIAssistant'
 import { AppSwitcher } from '@/components/AppSwitcher'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
+import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { NAV_CONFIG } from '@/config/navigation'
 import { isActivePath } from '@/lib/nav-utils'
+import type { Permission } from '@/lib/permissionConstants'
 import { createClient } from '@/lib/supabase/client'
+import { usePermissions } from '@/hooks/usePermissions'
 import { cn } from '@/lib/utils'
 import { LogOut, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { can } = usePermissions()
+
+  // Filter nav sections and items by requiredPermission
+  const filteredSections = NAV_CONFIG.sections
+    .filter((section) => {
+      if (!section.requiredPermission) return true
+      return can(section.requiredPermission as Permission)
+    })
+    .map((section) => ({
+      ...section,
+      groups: section.groups?.map((group) =>
+        group.filter((item) => {
+          if (!item.requiredPermission) return true
+          return can(item.requiredPermission as Permission)
+        })
+      ).filter((group) => group.length > 0),
+    }))
 
   // Close mobile sidebar on route change
+  const prevPathname = useRef(pathname)
   useEffect(() => {
-    setMobileOpen(false)
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname
+      setMobileOpen(false)
+    }
   }, [pathname])
 
   // Prevent body scroll when mobile sidebar is open
@@ -56,7 +80,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             {NAV_CONFIG.app.name}
           </span>
         </Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          <ThemeToggle />
           <AppSwitcher currentApp="conduit" />
         </div>
       </div>
@@ -67,7 +92,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         role="navigation"
         aria-label="Main navigation"
       >
-        {NAV_CONFIG.sections.map((section) => (
+        {filteredSections.map((section) => (
           <div key={section.label} className="mb-5">
             {/* Section header */}
             <h3 className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
@@ -216,6 +241,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 {NAV_CONFIG.app.name}
               </span>
             </Link>
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </header>
 
           {/* Main content */}

@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Apprentice and Employee Schema Design
 
 ## Overview

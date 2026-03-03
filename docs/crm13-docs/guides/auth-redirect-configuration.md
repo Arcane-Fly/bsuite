@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Auth Redirect Configuration Guide
 
 This guide provides practical instructions for configuring and implementing redirect URLs in our application's authentication flow using Supabase.

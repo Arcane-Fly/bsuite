@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Qualification-TrainingContract Relation Validation
 
 _Last Modified: 2025-03-06_

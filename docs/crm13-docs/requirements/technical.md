@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Technical Specifications
 
 _Last Modified: 2024-02-20_  

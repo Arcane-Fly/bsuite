@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Manual Steps to Apply GTO Schema
 
 _Last Updated: 2025-03-06_

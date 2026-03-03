@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Prisma Schema Integration for GTO Features
 
 _Last Updated: 2025-03-06_
