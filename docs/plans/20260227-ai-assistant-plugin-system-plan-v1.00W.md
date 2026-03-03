@@ -355,8 +355,7 @@ src/
 | Model | Context | Input Cost | Output Cost | Use Case |
 |-------|---------|------------|-------------|----------|
 | Claude Sonnet 4.6 | 200K | $0.003/1k | $0.015/1k | Primary fallback |
-| Claude 4 Opus | 200K | $0.015/1k | $0.075/1k | Complex reasoning fallback |
-| GPT-4.1 | 128K | $0.005/1k | $0.015/1k | Additional fallback |
+| Claude Opus 4.6 | 200K | $0.015/1k | $0.075/1k | Complex reasoning fallback |
 
 ### Monthly Cost Projections
 

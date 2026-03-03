@@ -58,8 +58,7 @@ CRM7 and Conduit use Vercel AI Gateway for model routing. **Do NOT revert these 
 |------|----------|-------------|
 | **Default** | `xai/grok-4.1-fast-reasoning` | `grok-4.1-fast` |
 | **Fallback** | `anthropic/claude-sonnet-4.6` | `claude-sonnet-4.6` |
-| **Complex** | `anthropic/claude-4-opus` | `claude-4-opus` |
-| **Additional** | `openai/gpt-4.1` | `gpt-4.1` |
+| **Complex** | `anthropic/claude-opus-4.6` | `claude-opus-4.6` |
 
 - Gateway URL: https://vercel.com/braden-pty-ltd/crm7/ai-gateway/models/grok-4.1-fast-reasoning
 - Config source of truth: `crm7/src/lib/ai/config.ts`
