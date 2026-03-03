@@ -1,6 +1,6 @@
-# CRM7 RBAC Matrix v1.00W
+# CRM7 RBAC Matrix v1.10W
 
-> Generated 2026-03-01 | Post-RBAC-unification audit
+> Updated 2026-03-02 | Post-deep-audit update (v1.00W → v1.10W)
 > Source files: `permissionConstants.ts`, `usePermissions.ts`, all `PermissionGate` usage in pages
 
 ---
@@ -9,13 +9,14 @@
 
 | Metric | Value |
 |--------|-------|
-| Permission constants defined | 56 (unified in `permissionConstants.ts`) |
-| Operational roles defined | 7 (`gto_admin`, `gto_staff`, `field_officer`, `host_employer`, `apprentice`, `training_provider`, `finance`) |
-| Legacy roles mapped | 5 (`admin`, `developer`, `organization_admin`, `rto_admin`, `free`) |
-| Platform bypass roles | 2 (`isDeveloper`, `isTester` -- bypass all permission checks) |
-| Pages with PermissionGate | ~139 of 155 (90%) |
+| Permission constants defined | 87 across 18 domain groups (unified in `permissionConstants.ts`) |
+| Operational roles defined | 15 — org-level: `org_admin`, `org_it_admin`, `executive`, `manager`, `hr`, `payroll`; CRM7: `gto_admin`, `gto_staff`, `field_officer`, `finance`; external: `host_employer`, `training_provider`, `apprentice`; generic: `member`, `viewer` |
+| Legacy roles mapped | 6 (`admin`, `owner`, `developer`, `organization_admin`, `rto_admin`, `free`) |
+| Platform bypass roles | 2 (`isDeveloper`, `isTester` — bypass all permission checks) |
+| Pages with PermissionGate | ~178 of 190+ (93%) |
 | Route-level auth enforcement | All via `ProtectedRoute` (requires auth session) |
-| Permission hook | `usePermissions()` -- single source of truth |
+| Permission hook | `usePermissions()` — single source of truth |
+| Nav filtering | Sidebar sections filtered by `section.permission` in `AppSidebar.tsx` |
 
 ### Improvements Since v0 (2026-02-28)
 
@@ -27,7 +28,7 @@
 
 ---
 
-## Permission Definitions (56 total)
+## Permission Definitions (87 total across 18 groups)
 
 ### Admin (4)
 
@@ -181,6 +182,30 @@
 | `view_field_officers` | View field officers |
 | `manage_field_officers` | Manage field officers |
 | `manage_site_assessments` | Manage site assessments |
+
+### People (5)
+
+| Permission | Description |
+|-----------|-------------|
+| `view_people` | View unified people list |
+| `manage_people` | Full people management |
+| `create_person` | Create new person |
+| `edit_person` | Edit existing person |
+| `delete_person` | Delete person |
+
+### Activity (2)
+
+| Permission | Description |
+|-----------|-------------|
+| `view_activities` | View activities |
+| `manage_activities` | Manage activities |
+
+### Performance Review (2)
+
+| Permission | Description |
+|-----------|-------------|
+| `view_performance_reviews` | View performance reviews |
+| `manage_performance_reviews` | Manage performance reviews |
 
 ---
 
@@ -434,57 +459,88 @@ The `normalizeRole()` function in `usePermissions.ts` maps legacy database role 
 
 | Legacy Role | Maps To | Rationale |
 |-------------|---------|-----------|
-| `admin` | `gto_admin` | Full access |
-| `developer` | `gto_admin` | Full access (platform) |
-| `organization_admin` | `gto_admin` | Full access |
+| `admin` | `org_admin` | Full access |
+| `owner` / `org_owner` | `org_admin` | Organization owner |
+| `developer` | `gto_admin` | Platform devs get full CRM7 access |
+| `organization_admin` | `org_it_admin` | IT admin (not full admin) |
 | `rto_admin` | `training_provider` | RTO-specific |
-| `free` | `apprentice` | Minimal access fallback |
-| (unknown) | `apprentice` | Least privilege default |
+| `free` | `viewer` | Minimal access fallback |
+| (unknown) | `viewer` | Least privilege default |
 
 ---
 
 ## Permission Count Summary by Role
 
-| Role | Permission Count | % of Total (56) |
-|------|:----------------:|:---------------:|
-| `gto_admin` | 56 | 100% |
-| `gto_staff` | 47 | 84% |
-| `field_officer` | 24 | 43% |
-| `host_employer` | 14 | 25% |
-| `training_provider` | 16 | 29% |
-| `finance` | 16 | 29% |
-| `apprentice` | 9 | 16% |
+| Role | Permission Count | % of Total (87) | Category |
+|------|:----------------:|:---------------:|----------|
+| `org_admin` | 87 | 100% | Org-level |
+| `gto_admin` | 87 | 100% | CRM7 operational |
+| `org_it_admin` | ~30 | 34% | Org-level |
+| `executive` | ~30 | 34% | Org-level |
+| `manager` | ~60 | 69% | Org-level |
+| `hr` | ~55 | 63% | Org-level |
+| `payroll` | ~21 | 24% | Org-level |
+| `gto_staff` | ~60 | 69% | CRM7 operational |
+| `field_officer` | ~24 | 28% | CRM7 operational |
+| `finance` | ~16 | 18% | CRM7 operational |
+| `host_employer` | ~18 | 21% | External portal |
+| `training_provider` | ~18 | 21% | External portal |
+| `apprentice` | ~10 | 11% | External portal |
+| `member` | ~14 | 16% | Generic |
+| `viewer` | 1 | 1% | Generic |
 
 ---
 
 ## Identified Gaps and Risks
 
 ### 1. No RLS enforcement validation
+
 PermissionGate is client-side only. Supabase RLS policies must independently enforce the same boundaries. No automated test verifies PermissionGate permissions match RLS policies.
 
-### 2. Missing navigation filtering
-Sidebar navigation does not filter items by role. Users see all menu items and hit "Access Denied" on click. This should be filtered client-side for UX.
+### 2. ~~Missing navigation filtering~~ — RESOLVED (v1.10W)
 
-### 3. `host_employer` cannot see Contacts or Leads
-Host employer role lacks `view_contacts` and `view_leads`, which may be needed for their operational workflow (e.g., seeing GTO contact info).
+`AppSidebar.tsx` filters top-level navigation sections using `section.permission` against `usePermissions().can()`. Users only see nav items they are authorised to access. Sub-items within a section are not individually filtered — the section-level gate is sufficient since sub-pages have their own `PermissionGate`.
+
+### 3. ~~`host_employer` cannot see Contacts or Leads~~ — RESOLVED (v1.10W)
+
+`host_employer` now has `view_contacts` for operational coordination with GTO staff. `view_leads` remains excluded (not relevant to host employer workflow).
 
 ### 4. `apprentice` role very limited
+
 Apprentice can view contracts, placements, timesheets, and documents, but cannot access any compliance, reporting, or financial pages. This is by design (self-service portal), but should be validated against worker portal UX.
 
 ### 5. `gto_staff` lacks `manage_financial`
+
 Staff can view financial data but cannot create/edit financial records, awards, or charge rates. They must escalate to admin for any financial mutations. This may be intentionally restrictive.
 
 ### 6. `training_provider` has `manage_contracts` but no `create_contract`
+
 Training providers can manage contracts (edit/approve) but not create them. This seems intentional but should be validated.
 
-### 7. Some pages use old `use-permissions.ts` import
-The permissions demo page (`settings/permissions-demo.tsx`) still imports from the old `@/hooks/use-permissions` and `@/lib/permissions` instead of the unified system. This should be migrated.
+### 7. ~~Some pages use old `use-permissions.ts` import~~ — RESOLVED (v1.10W)
+
+`permissions-demo.tsx` and `action-button.tsx` migrated from deprecated `PermissionGuard` to unified `PermissionGate`. All permission checks now use `PermissionGate` from `@/components/common/PermissionGate`.
 
 ### 8. Pricing page has no PermissionGate
+
 The pricing page is accessible to all authenticated users regardless of role. This is likely intentional but worth noting.
 
 ### 9. `finance` role cannot access WHS, CRM, or field officer pages
-Finance role is intentionally narrow -- financial data only. If finance staff need to cross-reference apprentice or compliance data, they must switch roles or request escalation.
+
+Finance role is intentionally narrow — financial data only. If finance staff need to cross-reference apprentice or compliance data, they must switch roles or request escalation.
 
 ### 10. Workflow and AI Plugin pages are admin-only
-These are gated by `manage_system`, meaning only `gto_admin` can access. If workflows become operational (e.g., automated compliance alerts), `gto_staff` may need access.
+
+These are gated by `manage_system`, meaning only `gto_admin` / `org_admin` can access. If workflows become operational (e.g., automated compliance alerts), `gto_staff` may need access.
+
+### 11. Deprecated files still exist (backward compat)
+
+The following files are maintained for backward compatibility but should be removed once all consumers are migrated:
+
+- `src/hooks/use-permissions.ts` — re-exports from canonical hook
+- `src/lib/permissions.ts` — legacy permission system (478 lines, DRY violation)
+- `src/components/auth/permission-guard.tsx` — deprecated component wrapper
+
+### 12. New org-level roles not yet reflected in Role-Permission Matrix tables
+
+The matrix tables above only show the 7 original CRM7 roles. The 8 new org-level roles (`org_admin`, `org_it_admin`, `executive`, `manager`, `hr`, `payroll`, `member`, `viewer`) are defined in `usePermissions.ts` with full permission mappings but not yet reflected in the matrix tables. This is a documentation gap only — the code is correct.
