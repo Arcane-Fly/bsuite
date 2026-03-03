@@ -15,8 +15,8 @@ Seven legacy repositories contain ~200K+ LOC of GTO/apprentice management code. 
 
 | Repo | High-Value Assets | Worth Cloning? |
 |------|-------------------|----------------|
-| `Arcane-Fly/crm7` | SQL functions, Zod schemas, rate types, migration DDL | Yes — targeted extraction |
-| `GaryOcean428/crm8u` | Flexible calc formula, 3-model config, DB schema | Yes — targeted extraction |
+| `Arcane-Fly/crm7` | SQL plpgsql functions, migration DDL, rate comparison engine | Yes — targeted extraction |
+| `GaryOcean428/crm8u` | DB schema (`billing_cycles`, `rate_adjustments`, analytics view) | Yes — schema only |
 | `GaryOcean428/ApprenticeTracker` | WHS module, real MAPD client, award monitor | Yes — targeted extraction |
 | `GaryOcean428/crm13` | RLS patterns, monitoring hooks | Reference only |
 | `GaryOcean428/workforce-hub` | Form patterns, 96+ components | Reference only |
@@ -207,22 +207,19 @@ function calculateFlexibleChargeRate(params: FlexibleChargeParams) {
 
 ## Extraction Plan
 
-### Phase 1: `@bsuite/charge-calc` Package
+### ~~Phase 1: `@bsuite/charge-calc` Package~~ — NOT NEEDED
 
-**Priority:** Critical — resolves known DRY violation between R80.3 and CRM7
+**Status:** Already complete. The existing `@bsuite/charge-calc` package (`packages/charge-calc/src/calculate.ts`, 273 LOC) already covers:
+- Full oncost breakdown with payroll tax, OT/penalty rates, shift loadings
+- 4 billing models (Standard/ALEX48/W52/Custom) with `BillingModel` union type
+- Date-aware super progression (`SUPER_SCHEDULE` + `getSuperRate()`)
+- Per-year training weeks override
+- Allowance aggregation with super-applicability tracking
+- Funding models (reduce/passThrough/passPercent)
 
-1. Extract `FlexibleChargeParams` and `ChargeRateBreakdown` interfaces from crm8u
-2. Add missing fields: `payrollTaxRate`, `adminCosts`, `financingCostRate`, `publicHolidaysDays`, `sickLeaveDays`
-3. Extract `calculateFlexibleChargeRate()` as pure function
-4. Fix formula gaps: payroll tax, super OTE rules, training weeks
-5. Implement 3-model config (`BillingModelConfig` discriminant union)
-6. Extract `RateTemplateSchema` (Zod) from Arcane-Fly/crm7
-7. Extract `RateError` class from Arcane-Fly/crm7
-8. Port `calculate_rate.sql` to Supabase migration
-9. Port `award-rates.sql` plpgsql functions to Supabase migration
-10. Port `rates_schema.sql` DDL (adapted for BSuite RLS)
+All legacy repos' calc engines are primitive subsets of what already ships. No salvage needed.
 
-### Phase 2: Fair Work API Coverage
+### Phase 1: Fair Work API Coverage (was Phase 2)
 
 **Priority:** High — fills missing allowance/penalty/expense endpoints
 
@@ -232,7 +229,7 @@ function calculateFlexibleChargeRate(params: FlexibleChargeParams) {
 4. Convert to Supabase Edge Function (cron-triggered)
 5. Extract `FairWorkConfigSchema` Zod from Arcane-Fly/crm7
 
-### Phase 3: WHS Module
+### Phase 2: WHS Module (was Phase 3)
 
 **Priority:** High — required for GTO Standard 2 compliance
 
@@ -244,7 +241,7 @@ function calculateFlexibleChargeRate(params: FlexibleChargeParams) {
 6. Port dashboard component (Recharts → existing CRM7 chart setup)
 7. Port incident form (react-hook-form → existing CRM7 form pattern)
 
-### Phase 4: Schema Enhancements
+### Phase 3: Schema Enhancements (was Phase 4)
 
 **Priority:** Medium
 
@@ -260,11 +257,11 @@ function calculateFlexibleChargeRate(params: FlexibleChargeParams) {
 
 | Phase | New Files | Modified Files | LOC (net new) | Effort |
 |-------|-----------|---------------|---------------|--------|
-| 1 — Charge Calc | 8-10 | 3-5 | ~1,200 | 2-3 sessions |
-| 2 — Fair Work API | 3-5 | 2-3 | ~600 | 1-2 sessions |
-| 3 — WHS Module | 15-20 | 3-5 | ~3,000 | 3-5 sessions |
-| 4 — Schema Enhancements | 3-5 | 2-3 | ~300 | 1 session |
-| **Total** | **~35** | **~15** | **~5,100** | **7-11 sessions** |
+| ~~1 — Charge Calc~~ | — | — | — | Not needed (`@bsuite/charge-calc` already complete) |
+| 1 — Fair Work API | 3-5 | 2-3 | ~600 | 1-2 sessions |
+| 2 — WHS Module | 15-20 | 3-5 | ~3,000 | 3-5 sessions |
+| 3 — Schema Enhancements | 3-5 | 2-3 | ~300 | 1 session |
+| **Total** | **~25** | **~12** | **~3,900** | **5-8 sessions** |
 
 ---
 
