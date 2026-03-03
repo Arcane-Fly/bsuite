@@ -28,3 +28,28 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `navigation.md` | Navigation structure |
 | `performance-report.md` | Performance report |
 | `ui.md` | UI documentation |
+
+---
+
+## CRM7A Repository Research (2025-03-03)
+
+If you're investigating the **Arcane-Fly/CRM7A** repository for potential reuse or integration with current CRM7, start here:
+
+### Documents
+1. **CRM7A-QUICK-REFERENCE.md** — 2-min read, decision matrix, red flags
+2. **CRM7A-EXECUTIVE-SUMMARY.md** — 5-min read, business/strategic overview  
+3. **CRM7A-REPOSITORY-RESEARCH.md** — 15-min read, deep technical analysis
+
+### Key Takeaway
+CRM7A is a **3-week-old, experimental monitoring dashboard** with modern UI patterns but **incomplete backend**. Use for **inspiration/reference**, not wholesale adoption. Current CRM7 is more mature and production-grade.
+
+### TL;DR
+- **Not production-ready** (0% tests, mock data only, #VERCEL_SKIP markers)
+- **Good for**: Next.js 15 patterns, Radix UI setup, sidebar/table UI inspiration
+- **Bad for**: Backend architecture, data layer, GTO compliance features
+- **Recommendation**: Cherry-pick components, don't fork/merge entire repo
+
+## External Research & Competitive Analysis
+
+- [20260303-crm8u-github-research.md](./20260303-crm8u-github-research.md) — CRM8U (GaryOcean428) GitHub repo analysis: architecture, features, code quality, salvageable assets for BSuite
+- [20260303-crm8u-code-snippets.md](./20260303-crm8u-code-snippets.md) — Key code patterns, Fair Work API integration stubs, Supabase SSR auth patterns, recommendations for adoption
