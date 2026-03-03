@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /** BSU login URL for cross-app SSO redirects. */
@@ -13,7 +13,7 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   // Only apply .crm7.app cookie domain when running on that TLD
-  const hostname = request.headers.get('host') ?? ''
+  const hostname = request.headers.get('host')?.split(':')[0] ?? ''
   const cookieDomain = (hostname === 'crm7.app' || hostname.endsWith('.crm7.app')) ? '.crm7.app' : undefined
 
   const supabase = createServerClient(
@@ -27,17 +27,17 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value }) =>
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value)
-          )
+          }
           supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
+          for (const { name, value, options } of cookiesToSet) {
             supabaseResponse.cookies.set(name, value, {
               ...options,
               ...(cookieDomain ? { domain: cookieDomain } : {}),
             })
-          )
+          }
         },
       },
     }

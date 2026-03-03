@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies, headers } from 'next/headers'
 
 /** Resolve cookie domain from request hostname — only set .crm7.app on production TLD. */
@@ -28,14 +28,14 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
+            for (const { name, value, options } of cookiesToSet) {
               cookieStore.set(name, value, {
                 ...options,
                 ...(cookieDomain ? { domain: cookieDomain } : {}),
               })
-            )
+            }
           } catch {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing sessions.
