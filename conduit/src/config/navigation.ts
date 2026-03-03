@@ -68,8 +68,9 @@ export const NAV_CONFIG: NavConfig = {
       label: 'Admin',
       icon: Settings,
       href: '/settings',
+      requiredPermission: 'view_settings',
       groups: [
-        [{ label: 'Settings', href: '/settings', icon: Settings }],
+        [{ label: 'Settings', href: '/settings', icon: Settings, requiredPermission: 'view_settings' }],
       ],
     },
   ],
