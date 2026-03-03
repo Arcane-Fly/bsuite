@@ -188,6 +188,9 @@ These rules exist because an agent shipped broken AI code that silently disabled
 - AI-generated content must be labeled in UI
 - Rate limiting on AI endpoints
 - CRM7 is the canonical reference for AI SDK patterns — other projects port from here
+- **AI Gateway models** — default: `xai/grok-4.1-fast-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-4-opus`
+- Config: `src/lib/ai/config.ts`, Router: `src/lib/ai/model-router.ts`
+- **NEVER replace grok-4.1-fast-reasoning as default** — it is the configured Vercel AI Gateway model
 
 ### R80.3 (Compliance)
 

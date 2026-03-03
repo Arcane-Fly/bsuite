@@ -116,7 +116,7 @@ See the original plan source for the full system architecture diagram, including
 
 - **User Interface Layer** — AI Chat Panel (slide-out or bottom bar)
 - **AI Orchestration Layer** — Vercel AI SDK with streaming, function calling, context management
-- **Model Router** — Claude 4.5 Sonnet (primary), Claude 4 Opus (complex), Claude Haiku (quick)
+- **Model Router** — Claude 4.6 Sonnet (fallback) <https://vercel.com/braden-pty-ltd/crm7/ai-gateway/models/claude-sonnet-4.6>, grok-4.1-fast-reasoning (default) <https://vercel.com/braden-pty-ltd/crm7/ai-gateway/models/grok-4.1-fast-reasoning>
 - **Action Execution Layer** — Tool Registry (80+ tools), Permission Guard
 - **Data Layer** — Supabase API Proxy with RLS enforcement and real-time subscriptions
 - **Plugin System** — Plugin Loader for custom tools, models, and workflows

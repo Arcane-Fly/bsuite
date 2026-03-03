@@ -101,6 +101,9 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 
 - AI-powered features via `@ai-sdk/react` — never commit API keys
 - Protected: `src/lib/supabase.ts`, `src/lib/ai/`
+- **AI Gateway models** — default: `xai/grok-4.1-fast-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-4-opus`
+- Config: `src/lib/ai/config.ts`, Router: `src/lib/ai/model-router.ts`
+- **NEVER replace grok-4.1-fast-reasoning as default** — it is the configured Vercel AI Gateway model
 
 ### conduit
 
