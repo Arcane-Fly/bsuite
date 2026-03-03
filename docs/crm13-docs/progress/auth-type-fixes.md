@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Authentication Type System Fixes
 
 This document outlines the fixes made to the authentication type system to ensure consistent type safety across the application.

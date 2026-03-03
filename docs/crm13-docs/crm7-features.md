@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # CRM7: Enterprise Workforce Management Platform
 
 ## Executive Summary

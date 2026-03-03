@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # GTO Implementation Status Report
 
 _Last Updated: 2025-03-06_

@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Workforce One Integration Specifications
 
 ## System Overview

@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # CRM13 Project Cleanup Plan
 
 ## Overview

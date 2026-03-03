@@ -188,6 +188,9 @@ These rules exist because an agent shipped broken AI code that silently disabled
 - AI-generated content must be labeled in UI
 - Rate limiting on AI endpoints
 - CRM7 is the canonical reference for AI SDK patterns — other projects port from here
+- **AI Gateway models** — default: `xai/grok-4.1-fast-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
+- Config: `src/lib/ai/config.ts`, Router: `src/lib/ai/model-router.ts`
+- **NEVER replace grok-4.1-fast-reasoning as default** — it is the configured Vercel AI Gateway model
 
 ### R80.3 (Compliance)
 
@@ -227,9 +230,36 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
 **pnpm** is the standard package manager for all 5 projects. Lock file: `pnpm-lock.yaml`.
 
 ```bash
-corepack enable && corepack prepare pnpm@latest --activate
+corepack enable && corepack prepare pnpm@10.30.3 --activate
 pnpm install
 ```
+
+---
+
+## Shared Packages (npm)
+
+**CRITICAL — DO NOT REVERT**: The following `@bsuite/*` packages are published to npm under the `@bsuite` org. Each submodule project deploys independently on Vercel from its own GitHub repo. Vercel clones **only** that repo — the parent monorepo's `packages/` directory does NOT exist in the Vercel build context.
+
+### Published Packages
+
+| Package | npm | Consumers | Source |
+|---------|-----|-----------|--------|
+| `@bsuite/charge-calc` | `^0.1.0` | CRM7, R80.3 | `packages/charge-calc/` |
+| `@bsuite/nav-core` | `^0.1.0` | braden | `packages/nav-core/` |
+
+### Rules (all agents MUST follow)
+
+1. **NEVER use `workspace:*`** for `@bsuite/*` dependencies in consumer projects. Always use the npm version (e.g., `"^0.1.0"`).
+2. **NEVER use `file:../packages/*`** — this also fails on Vercel since the parent directory doesn't exist.
+3. **When modifying a shared package** (e.g., `packages/charge-calc/`):
+   - Build locally: `pnpm build` in the package directory
+   - Bump version in `package.json` (follow semver)
+   - Publish: `cd packages/charge-calc && npm publish --access public`
+   - Update consumers: change version in CRM7/R80.3/braden `package.json`
+   - Run `pnpm install` in each consumer to update lockfile
+4. **`pnpm-workspace.yaml`** in submodule repos (e.g., `crm7/pnpm-workspace.yaml`) references `'../packages/*'` for **local development only**. This does NOT work on Vercel.
+5. **Version pinning**: `packageManager: "pnpm@10.30.3"` and `.node-version: 24` — do not change without coordinating across all projects.
+6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
 
 ---
 

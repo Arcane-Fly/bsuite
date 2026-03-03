@@ -116,7 +116,7 @@ See the original plan source for the full system architecture diagram, including
 
 - **User Interface Layer** — AI Chat Panel (slide-out or bottom bar)
 - **AI Orchestration Layer** — Vercel AI SDK with streaming, function calling, context management
-- **Model Router** — Claude 4.5 Sonnet (primary), Claude 4 Opus (complex), Claude Haiku (quick)
+- **Model Router** — Claude 4.6 Sonnet (fallback) <https://vercel.com/braden-pty-ltd/crm7/ai-gateway/models/claude-sonnet-4.6>, grok-4.1-fast-reasoning (default) <https://vercel.com/braden-pty-ltd/crm7/ai-gateway/models/grok-4.1-fast-reasoning>
 - **Action Execution Layer** — Tool Registry (80+ tools), Permission Guard
 - **Data Layer** — Supabase API Proxy with RLS enforcement and real-time subscriptions
 - **Plugin System** — Plugin Loader for custom tools, models, and workflows
@@ -131,8 +131,8 @@ See the original plan source for the full system architecture diagram, including
 
 **AI Configuration** (`src/lib/ai/config.ts`):
 
-- Claude Sonnet 4.5 (primary), Claude Opus 4 (complex), Claude Haiku 4 (quick)
-- Model routing imported from monkey-projects
+- Grok 4.1 Fast Reasoning (primary/default), Claude Sonnet 4.6 (fallback), Claude 4 Opus (complex)
+- Model routing via Vercel AI Gateway: `crm7/src/lib/ai/model-router.ts`
 
 **AI Chat API Route** (`src/pages/api/ai/chat.ts`):
 
@@ -345,25 +345,24 @@ src/
 
 | Metric | Value |
 |--------|-------|
-| Input Cost | $0.001 per 1K tokens |
-| Output Cost | $0.005 per 1K tokens |
+| Input Cost | $0.0002 per 1K tokens ($0.20 per 1M) |
+| Output Cost | $0.0005 per 1K tokens ($0.50 per 1M) |
 | Context Window | 2,000,000 tokens (2M) |
-| Max Output | 8,192 tokens |
+| Max Output | 30,000 tokens |
 
 ### Fallback Models (Claude via Anthropic)
 
 | Model | Context | Input Cost | Output Cost | Use Case |
 |-------|---------|------------|-------------|----------|
-| Claude Haiku 4 | 200K | $0.00025/1k | $0.00125/1k | Simple queries fallback |
-| Claude Sonnet 4.6 | 1M | $0.003/1k | $0.015/1k | Medium complexity fallback |
-| Claude Opus 4.6 | 1M | $0.015/1k | $0.075/1k | Very complex reasoning fallback |
+| Claude Sonnet 4.6 | 200K | $0.003/1k | $0.015/1k | Primary fallback |
+| Claude Opus 4.6 | 200K | $0.015/1k | $0.075/1k | Complex reasoning fallback |
 
 ### Monthly Cost Projections
 
-- **Per tenant (1000 interactions/month):** ~$7.70 → $6.20 net with caching
-- **100 tenants:** $620/month
-- **1000 tenants:** $6,200/month
-- **ROI:** 64:1 vs traditional support costs
+- **Per tenant (1000 interactions/month):** ~$1.40 → $1.12 net with caching (Grok 4.1 Fast pricing)
+- **100 tenants:** $112/month
+- **1000 tenants:** $1,120/month
+- **ROI:** 350:1 vs traditional support costs (5x better than original estimates)
 
 ---
 

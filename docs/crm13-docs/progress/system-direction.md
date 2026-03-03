@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # GTO Management System: Direction & Progress
 
 ## Current Vision & Approach

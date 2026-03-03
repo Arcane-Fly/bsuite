@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Authentication Fixes
 
 This document tracks authentication-related issues that were fixed in the project, providing context and solutions for future reference.

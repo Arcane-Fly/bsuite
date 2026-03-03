@@ -1,15 +1,15 @@
 import type { NavConfig } from '@/lib/nav-utils';
 import {
-    BarChart3,
-    Briefcase,
-    CalendarDays,
-    ClipboardCheck,
-    FileText,
-    FolderOpen,
-    KanbanSquare,
-    Settings,
-    ShieldCheck,
-    Users,
+  BarChart3,
+  Briefcase,
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
+  FolderOpen,
+  KanbanSquare,
+  Settings,
+  ShieldCheck,
+  Users,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -68,14 +68,16 @@ export const NAV_CONFIG: NavConfig = {
       label: 'Admin',
       icon: Settings,
       href: '/settings',
+      requiredPermission: 'view_settings',
       groups: [
-        [{ label: 'Settings', href: '/settings', icon: Settings }],
+        [{ label: 'Settings', href: '/settings', icon: Settings, requiredPermission: 'view_settings' }],
       ],
     },
   ],
   suiteLinks: [
     { label: 'BSuite Portal', href: 'https://suite.crm7.app', external: true },
-    { label: 'CRM7', href: 'https://crm7.app', external: true },
-    { label: 'R80 Calculator', href: 'https://r80.crm7.app', external: true },
+    { label: 'CRM7', href: 'https://crm.crm7.app', external: true },
+    { label: 'Conduit ATS', href: 'https://conduit.crm7.app', external: true },
+    { label: 'R8 Calculator', href: 'https://r8.crm7.app', external: true },
   ],
 };

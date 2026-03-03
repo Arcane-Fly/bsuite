@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Build Error Fixes
 
 This document tracks significant build errors that were fixed in the project, providing context and solutions for future reference.

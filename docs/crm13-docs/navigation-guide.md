@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # CRM13 Navigation System Guide
 
 ## Table of Contents

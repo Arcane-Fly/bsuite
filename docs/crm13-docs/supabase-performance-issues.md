@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Supabase Performance Issues
 
 | name | title | level | facing | categories | description | detail | remediation | metadata | cache_key |

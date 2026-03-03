@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Authentication and Notes Functionality Fixes
 
 This document outlines the fixes implemented to resolve authentication issues and add notes functionality to the CRM application.

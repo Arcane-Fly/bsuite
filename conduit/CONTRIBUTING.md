@@ -79,7 +79,7 @@ Conduit uses **Next.js 16** with the App Router, unlike the other Vite-based pro
 
 ## Theme
 
-This project uses the **D2C Neon Electric theme**. See [`../Theme-best-practice.md`](../Theme-best-practice.md) for the complete specification.
+This project uses the **D2C Neon Electric theme**. See [`../docs/20260228-d2c-theme-specification-v1.00W.md`](../docs/20260228-d2c-theme-specification-v1.00W.md) for the complete specification.
 
 - Tailwind config must extend with the neon electric color palette
 - ThemeProvider wraps the app in the root layout

@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Puck Editor Progress (Deprecated)
 
 ***Puck Editor has been intentionally removed in order to replace it with CRUD***

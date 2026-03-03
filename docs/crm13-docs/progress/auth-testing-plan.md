@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Authentication Testing Plan
 
 This document outlines our plan for comprehensive testing of the authentication system.

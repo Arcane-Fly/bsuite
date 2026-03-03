@@ -1,3 +1,5 @@
+> [IMPORTED FROM CRM13] -- Reference only, not canonical
+
 # Mermaid UI Builder Guide
 
 ## Table of Contents

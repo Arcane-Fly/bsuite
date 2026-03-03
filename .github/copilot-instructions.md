@@ -60,6 +60,22 @@ Uses corporate branding — NOT the D2C theme:
 - Accent: `#cbb26a` (Braden Gold)
 - Font: Montserrat (headings), Inter (body)
 
+## Shared Packages (npm)
+
+**CRITICAL — DO NOT REVERT**: `@bsuite/*` packages are published to npm. Each submodule deploys on Vercel from its own repo — the parent monorepo's `packages/` directory does NOT exist in the Vercel build context.
+
+| Package | npm | Consumers |
+|---------|-----|-----------|
+| `@bsuite/charge-calc` | `^0.1.0` | CRM7, R80.3 |
+| `@bsuite/nav-core` | `^0.1.0` | braden |
+
+**Rules:**
+1. **NEVER use `workspace:*`** for `@bsuite/*` deps. Always use npm version (`"^0.1.0"`).
+2. **NEVER use `file:../packages/*`** — fails on Vercel.
+3. **When modifying a shared package**: build → bump version → `npm publish --access public` → update consumers.
+4. **Version pinning**: `packageManager: "pnpm@10.30.3"`, `.node-version: 24` — do not change.
+5. **Vercel install**: All projects use `corepack enable && pnpm install`.
+
 ## Commits
 
 Conventional Commits: `type(scope): description`

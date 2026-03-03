@@ -41,7 +41,7 @@ const APPS: AppEntry[] = [
     name: 'CRM7 Professional',
     shortName: 'CRM7',
     icon: Users,
-    url: process.env.NEXT_PUBLIC_CRM7_URL || (isDev ? 'http://localhost:5676' : 'https://crm7.crm7.app'),
+    url: process.env.NEXT_PUBLIC_CRM7_URL || (isDev ? 'http://localhost:5676' : 'https://crm.crm7.app'),
     description: 'CRM with AI insights',
   },
   {
@@ -49,7 +49,7 @@ const APPS: AppEntry[] = [
     name: 'Conduit ATS',
     shortName: 'Conduit',
     icon: UserSearch,
-    url: process.env.NEXT_PUBLIC_CONDUIT_URL || (isDev ? 'http://localhost:3000' : 'https://conduit.crm7.app'),
+    url: process.env.NEXT_PUBLIC_CONDUIT_URL || (isDev ? 'http://localhost:5680' : 'https://conduit.crm7.app'),
     description: 'Recruitment & talent',
   },
   {

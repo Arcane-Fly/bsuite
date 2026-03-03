@@ -14,6 +14,8 @@ export interface NavItem {
   icon?: IconComponent;
   badge?: string | number;
   external?: boolean;
+  /** Permission required to see this nav item. Hidden if user lacks it. */
+  requiredPermission?: string;
 }
 
 export type NavItemGroup = NavItem[];
@@ -24,6 +26,8 @@ export interface NavSection {
   href?: string;
   groups?: NavItemGroup[];
   defaultOpen?: boolean;
+  /** Permission required to see this entire section. Hidden if user lacks it. */
+  requiredPermission?: string;
 }
 
 export interface NavConfig {
