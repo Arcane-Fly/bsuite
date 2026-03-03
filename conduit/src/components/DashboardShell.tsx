@@ -3,6 +3,7 @@
 import { AIAssistant } from '@/components/ai/AIAssistant'
 import { AppSwitcher } from '@/components/AppSwitcher'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
+import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { NAV_CONFIG } from '@/config/navigation'
 import { isActivePath } from '@/lib/nav-utils'
 import { createClient } from '@/lib/supabase/client'
@@ -60,7 +61,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             {NAV_CONFIG.app.name}
           </span>
         </Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          <ThemeToggle />
           <AppSwitcher currentApp="conduit" />
         </div>
       </div>
@@ -220,6 +222,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 {NAV_CONFIG.app.name}
               </span>
             </Link>
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </header>
 
           {/* Main content */}

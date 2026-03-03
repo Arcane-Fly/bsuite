@@ -8,11 +8,11 @@
  */
 
 import {
-    Calculator,
-    ChevronDown,
-    Grid3X3,
-    UserSearch,
-    Users,
+  Calculator,
+  ChevronDown,
+  Grid3X3,
+  UserSearch,
+  Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
