@@ -1,17 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Building2, Globe, Loader2, Save } from 'lucide-react'
-import { toast } from 'sonner'
+import { Building2, Save } from 'lucide-react'
 
 interface GeneralSectionProps {
   tenantId: string
 }
 
 export function GeneralSection({ tenantId }: GeneralSectionProps) {
-  const [saving, setSaving] = useState(false)
-
   return (
     <div className="space-y-6">
       <div>
@@ -137,24 +132,17 @@ export function GeneralSection({ tenantId }: GeneralSectionProps) {
         </div>
       </div>
 
-      {/* Save (placeholder — settings persistence is future work) */}
-      <div className="flex justify-end">
+      {/* Save button — disabled until persistence is implemented */}
+      <div className="flex justify-end gap-2 items-center">
+        <span className="text-xs text-muted-foreground">
+          Settings persistence coming soon
+        </span>
         <button
-          onClick={() => {
-            setSaving(true)
-            setTimeout(() => {
-              setSaving(false)
-              toast.success('Settings saved')
-            }, 500)
-          }}
-          disabled={saving}
-          className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          disabled
+          className="inline-flex items-center gap-2 rounded-lg bg-primary/50 px-4 py-2 text-sm font-medium text-primary-foreground cursor-not-allowed opacity-60"
+          title="Settings saving is coming soon"
         >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Save className="h-4 w-4" aria-hidden="true" />
-          )}
+          <Save className="h-4 w-4" />
           Save Settings
         </button>
       </div>
