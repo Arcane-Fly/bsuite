@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 3.00W
+**Version:** 4.00W
 **Date:** 2026-02-27
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-03
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
@@ -159,16 +159,21 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ Accessibility controls
 - ✅ Fair Work award selector
 - ✅ Tier 1 page wiring — 6 pages (leads, opportunities, tasks, clients, deals, apprentices) wired to Zustand stores with Supabase CRUD
-- ✅ 5-pass red team on all wired pages:
-  - Pass 1: Fixed silent-failure bug in 14 CRUD handlers (store returns null/false, not throws)
-  - Pass 2: Fixed missing `tenant_id` injection in `createEntityStore.create()` + `getCurrentTenantId` utility
-  - Pass 3: Fixed leads page render-time setState anti-pattern → proper `useEffect`
-  - Pass 4: Verified `useMemo`/`useCallback` usage, shared store cache
-  - Pass 5: Zero unused imports, consistent patterns across all 6 pages
+- ✅ 5-pass red team on all wired pages
+- ✅ **Launch-Ready Phase 0+1** ([plan](./plans/20260303-bsuite-launch-ready-implementation-plan-v1.00W.md), [design](./plans/20260303-bsuite-launch-ready-design-v1.00D.md)):
+  - Feature flag system: `useFeatureFlags` hook (35 flags, 19 hidden), `FeatureGate` component, `withFeatureGate` HOC
+  - Route-level enforcement: 57+ pages gated via `withFeatureGate` in App.tsx
+  - Nav gating: 6 sections hidden (WHS, VET, Communication, Portal, Financial, Analytics) via `filterSectionsByPermission`
+  - Kill list: 4 settings pages made read-only (24+ mutations disabled), host reports emptied, financial summary hidden
+  - 2 red-team rounds: 16 issues found, 13 fixed, 3 deferred (low risk)
+  - 48 new tests (2254 total passing)
 
 **Remaining:**
 
 - ✅ **Tier 2 page wiring** — 3 new stores (mentorStore, competencyStore, complianceStore), 2 stores fixed (timesheetStore, placementStore), 5 pages rewired (mentors, competencies, compliance, timesheets, placements), Placement + Timesheet entity types aligned to DB schema
+- 🔶 **Launch-Ready Phase 2** — Empty states on all list pages, consolidate duplicate EmptyState component (Tasks 11-12)
+- 🔶 **Launch-Ready Phase 3** — Dashboard real data, onboarding wizard improvements (Tasks 13-14)
+- 🔶 **Launch-Ready Phase 4** — Cmd+K command palette, activity timeline (Tasks 15-16)
 - 🔶 **PWA** — `vite-plugin-pwa`, service worker, mobile UI, offline IndexedDB, install prompt ([prompt](./claude-code-prompts.md#prompt-1))
 - 🔶 **Kanban pipeline board** — @dnd-kit, drag-and-drop deal management (critical UX gap vs competitors)
 - 🔲 Tier 3-4 page wiring — financial, compliance, field officers, WHS, comms, reports (~15 more stores)
@@ -388,6 +393,10 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | BSU Project Switching Plan | [`docs/plans/20260228-bsu-project-switching-plan-v1.00W.md`](./plans/20260228-bsu-project-switching-plan-v1.00W.md) |
 | R80↔CRM7 Shared Calc Engine | [`docs/plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md`](./plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md) |
 | Cross-Project UX Improvements | [`docs/plans/2026-02-28-cross-project-ux-improvements.md`](./plans/2026-02-28-cross-project-ux-improvements.md) |
+| Launch-Ready Design | [`docs/plans/20260303-bsuite-launch-ready-design-v1.00D.md`](./plans/20260303-bsuite-launch-ready-design-v1.00D.md) |
+| Launch-Ready Implementation | [`docs/plans/20260303-bsuite-launch-ready-implementation-plan-v1.00W.md`](./plans/20260303-bsuite-launch-ready-implementation-plan-v1.00W.md) |
+| External API Audit | See plan file at `.claude/plans/` (API integration inventory + remediation) |
+| Competitive Landscape | See memory file at `.claude/projects/.../memory/competitive-landscape.md` |
 | Claude Code Prompts (7 agents) | [`docs/claude-code-prompts.md`](./claude-code-prompts.md) |
 | Pricing Strategy | [`docs/pricing-strategy.md`](./pricing-strategy.md) |
 | Theme Best Practice | [`Theme-best-practice.md`](../Theme-best-practice.md) |
