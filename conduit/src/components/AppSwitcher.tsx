@@ -33,7 +33,7 @@ const APPS: AppEntry[] = [
     name: 'Business Suite',
     shortName: 'BSU',
     icon: Grid3X3,
-    url: process.env.NEXT_PUBLIC_BSU_URL || (isDev ? 'http://localhost:5675' : 'https://suite.crm7.app'),
+    url: process.env.NEXT_PUBLIC_BSU_URL || (isDev ? 'http://localhost:3000' : 'https://suite.crm7.app'),
     description: 'Portal & dashboard',
   },
   {
@@ -41,7 +41,7 @@ const APPS: AppEntry[] = [
     name: 'CRM7 Professional',
     shortName: 'CRM7',
     icon: Users,
-    url: process.env.NEXT_PUBLIC_CRM7_URL || (isDev ? 'http://localhost:5676' : 'https://crm.crm7.app'),
+    url: process.env.NEXT_PUBLIC_CRM7_URL || (isDev ? 'http://localhost:5173' : 'https://crm.crm7.app'),
     description: 'CRM with AI insights',
   },
   {
@@ -57,7 +57,7 @@ const APPS: AppEntry[] = [
     name: 'R8 Calculator',
     shortName: 'R8',
     icon: Calculator,
-    url: process.env.NEXT_PUBLIC_R8_URL || (isDev ? 'http://localhost:5677' : 'https://r8.crm7.app'),
+    url: process.env.NEXT_PUBLIC_R8_URL || (isDev ? 'http://localhost:5173' : 'https://r8.crm7.app'),
     description: 'Wage calculator',
   },
 ];

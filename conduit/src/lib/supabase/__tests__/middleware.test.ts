@@ -113,7 +113,7 @@ vi.mock('next/server', () => {
       const urlString = typeof url === 'string' ? url : url.toString()
       mockRedirectFn(urlString)
       const res = new NextResponseClass('redirect')
-      ;(res as Record<string, unknown>).redirectUrl = urlString
+      ;(res as unknown as Record<string, unknown>).redirectUrl = urlString
       return res
     }
   }
