@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/nav-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
@@ -15,8 +15,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
-    "./types": { "import": "./dist/types.js", "types": "./dist/types.d.ts" },
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    },
     "./tokens/d2c-sidebar.css": "./src/tokens/d2c-sidebar.css",
     "./tokens/corporate-sidebar.css": "./src/tokens/corporate-sidebar.css"
   },
@@ -26,6 +32,14 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.3.28",
+    "@vitejs/plugin-react": "^5.1.4",
+    "jsdom": "^28.1.0",
+    "lucide-react": "^0.576.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "typescript": "~5.7.3",
     "vitest": "^3.2.4"
   }
