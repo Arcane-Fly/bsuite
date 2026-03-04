@@ -102,6 +102,12 @@ export interface CalcConfig {
   publicHolidayDays: number;
   sickLeaveDays: number;
   leaveLoadingPercent: number;
+  /** Casual loading rate as a decimal (e.g. 0.25 for 25%).
+   *  Sourced from award/EA/user input — never hardcoded.
+   *  When defined, treats this worker as casual: leave entitlements
+   *  (annual leave, sick leave, public holidays) are zeroed and the
+   *  loading is applied to the hourly wage base instead. */
+  casualLoading?: number;
 
   // On-costs (as decimals, e.g. 0.12 for 12%)
   superRate: number;

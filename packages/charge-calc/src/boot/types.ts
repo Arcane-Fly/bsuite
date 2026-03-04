@@ -37,7 +37,10 @@ export type RosterScenario = z.infer<typeof RosterScenarioZ>;
 // ─── Monetary Terms ───
 export const MonetaryTermsZ = z.object({
   baseHourlyRate: z.number(),
-  casualLoading: z.number().default(0.25),  // 25%
+  /** Award/EA casual loading rate for BOOT comparison (e.g. 0.25 = 25%).
+   *  Defaults to 0.25 — the standard rate under most Australian awards.
+   *  This is distinct from CalcConfig.casualLoading, which controls charge-rate calculation. */
+  casualLoading: z.number().default(0.25),
   penaltyRates: z.object({
     saturday: z.number().nullable().default(null),    // e.g. 1.5
     sunday: z.number().nullable().default(null),      // e.g. 2.0
