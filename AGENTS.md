@@ -125,10 +125,76 @@ Each entity has a single owning app for create/edit. See `docs/DRY-ONE-SHOT-ARCH
 - Expand → Migrate → Contract pattern
 - Row Level Security on all tables
 
-### Authentication
+### Authentication & OAuth
 
-- Supabase Auth across all projects
-- See `docs/AUTH-MAP.md` for the auth architecture
+Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
+
+**Supabase Project:** `tuybltdrdefjblnplpqo`
+
+**Two auth mechanisms coexist:**
+
+| Mechanism | Purpose | Used By |
+|-----------|---------|---------|
+| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue | All 5 apps |
+| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is the OAuth server, others are clients | CRM7, R80.3, Braden (as clients) |
+
+**Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
+
+#### OAuth Client Registry
+
+| Client App | Client ID | Domain | Redirect URI |
+|------------|-----------|--------|--------------|
+| **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` | `{origin}/auth/callback` |
+| **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` | `{origin}/auth/callback` |
+| **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` | `{origin}/auth/callback` |
+
+**OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
+
+#### Cross-Domain Session Sharing (Cookie SSO)
+
+BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7.app` and key `business_suite_auth`. This enables seamless SSO across all `.crm7.app` subdomains.
+
+- **BSU** (`suite.crm7.app`): Sets the cookie — `src/lib/supabase.ts`
+- **CRM7** (`crm.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
+- **R80.3** (`r8.crm7.app`): Reads the cookie — `src/services/supabaseClient.ts`
+- **Braden** (`www.braden.com.au`): ❌ Different TLD — uses BS OAuth 2.1 for SSO instead
+- **Conduit** (`conduit.crm7.app`): Server-managed cookies via `@supabase/ssr` (no cross-domain)
+
+#### Cookie Hardening (Applied)
+
+- **Chunked storage**: Values >3 500 bytes split across `key.0`, `key.1`, … cookies
+- **`Secure` flag**: Only on HTTPS (disabled for localhost dev)
+- **`max-age`**: 30 days (aligned with Supabase refresh token lifetime)
+- **`SameSite=Lax`**: Standard cross-site protection
+
+#### BS OAuth PKCE Flow (Summary)
+
+1. Client generates PKCE `code_verifier` + `code_challenge`, stores `state` in `sessionStorage`
+2. Redirect to Supabase `/auth/v1/oauth/authorize` with client ID + challenge
+3. Supabase redirects to BSU `/oauth/consent` — user approves/denies
+4. Auth code returned to client's `/auth/callback`
+5. Client exchanges code + verifier at `/auth/v1/oauth/token`
+6. Client verifies JWT via JWKS (`jose` library, RS256/ES256)
+7. Tokens stored in localStorage: `bs_access_token`, `bs_refresh_token`, `bs_user`, `bs_id_token`
+
+#### Key Auth Files Per Project
+
+| Project | Supabase Client | OAuth Client | Auth Context/Store | Callback |
+|---------|----------------|--------------|-------------------|----------|
+| **BSU** | `src/lib/supabase.ts` | N/A (is the server) | `src/contexts/AuthContext.tsx` | `src/pages/auth/AuthCallback.tsx` |
+| **CRM7** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/contexts/AuthContext.tsx` | `src/pages/auth/callback.tsx` (dual) |
+| **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/stores/authStore.ts` | `src/pages/AuthCallback.tsx` |
+| **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/hooks/useAdminAuth.ts` | `src/pages/auth/AuthCallback.tsx` |
+| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/middleware.ts` | `src/app/auth/callback/route.ts` |
+
+#### Critical Auth Rules
+
+1. **All `.crm7.app` Supabase clients MUST use `cookieStorage`** with `domain=.crm7.app` and `storageKey: 'business_suite_auth'` — this enables cookie SSO
+2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
+3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server. It was previously copied to Braden by mistake and deleted
+4. **CRM7 callback is dual-purpose** — checks `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
+5. **BS OAuth tokens are NOT Supabase sessions** — they are separate token sets in localStorage. The two auth systems run in parallel.
+6. **`refreshBusinessSuiteToken()` is exported but unused** in all 3 client apps — BS OAuth tokens will silently expire (P1 fix pending)
 
 ---
 

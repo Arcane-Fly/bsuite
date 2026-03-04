@@ -10,3 +10,6 @@
 [submodule "business-suite-unified"]
 	path = business-suite-unified
 	url = https://github.com/GaryOcean428/business-suite-unified.git
+[submodule "conduit"]
+	path = conduit
+	url = https://github.com/GaryOcean428/conduit.git
