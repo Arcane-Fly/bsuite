@@ -8,7 +8,10 @@ import { QueryProvider } from '@/components/providers/query-provider'
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  title: 'Conduit — Candidate Sourcing & Onboarding',
+  title: {
+    default: 'Conduit',
+    template: '%s — Conduit',
+  },
   description:
     'End-to-end candidate sourcing, job posting, employer and employee onboarding, and progress tracking for GTOs and apprenticeship providers.',
 }

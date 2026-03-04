@@ -1,22 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { PortalRole } from '@/lib/roleMappingService'
 
 export function useTenantId() {
-  const [tenantId, setTenantId] = useState<string | null>(null)
-  const [role, setRole] = useState<PortalRole | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchTenantId() {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['tenant-context'],
+    queryFn: async () => {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setLoading(false)
-        return
-      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return null
 
       const { data } = await supabase
         .from('user_tenants')
@@ -26,15 +22,16 @@ export function useTenantId() {
         .limit(1)
         .single()
 
-      if (data) {
-        setTenantId(data.tenant_id)
-        setRole((data.role as PortalRole) ?? null)
-      }
-      setLoading(false)
-    }
+      if (!data) return null
+      return { tenantId: data.tenant_id as string, role: data.role as PortalRole }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes — tenant context is stable
+    retry: 1,
+  })
 
-    fetchTenantId()
-  }, [])
-
-  return { tenantId, role, loading }
+  return {
+    tenantId: data?.tenantId ?? null,
+    role: data?.role ?? null,
+    loading,
+  }
 }
