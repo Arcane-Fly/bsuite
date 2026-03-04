@@ -70,6 +70,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
     allowances,
     penalties,
     funding,
+    casualLoading,
   } = cfg;
 
   // Suppress unused variable lint — _hpd is destructured for completeness
@@ -83,7 +84,14 @@ export function calculate(cfg: CalcConfig): CalcResult {
       ? (trainingWeeksPerYear[currentYear - 1] ?? _rawTrainWk)
       : _rawTrainWk;
 
-  const leaveLoad = leaveLoadingPercent / 100;
+  // --- Casual worker adjustments ---
+  // When casualLoading is defined, the worker is casual. Loading replaces leave
+  // entitlements (annual leave, sick leave, public holidays, leave loading).
+  const isCasual = casualLoading !== undefined;
+  const effectiveAlDays = isCasual ? 0 : alDays;
+  const effectivePhDays = isCasual ? 0 : phDays;
+  const effectiveSickDays = isCasual ? 0 : sickDays;
+  const leaveLoad = (isCasual ? 0 : leaveLoadingPercent) / 100;
 
   // --- Allowance aggregation (lines 34-45) ---
   let allowPerHour = 0;
@@ -95,16 +103,18 @@ export function calculate(cfg: CalcConfig): CalcResult {
   }
 
   // --- Received wage (line 47-51) ---
-  const recv = wage + allowPerHour;
+  // Casual loading per hour is applied on top of the base wage (replaces leave costs)
+  const casualLoadingPH = isCasual ? wage * (casualLoading as number) : 0;
+  const recv = wage + allowPerHour + casualLoadingPH;
   const superBearingRate = wage + allowPerHourSuper;
   const wkPay = recv * hpw;
   const wkWage = wage * hpw;
   const wkSuperBearing = superBearingRate * hpw;
 
   // --- Week allocation (lines 53-58) ---
-  const alWk = alDays / dpw;
-  const phWk = phDays / dpw;
-  const sickWk = sickDays / dpw;
+  const alWk = effectiveAlDays / dpw;
+  const phWk = effectivePhDays / dpw;
+  const sickWk = effectiveSickDays / dpw;
   const totalNonBillable = alWk + phWk + sickWk + trainWk;
   const impliedBillable = 52 - totalNonBillable;
 
