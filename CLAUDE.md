@@ -63,6 +63,55 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 - Follow Expand → Migrate → Contract pattern
 - PRs with DB changes must include deployment notes
 
+### Authentication & OAuth
+
+Full details in `docs/AUTH-MAP.md`. Key facts:
+
+**Supabase Project:** `tuybltdrdefjblnplpqo`
+
+**Two auth mechanisms coexist:**
+
+| Mechanism | Purpose | Used By |
+|-----------|---------|---------|
+| **Supabase Native Auth** | Email/password + Google/Azure AD via GoTrue | All 5 apps |
+| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden (as clients) |
+
+**Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
+
+#### OAuth Client Registry
+
+| Client App | Client ID | Domain |
+|------------|-----------|--------|
+| **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` |
+| **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` |
+| **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` |
+
+**OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
+**Redirect URI pattern:** `{origin}/auth/callback` for all clients
+
+#### Cookie SSO (`.crm7.app` subdomains)
+
+BSU, CRM7, R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 instead.
+
+#### Critical Auth Rules
+
+1. **All `.crm7.app` Supabase clients MUST use `cookieStorage`** with `domain=.crm7.app` and `storageKey: 'business_suite_auth'`
+2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
+3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
+4. **CRM7 callback is dual-purpose** — checks `sessionStorage` for `bs_oauth_state` to distinguish flows
+5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage, systems run in parallel
+6. **`refreshBusinessSuiteToken()` is unused** in all 3 client apps — P1 fix pending
+
+#### Key Auth Files
+
+| Project | Supabase Client | OAuth Client | Callback |
+|---------|----------------|--------------|----------|
+| **BSU** | `src/lib/supabase.ts` | N/A (server) | `src/pages/auth/AuthCallback.tsx` |
+| **CRM7** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/callback.tsx` (dual) |
+| **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/AuthCallback.tsx` |
+| **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/AuthCallback.tsx` |
+| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/app/auth/callback/route.ts` |
+
 ## Shared Packages (npm)
 
 **CRITICAL — DO NOT REVERT**: The following `@bsuite/*` packages are published to npm under the `@bsuite` org. Each submodule project deploys independently on Vercel from its own GitHub repo. Vercel clones **only** that repo — the parent monorepo's `packages/` directory does NOT exist in the Vercel build context.
