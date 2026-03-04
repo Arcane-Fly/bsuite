@@ -194,7 +194,7 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server. It was previously copied to Braden by mistake and deleted
 4. **CRM7 callback is dual-purpose** — checks `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
 5. **BS OAuth tokens are NOT Supabase sessions** — they are separate token sets in localStorage. The two auth systems run in parallel.
-6. **`refreshBusinessSuiteToken()` is exported but unused** in all 3 client apps — BS OAuth tokens will silently expire (P1 fix pending)
+6. **`startBSTokenRefresh()` is wired** in all 3 client apps — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 
 ---
 
