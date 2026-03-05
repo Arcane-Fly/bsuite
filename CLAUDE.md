@@ -51,6 +51,19 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 - Vitest for Vite projects, Jest for Next.js (conduit)
 - Test files co-located with source: `*.test.ts` or `*.spec.ts`
 
+### Google Cloud Authentication
+
+**CRITICAL**: All Google API access MUST use Workload Identity Federation (WIF). Static service account keys are **BANNED**.
+
+- **GCP Project:** `claritycrm-hpofn` (project number `111744121676`)
+- **Service Account:** `firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com` (key-less — WIF only)
+- **WIF Pool:** `supabase-edge-functions` (global, Supabase OIDC as IdP)
+- **WIF Provider:** `supabase-auth` (trusts issuer `https://tuybltdrdefjblnplpqo.supabase.co/auth/v1`)
+- **Auth flow:** Supabase JWT → Google STS token exchange → SA impersonation → short-lived access token
+- **NEVER create or store service account JSON keys** — use WIF for all Google API access
+- **Reference impl:** `crm7/supabase/functions/generate-document/index.ts`
+- **Supabase secrets (non-sensitive metadata):** `GCP_PROJECT_NUMBER`, `GCP_WIF_POOL_ID`, `GCP_WIF_PROVIDER_ID`, `GCP_SA_EMAIL`
+
 ### Feature Protection
 
 - Feature flags over hard deletions
