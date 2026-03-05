@@ -35,6 +35,7 @@ Consolidated plan from all sources (root `docs/plans/`, Windsurf plans, Claude p
 **Secondary fix:** BSU `AppContent.tsx` — when an **already-authenticated** user arrives with `?return_to=conduit`, immediately redirect instead of showing the dashboard. Currently `AuthScreen` only renders for unauthenticated users.
 
 **Verification:**
+
 - Log in at suite.crm7.app with `?return_to=conduit` → lands on conduit.crm7.app
 - Navigate directly to conduit.crm7.app while logged into BSU → session detected, no redirect
 - Update middleware tests to assert `storageKey: 'business_suite_auth'`
@@ -50,6 +51,7 @@ Consolidated plan from all sources (root `docs/plans/`, Windsurf plans, Claude p
 **Fix:** Wire token refresh into each app's auth initialization or use an interval-based refresh. Check `bs_access_token` expiry on app load + periodic check.
 
 **Files:**
+
 - `crm7/src/lib/business-suite-oauth.ts` + `crm7/src/contexts/AuthContext.tsx`
 - `R80.3/src/lib/business-suite-oauth.ts` + `R80.3/src/stores/authStore.ts`
 - `braden/src/lib/business-suite-oauth.ts` + `braden/src/hooks/useAdminAuth.ts`
@@ -94,6 +96,26 @@ supabase functions deploy tga-search --project-ref tuybltdrdefjblnplpqo
 
 ---
 
+### Fix 6: WIF Migration — Static SA Key → Workload Identity Federation (COMPLETED ✅)
+
+- ✅ WIF pool `supabase-edge-functions` + OIDC provider `supabase-auth` created
+- ✅ `--allowed-audiences="authenticated"` set for Supabase JWT `aud` claim
+- ✅ IAM binding: `roles/iam.workloadIdentityUser` granted to pool for SA impersonation
+- ✅ IAM Credentials API enabled
+- ✅ Exposed SA key `63d97c908882b...` deleted — 0 user-managed keys remain
+- ✅ Edge Function `generate-document` rewritten: Supabase JWT → STS → SA impersonation → scoped access token
+- ✅ `googleDocsService.ts` updated to WIF pattern
+- ✅ `.env.example` updated with placeholder values (Copilot PR review addressed)
+- ✅ 4 docs files + AGENTS.md updated with WIF enforcement rules
+- ✅ Supabase secrets set: `GCP_PROJECT_NUMBER`, `GCP_WIF_POOL_ID`, `GCP_WIF_PROVIDER_ID`, `GCP_SA_EMAIL`
+- ✅ Old secret `GOOGLE_SERVICE_ACCOUNT_JSON` removed
+- ✅ Verified against Google official docs (`docs.cloud.google.com/iam/docs/workload-identity-federation-with-other-providers`)
+- ✅ Commits: `953a1cb` (crm7), `bb64b98` (root)
+- ⏳ E2E test pending: trigger document generation from CRM7 UI
+- **Plan:** `docs/plans/20260305-wif-migration-plan-v1.00A.md`
+
+---
+
 ## Part 2: AUTH & SSO HARDENING
 
 Per `supabase-oauth-server` skill §9 Security Hardening Checklist:
@@ -116,6 +138,7 @@ Per `supabase-oauth-server` skill §9 Security Hardening Checklist:
 | 14 | Chunked cookie storage handles >4KB | ✅ BSU cookieStorage chunks at 3500B | |
 
 **Add Conduit to OAuth client registry (P2):**
+
 - Register in Supabase Dashboard as OAuth app
 - Create `conduit/src/lib/business-suite-oauth.ts` (port from CRM7)
 - Wire dual callback in `conduit/src/app/auth/callback/route.ts`
@@ -289,6 +312,7 @@ From `docs/plans/20260304-remaining-work-implementation-plan-v1.00W.md`:
 ## Part 7: ADMIN UI CUSTOMIZATION (from `crm7/docs/plans/2026-03-04-admin-ui-customization-design.md`)
 
 Three-pillar system:
+
 1. **Custom Fields** — Developer → Org Admin → User scoped field definitions
 2. **Custom Views** — Configurable list/detail views per entity
 3. **Form Builder** — Drag-drop visual editor (@dnd-kit) for form layouts
