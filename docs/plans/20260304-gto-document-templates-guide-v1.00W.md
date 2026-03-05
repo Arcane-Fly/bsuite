@@ -855,7 +855,7 @@ Based on the Fair Work official templates, add these to Phase 2:
 
 1. Create each template in Google Docs under the GTO's Google Workspace
 2. Use `{{VARIABLE_NAME}}` syntax for all merge fields (matching the Edge Function's `replaceAllText` pattern)
-3. Share each template with the service account email: `firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com`
+3. Share each template with the service account email: `firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com` (key-less — authenticated via Workload Identity Federation)
 4. Copy the Google Doc ID from the URL and store in `document_templates.google_doc_id`
 5. Define merge variables in `document_templates.merge_variables` as JSON array
 

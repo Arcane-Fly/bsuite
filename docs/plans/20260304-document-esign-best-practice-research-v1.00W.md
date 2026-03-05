@@ -248,17 +248,21 @@ The `generate-document` Edge Function returns a `pdfUrl` pointing to Supabase St
 
 ## 7. Environment Variables Required (Production)
 
-### Google Cloud (for template merging) — ✅ CONFIGURED
+### Google Cloud (for template merging) — ✅ CONFIGURED via Workload Identity Federation
 
-Supabase secret:
+Supabase secrets (all non-sensitive metadata — no static keys):
 
 ```
-GOOGLE_SERVICE_ACCOUNT_JSON=<full JSON key file contents>
+GCP_PROJECT_NUMBER=111744121676
+GCP_WIF_POOL_ID=supabase-edge-functions
+GCP_WIF_PROVIDER_ID=supabase-auth
+GCP_SA_EMAIL=firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com
 ```
 
 - Google Cloud project: `claritycrm-hpofn`
-- Service account: `firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com`
-- APIs enabled: Google Docs API ✅, Google Drive API ✅
+- Service account: `firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com` (key-less — WIF only)
+- WIF pool: `supabase-edge-functions` (trusts Supabase OIDC issuer)
+- APIs enabled: Google Docs API ✅, Google Drive API ✅, IAM Credentials API ✅
 
 ### Adobe (NOT USED — credentials exist but are not consumed)
 

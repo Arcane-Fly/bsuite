@@ -263,7 +263,22 @@ The `requires_guardian_if_minor` flag on `document_templates` triggers an additi
 
 ### Auth
 
-Service account JSON credentials stored as Supabase secret `GOOGLE_SERVICE_ACCOUNT_JSON`. Scopes required:
+**Workload Identity Federation (WIF)** — no static service account keys.
+
+The Edge Function exchanges the caller's Supabase JWT for a short-lived Google access token via:
+
+1. Google Security Token Service (STS) — exchanges Supabase JWT for a federated token
+2. Service account impersonation — exchanges federated token for a scoped access token
+
+Supabase secrets (all non-sensitive metadata):
+
+- `GCP_PROJECT_NUMBER` — GCP project number (`111744121676`)
+- `GCP_WIF_POOL_ID` — `supabase-edge-functions`
+- `GCP_WIF_PROVIDER_ID` — `supabase-auth`
+- `GCP_SA_EMAIL` — `firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com`
+
+Scopes granted via SA impersonation:
+
 - `https://www.googleapis.com/auth/drive` (copy, export)
 - `https://www.googleapis.com/auth/documents` (batchUpdate)
 
@@ -309,6 +324,7 @@ async function mergeDocument(templateId: string, entityData: MergeData): Promise
 ### Template Authoring UX
 
 Admin workflow:
+
 1. Open Google Drive folder (shared link in CRM7 Template Registry page)
 2. Duplicate an existing template in Drive
 3. Edit in Google Docs — add/remove clauses, customize language
@@ -353,6 +369,7 @@ export const adobeSignService = {
 ### Webhook Handler
 
 Edge Function `adobe-sign-webhook` receives `AGREEMENT_ACTION_COMPLETED`:
+
 1. Verify webhook HMAC signature (Adobe Sign sends `x-adobesign-clientid` header)
 2. Look up `document_records` by `adobe_agreement_id`
 3. Download signed PDF via `adobeSignService.downloadSignedPdf()`
@@ -366,12 +383,14 @@ Edge Function `adobe-sign-webhook` receives `AGREEMENT_ACTION_COMPLETED`:
 ## 8. Plate.js In-App Editor
 
 For content that never leaves CRM7:
+
 - **Case notes** on person records (`people/[id].tsx` — Notes tab)
 - **Field officer site visit reports** (`field-officers/site-visits/`)
 - **Performance review narratives** (`progress-reviews/reviews/`)
 - **Internal memos** (`activities/`)
 
 **Plate.js** (MIT, [platejs.org](https://platejs.org/)) chosen over alternatives:
+
 - Built on Slate.js + React + **shadcn/ui** (matches existing component library exactly)
 - AI Copilot plugin → routes through existing Vercel AI Gateway (Grok + Claude)
 - Mention plugin → `@person`, `@employer` reference linking
@@ -408,6 +427,7 @@ Triggered from any entity page (person detail, host detail, contract detail):
 ```
 
 After generation:
+
 - Shows document status card inline
 - "View in Adobe Sign" button
 - Real-time status updates via Supabase Realtime subscription on `document_records`
@@ -452,7 +472,7 @@ After generation:
 
 ## 12. Security Considerations
 
-- Google service account credentials in Supabase secrets (never in `.env` or code)
+- Google API access via Workload Identity Federation (no static service account keys)
 - Adobe Sign API key in Supabase secrets
 - All generated PDFs in private Supabase Storage buckets with RLS
 - Generated draft Google Docs: auto-delete after 30 days (Drive API scheduled cleanup)
