@@ -17,6 +17,7 @@
 ### Task 0.1: Install dependencies
 
 **Files:**
+
 - Modify: `crm7/package.json`
 - Modify: `crm7/pnpm-lock.yaml`
 
@@ -56,6 +57,7 @@ git commit -m "chore(crm7): install document lifecycle dependencies (platejs, go
 ### Task 1.1: Create migration for document tables
 
 **Files:**
+
 - Create: `crm7/supabase/migrations/20260304000001_document_lifecycle.sql`
 
 **Step 1: Write the migration**
@@ -225,6 +227,7 @@ git commit -m "feat(crm7): add document lifecycle DB schema — templates, recor
 ### Task 1.2: TypeScript types for document entities
 
 **Files:**
+
 - Create: `crm7/src/types/documents.ts`
 - Modify: `crm7/src/types/index.ts` (barrel export)
 
@@ -381,6 +384,7 @@ git commit -m "feat(crm7): add document lifecycle TypeScript types"
 ### Task 1.3: Supabase Storage bucket setup
 
 **Files:**
+
 - Create: `crm7/supabase/migrations/20260304000002_document_storage.sql`
 
 **Step 1: Write the bucket migration**
@@ -437,39 +441,41 @@ git commit -m "feat(crm7): configure documents storage bucket with RLS"
 
 ## Phase 2 — Google Workspace Integration
 
-### Task 2.1: Google service credentials setup
+### Task 2.1: Google Cloud Workload Identity Federation setup
 
 **Files:**
-- No code files — configuration only
 
-**Step 1: Create Google service account**
+- No code files — GCP + Supabase configuration only
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create project "bsuite-documents" (or use existing)
-3. Enable APIs: Google Docs API, Google Drive API
-4. Create service account: `crm7-documents@bsuite-documents.iam.gserviceaccount.com`
-5. Download JSON key file
-6. Add the service account email to your Google Drive template folder with **Viewer** access
+**Step 1: Configure WIF in Google Cloud** (already done — 2026-03-05)
 
-**Step 2: Store credentials in Supabase**
+1. GCP project: `claritycrm-hpofn` (project number `111744121676`)
+2. APIs enabled: Google Docs API, Google Drive API, IAM Credentials API
+3. Service account: `firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com` (key-less — WIF only)
+4. WIF pool: `supabase-edge-functions` (global)
+5. WIF OIDC provider: `supabase-auth` (trusts Supabase OIDC issuer `https://tuybltdrdefjblnplpqo.supabase.co/auth/v1`)
+6. IAM binding: `roles/iam.workloadIdentityUser` granted to the WIF pool for the service account
+7. Add the service account email to your Google Drive template folder with **Viewer** access
+
+**Step 2: Store WIF config in Supabase secrets** (already done — 2026-03-05)
 
 ```bash
-supabase secrets set GOOGLE_SERVICE_ACCOUNT_JSON='<paste full JSON key content here>'
-supabase secrets set ADOBE_SIGN_CLIENT_ID='<from Adobe Sign developer portal>'
-supabase secrets set ADOBE_SIGN_CLIENT_SECRET='<from Adobe Sign developer portal>'
-supabase secrets set ADOBE_SIGN_ACCESS_TOKEN='<OAuth2 access token>'
-supabase secrets set ADOBE_SIGN_WEBHOOK_SECRET='<random 32-char string>'
+supabase secrets set \
+  GCP_PROJECT_NUMBER='111744121676' \
+  GCP_WIF_POOL_ID='supabase-edge-functions' \
+  GCP_WIF_PROVIDER_ID='supabase-auth' \
+  GCP_SA_EMAIL='firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com'
 ```
 
-**Step 3: Add to `.env.example`**
+**Step 3: `.env.example` updated** (already done — 2026-03-05)
 
 ```bash
-# Document Lifecycle
-GOOGLE_SERVICE_ACCOUNT_JSON=  # Supabase secret — JSON service account key
-ADOBE_SIGN_CLIENT_ID=         # Adobe Sign developer app
-ADOBE_SIGN_CLIENT_SECRET=     # Adobe Sign developer app
-ADOBE_SIGN_ACCESS_TOKEN=      # OAuth2 token (refresh via Adobe Sign OAuth)
-ADOBE_SIGN_WEBHOOK_SECRET=    # HMAC secret for webhook verification
+# Google Cloud — Workload Identity Federation (Edge Functions only)
+# These are non-sensitive metadata — set via: supabase secrets set KEY='value'
+# GCP_PROJECT_NUMBER=111744121676
+# GCP_WIF_POOL_ID=supabase-edge-functions
+# GCP_WIF_PROVIDER_ID=supabase-auth
+# GCP_SA_EMAIL=firebase-adminsdk-fbsvc@claritycrm-hpofn.iam.gserviceaccount.com
 ```
 
 **Step 4: Commit .env.example**
@@ -484,6 +490,7 @@ git commit -m "chore(crm7): document lifecycle env vars in .env.example"
 ### Task 2.2: Google Docs service
 
 **Files:**
+
 - Create: `crm7/src/services/googleDocsService.ts`
 - Create: `crm7/src/services/__tests__/googleDocsService.test.ts`
 
@@ -653,6 +660,7 @@ git commit -m "feat(crm7): Google Docs merge service — buildReplaceRequests + 
 ### Task 2.3: Merge variable resolver
 
 **Files:**
+
 - Create: `crm7/src/services/mergeVariableResolver.ts`
 - Create: `crm7/src/services/__tests__/mergeVariableResolver.test.ts`
 
@@ -812,6 +820,7 @@ git commit -m "feat(crm7): merge variable resolver — entity-aware, required fi
 ### Task 2.4: Edge Function — generate-document
 
 **Files:**
+
 - Create: `crm7/supabase/functions/generate-document/index.ts`
 
 **Step 1: Write the Edge Function**
@@ -970,6 +979,7 @@ git commit -m "feat(crm7): generate-document Edge Function — Google Docs merge
 ### Task 3.1: Adobe Sign service
 
 **Files:**
+
 - Create: `crm7/src/services/adobeSignService.ts`
 - Create: `crm7/src/services/__tests__/adobeSignService.test.ts`
 
@@ -1147,6 +1157,7 @@ git commit -m "feat(crm7): Adobe Acrobat Sign service — participant sets, agre
 ### Task 3.2: Adobe Sign webhook handler
 
 **Files:**
+
 - Create: `crm7/supabase/functions/adobe-sign-webhook/index.ts`
 
 **Step 1: Write the webhook handler**
@@ -1234,6 +1245,7 @@ supabase functions deploy adobe-sign-webhook --no-verify-jwt
 **Step 3: Register webhook in Adobe Sign**
 
 In Adobe Sign developer portal → Webhooks → Add webhook:
+
 - URL: `https://<project>.supabase.co/functions/v1/adobe-sign-webhook`
 - Events: `AGREEMENT_ACTION_COMPLETED`
 - Scope: `ACCOUNT`
@@ -1252,6 +1264,7 @@ git commit -m "feat(crm7): Adobe Sign webhook handler — auto-download signed P
 ### Task 4.1: Document Templates page
 
 **Files:**
+
 - Create: `crm7/src/pages/documents/templates/index.tsx`
 - Modify: `crm7/src/App.tsx` (add route)
 
@@ -1385,6 +1398,7 @@ git commit -m "feat(crm7): document templates registry page with Google Docs lin
 ### Task 4.2: Generate Document modal
 
 **Files:**
+
 - Create: `crm7/src/components/documents/GenerateDocumentModal.tsx`
 - Create: `crm7/src/components/documents/index.ts`
 
@@ -1562,6 +1576,7 @@ git commit -m "feat(crm7): GenerateDocumentModal — template select, merge, PDF
 ### Task 4.3: Wire "Generate Document" button to entity pages
 
 **Files:**
+
 - Modify: `crm7/src/pages/people/[id].tsx`
 - Modify: `crm7/src/pages/hosts/[id].tsx`
 
@@ -1617,6 +1632,7 @@ git commit -m "feat(crm7): wire Generate Document button to people and host deta
 ### Task 5.1: Documents hub page
 
 **Files:**
+
 - Create: `crm7/src/pages/documents/hub/index.tsx`
 - Modify: `crm7/src/App.tsx`
 
@@ -1762,6 +1778,7 @@ git commit -m "feat(crm7): documents hub page — all, pending, signed tabs with
 ### Task 6.1: Document editor component
 
 **Files:**
+
 - Create: `crm7/src/components/common/DocumentEditor/index.tsx`
 - Create: `crm7/src/components/common/DocumentEditor/plugins.ts`
 
@@ -1852,6 +1869,7 @@ git commit -m "feat(crm7): Plate.js DocumentEditor component — block editing w
 ### Task 6.2: Wire DocumentEditor to case notes on person detail
 
 **Files:**
+
 - Modify: `crm7/src/pages/people/[id].tsx`
 - Modify: `crm7/supabase/migrations/` (add `case_notes` column if missing)
 
@@ -1908,6 +1926,7 @@ git commit -m "feat(crm7): Plate.js case notes editor on person detail page"
 ### Task 7.1: Seed 20 document templates
 
 **Files:**
+
 - Create: `crm7/supabase/seed/document_templates_seed.sql`
 
 **Step 1: Write seed data for all 20 GTO document types**
@@ -2257,6 +2276,7 @@ Expected: All passing (≥2288 tests), 0 failures
 **Step 3: New tests pass**
 
 New tests introduced in this plan:
+
 - `googleDocsService.test.ts` — 3 tests
 - `mergeVariableResolver.test.ts` — 4 tests
 - `adobeSignService.test.ts` — 2 tests
