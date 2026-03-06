@@ -1,0 +1,152 @@
+name: App Quality Checks
+
+on:
+  pull_request:
+    paths:
+      - 'crm7/**'
+      - 'conduit/**'
+      - 'R80.3/**'
+      - 'business-suite-unified/**'
+      - 'braden/**'
+      - '.github/workflows/app-quality-checks.yml'
+  push:
+    branches:
+      - main
+      - development
+    paths:
+      - 'crm7/**'
+      - 'conduit/**'
+      - 'R80.3/**'
+      - 'business-suite-unified/**'
+      - 'braden/**'
+      - '.github/workflows/app-quality-checks.yml'
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'App to validate'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - crm7
+          - conduit
+          - R80.3
+          - business-suite-unified
+          - braden
+
+permissions:
+  contents: read
+
+jobs:
+  detect-apps:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - id: set-matrix
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT="${{ github.event.inputs.app }}"
+            if [ "$INPUT" = "all" ]; then
+              echo 'matrix=["crm7","conduit","R80.3","business-suite-unified","braden"]' >> "$GITHUB_OUTPUT"
+            else
+              echo "matrix=[\"$INPUT\"]" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+          HEAD_SHA="${{ github.sha }}"
+
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo 'matrix=["crm7","conduit","R80.3","business-suite-unified","braden"]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- '.github/workflows/app-quality-checks.yml' | grep -q .; then
+            echo 'matrix=["crm7","conduit","R80.3","business-suite-unified","braden"]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CHANGED=()
+          for dir in crm7 conduit R80.3 business-suite-unified braden; do
+            if git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- "$dir/" | grep -q .; then
+              CHANGED+=("\"$dir\"")
+            fi
+          done
+
+          if [ ${#CHANGED[@]} -eq 0 ]; then
+            echo 'matrix=[]' >> "$GITHUB_OUTPUT"
+          else
+            JOINED=$(IFS=,; echo "${CHANGED[*]}")
+            echo "matrix=[$JOINED]" >> "$GITHUB_OUTPUT"
+          fi
+
+  quality-checks:
+    needs: detect-apps
+    if: needs.detect-apps.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.detect-apps.outputs.matrix) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        shell: bash
+        run: |
+          TEST_SCRIPT=$(node -p "(require('./package.json').scripts?.test ?? '').trim()")
+          HAS_TEST_RUN=$(node -p "Boolean(require('./package.json').scripts?.['test:run'])")
+
+          if [ "$HAS_TEST_RUN" = "true" ]; then
+            pnpm test:run
+          elif printf '%s' "$TEST_SCRIPT" | grep -Eq '^vitest($|[[:space:]])' && ! printf '%s' "$TEST_SCRIPT" | grep -Eq '(^|[[:space:]])run($|[[:space:]])|--run'; then
+            pnpm test -- --run
+          else
+            pnpm test
+          fi
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "### ${{ matrix.app }} quality checks"
+            echo "- lint"
+            echo "- typecheck"
+            echo "- test"
+          } >> "$GITHUB_STEP_SUMMARY"
