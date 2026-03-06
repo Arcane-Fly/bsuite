@@ -46,8 +46,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
-          token: ${{ secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - id: set-matrix
@@ -102,51 +100,19 @@ jobs:
       fail-fast: false
       matrix:
         app: ${{ fromJson(needs.detect-apps.outputs.matrix) }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-
-      - name: Setup pnpm
-        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Test
+      - name: Verify submodule reference is present
         shell: bash
         run: |
-          TEST_SCRIPT=$(node -p "(require('./package.json').scripts?.test ?? '').trim()")
-          HAS_TEST_RUN=$(node -p "Boolean(require('./package.json').scripts?.['test:run'])")
-
-          if [ "$HAS_TEST_RUN" = "true" ]; then
-            pnpm test:run
-          elif printf '%s' "$TEST_SCRIPT" | grep -Eq '^vitest($|[[:space:]])' && ! printf '%s' "$TEST_SCRIPT" | grep -Eq '(^|[[:space:]])run($|[[:space:]])|--run'; then
-            pnpm test -- --run
-          else
-            pnpm test
-          fi
+          git ls-tree HEAD "${{ matrix.app }}"
 
       - name: Job summary
         if: always()
         run: |
           {
-            echo "### ${{ matrix.app }} quality checks"
-            echo "- lint"
-            echo "- typecheck"
-            echo "- test"
+            echo "### ${{ matrix.app }} reference check"
+            echo "- verified submodule gitlink exists in the workspace repo"
+            echo "- app-level lint, typecheck, test, and deploy gates run in the app repository PR"
           } >> "$GITHUB_STEP_SUMMARY"
