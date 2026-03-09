@@ -2,6 +2,14 @@
 
 Top-level documentation for the BSuite multi-project workspace. Contains cross-project standards, architecture references, and planning documents shared across all five applications.
 
+## Documentation Authority
+
+- `00-master-roadmap.md` is the canonical planning and delivery source of truth
+- `AUTH-MAP.md` is the canonical authentication and session-topology reference
+- Project `docs/README.md` files are navigation hubs only
+- `docs/plans/` contains feeder plans that must reconcile back into the master roadmap
+- `archive/` and imported donor documentation are reference-only and may preserve older naming or topology
+
 ## Contents
 
 | File / Directory | Description |
@@ -17,7 +25,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `pricing-strategy.md` | Pricing and subscription strategy — per-seat pricing with AI add-on tiers |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps superseded by the master roadmap |
-| [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity |
+| [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |
 | [`plans/`](plans/README.md) | Implementation plans for upcoming features and enhancements |
 | `20260228-crm7-page-inventory-v1.00W.md` | CRM7 page inventory — 148 pages audited with data source and status |
 | `20260228-crm7-rbac-matrix-v1.00W.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
@@ -36,14 +44,17 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 If you're investigating the **Arcane-Fly/CRM7A** repository for potential reuse or integration with current CRM7, start here:
 
 ### Documents
+
 1. **CRM7A-QUICK-REFERENCE.md** — 2-min read, decision matrix, red flags
-2. **CRM7A-EXECUTIVE-SUMMARY.md** — 5-min read, business/strategic overview  
+2. **CRM7A-EXECUTIVE-SUMMARY.md** — 5-min read, business/strategic overview
 3. **CRM7A-REPOSITORY-RESEARCH.md** — 15-min read, deep technical analysis
 
 ### Key Takeaway
+
 CRM7A is a **3-week-old, experimental monitoring dashboard** with modern UI patterns but **incomplete backend**. Use for **inspiration/reference**, not wholesale adoption. Current CRM7 is more mature and production-grade.
 
 ### TL;DR
+
 - **Not production-ready** (0% tests, mock data only, #VERCEL_SKIP markers)
 - **Good for**: Next.js 15 patterns, Radix UI setup, sidebar/table UI inspiration
 - **Bad for**: Backend architecture, data layer, GTO compliance features
