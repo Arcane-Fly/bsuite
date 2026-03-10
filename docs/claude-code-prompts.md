@@ -327,7 +327,7 @@ If Phase B takes longer than expected, a QUICK interim option exists:
 
 - `/home/braden/Desktop/Dev/bsuite/docs/00-master-roadmap.md` — project context
 - `/home/braden/Desktop/Dev/bsuite/AGENTS.md` — coding standards
-- `/home/braden/Desktop/Dev/bsuite/Theme-best-practice.md` — theme spec
+- `/home/braden/Desktop/Dev/bsuite/docs/20260228-d2c-theme-specification-v1.00W.md` — active theme spec
 - `/home/braden/Desktop/Dev/bsuite/docs/AUTH-MAP.md` — auth architecture
 - `/home/braden/Desktop/Dev/bsuite/crm7/src/stores/` — Zustand store patterns
 - `/home/braden/Desktop/Dev/bsuite/crm7/src/services/` — service layer patterns

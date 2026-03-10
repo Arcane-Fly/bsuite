@@ -185,7 +185,7 @@ BSU (suite.crm7.app)
 5. **Import DashboardShell** — adapt for CRM7's existing layout, replace inline layouts
 6. **Import DataTable** — drop into CRM7's `src/components/ui/`
 7. **Import type-safe routing** — adapt `AppRoute` enum + `useTypedNavigate()` for Wouter
-8. **Standardize theme** — apply `Theme-best-practice.md` to CRM7
+8. **Standardize theme** — apply `docs/20260228-d2c-theme-specification-v1.00W.md` to CRM7
 
 ### Phase 1: Core Feature Porting (Weeks 2-4)
 

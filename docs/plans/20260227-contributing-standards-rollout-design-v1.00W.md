@@ -40,7 +40,7 @@ Adopt and adapt quality enforcement, documentation, and indexing standards from 
 
 ### Theme Compliance
 
-- **D2C Neon Electric theme** (`Theme-best-practice.md`) applies to: business-suite-unified, crm7, conduit, R80.3
+- **D2C Neon Electric theme** (`docs/20260228-d2c-theme-specification-v1.00W.md`) applies to: business-suite-unified, crm7, conduit, R80.3
 - **Corporate branding** (exempt from D2C theme): braden (braden.com.au)
 
 ### Per-Project Deliverables

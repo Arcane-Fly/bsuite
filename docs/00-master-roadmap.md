@@ -427,7 +427,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | Competitive Landscape | See memory file at `.claude/projects/.../memory/competitive-landscape.md` |
 | Claude Code Prompts (7 agents) | [`docs/claude-code-prompts.md`](./claude-code-prompts.md) |
 | Pricing Strategy | [`docs/pricing-strategy.md`](./pricing-strategy.md) |
-| Theme Best Practice | [`Theme-best-practice.md`](../Theme-best-practice.md) |
+| D2C Theme Specification | [`docs/20260228-d2c-theme-specification-v1.00W.md`](./20260228-d2c-theme-specification-v1.00W.md) |
 | AI Feature Map | [`docs/ai/features/20260227-feature-map-complete-v1.0.0.md`](./ai/features/20260227-feature-map-complete-v1.0.0.md) |
 
 ### Archived Roadmaps

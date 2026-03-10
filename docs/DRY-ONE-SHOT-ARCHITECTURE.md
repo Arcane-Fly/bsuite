@@ -172,7 +172,7 @@ Implementation is per-app (no shared npm package yet) but patterns must match.
 | Table density | `compact / comfortable / spacious` | CRM7, R8 |
 | Card layout | `shadcn Card with consistent padding` | All |
 | Form layout | `label-above, full-width inputs, consistent spacing` | CRM7, R8 |
-| Theme | Deep Blue Neon (from `Theme-best-practice.md`) | All |
+| Theme | D2C Neon Electric (from `docs/20260228-d2c-theme-specification-v1.00W.md`) | All |
 
 ### Tier 3: Entity-Aware Components (smart reuse)
 

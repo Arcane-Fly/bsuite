@@ -1,134 +1,101 @@
-# User Interface Requirements
+# BSuite UI Architecture Summary
 
-_Last Modified: 2024-02-20_  
-_Version: 1.0.0_
+This document replaces the older generic UI requirements page and acts as the current cross-suite summary for UI direction.
 
-## 1. Design Principles
+## Canonical Source Chain
 
-### 1.1 Visual Design
+Use these documents together, in this order:
 
-- Clean, professional appearance
-- Consistent color scheme and typography
-- Responsive layout for all devices
+1. `docs/20260228-d2c-theme-specification-v1.00W.md`
+   - Canonical D2C Neon Electric palette, semantic tokens, Balanced Hybrid shell guidance, and light/dark guidance for business-suite-unified, CRM7, Conduit, and R80.3.
+
+2. `crm7/docs/plans/2026-03-04-admin-ui-customization-design.md`
+   - Canonical builder/customization architecture for drag-drop layouts, custom pages, field linking, picklists, saved views, and dashboard/widget composition.
+
+3. `docs/20260227-contributing-standards-guide-v1.00W.md`
+   - Canonical cross-project standards for accessibility, responsiveness, performance expectations, and documentation compliance.
+
+4. `braden/CONTRIBUTING.md` and `braden/docs/UI_UX_BEST_PRACTICES.md`
+   - Canonical corporate-brand guidance for the Braden refresh. Braden is explicitly outside the D2C Neon system even while its UI is being modernized.
+
+## Shared UI Direction
+
+### Brand and Surface System
+
+- BSuite D2C web apps use the Neon Electric palette with semantic tokens, not ad hoc hardcoded colors.
+- The D2C surface language is the Balanced Hybrid model:
+  - elevated shell backgrounds
+  - shell accent surfaces
+  - semantic shell borders
+  - soft shadows with restrained glow
+  - premium hero and panel treatment on high-visibility surfaces
+- Braden remains the only corporate-branded exception.
+- Braden is also receiving a UI refresh, but it must keep its corporate palette and should not visually drift into the Neon Electric system.
+- High-visibility CRM7 surfaces use a balanced hybrid treatment:
+  - premium shell backgrounds
+  - restrained glow
+  - elevated cards and chrome
+  - strong hierarchy without noisy neon overload
+
+### Layout and Reflow
+
+- Layouts must use the available screen width before introducing extra scroll or empty dead zones.
+- Dashboards, builders, and settings surfaces must support meaningful reflow across breakpoints.
+- Dense desktop layouts should still preserve touch-safe controls and keyboard accessibility.
+
+### Builder and Customization Model
+
+- One primary edit surface per page type.
+- Drag-drop is the default interaction for reorderable UI surfaces.
+- Customization should follow shared primitives across BSuite:
+  - fields
+  - views
+  - layouts
+  - pages
+  - widgets or dashboard blocks
+- Builders must expose a clear path to add custom elements tied to features, entities, and custom pages.
+
+### UX Requirements
+
 - Clear visual hierarchy
-- Accessible contrast ratios
-
-### 1.2 User Experience
-
-- Intuitive navigation
 - Minimal clicks for common tasks
-- Clear feedback for actions
-- Consistent interaction patterns
-- Progressive disclosure of complex features
+- Progressive disclosure for advanced configuration
+- Consistent action placement and interaction patterns
+- Accessible focus states, contrast, and keyboard flows
 
-## 2. Core Components
+### Performance and Accessibility
 
-### 2.1 Navigation
+- Responsive layouts across desktop, tablet, and mobile
+- WCAG 2.1 AA baseline
+- Fast initial loading, progressive data hydration, and resilient empty/error states
+- Avoid duplicate surfaces, placeholder controls, and dead-end editors
 
-- Main navigation menu
-- Quick access toolbar
-- Breadcrumb trails
-- Search functionality
-- Recent items list
+## Current Implementation Direction
 
-### 2.2 Dashboard
+### CRM7
 
-- Key metrics overview
-- Action items list
-- Notification center
-- Quick links to common tasks
-- Customizable widgets
+- Shared shell and dashboard surfaces should reflect the balanced hybrid CRM7 shell.
+- Dashboard editing should use a real builder model:
+  - drag-sort canvas
+  - per-block width control
+  - custom block insertion
+  - one primary builder entry point
+- Form layout, custom field, saved view, and custom page tooling should converge toward the architecture in the CRM7 admin UI customization design doc.
 
-## 3. Key Interfaces
+### Wider BSuite
 
-### 3.1 Apprentice Management
+- CRM7 is the proving ground for the shared builder model.
+- Once stabilized, the same primitives should be portable to other D2C apps where relevant.
+- Do not fork competing UI systems when the existing builder/customization architecture can be extended.
 
-- Profile view/edit
-- Training progress tracker
-- Document management
-- Timeline view
-- Contact history
+### Braden
 
-### 3.2 Host Management
+- Braden is refreshed as a corporate site, not as a D2C product shell.
+- Preserve Braden Red, Gold, Navy, corporate typography, and restrained professional shadows.
+- Modernize layout density, cards, spacing, and interactions without introducing D2C neon accents or glow-heavy chrome.
 
-- Company profile
-- Placement management
-- Financial overview
-- Document repository
-- Communication log
+## Legacy Status
 
-### 3.3 Compliance Management
-
-- Compliance dashboard
-- Document tracking
-- Due date calendar
-- Audit trail
-- Risk indicators
-
-### 3.4 Financial Management
-
-- Timesheet entry/approval
-- Invoice generation
-- Payment tracking
-- Funding claims
-- Financial reports
-
-## 4. Mobile Requirements
-
-### 4.1 Mobile Features
-
-- Timesheet submission
-- Document viewing
-- Basic profile access
-- Notifications
-- Contact directory
-
-### 4.2 Mobile Design
-
-- Touch-friendly interfaces
-- Offline capability
-- Responsive layouts
-- Native app feel
-- Quick actions
-
-## 5. Accessibility
-
-### 5.1 WCAG Compliance
-
-- WCAG 2.1 Level AA compliance
-- Keyboard navigation
-- Screen reader support
-- Color contrast requirements
-- Focus management
-
-### 5.2 Usability Features
-
-- Clear error messages
-- Help text and tooltips
-- Undo/redo capability
-- Progress indicators
-- Confirmation dialogs
-
-## 6. Performance
-
-### 6.1 Loading Times
-
-- Initial page load < 2s
-- Subsequent navigation < 1s
-- Smooth animations
-- Progressive loading
-- Optimized images
-
-### 6.2 Responsiveness
-
-- Immediate feedback
-- Background processing
-- Cached data
-- Optimistic updates
-- Error recovery
-
-## Revision History
-
-| Version | Date       | Description     | Author         |
-| ------- | ---------- | --------------- | -------------- |
-| 1.0.0   | 2024-02-20 | Initial release | UI/UX Designer |
+- The previous generic 2024 contents of this file are retired.
+- Imported donor docs under `docs/crm13-docs/` remain reference-only.
+- Any reference to `Theme-best-practice.md` should be treated as stale and replaced with `docs/20260228-d2c-theme-specification-v1.00W.md`.
