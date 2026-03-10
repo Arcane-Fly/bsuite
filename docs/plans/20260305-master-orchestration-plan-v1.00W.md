@@ -204,6 +204,78 @@ Per the capacity assessment (audit doc §Vercel):
 
 ---
 
+---
+
+## Part 5: BSuite Broad UI Refresh — Completed 2026-03-10
+
+### 5.1 Summary
+
+A broad UI refresh was executed across all five BSuite apps, anchored in the Balanced Hybrid design language with the CRM7 D2C Neon Electric token system extended to support theme modes and tenant branding hooks.
+
+### 5.2 Completed Work
+
+| Task | Scope | Status | Commits |
+|------|-------|--------|---------|
+| **Task 1** — CRM7 shell token extension | `theme.css`, `CRM7Header.tsx` | ✅ Complete | `c14305f`, `f78840f` |
+| **Task 2** — CRM7 workflow hub refresh | 23 pages → PageHeader; deprecated var cleanup; DashboardShell shell tokens | ✅ Complete | `22a8e86`, `103e43e`, `260f5b2` |
+| **Task 3** — CRM7 visual QA | Code-level audit of all touched surfaces | ✅ Clean — 0 critical issues | — |
+| **Task 4** — Cross-app polish | BSU, conduit, R80.3, braden token migrations and focus states | ✅ Complete | per-app commits |
+| **Task 5** — Magic UI pattern guide | Approved/rejected patterns, zone map, CRM7 mappings, guardrails | ✅ Complete | docs commit |
+| **Task 6** — Reference surface pack | 5 canonical CRM7 surfaces identified and documented | ✅ Complete | docs commit |
+
+### 5.3 Key Changes Per App
+
+**CRM7 (`crm7` branch: `development`)**
+- `src/styles/theme.css`: Added `[data-theme-mode="balanced"]`, `.dark[data-theme-mode="neon-premium"]`, `--shell-blur: 18px`, tenant override hooks (`--tenant-primary/secondary/surface/border`)
+- 23 workflow hub pages converted to use `PageHeader` component
+- Deprecated `--bg-primary` and `--text-heading` variable references eliminated from all component files
+- `DashboardShell.tsx`: breadcrumbs, header, and tab surfaces now use full shell token styling
+- `CRM7Footer.tsx`: `--border-color` → `--border-shell`
+- All `backdropFilter` values tokenized to `blur(var(--shell-blur))`
+
+**business-suite-unified**
+- `--text-heading` refs cleaned from 4 component files
+- `ServiceCard.tsx`, `DashboardStats.tsx`: slate Tailwind colors → CSS variables
+- `AuthForm.tsx`: focus-visible rings added to all inputs and action buttons
+
+**conduit**
+- `AppSwitcher.tsx`: hardcoded hex values → semantic tokens; `--muted-foreground` fixed to `--color-muted-foreground` (Tailwind v4 correction)
+- `DashboardShell.tsx`: same Tailwind v4 fix applied
+
+**R80.3**
+- `R8Calculator.tsx`: focus ring (`focus:ring-blue-500`) and checkbox color (`text-blue-600`) → `var(--accent-primary)`
+
+**braden**
+- `src/index.css`: added `--braden-red`, `--braden-gold`, `--braden-red-dark`, `--braden-gold-light`, `--braden-text-on-red`, `--braden-text-on-gold`, `--braden-red-90` brand token system
+- `Navigation.tsx`: `#811a2c` → `var(--braden-red)`; opacity modifier bug fixed; mobile menu focus state added
+- `Footer.tsx`, `Layout.tsx`: hardcoded hex colors replaced with Braden brand tokens
+
+### 5.4 New Reference Documents
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| Magic UI Pattern Guide | `crm7/docs/reference/20260310-crm7-magicui-pattern-guide-v1.00W.md` | Approved/rejected effects, zone map, implementation guardrails |
+| Reference Surface Pack | `crm7/docs/reference/20260310-crm7-reference-surface-pack-v1.00W.md` | Canonical surface examples with code patterns |
+
+### 5.5 Open Follow-Up Items
+
+| Item | Priority | App | Notes |
+|------|----------|-----|-------|
+| Adopt `--tenant-primary` in `CRM7Header.tsx` avatar and `AppSidebar.tsx` logo | P2 | CRM7 | Before `TenantThemeProvider` is wired |
+| `src/index.css`: 5 remaining `--text-heading` refs in utility classes | P3 | CRM7 | Valid token, not broken — cosmetic debt |
+| `DashboardShell` header (`--bg-shell-hero`) vs `PageHeader` (`--bg-shell-elevated`) alignment | P3 | CRM7 | Intentional divergence; review at next visual pass |
+| Braden admin folder: 20+ files with hardcoded colors | P2 | braden | Deferred from Task 4 — large scope |
+| R80.3 god component refactor (R8Calculator) | P2 | R80.3 | Existing Issue #92 — separate sprint |
+
+### 5.6 Sprint Order Update
+
+The broad UI refresh was completed as a precursor pass before Sprint A. Sprint ordering remains unchanged — continue from Part 3, Wave 2:
+
+- **Next:** CRM7 Sprint A (GTO Core Workflows: timesheets, competency, site visits, host assessment, induction)
+- The refreshed shell and token system provides the stable component foundation required for Sprint A page work
+
+---
+
 ## Appendix: Red-Team Validation Summary
 
 | Persona | Verdict |
