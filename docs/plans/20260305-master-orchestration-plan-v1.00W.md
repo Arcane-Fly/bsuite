@@ -137,14 +137,14 @@ Before Sprint A, build these reusable components (saves time across all GTO work
 
 ### 3.1 Current Health Dashboard
 
-| Project | TypeScript | Routes | Deployment | Key Gap |
-|---------|-----------|--------|------------|---------|
-| **CRM7** | ✅ 0 errors | 169 (0 dead) | ✅ Vercel Pro | GTO workflows, PWA, Kanban |
-| **Conduit** | ✅ 0 errors | 16 pages | ✅ Vercel Pro | AI "Scout", candidate edit |
-| **BSU** | ✅ 0 errors | 14 pages | ✅ Vercel Pro | Stripe billing, session handoff |
-| **R80.3** | ✅ 0 errors | Core calc | ✅ Vercel Pro | PWA, test coverage, charge-calc |
-| **Braden** | ✅ 0 errors | Corporate | ✅ Vercel Pro | SEO, lead capture |
-| **Infra** | ✅ 13 Edge Fns | 11 migrations | ✅ Supabase | `sync-award-rates` cron, CORS |
+| Project | TypeScript | Routes | Deployment | Current Lane |
+|---------|-----------|--------|------------|--------------|
+| **CRM7** | ✅ 0 errors | 169 (0 dead) | ✅ Vercel Pro | Finish-strong validation: theme review, browser QA, then Sprint A |
+| **Conduit** | ✅ 0 errors | 16 pages | ✅ Vercel Pro | Resume AI "Scout" and deeper workflow/product work on top of stable shell polish |
+| **BSU** | ✅ 0 errors | 14 pages | ✅ Vercel Pro | Resume Stripe billing and session handoff; shell work is complete unless QA finds regressions |
+| **R80.3** | ✅ 0 errors | Core calc | ✅ Vercel Pro | Resume PWA, test coverage, and charge-calc/package follow-through |
+| **Braden** | ✅ 0 errors | Corporate | ✅ Vercel Pro | Resume SEO and lead capture; keep deferred admin color cleanup separate |
+| **Infra** | ✅ 13 Edge Fns | 11 migrations | ✅ Supabase | Continue fairwork-enhanced hardening: penalty-rates correctness, rate limiting, CORS, validation |
 
 ### 3.2 Vercel Deployment: No Splitting Needed
 
@@ -182,6 +182,37 @@ Per the capacity assessment (audit doc §Vercel):
 | Expo mobile app | PWA covers mobile needs for now |
 | Biped marketplace | P4 — deferred until core 5 are best-in-class |
 | Org → Tenant hierarchy | P3 — single-tenant works for launch |
+
+### 3.5 Current Execution Lanes by App — 2026-03-10
+
+This section supersedes any CRM7-only reading of the orchestration state. The current suite posture is to close the remaining CRM7 validation lane while keeping the other four core apps and infra explicitly represented in the master plan.
+
+| App | Current State | Immediate Next Step | Notes |
+|-----|---------------|---------------------|-------|
+| **CRM7** | Broad UI refresh structurally complete; finish-strong shell polish landed and typechecked | Complete theme-spec validation and browser QA, then resume Sprint A (GTO workflows) | CRM7 remains the canonical D2C shell reference app |
+| **business-suite-unified** | Shared shell/token migration complete and verified | Resume Stripe billing and session handoff work after short polish-only review if screenshots reveal regressions | Avoid reopening shell redesign unless QA finds concrete issues |
+| **conduit** | Shared shell/high-visibility polish complete and verified | Resume product roadmap lane: AI "Scout" and candidate-edit depth, with only targeted UI fixes after manual review | Keep Next.js-specific best practices intact; no broad visual churn |
+| **R80.3** | Shared shell/high-visibility polish complete and verified | Resume PWA, test coverage, and charge-calc/package follow-through after any polish-only fixes from review | Existing calculator refactor remains a separate P2 item |
+| **braden** | Corporate brand token migration complete on core shared surfaces | Resume SEO and lead-capture lane; keep deferred admin hardcoded-color cleanup as a separate polish track | Never mix D2C Neon Electric shell language into Braden |
+| **Infra / Supabase / Edge Functions** | Platform stable, but fairwork-enhanced/security fixes remain on deck | Resume Wave 1 hardening: penalty-rates correctness, rate limiting, CORS, caller validation, API-key consistency | Infra remains shared leverage for multiple apps |
+
+**Suite-wide rule**
+- Do not let CRM7’s richer UI tracking obscure the other four apps.
+- Treat CRM7 as the shell proving ground, but keep BSU, Conduit, R80.3, Braden, and infra visible in every orchestration checkpoint.
+
+### 3.6 Active Next Actions by App — 2026-03-10
+
+| App | Immediate Action | Definition of Done for Current Lane |
+|-----|------------------|-------------------------------------|
+| **CRM7** | Finish D2C theme-spec review, complete browser QA via manual preview fallback if needed, then reopen Sprint A planning | Validation evidence captured, punch list trimmed to concrete issues only, shell lane formally closed |
+| **business-suite-unified** | Continue Stripe billing and session handoff implementation | Billing/session work reaches verified implementation state without reopening completed shell migration work |
+| **conduit** | Continue AI "Scout" and candidate/workflow product depth | Product lane advances while UI changes remain tightly scoped to evidence-based polish |
+| **R80.3** | Continue PWA and test-coverage lane, then follow through on charge-calc integration work | PWA/coverage work progresses independently of CRM7 validation and without bundling unrelated UI churn |
+| **braden** | Continue SEO and lead-capture execution under the corporate brand system | Growth/marketing lane advances while admin hardcoded-color cleanup remains separately tracked |
+| **Infra / Supabase / Edge Functions** | Continue fairwork-enhanced hardening and shared platform correctness/security work | Penalty-rate correctness, rate limiting, CORS, and validation remain active until verified resolved |
+
+**Operating principle**
+- CRM7 may hold the richest UI detail, but the orchestration plan must continue to move all five BSuite apps and shared infra forward in parallel.
 
 ---
 
@@ -269,10 +300,158 @@ A broad UI refresh was executed across all five BSuite apps, anchored in the Bal
 
 ### 5.6 Sprint Order Update
 
-The broad UI refresh was completed as a precursor pass before Sprint A. Sprint ordering remains unchanged — continue from Part 3, Wave 2:
+The broad UI refresh remains the active precursor pass before Sprint A. The shell/token foundation is complete and the remaining work is now the finish-strong validation lane rather than more structural redesign.
 
-- **Next:** CRM7 Sprint A (GTO Core Workflows: timesheets, competency, site visits, host assessment, induction)
-- The refreshed shell and token system provides the stable component foundation required for Sprint A page work
+- **Next:** Complete CRM7 finish-strong polish, theme-spec validation, and browser QA signoff
+- **Then:** Resume Part 3, Wave 2 / CRM7 Sprint A (GTO Core Workflows: timesheets, competency, site visits, host assessment, induction)
+- The refreshed shell and token system now provides the stable component foundation required for Sprint A page work
+
+### 5.7 CRM7 Continuation Progress — 2026-03-10
+
+The CRM7 refresh continued beyond the initial workflow hub pass and now covers the remaining high-visibility VET, deal-management, and auth surfaces that were still using older manual headers or flatter legacy panel treatments.
+
+**Verification status**
+- `pnpm typecheck` passed after each refresh batch in `crm7`
+- Rollout tracker updated in `~/.windsurf/plans/crm7-broad-ui-refresh-ec965f.md`
+
+**Additional completed CRM7 batches**
+
+| Batch | Files | Status |
+|------|-------|--------|
+| Training package flow | `src/pages/vet/training-packages/create.tsx`, `src/pages/vet/training-packages/[id]/index.tsx`, `src/pages/vet/training-packages/[id]/edit.tsx` | ✅ Complete |
+| Assessment flow | `src/pages/vet/assessments/create.tsx`, `src/pages/vet/assessments/[id]/index.tsx`, `src/pages/vet/assessments/[id]/edit.tsx` | ✅ Complete |
+| Units list/create | `src/pages/vet/units/index.tsx`, `src/pages/vet/units/create.tsx` | ✅ Complete |
+| Qualifications create/import | `src/pages/vet/qualifications/create.tsx`, `src/pages/vet/qualifications/import.tsx` | ✅ Complete |
+| Qualification structure + unit edit | `src/pages/vet/qualifications/[id]/structure.tsx`, `src/pages/vet/units/[id]/edit.tsx` | ✅ Complete |
+| Deals list/create | `src/pages/deals/index.tsx`, `src/pages/deals/new.tsx` | ✅ Complete |
+| Auth surfaces | `src/pages/auth/business-suite-sso.tsx`, `src/pages/auth/callback.tsx`, `src/pages/auth/confirm.tsx`, `src/pages/auth/reset-password.tsx` | ✅ Complete |
+
+**Pattern outcome**
+- Manual page headers were replaced with the shared `PageHeader` pattern where appropriate
+- Legacy card shells were normalized to semantic elevated surfaces using `--bg-shell-elevated`, `--border-shell`, and `--shadow-shell`
+- Tabs, toggle rows, and similar control groupings were aligned to accent shell surfaces using `--bg-shell-accent`
+- CRM7 auth states now visually match the broader shell language instead of appearing as a separate older UI pocket
+
+### 5.8 Current Active Lane
+
+The CRM7 refresh is now in a finish-strong completion lane: validation is active, but the dashboard and remaining dashboard-adjacent surfaces should not yet be treated as complete.
+
+**Current priorities**
+- Finish the remaining CRM7 dashboard and dashboard-adjacent UI completion work before calling the shell lane done
+- Validate light and dark mode readability against `docs/20260228-d2c-theme-specification-v1.00W.md`
+- Run browser/screenshot QA across refreshed CRM7 surfaces once a working preview is available
+- Produce a concise punch list only if QA finds concrete regressions or contrast issues
+
+**Latest progress**
+- Finish-strong shell polish landed and typechecked across `src/styles/theme.css`, `src/components/page-header.tsx`, `src/components/layout/CRM7Header.tsx`, `src/components/layout/AppSidebar.tsx`, `src/components/layout/DashboardShell.tsx`, and `src/components/ui/sidebar.tsx`
+- Shared shell chrome now uses slightly stronger elevated surfaces, restrained shell glow, tenant-surface adoption in the brand blocks, and more consistent blur/depth treatments across page headers, header chrome, dashboard hero regions, and sidebar navigation
+
+**Execution rule**
+- Do not expand scope into unrelated redesign work before the finish-strong validation lane is complete
+- Once QA is signed off, resume the next CRM7 product wave from Part 3 without reopening the shell migration lane
+
+### 5.9 Cross-App Continuation Guardrail
+
+The current orchestration state is not CRM7-only.
+
+- **CRM7** is in finish-strong validation and browser QA
+- **business-suite-unified** is clear to continue Stripe billing and session handoff once CRM7 QA no longer needs the active orchestration slot
+- **conduit** is clear to continue AI Scout and deeper product workflows on top of the now-stable shell layer
+- **R80.3** is clear to continue PWA/test-coverage work with UI polish treated as follow-up only if review finds regressions
+- **braden** is clear to continue SEO/lead-capture delivery while preserving the separate corporate brand system
+- **Infra** remains a parallel hardening lane anchored in the fairwork-enhanced fixes from Part 1
+
+This plan should therefore be read as a suite-wide sequencing document: close the CRM7 validation lane cleanly, then continue the next wave in each app without reopening completed shell migration work unless QA evidence justifies it.
+
+### 5.10 Current Validation Blocker — 2026-03-10
+
+The latest orchestration checkpoint is:
+
+- CRM7 finish-strong shell polish has landed and `pnpm typecheck` passed
+- An attempted live dashboard visit at `http://127.0.0.1:40227/dashboard` returned HTTP 502 because the preview endpoint was no longer serving the app
+- User direction is that the CRM7 dashboard is still nowhere near done and should not be treated as QA-ready
+
+**Implication**
+- CRM7 visual/browser QA is blocked by preview availability, but more importantly the dashboard lane still has unfinished implementation work and should not yet be collapsed into validation-only status
+- Until the dashboard finish pass is completed and a working preview is available, CRM7 should be treated as "partially polished, dashboard completion still active"
+
+**Suite-wide continuation guidance while CRM7 dashboard completion is pending**
+- **CRM7:** reopen the dashboard/dashboard-adjacent finish pass, then resume theme-spec validation and browser QA once the preview is running again
+- **business-suite-unified:** continue Stripe billing and session handoff; do not wait on CRM7 dashboard completion unless shared-shell regressions are discovered
+- **conduit:** continue AI Scout and deeper workflow/product work; reserve UI effort for screenshot-driven polish only
+- **R80.3:** continue PWA and test-coverage work; keep calculator refactor isolated from shell polish tracking
+- **braden:** continue SEO/lead-capture execution under the corporate brand system; keep admin color cleanup as a separate deferred polish lane
+- **Infra:** continue fairwork-enhanced hardening in parallel because it is independent of the CRM7 preview/dashboard blocker
+
+### 5.11 CRM7 Sync Startup Fix — 2026-03-10
+
+A secondary CRM7 runtime issue surfaced during preview QA: `SyncService` was attempting to push and pull multiple protected tables before auth had fully settled, producing noisy cross-table sync failures in the local preview.
+
+**Root cause**
+- `syncManager.start()` was being triggered as soon as SQLite initialization completed in `App.tsx`
+- `useSyncStatus()` in `src/lib/sync-service.ts` also auto-started the sync manager on mount
+- The sync layer gated on `isSupabaseReady`, but not on the presence of an authenticated session
+
+**Fix landed**
+- `src/App.tsx`: background sync startup now waits for SQLite readiness, auth loading to complete, Supabase to be configured, and a live session to exist before starting
+- `src/lib/sync-service.ts`: removed the extra auto-start path inside `useSyncStatus()` so sync lifecycle is controlled from the app boundary rather than from status subscribers
+- `pnpm typecheck` passed after the change in `crm7`
+
+**Effect on orchestration**
+- **CRM7:** local preview noise from premature sync startup is addressed, but this does not change the broader assessment that the dashboard finish pass is still open
+- **business-suite-unified / conduit / R80.3 / braden:** no orchestration change; their roadmap lanes remain active in parallel
+- **Infra:** remains focused on fairwork-enhanced hardening and other shared platform fixes, not on the CRM7 preview-only sync startup issue
+
+### 5.12 Dashboard Reality Check — 2026-03-10
+
+A live dashboard review was attempted at `http://127.0.0.1:40227/dashboard`.
+
+**Observed state**
+- The endpoint returned HTTP 502, so a true visual review could not be completed from the running preview
+- User direction is that the CRM7 dashboard is still far from done and should not be represented as a near-complete surface
+
+**Planning consequence**
+- The CRM7 lane remains broader than shell polish plus QA
+- Dashboard and dashboard-adjacent completion work must stay explicitly open in the rollout plan before CRM7 can be considered ready to exit the UI-refresh lane
+- Cross-app orchestration remains unchanged: BSU, Conduit, R80.3, Braden, and Infra should continue their own roadmap lanes in parallel
+
+### 5.13 CRM7 Dashboard Color Token Completion + Dead Code Purge — 2026-03-10 (cont.)
+
+**Work completed (commit `cdae0fc`)**
+
+- `src/pages/Dashboard.tsx` — final hardcoded Tailwind color cleanup:
+  - `recentActivityData`: changed `bgClass: string` (Tailwind strings like `bg-blue-50 dark:bg-blue-900/20`) to `bgStyle: React.CSSProperties` using semantic CSS vars (`--color-info-bg`, `--color-success-bg`, `--color-warning-bg`). Render updated to spread bgStyle into the `style` prop, removing the Tailwind dependency.
+  - Financial panel icons: `text-emerald-600` → `style={{ color: 'var(--color-success)' }}`
+  - Training panel icons: `text-purple-600` → `style={{ color: 'var(--accent-secondary)' }}`
+  - Error state: `--bg-panel` → `--bg-shell-elevated`
+
+- `src/features/dashboard/` — **entire directory deleted** (651 lines of dead code):
+  - `Dashboard.tsx` — legacy component; active route (`pages/Dashboard.tsx`) confirmed via `App.tsx` import. Never imported by any other file.
+  - `ModernDashboard.tsx` — unused variant
+  - `useDashboard.ts` — unused hook
+  - `dashboardService.ts` — unused service
+  - All barrel index files for the above
+  - TypeScript `noEmit` confirms no module references remain
+
+**Dashboard data model confirmed**
+
+- `pages/Dashboard.tsx` already calls `getCrmMetrics()` from `lib/data/dashboardQueries.ts` for live Supabase data
+- `DEMO_METRICS` is compile-time constants used ONLY when the developer "Demo Data" toggle (`useDevMode`) is active or as a last-resort DB-failure fallback
+- Real data flow: DB → localStorage cache → `DEMO_METRICS` (in that order on failure)
+- No changes needed to the data layer — it was already correct
+
+**In-flight work**
+
+- Background agent dispatched for broad 110-page color token audit across remaining `src/pages/` files
+- 110 pages identified with residual `text-{color}-{number}` / `bg-{color}-{number}` Tailwind classes
+- Agent targets: `people/`, `gto-compliance/`, `contacts/`, `deals/`, `reports/`, `calendar/`, `field-officers/`, `contracts/`, `funding-sources/` (in priority order)
+
+**Orchestration status after this pass**
+
+- CRM7 dashboard: ✅ Color tokens complete. Active route (`pages/Dashboard.tsx`) is fully theme-consistent.
+- CRM7 broad page audit: 🔄 In progress (background agent)
+- Cross-app shell: ✅ BSU, conduit, R80.3, braden — verified no deprecated token usage in shell/layout files
+- Remaining CRM7 lane: Continue broad page audit → visual QA signoff → resume Sprint A (GTO Core Workflows)
 
 ---
 
