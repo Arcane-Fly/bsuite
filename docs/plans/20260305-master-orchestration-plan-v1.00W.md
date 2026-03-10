@@ -440,18 +440,29 @@ A live dashboard review was attempted at `http://127.0.0.1:40227/dashboard`.
 - Real data flow: DB → localStorage cache → `DEMO_METRICS` (in that order on failure)
 - No changes needed to the data layer — it was already correct
 
-**In-flight work**
+**Broad color token audit — COMPLETE (2026-03-10)**
 
-- Background agent dispatched for broad 110-page color token audit across remaining `src/pages/` files
-- 110 pages identified with residual `text-{color}-{number}` / `bg-{color}-{number}` Tailwind classes
-- Agent targets: `people/`, `gto-compliance/`, `contacts/`, `deals/`, `reports/`, `calendar/`, `field-officers/`, `contracts/`, `funding-sources/` (in priority order)
+All `~110` CRM7 pages audited and converted across 6 commit batches + final sweep (commits `9b5ce09` → `c755a74`).
+
+Files converted across the full audit:
+
+- `people/` (compliance, progress, completion, standdown, leave), `gto-compliance/` (complaints, evidence, risk), `contracts/`, `calendar/`, `reports/`, `funding-sources/`, `skills/`, `communications/mail-merge.tsx`
+- `hosts/`, `claims/`, `contacts/`, `opportunities/`, `payroll/`, `pipeline/index.tsx`
+- `compliance/`, `hr/`, `whs/`, `field-officers/`, `timesheets/`, `leave/`, `tasks/`, `insights/`
+- `settings/`, `billing/`, `charge-rates/`, `documents/`, `vet/` (10 files), `enrichment/`, `financial/`, `clients/`, `awards/`, `admin/`, `portal/` (3 files), `deals/`
+- `pipeline/kanban.tsx` — COLUMNS array switched to Tailwind arbitrary value CSS vars (`bg-[var(--color-info-bg)]`, `border-t-[var(--color-info)]`)
+- `not-found.tsx`, `api-test.tsx` — error icon colors
+- `auth/accept-invite.tsx` — success/error icon containers
+- Shell: `theme.css`, `CRM7Header.tsx`, `AppSidebar.tsx`, `DashboardShell.tsx`, `page-header.tsx`
+- Auth pages: `callback.tsx`, `confirm.tsx`, `reset-password.tsx`, `business-suite-sso.tsx` — deprecated `--bg-primary`/`--text-heading` → `--bg-body`/`--text-primary`
 
 **Orchestration status after this pass**
 
-- CRM7 dashboard: ✅ Color tokens complete. Active route (`pages/Dashboard.tsx`) is fully theme-consistent.
-- CRM7 broad page audit: 🔄 In progress (background agent)
-- Cross-app shell: ✅ BSU, conduit, R80.3, braden — verified no deprecated token usage in shell/layout files
-- Remaining CRM7 lane: Continue broad page audit → visual QA signoff → resume Sprint A (GTO Core Workflows)
+- CRM7 dashboard: ✅ Color tokens complete
+- CRM7 broad page audit: ✅ COMPLETE — all pages converted to CSS custom property vars
+- CRM7 shell + auth: ✅ Deprecated vars replaced, theme modes added to `theme.css`
+- Cross-app shell: ✅ BSU, conduit, R80.3, braden — verified
+- Next CRM7 lane: Visual QA signoff → resume Sprint A (GTO Core Workflows)
 
 ---
 
