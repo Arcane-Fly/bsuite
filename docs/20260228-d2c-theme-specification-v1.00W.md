@@ -1,6 +1,29 @@
 # 🎨 Universal D2C Theme System 2025
 
-CRM R8 and Business Suite. apps ahve their own colours. braden.com.au has my corporate colours and is currently correct.
+This is the canonical design-system reference for the D2C BSuite web apps:
+
+- `business-suite-unified`
+- `crm7`
+- `conduit`
+- `R80.3`
+
+These projects use the **D2C Neon Electric** palette and the evolving **Balanced Hybrid** surface treatment:
+
+- semantic color tokens
+- elevated shell surfaces
+- restrained glow
+- rounded hero and panel chrome
+- premium dark mode with deep navy backgrounds
+
+`braden.com.au` is **not** part of this theme system. Braden is undergoing its own UI refresh, but it keeps the corporate Braden brand palette and should not inherit Neon Electric colors or glow styling.
+
+## Scope and Brand Boundaries
+
+- Use this document for the four D2C BSuite apps only.
+- Treat CRM7 as the proving ground for Balanced Hybrid shell and page-surface patterns.
+- Propagate proven D2C patterns to BSU, Conduit, and R80.3 through semantic tokens, not raw hex colors.
+- Do not apply Braden corporate red/gold branding to D2C apps.
+- Do not apply Neon Electric gradients, cyan glow, or D2C shell treatments to Braden.
 
 ## Complete Theme Package
 

@@ -85,7 +85,7 @@ docs(r80): update Fair Work API reference
 
 ### D2C Neon Electric (business-suite-unified, crm7, conduit, R80.3)
 
-Full spec in `Theme-best-practice.md`. Key colors:
+Full spec in `docs/20260228-d2c-theme-specification-v1.00W.md`. Key colors:
 
 | Color | Hex | Use |
 |-------|-----|-----|

@@ -72,7 +72,7 @@ All work on `feat/unified-upgrade`. Donor repos are READ-ONLY.
 
 | # | Task | Status | Verify |
 |---|------|--------|--------|
-| 0.8 | Apply Deep Blue Neon theme from `Theme-best-practice.md` to `crm7/src/index.css` | DONE | CASCADE |
+| 0.8 | Apply Deep Blue Neon theme from `docs/20260228-d2c-theme-specification-v1.00W.md` to `crm7/src/index.css` | DONE | CASCADE |
 | 0.9 | Apply matching theme to `R80.3/src/index.css` | DONE | CASCADE |
 | 0.10 | Apply matching theme to BSU CSS entry point | DONE | CASCADE |
 | 0.11 | Verify Tailwind config consistency across all 3 projects | DONE | CASCADE |
@@ -148,7 +148,7 @@ All work on `feat/unified-upgrade`. Donor repos are READ-ONLY.
 |-----|------|
 | **DRY / One-Shot Architecture** | `bsuite/docs/DRY-ONE-SHOT-ARCHITECTURE.md` |
 | Full Audit | `.windsurf/plans/crm7r-feature-audit-and-integration-plan-87682c.md` |
-| Theme Guide | `bsuite/Theme-best-practice.md` |
+| Theme Guide | `bsuite/docs/20260228-d2c-theme-specification-v1.00W.md` |
 | RLS Policies | `business-suite-unified/docs/crm7_rbac_rls.md` |
 | Unified Schema | `business-suite-unified/database/UNIFIED_SCHEMA_DOCUMENTATION.md` |
 | WH Entities | `business/workforce-hub/frontend/src/utils/entityTypes.ts` |
@@ -215,7 +215,7 @@ _Read ALL notes before starting any task. Leave actionable feedback, not just "l
 **Task 0.8 - CRM7 Theme (Verified + Enhanced):**
 
 - Added all 11 neon electric colors to `crm7/src/styles/theme.css` (RGB format)
-- Added light/dark background hierarchy per Theme-best-practice.md
+- Added light/dark background hierarchy per `docs/20260228-d2c-theme-specification-v1.00W.md`
 - Added all 6 required animations (pulse-soft, glow, typing, shimmer, float, neon-pulse)
 - Added comprehensive utility classes to `crm7/src/index.css`
 - CRM7 existing brand colors preserved for backwards compatibility
@@ -384,7 +384,7 @@ All 3 repos now unified:
 
 **supabase.ts** — Good fix: added explicit TypeScript types to cookieStorage params
 **theme.css** — Spec-compliant light/dark variables + neon palette + 6 animations
-**tailwind.config.js** — 11 neon colors + keyframes + gradients matching theme-best-practice.md
+**tailwind.config.js** — 11 neon colors + keyframes + gradients matching `docs/20260228-d2c-theme-specification-v1.00W.md`
 **index.css** — Neon utility classes properly referencing CSS variables defined in theme.css
 
 ### Verdict

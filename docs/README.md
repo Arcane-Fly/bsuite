@@ -35,7 +35,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `navigation-guide.md` | Navigation guide |
 | `navigation.md` | Navigation structure |
 | `performance-report.md` | Performance report |
-| `ui.md` | UI documentation |
+| `ui.md` | Current BSuite UI architecture summary and canonical UI source chain |
 
 ---
 
