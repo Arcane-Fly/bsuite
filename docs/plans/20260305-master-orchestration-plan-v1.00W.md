@@ -197,6 +197,7 @@ This section supersedes any CRM7-only reading of the orchestration state. The cu
 | **Infra / Supabase / Edge Functions** | Platform stable, but fairwork-enhanced/security fixes remain on deck | Resume Wave 1 hardening: penalty-rates correctness, rate limiting, CORS, caller validation, API-key consistency | Infra remains shared leverage for multiple apps |
 
 **Suite-wide rule**
+
 - Do not let CRM7’s richer UI tracking obscure the other four apps.
 - Treat CRM7 as the shell proving ground, but keep BSU, Conduit, R80.3, Braden, and infra visible in every orchestration checkpoint.
 
@@ -212,6 +213,7 @@ This section supersedes any CRM7-only reading of the orchestration state. The cu
 | **Infra / Supabase / Edge Functions** | Continue fairwork-enhanced hardening and shared platform correctness/security work | Penalty-rate correctness, rate limiting, CORS, and validation remain active until verified resolved |
 
 **Operating principle**
+
 - CRM7 may hold the richest UI detail, but the orchestration plan must continue to move all five BSuite apps and shared infra forward in parallel.
 
 ---
@@ -257,6 +259,7 @@ A broad UI refresh was executed across all five BSuite apps, anchored in the Bal
 ### 5.3 Key Changes Per App
 
 **CRM7 (`crm7` branch: `development`)**
+
 - `src/styles/theme.css`: Added `[data-theme-mode="balanced"]`, `.dark[data-theme-mode="neon-premium"]`, `--shell-blur: 18px`, tenant override hooks (`--tenant-primary/secondary/surface/border`)
 - 23 workflow hub pages converted to use `PageHeader` component
 - Deprecated `--bg-primary` and `--text-heading` variable references eliminated from all component files
@@ -265,18 +268,22 @@ A broad UI refresh was executed across all five BSuite apps, anchored in the Bal
 - All `backdropFilter` values tokenized to `blur(var(--shell-blur))`
 
 **business-suite-unified**
+
 - `--text-heading` refs cleaned from 4 component files
 - `ServiceCard.tsx`, `DashboardStats.tsx`: slate Tailwind colors → CSS variables
 - `AuthForm.tsx`: focus-visible rings added to all inputs and action buttons
 
 **conduit**
+
 - `AppSwitcher.tsx`: hardcoded hex values → semantic tokens; `--muted-foreground` fixed to `--color-muted-foreground` (Tailwind v4 correction)
 - `DashboardShell.tsx`: same Tailwind v4 fix applied
 
 **R80.3**
+
 - `R8Calculator.tsx`: focus ring (`focus:ring-blue-500`) and checkbox color (`text-blue-600`) → `var(--accent-primary)`
 
 **braden**
+
 - `src/index.css`: added `--braden-red`, `--braden-gold`, `--braden-red-dark`, `--braden-gold-light`, `--braden-text-on-red`, `--braden-text-on-gold`, `--braden-red-90` brand token system
 - `Navigation.tsx`: `#811a2c` → `var(--braden-red)`; opacity modifier bug fixed; mobile menu focus state added
 - `Footer.tsx`, `Layout.tsx`: hardcoded hex colors replaced with Braden brand tokens
@@ -311,6 +318,7 @@ The broad UI refresh remains the active precursor pass before Sprint A. The shel
 The CRM7 refresh continued beyond the initial workflow hub pass and now covers the remaining high-visibility VET, deal-management, and auth surfaces that were still using older manual headers or flatter legacy panel treatments.
 
 **Verification status**
+
 - `pnpm typecheck` passed after each refresh batch in `crm7`
 - Rollout tracker updated in `~/.windsurf/plans/crm7-broad-ui-refresh-ec965f.md`
 
@@ -327,6 +335,7 @@ The CRM7 refresh continued beyond the initial workflow hub pass and now covers t
 | Auth surfaces | `src/pages/auth/business-suite-sso.tsx`, `src/pages/auth/callback.tsx`, `src/pages/auth/confirm.tsx`, `src/pages/auth/reset-password.tsx` | ✅ Complete |
 
 **Pattern outcome**
+
 - Manual page headers were replaced with the shared `PageHeader` pattern where appropriate
 - Legacy card shells were normalized to semantic elevated surfaces using `--bg-shell-elevated`, `--border-shell`, and `--shadow-shell`
 - Tabs, toggle rows, and similar control groupings were aligned to accent shell surfaces using `--bg-shell-accent`
@@ -337,16 +346,19 @@ The CRM7 refresh continued beyond the initial workflow hub pass and now covers t
 The CRM7 refresh is now in a finish-strong completion lane: validation is active, but the dashboard and remaining dashboard-adjacent surfaces should not yet be treated as complete.
 
 **Current priorities**
+
 - Finish the remaining CRM7 dashboard and dashboard-adjacent UI completion work before calling the shell lane done
 - Validate light and dark mode readability against `docs/20260228-d2c-theme-specification-v1.00W.md`
 - Run browser/screenshot QA across refreshed CRM7 surfaces once a working preview is available
 - Produce a concise punch list only if QA finds concrete regressions or contrast issues
 
 **Latest progress**
+
 - Finish-strong shell polish landed and typechecked across `src/styles/theme.css`, `src/components/page-header.tsx`, `src/components/layout/CRM7Header.tsx`, `src/components/layout/AppSidebar.tsx`, `src/components/layout/DashboardShell.tsx`, and `src/components/ui/sidebar.tsx`
 - Shared shell chrome now uses slightly stronger elevated surfaces, restrained shell glow, tenant-surface adoption in the brand blocks, and more consistent blur/depth treatments across page headers, header chrome, dashboard hero regions, and sidebar navigation
 
 **Execution rule**
+
 - Do not expand scope into unrelated redesign work before the finish-strong validation lane is complete
 - Once QA is signed off, resume the next CRM7 product wave from Part 3 without reopening the shell migration lane
 
@@ -372,10 +384,12 @@ The latest orchestration checkpoint is:
 - User direction is that the CRM7 dashboard is still nowhere near done and should not be treated as QA-ready
 
 **Implication**
+
 - CRM7 visual/browser QA is blocked by preview availability, but more importantly the dashboard lane still has unfinished implementation work and should not yet be collapsed into validation-only status
 - Until the dashboard finish pass is completed and a working preview is available, CRM7 should be treated as "partially polished, dashboard completion still active"
 
 **Suite-wide continuation guidance while CRM7 dashboard completion is pending**
+
 - **CRM7:** reopen the dashboard/dashboard-adjacent finish pass, then resume theme-spec validation and browser QA once the preview is running again
 - **business-suite-unified:** continue Stripe billing and session handoff; do not wait on CRM7 dashboard completion unless shared-shell regressions are discovered
 - **conduit:** continue AI Scout and deeper workflow/product work; reserve UI effort for screenshot-driven polish only
@@ -388,16 +402,19 @@ The latest orchestration checkpoint is:
 A secondary CRM7 runtime issue surfaced during preview QA: `SyncService` was attempting to push and pull multiple protected tables before auth had fully settled, producing noisy cross-table sync failures in the local preview.
 
 **Root cause**
+
 - `syncManager.start()` was being triggered as soon as SQLite initialization completed in `App.tsx`
 - `useSyncStatus()` in `src/lib/sync-service.ts` also auto-started the sync manager on mount
 - The sync layer gated on `isSupabaseReady`, but not on the presence of an authenticated session
 
 **Fix landed**
+
 - `src/App.tsx`: background sync startup now waits for SQLite readiness, auth loading to complete, Supabase to be configured, and a live session to exist before starting
 - `src/lib/sync-service.ts`: removed the extra auto-start path inside `useSyncStatus()` so sync lifecycle is controlled from the app boundary rather than from status subscribers
 - `pnpm typecheck` passed after the change in `crm7`
 
 **Effect on orchestration**
+
 - **CRM7:** local preview noise from premature sync startup is addressed, but this does not change the broader assessment that the dashboard finish pass is still open
 - **business-suite-unified / conduit / R80.3 / braden:** no orchestration change; their roadmap lanes remain active in parallel
 - **Infra:** remains focused on fairwork-enhanced hardening and other shared platform fixes, not on the CRM7 preview-only sync startup issue
@@ -407,15 +424,38 @@ A secondary CRM7 runtime issue surfaced during preview QA: `SyncService` was att
 A live dashboard review was attempted at `http://127.0.0.1:40227/dashboard`.
 
 **Observed state**
-- The endpoint returned HTTP 502, so a true visual review could not be completed from the running preview
-- User direction is that the CRM7 dashboard is still far from done and should not be represented as a near-complete surface
+
+- The endpoint initially returned HTTP 502 when the preview server was down
+- After the CRM7 dev server was restarted on `http://localhost:5175` and exposed through preview `http://127.0.0.1:41765`, navigating to `/dashboard` redirected to `https://suite.crm7.app/login?return_to=crm7&return_path=%2Fdashboard`
+- This means the current blocker is no longer server availability alone; anonymous dashboard assessment is blocked by the normal protected-route/auth redirect
+- User direction remains that the CRM7 dashboard is still far from done and should not be represented as a near-complete surface
 
 **Planning consequence**
+
 - The CRM7 lane remains broader than shell polish plus QA
 - Dashboard and dashboard-adjacent completion work must stay explicitly open in the rollout plan before CRM7 can be considered ready to exit the UI-refresh lane
+- Browser-based dashboard assessment now requires an authenticated session or a purpose-built preview path that bypasses protected-route login redirection
 - Cross-app orchestration remains unchanged: BSU, Conduit, R80.3, Braden, and Infra should continue their own roadmap lanes in parallel
 
-### 5.13 CRM7 Dashboard Color Token Completion + Dead Code Purge — 2026-03-10 (cont.)
+### 5.13 Authenticated IDE Preview Assessment — 2026-03-10
+
+User-provided IDE preview screenshots supplied the missing authenticated-session view of CRM7 `/dashboard`.
+
+**Observed state from the authenticated preview**
+
+- The dashboard route does render correctly once the session/context is present; the earlier invisible/redirected state was an access-context issue rather than proof that the page could not render
+- An onboarding modal is displayed over the dashboard for users without an organization, which explains part of the first screenshot's obscured view
+- The underlying dashboard shell is still visually undercooked: hierarchy is weak, surfaces are overly flat, borders dominate more than depth, and key information blocks read as wireframe-like rather than production-finished
+- The metric row, quick actions, communication center, pipeline overview, and surrounding panels still lack the premium visual differentiation, stronger spacing rhythm, and polished semantic emphasis expected from the finish-strong target
+- Overall, the dashboard is functional but should still be classified as materially unfinished from a UI maturity perspective
+
+**Planning consequence**
+
+- CRM7 dashboard work remains an active completion lane, not a closed validation lane
+- The next CRM7 pass should focus specifically on dashboard information hierarchy, surface depth, hero treatment, metric emphasis, and navigation/dashboard cohesion before final cross-surface QA is considered meaningful
+- Cross-app orchestration remains unchanged: BSU, Conduit, R80.3, Braden, and Infra continue in parallel and should stay explicitly visible in the master plan
+
+### 5.14 CRM7 Dashboard Color Token Completion + Dead Code Purge — 2026-03-10 (cont.)
 
 **Work completed (commit `cdae0fc`)**
 
@@ -458,11 +498,53 @@ Files converted across the full audit:
 
 **Orchestration status after this pass**
 
-- CRM7 dashboard: ✅ Color tokens complete
 - CRM7 broad page audit: ✅ COMPLETE — all pages converted to CSS custom property vars
 - CRM7 shell + auth: ✅ Deprecated vars replaced, theme modes added to `theme.css`
 - Cross-app shell: ✅ BSU, conduit, R80.3, braden — verified
-- Next CRM7 lane: Visual QA signoff → resume Sprint A (GTO Core Workflows)
+- CRM7 dashboard: still open — finish quality, authenticated QA, and sync/runtime cleanup remain
+- Next CRM7 lane: finish dashboard polish → fix sync mismatches → run authenticated visual QA
+
+### 5.15 CRM7 Theme Architecture Reconciliation + Dashboard Finish Pass — 2026-03-10
+
+The next CRM7 pass moved upstream from surface polish into the theme architecture itself after runtime/browser audit findings showed that the D2C Neon Electric spec tokens were defined but not actually driving the rendered UI consistently.
+
+**Work completed**
+
+- `src/styles/theme.css`
+  - rogue CRM7 runtime color values were reconciled back to the D2C spec
+  - light/dark semantic background, text, border, status, glow, and shadow tokens were realigned
+  - missing `--status-*`, `--glow-strength`, and `--shadow-strength` semantics were restored as active values
+- `src/index.css`
+  - the shadcn bridge layer was corrected to read from the intended semantic surfaces and text colors rather than the stale accent/runtime mapping
+  - chart token mappings were realigned to the D2C palette
+- `src/components/ui/card.tsx`
+  - dead classes (`bg-light-bg-secondary`, `shadow-card-light`, etc.) were removed in favor of live `bg-card`, `text-card-foreground`, `shadow-light-md`, and `dark:shadow-dark-md`
+- `tailwind.config.js`
+  - light/dark/status color families and missing shadow/glow utilities were restored to the active config
+- feature-level off-spec color drift was reduced in:
+  - `src/config/tagColors.ts`
+  - `src/pages/contacts/index.tsx`
+  - `src/lib/fundingWorkflow.ts`
+- dashboard finish work continued in `src/pages/Dashboard.tsx`:
+  - stronger hero hierarchy
+  - restrained command-center summary chips
+  - richer quick-action cards
+  - upgraded communication, pipeline, and recent-activity treatments
+  - more intentional panel chrome and metadata
+
+**Verification**
+
+- `pnpm typecheck` — passed in `crm7`
+- `pnpm build` — passed in `crm7`
+
+**Updated orchestration implication**
+
+- The highest-risk CRM7 visual issue is no longer token-layer drift; it is now finish quality on the dashboard plus the remaining sync/runtime blockers
+- CRM7 should therefore stay in an active dashboard-completion lane, not be described as validation-only
+- The next execution order is:
+  - finish dashboard polish
+  - fix sync schema/query mismatches and improve observability
+  - run authenticated browser QA against the corrected theme/dashboard layer
 
 ---
 

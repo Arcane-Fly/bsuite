@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 4.10W
+**Version:** 4.11W
 **Date:** 2026-02-27
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-10
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
@@ -202,6 +202,8 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ **Launch-Ready Phase 4** — Cmd+K command palette with permission filtering + 6 tests, activity timeline deferred (no activities table). AI shortcut moved to Cmd+J. 2 red-team rounds: 30 issues found, 12 fixed, rest deferred low-risk. (Tasks 15-16)
 - ✅ **PWA** — `vite-plugin-pwa`, service worker, manifest, and `usePWA` hook are present in repo ([prompt](./claude-code-prompts.md#prompt-1))
 - ✅ **Kanban pipeline board** — `pages/pipeline/kanban.tsx` and drag-and-drop board components are present in repo
+- 🔶 **Theme architecture reconciliation + dashboard finish pass** — D2C token/source-layer correction landed across `src/styles/theme.css`, `src/index.css`, `src/components/ui/card.tsx`, `tailwind.config.js`, and `src/pages/Dashboard.tsx`; `pnpm typecheck` + `pnpm build` passed, but authenticated dashboard QA and finish quality remain open
+- 🔶 **Sync schema/query alignment** — sync startup timing noise was reduced earlier, but local SQLite ↔ Supabase schema mismatches remain an active runtime blocker for a clean CRM7 finish pass
 - 🔲 Tier 3-4 page wiring — financial, compliance, field officers, WHS, comms, reports (~15 more stores)
 - 🔲 AI plugin system + workflow automation ([plan](./plans/20260227-ai-assistant-plugin-system-plan-v1.00W.md))
 - 🔲 Xero integration (OAuth2 + 6 AI tools) + Google Calendar (OAuth2 + 4 AI tools)
@@ -363,30 +365,32 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 13 | `@bsuite/charge-calc` shared package (3 engines → 1) | R80↔CRM7 | 1w | `r80-crm7-shared-calc-engine` plan |
 | 14 | Enterprise Agreement + BOAT validation | CRM7 | 1w | Claude plans `warm-moseying-liskov` + `velvety-giggling-curry` |
 | 15 | Bulk operations and remaining admin data tooling | crm7 | 1w | Feature gap §2A-2D |
-| 16 | Cross-project UX (AI icon, @dnd-kit Conduit, view toggles) | multi | 3d | Claude plan `prancy-seeking-dijkstra` + `cross-project-ux-improvements` |
-| 17 | Cross-app notifications (Supabase Realtime) | bsu | 3d | Prompt 7 |
-| 18 | CRM7 Tier 3-4 wiring (financial, compliance, WHS, comms, reports) | crm7 | 2w | Feature gap §3 Tier 3-4 |
-| 19 | AI cost tracking per tenant | crm7/bsu | 2d | — |
-| 20 | Document storage QA fixes | crm7 | 2d | [report](./archive/crm7/20260226-document-storage-qa-report.md) |
-| 21 | Doc cleanup (22 missing READMEs, broken links) | all | 1d | Claude plan `prancy-seeking-dijkstra` |
-| 22 | Braden visual customization | braden | 1w | — |
-| 23 | R80.3 PDF export improvements | R80.3 | 2d | — |
-| 24 | Test coverage push (70% target all projects) | all | ongoing | — |
+| 16 | CRM7 dashboard finish pass + authenticated visual QA | crm7 | 3d | CRM7 broad UI refresh + 2026-03-10 audit reconciliation |
+| 17 | CRM7 sync schema/query mismatch remediation | crm7 | 2d | Active sync/runtime blocker from dashboard QA |
+| 18 | Cross-project UX (AI icon, @dnd-kit Conduit, view toggles) | multi | 3d | Claude plan `prancy-seeking-dijkstra` + `cross-project-ux-improvements` |
+| 19 | Cross-app notifications (Supabase Realtime) | bsu | 3d | Prompt 7 |
+| 20 | CRM7 Tier 3-4 wiring (financial, compliance, WHS, comms, reports) | crm7 | 2w | Feature gap §3 Tier 3-4 |
+| 21 | AI cost tracking per tenant | crm7/bsu | 2d | — |
+| 22 | Document storage QA fixes | crm7 | 2d | [report](./archive/crm7/20260226-document-storage-qa-report.md) |
+| 23 | Doc cleanup (22 missing READMEs, broken links) | all | 1d | Claude plan `prancy-seeking-dijkstra` |
+| 24 | Braden visual customization | braden | 1w | — |
+| 25 | R80.3 PDF export improvements | R80.3 | 2d | — |
+| 26 | Test coverage push (70% target all projects) | all | ongoing | — |
 
 ### P3 — Future
 
 | # | Task | Project | Effort | Source |
 |---|------|---------|--------|--------|
-| 25 | AI plugin system + Xero + Calendar + workflow automation | crm7 | 3w | Prompt 5 |
-| 26 | BSuite Mobile native (Expo → Google Play) | new `mobile/` | 2w | Prompt 1B |
-| 27 | Org → Tenant hierarchy | bsu/crm7 | 1w | Feature gap §1C |
-| 28 | BSU Idea Hub | bsu | 3d | Feature gap §5 |
-| 29 | Field-level parity against GTO evidence requirements | crm7 | 2d | Feature gap §2F |
-| 30 | Demo seed data | all | 2d | Feature gap §6 |
-| 31 | Compliance automation workflows | crm7 | 1w | — |
-| 32 | Advanced reporting with predictive analytics | crm7 | 2w | — |
-| 33 | BSU usage analytics dashboard | bsu | 3d | — |
-| 34 | Biped marketplace integration (P4 deferred) | braden/bsu | 2w | Deferred until core 5 are best-in-class |
+| 27 | AI plugin system + Xero + Calendar + workflow automation | crm7 | 3w | Prompt 5 |
+| 28 | BSuite Mobile native (Expo → Google Play) | new `mobile/` | 2w | Prompt 1B |
+| 29 | Org → Tenant hierarchy | bsu/crm7 | 1w | Feature gap §1C |
+| 30 | BSU Idea Hub | bsu | 3d | Feature gap §5 |
+| 31 | Field-level parity against GTO evidence requirements | crm7 | 2d | Feature gap §2F |
+| 32 | Demo seed data | all | 2d | Feature gap §6 |
+| 33 | Compliance automation workflows | crm7 | 1w | — |
+| 34 | Advanced reporting with predictive analytics | crm7 | 2w | — |
+| 35 | BSU usage analytics dashboard | bsu | 3d | — |
+| 36 | Biped marketplace integration (P4 deferred) | braden/bsu | 2w | Deferred until core 5 are best-in-class |
 
 ---
 
