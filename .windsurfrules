@@ -75,6 +75,20 @@ CRM7 and Conduit use Vercel AI Gateway for model routing. **Do NOT revert these 
 - Conventional commits: `type(scope): description`
 - @bsuite/* packages are on npm — NEVER use `workspace:*` in consumer projects
 
+### pnpm Lockfile Generation
+
+**NEVER run `pnpm install` from within the bsuite directory tree** when updating a project's lockfile. The bsuite `pnpm-workspace.yaml` (scoped to `packages/*`) causes pnpm to embed workspace-relative paths (`..`) into the lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE`.
+
+Always regenerate from an isolated directory **outside** the bsuite tree:
+
+```bash
+mkdir ~/crm7_lockgen && cp crm7/package.json ~/crm7_lockgen/
+cd ~/crm7_lockgen && pnpm install
+cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
+```
+
+Correct lockfile: `.:` as only importer. Broken lockfile: `..` or `../packages/*` as importers.
+
 ## Google Cloud Authentication
 
 **CRITICAL**: All Google API access MUST use Workload Identity Federation (WIF). Static service account keys are **BANNED**.

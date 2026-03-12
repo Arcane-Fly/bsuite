@@ -139,9 +139,18 @@ BSU, CRM7, R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7
 1. **NEVER use `workspace:*`** for `@bsuite/*` dependencies in consumer projects. Always use the npm version (e.g., `"^0.1.0"`).
 2. **NEVER use `file:../packages/*`** — this also fails on Vercel since the parent directory doesn't exist.
 3. **When modifying a shared package**: build → bump version → `npm publish --access public` → update consumers → `pnpm install`.
-4. **`pnpm-workspace.yaml`** in submodule repos references `'../packages/*'` for **local development only**. This does NOT work on Vercel.
+4. **`pnpm-workspace.yaml`** lives only at the bsuite root (scoped to `packages/*`). Individual project repos deployed on Vercel have no workspace config — they are fully standalone.
 5. **Version pinning**: `packageManager: "pnpm@10.30.3"` and `.node-version: 24` — do not change without coordinating across all projects.
 6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
+7. **Lockfile generation**: NEVER run `pnpm install` from within the bsuite directory tree when updating a project's lockfile. pnpm embeds workspace-relative paths (`..`) into the lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE`. Always regenerate from outside the bsuite tree:
+
+```bash
+mkdir ~/crm7_lockgen && cp crm7/package.json ~/crm7_lockgen/
+cd ~/crm7_lockgen && pnpm install
+cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
+```
+
+Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..` or `../packages/*`.
 
 ---
 
