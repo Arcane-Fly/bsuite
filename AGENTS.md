@@ -43,6 +43,23 @@ pnpm typecheck  # Type checking
 
 Environment variables: copy `.env.example` to `.env.local` and fill in Supabase credentials.
 
+### pnpm Lockfile Generation
+
+**CRITICAL**: Never run `pnpm install` from within the bsuite directory tree when updating a project's lockfile. The bsuite `pnpm-workspace.yaml` (scoped to `packages/*`) causes pnpm to embed workspace-relative paths (`..`) into the lockfile. Vercel clones only the individual project repo — `..` paths don't exist there, causing `ERR_PNPM_OUTDATED_LOCKFILE`.
+
+Always regenerate lockfiles from an isolated directory **outside** the bsuite tree:
+
+```bash
+# Example for crm7 — same pattern for all projects
+mkdir ~/crm7_lockgen
+cp crm7/package.json ~/crm7_lockgen/
+cd ~/crm7_lockgen && pnpm install
+cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml
+rm -rf ~/crm7_lockgen
+```
+
+The correct lockfile has `.:` as the only importer. A broken workspace lockfile will have `..` or `../packages/*` as importers.
+
 ---
 
 ## Quality Standards
