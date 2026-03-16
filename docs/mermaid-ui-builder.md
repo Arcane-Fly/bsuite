@@ -26,6 +26,7 @@ The Interactive Mermaid Diagrams component allows developers to:
 - Preview changes in real-time
 
 Implementation uses:
+
 - [mermaid.js](https://mermaid.js.org/) for diagram rendering
 - Custom React components for interactive editing
 - Two-way binding between diagram code and visual representation
@@ -49,6 +50,7 @@ The Entity-Form Generator automatically creates CRUD forms based on database sch
 - **Supports both visual form building and code integration**
 
 Implementation uses:
+
 - Schema-driven form generation
 - Visual form customization interface
 - Custom form builders for Supabase integration
@@ -67,6 +69,7 @@ graph LR
 #### Visual Form Building
 
 The Entity-Form Generator includes a visual interface where users can:
+
 - Select entity types from a dropdown
 - Customize field labels, types, and order
 - Hide/show specific fields
@@ -81,7 +84,7 @@ For developers, the components can be imported and used in code:
 
 ```tsx
 // Import components
-import { 
+import {
   EntityForm,
   CustomerForm,
   EmployeeForm,
@@ -115,6 +118,7 @@ The Template Library provides pre-built templates for common pages and component
 - Navigation structures
 
 Implementation uses:
+
 - Component categorization system
 - Preview thumbnails
 - Drag-and-drop application
@@ -137,6 +141,7 @@ The Quick Action System implements the "Add New" functionality through:
 - Integration with the navigation system's action buttons
 
 Implementation uses:
+
 - Context providers for awareness of current section
 - Modal system for form display
 - Animation effects for smooth transitions
@@ -159,6 +164,7 @@ The Visual Workflow Builder allows defining:
 - Conditional UI rendering
 
 Implementation uses:
+
 - [React Flow](https://reactflow.dev/) for node-based workflow editing
 - State machine concepts for workflow definition
 - Visual feedback for active states
@@ -208,23 +214,38 @@ graph TD
     A -->|Contains| D[Template Library]
     A -->|Contains| E[Quick Action System]
     A -->|Contains| F[Visual Workflow Builder]
-    
+
     B -->|Generates| G[UI Components]
     C -->|Creates| H[CRUD Forms]
     D -->|Provides| I[Page Templates]
     E -->|Enables| J[Add New Functionality]
     F -->|Defines| K[Process Flows]
-    
+
     G -->|Stored in| L[Supabase Database]
     H -->|Interacts with| L
     I -->|Saved to| L
     J -->|Updates| L
     K -->|Configures| G
-    
+
     M[User Role Check] -->|Controls Access| A
     N[Revision History] <-->|Tracks Changes| L
     O[Profile Page] -->|Access Point| A
 ```
+
+## Dashboard Canvas Alignment (March 2026)
+
+The CRM7 dashboard edit mode is the **first production surface** of this builder. Decisions made there carry forward:
+
+| Dashboard (current) | UI Builder (future) |
+|---|---|
+| `layoutCols` + `noCompactor` free canvas | Page builder canvas — same model |
+| `widgetDefinitions` registry in `Dashboard.tsx` | Template Library component registry |
+| `useScopedPreference('page:dashboard_grid_layouts')` | Will be replaced by `pages` + `page_revisions` Supabase tables |
+| Edit mode gated to `isDeveloper \|\| can('manage_system')` | Builder access gated to org admin + developer roles |
+
+Do not redesign the dashboard drag/layout system independently — any changes must align with the builder architecture above.
+
+---
 
 ## Implementation Plan
 
