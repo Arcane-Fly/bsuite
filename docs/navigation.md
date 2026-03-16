@@ -1,3 +1,5 @@
+> **ARCHIVED** — Pre-BSuite donor document (2024-05-18). Navigation structure has been superseded by `docs/navigation-guide.md` and per-project routing. Do not treat as authoritative.
+
 # Navigation Structure
 
 ## Overview

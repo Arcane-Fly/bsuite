@@ -1,6 +1,8 @@
+> **ARCHIVED** — Pre-BSuite donor document (2024-02-20). Requirements have been superseded by `docs/00-master-roadmap.md` and `docs/20260301-crm7-rbac-matrix-v1.00W.md`. Do not treat as authoritative.
+
 # Requirements Traceability Matrix
 
-_Last Modified: 2024-02-20_  
+_Last Modified: 2024-02-20_
 _Version: 1.0.0_
 
 ## Core Requirements

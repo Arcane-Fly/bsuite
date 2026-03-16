@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 4.11W
+**Version:** 5.00W
 **Date:** 2026-02-27
-**Last Updated:** 2026-03-10
+**Last Updated:** 2026-03-16
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
@@ -339,7 +339,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 | # | Task | Project | Effort | Notes |
 |---|------|---------|--------|-------|
-| 0 | Canonical roadmap and documentation normalization | all | 1d | ✅ Completed — master roadmap governance added, stale doc surfaces demoted, donor naming normalized |
+| 0 | Canonical roadmap and documentation normalization | all | 1d | ✅ Completed — master roadmap governance added, stale doc surfaces demoted, donor naming normalized. 2026-03-16: 20260228 page inventory + rbac matrix archived, matrix.md/navigation.md ARCHIVED headers added, gap report produced at `docs/20260316-bsuite-gap-report-v1.00W.md` |
 | 1 | ~~Fix Azure AD OAuth~~ | crm7 | 15m | ✅ **Done** — `xms_edov` + `email` optional claims added to Azure manifest |
 | 2 | ~~Create `ai_sessions` + `ai_messages` tables~~ | crm7 | — | ✅ **Already exist** in Supabase |
 | 3 | ~~Create 4 platform admin tables~~ | bsu | — | ✅ **Already exist** in Supabase |
@@ -365,7 +365,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 13 | `@bsuite/charge-calc` shared package (3 engines → 1) | R80↔CRM7 | 1w | `r80-crm7-shared-calc-engine` plan |
 | 14 | Enterprise Agreement + BOAT validation | CRM7 | 1w | Claude plans `warm-moseying-liskov` + `velvety-giggling-curry` |
 | 15 | Bulk operations and remaining admin data tooling | crm7 | 1w | Feature gap §2A-2D |
-| 16 | CRM7 dashboard finish pass + authenticated visual QA | crm7 | 3d | CRM7 broad UI refresh + 2026-03-10 audit reconciliation |
+| 16 | ~~CRM7 dashboard layout system~~ — free-canvas edit mode, configurable columns 1-24, bounded drag, responsive view-mode reflow, persist layoutCols | crm7 | ✅ Done | 2026-03-16 |
 | 17 | CRM7 sync schema/query mismatch remediation | crm7 | 2d | Active sync/runtime blocker from dashboard QA |
 | 18 | Cross-project UX (AI icon, @dnd-kit Conduit, view toggles) | multi | 3d | Claude plan `prancy-seeking-dijkstra` + `cross-project-ux-improvements` |
 | 19 | Cross-app notifications (Supabase Realtime) | bsu | 3d | Prompt 7 |
@@ -433,6 +433,8 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | Pricing Strategy | [`docs/pricing-strategy.md`](./pricing-strategy.md) |
 | D2C Theme Specification | [`docs/20260228-d2c-theme-specification-v1.00W.md`](./20260228-d2c-theme-specification-v1.00W.md) |
 | AI Feature Map | [`docs/ai/features/20260227-feature-map-complete-v1.0.0.md`](./ai/features/20260227-feature-map-complete-v1.0.0.md) |
+| BSuite Gap Report (2026-03-16) | [`docs/20260316-bsuite-gap-report-v1.00W.md`](./20260316-bsuite-gap-report-v1.00W.md) |
+| BSuite Completeness Matrix (2026-03-09) | [`docs/20260309-bsuite-completeness-matrix-v1.00W.md`](./20260309-bsuite-completeness-matrix-v1.00W.md) |
 
 ### Archived Roadmaps
 
