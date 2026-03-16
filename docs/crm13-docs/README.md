@@ -1,3 +1,11 @@
+> ⚠️ **ARCHIVED — CRM13 HISTORICAL REFERENCE ONLY**
+>
+> The files in this directory are imported from the CRM13 donor project and are **not part of the BSuite codebase**. They are retained as historical reference only and are not actively maintained. Do not use these files as current documentation.
+>
+> Archived: 2026-03-16
+
+---
+
 # CRM13 Donor Documentation Index
 
 > **[IMPORTED FROM CRM13]** — Reference material from the CRM13 predecessor project.

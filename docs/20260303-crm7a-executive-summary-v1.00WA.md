@@ -1,5 +1,9 @@
 # CRM7A Repository - Executive Summary
 
+> **ARCHIVED** — Historical reference, not actively maintained. Archived 2026-03-16 as part of documentation compliance remediation.
+
+---
+
 ## Quick Assessment
 
 **Arcane-Fly/CRM7A** is a **young, experimental CRM dashboard** that appears to be a technology spike by a shared contributor (GaryOcean). It's NOT a fork of current CRM7 and NOT production-ready.

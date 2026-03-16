@@ -14,7 +14,7 @@
 
 ### Canonical Sources
 
-- **Planning and delivery status:** this file (`docs/00-master-roadmap.md`)
+- **Planning and delivery status:** this file (`docs/20260227-bsuite-master-roadmap-v5.00W.md`)
 - **Authentication and session topology:** [`docs/AUTH-MAP.md`](./AUTH-MAP.md)
 - **Engineering standards and quality gates:** [`docs/20260227-contributing-standards-guide-v1.00W.md`](./20260227-contributing-standards-guide-v1.00W.md) and root `AGENTS.md`
 - **Implementation truth:** active repo files such as `package.json`, `vercel.json`, migrations, deployed function inventories, and tests
@@ -33,6 +33,19 @@
 - `Apprentice Tracker` donor material normalizes into **crm7** or **R80.3** unless a current active repo exists
 - `R80 calculator` and `R80.3 Remediated` normalize to **R80.3**
 - `ATS`, recruitment, and talent-pipeline donor material normalize to **conduit**
+
+---
+
+## Documentation Compliance
+
+**Audit Date:** 2026-03-16 | **Reference:** [`docs/20260316-docs-compliance-audit-v1.00W.md`](./20260316-docs-compliance-audit-v1.00W.md)
+
+- 375 .md files audited across all 6 BSuite projects
+- ~80 files compliant before remediation (21%) → remediation targets 100%
+- Windsurf plans consolidated into `docs/plans/`
+- Claude memory research files ported to `docs/`
+- crm13-docs labeled as historical reference only
+- All project-level docs normalized to `YYYYMMDD-descriptive-name-vMAJOR.MINOR[STATUS].md`
 
 ---
 
@@ -328,6 +341,33 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Unified settings management
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
+
+---
+
+## Recently Completed (as of 2026-03-16)
+
+- ✅ TGA edge function deployed to Supabase
+- ✅ 7 STA adapters + RAM/USI/ADMS Settings UI complete
+- ✅ Launch-Ready Phase 2: empty states across CRM7
+- ✅ caseNoteStore + host_preferred_qualifications migration
+- ✅ Fair Work compliance: timesheets (reg 3.34), disciplinary/PIP/support person, termination (reg 3.40), leave NES §88/§90
+- ✅ God file refactor (issue #92 closed)
+- ✅ R80.3 Milestones 2–3 committed (unified upgrade branch merged)
+- ✅ Document lifecycle system: 8 phases complete, TGA edge function deployed, 2,382 tests passing
+- ✅ RAM M2M auth wired: credential decrypted, Settings UI complete (ABRD:21662181740_crm7, valid to 2028-03-03)
+- ✅ WIF migration complete (static SA keys → Workload Identity Federation)
+- ✅ P0/P1 sweep: Conduit candidate docs tab, BSU Idea Hub, Braden GA4 env var migration
+- ✅ Documentation compliance remediation: 375 .md files normalized to YYYYMMDD convention
+
+## In Progress / Pending
+
+- ⚠️ Item 9: Test coverage — fairwork + auth tests complete, 16 pre-existing failures in AI components remain
+- ⚠️ Dashboard polish: hero signals, bento grid, ai_sessions/ai_messages tables, DND accessibility (KeyboardSensor)
+- ⚠️ Stripe end-to-end verification (checkout → webhook → DB unverified)
+- ⚠️ Cross-app notifications (Supabase Realtime pub/sub)
+- ⚠️ BOOT compliance engine (C8-tier, competitive differentiator — foundU is only competitor with any BOOT support)
+- ⚠️ @bsuite/charge-calc full convergence (3 independent calc engines → 1 shared package)
+- ⚠️ Xero payroll integration (5 major TODO blocks in CRM7)
 
 ---
 

@@ -1,5 +1,9 @@
 # CRM7A Repository Research Summary
 
+> **ARCHIVED** — Historical reference, not actively maintained. Archived 2026-03-16 as part of documentation compliance remediation.
+
+---
+
 ## Repository Metadata
 - **Owner**: Arcane-Fly
 - **Repository**: CRM7A
