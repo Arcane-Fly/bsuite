@@ -1,10 +1,27 @@
 # BSuite Gap Report
 
-**Version:** 1.00W
-**Date:** 2026-03-16
+**Version:** 1.01W
+**Date:** 2026-03-16 (revised after codebase audit)
 **Status:** Working
 **Scope:** All 5 BSuite projects — CRM7, Conduit, BSU, Braden, R80.3
-**Source inputs:** `docs/20260309-bsuite-completeness-matrix-v1.00W.md`, `docs/00-master-roadmap.md`, `crm7/docs/20260228-crm7-feature-gap-audit-v1.00W.md`, `crm7/docs/20260309-crm7-gto-owner-flow-completeness-matrix-v1.00W.md`, `~/.windsurf/plans/bsuite-reconciliation-07fa37.md`, dashboard regression audit (2026-03-16)
+**Source inputs:** `docs/20260309-bsuite-completeness-matrix-v1.00W.md`, `docs/00-master-roadmap.md`, `crm7/docs/20260228-crm7-feature-gap-audit-v1.00W.md`, `crm7/docs/20260309-crm7-gto-owner-flow-completeness-matrix-v1.00W.md`, `~/.windsurf/plans/bsuite-reconciliation-07fa37.md`, direct codebase audit (2026-03-16 session 2)
+
+---
+
+## Audit Corrections (v1.00W → v1.01W)
+
+Direct codebase inspection in session 2 (2026-03-16) revealed the following v1.00W items were **incorrect**:
+
+| v1.00W Claim | Actual State |
+|---|---|
+| P0-2: Dead route `/contacts/:id` | ✅ EXISTS — `src/pages/contacts/[id]/index.tsx` + wired in `App.tsx` |
+| P0-3: Dead route `/contacts/:id/edit` | ✅ EXISTS — `src/pages/contacts/[id]/edit.tsx` + wired |
+| P0-4: Dead route `/placements/:id` | ✅ EXISTS — `src/pages/placements/[id].tsx` + wired |
+| P0-5: Dead route `/placements/create` | ✅ EXISTS — `src/pages/placements/create.tsx` + wired |
+| P1-1: EntitySelectors missing | ✅ EXISTS — 6 selectors in `src/components/entity/selectors/` |
+| P1-2: DataContextSimple on active pages | ✅ Only in demo components (`demos/OneShotEntryDemo.tsx`); no production pages affected |
+| P1-3: Training plan sign-off missing | ✅ EXISTS — `src/pages/contracts/training/e-signatures.tsx` + `signatureQueries.ts` |
+| P1-4: Host employer agreement missing | ✅ EXISTS — `src/stores/hostAgreementStore.ts` + `src/pages/hosts/agreements/index.tsx` |
 
 ---
 
@@ -26,11 +43,7 @@
 | # | Issue | Location | Notes |
 |---|-------|----------|-------|
 | P0-1 | **Awards section `createEntityStore` queries wrong columns** — `award_classifications` always returns empty | `src/stores/useAwardStore.ts` | Column name mismatch between store query and actual DB schema; classifications UI shows nothing |
-| P0-2 | **Dead route: `/contacts/:id`** — no detail page exists | `src/pages/contacts/` | Link appears in multiple list views; clicking it 404s in-app |
-| P0-3 | **Dead route: `/contacts/:id/edit`** — no edit page exists | `src/pages/contacts/` | Linked from contact cards |
-| P0-4 | **Dead route: `/placements/:id`** | `src/pages/placements/` | Placement detail not implemented |
-| P0-5 | **Dead route: `/placements/create`** | `src/pages/placements/` | Create flow missing |
-| P0-6 | **CRM7 sync schema/query mismatch** — some sync queries reference columns that no longer exist after migration drift | `src/lib/sync/` | Active runtime blocker; surfaces as silent empty data or console errors |
+| P0-6 | **CRM7 sync schema/query mismatch** — some sync queries reference columns that no longer exist after migration drift | `src/lib/sync-service.ts` | Active runtime blocker; surfaces as silent empty data or console errors |
 
 ---
 
@@ -40,23 +53,19 @@
 
 | # | Feature | Status | Notes |
 |---|---------|--------|-------|
-| P1-1 | **EntitySelector components** — architecture specifies 6 shared selectors; none confirmed built | `src/components/entity-selectors/` does not exist | Multiple forms fall back to plain `<select>` with no search/async |
-| P1-2 | **DataContextSimple still wired on some pages** — in-memory seed data instead of Supabase | Scattered across older pages | Root cause: pages migrated from donor but never wired to real stores |
-| P1-3 | **Training plan co-development + sign-off evidence** — no workflow or page | Training plan module | GTO compliance requires documented co-development; currently no UI surface |
-| P1-4 | **Host employer agreement sign-off** — no route or workflow | Host employer module | Agreement record exists in DB (`host_agreements` table); no page to create/sign/track |
 | P1-5 | **GTO evidence field-level parity** — 198-entity inventory not fully mapped to DB + page fields | All GTO owner flows | `crm7/docs/20260309-crm7-gto-owner-flow-completeness-matrix-v1.00W.md` documents current gaps |
 
 ### Conduit
 
 | # | Feature | Status | Notes |
 |---|---------|--------|-------|
-| P1-6 | **Candidate documents UI** — no dashboard documents route | `src/app/(dashboard)/candidates/[id]/documents` does not exist | Mentioned in completeness matrix as Missing; blocking candidate file management |
+| P1-6 | **Candidate documents tab** | ✅ **Implemented 2026-03-16** — `candidates/[id]/documents/` route + tab nav | `r7_documents` table (entity_type='candidate') |
 
 ### business-suite-unified
 
 | # | Feature | Status | Notes |
 |---|---------|--------|-------|
-| P1-7 | **Idea Hub** — no implementation found | Not started | High-value feature; BSU roadmap item |
+| P1-7 | **Idea Hub** | ✅ **Implemented 2026-03-16** — `/ideas` route + nav entry | Uses `ideas` DB table |
 | P1-8 | **Cross-app notifications (Supabase Realtime)** — notification center UI + preferences incomplete | Scaffolding only | `NotificationPreferences.tsx` exists but pub/sub wiring unconfirmed |
 
 ---
@@ -114,7 +123,7 @@ These entities are defined in the 198-entity inventory (`docs/plans/CRM7_entity_
 
 | Entity Group | DB Tables Present | UI Surface | Gap |
 |---|---|---|---|
-| **Modern award / Pay data (42)** | `award_rates`, `award_rate_cache` | Awards page (broken — P0-1) | Full penalty/allowance/classification hierarchy UI |
+| **Modern award / Pay data (42)** | `award_rates`, `award_rate_cache` | Awards page (broken — P0-1: wrong column query) | Full penalty/allowance/classification hierarchy UI |
 | **Training / Progress (3)** | `training_plan_reviews` | No verified page | Review creation + sign-off workflow |
 | **VET Assessment (3)** | `vet_assessments` | Partial | Assessment result recording against unit outcomes |
 | **Funding / Administration (5)** | `funding_claims`, `funding_sources` | Funding claims page (partial) | CTF/AASN/ASIP-specific field coverage |
@@ -156,15 +165,13 @@ These entities are defined in the 198-entity inventory (`docs/plans/CRM7_entity_
 ## Recommended Execution Order
 
 1. **P0-1** Fix `useAwardStore` column query — single-line fix, unblocks Awards UI
-2. **P0-2/3/4/5** Add missing `/contacts/:id`, `/contacts/:id/edit`, `/placements/:id`, `/placements/create` routes
-3. **P0-6** Audit sync queries against current migrations; fix column mismatches
-4. **P1-1** Build EntitySelector components (6 — contact, host, qualification, unit, RTO, apprentice)
-5. **P1-2** Replace `DataContextSimple` pages with real Supabase store wiring
-6. **P1-6** Add Conduit candidate documents route
-7. **P1-7** BSU Idea Hub
-8. **P1-3/4** Training plan sign-off + host employer agreement workflows
-9. **P2-9** BSU Stripe end-to-end verification
-10. **P2-13** Braden GA4 real measurement ID
+2. **P0-6** Audit sync queries in `sync-service.ts` against current migrations; fix column mismatches
+3. ~~**P1-6**~~ ✅ Conduit candidate documents route — **done 2026-03-16**
+4. ~~**P1-7**~~ ✅ BSU Idea Hub — **done 2026-03-16**
+5. ~~**P2-13**~~ ✅ Braden GA4 env var — **done 2026-03-16**
+6. **P1-5** GTO evidence field-level parity (198-entity inventory)
+7. **P2-9** BSU Stripe end-to-end verification
+8. **P1-8** BSU cross-app notifications (Supabase Realtime pub/sub)
 
 ---
 
