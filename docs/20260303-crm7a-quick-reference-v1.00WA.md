@@ -1,5 +1,9 @@
 # CRM7A Quick Reference Card
 
+> **ARCHIVED** — Historical reference, not actively maintained. Archived 2026-03-16 as part of documentation compliance remediation.
+
+---
+
 ## Repository Info
 - **URL**: https://github.com/Arcane-Fly/CRM7A
 - **Status**: Private, 10 commits, 0 stars, created 2025-08-15

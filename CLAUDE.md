@@ -78,7 +78,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 
 ### Authentication & OAuth
 
-Full details in `docs/AUTH-MAP.md`. Key facts:
+Full details in `docs/20260227-auth-map-reference-v1.00W.md`. Key facts:
 
 **Supabase Project:** `tuybltdrdefjblnplpqo`
 
@@ -158,8 +158,8 @@ Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..`
 
 - `docs/20260227-contributing-standards-guide-v1.00W.md` — full quality standards
 - `docs/20260228-d2c-theme-specification-v1.00W.md` — active D2C theme specification
-- `docs/DRY-ONE-SHOT-ARCHITECTURE.md` — entity ownership and DRY patterns
-- `docs/AUTH-MAP.md` — authentication architecture
+- `docs/20260227-dry-one-shot-architecture-v1.00W.md` — entity ownership and DRY patterns
+- `docs/20260227-auth-map-reference-v1.00W.md` — authentication architecture
 
 ## Per-Project Notes
 
