@@ -112,7 +112,7 @@ Full spec in `docs/20260228-d2c-theme-specification-v1.00W.md`. Key colors:
 | Electric Coral | `#ff4757` | Alerts, destructive |
 | Electric Yellow | `#fdcb6e` | Warnings |
 
-Dark mode: deep navy `#0a0e1a`. Light mode: off-white `#fefefe`.
+Dark mode: deep navy `#0a0e1a`. Light mode: off-white `#f2f2f2`.
 Typography: Inter (body), JetBrains Mono (code).
 
 ### Corporate Branding (braden only)
