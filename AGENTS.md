@@ -402,3 +402,29 @@ When multiple AI agents work simultaneously:
 - **All projects**: Fixed Tailwind v4 deprecation (`flex-shrink-0` → `shrink-0`)
 - **BSU**: Removed stale Auth0 references from `.env.example`
 - **braden**: Fixed CONTRIBUTING.md (was referencing yarn, now correctly pnpm)
+
+---
+
+## Persistent Memory Protocol
+
+This project uses the QIG Memory API for cross-session continuity.
+
+**At session start — run these before any work:**
+
+```bash
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_session_latest | jq -r '.content'
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_pending_actions | jq -r '.content'
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_decisions | jq -r '.content'
+```
+
+**Write immediately after every commit, decision, or error fix — do NOT wait for session end:**
+
+```bash
+curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_session_latest \
+  -H "Content-Type: application/json" \
+  -d '{"category":"session_summary","content":"[summary]","updated":"[ISO timestamp]"}'
+```
+
+Key naming: all bsuite keys prefixed `bsuite_`. Session keys: `bsuite_session_YYYYMMDD[a-z]`. Update `bsuite_session_latest` pointer after every write.
+
+See `MEMORY_PROTOCOL.md` at project root for full protocol.
