@@ -310,7 +310,7 @@ If Phase B takes longer than expected, a QUICK interim option exists:
 - Error: Electric Coral #ff4757
 - Warning: Electric Yellow #fdcb6e
 - Dark background: Deep Navy #0a0e1a
-- Light background: Off-white #fefefe
+- Light background: Off-white #f2f2f2
 - Typography: Inter (use expo-font for Phase B)
 
 ## Technical Standards

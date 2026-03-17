@@ -63,6 +63,68 @@ Linear: #ff4757 → #ff7675 → #fdcb6e → #00cec9 → #a29bfe
 
 ---
 
+## Color Space: OKLCH
+
+OKLCH is a perceptually uniform color space that produces smoother gradients and more accurate contrast ratios than sRGB/hex. Conduit (Tailwind v4) uses `@theme` blocks with OKLCH values directly. Vite-based projects (CRM7, BSU, R80.3) continue to use hex CSS vars at runtime — the OKLCH values below are the canonical equivalents for reference and for any future migration.
+
+> **Note:** Values are approximate. Verify at [oklch.com](https://oklch.com) before use in production.
+
+### Neon Electric Colors — OKLCH Equivalents
+
+| Color | Hex | OKLCH |
+|-------|-----|-------|
+| Electric Blue | `#2563eb` | `oklch(0.45 0.22 264)` |
+| Electric Cyan | `#00cec9` | `oklch(0.74 0.14 184)` |
+| Electric Indigo | `#4f46e5` | `oklch(0.46 0.26 268)` |
+| Electric Purple | `#6c5ce7` | `oklch(0.53 0.24 271)` |
+| Electric Magenta | `#fd79a8` | `oklch(0.73 0.20 355)` |
+| Electric Pink | `#ec4899` | `oklch(0.58 0.24 350)` |
+| Electric Coral | `#ff4757` | `oklch(0.60 0.22 18)` |
+| Electric Orange | `#ff7675` | `oklch(0.69 0.17 22)` |
+| Electric Yellow | `#fdcb6e` | `oklch(0.86 0.14 79)` |
+| Electric Green | `#22c55e` | `oklch(0.70 0.20 142)` |
+| Electric Lavender | `#a29bfe` | `oklch(0.72 0.18 275)` |
+
+### Surface Colors — OKLCH Equivalents
+
+| Color | Hex | OKLCH | Use |
+|-------|-----|-------|-----|
+| Dark navy bg | `#0a0e1a` | `oklch(0.13 0.02 260)` | Dark mode background |
+| Dark secondary | `#1a1f2e` | `oklch(0.19 0.02 260)` | Dark mode cards |
+| Light bg | `#f2f2f2` | `oklch(0.96 0 0)` | Light mode background |
+
+### Conduit @theme usage (Tailwind v4)
+
+```css
+@theme {
+  --color-neon-electric-blue:    oklch(0.45 0.22 264);
+  --color-neon-electric-cyan:    oklch(0.74 0.14 184);
+  --color-neon-electric-indigo:  oklch(0.46 0.26 268);
+  --color-neon-electric-purple:  oklch(0.53 0.24 271);
+  --color-neon-electric-magenta: oklch(0.73 0.20 355);
+  --color-neon-electric-pink:    oklch(0.58 0.24 350);
+  --color-neon-electric-coral:   oklch(0.60 0.22 18);
+  --color-neon-electric-orange:  oklch(0.69 0.17 22);
+  --color-neon-electric-yellow:  oklch(0.86 0.14 79);
+  --color-neon-electric-green:   oklch(0.70 0.20 142);
+  --color-neon-electric-lavender: oklch(0.72 0.18 275);
+}
+```
+
+### Vite projects CSS var usage (CRM7, BSU, R80.3)
+
+```css
+:root {
+  --neon-electric-blue: 37 99 235;    /* RGB channels for Tailwind opacity support */
+  --neon-electric-cyan: 0 206 201;
+  /* ... */
+}
+```
+
+Tailwind config maps these as: `'neon-electric-blue': 'rgb(var(--neon-electric-blue) / <alpha-value>)'`
+
+---
+
 ## 1️⃣ TAILWIND CONFIGURATION
 
 **File: `tailwind.config.ts`**
@@ -97,7 +159,7 @@ export default {
         // ============================================
         light: {
           bg: {
-            primary: '#fefefe',      // Off-white
+            primary: '#f2f2f2',      // Off-white
             secondary: '#f8f9fa',    // Warm gray
             tertiary: '#f1f3f4',     // Slightly darker
             quaternary: '#e9ecef',   // Subtle depth
@@ -304,7 +366,7 @@ export default {
     --neon-electric-lavender: 162 155 254; /* #a29bfe */
 
     /* Light Theme */
-    --light-bg-primary: 254 254 254;   /* #fefefe */
+    --light-bg-primary: 254 254 254;   /* #f2f2f2 */
     --light-bg-secondary: 248 249 250; /* #f8f9fa */
     --light-bg-tertiary: 241 243 244;  /* #f1f3f4 */
     --light-text-primary: 45 52 54;    /* #2d3436 */

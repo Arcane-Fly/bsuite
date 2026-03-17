@@ -34,18 +34,18 @@ module.exports = {
         background: '#0a0e1a',
         surface: '#141828',
         'surface-elevated': '#1c2137',
-        foreground: '#fefefe',
+        foreground: '#f2f2f2',
         muted: {
           DEFAULT: '#6b7280',
           foreground: '#9ca3af',
         },
         destructive: {
           DEFAULT: '#ff4757',
-          foreground: '#fefefe',
+          foreground: '#f2f2f2',
         },
         success: {
           DEFAULT: '#22c55e',
-          foreground: '#fefefe',
+          foreground: '#f2f2f2',
         },
         warning: {
           DEFAULT: '#fdcb6e',

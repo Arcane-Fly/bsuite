@@ -50,7 +50,7 @@ Use D2C Neon Electric theme:
 - Primary: `#2563eb` (Electric Blue)
 - Accent: `#00cec9` (Electric Cyan)
 - Success: `#22c55e`, Warning: `#fdcb6e`, Error: `#ff4757`
-- Dark bg: `#0a0e1a`, Light bg: `#fefefe`
+- Dark bg: `#0a0e1a`, Light bg: `#f2f2f2`
 - Font: Inter, code: JetBrains Mono
 
 ### braden (braden.com.au)

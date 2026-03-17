@@ -11,7 +11,7 @@ export const Colors = {
   background: '#0a0e1a',
   surface: '#141828',
   surfaceElevated: '#1c2137',
-  foreground: '#fefefe',
+  foreground: '#f2f2f2',
   muted: '#6b7280',
   mutedForeground: '#9ca3af',
   destructive: '#ff4757',
