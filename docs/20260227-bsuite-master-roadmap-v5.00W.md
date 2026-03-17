@@ -215,7 +215,10 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ **Launch-Ready Phase 4** — Cmd+K command palette with permission filtering + 6 tests, activity timeline deferred (no activities table). AI shortcut moved to Cmd+J. 2 red-team rounds: 30 issues found, 12 fixed, rest deferred low-risk. (Tasks 15-16)
 - ✅ **PWA** — `vite-plugin-pwa`, service worker, manifest, and `usePWA` hook are present in repo ([prompt](./claude-code-prompts.md#prompt-1))
 - ✅ **Kanban pipeline board** — `pages/pipeline/kanban.tsx` and drag-and-drop board components are present in repo
-- 🔶 **Theme architecture reconciliation + dashboard finish pass** — D2C token/source-layer correction landed across `src/styles/theme.css`, `src/index.css`, `src/components/ui/card.tsx`, `tailwind.config.js`, and `src/pages/Dashboard.tsx`; `pnpm typecheck` + `pnpm build` passed, but authenticated dashboard QA and finish quality remain open
+- ✅ **Theme architecture reconciliation + dashboard finish pass** — D2C token/source-layer correction landed; Dashboard migrated from inline Responsive grid to universal `PageGridLayout`; CLS fixed (`containerWidth > 0` guard); Quick Actions stacked layout; edit-mode border; CSS vars verified in `theme.css` (2026-03-17)
+- ✅ **Universal Page Canvas** — `PageGridLayout` applied to Dashboard, Budget, Communications, Contacts, Analytics; `PageEditorLauncher` fires edit event directly (no modal gate); widget registry + `EntityTableWidget` + `WidgetPalette` infrastructure; Schema Builder "Add to Page" button + entity widget injection; 2427/2427 tests, 0 typecheck errors (2026-03-17)
+- ✅ **Per-tenant Branding** — `TenantThemeProvider` injects `--tenant-primary`/`--tenant-accent` CSS vars; Settings > Branding page (logo upload, color pickers, company name, live preview); `tenant-assets` Supabase storage bucket + RLS; migration adds `primary_color`, `accent_color`, `company_name` to `tenant_settings` (2026-03-17)
+- ✅ **A11y sweep** — heading level skips fixed in competency report + incidents pages; `WorkflowBuilder` icon buttons labelled; `PageGridLayout` loading placeholder with `aria-busy` (2026-03-17)
 - 🔶 **Sync schema/query alignment** — sync startup timing noise was reduced earlier, but local SQLite ↔ Supabase schema mismatches remain an active runtime blocker for a clean CRM7 finish pass
 - 🔲 Tier 3-4 page wiring — financial, compliance, field officers, WHS, comms, reports (~15 more stores)
 - 🔲 AI plugin system + workflow automation ([plan](./plans/20260227-ai-assistant-plugin-system-plan-v1.00W.md))
@@ -336,7 +339,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 - 🔶 **Stripe billing portal** — billing page UI, subscription hook, checkout flow, and customer portal flow are present; end-to-end completeness still needs review ([prompt](./claude-code-prompts.md#prompt-3))
 - 🔶 **Session handoff + AppSwitcher** — AppSwitcher component exists; full cross-app rollout and handoff completeness still need review ([plan](./plans/20260228-bsu-project-switching-plan-v1.00W.md), [prompt](./claude-code-prompts.md#prompt-7))
-- 🔲 **Idea Hub** — no repo implementation found in this audit pass
+- ✅ **Idea Hub** — implemented 2026-03-16 (`/ideas` route + nav entry, `ideas` DB table)
 - 🔶 **Cross-app notifications** — Supabase Realtime pub/sub, notification center UI, notification preferences
 - 🔲 Unified settings management
 - 🔲 Usage analytics dashboard
@@ -344,7 +347,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ---
 
-## Recently Completed (as of 2026-03-16)
+## Recently Completed (as of 2026-03-17)
 
 - ✅ TGA edge function deployed to Supabase
 - ✅ 7 STA adapters + RAM/USI/ADMS Settings UI complete
@@ -353,6 +356,10 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ Fair Work compliance: timesheets (reg 3.34), disciplinary/PIP/support person, termination (reg 3.40), leave NES §88/§90
 - ✅ God file refactor (issue #92 closed)
 - ✅ R80.3 Milestones 2–3 committed (unified upgrade branch merged)
+- ✅ **Universal Page Canvas** (2026-03-17) — PageGridLayout wired to all 5 main CRM7 pages; widget registry + EntityTableWidget + WidgetPalette; Schema Builder "Add to Page"; CLS fixed; 14 commits on crm7 development branch (PRs open, pending review)
+- ✅ **Per-tenant Branding** (2026-03-17) — TenantThemeProvider + Settings > Branding page + tenant-assets bucket + migration
+- ✅ **BSU Developer bypass fix** (2026-03-17) — stale-closure in checkSubscription resolved; hasBypassRole reset on sign-out; 3 commits on BSU development branch (PR open, pending review)
+- ✅ **A11y sweep** (2026-03-17) — heading levels, WorkflowBuilder aria-labels, PageGridLayout placeholder
 - ✅ Document lifecycle system: 8 phases complete, TGA edge function deployed, 2,382 tests passing
 - ✅ RAM M2M auth wired: credential decrypted, Settings UI complete (ABRD:21662181740_crm7, valid to 2028-03-03)
 - ✅ WIF migration complete (static SA keys → Workload Identity Federation)
