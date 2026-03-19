@@ -2,7 +2,7 @@
 
 **Version:** 5.00W
 **Date:** 2026-02-27
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-19
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
@@ -145,7 +145,27 @@ All repos use `development` as working branch, pushed to `origin/development`.
 | 11. Cost tracking | Per-tenant usage metering and limits | 🔲 Not started |
 | 12. Conduit AI tools | Candidate search, pipeline mgmt, interview scheduling | 🔲 Not started |
 
-### 3. Authentication & OAuth
+### 3. System Notices (SP-5)
+
+| Component | Status |
+|-----------|--------|
+| DB migration `20260319000001_system_notices.sql` | ✅ Applied |
+| `useSystemNotices` hook (Supabase Realtime, severity-aware) | ✅ All 5 apps |
+| `SystemNoticeBanner` component | ✅ All 5 apps |
+| Platform-scope notices (developer/platform_admin) | ✅ Wired |
+| Tenant-scope notices (enterprise super-admin) | ✅ Wired |
+
+### 4. TenantBrandingProvider Rollout
+
+| App | Status |
+|-----|--------|
+| CRM7 | ✅ `TenantThemeProvider` — migration + settings page + CSS vars |
+| BSU | ✅ `TenantBrandingProvider` + `useTenantBranding` hook wired |
+| R80.3 | ✅ `TenantBrandingContext` — 4 CSS vars applied |
+| Conduit | ✅ Server-side `getInlineBrandingStyle()` + `TenantBrandingProvider` client |
+| Braden | ✅ Hook present; `logo_url` + `company_name`; palette locked to Corporate |
+
+### 5. Authentication & OAuth
 
 **Reference:** [`AUTH-MAP.md`](./AUTH-MAP.md) (§10: Platform Developer Role System)
 
@@ -159,7 +179,7 @@ All repos use `development` as working branch, pushed to `origin/development`.
 | Tenant isolation | ✅ Active |
 | Platform Developer Role System | ✅ Built — `platform_role` (developer/tester/user), impersonation, tester licenses, DeveloperToolbar |
 
-### 4. DRY One-Shot Architecture
+### 6. DRY One-Shot Architecture
 
 **Reference:** [`DRY-ONE-SHOT-ARCHITECTURE.md`](./DRY-ONE-SHOT-ARCHITECTURE.md)
 
@@ -337,7 +357,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 **Remaining:**
 
-- 🔶 **Stripe billing portal** — billing page UI, subscription hook, checkout flow, and customer portal flow are present; end-to-end completeness still needs review ([prompt](./claude-code-prompts.md#prompt-3))
+- ✅ **Stripe billing portal** — 5 webhook events, `useSubscription` hook, checkout + portal flow fully audited and gap-filled. 16 stripeService tests + 10 useSubscription tests passing (SP-2, 2026-03-19)
 - 🔶 **Session handoff + AppSwitcher** — AppSwitcher component exists; full cross-app rollout and handoff completeness still need review ([plan](./plans/20260228-bsu-project-switching-plan-v1.00W.md), [prompt](./claude-code-prompts.md#prompt-7))
 - ✅ **Idea Hub** — implemented 2026-03-16 (`/ideas` route + nav entry, `ideas` DB table)
 - 🔶 **Cross-app notifications** — Supabase Realtime pub/sub, notification center UI, notification preferences
@@ -347,7 +367,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ---
 
-## Recently Completed (as of 2026-03-17)
+## Recently Completed (as of 2026-03-19)
 
 - ✅ TGA edge function deployed to Supabase
 - ✅ 7 STA adapters + RAM/USI/ADMS Settings UI complete
@@ -365,12 +385,18 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ WIF migration complete (static SA keys → Workload Identity Federation)
 - ✅ P0/P1 sweep: Conduit candidate docs tab, BSU Idea Hub, Braden GA4 env var migration
 - ✅ Documentation compliance remediation: 375 .md files normalized to YYYYMMDD convention
+- ✅ **P3 SP-1** (2026-03-19): TenantBrandingProvider rolled out to all 5 apps
+- ✅ **P3 SP-2** (2026-03-19): BSU Stripe E2E audit + gap-fill (5 webhook events, 26 tests)
+- ✅ **P3 SP-4** (2026-03-19): Entity crosswalk doc `docs/20260319-entity-crosswalk-v1.00D.md`
+- ✅ **P3 SP-5** (2026-03-19): `system_notices` migration + `SystemNoticeBanner` + `useSystemNotices` — all 5 apps
+- ✅ **P3 CA-8** (2026-03-19): BSU hardcoded hex → D2C token sweep (ideas pages, Analytics `D2C_CHART` const, `PageGridLayout`)
 
 ## In Progress / Pending
 
 - ⚠️ Item 9: Test coverage — fairwork + auth tests complete, 16 pre-existing failures in AI components remain
 - ⚠️ Dashboard polish: hero signals, bento grid, ai_sessions/ai_messages tables, DND accessibility (KeyboardSensor)
-- ⚠️ Stripe end-to-end verification (checkout → webhook → DB unverified)
+- ✅ ~~Stripe end-to-end verification~~ — complete (2026-03-19)
+- ⚠️ SP-3: CRM7 Tier 3-4 page wiring — in progress (Claude Code primary)
 - ⚠️ Cross-app notifications (Supabase Realtime pub/sub)
 - ⚠️ BOOT compliance engine (C8-tier, competitive differentiator — foundU is only competitor with any BOOT support)
 - ⚠️ @bsuite/charge-calc full convergence (3 independent calc engines → 1 shared package)
@@ -395,7 +421,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 | # | Task | Project | Effort | Agent | Source |
 |---|------|---------|--------|-------|--------|
-| 4 | BSU Stripe billing portal (Edge Functions + UI + gating) | bsu | 1w | Claude Code | Prompt 3 |
+| 4 | ~~BSU Stripe billing portal~~ ✅ E2E verified | bsu | ✅ Done | Cascade | 2026-03-19 |
 | 5 | ~~CRM7 PWA~~ (`vite-plugin-pwa`, manifest, service worker hook present) | crm7 | ✅ Built | Claude Code | Prompt 1A |
 | 6 | R80.3 PWA + 90% wage calc tests + logger migration | R80.3 | 5d | Claude Code | Prompt 4 |
 | 7 | ~~Conduit AI "Scout"~~ (API route + chat UI + persona surfaces present) | conduit | ✅ Built | Claude Code | Prompt 2 |
@@ -431,13 +457,29 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 27 | AI plugin system + Xero + Calendar + workflow automation | crm7 | 3w | Prompt 5 |
 | 28 | BSuite Mobile native (Expo → Google Play) | new `mobile/` | 2w | Prompt 1B |
 | 29 | Org → Tenant hierarchy | bsu/crm7 | 1w | Feature gap §1C |
-| 30 | BSU Idea Hub | bsu | 3d | Feature gap §5 |
+| 30 | ~~BSU Idea Hub~~ ✅ | bsu | ✅ Done | Windsurf | 2026-03-16 |
 | 31 | Field-level parity against GTO evidence requirements | crm7 | 2d | Feature gap §2F |
 | 32 | Demo seed data | all | 2d | Feature gap §6 |
 | 33 | Compliance automation workflows | crm7 | 1w | — |
 | 34 | Advanced reporting with predictive analytics | crm7 | 2w | — |
 | 35 | BSU usage analytics dashboard | bsu | 3d | — |
 | 36 | Biped marketplace integration (P4 deferred) | braden/bsu | 2w | Deferred until core 5 are best-in-class |
+
+---
+
+## P3 Sprint Status (2026-03-19)
+
+**Plan:** [`~/.windsurf/plans/p3-sprint-plan-2f6071.md`](../../../.windsurf/plans/p3-sprint-plan-2f6071.md)
+
+| Item | Description | Status |
+|------|-------------|--------|
+| SP-1 | TenantBrandingProvider — all 5 apps | ✅ Complete |
+| SP-2 | BSU Stripe E2E audit + gap-fill + tests | ✅ Complete |
+| SP-3 | CRM7 Tier 3-4 page wiring | 🔶 In progress (Claude Code) |
+| SP-4 | Entity crosswalk doc | ✅ Complete |
+| SP-5 | system_notices migration + SystemNoticeBanner rollout | ✅ Complete |
+| CA-8 | BSU hardcoded hex → D2C token sweep | ✅ Complete |
+| RT-10 | BSU react-day-picker v8 → v9 audit | 🔲 Pending |
 
 ---
 

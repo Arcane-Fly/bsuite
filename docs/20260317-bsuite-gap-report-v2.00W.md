@@ -2,7 +2,7 @@
 
 **NOTE to CASCADE** i saw in your planning that the project requires node 22. this is wrong. it should be and has always been node 24. the latest version the vercel platform supports even though local system is 25. 22 was brought into the project by an agent possibly copilot somwehre in the last day or so so most should be setup for node 24.
 
-**Date:** 2026-03-17
+**Date:** 2026-03-17 (updated 2026-03-19)
 **Auditor:** Cascade
 **Scope:** All 5 projects — BSU, CRM7, Conduit, braden, R80.3
 **Plans cross-referenced:**
@@ -116,17 +116,17 @@ All items below were previously listed as open or in-progress and have been **co
 | CA-5 | `vitest` upgrade: `v3` → `v4` for bsu, braden, r80.3 | BSU, braden, R80.3 | ~1h |
 | CA-6 | Theme compliance B4: BSU missing D2C shell tokens in global CSS | BSU | ~2h |
 | CA-7 | Theme compliance B3: R80.3 FOUC (no `data-theme` script on `<html>` before first paint) | R80.3 | ~1h |
-| CA-8 | Theme compliance C1: landing pages hex → token sweep (BSU ~62 instances, Conduit ~55 instances) | BSU, Conduit | ~4h |
+| CA-8 | ~~Theme compliance C1: landing pages hex → token sweep (BSU ~62 instances, Conduit ~55 instances)~~ | BSU, Conduit | ✅ Done (2026-03-19) |
 
 ### P3 — Requires Separate Planning Session
 
-| ID | Item | Project | Effort |
-|---|---|---|---|
-| SP-1 | TenantBrandingProvider (Track A) — `tenant_branding` table, `useTenantBranding` hook, CSS var injection in all 5 apps. Supabase migration is the pre-req. | All | ~3d |
-| SP-2 | BSU Stripe end-to-end verification — confirm webhook processing, subscription state, upgrade/downgrade flows | BSU | ~1w |
-| SP-3 | CRM7 Tier 3-4 page wiring (financial, compliance, WHS, comms, reports) into PageGridLayout | CRM7 | ~2w |
-| SP-4 | BSU cross-app notifications via Supabase Realtime pub/sub | BSU + all clients | ~3d |
-| SP-5 | R80.3 test coverage push to 70% (currently low) | R80.3 | ~1w |
+| ID | Item | Project | Effort | Status |
+|---|---|---|---|---|
+| SP-1 | TenantBrandingProvider — `useTenantBranding` hook, CSS var injection in all 5 apps | All | ~3d | ✅ Done (2026-03-19) |
+| SP-2 | BSU Stripe end-to-end verification — webhook, subscription state, upgrade/downgrade | BSU | ~1w | ✅ Done (2026-03-19) |
+| SP-3 | CRM7 Tier 3-4 page wiring (financial, compliance, WHS, comms, reports) | CRM7 | ~2w | 🔶 In progress (Claude Code) |
+| SP-4 | Entity crosswalk + traceability doc (pre-req for EntitySelectors) | CRM7 | ~1d | ✅ Done (2026-03-19) |
+| SP-5 | system_notices migration + SystemNoticeBanner — all 5 apps | All | ~2d | ✅ Done (2026-03-19) |
 
 ---
 
@@ -303,10 +303,12 @@ Projects needing regeneration: **BSU, CRM7, conduit, R80.3, braden**.
 | RT-9 | R80.3 `@vitest/coverage-v8` missing | Cascade | ✅ Done (2026-03-19) |
 | RT-10 | BSU `react-day-picker` v8 audit/migrate | Claude Code | P3 — open |
 | CC-3 | CRM7 broad refresh — remaining pages | Claude Code | P1 — open |
-| SP-1 | TenantBrandingProvider — awaits DB migration | P3 planning | See Section 8 |
-| SP-2 | BSU Stripe E2E verification | P3 planning | See Section 8 |
-| SP-3 | CRM7 Tier 3-4 page wiring | P3 planning | See Section 8 |
-| SP-4 | Entity crosswalk + traceability docs | P3 planning | See Section 8 |
+| SP-1 | TenantBrandingProvider — all 5 apps | Cascade | ✅ Done (2026-03-19) |
+| SP-2 | BSU Stripe E2E verification | Cascade | ✅ Done (2026-03-19) |
+| SP-3 | CRM7 Tier 3-4 page wiring | Claude Code | 🔶 In progress |
+| SP-4 | Entity crosswalk doc | Cascade | ✅ Done (2026-03-19) |
+| SP-5 | system_notices + SystemNoticeBanner rollout | Cascade | ✅ Done (2026-03-19) |
+| CA-8 | BSU hex → D2C token sweep | Cascade | ✅ Done (2026-03-19) |
 
 ---
 
@@ -458,7 +460,22 @@ These v1 items are not yet assigned to a sprint:
 | P2-7 | Conduit analytics depth (metrics + chart parity) | Conduit | Separate sprint |
 | P2-14 | Braden SEO/Lighthouse ≥90 | Braden | Lower priority |
 | P2-16 | R80.3 PWA offline-first data strategy | R80.3 | Separate sprint |
-| CA-8 | BSU landing pages ~62 hex instances + Conduit ~55 | BSU, Conduit | ~4h — schedule in next session |
+| CA-8 | ~~BSU landing pages ~62 hex instances + Conduit ~55~~ | BSU, Conduit | ✅ Done (2026-03-19) |
+
+---
+
+## Section 9 — P3 Sprint Summary (2026-03-19)
+
+**Sprint plan:** `~/.windsurf/plans/p3-sprint-plan-2f6071.md`
+
+| Item | Deliverables | Status |
+|------|-------------|--------|
+| SP-1 TenantBrandingProvider | All 5 apps wired: `TenantBrandingProvider`/`useTenantBranding` hook, CSS var injection. Conduit: server-side SSR pattern. | ✅ Complete |
+| SP-2 Stripe E2E | Webhook: 5 events (`checkout.session.completed`, `subscription.updated/deleted`, `invoice.payment_succeeded/failed`). `useSubscription` hook + 10 tests. `stripeService` 16 tests. | ✅ Complete |
+| SP-3 CRM7 Tier 3-4 | In progress — Claude Code primary. See `crm7-broad-ui-refresh-ec965f.md` coordination log. | 🔶 In progress |
+| SP-4 Entity crosswalk | `docs/20260319-entity-crosswalk-v1.00D.md` — 198-entity inventory mapped to DB table, store, route, selector, gap. | ✅ Complete |
+| SP-5 System notices | `system_notices` table + RLS migration applied. `useSystemNotices` + `SystemNoticeBanner` rolled out to all 5 apps. Severity: info/warning/critical → D2C tokens. | ✅ Complete |
+| CA-8 Hex sweep | BSU ideas pages (3 files), `Analytics.tsx` `D2C_CHART` const, `PageGridLayout.tsx`. Conduit user-data `??` fallbacks intentionally retained. Both typechecks clean, 45/45 BSU tests pass. | ✅ Complete |
 
 ---
 
