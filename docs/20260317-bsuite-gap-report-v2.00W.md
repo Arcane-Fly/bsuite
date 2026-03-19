@@ -1,9 +1,12 @@
 # BSuite Gap Report v2.00W
 
-**Date:** 2026-03-17  
-**Auditor:** Cascade  
-**Scope:** All 5 projects — BSU, CRM7, Conduit, braden, R80.3  
+**NOTE to CASCADE** i saw in your planning that the project requires node 22. this is wrong. it should be and has always been node 24. the latest version the vercel platform supports even though local system is 25. 22 was brought into the project by an agent possibly copilot somwehre in the last day or so so most should be setup for node 24.
+
+**Date:** 2026-03-17
+**Auditor:** Cascade
+**Scope:** All 5 projects — BSU, CRM7, Conduit, braden, R80.3
 **Plans cross-referenced:**
+
 - `docs/20260227-bsuite-master-roadmap-v5.00W.md`
 - `docs/20260316-bsuite-gap-report-v1.00W.md`
 - `~/.windsurf/plans/pageGridLayout-master-2f6071.md`
@@ -39,6 +42,7 @@ The previous gap report `20260316-bsuite-gap-report-v1.00W.md` contained stale P
 All items below were previously listed as open or in-progress and have been **confirmed complete** via direct codebase inspection.
 
 ### CRM7
+
 | Item | Status |
 |---|---|
 | `framer-motion` removed (kept `motion` alias) — ~300KB bundle save | ✅ Done |
@@ -58,6 +62,7 @@ All items below were previously listed as open or in-progress and have been **co
 | Conduit `canEditPage` — NOT hardcoded; `isEditing` starts `false`, enabled via event only | ✅ Done |
 
 ### BSU
+
 | Item | Status |
 |---|---|
 | PageGridLayout wired on all 8 pages (UnifiedDashboard, SystemOverview, TenantManagement, UserManagement, AuditLog, Analytics, Billing, Settings) | ✅ Done |
@@ -66,6 +71,7 @@ All items below were previously listed as open or in-progress and have been **co
 | Modal components (`UserDetailModal`, `InviteUserModal`, `TenantDetailModal`, `CreateTenantModal`) use `fixed inset-0 z-50` — correct overlay pattern | ✅ Done |
 
 ### R80.3
+
 | Item | Status |
 |---|---|
 | PageGridLayout wired in `R8Calculator.tsx` (inputPanel + results widgets) | ✅ Done |
@@ -73,12 +79,14 @@ All items below were previously listed as open or in-progress and have been **co
 | Neon Electric CSS var pattern in `tailwind.config.js` — correct `rgb(var(--neon-electric-X) / <alpha-value>)` | ✅ Done |
 
 ### Conduit
+
 | Item | Status |
 |---|---|
 | PageGridLayout wired on all 8 list `_view.tsx` files (candidates, jobs, pipeline, talent-pools, analytics, interviews, offers, onboarding) | ✅ Done |
 | Candidate documents tab at `/candidates/[id]/documents` (queries `r7_documents`) | ✅ Done |
 
 ### Braden
+
 | Item | Status |
 |---|---|
 | GA4 measurement ID reads `VITE_GA4_MEASUREMENT_ID` env var (falls back to `VITE_GA_ID`, then placeholder) | ✅ Done |
@@ -174,4 +182,286 @@ Near-term (separate plan):
 
 ---
 
-*Supersedes `docs/20260316-bsuite-gap-report-v1.00W.md`*
+## Section 7 — 5x Red-Team Sweep (Cascade session, 2026-03-17)
+
+> Red-team questions and findings that were missed or under-specified in v1 and v2.
+
+### RT-1 CC-2 Audit Result: Already Complete
+
+**Question:** v1 claimed "81 files missing DialogTitle" — is this accurate?
+
+**Finding:** INCORRECT. `comm` diff of all CRM7 `*.tsx` files confirms zero files have `<DialogContent` without `DialogTitle` or `VisuallyHidden`. The 81-file count was the total _using_ `DialogContent`, not files _missing_ the title. CC-2 is complete with no action required.
+
+---
+
+### RT-2 Sonner Version Divergence
+
+**Question:** Are all projects on the same toast library version?
+
+**Finding:** BSU and Conduit were on `sonner ^1.7.4`; CRM7 and braden were on `^2.0.7`. Sonner v2 has breaking changes to `<Toaster />` props. **Fixed:** BSU and Conduit upgraded to `^2.0.7` in this session.
+
+---
+
+### RT-3 BSU FOUC — Missing Inline Theme Script
+
+**Question:** Does BSU apply the correct dark/light class before first paint?
+
+**Finding:** BSU `index.html` was missing the synchronous inline theme-detection script present in R80.3. Additionally, the `<body>` element had hardcoded `class="bg-slate-900 text-white"` which overrides the D2C CSS token `--bg-body` in light mode and causes a visible colour flash. **Fixed:** Inline script added; hardcoded body classes removed. R80.3 was already correct.
+
+---
+
+### RT-4 Conduit AI SDK Version Drift (CA-4)
+
+**Question:** Are Conduit and CRM7 running the same AI SDK versions?
+
+**Finding:** Conduit was behind on `ai ^6.0.105` (CRM7: `^6.0.116`), `@ai-sdk/react ^3.0.107` (CRM7: `^3.0.118`), and provider packages `@ai-sdk/anthropic ^3.0.50` / `@ai-sdk/google ^3.0.34`. **Fixed:** All Conduit AI SDK packages bumped to `^3.0.118` / `^6.0.116` in this session.
+
+---
+
+### RT-5 `@types/react-grid-layout` Stale Across Projects
+
+**Question:** Do all projects using `react-grid-layout ^2.2.2` have matching types?
+
+**Finding:** BSU, R80.3, and Conduit all had `@types/react-grid-layout ^1.3.5` (v1 types) while the runtime was v2. CRM7 was already corrected in a prior session. **Fixed:** All three projects updated to `^2.1.0` in this session.
+
+---
+
+### RT-6 Lockfile Regeneration Required for All 5 Projects
+
+**Question:** Are existing lockfiles valid after package.json edits?
+
+**Finding:** Every project's `package.json` was modified in this session. All lockfiles are now **stale** and will cause `ERR_PNPM_OUTDATED_LOCKFILE` on Vercel. Regeneration is mandatory before merging to `main`/`master`. Use isolated-directory pattern per AGENTS.md (never run `pnpm install` inside the bsuite tree).
+
+**Pending action (per project):**
+
+```bash
+# Pattern — run outside bsuite tree for each project
+mkdir ~/P_lockgen && cp P/package.json ~/P_lockgen/
+cd ~/P_lockgen && pnpm install
+cp ~/P_lockgen/pnpm-lock.yaml P/pnpm-lock.yaml && rm -rf ~/P_lockgen
+```
+
+Projects needing regeneration: **BSU, CRM7, conduit, R80.3, braden**.
+
+---
+
+### RT-7 `@types/node` Version Behind Node 24 Requirement
+
+**Question:** Do `@types/node` versions match the mandatory Node 24 runtime?
+
+**Finding:** All five projects pin `@types/node: "^22.x"`. The mandatory runtime is Node 24. Type definitions should be `"^24.x"` to avoid false-positive type errors with new Node 24 APIs. **Pending:** Upgrade all projects to `@types/node: "^24.x"` (recommend doing with lockfile regeneration).
+
+---
+
+### RT-8 pnpm Version Inconsistency Across Projects
+
+**Question:** Are all projects on the same pnpm version?
+
+**Finding:** BSU, braden, conduit, R80.3 use `pnpm@10.30.3`; CRM7 uses `pnpm@10.32.1`. All should be aligned to the latest `10.x` patch. **Pending:** Bump `packageManager` field in the four lagging projects to `pnpm@10.32.1` during next lockfile regeneration cycle.
+
+---
+
+### RT-9 R80.3 Missing `@vitest/coverage-v8`
+
+**Question:** Can coverage reports be generated for R80.3?
+
+**Finding:** R80.3 has `@vitest/ui ^4.0.0` but **not** `@vitest/coverage-v8`, which means `pnpm test:coverage` will fail with "missing provider". All other Vite projects (BSU, CRM7) have this package. **Pending:** Add `"@vitest/coverage-v8": "^4.0.0"` to R80.3 devDependencies.
+
+---
+
+### RT-10 BSU `react-day-picker` Pinned at v8
+
+**Question:** Is BSU's `react-day-picker` compatible with the rest of the suite?
+
+**Finding:** BSU pins `"react-day-picker": "8.10.1"` (exact, no `^`). CRM7 and braden use `^9.14.0`. The v8→v9 API is a breaking change (prop renames, different `selected`/`onSelect` interface). This divergence is intentional if BSU's usage hasn't been migrated, but it is undocumented debt. **Pending:** Audit BSU's date picker usage and either migrate to v9 or document the intentional pin.
+
+---
+
+### Summary of Actions Taken in This Session
+
+| Item | Status |
+|------|--------|
+| CC-2 DialogTitle sweep — zero gaps confirmed | ✅ Done |
+| CA-1 BSU `react-hot-toast → sonner` | ✅ Done |
+| CA-2 TypeScript `~5.8.3` — BSU, CRM7, R80.3 | ✅ Done (braden/conduit already ahead) |
+| CA-3 `@supabase/supabase-js ^2.99.2` — all 5 | ✅ Done |
+| CA-4 AI SDK sync — Conduit bumped to match CRM7 | ✅ Done |
+| CA-5 `vitest ^4.0.0` — BSU, R80.3, braden, Conduit | ✅ Done (CRM7 already v4) |
+| CA-6 BSU D2C token gap — body FOUC class removed | ✅ Done |
+| CA-7 BSU FOUC prevention script | ✅ Done |
+| CA-8 R80.3 hardcoded hex hover replaced with token fallbacks | ✅ Partial — R80.3 done; BSU ~62 hex instances + Conduit ~55 hex instances in landing pages still open |
+| sonner v2 alignment — BSU, Conduit | ✅ Done |
+| `@types/react-grid-layout ^2.1.0` — BSU, R80.3, Conduit | ✅ Done |
+
+### Remaining Open Items
+
+| ID | Item | Owner | Status |
+|----|------|-------|--------|
+| RT-6 | Lockfile regeneration — all 5 projects | Cascade | ✅ Done (2026-03-19) |
+| RT-7 | `@types/node ^24.x` upgrade | Cascade | ✅ Done (2026-03-19) |
+| RT-8 | pnpm version alignment to 10.32.1 | Cascade | ✅ Done (2026-03-19) |
+| RT-9 | R80.3 `@vitest/coverage-v8` missing | Cascade | ✅ Done (2026-03-19) |
+| RT-10 | BSU `react-day-picker` v8 audit/migrate | Claude Code | P3 — open |
+| CC-3 | CRM7 broad refresh — remaining pages | Claude Code | P1 — open |
+| SP-1 | TenantBrandingProvider — awaits DB migration | P3 planning | See Section 8 |
+| SP-2 | BSU Stripe E2E verification | P3 planning | See Section 8 |
+| SP-3 | CRM7 Tier 3-4 page wiring | P3 planning | See Section 8 |
+| SP-4 | Entity crosswalk + traceability docs | P3 planning | See Section 8 |
+
+---
+
+## Section 8 — P3 Planning Brief (2026-03-19)
+
+> Pre-requisite sweep of v1 + v2 confirmed all P1/P2 Cascade items complete. The four P3 workstreams below require dedicated planning docs before implementation begins.
+
+### SP-1: TenantBrandingProvider Rollout (All 5 Apps)
+
+**Goal:** Allow tenants to override D2C tokens (primary colour, logo, font) via the BSU `AdminBranding` UI. CSS vars injected at the `<html>` level at session-start.
+
+**Pre-requisites:**
+
+- Supabase migration: `tenant_branding` table (tenant_id, primary_color, secondary_color, logo_url, font_family, updated_at)
+- RLS: tenant admin can read/write their own row; super-admin can read all
+- Edge Function or client hook: `useTenantBranding(tenantId)` → fetches row → injects CSS vars via `document.documentElement.style.setProperty`
+
+**Rollout order:**
+
+1. BSU — source of truth (admin writes here)
+2. CRM7 — most tenant traffic, highest value
+3. R80.3 — simple; only 3–4 vars needed
+4. Conduit — server component caveat: CSS var injection must happen client-side in a `'use client'` provider
+5. Braden — corporate, lower priority; only applies when BSU tenant is `braden`
+
+**Risks:**
+
+- SSR flash: Conduit RSC pages will render without tenant CSS vars on first paint — require client boundary + skeleton
+- Fallback: if `tenant_branding` row is null, D2C defaults apply silently
+- `next-themes` conflict in BSU: ensure tenant vars override after theme class is applied, not before
+
+**Effort:** ~3 days
+**Owner:** Cascade (DB migration + hook) + Claude Code (UI wiring)
+
+---
+
+### SP-2: BSU Stripe End-to-End Verification
+
+**Goal:** Prove the full Stripe billing loop works: checkout → subscription created → webhook → DB state → portal → cancel/upgrade.
+
+**What exists (v1 P2-9):**
+
+- `BillingPage.tsx` + `useSubscription` hook
+- Stripe checkout session creation
+- Stripe Customer Portal redirect
+- `stripe_customers` + `stripe_subscriptions` tables in Supabase
+
+**What must be verified:**
+
+1. **Webhook handler** (Edge Function) — receives `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`; updates Supabase `stripe_subscriptions` row
+2. **Webhook secret** — `STRIPE_WEBHOOK_SECRET` env var set in Supabase secrets and Vercel
+3. **Subscription state gate** — premium features gated on `subscription.status === 'active'`
+4. **Upgrade/downgrade** — plan change via portal reflects in DB within 1 webhook cycle
+5. **Test mode E2E** — use Stripe CLI `stripe listen --forward-to` for local verification
+
+**Gap from v1:** Edge Function → Stripe → webhook → DB loop is unverified end-to-end (P2-9).
+
+**Effort:** ~1 week
+**Owner:** Cascade (webhook + DB wiring) + User (Stripe test-mode keys + CLI)
+
+---
+
+### SP-3: CRM7 Tier 3-4 Page Wiring
+
+**Goal:** Wire 8+ shell pages (financial, compliance, WHS, comms, reports, payroll, billing, data-management) from stub to real data queries + form submission via PageGridLayout.
+
+**Source:** v1 P2-1. Tier definition:
+
+- **Tier 3:** Financial (invoices, payroll), Compliance (WHS incidents, regulatory), Comms (email logs, templates)
+- **Tier 4:** Reports (scheduled + ad-hoc), Data Management (import/export/wipe), AI Cost Tracking
+
+**Pre-requisites:**
+
+- Confirm which Tier 3-4 pages exist as routes in `crm7/src/App.tsx` — audit before starting
+- Confirm Supabase tables exist for each entity (cross-ref against v1 P3 entity table)
+- Confirm `awardStore` column fix (P0-1) is done — unblocks financial/award data
+
+**Approach per page:**
+
+1. Replace `DataContextSimple` / static mock with real Supabase query via relevant store
+2. Wire PageGridLayout if not already present
+3. Add form submission with optimistic update + toast
+4. Add `useDocumentTitle` if missing
+
+**Entity gaps from v1 P3 still needing UI:**
+
+- `payroll_records` — payroll run + STP submission
+- `invoices` — approval + send workflow
+- `funding_claims` / `funding_sources` — CTF/AASN/ASIP fields
+- `vet_assessments` — result recording against unit outcomes
+
+**Effort:** ~2 weeks
+**Owner:** Claude Code (page wiring) + Cascade (store/query patterns)
+
+---
+
+### SP-4: Entity Crosswalk + Traceability Docs (Pre-req for EntitySelectors)
+
+**Goal:** Produce a living document that maps every entity from the 198-entity inventory to: DB table, Zustand store, route, EntitySelector component (if any), and API endpoint. This is the pre-requisite gate before building new EntitySelectors.
+
+**Why needed:**
+
+- v1 audit proved some entities exist in DB but have no UI surface
+- v1 P1-1 confirmed 6 EntitySelectors already exist — but which entities are covered vs missing is undocumented
+- EntitySelectors for missing entities cannot be safely built without knowing the canonical source-of-truth table + store
+
+**Existing EntitySelectors (confirmed v1):**
+
+```
+crm7/src/components/entity/selectors/
+  CandidateSelector.tsx
+  ClientSelector.tsx
+  ContactSelector.tsx
+  HostSelector.tsx
+  JobSelector.tsx
+  PlacementSelector.tsx
+```
+
+**Coverage gaps to document:**
+
+- Award / classification hierarchy (42 entities, DB present, UI broken P0-1)
+- Training plan reviews (3 entities)
+- VET assessments (3 entities)
+- Funding claims (5 entities)
+- Webhook / WorkforceOne integration tables (11 entities)
+- Payroll records (1 entity)
+- Invoice (1 entity)
+
+**Deliverable:** `docs/20260319-entity-crosswalk-v1.00D.md` — table with columns: Entity Name | DB Table | Store | Route | Selector | Gap
+
+**Effort:** ~1 day (doc only); implementing missing selectors = additional P3 sprint
+**Owner:** Cascade (doc) + Claude Code (validation + selector implementation)
+
+---
+
+### P3 Open Items Carried Forward from v1
+
+These v1 items are not yet assigned to a sprint:
+
+| v1 ID | Item | Project | Notes |
+|-------|------|---------|-------|
+| P0-1 | `useAwardStore` wrong column query | CRM7 | Single-line fix — blocks all Awards UI |
+| P0-6 | Sync schema/query mismatch (`sync-service.ts`) | CRM7 | Silent data errors |
+| P1-5 | GTO evidence field-level parity (198-entity inventory) | CRM7 | Large — needs SP-4 crosswalk first |
+| P1-8 | Cross-app notifications (Supabase Realtime pub/sub) | BSU + all | SP-4 in v2 |
+| P2-2 | AI cost tracking per tenant (no UI surface) | CRM7 | Tier 4 — part of SP-3 |
+| P2-4 | `@bsuite/charge-calc` convergence (3 calc engines) | CRM7, R80.3 | Requires arch decision |
+| P2-5 | Data management (import/export/bulk-reassign) | CRM7 | Tier 4 — part of SP-3 |
+| P2-7 | Conduit analytics depth (metrics + chart parity) | Conduit | Separate sprint |
+| P2-14 | Braden SEO/Lighthouse ≥90 | Braden | Lower priority |
+| P2-16 | R80.3 PWA offline-first data strategy | R80.3 | Separate sprint |
+| CA-8 | BSU landing pages ~62 hex instances + Conduit ~55 | BSU, Conduit | ~4h — schedule in next session |
+
+---
+
+_Supersedes `docs/20260316-bsuite-gap-report-v1.00W.md`_
+
+Vercel Bot recommended implementing: <https://vercel.com/docs/tracing/instrumentation#adding-custom-spans>
