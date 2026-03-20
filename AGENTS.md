@@ -164,6 +164,7 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 | **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` | `{origin}/auth/callback` |
 | **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` | `{origin}/auth/callback` |
 | **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` | `{origin}/auth/callback` |
+| **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` | `{origin}/auth/callback` |
 
 **OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
 
@@ -174,6 +175,7 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 - **BSU** (`suite.crm7.app`): Sets the cookie — `src/lib/supabase.ts`
 - **CRM7** (`crm.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
 - **R80.3** (`r8.crm7.app`): Reads the cookie — `src/services/supabaseClient.ts`
+- **Throughput** (`ideas.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
 - **Braden** (`www.braden.com.au`): ❌ Different TLD — uses BS OAuth 2.1 for SSO instead
 - **Conduit** (`conduit.crm7.app`): Server-managed cookies via `@supabase/ssr` (no cross-domain)
 
@@ -202,6 +204,7 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 | **CRM7** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/contexts/AuthContext.tsx` | `src/pages/auth/callback.tsx` (dual) |
 | **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/stores/authStore.ts` | `src/pages/AuthCallback.tsx` |
 | **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/hooks/useAdminAuth.ts` | `src/pages/auth/AuthCallback.tsx` |
+| **Throughput** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/lib/auth/AuthProvider.tsx` | `src/pages/auth/AuthCallback.tsx` |
 | **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/middleware.ts` | `src/app/auth/callback/route.ts` |
 
 #### Critical Auth Rules
