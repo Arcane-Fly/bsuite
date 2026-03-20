@@ -151,8 +151,11 @@ export function calculate(cfg: CalcConfig): CalcResult {
   const nonBillHrs = tHrs - bHrs - trainHrs;
 
   // --- Per-hour rates (lines 88-94) ---
+  // tafeDayAmortizationPerHour is added AFTER the oncost divide so it
+  // does not compound through super, WC, or payroll tax.
+  const tafeDayAmortPH = cfg.tafeDayAmortizationPerHour ?? 0;
   const billedWage = (recv * tHrs) / bHrs;
-  const ordCost = totCost / bHrs;
+  const ordCost = totCost / bHrs + tafeDayAmortPH;
   const billedOnc = ordCost - billedWage;
   const marginPH =
     marginType === 'percent' ? ordCost * (marginVal / 100) : marginVal;
@@ -239,7 +242,8 @@ export function calculate(cfg: CalcConfig): CalcResult {
     workersComp: oncWC,
     overhead: oncOH,
     payrollTax: oncPayrollTax,
-    total: totOnc,
+    tafeAmortization: tafeDayAmortPH,
+    total: totOnc + tafeDayAmortPH,
   };
 
   return {
