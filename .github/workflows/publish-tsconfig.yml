@@ -1,0 +1,49 @@
+name: Publish @bsuite/tsconfig
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/tsconfig/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/tsconfig
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+          PUBLISHED=$(npm view "@bsuite/tsconfig@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
