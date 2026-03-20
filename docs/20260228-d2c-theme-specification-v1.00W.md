@@ -43,16 +43,18 @@ This document contains:
 | Color | Hex | CSS Variable | Use Case |
 |-------|-----|--------------|----------|
 | Electric Blue | #2563eb | --neon-electric-blue | Primary actions, highlights |
-| Electric Cyan | #00cec9 | --neon-cyan | Accents, borders |
-| Electric Indigo | #4f46e5 | --neon-indigo | Secondary actions |
-| Electric Purple | #6c5ce7 | --neon-purple | Gradients, effects |
-| Electric Magenta | #fd79a8 | --neon-magenta | Interactive elements |
-| Electric Pink | #ec4899 | --neon-pink | Hover states |
-| Electric Coral | #ff4757 | --neon-coral | Alerts, destructive |
-| Electric Orange | #ff7675 | --neon-orange | Warnings |
-| Electric Yellow | #fdcb6e | --neon-yellow | Info, secondary alerts |
-| Electric Green | #22c55e | --neon-green | Success states |
-| Electric Lavender | #a29bfe | --neon-lavender | Subtle accents |
+| Electric Cyan | #00cec9 | --neon-electric-cyan | Accents, borders |
+| Electric Indigo | #4f46e5 | --neon-electric-indigo | Secondary actions |
+| Electric Purple | #6c5ce7 | --neon-electric-purple | Gradients, effects |
+| Electric Magenta | #fd79a8 | --neon-electric-magenta | Interactive elements |
+| Electric Pink | #ec4899 | --neon-electric-pink | Hover states |
+| Electric Coral | #ff4757 | --neon-electric-coral | Alerts, destructive |
+| Electric Orange | #ff7675 | --neon-electric-orange | Warnings |
+| Electric Yellow | #fdcb6e | --neon-electric-yellow | Info, secondary alerts |
+| Electric Green | #22c55e | --neon-electric-green | Success states |
+| Electric Lavender | #a29bfe | --neon-electric-lavender | Subtle accents |
+
+> **⚠️ Deprecated:** `--brand-cyan` (`#00BFFF`, "Deep Sky Blue") is **NOT** a D2C color. It was a legacy holdover used in early CRM7/R80.3 theme files. All references have been replaced with `--neon-electric-cyan` (`#00cec9`). Do not reintroduce `--brand-cyan` in any D2C app.
 
 ### Brand Gradient
 
@@ -121,7 +123,12 @@ OKLCH is a perceptually uniform color space that produces smoother gradients and
 }
 ```
 
-Tailwind config maps these as: `'neon-electric-blue': 'rgb(var(--neon-electric-blue) / <alpha-value>)'`
+Tailwind config maps these for opacity-variant support. Two patterns are in use — both are correct:
+
+- **R80.3** — raw RGB channels in the var, no suffix: `'neon-electric-blue': 'rgb(var(--neon-electric-blue) / <alpha-value>)'`
+- **CRM7** — raw RGB channels in a `-rgb` suffixed var (hex kept in primary var): `'neon-electric-blue': 'rgb(var(--neon-electric-blue-rgb) / <alpha-value>)'`
+
+> Do NOT use `'neon-electric-blue': 'var(--neon-electric-blue)'` with a hex value — this breaks opacity modifiers like `bg-neon-electric-cyan/50`.
 
 ---
 
@@ -163,7 +170,7 @@ export default {
             secondary: '#f8f9fa',    // Warm gray
             tertiary: '#f1f3f4',     // Slightly darker
             quaternary: '#e9ecef',   // Subtle depth
-            accent: '#ffffff',       // Cards, dialogs
+            accent: '#f2f2f2',       // Cards, dialogs
           },
           text: {
             primary: '#2d3436',      // Dark charcoal
