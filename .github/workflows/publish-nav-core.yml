@@ -55,6 +55,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Dry-run publish (catches missing files or bad exports)
+        run: npm publish --dry-run --access public
+
       - name: Check if version already published
         id: version-check
         run: |
