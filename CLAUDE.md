@@ -161,6 +161,46 @@ Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..`
 - `docs/20260227-dry-one-shot-architecture-v1.00W.md` — entity ownership and DRY patterns
 - `docs/20260227-auth-map-reference-v1.00W.md` — authentication architecture
 
+## Persistent Memory Protocol
+
+Cross-session memory is stored at `https://qig-memory-api.vercel.app/api/memory`.
+
+### Session Protocol (REQUIRED)
+
+**On start:** Read relevant keys to restore context:
+
+```bash
+curl https://qig-memory-api.vercel.app/api/memory?keys_only=true   # list all keys
+curl https://qig-memory-api.vercel.app/api/memory/bsuite_pending_actions
+curl https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_20260321   # latest
+```
+
+**Before compaction / session end:** Write session summary + sleep packet:
+
+```bash
+curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_session_YYYYMMDD \
+  -H "Content-Type: application/json" \
+  -d '{"category":"session_summary","content":"...","updated":"YYYY-MM-DDT00:00:00Z"}'
+
+curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYYYMMDD \
+  -H "Content-Type: application/json" \
+  -d '{"category":"sleep_packet","content":"...","updated":"YYYY-MM-DDT00:00:00Z"}'
+```
+
+**After significant actions** (commits, arch decisions, env changes): Write immediately — don't wait.
+
+### Namespace Rules (CRITICAL)
+
+- BSuite work → prefix `bsuite_`
+- **NEVER write to `qig_`, `vex_`, `pantheon_` prefixes** — those are separate physics/AI projects
+- General dev → `_dev_`, user prefs → `_user_`
+
+### Categories
+
+`session_summary` | `sleep_packet` | `pending_actions` | `frozen_facts` | `architecture` | `toolchain` | `incident`
+
+---
+
 ## Per-Project Notes
 
 ### business-suite-unified
