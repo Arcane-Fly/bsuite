@@ -50,7 +50,7 @@ Use D2C Neon Electric theme:
 - Primary: `#2563eb` (Electric Blue)
 - Accent: `#00cec9` (Electric Cyan)
 - Success: `#22c55e`, Warning: `#fdcb6e`, Error: `#ff4757`
-- Dark bg: `#0a0e1a`, Light bg: `#fefefe`
+- Dark bg: `#0a0e1a`, Light bg: `#f2f2f2`
 - Font: Inter, code: JetBrains Mono
 
 ### braden (braden.com.au)
@@ -75,6 +75,15 @@ Uses corporate branding — NOT the D2C theme:
 3. **When modifying a shared package**: build → bump version → `npm publish --access public` → update consumers.
 4. **Version pinning**: `packageManager: "pnpm@10.30.3"`, `.node-version: 24` — do not change.
 5. **Vercel install**: All projects use `corepack enable && pnpm install`.
+6. **Lockfile generation**: NEVER run `pnpm install` from within the bsuite directory tree when updating a project's lockfile. The bsuite `pnpm-workspace.yaml` causes pnpm to embed workspace-relative paths (`..`) into the lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE`. Always regenerate from outside the bsuite tree:
+
+```bash
+mkdir ~/crm7_lockgen && cp crm7/package.json ~/crm7_lockgen/
+cd ~/crm7_lockgen && pnpm install
+cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
+```
+
+Correct lockfile: `.:` as only importer. Broken lockfile: `..` or `../packages/*` as importers.
 
 ## Commits
 

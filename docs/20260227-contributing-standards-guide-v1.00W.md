@@ -153,7 +153,7 @@ Update this index whenever a document is added or its status changes.
 
 **Applies to:** business-suite-unified, crm7, conduit, R80.3
 
-All webapp projects must use the Universal D2C Theme System defined in `Theme-best-practice.md`:
+All webapp projects must use the Universal D2C Theme System defined in `docs/20260228-d2c-theme-specification-v1.00W.md`:
 
 - **Tailwind config** extends with neon electric color palette (11 colors)
 - **CSS variables** defined in `globals.css` via `@layer base`
@@ -162,6 +162,12 @@ All webapp projects must use the Universal D2C Theme System defined in `Theme-be
 - **Light mode** uses off-white backgrounds with electric accents
 - **Semantic colors** for status (success, warning, error, info)
 - **Typography:** Inter (display/body), JetBrains Mono (code)
+- **Surface language:** Balanced Hybrid shells, elevated cards, restrained glow, and semantic shell tokens rather than hardcoded styling
+
+**Implementation rule:**
+
+- CRM7 is the reference implementation for the shared D2C shell and high-visibility workflow surfaces.
+- `business-suite-unified`, `conduit`, and `R80.3` should follow the same semantic shell model even when their local token plumbing differs.
 
 **Key colors:**
 
@@ -177,7 +183,12 @@ All webapp projects must use the Universal D2C Theme System defined in `Theme-be
 
 **Applies to:** braden project only
 
-Uses company branding colors and does not follow the D2C theme. See braden project docs for brand guidelines.
+Braden is being refreshed, but it still uses company branding colors and does not follow the D2C Neon theme.
+
+- Keep Braden Red / Gold / Navy as the visual identity
+- Use corporate typography and professional shadow language
+- Do not import D2C Neon colors, gradients, or glow treatments into Braden
+- See Braden project docs for the project-specific UI and branding rules
 
 ---
 

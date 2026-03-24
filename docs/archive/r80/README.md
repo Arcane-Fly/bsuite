@@ -1,6 +1,6 @@
 # Archive / R80.3
 
-Archived R80.3 planning and deployment documents. Superseded by the unified [BSuite Master Roadmap](../../00-master-roadmap.md).
+Archived R80.3 planning and deployment documents. Superseded by the unified [BSuite Master Roadmap](../../20260227-bsuite-master-roadmap-v5.00W.md).
 
 ## Contents
 

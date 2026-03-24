@@ -1,6 +1,6 @@
 # Archive / Braden
 
-Archived braden.com.au planning documents, summaries, and audit reports. Superseded by the unified [BSuite Master Roadmap](../../00-master-roadmap.md).
+Archived braden.com.au planning documents, summaries, and audit reports. Superseded by the unified [BSuite Master Roadmap](../../20260227-bsuite-master-roadmap-v5.00W.md).
 
 ## Contents
 

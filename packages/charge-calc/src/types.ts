@@ -138,6 +138,14 @@ export interface CalcConfig {
   // Penalties & OT
   penalties: PenaltyRate[];
 
+  /**
+   * TAFE/college day cost amortised across net billable hours ($/hr).
+   * Applied directly to costPerHour WITHOUT compounding through oncosts
+   * (no super, WC, or payroll tax applied on top).
+   * Source: awardRulesEngine.resolveRatePackage().tafeDayAmortizationPerHour
+   */
+  tafeDayAmortizationPerHour?: number;
+
   // Funding
   funding: FundingConfig;
 }
@@ -161,6 +169,8 @@ export interface OncostBreakdown {
   workersComp: number;
   overhead: number;
   payrollTax: number;
+  /** TAFE day cost amortised per billable hour (no oncost compounding). */
+  tafeAmortization: number;
   total: number;
 }
 

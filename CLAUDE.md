@@ -31,9 +31,9 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 ### Theme System
 
 - **D2C Neon Electric theme** for: business-suite-unified, crm7, conduit, R80.3
-  - See `docs/20260228-d2c-theme-specification-v1.00W.md` for full palette and implementation
+  - See `docs/20260228-d2c-theme-specification-v1.00W.md` for the active palette and implementation
   - Primary: Electric Blue `#2563eb`, Accent: Electric Cyan `#00cec9`
-  - Dark mode: deep navy `#0a0e1a`, Light mode: off-white `#fefefe`
+  - Dark mode: deep navy `#0a0e1a`, Light mode: off-white `#f2f2f2`
 - **Corporate branding** for: braden (braden.com.au)
   - Primary: Braden Red `#ab233a`, Accent: Braden Gold `#cbb26a`
   - Do NOT apply D2C theme to braden
@@ -78,7 +78,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 
 ### Authentication & OAuth
 
-Full details in `docs/AUTH-MAP.md`. Key facts:
+Full details in `docs/20260227-auth-map-reference-v1.00W.md`. Key facts:
 
 **Supabase Project:** `tuybltdrdefjblnplpqo`
 
@@ -139,18 +139,67 @@ BSU, CRM7, R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7
 1. **NEVER use `workspace:*`** for `@bsuite/*` dependencies in consumer projects. Always use the npm version (e.g., `"^0.1.0"`).
 2. **NEVER use `file:../packages/*`** — this also fails on Vercel since the parent directory doesn't exist.
 3. **When modifying a shared package**: build → bump version → `npm publish --access public` → update consumers → `pnpm install`.
-4. **`pnpm-workspace.yaml`** in submodule repos references `'../packages/*'` for **local development only**. This does NOT work on Vercel.
+4. **`pnpm-workspace.yaml`** lives only at the bsuite root (scoped to `packages/*`). Individual project repos deployed on Vercel have no workspace config — they are fully standalone.
 5. **Version pinning**: `packageManager: "pnpm@10.30.3"` and `.node-version: 24` — do not change without coordinating across all projects.
 6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
+7. **Lockfile generation**: NEVER run `pnpm install` from within the bsuite directory tree when updating a project's lockfile. pnpm embeds workspace-relative paths (`..`) into the lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE`. Always regenerate from outside the bsuite tree:
+
+```bash
+mkdir ~/crm7_lockgen && cp crm7/package.json ~/crm7_lockgen/
+cd ~/crm7_lockgen && pnpm install
+cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
+```
+
+Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..` or `../packages/*`.
 
 ---
 
 ## Key Files
 
 - `docs/20260227-contributing-standards-guide-v1.00W.md` — full quality standards
-- `docs/20260228-d2c-theme-specification-v1.00W.md` — D2C theme specification
-- `docs/DRY-ONE-SHOT-ARCHITECTURE.md` — entity ownership and DRY patterns
-- `docs/AUTH-MAP.md` — authentication architecture
+- `docs/20260228-d2c-theme-specification-v1.00W.md` — active D2C theme specification
+- `docs/20260227-dry-one-shot-architecture-v1.00W.md` — entity ownership and DRY patterns
+- `docs/20260227-auth-map-reference-v1.00W.md` — authentication architecture
+
+## Persistent Memory Protocol
+
+Cross-session memory is stored at `https://qig-memory-api.vercel.app/api/memory`.
+
+### Session Protocol (REQUIRED)
+
+**On start:** Read relevant keys to restore context:
+
+```bash
+curl https://qig-memory-api.vercel.app/api/memory?keys_only=true   # list all keys
+curl https://qig-memory-api.vercel.app/api/memory/bsuite_pending_actions
+curl https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_20260321   # latest
+```
+
+**Before compaction / session end:** Write session summary + sleep packet:
+
+```bash
+curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_session_YYYYMMDD \
+  -H "Content-Type: application/json" \
+  -d '{"category":"session_summary","content":"...","updated":"YYYY-MM-DDT00:00:00Z"}'
+
+curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYYYMMDD \
+  -H "Content-Type: application/json" \
+  -d '{"category":"sleep_packet","content":"...","updated":"YYYY-MM-DDT00:00:00Z"}'
+```
+
+**After significant actions** (commits, arch decisions, env changes): Write immediately — don't wait.
+
+### Namespace Rules (CRITICAL)
+
+- BSuite work → prefix `bsuite_`
+- **NEVER write to `qig_`, `vex_`, `pantheon_` prefixes** — those are separate physics/AI projects
+- General dev → `_dev_`, user prefs → `_user_`
+
+### Categories
+
+`session_summary` | `sleep_packet` | `pending_actions` | `frozen_facts` | `architecture` | `toolchain` | `incident`
+
+---
 
 ## Per-Project Notes
 

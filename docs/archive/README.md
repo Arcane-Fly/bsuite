@@ -1,6 +1,6 @@
 # Archive
 
-Archived per-project roadmaps and documents that have been superseded by the unified [BSuite Master Roadmap](../00-master-roadmap.md). Retained for historical reference.
+Archived per-project roadmaps and documents that have been superseded by the unified [BSuite Master Roadmap](../20260227-bsuite-master-roadmap-v5.00W.md). Retained for historical reference.
 
 ## Contents
 
@@ -54,6 +54,8 @@ Archived per-project roadmaps and documents that have been superseded by the uni
 |------|-------------|
 | `20260226-document-storage-qa-report.md` | Document storage QA report for feature/document-storage-system branch |
 | `20260226-master-roadmap.md` | CRM7 master roadmap (superseded by unified BSuite master roadmap) |
+| `20260228-crm7-page-inventory-v1.00W.md` | CRM7 page inventory (pre-rename copy archived here) |
+| `20260228-crm7-rbac-matrix-v1.00W.md` | CRM7 RBAC matrix (pre-rename copy archived here) |
 | `AI_STRATEGIC_VISION.md` | AI strategic vision document |
 | `DEPLOYMENT_STATUS.md` | Deployment status |
 | `DOCUMENT_STORAGE_IMPLEMENTATION.md` | Document storage implementation |
@@ -68,3 +70,15 @@ Archived per-project roadmaps and documents that have been superseded by the uni
 | `20260227-roadmap-v1.md` | R80.3 commercialisation roadmap (superseded by unified BSuite master roadmap) |
 | `README-CONSOLIDATION.md` | R80.3 consolidation readme |
 | `README-DEPLOY.md` | R80.3 deployment readme |
+
+### Root-level archived files
+
+| File | Description |
+|------|-------------|
+| [20260316-p0-p1-sweep-plan-v1.00WA.md](20260316-p0-p1-sweep-plan-v1.00WA.md) | P0/P1 sweep plan — all items complete, archived 2026-03-16 |
+
+### Other archived corpora
+
+| Location | Description |
+|----------|-------------|
+| [../crm13-docs/README.md](../crm13-docs/README.md) | CRM13 historical reference corpus (~100 files, imported donor project — archived 2026-03-16) |
