@@ -1,0 +1,9 @@
+{
+  "name": "@bsuite/tsconfig",
+  "version": "0.1.0",
+  "description": "Shared TypeScript base configs for all BSuite projects",
+  "files": ["base.json", "vite.json", "nextjs.json"],
+  "publishConfig": {
+    "access": "public"
+  }
+}

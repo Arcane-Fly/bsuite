@@ -72,7 +72,7 @@ export class ErrorBoundary extends React.Component<
               justifyContent: 'center',
             }}
           >
-            <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 16 }}>
+            <Text style={{ color: '#f2f2f2', fontWeight: '600', fontSize: 16 }}>
               Try Again
             </Text>
           </Pressable>

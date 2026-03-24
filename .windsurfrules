@@ -75,6 +75,20 @@ CRM7 and Conduit use Vercel AI Gateway for model routing. **Do NOT revert these 
 - Conventional commits: `type(scope): description`
 - @bsuite/* packages are on npm — NEVER use `workspace:*` in consumer projects
 
+### pnpm Lockfile Generation
+
+**NEVER run `pnpm install` from within the bsuite directory tree** when updating a project's lockfile. The bsuite `pnpm-workspace.yaml` (scoped to `packages/*`) causes pnpm to embed workspace-relative paths (`..`) into the lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE`.
+
+Always regenerate from an isolated directory **outside** the bsuite tree:
+
+```bash
+mkdir ~/crm7_lockgen && cp crm7/package.json ~/crm7_lockgen/
+cd ~/crm7_lockgen && pnpm install
+cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
+```
+
+Correct lockfile: `.:` as only importer. Broken lockfile: `..` or `../packages/*` as importers.
+
 ## Google Cloud Authentication
 
 **CRITICAL**: All Google API access MUST use Workload Identity Federation (WIF). Static service account keys are **BANNED**.
@@ -112,3 +126,29 @@ Full details in `AGENTS.md` and `docs/AUTH-MAP.md`. Key rules:
 - `export const maxDuration = 30` on all Vercel edge AI routes
 - Rate limiting mandatory on all AI endpoints
 - Run `pnpm typecheck` before marking AI work complete
+
+---
+
+## Persistent Memory Protocol
+
+This project uses the QIG Memory API for cross-session continuity.
+
+**At session start — run these before any work:**
+
+```bash
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_session_latest | jq -r '.content'
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_pending_actions | jq -r '.content'
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_decisions | jq -r '.content'
+```
+
+**Write immediately after every commit, decision, or error fix — do NOT wait for session end:**
+
+```bash
+curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_session_latest \
+  -H "Content-Type: application/json" \
+  -d '{"category":"session_summary","content":"[summary]","updated":"[ISO timestamp]"}'
+```
+
+Key naming: all bsuite keys prefixed `bsuite_`. Session keys: `bsuite_session_YYYYMMDD[a-z]`. Update `bsuite_session_latest` pointer after every write.
+
+See `MEMORY_PROTOCOL.md` at project root for full protocol.

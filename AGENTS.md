@@ -43,6 +43,23 @@ pnpm typecheck  # Type checking
 
 Environment variables: copy `.env.example` to `.env.local` and fill in Supabase credentials.
 
+### pnpm Lockfile Generation
+
+**CRITICAL**: Never run `pnpm install` from within the bsuite directory tree when updating a project's lockfile. The bsuite `pnpm-workspace.yaml` (scoped to `packages/*`) causes pnpm to embed workspace-relative paths (`..`) into the lockfile. Vercel clones only the individual project repo — `..` paths don't exist there, causing `ERR_PNPM_OUTDATED_LOCKFILE`.
+
+Always regenerate lockfiles from an isolated directory **outside** the bsuite tree:
+
+```bash
+# Example for crm7 — same pattern for all projects
+mkdir ~/crm7_lockgen
+cp crm7/package.json ~/crm7_lockgen/
+cd ~/crm7_lockgen && pnpm install
+cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml
+rm -rf ~/crm7_lockgen
+```
+
+The correct lockfile has `.:` as the only importer. A broken workspace lockfile will have `..` or `../packages/*` as importers.
+
 ---
 
 ## Quality Standards
@@ -85,7 +102,7 @@ docs(r80): update Fair Work API reference
 
 ### D2C Neon Electric (business-suite-unified, crm7, conduit, R80.3)
 
-Full spec in `Theme-best-practice.md`. Key colors:
+Full spec in `docs/20260228-d2c-theme-specification-v1.00W.md`. Key colors:
 
 | Color | Hex | Use |
 |-------|-----|-----|
@@ -95,7 +112,7 @@ Full spec in `Theme-best-practice.md`. Key colors:
 | Electric Coral | `#ff4757` | Alerts, destructive |
 | Electric Yellow | `#fdcb6e` | Warnings |
 
-Dark mode: deep navy `#0a0e1a`. Light mode: off-white `#fefefe`.
+Dark mode: deep navy `#0a0e1a`. Light mode: off-white `#f2f2f2`.
 Typography: Inter (body), JetBrains Mono (code).
 
 ### Corporate Branding (braden only)
@@ -147,6 +164,7 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 | **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` | `{origin}/auth/callback` |
 | **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` | `{origin}/auth/callback` |
 | **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` | `{origin}/auth/callback` |
+| **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` | `{origin}/auth/callback` |
 
 **OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
 
@@ -157,6 +175,7 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 - **BSU** (`suite.crm7.app`): Sets the cookie — `src/lib/supabase.ts`
 - **CRM7** (`crm.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
 - **R80.3** (`r8.crm7.app`): Reads the cookie — `src/services/supabaseClient.ts`
+- **Throughput** (`ideas.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
 - **Braden** (`www.braden.com.au`): ❌ Different TLD — uses BS OAuth 2.1 for SSO instead
 - **Conduit** (`conduit.crm7.app`): Server-managed cookies via `@supabase/ssr` (no cross-domain)
 
@@ -185,6 +204,7 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 | **CRM7** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/contexts/AuthContext.tsx` | `src/pages/auth/callback.tsx` (dual) |
 | **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/stores/authStore.ts` | `src/pages/AuthCallback.tsx` |
 | **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/hooks/useAdminAuth.ts` | `src/pages/auth/AuthCallback.tsx` |
+| **Throughput** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/lib/auth/AuthProvider.tsx` | `src/pages/auth/AuthCallback.tsx` |
 | **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/middleware.ts` | `src/app/auth/callback/route.ts` |
 
 #### Critical Auth Rules
@@ -385,3 +405,29 @@ When multiple AI agents work simultaneously:
 - **All projects**: Fixed Tailwind v4 deprecation (`flex-shrink-0` → `shrink-0`)
 - **BSU**: Removed stale Auth0 references from `.env.example`
 - **braden**: Fixed CONTRIBUTING.md (was referencing yarn, now correctly pnpm)
+
+---
+
+## Persistent Memory Protocol
+
+This project uses the QIG Memory API for cross-session continuity.
+
+**At session start — run these before any work:**
+
+```bash
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_session_latest | jq -r '.content'
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_pending_actions | jq -r '.content'
+curl -s https://qig-memory-api.vercel.app/api/memory/bsuite_decisions | jq -r '.content'
+```
+
+**Write immediately after every commit, decision, or error fix — do NOT wait for session end:**
+
+```bash
+curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_session_latest \
+  -H "Content-Type: application/json" \
+  -d '{"category":"session_summary","content":"[summary]","updated":"[ISO timestamp]"}'
+```
+
+Key naming: all bsuite keys prefixed `bsuite_`. Session keys: `bsuite_session_YYYYMMDD[a-z]`. Update `bsuite_session_latest` pointer after every write.
+
+See `MEMORY_PROTOCOL.md` at project root for full protocol.

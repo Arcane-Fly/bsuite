@@ -1,6 +1,29 @@
 # 🎨 Universal D2C Theme System 2025
 
-CRM R8 and Business Suite. apps ahve their own colours. braden.com.au has my corporate colours and is currently correct.
+This is the canonical design-system reference for the D2C BSuite web apps:
+
+- `business-suite-unified`
+- `crm7`
+- `conduit`
+- `R80.3`
+
+These projects use the **D2C Neon Electric** palette and the evolving **Balanced Hybrid** surface treatment:
+
+- semantic color tokens
+- elevated shell surfaces
+- restrained glow
+- rounded hero and panel chrome
+- premium dark mode with deep navy backgrounds
+
+`braden.com.au` is **not** part of this theme system. Braden is undergoing its own UI refresh, but it keeps the corporate Braden brand palette and should not inherit Neon Electric colors or glow styling.
+
+## Scope and Brand Boundaries
+
+- Use this document for the four D2C BSuite apps only.
+- Treat CRM7 as the proving ground for Balanced Hybrid shell and page-surface patterns.
+- Propagate proven D2C patterns to BSU, Conduit, and R80.3 through semantic tokens, not raw hex colors.
+- Do not apply Braden corporate red/gold branding to D2C apps.
+- Do not apply Neon Electric gradients, cyan glow, or D2C shell treatments to Braden.
 
 ## Complete Theme Package
 
@@ -20,16 +43,18 @@ This document contains:
 | Color | Hex | CSS Variable | Use Case |
 |-------|-----|--------------|----------|
 | Electric Blue | #2563eb | --neon-electric-blue | Primary actions, highlights |
-| Electric Cyan | #00cec9 | --neon-cyan | Accents, borders |
-| Electric Indigo | #4f46e5 | --neon-indigo | Secondary actions |
-| Electric Purple | #6c5ce7 | --neon-purple | Gradients, effects |
-| Electric Magenta | #fd79a8 | --neon-magenta | Interactive elements |
-| Electric Pink | #ec4899 | --neon-pink | Hover states |
-| Electric Coral | #ff4757 | --neon-coral | Alerts, destructive |
-| Electric Orange | #ff7675 | --neon-orange | Warnings |
-| Electric Yellow | #fdcb6e | --neon-yellow | Info, secondary alerts |
-| Electric Green | #22c55e | --neon-green | Success states |
-| Electric Lavender | #a29bfe | --neon-lavender | Subtle accents |
+| Electric Cyan | #00cec9 | --neon-electric-cyan | Accents, borders |
+| Electric Indigo | #4f46e5 | --neon-electric-indigo | Secondary actions |
+| Electric Purple | #6c5ce7 | --neon-electric-purple | Gradients, effects |
+| Electric Magenta | #fd79a8 | --neon-electric-magenta | Interactive elements |
+| Electric Pink | #ec4899 | --neon-electric-pink | Hover states |
+| Electric Coral | #ff4757 | --neon-electric-coral | Alerts, destructive |
+| Electric Orange | #ff7675 | --neon-electric-orange | Warnings |
+| Electric Yellow | #fdcb6e | --neon-electric-yellow | Info, secondary alerts |
+| Electric Green | #22c55e | --neon-electric-green | Success states |
+| Electric Lavender | #a29bfe | --neon-electric-lavender | Subtle accents |
+
+> **⚠️ Deprecated:** `--brand-cyan` (`#00BFFF`, "Deep Sky Blue") is **NOT** a D2C color. It was a legacy holdover used in early CRM7/R80.3 theme files. All references have been replaced with `--neon-electric-cyan` (`#00cec9`). Do not reintroduce `--brand-cyan` in any D2C app.
 
 ### Brand Gradient
 
@@ -37,6 +62,73 @@ This document contains:
 Linear: #ff4757 → #ff7675 → #fdcb6e → #00cec9 → #a29bfe
 (Coral → Orange → Yellow → Cyan → Lavender)
 ```
+
+---
+
+## Color Space: OKLCH
+
+OKLCH is a perceptually uniform color space that produces smoother gradients and more accurate contrast ratios than sRGB/hex. Conduit (Tailwind v4) uses `@theme` blocks with OKLCH values directly. Vite-based projects (CRM7, BSU, R80.3) continue to use hex CSS vars at runtime — the OKLCH values below are the canonical equivalents for reference and for any future migration.
+
+> **Note:** Values are approximate. Verify at [oklch.com](https://oklch.com) before use in production.
+
+### Neon Electric Colors — OKLCH Equivalents
+
+| Color | Hex | OKLCH |
+|-------|-----|-------|
+| Electric Blue | `#2563eb` | `oklch(0.45 0.22 264)` |
+| Electric Cyan | `#00cec9` | `oklch(0.74 0.14 184)` |
+| Electric Indigo | `#4f46e5` | `oklch(0.46 0.26 268)` |
+| Electric Purple | `#6c5ce7` | `oklch(0.53 0.24 271)` |
+| Electric Magenta | `#fd79a8` | `oklch(0.73 0.20 355)` |
+| Electric Pink | `#ec4899` | `oklch(0.58 0.24 350)` |
+| Electric Coral | `#ff4757` | `oklch(0.60 0.22 18)` |
+| Electric Orange | `#ff7675` | `oklch(0.69 0.17 22)` |
+| Electric Yellow | `#fdcb6e` | `oklch(0.86 0.14 79)` |
+| Electric Green | `#22c55e` | `oklch(0.70 0.20 142)` |
+| Electric Lavender | `#a29bfe` | `oklch(0.72 0.18 275)` |
+
+### Surface Colors — OKLCH Equivalents
+
+| Color | Hex | OKLCH | Use |
+|-------|-----|-------|-----|
+| Dark navy bg | `#0a0e1a` | `oklch(0.13 0.02 260)` | Dark mode background |
+| Dark secondary | `#1a1f2e` | `oklch(0.19 0.02 260)` | Dark mode cards |
+| Light bg | `#f2f2f2` | `oklch(0.96 0 0)` | Light mode background |
+
+### Conduit @theme usage (Tailwind v4)
+
+```css
+@theme {
+  --color-neon-electric-blue:    oklch(0.45 0.22 264);
+  --color-neon-electric-cyan:    oklch(0.74 0.14 184);
+  --color-neon-electric-indigo:  oklch(0.46 0.26 268);
+  --color-neon-electric-purple:  oklch(0.53 0.24 271);
+  --color-neon-electric-magenta: oklch(0.73 0.20 355);
+  --color-neon-electric-pink:    oklch(0.58 0.24 350);
+  --color-neon-electric-coral:   oklch(0.60 0.22 18);
+  --color-neon-electric-orange:  oklch(0.69 0.17 22);
+  --color-neon-electric-yellow:  oklch(0.86 0.14 79);
+  --color-neon-electric-green:   oklch(0.70 0.20 142);
+  --color-neon-electric-lavender: oklch(0.72 0.18 275);
+}
+```
+
+### Vite projects CSS var usage (CRM7, BSU, R80.3)
+
+```css
+:root {
+  --neon-electric-blue: 37 99 235;    /* RGB channels for Tailwind opacity support */
+  --neon-electric-cyan: 0 206 201;
+  /* ... */
+}
+```
+
+Tailwind config maps these for opacity-variant support. Two patterns are in use — both are correct:
+
+- **R80.3** — raw RGB channels in the var, no suffix: `'neon-electric-blue': 'rgb(var(--neon-electric-blue) / <alpha-value>)'`
+- **CRM7** — raw RGB channels in a `-rgb` suffixed var (hex kept in primary var): `'neon-electric-blue': 'rgb(var(--neon-electric-blue-rgb) / <alpha-value>)'`
+
+> Do NOT use `'neon-electric-blue': 'var(--neon-electric-blue)'` with a hex value — this breaks opacity modifiers like `bg-neon-electric-cyan/50`.
 
 ---
 
@@ -74,11 +166,11 @@ export default {
         // ============================================
         light: {
           bg: {
-            primary: '#fefefe',      // Off-white
+            primary: '#f2f2f2',      // Off-white
             secondary: '#f8f9fa',    // Warm gray
             tertiary: '#f1f3f4',     // Slightly darker
             quaternary: '#e9ecef',   // Subtle depth
-            accent: '#ffffff',       // Cards, dialogs
+            accent: '#f2f2f2',       // Cards, dialogs
           },
           text: {
             primary: '#2d3436',      // Dark charcoal
@@ -281,7 +373,7 @@ export default {
     --neon-electric-lavender: 162 155 254; /* #a29bfe */
 
     /* Light Theme */
-    --light-bg-primary: 254 254 254;   /* #fefefe */
+    --light-bg-primary: 254 254 254;   /* #f2f2f2 */
     --light-bg-secondary: 248 249 250; /* #f8f9fa */
     --light-bg-tertiary: 241 243 244;  /* #f1f3f4 */
     --light-text-primary: 45 52 54;    /* #2d3436 */

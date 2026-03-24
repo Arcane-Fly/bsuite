@@ -67,7 +67,7 @@ export function Button({
       {...props}
     >
       {isLoading ? (
-        <ActivityIndicator size="small" color="#fefefe" />
+        <ActivityIndicator size="small" color="#f2f2f2" />
       ) : (
         <>
           {icon && <>{icon}</>}

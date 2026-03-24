@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSuite D2C Theme — Per-App Accent System</title>
+<style>
+  :root {
+    --navy: #0a0e1a;
+    --navy-2: #111827;
+    --navy-3: #1e2a3a;
+    --navy-4: #243044;
+    --border: rgba(255,255,255,0.08);
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+
+    /* Core D2C palette */
+    --electric-blue: #2563eb;
+    --electric-cyan: #00cec9;
+    --electric-indigo: #4f46e5;
+    --electric-purple: #6c5ce7;
+    --electric-green: #22c55e;
+    --electric-amber: #f59e0b;
+    --electric-coral: #ff4757;
+
+    /* Per-app accents */
+    --crm7-primary: #2563eb;
+    --crm7-accent: #00cec9;
+
+    --bsu-primary: #6c5ce7;
+    --bsu-accent: #a29bfe;
+
+    --conduit-primary: #22c55e;
+    --conduit-accent: #4ade80;
+
+    --r80-primary: #f59e0b;
+    --r80-accent: #fbbf24;
+
+    --braden-primary: #ab233a;
+    --braden-accent: #cbb26a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 32px 24px 64px;
+  }
+
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+  h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  h3 { font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+  p { color: var(--text-muted); max-width: 640px; }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section { margin-top: 48px; }
+  .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 8px; }
+
+  /* App accent cards */
+  .app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .app-card {
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    background: var(--navy-2);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .app-card:hover { transform: translateY(-2px); }
+  .app-card.selected { border-color: rgba(255,255,255,0.3); }
+
+  .app-card .glow {
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.35;
+  }
+
+  .app-card .app-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .app-card .app-role { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+
+  .swatch-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .swatch { width: 28px; height: 28px; border-radius: 8px; }
+
+  .app-card .chip {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+
+  /* Magic UI component demos */
+  .magic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 16px;
+  }
+
+  .magic-card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .magic-card .tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  /* Border Beam simulation */
+  @keyframes beam-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .border-beam-wrap {
+    position: relative;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.5), rgba(0,206,201,0.5));
+    background-size: 200% 200%;
+    animation: beam-rotate 4s linear infinite;
+  }
+  .border-beam-inner {
+    background: var(--navy-3);
+    border-radius: 15px;
+    padding: 18px;
+  }
+
+  /* Number Ticker simulation */
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .ticker-value {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    animation: count-up 0.6s ease forwards;
+  }
+
+  /* Blur Fade simulation */
+  @keyframes blur-fade-in {
+    from { opacity: 0; filter: blur(8px); transform: translateY(12px); }
+    to { opacity: 1; filter: blur(0); transform: translateY(0); }
+  }
+  .blur-fade { animation: blur-fade-in 0.7s ease forwards; }
+
+  /* Animated Gradient Text */
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .gradient-text {
+    background: linear-gradient(90deg, #2563eb, #00cec9, #6c5ce7, #2563eb);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 4s ease infinite;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  /* Dot pattern */
+  .dot-pattern {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 20px 20px;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  /* Shine border */
+  @keyframes shine {
+    from { background-position: 200% center; }
+    to { background-position: -200% center; }
+  }
+  .shine-border {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    background-size: 200% auto;
+    animation: shine 3s linear infinite;
+    height: 1px;
+    width: 100%;
+  }
+
+  /* Meteors */
+  @keyframes meteor {
+    0% { transform: rotate(215deg) translateX(0); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: rotate(215deg) translateX(-600px); opacity: 0; }
+  }
+  .meteor {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 2px; height: 60px;
+    background: linear-gradient(to bottom, #00cec9, transparent);
+    border-radius: 9999px;
+    animation: meteor 2s linear infinite;
+  }
+  .meteor:nth-child(1) { animation-delay: 0s; top: 20%; left: 70%; }
+  .meteor:nth-child(2) { animation-delay: 0.8s; top: 40%; left: 50%; width: 1px; height: 40px; }
+  .meteor:nth-child(3) { animation-delay: 1.5s; top: 10%; left: 80%; width: 1px; height: 30px; opacity: 0.6; }
+
+  /* Glow button */
+  .glow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .glow-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    filter: blur(12px);
+    opacity: 0.5;
+    transform: translateY(4px);
+    z-index: -1;
+  }
+
+  /* Typing animation */
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .cursor { display: inline-block; width: 2px; height: 1em; background: currentColor; margin-left: 2px; animation: blink 1s step-end infinite; vertical-align: text-bottom; }
+
+  /* Shell surface demo */
+  .shell-demo {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 24px;
+    padding: 20px;
+    backdrop-filter: blur(18px);
+  }
+  .shell-elevated {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+
+  /* WCAG note */
+  .wcag-pass { color: #22c55e; font-weight: 600; font-size: 12px; }
+  .wcag-fail { color: #ff4757; font-weight: 600; font-size: 12px; }
+
+  .contrast-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 6px; }
+  .contrast-swatch { width: 32px; height: 20px; border-radius: 4px; }
+  .contrast-text { flex: 1; font-size: 13px; color: var(--text-muted); }
+  .contrast-ratio { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  .q-block {
+    background: var(--navy-3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+  .q-num { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--electric-cyan); margin-bottom: 6px; }
+  .q-text { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+
+  .options-inline { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.03);
+  }
+  .opt:hover { border-color: rgba(255,255,255,0.3); color: var(--text); background: rgba(255,255,255,0.06); }
+  .opt.selected { border-color: var(--electric-cyan); color: var(--electric-cyan); background: rgba(0,206,201,0.08); }
+
+  /* Inject brainstorm helper */
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="blur-fade" style="margin-bottom:40px">
+    <p class="label" style="margin-bottom:8px">BSuite Design System</p>
+    <h1 class="gradient-text" style="margin-bottom:12px">D2C Theme — Per-App Accents</h1>
+    <p style="font-size:16px;color:#94a3b8;max-width:560px">
+      Core D2C Neon Electric identity, each app weighted toward its own accent. Dark navy shell throughout. Magic UI components active.
+    </p>
+  </div>
+
+  <!-- App accent palette -->
+  <div class="section">
+    <h3>Per-App Accent System</h3>
+    <div class="app-grid">
+
+      <div class="app-card" style="border-color:rgba(37,99,235,0.4)">
+        <div class="glow" style="background:#2563eb"></div>
+        <div class="app-name">CRM7</div>
+        <div class="app-role">Workforce CRM</div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#2563eb" title="Electric Blue primary"></div>
+          <div class="swatch" style="background:#00cec9" title="Cyan accent"></div>
+          <div class="swatch" style="background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.3)" title="Surface tint"></div>
+        </div>
+        <div class="chip" style="background:rgba(37,99,235,0.15);color:#60a5fa">Blue · Cyan</div>
+      </div>
+
+      <div class="app-card" style="border-color:rgba(108,92,231,0.4)">
+        <div class="glow" style="background:#6c5ce7"></div>
+        <div class="app-name">BSU Portal</div>
+        <div class="app-role">Platform Hub + OAuth</div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#6c5ce7" title="Electric Purple primary"></div>
+          <div class="swatch" style="background:#a29bfe" title="Lavender accent"></div>
+          <div class="swatch" style="background:rgba(108,92,231,0.15);border:1px solid rgba(108,92,231,0.3)" title="Surface tint"></div>
+        </div>
+        <div class="chip" style="background:rgba(108,92,231,0.15);color:#a29bfe">Purple · Lavender</div>
+      </div>
+
+      <div class="app-card" style="border-color:rgba(34,197,94,0.4)">
+        <div class="glow" style="background:#22c55e"></div>
+        <div class="app-name">Conduit</div>
+        <div class="app-role">Recruitment ATS</div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#22c55e" title="Electric Green primary"></div>
+          <div class="swatch" style="background:#4ade80" title="Green-lite accent"></div>
+          <div class="swatch" style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3)" title="Surface tint"></div>
+        </div>
+        <div class="chip" style="background:rgba(34,197,94,0.15);color:#4ade80">Green · Growth</div>
+      </div>
+
+      <div class="app-card" style="border-color:rgba(245,158,11,0.4)">
+        <div class="glow" style="background:#f59e0b"></div>
+        <div class="app-name">R80.3</div>
+        <div class="app-role">Wage Calculator</div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#f59e0b" title="Electric Amber primary"></div>
+          <div class="swatch" style="background:#fbbf24" title="Yellow accent"></div>
+          <div class="swatch" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3)" title="Surface tint"></div>
+        </div>
+        <div class="chip" style="background:rgba(245,158,11,0.15);color:#fbbf24">Amber · Compliance</div>
+      </div>
+
+      <div class="app-card" style="border-color:rgba(171,35,58,0.4)">
+        <div class="glow" style="background:#ab233a"></div>
+        <div class="app-name">Braden.com.au</div>
+        <div class="app-role">Corporate site — own brand</div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#ab233a" title="Braden Red"></div>
+          <div class="swatch" style="background:#cbb26a" title="Braden Gold"></div>
+          <div class="swatch" style="background:rgba(171,35,58,0.15);border:1px solid rgba(171,35,58,0.3)" title="Surface tint"></div>
+        </div>
+        <div class="chip" style="background:rgba(203,178,106,0.15);color:#cbb26a">Red · Gold — ✓ Correct</div>
+      </div>
+
+    </div>
+    <p style="margin-top:14px;font-size:13px">All share the same navy shell, spacing scale, and typography. Only the primary/accent tokens change per app. Braden keeps its own corporate palette and is excluded from D2C token sharing.</p>
+  </div>
+
+  <hr>
+
+  <!-- Magic UI components demo -->
+  <div class="section">
+    <h3>Magic UI Components — Active Patterns</h3>
+    <div class="magic-grid">
+
+      <!-- Border Beam -->
+      <div class="magic-card">
+        <div class="tag">Border Beam</div>
+        <div class="border-beam-wrap">
+          <div class="border-beam-inner">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px">Pipeline Value</div>
+            <div style="font-size:32px;font-weight:800;color:#2563eb;letter-spacing:-1px">$2.3M</div>
+            <div style="font-size:12px;color:#64748b;margin-top:4px">Active opportunities this cycle</div>
+          </div>
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:#64748b">Rotating gradient border on hero cards and stat chips. Currently active on Dashboard hero.</p>
+      </div>
+
+      <!-- Number Ticker -->
+      <div class="magic-card">
+        <div class="tag">Number Ticker</div>
+        <div style="background:rgba(0,206,201,0.06);border:1px solid rgba(0,206,201,0.15);border-radius:14px;padding:18px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.12em;color:#64748b;text-transform:uppercase;margin-bottom:8px">CONVERSION RATE</div>
+          <div class="ticker-value" style="color:#00cec9">41.7%</div>
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:#64748b">Animates numeric values on mount. Used in heroSignals on Dashboard.</p>
+      </div>
+
+      <!-- Blur Fade -->
+      <div class="magic-card">
+        <div class="tag">Blur Fade</div>
+        <div style="display:grid;gap:8px">
+          <div class="blur-fade shell-elevated" style="animation-delay:0.1s">
+            <div style="font-size:13px;font-weight:600">Quick Actions</div>
+            <div style="font-size:12px;color:#64748b">Fades in with blur on scroll enter</div>
+          </div>
+          <div class="blur-fade shell-elevated" style="animation-delay:0.25s">
+            <div style="font-size:13px;font-weight:600">Communication Center</div>
+            <div style="font-size:12px;color:#64748b">Staggered reveal for panels</div>
+          </div>
+          <div class="blur-fade shell-elevated" style="animation-delay:0.4s">
+            <div style="font-size:13px;font-weight:600">Pipeline Overview</div>
+            <div style="font-size:12px;color:#64748b">Third panel in sequence</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animated Gradient Text -->
+      <div class="magic-card">
+        <div class="tag">Animated Gradient Text</div>
+        <div style="padding:16px 0">
+          <div class="gradient-text">Jodie</div>
+          <div style="font-size:13px;color:#64748b;margin-top:8px">AI assistant brand label in panel header. Cycles across Electric Blue → Cyan → Purple.</div>
+        </div>
+        <p style="font-size:12px;color:#64748b">Proposed for Jodie's header. Not yet wired in.</p>
+      </div>
+
+      <!-- Dot Pattern -->
+      <div class="magic-card" style="min-height:140px">
+        <div class="tag">Dot Pattern</div>
+        <div style="position:relative;border-radius:14px;overflow:hidden;height:100px;background:rgba(255,255,255,0.02)">
+          <div class="dot-pattern"></div>
+          <div style="position:relative;z-index:1;padding:16px;font-size:13px;color:#94a3b8">Background texture for hero sections and empty states. Subtle, WCAG-safe.</div>
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:#64748b">Proposed for Dashboard hero + Jodie empty state. Replaces flat backgrounds.</p>
+      </div>
+
+      <!-- Meteors -->
+      <div class="magic-card" style="min-height:140px">
+        <div class="tag">Meteors</div>
+        <div style="position:relative;border-radius:14px;overflow:hidden;height:100px;background:rgba(0,206,201,0.04);border:1px solid rgba(0,206,201,0.12)">
+          <div class="meteor"></div>
+          <div class="meteor"></div>
+          <div class="meteor"></div>
+          <div style="position:relative;z-index:1;padding:16px;text-align:center;font-size:13px;color:#94a3b8;padding-top:30px">Ask Jodie anything…</div>
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:#64748b">Proposed for Jodie empty/idle state. Subtle streaming effect.</p>
+      </div>
+
+      <!-- Shine Border on button -->
+      <div class="magic-card">
+        <div class="tag">Shine Border + Glow Button</div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:8px 0">
+          <button class="glow-btn" style="background:#2563eb;color:#fff;box-shadow:0 0 20px rgba(37,99,235,0.4)">
+            ✦ Create New Claim
+          </button>
+          <button class="glow-btn" style="background:rgba(37,99,235,0.12);color:#60a5fa;border:1px solid rgba(37,99,235,0.3)">
+            View All Claims
+          </button>
+          <div style="background:rgba(0,206,201,0.06);border:1px solid rgba(0,206,201,0.2);border-radius:12px;padding:12px;position:relative;overflow:hidden">
+            <div class="shine-border" style="position:absolute;top:0;left:0;right:0"></div>
+            <div style="font-size:13px;color:#94a3b8">Panel with shine border on top edge</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing animation -->
+      <div class="magic-card">
+        <div class="tag">Typing Animation</div>
+        <div style="background:rgba(108,92,231,0.06);border:1px solid rgba(108,92,231,0.15);border-radius:14px;padding:16px">
+          <div style="font-size:12px;color:#a29bfe;margin-bottom:8px;font-weight:600">JODIE</div>
+          <div style="font-size:14px;color:#e2e8f0">I can help you generate a compliance report for Q1<span class="cursor" style="background:#a29bfe"></span></div>
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:#64748b">Proposed for Jodie message streaming. Replaces static loading spinner.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- WCAG check -->
+  <div class="section">
+    <h3>WCAG 2.1 AA — Contrast Spot Check</h3>
+    <div style="max-width:500px">
+      <div class="contrast-row">
+        <div class="contrast-swatch" style="background:#f1f5f9"></div>
+        <div class="contrast-text">#f1f5f9 text on #0a0e1a navy</div>
+        <div class="contrast-ratio" style="color:#22c55e">15.8:1 ✓</div>
+      </div>
+      <div class="contrast-row">
+        <div class="contrast-swatch" style="background:#94a3b8"></div>
+        <div class="contrast-text">#94a3b8 muted text on #0a0e1a</div>
+        <div class="contrast-ratio" style="color:#22c55e">7.2:1 ✓</div>
+      </div>
+      <div class="contrast-row">
+        <div class="contrast-swatch" style="background:#60a5fa"></div>
+        <div class="contrast-text">#60a5fa (blue-400) on #0a0e1a</div>
+        <div class="contrast-ratio" style="color:#22c55e">7.8:1 ✓</div>
+      </div>
+      <div class="contrast-row">
+        <div class="contrast-swatch" style="background:#00cec9"></div>
+        <div class="contrast-text">#00cec9 cyan accent on #0a0e1a</div>
+        <div class="contrast-ratio" style="color:#f59e0b">4.6:1 ✓ AA</div>
+      </div>
+      <div class="contrast-row">
+        <div class="contrast-swatch" style="background:#2563eb"></div>
+        <div class="contrast-text">#2563eb blue on #0a0e1a — decorative only</div>
+        <div class="contrast-ratio" style="color:#ff4757">3.2:1 — use as bg, not text</div>
+      </div>
+    </div>
+    <p style="margin-top:12px;font-size:13px">All readable text uses #f1f5f9 (primary) or #94a3b8 (muted). Raw electric blue (#2563eb) is used as background/border only — never as text color in the shell.</p>
+  </div>
+
+  <hr>
+
+  <!-- Questions -->
+  <div class="section">
+    <h2>Open decisions — answer before we code</h2>
+
+    <div class="q-block">
+      <div class="q-num">Q1 of 4</div>
+      <div class="q-text">Are the per-app accents above right? CRM7 = Blue/Cyan · BSU = Purple/Lavender · Conduit = Green · R80.3 = Amber?</div>
+      <div class="options-inline">
+        <div class="opt" onclick="pick(this,'q1','yes')">Yes — looks right</div>
+        <div class="opt" onclick="pick(this,'q1','tweak')">Mostly yes, I'll tell you what to change</div>
+        <div class="opt" onclick="pick(this,'q1','no')">No — let me describe what I want</div>
+      </div>
+    </div>
+
+    <div class="q-block">
+      <div class="q-num">Q2 of 4</div>
+      <div class="q-text">Magic UI additions — which of these should we add first?</div>
+      <div class="options-inline" data-multiselect>
+        <div class="opt" onclick="pick(this,'q2','dot')">Dot Pattern (hero bg)</div>
+        <div class="opt" onclick="pick(this,'q2','gradient-text')">Gradient Text (Jodie label)</div>
+        <div class="opt" onclick="pick(this,'q2','shine')">Shine Border (panels)</div>
+        <div class="opt" onclick="pick(this,'q2','meteors')">Meteors (Jodie idle)</div>
+        <div class="opt" onclick="pick(this,'q2','typing')">Typing Animation (AI stream)</div>
+        <div class="opt" onclick="pick(this,'q2','all')">All of them</div>
+      </div>
+    </div>
+
+    <div class="q-block">
+      <div class="q-num">Q3 of 4</div>
+      <div class="q-text">Financial report editing — dedicated page or dialog?</div>
+      <div class="options-inline">
+        <div class="opt" onclick="pick(this,'q3','route')">Dedicated route /financial/reports/[id]/edit</div>
+        <div class="opt" onclick="pick(this,'q3','dialog')">Persisted dialog (stays in context)</div>
+        <div class="opt" onclick="pick(this,'q3','skip')">Not a priority right now</div>
+      </div>
+    </div>
+
+    <div class="q-block">
+      <div class="q-num">Q4 of 4</div>
+      <div class="q-text">Dashboard demo data — how should it work going forward?</div>
+      <div class="options-inline">
+        <div class="opt" onclick="pick(this,'q4','dev')">Developer-only toggle (current approach)</div>
+        <div class="opt" onclick="pick(this,'q4','seed')">Tenant-level demo/seed mode toggle</div>
+        <div class="opt" onclick="pick(this,'q4','remove')">Remove entirely — live data or empty state only</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const selections = {};
+  function pick(el, q, val) {
+    // Toggle for multi-select, exclusive for single
+    const block = el.parentElement;
+    const isMulti = block.hasAttribute('data-multiselect');
+    if (!isMulti) {
+      block.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+    }
+    el.classList.toggle('selected');
+    if (!selections[q]) selections[q] = [];
+    const idx = selections[q].indexOf(val);
+    if (idx >= 0) selections[q].splice(idx, 1);
+    else selections[q].push(val);
+    // Log for events file
+    try {
+      const evt = { type: 'click', question: q, choice: val, selected: selections[q], timestamp: Date.now() };
+      if (window._logEvent) window._logEvent(evt);
+    } catch(e) {}
+  }
+</script>
+</body>
+</html>

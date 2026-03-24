@@ -1,0 +1,75 @@
+<h2>CRM7 UI + Capability Remediation — Aligned Plan</h2>
+<p class="subtitle">Claude Code + Cascade lanes, aligned to Cascade's audit and the master roadmap. Confirm scope before either assistant starts coding.</p>
+
+<div class="section">
+  <div class="label">🔴 Cascade lane — visual system</div>
+  <div style="display:grid;gap:10px;margin-top:10px">
+    <div style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.25);border-radius:12px;padding:14px 16px">
+      <strong style="color:#2563eb">B1 — Shell + dashboard D2C finish</strong>
+      <p style="margin:6px 0 0;font-size:13px;opacity:0.8">Remove hard borders/black-white artifacts · add semantic shadow/glow depth · fix sidebar scroll · polish panel chrome to Balanced Hybrid intent</p>
+    </div>
+    <div style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.25);border-radius:12px;padding:14px 16px">
+      <strong style="color:#2563eb">B2 — Jodie premium command surface</strong>
+      <p style="margin:6px 0 0;font-size:13px;opacity:0.8">Redesign AI panel shell · wire existing Magic UI primitives (BorderBeam, BlurFade, NumberTicker) into perceivable experience · glass morphism + elevated surface treatment</p>
+    </div>
+    <div style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.25);border-radius:12px;padding:14px 16px">
+      <strong style="color:#2563eb">B3 — Auth screens as D2C cross-suite reference</strong>
+      <p style="margin:6px 0 0;font-size:13px;opacity:0.8">Freeze CRM7 auth as reference · extract reusable tokens/patterns for BSU / Conduit / R80.3 convergence</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">🟢 Claude Code lane — data trust + capability</div>
+  <div style="display:grid;gap:10px;margin-top:10px">
+    <div style="background:rgba(0,206,201,0.08);border:1px solid rgba(0,206,201,0.25);border-radius:12px;padding:14px 16px">
+      <strong style="color:#00cec9">A1 — Remove hardcoded financial / dashboard data</strong>
+      <p style="margin:6px 0 0;font-size:13px;opacity:0.8">Dashboard.tsx DEMO_METRICS · financial/reports dummy rows · separate live / seeded / empty / error states explicitly in code and UI</p>
+    </div>
+    <div style="background:rgba(0,206,201,0.08);border:1px solid rgba(0,206,201,0.25);border-radius:12px;padding:14px 16px">
+      <strong style="color:#00cec9">A2 — Financial report edit lifecycle</strong>
+      <p style="margin:6px 0 0;font-size:13px;opacity:0.8">Edit Report wired to real persistence · report-form-dialog.tsx backed by store/service · no simulated generation</p>
+    </div>
+    <div style="background:rgba(0,206,201,0.08);border:1px solid rgba(0,206,201,0.25);border-radius:12px;padding:14px 16px">
+      <strong style="color:#00cec9">A3 — Add Person: apprentice/trainee completeness</strong>
+      <p style="margin:6px 0 0;font-size:13px;opacity:0.8">people/new.tsx expanded · all required GTO workflow fields · validation reflects actual required data</p>
+    </div>
+    <div style="background:rgba(0,206,201,0.08);border:1px solid rgba(0,206,201,0.25);border-radius:12px;padding:14px 16px">
+      <strong style="color:#00cec9">C1 — Builder/customization persistence</strong>
+      <p style="margin:6px 0 0;font-size:13px;opacity:0.8">Audit existing settings/builder surfaces · define minimal credible persisted scope · tenant/user-scoped layout persistence</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">🟡 Additional scope — repo remediation plan Phase 6 (P1)</div>
+  <div style="background:rgba(253,203,110,0.08);border:1px solid rgba(253,203,110,0.3);border-radius:12px;padding:14px 16px;margin-top:10px">
+    <strong style="color:#fdcb6e">@bsuite/theme shared package</strong>
+    <p style="margin:6px 0 0;font-size:13px;opacity:0.8">Create <code>packages/theme/</code> with shared tokens, Tailwind preset, CSS custom properties, semantic status mappings, typography/spacing scale. D2C apps import from package, not local copies. Braden excluded (corporate brand). <em>Sequenced after B1–B3 and A1–A3 are stable.</em></p>
+    <p style="margin:8px 0 0;font-size:12px;color:#fdcb6e;opacity:0.8">⚠ Magic UI: only 3 components currently hand-copied. Should we expand the set via <code>npx shadcn add</code> or keep hand-copying as needed?</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Sequencing</div>
+  <div style="font-size:13px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px">
+      <strong>Phase 1 — Trust paths first</strong><br>
+      <span style="opacity:0.7">A1 hardcoded data · A2 report lifecycle · A3 add person</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px">
+      <strong>Phase 2 — Visual correction</strong><br>
+      <span style="opacity:0.7">B1 shell/dashboard · B2 Jodie · B3 auth ref</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px">
+      <strong>Phase 3 — Builder</strong><br>
+      <span style="opacity:0.7">C1 persisted customization</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px">
+      <strong>Phase 4 — Theme package</strong><br>
+      <span style="opacity:0.7">@bsuite/theme · cross-app token unification</span>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this split and sequencing look right? Anything to redirect before either lane starts?</p>
