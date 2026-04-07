@@ -31,7 +31,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 ### Theme System
 
 - **D2C Neon Electric theme** for: business-suite-unified, crm7, conduit, R80.3
-  - See `docs/20260228-d2c-theme-specification-v1.00W.md` for the active palette and implementation
+  - See `docs/20260228-d2c-theme-specification-v1.00A.md` for the active palette and implementation
   - Primary: Electric Blue `#2563eb`, Accent: Electric Cyan `#00cec9`
   - Dark mode: deep navy `#0a0e1a`, Light mode: off-white `#f2f2f2`
 - **Corporate branding** for: braden (braden.com.au)
@@ -78,7 +78,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
 
 ### Authentication & OAuth
 
-Full details in `docs/20260227-auth-map-reference-v1.00W.md`. Key facts:
+Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 
 **Supabase Project:** `tuybltdrdefjblnplpqo`
 
@@ -113,7 +113,7 @@ BSU, CRM7, R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
 4. **CRM7 callback is dual-purpose** — checks `sessionStorage` for `bs_oauth_state` to distinguish flows
 5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage, systems run in parallel
-6. **`refreshBusinessSuiteToken()` is unused** in all 3 client apps — P1 fix pending
+6. **`startBSTokenRefresh()` is wired** in all 3 client apps — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 
 #### Key Auth Files
 
@@ -156,10 +156,10 @@ Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..`
 
 ## Key Files
 
-- `docs/20260227-contributing-standards-guide-v1.00W.md` — full quality standards
-- `docs/20260228-d2c-theme-specification-v1.00W.md` — active D2C theme specification
-- `docs/20260227-dry-one-shot-architecture-v1.00W.md` — entity ownership and DRY patterns
-- `docs/20260227-auth-map-reference-v1.00W.md` — authentication architecture
+- `docs/20260227-contributing-standards-guide-v1.00A.md` — full quality standards
+- `docs/20260228-d2c-theme-specification-v1.00A.md` — active D2C theme specification
+- `docs/20260227-dry-one-shot-architecture-v1.00A.md` — entity ownership and DRY patterns
+- `docs/20260227-auth-map-reference-v1.00A.md` — authentication architecture
 
 ## Persistent Memory Protocol
 

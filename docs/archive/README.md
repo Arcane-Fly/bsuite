@@ -76,6 +76,15 @@ Archived per-project roadmaps and documents that have been superseded by the uni
 | File | Description |
 |------|-------------|
 | [20260316-p0-p1-sweep-plan-v1.00WA.md](20260316-p0-p1-sweep-plan-v1.00WA.md) | P0/P1 sweep plan — all items complete, archived 2026-03-16 |
+| [20260311-d2c-theme-remediation-plan-v1.00W.md](20260311-d2c-theme-remediation-plan-v1.00W.md) | D2C theme remediation plan — all items complete, archived 2026-04-07 |
+| [20260316-bsuite-entity-reconciliation-plan-v1.00W.md](20260316-bsuite-entity-reconciliation-plan-v1.00W.md) | Entity reconciliation plan (SP-4) — crosswalk delivered, archived 2026-04-07 |
+
+### crm7/ (additional archived plans)
+
+| File | Description |
+|------|-------------|
+| [20260316-crm7-dashboard-grid-fix-plan-v1.00W.md](crm7/20260316-crm7-dashboard-grid-fix-plan-v1.00W.md) | Dashboard grid fix — PageGridLayout wired everywhere, archived 2026-04-07 |
+| [20260316-crm7-ui-fix-plan-v1.00W.md](crm7/20260316-crm7-ui-fix-plan-v1.00W.md) | CRM7 UI fix plan — all items confirmed done, archived 2026-04-07 |
 
 ### Other archived corpora
 

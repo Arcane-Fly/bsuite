@@ -105,8 +105,29 @@ jobs:
 
       - name: Verify submodule reference is present
         shell: bash
+        env:
+          APP: ${{ matrix.app }}
         run: |
-          git ls-tree HEAD "${{ matrix.app }}"
+          git ls-tree HEAD "$APP"
+
+      - name: Validate lockfile integrity
+        shell: bash
+        env:
+          APP: ${{ matrix.app }}
+        run: |
+          LOCKFILE="${APP}/pnpm-lock.yaml"
+          if [ -f "$LOCKFILE" ]; then
+            # Fail if lockfile contains workspace-relative paths (../)
+            # These break Vercel builds with ERR_PNPM_OUTDATED_LOCKFILE
+            if grep -qE '^\s+\.\.\/' "$LOCKFILE"; then
+              echo "::error::$LOCKFILE contains workspace-relative paths (../) — regenerate outside bsuite tree"
+              echo "See CLAUDE.md lockfile generation instructions"
+              exit 1
+            fi
+            echo "✓ $LOCKFILE is clean (no workspace-relative paths)"
+          else
+            echo "⚠ No lockfile found at $LOCKFILE (may be generated at build time)"
+          fi
 
       - name: Job summary
         if: always()
