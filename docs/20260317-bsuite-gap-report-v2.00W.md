@@ -8,7 +8,7 @@
 **Plans cross-referenced:**
 
 - `docs/20260227-bsuite-master-roadmap-v5.00W.md`
-- `docs/20260316-bsuite-gap-report-v1.00W.md`
+- `docs/20260316-bsuite-gap-report-v1.00A.md`
 - `~/.windsurf/plans/pageGridLayout-master-2f6071.md`
 - `~/.windsurf/plans/pageGridLayout-phase2-bsu-r80-conduit-2f6071.md`
 - `~/.windsurf/plans/p0-p1-sweep-07fa37.md`
@@ -23,7 +23,7 @@
 
 ## Section 1 — Stale Data Corrections (gap report v1 was wrong)
 
-The previous gap report `20260316-bsuite-gap-report-v1.00W.md` contained stale P0/P1 entries that are **already fully implemented**:
+The previous gap report `20260316-bsuite-gap-report-v1.00A.md` contained stale P0/P1 entries that are **already fully implemented**:
 
 | Stale Claim | Actual Reality |
 |---|---|
@@ -479,6 +479,33 @@ These v1 items are not yet assigned to a sprint:
 
 ---
 
-_Supersedes `docs/20260316-bsuite-gap-report-v1.00W.md`_
+## Section 10 — Monorepo Maintenance Sweep (2026-04-07)
+
+> Cross-cutting infrastructure and quality improvements applied across the workspace.
+
+| Item | Project(s) | Status |
+|------|-----------|--------|
+| `refreshBusinessSuiteToken()` wired in all 3 client apps (CRM7, R80.3, Braden) | CRM7, R80.3, Braden | ✅ Done |
+| Secret scanning CI added (gitleaks in GitHub Actions) | All | ✅ Done |
+| ESLint configs unified across all 5 apps (shared rule set) | All | ✅ Done |
+| Barrel exports added to crm7 (9 directories) | CRM7 | ✅ Done |
+| Barrel exports added to conduit (8 directories) | Conduit | ✅ Done |
+| Coverage thresholds added to all apps and `@bsuite/nav-core` | All + nav-core | ✅ Done |
+| `charge-calculator.jsx` archived (superseded by `@bsuite/charge-calc` npm package) | Shared | ✅ Done |
+| Lockfile validation added to CI (detects workspace-relative paths) | All | ✅ Done |
+| E2E auth tests added to crm7 (Supabase Native + BS OAuth dual flow) | CRM7 | ✅ Done |
+| Bot protection (Cloudflare Turnstile) added to braden contact form | Braden | ✅ Done |
+
+### Previously Open Items Now Resolved
+
+| Gap Report ID | Item | Resolution |
+|---------------|------|------------|
+| (unlisted) | `refreshBusinessSuiteToken()` unused in all 3 client apps | Now wired — token refresh fires on 401 responses |
+| (unlisted) | No secret scanning in CI | gitleaks GitHub Action runs on push + PR |
+| (unlisted) | ESLint config divergence across projects | Unified base config, project-specific overrides only |
+
+---
+
+_Supersedes `docs/20260316-bsuite-gap-report-v1.00A.md`_
 
 Vercel Bot recommended implementing: <https://vercel.com/docs/tracing/instrumentation#adding-custom-spans>
