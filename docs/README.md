@@ -5,7 +5,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 ## Documentation Authority
 
 - `20260227-bsuite-master-roadmap-v5.00W.md` is the canonical planning and delivery source of truth
-- `20260227-auth-map-reference-v1.00W.md` is the canonical authentication and session-topology reference
+- `20260227-auth-map-reference-v1.00A.md` is the canonical authentication and session-topology reference
 - Project `docs/README.md` files are navigation hubs only
 - `docs/plans/` contains feeder plans that must reconcile back into the master roadmap
 - `archive/` and imported donor documentation are reference-only and may preserve older naming or topology
@@ -17,31 +17,31 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md` | Cascade ↔ Claude Code unified upgrade coordination plan (approved) |
 | `20260226-ux-oneshot-deep-dive-plan-v1.00W.md` | UX & one-shot deep dive — eliminate double-entry across CRM7 |
 | `20260227-bsuite-master-roadmap-v5.00W.md` | Single source of truth for BSuite project planning across all projects |
-| `20260227-auth-map-reference-v1.00W.md` | Authentication map for the Business Suite ecosystem (BSU, CRM7, R80.3, Braden) |
-| `20260227-bsuite-deep-audit-report-v1.00W.md` | Deep audit report covering CRM7, BSU, Conduit, braden.com.au, and R80.3 |
-| `20260227-contributing-standards-guide-v1.00W.md` | Universal quality, documentation, and code standards for all BSuite projects |
-| `20260227-dry-one-shot-architecture-v1.00W.md` | DRY principles and one-shot data entry architecture for all modules |
-| `20260301-crm7-page-inventory-v1.00W.md` | CRM7 page inventory — 148 pages audited with data source and status |
-| `20260301-crm7-rbac-matrix-v1.00W.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
-| `20260228-d2c-theme-specification-v1.00W.md` | D2C Neon Electric theme specification (palette, Tailwind config, CSS variables) |
-| `20260228-gto-standards-reference-v1.00W.md` | National Standards for Group Training Organisations evidence guide |
-| `20260303-bsuite-competitive-landscape-v1.00W.md` | BSuite competitive landscape & launch strategy — competitor map, BOOT moat, stub audit summary |
-| `20260303-crm8u-code-snippets-v1.00W.md` | Key code patterns, Fair Work API integration stubs, Supabase SSR auth patterns, recommendations for adoption |
-| `20260303-crm8u-github-research-v1.00W.md` | CRM8U (GaryOcean428) GitHub repo analysis: architecture, features, code quality, salvageable assets for BSuite |
-| `20260310-fairwork-reference-v1.00W.md` | Fair Work compliance reference |
-| `20260316-claude-code-prompts-reference-v1.00W.md` | Self-contained prompts for Claude Code to execute remaining roadmap items |
-| `20260316-compliance-reference-v1.00W.md` | Compliance documentation |
-| `20260316-matrix-reference-v1.00W.md` | Requirements/feature matrix |
-| `20260316-mermaid-ui-builder-reference-v1.00W.md` | Mermaid UI builder guide |
-| `20260316-navigation-guide-v1.00W.md` | Navigation guide |
-| `20260316-navigation-reference-v1.00W.md` | Navigation structure |
-| `20260316-performance-report-v1.00W.md` | Performance report |
-| `20260316-pricing-strategy-v1.00W.md` | Pricing and subscription strategy — per-seat pricing with AI add-on tiers |
-| `20260316-ui-reference-v1.00W.md` | Current BSuite UI architecture summary and canonical UI source chain |
-| `20260304-ram-credential-government-access-map-v1.00W.md` | RAM credential and government API access map (USI, ADMS, DTWD) |
-| `20260309-bsuite-completeness-matrix-v1.00W.md` | BSuite feature completeness matrix across all five projects |
-| `20260316-bsuite-gap-report-v1.00W.md` | BSuite gap report — P0/P1/P2 items, completion status, and delivery tracking |
-| `20260316-docs-compliance-audit-v1.00W.md` | Documentation compliance audit — naming, indexing, and coverage review |
+| `20260227-auth-map-reference-v1.00A.md` | Authentication map for the Business Suite ecosystem (BSU, CRM7, R80.3, Braden) |
+| `20260227-bsuite-deep-audit-report-v1.00A.md` | Deep audit report covering CRM7, BSU, Conduit, braden.com.au, and R80.3 |
+| `20260227-contributing-standards-guide-v1.00A.md` | Universal quality, documentation, and code standards for all BSuite projects |
+| `20260227-dry-one-shot-architecture-v1.00A.md` | DRY principles and one-shot data entry architecture for all modules |
+| `20260301-crm7-page-inventory-v1.00A.md` | CRM7 page inventory — 148 pages audited with data source and status |
+| `20260301-crm7-rbac-matrix-v1.00A.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
+| `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification (palette, Tailwind config, CSS variables) |
+| `20260228-gto-standards-reference-v1.00A.md` | National Standards for Group Training Organisations evidence guide |
+| `20260303-bsuite-competitive-landscape-v1.00A.md` | BSuite competitive landscape & launch strategy — competitor map, BOOT moat, stub audit summary |
+| `20260303-crm8u-code-snippets-v1.00A.md` | Key code patterns, Fair Work API integration stubs, Supabase SSR auth patterns, recommendations for adoption |
+| `20260303-crm8u-github-research-v1.00A.md` | CRM8U (GaryOcean428) GitHub repo analysis: architecture, features, code quality, salvageable assets for BSuite |
+| `20260310-fairwork-reference-v1.00A.md` | Fair Work compliance reference |
+| `20260316-claude-code-prompts-reference-v1.00A.md` | Self-contained prompts for Claude Code to execute remaining roadmap items |
+| `20260316-compliance-reference-v1.00A.md` | Compliance documentation |
+| `20260316-matrix-reference-v1.00A.md` | Requirements/feature matrix |
+| `20260316-mermaid-ui-builder-reference-v1.00A.md` | Mermaid UI builder guide |
+| `20260316-navigation-guide-v1.00A.md` | Navigation guide |
+| `20260316-navigation-reference-v1.00A.md` | Navigation structure |
+| `20260316-performance-report-v1.00A.md` | Performance report |
+| `20260316-pricing-strategy-v1.00A.md` | Pricing and subscription strategy — per-seat pricing with AI add-on tiers |
+| `20260316-ui-reference-v1.00A.md` | Current BSuite UI architecture summary and canonical UI source chain |
+| `20260304-ram-credential-government-access-map-v1.00A.md` | RAM credential and government API access map (USI, ADMS, DTWD) |
+| `20260309-bsuite-completeness-matrix-v1.00A.md` | BSuite feature completeness matrix across all five projects |
+| `20260316-bsuite-gap-report-v1.00A.md` | BSuite gap report v1 — superseded by v2 (approved/archived) |
+| `20260316-docs-compliance-audit-v1.00A.md` | Documentation compliance audit — naming, indexing, and coverage review |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps superseded by the master roadmap |
 | [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |

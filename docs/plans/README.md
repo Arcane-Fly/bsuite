@@ -12,11 +12,16 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 |------|--------|-------------|
 | `20260227-boot-compliance-engine-specification-v1.00W.md` | W | BOOT compliance engine specification (C8-tier competitive differentiator) |
 | `20260302-r80-crm7-integration-audit-v1.00W.md` | W | R80.3 ↔ CRM7 integration audit and shared calc engine plan |
-| `20260311-d2c-theme-remediation-plan-v1.00W.md` | W | D2C Neon Electric theme remediation — full-suite implementation plan |
-| `20260316-bsuite-entity-reconciliation-plan-v1.00W.md` | W | BSuite entity × DB reconciliation (198 entities) |
 | `20260316-crm7-broad-ui-refresh-plan-v1.00W.md` | W | CRM7 broad UI refresh (D2C Neon theme) |
-| `20260316-crm7-dashboard-grid-fix-plan-v1.00W.md` | W | CRM7 dashboard grid layout system fix |
-| `20260316-crm7-ui-fix-plan-v1.00W.md` | W | CRM7 UI fix plan (dashboard, sidebar, accessibility) |
+
+### Archived Plans (moved to `docs/archive/`)
+
+| File | Archived | Reason |
+|------|----------|--------|
+| `20260311-d2c-theme-remediation-plan-v1.00W.md` | 2026-04-07 | All theme remediation items confirmed complete in gap report v2 |
+| `20260316-bsuite-entity-reconciliation-plan-v1.00W.md` | 2026-04-07 | SP-4 entity crosswalk delivered (gap report v2 Section 9) |
+| `20260316-crm7-dashboard-grid-fix-plan-v1.00W.md` | 2026-04-07 | PageGridLayout wired on all apps (gap report v2 Section 2) |
+| `20260316-crm7-ui-fix-plan-v1.00W.md` | 2026-04-07 | All UI fix items confirmed done (gap report v2 Section 2) |
 
 ## Data Files
 
