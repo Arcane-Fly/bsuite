@@ -1,0 +1,38 @@
+# Gitleaks configuration for BSuite monorepo
+# https://github.com/gitleaks/gitleaks
+
+title = "BSuite gitleaks config"
+
+[extend]
+# Inherit the default gitleaks rules
+useDefault = true
+
+# ---------- Allowlists (global) ----------
+# Values that look like secrets but are public identifiers
+
+[allowlist]
+description = "Global allowlist for known public identifiers"
+
+paths = [
+  '''(^|/)\.gitleaks\.toml$''',
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''(^|/)package-lock\.json$''',
+]
+
+regexTarget = "match"
+
+regexes = [
+  # Supabase project ID (public, embedded in client URLs)
+  '''tuybltdrdefjblnplpqo''',
+
+  # GCP project ID (public metadata, not a secret)
+  '''claritycrm-hpofn''',
+
+  # GCP project number (public metadata)
+  '''111744121676''',
+
+  # BS OAuth 2.1 client IDs (public values sent in auth redirects)
+  '''30f76744-3e0b-40bf-abb8-8c587389802e''',
+  '''5d804d20-cd1b-4724-9107-86d2a9e51e09''',
+  '''dcb7af18-254a-4946-b94d-5c606b01fc3f''',
+]
