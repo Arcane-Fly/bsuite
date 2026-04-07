@@ -17,8 +17,9 @@ paths = [
   '''(^|/)\.gitleaks\.toml$''',
   '''(^|/)pnpm-lock\.yaml$''',
   '''(^|/)package-lock\.json$''',
-  # Legacy docs with example env vars — not live secrets
+  # Legacy/archived docs with example env vars — not live secrets
   '''docs/crm13-docs/''',
+  '''docs/archive/''',
 ]
 
 regexTarget = "match"
