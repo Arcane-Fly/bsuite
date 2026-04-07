@@ -24,6 +24,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260301-crm7-page-inventory-v1.00A.md` | CRM7 page inventory — 148 pages audited with data source and status |
 | `20260301-crm7-rbac-matrix-v1.00A.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
 | `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification (palette, Tailwind config, CSS variables) |
+| `20260407-d2c-wcag-contrast-audit-v1.00A.md` | WCAG AA/AAA contrast audit for D2C Neon Electric theme — failing pairs, semantic token recommendations |
 | `20260228-gto-standards-reference-v1.00A.md` | National Standards for Group Training Organisations evidence guide |
 | `20260303-bsuite-competitive-landscape-v1.00A.md` | BSuite competitive landscape & launch strategy — competitor map, BOOT moat, stub audit summary |
 | `20260303-crm8u-code-snippets-v1.00A.md` | Key code patterns, Fair Work API integration stubs, Supabase SSR auth patterns, recommendations for adoption |
