@@ -119,14 +119,19 @@ jobs:
           if [ -f "$LOCKFILE" ]; then
             # Fail if lockfile contains workspace-relative paths (../)
             # These break Vercel builds with ERR_PNPM_OUTDATED_LOCKFILE
-            if grep -qE '^\s+\.\.\/' "$LOCKFILE"; then
+            # Note: use [ \t] instead of \s for POSIX grep portability
+            if grep -qE '^[ 	]+\.\./' "$LOCKFILE"; then
               echo "::error::$LOCKFILE contains workspace-relative paths (../) — regenerate outside bsuite tree"
               echo "See CLAUDE.md lockfile generation instructions"
               exit 1
             fi
             echo "✓ $LOCKFILE is clean (no workspace-relative paths)"
           else
-            echo "⚠ No lockfile found at $LOCKFILE (may be generated at build time)"
+            # Submodule directories appear as gitlinks in the parent repo checkout.
+            # The actual lockfile lives inside the submodule, which is not checked
+            # out here (checking out all submodules would be expensive and unnecessary).
+            # Each submodule's own CI validates its lockfile independently.
+            echo "⚠ Skipping lockfile check — $APP is a submodule gitlink (content not checked out)"
           fi
 
       - name: Job summary
