@@ -1,18 +1,44 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { Plus } from 'lucide-react-native';
+import { useToast, SkeletonIncidentCard } from '@/components/ui';
 import { WHSIncidentCard } from '@/components/WHSIncidentCard';
 import { Colors } from '@/lib/constants';
 import { MOCK_INCIDENTS } from '@/lib/mock-data';
 import type { WHSIncident } from '@/types';
 
 /**
- * WHS incidents tab with incident list and floating "Report Incident" button.
+ * WHS incidents tab with skeleton loading state and toast feedback.
  */
 export default function WHSScreen() {
-  const renderItem = ({ item }: { item: WHSIncident }) => (
-    <WHSIncidentCard incident={item} />
+  const { showToast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate initial data load
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: WHSIncident }) => <WHSIncidentCard incident={item} />,
+    []
   );
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        <View className="px-4 pt-4 pb-2">
+          <View className="h-3 w-20 rounded bg-surface-elevated" />
+        </View>
+        <View className="px-4">
+          <SkeletonIncidentCard />
+          <SkeletonIncidentCard />
+          <SkeletonIncidentCard />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">
@@ -42,8 +68,9 @@ export default function WHSScreen() {
       <TouchableOpacity
         className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg"
         onPress={() => {
-          Alert.alert(
-            'Report Incident',
+          showToast(
+            'info',
+            'Coming Soon',
             'Incident reporting form will be available in the next update.'
           );
         }}

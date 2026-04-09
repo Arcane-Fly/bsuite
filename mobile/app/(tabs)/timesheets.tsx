@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { SkeletonTimesheetCard } from '@/components/ui';
 import { TimesheetCard } from '@/components/TimesheetCard';
 import { Colors } from '@/lib/constants';
 import { MOCK_TIMESHEETS } from '@/lib/mock-data';
@@ -15,18 +16,26 @@ const FILTER_OPTIONS: { label: string; value: FilterOption }[] = [
 ];
 
 /**
- * Timesheets tab with status filter (segmented control).
+ * Timesheets tab with skeleton loading state and status filter.
  */
 export default function TimesheetsScreen() {
   const [filter, setFilter] = useState<FilterOption>('pending');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate initial data load
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return MOCK_TIMESHEETS;
     return MOCK_TIMESHEETS.filter((t) => t.status === filter);
   }, [filter]);
 
-  const renderItem = ({ item }: { item: Timesheet }) => (
-    <TimesheetCard timesheet={item} />
+  const renderItem = useCallback(
+    ({ item }: { item: Timesheet }) => <TimesheetCard timesheet={item} />,
+    []
   );
 
   return (
@@ -59,24 +68,32 @@ export default function TimesheetsScreen() {
       {/* Count */}
       <View className="px-4 py-2">
         <Text className="text-xs text-muted-foreground">
-          {filtered.length} timesheet{filtered.length !== 1 ? 's' : ''}
+          {isLoading ? ' ' : `${filtered.length} timesheet${filtered.length !== 1 ? 's' : ''}`}
         </Text>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={filtered}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerClassName="px-4 pb-4"
-        ListEmptyComponent={
-          <View className="items-center justify-center py-16">
-            <Text className="text-base text-muted-foreground">
-              No timesheets to show.
-            </Text>
-          </View>
-        }
-      />
+      {/* Skeleton loading state */}
+      {isLoading ? (
+        <View className="px-4">
+          <SkeletonTimesheetCard />
+          <SkeletonTimesheetCard />
+          <SkeletonTimesheetCard />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerClassName="px-4 pb-4"
+          ListEmptyComponent={
+            <View className="items-center justify-center py-16">
+              <Text className="text-base text-muted-foreground">
+                No timesheets to show.
+              </Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
