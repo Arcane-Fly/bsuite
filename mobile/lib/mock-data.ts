@@ -1,6 +1,7 @@
 import type {
   Apprentice,
   ApprenticeDocument,
+  ApprenticeNote,
   DashboardMetric,
   Timesheet,
   WHSIncident,
@@ -275,6 +276,81 @@ export const MOCK_INCIDENTS: WHSIncident[] = [
     apprenticeName: 'Mia Nguyen',
     resolvedAt: null,
     photos: [],
+  },
+];
+
+// ─── Notes ──────────────────────────────────────────────────────────────────
+
+export const MOCK_NOTES: ApprenticeNote[] = [
+  {
+    id: 'note-1',
+    apprenticeId: '1',
+    content:
+      'Visited Jake on-site at Spark Electrical. He is progressing well through his second-year competencies. Supervisor David Chen confirmed Jake is meeting all workplace expectations.',
+    category: 'visit',
+    createdBy: 'Field Officer',
+    createdAt: '2026-02-25T10:00:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 'note-2',
+    apprenticeId: '1',
+    content:
+      'Jake mentioned interest in specialising in solar panel installation. Worth discussing training plan adjustment at next review.',
+    category: 'observation',
+    createdBy: 'Field Officer',
+    createdAt: '2026-02-25T10:15:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 'note-3',
+    apprenticeId: '1',
+    content:
+      'Confirm with RTO that Jake has completed Unit UEENEEG006A — Solve problems in single and three phase low voltage machines. Certificate pending.',
+    category: 'follow_up',
+    createdBy: 'Field Officer',
+    createdAt: '2026-02-25T10:20:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 'note-4',
+    apprenticeId: '2',
+    content:
+      'Site visit to North Coast Builders. Mia is ahead of schedule on framing competencies. Tim Walsh very pleased with her work ethic.',
+    category: 'visit',
+    createdBy: 'Field Officer',
+    createdAt: '2026-02-20T14:30:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 'note-5',
+    apprenticeId: '2',
+    content:
+      'Working at Heights certificate expires 2026-04-15. Chase renewal before expiry. Mia is aware and has booked the refresher course.',
+    category: 'follow_up',
+    createdBy: 'Field Officer',
+    createdAt: '2026-02-20T14:45:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 'note-6',
+    apprenticeId: '3',
+    content:
+      'Liam demonstrating strong practical skills but struggling with written assessments. Suggested literacy support through the RTO.',
+    category: 'observation',
+    createdBy: 'Field Officer',
+    createdAt: '2026-02-18T09:00:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 'note-7',
+    apprenticeId: '4',
+    content:
+      'Sophie currently suspended pending workplace investigation. Meeting scheduled with CoolTech HR for 2026-03-05 to discuss return-to-work plan.',
+    category: 'follow_up',
+    createdBy: 'Field Officer',
+    createdAt: '2026-02-15T11:00:00Z',
+    updatedAt: null,
   },
 ];
 
