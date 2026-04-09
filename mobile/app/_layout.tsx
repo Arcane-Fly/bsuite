@@ -5,6 +5,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ToastProvider } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { Colors } from '@/lib/constants';
 
@@ -47,28 +48,30 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
-          animation: 'fade',
-        }}
-      >
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="apprentice/[id]"
-          options={{
-            headerShown: true,
-            headerTitle: 'Apprentice',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.foreground,
-            headerTitleStyle: { fontWeight: '600' },
-            animation: 'slide_from_right',
+      <ToastProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.background },
+            animation: 'fade',
           }}
-        />
-      </Stack>
-      <StatusBar style="light" />
+        >
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="apprentice/[id]"
+            options={{
+              headerShown: true,
+              headerTitle: 'Apprentice',
+              headerStyle: { backgroundColor: Colors.surface },
+              headerTintColor: Colors.foreground,
+              headerTitleStyle: { fontWeight: '600' },
+              animation: 'slide_from_right',
+            }}
+          />
+        </Stack>
+        <StatusBar style="light" />
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

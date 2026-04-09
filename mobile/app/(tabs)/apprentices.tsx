@@ -2,19 +2,26 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Search } from 'lucide-react-native';
-import { Input } from '@/components/ui';
+import { Input, SkeletonApprenticeRow } from '@/components/ui';
 import { ApprenticeRow } from '@/components/ApprenticeRow';
 import { Colors } from '@/lib/constants';
 import { MOCK_APPRENTICES } from '@/lib/mock-data';
 import type { Apprentice } from '@/types';
 
 /**
- * Apprentices list tab with search and pull-to-refresh.
+ * Apprentices list tab with skeleton loading, search, and pull-to-refresh.
  */
 export default function ApprenticesScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate initial data load
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return MOCK_APPRENTICES;
@@ -68,32 +75,42 @@ export default function ApprenticesScreen() {
       {/* Results count */}
       <View className="px-4 py-2">
         <Text className="text-xs text-muted-foreground">
-          {filtered.length} apprentice{filtered.length !== 1 ? 's' : ''}
+          {isLoading ? ' ' : `${filtered.length} apprentice${filtered.length !== 1 ? 's' : ''}`}
         </Text>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={filtered}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={Colors.primary}
-            colors={[Colors.primary]}
-          />
-        }
-        ListEmptyComponent={
-          <View className="flex-1 items-center justify-center py-16">
-            <Text className="text-base text-muted-foreground">
-              No apprentices found.
-            </Text>
-          </View>
-        }
-        contentContainerStyle={{ paddingBottom: 16 }}
-      />
+      {/* Skeleton loading state */}
+      {isLoading ? (
+        <View>
+          <SkeletonApprenticeRow />
+          <SkeletonApprenticeRow />
+          <SkeletonApprenticeRow />
+          <SkeletonApprenticeRow />
+          <SkeletonApprenticeRow />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={Colors.primary}
+              colors={[Colors.primary]}
+            />
+          }
+          ListEmptyComponent={
+            <View className="flex-1 items-center justify-center py-16">
+              <Text className="text-base text-muted-foreground">
+                No apprentices found.
+              </Text>
+            </View>
+          }
+          contentContainerStyle={{ paddingBottom: 16 }}
+        />
+      )}
     </View>
   );
 }

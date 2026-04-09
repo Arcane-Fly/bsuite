@@ -9,7 +9,7 @@ import {
   ChevronRight,
   Shield,
 } from 'lucide-react-native';
-import { Avatar, Card } from '@/components/ui';
+import { Avatar, Card, useToast } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { Colors, APP_VERSION } from '@/lib/constants';
 
@@ -42,9 +42,11 @@ function SettingsRow({ icon, label, onPress, destructive = false }: SettingsRowP
 
 /**
  * More / Settings tab — profile, settings links, and sign out.
+ * Uses toast notifications for non-critical "coming soon" feedback.
  */
 export default function MoreScreen() {
   const { signOut, user } = useAuthStore();
+  const { showToast } = useToast();
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -87,7 +89,7 @@ export default function MoreScreen() {
             icon={<Bell size={20} color={Colors.foreground} />}
             label="Notifications"
             onPress={() =>
-              Alert.alert('Notifications', 'Notification preferences coming soon.')
+              showToast('info', 'Coming Soon', 'Notification preferences coming soon.')
             }
           />
           <View className="h-px bg-border" />
@@ -95,7 +97,7 @@ export default function MoreScreen() {
             icon={<Palette size={20} color={Colors.foreground} />}
             label="Appearance"
             onPress={() =>
-              Alert.alert('Appearance', 'Theme settings coming soon.')
+              showToast('info', 'Coming Soon', 'Theme settings coming soon.')
             }
           />
           <View className="h-px bg-border" />
@@ -103,7 +105,7 @@ export default function MoreScreen() {
             icon={<Shield size={20} color={Colors.foreground} />}
             label="Security"
             onPress={() =>
-              Alert.alert('Security', 'Biometric lock settings coming soon.')
+              showToast('info', 'Coming Soon', 'Biometric lock settings coming soon.')
             }
           />
         </Card>
@@ -119,9 +121,10 @@ export default function MoreScreen() {
             icon={<Info size={20} color={Colors.foreground} />}
             label="About BSuite"
             onPress={() =>
-              Alert.alert(
+              showToast(
+                'info',
                 'BSuite Mobile',
-                `Version ${APP_VERSION}\n\nBuilt for Australian Group Training Organisations.`
+                `Version ${APP_VERSION} — Built for Australian GTOs.`
               )
             }
           />
