@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -9,7 +9,7 @@ import {
   Plus,
   Search,
 } from 'lucide-react-native';
-import { Button } from '@/components/ui';
+import { Button, SkeletonMetricCard } from '@/components/ui';
 import { MetricCard } from '@/components/MetricCard';
 import { Colors, METRIC_ICON_SIZE } from '@/lib/constants';
 import { MOCK_METRICS } from '@/lib/mock-data';
@@ -22,10 +22,17 @@ const METRIC_ICONS = [
 ];
 
 /**
- * Dashboard tab — overview metrics and quick actions for field officers.
+ * Dashboard tab with skeleton loading — overview metrics and quick actions.
  */
 export default function DashboardScreen() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate initial data load
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <ScrollView className="flex-1 bg-background" contentContainerClassName="pb-8">
@@ -39,9 +46,13 @@ export default function DashboardScreen() {
 
       {/* Metric Cards Grid */}
       <View className="px-4 mt-4 flex-row flex-wrap gap-3">
-        {MOCK_METRICS.map((metric, idx) => (
-          <MetricCard key={metric.label} metric={metric} icon={METRIC_ICONS[idx]} />
-        ))}
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, idx) => (
+              <SkeletonMetricCard key={idx} />
+            ))
+          : MOCK_METRICS.map((metric, idx) => (
+              <MetricCard key={metric.label} metric={metric} icon={METRIC_ICONS[idx]} />
+            ))}
       </View>
 
       {/* Quick Actions */}

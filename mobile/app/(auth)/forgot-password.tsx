@@ -1,32 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail } from 'lucide-react-native';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, useToast } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/lib/constants';
 
+function isValidEmail(value: string): boolean {
+  return value.includes('@') && value.includes('.');
+}
+
 /**
- * Forgot password screen — sends a reset email via Supabase auth.
+ * Forgot password screen with inline email validation and toast feedback.
  */
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const validateEmail = useCallback((value: string, touched: boolean) => {
+    if (!touched) return null;
+    if (!value.trim()) return 'Email is required.';
+    if (!isValidEmail(value.trim())) return 'Enter a valid email address.';
+    return null;
+  }, []);
+
+  const handleEmailChange = useCallback(
+    (value: string) => {
+      setEmail(value);
+      if (emailTouched) {
+        setEmailError(validateEmail(value, true));
+      }
+    },
+    [emailTouched, validateEmail]
+  );
+
+  const handleEmailBlur = useCallback(() => {
+    setEmailTouched(true);
+    setEmailError(validateEmail(email, true));
+  }, [email, validateEmail]);
 
   const handleReset = async () => {
-    if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email address.');
-      return;
-    }
+    setEmailTouched(true);
+    const err = validateEmail(email, true);
+    setEmailError(err);
+    if (err) return;
 
     setIsLoading(true);
 
@@ -37,7 +65,7 @@ export default function ForgotPasswordScreen() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Failed to send reset email.';
-      Alert.alert('Error', message);
+      showToast('error', 'Reset Failed', message);
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +125,9 @@ export default function ForgotPasswordScreen() {
             label="Email"
             placeholder="you@company.com.au"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={handleEmailChange}
+            onBlur={handleEmailBlur}
+            error={emailError ?? undefined}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
