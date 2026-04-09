@@ -69,6 +69,20 @@ export const STATUS_COLORS: Record<string, string> = {
   expired: Colors.destructive,
 } as const;
 
+/** Note category labels */
+export const NOTE_CATEGORY_LABELS: Record<string, string> = {
+  visit: 'Visit',
+  observation: 'Observation',
+  follow_up: 'Follow-up',
+} as const;
+
+/** Note category colors */
+export const NOTE_CATEGORY_COLORS: Record<string, string> = {
+  visit: Colors.primary,
+  observation: Colors.accent,
+  follow_up: Colors.warning,
+} as const;
+
 /** App metadata */
 export const APP_NAME = 'BSuite';
 export const APP_VERSION = '1.0.0';
