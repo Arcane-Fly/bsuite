@@ -113,6 +113,20 @@ export interface ApprenticeDocument {
   uploadedAt: string;
 }
 
+// ─── Notes ──────────────────────────────────────────────────────────────────
+
+export type NoteCategory = 'visit' | 'observation' | 'follow_up';
+
+export interface ApprenticeNote {
+  id: string;
+  apprenticeId: string;
+  content: string;
+  category: NoteCategory;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
 export interface DashboardMetric {
