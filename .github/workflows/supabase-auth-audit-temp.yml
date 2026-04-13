@@ -1,4 +1,4 @@
-name: Supabase Auth Config Audit (one-shot)
+name: Supabase Auth Config Audit v2 (one-shot)
 
 on:
   workflow_dispatch: {}
@@ -6,19 +6,32 @@ on:
 permissions:
   contents: read
 
-env:
-  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
 jobs:
   audit:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
       - name: Get auth config
         run: |
-          echo "## Supabase Auth Config for tuybltdrdefjblnplpqo" >> $GITHUB_STEP_SUMMARY
-          curl -s "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/config/auth" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" | python3 -m json.tool >> $GITHUB_STEP_SUMMARY 2>&1 || echo "Failed to fetch config" >> $GITHUB_STEP_SUMMARY
+          CONFIG=$(curl -sf "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/config/auth" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN")
+          echo "AUTH_CONFIG<<EOF" >> $GITHUB_ENV
+          echo "$CONFIG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
+          echo "## Auth Provider Status" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          echo "$CONFIG" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          providers = {
+            'google': {'enabled': d.get('external_google_enabled'), 'client_id': d.get('external_google_client_id','(not set)')},
+            'azure': {'enabled': d.get('external_azure_enabled'), 'client_id': d.get('external_azure_client_id','(not set)')},
+            'github': {'enabled': d.get('external_github_enabled'), 'client_id': d.get('external_github_client_id','(not set)')},
+          }
+          site_url = d.get('site_url','')
+          uris = d.get('uri_allow_list','')
+          print(json.dumps({'providers': providers, 'site_url': site_url, 'uri_allow_list': uris}, indent=2))
+          " >> $GITHUB_STEP_SUMMARY 2>&1 || echo "$CONFIG" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
