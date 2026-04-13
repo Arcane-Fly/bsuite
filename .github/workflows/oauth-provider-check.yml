@@ -1,0 +1,155 @@
+name: OAuth Provider Mandate Check
+
+# Enforces the BSuite mandatory OAuth provider rule defined in AGENTS.md §Mandatory OAuth Providers.
+# All three providers — Google (google), Microsoft (azure), GitHub (github) — must be present
+# in every auth modal/form file. Removal of any provider is a critical regression.
+#
+# Files checked:
+#   - business-suite-unified/src/components/AuthForm.tsx        (BSU canonical auth entry point)
+#   - crm7/src/components/LoginModal.tsx                        (CRM7 sign-in modal)
+#   - crm7/src/components/SignupModal.tsx                       (CRM7 register modal)
+#   - Any new file matching patterns in AUTH_MODAL_PATTERNS      (future-proofing)
+#
+# The check passes only when ALL THREE provider IDs appear in ALL monitored files.
+
+on:
+  pull_request:
+    paths:
+      - 'business-suite-unified/src/components/AuthForm.tsx'
+      - 'crm7/src/components/LoginModal.tsx'
+      - 'crm7/src/components/SignupModal.tsx'
+      - 'crm7/src/components/auth/**'
+      - 'business-suite-unified/src/components/auth/**'
+      - 'conduit/src/**/*auth*'
+      - 'conduit/src/**/*Auth*'
+      - 'conduit/src/**/*login*'
+      - 'conduit/src/**/*Login*'
+      - 'conduit/src/**/*signin*'
+      - 'conduit/src/**/*SignIn*'
+      - '.github/workflows/oauth-provider-check.yml'
+  push:
+    branches: [main, development]
+    paths:
+      - 'business-suite-unified/src/components/AuthForm.tsx'
+      - 'crm7/src/components/LoginModal.tsx'
+      - 'crm7/src/components/SignupModal.tsx'
+      - '.github/workflows/oauth-provider-check.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check-oauth-providers:
+    name: Verify Google + Microsoft + GitHub in all auth modals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check mandatory OAuth providers
+        id: provider-check
+        shell: bash
+        run: |
+          # ── Configuration ──────────────────────────────────────────────────────────
+          # Files that MUST contain all three provider IDs.
+          # Add new auth entry points here as new apps join the suite.
+          declare -A AUTH_FILES=(
+            ["business-suite-unified/src/components/AuthForm.tsx"]="BSU canonical auth entry point"
+            ["crm7/src/components/LoginModal.tsx"]="CRM7 sign-in modal"
+            ["crm7/src/components/SignupModal.tsx"]="CRM7 register modal"
+          )
+
+          # The three mandatory OAuth provider IDs (Supabase GoTrue / @supabase/supabase-js Provider type)
+          declare -A PROVIDERS=(
+            ["google"]="Google Workspace"
+            ["azure"]="Microsoft Azure AD / M365"
+            ["github"]="GitHub"
+          )
+
+          # ── Check ──────────────────────────────────────────────────────────────────
+          FAILED=0
+          SUMMARY=""
+
+          for file in "${!AUTH_FILES[@]}"; do
+            desc="${AUTH_FILES[$file]}"
+
+            if [ ! -f "$file" ]; then
+              echo "::warning file=$file::File not found — skipping (may have been renamed or removed)"
+              SUMMARY+="⚠️  **\`$file\`** — not found (skipped)\n"
+              continue
+            fi
+
+            FILE_FAILED=0
+            FILE_SUMMARY="### \`$file\` ($desc)\n"
+
+            for provider_id in "${!PROVIDERS[@]}"; do
+              provider_name="${PROVIDERS[$provider_id]}"
+
+              # Check for the provider ID as a quoted string (e.g. 'google', "google", id: 'google')
+              # This covers: id: 'google', id: "google", 'google', handleOAuth('google'), onClick(() => handleOAuth('azure'))
+              if grep -qE "(id:|'|\"|\`|handleOAuth\()(${provider_id})(['\"\`)]|,)" "$file" 2>/dev/null || \
+                 grep -qE "signInWithOAuth\(['\"]${provider_id}['\"]" "$file" 2>/dev/null || \
+                 grep -qE "provider.*['\"]${provider_id}['\"]" "$file" 2>/dev/null || \
+                 grep -qE "['\"]${provider_id}['\"].*provider" "$file" 2>/dev/null; then
+                FILE_SUMMARY+="  ✅ \`${provider_id}\` (${provider_name}) — found\n"
+              else
+                FILE_SUMMARY+="  ❌ \`${provider_id}\` (${provider_name}) — **MISSING**\n"
+                echo "::error file=$file::Missing OAuth provider '${provider_id}' (${provider_name}). All three providers (google, azure/Microsoft, github) are mandatory per AGENTS.md §Mandatory OAuth Providers."
+                FILE_FAILED=1
+                FAILED=1
+              fi
+            done
+
+            SUMMARY+="$FILE_SUMMARY\n"
+
+            if [ "$FILE_FAILED" = "0" ]; then
+              SUMMARY+="  ✅ All three providers present\n"
+            fi
+          done
+
+          # ── Write step summary ─────────────────────────────────────────────────────
+          {
+            echo "## OAuth Provider Mandate Check"
+            echo ""
+            echo "All BSuite auth modals must expose Google + Microsoft (azure) + GitHub."
+            echo "See [AGENTS.md §Mandatory OAuth Providers](../blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
+            echo ""
+            echo -e "$SUMMARY"
+            if [ "$FAILED" = "0" ]; then
+              echo "### ✅ All providers present in all files"
+            else
+              echo "### ❌ One or more providers are missing — see errors above"
+              echo ""
+              echo "**How to fix:** Add the missing provider button to the flagged file."
+              echo "Reference implementation: \`crm7/src/components/LoginModal.tsx\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit $FAILED
+
+      - name: Comment on PR with provider status
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ OAuth Provider Mandate Check Failed
+
+            This PR modifies an auth modal file but is missing one or more of the three mandatory OAuth providers.
+
+            **All BSuite auth entry points must expose all three providers** (see [AGENTS.md §Mandatory OAuth Providers](../blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)):
+
+            | Provider | Supabase ID | Purpose |
+            |----------|------------|---------|
+            | Google | \`google\` | Google Workspace corporate accounts |
+            | Microsoft | \`azure\` | Azure AD / M365 — required for B2B org SSO across the suite |
+            | GitHub | \`github\` | Developer / technical user convenience |
+
+            Check the workflow run for details on which files and providers failed.
+
+            **Reference implementation:** \`crm7/src/components/LoginModal.tsx\``
+            })
