@@ -1,8 +1,9 @@
 name: OAuth Provider Mandate Check
 
 # Enforces the BSuite mandatory OAuth provider rule defined in AGENTS.md §Mandatory OAuth Providers.
-# All three providers — Google (google), Microsoft (azure), GitHub (github) — must be present
-# in every auth modal/form file. Removal of any provider is a critical regression.
+# Both providers — Google (google) and Microsoft (azure) — must be present
+# in every auth modal/form file. GitHub OAuth has been intentionally removed (not a B2B use case).
+# Removal of either remaining provider is a critical regression.
 #
 # Also enforces PKCE compliance: all Supabase client initialisations must use flowType: 'pkce'.
 # Implicit flow (hash-fragment token delivery) is forbidden per OAuth 2.1 §4.
@@ -46,7 +47,7 @@ jobs:
   # JOB 1: Three-provider mandate
   # ─────────────────────────────────────────────────────────────────────────────
   check-oauth-providers:
-    name: Verify Google + Microsoft + GitHub in all auth modals
+    name: Verify Google + Microsoft (azure) in all auth modals
     runs-on: ubuntu-latest
     steps:
       - name: Check mandatory OAuth providers via GitHub API
@@ -105,7 +106,6 @@ jobs:
           declare -A PROVIDERS=(
             ["google"]="Google Workspace"
             ["azure"]="Microsoft Azure AD / M365"
-            ["github"]="GitHub"
           )
 
           FAILED=0
@@ -144,7 +144,7 @@ jobs:
                 FILE_SUMMARY+="  ✅ \`${provider_id}\` (${provider_name}) — found\n"
               else
                 FILE_SUMMARY+="  ❌ \`${provider_id}\` (${provider_name}) — **MISSING**\n"
-                echo "::error::${repo}/${filepath}: Missing OAuth provider '${provider_id}' (${provider_name}). All three providers (google, azure/Microsoft, github) are mandatory per AGENTS.md §Mandatory OAuth Providers."
+                echo "::error::${repo}/${filepath}: Missing OAuth provider '${provider_id}' (${provider_name}). Both providers (google, azure/Microsoft) are mandatory per AGENTS.md §Mandatory OAuth Providers."
                 FILE_FAILED=1
                 FAILED=1
               fi
@@ -159,12 +159,12 @@ jobs:
           {
             echo "## OAuth Provider Mandate Check"
             echo ""
-            echo "All BSuite auth modals must expose Google + Microsoft (azure) + GitHub."
+            echo "All BSuite auth modals must expose Google + Microsoft (azure)."
             echo "See [AGENTS.md §Mandatory OAuth Providers](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
             echo ""
             echo -e "$SUMMARY"
             if [ "$FAILED" = "0" ]; then
-              echo "### ✅ All providers present in all files"
+              echo "### ✅ Both providers (Google + Microsoft) present in all files"
             else
               echo "### ❌ One or more providers are missing — see errors above"
               echo ""
