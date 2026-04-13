@@ -215,6 +215,32 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 4. **CRM7 callback is dual-purpose** — checks `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
 5. **BS OAuth tokens are NOT Supabase sessions** — they are separate token sets in localStorage. The two auth systems run in parallel.
 6. **`startBSTokenRefresh()` is wired** in all 3 client apps — checks every 60s, refreshes 5min before expiry, clears tokens on failure
+7. **Three OAuth providers are MANDATORY across the entire suite** — see section below. Never remove any of the three.
+
+#### Mandatory OAuth Providers (ALL THREE — Suite-Wide)
+
+> **This is a hard constraint enforced across all apps. Regression is a critical bug.**
+
+Every auth entry point in the BSuite (BSU `AuthForm.tsx`, CRM7 `LoginModal.tsx` + `SignupModal.tsx`, and any future app's login UI) **must** expose all three of the following providers:
+
+| Provider | Supabase ID | Purpose |
+|----------|------------|----------|
+| **Google** | `google` | Corporate Google Workspace accounts |
+| **Microsoft** | `azure` | Corporate Azure AD / Microsoft 365 — **critical for B2B SSO across the suite**. Users and orgs sign in with their M365 identity; downstream integrations (email sending from corporate Azure mailboxes, Entra ID group sync, M365 calendar access) depend on this provider existing at every auth surface. Removing it breaks corporate org onboarding. |
+| **GitHub** | `github` | Developer / technical user convenience. Required because some users register via GitHub and must be able to sign back in through any auth surface. |
+
+**Rules:**
+- All three providers must be present in **both** Register and Sign In modals/forms — identical lists, always in sync
+- The order is: Google → Microsoft → GitHub
+- If you modify any auth modal, verify the other modals in the same PR still have all three
+- LLMs often drop GitHub (treating Google + Microsoft as "complete") or drop Microsoft (treating it as redundant with Google). Both are wrong. All three are required.
+- Add a sync comment in every file that defines a provider list: `// IMPORTANT: Keep in sync with [other files] — all three providers (Google/Microsoft/GitHub) are mandatory`
+- For OAuth 2.1 / OIDC / PKCE compliance: Microsoft uses the `azure` provider ID (Azure AD OIDC endpoint, full PKCE support). GitHub uses `github`. Never use implicit flow.
+
+**Affected files (current):**
+- `business-suite-unified`: `src/components/AuthForm.tsx`
+- `crm7`: `src/components/LoginModal.tsx`, `src/components/SignupModal.tsx`
+- Any new app added to the suite must follow this pattern from day one
 
 ---
 
