@@ -1,4 +1,4 @@
-name: Supabase Auth Config Audit v3
+name: Supabase Fix Redirect URIs (one-shot)
 
 on:
   workflow_dispatch: {}
@@ -7,41 +7,37 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  fix:
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-    outputs:
-      provider_status: ${{ steps.check.outputs.provider_status }}
-      site_url: ${{ steps.check.outputs.site_url }}
-      uri_allow_list: ${{ steps.check.outputs.uri_allow_list }}
     steps:
-      - name: Fetch and parse auth config
-        id: check
+      - name: Add conduit redirect URI to allow list
         run: |
-          CONFIG=$(curl -sf "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/config/auth" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN")
+          # Current URI list (from audit):
+          # https://r8.crm7.app/auth/callback,https://www.braden.com.au/auth/callback,
+          # https://suite.crm7.app/auth/callback,http://localhost:*/**,https://*.vercel.app,
+          # https://*.vercel.app/**,https://crm.crm7.app/auth/callback,
+          # https://*.vusercontent.net/auth/callback,https://ideas.crm7.app/auth/callback
+          # 
+          # Missing: https://conduit.crm7.app/auth/callback
           
-          echo "=== RAW PROVIDER FIELDS ==="
-          echo "$CONFIG" | python3 -c "
+          NEW_URI_LIST="https://r8.crm7.app/auth/callback,https://www.braden.com.au/auth/callback,https://suite.crm7.app/auth/callback,http://localhost:*/**,https://*.vercel.app,https://*.vercel.app/**,https://crm.crm7.app/auth/callback,https://*.vusercontent.net/auth/callback,https://ideas.crm7.app/auth/callback,https://conduit.crm7.app/auth/callback"
+          
+          echo "Updating Supabase auth config with conduit redirect URI..."
+          
+          RESULT=$(curl -s -X PATCH \
+            "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/config/auth" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"uri_allow_list\": \"$NEW_URI_LIST\"}")
+          
+          echo "Result:"
+          echo "$RESULT" | python3 -c "
           import json, sys
           d = json.load(sys.stdin)
-          # Print all external_* keys
-          for k in sorted(d.keys()):
-            if k.startswith('external_') or k in ('site_url','uri_allow_list'):
-              print(f'{k}: {d[k]}')
-          "
-          
-          echo "=== STRUCTURED SUMMARY ==="
-          echo "$CONFIG" | python3 -c "
-          import json, sys
-          d = json.load(sys.stdin)
-          for p in ['google','azure','github']:
-            enabled = d.get(f'external_{p}_enabled', 'UNKNOWN')
-            cid = d.get(f'external_{p}_client_id', '(not set)')
-            masked_cid = cid[:8] + '...' if len(cid) > 8 else cid
-            print(f'{p}: enabled={enabled} client_id={masked_cid}')
-          print()
-          print('site_url:', d.get('site_url'))
-          print('uri_allow_list:', d.get('uri_allow_list'))
+          uris = d.get('uri_allow_list', 'ERROR')
+          print('uri_allow_list:', uris)
+          has_conduit = 'conduit.crm7.app' in uris
+          print('conduit.crm7.app present:', has_conduit)
           "
