@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-BSuite is a multi-project workspace of five web applications sharing Supabase, TypeScript/React, and unified standards.
+BSuite is a multi-project workspace of six web applications sharing Supabase, TypeScript/React, and unified standards.
 
 ### Projects
 
@@ -13,6 +13,9 @@ BSuite is a multi-project workspace of five web applications sharing Supabase, T
 | **conduit** | Recruitment ATS | Next.js 16 App Router | pnpm | Vercel |
 | **braden** | Corporate site (braden.com.au) | React + Vite | pnpm | Vercel/Railway |
 | **R80.3** | Wage calculator | React + Vite | pnpm | Vercel |
+| **throughput** | Idea management platform (Groq AI) | React + Vite | npm¹ | Vercel |
+
+¹ throughput currently ships with `package-lock.json` (npm), not `pnpm-lock.yaml` — divergent from the rest of the suite. Tracked separately for consolidation.
 
 ### Common Stack
 
@@ -152,8 +155,8 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 
 | Mechanism | Purpose | Used By |
 |-----------|---------|---------|
-| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue | All 5 apps |
-| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is the OAuth server, others are clients | CRM7, R80.3, Braden (as clients) |
+| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue | All 6 apps |
+| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is the OAuth server, others are clients | CRM7, R80.3, Braden, Throughput (as clients) |
 
 **Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
 
@@ -170,7 +173,7 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 
 #### Cross-Domain Session Sharing (Cookie SSO)
 
-BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7.app` and key `business_suite_auth`. This enables seamless SSO across all `.crm7.app` subdomains.
+BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` with `domain=.crm7.app` and key `business_suite_auth`. This enables seamless SSO across all `.crm7.app` subdomains.
 
 - **BSU** (`suite.crm7.app`): Sets the cookie — `src/lib/supabase.ts`
 - **CRM7** (`crm.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
@@ -346,6 +349,7 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
 | **conduit** | `NEXT_PUBLIC_` | Supabase SSR Auth |
 | **braden** | `VITE_` | Supabase Auth |
 | **R80.3** | `VITE_` | Supabase Auth |
+| **throughput** | `VITE_` | Supabase Auth + BS OAuth 2.1 |
 
 - Never commit `.env` / `.env.local` files
 - All client-side vars: `VITE_` (Vite) or `NEXT_PUBLIC_` (Next.js)

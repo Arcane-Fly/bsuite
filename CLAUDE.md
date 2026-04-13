@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-BSuite is a multi-project workspace containing five web applications sharing a common Supabase backend, TypeScript/React stack, and unified contributing standards.
+BSuite is a multi-project workspace containing six web applications sharing a common Supabase backend, TypeScript/React stack, and unified contributing standards.
 
 | Project | Purpose | Stack | Package Manager |
 |---------|---------|-------|----------------|
@@ -11,6 +11,9 @@ BSuite is a multi-project workspace containing five web applications sharing a c
 | conduit | Recruitment ATS | React + Next.js 16 | pnpm |
 | braden | Corporate website (braden.com.au) | React + Vite | pnpm |
 | R80.3 | Wage calculator | React + Vite | pnpm |
+| throughput | Idea management platform (Groq AI) | React + Vite | npm¹ |
+
+¹ throughput currently uses `package-lock.json` (npm), divergent from the rest of the suite. See `AGENTS.md` Projects table for details.
 
 ## Critical Rules
 
@@ -26,7 +29,7 @@ BSuite is a multi-project workspace containing five web applications sharing a c
 Format: `type(scope): description`
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`
-Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `shared`, `docs`, `deploy`
+Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `throughput`, `shared`, `docs`, `deploy`
 
 ### Theme System
 
@@ -86,8 +89,8 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 
 | Mechanism | Purpose | Used By |
 |-----------|---------|---------|
-| **Supabase Native Auth** | Email/password + Google/Azure AD via GoTrue | All 5 apps |
-| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden (as clients) |
+| **Supabase Native Auth** | Email/password + Google/Azure AD via GoTrue | All 6 apps |
+| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden, Throughput (as clients) |
 
 **Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
 
@@ -98,13 +101,14 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 | **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` |
 | **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` |
 | **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` |
+| **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` |
 
 **OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
 **Redirect URI pattern:** `{origin}/auth/callback` for all clients
 
 #### Cookie SSO (`.crm7.app` subdomains)
 
-BSU, CRM7, R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 instead.
+BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 instead. Conduit uses `@supabase/ssr` server-managed cookies and does not participate.
 
 #### Critical Auth Rules
 
@@ -113,7 +117,7 @@ BSU, CRM7, R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
 4. **CRM7 callback is dual-purpose** — checks `sessionStorage` for `bs_oauth_state` to distinguish flows
 5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage, systems run in parallel
-6. **`startBSTokenRefresh()` is wired** in all 3 client apps — checks every 60s, refreshes 5min before expiry, clears tokens on failure
+6. **`startBSTokenRefresh()` is wired** in all 4 client apps (CRM7, R80.3, Braden, Throughput) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 
 #### Key Auth Files
 
@@ -123,6 +127,7 @@ BSU, CRM7, R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7
 | **CRM7** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/callback.tsx` (dual) |
 | **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/AuthCallback.tsx` |
 | **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/AuthCallback.tsx` |
+| **Throughput** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/AuthCallback.tsx` |
 | **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/app/auth/callback/route.ts` |
 
 ## Shared Packages (npm)
@@ -233,3 +238,12 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 - Wage calculations are compliance-critical — extra test coverage required
 - Fair Work API integration — cache responses, respect rate limits
 - Protected: `src/utils/` (calculation engine), Fair Work API modules
+
+### throughput
+
+- Idea Management Platform at `ideas.crm7.app` — capture, refine, launch ideas with AI assistance
+- React 18 + Vite + TypeScript stack (matches the four other Vite apps)
+- AI integration via **Groq** (`gpt-oss-120b`) — see project `GROQ_SETUP.md` and `docs/GROQ_INTEGRATION.md`
+- Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
+- Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
+- **Anomaly:** ships with `package-lock.json` (npm), not `pnpm-lock.yaml`. Tracked separately for consolidation across the suite.
