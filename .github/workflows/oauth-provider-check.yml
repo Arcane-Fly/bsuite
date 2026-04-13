@@ -7,21 +7,19 @@ name: OAuth Provider Mandate Check
 # Also enforces PKCE compliance: all Supabase client initialisations must use flowType: 'pkce'.
 # Implicit flow (hash-fragment token delivery) is forbidden per OAuth 2.1 §4.
 #
-# ARCHITECTURE NOTE: The bsuite repo uses git submodules for all 5 apps. This workflow
-# fetches file contents directly from each submodule's GitHub repo via the API — no
-# submodule checkout required. This is faster, more reliable, and avoids submodule
-# authentication edge cases.
+# ARCHITECTURE NOTE: The bsuite repo uses git submodules for all 5 apps. All submodule
+# repos are private. This workflow requires a cross-repo PAT stored as BSUITE_CROSS_REPO_PAT
+# with Contents: Read access to GaryOcean428/business-suite-unified, GaryOcean428/crm7,
+# and GaryOcean428/conduit.
 #
-# Files checked (providers):
-#   - GaryOcean428/business-suite-unified → src/components/AuthForm.tsx
-#   - GaryOcean428/crm7                   → src/components/LoginModal.tsx
-#   - GaryOcean428/crm7                   → src/components/SignupModal.tsx
+# To add the secret:
+#   1. Create a fine-grained PAT at https://github.com/settings/tokens
+#      Permissions: Contents: Read on business-suite-unified, crm7, conduit
+#   2. Add it as BSUITE_CROSS_REPO_PAT at:
+#      https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new
 #
-# Files checked (PKCE):
-#   - GaryOcean428/business-suite-unified → src/lib/supabase.ts
-#   - GaryOcean428/crm7                   → src/lib/supabase.ts
-#   - GaryOcean428/conduit                → src/lib/supabase/client.ts
-#   - GaryOcean428/conduit                → src/lib/supabase/server.ts
+# Until BSUITE_CROSS_REPO_PAT is added, this workflow will emit a clear warning
+# but not fail (to avoid blocking PRs on an infra gap).
 
 on:
   pull_request:
@@ -33,12 +31,9 @@ on:
     paths:
       - '.github/workflows/oauth-provider-check.yml'
       - 'AGENTS.md'
-  # Run on any push to submodule default branches via repository_dispatch
-  # (triggered by submodule CI or manually)
   repository_dispatch:
     types: [submodule-auth-changed]
   workflow_dispatch: {}
-  # Also run on a schedule to catch drift — daily at 02:00 UTC
   schedule:
     - cron: '0 2 * * *'
 
@@ -57,9 +52,40 @@ jobs:
       - name: Check mandatory OAuth providers via GitHub API
         id: provider-check
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          # ── Preflight: detect whether we have cross-repo access ─────────────
+          # Test access to one of the private submodule repos
+          TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+
+          if [ "$TEST" = "401" ] || [ "$TEST" = "403" ] || [ "$TEST" = "404" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT is not configured or lacks access to private submodule repos (HTTP $TEST)."
+            echo "::warning::To enable this check, add a fine-grained PAT with Contents: Read on crm7, business-suite-unified, conduit as secret BSUITE_CROSS_REPO_PAT."
+            echo "::warning::See setup instructions at the top of .github/workflows/oauth-provider-check.yml"
+
+            {
+              echo "## ⚠️ OAuth Provider Mandate Check — Skipped (no cross-repo access)"
+              echo ""
+              echo "**Action required:** Add \`BSUITE_CROSS_REPO_PAT\` secret to this repo."
+              echo ""
+              echo "### Setup instructions"
+              echo "1. Create a fine-grained PAT at https://github.com/settings/tokens"
+              echo "   - Repository access: \`GaryOcean428/business-suite-unified\`, \`GaryOcean428/crm7\`, \`GaryOcean428/conduit\`"
+              echo "   - Permissions: **Contents: Read**"
+              echo "2. Add as \`BSUITE_CROSS_REPO_PAT\` at https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new"
+              echo ""
+              echo "Until then, the OAuth provider checks run inside each submodule's own CI via \`.github/workflows/oauth-provider-check.yml\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            exit 0  # Warn but don't fail — infra gap, not a code regression
+          fi
+
+          echo "Cross-repo access confirmed (HTTP $TEST) — running provider checks"
+
           # ── Configuration ──────────────────────────────────────────────────────
           # Format: "repo:branch:path:description"
           AUTH_FILE_SPECS=(
@@ -68,7 +94,6 @@ jobs:
             "GaryOcean428/crm7:main:src/components/SignupModal.tsx:CRM7 register modal"
           )
 
-          # The three mandatory OAuth provider IDs
           declare -A PROVIDERS=(
             ["google"]="Google Workspace"
             ["azure"]="Microsoft Azure AD / M365"
@@ -81,20 +106,17 @@ jobs:
           for spec in "${AUTH_FILE_SPECS[@]}"; do
             IFS=':' read -r repo branch filepath desc <<< "$spec"
 
-            # Fetch file content from GitHub API
-            API_URL="https://api.github.com/repos/${repo}/contents/${filepath}?ref=${branch}"
-            RESPONSE=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
-                            -H "Accept: application/vnd.github.v3+json" \
-                            "$API_URL")
+            RESPONSE=$(curl -sS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${repo}/contents/${filepath}?ref=${branch}")
 
-            # Check for API errors
             if echo "$RESPONSE" | grep -q '"message".*"Not Found"'; then
-              echo "::warning::${repo}/${filepath} — file not found on branch ${branch}, skipping"
+              echo "::warning::${repo}/${filepath} — not found on branch ${branch}, skipping"
               SUMMARY+="⚠️  **\`${repo}/${filepath}\`** ($desc) — not found (skipped)\n"
               continue
             fi
 
-            # Decode content
             FILE_CONTENT=$(echo "$RESPONSE" | python3 -c "
           import json, sys, base64
           d = json.load(sys.stdin)
@@ -107,8 +129,6 @@ jobs:
             for provider_id in "${!PROVIDERS[@]}"; do
               provider_name="${PROVIDERS[$provider_id]}"
 
-              # Check for the provider ID as a quoted string
-              # Covers: 'google', "google", handleOAuth('google'), provider: 'azure', id: 'github'
               if echo "$FILE_CONTENT" | grep -qE "(id:|'|\"|handleOAuth\()(${provider_id})(['\"]|,)" 2>/dev/null || \
                  echo "$FILE_CONTENT" | grep -qE "signInWithOAuth\(['\"]${provider_id}['\"]" 2>/dev/null || \
                  echo "$FILE_CONTENT" | grep -qE "provider.*['\"]${provider_id}['\"]" 2>/dev/null || \
@@ -128,7 +148,6 @@ jobs:
             fi
           done
 
-          # ── Write step summary ──────────────────────────────────────────────
           {
             echo "## OAuth Provider Mandate Check"
             echo ""
@@ -142,7 +161,7 @@ jobs:
               echo "### ❌ One or more providers are missing — see errors above"
               echo ""
               echo "**How to fix:** Add the missing provider button to the flagged file."
-              echo "Reference implementation: \`GaryOcean428/crm7:src/components/LoginModal.tsx\`"
+              echo "Reference: \`GaryOcean428/crm7:src/components/LoginModal.tsx\`"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -184,23 +203,38 @@ jobs:
       - name: Check PKCE compliance via GitHub API
         id: pkce-check
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          # ── Preflight: detect whether we have cross-repo access ─────────────
+          TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/GaryOcean428/crm7/contents/src/lib/supabase.ts?ref=main")
+
+          if [ "$TEST" = "401" ] || [ "$TEST" = "403" ] || [ "$TEST" = "404" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT not configured — PKCE check skipped. See workflow comments for setup instructions."
+            {
+              echo "## ⚠️ PKCE Compliance Check — Skipped (no cross-repo access)"
+              echo "Add \`BSUITE_CROSS_REPO_PAT\` secret. See setup instructions in the provider check job above."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "Cross-repo access confirmed — running PKCE checks"
+
           # ── Configuration ──────────────────────────────────────────────────
-          # Format: "repo:branch:path:description"
           CLIENT_FILE_SPECS=(
             "GaryOcean428/business-suite-unified:master:src/lib/supabase.ts:BSU Supabase client"
             "GaryOcean428/crm7:main:src/lib/supabase.ts:CRM7 Supabase client"
-            "GaryOcean428/conduit:main:src/lib/supabase/client.ts:Conduit browser client (@supabase/ssr)"
-            "GaryOcean428/conduit:main:src/lib/supabase/server.ts:Conduit server client (@supabase/ssr)"
+            "GaryOcean428/conduit:main:src/lib/supabase/client.ts:Conduit browser client"
+            "GaryOcean428/conduit:main:src/lib/supabase/server.ts:Conduit server client"
           )
 
-          # Callback handler files to check for exchangeCodeForSession
           CALLBACK_FILE_SPECS=(
             "GaryOcean428/business-suite-unified:master:src/pages/auth/AuthCallback.tsx:BSU auth callback"
             "GaryOcean428/crm7:main:src/pages/auth/callback.tsx:CRM7 auth callback"
-            "GaryOcean428/conduit:main:src/app/auth/callback/route.ts:Conduit auth callback route"
+            "GaryOcean428/conduit:main:src/app/auth/callback/route.ts:Conduit callback route"
           )
 
           FAILED=0
@@ -208,14 +242,13 @@ jobs:
 
           fetch_file() {
             local repo="$1" branch="$2" path="$3"
-            local url="https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}"
             local response
-            response=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
-                               -H "Accept: application/vnd.github.v3+json" \
-                               "$url")
+            response=$(curl -sS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}")
             if echo "$response" | grep -q '"message".*"Not Found"'; then
-              echo "__NOT_FOUND__"
-              return
+              echo "__NOT_FOUND__"; return
             fi
             echo "$response" | python3 -c "
           import json, sys, base64
@@ -224,19 +257,17 @@ jobs:
           "
           }
 
-          # ── Check Supabase client files ─────────────────────────────────────
+          # ── Client file checks ──────────────────────────────────────────────
           for spec in "${CLIENT_FILE_SPECS[@]}"; do
             IFS=':' read -r repo branch filepath desc <<< "$spec"
-
             CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
 
             if [ "$CONTENT" = "__NOT_FOUND__" ]; then
-              echo "::warning::${repo}/${filepath} — not found on branch ${branch}, skipping"
-              PKCE_SUMMARY+="⚠️  **\`${repo}/${filepath}\`** ($desc) — not found (skipped)\n"
+              echo "::warning::${repo}/${filepath} — not found, skipping"
+              PKCE_SUMMARY+="⚠️  **\`${repo}/${filepath}\`** — not found (skipped)\n"
               continue
             fi
 
-            # Does the file actually create a Supabase client?
             if ! echo "$CONTENT" | grep -qE "(createClient|createBrowserClient|createServerClient)\s*\("; then
               continue
             fi
@@ -244,81 +275,65 @@ jobs:
             FILE_FAILED=0
             FILE_SUMMARY="### \`${repo}/${filepath}\` ($desc)\n"
 
-            # ── Check 1: flowType: 'pkce' must be present ──────────────────
             if echo "$CONTENT" | grep -qE "flowType\s*:\s*['\"]pkce['\"]"; then
               FILE_SUMMARY+="  ✅ \`flowType: 'pkce'\` — present\n"
             else
-              FILE_SUMMARY+="  ❌ \`flowType: 'pkce'\` — **MISSING** (implicit flow risk)\n"
-              echo "::error::${repo}/${filepath}: Supabase client is missing flowType: 'pkce'. OAuth 2.1 and BSuite AGENTS.md require PKCE for all OAuth flows. Add flowType: 'pkce' to the auth config object."
-              FILE_FAILED=1
-              FAILED=1
+              FILE_SUMMARY+="  ❌ \`flowType: 'pkce'\` — **MISSING**\n"
+              echo "::error::${repo}/${filepath}: Missing flowType: 'pkce'. OAuth 2.1 and BSuite AGENTS.md require PKCE. Add flowType: 'pkce' to the auth config."
+              FILE_FAILED=1; FAILED=1
             fi
 
-            # ── Check 2: no implicit flow indicators ───────────────────────
             if echo "$CONTENT" | grep -qE "flowType\s*:\s*['\"]implicit['\"]"; then
               FILE_SUMMARY+="  ❌ \`flowType: 'implicit'\` — **FORBIDDEN** per OAuth 2.1 §4\n"
-              echo "::error::${repo}/${filepath}: flowType: 'implicit' is forbidden. OAuth 2.1 §4 prohibits implicit grant. Use PKCE."
-              FILE_FAILED=1
-              FAILED=1
+              echo "::error::${repo}/${filepath}: flowType: 'implicit' is forbidden by OAuth 2.1 §4. Use PKCE."
+              FILE_FAILED=1; FAILED=1
             fi
 
             if echo "$CONTENT" | grep -qE "response_type\s*[=:]\s*['\"]?token"; then
               FILE_SUMMARY+="  ❌ \`response_type=token\` — **IMPLICIT FLOW** detected\n"
-              echo "::error::${repo}/${filepath}: response_type=token is an implicit flow indicator. Use authorization_code + PKCE."
-              FILE_FAILED=1
-              FAILED=1
+              echo "::error::${repo}/${filepath}: response_type=token is implicit flow. Use authorization_code + PKCE."
+              FILE_FAILED=1; FAILED=1
             fi
 
             PKCE_SUMMARY+="$FILE_SUMMARY\n"
-            if [ "$FILE_FAILED" = "0" ]; then
-              PKCE_SUMMARY+="  ✅ PKCE compliant\n"
-            fi
+            [ "$FILE_FAILED" = "0" ] && PKCE_SUMMARY+="  ✅ PKCE compliant\n"
           done
 
-          # ── Check callback handler files ────────────────────────────────────
+          # ── Callback handler checks ─────────────────────────────────────────
           PKCE_SUMMARY+="\n### Callback handlers (PKCE code exchange)\n"
 
           for spec in "${CALLBACK_FILE_SPECS[@]}"; do
             IFS=':' read -r repo branch filepath desc <<< "$spec"
-
             CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
 
             if [ "$CONTENT" = "__NOT_FOUND__" ]; then
-              echo "::warning::${repo}/${filepath} — not found, skipping callback check"
-              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` ($desc) — not found (skipped)\n"
+              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` — not found (skipped)\n"
               continue
             fi
 
             if echo "$CONTENT" | grep -qE "exchangeCodeForSession"; then
-              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — uses \`exchangeCodeForSession\` ✓\n"
+              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — \`exchangeCodeForSession\` ✓\n"
             elif echo "$CONTENT" | grep -qE "detectSessionInUrl"; then
-              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — uses \`detectSessionInUrl\` (PKCE exchange delegated to client) ✓\n"
+              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — \`detectSessionInUrl\` (PKCE delegated) ✓\n"
             else
-              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` — no \`exchangeCodeForSession\` or \`detectSessionInUrl\` found (verify manually)\n"
-              echo "::warning::${repo}/${filepath}: Auth callback does not appear to call exchangeCodeForSession or detectSessionInUrl. Verify PKCE code exchange is handled."
+              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` — no \`exchangeCodeForSession\` or \`detectSessionInUrl\` (verify manually)\n"
+              echo "::warning::${repo}/${filepath}: Auth callback may not complete PKCE exchange — verify manually."
             fi
           done
 
-          # ── Write step summary ──────────────────────────────────────────────
           {
             echo "## PKCE Compliance Check"
             echo ""
-            echo "All Supabase clients must use \`flowType: 'pkce'\`. Implicit flow is forbidden per OAuth 2.1 §4."
+            echo "All Supabase clients must use \`flowType: 'pkce'\`. Implicit flow forbidden per OAuth 2.1 §4."
             echo ""
             echo -e "$PKCE_SUMMARY"
             if [ "$FAILED" = "0" ]; then
               echo "### ✅ All Supabase clients use PKCE — no implicit flow detected"
             else
-              echo "### ❌ One or more Supabase clients are missing PKCE — see errors above"
+              echo "### ❌ One or more Supabase clients are missing PKCE"
               echo ""
-              echo "**How to fix:** Add \`flowType: 'pkce'\` to your \`createClient()\` call:"
               echo "\`\`\`ts"
-              echo "createClient(url, key, {"
-              echo "  auth: {"
-              echo "    flowType: 'pkce',       // Required: OAuth 2.1 PKCE"
-              echo "    detectSessionInUrl: true,"
-              echo "  }"
-              echo "})"
+              echo "createClient(url, key, { auth: { flowType: 'pkce', detectSessionInUrl: true } })"
               echo "\`\`\`"
               echo "Reference: \`GaryOcean428/crm7:src/lib/supabase.ts\`"
             fi
@@ -337,25 +352,61 @@ jobs:
               repo: context.repo.repo,
               body: `## ❌ PKCE Compliance Check Failed
 
-            This PR modifies a Supabase client file but is missing \`flowType: 'pkce'\` or contains an implicit flow pattern.
+            A Supabase client file is missing \`flowType: 'pkce'\` or contains an implicit flow pattern.
 
-            **OAuth 2.1 §4 and BSuite AGENTS.md require PKCE for all OAuth flows** — implicit flow (hash-fragment token delivery) is forbidden.
-
-            **How to fix:**
+            **Fix:**
             \`\`\`ts
             createClient(url, key, {
-              auth: {
-                flowType: 'pkce',       // Required: OAuth 2.1 PKCE
-                detectSessionInUrl: true,
-              }
+              auth: { flowType: 'pkce', detectSessionInUrl: true }
             })
             \`\`\`
 
-            Auth callback routes must call \`supabase.auth.exchangeCodeForSession(code)\` to complete the PKCE exchange.
+            Auth callbacks must call \`exchangeCodeForSession(code)\` to complete PKCE.
 
-            **Reference implementations:**
-            - Client: \`GaryOcean428/crm7:src/lib/supabase.ts\`
-            - Callback: \`GaryOcean428/conduit:src/app/auth/callback/route.ts\`
+            References: [\`crm7/src/lib/supabase.ts\`](https://github.com/GaryOcean428/crm7/blob/main/src/lib/supabase.ts) · [\`conduit/src/app/auth/callback/route.ts\`](https://github.com/GaryOcean428/conduit/blob/main/src/app/auth/callback/route.ts)
 
-            Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for exact details.`
+            Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`
             })
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 3: Remind about PAT setup if missing
+  # ─────────────────────────────────────────────────────────────────────────────
+  pat-setup-reminder:
+    name: Cross-repo PAT setup status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if BSUITE_CROSS_REPO_PAT is configured
+        env:
+          PAT_CONFIGURED: ${{ secrets.BSUITE_CROSS_REPO_PAT != '' }}
+        shell: bash
+        run: |
+          if [ "$PAT_CONFIGURED" = "true" ]; then
+            echo "BSUITE_CROSS_REPO_PAT is configured — OAuth checks will run against live submodule code."
+            {
+              echo "## ✅ Cross-repo PAT configured"
+              echo "OAuth provider and PKCE checks are reading live code from private submodule repos."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice::BSUITE_CROSS_REPO_PAT is not configured. OAuth checks are skipped until this secret is added."
+            {
+              echo "## ⚠️ Action Required: Add BSUITE_CROSS_REPO_PAT"
+              echo ""
+              echo "The OAuth Provider Mandate and PKCE compliance checks require read access to the private submodule repos."
+              echo ""
+              echo "### One-time setup (5 minutes)"
+              echo ""
+              echo "1. Go to **[Settings → Developer Settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/tokens?type=beta)**"
+              echo "2. Click **Generate new token**"
+              echo "3. Set:"
+              echo "   - **Token name:** \`bsuite-ci-cross-repo-read\`"
+              echo "   - **Resource owner:** \`GaryOcean428\`"
+              echo "   - **Repository access:** Only select repositories → \`business-suite-unified\`, \`crm7\`, \`conduit\`"
+              echo "   - **Permissions:** Repository → Contents → **Read-only**"
+              echo "4. Copy the token"
+              echo "5. Add it at **[bsuite → Settings → Secrets → Actions → New](https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new)**"
+              echo "   - **Name:** \`BSUITE_CROSS_REPO_PAT\`"
+              echo "   - **Value:** paste the token"
+              echo ""
+              echo "Once added, re-run this workflow to activate the checks."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
