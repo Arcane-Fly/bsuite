@@ -52,19 +52,27 @@ jobs:
       - name: Check mandatory OAuth providers via GitHub API
         id: provider-check
         env:
-          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT }}
         shell: bash
         run: |
           # ── Preflight: detect whether we have cross-repo access ─────────────
-          # Test access to one of the private submodule repos
-          TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+          # Test access to one of the private submodule repos.
+          # We use BSUITE_CROSS_REPO_PAT directly (not || GITHUB_TOKEN) because
+          # GITHUB_TOKEN is scoped to bsuite only and will 404 on private submodules.
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT secret is empty or not set."
+            TEST="missing"
+          else
+            TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+            echo "Preflight HTTP status: $TEST"
+          fi
 
-          if [ "$TEST" = "401" ] || [ "$TEST" = "403" ] || [ "$TEST" = "404" ]; then
-            echo "::warning::BSUITE_CROSS_REPO_PAT is not configured or lacks access to private submodule repos (HTTP $TEST)."
-            echo "::warning::To enable this check, add a fine-grained PAT with Contents: Read on crm7, business-suite-unified, conduit as secret BSUITE_CROSS_REPO_PAT."
+          if [ "$TEST" != "200" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT cannot access private submodule repos (HTTP $TEST)."
+            echo "::warning::Ensure the PAT has Contents: Read on GaryOcean428/crm7, business-suite-unified, conduit."
             echo "::warning::See setup instructions at the top of .github/workflows/oauth-provider-check.yml"
 
             {
@@ -203,17 +211,21 @@ jobs:
       - name: Check PKCE compliance via GitHub API
         id: pkce-check
         env:
-          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT }}
         shell: bash
         run: |
-          # ── Preflight: detect whether we have cross-repo access ─────────────
-          TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/GaryOcean428/crm7/contents/src/lib/supabase.ts?ref=main")
+          # ── Preflight ───────────────────────────────────────────────────────
+          if [ -z "$GH_TOKEN" ]; then
+            TEST="missing"
+          else
+            TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/lib/supabase.ts?ref=main")
+          fi
 
-          if [ "$TEST" = "401" ] || [ "$TEST" = "403" ] || [ "$TEST" = "404" ]; then
-            echo "::warning::BSUITE_CROSS_REPO_PAT not configured — PKCE check skipped. See workflow comments for setup instructions."
+          if [ "$TEST" != "200" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT cannot access private submodule repos (HTTP $TEST) — PKCE check skipped."
             {
               echo "## ⚠️ PKCE Compliance Check — Skipped (no cross-repo access)"
               echo "Add \`BSUITE_CROSS_REPO_PAT\` secret. See setup instructions in the provider check job above."
@@ -377,17 +389,27 @@ jobs:
     steps:
       - name: Check if BSUITE_CROSS_REPO_PAT is configured
         env:
-          PAT_CONFIGURED: ${{ secrets.BSUITE_CROSS_REPO_PAT != '' }}
+          BSUITE_PAT: ${{ secrets.BSUITE_CROSS_REPO_PAT }}
         shell: bash
         run: |
-          if [ "$PAT_CONFIGURED" = "true" ]; then
-            echo "BSUITE_CROSS_REPO_PAT is configured — OAuth checks will run against live submodule code."
+          # Verify the PAT is set AND can actually read the private repos
+          if [ -n "$BSUITE_PAT" ]; then
+            STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $BSUITE_PAT" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+          else
+            STATUS="missing"
+          fi
+
+          if [ "$STATUS" = "200" ]; then
+            echo "BSUITE_CROSS_REPO_PAT is configured and has access — OAuth checks will run against live submodule code."
             {
-              echo "## ✅ Cross-repo PAT configured"
+              echo "## ✅ Cross-repo PAT configured and verified"
               echo "OAuth provider and PKCE checks are reading live code from private submodule repos."
             } >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::notice::BSUITE_CROSS_REPO_PAT is not configured. OAuth checks are skipped until this secret is added."
+            echo "::notice::BSUITE_CROSS_REPO_PAT is $([ -z "$BSUITE_PAT" ] && echo 'not set' || echo "set but returned HTTP $STATUS — check PAT scope"). OAuth checks skipped."
             {
               echo "## ⚠️ Action Required: Add BSUITE_CROSS_REPO_PAT"
               echo ""
