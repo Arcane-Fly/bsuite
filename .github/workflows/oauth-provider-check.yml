@@ -7,49 +7,40 @@ name: OAuth Provider Mandate Check
 # Also enforces PKCE compliance: all Supabase client initialisations must use flowType: 'pkce'.
 # Implicit flow (hash-fragment token delivery) is forbidden per OAuth 2.1 §4.
 #
+# ARCHITECTURE NOTE: The bsuite repo uses git submodules for all 5 apps. This workflow
+# fetches file contents directly from each submodule's GitHub repo via the API — no
+# submodule checkout required. This is faster, more reliable, and avoids submodule
+# authentication edge cases.
+#
 # Files checked (providers):
-#   - business-suite-unified/src/components/AuthForm.tsx        (BSU canonical auth entry point)
-#   - crm7/src/components/LoginModal.tsx                        (CRM7 sign-in modal)
-#   - crm7/src/components/SignupModal.tsx                       (CRM7 register modal)
+#   - GaryOcean428/business-suite-unified → src/components/AuthForm.tsx
+#   - GaryOcean428/crm7                   → src/components/LoginModal.tsx
+#   - GaryOcean428/crm7                   → src/components/SignupModal.tsx
 #
 # Files checked (PKCE):
-#   - business-suite-unified/src/lib/supabase.ts
-#   - crm7/src/lib/supabase.ts
-#   - conduit/src/lib/supabase/client.ts
-#   - conduit/src/lib/supabase/server.ts
-#   Any file matching SUPABASE_CLIENT_PATTERNS below (future-proofing)
+#   - GaryOcean428/business-suite-unified → src/lib/supabase.ts
+#   - GaryOcean428/crm7                   → src/lib/supabase.ts
+#   - GaryOcean428/conduit                → src/lib/supabase/client.ts
+#   - GaryOcean428/conduit                → src/lib/supabase/server.ts
 
 on:
   pull_request:
     paths:
-      - 'business-suite-unified/src/components/AuthForm.tsx'
-      - 'crm7/src/components/LoginModal.tsx'
-      - 'crm7/src/components/SignupModal.tsx'
-      - 'crm7/src/components/auth/**'
-      - 'business-suite-unified/src/components/auth/**'
-      - 'conduit/src/**/*auth*'
-      - 'conduit/src/**/*Auth*'
-      - 'conduit/src/**/*login*'
-      - 'conduit/src/**/*Login*'
-      - 'conduit/src/**/*signin*'
-      - 'conduit/src/**/*SignIn*'
-      - 'business-suite-unified/src/lib/supabase.ts'
-      - 'crm7/src/lib/supabase.ts'
-      - 'conduit/src/lib/supabase/**'
-      - 'business-suite-unified/src/contexts/AuthContext.tsx'
-      - 'crm7/src/contexts/AuthContext.tsx'
       - '.github/workflows/oauth-provider-check.yml'
+      - 'AGENTS.md'
   push:
     branches: [main, development]
     paths:
-      - 'business-suite-unified/src/components/AuthForm.tsx'
-      - 'crm7/src/components/LoginModal.tsx'
-      - 'crm7/src/components/SignupModal.tsx'
-      - 'business-suite-unified/src/lib/supabase.ts'
-      - 'crm7/src/lib/supabase.ts'
-      - 'conduit/src/lib/supabase/**'
       - '.github/workflows/oauth-provider-check.yml'
+      - 'AGENTS.md'
+  # Run on any push to submodule default branches via repository_dispatch
+  # (triggered by submodule CI or manually)
+  repository_dispatch:
+    types: [submodule-auth-changed]
   workflow_dispatch: {}
+  # Also run on a schedule to catch drift — daily at 02:00 UTC
+  schedule:
+    - cron: '0 2 * * *'
 
 permissions:
   contents: read
@@ -63,75 +54,86 @@ jobs:
     name: Verify Google + Microsoft + GitHub in all auth modals
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Check mandatory OAuth providers
+      - name: Check mandatory OAuth providers via GitHub API
         id: provider-check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          # ── Configuration ──────────────────────────────────────────────────────────
-          # Files that MUST contain all three provider IDs.
-          # Add new auth entry points here as new apps join the suite.
-          declare -A AUTH_FILES=(
-            ["business-suite-unified/src/components/AuthForm.tsx"]="BSU canonical auth entry point"
-            ["crm7/src/components/LoginModal.tsx"]="CRM7 sign-in modal"
-            ["crm7/src/components/SignupModal.tsx"]="CRM7 register modal"
+          # ── Configuration ──────────────────────────────────────────────────────
+          # Format: "repo:branch:path:description"
+          AUTH_FILE_SPECS=(
+            "GaryOcean428/business-suite-unified:master:src/components/AuthForm.tsx:BSU canonical auth entry point"
+            "GaryOcean428/crm7:main:src/components/LoginModal.tsx:CRM7 sign-in modal"
+            "GaryOcean428/crm7:main:src/components/SignupModal.tsx:CRM7 register modal"
           )
 
-          # The three mandatory OAuth provider IDs (Supabase GoTrue / @supabase/supabase-js Provider type)
+          # The three mandatory OAuth provider IDs
           declare -A PROVIDERS=(
             ["google"]="Google Workspace"
             ["azure"]="Microsoft Azure AD / M365"
             ["github"]="GitHub"
           )
 
-          # ── Check ──────────────────────────────────────────────────────────────────
           FAILED=0
           SUMMARY=""
 
-          for file in "${!AUTH_FILES[@]}"; do
-            desc="${AUTH_FILES[$file]}"
+          for spec in "${AUTH_FILE_SPECS[@]}"; do
+            IFS=':' read -r repo branch filepath desc <<< "$spec"
 
-            if [ ! -f "$file" ]; then
-              echo "::warning file=$file::File not found — skipping (may have been renamed or removed)"
-              SUMMARY+="⚠️  **\`$file\`** — not found (skipped)\n"
+            # Fetch file content from GitHub API
+            API_URL="https://api.github.com/repos/${repo}/contents/${filepath}?ref=${branch}"
+            RESPONSE=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                            -H "Accept: application/vnd.github.v3+json" \
+                            "$API_URL")
+
+            # Check for API errors
+            if echo "$RESPONSE" | grep -q '"message".*"Not Found"'; then
+              echo "::warning::${repo}/${filepath} — file not found on branch ${branch}, skipping"
+              SUMMARY+="⚠️  **\`${repo}/${filepath}\`** ($desc) — not found (skipped)\n"
               continue
             fi
 
+            # Decode content
+            FILE_CONTENT=$(echo "$RESPONSE" | python3 -c "
+          import json, sys, base64
+          d = json.load(sys.stdin)
+          print(base64.b64decode(d['content']).decode('utf-8', errors='replace'))
+          ")
+
             FILE_FAILED=0
-            FILE_SUMMARY="### \`$file\` ($desc)\n"
+            FILE_SUMMARY="### \`${repo}/${filepath}\` ($desc)\n"
 
             for provider_id in "${!PROVIDERS[@]}"; do
               provider_name="${PROVIDERS[$provider_id]}"
 
-              # Check for the provider ID as a quoted string (e.g. 'google', "google", id: 'google')
-              # This covers: id: 'google', id: "google", 'google', handleOAuth('google'), onClick(() => handleOAuth('azure'))
-              if grep -qE "(id:|'|\"|\\`|handleOAuth\\()(${provider_id})(['\"\`)]|,)" "$file" 2>/dev/null || \
-                 grep -qE "signInWithOAuth\\(['\"](${provider_id})['\"]" "$file" 2>/dev/null || \
-                 grep -qE "provider.*['\"](${provider_id})['\"]" "$file" 2>/dev/null || \
-                 grep -qE "['\"](${provider_id})['\"].*provider" "$file" 2>/dev/null; then
+              # Check for the provider ID as a quoted string
+              # Covers: 'google', "google", handleOAuth('google'), provider: 'azure', id: 'github'
+              if echo "$FILE_CONTENT" | grep -qE "(id:|'|\"|handleOAuth\()(${provider_id})(['\"]|,)" 2>/dev/null || \
+                 echo "$FILE_CONTENT" | grep -qE "signInWithOAuth\(['\"]${provider_id}['\"]" 2>/dev/null || \
+                 echo "$FILE_CONTENT" | grep -qE "provider.*['\"]${provider_id}['\"]" 2>/dev/null || \
+                 echo "$FILE_CONTENT" | grep -qE "['\"]${provider_id}['\"].*provider" 2>/dev/null; then
                 FILE_SUMMARY+="  ✅ \`${provider_id}\` (${provider_name}) — found\n"
               else
                 FILE_SUMMARY+="  ❌ \`${provider_id}\` (${provider_name}) — **MISSING**\n"
-                echo "::error file=$file::Missing OAuth provider '${provider_id}' (${provider_name}). All three providers (google, azure/Microsoft, github) are mandatory per AGENTS.md §Mandatory OAuth Providers."
+                echo "::error::${repo}/${filepath}: Missing OAuth provider '${provider_id}' (${provider_name}). All three providers (google, azure/Microsoft, github) are mandatory per AGENTS.md §Mandatory OAuth Providers."
                 FILE_FAILED=1
                 FAILED=1
               fi
             done
 
             SUMMARY+="$FILE_SUMMARY\n"
-
             if [ "$FILE_FAILED" = "0" ]; then
               SUMMARY+="  ✅ All three providers present\n"
             fi
           done
 
-          # ── Write step summary ─────────────────────────────────────────────────────
+          # ── Write step summary ──────────────────────────────────────────────
           {
             echo "## OAuth Provider Mandate Check"
             echo ""
             echo "All BSuite auth modals must expose Google + Microsoft (azure) + GitHub."
-            echo "See [AGENTS.md §Mandatory OAuth Providers](../blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
+            echo "See [AGENTS.md §Mandatory OAuth Providers](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
             echo ""
             echo -e "$SUMMARY"
             if [ "$FAILED" = "0" ]; then
@@ -140,13 +142,13 @@ jobs:
               echo "### ❌ One or more providers are missing — see errors above"
               echo ""
               echo "**How to fix:** Add the missing provider button to the flagged file."
-              echo "Reference implementation: \`crm7/src/components/LoginModal.tsx\`"
+              echo "Reference implementation: \`GaryOcean428/crm7:src/components/LoginModal.tsx\`"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
           exit $FAILED
 
-      - name: Comment on PR with provider status
+      - name: Comment on PR if providers missing
         if: github.event_name == 'pull_request' && failure()
         uses: actions/github-script@v7
         with:
@@ -157,9 +159,9 @@ jobs:
               repo: context.repo.repo,
               body: `## ❌ OAuth Provider Mandate Check Failed
 
-            This PR modifies an auth modal file but is missing one or more of the three mandatory OAuth providers.
+            A monitored auth modal file is missing one or more of the three mandatory OAuth providers.
 
-            **All BSuite auth entry points must expose all three providers** (see [AGENTS.md §Mandatory OAuth Providers](../blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)):
+            **All BSuite auth entry points must expose all three providers** (see [AGENTS.md §Mandatory OAuth Providers](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)):
 
             | Provider | Supabase ID | Purpose |
             |----------|------------|---------|
@@ -167,9 +169,9 @@ jobs:
             | Microsoft | \`azure\` | Azure AD / M365 — required for B2B org SSO across the suite |
             | GitHub | \`github\` | Developer / technical user convenience |
 
-            Check the workflow run for details on which files and providers failed.
+            Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for which files and providers failed.
 
-            **Reference implementation:** \`crm7/src/components/LoginModal.tsx\``
+            **Reference implementation:** \`GaryOcean428/crm7:src/components/LoginModal.tsx\``
             })
 
   # ─────────────────────────────────────────────────────────────────────────────
@@ -179,136 +181,129 @@ jobs:
     name: Verify PKCE flowType in all Supabase client files (no implicit flow)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Check PKCE compliance
+      - name: Check PKCE compliance via GitHub API
         id: pkce-check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          # ── Configuration ──────────────────────────────────────────────────────────
-          # All files that instantiate a Supabase client must explicitly set
-          # flowType: 'pkce'. Implicit flow (hash fragment token delivery) is
-          # forbidden under OAuth 2.1 §4 and BSuite AGENTS.md.
-          #
-          # Pattern: any file containing createClient( or createBrowserClient( or
-          # createServerClient( that does NOT have flowType: 'pkce' nearby.
-
-          # ── Static list: known Supabase client files ────────────────────────────
-          declare -A CLIENT_FILES=(
-            ["business-suite-unified/src/lib/supabase.ts"]="BSU Supabase client"
-            ["crm7/src/lib/supabase.ts"]="CRM7 Supabase client"
-            ["conduit/src/lib/supabase/client.ts"]="Conduit browser client (@supabase/ssr)"
-            ["conduit/src/lib/supabase/server.ts"]="Conduit server client (@supabase/ssr)"
+          # ── Configuration ──────────────────────────────────────────────────
+          # Format: "repo:branch:path:description"
+          CLIENT_FILE_SPECS=(
+            "GaryOcean428/business-suite-unified:master:src/lib/supabase.ts:BSU Supabase client"
+            "GaryOcean428/crm7:main:src/lib/supabase.ts:CRM7 Supabase client"
+            "GaryOcean428/conduit:main:src/lib/supabase/client.ts:Conduit browser client (@supabase/ssr)"
+            "GaryOcean428/conduit:main:src/lib/supabase/server.ts:Conduit server client (@supabase/ssr)"
           )
 
-          # ── Also scan for any other file in the repo that calls createClient ───
-          # Exclude test mocks, migrations, and node_modules
-          EXTRA_FILES=$(grep -rlE \
-            "(createClient|createBrowserClient|createServerClient)\s*\(" \
-            --include="*.ts" --include="*.tsx" \
-            --exclude-dir="{node_modules,.next,dist,build}" \
-            . 2>/dev/null | \
-            grep -vE "(test|spec|mock|migration|__tests__|\.test\.|\.spec\.)" | \
-            sort -u)
-
-          for extra in $EXTRA_FILES; do
-            # Strip leading ./
-            clean="${extra#./}"
-            # Add to check list only if not already present
-            if [ -z "${CLIENT_FILES[$clean]+_}" ]; then
-              CLIENT_FILES["$clean"]="Auto-detected Supabase client"
-            fi
-          done
-
-          # ── Patterns ────────────────────────────────────────────────────────────
-          # GOOD: flowType: 'pkce'  OR  flowType: "pkce"
-          PKCE_PATTERN="flowType[[:space:]]*:[[:space:]]*['\"]pkce['\"]"
-
-          # BAD: implicit flow indicators
-          # response_type=token, response_type: 'token', implicit in flowType
-          IMPLICIT_PATTERNS=(
-            "flowType[[:space:]]*:[[:space:]]*['\"]implicit['\"]"
-            "response_type[[:space:]]*=[[:space:]]*['\"]?token"
-            "response_type[[:space:]]*:[[:space:]]*['\"]token"
+          # Callback handler files to check for exchangeCodeForSession
+          CALLBACK_FILE_SPECS=(
+            "GaryOcean428/business-suite-unified:master:src/pages/auth/AuthCallback.tsx:BSU auth callback"
+            "GaryOcean428/crm7:main:src/pages/auth/callback.tsx:CRM7 auth callback"
+            "GaryOcean428/conduit:main:src/app/auth/callback/route.ts:Conduit auth callback route"
           )
-
-          # BAD: signing JWTs with client-side secret (indicates implicit token use)
-          SECRET_SIGN_PATTERN="sign\s*\(.*secret"
 
           FAILED=0
           PKCE_SUMMARY=""
 
-          for file in "${!CLIENT_FILES[@]}"; do
-            desc="${CLIENT_FILES[$file]}"
+          fetch_file() {
+            local repo="$1" branch="$2" path="$3"
+            local url="https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}"
+            local response
+            response=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                               -H "Accept: application/vnd.github.v3+json" \
+                               "$url")
+            if echo "$response" | grep -q '"message".*"Not Found"'; then
+              echo "__NOT_FOUND__"
+              return
+            fi
+            echo "$response" | python3 -c "
+          import json, sys, base64
+          d = json.load(sys.stdin)
+          print(base64.b64decode(d['content']).decode('utf-8', errors='replace'))
+          "
+          }
 
-            if [ ! -f "$file" ]; then
-              # Only warn for known files; auto-detected files may have been moved
-              if [ "${CLIENT_FILES[$file]}" != "Auto-detected Supabase client" ]; then
-                echo "::warning file=$file::Supabase client file not found — skipping"
-                PKCE_SUMMARY+="⚠️  **\`$file\`** ($desc) — not found (skipped)\n"
-              fi
+          # ── Check Supabase client files ─────────────────────────────────────
+          for spec in "${CLIENT_FILE_SPECS[@]}"; do
+            IFS=':' read -r repo branch filepath desc <<< "$spec"
+
+            CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
+
+            if [ "$CONTENT" = "__NOT_FOUND__" ]; then
+              echo "::warning::${repo}/${filepath} — not found on branch ${branch}, skipping"
+              PKCE_SUMMARY+="⚠️  **\`${repo}/${filepath}\`** ($desc) — not found (skipped)\n"
               continue
             fi
 
-            # Check: does file actually instantiate a Supabase client?
-            if ! grep -qE "(createClient|createBrowserClient|createServerClient)\s*\(" "$file" 2>/dev/null; then
-              # File doesn't create a client — skip PKCE check
+            # Does the file actually create a Supabase client?
+            if ! echo "$CONTENT" | grep -qE "(createClient|createBrowserClient|createServerClient)\s*\("; then
               continue
             fi
 
             FILE_FAILED=0
-            FILE_SUMMARY="### \`$file\` ($desc)\n"
+            FILE_SUMMARY="### \`${repo}/${filepath}\` ($desc)\n"
 
-            # ── Check 1: flowType: 'pkce' must be present ──────────────────────
-            if grep -qE "$PKCE_PATTERN" "$file" 2>/dev/null; then
+            # ── Check 1: flowType: 'pkce' must be present ──────────────────
+            if echo "$CONTENT" | grep -qE "flowType\s*:\s*['\"]pkce['\"]"; then
               FILE_SUMMARY+="  ✅ \`flowType: 'pkce'\` — present\n"
             else
               FILE_SUMMARY+="  ❌ \`flowType: 'pkce'\` — **MISSING** (implicit flow risk)\n"
-              echo "::error file=$file::Supabase client is missing flowType: 'pkce'. OAuth 2.1 and BSuite AGENTS.md require PKCE for all OAuth flows. Add flowType: 'pkce' to the auth config object passed to createClient/createBrowserClient/createServerClient."
+              echo "::error::${repo}/${filepath}: Supabase client is missing flowType: 'pkce'. OAuth 2.1 and BSuite AGENTS.md require PKCE for all OAuth flows. Add flowType: 'pkce' to the auth config object."
               FILE_FAILED=1
               FAILED=1
             fi
 
-            # ── Check 2: no implicit flow indicators ───────────────────────────
-            for pattern in "${IMPLICIT_PATTERNS[@]}"; do
-              if grep -qE "$pattern" "$file" 2>/dev/null; then
-                MATCH=$(grep -nE "$pattern" "$file" | head -3)
-                FILE_SUMMARY+="  ❌ Implicit flow pattern detected: \`$pattern\`\n     \`\`\`\n     $MATCH\n     \`\`\`\n"
-                echo "::error file=$file::Implicit OAuth flow pattern detected ('$pattern'). OAuth 2.1 §4 forbids implicit flow. Use PKCE (flowType: 'pkce') and exchangeCodeForSession() instead."
-                FILE_FAILED=1
-                FAILED=1
-              fi
-            done
+            # ── Check 2: no implicit flow indicators ───────────────────────
+            if echo "$CONTENT" | grep -qE "flowType\s*:\s*['\"]implicit['\"]"; then
+              FILE_SUMMARY+="  ❌ \`flowType: 'implicit'\` — **FORBIDDEN** per OAuth 2.1 §4\n"
+              echo "::error::${repo}/${filepath}: flowType: 'implicit' is forbidden. OAuth 2.1 §4 prohibits implicit grant. Use PKCE."
+              FILE_FAILED=1
+              FAILED=1
+            fi
 
-            # ── Check 3: auth callbacks must use exchangeCodeForSession ────────
-            # Only applies to files that look like callback/route handlers
-            if echo "$file" | grep -qE "(callback|AuthCallback|auth/callback|auth/route)"; then
-              if grep -qE "exchangeCodeForSession" "$file" 2>/dev/null; then
-                FILE_SUMMARY+="  ✅ \`exchangeCodeForSession\` — used in callback handler\n"
-              else
-                # May use detectSessionInUrl — acceptable but worth noting
-                if grep -qE "detectSessionInUrl" "$file" 2>/dev/null; then
-                  FILE_SUMMARY+="  ✅ \`detectSessionInUrl\` — used (PKCE code exchange delegated to client)\n"
-                else
-                  FILE_SUMMARY+="  ⚠️  No \`exchangeCodeForSession\` or \`detectSessionInUrl\` in callback file\n"
-                  echo "::warning file=$file::Auth callback file does not appear to call exchangeCodeForSession or rely on detectSessionInUrl. Verify PKCE code exchange is handled correctly."
-                fi
-              fi
+            if echo "$CONTENT" | grep -qE "response_type\s*[=:]\s*['\"]?token"; then
+              FILE_SUMMARY+="  ❌ \`response_type=token\` — **IMPLICIT FLOW** detected\n"
+              echo "::error::${repo}/${filepath}: response_type=token is an implicit flow indicator. Use authorization_code + PKCE."
+              FILE_FAILED=1
+              FAILED=1
             fi
 
             PKCE_SUMMARY+="$FILE_SUMMARY\n"
-
             if [ "$FILE_FAILED" = "0" ]; then
               PKCE_SUMMARY+="  ✅ PKCE compliant\n"
             fi
           done
 
-          # ── Write step summary ─────────────────────────────────────────────────────
+          # ── Check callback handler files ────────────────────────────────────
+          PKCE_SUMMARY+="\n### Callback handlers (PKCE code exchange)\n"
+
+          for spec in "${CALLBACK_FILE_SPECS[@]}"; do
+            IFS=':' read -r repo branch filepath desc <<< "$spec"
+
+            CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
+
+            if [ "$CONTENT" = "__NOT_FOUND__" ]; then
+              echo "::warning::${repo}/${filepath} — not found, skipping callback check"
+              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` ($desc) — not found (skipped)\n"
+              continue
+            fi
+
+            if echo "$CONTENT" | grep -qE "exchangeCodeForSession"; then
+              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — uses \`exchangeCodeForSession\` ✓\n"
+            elif echo "$CONTENT" | grep -qE "detectSessionInUrl"; then
+              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — uses \`detectSessionInUrl\` (PKCE exchange delegated to client) ✓\n"
+            else
+              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` — no \`exchangeCodeForSession\` or \`detectSessionInUrl\` found (verify manually)\n"
+              echo "::warning::${repo}/${filepath}: Auth callback does not appear to call exchangeCodeForSession or detectSessionInUrl. Verify PKCE code exchange is handled."
+            fi
+          done
+
+          # ── Write step summary ──────────────────────────────────────────────
           {
             echo "## PKCE Compliance Check"
             echo ""
             echo "All Supabase clients must use \`flowType: 'pkce'\`. Implicit flow is forbidden per OAuth 2.1 §4."
-            echo "See [AGENTS.md §Mandatory OAuth Providers](../blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
             echo ""
             echo -e "$PKCE_SUMMARY"
             if [ "$FAILED" = "0" ]; then
@@ -316,23 +311,22 @@ jobs:
             else
               echo "### ❌ One or more Supabase clients are missing PKCE — see errors above"
               echo ""
-              echo "**How to fix:** Add \`flowType: 'pkce'\` to the \`auth\` config in your \`createClient()\` call:"
+              echo "**How to fix:** Add \`flowType: 'pkce'\` to your \`createClient()\` call:"
               echo "\`\`\`ts"
               echo "createClient(url, key, {"
               echo "  auth: {"
-              echo "    flowType: 'pkce',      // Required: OAuth 2.1 PKCE"
+              echo "    flowType: 'pkce',       // Required: OAuth 2.1 PKCE"
               echo "    detectSessionInUrl: true,"
               echo "  }"
               echo "})"
               echo "\`\`\`"
-              echo ""
-              echo "**Reference implementation:** \`crm7/src/lib/supabase.ts\`"
+              echo "Reference: \`GaryOcean428/crm7:src/lib/supabase.ts\`"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
           exit $FAILED
 
-      - name: Comment on PR with PKCE status
+      - name: Comment on PR if PKCE missing
         if: github.event_name == 'pull_request' && failure()
         uses: actions/github-script@v7
         with:
@@ -347,8 +341,7 @@ jobs:
 
             **OAuth 2.1 §4 and BSuite AGENTS.md require PKCE for all OAuth flows** — implicit flow (hash-fragment token delivery) is forbidden.
 
-            **How to fix:** ensure every \`createClient\` / \`createBrowserClient\` / \`createServerClient\` call includes:
-
+            **How to fix:**
             \`\`\`ts
             createClient(url, key, {
               auth: {
@@ -358,11 +351,11 @@ jobs:
             })
             \`\`\`
 
-            And ensure auth callback routes call \`supabase.auth.exchangeCodeForSession(code)\` to complete the PKCE exchange.
+            Auth callback routes must call \`supabase.auth.exchangeCodeForSession(code)\` to complete the PKCE exchange.
 
             **Reference implementations:**
-            - Client: \`crm7/src/lib/supabase.ts\`
-            - Callback: \`conduit/src/app/auth/callback/route.ts\`
+            - Client: \`GaryOcean428/crm7:src/lib/supabase.ts\`
+            - Callback: \`GaryOcean428/conduit:src/app/auth/callback/route.ts\`
 
-            Check the workflow run for the exact files and lines that failed.`
+            Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for exact details.`
             })
