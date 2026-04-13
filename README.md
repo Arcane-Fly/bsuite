@@ -11,6 +11,7 @@ Parent repository for the Business Suite platform. Each application lives in its
 | **R8** | `R80.3/` | Calculation engine (charge rates, payroll) | [r8.crm7.app](https://r8.crm7.app) |
 | **BSU** | `business-suite-unified/` | Admin dashboard & OAuth provider | [suite.crm7.app](https://suite.crm7.app) |
 | **Braden** | `braden/` | Corporate website | [braden.com.au](https://www.braden.com.au) |
+| **Throughput** | `throughput/` | Idea management platform (Groq AI assist) | [ideas.crm7.app](https://ideas.crm7.app) |
 
 ## Getting Started
 
@@ -65,6 +66,11 @@ bsuite/
 ├── R80.3/                  # R8 calculation engine submodule
 ├── business-suite-unified/ # BSU admin dashboard submodule
 ├── braden/                 # Corporate website submodule
+├── throughput/             # Throughput idea management platform (pending submodule registration)*
+├── mobile/                 # Mobile app workspace
+├── packages/               # Shared @bsuite/* npm packages (charge-calc, nav-core)
 ├── docs/                   # Cross-project documentation
 └── supabase/               # Shared Supabase config (if any)
 ```
+
+\* `throughput/` exists in the repo tree but is not yet declared in `.gitmodules` alongside the other 5 apps. Tracked separately for registration.
