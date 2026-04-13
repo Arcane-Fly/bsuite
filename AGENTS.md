@@ -215,26 +215,28 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 4. **CRM7 callback is dual-purpose** — checks `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
 5. **BS OAuth tokens are NOT Supabase sessions** — they are separate token sets in localStorage. The two auth systems run in parallel.
 6. **`startBSTokenRefresh()` is wired** in all 3 client apps — checks every 60s, refreshes 5min before expiry, clears tokens on failure
-7. **Two OAuth providers are MANDATORY across the entire suite** — see section below. Never remove either provider.
+7. **Two OAuth providers are MANDATORY across the entire suite** — see section below. Never add a third provider (e.g. GitHub) without explicit owner instruction.
 
-#### Mandatory OAuth Providers (ALL THREE — Suite-Wide)
+#### Mandatory OAuth Providers (TWO — Suite-Wide)
 
 > **This is a hard constraint enforced across all apps. Regression is a critical bug.**
 
-Every auth entry point in the BSuite (BSU `AuthForm.tsx`, CRM7 `LoginModal.tsx` + `SignupModal.tsx`, and any future app's login UI) **must** expose both of the following providers:
+Every auth entry point in the BSuite (BSU `AuthForm.tsx`, CRM7 `LoginModal.tsx` + `SignupModal.tsx`, and any future app's login UI) **must** expose exactly the following two providers — no more, no less:
 
-| Provider | Supabase ID | Purpose |
-|----------|------------|----------|
-| **Google** | `google` | Corporate Google Workspace accounts |
-| **Microsoft** | `azure` | Corporate Azure AD / Microsoft 365 — **critical for B2B SSO across the suite**. Users and orgs sign in with their M365 identity; downstream integrations (email sending from corporate Azure mailboxes, Entra ID group sync, M365 calendar access) depend on this provider existing at every auth surface. Removing it breaks corporate org onboarding. |
+| Provider | Supabase ID | Status | Purpose |
+|----------|------------|--------|----------|
+| **Google** | `google` | ✅ Enabled | Corporate Google Workspace accounts |
+| **Microsoft** | `azure` | ✅ Enabled | Corporate Azure AD / Microsoft 365 — **critical for B2B SSO across the suite**. Users and orgs sign in with their M365 identity; downstream integrations (email sending from corporate Azure mailboxes, Entra ID group sync, M365 calendar access) depend on this provider existing at every auth surface. Removing it breaks corporate org onboarding. |
+| **GitHub** | `github` | ❌ Disabled | **Intentionally removed** — not appropriate for B2B use case. Disabled in Supabase. Button removed from all auth modals. **Never re-add without explicit owner instruction.** |
 
 **Rules:**
 - Both providers must be present in **both** Register and Sign In modals/forms — identical lists, always in sync
 - The order is: Google → Microsoft
-- If you modify any auth modal, verify the other modals in the same PR still have all three
-- LLMs sometimes drop Microsoft (treating it as redundant with Google). This is wrong — Microsoft/Azure is required for B2B Azure AD / M365 SSO. Both providers are mandatory.
-- Add a sync comment in every file that defines a provider list: `// IMPORTANT: Keep in sync with [other files] — both providers (Google/Microsoft) are mandatory`
+- If you modify any auth modal, verify the other modals in the same PR still show only these two providers
+- LLMs often drop Microsoft (treating it as redundant with Google) or re-add GitHub (treating it as harmless). Both are wrong. Google + Microsoft only.
+- Add a sync comment in every file that defines a provider list: `// IMPORTANT: Keep in sync with [other files] — exactly two providers (Google/Microsoft) are mandatory. GitHub is intentionally absent.`
 - For OAuth 2.1 / OIDC / PKCE compliance: Microsoft uses the `azure` provider ID (Azure AD OIDC endpoint, full PKCE support). Never use implicit flow.
+- The Supabase GitHub provider is disabled at the platform level — even if a button were added to the UI, it would fail. Do not attempt to re-enable it.
 
 **Affected files (current):**
 - `business-suite-unified`: `src/components/AuthForm.tsx`
@@ -419,6 +421,58 @@ When multiple AI agents work simultaneously:
 3. **Build verification** — every agent must verify build passes before committing
 4. **Conventional commits** — all agents follow `type(scope): description`
 5. **Protected files** — listed in each project's `CONTRIBUTING.md`
+
+---
+
+## Automated Deployment Checks (Ship-All-Apps Cron)
+
+The Ship-All-Apps cron runs every 6 hours (`25 */6 * * *`) and enforces the following checks beyond basic deploy health. Any agent modifying auth, RLS, or shared infra must be aware of what the cron validates.
+
+### RLS Policy Standing Audit
+
+On every run, the cron queries Supabase project `tuybltdrdefjblnplpqo` to verify these five policies remain `{authenticated}` — never `{public}`:
+
+| Table | Policy | CMD |
+|-------|--------|-----|
+| `tenants` | Tenant owners can update their tenant | UPDATE |
+| `tenants` | Users can view their own tenants | SELECT |
+| `user_tenants` | Admins can invite users to their tenants | INSERT |
+| `user_tenants` | Admins can update user roles in their tenants | UPDATE |
+| `user_tenants` | Users can view tenant memberships | SELECT |
+
+If any policy regresses to `{public}`, the cron re-applies the fix and files a GitHub issue on crm7 with label `security`. Migration reference: `20260413062306_fix_rls_public_to_authenticated_tenant_policies`.
+
+### Supabase URI Allow-List (Do Not Prune)
+
+The following redirect URIs must always be present in the Supabase allow-list. Removing any will break OAuth callbacks for that app:
+
+```
+https://r8.crm7.app/auth/callback
+https://www.braden.com.au/auth/callback
+https://suite.crm7.app/auth/callback
+http://localhost:*/**
+https://*.vercel.app
+https://*.vercel.app/**
+https://crm.crm7.app/auth/callback
+https://*.vusercontent.net/auth/callback
+https://ideas.crm7.app/auth/callback
+https://conduit.crm7.app/auth/callback
+```
+
+### Auth Routing Architecture (Expected Behaviour — Not Bugs)
+
+- **Conduit** (`conduit.crm7.app`) sign-in redirects to `suite.crm7.app/login?return_to=conduit&return_path=…` — BSU handles auth, conduit handles the post-auth redirect. Intentional.
+- **R80.3** (`r8.crm7.app`) similarly delegates to BSU. Cookie SSO (`business_suite_auth` on `domain=.crm7.app`) handles session sharing.
+- **Braden** (`www.braden.com.au`) is a different TLD — uses BS OAuth 2.1 PKCE instead of cookie SSO.
+- **Conduit** uses `@supabase/ssr` server-managed cookies and does **not** participate in cross-domain cookie SSO. Isolated by design.
+
+### Separate Project Warning
+
+`monkey-projects` org has its own GitHub OAuth app ("Monkey") deployed on Railway/Vercel. It is entirely separate from BSuite. Never apply BSuite auth, RLS, or provider changes to that org.
+
+### Known Platform Issues (Do Not Action)
+
+- **bsuite#106** — NULL `client_secret_hash` on public OAuth clients (Conduit, Throughput). Supabase platform bug. Dashboard-only; app auth flows are unaffected. No support ticket. No workaround.
 
 ---
 
