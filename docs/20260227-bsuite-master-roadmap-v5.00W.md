@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.00W
+**Version:** 5.01W
 **Date:** 2026-02-27
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-04-14
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
@@ -274,6 +274,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ Common components (EmptyState, StatusBadge)
 - ✅ Database table prefix migration (r7_→ conduit_)
 - ✅ D2C Neon Electric theme with dark mode
+- ✅ **RBAC architecture** — two-tier role model (BSuite portal roles → Conduit operational roles), 69 fine-grained permissions across 12 domains, `PermissionGate` component, `usePermissions` hook, server-side middleware route protection with `ROUTE_PERMISSIONS` map + write-route pattern matching, tenant role overrides via `mapPortalRoleToConduit(portalRole, tenantOverrides)`. See [`conduit/docs/20260303-rbac-architecture-design-v1.00W.md`](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md)
 
 **Remaining:**
 
@@ -317,6 +318,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 - ✅ Apprentice charge calculator core
 - ✅ Fair Work API integration (direct + enhanced Edge Function proxy)
+- ✅ **Fair Work API cache & fallback architecture** (PR #48) — in-memory cache → `award_rate_cache` Supabase table → empty fallback ladder; `fairworkCacheFallback.test.ts` behaviour suite. See [`docs/20260304-r80-fairwork-api-reference-v1.00W.md`](../R80.3/docs/20260304-r80-fairwork-api-reference-v1.00W.md)
 - ✅ PDF export
 - ✅ Enterprise agreement manager
 - ✅ Award rate selector with templates
@@ -324,7 +326,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ Import/export calculations
 - ✅ BSU OAuth integration
 - ✅ Onboarding wizard
-- ✅ Wage source manager (multiple data sources)
+- ✅ Wage source manager (multiple data sources) — CSV/spreadsheet import with auto-recalculation, fallback behaviour, format normalization
 
 **Remaining:**
 
@@ -366,6 +368,14 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
 
 ---
+
+## Recently Completed (as of 2026-04-14)
+
+- ✅ **CRM7 Nav + white-label fix** (2026-04-13, PR #185) — Collapsed nav icon mode correct; SidebarProvider as flex-row root fixes main content reflow; CRM7Logo always visible in header; `branding.tsx` now upserts to `tenant_branding` table (not disconnected `tenant_settings`)
+- ✅ **Node 24 alignment** (2026-04-13, PR #186) — crm7 `.node-version` 22→24 matching `engines.node: "24"`
+- ✅ **RLS migration** (2026-04-13) — all 5 tenants/user_tenants policies changed from {public} → {authenticated}. Migration `20260413062306_fix_rls_public_to_authenticated_tenant_policies` applied.
+- ✅ **BSU AGENTS.md OAuth mandate** (2026-04-13) — Two-provider OAuth canonical spec (Google + Microsoft/Azure only, GitHub intentionally removed). New "Automated Deployment Checks" section.
+- ✅ **Fair Work API cache & fallback architecture** (R80.3, PR #48) — in-memory → `award_rate_cache` → empty fallback ladder. `fairworkCacheFallback.test.ts` behaviour suite. `award_rate_cache` Supabase table.
 
 ## Recently Completed (as of 2026-03-19)
 
@@ -443,18 +453,34 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 18 | Cross-project UX (AI icon, @dnd-kit Conduit, view toggles) | multi | 3d | Claude plan `prancy-seeking-dijkstra` + `cross-project-ux-improvements` |
 | 19 | Cross-app notifications (Supabase Realtime) | bsu | 3d | Prompt 7 |
 | 20 | CRM7 Tier 3-4 wiring (financial, compliance, WHS, comms, reports) | crm7 | 2w | Feature gap §3 Tier 3-4 |
-| 21 | AI cost tracking per tenant | crm7/bsu | 2d | — |
+| 21 | AI cost tracking per tenant + full AI cost dashboard (per-user, per-tenant, per-feature breakdown with budget alerts) | crm7/bsu | 3d | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §6 |
 | 22 | Document storage QA fixes | crm7 | 2d | [report](./archive/crm7/20260226-document-storage-qa-report.md) |
 | 23 | Doc cleanup (22 missing READMEs, broken links) | all | 1d | Claude plan `prancy-seeking-dijkstra` |
 | 24 | Braden visual customization | braden | 1w | — |
 | 25 | R80.3 PDF export improvements | R80.3 | 2d | — |
 | 26 | Test coverage push (70% target all projects) | all | ongoing | — |
+| 26a | CC-1: DashboardPageEditorDrawer accessibility — add `KeyboardSensor` + `sortableKeyboardCoordinates` + `aria-label` on grip buttons | crm7 | 2h | Gap report v2 CC-1 |
+| 26b | CRM7 DRY one-shot: auto-population chains — apprentice select fills 6 related fields, claims/new auto-fills qualification/employer/dates | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 4 |
+| 26c | CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`, `PlacementSelector`, `HostSiteSelector`, `FieldOfficerSelector`, `TrainingProviderSelector` | crm7 | 2d | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.00A.md) §3 Tier 3 |
+| 26d | CRM7 DRY one-shot: DB FK migrations — `employers.primary_contact_id`, `funding_sources.contact_id` + ContactSelector on 9 forms | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 3 |
+| 26e | @types/node upgrade to ^24.x across all 5 apps | all | 30m | Gap report v2 RT-7 |
+| 26f | pnpm version alignment to 10.32.1 (BSU, braden, conduit, R80.3 behind CRM7) | all | 30m | Gap report v2 RT-8 |
+| 26g | R80.3: add `@vitest/coverage-v8 ^4.0.0` (missing, blocks `pnpm test:coverage`) | R80.3 | 15m | Gap report v2 RT-9 |
+| 26h | Conduit RBAC: document ✅ status — PermissionGate, middleware route protection, tenant role overrides, write-route pattern matching all confirmed implemented | conduit | — | [RBAC Design](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md) |
 
 ### P3 — Future
 
 | # | Task | Project | Effort | Source |
 |---|------|---------|--------|--------|
 | 27 | AI plugin system + Xero + Calendar + workflow automation | crm7 | 3w | Prompt 5 |
+| 27a | AI Conversational Data Entry — natural language CRM: user types entity description → AI extracts structured data → auto-creates record via tool call | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 2 |
+| 27b | AI Predictive Compliance Engine — daily background job scoring all apprentices for risk (training delays, expiring docs, funding eligibility, WHS patterns) → creates urgent tasks for field officers | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 1 |
+| 27c | AI Intelligent Report Generation — natural language analytics: user asks question → AI generates structured report with visualizations and actionable insights | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 3 |
+| 27d | AI Autonomous Workflow Engine — AI-triggered multi-step workflows (document routing, assessment scheduling, high-risk intervention) | crm7 | 2w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 4 |
+| 27e | Embedding/Vector Search — semantic document search via openai/text-embedding-3-small + vector DB; smart knowledge base; intelligent entity matching | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §7 |
+| 27f | AI Provider Routing + Fallbacks — xAI → Claude → GPT-5 fallback chain; cost-optimised routing; 99.99% uptime strategy | crm7 | 3d | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §5 |
+| 27g | AI Real-Time Compliance Intelligence — Perplexity Search integration for Fair Work monitoring (fairwork.gov.au + legislation.gov.au), Training.gov.au auto-sync, WHS regulation updates, USI verification | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §4 |
+| 27h | R80.3 Wage Source Enhancements — CSV template download button, version-controlled wage imports (timestamp + source metadata), automatic recalculation on source update, fallback to manual entry when source unavailable | R80.3 | 2d | [External Wage Sources](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |
 | 28 | BSuite Mobile native (Expo → Google Play) | new `mobile/` | 2w | Prompt 1B |
 | 29 | Org → Tenant hierarchy | bsu/crm7 | 1w | Feature gap §1C |
 | 30 | ~~BSU Idea Hub~~ ✅ | bsu | ✅ Done | Windsurf | 2026-03-16 |
@@ -480,6 +506,30 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | SP-5 | system_notices migration + SystemNoticeBanner rollout | ✅ Complete |
 | CA-8 | BSU hardcoded hex → D2C token sweep | ✅ Complete |
 | RT-10 | BSU react-day-picker v8 → v9 audit | 🔲 Pending |
+
+## Audit Sprint Status (2026-04-14)
+
+_Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap Report v2](./20260317-bsuite-gap-report-v2.00W.md) and [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md)._
+
+| Item | Description | Status |
+|------|-------------|--------|
+| AUD-1 | Conduit RBAC architecture (PermissionGate, middleware, 69 permissions, tenant overrides) | ✅ Confirmed implemented — added to roadmap as 26h |
+| AUD-2 | R80.3 Fair Work cache & fallback (PR #48, award_rate_cache table) | ✅ Confirmed implemented — added to Recently Completed |
+| AUD-3 | CRM7 nav + branding fix (PR #185) | ✅ Confirmed implemented — added to Recently Completed |
+| AUD-4 | RLS {public} → {authenticated} migration | ✅ Confirmed applied — added to Recently Completed |
+| AUD-5 | CA-1 sonner v2 alignment (BSU, Conduit) | ✅ Confirmed done (Gap v2 summary) |
+| AUD-6 | CA-2 TypeScript upgrade all apps | ✅ Confirmed done (Gap v2 summary) |
+| AUD-7 | CA-3 @supabase/supabase-js 2.99.2 all 5 | ✅ Confirmed done (Gap v2 summary) |
+| AUD-8 | CA-4 AI SDK version sync Conduit↔CRM7 | ✅ Confirmed done (Gap v2 summary) |
+| AUD-9 | CA-5 vitest v4 all projects | ✅ Confirmed done (Gap v2 summary) |
+| AUD-10 | CA-6 BSU FOUC inline theme script | ✅ Confirmed done (Gap v2 RT-3) |
+| AUD-11 | CC-2 DialogTitle sweep (claimed 81 gaps) | ✅ Zero gaps — count was total usages not missing titles |
+| AUD-12 | @types/react-grid-layout ^2.1.0 all projects | ✅ Confirmed done (Gap v2 RT-5) |
+| AUD-13 | AI Strategic Vision features 1–4 + vector search + provider routing | 🔲 Added to roadmap as 27a–27g (P3) |
+| AUD-14 | DRY one-shot: auto-population chains + Tier-3 selectors + FK migrations | 🔲 Added to roadmap as 26b–26d (P2) |
+| AUD-15 | @types/node ^24.x upgrade + pnpm 10.32.1 alignment + R80.3 coverage-v8 | 🔲 Added to roadmap as 26e–26g (P2) |
+| AUD-16 | CC-1 DashboardPageEditorDrawer KeyboardSensor + aria | 🔲 Added to roadmap as 26a (P2) |
+| AUD-17 | R80.3 Wage Source Enhancements (CSV template, version control) | 🔲 Added to roadmap as 27h (P3) |
 
 ---
 
@@ -523,7 +573,13 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | D2C Theme Specification | [`docs/20260228-d2c-theme-specification-v1.00W.md`](./20260228-d2c-theme-specification-v1.00W.md) |
 | AI Feature Map | [`docs/ai/features/20260227-feature-map-complete-v1.0.0.md`](./ai/features/20260227-feature-map-complete-v1.0.0.md) |
 | BSuite Gap Report (2026-03-16) | [`docs/20260316-bsuite-gap-report-v1.00W.md`](./20260316-bsuite-gap-report-v1.00W.md) |
+| BSuite Gap Report v2 (2026-03-17) | [`docs/20260317-bsuite-gap-report-v2.00W.md`](./20260317-bsuite-gap-report-v2.00W.md) |
 | BSuite Completeness Matrix (2026-03-09) | [`docs/20260309-bsuite-completeness-matrix-v1.00W.md`](./20260309-bsuite-completeness-matrix-v1.00W.md) |
+| CRM7 AI Strategic Vision | [`crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md`](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) |
+| Conduit RBAC Architecture Design | [`conduit/docs/20260303-rbac-architecture-design-v1.00W.md`](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md) |
+| R80.3 External Wage Sources Reference | [`R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md`](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |
+| R80.3 Fair Work API Reference (incl. cache/fallback arch.) | [`R80.3/docs/20260304-r80-fairwork-api-reference-v1.00W.md`](../R80.3/docs/20260304-r80-fairwork-api-reference-v1.00W.md) |
+| Entity Crosswalk & Traceability | [`docs/20260319-entity-crosswalk-v1.00D.md`](./20260319-entity-crosswalk-v1.00D.md) |
 
 ### Archived Roadmaps
 
