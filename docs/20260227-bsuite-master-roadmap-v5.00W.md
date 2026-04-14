@@ -371,6 +371,9 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ## Recently Completed (as of 2026-04-14)
 
+- ✅ **Tier-3 EntitySelectors** (2026-04-14, crm7 PR #192) — AwardRateSelector, PlacementSelector, HostSiteSelector, FieldOfficerSelector, TrainingProviderSelector added to `src/components/entity/selectors/`. Roadmap 26c.
+- ✅ **R80.3 Wage Source CSV UI** (2026-04-14, R80.3 PR #51) — Download Template button + Import CSV File picker in Settings → Award Rates. Surfaces existing `generateSampleCSVTemplate()` + `importWageDataFromFile()` service functions. Roadmap 27h.
+- ✅ **Roadmap v5.01W** (2026-04-14, bsuite PR #136) — Full doc→roadmap audit across 6 repos. 17 new entries, 13 confirmed complete, Audit Sprint Status table.
 - ✅ **CRM7 Nav + white-label fix** (2026-04-13, PR #185) — Collapsed nav icon mode correct; SidebarProvider as flex-row root fixes main content reflow; CRM7Logo always visible in header; `branding.tsx` now upserts to `tenant_branding` table (not disconnected `tenant_settings`)
 - ✅ **Node 24 alignment** (2026-04-13, PR #186) — crm7 `.node-version` 22→24 matching `engines.node: "24"`
 - ✅ **RLS migration** (2026-04-13) — all 5 tenants/user_tenants policies changed from {public} → {authenticated}. Migration `20260413062306_fix_rls_public_to_authenticated_tenant_policies` applied.
@@ -461,7 +464,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 26 | Test coverage push (70% target all projects) | all | ongoing | — |
 | 26a | CC-1: DashboardPageEditorDrawer accessibility — add `KeyboardSensor` + `sortableKeyboardCoordinates` + `aria-label` on grip buttons | crm7 | 2h | Gap report v2 CC-1 |
 | 26b | CRM7 DRY one-shot: auto-population chains — apprentice select fills 6 related fields, claims/new auto-fills qualification/employer/dates | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 4 |
-| 26c | CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`, `PlacementSelector`, `HostSiteSelector`, `FieldOfficerSelector`, `TrainingProviderSelector` | crm7 | 2d | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.00A.md) §3 Tier 3 |
+| 26c | ~~CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`| crm7 | ✅ Done | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.00A.md) §3 Tier 3 |
 | 26d | CRM7 DRY one-shot: DB FK migrations — `employers.primary_contact_id`, `funding_sources.contact_id` + ContactSelector on 9 forms | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 3 |
 | 26e | @types/node upgrade to ^24.x across all 5 apps | all | 30m | Gap report v2 RT-7 |
 | 26f | pnpm version alignment to 10.32.1 (BSU, braden, conduit, R80.3 behind CRM7) | all | 30m | Gap report v2 RT-8 |
@@ -480,7 +483,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 27e | Embedding/Vector Search — semantic document search via openai/text-embedding-3-small + vector DB; smart knowledge base; intelligent entity matching | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §7 |
 | 27f | AI Provider Routing + Fallbacks — xAI → Claude → GPT-5 fallback chain; cost-optimised routing; 99.99% uptime strategy | crm7 | 3d | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §5 |
 | 27g | AI Real-Time Compliance Intelligence — Perplexity Search integration for Fair Work monitoring (fairwork.gov.au + legislation.gov.au), Training.gov.au auto-sync, WHS regulation updates, USI verification | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §4 |
-| 27h | R80.3 Wage Source Enhancements — CSV template download button, version-controlled wage imports (timestamp + source metadata), automatic recalculation on source update, fallback to manual entry when source unavailable | R80.3 | 2d | [External Wage Sources](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |
+| 27h | ~~R80.3 Wage Source Enhancements~~ — CSV template download + import UI live in Settings; timestamp + preview on import | R80.3 | ✅ Done (2026-04-14) | [External Wage Sources](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |
 | 28 | BSuite Mobile native (Expo → Google Play) | new `mobile/` | 2w | Prompt 1B |
 | 29 | Org → Tenant hierarchy | bsu/crm7 | 1w | Feature gap §1C |
 | 30 | ~~BSU Idea Hub~~ ✅ | bsu | ✅ Done | Windsurf | 2026-03-16 |
@@ -525,11 +528,11 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 | AUD-10 | CA-6 BSU FOUC inline theme script | ✅ Confirmed done (Gap v2 RT-3) |
 | AUD-11 | CC-2 DialogTitle sweep (claimed 81 gaps) | ✅ Zero gaps — count was total usages not missing titles |
 | AUD-12 | @types/react-grid-layout ^2.1.0 all projects | ✅ Confirmed done (Gap v2 RT-5) |
-| AUD-13 | AI Strategic Vision features 1–4 + vector search + provider routing | 🔲 Added to roadmap as 27a–27g (P3) |
+| AUD-13 | AI Strategic Vision features 1–4 + vector search + provider routing | 🔲 Added to roadmap as 27a–27g (P3 — future work) |
 | AUD-14 | DRY one-shot: auto-population chains + Tier-3 selectors + FK migrations | 🔲 Added to roadmap as 26b–26d (P2) |
 | AUD-15 | @types/node ^24.x upgrade + pnpm 10.32.1 alignment + R80.3 coverage-v8 | 🔲 Added to roadmap as 26e–26g (P2) |
 | AUD-16 | CC-1 DashboardPageEditorDrawer KeyboardSensor + aria | 🔲 Added to roadmap as 26a (P2) |
-| AUD-17 | R80.3 Wage Source Enhancements (CSV template, version control) | 🔲 Added to roadmap as 27h (P3) |
+| AUD-17 | R80.3 Wage Source Enhancements (CSV template, version control) | ✅ Complete (PR #51) |
 
 ---
 
