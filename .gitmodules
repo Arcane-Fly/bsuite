@@ -13,3 +13,6 @@
 [submodule "conduit"]
 	path = conduit
 	url = https://github.com/GaryOcean428/conduit.git
+[submodule "throughput"]
+	path = throughput
+	url = https://github.com/GaryOcean428/throughput.git
