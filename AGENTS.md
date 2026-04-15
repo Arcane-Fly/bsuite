@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-BSuite is a multi-project workspace of five web applications sharing Supabase, TypeScript/React, and unified standards.
+BSuite is a multi-project workspace of six web applications sharing Supabase, TypeScript/React, and unified standards.
 
 ### Projects
 
@@ -13,6 +13,9 @@ BSuite is a multi-project workspace of five web applications sharing Supabase, T
 | **conduit** | Recruitment ATS | Next.js 16 App Router | pnpm | Vercel |
 | **braden** | Corporate site (braden.com.au) | React + Vite | pnpm | Vercel/Railway |
 | **R80.3** | Wage calculator | React + Vite | pnpm | Vercel |
+| **throughput** | Idea management platform (Groq AI) | React + Vite | npm¹ | Vercel |
+
+¹ throughput currently ships with `package-lock.json` (npm), not `pnpm-lock.yaml` — divergent from the rest of the suite. Tracked separately for consolidation.
 
 ### Common Stack
 
@@ -152,8 +155,8 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 
 | Mechanism | Purpose | Used By |
 |-----------|---------|---------|
-| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue | All 5 apps |
-| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is the OAuth server, others are clients | CRM7, R80.3, Braden (as clients) |
+| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue | All 6 apps |
+| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is the OAuth server, others are clients | CRM7, R80.3, Braden, Throughput (as clients) |
 
 **Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
 
@@ -170,7 +173,7 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 
 #### Cross-Domain Session Sharing (Cookie SSO)
 
-BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.crm7.app` and key `business_suite_auth`. This enables seamless SSO across all `.crm7.app` subdomains.
+BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` with `domain=.crm7.app` and key `business_suite_auth`. This enables seamless SSO across all `.crm7.app` subdomains.
 
 - **BSU** (`suite.crm7.app`): Sets the cookie — `src/lib/supabase.ts`
 - **CRM7** (`crm.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
@@ -215,6 +218,33 @@ BSU, CRM7, and R80.3 share a Supabase session via `cookieStorage` with `domain=.
 4. **CRM7 callback is dual-purpose** — checks `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
 5. **BS OAuth tokens are NOT Supabase sessions** — they are separate token sets in localStorage. The two auth systems run in parallel.
 6. **`startBSTokenRefresh()` is wired** in all 3 client apps — checks every 60s, refreshes 5min before expiry, clears tokens on failure
+7. **Two OAuth providers are MANDATORY across the entire suite** — see section below. Never add a third provider (e.g. GitHub) without explicit owner instruction.
+
+#### Mandatory OAuth Providers (TWO — Suite-Wide)
+
+> **This is a hard constraint enforced across all apps. Regression is a critical bug.**
+
+Every auth entry point in the BSuite (BSU `AuthForm.tsx`, CRM7 `LoginModal.tsx` + `SignupModal.tsx`, and any future app's login UI) **must** expose exactly the following two providers — no more, no less:
+
+| Provider | Supabase ID | Status | Purpose |
+|----------|------------|--------|----------|
+| **Google** | `google` | ✅ Enabled | Corporate Google Workspace accounts |
+| **Microsoft** | `azure` | ✅ Enabled | Corporate Azure AD / Microsoft 365 — **critical for B2B SSO across the suite**. Users and orgs sign in with their M365 identity; downstream integrations (email sending from corporate Azure mailboxes, Entra ID group sync, M365 calendar access) depend on this provider existing at every auth surface. Removing it breaks corporate org onboarding. |
+| **GitHub** | `github` | ❌ Disabled | **Intentionally removed** — not appropriate for B2B use case. Disabled in Supabase. Button removed from all auth modals. **Never re-add without explicit owner instruction.** |
+
+**Rules:**
+- Both providers must be present in **both** Register and Sign In modals/forms — identical lists, always in sync
+- The order is: Google → Microsoft
+- If you modify any auth modal, verify the other modals in the same PR still show only these two providers
+- LLMs often drop Microsoft (treating it as redundant with Google) or re-add GitHub (treating it as harmless). Both are wrong. Google + Microsoft only.
+- Add a sync comment in every file that defines a provider list: `// IMPORTANT: Keep in sync with [other files] — exactly two providers (Google/Microsoft) are mandatory. GitHub is intentionally absent.`
+- For OAuth 2.1 / OIDC / PKCE compliance: Microsoft uses the `azure` provider ID (Azure AD OIDC endpoint, full PKCE support). Never use implicit flow.
+- The Supabase GitHub provider is disabled at the platform level — even if a button were added to the UI, it would fail. Do not attempt to re-enable it.
+
+**Affected files (current):**
+- `business-suite-unified`: `src/components/AuthForm.tsx`
+- `crm7`: `src/components/LoginModal.tsx`, `src/components/SignupModal.tsx`
+- Any new app added to the suite must follow this pattern from day one
 
 ---
 
@@ -319,6 +349,7 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
 | **conduit** | `NEXT_PUBLIC_` | Supabase SSR Auth |
 | **braden** | `VITE_` | Supabase Auth |
 | **R80.3** | `VITE_` | Supabase Auth |
+| **throughput** | `VITE_` | Supabase Auth + BS OAuth 2.1 |
 
 - Never commit `.env` / `.env.local` files
 - All client-side vars: `VITE_` (Vite) or `NEXT_PUBLIC_` (Next.js)
@@ -396,6 +427,79 @@ When multiple AI agents work simultaneously:
 5. **Protected files** — listed in each project's `CONTRIBUTING.md`
 
 ---
+
+## Automated Deployment Checks (Ship-All-Apps Cron)
+
+The Ship-All-Apps cron runs every 6 hours (`25 */6 * * *`) and enforces the following checks beyond basic deploy health. Any agent modifying auth, RLS, or shared infra must be aware of what the cron validates.
+
+### RLS Policy Standing Audit
+
+On every run, the cron queries Supabase project `tuybltdrdefjblnplpqo` to verify these five policies remain `{authenticated}` — never `{public}`:
+
+| Table | Policy | CMD |
+|-------|--------|-----|
+| `tenants` | Tenant owners can update their tenant | UPDATE |
+| `tenants` | Users can view their own tenants | SELECT |
+| `user_tenants` | Admins can invite users to their tenants | INSERT |
+| `user_tenants` | Admins can update user roles in their tenants | UPDATE |
+| `user_tenants` | Users can view tenant memberships | SELECT |
+
+If any policy regresses to `{public}`, the cron re-applies the fix and files a GitHub issue on crm7 with label `security`. Migration reference: `20260413062306_fix_rls_public_to_authenticated_tenant_policies`.
+
+### Supabase URI Allow-List (Do Not Prune)
+
+The following redirect URIs must always be present in the Supabase allow-list. Removing any will break OAuth callbacks for that app:
+
+```
+https://r8.crm7.app/auth/callback
+https://www.braden.com.au/auth/callback
+https://suite.crm7.app/auth/callback
+http://localhost:*/**
+https://*.vercel.app
+https://*.vercel.app/**
+https://crm.crm7.app/auth/callback
+https://*.vusercontent.net/auth/callback
+https://ideas.crm7.app/auth/callback
+https://conduit.crm7.app/auth/callback
+```
+
+### Auth Routing Architecture (Expected Behaviour — Not Bugs)
+
+- **Conduit** (`conduit.crm7.app`) sign-in redirects to `suite.crm7.app/login?return_to=conduit&return_path=…` — BSU handles auth, conduit handles the post-auth redirect. Intentional.
+- **R80.3** (`r8.crm7.app`) similarly delegates to BSU. Cookie SSO (`business_suite_auth` on `domain=.crm7.app`) handles session sharing.
+- **Braden** (`www.braden.com.au`) is a different TLD — uses BS OAuth 2.1 PKCE instead of cookie SSO.
+- **Conduit** uses `@supabase/ssr` server-managed cookies and does **not** participate in cross-domain cookie SSO. Isolated by design.
+
+### Separate Project Warning
+
+`monkey-projects` org has its own GitHub OAuth app ("Monkey") deployed on Railway/Vercel. It is entirely separate from BSuite. Never apply BSuite auth, RLS, or provider changes to that org.
+
+### Known Platform Issues (Do Not Action)
+
+- **bsuite#106** — NULL `client_secret_hash` on public OAuth clients (Conduit, Throughput). Supabase platform bug. Dashboard-only; app auth flows are unaffected. No support ticket. No workaround.
+
+---
+
+## Recent Changes (2026-04-14)
+
+- **All projects — White-label Three-Tier Hierarchy**: New `useBranding()` hook in crm7 + BSU resolves `tenant_app_branding` → `tenant_branding` → `platform_branding` → hardcoded D2C defaults. Supabase schema (`platform_branding` single-row, `tenant_branding` v2 with light/dark logo URLs, `tenant_app_branding` per-app per-tenant) + RLS initplan-optimised policies. Force-override via `platform_branding.force_override_tenant_ids` for super-admin lock-to-platform. Slot-aware Logo component (`header`/`sidebar`/`auth`/`favicon`). See master roadmap §WL and bsuite#148 / crm7#193 / BSU#60.
+- **Conduit — Candidate Portal**: `/portal/candidate` replaced with full authenticated surface (applications, interviews, offers, documents). New `r7_candidate_id_for_auth_user()` security-definer RLS helper + 6 co-existing `FOR SELECT` policies. conduit#46 + #49.
+- **Conduit — Public Careers Page**: `/portal/careers` replaced with working job board, JSON-LD `JobPosting` structured data, `r7_jobs.apply_url` + `apply_email` columns. conduit#48.
+- **CRM7 — Per-stage Deal Rotting**: Converged with HubSpot/Pipedrive/Salesforce 2026 "stage rotting" feature. New `opportunities.stage_entered_at` column + trigger; pipeline-velocity.ts now uses precise time-in-stage. crm7#191.
+- **All Supabase Edge Functions — SEC-EDGE-005 Constant-Time Compares**: BSU centralized `timingSafeEqual` + `isServiceRoleCall` in `_shared/cors.ts`; migrated `verifyInternalAuth`, `send-notification`, `email-dispatcher`, `oauth-google-email`, `oauth-microsoft-email`, `process-webhook-queue`. crm7 migrated `timesheet-reminders` + `compliance-scanner`. Fixed duplicate `checkRateLimit` shadow in `store-ram-credential` + `xero-token-exchange`. BSU#63/#64/#66 + crm7#188/#190.
+- **BSU Edge Function Hardening**: `stripe-portal` IDOR closed (customerId now resolved from authenticated user's tenant, client-supplied value accepted only as hint), `lead-capture` wildcard CORS → shared allowlist, `generate-document` added missing rate limiter, `calendar-integration` migrated to shared CORS + shared rate limiter. BSU#58 + #64.
+- **Conduit — Perf**: cache()-wrapped `getCurrentUser()` + `getTenantContext()` helpers; branding waterfall (5 queries → 3 parallel). conduit#41.
+- **CRM7 Nav + Branding fix**: SidebarProvider as flex-row root fixes main content reflow; CRM7Logo always visible in header; `branding.tsx` now upserts to `tenant_branding` (not disconnected `tenant_settings`). crm7#185.
+- **RLS {public} → {authenticated}**: All 5 tenants/user_tenants policies migrated. Applied migration `20260413062306_fix_rls_public_to_authenticated_tenant_policies`.
+- **Node 24 alignment**: crm7 `.node-version` 22→24 matching `engines.node: "24"`. crm7#186.
+- **BSU OAuth Mandate**: Two-provider canonical spec (Google + Microsoft/Azure only, GitHub intentionally removed) documented in §Mandatory OAuth Providers above.
+- **Automated Deployment Checks (Ship-All-Apps cron)**: RLS policy standing audit documented; Supabase URI allow-list locked in.
+- **Tier-3 EntitySelectors (crm7)**: AwardRateSelector, PlacementSelector, HostSiteSelector, FieldOfficerSelector, TrainingProviderSelector. crm7#192.
+- **R80.3 Wage Source CSV UI**: Download Template + Import CSV File picker in Settings → Award Rates surfaces existing service functions. R80.3#51.
+- **R80.3 Fair Work API Reference v1.01W**: Documented actual 3-layer cache & fallback ladder, retry semantics, per-function fallback paths. R80.3#49.
+- **R80.3 Test coverage**: `fairworkCacheFallback.test.ts` adds 17 behaviour tests on in-memory → DB fallback ladder. R80.3#48.
+- **Type tightening sweep (3 projects)**: crm7 (EntitySelector generic), BSU (mcpDebugger globals, AuthContext row types), R80.3 (debounce never-arg generic, FinancialYearRow inline interfaces). crm7#194 + BSU#57 + R80.3#46.
+- **WCAG 2.1 AA A11Y sweep (3 projects)**: BSU Branding/AdminBranding/Notices (BSU#62), Conduit ComposeDialog → Radix Dialog primitive + APG tablist (conduit#40), R80.3 LoginModal dialog role + focus trap + skip-to-main (R80.3#45/#47).
 
 ## Recent Changes (2025-02-27)
 

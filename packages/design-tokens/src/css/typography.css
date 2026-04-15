@@ -1,0 +1,100 @@
+/*
+ * @bsuite/design-tokens — typography.css
+ * ────────────────────────────────────────────────────────────────────────────
+ * Utility classes and base styles for the shared type system.
+ * Requires base.css to be imported first.
+ *
+ * USAGE:
+ *   @import "@bsuite/design-tokens/css/base";
+ *   @import "@bsuite/design-tokens/css/typography";
+ *
+ * This file is optional — apps using Tailwind can use tw utilities instead.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
+/* Base body text */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  font-weight: var(--font-weight-base);
+  -webkit-font-smoothing: var(--font-smoothing);
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Code / mono */
+code, kbd, pre, samp {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+/* ── Heading utilities ──────────────────────────────────────────── */
+.text-display {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-heading);
+}
+
+.text-h1 {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-heading);
+}
+
+.text-h2 {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+.text-h3 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--text-heading);
+}
+
+.text-h4 {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+}
+
+/* ── Body utilities ─────────────────────────────────────────────── */
+.text-body-lg   { font-size: var(--text-lg);   line-height: var(--leading-relaxed); }
+.text-body      { font-size: var(--text-base);  line-height: var(--leading-relaxed); }
+.text-body-sm   { font-size: var(--text-sm);    line-height: var(--leading-normal); }
+
+/* ── Label / badge utilities ───────────────────────────────────── */
+.text-label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  line-height: var(--leading-none);
+}
+
+.text-badge {
+  font-size: 0.625rem;  /* 10px */
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  line-height: var(--leading-none);
+}
+
+/* ── Stat / metric values ───────────────────────────────────────── */
+.text-stat {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-none);
+  color: var(--stat-value-color);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.00W
+**Version:** 5.02W
 **Date:** 2026-02-27
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-04-14 (afternoon batch — post-TESTS rotation)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
@@ -237,7 +237,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ **Kanban pipeline board** — `pages/pipeline/kanban.tsx` and drag-and-drop board components are present in repo
 - ✅ **Theme architecture reconciliation + dashboard finish pass** — D2C token/source-layer correction landed; Dashboard migrated from inline Responsive grid to universal `PageGridLayout`; CLS fixed (`containerWidth > 0` guard); Quick Actions stacked layout; edit-mode border; CSS vars verified in `theme.css` (2026-03-17)
 - ✅ **Universal Page Canvas** — `PageGridLayout` applied to Dashboard, Budget, Communications, Contacts, Analytics; `PageEditorLauncher` fires edit event directly (no modal gate); widget registry + `EntityTableWidget` + `WidgetPalette` infrastructure; Schema Builder "Add to Page" button + entity widget injection; 2427/2427 tests, 0 typecheck errors (2026-03-17)
-- ✅ **Per-tenant Branding** — `TenantThemeProvider` injects `--tenant-primary`/`--tenant-accent` CSS vars; Settings > Branding page (logo upload, color pickers, company name, live preview); `tenant-assets` Supabase storage bucket + RLS; migration adds `primary_color`, `accent_color`, `company_name` to `tenant_settings` (2026-03-17)
+- ✅ **Per-tenant Branding (three-tier)** — original `TenantThemeProvider` landed 2026-03-17 with `tenant_settings`-backed primary/accent CSS vars. 2026-04-14 upgrade (crm7 PR #193 + BSU PR #60 + backend migrations via bsuite#148): new `useBranding()` hook resolves **Tier 3** (tenant_app_branding) → **Tier 2** (tenant_branding) → **Tier 1** (platform_branding) → hardcoded D2C fallback; honours `platform_branding.force_override_tenant_ids` for super-admin lock-to-platform; parallel tier fetches; light/dark logo URL variants; slot-aware Logo (`header`/`sidebar`/`auth`/`favicon`).
 - ✅ **A11y sweep** — heading level skips fixed in competency report + incidents pages; `WorkflowBuilder` icon buttons labelled; `PageGridLayout` loading placeholder with `aria-busy` (2026-03-17)
 - 🔶 **Sync schema/query alignment** — sync startup timing noise was reduced earlier, but local SQLite ↔ Supabase schema mismatches remain an active runtime blocker for a clean CRM7 finish pass
 - 🔲 Tier 3-4 page wiring — financial, compliance, field officers, WHS, comms, reports (~15 more stores)
@@ -274,10 +274,13 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ Common components (EmptyState, StatusBadge)
 - ✅ Database table prefix migration (r7_→ conduit_)
 - ✅ D2C Neon Electric theme with dark mode
+- ✅ **RBAC architecture** — two-tier role model (BSuite portal roles → Conduit operational roles), 69 fine-grained permissions across 12 domains, `PermissionGate` component, `usePermissions` hook, server-side middleware route protection with `ROUTE_PERMISSIONS` map + write-route pattern matching, tenant role overrides via `mapPortalRoleToConduit(portalRole, tenantOverrides)`. See [`conduit/docs/20260303-rbac-architecture-design-v1.00W.md`](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md)
 
 **Remaining:**
 
 - ✅ **AI assistant "Scout"** — API route, chat hook, branded UI, and assistant surfaces are present in repo ([plan](./plans/20260228-conduit-ai-tools-plan-v1.00W.md), [prompt](./claude-code-prompts.md#prompt-2))
+- ✅ **Candidate Portal** (2026-04-14, conduit PR #46) — replaces `/portal/candidate` stub with authenticated dashboard: applications, upcoming interviews, offers, documents. New RLS helper `r7_candidate_id_for_auth_user()` + 6 co-existing `FOR SELECT` policies. 29 view-component tests + 28 data-layer tests (conduit PR #49).
+- ✅ **Public careers page** (2026-04-14, conduit PR #48, rebased from #45) — replaces `/portal/careers` stub with working job board, JSON-LD `JobPosting` structured data, `r7_jobs.apply_url` + `apply_email` columns, `public_jobs_visible_all` RLS policy.
 - 🔶 **Candidate [id] edit page** — inline edit works, but no dedicated edit route
 - 🔶 **Missing stores/hooks** — some imports reference stores not yet created
 - 🔶 Advanced pipeline analytics — analytics route exists, but depth and completeness still need review
@@ -317,6 +320,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 - ✅ Apprentice charge calculator core
 - ✅ Fair Work API integration (direct + enhanced Edge Function proxy)
+- ✅ **Fair Work API cache & fallback architecture** (PR #48) — in-memory cache → `award_rate_cache` Supabase table → empty fallback ladder; `fairworkCacheFallback.test.ts` behaviour suite. See [`docs/20260304-r80-fairwork-api-reference-v1.00W.md`](../R80.3/docs/20260304-r80-fairwork-api-reference-v1.00W.md)
 - ✅ PDF export
 - ✅ Enterprise agreement manager
 - ✅ Award rate selector with templates
@@ -324,12 +328,12 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ Import/export calculations
 - ✅ BSU OAuth integration
 - ✅ Onboarding wizard
-- ✅ Wage source manager (multiple data sources)
+- ✅ Wage source manager (multiple data sources) — CSV/spreadsheet import with auto-recalculation, fallback behaviour, format normalization
 
 **Remaining:**
 
 - 🔶 **PWA + offline** — `vite-plugin-pwa` and manifest are present; full offline maturity still needs review ([prompt](./claude-code-prompts.md#prompt-4))
-- 🔶 **Wage calculation test suite** — multiple Vitest suites exist, but the 90%+ legally-critical coverage target and logger migration remain open
+- 🔶 **Wage calculation test suite** — multiple Vitest suites exist; 2026-04-14 R80.3 PR #48 added `fairworkCacheFallback.test.ts` (17 behaviour tests on the in-memory → DB fallback ladder), closing the last uncovered critical path on the legal-compliance critical chain. Broader 90%+ coverage target and logger migration still tracked.
 - 🔶 **`@bsuite/charge-calc` shared package** — package dependency and bridge layer are live; full engine convergence work remains ([plan](./plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md))
 - 🔲 Enterprise Agreement processing + BOAT validation
 - 🔲 Performance optimizations (large dataset handling)
@@ -366,6 +370,80 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
 
 ---
+
+## Recently Completed (as of 2026-04-14 — afternoon claude-loop rotation batch)
+
+> 30+ PRs merged across all 5 apps in the 2026-04-14 claude-loop rotation cycle (DEPS → FEATURE → UI → UX → WL → TYPES → A11Y → DB → EDGE → TESTS → COMPETE). Rotation tracker issues: [bsuite#139](https://github.com/GaryOcean428/bsuite/issues/139) through [bsuite#166](https://github.com/GaryOcean428/bsuite/issues/166).
+
+**WL — Three-tier white-label hook (bsuite#148 / bsuite#152)**
+
+- ✅ Platform/tenant/app-specific branding schema applied to Supabase via MCP — `platform_branding` (single row, force-override list), `tenant_branding` v2 with logo_light/dark/favicon URLs, `tenant_app_branding` (per-app per-tenant overrides).
+- ✅ `useBranding()` hook landed in **crm7** ([PR #193](https://github.com/GaryOcean428/crm7/pull/193)) and **BSU** ([PR #60](https://github.com/GaryOcean428/business-suite-unified/pull/60)) — resolves Tier 3 → Tier 2 → Tier 1 → hardcoded D2C Neon Electric fallback, honours `force_override_tenant_ids`, parallel tier fetches, CSS custom properties (`--brand-primary/secondary/accent/font` + legacy `--app-*`/`--color-*`), slot-aware logo component accepting `header`/`sidebar`/`auth`/`favicon`.
+- ✅ RLS `auth_rls_initplan` WARNs on all three new branding tables resolved — migration wraps `auth.uid()` in `(SELECT auth.uid())` for O(1) plan-time evaluation. crm7 PR #195.
+
+**FEATURE — Candidate Portal + public careers page (conduit)**
+
+- ✅ **Conduit Candidate Portal** ([PR #46](https://github.com/GaryOcean428/conduit/pull/46)) — replaces `/portal/candidate` "coming soon" stub with full authenticated surface: applications, upcoming interviews, offers, documents. New RLS helper `r7_candidate_id_for_auth_user()` joins `auth.users` → `r7_candidates` on lower-cased email. Six new `FOR SELECT` policies co-exist with existing tenant_isolation (OR-combined). 29 view-component tests.
+- ✅ **Conduit public careers page** ([PR #48](https://github.com/GaryOcean428/conduit/pull/48), rebased from stale #45 per handoff [bsuite#164](https://github.com/GaryOcean428/bsuite/issues/164)) — replaces `/portal/careers` stub with working job board, JSON-LD `JobPosting` structured data for Google for Jobs, `r7_jobs.apply_url` + `apply_email` columns, `public_jobs_visible_all` RLS policy.
+
+**COMPETE — Per-stage deal rotting alerts (crm7)**
+
+- ✅ **crm7 per-stage deal rotting alerts** ([PR #191](https://github.com/GaryOcean428/crm7/pull/191)) — converges with HubSpot Sales Hub Pro+, Pipedrive, and Salesforce Lightning 2026 "stage rotting" feature. New `opportunities.stage_entered_at` column + trigger on stage transitions; pipeline-velocity.ts now uses precise time-in-stage instead of the age-since-creation substitution called out in the previous header.
+
+**TYPES — Type tightening (3 projects)**
+
+- ✅ **crm7** ([PR #194](https://github.com/GaryOcean428/crm7/pull/194)) — EntitySelector schema-agnostic `EntitySelectorQuery` alias, useEffect cleanup audit, export trimming.
+- ✅ **BSU** ([PR #57](https://github.com/GaryOcean428/business-suite-unified/pull/57)) — mcpDebugger `window`/`performance.memory`/`window.MCPDebugger` typed via `declare global` (was 3 `any` casts), schemaBuilderService unified on `.from()` generic builder, AuthContext `UserTenantRow` interface (drop `(row: any)`), 10s loading-watchdog timeout cleared in effect cleanup.
+- ✅ **R80.3** ([PR #46](https://github.com/GaryOcean428/R80.3/pull/46)) — 5 `any` casts eliminated; `debounce` generic `T extends (...args: never[]) => void`; `FinancialYearRow` / `EnterpriseAgreementRow` inline DB interfaces; remaining TypeScript strictness flags enabled. Completes the last outstanding TYPES rotation across the BSuite workspace.
+
+**A11Y — WCAG 2.1 AA sweep (3 projects)**
+
+- ✅ **BSU** ([PR #62](https://github.com/GaryOcean428/business-suite-unified/pull/62)) — Branding, AdminBranding, Notices admin pages. useId() field IDs, aria-live error regions, label/for associations on 15+ inputs.
+- ✅ **Conduit** ([PR #40](https://github.com/GaryOcean428/conduit/pull/40)) — ComposeDialog migrated to Radix Dialog primitive (free focus trap, portal, escape, outside-click), channel selector → APG tablist (role=tablist/tab, arrow/home/end keyboard nav), aria-invalid + aria-describedby on every field, aria-busy on submit, aria-live=assertive for send-error banner. EmptyState focus-visible rings.
+- ✅ **R80.3** ([PR #45](https://github.com/GaryOcean428/R80.3/pull/45) + [PR #47](https://github.com/GaryOcean428/R80.3/pull/47)) — Trash2 aria-label, PaydaySuperCalculator htmlFor/id on 5 inputs, 4 settings toggle switches, skip-to-main-content link, LoginModal role=dialog + aria-modal + focus trap + body scroll lock + Escape dismiss, ExportCalculations radiogroup fix.
+
+**DB — Supabase health audit fixes (crm7)**
+
+- ✅ **Storage listing gap** ([PR #187](https://github.com/GaryOcean428/crm7/pull/187)) — dropped broad public `tenant_logos_select` policy on `storage.objects`. Public reads continue via CDN path (`storage.buckets.public = true`). Closes Supabase advisor `public_bucket_allows_listing` WARN on `tenant-logos` bucket.
+- ✅ **rls_initplan on branding tables** ([PR #195](https://github.com/GaryOcean428/crm7/pull/195)) — 5 `auth_rls_initplan` WARNs cleared on `platform_branding` and `tenant_app_branding` (see WL block above).
+
+**EDGE — SEC-EDGE-005 security hardening (all Supabase edge fns)**
+
+- ✅ **BSU 6-function constant-time compare sweep** ([PR #66](https://github.com/GaryOcean428/business-suite-unified/pull/66), rebased from #63) — centralized `timingSafeEqual` + `isServiceRoleCall` in `_shared/cors.ts`; migrated `verifyInternalAuth`, `send-notification`, `email-dispatcher` (+ Content-Type enforcement + 256KB body cap), `oauth-google-email/handleRefresh`, `oauth-microsoft-email/handleRefresh`, `process-webhook-queue` (also repaired undefined `serviceKey` reference that was crashing every invocation).
+- ✅ **BSU CORS + rate limit hardening** ([PR #64](https://github.com/GaryOcean428/business-suite-unified/pull/64)) — `calendar-integration` migrated to shared CORS + shared rate limiter (was missing entirely on a 1021-line public-facing endpoint), `tga-search` replaced inline 16-line rate limiter + 4-origin CORS allowlist (-38 lines). Shared `_shared/cors.ts` now recognises Vercel preview origins, crm7.app/braden.com.au apex variants, and 127.0.0.1:* dev origins.
+- ✅ **BSU edge hardening** ([PR #58](https://github.com/GaryOcean428/business-suite-unified/pull/58)) — `process-webhook-queue` repaired (undefined `serviceKey` crash), `lead-capture` replaced wildcard CORS with shared allowlist, `stripe-portal` closed IDOR on client-supplied `customerId` (authentication now always required, `body.customerId` accepted only as hint and rejected with 403 if it doesn't match resolved tenant-owned ID), `generate-document` replaced wildcard CORS and added missing rate limiting.
+- ✅ **crm7 edge functions** — [PR #188](https://github.com/GaryOcean428/crm7/pull/188) fixed duplicate `checkRateLimit` shadow in `store-ram-credential` + `xero-token-exchange` (local `checkRateLimit(userId)` was shadowing shared `checkRateLimit(req)` import, causing always-429-or-always-allow-through); [PR #190](https://github.com/GaryOcean428/crm7/pull/190) added constant-time compare + `week_ending` format validation to `timesheet-reminders`, constant-time compare on `compliance-scanner`; pre-auth IP rate limit added to `document-encryption` (previously only post-auth).
+
+**DEPS — 2026-04-14 patch round (5 projects)**
+
+- ✅ **BSU** ([PR #59](https://github.com/GaryOcean428/business-suite-unified/pull/59)) — 8 declared-floor bumps across react-hook-form, framer-motion, recharts, typescript-eslint, autoprefixer, globals (floors had drifted behind caret-resolved versions).
+- ✅ **Conduit** ([PR #42](https://github.com/GaryOcean428/conduit/pull/42) + [PR #44](https://github.com/GaryOcean428/conduit/pull/44)) — @ai-sdk/google 3.0.62→3.0.63, @ai-sdk/react 3.0.160→3.0.161, ai 6.0.158→6.0.159, next/eslint-config-next 16.1.6→16.2.3, react/react-dom 19.2.4→19.2.5.
+
+**TESTS — Behaviour-pinning test expansion (3 projects)**
+
+- ✅ **crm7** ([PR #189](https://github.com/GaryOcean428/crm7/pull/189)) — 65 tests across `src/lib/ai/config.test.ts` (21), `model-router.test.ts` (44) — pins Grok-4.1-fast-reasoning primary + Claude-Sonnet-4.6 / Claude-Opus-4.6 fallbacks (AGENTS.md "never replace grok" rule guarded), complexity routing, per-tenant monthly quota enforcement.
+- ✅ **Conduit** ([PR #49](https://github.com/GaryOcean428/conduit/pull/49)) — 80 behaviour tests across nav-utils (27), logger (15), interpolateTemplate (25), getCandidateProfile (28). Candidate Portal data layer (5 `cache()`-wrapped server resolvers + `loadCandidatePortalData()` fan-out) had zero direct tests before this. Baseline 357 → 437 tests (+22%).
+- ✅ **R80.3** ([PR #48](https://github.com/GaryOcean428/R80.3/pull/48)) — 17 behaviour tests in `fairworkCacheFallback.test.ts` — in-memory cache hit/miss, retry-exhaust → DB fallback content (`award_rate_cache` transform path), empty-row degradation to clean fallback. Completes the wage-calc legal-compliance test ladder.
+
+**PERF — Conduit branding waterfall collapse (conduit)**
+
+- ✅ **Conduit** ([PR #41](https://github.com/GaryOcean428/conduit/pull/41)) — eliminated 5-query Supabase waterfall on every dashboard page load. New `cache()`-wrapped `getCurrentUser()` + `getTenantContext()` helpers (canonical Next.js 16 / React `cache()` pattern), `getInlineBrandingStyle()` tenant_settings + tenant_branding + platform-default-fallback queries now parallelized via `Promise.all`.
+
+**DOCS — R80.3 Fair Work reference v1.01W (R80.3)**
+
+- ✅ **R80.3 Fair Work API reference** ([PR #49](https://github.com/GaryOcean428/R80.3/pull/49)) — documented the actual 3-layer cache & fallback ladder (in-memory → `auth-fairwork` edge fn → `award_rate_cache` → empty fallback), retry semantics (3 attempts, exponential backoff 1s/2s/4s), per-function fallback paths for `fetchAwards`/`fetchClassifications`/`fetchApprenticeRates`/`getAward`/etc, and the "API 200 with 0 rows" sub-path that's the actual common failure mode after every 1 July FWC schema revision. Previously the doc only covered upstream FWC endpoint shapes.
+- ✅ **R80.3 package.json duplicate key fix** ([PR #50](https://github.com/GaryOcean428/R80.3/pull/50)) — removed stale `@playwright/test: ^1.50.0` key shadowed by `^1.59.1` (duplicate JSON keys are RFC 8259 undefined behaviour; schema linters and `pnpm outdated` silently dropped the first occurrence).
+
+## Recently Completed (as of 2026-04-14 — morning batch)
+
+- ✅ **Tier-3 EntitySelectors** (2026-04-14, crm7 PR #192) — AwardRateSelector, PlacementSelector, HostSiteSelector, FieldOfficerSelector, TrainingProviderSelector added to `src/components/entity/selectors/`. Roadmap 26c.
+- ✅ **R80.3 Wage Source CSV UI** (2026-04-14, R80.3 PR #51) — Download Template button + Import CSV File picker in Settings → Award Rates. Surfaces existing `generateSampleCSVTemplate()` + `importWageDataFromFile()` service functions. Roadmap 27h.
+- ✅ **Roadmap v5.01W** (2026-04-14, bsuite PR #136) — Full doc→roadmap audit across 6 repos. 17 new entries, 13 confirmed complete, Audit Sprint Status table.
+- ✅ **CRM7 Nav + white-label fix** (2026-04-13, PR #185) — Collapsed nav icon mode correct; SidebarProvider as flex-row root fixes main content reflow; CRM7Logo always visible in header; `branding.tsx` now upserts to `tenant_branding` table (not disconnected `tenant_settings`)
+- ✅ **Node 24 alignment** (2026-04-13, PR #186) — crm7 `.node-version` 22→24 matching `engines.node: "24"`
+- ✅ **RLS migration** (2026-04-13) — all 5 tenants/user_tenants policies changed from {public} → {authenticated}. Migration `20260413062306_fix_rls_public_to_authenticated_tenant_policies` applied.
+- ✅ **BSU AGENTS.md OAuth mandate** (2026-04-13) — Two-provider OAuth canonical spec (Google + Microsoft/Azure only, GitHub intentionally removed). New "Automated Deployment Checks" section.
+- ✅ **Fair Work API cache & fallback architecture** (R80.3, PR #48) — in-memory → `award_rate_cache` → empty fallback ladder. `fairworkCacheFallback.test.ts` behaviour suite. `award_rate_cache` Supabase table.
 
 ## Recently Completed (as of 2026-03-19)
 
@@ -443,18 +521,34 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 18 | Cross-project UX (AI icon, @dnd-kit Conduit, view toggles) | multi | 3d | Claude plan `prancy-seeking-dijkstra` + `cross-project-ux-improvements` |
 | 19 | Cross-app notifications (Supabase Realtime) | bsu | 3d | Prompt 7 |
 | 20 | CRM7 Tier 3-4 wiring (financial, compliance, WHS, comms, reports) | crm7 | 2w | Feature gap §3 Tier 3-4 |
-| 21 | AI cost tracking per tenant | crm7/bsu | 2d | — |
+| 21 | AI cost tracking per tenant + full AI cost dashboard (per-user, per-tenant, per-feature breakdown with budget alerts) | crm7/bsu | 3d | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §6 |
 | 22 | Document storage QA fixes | crm7 | 2d | [report](./archive/crm7/20260226-document-storage-qa-report.md) |
 | 23 | Doc cleanup (22 missing READMEs, broken links) | all | 1d | Claude plan `prancy-seeking-dijkstra` |
 | 24 | Braden visual customization | braden | 1w | — |
 | 25 | R80.3 PDF export improvements | R80.3 | 2d | — |
 | 26 | Test coverage push (70% target all projects) | all | ongoing | — |
+| 26a | CC-1: DashboardPageEditorDrawer accessibility — add `KeyboardSensor` + `sortableKeyboardCoordinates` + `aria-label` on grip buttons | crm7 | 2h | Gap report v2 CC-1 |
+| 26b | CRM7 DRY one-shot: auto-population chains — apprentice select fills 6 related fields, claims/new auto-fills qualification/employer/dates | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 4 |
+| 26c | ~~CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`| crm7 | ✅ Done | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.00A.md) §3 Tier 3 |
+| 26d | CRM7 DRY one-shot: DB FK migrations — `employers.primary_contact_id`, `funding_sources.contact_id` + ContactSelector on 9 forms | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 3 |
+| 26e | @types/node upgrade to ^24.x across all 5 apps | all | 30m | Gap report v2 RT-7 |
+| 26f | pnpm version alignment to 10.32.1 (BSU, braden, conduit, R80.3 behind CRM7) | all | 30m | Gap report v2 RT-8 |
+| 26g | R80.3: add `@vitest/coverage-v8 ^4.0.0` (missing, blocks `pnpm test:coverage`) | R80.3 | 15m | Gap report v2 RT-9 |
+| 26h | Conduit RBAC: document ✅ status — PermissionGate, middleware route protection, tenant role overrides, write-route pattern matching all confirmed implemented | conduit | — | [RBAC Design](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md) |
 
 ### P3 — Future
 
 | # | Task | Project | Effort | Source |
 |---|------|---------|--------|--------|
 | 27 | AI plugin system + Xero + Calendar + workflow automation | crm7 | 3w | Prompt 5 |
+| 27a | AI Conversational Data Entry — natural language CRM: user types entity description → AI extracts structured data → auto-creates record via tool call | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 2 |
+| 27b | AI Predictive Compliance Engine — daily background job scoring all apprentices for risk (training delays, expiring docs, funding eligibility, WHS patterns) → creates urgent tasks for field officers | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 1 |
+| 27c | AI Intelligent Report Generation — natural language analytics: user asks question → AI generates structured report with visualizations and actionable insights | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 3 |
+| 27d | AI Autonomous Workflow Engine — AI-triggered multi-step workflows (document routing, assessment scheduling, high-risk intervention) | crm7 | 2w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Feature 4 |
+| 27e | Embedding/Vector Search — semantic document search via openai/text-embedding-3-small + vector DB; smart knowledge base; intelligent entity matching | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §7 |
+| 27f | AI Provider Routing + Fallbacks — xAI → Claude → GPT-5 fallback chain; cost-optimised routing; 99.99% uptime strategy | crm7 | 3d | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §5 |
+| 27g | AI Real-Time Compliance Intelligence — Perplexity Search integration for Fair Work monitoring (fairwork.gov.au + legislation.gov.au), Training.gov.au auto-sync, WHS regulation updates, USI verification | crm7 | 1w | [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) Part 2 §4 |
+| 27h | ~~R80.3 Wage Source Enhancements~~ — CSV template download + import UI live in Settings; timestamp + preview on import | R80.3 | ✅ Done (2026-04-14) | [External Wage Sources](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |
 | 28 | BSuite Mobile native (Expo → Google Play) | new `mobile/` | 2w | Prompt 1B |
 | 29 | Org → Tenant hierarchy | bsu/crm7 | 1w | Feature gap §1C |
 | 30 | ~~BSU Idea Hub~~ ✅ | bsu | ✅ Done | Windsurf | 2026-03-16 |
@@ -480,6 +574,30 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | SP-5 | system_notices migration + SystemNoticeBanner rollout | ✅ Complete |
 | CA-8 | BSU hardcoded hex → D2C token sweep | ✅ Complete |
 | RT-10 | BSU react-day-picker v8 → v9 audit | 🔲 Pending |
+
+## Audit Sprint Status (2026-04-14)
+
+_Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap Report v2](./20260317-bsuite-gap-report-v2.00W.md) and [AI Strategic Vision](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md)._
+
+| Item | Description | Status |
+|------|-------------|--------|
+| AUD-1 | Conduit RBAC architecture (PermissionGate, middleware, 69 permissions, tenant overrides) | ✅ Confirmed implemented — added to roadmap as 26h |
+| AUD-2 | R80.3 Fair Work cache & fallback (PR #48, award_rate_cache table) | ✅ Confirmed implemented — added to Recently Completed |
+| AUD-3 | CRM7 nav + branding fix (PR #185) | ✅ Confirmed implemented — added to Recently Completed |
+| AUD-4 | RLS {public} → {authenticated} migration | ✅ Confirmed applied — added to Recently Completed |
+| AUD-5 | CA-1 sonner v2 alignment (BSU, Conduit) | ✅ Confirmed done (Gap v2 summary) |
+| AUD-6 | CA-2 TypeScript upgrade all apps | ✅ Confirmed done (Gap v2 summary) |
+| AUD-7 | CA-3 @supabase/supabase-js 2.99.2 all 5 | ✅ Confirmed done (Gap v2 summary) |
+| AUD-8 | CA-4 AI SDK version sync Conduit↔CRM7 | ✅ Confirmed done (Gap v2 summary) |
+| AUD-9 | CA-5 vitest v4 all projects | ✅ Confirmed done (Gap v2 summary) |
+| AUD-10 | CA-6 BSU FOUC inline theme script | ✅ Confirmed done (Gap v2 RT-3) |
+| AUD-11 | CC-2 DialogTitle sweep (claimed 81 gaps) | ✅ Zero gaps — count was total usages not missing titles |
+| AUD-12 | @types/react-grid-layout ^2.1.0 all projects | ✅ Confirmed done (Gap v2 RT-5) |
+| AUD-13 | AI Strategic Vision features 1–4 + vector search + provider routing | 🔲 Added to roadmap as 27a–27g (P3 — future work) |
+| AUD-14 | DRY one-shot: auto-population chains + Tier-3 selectors + FK migrations | 🔲 Added to roadmap as 26b–26d (P2) |
+| AUD-15 | @types/node ^24.x upgrade + pnpm 10.32.1 alignment + R80.3 coverage-v8 | 🔲 Added to roadmap as 26e–26g (P2) |
+| AUD-16 | CC-1 DashboardPageEditorDrawer KeyboardSensor + aria | 🔲 Added to roadmap as 26a (P2) |
+| AUD-17 | R80.3 Wage Source Enhancements (CSV template, version control) | ✅ Complete (PR #51) |
 
 ---
 
@@ -523,7 +641,13 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | D2C Theme Specification | [`docs/20260228-d2c-theme-specification-v1.00W.md`](./20260228-d2c-theme-specification-v1.00W.md) |
 | AI Feature Map | [`docs/ai/features/20260227-feature-map-complete-v1.0.0.md`](./ai/features/20260227-feature-map-complete-v1.0.0.md) |
 | BSuite Gap Report (2026-03-16) | [`docs/20260316-bsuite-gap-report-v1.00W.md`](./20260316-bsuite-gap-report-v1.00W.md) |
+| BSuite Gap Report v2 (2026-03-17) | [`docs/20260317-bsuite-gap-report-v2.00W.md`](./20260317-bsuite-gap-report-v2.00W.md) |
 | BSuite Completeness Matrix (2026-03-09) | [`docs/20260309-bsuite-completeness-matrix-v1.00W.md`](./20260309-bsuite-completeness-matrix-v1.00W.md) |
+| CRM7 AI Strategic Vision | [`crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md`](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) |
+| Conduit RBAC Architecture Design | [`conduit/docs/20260303-rbac-architecture-design-v1.00W.md`](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md) |
+| R80.3 External Wage Sources Reference | [`R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md`](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |
+| R80.3 Fair Work API Reference (incl. cache/fallback arch.) | [`R80.3/docs/20260304-r80-fairwork-api-reference-v1.00W.md`](../R80.3/docs/20260304-r80-fairwork-api-reference-v1.00W.md) |
+| Entity Crosswalk & Traceability | [`docs/20260319-entity-crosswalk-v1.00D.md`](./20260319-entity-crosswalk-v1.00D.md) |
 
 ### Archived Roadmaps
 
