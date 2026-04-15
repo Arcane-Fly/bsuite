@@ -1,0 +1,434 @@
+name: OAuth Provider Mandate Check
+
+# Enforces the BSuite mandatory OAuth provider rule defined in AGENTS.md §Mandatory OAuth Providers.
+# Both providers — Google (google) and Microsoft (azure) — must be present
+# in every auth modal/form file. GitHub OAuth has been intentionally removed (not a B2B use case).
+# Removal of either remaining provider is a critical regression.
+#
+# Also enforces PKCE compliance: all Supabase client initialisations must use flowType: 'pkce'.
+# Implicit flow (hash-fragment token delivery) is forbidden per OAuth 2.1 §4.
+#
+# ARCHITECTURE NOTE: The bsuite repo uses git submodules for all 5 apps. All submodule
+# repos are private. This workflow requires a cross-repo PAT stored as BSUITE_CROSS_REPO_PAT
+# with Contents: Read access to GaryOcean428/business-suite-unified, GaryOcean428/crm7,
+# and GaryOcean428/conduit.
+#
+# To add the secret:
+#   1. Create a fine-grained PAT at https://github.com/settings/tokens
+#      Permissions: Contents: Read on business-suite-unified, crm7, conduit
+#   2. Add it as BSUITE_CROSS_REPO_PAT at:
+#      https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new
+#
+# Until BSUITE_CROSS_REPO_PAT is added, this workflow will emit a clear warning
+# but not fail (to avoid blocking PRs on an infra gap).
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/oauth-provider-check.yml'
+      - 'AGENTS.md'
+  push:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/oauth-provider-check.yml'
+      - 'AGENTS.md'
+  repository_dispatch:
+    types: [submodule-auth-changed]
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 1: Three-provider mandate
+  # ─────────────────────────────────────────────────────────────────────────────
+  check-oauth-providers:
+    name: Verify Google + Microsoft (azure) in all auth modals
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check mandatory OAuth providers via GitHub API
+        id: provider-check
+        env:
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT }}
+        shell: bash
+        run: |
+          # ── Preflight: detect whether we have cross-repo access ─────────────
+          # Test access to one of the private submodule repos.
+          # We use BSUITE_CROSS_REPO_PAT directly (not || GITHUB_TOKEN) because
+          # GITHUB_TOKEN is scoped to bsuite only and will 404 on private submodules.
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT secret is empty or not set."
+            TEST="missing"
+          else
+            TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+            echo "Preflight HTTP status: $TEST"
+          fi
+
+          if [ "$TEST" != "200" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT cannot access private submodule repos (HTTP $TEST)."
+            echo "::warning::Ensure the PAT has Contents: Read on GaryOcean428/crm7, business-suite-unified, conduit."
+            echo "::warning::See setup instructions at the top of .github/workflows/oauth-provider-check.yml"
+
+            {
+              echo "## ⚠️ OAuth Provider Mandate Check — Skipped (no cross-repo access)"
+              echo ""
+              echo "**Action required:** Add \`BSUITE_CROSS_REPO_PAT\` secret to this repo."
+              echo ""
+              echo "### Setup instructions"
+              echo "1. Create a fine-grained PAT at https://github.com/settings/tokens"
+              echo "   - Repository access: \`GaryOcean428/business-suite-unified\`, \`GaryOcean428/crm7\`, \`GaryOcean428/conduit\`"
+              echo "   - Permissions: **Contents: Read**"
+              echo "2. Add as \`BSUITE_CROSS_REPO_PAT\` at https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new"
+              echo ""
+              echo "Until then, the OAuth provider checks run inside each submodule's own CI via \`.github/workflows/oauth-provider-check.yml\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            exit 0  # Warn but don't fail — infra gap, not a code regression
+          fi
+
+          echo "Cross-repo access confirmed (HTTP $TEST) — running provider checks"
+
+          # ── Configuration ──────────────────────────────────────────────────────
+          # Format: "repo:branch:path:description"
+          AUTH_FILE_SPECS=(
+            "GaryOcean428/business-suite-unified:master:src/components/AuthForm.tsx:BSU canonical auth entry point"
+            "GaryOcean428/crm7:main:src/components/LoginModal.tsx:CRM7 sign-in modal"
+            "GaryOcean428/crm7:main:src/components/SignupModal.tsx:CRM7 register modal"
+          )
+
+          declare -A PROVIDERS=(
+            ["google"]="Google Workspace"
+            ["azure"]="Microsoft Azure AD / M365"
+          )
+
+          FAILED=0
+          SUMMARY=""
+
+          for spec in "${AUTH_FILE_SPECS[@]}"; do
+            IFS=':' read -r repo branch filepath desc <<< "$spec"
+
+            RESPONSE=$(curl -sS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${repo}/contents/${filepath}?ref=${branch}")
+
+            if echo "$RESPONSE" | grep -q '"message".*"Not Found"'; then
+              echo "::warning::${repo}/${filepath} — not found on branch ${branch}, skipping"
+              SUMMARY+="⚠️  **\`${repo}/${filepath}\`** ($desc) — not found (skipped)\n"
+              continue
+            fi
+
+            FILE_CONTENT=$(echo "$RESPONSE" | python3 -c "
+          import json, sys, base64
+          d = json.load(sys.stdin)
+          print(base64.b64decode(d['content']).decode('utf-8', errors='replace'))
+          ")
+
+            FILE_FAILED=0
+            FILE_SUMMARY="### \`${repo}/${filepath}\` ($desc)\n"
+
+            for provider_id in "${!PROVIDERS[@]}"; do
+              provider_name="${PROVIDERS[$provider_id]}"
+
+              if echo "$FILE_CONTENT" | grep -qE "(id:|'|\"|handleOAuth\()(${provider_id})(['\"]|,)" 2>/dev/null || \
+                 echo "$FILE_CONTENT" | grep -qE "signInWithOAuth\(['\"]${provider_id}['\"]" 2>/dev/null || \
+                 echo "$FILE_CONTENT" | grep -qE "provider.*['\"]${provider_id}['\"]" 2>/dev/null || \
+                 echo "$FILE_CONTENT" | grep -qE "['\"]${provider_id}['\"].*provider" 2>/dev/null; then
+                FILE_SUMMARY+="  ✅ \`${provider_id}\` (${provider_name}) — found\n"
+              else
+                FILE_SUMMARY+="  ❌ \`${provider_id}\` (${provider_name}) — **MISSING**\n"
+                echo "::error::${repo}/${filepath}: Missing OAuth provider '${provider_id}' (${provider_name}). Both providers (google, azure/Microsoft) are mandatory per AGENTS.md §Mandatory OAuth Providers."
+                FILE_FAILED=1
+                FAILED=1
+              fi
+            done
+
+            SUMMARY+="$FILE_SUMMARY\n"
+            if [ "$FILE_FAILED" = "0" ]; then
+              SUMMARY+="  ✅ All three providers present\n"
+            fi
+          done
+
+          {
+            echo "## OAuth Provider Mandate Check"
+            echo ""
+            echo "All BSuite auth modals must expose Google + Microsoft (azure)."
+            echo "See [AGENTS.md §Mandatory OAuth Providers](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
+            echo ""
+            echo -e "$SUMMARY"
+            if [ "$FAILED" = "0" ]; then
+              echo "### ✅ Both providers (Google + Microsoft) present in all files"
+            else
+              echo "### ❌ One or more providers are missing — see errors above"
+              echo ""
+              echo "**How to fix:** Add the missing provider button to the flagged file."
+              echo "Reference: \`GaryOcean428/crm7:src/components/LoginModal.tsx\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit $FAILED
+
+      - name: Comment on PR if providers missing
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ OAuth Provider Mandate Check Failed
+
+            A monitored auth modal file is missing one or more of the three mandatory OAuth providers.
+
+            **All BSuite auth entry points must expose all three providers** (see [AGENTS.md §Mandatory OAuth Providers](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)):
+
+            | Provider | Supabase ID | Purpose |
+            |----------|------------|---------|
+            | Google | \`google\` | Google Workspace corporate accounts |
+            | Microsoft | \`azure\` | Azure AD / M365 — required for B2B org SSO across the suite |
+            | GitHub | \`github\` | Developer / technical user convenience |
+
+            Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for which files and providers failed.
+
+            **Reference implementation:** \`GaryOcean428/crm7:src/components/LoginModal.tsx\``
+            })
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 2: PKCE compliance — no implicit flow
+  # ─────────────────────────────────────────────────────────────────────────────
+  check-pkce-compliance:
+    name: Verify PKCE flowType in all Supabase client files (no implicit flow)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PKCE compliance via GitHub API
+        id: pkce-check
+        env:
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT }}
+        shell: bash
+        run: |
+          # ── Preflight ───────────────────────────────────────────────────────
+          if [ -z "$GH_TOKEN" ]; then
+            TEST="missing"
+          else
+            TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/lib/supabase.ts?ref=main")
+          fi
+
+          if [ "$TEST" != "200" ]; then
+            echo "::warning::BSUITE_CROSS_REPO_PAT cannot access private submodule repos (HTTP $TEST) — PKCE check skipped."
+            {
+              echo "## ⚠️ PKCE Compliance Check — Skipped (no cross-repo access)"
+              echo "Add \`BSUITE_CROSS_REPO_PAT\` secret. See setup instructions in the provider check job above."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "Cross-repo access confirmed — running PKCE checks"
+
+          # ── Configuration ──────────────────────────────────────────────────
+          CLIENT_FILE_SPECS=(
+            "GaryOcean428/business-suite-unified:master:src/lib/supabase.ts:BSU Supabase client"
+            "GaryOcean428/crm7:main:src/lib/supabase.ts:CRM7 Supabase client"
+            "GaryOcean428/conduit:main:src/lib/supabase/client.ts:Conduit browser client"
+            "GaryOcean428/conduit:main:src/lib/supabase/server.ts:Conduit server client"
+          )
+
+          CALLBACK_FILE_SPECS=(
+            "GaryOcean428/business-suite-unified:master:src/pages/auth/AuthCallback.tsx:BSU auth callback"
+            "GaryOcean428/crm7:main:src/pages/auth/callback.tsx:CRM7 auth callback"
+            "GaryOcean428/conduit:main:src/app/auth/callback/route.ts:Conduit callback route"
+          )
+
+          FAILED=0
+          PKCE_SUMMARY=""
+
+          fetch_file() {
+            local repo="$1" branch="$2" path="$3"
+            local response
+            response=$(curl -sS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}")
+            if echo "$response" | grep -q '"message".*"Not Found"'; then
+              echo "__NOT_FOUND__"; return
+            fi
+            echo "$response" | python3 -c "
+          import json, sys, base64
+          d = json.load(sys.stdin)
+          print(base64.b64decode(d['content']).decode('utf-8', errors='replace'))
+          "
+          }
+
+          # ── Client file checks ──────────────────────────────────────────────
+          for spec in "${CLIENT_FILE_SPECS[@]}"; do
+            IFS=':' read -r repo branch filepath desc <<< "$spec"
+            CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
+
+            if [ "$CONTENT" = "__NOT_FOUND__" ]; then
+              echo "::warning::${repo}/${filepath} — not found, skipping"
+              PKCE_SUMMARY+="⚠️  **\`${repo}/${filepath}\`** — not found (skipped)\n"
+              continue
+            fi
+
+            if ! echo "$CONTENT" | grep -qE "(createClient|createBrowserClient|createServerClient)\s*\("; then
+              continue
+            fi
+
+            FILE_FAILED=0
+            FILE_SUMMARY="### \`${repo}/${filepath}\` ($desc)\n"
+
+            if echo "$CONTENT" | grep -qE "flowType\s*:\s*['\"]pkce['\"]"; then
+              FILE_SUMMARY+="  ✅ \`flowType: 'pkce'\` — present\n"
+            else
+              FILE_SUMMARY+="  ❌ \`flowType: 'pkce'\` — **MISSING**\n"
+              echo "::error::${repo}/${filepath}: Missing flowType: 'pkce'. OAuth 2.1 and BSuite AGENTS.md require PKCE. Add flowType: 'pkce' to the auth config."
+              FILE_FAILED=1; FAILED=1
+            fi
+
+            if echo "$CONTENT" | grep -qE "flowType\s*:\s*['\"]implicit['\"]"; then
+              FILE_SUMMARY+="  ❌ \`flowType: 'implicit'\` — **FORBIDDEN** per OAuth 2.1 §4\n"
+              echo "::error::${repo}/${filepath}: flowType: 'implicit' is forbidden by OAuth 2.1 §4. Use PKCE."
+              FILE_FAILED=1; FAILED=1
+            fi
+
+            if echo "$CONTENT" | grep -qE "response_type\s*[=:]\s*['\"]?token"; then
+              FILE_SUMMARY+="  ❌ \`response_type=token\` — **IMPLICIT FLOW** detected\n"
+              echo "::error::${repo}/${filepath}: response_type=token is implicit flow. Use authorization_code + PKCE."
+              FILE_FAILED=1; FAILED=1
+            fi
+
+            PKCE_SUMMARY+="$FILE_SUMMARY\n"
+            [ "$FILE_FAILED" = "0" ] && PKCE_SUMMARY+="  ✅ PKCE compliant\n"
+          done
+
+          # ── Callback handler checks ─────────────────────────────────────────
+          PKCE_SUMMARY+="\n### Callback handlers (PKCE code exchange)\n"
+
+          for spec in "${CALLBACK_FILE_SPECS[@]}"; do
+            IFS=':' read -r repo branch filepath desc <<< "$spec"
+            CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
+
+            if [ "$CONTENT" = "__NOT_FOUND__" ]; then
+              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` — not found (skipped)\n"
+              continue
+            fi
+
+            if echo "$CONTENT" | grep -qE "exchangeCodeForSession"; then
+              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — \`exchangeCodeForSession\` ✓\n"
+            elif echo "$CONTENT" | grep -qE "detectSessionInUrl"; then
+              PKCE_SUMMARY+="  ✅ \`${repo}/${filepath}\` — \`detectSessionInUrl\` (PKCE delegated) ✓\n"
+            else
+              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` — no \`exchangeCodeForSession\` or \`detectSessionInUrl\` (verify manually)\n"
+              echo "::warning::${repo}/${filepath}: Auth callback may not complete PKCE exchange — verify manually."
+            fi
+          done
+
+          {
+            echo "## PKCE Compliance Check"
+            echo ""
+            echo "All Supabase clients must use \`flowType: 'pkce'\`. Implicit flow forbidden per OAuth 2.1 §4."
+            echo ""
+            echo -e "$PKCE_SUMMARY"
+            if [ "$FAILED" = "0" ]; then
+              echo "### ✅ All Supabase clients use PKCE — no implicit flow detected"
+            else
+              echo "### ❌ One or more Supabase clients are missing PKCE"
+              echo ""
+              echo "\`\`\`ts"
+              echo "createClient(url, key, { auth: { flowType: 'pkce', detectSessionInUrl: true } })"
+              echo "\`\`\`"
+              echo "Reference: \`GaryOcean428/crm7:src/lib/supabase.ts\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit $FAILED
+
+      - name: Comment on PR if PKCE missing
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ PKCE Compliance Check Failed
+
+            A Supabase client file is missing \`flowType: 'pkce'\` or contains an implicit flow pattern.
+
+            **Fix:**
+            \`\`\`ts
+            createClient(url, key, {
+              auth: { flowType: 'pkce', detectSessionInUrl: true }
+            })
+            \`\`\`
+
+            Auth callbacks must call \`exchangeCodeForSession(code)\` to complete PKCE.
+
+            References: [\`crm7/src/lib/supabase.ts\`](https://github.com/GaryOcean428/crm7/blob/main/src/lib/supabase.ts) · [\`conduit/src/app/auth/callback/route.ts\`](https://github.com/GaryOcean428/conduit/blob/main/src/app/auth/callback/route.ts)
+
+            Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`
+            })
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 3: Remind about PAT setup if missing
+  # ─────────────────────────────────────────────────────────────────────────────
+  pat-setup-reminder:
+    name: Cross-repo PAT setup status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if BSUITE_CROSS_REPO_PAT is configured
+        env:
+          BSUITE_PAT: ${{ secrets.BSUITE_CROSS_REPO_PAT }}
+        shell: bash
+        run: |
+          # Verify the PAT is set AND can actually read the private repos
+          if [ -n "$BSUITE_PAT" ]; then
+            STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $BSUITE_PAT" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+          else
+            STATUS="missing"
+          fi
+
+          if [ "$STATUS" = "200" ]; then
+            echo "BSUITE_CROSS_REPO_PAT is configured and has access — OAuth checks will run against live submodule code."
+            {
+              echo "## ✅ Cross-repo PAT configured and verified"
+              echo "OAuth provider and PKCE checks are reading live code from private submodule repos."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice::BSUITE_CROSS_REPO_PAT is $([ -z "$BSUITE_PAT" ] && echo 'not set' || echo "set but returned HTTP $STATUS — check PAT scope"). OAuth checks skipped."
+            {
+              echo "## ⚠️ Action Required: Add BSUITE_CROSS_REPO_PAT"
+              echo ""
+              echo "The OAuth Provider Mandate and PKCE compliance checks require read access to the private submodule repos."
+              echo ""
+              echo "### One-time setup (5 minutes)"
+              echo ""
+              echo "1. Go to **[Settings → Developer Settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/tokens?type=beta)**"
+              echo "2. Click **Generate new token**"
+              echo "3. Set:"
+              echo "   - **Token name:** \`bsuite-ci-cross-repo-read\`"
+              echo "   - **Resource owner:** \`GaryOcean428\`"
+              echo "   - **Repository access:** Only select repositories → \`business-suite-unified\`, \`crm7\`, \`conduit\`"
+              echo "   - **Permissions:** Repository → Contents → **Read-only**"
+              echo "4. Copy the token"
+              echo "5. Add it at **[bsuite → Settings → Secrets → Actions → New](https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new)**"
+              echo "   - **Name:** \`BSUITE_CROSS_REPO_PAT\`"
+              echo "   - **Value:** paste the token"
+              echo ""
+              echo "Once added, re-run this workflow to activate the checks."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
