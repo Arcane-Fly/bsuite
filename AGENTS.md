@@ -480,6 +480,27 @@ https://conduit.crm7.app/auth/callback
 
 ---
 
+## Recent Changes (2026-04-14)
+
+- **All projects — White-label Three-Tier Hierarchy**: New `useBranding()` hook in crm7 + BSU resolves `tenant_app_branding` → `tenant_branding` → `platform_branding` → hardcoded D2C defaults. Supabase schema (`platform_branding` single-row, `tenant_branding` v2 with light/dark logo URLs, `tenant_app_branding` per-app per-tenant) + RLS initplan-optimised policies. Force-override via `platform_branding.force_override_tenant_ids` for super-admin lock-to-platform. Slot-aware Logo component (`header`/`sidebar`/`auth`/`favicon`). See master roadmap §WL and bsuite#148 / crm7#193 / BSU#60.
+- **Conduit — Candidate Portal**: `/portal/candidate` replaced with full authenticated surface (applications, interviews, offers, documents). New `r7_candidate_id_for_auth_user()` security-definer RLS helper + 6 co-existing `FOR SELECT` policies. conduit#46 + #49.
+- **Conduit — Public Careers Page**: `/portal/careers` replaced with working job board, JSON-LD `JobPosting` structured data, `r7_jobs.apply_url` + `apply_email` columns. conduit#48.
+- **CRM7 — Per-stage Deal Rotting**: Converged with HubSpot/Pipedrive/Salesforce 2026 "stage rotting" feature. New `opportunities.stage_entered_at` column + trigger; pipeline-velocity.ts now uses precise time-in-stage. crm7#191.
+- **All Supabase Edge Functions — SEC-EDGE-005 Constant-Time Compares**: BSU centralized `timingSafeEqual` + `isServiceRoleCall` in `_shared/cors.ts`; migrated `verifyInternalAuth`, `send-notification`, `email-dispatcher`, `oauth-google-email`, `oauth-microsoft-email`, `process-webhook-queue`. crm7 migrated `timesheet-reminders` + `compliance-scanner`. Fixed duplicate `checkRateLimit` shadow in `store-ram-credential` + `xero-token-exchange`. BSU#63/#64/#66 + crm7#188/#190.
+- **BSU Edge Function Hardening**: `stripe-portal` IDOR closed (customerId now resolved from authenticated user's tenant, client-supplied value accepted only as hint), `lead-capture` wildcard CORS → shared allowlist, `generate-document` added missing rate limiter, `calendar-integration` migrated to shared CORS + shared rate limiter. BSU#58 + #64.
+- **Conduit — Perf**: cache()-wrapped `getCurrentUser()` + `getTenantContext()` helpers; branding waterfall (5 queries → 3 parallel). conduit#41.
+- **CRM7 Nav + Branding fix**: SidebarProvider as flex-row root fixes main content reflow; CRM7Logo always visible in header; `branding.tsx` now upserts to `tenant_branding` (not disconnected `tenant_settings`). crm7#185.
+- **RLS {public} → {authenticated}**: All 5 tenants/user_tenants policies migrated. Applied migration `20260413062306_fix_rls_public_to_authenticated_tenant_policies`.
+- **Node 24 alignment**: crm7 `.node-version` 22→24 matching `engines.node: "24"`. crm7#186.
+- **BSU OAuth Mandate**: Two-provider canonical spec (Google + Microsoft/Azure only, GitHub intentionally removed) documented in §Mandatory OAuth Providers above.
+- **Automated Deployment Checks (Ship-All-Apps cron)**: RLS policy standing audit documented; Supabase URI allow-list locked in.
+- **Tier-3 EntitySelectors (crm7)**: AwardRateSelector, PlacementSelector, HostSiteSelector, FieldOfficerSelector, TrainingProviderSelector. crm7#192.
+- **R80.3 Wage Source CSV UI**: Download Template + Import CSV File picker in Settings → Award Rates surfaces existing service functions. R80.3#51.
+- **R80.3 Fair Work API Reference v1.01W**: Documented actual 3-layer cache & fallback ladder, retry semantics, per-function fallback paths. R80.3#49.
+- **R80.3 Test coverage**: `fairworkCacheFallback.test.ts` adds 17 behaviour tests on in-memory → DB fallback ladder. R80.3#48.
+- **Type tightening sweep (3 projects)**: crm7 (EntitySelector generic), BSU (mcpDebugger globals, AuthContext row types), R80.3 (debounce never-arg generic, FinancialYearRow inline interfaces). crm7#194 + BSU#57 + R80.3#46.
+- **WCAG 2.1 AA A11Y sweep (3 projects)**: BSU Branding/AdminBranding/Notices (BSU#62), Conduit ComposeDialog → Radix Dialog primitive + APG tablist (conduit#40), R80.3 LoginModal dialog role + focus trap + skip-to-main (R80.3#45/#47).
+
 ## Recent Changes (2025-02-27)
 
 - **Conduit**: Replaced all native `confirm()` with `ConfirmDialog` component + `useConfirmDialog` hook
