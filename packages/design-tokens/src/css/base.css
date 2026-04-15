@@ -1,0 +1,353 @@
+/*
+ * @bsuite/design-tokens — base.css
+ * ────────────────────────────────────────────────────────────────────────────
+ * Light-mode (default) design tokens shared across all 5 BSuite apps.
+ *
+ * USAGE:
+ *   @import "@bsuite/design-tokens/css/base";
+ *
+ * Each app adds its accent override AFTER this import:
+ *   :root { --app-primary: #2563eb; --app-accent: #00cec9; }
+ *
+ * Apps then import their theme-specific CSS (Tailwind v4 @theme or v3 extend)
+ * on top. This file only defines structural, chromatic-neutral tokens.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ══════════════════════════════════════════════════════════════════════
+   § 1. NEON ELECTRIC PALETTE
+   Shared chromatic vocabulary — RGB triplet format for rgba() compositing.
+   Never use directly as foreground text without checking contrast ratios.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Hex values — for fills, backgrounds, icon fills */
+  --ne-blue:     #2563eb;   /* electric blue   — primary actions        */
+  --ne-cyan:     #00cec9;   /* electric cyan   — accents, active borders */
+  --ne-indigo:   #4f46e5;   /* electric indigo — secondary actions       */
+  --ne-purple:   #6c5ce7;   /* electric purple — gradients, effects      */
+  --ne-magenta:  #fd79a8;   /* electric magenta — interactive highlights  */
+  --ne-pink:     #ec4899;   /* electric pink   — hover accents            */
+  --ne-coral:    #ff4757;   /* electric coral  — destructive / alerts     */
+  --ne-orange:   #ff7675;   /* electric orange — warnings                 */
+  --ne-yellow:   #fdcb6e;   /* electric yellow — secondary alerts         */
+  --ne-green:    #22c55e;   /* electric green  — success states           */
+  --ne-lavender: #a29bfe;   /* lavender        — subtle secondary accents */
+
+  /* RGB triplets (space-separated, for rgba() without comma syntax) */
+  --ne-blue-rgb:     37 99 235;
+  --ne-cyan-rgb:     0 206 201;
+  --ne-indigo-rgb:   79 70 229;
+  --ne-purple-rgb:   108 92 231;
+  --ne-magenta-rgb:  253 121 168;
+  --ne-pink-rgb:     236 72 153;
+  --ne-coral-rgb:    255 71 87;
+  --ne-orange-rgb:   255 118 117;
+  --ne-yellow-rgb:   253 203 110;
+  --ne-green-rgb:    34 197 94;
+  --ne-lavender-rgb: 162 155 254;
+
+  /* Legacy aliases — maintained for backwards compat with existing apps.
+     Apps should migrate to --ne-* over time. */
+  --neon-electric-blue:     var(--ne-blue);
+  --neon-electric-cyan:     var(--ne-cyan);
+  --neon-electric-indigo:   var(--ne-indigo);
+  --neon-electric-purple:   var(--ne-purple);
+  --neon-electric-magenta:  var(--ne-magenta);
+  --neon-electric-pink:     var(--ne-pink);
+  --neon-electric-coral:    var(--ne-coral);
+  --neon-electric-orange:   var(--ne-orange);
+  --neon-electric-yellow:   var(--ne-yellow);
+  --neon-electric-green:    var(--ne-green);
+  --neon-electric-lavender: var(--ne-lavender);
+  --neon-electric-blue-rgb:     var(--ne-blue-rgb);
+  --neon-electric-cyan-rgb:     var(--ne-cyan-rgb);
+  --neon-electric-indigo-rgb:   var(--ne-indigo-rgb);
+  --neon-electric-purple-rgb:   var(--ne-purple-rgb);
+  --neon-electric-magenta-rgb:  var(--ne-magenta-rgb);
+  --neon-electric-pink-rgb:     var(--ne-pink-rgb);
+  --neon-electric-coral-rgb:    var(--ne-coral-rgb);
+  --neon-electric-orange-rgb:   var(--ne-orange-rgb);
+  --neon-electric-yellow-rgb:   var(--ne-yellow-rgb);
+  --neon-electric-green-rgb:    var(--ne-green-rgb);
+  --neon-electric-lavender-rgb: var(--ne-lavender-rgb);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   § 2. TYPOGRAPHY
+   Structural type scale. Per-app font imports are NOT included here —
+   each app self-hosts its fonts. Only the cascade and scale are shared.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Font families — apps override --font-sans with their specific stack */
+  --font-sans:  'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont,
+                'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-mono:  'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace,
+                SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: var(--font-sans);  /* swap to a display face if needed */
+
+  /* Base font settings (applied to :root / body) */
+  --font-size-base:   1rem;     /* 16px */
+  --line-height-base: 1.5;
+  --font-weight-base: 400;
+  --font-smoothing:   antialiased;
+
+  /* Type scale — fluid via clamp where applicable */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-md:   1.0625rem; /* 17px — between sm and lg for reading comfort */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+
+  /* Font weights */
+  --weight-normal:    400;
+  --weight-medium:    500;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+
+  /* Letter spacing */
+  --tracking-tight:   -0.025em;
+  --tracking-normal:  0em;
+  --tracking-wide:    0.025em;
+  --tracking-wider:   0.05em;
+  --tracking-caps:    0.12em;   /* used on ALL-CAPS labels like "LIVE", "BETA" */
+
+  /* Line heights */
+  --leading-none:    1;
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose:   2;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   § 3. SPACING SCALE
+   T-shirt size tokens mapped to an 8px base grid.
+   Prefer these over raw px/rem values everywhere in component CSS.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --space-0:    0;
+  --space-px:   1px;
+  --space-0-5:  0.125rem;  /*  2px */
+  --space-1:    0.25rem;   /*  4px */
+  --space-1-5:  0.375rem;  /*  6px */
+  --space-2:    0.5rem;    /*  8px */
+  --space-2-5:  0.625rem;  /* 10px */
+  --space-3:    0.75rem;   /* 12px */
+  --space-3-5:  0.875rem;  /* 14px */
+  --space-4:    1rem;      /* 16px */
+  --space-5:    1.25rem;   /* 20px */
+  --space-6:    1.5rem;    /* 24px */
+  --space-7:    1.75rem;   /* 28px */
+  --space-8:    2rem;      /* 32px */
+  --space-9:    2.25rem;   /* 36px */
+  --space-10:   2.5rem;    /* 40px */
+  --space-12:   3rem;      /* 48px */
+  --space-14:   3.5rem;    /* 56px */
+  --space-16:   4rem;      /* 64px */
+  --space-20:   5rem;      /* 80px */
+  --space-24:   6rem;      /* 96px */
+  --space-32:   8rem;      /* 128px */
+
+  /* Semantic spacing aliases */
+  --space-gutter:   var(--space-4);   /* page-level gutter on mobile      */
+  --space-gutter-md:var(--space-6);   /* page-level gutter on md+          */
+  --space-gutter-lg:var(--space-8);   /* page-level gutter on lg+          */
+  --space-card:     var(--space-6);   /* default card padding              */
+  --space-panel:    var(--space-8);   /* panel / dialog padding            */
+  --space-section:  var(--space-12);  /* section vertical rhythm           */
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   § 4. BORDER RADIUS
+   Apps share one radius scale. Per-app "personality" comes from how
+   assertively they use larger radii (rounded corners = softer, more
+   consumer; smaller = more enterprise).
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --radius-none: 0;
+  --radius-xs:   0.125rem;  /*  2px */
+  --radius-sm:   0.25rem;   /*  4px */
+  --radius-md:   0.375rem;  /*  6px */
+  --radius-base: 0.5rem;    /*  8px — default card / button */
+  --radius-lg:   0.75rem;   /* 12px */
+  --radius-xl:   1rem;      /* 16px */
+  --radius-2xl:  1.25rem;   /* 20px */
+  --radius-3xl:  1.5rem;    /* 24px */
+  --radius-4xl:  1.75rem;   /* 28px — large panels, BSU shell cards */
+  --radius-full: 9999px;    /* pills, badges, avatars */
+
+  /* Semantic radius aliases */
+  --radius-button:  var(--radius-base);
+  --radius-input:   var(--radius-base);
+  --radius-card:    var(--radius-lg);
+  --radius-panel:   var(--radius-2xl);
+  --radius-dialog:  var(--radius-3xl);
+  --radius-shell:   var(--radius-4xl);  /* top-level app shell cards */
+  --radius-avatar:  var(--radius-full);
+  --radius-badge:   var(--radius-full);
+  --radius:         var(--radius-base); /* Tailwind shadcn compat alias */
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   § 5. ELEVATION / SHADOW SCALE
+   Consistent depth vocabulary across light and dark mode.
+   Shadow values adjust per theme — see dark.css for overrides.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Base elevation shadows (light mode — dark tinted) */
+  --shadow-0:  none;
+  --shadow-1:  0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-2:  0 4px 6px -1px rgba(0, 0, 0, 0.10),
+               0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  --shadow-3:  0 10px 15px -3px rgba(0, 0, 0, 0.10),
+               0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-4:  0 20px 25px -5px rgba(0, 0, 0, 0.10),
+               0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-5:  0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+  /* Semantic elevation aliases */
+  --shadow-tooltip:  var(--shadow-2);
+  --shadow-dropdown: var(--shadow-3);
+  --shadow-modal:    var(--shadow-5);
+  --shadow-card:     var(--shadow-2);
+  --shadow-panel:    var(--shadow-3);
+
+  /* Legacy compat aliases */
+  --shadow-elev-0: var(--shadow-0);
+  --shadow-elev-1: var(--shadow-1);
+  --shadow-elev-2: var(--shadow-2);
+  --shadow-elev-3: var(--shadow-3);
+  --shadow-elev-4: var(--shadow-4);
+  --panel-shadow:  var(--shadow-2);
+
+  /* D2C Shell shadows — neon glow layer on top of standard elevation */
+  --shadow-shell:      0 20px 45px -28px rgba(15, 23, 42, 0.28);
+  --shadow-shell-glow: 0 16px 40px -28px rgb(var(--ne-blue-rgb) / 0.28);
+
+  /* Component-specific shadows */
+  --shadow-button:       0 0 20px rgb(var(--ne-cyan-rgb) / 0.28);
+  --shadow-button-hover: 0 0 32px rgb(var(--ne-cyan-rgb) / 0.44);
+  --shadow-input-focus:  0 0 0 2px rgb(var(--ne-blue-rgb) / 0.14);
+
+  /* Blur values for backdrop-filter */
+  --blur-sm:    4px;
+  --blur-base:  8px;
+  --blur-md:    12px;
+  --blur-lg:    16px;   /* --shell-blur equivalent */
+  --blur-xl:    24px;
+  --shell-blur: var(--blur-lg);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   § 6. GLOW EFFECTS
+   Used on AI panels, neon borders, and interactive highlights.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --glow-blue:    0 0 20px rgb(var(--ne-blue-rgb) / 0.40);
+  --glow-cyan:    0 0 20px rgb(var(--ne-cyan-rgb) / 0.40);
+  --glow-purple:  0 0 20px rgb(var(--ne-purple-rgb) / 0.40);
+  --glow-pink:    0 0 20px rgb(var(--ne-pink-rgb) / 0.40);
+  --glow-coral:   0 0 20px rgb(var(--ne-coral-rgb) / 0.40);
+  --glow-green:   0 0 20px rgb(var(--ne-green-rgb) / 0.40);
+
+  /* Legacy aliases */
+  --glow-neon:          rgb(var(--ne-cyan-rgb) / 0.40);
+  --glow-electric-blue: var(--glow-blue);
+  --glow-electric-cyan: var(--glow-cyan);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   § 7. SEMANTIC COLOR TOKENS — LIGHT MODE
+   These feed into Tailwind's --background, --foreground, etc.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Backgrounds */
+  --bg-body:            #edf2fb;
+  --bg-surface:         #f8fafc;
+  --bg-panel:           rgba(255, 255, 255, 0.96);
+  --bg-header:          #f1f5f9;
+  --bg-footer:          #f8fafc;
+  --bg-input:           #f1f5f9;
+  --bg-tertiary:        #f3f5f7;
+  --bg-interactive:     #eaf0f6;
+  --bg-shell:           #edf2fb;
+  --bg-shell-elevated:  rgba(255, 255, 255, 0.82);
+  --bg-shell-accent:    rgba(248, 250, 252, 0.92);
+
+  /* Text — WCAG 2.1 AA compliant on light backgrounds */
+  --text-primary:   #1e293b;   /* slate-800: 13.5:1 on white */
+  --text-secondary: #475569;   /* slate-600: 6.3:1  on white */
+  --text-heading:   #0f172a;   /* slate-900 */
+  --text-muted:     #64748b;   /* slate-500: 4.62:1 on white */
+  --text-on-primary:#f2f2f2;
+
+  /* Borders */
+  --border-color:        #e2e8f0;
+  --border-color-strong: #cbd5e1;
+  --border-shell:        rgba(148, 163, 184, 0.20);
+
+  /* Status — WCAG AA on white */
+  --color-success:        #047857;   /* emerald-700: 5.56:1 */
+  --color-success-bg:     rgba(4, 120, 87, 0.10);
+  --color-success-border: rgba(4, 120, 87, 0.28);
+  --color-warning:        #b45309;   /* amber-700:   5.43:1 */
+  --color-warning-bg:     rgba(180, 83, 9, 0.10);
+  --color-warning-border: rgba(180, 83, 9, 0.28);
+  --color-error:          #b91c1c;   /* red-700:     6.05:1 */
+  --color-error-bg:       rgba(185, 28, 28, 0.10);
+  --color-error-border:   rgba(185, 28, 28, 0.28);
+  --color-info:           #0284c7;   /* sky-600:     4.65:1 */
+  --color-info-bg:        rgba(2, 132, 199, 0.10);
+  --color-info-border:    rgba(2, 132, 199, 0.28);
+
+  /* Stat value — large metric display */
+  --stat-value-color: #0f172a;
+
+  /* Glow shell (D2C glass panel internals) */
+  --glow-shell-dark-96:   rgba(10, 14, 26, 0.96);
+  --glow-shell-dark-98:   rgba(10, 14, 26, 0.98);
+  --glow-shell-dark-82:   rgba(10, 14, 26, 0.82);
+  --glow-shell-dark-64:   rgba(10, 14, 26, 0.64);
+  --glow-shell-dark-44:   rgba(10, 14, 26, 0.44);
+  --glow-shell-navy-94:   rgba(15, 23, 58, 0.94);
+  --glow-shell-navy-92:   rgba(15, 23, 58, 0.92);
+  --glow-shell-navy-82:   rgba(15, 23, 58, 0.82);
+  --glow-shell-navy-74:   rgba(15, 23, 58, 0.74);
+  --glow-shell-navy-66:   rgba(15, 23, 58, 0.66);
+  --glow-shell-abyss-72:  rgba(2, 6, 23, 0.72);
+
+  /* Accent primary — per-app override expected, this is a safe fallback */
+  --accent-primary:   var(--ne-blue);
+  --accent-secondary: var(--ne-cyan);
+  --accent-hover:     #0369a1;   /* sky-700 */
+  --accent-primary-foreground: #f2f2f2;
+
+  /* Component sizes — touch target compliant (44px min) */
+  --min-touch-target: 44px;
+  --button-height:    var(--min-touch-target);
+  --input-height:     var(--min-touch-target);
+  --nav-height:       64px;
+  --sidebar-width:    280px;
+  --sidebar-icon-width: 64px;
+
+  /* Z-index scale */
+  --z-base:      0;
+  --z-raised:    10;
+  --z-dropdown:  100;
+  --z-sticky:    200;
+  --z-overlay:   300;
+  --z-modal:     400;
+  --z-toast:     500;
+  --z-tooltip:   600;
+}
