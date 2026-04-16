@@ -221,6 +221,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: dom-layout-lint
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: |
             <!-- dom-layout-lint -->
             ${{ env.LINT_SUMMARY }}
