@@ -1,0 +1,229 @@
+# .github/workflows/dom-layout-lint.yml
+#
+# DOM Layout Invariant Linter
+# ===========================
+# Enforces the 5 suite-wide layout invariants defined in AGENTS.md
+# §Frontend Layout & Z-Index Standards on every PR.
+#
+# Invariants checked:
+#   1. No min-h-screen / min-h-svh on app shell roots
+#   2. No hardcoded calc(100vh - <px>) for layout heights
+#   3. No non-standard z-index utilities (z-200, z-150, etc.)
+#   4. No overflow-hidden on flex column wrappers that contain sticky children
+#   5. role="main" is never added to <main> elements
+#
+# Runs on: PRs to main/master/development in all BSuite repos
+# Skips:   node_modules, dist, .next, build output, test snapshots
+
+name: DOM Layout Lint
+
+on:
+  pull_request:
+    branches: [main, master, development]
+    paths:
+      - 'src/**/*.tsx'
+      - 'src/**/*.ts'
+      - 'src/**/*.css'
+      - 'apps/*/src/**/*.tsx'
+      - 'apps/*/src/**/*.ts'
+      - 'apps/*/src/**/*.css'
+
+jobs:
+  dom-layout-lint:
+    name: DOM Layout Invariants
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run DOM Layout Invariant Checks
+        id: lint
+        shell: bash
+        run: |
+          set +e  # Don't exit on first error — collect all violations
+
+          ERRORS=()
+          WARNINGS=()
+
+          # ---------------------------------------------------------------
+          # Helper: search changed files only (faster on large repos)
+          # ---------------------------------------------------------------
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
+            | grep -E '\.(tsx|ts|css)$' \
+            | grep -v 'node_modules\|\.next\|dist\|build\|\.test\.\|\.spec\.\|__snapshots__' \
+            || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No relevant files changed — skipping."
+            exit 0
+          fi
+
+          echo "Checking $(echo "$CHANGED_FILES" | wc -l) changed source files..."
+
+          # ---------------------------------------------------------------
+          # INVARIANT 1 — No min-h-screen / min-h-svh on shell roots
+          #
+          # Rule: App shell roots must use h-screen (or h-svh) + overflow-hidden.
+          # min-h-* makes the shell unbounded and breaks independent panel scroll.
+          #
+          # Pattern: className="... min-h-screen ..." OR min-h-svh
+          # Exclusions: non-shell components (marketing pages, landing pages,
+          #   standalone cards) identified by filename patterns.
+          # ---------------------------------------------------------------
+          SHELL_CANDIDATES=$(echo "$CHANGED_FILES" \
+            | grep -E '(App|MainLayout|MainApp|DashboardShell|AppShell|Layout|Shell)\.(tsx|ts)$' \
+            || true)
+
+          if [ -n "$SHELL_CANDIDATES" ]; then
+            while IFS= read -r file; do
+              if grep -qnP 'className=["\x27][^"'\'']*\bmin-h-(screen|svh)\b' "$file" 2>/dev/null; then
+                HITS=$(grep -nP 'className=["\x27][^"'\'']*\bmin-h-(screen|svh)\b' "$file")
+                ERRORS+=("**INVARIANT 1 — Unbounded shell root** in \`$file\`:\n\`\`\`\n$HITS\n\`\`\`\nApp shell roots must use \`h-screen overflow-hidden\` (or \`h-svh overflow-hidden\`), never \`min-h-*\`. See AGENTS.md §Frontend Layout & Z-Index Standards.")
+              fi
+            done <<< "$SHELL_CANDIDATES"
+          fi
+
+          # Also catch it in all files with a broader but still-targeted check
+          while IFS= read -r file; do
+            # Skip files already caught above
+            if echo "$file" | grep -qE '(App|MainLayout|MainApp|DashboardShell|AppShell|Layout|Shell)\.(tsx|ts)$'; then
+              continue
+            fi
+            # Flag inside SidebarProvider / root flex containers only
+            if grep -qnP '<(SidebarProvider|div)[^>]*className=["\x27][^"'\'']*\bmin-h-(screen|svh)\b' "$file" 2>/dev/null; then
+              HITS=$(grep -nP '<(SidebarProvider|div)[^>]*className=["\x27][^"'\'']*\bmin-h-(screen|svh)\b' "$file")
+              WARNINGS+=("**INVARIANT 1 — Possible unbounded shell** in \`$file\`:\n\`\`\`\n$HITS\n\`\`\`\nVerify this is not an app shell root. Shell roots must use \`h-screen overflow-hidden\`.")
+            fi
+          done <<< "$CHANGED_FILES"
+
+          # ---------------------------------------------------------------
+          # INVARIANT 2 — No hardcoded calc(100vh - <N>px) for layout heights
+          #
+          # Rule: Layout heights that subtract a fixed pixel offset will break
+          # when SystemNoticeBanner or other banners appear/disappear.
+          # Use flex remainder (flex-1 min-h-0) instead.
+          #
+          # Pattern: calc(100vh - \d+px) or h-[calc(100vh-\d+px)]
+          # ---------------------------------------------------------------
+          while IFS= read -r file; do
+            if grep -qnP 'calc\(100vh\s*-\s*\d+px\)' "$file" 2>/dev/null; then
+              HITS=$(grep -nP 'calc\(100vh\s*-\s*\d+px\)' "$file")
+              ERRORS+=("**INVARIANT 2 — Hardcoded calc(100vh-Npx)** in \`$file\`:\n\`\`\`\n$HITS\n\`\`\`\nReplace with flex remainder: \`flex-1 min-h-0\` on the container (parent must be \`h-screen flex-col\`). Hardcoded offsets break when banners are shown/hidden. See AGENTS.md §Frontend Layout & Z-Index Standards.")
+            fi
+          done <<< "$CHANGED_FILES"
+
+          # ---------------------------------------------------------------
+          # INVARIANT 3 — No non-standard z-index utilities
+          #
+          # Rule: Tailwind v4 only generates utilities it sees at build time.
+          # z-200, z-150, z-300 etc. are NOT standard Tailwind scale values
+          # and will silently produce no CSS unless safelisted.
+          # Always use explicit arbitrary values: z-[200], z-[150], z-[300].
+          #
+          # Pattern: \bz-\d{3,}\b that is NOT z-[...] form
+          # ---------------------------------------------------------------
+          while IFS= read -r file; do
+            # Match z-NNN (3+ digit number) NOT preceded by [ and not inside z-[...]
+            if grep -qnP '(?<!\[)\bz-[1-9]\d{2,}\b(?!\])' "$file" 2>/dev/null; then
+              HITS=$(grep -nP '(?<!\[)\bz-[1-9]\d{2,}\b(?!\])' "$file")
+              ERRORS+=("**INVARIANT 3 — Non-standard z-index utility** in \`$file\`:\n\`\`\`\n$HITS\n\`\`\`\nTailwind v4 only generates z-index utilities for values in its default scale (0,10,20,30,40,50). Use explicit arbitrary values: \`z-[200]\` not \`z-200\`. See AGENTS.md §Frontend Layout & Z-Index Standards.")
+            fi
+          done <<< "$CHANGED_FILES"
+
+          # ---------------------------------------------------------------
+          # INVARIANT 4 — overflow-hidden on flex-col wrappers containing
+          #               sticky elements
+          #
+          # Rule: Any ancestor with overflow:hidden or overflow:clip between a
+          # sticky element and its scroll container suppresses sticky entirely.
+          # The content column wrapper (between the shell root and <main>)
+          # must NOT have overflow-hidden.
+          #
+          # Heuristic: flag divs that have BOTH overflow-hidden AND flex-col
+          # AND are not the outermost shell root (which is allowed to have it).
+          # ---------------------------------------------------------------
+          while IFS= read -r file; do
+            if grep -qnP 'className=["\x27][^"'\'']*\bflex\b[^"'\'']*\bflex-col\b[^"'\'']*\boverflow-hidden\b|className=["\x27][^"'\'']*\boverflow-hidden\b[^"'\'']*\bflex\b[^"'\'']*\bflex-col\b' "$file" 2>/dev/null; then
+              HITS=$(grep -nP 'className=["\x27][^"'\'']*\bflex\b[^"'\'']*\bflex-col\b[^"'\'']*\boverflow-hidden\b|className=["\x27][^"'\'']*\boverflow-hidden\b[^"'\'']*\bflex\b[^"'\'']*\bflex-col\b' "$file")
+              WARNINGS+=("**INVARIANT 4 — overflow-hidden on flex-col wrapper** in \`$file\`:\n\`\`\`\n$HITS\n\`\`\`\nIf this is NOT the outermost shell root, remove \`overflow-hidden\` — it will suppress \`position:sticky\` on any descendant (SystemNoticeBanner, header, etc.). Only the shell root (\`h-screen overflow-hidden\`) is allowed to have this combination. See AGENTS.md §Frontend Layout & Z-Index Standards.")
+            fi
+          done <<< "$CHANGED_FILES"
+
+          # ---------------------------------------------------------------
+          # INVARIANT 5 — role="main" on <main> is redundant
+          #
+          # Rule: <main> already has implicit role=main per HTML spec.
+          # Adding it explicitly creates a duplicate ARIA landmark.
+          # ---------------------------------------------------------------
+          while IFS= read -r file; do
+            if grep -qnP '<main[^>]*\brole=["\x27]main["\x27]' "$file" 2>/dev/null; then
+              HITS=$(grep -nP '<main[^>]*\brole=["\x27]main["\x27]' "$file")
+              ERRORS+=("**INVARIANT 5 — Redundant role=\"main\" on \`<main>\`** in \`$file\`:\n\`\`\`\n$HITS\n\`\`\`\n\`<main>\` is implicitly \`role=main\` per the HTML spec. Adding it explicitly creates a duplicate ARIA landmark. Remove the \`role=\"main\"\` attribute. See AGENTS.md §Frontend Layout & Z-Index Standards.")
+            fi
+          done <<< "$CHANGED_FILES"
+
+          # ---------------------------------------------------------------
+          # Output results
+          # ---------------------------------------------------------------
+          echo "ERRORS_COUNT=${#ERRORS[@]}" >> "$GITHUB_ENV"
+          echo "WARNINGS_COUNT=${#WARNINGS[@]}" >> "$GITHUB_ENV"
+
+          # Build summary
+          SUMMARY=""
+          if [ ${#ERRORS[@]} -gt 0 ]; then
+            SUMMARY+="## DOM Layout Invariant Violations\n\n"
+            SUMMARY+="The following invariants defined in [AGENTS.md §Frontend Layout & Z-Index Standards](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md) were violated. These must be fixed before merging.\n\n"
+            for err in "${ERRORS[@]}"; do
+              SUMMARY+="### ❌ Error\n$err\n\n"
+            done
+          fi
+
+          if [ ${#WARNINGS[@]} -gt 0 ]; then
+            SUMMARY+="## DOM Layout Warnings\n\n"
+            SUMMARY+="The following patterns may indicate layout issues. Review before merging.\n\n"
+            for warn in "${WARNINGS[@]}"; do
+              SUMMARY+="### ⚠️ Warning\n$warn\n\n"
+            done
+          fi
+
+          if [ ${#ERRORS[@]} -eq 0 ] && [ ${#WARNINGS[@]} -eq 0 ]; then
+            SUMMARY="## ✅ DOM Layout Invariants\n\nAll 5 layout invariants passed. No violations found in changed files."
+          fi
+
+          # Write to step summary
+          printf "%b" "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+
+          # Save summary to env for PR comment
+          {
+            echo 'LINT_SUMMARY<<EOF'
+            printf "%b" "$SUMMARY"
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
+
+          # Exit with failure if errors
+          if [ ${#ERRORS[@]} -gt 0 ]; then
+            echo "::error::DOM layout invariant violations found: ${#ERRORS[@]} error(s), ${#WARNINGS[@]} warning(s)"
+            exit 1
+          fi
+
+          if [ ${#WARNINGS[@]} -gt 0 ]; then
+            echo "::warning::DOM layout warnings: ${#WARNINGS[@]} warning(s) — review before merging"
+          fi
+
+      - name: Comment on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: dom-layout-lint
+          message: |
+            <!-- dom-layout-lint -->
+            ${{ env.LINT_SUMMARY }}
+
+            ---
+            <sub>DOM Layout Lint · Enforces AGENTS.md §Frontend Layout & Z-Index Standards · <a href="https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md">View invariants</a></sub>
