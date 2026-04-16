@@ -144,6 +144,7 @@ Each entity has a single owning app for create/edit. See `docs/DRY-ONE-SHOT-ARCH
 - Schema changes via versioned migrations only
 - Expand → Migrate → Contract pattern
 - Row Level Security on all tables
+- **`client_id` RLS scoping**: BSuite apps are first-party trusted OAuth clients sharing a single Supabase project and user-base. Per-`client_id` DB isolation is **intentionally absent** — all authenticated users from any registered BS OAuth client get user-level access (`auth.uid() = user_id`). The `payment_methods` table has a named policy (`oauth_client_scoped_access`) documenting this decision. If per-client isolation is ever required, add a `client_id` column and a `USING ((auth.jwt() ->> 'client_id') = client_id)` guard. (See migration `20260415120000_rls_client_id_payment_methods.sql`.)
 
 ### Authentication & OAuth
 
@@ -233,6 +234,7 @@ Every auth entry point in the BSuite (BSU `AuthForm.tsx`, CRM7 `LoginModal.tsx` 
 | **GitHub** | `github` | ❌ Disabled | **Intentionally removed** — not appropriate for B2B use case. Disabled in Supabase. Button removed from all auth modals. **Never re-add without explicit owner instruction.** |
 
 **Rules:**
+
 - Both providers must be present in **both** Register and Sign In modals/forms — identical lists, always in sync
 - The order is: Google → Microsoft
 - If you modify any auth modal, verify the other modals in the same PR still show only these two providers
@@ -242,6 +244,7 @@ Every auth entry point in the BSuite (BSU `AuthForm.tsx`, CRM7 `LoginModal.tsx` 
 - The Supabase GitHub provider is disabled at the platform level — even if a button were added to the UI, it would fail. Do not attempt to re-enable it.
 
 **Affected files (current):**
+
 - `business-suite-unified`: `src/components/AuthForm.tsx`
 - `crm7`: `src/components/LoginModal.tsx`, `src/components/SignupModal.tsx`
 - Any new app added to the suite must follow this pattern from day one
@@ -455,6 +458,7 @@ Use this as the canonical starting point when adding new layered elements. Do no
 | `z-0` | Main content | all | Default flow |
 
 **Invariants:**
+
 - SystemNoticeBanner (`z-[60]`) **must** be in the same flex column as the header — never a sibling of the router root (it cannot coordinate stacking across different scroll containers)
 - Sticky positioning **requires** no `overflow: hidden` or `overflow: clip` on ANY ancestor between the sticky element and the scroll container — always audit the ancestor chain
 - `h-screen overflow-hidden` on the app shell root + `overflow-y-auto` on `<main>` only — this is the correct bounded app shell pattern. **Never** use `min-h-screen`, `min-h-svh`, or any `min-h-*` on the root — these make the shell unbounded and break independent panel scrolling.
