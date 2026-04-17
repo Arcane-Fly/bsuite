@@ -655,6 +655,22 @@ https://conduit.crm7.app/auth/callback
 
 ### Known Platform Issues (Do Not Action)
 
+## GITHUB ACTIONS LOG FETCHING — CORRECT PATTERN
+
+**NEVER** use `gh run view --log-failed` — this returns HTTP 404 for any run on a PR branch (not the default branch). Always fetch logs via the jobs endpoint:
+
+```bash
+# Get job ID from the run
+JOB_ID=$(gh api repos/GaryOcean428/{repo}/actions/runs/{run_id}/jobs \
+  --jq '.jobs[0].id')
+# Fetch the log (works for all branches including PR heads)
+gh api repos/GaryOcean428/{repo}/actions/jobs/$JOB_ID/logs 2>/dev/null \
+  | sed 's/^[0-9T:Z.]* //' | sed 's/\x1b\[[0-9;]*m//g' \
+  | grep -v '^$' | tail -50
+```
+
+**Empty `statusCheckRollup`** (`{}` or `null`) on a MERGEABLE PR = checks not yet triggered, NOT a failure. Wait 30s and retry once. A PR that is `MERGEABLE` with `statusCheckRollup = null` (no checks registered) is safe to merge with `--admin` — this is the `NO_CHECKS` case.
+
 - **bsuite#106** — NULL `client_secret_hash` on public OAuth clients (Conduit, Throughput). Supabase platform bug. Dashboard-only; app auth flows are unaffected. No support ticket. No workaround.
 
 ---
