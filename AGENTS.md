@@ -144,7 +144,7 @@ Each entity has a single owning app for create/edit. See `docs/DRY-ONE-SHOT-ARCH
 - Schema changes via versioned migrations only
 - Expand → Migrate → Contract pattern
 - Row Level Security on all tables
-- **`client_id` RLS scoping**: BSuite apps are first-party trusted OAuth clients sharing a single Supabase project and user-base. Per-`client_id` DB isolation is **intentionally absent** — all authenticated users from any registered BS OAuth client get user-level access (`auth.uid() = user_id`). The `payment_methods` table has a named policy (`oauth_client_scoped_access`) documenting this decision. If per-client isolation is ever required, add a `client_id` column and a `USING ((auth.jwt() ->> 'client_id') = client_id)` guard. (See migration `20260415120000_rls_client_id_payment_methods.sql`.)
+- **`client_id` RLS scoping**: BSuite apps are first-party trusted OAuth clients sharing a single Supabase project and user-base. Per-`client_id` DB isolation is **intentionally absent** — authenticated access is scoped at the user level (`auth.uid() = user_id`), not by OAuth `client_id`. If per-client isolation is ever required, add a `client_id` column and a `USING ((auth.jwt() ->> 'client_id') = client_id)` guard, and document that change in the corresponding migration under `supabase/migrations/`.
 
 ### Authentication & OAuth
 
