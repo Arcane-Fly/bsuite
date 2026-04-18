@@ -1,0 +1,76 @@
+name: Security Audit
+
+# Runs pnpm audit across all BSuite submodule apps to catch high/critical
+# CVEs before they land. Complements the existing per-app CI by providing
+# a unified audit gate at the parent monorepo level.
+#
+# BSuite World-Class Audit Wave 5 (bsuite#215, #213).
+
+on:
+  pull_request:
+    paths:
+      - 'crm7/**'
+      - 'conduit/**'
+      - 'R80.3/**'
+      - 'business-suite-unified/**'
+      - 'braden/**'
+      - 'throughput/**'
+      - '.github/workflows/security-audit.yml'
+  schedule:
+    # Run daily at 02:00 UTC to catch newly-disclosed CVEs even without PRs
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [crm7, conduit, R80.3, business-suite-unified, braden, throughput]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: 'recursive'
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable
+
+      - name: Audit app
+        shell: bash
+        # Matrix values (${{ matrix.app }}) are static inputs — safe. Using env:
+        # here as defence-in-depth against future refactors.
+        env:
+          APP: ${{ matrix.app }}
+        working-directory: ${{ matrix.app }}
+        # --audit-level=high means we fail on high + critical, accept moderate/low.
+        # --prod limits to production dependencies (we don't block on dev-only CVEs).
+        run: |
+          if [ -f package.json ]; then
+            pnpm audit --audit-level=high --prod || {
+              echo "::error::${APP} has high/critical vulnerabilities"
+              exit 1
+            }
+          else
+            echo "::warning::no package.json found in ${APP} — skipping audit"
+          fi
+
+      - name: Job summary
+        if: always()
+        env:
+          APP: ${{ matrix.app }}
+          STATUS: ${{ job.status }}
+        run: |
+          {
+            echo "### ${APP} audit"
+            echo "- Ran \`pnpm audit --audit-level=high --prod\`"
+            echo "- Status: ${STATUS}"
+          } >> "$GITHUB_STEP_SUMMARY"
