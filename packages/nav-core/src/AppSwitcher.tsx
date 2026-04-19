@@ -14,8 +14,14 @@
  *   <AppSwitcher apps={apps} currentApp="r8" />
  */
 
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown as ChevronDownRaw } from 'lucide-react'
 import { type ElementType, useEffect, useRef, useState } from 'react'
+
+// Cast through unknown to dodge React 18 vs 19 @types/react conflicts —
+// lucide-react ships React 19 types in newer versions while this package
+// keeps React 18 in devDeps to be compatible with braden's React 18
+// consumer. Same pattern as IconComponent in ./types.ts.
+const ChevronDown = ChevronDownRaw as unknown as ElementType
 
 export interface AppEntry {
   key: string
