@@ -1,0 +1,69 @@
+{
+  "name": "@bsuite/theme",
+  "version": "0.1.1",
+  "type": "module",
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "directory": "packages/theme"
+  },
+  "description": "BSuite Universal D2C Neon Electric theme — Tailwind preset, CSS vars, ThemeProvider, SSR init helper. Shared across BSU, CRM7, conduit, R80.3, throughput.",
+  "files": [
+    "dist",
+    "src/css",
+    "src/tailwind-preset.js",
+    "src/preset-v4.css"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react/index.js",
+      "types": "./dist/react/index.d.ts"
+    },
+    "./ssr": {
+      "import": "./dist/ssr/index.js",
+      "types": "./dist/ssr/index.d.ts"
+    },
+    "./tailwind-preset": "./src/tailwind-preset.js",
+    "./preset-v4.css": "./src/preset-v4.css",
+    "./css": "./src/css/index.css",
+    "./vars.css": "./src/css/vars.css",
+    "./utilities.css": "./src/css/utilities.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "tailwindcss": ">=3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.3.28",
+    "@vitejs/plugin-react": "^5.2.0",
+    "jsdom": "^28.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "~5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
