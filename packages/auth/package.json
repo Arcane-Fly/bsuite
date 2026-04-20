@@ -1,0 +1,42 @@
+{
+  "name": "@bsuite/auth",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "directory": "packages/auth"
+  },
+  "description": "BSuite OAuth 2.1 PKCE client — shared across CRM7, R80.3, Braden, and Throughput. Uses JWKS for token verification via jose.",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@vitejs/plugin-react": "^5.2.0",
+    "jsdom": "^28.1.0",
+    "typescript": "~5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

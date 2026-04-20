@@ -1,0 +1,375 @@
+/**
+ * BSuite OAuth 2.1 PKCE Client Factory
+ *
+ * Implements the OAuth 2.1 Authorization Code flow with PKCE (Proof Key for
+ * Code Exchange) to authenticate users via the Business Suite identity provider.
+ *
+ * Token verification uses JWKS (JSON Web Key Set) from the Supabase
+ * /.well-known/jwks.json endpoint — asymmetric key verification via jose.
+ *
+ * Per Supabase OAuth 2.1 server docs:
+ * - PKCE with S256 code challenge is mandatory (OAuth 2.1 spec)
+ * - Access tokens include user_id, role, and client_id claims
+ * - JWKS endpoint provides public keys for third-party token validation
+ * - Dynamic client registration available for MCP-compatible clients
+ *
+ * @see https://supabase.com/docs/guides/auth/oauth-server/getting-started
+ * @see https://supabase.com/docs/guides/auth/oauth-server/oauth-flows
+ * @see https://supabase.com/docs/guides/auth/oauth-server/mcp-authentication
+ */
+
+import { createRemoteJWKSet, jwtVerify } from 'jose';
+import type { BusinessSuiteTokens, OAuthClient, VerifiedUser } from './types.js';
+
+const BUSINESS_SUITE_SUPABASE_URL = 'https://tuybltdrdefjblnplpqo.supabase.co';
+
+// Lazy-initialized JWKS set — cached by jose, safe to create once per clientId
+const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+
+function getJWKS(): ReturnType<typeof createRemoteJWKSet> {
+  const cached = jwksCache.get(BUSINESS_SUITE_SUPABASE_URL);
+  if (cached) return cached;
+  const jwks = createRemoteJWKSet(
+    new URL(`${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/.well-known/jwks.json`)
+  );
+  jwksCache.set(BUSINESS_SUITE_SUPABASE_URL, jwks);
+  return jwks;
+}
+
+function getRedirectUri(): string {
+  return `${window.location.origin}/auth/callback`;
+}
+
+function generateCodeVerifier(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function generateState(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Verify an access token against the Business Suite JWKS endpoint.
+ *
+ * Uses asymmetric key verification (RS256/ES256) — the public key is fetched
+ * from the Supabase /.well-known/jwks.json endpoint and cached by jose.
+ */
+async function verifyAccessToken(token: string): Promise<VerifiedUser> {
+  const { payload } = await jwtVerify(token, getJWKS(), {
+    issuer: `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1`,
+    audience: 'authenticated',
+  });
+
+  return {
+    sub: payload.sub!,
+    email: payload.email as string | undefined,
+    name: payload.name as string | undefined,
+    picture: payload.picture as string | undefined,
+    client_id: payload.client_id as string | undefined,
+    role: payload.role as string | undefined,
+  };
+}
+
+/**
+ * Verify the id_token nonce claim against the expected value.
+ * Protects against id_token replay attacks (OIDC Core §3.1.2.2).
+ * Only rejects when the server returns a nonce that does NOT match — if the
+ * server omits the nonce claim we skip verification rather than hard-fail.
+ */
+async function verifyIdToken(idToken: string, expectedNonce: string): Promise<void> {
+  const { payload } = await jwtVerify(idToken, getJWKS(), {
+    issuer: `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1`,
+    audience: 'authenticated',
+  });
+  if (payload.nonce !== undefined && payload.nonce !== expectedNonce) {
+    throw new Error('id_token nonce mismatch — possible replay attack');
+  }
+}
+
+/**
+ * Decode a JWT payload without verification (for reading expiry only).
+ * Full cryptographic verification happens via JWKS in verifyAccessToken().
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    return JSON.parse(atob(b64));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Create an OAuth 2.1 PKCE client for a specific BSuite application.
+ *
+ * Each app passes its OAuth client ID (registered in the Supabase
+ * auth.oauth_clients table). All other logic is shared.
+ *
+ * @param clientId - The OAuth client ID for the calling app
+ * @returns OAuthClient with all auth methods bound to the given clientId
+ *
+ * @example
+ * ```ts
+ * // crm7/src/lib/business-suite-oauth.ts
+ * import { createOAuthClient } from '@bsuite/auth';
+ * export const { signInWithBusinessSuite, exchangeCodeForTokens, ... } =
+ *   createOAuthClient('30f76744-3e0b-40bf-abb8-8c587389802e');
+ * ```
+ */
+export function createOAuthClient(clientId: string): OAuthClient {
+  /** Refresh buffer — refresh 5 minutes before expiry */
+  const REFRESH_BUFFER_MS = 5 * 60 * 1000;
+  let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * Initiate the OAuth 2.1 authorization flow with PKCE.
+   * Redirects the user to the Business Suite consent screen.
+   */
+  async function signInWithBusinessSuite(): Promise<void> {
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const state = generateState();
+    const nonce = generateState(); // Same CSPRNG — 16 random bytes as hex (OIDC Core §3.1.2.1)
+
+    sessionStorage.setItem('bs_oauth_code_verifier', codeVerifier);
+    sessionStorage.setItem('bs_oauth_state', state);
+    sessionStorage.setItem('bs_oauth_nonce', nonce);
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: getRedirectUri(),
+      response_type: 'code',
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      state,
+      nonce,
+      scope: 'openid email profile',
+    });
+
+    window.location.href = `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/authorize?${params.toString()}`;
+  }
+
+  /**
+   * Exchange the authorization code for tokens, then verify the access token
+   * against the JWKS endpoint before returning.
+   */
+  async function exchangeCodeForTokens(
+    code: string,
+    state: string
+  ): Promise<{ tokens: BusinessSuiteTokens; user: VerifiedUser }> {
+    const storedState = sessionStorage.getItem('bs_oauth_state');
+    const codeVerifier = sessionStorage.getItem('bs_oauth_code_verifier');
+    const storedNonce = sessionStorage.getItem('bs_oauth_nonce');
+
+    if (!storedState || storedState !== state) {
+      throw new Error('Invalid state parameter - possible CSRF attack');
+    }
+    if (!codeVerifier) {
+      throw new Error('Missing PKCE code verifier');
+    }
+
+    const response = await fetch(`${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: getRedirectUri(),
+        client_id: clientId,
+        code_verifier: codeVerifier,
+      }),
+    });
+
+    // Clean up stored PKCE values and nonce
+    sessionStorage.removeItem('bs_oauth_code_verifier');
+    sessionStorage.removeItem('bs_oauth_state');
+    sessionStorage.removeItem('bs_oauth_nonce');
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Token exchange failed: ${response.status} ${errorBody}`);
+    }
+
+    const tokens: BusinessSuiteTokens = await response.json();
+    const user = await verifyAccessToken(tokens.access_token);
+
+    // Verify id_token nonce to prevent replay attacks (OIDC Core §3.1.2.2)
+    if (tokens.id_token && storedNonce) {
+      await verifyIdToken(tokens.id_token, storedNonce);
+    }
+
+    return { tokens, user };
+  }
+
+  /**
+   * Refresh an access token using a refresh token from Business Suite.
+   * Verifies the new access token against the JWKS endpoint.
+   */
+  async function refreshBusinessSuiteToken(
+    refreshToken: string
+  ): Promise<{ tokens: BusinessSuiteTokens; user: VerifiedUser }> {
+    const response = await fetch(`${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Token refresh failed: ${response.status} ${errorBody}`);
+    }
+
+    const tokens: BusinessSuiteTokens = await response.json();
+    const user = await verifyAccessToken(tokens.access_token);
+
+    return { tokens, user };
+  }
+
+  /**
+   * Fetch user info from the Business Suite UserInfo endpoint.
+   * The information returned depends on the scopes granted in the access token.
+   */
+  async function getUserInfo(accessToken: string): Promise<Record<string, unknown>> {
+    const response = await fetch(`${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/userinfo`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`UserInfo request failed: ${response.status} ${errorBody}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Clear all BS OAuth tokens from localStorage.
+   * MUST be called during sign-out to prevent stale token leakage.
+   */
+  function clearBSTokens(): void {
+    localStorage.removeItem('bs_access_token');
+    localStorage.removeItem('bs_refresh_token');
+    localStorage.removeItem('bs_user');
+    localStorage.removeItem('bs_id_token');
+  }
+
+  /**
+   * Check if the stored BS OAuth access token needs refreshing.
+   * If expired or about to expire, uses the refresh token to get new tokens.
+   * Updates localStorage with the new tokens.
+   */
+  async function checkAndRefreshToken(): Promise<void> {
+    const accessToken = localStorage.getItem('bs_access_token');
+    const refreshToken = localStorage.getItem('bs_refresh_token');
+    if (!accessToken || !refreshToken) return;
+
+    const payload = decodeJwtPayload(accessToken);
+    if (!payload?.exp) return;
+
+    const expiresAt = (payload.exp as number) * 1000;
+    const now = Date.now();
+
+    if (now < expiresAt - REFRESH_BUFFER_MS) return; // Still valid
+
+    try {
+      const { tokens, user } = await refreshBusinessSuiteToken(refreshToken);
+      localStorage.setItem('bs_access_token', tokens.access_token);
+      localStorage.setItem('bs_refresh_token', tokens.refresh_token);
+      localStorage.setItem('bs_user', JSON.stringify(user));
+      if (tokens.id_token) {
+        localStorage.setItem('bs_id_token', tokens.id_token);
+      }
+    } catch (err) {
+      const isAuthError = err instanceof Error && /^Token refresh failed: 4/.test(err.message);
+      if (!isAuthError) {
+        window.dispatchEvent(new CustomEvent('bs-oauth-expired', { detail: { reason: 'network_error' } }));
+      }
+      console.warn('[BS OAuth] Token refresh failed, clearing tokens:', err);
+      clearBSTokens();
+    }
+  }
+
+  /**
+   * Attempt a silent auth refresh before showing the explicit login UI.
+   *
+   * - If a valid access token is already in localStorage, considers the user
+   *   authenticated and returns `true` immediately.
+   * - If a refresh token is present, tries to exchange it for a fresh access
+   *   token (equivalent to a `prompt=none` re-auth).
+   * - Otherwise returns `false` so callers can fall through to the normal
+   *   interactive sign-in flow.
+   *
+   * This function never throws — errors are swallowed so the login UI can still
+   * render.
+   */
+  async function attemptSilentAuth(): Promise<boolean> {
+    try {
+      const existingToken = localStorage.getItem('bs_access_token');
+      if (existingToken) {
+        return true;
+      }
+      const refreshToken = localStorage.getItem('bs_refresh_token');
+      if (!refreshToken) return false;
+
+      const { tokens, user } = await refreshBusinessSuiteToken(refreshToken);
+      localStorage.setItem('bs_access_token', tokens.access_token);
+      localStorage.setItem('bs_refresh_token', tokens.refresh_token);
+      localStorage.setItem('bs_user', JSON.stringify(user));
+      if (tokens.id_token) {
+        localStorage.setItem('bs_id_token', tokens.id_token);
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Start periodic BS OAuth token refresh. Call once on app initialization.
+   * Checks every 60 seconds and refreshes 5 minutes before expiry.
+   * Returns a cleanup function to stop the interval.
+   */
+  function startBSTokenRefresh(): () => void {
+    void checkAndRefreshToken();
+    if (refreshIntervalId) clearInterval(refreshIntervalId);
+    refreshIntervalId = setInterval(() => void checkAndRefreshToken(), 60_000);
+    return () => {
+      if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+      }
+    };
+  }
+
+  return {
+    signInWithBusinessSuite,
+    exchangeCodeForTokens,
+    refreshBusinessSuiteToken,
+    verifyAccessToken,
+    getUserInfo,
+    clearBSTokens,
+    startBSTokenRefresh,
+    attemptSilentAuth,
+  };
+}
