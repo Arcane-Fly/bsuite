@@ -1,0 +1,390 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /
+              - img
+          - navigation:
+            - generic:
+              - paragraph: Main
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /
+                    - img
+                    - generic: Dashboard
+                - listitem:
+                  - link:
+                    - /url: /ideas
+                    - img
+                    - generic: Idea Hub
+                - listitem:
+                  - link:
+                    - /url: /analytics
+                    - img
+                    - generic: Analytics
+                - listitem:
+                  - link:
+                    - /url: /settings
+                    - img
+                    - generic: Settings
+                - listitem:
+                  - link:
+                    - /url: /billing
+                    - img
+                    - generic: Billing
+                - listitem:
+                  - link:
+                    - /url: /admin
+                    - img
+                    - generic: Admin
+          - generic:
+            - paragraph: Developer
+            - list:
+              - listitem:
+                - link:
+                  - /url: /developer
+                  - img
+                  - generic: Developer Portal
+          - generic:
+            - paragraph: BSuite Apps
+            - list:
+              - listitem:
+                - link:
+                  - /url: https://crm.crm7.app
+                  - img
+                  - generic: CRM7
+                  - img
+              - listitem:
+                - link:
+                  - /url: https://r8.crm7.app
+                  - img
+                  - generic: R8 Calculator
+                  - img
+              - listitem:
+                - link:
+                  - /url: https://conduit.crm7.app
+                  - img
+                  - generic: Conduit ATS
+                  - img
+        - button:
+          - img
+      - generic:
+        - banner:
+          - generic:
+            - generic:
+              - generic:
+                - img
+                - generic:
+                  - heading [level=1]: Business Suite
+                  - paragraph: Unified Platform
+                - generic:
+                  - generic:
+                    - button:
+                      - img
+                      - generic: BSU
+                      - img
+                - generic:
+                  - button:
+                    - img
+                    - generic: bsuite Platform
+                    - img
+              - navigation:
+                - generic:
+                  - generic: Search services
+                  - img
+                  - textbox:
+                    - /placeholder: Search services...
+                - button:
+                  - img
+                - generic:
+                  - button:
+                    - img
+                - generic:
+                  - button:
+                    - generic:
+                      - img
+                    - generic:
+                      - paragraph: braden.lang77
+                      - paragraph:
+                        - img
+                        - text: Developer
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: Unified portal
+                                  - generic:
+                                    - heading [level=2]: Business Suite
+                                    - paragraph: Unified platform for customer relationships, compliance, and business intelligence.
+                                  - generic:
+                                    - img
+                                    - generic: Developer Plan
+                                    - generic: $0/month
+                                - generic:
+                                  - link:
+                                    - /url: https://crm.crm7.app/dashboard
+                                    - img
+                                    - text: CRM7 Dashboard
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                  - generic:
+                                    - paragraph: Active Services
+                                    - paragraph: "9"
+                                    - paragraph: Based on your plan
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                  - generic:
+                                    - paragraph: Total Users
+                                    - paragraph: —
+                                    - paragraph: No data yet
+                                    - paragraph: Set up analytics to track this
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - heading [level=2]: Your Active Services
+                                  - paragraph: Access your suite of business tools with a single login.
+                                - generic:
+                                  - generic: 9 active
+                              - generic:
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: CRM7 Professional
+                                      - paragraph: Complete customer relationship management with AI-powered insights
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: Conduit ATS
+                                      - paragraph: Recruitment and talent acquisition with AI-powered candidate matching
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: GTO Compliance Suite
+                                      - paragraph: Apprenticeship and workforce management compliance tools
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: R8 Calculator
+                                      - paragraph: Apprentice charge rate calculations (consolidated R8)
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: Government Portal
+                                      - paragraph: Fair Work, ADMS, and funding integration
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: Enterprise Analytics
+                                      - paragraph: Cross-service reporting and business intelligence
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: Document Management
+                                      - paragraph: Unified document storage and collaboration
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: Admin Panel
+                                      - paragraph: Suite administration and user management
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                                - button:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - img
+                                      - heading [level=3]: White-Label Portal
+                                      - paragraph: Custom branding for enterprise clients
+                                      - generic:
+                                        - generic: FULL ACCESS
+                                      - generic:
+                                        - generic: Click to access →
+                            - generic:
+                              - generic:
+                                - heading [level=2]: Choose Your Business Suite Plan
+                                - paragraph: Scale your business operations with our comprehensive suite of integrated tools.
+                              - generic:
+                                - generic:
+                                  - generic: Included
+                                  - generic:
+                                    - heading [level=3]: Basic Suite
+                                    - generic: $29/month
+                                    - paragraph: 3 services included
+                                  - list:
+                                    - listitem:
+                                      - img
+                                      - generic: CRM7 Professional
+                                    - listitem:
+                                      - img
+                                      - generic: Conduit ATS
+                                    - listitem:
+                                      - img
+                                      - generic: R8 Calculator (basic)
+                                    - listitem:
+                                      - img
+                                      - generic: Email Support
+                                  - button [disabled]: Included in your plan
+                                - generic:
+                                  - generic: Included
+                                  - generic:
+                                    - heading [level=3]: Professional Suite
+                                    - generic: $59/month
+                                    - paragraph: 6 services included
+                                  - list:
+                                    - listitem:
+                                      - img
+                                      - generic: All Basic features
+                                    - listitem:
+                                      - img
+                                      - generic: GTO Compliance
+                                    - listitem:
+                                      - img
+                                      - generic: Government APIs
+                                    - listitem:
+                                      - img
+                                      - generic: Analytics Dashboard
+                                    - listitem:
+                                      - img
+                                      - generic: Priority Support
+                                  - button [disabled]: Included in your plan
+                                - generic:
+                                  - generic: Included
+                                  - generic:
+                                    - heading [level=3]: Enterprise Suite
+                                    - generic: $99/month
+                                    - paragraph: 9 services included
+                                  - list:
+                                    - listitem:
+                                      - img
+                                      - generic: All Professional features
+                                    - listitem:
+                                      - img
+                                      - generic: Document Management
+                                    - listitem:
+                                      - img
+                                      - generic: Admin Panel
+                                    - listitem:
+                                      - img
+                                      - generic: White-Label Options
+                                    - listitem:
+                                      - img
+                                      - generic: Advanced Security
+                                    - listitem:
+                                      - img
+                                      - generic: Custom Integrations
+                                    - listitem:
+                                      - img
+                                      - generic: Dedicated Support
+                                  - button [disabled]: Included in your plan
+    - button "Edit Page":
+      - img
+      - text: Edit Page
+    - region "Notifications alt+T":
+      - list:
+        - listitem:
+          - button "Close toast":
+            - img
+          - generic:
+            - img
+          - generic:
+            - generic: Welcome back!
+  - dialog "Get started with BSuite" [ref=e57]:
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - heading "Get started with BSuite" [level=2] [ref=e60]
+        - button "Skip onboarding" [active] [ref=e61]:
+          - img [ref=e62]
+      - paragraph [ref=e65]: Step 1 of 4 — Welcome
+      - progressbar [ref=e66]
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - img [ref=e72]
+        - generic [ref=e75]:
+          - heading "Welcome, braden.lang77@gmail.com" [level=3] [ref=e76]
+          - paragraph [ref=e77]: Setting up bsuite Platform
+      - paragraph [ref=e78]: This quick four-step wizard will get you oriented. You can always pick it up later from your settings if you skip.
+      - list [ref=e79]:
+        - listitem [ref=e80]: Assign your starting role
+        - listitem [ref=e81]: Connect the integrations that matter most
+        - listitem [ref=e82]: Take a one-minute tour of the workspace
+    - generic [ref=e83]:
+      - button "Back" [disabled]:
+        - img
+        - text: Back
+      - generic [ref=e84]:
+        - button "Skip" [ref=e85]
+        - button "Next" [ref=e86]:
+          - text: Next
+          - img
+    - button "Close" [ref=e87]:
+      - img [ref=e88]
+      - generic [ref=e91]: Close
