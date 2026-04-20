@@ -8,11 +8,12 @@
  * ReactNode definition changed between versions, making any transitive
  * React type reference fail across version boundaries.
  *
- * The structural signature `(props) => unknown` is wide enough that
- * Lucide, HeroIcons, and plain `(props) => JSX.Element` all satisfy
- * it, while still enforcing the expected prop shape.
+ * Returns `any` (rather than `unknown`) because JSX tags must satisfy
+ * `(props) => ReactNode` — `any` assigns to ReactNode in both React 18
+ * and React 19 type universes, while `unknown` does not.
  */
-export type IconComponent = (props: { className?: string; size?: number | string }) => unknown;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type IconComponent = (props: { className?: string; size?: number | string }) => any;
 
 /** A single navigation item (leaf node). */
 export interface NavItem {

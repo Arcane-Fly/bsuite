@@ -16,6 +16,7 @@
 
 import { ChevronDown as ChevronDownRaw } from 'lucide-react'
 import { type ElementType, useEffect, useRef, useState } from 'react'
+import type { IconComponent } from './types'
 
 // Cast through unknown to dodge React 18 vs 19 @types/react conflicts —
 // lucide-react ships React 19 types in newer versions while this package
@@ -27,7 +28,14 @@ export interface AppEntry {
   key: string
   name: string
   shortName: string
-  icon: ElementType
+  /**
+   * Icon component — structurally typed (see `./types.ts::IconComponent`) so
+   * it works across React 18 and React 19 `@types/react` versions. Using
+   * React's `ElementType` directly binds to whichever `@types/react` this
+   * package was built with, breaking consumers on the other version
+   * (conduit is on React 19, braden is on React 18).
+   */
+  icon: IconComponent
   url: string
   description: string
   current?: boolean
