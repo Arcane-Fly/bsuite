@@ -20,39 +20,39 @@
 
 @theme {
   /* ===== Neon Electric palette (11 colours, canonical D2C) ===== */
-  --color-neon-electric-blue: #2563eb;
-  --color-neon-electric-cyan: #00cec9;
-  --color-neon-electric-indigo: #4f46e5;
-  --color-neon-electric-purple: #6c5ce7;
-  --color-neon-electric-magenta: #fd79a8;
-  --color-neon-electric-pink: #ec4899;
-  --color-neon-electric-coral: #ff4757;
-  --color-neon-electric-orange: #ff7675;
-  --color-neon-electric-yellow: #fdcb6e;
-  --color-neon-electric-green: #22c55e;
-  --color-neon-electric-lavender: #a29bfe;
+  --color-neon-electric-blue: oklch(0.546 0.215 262.9);
+  --color-neon-electric-cyan: oklch(0.769 0.132 191.7);
+  --color-neon-electric-indigo: oklch(0.511 0.23 277);
+  --color-neon-electric-purple: oklch(0.568 0.202 283.1);
+  --color-neon-electric-magenta: oklch(0.742 0.167 359.5);
+  --color-neon-electric-pink: oklch(0.656 0.212 354.3);
+  --color-neon-electric-coral: oklch(0.669 0.219 20.9);
+  --color-neon-electric-orange: oklch(0.728 0.168 22.5);
+  --color-neon-electric-yellow: oklch(0.868 0.125 81.4);
+  --color-neon-electric-green: oklch(0.723 0.192 149.6);
+  --color-neon-electric-lavender: oklch(0.736 0.141 285.6);
 
   /* ===== Light surface tokens ===== */
-  --color-light-bg-primary: #f2f2f2;
-  --color-light-bg-secondary: #f8f9fa;
-  --color-light-bg-tertiary: #f1f3f4;
-  --color-light-bg-accent: #ffffff;
-  --color-light-text-primary: #2d3436;
-  --color-light-text-secondary: #636e72;
+  --color-light-bg-primary: oklch(0.961 0 0.5);
+  --color-light-bg-secondary: oklch(0.982 0.002 248);
+  --color-light-bg-tertiary: oklch(0.963 0.003 228.9);
+  --color-light-bg-accent: oklch(1 0 0.5);
+  --color-light-text-primary: oklch(0.319 0.01 216.8);
+  --color-light-text-secondary: oklch(0.53 0.015 221.6);
 
   /* ===== Dark surface tokens ===== */
-  --color-dark-bg-primary: #0a0e1a;
-  --color-dark-bg-secondary: #1a1f2e;
-  --color-dark-bg-tertiary: #2c3447;
-  --color-dark-bg-accent: #252b3d;
-  --color-dark-text-primary: #f8f9fa;
-  --color-dark-text-secondary: #adb5bd;
+  --color-dark-bg-primary: oklch(0.166 0.026 269.4);
+  --color-dark-bg-secondary: oklch(0.242 0.03 269.9);
+  --color-dark-bg-tertiary: oklch(0.326 0.036 266.7);
+  --color-dark-bg-accent: oklch(0.292 0.034 270);
+  --color-dark-text-primary: oklch(0.982 0.002 248);
+  --color-dark-text-secondary: oklch(0.769 0.015 248);
 
   /* ===== Semantic status ===== */
-  --color-status-success: #00b894;
-  --color-status-warning: #fdcb6e;
-  --color-status-error: #ff4757;
-  --color-status-info: #00cec9;
+  --color-status-success: oklch(0.697 0.135 172.1);
+  --color-status-warning: oklch(0.868 0.125 81.4);
+  --color-status-error: oklch(0.669 0.219 20.9);
+  --color-status-info: oklch(0.769 0.132 191.7);
 
   /* ===== Animations (Tailwind v4 exposes via --animate-*) ===== */
   --animate-pulse-soft: pulse-soft 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;

@@ -5,37 +5,37 @@
  * consumer regardless of their Tailwind version (v3 or v4).
  */
 
-/* ===== Glow effects (use box-shadow with alpha scaled by glow-strength) ===== */
+/* ===== Glow effects (oklch with alpha scaled by glow-strength) ===== */
 .glow-electric-blue {
-  box-shadow: 0 0 20px rgb(var(--neon-electric-blue-rgb) / var(--glow-strength));
+  box-shadow: 0 0 20px oklch(0.546 0.215 262.9 / var(--glow-strength));
 }
 .glow-electric-cyan {
-  box-shadow: 0 0 20px rgb(var(--neon-electric-cyan-rgb) / var(--glow-strength));
+  box-shadow: 0 0 20px oklch(0.769 0.132 191.7 / var(--glow-strength));
 }
 .glow-electric-indigo {
-  box-shadow: 0 0 20px rgb(var(--neon-electric-indigo-rgb) / var(--glow-strength));
+  box-shadow: 0 0 20px oklch(0.511 0.23 277 / var(--glow-strength));
 }
 .glow-electric-purple {
-  box-shadow: 0 0 20px rgb(var(--neon-electric-purple-rgb) / var(--glow-strength));
+  box-shadow: 0 0 20px oklch(0.568 0.202 283.1 / var(--glow-strength));
 }
 .glow-electric-pink {
-  box-shadow: 0 0 20px rgb(var(--neon-electric-pink-rgb) / var(--glow-strength));
+  box-shadow: 0 0 20px oklch(0.656 0.212 354.3 / var(--glow-strength));
 }
 .glow-electric-coral {
-  box-shadow: 0 0 20px rgb(var(--neon-electric-coral-rgb) / var(--glow-strength));
+  box-shadow: 0 0 20px oklch(0.669 0.219 20.9 / var(--glow-strength));
 }
 .glow-electric-magenta {
-  box-shadow: 0 0 20px rgb(var(--neon-electric-magenta-rgb) / var(--glow-strength));
+  box-shadow: 0 0 20px oklch(0.742 0.167 359.5 / var(--glow-strength));
 }
 
 /* ===== Neon text shadows ===== */
 .neon-text-cyan {
-  text-shadow: 0 0 10px rgb(var(--neon-electric-cyan-rgb) / 0.5),
-               0 0 20px rgb(var(--neon-electric-cyan-rgb) / 0.3);
+  text-shadow: 0 0 10px oklch(0.769 0.132 191.7 / 0.5),
+               0 0 20px oklch(0.769 0.132 191.7 / 0.3);
 }
 .neon-text-electric {
-  text-shadow: 0 0 10px rgb(var(--neon-electric-blue-rgb) / 0.5),
-               0 0 20px rgb(var(--neon-electric-blue-rgb) / 0.3);
+  text-shadow: 0 0 10px oklch(0.546 0.215 262.9 / 0.5),
+               0 0 20px oklch(0.546 0.215 262.9 / 0.3);
 }
 
 /* ===== Smooth theme transition ===== */

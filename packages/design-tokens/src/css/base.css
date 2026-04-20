@@ -16,35 +16,22 @@
 
 /* ══════════════════════════════════════════════════════════════════════
    § 1. NEON ELECTRIC PALETTE
-   Shared chromatic vocabulary — RGB triplet format for rgba() compositing.
+   Shared chromatic vocabulary — oklch format with native alpha support.
    Never use directly as foreground text without checking contrast ratios.
    ══════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Hex values — for fills, backgrounds, icon fills */
-  --ne-blue:     #2563eb;   /* electric blue   — primary actions        */
-  --ne-cyan:     #00cec9;   /* electric cyan   — accents, active borders */
-  --ne-indigo:   #4f46e5;   /* electric indigo — secondary actions       */
-  --ne-purple:   #6c5ce7;   /* electric purple — gradients, effects      */
-  --ne-magenta:  #fd79a8;   /* electric magenta — interactive highlights  */
-  --ne-pink:     #ec4899;   /* electric pink   — hover accents            */
-  --ne-coral:    #ff4757;   /* electric coral  — destructive / alerts     */
-  --ne-orange:   #ff7675;   /* electric orange — warnings                 */
-  --ne-yellow:   #fdcb6e;   /* electric yellow — secondary alerts         */
-  --ne-green:    #22c55e;   /* electric green  — success states           */
-  --ne-lavender: #a29bfe;   /* lavender        — subtle secondary accents */
-
-  /* RGB triplets (space-separated, for rgba() without comma syntax) */
-  --ne-blue-rgb:     37 99 235;
-  --ne-cyan-rgb:     0 206 201;
-  --ne-indigo-rgb:   79 70 229;
-  --ne-purple-rgb:   108 92 231;
-  --ne-magenta-rgb:  253 121 168;
-  --ne-pink-rgb:     236 72 153;
-  --ne-coral-rgb:    255 71 87;
-  --ne-orange-rgb:   255 118 117;
-  --ne-yellow-rgb:   253 203 110;
-  --ne-green-rgb:    34 197 94;
-  --ne-lavender-rgb: 162 155 254;
+  /* oklch values — for fills, backgrounds, icon fills, and alpha compositing */
+  --ne-blue:     oklch(0.546 0.215 262.9);   /* electric blue   — primary actions        */
+  --ne-cyan:     oklch(0.769 0.132 191.7);   /* electric cyan   — accents, active borders */
+  --ne-indigo:   oklch(0.511 0.23 277);      /* electric indigo — secondary actions       */
+  --ne-purple:   oklch(0.568 0.202 283.1);   /* electric purple — gradients, effects      */
+  --ne-magenta:  oklch(0.742 0.167 359.5);   /* electric magenta — interactive highlights  */
+  --ne-pink:     oklch(0.656 0.212 354.3);   /* electric pink   — hover accents            */
+  --ne-coral:    oklch(0.669 0.219 20.9);    /* electric coral  — destructive / alerts     */
+  --ne-orange:   oklch(0.728 0.168 22.5);    /* electric orange — warnings                 */
+  --ne-yellow:   oklch(0.868 0.125 81.4);    /* electric yellow — secondary alerts         */
+  --ne-green:    oklch(0.723 0.192 149.6);    /* electric green  — success states           */
+  --ne-lavender: oklch(0.736 0.141 285.6);   /* lavender        — subtle secondary accents */
 
   /* Legacy aliases — maintained for backwards compat with existing apps.
      Apps should migrate to --ne-* over time. */
@@ -59,17 +46,6 @@
   --neon-electric-yellow:   var(--ne-yellow);
   --neon-electric-green:    var(--ne-green);
   --neon-electric-lavender: var(--ne-lavender);
-  --neon-electric-blue-rgb:     var(--ne-blue-rgb);
-  --neon-electric-cyan-rgb:     var(--ne-cyan-rgb);
-  --neon-electric-indigo-rgb:   var(--ne-indigo-rgb);
-  --neon-electric-purple-rgb:   var(--ne-purple-rgb);
-  --neon-electric-magenta-rgb:  var(--ne-magenta-rgb);
-  --neon-electric-pink-rgb:     var(--ne-pink-rgb);
-  --neon-electric-coral-rgb:    var(--ne-coral-rgb);
-  --neon-electric-orange-rgb:   var(--ne-orange-rgb);
-  --neon-electric-yellow-rgb:   var(--ne-yellow-rgb);
-  --neon-electric-green-rgb:    var(--ne-green-rgb);
-  --neon-electric-lavender-rgb: var(--ne-lavender-rgb);
 }
 
 
@@ -231,12 +207,12 @@
 
   /* D2C Shell shadows — neon glow layer on top of standard elevation */
   --shadow-shell:      0 20px 45px -28px rgba(15, 23, 42, 0.28);
-  --shadow-shell-glow: 0 16px 40px -28px rgb(var(--ne-blue-rgb) / 0.28);
+  --shadow-shell-glow: 0 16px 40px -28px oklch(0.546 0.215 262.9 / 0.28);
 
   /* Component-specific shadows */
-  --shadow-button:       0 0 20px rgb(var(--ne-cyan-rgb) / 0.28);
-  --shadow-button-hover: 0 0 32px rgb(var(--ne-cyan-rgb) / 0.44);
-  --shadow-input-focus:  0 0 0 2px rgb(var(--ne-blue-rgb) / 0.14);
+  --shadow-button:       0 0 20px oklch(0.769 0.132 191.7 / 0.28);
+  --shadow-button-hover: 0 0 32px oklch(0.769 0.132 191.7 / 0.44);
+  --shadow-input-focus:  0 0 0 2px oklch(0.546 0.215 262.9 / 0.14);
 
   /* Blur values for backdrop-filter */
   --blur-sm:    4px;
@@ -253,15 +229,15 @@
    Used on AI panels, neon borders, and interactive highlights.
    ══════════════════════════════════════════════════════════════════════ */
 :root {
-  --glow-blue:    0 0 20px rgb(var(--ne-blue-rgb) / 0.40);
-  --glow-cyan:    0 0 20px rgb(var(--ne-cyan-rgb) / 0.40);
-  --glow-purple:  0 0 20px rgb(var(--ne-purple-rgb) / 0.40);
-  --glow-pink:    0 0 20px rgb(var(--ne-pink-rgb) / 0.40);
-  --glow-coral:   0 0 20px rgb(var(--ne-coral-rgb) / 0.40);
-  --glow-green:   0 0 20px rgb(var(--ne-green-rgb) / 0.40);
+  --glow-blue:    0 0 20px oklch(0.546 0.215 262.9 / 0.40);
+  --glow-cyan:    0 0 20px oklch(0.769 0.132 191.7 / 0.40);
+  --glow-purple:  0 0 20px oklch(0.568 0.202 283.1 / 0.40);
+  --glow-pink:    0 0 20px oklch(0.656 0.212 354.3 / 0.40);
+  --glow-coral:   0 0 20px oklch(0.669 0.219 20.9 / 0.40);
+  --glow-green:   0 0 20px oklch(0.723 0.192 149.6 / 0.40);
 
   /* Legacy aliases */
-  --glow-neon:          rgb(var(--ne-cyan-rgb) / 0.40);
+  --glow-neon:          oklch(0.769 0.132 191.7 / 0.40);
   --glow-electric-blue: var(--glow-blue);
   --glow-electric-cyan: var(--glow-cyan);
 }
