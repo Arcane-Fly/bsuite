@@ -57,7 +57,7 @@
 
   /* Shadows — deeper, more diffuse on dark backgrounds */
   --shadow-shell:      0 24px 60px -36px rgba(2, 6, 23, 0.80);
-  --shadow-shell-glow: 0 18px 45px -30px rgb(var(--ne-cyan-rgb) / 0.28);
-  --shadow-button:       0 0 20px rgb(var(--ne-cyan-rgb) / 0.36);
-  --shadow-button-hover: 0 0 36px rgb(var(--ne-cyan-rgb) / 0.54);
+  --shadow-shell-glow: 0 18px 45px -30px oklch(0.769 0.132 191.7 / 0.28);
+  --shadow-button:       0 0 20px oklch(0.769 0.132 191.7 / 0.36);
+  --shadow-button-hover: 0 0 36px oklch(0.769 0.132 191.7 / 0.54);
 }

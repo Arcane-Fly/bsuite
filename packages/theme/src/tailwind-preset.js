@@ -1,5 +1,5 @@
 /**
- * @bsuite/theme — Tailwind v3 preset
+ * @bsuite/theme — Tailwind v3 preset (oklch edition)
  *
  * Consume via:
  *   // tailwind.config.js (CommonJS)
@@ -12,9 +12,15 @@
  * surface tokens, semantic status colours, gradients, glow shadows, and
  * the six canonical animations. Does not override Tailwind's default scale.
  *
- * The `rgb(var(--*-rgb) / <alpha-value>)` pattern makes Tailwind alpha-value
- * modifiers work (e.g. `bg-neon-electric-blue/40`). Requires the companion
- * CSS vars to be loaded via `@import '@bsuite/theme/css'`.
+ * Colour values are inline oklch so the preset is self-contained — no
+ * dependency on any `--*-rgb` CSS custom property. Tailwind v3 injects
+ * `<alpha-value>` into any valid CSS colour function, and `oklch(L C H / A)`
+ * is valid CSS Color 4 syntax (supported in all evergreen browsers:
+ * Chrome ≥111, Safari ≥15.4, Firefox ≥113). Keeps bg-neon-electric-blue/40
+ * and friends working without the RGB-triplet variable indirection.
+ *
+ * Values are kept in sync with `preset-v4.css` — editing one without the
+ * other will cause v3 and v4 consumers to diverge. See README.
  *
  * NOTE: Tailwind v4 apps should import `@bsuite/theme/preset-v4.css` instead.
  * v4 removed the preset system — presets exist only for v3.
@@ -27,17 +33,17 @@ module.exports = {
     extend: {
       colors: {
         neon: {
-          'electric-blue': 'rgb(var(--neon-electric-blue-rgb) / <alpha-value>)',
-          'electric-cyan': 'rgb(var(--neon-electric-cyan-rgb) / <alpha-value>)',
-          'electric-indigo': 'rgb(var(--neon-electric-indigo-rgb) / <alpha-value>)',
-          'electric-purple': 'rgb(var(--neon-electric-purple-rgb) / <alpha-value>)',
-          'electric-magenta': 'rgb(var(--neon-electric-magenta-rgb) / <alpha-value>)',
-          'electric-pink': 'rgb(var(--neon-electric-pink-rgb) / <alpha-value>)',
-          'electric-coral': 'rgb(var(--neon-electric-coral-rgb) / <alpha-value>)',
-          'electric-orange': 'rgb(var(--neon-electric-orange-rgb) / <alpha-value>)',
-          'electric-yellow': 'rgb(var(--neon-electric-yellow-rgb) / <alpha-value>)',
-          'electric-green': 'rgb(var(--neon-electric-green-rgb) / <alpha-value>)',
-          'electric-lavender': 'rgb(var(--neon-electric-lavender-rgb) / <alpha-value>)',
+          'electric-blue': 'oklch(0.546 0.215 262.9 / <alpha-value>)',
+          'electric-cyan': 'oklch(0.769 0.132 191.7 / <alpha-value>)',
+          'electric-indigo': 'oklch(0.511 0.23 277 / <alpha-value>)',
+          'electric-purple': 'oklch(0.568 0.202 283.1 / <alpha-value>)',
+          'electric-magenta': 'oklch(0.742 0.167 359.5 / <alpha-value>)',
+          'electric-pink': 'oklch(0.656 0.212 354.3 / <alpha-value>)',
+          'electric-coral': 'oklch(0.669 0.219 20.9 / <alpha-value>)',
+          'electric-orange': 'oklch(0.728 0.168 22.5 / <alpha-value>)',
+          'electric-yellow': 'oklch(0.868 0.125 81.4 / <alpha-value>)',
+          'electric-green': 'oklch(0.726 0.197 145.5 / <alpha-value>)',
+          'electric-lavender': 'oklch(0.749 0.115 288.4 / <alpha-value>)',
         },
         light: {
           bg: {
@@ -82,26 +88,26 @@ module.exports = {
 
       backgroundImage: {
         'gradient-brand':
-          'linear-gradient(135deg, #ff4757 0%, #ff7675 25%, #fdcb6e 50%, #00cec9 75%, #a29bfe 100%)',
+          'linear-gradient(135deg, oklch(0.669 0.219 20.9) 0%, oklch(0.728 0.168 22.5) 25%, oklch(0.868 0.125 81.4) 50%, oklch(0.769 0.132 191.7) 75%, oklch(0.749 0.115 288.4) 100%)',
         'gradient-electric':
-          'linear-gradient(135deg, #2563eb 0%, #00cec9 50%, #ec4899 100%)',
+          'linear-gradient(135deg, oklch(0.546 0.215 262.9) 0%, oklch(0.769 0.132 191.7) 50%, oklch(0.656 0.212 354.3) 100%)',
         'gradient-neon':
-          'linear-gradient(90deg, #00cec9 0%, #6c5ce7 50%, #ff4757 100%)',
+          'linear-gradient(90deg, oklch(0.769 0.132 191.7) 0%, oklch(0.568 0.202 283.1) 50%, oklch(0.669 0.219 20.9) 100%)',
         'gradient-chat-user':
-          'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          'linear-gradient(135deg, oklch(0.636 0.153 271.3) 0%, oklch(0.466 0.168 296.3) 100%)',
         'gradient-chat-agent':
-          'linear-gradient(135deg, #2563eb 0%, #ec4899 100%)',
+          'linear-gradient(135deg, oklch(0.546 0.215 262.9) 0%, oklch(0.656 0.212 354.3) 100%)',
         'gradient-neural':
-          'radial-gradient(circle at center, rgba(0, 206, 201, 0.1) 0%, transparent 50%)',
+          'radial-gradient(circle at center, oklch(0.769 0.132 191.7 / 0.1) 0%, transparent 50%)',
       },
 
       boxShadow: {
-        'glow-electric-blue': '0 0 20px rgb(var(--neon-electric-blue-rgb) / var(--glow-strength))',
-        'glow-electric-cyan': '0 0 20px rgb(var(--neon-electric-cyan-rgb) / var(--glow-strength))',
-        'glow-electric-purple': '0 0 20px rgb(var(--neon-electric-purple-rgb) / var(--glow-strength))',
-        'glow-electric-pink': '0 0 20px rgb(var(--neon-electric-pink-rgb) / var(--glow-strength))',
-        'glow-electric-coral': '0 0 20px rgb(var(--neon-electric-coral-rgb) / var(--glow-strength))',
-        'glow-electric-magenta': '0 0 20px rgb(var(--neon-electric-magenta-rgb) / var(--glow-strength))',
+        'glow-electric-blue': '0 0 20px oklch(0.546 0.215 262.9 / var(--glow-strength))',
+        'glow-electric-cyan': '0 0 20px oklch(0.769 0.132 191.7 / var(--glow-strength))',
+        'glow-electric-purple': '0 0 20px oklch(0.568 0.202 283.1 / var(--glow-strength))',
+        'glow-electric-pink': '0 0 20px oklch(0.656 0.212 354.3 / var(--glow-strength))',
+        'glow-electric-coral': '0 0 20px oklch(0.669 0.219 20.9 / var(--glow-strength))',
+        'glow-electric-magenta': '0 0 20px oklch(0.742 0.167 359.5 / var(--glow-strength))',
       },
 
       animation: {
@@ -119,8 +125,8 @@ module.exports = {
           '50%': { opacity: '0.7' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(0, 206, 201, 0.2)' },
-          '100%': { boxShadow: '0 0 20px rgba(0, 206, 201, 0.6)' },
+          '0%': { boxShadow: '0 0 5px oklch(0.769 0.132 191.7 / 0.2)' },
+          '100%': { boxShadow: '0 0 20px oklch(0.769 0.132 191.7 / 0.6)' },
         },
         typing: {
           '0%, 60%': { opacity: '1' },
@@ -135,8 +141,8 @@ module.exports = {
           '50%': { transform: 'translateY(-10px)' },
         },
         'neon-pulse': {
-          '0%, 100%': { textShadow: '0 0 10px rgba(0, 206, 201, 0.3)' },
-          '50%': { textShadow: '0 0 20px rgba(0, 206, 201, 0.8)' },
+          '0%, 100%': { textShadow: '0 0 10px oklch(0.769 0.132 191.7 / 0.3)' },
+          '50%': { textShadow: '0 0 20px oklch(0.769 0.132 191.7 / 0.8)' },
         },
       },
     },
