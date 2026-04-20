@@ -13,7 +13,7 @@
  * and React 19 type universes, while `unknown` does not.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type IconComponent = (props: { className?: string; size?: number | string }) => any;
+export type IconComponent = (props: { className?: string; size?: number | string; [key: string]: any }) => any;
 
 /** A single navigation item (leaf node). */
 export interface NavItem {

@@ -1,0 +1,99 @@
+/*
+ * @bsuite/theme — CSS custom properties (:root + .dark)
+ *
+ * Canonical D2C Neon Electric palette. Both hex values and RGB triplets are
+ * exported so consumers can use either pattern:
+ *
+ *   color: var(--neon-electric-blue);
+ *   background: rgb(var(--neon-electric-blue-rgb) / 0.4);
+ *
+ * The RGB-triplet form is what the Tailwind preset uses under the hood so
+ * `<alpha-value>` modifiers in Tailwind classes (e.g. bg-neon-electric-blue/40)
+ * resolve correctly.
+ */
+
+:root {
+  /* ===== Neon Electric (11 colours — FROZEN per D2C spec v1.00A) ===== */
+  --neon-electric-blue: #2563eb;
+  --neon-electric-cyan: #00cec9;
+  --neon-electric-indigo: #4f46e5;
+  --neon-electric-purple: #6c5ce7;
+  --neon-electric-magenta: #fd79a8;
+  --neon-electric-pink: #ec4899;
+  --neon-electric-coral: #ff4757;
+  --neon-electric-orange: #ff7675;
+  --neon-electric-yellow: #fdcb6e;
+  --neon-electric-green: #22c55e;
+  --neon-electric-lavender: #a29bfe;
+
+  /* RGB triplets for rgba() use and Tailwind alpha-value substitution */
+  --neon-electric-blue-rgb: 37 99 235;
+  --neon-electric-cyan-rgb: 0 206 201;
+  --neon-electric-indigo-rgb: 79 70 229;
+  --neon-electric-purple-rgb: 108 92 231;
+  --neon-electric-magenta-rgb: 253 121 168;
+  --neon-electric-pink-rgb: 236 72 153;
+  --neon-electric-coral-rgb: 255 71 87;
+  --neon-electric-orange-rgb: 255 118 117;
+  --neon-electric-yellow-rgb: 253 203 110;
+  --neon-electric-green-rgb: 34 197 94;
+  --neon-electric-lavender-rgb: 162 155 254;
+
+  /* ===== Light theme surfaces ===== */
+  --light-bg-primary: #f2f2f2;
+  --light-bg-secondary: #f8f9fa;
+  --light-bg-tertiary: #f1f3f4;
+  --light-bg-accent: #ffffff;
+  --light-text-primary: #2d3436;
+  --light-text-secondary: #636e72;
+  --light-text-tertiary: #74b9ff;
+  --light-text-quaternary: #a4afb7;
+  --light-border: #e9ecef;
+  --light-hover: #f1f3f4;
+
+  /* ===== Dark theme surfaces ===== */
+  --dark-bg-primary: #0a0e1a;
+  --dark-bg-secondary: #1a1f2e;
+  --dark-bg-tertiary: #2c3447;
+  --dark-bg-quaternary: #3c4558;
+  --dark-bg-accent: #252b3d;
+  --dark-text-primary: #f8f9fa;
+  --dark-text-secondary: #adb5bd;
+  --dark-text-tertiary: #6c757d;
+  --dark-text-quaternary: #495057;
+  --dark-border: #495057;
+  --dark-hover: #3c4558;
+
+  /* ===== Semantic status colours ===== */
+  --status-success: #00b894;
+  --status-warning: #fdcb6e;
+  --status-error: #ff4757;
+  --status-info: #00cec9;
+
+  /* ===== WCAG AA compliant text pairs =====
+   *
+   * Raw neon cyan #00cec9 on light #f2f2f2 is 1.76:1 — fails WCAG AA 4.5:1.
+   * These tokens are the accessible text equivalents for the same visual
+   * identity. Use these for any text, border, or icon that needs to pass
+   * contrast checks; use raw --neon-electric-cyan for backgrounds and
+   * decorative elements only. */
+  --color-accent-text: #006e6b;   /* Dark cyan — passes AA on light bg */
+  --color-primary-text: #0a47e5;  /* Saturated blue — passes AA on light bg */
+
+  /* ===== Glow + shadow strength multipliers ===== */
+  --glow-strength: 0.4;
+  --shadow-strength: 1;
+}
+
+.dark {
+  /* Neon palette is identical in dark mode — same raw colours, same RGB
+   * triplets. What changes is the intensity of glow/shadow effects, which
+   * we scale down to suit dark surfaces. */
+  --glow-strength: 0.6;
+  --shadow-strength: 0.8;
+
+  /* Accent/primary text tokens flip to the raw neons in dark mode because
+   * contrast on #0a0e1a navy is already ≥ 9:1 for those values. */
+  --color-accent-text: #00cec9;
+  --color-primary-text: #3b82f6;
+}

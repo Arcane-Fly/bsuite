@@ -1,0 +1,59 @@
+/*
+ * @bsuite/theme — utility classes
+ *
+ * Pure CSS (no Tailwind @apply) so this file is safe to import from any
+ * consumer regardless of their Tailwind version (v3 or v4).
+ */
+
+/* ===== Glow effects (use box-shadow with alpha scaled by glow-strength) ===== */
+.glow-electric-blue {
+  box-shadow: 0 0 20px rgb(var(--neon-electric-blue-rgb) / var(--glow-strength));
+}
+.glow-electric-cyan {
+  box-shadow: 0 0 20px rgb(var(--neon-electric-cyan-rgb) / var(--glow-strength));
+}
+.glow-electric-indigo {
+  box-shadow: 0 0 20px rgb(var(--neon-electric-indigo-rgb) / var(--glow-strength));
+}
+.glow-electric-purple {
+  box-shadow: 0 0 20px rgb(var(--neon-electric-purple-rgb) / var(--glow-strength));
+}
+.glow-electric-pink {
+  box-shadow: 0 0 20px rgb(var(--neon-electric-pink-rgb) / var(--glow-strength));
+}
+.glow-electric-coral {
+  box-shadow: 0 0 20px rgb(var(--neon-electric-coral-rgb) / var(--glow-strength));
+}
+.glow-electric-magenta {
+  box-shadow: 0 0 20px rgb(var(--neon-electric-magenta-rgb) / var(--glow-strength));
+}
+
+/* ===== Neon text shadows ===== */
+.neon-text-cyan {
+  text-shadow: 0 0 10px rgb(var(--neon-electric-cyan-rgb) / 0.5),
+               0 0 20px rgb(var(--neon-electric-cyan-rgb) / 0.3);
+}
+.neon-text-electric {
+  text-shadow: 0 0 10px rgb(var(--neon-electric-blue-rgb) / 0.5),
+               0 0 20px rgb(var(--neon-electric-blue-rgb) / 0.3);
+}
+
+/* ===== Smooth theme transition ===== */
+.transition-theme {
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+/* ===== prefers-reduced-motion — cap animation duration ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
