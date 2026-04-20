@@ -1,18 +1,24 @@
 [submodule "crm7"]
-	path = crm7
-	url = https://github.com/GaryOcean428/crm7.git
+        path = crm7
+        url = https://github.com/GaryOcean428/crm7.git
+        branch = main
 [submodule "R80.3"]
-	path = R80.3
-	url = https://github.com/GaryOcean428/R80.3.git
+        path = R80.3
+        url = https://github.com/GaryOcean428/R80.3.git
+        branch = main
 [submodule "braden"]
-	path = braden
-	url = https://github.com/GaryOcean428/braden.git
+        path = braden
+        url = https://github.com/GaryOcean428/braden.git
+        branch = main
 [submodule "business-suite-unified"]
-	path = business-suite-unified
-	url = https://github.com/GaryOcean428/business-suite-unified.git
+        path = business-suite-unified
+        url = https://github.com/GaryOcean428/business-suite-unified.git
+        branch = master
 [submodule "conduit"]
-	path = conduit
-	url = https://github.com/GaryOcean428/conduit.git
+        path = conduit
+        url = https://github.com/GaryOcean428/conduit.git
+        branch = main
 [submodule "throughput"]
-	path = throughput
-	url = https://github.com/GaryOcean428/throughput.git
+        path = throughput
+        url = https://github.com/GaryOcean428/throughput.git
+        branch = main
