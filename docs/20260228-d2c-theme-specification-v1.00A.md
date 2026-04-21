@@ -40,19 +40,21 @@ This document contains:
 
 ### Neon Electric Colors (Complete Spectrum)
 
-| Color | Hex | CSS Variable | Use Case |
-|-------|-----|--------------|----------|
-| Electric Blue | #2563eb | --neon-electric-blue | Primary actions, highlights |
-| Electric Cyan | #00cec9 | --neon-electric-cyan | Accents, borders |
-| Electric Indigo | #4f46e5 | --neon-electric-indigo | Secondary actions |
-| Electric Purple | #6c5ce7 | --neon-electric-purple | Gradients, effects |
-| Electric Magenta | #fd79a8 | --neon-electric-magenta | Interactive elements |
-| Electric Pink | #ec4899 | --neon-electric-pink | Hover states |
-| Electric Coral | #ff4757 | --neon-electric-coral | Alerts, destructive |
-| Electric Orange | #ff7675 | --neon-electric-orange | Warnings |
-| Electric Yellow | #fdcb6e | --neon-electric-yellow | Info, secondary alerts |
-| Electric Green | #22c55e | --neon-electric-green | Success states |
-| Electric Lavender | #a29bfe | --neon-electric-lavender | Subtle accents |
+| Color | OKLCH | Hex (legacy) | CSS Variable | Use Case |
+|-------|-------|---------------|--------------|----------|
+| Electric Blue | `oklch(0.546 0.215 262.9)` | #2563eb | --neon-electric-blue | Primary actions, highlights |
+| Electric Cyan | `oklch(0.769 0.132 191.7)` | #00cec9 | --neon-electric-cyan | Accents, borders |
+| Electric Indigo | `oklch(0.511 0.23 277)` | #4f46e5 | --neon-electric-indigo | Secondary actions |
+| Electric Purple | `oklch(0.568 0.202 283.1)` | #6c5ce7 | --neon-electric-purple | Gradients, effects |
+| Electric Magenta | `oklch(0.742 0.167 359.5)` | #fd79a8 | --neon-electric-magenta | Interactive elements |
+| Electric Pink | `oklch(0.656 0.212 354.3)` | #ec4899 | --neon-electric-pink | Hover states |
+| Electric Coral | `oklch(0.669 0.219 20.9)` | #ff4757 | --neon-electric-coral | Alerts, destructive |
+| Electric Orange | `oklch(0.728 0.168 22.5)` | #ff7675 | --neon-electric-orange | Warnings |
+| Electric Yellow | `oklch(0.868 0.125 81.4)` | #fdcb6e | --neon-electric-yellow | Info, secondary alerts |
+| Electric Green | `oklch(0.723 0.192 149.6)` | #22c55e | --neon-electric-green | Success states |
+| Electric Lavender | `oklch(0.736 0.141 285.6)` | #a29bfe | --neon-electric-lavender | Subtle accents |
+
+> **Color format rule: oklch mandatory.** Never add new hex/rgb color tokens. Hex/rgb only acceptable for third-party component defaults or legacy compatibility tokens.
 
 > **⚠️ Deprecated:** `--brand-cyan` (`#00BFFF`, "Deep Sky Blue") is **NOT** a D2C color. It was a legacy holdover used in early CRM7/R80.3 theme files. All references have been replaced with `--neon-electric-cyan` (`#00cec9`). Do not reintroduce `--brand-cyan` in any D2C app.
 
@@ -67,49 +69,49 @@ Linear: #ff4757 → #ff7675 → #fdcb6e → #00cec9 → #a29bfe
 
 ## Color Space: OKLCH
 
-OKLCH is a perceptually uniform color space that produces smoother gradients and more accurate contrast ratios than sRGB/hex. Conduit (Tailwind v4) uses `@theme` blocks with OKLCH values directly. Vite-based projects (CRM7, BSU, R80.3) continue to use hex CSS vars at runtime — the OKLCH values below are the canonical equivalents for reference and for any future migration.
+OKLCH is a perceptually uniform color space that produces smoother gradients and more accurate contrast ratios than sRGB/hex. All BSuite projects now use OKLCH as the primary color format. Conduit (Tailwind v4) uses `@theme` blocks with OKLCH values directly. Vite-based projects (CRM7, BSU, R80.3) have migrated CSS vars to OKLCH with native alpha support in Tailwind v4.
 
-> **Note:** Values are approximate. Verify at [oklch.com](https://oklch.com) before use in production.
+> **Color format rule: oklch mandatory.** Never add new hex/rgb color tokens. Hex/rgb only acceptable for third-party component defaults or legacy compatibility tokens.
 
-### Neon Electric Colors — OKLCH Equivalents
+### Neon Electric Colors — OKLCH (Canonical)
 
-| Color | Hex | OKLCH |
-|-------|-----|-------|
-| Electric Blue | `#2563eb` | `oklch(0.45 0.22 264)` |
-| Electric Cyan | `#00cec9` | `oklch(0.74 0.14 184)` |
-| Electric Indigo | `#4f46e5` | `oklch(0.46 0.26 268)` |
-| Electric Purple | `#6c5ce7` | `oklch(0.53 0.24 271)` |
-| Electric Magenta | `#fd79a8` | `oklch(0.73 0.20 355)` |
-| Electric Pink | `#ec4899` | `oklch(0.58 0.24 350)` |
-| Electric Coral | `#ff4757` | `oklch(0.60 0.22 18)` |
-| Electric Orange | `#ff7675` | `oklch(0.69 0.17 22)` |
-| Electric Yellow | `#fdcb6e` | `oklch(0.86 0.14 79)` |
-| Electric Green | `#22c55e` | `oklch(0.70 0.20 142)` |
-| Electric Lavender | `#a29bfe` | `oklch(0.72 0.18 275)` |
+| Color | OKLCH | Hex (legacy) |
+|-------|-------|-------------|
+| Electric Blue | `oklch(0.546 0.215 262.9)` | `#2563eb` |
+| Electric Cyan | `oklch(0.769 0.132 191.7)` | `#00cec9` |
+| Electric Indigo | `oklch(0.511 0.23 277)` | `#4f46e5` |
+| Electric Purple | `oklch(0.568 0.202 283.1)` | `#6c5ce7` |
+| Electric Magenta | `oklch(0.742 0.167 359.5)` | `#fd79a8` |
+| Electric Pink | `oklch(0.656 0.212 354.3)` | `#ec4899` |
+| Electric Coral | `oklch(0.669 0.219 20.9)` | `#ff4757` |
+| Electric Orange | `oklch(0.728 0.168 22.5)` | `#ff7675` |
+| Electric Yellow | `oklch(0.868 0.125 81.4)` | `#fdcb6e` |
+| Electric Green | `oklch(0.723 0.192 149.6)` | `#22c55e` |
+| Electric Lavender | `oklch(0.736 0.141 285.6)` | `#a29bfe` |
 
-### Surface Colors — OKLCH Equivalents
+### Surface Colors — OKLCH (Canonical)
 
-| Color | Hex | OKLCH | Use |
-|-------|-----|-------|-----|
-| Dark navy bg | `#0a0e1a` | `oklch(0.13 0.02 260)` | Dark mode background |
-| Dark secondary | `#1a1f2e` | `oklch(0.19 0.02 260)` | Dark mode cards |
-| Light bg | `#f2f2f2` | `oklch(0.96 0 0)` | Light mode background |
+| Color | OKLCH | Hex (legacy) | Use |
+|-------|-------|-------------|-----|
+| Dark navy bg | `oklch(0.13 0.02 260)` | `#0a0e1a` | Dark mode background |
+| Dark secondary | `oklch(0.19 0.02 260)` | `#1a1f2e` | Dark mode cards |
+| Light bg | `oklch(0.96 0 0)` | `#f2f2f2` | Light mode background |
 
 ### Conduit @theme usage (Tailwind v4)
 
 ```css
 @theme {
-  --color-neon-electric-blue:    oklch(0.45 0.22 264);
-  --color-neon-electric-cyan:    oklch(0.74 0.14 184);
-  --color-neon-electric-indigo:  oklch(0.46 0.26 268);
-  --color-neon-electric-purple:  oklch(0.53 0.24 271);
-  --color-neon-electric-magenta: oklch(0.73 0.20 355);
-  --color-neon-electric-pink:    oklch(0.58 0.24 350);
-  --color-neon-electric-coral:   oklch(0.60 0.22 18);
-  --color-neon-electric-orange:  oklch(0.69 0.17 22);
-  --color-neon-electric-yellow:  oklch(0.86 0.14 79);
-  --color-neon-electric-green:   oklch(0.70 0.20 142);
-  --color-neon-electric-lavender: oklch(0.72 0.18 275);
+  --color-neon-electric-blue:    oklch(0.546 0.215 262.9);
+  --color-neon-electric-cyan:    oklch(0.769 0.132 191.7);
+  --color-neon-electric-indigo:  oklch(0.511 0.23 277);
+  --color-neon-electric-purple: oklch(0.568 0.202 283.1);
+  --color-neon-electric-magenta: oklch(0.742 0.167 359.5);
+  --color-neon-electric-pink:    oklch(0.656 0.212 354.3);
+  --color-neon-electric-coral:   oklch(0.669 0.219 20.9);
+  --color-neon-electric-orange:  oklch(0.728 0.168 22.5);
+  --color-neon-electric-yellow:  oklch(0.868 0.125 81.4);
+  --color-neon-electric-green:   oklch(0.723 0.192 149.6);
+  --color-neon-electric-lavender: oklch(0.736 0.141 285.6);
 }
 ```
 
