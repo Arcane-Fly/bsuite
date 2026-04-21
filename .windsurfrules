@@ -71,6 +71,7 @@ CRM7 and Conduit use Vercel AI Gateway for model routing. **Do NOT revert these 
 - pnpm as package manager (never npm/yarn)
 - Vitest for Vite projects, Jest for conduit (Next.js)
 - D2C Neon Electric theme for all projects EXCEPT braden (uses Corporate branding)
+- D2C color format: oklch mandatory for all new color tokens. Hex/rgb only acceptable for third-party component defaults or legacy compatibility tokens. Braden is exempt.
 - Never commit API keys or secrets
 - Conventional commits: `type(scope): description`
 - @bsuite/* packages are on npm — NEVER use `workspace:*` in consumer projects
