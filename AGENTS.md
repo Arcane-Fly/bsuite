@@ -107,16 +107,17 @@ docs(r80): update Fair Work API reference
 
 Full spec in `docs/20260228-d2c-theme-specification-v1.00W.md`. Key colors:
 
-| Color | Hex | Use |
-|-------|-----|-----|
-| Electric Blue | `#2563eb` | Primary actions |
-| Electric Cyan | `#00cec9` | Accents, borders |
-| Electric Green | `#22c55e` | Success |
-| Electric Coral | `#ff4757` | Alerts, destructive |
-| Electric Yellow | `#fdcb6e` | Warnings |
+| Color | OKLCH | Hex (legacy) | Use |
+|-------|-------|---------------|-----|
+| Electric Blue | `oklch(0.546 0.215 262.9)` | `#2563eb` | Primary actions |
+| Electric Cyan | `oklch(0.769 0.132 191.7)` | `#00cec9` | Accents, borders |
+| Electric Green | `oklch(0.723 0.192 149.6)` | `#22c55e` | Success |
+| Electric Coral | `oklch(0.669 0.219 20.9)` | `#ff4757` | Alerts, destructive |
+| Electric Yellow | `oklch(0.868 0.125 81.4)` | `#fdcb6e` | Warnings |
 
-Dark mode: deep navy `#0a0e1a`. Light mode: off-white `#f2f2f2`.
+Dark mode: deep navy `oklch(0.13 0.02 260)`. Light mode: off-white `oklch(0.96 0 0)`.
 Typography: Inter (body), JetBrains Mono (code).
+**Color format rule: oklch mandatory.** Never add new hex/rgb color tokens. Hex/rgb only acceptable for third-party component defaults or legacy compatibility tokens.
 
 ### Corporate Branding (braden only)
 
