@@ -46,3 +46,9 @@ clinework.txt
 
 # Git worktrees
 .worktrees/
+
+# Playwright MCP scratch (per-call page snapshots, console logs, downloads)
+.playwright-mcp/
+*/.playwright-mcp/
+playwright-report/
+test-results/
