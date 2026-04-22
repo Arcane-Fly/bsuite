@@ -1,6 +1,6 @@
 # Theme centralisation + white-labelling plan — BSuite — 2026-04-22
 
-**Status:** W (Working — awaiting Braden's approval before execution)
+**Status:** A (Approved 2026-04-22 — open questions in §12 answered; executing Phase 0)
 **Owner:** Braden + agent
 **Supersedes sections of:** the theming parts of `/home/braden/.claude/plans/bsuite-world-class-audit-adaptive-sonnet.md` Parts M.1.a / M.1.b / M.1.c which shipped only partial migrations and left the centralisation incomplete.
 **Parent initiative:** BSuite 2026 world-class audit.
@@ -270,9 +270,19 @@ Per the adaptive-sonnet plan Part K conventions:
 
 ---
 
-## 12 · Open questions for Braden
+## 12 · Decisions (answered 2026-04-22)
 
-1. **Corporate-brand template handling:** should enterprise tenants be able to pick "Braden Red + Gold" as a preset (for agencies white-labelling), or is that reserved for Braden only?
-2. **Font override:** tenants.branding.font_stack is in the schema — priority to ship in Phase 4 or defer?
-3. **Logo upload path:** Supabase Storage bucket `tenant-branding/{tenant_id}/logo.*` — confirm or specify alternative.
-4. **Migration window for braden (non-D2C):** Phase 3 reorders if braden's corporate deviation causes codemod ambiguity. Current plan: braden goes first in Phase 3 to prove the deviation path; alternative is to do braden LAST after D2C apps prove out.
+1. **Corporate-brand template handling** — Braden corporate red + gold is **developer-only**, reserved for Braden's own website. Not exposed to tenants as a white-label preset. Future "website-as-an-option" is not planned this cycle.
+2. **Font override** — `tenants.branding.font_stack` ships in **Phase 4** (initial branding schema, not deferred).
+3. **Logo upload path** — use the existing Supabase Storage buckets (no new bucket creation in this plan):
+   - **Platform-level** (BSuite master branding): `platform-logos/` — public, 50 MB, `image/png|jpeg|webp|svg+xml`.
+   - **Tenant-level** (enterprise white-label): `tenant-logos/{tenant_id}/logo.{png|jpg|webp|svg}` — public, **2 MB** client-enforced limit, 3 existing RLS policies (audit in Phase 4 to confirm fit).
+4. **Braden migration window** — **deferred**. Braden migrates LAST in Phase 3 after the 5 D2C apps prove the codemod. Braden's corporate brand renders correctly today; no urgency.
+
+### Knock-on changes from these decisions
+
+- §5 Phase 3 app order: **throughput → CRM7 → R80.3 → conduit → braden (last)**. BSU is Phase 2 pilot.
+- §4 Layer 3 schema: drop any `corporate_preset` field. Free-form `branding jsonb` per tenant only.
+- §4 Layer 3 storage: no new bucket creation. Reuse `tenant-logos/` for tenants and `platform-logos/` for the platform master row.
+- Phase 4 audits `tenant-logos` existing 3 RLS policies — if they don't cover the branding write-path for tenant owners/admins, Phase 4 lands an additive policy (no destructive change to existing policies).
+- Client upload code enforces the 2 MB ceiling pre-PUT so the UX never bounces on a rejected upload.
