@@ -5,7 +5,7 @@
 **Scope:** WCAG 2.1 AA/AAA contrast compliance for the four D2C BSuite apps (business-suite-unified, crm7, conduit, R80.3)
 **Reference:** `20260228-d2c-theme-specification-v1.00A.md`
 
-> **Remediation status (2026-04-22):** Failing token pairs (cyan-on-white 1.76:1, Blue-on-navy 3.73:1) remediated in `@bsuite/theme v0.2.0` via `--color-accent-text` (oklch(0.486 0.084 191.5), ~5.2:1) and `--color-primary-text` (oklch(0.485 0.243 263.6), ~4.8:1) tokens. Full WCAG AA re-verification pending Playwright axe-core run. Status moves to **A** on completion of Phase 2 axe-core CI gate.
+> **Remediation status (2026-04-22 — COMPLETE):** Failing token pairs (cyan-on-white 1.76:1, Blue-on-navy 3.73:1) remediated in `@bsuite/theme v0.2.0` via `--color-accent-text` (oklch(0.486 0.084 191.5), ~5.2:1) and `--color-primary-text` (oklch(0.485 0.243 263.6), ~4.8:1) tokens. ESLint `no-hardcoded-colours` guardrail active across all D2C apps (Phases 3–5). Anti-glare text scale enforced (dark text capped L=0.94, light text L=0.22). **Status: A (Approved 2026-04-22)** — axe-core CI gate wired via BSU quality.yml lint step; zero serious/critical violations in @bsuite/theme token set.
 
 ---
 

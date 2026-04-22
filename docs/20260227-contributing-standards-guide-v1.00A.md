@@ -149,11 +149,11 @@ Update this index whenever a document is added or its status changes.
 
 ## 5. Theme Compliance
 
-### §5 — Colour tokens (updated 2026-04-22 for @bsuite/theme v0.2.0)
+### §5 — Colour tokens (updated 2026-04-22 for @bsuite/theme v0.3.0)
 
 **Rule:** OKLCH mandatory everywhere except `braden/` (corporate brand exemption).
 
-**Single source of truth:** `@bsuite/theme v0.2.0` (`packages/theme/`).
+**Single source of truth:** `@bsuite/theme v0.3.0` (`packages/theme/`).
 
 **Import in every D2C app global stylesheet:**
 ```css
@@ -174,7 +174,30 @@ Update this index whenever a document is added or its status changes.
 | throughput | `oklch(0.546 0.215 262.9)` | `oklch(0.769 0.132 191.7)` |
 | braden | `oklch(0.488 0.170 17.6)` (Red) | `oklch(0.769 0.096 90.9)` (Gold) |
 
-**CI enforcement:** `bsuite/no-hardcoded-colours` ESLint rule (error severity) in all D2C apps. Braden: warn + BRADEN-EXEMPT file comment.
+**CI enforcement:** `bsuite/no-hardcoded-colours` ESLint rule (error severity) in all D2C apps. Braden: warn + BRADEN-EXEMPT file comment. Post-build hex-in-dist check warns on any surviving hex literals in CSS bundles.
+
+### §5a — Runtime white-labelling (Phase 4, 2026-04-22)
+
+**Mechanism:** `<BrandingProvider>` from `@bsuite/theme/react` calls `branding_json_for_tenant()` RPC on mount and subscribes to Supabase Realtime updates. Import from `@bsuite/theme/react` only — do NOT duplicate in `src/providers/`.
+
+**Branding JSONB schema** on `tenants.branding`:
+```json
+{
+  "primary": "oklch(0.55 0.22 265)",
+  "accent": "oklch(0.77 0.13 195)",
+  "logo_url": "https://storage.supabase.co/…",
+  "mark_url": "…",
+  "font_stack": null
+}
+```
+
+**Logo upload path:** `tenant-logos/{tenant_id}/logo.{png|jpg|webp|svg}` in Supabase Storage.
+- Enforce 2 MB client-side limit before PUT.
+- Bucket is public; existing 3 RLS policies govern access by tenant path prefix.
+
+**Kill switch:** `VITE_ENABLE_BRANDING_OVERRIDE=false` (Vite apps) or `NEXT_PUBLIC_ENABLE_BRANDING_OVERRIDE=false` (Next.js) disables runtime overrides instantly without code change.
+
+**Three-tier read hierarchy:** `tenant_app_branding` (Tier 3, per-app) → `tenant_branding` (Tier 2, per-tenant) → `platform_branding` (Tier 1, platform defaults) → D2C hardcoded fallback.
 
 ---
 
