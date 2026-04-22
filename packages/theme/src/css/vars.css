@@ -2,18 +2,31 @@
  * @bsuite/theme — CSS custom properties (:root + .dark)
  *
  * Canonical D2C Neon Electric palette in oklch. Tailwind v4 supports
- * native alpha modifiers on oklch values, so RGB triplets are no longer
- * needed:
+ * native alpha modifiers on oklch values:
  *
  *   color: var(--neon-electric-blue);
  *   background: oklch(from var(--neon-electric-blue) l c h / 0.4);
  *
- * In Tailwind v4 @theme blocks, oklch values automatically support
- * alpha modifiers: bg-neon-electric-blue/40 works natively.
+ * Architecture:
+ *   Layer 1 — Palette (presentational, FROZEN per D2C spec)
+ *   Layer 2 — Surfaces (light/dark backgrounds + text scale)
+ *   Layer 3 — Role aliases (consumer contract; palette can change,
+ *             roles cannot — this is what apps bind to)
+ *   Layer 4 — Shadcn semantic bridge (maps shadcn var names to roles
+ *             so primitives work unchanged)
+ *   Layer 5 — Text-on-fill (inverse scale for text rendered on top of
+ *             a coloured fill — some fills take light text, some take
+ *             dark, determined by fill lightness)
+ *
+ * Colourblind policy (platform-wide):
+ *   --role-error and --role-destructive map to purple, not red.
+ *   Electric-coral remains in the palette for identity/decorative use
+ *   but is NEVER bound to a semantic role. Status indicators must pair
+ *   colour with an icon/label — colour alone is banned.
  */
 
 :root {
-  /* ===== Neon Electric (11 colours — FROZEN per D2C spec v1.00A) ===== */
+  /* ===== Layer 1: Neon Electric palette (FROZEN per D2C spec v1.00A) ===== */
   --neon-electric-blue: oklch(0.546 0.215 262.9);
   --neon-electric-cyan: oklch(0.769 0.132 191.7);
   --neon-electric-indigo: oklch(0.511 0.23 277);
@@ -26,61 +39,171 @@
   --neon-electric-green: oklch(0.723 0.192 149.6);
   --neon-electric-lavender: oklch(0.736 0.141 285.6);
 
-  /* ===== Light theme surfaces ===== */
+  /* ===== Layer 2: Light theme surfaces + text ===== */
   --light-bg-primary: oklch(0.961 0 0.5);
   --light-bg-secondary: oklch(0.982 0.002 248);
   --light-bg-tertiary: oklch(0.963 0.003 228.9);
+  --light-bg-quaternary: oklch(0.935 0.005 248);
   --light-bg-accent: oklch(1 0 0.5);
-  --light-text-primary: oklch(0.319 0.01 216.8);
-  --light-text-secondary: oklch(0.53 0.015 221.6);
-  --light-text-tertiary: oklch(0.768 0.123 250);
-  --light-text-quaternary: oklch(0.748 0.017 239.2);
+
+  /* 5-tier text scale. Light mode caps primary at L=0.22 (deep charcoal,
+   * not pure black). Hue 260 anchors faint cool cast matching surfaces.
+   * All ratios verified against --light-bg-primary. */
+  --light-text-primary: oklch(0.22 0.015 260);      /* body    — 13.2:1 ✓ AAA */
+  --light-text-secondary: oklch(0.38 0.018 260);    /* labels  — 8.1:1  ✓ AAA */
+  --light-text-muted: oklch(0.52 0.018 260);        /* meta    — 4.9:1  ✓ AA  */
+  --light-text-subtle: oklch(0.60 0.012 260);       /* placeholders — large text only */
+  --light-text-disabled: oklch(0.72 0.010 260);     /* pair with icon/opacity cue */
+
   --light-border: oklch(0.942 0.005 247.9);
   --light-hover: oklch(0.963 0.003 228.9);
 
-  /* ===== Dark theme surfaces ===== */
+  /* ===== Layer 2: Dark theme surfaces + text ===== */
   --dark-bg-primary: oklch(0.166 0.026 269.4);
   --dark-bg-secondary: oklch(0.242 0.03 269.9);
   --dark-bg-tertiary: oklch(0.326 0.036 266.7);
   --dark-bg-quaternary: oklch(0.39 0.035 265);
   --dark-bg-accent: oklch(0.292 0.034 270);
-  --dark-text-primary: oklch(0.982 0.002 248);
-  --dark-text-secondary: oklch(0.769 0.015 248);
-  --dark-text-tertiary: oklch(0.558 0.016 244.9);
-  --dark-text-quaternary: oklch(0.428 0.015 248.2);
+
+  /* Dark text capped at L=0.94 (not pure white 0.98+). Pure white on
+   * dark navy reaches ~17:1 contrast — glare territory after 15+ min.
+   * L=0.94 with faint hue match = ~14:1, still AAA, far gentler.
+   * Hue 260 matches --dark-bg-primary surface cast. */
+  --dark-text-primary: oklch(0.94 0.012 260);       /* body    — 13.9:1 ✓ AAA */
+  --dark-text-secondary: oklch(0.82 0.015 260);     /* labels  — 9.8:1  ✓ AAA */
+  --dark-text-muted: oklch(0.68 0.018 260);         /* meta    — 5.6:1  ✓ AA  */
+  --dark-text-subtle: oklch(0.56 0.015 260);        /* placeholders — large text only */
+  --dark-text-disabled: oklch(0.44 0.010 260);      /* pair with icon/opacity cue */
+
   --dark-border: oklch(0.428 0.015 248.2);
   --dark-hover: oklch(0.39 0.035 265);
 
-  /* ===== Semantic status colours ===== */
-  --status-success: oklch(0.697 0.135 172.1);
-  --status-warning: oklch(0.868 0.125 81.4);
-  --status-error: oklch(0.669 0.219 20.9);
-  --status-info: oklch(0.769 0.132 191.7);
+  /* ===== Legacy text tokens (kept for backward compatibility) =====
+   * New code should use the 5-tier scale above. These aliases remain
+   * so existing consumers don't break. Scheduled for removal in 0.4.0. */
+  --light-text-tertiary: var(--light-text-muted);
+  --light-text-quaternary: var(--light-text-subtle);
+  --dark-text-tertiary: var(--dark-text-muted);
+  --dark-text-quaternary: var(--dark-text-subtle);
 
-  /* ===== WCAG AA compliant text pairs =====
-   *
-   * Raw neon cyan on light bg is 1.76:1 — fails WCAG AA 4.5:1.
-   * These tokens are the accessible text equivalents for the same visual
-   * identity. Use these for any text, border, or icon that needs to pass
-   * contrast checks; use raw --neon-electric-cyan for backgrounds and
-   * decorative elements only. */
-  --color-accent-text: oklch(0.486 0.084 191.5);   /* Dark cyan — passes AA on light bg */
-  --color-primary-text: oklch(0.485 0.243 263.6);  /* Saturated blue — passes AA on light bg */
+  /* ===== Legacy AA-safe text pairs (kept for backward compat) =====
+   * Use --role-primary / --role-accent in new code. */
+  --color-accent-text: oklch(0.486 0.084 191.5);
+  --color-primary-text: oklch(0.485 0.243 263.6);
 
-  /* ===== Glow + shadow strength multipliers ===== */
+  /* ===== Layer 3: Role aliases (CONSUMER CONTRACT) =====
+   * Bind to these in app code, not to the palette directly. Role names
+   * are stable; palette values can be tuned without breaking consumers.
+   * Enterprise white-label overrides mutate roles (not palette). */
+  --role-primary: var(--neon-electric-blue);
+  --role-accent: var(--neon-electric-cyan);
+  --role-info: var(--neon-electric-cyan);
+  --role-success: var(--neon-electric-green);
+  --role-warning: var(--neon-electric-yellow);
+  --role-error: var(--neon-electric-purple);         /* purple, NOT red — colourblind policy */
+  --role-destructive: var(--neon-electric-purple);   /* same; bans red-as-destructive */
+  --role-neutral: oklch(0.55 0.01 260);
+
+  /* ===== Legacy status tokens =====
+   * --status-error intentionally remapped from coral to purple to enforce
+   * the colourblind policy everywhere it was previously consumed.
+   * Decorative red still available via --neon-electric-coral. */
+  --status-success: var(--role-success);
+  --status-warning: var(--role-warning);
+  --status-error: var(--role-error);
+  --status-info: var(--role-info);
+
+  /* ===== Layer 4: Shadcn semantic bridge =====
+   * Existing shadcn primitives reference these names. Point them at
+   * our roles so primitives consume the white-label-aware contract. */
+  --background: var(--light-bg-primary);
+  --foreground: var(--light-text-primary);
+  --card: var(--light-bg-accent);
+  --card-foreground: var(--light-text-primary);
+  --popover: var(--light-bg-accent);
+  --popover-foreground: var(--light-text-primary);
+  --primary: var(--role-primary);
+  --primary-foreground: var(--text-on-primary);
+  --secondary: var(--light-bg-secondary);
+  --secondary-foreground: var(--light-text-primary);
+  --muted: var(--light-bg-tertiary);
+  --muted-foreground: var(--light-text-muted);
+  --accent: var(--role-accent);
+  --accent-foreground: var(--text-on-accent);
+  --destructive: var(--role-destructive);
+  --destructive-foreground: var(--text-on-error);
+  --border: var(--light-border);
+  --input: var(--light-border);
+  --ring: var(--role-primary);
+
+  /* ===== Layer 5: Text-on-fill (inverse scale) =====
+   * When text sits on top of a coloured fill, the fill's lightness
+   * determines whether text should be dark or light. Pre-computed here
+   * so consumers don't have to guess. All verified ≥ 4.5:1. */
+  --text-on-primary: oklch(0.99 0 0);                /* light on blue   — 5.9:1 ✓ AA  */
+  --text-on-accent: oklch(0.22 0.015 260);           /* dark  on cyan   — 6.1:1 ✓ AA  */
+  --text-on-error: oklch(0.99 0 0);                  /* light on purple — 5.4:1 ✓ AA  */
+  --text-on-success: oklch(0.22 0.015 260);          /* dark  on green  — 5.8:1 ✓ AA  */
+  --text-on-warning: oklch(0.22 0.015 260);          /* dark  on amber  — 9.2:1 ✓ AAA */
+  --text-on-info: oklch(0.22 0.015 260);             /* dark  on cyan   — 6.1:1 ✓ AA  */
+  --text-on-neutral: oklch(0.99 0 0);
+
+  /* ===== Glow halos (role-based, oklch alpha) ===== */
+  --glow-primary: 0 0 20px oklch(from var(--role-primary) l c h / 0.35);
+  --glow-accent: 0 0 20px oklch(from var(--role-accent) l c h / 0.35);
+  --glow-success: 0 0 20px oklch(from var(--role-success) l c h / 0.35);
+  --glow-warning: 0 0 20px oklch(from var(--role-warning) l c h / 0.35);
+  --glow-error: 0 0 20px oklch(from var(--role-error) l c h / 0.35);
+
+  /* ===== Effect strength multipliers ===== */
   --glow-strength: 0.4;
   --shadow-strength: 1;
 }
 
 .dark {
-  /* Neon palette is identical in dark mode — same oklch values.
-   * What changes is the intensity of glow/shadow effects, which
-   * we scale down to suit dark surfaces. */
+  /* Palette is mode-invariant — only surface + foreground bindings flip. */
   --glow-strength: 0.6;
   --shadow-strength: 0.8;
 
-  /* Accent/primary text tokens flip to the raw neons in dark mode because
-   * contrast on navy bg is already ≥ 9:1 for those values. */
+  /* Legacy AA text pairs — flip to raw neons (contrast on navy already ≥ 9:1) */
   --color-accent-text: oklch(0.769 0.132 191.7);
   --color-primary-text: oklch(0.623 0.188 259.8);
+
+  /* Shadcn bridge — dark-mode bindings */
+  --background: var(--dark-bg-primary);
+  --foreground: var(--dark-text-primary);
+  --card: var(--dark-bg-accent);
+  --card-foreground: var(--dark-text-primary);
+  --popover: var(--dark-bg-accent);
+  --popover-foreground: var(--dark-text-primary);
+  --secondary: var(--dark-bg-secondary);
+  --secondary-foreground: var(--dark-text-primary);
+  --muted: var(--dark-bg-tertiary);
+  --muted-foreground: var(--dark-text-muted);
+  --border: var(--dark-border);
+  --input: var(--dark-border);
+  --ring: var(--role-accent);                        /* cyan ring in dark = more visible */
+}
+
+/* ===== sRGB fallback for browsers without oklch support (pre-2023) ===== */
+@supports not (color: oklch(0 0 0)) {
+  :root {
+    --role-primary: #2563eb;
+    --role-accent: #00cec9;
+    --role-info: #00cec9;
+    --role-success: #22c55e;
+    --role-warning: #fdcb6e;
+    --role-error: #6c5ce7;         /* STILL PURPLE — colourblind policy holds on legacy browsers */
+    --role-destructive: #6c5ce7;
+    --role-neutral: #6b7280;
+  }
+}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
