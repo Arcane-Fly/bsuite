@@ -46,18 +46,24 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
+    "@supabase/supabase-js": ">=2.0.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0",
     "tailwindcss": ">=3.4.0"
   },
   "peerDependenciesMeta": {
+    "@supabase/supabase-js": {
+      "optional": true
+    },
     "tailwindcss": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.3.28",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "^28.1.0",
