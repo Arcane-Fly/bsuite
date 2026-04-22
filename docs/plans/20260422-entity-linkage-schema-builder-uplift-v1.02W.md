@@ -1,7 +1,7 @@
 # Entity linkage, one-shot enforcement, and schema/page-builder uplift — cross-app
 
-**Status:** W (Working — drafted 2026-04-22, §7 decisions captured 2026-04-22, ready to start Phase 1 after final sign-off)
-**Revision:** v1.01W — folds in Braden's decisions on polymorphic modelling, TGA API seeding, candidate→contact merge, tenant-scoped authoring isolation, and braden lead flow audit result
+**Status:** W (Working — drafted 2026-04-22, §7 decisions captured 2026-04-22, hardened via parallel red-team + skills + OAuth non-regression subagents 2026-04-22, ready to start Phase 1 after final sign-off)
+**Revision:** v1.02W — adds §K skills+MCPs per phase with 2026-currency verification, §M OAuth 2.1 Server non-regression guardrails, §R red-team attack trees + stop-ship criteria + staging per phase, §S sign-off gates between phases. Execution order in §6 restructured to enforce pre-phase → during-phase → post-phase discipline per master-orchestration §5 (Plan → Red-team → Research → Refine)
 **Applies to:** All 6 apps (BSU, CRM7, conduit, R80.3, braden, throughput)
 **Supersedes nothing — extends:** [docs/20260227-dry-one-shot-architecture-v1.00A.md](../20260227-dry-one-shot-architecture-v1.00A.md)
 **Parallel to:** [docs/plans/20260422-theme-centralisation-v1.00A.md](20260422-theme-centralisation-v1.00A.md) (theme work runs independently)
@@ -416,3 +416,295 @@ Each group ends with a `multi-agent-red-team-implementation` gate before the nex
 - **Theme centralisation** ([20260422-theme-centralisation-v1.00A.md](20260422-theme-centralisation-v1.00A.md)) — independent; can ship in parallel.
 - **Audit adaptive-sonnet Part N** — CLOSED as of 2026-04-22. This plan opens a new **Part P** focused on entity linkage + schema/page-builder uplift.
 - **Part O (deferred catalogue)** — Phase 5 here supersedes / tightens O.12 (CRM7 wizard move) because wizard definition becomes JSON authored in BSU.
+
+---
+
+## K. Skills + MCPs per phase (2026-current)
+
+Dispatched via parallel skills-identification subagent 2026-04-22. Every phase PR description MUST carry the K.8 checklist with these specific skills + MCPs ticked.
+
+### K.1 Cross-cutting (apply to EVERY phase, every turn)
+
+| Skill | Purpose |
+|---|---|
+| [master-orchestration](/home/braden/.claude/skills/master-orchestration/SKILL.md) | Invoked at turn start; coordinates sub-agents; writes architecturally significant decisions to `bsuite_*` memory |
+| [using-superpowers](/home/braden/.claude/skills/using-superpowers/SKILL.md) | Dispatches parallel sub-agents; checks 1% rule for skill invocation |
+| [verification-before-completion](/home/braden/.claude/skills/verification-before-completion/SKILL.md) | Evidence before claims — Playwright + RLS matrix + backfill idempotency proof BEFORE claiming done |
+| [subagent-driven-development](/home/braden/.claude/skills/subagent-driven-development/SKILL.md) | Three-role team (implementer + spec reviewer + code-quality reviewer) per phase |
+| [multi-agent-red-team-implementation](/home/braden/.claude/skills/multi-agent-red-team-implementation/SKILL.md) | Security / Reliability / Performance / UX-a11y gate before each phase group merges |
+| [git-workflow](/home/braden/.claude/skills/git-workflow/SKILL.md) | Conventional commits; branch naming `feat/phase-N-<topic>`; K.8 checklist in PR body |
+| [finishing-a-development-branch](/home/braden/.claude/skills/finishing-a-development-branch/SKILL.md) | Squash history; acceptance-gate check; dev→main promotion discipline |
+| [documentation-compliance](/home/braden/.claude/skills/documentation-compliance/SKILL.md) | Doc naming `YYYYMMDD-name-vMAJOR.MINOR[STATUS].md`; index updates |
+| [writing-plans](/home/braden/.claude/skills/writing-plans/SKILL.md) | Per-phase sub-plans trace back to this master plan |
+
+### K.2 Per-phase required skills
+
+| Phase | Required | Why |
+|---|---|---|
+| 1 | [supabase-postgres-best-practices](/home/braden/.claude/skills/supabase-postgres-best-practices/SKILL.md), [supabase](/home/braden/.claude/skills/supabase/SKILL.md), [forms-and-validation](/home/braden/.claude/skills/forms-and-validation/SKILL.md), [tanstack-query](/home/braden/.claude/skills/tanstack-query/SKILL.md), [shadcn-ui](/home/braden/.claude/skills/shadcn-ui/SKILL.md), [test-driven-development](/home/braden/.claude/skills/test-driven-development/SKILL.md), [playwright](/home/braden/.claude/skills/playwright/SKILL.md) | Migrations + RLS + selector forms + E2E smoke |
+| 2 | Same as Phase 1 + [security-audit](/home/braden/.claude/skills/security-audit/SKILL.md) | New entity (TrainingContract) with PII |
+| 3 | Phase 1 set + [security-audit](/home/braden/.claude/skills/security-audit/SKILL.md), [api-design-validation](/home/braden/.claude/skills/api-design-validation/SKILL.md) | TGA external API; Incident cross-tenant PII; RRULE parsing |
+| 4 | [supabase-postgres-best-practices](/home/braden/.claude/skills/supabase-postgres-best-practices/SKILL.md), [test-driven-development](/home/braden/.claude/skills/test-driven-development/SKILL.md), [playwright](/home/braden/.claude/skills/playwright/SKILL.md), [git-workflow](/home/braden/.claude/skills/git-workflow/SKILL.md), [security-audit](/home/braden/.claude/skills/security-audit/SKILL.md) | Backfill + edge function consolidation + cross-site verify |
+| 5 | Phase 1 set + [vercel-next-cache-components](/home/braden/.claude/skills/vercel-next-cache-components/SKILL.md), [supabase-auth-comprehensive](/home/braden/.claude/skills/supabase-auth-comprehensive/SKILL.md), [tailwind-css-v4-best-practices](/home/braden/.claude/skills/tailwind-css-v4-best-practices/SKILL.md), [security-audit](/home/braden/.claude/skills/security-audit/SKILL.md), [ui-ux-pro-max](/home/braden/.claude/skills/ui-ux-pro-max/SKILL.md) | Page-builder + tenant-scoped RLS + Next 16 RSC + realtime + WCAG audit |
+| 6 | [documentation-compliance](/home/braden/.claude/skills/documentation-compliance/SKILL.md), [git-workflow](/home/braden/.claude/skills/git-workflow/SKILL.md), [code-quality-enforcement](/home/braden/.claude/skills/code-quality-enforcement/SKILL.md) | DRY doc bump + CI lint rule wiring |
+
+### K.3 MCP matrix per phase
+
+| Phase | MCP | Purpose |
+|---|---|---|
+| 1–5 | `mcp__claude_ai_Supabase__apply_migration` + `execute_sql` + `get_advisors` + `list_tables` | Every schema change goes through apply_migration; `get_advisors` MUST be clean before merge |
+| 1–5 | `mcp__claude_ai_Supabase__deploy_edge_function` | Phase 3 `tga-sync`; Phase 4 consolidated `lead-capture` |
+| 1–5 | `mcp__plugin_playwright_playwright__browser_*` | E2E smoke (authenticated as dev + as enterprise-owner + as tenant-B for isolation tests) |
+| All | `mcp__plugin_context7_context7__query-docs` | BEFORE every library-sensitive change — `@tanstack/react-query@5`, `@supabase/ssr`, `@supabase/realtime-js`, `jose`, `dnd-kit`, `rrule`, `react-hook-form`, Tailwind v4 |
+| 3 | `mcp__google-dev-knowledge__search_documents` | TGA WSDL / training.gov.au docs lookup (fallback if Context7 has no index) |
+| 5 | `mcp__plugin_context7_context7__query-docs` (Next 16 Cache Components) | RSC-safe widget wrapping for conduit |
+| All | `mcp__claude_ai_Vercel__get_runtime_logs` | Post-deploy 10-min observability window per phase |
+| All | `mcp__claude_ai_github__create_pull_request` + `update_pull_request` + `get_commit` | PR bodies carry K.8 + §S sign-off checklist |
+
+### K.4 2026-currency confirmations
+
+All skills cited in K.2 have been verified as reflecting 2026 patterns (TanStack Query v5, React 19, Tailwind v4 oklch, Next 16 Cache Components, `@supabase/ssr`, `jose` for JWT). No skill targets pre-2025-Q3 API shapes. QIG/consciousness/e8/pantheon skills are explicitly EXCLUDED — separate project namespace per CLAUDE.md.
+
+### K.5 Skill gaps flagged (future work — not blocking this plan)
+
+| Gap | Suggested skill name | Needed for |
+|---|---|---|
+| Drag-drop page-builder composition with dnd-kit | `shadcn-page-builder-drag-drop` | Phase 5 |
+| Multi-tenant hierarchical RLS (`descendants_of`) | `enterprise-rls-hierarchical-tenants` | Phase 5 |
+| training.gov.au web services integration reference | `tga-training-gov-au-integration` | Phase 3 |
+| Supabase realtime → TanStack Query invalidation pattern | `supabase-realtime-cache-invalidation` | Phase 5 |
+| Fuzzy-match backfill with manual-review queue | `entity-fuzzy-match-backfill` | Phase 1 |
+
+These are tracked for future skill creation but do NOT block this plan — the underlying libraries' Context7 docs carry the same info.
+
+---
+
+## M. OAuth 2.1 Server non-regression guardrails
+
+Dispatched via parallel OAuth-audit subagent 2026-04-22. **Constraint: no reversion from Supabase Native OAuth 2.1 back to legacy custom BS OAuth server at ANY point across ANY phase.**
+
+### M.1 Current state (2026-04-22 verified)
+
+All 4 clients on Supabase Native OAuth 2.1:
+
+| App | Client ID | OAuth state |
+|---|---|---|
+| CRM7 | `30f76744-3e0b-40bf-abb8-8c587389802e` | Native, PKCE S256, JWKS, cookie SSO on `.crm7.app` |
+| R80.3 | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | Native, PKCE S256, JWKS, cookie SSO |
+| Braden | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | Native, PKCE S256, JWKS, localStorage (different TLD) |
+| Throughput | `35f0db49-ef62-4115-baba-7b961f034cc3` | Native, PKCE S256, JWKS, cookie SSO |
+
+Supabase project ref `tuybltdrdefjblnplpqo` immutable. `@bsuite/auth` package at [packages/auth/src/oauth-client.ts](../../packages/auth/src/oauth-client.ts) is the canonical implementation — PKCE `generateCodeChallenge()`, nonce enforcement `verifyIdToken()`, JWKS via `jose.createRemoteJWKSet()`, 5-min-buffer refresh via `startBSTokenRefresh()`.
+
+### M.2 Hard guardrails (numbered, non-negotiable)
+
+1. **Token endpoint lock.** Every exchange uses `/auth/v1/oauth/token` on `tuybltdrdefjblnplpqo.supabase.co`. No custom BSU `/oauth/token`.
+2. **JWKS verification immutable.** `jose.createRemoteJWKSet()` against Supabase-hosted JWKS only. No hardcoded keys. No custom issuer.
+3. **PKCE S256 non-reversible.** `flowType: 'pkce'` + SHA-256 code challenge, on every Supabase client across all 6 apps.
+4. **Nonce enforcement mandatory.** `verifyIdToken()` validates nonce (OIDC Core §3.1.2.2). Mismatch = auth failure, NEVER silent fallback.
+5. **Token refresh auto-extension.** `startBSTokenRefresh()` active on every authed route. 5-min pre-expiry buffer. 60s check interval.
+6. **Storage segregation.** sessionStorage for ephemeral PKCE state (code_verifier, state, nonce only). localStorage for refresh_token (domain-locked `.crm7.app` for SSO apps). **No secrets in URL fragments. No `VITE_DEVELOPER_EMAILS` revival.**
+7. **`onAuthStateChange` callbacks MUST NOT `await supabase.from(...)`.** Known deadlock incident 2026-04-21, PR #129. Any phase reintroducing this pattern is a stop-ship bug.
+8. **No second OAuth consent surface.** BSU `/oauth/consent` is the only consent screen for all 4 client apps. No per-app consent duplication.
+9. **`auth.oauth_clients` rows are protected.** The 4 client-ID rows above must not be deleted, re-created, or have their redirect URIs rewritten to include wildcards. Exact-match redirect URIs only per OAuth 2.1 §7.6.
+10. **No HS256 downgrade.** ECC P-256 JWKs + `sb_publishable_` / `sb_secret_` keys only. Legacy HS256 JWT revoked 2026-04-22; no code path restores it.
+11. **No `auth.jwt()` bypass in RLS.** Every RLS policy reads claims via `auth.jwt()`; no hand-parsed JWT in SQL functions.
+12. **`@bsuite/auth` is authoritative.** Any phase modifying `packages/auth/src/oauth-client.ts` requires explicit OAuth red-team sign-off (§R.6 below). No app adds its own `jwtVerify`.
+
+### M.3 Per-phase OAuth regression risk + mandatory red-team check
+
+| Phase | OAuth touch | Risk | Red-team check before merge |
+|---|---|---|---|
+| 1 | New RLS policies on contacts/leads/invoices | LOW — claim reads only | "Does the policy read tenant_id via `auth.jwt() ->> 'tenant_id'`? No hand-parsing?" |
+| 2 | TrainingContract RLS | LOW-MED — new table with multi-entity FK | "Does the policy check tenant via `auth.jwt()` on ALL three FK joins (apprentice / rto / host_employer)?" |
+| 3 | Incident RLS (cross-tenant PII) + `tga-sync` edge function | MED — new PII table + new external API | "Does `tga-sync` use `SUPABASE_SERVICE_ROLE_KEY` from secrets, never hardcoded? Does Incident RLS reject tenant-A user querying tenant-B incidents?" |
+| 4 | Deleting BSU `lead-capture` edge function | LOW — infrastructure only | "After deletion, does braden.com.au's Supabase client still reach the CRM7 copy without code change? (Supabase edge functions are project-scoped; verify invocation URL.)" |
+| 5 | `tenant_page_layouts` + `tenant_navigation` + realtime subscription + `/embed/lead-form` | HIGH — new write surfaces + authenticated realtime channel | "Does realtime channel auth use `auth.jwt()` from the Supabase client (not a custom token)? Do Enterprise-mode writes check `auth.jwt() ->> 'role'` before allowing braden-scope writes? Does `/embed/lead-form` run with anon JWT only — never service-role?" |
+| 6 | CI lint rule addition | ZERO | (no OAuth touch) |
+
+Every phase's PR description MUST cite the M.3 red-team check answer with evidence (grep output, test assertion, logs). No hand-wave "looks fine".
+
+---
+
+## R. Red-team attack trees + stop-ship criteria + staging per phase
+
+Dispatched via parallel red-team subagent 2026-04-22. Full attack-tree detail lives in the subagent artefact (committed to `/home/braden/.claude/artefacts/20260422-entity-plan-red-team-report.md`); the tight version below is the authoritative gate.
+
+### R.1 Phase 1 — CRITICAL golden-path FKs
+
+**Top attack paths:**
+- **Backfill fuzzy-match ambiguity** — 3 clients named "Braden" → non-deterministic winner. *Mitigation:* any match <90% score flagged `company_resolution_status='manual_review_required'`, audit UI lists flagged rows.
+- **ContactSelector async race** — user Tabs before results load → `client_id=null` submitted. *Mitigation:* Suspense-wrapped selector, can't submit until query settled.
+- **FK constraint violation mid-backfill** — partial state. *Mitigation:* single Postgres transaction, idempotent re-runnable `WHERE client_id IS NULL`.
+- **Lead notification email not actually updated** — migration skipped the `tenant_settings.lead_notification_email` update. *Mitigation:* Playwright spec submits live form, confirms recipient in function logs.
+
+**Stop-ship for Phase 1:**
+- [ ] Migration exits 0, idempotent (second run = no-op)
+- [ ] Fuzzy-match <90% flagged; audit UI lists flagged rows
+- [ ] Playwright: Contact-with-company → `client_id` persisted AND `company` TEXT preserved as display snapshot
+- [ ] Playwright: live braden.com.au submit → `lead_notification_email` in function logs = `braden@braden.com.au`
+- [ ] Four-persona RLS clean for contacts/leads/invoices with new FK columns
+- [ ] ContactSelector + ClientSelector keyboard-navigable (Tab/Enter/Escape per WCAG)
+
+**Staging:**
+- **Pre:** PR #266 pattern reviewed; CompanySelector component design signed-off; Context7 check on `@tanstack/react-query@5` for Suspense query pattern.
+- **During:** Every migration run against dev DB snapshot; backfill output summary (matched/flagged/failed counts) in PR.
+- **Post:** 3 green Playwright runs; observability window 60 min on prod post-promote.
+
+### R.2 Phase 2 — MEDIUM compliance FKs
+
+**Top attack paths:**
+- **HostEmployer contact snapshot phishing** — admin updates linked Contact email to a phishing domain; old snapshot still shows. *Mitigation:* snapshot fields suffixed `_snapshot`; UI shows "last updated X ago" label.
+- **Placement.award_rate_id R80.3 deletion race** — R80.3 hard-deletes a rate while CRM7 still references it. *Mitigation:* R80.3 AwardRate deletion is soft-delete (`is_active=false`) only during the Phase 2 window. Backfill creates synthetic "Discontinued" rate for missing codes.
+- **TrainingContract.apprentice_id race during concurrent Conduit handoff** — Part N.5.a handoff and Phase 2 backfill both try to create the same contract_number. *Mitigation:* Postgres advisory lock per apprentice_id; handoff paused during backfill window.
+
+**Stop-ship for Phase 2:**
+- [ ] All 4 new FKs wired; backfill flags pending-review rows
+- [ ] HostEmployer snapshot columns named `*_snapshot`; audit UI displays "last updated"
+- [ ] R80.3 coordinated: AwardRate deletion is soft-delete only during Phase 2
+- [ ] Playwright: TrainingContract created + Apprentice deletion cascade tested
+- [ ] Four-persona RLS clean on all new tables
+
+### R.3 Phase 3 — GTO entities + TGA API
+
+**Top attack paths:**
+- **TGA API credential exposure** — key logged to Supabase function logs or hardcoded. *Mitigation:* Supabase Vault secrets manager (`vault.secrets`); grep `dist/` for the key; 90-day rotation policy in reference doc.
+- **UnitOfCompetency CSV XSS injection** — admin uploads `<script>` in description. *Mitigation:* Zod + DOMPurify on render; CSV upload role-restricted to `admin`.
+- **Cross-tenant Incident leak** — tenant-A user queries an incident linked to tenant-B apprentice. *Mitigation:* Incident RLS checks all three FK joins against `auth.jwt() ->> 'tenant_id'`; Playwright test with tenant-B identity.
+- **`tga-sync` partial write on timeout** — 7.5k qualifications inserted before 504; next sync double-counts. *Mitigation:* entire sync in single transaction; `tga_last_sync_status` enum in `tenant_settings` tracks recovery.
+- **RRULE infinite loop** — malformed `FREQ=DAILY;UNTIL=...;FREQ=MONTHLY`. *Mitigation:* Zod validation via `rrule` npm library parser at form level.
+
+**Stop-ship for Phase 3:**
+- [ ] `tga-sync` completes first run on sandbox endpoint, seeds ≥1000 qualifications, uses Supabase Vault secret
+- [ ] Playwright: tenant-A Incident NOT visible to tenant-B user (four-persona RLS explicitly tests this case)
+- [ ] CSV upload DOMPurify + `admin` role gate confirmed
+- [ ] RRULE invalid input rejected at form level
+- [ ] TGA API reference doc [docs/20260422-tga-api-integration-reference-v1.00W.md](../20260422-tga-api-integration-reference-v1.00W.md) exists and reviewed BEFORE implementation
+- [ ] Lighthouse ≥95 on Incident + Reminder forms
+
+### R.4 Phase 4 — Cross-app closure + lead-capture consolidation
+
+**Top attack paths:**
+- **V5 edge function drift exploits** — BSU copy missing CSRF check in CRM7 copy → attacker calls BSU copy with spoofed tenant_ids. *Mitigation:* delete BSU copy; single canonical CRM7 version.
+- **Candidate→Contact merge overwrites address/phone data** — duplicate candidate records (import glitch) both merge into same contact. *Mitigation:* dedupe by email BEFORE merge loop; flag duplicates; idempotent upsert with explicit conflict handling.
+- **Lead-capture deletion breaks braden.com.au** — hardcoded BSU project ref somewhere. *Mitigation:* Playwright live submit on braden.com.au BEFORE and AFTER deletion; roll back if diff.
+
+**Stop-ship for Phase 4:**
+- [ ] `grep -r lead-capture/index.ts` across all 6 supabase/functions/ returns exactly ONE hit (CRM7)
+- [ ] Backfill flags duplicate candidates; audit UI lists them
+- [ ] Playwright live submit on braden.com.au post-deletion returns success + row in unified `leads`
+- [ ] `docs/YYYYMMDD-cross-app-write-audit-v1.00W.md` artefact committed
+
+### R.5 Phase 5 — Schema + page-builder (highest risk, most red-team attention)
+
+**Top attack paths:**
+- **Stored XSS via widget `label_html`** — enterprise admin injects `<script>`. *Mitigation:* Zod schema rejects HTML entirely for v1 (plain text only); DOMPurify ready for v2 if HTML enabled; CSP `script-src 'self'` (no new `unsafe-inline`).
+- **Widget entity whitelist bypass** — admin sets `DataTable entity='auth.users'` to enumerate platform users. *Mitigation:* entity prop validated server-side against `tenant_entities WHERE tenant_id IN descendants_of(user_tenant_id)`; client-side whitelist is UX not security.
+- **Realtime fan-out bomb** — 5000-user enterprise publishes → thundering herd cache invalidation. *Mitigation:* publish debounced ≤1/5s; selective invalidation (key by changed entity_id, not full schema key); consumer exponential backoff + jitter.
+- **Cross-tenant nav exposure** — tenant-A author creates `is_developer_only=true` nav item; tenant-B stale cache shows it. *Mitigation:* RLS + `WHERE (NOT is_developer_only OR user_role IN ('platform_admin','developer'))`; Playwright tenant-B test.
+- **Enterprise pivot to braden scope** — enterprise admin rewrites `app_scope='braden'` on a page. *Mitigation:* RLS blocks non-platform-role writes to `app_scope='braden'` OR `is_developer_only=true`; 403 returned; Playwright test.
+- **AuthContext reload regression** — `useTenantSchema()` captures stale closure of `user.role`. *Mitigation:* reads from `useAuth()` via context, NOT closure; cache invalidates on role change; Playwright demote-role test.
+- **Page-builder keyboard inaccessible** — mouse-only drag-drop. *Mitigation:* `dnd-kit` library (keyboard built-in: Tab/Space/arrow keys); Playwright keyboard test.
+- **Enterprise-authored theme fails WCAG AA** — light-gray on light-gray. *Mitigation:* contrast checker on theme save; Lighthouse CI gate on sample.
+
+**Stop-ship for Phase 5:**
+- [ ] Zod widget-props schemas reject unknown keys (exhaustive discriminated union)
+- [ ] Widget `entity` prop whitelist enforced in RLS policy, not only client-side
+- [ ] DOMPurify wraps every tenant-authored HTML string on render (ready for v2)
+- [ ] RLS four-persona matrix PASSES for `tenant_page_layouts` + `tenant_navigation` including `is_developer_only=true` isolation
+- [ ] Playwright: enterprise-owner-of-subsidiary tries to write to `app_scope='braden'` layout → 403
+- [ ] Playwright: enterprise-owner creates/edits a layout scoped to their own enterprise + sub-org → success
+- [ ] Playwright: tenant-B user with stale cache does NOT see tenant-A's `is_developer_only=true` nav items
+- [ ] Playwright: keyboard-only navigation through page-builder drag-drop works (Tab/Space/arrows)
+- [ ] Realtime publish debounced ≤1/5s; consumer invalidation selective by entity_id (not full schema key)
+- [ ] Bundle delta ≤35 KB gzip for schema-registry consumer
+- [ ] Lighthouse accessibility ≥95 on a BSU-authored CRM7 dashboard with 5 widgets
+- [ ] `prefers-reduced-motion` respected on any realtime animation
+
+### R.6 Phase 6 — CI lint + docs
+
+**Top attack paths:**
+- **Lint rule not enforced on branch protection** — rule added but merge-bypass-able. *Mitigation:* explicitly add to required checks on `main` branch protection.
+- **Exemption comment abuse** — developers add `// DRY exemption: <reason>` liberally. *Mitigation:* exemption requires PR-body justification + reviewer sign-off; tracked in a quarterly audit.
+
+**Stop-ship for Phase 6:**
+- [ ] `.github/workflows/lint-schema.yml` lint rule rejects any PR adding `text` column matching `*_name|*_email|*_phone|*_company|*_code` without FK AND without `// DRY exemption: <reason>` comment
+- [ ] Rule added to `main` branch protection as required check
+- [ ] DRY doc v1.00A → v1.01A with §11 addendum
+- [ ] All 6 app CLAUDE.md updated with `useTenantSchema()` + `useTenantPageLayout()` patterns
+
+### R.7 Cross-phase dependency red flags
+
+1. **Phase 1 fuzzy-match ambiguity** feeds Phase 5's DataTable — any unresolved backfill surfaces as mixed-up rows in widgets.
+2. **Phase 2 TrainingContract** must ship before Phase 3 can reference it (Incident context optional FK).
+3. **Phase 3 TGA schema discovery** must be complete before Phase 5 exposes UnitOfCompetency via DataTable/EntitySelector — schema surprises break widget queries.
+4. **Phase 4 lead-capture consolidation** must finish before Phase 5 ships `/embed/lead-form` — an unconsolidated function means some embed callers hit stale code.
+5. **Phase 5 RLS on `tenant_entities`** is too permissive → all Phase 2/3 entities leak via page-builder widgets even though table RLS was correct. RLS layered check required.
+6. **AuthContext state-closure regression** in any phase ripples to all 5 consumer apps — every phase PR explicitly asserts no `setState-in-effect` reintroduction.
+
+---
+
+## S. Sign-off gates between phases (hard gates, no exceptions)
+
+Per master-orchestration §5: Plan → Red-team → Research → Refine (2 iterations) → Implement → Red-team → Fix → Verify (2 iterations) → QA → Prove completion.
+
+### S.1 Entry gate (before Phase N+1 starts)
+
+All boxes MUST be checked or the next phase does NOT start:
+
+- [ ] Phase N merged to `main` and production deploy READY
+- [ ] Phase N observability window: 60 min post-merge, zero new error class in Supabase logs + Vercel runtime logs
+- [ ] Phase N memory writeback complete: `bsuite_session_YYYYMMDD<letter>` + `bsuite_pending_actions` updated, MEMORY.md index under 200 lines
+- [ ] Phase N red-team report attached to merged PR with every R.x stop-ship item checked
+- [ ] Phase N OAuth M.3 red-team check signed off with evidence
+- [ ] Phase N+1 pre-phase gate items from R.x satisfied
+- [ ] Context7 queries for Phase N+1's new library usages captured in PR draft
+- [ ] No open `needs-decision` items on this plan
+
+### S.2 During-phase gates (continuous)
+
+Every PR within Phase N carries the K.8 checklist AND:
+
+- [ ] `mcp__claude_ai_Supabase__get_advisors` run post-migration, zero warnings OR documented exemption
+- [ ] Four-persona RLS matrix attached for every new/changed table
+- [ ] `grep -rE 'bg-slate-|text-slate-|#[0-9a-fA-F]{3,8}' <modified files>` clean of new hardcoded colours (theme plan §K)
+- [ ] `pnpm lint + test + typecheck` green; husky hook passed without `--no-verify`
+- [ ] Playwright smoke of the specific flow the PR touches — screenshot attached
+- [ ] Bundle-size delta measured for any consumer-bundle change (Phase 5)
+
+### S.3 Exit gate (Phase N complete)
+
+- [ ] All §R.N stop-ship boxes checked
+- [ ] Squash merge into `development`
+- [ ] Dev-preview Vercel deploy READY
+- [ ] 3 × Playwright full-suite runs green on preview (flake check)
+- [ ] Dev → main promotion PR opened with §S.1 checklist inline; merge only after checklist clean
+- [ ] Post-merge 60-min observability window clean → only THEN Phase N+1 entry gate can open
+
+### S.4 Emergency stop
+
+Any phase can trigger an emergency stop if:
+
+- Supabase Auth logs spike sign-in failures >2% / 15 min
+- Runtime error count >10/hr on any app
+- A red-team finding crosses the "security CRITICAL" bar mid-implementation
+- OAuth 2.1 regression check in M.3 fails
+
+Emergency stop = immediate `git revert` on `development`, memory write-back explaining the abort, pause until root-caused.
+
+---
+
+## T. Final skills + tools summary for Phase 1 kick-off
+
+When Phase 1 starts, the implementing agent MUST:
+
+1. Invoke `master-orchestration` + `using-superpowers` at turn start
+2. Invoke Phase 1 skill set (K.2): `supabase-postgres-best-practices`, `supabase`, `forms-and-validation`, `tanstack-query`, `shadcn-ui`, `test-driven-development`, `playwright`
+3. Run Context7 queries: `@tanstack/react-query@5` (Suspense query), `react-hook-form` (async validation), `@supabase/ssr` (server-side session)
+4. Pull current state via Supabase MCP: `list_tables` on `public.contacts`, `public.leads`, `public.invoices`, `public.tenant_settings`
+5. Dispatch `subagent-driven-development` 3-role team: implementer + spec-compliance reviewer + code-quality reviewer
+6. Write migration + selector code; run `get_advisors` post-apply (clean required)
+7. Run Playwright smoke per §R.1 stop-ship
+8. Self-run the `multi-agent-red-team-implementation` 4-lens pass BEFORE requesting review
+9. PR body carries K.8 + §M.3 OAuth check + §R.1 stop-ship boxes + §S.2 during-phase gates
+10. After merge: observability window + memory writeback + §S.1 entry gate for Phase 2
