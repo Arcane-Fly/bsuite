@@ -153,7 +153,7 @@ Update this index whenever a document is added or its status changes.
 
 **Applies to:** business-suite-unified, crm7, conduit, R80.3
 
-All webapp projects must use the Universal D2C Theme System defined in `docs/20260228-d2c-theme-specification-v1.00W.md`:
+All webapp projects must use the Universal D2C Theme System defined in `docs/20260228-d2c-theme-specification-v1.00A.md`:
 
 - **Tailwind config** extends with neon electric color palette (11 colors)
 - **CSS variables** defined in `globals.css` via `@layer base`
@@ -171,13 +171,17 @@ All webapp projects must use the Universal D2C Theme System defined in `docs/202
 
 **Key colors:**
 
-| Color | Hex | Use |
-|-------|-----|-----|
-| Electric Blue | `#2563eb` | Primary actions |
-| Electric Cyan | `#00cec9` | Accents, borders |
-| Electric Green | `#22c55e` | Success states |
-| Electric Coral | `#ff4757` | Alerts, destructive |
-| Electric Yellow | `#fdcb6e` | Warnings, info |
+| Color | OKLCH | Hex (legacy) | Use |
+|-------|-------|---------------|-----|
+| Electric Blue | `oklch(0.546 0.215 262.9)` | `#2563eb` | Primary actions |
+| Electric Cyan | `oklch(0.769 0.132 191.7)` | `#00cec9` | Accents, borders |
+| Electric Green | `oklch(0.723 0.192 149.6)` | `#22c55e` | Success states |
+| Electric Coral | `oklch(0.669 0.219 20.9)` | `#ff4757` | Alerts, destructive |
+| Electric Yellow | `oklch(0.868 0.125 81.4)` | `#fdcb6e` | Warnings, info |
+
+**Color Format Rule:**
+
+oklch is mandatory for all new color tokens. Hex (`#RRGGBB`) and `rgb()`/`rgba()` are only acceptable for (a) third-party component defaults that cannot be overridden, (b) legacy compatibility tokens not yet migrated. Never introduce a new hex/rgb color when an oklch equivalent exists.
 
 ### Corporate Branding (braden.com.au)
 
@@ -189,6 +193,7 @@ Braden is being refreshed, but it still uses company branding colors and does no
 - Use corporate typography and professional shadow language
 - Do not import D2C Neon colors, gradients, or glow treatments into Braden
 - See Braden project docs for the project-specific UI and branding rules
+- **Braden is exempt from the oklch color format rule** — corporate branding uses hex colors by design
 
 ---
 
