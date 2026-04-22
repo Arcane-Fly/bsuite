@@ -1,12 +1,22 @@
 /*
- * @bsuite/theme — root CSS entry point
+ * @bsuite/theme — root CSS entry point (D2C Neon Electric)
  *
  * Import this once at the top of your app's global stylesheet:
  *
- *   @import '@bsuite/theme/css';
+ *   @import '@bsuite/theme/css';           <- D2C Neon Electric (default)
  *
- * Provides the full D2C Neon Electric palette as CSS custom properties
- * plus reusable glow / neon-text utility classes.
+ * Braden corporate brand (separate baseline) is imported by the braden
+ * submodule only:
+ *
+ *   @import '@bsuite/theme/braden-css';    <- Braden corporate
+ *
+ * Both files provide the same architecture:
+ *   palette → surfaces + 5-tier text → role aliases → shadcn bridge
+ *   → text-on-fill. Consumer code binds to role aliases (bg-primary,
+ *   text-foreground, etc.) and works on either brand unchanged.
+ *
+ * Colourblind policy (platform-wide):
+ *   --role-error is purple on EVERY brand. Red is identity only.
  */
 
 @import './vars.css';
