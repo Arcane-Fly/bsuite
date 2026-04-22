@@ -221,29 +221,70 @@ export function BrandingProvider({
   }, [fetchBranding])
 
   // Subscribe to Realtime tenant row changes so branding propagates without reload
+  // SEC-005: filter the subscription to id=eq.<tenantId> so Supabase only
+  // sends the caller's own tenant row over the wire — prevents cross-tenant
+  // branding data leaking at the transport layer even if RLS is misconfigured.
   useEffect(() => {
     if (!isBrandingEnabled()) return
 
-    const channel = supabaseClient
-      .channel('tenant-branding-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tenants',
-          // filter is applied server-side via RLS — only own tenant rows are received
-        },
-        (_payload) => {
-          // Re-fetch to get the full branding_json_for_tenant RPC result
-          void fetchBranding()
-        },
-      )
-      .subscribe()
+    let cancelled = false
 
-    channelRef.current = channel
+    const subscribe = async () => {
+      // Resolve the caller's tenant ID from their active session.
+      // user_metadata.tenant_id is set by the onboarding edge function; we
+      // fall back to a user_tenants query if it is absent.
+      let tenantId: string | null = null
+
+      const { data: sessionData } = await supabaseClient.auth.getSession()
+      const uid = sessionData?.session?.user?.id ?? null
+
+      if (uid) {
+        const meta = sessionData?.session?.user?.user_metadata as Record<string, unknown> | undefined
+        tenantId = (meta?.tenant_id as string | undefined) ?? null
+
+        if (!tenantId) {
+          // Fallback: first active user_tenants row (same logic as auth_tenant_id() in DB)
+          const { data: utRow } = await supabaseClient
+            .from('user_tenants')
+            .select('tenant_id')
+            .eq('user_id', uid)
+            .eq('status', 'active')
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .single()
+          tenantId = utRow?.tenant_id ?? null
+        }
+      }
+
+      if (cancelled) return
+
+      const channelFilter = tenantId ? `id=eq.${tenantId}` : undefined
+
+      const channel = supabaseClient
+        .channel('tenant-branding-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tenants',
+            // SEC-005: server-side transport filter — only own tenant rows sent over wire
+            ...(channelFilter ? { filter: channelFilter } : {}),
+          },
+          (_payload) => {
+            // Re-fetch to get the full branding_json_for_tenant RPC result
+            void fetchBranding()
+          },
+        )
+        .subscribe()
+
+      channelRef.current = channel
+    }
+
+    void subscribe()
 
     return () => {
+      cancelled = true
       if (channelRef.current) {
         void supabaseClient.removeChannel(channelRef.current)
         channelRef.current = null
