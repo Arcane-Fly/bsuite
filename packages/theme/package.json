@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/theme",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -16,7 +16,8 @@
     "dist",
     "src/css",
     "src/tailwind-preset.js",
-    "src/preset-v4.css"
+    "src/preset-v4.css",
+    "docs"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -37,7 +38,13 @@
     "./preset-v4.css": "./src/preset-v4.css",
     "./css": "./src/css/index.css",
     "./vars.css": "./src/css/vars.css",
-    "./utilities.css": "./src/css/utilities.css"
+    "./utilities.css": "./src/css/utilities.css",
+    "./tokens-light.css": "./src/css/tokens-light.css",
+    "./tokens-dark.css": "./src/css/tokens-dark.css",
+    "./tokens-high-contrast.css": "./src/css/tokens-high-contrast.css",
+    "./tokens-brand-corporate-braden.css": "./src/css/tokens-brand-corporate-braden.css",
+    "./runtime-branding.css": "./src/css/runtime-branding.css",
+    "./docs/TOKEN-MAPPING.md": "./docs/TOKEN-MAPPING.md"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -46,11 +53,15 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
+    "@supabase/supabase-js": ">=2.38.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0",
     "tailwindcss": ">=3.4.0"
   },
   "peerDependenciesMeta": {
+    "@supabase/supabase-js": {
+      "optional": true
+    },
     "tailwindcss": {
       "optional": true
     }
