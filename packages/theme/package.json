@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/theme",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -11,7 +11,7 @@
     "url": "https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/theme"
   },
-  "description": "BSuite Universal D2C Neon Electric theme — Tailwind preset, CSS vars, ThemeProvider, SSR init helper. Shared across BSU, CRM7, conduit, R80.3, throughput.",
+  "description": "BSuite theme package — oklch-native D2C Neon Electric baseline + Braden corporate baseline, role aliases, shadcn bridge, eye-strain-safe text scale, runtime BrandingProvider for enterprise white-label. Shared across BSU, CRM7, conduit, R80.3, throughput, braden.",
   "files": [
     "dist",
     "src/css",
@@ -37,7 +37,8 @@
     "./preset-v4.css": "./src/preset-v4.css",
     "./css": "./src/css/index.css",
     "./vars.css": "./src/css/vars.css",
-    "./utilities.css": "./src/css/utilities.css"
+    "./utilities.css": "./src/css/utilities.css",
+    "./braden-css": "./src/css/braden.css"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
