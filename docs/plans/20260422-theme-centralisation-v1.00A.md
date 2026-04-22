@@ -168,7 +168,7 @@ BSU has the highest violation count (733) and is the user's primary visible surf
 
 ### Phase 3 — Codemod scale-out (4d)
 
-One PR per app, in violation-count order (highest first): braden (681) → throughput (456) → CRM7 (281) → R80.3 (201) → conduit (190).
+One PR per app, in the order decided in §12: throughput (456) → CRM7 (281) → R80.3 (201) → conduit (190) → braden (681, last, after D2C apps prove the codemod).
 
 Per app:
 - Consume `@bsuite/theme@0.2.0`.
