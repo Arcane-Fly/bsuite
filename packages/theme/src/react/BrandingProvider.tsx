@@ -25,7 +25,6 @@
 import {
   createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -137,7 +136,8 @@ function loadPersistedBranding(): TenantBranding | null {
 function isBrandingEnabled(): boolean {
   try {
     // Vite env var — only present in client bundles that set it
-    const flag = (import.meta as Record<string, unknown>).env as Record<string, string> | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const flag = (import.meta as any).env as Record<string, string> | undefined
     const value = flag?.VITE_ENABLE_BRANDING_OVERRIDE ?? flag?.['VITE_ENABLE_BRANDING_OVERRIDE']
     if (value === 'false' || value === '0') return false
   } catch {
