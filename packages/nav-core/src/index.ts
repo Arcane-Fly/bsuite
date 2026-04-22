@@ -26,6 +26,8 @@ export type { Tier } from './tier';
 export { useFilteredNav } from './useFilteredNav';
 export type { GatedNavSection, UseFilteredNavOptions } from './useFilteredNav';
 
+export { mergeNavConfigs } from './merge';
+
 export {
   BSUITE_APP_KEYS,
   BSUITE_PROD_URLS,
