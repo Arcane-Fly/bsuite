@@ -1,0 +1,85 @@
+/*
+ * @bsuite/theme — tokens-dark.css
+ *
+ * Full semantic token set for the dark theme.
+ * Applied to .dark.
+ *
+ * All values are in OKLCH — no hex, no hsl() wrappers.
+ * Source of truth: TOKEN-MAPPING.md v0.2.0 + vars.css
+ */
+
+.dark {
+
+  /* ===== Text ===== */
+  --text-primary:        oklch(0.982 0.002 248);
+  --text-secondary:      oklch(0.769 0.015 248);
+  --text-muted:          oklch(0.558 0.016 244.9);
+  --text-disabled:       oklch(0.428 0.015 248.2);
+  --text-on-primary:     oklch(1 0 0);
+  --text-on-surface:     oklch(0.982 0.002 248);
+  --color-primary-text:  oklch(0.623 0.188 259.8);   /* WCAG AA blue text on dark bg */
+  --color-accent-text:   oklch(0.769 0.132 191.7);   /* WCAG AA cyan text on dark bg */
+
+  /* ===== Background ===== */
+  --bg-body:      oklch(0.166 0.026 269.4);           /* deep navy */
+  --bg-surface:   oklch(0.19 0.02 260);
+  --bg-panel:     oklch(0.242 0.03 269.9);
+  --bg-tertiary:  oklch(0.326 0.036 266.7);
+  --bg-elevated:  oklch(0.292 0.034 270);
+  --bg-input:     oklch(0.242 0.03 269.9 / 0.6);
+  --bg-hover:     oklch(0.39 0.035 265);
+  --bg-selected:  oklch(0.546 0.215 262.9 / 0.15);
+
+  /* ===== Border ===== */
+  --border-color:        oklch(0.769 0.132 191.7 / 0.15);
+  --border-color-strong: oklch(0.769 0.132 191.7 / 0.3);
+  --border-shell:        oklch(0.769 0.132 191.7 / 0.18);
+
+  /* ===== Accent / brand ===== */
+  --accent-primary:   oklch(0.546 0.215 262.9);   /* Electric Blue */
+  --accent-secondary: oklch(0.769 0.132 191.7);   /* Electric Cyan */
+
+  /* ===== Status (same values in both themes) ===== */
+  --color-success: oklch(0.697 0.135 172.1);
+  --color-warning: oklch(0.868 0.125 81.4);
+  --color-error:   oklch(0.669 0.219 20.9);
+  --color-info:    oklch(0.769 0.132 191.7);
+
+  /* ===== shadcn/ui bridge tokens ===== */
+  --background:             oklch(0.166 0.026 269.4);
+  --foreground:             oklch(0.982 0.002 248);
+  --card:                   oklch(0.242 0.03 269.9);
+  --card-foreground:        oklch(0.982 0.002 248);
+  --popover:                oklch(0.292 0.034 270);
+  --popover-foreground:     oklch(0.982 0.002 248);
+  --primary:                oklch(0.769 0.132 191.7);  /* Cyan as primary in dark */
+  --primary-foreground:     oklch(0.166 0.026 269.4);
+  --secondary:              oklch(0.242 0.03 269.9);
+  --secondary-foreground:   oklch(0.982 0.002 248);
+  --muted:                  oklch(0.242 0.03 269.9);
+  --muted-foreground:       oklch(0.558 0.016 244.9);
+  --accent:                 oklch(0.546 0.215 262.9);  /* Blue as accent in dark */
+  --accent-foreground:      oklch(0.982 0.002 248);
+  --destructive:            oklch(0.669 0.219 20.9);
+  --destructive-foreground: oklch(0.982 0.002 248);
+  --border:                 oklch(0.769 0.132 191.7 / 0.15);
+  --input:                  oklch(0.769 0.132 191.7 / 0.15);
+  --ring:                   oklch(0.769 0.132 191.7);  /* Cyan ring in dark */
+
+  /* ===== Box shadows — deep blacks + neon cyan glow ===== */
+  --shadow-elev-0: none;
+  --shadow-elev-1: 0 1px 3px oklch(0 0 0 / 0.3);
+  --shadow-elev-2: 0 4px 8px oklch(0 0 0 / 0.4), 0 1px 3px oklch(0 0 0 / 0.3);
+  --shadow-elev-3: 0 8px 16px oklch(0 0 0 / 0.5), 0 4px 8px oklch(0 0 0 / 0.3);
+  --shadow-elev-4: 0 16px 32px oklch(0 0 0 / 0.6), 0 8px 16px oklch(0 0 0 / 0.4);
+
+  /* ===== Neon glow helpers ===== */
+  --glow-button:       0 0 20px oklch(0.769 0.132 191.7 / 0.3);
+  --glow-button-hover: 0 0 30px oklch(0.769 0.132 191.7 / 0.5);
+  --glow-card:         0 0 15px oklch(0.769 0.132 191.7 / 0.08);
+  --glow-card-hover:   0 0 25px oklch(0.769 0.132 191.7 / 0.15);
+
+  /* ===== Button shadow ===== */
+  --button-shadow:       0 0 20px oklch(0.769 0.132 191.7 / 0.3);
+  --button-hover-shadow: 0 0 30px oklch(0.769 0.132 191.7 / 0.5);
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@bsuite/theme-codemod",
+  "version": "1.0.0",
+  "description": "One-off codemod: hardcoded colour classes → @bsuite/theme semantic tokens",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "run": "node --experimental-vm-modules migrate.mjs",
+    "dry-run": "node --experimental-vm-modules migrate.mjs --dry-run"
+  },
+  "dependencies": {}
+}
