@@ -248,3 +248,14 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 - Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
 - Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
 - **Anomaly:** ships with `package-lock.json` (npm), not `pnpm-lock.yaml`. Tracked separately for consolidation across the suite.
+
+## Theme & Colour Tokens (updated 2026-04-22)
+
+- **Package:** `@bsuite/theme v0.2.0` is the single source of truth for all colour tokens
+- **Import:** Every D2C app global CSS starts with `@import '@bsuite/theme/css';`
+- **OKLCH only:** Never use hex, hsl(), or rgba() for colour tokens in D2C apps
+- **Semantic classes:** Use `text-foreground`, `bg-card`, `border-border`, `shadow-elev-*` — not `text-slate-*` or `bg-gray-*`
+- **Token mapping:** `packages/theme/docs/TOKEN-MAPPING.md` — always consult before adding a colour
+- **Braden exemption:** `braden/` is BRADEN-EXEMPT from the oklch rule; use corporate Red/Gold tokens
+- **CI gate:** `bsuite/no-hardcoded-colours` ESLint rule will ERROR on any new hardcoded colour in D2C apps
+- **BrandingProvider:** Wrap app root in `<BrandingProvider supabaseClient={supabase}>` inside `<ThemeProvider>` for runtime tenant white-labelling

@@ -1,0 +1,22 @@
+/*
+ * runtime-branding.css — populated at runtime by <BrandingProvider>
+ *
+ * DO NOT add static values here. BrandingProvider reads the tenant's
+ * branding JSON from Supabase and calls
+ *   document.documentElement.style.setProperty('--primary', value)
+ * for each key. This file is a documentation placeholder only.
+ *
+ * Keys populated at runtime (if tenant has branding configured):
+ *   --primary         (oklch string)
+ *   --accent          (oklch string)
+ *   --accent-primary  (oklch string)
+ *   --app-primary     (oklch string)
+ *   --app-accent      (oklch string)
+ * Logo URLs are injected via JS into CSS vars:
+ *   --logo-url        (url() string)
+ *   --mark-url        (url() string)
+ */
+
+:root[data-branding-loaded="true"] {
+  /* intentionally empty — BrandingProvider injects vars directly via JS */
+}
