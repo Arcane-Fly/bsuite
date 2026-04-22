@@ -149,51 +149,55 @@ Update this index whenever a document is added or its status changes.
 
 ## 5. Theme Compliance
 
-### D2C Neon Electric Theme (webapps)
+### §5 — Colour tokens (updated 2026-04-22 for @bsuite/theme v0.3.0)
 
-**Applies to:** business-suite-unified, crm7, conduit, R80.3
+**Rule:** OKLCH mandatory everywhere except `braden/` (corporate brand exemption).
 
-All webapp projects must use the Universal D2C Theme System defined in `docs/20260228-d2c-theme-specification-v1.00A.md`:
+**Single source of truth:** `@bsuite/theme v0.3.0` (`packages/theme/`).
 
-- **Tailwind config** extends with neon electric color palette (11 colors)
-- **CSS variables** defined in `globals.css` via `@layer base`
-- **ThemeProvider** wraps the app for light/dark/system mode
-- **Dark mode** uses deep navy backgrounds with neon accents
-- **Light mode** uses off-white backgrounds with electric accents
-- **Semantic colors** for status (success, warning, error, info)
-- **Typography:** Inter (display/body), JetBrains Mono (code)
-- **Surface language:** Balanced Hybrid shells, elevated cards, restrained glow, and semantic shell tokens rather than hardcoded styling
+**Import in every D2C app global stylesheet:**
+```css
+@import '@bsuite/theme/css';
+```
 
-**Implementation rule:**
+**Never add** new `text-slate-*`, `bg-gray-*`, `text-white` (outside semantic use), `bg-white`, or raw hex/rgba in any D2C app source file.
 
-- CRM7 is the reference implementation for the shared D2C shell and high-visibility workflow surfaces.
-- `business-suite-unified`, `conduit`, and `R80.3` should follow the same semantic shell model even when their local token plumbing differs.
+**Semantic token reference:** `packages/theme/docs/TOKEN-MAPPING.md` — use this as the authoritative lookup for any migration or new code.
 
-**Key colors:**
+**Per-app brand tokens:**
+| App | `--app-primary` | `--app-accent` |
+|---|---|---|
+| BSU | `oklch(0.541 0.247 293.0)` | `oklch(0.709 0.159 293.5)` |
+| CRM7 | `oklch(0.546 0.215 262.9)` | `oklch(0.769 0.132 191.7)` |
+| R80.3 | `oklch(0.666 0.157 58.3)` | `oklch(0.837 0.164 84.4)` |
+| conduit | `oklch(0.596 0.127 163.3)` | `oklch(0.773 0.153 163.3)` |
+| throughput | `oklch(0.546 0.215 262.9)` | `oklch(0.769 0.132 191.7)` |
+| braden | `oklch(0.488 0.170 17.6)` (Red) | `oklch(0.769 0.096 90.9)` (Gold) |
 
-| Color | OKLCH | Hex (legacy) | Use |
-|-------|-------|---------------|-----|
-| Electric Blue | `oklch(0.546 0.215 262.9)` | `#2563eb` | Primary actions |
-| Electric Cyan | `oklch(0.769 0.132 191.7)` | `#00cec9` | Accents, borders |
-| Electric Green | `oklch(0.723 0.192 149.6)` | `#22c55e` | Success states |
-| Electric Coral | `oklch(0.669 0.219 20.9)` | `#ff4757` | Alerts, destructive |
-| Electric Yellow | `oklch(0.868 0.125 81.4)` | `#fdcb6e` | Warnings, info |
+**CI enforcement:** `bsuite/no-hardcoded-colours` ESLint rule (error severity) in all D2C apps. Braden: warn + BRADEN-EXEMPT file comment. Post-build hex-in-dist check warns on any surviving hex literals in CSS bundles.
 
-**Color Format Rule:**
+### §5a — Runtime white-labelling (Phase 4, 2026-04-22)
 
-oklch is mandatory for all new color tokens. Hex (`#RRGGBB`) and `rgb()`/`rgba()` are only acceptable for (a) third-party component defaults that cannot be overridden, (b) legacy compatibility tokens not yet migrated. Never introduce a new hex/rgb color when an oklch equivalent exists.
+**Mechanism:** `<BrandingProvider>` from `@bsuite/theme/react` calls `branding_json_for_tenant()` RPC on mount and subscribes to Supabase Realtime updates. Import from `@bsuite/theme/react` only — do NOT duplicate in `src/providers/`.
 
-### Corporate Branding (braden.com.au)
+**Branding JSONB schema** on `tenants.branding`:
+```json
+{
+  "primary": "oklch(0.55 0.22 265)",
+  "accent": "oklch(0.77 0.13 195)",
+  "logo_url": "https://storage.supabase.co/…",
+  "mark_url": "…",
+  "font_stack": null
+}
+```
 
-**Applies to:** braden project only
+**Logo upload path:** `tenant-logos/{tenant_id}/logo.{png|jpg|webp|svg}` in Supabase Storage.
+- Enforce 2 MB client-side limit before PUT.
+- Bucket is public; existing 3 RLS policies govern access by tenant path prefix.
 
-Braden is being refreshed, but it still uses company branding colors and does not follow the D2C Neon theme.
+**Kill switch:** `VITE_ENABLE_BRANDING_OVERRIDE=false` (Vite apps) or `NEXT_PUBLIC_ENABLE_BRANDING_OVERRIDE=false` (Next.js) disables runtime overrides instantly without code change.
 
-- Keep Braden Red / Gold / Navy as the visual identity
-- Use corporate typography and professional shadow language
-- Do not import D2C Neon colors, gradients, or glow treatments into Braden
-- See Braden project docs for the project-specific UI and branding rules
-- **Braden is exempt from the oklch color format rule** — corporate branding uses hex colors by design
+**Three-tier read hierarchy:** `tenant_app_branding` (Tier 3, per-app) → `tenant_branding` (Tier 2, per-tenant) → `platform_branding` (Tier 1, platform defaults) → D2C hardcoded fallback.
 
 ---
 
