@@ -141,14 +141,7 @@ function isBrandingEnabled(): boolean {
     const value = flag?.VITE_ENABLE_BRANDING_OVERRIDE ?? flag?.['VITE_ENABLE_BRANDING_OVERRIDE']
     if (value === 'false' || value === '0') return false
   } catch {
-    // Not in a Vite context (e.g. Next.js) — fall through to next check
-  }
-  try {
-    // Next.js / Node env var
-    const value = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ENABLE_BRANDING_OVERRIDE)
-    if (value === 'false' || value === '0') return false
-  } catch {
-    // ignore
+    // Not in a Vite context — default to enabled
   }
   return true
 }
@@ -234,7 +227,7 @@ export function BrandingProvider({
           table: 'tenants',
           // filter is applied server-side via RLS — only own tenant rows are received
         },
-        (_payload) => {
+        (_payload: unknown) => {
           // Re-fetch to get the full branding_json_for_tenant RPC result
           void fetchBranding()
         },
