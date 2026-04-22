@@ -259,3 +259,57 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 - **Braden exemption:** `braden/` is BRADEN-EXEMPT from the oklch rule; use corporate Red/Gold tokens
 - **CI gate:** `bsuite/no-hardcoded-colours` ESLint rule will ERROR on any new hardcoded colour in D2C apps
 - **BrandingProvider:** Wrap app root in `<BrandingProvider supabaseClient={supabase}>` inside `<ThemeProvider>` for runtime tenant white-labelling
+
+---
+
+## Phase 5 — Schema + Page Builder (2026-04-22)
+
+### New packages
+- `@bsuite/nav-core@0.5.0` — exports `mergeNavConfigs(base, overlay)` for additive DB nav merging
+- `@bsuite/schema-registry@0.1.0` — `useTenantSchema`, `useTenantPageLayout`, `useTenantNavigation`, `TenantLayoutSlot`, 5 widgets
+
+### useTenantSchema pattern
+```typescript
+import { useTenantSchema } from '@bsuite/schema-registry/react';
+const { data } = useTenantSchema(supabase, 'crm7'); // AppScope: 'bsu'|'crm7'|'conduit'|'r80'|'braden'|'all'
+```
+
+### useTenantNavigation + mergeNavConfigs pattern
+```typescript
+import { useTenantNavigation } from '@bsuite/schema-registry/react';
+import { mergeNavConfigs } from '@bsuite/nav-core';
+const { navConfig: dbNav } = useTenantNavigation(supabase, 'crm7');
+const merged = dbNav ? mergeNavConfigs(STATIC_NAV_CONFIG, dbNav) : STATIC_NAV_CONFIG;
+```
+
+### TenantLayoutSlot pattern
+```tsx
+import { TenantLayoutSlot } from '@bsuite/schema-registry/react';
+<TenantLayoutSlot supabase={supabase} route='/dashboard' appScope='crm7' />
+// Renders null if no layout authored — never throws, always safe to add
+```
+
+### Migration naming convention
+- Phase 5 (Perplexity): `20260423_phase5_*` in BSU + CRM7 supabase/migrations
+- Phase 4 (CC): `20260423_phase4_*`
+- Phase 6 (CC): `20260423_phase6_*`
+
+### Theme rules
+- All color values in CSS: oklch() only — no hex, no rgba()
+- `platform_branding` table: access via `platform_branding_public` view (excludes force_override_tenant_ids)
+- ESLint rule `no-hardcoded-colors` is `error` in all D2C apps (bsu, crm7, conduit, r80, throughput)
+
+### DB pre-conditions (PR 5.0 — MERGED to development)
+New tables/functions landed in `supabase/migrations/20260423_phase5_*`:
+- `tenant_page_layouts` — stores authored page layout JSON per tenant + route + app_scope
+- `tenant_navigation` — stores nav overlay JSON per tenant + app_scope
+- `tenant_field_definitions` — per-tenant field schema overrides
+- `descendants_of(uuid)` / `ancestors_of(uuid)` — recursive tenant hierarchy helpers
+- RLS policies on all three tables (tenant-scoped reads, service_role writes)
+
+### Phase 5 PR status
+| PR | Package/Feature | Branch | Status |
+|----|----------------|--------|--------|
+| 5.0 | DB pre-conditions | merged | MERGED to development |
+| 5.1 | `@bsuite/nav-core@0.5.0` | merged | MERGED + PUBLISHED |
+| 5.2 | `@bsuite/schema-registry@0.1.0` | `feat/phase5-schema-registry` | IN PROGRESS |
