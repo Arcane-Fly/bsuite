@@ -20,7 +20,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260227-auth-map-reference-v1.00A.md` | Authentication map for the Business Suite ecosystem (BSU, CRM7, R80.3, Braden) |
 | `20260227-bsuite-deep-audit-report-v1.00A.md` | Deep audit report covering CRM7, BSU, Conduit, braden.com.au, and R80.3 |
 | `20260227-contributing-standards-guide-v1.00A.md` | Universal quality, documentation, and code standards for all BSuite projects |
-| `20260227-dry-one-shot-architecture-v1.00A.md` | DRY principles and one-shot data entry architecture for all modules |
+| `20260227-dry-one-shot-architecture-v1.01A.md` | DRY principles and one-shot data entry architecture for all modules (v1.01A: adds §11 Phase 1–6 gap closure) |
+| `20260423-cross-app-write-audit-v1.00W.md` | Phase 4 V3+V4 cross-app write audit: zero active violations for `users` / `apprentices` |
 | `20260301-crm7-page-inventory-v1.00A.md` | CRM7 page inventory — 148 pages audited with data source and status |
 | `20260301-crm7-rbac-matrix-v1.00A.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
 | `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification (palette, Tailwind config, CSS variables) |
