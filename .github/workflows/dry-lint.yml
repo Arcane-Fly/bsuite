@@ -1,0 +1,37 @@
+name: DRY lint — free-text-where-FK (Phase 6c)
+
+# Phase 6c lint rule — scans PR-delta migration files for new free-text
+# columns (*_name | *_email | *_phone | *_company | *_code) added to a
+# table that already has a *_id FK column, without a `-- DRY exemption:
+# <reason>` comment. Intended as a code-review prompt per plan §R.6.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'packages/db/migrations/**.sql'
+      - 'scripts/dry-free-text-where-fk-lint.sh'
+      - '.github/workflows/dry-lint.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  dry-lint:
+    runs-on: ubuntu-latest
+    env:
+      BASE_REF: ${{ github.base_ref }}
+    steps:
+      - name: Checkout (full history required for diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure base ref is available
+        run: |
+          git fetch origin "${BASE_REF}:${BASE_REF}" || true
+
+      - name: Run DRY lint
+        run: |
+          bash scripts/dry-free-text-where-fk-lint.sh "origin/${BASE_REF}"
