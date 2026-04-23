@@ -1342,7 +1342,7 @@ Any file in feat/phase5-consumer-crm7 branch — work moved to development
 Skills & MCPs for Execution
 Tool When
 supabase MCP All migrations, edge function deploy, RLS application, execute_sql, apply_migration, list_tables
-vercel MCP + vcp_[REDACTED] Deploy edge functions, monitor builds
+vercel MCP + VERCEL_TOKEN (agent secret — MUST ROTATE, was previously committed) Deploy edge functions, monitor builds
 github_mcp_direct (gh CLI) Commit, push, PR creation on development
 xero-integration Xero Payroll AU EarningsRate, pay run, batch invoices, OAuth refresh
 supabase-postgres-best-practices All schema design — indexing, JSONB vs structured, immutable tables
@@ -1539,17 +1539,17 @@ Infrastructure
 Item Value
 Supabase project tuybltdrdefjblnplpqo
 Supabase URL https://tuybltdrdefjblnplpqo.supabase.co
-Supabase publishable key sb_publishable_[REDACTED]
-Supabase service role key sb_secret_[REDACTED]
+Supabase publishable key <stored in Vercel env — see SUPABASE_PUBLISHABLE_KEY>
+Supabase service role key <stored in Vercel env — see SUPABASE_SERVICE_ROLE_KEY (MUST ROTATE — was previously committed)>
 Vercel team team_ML7jNl1dZwSwgkKksx1pAOO9
-Vercel PAT vcp_[REDACTED]
+Vercel PAT <stored in agent secrets — see VERCEL_TOKEN (MUST ROTATE — was previously committed)>
 Vercel project IDs BSU=prj_OYfvQ2LzwnSFdV2DzxKHCl1H7ZBu, CRM7=prj_ZcvIEwYIBFQBfbJafOjGuc2THSbA, conduit=prj_EpTqQLe4muwr0E18AZoWcMRgUuT7, R80.3=prj_rYA6cjcjZYnHGJ0y366x4Xzyb9Ps
 GitHub org GaryOcean428
 Memory API https://qig-memory-api.vercel.app/api/memory/bsuite_session_20260423a
-AI Gateway API key vck_[REDACTED]
+AI Gateway API key <stored in agent secrets — see AI_GATEWAY_API_KEY (MUST ROTATE — was previously committed)>
 JODIE AI model slug xai/grok-4.20-reasoning
-Developer login braden.lang77@gmail.com / [REDACTED_DEV_PW]
-NPM token npm_[REDACTED]
+Developer login <stored in 1Password>
+NPM token <stored in agent secrets — see NPM_TOKEN (MUST ROTATE — was previously committed)>
 pnpm version 10.33.0
 git push method api_credentials=["github"] on bash tool (uses git-agent-proxy) — do NOT use gh auth setup-git with enterprise token (expired)
 Repo Branches
