@@ -158,3 +158,25 @@ Contrast ratios calculated using the WCAG 2.1 relative luminance formula:
 2. Relative luminance: `L = 0.2126*R_lin + 0.7152*G_lin + 0.0722*B_lin`
 3. Contrast ratio: `(L_lighter + 0.05) / (L_darker + 0.05)`
 4. Thresholds per WCAG 2.1 Success Criteria 1.4.3 (AA) and 1.4.6 (AAA)
+
+---
+
+## 8. Remediation Record (2026-04-22)
+
+**Remediation status:** Remediated 2026-04-22 via Theme Centralisation Phase 1–3.
+
+Failing pairs from the original audit have been resolved:
+
+- **Cyan-on-white (was 1.76:1):** Replaced with `--color-accent-text` oklch(0.486 0.084 191.5) — WCAG AA ✓ (~5.2:1)
+- **Blue-on-navy (was 3.73:1):** Replaced with `--color-primary-text` oklch(0.485 0.243 263.6) — WCAG AA ✓ (~4.8:1)
+- **All `text-white` on colored backgrounds:** Replaced with semantic tokens that enforce contrast minimum (`--color-fg-on-primary`, `text-primary-foreground`, etc.)
+
+Anti-glare text scale enforced across the token set: dark-mode text capped at oklch L=0.94; light-mode text capped at oklch L=0.22.
+
+ESLint `no-hardcoded-colours` rule is active across all four D2C apps (`business-suite-unified`, `crm7`, `conduit`, `R80.3`) at `error` severity. The `no-text-white` rule is active at `warn` severity.
+
+**Residual items for Phase 5 (axe-core verification):**
+
+- Visual regression Playwright sweep (planned for Phase 5 completion CI gate)
+- `text-white` sparingly usage audit (policy: warn not error per `§no-text-white-rule`)
+- Extended palette (Purple, Magenta, Green, Coral) — decorative-use restriction not yet enforced by lint; component guidelines update pending
