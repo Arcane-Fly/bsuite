@@ -1,8 +1,8 @@
 # DRY Principles & One-Shot Data Entry Architecture
 
-**Applies to:** CRM7 • R8 • BSU • Conduit • All future modules
-**Source of truth:** Unified Supabase schema (`business-suite-unified/database/`)
-**Last updated:** 2026-03-01
+**Applies to:** CRM7 • R8 • BSU • Conduit • braden • throughput • All future modules
+**Source of truth:** Unified Supabase schema (`business-suite-unified/database/` + `crm7/supabase/migrations/`)
+**Last updated:** 2026-04-23 (v1.01A — Phase 6a gap-closure refresh)
 
 ---
 
@@ -444,6 +444,70 @@ Schema files: `hostEmployer`, `hostAgreement`, `award`, `vacancy`, `qualificatio
 | `@bsuite/charge-calc` | `packages/charge-calc/` | CRM7 (`file:../packages/charge-calc`), R80.3 (`workspace:*`) |
 
 **Single source of truth** for all charge rate calculations. Both projects delegate to this package — no duplicated calc logic.
+
+---
+
+## 11. 2026-04-22/23 Gap Closure — Phases 1 through 6 outcomes
+
+The master plan [`docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`](plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md) executed six phases of DRY-violation closure and schema-builder uplift. This section captures the on-disk outcomes so future agents can reconcile §1 (Entity Ownership Map) and §6 (DRY Violations to Watch For) against what actually shipped.
+
+### Phase 1 — CRITICAL golden-path FKs + braden lead-notification fix (shipped)
+
+| Violation | Fix |
+|-----------|-----|
+| `contacts` + `leads` + `invoices` carried free-text `client_name` instead of `client_id` FK | Migration `crm7/supabase/migrations/20260422140000_phase1_golden_path_fks.sql` adds `client_id UUID REFERENCES clients(id)` with fuzzy-match backfill of the historic name strings |
+| braden website leads landed at `braden.lang77@gmail.com` not `braden@braden.com.au` | Migration `business-suite-unified/supabase/migrations/20260422140100_update_braden_lead_notification_email.sql` adds `tenant_settings.lead_notification_email` and seeds the braden-website tenant row. Phase 4 V5 (see below) wires the crm7 `lead-capture` edge function to read this column. |
+
+### Phase 2 — MEDIUM compliance/billing FKs (shipped)
+
+| Violation | Fix |
+|-----------|-----|
+| `placements` held free-text `award_code` instead of FK to `award_rates` | Migration `crm7/supabase/migrations/20260422075100_phase2_medium_fks.sql` adds `award_rate_id` with resolver + synthetic-discontinued backfill. Comment drift tracked in `crm7/supabase/migrations/CLAUDE.md` Nit 4 + Nit 5. |
+| `vet_assessments` had no FK to host employer | Same migration adds `host_employer_id` + snapshot trigger on the host-employer primary contact. Nit 4 guard bug fixed in `20260422092715_fix_primary_contact_snapshot_trigger_phone_only.sql`. |
+| No entity for apprenticeship training contracts | Same migration creates `training_contracts` with lifecycle states. |
+| FK indexes absent | `crm7/supabase/migrations/20260422180000_phase2_fk_indexes.sql` adds covering indexes. |
+
+### Phase 3 — GTO entity gap + TGA API integration (shipped)
+
+| Violation / Gap | Fix |
+|-----------|-----|
+| No entities for STAs, AASS providers, units of competency, incidents, reminders | `crm7/supabase/migrations/20260422213000_phase3_gto_entities.sql` creates single-table STA + AASS + UoC + Incident + Reminder entities per §7.1 decision (state discriminator, NOT polymorphic). |
+| UoC seed data had to come from an official source | `crm7/supabase/functions/tga-sync/` edge function pulls training.gov.au web services; CSV fallback in Developer Portal. See `docs/20260422-tga-api-integration-reference-v1.00W.md`. |
+| Stage-2 UoC remodel for alignment rules | `crm7/supabase/migrations/20260422230000_phase3_stage2_uoc_remodel.sql` + `20260423010000_phase3_uoc_drop_legacy_contract.sql`. |
+
+### Phase 4 — Cross-app write-violation closure + lead-capture consolidation (shipped 2026-04-23)
+
+| Violation | Fix |
+|-----------|-----|
+| V1 — Conduit candidate → CRM7 apprentice handoff created a fresh `contacts` row every time, even when one already existed for that email | `crm7/supabase/migrations/20260423020000_phase4_v1_candidate_contact_merge.sql` replaces the `create_apprentice_from_candidate` RPC with a version that merges by `(tenant_id, lower(email))` before insert. Non-NULL fields in the existing contact are preserved. Backfill DO block covers historic `source='conduit_handoff'` apprentices. |
+| V3 — users mirrored in any app? | **No.** Grep audit `docs/20260423-cross-app-write-audit-v1.00W.md` confirms zero local `public.users` tables. All auth identity lives in `auth.users` (GoTrue). |
+| V4 — apprentices mirrored in any app? | **No active violation.** CRM7 owns the canonical `apprentices` table; R80.3 and BSU are readers. throughput carries a dormant `CREATE TABLE IF NOT EXISTS` duplicate that is never executed against the shared project — tracked as throughput-debt-001. |
+| V5 — `lead-capture` edge function duplicated in both BSU and crm7 (drifted) | crm7 is the canonical copy; BSU copy deleted. crm7 copy gained tenant-scoped admin-email notification via `tenant_settings.lead_notification_email` (replaces BSU's hardcoded `info@braden.com.au`). |
+
+### Phase 5 — Schema + page-builder + navigation uplift (shipped 2026-04-22/23)
+
+| Entity | Role |
+|--------|------|
+| `tenant_page_layouts` | BSU-authored page layout JSON per `(tenant_id, app_scope, route_path)` |
+| `tenant_navigation` | BSU-authored navigation overlays per `(tenant_id, app_scope)` |
+| `tenant_field_definitions` | Tenant-scoped custom field metadata for Phase 5+ form extensions |
+| `tenant_entities` | Whitelist of entities a tenant may bind widgets to |
+| `platform_branding` / `tenant_branding` / `tenant_app_branding` | Three-tier branding already delivered by Phase 4 theme work |
+
+Consumer-side renderer: `@bsuite/schema-registry@^0.1.0` exports `<TenantLayoutSlot route=... appScope=... supabase=...>` + `useTenantNavigation(supabase, appScope)`. Realtime invalidation via `tenant-schema:<tenant_id>` channel. RLS policies enforce `is_developer_only=true` isolation from Enterprise-tenant authors — only `platform_admin` / `developer` may write to `app_scope='braden'` or developer-only surfaces.
+
+### Phase 6 — Documentation + CI lint (this section)
+
+- This document renamed `v1.00A` → `v1.01A` and now carries §11 (above).
+- Each consumer app's `CLAUDE.md` updated with the `TenantLayoutSlot` + `useTenantNavigation` pattern (§6b).
+- CI lint rule `no-free-text-where-fk` added as a GitHub Actions reusable workflow in every submodule repo (`.github/workflows/dry-lint.yml`). Rule flags any new migration `text` column matching `*_name|*_email|*_phone|*_company|*_code` added to a table that has an existing `_id` FK column, unless accompanied by `-- DRY exemption: <reason>` (§6c).
+
+### How to reconcile §1 after a future change
+
+1. Open the merge migration in the owning submodule.
+2. Update §1 entity row with: the new column, the FK target, and any new app that READs the entity.
+3. If a violation was closed, append a bullet under §11 with migration filename + fix summary.
+4. Status-bump the doc: v1.01A → v1.02A when §11 gains a new Phase block.
 
 ---
 
