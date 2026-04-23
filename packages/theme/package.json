@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/theme",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -11,13 +11,12 @@
     "url": "https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/theme"
   },
-  "description": "BSuite Universal D2C Neon Electric theme — Tailwind preset, CSS vars, ThemeProvider, SSR init helper. Shared across BSU, CRM7, conduit, R80.3, throughput.",
+  "description": "BSuite theme package — oklch-native D2C Neon Electric baseline + Braden corporate baseline, role aliases, shadcn bridge, eye-strain-safe text scale, runtime BrandingProvider for enterprise white-label. Shared across BSU, CRM7, conduit, R80.3, throughput, braden.",
   "files": [
     "dist",
     "src/css",
     "src/tailwind-preset.js",
-    "src/preset-v4.css",
-    "docs"
+    "src/preset-v4.css"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,12 +38,7 @@
     "./css": "./src/css/index.css",
     "./vars.css": "./src/css/vars.css",
     "./utilities.css": "./src/css/utilities.css",
-    "./tokens-light.css": "./src/css/tokens-light.css",
-    "./tokens-dark.css": "./src/css/tokens-dark.css",
-    "./tokens-high-contrast.css": "./src/css/tokens-high-contrast.css",
-    "./tokens-brand-corporate-braden.css": "./src/css/tokens-brand-corporate-braden.css",
-    "./runtime-branding.css": "./src/css/runtime-branding.css",
-    "./docs/TOKEN-MAPPING.md": "./docs/TOKEN-MAPPING.md"
+    "./braden-css": "./src/css/braden.css"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -53,7 +47,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": ">=2.38.0",
+    "@supabase/supabase-js": ">=2.0.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0",
     "tailwindcss": ">=3.4.0"
@@ -67,8 +61,10 @@
     }
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.3.28",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "^28.1.0",
