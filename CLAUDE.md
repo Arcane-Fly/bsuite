@@ -164,7 +164,7 @@ Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..`
 
 - `docs/20260227-contributing-standards-guide-v1.00A.md` — full quality standards
 - `docs/20260228-d2c-theme-specification-v1.00A.md` — active D2C theme specification
-- `docs/20260227-dry-one-shot-architecture-v1.00A.md` — entity ownership and DRY patterns
+- `docs/20260227-dry-one-shot-architecture-v1.01A.md` — entity ownership and DRY patterns (v1.01A: Phase 1–6 gap closure)
 - `docs/20260227-auth-map-reference-v1.00A.md` — authentication architecture
 
 ## Persistent Memory Protocol
