@@ -183,6 +183,28 @@
   --border: var(--dark-border);
   --input: var(--dark-border);
   --ring: var(--role-accent);                        /* cyan ring in dark = more visible */
+
+  /* ===== Dark-mode status token overrides =====
+   * Lighter / more saturated values so status indicators remain readable
+   * against the dark navy surface (--dark-bg-primary L≈0.17). */
+  --status-success: oklch(0.72 0.17 145);  /* lighter green */
+  --status-warning: oklch(0.75 0.16 75);   /* lighter amber */
+  --status-error: oklch(0.65 0.21 25);     /* lighter red (kept purple-remapped via role; this is for direct use) */
+  --status-info: oklch(0.72 0.16 230);     /* lighter blue */
+}
+
+/* ===== Semantic surface/text aliases =====
+ * --bg-base and --text-base provide a single token that switches
+ * between light and dark surface/text without needing a mode check.
+ * Bind app backgrounds and base text to these. */
+:root {
+  --bg-base: var(--light-bg-primary);
+  --text-base: var(--light-text-primary);
+}
+
+.dark {
+  --bg-base: var(--dark-bg-primary);
+  --text-base: var(--dark-text-primary);
 }
 
 /* ===== sRGB fallback for browsers without oklch support (pre-2023) ===== */
