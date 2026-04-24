@@ -4,6 +4,8 @@
 **Scope:** `docs/*.md` at repo root — excludes `docs/archive/*` and `docs/plans/*` (managed separately).
 **Audit authority:** See `docs/plans/README.md` for the plans-layer index.
 
+> **🧭 CANONICAL ACTION LIST:** For the prioritised "what's left to do" roll-up with stable item IDs (P0-* / P1-* / P2-* / WS-*), read [`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`](./20260425-bsuite-finish-line-roadmap-v1.00W.md) FIRST. That doc is the single source of truth for remaining work across all 6 apps (154 items, cited to sources). This index remains a per-file status tracker for each living W-status doc; the finish-line roadmap is the cross-cutting action queue.
+
 ---
 
 ## Development Completion Gates
