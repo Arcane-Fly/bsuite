@@ -1,8 +1,22 @@
 # BSuite Docs — Outstanding Work Index
 
-**Generated:** 2026-04-23 (docs audit pass — top-level `docs/*.md`)  
-**Scope:** `docs/*.md` at repo root — excludes `docs/archive/*` and `docs/plans/*` (managed separately).  
+**Generated:** 2026-04-24 (docs reconciliation pass — top-level `docs/*.md` + plan indexes)
+**Scope:** `docs/*.md` at repo root — excludes `docs/archive/*` and `docs/plans/*` (managed separately).
 **Audit authority:** See `docs/plans/README.md` for the plans-layer index.
+
+---
+
+## Development Completion Gates
+
+These gates apply before any item moves from `development` completion to production
+promotion:
+
+- Vercel/CI must be green on the owning app's `development` branch.
+- The one-shot compliance gate in
+  `20260227-dry-one-shot-architecture-v1.01A.md` must pass for changed data flows.
+- `@bsuite/*` consumers must use published npm semver ranges in deployable app
+  `package.json` files; `workspace:*` and `file:../packages/*` are local-only.
+- No merge from `development` to `main`/`master` without explicit user approval.
 
 ---
 
@@ -28,6 +42,8 @@ These are authoritative, continuously applicable documents. They evolve in place
 | `20260316-ui-reference-v1.00A.md` | BSuite UI architecture — canonical UI source chain, component layer map |
 | `20260421-auth-hardening-runbook-v1.00A.md` | Operator runbook for auth hardening — incident response, key rotation, Supabase RLS checks |
 | `20260422-tga-api-integration-reference-v1.00W.md` | TGA API integration specification reference (live spec, implementation in progress) |
+| `20260424-env-var-audit-findings-v1.00A.md` | 2026-04-24 cross-repo Vercel/env audit findings — security bugs, deploy-time bombs, and cleanup priority |
+| `20260424-env-var-audit-matrix-v1.00A.md` | 166-variable × 6-project env declaration/usage matrix |
 
 ---
 
@@ -118,19 +134,23 @@ N.7.c evaluation doc. All 6 apps are GO at TS 6.0 GA + typescript-eslint compat.
 | # | Remaining action | Owner |
 |---|-----------------|-------|
 | 1 | Wait for gate: TS 6.0.0 on `latest` npm + `typescript-eslint@^8.x` compat release + throughput preview-branch trial before any app migration | — |
-| 2 | Execute sequenced migration (throughput → braden → conduit → R80.3 → CRM7 → BSU); bump `@bsuite/*` shared packages first | Claude Code |
+| 2 | Execute sequenced migration (throughput → braden → conduit → R80.3 → CRM7 → BSU); bump and publish `@bsuite/*` shared packages first, then update consumers to npm semver only | Claude Code |
 | 3 | Promote doc status to A (Approved) when next-cycle implementation plan is opened referencing this evaluation as risk assessment | — |
 
 ---
 
 ### `20260423-cross-app-write-audit-v1.00W.md`
-Phase 4 V3+V4 audit. Zero active write violations found. Two non-blocking tech-debt items.
+Phase 4 V3+V4 audit. Superseded as a suite-wide one-shot signal by the
+2026-04-24 audit. The original V3/V4 checks still stand, but current roadmap
+execution must treat the broader ownership leaks below as active blockers.
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
-| 1 | braden-debt-001: Remove or repoint `src/lib/tasks/taskService.ts#getStaffDetails` — dead code querying non-existent `public.users` | Claude Code |
-| 2 | throughput-debt-001: Annotate `supabase/migrations/20251014120000_unified_business_suite_schema.sql` as "REFERENCE ONLY — NEVER APPLY" or replace with throughput-only tables | Claude Code |
-| 3 | Promote doc status to A (Approved) — all Phase 4 stop-ship boxes already checked; only cosmetic cleanup remains | Cascade |
+| 1 | R80.3 must stop writing CRM7-owned `apprentices`; R80 should read apprentices and persist calculator state to R80-owned calculation tables only | Claude Code |
+| 2 | BSU ideas CRUD must be converted to Throughput deep links/read-only aggregation or the ownership map must be formally changed | Claude Code |
+| 3 | Braden lead/client write paths must route through CRM7-owned lead/contact flows | Claude Code |
+| 4 | Schema-builder authoring must be centralized to one owner; consumer apps read/render only | Claude Code |
+| 5 | Tenant/team writes outside BSU need owner API routing or documented owner-map change | Claude Code |
 
 ---
 
@@ -142,6 +162,17 @@ Phase 12.1 audit. 6 deferred route moves (F-01…F-06) pending Phase 7 merge.
 | 1 | F-01/F-02/F-03: Replace CRM7 `/settings/branding`, `/settings/organization`, `/settings/tester-licenses` with `<RedirectTo>` pointing at BSU equivalents (post-Phase 7 merge — CRM7 checkout held by Phase 7) | Phase 12 follow-up PR |
 | 2 | F-04/F-05/F-06: Remove duplicated branding/onboarding/schema-builder UI from R80.3 (post-Phase 7 merge — R80.3 checkout held by Phase 7) | Phase 12 follow-up PR |
 | 3 | Promote doc to A (Approved) once F-01…F-06 PRs merge and F-08/F-10 (deferred P2 items) have owning tickets | — |
+
+---
+
+### `20260424-env-var-contributing-rules-v1.00W.md`
+Standing env/Vercel rules extracted from the 2026-04-24 audit.
+
+| # | Remaining action | Owner |
+|---|-----------------|-------|
+| 1 | Align all app `.env.example` files and Vercel env entries to the canonical publishable/secret-key naming rules | Claude Code / operator |
+| 2 | Add CI assertions for forbidden `VITE_*SECRET`, legacy Supabase JWT-era names, missing `.env.example` entries, and client-bundle secret leaks | Claude Code |
+| 3 | Promote doc to A once CI enforcement exists and app examples are aligned | — |
 
 ---
 
@@ -176,7 +207,7 @@ Phase 12.1 audit. 6 deferred route moves (F-01…F-06) pending Phase 7 merge.
 ## Top 5 Outstanding Items (Priority Order)
 
 1. **Roadmap v5.03W bump** — Roll `20260415-roadmap-audit-delta-v1.00W.md` findings into master roadmap (26a/26e/26f/26g strike-through + AUD-15/16 ✅). Unblocks several downstream tracking items.
-2. **CRM7 Tier 3-4 page wiring (CC-3 / SP-3)** — Largest open P1 delivery item; in progress per gap report v2.
-3. **P1 EntitySelector builds** — `AwardSelector`, `TrainingPlanSelector`, `PlacementSelector`, `ChargeRateSelector` required for Tier 3-4 forms (entity-crosswalk).
-4. **React Hooks v7 remediation** — 47 BSU + 21 braden warnings; rule demotion to `warn` is time-boxed; promote to `error` once counts are zero.
-5. **Supabase Realtime blocks rollout** — `realtime-chat` in CRM7 first (smallest blast radius), then `realtime-cursor` in Conduit, then `realtime-monaco` in CRM7.
+2. **Development branch Vercel-green gate** — Resolve production-plan Phase 6 blockers, especially the Conduit SSR prerender guard, before any production merge discussion.
+3. **One-shot Phase 7 completion** — Remaining FK/UI coverage plus EntitySelector/EntityLinker rollout; all changed flows must pass the one-shot compliance gate.
+4. **Environment security cleanup** — Execute the 2026-04-24 env audit priority list: remove client-exposed secret names, add missing RAM vars, and align Supabase publishable/secret key naming.
+5. **React Hooks v7 remediation** — 47 BSU + 21 braden warnings; rule demotion to `warn` is time-boxed; promote to `error` once counts are zero.

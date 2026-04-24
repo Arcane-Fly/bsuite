@@ -333,6 +333,26 @@ Before building any new page or component, verify:
 - [ ] **BI event:** Should this action emit a `bi_metrics` record?
 - [ ] **Shared component:** Am I building something that already exists?
 
+### One-Shot Compliance Gate (development completion)
+
+Before any feature branch can be considered complete on `development`, the reviewer must
+run this one-shot gate against the changed surface:
+
+- [ ] New create/edit flows use the owning app from §1; reader apps link out or select
+      existing records rather than creating duplicate local forms.
+- [ ] Every entity reference uses an FK-backed selector or lookup component; no new
+      free-text `*_name`, `*_email`, `*_phone`, `*_company`, or `*_code` fields are added
+      when a canonical table already exists.
+- [ ] Cross-app reads use published packages and Supabase tables only; no app-local mirror
+      table, in-memory seed model, or duplicated service becomes a second source of truth.
+- [ ] RLS, role checks, and subscription gates are present before UI merge; frontend-only
+      checks are not enough.
+- [ ] Any `@bsuite/*` consumer dependency uses an npm semver range in deployable
+      `package.json` files. `workspace:*` and `file:../packages/*` are local-dev only and
+      must not appear in Vercel deploy context.
+- [ ] Project build/typecheck/lint status is green on the `development` branch before any
+      promotion discussion.
+
 ---
 
 ## 8. Cross-App Data Flow Diagram
@@ -441,9 +461,14 @@ Schema files: `hostEmployer`, `hostAgreement`, `award`, `vacancy`, `qualificatio
 
 | Package | Path | Used By |
 |---------|------|---------|
-| `@bsuite/charge-calc` | `packages/charge-calc/` | CRM7 (`file:../packages/charge-calc`), R80.3 (`workspace:*`) |
+| `@bsuite/charge-calc` | `packages/charge-calc/` | CRM7 + R80.3 via npm semver (`^0.1.0` or later published version) |
 
-**Single source of truth** for all charge rate calculations. Both projects delegate to this package — no duplicated calc logic.
+**Single source of truth** for all charge rate calculations. Both projects delegate to the
+published package — no duplicated calc logic. In deployable consumer repos, never use
+`workspace:*` or `file:../packages/*` for `@bsuite/*` packages because Vercel clones the
+consumer repo without the parent `packages/` directory. Local workspace links are allowed
+only as temporary developer tooling and must be removed before the consumer lockfile is
+regenerated for deployment.
 
 ---
 
@@ -476,6 +501,13 @@ The master plan [`docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02
 | Stage-2 UoC remodel for alignment rules | `crm7/supabase/migrations/20260422230000_phase3_stage2_uoc_remodel.sql` + `20260423010000_phase3_uoc_drop_legacy_contract.sql`. |
 
 ### Phase 4 — Cross-app write-violation closure + lead-capture consolidation (shipped 2026-04-23)
+
+> **2026-04-24 status correction:** the Phase 4 V3/V4 audit was narrow. The
+> current one-shot gate found broader unresolved ownership leaks: R80.3 writes
+> CRM7-owned apprentices, BSU writes Throughput-owned ideas, Braden writes
+> CRM7-owned leads/clients, schema-builder authoring is duplicated across apps,
+> and tenant/team writes appear outside BSU-owned flows. Treat those as active
+> Phase 7 blockers until fixed or formally reconciled in the owner map.
 
 | Violation | Fix |
 |-----------|-----|

@@ -1,9 +1,24 @@
 # BSuite Documentation
 
-Top-level documentation for the BSuite multi-project workspace. Contains cross-project standards, architecture references, and planning documents shared across all five applications.
+Top-level documentation for the BSuite multi-project workspace. Contains cross-project standards, architecture references, and planning documents shared across all six applications.
 
 > **Navigation:** For the full outstanding-work index, see [`OUTSTANDING.md`](OUTSTANDING.md).  
 > For implementation plans, see [`plans/README.md`](plans/README.md).
+
+---
+
+## Development Completion Gates
+
+- `development` is the working branch for completion work. Do not promote to
+  `main`/`master` until the user explicitly approves that production step.
+- Vercel/CI must be green on the owning app's `development` branch before a roadmap item
+  is marked complete.
+- One-shot data-entry compliance is a hard gate; see
+  [`20260227-dry-one-shot-architecture-v1.01A.md`](20260227-dry-one-shot-architecture-v1.01A.md)
+  for the checklist.
+- Deployable apps must consume `@bsuite/*` packages by npm semver. `workspace:*` and
+  `file:../packages/*` are local-development conveniences only and must not enter Vercel
+  deploy lockfiles.
 
 ---
 
@@ -12,6 +27,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [`20260227-bsuite-master-roadmap-v5.00W.md`](20260227-bsuite-master-roadmap-v5.00W.md) — canonical planning and delivery source of truth
 - [`20260227-auth-map-reference-v1.00A.md`](20260227-auth-map-reference-v1.00A.md) — canonical authentication / session-topology reference
 - [`20260227-dry-one-shot-architecture-v1.01A.md`](20260227-dry-one-shot-architecture-v1.01A.md) — §1 Entity Ownership Map is the cross-app ownership source of truth
+- [`20260424-env-var-contributing-rules-v1.00W.md`](20260424-env-var-contributing-rules-v1.00W.md) — canonical environment-variable naming, scoping, and Vercel branch rules
 - `docs/plans/` — feeder implementation plans that reconcile back to the master roadmap
 - `docs/archive/` — historical snapshots (read-only reference)
 
@@ -37,6 +53,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | [`20260316-ui-reference-v1.00A.md`](20260316-ui-reference-v1.00A.md) | UI architecture — canonical component source chain |
 | [`20260421-auth-hardening-runbook-v1.00A.md`](20260421-auth-hardening-runbook-v1.00A.md) | Operator runbook — auth hardening, key rotation, RLS checks |
 | [`20260422-tga-api-integration-reference-v1.00W.md`](20260422-tga-api-integration-reference-v1.00W.md) | TGA API integration spec reference (live, implementation in progress) |
+| [`20260424-env-var-audit-findings-v1.00A.md`](20260424-env-var-audit-findings-v1.00A.md) | 2026-04-24 cross-repo Vercel/env audit findings |
+| [`20260424-env-var-audit-matrix-v1.00A.md`](20260424-env-var-audit-matrix-v1.00A.md) | 166-variable × 6-project env declaration/usage matrix |
 
 ---
 
@@ -54,8 +72,9 @@ See [`OUTSTANDING.md`](OUTSTANDING.md) for full remaining-action tables.
 | [`20260421-storage-rls-reserved-prefixes-v1.00W.md`](20260421-storage-rls-reserved-prefixes-v1.00W.md) | W | M.6 RLS reserved-prefix policy; 5-min Dashboard update pending |
 | [`20260421-supabase-realtime-blocks-rollout-v1.00W.md`](20260421-supabase-realtime-blocks-rollout-v1.00W.md) | W | G.3 rollout plan; 3 blocks (chat, cursor, monaco) not yet installed |
 | [`20260422-typescript-6-migration-evaluation-v1.00W.md`](20260422-typescript-6-migration-evaluation-v1.00W.md) | W | N.7.c evaluation; all 6 apps GO — gated on TS 6.0 GA + eslint-compat |
-| [`20260423-cross-app-write-audit-v1.00W.md`](20260423-cross-app-write-audit-v1.00W.md) | W | Phase 4 V3+V4; zero violations found; 2 tech-debt follow-ups remaining |
+| [`20260423-cross-app-write-audit-v1.00W.md`](20260423-cross-app-write-audit-v1.00W.md) | W | Superseded as a suite-wide one-shot signal by the 2026-04-24 audit; use `docs/plans/README.md` and the DRY one-shot gate for current violations |
 | [`20260423-misplaced-routes-audit-v1.00W.md`](20260423-misplaced-routes-audit-v1.00W.md) | W | Phase 12.1; 6 route moves deferred pending Phase 7 merge |
+| [`20260424-env-var-contributing-rules-v1.00W.md`](20260424-env-var-contributing-rules-v1.00W.md) | W | Forward-looking env/Vercel rules extracted from the 2026-04-24 audit |
 
 ---
 

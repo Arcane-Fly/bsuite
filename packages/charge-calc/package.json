@@ -1,11 +1,11 @@
 {
   "name": "@bsuite/charge-calc",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "url": "git+https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/charge-calc"
   },
   "files": [
