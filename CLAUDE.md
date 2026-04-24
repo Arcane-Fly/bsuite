@@ -244,7 +244,7 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 
 - Idea Management Platform at `ideas.crm7.app` — capture, refine, launch ideas with AI assistance
 - React 18 + Vite + TypeScript stack (matches the four other Vite apps)
-- AI integration via **Groq** (`gpt-oss-120b`) — see project `GROQ_SETUP.md` and `docs/GROQ_INTEGRATION.md`
+- AI integration via **Groq** (`gpt-oss-120b`) — see `throughput/GROQ_SETUP.md` and `throughput/docs/GROQ_INTEGRATION.md` (submodule-local paths)
 - Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
 - Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
 - **Anomaly:** ships with `package-lock.json` (npm), not `pnpm-lock.yaml`. Tracked separately for consolidation across the suite.
