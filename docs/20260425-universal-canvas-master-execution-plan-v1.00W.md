@@ -532,7 +532,7 @@ Phase 5.5 = universal canvas + Design Studio = DONE when all of the following ar
 | Criterion | Target | Actual | Status |
 |-----------|--------|--------|--------|
 | All 7 Phase-5 PRs merged or superseded | 7/7 | 7/7 (5.0 `4f1a14c`, 5.1 `a58a8d0`, 5.2 `7d42350`→v0.2.0 `8aac009`, 5.3 `e0706ea`+`3421ac3`, 5.4 `f4a9f386`+`858b9149`+`e6f4b7d6`+`8568fa5e`, 5.5 `414f813`+`2b16b54`, 5.6 `f9ec621`+`bbe47b4`+`731f6bb`) | ✅ |
-| 5 must-haves shipped + covered by tests | 5/5 | **5/6 ✅ SHIPPED, 1/6 🟡 blocked-on-operator** (#4 SchemaFieldAdder — widget shipped `8aac009`, DB migrations staged `43fb250`, pending `supabase db push`) | 🟡 |
+| 6 must-haves shipped + covered by tests | 6/6 | **5/6 ✅ SHIPPED, 1/6 🟡 blocked-on-operator** (#4 SchemaFieldAdder — widget shipped `8aac009`, DB migrations staged `43fb250`, pending `supabase db push`) | 🟡 |
 | ≥60% page adoption | ≥60% | **90.8%** (307 / 338 CRM7 pages on `PageGridLayout` post Tier-A 20 + Tier-B 13 `e6f4b7d6` + Tier-C 206 `8568fa5e`) | ✅ |
 | 13 stop-ship gates green | 13/13 | 13/13 (see §6 — G1–G14 + SS1–SS17 all PASSED; S-07 verified by W3-D cross-app E2E `0c1da979`) | ✅ |
 | Vercel preview deploys green across 6 apps | 6/6 | pending green-check on `bsuite/development` head commit `d1f1faf` (bsu, crm7, conduit, r80, braden, throughput) | 🟡 |
