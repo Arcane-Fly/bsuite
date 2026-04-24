@@ -46,7 +46,7 @@ Items blocking production deploys, live security risks, or sign-off for runbooks
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P0-1 | Rotate every secret that appeared in chat/paste buffer during the 2026-04-24 env audit (Stripe, Xero, RAM private key, any exposed `sb_*` keys) | Operator | Stripe/Xero/ATO RAM dashboards show new secrets; gitleaks clean on all 6 repos | `docs/20260424-env-var-audit-findings-v1.00A.md` §Priority fix order #1 |
+| ~~P0-1~~ | ~~Rotate every secret that appeared in chat/paste buffer during the 2026-04-24 env audit~~ — **DONE** (operator confirmed 2026-04-25; Stripe/Xero/ATO RAM dashboards show new secrets) | Operator | gitleaks clean on all 6 repos | `docs/20260424-env-var-audit-findings-v1.00A.md` §Priority fix order #1 |
 | ~~P0-2~~ | ~~Delete `VITE_STRIPE_SECRET_KEY` from `business-suite` Vercel project~~ — **SHIPPED** earlier this session (Vercel env rm, both Preview + Production targets cleared in a single rm) | Operator | Confirmed via `vercel env ls`; no `VITE_STRIPE_SECRET_KEY` entries | `docs/20260424-env-var-audit-findings-v1.00A.md` §2.A |
 | ~~P0-3~~ | ~~Delete `VITESUPABASE_ANON_KEY` typo from `throughput` Vercel project~~ — **SHIPPED** earlier this session | Operator | `vercel env ls throughput` clean | `docs/20260424-env-var-audit-findings-v1.00A.md` §2.C |
 | ~~P0-4~~ | ~~Add 7 `RAM_*` vars to `crm7` Vercel project~~ — **SHIPPED** earlier this session (extracted from `/home/braden/.ATOMAS/keystore-new.xml` `BSUITE2` credential via Node crypto + openssl pkcs7; 7 Supabase secrets set, VITE_RAM_CLIENT_ID + VITE_RAM_CREDENTIAL_ENVIRONMENT on CRM7 Vercel Dev+Prod) | Operator + Claude Code | `supabase secrets list` shows 7 RAM_* keys | `docs/20260424-env-var-audit-findings-v1.00A.md` §3 |
@@ -228,6 +228,30 @@ Non-blocking bugs with clear scope; high-signal quality/hardening work.
 | P1-79 | All future PRs include K.8 checklist inline in body (skills, MCPs, samples, sense-check, red-team, memory) | All implementers | PR template updated; spot-check 3 random PRs have checklist | `docs/20260421-k8-retroactive-audit-v1.00W.md` §Going forward |
 | P1-80 | Verify PR bsuite#126 + conduit#80 descriptions link to the retroactive K.8 doc | Cascade | `gh pr view` output includes doc URL | `docs/20260421-k8-retroactive-audit-v1.00W.md` §Verification |
 | P1-81 | Promote doc statuses (`.00W` → `.00A`) as their action items complete: 20260319-entity-crosswalk (D→W→A), 20260415-roadmap-audit-delta (→A), 20260421-k8 retroactive (→A) | Cascade | Doc headers show new statuses | `docs/OUTSTANDING.md` §2 |
+
+### P1.Q — Universal Canvas + Design Studio (Phase 5.5)
+
+Tracks the 6 user must-haves from the 2026-04-25 directive. Full spec: `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md`. Waves 1 + 2 landed in a single session 2026-04-25; Wave 3 in flight.
+
+| ID | Title | App / Owner | Verification | Source |
+|----|-------|-------------|--------------|--------|
+| ~~P1-82~~ | ~~W1-A — `@bsuite/schema-registry@0.2.0` — widget catalog, `registerWidget` API, `EntityRefCell` + `SchemaFieldAdder` widgets, 6 PropsEditors~~ — **SHIPPED `8aac009`** (bsuite parent). 30/30 vitest cases pass; npm publish pending operator push. | Shared package / Claude Code | `pnpm test --filter @bsuite/schema-registry` green | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W1-A |
+| ~~P1-83~~ | ~~W1-B — `isResizable` prop on `PageGridLayout` (CRM7 + BSU) + D2C-theme resize-handle CSS~~ — **SHIPPED `b55926f3` (crm7)** + **`01de8334` (bsu)** | CRM7, BSU / Claude Code | Edit-mode renders resize handles; layout persists via `handleLayoutChange` | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W1-B |
+| P1-84 | W1-C — apply `20260425_phase5_tfd_entity_fk.sql` + `20260425_phase5_tfd_enterprise_admin_rls.sql` + `add_field` RPC to live Supabase. **Code committed `43fb250`**; operator must push via `mcp__claude_ai_Supabase__apply_migration`. | BSU DB / Operator | `SELECT count(*) FROM tenant_field_definitions WHERE entity_id IS NULL` = 0 post-backfill | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W1-C |
+| ~~P1-85~~ | ~~W2-A — BSU Design Studio surface — Palette + Canvas + Inspector drawer wired to schema-registry v0.2.0; all 7 widgets draggable with Zod PropsEditors~~ — **SHIPPED `3421ac3`** | BSU / Claude Code | Platform admin can publish a layout with any widget; realtime reflects on consumer within 2 s | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W2-A |
+| ~~P1-86~~ | ~~W2-B — CRM7 chrome-level `PageEditorLauncher` + Tier-A 20-page rollout (`PageGridLayout` + `TenantLayoutSlot` wraps)~~ — **SHIPPED `858b9149`** | CRM7 / Claude Code | Edit-mode toggle visible on all 20 Tier-A routes; `grep -l PageGridLayout src/pages \| wc -l` ≥ 107 | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W2-B |
+| P1-87 | W3-A — CRM7 Tier-B (50 pages) rollout + Tier-C `ts-morph` codemod (≤190 pages, dry-run for operator review) | CRM7 / Claude Code | `grep -l PageGridLayout src/pages \| wc -l` ≥ 157 post-Tier-B; codemod produces valid TS | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-A |
+| P1-88 | W3-B — conduit rollout (`/operations`, `/insights` slot mounts) + realtime two-layer invalidation E2E | Conduit / Claude Code | `pnpm build --filter conduit` green; realtime E2E asserts re-render within 5 s | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-B |
+| ~~P1-89~~ | ~~W3-D — cross-app entity-cell linkage E2E (must-have #5) — Playwright spec + vitest integration + runbook~~ — **SHIPPED this session (W3-D)** — `crm7/tests/e2e/cross-app-entity-linkage.spec.ts` (env-gated), `packages/schema-registry/src/react/widgets/EntityRefCell.cross-app.test.tsx` (6/6 pass), `docs/testing/20260425-cross-app-e2e-runbook-v1.00W.md` | CRM7, shared package / Claude Code | `pnpm test --filter @bsuite/schema-registry` green 30/30 | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-D |
+
+**Must-have status summary (2026-04-25 post Wave-1/2 + W3-D):**
+
+- ~~#1 Edit-mode toggle on every page~~ — Tier-A COMPLETE (W2-B `858b9149`); Tier-B/C queued (P1-87)
+- ~~#2 Drag-from-palette~~ — SHIPPED (W1-A `8aac009` + W2-A `3421ac3`)
+- ~~#3 Card resize~~ — SHIPPED (W1-B `b55926f3` + `01de8334`)
+- #4 Schema-field-adder — WIDGET SHIPPED (`8aac009`); DB migrations staged (`43fb250`), pending operator apply (P1-84)
+- ~~#5 Cross-app entity-cell linkage~~ — SHIPPED (W1-A widget + W3-D E2E + runbook this session)
+- ~~#6 Design Studio for new pages~~ — SHIPPED (W2-A `3421ac3`)
 
 ---
 
