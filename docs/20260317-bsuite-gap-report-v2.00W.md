@@ -506,6 +506,75 @@ These v1 items are not yet assigned to a sprint:
 
 ---
 
+## Section 11 — 2026-04-24 archive-pass findings (plan: completed-the-current-development-branch)
+
+> 7 parallel Explore agents (one per repo) scanned all `.md` files outside `docs/archive/*` on 2026-04-24. Findings below are features marked incomplete/TODO/deferred in docs but not yet captured above. Resolve by shipping, moving to a dated plan, or striking through with a "not needed" rationale.
+
+### 11.1 — BSU (`business-suite-unified`)
+
+| # | Remaining action | Source |
+|---|------------------|--------|
+| BSU-G1 | Auth dashboard hardening — Azure Entra ID claim addition (bsu#91) + Supabase wildcard redirect-URL removal (bsu#92) still unshipped | `business-suite-unified/docs/20260418-auth-dashboard-hardening-v1.00W.md` |
+| BSU-G2 | Platform-kit admin — only shell + users list shipped; 6 admin sub-panels (auth, logs, database, secrets, storage, dynamic tables) still missing (~1,171 LOC port) | `business-suite-unified/docs/20260421-platform-kit-admin-v1.00W.md` |
+| BSU-G3 | WCAG AA audit — 5 open manual-review items + cross-app rollout to 4 siblings pending | `business-suite-unified/docs/20260421-wcag-aa-audit-v1.00W.md` |
+| BSU-G4 | SEC-002/003/004 (Low–Medium) — CSS injection via tenant `font_stack` / `logo_url`, stale branding cache no-TTL | `business-suite-unified/CLAUDE.md §Known Security Risks` |
+| BSU-G5 | CRM7 supabase audit — 6 unchecked verification items, CRM7 domain tables (inspections, workflows, reports) not applied via unified migration | `business-suite-unified/docs/20260316-bsu-crm7-supabase-audit-v1.00W.md` |
+
+### 11.2 — CRM7
+
+| # | Remaining action | Source |
+|---|------------------|--------|
+| CRM7-G1 | Combined foundations + GTO plan — 5 phases (F-1..F-3 foundations, B-1..B-5 business tracks) not in parent v5.00W roadmap | `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` |
+| CRM7-G2 | GTO billing/payroll core — MAPD Edge Function, apprentice_rate_configs, 7-state timesheet machine, Xero Payroll AU wire-up, Payday Super | same §B-1..B-3 |
+| CRM7-G3 | Report builder + 7 pre-built report templates not yet implemented | same §B-4 |
+| CRM7-G4 | AVETMISS 8.0 code-gen pipeline (NAT00010..NAT00130) incomplete | same §B-5 |
+| CRM7-G5 | Schema/page-builder rebuild — 6 Critical + 9 High findings still open (C-1..C-6, H-1..H-9) | `crm7/docs/00-roadmap/20260423-crm7-schema-page-builder-audit-1.00W.md` |
+| CRM7-G6 | Pre-existing typecheck errors — 3 unresolved modules (`@bsuite/nav-core.mergeNavConfigs`, `@bsuite/schema-registry/react`, `@sentry/react`) | Codex 2026-04-24 handoff, verified by Explore agent |
+
+### 11.3 — R80.3
+
+| # | Remaining action | Source |
+|---|------------------|--------|
+| R80-G1 | Training-fees UI validation bounds undocumented — no max cap | `R80.3/docs/20260304-r80-training-fees-feature-v1.00W.md` |
+| R80-G2 | Per-apprentice training-fees overrides not scoped | same |
+| R80-G3 | Training-fees inclusion in export/PDF reports — no spec | same |
+| R80-G4 | Payday Super — **public-holiday awareness missing** — critical before 1 July 2026 go-live | `R80.3/docs/20260418-payday-super-feature-v1.00W.md §5` |
+| R80-G5 | Payday Super — salary-sacrifice OTE/QE-eligible dropdown for ATO compliance | same |
+| R80-G6 | Payday Super — UI snapshot/component tests missing before go-live | same |
+
+### 11.4 — Braden
+
+| # | Remaining action | Source |
+|---|------------------|--------|
+| BRADEN-G1 | Phase 2 Visual Editing — 5 tasks (DnD layout editor, component editors, visual preview, responsive tools, content-block reuse) | `braden/docs/20260316-braden-roadmap-v1.00W.md` |
+| BRADEN-G2 | Phase 3 Advanced — 5 tasks (version history/rollbacks, publishing workflow, advanced customisation, perf, role permissions) | same |
+| BRADEN-G3 | Current Sprint — 3 tasks (site preview, component placement, layout save/load from DB) | same |
+| BRADEN-G4 | QA Config — 67+ `any` instances, 5 components >200 lines | `braden/docs/20260316-braden-qa-configuration-v1.00W.md` |
+| BRADEN-G5 | Accessibility (6) + Performance (5) testing items pending | `braden/docs/20260316-braden-*-v1.00W.md` |
+| BRADEN-G6 | Bot protection follow-ups — server-side `checkBotId()`, custom route rules, monitoring/alerting, rate-limit integration | `braden/docs/20260316-braden-bot-protection-v1.00W.md` |
+| BRADEN-G7 | Phase 5 TenantLayoutSlot only wired for `/contact` — no tenant-authored nav overlays yet | `braden/CLAUDE.md` |
+
+### 11.5 — Throughput
+
+| # | Remaining action | Source |
+|---|------------------|--------|
+| TP-G1 | Email invitations — team-member invite system exists in code but backend email delivery incomplete | `throughput/PRODUCTION_DEPLOYMENT_GUIDE.md:217` |
+| TP-G2 | Phase 5.5 schema-registry integration deferred pending React 19 upgrade + TanStack Query + npm→pnpm alignment | `throughput/CLAUDE.md` |
+| TP-G3 | README.md:52 tells users to run `pnpm install` but repo uses `package-lock.json` (npm) — doc inconsistency | `throughput/README.md:52` |
+| TP-G4 | `IMPLEMENTATION_COMPLETE.md` claims 8 phases done — contradicted by Phase 5/5.5 deferrals in CLAUDE.md | `throughput/IMPLEMENTATION_COMPLETE.md` |
+
+### 11.6 — Stalled W-status clusters (cross-cutting)
+
+- **39-day cluster (2026-03-16):** 10 BSU + 9 braden docs — intentionally live-reference per OUTSTANDING indexes, but track here to prevent mistaken archival.
+- **51-day cluster (2026-03-04):** 9 R80.3 docs — same pattern.
+- **40+ day item:** `crm7/docs/00-roadmap/20260226-au-funding-claims-enhancement-plan-v1.00W.md` — no updates since Phase 2 complete; promote to Approved or archive after verification.
+
+### Completion note
+
+Read-only observations; no code moved or deleted. Owning teams either ship and close the `W` status or file ticket-linked follow-ups. Provenance: *— discovered during 2026-04-24 archive pass (plan: completed-the-current-development-branch)*.
+
+---
+
 _Supersedes `docs/20260316-bsuite-gap-report-v1.00A.md`_
 
 Vercel Bot recommended implementing: <https://vercel.com/docs/tracing/instrumentation#adding-custom-spans>

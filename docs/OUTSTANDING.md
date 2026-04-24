@@ -147,10 +147,12 @@ execution must treat the broader ownership leaks below as active blockers.
 | # | Remaining action | Owner |
 |---|-----------------|-------|
 | 1 | R80.3 must stop writing CRM7-owned `apprentices`; R80 should read apprentices and persist calculator state to R80-owned calculation tables only | Claude Code |
-| 2 | BSU ideas CRUD must be converted to Throughput deep links/read-only aggregation or the ownership map must be formally changed | Claude Code |
-| 3 | Braden lead/client write paths must route through CRM7-owned lead/contact flows | Claude Code |
-| 4 | Schema-builder authoring must be centralized to one owner; consumer apps read/render only | Claude Code |
-| 5 | Tenant/team writes outside BSU need owner API routing or documented owner-map change | Claude Code |
+| 2 | BSU ideas CRUD (`business-suite-unified/src/lib/ideaService.ts:60`) must be converted to Throughput deep links/read-only aggregation or the ownership map must be formally changed | Claude Code |
+| 3 | Braden lead writes from BSU embed (`business-suite-unified/src/pages/Embed/LeadForm.tsx:109`) must route through a Braden-exposed endpoint or shared edge function | Claude Code |
+| 4 | Schema-builder authoring — remove CRM7 writes to `custom_pages`/`custom_page_blocks` (`crm7/src/pages/settings/schema-builder/*`); BSU `/developer/pages` is canonical per Phase 5 | Claude Code |
+| 5 | Tenant/team writes outside BSU: CRM7 `src/services/tenantService.ts:63` writes `tenant_branding`/`platform_branding` (BSU-owned); Throughput `src/lib/teamPermissions.ts:302` writes `team_members`. Route through BSU API or formalise co-ownership. | Claude Code |
+| 6 | `apprentice_rate_configs` + `wage_calculation_snapshots` shared between CRM7 + R80.3 — formalise ownership per the combined-GTO-plan N-2 finding; unified `create_append_only_audit()` helper is the long-term shape | Claude Code |
+| 7 | V10 — OAuth auth-callback hardcoded-production fallbacks: R80.3 `src/pages/AuthCallback.tsx:44`, throughput `src/pages/auth/AuthCallback.tsx:48-50`. Fix alongside BSU `redirectTargets.ts` in WS-4 of the dev-branch-closure plan. | Claude Code |
 
 ---
 
