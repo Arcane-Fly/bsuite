@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/schema-registry",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tenant schema, page layout, and navigation hooks for BSuite consumer apps",
   "type": "module",
   "publishConfig": {
@@ -24,6 +24,10 @@
     "./react": {
       "import": "./dist/react/index.js",
       "types": "./dist/react/index.d.ts"
+    },
+    "./react/editors": {
+      "import": "./dist/react/editors/index.js",
+      "types": "./dist/react/editors/index.d.ts"
     },
     "./server": {
       "import": "./dist/server/index.js",

@@ -10,6 +10,8 @@ export {
   EntitySelectorPropsSchema,
   CardPropsSchema,
   FormRendererPropsSchema,
+  EntityRefCellPropsSchema,
+  SchemaFieldAdderPropsSchema,
   WidgetPropsSchema,
   LayoutJsonSchema,
 } from './schemas/widgetProps';

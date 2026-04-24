@@ -21,7 +21,12 @@ export function TenantLayoutSlot({ supabase, route, appScope, context }: TenantL
   const parseResult = LayoutJsonSchema.safeParse(layout.layout_json);
   if (!parseResult.success) {
     if (process.env.NODE_ENV !== 'production') {
-      console.warn('[TenantLayoutSlot] Invalid layout_json — skipping render', parseResult.error);
+      // Stringify the ZodError to avoid a node util.inspect bug that crashes
+      // on certain error graphs in jsdom/vitest environments.
+      console.warn(
+        '[TenantLayoutSlot] Invalid layout_json — skipping render',
+        parseResult.error.message
+      );
     }
     return null;
   }
