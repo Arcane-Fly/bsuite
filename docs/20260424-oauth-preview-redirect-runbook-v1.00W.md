@@ -60,11 +60,15 @@ File: `src/lib/business-suite-oauth.ts`.
 
 Same pattern as CRM7. Also, the existing hardcoded-production-URL fallback at `src/pages/AuthCallback.tsx:44` is benign as long as `VITE_BSU_URL` is set on the Vercel project (it is, for both prod and preview). Optional follow-up: remove the hardcoded string and require `VITE_BSU_URL` at build time — cleaner but not functionally urgent.
 
-### B.3 — Braden
+### B.3 — Braden — NO CODE PATCH NEEDED
 
-File: `src/lib/business-suite-oauth.ts`.
+**Correction to earlier v1.00W draft:** braden does **not** use the `${bsuUrl}/auth/login?return_to=...` URL pattern that the other 3 client apps use. Braden's BS-OAuth entry point is `signInWithBusinessSuite()` from `@bsuite/auth` (the shared package), which redirects directly to Supabase's `/auth/v1/oauth/authorize` endpoint — a different flow that's out of scope for BSU's `buildReturnUrl(requestedOrigin?)` validator.
 
-Braden is on a different TLD (`braden.com.au`), not `.crm7.app`. Its BSU-OAuth callbacks come through a public redirect, so preview-branch testing is rarer but still supported by the same `return_origin` append.
+Grep verification on 2026-04-25: `grep -rn "return_to\|buildLoginUrl\|\${bsuUrl}/auth/login" braden/src/` returned zero matches. The only BS-OAuth call is `signInWithBusinessSuite()` (sourced from the shared `@bsuite/auth` package), plus native `supabase.auth.signInWithPassword()` for the admin login.
+
+Braden's code path is already preview-safe — per the WS-1 discovery, `packages/auth/src/oauth-client.ts` line 40 uses dynamic `window.location.origin` for the redirect URI when calling `signInWithBusinessSuite()`. No braden-side patch required.
+
+**What braden DOES need:** Part C (Supabase dashboard allowlist) must add braden's preview URL patterns to the Supabase OAuth-client config, same as the other clients. This is the only step that unblocks braden preview logins.
 
 ### B.4 — Throughput
 
