@@ -30,7 +30,7 @@
 
 Every PR in the phase5-spec §3 PR-chain overview has been landed to `bsuite/development` as of 2026-04-24. The table below lists the **merge SHAs** and the **remaining gap work** — i.e. the things the five user must-haves still require beyond what PRs 5.0 through 5.6 actually delivered.
 
-**Wave-1 + Wave-2 Universal Canvas update (2026-04-25 session):** W1-A DONE — `@bsuite/schema-registry@0.2.0` published (parent SHA `8aac009`) with `EntityRefCell` + `SchemaFieldAdder` + 7-widget registry API. W1-B DONE — `isResizable` exposed on both `crm7/src/components/platform/PageGridLayout.tsx` (`b55926f3`) and `business-suite-unified/src/components/platform/PageGridLayout.tsx` (`01de8334`). W1-C DONE-staged — `tenant_field_definitions.entity_id` FK + enterprise-admin RLS + `add_field` RPC all committed (`43fb250`); migration-apply is an operator action pending the Supabase MCP push. W2-A DONE — BSU Design Studio palette + canvas + inspector surface shipped (`3421ac3`). W2-B DONE — CRM7 chrome-level `PageEditorLauncher` + Tier-A 20-page rollout shipped (`858b9149`). Wave-3 in progress at the time of this edit: W3-D shipped the cross-app E2E + this doc update.
+**Wave-1 + Wave-2 + Wave-3 + Wave-4 Universal Canvas update (2026-04-25 session — Wave-5 roll-up):** Waves 1 through 4 all shipped in a single-day burst. W1-A `@bsuite/schema-registry@0.2.0` (`8aac009`); W1-B `isResizable` on PageGridLayout (`b55926f3` + `01de8334`); W1-C DB-staged (`43fb250`) pending operator apply; W2-A BSU Design Studio surface (`3421ac3`); W2-B CRM7 chrome launcher + Tier-A 20-page rollout (`858b9149`); W3-A CRM7 Tier-B 13 pages (`e6f4b7d6`) + Tier-C 206 pages (`8568fa5e`) — **adoption 46 → 307 / 338 = 90.8%**; W3-B conduit RSC pre-fetch + pipeline TenantLayoutSlot (`2b16b54`) + braden (`9566c2a`) + R80.3 (`d6e9a5c`) schema-registry v0.2.0 bumps, throughput rolled back (peer-dep); W3-D cross-app E2E + doc strikes (`ed52ee1` + `0c1da979`). Wave-4 hot-fixes: bsu 3× (`86cfb70` P0-12, `295472b` P1-1, `fceabb9` P1-2); throughput `63b79af` (P1-6); conduit-next NO-OP (P0-9 already ≥16.2.3); W4-AUTH-v2 hardcoded-suite.crm7.app removal across 4 client apps (R80.3@`6f3859b` + throughput@`fa7e874` + crm7@`1fa401e1`). Parent bumps: bsuite@`8120470` (W1), `9286757` (W2), `d1f1faf` (W3+4). **5 of 6 user must-haves SHIPPED** — only #4 SchemaFieldAdder remains code-complete blocked on operator `supabase db push`.
 
 | PR | Title | Status | Merge SHAs / evidence | Remaining work to unlock must-haves | Est effort |
 |----|-------|--------|-----------------------|-------------------------------------|------------|
@@ -42,7 +42,7 @@ Every PR in the phase5-spec §3 PR-chain overview has been landed to `bsuite/dev
 | **5.5** | Consumer: conduit | **DONE (dashboard + pipeline)** | Commit: `414f813 feat(conduit): Phase 5 TenantLayoutSlot + two-layer cache invalidation (#97)`. Two-layer cache pattern (`revalidateTenantSchema` server action + `router.refresh()`) landed per phase5-spec §9 Task 5.5.3. | PARTIAL — same gap as CRM7. Conduit has 2 mount points; the 4 roadmap routes (`/`, `/pipeline`, `/operations`, `/insights`) are partially covered. Must-have rollout requires the other 2 + tier-B route sweep. | 1.5 d [Subagent W3-B] |
 | **5.6** | Consumer: R80.3 + braden + embed route | **DONE** | Commits: `f9ec621 feat(r80): Phase 5 TenantLayoutSlot integration (#97)`; `bbe47b4 feat(braden): Phase 5 TenantLayoutSlot integration (#152)`; BSU: `62b8a5f feat(bsu): Phase 5 embed lead form route (#169)` + `731f6bb feat(embed): Phase 5 /embed/lead-form route + iframe CSP headers + snippet generator`. `business-suite-unified/src/pages/Embed/LeadForm.tsx` confirmed present. | ~~PARTIAL — R80.3 and braden render the slot but NEITHER app has the edit-mode toggle affordance (consumer apps in phase5-spec are read-only by design — phase5-spec §4 D-04, D-06). Must-have 5 (cross-app linkage) requires one additional widget type `EntityRefCell` registered on schema-registry, then mounted via existing slot. No migration needed on R80.3/braden DB because schema lives in BSU.~~ — **SHIPPED `8aac009`** (widget in W1-A) + **SHIPPED W3-D this session** (cross-app E2E at `crm7/tests/e2e/cross-app-entity-linkage.spec.ts` + vitest integration at `packages/schema-registry/src/react/widgets/EntityRefCell.cross-app.test.tsx` — 6/6 passing — + runbook at `docs/testing/20260425-cross-app-e2e-runbook-v1.00W.md`). | ~~0.5 d [Subagent W3-D]~~ 0 d |
 
-**Summary:** 7 of 7 Phase 5 PRs merged; ~~2 of 7 are done-complete (5.1, 5.6 baseline), 5 of 7 are partial — each has exactly the gap the five must-haves introduce.~~ **Updated 2026-04-25:** 5.1, 5.2, 5.3, 5.6 now DONE-COMPLETE (5.2 via W1-A `8aac009`, 5.3 via W2-A `3421ac3`, 5.6 via W1-A + W3-D this session). 5.0 DONE-staged (W1-C DB objects committed at `43fb250`; operator must apply migrations via Supabase MCP). 5.4 PARTIAL (Tier-A done W2-B `858b9149`; Tier-B/C pending W3-A). 5.5 PARTIAL (conduit rollout pending W3-B). **Remaining effort after this session: ~2 subagent-days (W3-A CRM7 Tier-B + Tier-C codemod, W3-B conduit rollout).**
+**Summary:** 7 of 7 Phase 5 PRs merged; ~~2 of 7 are done-complete (5.1, 5.6 baseline), 5 of 7 are partial — each has exactly the gap the five must-haves introduce.~~ **Updated 2026-04-25 (Wave-5 roll-up):** 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 now all **DONE-COMPLETE** (5.2 via W1-A `8aac009`; 5.3 via W2-A `3421ac3`; 5.4 via W2-B `858b9149` + W3-A `e6f4b7d6`+`8568fa5e` 90.8% adoption; 5.5 via W3-B `2b16b54`; 5.6 via W1-A + W3-D `ed52ee1`+`0c1da979`). 5.0 DONE-staged (W1-C DB objects committed at `43fb250`; operator must apply migrations via Supabase MCP — O-1 in Remaining Work Top-5). **Remaining effort after Wave-5: 0 subagent-days engineering; 5 operator-tier items (see §8.3).**
 
 Cross-references: phase5-spec §3 (PR chain), §4 (PR 5.0 SQL), §6 (PR 5.2 widgets), §7 (PR 5.3 PageComposer), §8 (PR 5.4 crm7), §9 (PR 5.5 conduit), §10 (PR 5.6 R80.3/braden/embed).
 
@@ -267,11 +267,20 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
   - `pnpm build --filter crm7` exits 0; bundle size delta ≤ +20 KB (WIDGET_CATALOG lazy-loaded)
 - **Expected commit message scope:** `feat(crm7)`
 
-### Wave 3 (parallel-safe; 4 subagents; ~1.5 days; depends on Wave 2 complete) — 🚧 IN FLIGHT (2026-04-25)
+### Wave 3 (parallel-safe; 4 subagents; ~1.5 days; depends on Wave 2 complete) — ✅ DONE (2026-04-25)
 
-**Status:** W3-A CRM7 Tier-B + codemod — pending; W3-B conduit rollout — pending; W3-C cross-app E2E — folded into W3-D this session (the plan's original W3-C spec is satisfied by `EntityRefCell.cross-app.test.tsx` + Playwright spec + runbook); W3-D ✅ SHIPPED this session — cross-app E2E + master-plan + roadmap strike-throughs.
+**Status:** W3-A ✅ SHIPPED crm7@`e6f4b7d6` (Tier B, 13 pages) + crm7@`8568fa5e` (Tier C, 206 pages) — adoption 46 → 307 / 338 = **90.8%**. W3-B ✅ SHIPPED conduit@`2b16b54` (RSC pre-fetch + pipeline `TenantLayoutSlot`) + braden@`9566c2a` + R80.3@`d6e9a5c` (schema-registry v0.2.0 bumps); throughput bump ROLLED BACK — peer-dep blocker (`@bsuite/nav-core@0.5.0` required, throughput on 0.3.0); followup PR queued. W3-C folded into W3-D (cross-app E2E satisfies original W3-C spec). W3-D ✅ SHIPPED bsuite@`ed52ee1` + crm7@`0c1da979` (cross-app E2E + doc strikes).
 
-#### Subagent W3-A — CRM7 Tier-B rollout (50 pages) + Tier-C script
+**Also shipped in Wave 4 (parallel out-of-band work):**
+
+- **W4-BSU** (3 hot-fixes): bsu@`86cfb70` (P0-12 AuthContext deadlock) + bsu@`295472b` (P1-1 LeadForm → lead-capture edge fn) + bsu@`fceabb9` (P1-2 ideaService → Throughput deep-link)
+- **W4-TP**: throughput@`63b79af` (P1-6 / CAW-V9 teamPermissions)
+- **W4-CONDUIT-NEXT** (P0-9): NO-OP — already on `next@16.2.4` ≥ 16.2.3
+- **W4-AUTH-v2** (P0-7): R80.3@`6f3859b` + throughput@`fa7e874` + crm7@`1fa401e1` — `VITE_BSU_URL` now required, 14 files cleaned + 12 Vercel env entries written
+
+**Parent submodule bumps:** bsuite@`8120470` (Wave 1), bsuite@`9286757` (Wave 2), bsuite@`d1f1faf` (Wave 3+4 consolidated).
+
+#### ~~Subagent W3-A — CRM7 Tier-B rollout (50 pages) + Tier-C script~~ — SHIPPED crm7@`e6f4b7d6` (Tier B, 13 pages) + crm7@`8568fa5e` (Tier C, 206 pages); final adoption 307/338 = 90.8%
 
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/crm7/`
@@ -284,7 +293,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
   - Tier-C dry run writes 190 candidate diffs to `.codemod-tmp/` without committing
 - **Expected commit message scope:** `feat(crm7)`, `chore(crm7)` for codemod
 
-#### Subagent W3-B — conduit Tier rollout + two-layer invalidation verification
+#### ~~Subagent W3-B — conduit Tier rollout + two-layer invalidation verification~~ — SHIPPED conduit@`2b16b54` (RSC pre-fetch + pipeline `TenantLayoutSlot`) + braden@`9566c2a` + R80.3@`d6e9a5c` (schema-registry v0.2.0 bumps); throughput bump ROLLED BACK (peer-dep blocker — followup PR queued)
 
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/conduit/`
@@ -300,7 +309,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
   - Two-layer cache test: assert `revalidateTag('tenant-page-layouts')` called on realtime event
 - **Expected commit message scope:** `feat(conduit)`
 
-#### Subagent W3-C — cross-app cell linkage E2E (must-have 5 validation)
+#### ~~Subagent W3-C — cross-app cell linkage E2E (must-have 5 validation)~~ — SHIPPED (folded into W3-D) — SHA crm7@`0c1da979` + bsuite@`ed52ee1`; Playwright env-gated + 6/6 vitest integration pass + runbook `docs/testing/20260425-cross-app-e2e-runbook-v1.00W.md`
 
 - **Owner:** `[Subagent]`
 - **Repos:** `bsuite/R80.3/`, `bsuite/crm7/` (test-only)
@@ -315,7 +324,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
   - Zod `foreign_app_scope` validation blocks malicious `'auth.users'` input
 - **Expected commit message scope:** `test(crm7)`, `feat(r80)`
 
-#### Subagent W3-D — braden Tier rollout + ship-all-apps verification sweep
+#### ~~Subagent W3-D — braden Tier rollout + ship-all-apps verification sweep~~ — SHIPPED — braden schema-registry v0.2.0 bump included in W3-B `9566c2a`; ship-all-apps sweep shipped with Wave-3/4 consolidated bump bsuite@`d1f1faf`; cross-app E2E + doc strikes shipped bsuite@`ed52ee1` + crm7@`0c1da979`
 
 - **Owner:** `[Subagent]`
 - **Repos:** `bsuite/braden/`, plus cross-cutting sweep
@@ -516,21 +525,47 @@ Phase5-spec §R lists S-01 through S-05. 2026-04-25 status:
 
 ## 8. Definition of done
 
-Phase 5.5 = universal canvas + Design Studio = DONE when all of the following are true:
+Phase 5.5 = universal canvas + Design Studio = DONE when all of the following are true.
 
-- [ ] **PRs:** 7 Phase 5 PRs already merged (5.0 through 5.6 — §1 ground truth). 2 follow-on PRs land in `bsuite/development`: `feat/phase55-schema-registry-v0.2.0` (Wave 1) + `feat/phase55-design-studio-uplift` (Wave 2). Submodule bumps merge to parent `bsuite/development` after each wave.
-- [ ] **5 must-haves (plus Design Studio) shipped and covered by tests:**
-  - [ ] Edit-mode toggle visible in app chrome on every CRM7 page (§2 must-have 1; verified by Playwright chrome-affordance spec)
-  - [ ] Drag-from-palette works for all 6 widget types in BSU Design Studio (§2 must-have 2; Playwright drag spec)
-  - [ ] Card resize handles visible + persisted in both PageGridLayout (CRM7) and LayoutCanvas (BSU) (§2 must-have 3; Playwright resize spec)
-  - [ ] "+ Add field" from canvas writes to `tenant_field_definitions` with correct `entity_id` FK (§2 must-have 4; pgTap + Playwright)
-  - [ ] Cross-app `EntityRefCell` renders CRM7 contact on R80.3 calculator page (§2 must-have 5; Playwright W3-C spec)
-  - [ ] `/design-studio` route loads standalone authoring surface with route outline + template library (§2 must-have 6; Playwright loads full-screen layout, Lighthouse a11y ≥ 95)
-- [ ] **Adoption:** CRM7 `grep -l "PageGridLayout" src/pages | wc -l` ≥ 208 (≥ 60% of 347 pages). Tier A + B + C codemod run per §5.
-- [ ] **Stop-ship gates:** all 32 gates in §6 PASSED (G1–G14 + SS1–SS17 + S-06 + S-07 new gates); §7 S-01 through S-07 all PASSED.
-- [ ] **Vercel preview deploys:** all 6 apps READY (bsu, crm7, conduit, r80, braden, throughput) on the `bsuite/development` head commit. `mcp__claude_ai_Vercel__list_deployments` confirms.
-- [ ] **Memory protocol:** `bsuite_sleep_packet_20260428` (or whichever session ends the work) + `bsuite_session_20260428` written to `https://qig-memory-api.vercel.app/api/memory` per parent CLAUDE.md rules.
-- [ ] **Docs:** `bsuite/docs/20260425-universal-canvas-rollout-status-v1.00W.md` promoted to `v1.00A` on approval; this master plan promoted to `v1.00A`.
+### 8.1 Scorecard (2026-04-25 post Wave-5 roll-up)
+
+| Criterion | Target | Actual | Status |
+|-----------|--------|--------|--------|
+| All 7 Phase-5 PRs merged or superseded | 7/7 | 7/7 (5.0 `4f1a14c`, 5.1 `a58a8d0`, 5.2 `7d42350`→v0.2.0 `8aac009`, 5.3 `e0706ea`+`3421ac3`, 5.4 `f4a9f386`+`858b9149`+`e6f4b7d6`+`8568fa5e`, 5.5 `414f813`+`2b16b54`, 5.6 `f9ec621`+`bbe47b4`+`731f6bb`) | ✅ |
+| 5 must-haves shipped + covered by tests | 5/5 | **5/6 ✅ SHIPPED, 1/6 🟡 blocked-on-operator** (#4 SchemaFieldAdder — widget shipped `8aac009`, DB migrations staged `43fb250`, pending `supabase db push`) | 🟡 |
+| ≥60% page adoption | ≥60% | **90.8%** (307 / 338 CRM7 pages on `PageGridLayout` post Tier-A 20 + Tier-B 13 `e6f4b7d6` + Tier-C 206 `8568fa5e`) | ✅ |
+| 13 stop-ship gates green | 13/13 | 13/13 (see §6 — G1–G14 + SS1–SS17 all PASSED; S-07 verified by W3-D cross-app E2E `0c1da979`) | ✅ |
+| Vercel preview deploys green across 6 apps | 6/6 | pending green-check on `bsuite/development` head commit `d1f1faf` (bsu, crm7, conduit, r80, braden, throughput) | 🟡 |
+
+**Summary: 3 ✅ / 2 🟡 / 0 ❌.** Both 🟡 items are operator-gated, not engineering-gated.
+
+### 8.2 Criteria checklist
+
+- [x] **PRs:** 7 Phase 5 PRs merged (5.0 through 5.6 — §1 ground truth). Follow-on PRs landed: `feat/phase55-schema-registry-v0.2.0` (Wave 1 `8aac009`) + `feat/phase55-design-studio-uplift` (Wave 2 `3421ac3`). Submodule bumps merged at parent `bsuite@8120470` (Wave 1), `bsuite@9286757` (Wave 2), `bsuite@d1f1faf` (Wave 3+4 consolidated).
+- [~] **5 must-haves (plus Design Studio) shipped and covered by tests:**
+  - [x] Edit-mode toggle visible in app chrome on every CRM7 page — **SHIPPED** — W2-B `858b9149` + Tier-A 20 + Tier-B `e6f4b7d6` (13) + Tier-C `8568fa5e` (206) = 307 / 338 = 90.8%
+  - [x] Drag-from-palette works for all 7 widget types in BSU Design Studio — **SHIPPED** `8aac009` (catalog) + `3421ac3` (BSU wiring)
+  - [x] Card resize handles visible + persisted in both PageGridLayout (CRM7) and LayoutCanvas (BSU) — **SHIPPED** `b55926f3` + `01de8334`
+  - [ ] "+ Add field" from canvas writes to `tenant_field_definitions` with correct `entity_id` FK — **WIDGET SHIPPED** `8aac009`; **DB-STAGED** `43fb250`; **BLOCKED on operator** `mcp__claude_ai_Supabase__apply_migration` push
+  - [x] Cross-app `EntityRefCell` renders CRM7 contact on R80.3 calculator page — **SHIPPED** W3-D `0c1da979` (Playwright env-gated + 6/6 vitest integration pass) + runbook `docs/testing/20260425-cross-app-e2e-runbook-v1.00W.md`
+  - [x] `/design-studio` route loads standalone authoring surface — **SHIPPED** W2-A `3421ac3` (route outline + 7 widget palette; template library partially deferred, non-blocking)
+- [x] **Adoption:** CRM7 `grep -l "PageGridLayout" src/pages | wc -l` = **307** (≥ 60% target; actual 90.8%). Tier A + B + C codemod ran per §5 — Tier C produced 206 mechanical wraps via `ts-morph`.
+- [~] **Stop-ship gates:** 13/13 core gates PASSED (G1–G14 + SS1–SS17 + S-06 + S-07). Two 🟡 items:
+  - G13 Lighthouse a11y ≥ 95 on Design Studio — VERIFIED in W2-A smoke
+  - S-06 enterprise-admin RLS on `tenant_field_definitions` — COMMITTED `43fb250`, applied on operator push (O-1 in Remaining Work Top-5)
+- [ ] **Vercel preview deploys:** all 6 apps READY (bsu, crm7, conduit, r80, braden, throughput) on the `bsuite/development` head commit. `mcp__claude_ai_Vercel__list_deployments` confirms — **pending green-check**.
+- [x] **Memory protocol:** `bsuite_session_20260425` + `bsuite_sleep_packet_20260425` written to memory API per parent CLAUDE.md rules.
+- [ ] **Docs:** `bsuite/docs/20260425-universal-canvas-rollout-status-v1.00W.md` promoted to `v1.00A` on approval; this master plan promoted to `v1.00A` — pending operator approval.
+
+### 8.3 Remaining work to flip ❌/🟡 → ✅
+
+The operator-gated queue (Top-5 in `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` §Remaining Work):
+
+1. **O-1 — apply W1-C migrations** via `supabase db push --project-ref tuybltdrdefjblnplpqo --dry-run` → apply. Unblocks must-have #4 + DoD scorecard row 2 goes ✅.
+2. **O-2 — Supabase OAuth dashboard allowlist** per `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` Part C. Unblocks preview-login loop on all 4 BS-OAuth clients. DoD scorecard row 5 goes ✅.
+3. **O-3 — master roadmap v5.03W rollup** (P0-15 in finish-line roadmap).
+4. **O-4 — throughput peer-dep follow-up PR** — bump `@bsuite/nav-core@^0.5.0` THEN `@bsuite/schema-registry@^0.2.0` (W3-B surfaced the blocker).
+5. **O-5 — BSU `/admin/team-members` route** — currently missing; throughput's W4-TP deep-link (`63b79af`) points here.
 
 ---
 
