@@ -4,7 +4,7 @@
 **Scope:** `docs/*.md` at repo root — excludes `docs/archive/*` and `docs/plans/*` (managed separately).
 **Audit authority:** See `docs/plans/README.md` for the plans-layer index.
 
-> **🧭 CANONICAL ACTION LIST:** For the prioritised "what's left to do" roll-up with stable item IDs (P0-* / P1-* / P2-* / WS-*), read [`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`](./20260425-bsuite-finish-line-roadmap-v1.00W.md) FIRST. That doc is the single source of truth for remaining work across all 6 apps (154 items, cited to sources). This index remains a per-file status tracker for each living W-status doc; the finish-line roadmap is the cross-cutting action queue.
+> **🧭 CANONICAL ACTION LIST:** For the prioritised "what's left to do" roll-up with stable item IDs (P0-*/ P1-* / P2-*/ WS-*), read [`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`](./20260425-bsuite-finish-line-roadmap-v1.00W.md) FIRST. That doc is the single source of truth for remaining work across all 6 apps (154 items, cited to sources). This index remains a per-file status tracker for each living W-status doc; the finish-line roadmap is the cross-cutting action queue.
 
 ---
 
@@ -38,7 +38,6 @@ These are authoritative, continuously applicable documents. They evolve in place
 | `20260316-claude-code-prompts-reference-v1.00A.md` | Self-contained prompts for Claude Code to execute remaining roadmap items |
 | `20260316-compliance-reference-v1.00A.md` | BSuite compliance documentation (WCAG, data handling, regulatory) |
 | `20260316-matrix-reference-v1.00A.md` | Feature/requirements matrix across all apps |
-| `20260316-mermaid-ui-builder-reference-v1.00A.md` | Mermaid UI builder guide for diagram-driven UI spec |
 | `20260316-navigation-reference-v1.00A.md` | Navigation structure reference (canonical — `navigation-guide-v1.00A` archived as donor/duplicate) |
 | `20260316-pricing-strategy-v1.00A.md` | Subscription and per-seat pricing strategy with AI add-on tiers |
 | `20260316-ui-reference-v1.00A.md` | BSuite UI architecture — canonical UI source chain, component layer map |
@@ -54,6 +53,7 @@ These are authoritative, continuously applicable documents. They evolve in place
 Files with `.00W` (Working) or `.00D` (Draft) status that have open actions. Update status to `.00A` (Approved) once all actions are resolved.
 
 ### `20260317-bsuite-gap-report-v2.00W.md`
+
 Living gap register — supersedes v1. Accumulates sprint findings.
 
 | # | Remaining action | Owner |
@@ -65,6 +65,7 @@ Living gap register — supersedes v1. Accumulates sprint findings.
 ---
 
 ### `20260319-entity-crosswalk-v1.00D.md`
+
 198-entity inventory mapped to DB table, Zustand store, route, selector, gap.
 
 | # | Remaining action | Owner |
@@ -76,6 +77,7 @@ Living gap register — supersedes v1. Accumulates sprint findings.
 ---
 
 ### `20260415-roadmap-audit-delta-v1.00W.md`
+
 Delta audit confirming four P2 `#26` subtasks already complete; pending rollup into master roadmap.
 
 | # | Remaining action | Owner |
@@ -87,6 +89,7 @@ Delta audit confirming four P2 `#26` subtasks already complete; pending rollup i
 ---
 
 ### `20260420-react-hooks-v7-tech-debt-v1.00W.md`
+
 ESLint react-hooks v7 warning remediation tracker. 47 warnings in BSU, 21 in braden, ~30 in throughput.
 
 | # | Remaining action | Owner |
@@ -98,6 +101,7 @@ ESLint react-hooks v7 warning remediation tracker. 47 warnings in BSU, 21 in bra
 ---
 
 ### `20260421-k8-retroactive-audit-v1.00W.md`
+
 Part K.8 retroactive checklist for 7 commits in the 2026-04-21 cycle.
 
 | # | Remaining action | Owner |
@@ -109,6 +113,7 @@ Part K.8 retroactive checklist for 7 commits in the 2026-04-21 cycle.
 ---
 
 ### `20260421-storage-rls-reserved-prefixes-v1.00W.md`
+
 M.6 state: reserved-prefix RLS policy for `tenant-logos` bucket.
 
 | # | Remaining action | Owner |
@@ -120,6 +125,7 @@ M.6 state: reserved-prefix RLS policy for `tenant-logos` bucket.
 ---
 
 ### `20260421-supabase-realtime-blocks-rollout-v1.00W.md`
+
 G.3 rollout plan for `realtime-chat` (CRM7), `realtime-cursor` (Conduit), `realtime-monaco` (CRM7).
 
 | # | Remaining action | Owner |
@@ -131,6 +137,7 @@ G.3 rollout plan for `realtime-chat` (CRM7), `realtime-cursor` (Conduit), `realt
 ---
 
 ### `20260422-typescript-6-migration-evaluation-v1.00W.md`
+
 N.7.c evaluation doc. All 6 apps are GO at TS 6.0 GA + typescript-eslint compat.
 
 | # | Remaining action | Owner |
@@ -142,6 +149,7 @@ N.7.c evaluation doc. All 6 apps are GO at TS 6.0 GA + typescript-eslint compat.
 ---
 
 ### `20260423-cross-app-write-audit-v1.00W.md`
+
 Phase 4 V3+V4 audit. Superseded as a suite-wide one-shot signal by the
 2026-04-24 audit. The original V3/V4 checks still stand, but current roadmap
 execution must treat the broader ownership leaks below as active blockers.
@@ -159,6 +167,7 @@ execution must treat the broader ownership leaks below as active blockers.
 ---
 
 ### `20260423-misplaced-routes-audit-v1.00W.md`
+
 Phase 12.1 audit. 6 deferred route moves (F-01…F-06) pending Phase 7 merge.
 
 | # | Remaining action | Owner |
@@ -170,6 +179,7 @@ Phase 12.1 audit. 6 deferred route moves (F-01…F-06) pending Phase 7 merge.
 ---
 
 ### `20260424-env-var-contributing-rules-v1.00W.md`
+
 Standing env/Vercel rules extracted from the 2026-04-24 audit.
 
 | # | Remaining action | Owner |
@@ -180,7 +190,22 @@ Standing env/Vercel rules extracted from the 2026-04-24 audit.
 
 ---
 
-## 3 — Archived This Pass (`docs/archive/2026-04/`)
+## 3 — Archived This Pass
+
+### 2026-04-25 bucket — `docs/archive/2026-04-25-universal-canvas-wave/`
+
+Wave-5 ARCHIVAL sweep (user directive 2026-04-25 — docs cleanup + archival of
+completed work). 2 files moved from their prior locations to this bucket. See
+`docs/archive/2026-04-25-universal-canvas-wave/README.md` for the full table
+and the list of 10 further archive candidates whose triggers have not yet
+fired.
+
+| File | Moved from | Archive reason |
+|------|-----------|----------------|
+| `20260423-phase5-schema-pagebuilder-implementation-v1.00W.md` | `docs/plans/` | 1528-line Phase 5 impl plan — all 7 PRs (5.0 → 5.6) landed; superseded by `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` |
+| `20260316-mermaid-ui-builder-reference-v1.00A.md` | `docs/` | March 2026 legacy diagram-driven UI vision — superseded by universal-canvas architecture (PageGridLayout + @bsuite/schema-registry + TenantLayoutSlot) |
+
+### 2026-04-23 bucket — `docs/archive/2026-04/`
 
 19 files moved from `docs/*.md` to `docs/archive/2026-04/` on 2026-04-23.
 
@@ -210,8 +235,14 @@ Standing env/Vercel rules extracted from the 2026-04-24 audit.
 
 ## Top 5 Outstanding Items (Priority Order)
 
-1. **Roadmap v5.03W bump** — Roll `20260415-roadmap-audit-delta-v1.00W.md` findings into master roadmap (26a/26e/26f/26g strike-through + AUD-15/16 ✅). Unblocks several downstream tracking items.
-2. **Development branch Vercel-green gate** — Resolve production-plan Phase 6 blockers, especially the Conduit SSR prerender guard, before any production merge discussion.
-3. **One-shot Phase 7 completion** — Remaining FK/UI coverage plus EntitySelector/EntityLinker rollout; all changed flows must pass the one-shot compliance gate.
-4. **Environment security cleanup** — Execute the 2026-04-24 env audit priority list: remove client-exposed secret names, add missing RAM vars, and align Supabase publishable/secret key naming.
-5. **React Hooks v7 remediation** — 47 BSU + 21 braden warnings; rule demotion to `warn` is time-boxed; promote to `error` once counts are zero.
+Re-ranked 2026-04-25 after Wave-1 → Wave-4 of the universal-canvas sweep
+landed. The universal-canvas master plan
+(`docs/20260425-universal-canvas-master-execution-plan-v1.00W.md`) is the
+primary execution source; IDs below match the finish-line roadmap
+(`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`).
+
+1. **P0-6 Part C — Supabase dashboard preview-URL allowlist** (operator action). Parts A + B shipped in this session; Part C is a 5-minute click-through in the Supabase dashboard to add preview-URL patterns to `additional_redirect_urls` for all 4 OAuth-client apps (CRM7, R80.3, Braden, Throughput). Blocks preview-branch auth for every client app. See `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` §Sign-off.
+2. **P1-84 — Wave 1-C migration apply to live Supabase**. Code committed (BSU `20260425_phase5_tfd_entity_fk.sql` + `20260425_phase5_tfd_enterprise_admin_rls.sql` + `add_field` RPC at commit `43fb250`). Operator must push via `mcp__claude_ai_Supabase__apply_migration`; post-backfill verification `SELECT count(*) FROM tenant_field_definitions WHERE entity_id IS NULL` must return 0.
+3. **P0-15 — Master roadmap v5.03W rollup**. Bump `docs/20260227-bsuite-master-roadmap-v5.00W.md` header to v5.03W, strike `#26a/26e/26f/26g`, mark AUD-15/AUD-16 done. Unblocks archival of `20260415-roadmap-audit-delta-v1.00W.md`.
+4. **Development → production Vercel-green gate**. Resolve production-plan Phase 6 blockers, especially the Conduit SSR prerender guard, before any production merge discussion. Remains the last gate between dev-green and production-promote.
+5. **Environment security cleanup** — Execute the 2026-04-24 env audit priority list: remove client-exposed secret names, add missing RAM vars, and align Supabase publishable/secret key naming. Track in `docs/20260424-env-var-audit-findings-v1.00A.md` priority queue.
