@@ -571,7 +571,7 @@ These v1 items are not yet assigned to a sprint:
 
 ### Completion note
 
-Read-only observations; no code moved or deleted. Owning teams either ship and close the `W` status or file ticket-linked follow-ups. Provenance: *— discovered during 2026-04-24 archive pass (plan: completed-the-current-development-branch)*.
+Read-only observations; no code moved or deleted. Owning teams either ship and close the `W` status or file ticket-linked follow-ups. Provenance: _— discovered during 2026-04-24 archive pass (plan: completed-the-current-development-branch)_.
 
 ---
 

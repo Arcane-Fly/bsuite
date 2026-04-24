@@ -169,11 +169,13 @@ These are not database-write violations but architectural violations of the same
 The V7 entries above listed `platform_branding` writes and `custom_pages` writes in paths that do not match the actual code. Corrected per a 2026-04-25 subagent investigation ahead of shipping V7a:
 
 ### V7a-actual (SHIPPED crm7@`e15763c9`)
+
 The V7a authoring writes were in `crm7/src/pages/settings/branding.tsx` — `saveMutation` called `.upsert()` on `tenant_branding` and `.update()` on `tenant_settings`. That entire UI was reduced to a 16-line re-export of `BrandingRedirect` which navigates to `${VITE_BSU_URL}/branding`. The original audit's cite of `src/services/tenantService.ts:63` was inaccurate — that line is whitespace/type in the current file. Also: CRM7 never wrote to `platform_branding` — the V7 entry mentioning it was aspirational. All current `platform_branding` references are `.select()` reads.
 
 Post-ship state: `grep -rn "\.(insert|update|upsert|delete)\s*\(.*\bfrom\s*\(\s*['\"]platform_branding['\"]\|tenant_branding['\"]` in `crm7/src/` returns zero matches. `useBranding.ts` consumes via `.select()` only.
 
 ### V7b-needs-rescope (NOT actionable as written)
+
 The V7b entry claimed `crm7/src/pages/settings/schema-builder/*` writes to `custom_pages` / `custom_page_blocks`. Neither is true:
 
 1. `schema-builder/*` writes to `tenant_entities` + `tenant_relations` (the entity-relationship diagram builder). This is a data-model authoring surface, not a page-layout builder.
@@ -182,10 +184,12 @@ The V7b entry claimed `crm7/src/pages/settings/schema-builder/*` writes to `cust
 4. CRM7 legitimately authors `custom_pages` via `src/pages/settings/custom-page-{create,edit,detail}.tsx` + `src/services/customPageService.ts`. No BSU equivalent exists.
 
 Decision needed (outside Phase 4 scope):
+
 - **Option A:** Build a BSU `custom_pages` authoring surface in `/developer/pages` (currently authors `tenant_page_layouts` only), then convert CRM7 custom-page-*.tsx to consumers. Adds BSU workstream.
 - **Option B:** Accept `custom_pages` as CRM7-owned and update `docs/20260227-dry-one-shot-architecture-v1.01A.md §1 Entity Ownership Map` to reflect this. V7b closes as "not a violation."
 
 Tracked as P1-4 in `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` with AUDIT MISMATCH flag until the decision lands.
 
 ### V7c-new-candidate (unscoped — future audit entry)
+
 If `schema-builder/*` (tenant_entities/relations writes) should ALSO move to a centralised owner, that's a separate audit question. It would need a BSU authoring surface built first (same shape as the Phase 5 Developer Portal, but for schema). Out of scope for this audit pass.

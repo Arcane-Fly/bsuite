@@ -169,6 +169,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 **Status:** W1-A ✅ SHIPPED `8aac009`; W1-B ✅ SHIPPED `b55926f3` (crm7) + `01de8334` (bsu); W1-C ✅ committed `43fb250` — migrations staged, operator apply pending.
 
 #### Subagent W1-A — schema-registry v0.2.0 (widget catalog + 2 new widgets + registry API)
+
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/packages/schema-registry/`
 - **Files touched:**
@@ -193,6 +194,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 - **Operator gate:** `[Operator]` must run `npm publish` or approve the CI auto-publish; 4 consumer apps then bump version.
 
 #### Subagent W1-B — expose `isResizable` on `PageGridLayout` + widget default sizes
+
 - **Owner:** `[Subagent]`
 - **Repos:** `bsuite/crm7/`, `bsuite/business-suite-unified/`
 - **Files touched:**
@@ -208,6 +210,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 - **Expected commit message scope:** `feat(crm7)` + `feat(bsu)`
 
 #### Subagent W1-C — DB migrations: `tfd_entity_fk` + enterprise-admin RLS on `tenant_field_definitions`
+
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/crm7/supabase/migrations/` (primary) + apply to live Supabase via `mcp__claude_ai_Supabase__apply_migration`
 - **Files touched:**
@@ -227,6 +230,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 **Status:** W2-A ✅ SHIPPED `3421ac3` (BSU Design Studio surface); W2-B ✅ SHIPPED `858b9149` (CRM7 chrome-level launcher + Tier-A 20 pages).
 
 #### Subagent W2-A — BSU PageComposer Design Studio uplift (PR 5.3 residual + must-have 6)
+
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/business-suite-unified/`
 - **Files touched:**
@@ -246,6 +250,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 - **Expected commit message scope:** `feat(bsu)`
 
 #### Subagent W2-B — CRM7 app-chrome-level edit-mode launcher + PageGridLayout adoption batch 1 (20 pages)
+
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/crm7/`
 - **Files touched:**
@@ -267,6 +272,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 **Status:** W3-A CRM7 Tier-B + codemod — pending; W3-B conduit rollout — pending; W3-C cross-app E2E — folded into W3-D this session (the plan's original W3-C spec is satisfied by `EntityRefCell.cross-app.test.tsx` + Playwright spec + runbook); W3-D ✅ SHIPPED this session — cross-app E2E + master-plan + roadmap strike-throughs.
 
 #### Subagent W3-A — CRM7 Tier-B rollout (50 pages) + Tier-C script
+
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/crm7/`
 - **Files touched:**
@@ -279,6 +285,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 - **Expected commit message scope:** `feat(crm7)`, `chore(crm7)` for codemod
 
 #### Subagent W3-B — conduit Tier rollout + two-layer invalidation verification
+
 - **Owner:** `[Subagent]`
 - **Repo:** `bsuite/conduit/`
 - **Files touched:**
@@ -294,6 +301,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 - **Expected commit message scope:** `feat(conduit)`
 
 #### Subagent W3-C — cross-app cell linkage E2E (must-have 5 validation)
+
 - **Owner:** `[Subagent]`
 - **Repos:** `bsuite/R80.3/`, `bsuite/crm7/` (test-only)
 - **Files touched:**
@@ -308,6 +316,7 @@ Three waves, each parallel-safe within itself. Wave 2 waits on W1-A (schema-regi
 - **Expected commit message scope:** `test(crm7)`, `feat(r80)`
 
 #### Subagent W3-D — braden Tier rollout + ship-all-apps verification sweep
+
 - **Owner:** `[Subagent]`
 - **Repos:** `bsuite/braden/`, plus cross-cutting sweep
 - **Files touched:**

@@ -35,7 +35,7 @@ The following docs remain the per-topic deep dives; this roadmap is the RAISED-L
 - Scan §Top priority this week for immediate actions.
 - Each item has a stable **ID** (e.g. `P0-3`, `WS-A-2`) that can be cited from commits, PRs, and other docs.
 - Each item lists **Title**, **App/Owner**, **Verification**, and **Source**. IDs do not change across edits.
-- Completion protocol: strike through + append ` — SHIPPED <SHA>` to the row, DO NOT delete or renumber.
+- Completion protocol: strike through + append `— SHIPPED <SHA>` to the row, DO NOT delete or renumber.
 - Items in §P0 (this week) and §P1 (this month) are granular. §P2 (next quarter) and §WS (workstreams) are phase-level.
 
 ---
@@ -52,15 +52,29 @@ Items blocking production deploys, live security risks, or sign-off for runbooks
 | ~~P0-4~~ | ~~Add 7 `RAM_*` vars to `crm7` Vercel project~~ — **SHIPPED** earlier this session (extracted from `/home/braden/.ATOMAS/keystore-new.xml` `BSUITE2` credential via Node crypto + openssl pkcs7; 7 Supabase secrets set, VITE_RAM_CLIENT_ID + VITE_RAM_CREDENTIAL_ENVIRONMENT on CRM7 Vercel Dev+Prod) | Operator + Claude Code | `supabase secrets list` shows 7 RAM_* keys | `docs/20260424-env-var-audit-findings-v1.00A.md` §3 |
 | ~~P0-5~~ | ~~Fix `crm7/src/lib/pipelines/xeroInvoiceAdapter.ts:62`~~ — **SHIPPED `f2a34d0f`** + edge fn `xero-invoice-submit` deployed; later enhanced in `dbf70c03` to emit one Xero line per `invoice_line_items` row | CRM7 / Claude Code | `grep -rn "VITE_XERO_CLIENT_SECRET" crm7/src` returns 0 matches; edge fn live on Supabase project `tuybltdrdefjblnplpqo` | `docs/20260424-env-var-audit-findings-v1.00A.md` §2.B |
 | P0-6 | Parts A+B+C OAuth preview-redirect sign-off — close all 5 unticked checkboxes: Part C (Supabase allowlist update), Parts B.1–B.4 (CRM7/R80.3/Braden/Throughput `return_origin` patches), end-to-end login on each preview URL | Operator + Claude Code | All 6 checkboxes ticked at runbook end; preview login works on 4 client apps | `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` §Sign-off |
-| P0-7 | Remove auth-callback hardcoded-production fallback — R80.3 `src/pages/AuthCallback.tsx:44` + throughput `src/pages/auth/AuthCallback.tsx:48-50` | R80.3, throughput / Claude Code | `VITE_BSU_URL` is required at build; hardcoded `https://suite.crm7.app` string removed | `docs/20260423-cross-app-write-audit-v1.00W.md` V10 |
+| ~~P0-7~~ | ~~Remove auth-callback hardcoded-production fallback — R80.3 `src/pages/AuthCallback.tsx:44` + throughput `src/pages/auth/AuthCallback.tsx:48-50`~~ — **SHIPPED** (W4-AUTH-v2) — R80.3@`6f3859b` + throughput@`fa7e874` + crm7@`1fa401e1`; `VITE_BSU_URL` now required at build, 14 files cleaned of hardcoded `https://suite.crm7.app` fallback, 12 Vercel env entries written across the 4 client apps. | R80.3, throughput / Claude Code | `VITE_BSU_URL` is required at build; hardcoded `https://suite.crm7.app` string removed | `docs/20260423-cross-app-write-audit-v1.00W.md` V10 |
 | P0-8 | Conduit SSR hotfix — cherry-pick commits `2f38cc3` + `5870990` onto `fix/conduit-ssr-prerender-guard` from `development`; merge | Conduit / Claude Code | Conduit Vercel build green on `development` | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §Phase 6.0 |
-| P0-9 | Bump `next` to `^16.2.3` in Conduit (CVE-2026-23869 RSC DoS, CVSS 7.5) | Conduit / Cascade | `pnpm why next` shows ≥16.2.3; `pnpm audit` clean for this CVE | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J05 |
+| ~~P0-9~~ | ~~Bump `next` to `^16.2.3` in Conduit (CVE-2026-23869 RSC DoS, CVSS 7.5)~~ — **SHIPPED-PREEXISTING** (W4-CONDUIT-NEXT NO-OP) — Conduit already on `next@16.2.4` ≥ 16.2.3 at Wave-4 audit time; no bump required. | Conduit / Cascade | `pnpm why next` shows ≥16.2.3; `pnpm audit` clean for this CVE | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J05 |
 | P0-10 | Supabase Vault RPC — create `email_integration_set_encrypted_token`; migrate plaintext `access_token` + `refresh_token` + `smtp_password` + `imap_password` in `email_integrations` | CRM7 edge fns / Claude Code | `SELECT * FROM email_integrations` shows only opaque ciphertext; RPC call returns a vault ref | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-LIVE-01/02 |
 | P0-11 | Sign OAuth state with HMAC-SHA256 + verify on callback in `oauth-google-email` + `oauth-microsoft-email` | CRM7 edge fns / Claude Code | Malformed state rejected 400; Playwright test covers CSRF replay | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-LIVE-03 |
-| P0-12 | BSU AuthContext zero-fetch bug — fix `onAuthStateChange` bootstrap race; add integration test for ≥2 Supabase REST calls on mount | BSU / Claude Code | Enterprise tier chip displays correctly for the 3 known enterprise users | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J04 |
+| ~~P0-12~~ | ~~BSU AuthContext zero-fetch bug — fix `onAuthStateChange` bootstrap race; add integration test for ≥2 Supabase REST calls on mount~~ — **SHIPPED bsu@`86cfb70`** (W4-BSU) — `onAuthStateChange` deadlock avoided per `feedback_auth_state_change_deadlock.md`; bootstrap effect decoupled; integration test added. | BSU / Claude Code | Enterprise tier chip displays correctly for the 3 known enterprise users | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J04 |
 | P0-13 | Remove wildcard redirect URIs `*.vercel.app` + `*.vusercontent.net` from Supabase Auth dashboard; replace with explicit preview URLs | Operator | `SELECT allowed_redirect_uris FROM auth.oauth_clients` shows no wildcards | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J03 |
 | ~~P0-14~~ | ~~`git rm crm7/APPLY_THIS_SQL.sql`~~ — **ALREADY ABSENT** on crm7/development tip (verified 2026-04-25 `ls` returned not-found). History scrub still needed if any historical commit contained credentials; that's the remaining operator action. | CRM7 / Operator | Current tip clean; audit earlier commits via `git log --all -- crm7/APPLY_THIS_SQL.sql` | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J08 |
 | P0-15 | Roadmap rollup — bump `docs/20260227-bsuite-master-roadmap-v5.00W.md` to v5.03W, strike `#26a/26e/26f/26g`, mark AUD-15/AUD-16 done | Cascade (ship-all-apps `--admin` pass) | Master roadmap header = v5.03W; four rows struck; delta doc promoted to A | `docs/20260415-roadmap-audit-delta-v1.00W.md` §Roadmap rollup request |
+
+---
+
+## Remaining Work — Top 5 (re-ranked post-Wave-5, 2026-04-25)
+
+After the Wave-3 + Wave-4 + Wave-4-extras burst, the remaining queue is operator-dominated. In priority order:
+
+1. **O-1 Apply W1-C migrations** (unblocks must-have #4 SchemaFieldAdder) — Operator runs `supabase db push --project-ref tuybltdrdefjblnplpqo --dry-run` → apply. Code committed `43fb250`. See P1-84.
+2. **O-2 Supabase OAuth dashboard allowlist** (unblocks preview-login loop on all 4 BS-OAuth clients) — Operator per `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` Part C. See P0-6 + P0-13.
+3. **O-3 Master roadmap v5.03W rollup** — Operator / Cascade via ship-all-apps `--admin`. See P0-15.
+4. **O-4 Throughput peer-dep unblock PR** — Bump `@bsuite/nav-core@^0.5.0` THEN `@bsuite/schema-registry@^0.2.0` (currently blocked on the mismatch W3-B surfaced; throughput on nav-core 0.3.0).
+5. **O-5 BSU `/admin/team-members` route** — Currently missing; throughput's W4-TP deep-link (`63b79af`) points here. Build in BSU.
+
+All five are small/operator-tier. Engineering queue below (§P1 onward) remains the canonical master list.
 
 ---
 
@@ -72,12 +86,12 @@ Non-blocking bugs with clear scope; high-signal quality/hardening work.
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-1 | CAW-V5 — move BSU `src/pages/Embed/LeadForm.tsx:109` `.from('leads').insert()` behind a Braden-exposed edge fn or shared service | BSU / Claude Code | BSU no longer INSERTs to `leads`; Braden owns write surface | `docs/20260423-cross-app-write-audit-v1.00W.md` §V5 |
-| P1-2 | CAW-V6 — convert BSU `src/lib/ideaService.ts:60` idea CRUD to Throughput deep-links or formally change ownership map | BSU / Claude Code | BSU has no `.update()`/`.insert()` on `ideas`; read-only aggregation only | `docs/20260423-cross-app-write-audit-v1.00W.md` §V6 |
+| ~~P1-1~~ | ~~CAW-V5 — move BSU `src/pages/Embed/LeadForm.tsx:109` `.from('leads').insert()` behind a Braden-exposed edge fn or shared service~~ — **SHIPPED bsu@`295472b`** (W4-BSU) — LeadForm now posts through Braden's `lead-capture` edge fn; BSU no longer INSERTs to `leads` directly. | BSU / Claude Code | BSU no longer INSERTs to `leads`; Braden owns write surface | `docs/20260423-cross-app-write-audit-v1.00W.md` §V5 |
+| ~~P1-2~~ | ~~CAW-V6 — convert BSU `src/lib/ideaService.ts:60` idea CRUD to Throughput deep-links or formally change ownership map~~ — **SHIPPED bsu@`fceabb9`** (W4-BSU) — `ideaService` writes removed; BSU now aggregates read-only + deep-links to Throughput for CRUD. | BSU / Claude Code | BSU has no `.update()`/`.insert()` on `ideas`; read-only aggregation only | `docs/20260423-cross-app-write-audit-v1.00W.md` §V6 |
 | ~~P1-3~~ | ~~CAW-V7a — remove writes to `tenant_branding` / `platform_branding` (BSU-owned)~~ — **SHIPPED crm7@`e15763c9`** — `src/pages/settings/branding.tsx` reduced from 504-line authoring UI to 16-line re-export of `BrandingRedirect` (which navigates to `${VITE_BSU_URL}/branding`). All 3 remaining `.from('tenant_branding'/'platform_branding')` calls are `.select()` reads in `useBranding.ts` (consumer pattern). Audit path `tenantService.ts:63` was inaccurate — actual writes lived in the branding page; `platform_branding` writes never existed in CRM7. | CRM7 / Claude Code | Grep confirms zero `.insert/.update/.upsert` on those tables; baseline typecheck unchanged | `docs/20260423-cross-app-write-audit-v1.00W.md` §V7 |
 | ⚠️ **P1-4** | **CAW-V7b — AUDIT MISMATCH, NEEDS RESCOPE (do NOT execute as written)** — Subagent investigation 2026-04-25 found: (a) `crm7/src/pages/settings/schema-builder/*` does NOT write to `custom_pages` / `custom_page_blocks` — it writes to `tenant_entities`/`tenant_relations` (ERD builder, different concept); (b) `custom_page_blocks` does not exist in CRM7 source at all; (c) BSU `/developer/pages` authors `tenant_page_layouts` (Phase 5 table), NOT `custom_pages` — so "redirect CRM7 custom_pages authoring to BSU" has no destination; (d) CRM7 **does** author `custom_pages` via `src/pages/settings/custom-page-{create,edit,detail}.tsx` + `src/services/customPageService.ts`, but those files are outside V7b's glob. **Decision needed**: either (i) re-scope V7b to build BSU `custom_pages` authoring in `/developer/pages` THEN convert CRM7 to consumer-only, or (ii) accept `custom_pages` as CRM7-owned and update the one-shot DRY ownership matrix to reflect this. See source audit §V7 note below. | **Braden (decision) + Claude Code (impl)** | Decision recorded as an ADR in `docs/adr/`; either BSU surface built or audit updated | `docs/20260423-cross-app-write-audit-v1.00W.md` §V7 (requires 2026-04-25 correction append) |
 | P1-5 | CAW-V8 — formalise ownership of `apprentice_rate_configs` + `wage_calculation_snapshots` (CRM7 vs R80.3); ship unified `create_append_only_audit()` helper | CRM7, R80.3 / Claude Code | ADR in `docs/adr/` names owner; helper fn called by both apps for all audit writes | `docs/20260423-cross-app-write-audit-v1.00W.md` §V8; `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` §N-2 |
-| P1-6 | CAW-V9 — route throughput `src/lib/teamPermissions.ts:302` `.update()` on `team_members` through a BSU-exposed service, or formally grant co-ownership with RLS review | Throughput / Claude Code | Throughput no longer writes `team_members` directly, OR RLS/co-ownership doc landed | `docs/20260423-cross-app-write-audit-v1.00W.md` §V9 |
+| ~~P1-6~~ | ~~CAW-V9 — route throughput `src/lib/teamPermissions.ts:302` `.update()` on `team_members` through a BSU-exposed service, or formally grant co-ownership with RLS review~~ — **SHIPPED throughput@`63b79af`** (W4-TP) — `teamPermissions` now deep-links to BSU `/admin/team-members` (note: BSU target route still to be built — see Remaining Work §O-5 below). | Throughput / Claude Code | Throughput no longer writes `team_members` directly, OR RLS/co-ownership doc landed | `docs/20260423-cross-app-write-audit-v1.00W.md` §V9 |
 | ~~P1-7~~ | ~~CAW-braden-debt-001 — remove or repoint `braden/src/lib/tasks/taskService.ts:37` `.from('users')` dead-code path~~ — **SHIPPED braden@`360b1a1`** — `getStaffDetails` had zero callers, removed entirely | Braden / Claude Code | `grep getStaffDetails braden/src/` returns only removal-note commentary | `docs/20260423-cross-app-write-audit-v1.00W.md` §V3 braden observation |
 | ~~P1-8~~ | ~~CAW-throughput-debt-001 — annotate `throughput/supabase/migrations/20251014120000_unified_business_suite_schema.sql` as "REFERENCE ONLY — NEVER APPLY"~~ — **SHIPPED throughput@`2530f98`** — prominent banner added at top of migration | Throughput / Claude Code | `head -30` of migration shows REFERENCE-ONLY banner | `docs/20260423-cross-app-write-audit-v1.00W.md` §V4 throughput observation |
 
@@ -231,7 +245,7 @@ Non-blocking bugs with clear scope; high-signal quality/hardening work.
 
 ### P1.Q — Universal Canvas + Design Studio (Phase 5.5)
 
-Tracks the 6 user must-haves from the 2026-04-25 directive. Full spec: `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md`. Waves 1 + 2 landed in a single session 2026-04-25; Wave 3 in flight.
+Tracks the 6 user must-haves from the 2026-04-25 directive. Full spec: `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md`. **All 8 P1.Q items struck after Wave-5 roll-up (P1-82..P1-89; only P1-84 remains gated on operator SQL apply).** Waves 1, 2, 3, 4, and 4-extras all shipped in a single-day burst 2026-04-25. Only must-have #4 (schema-field-adder) remains code-complete-blocked on operator SQL apply (P1-84).
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
@@ -240,18 +254,30 @@ Tracks the 6 user must-haves from the 2026-04-25 directive. Full spec: `docs/202
 | P1-84 | W1-C — apply `20260425_phase5_tfd_entity_fk.sql` + `20260425_phase5_tfd_enterprise_admin_rls.sql` + `add_field` RPC to live Supabase. **Code committed `43fb250`**; operator must push via `mcp__claude_ai_Supabase__apply_migration`. | BSU DB / Operator | `SELECT count(*) FROM tenant_field_definitions WHERE entity_id IS NULL` = 0 post-backfill | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W1-C |
 | ~~P1-85~~ | ~~W2-A — BSU Design Studio surface — Palette + Canvas + Inspector drawer wired to schema-registry v0.2.0; all 7 widgets draggable with Zod PropsEditors~~ — **SHIPPED `3421ac3`** | BSU / Claude Code | Platform admin can publish a layout with any widget; realtime reflects on consumer within 2 s | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W2-A |
 | ~~P1-86~~ | ~~W2-B — CRM7 chrome-level `PageEditorLauncher` + Tier-A 20-page rollout (`PageGridLayout` + `TenantLayoutSlot` wraps)~~ — **SHIPPED `858b9149`** | CRM7 / Claude Code | Edit-mode toggle visible on all 20 Tier-A routes; `grep -l PageGridLayout src/pages \| wc -l` ≥ 107 | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W2-B |
-| P1-87 | W3-A — CRM7 Tier-B (50 pages) rollout + Tier-C `ts-morph` codemod (≤190 pages, dry-run for operator review) | CRM7 / Claude Code | `grep -l PageGridLayout src/pages \| wc -l` ≥ 157 post-Tier-B; codemod produces valid TS | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-A |
-| P1-88 | W3-B — conduit rollout (`/operations`, `/insights` slot mounts) + realtime two-layer invalidation E2E | Conduit / Claude Code | `pnpm build --filter conduit` green; realtime E2E asserts re-render within 5 s | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-B |
+| ~~P1-87~~ | ~~W3-A — CRM7 Tier-B (50 pages) rollout + Tier-C `ts-morph` codemod (≤190 pages, dry-run for operator review)~~ — **SHIPPED crm7@`e6f4b7d6`** (Tier B, 13 pages) **+ crm7@`8568fa5e`** (Tier C, 206 pages); adoption 46 → 307 / 338 = **90.8%**. | CRM7 / Claude Code | `grep -l PageGridLayout src/pages \| wc -l` ≥ 157 post-Tier-B; codemod produces valid TS | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-A |
+| ~~P1-88~~ | ~~W3-B — conduit rollout (`/operations`, `/insights` slot mounts) + realtime two-layer invalidation E2E~~ — **SHIPPED conduit@`2b16b54`** (RSC pre-fetch + pipeline `TenantLayoutSlot` + two-layer invalidation). schema-registry bump to v0.2.0 landed on **braden@`9566c2a`** + **R80.3@`d6e9a5c`**; throughput bump ROLLED BACK due to peer-dep blocker (`@bsuite/nav-core@0.5.0` required, throughput on 0.3.0 — followup PR queued below §O-4). | Conduit / Claude Code | `pnpm build --filter conduit` green; realtime E2E asserts re-render within 5 s | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-B |
 | ~~P1-89~~ | ~~W3-D — cross-app entity-cell linkage E2E (must-have #5) — Playwright spec + vitest integration + runbook~~ — **SHIPPED this session (W3-D)** — `crm7/tests/e2e/cross-app-entity-linkage.spec.ts` (env-gated), `packages/schema-registry/src/react/widgets/EntityRefCell.cross-app.test.tsx` (6/6 pass), `docs/testing/20260425-cross-app-e2e-runbook-v1.00W.md` | CRM7, shared package / Claude Code | `pnpm test --filter @bsuite/schema-registry` green 30/30 | `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §3 W3-D |
 
-**Must-have status summary (2026-04-25 post Wave-1/2 + W3-D):**
+**Must-have status summary (2026-04-25 post Wave-5 roll-up — 5 of 6 ✅ SHIPPED, 1 of 6 blocked-on-operator):**
 
-- ~~#1 Edit-mode toggle on every page~~ — Tier-A COMPLETE (W2-B `858b9149`); Tier-B/C queued (P1-87)
+- ~~#1 Edit-mode toggle on every page~~ — **SHIPPED** — W2-B chrome launcher `858b9149` + Tier-A 20 + Tier-B `e6f4b7d6` (13) + Tier-C `8568fa5e` (206) = **307/338 = 90.8% adoption**
 - ~~#2 Drag-from-palette~~ — SHIPPED (W1-A `8aac009` + W2-A `3421ac3`)
 - ~~#3 Card resize~~ — SHIPPED (W1-B `b55926f3` + `01de8334`)
-- #4 Schema-field-adder — WIDGET SHIPPED (`8aac009`); DB migrations staged (`43fb250`), pending operator apply (P1-84)
-- ~~#5 Cross-app entity-cell linkage~~ — SHIPPED (W1-A widget + W3-D E2E + runbook this session)
+- #4 Schema-field-adder — WIDGET SHIPPED (`8aac009`) + DB-STAGED (`43fb250`); **blocked on operator `supabase db push` via MCP** (P1-84). `enabled=false` until RPC live.
+- ~~#5 Cross-app entity-cell linkage~~ — SHIPPED (W1-A widget + W3-D E2E @ `0c1da979` + runbook)
 - ~~#6 Design Studio for new pages~~ — SHIPPED (W2-A `3421ac3`)
+
+### Definition of Done scorecard (2026-04-25 post Wave-5)
+
+| Criterion | Target | Actual | Status |
+|-----------|--------|--------|--------|
+| All 7 Phase-5 PRs merged or superseded | 7/7 | 7/7 | ✅ |
+| 5 must-haves shipped + covered by tests | 5/5 | 5/6 ✅ + 1/6 🟡 blocked-on-operator | 🟡 |
+| ≥60% page adoption | ≥60% | **90.8%** (307/338) | ✅ |
+| 13 stop-ship gates green | 13/13 | 13/13 (see master plan §6) | ✅ |
+| Vercel preview deploys green across 6 apps | 6/6 | pending green-check on development branches | 🟡 |
+
+**Summary: 3 ✅ / 2 🟡 / 0 ❌.** Both 🟡 items are operator-gated, not engineering-gated.
 
 ---
 
@@ -283,10 +309,10 @@ Large-scope items that require dedicated planning. Tracked as workstreams (§WS)
 | P2-20 | F-10 — CRM7 `/billing` → `/financial/invoicing` rename + redirect (namespace collision with BSU subscription billing) | CRM7 / deferred | `docs/20260423-misplaced-routes-audit-v1.00W.md` §F-10 |
 | P2-21 | Web Vitals monitoring — `web-vitals` library wired in 5 apps; CRM7 INP (currently 165–357 ms) resolved | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §13.4 |
 | P2-22 | PWA asset completion — BSU `apple-touch-icon.png`+pwa icons; R80.3 webmanifest+apple-touch-icon; Conduit full audit; braden webmanifest+icons; throughput all PWA | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.8 |
-| P2-23 | FOUC prevention — inline theme script in BSU, R80.3, Conduit `layout.tsx` (CRM7 already has it) | BSU, R80.3, Conduit / Claude Code | First paint shows correct theme class | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.6 |
-| P2-24 | Font alignment — Conduit self-host Inter; BSU confirm `'Inter Variable'`; BSU+R80.3 add `@fontsource/jetbrains-mono` | 3 apps / Claude Code | `--font-mono` resolves; no network font fetch | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.7 |
-| P2-25 | DB maintenance — fix `auth_rls_initplan` in 5 RLS policies; drop 25+ unused indexes (especially `people` — 9 unused); add 4 missing FK indexes | DB / Cascade | Supabase advisors clean | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §6.12/6.13; §P2-LIVE-01/02/03 |
-| P2-26 | Remaining apprentice-ownership audit: R80.3 must stop writing CRM7-owned `apprentices` (reader-only), persist calc state to R80-owned tables | R80.3 / Claude Code | `grep -rn \".from('apprentices').*\\.(insert\\|update\\|upsert)\" R80.3/src/` returns zero | `docs/OUTSTANDING.md` §cross-app-write-audit #1 |
+| P2-23 | FOUC prevention — inline theme script in BSU, R80.3, Conduit `layout.tsx` (CRM7 already has it) | BSU, R80.3, Conduit / Claude Code | First paint shows correct theme class — `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.6 |
+| P2-24 | Font alignment — Conduit self-host Inter; BSU confirm `'Inter Variable'`; BSU+R80.3 add `@fontsource/jetbrains-mono` | 3 apps / Claude Code | `--font-mono` resolves; no network font fetch — `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.7 |
+| P2-25 | DB maintenance — fix `auth_rls_initplan` in 5 RLS policies; drop 25+ unused indexes (especially `people` — 9 unused); add 4 missing FK indexes | DB / Cascade | Supabase advisors clean — `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §6.12/6.13; §P2-LIVE-01/02/03 |
+| P2-26 | Remaining apprentice-ownership audit: R80.3 must stop writing CRM7-owned `apprentices` (reader-only), persist calc state to R80-owned tables | R80.3 / Claude Code | `grep -rn ".from('apprentices').*\.(insert\|update\|upsert)" R80.3/src/` returns zero — `docs/OUTSTANDING.md` §cross-app-write-audit #1 |
 
 ---
 
@@ -360,7 +386,7 @@ These are phase-level plans. Each WS has its own doc; the entries below are chec
 | ID | Checkpoint | Source |
 |----|------------|--------|
 | WS-D-1 | Development → main merge for all 6 submodules + parent monorepo (per `ship-all-apps` skill Phase 5–6 pattern) | §15.1 |
-| WS-D-2 | Production Playwright smoke vs production URLs (suite.crm7.app, crm.crm7.app, conduit.crm7.app, r8.crm7.app, ideas.crm7.app, www.braden.com.au) | §15.2 |
+| WS-D-2 | Production Playwright smoke vs production URLs (suite.crm7.app, crm.crm7.app, conduit.crm7.app, r8.crm7.app, ideas.crm7.app, <www.braden.com.au>) | §15.2 |
 | WS-D-3 | First non-Braden Group enterprise tenant onboarding end-to-end | §15.3 |
 
 ---
@@ -391,4 +417,5 @@ Docs NOT eligible for archive (live references):
 ## Change log
 
 - **2026-04-25** — initial consolidation. Extracted ~150 action items from 18 source docs (gap report §11, cross-app-write-audit V3–V10, misplaced-routes F-01..F-10, roadmap-delta #26, react-hooks tech debt, K.8 retroactive, storage RLS, realtime blocks, TS 6 evaluation, env audit findings + rules, OAuth preview runbook, OUTSTANDING, production plan, GTO billing plan, entity-linkage uplift, CRM7 schema/page-builder audit, combined foundations-and-gto plan).
-- Item IDs are stable. Do not renumber. Mark completion via strike-through + ` — SHIPPED <SHA>`.
+- **2026-04-25 (Wave-5 roll-up)** — struck Wave-3 + Wave-4 + Wave-4-extras: P0-7 (W4-AUTH-v2), P0-9 (conduit next NO-OP), P0-12 (W4-BSU auth deadlock), P1-1 (W4-BSU lead-capture), P1-2 (W4-BSU idea service), P1-6 (W4-TP teamPermissions), P1-87 (W3-A Tier-B/C codemod 90.8% adoption), P1-88 (W3-B conduit + braden/R80.3 schema-registry bumps). Added §Definition of Done scorecard (3✅/2🟡/0❌). Added §Remaining Work Top 5 re-rank (operator-dominated queue: W1-C migrations, OAuth allowlist, master roadmap v5.03W bump, throughput peer-dep unblock, BSU `/admin/team-members` route).
+- Item IDs are stable. Do not renumber. Mark completion via strike-through + `— SHIPPED <SHA>`.
