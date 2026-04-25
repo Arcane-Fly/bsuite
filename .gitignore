@@ -40,6 +40,8 @@ supabase/.temp/
 
 # Windsurf / AI
 .windsurf/
+.claude/
+.playwright-mcp/
 
 # Scratch files
 clinework.txt
