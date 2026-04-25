@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-25
 **Scope:** WS-D — `@bsuite/theme` republish + consumer migration + Conduit `text-white` audit + Throughput palette cleanup
-**Status:** WORKING (W) — superseded by per-PR commits
+**Status:** REVIEW (R) — superseded by per-PR commits; flipped to R after WS-D-followup discovered downstream WCAG/semantic regressions in §6.2 and §11 (see follow-up rows below)
 
 ---
 
@@ -165,19 +165,51 @@ Total: **24 occurrences** across **12 files**.
 
 ### 6.2 Replace with semantic token (`text-primary-foreground` / `text-card-foreground`)
 
-| File:Line | Current | Replacement | Why |
-|-----------|---------|-------------|-----|
-| `components/settings/TeamSection.tsx:339` | `bg-blue-600 text-white` | `bg-blue-600 text-primary-foreground` | shadcn-style button, semantic |
-| `components/common/ConfirmDialog.tsx:46,50,54` | `bg-{red,amber,blue}-600 text-white` | keep `text-white` (raw palette buttons, not on brand surface) | acceptable — these are confirm-dialog action buttons, white-on-saturated is the dialog convention |
-| `components/settings/PipelineStagesSection.tsx:145,318` | `bg-blue-600 text-white` | `text-primary-foreground` | semantic |
-| `components/settings/EmailTemplatesSection.tsx:238,402` | `bg-blue-600 text-white` | `text-primary-foreground` | semantic |
-| `components/communications/ComposeDialog.tsx:400` | `bg-blue-600 text-white` | `text-primary-foreground` | semantic |
-| `app/(dashboard)/candidates/[id]/_convert-to-apprentice-button.tsx:82` | `bg-blue-600 text-white` | `text-primary-foreground` | semantic |
-| `app/(dashboard)/candidates/[id]/_view.tsx:306` | `bg-blue-600 text-white` | `text-primary-foreground` | semantic |
-| `app/(dashboard)/jobs/[id]/_view.tsx:153,284` | `bg-{green,blue}-600 text-white` | `text-primary-foreground` | semantic |
+> **CORRECTION (2026-04-25, post-merge of PR #109):** the proposed `bg-blue-600 text-primary-foreground`
+> mapping below was applied in PR #109 but **failed WCAG AA in dark mode**. Reverted in
+> conduit PR #113 (branch `fix/conduit-text-primary-foreground-wcag`). See "Mode-coupling
+> mismatch" callout below the table for the root-cause analysis. The corrected convention
+> is to keep `text-white` on raw palette `bg-{blue,green,red,amber}-600` buttons, matching
+> the existing `ConfirmDialog` convention in §6.1.
 
-**Decision count: 11 justified (keep) / 13 replaced.** ConfirmDialog kept raw because the `bg-red-600` etc.
-buttons are the established shadcn convention.
+| File:Line | Original | PR #109 (BROKEN — reverted) | PR #113 (correct) | Why |
+|-----------|----------|------------------------------|-------------------|-----|
+| `components/settings/TeamSection.tsx:339` | `bg-blue-600 text-white` | `text-primary-foreground` ✗ | `text-white` ✓ | mode-coupling mismatch |
+| `components/common/ConfirmDialog.tsx:46,50,54` | `bg-{red,amber,blue}-600 text-white` | unchanged (kept) | unchanged (kept) | dialog convention reference |
+| `components/settings/PipelineStagesSection.tsx:145,318` | `bg-blue-600 text-white` | `text-primary-foreground` ✗ | `text-white` ✓ | mode-coupling mismatch |
+| `components/settings/EmailTemplatesSection.tsx:238,402` | `bg-blue-600 text-white` | `text-primary-foreground` ✗ | `text-white` ✓ | mode-coupling mismatch |
+| `components/communications/ComposeDialog.tsx:400` | `bg-blue-600 text-white` | `text-primary-foreground` ✗ | `text-white` ✓ | mode-coupling mismatch |
+| `app/(dashboard)/candidates/[id]/_convert-to-apprentice-button.tsx:82` | `bg-blue-600 text-white` | `text-primary-foreground` ✗ | `text-white` ✓ | mode-coupling mismatch |
+| `app/(dashboard)/candidates/[id]/_view.tsx:306` | `bg-blue-600 text-white` | `text-primary-foreground` ✗ | `text-white` ✓ | mode-coupling mismatch |
+| `app/(dashboard)/jobs/[id]/_view.tsx:153,284` | `bg-{green,blue}-600 text-white` | `text-primary-foreground` ✗ | `text-white` ✓ | mode-coupling mismatch |
+
+**Final decision count: 11 justified (kept) / 9 reverted to text-white.** All raw-palette button
+sites (`bg-{blue,green,red,amber}-600`) follow the ConfirmDialog convention from §6.1.
+
+#### Mode-coupling mismatch — root cause
+
+`text-primary-foreground` is **mode-coupled** with `--primary`:
+
+- Light mode: near-white text (because `--primary` is electric blue, contrast pair = white)
+- Dark mode: near-black navy `oklch(0.13 0.02 260)` (because `--primary` is also electric blue, but the foreground pair flips to dark to match BSU's dark-on-light surfaces convention)
+
+But Tailwind's `bg-blue-600` is a **raw palette utility** that resolves to the same saturated
+blue `oklch(0.546 0.245 262.881)` in BOTH modes — it does NOT flip with the dark/light theme.
+
+Result: in dark mode, near-black text on saturated blue gives ~3:1 contrast — **fails WCAG AA**
+(4.5:1 required for normal text).
+
+**The correct rule:** `text-{primary,secondary,destructive}-foreground` are mode-coupled with
+their `bg-{primary,secondary,destructive}` pair only. **Never pair them with raw palette
+utilities (`bg-blue-600`, `bg-green-600`, etc.).** For raw palette buttons, use `text-white`
+explicitly — white-on-saturated-blue passes WCAG AA in both modes (~5:1).
+
+The alternative (using `bg-primary text-primary-foreground` together) is semantically correct
+but changes the visible colour entirely — BSU's `--primary` is electric blue, NOT Tailwind's
+palette `blue-600`. The user's brand intentionally uses the raw `blue-600` palette utility
+on these specific button sites; switching them to `bg-primary` would visibly shift the colour.
+
+See `packages/theme/docs/TOKEN-MAPPING.md` for the full mode-coupling rules.
 
 ---
 
@@ -257,13 +289,25 @@ tracked through this audit doc + the per-repo PRs landed during WS-D.
 - [x] CRM7 PR — bump `@bsuite/theme` to `^0.3.1` (from `^0.1.1`) — **PR #309**
 - [x] Conduit PR — bump `@bsuite/theme` to `^0.3.1`; drop duplicate overrides at `app/globals.css:323,394`; replace 9 `text-white` instances per §6.2 — **PR #109**
 - [x] R80.3 PR — bump `@bsuite/theme` to `^0.3.1` (token-passthrough only) — **PR #106**
-- [x] Throughput PR (base = WS-C branch) — bump `@bsuite/theme` to `^0.3.1`; replace 15 hex/rgba literals per §7.1; promote `bsuite/no-hardcoded-colours` to `error` — **PR #43**
+- [x] Throughput PR (base = WS-C branch) — bump `@bsuite/theme` to `^0.3.1`; replace 15 hex/rgba literals per §7.1; promote `bsuite/no-hardcoded-colours` to `error` — **PR #44** (originally tracked as #43; promoted-to-error PR was #44 / commit `c184f4d`)
 - [x] Parent PR — this audit doc — **PR #270**
+
+### Post-merge regressions and follow-up PRs (WS-D-followup, 2026-04-25)
+
+- [x] **Conduit PR #113** (`fix/conduit-text-primary-foreground-wcag`) — revert §6.2 mapping. The `text-primary-foreground` on `bg-blue-600` mapping FAILED WCAG AA in dark mode (~3:1 vs 4.5:1 required) due to mode-coupling mismatch between mode-flipping `--primary-foreground` and mode-invariant raw palette `bg-blue-600`. Reverted to `text-white` on all 9 sites. See §6.2 "Mode-coupling mismatch" callout for full root cause.
+- [x] **Throughput PR #45** (`fix/throughput-bg-gray-semantic`) — correct the mapping introduced by PR #44 commit `c184f4d`. The `bg-gray-300 → bg-accent` / `bg-gray-500 → bg-muted-foreground` / `bg-gray-600 → bg-secondary` / `bg-gray-700 → bg-card` mapping was semantically wrong:
+  - `bg-accent` is electric cyan (saturated brand colour, not a neutral)
+  - `bg-muted-foreground` is a TEXT token used as a background (anti-pattern that breaks the role layer)
+  - `bg-secondary` is electric indigo (saturated brand colour)
+  - `bg-card` inverts the dark intent in light mode
+
+  Recommended approach (also applied in PR #45): for decorative neutral surfaces, keep raw `bg-gray-*` (Tailwind v4-converted OKLCH) with explanatory comment — the `bsuite/no-hardcoded-colours` rule's intent is to discourage NEW hardcoded colours, not retire all palette utilities. For low-emphasis interactive surfaces, use `bg-muted` / `hover:bg-muted/80` (the actual gray surface token).
 
 ### Follow-ups (not in WS-D)
 
 - Forward-port the v0.3.x theme source from cascade snapshot `6c3ab9e` into `packages/theme/` on `development`. Currently the parent monorepo's source-of-truth is at 0.1.2 while npm has 0.3.1 — a future republish from the parent will accidentally regress to 0.1.2 unless this is reconciled.
 - Issue #229 (open) is about `@vercel/analytics` v2 / `@vercel/blob` v2 for braden — NOT colour tokens. Throughput's eslint config previously misattributed the colour-token sprint to #229; the WS-D commit comment now points to this audit doc instead.
+- `packages/theme/docs/TOKEN-MAPPING.md` — created in `docs/audit-and-token-mapping-fix` parent PR with explicit mode-coupling rules (`text-*-foreground` only pairs with `bg-*` semantic siblings, never with raw palette utilities) to prevent the §6.2 regression class from recurring.
 
 ---
 
