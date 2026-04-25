@@ -75,11 +75,27 @@ rg --type-add 'tsx:*.tsx' --type-add 'styles:*.css' \
 
 | Field | Value |
 |-------|-------|
-| Current published version | **0.3.0** (already shipped 2026-04-22T09:36:25Z) |
+| Current published version | **0.3.1** (re-shipped 2026-04-25 to fix preset-v4 nested-comment bug) |
+| Previous version | 0.3.0 (shipped 2026-04-22T09:36:25Z) — **BROKEN** in Tailwind v4 PostCSS parser |
 | Source-of-truth file | `packages/theme/src/css/vars.css` (237 LOC, 5-layer architecture) |
 | `--muted-foreground` resolution | shadcn bridge `--muted-foreground → --role-text-muted → --light-text-muted (oklch(0.52 0.018 260)) / --dark-text-muted (oklch(0.68 0.018 260))` |
 | WCAG AA compliance | light 4.9:1 ✓ AA, dark 5.6:1 ✓ AA — both above 4.5:1 threshold |
-| Action | NO RE-PUBLISH NEEDED — published 0.3.0 already satisfies WS-D §2 acceptance criteria |
+
+### 0.3.0 → 0.3.1 fix (REQUIRED republish)
+
+`@bsuite/theme@0.3.0`'s `src/preset-v4.css:12` contained a nested CSS comment:
+
+```css
+*     --color-app-primary: oklch(0.45 0.18 142);  /* app-specific override */
+```
+
+CSS does not support nested comments — the inner `/*` doesn't open a new comment but the inner `*/` closes the outer one, leaving the rest of the file as parser garbage. Tailwind v4's PostCSS plugin reports `CssSyntaxError: Missing opening {` and aborts the build for every consumer.
+
+**Detection:** The bug surfaced in the WS-D consumer PR CI runs (BSU PR #191 e2e build, Conduit PR #109 build-and-test). Locally, `pnpm build` reproduced the failure on consumers consuming 0.3.0.
+
+**Fix:** Replace the nested `/* ... */` with a `--` end-of-line marker. Republished as 0.3.1 (2026-04-25T10:01Z).
+
+**Note:** The parent monorepo's `packages/theme/` source on `development` is still at 0.1.2 — the 0.3.0 publish was done from an unmerged Cascade snapshot branch (commit `6c3ab9e`). The 0.3.1 republish was done by patching the 0.3.0 npm tarball directly. A separate follow-up task is needed to forward-port the v0.3.x source into the parent monorepo and align `packages/theme/package.json` with the published 0.3.1.
 
 ---
 
@@ -87,12 +103,15 @@ rg --type-add 'tsx:*.tsx' --type-add 'styles:*.css' \
 
 | Consumer | Current | Action |
 |----------|---------|--------|
-| `business-suite-unified` | `^0.2.0` | bump → `^0.3.0`, regenerate lockfile, remove R5 override |
-| `crm7` | `^0.1.1` | bump → `^0.3.0`, regenerate lockfile |
-| `conduit` | `^0.2.0` | bump → `^0.3.0`, regenerate lockfile, drop duplicate `--color-muted-foreground` overrides |
-| `R80.3` | `^0.2.0` | bump → `^0.3.0`, regenerate lockfile |
-| `throughput` | `^0.2.0` | bump → `^0.3.0`, regenerate lockfile **AFTER WS-C (PR #41) merges** |
+| `business-suite-unified` | `^0.2.0` | bump → `^0.3.1`, regenerate lockfile, remove R5 override |
+| `crm7` | `^0.1.1` | bump → `^0.3.1`, regenerate lockfile |
+| `conduit` | `^0.2.0` | bump → `^0.3.1`, regenerate lockfile, drop duplicate `--color-muted-foreground` overrides |
+| `R80.3` | `^0.2.0` | bump → `^0.3.1`, regenerate lockfile |
+| `throughput` | `^0.2.0` | bump → `^0.3.1`, regenerate lockfile **AFTER WS-C (PR #41) merges** |
 | `braden` | (not consumed) | no-op — Braden uses corporate brand, exempt from D2C theme |
+
+> Initial bump targeted `^0.3.0`; bumped a second time to `^0.3.1` after the
+> nested-comment bug was discovered in CI (see §3).
 
 ---
 
@@ -234,12 +253,17 @@ tracked through this audit doc + the per-repo PRs landed during WS-D.
 
 ## 11. Per-PR checklist (closed by commit)
 
-- [ ] BSU PR — remove R5 override at `src/index.css:724,843`; bump `@bsuite/theme` to `^0.3.0`
-- [ ] CRM7 PR — bump `@bsuite/theme` to `^0.3.0` (from `^0.1.1`)
-- [ ] Conduit PR — bump `@bsuite/theme` to `^0.3.0`; drop duplicate overrides at `app/globals.css:323,394`; replace 13 `text-white` instances per §6.2
-- [ ] R80.3 PR — bump `@bsuite/theme` to `^0.3.0` (token-passthrough only)
-- [ ] Throughput PR (after WS-C merges) — bump `@bsuite/theme` to `^0.3.0`; replace 15 hex/rgba literals per §7.1; demote `bsuite/no-hardcoded-colours` to `error`
-- [ ] Parent PR — this audit doc
+- [x] BSU PR — remove R5 override at `src/index.css:724,843`; bump `@bsuite/theme` to `^0.3.1` — **PR #191**
+- [x] CRM7 PR — bump `@bsuite/theme` to `^0.3.1` (from `^0.1.1`) — **PR #309**
+- [x] Conduit PR — bump `@bsuite/theme` to `^0.3.1`; drop duplicate overrides at `app/globals.css:323,394`; replace 9 `text-white` instances per §6.2 — **PR #109**
+- [x] R80.3 PR — bump `@bsuite/theme` to `^0.3.1` (token-passthrough only) — **PR #106**
+- [x] Throughput PR (base = WS-C branch) — bump `@bsuite/theme` to `^0.3.1`; replace 15 hex/rgba literals per §7.1; promote `bsuite/no-hardcoded-colours` to `error` — **PR #43**
+- [x] Parent PR — this audit doc — **PR #270**
+
+### Follow-ups (not in WS-D)
+
+- Forward-port the v0.3.x theme source from cascade snapshot `6c3ab9e` into `packages/theme/` on `development`. Currently the parent monorepo's source-of-truth is at 0.1.2 while npm has 0.3.1 — a future republish from the parent will accidentally regress to 0.1.2 unless this is reconciled.
+- Issue #229 (open) is about `@vercel/analytics` v2 / `@vercel/blob` v2 for braden — NOT colour tokens. Throughput's eslint config previously misattributed the colour-token sprint to #229; the WS-D commit comment now points to this audit doc instead.
 
 ---
 
