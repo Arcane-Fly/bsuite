@@ -53,12 +53,45 @@ export const FormRendererPropsSchema = z.object({
   submit_label: SafeText.default('Submit'),
 });
 
+// AppScope allow-list — mirrors types.ts AppScope union but re-declared here to
+// avoid circular imports between schema + types layers.
+const AppScopeEnum = z.enum(['bsu', 'crm7', 'conduit', 'r80', 'braden', 'all']);
+
+export const EntityRefCellPropsSchema = z.object({
+  type: z.literal('EntityRefCell'),
+  // tenant scoping — server-side RLS still applies; this is a UX hint only.
+  tenant_id: z.string().uuid().optional(),
+  foreign_app_scope: AppScopeEnum,
+  // Whitelist of entities this cell can cross-read. Server RLS enforces auth.
+  entity: z.string().min(1),
+  entity_id: z.string().uuid(),
+  // Which field's value to display. Must not be a system column.
+  display_field: z.string().min(1).refine(
+    (v) => !['tenant_id', 'user_id', 'auth_id'].includes(v),
+    { message: 'display_field cannot be a system column' }
+  ),
+  // Optional deep-link target override; default is `/${foreign_app_scope}/${entity}/${entity_id}`.
+  href_template: SafeText.optional(),
+});
+
+export const SchemaFieldAdderPropsSchema = z.object({
+  type: z.literal('SchemaFieldAdder'),
+  widget_id: z.string().min(1),
+  entity_id: z.string().uuid(),
+  allowed_types: z.array(z.enum(['text', 'number', 'date', 'link', 'boolean', 'enum'])).default(
+    ['text', 'number', 'date', 'link', 'boolean', 'enum']
+  ),
+  button_label: SafeText.default('+ Add field'),
+});
+
 export const WidgetPropsSchema = z.discriminatedUnion('type', [
   DataTablePropsSchema,
   StatGridPropsSchema,
   EntitySelectorPropsSchema,
   CardPropsSchema,
   FormRendererPropsSchema,
+  EntityRefCellPropsSchema,
+  SchemaFieldAdderPropsSchema,
 ]);
 
 export const LayoutJsonSchema = z.object({
