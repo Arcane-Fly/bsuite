@@ -1,0 +1,53 @@
+{
+  "name": "@bsuite/dry-lint",
+  "version": "0.1.0",
+  "description": "ESLint plugin enforcing the BSuite one-shot architecture (single owner per Supabase entity table).",
+  "type": "module",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "directory": "packages/dry-lint"
+  },
+  "files": [
+    "dist",
+    "src/ownership-map.json",
+    "README.md"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+    "./ownership-map": "./src/ownership-map.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "bsuite",
+    "supabase"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@typescript-eslint/parser": "^8.21.0",
+    "@typescript-eslint/rule-tester": "^8.21.0",
+    "eslint": "^9.18.0",
+    "typescript": "~5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@typescript-eslint/utils": "^8.21.0"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
