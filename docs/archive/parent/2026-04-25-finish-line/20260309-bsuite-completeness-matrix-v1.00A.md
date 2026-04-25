@@ -1,5 +1,9 @@
 # BSuite Completeness Matrix
 
+> **SUPERSEDED-BY:** `docs/20260317-bsuite-gap-report-v2.00W.md` (with §11 finish-line reconciliation, 2026-04-25)
+> **Archived:** 2026-04-25 (WS-H finish-line sweep)
+> **Reason:** Reconciliation matrix from 2026-03-09 was rolled into the gap-report v2 (which audited the same surfaces against codebase reality). Master roadmap is the canonical status source. Retained for provenance only.
+
 _Last Modified: 2026-03-09_
 _Version: 1.00W (Working)_
 _Status: Working_

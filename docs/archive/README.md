@@ -10,6 +10,8 @@ Archived per-project roadmaps and documents that have been superseded by the uni
 | [`bsu/`](bsu/) | Archived business-suite-unified implementation notes and summaries |
 | [`crm7/`](crm7/) | Archived CRM7 roadmap, QA reports, and implementation docs |
 | [`r80/`](r80/) | Archived R80.3 commercialisation roadmap and deploy docs |
+| [`R80.3/`](R80.3/) | Per-app orphan branch archives (2026-04-25 finish-line WS-B) |
+| [`parent/2026-04-25-finish-line/`](parent/2026-04-25-finish-line/) | Parent-monorepo docs archived in the 2026-04-25 finish-line WS-H sweep — each carries `SUPERSEDED-BY:` header |
 | `mapd-api-guide.md` | MAPD API integration guide (archived) |
 
 ### braden/

@@ -506,6 +506,59 @@ These v1 items are not yet assigned to a sprint:
 
 ---
 
-_Supersedes `docs/20260316-bsuite-gap-report-v1.00A.md`_
+## Section 11 — Finish-Line Reconciliation (2026-04-25)
+
+> WS-H sweep against the 2026-04-25 finish-line session. For each prior-section item, the table below records SHIPPED status (with commit/PR refs where known) or carries forward the open item with a cross-link to the finish-line workstream that owns it.
+
+### Reconciliation against §3 — Confirmed Open Gaps (originally 2026-03-17)
+
+| §3 ID | Item | Disposition | Reference |
+|-------|------|-------------|-----------|
+| §3 P2 #26a | DashboardPageEditorDrawer keyboard-accessible drag | ✅ SHIPPED | crm7#197 (regression-guard) per `docs/20260415-roadmap-audit-delta-v1.00W.md` |
+| §3 P2 #26b | DRY auto-population chains | ⚠️ STILL OPEN | Tracked in cross-app write audit (`docs/20260423-cross-app-write-audit-v1.00W.md`); finish-line WS-I (`bsuite_ws_i_one_shot_complete`) |
+| §3 P2 #26c | Dashboard accent glow + bento grid (CRM7) | ✅ SHIPPED | §2 listing |
+| §3 P2 #26d | DB FK migrations + ContactSelector on 9 forms | ⚠️ STILL OPEN | Carried forward to finish-line WS-I |
+| §3 P2 RT-7/8/9 | Roadmap drift on RT subtasks | ✅ RESOLVED | `docs/20260415-roadmap-audit-delta-v1.00W.md` (NU4GF rotation) |
+| §3 P2 CC-1 | Cross-cutting drift items | ✅ RESOLVED | Same delta doc above |
+
+### Reconciliation against §7 — 5x Red-Team Sweep (Cascade 2026-03-17)
+
+All red-team findings from §7 either shipped or were rolled into the finish-line backlog. None remain unaddressed.
+
+### Reconciliation against §8/§9 — P3 Planning Brief + Sprint (2026-03-19)
+
+P3 sprint shipped per §9 summary; carried-over P3 items are addressed by finish-line WS-A through WS-J.
+
+### Reconciliation against §10 — Monorepo Maintenance Sweep (2026-04-07)
+
+All §10 items remain ✅ SHIPPED. No regressions surfaced in the 2026-04-25 sweep.
+
+### Net new finish-line context (2026-04-25)
+
+| Workstream | Status | Reference |
+|------------|--------|-----------|
+| WS-A — BSU e2e Playwright hang RCA | Tracked | `business-suite-unified/docs/20260425-e2e-hang-rca-v1.00A.md` |
+| WS-B — Orphan branch triage (9 branches across 7 repos) | Tracked | `docs/20260425-orphan-branch-triage-v1.00W.md` |
+| WS-C — Throughput PR #41 (npm → pnpm) | Tracked | finish-line operator handoff |
+| WS-D — `@bsuite/theme` republish + colour-token cleanup | Tracked | `docs/20260425-colour-token-audit-v1.00W.md` (status R) |
+| WS-E — CRM7 typecheck blockers | Tracked | finish-line operating prompt §3 WS-E |
+| WS-F — Conduit Next 16 `cacheComponents` proper fix | Tracked | finish-line operating prompt §3 WS-F |
+| WS-G — Operator-checklist execution + handoff | Tracked | `docs/20260425-operator-handoff-v1.00W.md` |
+| WS-H — Documentation hygiene + archival sweep | ✅ THIS SECTION | `bsuite_ws_h_doc_hygiene_complete` memory key |
+| WS-I — Cross-app write audit + dry-lint | Tracked | `docs/20260423-cross-app-write-audit-v1.00W.md` + `packages/dry-lint/` |
+| WS-J — 360 smoke + DoD scorecard | Tracked | finish-line operating prompt §3 WS-J |
+
+### Known still-open items (forward-looking)
+
+The following items remain genuinely open and have been routed into the finish-line backlog or operator handoff. Tracking authority is now the finish-line operating prompt + operator handoff doc, NOT this gap report.
+
+- One-shot DRY auto-population chains across CRM7 forms (§3 #26b, #26d) → finish-line WS-I
+- Operator-only steps (Supabase OAuth allowlist, JWK rotation, Azure `xms_edov` claim, Xero developer-portal app registration) → `docs/20260425-operator-handoff-v1.00W.md`
+- Throughput npm → pnpm migration → WS-C
+- Conduit `cacheComponents` proper fix → WS-F
+
+---
+
+_Supersedes `docs/20260316-bsuite-gap-report-v1.00A.md` (now archived in `docs/archive/parent/2026-04-25-finish-line/`)_
 
 Vercel Bot recommended implementing: <https://vercel.com/docs/tracing/instrumentation#adding-custom-spans>

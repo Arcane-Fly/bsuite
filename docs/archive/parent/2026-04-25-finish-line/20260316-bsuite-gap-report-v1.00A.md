@@ -1,5 +1,9 @@
 # BSuite Gap Report
 
+> **SUPERSEDED-BY:** `docs/20260317-bsuite-gap-report-v2.00W.md`
+> **Archived:** 2026-04-25 (WS-H finish-line sweep)
+> **Reason:** v2 was authoritative from 2026-03-17; v1 entries were already corrected in v2 §1 ("Stale Data Corrections"). Retained for provenance only.
+
 **Version:** 1.01W
 **Date:** 2026-03-16 (revised after codebase audit)
 **Status:** Working
