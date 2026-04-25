@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/theme",
-  "version": "0.1.2",
+  "version": "0.3.1",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -11,7 +11,7 @@
     "url": "https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/theme"
   },
-  "description": "BSuite Universal D2C Neon Electric theme — Tailwind preset, CSS vars, ThemeProvider, SSR init helper. Shared across BSU, CRM7, conduit, R80.3, throughput.",
+  "description": "BSuite Universal theme — D2C Neon Electric + Braden Corporate baselines. Tailwind v4 preset, CSS vars (5-layer), role aliases, colourblind-safe tokens, eye-strain-safe text scale, BrandingProvider (runtime white-label). Used by BSU, CRM7, conduit, R80.3, throughput (D2C) and braden.com.au (Corporate).",
   "files": [
     "dist",
     "src/css",
@@ -37,7 +37,8 @@
     "./preset-v4.css": "./src/preset-v4.css",
     "./css": "./src/css/index.css",
     "./vars.css": "./src/css/vars.css",
-    "./utilities.css": "./src/css/utilities.css"
+    "./utilities.css": "./src/css/utilities.css",
+    "./braden-css": "./src/css/braden.css"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -46,18 +47,24 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
+    "@supabase/supabase-js": ">=2.0.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0",
     "tailwindcss": ">=3.4.0"
   },
   "peerDependenciesMeta": {
+    "@supabase/supabase-js": {
+      "optional": true
+    },
     "tailwindcss": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.3.28",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "^28.1.0",
