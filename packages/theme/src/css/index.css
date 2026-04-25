@@ -1,12 +1,17 @@
 /*
- * @bsuite/theme — root CSS entry point
+ * @bsuite/theme — root CSS entry point (D2C Neon Electric brand)
+ * Version 0.3.0
  *
- * Import this once at the top of your app's global stylesheet:
+ * DUAL-BRAND ENTRY POINTS:
  *
- *   @import '@bsuite/theme/css';
+ *   D2C Neon Electric (crm7, conduit, BSU, R80.3, throughput):
+ *     @import '@bsuite/theme/css';       ← this file
  *
- * Provides the full D2C Neon Electric palette as CSS custom properties
- * plus reusable glow / neon-text utility classes.
+ *   Braden Corporate (braden.com.au only):
+ *     @import '@bsuite/theme/braden-css';
+ *
+ * DO NOT import both in the same app. Each file fully defines
+ * the --role-* and shadcn bridge layers for its own brand.
  */
 
 @import './vars.css';
