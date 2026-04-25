@@ -42,6 +42,7 @@ supabase/.temp/
 .windsurf/
 .claude/
 .playwright-mcp/
+.smoke-artefacts/
 
 # Scratch files
 clinework.txt
