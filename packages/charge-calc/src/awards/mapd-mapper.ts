@@ -68,12 +68,31 @@ export function mapPaymentFrequency(freq: string | null): AllowanceType {
   return 'perHour'; // fallback
 }
 
+/**
+ * Returns true if the MAPD payment_frequency string represents an annual amount.
+ * Used to trigger the ÷52 normalisation in allowance mappers.
+ */
+export function isAnnualFrequency(freq: string | null): boolean {
+  if (!freq) return false;
+  const lower = freq.toLowerCase().trim();
+  return lower.includes('annum') || lower.includes('year');
+}
+
 /** Map MAPD wage allowance to internal format */
 export function mapWageAllowance(raw: MAPDWageAllowance): AwardAllowance {
+  // BUG-1 fix: annual allowance amounts must be converted to a weekly amount
+  // so downstream CalcConfig consumers receive a perWeek figure, not a 52×
+  // inflated annual figure. The type is already mapped to 'perWeek' by
+  // mapPaymentFrequency. Division preserves rounding to the cent.
+  const amount =
+    raw.allowance_amount !== null && isAnnualFrequency(raw.payment_frequency)
+      ? Math.round((raw.allowance_amount / 52) * 100) / 100
+      : raw.allowance_amount;
+
   return {
     fixedId: raw.wage_allowance_fixed_id,
     name: raw.allowance,
-    amount: raw.allowance_amount,
+    amount,
     rate: raw.rate,
     rateUnit: raw.rate_unit,
     paymentFrequency: raw.payment_frequency,
@@ -86,10 +105,16 @@ export function mapWageAllowance(raw: MAPDWageAllowance): AwardAllowance {
 
 /** Map MAPD expense allowance to internal format */
 export function mapExpenseAllowance(raw: MAPDExpenseAllowance): AwardAllowance {
+  // BUG-1 fix: same annual÷52 normalisation as wage allowances.
+  const amount =
+    raw.allowance_amount !== null && isAnnualFrequency(raw.payment_frequency)
+      ? Math.round((raw.allowance_amount / 52) * 100) / 100
+      : raw.allowance_amount;
+
   return {
     fixedId: raw.expense_allowance_fixed_id,
     name: raw.allowance,
-    amount: raw.allowance_amount,
+    amount,
     rate: null, // expense allowances don't have rates
     rateUnit: null,
     paymentFrequency: raw.payment_frequency,
