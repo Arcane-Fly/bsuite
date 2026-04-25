@@ -1,5 +1,9 @@
 # Cascade ↔ Claude Code: Unified Upgrade Coordination Plan
 
+> **SUPERSEDED-BY:** `docs/20260227-bsuite-master-roadmap-v5.00W.md` (governance) + `docs/plans/20260425-finish-line-session-refined.md` (current operating prompt)
+> **Archived:** 2026-04-25 (WS-H finish-line sweep)
+> **Reason:** Coordination plan from Feb 2026 — both agents (Cascade, Claude Code) completed their phase-0/1/2 obligations. Outcomes rolled into the master roadmap and gap-report v2. Retained for provenance only.
+
 Shared task board for the tandem upgrade of CRM7, R8, and BSU — both agents work in parallel on non-overlapping domains, leave notes for each other, and cross-check completed work.
 
 ---

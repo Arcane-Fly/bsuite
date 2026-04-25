@@ -1,5 +1,9 @@
 # UX & One-Shot Deep Dive: Eliminate Double-Entry Across CRM7
 
+> **SUPERSEDED-BY:** `docs/20260227-dry-one-shot-architecture-v1.00A.md` (architecture) + `docs/20260423-cross-app-write-audit-v1.00W.md` (cross-app audit) + finish-line WS-I (`bsuite_ws_i_one_shot_complete`)
+> **Archived:** 2026-04-25 (WS-H finish-line sweep)
+> **Reason:** Phase 1 (EntitySelector), Phase 2 (auto-population), Phase 3 (DynamicFieldRenderer rollout) all shipped per gap-report v2 §2. Remaining one-shot enforcement work moved to the cross-app write audit and `@bsuite/dry-lint` plugin. Retained for provenance only.
+
 Comprehensive audit of every CRM7 form, selector, DB link, and data layer to enforce the "enter once, use everywhere" principle from `DRY-ONE-SHOT-ARCHITECTURE.md` — from UI to DB connections.
 
 ---

@@ -14,8 +14,6 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File / Directory | Description |
 |------------------|-------------|
-| `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md` | Cascade ↔ Claude Code unified upgrade coordination plan (approved) |
-| `20260226-ux-oneshot-deep-dive-plan-v1.00W.md` | UX & one-shot deep dive — eliminate double-entry across CRM7 |
 | `20260227-bsuite-master-roadmap-v5.00W.md` | Single source of truth for BSuite project planning across all projects |
 | `20260227-auth-map-reference-v1.00A.md` | Authentication map for the Business Suite ecosystem (BSU, CRM7, R80.3, Braden) |
 | `20260227-bsuite-deep-audit-report-v1.00A.md` | Deep audit report covering CRM7, BSU, Conduit, braden.com.au, and R80.3 |
@@ -41,16 +39,22 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260316-pricing-strategy-v1.00A.md` | Pricing and subscription strategy — per-seat pricing with AI add-on tiers |
 | `20260316-ui-reference-v1.00A.md` | Current BSuite UI architecture summary and canonical UI source chain |
 | `20260304-ram-credential-government-access-map-v1.00A.md` | RAM credential and government API access map (USI, ADMS, DTWD) |
-| `20260309-bsuite-completeness-matrix-v1.00A.md` | BSuite feature completeness matrix across all five projects |
-| `20260316-bsuite-gap-report-v1.00A.md` | BSuite gap report v1 — superseded by v2 (approved/archived) |
-| `20260316-docs-compliance-audit-v1.00A.md` | Documentation compliance audit — naming, indexing, and coverage review |
+| `20260317-bsuite-gap-report-v2.00W.md` | BSuite gap report v2 — current authority (with §11 finish-line reconciliation, 2026-04-25) |
+| `20260319-entity-crosswalk-v1.00D.md` | CRM7 entity crosswalk and traceability — Draft |
+| `20260407-core-web-vitals-baseline-v1.00A.md` | Core Web Vitals baseline measurements |
+| `20260415-roadmap-audit-delta-v1.00W.md` | 2026-04-15 NU4GF rotation: ROADMAP audit delta — P2 #26 subtasks reconciliation |
+| `20260420-react-hooks-v7-tech-debt-v1.00W.md` | React Hooks v7 tech debt remediation tracker — per-app finding counts |
+| `20260425-orphan-branch-triage-v1.00W.md` | WS-B finish-line: orphan branch triage across 7 repos |
 | `20260425-operator-handoff-v1.00W.md` | Operator handoff for finish-line session (2026-04-25) — items requiring human credentials (Supabase dashboard, Microsoft Entra portal, etc.) with verification commands |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
-| [`archive/`](archive/README.md) | Archived per-project roadmaps superseded by the master roadmap |
+| [`archive/`](archive/README.md) | Archived per-project roadmaps + 2026-04-25 finish-line sweep archive (`archive/parent/2026-04-25-finish-line/`) |
 | [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |
 | [`email-templates/`](email-templates/README.md) | Supabase email template HTML files (signup, invite, magic link, etc.) |
+| [`operator-screenshots/`](operator-screenshots/) | Operator handoff screenshots referenced from `20260425-operator-handoff-v1.00W.md` |
 | [`plans/`](plans/README.md) | Implementation plans for upcoming features and enhancements |
 | `superpowers/` | D2C theme remediation design specs (no README yet) |
+
+> **Recently archived (2026-04-25 WS-H sweep):** `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md`, `20260226-ux-oneshot-deep-dive-plan-v1.00W.md`, `20260309-bsuite-completeness-matrix-v1.00A.md`, `20260316-bsuite-gap-report-v1.00A.md`, `20260316-docs-compliance-audit-v1.00A.md` → see `archive/parent/2026-04-25-finish-line/`.
 
 ---
 

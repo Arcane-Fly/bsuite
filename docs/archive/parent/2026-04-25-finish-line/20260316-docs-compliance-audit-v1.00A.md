@@ -1,5 +1,9 @@
 # BSuite Documentation Compliance Audit
 
+> **SUPERSEDED-BY:** Per-submodule `docs/OUTSTANDING.md` files (2026-04-23 reconciliation) + WS-H finish-line sweep (2026-04-25)
+> **Archived:** 2026-04-25 (WS-H finish-line sweep)
+> **Reason:** Mar 2026 audit found 80/375 docs compliant — that work has been carried out per submodule. Each project's `docs/OUTSTANDING.md` (2026-04-23) is now the per-scope authority. Retained for provenance only.
+
 **Date:** 2026-03-16
 **Standard:** `YYYYMMDD-descriptive-name-type-vMAJOR.MINOR[STATUS].md`
 **Reference:** `docs/20260227-contributing-standards-guide-v1.00W.md`
