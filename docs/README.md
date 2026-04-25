@@ -43,6 +43,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260309-bsuite-completeness-matrix-v1.00A.md` | BSuite feature completeness matrix across all five projects |
 | `20260316-bsuite-gap-report-v1.00A.md` | BSuite gap report v1 — superseded by v2 (approved/archived) |
 | `20260316-docs-compliance-audit-v1.00A.md` | Documentation compliance audit — naming, indexing, and coverage review |
+| `20260425-operator-handoff-v1.00W.md` | Operator handoff for finish-line session (2026-04-25) — items requiring human credentials (Supabase dashboard, Microsoft Entra portal, etc.) with verification commands |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps superseded by the master roadmap |
 | [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |
