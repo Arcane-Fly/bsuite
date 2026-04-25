@@ -37,8 +37,8 @@
     "todos":                          { "owner": "throughput", "readers": [] },
 
     "users":                          { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
-    "tenants":                        { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
-    "user_tenants":                   { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
+    "tenants":                        { "owner": "shared",     "readers": [], "$comment": "WS-I PHASE-2 decision (2026-04-25): co-owned by BSU + CRM7. BSU owns platform-level tenant CRUD via /developer/tenants and Stripe webhook (`stripe-webhook` writes subscription metadata). CRM7 owns tenant-admin surfaces (`tenant-management` edge function: create-org, create-division, update-tenant, invite-member, set-sharing-policy — all scoped to a CRM7 tenant admin managing their own org hierarchy). RLS enforces tenant scope. See docs/20260425-dry-lint-violations-triage-v1.00W.md §3 — Tenant-Management Ownership Decision." },
+    "user_tenants":                   { "owner": "shared",     "readers": [], "$comment": "WS-I PHASE-2 decision (2026-04-25): co-owned by BSU + CRM7. BSU owns invitation acceptance flow (canonical signup); CRM7 owns tenant-admin membership operations (invite-member, approve-membership, update-member-role, remove-member) via the `tenant-management` edge function. RLS enforces tenant scope. Same justification as `tenants`." },
     "user_roles":                     { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "user_sessions":                  { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "user_permissions":               { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
