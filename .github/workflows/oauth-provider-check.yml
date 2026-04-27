@@ -98,7 +98,7 @@ jobs:
           # ── Configuration ──────────────────────────────────────────────────────
           # Format: "repo:branch:path:description"
           AUTH_FILE_SPECS=(
-            "GaryOcean428/business-suite-unified:master:src/components/AuthForm.tsx:BSU canonical auth entry point"
+            "GaryOcean428/business-suite-unified:main:src/components/AuthForm.tsx:BSU canonical auth entry point"
             "GaryOcean428/crm7:main:src/components/LoginModal.tsx:CRM7 sign-in modal"
             "GaryOcean428/crm7:main:src/components/SignupModal.tsx:CRM7 register modal"
           )
@@ -237,16 +237,16 @@ jobs:
 
           # ── Configuration ──────────────────────────────────────────────────
           CLIENT_FILE_SPECS=(
-            "GaryOcean428/business-suite-unified:master:src/lib/supabase.ts:BSU Supabase client"
+            "GaryOcean428/business-suite-unified:main:src/lib/supabase.ts:BSU Supabase client"
             "GaryOcean428/crm7:main:src/lib/supabase.ts:CRM7 Supabase client"
             "GaryOcean428/conduit:main:src/lib/supabase/client.ts:Conduit browser client"
             "GaryOcean428/conduit:main:src/lib/supabase/server.ts:Conduit server client"
           )
 
           CALLBACK_FILE_SPECS=(
-            "GaryOcean428/business-suite-unified:master:src/pages/auth/AuthCallback.tsx:BSU auth callback"
+            "GaryOcean428/business-suite-unified:main:src/pages/auth/AuthCallback.tsx:BSU auth callback"
             "GaryOcean428/crm7:main:src/pages/auth/callback.tsx:CRM7 auth callback"
-            "GaryOcean428/conduit:main:src/app/auth/callback/route.ts:Conduit callback route"
+            "GaryOcean428/conduit:main:src/app/auth/callback/page.tsx:Conduit callback handler"
           )
 
           FAILED=0
