@@ -41,7 +41,7 @@ Existing repo-local docs dated `20260428` were present during this 2026-04-27 sc
 | `conduit` | `OUTSTANDING.md` plus parent full-7/OAuth ledger references | Conduit docs have no incomplete local plans; parent-ledger runtime smoke remains. |
 | `R80.3` | `OUTSTANDING.md`, roadmap, Payday Super plan, training fees plan | App `OUTSTANDING.md` is current; the older roadmap is broad and superseded. |
 | `braden` | `OUTSTANDING.md`, roadmap and QA/security plans | Open work centers on visual editing, CMS/API coverage, accessibility, performance, and bot protection. |
-| `throughput` | `OUTSTANDING.md`, `roadmap.md`, audit summaries, quality audit | Live gaps are production readiness, accessibility/testing/logging, and deferred React 19/schema-registry work. |
+| `throughput` | `OUTSTANDING.md`, `roadmap.md`, audit summaries, quality audit | Live gaps are production readiness, accessibility/testing/logging, and React 19/schema-registry work carried into Priority 11. |
 | `packages/theme` | Package README and current source | Theme package has active consumer migration work after `@bsuite/theme@0.3.3`. |
 
 ## Priority 0: Current Blockers and Gates
@@ -126,10 +126,11 @@ Items verified complete in the newest handoff, not current backlog:
 
 ### `@bsuite/dry-lint`
 
-- Writers schema support exists in the current package state.
-- Ownership map still needs tightening and alignment.
-- Promote direct-write checks from warning to error once fixes land.
-- Keep cross-app rules aligned with DRY one-shot ownership.
+- `@bsuite/dry-lint@0.2.0` writers schema support is shipped.
+- `tenants`, `user_tenants`, `teams`, and `team_invitations` ownership maps are tightened for current DRY one-shot rules.
+- Direct-write checks are promoted from warning to error in BSU, CRM7, Conduit, R80.3, Braden, and Throughput.
+- Consumer configs pin `appOverride` so the rule remains active in temporary worktrees and independently cloned app repos.
+- Phase 5 still owns relocation of the known legacy write paths currently isolated by narrow per-file overrides.
 
 ### Charge Calc and Navigation
 
@@ -465,7 +466,7 @@ The old R80 roadmap is archived or superseded by newer parent plans and `R80.3/d
 
 ### Current Outstanding Index
 
-- React 19 and schema-registry consumer wiring is deferred to Phase 5.5 in current docs.
+- React 19 and schema-registry consumer wiring remains open in current docs and should be completed under Priority 11.
 - Docs naming convention non-compliance remains low priority.
 - npm to pnpm migration appears handled by finish-line work, but should be rechecked before closing permanently.
 
@@ -539,7 +540,7 @@ These docs contain useful evidence but should not be used as current backlog wit
 3. Complete preview OAuth runtime smoke across CRM7, Conduit, R80.3, Throughput, and Braden.
 4. Restore or extract shared package source for `@bsuite/schema-registry` and `@bsuite/page-builder`.
 5. Migrate consumers to `@bsuite/theme@0.3.3` platform-logo helpers.
-6. Fix dry-lint ownership violations and promote enforcement from warning to error.
+6. Replace the known legacy cross-app write exceptions now that dry-lint error-level enforcement is active.
 7. Execute CRM7 GTO WS-2 through WS-9 work in dependency order.
 8. Close CRM7 AI/cost/session/quota and modernization items.
 9. Finish BSU platform admin, WCAG, and Supabase domain/runbook work.
