@@ -1,11 +1,11 @@
 'use client';
 import React from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppScope } from './types';
-import { useTenantPageLayout } from './useTenantPageLayout';
-import { WidgetRenderer } from './WidgetRenderer';
-import { ErrorBoundary } from './ErrorBoundary';
-import { LayoutJsonSchema } from '../schemas/widgetProps';
+import type { AppScope } from './types.js';
+import { useTenantPageLayout } from './useTenantPageLayout.js';
+import { WidgetRenderer } from './WidgetRenderer.js';
+import { ErrorBoundary } from './ErrorBoundary.js';
+import { LayoutJsonSchema } from '../schemas/widgetProps.js';
 
 interface TenantLayoutSlotProps {
   supabase: SupabaseClient;

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { z } from 'zod';
-import type { SchemaFieldAdderPropsSchema } from '../../schemas/widgetProps';
+import type { SchemaFieldAdderPropsSchema } from '../../schemas/widgetProps.js';
 
 type SchemaFieldAdderProps = z.infer<typeof SchemaFieldAdderPropsSchema>;
 

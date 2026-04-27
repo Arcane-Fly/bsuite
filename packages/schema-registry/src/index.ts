@@ -1,9 +1,9 @@
-export { TenantLayoutSlot } from './react/TenantLayoutSlot';
-export { useTenantSchema } from './react/useTenantSchema';
-export { useTenantPageLayout } from './react/useTenantPageLayout';
-export { useTenantNavigation } from './react/useTenantNavigation';
-export { createMinimalClient } from './react/minimalClient';
-export type { AppScope } from './react/types';
+export { TenantLayoutSlot } from './react/TenantLayoutSlot.js';
+export { useTenantSchema } from './react/useTenantSchema.js';
+export { useTenantPageLayout } from './react/useTenantPageLayout.js';
+export { useTenantNavigation } from './react/useTenantNavigation.js';
+export { createMinimalClient } from './react/minimalClient.js';
+export type { AppScope } from './react/types.js';
 export {
   DataTablePropsSchema,
   StatGridPropsSchema,
@@ -14,5 +14,5 @@ export {
   SchemaFieldAdderPropsSchema,
   WidgetPropsSchema,
   LayoutJsonSchema,
-} from './schemas/widgetProps';
-export type { WidgetProps, LayoutJson } from './schemas/widgetProps';
+} from './schemas/widgetProps.js';
+export type { WidgetProps, LayoutJson } from './schemas/widgetProps.js';

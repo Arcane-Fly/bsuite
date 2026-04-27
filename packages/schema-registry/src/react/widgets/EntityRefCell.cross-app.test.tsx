@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { EntityRefCellWidget } from './EntityRefCell';
+import { EntityRefCellWidget } from './EntityRefCell.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**

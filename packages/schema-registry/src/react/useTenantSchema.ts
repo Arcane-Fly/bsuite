@@ -1,7 +1,7 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppScope } from './types';
+import type { AppScope } from './types.js';
 
 export function useTenantSchema(supabase: SupabaseClient, scope: AppScope) {
   return useQuery({

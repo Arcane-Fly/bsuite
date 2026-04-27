@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NavConfig } from '@bsuite/nav-core';
-import type { AppScope } from './types';
+import type { AppScope } from './types.js';
 
 export function useTenantNavigation(
   supabase: SupabaseClient,

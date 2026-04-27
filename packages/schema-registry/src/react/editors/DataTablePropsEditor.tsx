@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import type { z } from 'zod';
-import { DataTablePropsSchema } from '../../schemas/widgetProps';
+import { DataTablePropsSchema } from '../../schemas/widgetProps.js';
 import {
   EDITOR_ERROR_CLASS,
   EDITOR_INPUT_CLASS,
@@ -9,7 +9,7 @@ import {
   EDITOR_SECTION_CLASS,
   validateWith,
   type PropsEditorShellProps,
-} from './editorCommon';
+} from './editorCommon.js';
 
 type DataTableProps = z.infer<typeof DataTablePropsSchema>;
 

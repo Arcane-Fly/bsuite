@@ -1,1 +1,1 @@
-export { prefetchTenantPageLayout } from './prefetch';
+export { prefetchTenantPageLayout } from './prefetch.js';

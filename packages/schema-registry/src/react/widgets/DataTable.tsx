@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { z } from 'zod';
-import type { DataTablePropsSchema } from '../../schemas/widgetProps';
+import type { DataTablePropsSchema } from '../../schemas/widgetProps.js';
 
 type DataTableProps = z.infer<typeof DataTablePropsSchema>;
 

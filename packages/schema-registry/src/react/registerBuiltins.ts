@@ -7,14 +7,14 @@
  * Consumer apps that need custom widgets can call `registerWidget(...)` at
  * mount time; re-registering the same id is idempotent.
  */
-import { registerWidget } from './registerWidget';
-import { CardWidget } from './widgets/Card';
-import { DataTableWidget } from './widgets/DataTable';
-import { EntityRefCellWidget } from './widgets/EntityRefCell';
-import { EntitySelectorWidget } from './widgets/EntitySelector';
-import { FormRendererWidget } from './widgets/FormRenderer';
-import { SchemaFieldAdderWidget } from './widgets/SchemaFieldAdder';
-import { StatGridWidget } from './widgets/StatGrid';
+import { registerWidget } from './registerWidget.js';
+import { CardWidget } from './widgets/Card.js';
+import { DataTableWidget } from './widgets/DataTable.js';
+import { EntityRefCellWidget } from './widgets/EntityRefCell.js';
+import { EntitySelectorWidget } from './widgets/EntitySelector.js';
+import { FormRendererWidget } from './widgets/FormRenderer.js';
+import { SchemaFieldAdderWidget } from './widgets/SchemaFieldAdder.js';
+import { StatGridWidget } from './widgets/StatGrid.js';
 
 // Use a module-local flag to prevent double-registration when the module is
 // evaluated in multiple bundles (e.g. SSR + client).

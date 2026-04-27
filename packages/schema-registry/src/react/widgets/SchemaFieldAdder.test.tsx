@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { SchemaFieldAdderWidget } from './SchemaFieldAdder';
+import { SchemaFieldAdderWidget } from './SchemaFieldAdder.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const baseProps = {
