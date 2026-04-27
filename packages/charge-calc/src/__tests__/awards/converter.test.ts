@@ -181,6 +181,32 @@ const dailyAllowance: AwardAllowance = {
   type: 'wage',
 };
 
+const annualAllowance: AwardAllowance = {
+  fixedId: 5504,
+  name: 'Annual licence allowance',
+  amount: 1040,
+  rate: null,
+  rateUnit: null,
+  paymentFrequency: 'per annum',
+  isAllPurpose: true,
+  parentAllowance: null,
+  clauseRef: '19.2(d)',
+  type: 'wage',
+};
+
+const yearlyAllowance: AwardAllowance = {
+  fixedId: 5505,
+  name: 'Yearly equipment allowance',
+  amount: 260,
+  rate: null,
+  rateUnit: null,
+  paymentFrequency: 'yearly',
+  isAllPurpose: false,
+  parentAllowance: null,
+  clauseRef: '19.2(e)',
+  type: 'wage',
+};
+
 const nullAmountAllowance: AwardAllowance = {
   fixedId: 5599,
   name: 'Empty allowance',
@@ -580,6 +606,26 @@ describe('awardToCalcConfig', () => {
       const award = buildAward({ wageAllowances: [dailyAllowance] });
       const result = awardToCalcConfig(award, defaultCtx);
       expect(result.allowances[0].type).toBe('perDay');
+    });
+
+    it('maps annual payment frequency to weekly allowance amount', () => {
+      const award = buildAward({ wageAllowances: [annualAllowance] });
+      const result = awardToCalcConfig(award, defaultCtx);
+
+      expect(result.allowances[0]).toMatchObject({
+        type: 'perWeek',
+        amount: 20,
+      });
+    });
+
+    it('maps yearly payment frequency to weekly allowance amount', () => {
+      const award = buildAward({ wageAllowances: [yearlyAllowance] });
+      const result = awardToCalcConfig(award, defaultCtx);
+
+      expect(result.allowances[0]).toMatchObject({
+        type: 'perWeek',
+        amount: 5,
+      });
     });
 
     it('maps null payment frequency to "perHour" default', () => {

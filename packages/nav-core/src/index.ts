@@ -14,11 +14,19 @@ export type { CookieStorageOptions, CookieStorageLike } from './cookieStorage';
 export { AppSwitcher } from './AppSwitcher';
 export type { AppEntry, AppSwitcherProps } from './AppSwitcher';
 
+export { useSidebarState } from './useSidebarState';
+export type { UseSidebarStateOptions, SidebarState } from './useSidebarState';
+
+export { MobileSidebarDrawer } from './MobileSidebarDrawer';
+export type { MobileSidebarDrawerProps } from './MobileSidebarDrawer';
+
 export { tierSatisfies, tierRank } from './tier';
 export type { Tier } from './tier';
 
 export { useFilteredNav } from './useFilteredNav';
 export type { GatedNavSection, UseFilteredNavOptions } from './useFilteredNav';
+
+export { mergeNavConfigs } from './merge';
 
 export {
   BSUITE_APP_KEYS,
