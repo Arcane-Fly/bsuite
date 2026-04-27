@@ -7,6 +7,11 @@ import { WidgetRenderer } from './WidgetRenderer.js';
 import { ErrorBoundary } from './ErrorBoundary.js';
 import { LayoutJsonSchema } from '../schemas/widgetProps.js';
 
+function isProductionRuntime(): boolean {
+  const maybeProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process;
+  return maybeProcess?.env?.NODE_ENV === 'production';
+}
+
 interface TenantLayoutSlotProps {
   supabase: SupabaseClient;
   route: string;
@@ -20,7 +25,7 @@ export function TenantLayoutSlot({ supabase, route, appScope, context }: TenantL
   if (error || !layout) return null;
   const parseResult = LayoutJsonSchema.safeParse(layout.layout_json);
   if (!parseResult.success) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (!isProductionRuntime()) {
       // Stringify the ZodError to avoid a node util.inspect bug that crashes
       // on certain error graphs in jsdom/vitest environments.
       console.warn(
