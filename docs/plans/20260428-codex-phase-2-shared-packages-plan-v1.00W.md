@@ -1,6 +1,6 @@
 # Codex Phase 2 — Shared Packages Execution Plan
 
-**Status:** W (Working — pickup spec for next session)
+**Status:** W (Phase 2 implementation complete on development; Phase 3 pickup)
 **Date:** 2026-04-28
 **Authority:** `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` Priority 2; Codex operating prompt §5 Phase 2.
 **Predecessor:** `docs/20260428-finish-line-final-signoff-v3.00W.md` (closes WS-η — Phases 0+1+ε complete).
@@ -22,32 +22,21 @@ The four shared-package workstreams in this Phase are sequential within a single
 | `@bsuite/auth` | 0.1.0 | `packages/auth/` | ✅ shipped, consumed by 5 client apps |
 | `@bsuite/charge-calc` | 0.2.2 | `packages/charge-calc/` | ✅ shipped, consumed by CRM7 + R80.3 |
 | `@bsuite/design-tokens` | 0.1.0 | `packages/design-tokens/` | ✅ shipped |
-| `@bsuite/dry-lint` | **0.2.0** | `packages/dry-lint/` | ✅ shipped (WS-γ); writers schema; warn-mode in 4 consumers |
+| `@bsuite/dry-lint` | **0.2.0** | `packages/dry-lint/` | ✅ shipped; writers schema; error-level consumer enforcement |
 | `@bsuite/eslint-config` | 0.2.0 | `packages/eslint-config/` | ✅ shipped |
 | `@bsuite/nav-core` | 0.5.0 | `packages/nav-core/` | ✅ shipped, consumed by braden |
-| `@bsuite/schema-registry` | 0.2.1 | `packages/schema-registry/` | ✅ shipped (post-PR #286 .js extension fix) |
-| `@bsuite/theme` | 0.3.1 | `packages/theme/` | ✅ shipped; ledger references `0.3.3` — version mismatch to investigate |
+| `@bsuite/schema-registry` | 0.2.2 | `packages/schema-registry/` | ✅ shipped; browser-safe React helpers; consumers aligned |
+| `@bsuite/theme` | 0.3.3 | `packages/theme/` | ✅ shipped; platform-logo helpers; consumers migrated |
 | `@bsuite/theme-codemod` | 1.0.0 | `packages/theme-codemod/` | ✅ shipped |
 | `@bsuite/ui` | 0.1.0 | `packages/ui/` | ✅ shipped |
-| **`@bsuite/page-builder`** | — | **NOT YET EXTRACTED** | ❌ 4 app-local copies remain |
+| **`@bsuite/page-builder`** | 0.1.0 | `packages/page-builder/` | ✅ extracted; BSU, CRM7, Conduit, and R80.3 consume npm package |
 
 Total: 10 published + 1 missing = 11 packages on the roadmap.
 
 ### App-local PageGridLayout duplicate inventory
 
-```
-business-suite-unified/src/components/platform/PageGridLayout.tsx     454 LOC
-crm7/src/components/platform/PageGridLayout.tsx                       474 LOC
-conduit/src/components/platform/PageGridLayout.tsx                    294 LOC
-R80.3/src/components/platform/PageGridLayout.tsx                      296 LOC
-
-business-suite-unified/src/hooks/usePageGridLayout.ts                 269 LOC
-crm7/src/hooks/usePageGridLayout.ts                                   323 LOC
-conduit/src/hooks/usePageGridLayout.ts                                302 LOC
-R80.3/src/hooks/usePageGridLayout.ts                                  265 LOC
-```
-
-All 8 files have unique sha256 — the 4 apps drifted independently. The 0427 finish-line review flagged this as Priority 2 §2a.
+Resolved by `@bsuite/page-builder@0.1.0`. The four apps now keep thin adapters
+only where app-specific preferences, permissions, or editor events differ.
 
 ---
 
@@ -106,10 +95,9 @@ export const BREAKPOINTS = {
 
 Resize handles + edit-mode toggle: read the canonical CRM7 surface, copy verbatim, name `<EditModePanel>` and export.
 
-### Tests + Storybook
+### Tests
 
 - 12 unit tests covering: grid layout persistence, breakpoint switching, widget add/remove, resize, drag-reorder, edit-mode toggle, dnd-kit integration, RGL integration, type-correct widget config, error-boundary fallback
-- Storybook stories for each widget primitive (deferred — not blocking npm publish)
 
 ### Publish to npm
 
@@ -211,36 +199,63 @@ For each app that has app-local logo/path fallback logic:
 
 ## Workstream 2D — `@bsuite/dry-lint` warn → error promotion
 
-### State (verified 2026-04-28)
+### State (updated 2026-04-27)
 
-WS-γ landed `@bsuite/dry-lint@0.2.0` with multi-writer schema. All 4 D2C consumers + parent BSU have the rule wired as `warn`. Pre-existing violations exist:
+WS-γ landed `@bsuite/dry-lint@0.2.0` with multi-writer schema. Phase 2D promoted
+consumer enforcement to `error` across BSU, CRM7, Conduit, R80.3, Braden, and
+Throughput.
 
-- BSU `src/lib/schemaBuilderService.ts` (Category B duplicate — schemaBuilder triplicate)
-- CRM7 `supabase/functions/tenant-management/index.ts` (cleared via PR #317 — 12 PHASE-3c directives removed)
-- Conduit `src/lib/schemaBuilderService.ts` (Category B), `src/components/settings/TeamSection.tsx` (P1-7), `src/stores/settingsStore.ts` (P1-8)
-- Throughput: 0 violations (audit-cited team_members write was removed in earlier session)
+Red-team correction: the first promotion pass still relied on checkout-path app
+detection in several apps, which can make `no-cross-app-write` inert in isolated
+worktrees. The hardening follow-up pins `appOverride` per app and separates
+ownership enforcement from token-rule ignore lists.
 
-Per `docs/20260425-dry-lint-violations-triage-v1.00W.md`, these are tracked under PHASE-3 Category A/B/C/D fixes.
+Merged evidence:
+
+- Parent docs/lockfile: bsuite PR #310, commit `97ee59b`
+- BSU: PR #213, commit `28fa10a`
+- CRM7: PR #326, commit `3e64e301`
+- Conduit: PR #133, commit `b321a87`
+- R80.3: PR #116, commit `51664be`
+- Braden: PR #163, commit `40f51ef`
+- Throughput: PR #57, commit `378a4cd`
+- App-override hardening:
+  - BSU PR #214, commit `297593b`
+  - CRM7 PR #327, commit `16f3104`
+  - Conduit PR #134, commit `e51e4b6`
+  - R80.3 PR #117, commit `d7bbf5d`
+  - Braden PR #164, commit `7297279`
+  - Throughput PR #58, commit `42b7a97`
 
 ### Tighten ownership map
 
-Per ledger §5: "Tighten `tenants` and `user_tenants` writer lists now that the dry-lint writers schema exists." Currently: `writers: ["bsu", "crm7"]`. Investigate whether all of BSU + CRM7's writes to these tables go through the legitimate write surfaces, or whether some app-local writes should move to CRM7-owned RPC paths instead (per Phase 5 — DRY ownership).
+Complete in `@bsuite/dry-lint@0.2.0`: `tenants` and `user_tenants` use
+`writers: ["bsu", "crm7"]`, and `teams` plus `team_invitations` are mapped to
+BSU with read access for consumer apps.
 
-### Promote warn → error
+### Promote warning → error
 
-Once Category B kill-shot lands (schemaBuilder triplicate eliminated):
+Complete:
 
-1. Update `eslint.config.js` in 4 apps: `'bsuite/no-cross-app-write': 'error'`
-2. Verify zero violations: `pnpm dry-lint` per app should exit 0
-3. Remove per-file `eslint-disable` directives that were warn-mode bandaids
-4. Cross-app rules aligned with DRY one-shot frozen #2
+1. Base consumer configs set `'bsuite/no-cross-app-write': 'error'`.
+2. R80.3 and Braden now depend on `@bsuite/dry-lint@^0.2.0`.
+3. Existing legacy write paths are isolated by narrow per-file overrides only.
+4. Each consumer config passes `appOverride` so temporary worktrees and
+   independently cloned repos cannot silently disable the rule.
+5. Local verification: `pnpm lint` passed in all six app worktrees with zero
+   dry-lint errors.
 
 ### DoD §2D
 
-- `bsuite/no-cross-app-write` is `error` in all 4 D2C app + BSU eslint configs
-- `pnpm dry-lint` returns exit 0 across all 7 repos
-- Zero `eslint-disable bsuite/no-cross-app-write` directives remain
-- Memory key `bsuite_phase2d_dry_lint_error_mode`
+- [x] `bsuite/no-cross-app-write` is `error` in BSU, CRM7, Conduit, R80.3,
+  Braden, and Throughput eslint configs.
+- [x] `bsuite/no-cross-app-write` uses explicit `appOverride` in all six
+  consumer configs.
+- [x] No consumer uses `bsuiteDryLint.configs.warn`.
+- [x] No `workspace:*`, `file:../packages`, or `link:` `@bsuite/*` dependency
+  was introduced.
+- [x] `@bsuite/dry-lint` build/test passed: 47 tests.
+- [x] Memory key `bsuite_phase2d_dry_lint_error_mode`.
 
 ---
 
@@ -272,7 +287,7 @@ If any remaining `workspace:*` or `file:` references — convert to npm pins per
                                                  ↓
 2C theme@0.3.3 + platform-logo helpers ← (independent; can parallelise with 2A/2B)
                                                  ↓
-2D dry-lint warn → error (DEPENDS ON: 2A complete + Category B fixes)
+2D dry-lint warning → error
                                                  ↓
 2E charge-calc + nav workspace-pin verification (final cleanup)
                                                  ↓
@@ -310,7 +325,7 @@ If any remaining `workspace:*` or `file:` references — convert to npm pins per
 
 ---
 
-## Out of scope for Phase 2
+## Later Ledger Phases
 
 These move to Phases 4-9 per the ledger:
 
@@ -325,16 +340,13 @@ These move to Phases 4-9 per the ledger:
 
 ---
 
-## Pickup checklist for next session
+## Pickup checklist for Phase 3
 
-Before starting Phase 2:
+Before starting Phase 3:
 
-- [ ] Read this doc end-to-end
-- [ ] Read the ledger Priority 2 section
-- [ ] Re-verify shared-package versions (this doc was accurate 2026-04-28; versions may have moved)
-- [ ] Confirm Phase 0 §1.4 still passes (no regression on operator-side items)
-- [ ] Confirm all 7 repos still at dev = main parity
-- [ ] Confirm 6 production deploys still READY against main HEAD
-- [ ] Read `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` Priority 2 + 3 (auth runtime smoke is Phase 3 — can run in parallel with 2A)
+- [ ] Read this doc end-to-end.
+- [ ] Read the ledger Priority 3 auth runtime smoke section.
+- [ ] Confirm all Phase 2 development PRs remain merged.
+- [ ] Confirm preview deploys remain READY for the apps touched by Phase 2D.
 
-Begin §2A page-builder extraction. The session ends when §2E DoD is true OR a red-team finding requires operator binary.
+Begin Phase 3 auth runtime smoke.
