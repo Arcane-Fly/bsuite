@@ -190,8 +190,7 @@ Outstanding cross-app ownership and duplicate-write fixes:
 - Move BSU `tga-search` writes behind a CRM7-owned edge function if CRM7 owns the data.
 - Move Braden `clients` writes and `BrandingAdmin` behavior to CRM7 or BSU owner surfaces as appropriate.
 - Move R80 apprentice-store writes behind CRM7-owned APIs or RPC.
-- Tighten `tenants` and `user_tenants` writer lists now that the dry-lint writers schema exists.
-- Keep ownership enforcement in CI once violations are fixed.
+- Keep replacing the known legacy exception files while dry-lint ownership enforcement remains active in CI.
 
 ## Priority 6: CRM7 Product and Data Work
 
