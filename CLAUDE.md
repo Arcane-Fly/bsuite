@@ -92,7 +92,7 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 | **Supabase Native Auth** | Email/password + Google/Azure AD via GoTrue | All 6 apps |
 | **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden, Throughput (as clients) |
 
-**Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
+**Conduit** uses Supabase Native Auth via `@supabase/ssr` (no BS OAuth 2.1 client registration, no `bs_oauth_state`, no `business-suite-oauth.ts`). However, since 2026-03 (PR #102 / commit `8a3143e`), Conduit's `/auth/login` is a **redirect-stub that bounces unauthenticated visitors to BSU's native `/login`**; once authenticated, the `.crm7.app` shared cookie (`business_suite_auth`) lets Conduit treat that session as its own. So Conduit IS a cookie-SSO consumer with delegated login UI, even though its auth mechanism remains Supabase native.
 
 #### OAuth Client Registry
 
@@ -108,7 +108,7 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 
 #### Cookie SSO (`.crm7.app` subdomains)
 
-BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 instead. Conduit uses `@supabase/ssr` server-managed cookies and does not participate.
+BSU, CRM7, R80.3, Throughput, **and Conduit** share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 instead. Conduit uses `@supabase/ssr` server-managed cookies AND participates in the shared cookie via the `business_suite_auth` storage key (verified `conduit/src/lib/supabase/{client,server,middleware}.ts:22|25|55`); its `/auth/login` is a redirect stub to BSU's `/login` page (the BSU page itself, not BSU's OAuth consent surface).
 
 #### Critical Auth Rules
 
