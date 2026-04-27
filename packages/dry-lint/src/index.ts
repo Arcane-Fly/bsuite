@@ -8,7 +8,7 @@ export { detectAppFromPath, type AppKey } from './app-detection.js';
 export { noCrossAppWriteRule };
 
 const PLUGIN_NAME = 'bsuite';
-const PLUGIN_VERSION = '0.1.2';
+const PLUGIN_VERSION = '0.2.0';
 
 /**
  * The `@bsuite/dry-lint` ESLint flat-config plugin.

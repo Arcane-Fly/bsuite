@@ -3,11 +3,33 @@ import { ESLintUtils, AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/u
 import ownershipMap from '../ownership-map.json' with { type: 'json' };
 import { detectAppFromPath, type AppKey } from '../app-detection.js';
 
-type OwnershipEntry = {
+/**
+ * Single-owner entry — one canonical write surface.
+ */
+type OwnerOwnershipEntry = {
   owner: AppKey | 'all' | 'shared';
+  writers?: never;
   readers: ReadonlyArray<AppKey>;
   $comment?: string;
 };
+
+/**
+ * Multi-writer entry (PHASE-3c, @bsuite/dry-lint@0.2.0) — explicit allow-list of
+ * apps that may write to a co-owned table. Mutually exclusive with `owner`. Use
+ * for admin-CRUD co-ownership cases (e.g. tenants + user_tenants where BSU is
+ * the platform-level owner and CRM7's tenant-management edge function performs
+ * legitimate tenant admin operations on its own org hierarchy).
+ *
+ * `writers: []` is invalid — see {@link assertOwnershipEntryValid}.
+ */
+type WritersOwnershipEntry = {
+  owner?: never;
+  writers: ReadonlyArray<AppKey>;
+  readers: ReadonlyArray<AppKey>;
+  $comment?: string;
+};
+
+type OwnershipEntry = OwnerOwnershipEntry | WritersOwnershipEntry;
 
 type OwnershipMap = {
   $schema?: string;
@@ -15,7 +37,50 @@ type OwnershipMap = {
   tables: Record<string, OwnershipEntry>;
 };
 
+/**
+ * Validate an ownership-map entry at module load. Throws on malformed entries
+ * so we fail fast at lint startup rather than silently letting invalid map
+ * shapes through. Enforces:
+ *  - `owner` and `writers` are mutually exclusive (PHASE-3c rule schema).
+ *  - At least one of `owner` / `writers` must be present.
+ *  - `writers` (when present) must be a non-empty array.
+ *
+ * Exported for unit-test access — the same validator runs at module load on
+ * the bundled `ownership-map.json`.
+ */
+export function assertOwnershipEntryValid(table: string, entry: OwnershipEntry): void {
+  const hasOwner = 'owner' in entry && entry.owner != null;
+  const hasWriters = 'writers' in entry && entry.writers != null;
+
+  if (hasOwner && hasWriters) {
+    throw new Error(
+      `[bsuite/no-cross-app-write] Ownership-map entry for "${table}" has BOTH ` +
+        `"owner" and "writers" set. These are mutually exclusive — use one or the other.`,
+    );
+  }
+
+  if (!hasOwner && !hasWriters) {
+    throw new Error(
+      `[bsuite/no-cross-app-write] Ownership-map entry for "${table}" must have ` +
+        `either "owner" or "writers" set.`,
+    );
+  }
+
+  if (hasWriters && (!Array.isArray(entry.writers) || entry.writers.length === 0)) {
+    throw new Error(
+      `[bsuite/no-cross-app-write] Ownership-map entry for "${table}" has empty ` +
+        `"writers" list. Use "owner" for single-writer entries, or list at least ` +
+        `one writer app.`,
+    );
+  }
+}
+
 const TABLES: Record<string, OwnershipEntry> = (ownershipMap as OwnershipMap).tables;
+
+// Validate every entry at module load — fail fast on schema violations.
+for (const [tableName, entry] of Object.entries(TABLES)) {
+  assertOwnershipEntryValid(tableName, entry);
+}
 
 /**
  * Set of method names on the Supabase query builder that constitute a WRITE.
@@ -28,7 +93,7 @@ const createRule = ESLintUtils.RuleCreator<{ recommended: boolean }>(
     `https://github.com/GaryOcean428/bsuite/blob/main/packages/dry-lint/README.md#${name}`,
 );
 
-type MessageIds = 'crossAppWrite' | 'unknownTable';
+type MessageIds = 'crossAppWrite' | 'crossAppWriteMultiWriter' | 'unknownTable';
 
 type RuleOptions = [
   {
@@ -145,6 +210,9 @@ export const noCrossAppWriteRule = createRule<RuleOptions, MessageIds>({
       crossAppWrite:
         '[bsuite/no-cross-app-write] {{app}} cannot {{method}} into "{{table}}" — owned by {{owner}}. ' +
         'Either move the write to {{owner}} (one-shot pattern) or update src/ownership-map.json with justification.',
+      crossAppWriteMultiWriter:
+        '[bsuite/no-cross-app-write] {{app}} cannot {{method}} into "{{table}}" — writers are [{{writers}}]. ' +
+        'Either move the write to one of those apps or add {{app}} to the writers list in src/ownership-map.json with justification.',
       unknownTable:
         '[bsuite/no-cross-app-write] Unknown table "{{table}}" written from {{app}} via .{{method}}(). ' +
         'Add it to packages/dry-lint/src/ownership-map.json with the canonical owner.',
@@ -199,6 +267,25 @@ export const noCrossAppWriteRule = createRule<RuleOptions, MessageIds>({
               data: { table: tableName, app: detectedApp, method: methodName },
             });
           }
+          return;
+        }
+
+        // Multi-writer entry (PHASE-3c): pass when detected app is in writers,
+        // flag otherwise.
+        if ('writers' in entry && entry.writers != null) {
+          if (entry.writers.includes(detectedApp as AppKey)) {
+            return;
+          }
+          context.report({
+            node,
+            messageId: 'crossAppWriteMultiWriter',
+            data: {
+              app: detectedApp,
+              method: methodName,
+              table: tableName,
+              writers: entry.writers.join(', '),
+            },
+          });
           return;
         }
 

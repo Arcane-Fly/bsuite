@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$comment": "BSuite one-shot entity ownership map. Source: docs/20260227-dry-one-shot-architecture-v1.01A.md §1 + docs/20260423-cross-app-write-audit-v1.00W.md V5–V10. Owner = single app allowed to insert/update/upsert/delete. readers = apps that may .select() but never write. shared = co-ownership accepted — RESERVED FOR AUDIT-TRAIL / APPEND-ONLY SINKS ONLY (per docs/20260427-ownership-map-ratification-v1.00W.md Item 3 — admin-CRUD co-ownership cases must wait for the per-app `writers` schema extension shipping in @bsuite/dry-lint@0.2.0 / PHASE-3c). 'all' = any app may write (event sinks like bi_metrics).",
+  "$comment": "BSuite one-shot entity ownership map. Source: docs/20260227-dry-one-shot-architecture-v1.01A.md §1 + docs/20260423-cross-app-write-audit-v1.00W.md V5–V10 + docs/20260427-ownership-map-ratification-v1.00W.md (PHASE-3c). Each entry uses EXACTLY ONE of: `owner: <app>` (single canonical write surface) OR `writers: [<app>, ...]` (multi-writer admin co-ownership, @bsuite/dry-lint@0.2.0+). owner + writers together is a schema error. readers = apps that may .select() but never write. owner=`shared` is reserved for audit-trail/append-only sinks + user-self-write + multi-app capture flows (see Item 3 enumeration in ratification doc). owner=`all` = explicit event-sink (e.g. bi_metrics, audit_log).",
   "tables": {
     "contacts":                       { "owner": "crm7",       "readers": ["r80", "bsu"] },
     "clients":                        { "owner": "crm7",       "readers": ["r80", "bsu"] },
@@ -37,8 +37,8 @@
     "todos":                          { "owner": "throughput", "readers": [] },
 
     "users":                          { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
-    "tenants":                        { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "throughput"], "$comment": "Interim per docs/20260427-ownership-map-ratification-v1.00W.md Option C — ownership reverted from `shared`. CRM7 tenant-management edge function violation sites carry inline eslint-disable + TODO link to PHASE-3c rule schema extension." },
-    "user_tenants":                   { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "throughput"], "$comment": "Interim per docs/20260427-ownership-map-ratification-v1.00W.md Option C — ownership reverted from `shared`. CRM7 tenant-management edge function violation sites carry inline eslint-disable + TODO link to PHASE-3c rule schema extension." },
+    "tenants":                        { "writers": ["bsu", "crm7"], "readers": ["r80", "conduit", "throughput"], "$comment": "PHASE-3c (@bsuite/dry-lint@0.2.0): multi-writer per docs/20260427-ownership-map-ratification-v1.00W.md Option C. BSU owns platform-level tenant CRUD; CRM7 tenant-management edge function performs tenant admin operations on its own org hierarchy under RLS. Other apps remain readers." },
+    "user_tenants":                   { "writers": ["bsu", "crm7"], "readers": ["r80", "conduit", "throughput"], "$comment": "PHASE-3c (@bsuite/dry-lint@0.2.0): multi-writer per docs/20260427-ownership-map-ratification-v1.00W.md Option C. BSU owns membership join writes; CRM7 tenant-management edge function manages org membership (invite/approve/remove) under RLS. Other apps remain readers." },
     "user_roles":                     { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "user_sessions":                  { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "user_permissions":               { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },

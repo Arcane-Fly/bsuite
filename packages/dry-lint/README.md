@@ -111,6 +111,10 @@ It does NOT report:
 
 ## Adding a new table to the ownership map
 
+Each entry uses **EXACTLY ONE** of `owner` (single canonical write surface) or `writers` (multi-writer admin co-ownership, `@bsuite/dry-lint@0.2.0`+). Setting both is a schema error.
+
+### Single-owner entry (most common)
+
 1. Open [`src/ownership-map.json`](./src/ownership-map.json).
 2. Add an entry under `tables`:
 
@@ -125,9 +129,31 @@ It does NOT report:
      }
    }
    ```
+
 3. Use `"shared"` if the table is co-owned by 2+ apps with a documented audit-trail / append-only pattern (e.g. `wage_calculation_snapshots`).
 4. Use `"all"` for explicit event-sink tables (e.g. `bi_metrics`).
-5. Bump the `@bsuite/dry-lint` version (patch for new tables, minor for owner moves) and republish.
+
+### Multi-writer entry (PHASE-3c, v0.2.0+)
+
+For admin-CRUD tables co-owned by an explicit allow-list of apps (e.g. `tenants` + `user_tenants`, where BSU is the platform owner and CRM7's tenant-management edge function performs legitimate org-admin operations under RLS):
+
+```jsonc
+{
+  "tables": {
+    "your_co_owned_table": {
+      "writers": ["bsu", "crm7"],   // explicit allow-list — at least one app
+      "readers": ["r80", "conduit"], // apps that may .select() only
+      "$comment": "Why this is multi-writer rather than single-owner."
+    }
+  }
+}
+```
+
+The rule will pass writes from any listed app and flag writes from non-listed apps with a `crossAppWriteMultiWriter` message.
+
+### Versioning
+
+Bump the `@bsuite/dry-lint` version (patch for new tables, minor for owner moves or schema additions) and republish.
 
 ---
 
