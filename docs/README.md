@@ -46,6 +46,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260420-react-hooks-v7-tech-debt-v1.00W.md` | React Hooks v7 tech debt remediation tracker — per-app finding counts |
 | `20260425-orphan-branch-triage-v1.00W.md` | WS-B finish-line: orphan branch triage across 7 repos |
 | `20260425-operator-handoff-v1.00W.md` | Operator handoff for finish-line session (2026-04-25) — items requiring human credentials (Supabase dashboard, Microsoft Entra portal, etc.) with verification commands |
+| `20260427-bypass-pr-audit-v1.00W.md` | Bypass-PR audit + cherry-pick plan (pre-reconcile gate) — classifies the 26 direct-to-main PRs (10 bsuite + 16 crm7) merged 2026-04-14 to 2026-04-20 against `origin/development` for reconcile safety |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps + 2026-04-25 finish-line sweep archive (`archive/parent/2026-04-25-finish-line/`) |
 | [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |
