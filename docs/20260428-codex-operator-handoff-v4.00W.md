@@ -158,9 +158,13 @@ MS_GRAPH_TOKEN=$(az account get-access-token \
   --resource https://graph.microsoft.com \
   --query accessToken -o tsv)
 
-APP_ID=<AZURE_CLIENT_ID>
+CLIENT_ID=<AZURE_CLIENT_ID>
+APP_OBJECT_ID=$(curl -sG "https://graph.microsoft.com/v1.0/applications" \
+  --data-urlencode "\$filter=appId eq '${CLIENT_ID}'" \
+  -H "Authorization: Bearer ${MS_GRAPH_TOKEN}" \
+  | jq -r '.value[0].id')
 
-curl -s "https://graph.microsoft.com/v1.0/applications/${APP_ID}/optionalClaims" \
+curl -s "https://graph.microsoft.com/v1.0/applications/${APP_OBJECT_ID}/optionalClaims" \
   -H "Authorization: Bearer ${MS_GRAPH_TOKEN}" \
   | jq '.idToken'
 ```

@@ -1,0 +1,25 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate workspace metadata
+        shell: bash
+        run: |
+          test -f AGENTS.md
+          test -f docs/README.md
+          git submodule status --recursive
