@@ -43,4 +43,4 @@ git checkout origin/main -- packages/auth packages/charge-calc \
 - All 11 expected packages present: `auth charge-calc design-tokens dry-lint eslint-config nav-core schema-registry theme theme-codemod tsconfig ui`.
 - Versions verified at canonical npm-published levels:
   - auth=0.1.0, charge-calc=0.2.2, design-tokens=0.1.0, dry-lint=0.2.0, eslint-config=0.2.0, nav-core=0.5.0, schema-registry=0.2.1, theme=0.3.1, theme-codemod=1.0.0, ui=0.1.0
-- `pnpm-lock.yaml` regeneration deferred to final pre-push step.
+- `pnpm-lock.yaml` regeneration completed in the final pre-push step.

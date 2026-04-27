@@ -75,4 +75,4 @@ git checkout origin/main -- .gitmodules SECURITY.md env.example \
 ## Verification
 
 - File-presence and grep-spot-check confirm all decisions applied.
-- `pnpm install --frozen-lockfile` deferred to post-Domain 4 lockfile regeneration.
+- `pnpm install --frozen-lockfile` was completed during the Domain 4 lockfile regeneration pass.
