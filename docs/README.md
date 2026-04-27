@@ -46,9 +46,10 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260420-react-hooks-v7-tech-debt-v1.00W.md` | React Hooks v7 tech debt remediation tracker — per-app finding counts |
 | `20260425-orphan-branch-triage-v1.00W.md` | WS-B finish-line: orphan branch triage across 7 repos |
 | `20260425-operator-handoff-v1.00W.md` | Historical operator handoff for finish-line session (2026-04-25); superseded by later operator handoffs |
-| `20260428-codex-operator-handoff-v4.00W.md` | Current Codex Phase 0 operator handoff — TGA custom config, TGA production enablement, Azure `xms_edov`, and Supabase Auth allow-list doctrine conflict |
 | `20260427-bypass-pr-audit-v1.00W.md` | Bypass-PR audit + cherry-pick plan (pre-reconcile gate) — classifies the 26 direct-to-main PRs (10 bsuite + 16 crm7) merged 2026-04-14 to 2026-04-20 against `origin/development` for reconcile safety |
+| `20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` | Consolidated execution ledger for outstanding roadmap, audit, gap-analysis, plan, and app-level backlog items across the parent workspace and submodules |
 | `20260427-visual-smoke-completion-v1.00W.md` | WS-J gap closure: 144 full-matrix visual smoke captures across 6 apps × routes × {light, dark} × {mobile, desktop} via local Playwright; pixel-diff vs WS-J baseline; 0 broken routes, 1 medium finding (Throughput → BSU `/auth/login` mismatch resolved in throughput PR #50) |
+| `20260428-codex-operator-handoff-v4.00W.md` | Current Codex Phase 0 operator handoff — TGA custom config, TGA production enablement, Azure `xms_edov`, and Supabase Auth allow-list doctrine conflict |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps + 2026-04-25 finish-line sweep archive (`archive/parent/2026-04-25-finish-line/`) |
 | [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |

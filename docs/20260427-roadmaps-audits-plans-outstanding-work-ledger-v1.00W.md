@@ -24,7 +24,7 @@ Existing repo-local docs dated `20260428` were present during this 2026-04-27 sc
 ## Authority Order
 
 1. `docs/20260427-full-7-execution-ledger-v1.00W.md`
-2. `docs/20260428-operator-handoff-v3.00W.md`
+2. `docs/20260428-codex-operator-handoff-v4.00W.md`
 3. `docs/20260427-finish-line-review-signoff-v1.00W.md`
 4. `docs/20260317-bsuite-gap-report-v2.00W.md`
 5. App-level `OUTSTANDING.md` files
@@ -35,7 +35,7 @@ Existing repo-local docs dated `20260428` were present during this 2026-04-27 sc
 
 | Area | Active source docs reviewed | Notes |
 | --- | --- | --- |
-| Parent workspace | Master roadmap, gap report, full-7 ledger, finish-line signoffs, operator handoff v3, bypass-PR audit, dry-lint triage, color-token audit, universal-canvas plan, `docs/plans/*` | Parent docs contain the current cross-app gates and architecture backlog. |
+| Parent workspace | Master roadmap, gap report, full-7 ledger, finish-line signoffs, operator handoff v4, bypass-PR audit, dry-lint triage, color-token audit, universal-canvas plan, `docs/plans/*` | Parent docs contain the current cross-app gates and architecture backlog. |
 | `business-suite-unified` | `OUTSTANDING-PLANS.md`, `OUTSTANDING-SYSTEM.md`, WCAG audit, BSU/CRM7 Supabase audit | Open work is mostly platform admin, Supabase CRM domain schema, and WCAG verification. |
 | `crm7` | `OUTSTANDING.md`, `00-roadmap/*`, `docs/plans/*`, schema/page-builder audit, GTO plans, AI plans | CRM7 has the largest live backlog and owns much of the cross-app data architecture. |
 | `conduit` | `OUTSTANDING.md` plus parent full-7/OAuth ledger references | Conduit docs have no incomplete local plans; parent-ledger runtime smoke remains. |
