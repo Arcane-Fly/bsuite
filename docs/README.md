@@ -47,6 +47,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260425-orphan-branch-triage-v1.00W.md` | WS-B finish-line: orphan branch triage across 7 repos |
 | `20260425-operator-handoff-v1.00W.md` | Operator handoff for finish-line session (2026-04-25) — items requiring human credentials (Supabase dashboard, Microsoft Entra portal, etc.) with verification commands |
 | `20260427-bypass-pr-audit-v1.00W.md` | Bypass-PR audit + cherry-pick plan (pre-reconcile gate) — classifies the 26 direct-to-main PRs (10 bsuite + 16 crm7) merged 2026-04-14 to 2026-04-20 against `origin/development` for reconcile safety |
+| `20260427-visual-smoke-completion-v1.00W.md` | WS-J gap closure: 144 full-matrix visual smoke captures across 6 apps × routes × {light, dark} × {mobile, desktop} via local Playwright; pixel-diff vs WS-J baseline; 0 broken routes, 1 medium finding (Throughput → BSU `/auth/login` mismatch resolved in throughput PR #50) |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps + 2026-04-25 finish-line sweep archive (`archive/parent/2026-04-25-finish-line/`) |
 | [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |
