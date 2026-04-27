@@ -16,7 +16,7 @@ This session addressed all 10 review concerns. Result: **5 of 7 repos promoted t
 |---|---|
 | **CRM7 pnpm pin** (frozen #4 violation) | PR #314 — pinned to 10.30.3 suite-wide; lockfile regen via temp-dir recipe; CI green without --admin. |
 | **Conduit auth doctrine** (frozen #5 — smoke vs reality) | Verdict (C) — doctrine was technically correct on mechanism but mischaracterized SSO posture. Conduit IS a cookie-SSO consumer with delegated login UI to BSU's `/login` (since PR #102 / 8a3143e by Braden, 2026-03). Updated parent CLAUDE.md to reflect reality. Investigation doc: [`docs/20260427-conduit-auth-doctrine-investigation-v1.00W.md`](20260427-conduit-auth-doctrine-investigation-v1.00W.md). |
-| **tenants/user_tenants ownership** (frozen #2 ratification per review #7) | Per user decision: **Option C interim revert**. PRs #283 (parent) + #315 (crm7) — set both back to `owner: bsu`; CRM7 tenant-management edge fn writes carry inline `eslint-disable-next-line` + TODO referencing PHASE-3c. `team_invitations` + `teams` added to map (gap from WS-G). `@bsuite/dry-lint@0.1.2` published. Schema extension (`writers: [...]`) deferred to next session as PHASE-3c. Ratification doc: [`docs/20260427-ownership-map-ratification-v1.00W.md`](20260427-ownership-map-ratification-v1.00W.md). |
+| **tenants/user_tenants ownership** (frozen #2 ratification per review #7) | Historical note: this item was open when this signoff was written. It was later closed by `@bsuite/dry-lint@0.2.0`, which added writers-schema support and set `tenants` / `user_tenants` to `writers: ["bsu", "crm7"]`. Current status lives in the 2026-04-27 outstanding-work ledger and Phase 2 shared-packages plan. |
 
 ### Security hardening (concern #3 — SECURITY DEFINER audit)
 
@@ -98,7 +98,8 @@ A naive `gh pr merge` produces 376 conflicts on crm7. `git merge -X ours` reduce
 
 **Option B for crm7 + Option A for parent.** Crm7's main-only commits are mostly feature work (selectors + AVETMISS + AI features) that should be shipped on dev too. Parent's main-only work is mostly submodule pointer bumps + docs that need per-file review.
 
-This is a separate workstream, not a tail-end task. Open a focused issue + dedicate a session to it.
+Historical note: the reconcile was completed in the later finish-line session;
+current status lives in the 2026-04-28 final signoff and outstanding-work ledger.
 
 ---
 
@@ -108,21 +109,20 @@ This is a separate workstream, not a tail-end task. Open a focused issue + dedic
 - **No --admin bypassing required CI.** All 5 promoted repos' dev→main PRs went through their full required CI suite. `--admin` was used only for non-required Vercel CLI dead-scaffolding workflows that pre-date this session.
 - **DB security state is strictly better.** SECURITY DEFINER NULL-search_path FAIL eliminated; is_team_admin tightened to `search_path=''`.
 - **No new test debt.** Throughput quarantine fully resolved; CI guardrail prevents recurrence.
-- **No new doctrine drift.** Three drifts addressed; one new ratification queued (PHASE-3c rule schema extension).
+- **No new doctrine drift at signoff time.** Later Phase 2 work closed the queued dry-lint writers-schema ratification.
 
 ---
 
-## Outstanding (operator-only, post-session)
+## Historical Outstanding Snapshot
 
-| # | Item | Doc |
-|---|---|---|
-| 1 | crm7 dev→main reconcile (Option B per recommendation) | This doc, §Operator decision required |
-| 2 | bsuite parent dev→main reconcile (Option A per recommendation) | This doc, §Operator decision required |
-| 3 | 6 operator-only items in handoff (OAUTH_STATE_SECRET, TGA GUCs, TGA_SYNC_ENABLED, Azure xms_edov, *.vercel.app wildcards, HS256 JWK) | [`docs/20260425-operator-handoff-v1.00W.md`](20260425-operator-handoff-v1.00W.md) |
-| 4 | Xero developer-portal app registration (Part O.2 — Item 11 of handoff) | Same |
-| 5 | Reconfigure Cascade IDE workflows to use PR-based pushes (server-side enforcement now blocks direct-push) | This doc, §2-gate concerns |
-| 6 | PHASE-3c — extend `@bsuite/dry-lint` schema with `writers: [...]` lists; bump to 0.2.0; migrate `tenants` + `user_tenants` to `writers: [bsu, crm7]` | [`docs/20260427-ownership-map-ratification-v1.00W.md`](20260427-ownership-map-ratification-v1.00W.md) Item 1 Option C |
-| 7 | Visual smoke baseline standardisation (capture mode mismatch surfaced in 5) | [`docs/20260427-visual-smoke-completion-v1.00W.md`](20260427-visual-smoke-completion-v1.00W.md) |
+This section is superseded by
+[`docs/20260428-finish-line-final-signoff-v3.00W.md`](20260428-finish-line-final-signoff-v3.00W.md),
+[`docs/20260428-operator-handoff-v3.00W.md`](20260428-operator-handoff-v3.00W.md),
+and the current outstanding-work ledger.
+
+Items previously listed here for CRM7 reconcile, parent reconcile, and
+`@bsuite/dry-lint@0.2.0` writers-schema work have shipped. Current remaining
+operator-only items live in the active operator handoff.
 
 ---
 
