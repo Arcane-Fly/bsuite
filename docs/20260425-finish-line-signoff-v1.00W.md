@@ -197,10 +197,11 @@ See "STOPPED Repos". Both need dedicated `tandem-dev-main-reconcile` skill sessi
 
 ## Outstanding Items
 
-### Operator-only (6 items)
+### Operator-only (7 items, was 6 — see Restoration Errata)
 See `docs/20260425-operator-handoff-v1.00W.md`:
 1. `OAUTH_STATE_SECRET` set + redeploy oauth edge functions
 2. (5 more — see handoff doc)
+3. **Item 11 — Xero developer-portal app registration (Part O.2)** — restored 2026-04-27 per Restoration Errata below.
 
 ### Known follow-ups (2 items, not regressions)
 1. **BSU local schema-registry workaround** — `vitest.config.ts` falls back to npm package resolution on CI per BSU commit `b9f4d657`. The schema-registry's extensionless internal imports break Node's strict ESM resolver. Long-term fix: add `.js` extensions to internal imports in `@bsuite/schema-registry` and republish. Tracked in `bsuite_pending_actions`.
@@ -267,6 +268,21 @@ PR count and commit count reflect the user-cited prior session totals (commits i
 ```
 
 Note: BrowserBase MCP session was unstable during the smoke pass; Playwright MCP was used as the substitute. No persistent BrowserBase bucket recorded.
+
+---
+
+## Restoration Errata (2026-04-27)
+
+During post-signoff review, the user identified that **Xero developer-portal app registration (originally catalogued as Part O.2 in `bsuite_backlog_2026_post_n` on 2026-04-22)** was silently dropped from the operator handoff doc when WS-G/WS-J consolidated the 10-item operator checklist down to 6 items. The original Part O catalogue treated Xero developer-portal registration as a documented blocker — it should not have fallen off the list.
+
+**Restoration action (PR `docs/operator-handoff-xero-restoration`, 2026-04-27):**
+
+- Added **Item 11 — Xero developer-portal app registration (Part O.2)** to `docs/20260425-operator-handoff-v1.00W.md` with full Action / Dashboard URL / Screenshot reference / Verification command, matching the structure of the other 6 operator-only items.
+- Updated the Summary table in the handoff doc — operator-action item count is now **7** (was 6); time estimate is **~70 min** (was ~60 min).
+- Updated `bsuite_pending_actions` memory key — operator-action list now reflects 7 items including Xero registration.
+- Cross-referenced restoration in handoff doc §Cross-Reference and in this signoff doc.
+
+The restoration is **correctional, not net-new scope** — it brings the 2026-04-25 finish-line handoff back into alignment with the 2026-04-22 backlog snapshot. The Xero implementation work itself (1 week, agent-executable) remains catalogued under Part O.2 in `bsuite_backlog_2026_post_n` and is **separate** from the operator app-registration step covered here.
 
 ---
 

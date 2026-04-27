@@ -298,6 +298,67 @@ done
 
 ---
 
+## Item 11 — Xero developer-portal app registration (Part O.2)
+
+**Why operator-only:** Registering a Xero OAuth 2.0 app at `developer.xero.com/myapps` requires interactive sign-in with the Xero developer account credentials (linked to Braden's MyXero login). Agents cannot authenticate to Xero's developer portal — there is no API or service-account path to register an app. This is genuinely human-only.
+
+**Restoration note:** This item was originally catalogued as **Part O.2** in `bsuite_backlog_2026_post_n` (2026-04-22 backlog) and listed as a human-action blocker. It was inadvertently omitted from the 2026-04-25 finish-line operator handoff during the WS-G/WS-J doc consolidation. Restored here on 2026-04-27 per user review request — see `docs/20260425-finish-line-signoff-v1.00W.md` §"Restoration Errata" for cross-reference.
+
+### Action
+
+1. Sign in to https://developer.xero.com/myapps with the Braden Xero developer account.
+2. Click **New app**.
+3. Fill out the app registration form:
+   - **App name:** `BSuite CRM7 Integration` (or `Braden Group CRM7` per Xero brand guidelines)
+   - **Integration type:** **Web app**
+   - **Company or application URL:** `https://crm.crm7.app`
+   - **OAuth 2.0 redirect URI:** `https://crm.crm7.app/auth/xero/callback`
+4. After creation, open the app's **Configuration** tab and confirm the following scopes are requested when the OAuth client requests consent (these are scopes the consumer app will request — not all need to be pre-approved on Xero's side, but document them here as the contract):
+   - `accounting.contacts`
+   - `accounting.transactions`
+   - `accounting.settings.read`
+   - `payroll.employees`
+   - `payroll.payruns`
+   - `offline_access`
+5. From the **Configuration** tab, copy the **Client ID** and **Client Secret**. The client secret is shown ONCE — store immediately in a secure location (1Password / operator's vault) before navigating away.
+6. Hand `client_id` and `client_secret` back to the agent session via the agreed secure channel (DO NOT paste raw secrets into chat — share the 1Password reference / secret-store path instead).
+
+### What happens next (agent-executable, AFTER operator returns credentials)
+
+The agent will:
+
+- Write `VITE_XERO_CLIENT_ID=<client_id>` to **CRM7 Vercel** env (Production + Preview scopes) via `vercel env add`.
+- Write `XERO_CLIENT_ID=<client_id>`, `XERO_CLIENT_SECRET=<client_secret>`, `XERO_REDIRECT_URI=https://crm.crm7.app/auth/xero/callback` to **Supabase secrets** (project `tuybltdrdefjblnplpqo`) via the Supabase MCP `secrets set` flow (or `supabase secrets set` CLI).
+- Per-tenant `xero_integration` feature flag activation lives in CRM7 `tenant_settings` JSONB and is operator-toggled per customer at rollout time (separate concern from initial app registration).
+
+**Dashboard URL:** https://developer.xero.com/myapps
+
+**Screenshot reference:** `docs/operator-screenshots/xero-app-registration.png` (operator captures and commits after first registration so the next operator can verify the form fields visually).
+
+### `verification_command`
+
+Run **after** the agent has written the secrets (i.e., post-handoff back to the agent):
+
+```bash
+# 1. Confirm VITE_XERO_CLIENT_ID is set on CRM7 in both Production + Preview
+vercel env ls --token=$VERCEL_TOKEN --scope=braden-pty-ltd \
+  | grep VITE_XERO_CLIENT_ID
+# Expected: a line showing "VITE_XERO_CLIENT_ID  Encrypted  Production, Preview"
+
+# 2. Confirm Supabase has all three Xero edge-function secrets
+supabase secrets list --project-ref tuybltdrdefjblnplpqo \
+  | grep -E '^(XERO_CLIENT_ID|XERO_CLIENT_SECRET|XERO_REDIRECT_URI)\b'
+# Expected: 3 lines, one for each secret name
+
+# 3. End-to-end OAuth handshake smoke — should redirect to Xero (not 404)
+curl -sI https://crm.crm7.app/auth/xero/connect | head -1
+# Expected: HTTP/2 302  with Location header pointing to login.xero.com/identity/connect/authorize
+```
+
+If step 3 returns `404` instead of `302`, the consumer route `/auth/xero/connect` has not yet been wired in CRM7 — that is **Part O.2 implementation work** (the agent-executable 1-week task post-registration), tracked separately in `bsuite_backlog_2026_post_n`.
+
+---
+
 ## Summary — Items Requiring Operator Action
 
 | # | Item | Reason | ETA |
@@ -308,10 +369,11 @@ done
 | 6 | Azure xms_edov claim | Entra portal interactive only | ~5 min |
 | 7 | Remove `*.vercel.app` wildcards | Operator must review intent | ~5 min |
 | 8 | Revoke HS256 Previous JWK | Dashboard-only, no API | ~2 min |
+| 11 | Xero app registration (Part O.2) | developer.xero.com requires interactive sign-in | ~10 min |
 
 **Items resolved this session:** 2 (migrations), 3a (pg_net install), 5 (skipped per plan), 9 (blocked on WS-I), 10 (auto-delete branches).
 
-**Total operator time estimate:** ~60 minutes.
+**Total operator time estimate:** ~70 minutes (was 60 min — +10 for Xero registration).
 
 ---
 
@@ -321,3 +383,4 @@ done
 - Replacement memory key written by this session: `bsuite_pending_actions` (2026-04-25), trimmed to operator-only items.
 - Implementation context: `docs/plans/20260425-finish-line-session-refined.md` (parent monorepo).
 - Throughput W4-TP deep-link target: `business-suite-unified/src/pages/Admin/TeamMembers.tsx` (created in WS-G, PR #192).
+- **Xero (Item 11 / Part O.2) source:** memory key `bsuite_backlog_2026_post_n` (2026-04-22, "HUMAN-ACTION BLOCKERS" #1). Restored 2026-04-27 — see signoff doc §"Restoration Errata".
