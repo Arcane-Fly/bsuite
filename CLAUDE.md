@@ -90,9 +90,9 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 | Mechanism | Purpose | Used By |
 |-----------|---------|---------|
 | **Supabase Native Auth** | Email/password + Google/Azure AD via GoTrue | All 6 apps |
-| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden, Throughput (as clients) |
+| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden, Throughput, **Conduit** (as clients) |
 
-**Conduit** uses Supabase Native Auth via `@supabase/ssr` (no BS OAuth 2.1 client registration, no `bs_oauth_state`, no `business-suite-oauth.ts`). However, since 2026-03 (PR #102 / commit `8a3143e`), Conduit's `/auth/login` is a **redirect-stub that bounces unauthenticated visitors to BSU's native `/login`**; once authenticated, the `.crm7.app` shared cookie (`business_suite_auth`) lets Conduit treat that session as its own. So Conduit IS a cookie-SSO consumer with delegated login UI, even though its auth mechanism remains Supabase native.
+**All five client apps — CRM7, R80.3, Braden, Throughput, AND Conduit — are full BSU OAuth 2.1 PKCE clients.** No app maintains its own separate OAuth flow. (Frozen #5 corrected 2026-04-28; WS-α — superseded the prior 2026-04-27 "Conduit cookie-SSO with delegated UI" doctrine carve-out, which was a doctrine-investigation anti-pattern. Conduit now mirrors the throughput pattern: imports `signInWithBusinessSuite` / `exchangeCodeForTokens` / `startBSTokenRefresh` from `@bsuite/auth`, dual-purpose callback at `/auth/callback`, BS OAuth tokens stored in localStorage with `bs_*` prefix.)
 
 #### OAuth Client Registry
 
@@ -102,22 +102,23 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 | **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` |
 | **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` |
 | **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` |
+| **Conduit** | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit.crm7.app` |
 
 **OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
 **Redirect URI pattern:** `{origin}/auth/callback` for all clients
 
 #### Cookie SSO (`.crm7.app` subdomains)
 
-BSU, CRM7, R80.3, Throughput, **and Conduit** share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 instead. Conduit uses `@supabase/ssr` server-managed cookies AND participates in the shared cookie via the `business_suite_auth` storage key (verified `conduit/src/lib/supabase/{client,server,middleware}.ts:22|25|55`); its `/auth/login` is a redirect stub to BSU's `/login` page (the BSU page itself, not BSU's OAuth consent surface).
+BSU, CRM7, R80.3, Throughput, and Conduit share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 only (no shared cookie). Conduit additionally uses `@supabase/ssr` for server-managed cookies — both layers coexist (the BS OAuth tokens live in localStorage with `bs_*` prefix, the Supabase session lives in the shared `business_suite_auth` cookie).
 
 #### Critical Auth Rules
 
 1. **All `.crm7.app` Supabase clients MUST use `cookieStorage`** with `domain=.crm7.app` and `storageKey: 'business_suite_auth'`
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
-4. **CRM7 callback is dual-purpose** — checks `sessionStorage` for `bs_oauth_state` to distinguish flows
-5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage, systems run in parallel
-6. **`startBSTokenRefresh()` is wired** in all 4 client apps (CRM7, R80.3, Braden, Throughput) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
+4. **Conduit + CRM7 callbacks are dual-purpose** — check `sessionStorage` for `bs_oauth_state` to distinguish BS OAuth flow from Supabase native PKCE
+5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage (`bs_*` prefix), systems run in parallel
+6. **`startBSTokenRefresh()` is wired** in all 5 client apps (CRM7, R80.3, Braden, Throughput, Conduit) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 
 #### Key Auth Files
 
@@ -128,7 +129,7 @@ BSU, CRM7, R80.3, Throughput, **and Conduit** share a Supabase session via `cook
 | **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/AuthCallback.tsx` |
 | **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/AuthCallback.tsx` |
 | **Throughput** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/AuthCallback.tsx` |
-| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/app/auth/callback/route.ts` |
+| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | `src/lib/business-suite-oauth.ts` | `src/app/auth/callback/page.tsx` (dual) |
 
 ## Shared Packages (npm)
 
