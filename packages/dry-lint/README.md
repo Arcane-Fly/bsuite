@@ -172,15 +172,23 @@ Bump the `@bsuite/dry-lint` version (patch for new tables, minor for owner moves
 
 ---
 
-## Known violations (PHASE 2 fix targets)
+## Known violations and enforcement posture
 
-Per `docs/20260423-cross-app-write-audit-v1.00W.md` V5–V10, the rule will (intentionally) fire on these existing sites until WS-I PHASE 2 lands:
+Consumer apps should wire `bsuite/no-cross-app-write` as `error`. Pre-existing
+legacy write paths must be isolated with narrow per-file overrides in the
+consumer ESLint config; do not keep the base rule in warn-mode.
 
-- BSU `src/pages/Embed/LeadForm.tsx:109` — `.from('leads').insert()` (P1-1)
-- BSU `src/lib/ideaService.ts:60` — `.from('ideas').update()` (P1-2)
-- Throughput `src/lib/teamPermissions.ts:302` — `.from('team_members').update()` (P1-6)
+The 2026-04-27 Phase 2D promotion moved BSU, CRM7, Conduit, R80.3, Braden, and
+Throughput to error-level enforcement while preserving documented exception
+sets for the Phase 5 ownership-relocation work.
 
-Until they are fixed, consumer ESLint configs should wire the rule as `warn`, not `error`.
+Run the dry-run helper after ownership-map edits to identify any exception list
+that can be removed:
+
+```bash
+pnpm --filter @bsuite/dry-lint build
+node packages/dry-lint/scripts/dry-run.mjs
+```
 
 ---
 
