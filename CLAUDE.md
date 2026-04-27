@@ -35,10 +35,9 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `throughput`, `shared`, `docs
 
 - **D2C Neon Electric theme** for: business-suite-unified, crm7, conduit, R80.3
   - See `docs/20260228-d2c-theme-specification-v1.00A.md` for the active palette and implementation
-  - Primary: Electric Blue `oklch(0.546 0.215 262.9)`, Accent: Electric Cyan `oklch(0.769 0.132 191.7)`
-  - Dark mode: deep navy `oklch(0.13 0.02 260)`, Light mode: off-white `oklch(0.96 0 0)`
-  - **Color format rule: oklch mandatory.** Never add new hex/rgb color tokens. Hex/rgb only acceptable for third-party component defaults or legacy compatibility tokens. See contributing standards §5.
-- **Corporate branding** for: braden (braden.com.au) — exempt from oklch rule
+  - Primary: Electric Blue `#2563eb`, Accent: Electric Cyan `#00cec9`
+  - Dark mode: deep navy `#0a0e1a`, Light mode: off-white `#f2f2f2`
+- **Corporate branding** for: braden (braden.com.au)
   - Primary: Braden Red `#ab233a`, Accent: Braden Gold `#cbb26a`
   - Do NOT apply D2C theme to braden
 
@@ -91,9 +90,9 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 | Mechanism | Purpose | Used By |
 |-----------|---------|---------|
 | **Supabase Native Auth** | Email/password + Google/Azure AD via GoTrue | All 6 apps |
-| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden, Throughput (as clients) |
+| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is OAuth server | CRM7, R80.3, Braden, Throughput, **Conduit** (as clients) |
 
-**Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
+**All five client apps — CRM7, R80.3, Braden, Throughput, AND Conduit — are full BSU OAuth 2.1 PKCE clients.** No app maintains its own separate OAuth flow. (Frozen #5 corrected 2026-04-28; WS-α — superseded the prior 2026-04-27 "Conduit cookie-SSO with delegated UI" doctrine carve-out, which was a doctrine-investigation anti-pattern. Conduit now mirrors the throughput pattern: imports `signInWithBusinessSuite` / `exchangeCodeForTokens` / `startBSTokenRefresh` from `@bsuite/auth`, dual-purpose callback at `/auth/callback`, BS OAuth tokens stored in localStorage with `bs_*` prefix.)
 
 #### OAuth Client Registry
 
@@ -103,22 +102,23 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 | **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` |
 | **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` |
 | **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` |
+| **Conduit** | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit.crm7.app` |
 
 **OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
 **Redirect URI pattern:** `{origin}/auth/callback` for all clients
 
 #### Cookie SSO (`.crm7.app` subdomains)
 
-BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 instead. Conduit uses `@supabase/ssr` server-managed cookies and does not participate.
+BSU, CRM7, R80.3, Throughput, and Conduit share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 only (no shared cookie). Conduit additionally uses `@supabase/ssr` for server-managed cookies — both layers coexist (the BS OAuth tokens live in localStorage with `bs_*` prefix, the Supabase session lives in the shared `business_suite_auth` cookie).
 
 #### Critical Auth Rules
 
 1. **All `.crm7.app` Supabase clients MUST use `cookieStorage`** with `domain=.crm7.app` and `storageKey: 'business_suite_auth'`
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
-4. **CRM7 callback is dual-purpose** — checks `sessionStorage` for `bs_oauth_state` to distinguish flows
-5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage, systems run in parallel
-6. **`startBSTokenRefresh()` is wired** in all 4 client apps (CRM7, R80.3, Braden, Throughput) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
+4. **Conduit + CRM7 callbacks are dual-purpose** — check `sessionStorage` for `bs_oauth_state` to distinguish BS OAuth flow from Supabase native PKCE
+5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage (`bs_*` prefix), systems run in parallel
+6. **`startBSTokenRefresh()` is wired** in all 5 client apps (CRM7, R80.3, Braden, Throughput, Conduit) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 
 #### Key Auth Files
 
@@ -129,7 +129,7 @@ BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` wi
 | **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/AuthCallback.tsx` |
 | **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/AuthCallback.tsx` |
 | **Throughput** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/pages/auth/AuthCallback.tsx` |
-| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/app/auth/callback/route.ts` |
+| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | `src/lib/business-suite-oauth.ts` | `src/app/auth/callback/page.tsx` (dual) |
 
 ## Shared Packages (npm)
 
@@ -164,7 +164,7 @@ Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..`
 
 - `docs/20260227-contributing-standards-guide-v1.00A.md` — full quality standards
 - `docs/20260228-d2c-theme-specification-v1.00A.md` — active D2C theme specification
-- `docs/20260227-dry-one-shot-architecture-v1.01A.md` — entity ownership and DRY patterns (v1.01A: Phase 1–6 gap closure)
+- `docs/20260227-dry-one-shot-architecture-v1.00A.md` — entity ownership and DRY patterns
 - `docs/20260227-auth-map-reference-v1.00A.md` — authentication architecture
 
 ## Persistent Memory Protocol
@@ -248,68 +248,3 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 - Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
 - Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
 - **Anomaly:** ships with `package-lock.json` (npm), not `pnpm-lock.yaml`. Tracked separately for consolidation across the suite.
-
-## Theme & Colour Tokens (updated 2026-04-22)
-
-- **Package:** `@bsuite/theme v0.2.0` is the single source of truth for all colour tokens
-- **Import:** Every D2C app global CSS starts with `@import '@bsuite/theme/css';`
-- **OKLCH only:** Never use hex, hsl(), or rgba() for colour tokens in D2C apps
-- **Semantic classes:** Use `text-foreground`, `bg-card`, `border-border`, `shadow-elev-*` — not `text-slate-*` or `bg-gray-*`
-- **Token mapping:** `packages/theme/docs/TOKEN-MAPPING.md` — always consult before adding a colour
-- **Braden exemption:** `braden/` is BRADEN-EXEMPT from the oklch rule; use corporate Red/Gold tokens
-- **CI gate:** `bsuite/no-hardcoded-colours` ESLint rule will ERROR on any new hardcoded colour in D2C apps
-- **BrandingProvider:** Wrap app root in `<BrandingProvider supabaseClient={supabase}>` inside `<ThemeProvider>` for runtime tenant white-labelling
-
----
-
-## Phase 5 — Schema + Page Builder (2026-04-22)
-
-### New packages
-- `@bsuite/nav-core@0.5.0` — exports `mergeNavConfigs(base, overlay)` for additive DB nav merging
-- `@bsuite/schema-registry@0.1.0` — `useTenantSchema`, `useTenantPageLayout`, `useTenantNavigation`, `TenantLayoutSlot`, 5 widgets
-
-### useTenantSchema pattern
-```typescript
-import { useTenantSchema } from '@bsuite/schema-registry/react';
-const { data } = useTenantSchema(supabase, 'crm7'); // AppScope: 'bsu'|'crm7'|'conduit'|'r80'|'braden'|'all'
-```
-
-### useTenantNavigation + mergeNavConfigs pattern
-```typescript
-import { useTenantNavigation } from '@bsuite/schema-registry/react';
-import { mergeNavConfigs } from '@bsuite/nav-core';
-const { navConfig: dbNav } = useTenantNavigation(supabase, 'crm7');
-const merged = dbNav ? mergeNavConfigs(STATIC_NAV_CONFIG, dbNav) : STATIC_NAV_CONFIG;
-```
-
-### TenantLayoutSlot pattern
-```tsx
-import { TenantLayoutSlot } from '@bsuite/schema-registry/react';
-<TenantLayoutSlot supabase={supabase} route='/dashboard' appScope='crm7' />
-// Renders null if no layout authored — never throws, always safe to add
-```
-
-### Migration naming convention
-- Phase 5 (Perplexity): `20260423_phase5_*` in BSU + CRM7 supabase/migrations
-- Phase 4 (CC): `20260423_phase4_*`
-- Phase 6 (CC): `20260423_phase6_*`
-
-### Theme rules
-- All color values in CSS: oklch() only — no hex, no rgba()
-- `platform_branding` table: access via `platform_branding_public` view (excludes force_override_tenant_ids)
-- ESLint rule `no-hardcoded-colors` is `error` in all D2C apps (bsu, crm7, conduit, r80, throughput)
-
-### DB pre-conditions (PR 5.0 — MERGED to development)
-New tables/functions landed in `supabase/migrations/20260423_phase5_*`:
-- `tenant_page_layouts` — stores authored page layout JSON per tenant + route + app_scope
-- `tenant_navigation` — stores nav overlay JSON per tenant + app_scope
-- `tenant_field_definitions` — per-tenant field schema overrides
-- `descendants_of(uuid)` / `ancestors_of(uuid)` — recursive tenant hierarchy helpers
-- RLS policies on all three tables (tenant-scoped reads, service_role writes)
-
-### Phase 5 PR status
-| PR | Package/Feature | Branch | Status |
-|----|----------------|--------|--------|
-| 5.0 | DB pre-conditions | merged | MERGED to development |
-| 5.1 | `@bsuite/nav-core@0.5.0` | merged | MERGED + PUBLISHED |
-| 5.2 | `@bsuite/schema-registry@0.1.0` | `feat/phase5-schema-registry` | IN PROGRESS |

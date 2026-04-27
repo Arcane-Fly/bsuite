@@ -3,5 +3,10 @@ export type { ThemeProviderProps } from './ThemeProvider'
 export { useTheme } from './useTheme'
 export type { ThemeContextValue, ThemeMode, ResolvedTheme } from '../index'
 export { THEME_STORAGE_KEY } from '../index'
-export { BrandingProvider, BrandingContext, BRANDING_STORAGE_KEY, BRANDING_OVERRIDE_FLAG } from './BrandingProvider'
+export {
+  BrandingProvider,
+  BrandingContext,
+  BRANDING_STORAGE_KEY,
+  BRANDING_OVERRIDE_FLAG,
+} from './BrandingProvider'
 export type { TenantBranding, BrandingContextValue } from './BrandingProvider'

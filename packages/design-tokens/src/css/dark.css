@@ -14,49 +14,49 @@
 
 .dark {
   /* Backgrounds — deep navy D2C palette */
-  --bg-body:            oklch(0.166 0.026 269.4);
-  --bg-surface:         oklch(0.242 0.03 269.9);
-  --bg-panel:           oklch(0.242 0.03 269.9 / 0.96);
-  --bg-header:          oklch(0.196 0.033 272);
-  --bg-footer:          oklch(0.242 0.03 269.9);
-  --bg-input:           oklch(1 0 0 / 0.06);
-  --bg-tertiary:        oklch(0.275 0.036 267);
-  --bg-interactive:     oklch(0.326 0.036 266.7);
-  --bg-shell:           oklch(0.166 0.026 269.4);
-  --bg-shell-elevated:  oklch(0.242 0.03 269.9 / 0.82);
-  --bg-shell-accent:    oklch(0.39 0.035 265 / 0.72);
+  --bg-body:            #0a0e1a;
+  --bg-surface:         #111827;
+  --bg-panel:           rgba(17, 24, 39, 0.96);
+  --bg-header:          #0f1629;
+  --bg-footer:          #111827;
+  --bg-input:           rgba(255, 255, 255, 0.06);
+  --bg-tertiary:        #1a2332;
+  --bg-interactive:     #1e293b;
+  --bg-shell:           #0a0e1a;
+  --bg-shell-elevated:  rgba(26, 31, 46, 0.82);
+  --bg-shell-accent:    rgba(44, 52, 71, 0.72);
 
   /* Text */
-  --text-primary:   oklch(0.929 0.013 255.5);   /* slate-200 */
-  --text-secondary: oklch(0.704 0.04 256.8);    /* slate-400 */
-  --text-heading:   oklch(0.968 0.007 247.9);   /* slate-100 */
-  --text-muted:     oklch(0.554 0.046 257.4);   /* slate-500 */
-  --text-on-primary:oklch(0.166 0.026 269.4);
+  --text-primary:   #e2e8f0;   /* slate-200 */
+  --text-secondary: #94a3b8;   /* slate-400 */
+  --text-heading:   #f1f5f9;   /* slate-100 */
+  --text-muted:     #64748b;   /* slate-500 */
+  --text-on-primary:#0a0e1a;
 
   /* Borders */
-  --border-color:        oklch(1 0 0 / 0.10);
-  --border-color-strong: oklch(1 0 0 / 0.18);
-  --border-shell:        oklch(0.769 0.132 191.7 / 0.18);
+  --border-color:        rgba(255, 255, 255, 0.10);
+  --border-color-strong: rgba(255, 255, 255, 0.18);
+  --border-shell:        rgba(0, 206, 201, 0.18);
 
   /* Status — brightened for dark backgrounds */
-  --color-success:        oklch(0.723 0.192 149.6);
-  --color-success-bg:     oklch(0.723 0.192 149.6 / 0.12);
-  --color-success-border: oklch(0.723 0.192 149.6 / 0.28);
-  --color-warning:        oklch(0.769 0.188 70.08);
-  --color-warning-bg:     oklch(0.769 0.188 70.08 / 0.12);
-  --color-warning-border: oklch(0.769 0.188 70.08 / 0.28);
-  --color-error:          oklch(0.637 0.237 25.331);
-  --color-error-bg:       oklch(0.637 0.237 25.331 / 0.12);
-  --color-error-border:   oklch(0.637 0.237 25.331 / 0.28);
-  --color-info:           oklch(0.746 0.16 232.661);
-  --color-info-bg:        oklch(0.746 0.16 232.661 / 0.12);
-  --color-info-border:    oklch(0.746 0.16 232.661 / 0.28);
+  --color-success:        #10b981;
+  --color-success-bg:     rgba(16, 185, 129, 0.12);
+  --color-success-border: rgba(16, 185, 129, 0.28);
+  --color-warning:        #f59e0b;
+  --color-warning-bg:     rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.28);
+  --color-error:          #ef4444;
+  --color-error-bg:       rgba(239, 68, 68, 0.12);
+  --color-error-border:   rgba(239, 68, 68, 0.28);
+  --color-info:           #38bdf8;
+  --color-info-bg:        rgba(56, 189, 248, 0.12);
+  --color-info-border:    rgba(56, 189, 248, 0.28);
 
   /* Stat value — D2C electric cyan for dark mode metric display */
-  --stat-value-color: oklch(0.769 0.132 191.7);
+  --stat-value-color: #00cec9;
 
   /* Shadows — deeper, more diffuse on dark backgrounds */
-  --shadow-shell:      0 24px 60px -36px oklch(0.07 0.01 265 / 0.80);
+  --shadow-shell:      0 24px 60px -36px rgba(2, 6, 23, 0.80);
   --shadow-shell-glow: 0 18px 45px -30px oklch(0.769 0.132 191.7 / 0.28);
   --shadow-button:       0 0 20px oklch(0.769 0.132 191.7 / 0.36);
   --shadow-button-hover: 0 0 36px oklch(0.769 0.132 191.7 / 0.54);

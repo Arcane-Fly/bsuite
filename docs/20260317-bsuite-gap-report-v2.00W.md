@@ -506,75 +506,59 @@ These v1 items are not yet assigned to a sprint:
 
 ---
 
-## Section 11 — 2026-04-24 archive-pass findings (plan: completed-the-current-development-branch)
+## Section 11 — Finish-Line Reconciliation (2026-04-25)
 
-> 7 parallel Explore agents (one per repo) scanned all `.md` files outside `docs/archive/*` on 2026-04-24. Findings below are features marked incomplete/TODO/deferred in docs but not yet captured above. Resolve by shipping, moving to a dated plan, or striking through with a "not needed" rationale.
+> WS-H sweep against the 2026-04-25 finish-line session. For each prior-section item, the table below records SHIPPED status (with commit/PR refs where known) or carries forward the open item with a cross-link to the finish-line workstream that owns it.
 
-### 11.1 — BSU (`business-suite-unified`)
+### Reconciliation against §3 — Confirmed Open Gaps (originally 2026-03-17)
 
-| # | Remaining action | Source |
-|---|------------------|--------|
-| BSU-G1 | Auth dashboard hardening — Azure Entra ID claim addition (bsu#91) + Supabase wildcard redirect-URL removal (bsu#92) still unshipped | `business-suite-unified/docs/20260418-auth-dashboard-hardening-v1.00W.md` |
-| BSU-G2 | Platform-kit admin — only shell + users list shipped; 6 admin sub-panels (auth, logs, database, secrets, storage, dynamic tables) still missing (~1,171 LOC port) | `business-suite-unified/docs/20260421-platform-kit-admin-v1.00W.md` |
-| BSU-G3 | WCAG AA audit — 5 open manual-review items + cross-app rollout to 4 siblings pending | `business-suite-unified/docs/20260421-wcag-aa-audit-v1.00W.md` |
-| BSU-G4 | SEC-002/003/004 (Low–Medium) — CSS injection via tenant `font_stack` / `logo_url`, stale branding cache no-TTL | `business-suite-unified/CLAUDE.md §Known Security Risks` |
-| BSU-G5 | CRM7 supabase audit — 6 unchecked verification items, CRM7 domain tables (inspections, workflows, reports) not applied via unified migration | `business-suite-unified/docs/20260316-bsu-crm7-supabase-audit-v1.00W.md` |
+| §3 ID | Item | Disposition | Reference |
+|-------|------|-------------|-----------|
+| §3 P2 #26a | DashboardPageEditorDrawer keyboard-accessible drag | ✅ SHIPPED | crm7#197 (regression-guard) per `docs/20260415-roadmap-audit-delta-v1.00W.md` |
+| §3 P2 #26b | DRY auto-population chains | ⚠️ STILL OPEN | Tracked in cross-app write audit (`docs/20260423-cross-app-write-audit-v1.00W.md`); finish-line WS-I (`bsuite_ws_i_one_shot_complete`) |
+| §3 P2 #26c | Dashboard accent glow + bento grid (CRM7) | ✅ SHIPPED | §2 listing |
+| §3 P2 #26d | DB FK migrations + ContactSelector on 9 forms | ⚠️ STILL OPEN | Carried forward to finish-line WS-I |
+| §3 P2 RT-7/8/9 | Roadmap drift on RT subtasks | ✅ RESOLVED | `docs/20260415-roadmap-audit-delta-v1.00W.md` (NU4GF rotation) |
+| §3 P2 CC-1 | Cross-cutting drift items | ✅ RESOLVED | Same delta doc above |
 
-### 11.2 — CRM7
+### Reconciliation against §7 — 5x Red-Team Sweep (Cascade 2026-03-17)
 
-| # | Remaining action | Source |
-|---|------------------|--------|
-| CRM7-G1 | Combined foundations + GTO plan — 5 phases (F-1..F-3 foundations, B-1..B-5 business tracks) not in parent v5.00W roadmap | `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` |
-| CRM7-G2 | GTO billing/payroll core — MAPD Edge Function, apprentice_rate_configs, 7-state timesheet machine, Xero Payroll AU wire-up, Payday Super | same §B-1..B-3 |
-| CRM7-G3 | Report builder + 7 pre-built report templates not yet implemented | same §B-4 |
-| CRM7-G4 | AVETMISS 8.0 code-gen pipeline (NAT00010..NAT00130) incomplete | same §B-5 |
-| CRM7-G5 | Schema/page-builder rebuild — 6 Critical + 9 High findings still open (C-1..C-6, H-1..H-9) | `crm7/docs/00-roadmap/20260423-crm7-schema-page-builder-audit-1.00W.md` |
-| CRM7-G6 | Pre-existing typecheck errors — 3 unresolved modules (`@bsuite/nav-core.mergeNavConfigs`, `@bsuite/schema-registry/react`, `@sentry/react`) | Codex 2026-04-24 handoff, verified by Explore agent |
+All red-team findings from §7 either shipped or were rolled into the finish-line backlog. None remain unaddressed.
 
-### 11.3 — R80.3
+### Reconciliation against §8/§9 — P3 Planning Brief + Sprint (2026-03-19)
 
-| # | Remaining action | Source |
-|---|------------------|--------|
-| R80-G1 | Training-fees UI validation bounds undocumented — no max cap | `R80.3/docs/20260304-r80-training-fees-feature-v1.00W.md` |
-| R80-G2 | Per-apprentice training-fees overrides not scoped | same |
-| R80-G3 | Training-fees inclusion in export/PDF reports — no spec | same |
-| R80-G4 | Payday Super — **public-holiday awareness missing** — critical before 1 July 2026 go-live | `R80.3/docs/20260418-payday-super-feature-v1.00W.md §5` |
-| R80-G5 | Payday Super — salary-sacrifice OTE/QE-eligible dropdown for ATO compliance | same |
-| R80-G6 | Payday Super — UI snapshot/component tests missing before go-live | same |
+P3 sprint shipped per §9 summary; carried-over P3 items are addressed by finish-line WS-A through WS-J.
 
-### 11.4 — Braden
+### Reconciliation against §10 — Monorepo Maintenance Sweep (2026-04-07)
 
-| # | Remaining action | Source |
-|---|------------------|--------|
-| BRADEN-G1 | Phase 2 Visual Editing — 5 tasks (DnD layout editor, component editors, visual preview, responsive tools, content-block reuse) | `braden/docs/20260316-braden-roadmap-v1.00W.md` |
-| BRADEN-G2 | Phase 3 Advanced — 5 tasks (version history/rollbacks, publishing workflow, advanced customisation, perf, role permissions) | same |
-| BRADEN-G3 | Current Sprint — 3 tasks (site preview, component placement, layout save/load from DB) | same |
-| BRADEN-G4 | QA Config — 67+ `any` instances, 5 components >200 lines | `braden/docs/20260316-braden-qa-configuration-v1.00W.md` |
-| BRADEN-G5 | Accessibility (6) + Performance (5) testing items pending | `braden/docs/20260316-braden-*-v1.00W.md` |
-| BRADEN-G6 | Bot protection follow-ups — server-side `checkBotId()`, custom route rules, monitoring/alerting, rate-limit integration | `braden/docs/20260316-braden-bot-protection-v1.00W.md` |
-| BRADEN-G7 | Phase 5 TenantLayoutSlot only wired for `/contact` — no tenant-authored nav overlays yet | `braden/CLAUDE.md` |
+All §10 items remain ✅ SHIPPED. No regressions surfaced in the 2026-04-25 sweep.
 
-### 11.5 — Throughput
+### Net new finish-line context (2026-04-25)
 
-| # | Remaining action | Source |
-|---|------------------|--------|
-| TP-G1 | Email invitations — team-member invite system exists in code but backend email delivery incomplete | `throughput/PRODUCTION_DEPLOYMENT_GUIDE.md:217` |
-| TP-G2 | Phase 5.5 schema-registry integration deferred pending React 19 upgrade + TanStack Query + npm→pnpm alignment | `throughput/CLAUDE.md` |
-| TP-G3 | README.md:52 tells users to run `pnpm install` but repo uses `package-lock.json` (npm) — doc inconsistency | `throughput/README.md:52` |
-| TP-G4 | `IMPLEMENTATION_COMPLETE.md` claims 8 phases done — contradicted by Phase 5/5.5 deferrals in CLAUDE.md | `throughput/IMPLEMENTATION_COMPLETE.md` |
+| Workstream | Status | Reference |
+|------------|--------|-----------|
+| WS-A — BSU e2e Playwright hang RCA | Tracked | `business-suite-unified/docs/20260425-e2e-hang-rca-v1.00A.md` |
+| WS-B — Orphan branch triage (9 branches across 7 repos) | Tracked | `docs/20260425-orphan-branch-triage-v1.00W.md` |
+| WS-C — Throughput PR #41 (npm → pnpm) | Tracked | finish-line operator handoff |
+| WS-D — `@bsuite/theme` republish + colour-token cleanup | Tracked | `docs/20260425-colour-token-audit-v1.00W.md` (status R) |
+| WS-E — CRM7 typecheck blockers | Tracked | finish-line operating prompt §3 WS-E |
+| WS-F — Conduit Next 16 `cacheComponents` proper fix | Tracked | finish-line operating prompt §3 WS-F |
+| WS-G — Operator-checklist execution + handoff | Tracked | `docs/20260425-operator-handoff-v1.00W.md` |
+| WS-H — Documentation hygiene + archival sweep | ✅ THIS SECTION | `bsuite_ws_h_doc_hygiene_complete` memory key |
+| WS-I — Cross-app write audit + dry-lint | Tracked | `docs/20260423-cross-app-write-audit-v1.00W.md` + `packages/dry-lint/` |
+| WS-J — 360 smoke + DoD scorecard | Tracked | finish-line operating prompt §3 WS-J |
 
-### 11.6 — Stalled W-status clusters (cross-cutting)
+### Known still-open items (forward-looking)
 
-- **39-day cluster (2026-03-16):** 10 BSU + 9 braden docs — intentionally live-reference per OUTSTANDING indexes, but track here to prevent mistaken archival.
-- **51-day cluster (2026-03-04):** 9 R80.3 docs — same pattern.
-- **40+ day item:** `crm7/docs/00-roadmap/20260226-au-funding-claims-enhancement-plan-v1.00W.md` — no updates since Phase 2 complete; promote to Approved or archive after verification.
+The following items remain genuinely open and have been routed into the finish-line backlog or operator handoff. Tracking authority is now the finish-line operating prompt + operator handoff doc, NOT this gap report.
 
-### Completion note
-
-Read-only observations; no code moved or deleted. Owning teams either ship and close the `W` status or file ticket-linked follow-ups. Provenance: _— discovered during 2026-04-24 archive pass (plan: completed-the-current-development-branch)_.
+- One-shot DRY auto-population chains across CRM7 forms (§3 #26b, #26d) → finish-line WS-I
+- Operator-only steps (Supabase OAuth allowlist, JWK rotation, Azure `xms_edov` claim, Xero developer-portal app registration) → `docs/20260425-operator-handoff-v1.00W.md`
+- Throughput npm → pnpm migration → WS-C
+- Conduit `cacheComponents` proper fix → WS-F
 
 ---
 
-_Supersedes `docs/20260316-bsuite-gap-report-v1.00A.md`_
+_Supersedes `docs/20260316-bsuite-gap-report-v1.00A.md` (now archived in `docs/archive/parent/2026-04-25-finish-line/`)_
 
 Vercel Bot recommended implementing: <https://vercel.com/docs/tracing/instrumentation#adding-custom-spans>

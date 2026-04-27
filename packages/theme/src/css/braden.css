@@ -1,221 +1,209 @@
 /*
- * @bsuite/theme — Braden corporate brand baseline
+ * @bsuite/theme — Braden Corporate brand baseline
+ * Version 0.3.0
  *
- * Braden is a separate brand from D2C Neon Electric. This file is the
- * canonical source of truth for Braden corporate colours and is imported
- * ONLY by the braden submodule. Every other app imports `./vars.css`
- * (the D2C baseline) instead.
+ * Usage (braden.com.au only):
+ *   @import '@bsuite/theme/braden-css';
  *
- *   braden/src/index.css:
- *     @import '@bsuite/theme/braden-css';
- *     @import '@bsuite/theme/preset-v4.css';
+ * This file is EXCLUSIVELY for the braden.com.au Corporate brand.
+ * NEVER import this into D2C webapp projects (crm7, conduit, BSU, R80.3).
+ * NEVER apply Neon Electric colours to braden.com.au surfaces.
  *
- * Architecture matches vars.css exactly:
- *   Layer 1 — Palette (Braden corporate: red / gold / navy)
- *   Layer 2 — Surfaces + 5-tier text scale
- *   Layer 3 — Role aliases (SAME CONTRACT as D2C — consumers
- *             interchangeable at the role level)
- *   Layer 4 — Shadcn semantic bridge
- *   Layer 5 — Text-on-fill inverse scale
+ * Architecture — same 5-layer structure as vars.css:
+ *   1. Palette  — --braden-red-*, --braden-gold-*, --braden-navy-*
+ *   2. Surface  — --braden-light-*, --braden-dark-*
+ *   3. Role     — --role-* (rebinds D2C role tokens to Braden values)
+ *   4. Shadcn   — --background, --foreground, etc. (same keys, Braden values)
+ *   5. App      — --app-primary, --app-accent
  *
- * Colourblind policy (platform-wide, enforced on every brand):
- *   --role-error and --role-destructive map to purple, NOT red.
- *   Braden Red is corporate identity. It is never bound to the error
- *   role, even though it is the corporate primary. This is deliberate —
- *   red-as-error is banned platform-wide.
+ * Colourblind policy is PRESERVED:
+ *   --role-error / --role-destructive = PURPLE (oklch(0.568 0.202 283.1))
+ *   Same as D2C — purple error is a cross-brand system requirement.
+ *
+ * Eye-strain policy is PRESERVED:
+ *   Dark text capped at L=0.94. Light text capped at L=0.22 (navy hue 250).
+ *
+ * OKLCH format mandatory for all new tokens. HSL values below are for
+ * legacy Tailwind v3 interop only, marked with LEGACY comments.
  */
 
+/* ============================================================
+   LAYER 1 — BRADEN CORPORATE PALETTE PRIMITIVES
+   ============================================================ */
 :root {
-  /* ===== Layer 1: Braden corporate palette ===== */
-  --braden-red: oklch(0.51 0.17 19);                 /* #ab233a — corporate primary */
-  --braden-gold: oklch(0.77 0.10 82);                /* #cbb26a — corporate accent */
-  --braden-navy: oklch(0.34 0.04 250);               /* #2c3e50 — corporate deep */
+  /* Primary — Braden Red scale */
+  --braden-red-50:  oklch(0.965 0.015  17);
+  --braden-red-100: oklch(0.930 0.035  17);
+  --braden-red-200: oklch(0.870 0.070  18);
+  --braden-red-300: oklch(0.780 0.110  18);
+  --braden-red-400: oklch(0.660 0.145  18);
+  --braden-red-500: oklch(0.550 0.175  18);   /* main brand red */
+  --braden-red-600: oklch(0.488 0.170  17.6); /* canonical –- oklch spec */
+  --braden-red-700: oklch(0.420 0.150  17);
+  --braden-red-800: oklch(0.340 0.120  16);
+  --braden-red-900: oklch(0.260 0.090  15);
 
-  /* Extended tints/shades — oklch keeps hue+chroma constant,
-   * only lightness shifts. Perceptually uniform scale. */
-  --braden-red-50: oklch(0.96 0.02 19);
-  --braden-red-100: oklch(0.92 0.04 19);
-  --braden-red-200: oklch(0.82 0.08 19);
-  --braden-red-300: oklch(0.72 0.12 19);
-  --braden-red-400: oklch(0.61 0.15 19);
-  --braden-red-500: oklch(0.51 0.17 19);             /* corporate primary */
-  --braden-red-600: oklch(0.46 0.17 19);
-  --braden-red-700: oklch(0.42 0.17 19);
-  --braden-red-800: oklch(0.36 0.15 19);
-  --braden-red-900: oklch(0.30 0.13 19);
+  /* Accent — Braden Gold scale */
+  --braden-gold-50:  oklch(0.980 0.015  88);
+  --braden-gold-100: oklch(0.955 0.035  89);
+  --braden-gold-200: oklch(0.910 0.060  90);
+  --braden-gold-300: oklch(0.860 0.078  91);
+  --braden-gold-400: oklch(0.829 0.073  91.8); /* light gold */
+  --braden-gold-500: oklch(0.769 0.096  90.9); /* canonical accent */
+  --braden-gold-600: oklch(0.711 0.115  89.5); /* bronze */
+  --braden-gold-700: oklch(0.630 0.110  88);
+  --braden-gold-800: oklch(0.520 0.090  86);
+  --braden-gold-900: oklch(0.400 0.065  84);
 
-  --braden-gold-50: oklch(0.97 0.02 82);
-  --braden-gold-100: oklch(0.93 0.05 82);
-  --braden-gold-200: oklch(0.87 0.08 82);
-  --braden-gold-300: oklch(0.82 0.09 82);
-  --braden-gold-400: oklch(0.79 0.10 82);
-  --braden-gold-500: oklch(0.77 0.10 82);            /* corporate accent */
-  --braden-gold-600: oklch(0.69 0.10 82);
-  --braden-gold-700: oklch(0.62 0.10 82);
-  --braden-gold-800: oklch(0.52 0.09 82);
-  --braden-gold-900: oklch(0.45 0.08 82);
+  /* Navy — secondary brand colour */
+  --braden-navy-50:  oklch(0.960 0.008 249);
+  --braden-navy-100: oklch(0.920 0.015 249);
+  --braden-navy-200: oklch(0.840 0.025 249);
+  --braden-navy-300: oklch(0.720 0.030 249);
+  --braden-navy-400: oklch(0.580 0.033 249);
+  --braden-navy-500: oklch(0.450 0.035 249);
+  --braden-navy-600: oklch(0.356 0.039 249);  /* canonical navy */
+  --braden-navy-700: oklch(0.280 0.030 248);
+  --braden-navy-800: oklch(0.200 0.022 248);
+  --braden-navy-900: oklch(0.130 0.015 248);
 
-  --braden-navy-50: oklch(0.96 0.01 250);
-  --braden-navy-100: oklch(0.88 0.02 250);
-  --braden-navy-200: oklch(0.76 0.03 250);
-  --braden-navy-300: oklch(0.62 0.035 250);
-  --braden-navy-400: oklch(0.48 0.04 250);
-  --braden-navy-500: oklch(0.34 0.04 250);           /* corporate deep */
-  --braden-navy-600: oklch(0.30 0.035 250);
-  --braden-navy-700: oklch(0.25 0.03 250);
-  --braden-navy-800: oklch(0.21 0.025 250);
-  --braden-navy-900: oklch(0.17 0.02 250);
+  /* Neutrals */
+  --braden-slate:   oklch(0.710 0.018 201.5);
+  --braden-sky:     oklch(0.653 0.135 242.7);
+  --braden-forest:  oklch(0.663 0.160 152.4);
+  --braden-lavender:oklch(0.577 0.153 315.3);
 
-  /* ===== Layer 2: Light theme surfaces + text =====
-   * Text scale: 5 tiers, hue-matched to navy 250 for brand coherence.
-   * All tiers WCAG AA/AAA verified against --light-bg-primary. */
-  --light-bg-primary: oklch(0.99 0 0);
-  --light-bg-secondary: oklch(0.975 0.002 250);
-  --light-bg-tertiary: oklch(0.96 0.003 250);
-  --light-bg-quaternary: oklch(0.935 0.005 250);
-  --light-bg-accent: oklch(1 0 0);
+  /* ============================================================
+     LAYER 2 — BRADEN SURFACE PRIMITIVES (light mode)
+     ============================================================ */
+  --braden-light-bg-body:    oklch(0.980 0.002 50);   /* warm white */
+  --braden-light-bg-surface: oklch(0.996 0.001 50);   /* near white */
+  --braden-light-bg-panel:   oklch(1.000 0     0);    /* white */
+  --braden-light-bg-input:   oklch(0.972 0.003 250);  /* cool light grey */
 
-  --light-text-primary: oklch(0.22 0.020 250);       /* body     — 13.1:1 ✓ AAA */
-  --light-text-secondary: oklch(0.38 0.022 250);     /* labels   — 8.0:1  ✓ AAA */
-  --light-text-muted: oklch(0.52 0.020 250);         /* meta     — 4.9:1  ✓ AA  */
-  --light-text-subtle: oklch(0.60 0.014 250);        /* placeholders — large text only */
-  --light-text-disabled: oklch(0.72 0.010 250);      /* pair with icon cue */
+  /* Braden light text scale — hue 250 (navy cast), capped L=0.22 */
+  --braden-light-text-primary:   oklch(0.22 0.020 250);  /* 13.2:1 ✓ AAA */
+  --braden-light-text-secondary: oklch(0.38 0.018 250);  /*  8.1:1 ✓ AAA */
+  --braden-light-text-muted:     oklch(0.52 0.018 250);  /*  4.9:1 ✓ AA  */
+  --braden-light-text-subtle:    oklch(0.60 0.012 250);  /*  3.8:1 ✓ AA large */
+  --braden-light-text-disabled:  oklch(0.72 0.010 250);
 
-  --light-border: oklch(0.92 0.005 250);
-  --light-hover: oklch(0.96 0.003 250);
+  --braden-light-border: oklch(0.900 0.008 248);
+  --braden-light-hover:  oklch(0.950 0.005 248);
 
-  /* ===== Layer 2: Dark theme surfaces + text =====
-   * Dark surfaces derive from braden-navy. Text capped at L=0.93
-   * for eye-strain safety; hue 250 matches surface cast. */
-  --dark-bg-primary: var(--braden-navy-900);
-  --dark-bg-secondary: var(--braden-navy-700);
-  --dark-bg-tertiary: oklch(0.31 0.03 250);
-  --dark-bg-quaternary: oklch(0.36 0.03 250);
-  --dark-bg-accent: oklch(0.28 0.03 250);
+  /* ============================================================
+     LAYER 3 — ROLE ALIASES (Braden light-mode rebind)
+     Reuses the same --role-* names as vars.css so components
+     are brand-agnostic at the role layer.
+     ============================================================ */
+  --role-primary:     var(--braden-red-600);   /* oklch(0.488 0.170 17.6)  */
+  --role-secondary:   var(--braden-navy-600);  /* oklch(0.356 0.039 249)   */
+  --role-accent:      var(--braden-gold-500);  /* oklch(0.769 0.096 90.9)  */
 
-  --dark-text-primary: oklch(0.93 0.014 250);        /* body     — 13.1:1 ✓ AAA */
-  --dark-text-secondary: oklch(0.80 0.018 250);      /* labels   — 9.0:1  ✓ AAA */
-  --dark-text-muted: oklch(0.66 0.020 250);          /* meta     — 5.2:1  ✓ AA  */
-  --dark-text-subtle: oklch(0.54 0.016 250);         /* placeholders — large text only */
-  --dark-text-disabled: oklch(0.42 0.010 250);       /* pair with icon cue */
+  /* Colourblind policy: SAME purple as D2C — cross-brand requirement */
+  --role-error:       oklch(0.568 0.202 283.1);
+  --role-destructive: oklch(0.568 0.202 283.1);
+  --role-warning:     oklch(0.728 0.168  22.5);
+  --role-success:     oklch(0.663 0.160 152.4);  /* braden forest green */
+  --role-info:        var(--braden-sky);
 
-  --dark-border: oklch(0.42 0.02 250);
-  --dark-hover: oklch(0.36 0.03 250);
+  /* Text roles */
+  --role-text-body:      var(--braden-light-text-primary);
+  --role-text-secondary: var(--braden-light-text-secondary);
+  --role-text-muted:     var(--braden-light-text-muted);
+  --role-text-subtle:    var(--braden-light-text-subtle);
+  --role-text-disabled:  var(--braden-light-text-disabled);
+  --role-text-heading:   oklch(0.19 0.025 252);  /* near-navy — 14.8:1 ✓ AAA */
 
-  /* ===== Legacy text aliases (backward compat) ===== */
-  --light-text-tertiary: var(--light-text-muted);
-  --light-text-quaternary: var(--light-text-subtle);
-  --dark-text-tertiary: var(--dark-text-muted);
-  --dark-text-quaternary: var(--dark-text-subtle);
+  /* Surface roles */
+  --role-bg-body:    var(--braden-light-bg-body);
+  --role-bg-surface: var(--braden-light-bg-surface);
+  --role-bg-panel:   var(--braden-light-bg-panel);
+  --role-bg-input:   var(--braden-light-bg-input);
+  --role-border:     var(--braden-light-border);
 
-  /* ===== Layer 3: Role aliases (SAME CONTRACT as D2C) =====
-   * The role contract is brand-agnostic. Only the binding values
-   * differ. Consumers that use role classes work identically on
-   * both brands. */
-  --role-primary: var(--braden-red-500);             /* corporate red */
-  --role-accent: var(--braden-gold-500);             /* corporate gold */
-  --role-info: oklch(0.58 0.14 230);                 /* neutral blue — NOT red */
-  --role-success: oklch(0.62 0.15 150);              /* green, same function as D2C */
-  --role-warning: var(--braden-gold-700);            /* gold reads as warning on this brand */
-  --role-error: oklch(0.58 0.22 295);                /* PURPLE — platform policy, never red */
-  --role-destructive: oklch(0.58 0.22 295);          /* same — bans red-as-destructive */
-  --role-neutral: oklch(0.55 0.02 250);
+  /* Inverse text on coloured fills */
+  --text-on-primary:  oklch(0.99 0    0);     /* on red L≈0.49 — 7.8:1 ✓ AA */
+  --text-on-accent:   oklch(0.17 0.02 250);   /* on gold L≈0.77 — dark text */
+  --text-on-error:    oklch(0.99 0    0);     /* on purple */
+  --text-on-success:  oklch(0.17 0.02 250);
+  --text-on-warning:  oklch(0.17 0.02 250);
 
-  /* ===== Legacy status tokens (remapped to roles) ===== */
-  --status-success: var(--role-success);
-  --status-warning: var(--role-warning);
-  --status-error: var(--role-error);
-  --status-info: var(--role-info);
+  /* ============================================================
+     LAYER 4 — SHADCN BRIDGE (Braden values)
+     ============================================================ */
+  --background:         var(--braden-light-bg-body);
+  --foreground:         var(--braden-light-text-primary);
+  --card:               var(--braden-light-bg-panel);
+  --card-foreground:    var(--braden-light-text-primary);
+  --popover:            var(--braden-light-bg-panel);
+  --popover-foreground: var(--braden-light-text-primary);
+  --primary:            var(--braden-red-600);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary:          var(--braden-navy-600);
+  --secondary-foreground: oklch(0.99 0 0);
+  --muted:              var(--braden-light-bg-input);
+  --muted-foreground:   var(--braden-light-text-muted);
+  --accent:             var(--braden-gold-500);
+  --accent-foreground:  oklch(0.17 0.02 250);
+  --destructive:        oklch(0.568 0.202 283.1);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border:             var(--braden-light-border);
+  --input:              var(--braden-light-border);
+  --ring:               var(--braden-red-600);
 
-  /* ===== Layer 4: Shadcn semantic bridge ===== */
-  --background: var(--light-bg-primary);
-  --foreground: var(--light-text-primary);
-  --card: var(--light-bg-accent);
-  --card-foreground: var(--light-text-primary);
-  --popover: var(--light-bg-accent);
-  --popover-foreground: var(--light-text-primary);
-  --primary: var(--role-primary);
-  --primary-foreground: var(--text-on-primary);
-  --secondary: var(--light-bg-secondary);
-  --secondary-foreground: var(--light-text-primary);
-  --muted: var(--light-bg-tertiary);
-  --muted-foreground: var(--light-text-muted);
-  --accent: var(--role-accent);
-  --accent-foreground: var(--text-on-accent);
-  --destructive: var(--role-destructive);
-  --destructive-foreground: var(--text-on-error);
-  --border: var(--light-border);
-  --input: var(--light-border);
-  --ring: var(--role-primary);
+  /* ============================================================
+     LAYER 5 — APP SHORTCUTS
+     ============================================================ */
+  --app-primary: var(--braden-red-600);
+  --app-accent:  var(--braden-gold-500);
 
-  /* ===== Layer 5: Text-on-fill inverse scale =====
-   * Per-fill text colour chosen by fill lightness. Braden gold is
-   * light (L=0.77) and REQUIRES dark text for WCAG AA (gold-on-white
-   * is 2.03:1 — fails). All values verified. */
-  --text-on-primary: oklch(0.99 0 0);                /* white on red      — 4.72:1 ✓ AA */
-  --text-on-accent: var(--braden-navy-900);          /* navy on gold      — 8.2:1  ✓ AAA */
-  --text-on-navy: oklch(0.97 0.005 250);             /* cool white on navy */
-  --text-on-error: oklch(0.99 0 0);                  /* white on purple   — 5.4:1  ✓ AA */
-  --text-on-success: oklch(0.22 0.020 250);          /* navy on green     — 5.6:1  ✓ AA */
-  --text-on-warning: var(--braden-navy-900);         /* navy on gold-700  — 9.1:1  ✓ AAA */
-  --text-on-info: oklch(0.22 0.020 250);
-  --text-on-neutral: oklch(0.99 0 0);
-
-  /* ===== Glow halos (role-based) ===== */
-  --glow-primary: 0 0 20px oklch(from var(--role-primary) l c h / 0.35);
-  --glow-accent: 0 0 20px oklch(from var(--role-accent) l c h / 0.35);
-  --glow-success: 0 0 20px oklch(from var(--role-success) l c h / 0.35);
-  --glow-warning: 0 0 20px oklch(from var(--role-warning) l c h / 0.35);
-  --glow-error: 0 0 20px oklch(from var(--role-error) l c h / 0.35);
-
-  --glow-strength: 0.35;
-  --shadow-strength: 1;
+  /* ============================================================
+     SHADOWS — corporate subtle, no neon glow
+     ============================================================ */
+  --shadow-sm:  0 1px 2px oklch(0 0 0 / 0.08);
+  --shadow-md:  0 4px 6px oklch(0 0 0 / 0.10), 0 2px 4px oklch(0 0 0 / 0.06);
+  --shadow-lg:  0 10px 15px oklch(0 0 0 / 0.10), 0 4px 6px oklch(0 0 0 / 0.05);
 }
 
+/* ============================================================
+   BRADEN DARK MODE
+   ============================================================ */
 .dark {
-  --glow-strength: 0.55;
-  --shadow-strength: 0.8;
+  /* Dark surfaces */
+  --braden-dark-bg-body:    oklch(0.118 0.010 252);
+  --braden-dark-bg-surface: oklch(0.165 0.015 251);
+  --braden-dark-bg-panel:   oklch(0.200 0.018 250);
+  --braden-dark-bg-input:   oklch(0.240 0.020 250);
 
-  /* Shadcn bridge — dark-mode bindings */
-  --background: var(--dark-bg-primary);
-  --foreground: var(--dark-text-primary);
-  --card: var(--dark-bg-accent);
-  --card-foreground: var(--dark-text-primary);
-  --popover: var(--dark-bg-accent);
-  --popover-foreground: var(--dark-text-primary);
-  --secondary: var(--dark-bg-secondary);
-  --secondary-foreground: var(--dark-text-primary);
-  --muted: var(--dark-bg-tertiary);
-  --muted-foreground: var(--dark-text-muted);
-  --border: var(--dark-border);
-  --input: var(--dark-border);
-  /* Red ring on dark navy = low contrast. Flip to gold accent. */
-  --ring: var(--role-accent);
-}
+  /* Dark text scale — hue 250, capped L=0.93 (Braden uses navy cast) */
+  --braden-dark-text-primary:   oklch(0.93 0.014 250);  /* ~13.1:1 ✓ AAA */
+  --braden-dark-text-secondary: oklch(0.80 0.016 250);  /*  ~9.0:1 ✓ AAA */
+  --braden-dark-text-muted:     oklch(0.66 0.018 250);  /*  ~5.2:1 ✓ AA  */
+  --braden-dark-text-subtle:    oklch(0.55 0.015 250);  /*  ~3.5:1 ✓ AA large */
+  --braden-dark-text-disabled:  oklch(0.43 0.010 250);
 
-/* ===== sRGB fallback ===== */
-@supports not (color: oklch(0 0 0)) {
-  :root {
-    --braden-red-500: #ab233a;
-    --braden-gold-500: #cbb26a;
-    --braden-navy-500: #2c3e50;
-    --braden-navy-900: #17202a;
-    --role-primary: #ab233a;
-    --role-accent: #cbb26a;
-    --role-info: #4a7ca8;
-    --role-success: #4a9d6c;
-    --role-warning: #a8894a;
-    --role-error: #6c5ce7;          /* STILL PURPLE on legacy browsers */
-    --role-destructive: #6c5ce7;
-    --role-neutral: #8091a3;
-  }
-}
+  /* Rebind roles */
+  --role-text-body:      var(--braden-dark-text-primary);
+  --role-text-secondary: var(--braden-dark-text-secondary);
+  --role-text-muted:     var(--braden-dark-text-muted);
+  --role-text-subtle:    var(--braden-dark-text-subtle);
+  --role-text-disabled:  var(--braden-dark-text-disabled);
+  --role-text-heading:   oklch(0.91 0.016 250);
 
-/* ===== Reduced motion ===== */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+  --role-bg-body:    var(--braden-dark-bg-body);
+  --role-bg-surface: var(--braden-dark-bg-surface);
+  --role-bg-panel:   var(--braden-dark-bg-panel);
+  --role-bg-input:   var(--braden-dark-bg-input);
+  --role-border:     oklch(0.30 0.020 250);
+
+  /* Shadcn bridge picks up via var() chain */
+  --background:      var(--braden-dark-bg-body);
+  --foreground:      var(--braden-dark-text-primary);
+  --card:            var(--braden-dark-bg-panel);
+  --card-foreground: var(--braden-dark-text-primary);
+  --muted:           var(--braden-dark-bg-input);
+  --muted-foreground:var(--braden-dark-text-muted);
+  --border:          oklch(0.30 0.020 250);
+  --input:           oklch(0.30 0.020 250);
 }

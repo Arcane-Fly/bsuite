@@ -107,17 +107,16 @@ docs(r80): update Fair Work API reference
 
 Full spec in `docs/20260228-d2c-theme-specification-v1.00W.md`. Key colors:
 
-| Color | OKLCH | Hex (legacy) | Use |
-|-------|-------|---------------|-----|
-| Electric Blue | `oklch(0.546 0.215 262.9)` | `#2563eb` | Primary actions |
-| Electric Cyan | `oklch(0.769 0.132 191.7)` | `#00cec9` | Accents, borders |
-| Electric Green | `oklch(0.723 0.192 149.6)` | `#22c55e` | Success |
-| Electric Coral | `oklch(0.669 0.219 20.9)` | `#ff4757` | Alerts, destructive |
-| Electric Yellow | `oklch(0.868 0.125 81.4)` | `#fdcb6e` | Warnings |
+| Color | Hex | Use |
+|-------|-----|-----|
+| Electric Blue | `#2563eb` | Primary actions |
+| Electric Cyan | `#00cec9` | Accents, borders |
+| Electric Green | `#22c55e` | Success |
+| Electric Coral | `#ff4757` | Alerts, destructive |
+| Electric Yellow | `#fdcb6e` | Warnings |
 
-Dark mode: deep navy `oklch(0.13 0.02 260)`. Light mode: off-white `oklch(0.96 0 0)`.
+Dark mode: deep navy `#0a0e1a`. Light mode: off-white `#f2f2f2`.
 Typography: Inter (body), JetBrains Mono (code).
-**Color format rule: oklch mandatory.** Never add new hex/rgb color tokens. Hex/rgb only acceptable for third-party component defaults or legacy compatibility tokens.
 
 ### Corporate Branding (braden only)
 
@@ -499,9 +498,9 @@ Use this as the canonical starting point when adding new layered elements. Do no
 - AI-generated content must be labeled in UI
 - Rate limiting on AI endpoints
 - CRM7 is the canonical reference for AI SDK patterns — other projects port from here
-- **AI Gateway models** — default: `xai/grok-4.1-fast-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
+- **AI Gateway models** — default: `xai/grok-4.20-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
 - Config: `src/lib/ai/config.ts`, Router: `src/lib/ai/model-router.ts`
-- **NEVER replace grok-4.1-fast-reasoning as default** — it is the configured Vercel AI Gateway model
+- **Primary model is `xai/grok-4.20-reasoning`** (supersedes `grok-4.1-fast-reasoning` per 2026-04-24 Vercel AI Gateway roster update). 2M context, 2M max output, $2/M input + $6/M output. Do not downgrade without explicit user approval.
 
 ### R80.3 (Compliance)
 

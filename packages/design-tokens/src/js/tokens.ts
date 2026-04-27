@@ -12,22 +12,22 @@
 // ── Neon Electric Palette ─────────────────────────────────────────────────
 
 export const neonElectric = {
-  blue:     'oklch(0.546 0.215 262.9)',
-  cyan:     'oklch(0.769 0.132 191.7)',
-  indigo:   'oklch(0.511 0.23 277)',
-  purple:   'oklch(0.568 0.202 283.1)',
-  magenta:  'oklch(0.742 0.167 359.5)',
-  pink:     'oklch(0.656 0.212 354.3)',
-  coral:    'oklch(0.669 0.219 20.9)',
-  orange:   'oklch(0.728 0.168 22.5)',
-  yellow:   'oklch(0.868 0.125 81.4)',
-  green:    'oklch(0.723 0.192 149.6)',
-  lavender: 'oklch(0.736 0.141 285.6)',
+  blue:     '#2563eb',
+  cyan:     '#00cec9',
+  indigo:   '#4f46e5',
+  purple:   '#6c5ce7',
+  magenta:  '#fd79a8',
+  pink:     '#ec4899',
+  coral:    '#ff4757',
+  orange:   '#ff7675',
+  yellow:   '#fdcb6e',
+  green:    '#22c55e',
+  lavender: '#a29bfe',
 } as const;
 
 export type NeonElectricColor = keyof typeof neonElectric;
 
-/** @deprecated Use `neonElectric` oklch values in CSS contexts. Keep for canvas/chart runtime use only. */
+/** RGB triplet arrays for use in rgba() or canvas contexts */
 export const neonElectricRgb = {
   blue:     [37,  99,  235] as const,
   cyan:     [0,   206, 201] as const,
@@ -42,7 +42,7 @@ export const neonElectricRgb = {
   lavender: [162, 155, 254] as const,
 } as const;
 
-/** @deprecated For canvas/SVG use only. In CSS, use oklch(from var(--neon-electric-*) l c h / alpha) instead. */
+/** Returns an rgba() string from a neon electric colour at a given opacity */
 export function neonRgba(color: NeonElectricColor, alpha: number): string {
   const [r, g, b] = neonElectricRgb[color];
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
@@ -165,18 +165,18 @@ export const easing = {
 
 /** Light-mode status colors — WCAG 2.1 AA on white */
 export const statusLight = {
-  success: 'oklch(0.509 0.118 165.612)',  /* emerald-700 */
-  warning: 'oklch(0.555 0.163 48.998)',   /* amber-700 */
-  error:   'oklch(0.505 0.213 27.518)',   /* red-700 */
-  info:    'oklch(0.588 0.158 241.966)',  /* sky-600 */
+  success: '#047857',
+  warning: '#b45309',
+  error:   '#b91c1c',
+  info:    '#0284c7',
 } as const;
 
 /** Dark-mode status colors — brightened for dark backgrounds */
 export const statusDark = {
-  success: 'oklch(0.723 0.192 149.6)',    /* emerald-500 */
-  warning: 'oklch(0.769 0.188 70.08)',    /* amber-500 */
-  error:   'oklch(0.637 0.237 25.331)',   /* red-500 */
-  info:    'oklch(0.746 0.16 232.661)',   /* sky-400 */
+  success: '#10b981',
+  warning: '#f59e0b',
+  error:   '#ef4444',
+  info:    '#38bdf8',
 } as const;
 
 
@@ -191,34 +191,34 @@ export const statusDark = {
  */
 export const appAccents = {
   crm7: {
-    primary:      'oklch(0.546 0.215 262.9)',          /* electric blue */
-    accent:       'oklch(0.769 0.132 191.7)',           /* electric cyan */
-    primaryGlow:  'oklch(0.546 0.215 262.9 / 0.15)',
-    accentGlow:   'oklch(0.769 0.132 191.7 / 0.12)',
+    primary:      '#2563eb',  /* electric blue */
+    accent:       '#00cec9',  /* electric cyan */
+    primaryGlow:  'rgba(37,  99,  235, 0.15)',
+    accentGlow:   'rgba(0,   206, 201, 0.12)',
   },
   conduit: {
-    primary:      'oklch(0.596 0.145 163.225)',         /* emerald-600 */
-    accent:       'oklch(0.765 0.177 163.223)',          /* emerald-400 */
-    primaryGlow:  'oklch(0.596 0.145 163.225 / 0.15)',
-    accentGlow:   'oklch(0.765 0.177 163.223 / 0.12)',
+    primary:      '#059669',  /* emerald-600 */
+    accent:       '#34d399',  /* emerald-400 */
+    primaryGlow:  'rgba(5,   150, 105, 0.15)',
+    accentGlow:   'rgba(52,  211, 153, 0.12)',
   },
   bsu: {
-    primary:      'oklch(0.541 0.247 293.0)',           /* electric purple */
-    accent:       'oklch(0.709 0.159 293.5)',            /* light purple */
-    primaryGlow:  'oklch(0.541 0.247 293.0 / 0.15)',
-    accentGlow:   'oklch(0.709 0.159 293.5 / 0.12)',
+    primary:      '#7c3aed',  /* violet-600 */
+    accent:       '#a78bfa',  /* violet-400 */
+    primaryGlow:  'rgba(124, 58,  237, 0.15)',
+    accentGlow:   'rgba(167, 139, 250, 0.12)',
   },
   r8: {
-    primary:      'oklch(0.525 0.223 3.958)',           /* pink-600 */
-    accent:       'oklch(0.718 0.202 349.761)',          /* pink-400 */
-    primaryGlow:  'oklch(0.525 0.223 3.958 / 0.15)',
-    accentGlow:   'oklch(0.718 0.202 349.761 / 0.12)',
+    primary:      '#db2777',  /* pink-600 */
+    accent:       '#f472b6',  /* pink-400 */
+    primaryGlow:  'rgba(219, 39,  119, 0.15)',
+    accentGlow:   'rgba(244, 114, 182, 0.12)',
   },
   braden: {
-    primary:      'oklch(0.588 0.158 241.966)',         /* sky-600 */
-    accent:       'oklch(0.746 0.16 232.661)',           /* sky-400 */
-    primaryGlow:  'oklch(0.588 0.158 241.966 / 0.15)',
-    accentGlow:   'oklch(0.746 0.16 232.661 / 0.12)',
+    primary:      '#0284c7',  /* sky-600 */
+    accent:       '#38bdf8',  /* sky-400 */
+    primaryGlow:  'rgba(2,   132, 199, 0.15)',
+    accentGlow:   'rgba(56,  189, 248, 0.12)',
   },
 } as const;
 

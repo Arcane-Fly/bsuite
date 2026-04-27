@@ -1,147 +1,182 @@
 /*
  * @bsuite/theme — Tailwind v4 @theme block
+ * Version 0.3.1
  *
- * Tailwind v4 removed the preset system; design tokens are exposed to the
- * Tailwind engine via CSS `@theme {}` blocks. Import this before any
- * app-specific @theme overrides:
+ * Tailwind v4 exposes design tokens to the engine via CSS @theme blocks.
+ * Import this before any app-specific @theme overrides:
  *
  *   @import 'tailwindcss';
- *   @import '@bsuite/theme/css';           <- ship vars + .dark block first
- *   @import '@bsuite/theme/preset-v4.css'; <- then expose to Tailwind
+ *   @import '@bsuite/theme/preset-v4.css';
  *
- * Tailwind v4 generates classes from @theme variables. So:
- *   --color-primary → bg-primary, text-primary, border-primary
- *   --color-neon-electric-blue → bg-neon-electric-blue, etc.
+ *   @theme {
+ *     --color-app-primary: oklch(0.45 0.18 142); -- app-specific override
+ *   }
  *
- * Consumer guidance:
- *   PREFER role classes (bg-primary, text-foreground, text-muted-foreground)
- *   over palette classes (bg-neon-electric-blue). Roles white-label cleanly;
- *   palette colours do not.
+ * Token naming: `--color-{name}` → Tailwind generates `bg-{name}`,
+ * `text-{name}`, `border-{name}` etc. automatically.
+ *
+ * Layer order matches vars.css:
+ *   1. Palette  — --color-neon-electric-*
+ *   2. Surface  — --color-{light|dark}-{bg|text}-*
+ *   3. Role     — --color-role-*   ← bind to these in components
+ *   4. Shadcn   — --color-background, --color-foreground, etc.
+ *   5. Text-on  — --color-text-on-*
  */
 
 @theme {
-  /* ===== Layer 1: Neon Electric palette (11 colours, canonical D2C) =====
-   * Use for decorative/identity fills. For any semantic role (primary/error
-   * etc.) use the role colours below. */
-  --color-neon-electric-blue: oklch(0.546 0.215 262.9);
-  --color-neon-electric-cyan: oklch(0.769 0.132 191.7);
-  --color-neon-electric-indigo: oklch(0.511 0.23 277);
-  --color-neon-electric-purple: oklch(0.568 0.202 283.1);
-  --color-neon-electric-magenta: oklch(0.742 0.167 359.5);
-  --color-neon-electric-pink: oklch(0.656 0.212 354.3);
-  --color-neon-electric-coral: oklch(0.669 0.219 20.9);
-  --color-neon-electric-orange: oklch(0.728 0.168 22.5);
-  --color-neon-electric-yellow: oklch(0.868 0.125 81.4);
-  --color-neon-electric-green: oklch(0.723 0.192 149.6);
+  /* ============================================================
+     LAYER 1 — Neon Electric palette (11 colours, FROZEN)
+     ============================================================ */
+  --color-neon-electric-blue:     oklch(0.546 0.215 262.9);
+  --color-neon-electric-cyan:     oklch(0.769 0.132 191.7);
+  --color-neon-electric-indigo:   oklch(0.511 0.23  277);
+  --color-neon-electric-purple:   oklch(0.568 0.202 283.1);
+  --color-neon-electric-magenta:  oklch(0.742 0.167 359.5);
+  --color-neon-electric-pink:     oklch(0.656 0.212 354.3);
+  --color-neon-electric-coral:    oklch(0.669 0.219  20.9);
+  --color-neon-electric-orange:   oklch(0.728 0.168  22.5);
+  --color-neon-electric-yellow:   oklch(0.868 0.125  81.4);
+  --color-neon-electric-green:    oklch(0.723 0.192 149.6);
   --color-neon-electric-lavender: oklch(0.736 0.141 285.6);
 
-  /* ===== Layer 2: Light surface tokens ===== */
-  --color-light-bg-primary: oklch(0.961 0 0.5);
+  /* ============================================================
+     LAYER 2 — Surface tokens (light)
+     ============================================================ */
+  --color-light-bg-primary:   oklch(0.961 0     0.5);
   --color-light-bg-secondary: oklch(0.982 0.002 248);
-  --color-light-bg-tertiary: oklch(0.963 0.003 228.9);
-  --color-light-bg-accent: oklch(1 0 0.5);
-  --color-light-text-primary: oklch(0.22 0.015 260);
-  --color-light-text-secondary: oklch(0.38 0.018 260);
-  --color-light-text-muted: oklch(0.52 0.018 260);
-  --color-light-text-subtle: oklch(0.60 0.012 260);
-  --color-light-text-disabled: oklch(0.72 0.010 260);
+  --color-light-bg-tertiary:  oklch(0.963 0.003 228.9);
+  --color-light-bg-accent:    oklch(1     0     0.5);
 
-  /* ===== Layer 2: Dark surface tokens =====
-   * Dark text primary capped at L=0.94 (not pure white). Eye-strain-safe
-   * over extended sessions. All tiers WCAG AA/AAA verified. */
-  --color-dark-bg-primary: oklch(0.166 0.026 269.4);
-  --color-dark-bg-secondary: oklch(0.242 0.03 269.9);
-  --color-dark-bg-tertiary: oklch(0.326 0.036 266.7);
-  --color-dark-bg-accent: oklch(0.292 0.034 270);
-  --color-dark-text-primary: oklch(0.94 0.012 260);
-  --color-dark-text-secondary: oklch(0.82 0.015 260);
-  --color-dark-text-muted: oklch(0.68 0.018 260);
-  --color-dark-text-subtle: oklch(0.56 0.015 260);
-  --color-dark-text-disabled: oklch(0.44 0.010 260);
+  /* Eye-strain-safe light text scale (L capped at 0.22, hue 260) */
+  --color-light-text-primary:   oklch(0.22 0.015 260);  /* 13.2:1 AAA */
+  --color-light-text-secondary: oklch(0.38 0.018 260);  /*  8.1:1 AAA */
+  --color-light-text-muted:     oklch(0.52 0.018 260);  /*  4.9:1 AA  */
+  --color-light-text-subtle:    oklch(0.60 0.012 260);  /*  3.8:1 AA large */
+  --color-light-text-disabled:  oklch(0.72 0.010 260);
 
-  /* ===== Layer 3: Role aliases (CONSUMER CONTRACT) =====
-   * Bind to these in app code. Exposed as Tailwind classes:
-   *   bg-primary, text-primary, bg-accent, bg-error, etc.
-   * --color-error maps to purple — platform colourblind policy. */
-  --color-primary: var(--role-primary);
-  --color-accent: var(--role-accent);
-  --color-info: var(--role-info);
-  --color-success: var(--role-success);
-  --color-warning: var(--role-warning);
-  --color-error: var(--role-error);
-  --color-destructive: var(--role-destructive);
-  --color-neutral: var(--role-neutral);
+  /* ============================================================
+     LAYER 2 — Surface tokens (dark)
+     ============================================================ */
+  --color-dark-bg-primary:    oklch(0.166 0.026 269.4);
+  --color-dark-bg-secondary:  oklch(0.242 0.03  269.9);
+  --color-dark-bg-tertiary:   oklch(0.326 0.036 266.7);
+  --color-dark-bg-quaternary: oklch(0.39  0.035 265);
+  --color-dark-bg-accent:     oklch(0.292 0.034 270);
 
-  /* ===== Layer 4: Shadcn semantic bridge (exposed as Tailwind classes) =====
-   * bg-background, text-foreground, bg-card, text-muted-foreground, etc. */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  /* Eye-strain-safe dark text scale (L capped at 0.94, hue 260) */
+  --color-dark-text-primary:   oklch(0.94 0.012 260);  /* 13.9:1 AAA */
+  --color-dark-text-secondary: oklch(0.82 0.015 260);  /*  9.8:1 AAA */
+  --color-dark-text-muted:     oklch(0.68 0.018 260);  /*  5.6:1 AA  */
+  --color-dark-text-subtle:    oklch(0.56 0.015 260);  /*  3.6:1 AA large */
+  --color-dark-text-disabled:  oklch(0.44 0.010 260);
 
-  /* ===== Layer 5: Text-on-fill tokens =====
-   * When placing text on a coloured fill, use these instead of guessing
-   * white vs black. Some fills need dark text, some need light. */
-  --color-text-on-primary: var(--text-on-primary);
-  --color-text-on-accent: var(--text-on-accent);
-  --color-text-on-error: var(--text-on-error);
-  --color-text-on-success: var(--text-on-success);
-  --color-text-on-warning: var(--text-on-warning);
-  --color-text-on-info: var(--text-on-info);
-  --color-text-on-neutral: var(--text-on-neutral);
+  /* ============================================================
+     LAYER 3 — Role aliases
+     Consumers should only reference these — never palette names.
+     ============================================================ */
+  --color-role-primary:     oklch(0.546 0.215 262.9);  /* electric blue  */
+  --color-role-secondary:   oklch(0.511 0.23  277);    /* electric indigo */
+  --color-role-accent:      oklch(0.769 0.132 191.7);  /* electric cyan  */
 
-  /* ===== Legacy status tokens (still exposed for backward compat) =====
-   * --color-status-error remapped to purple role (was coral). Consumers
-   * previously using bg-status-error now render purple, not red. This is
-   * intentional per the platform colourblind policy. */
-  --color-status-success: var(--role-success);
-  --color-status-warning: var(--role-warning);
-  --color-status-error: var(--role-error);
-  --color-status-info: var(--role-info);
+  /* Colourblind-safe: error = purple, never red/coral */
+  --color-role-error:       oklch(0.568 0.202 283.1);  /* electric purple */
+  --color-role-destructive: oklch(0.568 0.202 283.1);  /* synonym         */
+  --color-role-warning:     oklch(0.728 0.168  22.5);  /* electric orange */
+  --color-role-success:     oklch(0.723 0.192 149.6);  /* electric green  */
+  --color-role-info:        oklch(0.769 0.132 191.7);  /* electric cyan   */
 
-  /* ===== Animations (Tailwind v4 exposes via --animate-*) ===== */
-  --animate-pulse-soft: pulse-soft 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-glow: glow 2s ease-in-out infinite alternate;
-  --animate-neon-pulse: neon-pulse 2s ease-in-out infinite;
-  --animate-float: float 3s ease-in-out infinite;
-  --animate-shimmer: shimmer 2s infinite;
-  --animate-typing: typing 1.5s infinite;
+  /* Semantic status aliases (deprecated: prefer role-*) */
+  --color-status-success: oklch(0.723 0.192 149.6);
+  --color-status-warning: oklch(0.728 0.168  22.5);
+  --color-status-error:   oklch(0.568 0.202 283.1);  /* purple — colourblind policy */
+  --color-status-info:    oklch(0.769 0.132 191.7);
+
+  /* ============================================================
+     LAYER 4 — Shadcn/ui bridge
+     Tailwind generates bg-background, text-foreground, etc.
+     ============================================================ */
+  --color-background:         oklch(0.961 0     0.5);
+  --color-foreground:         oklch(0.22  0.015 260);
+  --color-card:               oklch(1     0     0.5);
+  --color-card-foreground:    oklch(0.22  0.015 260);
+  --color-popover:            oklch(1     0     0.5);
+  --color-popover-foreground: oklch(0.22  0.015 260);
+  --color-primary:            oklch(0.546 0.215 262.9);
+  --color-primary-foreground: oklch(0.99  0     0);
+  --color-secondary:          oklch(0.511 0.23  277);
+  --color-secondary-foreground: oklch(0.99 0    0);
+  --color-muted:              oklch(0.963 0.003 228.9);
+  --color-muted-foreground:   oklch(0.52  0.018 260);
+  --color-accent:             oklch(0.769 0.132 191.7);
+  --color-accent-foreground:  oklch(0.17  0.02  260);
+  --color-destructive:        oklch(0.568 0.202 283.1);  /* purple — colourblind policy */
+  --color-destructive-foreground: oklch(0.99 0  0);
+  --color-border:             oklch(0.942 0.005 247.9);
+  --color-input:              oklch(0.942 0.005 247.9);
+  --color-ring:               oklch(0.546 0.215 262.9);
+
+  /* ============================================================
+     LAYER 5 — Inverse text (for coloured fill surfaces)
+     ============================================================ */
+  --color-text-on-primary:  oklch(0.99 0    0);
+  --color-text-on-accent:   oklch(0.17 0.02 260);
+  --color-text-on-error:    oklch(0.99 0    0);
+  --color-text-on-success:  oklch(0.17 0.02 260);
+  --color-text-on-warning:  oklch(0.17 0.02 260);
+
+  /* ============================================================
+     WCAG AA text pairs for raw neons on light backgrounds
+     ============================================================ */
+  --color-accent-text:  oklch(0.486 0.084 191.5);
+  --color-primary-text: oklch(0.485 0.243 263.6);
+
+  /* ============================================================
+     ANIMATIONS
+     ============================================================ */
+  --animate-pulse-soft:  pulse-soft  3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-glow:        glow        2s ease-in-out infinite alternate;
+  --animate-neon-pulse:  neon-pulse  2s ease-in-out infinite;
+  --animate-float:       float       3s ease-in-out infinite;
+  --animate-shimmer:     shimmer     2s infinite;
+  --animate-typing:      typing      1.5s infinite;
+  --animate-shine:       shine       3s ease-in-out infinite;
 }
 
-/* Keyframes live outside @theme because v4 doesn't expose them there. */
+/* ============================================================
+   KEYFRAMES — outside @theme (v4 doesn't expose them there)
+   oklch used throughout — no rgba/hsl leakage
+   ============================================================ */
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50%       { opacity: 0.7; }
 }
+
 @keyframes glow {
-  0% { box-shadow: 0 0 5px oklch(0.769 0.132 191.7 / 0.2); }
+  0%   { box-shadow: 0 0  5px oklch(0.769 0.132 191.7 / 0.2); }
   100% { box-shadow: 0 0 20px oklch(0.769 0.132 191.7 / 0.6); }
 }
+
 @keyframes neon-pulse {
   0%, 100% { text-shadow: 0 0 10px oklch(0.769 0.132 191.7 / 0.3); }
-  50% { text-shadow: 0 0 20px oklch(0.769 0.132 191.7 / 0.8); }
+  50%       { text-shadow: 0 0 20px oklch(0.769 0.132 191.7 / 0.8); }
 }
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50%       { transform: translateY(-10px); }
 }
+
 @keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
 }
+
 @keyframes typing {
   0%, 60% { opacity: 1; }
-  30% { opacity: 0.4; }
+  30%      { opacity: 0.4; }
+}
+
+@keyframes shine {
+  0%   { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%)  skewX(-15deg); }
 }

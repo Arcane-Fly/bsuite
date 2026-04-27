@@ -529,7 +529,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 26 | Test coverage push (70% target all projects) | all | ongoing | — |
 | 26a | CC-1: DashboardPageEditorDrawer accessibility — add `KeyboardSensor` + `sortableKeyboardCoordinates` + `aria-label` on grip buttons | crm7 | 2h | Gap report v2 CC-1 |
 | 26b | CRM7 DRY one-shot: auto-population chains — apprentice select fills 6 related fields, claims/new auto-fills qualification/employer/dates | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 4 |
-| 26c | ~~CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`| crm7 | ✅ Done | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.01A.md) §3 Tier 3 |
+| 26c | ~~CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`| crm7 | ✅ Done | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.00A.md) §3 Tier 3 |
 | 26d | CRM7 DRY one-shot: DB FK migrations — `employers.primary_contact_id`, `funding_sources.contact_id` + ContactSelector on 9 forms | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 3 |
 | 26e | @types/node upgrade to ^24.x across all 5 apps | all | 30m | Gap report v2 RT-7 |
 | 26f | pnpm version alignment to 10.32.1 (BSU, braden, conduit, R80.3 behind CRM7) | all | 30m | Gap report v2 RT-8 |

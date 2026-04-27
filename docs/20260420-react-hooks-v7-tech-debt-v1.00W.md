@@ -21,44 +21,6 @@ Rather than demote the rules globally and hide the findings, every app surfaces 
 | braden | 0 (smaller surface) | — | — | — | — | — | — |
 | throughput | 139 (incl. pre-existing non-hooks warnings) | ~30 | — | — | — | — | — |
 
-## Outstanding (2026-04-22 — post N.7.a re-baseline)
-
-Part N.7.a (bsuite#228) re-captured lint baselines after aligning all
-five D2C apps to `lucide-react@1.8.0` + `eslint-plugin-react-hooks@7.1.1`.
-Deltas observed in the worktree runs:
-
-| App | Before N.7.a | After N.7.a | Delta | PR |
-|-----|--------------|-------------|-------|-----|
-| conduit | 0 | 0 | 0 | [conduit#87](https://github.com/GaryOcean428/conduit/pull/87) |
-| R80.3 | 0 | 0 | 0 | [R80.3#90](https://github.com/GaryOcean428/R80.3/pull/90) |
-| braden | 21 | 21 | 0 | [braden#144](https://github.com/GaryOcean428/braden/pull/144) |
-
-No new warnings were unmasked by N.7.a because all three apps were
-already on `eslint-plugin-react-hooks@7.1.1` — conduit via the
-transitive from `eslint-config-next`, R80.3 via commit f518d65, braden
-via prior cycle. N.7.a promoted the direct devDep pin in conduit for
-consistency.
-
-**braden surfaced 21 react-hooks warnings** that the earlier table
-reported as 0 (because the doc pre-dated the v7.1.1 consumption in
-braden's local lint runs). The breakdown:
-
-- `react-hooks/purity`: ~5 occurrences (most in setting async-error-throw
-  code paths inside render functions — pattern matches BSU's
-  `sync-from-server` justification)
-- `react-hooks/immutability`: ~13 occurrences (mutation of captured
-  locals inside handlers that close over state)
-- `react-hooks/preserve-manual-memoization`: 1 occurrence
-- `react-hooks/incompatible-library`: 1 occurrence (likely
-  `@tanstack/react-query` devtools or similar — compiler over-flag)
-- 1 unused `eslint-disable` directive (easy cleanup)
-
-braden's `lint` script is `eslint .` (no `--max-warnings 0` gate), so
-these do not block husky pre-commit or CI. They should be batched into
-a follow-up remediation PR using the same pattern the BSU 47 are being
-worked through. Target: tighten `pnpm lint` to `--max-warnings 0` after
-the count drops to zero, matching conduit and R80.3.
-
 ## Remediation plan
 
 Batch into rule-specific PRs (roughly 1 per rule per app). Each PR:

@@ -1,238 +1,200 @@
-# @bsuite/theme — Token Mapping Reference
+# `@bsuite/theme` — Token Mapping Reference
 
-**Version:** 0.2.0  
-**Status:** A (Approved 2026-04-22)  
-**Purpose:** Definitive hardcoded-colour → semantic-token mapping table consumed by the `packages/theme-codemod/` migration script and used as the human-review reference for Phase 2–3 consumer migrations.
-
-> **Rule:** All colour values outside `packages/theme/` and `braden/src/**` MUST resolve to one of the semantic tokens below. No hex, no `rgba()`, no `text-slate-N`, no `text-gray-N`, no `text-white` / `bg-white` unless that element is explicitly colourblind-safe and intentional.
+**Version:** 0.3.1+
+**Last updated:** 2026-04-25
+**Audience:** Engineers writing or reviewing JSX/TSX with Tailwind classes in BSuite D2C apps (BSU, CRM7, Conduit, R80.3, Throughput). Braden is brand-exempt from this guide.
 
 ---
 
-## 1 · Tailwind Utility Class Mapping
+## 1. The two layers — and why this matters
 
-### Text colour utilities → semantic tokens
+`@bsuite/theme` ships **two distinct kinds** of colour tokens. Mixing them is the single most common source of WCAG-AA contrast regressions. Understand the distinction before reaching for `text-*-foreground`.
 
-| Hardcoded class | Replace with | Notes |
-|---|---|---|
-| `text-slate-900` | `text-foreground` | Primary body text |
-| `text-slate-800` | `text-foreground` | Primary body text |
-| `text-slate-700` | `text-foreground` | Primary body text |
-| `text-slate-600` | `text-muted-foreground` | Secondary / label text |
-| `text-slate-500` | `text-muted-foreground` | Secondary / label text |
-| `text-slate-400` | `text-muted-foreground` | Muted / helper text |
-| `text-slate-300` | `text-muted-foreground` | Muted / helper text |
-| `text-slate-200` | `text-muted-foreground` | Low-emphasis text |
-| `text-slate-100` | `text-muted-foreground` | Low-emphasis text on dark |
-| `text-gray-900` | `text-foreground` | |
-| `text-gray-800` | `text-foreground` | |
-| `text-gray-700` | `text-foreground` | |
-| `text-gray-600` | `text-muted-foreground` | |
-| `text-gray-500` | `text-muted-foreground` | |
-| `text-gray-400` | `text-muted-foreground` | |
-| `text-gray-300` | `text-muted-foreground` | |
-| `text-gray-200` | `text-muted-foreground` | |
-| `text-gray-100` | `text-muted-foreground` | |
-| `text-zinc-*` | `text-foreground` or `text-muted-foreground` | map by shade like slate |
-| `text-neutral-*` | `text-foreground` or `text-muted-foreground` | map by shade like slate |
-| `text-white` | ⚠️ **FLAG** — context-dependent | On dark bg → `text-primary-foreground`; decorative → `text-white` (document intent); over coloured bg → `text-(--text-on-primary)` |
-| `text-black` | ⚠️ **FLAG** — context-dependent | Usually `text-foreground` |
+### Layer A: semantic role tokens (mode-coupled pairs)
 
-### Background utilities → semantic tokens
+These are the canonical brand-aware tokens. Every semantic background has a partnered foreground text token, and **the pair flips together** between light and dark mode.
 
-| Hardcoded class | Replace with | Notes |
-|---|---|---|
-| `bg-white` | ⚠️ **FLAG** — context-dependent | Page bg → `bg-background`; card → `bg-card`; input → `bg-input` |
-| `bg-black` | `bg-background` (dark) or **FLAG** | |
-| `bg-slate-50` | `bg-background` | Page-level background |
-| `bg-slate-100` | `bg-muted` | Muted / subtle panel |
-| `bg-slate-200` | `bg-muted` | |
-| `bg-slate-800` | `bg-card` | Dark card surface |
-| `bg-slate-900` | `bg-background` | Dark page surface |
-| `bg-slate-950` | `bg-background` | Deep dark background |
-| `bg-gray-50` | `bg-background` | |
-| `bg-gray-100` | `bg-muted` | |
-| `bg-gray-200` | `bg-muted` | |
-| `bg-gray-800` | `bg-card` | |
-| `bg-gray-900` | `bg-background` | |
-| `bg-gray-950` | `bg-background` | |
-| `bg-zinc-*` | map same as slate/gray | |
-| `bg-neutral-*` | map same as slate/gray | |
+| Surface (bg) | Partnered text | Light-mode value | Dark-mode value |
+|--------------|----------------|------------------|-----------------|
+| `bg-primary` | `text-primary-foreground` | electric blue / near-white | electric blue / near-black navy `oklch(0.13 0.02 260)` |
+| `bg-secondary` | `text-secondary-foreground` | electric indigo / white | electric indigo / dark navy |
+| `bg-accent` | `text-accent-foreground` | electric cyan / dark | electric cyan / dark |
+| `bg-destructive` | `text-destructive-foreground` | red / white | red / white |
+| `bg-card` | `text-card-foreground` | white / foreground | navy / foreground |
+| `bg-muted` | `text-muted-foreground` | light gray / mid-gray | dark gray / light gray |
+| `bg-background` | `text-foreground` | off-white / near-black | navy / near-white |
 
-### Border utilities → semantic tokens
+**Rule A1:** `text-{role}-foreground` is **only** safe when paired with the matching `bg-{role}` semantic class. The pair was designed and tested as a unit.
 
-| Hardcoded class | Replace with | Notes |
-|---|---|---|
-| `border-slate-100` | `border-border` | |
-| `border-slate-200` | `border-border` | |
-| `border-slate-300` | `border-border` | |
-| `border-slate-600` | `border-border-strong` | Only if not dark-mode specific |
-| `border-slate-700` | `border-border-strong` | |
-| `border-gray-*` | map same as slate | |
-| `divide-slate-*` | map same as border | |
+**Rule A2:** If you change the background to a different token (or a raw palette utility), you **must** change the foreground to match.
+
+### Layer B: raw Tailwind palette utilities (mode-invariant)
+
+`bg-blue-600`, `bg-green-600`, `bg-red-500`, etc. These resolve to fixed OKLCH values that **do NOT flip between light and dark mode**. Tailwind v4 converts them at build time but they remain semantically a "raw" colour, not a brand token.
+
+**Rule B1:** Pair raw palette utilities with **explicit white/black/foreground tokens** — never with `text-*-foreground`.
+
+**Rule B2:** White-on-saturated-blue (`bg-blue-600 text-white`) passes WCAG AA in both modes (~5:1). This is the established convention for action buttons that intentionally use raw palette colours (see `conduit/src/components/common/ConfirmDialog.tsx`).
 
 ---
 
-## 2 · CSS Custom Property Mapping
+## 2. The mode-coupling mismatch — why `bg-blue-600 text-primary-foreground` fails
 
-### Hex / rgba() → OKLCH token
+This is the regression class that triggered the 2026-04-25 audit follow-up (conduit PR #113).
 
-| Hardcoded value | CSS var / OKLCH | Notes |
-|---|---|---|
-| `#7c3aed` | `var(--app-primary)` with value `oklch(0.492 0.226 292)` | BSU wrong purple — fix to D2C Blue `oklch(0.541 0.247 293)` |
-| `#2563eb` | `var(--accent-primary)` → `oklch(0.546 0.215 262.9)` | Electric Blue |
-| `#00cec9` | `var(--neon-electric-cyan)` → `oklch(0.769 0.132 191.7)` | Electric Cyan |
-| `#0a47e5` | `var(--color-primary-text)` | WCAG AA text token |
-| `#0a0e1a` | `var(--bg-body)` (dark) | Deep navy |
-| `#E2E8F0` | `var(--border-color)` (light) | Light border |
-| `#CBD5E1` | `var(--border-color-strong)` (light) | Stronger light border |
-| `#f2f2f2` | `var(--text-primary)` (dark) | Near-white on dark bg |
-| `#000000` | `var(--border-color)` (high-contrast, needs manual review) | |
-| `rgba(0, 206, 201, *)` | `oklch(0.769 0.132 191.7 / <alpha>)` | Cyan with alpha |
-| `rgba(37, 99, 235, *)` | `oklch(0.546 0.215 262.9 / <alpha>)` | Blue with alpha |
+```
+Light mode:
+  bg-blue-600           = oklch(0.546 0.245 262.881)   [saturated blue, fixed]
+  text-primary-foreground = oklch(1 0 0)               [near-white, light-mode value]
+  Contrast ratio        ≈ 5.1 : 1  ✓ AA pass
 
-### HSL triplets → `@bsuite/theme` semantic tokens (shadcn pattern)
+Dark mode:
+  bg-blue-600           = oklch(0.546 0.245 262.881)   [saturated blue, SAME — palette is mode-invariant]
+  text-primary-foreground = oklch(0.13 0.02 260)       [near-black navy, dark-mode value]
+  Contrast ratio        ≈ 3.0 : 1  ✗ FAIL AA  (4.5:1 required)
+```
 
-These are the raw channel values used in `hsl(var(--x))` patterns. After v0.2.0 all consumers switch to `var(--color-*)` directly (no hsl() wrapper needed since @theme values are OKLCH).
+The bug: `text-primary-foreground` flips with the theme, but `bg-blue-600` does not. In dark mode, a near-black foreground over a saturated mid-blue background gives ~3:1 — the text is barely legible.
 
-| Old HSL var | New semantic CSS var (v0.2.0) | OKLCH value |
-|---|---|---|
-| `--primary: 217 91% 60%` | `--primary` → `oklch(0.546 0.215 262.9)` | Electric Blue |
-| `--accent: 187 95% 46%` | `--accent` → `oklch(0.769 0.132 191.7)` | Electric Cyan |
-| `--secondary: 210 40% 96.1%` | `--secondary` → surface token | `oklch(0.961 0 0.5)` |
-| `--muted: 210 40% 96.1%` | `--muted` → `oklch(0.961 0 0.5)` | Light muted bg |
-| `--background: 0 0% 100%` | `--background` → `oklch(1 0 0)` | White |
-| `--foreground: 222.2 84% 4.9%` | `--foreground` → `oklch(0.156 0.012 261)` | Near-black |
-| `--card: 0 0% 100%` | `--card` → `oklch(1 0 0)` | White card |
-| `--border: 214.3 31.8% 91.4%` | `--border` → `oklch(0.916 0.006 248)` | Light border |
-| `--ring: 222.2 84% 4.9%` | `--ring` → `oklch(0.546 0.215 262.9)` | Electric Blue ring |
+**The fix:** use `text-white` on raw palette buttons. White stays white in both modes, and white-on-`blue-600` stays at ~5:1 in both modes.
+
+```diff
+- className="bg-blue-600 text-primary-foreground hover:bg-blue-700"
++ className="bg-blue-600 text-white hover:bg-blue-700"
+```
+
+If the brand intent was actually "primary brand surface", switch the background too:
+
+```diff
+- className="bg-blue-600 text-primary-foreground hover:bg-blue-700"
++ className="bg-primary text-primary-foreground hover:bg-primary/90"
+```
+
+But understand this **changes the visible colour**. BSU's `--primary` is electric blue `oklch(0.546 0.215 262.9)`, very close to but not identical to Tailwind's `blue-600` `oklch(0.546 0.245 262.881)`. If a designer chose `bg-blue-600` deliberately (e.g. for the precise saturated blue), keep it and use `text-white`.
 
 ---
 
-## 3 · Semantic Token Full Set (v0.2.0)
+## 3. The `bg-gray-*` pitfall — why `bg-gray-300 → bg-accent` is wrong
 
-These are the canonical token names. Every consumer app's CSS must map to these names; local definitions of the same concept are duplicates and must be deleted.
+This is the regression class that triggered throughput PR #45.
+
+`bg-gray-300`, `bg-gray-500`, `bg-gray-600`, `bg-gray-700` are **neutral grays**. Mapping them naively to semantic role tokens introduces saturated brand colours where neutral was intended:
+
+| Original (neutral gray) | Wrong mapping | What you actually get |
+|-------------------------|---------------|------------------------|
+| `bg-gray-300` | `bg-accent` | electric cyan (saturated brand colour) |
+| `bg-gray-500` | `bg-muted-foreground` | text token used as background — anti-pattern that breaks the role layer |
+| `bg-gray-600` | `bg-secondary` | electric indigo (saturated brand colour) |
+| `bg-gray-700` | `bg-card` | white in light mode (inverts the dark intent) |
+
+**The correct mapping:**
+
+| Original | Use | When |
+|----------|-----|------|
+| `bg-gray-{100,200}` | `bg-muted` | low-emphasis surface (cards, hover states) |
+| `bg-gray-{300,400,500}` | keep raw `bg-gray-*` with explanatory comment | decorative neutral elements (status dots, avatar fallbacks) — the rule's intent is to discourage NEW hardcoded colours, not retire all palette utilities |
+| `bg-gray-{600,700,800}` | keep raw `bg-gray-*` for `dark:` only, or use `bg-card` if both modes share a card surface | dark-mode-specific surfaces |
+| `bg-gray-900` | `bg-background` | full-page dark background |
+
+The `bsuite/no-hardcoded-colours` ESLint rule's regex `\b(text|bg|border|divide)-(slate|gray|zinc|neutral)-(\d{2,3})\b` does fire on these patterns in principle, but its current AST visitor in @typescript-eslint may not catch every JSX form. Add an `eslint-disable-next-line` comment **only** when the lint actually flags an intentional decorative use.
+
+---
+
+## 4. Quick reference — when to use which token
+
+### Buttons
+
+| Intent | Recommended | Notes |
+|--------|-------------|-------|
+| Primary brand action | `bg-primary text-primary-foreground hover:bg-primary/90` | mode-coupled pair, will track tenant white-labelling via `BrandingProvider` |
+| Raw blue confirmation button | `bg-blue-600 text-white hover:bg-blue-700` | matches `ConfirmDialog` convention; mode-invariant |
+| Destructive | `bg-destructive text-destructive-foreground hover:bg-destructive/90` | mode-coupled |
+| Secondary / low-emphasis | `bg-muted text-foreground hover:bg-muted/80` | uses neutral surface, foreground text |
+| Outline / ghost | `border border-border bg-background text-foreground hover:bg-muted` | minimal, semantic |
+
+### Surfaces
+
+| Intent | Recommended |
+|--------|-------------|
+| Page background | `bg-background` |
+| Card / panel | `bg-card text-card-foreground` |
+| Low-emphasis surface | `bg-muted text-muted-foreground` |
+| Hover state on muted surface | `hover:bg-muted/80` (light) or `hover:bg-muted` (dark) |
+| Modal / dialog | `bg-background border border-border` |
 
 ### Text
 
-| Token | Light value | Dark value | Purpose |
-|---|---|---|---|
-| `--text-primary` | `oklch(0.319 0.01 216.8)` | `oklch(0.982 0.002 248)` | Body text, headings |
-| `--text-secondary` | `oklch(0.53 0.015 221.6)` | `oklch(0.769 0.015 248)` | Labels, captions |
-| `--text-muted` | `oklch(0.558 0.016 244.9)` | `oklch(0.558 0.016 244.9)` | Placeholder, helper |
-| `--text-disabled` | `oklch(0.748 0.017 239.2)` | `oklch(0.428 0.015 248.2)` | Disabled state |
-| `--text-on-primary` | `oklch(1 0 0)` | `oklch(1 0 0)` | Text on primary-coloured bg |
-| `--text-on-surface` | `oklch(0.319 0.01 216.8)` | `oklch(0.982 0.002 248)` | Text on card/panel |
-| `--color-primary-text` | `oklch(0.485 0.243 263.6)` | `oklch(0.623 0.188 259.8)` | WCAG AA blue text |
-| `--color-accent-text` | `oklch(0.486 0.084 191.5)` | `oklch(0.769 0.132 191.7)` | WCAG AA cyan text |
-
-### Background
-
-| Token | Light value | Dark value | Purpose |
-|---|---|---|---|
-| `--bg-body` | `oklch(0.961 0 0.5)` | `oklch(0.166 0.026 269.4)` | Page / body background |
-| `--bg-surface` | `oklch(0.982 0.002 248)` | `oklch(0.19 0.02 260)` | Elevated surface, card base |
-| `--bg-panel` | `oklch(1 0 0)` | `oklch(0.242 0.03 269.9)` | Card, dialog, popover |
-| `--bg-tertiary` | `oklch(0.963 0.003 228.9)` | `oklch(0.326 0.036 266.7)` | Subtle containers |
-| `--bg-elevated` | `oklch(1 0 0)` | `oklch(0.292 0.034 270)` | Highest elevation surface |
-| `--bg-input` | `oklch(0.982 0.002 248)` | `oklch(0.242 0.03 269.9 / 0.6)` | Input field background |
-| `--bg-hover` | `oklch(0.963 0.003 228.9)` | `oklch(0.39 0.035 265)` | Hover state overlay |
-| `--bg-selected` | `oklch(0.546 0.215 262.9 / 0.08)` | `oklch(0.546 0.215 262.9 / 0.15)` | Selected row / item |
-
-### Border
-
-| Token | Light value | Dark value | Purpose |
-|---|---|---|---|
-| `--border-color` | `oklch(0.916 0.006 248)` | `oklch(0.769 0.132 191.7 / 0.15)` | Default border |
-| `--border-color-strong` | `oklch(0.741 0.022 250 / 0.5)` | `oklch(0.769 0.132 191.7 / 0.3)` | Emphasis border |
-| `--border-shell` | `oklch(0.741 0.022 250 / 0.2)` | `oklch(0.769 0.132 191.7 / 0.18)` | Shell / sidebar border |
-
-### Accent / brand
-
-| Token | Light value | Dark value | Purpose |
-|---|---|---|---|
-| `--accent-primary` | `oklch(0.546 0.215 262.9)` | `oklch(0.546 0.215 262.9)` | Electric Blue — primary action |
-| `--accent-secondary` | `oklch(0.769 0.132 191.7)` | `oklch(0.769 0.132 191.7)` | Electric Cyan — secondary / accent |
-
-### Status / semantic
-
-| Token | Value (both themes) | Purpose |
-|---|---|---|
-| `--color-success` | `oklch(0.697 0.135 172.1)` | Success state |
-| `--color-warning` | `oklch(0.868 0.125 81.4)` | Warning state |
-| `--color-error` | `oklch(0.669 0.219 20.9)` | Error / destructive |
-| `--color-info` | `oklch(0.769 0.132 191.7)` | Informational |
-
-### shadcn/ui bridge tokens (Tailwind @theme — used as `var(--color-*)`)
-
-These appear in the `@theme` block to drive Tailwind utility generation **and** as CSS vars on `:root`. After v0.2.0 these point to the semantic tokens above — no raw hex or HSL triplets.
-
-| `@theme` variable | Resolves to |
-|---|---|
-| `--color-background` | `var(--bg-body)` |
-| `--color-foreground` | `var(--text-primary)` |
-| `--color-primary` | `var(--accent-primary)` |
-| `--color-primary-foreground` | `var(--text-on-primary)` |
-| `--color-secondary` | `var(--bg-surface)` |
-| `--color-secondary-foreground` | `var(--text-primary)` |
-| `--color-muted` | `var(--bg-tertiary)` |
-| `--color-muted-foreground` | `var(--text-muted)` |
-| `--color-accent` | `var(--accent-secondary)` |
-| `--color-accent-foreground` | `var(--text-on-primary)` |
-| `--color-card` | `var(--bg-panel)` |
-| `--color-card-foreground` | `var(--text-primary)` |
-| `--color-popover` | `var(--bg-elevated)` |
-| `--color-popover-foreground` | `var(--text-primary)` |
-| `--color-border` | `var(--border-color)` |
-| `--color-input` | `var(--border-color)` |
-| `--color-ring` | `var(--accent-primary)` |
-| `--color-destructive` | `var(--color-error)` |
-| `--color-destructive-foreground` | `oklch(0.982 0.002 248)` |
-| `--color-success` | `var(--color-success)` |
-| `--color-warning` | `var(--color-warning)` |
-| `--color-info` | `var(--color-info)` |
+| Intent | Recommended |
+|--------|-------------|
+| Default body text | `text-foreground` |
+| De-emphasised body text | `text-muted-foreground` |
+| Text on `bg-primary` | `text-primary-foreground` |
+| Text on raw `bg-{blue,green,red,amber}-{500,600}` | `text-white` |
+| Text on `bg-card` | `text-card-foreground` (or `text-foreground`, equivalent) |
 
 ---
 
-## 4 · Per-App `--app-primary` / `--app-accent` Correct Values
+## 5. ESLint rule (`bsuite/no-hardcoded-colours`)
 
-| App | `--app-primary` | `--app-accent` | Status |
-|---|---|---|---|
-| BSU | `oklch(0.541 0.247 293.0)` | `oklch(0.709 0.159 293.5)` | ⚠️ **Fix** — currently hex `#7c3aed` |
-| CRM7 | `oklch(0.546 0.215 262.9)` | `oklch(0.769 0.132 191.7)` | ✅ Correct |
-| R80.3 | `oklch(0.666 0.157 58.3)` | `oklch(0.837 0.164 84.4)` | Check theme.css |
-| conduit | `oklch(0.596 0.127 163.3)` | `oklch(0.773 0.153 163.3)` | Check globals.css |
-| throughput | `oklch(0.546 0.215 262.9)` | `oklch(0.769 0.132 191.7)` | v3 — no `@theme` block |
-| braden | `oklch(0.488 0.170 17.6)` | `oklch(0.769 0.096 90.9)` | ✅ Corporate — exempt |
+The rule lives at:
+- `packages/eslint-config/rules/no-hardcoded-colours.js` (canonical)
+- Per-app inlined copies in `{conduit,throughput,...}/eslint-rules/no-hardcoded-colours.js`
+
+**What it forbids:**
+- Tailwind palette utilities matching `\b(text|bg|border|divide)-(slate|gray|zinc|neutral)-(\d{2,3})\b` in JSX `className` strings
+- Hex literals (`#3b82f6`) in object/property string values
+- `rgb()` / `rgba()` literals in object/property string values
+
+**What it does NOT catch:**
+- `bg-gray-*` inside template literals (only checks `quasis[].value.raw` → still catches static fragments)
+- Coloured palette utilities outside the `gray|slate|zinc|neutral` set (`bg-blue-600`, `bg-red-500` are intentional brand-ish accents and not flagged)
+- Inline `style={{ color: '#abc' }}` (use `style` prop sparingly; flagged via `Property` visitor only when the literal is a plain hex string)
+
+**Disabling correctly:**
+
+```tsx
+// GOOD — inline disable with reason
+{/* eslint-disable-next-line bsuite/no-hardcoded-colours -- decorative neutral status dot, no semantic equivalent */}
+<span className="bg-gray-300" />
+
+// GOOD — disable on the JSX opening tag for multi-line JSX
+<div
+  /* eslint-disable-next-line bsuite/no-hardcoded-colours -- decorative overflow avatar, mid-gray neutral by design */
+  className="bg-gray-500 ..."
+>
+```
+
+```tsx
+// BAD — comment is dropped by parser, attached to nothing
+{/* eslint-disable-next-line ... */}
+{condition && <div className="bg-gray-500" />}
+```
+
+Always test with `pnpm lint` after adding disables — eslint reports unused-disable directives as warnings, which signals the rule didn't actually fire and the disable can be removed.
 
 ---
 
-## 5 · Codemod Confidence Levels
+## 6. Migration checklist when adding a new component
 
-| Level | Meaning | Action |
-|---|---|---|
-| **AUTO** | Safe to replace automatically — unique semantic match | Codemod replaces |
-| **REVIEW** | Ambiguous — depends on context (e.g. `text-white` on coloured bg) | Codemod flags with `/* THEME-REVIEW: reason */` comment |
-| **MANUAL** | Can only be resolved with visual inspection | Codemod flags; no substitution |
+Before you commit any new JSX with colour classes:
 
-| Source pattern | Level |
-|---|---|
-| `text-slate-{600-900}` → `text-foreground` | AUTO |
-| `text-slate-{100-500}` → `text-muted-foreground` | AUTO |
-| `bg-slate-{50-100}` → `bg-muted` | AUTO |
-| `bg-slate-{800-950}` → `bg-background` | AUTO |
-| `border-slate-{100-300}` → `border-border` | AUTO |
-| `text-white` | REVIEW |
-| `bg-white` | REVIEW |
-| `text-black` | REVIEW |
-| Inline `style={{ color: '#xxx' }}` | MANUAL |
-| `className="bg-[#xxx]"` | MANUAL |
+1. **Default to semantic tokens.** `bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground` cover ~80% of UI surfaces.
+2. **For brand-coloured actions, use `bg-primary text-primary-foreground`** (mode-coupled pair).
+3. **For raw Tailwind palette buttons (`bg-blue-600` etc.), pair with `text-white` explicitly.** Never `text-primary-foreground`.
+4. **For decorative neutral grays, prefer `bg-muted`.** Only fall back to raw `bg-gray-*` for genuinely decorative elements where `bg-muted` resolves to the wrong tone.
+5. **Run `pnpm lint`** — the rule catches the most common mistakes at build time.
+6. **Test in light AND dark mode.** Mode-coupling regressions only surface in one mode.
 
 ---
 
-## 6 · Braden Corporate Exemptions
+## 7. References
 
-The following tokens and usages are **intentionally exempt** from the D2C oklch-only rule. The codemod must skip these:
+- Parent monorepo audit: `docs/20260425-colour-token-audit-v1.00W.md` — full WCAG AA contrast table + per-PR migration log + WS-D-followup regressions
+- D2C theme spec: `docs/20260228-d2c-theme-specification-v1.00A.md`
+- WCAG contrast audit: `docs/20260407-d2c-wcag-contrast-audit-v1.00A.md`
+- Conduit PR #113 — revert of incorrect §6.2 mapping (mode-coupling mismatch)
+- Throughput PR #45 — correction of `bg-gray-*` semantic mapping
 
-- All files under `braden/src/**` and `braden/styles/**`
-- The `packages/theme/src/css/tokens-brand-corporate-braden.css` file
-- Any class with `braden` in a comment: `/* BRADEN-EXEMPT */`
+---
+
+*This document is the source of truth for colour-token decisions across all D2C BSuite apps. When in doubt, check here before reaching for a `text-*-foreground` or a raw palette utility.*

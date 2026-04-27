@@ -9,26 +9,26 @@
 
 ## 1. Per-App D2C Accent System
 
-All D2C apps share: navy shell (`oklch(0.13 0.02 260)`), same spacing scale, same typography. Only accent tokens differ.
+All D2C apps share: navy shell (`#0a0e1a`), same spacing scale, same typography. Only accent tokens differ.
 
 | App | Primary | Accent | Label |
 |-----|---------|--------|-------|
-| CRM7 | Electric Blue `oklch(0.546 0.215 262.9)` | Cyan `oklch(0.769 0.132 191.7)` | Blue · Cyan |
+| CRM7 | Electric Blue `#2563eb` | Cyan `#00cec9` | Blue · Cyan |
 | BSU Portal | Purple `#7c3aed` | Lavender `#a78bfa` | Purple · Lavender |
 | Conduit | Emerald `#059669` | Green `#34d399` | Green · Growth |
 | R80.3 | Amber `#d97706` | Gold `#fbbf24` | Amber · Compliance |
 | Braden.com.au | Red `#ab233a` | Gold `#cbb26a` | Corporate — excluded from D2C tokens |
 
-**Correction from review:** App card/section headings must NOT use pure white (`oklch(0.96 0 0)`). Use accent-200 or `slate-200` (`#e2e8f0`) — subtle tint, not pure white. This applies to all heading text sitting on the dark navy shell.
+**Correction from review:** App card/section headings must NOT use pure white (`#f2f2f2`). Use accent-200 or `slate-200` (`#e2e8f0`) — subtle tint, not pure white. This applies to all heading text sitting on the dark navy shell.
 
 CSS variables per app:
 
 ```css
 /* CRM7 */
---app-primary: oklch(0.546 0.215 262.9);
---app-accent: oklch(0.769 0.132 191.7);
---app-primary-glow: oklch(0.546 0.215 262.9 / 0.15);
---app-accent-glow: oklch(0.769 0.132 191.7 / 0.12);
+--app-primary: #2563eb;
+--app-accent: #00cec9;
+--app-primary-glow: rgba(37, 99, 235, 0.15);
+--app-accent-glow: rgba(0, 206, 201, 0.12);
 ```
 
 Each app's `theme.css` gets its own `--app-primary` / `--app-accent` / `--app-primary-glow` / `--app-accent-glow` set. These feed into the panel glow and bento grid shadow system.
@@ -59,8 +59,8 @@ In priority order:
 
 Panels use a **bento grid** layout (varied panel sizes, visual hierarchy). Not the current equal-column grid.
 
-- Dark mode: panel borders have accent color glow (`box-shadow: 0 0 0 1px var(--app-accent-glow), 0 4px 24px var(--app-primary-glow)`) — glow tokens use oklch with alpha
-- Light mode: panels use accent-hinted shadow (`box-shadow: 0 1px 3px oklch(0.546 0.215 262.9 / 0.08), 0 4px 16px oklch(0.546 0.215 262.9 / 0.05)`)
+- Dark mode: panel borders have accent color glow (`box-shadow: 0 0 0 1px var(--app-accent-glow), 0 4px 24px var(--app-primary-glow)`)
+- Light mode: panels use accent-hinted shadow (`box-shadow: 0 1px 3px rgba(37,99,235,0.08), 0 4px 16px rgba(37,99,235,0.05)`)
 - Dashboard currently wastes vertical space — bento grid must fill the viewport
 
 **Handoff note:** Bento grid layout is Cascade's B1 territory. This spec documents the requirement and the glow/shadow token formula. Cascade implements the layout.

@@ -35,7 +35,3 @@ export interface ThemeContextValue {
   /** Update the theme. Persists to localStorage and applies the class. */
   setTheme: (mode: ThemeMode) => void
 }
-
-/** Branding constants re-exported for consumers that don't use /react subpath */
-export { BRANDING_STORAGE_KEY, BRANDING_OVERRIDE_FLAG } from './react/BrandingProvider'
-export type { TenantBranding } from './react/BrandingProvider'
