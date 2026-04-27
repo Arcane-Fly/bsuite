@@ -34,9 +34,27 @@ ruleTester.run('no-cross-app-write', noCrossAppWriteRule, {
       filename: pathFor('r80.3', 'lib/foo.ts'),
     },
     {
-      name: 'bsu may update tenants (its own table)',
+      name: 'bsu may update tenants (multi-writer: bsu listed)',
       code: "supabase.from('tenants').update({ name: 'x' });",
       filename: pathFor('business-suite-unified', 'lib/foo.ts'),
+    },
+    // PHASE-3c (@bsuite/dry-lint@0.2.0): multi-writer schema — both listed
+    // writers may write; non-writers are flagged. tenants + user_tenants are
+    // co-owned by BSU + CRM7 per Option C.
+    {
+      name: 'crm7 may insert tenants (multi-writer: crm7 listed)',
+      code: "supabase.from('tenants').insert({ name: 'x' });",
+      filename: pathFor('crm7', 'supabase/functions/tenant-management/index.ts'),
+    },
+    {
+      name: 'crm7 may update user_tenants (multi-writer: crm7 listed)',
+      code: "supabase.from('user_tenants').update({ role: 'admin' }).eq('id', 1);",
+      filename: pathFor('crm7', 'supabase/functions/tenant-management/index.ts'),
+    },
+    {
+      name: 'bsu may delete user_tenants (multi-writer: bsu listed)',
+      code: "supabase.from('user_tenants').delete().eq('id', 1);",
+      filename: pathFor('business-suite-unified', 'lib/admin.ts'),
     },
     {
       name: 'throughput may delete from ideas (its own table)',
@@ -46,8 +64,13 @@ ruleTester.run('no-cross-app-write', noCrossAppWriteRule, {
     // Reads are always allowed regardless of owner.
     {
       name: 'crm7 may .select() from a BSU-owned table',
-      code: "supabase.from('tenants').select('*');",
+      code: "supabase.from('tenant_branding').select('*');",
       filename: pathFor('crm7', 'lib/foo.ts'),
+    },
+    {
+      name: 'r80 may .select() from tenants (reader on multi-writer table)',
+      code: "supabase.from('tenants').select('*').eq('id', 1);",
+      filename: pathFor('r80.3', 'lib/foo.ts'),
     },
     {
       name: 'throughput may .select() from team_members',
@@ -173,6 +196,40 @@ ruleTester.run('no-cross-app-write', noCrossAppWriteRule, {
       filename: '/tmp/foo/src/x.ts', // would otherwise be unknown app
       options: [{ appOverride: 'bsu' }],
       errors: [{ messageId: 'crossAppWrite', data: { app: 'bsu', method: 'delete', table: 'award_rates', owner: 'r80' } }],
+    },
+    // PHASE-3c (@bsuite/dry-lint@0.2.0): multi-writer schema — apps NOT in
+    // writers list are flagged with the multi-writer message.
+    {
+      name: 'r80 cannot insert tenants (multi-writer: r80 not in writers)',
+      code: "await supabase.from('tenants').insert({ name: 'x' });",
+      filename: pathFor('r80.3', 'lib/foo.ts'),
+      errors: [
+        {
+          messageId: 'crossAppWriteMultiWriter',
+          data: {
+            app: 'r80',
+            method: 'insert',
+            table: 'tenants',
+            writers: 'bsu, crm7',
+          },
+        },
+      ],
+    },
+    {
+      name: 'throughput cannot update user_tenants (multi-writer: throughput not in writers)',
+      code: "await supabase.from('user_tenants').update({ role: 'admin' }).eq('id', 1);",
+      filename: pathFor('throughput', 'lib/foo.ts'),
+      errors: [
+        {
+          messageId: 'crossAppWriteMultiWriter',
+          data: {
+            app: 'throughput',
+            method: 'update',
+            table: 'user_tenants',
+            writers: 'bsu, crm7',
+          },
+        },
+      ],
     },
   ],
 });
