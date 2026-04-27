@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$comment": "BSuite one-shot entity ownership map. Source: docs/20260227-dry-one-shot-architecture-v1.01A.md §1 + docs/20260423-cross-app-write-audit-v1.00W.md V5–V10. Owner = single app allowed to insert/update/upsert/delete. readers = apps that may .select() but never write. shared = co-ownership accepted (audit-trail / append-only sinks). 'all' = any app may write (event sinks like bi_metrics).",
+  "$comment": "BSuite one-shot entity ownership map. Source: docs/20260227-dry-one-shot-architecture-v1.01A.md §1 + docs/20260423-cross-app-write-audit-v1.00W.md V5–V10. Owner = single app allowed to insert/update/upsert/delete. readers = apps that may .select() but never write. shared = co-ownership accepted — RESERVED FOR AUDIT-TRAIL / APPEND-ONLY SINKS ONLY (per docs/20260427-ownership-map-ratification-v1.00W.md Item 3 — admin-CRUD co-ownership cases must wait for the per-app `writers` schema extension shipping in @bsuite/dry-lint@0.2.0 / PHASE-3c). 'all' = any app may write (event sinks like bi_metrics).",
   "tables": {
     "contacts":                       { "owner": "crm7",       "readers": ["r80", "bsu"] },
     "clients":                        { "owner": "crm7",       "readers": ["r80", "bsu"] },
@@ -37,8 +37,8 @@
     "todos":                          { "owner": "throughput", "readers": [] },
 
     "users":                          { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
-    "tenants":                        { "owner": "shared",     "readers": [], "$comment": "WS-I PHASE-2 decision (2026-04-25): co-owned by BSU + CRM7. BSU owns platform-level tenant CRUD via /developer/tenants and Stripe webhook (`stripe-webhook` writes subscription metadata). CRM7 owns tenant-admin surfaces (`tenant-management` edge function: create-org, create-division, update-tenant, invite-member, set-sharing-policy — all scoped to a CRM7 tenant admin managing their own org hierarchy). RLS enforces tenant scope. See docs/20260425-dry-lint-violations-triage-v1.00W.md §3 — Tenant-Management Ownership Decision." },
-    "user_tenants":                   { "owner": "shared",     "readers": [], "$comment": "WS-I PHASE-2 decision (2026-04-25): co-owned by BSU + CRM7. BSU owns invitation acceptance flow (canonical signup); CRM7 owns tenant-admin membership operations (invite-member, approve-membership, update-member-role, remove-member) via the `tenant-management` edge function. RLS enforces tenant scope. Same justification as `tenants`." },
+    "tenants":                        { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "throughput"], "$comment": "Interim per docs/20260427-ownership-map-ratification-v1.00W.md Option C — ownership reverted from `shared`. CRM7 tenant-management edge function violation sites carry inline eslint-disable + TODO link to PHASE-3c rule schema extension." },
+    "user_tenants":                   { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "throughput"], "$comment": "Interim per docs/20260427-ownership-map-ratification-v1.00W.md Option C — ownership reverted from `shared`. CRM7 tenant-management edge function violation sites carry inline eslint-disable + TODO link to PHASE-3c rule schema extension." },
     "user_roles":                     { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "user_sessions":                  { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "user_permissions":               { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
@@ -46,6 +46,8 @@
     "permissions":                    { "owner": "bsu",        "readers": ["crm7", "r80"] },
     "role_permissions":               { "owner": "bsu",        "readers": ["crm7", "r80"] },
     "team_members":                   { "owner": "bsu",        "readers": ["crm7", "r80", "throughput"] },
+    "team_invitations":               { "owner": "bsu",        "readers": ["crm7", "r80", "throughput"], "$comment": "Added per docs/20260427-ownership-map-ratification-v1.00W.md Item 2 — sibling of team_members. WS-G admin RLS migration `20260426000000_team_members_admin_rls.sql` shipped policies for this table; align ownership with team_members." },
+    "teams":                          { "owner": "bsu",        "readers": ["crm7", "r80", "throughput"], "$comment": "Added per docs/20260427-ownership-map-ratification-v1.00W.md Item 2 — sibling of team_members. WS-G admin RLS migration `20260426000000_team_members_admin_rls.sql` shipped policies for this table; align ownership with team_members." },
     "tenant_branding":                { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "platform_branding":              { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "tenant_settings":                { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
