@@ -12,7 +12,7 @@
         branch = main
 [submodule "business-suite-unified"]
         path = business-suite-unified
-        url = https://github.com/GaryOcean428/business-suite-unified.git
+	url = https://github.com/GaryOcean428/business-suite-unified.git
         branch = master
 [submodule "conduit"]
         path = conduit

@@ -218,9 +218,9 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 
 - AI-powered features via `@ai-sdk/react` — never commit API keys
 - Protected: `src/lib/supabase.ts`, `src/lib/ai/`
-- **AI Gateway models** — default: `xai/grok-4.1-fast-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
+- **AI Gateway models** — default: `xai/grok-4.20-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
 - Config: `src/lib/ai/config.ts`, Router: `src/lib/ai/model-router.ts`
-- **NEVER replace grok-4.1-fast-reasoning as default** — it is the configured Vercel AI Gateway model
+- **Primary model is `xai/grok-4.20-reasoning`** (supersedes `grok-4.1-fast-reasoning` per 2026-04-24 Vercel AI Gateway roster update). 2M context, 2M max output, $2/M input + $6/M output. Do not downgrade without explicit user approval.
 
 ### conduit
 
@@ -244,7 +244,7 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 
 - Idea Management Platform at `ideas.crm7.app` — capture, refine, launch ideas with AI assistance
 - React 18 + Vite + TypeScript stack (matches the four other Vite apps)
-- AI integration via **Groq** (`gpt-oss-120b`) — see project `GROQ_SETUP.md` and `docs/GROQ_INTEGRATION.md`
+- AI integration via **Groq** (`gpt-oss-120b`) — see `throughput/GROQ_SETUP.md` and `throughput/docs/GROQ_INTEGRATION.md` (submodule-local paths)
 - Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
 - Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
 - **Anomaly:** ships with `package-lock.json` (npm), not `pnpm-lock.yaml`. Tracked separately for consolidation across the suite.

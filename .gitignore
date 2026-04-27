@@ -42,6 +42,7 @@ supabase/.temp/
 .windsurf/
 .claude/
 .playwright-mcp/
+*/.playwright-mcp/
 .smoke-artefacts/
 
 # Scratch files
@@ -49,3 +50,7 @@ clinework.txt
 
 # Git worktrees
 .worktrees/
+
+# Playwright MCP scratch — per-call page snapshots, console logs, downloads
+playwright-report/
+test-results/

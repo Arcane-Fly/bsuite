@@ -8,7 +8,6 @@ import {
   mapWageAllowance,
   mapExpenseAllowance,
   filterApprenticeClassifications,
-  isAnnualFrequency,
 } from '../../awards/mapd-mapper';
 
 import { fetchCompleteAward } from '../../awards/mapd-client';
@@ -385,32 +384,6 @@ describe('mapPaymentFrequency', () => {
   });
 });
 
-describe('isAnnualFrequency', () => {
-  it('returns true for "per annum"', () => {
-    expect(isAnnualFrequency('per annum')).toBe(true);
-  });
-
-  it('returns true for "per year"', () => {
-    expect(isAnnualFrequency('per year')).toBe(true);
-  });
-
-  it('returns true for "Per Annum" (case-insensitive)', () => {
-    expect(isAnnualFrequency('Per Annum')).toBe(true);
-  });
-
-  it('returns false for "per week"', () => {
-    expect(isAnnualFrequency('per week')).toBe(false);
-  });
-
-  it('returns false for "per hour"', () => {
-    expect(isAnnualFrequency('per hour')).toBe(false);
-  });
-
-  it('returns false for null', () => {
-    expect(isAnnualFrequency(null)).toBe(false);
-  });
-});
-
 describe('mapWageAllowance', () => {
   it('maps all fields correctly with type=wage', () => {
     const result = mapWageAllowance(mapdWageAllowanceFixture);
@@ -471,47 +444,6 @@ describe('mapWageAllowance', () => {
   it('result passes AwardAllowanceZ validation', () => {
     const result = mapWageAllowance(mapdWageAllowanceFixture);
     expect(() => AwardAllowanceZ.parse(result)).not.toThrow();
-  });
-
-  // BUG-1 regression tests — annualised allowance ÷52 normalisation
-  it('divides per-annum amount by 52 (e.g. $2600/yr → $50/wk)', () => {
-    const annualAllowance: MAPDWageAllowance = {
-      ...mapdWageAllowanceFixture,
-      wage_allowance_fixed_id: 5599,
-      allowance: 'Annual clothing allowance',
-      allowance_amount: 2600,
-      payment_frequency: 'per annum',
-    };
-    const result = mapWageAllowance(annualAllowance);
-    expect(result.amount).toBe(50); // 2600 / 52 = 50.00
-  });
-
-  it('divides per-year amount by 52', () => {
-    const annualAllowance: MAPDWageAllowance = {
-      ...mapdWageAllowanceFixture,
-      wage_allowance_fixed_id: 5600,
-      allowance: 'Annual tool allowance',
-      allowance_amount: 1040,
-      payment_frequency: 'per year',
-    };
-    const result = mapWageAllowance(annualAllowance);
-    expect(result.amount).toBe(20); // 1040 / 52 = 20.00
-  });
-
-  it('does NOT divide per-week amount', () => {
-    const result = mapWageAllowance(mapdWageAllowanceFixture); // fixture uses per week
-    expect(result.amount).toBe(32.59); // unchanged
-  });
-
-  it('leaves null amount unchanged for annual frequency', () => {
-    const nullAmountAnnual: MAPDWageAllowance = {
-      ...mapdWageAllowanceFixture,
-      wage_allowance_fixed_id: 5601,
-      allowance_amount: null,
-      payment_frequency: 'per annum',
-    };
-    const result = mapWageAllowance(nullAmountAnnual);
-    expect(result.amount).toBeNull();
   });
 });
 

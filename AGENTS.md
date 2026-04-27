@@ -498,9 +498,9 @@ Use this as the canonical starting point when adding new layered elements. Do no
 - AI-generated content must be labeled in UI
 - Rate limiting on AI endpoints
 - CRM7 is the canonical reference for AI SDK patterns — other projects port from here
-- **AI Gateway models** — default: `xai/grok-4.1-fast-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
+- **AI Gateway models** — default: `xai/grok-4.20-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
 - Config: `src/lib/ai/config.ts`, Router: `src/lib/ai/model-router.ts`
-- **NEVER replace grok-4.1-fast-reasoning as default** — it is the configured Vercel AI Gateway model
+- **Primary model is `xai/grok-4.20-reasoning`** (supersedes `grok-4.1-fast-reasoning` per 2026-04-24 Vercel AI Gateway roster update). 2M context, 2M max output, $2/M input + $6/M output. Do not downgrade without explicit user approval.
 
 ### R80.3 (Compliance)
 

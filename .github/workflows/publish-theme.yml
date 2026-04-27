@@ -1,0 +1,85 @@
+# Publish @bsuite/theme to npm
+#
+# Triggers automatically when packages/theme/** changes land on main.
+# Skips publish if the current version is already on npm (idempotent).
+#
+# Required GitHub Secret:
+#   NPM_TOKEN  - npm Classic Automation token with publish rights to @bsuite org
+#                Create at: https://www.npmjs.com/settings/<user>/tokens
+#                Token type: "Automation" (bypasses 2FA for CI)
+#
+# To trigger manually:
+#   gh workflow run publish-theme.yml
+
+name: Publish @bsuite/theme
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/theme/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/theme
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+      - name: Install workspace dependencies
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+          PUBLISHED=$(npm view "@bsuite/theme@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::@bsuite/theme@${PKG_VERSION} already on npm — skipping"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Will publish @bsuite/theme@${PKG_VERSION}"
+          fi
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.skip == 'false'
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+          npm publish --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Job summary
+        if: always()
+        run: |
+          VERSION="${{ steps.version-check.outputs.version }}"
+          SKIPPED="${{ steps.version-check.outputs.skip }}"
+          if [ "$SKIPPED" = "true" ]; then
+            echo "### ⏭️ Skipped — already published" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`@bsuite/theme@${VERSION}\` is already on npm." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ✅ Published" >> "$GITHUB_STEP_SUMMARY"
+            echo "[\`@bsuite/theme@${VERSION}\`](https://www.npmjs.com/package/@bsuite/theme) published to npm." >> "$GITHUB_STEP_SUMMARY"
+          fi

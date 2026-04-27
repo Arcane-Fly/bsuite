@@ -152,7 +152,19 @@ function mapFrequencyToType(freq: string | null): AllowanceType {
   if (lower.includes('hour')) return 'perHour';
   if (lower.includes('day')) return 'perDay';
   if (lower.includes('week')) return 'perWeek';
+  if (isAnnualFrequency(freq)) return 'perWeek';
   return 'perHour';
+}
+
+function isAnnualFrequency(freq: string | null): boolean {
+  if (!freq) return false;
+  const lower = freq.toLowerCase().trim();
+  return lower.includes('annum') || lower.includes('year');
+}
+
+function mapAllowanceAmount(a: AwardAllowance): number {
+  const amount = a.amount ?? a.rate ?? 0;
+  return isAnnualFrequency(a.paymentFrequency) ? amount / 52 : amount;
 }
 
 /** Convert AwardAllowance[] to CalcConfig Allowance[] */
@@ -166,7 +178,7 @@ function convertAllowances(
       id: a.fixedId,
       name: a.name,
       type: mapFrequencyToType(a.paymentFrequency),
-      amount: a.amount ?? a.rate ?? 0,
+      amount: mapAllowanceAmount(a),
       superApplicable: a.isAllPurpose,
       enabled:
         enabledIds === null
