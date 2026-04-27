@@ -1,19 +1,19 @@
 'use client';
 import React from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { CardWidget } from './widgets/Card';
-import { DataTableWidget } from './widgets/DataTable';
-import { EntityRefCellWidget } from './widgets/EntityRefCell';
-import { EntitySelectorWidget } from './widgets/EntitySelector';
-import { FormRendererWidget } from './widgets/FormRenderer';
-import { SchemaFieldAdderWidget } from './widgets/SchemaFieldAdder';
-import { StatGridWidget } from './widgets/StatGrid';
-import { UnknownWidget } from './widgets/UnknownWidget';
-import { WidgetPropsSchema } from '../schemas/widgetProps';
-import { ErrorBoundary } from './ErrorBoundary';
-import { getWidgetById } from './registerWidget';
+import { CardWidget } from './widgets/Card.js';
+import { DataTableWidget } from './widgets/DataTable.js';
+import { EntityRefCellWidget } from './widgets/EntityRefCell.js';
+import { EntitySelectorWidget } from './widgets/EntitySelector.js';
+import { FormRendererWidget } from './widgets/FormRenderer.js';
+import { SchemaFieldAdderWidget } from './widgets/SchemaFieldAdder.js';
+import { StatGridWidget } from './widgets/StatGrid.js';
+import { UnknownWidget } from './widgets/UnknownWidget.js';
+import { WidgetPropsSchema } from '../schemas/widgetProps.js';
+import { ErrorBoundary } from './ErrorBoundary.js';
+import { getWidgetById } from './registerWidget.js';
 // Side-effect import: ensures the 7 built-ins self-register.
-import './registerBuiltins';
+import './registerBuiltins.js';
 
 interface WidgetDef {
   id: string;

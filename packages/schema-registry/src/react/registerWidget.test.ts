@@ -4,7 +4,7 @@ import {
   getRegisteredWidgets,
   getWidgetById,
   _resetRegistryForTests,
-} from './registerWidget';
+} from './registerWidget.js';
 
 const StubComponent = () => null;
 

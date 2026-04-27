@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { z } from 'zod';
-import type { EntityRefCellPropsSchema } from '../../schemas/widgetProps';
-import { UnknownWidget } from './UnknownWidget';
+import type { EntityRefCellPropsSchema } from '../../schemas/widgetProps.js';
+import { UnknownWidget } from './UnknownWidget.js';
 
 type EntityRefCellProps = z.infer<typeof EntityRefCellPropsSchema>;
 

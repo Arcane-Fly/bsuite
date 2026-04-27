@@ -1,6 +1,6 @@
-export { DataTablePropsEditor } from './DataTablePropsEditor';
-export { StatGridPropsEditor } from './StatGridPropsEditor';
-export { EntitySelectorPropsEditor } from './EntitySelectorPropsEditor';
-export { CardPropsEditor } from './CardPropsEditor';
-export { FormRendererPropsEditor } from './FormRendererPropsEditor';
-export type { PropsEditorShellProps } from './editorCommon';
+export { DataTablePropsEditor } from './DataTablePropsEditor.js';
+export { StatGridPropsEditor } from './StatGridPropsEditor.js';
+export { EntitySelectorPropsEditor } from './EntitySelectorPropsEditor.js';
+export { CardPropsEditor } from './CardPropsEditor.js';
+export { FormRendererPropsEditor } from './FormRendererPropsEditor.js';
+export type { PropsEditorShellProps } from './editorCommon.js';

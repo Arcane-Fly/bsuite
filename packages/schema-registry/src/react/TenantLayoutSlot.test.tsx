@@ -1,14 +1,14 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TenantLayoutSlot } from './TenantLayoutSlot';
+import { TenantLayoutSlot } from './TenantLayoutSlot.js';
 
 // Mock useTenantPageLayout
 vi.mock('./useTenantPageLayout', () => ({
   useTenantPageLayout: vi.fn(),
 }));
 
-import { useTenantPageLayout } from './useTenantPageLayout';
+import { useTenantPageLayout } from './useTenantPageLayout.js';
 
 const mockUseTenantPageLayout = vi.mocked(useTenantPageLayout);
 

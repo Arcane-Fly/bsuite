@@ -1,18 +1,18 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { DataTablePropsEditor } from './DataTablePropsEditor';
-import { StatGridPropsEditor } from './StatGridPropsEditor';
-import { EntitySelectorPropsEditor } from './EntitySelectorPropsEditor';
-import { CardPropsEditor } from './CardPropsEditor';
-import { FormRendererPropsEditor } from './FormRendererPropsEditor';
+import { DataTablePropsEditor } from './DataTablePropsEditor.js';
+import { StatGridPropsEditor } from './StatGridPropsEditor.js';
+import { EntitySelectorPropsEditor } from './EntitySelectorPropsEditor.js';
+import { CardPropsEditor } from './CardPropsEditor.js';
+import { FormRendererPropsEditor } from './FormRendererPropsEditor.js';
 import {
   DataTablePropsSchema,
   StatGridPropsSchema,
   EntitySelectorPropsSchema,
   CardPropsSchema,
   FormRendererPropsSchema,
-} from '../../schemas/widgetProps';
+} from '../../schemas/widgetProps.js';
 
 describe('PropsEditor components', () => {
   it('DataTablePropsEditor renders and emits Zod-valid onChange', () => {

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppScope } from '../react/types';
+import type { AppScope } from '../react/types.js';
 
 export async function prefetchTenantPageLayout(
   supabase: SupabaseClient,
