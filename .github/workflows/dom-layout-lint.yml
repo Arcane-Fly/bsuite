@@ -20,13 +20,6 @@ name: DOM Layout Lint
 on:
   pull_request:
     branches: [main, master, development]
-    paths:
-      - 'src/**/*.tsx'
-      - 'src/**/*.ts'
-      - 'src/**/*.css'
-      - 'apps/*/src/**/*.tsx'
-      - 'apps/*/src/**/*.ts'
-      - 'apps/*/src/**/*.css'
 
 jobs:
   dom-layout-lint:
