@@ -1,112 +1,88 @@
-# Operator Handoff — Finish Line Session (2026-04-25)
+# Operator Handoff — 7 actionable items
 
 **Status:** W (Working)
-**Author:** Claude Code (WS-G agent, finish-line plan)
-**Scope:** Tasks that **cannot** be completed by an agent and require a human operator with elevated credentials (Supabase dashboard, Microsoft Entra portal, GitHub branch-protection admin).
+**Last updated:** 2026-04-27 (rewrite for clarity per operator review)
+**Audience:** Braden — operator with credentials for Supabase dashboard, Microsoft Entra portal, developer.xero.com, and Supabase CLI.
 
-This document is the residue from the 10-item operator checklist captured in `bsuite_pending_actions` (memory key, dated 2026-04-23). Items 1-5 (Supabase migrations + extensions + GUC discovery) and item 10 (auto-delete head branches) were executed during this session; only items below remain operator-only.
-
-After every operator action, run the listed `verification_command` so the next agent session can confirm the state without re-asking.
+This doc lists **only the 7 items that still need you**. Everything else from the 2026-04-25 + 2026-04-27 sessions is done and verifiable — see [§Already Resolved](#already-resolved) at the bottom for the audit trail.
 
 ---
 
-## Item 1 — `OAUTH_STATE_SECRET` set + redeploy oauth edge functions
+## Quick reference
 
-**Why operator-only:** Supabase edge function env vars (project-level secrets) are NOT writable via the Supabase MCP `execute_sql` tool — they live in the Supabase platform config, not Postgres. The `apply_migration` / `execute_sql` MCP surface explicitly cannot reach them. Setting requires either the Supabase CLI (`supabase secrets set ...`) authenticated with a project access token, or the dashboard.
+Run any item independently. Each section below has identical structure: **What / Why-you / How / Verify**.
 
-### Action
+| # | Item | Where | Time | Blocking? |
+|---|---|---|---|---|
+| 1 | Set `OAUTH_STATE_SECRET` + redeploy 2 edge fns | Supabase CLI or dashboard | 5 min | OAuth login broken until done |
+| 2 | Add 2 TGA GUCs (`app.tga_sync_url`, `app.tga_sync_secret`) | Supabase dashboard (or support ticket) | 10 min | Blocks item 3 |
+| 3 | Flip `TGA_SYNC_ENABLED=true` after sandbox dry-run | Supabase branch + CLI | 30 min (incl. dry-run) | Blocks TGA cron job |
+| 4 | Enable Azure `xms_edov` optional claim | https://entra.microsoft.com | 5 min | Microsoft email verification |
+| 5 | Replace `*.vercel.app` wildcard redirect URIs with explicit list | Supabase dashboard | 5 min | Security hardening |
+| 6 | Revoke HS256 "Previous" JWK | Supabase dashboard | 2 min | Final step of JWK rotation |
+| 7 | Register Xero OAuth app (Part O.2) | https://developer.xero.com/myapps | 10 min | Blocks Xero integration rollout |
 
-Generate a 32-byte secret and persist it as a project-level secret, then redeploy the two consuming edge functions so they pick up the new env var.
+**Total:** ~70 minutes of active operator time (longer if waiting on Supabase support for item 2).
 
-### CLI (preferred — keyless via interactive login)
+**Suggested order:** 1 → 2 → 3 → 4 → 5 → 6 → 7. Items 4, 5, 6, 7 are independent — do them in any order. Item 3 needs item 2 done first.
+
+---
+
+## Item 1 — Set `OAUTH_STATE_SECRET` + redeploy 2 edge functions
+
+**What:** Generate a 32-byte secret. Set it as a Supabase project-level edge function secret. Redeploy `oauth-google-email` and `oauth-microsoft-email` so they pick up the new env var.
+
+**Why you (not the agent):** Supabase edge function env vars are platform-config, not Postgres rows. The MCP `execute_sql` tool can't reach them. Setting requires the Supabase CLI (interactive `supabase login`) or the dashboard.
+
+### How — CLI path (preferred)
 
 ```bash
-# 1. Authenticate once (opens browser)
-supabase login
+supabase login                                                                       # one-time browser flow
 
-# 2. Set the secret
 supabase secrets set OAUTH_STATE_SECRET=$(openssl rand -hex 32) \
   --project-ref tuybltdrdefjblnplpqo
 
-# 3. Redeploy both consumers so they re-read env
 supabase functions deploy oauth-google-email --project-ref tuybltdrdefjblnplpqo
 supabase functions deploy oauth-microsoft-email --project-ref tuybltdrdefjblnplpqo
 ```
 
-### Dashboard alternative
+### How — Dashboard path
 
-URL: https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/functions/secrets
+1. Open https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/functions/secrets
+2. **Add new secret** → Name `OAUTH_STATE_SECRET` → Value `openssl rand -hex 32` output (must be ≥32 chars) → Save.
+3. Functions → `oauth-google-email` → Redeploy. Then same for `oauth-microsoft-email`.
 
-1. Click "Add new secret".
-2. Name: `OAUTH_STATE_SECRET`. Value: paste output of `openssl rand -hex 32` (must be ≥ 32 chars).
-3. Click "Save".
-4. Navigate to Functions → `oauth-google-email` → "Redeploy". Repeat for `oauth-microsoft-email`.
-
-**Screenshot reference:** `docs/operator-screenshots/oauth-state-secret-add.png` (capture after first run for next operator).
-
-### `verification_command`
+### Verify
 
 ```bash
-# Check the function logs after attempting an OAuth round-trip — absence of
-# "OAUTH_STATE_SECRET is not configured" is success. The function code at
-# business-suite-unified/supabase/functions/_shared/oauth-state.ts:48-52
-# raises that exact error when the env var is < 32 chars.
+# After an OAuth round-trip attempt, the function logs should NOT contain
+# "OAUTH_STATE_SECRET is not configured" (raised by _shared/oauth-state.ts:48-52).
 curl -s "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/functions/oauth-google-email/logs?limit=20" \
   -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
   | jq '.[] | select(.event_message | contains("OAUTH_STATE_SECRET"))' \
   | wc -l
-# Expected: 0 (no occurrences after redeploy)
+# Expected: 0
 ```
 
 ---
 
-## Item 2 — Apply pending Supabase migrations
+## Item 2 — Add 2 TGA GUCs
 
-**Status:** ✅ DONE (this session, 2026-04-25). All three migrations (`phase12_tenant_hierarchy_hardening`, `phase12_hierarchy_rls`, `phase6_11_seed_enterprise_subscriptions`) applied via `Supabase:apply_migration` MCP tool. Verified post-state: 5 contacts policies (was 4), 5 placements policies (was 4), 4 enterprise subscription rows (was 0), `trg_tenants_hierarchy_check` trigger present, `has_parent_admin_access` function present.
+**What:** Add two custom Postgres GUCs scoped to the database — `app.tga_sync_url` and `app.tga_sync_secret`. The pg_cron job that drives TGA syncing reads these.
 
-### `verification_command`
+**Why you (not the agent):** Hosted Supabase doesn't grant the connecting `postgres` role privileges to `ALTER DATABASE ... SET app.*`. Verified by `current_setting('app.tga_sync_url', true)` returning empty. Either dashboard "Custom Postgres Config" panel or a Supabase support ticket.
 
-```bash
-psql "$SUPABASE_DB_URL" -c "
-SELECT
-  (SELECT count(*) FROM pg_policy WHERE polrelid = 'public.contacts'::regclass) AS contacts_policies,
-  (SELECT count(*) FROM pg_policy WHERE polrelid = 'public.placements'::regclass) AS placements_policies,
-  (SELECT count(*) FROM public.subscriptions WHERE plan_tier = 'enterprise' AND status = 'active') AS enterprise_subs,
-  (SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_tenants_hierarchy_check')) AS hierarchy_trigger,
-  (SELECT EXISTS (SELECT 1 FROM pg_proc WHERE proname='has_parent_admin_access')) AS hierarchy_func;
-"
-# Expected: contacts_policies=5, placements_policies=5, enterprise_subs=4, both booleans TRUE
-```
+### How
 
----
+1. Open https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/database/custom-config
+2. **Add custom variable** — name `app.tga_sync_url` — value `https://tuybltdrdefjblnplpqo.supabase.co/functions/v1/tga-sync` → Add.
+3. **Add custom variable** — name `app.tga_sync_secret` — value `openssl rand -hex 32` output → Add. Save this same value to your password store; you'll need it again in step 4.
+4. Save. Postgres pool restarts (~30s).
+5. **Item 1 prereq:** `TGA_SYNC_SECRET` edge-fn secret must equal the value from step 3. Use the CLI from Item 1 with `supabase secrets set TGA_SYNC_SECRET=<value-from-step-3>`.
 
-## Item 3 — Extensions + GUCs
+If the dashboard rejects (`variable not in allowed list`), open a Supabase support ticket: subject *"Need ALTER DATABASE SET privilege for `app.*` GUCs (project tuybltdrdefjblnplpqo)"*.
 
-### 3a. `pg_cron` + `pg_net` extensions — ✅ DONE (this session)
-
-`pg_cron` was already installed (1.6.4 in `pg_catalog`); `pg_net` 0.19.5 installed via `CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;` through the Supabase MCP `execute_sql` tool. No operator action remains.
-
-### 3b. `app.tga_sync_url` + `app.tga_sync_secret` GUCs — OPERATOR-ONLY
-
-**Why operator-only:** Hosted Supabase does NOT grant the `postgres` connecting role the necessary privileges for `ALTER DATABASE ... SET app.tga_sync_url = ...` (we verified by querying `current_setting('app.tga_sync_url', true)` — returned empty). This requires either dashboard-level "Custom Postgres Config" or contacting Supabase support.
-
-### Action
-
-Add two custom GUCs scoped to the database via the Supabase dashboard's Custom Postgres Config panel.
-
-URL: https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/database/custom-config
-
-1. Click "Add custom variable".
-2. Variable: `app.tga_sync_url`. Value: production TGA edge function URL — `https://tuybltdrdefjblnplpqo.supabase.co/functions/v1/tga-sync`.
-3. Click "Add custom variable" again.
-4. Variable: `app.tga_sync_secret`. Value: a freshly generated `openssl rand -hex 32` value. **The same value must also be set as the `TGA_SYNC_SECRET` edge function secret** (see Item 1 for the secrets workflow).
-5. Click "Save". The Postgres pool will be restarted (~30s).
-
-If the dashboard rejects the request ("variable not in allowed list"), open a Supabase support ticket: subject `Need ALTER DATABASE SET privilege for app.* GUCs (project tuybltdrdefjblnplpqo)`.
-
-**Screenshot reference:** `docs/operator-screenshots/custom-postgres-config.png`.
-
-### `verification_command`
+### Verify
 
 ```bash
 psql "$SUPABASE_DB_URL" -c "
@@ -114,34 +90,34 @@ SELECT
   current_setting('app.tga_sync_url', true)    AS tga_url,
   current_setting('app.tga_sync_secret', true) IS NOT NULL AS tga_secret_set;
 "
-# Expected: tga_url is the function URL; tga_secret_set is true
+# Expected: tga_url = function URL; tga_secret_set = t
 ```
 
 ---
 
-## Item 4 — `TGA_SYNC_ENABLED=true` flip
+## Item 3 — Flip `TGA_SYNC_ENABLED=true` (after sandbox dry-run)
 
-**Why operator-only:** The runbook requires a manual sandbox dry-run with non-prod data BEFORE enabling. The sandbox path (Supabase branch DB or local emulator) requires interactive supervision; the agent cannot prove safety without operator-supplied test data.
+**What:** Turn on the production TGA sync cron job after proving it doesn't corrupt existing `units_of_competency` data on a sandbox branch.
 
-### Action
+**Why you (not the agent):** Requires a manual sandbox dry-run with non-prod data. The agent can't pick safe test payloads or judge "did this disturb existing rows" without operator inspection.
 
-1. From the Supabase dashboard, create a temporary branch: https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/branches → "Create branch" → name `tga-dryrun-20260425`.
-2. Apply all migrations to the branch.
-3. Manually invoke the `tga-sync` function on the branch with a tiny payload (1-3 qualification codes).
-4. Inspect `units_of_competency` rows on the branch — confirm only the test rows landed and no existing data was disturbed.
-5. Once verified, set the production env var:
+### How
 
-```bash
-supabase secrets set TGA_SYNC_ENABLED=true --project-ref tuybltdrdefjblnplpqo
-supabase functions deploy tga-sync --project-ref tuybltdrdefjblnplpqo
-```
-
+1. https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/branches → **Create branch** → name `tga-dryrun-20260427`.
+2. The new branch auto-applies all migrations.
+3. Manually invoke the `tga-sync` function on the branch with a tiny payload (1–3 qualification codes).
+4. Inspect `units_of_competency` rows on the branch. Confirm only your test rows landed; existing data untouched.
+5. If safe, flip production:
+   ```bash
+   supabase secrets set TGA_SYNC_ENABLED=true --project-ref tuybltdrdefjblnplpqo
+   supabase functions deploy tga-sync --project-ref tuybltdrdefjblnplpqo
+   ```
 6. Delete the dry-run branch.
 
-### `verification_command`
+### Verify
 
 ```bash
-# Inspect a recent tga_sync_runs row — should now have synced_components > 0
+# Most recent tga_sync_runs row should have synced_components > 0
 psql "$SUPABASE_DB_URL" -c "
 SELECT id, started_at, finished_at, status, synced_components
 FROM public.tga_sync_runs
@@ -152,235 +128,189 @@ LIMIT 3;
 
 ---
 
-## Item 5 — `phase3_uoc_drop_legacy_contract.sql`
+## Item 4 — Enable Azure `xms_edov` optional claim
 
-**Status:** SKIP (no migration file exists in `business-suite-unified/supabase/migrations/`). Per the original 2026-04-23 plan, this is the "Contract" half of an Expand → Migrate → Contract pattern that should NOT be applied until the consumer rollout is stable. Action deferred until a separate session that owns the consumer audit (likely WS-K or a future Phase 3 closeout).
+**What:** Add the `xms_edov` (email-domain-owner-verified) claim to the Microsoft Entra app registration so `oauth-microsoft-email` can confirm the user actually owns the email domain claimed in their token.
 
-### `verification_command` (when ready to apply)
+**Why you (not the agent):** Microsoft Entra portal requires Global Admin interactive sign-in. No service-account or API path.
 
-```bash
-# Confirm no consumer references the legacy uoc contract before dropping
-rg -l "uoc_legacy|qualification_unit_legacy" /home/braden/Desktop/Dev/bsuite --type ts --type tsx
-# Expected: empty output → safe to apply the drop migration
-```
+### How
 
----
-
-## Item 6 — Azure `xms_edov` optional claim
-
-**Why operator-only:** Microsoft Entra portal requires an interactive admin login (cannot be automated via gh / supabase MCP).
-
-### Action
-
-1. Sign in to https://entra.microsoft.com as Global Administrator.
-2. Navigate to: **Identity → Applications → App registrations** → select the Microsoft OAuth app used by `oauth-microsoft-email` (app id is in the function code).
-3. Open **Token configuration** → "Add optional claim".
-4. Token type: `ID`. Select `xms_edov` (email-domain-owner-verified). Click Add.
-5. When prompted, grant Microsoft Graph `email` permission (admin consent).
+1. Sign in to https://entra.microsoft.com as **Global Administrator**.
+2. **Identity → Applications → App registrations** → select the Microsoft OAuth app used by `oauth-microsoft-email`. (App ID is hardcoded in `business-suite-unified/supabase/functions/oauth-microsoft-email/index.ts` near the top of the file.)
+3. **Token configuration → Add optional claim**.
+4. Token type **ID** → tick `xms_edov` → Add.
+5. When prompted, **grant Microsoft Graph `email` permission** (admin consent).
 6. Save.
 
-**Screenshot reference:** `docs/operator-screenshots/azure-xms-edov-optional-claim.png`.
-
-### `verification_command`
+### Verify
 
 ```bash
-# Inspect a fresh ID token from a Microsoft sign-in attempt — xms_edov should
-# appear as a claim. Use jwt.io or jq:
+# After a fresh Microsoft sign-in, the function logs should record the claim:
 curl -s "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/functions/oauth-microsoft-email/logs?limit=5" \
   -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
   | jq -r '.[] | select(.event_message | contains("id_token claims")) | .event_message' \
   | head -1
-# Expected: log line includes "xms_edov" key
+# Expected: log line includes the substring "xms_edov"
 ```
 
 ---
 
-## Item 7 — Remove `*.vercel.app` wildcard redirect URIs
+## Item 5 — Replace `*.vercel.app` wildcard redirect URIs
 
-**Why operator-only:** Supabase Auth URL Configuration (Site URL + Redirect URLs allowlist) has a Management API path (PATCH `/v1/projects/{ref}/config/auth`), but it requires a Personal Access Token + the operator should review the wildcard list before stripping (some preview-branch flows may be intentional). Agent cannot judge intent safely.
+**What:** In Supabase Auth's redirect-URL allowlist, replace any `https://*.vercel.app/**` wildcard with the explicit production hostnames. Preview-branch flows use the `return_origin` query param path instead (added 2026-04-24, see `business-suite-unified/src/lib/redirectTargets.ts`).
 
-### Action
+**Why you (not the agent):** The Management API path exists (PATCH `/v1/projects/{ref}/config/auth`) but you should review the wildcard list before stripping — some preview flows might be intentional. The agent can't judge intent safely.
 
-URL: https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/auth/url-configuration
+### How
 
-1. Under **Redirect URLs**, find any entry matching `https://*.vercel.app/**` or similar wildcard.
-2. Replace with explicit entries: e.g.
+1. Open https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/auth/url-configuration
+2. Under **Redirect URLs**, find any `https://*.vercel.app/**` entries.
+3. Replace with explicit:
    - `https://business-suite-unified.vercel.app/**`
    - `https://crm7.vercel.app/**`
    - `https://r8-chi.vercel.app/**`
    - `https://braden.vercel.app/**`
-3. For per-PR Vercel preview support, the BSU app already supports `return_origin` query param (added 2026-04-24, see `business-suite-unified/src/lib/redirectTargets.ts`) — preview URLs can be passed through that path without an open allowlist.
-4. Click "Save".
+   - (any others you actually use; do NOT add ones you don't)
+4. Save.
 
-**Screenshot reference:** `docs/operator-screenshots/auth-url-config-redirect-urls.png`.
-
-### `verification_command`
+### Verify
 
 ```bash
 curl -s "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/config/auth" \
   -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
   | jq '.uri_allow_list' | grep -c '\\*\\.vercel\\.app'
-# Expected: 0 (no wildcards present)
+# Expected: 0
 ```
 
 ---
 
-## Item 8 — Revoke HS256 Previous JWK in Supabase dashboard
+## Item 6 — Revoke HS256 "Previous" JWK
 
-**Why operator-only:** As of 2026-04, the JWT Signing Keys management surface in Supabase is dashboard-only — no Management API endpoint, no SQL path. Confirmed via `Supabase:search_docs` GraphQL query (no `revoke previous JWK` API result returned).
+**What:** Final step of the JWT signing-key rotation. The current ES256 key is in use; the previous HS256 key needs revoking so old sessions signed with it can't be replayed.
 
-### Action
+**Why you (not the agent):** Supabase JWT Signing Keys are dashboard-only as of 2026-04. No Management API endpoint, no SQL path. Verified via `Supabase:search_docs` returning no `revoke previous JWK` API result.
 
-URL: https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/settings/jwt
+### How
 
-1. Find the section "JWT Signing Keys".
-2. If a previous HS256 key is listed alongside the current ES256 key, click "Revoke" on the HS256 row.
-3. Confirm the modal warning ("All sessions signed with this key will be invalidated"). The new active ES256 key is unaffected.
+1. Open https://supabase.com/dashboard/project/tuybltdrdefjblnplpqo/settings/jwt
+2. In the **JWT Signing Keys** section, find the previous HS256 key listed alongside the current ES256 key.
+3. Click **Revoke** on the HS256 row.
+4. Confirm the modal warning ("All sessions signed with this key will be invalidated"). The active ES256 key is unaffected.
 
-**Screenshot reference:** `docs/operator-screenshots/jwt-revoke-hs256.png`.
-
-### `verification_command`
+### Verify
 
 ```bash
-# Inspect a fresh access token's `alg` header — must be ES256, not HS256
+# Fresh access tokens should now be ES256-only
 curl -s "https://tuybltdrdefjblnplpqo.supabase.co/auth/v1/.well-known/jwks.json" \
   | jq '.keys | map(.alg) | unique'
-# Expected: ["ES256"]  (NOT containing "HS256")
+# Expected: ["ES256"]   (HS256 must NOT appear)
 ```
 
 ---
 
-## Item 9 — Add `dry-lint` as required status check on protected branches
+## Item 7 — Register Xero OAuth app (Part O.2)
 
-**Status:** BLOCKED on WS-I (which builds the `dry-lint` package). Skipping per the original WS-G plan.
+**What:** Create a Xero OAuth 2.0 app at developer.xero.com so CRM7 can connect tenant Xero organizations for payroll/accounting integration.
 
-When WS-I lands, the operator action is:
+**Why you (not the agent):** Xero's developer portal requires interactive sign-in with your Xero developer account. No API or service-account path to register apps.
 
-```bash
-for repo in crm7 R80.3 braden business-suite-unified throughput conduit bsuite; do
-  for branch in development main; do
-    gh api -X PATCH "/repos/GaryOcean428/$repo/branches/$branch/protection/required_status_checks" \
-      -f strict=true \
-      --input <(echo '{"contexts":["dry-lint","quality"]}')
-  done
-done
-```
-
-### `verification_command`
-
-```bash
-gh api /repos/GaryOcean428/business-suite-unified/branches/development/protection/required_status_checks \
-  --jq '.contexts'
-# Expected: ["dry-lint","quality",...]
-```
-
----
-
-## Item 10 — Disable "Automatically delete head branches"
-
-**Status:** ✅ DONE (this session). Patched 5 repos via `gh api -X PATCH /repos/<owner>/<repo> -f delete_branch_on_merge=false`:
-
-- `crm7` → `delete_branch_on_merge=false` ✅
-- `R80.3` → `delete_branch_on_merge=false` ✅
-- `braden` → `delete_branch_on_merge=false` ✅
-- `business-suite-monorepo` → `delete_branch_on_merge=false` ✅
-- `bsuite` → `delete_branch_on_merge=false` ✅ (was previously `true`)
-
-### `verification_command`
-
-```bash
-for repo in crm7 R80.3 braden business-suite-monorepo bsuite business-suite-unified throughput conduit; do
-  echo -n "$repo: "
-  gh api "/repos/GaryOcean428/$repo" --jq '.delete_branch_on_merge'
-done
-# Expected: false for all listed repos
-```
-
----
-
-## Item 11 — Xero developer-portal app registration (Part O.2)
-
-**Why operator-only:** Registering a Xero OAuth 2.0 app at `developer.xero.com/myapps` requires interactive sign-in with the Xero developer account credentials (linked to Braden's MyXero login). Agents cannot authenticate to Xero's developer portal — there is no API or service-account path to register an app. This is genuinely human-only.
-
-**Restoration note:** This item was originally catalogued as **Part O.2** in `bsuite_backlog_2026_post_n` (2026-04-22 backlog) and listed as a human-action blocker. It was inadvertently omitted from the 2026-04-25 finish-line operator handoff during the WS-G/WS-J doc consolidation. Restored here on 2026-04-27 per user review request — see `docs/20260425-finish-line-signoff-v1.00W.md` §"Restoration Errata" for cross-reference.
-
-### Action
+### How
 
 1. Sign in to https://developer.xero.com/myapps with the Braden Xero developer account.
 2. Click **New app**.
-3. Fill out the app registration form:
-   - **App name:** `BSuite CRM7 Integration` (or `Braden Group CRM7` per Xero brand guidelines)
+3. Fill in:
+   - **App name:** `Braden Group CRM7` (or `BSuite CRM7 Integration` — your call on branding)
    - **Integration type:** **Web app**
-   - **Company or application URL:** `https://crm.crm7.app`
+   - **Company / app URL:** `https://crm.crm7.app`
    - **OAuth 2.0 redirect URI:** `https://crm.crm7.app/auth/xero/callback`
-4. After creation, open the app's **Configuration** tab and confirm the following scopes are requested when the OAuth client requests consent (these are scopes the consumer app will request — not all need to be pre-approved on Xero's side, but document them here as the contract):
+4. After creation, open the app's **Configuration** tab.
+5. **Copy the Client ID and Client Secret.** The secret is shown ONCE — store immediately in 1Password (or your vault) before navigating away.
+6. The consumer app will request these scopes at OAuth time (no pre-approval needed on Xero's side, but document them):
    - `accounting.contacts`
    - `accounting.transactions`
    - `accounting.settings.read`
    - `payroll.employees`
    - `payroll.payruns`
    - `offline_access`
-5. From the **Configuration** tab, copy the **Client ID** and **Client Secret**. The client secret is shown ONCE — store immediately in a secure location (1Password / operator's vault) before navigating away.
-6. Hand `client_id` and `client_secret` back to the agent session via the agreed secure channel (DO NOT paste raw secrets into chat — share the 1Password reference / secret-store path instead).
+7. **Hand the Client ID + Client Secret back via the agreed secure channel** (1Password reference, not raw chat paste).
 
-### What happens next (agent-executable, AFTER operator returns credentials)
+### What the agent does next (after you return credentials)
 
-The agent will:
+- Writes `VITE_XERO_CLIENT_ID=<client_id>` to **CRM7 Vercel** env (Production + Preview) via Vercel MCP.
+- Writes `XERO_CLIENT_ID`, `XERO_CLIENT_SECRET`, `XERO_REDIRECT_URI=https://crm.crm7.app/auth/xero/callback` to **Supabase secrets** (project `tuybltdrdefjblnplpqo`) via Supabase MCP.
+- Per-tenant `xero_integration` feature flag activation is operator-toggled per customer at rollout time (separate from app registration).
 
-- Write `VITE_XERO_CLIENT_ID=<client_id>` to **CRM7 Vercel** env (Production + Preview scopes) via `vercel env add`.
-- Write `XERO_CLIENT_ID=<client_id>`, `XERO_CLIENT_SECRET=<client_secret>`, `XERO_REDIRECT_URI=https://crm.crm7.app/auth/xero/callback` to **Supabase secrets** (project `tuybltdrdefjblnplpqo`) via the Supabase MCP `secrets set` flow (or `supabase secrets set` CLI).
-- Per-tenant `xero_integration` feature flag activation lives in CRM7 `tenant_settings` JSONB and is operator-toggled per customer at rollout time (separate concern from initial app registration).
-
-**Dashboard URL:** https://developer.xero.com/myapps
-
-**Screenshot reference:** `docs/operator-screenshots/xero-app-registration.png` (operator captures and commits after first registration so the next operator can verify the form fields visually).
-
-### `verification_command`
-
-Run **after** the agent has written the secrets (i.e., post-handoff back to the agent):
+### Verify (after agent has written secrets)
 
 ```bash
-# 1. Confirm VITE_XERO_CLIENT_ID is set on CRM7 in both Production + Preview
-vercel env ls --token=$VERCEL_TOKEN --scope=braden-pty-ltd \
-  | grep VITE_XERO_CLIENT_ID
+# 1. CRM7 Vercel env has the public client ID
+vercel env ls --token=$VERCEL_TOKEN --scope=braden-pty-ltd | grep VITE_XERO_CLIENT_ID
 # Expected: a line showing "VITE_XERO_CLIENT_ID  Encrypted  Production, Preview"
 
-# 2. Confirm Supabase has all three Xero edge-function secrets
+# 2. Supabase has all 3 server-side secrets
 supabase secrets list --project-ref tuybltdrdefjblnplpqo \
   | grep -E '^(XERO_CLIENT_ID|XERO_CLIENT_SECRET|XERO_REDIRECT_URI)\b'
-# Expected: 3 lines, one for each secret name
+# Expected: 3 lines
 
-# 3. End-to-end OAuth handshake smoke — should redirect to Xero (not 404)
+# 3. End-to-end OAuth handshake smoke
 curl -sI https://crm.crm7.app/auth/xero/connect | head -1
-# Expected: HTTP/2 302  with Location header pointing to login.xero.com/identity/connect/authorize
+# Expected: HTTP/2 302 with Location → login.xero.com/identity/connect/authorize
+# (404 means consumer route not yet wired in CRM7 — that's the implementation
+#  follow-up task post-registration, not blocking your handoff.)
 ```
 
-If step 3 returns `404` instead of `302`, the consumer route `/auth/xero/connect` has not yet been wired in CRM7 — that is **Part O.2 implementation work** (the agent-executable 1-week task post-registration), tracked separately in `bsuite_backlog_2026_post_n`.
+---
+
+## Already resolved
+
+These items came off the original 10-item checklist (memory `bsuite_pending_actions` 2026-04-23) and the 2026-04-27 review. Listed here for audit trail — no operator action needed.
+
+| Original # | Item | Resolved by | Evidence |
+|---|---|---|---|
+| 2 | Apply 3 Supabase migrations (`phase12_tenant_hierarchy_hardening`, `phase12_hierarchy_rls`, `phase6_11_seed_enterprise_subscriptions`) | WS-G (2026-04-25) via `Supabase:apply_migration` MCP | contacts policies 4→5, placements 4→5, enterprise subs 0→4, hierarchy trigger + function present |
+| 3a | Install `pg_cron` + `pg_net` extensions | WS-G (2026-04-25) | `pg_cron@1.6.4` already installed; `pg_net@0.19.5` installed via `CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions` |
+| 5 | Apply `phase3_uoc_drop_legacy_contract.sql` | SKIPPED — file does not exist in `business-suite-unified/supabase/migrations/`. The "Contract" half of the Expand → Migrate → Contract pattern was never authored. Track in a future Phase 3 closeout if needed. | n/a |
+| 9 | Add `dry-lint` as required CI check on protected branches | WS-I-PHASE-2 (2026-04-25) — wired across all 7 repos × 2 branches (14 protections) | `gh api repos/<r>/branches/<b>/protection/required_status_checks --jq '.contexts'` includes the lint job that runs `bsuite/no-cross-app-write` |
+| 10 | Disable "Automatically delete head branches" | WS-G (2026-04-25) — patched all 8 BSuite repos | `gh api /repos/GaryOcean428/<r> --jq '.delete_branch_on_merge'` returns `false` for all |
+| (new) | SECURITY DEFINER NULL-search_path FAIL on `set_payroll_super_due_date` | 2026-04-27 review session — migration `20260427000000_security_definer_hardening.sql` applied live, source PR #197 merged | `pg_proc` shows `proconfig != NULL` for `set_payroll_super_due_date` and `is_team_admin` (latter tightened to `''`) |
+| (new) | Branch protection enforced (`allow_force_pushes=false`, `prs_required=true`, `enforce_admins=true`) on all 14 refs | 2026-04-27 review session — PR #280 | `gh api repos/<r>/branches/<b>/protection --jq '.allow_force_pushes.enabled'` returns `false` |
+
+### Operator behavior change required (consequence of branch-protection enforcement)
+
+Cascade IDE auto-snapshot direct-pushes to `main` or `development` on any of the 7 repos will now be **rejected server-side**. You'll need to either reconfigure Cascade to push to a feature branch + open a PR, or accept that those workflows will keep failing. Server-side enforcement is in place; client-side tooling is your call.
 
 ---
 
-## Summary — Items Requiring Operator Action
+## Quick-start: do all 7 in one sitting
 
-| # | Item | Reason | ETA |
-|---|------|--------|-----|
-| 1 | OAUTH_STATE_SECRET + redeploy | Edge fn env vars not in MCP | ~5 min |
-| 3b | TGA GUCs | Hosted Supabase tier blocks `ALTER DATABASE` | ~10 min (or Supabase support ticket) |
-| 4 | TGA_SYNC_ENABLED flip | Requires sandbox dry-run | ~30 min including dry-run |
-| 6 | Azure xms_edov claim | Entra portal interactive only | ~5 min |
-| 7 | Remove `*.vercel.app` wildcards | Operator must review intent | ~5 min |
-| 8 | Revoke HS256 Previous JWK | Dashboard-only, no API | ~2 min |
-| 11 | Xero app registration (Part O.2) | developer.xero.com requires interactive sign-in | ~10 min |
+If you want to bang through everything in ~70 minutes:
 
-**Items resolved this session:** 2 (migrations), 3a (pg_net install), 5 (skipped per plan), 9 (blocked on WS-I), 10 (auto-delete branches).
+```bash
+# Block 1 (~15 min): Items 1, 2, 3 — Supabase secrets + GUCs + dry-run
+supabase login                                                                                     # one-time
+supabase secrets set OAUTH_STATE_SECRET=$(openssl rand -hex 32) --project-ref tuybltdrdefjblnplpqo  # Item 1
+# (then dashboard for Item 2 GUCs, then sandbox-branch + flip for Item 3)
 
-**Total operator time estimate:** ~70 minutes (was 60 min — +10 for Xero registration).
+# Block 2 (~10 min): Items 4, 5, 6 — Microsoft Entra + Supabase dashboard
+# (interactive UI work — open the 3 dashboard URLs in tabs and step through)
+
+# Block 3 (~10 min): Item 7 — Xero developer portal
+# (interactive — register the app, capture credentials, hand back)
+```
+
+Each block has explicit `verify` blocks above. Run them in order; if a verify fails, the agent can pick up from that item next session.
 
 ---
 
-## Cross-Reference
+## Cross-reference
 
-- Original checklist source: memory key `bsuite_pending_actions` (2026-04-23).
-- Replacement memory key written by this session: `bsuite_pending_actions` (2026-04-25), trimmed to operator-only items.
-- Implementation context: `docs/plans/20260425-finish-line-session-refined.md` (parent monorepo).
-- Throughput W4-TP deep-link target: `business-suite-unified/src/pages/Admin/TeamMembers.tsx` (created in WS-G, PR #192).
-- **Xero (Item 11 / Part O.2) source:** memory key `bsuite_backlog_2026_post_n` (2026-04-22, "HUMAN-ACTION BLOCKERS" #1). Restored 2026-04-27 — see signoff doc §"Restoration Errata".
+- **2026-04-27 finish-line review sign-off:** [`docs/20260427-finish-line-review-signoff-v1.00W.md`](20260427-finish-line-review-signoff-v1.00W.md) — full session context.
+- **Original 10-item checklist source:** memory key `bsuite_pending_actions` (2026-04-23 — superseded; current memory key has the trimmed list).
+- **Original Xero (Item 7 / Part O.2) source:** memory key `bsuite_backlog_2026_post_n` (2026-04-22, "HUMAN-ACTION BLOCKERS" #1).
+- **Throughput W4-TP deep-link target (built in WS-G):** `business-suite-unified/src/pages/Admin/TeamMembers.tsx`.
+- **Operator screenshots (capture as you go):** `docs/operator-screenshots/` — directory stub created in WS-G-fix; capture protocol in its README.
+
+---
+
+**Author:** Claude Opus 4.7 (1M context). Original 11-item version 2026-04-25; 7-item rewrite 2026-04-27 per operator review feedback ("be clearer with the 6-item handoff").
