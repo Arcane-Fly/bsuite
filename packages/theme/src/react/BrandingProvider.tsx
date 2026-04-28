@@ -47,8 +47,16 @@ export interface TenantBranding {
   accent?: string
   /** Full logo URL (SVG or raster) */
   logo_url?: string
+  /** Light-mode full logo URL */
+  logo_light_url?: string
+  /** Dark-mode full logo URL */
+  logo_dark_url?: string
   /** Mark / icon logo URL */
   mark_url?: string
+  /** Favicon URL */
+  favicon_url?: string
+  /** Display name used for generated logo alt text */
+  company_name?: string
   /** Optional CSS font-family stack string */
   font_stack?: string | null
 }
@@ -115,7 +123,11 @@ const BRANDING_CSS_MAP: Record<keyof TenantBranding, string> = {
   primary: '--primary',
   accent: '--accent',
   logo_url: '--logo-url',
+  logo_light_url: '--logo-light-url',
+  logo_dark_url: '--logo-dark-url',
   mark_url: '--mark-url',
+  favicon_url: '--favicon-url',
+  company_name: '',
   font_stack: '--font-stack',
 }
 
@@ -169,8 +181,20 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
     root.style.setProperty('--logo-url', `url(${branding.logo_url})`)
   }
 
+  if (branding.logo_light_url) {
+    root.style.setProperty('--logo-light-url', `url(${branding.logo_light_url})`)
+  }
+
+  if (branding.logo_dark_url) {
+    root.style.setProperty('--logo-dark-url', `url(${branding.logo_dark_url})`)
+  }
+
   if (branding.mark_url) {
     root.style.setProperty('--mark-url', `url(${branding.mark_url})`)
+  }
+
+  if (branding.favicon_url) {
+    root.style.setProperty('--favicon-url', `url(${branding.favicon_url})`)
   }
 
   if (branding.font_stack) {

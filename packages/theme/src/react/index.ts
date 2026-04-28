@@ -10,3 +10,13 @@ export {
   BRANDING_OVERRIDE_FLAG,
 } from './BrandingProvider'
 export type { TenantBranding, BrandingContextValue } from './BrandingProvider'
+export { useBranding } from './useBranding'
+export { resolvePlatformLogo, usePlatformLogo } from './usePlatformLogo'
+export type {
+  PlatformLogoHookResult,
+  PlatformLogoOptions,
+  PlatformLogoScheme,
+  PlatformLogoSlot,
+  PlatformLogoSource,
+  ResolvedPlatformLogo,
+} from './usePlatformLogo'
