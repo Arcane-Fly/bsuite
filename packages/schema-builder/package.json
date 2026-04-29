@@ -1,0 +1,53 @@
+{
+  "name": "@bsuite/schema-builder",
+  "version": "0.6.0",
+  "description": "Shared BSuite schema-builder: field CRUD + keyboard reorder for tenant_field_definitions",
+  "type": "module",
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GaryOcean428/bsuite.git",
+    "directory": "packages/schema-builder"
+  },
+  "files": [
+    "dist",
+    "src/supabase/migrations"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./migrations": {
+      "import": "./src/supabase/migrations"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "react": ">=18 <21",
+    "react-dom": ">=18 <21"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.6",
+    "@vitejs/plugin-react": "^5.2.0",
+    "jsdom": "^28.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "~5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
