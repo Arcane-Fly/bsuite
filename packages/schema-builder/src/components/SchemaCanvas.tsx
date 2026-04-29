@@ -41,6 +41,7 @@ import { exportCanvasToPng } from '../utils/exportPng.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
 import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
 import { FieldCreateDialog } from './FieldCreateDialog.js';
+import { FieldEditDialog } from './FieldEditDialog.js';
 import { RelationshipConfigDialog } from './RelationshipConfigDialog.js';
 import { SchemaToolbar } from './SchemaToolbar.js';
 import { SmartEdge, type SmartEdgeData } from './edges/SmartEdge.js';
@@ -124,6 +125,15 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
     const [fieldDialogEntityId, setFieldDialogEntityId] = useState<
       string | null
     >(null);
+    // Phase 2: double-click a field row to open the edit dialog. The
+    // context holds the entity + field ids so we can look up the live
+    // TenantFieldDefinition every render — avoids stale closure issues if
+    // the field is updated by another tab via Realtime while the dialog
+    // is open.
+    const [fieldEditContext, setFieldEditContext] = useState<{
+      entityId: string;
+      fieldId: string;
+    } | null>(null);
     const pendingConnection = useRef<Connection | null>(null);
     const flowRef = useRef<ReactFlowInstance<
       Node<EntityNodeData>,
@@ -502,6 +512,22 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       return () => window.removeEventListener('bsuite-add-field', handler);
     }, [addFieldToSelectedEntity]);
 
+    // Phase 2: FieldRow dispatches `bsuite-edit-field` on double-click.
+    // We gate on entity being user-editable (not system) here too so that
+    // any future caller (e.g. a keyboard shortcut) gets the same guard.
+    useEffect(() => {
+      const handler = (e: Event) => {
+        const ce = e as CustomEvent<{ entityId: string; fieldId: string }>;
+        if (!ce.detail?.entityId || !ce.detail?.fieldId) return;
+        setFieldEditContext({
+          entityId: ce.detail.entityId,
+          fieldId: ce.detail.fieldId,
+        });
+      };
+      window.addEventListener('bsuite-edit-field', handler);
+      return () => window.removeEventListener('bsuite-edit-field', handler);
+    }, []);
+
     useImperativeHandle(
       ref,
       () => ({
@@ -675,6 +701,54 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                   })
                   .catch(() => {});
                 setFieldDialogEntityId(null);
+              }}
+            />
+          );
+        })()}
+
+        {(() => {
+          // Phase 2 edit-dialog derivation. Looking up the field every
+          // render (instead of stashing the whole field in state) keeps the
+          // dialog in sync if `controller.fields` refreshes via Realtime or
+          // a mutation-invalidate round-trip while it is open.
+          if (!fieldEditContext) return null;
+          const entity = controller.entities.find(
+            (e) => e.id === fieldEditContext.entityId,
+          );
+          if (!entity) return null;
+          const entityFields = controller.fields[entity.id] ?? [];
+          const field = entityFields.find(
+            (f) => f.id === fieldEditContext.fieldId,
+          );
+          if (!field) return null;
+          const existingFieldNames = entityFields.map((f) =>
+            f.field_name.toLowerCase(),
+          );
+          return (
+            <FieldEditDialog
+              open={true}
+              onOpenChange={(o) => {
+                if (!o) setFieldEditContext(null);
+              }}
+              entityLabel={entity.label}
+              entityName={entity.name}
+              field={field}
+              existingFieldNames={existingFieldNames}
+              onSave={(payload) => {
+                controller
+                  .updateField(field.id, {
+                    field_name: payload.field_name,
+                    field_type: payload.field_type,
+                    label: payload.label,
+                    placeholder: payload.placeholder,
+                    is_required: payload.is_required,
+                  })
+                  .catch(() => {});
+                setFieldEditContext(null);
+              }}
+              onDelete={() => {
+                controller.deleteField(field.id).catch(() => {});
+                setFieldEditContext(null);
               }}
             />
           );

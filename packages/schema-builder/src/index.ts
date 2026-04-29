@@ -8,6 +8,10 @@ export {
   SchemaBuilder,
   SchemaToolbar,
   FieldRow,
+  FieldCreateDialog,
+  FieldEditDialog,
+  FIELD_TYPE_OPTIONS,
+  SNAKE_CASE_RE,
   SmartEdge,
   SmartEdgeMarkers,
   buildSmartEdgeStyle,
@@ -26,6 +30,10 @@ export type {
   SchemaToolbarProps,
   FieldRowProps,
   FieldRowField,
+  FieldCreateDialogProps,
+  FieldCreateDialogPayload,
+  FieldEditDialogProps,
+  FieldEditDialogPayload,
   SmartEdgeData,
 } from './components/index.js';
 
