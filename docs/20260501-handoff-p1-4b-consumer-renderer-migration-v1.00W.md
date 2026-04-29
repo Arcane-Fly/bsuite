@@ -11,10 +11,12 @@
 
 ## Overview
 
-The 2026-04-29 production drop removed `public.tenant_page_layouts` from `tuybltdrdefjblnplpqo`. Three production-code consumers were left in degraded state:
+The 2026-04-29 production drop removed `public.tenant_page_layouts` from `tuybltdrdefjblnplpqo` (verified live: table_exists=false, backup_exists at 0 rows, RLS policies cascaded, removed from `supabase_realtime`). Production drop applied via Supabase MCP `apply_migration`, recorded as `{version: 20260429045143, name: 20260502000000_drop_tenant_page_layouts}`. File preserved on BSU/main at `supabase/migrations/20260502000000_drop_tenant_page_layouts.sql` (PR #218 → #222 dev→main release SHA `d430ab6`).
+
+Three production-code consumers were left in degraded state:
 
 1. **BSU `Pages.tsx`** (Developer › Design Studio) — Save button errors on `upsert` (admin-only, dev-role-gated)
-2. **BSU PR #220 Developer/* pages** (Notices/RateLimits/Routing/Schema/index) — query the dropped table (admin-only)
+2. **BSU PR #220 Developer/* pages** (`Notices/RateLimits/Routing/Schema/index`) — query the dropped table. **Shipped 2026-04-29 via HANDOFF-3c un-deferral, now zombie code under ADR-0001.** Phase 1 of this HANDOFF deletes them explicitly.
 3. **conduit `DashboardShell.tsx`** — realtime channel subscription set up but never fires (silent degradation)
 
 Per **ADR-0001**: BSU's `tenant_page_layouts` authoring is *deleted*, not re-targeted. CRM7 `custom_pages` becomes the canonical authoring surface.
@@ -108,21 +110,27 @@ Use these throughout the workstream — pick the right one per phase.
 
 Removes the BSU `tenant_page_layouts` authoring UI that's been broken in production since the schema/client divergence (ADR-0001 §Context). Currently after the drop, the Save action errors silently — better to remove the surface entirely than leave a broken admin tool.
 
+### ⚠️ CRITICAL: PR #220 zombie code (shipped 2026-04-29)
+
+**The Developer/* files listed below were just shipped today via PR #220 (HANDOFF-3c un-deferred), merged at SHA `5a2c80c` on BSU/development.** Codebuff and the next executor MUST NOT treat them as "recently shipped — don't touch". Those 5 files (`Notices.tsx`, `RateLimits.tsx`, `Routing.tsx`, `Schema.tsx`, plus the new test) all query `tenant_page_layouts` — a table that no longer exists. They are **zombie code under ADR-0001** and **explicit deletion targets** in this Phase 1 PR.
+
+The shipping was intentional (per user's "all features on development" directive at the time, before the production drop authorization). Now that the drop has executed, these files cannot function. Deletion is correct, not a regression.
+
 ### Owner
 
-Codebuff or lead session. Single-repo.
+Codebuff or lead session. Single-repo. No coordination needed beyond Phase 1.
 
-### Files to delete
+### Files to delete (explicit paths, with provenance)
 
 ```
 business-suite-unified/
-├── src/pages/Developer/Pages.tsx                 (the design studio surface)
-├── src/pages/Developer/__tests__/Pages.test.tsx  (its test)
-├── src/pages/Developer/Notices.tsx               (PR #220, queries tenant_page_layouts)
-├── src/pages/Developer/RateLimits.tsx            (PR #220, queries tenant_page_layouts)
-├── src/pages/Developer/Routing.tsx               (PR #220, queries tenant_page_layouts)
-├── src/pages/Developer/Schema.tsx                (PR #220, queries tenant_page_layouts)
-├── src/pages/Developer/index.tsx                 (sub-nav controller — REWRITE rather than delete; remove just the sub-tabs that depended on tenant_page_layouts)
+├── src/pages/Developer/Pages.tsx                 ← phase-5 design studio (broken since pre-drop, ADR-0001 §Context)
+├── src/pages/Developer/__tests__/Pages.test.tsx  ← test for above
+├── src/pages/Developer/Notices.tsx               ← PR #220 zombie (queries tenant_page_layouts)
+├── src/pages/Developer/RateLimits.tsx            ← PR #220 zombie (queries tenant_page_layouts)
+├── src/pages/Developer/Routing.tsx               ← PR #220 zombie (queries tenant_page_layouts)
+├── src/pages/Developer/Schema.tsx                ← PR #220 zombie (queries tenant_page_layouts)
+├── src/pages/Developer/index.tsx                 ← sub-nav controller — REWRITE (remove the sub-tabs that depended on tenant_page_layouts; KEEP non-table-querying tabs if any remain)
 ├── src/pages/Developer/__tests__/DeveloperPortalRoutes.test.ts  (PR #220 test)
 ├── src/components/platform/LayoutCanvas.tsx      (only the JSDoc reference; safe to keep but obsolete — likely delete)
 └── src/config/tenantRoutes.ts                    (REMOVE entries: /developer/pages, /developer/nav; KEEP non-page-related routes)
