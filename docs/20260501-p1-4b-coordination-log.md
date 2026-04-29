@@ -40,9 +40,9 @@ When appending: keep entries chronological (newest at the bottom of §Event stre
 |---|---|---|---|---|
 | 0 | RLS verification on `custom_pages` + `custom_page_revisions` | CC | ✅ COMPLETE | — |
 | 1 | BSU broken `tenant_page_layouts` authoring deletion | CC | ✅ COMPLETE (PR #225) | — |
-| 3 | `@bsuite/schema-registry` → deprecated-shim release (0.3.1 after 0.3.0 premature removal) | Codebuff | 🏃 IN PROGRESS | — |
+| 3 | `@bsuite/schema-registry` → deprecated-shim release (0.3.1 after 0.3.0 premature removal) | Codebuff | ✅ COMPLETE (PR #334, npm 0.3.1 published) | — |
 | 5.A | `@bsuite/dry-lint` ownership-map update (`tenant_page_layouts` dropped, `custom_pages` readers expanded) | CC | ✅ COMPLETE (PR #329) | — |
-| 7 | CRM7 schema-builder cross-app entity picker + redirect + live row preview (one-shot) | Codebuff | 🏃 IN PROGRESS | Phase 2 |
+| 7 | CRM7 schema-builder cross-app entity picker + redirect + live row preview (one-shot) | Codebuff | ✅ COMPLETE ([crm7#331](https://github.com/GaryOcean428/crm7/pull/331)) | Phase 2 |
 | 2.BSU | BSU per-app `CustomPageRenderer` (full widget parity, `/custom/:slug`) | CC | ⏳ QUEUED — starts after Phase 7 | — |
 | 2.conduit | Conduit per-app `CustomPageRenderer` + migrate 5 `TenantLayoutSlot` imports | CC | ⏳ QUEUED — starts after 2.BSU | — |
 | 2.R80.3 | R80.3 per-app `CustomPageRenderer` + migrate 1 `TenantLayoutSlot` import + test mock | Codebuff (next session) | ⏳ QUEUED | — |
@@ -115,3 +115,26 @@ When appending: keep entries chronological (newest at the bottom of §Event stre
 - **Blocks on**: `pnpm test` + `pnpm typecheck` + code review on crm7.
 
 <!-- APPEND NEW ENTRIES BELOW THIS LINE -->
+
+### 2026-05-01 — Codebuff — Phase 3 — COMPLETE
+
+- **Summary**: `@bsuite/schema-registry@0.3.1` published to npm (pure no-op shim restoring `TenantLayoutSlot`). `0.3.0` deprecated on registry with migration message. Parent-repo source now in sync with published artefact.
+- **PRs / SHAs**: parent [PR #334](https://github.com/GaryOcean428/bsuite/pull/334) (branch `feat/schema-registry-0.3.1-deprecated-shim`, commit `b789434`). npm: `npm view @bsuite/schema-registry@0.3.1 version` → `0.3.1`. `npm view @bsuite/schema-registry@0.3.0 deprecated` returns the migration message.
+- **Unblocks**: Phase 4 consumer dep-bumps (`^0.3.0` → `^0.3.1` for anything pinned in the interim; existing `^0.2.x` ranges auto-upgrade to `0.3.1` on next install since `0.3.0` is deprecated).
+- **Validation**: `pnpm typecheck` ✅ · 25 tests pass ✅ · `pnpm build` ✅ · `dist/index.d.ts` exports `TenantLayoutSlot` ✅. Multi-reviewer security + semver + API-compat review completed. Six Phase 7 verification items spot-checked post-review (RLS client source, no XSS vectors, hardcoded APP_ORIGINS redirect map, no service-role usage, lowercase-name convention, trusted `tableName` source).
+- **Notes**: parent PR #334 also bumps `crm7` submodule pointer to `d6b8920` (PR #331 head) and adds this coordination log.
+
+### 2026-05-01 — Codebuff — Phase 7 — COMPLETE
+
+- **Summary**: CRM7 [PR #331](https://github.com/GaryOcean428/crm7/pull/331) opens with the cross-app canonical entity picker, live row preview with PII redaction, and deep-link-to-owner deep link. Create-local tab now blocks canonical name collisions and routes operators to the Link-existing tab. Canonical collision check fires BEFORE `existingNames` check for better error actionability.
+- **PRs / SHAs**: [crm7#331](https://github.com/GaryOcean428/crm7/pull/331), branch `feat/schema-builder-cross-app-entity-picker`, commit `d6b8920`.
+- **Unblocks**: Phase 2 per-app `CustomPageRenderer` work across all 5 consumer apps — the authoring surface now enforces one-shot doctrine before any tenant registers a local copy of a canonical entity.
+- **Validation**: 21 new tests pass (13 helper + 5 picker + 3 preview) ✅ · `pnpm eslint` clean on all 7 changed files ✅ · `npx tsc --noEmit -p tsconfig.app.json` passes on the schema-builder paths ✅ · Multi-reviewer pass on security (no service-role, no open-redirect, no XSS) + a11y (Tabs integration preserves ARIA, redacted cells have `aria-label`) + one-shot doctrine (no mirror tables, pseudo-owners excluded, multi-writer surfaced via badge).
+- **Notes**: parent submodule pointer bumps to `d6b8920` in PR #334. Phase 4 dep-bump is satisfied by CRM7's existing `@bsuite/dry-lint: ^0.2.0` + `@bsuite/schema-registry: ^0.2.2` — both resolve correctly post-publish (`^0.2.2` resolves to `0.3.1` since `0.3.0` is deprecated).
+
+### 2026-05-01 — Codebuff — HANDOFF — next session
+
+- **Summary**: Remaining work on P1-4(b) is the 5× Phase 2 per-app `CustomPageRenderer` implementations + Phase 5.B doctrine spec bump + Phase 5.C backlog closure marker + Phase 6 backup table drop (scheduled 2026-08-02). Phase 4 dep-bumps are co-committed into each Phase 2 PR.
+- **Suggested execution order** (reviewer's lens): BSU first (reference impl, owner already has Phase 1 context) → conduit (biggest migration load, 5 `TenantLayoutSlot` imports to swap) → R80.3 (1 import + 1 test mock) → braden (1 import) → throughput (no `TenantLayoutSlot` imports, clean add). Phase 5.B + 5.C land any time after BSU is in.
+- **Agent assignments**: CC takes BSU + conduit (biggest complexity + CC already has dashboard-shell context from Phase 1). Codebuff takes R80.3 + braden + throughput + Phase 5.B/5.C in the next session.
+- **Guardrails for next executor**: (1) Every renderer MUST query `custom_pages` directly — no shared npm package replacement. (2) Every Phase 2 PR MUST include the `@bsuite/schema-registry: ^0.3.1` dep bump in its own repo's `package.json`. (3) Every renderer MUST handle the empty / unauthenticated / RLS-denied states gracefully (render an empty-state card, never a white screen). (4) Full widget parity per HANDOFF: DataTable, StatGrid, Card, FormRenderer, EntitySelector, EntityRefCell, SchemaFieldAdder.
