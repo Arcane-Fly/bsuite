@@ -3,6 +3,10 @@ export { useTenantNavigation } from './useTenantNavigation.js';
 export { createMinimalClient } from './minimalClient.js';
 export type { AppScope } from './types.js';
 
+// Deprecated shim (0.3.1+) — will be removed in 0.4.0 per ADR-0001/0003.
+export { TenantLayoutSlot } from './TenantLayoutSlot.js';
+export type { TenantLayoutSlotProps } from './TenantLayoutSlot.js';
+
 // Widget registry plugin API (v0.2.0)
 export {
   registerWidget,
