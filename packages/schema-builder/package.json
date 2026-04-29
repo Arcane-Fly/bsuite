@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/schema-builder",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Shared Schema Builder canvas, hooks, and Zod schemas for BSuite consumer apps (crm7, BSU, conduit, R80.3). Canonical implementation consolidating the 4 previously-duplicated React Flow schema builders.",
   "type": "module",
   "license": "UNLICENSED",

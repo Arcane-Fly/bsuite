@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
 import {
   useSchemaController,
   type UseSchemaControllerOptions,
@@ -33,52 +33,74 @@ export interface SchemaBuilderProps {
 }
 
 /**
+ * Imperative handle exposed by `<SchemaBuilder ref={...} />`. Consumer thin
+ * wrappers use this to trigger actions from their own app-chrome (e.g. a
+ * "+ New Entity" button in the page header that opens the create panel).
+ */
+export interface SchemaBuilderHandle {
+  /** Open the properties panel in create mode. */
+  openCreateEntity: () => void;
+  /** Pan+zoom the canvas to a specific entity. */
+  focusEntity: (entityId: string) => void;
+}
+
+/**
  * Canonical Schema Builder surface. Consumer thin wrappers render this
  * component and provide the Supabase client + tenantId + navigation targets.
  */
-export function SchemaBuilder({
-  supabase,
-  tenantId,
-  appScope = 'all',
-  navigationTargets = [],
-  onNavigate,
-  onError,
-  onSuccess,
-  disableCommandPalette = false,
-  disableRealtime = false,
-}: SchemaBuilderProps) {
-  const canvasRef = useRef<SchemaCanvasHandle | null>(null);
+export const SchemaBuilder = forwardRef<SchemaBuilderHandle, SchemaBuilderProps>(
+  function SchemaBuilder(
+    {
+      supabase,
+      tenantId,
+      appScope = 'all',
+      navigationTargets = [],
+      onNavigate,
+      onError,
+      onSuccess,
+      disableCommandPalette = false,
+      disableRealtime = false,
+    },
+    ref,
+  ) {
+    const canvasRef = useRef<SchemaCanvasHandle | null>(null);
 
-  const controller = useSchemaController({
-    supabase,
-    tenantId,
-    appScope,
-    onError,
-    onSuccess,
-    realtime: !disableRealtime,
-  });
+    const controller = useSchemaController({
+      supabase,
+      tenantId,
+      appScope,
+      onError,
+      onSuccess,
+      realtime: !disableRealtime,
+    });
 
-  const handleSelectEntity = (entity: TenantEntity) => {
-    canvasRef.current?.focusEntity(entity.id);
-  };
+    useImperativeHandle(ref, () => ({
+      openCreateEntity: () => canvasRef.current?.openCreateEntity(),
+      focusEntity: (entityId) => canvasRef.current?.focusEntity(entityId),
+    }));
 
-  return (
-    <div className="relative h-full w-full">
-      <SchemaCanvas
-        ref={canvasRef}
-        controller={controller}
-        tenantId={tenantId}
-        appScope={appScope}
-        onError={onError}
-      />
-      {disableCommandPalette ? null : (
-        <CommandPalette
-          entities={controller.entities}
-          navigationTargets={navigationTargets}
-          onNavigate={onNavigate}
-          onSelectEntity={handleSelectEntity}
+    const handleSelectEntity = (entity: TenantEntity) => {
+      canvasRef.current?.focusEntity(entity.id);
+    };
+
+    return (
+      <div className="relative h-full w-full">
+        <SchemaCanvas
+          ref={canvasRef}
+          controller={controller}
+          tenantId={tenantId}
+          appScope={appScope}
+          onError={onError}
         />
-      )}
-    </div>
-  );
-}
+        {disableCommandPalette ? null : (
+          <CommandPalette
+            entities={controller.entities}
+            navigationTargets={navigationTargets}
+            onNavigate={onNavigate}
+            onSelectEntity={handleSelectEntity}
+          />
+        )}
+      </div>
+    );
+  },
+);

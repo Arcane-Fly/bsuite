@@ -31,8 +31,13 @@ import {
 } from 'react';
 
 import type { SchemaController } from '../hooks/useSchemaController.js';
-import type { AppScope, RelationType, TenantEntity } from '../types.js';
+import type {
+  AppScope,
+  RelationType,
+  TenantEntity,
+} from '../types.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
+import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
 import { RelationshipConfigDialog } from './RelationshipConfigDialog.js';
 
 const RELATION_LABELS: Record<RelationType, string> = {
@@ -65,13 +70,25 @@ export interface SchemaCanvasProps {
 export interface SchemaCanvasHandle {
   /** Pan+zoom the viewport to the entity with this id. */
   focusEntity: (entityId: string) => void;
+  /** Open the entity properties panel in create mode. */
+  openCreateEntity: () => void;
 }
 
 export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
-  function SchemaCanvas({ controller, onError }, ref) {
+  function SchemaCanvas(
+    { controller, tenantId, appScope, onError },
+    ref,
+  ) {
     const [isRelationDialogOpen, setIsRelationDialogOpen] = useState(false);
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+    const [selectedEntity, setSelectedEntity] = useState<TenantEntity | null>(
+      null,
+    );
     const pendingConnection = useRef<Connection | null>(null);
-    const flowRef = useRef<ReactFlowInstance<Node<EntityNodeData>, Edge> | null>(null);
+    const flowRef = useRef<ReactFlowInstance<
+      Node<EntityNodeData>,
+      Edge
+    > | null>(null);
 
     useImperativeHandle(ref, () => ({
       focusEntity: (entityId) => {
@@ -84,6 +101,10 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           node.position.y + (node.height ?? 120) / 2,
           { zoom: 1.2, duration: 400 },
         );
+      },
+      openCreateEntity: () => {
+        setSelectedEntity(null);
+        setIsPanelOpen(true);
       },
     }));
 
@@ -153,15 +174,18 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       setLocalEdges(edges);
     }, [edges]);
 
-    const onConnect = useCallback((params: Connection) => {
-      if (!params.source || !params.target) return;
-      if (params.source === params.target) {
-        onError?.('Cannot create a relationship from an entity to itself');
-        return;
-      }
-      pendingConnection.current = params;
-      setIsRelationDialogOpen(true);
-    }, [onError]);
+    const onConnect = useCallback(
+      (params: Connection) => {
+        if (!params.source || !params.target) return;
+        if (params.source === params.target) {
+          onError?.('Cannot create a relationship from an entity to itself');
+          return;
+        }
+        pendingConnection.current = params;
+        setIsRelationDialogOpen(true);
+      },
+      [onError],
+    );
 
     const handleRelationConfirm = useCallback(
       async (config: {
@@ -176,7 +200,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         try {
           const newRelation = await controller.createRelation({
             id: crypto.randomUUID(),
-            tenant_id: null,
+            tenant_id: tenantId,
             source_entity_id: params.source,
             target_entity_id: params.target,
             source_field_id: null,
@@ -187,7 +211,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             on_delete: 'SET NULL',
             on_update: 'CASCADE',
             is_system: false,
-            app_scope: 'all',
+            app_scope: appScope,
             metadata: {},
           });
 
@@ -211,7 +235,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           pendingConnection.current = null;
         }
       },
-      [controller],
+      [controller, tenantId, appScope],
     );
 
     const onEdgesChange = useCallback(
@@ -265,6 +289,63 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       [controller, localNodes, onError],
     );
 
+    const onNodeDoubleClick = useCallback(
+      (_: React.MouseEvent, node: Node<EntityNodeData>) => {
+        const entity = node.data.entity;
+        if (!entity) return;
+        setSelectedEntity(entity);
+        setIsPanelOpen(true);
+      },
+      [],
+    );
+
+    const handleSaveEntity = useCallback(
+      async (updates: Partial<TenantEntity>) => {
+        try {
+          if (selectedEntity) {
+            await controller.updateEntity(selectedEntity.id, updates);
+          } else {
+            await controller.createEntity({
+              tenant_id: tenantId,
+              name: updates.name ?? '',
+              label: updates.label ?? '',
+              description: updates.description ?? null,
+              icon: updates.icon ?? null,
+              app_scope: updates.app_scope ?? appScope,
+              is_system: false,
+              metadata: { position: { x: 100, y: 100 } },
+            });
+          }
+          setIsPanelOpen(false);
+          setSelectedEntity(null);
+        } catch (err) {
+          onError?.('Failed to save entity', err);
+        }
+      },
+      [controller, selectedEntity, tenantId, appScope, onError],
+    );
+
+    const handleDeleteEntity = useCallback(
+      async (id: string) => {
+        try {
+          await controller.deleteEntity(id);
+          setIsPanelOpen(false);
+          setSelectedEntity(null);
+        } catch (err) {
+          onError?.('Failed to delete entity', err);
+        }
+      },
+      [controller, onError],
+    );
+
+    const existingNames = useMemo(
+      () =>
+        controller.entities
+          .map((e) => e.name?.toLowerCase())
+          .filter((n): n is string => !!n),
+      [controller.entities],
+    );
+
     const sourceLabel =
       pendingConnection.current?.source
         ? (localNodes.find((n) => n.id === pendingConnection.current?.source)
@@ -276,63 +357,71 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             ?.data.entity.label ?? 'Target')
         : 'Target';
 
-    if (controller.isLoading) {
-      return (
-        <div className="flex h-full w-full items-center justify-center bg-neutral-50 dark:bg-neutral-950">
-          <span className="text-sm text-neutral-500">Loading schema...</span>
-        </div>
-      );
-    }
-    if (controller.loadError) {
-      return (
-        <div
-          className="flex h-full w-full flex-col items-center justify-center gap-3 bg-neutral-50 dark:bg-neutral-950"
-          role="alert"
-        >
-          <AlertTriangle className="h-10 w-10 text-red-500" />
-          <p className="text-sm font-medium text-red-600 dark:text-red-400">
-            Failed to load schema
-          </p>
-          <p className="max-w-sm px-4 text-center text-xs text-neutral-500">
-            {controller.loadError.message}
-          </p>
-        </div>
-      );
-    }
-    if (localNodes.length === 0) {
-      return (
-        <div
-          className="flex h-full w-full flex-col items-center justify-center gap-3 bg-neutral-50 dark:bg-neutral-950"
-          role="status"
-        >
-          <Workflow className="h-10 w-10 text-neutral-400" />
-          <p className="text-sm font-medium text-neutral-600">No entities yet</p>
-          <p className="max-w-sm px-4 text-center text-xs text-neutral-500">
-            Create your first entity to start building the schema.
-          </p>
-        </div>
-      );
-    }
+    const canvasContent = controller.isLoading ? (
+      <div className="flex h-full w-full items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+        <span className="text-sm text-neutral-500">Loading schema...</span>
+      </div>
+    ) : controller.loadError ? (
+      <div
+        className="flex h-full w-full flex-col items-center justify-center gap-3 bg-neutral-50 dark:bg-neutral-950"
+        role="alert"
+      >
+        <AlertTriangle className="h-10 w-10 text-red-500" />
+        <p className="text-sm font-medium text-red-600 dark:text-red-400">
+          Failed to load schema
+        </p>
+        <p className="max-w-sm px-4 text-center text-xs text-neutral-500">
+          {controller.loadError.message}
+        </p>
+      </div>
+    ) : localNodes.length === 0 ? (
+      <div
+        className="flex h-full w-full flex-col items-center justify-center gap-3 bg-neutral-50 dark:bg-neutral-950"
+        role="status"
+      >
+        <Workflow className="h-10 w-10 text-neutral-400" />
+        <p className="text-sm font-medium text-neutral-600">No entities yet</p>
+        <p className="max-w-sm px-4 text-center text-xs text-neutral-500">
+          Create your first entity to start building the schema.
+        </p>
+      </div>
+    ) : (
+      <ReactFlow
+        nodes={localNodes}
+        edges={localEdges}
+        nodeTypes={nodeTypes}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeDoubleClick={onNodeDoubleClick}
+        onInit={(inst) => {
+          flowRef.current = inst;
+        }}
+        fitView
+        aria-label="Entity relationship diagram"
+      >
+        <Background gap={16} />
+        <Controls />
+        <MiniMap />
+      </ReactFlow>
+    );
 
     return (
-      <>
-        <ReactFlow
-          nodes={localNodes}
-          edges={localEdges}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onInit={(inst) => {
-            flowRef.current = inst;
-          }}
-          fitView
-          aria-label="Entity relationship diagram"
-        >
-          <Background gap={16} />
-          <Controls />
-          <MiniMap />
-        </ReactFlow>
+      <div className="flex h-full w-full">
+        <div className="relative h-full flex-1">{canvasContent}</div>
+
+        {isPanelOpen ? (
+          <EntityPropertiesPanel
+            entity={selectedEntity}
+            existingNames={existingNames}
+            onClose={() => {
+              setIsPanelOpen(false);
+              setSelectedEntity(null);
+            }}
+            onSave={handleSaveEntity}
+            onDelete={handleDeleteEntity}
+          />
+        ) : null}
 
         <RelationshipConfigDialog
           open={isRelationDialogOpen}
@@ -344,8 +433,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           targetName={targetLabel}
           onConfirm={handleRelationConfirm}
         />
-      </>
+      </div>
     );
   },
 );
-

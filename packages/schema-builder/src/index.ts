@@ -1,6 +1,7 @@
 // Components
 export {
   EntityNode,
+  EntityPropertiesPanel,
   RelationshipConfigDialog,
   SchemaCanvas,
   CommandPalette,
@@ -9,11 +10,13 @@ export {
 export type {
   EntityNodeData,
   EntityNodeType,
+  EntityPropertiesPanelProps,
   SchemaCanvasHandle,
   SchemaCanvasProps,
   CommandPaletteProps,
   CommandPaletteNavTarget,
   SchemaBuilderProps,
+  SchemaBuilderHandle,
 } from './components/index.js';
 
 // Hooks
