@@ -22,8 +22,8 @@
     "tenant_entities_revisions":      { "owner": "crm7",       "readers": ["bsu"] },
     "host_preferred_qualifications":  { "owner": "crm7",       "readers": [] },
     "case_notes":                     { "owner": "crm7",       "readers": [] },
-    "custom_pages":                   { "owner": "crm7",       "readers": ["bsu"], "$comment": "P1-4 pending decision; for now CRM7 is sole authoring surface (`src/pages/settings/custom-page-*.tsx`). No BSU equivalent exists. Audit V7c-correction 2026-04-25." },
-    "custom_page_blocks":             { "owner": "crm7",       "readers": ["bsu"], "$comment": "Same scope as custom_pages." },
+    "custom_pages":                   { "owner": "crm7",       "readers": ["bsu", "conduit", "r80", "braden", "throughput"], "$comment": "ADR-0001 (2026-05-01) ratified: CRM7 sole authoring surface (`src/pages/settings/custom-page-*.tsx`). Per ADR-0003 each consumer app ships its own read-only `CustomPageRenderer`. Replaces the prior `tenant_page_layouts` slot which was atomically dropped 2026-04-29." },
+    "custom_page_revisions":          { "owner": "crm7",       "readers": ["bsu"], "$comment": "Optional version-history surface for custom_pages. 7 columns. The former `custom_page_blocks` entry was a misnomer — blocks live in `custom_pages.layout` jsonb, not a separate table." },
 
     "award_rates":                    { "owner": "r80",        "readers": ["crm7"] },
     "charge_calculations":            { "owner": "r80",        "readers": ["crm7"] },
@@ -51,7 +51,6 @@
     "tenant_branding":                { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "platform_branding":              { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "tenant_settings":                { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
-    "tenant_page_layouts":            { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "tenant_navigation":              { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "tenant_field_definitions":       { "owner": "bsu",        "readers": ["crm7", "r80", "conduit", "braden", "throughput"] },
     "subscriptions":                  { "owner": "bsu",        "readers": ["crm7", "r80", "throughput"] },
