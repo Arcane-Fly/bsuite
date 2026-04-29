@@ -11,9 +11,7 @@ BSuite is a multi-project workspace containing six web applications sharing a co
 | conduit | Recruitment ATS | React + Next.js 16 | pnpm |
 | braden | Corporate website (braden.com.au) | React + Vite | pnpm |
 | R80.3 | Wage calculator | React + Vite | pnpm |
-| throughput | Idea management platform (Groq AI) | React + Vite | npm¹ |
-
-¹ throughput currently uses `package-lock.json` (npm), divergent from the rest of the suite. See `AGENTS.md` Projects table for details.
+| throughput | Idea management platform (Groq AI) | React + Vite | pnpm |
 
 ## Critical Rules
 
@@ -247,4 +245,4 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 - AI integration via **Groq** (`gpt-oss-120b`) — see `throughput/GROQ_SETUP.md` and `throughput/docs/GROQ_INTEGRATION.md` (submodule-local paths)
 - Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
 - Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
-- **Anomaly:** ships with `package-lock.json` (npm), not `pnpm-lock.yaml`. Tracked separately for consolidation across the suite.
+- Package manager: **pnpm** (migrated from npm in PR #41, merged 2026-04-25)

@@ -13,9 +13,7 @@ BSuite is a multi-project workspace of six web applications sharing Supabase, Ty
 | **conduit** | Recruitment ATS | Next.js 16 App Router | pnpm | Vercel |
 | **braden** | Corporate site (braden.com.au) | React + Vite | pnpm | Vercel/Railway |
 | **R80.3** | Wage calculator | React + Vite | pnpm | Vercel |
-| **throughput** | Idea management platform (Groq AI) | React + Vite | npm¹ | Vercel |
-
-¹ throughput currently ships with `package-lock.json` (npm), not `pnpm-lock.yaml` — divergent from the rest of the suite. Tracked separately for consolidation.
+| **throughput** | Idea management platform (Groq AI) | React + Vite | pnpm | Vercel |
 
 ### Common Stack
 
