@@ -22,6 +22,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 | `20260316-bsuite-entity-reconciliation-plan-v1.00W.md` | 2026-04-07 | SP-4 entity crosswalk delivered (gap report v2 Section 9) |
 | `20260316-crm7-dashboard-grid-fix-plan-v1.00W.md` | 2026-04-07 | PageGridLayout wired on all apps (gap report v2 Section 2) |
 | `20260316-crm7-ui-fix-plan-v1.00W.md` | 2026-04-07 | All UI fix items confirmed done (gap report v2 Section 2) |
+| `20260422-entity-linkage-schema-builder-uplift-v1.02W.md` | 2026-05-01 | Superseded by v1.05W `20260501-universal-wysiwyg-schema-ux-v1.00W.md` §3.6 + §3.9 (strict superset — field-level handles, SchemaRelationSchema, dagre, crow's-foot) |
 
 ## Data Files
 

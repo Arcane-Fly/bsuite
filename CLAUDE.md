@@ -156,6 +156,15 @@ cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
 
 Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..` or `../packages/*`.
 
+### Dependency Version Policy
+
+1. All apps and shared packages MUST use the latest mutually-compatible versions of React, React DOM, `@types/react`, `@types/react-dom`, and related React libraries.
+2. When any of the 6 apps bumps React, `packages/schema-registry`, `packages/page-builder`, and `packages/nav-core` MUST be bumped in the same PR or the next PR. CI blocks if a shared package is behind the lowest consumer app version by more than one minor.
+3. Peer-dependency ranges for shared packages stay liberal, but devDependencies in each package MUST match the current consumer React version.
+4. Use caret ranges (`^X.Y.Z`) for all dependencies that follow semver.
+5. Run `pnpm update --latest --interactive` monthly.
+6. Triage `pnpm audit` security advisories weekly.
+
 ---
 
 ## Key Files
