@@ -142,6 +142,7 @@ Each entity has a single owning app for create/edit. See `docs/DRY-ONE-SHOT-ARCH
 - Schema changes via versioned migrations only
 - Expand → Migrate → Contract pattern
 - Row Level Security on all tables
+- **Production migrations land via PR only** — **NEVER** run `supabase db push` from a local checkout against `tuybltdrdefjblnplpqo`. Migrations apply via (a) merged PR + CI/CD, OR (b) Supabase MCP `apply_migration` (audit-tracked). Direct local push creates git↔production history drift — see `20260428085641_repair_tenant_page_layouts_contract` for a documented case where local push happened pre-PR and required follow-up file preservation in PR #218 (drop migration). When using MCP `apply_migration`, the recorded version timestamp is auto-generated; align the recorded `name` with the file path (e.g., name=`20260502000000_drop_tenant_page_layouts`) so future `supabase db push` from a fresh checkout sees the migration as applied.
 - **`client_id` RLS scoping**: BSuite apps are first-party trusted OAuth clients sharing a single Supabase project and user-base. Per-`client_id` DB isolation is **intentionally absent** — all authenticated users from any registered BS OAuth client get user-level access (`auth.uid() = user_id`). The `payment_methods` table has a named policy (`oauth_client_scoped_access`) documenting this decision. If per-client isolation is ever required, add a `client_id` column and a `USING ((auth.jwt() ->> 'client_id') = client_id)` guard. (See migration `20260415120000_rls_client_id_payment_methods.sql`.)
 
 ### Authentication & OAuth
@@ -161,14 +162,14 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 
 #### OAuth Client Registry
 
-| Client App | Client ID | Domain | Redirect URI |
-|------------|-----------|--------|--------------|
-| **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` | `{origin}/auth/callback` |
-| **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` | `{origin}/auth/callback` |
-| **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` | `{origin}/auth/callback` |
-| **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` | `{origin}/auth/callback` |
+| Client App | Client ID | Production Domain | Dev Preview Domain | Redirect URI |
+|------------|-----------|-------------------|--------------------|--------------|
+| **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` | `d.crm.crm7.app` | `{origin}/auth/callback` |
+| **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` | `d.r8.crm7.app` | `{origin}/auth/callback` |
+| **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` | `d.braden.com.au` | `{origin}/auth/callback` |
+| **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` | `d.ideas.crm7.app` | `{origin}/auth/callback` |
 
-**OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
+**OAuth Server:** BSU (`suite.crm7.app` / `d.suite.crm7.app` for dev preview) — consent screen at `/oauth/consent`
 
 #### Cross-Domain Session Sharing (Cookie SSO)
 
@@ -180,6 +181,34 @@ BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` wi
 - **Throughput** (`ideas.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
 - **Braden** (`www.braden.com.au`): ❌ Different TLD — uses BS OAuth 2.1 for SSO instead
 - **Conduit** (`conduit.crm7.app`): Server-managed cookies via `@supabase/ssr` (no cross-domain)
+
+#### Preview Deployments (`d.*` aliases)
+
+Each Vercel project has a custom **development-branch** domain assigned in addition to the auto-generated Vercel preview URL. This makes preview-deployment auth testing work end-to-end without per-PR Supabase allowlist updates.
+
+| App | Production | Development branch preview |
+|-----|-----------|----------------------------|
+| BSU | `suite.crm7.app` | `d.suite.crm7.app` |
+| CRM7 | `crm.crm7.app` | `d.crm.crm7.app` |
+| R80.3 | `r8.crm7.app` | `d.r8.crm7.app` |
+| Conduit | `conduit.crm7.app` | `d.conduit.crm7.app` |
+| Throughput | `ideas.crm7.app` | `d.ideas.crm7.app` |
+| Braden | `www.braden.com.au` | `d.braden.com.au` |
+
+**Cookie SSO inherits automatically** for all `.crm7.app` subdomains — login on production CRM7 → any `d.<app>.crm7.app` is auto-authenticated via the shared `business_suite_auth` cookie. Braden's preview is on a different TLD (`.braden.com.au`) and uses BS OAuth 2.1 (same pattern as production).
+
+**Supabase Auth URL Configuration** — registered redirect URIs for these previews (in addition to production URLs):
+
+- `d.suite.crm7.app/auth/callback` + `d.suite.crm7.app/oauth/consent` (BSU is consent surface)
+- `d.crm.crm7.app/auth/callback` + `d.crm.crm7.app/oauth/consent`
+- `d.r8.crm7.app/auth/callback` + `d.r8.crm7.app/oauth/consent`
+- `d.ideas.crm7.app/auth/callback` + `d.ideas.crm7.app/oauth/consent`
+- `d.conduit.crm7.app/auth/callback` (no `/oauth/consent` — conduit doesn't host consent)
+- `d.braden.com.au/auth/callback` (no `/oauth/consent` — braden uses BS OAuth, different TLD)
+
+**ADR-0004 doctrine**: this AGENTS.md is the SSoT for the Supabase redirect-URI allowlist. Any new preview alias requires (1) adding the URL to the table above, (2) adding `/auth/callback` (and `/oauth/consent` if a consent surface) to Supabase Auth URL Configuration, (3) PR documenting both additions.
+
+**Feature-branch previews** (auto-generated `<app>-git-<branch>-…vercel.app`) are **NOT** in the allowlist. Authenticated testing of a feature branch requires either: (a) merging to `development` first to test via the `d.*` alias, OR (b) a one-off PR adding the specific feature-branch URL to Supabase Auth URL Configuration. Do not let the allowlist balloon — prefer (a).
 
 #### Cookie Hardening (Applied)
 

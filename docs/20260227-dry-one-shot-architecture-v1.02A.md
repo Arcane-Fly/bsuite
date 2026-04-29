@@ -2,7 +2,7 @@
 
 **Applies to:** CRM7 • R8 • BSU • Conduit • braden • throughput • All future modules
 **Source of truth:** Unified Supabase schema (`business-suite-unified/database/` + `crm7/supabase/migrations/`)
-**Last updated:** 2026-04-23 (v1.01A — Phase 6a gap-closure refresh)
+**Last updated:** 2026-05-01 (v1.02A — P1-4(b) consumer-renderer migration: ADR-0001/ADR-0003 ratified, `tenant_page_layouts` dropped, CRM7 `custom_pages` canonical, per-app `CustomPageRenderer` doctrine)
 
 ---
 
@@ -516,11 +516,18 @@ The master plan [`docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02
 | V4 — apprentices mirrored in any app? | **No active violation.** CRM7 owns the canonical `apprentices` table; R80.3 and BSU are readers. throughput carries a dormant `CREATE TABLE IF NOT EXISTS` duplicate that is never executed against the shared project — tracked as throughput-debt-001. |
 | V5 — `lead-capture` edge function duplicated in both BSU and crm7 (drifted) | crm7 is the canonical copy; BSU copy deleted. crm7 copy gained tenant-scoped admin-email notification via `tenant_settings.lead_notification_email` (replaces BSU's hardcoded `info@braden.com.au`). |
 
-### Phase 5 — Schema + page-builder + navigation uplift (shipped 2026-04-22/23)
+### Phase 5 — Schema + page-builder + navigation uplift (shipped 2026-04-22/23, page-builder superseded 2026-05-01 per P1-4(b))
+
+**Note (v1.02A, 2026-05-01)**: The Phase 5 page-builder design (BSU-authored `tenant_page_layouts` + `TenantLayoutSlot` slot in each consumer app) was atomically replaced 2026-04-29 per ADR-0001 / ADR-0003. Page-builder authoring consolidated under CRM7 `custom_pages` (sole canonical surface); each consumer app ships its own read-only `CustomPageRenderer` (no shared package). The schema-registry package version 0.3.0 removes the deprecated `TenantLayoutSlot`, `useTenantPageLayout`, and `prefetchTenantPageLayout` exports. See `docs/20260501-handoff-p1-4b-consumer-renderer-migration-v1.00W.md` for the execution log; see ADR-0001 + ADR-0003 for the doctrine.
+
+---
+
 
 | Entity | Role |
 |--------|------|
-| `tenant_page_layouts` | BSU-authored page layout JSON per `(tenant_id, app_scope, route_path)` |
+| ~~`tenant_page_layouts`~~ | ~~BSU-authored page layout JSON~~ — **DROPPED 2026-04-29** per ADR-0001 atomic drop. Replaced by CRM7 `custom_pages` (single canonical authoring surface). Migration: `20260502000000_drop_tenant_page_layouts.sql` recorded in supabase_migrations as version `20260429045143`. Backup table `public.tenant_page_layouts_backup_20260502` retained 90 days (drop on 2026-08-02). |
+| `custom_pages` | **CRM7-authored** tenant page layouts (canonical surface per ADR-0001). 20 columns including `slug`, `tenant_id` (nullable for `scope='platform'`), `layout` jsonb (blocks live here, no separate `custom_page_blocks` table), `is_published`, `version`, `nav_config`. RLS: 4 policies (SELECT/INSERT/UPDATE/DELETE for `authenticated`) verified 2026-04-29. Realtime publication enabled. |
+| `custom_page_revisions` | Optional version-history surface for `custom_pages` (CRM7-owned). |
 | `tenant_navigation` | BSU-authored navigation overlays per `(tenant_id, app_scope)` |
 | `tenant_field_definitions` | Tenant-scoped custom field metadata for Phase 5+ form extensions |
 | `tenant_entities` | Whitelist of entities a tenant may bind widgets to |
