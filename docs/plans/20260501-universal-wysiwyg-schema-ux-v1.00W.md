@@ -1,12 +1,13 @@
-# Universal WYSIWYG + Schema UX Master Plan — v1.03W
+# Universal WYSIWYG + Schema UX Master Plan — v1.04W
 
-**Date:** 2026-05-01 (revised same-day, third pass)
+**Date:** 2026-05-01 (revised same-day, fourth pass)
 **Status:** W (Working — awaiting user sign-off on Phase 1+)
 **Owner:** Codebuff (Buffy) coordination with user
 **Supersedes / extends:** `docs/20260427-full-7-execution-ledger-v1.00W.md`, `docs/adr/ADR-0003-consumer-renderer-pattern.md`
 
 **Revision history:**
 
+- **v1.04W (2026-05-01)** — Knowledge-currency refresh via `/best-practice-research` + skill sweep (`bsuite-brand-system`, `ui-ux-pro-max`, `dry-one-shot-architecture`, `dnd-kit`, `zustand`, `shadcn-ui`, `forms-and-validation`, `tanstack-query`, `tanstack-table`, `supabase`). Findings applied as surgical refinements — no structural changes, no new phases. Key updates: **Phase 0 marked ✅ Completed** (shipped via PRs #335 parent / #332 crm7 / #228 BSU on 2026-05-01); **Dagre pin bumped** `^1.1.x` → `^3.0.0` (verified current stable — the `@dagrejs/dagre` 3.x line is the active maintenance branch and what production React Flow integrations ship against in 2026); **OKLCH color-space mandate** added to §3.5 per `bsuite-brand-system` skill (D2C tokens are authored in OKLCH; the color picker must present OKLCH values even when the user picks a custom colour so brand compliance gates catch non-OKLCH drift); **TanStack Query `queryOptions` factory pattern** named explicitly in §3.7 as the canonical read-query shape used inside `useSchemaController` per `tanstack-query` skill v5 guidance; **Protected-branch workflow** documented in §7 (parent `bsuite/development` + `crm7/development` + `business-suite-unified/development` are protected — all work lands via PR branches, never direct push, even for maintainers); Q2 marked locked/resolved since Phase 0 has shipped.
 - **v1.03W (2026-05-01)** — Consolidated 15 refinements from v1.02W code review: dropped `useOptimistic` from Vite pattern (TanStack Query's native optimistic is transition-safe; `useOptimistic` in a TanStack Query callback throws in React 19); fixed dagre axis labels for `rankdir: 'LR'` (`ranksep` is horizontal between ranks, `nodesep` is vertical within a rank); added Zod↔DB alias table in §3.9 so `SchemaRelation.source.tableId` ↔ `tenant_entity_relations.source_entity_id` is explicit; split `metadata.isSystem` into two orthogonal flags (`isSystem` = reflects existing native FK, `applyAsPostgresFK` = one-shot intent to emit DDL); moved field-level FK migration into Phase 1a deliverable 0 (must land before any code work); Phase 0 aligns shared-package React devDependencies while keeping peer ranges liberal; reconciled page persistence with ADR-0001 so CRM7 `custom_pages` remains canonical and `tenant_page_layouts` is not resurrected; added §4.0 Phase dependency graph; locked Q5 + Q7 (plan body already answers them); clarified `cmdk` is shadcn-transitive (not a separate package.json entry); named `syncpack` explicitly as the peer-dep + base-stack enforcement tool; scoped Phase 1a Cmd+K subset down to `Find Entity` + `Go to <page-path>` only to prevent Phase 1a sprawl. Trailing `Next session entry point` footnote retained unchanged.
 - **v1.02W (2026-05-01)** — Integrated user's improvement notes (field-level React Flow handles, React 19 `useOptimistic` + TanStack Query / Server-Action mutation pattern, hybrid relational-registry + jsonb view-state storage, shared `useSchemaController` hook, strict React 19 peer enforcement, Cmd+K command palette via shadcn `cmdk`). New §§2.6 / 3.7 / 3.8 / 3.9 / 3.10 added; §3.2 package structure expanded; §3.5 color picker refined to store CSS variable **name** (`var(--accent-primary)`) rather than resolved hex so the same layout renders correctly across D2C and Corporate themes; §3.6 dagre config pinned (`rankdir: 'LR'`, `nodesep: 60`, `ranksep: 80`) and smart-edge routing file named (`edges/SmartEdge.tsx`); §4 Phase 1 starts with a 'Hot-Sync' carve-out that extracts the shared `useSchemaController` hook BEFORE layering Airtable upgrades; §5 extended with peer-dependency enforcement clause; `cmdk` + `tailwind-merge` added to §2.5 + §6 as already-in-base-stack (cmdk needs install in BSU / conduit / R80.3 via `pnpm dlx shadcn add command`). Trailing user-notes block removed — content now integrated into body.
 - **v1.01W (2026-05-01)** — Scope tightened to base-stack-only per user direction: *"we have these skills already and the base. we've just diverted recently."* Dropped ELKjs, reactflow-smart-edge, react-colorful, Puck, and Craft.js. Added `@dagrejs/dagre` (~25 KB) as the single new dependency for Schema Builder auto-layout, justified by the user's explicit *"highest UX is key"* directive. New §2.5 maps every capability in the plan to an already-installed base-stack library plus its corresponding session-loaded skill.
@@ -49,12 +50,14 @@ The work is sized in 6 phases, running approximately 5–8 sessions depending on
 | **packages/page-builder** | ^18.3.1 (dev) | ^18.3.1 (dev) | ^18.3.28 | ⚠️ Outdated |
 | **packages/nav-core** | ^18.3.1 (dev) | ^18.3.1 (dev) | ^18.3.28 | ⚠️ Outdated |
 
-The user's claim "we've reverted to React 18" is partially correct:
+> **Phase 0 status (2026-05-01): ✅ Completed.** React 19 devDependency alignment across shared packages (`@bsuite/schema-registry`, `@bsuite/page-builder`, `@bsuite/nav-core`, `@bsuite/theme`, `@bsuite/ui`) and `mobile` shipped via PR #335 (parent bsuite) + PR #228 (BSU — aligns local `@business-suite/ui` React deps). `throughput` remains on React 18 intentionally and is deferred to Phase 6 per §4.0. Dependency Version Policy (§5) added to `AGENTS.md`, `CLAUDE.md`, and `.windsurfrules` in the same wave. CRM7 FormLayoutBuilder card-clipping fix shipped via PR #332. All three PRs MERGEABLE/CLEAN at last check.
 
-- 5 of 6 apps are already on 19.2.4 (no regression)
-- All 3 shared packages still have React 18 pinned as dev dep + peer-range `>=18 <21`
-- `throughput` never migrated to 19 (it's a real stragglers' regression)
-- `mobile` has a minor `react` vs `react-dom` version mismatch
+The user's 2026-05-01 claim "we've reverted to React 18" was partially correct at the time of audit:
+
+- 5 of 6 apps were already on 19.2.4 (no regression)
+- All 3 shared packages had React 18 pinned as dev dep + peer-range `>=18 <21` — **resolved by Phase 0 (PR #335)**; devDeps now on `^19.2.4`, peer ranges remain liberal
+- `throughput` never migrated to 19 (a real stragglers' regression) — intentionally deferred to Phase 6 per §4.0
+- `mobile` had a minor `react` vs `react-dom` version mismatch — **resolved by Phase 0**; `mobile/package.json` now pins react `^19.2.4` to match react-dom
 
 ### 2.2 Schema Builder duplication (DRY violation)
 
@@ -134,7 +137,7 @@ Per user direction (2026-05-01): *"we have these skills already and the base. we
 | Payments + webhooks | Stripe + BSU edge functions | ✅ Used (BSU, crm7) | `stripe-integration` |
 | Command palette / fuzzy actions (Cmd+K) | shadcn `cmdk` Command | ✅ crm7, braden have it. ⚠️ BSU / conduit / R80.3 need `pnpm dlx shadcn@latest add command` (installs the `cmdk` transitive dep — already a shadcn standard, not a net-new library choice) | `shadcn-ui` |
 | Utility-class merging / style overrides | `tailwind-merge` + `clsx` (`cn()` helper) | ✅ Already installed everywhere via shadcn — critical for the "edit borders" requirement so user-authored style overrides can safely override component base styles without class collisions | `shadcn-ui`, `ui-styling` |
-| **Schema auto-layout (NEW)** | **`@dagrejs/dagre@^1.1.x`** | ➕ **New addition — Phase 1 only** | N/A (see §3.6) |
+| **Schema auto-layout (NEW)** | **`@dagrejs/dagre@^3.0.0`** | ➕ **New addition — Phase 1 only** | N/A (see §3.6) |
 
 **Dropped from v1.00W drift** (replaced with built-ins; no net new runtime deps besides dagre):
 
@@ -335,14 +338,14 @@ A shadcn `Sheet` docked to the right edge, 320px wide, with four tabs (shadcn `T
 
 | Tab | Controls | Notes |
 |---|---|---|
-| **Style** | Border (color/width/style), Radius, Padding, Margin, Shadow, Background, Text color | Color pickers are **token-aware** — pick from theme (`--accent-primary`, `--accent-secondary`, etc.) not freeform hex. "Custom" option opens a shadcn `Popover` containing a native `<input type="color">` (zero new deps). |
+| **Style** | Border (color/width/style), Radius, Padding, Margin, Shadow, Background, Text color | Color pickers are **token-aware** — pick from theme (`--accent-primary`, `--accent-secondary`, etc.) not freeform hex. "Custom" option opens a shadcn `Popover` containing a native `<input type="color">` (zero new deps). The picker presents values in **OKLCH** colour space per the `bsuite-brand-system` skill — D2C and Corporate tokens are authored as OKLCH (e.g. `oklch(0.60 0.22 250)`), and the "Custom" fallback `<input type="color">` emits sRGB hex which the picker transparently converts to OKLCH before persisting so downstream brand-compliance linters catch drift. Hex storage is forbidden in layout JSON; every persisted colour is either `var(--token-name)` or an explicit `oklch(...)` string. |
 | **Layout** | Grid position (x/y/w/h), breakpoint overrides (lg/md/sm/xs), min/max size, alignment | Read/write bound to `react-grid-layout` `Layout` object |
 | **Content** | Title, description, icon, inline text editor for card body | Applies to card-type widgets only; data-bound widgets show the binding instead |
 | **Data** | Entity binding, filter, sort, row limit, columns shown | Applies to DataTable / EntityTable / Chart widgets |
 
 **Token-aware color picker** (critical for brand compliance — no new deps): the default swatches are a grid of shadcn `Button` components coloured from the app's own CSS variables (D2C or Corporate tokens — e.g., `--accent-primary`, `--accent-secondary`, `--surface-raised`). A final "Custom" button opens a shadcn `Popover` wrapping a native `<input type="color">` for arbitrary hex. This keeps developers inside the brand system by default and avoids pulling in `react-colorful` or any other picker library.
 
-> **Critical implementation rule (v1.02W R1 refinement)**: when a user picks a token swatch, persist the CSS variable **name** (`var(--accent-primary)`) into the layout JSON — NEVER the resolved hex colour at authoring time. Reason: the same page must render correctly under both D2C Neon Electric (blue primary) and Corporate (red primary) themes. A hex locks the layout to whichever theme was active during authoring. Only freeform "Custom" hex values are stored literally, and those carry an explicit `isCustomColor: true` flag so the validator can warn on brand drift during review.
+> **Critical implementation rule (v1.02W R1 refinement)**: when a user picks a token swatch, persist the CSS variable **name** (`var(--accent-primary)`) into the layout JSON — NEVER the resolved hex colour at authoring time. Reason: the same page must render correctly under both D2C Neon Electric (blue primary) and Corporate (red primary) themes. A hex locks the layout to whichever theme was active during authoring. Only freeform "Custom" values are stored as `oklch(...)` strings (never raw hex), and those carry an explicit `isCustomColor: true` flag so the validator can warn on brand drift during review.
 
 ### 3.6 Schema Builder upgrades (Airtable/Supabase-grade)
 
@@ -384,6 +387,27 @@ Per user direction (2026-05-01 follow-up): *"Since you are on React 19, stop usi
 | braden | Vite | Same as BSU |
 | R80.3 | Vite | Same as BSU |
 | throughput | Vite | N/A — not a Schema Builder consumer |
+
+**`queryOptions` factory pattern** (per TanStack Query v5 / `tanstack-query` skill): all read queries in `useSchemaController` are defined as factory-returned `queryOptions` objects so consumers can compose, share, and invalidate them without stringly-typed `queryKey` arrays. Example:
+
+```ts
+// packages/schema-builder/src/hooks/queries.ts
+import { queryOptions } from '@tanstack/react-query';
+export const schemaEntitiesOptions = (tenantId: string) =>
+  queryOptions({
+    queryKey: ['schema-entities', tenantId] as const,
+    queryFn: ({ signal }) => fetchSchemaEntities(tenantId, signal),
+    staleTime: 30_000,
+  });
+export const schemaRelationsOptions = (tenantId: string) =>
+  queryOptions({
+    queryKey: ['schema-relations', tenantId] as const,
+    queryFn: ({ signal }) => fetchSchemaRelations(tenantId, signal),
+    staleTime: 30_000,
+  });
+```
+
+The mutation's `onSettled` then invalidates `schemaRelationsOptions(tenantId).queryKey` rather than a bare string array, which keeps the key canonical across the package and its consumers.
 
 **Canonical Vite-app pattern** (used in `useSchemaController`) — TanStack Query native optimistic, no `useOptimistic`:
 
@@ -864,7 +888,7 @@ As of 2026-05-01 the confirmed mutually-compatible versions are:
 
 | Library | Version | Phase | Notes |
 |---|---|---|---|
-| `@dagrejs/dagre` | `^1.1.x` | Phase 1b | Schema Builder auto-layout. ~25 KB gzipped, zero runtime deps, synchronous API. De-facto standard for React Flow tidy-up. |
+| `@dagrejs/dagre` | `^3.0.0` | Phase 1b | Schema Builder auto-layout. ~25 KB gzipped, zero runtime deps, synchronous API. De-facto standard for React Flow tidy-up. Stable 3.x active maintenance line as of 2026-05-01. |
 
 **Top-up installs (not new libraries — existing shadcn components in some apps, missing in others)**:
 
@@ -882,6 +906,7 @@ All other features in this plan use libraries already installed in the BSuite mo
 - Phase 1a–3 are behind a feature flag per tenant (`visual_editor_enabled`, default false except Braden pty ltd).
 - Rollback plan: every new table has a corresponding `20260502000001_revert_*.sql` migration that restores the prior state non-destructively.
 - Phase 2+ require Supabase migration approval from the user before running in production.
+- **Protected-branch workflow**: `bsuite/development`, `crm7/development`, and `business-suite-unified/development` (and any other submodule's `development` branch) are protected. Direct pushes are rejected even for maintainers. All work — including Phase 0's React 19 alignment + policy rollout — lands via feature-branch PRs targeting `development`. This was validated during the Phase 0 rollout on 2026-05-01 when direct-push attempts were rejected and the work was preserved via PRs #335 / #332 / #228.
 
 ---
 
@@ -890,7 +915,7 @@ All other features in this plan use libraries already installed in the BSuite mo
 Mark these ⬜ below and reply inline when reviewing:
 
 - [ ] **Q1**: Approve the overall 6-phase plan (with Phase 1 now split into 1a Hot-Sync + 1b Airtable upgrades)?
-- [ ] **Q2**: Approve Phase 0 to execute immediately (this session)?
+- [x] **Q2**: ~~Approve Phase 0 to execute immediately…~~ **Resolved 2026-05-01**: Phase 0 shipped via PRs #335 (parent) / #332 (crm7) / #228 (BSU). Dependency Version Policy in AGENTS.md / CLAUDE.md / .windsurfrules; React 19 devDep alignment across all shared packages + mobile + BSU local UI; CRM7 FormLayoutBuilder card-clipping fix. All typechecks + BSU Vitest (243 passed) green.
 - [x] **Q3**: ~~For the style inspector color picker…~~ **Locked (v1.02W §3.5 R1)**: token-aware defaults (CSS variable names, not hex) with shadcn `Popover` + native `<input type="color">` for "Custom" fallback.
 - [ ] **Q4**: CASS persistence — do you want "per-user override on tenant default" (most flexible, complex) or "tenant-wide only, no per-user" (simpler)? (Recommendation: CASS with a UI toggle at save time.)
 - [x] **Q5**: ~~Undo/redo scope…~~ **Locked (v1.03W §3.4 + §4 Phase 3 deliverable 4)**: per-page-session, zustand + `temporal` middleware, no DB persistence. DB persistence is a Phase 6 optional polish item.
@@ -928,6 +953,7 @@ The user appended a set of best-practice improvement notes to v1.01W; v1.02W int
 | Concrete migration SQL (`20260503000000_add_field_level_relations.sql` + rollback twin) | §2.6 (inlined verbatim as the Phase 1a blocker, with RLS / CHECK / index / Realtime publication clauses ready to copy into `*/supabase/migrations/`) |
 | Syncpack + Husky peer-dep enforcement mechanism (concrete tooling, not just the rule) | §5 item 8 (zero-runtime-dep approach via `pnpm dlx syncpack`, hooked into `.husky/pre-push` + GitHub Actions required check `peer-deps-aligned`) |
 | "Should we move on to drafting the React 19 Custom Node component…" user rhetorical prompt | Preserved verbatim in the "Next session entry point" footnote at the end of this document, pre-answered with Phase 1a step 3 + `packages/schema-builder/src/components/EntityNode.tsx` file path and shape contract |
+| v1.04W knowledge-currency refresh (Dagre 3.x, OKLCH, queryOptions factory, protected-branch workflow) | §3.5 (OKLCH mandate + updated R1 callout) + §3.7 (queryOptions factory paragraph + code block above Vite pattern) + §6 (Dagre pin) + §7 (protected-branch bullet) + §8 Q2 locked |
 
 ---
 
