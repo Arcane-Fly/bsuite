@@ -7,6 +7,7 @@ export {
   CommandPalette,
   SchemaBuilder,
   SchemaToolbar,
+  FieldRow,
   SmartEdge,
   SmartEdgeMarkers,
   buildSmartEdgeStyle,
@@ -23,24 +24,32 @@ export type {
   SchemaBuilderProps,
   SchemaBuilderHandle,
   SchemaToolbarProps,
+  FieldRowProps,
+  FieldRowField,
   SmartEdgeData,
 } from './components/index.js';
 
 // Utils
-export { computeDagreLayout } from './utils/index.js';
+export { computeDagreLayout, exportCanvasToPng, defaultPngFilename } from './utils/index.js';
 export type { AutoLayoutOptions } from './utils/index.js';
 
 // Hooks
 export {
   useSchemaController,
   useRealtimeSubscription,
+  useSchemaReflection,
   schemaEntitiesOptions,
   schemaRelationsOptions,
+  entityFieldsOptions,
+  tenantFieldsOptions,
 } from './hooks/index.js';
 export type {
   UseSchemaControllerOptions,
   SchemaController,
   UseRealtimeSubscriptionOptions,
+  ReflectedColumn,
+  UseSchemaReflectionOptions,
+  UseSchemaReflectionResult,
 } from './hooks/index.js';
 
 // Zod schemas (re-exported for convenience)
@@ -65,8 +74,10 @@ export type {
 // Shared types
 export type {
   AppScope,
+  FieldType,
   TenantEntity,
   TenantEntityRelation,
+  TenantFieldDefinition,
   EntityMetadata,
   RelationType,
   SchemaControllerOptions,
@@ -83,5 +94,10 @@ export {
   createSchemaRelation,
   updateSchemaRelation,
   deleteSchemaRelation,
+  getEntityFields,
+  getTenantFields,
+  createEntityField,
+  updateEntityField,
+  deleteEntityField,
 } from './service.js';
 export type { LooseSupabaseClient } from './service.js';

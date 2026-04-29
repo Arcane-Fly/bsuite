@@ -61,6 +61,47 @@ export interface TenantEntityRelation {
   updated_at: string | null;
 }
 
+/**
+ * Field type enum mirroring the CHECK constraint on
+ * `tenant_field_definitions.field_type`.
+ */
+export type FieldType =
+  | 'text'
+  | 'number'
+  | 'boolean'
+  | 'date'
+  | 'select'
+  | 'multiselect'
+  | 'url'
+  | 'email'
+  | 'phone';
+
+/**
+ * Row shape for `tenant_field_definitions`. Covers the columns added through
+ * migrations `20260304090002_phase5_create_tenant_field_definitions.sql`,
+ * `20260304100000_ui_customization_system.sql`, and
+ * `20260311053135_visual_relational_builder.sql` (entity_id).
+ */
+export interface TenantFieldDefinition {
+  id: string;
+  tenant_id: string | null;
+  entity_id: string | null;
+  entity_type: string;
+  field_name: string;
+  field_type: FieldType;
+  label: string;
+  placeholder: string | null;
+  is_required: boolean;
+  options: Record<string, unknown> | null;
+  sort_order: number;
+  is_active: boolean;
+  scope: string | null;
+  is_system: boolean;
+  is_locked: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 /** Controller-options bag passed to every hook and the top-level component. */
 export interface SchemaControllerOptions {
   /**

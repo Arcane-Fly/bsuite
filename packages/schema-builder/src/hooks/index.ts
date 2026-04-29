@@ -8,4 +8,12 @@ export type { UseRealtimeSubscriptionOptions } from './useRealtimeSubscription.j
 export {
   schemaEntitiesOptions,
   schemaRelationsOptions,
+  entityFieldsOptions,
+  tenantFieldsOptions,
 } from './queries.js';
+export { useSchemaReflection } from './useSchemaReflection.js';
+export type {
+  ReflectedColumn,
+  UseSchemaReflectionOptions,
+  UseSchemaReflectionResult,
+} from './useSchemaReflection.js';

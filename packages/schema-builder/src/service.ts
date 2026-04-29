@@ -8,7 +8,12 @@
  * a single nested `and(or(...),or(...))` expression so both filters AND.
  */
 
-import type { AppScope, TenantEntity, TenantEntityRelation } from './types.js';
+import type {
+  AppScope,
+  TenantEntity,
+  TenantEntityRelation,
+  TenantFieldDefinition,
+} from './types.js';
 
 // Loose Supabase client type to keep package consumer-agnostic. Consumers pass
 // their own strongly-typed client; we only rely on the query-builder surface.
@@ -170,6 +175,95 @@ export async function deleteSchemaRelation(
 ): Promise<void> {
   const res = await (client
     .from('tenant_entity_relations')
+    .delete()
+    .eq('id', id) as unknown as Promise<{ data: unknown; error: unknown }>);
+  assertNoError<unknown>(res);
+}
+
+// -----------------------------------------------------------------
+// Field CRUD (tenant_field_definitions) — Phase 1b.2
+// -----------------------------------------------------------------
+
+/**
+ * Fetch the active fields for a single entity, sorted by sort_order then
+ * creation time. Used by the per-entity properties panel.
+ */
+export async function getEntityFields(
+  client: LooseSupabaseClient,
+  entityId: string,
+): Promise<TenantFieldDefinition[]> {
+  const q = client
+    .from('tenant_field_definitions')
+    .select('*')
+    .eq('entity_id', entityId)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+  const res = await (q as unknown as Promise<{ data: unknown; error: unknown }>);
+  return assertNoError<TenantFieldDefinition[]>(res);
+}
+
+/**
+ * Fetch all active fields for the given tenant. Used by
+ * `useSchemaController` to populate `fields` on every entity node at once
+ * without N+1 round-trips. NULL tenant fields (platform / system fields)
+ * are included so they appear on shared entities too.
+ */
+export async function getTenantFields(
+  client: LooseSupabaseClient,
+  tenantId: string | null,
+): Promise<TenantFieldDefinition[]> {
+  let q = client
+    .from('tenant_field_definitions')
+    .select('*')
+    .eq('is_active', true);
+
+  if (tenantId) {
+    q = q.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  } else {
+    q = q.is('tenant_id', null);
+  }
+
+  q = q.order('sort_order', { ascending: true }).order('created_at', {
+    ascending: true,
+  });
+
+  const res = await (q as unknown as Promise<{ data: unknown; error: unknown }>);
+  return assertNoError<TenantFieldDefinition[]>(res);
+}
+
+export async function createEntityField(
+  client: LooseSupabaseClient,
+  field: Omit<TenantFieldDefinition, 'id' | 'created_at' | 'updated_at'>,
+): Promise<TenantFieldDefinition> {
+  const res = await client
+    .from('tenant_field_definitions')
+    .insert(field)
+    .select('*')
+    .single();
+  return assertNoError<TenantFieldDefinition>(res);
+}
+
+export async function updateEntityField(
+  client: LooseSupabaseClient,
+  id: string,
+  updates: Partial<TenantFieldDefinition>,
+): Promise<TenantFieldDefinition> {
+  const res = await client
+    .from('tenant_field_definitions')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  return assertNoError<TenantFieldDefinition>(res);
+}
+
+export async function deleteEntityField(
+  client: LooseSupabaseClient,
+  id: string,
+): Promise<void> {
+  const res = await (client
+    .from('tenant_field_definitions')
     .delete()
     .eq('id', id) as unknown as Promise<{ data: unknown; error: unknown }>);
   assertNoError<unknown>(res);
