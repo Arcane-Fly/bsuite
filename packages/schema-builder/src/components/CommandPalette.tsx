@@ -1,5 +1,5 @@
 import { Command } from 'cmdk';
-import { Database, Link, Navigation } from 'lucide-react';
+import { Database, Link, Navigation, Wand2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { TenantEntity } from '../types.js';
 
@@ -16,18 +16,22 @@ export interface CommandPaletteProps {
   onNavigate?: (path: string) => void;
   /** Called when an entity is chosen (consumer typically pans/zooms to it). */
   onSelectEntity?: (entity: TenantEntity) => void;
+  /** Called when the user picks "Tidy Up Layout" (§3.6 item 3 + §3.10). */
+  onTidyUp?: () => void;
 }
 
 /**
  * Mounted once at the app shell level. Listens for Cmd/Ctrl+K globally.
- * Phase 1a command catalogue: `Find Entity <name>` and `Go to <page-path>`
- * only. Everything else ships in Phases 1b / 3 / 5 per §3.10.
+ * Phase 1a command catalogue: `Find Entity <name>` + `Go to <page-path>`.
+ * Phase 1b adds `Tidy Up Layout` per §3.10. Everything else ships in Phases
+ * 3 / 5.
  */
 export function CommandPalette({
   entities,
   navigationTargets,
   onNavigate,
   onSelectEntity,
+  onTidyUp,
 }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
 
@@ -77,6 +81,30 @@ export function CommandPalette({
             <Command.Empty className="p-4 text-center text-sm text-neutral-500">
               No matches.
             </Command.Empty>
+
+            {onTidyUp ? (
+              <Command.Group
+                heading="Actions"
+                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-neutral-500"
+              >
+                <Command.Item
+                  value="Tidy Up Layout auto arrange dagre"
+                  onSelect={() => {
+                    onTidyUp();
+                    setOpen(false);
+                  }}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+                >
+                  <Wand2 className="h-4 w-4 shrink-0 text-purple-500" />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate">Tidy Up Layout</span>
+                    <span className="truncate text-[10px] text-neutral-400">
+                      Auto-arrange entities left-to-right
+                    </span>
+                  </div>
+                </Command.Item>
+              </Command.Group>
+            ) : null}
 
             {entities.length > 0 ? (
               <Command.Group

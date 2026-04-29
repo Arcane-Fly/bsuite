@@ -1,6 +1,7 @@
 import type { Node, NodeProps } from '@xyflow/react';
 import { Handle, Position } from '@xyflow/react';
 import { Database, FileText, PlusSquare } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import type { EntityNodeData as ZodEntityNodeData } from '../schemas.js';
 import type { TenantEntity } from '../types.js';
@@ -11,9 +12,9 @@ import type { TenantEntity } from '../types.js';
  * `TenantEntity` row so downstream consumers (properties panel, relation
  * dialog) can read every column without a second Supabase round-trip.
  *
- * Phase 1b will add the `fields[]` array from `ZodEntityNodeData`, at which
- * point the component will render a handle pair per field row per §3.6
- * item 1.
+ * Phase 1b (§3.6 item 1) will hydrate the `fields[]` array from
+ * `ZodEntityNodeData`, at which point the component will render a handle pair
+ * per field row.
  */
 export type EntityNodeData = {
   label: React.ReactNode;
@@ -26,6 +27,37 @@ export type EntityNodeType = Node<EntityNodeData, 'entity'>;
 
 export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
   const entity = data.entity;
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [draftLabel, setDraftLabel] = useState(entity.label);
+
+  // Reset draft when the entity's label changes externally (e.g. Realtime
+  // update from another tab), but only if the user isn't mid-edit.
+  useEffect(() => {
+    if (!isRenaming) setDraftLabel(entity.label);
+  }, [entity.label, isRenaming]);
+
+  const commitRename = () => {
+    const trimmed = draftLabel.trim();
+    if (trimmed && trimmed !== entity.label) {
+      // Dispatch CustomEvent; SchemaCanvas listens and routes to
+      // controller.updateEntity so the node stays a pure display component.
+      // §3.6 item 7.
+      window.dispatchEvent(
+        new CustomEvent('bsuite-rename-entity', {
+          detail: { entityId: entity.id, newLabel: trimmed },
+        }),
+      );
+    } else {
+      // Nothing to commit — revert draft to persisted label.
+      setDraftLabel(entity.label);
+    }
+    setIsRenaming(false);
+  };
+
+  const cancelRename = () => {
+    setDraftLabel(entity.label);
+    setIsRenaming(false);
+  };
 
   return (
     <div
@@ -49,9 +81,51 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
       />
 
       <div className="flex items-center justify-between gap-3 rounded-t-xl border-b border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-800">
-        <div className="flex items-center gap-2 overflow-hidden">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
           <Database className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-          <div className="truncate text-sm font-semibold">{entity.label}</div>
+          {isRenaming ? (
+            <input
+              autoFocus
+              type="text"
+              value={draftLabel}
+              onChange={(e) => setDraftLabel(e.target.value)}
+              onBlur={commitRename}
+              onFocus={(e) => e.target.select()}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                // Stop React Flow from intercepting these keys while renaming
+                // (Delete/Backspace would otherwise remove the node).
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  commitRename();
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  cancelRename();
+                }
+              }}
+              aria-label={`Rename ${entity.label}`}
+              className="min-w-0 flex-1 rounded bg-transparent px-1 text-sm font-semibold text-neutral-900 outline-none ring-1 ring-blue-500 dark:text-neutral-100"
+            />
+          ) : (
+            <div
+              className="truncate text-sm font-semibold"
+              onDoubleClick={(e) => {
+                // Stop-propagation CRITICAL so the canvas's onNodeDoubleClick
+                // (which opens the properties panel) doesn't also fire when
+                // the user specifically double-clicks the label for rename.
+                e.stopPropagation();
+                if (!entity.is_system) setIsRenaming(true);
+              }}
+              title={
+                entity.is_system
+                  ? undefined
+                  : 'Double-click to rename'
+              }
+            >
+              {entity.label}
+            </div>
+          )}
         </div>
         {entity.is_system ? (
           <span className="h-4 shrink-0 rounded bg-neutral-200 px-1.5 text-[9px] font-medium uppercase leading-4 tracking-wide text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">

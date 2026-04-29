@@ -42,6 +42,8 @@ export interface SchemaBuilderHandle {
   openCreateEntity: () => void;
   /** Pan+zoom the canvas to a specific entity. */
   focusEntity: (entityId: string) => void;
+  /** Auto-arrange nodes via dagre (§3.6 item 3). */
+  tidyUp: () => void;
 }
 
 /**
@@ -77,6 +79,7 @@ export const SchemaBuilder = forwardRef<SchemaBuilderHandle, SchemaBuilderProps>
     useImperativeHandle(ref, () => ({
       openCreateEntity: () => canvasRef.current?.openCreateEntity(),
       focusEntity: (entityId) => canvasRef.current?.focusEntity(entityId),
+      tidyUp: () => canvasRef.current?.tidyUp(),
     }));
 
     const handleSelectEntity = (entity: TenantEntity) => {
@@ -98,6 +101,7 @@ export const SchemaBuilder = forwardRef<SchemaBuilderHandle, SchemaBuilderProps>
             navigationTargets={navigationTargets}
             onNavigate={onNavigate}
             onSelectEntity={handleSelectEntity}
+            onTidyUp={() => canvasRef.current?.tidyUp()}
           />
         )}
       </div>

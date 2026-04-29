@@ -12,3 +12,12 @@ export type {
 } from './CommandPalette.js';
 export { SchemaBuilder } from './SchemaBuilder.js';
 export type { SchemaBuilderProps, SchemaBuilderHandle } from './SchemaBuilder.js';
+export { SchemaToolbar } from './SchemaToolbar.js';
+export type { SchemaToolbarProps } from './SchemaToolbar.js';
+export {
+  SmartEdge,
+  SmartEdgeMarkers,
+  buildSmartEdgeStyle,
+  getMarkerIdsForCardinality,
+} from './edges/SmartEdge.js';
+export type { SmartEdgeData } from './edges/SmartEdge.js';
