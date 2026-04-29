@@ -274,14 +274,19 @@ export async function deleteEntityField(
 // Physical column rename (rename_physical_column RPC) — Phase 3B
 // -----------------------------------------------------------------
 
+/** Returned by `rename_physical_column` when `p_dry_run = false`. */
+export interface RenameWetResult {
+  executed: true;
+  previous_name: string;
+  new_name: string;
+}
+
 /**
  * Call the `rename_physical_column` Postgres RPC.
  *
- * - `dryRun = true` (default): returns `RenamePreviewResult` with the
- *   proposed SQL and affected objects WITHOUT executing any DDL.
- * - `dryRun = false`: executes `ALTER TABLE ... RENAME COLUMN ...` AND
- *   updates `tenant_field_definitions.field_name` in one transaction; returns
- *   `{ executed: true, previous_name: string, new_name: string }`.
+ * Overloaded signatures provide compile-time safety on the return type:
+ * - `dryRun = true` → `RenamePreviewResult`
+ * - `dryRun = false` → `RenameWetResult`
  *
  * The RPC enforces: admin/owner role check, identifier regex validation,
  * and writes an audit row to `schema_mutations_audit` BEFORE executing.
@@ -291,15 +296,34 @@ export async function renamePhysicalColumn(
   entityId: string,
   fieldId: string,
   newName: string,
+  dryRun: true,
+): Promise<RenamePreviewResult>;
+export async function renamePhysicalColumn(
+  client: LooseSupabaseClient,
+  entityId: string,
+  fieldId: string,
+  newName: string,
+  dryRun: false,
+): Promise<RenameWetResult>;
+export async function renamePhysicalColumn(
+  client: LooseSupabaseClient,
+  entityId: string,
+  fieldId: string,
+  newName: string,
+  dryRun?: boolean,
+): Promise<RenamePreviewResult | RenameWetResult>;
+export async function renamePhysicalColumn(
+  client: LooseSupabaseClient,
+  entityId: string,
+  fieldId: string,
+  newName: string,
   dryRun = true,
-): Promise<RenamePreviewResult | { executed: true; previous_name: string; new_name: string }> {
+): Promise<RenamePreviewResult | RenameWetResult> {
   const res = await (client.rpc('rename_physical_column', {
     p_entity_id: entityId,
     p_field_id: fieldId,
     p_new_name: newName,
     p_dry_run: dryRun,
   }) as unknown as Promise<{ data: unknown; error: unknown }>);
-  return assertNoError<
-    RenamePreviewResult | { executed: true; previous_name: string; new_name: string }
-  >(res);
+  return assertNoError<RenamePreviewResult | RenameWetResult>(res);
 }

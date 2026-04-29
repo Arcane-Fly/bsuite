@@ -110,4 +110,4 @@ export {
   deleteEntityField,
   renamePhysicalColumn,
 } from './service.js';
-export type { LooseSupabaseClient } from './service.js';
+export type { LooseSupabaseClient, RenameWetResult } from './service.js';

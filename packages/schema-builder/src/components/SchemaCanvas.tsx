@@ -741,7 +741,9 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                     .renameField(entity.id, field.id, payload.field_name, {
                       physical: true,
                     })
-                    .catch(() => {});
+                    .catch((err) =>
+                      onError?.('Failed to rename physical column', err),
+                    );
                 } else {
                   controller
                     .updateField(field.id, {
@@ -751,7 +753,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                       placeholder: payload.placeholder,
                       is_required: payload.is_required,
                     })
-                    .catch(() => {});
+                    .catch((err) => onError?.('Failed to save field', err));
                 }
                 setFieldEditContext(null);
               }}

@@ -525,7 +525,7 @@ export function useSchemaController({
       fieldId: string,
       newName: string,
     ): Promise<RenamePreviewResult> =>
-      renamePhysicalColumn(supabase, entityId, fieldId, newName, true) as Promise<RenamePreviewResult>,
+      renamePhysicalColumn(supabase, entityId, fieldId, newName, true),
     [supabase],
   );
 
