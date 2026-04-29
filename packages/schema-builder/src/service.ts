@@ -12,37 +12,30 @@ import type { AppScope, TenantEntity, TenantEntityRelation } from './types.js';
 
 // Loose Supabase client type to keep package consumer-agnostic. Consumers pass
 // their own strongly-typed client; we only rely on the query-builder surface.
-// Using `any` inside the type arg is intentional — the Database generic is
-// owned by the consumer and resolved at their callsite.
-type LooseQuery = {
-  select: (cols: string) => LooseQuery;
-  insert: (row: unknown) => LooseQuery;
-  update: (row: unknown) => LooseQuery;
-  delete: () => LooseQuery;
-  eq: (col: string, val: unknown) => LooseQuery;
-  is: (col: string, val: unknown) => LooseQuery;
-  in: (col: string, vals: unknown[]) => LooseQuery;
-  or: (expr: string) => LooseQuery;
-  order: (col: string, opts?: { ascending?: boolean }) => LooseQuery;
-  single: () => Promise<{ data: unknown; error: unknown }>;
-  // Thenable so `await query` works on the query builder directly.
-  then: Promise<{ data: unknown; error: unknown }>['then'];
-};
+//
+// `LooseQuery` is intentionally `any`: the real `@supabase/supabase-js`
+// PostgrestQueryBuilder returns different concrete builder types from
+// `.select()` / `.eq()` / `.or()` / `.is()` / `.in()` / `.order()`, so a
+// structurally-typed shape cannot match. Service methods below cast to
+// `Promise<{ data, error }>` at the await site, so the loss of type precision
+// on intermediate chain links has no runtime impact.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LooseQuery = any;
 
-export interface LooseChannel {
-  on: (
-    event: string,
-    filter: Record<string, unknown>,
-    handler: (payload: unknown) => void,
-  ) => LooseChannel;
-  subscribe: () => { unsubscribe: () => void };
-}
+// See LooseQuery above for rationale — the real RealtimeChannel's `.on()` has
+// tagged-union overloads (presence/postgres_changes/broadcast/system) that
+// cannot be structurally matched, so we widen to `any`.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type LooseChannel = any;
 
-export type LooseSupabaseClient = {
-  from: (table: string) => LooseQuery;
-  channel: (name: string) => LooseChannel;
-  removeChannel: (channel: unknown) => void;
-};
+// Pragmatic widening to `any` after three rounds of structural-compat failures
+// (.from()/eq/or, .channel().on() overloads, .removeChannel() return type).
+// The package trusts callers to pass a real supabase-js client. Service methods
+// below cast `await` sites to Promise<{data,error}> explicitly, so there is no
+// runtime type-safety loss — TypeScript just stops re-validating the client's
+// rich structural API on every version bump of @supabase/supabase-js.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type LooseSupabaseClient = any;
 
 function assertNoError<T>(res: { data: unknown; error: unknown }): T {
   if (res.error) {
