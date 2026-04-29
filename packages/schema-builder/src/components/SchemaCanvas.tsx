@@ -36,9 +36,12 @@ import type {
   RelationType,
   TenantEntity,
 } from '../types.js';
+import { computeDagreLayout } from '../utils/autoLayout.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
 import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
 import { RelationshipConfigDialog } from './RelationshipConfigDialog.js';
+import { SchemaToolbar } from './SchemaToolbar.js';
+import { SmartEdge, type SmartEdgeData } from './edges/SmartEdge.js';
 
 const RELATION_LABELS: Record<RelationType, string> = {
   one_to_one: '1:1',
@@ -48,6 +51,7 @@ const RELATION_LABELS: Record<RelationType, string> = {
 };
 
 const nodeTypes = { entity: EntityNode };
+const edgeTypes = { smart: SmartEdge };
 
 function stylesForRelation(type: RelationType) {
   return {
@@ -72,6 +76,8 @@ export interface SchemaCanvasHandle {
   focusEntity: (entityId: string) => void;
   /** Open the entity properties panel in create mode. */
   openCreateEntity: () => void;
+  /** Auto-arrange nodes via dagre (§3.6 item 3). */
+  tidyUp: () => void;
 }
 
 export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
@@ -84,29 +90,24 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
     const [selectedEntity, setSelectedEntity] = useState<TenantEntity | null>(
       null,
     );
+    const [searchQuery, setSearchQuery] = useState('');
     const pendingConnection = useRef<Connection | null>(null);
     const flowRef = useRef<ReactFlowInstance<
       Node<EntityNodeData>,
       Edge
     > | null>(null);
 
-    useImperativeHandle(ref, () => ({
-      focusEntity: (entityId) => {
-        const flow = flowRef.current;
-        if (!flow) return;
-        const node = flow.getNode(entityId);
-        if (!node) return;
-        flow.setCenter(
-          node.position.x + (node.width ?? 200) / 2,
-          node.position.y + (node.height ?? 120) / 2,
-          { zoom: 1.2, duration: 400 },
-        );
-      },
-      openCreateEntity: () => {
-        setSelectedEntity(null);
-        setIsPanelOpen(true);
-      },
-    }));
+    const focusEntityById = useCallback((entityId: string) => {
+      const flow = flowRef.current;
+      if (!flow) return;
+      const node = flow.getNode(entityId);
+      if (!node) return;
+      flow.setCenter(
+        node.position.x + (node.width ?? 200) / 2,
+        node.position.y + (node.height ?? 120) / 2,
+        { zoom: 1.2, duration: 400 },
+      );
+    }, []);
 
     // Derive nodes+edges deterministically from controller state so Realtime
     // invalidations propagate on each render instead of stale local state.
@@ -135,26 +136,32 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         },
       );
 
-      const builtEdges: Edge[] = controller.relations
+      const builtEdges: Edge<SmartEdgeData>[] = controller.relations
         .filter(
           (r) =>
             entityById.has(r.source_entity_id) &&
             entityById.has(r.target_entity_id),
         )
-        .map((rel) => ({
-          id: rel.id,
-          source: rel.source_entity_id,
-          target: rel.target_entity_id,
-          label:
-            rel.source_label ||
-            RELATION_LABELS[rel.relation_type] ||
-            rel.relation_type,
-          type: 'smoothstep',
-          animated: rel.relation_type === 'inherits_from',
-          style: stylesForRelation(rel.relation_type),
-          labelBgPadding: [6, 4] as [number, number],
-          labelBgBorderRadius: 4,
-        }));
+        .map((rel) => {
+          const styling = stylesForRelation(rel.relation_type);
+          return {
+            id: rel.id,
+            source: rel.source_entity_id,
+            target: rel.target_entity_id,
+            label:
+              rel.source_label ||
+              RELATION_LABELS[rel.relation_type] ||
+              rel.relation_type,
+            type: 'smart',
+            animated: rel.relation_type === 'inherits_from',
+            style: styling,
+            data: {
+              cardinality: rel.relation_type,
+              onDelete: rel.on_delete,
+              stroke: styling.stroke,
+            },
+          };
+        });
 
       return { nodes: builtNodes, edges: builtEdges };
     }, [controller.entities, controller.relations]);
@@ -164,15 +171,42 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
     const [localNodes, setLocalNodes] = useState<Node<EntityNodeData>[]>(nodes);
     const [localEdges, setLocalEdges] = useState<Edge[]>(edges);
 
-    // Re-sync local state when controller data changes (Realtime or mutation
-    // settle). Use reference equality so React Flow's mid-drag local state is
-    // preserved across unrelated re-renders.
     useEffect(() => {
       setLocalNodes(nodes);
     }, [nodes]);
     useEffect(() => {
       setLocalEdges(edges);
     }, [edges]);
+
+    // Inline rename from EntityNode (§3.6 item 7). CustomEvent-based to avoid
+    // prop drilling; SchemaCanvas is the only listener per mount.
+    useEffect(() => {
+      const handler = (e: Event) => {
+        const ce = e as CustomEvent<{ entityId: string; newLabel: string }>;
+        if (!ce.detail?.entityId || !ce.detail.newLabel) return;
+        controller
+          .updateEntity(ce.detail.entityId, { label: ce.detail.newLabel })
+          .catch(() => {});
+      };
+      window.addEventListener('bsuite-rename-entity', handler);
+      return () =>
+        window.removeEventListener('bsuite-rename-entity', handler);
+    }, [controller]);
+
+    // Search input → focus first matching entity (debounced 200ms). §3.6 item 6.
+    useEffect(() => {
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) return;
+      const t = setTimeout(() => {
+        const match = controller.entities.find(
+          (e) =>
+            e.label.toLowerCase().includes(q) ||
+            e.name.toLowerCase().includes(q),
+        );
+        if (match) focusEntityById(match.id);
+      }, 200);
+      return () => clearTimeout(t);
+    }, [searchQuery, controller.entities, focusEntityById]);
 
     const onConnect = useCallback(
       (params: Connection) => {
@@ -215,19 +249,25 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             metadata: {},
           });
 
+          const styling = stylesForRelation(newRelation.relation_type);
           setLocalEdges((eds) =>
             addEdge(
               {
                 ...params,
                 id: newRelation.id,
-                type: 'smoothstep',
+                type: 'smart',
                 label:
                   config.source_label ||
                   RELATION_LABELS[newRelation.relation_type] ||
                   newRelation.relation_type,
                 animated: newRelation.relation_type === 'inherits_from',
-                style: stylesForRelation(newRelation.relation_type),
-              },
+                style: styling,
+                data: {
+                  cardinality: newRelation.relation_type,
+                  onDelete: newRelation.on_delete,
+                  stroke: styling.stroke,
+                },
+              } as Edge<SmartEdgeData>,
               eds,
             ),
           );
@@ -338,6 +378,44 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       [controller, onError],
     );
 
+    // Dagre auto-layout. Runs against current local nodes/edges, optimistically
+    // updates the visual layer, persists each non-system entity's position,
+    // then fits the viewport once settled. §3.6 item 3.
+    const handleTidyUp = useCallback(() => {
+      if (localNodes.length === 0) return;
+      const laidOut = computeDagreLayout(localNodes, localEdges);
+      setLocalNodes(laidOut);
+      const persist = laidOut.map((node) => {
+        const entity = (node.data as EntityNodeData | undefined)?.entity;
+        if (!entity || entity.is_system) return Promise.resolve();
+        return controller
+          .updateEntityPosition(node.id, node.position)
+          .catch(() => {});
+      });
+      Promise.all(persist).finally(() => {
+        requestAnimationFrame(() => {
+          flowRef.current?.fitView({ duration: 400, padding: 0.1 });
+        });
+      });
+    }, [localNodes, localEdges, controller]);
+
+    const handleFitView = useCallback(() => {
+      flowRef.current?.fitView({ duration: 400, padding: 0.1 });
+    }, []);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        focusEntity: focusEntityById,
+        openCreateEntity: () => {
+          setSelectedEntity(null);
+          setIsPanelOpen(true);
+        },
+        tidyUp: handleTidyUp,
+      }),
+      [focusEntityById, handleTidyUp],
+    );
+
     const existingNames = useMemo(
       () =>
         controller.entities
@@ -356,6 +434,9 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         ? (localNodes.find((n) => n.id === pendingConnection.current?.target)
             ?.data.entity.label ?? 'Target')
         : 'Target';
+
+    const showToolbar =
+      !controller.isLoading && !controller.loadError && localNodes.length > 0;
 
     const canvasContent = controller.isLoading ? (
       <div className="flex h-full w-full items-center justify-center bg-neutral-50 dark:bg-neutral-950">
@@ -390,6 +471,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         nodes={localNodes}
         edges={localEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -408,7 +490,17 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
 
     return (
       <div className="flex h-full w-full">
-        <div className="relative h-full flex-1">{canvasContent}</div>
+        <div className="relative h-full flex-1">
+          {canvasContent}
+          {showToolbar ? (
+            <SchemaToolbar
+              onTidyUp={handleTidyUp}
+              onFitView={handleFitView}
+              onSearchChange={setSearchQuery}
+              searchQuery={searchQuery}
+            />
+          ) : null}
+        </div>
 
         {isPanelOpen ? (
           <EntityPropertiesPanel

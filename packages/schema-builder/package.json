@@ -1,7 +1,7 @@
 {
   "name": "@bsuite/schema-builder",
-  "version": "0.1.5",
-  "description": "Shared Schema Builder canvas, hooks, and Zod schemas for BSuite consumer apps (crm7, BSU, conduit, R80.3). Canonical implementation consolidating the 4 previously-duplicated React Flow schema builders.",
+  "version": "0.2.0",
+  "description": "Shared Schema Builder canvas, hooks, and Zod schemas for BSuite consumer apps (crm7, BSU, conduit, R80.3). Canonical implementation consolidating the 4 previously-duplicated React Flow schema builders, plus dagre auto-layout, crow's-foot cardinality edges, floating toolbar, and inline rename (v0.2.0 = Phase 1b.1 visual upgrades).",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -34,6 +34,10 @@
     "./components": {
       "import": "./dist/components/index.js",
       "types": "./dist/components/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
     }
   },
   "scripts": {
@@ -41,6 +45,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^3.0.0"
   },
   "peerDependencies": {
     "@supabase/supabase-js": "^2",

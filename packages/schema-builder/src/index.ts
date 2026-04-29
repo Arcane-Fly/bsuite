@@ -6,6 +6,11 @@ export {
   SchemaCanvas,
   CommandPalette,
   SchemaBuilder,
+  SchemaToolbar,
+  SmartEdge,
+  SmartEdgeMarkers,
+  buildSmartEdgeStyle,
+  getMarkerIdsForCardinality,
 } from './components/index.js';
 export type {
   EntityNodeData,
@@ -17,7 +22,13 @@ export type {
   CommandPaletteNavTarget,
   SchemaBuilderProps,
   SchemaBuilderHandle,
+  SchemaToolbarProps,
+  SmartEdgeData,
 } from './components/index.js';
+
+// Utils
+export { computeDagreLayout } from './utils/index.js';
+export type { AutoLayoutOptions } from './utils/index.js';
 
 // Hooks
 export {
