@@ -157,6 +157,90 @@ Per user direction (2026-05-01 follow-up): *"The plan relies heavily on jsonb fo
 
 **Realtime benefit**: because the registry tables are already listed in `enable_realtime_all_tables.sql`, every open developer tab receives schema mutations via Supabase Realtime without polling. The Schema Builder subscribes to `postgres_changes` on `tenant_entities`, `tenant_entity_relations`, and `tenant_field_definitions` to keep all open canvases in sync.
 
+**Prereq migration (Phase 1a blocker) — `20260503000000_add_field_level_relations.sql`**:
+
+The existing `tenant_entity_relations` table is entity-to-entity only (`source_entity_id` → `target_entity_id`). To support Airtable / dbdiagram-grade field-level connections per §3.6 item 1 and the `SchemaRelationSchema` Zod contract in §3.9, two nullable FK columns are added plus a Realtime publication confirmation. The migration is additive and fully backwards-compatible — existing entity-to-entity rows keep working (both new columns NULL), and Phase 1b can start emitting field-level rows the moment the migration lands.
+
+```sql
+-- 20260503000000_add_field_level_relations.sql
+-- Phase 1a prereq per docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md §2.6.
+-- Adds field-level FK columns to tenant_entity_relations + confirms Realtime.
+
+BEGIN;
+
+-- 1. Field-level FK columns (nullable — entity-to-entity rows stay valid)
+ALTER TABLE public.tenant_entity_relations
+  ADD COLUMN IF NOT EXISTS source_field_id uuid
+    REFERENCES public.tenant_field_definitions(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS target_field_id uuid
+    REFERENCES public.tenant_field_definitions(id) ON DELETE SET NULL;
+
+COMMENT ON COLUMN public.tenant_entity_relations.source_field_id IS
+  'Field-level FK source column. NULL = entity-to-entity relation (legacy). '
+  'Set by Schema Builder when the user drags from a field-row handle per §3.9.';
+
+COMMENT ON COLUMN public.tenant_entity_relations.target_field_id IS
+  'Field-level FK target column. Almost always the primary key of the target entity.';
+
+-- 2. Integrity guard — both field IDs present or both NULL (never mismatched)
+ALTER TABLE public.tenant_entity_relations
+  DROP CONSTRAINT IF EXISTS chk_field_level_pair;
+ALTER TABLE public.tenant_entity_relations
+  ADD CONSTRAINT chk_field_level_pair
+  CHECK (
+    (source_field_id IS NULL AND target_field_id IS NULL)
+    OR
+    (source_field_id IS NOT NULL AND target_field_id IS NOT NULL)
+  );
+
+-- 3. Performance indexes for the typical Schema Builder queries
+CREATE INDEX IF NOT EXISTS idx_ter_source_field
+  ON public.tenant_entity_relations (source_field_id)
+  WHERE source_field_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_ter_target_field
+  ON public.tenant_entity_relations (target_field_id)
+  WHERE target_field_id IS NOT NULL;
+
+-- 4. Realtime publication — idempotent add (table is already in the
+-- publication in canonical environments, but re-assert to guard against
+-- drift on dev/staging Supabase projects).
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'tenant_entity_relations'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.tenant_entity_relations;
+  END IF;
+END $$;
+
+COMMIT;
+```
+
+**Rollback migration** (`20260503000001_revert_field_level_relations.sql`) ships alongside per §7 rollback policy:
+
+```sql
+-- 20260503000001_revert_field_level_relations.sql
+BEGIN;
+
+DROP INDEX IF EXISTS public.idx_ter_source_field;
+DROP INDEX IF EXISTS public.idx_ter_target_field;
+
+ALTER TABLE public.tenant_entity_relations
+  DROP CONSTRAINT IF EXISTS chk_field_level_pair;
+
+ALTER TABLE public.tenant_entity_relations
+  DROP COLUMN IF EXISTS source_field_id,
+  DROP COLUMN IF EXISTS target_field_id;
+
+COMMIT;
+```
+
+**RLS note**: the existing `tenant_entity_relations` policies (SELECT / INSERT / UPDATE / DELETE scoped by `tenant_id` through `user_tenants`) already cover the new columns — row-level filtering is unaffected. The new FK references to `tenant_field_definitions(id)` use `ON DELETE SET NULL` so dropping a field-definition row degrades the relation to entity-level rather than cascading to delete the whole relation. This preserves the audit trail of the connection even when one endpoint column is removed.
+
 ---
 
 ## 3. Target Architecture
@@ -639,6 +723,28 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
    the master plan in the same PR. A CI lint script
    (`scripts/check-base-stack-only.sh`, delivered in Phase 6) diffs each
    PR's package.json changes against the allow-list and blocks on violation.
+
+8. Peer-dependency enforcement mechanism (item 3 implementation, delivered
+   in Phase 0): use `syncpack` (https://github.com/JamieMason/syncpack —
+   zero-runtime-dep dev-tool, invoked via `pnpm dlx` so no new package.json
+   entry is required) to detect version drift across every workspace
+   package.json. Shipping artefacts in Phase 0:
+     - `.syncpackrc.json` at repo root declaring a single pinned version
+       group for `react`, `react-dom`, `@types/react`, `@types/react-dom`
+       (all pinned to the latest active major — currently `^19.2.x`)
+     - `scripts/check-peer-deps.sh` wrapping
+       `pnpm dlx syncpack@latest list-mismatches` with a non-zero exit on
+       any detected mismatch
+     - Husky `.husky/pre-push` hook calling the script for fast local
+       fail-before-push
+     - GitHub Actions required status check `peer-deps-aligned` calling
+       the same script on every PR so the policy is enforced even when
+       pre-push is bypassed with `--no-verify`
+   Any PR that misaligns React versions across the workspace is blocked
+   at both the pre-push and CI layer. Non-React peer-dep drift (e.g. zod,
+   @tanstack/react-query) is surfaced as a warning by the same script but
+   does not block — only the React version group is a hard fail, because
+   it is the one that causes the peer-dep cascade the user called out.
 ```
 
 ---
@@ -736,3 +842,36 @@ The user appended a set of best-practice improvement notes to v1.01W; v1.02W int
 | "Strict peerDependency enforcement — react ^19.0.0" | §5 policy item 3 + Phase 0 deliverable + Phase 6 tightening |
 | "Phase 1.5 Hot-Sync Fix — useSchemaController hook" | §4 Phase 1a (Hot-Sync carve-out that MUST land before Phase 1b) |
 | CardinalitySchema / SchemaRelationSchema / EntityFieldSchema / EntityNodeDataSchema | §3.9 (cleaned, typed, with integration points documented) |
+| Concrete migration SQL (`20260503000000_add_field_level_relations.sql` + rollback twin) | §2.6 (inlined verbatim as the Phase 1a blocker, with RLS / CHECK / index / Realtime publication clauses ready to copy into `*/supabase/migrations/`) |
+| Syncpack + Husky peer-dep enforcement mechanism (concrete tooling, not just the rule) | §5 item 8 (zero-runtime-dep approach via `pnpm dlx syncpack`, hooked into `.husky/pre-push` + GitHub Actions required check `peer-deps-aligned`) |
+| "Should we move on to drafting the React 19 Custom Node component…" user rhetorical prompt | Preserved verbatim in the "Next session entry point" footnote at the end of this document, pre-answered with Phase 1a step 3 + `packages/schema-builder/src/components/EntityNode.tsx` file path and shape contract |
+
+---
+
+## Next session entry point
+
+> *"Should we move on to drafting the React 19 Custom Node component that renders these field-level handles?"*
+>
+> — User, 2026-05-01 (appended to v1.01W improvement notes; preserved verbatim per v1.02W R4 refinement).
+
+**Answer — Yes**. This is the first concrete code deliverable of Phase 1a (§4):
+
+1. **File**: `packages/schema-builder/src/components/EntityNode.tsx`
+2. **Reference implementation to port**: `crm7/src/pages/settings/schema-builder/components/EntityNode.tsx` (canonical — the other 3 apps carry copies that converge on this shape).
+3. **Shape contract**: `EntityNodeDataSchema` from §3.9 — `{ tableId, label, fields[], accentColor?, collapsed }`. Note the `tableId` ↔ `tenant_entities.id` aliasing — the Zod schema calls it `tableId` because that is the React Flow term, but the DB column is `tenant_entities.id`. The mapping is 1:1; do not introduce a second id concept.
+4. **Handle wiring**: iterate `data.fields`; for each field emit two `<Handle>` components from `@xyflow/react`:
+   - `<Handle type="target" id={`${data.tableId}.${field.id}.left`} position={Position.Left} />`
+   - `<Handle type="source" id={`${data.tableId}.${field.id}.right`} position={Position.Right} />`
+   The field row itself stays a shadcn-styled flex row (icon + name + type badge) so the handle anchors precisely on the row midline per React Flow's port pattern. The entity card keeps its top/bottom handles as the entity-level fallback (drop on empty card chrome) per §3.6 item 1.
+5. **Accent color**: read `data.accentColor` as-is — the value is a CSS variable reference (`var(--accent-secondary)`) per §3.5 R1, never a hex literal, so the card reacts to the active theme (D2C vs Corporate) at render time.
+6. **Realtime**: the canvas parent (`SchemaCanvas`) subscribes via `useSchemaController`; `EntityNode` stays a pure display component that re-renders when its `data` prop changes. No internal state, no `useEffect` for persist — all mutations flow through the controller hook per §3.7.
+7. **Acceptance**: the component must render in Storybook (shipped with `packages/schema-builder`) with a fixture entity containing 10 fields (one primary key, one FK source, one nullable, mixed types) and show correct handle anchoring under both D2C Neon Electric and Corporate theme CSS variables.
+
+**Prerequisites that must land before this component is written**:
+
+- [ ] Phase 0 merged (React 19 unification in shared packages + Dependency Version Policy in AGENTS.md/CLAUDE.md/.windsurfrules + syncpack hook)
+- [ ] PRs #334 (parent schema-registry 0.3.1 recovery) and #331 (crm7 cross-app entity picker) merged so `main` carries the clean base
+- [ ] Migration `20260503000000_add_field_level_relations.sql` (§2.6) applied in the dev Supabase project
+- [ ] `@bsuite/schema-builder` package scaffolded (empty shell with `package.json` + `tsconfig.json` + `vitest.config.ts` + `tsup.config.ts` matching `packages/schema-registry`'s layout)
+
+Then `EntityNode.tsx` is the first real component to land, followed by `SchemaCanvas.tsx`, then `useSchemaController.ts`, then the 4 consumer thin-wrapper PRs (BSU / conduit / braden / R80.3) collapsing their ~1500 lines of duplicated React Flow code down to ~30 lines each.
