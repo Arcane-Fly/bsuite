@@ -102,6 +102,22 @@ export interface TenantFieldDefinition {
   updated_at: string | null;
 }
 
+/**
+ * Result shape returned by the `rename_physical_column` RPC when called with
+ * `p_dry_run = true`. Used by `FieldEditDialog` to populate the confirmation
+ * modal before the user triggers the wet-run.
+ *
+ * Phase 3B.
+ */
+export interface RenamePreviewResult {
+  /** The exact `ALTER TABLE ... RENAME COLUMN ...` SQL that would be executed. */
+  would_execute: string;
+  /** Names of views in the `public` schema whose definition references the old column name. */
+  affected_views: string[];
+  /** Names of RLS policies on the entity's table (all policies, not just those referencing the column). */
+  affected_policies: string[];
+}
+
 /** Controller-options bag passed to every hook and the top-level component. */
 export interface SchemaControllerOptions {
   /**

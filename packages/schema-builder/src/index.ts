@@ -83,6 +83,7 @@ export type {
 export type {
   AppScope,
   FieldType,
+  RenamePreviewResult,
   TenantEntity,
   TenantEntityRelation,
   TenantFieldDefinition,
@@ -107,5 +108,6 @@ export {
   createEntityField,
   updateEntityField,
   deleteEntityField,
+  renamePhysicalColumn,
 } from './service.js';
 export type { LooseSupabaseClient } from './service.js';

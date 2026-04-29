@@ -274,3 +274,261 @@ describe('FieldEditDialog', () => {
     ).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 3B: physical rename disclosure + confirmation modal
+// ---------------------------------------------------------------------------
+
+describe('FieldEditDialog — Phase 3B physical rename', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('hides the physical disclosure when field_name is unchanged', () => {
+    const onPreviewRename = vi.fn();
+    setup({ onPreviewRename });
+    // No name change — disclosure must not be rendered.
+    expect(
+      screen.queryByText(/Also rename the underlying Postgres column/i),
+    ).toBeNull();
+  });
+
+  it('hides the physical disclosure when onPreviewRename is not wired', () => {
+    // Change the name but don't provide onPreviewRename.
+    const { getByLabelText } = setup();
+    fireEvent.change(getByLabelText('Field Name'), {
+      target: { value: 'primary_email' },
+    });
+    expect(
+      screen.queryByText(/Also rename the underlying Postgres column/i),
+    ).toBeNull();
+  });
+
+  it('shows the physical disclosure when name changes and onPreviewRename is provided', async () => {
+    const onPreviewRename = vi.fn().mockResolvedValue({
+      would_execute: 'ALTER TABLE contacts RENAME COLUMN email_address TO primary_email',
+      affected_views: [],
+      affected_policies: [],
+    });
+    setup({ onPreviewRename });
+    fireEvent.change(screen.getByLabelText('Field Name'), {
+      target: { value: 'primary_email' },
+    });
+    expect(
+      screen.getByText(/Also rename the underlying Postgres column/i),
+    ).toBeInTheDocument();
+  });
+
+  it('does not call onPreviewRename when physical checkbox is unchecked', async () => {
+    const onSave = vi.fn();
+    const onPreviewRename = vi.fn().mockResolvedValue({
+      would_execute: 'ALTER TABLE contacts RENAME COLUMN email_address TO primary_email',
+      affected_views: [],
+      affected_policies: [],
+    });
+    render(
+      <FieldEditDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        entityLabel="Contacts"
+        entityName="contacts"
+        field={baseField}
+        existingFieldNames={['email_address']}
+        onSave={onSave}
+        onDelete={vi.fn()}
+        onPreviewRename={onPreviewRename}
+      />,
+    );
+    // Change name but do NOT check the physical checkbox.
+    fireEvent.change(screen.getByLabelText('Field Name'), {
+      target: { value: 'primary_email' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+    // Metadata-only save should fire directly without calling the preview RPC.
+    expect(onPreviewRename).not.toHaveBeenCalled();
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ field_name: 'primary_email' }),
+    );
+    // physical flag should NOT be set for metadata-only saves.
+    const callArg = (onSave as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
+    expect(callArg.physical).toBeUndefined();
+  });
+
+  it('calls onPreviewRename and shows the confirmation modal when physical is checked', async () => {
+    const dryRunResult = {
+      would_execute: 'ALTER TABLE contacts RENAME COLUMN email_address TO primary_email',
+      affected_views: ['v_contact_emails'],
+      affected_policies: ['contacts_tenant_select'],
+    };
+    const onPreviewRename = vi.fn().mockResolvedValue(dryRunResult);
+    render(
+      <FieldEditDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        entityLabel="Contacts"
+        entityName="contacts"
+        field={baseField}
+        existingFieldNames={['email_address']}
+        onSave={vi.fn()}
+        onDelete={vi.fn()}
+        onPreviewRename={onPreviewRename}
+      />,
+    );
+
+    // Change the name.
+    fireEvent.change(screen.getByLabelText('Field Name'), {
+      target: { value: 'primary_email' },
+    });
+
+    // Open the disclosure and check the physical checkbox.
+    const summary = screen.getByText(/Also rename the underlying Postgres column/i);
+    fireEvent.click(summary);
+    const physicalCheckbox = screen.getByLabelText(
+      /Execute.*ALTER TABLE.*RENAME COLUMN.*on save/i,
+    );
+    fireEvent.click(physicalCheckbox);
+
+    // Click Save — should trigger the preview RPC.
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    // Wait for the async preview to resolve and the confirmation dialog to appear.
+    await screen.findByText('Confirm column rename');
+    expect(onPreviewRename).toHaveBeenCalledWith('primary_email');
+
+    // Proposed SQL is shown.
+    expect(
+      screen.getByText('ALTER TABLE contacts RENAME COLUMN email_address TO primary_email'),
+    ).toBeInTheDocument();
+
+    // Affected views and policies are shown.
+    expect(screen.getByText('v_contact_emails')).toBeInTheDocument();
+    expect(screen.getByText('contacts_tenant_select')).toBeInTheDocument();
+  });
+
+  it('calls onSave with physical:true when the user confirms the rename', async () => {
+    const dryRunResult = {
+      would_execute: 'ALTER TABLE contacts RENAME COLUMN email_address TO primary_email',
+      affected_views: [],
+      affected_policies: [],
+    };
+    const onPreviewRename = vi.fn().mockResolvedValue(dryRunResult);
+    const onSave = vi.fn();
+    render(
+      <FieldEditDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        entityLabel="Contacts"
+        entityName="contacts"
+        field={baseField}
+        existingFieldNames={['email_address']}
+        onSave={onSave}
+        onDelete={vi.fn()}
+        onPreviewRename={onPreviewRename}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Field Name'), {
+      target: { value: 'primary_email' },
+    });
+
+    const summary = screen.getByText(/Also rename the underlying Postgres column/i);
+    fireEvent.click(summary);
+    fireEvent.click(
+      screen.getByLabelText(/Execute.*ALTER TABLE.*RENAME COLUMN.*on save/i),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    // Wait for confirmation modal.
+    await screen.findByText('Confirm column rename');
+
+    // Confirm the rename.
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Column' }));
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        field_name: 'primary_email',
+        physical: true,
+      }),
+    );
+  });
+
+  it('does NOT call onSave when the user cancels the confirmation modal', async () => {
+    const dryRunResult = {
+      would_execute: 'ALTER TABLE contacts RENAME COLUMN email_address TO primary_email',
+      affected_views: [],
+      affected_policies: [],
+    };
+    const onPreviewRename = vi.fn().mockResolvedValue(dryRunResult);
+    const onSave = vi.fn();
+    render(
+      <FieldEditDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        entityLabel="Contacts"
+        entityName="contacts"
+        field={baseField}
+        existingFieldNames={['email_address']}
+        onSave={onSave}
+        onDelete={vi.fn()}
+        onPreviewRename={onPreviewRename}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Field Name'), {
+      target: { value: 'primary_email' },
+    });
+
+    const summary = screen.getByText(/Also rename the underlying Postgres column/i);
+    fireEvent.click(summary);
+    fireEvent.click(
+      screen.getByLabelText(/Execute.*ALTER TABLE.*RENAME COLUMN.*on save/i),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    // Wait for confirmation modal.
+    await screen.findByText('Confirm column rename');
+
+    // Cancel the rename.
+    const cancelButtons = screen.getAllByRole('button', { name: 'Cancel' });
+    // The confirmation modal's Cancel button is the last one.
+    fireEvent.click(cancelButtons[cancelButtons.length - 1]);
+
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('shows an error in the disclosure when onPreviewRename rejects', async () => {
+    const onPreviewRename = vi
+      .fn()
+      .mockRejectedValue(new Error('Permission denied'));
+    render(
+      <FieldEditDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        entityLabel="Contacts"
+        entityName="contacts"
+        field={baseField}
+        existingFieldNames={['email_address']}
+        onSave={vi.fn()}
+        onDelete={vi.fn()}
+        onPreviewRename={onPreviewRename}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Field Name'), {
+      target: { value: 'primary_email' },
+    });
+
+    const summary = screen.getByText(/Also rename the underlying Postgres column/i);
+    fireEvent.click(summary);
+    fireEvent.click(
+      screen.getByLabelText(/Execute.*ALTER TABLE.*RENAME COLUMN.*on save/i),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    // Wait for the error to appear in the disclosure.
+    await screen.findByText('Permission denied');
+    // Confirmation modal should NOT appear.
+    expect(screen.queryByText('Confirm column rename')).toBeNull();
+  });
+});

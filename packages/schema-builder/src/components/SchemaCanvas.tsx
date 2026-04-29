@@ -735,21 +735,33 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
               field={field}
               existingFieldNames={existingFieldNames}
               onSave={(payload) => {
-                controller
-                  .updateField(field.id, {
-                    field_name: payload.field_name,
-                    field_type: payload.field_type,
-                    label: payload.label,
-                    placeholder: payload.placeholder,
-                    is_required: payload.is_required,
-                  })
-                  .catch(() => {});
+                if (payload.physical) {
+                  // Phase 3B: wet-run physical rename via RPC.
+                  controller
+                    .renameField(entity.id, field.id, payload.field_name, {
+                      physical: true,
+                    })
+                    .catch(() => {});
+                } else {
+                  controller
+                    .updateField(field.id, {
+                      field_name: payload.field_name,
+                      field_type: payload.field_type,
+                      label: payload.label,
+                      placeholder: payload.placeholder,
+                      is_required: payload.is_required,
+                    })
+                    .catch(() => {});
+                }
                 setFieldEditContext(null);
               }}
               onDelete={() => {
                 controller.deleteField(field.id).catch(() => {});
                 setFieldEditContext(null);
               }}
+              onPreviewRename={(newName) =>
+                controller.previewRenameField(entity.id, field.id, newName)
+              }
             />
           );
         })()}

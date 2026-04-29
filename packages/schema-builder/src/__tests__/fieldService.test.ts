@@ -180,3 +180,65 @@ describe('deleteEntityField', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 3B: renamePhysicalColumn
+// ---------------------------------------------------------------------------
+
+import { renamePhysicalColumn } from '../service.js';
+import type { RenamePreviewResult } from '../types.js';
+
+function makeRpcMockClient(rpcResponse: { data: unknown; error: unknown }) {
+  const rpcCalls: Array<{ fn: string; args: unknown }> = [];
+  const rpc = vi.fn((fn: string, args: unknown) => {
+    rpcCalls.push({ fn, args });
+    return Promise.resolve(rpcResponse) as unknown;
+  });
+  return { client: { rpc }, rpcCalls };
+}
+
+describe('renamePhysicalColumn', () => {
+  it('calls the rename_physical_column RPC with dry_run=true by default', async () => {
+    const preview: RenamePreviewResult = {
+      would_execute: 'ALTER TABLE contacts RENAME COLUMN email TO primary_email',
+      affected_views: [],
+      affected_policies: [],
+    };
+    const { client, rpcCalls } = makeRpcMockClient({ data: preview, error: null });
+    const result = await renamePhysicalColumn(client, 'entity-1', 'field-1', 'primary_email');
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0].fn).toBe('rename_physical_column');
+    expect(rpcCalls[0].args).toEqual({
+      p_entity_id: 'entity-1',
+      p_field_id: 'field-1',
+      p_new_name: 'primary_email',
+      p_dry_run: true,
+    });
+    expect(result).toEqual(preview);
+  });
+
+  it('calls the RPC with dry_run=false for wet-run', async () => {
+    const wetResult = { executed: true, previous_name: 'email', new_name: 'primary_email' };
+    const { client, rpcCalls } = makeRpcMockClient({ data: wetResult, error: null });
+    const result = await renamePhysicalColumn(client, 'entity-1', 'field-1', 'primary_email', false);
+    expect(rpcCalls[0].args).toEqual(
+      expect.objectContaining({ p_dry_run: false }),
+    );
+    expect(result).toEqual(wetResult);
+  });
+
+  it('throws when the RPC returns an error', async () => {
+    const { client } = makeRpcMockClient({
+      data: null,
+      error: { message: 'insufficient privilege' },
+    });
+    let caught: Error | null = null;
+    try {
+      await renamePhysicalColumn(client, 'entity-1', 'field-1', 'bad_name');
+    } catch (e) {
+      caught = e instanceof Error ? e : new Error(String(e));
+    }
+    expect(caught).not.toBeNull();
+    expect(caught?.message).toBe('insufficient privilege');
+  });
+});

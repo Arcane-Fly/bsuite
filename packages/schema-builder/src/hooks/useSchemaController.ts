@@ -26,6 +26,7 @@ import {
   deleteEntityField,
   deleteSchemaEntity,
   deleteSchemaRelation,
+  renamePhysicalColumn,
   updateEntityField,
   updateSchemaEntity,
   updateSchemaRelation,
@@ -33,6 +34,7 @@ import {
 import type { LooseSupabaseClient } from '../service.js';
 import type {
   AppScope,
+  RenamePreviewResult,
   TenantEntity,
   TenantEntityRelation,
   TenantFieldDefinition,
@@ -91,6 +93,32 @@ export interface SchemaController {
     updates: Partial<TenantFieldDefinition>,
   ) => Promise<TenantFieldDefinition>;
   deleteField: (id: string) => Promise<void>;
+  /**
+   * Phase 3B: rename a field's `field_name`.
+   *
+   * - `options.physical = false` (default): updates `tenant_field_definitions`
+   *   metadata only — identical to calling `updateField(id, { field_name })`.
+   * - `options.physical = true`: calls the `rename_physical_column` RPC with
+   *   `p_dry_run = false`, executing `ALTER TABLE … RENAME COLUMN` AND updating
+   *   `tenant_field_definitions.field_name` in a single transaction.
+   *   Requires the caller to hold admin/owner role for the entity's tenant.
+   */
+  renameField: (
+    entityId: string,
+    fieldId: string,
+    newName: string,
+    options?: { physical?: boolean },
+  ) => Promise<void>;
+  /**
+   * Phase 3B: dry-run preview for a physical column rename.
+   * Returns the proposed SQL + affected views/policies WITHOUT executing DDL.
+   * Intended to be wired into `FieldEditDialog.onPreviewRename`.
+   */
+  previewRenameField: (
+    entityId: string,
+    fieldId: string,
+    newName: string,
+  ) => Promise<RenamePreviewResult>;
 }
 
 export function useSchemaController({
@@ -464,6 +492,43 @@ export function useSchemaController({
     [deleteFieldMutation],
   );
 
+  // -----------------------------------------------------------------
+  // Phase 3B: renameField + previewRenameField
+  // -----------------------------------------------------------------
+
+  const renameField = useCallback(
+    async (
+      entityId: string,
+      fieldId: string,
+      newName: string,
+      options?: { physical?: boolean },
+    ): Promise<void> => {
+      if (options?.physical) {
+        // Wet-run: ALTER TABLE + metadata update in one transaction.
+        await renamePhysicalColumn(supabase, entityId, fieldId, newName, false);
+        // Invalidate fields cache so the UI reflects the renamed column.
+        void qc.invalidateQueries({ queryKey: fieldsKey });
+      } else {
+        // Metadata-only rename: same as updateField(fieldId, { field_name: newName }).
+        await updateFieldMutation.mutateAsync({
+          id: fieldId,
+          updates: { field_name: newName },
+        });
+      }
+    },
+    [supabase, qc, fieldsKey, updateFieldMutation],
+  );
+
+  const previewRenameField = useCallback(
+    (
+      entityId: string,
+      fieldId: string,
+      newName: string,
+    ): Promise<RenamePreviewResult> =>
+      renamePhysicalColumn(supabase, entityId, fieldId, newName, true) as Promise<RenamePreviewResult>,
+    [supabase],
+  );
+
   const fieldsByEntity = useMemo(() => {
     const out: Record<string, TenantFieldDefinition[]> = {};
     for (const f of fieldsQuery.data ?? []) {
@@ -496,5 +561,7 @@ export function useSchemaController({
     createField,
     updateField,
     deleteField,
+    renameField,
+    previewRenameField,
   };
 }
