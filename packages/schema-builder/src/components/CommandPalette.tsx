@@ -1,5 +1,12 @@
 import { Command } from 'cmdk';
-import { Database, Link, Navigation, Wand2 } from 'lucide-react';
+import {
+  Database,
+  Download,
+  Link,
+  Navigation,
+  PlusCircle,
+  Wand2,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { TenantEntity } from '../types.js';
 
@@ -18,6 +25,14 @@ export interface CommandPaletteProps {
   onSelectEntity?: (entity: TenantEntity) => void;
   /** Called when the user picks "Tidy Up Layout" (§3.6 item 3 + §3.10). */
   onTidyUp?: () => void;
+  /** Called when the user picks "Export as PNG" (§3.6 item 8 + §3.10). */
+  onExportPng?: () => void;
+  /**
+   * Called when the user picks "Add Field to Selected Entity" (§3.10). If
+   * omitted, the command falls back to dispatching the `bsuite-add-field`
+   * CustomEvent which SchemaCanvas handles by default.
+   */
+  onAddField?: () => void;
 }
 
 /**
@@ -32,6 +47,8 @@ export function CommandPalette({
   onNavigate,
   onSelectEntity,
   onTidyUp,
+  onExportPng,
+  onAddField,
 }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
 
@@ -82,11 +99,16 @@ export function CommandPalette({
               No matches.
             </Command.Empty>
 
-            {onTidyUp ? (
-              <Command.Group
-                heading="Actions"
-                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-neutral-500"
-              >
+            {/* Actions group is always rendered — "Add Field" has a
+                CustomEvent fallback that SchemaCanvas listens for by default,
+                so it works without an explicit `onAddField` wiring. Tidy Up
+                and Export PNG remain opt-in (only render when their callback
+                prop is provided). */}
+            <Command.Group
+              heading="Actions"
+              className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-neutral-500"
+            >
+              {onTidyUp ? (
                 <Command.Item
                   value="Tidy Up Layout auto arrange dagre"
                   onSelect={() => {
@@ -103,8 +125,46 @@ export function CommandPalette({
                     </span>
                   </div>
                 </Command.Item>
-              </Command.Group>
-            ) : null}
+              ) : null}
+              {onExportPng ? (
+                <Command.Item
+                  value="Export as PNG download image snapshot"
+                  onSelect={() => {
+                    onExportPng();
+                    setOpen(false);
+                  }}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+                >
+                  <Download className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate">Export as PNG</span>
+                    <span className="truncate text-[10px] text-neutral-400">
+                      Download the schema as an image
+                    </span>
+                  </div>
+                </Command.Item>
+              ) : null}
+              <Command.Item
+                value="Add Field to Selected Entity new column"
+                onSelect={() => {
+                  if (onAddField) {
+                    onAddField();
+                  } else {
+                    window.dispatchEvent(new CustomEvent('bsuite-add-field'));
+                  }
+                  setOpen(false);
+                }}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+              >
+                <PlusCircle className="h-4 w-4 shrink-0 text-blue-500" />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate">Add Field to Selected Entity</span>
+                  <span className="truncate text-[10px] text-neutral-400">
+                    Prompt for name + type and create a new column
+                  </span>
+                </div>
+              </Command.Item>
+            </Command.Group>
 
             {entities.length > 0 ? (
               <Command.Group

@@ -14,6 +14,8 @@ export { SchemaBuilder } from './SchemaBuilder.js';
 export type { SchemaBuilderProps, SchemaBuilderHandle } from './SchemaBuilder.js';
 export { SchemaToolbar } from './SchemaToolbar.js';
 export type { SchemaToolbarProps } from './SchemaToolbar.js';
+export { FieldRow } from './FieldRow.js';
+export type { FieldRowProps, FieldRowField } from './FieldRow.js';
 export {
   SmartEdge,
   SmartEdgeMarkers,

@@ -33,10 +33,12 @@ import {
 import type { SchemaController } from '../hooks/useSchemaController.js';
 import type {
   AppScope,
+  FieldType,
   RelationType,
   TenantEntity,
 } from '../types.js';
 import { computeDagreLayout } from '../utils/autoLayout.js';
+import { exportCanvasToPng } from '../utils/exportPng.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
 import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
 import { RelationshipConfigDialog } from './RelationshipConfigDialog.js';
@@ -47,11 +49,54 @@ const RELATION_LABELS: Record<RelationType, string> = {
   one_to_one: '1:1',
   one_to_many: '1:N',
   many_to_many: 'N:N',
-  inherits_from: '⬆ inherits',
+  inherits_from: '\u2B06 inherits',
 };
 
 const nodeTypes = { entity: EntityNode };
 const edgeTypes = { smart: SmartEdge };
+
+/**
+ * Pattern: `${entityId}.${fieldId|'entity'}.${side}-${kind}`.
+ * Valid sides: left|right|top|bottom. Valid kinds: source|target.
+ * The literal `entity` as the fieldId component indicates an entity-level
+ * fallback handle; field-level relations are only created when fieldId is not
+ * that literal.
+ */
+const HANDLE_ID_RE =
+  /^(?<entityId>.+)\.(?<fieldId>[^.]+)\.(?<side>left|right|top|bottom)-(?<kind>source|target)$/;
+
+function parseHandleId(handleId: string | null | undefined): {
+  entityId?: string;
+  fieldId?: string;
+} {
+  if (!handleId) return {};
+  const match = handleId.match(HANDLE_ID_RE);
+  if (!match?.groups) return {};
+  const { entityId, fieldId } = match.groups;
+  return {
+    entityId,
+    fieldId: fieldId === 'entity' ? undefined : fieldId,
+  };
+}
+
+const VALID_FIELD_TYPES: readonly FieldType[] = [
+  'text',
+  'number',
+  'boolean',
+  'date',
+  'select',
+  'multiselect',
+  'url',
+  'email',
+  'phone',
+];
+
+/**
+ * Enforced on client-side `Cmd+K → Add Field` creation so user input matches
+ * the canonical identifier pattern used elsewhere in the suite (snake_case,
+ * no leading digit).
+ */
+const SNAKE_CASE_RE = /^[a-z_][a-z0-9_]*$/;
 
 function stylesForRelation(type: RelationType) {
   return {
@@ -78,6 +123,10 @@ export interface SchemaCanvasHandle {
   openCreateEntity: () => void;
   /** Auto-arrange nodes via dagre (§3.6 item 3). */
   tidyUp: () => void;
+  /** Export the current canvas as PNG (§3.6 item 8). */
+  exportPng: () => Promise<void>;
+  /** Prompt and add a new field to the currently-selected entity. */
+  addFieldToSelectedEntity: () => void;
 }
 
 export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
@@ -96,6 +145,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       Node<EntityNodeData>,
       Edge
     > | null>(null);
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
 
     const focusEntityById = useCallback((entityId: string) => {
       const flow = flowRef.current;
@@ -124,6 +174,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
               x: 100 + (i % 4) * 280,
               y: 100 + Math.floor(i / 4) * 180,
             };
+          const defs = controller.fields[entity.id] ?? [];
+          const fields = defs.map((f) => ({
+            id: f.id,
+            name: f.field_name,
+            type: f.field_type,
+            isPrimary: f.field_name === 'id',
+            isNullable: !f.is_required,
+          }));
           return {
             id: entity.id,
             type: 'entity',
@@ -131,6 +189,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             data: {
               label: entity.label,
               entity,
+              fields,
             },
           } as Node<EntityNodeData>;
         },
@@ -144,10 +203,18 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         )
         .map((rel) => {
           const styling = stylesForRelation(rel.relation_type);
+          const baseSource = rel.source_field_id
+            ? `${rel.source_entity_id}.${rel.source_field_id}.right-source`
+            : `${rel.source_entity_id}.entity.bottom-source`;
+          const baseTarget = rel.target_field_id
+            ? `${rel.target_entity_id}.${rel.target_field_id}.left-target`
+            : `${rel.target_entity_id}.entity.top-target`;
           return {
             id: rel.id,
             source: rel.source_entity_id,
             target: rel.target_entity_id,
+            sourceHandle: baseSource,
+            targetHandle: baseTarget,
             label:
               rel.source_label ||
               RELATION_LABELS[rel.relation_type] ||
@@ -164,7 +231,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         });
 
       return { nodes: builtNodes, edges: builtEdges };
-    }, [controller.entities, controller.relations]);
+    }, [controller.entities, controller.relations, controller.fields]);
 
     // Local visual overlay for pending edits — React Flow needs mutable state
     // to animate drag and edit operations smoothly before controller confirms.
@@ -231,14 +298,17 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         if (!params || !params.source || !params.target) return;
         setIsRelationDialogOpen(false);
 
+        const { fieldId: sourceFieldId } = parseHandleId(params.sourceHandle);
+        const { fieldId: targetFieldId } = parseHandleId(params.targetHandle);
+
         try {
           const newRelation = await controller.createRelation({
             id: crypto.randomUUID(),
             tenant_id: tenantId,
             source_entity_id: params.source,
             target_entity_id: params.target,
-            source_field_id: null,
-            target_field_id: null,
+            source_field_id: sourceFieldId ?? null,
+            target_field_id: targetFieldId ?? null,
             relation_type: config.relation_type,
             source_label: config.source_label,
             target_label: config.target_label,
@@ -378,9 +448,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       [controller, onError],
     );
 
-    // Dagre auto-layout. Runs against current local nodes/edges, optimistically
-    // updates the visual layer, persists each non-system entity's position,
-    // then fits the viewport once settled. §3.6 item 3.
+    // Dagre auto-layout. §3.6 item 3.
     const handleTidyUp = useCallback(() => {
       if (localNodes.length === 0) return;
       const laidOut = computeDagreLayout(localNodes, localEdges);
@@ -403,6 +471,96 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       flowRef.current?.fitView({ duration: 400, padding: 0.1 });
     }, []);
 
+    const handleExportPng = useCallback(async () => {
+      const el = wrapperRef.current?.querySelector<HTMLElement>('.react-flow');
+      if (!el) {
+        onError?.('Canvas is not ready to export');
+        return;
+      }
+      try {
+        await exportCanvasToPng(el);
+      } catch (err) {
+        onError?.('Failed to export schema as PNG', err);
+      }
+    }, [onError]);
+
+    const pickTargetEntityId = useCallback((): string | null => {
+      const flow = flowRef.current;
+      if (flow) {
+        const selected = flow.getNodes().find((n) => n.selected);
+        if (selected) return selected.id;
+      }
+      return controller.entities[0]?.id ?? null;
+    }, [controller.entities]);
+
+    const addFieldToSelectedEntity = useCallback(() => {
+      const targetEntityId = pickTargetEntityId();
+      if (!targetEntityId) {
+        onError?.('Select an entity before adding a field');
+        return;
+      }
+      const entity = controller.entities.find((e) => e.id === targetEntityId);
+      if (!entity) {
+        onError?.('Selected entity not found');
+        return;
+      }
+      if (entity.is_system) {
+        onError?.('Cannot add fields to a system entity');
+        return;
+      }
+      // TODO(phase-2): replace window.prompt with a FieldCreateDialog
+      // component (§3.10). Prompt is a placeholder UX — the final flow uses
+      // a shadcn Dialog with proper type <Select>, required-flag <Switch>,
+      // and server-side validation feedback.
+      const name = window.prompt('Field name (snake_case):')?.trim();
+      if (!name) return;
+      if (!SNAKE_CASE_RE.test(name)) {
+        onError?.(
+          'Field names must be snake_case (lowercase letters, digits, underscore; must not start with a digit)',
+        );
+        return;
+      }
+      const typeInput =
+        window.prompt(
+          `Field type (${VALID_FIELD_TYPES.join('/')}):`,
+          'text',
+        )?.trim() ?? 'text';
+      let fieldType: FieldType;
+      if (VALID_FIELD_TYPES.includes(typeInput as FieldType)) {
+        fieldType = typeInput as FieldType;
+      } else {
+        onError?.(`Unknown field type '${typeInput}', defaulted to 'text'`);
+        fieldType = 'text';
+      }
+      const existingFieldCount =
+        controller.fields[entity.id]?.length ?? 0;
+      controller
+        .createField({
+          tenant_id: tenantId,
+          entity_id: entity.id,
+          entity_type: entity.name,
+          field_name: name,
+          field_type: fieldType,
+          label: name,
+          placeholder: null,
+          is_required: false,
+          options: null,
+          sort_order: existingFieldCount,
+          is_active: true,
+          scope: null,
+          is_system: false,
+          is_locked: false,
+        })
+        .catch(() => {});
+    }, [controller, pickTargetEntityId, onError, tenantId]);
+
+    // Cmd+K "Add Field" dispatches this event; the canvas owns the UI flow.
+    useEffect(() => {
+      const handler = () => addFieldToSelectedEntity();
+      window.addEventListener('bsuite-add-field', handler);
+      return () => window.removeEventListener('bsuite-add-field', handler);
+    }, [addFieldToSelectedEntity]);
+
     useImperativeHandle(
       ref,
       () => ({
@@ -412,8 +570,15 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           setIsPanelOpen(true);
         },
         tidyUp: handleTidyUp,
+        exportPng: handleExportPng,
+        addFieldToSelectedEntity,
       }),
-      [focusEntityById, handleTidyUp],
+      [
+        focusEntityById,
+        handleTidyUp,
+        handleExportPng,
+        addFieldToSelectedEntity,
+      ],
     );
 
     const existingNames = useMemo(
@@ -490,7 +655,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
 
     return (
       <div className="flex h-full w-full">
-        <div className="relative h-full flex-1">
+        <div ref={wrapperRef} className="relative h-full flex-1">
           {canvasContent}
           {showToolbar ? (
             <SchemaToolbar
@@ -498,6 +663,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
               onFitView={handleFitView}
               onSearchChange={setSearchQuery}
               searchQuery={searchQuery}
+              onExportPng={handleExportPng}
             />
           ) : null}
         </div>

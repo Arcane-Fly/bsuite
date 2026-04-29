@@ -1,16 +1,17 @@
 /**
  * SchemaToolbar — floating toolbar rendered on top of the Schema Builder
- * canvas. Provides Tidy-Up / Fit-View buttons and a fuzzy entity search input.
+ * canvas. Provides Tidy-Up / Fit-View / Export-PNG buttons and a fuzzy entity
+ * search input.
  *
  * Reference: `docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md` §3.6
- * item 6 (minimap + zoom-to-fit + search).
+ * items 6 (minimap + zoom-to-fit + search) and 8 (PNG export).
  *
  * Positioned `absolute top-2 left-2 z-10` inside the canvas container so it
  * stays glued to the canvas on resize without introducing any new layout
  * primitive.
  */
 
-import { Maximize2, Search, Wand2 } from 'lucide-react';
+import { Download, Maximize2, Search, Wand2 } from 'lucide-react';
 import type { ChangeEvent, ReactElement } from 'react';
 
 export interface SchemaToolbarProps {
@@ -18,6 +19,8 @@ export interface SchemaToolbarProps {
   onFitView: () => void;
   onSearchChange: (query: string) => void;
   searchQuery: string;
+  /** Phase 1b.2. Optional; button is hidden if omitted. */
+  onExportPng?: () => void;
 }
 
 export function SchemaToolbar({
@@ -25,6 +28,7 @@ export function SchemaToolbar({
   onFitView,
   onSearchChange,
   searchQuery,
+  onExportPng,
 }: SchemaToolbarProps): ReactElement {
   return (
     <div
@@ -51,6 +55,17 @@ export function SchemaToolbar({
         >
           <Maximize2 className="h-4 w-4" />
         </button>
+        {onExportPng ? (
+          <button
+            type="button"
+            onClick={onExportPng}
+            title="Export as PNG"
+            aria-label="Export schema as PNG"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-neutral-600 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
       <div
         className="hidden h-5 w-px bg-neutral-200 sm:block dark:bg-neutral-700"
