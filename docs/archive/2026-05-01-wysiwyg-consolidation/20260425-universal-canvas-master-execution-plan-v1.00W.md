@@ -1,3 +1,12 @@
+> **⚠️ SUPERSEDED — 2026-05-01**
+>
+> This document has been superseded by:
+> **[`docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md`](../../plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md)** — Universal WYSIWYG + Schema UX Master Plan v1.05W
+>
+> See `docs/archive/2026-05-01-wysiwyg-consolidation/README.md` for the full supersession rationale. This file is a read-only historical reference — do not resurrect.
+
+---
+
 # Universal Canvas Master Execution Plan — Finish-Line Session
 
 **Date:** 2026-04-25

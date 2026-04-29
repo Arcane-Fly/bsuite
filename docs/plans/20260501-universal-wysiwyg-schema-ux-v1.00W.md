@@ -1,12 +1,13 @@
-# Universal WYSIWYG + Schema UX Master Plan — v1.04W
+# Universal WYSIWYG + Schema UX Master Plan — v1.05W
 
-**Date:** 2026-05-01 (revised same-day, fourth pass)
+**Date:** 2026-05-01 (revised same-day, fifth pass)
 **Status:** W (Working — awaiting user sign-off on Phase 1+)
 **Owner:** Codebuff (Buffy) coordination with user
 **Supersedes / extends:** `docs/20260427-full-7-execution-ledger-v1.00W.md`, `docs/adr/ADR-0003-consumer-renderer-pattern.md`
 
 **Revision history:**
 
+- **v1.05W (2026-05-01)** — Operational-rigour refresh per user direction (2026-05-01): *"use ship all apps skill to bring all changes including earlier and claude code and other changes into development branch… make sure development branch contains everything before commencing 1a and repeat this before each subsequent phase… inbuild skills to your plans and phases and ensure you include red-team skills/steps."* Three additive structural changes, no scope drift: **(1) new §4.−1 Pre-Phase Readiness Gate** — before any phase begins, run the `ship-all-apps` skill's sweep to pull every unmerged Claude-Code / other-agent branch that does not conflict into `development` across the parent bsuite repo and all 6 submodules (gate blocks if any PR is open + conflict-free + has passed its checks yet not merged); **(2) Skills per phase** — each phase §4.x now enumerates the exact session-loaded skills + MCP tools the executing agent must load before coding (pulled from the `master-orchestration` skill's allow-list, scoped to the BSuite silo, QIG skills explicitly excluded); **(3) Red-team per phase** — each phase now has a mandatory `multi-agent-red-team-implementation` pass after the main deliverables land but before the phase is marked complete, with explicit red-team lenses pre-chosen per phase. Archival of three divergent plan docs (`20260425-universal-canvas-master-execution-plan-v1.00W.md`, `20260422-entity-linkage-schema-builder-uplift-v1.02W.md`, `20260316-mermaid-ui-builder-reference-v1.00A.md`) lands in the same PR into `docs/archive/2026-05-01-wysiwyg-consolidation/` with SUPERSEDED-BY headers pointing at this plan — user approval 2026-05-01: *"archival plan approved"* + *"mermaid ui builder doc can be archived because if done correctly our end result will be better."*
 - **v1.04W (2026-05-01)** — Knowledge-currency refresh via `/best-practice-research` + skill sweep (`bsuite-brand-system`, `ui-ux-pro-max`, `dry-one-shot-architecture`, `dnd-kit`, `zustand`, `shadcn-ui`, `forms-and-validation`, `tanstack-query`, `tanstack-table`, `supabase`). Findings applied as surgical refinements — no structural changes, no new phases. Key updates: **Phase 0 marked ✅ Completed** (shipped via PRs #335 parent / #332 crm7 / #228 BSU on 2026-05-01); **Dagre pin bumped** `^1.1.x` → `^3.0.0` (verified current stable — the `@dagrejs/dagre` 3.x line is the active maintenance branch and what production React Flow integrations ship against in 2026); **OKLCH color-space mandate** added to §3.5 per `bsuite-brand-system` skill (D2C tokens are authored in OKLCH; the color picker must present OKLCH values even when the user picks a custom colour so brand compliance gates catch non-OKLCH drift); **TanStack Query `queryOptions` factory pattern** named explicitly in §3.7 as the canonical read-query shape used inside `useSchemaController` per `tanstack-query` skill v5 guidance; **Protected-branch workflow** documented in §7 (parent `bsuite/development` + `crm7/development` + `business-suite-unified/development` are protected — all work lands via PR branches, never direct push, even for maintainers); Q2 marked locked/resolved since Phase 0 has shipped.
 - **v1.03W (2026-05-01)** — Consolidated 15 refinements from v1.02W code review: dropped `useOptimistic` from Vite pattern (TanStack Query's native optimistic is transition-safe; `useOptimistic` in a TanStack Query callback throws in React 19); fixed dagre axis labels for `rankdir: 'LR'` (`ranksep` is horizontal between ranks, `nodesep` is vertical within a rank); added Zod↔DB alias table in §3.9 so `SchemaRelation.source.tableId` ↔ `tenant_entity_relations.source_entity_id` is explicit; split `metadata.isSystem` into two orthogonal flags (`isSystem` = reflects existing native FK, `applyAsPostgresFK` = one-shot intent to emit DDL); moved field-level FK migration into Phase 1a deliverable 0 (must land before any code work); Phase 0 aligns shared-package React devDependencies while keeping peer ranges liberal; reconciled page persistence with ADR-0001 so CRM7 `custom_pages` remains canonical and `tenant_page_layouts` is not resurrected; added §4.0 Phase dependency graph; locked Q5 + Q7 (plan body already answers them); clarified `cmdk` is shadcn-transitive (not a separate package.json entry); named `syncpack` explicitly as the peer-dep + base-stack enforcement tool; scoped Phase 1a Cmd+K subset down to `Find Entity` + `Go to <page-path>` only to prevent Phase 1a sprawl. Trailing `Next session entry point` footnote retained unchanged.
 - **v1.02W (2026-05-01)** — Integrated user's improvement notes (field-level React Flow handles, React 19 `useOptimistic` + TanStack Query / Server-Action mutation pattern, hybrid relational-registry + jsonb view-state storage, shared `useSchemaController` hook, strict React 19 peer enforcement, Cmd+K command palette via shadcn `cmdk`). New §§2.6 / 3.7 / 3.8 / 3.9 / 3.10 added; §3.2 package structure expanded; §3.5 color picker refined to store CSS variable **name** (`var(--accent-primary)`) rather than resolved hex so the same layout renders correctly across D2C and Corporate themes; §3.6 dagre config pinned (`rankdir: 'LR'`, `nodesep: 60`, `ranksep: 80`) and smart-edge routing file named (`edges/SmartEdge.tsx`); §4 Phase 1 starts with a 'Hot-Sync' carve-out that extracts the shared `useSchemaController` hook BEFORE layering Airtable upgrades; §5 extended with peer-dependency enforcement clause; `cmdk` + `tailwind-merge` added to §2.5 + §6 as already-in-base-stack (cmdk needs install in BSU / conduit / R80.3 via `pnpm dlx shadcn add command`). Trailing user-notes block removed — content now integrated into body.
@@ -584,6 +585,32 @@ Per user direction (2026-05-01 follow-up): *"Add a 'Command Palette' (Cmd+K) tha
 
 ## 4. Phased Execution
 
+### 4.−1 Pre-Phase Readiness Gate (run before EVERY phase)
+
+Per user direction (2026-05-01): *"use ship all apps skill to bring all changes including earlier and claude code and other changes into development branch so long as they don't conflict with our current work. stop short of merge to default branch. but make sure development branch contains everything before commencing 1a and repeat this before each subsequent phase."*
+
+**Trigger:** runs immediately before **every** phase (0, 1a, 1b, 2, 3, 4, 5, 6) — including repeat runs when a phase spans multiple sessions.
+
+**Agent skill to load:** `ship-all-apps` (parent-repo sweep across parent bsuite + 6 submodules: crm7, business-suite-unified, conduit, braden, R80.3, throughput).
+
+**Gate steps (sequential, fail-fast):**
+
+1. **Fetch + sweep** — `git fetch --all --prune` in parent and every submodule; list every remote branch that has no open PR (orphans) and every open PR across all 7 repos.
+2. **Pull conflict-free work into `development`** — for every open PR that (a) targets `development`, (b) is MERGEABLE/CLEAN, (c) has passed its required checks, (d) does not conflict with the current phase's planned file changes → merge into `development` via GitHub's merge-queue-equivalent. Orphan branches with no PR are surfaced to the user for triage, not auto-merged.
+3. **Stop short of `main`** — nothing in the gate merges `development` → `main` / default branch. That is a separate sign-off event the user retains control of.
+4. **Report** — print a per-repo table: `open_prs`, `merged_into_dev`, `skipped_conflicting`, `orphaned_no_pr`, `blocked_failing_checks`. The current phase MAY NOT start until every entry in `skipped_conflicting` is either resolved or explicitly deferred by the user.
+5. **Snapshot** — record the final `development` HEAD SHA for parent + every submodule in the phase's kickoff memo so the phase has a deterministic base.
+
+**Skills consulted during the gate:**
+
+- `ship-all-apps` — sweep + merge orchestration
+- `git-workflow` — conventional commit format for any cleanup commits
+- `tandem-dev-main-reconcile` — only if the sweep surfaces a parent/submodule pointer conflict (DIRTY merge state)
+- `using-git-worktrees` — if a conflict needs side-by-side resolution, the worktree is created in `/tmp/bsuite-reconcile-YYYYMMDD/`
+- `verification-before-completion` — no gate step is marked complete until its output is shown to the user
+
+**Definition of done:** a single comment posted to the phase's tracking issue (or the user's chat) with the report table from step 4 and the snapshot SHAs from step 5.
+
 ### 4.0 Phase dependency graph
 
 ```
@@ -612,7 +639,11 @@ Phase 6  (throughput React 19 migration + peer policy re-evaluation     — no h
 
 Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the shared zustand temporal store is extracted in Phase 3's first milestone. Phase 6 (throughput React 19 + peer policy re-evaluation) is intentionally last because peer ranges should not tighten until every consumer app is verified on React 19.
 
+**Gate before every phase:** run §4.−1 Pre-Phase Readiness Gate. A phase may not begin until its gate report has been posted and its conflicts either resolved or explicitly deferred. This is in addition to any code-level prereqs listed in the phase's own Prereqs line.
+
 ### Phase 0 — Safe quick wins (this session)
+
+**Skills to load before starting:** `master-orchestration`, `git-workflow`, `cross-platform-sync` (AGENTS.md / CLAUDE.md / .windsurfrules must stay in sync), `verification-before-completion`, `dependency-management`, `bsuite-brand-system` (React 19 across all apps without cross-contaminating braden Corporate theme).
 
 **Scope** (all low-risk, no behavior changes to editor UX):
 
@@ -640,6 +671,8 @@ Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the
 - Visual confirmation in the user's browser that the clipped title now truncates with ellipsis and shows a tooltip
 - The three rule files contain the new Dependency Version Policy section
 
+**Red-team pass (mandatory before Phase 0 is marked ✅):** spawn `multi-agent-red-team-implementation` with these three lenses: (1) `dependency-management` + `security-audit` — any secret leak or downgrade attack vector introduced by the React 19 bump? (2) `cross-platform-sync` — does the Dependency Version Policy read identically in all three rule files, with no drift? (3) `bsuite-brand-system` — has the Corporate (braden) brand accidentally picked up D2C tokens anywhere during the edit?
+
 ### Phase 1 — Schema Builder consolidation + Airtable upgrades (1 session)
 
 **Prereqs**: Phase 0 merged; user approval of this doc; `pnpm dlx shadcn@latest add command` run in BSU / conduit / R80.3 (Cmd+K palette prereq per §3.10).
@@ -647,6 +680,8 @@ Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the
 Phase 1 splits into **Phase 1a (Hot-Sync Fix)** and **Phase 1b (Airtable upgrades)**. Phase 1a MUST ship and land in all 4 consumers before Phase 1b starts — it eliminates the ~1500-line DRY violation that blocks every subsequent change.
 
 #### Phase 1a — Hot-Sync Fix (carve-out per user direction)
+
+**Skills to load before starting:** `master-orchestration`, `ship-all-apps` (re-run the gate per §4.−1), `dry-one-shot-architecture` (the consolidation IS the DRY fix for the 4 duplicated schema builders), `tanstack-query` + `tanstack-router` (controller hook), `forms-and-validation` (Zod schemas in §3.9), `supabase` + `supabase-postgres-best-practices` (RLS + Realtime wiring + migration application), `shadcn-ui` (Cmd+K Command install), `zustand` (canvas state), `dnd-kit` (node drag handles), `subagent-driven-development` (4 consumer PRs open in parallel), `verification-before-completion`.
 
 Per user direction (2026-05-01): *"Before building new features, consolidate the 4 duplicated Schema Builders into `@bsuite/schema-builder`. Extract the logic into a `useSchemaController` hook. Publish as a versioned package. Inject into the 4 apps."*
 
@@ -674,7 +709,11 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 - No `useEffect`-for-persist patterns remain anywhere in the 4 apps' Schema Builder code
 - Cmd+K opens in all 5 Vite-shelled apps + conduit; `Find Entity` pans & zooms to the picked node
 
+**Red-team pass (mandatory before Phase 1a is marked ✅):** spawn `multi-agent-red-team-implementation` with five lenses: (1) `security-audit` on the new Supabase migration + RPC scaffolding (RLS preserved? no `service_role` bypass?); (2) `dry-one-shot-architecture` — do all 4 consumers actually share one implementation, or did a subtle divergence survive the port? (3) `test-coverage-analysis` + `qa-and-verification` — does `useSchemaController` have tests for every mutation rollback path? (4) `api-design-validation` — does the Zod schema in §3.9 match the DB column-alias table with zero drift? (5) `receiving-code-review` — every PR review comment on the 4 consumer PRs is addressed or explicitly deferred with a linked follow-up issue.
+
 #### Phase 1b — Airtable / dbdiagram upgrades (on top of 1a)
+
+**Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `ui-ux-pro-max` (the UX bar for column-level handles + crow's-foot is explicit user direction: *"highest UX is key"*), `bsuite-brand-system` (OKLCH colours on edge styling), `tanstack-query` (dagre-run mutation invalidation), `supabase` (information_schema reflection RPC), `shadcn-ui` (remaining Cmd+K commands), `framer-motion` (node auto-layout transition), `verification-before-completion`.
 
 **Deliverables**:
 
@@ -697,7 +736,11 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 - Two open tabs on the same tenant see each other's schema mutations within 500 ms (Realtime sync)
 - PNG export captures the full canvas (not just viewport)
 
+**Red-team pass (mandatory before Phase 1b is marked ✅):** spawn `multi-agent-red-team-implementation` with four lenses: (1) `ui-ux-pro-max` + `vercel-web-design-guidelines` — does the final canvas meet the Airtable/dbdiagram UX bar the user explicitly demanded? (2) `performance-regression` adapted for BSuite (rename to "layout-performance-regression") — does dagre run in ≤100 ms for 100 entities as the acceptance criterion demands? (3) `wiring-validation` — is every documented feature actually wired + telemetry-enabled? (4) `api-design-validation` on the `apply_schema_relation` RPC shape (if Q9 is answered "ship now" — if Q9 is "defer", this lens moves to the DDL follow-on phase).
+
 ### Phase 2 — CRM7 `custom_pages` rendering + layout resolver (1 session)
+
+**Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `dry-one-shot-architecture` (CRM7 is the one-shot owner of `custom_pages`), `supabase` + `supabase-postgres-best-practices` (RLS on `custom_pages` / `custom_page_blocks` / `custom_page_revisions`), `tanstack-query` (resolver cache), `api-design-validation` (LayoutAdapter interface surface), `verification-before-completion`.
 
 **Deliverables**:
 
@@ -715,7 +758,11 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 - Per-user dashboard layout preferences continue to work without writing to deprecated tables.
 - No new `tenant_page_layouts` table or BSU authoring surface is introduced.
 
+**Red-team pass (mandatory before Phase 2 is marked ✅):** spawn `multi-agent-red-team-implementation` with three lenses: (1) `dry-one-shot-architecture` — did any consumer app grow a write path to `custom_pages`? (only CRM7 may write per ADR-0001); (2) `security-audit` + `schema-consistency` — RLS on `custom_pages` + `custom_page_blocks` intact, no tenant leak; (3) `frontend-backend-mapping` — every CRM7 authoring API has a TypeScript consumer in every other app.
+
 ### Phase 3 — Edit mode + style inspector (2 sessions)
+
+**Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `ui-ux-pro-max` + `vercel-web-design-guidelines` (inspector + edit-mode UX), `bsuite-brand-system` (OKLCH + token-aware picker), `zustand` (temporal undo/redo), `shadcn-ui` (Sheet + Tabs + Popover), `framer-motion` (inspector open/close + selection ring), `dnd-kit` (grid-item drag-in-edit-mode), `verification-before-completion`.
 
 **Deliverables**:
 
@@ -735,7 +782,11 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 - Cmd+Z reverts; Cmd+Shift+Z re-applies
 - Published tenant-authored pages persist to CRM7 `custom_pages` (Phase 2 dependency)
 
+**Red-team pass (mandatory before Phase 3 is marked ✅):** spawn `multi-agent-red-team-implementation` with four lenses: (1) `bsuite-brand-system` — no raw hex in persisted JSON, every colour is `var(--…)` or `oklch(…)`; (2) `ui-ux-pro-max` — inspector passes WCAG 2.1 AA + has keyboard + screen-reader parity; (3) `security-audit` — `manage_system` check is enforced both client-side (UX) and server-side (RLS); (4) `performance-regression` adapted — undo/redo history never exceeds the declared 50-state cap and has no memory leak across multi-hour sessions.
+
 ### Phase 4 — Form Builder UX overhaul (1 session)
+
+**Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `dnd-kit` (palette→canvas drop), `forms-and-validation` (live preview wiring), `ui-ux-pro-max`, `zustand` (shared temporal store with Phase 3), `shadcn-ui`, `verification-before-completion`.
 
 **Deliverables**:
 
@@ -752,7 +803,11 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 - Double-click section title → inline edit → Enter commits
 - "Preview" toggle shows the rendered form; "Edit" returns to builder
 
+**Red-team pass (mandatory before Phase 4 is marked ✅):** spawn `multi-agent-red-team-implementation` with three lenses: (1) `ui-ux-pro-max` — palette→canvas drop has drop-indicator + keyboard parity; (2) `forms-and-validation` — live preview uses the exact same Zod validator path the production form will; (3) `qa-and-verification` — undo/redo is coherent across section + field + style edits (shared store with Phase 3).
+
 ### Phase 5 — Custom page authoring (1 session)
+
+**Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `dry-one-shot-architecture`, `supabase` (revision history), `ui-ux-pro-max` (side-by-side diff), `shadcn-ui`, `verification-before-completion`.
 
 **Deliverables**:
 
@@ -768,7 +823,11 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 - Page appears in all consumer apps at the configured route
 - Revision history shows diffs; rollback button reverts
 
+**Red-team pass (mandatory before Phase 5 is marked ✅):** spawn `multi-agent-red-team-implementation` with three lenses: (1) `dry-one-shot-architecture` + `frontend-backend-mapping` — no consumer app grew a write path; (2) `security-audit` — publish/rollback flows have server-side permission checks; (3) `documentation-compliance` — every new public API has JSDoc + an entry in the per-app CONTRIBUTING.md.
+
 ### Phase 6 — `throughput` React 19 migration + polish
+
+**Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `dependency-management`, `cross-platform-sync`, `verification-before-completion`, `git-workflow`.
 
 **Deliverables**:
 
@@ -780,6 +839,15 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 6. Optional: DBML + SQL DDL exporters for Schema Builder (deferred from Phase 1b §3.6 item 8)
 7. Optional: persist undo/redo history to DB so it survives refresh (deferred from Phase 3 §4)
 8. CI lint enforcing the base-stack-only rule (blocks PRs that add runtime deps outside the §2.5 + §6 allow-list — enforces v1.01W's hard scope constraint mechanically)
+
+**Acceptance criteria for Phase 6**:
+
+- `throughput` passes typecheck + Vitest + any configured Playwright run on React 19.2.4
+- `pnpm list --depth=-1 react` in every app and every shared package returns `^19.2.x` — no React 18 anywhere
+- Shared-package `peerDependencies` decision (tighten vs keep liberal) is recorded in ADR-0005
+- The base-stack-only CI lint blocks a deliberately-poisoned test PR that tries to add a non-allow-listed runtime dep
+
+**Red-team pass (mandatory before Phase 6 is marked ✅):** spawn `multi-agent-red-team-implementation` with three lenses: (1) `dependency-management` — can a malicious transitive bump slip past syncpack? (2) `cross-platform-sync` — AGENTS.md / CLAUDE.md / .windsurfrules all carry the final policy with zero drift; (3) `security-audit` — no high-severity pnpm-audit findings remain suppressed.
 
 ---
 
@@ -930,7 +998,7 @@ Mark these ⬜ below and reply inline when reviewing:
 ## 9. Sign-off
 
 **Reviewed by:** *pending user*
-**Executed by:** Codebuff (Buffy) — Phase 0 this session, Phase 1a+ pending sign-off
+**Executed by:** Codebuff (Buffy) — Phase 0 ✅ shipped (PRs #335/#332/#228); Phase 1a kickoff pending pre-phase gate (§4.−1) completion.
 **Memory key:** `bsuite_universal_wysiwyg_plan_20260501`
 
 ---
@@ -954,6 +1022,7 @@ The user appended a set of best-practice improvement notes to v1.01W; v1.02W int
 | Syncpack + Husky peer-dep enforcement mechanism (concrete tooling, not just the rule) | §5 item 8 (zero-runtime-dep approach via `pnpm dlx syncpack`, hooked into `.husky/pre-push` + GitHub Actions required check `peer-deps-aligned`) |
 | "Should we move on to drafting the React 19 Custom Node component…" user rhetorical prompt | Preserved verbatim in the "Next session entry point" footnote at the end of this document, pre-answered with Phase 1a step 3 + `packages/schema-builder/src/components/EntityNode.tsx` file path and shape contract |
 | v1.04W knowledge-currency refresh (Dagre 3.x, OKLCH, queryOptions factory, protected-branch workflow) | §3.5 (OKLCH mandate + updated R1 callout) + §3.7 (queryOptions factory paragraph + code block above Vite pattern) + §6 (Dagre pin) + §7 (protected-branch bullet) + §8 Q2 locked |
+| v1.05W operational-rigour refresh (pre-phase gate + skills-per-phase + red-team-per-phase) | §4.−1 (new Pre-Phase Readiness Gate) + every §4.x phase now has a `**Skills to load before starting**` line and a `**Red-team pass (mandatory …)**` block + Appendix A row added for v1.04W retroactively |
 
 ---
 
