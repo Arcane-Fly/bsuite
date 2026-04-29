@@ -75,13 +75,36 @@ export interface ReorderFieldEventDetail {
 }
 
 // ---------------------------------------------------------------------------
-// Supabase client duck-type
+// Supabase client structural interface
 // ---------------------------------------------------------------------------
 
+/** Minimal error shape returned by Supabase operations. */
+export interface SupabaseError {
+  message: string
+  code?: string
+}
+
+/** Minimal Supabase-compatible query result. */
+export interface SupabaseResult<T = unknown> {
+  data: T | null
+  error: SupabaseError | null
+}
+
+/** Chainable query builder stub — covers the chained calls service.ts makes. */
+export interface SupabaseQueryChain {
+  select(cols?: string): SupabaseQueryChain
+  eq(col: string, val: string | number | boolean | null): SupabaseQueryChain
+  order(col: string, opts?: { ascending?: boolean; nullsFirst?: boolean }): SupabaseQueryChain
+  then<T>(onFulfilled: (value: SupabaseResult<unknown[]>) => T): Promise<T>
+  catch<T>(onRejected: (reason: unknown) => T): Promise<T>
+}
+
 /**
- * Minimal Supabase-compatible client type.
- * Any @supabase/supabase-js SupabaseClient satisfies this interface.
- * Using `any` avoids coupling to a specific @supabase/supabase-js version.
+ * Minimal structural Supabase client interface.
+ * Any @supabase/supabase-js SupabaseClient satisfies this without importing
+ * @supabase/supabase-js as a dependency (avoids version coupling).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- structural duck-type; avoids @supabase/supabase-js version coupling
-export type SupabaseLike = any
+export interface SupabaseLike {
+  rpc(fn: string, params?: Record<string, unknown>): PromiseLike<SupabaseResult<unknown>>
+  from(table: string): SupabaseQueryChain
+}

@@ -49,7 +49,10 @@ BEGIN
       tfd.field_name,
       tfd.field_type,
       tfd.nullable,
-      COALESCE(tfd.sort_order, 0)::integer AS sort_order,
+      -- sort_order column does not exist yet (added in 20260505000000_tenant_field_definitions_sort_order.sql).
+      -- Return 0 as a placeholder; Phase 3A migration replaces this function with a version
+      -- that reads the actual sort_order column.
+      0::integer AS sort_order,
       tfd.created_at
     FROM   public.tenant_field_definitions tfd
     WHERE  tfd.entity_id = p_entity_id

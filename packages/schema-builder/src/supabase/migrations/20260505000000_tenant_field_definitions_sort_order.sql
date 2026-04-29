@@ -41,7 +41,9 @@ CREATE INDEX IF NOT EXISTS ix_tfd_entity_sort_order
   ON public.tenant_field_definitions (entity_id, sort_order);
 
 -- ---------------------------------------------------------------------------
--- 4. Update get_entity_fields: ORDER BY sort_order NULLS LAST, created_at
+-- 4. Replace get_entity_fields: now reads the real sort_order column and
+--    orders by sort_order NULLS LAST, created_at (replaces Phase 1 version
+--    which used 0 AS sort_order and ordered by created_at only).
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_entity_fields(p_entity_id uuid)
 RETURNS TABLE (

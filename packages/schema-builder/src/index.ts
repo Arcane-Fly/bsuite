@@ -14,6 +14,9 @@ export type {
   SchemaController,
   ReorderFieldEventDetail,
   SupabaseLike,
+  SupabaseError,
+  SupabaseResult,
+  SupabaseQueryChain,
 } from './types.js'
 
 // Service

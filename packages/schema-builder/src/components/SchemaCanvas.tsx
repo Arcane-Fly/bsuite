@@ -74,8 +74,9 @@ export function SchemaCanvas({
       setAnnouncement(`Moved ${field.field_name} ${directionLabel}`)
 
       controller.reorderFields(entityId, newFieldIds).catch(() => {
-        // Rollback is handled by the controller; clear any stale announcement
-        setAnnouncement('')
+        // Rollback is handled by the controller; announce the failure so
+        // screen-reader users know the move did not persist.
+        setAnnouncement(`Failed to reorder ${field.field_name}`)
       })
     },
     [entityId, controller],

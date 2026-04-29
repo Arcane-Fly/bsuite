@@ -26,7 +26,7 @@ export class SchemaService {
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
 
-    if (error) throw new Error((error as { message: string }).message)
+    if (error) throw new Error(error.message)
     return (data as EntityField[]) ?? []
   }
 
@@ -42,7 +42,7 @@ export class SchemaService {
       p_nullable:   payload.nullable ?? true,
     })
 
-    if (error) throw new Error((error as { message: string }).message)
+    if (error) throw new Error(error.message)
     return data as EntityField
   }
 
@@ -57,7 +57,7 @@ export class SchemaService {
       p_nullable:   payload.nullable   ?? null,
     })
 
-    if (error) throw new Error((error as { message: string }).message)
+    if (error) throw new Error(error.message)
   }
 
   /**
@@ -69,7 +69,7 @@ export class SchemaService {
       p_field_id:  fieldId,
     })
 
-    if (error) throw new Error((error as { message: string }).message)
+    if (error) throw new Error(error.message)
   }
 
   /**
@@ -83,6 +83,6 @@ export class SchemaService {
       p_field_ids: fieldIds,
     })
 
-    if (error) throw new Error((error as { message: string }).message)
+    if (error) throw new Error(error.message)
   }
 }
