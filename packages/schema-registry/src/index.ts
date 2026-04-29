@@ -1,6 +1,4 @@
-export { TenantLayoutSlot } from './react/TenantLayoutSlot.js';
 export { useTenantSchema } from './react/useTenantSchema.js';
-export { useTenantPageLayout } from './react/useTenantPageLayout.js';
 export { useTenantNavigation } from './react/useTenantNavigation.js';
 export { createMinimalClient } from './react/minimalClient.js';
 export type { AppScope } from './react/types.js';
