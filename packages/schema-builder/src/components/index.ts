@@ -2,6 +2,15 @@ export { EntityNode } from './EntityNode.js';
 export type { EntityNodeData, EntityNodeType } from './EntityNode.js';
 export { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
 export type { EntityPropertiesPanelProps } from './EntityPropertiesPanel.js';
+export {
+  FieldCreateDialog,
+  FIELD_TYPE_OPTIONS,
+  SNAKE_CASE_RE,
+} from './FieldCreateDialog.js';
+export type {
+  FieldCreateDialogProps,
+  FieldCreateDialogPayload,
+} from './FieldCreateDialog.js';
 export { RelationshipConfigDialog } from './RelationshipConfigDialog.js';
 export { SchemaCanvas } from './SchemaCanvas.js';
 export type { SchemaCanvasHandle, SchemaCanvasProps } from './SchemaCanvas.js';

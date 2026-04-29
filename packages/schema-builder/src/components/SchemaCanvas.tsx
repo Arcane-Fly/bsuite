@@ -33,7 +33,6 @@ import {
 import type { SchemaController } from '../hooks/useSchemaController.js';
 import type {
   AppScope,
-  FieldType,
   RelationType,
   TenantEntity,
 } from '../types.js';
@@ -41,6 +40,7 @@ import { computeDagreLayout } from '../utils/autoLayout.js';
 import { exportCanvasToPng } from '../utils/exportPng.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
 import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
+import { FieldCreateDialog } from './FieldCreateDialog.js';
 import { RelationshipConfigDialog } from './RelationshipConfigDialog.js';
 import { SchemaToolbar } from './SchemaToolbar.js';
 import { SmartEdge, type SmartEdgeData } from './edges/SmartEdge.js';
@@ -78,25 +78,6 @@ function parseHandleId(handleId: string | null | undefined): {
     fieldId: fieldId === 'entity' ? undefined : fieldId,
   };
 }
-
-const VALID_FIELD_TYPES: readonly FieldType[] = [
-  'text',
-  'number',
-  'boolean',
-  'date',
-  'select',
-  'multiselect',
-  'url',
-  'email',
-  'phone',
-];
-
-/**
- * Enforced on client-side `Cmd+K → Add Field` creation so user input matches
- * the canonical identifier pattern used elsewhere in the suite (snake_case,
- * no leading digit).
- */
-const SNAKE_CASE_RE = /^[a-z_][a-z0-9_]*$/;
 
 function stylesForRelation(type: RelationType) {
   return {
@@ -140,6 +121,9 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       null,
     );
     const [searchQuery, setSearchQuery] = useState('');
+    const [fieldDialogEntityId, setFieldDialogEntityId] = useState<
+      string | null
+    >(null);
     const pendingConnection = useRef<Connection | null>(null);
     const flowRef = useRef<ReactFlowInstance<
       Node<EntityNodeData>,
@@ -508,51 +492,8 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         onError?.('Cannot add fields to a system entity');
         return;
       }
-      // TODO(phase-2): replace window.prompt with a FieldCreateDialog
-      // component (§3.10). Prompt is a placeholder UX — the final flow uses
-      // a shadcn Dialog with proper type <Select>, required-flag <Switch>,
-      // and server-side validation feedback.
-      const name = window.prompt('Field name (snake_case):')?.trim();
-      if (!name) return;
-      if (!SNAKE_CASE_RE.test(name)) {
-        onError?.(
-          'Field names must be snake_case (lowercase letters, digits, underscore; must not start with a digit)',
-        );
-        return;
-      }
-      const typeInput =
-        window.prompt(
-          `Field type (${VALID_FIELD_TYPES.join('/')}):`,
-          'text',
-        )?.trim() ?? 'text';
-      let fieldType: FieldType;
-      if (VALID_FIELD_TYPES.includes(typeInput as FieldType)) {
-        fieldType = typeInput as FieldType;
-      } else {
-        onError?.(`Unknown field type '${typeInput}', defaulted to 'text'`);
-        fieldType = 'text';
-      }
-      const existingFieldCount =
-        controller.fields[entity.id]?.length ?? 0;
-      controller
-        .createField({
-          tenant_id: tenantId,
-          entity_id: entity.id,
-          entity_type: entity.name,
-          field_name: name,
-          field_type: fieldType,
-          label: name,
-          placeholder: null,
-          is_required: false,
-          options: null,
-          sort_order: existingFieldCount,
-          is_active: true,
-          scope: null,
-          is_system: false,
-          is_locked: false,
-        })
-        .catch(() => {});
-    }, [controller, pickTargetEntityId, onError, tenantId]);
+      setFieldDialogEntityId(targetEntityId);
+    }, [controller.entities, pickTargetEntityId, onError]);
 
     // Cmd+K "Add Field" dispatches this event; the canvas owns the UI flow.
     useEffect(() => {
@@ -691,6 +632,53 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           targetName={targetLabel}
           onConfirm={handleRelationConfirm}
         />
+
+        {(() => {
+          // Derive dialog context inline — only referenced here, so a useMemo
+          // wrapper would be overkill for two cheap array lookups per render.
+          if (!fieldDialogEntityId) return null;
+          const entity = controller.entities.find(
+            (e) => e.id === fieldDialogEntityId,
+          );
+          if (!entity) return null;
+          const entityFields = controller.fields[entity.id] ?? [];
+          const existingFieldNames = entityFields.map((f) =>
+            f.field_name.toLowerCase(),
+          );
+          return (
+            <FieldCreateDialog
+              open={true}
+              onOpenChange={(o) => {
+                if (!o) setFieldDialogEntityId(null);
+              }}
+              entityLabel={entity.label}
+              entityName={entity.name}
+              existingFieldNames={existingFieldNames}
+              nextSortOrder={entityFields.length}
+              onConfirm={(payload) => {
+                controller
+                  .createField({
+                    tenant_id: tenantId,
+                    entity_id: entity.id,
+                    entity_type: entity.name,
+                    field_name: payload.field_name,
+                    field_type: payload.field_type,
+                    label: payload.label,
+                    placeholder: payload.placeholder,
+                    is_required: payload.is_required,
+                    options: null,
+                    sort_order: payload.sort_order,
+                    is_active: true,
+                    scope: null,
+                    is_system: false,
+                    is_locked: false,
+                  })
+                  .catch(() => {});
+                setFieldDialogEntityId(null);
+              }}
+            />
+          );
+        })()}
       </div>
     );
   },
