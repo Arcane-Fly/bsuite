@@ -1,11 +1,13 @@
-# Universal WYSIWYG + Schema UX Master Plan — v1.02W
+# Universal WYSIWYG + Schema UX Master Plan — v1.03W
 
-**Date:** 2026-05-01 (revised same-day, second pass)
+**Date:** 2026-05-01 (revised same-day, third pass)
 **Status:** W (Working — awaiting user sign-off on Phase 1+)
 **Owner:** Codebuff (Buffy) coordination with user
 **Supersedes / extends:** `docs/20260427-full-7-execution-ledger-v1.00W.md`, `docs/adr/ADR-0003-consumer-renderer-pattern.md`
 
 **Revision history:**
+
+- **v1.03W (2026-05-01)** — Consolidated 15 refinements from v1.02W code review: dropped `useOptimistic` from Vite pattern (TanStack Query's native optimistic is transition-safe; `useOptimistic` in a TanStack Query callback throws in React 19); fixed dagre axis labels for `rankdir: 'LR'` (`ranksep` is horizontal between ranks, `nodesep` is vertical within a rank); added Zod↔DB alias table in §3.9 so `SchemaRelation.source.tableId` ↔ `tenant_entity_relations.source_entity_id` is explicit; split `metadata.isSystem` into two orthogonal flags (`isSystem` = reflects existing native FK, `applyAsPostgresFK` = one-shot intent to emit DDL); moved field-level FK migration into Phase 1a deliverable 0 (must land before any code work); Phase 0 aligns shared-package React devDependencies while keeping peer ranges liberal; reconciled page persistence with ADR-0001 so CRM7 `custom_pages` remains canonical and `tenant_page_layouts` is not resurrected; added §4.0 Phase dependency graph; locked Q5 + Q7 (plan body already answers them); clarified `cmdk` is shadcn-transitive (not a separate package.json entry); named `syncpack` explicitly as the peer-dep + base-stack enforcement tool; scoped Phase 1a Cmd+K subset down to `Find Entity` + `Go to <page-path>` only to prevent Phase 1a sprawl. Trailing `Next session entry point` footnote retained unchanged.
 - **v1.02W (2026-05-01)** — Integrated user's improvement notes (field-level React Flow handles, React 19 `useOptimistic` + TanStack Query / Server-Action mutation pattern, hybrid relational-registry + jsonb view-state storage, shared `useSchemaController` hook, strict React 19 peer enforcement, Cmd+K command palette via shadcn `cmdk`). New §§2.6 / 3.7 / 3.8 / 3.9 / 3.10 added; §3.2 package structure expanded; §3.5 color picker refined to store CSS variable **name** (`var(--accent-primary)`) rather than resolved hex so the same layout renders correctly across D2C and Corporate themes; §3.6 dagre config pinned (`rankdir: 'LR'`, `nodesep: 60`, `ranksep: 80`) and smart-edge routing file named (`edges/SmartEdge.tsx`); §4 Phase 1 starts with a 'Hot-Sync' carve-out that extracts the shared `useSchemaController` hook BEFORE layering Airtable upgrades; §5 extended with peer-dependency enforcement clause; `cmdk` + `tailwind-merge` added to §2.5 + §6 as already-in-base-stack (cmdk needs install in BSU / conduit / R80.3 via `pnpm dlx shadcn add command`). Trailing user-notes block removed — content now integrated into body.
 - **v1.01W (2026-05-01)** — Scope tightened to base-stack-only per user direction: *"we have these skills already and the base. we've just diverted recently."* Dropped ELKjs, reactflow-smart-edge, react-colorful, Puck, and Craft.js. Added `@dagrejs/dagre` (~25 KB) as the single new dependency for Schema Builder auto-layout, justified by the user's explicit *"highest UX is key"* directive. New §2.5 maps every capability in the plan to an already-installed base-stack library plus its corresponding session-loaded skill.
 - **v1.00W (2026-05-01)** — Initial draft.
@@ -48,6 +50,7 @@ The work is sized in 6 phases, running approximately 5–8 sessions depending on
 | **packages/nav-core** | ^18.3.1 (dev) | ^18.3.1 (dev) | ^18.3.28 | ⚠️ Outdated |
 
 The user's claim "we've reverted to React 18" is partially correct:
+
 - 5 of 6 apps are already on 19.2.4 (no regression)
 - All 3 shared packages still have React 18 pinned as dev dep + peer-range `>=18 <21`
 - `throughput` never migrated to 19 (it's a real stragglers' regression)
@@ -56,11 +59,13 @@ The user's claim "we've reverted to React 18" is partially correct:
 ### 2.2 Schema Builder duplication (DRY violation)
 
 `crm7/src/pages/settings/schema-builder/` (React Flow canvas with `EntityNode`, `EntityPropertiesPanel`, `RelationshipConfigDialog`, drag-to-persist positions) has been **copied 3 times** into:
+
 - `business-suite-unified/src/pages/Settings/SchemaBuilder.tsx` (monolithic 480-line file)
 - `conduit/src/app/(dashboard)/settings/schema-builder/_view.tsx` (monolithic 480-line file)
 - `R80.3/src/components/SchemaBuilderView.tsx` (monolithic 440-line file)
 
 All four already implement:
+
 - ✅ Top/bottom handles for drag-to-connect
 - ✅ `onConnect` → `RelationshipConfigDialog` → `createSchemaRelation` persist
 - ✅ Smoothstep edges with labels from `RELATION_LABELS`
@@ -70,6 +75,7 @@ All four already implement:
 - ✅ `RelationshipConfigDialog` for configuring edge type + labels
 
 But **none** of them implement:
+
 - ❌ Column-level handles (connect a specific field to another table's field — Airtable/dbdiagram parity)
 - ❌ Cardinality markers at edge endpoints (`1` / `N` / crow's-foot glyphs)
 - ❌ Auto-layout (ELKjs or dagre) — users must drag-position every entity manually
@@ -81,6 +87,7 @@ But **none** of them implement:
 ### 2.3 Form Layout Builder ("create form layout") issues
 
 Current state (`crm7/src/components/ui-customization/FormLayoutBuilder.tsx`, 585 lines):
+
 - ✅ Real `@dnd-kit` drag-and-drop (sections, fields within/across sections)
 - ✅ Field palette (left) + canvas (center) + properties panel (right) — three-pane layout
 - ✅ Property panel for sections (title, description, columns, collapsible) and fields (label, placeholder, help, col-span, required, read-only, hidden)
@@ -88,6 +95,7 @@ Current state (`crm7/src/components/ui-customization/FormLayoutBuilder.tsx`, 585
 - ✅ Keyboard accessibility (`KeyboardSensor`, `sortableKeyboardCoordinates`)
 
 Gaps the user identified:
+
 - ❌ **Card clipping**: `<span className="flex-1 text-xs font-medium">{section.title}</span>` has no `truncate` / `break-words` / tooltip — long titles bleed past the card's right edge when palette + inspector narrow the canvas
 - ❌ **Unintuitive drag-and-drop**: palette fields can't be dragged into the canvas directly (the hover-only `+` button is the only way); only within-canvas DnD works
 - ❌ No drag preview / drop indicator when dragging from palette
@@ -99,6 +107,7 @@ Gaps the user identified:
 ### 2.4 WYSIWYG state ("edit borders, add cards anywhere")
 
 No infrastructure currently exists for:
+
 - Developer-gated in-page edit mode (e.g., a `?edit=1` toggle or keyboard shortcut on any page)
 - Per-card style overrides (border color, radius, shadow, padding)
 - Adding new cards to arbitrary pages (only `PageGridLayout` grid items are addable via the `crm7-add-entity-widget` CustomEvent; no freeform card creation)
@@ -149,7 +158,7 @@ Per user direction (2026-05-01 follow-up): *"The plan relies heavily on jsonb fo
 | Fields / columns on entities | `public.tenant_field_definitions` (flat table, RLS) | Queryable per-entity; validates row payloads via `dbSchemaToZod` | ✅ Yes — BSU + crm7 wire to it |
 | Relationships (FKs, inheritance, M:N) | `public.tenant_entity_relations` (flat table, RLS) | Core of the Schema Builder graph; drives crow's-foot markers | ✅ Yes — used by `createSchemaRelation` etc. |
 | Canvas view state (x/y, accent color, collapsed) | `tenant_entities.metadata` jsonb | Non-functional; never queried to answer "which entities…" questions | ✅ Yes — current drag-end persist targets `metadata.position` |
-| Page layouts (widget positions + style overrides) | `tenant_page_layouts.layout` + `user_page_layout_overrides.layout` jsonb | Per-page, per-scope; rarely cross-queried | ⚠️ Tables to be created in Phase 2 |
+| Page layouts (widget positions + style overrides) | `custom_pages.layout` + `custom_page_blocks` jsonb | Per-page, per-scope; rarely cross-queried | ✅ Yes — CRM7-owned canonical surface per ADR-0001 |
 | Form layouts (tabs/sections/fields) | `form_layouts.layout` jsonb | Per-form, tenant-scoped | ✅ Yes — existing in crm7 UI customization system |
 | Custom pages | `custom_pages.layout` jsonb + `custom_page_revisions` | Per-page, revisioned | ✅ Yes — schema exists; authoring UI in Phase 5 |
 
@@ -250,8 +259,8 @@ COMMIT;
 | System | Purpose | Authoring surface | Storage | Renderer |
 |---|---|---|---|---|
 | **FormLayoutConfig** | Per-entity **form** customization (tabs/sections/fields) | `crm7` `/settings/form-layouts/:id` (FormLayoutBuilder) | `form_layouts.layout` jsonb (Supabase) | `FormLayoutRenderer` |
-| **PageGridLayout** | Per-user **dashboard grid** widget arrangement | Any page in edit mode (Settings2 icon) | `localStorage` per-user today → `tenant_page_layouts` + `user_page_layout_overrides` in Phase 2 | `PageGridLayout` + `WidgetRenderer` |
-| **Custom Pages** | Tenant-authored **new pages** added to navigation | BSU `/developer/pages` (editor) — currently placeholder | `custom_pages.layout` jsonb (Supabase) | `CustomPageRenderer` (per-app thin wrapper + shared `WidgetRenderer`) |
+| **PageGridLayout** | Per-user **dashboard grid** widget arrangement | Any page in edit mode (Settings2 icon) | `localStorage` per-user today; tenant-authored published pages use CRM7 `custom_pages` per ADR-0001 | `PageGridLayout` + `WidgetRenderer` |
+| **Custom Pages** | Tenant-authored **new pages** added to navigation | CRM7 custom page settings (canonical editor) | `custom_pages.layout` jsonb + `custom_page_blocks` + `custom_page_revisions` (Supabase) | `CustomPageRenderer` (per-app thin wrapper + shared `WidgetRenderer`) |
 
 ### 3.2 Shared package boundaries after refactor
 
@@ -265,7 +274,7 @@ COMMIT;
   ├── PageGridLayout          — react-grid-layout wrapper (existing)
   ├── WidgetInspector         — NEW: style inspector panel for selected widgets
   ├── EditModeProvider        — NEW: permission-gated edit mode context
-  ├── LayoutAdapter           — NEW: pluggable localStorage | Supabase | dual (CASS) persistence
+  ├── LayoutAdapter           — NEW: pluggable localStorage | CRM7 custom_pages reader | dual resolver persistence
   └── styles/                 — CSS for grid overrides + inspector chrome
 
 @bsuite/schema-builder (NEW — React 19)
@@ -288,24 +297,27 @@ COMMIT;
 Layered resolution at runtime:
 
 ```
-1. user_page_layout_overrides (per-user, optional)   ← highest priority
-2. tenant_page_layouts          (tenant-wide, optional)
+1. localStorage user override (per-user, optional)   ← highest priority
+2. CRM7 custom_pages published layout (tenant-wide, optional)
 3. app_default_layouts          (shipped with app bundle)
 4. hardcoded fallback           ← lowest priority
 ```
 
-Developer picks persistence scope per edit via a UI toggle:
-- **"Save to my layout"** → writes to `user_page_layout_overrides` only
-- **"Save for whole tenant"** → writes to `tenant_page_layouts`, clears matching `user_page_layout_overrides` rows with a confirmation
-- **"Reset to default"** → deletes both user override and tenant override for this page
+Developer picks persistence scope per edit via a UI toggle where the current surface supports publishing:
+
+- **"Save to my layout"** → writes to the existing per-user/local layout preference layer
+- **"Publish to tenant"** → writes through the canonical CRM7 `custom_pages` / `custom_page_blocks` service
+- **"Reset to default"** → clears the per-user override so the published tenant or shipped default layout resolves
 
 RLS:
-- `tenant_page_layouts`: write requires `manage_system` permission (developer role), read by all authenticated tenant members
-- `user_page_layout_overrides`: read/write by `auth.uid() = user_id` only
+
+- `custom_pages` / `custom_page_blocks`: tenant-scoped RLS remains canonical; write requires the existing CRM7 authoring permissions
+- Per-user layout preferences remain user-scoped and never write to deprecated layout tables
 
 ### 3.4 Edit-mode UX (borrowed from Puck + Notion + Framer)
 
 A global `EditModeProvider` context at the app shell level controls:
+
 - **Chrome visibility**: drag handles, delete buttons, "+ Add card" hover targets, selection rings
 - **Cursor state**: `crosshair` on hover over editable regions
 - **Selection state**: single-select card/section/field, shown in inspector
@@ -346,7 +358,7 @@ A shadcn `Sheet` docked to the right edge, 320px wide, with four tabs (shadcn `T
    - `many_to_many`: `⟩—⟨` both ends
    - `inherits_from`: animated arrow (existing)
 
-3. **Dagre auto-layout** — a "Tidy up" button in the toolbar runs `@dagrejs/dagre` with `rankdir: 'LR'` (left-to-right), `ranker: 'network-simplex'` (default, minimises edge crossings), `nodesep: 60` (horizontal spacing within a rank), and `ranksep: 80` (vertical spacing between ranks — tuned for our default entity-card width so labels never overlap). Preserves existing positions on manual drag (auto-layout only applies when requested). Dagre is the smallest proven graph-layout library (~25 KB gzipped, zero runtime deps, synchronous API) and is the de-facto standard for React Flow auto-layout in production schema visualizers (dbdiagram.io, azimutt, drawsql). Integration is ~30 lines: build the dagre graph from `nodes` + `edges`, call `dagre.layout()`, map the returned `(x, y)` back onto React Flow node positions. See §6 for the pinned version.
+3. **Dagre auto-layout** — a "Tidy up" button in the toolbar runs `@dagrejs/dagre` with `rankdir: 'LR'` (left-to-right), `ranker: 'network-simplex'` (default, minimises edge crossings), `nodesep: 60` (vertical spacing between sibling nodes within the same rank), and `ranksep: 80` (horizontal spacing between successive ranks — tuned for our default entity-card width of ~260 px so labels never overlap). Preserves existing positions on manual drag (auto-layout only applies when requested). Dagre is the smallest proven graph-layout library (~25 KB gzipped, zero runtime deps, synchronous API) and is the de-facto standard for React Flow auto-layout in production schema visualizers (dbdiagram.io, azimutt, drawsql). Integration is ~30 lines: build the dagre graph from `nodes` + `edges`, call `dagre.layout()`, map the returned `(x, y)` back onto React Flow node positions. See §6 for the pinned version.
 
 4. **Schema reflection** — a new `useEntityColumns(entityId)` hook queries `information_schema.columns` (via a Supabase RPC) for the underlying table, showing actual column names and types inside each card — not just "Fields mapped".
 
@@ -373,22 +385,19 @@ Per user direction (2026-05-01 follow-up): *"Since you are on React 19, stop usi
 | R80.3 | Vite | Same as BSU |
 | throughput | Vite | N/A — not a Schema Builder consumer |
 
-**Canonical Vite-app pattern** (used in `useSchemaController`):
+**Canonical Vite-app pattern** (used in `useSchemaController`) — TanStack Query native optimistic, no `useOptimistic`:
 
 ```ts
-// Drag-end / connect persist with instant UI + atomic rollback on failure
-const [optimisticRelations, addOptimisticRelation] = useOptimistic(
-  relations,
-  (current, incoming: SchemaRelation) => [...current, incoming]
-);
-
+// Drag-end / connect persist — TanStack Query native optimistic pattern
 const createRelationMutation = useMutation({
   mutationFn: (relation: SchemaRelation) => createSchemaRelation(relation),
   onMutate: async (relation) => {
-    addOptimisticRelation(relation);
     await queryClient.cancelQueries({ queryKey: ['schema-relations', tenantId] });
-    const prev = queryClient.getQueryData(['schema-relations', tenantId]);
-    queryClient.setQueryData(['schema-relations', tenantId], (old: SchemaRelation[] = []) => [...old, relation]);
+    const prev = queryClient.getQueryData<SchemaRelation[]>(['schema-relations', tenantId]);
+    queryClient.setQueryData<SchemaRelation[]>(
+      ['schema-relations', tenantId],
+      (old = []) => [...old, relation],
+    );
     return { prev };
   },
   onError: (_err, _relation, ctx) => {
@@ -397,6 +406,8 @@ const createRelationMutation = useMutation({
   onSettled: () => queryClient.invalidateQueries({ queryKey: ['schema-relations', tenantId] }),
 });
 ```
+
+> **Why no `useOptimistic` in Vite apps**: React 19's `useOptimistic` updater must be invoked inside a transition or action (i.e., inside a Server-Action flow driven by `useActionState`, or inside a manual `startTransition`). Calling it from a TanStack Query `onMutate` callback runs outside any transition and React 19 throws *"An optimistic state update occurred outside a transition or action."* TanStack Query's own `onMutate` + `queryClient.setQueryData` + `onError` rollback is already transition-safe and is functionally equivalent to `useOptimistic` for this use-case — there is no advantage to layering `useOptimistic` on top. `useOptimistic` is used in the Conduit / Server-Action pattern only, where `useActionState` provides the required transition boundary.
 
 **Canonical Next.js / Conduit pattern** (used in `useSchemaController` when running inside the Next.js app):
 
@@ -480,18 +491,38 @@ export const SchemaRelationSchema = z.object({
     cardinality: CardinalitySchema.default('one_to_many'),
     onDelete: z.enum(['CASCADE', 'SET NULL', 'RESTRICT', 'NO ACTION']).default('SET NULL'),
     onUpdate: z.enum(['CASCADE', 'RESTRICT', 'NO ACTION']).default('CASCADE'),
-    isSystem: z.boolean().default(false), // true iff it reflects a native Postgres FK (read-only in UI)
+    isSystem: z.boolean().default(false),            // true iff this row REFLECTS a native Postgres FK discovered by schema reflection (read-only in UI)
+    applyAsPostgresFK: z.boolean().default(false),   // one-shot INTENT: emit ALTER TABLE ... ADD CONSTRAINT via the apply_schema_relation RPC on next save. Never persisted — the RPC consumes and clears it.
   }),
 });
 export type SchemaRelation = z.infer<typeof SchemaRelationSchema>;
 ```
 
+**Zod ↔ DB column aliasing** — because `SchemaRelation.source.tableId` and `target.tableId` are React Flow terminology but the database calls them `entity_id`, the Schema Controller translates at the persistence boundary. The mapping is 1:1:
+
+| Zod field | DB column in `tenant_entity_relations` | Notes |
+|---|---|---|
+| `id` | `id` | UUID |
+| `name` | `source_label` or `target_label` | Human-readable; stored on whichever side the user authored |
+| `source.tableId` | `source_entity_id` | Points to `tenant_entities.id` |
+| `source.fieldId` | `source_field_id` (new — see §2.6 migration) | Points to `tenant_field_definitions.id`; NULL for entity-level fallback |
+| `source.handle` | — | UI-only; the full Handle ID `${tableId}.${fieldId}.(left\|right)` is reconstructed by `EntityNode` and never persisted |
+| `target.tableId` | `target_entity_id` | |
+| `target.fieldId` | `target_field_id` (new) | |
+| `target.handle` | — | UI-only, as above |
+| `metadata.cardinality` | `relation_type` | Existing column; values map 1:1 (`one_to_one`, `one_to_many`, `many_to_many`, `inherits_from`) |
+| `metadata.onDelete` | `on_delete` (new) | |
+| `metadata.onUpdate` | `on_update` (new) | |
+| `metadata.isSystem` | `is_system` | Existing column |
+| `metadata.applyAsPostgresFK` | — | Not persisted — a one-shot intent flag passed to the `apply_schema_relation` RPC, never stored |
+
 **Integration points**:
 
 - **Handle generation** — `EntityNode.tsx` maps `data.fields` to one `<Handle type="source" id={`${data.tableId}.${field.id}.right`}>` and one `<Handle type="target" id={`${data.tableId}.${field.id}.left`}>` per field row.
 - **`onConnect`** — decomposes the React Flow `Connection` (`sourceHandle`, `targetHandle`) strings into `{ tableId, fieldId, side }`, constructs a `SchemaRelation`, validates through `SchemaRelationSchema.parse()`, then dispatches through `useSchemaController.createRelation()`.
-- **Persist** — the validated object maps 1:1 onto `tenant_entity_relations` rows. For the rare case where a developer wants the Schema Builder to emit actual Postgres FK DDL (not just metadata), a Supabase RPC `apply_schema_relation(rel_id uuid)` runs `ALTER TABLE … ADD CONSTRAINT` server-side with SECURITY DEFINER scoped to the tenant. Gated behind `metadata.isSystem = true` and an extra "Apply to database" explicit confirmation — never automatic.
+- **Persist** — the validated object maps 1:1 onto `tenant_entity_relations` rows via the alias table above. For the rare case where a developer wants the Schema Builder to emit actual Postgres FK DDL (not just metadata), a Supabase RPC `apply_schema_relation(rel_id uuid)` runs `ALTER TABLE … ADD CONSTRAINT` server-side with SECURITY DEFINER scoped to the tenant. Gated behind `metadata.applyAsPostgresFK = true` (a one-shot intent flag, never persisted — the RPC consumes and clears it) plus an extra "Apply to database" explicit confirmation dialog — never automatic. The separate `metadata.isSystem` flag is orthogonal: it tags rows that REFLECT an already-existing native Postgres FK discovered by schema reflection (such rows are read-only in the UI), whereas `applyAsPostgresFK` is the transient intent to CREATE a new native FK from the current metadata row.
 - **Rendering** — the custom edge component reads `metadata.cardinality` to render crow's-foot markers (§3.6 item 2), and `metadata.onDelete` to style the edge (solid for CASCADE, dashed for SET NULL).
+- **Handle ID vs Zod `handle` field** — the `source.handle` and `target.handle` Zod fields store only `'left' | 'right'` (the side of the card the handle lives on). The full React Flow Handle ID `${tableId}.${fieldId}.${handle}` is reconstructed at render time by `EntityNode` and never persisted. This separation keeps the Zod schema 1:1 with the DB row shape while giving React Flow the unique handle IDs it requires.
 
 ### 3.10 Command palette (Cmd+K)
 
@@ -512,7 +543,7 @@ Per user direction (2026-05-01 follow-up): *"Add a 'Command Palette' (Cmd+K) tha
 | `Go to` <page-path> (fuzzy navigation) | Global | Phase 1a |
 | `Toggle Edit Mode` (E) | Global | Phase 3 |
 | `Undo` / `Redo` | Global | Phase 3 |
-| `Publish` / `Preview` (for Custom Pages) | BSU /developer/pages | Phase 5 |
+| `Publish` / `Preview` (for Custom Pages) | CRM7 custom page settings | Phase 5 |
 
 **Install step (Phase 1a prereq)**: BSU, conduit, and R80.3 need `pnpm dlx shadcn@latest add command` run once (inside an isolated dir per AGENTS.md lockfile rules). crm7 and braden already have it. This is a shadcn top-up, not a new library choice — `cmdk` is a shadcn-native primitive.
 
@@ -529,6 +560,34 @@ Per user direction (2026-05-01 follow-up): *"Add a 'Command Palette' (Cmd+K) tha
 
 ## 4. Phased Execution
 
+### 4.0 Phase dependency graph
+
+```
+Phase 0  (React 19 unification + Dep Policy + card clipping)           — no prereqs
+   ↓
+Phase 1a (Hot-Sync — migration + useSchemaController + 4 wrappers      — needs Phase 0
+          + cmdk install + Find Entity/Go to palette subset)
+   ↓
+Phase 1b (Airtable upgrades — column handles + crow's-foot             — needs 1a
+          + dagre + reflection + SmartEdge + minimap + PNG export)
+   ↓
+Phase 2  (custom_pages renderer + LayoutAdapter resolver)              — needs Phase 1b's useSchemaController patterns
+   ↓
+Phase 3  (EditModeProvider + WidgetInspector + undo/redo                — needs Phase 2's LayoutAdapter
+          + twMerge style overrides + Cmd+K mutation commands)
+   ↓
+Phase 4  (Form Builder DnD + inline rename + live preview)              — shares zustand temporal store with Phase 3
+                                                                          (can start in parallel with Phase 3 once
+                                                                          the temporal store is extracted in 3's first milestone)
+   ↓
+Phase 5  (Custom Page authoring in CRM7 custom page settings)           — needs Phase 2 + Phase 3
+   ↓
+Phase 6  (throughput React 19 migration + peer policy re-evaluation     — no hard prereqs; can run anytime after Phase 0
+          + polish + CI lint + DBML/SQL DDL exporters)                    but traditionally last so the suite converges)
+```
+
+Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the shared zustand temporal store is extracted in Phase 3's first milestone. Phase 6 (throughput React 19 + peer policy re-evaluation) is intentionally last because peer ranges should not tighten until every consumer app is verified on React 19.
+
 ### Phase 0 — Safe quick wins (this session)
 
 **Scope** (all low-risk, no behavior changes to editor UX):
@@ -536,20 +595,23 @@ Per user direction (2026-05-01 follow-up): *"Add a 'Command Palette' (Cmd+K) tha
 1. **Rule**: Add "Dependency Version Policy" to `AGENTS.md` + `CLAUDE.md` + `.windsurfrules`:
    > Always use the latest mutually-compatible versions of React, React-DOM, `@types/react`, and related libraries across apps AND shared packages. When a shared package is bumped, consumer apps must be re-verified. A CI lint step blocks PRs where `packages/*/package.json` React version falls behind the lowest consumer app React version.
 
-2. **React 19 unification**:
-   - `packages/schema-registry`: devDeps react / react-dom → `^19.2.4`, `@types/react` → `^19.2.14`, peer range stays `>=18 <21` (no breaking consumer change)
-   - `packages/page-builder`: same bump
-   - `packages/nav-core`: same bump
-   - `mobile`: react `19.2.0` (exact) → `^19.2.4` to match `react-dom`
+2. **React 19 unification in shared packages (devDependency alignment, liberal peers)**:
+   - `packages/schema-registry`: devDeps react / react-dom → `^19.2.4`, `@types/react` → `^19.2.14`, `@types/react-dom` → `^19.2.3`; peer range stays liberal.
+   - `packages/page-builder`: same devDependency bump; peer range stays liberal.
+   - `packages/nav-core`: same devDependency bump; no React peer tightening in Phase 0.
+   - `packages/theme` and `packages/ui`: same devDependency bump because they are shared packages and must not trail the consumer React major.
+   - `mobile`: react `19.2.0` (exact) → `^19.2.4` to match `react-dom`.
+   - `throughput`: NOT touched in Phase 0. Its React 18 → 19 migration is the primary deliverable of Phase 6.
 
 3. **Card clipping fix** (`crm7/src/components/ui-customization/FormLayoutBuilder.tsx`):
    - Section title: add `truncate` + `min-w-0` so flex clipping works; add `title={section.title}` for native tooltip on hover
    - Field label in `SortableField`: already has `truncate` — audit for the same `min-w-0` parent issue
    - Property-panel inputs: add `w-full` consistently so labels don't push inputs off-panel
 
-4. **Throughput React 18 → 19** (deferred to Phase 1 — needs full typecheck + test pass, not a Phase 0 quick win)
+4. **Throughput React 18 → 19** (Phase 6 — needs full typecheck + Vitest + optional Playwright pass, not a Phase 0 quick win)
 
 **Acceptance criteria for Phase 0**:
+
 - `pnpm typecheck` passes in `packages/schema-registry`, `packages/page-builder`, `packages/nav-core`, `crm7`
 - Visual confirmation in the user's browser that the clipped title now truncates with ellipsis and shows a tooltip
 - The three rule files contain the new Dependency Version Policy section
@@ -565,19 +627,23 @@ Phase 1 splits into **Phase 1a (Hot-Sync Fix)** and **Phase 1b (Airtable upgrade
 Per user direction (2026-05-01): *"Before building new features, consolidate the 4 duplicated Schema Builders into `@bsuite/schema-builder`. Extract the logic into a `useSchemaController` hook. Publish as a versioned package. Inject into the 4 apps."*
 
 **Deliverables**:
+0. **Ship DB migration `20260503000000_add_field_level_relations.sql`** (inlined in §2.6) + its rollback twin. MUST land in the dev Supabase project before any code work begins; Phase 1b column-level handles require these columns (`source_field_id`, `target_field_id`, `on_delete`, `on_update`) to exist.
+
 1. New `packages/schema-builder/` package scaffolded with tsc build pipeline + Vitest + tsup (matching `packages/schema-registry` layout)
-2. Port `crm7/src/pages/settings/schema-builder/*` into the package (canonical source)
+2. Port `crm7/src/pages/settings/schema-builder/*` into the package (canonical source — crm7 becomes the 4th consumer, collapsing its own route file to a thin wrapper)
 3. Extract all load / save / persist / subscribe logic into a single `useSchemaController` hook that owns:
    - TanStack Query reads (`tenant_entities`, `tenant_entity_relations`, `tenant_field_definitions`)
-   - TanStack Query mutations with `useOptimistic` (Vite) or Server Action bridge (Next.js) per §3.7
+   - TanStack Query mutations with native optimistic (Vite — see §3.7) or Server Action bridge via `useActionState` + `useOptimistic` (Next.js / conduit — see §3.7)
    - Supabase Realtime subscriptions per §3.8
-   - Zod-validated create / update / delete through `SchemaRelationSchema` + `EntityNodeDataSchema` (§3.9)
-4. Each of the 4 consumer apps replaces its implementation with a thin wrapper (~30 lines each) — net removal of ~1500 lines of duplicated code. Wrappers pass in `tenantId`, `appScope`, and optional entity filters.
-5. Cmd+K palette with the Phase-1a command subset (`Find Entity`, `Go to …`, `Toggle Edit Mode`) wired at each app shell — §3.10
-6. Publish `@bsuite/schema-builder@0.1.0` to npm
-7. 4 consumer PRs + 1 parent PR (package + ADR-0004 documenting the consolidation)
+   - Zod-validated create / update / delete through `SchemaRelationSchema` + `EntityNodeDataSchema` (§3.9), translated to DB column names via the alias table in §3.9
+4. **All four consumer apps collapse to thin wrappers (~30 lines each)** — this includes crm7 (whose current schema-builder page is the canonical source being extracted), business-suite-unified, conduit, braden, and R80.3. Net removal of ~1500 lines of duplicated code. Wrappers pass in `tenantId`, `appScope`, and optional entity filters.
+5. **Install shadcn `Command` (`cmdk`) in BSU / conduit / R80.3**: run `pnpm dlx shadcn@latest add command` once per app **from an isolated directory outside the bsuite tree per AGENTS.md pnpm-workspace lockfile rules**. crm7 and braden already have the component.
+6. **Wire Cmd+K palette with the Phase-1a command subset ONLY**: `Find Entity <name>` (fuzzy search + pan/zoom to picked node) and `Go to <page-path>` (fuzzy navigation). That is the entire Phase 1a Cmd+K surface — nothing else. *Full Cmd+K catalogue (`Add Column`, `Connect Tables`, `Tidy Up Layout`, `Toggle Edit Mode`, `Add to Page`, `Undo`, `Redo`, `Publish`) ships incrementally across Phases 1b, 3, and 5 — see §3.10.*
+7. Publish `@bsuite/schema-builder@0.1.0` to npm
+8. 4 consumer PRs + 1 parent PR (package + ADR-0004 documenting the consolidation)
 
 **Acceptance criteria for Phase 1a**:
+
 - All 4 apps show identical Schema Builder UI (pixel-matched to current CRM7 behaviour before any upgrades)
 - Each consumer file that previously held the canvas is ≤ 40 lines
 - `useSchemaController` has Vitest coverage for load / save / optimistic-rollback / Realtime-dedup paths
@@ -587,6 +653,7 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 #### Phase 1b — Airtable / dbdiagram upgrades (on top of 1a)
 
 **Deliverables**:
+
 1. Column-level handles per §3.6 item 1 (IDs use `${tableId}.${fieldId}.(left|right)` format)
 2. Crow's-foot cardinality markers per §3.6 item 2
 3. Dagre auto-layout per §3.6 item 3 with the pinned config (`LR`, `nodesep: 60`, `ranksep: 80`)
@@ -599,31 +666,35 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 10. Bump `@bsuite/schema-builder` → `0.2.0` + 4 consumer pin bumps
 
 **Acceptance criteria for Phase 1b**:
+
 - User drags `orders.customer_id` → `customers.id` and a 1:N relation is created automatically via `SchemaRelationSchema.parse()` → `useSchemaController.createRelation()`
 - "Tidy up" button arranges all entities in a sensible left-to-right tree layout within 100 ms for ≤100 entities
 - Crow's-foot markers render correctly for all 4 relation types
 - Two open tabs on the same tenant see each other's schema mutations within 500 ms (Realtime sync)
 - PNG export captures the full canvas (not just viewport)
 
-### Phase 2 — Supabase persistence for `PageGridLayout` + CASS resolver (1 session)
+### Phase 2 — CRM7 `custom_pages` rendering + layout resolver (1 session)
 
 **Deliverables**:
-1. Migration `20260502000000_tenant_page_layouts.sql` — creates `tenant_page_layouts` + `user_page_layout_overrides` tables with RLS
+
+1. Verify CRM7 `custom_pages`, `custom_page_blocks`, and `custom_page_revisions` schema coverage; add only additive columns required by ADR-0001 follow-ons if missing.
 2. New `LayoutAdapter` abstraction in `@bsuite/page-builder`:
    - `LocalStorageAdapter` (existing behavior, default for non-dev users)
-   - `SupabaseTenantAdapter` (writes when `manage_system` permission; reads for all)
-   - `CASSAdapter` (composes the two — user override on top of tenant default)
-3. Feature flag `page_layout_tenant_persistence` per tenant to gate rollout
-4. Backfill tool: one-click "migrate my localStorage to tenant default" for developers
+   - `CustomPagesAdapter` (reads published CRM7-authored pages for consumer apps)
+   - `ResolvedLayoutAdapter` (composes local per-user preference over published tenant defaults where applicable)
+3. Per-app `CustomPageRenderer` thin wrappers for BSU, conduit, R80.3, braden, throughput, and CRM7 routes.
+4. Atomic removal path for deprecated BSU `tenant_page_layouts` remains governed by ADR-0001, not this plan.
 
 **Acceptance criteria**:
-- Developer edits a dashboard page, clicks "Save for whole tenant", refreshes in incognito — sees the new layout
-- Non-developer edits are captured as user overrides (visible only to them)
-- Dual persistence coexists (per-user + tenant-wide) without conflicts
+
+- Tenant-authored pages render from CRM7 `custom_pages` in consumer apps via per-app wrappers.
+- Per-user dashboard layout preferences continue to work without writing to deprecated tables.
+- No new `tenant_page_layouts` table or BSU authoring surface is introduced.
 
 ### Phase 3 — Edit mode + style inspector (2 sessions)
 
 **Deliverables**:
+
 1. `EditModeProvider` + `usePermission` gate (requires `manage_system` on both client and server — see §8 Q7)
 2. `WidgetInspector` shadcn `Sheet` with 4 tabs (Style / Layout / Content / Data)
 3. Token-aware color picker — default swatches from theme CSS variables; "Custom" opens shadcn `Popover` with native `<input type="color">`. Persists CSS variable **name** (`var(--accent-primary)`) per §3.5 R1 refinement, not resolved hex.
@@ -634,14 +705,16 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 8. Cmd+K palette actions `Toggle Edit Mode`, `Undo`, `Redo`, `Add to Page …` wired per §3.10
 
 **Acceptance criteria**:
+
 - Developer presses `E` on any page with `manage_system` — edit mode activates, chrome appears
 - Clicking any card opens inspector; changing border radius updates live
 - Cmd+Z reverts; Cmd+Shift+Z re-applies
-- "Save for whole tenant" persists to `tenant_page_layouts` (Phase 2 dependency)
+- Published tenant-authored pages persist to CRM7 `custom_pages` (Phase 2 dependency)
 
 ### Phase 4 — Form Builder UX overhaul (1 session)
 
 **Deliverables**:
+
 1. Drag-from-palette into canvas works (currently only within-canvas DnD)
 2. Drop indicator shows where the field will land
 3. Inline double-click rename on sections and fields
@@ -650,6 +723,7 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 6. Style tab added to property panel (border, radius, padding per section)
 
 **Acceptance criteria**:
+
 - User drags a field from palette to an empty section and drops it successfully
 - Double-click section title → inline edit → Enter commits
 - "Preview" toggle shows the rendered form; "Edit" returns to builder
@@ -657,25 +731,28 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 ### Phase 5 — Custom page authoring (1 session)
 
 **Deliverables**:
-1. BSU `/developer/pages` gets a functional editor (currently placeholder)
-2. Editor writes to `custom_pages.layout` using the unified `PageGridLayout` + inspector
-3. Each consumer app's `CustomPageRenderer` is already thin — no consumer changes needed
+
+1. CRM7 custom page settings get the unified `PageGridLayout` + inspector authoring experience.
+2. Editor writes to `custom_pages.layout` / `custom_page_blocks` and revision history through the canonical CRM7 service.
+3. Each consumer app's `CustomPageRenderer` remains a thin per-app wrapper — no resurrected BSU authoring surface.
 4. "Publish to tenant" flow with revision history via `custom_page_revisions` (table already exists)
 5. Side-by-side diff view between current and previous revision
 
 **Acceptance criteria**:
-- Admin creates a new page in BSU, adds widgets, saves, publishes
-- Page appears in all 4 consumer apps at the configured route
+
+- Admin creates a new page in CRM7, adds widgets, saves, publishes
+- Page appears in all consumer apps at the configured route
 - Revision history shows diffs; rollback button reverts
 
 ### Phase 6 — `throughput` React 19 migration + polish
 
 **Deliverables**:
+
 1. `throughput` react / react-dom / @types/react → 19.2.4
 2. Full typecheck + Vitest run + Playwright (if configured)
 3. Fix any React 19 strict-mode / concurrent issues
 4. Update the Zero-Defer checklist in AGENTS.md confirming 100% React 19 parity
-5. Tighten shared-package `peerDependencies` from the Phase 0 `"react": "^19.0.0"` across the board — after throughput is on 19 this is a no-op, but it documents that the whole suite is React 19 only
+5. Re-evaluate whether shared-package `peerDependencies` should remain liberal or tighten after every consumer app is on React 19.
 6. Optional: DBML + SQL DDL exporters for Schema Builder (deferred from Phase 1b §3.6 item 8)
 7. Optional: persist undo/redo history to DB so it survives refresh (deferred from Phase 3 §4)
 8. CI lint enforcing the base-stack-only rule (blocks PRs that add runtime deps outside the §2.5 + §6 allow-list — enforces v1.01W's hard scope constraint mechanically)
@@ -692,18 +769,20 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
    bumping a dependency, verify against the reference matrix in
    `docs/dependencies/20260501-compatibility-matrix-v1.00W.md`.
 
-2. When ANY of the 4 production apps (BSU, crm7, conduit, braden, R80.3)
+2. When ANY of the production apps (BSU, crm7, conduit, braden, R80.3,
+   throughput, or mobile)
    bumps React, all shared packages (@bsuite/schema-registry,
-   @bsuite/page-builder, @bsuite/nav-core, @bsuite/schema-builder) MUST be
+   @bsuite/page-builder, @bsuite/nav-core, @bsuite/theme, @bsuite/ui,
+   @bsuite/schema-builder) MUST be
    bumped in the same PR or the next PR. CI will block if a shared package
    is behind the lowest consumer app version by more than one minor.
 
-3. Peer-dependency ranges for shared packages are PINNED to the current
-   active major (currently `"react": "^19.0.0"` — not `>=18 <21`). This
-   triggers a build-time error if any app (e.g. throughput) tries to
-   install them while still on React 18, per user direction 2026-05-01.
-   The corresponding devDependencies in each package MUST match the pinned
-   major so local tests reflect the peer contract exactly.
+3. Peer-dependency ranges for shared packages stay liberal unless a package
+   has an explicit, verified React-major incompatibility. The corresponding
+   devDependencies in each package MUST match the active consumer React major
+   so local tests reflect the suite's current runtime. Enforcement is via
+   `syncpack` (see item 8) for `react`, `react-dom`, `@types/react`, and
+   `@types/react-dom` devDependency drift.
 
 4. Use caret ranges (`^X.Y.Z`) for all dependencies that follow semver.
    Pinning exact versions (no caret) is reserved for native / build-tool
@@ -723,6 +802,10 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
    the master plan in the same PR. A CI lint script
    (`scripts/check-base-stack-only.sh`, delivered in Phase 6) diffs each
    PR's package.json changes against the allow-list and blocks on violation.
+   The script can reuse the same `pnpm dlx syncpack@latest list-mismatches`
+   invocation used for peer-dep enforcement (item 8), extended with an
+   allow-list check against the §2.5 + §6 tables so one tool catches both
+   classes of violation.
 
 8. Peer-dependency enforcement mechanism (item 3 implementation, delivered
    in Phase 0): use `syncpack` (https://github.com/JamieMason/syncpack —
@@ -773,7 +856,7 @@ As of 2026-05-01 the confirmed mutually-compatible versions are:
 | zod | `^4.x` | v4 is mono-package; both schema-registry peers `^3 || ^4` |
 | framer-motion | `^12.x` | React 19 compatible |
 | react-hook-form | `^7.x` | React 19 compatible |
-| `cmdk` | `^1.x` | shadcn Command primitive. Already installed in crm7 + braden; shadcn-standard dep, not a net-new library |
+| `cmdk` | ships with `pnpm dlx shadcn@latest add command` — **not a separate `package.json` entry** | shadcn Command primitive. Already present in crm7 + braden; BSU / conduit / R80.3 install it via the shadcn CLI in Phase 1a (from an isolated dir per AGENTS.md pnpm-workspace lockfile rules). Never add `"cmdk": "…"` manually to any `package.json` — it's a shadcn-transitive dep. |
 | `tailwind-merge` | `^2.x \|\| ^3.x` | Already installed everywhere via shadcn's `cn()` helper. Critical for the "edit borders" requirement (§3.5) |
 | `clsx` | `^2.x` | Companion to tailwind-merge in shadcn's `cn()` helper |
 
@@ -796,7 +879,7 @@ All other features in this plan use libraries already installed in the BSuite mo
 ## 7. Rollout & safety
 
 - Every phase ships as a parent PR + per-app PRs. Nothing merges until typecheck + tests pass in all 6 apps.
-- Phase 1–3 are behind a feature flag per tenant (`visual_editor_enabled`, default false except Braden pty ltd).
+- Phase 1a–3 are behind a feature flag per tenant (`visual_editor_enabled`, default false except Braden pty ltd).
 - Rollback plan: every new table has a corresponding `20260502000001_revert_*.sql` migration that restores the prior state non-destructively.
 - Phase 2+ require Supabase migration approval from the user before running in production.
 
@@ -810,10 +893,10 @@ Mark these ⬜ below and reply inline when reviewing:
 - [ ] **Q2**: Approve Phase 0 to execute immediately (this session)?
 - [x] **Q3**: ~~For the style inspector color picker…~~ **Locked (v1.02W §3.5 R1)**: token-aware defaults (CSS variable names, not hex) with shadcn `Popover` + native `<input type="color">` for "Custom" fallback.
 - [ ] **Q4**: CASS persistence — do you want "per-user override on tenant default" (most flexible, complex) or "tenant-wide only, no per-user" (simpler)? (Recommendation: CASS with a UI toggle at save time.)
-- [ ] **Q5**: Undo/redo scope — per-page-session (lost on navigate) or persisted to DB (survives refresh)? (Recommendation: per-session; DB persistence is a Phase 6 polish.)
+- [x] **Q5**: ~~Undo/redo scope…~~ **Locked (v1.03W §3.4 + §4 Phase 3 deliverable 4)**: per-page-session, zustand + `temporal` middleware, no DB persistence. DB persistence is a Phase 6 optional polish item.
 - [x] **Q6**: ~~Schema Builder column-level handles…~~ **Locked (v1.02W §3.6 item 1 + §3.9)**: column-level when the user drags from a field handle; entity-level as fallback when dropping on empty card chrome.
-- [ ] **Q7**: Editor keyboard shortcut `E` + Cmd+K palette mutations — should they require `manage_system` permission server-side, or just client-side gating? (Recommendation: both — client gate is UX, server RLS is the actual security boundary.)
-- [ ] **Q8** (new v1.02W): Phase 0 will tighten shared-package peer deps from `"react": ">=18 <21"` to `"react": "^19.0.0"`, per user direction. This is a no-op for the 4 current consumers (all React 19) and throughput is not a consumer of any shared package, so nothing breaks. Confirm proceed?
+- [x] **Q7**: ~~Editor keyboard shortcut `E` + Cmd+K palette mutations…~~ **Locked (v1.03W §4 Phase 3 deliverable 1)**: both client-side permission gates (UX) AND server-side RLS on canonical CRM7 `custom_pages` writes (security). Defense in depth per the brand-system security-audit skill.
+- [x] **Q8** (refined v1.03W): ~~Shared-package peerDependency tightening…~~ **Resolved in Phase 0**: keep peer ranges liberal and align React 19 devDependencies across shared packages so local tests match the active consumer runtime without unnecessarily breaking npm consumers.
 - [ ] **Q9** (new v1.02W): The Supabase RPC `apply_schema_relation(rel_id uuid)` that emits actual `ALTER TABLE … ADD CONSTRAINT` is powerful but risky. Ship it in Phase 1b as originally planned, or defer to a later explicit "Postgres DDL" phase behind its own feature flag + destructive-action confirmation UI? (Recommendation: defer — the metadata-only relation is enough for 99 % of CRM authoring use-cases.)
 - [ ] **Q10** (new v1.02W): Conduit (Next.js) gets real Server Actions (`'use server'`) while the 5 Vite apps get the `useOptimistic` + TanStack Query equivalent (§3.7). Both flow through the same `useSchemaController` hook, which picks the right primitive at build time. Confirm this split is acceptable, or do you want the Vite apps to also route through a /api route that mimics Server Actions (slower but uniform)?
 
@@ -821,7 +904,7 @@ Mark these ⬜ below and reply inline when reviewing:
 
 ## 9. Sign-off
 
-**Reviewed by:** _pending user_
+**Reviewed by:** *pending user*
 **Executed by:** Codebuff (Buffy) — Phase 0 this session, Phase 1a+ pending sign-off
 **Memory key:** `bsuite_universal_wysiwyg_plan_20260501`
 
@@ -839,7 +922,7 @@ The user appended a set of best-practice improvement notes to v1.01W; v1.02W int
 | "Dnd-kit/Sortable for Form Layout Builder" | Already present in §2.5 base-stack table + §2.3 confirming FormLayoutBuilder uses it |
 | "Arcade.js or Joyride for Cmd+K" → replaced with shadcn cmdk | §2.5 dropped-library table + §3.10 (shadcn `cmdk` Command with full command catalogue) |
 | "Tailwind Merge for edit-borders requirement" | §2.5 base-stack table (already installed everywhere via shadcn) + §4 Phase 3 step 7 |
-| "Strict peerDependency enforcement — react ^19.0.0" | §5 policy item 3 + Phase 0 deliverable + Phase 6 tightening |
+| "Strict React version enforcement" | §5 policy item 3 + Phase 0 deliverable + Phase 6 peer-policy re-evaluation |
 | "Phase 1.5 Hot-Sync Fix — useSchemaController hook" | §4 Phase 1a (Hot-Sync carve-out that MUST land before Phase 1b) |
 | CardinalitySchema / SchemaRelationSchema / EntityFieldSchema / EntityNodeDataSchema | §3.9 (cleaned, typed, with integration points documented) |
 | Concrete migration SQL (`20260503000000_add_field_level_relations.sql` + rollback twin) | §2.6 (inlined verbatim as the Phase 1a blocker, with RLS / CHECK / index / Realtime publication clauses ready to copy into `*/supabase/migrations/`) |
