@@ -10,12 +10,24 @@
  * `${entityId}.${fieldId}.${side}-${kind}` so SchemaCanvas#onConnect can parse
  * them back into `source_field_id` / `target_field_id` on the relation row.
  *
+ * Phase 2 edit affordance:
+ *   - A real `<button>` child (pencil icon) with `aria-label="Edit field X"`
+ *     is rendered on editable rows. This is the canonical focusable element
+ *     assistive tech and Playwright use to trigger the edit flow.
+ *   - A whole-row `onDoubleClick` handler fires the same event for mouse
+ *     users who remember the "double-click to edit" convention.
+ *   - The outer `<div>` does NOT have `role="button"`. ARIA forbids
+ *     interactive descendants (React Flow Handles) inside a role=button,
+ *     and the browser cannot compute an accessible name from a wrapper
+ *     that also contains truncated text + badges. The inner button is the
+ *     correct accessibility surface.
+ *
  * Memoised — large entities with 30+ fields would otherwise re-render every
  * row on every node drag.
  */
 
 import { Handle, Position } from '@xyflow/react';
-import { Key } from 'lucide-react';
+import { Key, Pencil } from 'lucide-react';
 import { memo } from 'react';
 
 import type { EntityField } from '../schemas.js';
@@ -42,15 +54,42 @@ function truncateType(t: string, max = 12): string {
   return `${t.slice(0, max - 1)}\u2026`;
 }
 
+function dispatchEditEvent(entityId: string, fieldId: string) {
+  window.dispatchEvent(
+    new CustomEvent('bsuite-edit-field', {
+      detail: { entityId, fieldId },
+    }),
+  );
+}
+
 function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
   const baseId = `${entityId}.${field.id}`;
   const showNotNull = !field.isNullable && !field.isPrimary;
+  // Primary keys and system entities are read-only; they don't get the
+  // pencil button or the double-click handler.
+  const isEditable = !field.isPrimary && !isSystemEntity;
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!isEditable) return;
+    // Stop React Flow's node-level doubleclick from also firing, which
+    // would open the EntityPropertiesPanel on top of the edit dialog.
+    e.stopPropagation();
+    dispatchEditEvent(entityId, field.id);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatchEditEvent(entityId, field.id);
+  };
 
   return (
     <div
-      className="nodrag relative flex h-7 items-center gap-2 px-3 text-[11px] last:rounded-b-xl"
+      className={`nodrag relative flex h-7 items-center gap-2 px-3 text-[11px] last:rounded-b-xl ${
+        isEditable ? 'hover:bg-neutral-50 dark:hover:bg-neutral-800/60' : ''
+      }`}
       data-field-id={field.id}
       data-system={isSystemEntity ? 'true' : undefined}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Left side handles */}
       <Handle
@@ -92,6 +131,18 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
       >
         {truncateType(field.type)}
       </span>
+
+      {isEditable ? (
+        <button
+          type="button"
+          onClick={handleEditClick}
+          aria-label={`Edit field ${field.name}`}
+          title={`Edit field ${field.name}`}
+          className="nodrag inline-flex h-4 w-4 shrink-0 items-center justify-center rounded text-neutral-500 opacity-50 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-neutral-400"
+        >
+          <Pencil className="h-3 w-3" aria-hidden="true" />
+        </button>
+      ) : null}
 
       {/* Right side handles */}
       <Handle
