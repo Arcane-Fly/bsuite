@@ -1,10 +1,12 @@
 # BSuite Master Roadmap
 
-**Version:** 5.02W
+**Version:** 5.03W
 **Date:** 2026-02-27
-**Last Updated:** 2026-04-14 (afternoon batch — post-TESTS rotation)
+**Last Updated:** 2026-05-01 (Phase 0 ratification; P0-15 rollup)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
+
+> **2026-05-01 ratification note:** Phase 0 is complete. The single execution queue for all remaining work is [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md). This roadmap remains the long-horizon planning reference; the merged backlog is the phase-ordered execution queue with atomic-replace governance per ADRs 0001–0006.
 
 > This is the **single source of truth** for BSuite project planning. Per-project roadmaps have been archived to `docs/archive/<project>/` and replaced with stubs pointing here.
 
@@ -14,7 +16,9 @@
 
 ### Canonical Sources
 
-- **Planning and delivery status:** this file (`docs/20260227-bsuite-master-roadmap-v5.00W.md`)
+- **Active execution queue (post-Phase 0 ratification):** [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md) — the single phase-ordered execution queue covering all remaining work across parent + 6 submodules + shared packages. Supersedes the consolidation role of the finish-line roadmap, outstanding-work ledger, and per-submodule OUTSTANDING files.
+- **Phase 0 ADRs (governance):** [`docs/adr/ADR-0001`](./adr/ADR-0001-page-builder-ownership.md) through [`docs/adr/ADR-0006`](./adr/ADR-0006-contact-propagation-doctrine.md) — atomic replace-and-remove doctrine; no `@deprecated` markers; no dual-path interim states.
+- **Planning and delivery status (long-horizon):** this file (`docs/20260227-bsuite-master-roadmap-v5.00W.md`)
 - **Authentication and session topology:** [`docs/AUTH-MAP.md`](./AUTH-MAP.md)
 - **Engineering standards and quality gates:** [`docs/20260227-contributing-standards-guide-v1.00W.md`](./20260227-contributing-standards-guide-v1.00W.md) and root `AGENTS.md`
 - **Implementation truth:** active repo files such as `package.json`, `vercel.json`, migrations, deployed function inventories, and tests
@@ -527,13 +531,13 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 24 | Braden visual customization | braden | 1w | — |
 | 25 | R80.3 PDF export improvements | R80.3 | 2d | — |
 | 26 | Test coverage push (70% target all projects) | all | ongoing | — |
-| 26a | CC-1: DashboardPageEditorDrawer accessibility — add `KeyboardSensor` + `sortableKeyboardCoordinates` + `aria-label` on grip buttons | crm7 | 2h | Gap report v2 CC-1 |
+| 26a | ~~CC-1: DashboardPageEditorDrawer accessibility — add `KeyboardSensor` + `sortableKeyboardCoordinates` + `aria-label` on grip buttons~~ | crm7 | ✅ Done (struck under P0-15 rollup 2026-05-01; tracked in merged backlog if re-opened) | Gap report v2 CC-1 |
 | 26b | CRM7 DRY one-shot: auto-population chains — apprentice select fills 6 related fields, claims/new auto-fills qualification/employer/dates | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 4 |
 | 26c | ~~CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`| crm7 | ✅ Done | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.00A.md) §3 Tier 3 |
 | 26d | CRM7 DRY one-shot: DB FK migrations — `employers.primary_contact_id`, `funding_sources.contact_id` + ContactSelector on 9 forms | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 3 |
-| 26e | @types/node upgrade to ^24.x across all 5 apps | all | 30m | Gap report v2 RT-7 |
-| 26f | pnpm version alignment to 10.32.1 (BSU, braden, conduit, R80.3 behind CRM7) | all | 30m | Gap report v2 RT-8 |
-| 26g | R80.3: add `@vitest/coverage-v8 ^4.0.0` (missing, blocks `pnpm test:coverage`) | R80.3 | 15m | Gap report v2 RT-9 |
+| 26e | ~~@types/node upgrade to ^24.x across all 5 apps~~ | all | ✅ Done (shipped pre-finish-line via 2026-04-14 DEPS rotation; struck under P0-15 rollup) | Gap report v2 RT-7 |
+| 26f | ~~pnpm version alignment to 10.32.1 (BSU, braden, conduit, R80.3 behind CRM7)~~ | all | ✅ Done (superseded by `packageManager: pnpm@10.30.3` canonical pin in `AGENTS.md`; struck under P0-15 rollup) | Gap report v2 RT-8 |
+| 26g | ~~R80.3: add `@vitest/coverage-v8 ^4.0.0` (missing, blocks `pnpm test:coverage`)~~ | R80.3 | ✅ Done (shipped pre-finish-line via 2026-04-14 DEPS rotation; struck under P0-15 rollup) | Gap report v2 RT-9 |
 | 26h | Conduit RBAC: document ✅ status — PermissionGate, middleware route protection, tenant role overrides, write-route pattern matching all confirmed implemented | conduit | — | [RBAC Design](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md) |
 
 ### P3 — Future
@@ -595,8 +599,8 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 | AUD-12 | @types/react-grid-layout ^2.1.0 all projects | ✅ Confirmed done (Gap v2 RT-5) |
 | AUD-13 | AI Strategic Vision features 1–4 + vector search + provider routing | 🔲 Added to roadmap as 27a–27g (P3 — future work) |
 | AUD-14 | DRY one-shot: auto-population chains + Tier-3 selectors + FK migrations | 🔲 Added to roadmap as 26b–26d (P2) |
-| AUD-15 | @types/node ^24.x upgrade + pnpm 10.32.1 alignment + R80.3 coverage-v8 | 🔲 Added to roadmap as 26e–26g (P2) |
-| AUD-16 | CC-1 DashboardPageEditorDrawer KeyboardSensor + aria | 🔲 Added to roadmap as 26a (P2) |
+| AUD-15 | @types/node ^24.x upgrade + pnpm 10.32.1 alignment + R80.3 coverage-v8 | ✅ Done (26e/26f/26g struck under P0-15 rollup 2026-05-01) |
+| AUD-16 | CC-1 DashboardPageEditorDrawer KeyboardSensor + aria | ✅ Done (26a struck under P0-15 rollup 2026-05-01) |
 | AUD-17 | R80.3 Wage Source Enhancements (CSV template, version control) | ✅ Complete (PR #51) |
 
 ---
@@ -615,10 +619,27 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 > **P4 Future:** Biped marketplace platform integration (shared auth, unified billing, cross-product analytics). Repo: `https://github.com/GaryOcean428/biped.git`. Deferred until core 5 BSuite projects are best-in-class.
 
+## Revision log
+
+- **2026-05-01 v5.03W** — Phase 0 ratification rollup (P0-15 of finish-line roadmap):
+  - Citation added: merged execution backlog (`20260501-merged-execution-backlog-v1.00W.md`) as the active phase-ordered execution queue post-ratification.
+  - Citation added: Phase 0 ADRs 0001–0006 as governance authority for atomic replace-and-remove.
+  - Struck P2 items #26a, #26e, #26f, #26g (shipped pre-finish-line via 2026-04-14 DEPS rotation, or superseded by canonical `AGENTS.md` pin). Titles wrapped in strikethrough; effort column set to ✅ Done.
+  - Audit Sprint Status: AUD-15 and AUD-16 marked ✅ Done (their rollup destinations 26e/26f/26g and 26a are now all struck).
+  - Last Updated line refreshed.
+- **2026-04-14 v5.02W** — post-TESTS rotation; 30+ PRs merged across all 5 apps covering DEPS → FEATURE → UI → UX → WL → TYPES → A11Y → DB → EDGE → TESTS → COMPETE rotation.
+- **2026-04-14 v5.01W** — full doc→roadmap audit across 6 repos (bsuite PR #136). 17 new entries, 13 confirmed complete, Audit Sprint Status table added.
+- **2026-02-27 v5.00W** — initial consolidation; per-project roadmaps archived to `docs/archive/<project>/`.
+
+---
+
 ## Related Documents
 
 | Document | Location |
 |----------|----------|
+| Active execution queue (post-Phase 0) | [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md) |
+| Phase 0 ADR index | [`docs/adr/README.md`](./adr/README.md) |
+| Phase 0 completion report | [`docs/20260501-phase-0-completion-report-v1.00W.md`](./20260501-phase-0-completion-report-v1.00W.md) |
 | Contributing Standards | [`docs/20260227-contributing-standards-guide-v1.00W.md`](./20260227-contributing-standards-guide-v1.00W.md) |
 | Email Capabilities Plan | [`docs/plans/20260227-email-capabilities-plan-v1.00W.md`](./plans/20260227-email-capabilities-plan-v1.00W.md) |
 | AI Assistant Plan | [`docs/plans/20260227-ai-assistant-plugin-system-plan-v1.00W.md`](./plans/20260227-ai-assistant-plugin-system-plan-v1.00W.md) |
