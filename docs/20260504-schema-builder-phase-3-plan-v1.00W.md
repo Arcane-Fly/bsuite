@@ -299,6 +299,22 @@ Neither is a Phase 3 deliverable.
 - **Workstream B:** [GaryOcean428/bsuite#344](https://github.com/GaryOcean428/bsuite/issues/344) — assigned `copilot-swe-agent`. Draft PR: [#345](https://github.com/GaryOcean428/bsuite/pull/345) (branch `copilot/feat-schema-builder-rename-column`)
 - **Workstream C:** [GaryOcean428/crm7#338](https://github.com/GaryOcean428/crm7/issues/338) — assigned `copilot-swe-agent`. Draft PR: [#339](https://github.com/GaryOcean428/crm7/pull/339) (branch `copilot/add-e2e-tenant-fixture-migration`)
 
+### Review status (updated 2026-04-28)
+
+All three Copilot PRs were opened, locally validated (worktree + merge-with-development), and reviewed in a single parent-agent session on 2026-04-28. Full review trail in `docs/OUTSTANDING.md` → §2 "Schema-Builder Phase 3 PRs — under review (2026-04-28)".
+
+| Workstream | PR | Verdict | Merge-blockers | Hardening follow-ups |
+|---|----|---------|----------------|----------------------|
+| **A — keyboard reorder** | [#346](https://github.com/GaryOcean428/bsuite/pull/346) | **Approve with polish** | none | (optional) announcement specificity (`"Moved {name} to position N of M"`) + focus-return-to-edit-button after reorder |
+| **B — rename column** | [#345](https://github.com/GaryOcean428/bsuite/pull/345) | **Request changes** | native `<dialog>` + `<details>` diverges from shadcn / Radix convention (§AGENTS.md §5) | 5 items tracked in OUTSTANDING.md (UX-correctness first: `affected_views` precision → stale-preview invalidation → reserved-keyword rejection → protected-table blocklist → TOCTOU hash) |
+| **C — e2e fixture** | [crm7#339](https://github.com/GaryOcean428/crm7/pull/339) | **Approve with polish** | none | document `CRM7_E2E_SEED_SUPABASE` in `.env.example` + README + CONTRIBUTING; decide whether to remove the vestigial `set_e2e_mode` GUC (transaction-scoped so effectively dead code) or keep as explicit defense-in-depth with a clarifying migration comment |
+
+**Severity recalibration (2026-04-28 addendum on #345):** initial review flagged 4 blockers for B; after verifying that `tenant_entities` is seeded with business-domain entities only (`contact`, `lead`, `apprentice`, `opportunity`, `employer`, etc. — NOT structural tables like `tenants`, `user_tenants`, `auth.*`) and that the existing RLS on `tenant_entities` prevents tenant admins from writing to system rows (`tenant_id IS NULL`), three of those four were recalibrated to "hardening follow-up" rather than merge-blocker. The SECURITY DEFINER function's actual attack-surface gates (`auth.uid()` null check, role verification, `format('%I')` quoting, pinned `search_path = ''`) are all correct. Addendum: [bsuite#345 issuecomment-4349518914](https://github.com/GaryOcean428/bsuite/pull/345#issuecomment-4349518914).
+
+**Test-infra prereq:** commit `3249f98` landed the `vitest@2.1.9` + `jsdom` + `@testing-library/jest-dom` `.rejects.toThrow` workaround (manual `.catch((e) => e)` + `toBeInstanceOf(Error)` + `.message` check) directly on `development` on 2026-04-28. This unblocked local CI on all three Phase 3 PRs; each branch will pick up the conflict-resolution on its next rebase. Tracked in `packages/schema-builder/docs/testing-notes.md`.
+
+**GitHub state (2026-04-28):** all 3 PRs `DRAFT` + `MERGEABLE: BLOCKED` pending rebase on post-`3249f98` development. Expect to flip green after Copilot's next push.
+
 **Branch-naming caveat:** Copilot chooses its own branch slug (not always `copilot/fix-<n>`). Poll with `gh pr list --head 'copilot/*' --author 'app/copilot-swe-agent'` to discover the actual name.
 
 Filed at 2026-05-04. Copilot typically opens a draft PR within 5–30 minutes of assignment (confirmed on this phase — all three draft PRs opened within ~5 min of issue filing).
