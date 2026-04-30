@@ -1,12 +1,26 @@
 # HANDOFF-1 — throughput trivial ship
 
 **Document**: `20260501-handoff-1-throughput-trivial-ship-v1.00W.md`
-**Status**: W (Working)
+**Status**: SUPERSEDED 2026-05-02 — work verified complete via other paths; see completion notice below
 **Owner**: Codebuff session
 **Submodule**: `throughput` (`/home/braden/Desktop/Dev/bsuite/throughput/`)
 **Default branch**: `main`
 **Package manager**: **claimed pnpm** (verify in Step 1) — divergent doc was npm pre-2026-04-25
 **Vercel project**: `throughput` (ID `prj_???`, see § 6 of continuation prompt)
+
+## ✅ Completion Notice (2026-05-02, Codebuff verification)
+
+**Status**: SUPERSEDED — work effectively complete before this handoff was executed.
+
+**Evidence of completion**:
+- PR #41 `chore(throughput): migrate from npm to pnpm@10.30.3` merged 2026-04-25.
+- `throughput/CLAUDE.md` on `origin/main` matches `origin/development` byte-for-byte (no pending doc update).
+- Working tree on `throughput/development` was clean at verification time.
+- The only residual `development→main` delta (`65da9db` jest→vitest doc fix in test examples) was shipped via PR #69 on 2026-05-02; `development` re-aligned via reconcile PR #71 using the `tandem-dev-main-reconcile` skill's Move 2 pattern. Parent submodule pointer bumped via bsuite#385.
+
+**Do not execute the original handoff steps below.** They describe work that is already done. The original content is preserved for audit-trail purposes.
+
+---
 
 ## Goal
 

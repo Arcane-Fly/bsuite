@@ -1,11 +1,25 @@
 # HANDOFF-2 — parent housekeeping
 
 **Document**: `20260501-handoff-2-parent-housekeeping-v1.00W.md`
-**Status**: W (Working)
+**Status**: SUPERSEDED 2026-05-02 — work verified complete via other paths; see completion notice below
 **Owner**: Codebuff session
 **Repo**: parent monorepo `/home/braden/Desktop/Dev/bsuite/`
 **Default branch**: `main`
 **Active branch**: `development` (4 ahead, 1 behind main; PR #322 already open)
+
+## ✅ Completion Notice (2026-05-02, Codebuff verification)
+
+**Status**: SUPERSEDED — work effectively complete via PR #323 Phase 0 ratification batch.
+
+**Evidence of completion**:
+- All handoff docs (continuation prompt + README + handoffs 1/2/3a/3b/3c/3d) are already on `origin/main` (verified via `git ls-tree origin/main docs/20260501-*.md`).
+- `AGENTS.md` on parent `development` has no delta vs `origin/main` at verification time.
+- Working tree on parent `development` was clean at verification time.
+- No open PR #322 remains; the parent dev→main promotion already shipped via prior PRs.
+
+**Do not execute the original handoff steps below.** They describe staging work that was already committed and merged. The original content is preserved for audit-trail purposes.
+
+---
 
 ## Goal
 
