@@ -7,6 +7,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { reorderEntityFields } from '../service.js';
+import { expectRejectsWithMessage } from './test-helpers.js';
 
 function mkMockClient(
   rpcResult: { data?: unknown; error?: unknown } = { data: null, error: null },
@@ -55,21 +56,10 @@ describe('reorderEntityFields', () => {
       data: null,
       error: { message: 'insufficient_privilege: admin or owner role required' },
     });
-    // NOTE: manual try/catch is used here (instead of
-    // `.rejects.toThrow(/regex/)`) because vitest 2.x's regex-matcher path
-    // stringifies the thrown Error's `.message` via a route that returns `''`
-    // for plain Error instances wrapping a stringified PostgREST error. The
-    // Error IS thrown with the right message — `.toBeInstanceOf(Error)` +
-    // `.message.toMatch(/regex/)` is the reliable check and is also more
-    // portable across vitest versions.
-    let caught: unknown;
-    try {
-      await reorderEntityFields(client, entityId, ['a']);
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).message).toMatch(/insufficient_privilege/);
+    await expectRejectsWithMessage(
+      reorderEntityFields(client, entityId, ['a']),
+      /insufficient_privilege/,
+    );
   });
 
   it('rejects when the RPC returns invalid_parameter_value for a partial array', async () => {
@@ -80,14 +70,10 @@ describe('reorderEntityFields', () => {
           "invalid_parameter_value: p_field_ids does not match the entity's active fields",
       },
     });
-    let caught: unknown;
-    try {
-      await reorderEntityFields(client, entityId, ['a']);
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).message).toMatch(/invalid_parameter_value/);
+    await expectRejectsWithMessage(
+      reorderEntityFields(client, entityId, ['a']),
+      /invalid_parameter_value/,
+    );
   });
 
   it('rejects when the RPC returns a duplicate-id error', async () => {
@@ -97,14 +83,10 @@ describe('reorderEntityFields', () => {
         message: 'invalid_parameter_value: p_field_ids contains duplicates',
       },
     });
-    let caught: unknown;
-    try {
-      await reorderEntityFields(client, entityId, ['a', 'a']);
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).message).toMatch(/duplicates/);
+    await expectRejectsWithMessage(
+      reorderEntityFields(client, entityId, ['a', 'a']),
+      /duplicates/,
+    );
   });
 
   it('rejects when the RPC returns a bare string error', async () => {

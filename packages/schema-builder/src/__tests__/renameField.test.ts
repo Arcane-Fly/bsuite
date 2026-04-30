@@ -7,6 +7,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { renamePhysicalColumn } from '../service.js';
+import { expectRejectsWithMessage } from './test-helpers.js';
 
 function mkMockClient(
   rpcResult: { data?: unknown; error?: unknown } = { data: null, error: null },
@@ -95,9 +96,6 @@ describe('renamePhysicalColumn', () => {
     expect(result.reason).toBe('no_physical_table');
   });
 
-  // NOTE: manual try/catch here (instead of `.rejects.toThrow(/regex/)`)
-  // because vitest 2.x's regex-matcher path stringifies plain Error instances
-  // wrapping PostgREST messages to `''`. Same workaround as reorderFields.test.ts.
   it('rejects with invalid_parameter_value when the RPC rejects the identifier', async () => {
     const client = mkMockClient({
       data: null,
@@ -106,16 +104,12 @@ describe('renamePhysicalColumn', () => {
           "invalid_parameter_value: p_new_name must match ^[a-z][a-z0-9_]{0,62}$ (got 1bad)",
       },
     });
-    let caught: unknown;
-    try {
-      await renamePhysicalColumn(client, entityId, fieldId, '1bad', {
+    await expectRejectsWithMessage(
+      renamePhysicalColumn(client, entityId, fieldId, '1bad', {
         dryRun: true,
-      });
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).message).toMatch(/invalid_parameter_value/);
+      }),
+      /invalid_parameter_value/,
+    );
   });
 
   it('rejects with insufficient_privilege when the caller lacks role', async () => {
@@ -126,16 +120,12 @@ describe('renamePhysicalColumn', () => {
           'insufficient_privilege: admin or owner role required for entity',
       },
     });
-    let caught: unknown;
-    try {
-      await renamePhysicalColumn(client, entityId, fieldId, 'email_address', {
+    await expectRejectsWithMessage(
+      renamePhysicalColumn(client, entityId, fieldId, 'email_address', {
         dryRun: true,
-      });
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).message).toMatch(/insufficient_privilege/);
+      }),
+      /insufficient_privilege/,
+    );
   });
 
   it('rejects with duplicate_column when the target name already exists', async () => {
@@ -146,16 +136,12 @@ describe('renamePhysicalColumn', () => {
           'invalid_parameter_value: duplicate_column — contact.email_address already exists',
       },
     });
-    let caught: unknown;
-    try {
-      await renamePhysicalColumn(client, entityId, fieldId, 'email_address', {
+    await expectRejectsWithMessage(
+      renamePhysicalColumn(client, entityId, fieldId, 'email_address', {
         dryRun: false,
-      });
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).message).toMatch(/duplicate_column/);
+      }),
+      /duplicate_column/,
+    );
   });
 
   it('propagates Error instances unchanged', async () => {
