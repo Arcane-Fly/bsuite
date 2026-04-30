@@ -340,7 +340,7 @@ Shared primitives still needed:
 - Complete keyboard-only end-to-end flow.
 - Ensure toast timing is at least 20 seconds or dismissable-on-focus where required.
 - Roll WCAG verification across CRM7, R80.3, Braden, Throughput, and Conduit.
-- Add or run `jest-axe` coverage where applicable.
+- Add or run `@axe-core/react` axe coverage where applicable (monorepo uses Vitest — not Jest).
 
 ### Supabase CRM Domain Audit
 

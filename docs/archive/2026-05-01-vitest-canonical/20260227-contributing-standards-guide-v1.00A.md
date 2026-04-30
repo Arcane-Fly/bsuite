@@ -1,3 +1,9 @@
+> **⚠ ARCHIVED 2026-05-01 — SUPERSEDED BY [`20260227-contributing-standards-guide-v1.01W.md`](./20260227-contributing-standards-guide-v1.01W.md)**
+>
+> This v1.00A snapshot contained the stale claim that the monorepo uses "Jest (Next.js projects) or Vitest (Vite projects)". Verified 2026-04-28: every project (6 apps) and shared package (3) in the bsuite monorepo uses Vitest — zero Jest installations. The corrected .01W working version is the live source of truth. This file is preserved as a historical reference only.
+
+---
+
 # BSuite Contributing Standards
 
 **Date:** 2026-02-27 | **Version:** 1.00W | **Status:** Working

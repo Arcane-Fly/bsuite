@@ -22,7 +22,7 @@ BSuite is a multi-project workspace of six web applications sharing Supabase, Ty
 - **State:** Zustand
 - **Forms:** React Hook Form + Zod
 - **Database:** Supabase (Auth, DB, Storage, Edge Functions)
-- **Testing:** Vitest (Vite projects), Jest (Next.js)
+- **Testing:** Vitest (all projects, including Next.js conduit) — verified 2026-04-28
 
 ---
 
@@ -74,7 +74,7 @@ The correct lockfile has `.:` as the only importer. A broken workspace lockfile 
 
 ## Quality Standards
 
-All standards are documented in `docs/20260227-contributing-standards-guide-v1.00W.md`. Key rules:
+All standards are documented in `docs/20260227-contributing-standards-guide-v1.01W.md`. Key rules:
 
 ### Code
 

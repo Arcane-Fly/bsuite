@@ -39,7 +39,7 @@ Do not generate regex for parsing structured data. Use:
 ### Testing
 
 - Co-locate tests with source: `ComponentName.test.ts`
-- Use Vitest for Vite projects, Jest for Next.js (conduit).
+- Use Vitest for all projects (Vite + Next.js conduit). Verified 2026-04-28.
 - Test business logic, hooks, and interactive components.
 
 ## Theme
