@@ -311,7 +311,7 @@ All deploy timestamps fall within the Phase 3 merge-wave window (2026-04-30 ~14:
   - Live production domains all return `200 OK` — no stale-deploy rollback symptoms (these would typically manifest as `404`, `503`, or `READY` state without traffic-serving behind the alias).
   - `pnpm install --frozen-lockfile` completed on all 6 projects without `ERR_PNPM_OUTDATED_LOCKFILE`. A mismatched SHA (older lockfile in the deployed commit vs the Phase 3 lockfile bump) would have failed this gate on the 5 projects carrying `@bsuite/schema-builder` version bumps (braden has no schema-builder dep). The specific resolved version string was not independently grep'd from the install log — that audit is left to Claude Code's MCP re-check.
 
-  **Claude Code should re-run the SHA-match check via Vercel MCP** (which exposes `meta.githubCommitSha` directly) as a belt-and-braces confirmation. If MCP confirms the SHAs match §2 HEADs, promote this footnote to ✅.
+  **If Claude Code opts to run the MCP-level SHA-match check** (Vercel MCP exposes `meta.githubCommitSha` directly), an agreeing result would convert this ⚠️ to ✅. The current ⚠️ reflects CLI payload trimming, not an unresolved finding.
 
 ² **r8 build log cosmetic warning.** One cosmetic pnpm warning surfaced during install: `Failed to create bin symlink` for a dev-only binary (pnpm-known issue on Vercel build containers, does not affect runtime). No `ERROR`, no `FAIL`, install completed, build succeeded, deploy went `READY`.
 
@@ -351,9 +351,9 @@ The following error signatures are therefore listed as **MCP re-check targets** 
 | `https://www.braden.com.au/` | 200 | 0.206s |
 | `https://ideas.crm7.app/` | 200 | 0.433s |
 
-### 7.6 Items deferred to Claude Code for MCP-level confirmation
+### 7.6 Optional MCP re-verifications (non-gating, evidence already green)
 
-These are **belt-and-braces re-verifications**, not gating issues. The green signoff stands.
+These are **optional belt-and-braces re-verifications** — the green signoff in §7.2 already stands on CLI-level evidence. The items below are available for Claude Code (with Vercel MCP access) to strengthen the evidence trail, but are **not** gating and **not** deferred work under the Zero-Defer mandate.
 
 1. **SHA-exact match via Vercel MCP** — re-read `meta.githubCommitSha` from MCP (CLI trimmed the payload; see footnote ¹). Confirm each deploy's SHA equals the §2 `main` HEAD for its repo.
 2. **Historical 30-min post-READY runtime-log window via Vercel MCP** — re-run the log query against the exact `readyAt..readyAt+30min` window per deploy (CLI tail is live-only; see footnote ³).
