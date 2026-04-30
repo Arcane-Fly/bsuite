@@ -39,6 +39,15 @@
 #   file on its own line with no leading/trailing whitespace. Check 3
 #   enforces that before doing the content diff.
 #
+# - This workflow requires the BSUITE_CROSS_REPO_PAT repository secret
+#   (fine-grained PAT with Contents: Read on GaryOcean428/business-suite-unified
+#   and the other 5 submodule repos: crm7, R80.3, braden, conduit, throughput).
+#   The default GITHUB_TOKEN is scoped only to the bsuite repo and will 404
+#   when actions/checkout tries to recursively clone the private sibling
+#   submodules. The same secret is consumed by
+#   .github/workflows/oauth-provider-check.yml — see that file's header for
+#   the canonical setup instructions.
+#
 # See packages/schema-builder/supabase/migrations/README.md for the sync
 # workflow and the anti-regression hard rule.
 
@@ -70,7 +79,20 @@ jobs:
     steps:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
+        # The default GITHUB_TOKEN is scoped to bsuite only and will 404 when
+        # recursive submodule checkout tries to clone the 6 private sibling
+        # repos (business-suite-unified, crm7, R80.3, braden, conduit,
+        # throughput). BSUITE_CROSS_REPO_PAT is a fine-grained PAT with
+        # Contents: Read on those repos (same secret consumed by
+        # oauth-provider-check.yml — keep both workflows in sync). If the
+        # secret is absent the fallback to GITHUB_TOKEN will fail loudly at
+        # the submodule fetch stage, making the misconfiguration visible
+        # rather than silently skipping the parity check. `submodules:
+        # recursive` matches supabase-migrate.yml for consistency; `true`
+        # would also work for this workflow since none of our submodules
+        # have nested submodules of their own.
         with:
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           submodules: recursive
 
       - name: Check 1 — every package dev-fixture has a BSU canonical twin
