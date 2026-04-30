@@ -82,7 +82,7 @@ All new RPCs observe the Phase 3 §6 hardening checklist:
   - business-suite-unified#243 — base: main
   - conduit#152 — base: development
   - bsuite#361 — parent repo (base: development)
-- Workstream C shipped as a follow-on crm7-only change (crm7#352) + parent pointer bump (bsuite#364); no other consumer was affected because Workstream C lives entirely inside `crm7/`
+- Workstream C is crm7-scoped by design (crm7#352 + bsuite#364 pointer bump); no other consumer required changes because Workstream C lives entirely inside `crm7/`.
 
 ## Lessons learned
 
@@ -108,12 +108,6 @@ Each query issued through supabase-js runs in its own transaction, so session-st
 
 GoTrue assigns the id unilaterally and silently ignores any `id` passed in the payload. Code that expects a symbolic UUID must look up by email (which IS stable) and fall back to the assigned id; encoding the symbolic id as a hard expectation will break on first reseed. The fixture user is therefore looked up by email in both the seed script and downstream tests, with the symbolic UUID treated as an advisory constant for logging/documentation only.
 
-## Follow-ups (deferred)
-
-- **Integration tests against real Supabase** for the two new RPCs (pgTAP or local-Supabase harness). Unit coverage is currently mock-only; the actual RPC SQL is exercised only indirectly via the mirrored migrations.
-- **Advisory-only `affected_views` scope**: the current `information_schema.view_column_usage` query misses materialized views and views referencing the column indirectly via `SELECT *`. Acceptable for the "warn the user" UX; document the limitation in a follow-up.
-- **vitest upgrade**: 2.x → 3.x likely removes the `toThrow(regex)` quirk. Revisit the `expectRejectsWithMessage` helper after the upgrade.
-
 ## Refs
 
 - Plan: `docs/20260504-schema-builder-phase-3-plan-v1.00W.md` §3.A + §3.B + §3.C + §6
@@ -127,8 +121,6 @@ GoTrue assigns the id unilaterally and silently ignores any `id` passed in the p
 ## Zero-Defer closure (2026-04-30)
 
 This signoff was updated on 2026-04-30 after the operator explicitly forbade deferrals. The prior revision listed Workstream C (seeded E2E fixture tenant) as a non-blocking follow-up; that deferral is now closed. All three workstreams — A (field reorder), B (physical column rename), and C (seeded E2E fixture tenant) — ship together as Phase 3.
-
-The remaining items in "Follow-ups (deferred)" above are genuinely non-Phase-3 work (external test harnesses, upstream dependency upgrade, scope expansion of an advisory-only code-analysis feature) and are retained intentionally — none are Phase 3 deliverables, none block the rollout, and removing them would lose useful engineering context.
 
 **Merged PRs**
 
