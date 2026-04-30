@@ -26,11 +26,16 @@ import {
   deleteEntityField,
   deleteSchemaEntity,
   deleteSchemaRelation,
+  renamePhysicalColumn,
+  reorderEntityFields,
   updateEntityField,
   updateSchemaEntity,
   updateSchemaRelation,
 } from '../service.js';
-import type { LooseSupabaseClient } from '../service.js';
+import type {
+  LooseSupabaseClient,
+  RenamePhysicalColumnResult,
+} from '../service.js';
 import type {
   AppScope,
   TenantEntity,
@@ -91,6 +96,34 @@ export interface SchemaController {
     updates: Partial<TenantFieldDefinition>,
   ) => Promise<TenantFieldDefinition>;
   deleteField: (id: string) => Promise<void>;
+  /**
+   * Phase 3A: atomically reorder the active fields of an entity. The id
+   * array must cover exactly the entity's active fields (no missing/extra/
+   * duplicate ids) — the `reorder_entity_fields` RPC rejects partial arrays
+   * with `invalid_parameter_value`. Optimistic cache update rolls back on
+   * error via the usual toast sink.
+   */
+  reorderFields: (
+    entityId: string,
+    orderedFieldIds: string[],
+  ) => Promise<void>;
+  /**
+   * Phase 3B: rename a field. By default (`physical` omitted or false) this
+   * is metadata-only — identical to `updateField(id, { field_name })` — and
+   * returns the updated field row. When `physical: true` is passed, the
+   * underlying Postgres column is renamed via the `rename_physical_column`
+   * SECURITY DEFINER RPC in a two-phase flow: the UI is expected to call
+   * with `dryRun: true` first, show the returned `would_execute` plus
+   * affected views/policies to the user, and only call again with
+   * `dryRun: false` on explicit confirmation. Every call writes an audit
+   * row to `schema_mutations_audit`.
+   */
+  renameField: (
+    entityId: string,
+    fieldId: string,
+    newName: string,
+    opts?: { physical?: boolean; dryRun?: boolean },
+  ) => Promise<RenamePhysicalColumnResult | TenantFieldDefinition>;
 }
 
 export function useSchemaController({
@@ -384,6 +417,41 @@ export function useSchemaController({
     onSettled: () => qc.invalidateQueries({ queryKey: fieldsKey }),
   });
 
+  const reorderFieldsMutation = useMutation({
+    mutationFn: ({
+      entityId,
+      orderedFieldIds,
+    }: {
+      entityId: string;
+      orderedFieldIds: string[];
+    }) => reorderEntityFields(supabase, entityId, orderedFieldIds),
+    onMutate: async ({ entityId, orderedFieldIds }) => {
+      await qc.cancelQueries({ queryKey: fieldsKey });
+      const prev = qc.getQueryData<TenantFieldDefinition[]>(fieldsKey);
+      // Optimistic: rewrite sort_order in cache so the UI reflects the new
+      // order instantly. `onSettled` re-fetches from Postgres to reconcile,
+      // and `onError` restores the pre-mutation snapshot below.
+      const indexMap = new Map(
+        orderedFieldIds.map((id, idx) => [id, idx] as const),
+      );
+      qc.setQueryData<TenantFieldDefinition[]>(fieldsKey, (old = []) =>
+        old.map((f) =>
+          f.entity_id === entityId && indexMap.has(f.id)
+            ? { ...f, sort_order: indexMap.get(f.id)! }
+            : f,
+        ),
+      );
+      return { prev };
+    },
+    onError: (err, _vars, ctx) => {
+      // Deterministic rollback — see createFieldMutation onError comment.
+      qc.setQueryData(fieldsKey, ctx?.prev ?? []);
+      onError?.('Failed to reorder fields', err);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: fieldsKey }),
+    onSuccess: () => onSuccess?.('Fields reordered'),
+  });
+
   const deleteFieldMutation = useMutation({
     mutationFn: (id: string) => deleteEntityField(supabase, id),
     onMutate: async (id) => {
@@ -463,6 +531,49 @@ export function useSchemaController({
     (id: string) => deleteFieldMutation.mutateAsync(id),
     [deleteFieldMutation],
   );
+  const reorderFields = useCallback(
+    (entityId: string, orderedFieldIds: string[]) =>
+      reorderFieldsMutation.mutateAsync({ entityId, orderedFieldIds }),
+    [reorderFieldsMutation],
+  );
+  const renameField = useCallback(
+    async (
+      entityId: string,
+      fieldId: string,
+      newName: string,
+      opts: { physical?: boolean; dryRun?: boolean } = {},
+    ): Promise<RenamePhysicalColumnResult | TenantFieldDefinition> => {
+      // Metadata-only path: identical to the existing updateField flow, so
+      // downstream cache invalidation, optimistic updates, and error toasts
+      // are unchanged.
+      if (!opts.physical) {
+        return updateFieldMutation.mutateAsync({
+          id: fieldId,
+          updates: { field_name: newName },
+        });
+      }
+      // Physical-rename path: bypass the mutation cache — the UI drives the
+      // two-phase confirm flow and refetches via invalidate on wet-run
+      // success. Query invalidation is handled in the wet-run success case
+      // below to keep the fields cache in sync with the DB rename.
+      const dryRun = opts.dryRun ?? true;
+      const result = await renamePhysicalColumn(
+        supabase,
+        entityId,
+        fieldId,
+        newName,
+        { dryRun },
+      );
+      if (!dryRun && result.executed) {
+        // ALTER TABLE succeeded — tenant_field_definitions.field_name was
+        // updated server-side too. Refetch so the canvas reflects the new
+        // name without waiting for the realtime event.
+        void qc.invalidateQueries({ queryKey: fieldsKey });
+      }
+      return result;
+    },
+    [supabase, updateFieldMutation, qc, fieldsKey],
+  );
 
   const fieldsByEntity = useMemo(() => {
     const out: Record<string, TenantFieldDefinition[]> = {};
@@ -496,5 +607,7 @@ export function useSchemaController({
     createField,
     updateField,
     deleteField,
+    reorderFields,
+    renameField,
   };
 }
