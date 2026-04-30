@@ -1,12 +1,27 @@
 # HANDOFF-3b — BSU P1-14 FK embed fix (sibling PR)
 
 **Document**: `20260501-handoff-3b-bsu-fk-embed-fix-v1.00W.md`
-**Status**: W (Working) — **READY FOR EXECUTION** (snapshot branch already exists on origin from cancelled-3a's Step 1)
+**Status**: SUPERSEDED 2026-05-02 — work verified complete via other paths; see completion notice below
 **Owner**: Codebuff session
 **Submodule**: `business-suite-unified`
 **Default branch**: `main` (verified 2026-05-01 — supersedes continuation prompt § 2.2 which claimed `master`)
 **Vercel project**: `business-suite` (ID `prj_OYfvQ2LzwnSFdV2DzxKHCl1H7ZBu`)
 **Note 2026-05-01**: HANDOFF-3a was cancelled (no auth-flicker fix existed on the source branch — see HANDOFF-3a's Cancellation Notice). HANDOFF-3a's Step 1 snapshot creation DID complete and force-pushed to origin as `fix/auth-tier-free-flicker-20260428-snapshot` (commit `c4870e8`). This handoff still works as written — the snapshot branch carries Admin.tsx + leadRoutingStore.ts ready for cherry-pick.
+
+## ✅ Completion Notice (2026-05-02, Codebuff verification)
+
+**Status**: SUPERSEDED — P1-14 fix already landed on `business-suite-unified/main`.
+
+**Evidence of completion**:
+- The Map-based join replacement pattern is already present on `origin/main`:
+  - `src/pages/Admin.tsx` lines 85/90 (`new Map` + `.in('id', userIds)`)
+  - `src/stores/leadRoutingStore.ts` lines 137/142 (same pattern)
+- The snapshot branch `fix/auth-tier-free-flicker-20260428-snapshot` has been deleted from `origin` (cleanup post-landing).
+- No open BSU PR matching `fix/bsu-fk-embed-*` exists.
+
+**Do not execute the original handoff steps below.** They describe a cherry-pick from a no-longer-existing snapshot branch to fix a bug that has already been fixed. The original content is preserved for audit-trail purposes.
+
+---
 
 ## Goal
 
