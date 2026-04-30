@@ -7,7 +7,7 @@
 | **Version** | v1.00W |
 | **Date** | 2026-04-30 |
 | **Package** | [`@bsuite/schema-builder@0.5.1`](https://www.npmjs.com/package/@bsuite/schema-builder/v/0.5.1) |
-| **Predecessor** | [`docs/20260504-schema-builder-phase-2-signoff-v1.00W.md`](./20260504-schema-builder-phase-2-signoff-v1.00W.md) (0.5.0) |
+| **Predecessor** | [`docs/20260504-schema-builder-phase-2-signoff-v1.00W.md`](./20260504-schema-builder-phase-2-signoff-v1.00W.md) (0.5.0)[^filename-dates] |
 | **Successor** | [`docs/20260504-schema-builder-phase-3-plan-v1.00W.md`](./20260504-schema-builder-phase-3-plan-v1.00W.md) (0.6.0 / 0.7.0) |
 | **Roadmap ref** | WYSIWYG / Schema Builder §3.6 + ADR-0003 canonical migration pattern |
 
@@ -23,13 +23,13 @@ Every row in this table is independently verifiable via the commands in §3. If 
 | 2 | 3 canonical SQL migrations present in BSU `supabase/migrations/` on `main` | `gh api repos/GaryOcean428/business-suite-unified/contents/supabase/migrations?ref=main --jq '.[] \| select(.name \| startswith("2026050")) \| .name'` | ✅ 3 files (see §3.2) |
 | 3 | `-- @sync-boundary-below` marker present in each of the 3 canonical BSU migrations AND matching pkg fixtures | `grep -l '@sync-boundary-below' business-suite-unified/supabase/migrations/2026050*.sql packages/schema-builder/supabase/migrations/2026050*.sql` | ✅ 6 matches (3 + 3) |
 | 4 | `ON DELETE CASCADE` (not `SET NULL`) on `tenant_field_relations` FKs + idempotent repair block | `grep -A3 'REFERENCES tenant_field_definitions' business-suite-unified/supabase/migrations/20260503000000_add_field_level_relations.sql \| grep CASCADE` | ✅ 2 CASCADE refs |
-| 5 | `reflect_entity_schema` RPC has `SET search_path = ''` and schema whitelist guard | `grep -E "search_path \|whitelist" business-suite-unified/supabase/migrations/20260504000000_schema_reflection_rpc.sql` | ✅ both present |
-| 6 | CI parity workflow live on bsuite `main` (3 checks + aggregation verdict) | `gh api repos/GaryOcean428/bsuite/contents/.github/workflows/schema-builder-migration-parity.yml?ref=main --jq '.size'` | ✅ 12 237 bytes |
+| 5 | `reflect_entity_schema` RPC has `SET search_path = ''` and `p_schema`-parameter whitelist guard | `grep -E "search_path \|p_schema" business-suite-unified/supabase/migrations/20260504000000_schema_reflection_rpc.sql` | ✅ both present (guard uses the `p_schema` parameter in an `IN (…)` / `NOT IN (…)` check — exact form varies but `p_schema` is always referenced) |
+| 6 | CI parity workflow live on bsuite `main` (3 checks + aggregation verdict) | `gh api repos/GaryOcean428/bsuite/contents/.github/workflows/schema-builder-migration-parity.yml?ref=main --jq '.name'` | ✅ file present (size is ~12 KiB; whitespace tweaks may drift the exact byte count — don't rely on it) |
 | 7 | CI parity workflow uses `BSUITE_CROSS_REPO_PAT` for submodule checkout auth | `grep BSUITE_CROSS_REPO_PAT .github/workflows/schema-builder-migration-parity.yml` | ✅ matches `oauth-provider-check.yml` pattern |
 | 8 | Parent `bsuite/main` submodule pointer reachable from BSU `main` (no dangling ref) | `(cd business-suite-unified && git merge-base --is-ancestor 0ee8527 origin/main) && echo '✓'` | ✅ reachable |
-| 9 | 5 PRs all merged, 3 feature branches deleted on both remotes | `gh pr list --state merged --search 'schema-builder'` across both repos | ✅ 5/5 merged, 0 orphan branches |
+| 9 | 5 PRs all merged, 3 feature branches deleted on both remotes | `for pr in 352 353 354; do gh pr view $pr --repo GaryOcean428/bsuite --json state --jq .state; done && for pr in 239 240; do gh pr view $pr --repo GaryOcean428/business-suite-unified --json state --jq .state; done` | ✅ 5× `MERGED`, 0 orphan branches (enumerated explicitly because `--search 'schema-builder'` doesn't match PR titles that use 'mirror' / 'promote' / 'migrations' wording) |
 | 10 | `.gitattributes` enforces LF on SQL in both mirror dirs | `cat packages/schema-builder/supabase/migrations/.gitattributes business-suite-unified/supabase/migrations/.gitattributes` | ✅ both present, `eol=lf linguist-language=SQL` |
-| 11 | README.md hard rule banner in pkg migrations dir | `head -20 packages/schema-builder/supabase/migrations/README.md \| grep 'HARD RULE'` | ✅ banner present |
+| 11 | README.md hard rule banner in pkg migrations dir | `head -20 packages/schema-builder/supabase/migrations/README.md \| grep -F 'HARD RULE'` | ✅ banner present (use `-F` for fixed-string matching so the ⚠️ emoji prefix doesn't confuse the regex engine) |
 | 12 | CHANGELOG.md `0.5.1` entry uses real git dates + Keep-a-Changelog format + `[Unreleased]` slot | `head -40 packages/schema-builder/CHANGELOG.md` | ✅ all present |
 
 **Aggregate verdict:** ✅ **12 / 12 GREEN** — initial task (migration canonicalisation) is complete and verifiable.
@@ -139,6 +139,8 @@ Deleted on both remotes after merge:
 - `business-suite-unified`: `chore/mirror-schema-builder-migrations-20260501`
 
 Verify via `git ls-remote origin 'chore/*schema*'` on each repo → zero matches.
+
+> **Note:** 8 additional *unrelated* orphan branches from prior sessions (5× `chore/*-20260501` submodule-wrangling branches + 2× `copilot/feat-schema-builder-*` rejected Phase 3 drafts on bsuite + 1× `copilot/add-e2e-tenant-fixture-migration` rejected Phase 3C draft on crm7) were swept concurrently as part of Phase 0 of the ship-all-apps run that produced this doc. Those 8 are **not** part of the 0.5.1 release and had already-closed PRs; they're mentioned here only to explain the discrepancy if a reader sees '8 orphan branches deleted' elsewhere and wonders why only 3 appear above.
 
 ### 3.6 — Local parity check (reproducible on any checkout of `main`)
 
@@ -291,6 +293,10 @@ Nothing. 0.5.1 is feature-complete as a migration-canonicalisation-and-CI-guardr
 - `editor-multi-prompt` (×4 rounds) — SQL hardening, CI workflow polish, CHANGELOG, dual Fix A/B error messages
 - `code-reviewer-multi-prompt` (×4 rounds) — security focus on `SECURITY DEFINER`, adversary simulation on Check 2, go/no-go verdict
 - `basher` — parity check runs, git operations, npm publish, PR ops
+
+---
+
+[^filename-dates]: The predecessor's filename date (`20260504`) is later than this doc's (`20260430`) because filenames use the repo's forward-dated YYYYMMDD convention while the metadata date reflects the actual merge date. The chronology is: 0.5.0 Phase 2 signed off *before* the 0.5.1 canonicalisation work began; the five 0.5.1 merges all landed on 2026-04-30, hence this doc's filename uses that date.
 
 ---
 
