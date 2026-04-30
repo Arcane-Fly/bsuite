@@ -31,6 +31,7 @@ import {
 } from 'react';
 
 import type { SchemaController } from '../hooks/useSchemaController.js';
+import type { RenamePhysicalColumnResult } from '../service.js';
 import type {
   AppScope,
   RelationType,
@@ -134,6 +135,11 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       entityId: string;
       fieldId: string;
     } | null>(null);
+    // Phase 3A accessibility: announce successful reorders via a polite
+    // aria-live region. `announcementKey` forces React to swap the text node
+    // so screen readers re-announce even identical repeat moves.
+    const [announcement, setAnnouncement] = useState<string>('');
+    const [announcementKey, setAnnouncementKey] = useState<number>(0);
     const pendingConnection = useRef<Connection | null>(null);
     const flowRef = useRef<ReactFlowInstance<
       Node<EntityNodeData>,
@@ -512,6 +518,56 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       return () => window.removeEventListener('bsuite-add-field', handler);
     }, [addFieldToSelectedEntity]);
 
+    // Phase 3A: FieldRow dispatches `bsuite-reorder-field` when the user
+    // presses Alt+ArrowUp / Alt+ArrowDown on a focused edit button. We
+    // resolve the new order from controller.fields[entityId] (sorted by
+    // sort_order ASC, tiebreak by created_at to match the DB ordering) and
+    // call `controller.reorderFields` — which does the optimistic cache
+    // update + RPC round-trip. No-op when the field is already at a
+    // boundary (topmost + up, bottommost + down).
+    useEffect(() => {
+      const handler = (e: Event) => {
+        const ce = e as CustomEvent<{
+          entityId: string;
+          fieldId: string;
+          direction: 'up' | 'down';
+        }>;
+        const { entityId, fieldId, direction } = ce.detail ?? {};
+        if (!entityId || !fieldId || !direction) return;
+        const entity = controller.entities.find((en) => en.id === entityId);
+        if (!entity || entity.is_system) return;
+        const current = (controller.fields[entityId] ?? [])
+          .slice()
+          .sort((a, b) => {
+            const sa = a.sort_order ?? 0;
+            const sb = b.sort_order ?? 0;
+            if (sa !== sb) return sa - sb;
+            return (a.created_at ?? '').localeCompare(b.created_at ?? '');
+          });
+        const idx = current.findIndex((f) => f.id === fieldId);
+        if (idx === -1) return;
+        const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (targetIdx < 0 || targetIdx >= current.length) return;
+        const moved = current[idx];
+        const next = current.slice();
+        next.splice(idx, 1);
+        next.splice(targetIdx, 0, moved);
+        const orderedIds = next.map((f) => f.id);
+        controller
+          .reorderFields(entityId, orderedIds)
+          .then(() => {
+            setAnnouncement(
+              `Field ${moved.field_name} moved ${direction === 'up' ? 'up' : 'down'}`,
+            );
+            setAnnouncementKey((k) => k + 1);
+          })
+          .catch(() => {});
+      };
+      window.addEventListener('bsuite-reorder-field', handler);
+      return () =>
+        window.removeEventListener('bsuite-reorder-field', handler);
+    }, [controller]);
+
     // Phase 2: FieldRow dispatches `bsuite-edit-field` on double-click.
     // We gate on entity being user-editable (not system) here too so that
     // any future caller (e.g. a keyboard shortcut) gets the same guard.
@@ -622,6 +678,19 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
 
     return (
       <div className="flex h-full w-full">
+        {/* Phase 3A: hidden a11y announcer for keyboard reorder moves.
+            Rendered outside the canvas wrapper so it's never captured by
+            the PNG export. `key` swaps the text node to force re-announce. */}
+        <div
+          key={announcementKey}
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+          data-testid="bsuite-schema-announcer"
+        >
+          {announcement}
+        </div>
         <div ref={wrapperRef} className="relative h-full flex-1">
           {canvasContent}
           {showToolbar ? (
@@ -749,6 +818,20 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
               onDelete={() => {
                 controller.deleteField(field.id).catch(() => {});
                 setFieldEditContext(null);
+              }}
+              onRenamePhysical={async (newName, opts) => {
+                // Phase 3B: the two-phase dry-run → wet-run flow is owned by
+                // the dialog. `renameField` with `physical: true` forwards to
+                // the `rename_physical_column` RPC; metadata-only renames go
+                // through `updateField` via the dialog's fast path and never
+                // hit this callback.
+                const result = (await controller.renameField(
+                  entity.id,
+                  field.id,
+                  newName,
+                  { physical: true, dryRun: opts.dryRun },
+                )) as RenamePhysicalColumnResult;
+                return result;
               }}
             />
           );

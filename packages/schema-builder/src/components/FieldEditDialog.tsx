@@ -1,5 +1,5 @@
 /**
- * FieldEditDialog — Phase 2 (v0.5.0).
+ * FieldEditDialog — Phase 2 (v0.5.0) + Phase 3B (v0.7.0).
  *
  * Sibling of FieldCreateDialog for editing an existing
  * tenant_field_definitions row. Pre-populates every input from the `field`
@@ -14,20 +14,19 @@
  * tests short and means future UX tweaks can be applied in one pass across
  * both dialogs.
  *
- * ⚠ Rename semantics:
- * Editing `field_name` here updates the `tenant_field_definitions` metadata
- * row ONLY. It does NOT rename the underlying Postgres column (which would
- * require an `ALTER TABLE ... RENAME COLUMN` migration and coordinated
- * deploys across all consumers). Downstream queries referencing the old
- * name via the reflection RPC (§3.6 item 4) or raw SQL will continue to
- * work; queries that join against `tenant_field_definitions.field_name`
- * will see the new name immediately. In practice this means `field_name`
- * edits are safe for soft, metadata-driven widgets (Form Builder / Page
- * Builder) but unsafe for anything bound to the physical column name.
+ * Rename semantics:
+ * Editing `field_name` here is metadata-only by default; an opt-in
+ * disclosure (§3.B — Phase 3B) allows also renaming the physical column via
+ * a dry-run → confirm → wet-run flow. Without the opt-in, the underlying
+ * Postgres column keeps its old name and raw-SQL consumers continue to work
+ * against the old identifier. Metadata-driven widgets (Form Builder / Page
+ * Builder) resolve through `tenant_field_definitions.field_name` and pick up
+ * the new name immediately.
  */
 
 import { Save, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useRef, useState } from 'react';
+import type { RenamePhysicalColumnResult } from '../service.js';
 import type { FieldType, TenantFieldDefinition } from '../types.js';
 import {
   FIELD_TYPE_OPTIONS,
@@ -63,6 +62,19 @@ export interface FieldEditDialogProps {
   existingFieldNames?: string[];
   onSave: (payload: FieldEditDialogPayload) => void;
   onDelete: () => void;
+  /**
+   * Phase 3B — opt-in physical-column rename. When provided, a disclosure
+   * appears under the form whenever `field_name` differs from the initial
+   * value. Callers must support both dry-run (preview) and wet-run
+   * (execute) modes via the `opts.dryRun` flag; the dialog calls dry-run
+   * first to populate the confirmation step and wet-run only after the
+   * user confirms. When omitted, the disclosure is hidden and rename
+   * remains metadata-only.
+   */
+  onRenamePhysical?: (
+    newName: string,
+    opts: { dryRun: boolean },
+  ) => Promise<RenamePhysicalColumnResult>;
 }
 
 interface FormState {
@@ -71,6 +83,8 @@ interface FormState {
   label: string;
   placeholder: string;
   isRequired: boolean;
+  /** Phase 3B: user has ticked the "also rename Postgres column" checkbox. */
+  physicalRenameRequested: boolean;
 }
 
 type FormAction =
@@ -79,6 +93,7 @@ type FormAction =
   | { type: 'SET_TYPE'; value: FieldType }
   | { type: 'SET_PLACEHOLDER'; value: string }
   | { type: 'TOGGLE_REQUIRED' }
+  | { type: 'TOGGLE_PHYSICAL_RENAME' }
   | { type: 'INIT'; field: TenantFieldDefinition };
 
 const EMPTY_STATE: FormState = {
@@ -87,6 +102,7 @@ const EMPTY_STATE: FormState = {
   label: '',
   placeholder: '',
   isRequired: false,
+  physicalRenameRequested: false,
 };
 
 /**
@@ -105,6 +121,7 @@ function initialStateFromField(field: TenantFieldDefinition): FormState {
     label: field.label ?? field.field_name,
     placeholder: field.placeholder ?? '',
     isRequired: !!field.is_required,
+    physicalRenameRequested: false,
   };
 }
 
@@ -120,6 +137,11 @@ function formReducer(state: FormState, action: FormAction): FormState {
       return { ...state, placeholder: action.value };
     case 'TOGGLE_REQUIRED':
       return { ...state, isRequired: !state.isRequired };
+    case 'TOGGLE_PHYSICAL_RENAME':
+      return {
+        ...state,
+        physicalRenameRequested: !state.physicalRenameRequested,
+      };
     case 'INIT':
       return initialStateFromField(action.field);
     default:
@@ -146,6 +168,22 @@ function validateFieldName(
   return null;
 }
 
+/**
+ * Phase 3B — state machine for the two-phase physical rename flow.
+ *
+ *   idle            → no physical rename in progress
+ *   running-dry     → awaiting dry-run RPC
+ *   confirming      → dry-run returned; showing confirmation dialog
+ *   running-wet     → user confirmed; awaiting wet-run RPC
+ *   error           → dry-run OR wet-run failed; showing error inline
+ */
+type PhysicalRenameState =
+  | { phase: 'idle' }
+  | { phase: 'running-dry' }
+  | { phase: 'confirming'; result: RenamePhysicalColumnResult }
+  | { phase: 'running-wet'; result: RenamePhysicalColumnResult }
+  | { phase: 'error'; message: string };
+
 export function FieldEditDialog({
   open,
   onOpenChange,
@@ -155,12 +193,17 @@ export function FieldEditDialog({
   existingFieldNames = [],
   onSave,
   onDelete,
+  onRenamePhysical,
 }: FieldEditDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const confirmDialogRef = useRef<HTMLDialogElement>(null);
   const [state, dispatch] = useReducer(
     formReducer,
     field ? initialStateFromField(field) : EMPTY_STATE,
   );
+  const [renameState, setRenameState] = useState<PhysicalRenameState>({
+    phase: 'idle',
+  });
 
   // Render-time reset keyed on `field.id`: when the parent swaps this
   // dialog between different fields (or toggles from null -> a field),
@@ -170,6 +213,7 @@ export function FieldEditDialog({
   if (prevFieldId !== fieldId) {
     setPrevFieldId(fieldId);
     if (field) dispatch({ type: 'INIT', field });
+    setRenameState({ phase: 'idle' });
   }
 
   // Native <dialog> imperative open/close — mirrors FieldCreateDialog.
@@ -180,6 +224,18 @@ export function FieldEditDialog({
     else if (!open && el.open) el.close();
   }, [open]);
 
+  // Open / close the secondary confirm <dialog> based on rename state.
+  useEffect(() => {
+    const el = confirmDialogRef.current;
+    if (!el) return;
+    const shouldBeOpen =
+      renameState.phase === 'confirming' ||
+      renameState.phase === 'running-wet' ||
+      renameState.phase === 'error';
+    if (shouldBeOpen && !el.open) el.showModal();
+    else if (!shouldBeOpen && el.open) el.close();
+  }, [renameState.phase]);
+
   if (!field) return null;
 
   const ownName = field.field_name;
@@ -188,18 +244,44 @@ export function FieldEditDialog({
     existingFieldNames,
     ownName,
   );
-  const canSubmit = state.fieldName.length > 0 && nameError === null;
+  const canSubmit =
+    state.fieldName.length > 0 &&
+    nameError === null &&
+    renameState.phase !== 'running-dry' &&
+    renameState.phase !== 'running-wet';
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const fieldNameChanged = state.fieldName !== ownName;
+  const showPhysicalDisclosure =
+    typeof onRenamePhysical === 'function' && fieldNameChanged;
+
+  const buildPayload = (): FieldEditDialogPayload => ({
+    field_name: state.fieldName,
+    field_type: state.fieldType,
+    label: state.label.trim() || state.fieldName,
+    placeholder: state.placeholder.trim() || null,
+    is_required: state.isRequired,
+  });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onSave({
-      field_name: state.fieldName,
-      field_type: state.fieldType,
-      label: state.label.trim() || state.fieldName,
-      placeholder: state.placeholder.trim() || null,
-      is_required: state.isRequired,
-    });
+    // Fast path: no physical rename requested — behave exactly like Phase 2.
+    if (!state.physicalRenameRequested || !onRenamePhysical) {
+      onSave(buildPayload());
+      return;
+    }
+    // Phase 3B: dry-run first so the user sees the exact DDL + affected
+    // views/policies before any destructive change runs.
+    setRenameState({ phase: 'running-dry' });
+    try {
+      const result = await onRenamePhysical(state.fieldName, { dryRun: true });
+      setRenameState({ phase: 'confirming', result });
+    } catch (err) {
+      setRenameState({
+        phase: 'error',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
   };
 
   const handleCancel = () => onOpenChange(false);
@@ -215,188 +297,363 @@ export function FieldEditDialog({
     if (ok) onDelete();
   };
 
-  return (
-    <dialog
-      ref={dialogRef}
-      onClose={() => onOpenChange(false)}
-      className="w-[min(520px,90vw)] rounded-lg border border-neutral-200 bg-white p-0 shadow-xl backdrop:bg-black/50 dark:border-neutral-700 dark:bg-neutral-900"
-      aria-labelledby="field-edit-dialog-title"
-    >
-      <form onSubmit={handleSubmit} className="p-6">
-        <h2
-          id="field-edit-dialog-title"
-          className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100"
-        >
-          <Save className="h-5 w-5 text-blue-500" aria-hidden="true" />
-          Edit Field in {entityLabel}
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Entity:{' '}
-          <code className="rounded bg-neutral-100 px-1 font-mono text-xs dark:bg-neutral-800">
-            {entityName}
-          </code>
-        </p>
+  const handleConfirmWetRun = async () => {
+    if (renameState.phase !== 'confirming' || !onRenamePhysical) return;
+    const dryResult = renameState.result;
+    setRenameState({ phase: 'running-wet', result: dryResult });
+    try {
+      const wet = await onRenamePhysical(state.fieldName, { dryRun: false });
+      if (!wet.executed) {
+        setRenameState({
+          phase: 'error',
+          message:
+            wet.reason === 'no_physical_table'
+              ? 'No physical table exists for this entity; only the metadata name will change.'
+              : 'Rename did not execute. Please try again.',
+        });
+        return;
+      }
+      setRenameState({ phase: 'idle' });
+      onSave(buildPayload());
+    } catch (err) {
+      setRenameState({
+        phase: 'error',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
 
-        <div className="mt-4 space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="field-edit-name"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
-            >
-              Field Name
-            </label>
-            <input
-              id="field-edit-name"
-              type="text"
-              autoFocus
-              value={state.fieldName}
-              onChange={(e) =>
-                dispatch({ type: 'SET_NAME', value: e.target.value })
-              }
-              aria-invalid={nameError !== null}
-              aria-describedby={
-                nameError ? 'field-edit-name-error' : 'field-edit-name-hint'
-              }
-              aria-required="true"
-              className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-900 ${
-                nameError
-                  ? 'border-red-500 dark:border-red-600'
-                  : 'border-neutral-200 dark:border-neutral-700'
-              }`}
-            />
-            {nameError ? (
-              <p
-                id="field-edit-name-error"
-                role="alert"
-                className="text-[10px] text-red-600 dark:text-red-400"
+  const handleCancelConfirm = () => {
+    setRenameState({ phase: 'idle' });
+  };
+
+  const confirmResult =
+    renameState.phase === 'confirming' || renameState.phase === 'running-wet'
+      ? renameState.result
+      : null;
+
+  return (
+    <>
+      <dialog
+        ref={dialogRef}
+        onClose={() => onOpenChange(false)}
+        className="w-[min(520px,90vw)] rounded-lg border border-neutral-200 bg-white p-0 shadow-xl backdrop:bg-black/50 dark:border-neutral-700 dark:bg-neutral-900"
+        aria-labelledby="field-edit-dialog-title"
+      >
+        <form onSubmit={handleSubmit} className="p-6">
+          <h2
+            id="field-edit-dialog-title"
+            className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+          >
+            <Save className="h-5 w-5 text-blue-500" aria-hidden="true" />
+            Edit Field in {entityLabel}
+          </h2>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Entity:{' '}
+            <code className="rounded bg-neutral-100 px-1 font-mono text-xs dark:bg-neutral-800">
+              {entityName}
+            </code>
+          </p>
+
+          <div className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="field-edit-name"
+                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
               >
-                {nameError}
-              </p>
-            ) : (
+                Field Name
+              </label>
+              <input
+                id="field-edit-name"
+                type="text"
+                autoFocus
+                value={state.fieldName}
+                onChange={(e) =>
+                  dispatch({ type: 'SET_NAME', value: e.target.value })
+                }
+                aria-invalid={nameError !== null}
+                aria-describedby={
+                  nameError ? 'field-edit-name-error' : 'field-edit-name-hint'
+                }
+                aria-required="true"
+                className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-900 ${
+                  nameError
+                    ? 'border-red-500 dark:border-red-600'
+                    : 'border-neutral-200 dark:border-neutral-700'
+                }`}
+              />
+              {nameError ? (
+                <p
+                  id="field-edit-name-error"
+                  role="alert"
+                  className="text-[10px] text-red-600 dark:text-red-400"
+                >
+                  {nameError}
+                </p>
+              ) : (
+                <p
+                  id="field-edit-name-hint"
+                  className="text-[10px] text-neutral-500 dark:text-neutral-400"
+                >
+                  Column identifier. Lowercase letters, digits, and underscores.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="field-edit-type"
+                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+              >
+                Field Type
+              </label>
+              <select
+                id="field-edit-type"
+                value={state.fieldType}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_TYPE',
+                    value: e.target.value as FieldType,
+                  })
+                }
+                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              >
+                {FIELD_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="field-edit-label"
+                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+              >
+                Display Label
+              </label>
+              <input
+                id="field-edit-label"
+                type="text"
+                value={state.label}
+                onChange={(e) =>
+                  dispatch({ type: 'SET_LABEL', value: e.target.value })
+                }
+                placeholder="Shown to end users"
+                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+                aria-describedby="field-edit-label-hint"
+              />
               <p
-                id="field-edit-name-hint"
+                id="field-edit-label-hint"
                 className="text-[10px] text-neutral-500 dark:text-neutral-400"
               >
-                Column identifier. Lowercase letters, digits, and underscores.
+                Shown to end users in forms and tables.
               </p>
-            )}
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="field-edit-placeholder"
+                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+              >
+                Placeholder (optional)
+              </label>
+              <input
+                id="field-edit-placeholder"
+                type="text"
+                value={state.placeholder}
+                onChange={(e) =>
+                  dispatch({ type: 'SET_PLACEHOLDER', value: e.target.value })
+                }
+                placeholder="e.g. jane@example.com"
+                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="field-edit-required"
+                type="checkbox"
+                checked={state.isRequired}
+                onChange={() => dispatch({ type: 'TOGGLE_REQUIRED' })}
+                className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800"
+              />
+              <label
+                htmlFor="field-edit-required"
+                className="text-sm text-neutral-700 dark:text-neutral-300"
+              >
+                Required field
+              </label>
+            </div>
+
+            {showPhysicalDisclosure ? (
+              <details
+                className="rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/40"
+                data-testid="field-edit-physical-disclosure"
+              >
+                <summary className="cursor-pointer text-xs font-medium text-amber-800 dark:text-amber-300">
+                  Advanced: also rename the underlying Postgres column
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <p className="text-[11px] text-amber-800 dark:text-amber-200">
+                    Raw SQL queries and views referencing the old column name
+                    will break. Metadata-driven widgets (Form Builder / Page
+                    Builder) are unaffected.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="field-edit-rename-physical"
+                      type="checkbox"
+                      checked={state.physicalRenameRequested}
+                      onChange={() =>
+                        dispatch({ type: 'TOGGLE_PHYSICAL_RENAME' })
+                      }
+                      className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-2 focus:ring-amber-500 dark:border-amber-700 dark:bg-amber-950"
+                    />
+                    <label
+                      htmlFor="field-edit-rename-physical"
+                      className="text-xs text-amber-900 dark:text-amber-100"
+                    >
+                      Also rename the underlying Postgres column (advanced,
+                      destructive)
+                    </label>
+                  </div>
+                </div>
+              </details>
+            ) : null}
           </div>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="field-edit-type"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
-            >
-              Field Type
-            </label>
-            <select
-              id="field-edit-type"
-              value={state.fieldType}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_TYPE',
-                  value: e.target.value as FieldType,
-                })
-              }
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
-            >
-              {FIELD_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="field-edit-label"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
-            >
-              Display Label
-            </label>
-            <input
-              id="field-edit-label"
-              type="text"
-              value={state.label}
-              onChange={(e) =>
-                dispatch({ type: 'SET_LABEL', value: e.target.value })
-              }
-              placeholder="Shown to end users"
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
-              aria-describedby="field-edit-label-hint"
-            />
-            <p
-              id="field-edit-label-hint"
-              className="text-[10px] text-neutral-500 dark:text-neutral-400"
-            >
-              Shown to end users in forms and tables.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="field-edit-placeholder"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
-            >
-              Placeholder (optional)
-            </label>
-            <input
-              id="field-edit-placeholder"
-              type="text"
-              value={state.placeholder}
-              onChange={(e) =>
-                dispatch({ type: 'SET_PLACEHOLDER', value: e.target.value })
-              }
-              placeholder="e.g. jane@example.com"
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              id="field-edit-required"
-              type="checkbox"
-              checked={state.isRequired}
-              onChange={() => dispatch({ type: 'TOGGLE_REQUIRED' })}
-              className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800"
-            />
-            <label
-              htmlFor="field-edit-required"
-              className="text-sm text-neutral-700 dark:text-neutral-300"
-            >
-              Required field
-            </label>
-          </div>
-        </div>
-
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-red-300 bg-white px-3 text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-700 dark:bg-neutral-900 dark:text-red-400 dark:hover:bg-red-950"
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            Delete Field
-          </button>
-          <div className="flex items-center gap-3">
+          <div className="mt-6 flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={handleCancel}
+              onClick={handleDelete}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-red-300 bg-white px-3 text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-700 dark:bg-neutral-900 dark:text-red-400 dark:hover:bg-red-950"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Delete Field
+            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                className="inline-flex h-9 items-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {renameState.phase === 'running-dry'
+                  ? 'Checking\u2026'
+                  : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </dialog>
+
+      {/* Phase 3B confirmation dialog — shown only when the user opted into
+          the physical rename path. Renders the exact DDL + affected views /
+          policies returned by the dry-run, and captures explicit consent
+          before the wet-run ALTER TABLE is executed. */}
+      <dialog
+        ref={confirmDialogRef}
+        onClose={handleCancelConfirm}
+        className="w-[min(560px,92vw)] rounded-lg border border-amber-300 bg-white p-0 shadow-xl backdrop:bg-black/50 dark:border-amber-800 dark:bg-neutral-900"
+        aria-labelledby="field-edit-confirm-title"
+      >
+        <div className="p-6">
+          <h3
+            id="field-edit-confirm-title"
+            className="text-base font-semibold text-amber-800 dark:text-amber-300"
+          >
+            Confirm physical column rename
+          </h3>
+          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+            This will execute the following statement against the production
+            database. It cannot be rolled back automatically.
+          </p>
+
+          {confirmResult ? (
+            <div className="mt-4 space-y-3">
+              <pre className="overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-3 font-mono text-[11px] text-neutral-800 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100">
+                {confirmResult.would_execute ?? '(no DDL returned)'}
+              </pre>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                    Affected views ({confirmResult.affected_views?.length ?? 0})
+                  </p>
+                  {confirmResult.affected_views?.length ? (
+                    <ul className="mt-1 space-y-0.5 text-[11px] text-neutral-700 dark:text-neutral-300">
+                      {confirmResult.affected_views.map((v) => (
+                        <li key={v} className="font-mono">
+                          {v}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1 text-[11px] text-neutral-500">None</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                    Affected policies (
+                    {confirmResult.affected_policies?.length ?? 0})
+                  </p>
+                  {confirmResult.affected_policies?.length ? (
+                    <ul className="mt-1 space-y-0.5 text-[11px] text-neutral-700 dark:text-neutral-300">
+                      {confirmResult.affected_policies.map((p) => (
+                        <li key={p} className="font-mono">
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1 text-[11px] text-neutral-500">None</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {renameState.phase === 'error' ? (
+            <div
+              role="alert"
+              className="mt-4 rounded-md border border-red-300 bg-red-50 p-3 text-[11px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+            >
+              {renameState.message}
+            </div>
+          ) : null}
+
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCancelConfirm}
               className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
             >
               Cancel
             </button>
             <button
-              type="submit"
-              disabled={!canSubmit}
-              className="inline-flex h-9 items-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              onClick={handleConfirmWetRun}
+              disabled={
+                renameState.phase !== 'confirming' &&
+                renameState.phase !== 'error'
+              }
+              className="inline-flex h-9 items-center rounded-md bg-amber-600 px-4 text-sm font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Save Changes
+              {renameState.phase === 'running-wet'
+                ? 'Renaming\u2026'
+                : 'Rename column'}
             </button>
           </div>
         </div>
-      </form>
-    </dialog>
+      </dialog>
+    </>
   );
 }
