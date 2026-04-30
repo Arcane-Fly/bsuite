@@ -19,68 +19,68 @@ Canonical source of truth for scope delivered, design deviations, and lessons le
 
 #### Parent bsuite (11)
 
-| PR | One-liner |
+| PR | Title |
 |---|---|
-| [#361](https://github.com/GaryOcean428/bsuite/pull/361) | package + migrations (Phase 3 A+B core) |
-| [#362](https://github.com/GaryOcean428/bsuite/pull/362) | submodule bumps + original signoff doc |
-| [#363](https://github.com/GaryOcean428/bsuite/pull/363) | docs-archive-sweep submodule pointers + Phase 3 lockfile |
-| [#364](https://github.com/GaryOcean428/bsuite/pull/364) | crm7 pointer post-Workstream-C merge |
-| [#365](https://github.com/GaryOcean428/bsuite/pull/365) | parent dev→main promotion (first) |
-| [#366](https://github.com/GaryOcean428/bsuite/pull/366) | signoff doc: close Workstream C deferral per Zero-Defer mandate |
-| [#367](https://github.com/GaryOcean428/bsuite/pull/367) | BSU migration parity + dry-lint exemption for `schema_mutations_audit` |
-| [#368](https://github.com/GaryOcean428/bsuite/pull/368) | crm7 pointer for spec tightening (#354) |
-| [#369](https://github.com/GaryOcean428/bsuite/pull/369) | parent dev→main promotion (second) |
-| [#370](https://github.com/GaryOcean428/bsuite/pull/370) | parent dev→main promotion (final alignment) |
-| [#371](https://github.com/GaryOcean428/bsuite/pull/371) | post-promotion back-merge main→dev (sync divergence) |
+| [#361](https://github.com/GaryOcean428/bsuite/pull/361) | `feat(schema-builder): 0.7.0 — Phase 3 A+B (field reorder + physical column rename)` |
+| [#362](https://github.com/GaryOcean428/bsuite/pull/362) | `chore(bsuite): Phase 3 A+B submodule bump + signoff doc` |
+| [#363](https://github.com/GaryOcean428/bsuite/pull/363) | `chore(bsuite): bump submodule pointers for docs-archive-sweep (2026-04-30 wave)` |
+| [#364](https://github.com/GaryOcean428/bsuite/pull/364) | `chore(bsuite): bump crm7 submodule pointer post-Workstream-C merge` |
+| [#365](https://github.com/GaryOcean428/bsuite/pull/365) | `chore(bsuite): promote development → main (Phase 3 A+B+C complete, zero deferrals)` |
+| [#366](https://github.com/GaryOcean428/bsuite/pull/366) | `docs(phase3): close Workstream C deferral + remove Follow-ups per Zero-Defer mandate` |
+| [#367](https://github.com/GaryOcean428/bsuite/pull/367) | `fix(bsuite): mirror Phase 3 schema-builder migrations into BSU + dry-lint exemption` |
+| [#368](https://github.com/GaryOcean428/bsuite/pull/368) | `chore(bsuite): bump crm7 submodule pointer for spec tightening` |
+| [#369](https://github.com/GaryOcean428/bsuite/pull/369) | `chore(bsuite): promote development → main (final Zero-Defer alignment)` |
+| [#370](https://github.com/GaryOcean428/bsuite/pull/370) | `chore(bsuite): promote development → main (BSU migration parity + dry-lint fix)` |
+| [#371](https://github.com/GaryOcean428/bsuite/pull/371) | `chore(bsuite): back-merge main → dev + align crm7 submodule pointer` |
 
 Note: `bsuite#350` was closed without merging (obsolete tracker PR superseded by the in-house Phase 3 rollout).
 
 #### crm7 (6)
 
-| PR | One-liner |
+| PR | Title |
 |---|---|
-| [#350](https://github.com/GaryOcean428/crm7/pull/350) | bump `@bsuite/schema-builder` to `^0.7.0` |
-| [#351](https://github.com/GaryOcean428/crm7/pull/351) | docs-archive-sweep (markdown hygiene only) |
-| [#352](https://github.com/GaryOcean428/crm7/pull/352) | **Workstream C — seeded E2E fixture tenant** (migration + seed script + Playwright fixtures) |
-| [#353](https://github.com/GaryOcean428/crm7/pull/353) | dev→main promotion |
-| [#354](https://github.com/GaryOcean428/crm7/pull/354) | spec tightening — strict assertion on `widget_name` fixture field |
-| [#355](https://github.com/GaryOcean428/crm7/pull/355) | dev→main promotion (carries #354) |
+| [#350](https://github.com/GaryOcean428/crm7/pull/350) | `chore(crm7): bump @bsuite/schema-builder to ^0.7.0 (Phase 3 A+B)` |
+| [#351](https://github.com/GaryOcean428/crm7/pull/351) | `chore(crm7): archive shipped docs (2026-04-30 wave)` |
+| [#352](https://github.com/GaryOcean428/crm7/pull/352) | **`feat(schema-builder): Workstream C — seeded E2E fixture tenant`** |
+| [#353](https://github.com/GaryOcean428/crm7/pull/353) | `chore: promote development → main (Phase 3 A+B+C complete)` |
+| [#354](https://github.com/GaryOcean428/crm7/pull/354) | `chore(e2e): tighten seeded-mode assertion to fixture widget_name field` |
+| [#355](https://github.com/GaryOcean428/crm7/pull/355) | `chore(crm7): promote development → main (spec tightening #354)` |
 
 #### R80.3 (3)
 
-| PR | One-liner |
+| PR | Title |
 |---|---|
-| [#136](https://github.com/GaryOcean428/R80.3/pull/136) | bump `@bsuite/charge-calc` to `^0.2.3` |
-| [#137](https://github.com/GaryOcean428/R80.3/pull/137) | docs-archive-sweep |
-| [#138](https://github.com/GaryOcean428/R80.3/pull/138) | dev→main promotion |
+| [#136](https://github.com/GaryOcean428/R80.3/pull/136) | `chore(r80): bump @bsuite/schema-builder to ^0.7.0 (Phase 3 A+B)` |
+| [#137](https://github.com/GaryOcean428/R80.3/pull/137) | `chore(r80): archive shipped docs (2026-04-30 wave)` |
+| [#138](https://github.com/GaryOcean428/R80.3/pull/138) | `chore: promote development → main (Phase 3 A+B+C complete)` |
 
 #### conduit (3)
 
-| PR | One-liner |
+| PR | Title |
 |---|---|
-| [#152](https://github.com/GaryOcean428/conduit/pull/152) | schema-builder consumer bump (where applicable) |
-| [#153](https://github.com/GaryOcean428/conduit/pull/153) | docs-archive-sweep |
-| [#154](https://github.com/GaryOcean428/conduit/pull/154) | dev→main promotion |
+| [#152](https://github.com/GaryOcean428/conduit/pull/152) | `chore(conduit): bump @bsuite/schema-builder to ^0.7.0 (Phase 3 A+B)` |
+| [#153](https://github.com/GaryOcean428/conduit/pull/153) | `chore(conduit): archive shipped docs (2026-04-30 wave)` |
+| [#154](https://github.com/GaryOcean428/conduit/pull/154) | `chore: promote development → main (Phase 3 A+B+C complete)` |
 
 #### business-suite-unified (3)
 
-| PR | One-liner |
+| PR | Title |
 |---|---|
-| [#243](https://github.com/GaryOcean428/business-suite-unified/pull/243) | schema-builder consumer alignment |
-| [#244](https://github.com/GaryOcean428/business-suite-unified/pull/244) | docs-archive-sweep |
-| [#245](https://github.com/GaryOcean428/business-suite-unified/pull/245) | **BSU migration parity — mirror Phase 3 `schema_mutations_audit` as canonical** |
+| [#243](https://github.com/GaryOcean428/business-suite-unified/pull/243) | `chore(bsu): bump @bsuite/schema-builder to ^0.7.0 (Phase 3 A+B)` |
+| [#244](https://github.com/GaryOcean428/business-suite-unified/pull/244) | `chore(bsu): archive shipped docs (2026-04-30 wave)` |
+| [#245](https://github.com/GaryOcean428/business-suite-unified/pull/245) | **`chore(bsu): mirror Phase 3 schema-builder migrations as canonical`** |
 
 #### braden (1)
 
-| PR | One-liner |
+| PR | Title |
 |---|---|
-| [#171](https://github.com/GaryOcean428/braden/pull/171) | docs-archive-sweep (2026-04-30 wave) |
+| [#171](https://github.com/GaryOcean428/braden/pull/171) | `chore(braden): archive shipped docs (2026-04-30 wave)` |
 
 #### throughput (1)
 
-| PR | One-liner |
+| PR | Title |
 |---|---|
-| [#67](https://github.com/GaryOcean428/throughput/pull/67) | docs-archive-sweep (2026-04-30 wave) |
+| [#67](https://github.com/GaryOcean428/throughput/pull/67) | `chore(throughput): archive shipped docs (2026-04-30 wave)` |
 
 ---
 
@@ -102,16 +102,16 @@ Default-branch HEAD SHAs captured at handoff time. All 6 submodule pointers in p
 
 ## 3. Vercel Deploy Snapshot at Handoff
 
-Captured via `vercel ls <project> --scope braden-pty-ltd` at ~2026-04-30T14:45Z.
+Captured via `vercel ls <project> --scope braden-pty-ltd` at the time of this doc's creation (2026-04-30). These are pointers to freeze-frame the snapshot — fresher deploys may exist by the time you read this; cross-check against §2 HEADs using the §4 procedure.
 
-| Vercel project | Production domain | Latest Production deploy URL | Age at handoff | Status |
-|---|---|---|---|---|
-| `business-suite` | `suite.crm7.app` | *(see `vercel ls business-suite`; most recent Production row)* | 27m | ● Ready |
-| `crm7` | `crm.crm7.app` | *(see `vercel ls crm7`; most recent Production row)* | 20m | ● Ready |
-| `r8` | `r8.crm7.app` | *(see `vercel ls r8`; most recent Production row)* | 56m | ● Ready |
-| `conduit` | `conduit.crm7.app` | `https://conduit-lbisxsgnw-braden-pty-ltd.vercel.app` | 57m | ● Ready |
-| `braden` | `www.braden.com.au` | `https://braden-ov1cmd6uv-braden-pty-ltd.vercel.app` | 1h | ● Ready |
-| `throughput` | `ideas.crm7.app` | `https://throughput-8ej3u26jp-braden-pty-ltd.vercel.app` | 1h | ● Ready |
+| Vercel project | Production domain | Most recent Production deploy URL at handoff | Status |
+|---|---|---|---|
+| `business-suite` | `suite.crm7.app` | `https://business-suite-c3fg69wi6-braden-pty-ltd.vercel.app` | ● Ready |
+| `crm7` | `crm.crm7.app` | `https://crm7-hlevczn4r-braden-pty-ltd.vercel.app` | ● Ready |
+| `r8` | `r8.crm7.app` | `https://r8-qgggnqx7r-braden-pty-ltd.vercel.app` | ● Ready |
+| `conduit` | `conduit.crm7.app` | `https://conduit-lbisxsgnw-braden-pty-ltd.vercel.app` | ● Ready |
+| `braden` | `www.braden.com.au` | `https://braden-ov1cmd6uv-braden-pty-ltd.vercel.app` | ● Ready |
+| `throughput` | `ideas.crm7.app` | `https://throughput-8ej3u26jp-braden-pty-ltd.vercel.app` | ● Ready |
 
 **Git-level:** all Production deploys are `READY`.
 
@@ -136,24 +136,54 @@ Use your **Vercel MCP tools** (preferred) or **Vercel CLI** as fallback to verif
 
 Run for **`business-suite`**, **`crm7`**, **`r8`**, **`conduit`**, **`braden`**, **`throughput`**.
 
-1. **Commit SHA match.** Latest Production deployment's `meta.githubCommitSha` (or the equivalent MCP field) **must match** the `main` HEAD in the table in §2. If it does not, the deploy is stale — find out why (paused project, failed build, auto-deploy disabled, superseded by a rollback).
+**Work against CURRENT latest Production deploys, not the handoff snapshot.** The §3 URLs are freeze-frame pointers — run a fresh `vercel ls <project>` first and verify the latest Production row. Use the §3 URLs only as tiebreakers if you see something unexpected ("was this broken at handoff or is this new?"). All checks below apply to the CURRENT latest Production deploy per project.
+
+1. **Commit SHA match.** Run `vercel inspect <deployment-url> --scope braden-pty-ltd` and compare the `meta.githubCommitSha` field (MCP field may also be called `gitSource.sha` or similar) against the `main` HEAD in §2. The Vercel runtime also exposes this as `VERCEL_GIT_COMMIT_SHA` in deployment env. If the deployed SHA is older than the §2 HEAD **AND** the deploy was created before 2026-04-30T14:00Z (when Phase 3 PRs started merging), the deploy is stale — find out why (paused project, failed build, auto-deploy disabled, superseded by a rollback). If the deployed SHA is *newer* than §2, that just means `main` advanced after handoff — not a red flag, just verify the newer deploy is also `READY` and carry on.
 2. **Build logs clean.** No `ERROR`, no `FAIL`, no `EADDRINUSE`, no `EACCES`. Warnings are allowed, but flag anything mentioning `schema-builder`, `charge-calc`, `migrations`, `supabase`, `pnpm-lock`, or `Peer dependency`.
-3. **Runtime logs (last 30 min post-deploy).** No 5xx responses. No `TypeError`, `ReferenceError`, `SyntaxError`. No `Cannot find module`. No `Invalid client credentials`, `JWT expired`, or `RLS policy violation`.
-4. **Runtime env vars sanity.**
-   - For **crm7 only**: confirm `CRM7_E2E_PASSWORD` is **NOT** set in Production. It is an E2E-only fixture credential — if present in Production, that is an exposure bug.
-   - For **all**: confirm `SUPABASE_URL` points at `tuybltdrdefjblnplpqo`.
+3. **Runtime logs (30-min window starting from the deploy's READY timestamp).** `vercel logs <deployment-url> --scope braden-pty-ltd --since <READY timestamp> --until <READY timestamp + 30min>`. No 5xx responses. No `TypeError`, `ReferenceError`, `SyntaxError`. No `Cannot find module`. No `Invalid client credentials`, `JWT expired`, or `RLS policy violation`. If the deploy became READY more than 30 min ago, use the 30-min window immediately after READY — do not use "last 30 min" (which may be a quiet period well after the risky cold-start traffic).
+4. **Runtime env vars sanity.** Note: `vercel env ls production --scope braden-pty-ltd` only returns **names**, not values. To check values, either:
+   - Run `vercel env pull .env.production.tmp --environment=production --scope braden-pty-ltd` inside the project dir, then `grep SUPABASE_URL .env.production.tmp` and discard the file (do NOT commit it). OR
+   - `curl -s https://<domain>/ | grep -oE 'https://[a-z0-9]+\.supabase\.co' | head -1` — the Supabase URL is typically embedded in the client bundle.
+
+   Checks:
+   - For **crm7 only**: confirm `CRM7_E2E_PASSWORD` is **NOT** listed in `vercel env ls production` output. It is an E2E-only fixture credential — if present in Production, that is an exposure bug.
+   - For **all**: confirm the `SUPABASE_URL` (or `VITE_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` depending on framework) value includes `tuybltdrdefjblnplpqo`.
 5. **Live domain smoke test.** `curl -I https://<domain>` returns 200 (or 307 for auth-gated apps). Follow any redirect chain.
 
 ### 4.2 Project-specific concerns
 
 - **crm7** — Workstream C added migration `crm7/supabase/migrations/20260507000000_e2e_fixture_tenant.sql`. Vercel deploys do **not** run Supabase migrations (the Supabase CLI does). Verify:
-  - The migration file is present in the build output / deployed commit.
-  - The migration is **NOT** applied in Production Supabase (`tuybltdrdefjblnplpqo`). Check migration history: the fixture tenant must stay out of Production. The migration is idempotent and safe, but Production should not carry `is_e2e_fixture=true` rows.
-- **business-suite-unified** — PR #245 mirrored the `schema_mutations_audit` migration as canonical in BSU. Same note: Vercel doesn't apply migrations. Check the file is present at `business-suite-unified/supabase/migrations/20260503*` on the deployed commit.
-- **conduit** — Next.js 16 (App Router). Check Edge runtime routes for any Phase 3-related `/api` paths. Verify `maxDuration` is set on any new AI routes if touched.
-- **braden** — CSP is strict. If any Phase 3 PR accidentally introduced a new external script source, the CSP header would block it at runtime. Inspect the browser-visible deploy for console CSP violations.
-- **throughput** — CSP connects to Groq/OpenAI/Anthropic. Phase 3 did not touch these, but confirm the docs-archive-sweep PR (#67) did not accidentally remove a runtime file. Also: throughput uses `npm` not `pnpm` — verify the install step matches.
-- **R80.3** — `vercel.json` specifies `pnpm install --frozen-lockfile`. If the lockfile drift from the `@bsuite/charge-calc@0.2.3` upgrade was handled incorrectly, install would fail with `ERR_PNPM_OUTDATED_LOCKFILE`. Confirm install step succeeded in the build log.
+  - The migration file is present in the deployed commit: `git show <deployed-sha>:supabase/migrations/20260507000000_e2e_fixture_tenant.sql | head -5` should return SQL.
+  - The migration is **NOT** applied in Production Supabase (`tuybltdrdefjblnplpqo`). Check migration history with ONE of:
+
+    Prerequisites before running these commands:
+    - Supabase CLI path requires `supabase link --project-ref tuybltdrdefjblnplpqo` to have been run in `crm7/` once (may prompt for an access token via browser flow).
+    - psql path requires `SUPABASE_DB_URL` exported from 1Password — it is NOT in any `.env.example` (production DB password).
+    - Management API path requires `SUPABASE_ACCESS_TOKEN` from the Supabase dashboard → Account → Access Tokens.
+
+    ```bash
+    # Via Supabase CLI (requires project link)
+    cd /home/braden/Desktop/Dev/bsuite/crm7 && supabase migration list --linked
+
+    # Or via direct psql against the prod connection string (look it up from 1Password / Supabase dashboard)
+    psql "$SUPABASE_DB_URL" -c "SELECT version FROM supabase_migrations.schema_migrations WHERE version = '20260507000000';"
+    # Expected: 0 rows
+
+    # Or via Supabase Management API if you have a service-role key
+    curl -s -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+      "https://api.supabase.com/v1/projects/tuybltdrdefjblnplpqo/database/migrations" \
+      | jq '.[] | select(.version == "20260507000000")'
+    # Expected: empty
+    ```
+
+    The fixture tenant must stay out of Production. The migration is idempotent and safe, but Production should not carry `is_e2e_fixture=true` rows.
+- **business-suite-unified** — PR #245 mirrored the `schema_mutations_audit` migration as canonical in BSU. Same note: Vercel doesn't apply migrations. Check the canonical migration files are present at `business-suite-unified/supabase/migrations/` on the deployed commit — specifically `20260503000000_add_field_level_relations.sql`, `20260503000001_revert_field_level_relations.sql`, `20260504000000_schema_reflection_rpc.sql`, and `20260505000000_field_sort_order_and_reorder_rpc.sql`. Spot-check with `git show <deployed-sha>:supabase/migrations/20260505000000_field_sort_order_and_reorder_rpc.sql | head -10` should return SQL.
+- **conduit** — Next.js 16 (App Router). Phase 3 did NOT add any new conduit API routes (PR #152 was a pure consumer dependency bump; PR #153 was docs-archive; PR #154 was dev→main). Verification scope is narrow: (a) `pnpm build` succeeded on the deployed commit (covered by `Build logs clean`); (b) the `@bsuite/schema-builder@^0.7.0` peer dep resolved without warnings; (c) no runtime errors referencing `schema-builder` imports appear in §4.1 step 3 logs.
+- **braden** — CSP is strict. If any Phase 3 PR accidentally introduced a new external script source, the CSP header would block it at runtime. Two checks:
+  1. Check the `Content-Security-Policy` response header: `curl -sI https://www.braden.com.au/ | grep -i content-security-policy` — compare the returned CSP against the one in `braden/vercel.json`.
+  2. CSP violations surface as `report-uri` hits in logs OR console errors only visible in a real browser. Vercel MCP cannot drive a browser; if you need to check console errors, spawn a separate `browser-use` agent pointing at `https://www.braden.com.au/` and look for `Content Security Policy` console errors.
+- **throughput** — CSP connects to Groq/OpenAI/Anthropic. Phase 3 did not touch these, but confirm the docs-archive-sweep PR (#67) did not accidentally remove a runtime file. Install command in `throughput/vercel.json` is `corepack enable && rm -rf node_modules && pnpm install --frozen-lockfile` (pnpm, not npm — contrary to the AGENTS.md footnote about throughput historically using npm; verified against current vercel.json).
+- **R80.3** — `vercel.json` specifies `pnpm install --frozen-lockfile`. Phase 3 bumped `@bsuite/schema-builder` from `^0.5.1` to `^0.7.0` (verified via PR #136 title). If the lockfile drift from that upgrade was handled incorrectly, install would fail with `ERR_PNPM_OUTDATED_LOCKFILE`. Confirm install step succeeded in the build log.
 
 ### 4.3 Vercel CLI cheat-sheet
 
@@ -163,17 +193,24 @@ Use the Vercel MCP equivalents where available. Falling back to CLI:
 # List recent deploys for a project
 vercel ls <project-name> --scope braden-pty-ltd
 
-# Inspect a specific deploy (gets commit SHA, build duration, state, env)
-vercel inspect <deployment-url> --scope braden-pty-ltd
+# Inspect a specific deploy (machine-readable JSON includes readyAt + githubCommitSha)
+vercel inspect <deployment-url> --scope braden-pty-ltd --format json | jq '{state, readyAt, created, meta: .meta}'
+# Fields of interest: .state (should be "READY"), .readyAt (unix ms),
+#   .meta.githubCommitSha (= VERCEL_GIT_COMMIT_SHA), .meta.githubCommitRef (branch).
+# Human-readable fallback (default format): `vercel inspect <url> --scope braden-pty-ltd`
 
-# Tail runtime logs for a deploy
-vercel logs <deployment-url> --scope braden-pty-ltd
+# Runtime logs in a window (CLI 50.x supports --since / --until as ISO timestamps OR relative like "1h", "30m")
+vercel logs <deployment-url> --scope braden-pty-ltd --since 30m --until 0m
+# Exact 30-min window starting from READY timestamp:
+vercel logs <deployment-url> --scope braden-pty-ltd --since <readyAt ISO> --until <readyAt+30m ISO>
 
 # Build logs (non-follow)
 vercel logs <deployment-url> --scope braden-pty-ltd --follow=false
 
-# Production env vars (run inside project dir or with --cwd)
+# Production env var NAMES only (values require `vercel env pull`)
 vercel env ls production --scope braden-pty-ltd
+# Pull values to a throwaway file (must be run inside project dir or with --cwd; DO NOT commit):
+vercel env pull .env.production.tmp --environment=production --scope braden-pty-ltd
 ```
 
 **Project → Vercel CLI name mapping:**
@@ -196,12 +233,12 @@ vercel env ls production --scope braden-pty-ltd
 Stop and report back without attempting remediation if any of the following is true:
 
 - Any Production deploy is in `ERROR` state since the Phase 3 PRs started merging (2026-04-30 ~14:00 UTC onward).
-- Any Production deploy's commit SHA is **older** than the `main` HEAD listed in §2.
-- Any runtime log contains `schema_mutations_audit`, `tenant_field_definitions`, or `tenant_entities` at `ERROR` level.
-- Any runtime log contains `e2e-fixture` or `is_e2e_fixture` in **Production** (these strings must only appear during E2E runs).
-- New CSP violations appear in browser console on braden or throughput production surfaces since the docs-archive-sweep PRs merged.
-- Any missing env var at runtime (`process.env.X is undefined` patterns, or `X is not defined` referencing an expected env key).
-- Supabase Production has migration `20260507000000_e2e_fixture_tenant` applied. It **must not be**.
+- Any Production deploy's commit SHA is **older than both** the `main` HEAD listed in §2 **and** the Phase 3 merge-wave timestamp (2026-04-30T14:00Z). If `main` has advanced after handoff and the deploy is simply catching up to the newer HEAD, that is NOT a red flag — just verify the newer deploy is also `READY`.
+- Any runtime log within 30 min of the deploy's READY timestamp contains `schema_mutations_audit`, `tenant_field_definitions`, or `tenant_entities` at `ERROR` level.
+- Any runtime log contains the strings `e2e-fixture`, `is_e2e_fixture`, or `e2e@crm7.app` in **Production** (these must only appear during E2E runs against staging/preview).
+- CSP violations reported via `report-uri` or visible in browser console on braden or throughput that were NOT present in the immediately prior Production deploy (i.e. new since Phase 3). If unsure whether a violation is new, flag it.
+- Any missing env var at runtime (`process.env.X is undefined` patterns, or `X is not defined` referencing an expected env key from the project's `.env.example`).
+- Supabase Production has migration `20260507000000_e2e_fixture_tenant` applied. It **must not be** — verify via one of the commands in §4.2 crm7.
 
 ---
 
@@ -212,7 +249,7 @@ All 6 projects pass every item:
 - [ ] Latest Production deploy is in `READY` state.
 - [ ] `meta.githubCommitSha` matches the `main` HEAD from §2.
 - [ ] Build logs clean (no `ERROR`, no `FAIL`).
-- [ ] Runtime logs for the last 30 min post-deploy show no 5xx and no unhandled exceptions.
+- [ ] Runtime logs in the 30-min window starting at the deploy's READY timestamp show no 5xx and no unhandled exceptions.
 - [ ] Live domain returns 200 or 307 on `curl -I`.
 - [ ] (crm7 + BSU only) Supabase Production migration history does **NOT** contain `20260507000000_e2e_fixture_tenant`.
 
@@ -236,7 +273,7 @@ All 6 projects pass every item:
 
 ## 7. Supporting refs
 
-- **Signoff doc:** `docs/20260504-schema-builder-phase-3-signoff-v1.00W.md`
+- **Signoff doc:** `docs/20260504-schema-builder-phase-3-signoff-v1.00W.md` (filename date `20260504` is intentional — the doc was created at the start of the Phase 3 rollout with the planned completion date in the name; it is the canonical signoff and exists today)
 - **Session memory:** `bsuite_session_20260430b` at `https://qig-memory-api.vercel.app/api/memory/bsuite_session_20260430b`
 - **Zero-Defer mandate:** operator statement 2026-04-30 — *"no deferrals permitted. I forbid them."*
 - **Vercel team:** `braden-pty-ltd` (team ID). CLI flag: `--scope braden-pty-ltd`.
