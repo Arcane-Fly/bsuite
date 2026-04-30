@@ -1,7 +1,7 @@
 # BSuite — Environment Variable Contributing Rules
 
 **Status:** W (Working — living document)
-**Supersedes / amends:** [20260227-contributing-standards-guide-v1.00A.md](20260227-contributing-standards-guide-v1.00A.md) §Env
+**Supersedes / amends:** [20260227-contributing-standards-guide-v1.01W.md](20260227-contributing-standards-guide-v1.01W.md) §Env
 **Sources:** [20260424-env-var-audit-findings-v1.00A.md](20260424-env-var-audit-findings-v1.00A.md) + [20260424-env-var-audit-matrix-v1.00A.md](20260424-env-var-audit-matrix-v1.00A.md) + root [env.example](../env.example)
 **Canonical Supabase project:** `tuybltdrdefjblnplpqo`
 

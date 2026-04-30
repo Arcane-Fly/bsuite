@@ -22,7 +22,7 @@ BSuite is a multi-project workspace of six web applications sharing Supabase, Ty
 - **State:** Zustand
 - **Forms:** React Hook Form + Zod
 - **Database:** Supabase (Auth, DB, Storage, Edge Functions)
-- **Testing:** Vitest (Vite projects), Jest (Next.js)
+- **Testing:** Vitest (all projects, including Next.js conduit) — verified 2026-04-28
 
 ---
 
@@ -61,11 +61,20 @@ rm -rf ~/crm7_lockgen
 
 The correct lockfile has `.:` as the only importer. A broken workspace lockfile will have `..` or `../packages/*` as importers.
 
+### Dependency Version Policy
+
+1. All apps and shared packages MUST use the latest mutually-compatible versions of React, React DOM, `@types/react`, `@types/react-dom`, and related React libraries.
+2. When any of the 6 apps bumps React, `packages/schema-registry`, `packages/page-builder`, and `packages/nav-core` MUST be bumped in the same PR or the next PR. CI blocks if a shared package is behind the lowest consumer app version by more than one minor.
+3. Peer-dependency ranges for shared packages stay liberal, but devDependencies in each package MUST match the current consumer React version.
+4. Use caret ranges (`^X.Y.Z`) for all dependencies that follow semver.
+5. Run `pnpm update --latest --interactive` monthly.
+6. Triage `pnpm audit` security advisories weekly.
+
 ---
 
 ## Quality Standards
 
-All standards are documented in `docs/20260227-contributing-standards-guide-v1.00W.md`. Key rules:
+All standards are documented in `docs/20260227-contributing-standards-guide-v1.01W.md`. Key rules:
 
 ### Code
 

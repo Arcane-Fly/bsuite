@@ -49,7 +49,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `throughput`, `shared`, `docs
 ### Testing
 
 - Minimum 70% coverage for critical paths
-- Vitest for Vite projects, Jest for Next.js (conduit)
+- Vitest for all projects (Vite + Next.js conduit) — verified 2026-04-28
 - Test files co-located with source: `*.test.ts` or `*.spec.ts`
 
 ### Google Cloud Authentication
@@ -156,11 +156,20 @@ cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
 
 Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..` or `../packages/*`.
 
+### Dependency Version Policy
+
+1. All apps and shared packages MUST use the latest mutually-compatible versions of React, React DOM, `@types/react`, `@types/react-dom`, and related React libraries.
+2. When any of the 6 apps bumps React, `packages/schema-registry`, `packages/page-builder`, and `packages/nav-core` MUST be bumped in the same PR or the next PR. CI blocks if a shared package is behind the lowest consumer app version by more than one minor.
+3. Peer-dependency ranges for shared packages stay liberal, but devDependencies in each package MUST match the current consumer React version.
+4. Use caret ranges (`^X.Y.Z`) for all dependencies that follow semver.
+5. Run `pnpm update --latest --interactive` monthly.
+6. Triage `pnpm audit` security advisories weekly.
+
 ---
 
 ## Key Files
 
-- `docs/20260227-contributing-standards-guide-v1.00A.md` — full quality standards
+- `docs/20260227-contributing-standards-guide-v1.01W.md` — full quality standards
 - `docs/20260228-d2c-theme-specification-v1.00A.md` — active D2C theme specification
 - `docs/20260227-dry-one-shot-architecture-v1.00A.md` — entity ownership and DRY patterns
 - `docs/20260227-auth-map-reference-v1.00A.md` — authentication architecture

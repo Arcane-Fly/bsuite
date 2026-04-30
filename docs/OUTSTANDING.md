@@ -30,7 +30,7 @@ These are authoritative, continuously applicable documents. They evolve in place
 |------|---------|
 | `20260227-auth-map-reference-v1.00A.md` | Authentication topology across BSU, CRM7, R80.3, Braden — OAuth 2.1, session boundaries, token refresh chains |
 | `20260227-bsuite-master-roadmap-v5.00W.md` | **Primary planning source of truth.** All sprints, P0–P3 gaps, audit sprint status, and recently-completed items live here. Currently at v5.02W (see `20260415-roadmap-audit-delta-v1.00W.md` for pending v5.03W bump). |
-| `20260227-contributing-standards-guide-v1.00A.md` | Universal code quality, documentation naming, and commit standards for all BSuite projects |
+| `20260227-contributing-standards-guide-v1.01W.md` | Universal code quality, documentation naming, and commit standards for all BSuite projects (supersedes v1.00A which is archived) |
 | `20260227-dry-one-shot-architecture-v1.01A.md` | DRY / one-shot data entry architecture; §1 Entity Ownership Map is the canonical cross-app ownership reference |
 | `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification — OKLCH palette, Tailwind token map, CSS variable contract |
 | `20260228-gto-standards-reference-v1.00A.md` | National Standards for Group Training Organisations evidence guide (GTO compliance) |
@@ -190,7 +190,48 @@ Standing env/Vercel rules extracted from the 2026-04-24 audit.
 
 ---
 
-## 3 — Archived This Pass
+### `packages/schema-builder/docs/testing-notes.md` — vitest/jsdom workaround tracker
+
+Package-internal testing notes. Documents a vitest `2.1.9` + `jsdom` +
+`@testing-library/jest-dom` interaction where `.rejects.toThrow('string')`
+fails with `TypeError: Cannot read properties of undefined (reading
+'indexOf')` because `.message` is stripped across the async rejection
+boundary. Current workaround: manual `.catch((e) => e)` +
+`toBeInstanceOf(Error)` + `.message` property assertion (applied to 3
+tests across `fieldService.test.ts` and `exportPng.test.ts`).
+
+| # | Remaining action | Owner |
+|---|-----------------|-------|
+| 1 | Upgrade `@bsuite/schema-builder` to `vitest@^3` as part of the cross-project vitest upgrade; verify the simplest reproduction passes in this package's setup (`await expect(Promise.reject(new Error('x'))).rejects.toThrow('x')`) before declaring the upgrade successful | Claude Code |
+| 2 | Once vitest 3 is confirmed-good, revert the manual-catch workaround in `src/__tests__/fieldService.test.ts` (2 assertions) and `src/__tests__/exportPng.test.ts` (1 assertion) back to the ergonomic `.rejects.toThrow('…')` pattern; delete the `## Gotcha` and `## History` sections of `packages/schema-builder/docs/testing-notes.md` | Claude Code |
+
+---
+
+## 3 — Archived / Clarified This Pass
+
+### 2026-05-01 bucket — `docs/archive/2026-05-01-vitest-canonical/`
+
+Vitest-canonical docs cleanup (user directive 2026-04-28 + 2026-05-01 — correct stale Jest claims across the monorepo; every project and shared package uses Vitest). 1 file moved.
+
+| File | Moved from | Archive reason |
+|------|-----------|----------------|
+| `20260227-contributing-standards-guide-v1.00A.md` | `docs/` | Explicitly superseded by `20260227-contributing-standards-guide-v1.01W.md` — .00A carried the stale "Jest (Next.js)" claim; .01W is the corrected live version |
+
+### 2026-05-01 — Schema-builder migration consolidation
+
+No archive move this time — a documentation/convention clarification. The 3 schema-builder SQL migrations (`20260503000000_add_field_level_relations.sql`, its rollback twin, and `20260504000000_schema_reflection_rpc.sql`) were previously only colocated with the `@bsuite/schema-builder` package, split across two inconsistent paths (`packages/schema-builder/supabase/migrations/` and a stray `packages/schema-builder/src/supabase/migrations/`). This meant consumer apps deploying via Vercel/Railway CI never picked them up, since `supabase db push` targets the consumer's own `supabase/migrations/` dir.
+
+Resolution:
+
+- Copied all 3 migrations verbatim into `business-suite-unified/supabase/migrations/` (BSU is the canonical DB-migration owner for the whole BSuite monorepo — every other consumer reads from BSU's schema via shared Supabase project `tuybltdrdefjblnplpqo`).
+- Consolidated the stray `packages/schema-builder/src/supabase/migrations/` path into `packages/schema-builder/supabase/migrations/` so the package has exactly ONE dev-fixture location.
+- Added `packages/schema-builder/supabase/migrations/README.md` documenting the canonical-vs-fixture split and the sync workflow.
+- Package version bumped 0.5.0 → 0.5.1.
+
+Shipped via:
+
+- `business-suite-unified` PR — migration mirror (target: `development`)
+- `bsuite` parent PR — package version bump + README + CHANGELOG + BSU submodule pointer bump + this doc update (target: `development`)
 
 ### 2026-04-25 bucket — `docs/archive/2026-04-25-universal-canvas-wave/`
 
