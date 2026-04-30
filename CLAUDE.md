@@ -49,7 +49,7 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `throughput`, `shared`, `docs
 ### Testing
 
 - Minimum 70% coverage for critical paths
-- Vitest for Vite projects, Jest for Next.js (conduit)
+- Vitest for all projects (Vite + Next.js conduit) — verified 2026-04-28
 - Test files co-located with source: `*.test.ts` or `*.spec.ts`
 
 ### Google Cloud Authentication

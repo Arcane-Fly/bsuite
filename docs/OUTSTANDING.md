@@ -50,6 +50,13 @@ These are authoritative, continuously applicable documents. They evolve in place
 
 ## 2 — Incomplete / Working Documents
 
+### Frozen .00A docs with stale Jest claims (2026-04-28)
+
+`docs/20260227-contributing-standards-guide-v1.00A.md` §3 Testing — framework list says "Vitest (Vite projects) or Jest (Next.js projects)" but the monorepo is **Vitest-only** (all 6 apps + all 3 shared packages use Vitest; zero Jest installations). Cannot edit the frozen `.00A` doc directly per docs-hygiene mandate. To be addressed by re-promoting via `v1.01W+` if future changes merit; for now, `AGENTS.md` / `CLAUDE.md` / `.github/copilot-instructions.md` (all corrected 2026-04-28) are the live SSoT and this frozen doc is historical reference only. See `docs/vitest-not-jest` branch PRs on bsuite + crm7 + R80.3 + braden + business-suite-unified submodules for the live-doc corrections.
+
+---
+
+
 Files with `.00W` (Working) or `.00D` (Draft) status that have open actions. Update status to `.00A` (Approved) once all actions are resolved.
 
 ### `20260317-bsuite-gap-report-v2.00W.md`
