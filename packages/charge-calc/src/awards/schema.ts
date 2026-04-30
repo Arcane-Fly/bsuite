@@ -77,14 +77,25 @@ export type AwardAllowance = z.infer<typeof AwardAllowanceZ>;
 // ─── Supplement (manually-entered data not in MAPD API) ─────────────
 
 /**
- * Wraps a Zod object schema so that `undefined` / `null` input is
- * coerced to `{}` before parsing. This ensures nested `.default()`
- * values are applied when the parent provides a bare `{}` via its
- * own `.default({})` — which Zod v4 otherwise passes through as-is
- * without re-parsing inner fields.
+ * Wraps a Zod object schema so that a missing key or `undefined` input is
+ * coerced to `{}` BEFORE parsing — which lets nested `.default()` values
+ * cascade through and populate the returned object.
+ *
+ * Implementation note: uses Zod 4's `.prefault({})` (applied pre-parse) rather
+ * than the earlier `z.preprocess((val) => val ?? {}, schema)` pattern. The
+ * preprocess variant worked on Zod 4.3.x but silently broke on Zod 4.4.0+
+ * because a missing object key no longer triggers `preprocess` — Zod raises
+ * `nonoptional` on the missing field before the preprocess callback runs.
+ * `.prefault({})` is the idiomatic Zod 4 replacement and cascades nested
+ * `.default()` values correctly for missing-key, `undefined`, and partial-input
+ * cases. (Explicit `null` still errors — callers must pass `undefined` or omit
+ * the key.)
+ *
+ * The `as unknown as T` cast preserves the external API shape so existing call
+ * sites and downstream `z.infer<typeof …>` consumers see no type drift.
  */
 function withObjectDefaults<T extends z.ZodObject>(schema: T) {
-  return z.preprocess((val) => val ?? {}, schema) as unknown as T;
+  return schema.prefault({} as z.input<T>) as unknown as T;
 }
 
 const SpanOfHoursZ = z.object({
