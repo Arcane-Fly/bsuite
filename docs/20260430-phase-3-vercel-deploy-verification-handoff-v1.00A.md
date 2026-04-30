@@ -125,6 +125,8 @@ Captured via `vercel ls <project> --scope braden-pty-ltd` at the time of this do
 
 ## 4. Your Task (Claude Code)
 
+> **Historical note (2026-04-30):** §4 was the pre-verification task spec. It was executed on 2026-04-30 at CLI level — see §7 for the completed Verification Report. §§4.1–4.3 are retained as the reference spec for future re-verifications or MCP-level strengthening (see §7.6 for the optional MCP re-verification menu).
+
 Use your **Vercel MCP tools** (preferred) or **Vercel CLI** as fallback to verify each of the 6 projects against the checklist below.
 
 **Environment:**
@@ -315,7 +317,7 @@ All deploy timestamps fall within the Phase 3 merge-wave window (2026-04-30 ~14:
 
 ² **r8 build log cosmetic warning.** One cosmetic pnpm warning surfaced during install: `Failed to create bin symlink` for a dev-only binary (pnpm-known issue on Vercel build containers, does not affect runtime). No `ERROR`, no `FAIL`, install completed, build succeeded, deploy went `READY`.
 
-³ **Runtime logs — "silent-clean" verification.** `vercel logs <url> --scope braden-pty-ltd` on all 6 deploys returned the expected idle-waiting state (`waiting for new logs...`) with zero error entries captured. This confirms the absence of active 5xx / unhandled exception traffic at the time of verification, but does NOT prove the 30-min post-READY window was clean — the CLI logs tail is live-only and does not support historical lookback beyond Vercel's retention window for idle deploys. **Claude Code should re-run with Vercel MCP's log-history API** against the exact `readyAt + 30min` window for each deploy as a belt-and-braces confirmation.
+³ **Runtime logs — "silent-clean" verification.** `vercel logs <url> --scope braden-pty-ltd` on all 6 deploys returned the expected idle-waiting state (`waiting for new logs...`) with zero error entries captured. This confirms the absence of active 5xx / unhandled exception traffic at the time of verification, but does NOT prove the 30-min post-READY window was clean — the CLI logs tail is live-only and does not support historical lookback beyond Vercel's retention window for idle deploys. **If Claude Code opts to run an MCP log-history query** against the exact `readyAt + 30min` window for each deploy, an all-clean result would convert this ✅³ to a plain ✅. The current ✅³ reflects CLI live-tail limitations, not an unresolved finding.
 
 ### 7.3 Build-log findings
 
