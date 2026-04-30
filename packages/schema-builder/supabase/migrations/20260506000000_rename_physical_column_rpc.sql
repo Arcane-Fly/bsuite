@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS public.schema_mutations_audit (
   new_identifier text,
   dry_run boolean NOT NULL,
   executed boolean NOT NULL DEFAULT false,
+  -- DRY exemption: SQLSTATE/sqlerrm diagnostic payload from failed ALTER TABLE attempts; not an FK. Relational anchors are tenant_id/actor_id/entity_id/field_id (all *_id FKs above).
   error_code text,
   error_message text,
   would_execute text,
