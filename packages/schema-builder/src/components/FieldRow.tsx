@@ -62,6 +62,18 @@ function dispatchEditEvent(entityId: string, fieldId: string) {
   );
 }
 
+function dispatchReorderEvent(
+  entityId: string,
+  fieldId: string,
+  direction: 'up' | 'down',
+) {
+  window.dispatchEvent(
+    new CustomEvent('bsuite-reorder-field', {
+      detail: { entityId, fieldId, direction },
+    }),
+  );
+}
+
 function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
   const baseId = `${entityId}.${field.id}`;
   const showNotNull = !field.isNullable && !field.isPrimary;
@@ -80,6 +92,26 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatchEditEvent(entityId, field.id);
+  };
+
+  /**
+   * Phase 3A keyboard reorder — Alt+ArrowUp / Alt+ArrowDown while the edit
+   * button is focused dispatches a `bsuite-reorder-field` event that
+   * SchemaCanvas resolves into a `controller.reorderFields` RPC call. The
+   * handler lives on the button (not the row div) so React Flow's own
+   * arrow-key behaviour on the surrounding canvas stays intact.
+   */
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!e.altKey) return;
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+      dispatchReorderEvent(entityId, field.id, 'up');
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      e.stopPropagation();
+      dispatchReorderEvent(entityId, field.id, 'down');
+    }
   };
 
   return (
@@ -136,8 +168,10 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         <button
           type="button"
           onClick={handleEditClick}
+          onKeyDown={handleEditKeyDown}
           aria-label={`Edit field ${field.name}`}
-          title={`Edit field ${field.name}`}
+          aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
+          title={`Edit field ${field.name} (Alt+\u2191 / Alt+\u2193 to reorder)`}
           className="nodrag inline-flex h-4 w-4 shrink-0 items-center justify-center rounded text-neutral-500 opacity-50 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-neutral-400"
         >
           <Pencil className="h-3 w-3" aria-hidden="true" />

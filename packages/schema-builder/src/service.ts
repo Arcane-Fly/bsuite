@@ -268,3 +268,74 @@ export async function deleteEntityField(
     .eq('id', id) as unknown as Promise<{ data: unknown; error: unknown }>);
   assertNoError<unknown>(res);
 }
+
+/**
+ * Atomically reorder the active fields of an entity via the
+ * `reorder_entity_fields` SECURITY DEFINER RPC. `orderedFieldIds` MUST be
+ * the complete set of active field ids for `entityId` (no missing, extra,
+ * or duplicate ids); the RPC rejects partial arrays with
+ * `invalid_parameter_value` to prevent accidental data loss.
+ *
+ * Phase 3A — see `docs/20260504-schema-builder-phase-3-plan-v1.00W.md` §3.A
+ * and migration `20260505000000_field_sort_order_and_reorder_rpc.sql`.
+ */
+export async function reorderEntityFields(
+  client: LooseSupabaseClient,
+  entityId: string,
+  orderedFieldIds: string[],
+): Promise<void> {
+  const res = await (client.rpc('reorder_entity_fields', {
+    p_entity_id: entityId,
+    p_field_ids: orderedFieldIds,
+  }) as unknown as Promise<{ data: unknown; error: unknown }>);
+  assertNoError<unknown>(res);
+}
+
+// -----------------------------------------------------------------
+// Physical column rename (rename_physical_column) — Phase 3B
+// -----------------------------------------------------------------
+
+/**
+ * Result of `rename_physical_column`. On a dry-run `executed` is always
+ * `false` and `would_execute` / `affected_views` / `affected_policies` are
+ * populated so the UI can ask the user to confirm. On a wet-run `executed`
+ * flips to `true` when the ALTER TABLE succeeded. Metadata-only entities
+ * (no matching `public.<name>` table) return `{ executed: false, reason:
+ * 'no_physical_table' }` without writing an audit row.
+ *
+ * Phase 3B — see `docs/20260504-schema-builder-phase-3-plan-v1.00W.md` §3.B
+ * and migration `20260506000000_rename_physical_column_rpc.sql`.
+ */
+export interface RenamePhysicalColumnResult {
+  executed: boolean;
+  reason?: string;
+  audit_id?: string;
+  would_execute?: string;
+  affected_views?: string[];
+  affected_policies?: string[];
+  old_field_name?: string;
+  new_field_name?: string;
+}
+
+/**
+ * Invoke the `rename_physical_column` RPC. Callers MUST run a dry-run first
+ * (opts.dryRun = true) and show the returned `would_execute` + affected
+ * objects to the user before calling again with `dryRun: false`. The RPC
+ * writes one audit row per call (dry-run and wet-run both) so every attempt
+ * — successful or not — is observable in `schema_mutations_audit`.
+ */
+export async function renamePhysicalColumn(
+  client: LooseSupabaseClient,
+  entityId: string,
+  fieldId: string,
+  newName: string,
+  opts: { dryRun: boolean },
+): Promise<RenamePhysicalColumnResult> {
+  const res = await (client.rpc('rename_physical_column', {
+    p_entity_id: entityId,
+    p_field_id: fieldId,
+    p_new_name: newName,
+    p_dry_run: opts.dryRun,
+  }) as unknown as Promise<{ data: unknown; error: unknown }>);
+  return assertNoError<RenamePhysicalColumnResult>(res);
+}

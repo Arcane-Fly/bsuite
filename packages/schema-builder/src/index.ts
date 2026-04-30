@@ -107,5 +107,10 @@ export {
   createEntityField,
   updateEntityField,
   deleteEntityField,
+  reorderEntityFields,
+  renamePhysicalColumn,
 } from './service.js';
-export type { LooseSupabaseClient } from './service.js';
+export type {
+  LooseSupabaseClient,
+  RenamePhysicalColumnResult,
+} from './service.js';
