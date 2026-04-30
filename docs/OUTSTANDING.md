@@ -207,6 +207,25 @@ tests across `fieldService.test.ts` and `exportPng.test.ts`).
 
 ---
 
+### Schema-Builder Phase 3 PRs — under review (2026-04-28)
+
+Three Copilot-authored PRs completing Phase 3 of the `@bsuite/schema-builder` roadmap (per `docs/20260504-schema-builder-phase-3-plan-v1.00W.md`). All 3 reviewed and commented on 2026-04-28 after the test-infra fix (commit `3249f98`) landed on `development` and unblocked CI.
+
+| # | PR | Title | Verdict | Blockers (if any) | Next action |
+|---|----|-------|---------|-------------------|-------------|
+| 1 | [bsuite#346](https://github.com/GaryOcean428/bsuite/pull/346) | Phase 3A: FieldRow drag/keyboard reorder + sort_order RPC | **Approve with polish** | none | Rebase on development (trivial conflicts on `tsconfig.json` / `vitest.config.ts` from test-infra fix `3249f98`); optional polish: announcement specificity (`"Moved {name} to position N of M"`) + focus-return-to-edit-button after reorder (see PR review comment) |
+| 2 | [bsuite#345](https://github.com/GaryOcean428/bsuite/pull/345) | Phase 3B: Opt-in `rename_physical_column` + FieldEditDialog confirm | **Request changes** | (a) regex `^[a-z][a-z0-9_]{0,62}$` accepts reserved SQL keywords (`select`, `user`, `table`, …); (b) regex accepts `pg_*` prefix (reserved namespace); (c) no protected-table guard (admin on any tenant could rename columns on `tenants`, `user_tenants`, `schema_mutations_audit`, etc.); (d) native `<dialog>` + `<details>` diverges from shadcn/Radix convention per `AGENTS.md` UI consistency mandate | Copilot to address blockers (a)/(b)/(c) in `20260506000000_rename_physical_column_rpc.sql` via `pg_get_keywords()` + `pg_` LIKE + system-table blocklist; (d) Radix-Dialog conversion may split into a follow-up PR if scope creeps. Also fix `affected_views` heuristic (`ILIKE '%name%'` → word-boundary or `pg_depend`) and close TOCTOU via `p_preview_hash` |
+| 3 | [crm7#339](https://github.com/GaryOcean428/crm7/pull/339) | E2E fixture tenant migration + auth setup (seeded mode) | **Approve with polish** | none | Document `CRM7_E2E_SEED_SUPABASE=1` in `crm7/.env.example` + `crm7/README.md` + `crm7/CONTRIBUTING.md`; decide whether to remove the vestigial `set_e2e_mode` GUC (it is transaction-scoped so effectively dead code — `e2e-tenant.ts` already acknowledges this honestly) or keep as explicit defense-in-depth with a clarifying migration comment; rebase on development |
+
+**Context (2026-04-28):**
+
+- **Local validation**: Workstream A passed typecheck / test / build cleanly on a merge-with-development worktree. Workstream B and C both surfaced merge conflicts against `development` (B: `tsconfig.json` + phase-3 plan doc; C: `tests/e2e/schema-builder-field-dialogs.spec.ts`) — all expected fallout from the test-infra fix merge and the parallel universal-canvas docs churn. Copilot will resolve on rebase.
+- **GitHub state**: all 3 PRs currently `DRAFT` + `MERGEABLE: BLOCKED` because they predate `3249f98`. Expect to flip green after Copilot's next push.
+- **Reviews posted**: detailed review comments on each PR (2026-04-28) — retrieve via `gh pr view 346 --repo GaryOcean428/bsuite --comments`, `gh pr view 345 --repo GaryOcean428/bsuite --comments`, and `gh pr view 339 --repo GaryOcean428/crm7 --comments`.
+- **Parent mandate**: these 3 PRs complete Phase 3 of the `@bsuite/schema-builder` roadmap (`docs/20260504-schema-builder-phase-3-plan-v1.00W.md`). Once all three merge and the consumer apps (crm7, R80.3, braden) are bumped to the new `@bsuite/schema-builder` version, that phase-plan doc should be promoted from `W` (Working) → `A` (Approved) and archived under `docs/archive/` per the user's docs-hygiene mandate (clean-up after yourself — user objective §6, §7).
+
+---
+
 ## 3 — Archived This Pass
 
 ### 2026-04-25 bucket — `docs/archive/2026-04-25-universal-canvas-wave/`
