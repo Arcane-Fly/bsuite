@@ -4,7 +4,7 @@
 **Owner:** Braden + agent
 **Supersedes sections of:** the theming parts of `/home/braden/.claude/plans/bsuite-world-class-audit-adaptive-sonnet.md` Parts M.1.a / M.1.b / M.1.c which shipped only partial migrations and left the centralisation incomplete.
 **Parent initiative:** BSuite 2026 world-class audit.
-**Related docs:** `docs/20260228-d2c-theme-specification-v1.00A.md`, `docs/20260407-d2c-wcag-contrast-audit-v1.00A.md`, `docs/20260227-contributing-standards-guide-v1.00A.md`, `conduit/docs/20260303-theme-system-design-v1.00W.md`, `docs/plans/20260316-crm7-broad-ui-refresh-plan-v1.00W.md`, `braden/docs/20260316-braden-corporate-theme-reference-v1.00W.md`.
+**Related docs:** `docs/20260228-d2c-theme-specification-v1.00A.md`, `docs/20260407-d2c-wcag-contrast-audit-v1.00A.md`, `docs/20260227-contributing-standards-guide-v1.01W.md`, `conduit/docs/20260303-theme-system-design-v1.00W.md`, `docs/plans/20260316-crm7-broad-ui-refresh-plan-v1.00W.md`, `braden/docs/20260316-braden-corporate-theme-reference-v1.00W.md`.
 
 ---
 
@@ -261,7 +261,7 @@ Per the adaptive-sonnet plan Part K conventions:
 
 - `docs/20260228-d2c-theme-specification-v1.00A.md` — the palette, WCAG AA thresholds, the 3-layer intent (pre-dates this plan, authoritative on design).
 - `docs/20260407-d2c-wcag-contrast-audit-v1.00A.md` — the failing pairs this plan remediates.
-- `docs/20260227-contributing-standards-guide-v1.00A.md` §5 — the oklch-mandatory rule.
+- `docs/20260227-contributing-standards-guide-v1.01W.md` §5 — the oklch-mandatory rule.
 - `conduit/docs/20260303-theme-system-design-v1.00W.md` — Tailwind v4 Next.js pattern.
 - `docs/plans/20260316-crm7-broad-ui-refresh-plan-v1.00W.md` — the CRM7 9-module refresh, subsumed into Phase 3 here.
 - `braden/docs/20260316-braden-corporate-theme-reference-v1.00W.md` — the Braden corporate exemption, preserved.

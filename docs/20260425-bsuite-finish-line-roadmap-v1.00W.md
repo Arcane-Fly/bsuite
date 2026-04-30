@@ -410,7 +410,7 @@ These docs contributed to this roadmap and have no remaining unique open work on
 
 Docs NOT eligible for archive (live references):
 
-- `20260227-auth-map-reference-v1.00A.md`, `20260227-bsuite-master-roadmap-v5.00W.md`, `20260227-contributing-standards-guide-v1.00A.md`, `20260227-dry-one-shot-architecture-v1.01A.md`, `20260228-d2c-theme-specification-v1.00A.md`, `20260228-gto-standards-reference-v1.00A.md`, `20260310-fairwork-reference-v1.00A.md`, `20260316-*-reference-v1.00A.md` (8 files), `20260421-auth-hardening-runbook-v1.00A.md`, `20260422-tga-api-integration-reference-v1.00W.md`, `20260424-env-var-audit-findings-v1.00A.md`, `20260424-env-var-audit-matrix-v1.00A.md`, `20260424-env-var-contributing-rules-v1.00W.md`. See `docs/OUTSTANDING.md` §1.
+- `20260227-auth-map-reference-v1.00A.md`, `20260227-bsuite-master-roadmap-v5.00W.md`, `20260227-contributing-standards-guide-v1.01W.md`, `20260227-dry-one-shot-architecture-v1.01A.md`, `20260228-d2c-theme-specification-v1.00A.md`, `20260228-gto-standards-reference-v1.00A.md`, `20260310-fairwork-reference-v1.00A.md`, `20260316-*-reference-v1.00A.md` (8 files), `20260421-auth-hardening-runbook-v1.00A.md`, `20260422-tga-api-integration-reference-v1.00W.md`, `20260424-env-var-audit-findings-v1.00A.md`, `20260424-env-var-audit-matrix-v1.00A.md`, `20260424-env-var-contributing-rules-v1.00W.md`. See `docs/OUTSTANDING.md` §1.
 
 ---
 
