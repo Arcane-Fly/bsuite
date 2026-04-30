@@ -11,7 +11,8 @@
     "noEmit": true,
     "skipLibCheck": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["@testing-library/jest-dom", "vitest/globals"]
   },
   "include": ["src"]
 }
