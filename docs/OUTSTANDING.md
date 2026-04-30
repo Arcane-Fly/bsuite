@@ -190,6 +190,23 @@ Standing env/Vercel rules extracted from the 2026-04-24 audit.
 
 ---
 
+### `packages/schema-builder/docs/testing-notes.md` — vitest/jsdom workaround tracker
+
+Package-internal testing notes. Documents a vitest `2.1.9` + `jsdom` +
+`@testing-library/jest-dom` interaction where `.rejects.toThrow('string')`
+fails with `TypeError: Cannot read properties of undefined (reading
+'indexOf')` because `.message` is stripped across the async rejection
+boundary. Current workaround: manual `.catch((e) => e)` +
+`toBeInstanceOf(Error)` + `.message` property assertion (applied to 3
+tests across `fieldService.test.ts` and `exportPng.test.ts`).
+
+| # | Remaining action | Owner |
+|---|-----------------|-------|
+| 1 | Upgrade `@bsuite/schema-builder` to `vitest@^3` as part of the cross-project vitest upgrade; verify the simplest reproduction passes in this package's setup (`await expect(Promise.reject(new Error('x'))).rejects.toThrow('x')`) before declaring the upgrade successful | Claude Code |
+| 2 | Once vitest 3 is confirmed-good, revert the manual-catch workaround in `src/__tests__/fieldService.test.ts` (2 assertions) and `src/__tests__/exportPng.test.ts` (1 assertion) back to the ergonomic `.rejects.toThrow('…')` pattern; delete the `## Gotcha` and `## History` sections of `packages/schema-builder/docs/testing-notes.md` | Claude Code |
+
+---
+
 ## 3 — Archived This Pass
 
 ### 2026-04-25 bucket — `docs/archive/2026-04-25-universal-canvas-wave/`

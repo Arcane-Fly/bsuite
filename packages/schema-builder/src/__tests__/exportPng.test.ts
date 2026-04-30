@@ -88,6 +88,13 @@ describe('exportCanvasToPng', () => {
   it('propagates toPng failures to the caller', async () => {
     mockedToPng.mockRejectedValue(new Error('snapshot failed'));
     const el = document.createElement('div');
-    await expect(exportCanvasToPng(el)).rejects.toThrow('snapshot failed');
+    // NOTE: deliberately avoid `.rejects.toThrow('snapshot failed')` here.
+    // Under vitest 2.1.9 + jsdom, Error `.message` is stripped across the async
+    // rejection boundary and the string matcher blows up with
+    // `TypeError: Cannot read properties of undefined (reading 'indexOf')`.
+    // See packages/schema-builder/docs/testing-notes.md (vitest/jsdom gotcha).
+    const caught = await exportCanvasToPng(el).catch((e: unknown) => e);
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toBe('snapshot failed');
   });
 });

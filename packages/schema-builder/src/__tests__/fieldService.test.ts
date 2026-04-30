@@ -1,3 +1,10 @@
+// NOTE: `.rejects.toThrow('literal')` throws `TypeError: Cannot read
+// properties of undefined (reading 'indexOf')` under this package's vitest
+// + jsdom + @testing-library/jest-dom setup. The two failing assertions
+// below use manual `.catch((e) => e)` + `toBeInstanceOf(Error)` + exact
+// `.message` equality (stricter than `.toThrow`'s substring match — fine
+// here because the Error is constructed as `new Error(String(res.error.message))`).
+// Full writeup + History: `packages/schema-builder/docs/testing-notes.md`.
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -93,9 +100,12 @@ describe('getEntityFields', () => {
       data: null,
       error: { message: 'RLS denied' },
     });
-    await expect(getEntityFields(client, 'entity-1')).rejects.toThrow(
-      'RLS denied',
+    // See top-of-file note on .rejects.toThrow workaround.
+    const caught = await getEntityFields(client, 'entity-1').catch(
+      (e: unknown) => e,
     );
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toBe('RLS denied');
   });
 });
 
@@ -175,8 +185,11 @@ describe('deleteEntityField', () => {
       data: null,
       error: { message: 'FK violation' },
     });
-    await expect(deleteEntityField(client, 'field-1')).rejects.toThrow(
-      'FK violation',
+    // See top-of-file note on .rejects.toThrow workaround.
+    const caught = await deleteEntityField(client, 'field-1').catch(
+      (e: unknown) => e,
     );
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toBe('FK violation');
   });
 });
