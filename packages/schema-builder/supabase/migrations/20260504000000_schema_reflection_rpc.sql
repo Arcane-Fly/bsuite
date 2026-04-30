@@ -1,5 +1,9 @@
 -- Schema Builder §3.6 item 4 — live Postgres schema reflection.
 --
+-- ⚠️  DEV-FIXTURE COPY — DO NOT EDIT HERE.
+-- Canonical location: business-suite-unified/supabase/migrations/20260504000000_schema_reflection_rpc.sql
+-- See README.md in this directory for the hard rule and sync workflow.
+--
 -- Consumers call `reflect_entity_schema(table_name)` to introspect the actual
 -- column list + PK/FK metadata of a table rather than relying solely on
 -- `tenant_field_definitions`. This powers the "Airtable / dbdiagram look"
@@ -14,25 +18,35 @@
 -- SECURITY POSTURE (read before deploying)
 -- -----------------------------------------------------------------------
 -- `SECURITY DEFINER` + `GRANT EXECUTE ... TO authenticated` means any
--- logged-in user can introspect the column list and FK graph of ANY table
--- in the target schema (default: `public`). The SECURITY DEFINER bypasses
--- the role-based filtering that `information_schema` normally applies at
--- the caller's privilege level.
+-- logged-in user can introspect the column list and FK graph of tables in
+-- the whitelisted schema(s). The SECURITY DEFINER bypasses the role-based
+-- filtering that `information_schema` normally applies at the caller's
+-- privilege level.
+--
+-- Schema whitelist: currently `public` only. Non-whitelisted schemas return
+-- an empty result set (not an error), so the useSchemaReflection hook treats
+-- them identically to "no columns found". To extend the whitelist, edit the
+-- CASE expression in the WHERE clause below AND update the canonical copy
+-- in BSU (this is a dev-fixture — BSU is the source of truth).
 --
 -- This is an INTENTIONAL trust decision: schema-builder users in BSuite
 -- are admin-tier (gated at the application layer by route guards on
--- /settings/schema-builder). Column metadata is not itself sensitive data.
+-- /settings/schema-builder). Column metadata within `public` is not itself
+-- sensitive data.
 --
 -- If your deployment needs per-tenant or per-role isolation of schema
 -- introspection, either:
 --   1. Drop SECURITY DEFINER and rely on information_schema's native
 --      role-based filtering (the caller's role will only see columns they
 --      have SELECT privilege on); OR
---   2. Keep SECURITY DEFINER but restrict `p_schema` to a whitelist inside
---      the function body (e.g. reject anything but 'public'); OR
---   3. Require the target table to exist in `tenant_entities` for the
---      caller's tenant before returning rows.
+--   2. Require the target table to exist in `tenant_entities` for the
+--      caller's tenant before returning rows; OR
+--   3. Narrow the whitelist further (e.g. reject all introspection of
+--      system tables by matching on a prefix).
 -- -----------------------------------------------------------------------
+
+-- @sync-boundary-below
+-- Everything below this line MUST be byte-identical with the BSU canonical copy.
 
 create or replace function public.reflect_entity_schema(
   p_table_name text,
@@ -93,10 +107,21 @@ as $$
   ) fk on fk.column_name = c.column_name
   where c.table_schema = p_schema
     and c.table_name   = p_table_name
+    -- Schema whitelist — gracefully returns empty for non-allowed schemas.
+    -- To extend beyond `public`: add additional schema names inside the
+    -- parentheses below AND update the package dev-fixture copy in the same
+    -- PR (parity CI enforces byte-identity below the sync boundary).
+    -- Case-sensitive: 'Public' / 'PUBLIC' will not match (information_schema
+    -- stores schema names lower-case, so the downstream c.table_schema
+    -- comparison would also reject them — this is defense-in-depth).
+    and p_schema in ('public')
   order by c.ordinal_position;
 $$;
 
 grant execute on function public.reflect_entity_schema(text, text) to authenticated;
 
 comment on function public.reflect_entity_schema(text, text) is
-  'Schema Builder §3.6.4 — returns column metadata (name, type, nullable, PK, FK) for the given table from information_schema. Used by @bsuite/schema-builder useSchemaReflection() hook.';
+  'Schema Builder §3.6.4 — returns column metadata (name, type, nullable, PK, FK) '
+  'for the given table from information_schema. Whitelist-gated to the `public` '
+  'schema; non-whitelisted schemas return empty rows (not an error). Used by '
+  '@bsuite/schema-builder useSchemaReflection() hook.';

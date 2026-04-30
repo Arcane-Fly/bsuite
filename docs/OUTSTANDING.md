@@ -207,7 +207,7 @@ tests across `fieldService.test.ts` and `exportPng.test.ts`).
 
 ---
 
-## 3 — Archived This Pass
+## 3 — Archived / Clarified This Pass
 
 ### 2026-05-01 bucket — `docs/archive/2026-05-01-vitest-canonical/`
 
@@ -216,6 +216,22 @@ Vitest-canonical docs cleanup (user directive 2026-04-28 + 2026-05-01 — correc
 | File | Moved from | Archive reason |
 |------|-----------|----------------|
 | `20260227-contributing-standards-guide-v1.00A.md` | `docs/` | Explicitly superseded by `20260227-contributing-standards-guide-v1.01W.md` — .00A carried the stale "Jest (Next.js)" claim; .01W is the corrected live version |
+
+### 2026-05-01 — Schema-builder migration consolidation
+
+No archive move this time — a documentation/convention clarification. The 3 schema-builder SQL migrations (`20260503000000_add_field_level_relations.sql`, its rollback twin, and `20260504000000_schema_reflection_rpc.sql`) were previously only colocated with the `@bsuite/schema-builder` package, split across two inconsistent paths (`packages/schema-builder/supabase/migrations/` and a stray `packages/schema-builder/src/supabase/migrations/`). This meant consumer apps deploying via Vercel/Railway CI never picked them up, since `supabase db push` targets the consumer's own `supabase/migrations/` dir.
+
+Resolution:
+
+- Copied all 3 migrations verbatim into `business-suite-unified/supabase/migrations/` (BSU is the canonical DB-migration owner for the whole BSuite monorepo — every other consumer reads from BSU's schema via shared Supabase project `tuybltdrdefjblnplpqo`).
+- Consolidated the stray `packages/schema-builder/src/supabase/migrations/` path into `packages/schema-builder/supabase/migrations/` so the package has exactly ONE dev-fixture location.
+- Added `packages/schema-builder/supabase/migrations/README.md` documenting the canonical-vs-fixture split and the sync workflow.
+- Package version bumped 0.5.0 → 0.5.1.
+
+Shipped via:
+
+- `business-suite-unified` PR — migration mirror (target: `development`)
+- `bsuite` parent PR — package version bump + README + CHANGELOG + BSU submodule pointer bump + this doc update (target: `development`)
 
 ### 2026-04-25 bucket — `docs/archive/2026-04-25-universal-canvas-wave/`
 

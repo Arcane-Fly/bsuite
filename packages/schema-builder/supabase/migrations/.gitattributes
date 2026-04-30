@@ -1,0 +1,17 @@
+# Enforce LF line endings for @bsuite/schema-builder migration fixtures.
+#
+# The Schema Builder Migration Parity CI workflow
+# (.github/workflows/schema-builder-migration-parity.yml) uses byte-exact cmp
+# on content below the `-- @sync-boundary-below` marker. A CRLF-vs-LF mismatch
+# between the BSU canonical copy and this dev-fixture copy would either:
+#
+#   (a) break the awk marker-extraction (because the `$` anchor fails on a
+#       trailing \r), causing a cryptic "missing marker" error; or
+#   (b) cause every single line of the body to differ under cmp, producing
+#       noisy diffs that look like content drift when the actual delta is
+#       just line endings.
+#
+# Forcing eol=lf on commit (via `text eol=lf`) guarantees both copies normalise
+# to the same byte sequence regardless of contributor platform.
+*.sql text eol=lf
+*.md  text eol=lf

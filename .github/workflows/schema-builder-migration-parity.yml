@@ -1,0 +1,225 @@
+# Schema Builder Migration Parity
+#
+# Enforces that the dev-fixture copies under
+#   packages/schema-builder/supabase/migrations/
+# stay byte-identical (below the `-- @sync-boundary-below` marker) with the
+# canonical copies under
+#   business-suite-unified/supabase/migrations/
+#
+# Background: pre-v0.5.1 the schema-builder SQL migrations lived only inside
+# the package. `supabase db push` in consumer-app CI targets the consumer's
+# own supabase/migrations/ dir, so those migrations never reached BSU staging
+# or production on fresh deploys. We now keep BSU as the canonical source
+# plus dev-fixture copies inside the package for standalone Vitest. This
+# workflow prevents the two from drifting.
+#
+# Design notes for future maintainers:
+#
+# - All three checks are marked `continue-on-error: true` so a failure in
+#   Check 1 does not mask a failure in Check 2 or Check 3. The final
+#   "Parity verdict" step aggregates outcomes and is the only step that
+#   fails the job.
+#
+# - Check 2 uses MARKER-based opt-in detection. A BSU migration declares
+#   itself Schema-Builder-managed (and therefore requires a dev-fixture
+#   twin) by including the `-- @sync-boundary-below` marker on its own
+#   line. This is the SAME marker Check 3 uses for byte-identical content
+#   comparison, so there is exactly one concept to learn. An earlier draft
+#   used content-based pattern matching (grep for table names), but that
+#   over-matched pre-existing BSU migrations which legitimately touch
+#   Schema-Builder tables for broader concerns (enabling Realtime,
+#   hardening RLS, adding FK indexes) without being Schema-Builder-owned.
+#   Marker-based opt-in gives the BSU author explicit agency.
+#
+# - Check 3 uses `cmp` against tempfiles for byte-exact comparison, NOT
+#   bash `!=` on `$(...)` captured strings (which silently strip trailing
+#   newlines and can mask whitespace-only drift from IDE auto-save).
+#
+# - The `-- @sync-boundary-below` marker must appear exactly once per SQL
+#   file on its own line with no leading/trailing whitespace. Check 3
+#   enforces that before doing the content diff.
+#
+# See packages/schema-builder/supabase/migrations/README.md for the sync
+# workflow and the anti-regression hard rule.
+
+name: Schema Builder Migration Parity
+
+on:
+  pull_request:
+    paths:
+      - 'packages/schema-builder/supabase/migrations/**'
+      - 'business-suite-unified/supabase/migrations/**'
+      - '.github/workflows/schema-builder-migration-parity.yml'
+  push:
+    branches:
+      - development
+      - main
+    paths:
+      - 'packages/schema-builder/supabase/migrations/**'
+      - 'business-suite-unified/supabase/migrations/**'
+      - '.github/workflows/schema-builder-migration-parity.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    name: Enforce schema-builder migration parity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Check 1 — every package dev-fixture has a BSU canonical twin
+        id: check-pkg-to-bsu
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          shopt -s nullglob
+          for f in packages/schema-builder/supabase/migrations/*.sql; do
+            bn=$(basename "$f")
+            twin="business-suite-unified/supabase/migrations/$bn"
+            if [ ! -f "$twin" ]; then
+              echo "::error file=$f::Package dev-fixture '$bn' has no BSU canonical twin at $twin"
+              echo "::error::  Fix: land a BSU PR adding $twin first (BSU is canonical),"
+              echo "::error::        then copy the final file verbatim into this package dev-fixture."
+              echo "::error::        See packages/schema-builder/supabase/migrations/README.md §Sync workflow."
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Check 2 — every opt-in BSU migration has a dev-fixture twin
+        id: check-bsu-to-pkg
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          shopt -s nullglob
+          # Marker-based opt-in detection — a BSU migration declares itself
+          # Schema-Builder-managed (and therefore requires a dev-fixture twin)
+          # by including the `-- @sync-boundary-below` marker on its own line.
+          # This is the SAME marker Check 3 uses for byte-identical content
+          # comparison, so there is exactly one concept to learn. Migrations
+          # without the marker are out of scope for this workflow — this is
+          # intentional, because some pre-existing BSU migrations touch
+          # schema-builder tables for broader concerns (enabling Realtime,
+          # hardening RLS, adding FK indexes) without being Schema-Builder-
+          # owned.
+          for f in business-suite-unified/supabase/migrations/*.sql; do
+            [ -f "$f" ] || continue
+            if grep -qE '^-- @sync-boundary-below$' "$f"; then
+              bn=$(basename "$f")
+              twin="packages/schema-builder/supabase/migrations/$bn"
+              if [ ! -f "$twin" ]; then
+                # Dual-fix error output — there are TWO legitimate remediation paths
+                # depending on the author's intent. Surface both so a future maintainer
+                # who added the marker by mistake doesn't blindly follow Fix A and
+                # needlessly create a dev-fixture twin for a migration that isn't
+                # actually Schema-Builder-managed.
+                echo "::error file=$f::BSU migration '$bn' opts into schema-builder parity (contains '-- @sync-boundary-below' marker) but has no dev-fixture twin at $twin"
+                echo "::error::"
+                echo "::error::  Fix A — this migration IS Schema-Builder-managed (intended)."
+                echo "::error::    Copy $f into $twin, preserving the '-- @sync-boundary-below' marker,"
+                echo "::error::    and swap the annotation header above the marker from 'CANONICAL location'"
+                echo "::error::    to '⚠ DEV-FIXTURE COPY'. Bump @bsuite/schema-builder version in"
+                echo "::error::    packages/schema-builder/package.json and add a CHANGELOG entry."
+                echo "::error::"
+                echo "::error::  Fix B — this migration is NOT Schema-Builder-managed (marker added by mistake)."
+                echo "::error::    Remove the '-- @sync-boundary-below' line from $f. The migration will then"
+                echo "::error::    be correctly ignored by this workflow (it may still legitimately touch"
+                echo "::error::    Schema-Builder tables for broader concerns like blanket RLS sweeps,"
+                echo "::error::    Realtime publication toggles, or FK index additions)."
+                echo "::error::"
+                echo "::error::  See packages/schema-builder/supabase/migrations/README.md §Sync workflow."
+                failed=1
+              fi
+            fi
+          done
+          exit $failed
+
+      - name: Check 3 — content below @sync-boundary-below is byte-identical
+        id: check-content
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          shopt -s nullglob
+
+          # 3a. Helper — marker must appear exactly once per file, on its own
+          #     line, with no leading/trailing whitespace. Returns 0 if OK.
+          check_marker_count() {
+            local file=$1
+            local count
+            count=$(grep -c '^-- @sync-boundary-below$' "$file" 2>/dev/null || true)
+            if [ "${count:-0}" -ne 1 ]; then
+              echo "::error file=$file::Expected exactly 1 '-- @sync-boundary-below' marker, found ${count:-0}"
+              echo "::error::  The marker must appear on its own line with no leading/trailing whitespace."
+              echo "::error::  CI uses this marker to split the per-copy annotation header (may differ)"
+              echo "::error::        from the SQL body (must be byte-identical across BSU canonical and dev-fixture)."
+              return 1
+            fi
+            return 0
+          }
+
+          for f in packages/schema-builder/supabase/migrations/*.sql; do
+            bn=$(basename "$f")
+            twin="business-suite-unified/supabase/migrations/$bn"
+            # Missing-twin already flagged by Check 1; skip to avoid noise.
+            [ ! -f "$twin" ] && continue
+
+            # 3b. Marker presence + uniqueness on both sides.
+            check_marker_count "$f"    || { failed=1; continue; }
+            check_marker_count "$twin" || { failed=1; continue; }
+
+            # 3c. Byte-exact comparison of the body below the marker via cmp.
+            #     cmp is byte-exact (unlike bash `!=` on captured strings,
+            #     which silently drops trailing newlines and can mask
+            #     whitespace-only drift).
+            pkg_body=$(mktemp)
+            bsu_body=$(mktemp)
+            awk '/^-- @sync-boundary-below$/{found=1; next} found' "$f"    > "$pkg_body"
+            awk '/^-- @sync-boundary-below$/{found=1; next} found' "$twin" > "$bsu_body"
+
+            if ! cmp -s "$pkg_body" "$bsu_body"; then
+              echo "::error file=$f::Content below '-- @sync-boundary-below' differs from $twin"
+              echo "::error::  BSU is canonical. Fix: copy the body (below the marker) from $twin into $f verbatim."
+              echo ""
+              echo "    Diff (< package dev-fixture, > BSU canonical):"
+              diff "$pkg_body" "$bsu_body" | sed 's/^/    /' | head -60 || true
+              echo ""
+              failed=1
+            fi
+            rm -f "$pkg_body" "$bsu_body"
+          done
+          exit $failed
+
+      - name: Parity verdict
+        if: always()
+        shell: bash
+        run: |
+          c1='${{ steps.check-pkg-to-bsu.outcome }}'
+          c2='${{ steps.check-bsu-to-pkg.outcome }}'
+          c3='${{ steps.check-content.outcome }}'
+          echo "=== schema-builder migration parity summary ==="
+          echo "  Check 1 (pkg → BSU twin exists):          $c1"
+          echo "  Check 2 (BSU → pkg twin exists):          $c2"
+          echo "  Check 3 (byte-identical below boundary):  $c3"
+          echo ""
+          failed=0
+          [ "$c1" = "failure" ] && failed=1
+          [ "$c2" = "failure" ] && failed=1
+          [ "$c3" = "failure" ] && failed=1
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more parity checks failed. See annotated errors above and"
+            echo "packages/schema-builder/supabase/migrations/README.md for the sync workflow."
+            exit 1
+          fi
+          echo "✓ all parity checks passed"
