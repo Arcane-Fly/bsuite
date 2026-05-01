@@ -75,12 +75,8 @@ jobs:
           fi
 
       - name: Publish to npm
-        # NOTE: --provenance dropped because npm provenance attestation only
-        # supports PUBLIC GitHub repos; bsuite is private. The publish still
-        # uses HTTPS-authenticated NPM_TOKEN. Restore --provenance if/when
-        # bsuite is made public.
         if: steps.version-check.outputs.skip == 'false'
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
