@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import { noCompactor, verticalCompactor } from 'react-grid-layout';
+import { buildResponsiveLayouts } from './buildResponsiveLayouts.js';
 import { defaultPreferenceAdapter } from './preferences.js';
 import { rescaleLayout } from './rescaleLayout.js';
 import type {
@@ -118,8 +119,9 @@ export function usePageGridLayout({
   }, [savedLayout, defaultLayouts]);
 
   const currentLayouts = useMemo(() => {
-    if (baseCols !== layoutCols) return rescaleLayout(rawLayouts, baseCols, layoutCols);
-    return rawLayouts;
+    const rescaled =
+      baseCols !== layoutCols ? rescaleLayout(rawLayouts, baseCols, layoutCols) : rawLayouts;
+    return buildResponsiveLayouts(rescaled, { cols: layoutCols });
   }, [rawLayouts, baseCols, layoutCols]);
 
   useEffect(() => {
