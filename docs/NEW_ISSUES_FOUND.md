@@ -60,20 +60,40 @@ Severity: BLOCKER / HIGH / MEDIUM / LOW
 
 ### USER-ACTION REQUIRED (blocking publish)
 
-- **`NPM_TOKEN` repo secret needs refresh — blocks `@bsuite/page-builder@0.2.0` npm publish** — severity HIGH
-  Discovered 2026-05-02: Codebuff merged `@bsuite/page-builder@0.2.0` (#412) and added the publish workflow. After lockfile-overrides fix (#417) the workflow ran cleanly through install/test/build/dry-run, then failed on `npm publish` with:
+- **`NPM_TOKEN` needs to be an "Automation" type token to bypass 2FA — blocks `@bsuite/page-builder@0.2.0` publish** — severity HIGH
+  Discovered 2026-05-02: Codebuff merged `@bsuite/page-builder@0.2.0` (#412) and added the publish workflow. After lockfile-overrides fix (#417), three publish attempts failed:
+
+  **Attempt 1** (run 25204531162, before lockfile fix): `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` — Fixed via #417.
+
+  **Attempt 2** (run 25204766982, with old NPM_TOKEN secret from 2026-04-22):
   ```
-  npm error code E404
   npm error 404 Not Found - PUT https://registry.npmjs.org/@bsuite%2fpage-builder
-  npm error 404  The requested resource '@bsuite/page-builder@0.2.0' could not be found or you do not have permission to access it.
+  npm error 404  could not be found or you do not have permission
   ```
-  Workflow run: https://github.com/GaryOcean428/bsuite/actions/runs/25204766982
-  The 404-on-PUT pattern from npm registry indicates the auth token doesn't have publish rights. Package maintainer is `garyocean428`, secret was last updated 2026-04-22 — likely an expired/insufficient-scope Automation token.
-  **Fix (user-side):**
-  1. Visit https://www.npmjs.com/settings/garyocean428/tokens
-  2. Generate new "Granular Access Token" with: Permissions → Packages and scopes: Read and write, Selected scopes: `@bsuite`, Expiration: 1 year
-  3. Update GitHub secret: `gh secret set NPM_TOKEN --repo GaryOcean428/bsuite --body '<token>'`
+  This was actually wrong-token symptom — the secret held a value that didn't have @bsuite scope.
+
+  **Attempt 3** (run 25205067520, after refreshing NPM_TOKEN secret with the working `npm_Q2HI...` token from `.env.local`):
+  ```
+  npm error code EOTP
+  npm error This operation requires a one-time password.
+  ```
+  The full-access token works for auth but `npm publish` requires 2FA when the @bsuite scope (or the publishing user) has 2FA-on-publish enforcement. CI tokens need to be of "Automation" type to bypass 2FA.
+
+  **Fix (user-side, ~2 min):**
+  1. Visit https://www.npmjs.com/settings/garyocean428/tokens/new
+  2. Choose **"Automation"** token type (NOT "Publish" — Automation bypasses 2FA)
+  3. Copy token, then update GitHub secret:
+     ```
+     echo '<token>' | gh secret set NPM_TOKEN --repo GaryOcean428/bsuite
+     ```
   4. Re-run workflow: `gh workflow run publish-page-builder.yml --repo GaryOcean428/bsuite`
+
+  Alternative (if the Automation token type isn't desired): add publishConfig override in package.json:
+  ```json
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" }
+  ```
+  …combined with disabling 2FA on the package via `npm access set 2fa=auth-only @bsuite/page-builder` (interactive npm CLI).
+
   Once 0.2.0 publishes, consumer apps (BSU/CRM7/conduit/R80.3) need their `@bsuite/page-builder` dep bumped from `^0.1.0` → `^0.2.0` (caret on 0.x doesn't span minor).
 
 ### Active investigation
