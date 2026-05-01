@@ -51,6 +51,13 @@ Severity: BLOCKER / HIGH / MEDIUM / LOW
   `src/types/entities.ts` (~10 sites) + `src/types/billing.ts` + several store files declare `host_employer?: { id: string; business_name: string }`. The W1 `insuranceQueries.ts` fix uses PostgREST query alias (`business_name:name`) to preserve consumer shape. If these types are populated from joins to `host_employers` (not `employers`), the runtime data won't have `business_name` unless the alias is propagated. Sweep all consumers to confirm they query via the alias OR target `employers` table.
   Status: TRACKED-W4
 
+### Logged for Wave 5 (process / tooling guard)
+
+- **`gh pr merge --auto` deletes the `development` branch on dev→main promote** — pattern F — severity HIGH (process)
+  Discovered 2026-05-02 mid-W4: crm7 `development` branch was missing on the remote after the W1 promote PR #371 merged. `gh pr merge --squash --auto` defaults to deleting the branch unless `--delete-branch=false` is passed. For SHORT-LIVED feature branches this is correct; for the LONG-LIVED `development` branch it's destructive — the next dev work loses its base. Restored via `gh api -X POST repos/.../git/refs` from main's tip.
+  W5 fix: shell helper `bsu_promote_dev_to_main()` in scripts/ that always passes `--delete-branch=false` for promotes from `development`. Optional: GitHub branch protection rule "do not allow deletion of `development` branch" via repo settings.
+  Status: TRACKED-W5
+
 ### Active investigation
 
-(W1.D NOISE_PATTERNS sibling sweep is next — additions land here)
+(W4 follow-on tracked for next session — Airtable parity (dnd column reorder, filter row, bulk import, field-template export, Sheets export via WIF, BigQuery FDW), PageComposer greenfield, real Nav editor multi-row authoring, W3 follow-on for conduit Next.js adapter + R80.3/throughput/braden admin page wiring, W5 systemic guards CI)
