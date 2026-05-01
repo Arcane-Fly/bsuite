@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/dry-lint",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "ESLint plugin enforcing the BSuite one-shot architecture (single owner per Supabase entity table).",
   "type": "module",
   "license": "UNLICENSED",
@@ -17,7 +17,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
     "./ownership-map": "./src/ownership-map.json"
   },
   "scripts": {
