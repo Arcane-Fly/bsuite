@@ -54,7 +54,7 @@ Severity: BLOCKER / HIGH / MEDIUM / LOW
 ### Logged for Wave 5 (process / tooling guard)
 
 - **NEVER paste credential values into committed docs (incident 2026-05-02)** — pattern F — severity HIGH (process / security)
-  Discovered 2026-05-02 mid-debugging the npm publish flow: I (Claude) included a literal npm token value in `docs/NEW_ISSUES_FOUND.md` while explaining the EOTP failure — even though the doc context was "this token doesn't work for CI". The actual token bytes still leaked into the open PR (#420 head branch); user caught it before merge to main and rotated the token. The truncated `npm_Q2HI...` form was also too revealing.
+  Discovered 2026-05-02 mid-debugging the npm publish flow: I (Claude) included a literal npm token value in `docs/NEW_ISSUES_FOUND.md` while explaining the EOTP failure — even though the doc context was "this token doesn't work for CI". The actual token bytes still leaked into the open PR (#420 head branch); user caught it before merge to main and rotated the token. The truncated `<rotated-token-prefix>` form was also too revealing.
   W5 fix: add `gitleaks` pre-commit hook (or pre-push) to bsuite + all 6 submodules so any accidental credential paste is blocked locally before reaching GitHub. Most repos already run gitleaks in CI, but that's too late — we want LOCAL block. Recipe: `pnpm dlx husky-init && echo 'gitleaks protect --staged --no-banner' > .husky/pre-commit`. Also ensure CLAUDE-class agents are explicitly told: when describing a credential in any doc/PR/commit, use `<REDACTED>` or `<token>` placeholder — never the actual prefix, even truncated, since registries fingerprint by prefix.
   Status: TRACKED-W5
 
