@@ -22,7 +22,10 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # Required for npm provenance attestation
+  # Note: --provenance is intentionally NOT used because bsuite is a private
+  # repository and Sigstore provenance requires a public source repo.
+  # If/when bsuite goes public, re-add `id-token: write` here and `--provenance`
+  # to the npm publish step.
 
 jobs:
   publish:
@@ -76,7 +79,7 @@ jobs:
 
       - name: Publish to npm
         if: steps.version-check.outputs.skip == 'false'
-        run: npm publish --access public --provenance
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
