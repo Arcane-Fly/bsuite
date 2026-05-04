@@ -16,6 +16,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.3.2] — 2026-05-04 — React 19 attestation
+
+### Changed
+
+- Formal attestation that `@bsuite/schema-registry` is tested against and
+  compatible with React 19. No public API changes.
+
+### Notes
+
+- `peerDependencies.react` remains `">=18 <21"` (unchanged). The range already
+  admitted React 19; this patch bump documents the attestation after all six
+  consumer apps (braden, business-suite-unified, conduit, crm7, R80.3,
+  throughput) landed on React `^19.2.4` / `^19.2.5`.
+- `devDependencies.react` and `devDependencies.react-dom` remain `^19.2.4`
+  (unchanged) — the package has been tested against React 19 since `0.3.0`.
+- Satisfies AGENTS.md §Dependency Version Policy rule 2: shared packages must
+  keep parity with the lowest consumer React version. All consumers are now on
+  React 19.
+- Accompanies `@bsuite/nav-core` 0.5.1 (adds missing React `peerDependencies`)
+  and `@bsuite/page-builder` 0.2.1 (same attestation bump). Release order:
+  publish `nav-core` → `page-builder` → `schema-registry` so the peer-dep
+  resolver can find the new `nav-core` version.
+
+---
+
 ## [0.3.1] — 2026-05-01 — Recovery release
 
 ### Changed
