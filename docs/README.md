@@ -1,12 +1,14 @@
 # BSuite Documentation
 
-Top-level documentation for the BSuite multi-project workspace. Contains cross-project standards, architecture references, and planning documents shared across all five applications.
+Top-level documentation for the BSuite multi-project workspace. Contains cross-project standards, architecture references, and planning documents shared across all six applications (business-suite-unified, crm7, conduit, braden, R80.3, throughput).
 
 ## Documentation Authority
 
 - `20260227-bsuite-master-roadmap-v5.00W.md` is the canonical planning and delivery source of truth
 - `20260227-auth-map-reference-v1.00A.md` is the canonical authentication and session-topology reference
-- Project `docs/README.md` files are navigation hubs only
+- `20260504-bsuite-tech-stack-alignment-v1.00W.md` is the canonical tech-stack baseline — all apps must converge
+- `20260504-bsuite-documentation-hub-v1.00W.md` is the canonical cross-submodule documentation index — start here to find any doc
+- Project `docs/README.md` files are navigation hubs only; each submodule also has `docs/PARENT-DOCS.md` linking back to this folder
 - `docs/plans/` contains feeder plans that must reconcile back into the master roadmap
 - `archive/` and imported donor documentation are reference-only and may preserve older naming or topology
 
@@ -15,10 +17,12 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | File / Directory | Description |
 |------------------|-------------|
 | `20260227-bsuite-master-roadmap-v5.00W.md` | Single source of truth for BSuite project planning across all projects |
+| `20260504-bsuite-documentation-hub-v1.00W.md` | **Canonical cross-submodule documentation hub** — indexes every `docs/` folder across parent + 6 submodules with like-for-like mapping |
+| `20260504-bsuite-tech-stack-alignment-v1.00W.md` | **Canonical tech-stack baseline** — target versions, per-app matrix, shared `@bsuite/*` package inventory, gap register |
 | `20260227-auth-map-reference-v1.00A.md` | Authentication map for the Business Suite ecosystem (BSU, CRM7, R80.3, Braden) |
 | `20260227-bsuite-deep-audit-report-v1.00A.md` | Deep audit report covering CRM7, BSU, Conduit, braden.com.au, and R80.3 |
 | `20260227-contributing-standards-guide-v1.01W.md` | Universal quality, documentation, and code standards for all BSuite projects (supersedes v1.00A which is archived) |
-| `20260227-dry-one-shot-architecture-v1.00A.md` | DRY principles and one-shot data entry architecture for all modules |
+| `20260227-dry-one-shot-architecture-v1.02A.md` | DRY principles and one-shot data entry architecture for all modules (Approved) |
 | `20260301-crm7-page-inventory-v1.00A.md` | CRM7 page inventory — 148 pages audited with data source and status |
 | `20260301-crm7-rbac-matrix-v1.00A.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
 | `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification (palette, Tailwind config, CSS variables) |
