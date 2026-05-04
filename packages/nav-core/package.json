@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/nav-core",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
@@ -30,6 +30,10 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=18 <21",
+    "react-dom": ">=18 <21"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
