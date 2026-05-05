@@ -1,13 +1,16 @@
 # Schema Builder — Phase 3 Plan
 
-- **Status:** Working (W)
+- **Status:** Complete (closed by signoff; kept as W filename for provenance)
 - **Version:** v1.00W
 - **Date:** 2026-05-04
 - **Target packages:** `@bsuite/schema-builder@0.6.0` (Workstream A) → `0.7.0` (Workstream B). See §5 for the A-before-B ordering rule.
-- **Predecessor:** [`20260504-schema-builder-phase-2-signoff-v1.00W.md`](./20260504-schema-builder-phase-2-signoff-v1.00W.md)
+- **Predecessor:** [`20260504-schema-builder-phase-2-signoff-v1.00W.md`](../2026-04-30-shipped-package-work/20260504-schema-builder-phase-2-signoff-v1.00W.md)
+- **Signoff:** [`20260504-schema-builder-phase-3-signoff-v1.00W.md`](./20260504-schema-builder-phase-3-signoff-v1.00W.md)
 - **Roadmap ref:** WYSIWYG / Schema Builder §3.6 items 5 + 6, §3.7 (E2E tenant isolation)
 
 ---
+
+> **Closure note (2026-05-05):** This execution plan is complete. Workstreams A, B, and C shipped; `@bsuite/schema-builder@0.7.0` is the published package line; the seeded E2E fixture lives in CRM7; and no Phase 3 follow-ups remain. Treat the signoff document as the authoritative completion record and this file as the historical execution plan.
 
 ## 1. Goals
 
@@ -240,36 +243,43 @@ Any "take in-house" event is documented in the Phase 3 signoff doc as a lesson l
 
 ## 6. Acceptance Gates
 
+> **Archive verification note (2026-05-05):** Closed by
+> `20260504-schema-builder-phase-3-signoff-v1.00W.md` and re-verified before
+> archive. Current package verification passed:
+> `pnpm --filter @bsuite/schema-builder test` (12 files, 104 tests),
+> `pnpm --filter @bsuite/schema-builder typecheck`, and
+> `pnpm --filter @bsuite/schema-builder build`.
+
 Each Copilot PR must pass **all** of these before the parent merges:
 
-- [ ] `pnpm typecheck` clean (in the PR's workspace)
-- [ ] `pnpm test` passes (new tests + existing tests, no regressions)
-- [ ] `pnpm build` clean
-- [ ] `pnpm lint` clean
-- [ ] All CI checks green on the PR (GitHub Actions rollup `SUCCESS`)
-- [ ] No files outside the workstream's declared Allowed paths touched (§3.X)
-- [ ] No safety-constraint violations (§4)
-- [ ] Commit messages follow Conventional Commits
-- [ ] PR description references the issue number and checks off the acceptance criteria from the issue
-- [ ] PR description includes a **Rollback SQL** section for every new migration (executable DROP statements)
-- [ ] **Rollback SQL actually verified**: parent agent applies migration to a fresh local Supabase instance, applies rollback SQL, then re-applies migration UP — all three steps clean
-- [ ] **For any PR touching `*.sql` or containing `SECURITY DEFINER`**: `code-reviewer-multi-prompt` run with a dedicated security-focused prompt (SQL injection, role-check placement, audit-before-side-effect, `SET search_path = ''`, regex vs `format('%I')` defence-in-depth), AND explicit user approval before `gh pr merge --admin`
-- [ ] **Smoke-test against production Supabase (`tuybltdrdefjblnplpqo`) is a HUMAN responsibility, not Copilot's.** Copilot's migration file is validated by `psql --syntax-check` or `supabase db reset --local` + apply; the live prod smoke-test runs after merge, by Workstream D.
+- [x] `pnpm typecheck` clean (in the PR's workspace)
+- [x] `pnpm test` passes (new tests + existing tests, no regressions)
+- [x] `pnpm build` clean
+- [x] `pnpm lint` clean
+- [x] All CI checks green on the PR (GitHub Actions rollup `SUCCESS`)
+- [x] No files outside the workstream's declared Allowed paths touched (§3.X)
+- [x] No safety-constraint violations (§4)
+- [x] Commit messages follow Conventional Commits
+- [x] PR description references the issue number and checks off the acceptance criteria from the issue
+- [x] PR description includes a **Rollback SQL** section for every new migration (executable DROP statements)
+- [x] **Rollback SQL actually verified**: parent agent applies migration to a fresh local Supabase instance, applies rollback SQL, then re-applies migration UP — all three steps clean
+- [x] **For any PR touching `*.sql` or containing `SECURITY DEFINER`**: `code-reviewer-multi-prompt` run with a dedicated security-focused prompt (SQL injection, role-check placement, audit-before-side-effect, `SET search_path = ''`, regex vs `format('%I')` defence-in-depth), AND explicit user approval before `gh pr merge --admin`
+- [x] **Smoke-test against production Supabase (`tuybltdrdefjblnplpqo`) is a HUMAN responsibility, not Copilot's.** Copilot's migration file is validated by `psql --syntax-check` or `supabase db reset --local` + apply; the live prod smoke-test runs after merge, by Workstream D.
 
 For the Phase 3 integration (Workstream D), additionally:
 
-- [ ] Consumer-preview gate: tarball `npm pack`ed and installed into one disposable consumer (`npm install file:./<package>.tgz`); that consumer's `pnpm typecheck && pnpm build` clean — BEFORE `npm publish`
-- [ ] `@bsuite/schema-builder@<version>` published to npm and verified via `npm view`
-- [ ] All 4 consumer PRs green and merged
-- [ ] Parent submodule pointers bumped to post-merge development HEADs
-- [ ] Phase 3 signoff doc at `docs/20260504-schema-builder-phase-3-signoff-v1.00W.md` (or later date if integration slips)
+- [x] Consumer-preview gate: tarball `npm pack`ed and installed into one disposable consumer (`npm install file:./<package>.tgz`); that consumer's `pnpm typecheck && pnpm build` clean — BEFORE `npm publish`
+- [x] `@bsuite/schema-builder@<version>` published to npm and verified via `npm view`
+- [x] All 4 consumer PRs green and merged
+- [x] Parent submodule pointers bumped to post-merge development HEADs
+- [x] Phase 3 signoff doc at `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-signoff-v1.00W.md`
 
-### Mechanically-enforceable guards (future work)
+### Mechanically-enforceable guards (post-Phase-3 hardening recommendations)
 
-The two safety constraints most likely to regress should become CI lint rules in a future phase:
+The two safety constraints most likely to regress are recorded as separate hardening recommendations outside the completed Phase 3 scope:
 
-- ESLint rule: flag `role="button"` on non-`<button>` elements that contain interactive descendants
-- SQL linter: flag raw string concatenation with `||` or `concat()` inside `CREATE FUNCTION` bodies where an identifier (not literal) is being constructed
+- ESLint rule candidate: flag `role="button"` on non-`<button>` elements that contain interactive descendants
+- SQL linter candidate: flag raw string concatenation with `||` or `concat()` inside `CREATE FUNCTION` bodies where an identifier (not literal) is being constructed
 
 Neither is a Phase 3 deliverable.
 

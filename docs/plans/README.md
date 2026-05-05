@@ -20,11 +20,11 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 |------|--------|-------------|
 | `20260227-boot-compliance-engine-specification-v1.00W.md` | W | BOOT compliance engine specification (C8-tier competitive differentiator) |
 | `20260302-r80-crm7-integration-audit-v1.00W.md` | W | R80.3 ↔ CRM7 integration audit and shared calc engine plan |
-| `20260316-crm7-broad-ui-refresh-plan-v1.00W.md` | W | CRM7 broad UI refresh (D2C Neon theme) — ~40% complete |
+| `20260316-crm7-broad-ui-refresh-plan-v1.00W.md` | W | CRM7 broad UI refresh (D2C Neon theme) — active CRM7 page/chrome work tracked through merged backlog |
 | `20260423-bsuite-production-plan-v1.00W.md` | W | Refreshed audit + full production plan (Phases 6-15); authoritative P0/P1/P2 register |
 | `20260423-gto-billing-reporting-refined-plan-v1.00A.md` | A | Production billing, STP Phase 2, Payday Super, regulatory reporting (Approved) |
 | `20260427-full-7-audit-page-builder-branding-relationships-plan-v1.00W.md` | W | Full-7 audit + UX upgrade orchestration plan |
-| `20260501-universal-wysiwyg-schema-ux-v1.00W.md` | W | Universal WYSIWYG + schema-driven UX (multi-pass, pre-phase readiness gates) |
+| `20260501-universal-wysiwyg-schema-ux-v1.00W.md` | W | Universal WYSIWYG + schema-driven UX (Phase 0 + Schema Builder Phase 1a/1b + schema-builder-specific Phase 3 complete; page/form/custom authoring phases active) |
 
 ### Archived Plans (moved to `docs/archive/`)
 

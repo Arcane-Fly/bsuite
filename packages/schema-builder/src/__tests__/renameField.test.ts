@@ -7,7 +7,6 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { renamePhysicalColumn } from '../service.js';
-import { expectRejectsWithMessage } from './test-helpers.js';
 
 function mkMockClient(
   rpcResult: { data?: unknown; error?: unknown } = { data: null, error: null },
@@ -104,12 +103,11 @@ describe('renamePhysicalColumn', () => {
           "invalid_parameter_value: p_new_name must match ^[a-z][a-z0-9_]{0,62}$ (got 1bad)",
       },
     });
-    await expectRejectsWithMessage(
+    await expect(
       renamePhysicalColumn(client, entityId, fieldId, '1bad', {
         dryRun: true,
       }),
-      /invalid_parameter_value/,
-    );
+    ).rejects.toThrow(/invalid_parameter_value/);
   });
 
   it('rejects with insufficient_privilege when the caller lacks role', async () => {
@@ -120,12 +118,11 @@ describe('renamePhysicalColumn', () => {
           'insufficient_privilege: admin or owner role required for entity',
       },
     });
-    await expectRejectsWithMessage(
+    await expect(
       renamePhysicalColumn(client, entityId, fieldId, 'email_address', {
         dryRun: true,
       }),
-      /insufficient_privilege/,
-    );
+    ).rejects.toThrow(/insufficient_privilege/);
   });
 
   it('rejects with duplicate_column when the target name already exists', async () => {
@@ -136,12 +133,11 @@ describe('renamePhysicalColumn', () => {
           'invalid_parameter_value: duplicate_column — contact.email_address already exists',
       },
     });
-    await expectRejectsWithMessage(
+    await expect(
       renamePhysicalColumn(client, entityId, fieldId, 'email_address', {
         dryRun: false,
       }),
-      /duplicate_column/,
-    );
+    ).rejects.toThrow(/duplicate_column/);
   });
 
   it('propagates Error instances unchanged', async () => {

@@ -15,6 +15,6 @@
 | `20260311-d2c-theme-remediation-design-v1.00W.md` (was under `docs/superpowers/specs/`) | Shipped: `@bsuite/theme@0.3.3`. |
 | `20260422-theme-centralisation-v1.00A.md` (was under `docs/plans/`) | Shipped: theme centralisation landed in `@bsuite/theme@0.3.3`. |
 
-## What was NOT archived
+## Subsequent archive note
 
-The active schema-builder Phase 3 plan remains in place at `docs/20260504-schema-builder-phase-3-plan-v1.00W.md` (still in-flight on `feat/schema-builder-0.7.0-phase3-reorder-rename-20260502`).
+Schema Builder Phase 3 was later verified as 100% complete and archived in `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/`.

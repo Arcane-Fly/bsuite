@@ -190,13 +190,13 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 **OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
 **Redirect URI pattern:** `{origin}/auth/callback` for all clients
 
-#### Cookie SSO (`.crm7.app` subdomains)
+#### Cross-app SSO (post-2025-02-27)
 
-BSU, CRM7, R80.3, Throughput, and Conduit share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 only (no shared cookie). Conduit additionally uses `@supabase/ssr` for server-managed cookies — both layers coexist (the BS OAuth tokens live in localStorage with `bs_*` prefix, the Supabase session lives in the shared `business_suite_auth` cookie).
+Cookie SSO has been **removed**. Each app's Supabase client uses per-domain default `localStorage` (`sb-<project-ref>-auth-token`). Cross-app SSO is provided exclusively by **BS OAuth 2.1 PKCE + JWKS** via `@bsuite/auth`. BSU is the OAuth server; CRM7, R80.3, Braden, Throughput, and Conduit are clients. See [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) for the full migration rationale.
 
 #### Critical Auth Rules
 
-1. **All `.crm7.app` Supabase clients MUST use `cookieStorage`** with `domain=.crm7.app` and `storageKey: 'business_suite_auth'`
+1. **NEVER add `cookieStorage`, `domain=.crm7.app`, or `storageKey: 'business_suite_auth'`** to any Supabase client — these are forbidden patterns. Cross-app SSO is exclusively via BS OAuth 2.1 PKCE.
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
 4. **Conduit + CRM7 callbacks are dual-purpose** — check `sessionStorage` for `bs_oauth_state` to distinguish BS OAuth flow from Supabase native PKCE

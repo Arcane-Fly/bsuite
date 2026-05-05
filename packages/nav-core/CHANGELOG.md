@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.5.2] — 2026-05-05 — Toolchain refresh
+
+### Changed
+
+- Bumped dev toolchain to latest compatible: Vite 6 → 8, TypeScript 5.9 → 6.0, `@vitejs/plugin-react` 5 → 6. No public API changes.
+- Lockfile regenerated against the new toolchain. All 56 tests passing on Node 24.
+
+### Notes
+
+- Part of the bsuite-wide toolchain refresh (2026-05-05). Companion bumps in `@bsuite/page-builder` 0.2.2, `@bsuite/schema-registry` 0.3.3, `@bsuite/schema-builder` 0.7.1, `@bsuite/data-export` 0.1.4, `@bsuite/charge-calc` 0.2.4.
+
+---
+
 ## [0.5.1] — 2026-05-04 — React 19 attestation + explicit peerDependencies
 
 ### Added

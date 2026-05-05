@@ -60,7 +60,7 @@ Items blocking production deploys, live security risks, or sign-off for runbooks
 | ~~P0-12~~ | ~~BSU AuthContext zero-fetch bug — fix `onAuthStateChange` bootstrap race; add integration test for ≥2 Supabase REST calls on mount~~ — **SHIPPED bsu@`86cfb70`** (W4-BSU) — `onAuthStateChange` deadlock avoided per `feedback_auth_state_change_deadlock.md`; bootstrap effect decoupled; integration test added. | BSU / Claude Code | Enterprise tier chip displays correctly for the 3 known enterprise users | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J04 |
 | P0-13 | Remove wildcard redirect URIs `*.vercel.app` + `*.vusercontent.net` from Supabase Auth dashboard; replace with explicit preview URLs | Operator | `SELECT allowed_redirect_uris FROM auth.oauth_clients` shows no wildcards | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J03 |
 | ~~P0-14~~ | ~~`git rm crm7/APPLY_THIS_SQL.sql`~~ — **ALREADY ABSENT** on crm7/development tip (verified 2026-04-25 `ls` returned not-found). History scrub still needed if any historical commit contained credentials; that's the remaining operator action. | CRM7 / Operator | Current tip clean; audit earlier commits via `git log --all -- crm7/APPLY_THIS_SQL.sql` | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J08 |
-| P0-15 | Roadmap rollup — bump `docs/20260227-bsuite-master-roadmap-v5.00W.md` to v5.03W, strike `#26a/26e/26f/26g`, mark AUD-15/AUD-16 done | Cascade (ship-all-apps `--admin` pass) | Master roadmap header = v5.03W; four rows struck; delta doc promoted to A | `docs/20260415-roadmap-audit-delta-v1.00W.md` §Roadmap rollup request |
+| ~~P0-15~~ | ~~Roadmap rollup — bump `docs/20260227-bsuite-master-roadmap-v5.00W.md` to v5.03W, strike `#26a/26e/26f/26g`, mark AUD-15/AUD-16 done~~ — **DONE** (master roadmap header is v5.03W; 26a/26e/26f/26g struck; AUD-15/AUD-16 marked done; revision log records the 2026-05-01 ratification rollup) | Cascade | Master roadmap header = v5.03W; four rows struck; delta doc retained as archived provenance | `docs/archive/parent/2026-04-30-audits-closed/20260415-roadmap-audit-delta-v1.00W.md` §Roadmap rollup request |
 
 ---
 
@@ -70,9 +70,9 @@ After the Wave-3 + Wave-4 + Wave-4-extras burst, the remaining queue is operator
 
 1. **O-1 Apply W1-C migrations** (unblocks must-have #4 SchemaFieldAdder) — Operator runs `supabase db push --project-ref tuybltdrdefjblnplpqo --dry-run` → apply. Code committed `43fb250`. See P1-84.
 2. **O-2 Supabase OAuth dashboard allowlist** (unblocks preview-login loop on all 4 BS-OAuth clients) — Operator per `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` Part C. See P0-6 + P0-13.
-3. **O-3 Master roadmap v5.03W rollup** — Operator / Cascade via ship-all-apps `--admin`. See P0-15.
-4. **O-4 Throughput peer-dep unblock PR** — Bump `@bsuite/nav-core@^0.5.0` THEN `@bsuite/schema-registry@^0.2.0` (currently blocked on the mismatch W3-B surfaced; throughput on nav-core 0.3.0).
-5. **O-5 BSU `/admin/team-members` route** — Currently missing; throughput's W4-TP deep-link (`63b79af`) points here. Build in BSU.
+3. **O-3 Environment security cleanup** — P0-1 through P0-5 shipped; continue down priority queue in `20260424-env-var-audit-findings`.
+4. **O-4 Production gate** — Do not merge `development` to production branches until Vercel-green + no P0 leftovers.
+5. **O-5 Submodule deprecated-branch cleanup** — Org-admin cleanup tracked in `docs/20260428-orphan-branch-cleanup-handoff-v1.00W.md` and G-13 of the merged execution backlog. BSU `/admin/team-members` is already shipped via BSU #192/#193; Throughput peer-dep unblock is now complete.
 
 All five are small/operator-tier. Engineering queue below (§P1 onward) remains the canonical master list.
 
@@ -305,8 +305,8 @@ Large-scope items that require dedicated planning. Tracked as workstreams (§WS)
 | P2-16 | Email/Calendar integration UI — settings tab + inbox + tasks sync badge + `email_messages`/`tasks` migrations | CRM7 / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §14.4 |
 | P2-17 | Conduit candidate documents tab — wire `r7_documents` | Conduit / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §14.6 |
 | P2-18 | CRM7 Tier 3-4 page wiring (SP-3, in progress) — financial, compliance, WHS, comms, reports, payroll, billing, data mgmt | CRM7 / Claude Code | `docs/20260317-bsuite-gap-report-v2.00W.md` §SP-3 |
-| P2-19 | F-08 — BSU `/ideas/*` "Open in Throughput" deep-link affordance (keep light portfolio lens) | BSU / deferred | `docs/20260423-misplaced-routes-audit-v1.00W.md` §F-08 |
-| P2-20 | F-10 — CRM7 `/billing` → `/financial/invoicing` rename + redirect (namespace collision with BSU subscription billing) | CRM7 / deferred | `docs/20260423-misplaced-routes-audit-v1.00W.md` §F-10 |
+| P2-19 | F-08 — BSU `/ideas/*` "Open in Throughput" deep-link affordance (keep light portfolio lens) | BSU / Claude Code | `docs/20260423-misplaced-routes-audit-v1.00W.md` §F-08 |
+| P2-20 | F-10 — CRM7 `/billing` → `/financial/invoicing` rename + redirect (namespace collision with BSU subscription billing) | CRM7 / Claude Code | `docs/20260423-misplaced-routes-audit-v1.00W.md` §F-10 |
 | P2-21 | Web Vitals monitoring — `web-vitals` library wired in 5 apps; CRM7 INP (currently 165–357 ms) resolved | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §13.4 |
 | P2-22 | PWA asset completion — BSU `apple-touch-icon.png`+pwa icons; R80.3 webmanifest+apple-touch-icon; Conduit full audit; braden webmanifest+icons; throughput all PWA | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.8 |
 | P2-23 | FOUC prevention — inline theme script in BSU, R80.3, Conduit `layout.tsx` (CRM7 already has it) | BSU, R80.3, Conduit / Claude Code | First paint shows correct theme class — `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.6 |

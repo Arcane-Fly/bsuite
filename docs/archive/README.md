@@ -4,15 +4,16 @@ Archived per-project roadmaps and documents that have been superseded by the uni
 
 ## Contents
 
-| Directory | Description |
-|-----------|-------------|
-| [`braden/`](braden/) | Archived braden.com.au roadmap, summaries, and audit reports |
-| [`bsu/`](bsu/) | Archived business-suite-unified implementation notes and summaries |
-| [`crm7/`](crm7/) | Archived CRM7 roadmap, QA reports, and implementation docs |
-| [`r80/`](r80/) | Archived R80.3 commercialisation roadmap and deploy docs |
-| [`R80.3/`](R80.3/) | Per-app orphan branch archives (2026-04-25 finish-line WS-B) |
-| [`parent/2026-04-25-finish-line/`](parent/2026-04-25-finish-line/) | Parent-monorepo docs archived in the 2026-04-25 finish-line WS-H sweep — each carries `SUPERSEDED-BY:` header |
-| `mapd-api-guide.md` | MAPD API integration guide (archived) |
+| Directory | Status | Description |
+|-----------|--------|-------------|
+| [`braden/`](braden/) | A | Archived braden.com.au roadmap, summaries, and audit reports |
+| [`bsu/`](bsu/) | A | Archived business-suite-unified implementation notes and summaries |
+| [`crm7/`](crm7/) | A | Archived CRM7 roadmap, QA reports, and implementation docs |
+| [`r80/`](r80/) | A | Archived R80.3 commercialisation roadmap and deploy docs |
+| [`R80.3/`](R80.3/) | A | Per-app orphan branch archives (2026-04-25 finish-line WS-B) |
+| [`parent/2026-04-25-finish-line/`](parent/2026-04-25-finish-line/) | A | Parent-monorepo docs archived in the 2026-04-25 finish-line WS-H sweep — each carries `SUPERSEDED-BY:` header |
+| [`parent/2026-05-05-schema-builder-phase-3-verified/`](parent/2026-05-05-schema-builder-phase-3-verified/) | A | Schema Builder Phase 3 plan and signoff archived after red-team verification proved 100% completion |
+| `mapd-api-guide.md` | A | MAPD API integration guide |
 
 ### braden/
 

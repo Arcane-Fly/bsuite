@@ -6,9 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [Unreleased]
+## [0.7.1] — 2026-05-05 — Toolchain refresh
 
-Nothing yet.
+### Changed
+
+- Bumped dev toolchain: Vite 6 → 8, TypeScript 5.9 → 6.0, `@vitejs/plugin-react` 5 → 6. No public API changes.
+- Lockfile regenerated. All 104 tests passing on Node 24.
+
+### Notes
+
+- Part of the bsuite-wide toolchain refresh (2026-05-05). See `@bsuite/nav-core` 0.5.2.
+- Note: `0.6.0` (Phase 3A field reorder) and `0.7.0` (Phase 3B opt-in ALTER TABLE RENAME COLUMN) shipped without CHANGELOG entries; see the `package.json` `description` field and `git log` for those changes.
 
 ---
 
