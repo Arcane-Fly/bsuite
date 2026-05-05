@@ -61,10 +61,10 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', localMock)
   vi.stubGlobal('sessionStorage', sessionMock)
   vi.stubGlobal('fetch', fetchMock)
-  vi.spyOn(crypto, 'getRandomValues').mockImplementation((buf) => {
+  vi.spyOn(crypto, 'getRandomValues').mockImplementation(((buf: ArrayBufferView) => {
     if (buf instanceof Uint8Array) fillDeterministicRandom(buf)
-    return buf as ArrayBufferView & { buffer: ArrayBufferLike } as Uint8Array
-  })
+    return buf
+  }) as Crypto['getRandomValues'])
   originalLocation = window.location
   Object.defineProperty(window, 'location', {
     configurable: true,
@@ -435,7 +435,7 @@ describe('startBSTokenRefresh', () => {
   it('returns a cleanup function that stops the interval', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     const stop = createOAuthClient(CLIENT_ID).startBSTokenRefresh()
-    const spy = vi.spyOn(global, 'clearInterval')
+    const spy = vi.spyOn(globalThis, 'clearInterval')
     stop()
     expect(spy).toHaveBeenCalled()
   })

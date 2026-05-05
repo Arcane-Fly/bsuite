@@ -1,5 +1,7 @@
 # BSuite Tech-Stack Alignment — Canonical Baseline
 
+> **⚠️ SUPERSEDED (2025-02-27, auth section only):** This document describes the cookie-SSO architecture (storage key `business_suite_auth`, `domain=.crm7.app`) that was the active pattern at the time of writing. Cookie SSO has since been **removed suite-wide**. Cross-app SSO now rides exclusively on **BS OAuth 2.1 PKCE + JWKS** via `@bsuite/auth`. All non-auth content in this doc remains accurate. See [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) for the current auth architecture.
+
 **Doc ID:** 20260504-bsuite-tech-stack-alignment-v1.00W
 **Status:** W (Working — active baseline; promote to A once all apps land the remediation table)
 **Scope:** All six BSuite apps (`business-suite-unified`, `crm7`, `conduit`, `braden`, `R80.3`, `throughput`) + all 14 `@bsuite/*` shared packages

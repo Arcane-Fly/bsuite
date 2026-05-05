@@ -1,12 +1,14 @@
-# Universal WYSIWYG + Schema UX Master Plan — v1.05W
+# Universal WYSIWYG + Schema UX Master Plan — v1.07W
 
-**Date:** 2026-05-01 (revised same-day, fifth pass)
-**Status:** W (Working — awaiting user sign-off on Phase 1+)
+**Date:** 2026-05-01 (revised 2026-05-05, seventh pass)
+**Status:** W (Working — React 19 parity, Phase 0, Schema Builder Phase 1a/1b, and schema-builder-specific Phase 3 are complete; page/form/custom authoring phases remain active)
 **Owner:** Codebuff (Buffy) coordination with user
 **Supersedes / extends:** `docs/20260427-full-7-execution-ledger-v1.00W.md`, `docs/adr/ADR-0003-consumer-renderer-pattern.md`
 
 **Revision history:**
 
+- **v1.07W (2026-05-05)** — Zero-workaround reconciliation per user directive. Updated the React ground-truth table to current code: all six web apps, mobile, and shared packages are on React 19-compatible dependency lines. Removed stale “Throughput React 18 deferred” language and converted deferred/optional polish into explicit backlog requirements: DBML/SQL DDL exporters, durable undo/redo history, and cross-app WYSIWYG parity are required for plan completion rather than nice-to-have work.
+- **v1.06W (2026-05-05)** — Documentation reconciliation after the WYSIWYG/layout-shift and Schema Builder Phase 3 waves. Added explicit current-status notes so the historical delivery sections are not mistaken for open work: Phase 1a consolidation shipped as `@bsuite/schema-builder@0.1.0`; Phase 1b/Airtable upgrades advanced through `@bsuite/schema-builder@0.5.1`; the schema-builder-specific Phase 3 follow-up plan (`docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md`) closed via `@bsuite/schema-builder@0.7.0` and `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-signoff-v1.00W.md`. Also records the mandatory WYSIWYG primitive contract in §6.1 and the cross-app layout-shift remediation in the phase status notes.
 - **v1.05W (2026-05-01)** — Operational-rigour refresh per user direction (2026-05-01): *"use ship all apps skill to bring all changes including earlier and claude code and other changes into development branch… make sure development branch contains everything before commencing 1a and repeat this before each subsequent phase… inbuild skills to your plans and phases and ensure you include red-team skills/steps."* Three additive structural changes, no scope drift: **(1) new §4.−1 Pre-Phase Readiness Gate** — before any phase begins, run the `ship-all-apps` skill's sweep to pull every unmerged Claude-Code / other-agent branch that does not conflict into `development` across the parent bsuite repo and all 6 submodules (gate blocks if any PR is open + conflict-free + has passed its checks yet not merged); **(2) Skills per phase** — each phase §4.x now enumerates the exact session-loaded skills + MCP tools the executing agent must load before coding (pulled from the `master-orchestration` skill's allow-list, scoped to the BSuite silo, QIG skills explicitly excluded); **(3) Red-team per phase** — each phase now has a mandatory `multi-agent-red-team-implementation` pass after the main deliverables land but before the phase is marked complete, with explicit red-team lenses pre-chosen per phase. Archival of three divergent plan docs (`20260425-universal-canvas-master-execution-plan-v1.00W.md`, `20260422-entity-linkage-schema-builder-uplift-v1.02W.md`, `20260316-mermaid-ui-builder-reference-v1.00A.md`) lands in the same PR into `docs/archive/2026-05-01-wysiwyg-consolidation/` with SUPERSEDED-BY headers pointing at this plan — user approval 2026-05-01: *"archival plan approved"* + *"mermaid ui builder doc can be archived because if done correctly our end result will be better."*
 - **v1.04W (2026-05-01)** — Knowledge-currency refresh via `/best-practice-research` + skill sweep (`bsuite-brand-system`, `ui-ux-pro-max`, `dry-one-shot-architecture`, `dnd-kit`, `zustand`, `shadcn-ui`, `forms-and-validation`, `tanstack-query`, `tanstack-table`, `supabase`). Findings applied as surgical refinements — no structural changes, no new phases. Key updates: **Phase 0 marked ✅ Completed** (shipped via PRs #335 parent / #332 crm7 / #228 BSU on 2026-05-01); **Dagre pin bumped** `^1.1.x` → `^3.0.0` (verified current stable — the `@dagrejs/dagre` 3.x line is the active maintenance branch and what production React Flow integrations ship against in 2026); **OKLCH color-space mandate** added to §3.5 per `bsuite-brand-system` skill (D2C tokens are authored in OKLCH; the color picker must present OKLCH values even when the user picks a custom colour so brand compliance gates catch non-OKLCH drift); **TanStack Query `queryOptions` factory pattern** named explicitly in §3.7 as the canonical read-query shape used inside `useSchemaController` per `tanstack-query` skill v5 guidance; **Protected-branch workflow** documented in §7 (parent `bsuite/development` + `crm7/development` + `business-suite-unified/development` are protected — all work lands via PR branches, never direct push, even for maintainers); Q2 marked locked/resolved since Phase 0 has shipped.
 - **v1.03W (2026-05-01)** — Consolidated 15 refinements from v1.02W code review: dropped `useOptimistic` from Vite pattern (TanStack Query's native optimistic is transition-safe; `useOptimistic` in a TanStack Query callback throws in React 19); fixed dagre axis labels for `rankdir: 'LR'` (`ranksep` is horizontal between ranks, `nodesep` is vertical within a rank); added Zod↔DB alias table in §3.9 so `SchemaRelation.source.tableId` ↔ `tenant_entity_relations.source_entity_id` is explicit; split `metadata.isSystem` into two orthogonal flags (`isSystem` = reflects existing native FK, `applyAsPostgresFK` = one-shot intent to emit DDL); moved field-level FK migration into Phase 1a deliverable 0 (must land before any code work); Phase 0 aligns shared-package React devDependencies while keeping peer ranges liberal; reconciled page persistence with ADR-0001 so CRM7 `custom_pages` remains canonical and `tenant_page_layouts` is not resurrected; added §4.0 Phase dependency graph; locked Q5 + Q7 (plan body already answers them); clarified `cmdk` is shadcn-transitive (not a separate package.json entry); named `syncpack` explicitly as the peer-dep + base-stack enforcement tool; scoped Phase 1a Cmd+K subset down to `Find Entity` + `Go to <page-path>` only to prevent Phase 1a sprawl. Trailing `Next session entry point` footnote retained unchanged.
@@ -45,20 +47,20 @@ The work is sized in 6 phases, running approximately 5–8 sessions depending on
 | conduit | ^19.2.5 | ^19.2.5 | ^19.2.14 | ✅ Correct |
 | braden | ^19.2.4 | ^19.2.4 | ^19.2.14 | ✅ Correct |
 | R80.3 | ^19.2.4 | ^19.2.4 | ^19.2.14 | ✅ Correct |
-| **throughput** | ^18.3.1 | ^18.3.1 | ^18.3.5 | ❌ **Regression** |
-| **mobile** | 19.2.0 (exact) | ^19.2.4 | ~19.2.2 | ⚠️ Mismatch |
-| **packages/schema-registry** | ^18.3.1 (dev) | ^18.3.1 (dev) | ^18.3.28 | ⚠️ Outdated |
-| **packages/page-builder** | ^18.3.1 (dev) | ^18.3.1 (dev) | ^18.3.28 | ⚠️ Outdated |
-| **packages/nav-core** | ^18.3.1 (dev) | ^18.3.1 (dev) | ^18.3.28 | ⚠️ Outdated |
+| throughput | ^19.2.5 | ^19.2.5 | ^19.2.14 | ✅ Correct |
+| mobile | ^19.2.4 | ^19.2.4 | ^19.2.14 | ✅ Correct |
+| packages/schema-registry | ^19.2.5 (dev) | ^19.2.5 (dev) | ^19.2.14 | ✅ Correct |
+| packages/page-builder | ^19.2.5 (dev) | ^19.2.5 (dev) | ^19.2.14 | ✅ Correct |
+| packages/nav-core | ^19.2.5 (dev) | ^19.2.5 (dev) | ^19.2.14 | ✅ Correct |
 
-> **Phase 0 status (2026-05-01): ✅ Completed.** React 19 devDependency alignment across shared packages (`@bsuite/schema-registry`, `@bsuite/page-builder`, `@bsuite/nav-core`, `@bsuite/theme`, `@bsuite/ui`) and `mobile` shipped via PR #335 (parent bsuite) + PR #228 (BSU — aligns local `@business-suite/ui` React deps). `throughput` remains on React 18 intentionally and is deferred to Phase 6 per §4.0. Dependency Version Policy (§5) added to `AGENTS.md`, `CLAUDE.md`, and `.windsurfrules` in the same wave. CRM7 FormLayoutBuilder card-clipping fix shipped via PR #332. All three PRs MERGEABLE/CLEAN at last check.
+> **Phase 0 status (2026-05-05): ✅ Completed and superseded by current React 19 parity.** React 19 devDependency alignment across shared packages (`@bsuite/schema-registry`, `@bsuite/page-builder`, `@bsuite/nav-core`, `@bsuite/theme`, `@bsuite/ui`) and `mobile` shipped via PR #335 (parent bsuite) + PR #228 (BSU — aligns local `@business-suite/ui` React deps). Throughput has also been brought to React 19. Dependency Version Policy (§5) is present in the rule files. CRM7 FormLayoutBuilder card-clipping fix shipped via PR #332.
 
 The user's 2026-05-01 claim "we've reverted to React 18" was partially correct at the time of audit:
 
-- 5 of 6 apps were already on 19.2.4 (no regression)
-- All 3 shared packages had React 18 pinned as dev dep + peer-range `>=18 <21` — **resolved by Phase 0 (PR #335)**; devDeps now on `^19.2.4`, peer ranges remain liberal
-- `throughput` never migrated to 19 (a real stragglers' regression) — intentionally deferred to Phase 6 per §4.0
-- `mobile` had a minor `react` vs `react-dom` version mismatch — **resolved by Phase 0**; `mobile/package.json` now pins react `^19.2.4` to match react-dom
+- 5 of 6 web apps were already on React 19 during the original audit.
+- Shared packages had React 18 pinned as dev deps while keeping liberal peer ranges — resolved by Phase 0 and subsequent shared-package alignment.
+- Throughput is now on React 19.2.x and no longer carries a React 18 exception.
+- `mobile` now pins React and React DOM to matching React 19.2.x ranges.
 
 ### 2.2 Schema Builder duplication (DRY violation)
 
@@ -372,7 +374,7 @@ A shadcn `Sheet` docked to the right edge, 320px wide, with four tabs (shadcn `T
 
 7. **Inline edit** — double-click an entity label to rename; double-click a field row to edit field metadata in a popover (not the side panel).
 
-8. **Export** — button to export the current schema as DBML, SQL DDL, or PNG (for docs). Initial release ships PNG via React Flow's `toImage` (zero new deps); DBML / SQL DDL emitters are deferred to a later polish phase.
+8. **Export** — button to export the current schema as DBML, SQL DDL, or PNG (for docs). PNG shipped first via React Flow's image path; DBML and SQL DDL emitters remain required backlog scope before this plan can be marked complete in full.
 
 ### 3.7 Mutation pattern — `useOptimistic` + TanStack Query (+ Server Actions where available)
 
@@ -559,13 +561,13 @@ Per user direction (2026-05-01 follow-up): *"Add a 'Command Palette' (Cmd+K) tha
 
 | Command | Scope | Phase |
 |---|---|---|
-| `Add Column` to <entity> | Schema Builder, any page with a selected entity | Phase 1b |
-| `Connect Tables` <source> → <target> | Schema Builder | Phase 1b |
-| `Find Entity` <name> (fuzzy) + pan & zoom | Schema Builder | Phase 1a |
+| `Add Column` to `entity` | Schema Builder, any page with a selected entity | Phase 1b |
+| `Connect Tables` `source` → `target` | Schema Builder | Phase 1b |
+| `Find Entity` `name` (fuzzy) + pan & zoom | Schema Builder | Phase 1a |
 | `Tidy Up Layout` (runs dagre auto-layout) | Schema Builder | Phase 1b |
-| `Add to Page` <entity> as <widget-type> | Any page with PageGridLayout | Phase 3 |
+| `Add to Page` `entity` as `widget-type` | Any page with PageGridLayout | Phase 3 |
 | `Edit Page` / `Save Page Layout` / `Reset Page Layout` | Any page with PageGridLayout | Phase 3 |
-| `Go to` <page-path> (fuzzy navigation) | Global | Phase 1a |
+| `Go to` `page-path` (fuzzy navigation) | Global | Phase 1a |
 | `Toggle Edit Mode` (E) | Global | Phase 3 |
 | `Undo` / `Redo` | Global | Phase 3 |
 | `Publish` / `Preview` (for Custom Pages) | CRM7 custom page settings | Phase 5 |
@@ -598,7 +600,7 @@ Per user direction (2026-05-01): *"use ship all apps skill to bring all changes 
 1. **Fetch + sweep** — `git fetch --all --prune` in parent and every submodule; list every remote branch that has no open PR (orphans) and every open PR across all 7 repos.
 2. **Pull conflict-free work into `development`** — for every open PR that (a) targets `development`, (b) is MERGEABLE/CLEAN, (c) has passed its required checks, (d) does not conflict with the current phase's planned file changes → merge into `development` via GitHub's merge-queue-equivalent. Orphan branches with no PR are surfaced to the user for triage, not auto-merged.
 3. **Stop short of `main`** — nothing in the gate merges `development` → `main` / default branch. That is a separate sign-off event the user retains control of.
-4. **Report** — print a per-repo table: `open_prs`, `merged_into_dev`, `skipped_conflicting`, `orphaned_no_pr`, `blocked_failing_checks`. The current phase MAY NOT start until every entry in `skipped_conflicting` is either resolved or explicitly deferred by the user.
+4. **Report** — print a per-repo table: `open_prs`, `merged_into_dev`, `skipped_conflicting`, `orphaned_no_pr`, `blocked_failing_checks`. The current phase MAY NOT start until every entry in `skipped_conflicting` is resolved, converted into an operator-only/external-blocked item with explicit evidence, or removed because a newer canonical plan supersedes it.
 5. **Snapshot** — record the final `development` HEAD SHA for parent + every submodule in the phase's kickoff memo so the phase has a deterministic base.
 
 **Skills consulted during the gate:**
@@ -633,13 +635,13 @@ Phase 4  (Form Builder DnD + inline rename + live preview)              — shar
    ↓
 Phase 5  (Custom Page authoring in CRM7 custom page settings)           — needs Phase 2 + Phase 3
    ↓
-Phase 6  (throughput React 19 migration + peer policy re-evaluation     — no hard prereqs; can run anytime after Phase 0
-          + polish + CI lint + DBML/SQL DDL exporters)                    but traditionally last so the suite converges)
+Phase 6  (peer policy re-evaluation + CI lint + DBML/SQL DDL exporters   — no hard prereqs; can run anytime after Phase 0
+          + durable undo/redo history + final parity verification)         but traditionally last so the suite converges)
 ```
 
-Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the shared zustand temporal store is extracted in Phase 3's first milestone. Phase 6 (throughput React 19 + peer policy re-evaluation) is intentionally last because peer ranges should not tighten until every consumer app is verified on React 19.
+Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the shared zustand temporal store is extracted in Phase 3's first milestone. Phase 6 now closes remaining parity and governance scope after React 19 parity is already achieved: peer policy decision, CI enforcement, DBML/SQL DDL exporters, durable undo/redo history, and cross-app WYSIWYG parity verification.
 
-**Gate before every phase:** run §4.−1 Pre-Phase Readiness Gate. A phase may not begin until its gate report has been posted and its conflicts either resolved or explicitly deferred. This is in addition to any code-level prereqs listed in the phase's own Prereqs line.
+**Gate before every phase:** run §4.−1 Pre-Phase Readiness Gate. A phase may not begin until its gate report has been posted and its conflicts are either resolved, operator/external-blocked with evidence, or superseded by a newer canonical plan. This is in addition to any code-level prereqs listed in the phase's own Prereqs line.
 
 ### Phase 0 — Safe quick wins (this session)
 
@@ -656,14 +658,14 @@ Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the
    - `packages/nav-core`: same devDependency bump; no React peer tightening in Phase 0.
    - `packages/theme` and `packages/ui`: same devDependency bump because they are shared packages and must not trail the consumer React major.
    - `mobile`: react `19.2.0` (exact) → `^19.2.4` to match `react-dom`.
-   - `throughput`: NOT touched in Phase 0. Its React 18 → 19 migration is the primary deliverable of Phase 6.
+   - `throughput`: originally outside Phase 0 scope; now independently complete on React 19.2.x.
 
 3. **Card clipping fix** (`crm7/src/components/ui-customization/FormLayoutBuilder.tsx`):
    - Section title: add `truncate` + `min-w-0` so flex clipping works; add `title={section.title}` for native tooltip on hover
    - Field label in `SortableField`: already has `truncate` — audit for the same `min-w-0` parent issue
    - Property-panel inputs: add `w-full` consistently so labels don't push inputs off-panel
 
-4. **Throughput React 18 → 19** (Phase 6 — needs full typecheck + Vitest + optional Playwright pass, not a Phase 0 quick win)
+4. **Throughput React 19 parity** — now complete in current code; keep Phase 6 focused on enforcement and full-app parity, not migration.
 
 **Acceptance criteria for Phase 0**:
 
@@ -675,11 +677,15 @@ Phase 1a is a hard blocker for all feature work. Phases 3/4 can overlap once the
 
 ### Phase 1 — Schema Builder consolidation + Airtable upgrades (1 session)
 
+> **Current status (2026-05-05): ✅ Completed for Schema Builder.** Phase 1a shipped the shared `@bsuite/schema-builder` package and consumer thin-wrapper pattern. Phase 1b's Airtable/dbdiagram-grade upgrades subsequently shipped through the package's 0.2.x–0.5.x line: column-level handles, crow's-foot markers, dagre auto-layout, schema reflection, smart edge routing, minimap/zoom-to-fit/fuzzy toolbar, inline editing, PNG export, full command surface foundations, `FieldCreateDialog`, `FieldEditDialog`, and migration-path cleanup. The current package line is `@bsuite/schema-builder@0.7.0`; details are summarized in `packages/schema-builder/README.md` and the Phase 3 signoff.
+
 **Prereqs**: Phase 0 merged; user approval of this doc; `pnpm dlx shadcn@latest add command` run in BSU / conduit / R80.3 (Cmd+K palette prereq per §3.10).
 
 Phase 1 splits into **Phase 1a (Hot-Sync Fix)** and **Phase 1b (Airtable upgrades)**. Phase 1a MUST ship and land in all 4 consumers before Phase 1b starts — it eliminates the ~1500-line DRY violation that blocks every subsequent change.
 
 #### Phase 1a — Hot-Sync Fix (carve-out per user direction)
+
+> **Completion note (2026-05-05):** Closed. The canonical package, `useSchemaController`, Zod contracts, Cmd+K Phase-1a subset, migration fixture split, and consumer wrappers exist. ADR-0004 records the consolidation decision.
 
 **Skills to load before starting:** `master-orchestration`, `ship-all-apps` (re-run the gate per §4.−1), `dry-one-shot-architecture` (the consolidation IS the DRY fix for the 4 duplicated schema builders), `tanstack-query` + `tanstack-router` (controller hook), `forms-and-validation` (Zod schemas in §3.9), `supabase` + `supabase-postgres-best-practices` (RLS + Realtime wiring + migration application), `shadcn-ui` (Cmd+K Command install), `zustand` (canvas state), `dnd-kit` (node drag handles), `subagent-driven-development` (4 consumer PRs open in parallel), `verification-before-completion`.
 
@@ -697,7 +703,7 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
    - Zod-validated create / update / delete through `SchemaRelationSchema` + `EntityNodeDataSchema` (§3.9), translated to DB column names via the alias table in §3.9
 4. **All four consumer apps collapse to thin wrappers (~30 lines each)** — this includes crm7 (whose current schema-builder page is the canonical source being extracted), business-suite-unified, conduit, braden, and R80.3. Net removal of ~1500 lines of duplicated code. Wrappers pass in `tenantId`, `appScope`, and optional entity filters.
 5. **Install shadcn `Command` (`cmdk`) in BSU / conduit / R80.3**: run `pnpm dlx shadcn@latest add command` once per app **from an isolated directory outside the bsuite tree per AGENTS.md pnpm-workspace lockfile rules**. crm7 and braden already have the component.
-6. **Wire Cmd+K palette with the Phase-1a command subset ONLY**: `Find Entity <name>` (fuzzy search + pan/zoom to picked node) and `Go to <page-path>` (fuzzy navigation). That is the entire Phase 1a Cmd+K surface — nothing else. *Full Cmd+K catalogue (`Add Column`, `Connect Tables`, `Tidy Up Layout`, `Toggle Edit Mode`, `Add to Page`, `Undo`, `Redo`, `Publish`) ships incrementally across Phases 1b, 3, and 5 — see §3.10.*
+6. **Wire Cmd+K palette with the Phase-1a command subset ONLY**: `Find Entity name` (fuzzy search + pan/zoom to picked node) and `Go to page-path` (fuzzy navigation). That is the entire Phase 1a Cmd+K surface — nothing else. *Full Cmd+K catalogue (`Add Column`, `Connect Tables`, `Tidy Up Layout`, `Toggle Edit Mode`, `Add to Page`, `Undo`, `Redo`, `Publish`) ships incrementally across Phases 1b, 3, and 5 — see §3.10.*
 7. Publish `@bsuite/schema-builder@0.1.0` to npm
 8. 4 consumer PRs + 1 parent PR (package + ADR-0004 documenting the consolidation)
 
@@ -712,6 +718,8 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 **Red-team pass (mandatory before Phase 1a is marked ✅):** spawn `multi-agent-red-team-implementation` with five lenses: (1) `security-audit` on the new Supabase migration + RPC scaffolding (RLS preserved? no `service_role` bypass?); (2) `dry-one-shot-architecture` — do all 4 consumers actually share one implementation, or did a subtle divergence survive the port? (3) `test-coverage-analysis` + `qa-and-verification` — does `useSchemaController` have tests for every mutation rollback path? (4) `api-design-validation` — does the Zod schema in §3.9 match the DB column-alias table with zero drift? (5) `receiving-code-review` — every PR review comment on the 4 consumer PRs is addressed or explicitly deferred with a linked follow-up issue.
 
 #### Phase 1b — Airtable / dbdiagram upgrades (on top of 1a)
+
+> **Completion note (2026-05-05):** Closed for the schema-builder scope listed below. Follow-up work that belongs to page/card authoring remains in the later universal-plan phases, not in Schema Builder Phase 1b.
 
 **Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `ui-ux-pro-max` (the UX bar for column-level handles + crow's-foot is explicit user direction: *"highest UX is key"*), `bsuite-brand-system` (OKLCH colours on edge styling), `tanstack-query` (dagre-run mutation invalidation), `supabase` (information_schema reflection RPC), `shadcn-ui` (remaining Cmd+K commands), `framer-motion` (node auto-layout transition), `verification-before-completion`.
 
@@ -762,6 +770,8 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 
 ### Phase 3 — Edit mode + style inspector (2 sessions)
 
+> **Status note (2026-05-05):** This universal-plan Phase 3 is the page/card edit-mode and style-inspector phase. It is distinct from `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md`, whose Schema Builder follow-ups (field reorder, physical column rename, seeded E2E tenant) are complete per `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-signoff-v1.00W.md`.
+
 **Skills to load before starting:** `master-orchestration`, `ship-all-apps`, `ui-ux-pro-max` + `vercel-web-design-guidelines` (inspector + edit-mode UX), `bsuite-brand-system` (OKLCH + token-aware picker), `zustand` (temporal undo/redo), `shadcn-ui` (Sheet + Tabs + Popover), `framer-motion` (inspector open/close + selection ring), `dnd-kit` (grid-item drag-in-edit-mode), `verification-before-completion`.
 
 **Deliverables**:
@@ -769,7 +779,7 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 1. `EditModeProvider` + `usePermission` gate (requires `manage_system` on both client and server — see §8 Q7)
 2. `WidgetInspector` shadcn `Sheet` with 4 tabs (Style / Layout / Content / Data)
 3. Token-aware color picker — default swatches from theme CSS variables; "Custom" opens shadcn `Popover` with native `<input type="color">`. Persists CSS variable **name** (`var(--accent-primary)`) per §3.5 R1 refinement, not resolved hex.
-4. Undo/redo via zustand + `temporal` middleware (per-page-session scope; DB persistence deferred to Phase 6 polish)
+4. Undo/redo via zustand + `temporal` middleware (per-page-session scope first; durable DB-backed history remains required Phase 6 parity scope)
 5. Keyboard shortcuts (E toggle edit, Delete remove selected, Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo, Escape deselect)
 6. Wire into `PageGridLayout` — clicking a grid item in edit mode opens inspector
 7. Style overrides persist into the layout JSON as a `style` property per widget, using `tailwind-merge`'s `cn()` helper at render time so authored overrides safely layer on top of component base classes without collisions
@@ -831,20 +841,20 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 
 **Deliverables**:
 
-1. `throughput` react / react-dom / @types/react → 19.2.4
+1. Verify `throughput` stays on React 19.2.x with matching `react-dom` and `@types/react`.
 2. Full typecheck + Vitest run + Playwright (if configured)
-3. Fix any React 19 strict-mode / concurrent issues
+3. Fix any React 19 strict-mode / concurrent issues discovered by verification
 4. Update the Zero-Defer checklist in AGENTS.md confirming 100% React 19 parity
-5. Re-evaluate whether shared-package `peerDependencies` should remain liberal or tighten after every consumer app is on React 19.
-6. Optional: DBML + SQL DDL exporters for Schema Builder (deferred from Phase 1b §3.6 item 8)
-7. Optional: persist undo/redo history to DB so it survives refresh (deferred from Phase 3 §4)
-8. CI lint enforcing the base-stack-only rule (blocks PRs that add runtime deps outside the §2.5 + §6 allow-list — enforces v1.01W's hard scope constraint mechanically)
+5. Re-evaluate whether shared-package `peerDependencies` should remain liberal or tighten after every consumer app is verified on React 19.
+6. DBML + SQL DDL exporters for Schema Builder (required completion of Phase 1b §3.6 item 8)
+7. Persist undo/redo history to DB so it survives refresh (required completion of Phase 3 §4)
+8. CI lint enforcing the base-stack-only rule (blocks PRs that add runtime deps outside the §2.5 + §6 approved dependency set — enforces v1.01W's hard scope constraint mechanically)
 
 **Acceptance criteria for Phase 6**:
 
-- `throughput` passes typecheck + Vitest + any configured Playwright run on React 19.2.4
-- `pnpm list --depth=-1 react` in every app and every shared package returns `^19.2.x` — no React 18 anywhere
-- Shared-package `peerDependencies` decision (tighten vs keep liberal) is recorded in ADR-0005
+- `throughput` remains green on React 19.2.x: typecheck + Vitest + any configured Playwright run
+- `pnpm list --depth=-1 react` in every app and every shared package returns React 19.2.x — no React 18 anywhere
+- Shared-package `peerDependencies` decision (tighten vs keep liberal) is recorded in the canonical tech-stack alignment doc
 - The base-stack-only CI lint blocks a deliberately-poisoned test PR that tries to add a non-allow-listed runtime dep
 
 **Red-team pass (mandatory before Phase 6 is marked ✅):** spawn `multi-agent-red-team-implementation` with three lenses: (1) `dependency-management` — can a malicious transitive bump slip past syncpack? (2) `cross-platform-sync` — AGENTS.md / CLAUDE.md / .windsurfrules all carry the final policy with zero drift; (3) `security-audit` — no high-severity pnpm-audit findings remain suppressed.
@@ -945,12 +955,25 @@ As of 2026-05-01 the confirmed mutually-compatible versions are:
 | @tanstack/react-query | `^5.x` | React 19 compatible |
 | @supabase/supabase-js | `^2.98.0` | Framework-agnostic |
 | zustand | `^5.0.11` | React 19 compatible |
-| zod | `^4.x` | v4 is mono-package; both schema-registry peers `^3 || ^4` |
+| zod | `^4.x` | v4 is mono-package; both schema-registry peers support v3 or v4 |
 | framer-motion | `^12.x` | React 19 compatible |
 | react-hook-form | `^7.x` | React 19 compatible |
 | `cmdk` | ships with `pnpm dlx shadcn@latest add command` — **not a separate `package.json` entry** | shadcn Command primitive. Already present in crm7 + braden; BSU / conduit / R80.3 install it via the shadcn CLI in Phase 1a (from an isolated dir per AGENTS.md pnpm-workspace lockfile rules). Never add `"cmdk": "…"` manually to any `package.json` — it's a shadcn-transitive dep. |
 | `tailwind-merge` | `^2.x \|\| ^3.x` | Already installed everywhere via shadcn's `cn()` helper. Critical for the "edit borders" requirement (§3.5) |
 | `clsx` | `^2.x` | Companion to tailwind-merge in shadcn's `cn()` helper |
+
+### 6.1 WYSIWYG primitive contract — mandatory implementation split
+
+All WYSIWYG work MUST use the correct canvas/interaction primitive for the surface being edited. The shared source of truth is `@bsuite/page-builder`'s `WYSIWYG_SURFACE_CONTRACTS` export, with Vitest coverage in `packages/page-builder/src/__tests__/wysiwygContract.test.ts`.
+
+| Surface | Interaction primitive | Persistence primitive | Owner |
+|---|---|---|---|
+| Schema Builder | React Flow (`@xyflow/react`) handles, edges, custom nodes | TanStack Query v5 (`queryOptions`, optimistic mutation rollback, invalidation) | `@bsuite/schema-builder` |
+| Page Builder / card canvas | Resizable cards through `@bsuite/page-builder` / React Grid Layout | Page-grid preference adapter now, later `custom_pages` adapter | `@bsuite/page-builder` |
+| Form Layout Builder | `dnd-kit` sortable/palette-to-canvas interactions with `PointerSensor`, `KeyboardSensor`, `DragOverlay` | TanStack Query v5 for persisted form layout writes | CRM7 UI customization |
+| Custom Page Renderer | Read-only renderer | TanStack Query read from CRM7-owned `custom_pages` | `@bsuite/page-builder` wrappers |
+
+This contract prevents primitive drift: schema relationships must not be reimplemented with `dnd-kit`, card layout editing must not bypass resizable grid cards, and persisted WYSIWYG server state must not use ad-hoc local mirrors instead of TanStack Query + owner tables.
 
 **New runtime dependency introduced by this plan** (single addition, justified in §2.5):
 

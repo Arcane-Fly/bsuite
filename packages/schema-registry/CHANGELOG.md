@@ -16,6 +16,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.3.4] — 2026-05-05 — Tarball leak fix
+
+### Fixed
+
+- **Closes real consumer leak.** Prior `0.3.3` tarball shipped `dist/__tests__/setup.{js,d.ts}` into the published package. `setup.js` contained `import '@testing-library/jest-dom'`, meaning any consumer who wildcard-imported the package could have pulled jest-dom into a runtime bundle. `package.json` `exports` gates access to `./react`, `./react/editors`, `./server`, and `.` only — so exposure through normal deep-imports was not possible — but the files were present in the tarball and increased install footprint. Verified via `rg @bsuite/schema-registry.*__tests__` across the entire bsuite tree: zero cross-app imports of the leaked path. Tarball is now clean.
+- Root cause: `tsconfig.build.json` `exclude` was `["**/*.test.tsx", "**/*.test.ts", "node_modules"]` which did NOT cover the non-test `setup.ts` file living inside `src/__tests__/`. Missing the `src/__tests__` directory-level exclude entirely.
+
+### Changed
+
+- Canonicalised `tsconfig.build.json` `exclude` to the 5-entry pattern matching `packages/auth/tsconfig.build.json`: `src/__tests__`, `src/**/*.test.ts`, `src/**/*.test.tsx`, `src/**/*.spec.ts`, `src/**/*.spec.tsx`. Documented in `docs/20260505-bsuite-dependency-refresh-ts6-migration-v1.00W.md` §2.1.
+
+### Notes
+
+- No public API changes. All 25 tests still pass. Consumers on `^0.3.0` or `^0.3.3` pick this up automatically via semver caret on next install.
+
+---
+
+## [0.3.3] — 2026-05-05 — Toolchain refresh
+
+### Changed
+
+- Bumped dev toolchain: Vite 6 → 8, TypeScript 5.9 → 6.0, `@vitejs/plugin-react` 5 → 6. No public API changes.
+- Lockfile regenerated. All 25 tests passing on Node 24.
+
+### Notes
+
+- Part of the bsuite-wide toolchain refresh (2026-05-05).
+
+---
+
 ## [0.3.2] — 2026-05-04 — React 19 attestation
 
 ### Changed

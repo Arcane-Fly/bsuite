@@ -13,7 +13,7 @@
 Phase 3 A+B+C of the `@bsuite/schema-builder` rollout completed **2026-04-30** under an explicit operator **Zero-Defer mandate** ("no deferrals permitted. I forbid them."). **25 PRs** merged across 6 consumer repos plus the parent `bsuite` monorepo.
 
 Canonical source of truth for scope delivered, design deviations, and lessons learned:
-👉 `docs/20260504-schema-builder-phase-3-signoff-v1.00W.md`
+👉 `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-signoff-v1.00W.md`
 
 ### Merged PRs
 
@@ -130,6 +130,7 @@ Captured via `vercel ls <project> --scope braden-pty-ltd` at the time of this do
 Use your **Vercel MCP tools** (preferred) or **Vercel CLI** as fallback to verify each of the 6 projects against the checklist below.
 
 **Environment:**
+
 - Vercel CLI installed at `~/.npm-global/bin/vercel` (v50.32.3)
 - Authenticated as `garyocean428`
 - Active team scope: `braden-pty-ltd`
@@ -309,9 +310,9 @@ All deploy timestamps fall within the Phase 3 merge-wave window (2026-04-30 ~14:
 
 ¹ **SHA match — CLI limitation, circumstantial evidence green.** `vercel inspect --format json` on CLI 50.32.3 returns a deployment object with top-level keys `{aliases, builds, contextName, createdAt, id, name, readyState, target, url}` — the `meta` object is present but does not include `githubCommitSha`, `githubCommitRef`, or `githubCommitAuthor` fields in the returned payload for these deploys. This is a CLI payload-trimming issue (the Vercel dashboard and MCP do expose these fields). Rather than leaving the SHA-match check unverified, the following circumstantial evidence was collected:
 
-  - All 6 deploy `createdAt` timestamps fall inside the Phase 3 merge window (2026-04-30T10:01–11:08 UTC = 2026-04-30T18:01–19:08 AWST). No deploy predates the first Phase 3 merge.
-  - Live production domains all return `200 OK` — no stale-deploy rollback symptoms (these would typically manifest as `404`, `503`, or `READY` state without traffic-serving behind the alias).
-  - `pnpm install --frozen-lockfile` completed on all 6 projects without `ERR_PNPM_OUTDATED_LOCKFILE`. A mismatched SHA (older lockfile in the deployed commit vs the Phase 3 lockfile bump) would have failed this gate on the 5 projects carrying `@bsuite/schema-builder` version bumps (braden has no schema-builder dep). The specific resolved version string was not independently grep'd from the install log — that audit is left to Claude Code's MCP re-check.
+- All 6 deploy `createdAt` timestamps fall inside the Phase 3 merge window (2026-04-30T10:01–11:08 UTC = 2026-04-30T18:01–19:08 AWST). No deploy predates the first Phase 3 merge.
+- Live production domains all return `200 OK` — no stale-deploy rollback symptoms (these would typically manifest as `404`, `503`, or `READY` state without traffic-serving behind the alias).
+- `pnpm install --frozen-lockfile` completed on all 6 projects without `ERR_PNPM_OUTDATED_LOCKFILE`. A mismatched SHA (older lockfile in the deployed commit vs the Phase 3 lockfile bump) would have failed this gate on the 5 projects carrying `@bsuite/schema-builder` version bumps (braden has no schema-builder dep). The specific resolved version string was not independently grep'd from the install log — that audit is left to Claude Code's MCP re-check.
 
   **If Claude Code opts to run the MCP-level SHA-match check** (Vercel MCP exposes `meta.githubCommitSha` directly), an agreeing result would convert this ⚠️ to ✅. The current ⚠️ reflects CLI payload trimming, not an unresolved finding.
 
@@ -372,7 +373,7 @@ These are **optional belt-and-braces re-verifications** — the green signoff in
 
 ## 8. Supporting refs
 
-- **Signoff doc:** `docs/20260504-schema-builder-phase-3-signoff-v1.00W.md` (filename date `20260504` is intentional — the doc was created at the start of the Phase 3 rollout with the planned completion date in the name; it is the canonical signoff and exists today)
+- **Signoff doc:** `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-signoff-v1.00W.md` (filename date `20260504` is intentional — the doc was created at the start of the Phase 3 rollout with the planned completion date in the name; it is the canonical signoff and exists today)
 - **Session memory:** `bsuite_session_20260430b` at `https://qig-memory-api.vercel.app/api/memory/bsuite_session_20260430b`
 - **Zero-Defer mandate:** operator statement 2026-04-30 — *"no deferrals permitted. I forbid them."*
 - **Vercel team:** `braden-pty-ltd` (team ID). CLI flag: `--scope braden-pty-ltd`.

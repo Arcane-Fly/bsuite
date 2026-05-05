@@ -7,7 +7,6 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { reorderEntityFields } from '../service.js';
-import { expectRejectsWithMessage } from './test-helpers.js';
 
 function mkMockClient(
   rpcResult: { data?: unknown; error?: unknown } = { data: null, error: null },
@@ -56,10 +55,9 @@ describe('reorderEntityFields', () => {
       data: null,
       error: { message: 'insufficient_privilege: admin or owner role required' },
     });
-    await expectRejectsWithMessage(
+    await expect(
       reorderEntityFields(client, entityId, ['a']),
-      /insufficient_privilege/,
-    );
+    ).rejects.toThrow(/insufficient_privilege/);
   });
 
   it('rejects when the RPC returns invalid_parameter_value for a partial array', async () => {
@@ -70,10 +68,9 @@ describe('reorderEntityFields', () => {
           "invalid_parameter_value: p_field_ids does not match the entity's active fields",
       },
     });
-    await expectRejectsWithMessage(
+    await expect(
       reorderEntityFields(client, entityId, ['a']),
-      /invalid_parameter_value/,
-    );
+    ).rejects.toThrow(/invalid_parameter_value/);
   });
 
   it('rejects when the RPC returns a duplicate-id error', async () => {
@@ -83,10 +80,9 @@ describe('reorderEntityFields', () => {
         message: 'invalid_parameter_value: p_field_ids contains duplicates',
       },
     });
-    await expectRejectsWithMessage(
+    await expect(
       reorderEntityFields(client, entityId, ['a', 'a']),
-      /duplicates/,
-    );
+    ).rejects.toThrow(/duplicates/);
   });
 
   it('rejects when the RPC returns a bare string error', async () => {

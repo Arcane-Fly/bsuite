@@ -1,5 +1,7 @@
 # BSuite — Phase 0 Completion Report (v1.00W)
 
+> **⚠️ SUPERSEDED (2025-02-27, cookie-SSO sections only):** References in this report to cookie SSO as "correctly wired" (storage key `business_suite_auth`, `domain=.crm7.app`) describe the architecture as it existed at the time. Cookie SSO has since been **removed suite-wide**; cross-app SSO now rides on **BS OAuth 2.1 PKCE** only. Non-auth sections of this report remain accurate. See [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md).
+
 **Status:** Working — hand-off to user for ADR ratification
 **Session:** 2026-05-01
 **Scope:** Docs reconciliation + ADR drafting + merged backlog + audit frameworks (per subagent-driven-development + Phase 0 of consolidated plan)

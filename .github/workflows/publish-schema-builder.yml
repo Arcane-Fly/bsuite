@@ -1,0 +1,93 @@
+# Publish @bsuite/schema-builder to npm
+#
+# Triggers automatically when packages/schema-builder/package.json changes on main.
+# Skips publish if the current version is already on npm (idempotent).
+#
+# Required GitHub Secret:
+#   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
+#
+# To trigger manually (e.g. after a version bump merged to main):
+#   gh workflow run publish-schema-builder.yml
+
+name: Publish @bsuite/schema-builder
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/schema-builder/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Note: --provenance is intentionally NOT used because bsuite is a private
+  # repository and Sigstore provenance requires a public source repo.
+
+jobs:
+  publish:
+    name: Build, test and publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/schema-builder
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.33.3 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Dry-run publish
+        run: npm publish --dry-run --access public
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+
+          PUBLISHED=$(npm view "@bsuite/schema-builder@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::@bsuite/schema-builder@${PKG_VERSION} is already on npm — skipping publish"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Will publish @bsuite/schema-builder@${PKG_VERSION}"
+          fi
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Job summary
+        if: always()
+        env:
+          PKG_VERSION: ${{ steps.version-check.outputs.version }}
+          SKIPPED: ${{ steps.version-check.outputs.skip }}
+        run: |
+          if [ "$SKIPPED" = "true" ]; then
+            echo "### Skipped — already published" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`@bsuite/schema-builder@${PKG_VERSION}\` is already on npm." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published" >> "$GITHUB_STEP_SUMMARY"
+            echo "[\`@bsuite/schema-builder@${PKG_VERSION}\`](https://www.npmjs.com/package/@bsuite/schema-builder) published to npm." >> "$GITHUB_STEP_SUMMARY"
+          fi

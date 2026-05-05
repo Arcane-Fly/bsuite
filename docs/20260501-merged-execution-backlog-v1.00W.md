@@ -1,8 +1,10 @@
 # BSuite — Merged Execution Backlog (v1.00W)
 
+> **⚠️ SUPERSEDED (2025-02-27, cookie-SSO line items only):** Backlog items that reference cookie SSO (storage key `business_suite_auth`, `domain=.crm7.app`) are obsolete — cookie SSO has been **removed suite-wide**. Remaining cookie-SSO entries in this backlog are closed by removal, not implementation. Non-auth backlog items remain relevant. See [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md).
+
 **Status:** Working (ratification pending user Phase 0 sign-off)
 **Scope:** All remaining work across parent `bsuite` + 6 submodules + 4 shared packages, consolidated from every source listed below.
-**Governance:** Atomic replace-and-remove (per Phase 0 governance) — no `@deprecated` markers shipped, no dual-path interim states. Every item below is an atomic PR or coordinated PR-set.
+**Governance:** Atomic replace-and-remove (per Phase 0 governance) — no `@deprecated` markers shipped, no workaround allow-lists, and no dual-path interim states. Every item below is an atomic PR or coordinated PR-set. Older source plans are donor material only: useful intent is extracted into this backlog, while stale approaches are superseded by newer canonical plans.
 **Supersedes (consolidation authority):** items below supersede their original source entries in the docs listed under §Sources. Conflicts resolved in favour of this doc.
 
 ---
@@ -93,7 +95,7 @@ Nothing in Phase 1 onwards executes without these four sign-offs.
 | **P0-10** | **Supabase Vault RPC migration completeness** — create `email_integration_set_encrypted_token`; migrate plaintext `access_token`/`refresh_token`/`smtp_password`/`imap_password` in `email_integrations`; finish Vault-backed secrets for edge functions still reading `pg_settings`. | CRM7 edge fns / Claude Code | One PR per function migrating off `pg_settings`. | Finish-line roadmap P0-10 |
 | **P0-11** | **OAuth state HMAC signing** — sign OAuth state with HMAC-SHA256 + verify on callback in `oauth-google-email` + `oauth-microsoft-email` edge functions. | CRM7 edge fns / Claude Code | One PR: signing + verification + Playwright CSRF-replay test. | Finish-line P0-11 |
 | **P0-13** | **Remove wildcard redirect URIs from Supabase dashboard** — remove `*.vercel.app` + `*.vusercontent.net` wildcards; replace with explicit preview URLs. Coordinates with ADR-0004 — the `AGENTS.md` allow-list currently includes wildcards; revisit whether to keep or remove per ADR-0004 ratification. | Operator | Dashboard review + prune. | Finish-line P0-13 |
-| **P0-15** | **Master roadmap rollup** — bump `20260227-bsuite-master-roadmap-v5.00W.md` to v5.03W; strike `#26a/26e/26f/26g`; mark AUD-15/AUD-16 done; cite the merged execution backlog (this doc) as the active queue. Lands with Phase 0 ratification commit, not as a separate Phase 1 item. | Controller | One commit: amend master roadmap header + §Active Work. | Finish-line roadmap P0-15; Phase 0 ratification output |
+| ~~**P0-15**~~ | ~~**Master roadmap rollup** — bump `20260227-bsuite-master-roadmap-v5.00W.md` to v5.03W; strike `#26a/26e/26f/26g`; mark AUD-15/AUD-16 done; cite the merged execution backlog (this doc) as the active queue.~~ **DONE** — master roadmap header is `v5.03W`, 26a/26e/26f/26g are struck, AUD-15/AUD-16 are marked done, and the revision log records the Phase 0 ratification rollup. | Controller | ✅ Complete — retained here as provenance, not active Phase 1 work. | Finish-line roadmap P0-15; Phase 0 ratification output |
 
 **Phase 1 exit criteria (testable):**
 
@@ -270,8 +272,8 @@ Cross-cutting Phase 4 items:
 | **P2-16** | Email/Calendar integration UI — settings tab + inbox + tasks sync badge + `email_messages`/`tasks` migrations | CRM7 / Claude Code | Finish-line P2-16 |
 | **P2-17** | Conduit candidate documents tab — wire `r7_documents` | Conduit / Claude Code | Finish-line P2-17 |
 | **P2-18** | CRM7 Tier 3-4 page wiring (SP-3, in progress) — financial, compliance, WHS, comms, reports, payroll, billing, data mgmt | CRM7 / Claude Code | Finish-line P2-18 |
-| **P2-19** | F-08 — BSU `/ideas/*` "Open in Throughput" deep-link affordance (keep light portfolio lens) | BSU / deferred | Finish-line P2-19 |
-| **P2-20** | F-10 — CRM7 `/billing` → `/financial/invoicing` rename + redirect (namespace collision with BSU subscription billing) | CRM7 / deferred | Finish-line P2-20 |
+| **P2-19** | F-08 — BSU `/ideas/*` "Open in Throughput" deep-link affordance (keep light portfolio lens) | BSU / Claude Code | Finish-line P2-19 |
+| **P2-20** | F-10 — CRM7 `/billing` → `/financial/invoicing` rename + redirect (namespace collision with BSU subscription billing) | CRM7 / Claude Code | Finish-line P2-20 |
 | **P2-21** | Web Vitals monitoring — `web-vitals` library wired in 5 apps; CRM7 INP (currently 165–357 ms) resolved | All / Claude Code | Finish-line P2-21 |
 | **P2-22** | PWA asset completion — BSU `apple-touch-icon.png`+pwa icons; R80.3 webmanifest+apple-touch-icon; Conduit full audit; braden webmanifest+icons; throughput all PWA | All / Claude Code | Finish-line P2-22 |
 | **P2-23** | FOUC prevention — inline theme script in BSU, R80.3, Conduit `layout.tsx` (CRM7 already has it) | BSU, R80.3, Conduit / Claude Code | Finish-line P2-23 |
@@ -287,7 +289,7 @@ Cross-cutting Phase 4 items:
 | **BL-014** | Final `docs/README.md` rewrite reflecting post-cleanup state + authority chain. | Controller | Phase 0 consolidation |
 | **BL-015** | Canonical `OUTSTANDING.md` consolidation — remove per-submodule OUTSTANDING files, leaving only the merged backlog as the single execution queue. | Controller | Phase 0 consolidation |
 | **BL-016** | CI lint rule set locked — `no-free-text-where-fk` extended, `no-new-deprecations` active, `no-duplicate-allowlists` active. | Controller | ADR-0004, ADR-0006 |
-| **BL-017** | `docs/deprecation-workarounds-allowlist.yml` initial file (Phase 6 — governance safety-valve per deprecation audit rule #6; expected to be empty). | Controller | Deprecation audit |
+| **BL-017** | Zero-workaround/deprecation enforcement — CI fails on new workaround allow-lists, new `@deprecated` markers, and dual-path interim states. Empty allow-list files are not created; exceptions require removal or a separately ratified ADR with an owner and expiry. | Controller | User directive 2026-05-05; deprecation audit |
 | **BL-018** | WS-D Production Ship Gate execution — all 6 submodules `development → main` merge + Playwright smoke vs production URLs + first non-Braden enterprise tenant onboarding end-to-end. | All / Cascade | Finish-line WS-D |
 
 **Phase 6 exit criteria (testable):**
@@ -309,7 +311,7 @@ These workstreams from the finish-line roadmap map to items already enumerated i
 |---|---|---|
 | **WS-A** | GTO billing / payroll / reporting (Q2) — 11 checkpoints WS-A-1..WS-A-11 | Phase 5 `WS-A` row (with P2-1, P2-3, P2-4 residuals in Phase 6) |
 | **WS-B** | Schema / Page Builder rebuild (Q2, overlaps WS-A) — 5 checkpoints WS-B-1..WS-B-5. WS-B-1 hot-fixes map to P1-73..P1-78 (executed inline as part of Phase 2 ADR-0001/ADR-0002 PR sets). WS-B-2..WS-B-5 split across Phase 4 (WS-C schema FKs) + Phase 5 (P2-2 residual). | Phase 2 P1-4(b) + BL-001 + Phase 4 + Phase 6 P2-2 |
-| **WS-C** | Entity linkage + DRY one-shot closure (Q2) — 5 checkpoints WS-C-1..WS-C-5. Phase 5 (schema registry) landed; Phase 6 docs outstanding; Phase 3 GTO-domain entities pending. | Phase 4 WS-E.* (which is a superset), Phase 4 P1.G-*, Phase 4 WS-E.6 (one-shot spec bump) for WS-C-5 |
+| **WS-C** | Entity linkage + DRY one-shot closure (Q2) — 5 checkpoints WS-C-1..WS-C-5. Phase 5 (schema registry) landed; Phase 6 docs outstanding; Phase 3 GTO-domain entities pending. | Phase 4 WS-E.*(which is a superset), Phase 4 P1.G-*, Phase 4 WS-E.6 (one-shot spec bump) for WS-C-5 |
 | **WS-D** | Production ship gate (Phase 15) — 3 checkpoints WS-D-1..WS-D-3. | Phase 6 BL-018 |
 
 ---
@@ -332,8 +334,8 @@ These workstreams from the finish-line roadmap map to items already enumerated i
 | **G-12** | Payday Super regulatory finalisation — waiting on ATO guidance variations. | ATO | R80.3 OUTSTANDING |
 | **G-13** | Submodule deprecated-branch cleanup on GitHub. | Org admin | `docs/20260428-orphan-branch-cleanup-handoff-v1.00W.md` |
 | **G-14** | Supabase OAuth dashboard allowlist (O-2, per finish-line remaining-work top 5). | Operator | Finish-line O-2; P0-6 + P0-13 |
-| **G-15** | Throughput peer-dep unblock — bump `@bsuite/nav-core@^0.5.0` THEN `@bsuite/schema-registry@^0.2.0` (currently on nav-core 0.3.0 mismatch). | Throughput / Claude Code | Finish-line O-4 |
-| **G-16** | BSU `/admin/team-members` route creation — throughput deep-links here (W4-TP `63b79af`) but route does not yet exist. | BSU / Claude Code | Finish-line O-5 |
+| ~~**G-15**~~ | ~~Throughput peer-dep unblock.~~ **DONE** — Throughput `package.json` and `pnpm-lock.yaml` now resolve `@bsuite/nav-core@0.5.1` and `@bsuite/schema-registry@0.3.2`; isolated install, typecheck, and production build pass. | Throughput / Claude Code | Finish-line O-4 |
+| ~~**G-16**~~ | ~~BSU `/admin/team-members` route creation for the throughput W4-TP deep-link.~~ **DONE** — BSU has `/admin/team-members` wired in `src/components/AppContent.tsx`, implemented by `src/pages/Admin/TeamMembers.tsx` and `src/lib/teamMembersService.ts`; BSU typecheck passes. | BSU / Claude Code | Finish-line O-5 |
 
 ---
 
