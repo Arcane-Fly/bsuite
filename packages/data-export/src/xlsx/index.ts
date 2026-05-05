@@ -183,7 +183,9 @@ export async function toXlsxBlob(
   options: ToXlsxOptions = {},
 ): Promise<Blob> {
   const bytes = await toXlsx(sheets, options);
-  return new Blob([bytes], { type: XLSX_MIME });
+  const blobBytes = new Uint8Array(bytes.byteLength);
+  blobBytes.set(bytes);
+  return new Blob([blobBytes], { type: XLSX_MIME });
 }
 
 // ─── Read ────────────────────────────────────────────────────────────────
