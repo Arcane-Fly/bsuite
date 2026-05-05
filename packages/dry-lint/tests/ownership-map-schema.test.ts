@@ -19,7 +19,7 @@ describe('ownership-map schema (assertOwnershipEntryValid)', () => {
     expect(() =>
       assertOwnershipEntryValid('mixed_entry', {
         // @ts-expect-error — intentionally malformed for test
-        owner: 'bsu',
+        owner: 'invalid',
         writers: ['bsu', 'crm7'],
         readers: [],
       }),

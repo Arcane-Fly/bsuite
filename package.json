@@ -14,7 +14,11 @@
 			"picomatch": "^4.0.4",
 			"happy-dom": "^20.8.9",
 			"yaml": "^2.8.3",
-			"zustand": "^5.0.12"
+			"zustand": "^5.0.12",
+			"@eslint/js": "^9.39.4",
+			"@types/node": "^24.12.2",
+			"eslint": "^9.39.4",
+			"typescript": "~5.9.3"
 		}
 	},
 	"scripts": {
