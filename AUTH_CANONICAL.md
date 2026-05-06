@@ -23,7 +23,7 @@ The cookie SSO scheme was deprecated 2025-02-27 in favour of universal **BS OAut
 | OAuth token storage | per-domain `localStorage`, keys `bs_access_token` / `bs_refresh_token` / `bs_user` / `bs_id_token` | inside `@bsuite/auth` |
 | OAuth token verification | **JWKS** (RS256/ES256) via `jose` against Supabase JWKS endpoint | inside `@bsuite/auth` |
 | OIDC nonce | `crypto.getRandomValues(16)` → `sessionStorage('bs_oauth_nonce')` → verified on token exchange | inside `@bsuite/auth` |
-| Local Supabase session | `@supabase/supabase-js` defaults — per-domain `localStorage`, `flowType: 'pkce'`, `autoRefreshToken: true` | `src/lib/supabase.ts` per app |
+| Local Supabase session | `@supabase/supabase-js` defaults — per-domain `localStorage`, `flowType: 'pkce'`, `autoRefreshToken: true`; BS OAuth Server tokens must be bridged into this client with `supabase.auth.setSession({ access_token, refresh_token })` after callback/refresh | `src/lib/supabase.ts` per app + callback/AuthContext |
 | User identity verification | `supabase.auth.getClaims()` (preferred — JWKS-verified locally) or `getUser()` — **never trust `getSession()`** for auth decisions | server + client |
 
 ## Supabase client config — FORBIDDEN
@@ -65,7 +65,9 @@ Conduit is Next.js App Router and uses `createBrowserClient` / `createServerClie
 
 ## Why this works for cross-app SSO without cookie sharing
 
-When a user signs in to one BSuite app, their identity is cached as a refresh token in localStorage of *that* app. When they later visit another BSuite app, the new app calls `attemptSilentAuth()` from `@bsuite/auth`, which redirects to BSU's `/oauth/authorize` with `prompt=none`. Because the user already has an active Supabase session at BSU (BSU's own per-domain localStorage), BSU silently issues a fresh authorization code and the new app gets logged in without any UI.
+When a user signs in to one BSuite app, their identity is cached as OAuth tokens in localStorage of *that* app. On OAuth callback, the client must install the OAuth Server tokens into its own per-domain Supabase client using `supabase.auth.setSession({ access_token, refresh_token })`; otherwise PostgREST/RPC/Realtime still run as anon even though `bs_access_token` exists.
+
+For fully silent cross-app entry, the target architecture remains: when a user later visits another BSuite app, the new app calls `attemptSilentAuth()` from `@bsuite/auth`, which redirects to BSU's `/oauth/authorize` with `prompt=none`. Because the user already has an active Supabase session at BSU (BSU's own per-domain localStorage), BSU silently issues a fresh authorization code and the new app gets logged in without any UI.
 
 This is OIDC-standard silent re-authentication and works across **any** TLD, including Braden's `.braden.com.au`.
 
@@ -106,4 +108,4 @@ If a user asks you to add `cookieStorage` or `domain=.crm7.app`, **stop and link
 | Date | Change | PR |
 |------|--------|-----|
 | 2025-02-27 | Cookie SSO scheme deprecated; all 5 client apps migrated to BS OAuth 2.1 PKCE + per-domain localStorage | TBD |
-| 2026-05-06 | RCA: discovered `attemptSilentAuth()` only checks per-domain localStorage and does NOT issue OIDC `prompt=none` redirect to BSU as the doctrine claims. Cross-app SSO BSU→crm7 silently fails. Track A (defensive `.maybeSingle()` + profile bootstrap migration) shipped: crm7#487. Track B (true OIDC silent re-auth in `@bsuite/auth` v0.2.0) designed, tracked at bsuite#505. See `docs/20260506-cross-app-auth-bug-rca-v1.00A.md`. | crm7#487 / bsuite#505 |
+| 2026-05-06 | RCA: discovered `attemptSilentAuth()` only checks per-domain localStorage and does NOT issue OIDC `prompt=none` redirect to BSU as the doctrine claims. Track A (defensive `.maybeSingle()` + profile bootstrap migration) shipped: crm7#487. Follow-up Track A2 shipped CRM7 OAuth-token → Supabase session bridge (`supabase.auth.setSession`) and applied MCP migration `20260506003000_backfill_app_metadata_tenant_id_from_profiles`; Track B (true OIDC silent re-auth in `@bsuite/auth` v0.2.0) remains tracked at bsuite#505. See `docs/20260506-cross-app-auth-bug-rca-v1.00A.md`. | crm7#487 / crm7@bc4eae77 / bsuite#505 |
