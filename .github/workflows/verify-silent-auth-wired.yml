@@ -21,8 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (with submodules)
-        uses: actions/checkout@v4
+        # The bsuite repo uses git submodules for all 5 consumer apps. All
+        # submodule repos are private — actions/checkout's default
+        # GITHUB_TOKEN is scoped only to bsuite and 404s on the private
+        # siblings. BSUITE_CROSS_REPO_PAT is a fine-grained PAT with
+        # Contents: Read on those repos (same secret used by
+        # schema-builder-migration-parity.yml and oauth-provider-check.yml).
+        # If the secret is absent the script soft-skips each missing
+        # consumer, which is fine for a forked PR build.
+        uses: actions/checkout@v5
         with:
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           submodules: recursive
           fetch-depth: 1
 
