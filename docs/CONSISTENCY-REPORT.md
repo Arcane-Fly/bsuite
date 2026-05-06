@@ -1,11 +1,46 @@
 # BSuite Consistency Report
 
-**Generated:** 2026-05-04
-**Scope:** Cross-app WCAG / a11y / dependency consistency status.
+**Generated:** 2026-05-04 (Plan-tracking convention added 2026-05-06)
+**Scope:** Cross-app WCAG / a11y / dependency / auth consistency status,
+plus the canonical plan-tracking convention.
 
 This report tracks parent-level consistency items that span all six
 submodules. It is updated whenever a parent EPIC moves, a per-submodule fix
 lands, or a new cross-cutting concern is opened.
+
+## Plan-tracking convention
+
+Codified after the 2026-05-04 doc-unification wave and the 2026-05-06
+plans audit. All future plans across the parent + 6 submodules MUST
+follow this layout:
+
+- **Location:** `docs/plans/` of the relevant repo (parent or submodule).
+  Cross-app plans live in the parent's `docs/plans/`; per-app plans
+  live in the submodule's `docs/plans/`. Plans MUST NOT be authored in
+  IDE-specific locations such as `~/.claude/plans/` or `~/.windsurf/plans/`
+  — those locations are agent-private scratch and are out-of-tree.
+- **Naming:** `YYYYMMDD-descriptive-name-type-vMAJOR.MINOR[STATUS].md`
+  (status codes: `W` Working, `D` Draft, `R` Review, `A` Approved,
+  `F` Frozen). Adopt-stub plans created in the 2026-05-04 sweep use the
+  shorter `YYYY-MM-DD-name.md` form by exception.
+- **Status ledger:** every `docs/plans/` directory has a `STATUS.md`
+  with sibling-link block + per-plan rows + cross-app a11y / dependency
+  tracking rows. The parent `STATUS.md` is the cross-app dispatch
+  surface; submodule `STATUS.md` files mirror their slice.
+- **Archive:** verified-complete plans move to
+  `docs/plans/archive/YYYY-MM/<plan>.md` with an
+  `archive/YYYY-MM/<plan>.evidence.md` companion that lists per-checklist
+  evidence (PR, commit SHA, closed issue, file:line). The parent uses
+  `docs/archive/<group>/` (organised by archival event) rather than by
+  plan-creation month.
+- **Archival gate:** never archive a plan without per-checklist
+  evidence. If a plan is partially shipped, mark it `PARTIAL` in
+  `STATUS.md` and itemise the open scope inside the plan body.
+- **External plans (claude_code IDE / windsurf cascade):** are
+  out-of-tree. They MAY be referenced for context but MUST NOT be
+  treated as canonical. When an external plan ships, the loop is closed
+  in this repo's `STATUS.md`; the external file does not need to be
+  moved into `docs/plans/`.
 
 ## WCAG / Accessibility
 
