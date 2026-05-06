@@ -1,5 +1,17 @@
 name: Verify silent-auth wired in consumers
 
+# This guard only fires when a submodule pointer (consumer app) changes, OR
+# when the verify script / workflow itself is edited. It deliberately does
+# NOT fire on packages/auth/** edits, because the auth package's PR cannot
+# pass the guard until consumer pointers have advanced to commits that
+# include the wiring — and consumer wiring PRs depend on the auth package
+# being on npm. Running the guard on the auth-only PR creates a
+# chicken-and-egg deadlock.
+#
+# The guard runs on every push to main and development, where the order
+# of operations is enforced (auth package → publish → consumer bumps →
+# parent submodule pointer rebump). At that point all consumers MUST be
+# wired or the guard fails the rebump PR.
 on:
   pull_request:
     paths:
@@ -8,7 +20,6 @@ on:
       - 'R80.3'
       - 'braden'
       - 'conduit'
-      - 'packages/auth/**'
       - 'scripts/verify-silent-auth-wired.sh'
       - '.github/workflows/verify-silent-auth-wired.yml'
   push:
