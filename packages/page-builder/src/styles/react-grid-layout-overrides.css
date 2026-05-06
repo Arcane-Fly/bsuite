@@ -1,3 +1,17 @@
+/*
+ * BSuite page-builder — react-grid-layout style overrides + base handle styles
+ *
+ * react-grid-layout requires base CSS from `react-grid-layout/css/styles.css`
+ * + `react-resizable/css/styles.css` to render the resize handle visibly.
+ * Consumer apps usually don't import those, so we inline the handle styles
+ * here. Without this, the handle has zero size and corner-drag is silently
+ * non-functional (issue #539, 2026-05-06).
+ *
+ * The handle is only rendered into the DOM when the grid is in edit mode
+ * (rgl reads `isResizable` per item), so we don't need a separate edit-mode
+ * gate — the styles below apply only when the handle is present.
+ */
+
 .react-grid-layout {
   position: relative;
   transition: height 200ms ease;
@@ -13,6 +27,44 @@
   opacity: 0.16;
 }
 
+/* Resize handle (bottom-right corner). Visible 20×20 hit target with a
+ * diagonal-arrow marker. z-index sits above widget content but below
+ * modal overlays. */
 .react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
   z-index: 35;
+  padding: 0 3px 3px 0;
+  box-sizing: border-box;
+  background-color: transparent;
+  /* Subtle by default — opacity ramps on widget hover. */
+  opacity: 0.5;
+  transition: opacity 120ms ease;
+}
+
+/* Stronger handle when hovering the parent widget so users discover it. */
+.react-grid-item:hover > .react-resizable-handle {
+  opacity: 1;
+}
+
+/* Diagonal-arrow marker (two L-shaped border lines). */
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--text-secondary, rgba(0, 0, 0, 0.45));
+  border-bottom: 2px solid var(--text-secondary, rgba(0, 0, 0, 0.45));
+}
+
+/* Highlight the marker when hovering the handle itself. */
+.react-grid-item > .react-resizable-handle:hover::after {
+  border-right-color: var(--accent-primary, var(--primary, #2563eb));
+  border-bottom-color: var(--accent-primary, var(--primary, #2563eb));
 }
