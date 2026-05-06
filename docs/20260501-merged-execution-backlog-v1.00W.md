@@ -303,6 +303,38 @@ Cross-cutting Phase 4 items:
 
 ---
 
+<!-- Added 2026-05-06: Codehouse parity & Platform 360 — see docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md -->
+
+## Phase P-360 — Codehouse Parity & Platform 360 (parallel to Phases 4-6, added 2026-05-06)
+
+**Plan:** [`docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md`](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md). Domain detail in `~/workspace/competitor/parity-matrix.md` (external — referenced by row, not restated). Permissions remain `AUTH_CANONICAL.md` + Supabase RLS + BSuite SSO. **No new RBAC/ABAC framework.**
+
+| ID | Item | Owner | Source-doc |
+|---|---|---|---|
+| **P360-A1** | New top-level plan in `docs/plans/` (this PR) | Cascade | Plan §2 WS-A1 |
+| **P360-A2** | Append parity workstream to this merged-execution-backlog (this row block) | Cascade | Plan §2 WS-A2 |
+| **P360-A3** | Update each submodule's `OUTSTANDING.md` + `docs/plans/STATUS.md` (separate one-line PRs per submodule) | Cascade | Plan §2 WS-A3 |
+| **P360-A4** | New "Codehouse Parity & Platform 360" section in master roadmap (this PR) | Cascade | Plan §2 WS-A4 |
+| **P360-B** | File 12 grouped GitHub issues for the 35 parity gaps (one per domain) — labels: `filed-by-perplexity`, `research-driven`, `parity-codehouse`, `p1`/`p2`, `area:*` | Issue-filer subagent | Plan §2 WS-B |
+| **P360-C** | Dashboard schema additive extension (`parity_status`, `feature_360_status`, `portal_coverage` keys); update `refresh-data.py`; render in `index.html` | Dashboard subagent (post PR #535) | Plan §2 WS-C |
+| **P360-D-1..9** | 9 portal sub-plans — BSU admin, CRM7 internal, Conduit recruiter/candidate/employer/careers, BSU tenant admin, R80.3 calculator, Braden marketing (this PR) | Cascade | Plan §5 |
+| **P360-E** | `/dev/feature-builder` full-stack route in BSU — entity panel + page panel + AI panel + "Export feature bundle as PR" edge fn | BSU / Claude Code | Plan §6 + spec doc |
+| **P360-F1** | Fix the 17 doc-drift items from `bsuite-inventory.md` | Cascade | Plan §2 WS-F1 |
+| **P360-F2** | Update 6 README "Features" sections to surface BSuite over-deliveries (BOOT, AI, schema-builder, offline PWA, sub-org tenancy) | Cascade | Plan §2 WS-F2 |
+| **P360-F3** | Update `bsuite/knowledge.md` + `AGENTS.md` if anything changes during P360 execution | Cascade | Plan §2 WS-F3 |
+| **P360-Domain-A..U** | Per-domain parity rows (21 domains) — owning issue numbers TBD until WS-B fires | per matrix row | Plan §8 |
+
+**Phase P-360 exit criteria:**
+
+1. All 12 plan files (1 index + 1 inputs + 9 portals + 1 spec) exist and are linked from master roadmap, this backlog, plans STATUS, plans README, OUTSTANDING.
+2. WS-B 12 grouped issues filed and cross-linked back into plan §8.
+3. Dashboard schema extension (P360-C) co-merged or follow-up to PR #535.
+4. WS-E `/dev/feature-builder` shipped with role-gated route + 13 acceptance criteria from spec doc.
+5. WS-F doc-drift sweep complete (17 items).
+6. Index plan flips W→A only after operator approval AND red-team review of all 9 portal sub-plans.
+
+---
+
 ## Architectural workstreams (cross-reference, merged into phase tables above)
 
 These workstreams from the finish-line roadmap map to items already enumerated in Phases 2-6. Listed here so the authority chain is complete and no finish-line reference is dropped.

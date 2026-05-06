@@ -52,6 +52,21 @@ These are authoritative, continuously applicable documents. They evolve in place
 
 Files with `.00W` (Working) or `.00D` (Draft) status that have open actions. Update status to `.00A` (Approved) once all actions are resolved.
 
+<!-- Added 2026-05-06: Codehouse parity & Platform 360 — see docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md -->
+
+### `plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` (added 2026-05-06)
+
+Index plan integrating Codehouse Workforce-One parity tracking with full Platform-360 capability/portal/role coverage. Companion files: 9 portal sub-plans + 1 visual feature builder spec under `plans/20260506-codehouse-parity/`; refined-prompt provenance at `plans/inputs/20260506-codehouse-parity-prompt-enhancer-output.md`.
+
+| # | Remaining action | Owner |
+|---|-----------------|-------|
+| 1 | File 12 grouped GitHub issues for the 35 parity gaps (WS-B) | Issue-filer subagent |
+| 2 | Dashboard JSON additive extension — `parity_status`, `feature_360_status`, `portal_coverage` (WS-C, post PR #535) | Dashboard subagent |
+| 3 | Ship `/dev/feature-builder` route in BSU per spec (WS-E) | BSU / Claude Code |
+| 4 | Doc-drift sweep — 17 items from `bsuite-inventory.md` (WS-F) | Cascade |
+| 5 | 6 submodule `OUTSTANDING.md` + `docs/plans/STATUS.md` link rows (WS-A3) — separate one-line PRs | Cascade |
+| 6 | Red-team review across all 9 portal sub-plans before flipping plan W→A | multi-agent-red-team-planning |
+
 ### `20260317-bsuite-gap-report-v2.00W.md`
 
 Living gap register — supersedes v1. Accumulates sprint findings.

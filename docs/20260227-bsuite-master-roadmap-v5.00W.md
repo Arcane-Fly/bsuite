@@ -181,6 +181,26 @@ All repos use `development` as working branch, pushed to `origin/development`.
 
 ## Cross-Project Initiatives
 
+<!-- Added 2026-05-06: Codehouse parity & Platform 360 — see docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md -->
+
+### Codehouse Parity & Platform 360 (added 2026-05-06)
+
+**Plan:** [`20260506-codehouse-parity-and-platform-360-v1.00W`](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md)
+
+A cross-app workstream tracking 35 Codehouse Workforce-One parity gaps and a Platform-360 capability spec (every feature × every portal × every role × every data-flow). Six workstreams: WS-A (parity tracking integration) · WS-B (issue alignment) · WS-C (dashboard schema extension) · WS-D (Platform-360 spec — 9 portal sub-plans) · WS-E (visual feature builder full-stack — `/dev/feature-builder` route in BSU) · WS-F (doc-drift sweep). Permissions remain `AUTH_CANONICAL.md` + Supabase RLS + BSuite SSO — **no new RBAC/ABAC framework**. Domains tracked in the parity matrix (external — `~/workspace/competitor/parity-matrix.md`); this plan references matrix rows rather than restating them.
+
+| Workstream | Status (this PR) | Owner |
+|---|---|---|
+| WS-A1 / WS-A4 — index plan + roadmap section | ✅ Shipped (this PR) | Cascade |
+| WS-D — 9 portal sub-plans | ✅ Shipped (this PR) | Cascade |
+| WS-E — visual feature builder spec | ✅ Shipped (this PR) | Cascade |
+| WS-A2 — parity workstream in merged-execution-backlog | ✅ Shipped (this PR) | Cascade |
+| WS-A3 — submodule OUTSTANDING + STATUS link rows | 🟡 Per-submodule one-line PRs (separate) | Cascade |
+| WS-B — 12 grouped GitHub issues | 🔲 Follow-up PR (issue-filer subagent) | TBD |
+| WS-C — dashboard schema additive extension | 🔲 Follow-up PR (post #535) | TBD |
+| WS-E1–E5 — `/dev/feature-builder` shipped code | 🔲 Phase P-360 / future | BSU |
+| WS-F — doc-drift sweep (17 items) | 🔲 Follow-up PR | Cascade |
+
 ### 1. Email & Calendar Capabilities
 
 **Plans:** [`email-capabilities-plan`](./plans/20260227-email-capabilities-plan-v1.00W.md) · [`ai-tools-migration-calendar`](./plans/20260228-ai-tools-migration-calendar-edge-fn-v1.00W.md) ✅
