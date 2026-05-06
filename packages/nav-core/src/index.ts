@@ -8,9 +8,6 @@ export type {
 
 export { isActivePath, isSectionActive } from './utils';
 
-export { createCookieStorage } from './cookieStorage';
-export type { CookieStorageOptions, CookieStorageLike } from './cookieStorage';
-
 export { AppSwitcher } from './AppSwitcher';
 export type { AppEntry, AppSwitcherProps } from './AppSwitcher';
 
