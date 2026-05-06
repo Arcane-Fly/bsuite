@@ -1,0 +1,62 @@
+name: Claude Code — implement dispatched issue
+
+# Fires when an issue is assigned AND carries the `claude-dispatched` label.
+# Operator sets the label + assigns the issue to trigger autonomous implementation.
+# Closes bsuite#558.
+
+on:
+  issues:
+    types: [assigned]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  implement:
+    # Guard: only run when the claude-dispatched label is present on the issue.
+    if: contains(github.event.issue.labels.*.name, 'claude-dispatched')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are an autonomous coding agent working on the BSuite platform (parent monorepo).
+
+            Implement GitHub issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            Issue body:
+            ${{ github.event.issue.body }}
+
+            Mandatory pre-task steps:
+            1. Read CLAUDE.md in full — it contains project rules, theme system, commit conventions,
+               auth rules, shared-package rules, and testing standards.
+            2. Pull the development branch to base your work on the latest state.
+
+            Implementation rules:
+            - Branch name: claude/${{ github.event.repository.name }}-${{ github.event.issue.number }}/implement
+            - Base branch: development
+            - TypeScript strict mode everywhere — no untyped `any` without explicit justification.
+            - ESLint + Prettier must pass with zero warnings before opening the PR.
+            - Maintain ≥70% test coverage on critical paths (Vitest).
+            - D2C Neon Electric theme tokens for all UI changes — never raw hex colours.
+            - Follow BS OAuth 2.1 PKCE rules from AUTH_CANONICAL.md; never add cookieStorage.
+            - Do NOT modify submodule directories (crm7/, conduit/, business-suite-unified/,
+              braden/, R80.3/, throughput/) unless the issue explicitly targets them.
+            - Remove all dead code introduced or exposed by your changes.
+
+            When implementation is complete:
+            - Open a PR targeting `development`.
+            - PR body must include a red-team checklist per protocol §6
+              (security / performance / reliability / UX / quality).
+            - Add label `claude-dispatched` to the PR so the review workflow fires.
+            - Comment on this issue with a link to the PR and a one-paragraph Continuity Summary.
+          claude_args: '--max-turns 10'

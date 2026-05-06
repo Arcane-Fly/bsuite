@@ -1,0 +1,69 @@
+name: Claude Code — review dispatched PR
+
+# Fires on PR open/sync for PRs labelled `claude-dispatched` or `copilot-dispatched`.
+# Skipped on fork PRs to prevent secret exfiltration.
+# Closes bsuite#558 (review half).
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    # Guard 1: never run on fork PRs (prevents ANTHROPIC_API_KEY exfiltration).
+    # Guard 2: only run when a dispatch label is present.
+    if: |
+      github.event.pull_request.head.repo.fork == false &&
+      (contains(github.event.pull_request.labels.*.name, 'claude-dispatched') ||
+       contains(github.event.pull_request.labels.*.name, 'copilot-dispatched'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are a senior code reviewer for the BSuite platform. Review this pull request
+            thoroughly and post inline GitHub review comments for every issue found.
+
+            Review checklist (post inline comments per category):
+
+            1. **Correctness** — logic errors, off-by-one, null/undefined safety,
+               async/await misuse, missing edge cases.
+
+            2. **Security** — OWASP Top 10, no hardcoded secrets, no command injection,
+               no eval/exec with untrusted input, no XSS, no SQL injection.
+               Auth-specific: flowType must be pkce; no cookieStorage; no domain=.crm7.app;
+               BS OAuth callbacks must call supabase.auth.setSession() to bridge tokens.
+
+            3. **Performance** — no N+1 queries, no unnecessary React re-renders,
+               no synchronous I/O in hot paths, no unindexed heavy queries.
+
+            4. **BSuite style** — TypeScript strict (no untyped `any`), ESLint clean,
+               Prettier formatted. UI changes must use D2C Neon Electric theme tokens
+               (Electric Blue #2563eb, Electric Cyan #00cec9) not raw hex. WCAG AA.
+               Braden corporate theme (Braden Red #ab233a) must NOT use D2C tokens.
+
+            5. **Shared-package rules** — @bsuite/* imports must use caret npm ranges,
+               never workspace:* or file:../packages/*. Vercel build context has no parent dir.
+
+            6. **Test coverage** — critical paths must have ≥70% coverage. New features
+               need accompanying tests. No dead test stubs.
+
+            7. **Documentation** — new public API / arch changes need docs update.
+               CLAUDE.md must be current.
+
+            Conclude the review with an overall risk assessment in the PR review summary:
+            CRITICAL | HIGH | MEDIUM | LOW | CLEAN
+
+            Approve (APPROVE) only if risk level is LOW or CLEAN and all checks pass.
+            Request changes (REQUEST_CHANGES) for CRITICAL or HIGH.
+            Comment (COMMENT) for MEDIUM — human reviewer decides.
+          claude_args: '--max-turns 5'
