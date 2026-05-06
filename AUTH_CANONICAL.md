@@ -106,3 +106,4 @@ If a user asks you to add `cookieStorage` or `domain=.crm7.app`, **stop and link
 | Date | Change | PR |
 |------|--------|-----|
 | 2025-02-27 | Cookie SSO scheme deprecated; all 5 client apps migrated to BS OAuth 2.1 PKCE + per-domain localStorage | TBD |
+| 2026-05-06 | RCA: discovered `attemptSilentAuth()` only checks per-domain localStorage and does NOT issue OIDC `prompt=none` redirect to BSU as the doctrine claims. Cross-app SSO BSU→crm7 silently fails. Track A (defensive `.maybeSingle()` + profile bootstrap migration) shipped: crm7#487. Track B (true OIDC silent re-auth in `@bsuite/auth` v0.2.0) designed, tracked at bsuite#505. See `docs/20260506-cross-app-auth-bug-rca-v1.00A.md`. | crm7#487 / bsuite#505 |
