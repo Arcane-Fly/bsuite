@@ -2,6 +2,36 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.2.0 — 2026-05-06
+
+### Added — OIDC silent re-auth via `prompt=none` (Track B)
+
+- `signInWithBusinessSuite(options?: { prompt?: 'none' | 'login'; returnTo?: string })` — added `options` argument. The `prompt` value is forwarded to BSU's `/auth/v1/oauth/authorize` per OIDC Core 1.0 §3.1.2.1. `returnTo` is stashed at `sessionStorage['auth_return_path']` for the callback handler.
+- `attemptSilentAuth(options?: { returnTo?: string })` — added `options` argument. The function now performs **real** OIDC silent re-auth: when no local access/refresh token is available (or refresh fails), it redirects the browser to BSU `/auth/v1/oauth/authorize?prompt=none&…`. The OAuth Server returns either an auth code (silent success) or `error=login_required` (delivered to the consumer's callback page).
+- New types `OidcPrompt`, `SignInOptions`, `SilentAuthOptions` exported from `@bsuite/auth/types`.
+
+### Changed — public API surface
+
+- The `signInWithBusinessSuite` signature changed from `() => Promise<void>` to `(options?: SignInOptions) => Promise<void>`. The optional argument is backwards-compatible at the call-site for existing consumers.
+- The `attemptSilentAuth` signature changed from `() => Promise<boolean>` to `(options?: SilentAuthOptions) => Promise<boolean>`. **Behaviour change**: previously returned `false` when no tokens were stored; now redirects via `prompt=none` (and only returns `false` when the redirect itself is suppressed, e.g. JSDOM in tests).
+
+### Why a minor (not a patch)
+
+The behaviour change in `attemptSilentAuth` is observable by callers: previously a no-token call was a synchronous "you are unauthenticated" signal, now it triggers a navigation. Consumers that called `attemptSilentAuth()` and rendered an unauthenticated UI based on the `false` result need to be aware that the call may navigate. This is the **intended doctrine fix per `AUTH_CANONICAL.md`** (cross-app SSO via OIDC, not local-storage probing) — the prior behaviour was the very bug Track B exists to fix.
+
+### Migration
+
+Consumer apps do not need to change their OAuth-callback wiring (the callback is dual-purpose for native PKCE / BS OAuth 2.1 PKCE today; the only addition is handling `error=login_required` returned by `prompt=none`). Each consumer should:
+
+1. Wire `attemptSilentAuth({ returnTo: window.location.href })` into the boot path (e.g. crm7's `AuthContext` runs it before rendering unauthenticated when `getSession()` returns null).
+2. In the callback handler, when `url.searchParams.get('error') === 'login_required'`, clear stale tokens, clear PKCE state, and route the user to the app's interactive login (typically `/auth/login`) — not back to `prompt=none` again, which would loop.
+
+The two changes are shipped together as a single canonical doctrine update across crm7, R80.3, Braden, Throughput, and Conduit.
+
+### Notes
+
+- BSU's `/auth/v1/oauth/authorize` is the Supabase-hosted OAuth Server (`tuybltdrdefjblnplpqo.supabase.co`), which is OIDC-spec-compliant and honours `prompt=none` natively. No custom BSU server changes are required for the doctrine flip.
+
 ## 0.1.2 — 2026-05-05
 
 ### Fixed
