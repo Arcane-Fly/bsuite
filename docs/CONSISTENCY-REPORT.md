@@ -52,3 +52,33 @@ lands, or a new cross-cutting concern is opened.
 
 EPIC remains open with `external-blocked` rationale: deferred to scheduled
 migration window per the universal rulebook's formal-issue requirement.
+
+## Authentication
+
+### bsuite#505 — Cross-app OIDC silent re-auth
+
+**Status:** 🟢 **IMPLEMENTED, PROMOTING** (2026-05-06)
+
+The doctrine claim from 2025-02-27 (cross-app SSO via OIDC `prompt=none`,
+not cookies) now matches the code. `@bsuite/auth` v0.2.0 implements real
+silent re-auth; every BS OAuth 2.1 client wires `attemptSilentAuth()` in
+its boot path; every callback handles `error=login_required`.
+
+| Submodule | Status | Evidence |
+|-----------|--------|----------|
+| crm7 | ✅ Wired | crm7#488 — `src/contexts/AuthContext.tsx` calls `attemptSilentAuth({ returnTo })`; `src/pages/auth/callback.tsx` handles `error=login_required` |
+| throughput | ✅ Wired | throughput#104 — `src/lib/auth/AuthProvider.tsx` + `src/pages/auth/AuthCallback.tsx` |
+| R80.3 | 🟡 In flight | feat/auth-wire-silent-reauth-bsuite-auth-v0.2.0 |
+| braden | 🟡 In flight | feat/auth-wire-silent-reauth-bsuite-auth-v0.2.0 |
+| conduit | 🟡 In flight | feat/auth-wire-silent-reauth-bsuite-auth-v0.2.0 |
+| business-suite-unified | ⊘ N/A | BSU is the OAuth Server, not a consumer |
+
+Parent CI guard: `.github/workflows/verify-silent-auth-wired.yml` runs on
+every push to main + development and asserts every consumer's source tree
+references `attemptSilentAuth` in a `.ts` / `.tsx` file. Drift fails the
+guard — no consumer can quietly remove the wiring.
+
+Bootstrap migration (`crm7/supabase/migrations/20260506000100_bootstrap_profile_for_existing_users.sql`)
+shipped as part of Track A in crm7#487; application to Supabase is tracked
+at bsuite#507 (operator action required — Supabase MCP / `supabase login`
+credentials needed).
