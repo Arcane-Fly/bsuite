@@ -200,7 +200,7 @@ Cookie SSO has been **removed**. Each app's Supabase client uses per-domain defa
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
 4. **Conduit + CRM7 callbacks are dual-purpose** — check `sessionStorage` for `bs_oauth_state` to distinguish BS OAuth flow from Supabase native PKCE
-5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage (`bs_*` prefix), systems run in parallel
+5. **BS OAuth tokens are Supabase-compatible JWTs, but not automatic supabase-js sessions** (corrected 2026-05-06) — the OAuth Server `/auth/v1/oauth/token` endpoint issues standard Supabase JWTs (`aud=authenticated`, `role=authenticated`, `sub=<user-uuid>`, plus a `client_id` claim). Each client app's callback MUST bridge them via `supabase.auth.setSession({access_token, refresh_token})` so PostgREST/RPC/Realtime authenticate as the user. Without the bridge, the per-domain supabase client falls back to anon and RLS-protected reads 401/406 immediately after the BSU→app handoff (BSU→CRM7 logged-out incident, 2026-05-06). The `bs_*` localStorage entries are kept for `startBSTokenRefresh()` to drive the OAuth refresh endpoint; an additional 60s sync in `AuthContext` re-seeds the Supabase session whenever `bs_access_token` rotates.
 6. **`startBSTokenRefresh()` is wired** in all 5 client apps (CRM7, R80.3, Braden, Throughput, Conduit) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 
 #### Key Auth Files

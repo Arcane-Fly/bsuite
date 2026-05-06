@@ -9,12 +9,14 @@ These instructions override any default agent behaviors. You must read, understa
 ## 1. Anti-Laziness & Zero-Defer Policy (CRITICAL)
 
 **BANNED BEHAVIOURS:**
+
 - ❌ Acknowledging a list of open issues and stating "Closing all X in this session isn't realistic" or "Leaving those for another session."
 - ❌ Deferring tasks because they require "fresh sessions," "runtime testing," or "judgment calls." You are an autonomous agent; make the judgment call, write the tests, and do the work.
 - ❌ Using "TODO: implement later" or leaving stub implementations for known problems.
 - ❌ Using pre-existing issues (like types or lints) as an excuse to ignore them. You take responsibility for the codebase you touch.
 
 **REQUIRED BEHAVIOURS:**
+
 - **Never defer fixes.** If you identify an issue (lint, type error, bug), fix it immediately in the same session.
 - **100% Completion:** You must continue working until the assigned task is completed to 100% of its requirements. Do not stop or consider the task complete until a zero-defect state is reached.
 - **If a fix is genuinely blocked by an external dependency**, you MUST register it as a formal issue in the repository's issue tracker and return to it before completing your current overarching task.
@@ -45,6 +47,7 @@ These instructions override any default agent behaviors. You must read, understa
 ## 5. Conflict Resolution in Documentation
 
 In the event of conflicting documentation, instructions, or approaches, you MUST default to the option that is:
+
 1. The **latest** and **newest** approach.
 2. The **most complete** and **best practice**.
 3. Yields the **highest standard** of code quality.
@@ -68,6 +71,7 @@ If necessary, combine approaches to achieve this optimal outcome. Never settle f
 ## 8. End-of-Task Workflow
 
 When concluding a development cycle or major task, follow this strict sequence:
+
 1. Commit and push all changes to the Git repository.
 2. Fix failing checks in open PRs and merge them.
 3. Pull the latest changes.
@@ -79,7 +83,6 @@ When concluding a development cycle or major task, follow this strict sequence:
 
 ---
 *By executing tasks in this project, you acknowledge and agree to operate strictly within these parameters. Laziness, deferral, and scope-dropping are explicitly forbidden.*
-
 
 ---
 
@@ -253,6 +256,7 @@ Each entity has a single owning app for create/edit. See `docs/DRY-ONE-SHOT-ARCH
 > **BS OAuth 2.1 PKCE + JWKS** — the same pattern Braden has always used.
 >
 > Reasons it was abandoned:
+>
 > 1. Tokens leaked across all `.crm7.app` subdomains regardless of consent
 > 2. Broke on previews that move off `.crm7.app`
 > 3. Didn't work for Braden's different TLD (`.braden.com.au`)
@@ -424,7 +428,7 @@ Each Vercel project has a custom **development-branch** domain assigned in addit
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server. It was previously copied to Braden by mistake and deleted
 4. **CRM7 and Conduit callbacks are dual-purpose** — check `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
-5. **BS OAuth tokens are NOT Supabase sessions** — they are separate token sets in localStorage. The two auth systems run in parallel.
+5. **BS OAuth tokens are Supabase-compatible JWTs, but not automatic supabase-js sessions** (corrected 2026-05-06) — the OAuth Server `/auth/v1/oauth/token` endpoint issues standard Supabase JWTs (`aud=authenticated`, `role=authenticated`, `sub=<user-uuid>`, plus a `client_id` claim). Each client app's callback MUST bridge them via `supabase.auth.setSession({access_token, refresh_token})` so PostgREST/RPC/Realtime authenticate as the user. Without the bridge, the per-domain supabase client falls back to anon and RLS-protected reads 401/406 immediately after the BSU→app handoff (BSU→CRM7 logged-out incident, 2026-05-06). The `bs_*` localStorage entries remain for `startBSTokenRefresh()`; consumers must also re-seed the Supabase session whenever `bs_access_token` rotates.
 6. **`startBSTokenRefresh()` is wired** in all 5 client apps (CRM7, R80.3, Braden, Throughput, Conduit) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 7. **Two OAuth providers are MANDATORY across the entire suite** — see section below. Never add a third provider (e.g. GitHub) without explicit owner instruction.
 

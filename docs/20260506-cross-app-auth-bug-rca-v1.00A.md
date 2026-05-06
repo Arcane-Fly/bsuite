@@ -1,6 +1,6 @@
 # Cross-App Auth Bug RCA + Remediation — 2026-05-06
 
-**Status:** A (Approved investigation; W2 partial remediation shipped, W1 design tracked)
+**Status:** A (Approved investigation; defensive remediation + CRM7 session bridge shipped, OIDC silent re-auth tracked)
 **Tracking issue:** [GaryOcean428/bsuite#505](https://github.com/GaryOcean428/bsuite/issues/505)
 **Affected user:** ebdb7d74-a3ba-44d8-8e1b-2973a9b14420
 **Supabase project:** tuybltdrdefjblnplpqo
@@ -19,13 +19,13 @@ User reported: signs in to crm7 alone (works), signs in to BSU alone (works), bu
 
 `AUTH_CANONICAL.md` (effective 2025-02-27) prescribes cross-app SSO via **BS OAuth 2.1 PKCE + JWKS** silent re-auth (`prompt=none`) through `@bsuite/auth`'s `attemptSilentAuth()`. Cookie SSO is explicitly forbidden.
 
-Audit found that **the doctrine is not implemented in code**:
+Initial audit found that **the silent re-auth portion of the doctrine is not implemented in code**:
 
 1. `attemptSilentAuth()` in `packages/auth/src/oauth-client.ts:326-346` only checks per-domain `localStorage` for `bs_access_token` / `bs_refresh_token`. It does not issue an OIDC `prompt=none` redirect to BSU.
 2. crm7's `AuthContext` (`crm7/src/contexts/AuthContext.tsx:119-156`) calls `supabase.auth.getSession()` on mount and renders unauthenticated on null. **It never calls `attemptSilentAuth()`.**
-3. Consequence: a user who is signed in at BSU but has no Supabase session at crm7's domain renders as logged-out. The 401s on `platform_branding` and the RPC are derivative of the missing session.
+3. Consequence: a user who is signed in at BSU but has no Supabase session at crm7's domain renders as logged-out until the normal CRM7 login redirect flow is entered. The 401s on `platform_branding` and the RPC are derivative of the missing Supabase client session.
 
-The 406 on `profiles` is a separate (overlapping) failure mode: when a user lacks a row in `public.profiles`, `.single()` against `id=eq.<uuid>` returns 406 (PostgREST cannot satisfy `Accept: application/vnd.pgrst.object+json` with 0 rows).
+Follow-up Supabase MCP inspection found the reported user does have a `public.profiles` row, but lacked tenant claims in `auth.users.raw_app_meta_data`. With an anon Supabase client session, RLS hides the own-profile row, so `.single()` also returns 406 (PostgREST cannot satisfy `Accept: application/vnd.pgrst.object+json` with 0 visible rows).
 
 ## Decision
 
@@ -42,7 +42,17 @@ PR: [GaryOcean428/crm7#487](https://github.com/GaryOcean428/crm7/pull/487)
   - Re-binds `on_auth_user_created` trigger on `auth.users`.
   - Backfills missing rows.
   - Idempotent.
-- DB application of the migration is operator-blocked (no Supabase access in the executing session); tracked as an external-blocked sub-task on issue #505.
+- DB application of the profile-bootstrap migration from crm7#487 remains tracked separately if not already applied by its PR pipeline.
+
+### Track A2 — CRM7 OAuth-token → Supabase session bridge (SHIPPED after RCA)
+
+Commit: `GaryOcean428/crm7@bc4eae77`
+
+- CRM7 callback now calls `supabase.auth.setSession({ access_token, refresh_token })` after the BS OAuth code exchange. Supabase OAuth Server access tokens are Supabase-compatible JWTs, but they are not automatically installed into the per-domain `supabase-js` client until this bridge runs.
+- CRM7 `AuthContext` re-seeds `supabase.auth.setSession()` from `bs_access_token` / `bs_refresh_token` whenever `@bsuite/auth` rotates the BS OAuth access token.
+- WCAG login tests now block redirect URLs via a URL-parsed helper so direct `https://suite.crm7.app/...` OAuth redirects are caught reliably.
+- Supabase MCP migration `20260506003000_backfill_app_metadata_tenant_id_from_profiles` was applied to project `tuybltdrdefjblnplpqo` and recorded as version `20260506001528`. It populated `app_metadata.tenant_id`, `app_metadata.home_tenant_id`, and `app_metadata.current_tenant_id` from `public.profiles` for profile-linked users missing tenant claims.
+- Verification: affected user `ebdb7d74-a3ba-44d8-8e1b-2973a9b14420` now has app metadata tenant claims; profile-linked missing-tenant count is 0.
 
 ### Track B — OIDC silent re-auth (DESIGNED, NOT SHIPPED — too risky for the executing session)
 
@@ -83,14 +93,14 @@ The doctrine-correct path is Track B, not cookie unification.
 ## Verification
 
 - E2E test scaffolded at `crm7/tests/e2e/cross-app-auth.spec.ts` — asserts no 401/406 on the protected fetches after a BSU → crm7 navigation. Skips automatically without `CRM7_E2E_EMAIL` + `CRM7_E2E_PASSWORD`. Will fail with a redirect to `/auth/login` until Track B ships — that failure documents the regression.
-- DB diagnosis SQL (the four queries in `auth-bug-refined.md` Phase 1) is filed as a blocked sub-task on issue #505. Operator action: `supabase login && supabase link --project-ref tuybltdrdefjblnplpqo && supabase db push`.
+- CRM7 verification for the session bridge: `pnpm test` passed (165 files, 3256 passed, 23 skipped); `pnpm run typecheck` passed; `pnpm run build:noprerender` passed; targeted auth/route-blocker tests passed (23 tests).
+- Supabase MCP verification confirmed the app metadata tenant claims and zero remaining profile-linked users missing `app_metadata.tenant_id`.
 
 ## Next steps
 
-1. Operator applies the bootstrap migration.
-2. Track B implementation (`@bsuite/auth` v0.2.0 + 5-app propagation) per the plan in issue #505.
-3. Re-enable the cross-app E2E in CI once Track B ships.
-4. Update AUTH_CANONICAL.md migration ledger with both events.
+1. Track B implementation (`@bsuite/auth` v0.2.0 + 5-app propagation) per the plan in issue #505.
+2. Re-enable the cross-app E2E in CI once Track B ships and Playwright browser binaries are available in the runner.
+3. Continue applying equivalent session bridges to any remaining BS OAuth client apps that exchange OAuth Server tokens but do not install them into their local Supabase client.
 
 ## References
 
