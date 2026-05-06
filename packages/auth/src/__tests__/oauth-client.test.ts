@@ -182,6 +182,145 @@ describe('signInWithBusinessSuite', () => {
 })
 
 // ---------------------------------------------------------------------------
+// signInWithBusinessSuite — redirect-loop circuit breaker
+// ---------------------------------------------------------------------------
+
+describe('signInWithBusinessSuite redirect-loop circuit breaker', () => {
+  beforeEach(() => {
+    // Defense-in-depth: ensure a clean slate for each test regardless of
+    // whether the outer beforeEach resets localMock.
+    localMock.removeItem('bs_oauth_last_redirect_at')
+  })
+
+  it('throws if invoked within 10s of a previous redirect', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    // First call records the timestamp and "navigates" (jsdom no-op).
+    await client.signInWithBusinessSuite()
+    await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
+  })
+
+  it('mentions the localStorage key in the error message so callers can reset', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+    await expect(client.signInWithBusinessSuite()).rejects.toThrow(/bs_oauth_last_redirect_at/)
+  })
+
+  it('does NOT rotate PKCE state for the rejected second call', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+    // Snapshot what the first (successful) call wrote.
+    const firstVerifier = sessionMock.getItem('bs_oauth_code_verifier')
+    const firstState = sessionMock.getItem('bs_oauth_state')
+    const firstNonce = sessionMock.getItem('bs_oauth_nonce')
+    expect(firstVerifier).toMatch(/^[0-9a-f]+$/)
+    // Rejected call must throw before rotating verifier / state / nonce.
+    await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
+    expect(sessionMock.getItem('bs_oauth_code_verifier')).toBe(firstVerifier)
+    expect(sessionMock.getItem('bs_oauth_state')).toBe(firstState)
+    expect(sessionMock.getItem('bs_oauth_nonce')).toBe(firstNonce)
+  })
+
+  it('succeeds again after clearing bs_oauth_last_redirect_at from localStorage', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+    localMock.removeItem('bs_oauth_last_redirect_at')
+    await expect(client.signInWithBusinessSuite()).resolves.toBeUndefined()
+  })
+
+  it('records the timestamp under bs_oauth_last_redirect_at after a successful redirect', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const before = Date.now()
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    const after = Date.now()
+    const stored = Number(localMock.getItem('bs_oauth_last_redirect_at'))
+    expect(Number.isFinite(stored)).toBe(true)
+    expect(stored).toBeGreaterThanOrEqual(before)
+    expect(stored).toBeLessThanOrEqual(after)
+  })
+
+  it('unblocks after the 10s window has elapsed (verified deterministically with fake timers)', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date('2026-05-06T00:00:00Z'))
+      await client.signInWithBusinessSuite()
+      // 9s later — still inside the window, still blocked (9 < 10).
+      vi.setSystemTime(new Date('2026-05-06T00:00:09Z'))
+      await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
+      // Exactly at the window edge: strict-less-than means 10s unblocks
+      // (10 !< 10). This pins the boundary so a future `<=` typo regresses
+      // loudly — the test would start failing at this line.
+      vi.setSystemTime(new Date('2026-05-06T00:00:10Z'))
+      await expect(client.signInWithBusinessSuite()).resolves.toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not rotate PKCE state when the breaker trips (defense in depth)', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+    const firstVerifier = sessionMock.getItem('bs_oauth_code_verifier')
+    const firstState = sessionMock.getItem('bs_oauth_state')
+    const firstNonce = sessionMock.getItem('bs_oauth_nonce')
+    // Second call within 10s must throw BEFORE any PKCE rotation. If it
+    // rotated first and then threw, the first consent round-trip would be
+    // invalidated (verifier mismatch on /oauth/token).
+    await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
+    expect(sessionMock.getItem('bs_oauth_code_verifier')).toBe(firstVerifier)
+    expect(sessionMock.getItem('bs_oauth_state')).toBe(firstState)
+    expect(sessionMock.getItem('bs_oauth_nonce')).toBe(firstNonce)
+  })
+
+  it('does NOT stamp the sentinel on prompt=none silent redirects', async () => {
+    // Silent re-auth is exempt from the circuit breaker so that a
+    // silent → interactive fallback on a login page is not blocked.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    expect(localMock.getItem('bs_oauth_last_redirect_at')).toBeNull()
+  })
+
+  it('allows an interactive sign-in immediately after a prompt=none silent redirect', async () => {
+    // Scenario: BSU returned error=login_required from a silent attempt, and
+    // the consumer's login page now needs to redirect to the interactive
+    // consent screen. The circuit breaker must NOT block this follow-up.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    await expect(client.signInWithBusinessSuite()).resolves.toBeUndefined()
+    // But a SECOND interactive call within 10s of the first interactive one
+    // still trips — the breaker still catches genuine interactive loops.
+    await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
+  })
+
+  it('emits a browser-gated console.warn breadcrumb with structured context before throwing', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+    // Install the spy AFTER the first (successful) redirect so the
+    // subsequent trip is the only call observed.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[bs-oauth]'),
+        expect.objectContaining({ key: 'bs_oauth_last_redirect_at' })
+      )
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
 // exchangeCodeForTokens — CSRF state guard + happy path
 // ---------------------------------------------------------------------------
 
@@ -411,6 +550,21 @@ describe('clearBSTokens', () => {
     expect(localMock.getItem('bs_id_token')).toBeNull()
     expect(localMock.getItem('unrelated')).toBe('keep')
   })
+
+  it('also clears the redirect-loop sentinel so a fresh sign-in after sign-out is not blocked', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    // Pre-condition: a recent redirect has stamped the sentinel.
+    localMock.removeItem('bs_oauth_last_redirect_at')
+    await client.signInWithBusinessSuite()
+    expect(localMock.getItem('bs_oauth_last_redirect_at')).not.toBeNull()
+    // clearBSTokens must wipe the sentinel as part of its contract, so the
+    // user's next explicit Sign-In click isn't rejected by the breaker.
+    client.clearBSTokens()
+    expect(localMock.getItem('bs_oauth_last_redirect_at')).toBeNull()
+    // And a subsequent sign-in must succeed (no breaker trip).
+    await expect(client.signInWithBusinessSuite()).resolves.toBeUndefined()
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -418,6 +572,12 @@ describe('clearBSTokens', () => {
 // ---------------------------------------------------------------------------
 
 describe('attemptSilentAuth', () => {
+  beforeEach(() => {
+    // Ensure the redirect-loop circuit breaker timestamp is cleared so the
+    // slow-path tests below can trigger signInWithBusinessSuite freely.
+    localMock.removeItem('bs_oauth_last_redirect_at')
+  })
+
   it('returns true immediately when an access token is already stored', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     localMock.setItem('bs_access_token', 'existing')
@@ -467,6 +627,26 @@ describe('attemptSilentAuth', () => {
     const href = window.location.href
     expect(href).toContain('/auth/v1/oauth/authorize?')
     expect(href).toContain('prompt=none')
+  })
+
+  it('returns false (does not throw) when the redirect-loop circuit breaker trips on the slow path', async () => {
+    // End-to-end contract: attemptSilentAuth's slow path invokes
+    // signInWithBusinessSuite({ prompt: 'none' }). If the circuit breaker
+    // throws (because a redirect already happened <10s ago), the slow
+    // path must swallow the error and return `false` so callers can fall
+    // back to the explicit interactive login UI instead of crashing.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    // Prime the sentinel to simulate "we just redirected a moment ago".
+    localMock.setItem('bs_oauth_last_redirect_at', String(Date.now()))
+    // Silence the breadcrumb since a trip is expected inside this test.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const result = await client.attemptSilentAuth()
+      expect(result).toBe(false)
+    } finally {
+      warnSpy.mockRestore()
+    }
   })
 
   it('forwards returnTo to the prompt=none redirect via auth_return_path', async () => {
