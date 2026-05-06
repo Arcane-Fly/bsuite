@@ -22,18 +22,11 @@ on:
 
 permissions:
   contents: read
-  # Note: --provenance is intentionally NOT used because bsuite is a private
-  # repository and Sigstore provenance requires a public source repo.
-  # If/when bsuite goes public, re-add `id-token: write` here and `--provenance`
-  # to the npm publish step.
 
 jobs:
   publish:
     name: Build, test and publish
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/page-builder
 
     steps:
       - uses: actions/checkout@v5
@@ -46,26 +39,34 @@ jobs:
       - name: Setup pnpm
         run: corepack enable && corepack prepare pnpm@10.30.3 --activate
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      # Install at workspace root (not from packages/page-builder/) so pnpm
+      # uses the package's own pnpm-lock.yaml resolutions (vite@8 + plugin-react@6),
+      # not the parent workspace lockfile (which pins vite@6.4.2 and breaks
+      # plugin-react@6 due to vite removing the './internal' export path).
+      - name: Install dependencies (filtered to @bsuite/page-builder)
+        run: pnpm install --frozen-lockfile --filter @bsuite/page-builder...
 
       - name: Typecheck
+        working-directory: packages/page-builder
         run: pnpm typecheck
 
       - name: Run tests
+        working-directory: packages/page-builder
         run: pnpm test
 
       - name: Build
+        working-directory: packages/page-builder
         run: pnpm build
 
       - name: Dry-run publish (catches missing files or bad exports)
+        working-directory: packages/page-builder
         run: npm publish --dry-run --access public
 
       - name: Check if version already published
         id: version-check
+        working-directory: packages/page-builder
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
-          # Store version in env var to avoid expression injection in run steps
           echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
 
           PUBLISHED=$(npm view "@bsuite/page-builder@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
@@ -79,15 +80,17 @@ jobs:
 
       - name: Publish to npm
         if: steps.version-check.outputs.skip == 'false'
+        working-directory: packages/page-builder
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Job summary
         if: always()
+        env:
+          VERSION: ${{ steps.version-check.outputs.version }}
+          SKIPPED: ${{ steps.version-check.outputs.skip }}
         run: |
-          VERSION="${{ steps.version-check.outputs.version }}"
-          SKIPPED="${{ steps.version-check.outputs.skip }}"
           if [ "$SKIPPED" = "true" ]; then
             echo "### Skipped — already published" >> "$GITHUB_STEP_SUMMARY"
             echo "\`@bsuite/page-builder@${VERSION}\` is already on npm." >> "$GITHUB_STEP_SUMMARY"
