@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 0.2.5 — 2026-05-06
+
+### Fixed
+
+- **D2C theme on canvas-editor chrome.** Column-preset chips, Compact Layout / Reset to Default / Add-widget buttons no longer fall through to hardcoded gray hex (#2563eb / #f3f4f6 / #6b7280 / #e5e7eb) when consumer apps use shadcn-style `--primary`/`--muted`/`--border` tokens instead of the legacy `--accent-primary`/`--bg-tertiary`/`--text-secondary`/`--border-shell` names. Replaced inline `style={...}` with Tailwind classes that resolve via every BSuite consumer's `@theme inline` block. Closes bsuite operator UX issue (BSU walkthrough 2026-05-06).
+
+### Notes
+
+- 0.2.4 was published with no source change; 0.2.5 carries the actual fix.
+
+---
+
 ## [0.2.2] — 2026-05-05 — Toolchain refresh
 
 ### Changed
