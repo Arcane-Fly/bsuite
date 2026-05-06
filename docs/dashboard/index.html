@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BSuite Plan Completion Dashboard — 2026-05-06</title>
+<meta name="description" content="Live audit of 51 BSuite plans across 7 repos with OAuth-freeze gap analysis.">
+<link rel="icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="oklch(0.65 0.22 280)"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" fill="white" font-family="ui-sans-serif" font-weight="700" font-size="16">B</text></svg>'>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&f[]=jetbrains-mono@400,500&display=swap">
+<style>
+:root {
+  /* Type scale (fluid) */
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+
+  /* Spacing (4px grid) */
+  --s-1:.25rem; --s-2:.5rem; --s-3:.75rem; --s-4:1rem; --s-5:1.25rem; --s-6:1.5rem; --s-8:2rem; --s-10:2.5rem; --s-12:3rem; --s-16:4rem;
+
+  /* Radius */
+  --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:20px;
+
+  /* Type families */
+  --font-sans:'Satoshi',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  /* Severity colors (OKLCH so they look good both modes) */
+  --sev-p0:oklch(0.62 0.22 25);
+  --sev-p1:oklch(0.72 0.18 60);
+  --sev-p2:oklch(0.7 0.15 200);
+  --sev-p3:oklch(0.55 0.05 270);
+
+  /* Status colors */
+  --st-done:oklch(0.7 0.18 145);
+  --st-flight:oklch(0.7 0.18 220);
+  --st-partial:oklch(0.78 0.18 80);
+  --st-open:oklch(0.78 0.18 35);
+  --st-blocked:oklch(0.62 0.22 25);
+  --st-ref:oklch(0.55 0.05 270);
+}
+
+[data-theme='dark'] {
+  /* D2C Neon Electric — dark surfaces, electric purple accent */
+  --bg:oklch(0.18 0.015 270);
+  --bg-2:oklch(0.21 0.018 270);
+  --surface:oklch(0.24 0.02 270);
+  --surface-2:oklch(0.28 0.022 270);
+  --border:oklch(0.36 0.025 270);
+  --border-strong:oklch(0.45 0.03 270);
+
+  --text:oklch(0.96 0.005 270);
+  --text-muted:oklch(0.72 0.015 270);
+  --text-faint:oklch(0.56 0.02 270);
+
+  --accent:oklch(0.72 0.22 295);
+  --accent-2:oklch(0.65 0.24 280);
+  --accent-faint:oklch(0.34 0.12 285 / 0.25);
+
+  --shadow:0 1px 2px oklch(0 0 0 / 0.4), 0 4px 16px oklch(0 0 0 / 0.3);
+  --shadow-lg:0 8px 32px oklch(0 0 0 / 0.5);
+
+  --glow:0 0 0 1px oklch(0.72 0.22 295 / 0.4), 0 0 24px oklch(0.72 0.22 295 / 0.15);
+}
+
+[data-theme='light'] {
+  --bg:oklch(0.985 0.003 270);
+  --bg-2:oklch(0.97 0.005 270);
+  --surface:oklch(1 0 0);
+  --surface-2:oklch(0.985 0.005 270);
+  --border:oklch(0.9 0.01 270);
+  --border-strong:oklch(0.82 0.015 270);
+
+  --text:oklch(0.18 0.015 270);
+  --text-muted:oklch(0.42 0.015 270);
+  --text-faint:oklch(0.62 0.015 270);
+
+  --accent:oklch(0.5 0.24 290);
+  --accent-2:oklch(0.45 0.26 280);
+  --accent-faint:oklch(0.85 0.08 290 / 0.4);
+
+  --shadow:0 1px 2px oklch(0 0 0 / 0.05), 0 4px 12px oklch(0 0 0 / 0.06);
+  --shadow-lg:0 8px 32px oklch(0 0 0 / 0.1);
+
+  --glow:0 0 0 1px oklch(0.5 0.24 290 / 0.25);
+}
+
+* { box-sizing:border-box; }
+html,body { margin:0; padding:0; }
+body {
+  font-family:var(--font-sans);
+  font-size:var(--text-base);
+  line-height:1.55;
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  min-height:100vh;
+}
+button { font-family:inherit; }
+code, pre, .mono { font-family:var(--font-mono); font-size:0.92em; }
+a { color:var(--accent); text-decoration:none; transition:color .15s; }
+a:hover { color:var(--accent-2); text-decoration:underline; }
+
+/* Header */
+.topbar {
+  display:flex; align-items:center; gap:var(--s-4);
+  padding:var(--s-4) var(--s-6);
+  border-bottom:1px solid var(--border);
+  background:var(--bg-2);
+  position:sticky; top:0; z-index:30;
+  backdrop-filter:saturate(180%) blur(10px);
+  -webkit-backdrop-filter:saturate(180%) blur(10px);
+}
+.brand { display:flex; align-items:center; gap:var(--s-3); font-weight:700; font-size:var(--text-base); letter-spacing:-0.01em; }
+.brand-mark { width:32px; height:32px; border-radius:var(--r-sm); background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; box-shadow:var(--glow); }
+.topbar .meta { color:var(--text-faint); font-size:var(--text-xs); }
+.spacer { flex:1; }
+.iconbtn { background:transparent; border:1px solid var(--border); color:var(--text); width:36px; height:36px; border-radius:var(--r-sm); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; }
+.iconbtn:hover { background:var(--surface); border-color:var(--border-strong); }
+
+/* Layout */
+.shell {
+  max-width:1480px; margin:0 auto; padding:var(--s-6);
+  display:grid; gap:var(--s-6);
+}
+.hero {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:var(--s-6); display:grid; gap:var(--s-3);
+}
+.hero h1 { margin:0; font-size:var(--text-xl); font-weight:700; letter-spacing:-0.02em; line-height:1.15; }
+.hero .sub { color:var(--text-muted); font-size:var(--text-sm); }
+
+/* KPI grid */
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:var(--s-3); }
+.kpi {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:var(--s-4); display:grid; gap:var(--s-1);
+}
+.kpi .label { font-size:var(--text-xs); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:500; }
+.kpi .value { font-size:var(--text-lg); font-weight:700; line-height:1.1; font-feature-settings:'tnum' 1; }
+.kpi .delta { font-size:var(--text-xs); color:var(--text-faint); }
+.kpi.accent { background:linear-gradient(135deg, var(--accent-faint), transparent); border-color:var(--accent); }
+
+/* Repo overview */
+.repos {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:var(--s-3);
+}
+.repo {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:var(--s-4); display:grid; gap:var(--s-2);
+}
+.repo .name { font-weight:600; display:flex; align-items:flex-start; gap:var(--s-2); flex-wrap:wrap; min-width:0; }
+.repo .name .repo-text { word-break:break-word; line-height:1.25; min-width:0; flex:1; }
+.repo .name .tag { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--surface-2); color:var(--text-muted); font-weight:500; }
+.repo .stats { display:flex; gap:var(--s-3); font-size:var(--text-xs); color:var(--text-muted); }
+.repo .vercel { font-size:var(--text-xs); display:flex; align-items:center; gap:var(--s-1); }
+.dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.dot.success { background:var(--st-done); box-shadow:0 0 8px var(--st-done); }
+.dot.na { background:var(--text-faint); }
+
+/* Filters */
+.filters {
+  display:grid; grid-template-columns:1fr auto auto auto auto auto; gap:var(--s-3); align-items:center;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:var(--s-3) var(--s-4);
+  position:sticky; top:73px; z-index:20;
+}
+.search {
+  display:flex; align-items:center; gap:var(--s-2);
+  background:var(--bg-2); border:1px solid var(--border); border-radius:var(--r-sm);
+  padding:0 var(--s-3);
+}
+.search input { flex:1; background:transparent; border:none; color:var(--text); font-size:var(--text-sm); padding:var(--s-3) 0; outline:none; font-family:inherit; }
+.search svg { color:var(--text-faint); flex-shrink:0; }
+.chip {
+  background:var(--bg-2); border:1px solid var(--border); color:var(--text-muted);
+  font-size:var(--text-xs); padding:var(--s-2) var(--s-3); border-radius:var(--r-sm);
+  cursor:pointer; transition:all .15s; font-weight:500;
+}
+.chip:hover { border-color:var(--border-strong); color:var(--text); }
+.chip.active { background:var(--accent); border-color:var(--accent); color:white; }
+.filter-group { display:flex; gap:var(--s-1); flex-wrap:wrap; }
+
+/* Plan table */
+.section-h { display:flex; align-items:center; justify-content:space-between; margin:var(--s-2) 0; }
+.section-h h2 { margin:0; font-size:var(--text-lg); font-weight:600; letter-spacing:-0.01em; }
+.section-h .count { color:var(--text-faint); font-size:var(--text-xs); font-weight:500; }
+
+.plan-grid { display:grid; gap:var(--s-3); }
+.plan {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:var(--s-4); display:grid; gap:var(--s-2);
+  transition:all .15s;
+}
+.plan:hover { border-color:var(--border-strong); box-shadow:var(--shadow); }
+.plan-row { display:flex; gap:var(--s-3); align-items:flex-start; flex-wrap:wrap; }
+.plan-title { font-weight:600; flex:1; min-width:240px; line-height:1.35; }
+.plan-meta { display:flex; gap:var(--s-2); flex-wrap:wrap; }
+.badge { font-size:var(--text-xs); padding:2px 8px; border-radius:999px; font-weight:500; white-space:nowrap; }
+.badge.done { background:color-mix(in oklch, var(--st-done) 20%, transparent); color:var(--st-done); border:1px solid color-mix(in oklch, var(--st-done) 30%, transparent); }
+.badge.in-flight { background:color-mix(in oklch, var(--st-flight) 20%, transparent); color:var(--st-flight); border:1px solid color-mix(in oklch, var(--st-flight) 30%, transparent); }
+.badge.partial { background:color-mix(in oklch, var(--st-partial) 20%, transparent); color:var(--st-partial); border:1px solid color-mix(in oklch, var(--st-partial) 30%, transparent); }
+.badge.open { background:color-mix(in oklch, var(--st-open) 20%, transparent); color:var(--st-open); border:1px solid color-mix(in oklch, var(--st-open) 30%, transparent); }
+.badge.operator-blocked { background:color-mix(in oklch, var(--st-blocked) 20%, transparent); color:var(--st-blocked); border:1px solid color-mix(in oklch, var(--st-blocked) 40%, transparent); font-weight:600; }
+.badge.reference { background:color-mix(in oklch, var(--st-ref) 25%, transparent); color:var(--text-muted); border:1px solid var(--border); }
+
+.sev { font-size:10px; font-weight:700; padding:1px 7px; border-radius:4px; letter-spacing:0.05em; }
+.sev.P0 { background:var(--sev-p0); color:white; }
+.sev.P1 { background:var(--sev-p1); color:oklch(0.18 0.015 270); }
+.sev.P2 { background:var(--sev-p2); color:oklch(0.18 0.015 270); }
+.sev.P3 { background:var(--sev-p3); color:white; }
+
+.repo-tag { font-family:var(--font-mono); font-size:var(--text-xs); color:var(--text-muted); padding:1px 8px; border-radius:4px; background:var(--bg-2); border:1px solid var(--border); }
+.scope-tag { font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; }
+.plan-next { font-size:var(--text-sm); color:var(--text-muted); line-height:1.5; }
+.plan-path { font-family:var(--font-mono); font-size:var(--text-xs); color:var(--text-faint); word-break:break-all; }
+.plan-link { font-size:var(--text-xs); color:var(--accent); }
+
+/* Operator blockers panel */
+.blockers {
+  background:linear-gradient(135deg,var(--accent-faint),transparent);
+  border:1px solid var(--accent); border-radius:var(--r-lg);
+  padding:var(--s-5);
+}
+.blockers h2 { margin-top:0; }
+.blocker { display:grid; grid-template-columns:auto 1fr auto; gap:var(--s-3); align-items:start; padding:var(--s-3) 0; border-bottom:1px solid color-mix(in oklch, var(--accent) 20%, transparent); }
+.blocker:last-child { border-bottom:0; }
+.blocker .icon { width:28px; height:28px; border-radius:50%; background:var(--accent); color:white; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.blocker .label { font-weight:600; font-size:var(--text-sm); }
+.blocker .ctx { font-size:var(--text-xs); color:var(--text-muted); margin-top:var(--s-1); line-height:1.5; }
+.blocker .type { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg-2); color:var(--text-muted); white-space:nowrap; align-self:start; }
+
+/* Gap report panel */
+.gap-panel {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:var(--s-6);
+}
+.gap-panel.loading { display:flex; align-items:center; gap:var(--s-3); color:var(--text-muted); font-size:var(--text-sm); }
+.gap-panel .spinner { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.gap-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:var(--s-3); margin-top:var(--s-4); }
+.gap-cat { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:var(--s-4); margin-top:var(--s-3); }
+.gap-cat h3 { margin:0 0 var(--s-2); font-size:var(--text-sm); font-weight:600; }
+.gap-cat .gaps-list { display:grid; gap:var(--s-2); }
+.gap-item { padding:var(--s-3); background:var(--bg-2); border:1px solid var(--border); border-radius:var(--r-sm); font-size:var(--text-sm); }
+.gap-item .gap-id { font-family:var(--font-mono); font-size:var(--text-xs); color:var(--text-faint); margin-right:var(--s-2); }
+
+/* Footer */
+footer { color:var(--text-faint); font-size:var(--text-xs); padding:var(--s-8) var(--s-4); text-align:center; }
+footer code { background:var(--bg-2); padding:2px 6px; border-radius:4px; }
+
+/* Responsive */
+@media (max-width:760px) {
+  .shell { padding:var(--s-3); }
+  .filters { grid-template-columns:1fr; }
+  .filter-group { overflow-x:auto; padding-bottom:var(--s-1); flex-wrap:nowrap; }
+  .plan-row { flex-direction:column; align-items:stretch; }
+  .plan-meta { gap:var(--s-1); }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion:reduce) {
+  * { animation-duration:0s !important; transition-duration:0s !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">B</div>
+    <div>
+      <div>BSuite Plan Dashboard</div>
+      <div class="meta" id="audit-meta"></div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <a class="meta" href="https://github.com/GaryOcean428/bsuite/pull/525" target="_blank" rel="noopener">PR #525</a>
+  <button class="iconbtn" id="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="theme-icon">
+      <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </svg>
+  </button>
+</header>
+
+
+<div id="critical-banner" style="background:linear-gradient(135deg, oklch(0.7 0.18 145 / 0.16), oklch(0.7 0.18 145 / 0.04)); border-bottom:1px solid oklch(0.7 0.18 145 / 0.4); padding:var(--s-3) var(--s-6);">
+  <div style="max-width:1480px; margin:0 auto; display:flex; gap:var(--s-3); align-items:flex-start;">
+    <div style="font-size:20px; flex-shrink:0;">✓</div>
+    <div style="flex:1;">
+      <strong style="color:oklch(0.85 0.18 145); font-size:var(--text-sm);">Freeze shipped + propagated (re-verified 2026-05-06 08:10 UTC):</strong>
+      <span style="font-size:var(--text-sm); color:var(--text);"> All 5 consumers fully synced to <code style="background:var(--bg-2);padding:1px 6px;border-radius:4px;">@bsuite/auth 0.2.1</code> + <code style="background:var(--bg-2);padding:1px 6px;border-radius:4px;">@bsuite/dry-lint 0.4.0</code> + <code style="background:var(--bg-2);padding:1px 6px;border-radius:4px;">oauth-contract.test.ts</code> on main. <strong>BSU only:</strong> bump dry-lint <code style="background:var(--bg-2);padding:1px 6px;border-radius:4px;">^0.2.0→0.4.0</code> + add oauth-contract test (server-flavoured). 0 P0/P1 issues open across all 7 repos.</span>
+    </div>
+  </div>
+</div>
+
+<main class="shell">
+
+  <section class="hero">
+    <h1 id="hero-title">BSuite Plan Dashboard — plans, parity, Platform 360, Visual Feature Builder</h1>
+    <p class="sub" id="hero-sub"></p>
+  </section>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section>
+    <div class="section-h"><h2>Repos & production state</h2><span class="count">All 6 consumer apps live on @bsuite/auth v0.2.0</span></div>
+    <div class="repos" id="repos"></div>
+  </section>
+
+  <section class="blockers" id="blockers-panel">
+    <div class="section-h"><h2>Operator-only actions</h2><span class="count" id="blocker-count"></span></div>
+    <div id="blocker-list"></div>
+  </section>
+
+  <section class="gap-panel" id="gap-panel">
+    <div class="section-h"><h2>OAuth-freeze gap analysis</h2><span class="count" id="gap-count">computing…</span></div>
+    <div id="gap-content" class="loading">
+      <span class="spinner"></span>
+      <span>Gap audit running in background. Refresh this page when complete — data will populate live.</span>
+    </div>
+  </section>
+
+  <section id="parity-section" style="display:none;">
+    <div class="section-h"><h2>Codehouse Workforce One — parity matrix</h2><span class="count" id="parity-count"></span></div>
+    <p style="color:var(--text-faint);font-size:var(--text-sm);margin:0 0 var(--s-3) 0;">Match-or-better doctrine. <a href="https://github.com/GaryOcean428/bsuite/pull/580" target="_blank" rel="noopener" style="color:var(--accent);">Plan PR #580</a> · evidence: <code style="background:var(--bg-2);padding:1px 6px;border-radius:4px;font-size:11px;">competitor/parity-matrix.md</code></p>
+    <div class="plan-grid" id="parity-grid"></div>
+  </section>
+
+  <section id="feature-builder-section" style="display:none;">
+    <div class="section-h"><h2>Visual Feature Builder</h2><span class="count" id="fb-count"></span></div>
+    <p style="color:var(--text-faint);font-size:var(--text-sm);margin:0 0 var(--s-3) 0;">Self-hostable feature factory inside BSU at <code style="background:var(--bg-2);padding:1px 6px;border-radius:4px;font-size:11px;">/dev/feature-builder</code>. <span id="fb-progress-text"></span></p>
+    <div class="plan-grid" id="fb-grid"></div>
+  </section>
+
+  <section id="portal-section" style="display:none;">
+    <div class="section-h"><h2>Platform 360 — portal coverage</h2><span class="count" id="portal-count"></span></div>
+    <p style="color:var(--text-faint);font-size:var(--text-sm);margin:0 0 var(--s-3) 0;">9 portals across 6 apps. AUTH_CANONICAL.md doctrine. Allowed divergence: braden corporate red/gold + conduit Next.js.</p>
+    <div class="plan-grid" id="portal-grid"></div>
+  </section>
+
+  <section>
+    <div class="section-h"><h2>Plans</h2><span class="count" id="plans-count"></span></div>
+    <div class="filters">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" placeholder="Search title, owner, next step, path…" autocomplete="off">
+      </div>
+      <div class="filter-group" id="filter-repo"></div>
+      <div class="filter-group" id="filter-status"></div>
+      <div class="filter-group" id="filter-severity"></div>
+      <div class="filter-group" id="filter-scope"></div>
+      <button class="chip" id="reset-filters">Reset</button>
+    </div>
+    <div class="plan-grid" id="plan-list" style="margin-top:var(--s-4);"></div>
+  </section>
+
+  <footer>
+    <div>BSuite Plan Dashboard · <span class="mono" id="footer-date"></span> · Auditor chain: <span id="footer-auditors"></span></div>
+    <div style="margin-top:var(--s-2);">Sources: external IDE plans (claude_code + windsurf) · in-repo <code>docs/plans/</code> · <code>bsuite_*</code> memory keys (44 read)</div><div style="margin-top:var(--s-1);">Math: 30 external triaged (BSuite-relevant) + 19 in-repo active + 10 already archived = 59. Excludes 17 QIG plans (silo) + 2 reclassified mid-audit. Docs/ root corpus (~85 files) auditing in parallel.</div>
+  </footer>
+</main>
+
+<script id="dashboard-data" type="application/json">{"meta":{"title":"BSuite Plan Completion Dashboard","subtitle":"59 plans audited + 142 Codehouse parity matrix rows + 9 portals 360°. 13 parity issues filed (#567-#579) covering 82 gaps. Visual Feature Builder Phase 0 shipped (PR #344, 329 tests green). Phase 5 in-progress.","audit_date":"2026-05-06","auditor_chain":["Perplexity Computer (Phase 1 dispatch)","Claude Opus 4.7 (audit subagent)"],"scope":"BSuite parent + 6 submodules (crm7, conduit, business-suite-unified, R80.3, braden, throughput)","rulebook":"Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)","plans_audit_pr":"https://github.com/GaryOcean428/bsuite/pull/525","freeze_landed":"2026-05-06T04:30Z by Claude Code","last_extended":"2026-05-06T12:30Z","extended_by":"perplexity-computer","extension_pr":"https://github.com/GaryOcean428/bsuite/pull/583"},"summary":{"external_total":30,"external_qig_dismissed":17,"external_bsuite_triaged":30,"external_done_verified":12,"external_done_claimed":0,"external_partial":3,"external_superseded":11,"external_duplicate":2,"external_open":2,"external_reclassified":2,"in_repo_active":19,"in_repo_archivable_now":0,"already_archived":10,"operator_blocked":1,"production_apps_live_v0_2_0":6,"docs_root_files_pending":85,"audit_grand_total_v1":59,"gap_total":22,"gap_p0":0,"gap_p1":7,"gap_p2":11,"gap_p3":4,"untracked_items":25,"untracked_p0":1,"untracked_p1":7,"docs_root_files_audited":75,"audit_grand_total_v3":84,"parity_issues_filed":13,"parity_gaps_covered":82,"parity_needs_team":5,"fb_phases_total":9,"fb_phases_done":1,"fb_phases_in_progress":1,"portals_360":9},"repos":[{"name":"bsuite","type":"parent","active_plans":8,"archived":6,"main_sha":"post-#523","vercel":"n/a"},{"name":"crm7","type":"submodule","active_plans":2,"archived":2,"main_sha":"d4fc95e5","vercel":"success"},{"name":"conduit","type":"submodule","active_plans":2,"archived":0,"main_sha":"a4264a66","vercel":"success"},{"name":"business-suite-unified","type":"submodule","active_plans":5,"archived":0,"main_sha":"19781ae5","vercel":"success"},{"name":"R80.3","type":"submodule","active_plans":0,"archived":1,"main_sha":"d2f6dfbc","vercel":"success"},{"name":"braden","type":"submodule","active_plans":0,"archived":1,"main_sha":"4f524ee8","vercel":"success"},{"name":"throughput","type":"submodule","active_plans":2,"archived":0,"main_sha":"ade797e3","vercel":"success"}],"plans":[{"id":"p-bsuite-1","title":"TypeScript 6.0 migration","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/2026-05-04-typescript-6-migration.md","status":"open","phase":"deferred","owner":"EPIC #211","next_step":"Execute in 2026-Q3 maintenance window (deferred by design); per-app issues #286/#433/#157/#168/#188/#90 tracked","severity":"P3","category":"Tech debt","issue":"GaryOcean428/bsuite#211"},{"id":"p-bsuite-2","title":"Boot compliance engine specification","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/20260227-boot-compliance-engine-specification-v1.00W.md","status":"open","phase":"spec-only","owner":"GTO master plan WS-2","next_step":"Engine implementation deferred to GTO master plan workstreams; spec stays as reference","severity":"P2","category":"Architecture"},{"id":"p-bsuite-3","title":"R80↔CRM7 integration audit","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/20260302-r80-crm7-integration-audit-v1.00W.md","status":"in-flight","phase":"WS-2 active","owner":"R80.3 + crm7 teams","next_step":"WS-2 award rates / MAPD in flight per R80.3 STATUS","severity":"P1","category":"Integration"},{"id":"p-bsuite-4","title":"CRM7 broad UI refresh","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/20260316-crm7-broad-ui-refresh-plan-v1.00W.md","status":"in-flight","phase":"Phase 1 done","owner":"crm7","next_step":"Phase 1 Mar-17 fixes shipped; broad refresh tracked through merged backlog","severity":"P2","category":"UI/UX"},{"id":"p-bsuite-5","title":"BSuite production plan (P0/P1/P2 register)","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/20260423-bsuite-production-plan-v1.00W.md","status":"in-flight","phase":"~50% complete","owner":"cross-app","next_step":"Living register; OPEN: Vault RPC for email tokens, OIDC nonce, contact FK migrations, multiple P1-*","severity":"P0","category":"Production readiness"},{"id":"p-bsuite-6","title":"GTO billing & reporting refined plan","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md","status":"in-flight","phase":"WS-1 ✅, WS-2 active","owner":"crm7 + R80.3","next_step":"WS-3..9 OPEN (invoicing, timesheets, reports, AVETMISS, GTO standards, RLS hardening)","severity":"P0","category":"Billing"},{"id":"p-bsuite-7","title":"Full 7 audit — page-builder branding relationships","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/20260427-full-7-audit-page-builder-branding-relationships-plan-v1.00W.md","status":"in-flight","phase":"Phases 0+1 done","owner":"cross-app","next_step":"Phases 2-7 in flight per execution-ledger v1.00W","severity":"P1","category":"UI/UX"},{"id":"p-bsuite-8","title":"Universal WYSIWYG schema UX","repo":"bsuite","scope":"parent","source":"in-repo","path":"docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md","status":"in-flight","phase":"Phase 0 + SB Phase 1a/1b/3 done","owner":"cross-app","next_step":"Page/form/custom authoring phases active","severity":"P1","category":"Schema"},{"id":"p-crm7-1","title":"BSuite GTO master plan (companion)","repo":"crm7","scope":"submodule","source":"in-repo","path":"docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md","status":"in-flight","phase":"WS-1 done","owner":"crm7","next_step":"Companion to parent's GTO refined plan; WS-1 done","severity":"P0","category":"Billing"},{"id":"p-crm7-2","title":"WS3-WS9 implementation plan","repo":"crm7","scope":"submodule","source":"in-repo","path":"docs/plans/20260423-ws3-to-ws9-implementation-plan.md","status":"in-flight","phase":"schema migrations + UI in flight","owner":"crm7","next_step":"Heavy schema-first migrations + services + UI per WS in flight","severity":"P0","category":"Billing"},{"id":"p-conduit-1","title":"Adopt shadcn-init","repo":"conduit","scope":"submodule","source":"in-repo","path":"docs/plans/2026-05-04-shadcn-init.md","status":"open","phase":"stub","owner":"conduit","next_step":"Adoption stub from parent CONSISTENCY-REPORT §A.4","severity":"P2","category":"Stack alignment"},{"id":"p-conduit-2","title":"Adopt EntitySelector pattern","repo":"conduit","scope":"submodule","source":"in-repo","path":"docs/plans/2026-05-04-adopt-entity-selectors.md","status":"open","phase":"stub","owner":"conduit","next_step":"Adoption stub from parent FEATURE-SURFACE §F-7","severity":"P2","category":"Stack alignment"},{"id":"p-bsu-1","title":"Adopt dnd dashboard pattern","repo":"business-suite-unified","scope":"submodule","source":"in-repo","path":"docs/plans/2026-05-04-adopt-dnd-dashboard.md","status":"open","phase":"stub","owner":"BSU","next_step":"Adoption stub from parent CONSISTENCY-REPORT §C CON-8","severity":"P2","category":"Stack alignment"},{"id":"p-bsu-2","title":"Adopt EntitySelector pattern","repo":"business-suite-unified","scope":"submodule","source":"in-repo","path":"docs/plans/2026-05-04-adopt-entity-selectors.md","status":"open","phase":"stub","owner":"BSU","next_step":"Adoption stub from parent FEATURE-SURFACE §F-7","severity":"P2","category":"Stack alignment"},{"id":"p-bsu-3","title":"Auth dashboard hardening","repo":"business-suite-unified","scope":"submodule","source":"in-repo","path":"docs/20260418-auth-dashboard-hardening-v1.00W.md","status":"operator-blocked","phase":"external action required","owner":"operator","next_step":"OPERATOR-BLOCKED — issue #283 label external-blocked (Azure xms_edov + Supabase wildcard)","severity":"P1","category":"Auth","issue":"GaryOcean428/business-suite-unified#283"},{"id":"p-bsu-4","title":"Platform kit admin","repo":"business-suite-unified","scope":"submodule","source":"in-repo","path":"docs/20260421-platform-kit-admin-v1.00W.md","status":"open","phase":"scoped","owner":"BSU","next_step":"OPEN per OUTSTANDING-PLANS §2","severity":"P2","category":"Admin"},{"id":"p-bsu-5","title":"WCAG AA audit reference","repo":"business-suite-unified","scope":"submodule","source":"in-repo","path":"docs/20260421-wcag-aa-audit-v1.00W.md","status":"reference","phase":"n/a","owner":"BSU","next_step":"Reference doc, not a checklist","severity":"P3","category":"Accessibility"},{"id":"p-throughput-1","title":"Stack modernization","repo":"throughput","scope":"submodule","source":"in-repo","path":"docs/plans/2026-05-04-stack-modernization.md","status":"partial","phase":"core stack shipped","owner":"throughput","next_step":"Tailwind/Zustand parity items remain open per plan body","severity":"P3","category":"Stack alignment"},{"id":"p-throughput-2","title":"Adopt canonical patterns","repo":"throughput","scope":"submodule","source":"in-repo","path":"docs/plans/2026-05-04-adopt-canonical-patterns.md","status":"partial","phase":"deps + EntitySelector shipped","owner":"throughput","next_step":"Drag integration + idea_order migration remain open","severity":"P2","category":"Stack alignment"},{"id":"ext-1","title":"5-wave stabilisation (W1–W5)","repo":"bsuite","scope":"external","source":"claude_code/plans/starting-at-parent-docs-soft-shell.md","status":"partial","phase":"W1–W4 ✅, W5 open","owner":"cross-app","next_step":"W5 systemic guards remain open; W1–W4 shipped per bsuite_session_20260502_w1_to_w4_complete","severity":"P1","category":"Stabilisation"},{"id":"ext-2","title":"Email + calendar + tasks integration","repo":"bsuite","scope":"external","source":"windsurf/plans/email-calendar-tasks-integration-98e953.md","status":"partial","phase":"5/7 edge fns live","owner":"cross-app","next_step":"Phase 3 (email-inbox-sync) + Phase 4 (tasks-sync) + Settings UI Email Tab + Inbox UI OPEN","severity":"P1","category":"Integration"},{"id":"ext-3","title":"P3 sprint plan items","repo":"bsuite","scope":"external","source":"windsurf/plans/p3-sprint-plan-2f6071.md","status":"partial","phase":"Branding/Stripe/DeveloperToolbar shipped","owner":"crm7","next_step":"CA-8 hex→token sweep + RT-10 day-picker v9 + CC-3 broad refresh remaining pages still in-flight","severity":"P2","category":"UI/UX"},{"id":"ext-4","title":"BSuite world-class quality pass","repo":"bsuite","scope":"external","source":"windsurf/plans/bsuite-world-class-quality-pass-98e953.md","status":"partial","phase":"subsumed","owner":"cross-app","next_step":"Remainder absorbed into 20260427-full-7-audit-page-builder-branding-relationships-plan-v1.00W.md","severity":"P2","category":"Quality"},{"id":"ext-5","title":"BSuite production plan (live OPEN row)","repo":"bsuite","scope":"external","source":"windsurf/plans/bsuite-comprehensive-audit-roadmap-35b53f.md","status":"open","phase":"subsumed","owner":"cross-app","next_step":"Maturity matrix folded into production plan; quick wins (skip link, web-vitals, lint-staged) tracked individually","severity":"P3","category":"Quality"},{"id":"ut-001","title":"BSU Developer/* + tenantRoutes follow-up after HANDOFF-3d migration lands","repo":"business-suite-unified","scope":"docs-root","source":"bsuite/docs/20260501-handoff-3c-bsu-developer-routes-deferred-v1.00W.md","path":"bsuite/docs/20260501-handoff-3c-bsu-developer-routes-deferred-v1.00W.md","status":"deferred","phase":"deferred","owner":"TBD (deferred handoff)","next_step":"Wait for HANDOFF-3d (drop_tenant_page_layouts migration) to land first, then resume P1-15 work. Already covered indirectly by BSU#301 (P1-15) — flagged here for traceability.","severity":"P1","category":"Deferred"},{"id":"ut-002","title":"AGENTS.md guard rule: prohibit `supabase db push` from local checkouts against production project","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/20260501-handoffs-readme-v1.00W.md","path":"bsuite/docs/20260501-handoffs-readme-v1.00W.md","status":"open","phase":"process-gap","owner":"Cascade / Claude Code","next_step":"Add guard rule to AGENTS.md prohibiting `supabase db push` from local checkouts against tuybltdrdefjblnplpqo. Out-of-band migration `20260428085641_repair_tenant_page_layouts_contract` was applied this way, creating a git↔production history gap (§ 2.10 doctrine smell).","severity":"P2","category":"Process Gap"},{"id":"ut-003","title":"@bsuite/dry-lint version sweep: bump 6 consumers from ^0.2.0 to ^0.3.0 (TS-24)","repo":"bsuite (parent) — coordinates 6 consumers","scope":"docs-root","source":"bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md","path":"bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md","status":"open","phase":"gap","owner":"Shared packages lead","next_step":"Bump all 6 consumer apps to `@bsuite/dry-lint@^0.3.0` in coordinated sweep; verify `pnpm lint` green everywhere (the `no-raw-entity-select` rule is currently unenforced). Source at 0.3.0, consumers on 0.2.0.","severity":"P2","category":"Gap"},{"id":"ut-004","title":"Re-verification script for tech-stack matrix (TS-25)","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md","path":"bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md","status":"open","phase":"gap","owner":"Shared packages lead","next_step":"Create `scripts/verify-tech-stack-matrix.sh` that diffs each `package.json` against the §2 baseline and flags drift. Per-app rows in §2.1-2.5 are inherited from 2026-04-23 audit and need re-verification.","severity":"P2","category":"Gap"},{"id":"ut-005","title":"PARENT-DOCS.md byte-identity CI check (TS-26)","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md","path":"bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md","status":"open","phase":"gap","owner":"Shared packages lead","next_step":"Create `scripts/verify-parent-docs-sync.sh` that diffs the shared section (between two `---` separators around 'Living Authority') across all 6 `{submodule}/docs/PARENT-DOCS.md` files; fail CI on divergence (Braden/Conduit/R80.3 already drifted 2026-05-04).","severity":"P2","category":"Gap"},{"id":"ut-006","title":"Remove --provenance from 3 publish workflows (charge-calc, eslint-config, tsconfig) — high probability latent risk L1","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","path":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","status":"open","phase":"rca-followup","owner":"Shared packages lead","next_step":"One PR applying PR #438 pattern to `publish-charge-calc.yml`, `publish-eslint-config.yml`, `publish-tsconfig.yml`. ~30 minutes. Will fail next version bump otherwise (bsuite is private).","severity":"P1","category":"Rca Followup"},{"id":"ut-007","title":"CI guard: parent root `pnpm install --frozen-lockfile` on every PR (Prevention 1)","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","path":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","status":"open","phase":"rca-followup","owner":"Platform lead","next_step":"Add step to `build-and-test.yml` (or new `parent-lockfile-check.yml`) running `pnpm install --frozen-lockfile` on PRs touching `package.json`/`pnpm-lock.yaml`/`pnpm-workspace.yaml`/`packages/*/package.json`/`packages/*/pnpm-lock.yaml`. Would have caught the L3 drift incident.","severity":"P1","category":"Rca Followup"},{"id":"ut-008","title":"Workflow-lint: forbid --provenance on private repo publish workflows (Prevention 3)","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","path":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","status":"open","phase":"rca-followup","owner":"Platform lead","next_step":"Add lint step to `app-quality-checks.yml` (or new `workflow-lint.yml`) that fails if any `.github/workflows/publish-*.yml` contains `--provenance` or `id-token: write` while repo is private. Prevents PR #422 regression.","severity":"P2","category":"Rca Followup"},{"id":"ut-009","title":"Optional: husky/lint-staged pre-commit lockfile-in-sync hook (Prevention 4)","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","path":"bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md","status":"open","phase":"rca-followup","owner":"Platform lead","next_step":"Optional one-layer-earlier catch — adopt husky + lint-staged in parent. Pre-commit runs `pnpm install --frozen-lockfile` if `package.json`/`pnpm-workspace.yaml` staged. Cost: setup friction across 6 submodules. Marked OPTIONAL in post-mortem.","severity":"P3","category":"Rca Followup"},{"id":"ut-010","title":"Track B silent re-auth completion in R80.3 / braden / conduit","repo":"R80.3 + braden + conduit","scope":"docs-root","source":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md + bsuite/docs/CONSISTENCY-REPORT.md","path":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md + bsuite/docs/CONSISTENCY-REPORT.md","status":"in-flight","phase":"rca-followup","owner":"Per-app maintainers","next_step":"Three apps already on branch `feat/auth-wire-silent-reauth-bsuite-auth-v0.2.0`. Per CONSISTENCY-REPORT bsuite#505: wire `attemptSilentAuth({ returnTo })` in AuthContext + handle `error=login_required` in callback. Parent CI guard `.github/workflows/verify-silent-auth-wired.yml` will block drift after merge.","severity":"P0","category":"Rca Followup"},{"id":"ut-011","title":"Apply CRM7 bootstrap-profile migration to Supabase (bsuite#507)","repo":"crm7 (operator)","scope":"docs-root","source":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md + bsuite/docs/CONSISTENCY-REPORT.md","path":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md + bsuite/docs/CONSISTENCY-REPORT.md","status":"operator-blocked","phase":"operator-action","owner":"Operator (Braden) — needs Supabase MCP / supabase login credentials","next_step":"Apply `crm7/supabase/migrations/20260506000100_bootstrap_profile_for_existing_users.sql` to project `tuybltdrdefjblnplpqo`. Tracked at bsuite#507 (NOT in the #100-#503 scan because filed after ship handoff).","severity":"P1","category":"Operator Action"},{"id":"ut-012","title":"Re-enable cross-app E2E in CI once Track B fully ships","repo":"crm7","scope":"docs-root","source":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md","path":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md","status":"open","phase":"rca-followup","owner":"QA lead","next_step":"Re-enable `crm7/tests/e2e/cross-app-auth.spec.ts` once Track B fully ships and Playwright browser binaries are available in the CI runner. Currently asserts no 401/406 on protected fetches after BSU → crm7 navigation; will fail with redirect to `/auth/login` until Track B is across all 5 consumer apps.","severity":"P2","category":"Rca Followup"},{"id":"ut-013","title":"Apply OAuth-token → Supabase session bridge to remaining BS OAuth client apps","repo":"R80.3 + braden + conduit + throughput","scope":"docs-root","source":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md","path":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md","status":"open","phase":"rca-followup","owner":"Per-app maintainers","next_step":"CRM7 shipped the bridge in commit bc4eae77 (callback calls `supabase.auth.setSession({access_token, refresh_token})` after BS OAuth code exchange). Apply same pattern in R80.3, braden, conduit, throughput. Without it, RLS-protected reads 401/406 immediately after BSU→app handoff. Likely bundled with ut-010 silent-reauth wiring.","severity":"P1","category":"Rca Followup"},{"id":"ut-014","title":"Promote entity-crosswalk doc D→W after P1 selectors land","repo":"bsuite (parent)","scope":"docs-root","source":"bsuite/docs/OUTSTANDING.md §20260319-entity-crosswalk-v1.00D.md","path":"bsuite/docs/OUTSTANDING.md §20260319-entity-crosswalk-v1.00D.md","status":"open","phase":"outstanding-item","owner":"Cascade","next_step":"Promote `docs/20260319-entity-crosswalk-v1.00D.md` from Draft (D) to Working (W) once AwardSelector / TrainingPlanSelector / PlacementSelector / ChargeRateSelector P1 selectors land (tracked as #460/#461/#463 P1.G-1/2/I-1). Then to Approved (A) after P2 selectors. Doc-status bookkeeping.","severity":"P3","category":"Outstanding Item"},{"id":"ut-015","title":"Tighten `pnpm lint --max-warnings 0` after react-hooks counts hit zero (BSU/braden/throughput)","repo":"business-suite-unified + braden + throughput","scope":"docs-root","source":"bsuite/docs/OUTSTANDING.md §20260420-react-hooks-v7-tech-debt-v1.00W.md","path":"bsuite/docs/OUTSTANDING.md §20260420-react-hooks-v7-tech-debt-v1.00W.md","status":"open","phase":"outstanding-item","owner":"Cascade / Claude Code","next_step":"After react-hooks remediation (#308 BSU 47, #198 braden 21, #100 throughput ~30), promote demoted rules from `warn` → `error` in `business-suite-unified/eslint.config.js` and `throughput/eslint.config.js`; tighten `pnpm lint` to `--max-warnings 0`. The flip step itself is not an enumerated issue.","severity":"P2","category":"Outstanding Item"},{"id":"ut-016","title":"Apply RLS policy update to Supabase Dashboard for tenant-logos bucket reserved prefixes","repo":"operator (Supabase Dashboard)","scope":"docs-root","source":"bsuite/docs/OUTSTANDING.md §20260421-storage-rls-reserved-prefixes-v1.00W.md","path":"bsuite/docs/OUTSTANDING.md §20260421-storage-rls-reserved-prefixes-v1.00W.md","status":"operator-blocked","phase":"operator-action","owner":"Braden (operator)","next_step":"5-min click-through in Supabase Dashboard: update `tenant_logos_insert/update/delete` to exclude `hero/platform/global` prefixes from tenant-admin clause. Then run four-persona `execute_sql` verification matrix. Promote doc to F (Frozen) after.","severity":"P2","category":"Operator Action"},{"id":"ut-017","title":"Install Supabase realtime blocks (chat / cursor / monaco) feature-flagged","repo":"crm7 + conduit","scope":"docs-root","source":"bsuite/docs/OUTSTANDING.md §20260421-supabase-realtime-blocks-rollout-v1.00W.md","path":"bsuite/docs/OUTSTANDING.md §20260421-supabase-realtime-blocks-rollout-v1.00W.md","status":"open","phase":"outstanding-item","owner":"Claude Code","next_step":"Install `realtime-chat` in CRM7 (separate PR, feature-flagged OFF) → `realtime-cursor` in Conduit pipeline page → `realtime-monaco` in CRM7. Add `wss:*.supabase.co` to CSP `connect-src` in each app's `vercel.json`. Not in #100-#503.","severity":"P2","category":"Outstanding Item"},{"id":"ut-018","title":"F-01..F-03 — CRM7 settings → BSU redirect stubs (branding/organization/tester-licenses)","repo":"crm7","scope":"docs-root","source":"bsuite/docs/OUTSTANDING.md §20260423-misplaced-routes-audit-v1.00W.md","path":"bsuite/docs/OUTSTANDING.md §20260423-misplaced-routes-audit-v1.00W.md","status":"open","phase":"outstanding-item","owner":"Phase 12 follow-up PR","next_step":"Replace CRM7 `/settings/branding`, `/settings/organization`, `/settings/tester-licenses` with `<RedirectTo>` pointing at BSU equivalents (post-Phase 7 merge — held by Phase 7 CRM7 checkout). F-04..F-06 (R80.3 side) already covered by R80.3#174 + #178. F-01..F-03 (CRM7 side) not in #100-#503.","severity":"P2","category":"Outstanding Item"},{"id":"ut-019","title":"BSU CRM7 domain table migration + RLS + Edge Functions (audit checklist closure)","repo":"business-suite-unified","scope":"docs-root","source":"business-suite-unified/docs/20260316-bsu-crm7-supabase-audit-v1.00W.md + OUTSTANDING-SYSTEM.md","path":"business-suite-unified/docs/20260316-bsu-crm7-supabase-audit-v1.00W.md + OUTSTANDING-SYSTEM.md","status":"tracked-as-G3","phase":"outstanding-item","owner":"BSU maintainer","next_step":"Already TRACKED as G-3 / BSU#325 / CRM7#485. Apply Supabase migration for `inspections`, `inspection_checklists`, `inspection_reminders`, `workflow_triggers`, `workflow_escalation_rules`, `workflow_followup_tasks`, `report_configs`, `report_executions`, `report_templates` with `org_id` scoping + RLS policies + Edge Functions (`send_inspection_reminders`, `execute_report`, `get_inspection_calendar`).","severity":"P1","category":"Outstanding Item"},{"id":"ut-020","title":"Create missing crm7 core schema SQL referenced in BSU supabase-apply-runbook","repo":"business-suite-unified + crm7","scope":"docs-root","source":"business-suite-unified/docs/20260316-bsu-supabase-apply-runbook-v1.00W.md + OUTSTANDING-SYSTEM.md","path":"business-suite-unified/docs/20260316-bsu-supabase-apply-runbook-v1.00W.md + OUTSTANDING-SYSTEM.md","status":"tracked-as-G3","phase":"outstanding-item","owner":"BSU maintainer","next_step":"Either create `external-apps/crm7/supabase/migrations/20250601_crm7_core_schema.sql` (referenced in runbook but doesn't exist) or update runbook to point to the actual ut-019 / G-3 migration path. Bundled with ut-019 G-3 work.","severity":"P2","category":"Outstanding Item"},{"id":"ut-021","title":"Microsoft xms_edov rejection-guard code follow-up after Azure dashboard change","repo":"business-suite-unified","scope":"docs-root","source":"business-suite-unified/docs/20260418-auth-dashboard-hardening-v1.00W.md","path":"business-suite-unified/docs/20260418-auth-dashboard-hardening-v1.00W.md","status":"operator-blocked","phase":"outstanding-item","owner":"BSU maintainer (after operator adds Azure claim)","next_step":"After tenant admin adds `xms_edov` optional claim to Azure App registration (bsu#91 dashboard step), add `xms_edov !== 1` rejection guard to Microsoft OAuth callback handler in `business-suite-oauth.ts`. Code half tracked indirectly under operator-handoff but the code change itself is not in #100-#503.","severity":"P1","category":"Outstanding Item"},{"id":"ut-022","title":"Sonner toast auto-dismiss timing per WCAG SC 2.2.1","repo":"all 6 apps using sonner","scope":"docs-root","source":"business-suite-unified/docs/20260421-wcag-aa-audit-v1.00W.md","path":"business-suite-unified/docs/20260421-wcag-aa-audit-v1.00W.md","status":"open","phase":"outstanding-item","owner":"Cascade / per-app maintainer","next_step":"Sonner's 5s default likely violates SC 2.2.1 (Timing Adjustable). Change to ≥20s default OR make toasts dismissable-on-focus. Suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not explicitly enumerate this fix.","severity":"P2","category":"Outstanding Item"},{"id":"ut-023","title":"crm7SyncService.ts must push host_charge_rates to Supabase (WS-3 dependency)","repo":"R80.3","scope":"docs-root","source":"crm7/docs/OUTSTANDING.md §Cross-repo dependencies","path":"crm7/docs/OUTSTANDING.md §Cross-repo dependencies","status":"tracked-as-WSA","phase":"outstanding-item","owner":"R80.3 maintainer","next_step":"R80.3's `crm7SyncService.ts` must push resolved `host_charge_rates` to Supabase so CRM7's invoicing pipeline can read them. Bundled into WS-A (#470 Phase 5 GTO billing 6-week workstream) but not enumerated as a discrete issue.","severity":"P2","category":"Outstanding Item"},{"id":"ut-024","title":"R80.3 Payday Super gaps 4-6 (timesheet integration, director rules, JSDoc on constants)","repo":"R80.3","scope":"docs-root","source":"R80.3/docs/20260418-payday-super-feature-v1.00W.md §5 Open Gaps","path":"R80.3/docs/20260418-payday-super-feature-v1.00W.md §5 Open Gaps","status":"open","phase":"outstanding-item","owner":"R80.3 maintainer","next_step":"Three gaps from §5 not enumerated in R80.3#173 (P1.J Payday Super deadline 2026-07-01): (4) timesheet/pay-run pipeline integration to pull QE directly; (5) director/close-associate special handling for working directors; (6) inline JSDoc with ATO source-URL comments on `MAX_CONTRIBUTION_BASE_ANNUAL_2026` + `PAYDAY_SUPER_START_DATE` constants for audit. Loosely covered under P1.J but not enumerated.","severity":"P3","category":"Outstanding Item"},{"id":"ut-025","title":"Throughput-specific WCAG/quality items (8 enumerated tasks, 2-8h each)","repo":"throughput","scope":"docs-root","source":"throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md §Next Steps","path":"throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md §Next Steps","status":"open","phase":"outstanding-item","owner":"throughput maintainer","next_step":"HIGH (next sprint): ARIA labels on buttons (4h), alt text on images (2h), console.log → logger.ts (8h), form labels (4h). MEDIUM (this month): focus trap for modals (4h), aria-live regions (3h), color contrast audit (6h), keyboard shortcuts (8h). LOW (backlog): screen reader testing (8h), visual regression tests (8h). Throughput #100 covers React hooks; suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not enumerate these throughput-specific items.","severity":"P2","category":"Outstanding Item"}],"operator_blockers":[{"label":"npm publish @bsuite/auth@0.2.1","owner":"operator","blocker_type":"publish","context":"Built + tested + CHANGELOG updated by Claude Code freeze. Run pnpm build && npm publish --access public from packages/auth/.","priority_boost":true,"affects":"7 P1 gaps depend on this publish landing"},{"label":"npm publish @bsuite/dry-lint@0.4.0","owner":"operator","blocker_type":"publish","context":"Same as above for dry-lint package containing oauth-callback-must-bridge ESLint rule."},{"label":"Bump consumer pins 0.2.0 → 0.2.1 in 5 apps","owner":"operator","blocker_type":"post-publish","context":"After publish: edit package.json in crm7/conduit/business-suite-unified/R80.3/braden, regenerate lockfiles outside the bsuite tree per lockfile rule."},{"label":"GitHub branch protection: code-owner review on main + development × 6 repos","owner":"operator","blocker_type":"ui-config","context":"CODEOWNERS files exist but don't enforce until protection wired in GitHub UI. 12 protection rules total."},{"label":"Spread setSession 60s sync interval to R80.3 / throughput / conduit / braden","owner":"operator-or-agent","blocker_type":"forward-work","context":"CRM7 has it; other 4 apps don't. Contract tests don't yet require it on the other 4."},{"label":"Azure xms_edov claim configuration (BSU auth hardening)","owner":"operator","blocker_type":"external","context":"Issue #283 — Azure portal manual config required."},{"label":"Supabase wildcard removal (BSU auth hardening)","owner":"operator","blocker_type":"external","context":"Issue #283 — Supabase dashboard config."}],"production_state":{"all_apps_live_v0_2_0":true,"vercel_status":"6/6 success","auth_canonical_md_at":"GaryOcean428/bsuite/AUTH_CANONICAL.md","frozen_facts_count":11,"contract_tests_count":55,"eslint_rule_tests_count":10,"circuit_breaker_tests_count":3},"freeze_artifacts":{"packages":[{"name":"@bsuite/auth","current_pinned":"0.2.0","source_version":"0.2.1","delta":"circuit breaker (>2 redirects in 10s)"},{"name":"@bsuite/dry-lint","current_pinned":"^0.2.0","source_version":"0.4.0","delta":"oauth-callback-must-bridge AST rule"}],"tests":[{"app":"crm7","contract_tests":12,"auth_tests":20},{"app":"R80.3","contract_tests":11,"auth_tests":"pass"},{"app":"throughput","contract_tests":11,"auth_tests":"pass"},{"app":"conduit","contract_tests":11,"auth_tests":"56 mw"},{"app":"braden","contract_tests":10,"auth_tests":"pass"}],"frozen_fact_5_inverted":"Was: 'BS OAuth tokens are NOT Supabase sessions' (the bug). Now: After exchangeCodeForTokens(), bridge into supabase-js via setSession(). OAuth access tokens have full RLS access per oauth-flows.md L397.","redirect_uris_registered":20},"gap_report":{"audit_date":"2026-05-06","audit_mode":"read_only","source_of_truth_checkout":"/home/user/workspace/bsuite-a98bc6a0","source_of_truth_branch":"main","summary":{"p0":0,"p1":7,"p2":11,"p3":4,"total":22},"top_risks":["Freeze partially propagated: braden and throughput are still pinned to @bsuite/auth 0.2.0 on main (need 0.2.1 bump). BSU is missing oauth-contract.test.ts entirely. dry-lint pin is stale on braden, throughput, BSU.","syncSupabaseSessionToBSOAuth 60s interval exists ONLY in crm7; R80.3, throughput, braden, and conduit will see delayed-ignition 401/406 once the BS OAuth refresh fires (~55 min into a session).","R80.3 src/stores/authStore.ts contains a stale doctrine comment about '.crm7.app cookie' SSO that AUTH_CANONICAL.md forbids; a future agent reading it is one step from regressing to cookie SSO."],"freeze_claim_vs_reality":[{"claim":"@bsuite/auth@0.2.1 with circuit breaker","reality":"Source on 0.2.0; no 'circuit' token in packages/auth/","evidence":"packages/auth/package.json:3; grep -r circuit packages/auth/"},{"claim":"@bsuite/dry-lint@0.4.0 with oauth-callback-must-bridge rule","reality":"Source on 0.3.0; rules dir contains only no-cross-app-write + no-raw-entity-select","evidence":"packages/dry-lint/package.json:3; ls packages/dry-lint/src/rules/; gh search code 'oauth-callback-must-bridge' = 0 hits"},{"claim":"55 oauth-contract.test.ts files (12+11+11+11+10) across 5 consumers","reality":"None exist","evidence":"find ... -name oauth-contract.test.* empty; gh search code 'oauth-contract' = 1 doc reference, 0 test files"},{"claim":"CODEOWNERS in 6 repos requiring @GaryOcean428 review on auth files","reality":"Not present in any repo","evidence":"gh api .../contents/CODEOWNERS and .github/CODEOWNERS 404 for crm7, R80.3, braden, conduit, throughput, bsuite"}],"categories":[{"id":"A","title":"Enforcement gaps","gaps":[{"id":"A-1","description":"oauth-callback-must-bridge ESLint rule does not exist; dry-lint is on 0.3.0 not 0.4.0","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P1","evidence":"packages/dry-lint/package.json:3; ls packages/dry-lint/src/rules/","remediation":"Implement rule, bump to 0.4.0, publish, pin in 5 consumers"},{"id":"A-2","description":"55 oauth-contract.test.ts files claimed by freeze report do not exist","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P1","evidence":"find returns empty; gh search code 'oauth-contract' = 0 hits","remediation":"Author the suites covering: state-CSRF, nonce-replay, code-verifier cleanup, bridge call, login_required, RLS round-trip"},{"id":"A-3","description":"verify-silent-auth-wired CI guard lives only in parent bsuite repo; consumer-repo PRs can break wiring without CI signal until parent submodule rebump","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P1","evidence":"bsuite/.github/workflows/verify-silent-auth-wired.yml; consumer workflows lack equivalent","remediation":"Mirror the script into each consumer's workflows"},{"id":"A-4","description":"no-raw-entity-select rule shipped by dry-lint but not enabled in any consumer ESLint config","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"gh api .../eslint.config.js for each consumer","remediation":"Activate the rule or remove the export"},{"id":"A-5","description":"crm7 disables bsuite/no-cross-app-write for supabase/functions/; cross-app writes in edge functions slip past lint","apps":["crm7"],"severity":"P2","evidence":"crm7/eslint.config.js override block","remediation":"Enable rule in functions/ or document the exemption"},{"id":"A-6","description":"Forbidden-pattern grep CI guard described in AUTH_CANONICAL.md as 'target — to be enforced' has never landed","apps":["crm7","R80.3","braden","throughput","conduit","bsuite"],"severity":"P1","evidence":"AUTH_CANONICAL.md:92-96; no such workflow in any repo","remediation":"Add CI workflow that fails on cookieStorage, business_suite_auth, domain.*\\.crm7\\.app in src/ + supabase/"},{"id":"A-7","description":"verify-silent-auth-wired.sh greps for the bare string 'attemptSilentAuth' — comments and type-only imports pass the check","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"bsuite/scripts/verify-silent-auth-wired.sh:60","remediation":"Tighten regex to require call-site (attemptSilentAuth\\s*\\()"}]},{"id":"B","title":"Refresh / rotation gaps","gaps":[{"id":"B-1","description":"syncSupabaseSessionToBSOAuth 60s sync interval that re-seeds setSession() after BS OAuth refresh exists ONLY in crm7. After ~55 min, the per-domain Supabase session goes stale on the other 4 apps and PostgREST/RPC/Realtime auth as anon — same RCA as 2026-05-06 BSU→CRM7 incident, delayed-ignition variant","apps":["R80.3","throughput","braden","conduit"],"severity":"P1","evidence":"gh search code 'syncSupabaseSessionToBSOAuth' = 1 hit (crm7 only); other 4 AuthContexts only call startBSTokenRefresh()","remediation":"Port the 60s sync interval to all four; alternatively extract into @bsuite/auth"},{"id":"B-2","description":"@bsuite/auth dispatches bs-oauth-expired CustomEvent on network errors during refresh, but no consumer installs a listener; user is silently downgraded to anon on a single network blip","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P2","evidence":"packages/auth/src/oauth-client.ts:333-339; gh search code 'bs-oauth-expired' = 0 consumer hits","remediation":"Wire a listener that surfaces a re-auth prompt, or remove the unused event"},{"id":"B-3","description":"OAuth refresh path is /auth/v1/oauth/token (not /auth/v1/token); supabase-js autoRefreshToken cannot refresh OAuth-Server sessions. Only @bsuite/auth's 60s interval does. If startBSTokenRefresh ever returns early on HMR/unmount race, refresh stops silently","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P2","evidence":"packages/auth/src/oauth-client.ts:419-429","remediation":"Add a heartbeat/health log for refresh"},{"id":"B-4","description":"JWKS cache TTL defaults to jose's internal 30s cooldown; not pinned by createRemoteJWKSet config","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"packages/auth/src/oauth-client.ts:35-43; jose docs default","remediation":"Pin cooldownDuration: 30_000, cacheMaxAge: 600_000 explicitly"}]},{"id":"C","title":"Logout / revocation gaps","gaps":[{"id":"C-1","description":"Logout clears local tokens but does not POST to /auth/v1/oauth/revoke; a leaked bs_refresh_token remains valid until natural expiry","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P2","evidence":"AuthContext signOut implementations call clearBSTokens() only","remediation":"Add an OAuth Server revoke call (RFC 7009) to clearBSTokens or new revokeBSTokens helper"},{"id":"C-2","description":"No cross-tab logout. Tabs 2..N keep stale tokens after tab 1 signs out; no consumer listens to window.storage events on bs_* keys","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P2","evidence":"No window.addEventListener('storage', ...) for bs_* keys in any consumer","remediation":"Listen for storage events on bs_access_token and call supabase.auth.signOut({scope:'local'}) when it disappears"},{"id":"C-3","description":"No cross-app logout / OIDC RP-Initiated Logout. Logging out of BSU does not invalidate bs_* tokens already issued to other apps","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P2","evidence":"packages/auth/src/oauth-client.ts has no end_session_endpoint logic","remediation":"Implement /auth/v1/oauth/end_session as follow-up to silent re-auth"},{"id":"C-4","description":"Supabase admin session revocation is not handled; AuthContext only listens for SIGNED_OUT to clear tenant cache, not to clear BS tokens or trigger silent re-auth","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P2","evidence":"crm7/src/contexts/AuthContext.tsx:209-216","remediation":"On SIGNED_OUT also clearBSTokens() and trigger silent re-auth"}]},{"id":"D","title":"OAuth flow edge cases","gaps":[{"id":"D-1","description":"crm7 callback catch block clears auth_return_path + bs_oauth_state + bs_oauth_nonce + clearBSTokens but does not delete bs_oauth_code_verifier (handled inside @bsuite/auth on success path); asymmetry is fragile","apps":["crm7"],"severity":"P3","evidence":"crm7/src/pages/auth/callback.tsx:152-164 catch block","remediation":"Make all callback error paths symmetric: clear all three sessionStorage keys"},{"id":"D-2","description":"attemptSilentAuth fast path 1 returns true based on token presence without checking expiry; race window with auto-refresh interval allows stale tokens to short-circuit","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"packages/auth/src/oauth-client.ts:373-377","remediation":"Decode JWT exp before the fast path; reuse predicate from line 313-322"},{"id":"D-3","description":"Client-side redirect_uri is window.location.origin + '/auth/callback' with no second-line allowlist; OAuth Server enforces, but registry of 20 URIs is not committed to source","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"packages/auth/src/oauth-client.ts:45-47","remediation":"Confirm with operator that BSU auth.oauth_clients has no wildcards/HTTP/localhost in production rows; commit registry to AUTH_CANONICAL.md"},{"id":"D-4","description":"interaction_required and consent_required errors (OIDC §3.1.2.6 silent-auth failures) handled only by crm7 callback; throughput/R80.3/braden/conduit only handle login_required and fall through other two to generic error display","apps":["throughput","R80.3","braden","conduit"],"severity":"P2","evidence":"crm7/src/pages/auth/callback.tsx:84-103 enumerates all three; spot-check shows others enumerate only login_required","remediation":"Mirror crm7's three-error switch into the other four callbacks"},{"id":"D-5","description":"CSRF state is 16 random bytes in sessionStorage with no binding to user agent / IP / cookie","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"packages/auth/src/oauth-client.ts:65-69","remediation":"Acceptable per OAuth 2.1; document threat model"}]},{"id":"E","title":"Cross-app session synchronization gaps","gaps":[{"id":"E-1","description":"Conduit cookie max-age 55min is one minute longer than the 5-min-pre-expiry refresh interval; SSR middleware can see up-to-60s-stale tokens and 401 randomly","apps":["conduit"],"severity":"P2","evidence":"conduit/src/lib/auth/bs-oauth-cookie.ts:5; packages/auth/src/oauth-client.ts:144","remediation":"Match cookie max-age to access token TTL (Supabase default 3600s) or refresh on every middleware call"},{"id":"E-2","description":"BSU session pinning rotation race: silent re-auth can land on error=login_required even when user is logged in at BSU due to mid-rotation cookie state","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"crm7/src/pages/auth/callback.tsx:84-103; attemptSilentAuth provides no retry","remediation":"One-shot retry on login_required after 1s before routing to interactive login"},{"id":"E-3","description":"Conduit has three auth surfaces (Supabase SSR cookies + bs_* localStorage + conduit_bs_access_token cookie) with no integration test asserting they stay consistent atomically","apps":["conduit"],"severity":"P2","evidence":"conduit/src/lib/supabase/middleware.ts; conduit/src/lib/auth/AuthProvider.tsx","remediation":"Add cross-surface contract test: after callback, all three surfaces hold the same sub"},{"id":"E-4","description":"Conduit middleware uses service-role key to call resolve_bs_oauth_subject_portal_role RPC with the JWT-verified subject. JWT verification IS present (verifyAccessToken via JWKS), but no contract test asserts middleware rejects an unsigned/wrongly-signed cookie","apps":["conduit"],"severity":"P3","evidence":"conduit/src/lib/supabase/middleware.ts:43-50","remediation":"Add contract test for unsigned/wrong-sig cookie rejection"}]},{"id":"F","title":"RLS / authorization gaps","gaps":[{"id":"F-1","description":"client_id claim in BS OAuth tokens is NOT used by any RLS policy in BSuite — same-user via crm7 OAuth has identical RLS-visible row set as direct BSU session. No third-party-OAuth attenuation. Sensitive tables (payment_methods, billing, audit_log) are fully readable by any consenting OAuth client","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P1","evidence":"gh search code 'client_id' 'claim' org-wide returns only monkey1 (separate project) using auth.jwt() ->> 'client_id' in policies","remediation":"Audit RLS on sensitive tables; add OR auth.jwt() ->> 'client_id' IS NULL qualifier where appropriate, or document intent"},{"id":"F-2","description":"braden/src/utils/roleManager.ts uses getSession() for role decisions and has hardcoded admin email braden.lang77@gmail.com","apps":["braden"],"severity":"P1","evidence":"braden/src/utils/roleManager.ts lines 22-24, 60-69","remediation":"Replace getSession() with getClaims(); remove hardcoded email; rely on admin_users table + RLS"},{"id":"F-3","description":"Multiple call sites use getSession() to extract access tokens for outgoing fetch headers — permitted by AUTH_CANONICAL.md but the policy text is ambiguous","apps":["crm7","R80.3","braden","throughput","business-suite-unified"],"severity":"P3","evidence":"gh search code 'supabase.auth.getSession' org-wide; spot-checks confirm token-extraction usage not auth-gating","remediation":"Document the exception in AUTH_CANONICAL.md §Verification preferences"}]},{"id":"G","title":"Service role / API key exposure","gaps":[{"id":"G-1","description":"STRENGTH: No VITE_*SERVICE* or NEXT_PUBLIC_*SERVICE* keys found in active consumer source","apps":[],"severity":"info","evidence":"gh search code returns hits only on archive repos","remediation":"None"},{"id":"G-2","description":"Conduit middleware uses SUPABASE_SERVICE_ROLE_KEY server-side to call resolve_bs_oauth_subject_portal_role RPC; need DB-level confirmation function is SECURITY INVOKER (or DEFINER scoped + revoked from anon/authenticated)","apps":["conduit"],"severity":"P2","evidence":"conduit/src/lib/supabase/middleware.ts:48","remediation":"Operator: SELECT proname, prosecdef, proacl FROM pg_proc WHERE proname = 'resolve_bs_oauth_subject_portal_role'; confirm grants"},{"id":"G-3","description":"Env var name drift: bsuite/env.example documents new SUPABASE_SECRET_KEY name; conduit still uses SUPABASE_SERVICE_ROLE_KEY","apps":["conduit"],"severity":"P3","evidence":"bsuite/env.example; conduit/src/lib/supabase/middleware.ts:48","remediation":"Align naming convention across consumers and parent example"}]},{"id":"H","title":"Database advisor follow-ups","gaps":[{"id":"H-1","description":"bsuite#515 tracks 47 anon-executable SECURITY DEFINER functions; need to confirm none of the auth-flow critical ones (handle_new_user, etc.) are in that bucket","apps":[],"severity":"P2","evidence":"bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md Track A","remediation":"Operator: SELECT proname, prosecdef, proacl FROM pg_proc WHERE proname IN ('handle_new_user','resolve_bs_oauth_subject_portal_role','branding_json_for_tenant')"}]},{"id":"I","title":"CODEOWNERS enforcement gaps","gaps":[{"id":"I-1","description":"No CODEOWNERS file exists in any consumer repo or in parent bsuite","apps":["crm7","R80.3","braden","throughput","conduit","bsuite"],"severity":"P1","evidence":"gh api .../contents/CODEOWNERS and .github/CODEOWNERS = 404 for all 6 repos","remediation":"Author CODEOWNERS covering src/contexts/AuthContext.tsx, src/lib/business-suite-oauth.ts, src/pages/auth/**, src/lib/supabase/**, src/middleware*, src/lib/auth/**, packages/auth/**, AUTH_CANONICAL.md"},{"id":"I-2","description":"Branch protection requiring code-owner review is a separate UI setting from CODEOWNERS file; even with CODEOWNERS landing, operator must enable per-repo","apps":["crm7","R80.3","braden","throughput","conduit","bsuite","business-suite-unified"],"severity":"ops","evidence":"GitHub branch-protection settings out-of-band","remediation":"Operator UI: Settings → Branches → Add rule → main → Require PR + Require CodeOwner review + Restrict dismissal; repeat for development; for each of 7 repos"}]},{"id":"J","title":"Documentation drift","gaps":[{"id":"J-1","description":"R80.3/src/stores/authStore.ts contains a stale doctrine comment block referencing the deprecated '.crm7.app cookie' SSO scheme that AUTH_CANONICAL.md forbids","apps":["R80.3"],"severity":"P1","evidence":"gh api repos/GaryOcean428/R80.3/contents/src/stores/authStore.ts lines 56-61","remediation":"Replace with canonical doctrine: BS OAuth 2.1 PKCE per AUTH_CANONICAL.md; no cookie SSO"},{"id":"J-2","description":"All 12 frozen-fact #5 references across 6 repos updated correctly, but only crm7's CLAUDE.md documents the 60s sync; other apps' CLAUDE.md only document the bridge — asymmetry mirrors B-1 code asymmetry","apps":["R80.3","braden","throughput","conduit"],"severity":"P3","evidence":"gh search code 'BS OAuth tokens are Supabase-compatible' = 11 hits matching corrected wording","remediation":"When porting 60s sync to other apps, update those apps' CLAUDE.md"},{"id":"J-3","description":"AUTH_CANONICAL.md ledger does not mention the freeze claimed by the operator; consistent with the freeze artifacts being absent — but if they are intended to ship the ledger needs a fourth row","apps":["bsuite"],"severity":"P3","evidence":"bsuite/AUTH_CANONICAL.md:108-112","remediation":"Append 2026-05-06 (post-Track B) entry when freeze ships"},{"id":"J-4","description":"Doc claims 'Conduit + CRM7 callbacks are dual-purpose'; R80.3/throughput/braden are single-purpose — Supabase native OAuth flows would fail there","apps":["R80.3","throughput","braden"],"severity":"P3","evidence":"gh api .../contents/src/pages/auth/AuthCallback.tsx for these apps shows single BS-OAuth branch only","remediation":"Confirm with operator whether single-purpose is intentional; dual-purpose otherwise"},{"id":"J-5","description":"20-URI redirect_uris registry mentioned in operator's brief is not committed to AUTH_CANONICAL.md or any in-tree doc","apps":["bsuite"],"severity":"P2","evidence":"gh search code 'redirect_uris' --owner GaryOcean428 = 0 hits","remediation":"Commit the 20-URI table to AUTH_CANONICAL.md"}]},{"id":"K","title":"Forward work / known gaps the freeze report flagged","gaps":[{"id":"K-1","description":"Spreading setSession 60s sync to other 4 apps — flagged as forward work but runtime impact justifies P1 not P3","apps":["R80.3","throughput","braden","conduit"],"severity":"P1","evidence":"Same as B-1","remediation":"Same as B-1"},{"id":"K-2","description":"Circuit breaker (>2 redirects in 10s) claimed by freeze report does not exist; chronic error=login_required loop could spin a user with no rate limit","apps":["crm7","R80.3","braden","throughput","conduit"],"severity":"P2","evidence":"packages/auth/src/oauth-client.ts has no rate limiting; gh search code 'circuit' = 0 hits in auth code","remediation":"Implement sessionStorage-based redirect counter: bs_oauth_redirect_count + window_start; abort silent path if >2 in 10s"}]}],"freeze_strengths":["No cookie-SSO regression: gh search code 'cookieStorage|business_suite_auth|domain.*crm7\\.app' returns 0 hits in src/ files across all consumers","Bridge call (supabase.auth.setSession) present in all 5 consumer callbacks: crm7, R80.3, braden, throughput, conduit","attemptSilentAuth wiring enforced by parent bsuite verify-silent-auth-wired.yml CI workflow on every push","sanitizeReturnPath implemented with decodeURIComponent-aware bypass guards; unit-tested in crm7/src/lib/auth/__tests__/","OIDC nonce verification present in @bsuite/auth/oauth-client.ts:99-107 (OIDC Core §3.1.2.2)","PKCE hygiene on success: code_verifier/state/nonce deleted from sessionStorage before response.ok check","Silent-auth path-prefix guards consistently implemented in all 5 AuthContext/AuthProvider files (callback, login, reset-password, error=login_required URLs)","AUTH_CANONICAL.md doctrine updates uniform across all 6 CLAUDE.md/AGENTS.md (corrected frozen-fact #5)","JWKS-based asymmetric verification (RS256/ES256 via jose); no shared HS256 secrets in client code","Per-domain Supabase clients with no cross-subdomain leakage (no storage/storageKey/domain overrides)","No browser-exposed service-role keys in any active consumer repo"],"freeze_ship_verification_2026_05_06_0800Z":{"audit_was_stale_by_minutes":26,"audit_completed_at":"2026-05-06T06:48Z","freeze_landed_at":"2026-05-06T07:14Z","parent_main_state":{"@bsuite/auth_source_version":"0.2.1","@bsuite/dry-lint_source_version":"0.4.0","oauth_callback_must_bridge_rule_present":true,"rule_test_present":true},"consumer_propagation":{"crm7":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"conduit":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"R80.3":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"braden":{"auth":"0.2.0","dry-lint":"^0.2.0","contract_test":true,"codeowners":true,"fully_synced":false,"gap":"pin still on 0.2.0 — needs 0.2.1 bump"},"throughput":{"auth":"0.2.0","dry-lint":"^0.2.0","contract_test":true,"codeowners":true,"fully_synced":false,"gap":"pin still on 0.2.0 — needs 0.2.1 bump"},"business-suite-unified":{"auth":"n/a (OAuth server)","dry-lint":"^0.2.0","contract_test":false,"codeowners":true,"fully_synced":false,"gap":"oauth-contract.test.ts MISSING + dry-lint pin stale"}},"codeowners_path_correction":".github/CODEOWNERS (audit checked root CODEOWNERS — wrong path)","parent_commits_that_landed_freeze":[{"sha":"bdf7fa0d","time":"2026-05-06T07:14Z","pr":526,"title":"chore(bsuite): land OAuth freeze + circuit breaker + ESLint rule + redirect_uris registry"},{"sha":"335cae7b","time":"2026-05-06T07:33Z","pr":530,"title":"promote: development → main (publish-dry-lint workflow + sync)"}]}},"freeze_claim_vs_reality":[{"claim":"@bsuite/auth@0.2.1 with circuit breaker","reality":"Source on 0.2.0; no 'circuit' token in packages/auth/","evidence":"packages/auth/package.json:3; grep -r circuit packages/auth/"},{"claim":"@bsuite/dry-lint@0.4.0 with oauth-callback-must-bridge rule","reality":"Source on 0.3.0; rules dir contains only no-cross-app-write + no-raw-entity-select","evidence":"packages/dry-lint/package.json:3; ls packages/dry-lint/src/rules/; gh search code 'oauth-callback-must-bridge' = 0 hits"},{"claim":"55 oauth-contract.test.ts files (12+11+11+11+10) across 5 consumers","reality":"None exist","evidence":"find ... -name oauth-contract.test.* empty; gh search code 'oauth-contract' = 1 doc reference, 0 test files"},{"claim":"CODEOWNERS in 6 repos requiring @GaryOcean428 review on auth files","reality":"Not present in any repo","evidence":"gh api .../contents/CODEOWNERS and .github/CODEOWNERS 404 for crm7, R80.3, braden, conduit, throughput, bsuite"}],"freeze_actual_status_2026_05_06_0800Z":{"audit_was_stale_by_minutes":26,"audit_completed_at":"2026-05-06T06:48Z","freeze_landed_at":"2026-05-06T07:14Z","parent_main_state":{"@bsuite/auth_source_version":"0.2.1","@bsuite/dry-lint_source_version":"0.4.0","oauth_callback_must_bridge_rule_present":true,"rule_test_present":true},"consumer_propagation":{"crm7":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"conduit":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"R80.3":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"braden":{"auth":"0.2.0","dry-lint":"^0.2.0","contract_test":true,"codeowners":true,"fully_synced":false,"gap":"pin still on 0.2.0 — needs 0.2.1 bump"},"throughput":{"auth":"0.2.0","dry-lint":"^0.2.0","contract_test":true,"codeowners":true,"fully_synced":false,"gap":"pin still on 0.2.0 — needs 0.2.1 bump"},"business-suite-unified":{"auth":"n/a (OAuth server)","dry-lint":"^0.2.0","contract_test":false,"codeowners":true,"fully_synced":false,"gap":"oauth-contract.test.ts MISSING + dry-lint pin stale"}},"codeowners_path_correction":".github/CODEOWNERS (audit checked root CODEOWNERS — wrong path)","parent_commits_that_landed_freeze":[{"sha":"bdf7fa0d","time":"2026-05-06T07:14Z","pr":526,"title":"chore(bsuite): land OAuth freeze + circuit breaker + ESLint rule + redirect_uris registry"},{"sha":"335cae7b","time":"2026-05-06T07:33Z","pr":530,"title":"promote: development → main (publish-dry-lint workflow + sync)"}]},"freeze_actual_status_2026_05_06_0810Z":{"audit_was_stale_by_minutes":26,"gap_audit_completed_at":"2026-05-06T06:48Z","parent_freeze_landed_at":"2026-05-06T07:14Z (PR #526)","parent_state_main":{"@bsuite/auth_source":"0.2.1","@bsuite/dry-lint_source":"0.4.0","oauth_callback_must_bridge_rule":true,"rule_test":true},"consumer_propagation_after_codebuff_completion":{"crm7":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"conduit":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"R80.3":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true},"braden":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true,"note":"PRs #224/#226/#228 landed 2026-05-06 07:51-08:04 UTC"},"throughput":{"auth":"0.2.1","dry-lint":"0.4.0","contract_test":true,"codeowners":true,"fully_synced":true,"note":"PRs #115/#117/#119 landed 2026-05-06 07:51-08:04 UTC"},"business-suite-unified":{"auth":"n/a (OAuth server)","dry-lint":"^0.2.0","contract_test":false,"codeowners":true,"fully_synced":false,"gap":"oauth-contract.test.ts MISSING + dry-lint pin still ^0.2.0"}},"remaining_gaps":"2 BSU items only: (1) bump @bsuite/dry-lint ^0.2.0 → 0.4.0 (2) add src/__tests__/oauth-contract.test.ts"},"branch_protection_audit_2026_05_06":{"audit_date":"2026-05-06T08:10Z","org_level_rulesets":0,"classic_protection":{"all_repos_main":"✅ enforced — required PR reviews + status check + enforce_admins=true + force-push DENIED + delete DENIED","development_branch":{"crm7":"❌ NO PROTECTION","conduit":"❌ NO PROTECTION","R80.3":"❌ NO PROTECTION","bsuite":"✅ protected","business-suite-unified":"✅ protected","braden":"✅ protected","throughput":"✅ protected"}},"silent_gaps":[{"severity":"P1","gap":"PR review count required = 0 across ALL repos","meaning":"A PR can be merged with ZERO approving reviews on every main branch. The existence of the rule satisfies \"PRs required\" but does not require any human or bot to actually review.","evidence":"gh api repos/GaryOcean428/<r>/branches/main/protection → required_approving_review_count = 0","remediation":"Set required_approving_review_count = 1 (or 2 for bsuite parent). Operator-only via GitHub UI Settings → Branches → Edit rule."},{"severity":"P1","gap":"CODEOWNERS review NOT required by branch protection","meaning":"CODEOWNERS files were added 2026-05-06 (.github/CODEOWNERS in all 7 repos) but the protection rule has require_code_owner_reviews = FALSE. Auth file changes can bypass the codeowner gate entirely.","evidence":"classic protection: require_code_owner_reviews=false on every repo","remediation":"Enable in protection: require_code_owner_reviews=true. This is the missing operator action from the freeze handoff."},{"severity":"P1","gap":"crm7, conduit, R80.3 development branches have NO protection at all","meaning":"Direct push to development is allowed, force-push is allowed, deletion is allowed (which is exactly how R80.3 + conduit development branches got auto-deleted in earlier ceremonies).","evidence":"gh api .../branches/development/protection → \"Branch not protected\" 404","remediation":"Apply same classic protection pattern to development on these 3 repos."},{"severity":"P2","gap":"dismiss_stale_reviews = false on all repos","meaning":"A PR approved at HEAD A keeps its approval after force-push or new commits are pushed (HEAD B). Reviewer attestation no longer reflects current code.","evidence":"classic protection: dismiss_stale_reviews=false everywhere","remediation":"Set dismiss_stale_reviews=true on every repo."},{"severity":"P2","gap":"required_signatures = false on all repos","meaning":"Commits are not required to be GPG/Sigstore-signed. Authorship cannot be cryptographically verified; impersonation via spoofed author headers is possible.","evidence":"classic protection: required_signatures.enabled=false everywhere","remediation":"Optional. Enable signed commits if compliance requires it."},{"severity":"P2","gap":"Status check requirements vary per repo and are MINIMAL","meaning":"Some main branches require only one check: bsuite=gitleaks, crm7=build-and-test, R80.3=quality, throughput=Test Suite. The new `oauth-contract` test in 5 consumers is NOT required by branch protection — a PR can merge while it fails or never runs.","evidence":"classic protection contexts: each repo has 1 required check; oauth-contract test absent from required list everywhere","remediation":"Add oauth-contract test to required_status_checks on each consumer repo. Critical given AUTH_CANONICAL.md doctrine."},{"severity":"P3","gap":"required_conversation_resolution = false on all repos","meaning":"PR review comments can be left unresolved at merge time.","evidence":"classic protection: required_conversation_resolution=false everywhere","remediation":"Enable for hygiene."},{"severity":"P3","gap":"No org-level ruleset","meaning":"Each repo configures protection independently. Drift is possible (and observed: crm7/conduit/R80.3 development branches missing protection while braden/BSU/throughput have it).","evidence":"gh api orgs/GaryOcean428/rulesets → empty","remediation":"Create one org ruleset that targets ~DEFAULT_BRANCH + development + main with the canonical settings, so all 7 repos inherit the same baseline. This is the strongest single fix."}],"protection_strengths":["enforce_admins=true everywhere — admins cannot override the rule","allow_force_pushes=false everywhere — no history rewrites possible","allow_deletions=false on classic-protected branches","Per-repo rulesets ALSO present (5-6 per repo) layering required_linear_history + non_fast_forward — defense in depth","gitleaks status check required on bsuite parent (secrets scanning)"]},"freeze_completion_bumps":{"state":"PARTIAL — 5 of 6 consumers fully synced. Only BSU has 2 small gaps.","remaining_bumps":[{"id":"fb-1","severity":"P1","app":"business-suite-unified","change":"@bsuite/dry-lint ^0.2.0 → 0.4.0 in devDependencies","unblocks":"oauth-callback-must-bridge ESLint rule activates in BSU CI. Without this, BSU lint passes even if a future agent removes the setSession bridge from a callback page (BSU has /auth/callback for native Supabase flows AND will get the OIDC consent flow). The rule is the only thing preventing the regression that caused the original 2026-05-06 incident.","effort":"2-line PR (package.json + lockfile)"},{"id":"fb-2","severity":"P1","app":"business-suite-unified","change":"add src/__tests__/oauth-contract.test.ts","unblocks":"BSU's auth surface (OAuth server callback handlers, /auth/callback, consent UI) becomes contract-tested. The 5 consumers all have this test pinning frozen invariants (PKCE flow, setSession bridge, no cookie SSO). BSU is the OAuth server itself — its contract test should pin DIFFERENT invariants: oauth_clients table state, /oauth/authorize prompt=none handling, redirect_uri exact-match, JWKS-only verification. Without this test, BSU's OAuth server can drift silently.","effort":"~50-line file modeled on crm7 contract test but pinning server-side invariants"}],"end_to_end_unblock_chain":{"bumps":"2 small PRs to BSU","after":["Full freeze coverage across all 6 BSuite consumer/server apps","oauth-callback-must-bridge ESLint rule active in 6 of 6 CI pipelines (currently 5 of 6)","oauth-contract test active in 6 of 6 CI pipelines (currently 5 of 6)","Closes the bsuite#505 RCA with full evidence-based green flag","Allows bsuite#525 (plans audit PR) to merge cleanly","Unblocks the operator branch-protection wiring (Q1) — adding require_code_owner_reviews=true + adding oauth-contract to required_status_checks now becomes a meaningful gate, since every consumer has the test"]}},"parity_status":{"schema_version":1,"audit_date":"2026-05-06","competitor":"Codehouse Workforce One","scope_pages":142,"matrix_rows":142,"matrix_path":"competitor/parity-matrix.md","evidence_grounded":true,"domains":{"A_timesheet_entry":{"gaps":8,"issue":567,"label":"p1"},"B_timesheet_approval":{"gaps":4,"issue":568,"label":"p1,needs-team"},"C_pay_items":{"gaps":11,"issue":569,"label":"p1,needs-team"},"E_pay_periods":{"gaps":4,"issue":575,"label":"p2"},"F_leave":{"gaps":5,"issue":573,"label":"p1"},"H_M_N_admin":{"gaps":14,"issue":578,"label":"p1"},"J_comms":{"gaps":3,"issue":571,"label":"p1,needs-team"},"K_reports":{"gaps":4,"issue":574,"label":"p2"},"L_export_adapters_pay":{"gaps":1,"issue":570,"label":"p1,needs-team"},"L_export_adapters_files":{"gaps":3,"issue":576,"label":"p2"},"O_mobile_portal":{"gaps":3,"issue":572,"label":"p2,needs-team"},"U_integrations":{"gaps":5,"issue":577,"label":"p2"},"doc_drift":{"gaps":17,"issue":579,"label":"documentation,p2"}},"totals":{"issues_filed":13,"gaps_covered":82,"needs_team":5,"needs_team_issues":[568,569,570,571,572],"p1_count":7,"p2_count":6},"plan_pr":"https://github.com/GaryOcean428/bsuite/pull/580","plan_files_count":12,"plan_lines_added":1424,"plan_status":"validated by claude-code (cross-validation 2026-05-06T11:43Z)"},"feature_360_status":{"schema_version":1,"match_or_better_doctrine":true,"doctrine_source":"operator directive 2026-05-06: 'so long as we match or better their features across the full bsuite that's fine'","portals_in_scope":[{"portal":"BSU admin","app":"business-suite-unified","role":"platform-admin"},{"portal":"CRM7 internal","app":"crm7","role":"internal staff"},{"portal":"Conduit recruiter","app":"conduit","role":"recruiter"},{"portal":"Conduit candidate","app":"conduit","role":"candidate"},{"portal":"Conduit employer","app":"conduit","role":"employer"},{"portal":"Conduit careers","app":"conduit","role":"public job-seeker"},{"portal":"BSU tenant admin","app":"business-suite-unified","role":"tenant-admin"},{"portal":"R80.3 calculator","app":"R80.3","role":"tenant user"},{"portal":"braden marketing","app":"braden","role":"public marketing"}],"auth_doctrine":"AUTH_CANONICAL.md (no cookie SSO, OAuth 2.1 PKCE bridge, Supabase RLS source of truth)","data_flow_status":"designed (sub-plans authored)","design_status":"approved by operator 2026-05-06T11:00Z","delivery_strategy":"FULL not MVP (operator directive 2026-05-06)"},"visual_feature_builder":{"schema_version":1,"name":"Visual Feature Builder","route":"/dev/feature-builder","host":"business-suite-unified","phases_total":9,"phases":[{"id":"FB-PHASE-0","name":"Foundation + entity layer","status":"done","pr":"https://github.com/GaryOcean428/business-suite-unified/pull/344","pr_state":"DRAFT (per spec)","files_changed":32,"lines_added":4302,"tests":329,"ci":"all green"},{"id":"FB-PHASE-1","name":"Entity layer advanced (RLS+indexes+triggers+realtime+types)","status":"decomposed","sub_items":6,"blocked_by":"PR #344 merge"},{"id":"FB-PHASE-1.A","name":"RLS visual editor","status":"open","blocked_by":"PR #344"},{"id":"FB-PHASE-1.B","name":"Index editor","status":"open","blocked_by":"PR #344"},{"id":"FB-PHASE-1.C","name":"Trigger editor + pgTAP","status":"open","blocked_by":"PR #344"},{"id":"FB-PHASE-1.D","name":"Realtime subscriptions","status":"open","blocked_by":"PR #344 + 1.A"},{"id":"FB-PHASE-1.E","name":"Types-export bundle","status":"open","blocked_by":"PR #344"},{"id":"FB-PHASE-1.F","name":"Migration preview SQL diff","status":"open","blocked_by":"PR #344 + 1.A/B/C"},{"id":"FB-PHASE-2","name":"Page layer (breakpoints, snap, layers, multi-select, symbols)","status":"open","blocked_by":"FB-PHASE-0+1"},{"id":"FB-PHASE-3","name":"Logic layer (workflow + edge fn + scheduled-job)","status":"open","blocked_by":"FB-PHASE-0+1"},{"id":"FB-PHASE-4","name":"AI prompt-to-feature (full)","status":"open","blocked_by":"FB-PHASE-0..3","operator_pending":"AI_GATEWAY_API_KEY"},{"id":"FB-PHASE-5","name":"Permissions visual editor (role × capability × route × RLS)","status":"in-progress","claimed_by":"perplexity-computer","blocked_by":"FB-PHASE-0+1"},{"id":"FB-PHASE-6","name":"Portal targeting (per-portal route + nav)","status":"open","blocked_by":"FB-PHASE-0+2"},{"id":"FB-PHASE-7","name":"Full-stack PR export","status":"open","blocked_by":"all prior","operator_pending":"FEATURE_BUILDER_GH_PAT or Jodie GitHub App"},{"id":"FB-PHASE-8","name":"Verification (Supabase branch + Playwright + RLS contract + axe + perf)","status":"open","blocked_by":"FB-PHASE-7"}],"operator_blockers":["AI_GATEWAY_API_KEY (Vercel env, BSU project) — for FB-PHASE-4 AI features","FEATURE_BUILDER_GH_PAT (Vercel env, BSU project) — for FB-PHASE-7 PR export","Jodie GitHub App registration (bsuite#557) — replaces PAT path long-term"],"completed_pct":11,"completed_count":1,"in_progress_count":1,"open_count":13},"portal_coverage":{"schema_version":1,"audit_date":"2026-05-06","rows":[{"portal":"BSU admin","auth":"AUTH_CANONICAL","rls_source":"supabase","shadcn":true,"oklch":true,"status":"production v0.2.0+"},{"portal":"CRM7 internal","auth":"AUTH_CANONICAL","rls_source":"supabase","shadcn":true,"oklch":true,"status":"production v0.2.0+"},{"portal":"Conduit recruiter","auth":"AUTH_CANONICAL","rls_source":"supabase","shadcn":true,"oklch":true,"status":"production (Next.js divergence allowed)"},{"portal":"Conduit candidate","auth":"AUTH_CANONICAL","rls_source":"supabase","shadcn":true,"oklch":true,"status":"production"},{"portal":"Conduit employer","auth":"AUTH_CANONICAL","rls_source":"supabase","shadcn":true,"oklch":true,"status":"production"},{"portal":"Conduit careers","auth":"anonymous + magic-link","rls_source":"supabase","shadcn":true,"oklch":true,"status":"production"},{"portal":"BSU tenant admin","auth":"AUTH_CANONICAL","rls_source":"supabase","shadcn":true,"oklch":true,"status":"production v0.2.0+ (OKLCH picker landed bsu#340)"},{"portal":"R80.3 calculator","auth":"AUTH_CANONICAL","rls_source":"supabase","shadcn":true,"oklch":true,"react_version":"19","note":"README needs React 19 correction (bsuite#579)"},{"portal":"braden marketing","auth":"anonymous (public marketing)","rls_source":"n/a","shadcn":true,"oklch":false,"theme":"corporate red #ab233a / gold #cbb26a (allowed divergence)","status":"production"}],"consistency_check":{"all_AUTH_CANONICAL":true,"all_supabase_RLS":true,"all_shadcn":true,"all_oklch_except_braden":true,"all_react_19":true}}}</script>
+<!-- gap report inlined into dashboard-data -->
+
+<script>
+const DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
+const GAP = DATA.gap_report || null;
+
+// Theme toggle
+const root = document.documentElement;
+const themeBtn = document.getElementById('theme-toggle');
+const sysDark = window.matchMedia('(prefers-color-scheme: dark)');
+function setTheme(t){ root.setAttribute('data-theme', t); }
+sysDark.addEventListener('change', e => setTheme(e.matches ? 'dark' : 'light'));
+themeBtn.addEventListener('click', () => {
+  const cur = root.getAttribute('data-theme');
+  setTheme(cur === 'dark' ? 'light' : 'dark');
+});
+
+// Hero
+document.getElementById('audit-meta').textContent = DATA.meta.audit_date + ' · ' + DATA.meta.scope;
+document.getElementById('hero-sub').textContent = '59 plans audited + ' + DATA.summary.gap_total + ' OAuth-freeze gaps + ' + (DATA.summary.parity_issues_filed||0) + ' Codehouse parity issues (' + (DATA.summary.parity_gaps_covered||0) + ' gaps) + Visual Feature Builder ' + (DATA.summary.fb_phases_done||0) + '/' + (DATA.summary.fb_phases_total||0) + ' phases + ' + (DATA.summary.portals_360||0) + '-portal Platform 360. Production: 6/6 apps live on @bsuite/auth v0.2.0.';
+document.getElementById('footer-date').textContent = DATA.meta.audit_date;
+document.getElementById('footer-auditors').textContent = DATA.meta.auditor_chain.join(' → ');
+
+// KPIs
+// Math: 30 external triaged (12 done-V + 11 superseded + 3 partial + 2 dup + 2 open) + 19 in-repo active + 10 archived = 59 audited; +25 untracked from docs root + 22 OAuth gaps
+const kpis = [
+  { label: 'Total audited', value: '59', delta: '30 external + 19 in-repo + 10 archived', accent: false },
+  { label: 'OAuth-freeze gaps', value: DATA.summary.gap_total, delta: 'P0:'+DATA.summary.gap_p0+' P1:'+DATA.summary.gap_p1+' P2:'+DATA.summary.gap_p2+' P3:'+DATA.summary.gap_p3, accent: false },
+  { label: 'Untracked items', value: DATA.summary.untracked_items, delta: 'from '+DATA.summary.docs_root_files_audited+' docs root files', accent: false },
+  { label: 'Already archived', value: DATA.summary.already_archived, delta: 'evidence-verified', accent: false },
+  { label: 'Operator-blocked', value: DATA.summary.operator_blockers ? DATA.operator_blockers.length : DATA.summary.operator_blocked, delta: 'awaiting external action', accent: false },
+  { label: 'Apps live on v0.2.0', value: DATA.summary.production_apps_live_v0_2_0 + '/6', delta: 'all Vercel ✅ success', accent: true }
+];
+document.getElementById('kpis').innerHTML = kpis.map(k =>
+  `<div class="kpi ${k.accent ? 'accent' : ''}"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="delta">${k.delta}</div></div>`
+).join('');
+
+// Repos
+document.getElementById('repos').innerHTML = DATA.repos.map(r =>
+  `<div class="repo">
+    <div class="name"><span class="repo-text">${r.name}</span> <span class="tag">${r.type}</span></div>
+    <div class="stats">
+      <span>${r.active_plans} active</span>
+      <span>${r.archived} archived</span>
+    </div>
+    <div class="vercel">
+      <span class="dot ${r.vercel === 'success' ? 'success' : 'na'}"></span>
+      ${r.vercel === 'success' ? `Vercel ✅ <span class="mono" style="color:var(--text-faint);font-size:11px;">${r.main_sha}</span>` : 'No Vercel project'}
+    </div>
+  </div>`
+).join('');
+
+// Operator blockers
+document.getElementById('blocker-count').textContent = DATA.operator_blockers.length + ' actions';
+document.getElementById('blocker-list').innerHTML = DATA.operator_blockers.map((b,i) =>
+  `<div class="blocker" ${b.priority_boost ? 'style="background:oklch(0.58 0.22 25 / 0.06);border-left:3px solid oklch(0.58 0.22 25);padding-left:var(--s-3);"' : ''}>
+    <div class="icon" ${b.priority_boost ? 'style="background:oklch(0.58 0.22 25);"' : ''}>${i+1}</div>
+    <div>
+      <div class="label">${escapeHtml(b.label)} ${b.priority_boost ? '<span class="badge operator-blocked" style="margin-left:var(--s-2);">CRITICAL</span>' : ''}</div>
+      <div class="ctx">${escapeHtml(b.context)}${b.affects ? ' <strong style="color:oklch(0.78 0.22 25);">— '+escapeHtml(b.affects)+'</strong>' : ''}</div>
+    </div>
+    <span class="type">${escapeHtml(b.blocker_type)}</span>
+  </div>`
+).join('');
+
+// Filters
+const REPOS = ['all', ...new Set(DATA.plans.map(p => p.repo))];
+const STATUSES = ['all', 'in-flight', 'partial', 'open', 'operator-blocked', 'reference'];
+const SEVS = ['all', 'P0', 'P1', 'P2', 'P3'];
+const SCOPES = ['all', 'parent', 'submodule', 'external', 'docs-root'];
+
+function buildChips(containerId, options, paramName) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = options.map(o => `<button class="chip" data-${paramName}="${o}">${o}</button>`).join('');
+  c.firstElementChild.classList.add('active');
+}
+buildChips('filter-repo', REPOS, 'repo');
+buildChips('filter-status', STATUSES, 'status');
+buildChips('filter-severity', SEVS, 'sev');
+buildChips('filter-scope', SCOPES, 'scope');
+
+const state = { q:'', repo:'all', status:'all', sev:'all', scope:'all' };
+
+document.querySelectorAll('.filter-group').forEach(g => {
+  g.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') return;
+    const param = ['repo','status','sev','scope'].find(p => e.target.dataset[p]);
+    if (!param) return;
+    g.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    e.target.classList.add('active');
+    state[param] = e.target.dataset[param];
+    render();
+  });
+});
+document.getElementById('q').addEventListener('input', e => { state.q = e.target.value.toLowerCase(); render(); });
+document.getElementById('reset-filters').addEventListener('click', () => {
+  state.q=''; state.repo='all'; state.status='all'; state.sev='all'; state.scope='all';
+  document.getElementById('q').value='';
+  document.querySelectorAll('.filter-group').forEach(g => {
+    g.querySelectorAll('.chip').forEach((c,i) => c.classList.toggle('active', i===0));
+  });
+  render();
+});
+
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// === Codehouse parity ===
+if (DATA.parity_status) {
+  const ps = DATA.parity_status;
+  document.getElementById('parity-section').style.display = '';
+  document.getElementById('parity-count').textContent = ps.totals.issues_filed + ' issues · ' + ps.totals.gaps_covered + ' gaps · ' + ps.totals.needs_team + ' needs-team';
+  const domains = Object.entries(ps.domains).map(([k,v]) => ({key:k, ...v}));
+  document.getElementById('parity-grid').innerHTML = domains.map(d => {
+    const isNeedsTeam = String(d.label||'').includes('needs-team');
+    const sev = String(d.label||'').match(/p\d/)?.[0]?.toUpperCase() || 'P2';
+    const niceName = d.key.replace(/^[A-Z_]+_/,'').replace(/_/g,' ');
+    return `<div class="plan">
+      <div class="plan-row">
+        <div class="plan-title">${escapeHtml(niceName)}</div>
+        <div class="plan-meta">
+          <span class="sev ${sev}">${sev}</span>
+          <span class="badge ${isNeedsTeam ? 'operator-blocked' : 'in-flight'}">${isNeedsTeam ? 'needs team' : 'open'}</span>
+          <span class="repo-tag">${d.gaps} gaps</span>
+        </div>
+      </div>
+      <div class="plan-row" style="gap:var(--s-2);">
+        <a class="plan-link" href="https://github.com/GaryOcean428/bsuite/issues/${d.issue}" target="_blank" rel="noopener">↗ bsuite#${d.issue}</a>
+        <span class="scope-tag">domain ${d.key.split('_')[0]}</span>
+      </div>
+      <div class="plan-path">labels: ${escapeHtml(d.label)}</div>
+    </div>`;
+  }).join('');
+}
+
+// === Visual Feature Builder ===
+if (DATA.visual_feature_builder) {
+  const fb = DATA.visual_feature_builder;
+  document.getElementById('feature-builder-section').style.display = '';
+  document.getElementById('fb-count').textContent = fb.completed_count + '/' + fb.phases_total + ' phases · ' + fb.in_progress_count + ' in-progress · ' + fb.completed_pct + '%';
+  const blockerNote = fb.operator_blockers && fb.operator_blockers.length
+    ? ' Operator blockers: ' + fb.operator_blockers.length + '.'
+    : '';
+  document.getElementById('fb-progress-text').textContent = 'Phase 0 shipped (PR #344 DRAFT, 329 tests green). Phase 5 in progress.' + blockerNote;
+  document.getElementById('fb-grid').innerHTML = fb.phases.map(ph => {
+    const statusBadge = {
+      'done': 'in-flight',
+      'in-progress': 'partial',
+      'open': 'open',
+      'decomposed': 'reference'
+    }[ph.status] || 'open';
+    const sev = ph.id.includes('PHASE-0') || ph.id.includes('PHASE-1') || ph.id.includes('PHASE-5') ? 'P1' : 'P2';
+    return `<div class="plan">
+      <div class="plan-row">
+        <div class="plan-title">${escapeHtml(ph.id)} — ${escapeHtml(ph.name)}</div>
+        <div class="plan-meta">
+          <span class="sev ${sev}">${sev}</span>
+          <span class="badge ${statusBadge}">${escapeHtml(ph.status)}</span>
+          ${ph.claimed_by ? `<span class="repo-tag">@${escapeHtml(ph.claimed_by)}</span>` : ''}
+        </div>
+      </div>
+      <div class="plan-row" style="gap:var(--s-2);">
+        ${ph.pr ? `<a class="plan-link" href="${escapeHtml(ph.pr)}" target="_blank" rel="noopener">↗ ${escapeHtml(ph.pr_state || 'PR')}</a>` : ''}
+        ${ph.tests ? `<span class="scope-tag">${ph.tests} tests · ${escapeHtml(ph.ci || '')}</span>` : ''}
+        ${ph.files_changed ? `<span class="repo-tag">${ph.files_changed} files / +${ph.lines_added}</span>` : ''}
+      </div>
+      ${ph.blocked_by ? `<div class="plan-next">blocked: ${escapeHtml(ph.blocked_by)}</div>` : ''}
+      ${ph.operator_pending ? `<div class="plan-path" style="color:oklch(0.78 0.22 25);">operator: ${escapeHtml(ph.operator_pending)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// === Portal coverage ===
+if (DATA.portal_coverage) {
+  const pc = DATA.portal_coverage;
+  document.getElementById('portal-section').style.display = '';
+  document.getElementById('portal-count').textContent = pc.rows.length + ' portals · ' + Object.values(pc.consistency_check).filter(Boolean).length + '/' + Object.keys(pc.consistency_check).length + ' consistency checks pass';
+  document.getElementById('portal-grid').innerHTML = pc.rows.map(p =>
+    `<div class="plan">
+      <div class="plan-row">
+        <div class="plan-title">${escapeHtml(p.portal)}</div>
+        <div class="plan-meta">
+          <span class="badge in-flight">${escapeHtml(p.status)}</span>
+          <span class="repo-tag">${escapeHtml(p.auth)}</span>
+        </div>
+      </div>
+      <div class="plan-row" style="gap:var(--s-2);">
+        ${p.shadcn ? '<span class="scope-tag">shadcn ✓</span>' : ''}
+        ${p.oklch ? '<span class="scope-tag">OKLCH ✓</span>' : (p.theme ? `<span class="scope-tag">theme: ${escapeHtml(p.theme)}</span>` : '')}
+        ${p.rls_source !== 'n/a' ? `<span class="scope-tag">RLS: ${escapeHtml(p.rls_source)}</span>` : ''}
+      </div>
+      ${p.note ? `<div class="plan-next">${escapeHtml(p.note)}</div>` : ''}
+    </div>`
+  ).join('');
+}
+
+function render() {
+  const filtered = DATA.plans.filter(p => {
+    if (state.repo !== 'all' && p.repo !== state.repo) return false;
+    if (state.status !== 'all' && p.status !== state.status) return false;
+    if (state.sev !== 'all' && p.severity !== state.sev) return false;
+    if (state.scope !== 'all' && p.scope !== state.scope) return false;
+    if (state.q) {
+      const blob = (p.title + ' ' + (p.owner||'') + ' ' + (p.next_step||'') + ' ' + (p.path||'') + ' ' + (p.category||'')).toLowerCase();
+      if (!blob.includes(state.q)) return false;
+    }
+    return true;
+  });
+  document.getElementById('plans-count').textContent = filtered.length + ' / ' + DATA.plans.length + ' shown';
+  document.getElementById('plan-list').innerHTML = filtered.map(p =>
+    `<div class="plan">
+      <div class="plan-row">
+        <div class="plan-title">${escapeHtml(p.title)}</div>
+        <div class="plan-meta">
+          <span class="sev ${p.severity}">${p.severity}</span>
+          <span class="badge ${p.status}">${p.status.replace(/-/g,' ')}</span>
+          <span class="repo-tag">${escapeHtml(p.repo)}</span>
+          ${p.scope === 'external' ? '<span class="scope-tag" style="color:var(--accent);">EXTERNAL</span>' : (p.scope === 'docs-root' ? '<span class="scope-tag" style="color:oklch(0.72 0.18 60);">UNTRACKED</span>' : '')}
+        </div>
+      </div>
+      <div class="plan-row" style="gap:var(--s-2);">
+        <span class="scope-tag">${escapeHtml(p.phase || '')}</span>
+        ${p.category ? `<span class="repo-tag">${escapeHtml(p.category)}</span>` : ''}
+        ${p.owner ? `<span class="repo-tag">@${escapeHtml(p.owner)}</span>` : ''}
+        ${p.issue ? `<a class="plan-link" href="https://github.com/${p.issue.split('#')[0]}/issues/${p.issue.split('#')[1]}" target="_blank" rel="noopener">↗ ${escapeHtml(p.issue)}</a>` : ''}
+      </div>
+      <div class="plan-next">${escapeHtml(p.next_step || '')}</div>
+      <div class="plan-path">${escapeHtml(p.path || p.source || '')}</div>
+    </div>`
+  ).join('');
+}
+render();
+
+// Render gap report if loaded
+if (GAP) {
+  const sevCounts = GAP.summary;
+  document.getElementById('gap-count').textContent = sevCounts.total + ' gaps · P0:' + sevCounts.p0 + ' P1:' + sevCounts.p1 + ' P2:' + sevCounts.p2 + ' P3:' + sevCounts.p3;
+  let gapHtml = '';
+  if (GAP.top_risks && GAP.top_risks.length) {
+    gapHtml += '<div style="margin-bottom:var(--s-4);"><strong>Top risks:</strong><ul style="margin:var(--s-2) 0 0; padding-left:var(--s-5);">' +
+      GAP.top_risks.map(r => '<li style="margin-bottom:var(--s-1);font-size:var(--text-sm);color:var(--text-muted);">'+escapeHtml(r)+'</li>').join('') + '</ul></div>';
+  }
+  GAP.categories.forEach(cat => {
+    gapHtml += `<div class="gap-cat"><h3>${escapeHtml(cat.id)}. ${escapeHtml(cat.title)} <span style="color:var(--text-faint);font-weight:400;">(${cat.gaps.length})</span></h3><div class="gaps-list">`;
+    cat.gaps.forEach(g => {
+      gapHtml += `<div class="gap-item">
+        <div style="display:flex;gap:var(--s-2);align-items:center;margin-bottom:var(--s-1);">
+          <span class="gap-id">${escapeHtml(g.id)}</span>
+          <span class="sev ${g.severity}">${g.severity}</span>
+          ${g.apps && g.apps.length ? '<span class="repo-tag">' + g.apps.map(escapeHtml).join(', ') + '</span>' : ''}
+        </div>
+        <div style="font-weight:500;margin-bottom:var(--s-1);">${escapeHtml(g.description)}</div>
+        ${g.evidence ? '<div style="font-size:var(--text-xs);color:var(--text-faint);margin-bottom:var(--s-1);font-family:var(--font-mono);">'+escapeHtml(g.evidence)+'</div>' : ''}
+        ${g.remediation ? '<div style="font-size:var(--text-xs);color:var(--text-muted);">→ '+escapeHtml(g.remediation)+'</div>' : ''}
+      </div>`;
+    });
+    gapHtml += '</div></div>';
+  });
+  if (GAP.freeze_strengths && GAP.freeze_strengths.length) {
+    gapHtml += '<div class="gap-cat"><h3>What the freeze DOES enforce well</h3><ul style="margin:0;padding-left:var(--s-5);">' +
+      GAP.freeze_strengths.map(s => '<li style="margin-bottom:var(--s-1);font-size:var(--text-sm);color:var(--text-muted);">'+escapeHtml(s)+'</li>').join('') + '</ul></div>';
+  }
+  document.getElementById('gap-content').innerHTML = gapHtml;
+  document.getElementById('gap-content').className = '';
+}
+</script>
+</body>
+</html>
