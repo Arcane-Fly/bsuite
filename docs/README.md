@@ -55,6 +55,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260427-visual-smoke-completion-v1.00W.md` | WS-J gap closure: 144 full-matrix visual smoke captures across 6 apps × routes × {light, dark} × {mobile, desktop} via local Playwright; pixel-diff vs WS-J baseline; 0 broken routes, 1 medium finding (Throughput → BSU `/auth/login` mismatch resolved in throughput PR #50) |
 | `20260428-codex-operator-handoff-v4.00W.md` | Current Codex Phase 0 operator handoff — TGA custom config, TGA production enablement, Azure `xms_edov`, and Supabase Auth allow-list doctrine conflict |
 | `20260505-bsuite-dependency-refresh-ts6-migration-v1.00W.md` | TS 5.9→6.0 migration playbook — rootDir on shared-package build tsconfigs, CSS ambient declarations, `global`→`globalThis`, baseUrl deprecation; verification matrix for all 13 packages; reusable for next TS major bump |
+| `20260506-cron-log-claude-18h-v1.00W.md` | claude-code-scheduled cron log 2026-05-06T18:20Z — #592 §17 ack + §20 merge; #586 red-team hold; P1 issue scan; memory API P0 gap; /ship-all-apps gap; operator next-actions |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived per-project roadmaps + 2026-04-25 finish-line sweep archive (`archive/parent/2026-04-25-finish-line/`) |
 | [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |
