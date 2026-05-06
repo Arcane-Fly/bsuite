@@ -6,13 +6,17 @@ import {
   NO_RAW_ENTITY_SELECT_RULE_NAME,
   noRawEntitySelectRule,
 } from './rules/no-raw-entity-select.js';
+import {
+  OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME,
+  oauthCallbackMustBridgeRule,
+} from './rules/oauth-callback-must-bridge.js';
 import ownershipMap from './ownership-map.json' with { type: 'json' };
 
 export { detectAppFromPath, type AppKey } from './app-detection.js';
-export { noCrossAppWriteRule, noRawEntitySelectRule };
+export { noCrossAppWriteRule, noRawEntitySelectRule, oauthCallbackMustBridgeRule };
 
 const PLUGIN_NAME = 'bsuite';
-const PLUGIN_VERSION = '0.3.0';
+const PLUGIN_VERSION = '0.4.0';
 
 /**
  * The `@bsuite/dry-lint` ESLint flat-config plugin.
@@ -48,6 +52,7 @@ const pluginBase = {
   rules: {
     [NO_CROSS_APP_WRITE_RULE_NAME]: noCrossAppWriteRule,
     [NO_RAW_ENTITY_SELECT_RULE_NAME]: noRawEntitySelectRule,
+    [OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME]: oauthCallbackMustBridgeRule,
   },
 };
 
@@ -57,6 +62,7 @@ const recommendedConfig = {
   rules: {
     [`${PLUGIN_NAME}/${NO_CROSS_APP_WRITE_RULE_NAME}`]: 'error' as const,
     [`${PLUGIN_NAME}/${NO_RAW_ENTITY_SELECT_RULE_NAME}`]: 'warn' as const,
+    [`${PLUGIN_NAME}/${OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME}`]: 'error' as const,
   },
 };
 
@@ -66,6 +72,7 @@ const warnConfig = {
   rules: {
     [`${PLUGIN_NAME}/${NO_CROSS_APP_WRITE_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${NO_RAW_ENTITY_SELECT_RULE_NAME}`]: 'warn' as const,
+    [`${PLUGIN_NAME}/${OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME}`]: 'warn' as const,
   },
 };
 
