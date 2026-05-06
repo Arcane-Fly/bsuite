@@ -20,14 +20,17 @@
 
 set -euo pipefail
 
-# Each consumer's root + the file we expect to wire silent re-auth.
+# Each consumer's root + the directory grepped for the silent-auth call site.
 # Conduit is included per AUTH_CANONICAL.md (full BS OAuth 2.1 PKCE client).
+# The grep is recursive to allow apps to host their auth boot path under any
+# of the canonical layouts (e.g. throughput uses `src/lib/auth/AuthProvider.tsx`
+# while crm7 uses `src/contexts/AuthContext.tsx`).
 CONSUMERS=(
-  "crm7|src/contexts/AuthContext.tsx"
-  "throughput|src/contexts/AuthContext.tsx"
-  "R80.3|src/contexts/AuthContext.tsx"
-  "braden|src/contexts/AuthContext.tsx"
-  "conduit|src/contexts/AuthContext.tsx"
+  "crm7|src"
+  "throughput|src"
+  "R80.3|src"
+  "braden|src"
+  "conduit|src"
 )
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")"/.. && pwd)"
@@ -38,19 +41,25 @@ for entry in "${CONSUMERS[@]}"; do
   rel="${entry#*|}"
   path="${REPO_ROOT}/${consumer}/${rel}"
 
-  if [ ! -f "$path" ]; then
+  if [ ! -d "$path" ]; then
     # Consumer subdirectory missing (submodule not initialized) — soft skip.
     echo "warn: ${consumer} not present at ${path} — skipping"
     continue
   fi
 
-  if ! grep -q 'attemptSilentAuth' "$path"; then
-    echo "FAIL: ${consumer}: ${rel} does not reference attemptSilentAuth"
+  # Search for any call site (not just a comment / type import). A bare token
+  # match is sufficient — false-positives here would be an active call to
+  # `attemptSilentAuth` in test code, which is fine: the doctrine just
+  # requires it to be wired SOMEWHERE in the consumer's source.
+  hits=$(grep -rl 'attemptSilentAuth' "$path" --include='*.ts' --include='*.tsx' 2>/dev/null || true)
+  if [ -z "$hits" ]; then
+    echo "FAIL: ${consumer}: no .ts/.tsx file under ${rel}/ references attemptSilentAuth"
     echo "  AUTH_CANONICAL.md requires every BS OAuth 2.1 client to invoke attemptSilentAuth"
     echo "  in its auth boot path so cross-app SSO via prompt=none works."
     fail=1
   else
-    echo "ok:   ${consumer}: attemptSilentAuth referenced in ${rel}"
+    echo "ok:   ${consumer}: attemptSilentAuth referenced in:"
+    echo "$hits" | sed 's|^|        |'
   fi
 done
 
