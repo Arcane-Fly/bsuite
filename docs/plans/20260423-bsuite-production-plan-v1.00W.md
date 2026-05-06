@@ -573,7 +573,7 @@ With BSU auth working, schema builder active, and all one-shot flows operational
 
 **Total estimated effort:** 27–35 agent-days from today to full production.
 
-**Critical path:** Phase 6 → Phase 9 → Phase 15. Everything else can run in parallel with the critical path or be deferred without blocking the production ship, provided P0 security issues are resolved first.
+**Critical path:** Phase 6 → Phase 9 → Phase 15. Everything else can run in parallel with the critical path or remain queued after the production ship, provided P0 security issues are resolved first and every non-critical item stays represented in the merged backlog with an owner and acceptance criteria.
 
 **Immediate next action:** Resolve conduit SSR divergence (Phase 6.0) — cherry-pick `2f38cc3` + `5870990` onto `fix/conduit-ssr-prerender-guard` from `development`, open new PR, merge once CI passes. This unblocks conduit Vercel and clears the only remaining Phase 5 outstanding item.
 

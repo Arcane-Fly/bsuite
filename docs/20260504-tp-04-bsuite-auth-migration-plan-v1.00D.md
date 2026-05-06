@@ -1,5 +1,7 @@
 # TP-04 — @bsuite/auth Migration Plan for Throughput
 
+> **⚠️ SUPERSEDED (2025-02-27) — HISTORICAL ONLY:** This draft plan targeted the cookie-SSO architecture (storage key `business_suite_auth`, `domain=.crm7.app`). Cookie SSO has since been **removed suite-wide**; this plan should NOT be executed. Throughput is now a BS OAuth 2.1 PKCE client via `@bsuite/auth`. See [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) for the current architecture.
+
 | Field | Value |
 |---|---|
 | **Date** | 2026-05-04 |

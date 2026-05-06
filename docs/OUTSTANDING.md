@@ -58,8 +58,8 @@ Living gap register — supersedes v1. Accumulates sprint findings.
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
-| 1 | Bump master roadmap header to v5.03W and cross off four `#26` subtasks (26a, 26e, 26f, 26g) — details in `20260415-roadmap-audit-delta-v1.00W.md` | ship-all-apps / Cascade |
-| 2 | RT-10: Audit BSU `react-day-picker` v8 usage; migrate to v9 or document intentional pin | Claude Code |
+| 1 | ~~Bump master roadmap header to v5.03W and cross off four `#26` subtasks (26a, 26e, 26f, 26g) — details in `20260415-roadmap-audit-delta-v1.00W.md`~~ | ✅ Complete |
+| 2 | ~~RT-10: Audit BSU `react-day-picker` v8 usage and migrate to v9~~ | ✅ Complete — BSU uses `react-day-picker@^9.14.0` |
 | 3 | CC-3: CRM7 Tier 3-4 broad page wiring (remaining pages in SP-3) — in progress | Claude Code |
 
 ---
@@ -78,13 +78,13 @@ Living gap register — supersedes v1. Accumulates sprint findings.
 
 ### `20260415-roadmap-audit-delta-v1.00W.md`
 
-Delta audit confirming four P2 `#26` subtasks already complete; pending rollup into master roadmap.
+Delta audit confirming four P2 `#26` subtasks already complete. Rollup is now reflected in the master roadmap (`20260227-bsuite-master-roadmap-v5.00W.md` header `v5.03W`, `Last Updated: 2026-05-01`, 26a/26e/26f/26g struck, AUD-15/AUD-16 marked done).
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
-| 1 | Roll findings into `20260227-bsuite-master-roadmap-v5.00W.md`: bump header to v5.03W, cross off 26a/26e/26f/26g, update AUD-15/AUD-16 | ship-all-apps / Cascade (next `--admin` pass) |
-| 2 | File companion agent-handoff bsuite issue tracking the roadmap rollup | Cascade |
-| 3 | Once master roadmap is updated, this delta doc's status moves to A (Approved) and can be archived | — |
+| 1 | ~~Roll findings into `20260227-bsuite-master-roadmap-v5.00W.md`: bump header to v5.03W, cross off 26a/26e/26f/26g, update AUD-15/AUD-16~~ | ✅ Complete |
+| 2 | Companion agent-handoff issue no longer required; the master roadmap already cites the merged execution backlog as the active queue | ✅ Superseded |
+| 3 | Archive/provenance cleanup only: source delta now lives under `docs/archive/parent/2026-04-30-audits-closed/` | ✅ Complete |
 
 ---
 
@@ -168,13 +168,13 @@ execution must treat the broader ownership leaks below as active blockers.
 
 ### `20260423-misplaced-routes-audit-v1.00W.md`
 
-Phase 12.1 audit. 6 deferred route moves (F-01…F-06) pending Phase 7 merge.
+Phase 12.1 audit. 6 route moves (F-01…F-06) remain active in the merged backlog; they must land as atomic redirect/delete PRs with no duplicate authoring surfaces left behind.
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
 | 1 | F-01/F-02/F-03: Replace CRM7 `/settings/branding`, `/settings/organization`, `/settings/tester-licenses` with `<RedirectTo>` pointing at BSU equivalents (post-Phase 7 merge — CRM7 checkout held by Phase 7) | Phase 12 follow-up PR |
 | 2 | F-04/F-05/F-06: Remove duplicated branding/onboarding/schema-builder UI from R80.3 (post-Phase 7 merge — R80.3 checkout held by Phase 7) | Phase 12 follow-up PR |
-| 3 | Promote doc to A (Approved) once F-01…F-06 PRs merge and F-08/F-10 (deferred P2 items) have owning tickets | — |
+| 3 | Promote doc to A (Approved) once F-01…F-06 PRs merge and F-08/F-10 are closed through merged backlog items P2-19/P2-20 | — |
 
 ---
 
@@ -190,24 +190,32 @@ Standing env/Vercel rules extracted from the 2026-04-24 audit.
 
 ---
 
-### `packages/schema-builder/docs/testing-notes.md` — vitest/jsdom workaround tracker
+### `packages/schema-builder/docs/testing-notes.md` — completed Vitest matcher cleanup
 
-Package-internal testing notes. Documents a vitest `2.1.9` + `jsdom` +
+Package-internal testing notes formerly documented a vitest `2.1.9` + `jsdom` +
 `@testing-library/jest-dom` interaction where `.rejects.toThrow('string')`
-fails with `TypeError: Cannot read properties of undefined (reading
-'indexOf')` because `.message` is stripped across the async rejection
-boundary. Current workaround: manual `.catch((e) => e)` +
-`toBeInstanceOf(Error)` + `.message` property assertion (applied to 3
-tests across `fieldService.test.ts` and `exportPng.test.ts`).
+failed. As of 2026-05-05, `@bsuite/schema-builder` is on `vitest@^4.1.5`,
+native `.rejects.toThrow(...)` matchers pass in the current setup, and the
+legacy workaround has been removed.
 
-| # | Remaining action | Owner |
+| # | Completed action | Owner |
 |---|-----------------|-------|
-| 1 | Upgrade `@bsuite/schema-builder` to `vitest@^3` as part of the cross-project vitest upgrade; verify the simplest reproduction passes in this package's setup (`await expect(Promise.reject(new Error('x'))).rejects.toThrow('x')`) before declaring the upgrade successful | Claude Code |
-| 2 | Once vitest 3 is confirmed-good, revert the manual-catch workaround in `src/__tests__/fieldService.test.ts` (2 assertions) and `src/__tests__/exportPng.test.ts` (1 assertion) back to the ergonomic `.rejects.toThrow('…')` pattern; delete the `## Gotcha` and `## History` sections of `packages/schema-builder/docs/testing-notes.md` | Claude Code |
+| 1 | ~~Verify the simplest reproduction passes in this package's current `vitest@^4.1.5` setup (`await expect(Promise.reject(new Error('x'))).rejects.toThrow('x')`)~~ | ✅ Complete |
+| 2 | ~~Restore the ergonomic `.rejects.toThrow('…')` pattern in affected tests and delete the stale gotcha/history sections from `packages/schema-builder/docs/testing-notes.md`~~ | ✅ Complete |
 
 ---
 
 ## 3 — Archived / Clarified This Pass
+
+### 2026-05-05 bucket — `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/`
+
+Schema Builder Phase 3 was red-team verified and archived after completion evidence
+confirmed all Phase 3 workstreams were closed.
+
+| File | Status | Moved from | Description |
+|------|--------|------------|-------------|
+| `20260504-schema-builder-phase-3-plan-v1.00W.md` | A — archived; original `W` filename preserved for traceability | `docs/` | 100% complete: Workstreams A/B/C closed by signoff; `@bsuite/schema-builder@0.7.0` tests, typecheck, and build pass. |
+| `20260504-schema-builder-phase-3-signoff-v1.00W.md` | A — archived; original `W` filename preserved for traceability | `docs/` | Authoritative Phase 3 completion record; no Phase 3 follow-ups remain. |
 
 ### 2026-05-01 bucket — `docs/archive/2026-05-01-vitest-canonical/`
 
@@ -284,6 +292,6 @@ primary execution source; IDs below match the finish-line roadmap
 
 1. **P0-6 Part C — Supabase dashboard preview-URL allowlist** (operator action). Parts A + B shipped in this session; Part C is a 5-minute click-through in the Supabase dashboard to add preview-URL patterns to `additional_redirect_urls` for all 4 OAuth-client apps (CRM7, R80.3, Braden, Throughput). Blocks preview-branch auth for every client app. See `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` §Sign-off.
 2. **P1-84 — Wave 1-C migration apply to live Supabase**. Code committed (BSU `20260425_phase5_tfd_entity_fk.sql` + `20260425_phase5_tfd_enterprise_admin_rls.sql` + `add_field` RPC at commit `43fb250`). Operator must push via `mcp__claude_ai_Supabase__apply_migration`; post-backfill verification `SELECT count(*) FROM tenant_field_definitions WHERE entity_id IS NULL` must return 0.
-3. **P0-15 — Master roadmap v5.03W rollup**. Bump `docs/20260227-bsuite-master-roadmap-v5.00W.md` header to v5.03W, strike `#26a/26e/26f/26g`, mark AUD-15/AUD-16 done. Unblocks archival of `20260415-roadmap-audit-delta-v1.00W.md`.
-4. **Development → production Vercel-green gate**. Resolve production-plan Phase 6 blockers, especially the Conduit SSR prerender guard, before any production merge discussion. Remains the last gate between dev-green and production-promote.
-5. **Environment security cleanup** — Execute the 2026-04-24 env audit priority list: remove client-exposed secret names, add missing RAM vars, and align Supabase publishable/secret key naming. Track in `docs/20260424-env-var-audit-findings-v1.00A.md` priority queue.
+3. **Development → production Vercel-green gate**. Resolve production-plan Phase 6 blockers, especially the Conduit SSR prerender guard, before any production merge discussion. Remains the last gate between dev-green and production-promote.
+4. **Environment security cleanup** — Execute the 2026-04-24 env audit priority list: remove client-exposed secret names, add missing RAM vars, and align Supabase publishable/secret key naming. Track in `docs/20260424-env-var-audit-findings-v1.00A.md` priority queue.
+5. **Submodule deprecated-branch cleanup** — Org-admin cleanup tracked in `docs/20260428-orphan-branch-cleanup-handoff-v1.00W.md` and G-13 of the merged execution backlog.

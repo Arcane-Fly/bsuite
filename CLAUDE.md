@@ -190,17 +190,17 @@ Full details in `docs/20260227-auth-map-reference-v1.00A.md`. Key facts:
 **OAuth Server:** BSU (`suite.crm7.app`) — consent screen at `/oauth/consent`
 **Redirect URI pattern:** `{origin}/auth/callback` for all clients
 
-#### Cookie SSO (`.crm7.app` subdomains)
+#### Cross-app SSO (post-2025-02-27)
 
-BSU, CRM7, R80.3, Throughput, and Conduit share a Supabase session via `cookieStorage` with `domain=.crm7.app`, key `business_suite_auth`. Braden is on a different TLD so uses BS OAuth 2.1 only (no shared cookie). Conduit additionally uses `@supabase/ssr` for server-managed cookies — both layers coexist (the BS OAuth tokens live in localStorage with `bs_*` prefix, the Supabase session lives in the shared `business_suite_auth` cookie).
+Cookie SSO has been **removed**. Each app's Supabase client uses per-domain default `localStorage` (`sb-<project-ref>-auth-token`). Cross-app SSO is provided exclusively by **BS OAuth 2.1 PKCE + JWKS** via `@bsuite/auth`. BSU is the OAuth server; CRM7, R80.3, Braden, Throughput, and Conduit are clients. See [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) for the full migration rationale.
 
 #### Critical Auth Rules
 
-1. **All `.crm7.app` Supabase clients MUST use `cookieStorage`** with `domain=.crm7.app` and `storageKey: 'business_suite_auth'`
+1. **NEVER add `cookieStorage`, `domain=.crm7.app`, or `storageKey: 'business_suite_auth'`** to any Supabase client — these are forbidden patterns. Cross-app SSO is exclusively via BS OAuth 2.1 PKCE.
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server
 4. **Conduit + CRM7 callbacks are dual-purpose** — check `sessionStorage` for `bs_oauth_state` to distinguish BS OAuth flow from Supabase native PKCE
-5. **BS OAuth tokens are NOT Supabase sessions** — separate token sets in localStorage (`bs_*` prefix), systems run in parallel
+5. **BS OAuth tokens are Supabase-compatible JWTs, but not automatic supabase-js sessions** (corrected 2026-05-06) — the OAuth Server `/auth/v1/oauth/token` endpoint issues standard Supabase JWTs (`aud=authenticated`, `role=authenticated`, `sub=<user-uuid>`, plus a `client_id` claim). Each client app's callback MUST bridge them via `supabase.auth.setSession({access_token, refresh_token})` so PostgREST/RPC/Realtime authenticate as the user. Without the bridge, the per-domain supabase client falls back to anon and RLS-protected reads 401/406 immediately after the BSU→app handoff (BSU→CRM7 logged-out incident, 2026-05-06). The `bs_*` localStorage entries are kept for `startBSTokenRefresh()` to drive the OAuth refresh endpoint; an additional 60s sync in `AuthContext` re-seeds the Supabase session whenever `bs_access_token` rotates.
 6. **`startBSTokenRefresh()` is wired** in all 5 client apps (CRM7, R80.3, Braden, Throughput, Conduit) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 
 #### Key Auth Files

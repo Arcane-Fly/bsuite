@@ -155,7 +155,7 @@ If still `isDraft=true` → leave Copilot to keep working, check again in 15-30 
 ## 7. Related docs
 
 - `docs/20260504-schema-builder-phase-2-signoff-v1.00W.md` — Phase 2 shipped context
-- `docs/20260504-schema-builder-phase-3-plan-v1.00W.md` — Phase 3 plan with gate definitions
+- `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md` — archived Phase 3 plan with gate definitions
 - `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` — source-of-truth roadmap (cross-references)
 - `docs/OUTSTANDING.md` — living index the delegation set was derived from
 - `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` — broader outstanding-work ledger

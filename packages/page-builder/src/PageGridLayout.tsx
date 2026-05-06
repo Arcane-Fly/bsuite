@@ -347,7 +347,7 @@ export function PageGridLayout({
             onLayoutChange={onLayoutChange}
             dragConfig={{ enabled: isEditing, handle: '.drag-handle', bounded: false, cancel: '.react-resizable-handle' }}
             resizeConfig={{ enabled: resizeEnabled, handles: resizeHandles }}
-            constraints={resizeConstraints}
+            constraints={resizeEnabled ? resizeConstraints : undefined}
             compactor={activeCompactor}
             cols={activeCols}
             margin={[6, 6]}

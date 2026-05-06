@@ -1,5 +1,7 @@
 # BSuite Gap Report v2.00W
 
+> **⚠️ SUPERSEDED (2025-02-27, auth retrospectives only):** References in this report to `refreshBusinessSuiteToken()` wired in 'all 3 client apps (CRM7, R80.3, Braden)' describe the state at 2026-03-17. Post cookie-SSO removal (2025-02-27), token refresh is wired in **all 5 client apps** (CRM7, R80.3, Braden, Throughput, Conduit). Non-auth retrospective content in this report remains accurate. See [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) for the current architecture.
+
 **NOTE to CASCADE** i saw in your planning that the project requires node 22. this is wrong. it should be and has always been node 24. the latest version the vercel platform supports even though local system is 25. 22 was brought into the project by an agent possibly copilot somwehre in the last day or so so most should be setup for node 24.
 
 **Date:** 2026-03-17 (updated 2026-03-19)

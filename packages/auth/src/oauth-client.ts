@@ -19,7 +19,13 @@
  */
 
 import { createRemoteJWKSet, jwtVerify } from 'jose';
-import type { BusinessSuiteTokens, OAuthClient, VerifiedUser } from './types.js';
+import type {
+  BusinessSuiteTokens,
+  OAuthClient,
+  SignInOptions,
+  SilentAuthOptions,
+  VerifiedUser,
+} from './types.js';
 
 const BUSINESS_SUITE_SUPABASE_URL = 'https://tuybltdrdefjblnplpqo.supabase.co';
 
@@ -140,9 +146,22 @@ export function createOAuthClient(clientId: string): OAuthClient {
 
   /**
    * Initiate the OAuth 2.1 authorization flow with PKCE.
-   * Redirects the user to the Business Suite consent screen.
+   *
+   * Redirects the user to the Business Suite OAuth Server. By default this is
+   * an interactive flow (the consent screen renders if a fresh session is
+   * required). Pass `prompt: 'none'` for OIDC silent re-auth — the OAuth
+   * Server returns either an auth code (when a BSU session already exists,
+   * delivered without UI) or `error=login_required` (delivered as a redirect
+   * with the same query parameter shape, so the callback page handles it
+   * uniformly).
+   *
+   * Pass `returnTo` to control where the callback navigates after completion.
+   * It is stored at `sessionStorage['auth_return_path']` and consumed by each
+   * app's callback handler.
+   *
+   * @see OIDC Core 1.0 §3.1.2.1 — Authentication Request
    */
-  async function signInWithBusinessSuite(): Promise<void> {
+  async function signInWithBusinessSuite(options?: SignInOptions): Promise<void> {
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
     const state = generateState();
@@ -151,6 +170,13 @@ export function createOAuthClient(clientId: string): OAuthClient {
     sessionStorage.setItem('bs_oauth_code_verifier', codeVerifier);
     sessionStorage.setItem('bs_oauth_state', state);
     sessionStorage.setItem('bs_oauth_nonce', nonce);
+
+    const returnTo = options?.returnTo ?? window.location.href;
+    try {
+      sessionStorage.setItem('auth_return_path', returnTo);
+    } catch {
+      // Storage write failures are non-fatal — callback falls back to /dashboard.
+    }
 
     const params = new URLSearchParams({
       client_id: clientId,
@@ -162,6 +188,9 @@ export function createOAuthClient(clientId: string): OAuthClient {
       nonce,
       scope: 'openid email profile',
     });
+    if (options?.prompt) {
+      params.set('prompt', options.prompt);
+    }
 
     window.location.href = `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/authorize?${params.toString()}`;
   }
@@ -313,36 +342,73 @@ export function createOAuthClient(clientId: string): OAuthClient {
   /**
    * Attempt a silent auth refresh before showing the explicit login UI.
    *
-   * - If a valid access token is already in localStorage, considers the user
-   *   authenticated and returns `true` immediately.
-   * - If a refresh token is present, tries to exchange it for a fresh access
-   *   token (equivalent to a `prompt=none` re-auth).
-   * - Otherwise returns `false` so callers can fall through to the normal
-   *   interactive sign-in flow.
+   * Strategy (in order):
    *
-   * This function never throws — errors are swallowed so the login UI can still
-   * render.
+   *   1. **Fast path — local access token still valid.** Returns `true`
+   *      immediately. No network call.
+   *   2. **Fast path — refresh token present.** Exchanges it for a new
+   *      access token via the OAuth Server `/auth/v1/oauth/token` endpoint
+   *      and persists the rotated tokens.
+   *   3. **Slow path — OIDC silent re-auth via `prompt=none`.** Redirects
+   *      the browser to BSU `/auth/v1/oauth/authorize?…&prompt=none`. The
+   *      OAuth Server either:
+   *        - issues an auth code without UI (BSU session exists), or
+   *        - redirects back with `error=login_required` (no BSU session).
+   *      In the success case the browser navigates away before this Promise
+   *      resolves, so the function is intentionally treated as
+   *      "may not return". In the `login_required` case the consumer's
+   *      callback page must surface the error (e.g. clear stale tokens and
+   *      route to its own `/auth/login`) — see crm7's `/auth/callback`.
+   *
+   * The first two branches are best-effort and never throw — errors fall
+   * through to the redirect path so the user is never stranded on a stale
+   * page. The redirect itself may navigate before the Promise resolves;
+   * callers should treat this function as "render unauthenticated only if
+   * it returns `false`" and otherwise let the navigation proceed.
+   *
+   * @see OIDC Core 1.0 §3.1.2.1 — Authentication Request (`prompt=none`)
    */
-  async function attemptSilentAuth(): Promise<boolean> {
-    try {
-      const existingToken = localStorage.getItem('bs_access_token');
-      if (existingToken) {
-        return true;
-      }
-      const refreshToken = localStorage.getItem('bs_refresh_token');
-      if (!refreshToken) return false;
-
-      const { tokens, user } = await refreshBusinessSuiteToken(refreshToken);
-      localStorage.setItem('bs_access_token', tokens.access_token);
-      localStorage.setItem('bs_refresh_token', tokens.refresh_token);
-      localStorage.setItem('bs_user', JSON.stringify(user));
-      if (tokens.id_token) {
-        localStorage.setItem('bs_id_token', tokens.id_token);
-      }
+  async function attemptSilentAuth(options?: SilentAuthOptions): Promise<boolean> {
+    // Fast path 1: existing local access token (still treats stored token as
+    // valid; the auto-refresh interval owns expiry checking).
+    const existingToken = localStorage.getItem('bs_access_token');
+    if (existingToken) {
       return true;
+    }
+
+    // Fast path 2: refresh-token exchange.
+    const refreshToken = localStorage.getItem('bs_refresh_token');
+    if (refreshToken) {
+      try {
+        const { tokens, user } = await refreshBusinessSuiteToken(refreshToken);
+        localStorage.setItem('bs_access_token', tokens.access_token);
+        localStorage.setItem('bs_refresh_token', tokens.refresh_token);
+        localStorage.setItem('bs_user', JSON.stringify(user));
+        if (tokens.id_token) {
+          localStorage.setItem('bs_id_token', tokens.id_token);
+        }
+        return true;
+      } catch {
+        // fall through to slow-path redirect
+      }
+    }
+
+    // Slow path: OIDC silent re-auth via prompt=none.
+    try {
+      await signInWithBusinessSuite({
+        prompt: 'none',
+        returnTo: options?.returnTo ?? window.location.href,
+      });
     } catch {
+      // If the redirect itself fails (extremely unlikely — only if
+      // window.location is unwritable), fall through to false so callers
+      // surface the interactive login UI.
       return false;
     }
+
+    // The browser is navigating; this return value is reached only when the
+    // navigation did not happen (e.g. JSDOM in tests or a blocked redirect).
+    return false;
   }
 
   /**

@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/schema-registry",
-  "version": "0.3.2",
+  "version": "0.3.4",
   "description": "Tenant schema, page layout, and navigation hooks for BSuite consumer apps",
   "type": "module",
   "publishConfig": {
@@ -40,10 +40,10 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "react": ">=18 <21",
-    "@supabase/supabase-js": "^2",
     "@bsuite/nav-core": "^0.5.0",
+    "@supabase/supabase-js": "^2",
     "@tanstack/react-query": "^5",
+    "react": ">=18 <21",
     "zod": "^3"
   },
   "devDependencies": {
@@ -51,11 +51,12 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.2.0",
-    "jsdom": "^28.1.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "typescript": "^5",
-    "vitest": "^2"
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^29.1.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
   }
 }

@@ -8,7 +8,7 @@
 | **Date** | 2026-04-30 |
 | **Package** | [`@bsuite/schema-builder@0.5.1`](https://www.npmjs.com/package/@bsuite/schema-builder/v/0.5.1) |
 | **Predecessor** | [`docs/20260504-schema-builder-phase-2-signoff-v1.00W.md`](./20260504-schema-builder-phase-2-signoff-v1.00W.md) (0.5.0)[^filename-dates] |
-| **Successor** | [`docs/20260504-schema-builder-phase-3-plan-v1.00W.md`](./20260504-schema-builder-phase-3-plan-v1.00W.md) (0.6.0 / 0.7.0) |
+| **Successor** | [`docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md`](../2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md) (0.6.0 / 0.7.0) |
 | **Roadmap ref** | WYSIWYG / Schema Builder §3.6 + ADR-0003 canonical migration pattern |
 
 ---
@@ -108,13 +108,13 @@ Verified via `gh api repos/GaryOcean428/business-suite-unified/contents/supabase
 - `20260503000001_revert_field_level_relations.sql`
 - `20260504000000_schema_reflection_rpc.sql`
 
-GitHub tree URL: https://github.com/GaryOcean428/business-suite-unified/tree/main/supabase/migrations
+GitHub tree URL: <https://github.com/GaryOcean428/business-suite-unified/tree/main/supabase/migrations>
 
 ### 3.3 — CI workflow live on `bsuite/main`
 
 - File: `.github/workflows/schema-builder-migration-parity.yml` (12 237 bytes)
-- Direct URL: https://github.com/GaryOcean428/bsuite/blob/main/.github/workflows/schema-builder-migration-parity.yml
-- First green run on #352: https://github.com/GaryOcean428/bsuite/actions (search `Schema Builder Migration Parity` workflow after commit `38effff`)
+- Direct URL: <https://github.com/GaryOcean428/bsuite/blob/main/.github/workflows/schema-builder-migration-parity.yml>
+- First green run on #352: <https://github.com/GaryOcean428/bsuite/actions> (search `Schema Builder Migration Parity` workflow after commit `38effff`)
 
 ### 3.4 — npm package artifacts
 
@@ -128,7 +128,7 @@ $ npm view @bsuite/schema-builder dist-tags
 { latest: '0.5.1' }
 ```
 
-- Package page: https://www.npmjs.com/package/@bsuite/schema-builder
+- Package page: <https://www.npmjs.com/package/@bsuite/schema-builder>
 - Publisher: `garyocean428`
 
 ### 3.5 — Branch cleanup
@@ -237,7 +237,7 @@ After all 4 consumer bumps merge to their respective `development` branches, ope
 
 ## 5. What's Next — Phase 3
 
-Phase 3 is fully planned in [`docs/20260504-schema-builder-phase-3-plan-v1.00W.md`](./20260504-schema-builder-phase-3-plan-v1.00W.md) and executes via three parallel GitHub Copilot workstreams:
+Phase 3 is archived in [`docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md`](../2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md) after all three GitHub Copilot workstreams completed:
 
 - **Workstream A — FieldRow keyboard reorder + `sort_order` column** → `@bsuite/schema-builder@0.6.0`
 - **Workstream B — ALTER TABLE RENAME COLUMN path** → `@bsuite/schema-builder@0.7.0` (must rebase after A lands)
@@ -305,9 +305,9 @@ Nothing. 0.5.1 is feature-complete as a migration-canonicalisation-and-CI-guardr
 ## 8. Sign-off
 
 - **Author:** Buffy (Codebuff) lead session, 2026-04-30
-- **Status:** ✅ Working (W) — all 12 verification rows green; consumer rollout complete (§9); ready for Phase 3 kickoff
-- **Action required from operator:** none — 0.5.1 consumer rollout complete (see §9); ready for Phase 3 kickoff
-- **Next planned doc:** `docs/20260504-schema-builder-phase-3-signoff-v1.00W.md` (or later if integration slips) — per Phase 3 plan §8
+- **Status:** ✅ Working (W) — all 12 verification rows green; consumer rollout complete (§9); Phase 3 later completed and archived
+- **Action required from operator:** none — 0.5.1 consumer rollout complete (see §9); Phase 3 later completed and archived
+- **Completion doc:** Completed and archived as `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-signoff-v1.00W.md`
 
 ---
 
@@ -431,4 +431,4 @@ Until that lands, **do not remove the pin** — it is the only thing preventing 
 - **Executor:** Buffy (Codebuff) session, 2026-04-30
 - **Verdict:** ✅ Complete — `@bsuite/schema-builder@0.5.1` live on every consumer `main`, all production Vercel deploys green
 - **Open items:** §9.6 (crm7 zod pin upstream fix) — deferred to Phase 3 or next `@bsuite/charge-calc` release
-- **Next action:** Phase 3 kickoff per [`docs/20260504-schema-builder-phase-3-plan-v1.00W.md`](./20260504-schema-builder-phase-3-plan-v1.00W.md)
+- **Next action:** Completed and archived per [`docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md`](../2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md)

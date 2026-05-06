@@ -1,5 +1,12 @@
 # @bsuite/data-export
 
+## 0.1.4 (2026-05-05)
+
+### Changed
+
+- Bumped dev toolchain: Vite 6 → 8, TypeScript 5.9 → 6.0. No public API changes.
+- Lockfile regenerated. All 123 tests passing on Node 24.
+
 ## 0.1.3 (2026-04-30)
 
 ### Changed

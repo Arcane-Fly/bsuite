@@ -10,15 +10,18 @@ const layouts: GridLayouts = {
 
 describe('PageGridLayout', () => {
   it('renders known widget content', () => {
-    render(
+    const view = render(
       <PageGridLayout
         pageKey="test"
         defaultLayouts={layouts}
         widgets={{ alpha: <div>Alpha widget</div> }}
+        isResizable
       />,
     );
 
     expect(screen.getByText('Alpha widget')).toBeTruthy();
+    expect(view.container.querySelector('.react-resizable-hide')).toBeTruthy();
+    expect(view.container.querySelector('.react-resizable-handle')).toBeNull();
   });
 });
 

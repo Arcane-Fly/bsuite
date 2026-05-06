@@ -85,6 +85,8 @@ When concluding a development cycle or major task, follow this strict sequence:
 
 # BSuite — GitHub Copilot Instructions
 
+> **⚠️ Auth policy (2025-02-27): Cookie SSO has been REMOVED suite-wide.** Cross-app sessions ride on **BS OAuth 2.1 PKCE + JWKS** only. Do NOT add `cookieStorage`, `domain=.crm7.app`, or `storageKey: 'business_suite_auth'` to any Supabase client. See [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) and the parent `AGENTS.md` § Authentication & OAuth for the canonical pattern and forbidden-pattern list.
+
 ## Context
 
 BSuite is a multi-project workspace with five web applications: business-suite-unified (portal), crm7 (CRM), conduit (ATS), braden (corporate site), and R80.3 (wage calculator). All share Supabase, TypeScript strict mode, React, TailwindCSS, and Zustand.

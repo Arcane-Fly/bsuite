@@ -9,12 +9,14 @@ These instructions override any default agent behaviors. You must read, understa
 ## 1. Anti-Laziness & Zero-Defer Policy (CRITICAL)
 
 **BANNED BEHAVIOURS:**
+
 - ❌ Acknowledging a list of open issues and stating "Closing all X in this session isn't realistic" or "Leaving those for another session."
 - ❌ Deferring tasks because they require "fresh sessions," "runtime testing," or "judgment calls." You are an autonomous agent; make the judgment call, write the tests, and do the work.
 - ❌ Using "TODO: implement later" or leaving stub implementations for known problems.
 - ❌ Using pre-existing issues (like types or lints) as an excuse to ignore them. You take responsibility for the codebase you touch.
 
 **REQUIRED BEHAVIOURS:**
+
 - **Never defer fixes.** If you identify an issue (lint, type error, bug), fix it immediately in the same session.
 - **100% Completion:** You must continue working until the assigned task is completed to 100% of its requirements. Do not stop or consider the task complete until a zero-defect state is reached.
 - **If a fix is genuinely blocked by an external dependency**, you MUST register it as a formal issue in the repository's issue tracker and return to it before completing your current overarching task.
@@ -45,6 +47,7 @@ These instructions override any default agent behaviors. You must read, understa
 ## 5. Conflict Resolution in Documentation
 
 In the event of conflicting documentation, instructions, or approaches, you MUST default to the option that is:
+
 1. The **latest** and **newest** approach.
 2. The **most complete** and **best practice**.
 3. Yields the **highest standard** of code quality.
@@ -68,6 +71,7 @@ If necessary, combine approaches to achieve this optimal outcome. Never settle f
 ## 8. End-of-Task Workflow
 
 When concluding a development cycle or major task, follow this strict sequence:
+
 1. Commit and push all changes to the Git repository.
 2. Fix failing checks in open PRs and merge them.
 3. Pull the latest changes.
@@ -79,7 +83,6 @@ When concluding a development cycle or major task, follow this strict sequence:
 
 ---
 *By executing tasks in this project, you acknowledge and agree to operate strictly within these parameters. Laziness, deferral, and scope-dropping are explicitly forbidden.*
-
 
 ---
 
@@ -239,7 +242,107 @@ Each entity has a single owning app for create/edit. See `docs/DRY-ONE-SHOT-ARCH
 - **Production migrations land via PR only** — **NEVER** run `supabase db push` from a local checkout against `tuybltdrdefjblnplpqo`. Migrations apply via (a) merged PR + CI/CD, OR (b) Supabase MCP `apply_migration` (audit-tracked). Direct local push creates git↔production history drift — see `20260428085641_repair_tenant_page_layouts_contract` for a documented case where local push happened pre-PR and required follow-up file preservation in PR #218 (drop migration). When using MCP `apply_migration`, the recorded version timestamp is auto-generated; align the recorded `name` with the file path (e.g., name=`20260502000000_drop_tenant_page_layouts`) so future `supabase db push` from a fresh checkout sees the migration as applied.
 - **`client_id` RLS scoping**: BSuite apps are first-party trusted OAuth clients sharing a single Supabase project and user-base. Per-`client_id` DB isolation is **intentionally absent** — all authenticated users from any registered BS OAuth client get user-level access (`auth.uid() = user_id`). The `payment_methods` table has a named policy (`oauth_client_scoped_access`) documenting this decision. If per-client isolation is ever required, add a `client_id` column and a `USING ((auth.jwt() ->> 'client_id') = client_id)` guard. (See migration `20260415120000_rls_client_id_payment_methods.sql`.)
 
-### Authentication & OAuth
+### Authentication & OAuth — Canonical Architecture (2025-02-27)
+
+> **🛑 DO NOT REVERT TO COOKIE SSO. 🛑**
+>
+> This block is the **single source of truth** for BSuite authentication.
+> If any future doc, code comment, test, or AI agent suggests reintroducing
+> `cookieStorage`, `domain=.crm7.app`, or `storageKey: 'business_suite_auth'`,
+> **that suggestion is wrong**. Reject it and point them here or to
+> [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md).
+>
+> The cookie SSO scheme was deprecated 2025-02-27 in favour of universal
+> **BS OAuth 2.1 PKCE + JWKS** — the same pattern Braden has always used.
+>
+> Reasons it was abandoned:
+>
+> 1. Tokens leaked across all `.crm7.app` subdomains regardless of consent
+> 2. Broke on previews that move off `.crm7.app`
+> 3. Didn't work for Braden's different TLD (`.braden.com.au`)
+> 4. Doubled the auth attack surface (two parallel mechanisms)
+> 5. Made per-app session isolation impossible
+> 6. Encouraged AI agents to "fix" things by reintroducing it on every refactor
+
+**Canonical pattern — used by ALL client apps (BSU is the OAuth server):**
+
+| Layer | Mechanism | Where |
+|-------|-----------|-------|
+| Cross-app SSO | **BS OAuth 2.1 PKCE** via `@bsuite/auth`'s `createOAuthClient(clientId)` | `src/lib/business-suite-oauth.ts` per app |
+| OAuth token storage | per-domain `localStorage`, keys `bs_access_token` / `bs_refresh_token` / `bs_user` / `bs_id_token` | inside `@bsuite/auth` |
+| OAuth token verification | **JWKS** (RS256/ES256) via `jose` against Supabase JWKS endpoint | inside `@bsuite/auth` |
+| OIDC nonce | `crypto.getRandomValues(16)` → `sessionStorage('bs_oauth_nonce')` → verified on token exchange | inside `@bsuite/auth` |
+| Local Supabase session | `@supabase/supabase-js` defaults — per-domain `localStorage`, `flowType: 'pkce'`, `autoRefreshToken: true` | `src/lib/supabase.ts` per app |
+| User identity verification | `supabase.auth.getClaims()` (preferred — JWKS-verified locally) or `getUser()` — **never trust `getSession()`** for auth decisions | server + client |
+
+**Supabase client config — what is FORBIDDEN (these were the deprecated cookie SSO scheme):**
+
+```ts
+// ❌ NEVER do any of these. They are gone. Do not reintroduce them.
+auth: {
+  storage: cookieStorage,             // ❌ removed 2025-02-27
+  storageKey: 'business_suite_auth',  // ❌ removed 2025-02-27
+  // domain: '.crm7.app' anywhere     // ❌ removed 2025-02-27
+}
+```
+
+**Supabase client config — what is REQUIRED:**
+
+```ts
+// ✅ Per-app, per-domain. Each app has an isolated Supabase session.
+// Cross-app SSO is achieved exclusively via BS OAuth 2.1 PKCE.
+import { createClient } from '@supabase/supabase-js'
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    flowType: 'pkce',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    // No `storage` override → defaults to localStorage on the app's own domain.
+    // No `storageKey` override → defaults to `sb-<project-ref>-auth-token`.
+    // No `domain` cookie option → no cross-subdomain leakage.
+  },
+})
+```
+
+**Conduit's `@supabase/ssr` exception** — conduit is Next.js App Router and uses
+`createBrowserClient` / `createServerClient` from `@supabase/ssr`. These manage
+SSR-aware auth cookies on conduit's own domain (`conduit.crm7.app` or preview).
+**No `domain=` override.** Conduit's auth cookies stay on its own host — no
+cross-subdomain bleed.
+
+**Why this works for cross-app SSO without cookie sharing:** when a user signs
+in to one BSuite app, their identity is cached as a refresh token in
+localStorage of *that* app. When they later visit another BSuite app, the new
+app calls `attemptSilentAuth()` from `@bsuite/auth`, which redirects to BSU's
+`/oauth/authorize` with `prompt=none`. Because the user already has an active
+Supabase session at BSU (BSU's own per-domain localStorage), BSU silently
+issues a fresh authorization code and the new app gets logged in without any
+UI. This is OIDC-standard silent re-authentication and works across **any**
+TLD, including Braden's `.braden.com.au`.
+
+**Per-app OAuth client IDs (registered with the BSU OAuth server):**
+
+| App | Client ID | OAuth client file |
+|-----|-----------|-------------------|
+| CRM7 | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm7/src/lib/business-suite-oauth.ts` |
+| R80.3 | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `R80.3/src/lib/business-suite-oauth.ts` |
+| Braden | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `braden/src/lib/business-suite-oauth.ts` |
+| Throughput | `35f0db49-ef62-4115-baba-7b961f034cc3` | `throughput/src/lib/business-suite-oauth.ts` |
+| Conduit | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit/src/lib/business-suite-oauth.ts` |
+
+**Verification preferences (in order):**
+
+1. **`supabase.auth.getClaims()`** — verifies JWT against JWKS locally (no network). **Use this for all auth gates** in API routes, RSC, middleware. Fastest + safest.
+2. **`supabase.auth.getUser()`** — round-trips to Supabase to validate. Use only when you also need fresh user metadata.
+3. **`supabase.auth.getSession()`** — **DO NOT use for auth decisions.** Reads localStorage without verification. Acceptable only for non-security UI hints (e.g. "are we logged in?" boolean for showing/hiding a button).
+
+Full canonical reference: [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md).
+
+---
+
+### Authentication & OAuth (Reference notes)
 
 Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 
@@ -249,10 +352,10 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 
 | Mechanism | Purpose | Used By |
 |-----------|---------|---------|
-| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue | All 6 apps |
-| **BS OAuth 2.1 PKCE** | SSO across apps — BSU is the OAuth server, others are clients | CRM7, R80.3, Braden, Throughput (as clients) |
+| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue, scoped per-app per-domain (no cross-domain cookies) | All 6 apps |
+| **BS OAuth 2.1 PKCE** | Cross-app SSO — BSU is the OAuth server, others are clients via `@bsuite/auth` | CRM7, R80.3, Braden, Throughput, Conduit |
 
-**Conduit** uses Supabase Native Auth only (via `@supabase/ssr`). It does **not** participate in BS OAuth.
+All 5 client apps use the same canonical pattern (see "Canonical Architecture (2025-02-27)" above). Conduit was previously documented as "delegated UI / cookie SSO only" — that was incorrect. Conduit is a full BS OAuth 2.1 PKCE client matching CRM7 / R80.3 / Throughput / Braden.
 
 #### OAuth Client Registry
 
@@ -262,19 +365,13 @@ Full details in `docs/AUTH-MAP.md`. Key facts every agent must know:
 | **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` | `d.r8.crm7.app` | `{origin}/auth/callback` |
 | **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` | `d.braden.com.au` | `{origin}/auth/callback` |
 | **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` | `d.ideas.crm7.app` | `{origin}/auth/callback` |
+| **Conduit** | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit.crm7.app` | `d.conduit.crm7.app` | `{origin}/auth/callback` |
 
 **OAuth Server:** BSU (`suite.crm7.app` / `d.suite.crm7.app` for dev preview) — consent screen at `/oauth/consent`
 
-#### Cross-Domain Session Sharing (Cookie SSO)
+#### Cross-Domain Session Sharing (DEPRECATED 2025-02-27)
 
-BSU, CRM7, R80.3, and Throughput share a Supabase session via `cookieStorage` with `domain=.crm7.app` and key `business_suite_auth`. This enables seamless SSO across all `.crm7.app` subdomains.
-
-- **BSU** (`suite.crm7.app`): Sets the cookie — `src/lib/supabase.ts`
-- **CRM7** (`crm.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
-- **R80.3** (`r8.crm7.app`): Reads the cookie — `src/services/supabaseClient.ts`
-- **Throughput** (`ideas.crm7.app`): Reads the cookie — `src/lib/supabase.ts`
-- **Braden** (`www.braden.com.au`): ❌ Different TLD — uses BS OAuth 2.1 for SSO instead
-- **Conduit** (`conduit.crm7.app`): Server-managed cookies via `@supabase/ssr` (no cross-domain)
+> The previous cookie SSO scheme (`business_suite_auth` cookie on `domain=.crm7.app`) has been **removed**. See "Canonical Architecture (2025-02-27)" above for the replacement: per-domain Supabase localStorage + BS OAuth 2.1 PKCE silent re-auth via `@bsuite/auth`. **Do not reintroduce the cookie scheme.**
 
 #### Preview Deployments (`d.*` aliases)
 
@@ -289,7 +386,7 @@ Each Vercel project has a custom **development-branch** domain assigned in addit
 | Throughput | `ideas.crm7.app` | `d.ideas.crm7.app` |
 | Braden | `www.braden.com.au` | `d.braden.com.au` |
 
-**Cookie SSO inherits automatically** for all `.crm7.app` subdomains — login on production CRM7 → any `d.<app>.crm7.app` is auto-authenticated via the shared `business_suite_auth` cookie. Braden's preview is on a different TLD (`.braden.com.au`) and uses BS OAuth 2.1 (same pattern as production).
+**BS OAuth silent re-auth handles preview SSO** — login on any production app → any `d.<app>.crm7.app` (or Braden's `d.braden.com.au`) calls `attemptSilentAuth()` from `@bsuite/auth`, which silently re-authenticates via BSU `/oauth/authorize?prompt=none`. **No cookie sharing required** — works across any TLD. (Previously documented as "cookie SSO inherits automatically" — that path is gone as of 2025-02-27.)
 
 **Supabase Auth URL Configuration** — registered redirect URIs for these previews (in addition to production URLs):
 
@@ -303,13 +400,6 @@ Each Vercel project has a custom **development-branch** domain assigned in addit
 **ADR-0004 doctrine**: this AGENTS.md is the SSoT for the Supabase redirect-URI allowlist. Any new preview alias requires (1) adding the URL to the table above, (2) adding `/auth/callback` (and `/oauth/consent` if a consent surface) to Supabase Auth URL Configuration, (3) PR documenting both additions.
 
 **Feature-branch previews** (auto-generated `<app>-git-<branch>-…vercel.app`) are **NOT** in the allowlist. Authenticated testing of a feature branch requires either: (a) merging to `development` first to test via the `d.*` alias, OR (b) a one-off PR adding the specific feature-branch URL to Supabase Auth URL Configuration. Do not let the allowlist balloon — prefer (a).
-
-#### Cookie Hardening (Applied)
-
-- **Chunked storage**: Values >3 500 bytes split across `key.0`, `key.1`, … cookies
-- **`Secure` flag**: Only on HTTPS (disabled for localhost dev)
-- **`max-age`**: 30 days (aligned with Supabase refresh token lifetime)
-- **`SameSite=Lax`**: Standard cross-site protection
 
 #### BS OAuth PKCE Flow (Summary)
 
@@ -330,16 +420,16 @@ Each Vercel project has a custom **development-branch** domain assigned in addit
 | **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/stores/authStore.ts` | `src/pages/AuthCallback.tsx` |
 | **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/hooks/useAdminAuth.ts` | `src/pages/auth/AuthCallback.tsx` |
 | **Throughput** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/lib/auth/AuthProvider.tsx` | `src/pages/auth/AuthCallback.tsx` |
-| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | N/A | `src/middleware.ts` | `src/app/auth/callback/route.ts` |
+| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | `src/lib/business-suite-oauth.ts` | `src/middleware.ts` + `src/lib/auth/AuthProvider.tsx` | `src/app/auth/callback/route.ts` (server) + `src/app/auth/callback/page.tsx` (BS OAuth) |
 
 #### Critical Auth Rules
 
-1. **All `.crm7.app` Supabase clients MUST use `cookieStorage`** with `domain=.crm7.app` and `storageKey: 'business_suite_auth'` — this enables cookie SSO
+1. **All Supabase clients MUST use per-domain default storage** — NO `cookieStorage`, NO `domain=.crm7.app`, NO `storageKey: 'business_suite_auth'`. Cross-app SSO is exclusively via BS OAuth 2.1 PKCE (`@bsuite/auth`). See "Canonical Architecture (2025-02-27)" above and [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md). **This rule replaces the deprecated 2025 cookie SSO mandate — DO NOT REVERT.**
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server. It was previously copied to Braden by mistake and deleted
-4. **CRM7 callback is dual-purpose** — checks `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
-5. **BS OAuth tokens are NOT Supabase sessions** — they are separate token sets in localStorage. The two auth systems run in parallel.
-6. **`startBSTokenRefresh()` is wired** in all 3 client apps — checks every 60s, refreshes 5min before expiry, clears tokens on failure
+4. **CRM7 and Conduit callbacks are dual-purpose** — check `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
+5. **BS OAuth tokens are Supabase-compatible JWTs, but not automatic supabase-js sessions** (corrected 2026-05-06) — the OAuth Server `/auth/v1/oauth/token` endpoint issues standard Supabase JWTs (`aud=authenticated`, `role=authenticated`, `sub=<user-uuid>`, plus a `client_id` claim). Each client app's callback MUST bridge them via `supabase.auth.setSession({access_token, refresh_token})` so PostgREST/RPC/Realtime authenticate as the user. Without the bridge, the per-domain supabase client falls back to anon and RLS-protected reads 401/406 immediately after the BSU→app handoff (BSU→CRM7 logged-out incident, 2026-05-06). The `bs_*` localStorage entries remain for `startBSTokenRefresh()`; consumers must also re-seed the Supabase session whenever `bs_access_token` rotates.
+6. **`startBSTokenRefresh()` is wired** in all 5 client apps (CRM7, R80.3, Braden, Throughput, Conduit) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
 7. **Two OAuth providers are MANDATORY across the entire suite** — see section below. Never add a third provider (e.g. GitHub) without explicit owner instruction.
 
 #### Mandatory OAuth Providers (TWO — Suite-Wide)
@@ -676,8 +766,13 @@ pnpm install
 
 | Package | npm | Consumers | Source |
 |---------|-----|-----------|--------|
-| `@bsuite/charge-calc` | `^0.1.0` | CRM7, R80.3 | `packages/charge-calc/` |
-| `@bsuite/nav-core` | `^0.1.0` | braden | `packages/nav-core/` |
+| `@bsuite/auth` | `^0.1.0` (latest `0.1.1`) | CRM7, Conduit, R80.3, Braden, Throughput | `packages/auth/` |
+| `@bsuite/charge-calc` | `^0.2.0` (latest `0.2.4`) | CRM7, R80.3 | `packages/charge-calc/` |
+| `@bsuite/nav-core` | `^0.5.0` (latest `0.5.2`) | braden, CRM7 | `packages/nav-core/` |
+| `@bsuite/page-builder` | `^0.2.0` (latest `0.2.2`) | BSU, CRM7, Conduit, R80.3 | `packages/page-builder/` |
+| `@bsuite/schema-builder` | `^0.7.0` (latest `0.7.1`) | BSU, CRM7, Conduit, R80.3 | `packages/schema-builder/` |
+| `@bsuite/schema-registry` | `^0.3.0` (latest `0.3.3`) | braden, BSU, Conduit, CRM7, R80.3, Throughput | `packages/schema-registry/` |
+| `@bsuite/data-export` | `^0.1.0` (latest `0.1.4`) | CRM7, R80.3 | `packages/data-export/` |
 
 ### Rules (all agents MUST follow)
 
@@ -779,6 +874,23 @@ https://conduit.crm7.app/auth/callback
 - **bsuite#106** — NULL `client_secret_hash` on public OAuth clients (Conduit, Throughput). Supabase platform bug. Dashboard-only; app auth flows are unaffected. No support ticket. No workaround.
 
 ---
+
+## Recent Changes (2026-05-05)
+
+- **Bsuite-wide dependency refresh — every package bumped to its latest compatible version.** All 13 `package.json` files (6 apps + 7 shared packages) regenerated via `pnpm dlx npm-check-updates -u` + isolated-directory lockfile regeneration pattern (importer `.:`, zero `../` paths — Vercel-compatible). Major bumps: TypeScript 5→6, Sentry 9→10 across `@sentry/react` + `@sentry/nextjs` + `@sentry/vite-plugin`, `@platejs` 52→53 (crm7), Vite 6→8 (shared packages), `@vitejs/plugin-react` 5→6, ESLint 9→10 (throughput only). Throughput's backlog also cleared: React Router 6→7, Stripe 14→22, `@stripe/stripe-js` 2→9, LangChain 0.3→1.3, OpenAI 4→6, `@testing-library/react` 14→16, `jsdom` 24→29, `immer` 10→11, `tailwind-merge` 2→3, `dotenv` 16→17. TS 6 `baseUrl` deprecation (TS5101) fixed in 5 tsconfig files across crm7, braden, R80.3 by removing the redundant `baseUrl: "."` under `moduleResolution: "bundler"` (BSU, conduit, throughput already correct). Verification: all 6 apps + 7 shared packages pass `pnpm typecheck`, `pnpm test` (1683 tests total), and `pnpm build`. Shared-package patch bumps published: `@bsuite/auth` 0.1.1, `@bsuite/charge-calc` 0.2.4, `@bsuite/nav-core` 0.5.2, `@bsuite/page-builder` 0.2.2, `@bsuite/schema-builder` 0.7.1, `@bsuite/schema-registry` 0.3.3, `@bsuite/data-export` 0.1.4 — all dev-toolchain-only, no public API changes. Consumer specifier bumps (apps → new shared-package versions) intentionally deferred to a follow-up PR after CI republishes to npm. Two late build fixes: `packages/auth/tsconfig.build.json` gained `rootDir: "./src"` + `exclude` for test files (TS 6 stricter), and `packages/page-builder/src/globals.d.ts` added `declare module '*.css'` for TS 6's tighter ambient-module inference on side-effect CSS imports. No runtime code changes — verified Sentry code already uses v10 functional API (`browserTracingIntegration()`, `replayIntegration()`) and no `langchain/` legacy imports remain. Stripe edge functions pin `stripe@14.14.0` via esm.sh independently of npm and are unaffected.
+
+## Recent Changes (2025-02-27)
+
+**Anti-regression check.** Before opening any auth-related PR, run from the bsuite root:
+
+```bash
+rg 'business_suite_auth|cookieStorage|forceRemoveAuthCookies|subscribeToRefresh' \
+  -g '*.ts' -g '*.tsx' -g '!node_modules' -g '!packages/nav-core/**'
+```
+
+Results should be limited to deprecation comments + `tabCoordinator.ts` historical note. Any hit in a Supabase client, AuthContext, or auth callback file is a regression — reject the PR and link the author to `AUTH_CANONICAL.md`.
+
+- **Auth migration: cookie SSO removed across all apps.** All 5 client apps (BSU, CRM7, R80.3, Throughput, Conduit) previously used a shared `business_suite_auth` cookie on `domain=.crm7.app` for cross-subdomain Supabase session sharing. This was a redundant layer on top of BS OAuth 2.1 PKCE (which handles cross-app SSO correctly via OIDC silent re-auth + JWKS verification). The cookie pattern caused: (a) repeated AI-agent regressions trying to enforce a misleading mandate, (b) preference_key collisions between apps reading the same cookie, (c) tokens leaked across all `.crm7.app` subdomains regardless of consent, (d) didn't work for Braden's different TLD. **Removed**: `cookieStorage`, `domain=.crm7.app`, `storageKey: 'business_suite_auth'`, manual cookie chunking (`key.0` / `key.1`), `forceRemoveAuthCookies`. **Added**: explicit forbidden-pattern list + 'do not revert' guardrail in this AGENTS.md and new [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) SSoT. Cross-app SSO continues via BS OAuth 2.1 PKCE only (the Braden pattern, now universal). Banners added to every per-app `AGENTS.md`/`CLAUDE.md`/`.windsurfrules`.
 
 ## Recent Changes (2026-04-14)
 
