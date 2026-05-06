@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "BSuite Plan Completion Dashboard",
-    "subtitle": "59 plans audited + 142 Codehouse parity matrix rows + 9 portals 360°. 13 parity issues filed (#567-#579) covering 82 gaps. Visual Feature Builder Phase 0 shipped (PR #344, 329 tests green). Phase 5 in-progress.",
+    "subtitle": "59 plans audited + 142 Codehouse parity matrix rows + 9 portals 360 degrees. 13 parity issues filed (#567-#579) covering 82 gaps. Visual Feature Builder Phase 0 + Phase 5 ready-for-review (PRs #344, #346). Apprentice placements: L1+L1.1+L2+L3.A+L3.B done, L4 spec merged, L6 doc shipped.",
     "audit_date": "2026-05-06",
     "auditor_chain": [
       "Perplexity Computer (Phase 1 dispatch)",
@@ -11,8 +11,8 @@
     "rulebook": "Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)",
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
-    "last_extended": "2026-05-06T12:30Z",
-    "extended_by": "perplexity-computer",
+    "last_extended": "2026-05-06T15:08Z",
+    "extended_by": "perplexity-computer (cron 8c20448f run #4)",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
   },
   "summary": {
@@ -48,8 +48,13 @@
     "parity_needs_team": 5,
     "fb_phases_total": 9,
     "fb_phases_done": 1,
-    "fb_phases_in_progress": 1,
-    "portals_360": 9
+    "fb_phases_in_progress": 0,
+    "portals_360": 9,
+    "fb_phases_ready_for_review": 1,
+    "doc_drift_prs_open": 6,
+    "doc_drift_prs_merged": 1,
+    "apprentice_placements_done": 5,
+    "apprentice_placements_ready_for_review": 1
   },
   "repos": [
     {
@@ -2090,9 +2095,17 @@
       {
         "id": "FB-PHASE-5",
         "name": "Permissions visual editor (role × capability × route × RLS)",
-        "status": "in-progress",
+        "status": "ready-for-review",
         "claimed_by": "perplexity-computer",
-        "blocked_by": "FB-PHASE-0+1"
+        "blocked_by": "FB-PHASE-0+1",
+        "pr": "https://github.com/GaryOcean428/business-suite-unified/pull/346",
+        "pr_state": "DRAFT (chained behind #344)",
+        "files_changed": 18,
+        "lines_added": 2995,
+        "lines_removed": 43,
+        "tests": 357,
+        "tests_added": 21,
+        "compliance_codes": 7
       },
       {
         "id": "FB-PHASE-6",
@@ -2119,10 +2132,11 @@
       "FEATURE_BUILDER_GH_PAT (Vercel env, BSU project) — for FB-PHASE-7 PR export",
       "Jodie GitHub App registration (bsuite#557) — replaces PAT path long-term"
     ],
-    "completed_pct": 11,
+    "completed_pct": 22,
     "completed_count": 1,
-    "in_progress_count": 1,
-    "open_count": 13
+    "in_progress_count": 0,
+    "open_count": 13,
+    "ready_for_review_count": 1
   },
   "portal_coverage": {
     "schema_version": 1,
@@ -2210,5 +2224,142 @@
       "all_oklch_except_braden": true,
       "all_react_19": true
     }
+  },
+  "apprentice_placements_status": {
+    "schema_version": 1,
+    "audit_date": "2026-05-06",
+    "scope": "GTO apprentice/trainee placement lifecycle on crm7",
+    "queue_items": [
+      {
+        "id": "APPRENTICE-WIRING.L1",
+        "title": "Schema restoration",
+        "status": "done",
+        "merged": true
+      },
+      {
+        "id": "APPRENTICE-WIRING.L1.1",
+        "title": "Indexes follow-up (UNIQUE partial + FK)",
+        "status": "done",
+        "pr": "https://github.com/GaryOcean428/crm7/pull/501"
+      },
+      {
+        "id": "APPRENTICE-WIRING.L2",
+        "title": "Service layer + transfer RPC",
+        "status": "done",
+        "pr": "https://github.com/GaryOcean428/crm7/pull/500"
+      },
+      {
+        "id": "APPRENTICE-WIRING.L3.A",
+        "title": "TanStack Query hooks",
+        "status": "done",
+        "pr": "https://github.com/GaryOcean428/crm7/pull/502"
+      },
+      {
+        "id": "APPRENTICE-WIRING.L3.B",
+        "title": "List page (placements timeline)",
+        "status": "done",
+        "pr": "https://github.com/GaryOcean428/crm7/pull/504"
+      },
+      {
+        "id": "APPRENTICE-WIRING.L3.C",
+        "title": "Create/edit form (RHF + Zod)",
+        "status": "open"
+      },
+      {
+        "id": "APPRENTICE-WIRING.L3.D",
+        "title": "Transition dialog UI",
+        "status": "open"
+      },
+      {
+        "id": "APPRENTICE-WIRING.L4",
+        "title": "AVETMISS NAT00120 export research + spec",
+        "status": "done",
+        "pr": "https://github.com/GaryOcean428/bsuite/pull/587",
+        "merged": true,
+        "doc_only": true
+      },
+      {
+        "id": "APPRENTICE-WIRING.L5",
+        "title": "Per-state award rate decision",
+        "status": "blocked",
+        "blocker": "Operator product decision needed"
+      },
+      {
+        "id": "APPRENTICE-WIRING.L6",
+        "title": "State machine canon doc",
+        "status": "ready-for-review",
+        "pr": "https://github.com/GaryOcean428/bsuite/pull/588",
+        "doc_only": true
+      }
+    ],
+    "totals": {
+      "completed": 5,
+      "ready_for_review": 1,
+      "open": 2,
+      "blocked": 1,
+      "doc_specs_shipped": 2
+    }
+  },
+  "doc_drift_status": {
+    "schema_version": 1,
+    "scope": "17 doc fixes + over-delivery surfacing across 7 repos",
+    "prs": [
+      {
+        "repo": "bsuite",
+        "number": 585,
+        "state": "MERGED",
+        "url": "https://github.com/GaryOcean428/bsuite/pull/585"
+      },
+      {
+        "repo": "crm7",
+        "number": 503,
+        "state": "OPEN-CLEAN",
+        "url": "https://github.com/GaryOcean428/crm7/pull/503"
+      },
+      {
+        "repo": "conduit",
+        "number": 193,
+        "state": "OPEN-CLEAN",
+        "url": "https://github.com/GaryOcean428/conduit/pull/193"
+      },
+      {
+        "repo": "business-suite-unified",
+        "number": 345,
+        "state": "OPEN-CLEAN",
+        "url": "https://github.com/GaryOcean428/business-suite-unified/pull/345"
+      },
+      {
+        "repo": "R80.3",
+        "number": 190,
+        "state": "OPEN-CLEAN",
+        "url": "https://github.com/GaryOcean428/R80.3/pull/190",
+        "critical": "React 18 -> 19 README fix"
+      },
+      {
+        "repo": "braden",
+        "number": 232,
+        "state": "OPEN-CLEAN",
+        "url": "https://github.com/GaryOcean428/braden/pull/232"
+      },
+      {
+        "repo": "throughput",
+        "number": 123,
+        "state": "OPEN-CLEAN",
+        "url": "https://github.com/GaryOcean428/throughput/pull/123"
+      }
+    ],
+    "totals": {
+      "merged": 1,
+      "open_awaiting_validation": 6
+    },
+    "fixes_count": 17,
+    "over_deliveries_surfaced": 5,
+    "five_over_deliveries": [
+      "BOOT Assessment Engine",
+      "20-component AI Assistant suite",
+      "Visual schema-builder",
+      "Offline-first PWA (CRM7)",
+      "Multi-tenant sub-organisation hierarchy + OKLCH branding"
+    ]
   }
 }
