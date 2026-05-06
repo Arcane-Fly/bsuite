@@ -1,14 +1,80 @@
 # BSuite Master Roadmap
 
-**Version:** 5.03W
+**Version:** 5.04W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-01 (Phase 0 ratification; P0-15 rollup)
+**Last Updated:** 2026-05-06 (plans audit — see "2026-05-06 Plans Audit" section)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
 
 > **2026-05-01 ratification note:** Phase 0 is complete. The single execution queue for all remaining work is [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md). This roadmap remains the long-horizon planning reference; the merged backlog is the phase-ordered execution queue with atomic-replace governance per ADRs 0001–0006.
 
 > This is the **single source of truth** for BSuite project planning. Per-project roadmaps have been archived to `docs/archive/<project>/` and replaced with stubs pointing here.
+
+## 2026-05-06 Plans Audit
+
+A docs-only plans audit on 2026-05-06 reconciled in-repo plans against an
+external corpus of 49 IDE/Cascade plan files (claude_code IDE plans +
+windsurf cascade plans) and the `bsuite_*` memory namespace.
+
+**Source:** claude_code IDE plans + windsurf cascade plans audited
+2026-05-06.
+
+**Roll-up:**
+
+| Bucket | Count |
+|--------|------:|
+| External BSuite plans triaged | 30 (32 minus 2 reclassified to QIG/agent-tooling during audit) |
+| External plans dismissed as QIG (silo violation if acted on) | 19 (17 pre-classified + 2 reclassified) |
+| External plans verified DONE (against current code / merged PRs) | 12 |
+| External plans superseded by canonical in-repo doctrine | 11 |
+| External plans that are direct duplicates of active in-repo plans | 2 |
+| External plans still actionable (OPEN / PARTIAL) | 5 |
+| In-repo active plans (parent + 6 submodules) | 19 |
+| In-repo plans archived in this run | 0 — every in-repo plan is either active multi-phase work or already archived in 2026-05-04 doc-unification (parent PR #430) and throughput Wave A (throughput PR #76) |
+| In-repo plans already in `archive/` | 10 |
+
+**Loop-closing notes:**
+
+- `crm7-broad-ui-refresh-ec965f.md` (windsurf) ⇄ canonical
+  [`docs/plans/20260316-crm7-broad-ui-refresh-plan-v1.00W.md`](./plans/20260316-crm7-broad-ui-refresh-plan-v1.00W.md)
+  — same plan, in-repo is canonical, status W (Working).
+- `bsuite-audit-page-builder-branding-relationships-66c734.md` (windsurf)
+  ⇄ canonical
+  [`docs/plans/20260427-full-7-audit-page-builder-branding-relationships-plan-v1.00W.md`](./plans/20260427-full-7-audit-page-builder-branding-relationships-plan-v1.00W.md)
+  — same plan, in-repo is canonical, status W.
+- `oauth-best-practice-audit-03bc3f.md` (windsurf) → superseded by
+  [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) +
+  `bsuite_decisions_v2` frozen decision #5 (auth canonicalisation
+  2026-04-28) and #7 (cookie SSO removed 2025-02-27); residual OIDC
+  nonce work shipped in `@bsuite/auth` v0.2.0 (PR #510).
+- `pageGridLayout-master-2f6071.md` (windsurf) → DONE-V via
+  `@bsuite/page-builder@0.1.0` extraction
+  (`bsuite_phase2a_page_builder_complete_20260427`).
+- `enforce-oklch-color-format-35b53f.md` /
+  `oklch-theme-migration-35b53f.md` /
+  `theme-compliance-audit-368b75.md` (windsurf) → DONE-V via WS-D
+  rollout (`bsuite_ws_d_complete`, 9 PRs).
+- `branch-sync-and-bug-fixes-d79b6f.md` (windsurf) → DONE-V via WS-B
+  orphan triage (`bsuite_ws_b_orphan_triage_complete`, 12 candidates
+  resolved).
+
+**External-only OPEN plans worth transcribing if picked up:**
+
+- The five-wave stabilisation plan
+  (`starting-at-parent-docs-soft-shell.md`, claude_code) — W1–W4 SHIPPED
+  per `bsuite_session_20260502_w1_to_w4_complete`; **W5 systemic
+  guards remain open**.
+- The email/calendar/tasks integration plan
+  (`email-calendar-tasks-integration-98e953.md`, windsurf) — 5/7 edge
+  functions ACTIVE; **Phases 3 + 4 (`email-inbox-sync`, `tasks-sync`,
+  Settings UI email tab, Inbox UI) remain open**.
+
+Triage workpapers (out-of-repo, in `~/workspace/plans-review/`):
+`external-plans-triage.md`, `in-repo-plans-triage.md`,
+`memory-archaeology.md`, `PLANS-AUDIT-FINAL.json`. The plan-tracking
+convention codified by this audit is recorded in
+[`docs/CONSISTENCY-REPORT.md`](./CONSISTENCY-REPORT.md) under
+"Plan-tracking convention".
 
 ---
 
