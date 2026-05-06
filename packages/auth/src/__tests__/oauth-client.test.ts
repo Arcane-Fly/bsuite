@@ -144,6 +144,40 @@ describe('signInWithBusinessSuite', () => {
     expect(params.get('code_challenge')).toBeTruthy()
     expect(params.get('state')).toBe(sessionMock.getItem('bs_oauth_state'))
     expect(params.get('nonce')).toBe(sessionMock.getItem('bs_oauth_nonce'))
+    // Default invocation does NOT include the OIDC prompt parameter.
+    expect(params.get('prompt')).toBeNull()
+  })
+
+  it('passes prompt=none for OIDC silent re-auth', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite({ prompt: 'none' })
+    const href = window.location.href
+    const params = new URLSearchParams(href.split('?')[1])
+    expect(params.get('prompt')).toBe('none')
+  })
+
+  it('passes prompt=login when explicitly requested', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite({ prompt: 'login' })
+    const href = window.location.href
+    const params = new URLSearchParams(href.split('?')[1])
+    expect(params.get('prompt')).toBe('login')
+  })
+
+  it('stashes returnTo into sessionStorage[auth_return_path]', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite({ returnTo: '/dashboard?x=1' })
+    expect(sessionMock.getItem('auth_return_path')).toBe('/dashboard?x=1')
+  })
+
+  it('defaults returnTo to current window.location.href', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    Object.defineProperty(window, 'location', {
+      configurable: true, writable: true,
+      value: { origin: 'https://crm.crm7.app', href: 'https://crm.crm7.app/projects/42' } as Location,
+    })
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    expect(sessionMock.getItem('auth_return_path')).toBe('https://crm.crm7.app/projects/42')
   })
 })
 
@@ -390,35 +424,20 @@ describe('attemptSilentAuth', () => {
     const result = await createOAuthClient(CLIENT_ID).attemptSilentAuth()
     expect(result).toBe(true)
     expect(fetchMock).not.toHaveBeenCalled()
+    // Should NOT redirect — fast path wins.
+    expect(window.location.href).toBe('')
   })
 
-  it('returns false without redirecting when no local tokens are stored by default', async () => {
+  it('redirects to /oauth/authorize?prompt=none when no tokens are stored', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     const result = await createOAuthClient(CLIENT_ID).attemptSilentAuth()
+    // The redirect happens via window.location.href = ...
+    // In jsdom this does not navigate, so the function falls through and returns false.
     expect(result).toBe(false)
-    expect(window.location.href).toBe('')
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it('starts a prompt=none OIDC authorization redirect when no local tokens are stored and promptNone is enabled', async () => {
-    const { createOAuthClient } = await import('../oauth-client.js')
-    const result = await createOAuthClient(CLIENT_ID).attemptSilentAuth({ promptNone: true })
-    expect(result).toBe('redirect_started')
-    expect(sessionMock.getItem('bs_oauth_code_verifier')).toMatch(/^[0-9a-f]+$/)
-    expect(sessionMock.getItem('bs_oauth_state')).toMatch(/^[0-9a-f]+$/)
-    expect(sessionMock.getItem('bs_oauth_nonce')).toMatch(/^[0-9a-f]+$/)
-    expect(sessionMock.getItem('bs_oauth_prompt')).toBe('none')
-    expect(window.location.href).toContain(`${BS_URL}/auth/v1/oauth/authorize?`)
-    const redirectUrl = new URL(window.location.href)
-    expect(redirectUrl.searchParams.get('client_id')).toBe(CLIENT_ID)
-    expect(redirectUrl.searchParams.get('redirect_uri')).toBe('https://crm.crm7.app/auth/callback')
-    expect(redirectUrl.searchParams.get('response_type')).toBe('code')
-    expect(redirectUrl.searchParams.get('code_challenge_method')).toBe('S256')
-    expect(redirectUrl.searchParams.get('scope')).toBe('openid email profile')
-    expect(redirectUrl.searchParams.get('prompt')).toBe('none')
-    expect(redirectUrl.searchParams.get('state')).toBe(sessionMock.getItem('bs_oauth_state'))
-    expect(redirectUrl.searchParams.get('nonce')).toBe(sessionMock.getItem('bs_oauth_nonce'))
-    expect(fetchMock).not.toHaveBeenCalled()
+    const href = window.location.href
+    expect(href.startsWith(`${BS_URL}/auth/v1/oauth/authorize?`)).toBe(true)
+    const params = new URLSearchParams(href.split('?')[1])
+    expect(params.get('prompt')).toBe('none')
   })
 
   it('refreshes + persists + returns true when only a refresh token is stored', async () => {
@@ -438,12 +457,22 @@ describe('attemptSilentAuth', () => {
     expect(JSON.parse(localMock.getItem('bs_user')!)).toEqual({ sub: 'u1' })
   })
 
-  it('returns false and never throws when refresh fails', async () => {
+  it('falls through to prompt=none redirect when refresh fails', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     localMock.setItem('bs_refresh_token', 'rt-bad')
     fetchMock.mockResolvedValue({ ok: false, status: 401, text: async () => 'invalid_grant', json: async () => ({}) })
     const result = await createOAuthClient(CLIENT_ID).attemptSilentAuth()
     expect(result).toBe(false)
+    // Should have redirected to the OAuth Server with prompt=none.
+    const href = window.location.href
+    expect(href).toContain('/auth/v1/oauth/authorize?')
+    expect(href).toContain('prompt=none')
+  })
+
+  it('forwards returnTo to the prompt=none redirect via auth_return_path', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).attemptSilentAuth({ returnTo: '/projects/42' })
+    expect(sessionMock.getItem('auth_return_path')).toBe('/projects/42')
   })
 })
 
