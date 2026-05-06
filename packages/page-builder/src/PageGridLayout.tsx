@@ -58,12 +58,8 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             </button>
           )}
           <div
-            className="h-full w-full rounded-3xl transition-all flex flex-col"
-            style={{
-              background: 'var(--bg-panel, var(--background, var(--card, #fff)))',
-              boxShadow: 'var(--shadow-shell-glow, 0 1px 3px rgb(0 0 0 / 0.1))',
-              contain: 'paint',
-            }}
+            className="h-full w-full rounded-3xl transition-all flex flex-col bg-card shadow-sm"
+            style={{ contain: 'paint' }}
           >
             {content}
           </div>
@@ -202,30 +198,24 @@ export function PageGridLayout({
   return (
     <div className={className}>
       {isEditing && (
-        <div
-          className="flex flex-col gap-3 p-4 rounded-xl shadow-lg border-2 mb-4"
-          style={{ backgroundColor: 'var(--bg-panel, var(--card, #fff))', borderColor: 'var(--accent-primary, var(--primary, #2563eb))' }}
-        >
+        <div className="flex flex-col gap-3 p-4 rounded-xl shadow-lg border-2 mb-4 bg-card border-primary">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div
-                className="h-10 w-10 rounded-full flex items-center justify-center animate-pulse"
-                style={{ backgroundColor: 'var(--bg-shell-accent, rgb(37 99 235 / 0.1))' }}
-              >
+              <div className="h-10 w-10 rounded-full flex items-center justify-center animate-pulse bg-primary/10">
                 <Settings2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg" style={{ color: 'var(--text-heading, var(--foreground, #111827))' }}>
+                <h3 className="font-semibold text-lg text-foreground">
                   Canvas Editor Active
                 </h3>
-                <span className="text-sm" style={{ color: 'var(--text-secondary, var(--muted-foreground, #6b7280))' }}>
+                <span className="text-sm text-muted-foreground">
                   Drag anywhere on a card to move it. Resize with the bottom-right handle.
                 </span>
               </div>
             </div>
             <button
               type="button"
-              className="shrink-0 inline-flex items-center rounded-md px-3 py-2 text-sm font-medium bg-primary text-primary-foreground shadow"
+              className="shrink-0 inline-flex items-center rounded-md px-3 py-2 text-sm font-medium bg-primary text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
               onClick={() => startTransition(() => setIsEditing(false))}
             >
               <Save className="h-4 w-4 mr-2" />
@@ -233,7 +223,7 @@ export function PageGridLayout({
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t" style={{ borderColor: 'var(--border-shell, var(--border, #e5e7eb))' }}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border">
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm shrink-0 text-muted-foreground">Columns:</span>
@@ -255,13 +245,15 @@ export function PageGridLayout({
                   type="button"
                   key={columnCount}
                   onClick={() => handleColumnChange(columnCount)}
-                  className="px-2 py-0.5 rounded text-xs font-medium transition-colors"
-                  style={{
-                    backgroundColor: layoutCols === columnCount ? 'var(--accent-primary, var(--primary, #2563eb))' : 'var(--bg-tertiary, var(--muted, #f3f4f6))',
-                    color: layoutCols === columnCount ? '#fff' : 'var(--text-secondary, var(--muted-foreground, #6b7280))',
-                    border: '1px solid var(--border-shell, var(--border, #e5e7eb))',
-                  }}
+                  data-active={layoutCols === columnCount || undefined}
                   aria-pressed={layoutCols === columnCount}
+                  className={cn(
+                    'px-2 py-0.5 rounded text-xs font-medium transition-colors border',
+                    'bg-muted text-muted-foreground border-border',
+                    'hover:bg-muted/80 hover:text-foreground',
+                    'data-[active]:bg-primary data-[active]:text-primary-foreground data-[active]:border-primary',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                  )}
                 >
                   {columnCount}
                 </button>
@@ -281,7 +273,12 @@ export function PageGridLayout({
                         type="button"
                         key={key}
                         onClick={() => addWidget(key, meta?.defaultSize)}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors hover:border-primary/60 bg-muted text-muted-foreground"
+                        className={cn(
+                          'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
+                          'bg-muted text-muted-foreground border-border',
+                          'hover:bg-muted/80 hover:text-foreground hover:border-primary/60',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                        )}
                       >
                         <Plus className="h-3 w-3" />
                         {Icon && <Icon className="h-3 w-3" />}
@@ -293,12 +290,28 @@ export function PageGridLayout({
               </div>
             )}
 
-            <button type="button" onClick={handleCompact} className="ml-auto inline-flex items-center rounded-md border px-2 py-1 text-sm text-muted-foreground">
+            <button
+              type="button"
+              onClick={handleCompact}
+              className={cn(
+                'ml-auto inline-flex items-center rounded-md border border-border px-2 py-1 text-sm transition-colors',
+                'text-muted-foreground hover:bg-muted hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+              )}
+            >
               <Layers className="h-4 w-4 mr-1" />
               Compact Layout
             </button>
 
-            <button type="button" onClick={() => setResetConfirmOpen(true)} className="inline-flex items-center rounded-md border px-2 py-1 text-sm text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => setResetConfirmOpen(true)}
+              className={cn(
+                'inline-flex items-center rounded-md border border-border px-2 py-1 text-sm transition-colors',
+                'text-muted-foreground hover:bg-muted hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+              )}
+            >
               <RotateCcw className="h-4 w-4 mr-1" />
               Reset to Default
             </button>
