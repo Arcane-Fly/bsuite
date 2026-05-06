@@ -93,8 +93,8 @@ export function usePageGridLayout({
     setSavedLayoutVersion,
   ]);
 
-  const layoutCols = Math.max(2, savedLayoutCols ?? defaultCols);
-  const baseCols = Math.max(2, savedBaseCols ?? defaultCols);
+  const layoutCols = Math.max(1, savedLayoutCols ?? defaultCols);
+  const baseCols = Math.max(1, savedBaseCols ?? defaultCols);
 
   const rawLayouts = useMemo(() => {
     if (Object.keys(savedLayout || {}).length === 0) return defaultLayouts;

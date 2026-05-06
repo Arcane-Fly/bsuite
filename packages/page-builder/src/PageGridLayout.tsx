@@ -239,7 +239,7 @@ export function PageGridLayout({
               <span className="text-sm shrink-0 text-muted-foreground">Columns:</span>
               <input
                 type="range"
-                min={2}
+                min={1}
                 max={24}
                 value={layoutCols}
                 onChange={(event) => handleColumnChange(Number(event.target.value))}
@@ -250,7 +250,7 @@ export function PageGridLayout({
             </div>
 
             <div className="flex items-center gap-1" role="group" aria-label="Column presets">
-              {[2, 3, 4, 6, 12].map((columnCount) => (
+              {[1, 2, 3, 4, 6, 12].map((columnCount) => (
                 <button
                   type="button"
                   key={columnCount}
