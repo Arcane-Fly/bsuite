@@ -1,0 +1,30 @@
+name: Verify silent-auth wired in consumers
+
+on:
+  pull_request:
+    paths:
+      - 'crm7'
+      - 'throughput'
+      - 'R80.3'
+      - 'braden'
+      - 'conduit'
+      - 'packages/auth/**'
+      - 'scripts/verify-silent-auth-wired.sh'
+      - '.github/workflows/verify-silent-auth-wired.yml'
+  push:
+    branches:
+      - main
+      - development
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Verify attemptSilentAuth is wired in every BS OAuth consumer
+        run: bash scripts/verify-silent-auth-wired.sh
