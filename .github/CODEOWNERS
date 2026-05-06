@@ -1,0 +1,33 @@
+# CODEOWNERS — bsuite parent monorepo
+# ----------------------------------------------------------------------------
+# Parent monorepo holds the shared @bsuite/* packages (published to npm) and
+# canonical AUTH/standards docs. Auth changes ripple to all 5 client apps,
+# so every shared-package change needs human review.
+#
+# Reference: 2026-05-06 BSU→CRM7 logged-out incident +
+#            2026-05-06 silent-auth redirect-loop incident.
+
+# Default — every PR needs a reviewer
+* @GaryOcean428
+
+# @bsuite/auth — shared OAuth client. Bumps from this package have already
+# caused two suite-wide incidents (0.1.0→0.2.0 silent-auth slow path).
+packages/auth/                          @GaryOcean428
+
+# Canonical AUTH docs — frozen-facts live here
+AUTH_CANONICAL.md                       @GaryOcean428
+docs/20260227-auth-map-reference-v1.00A.md  @GaryOcean428
+
+# Cross-cutting standards docs
+CLAUDE.md                               @GaryOcean428
+AGENTS.md                               @GaryOcean428
+docs/                                   @GaryOcean428
+
+# Other shared packages (theme, schema-registry, dry-lint, etc.)
+packages/                               @GaryOcean428
+
+# Dep + CI plumbing
+package.json                            @GaryOcean428
+pnpm-workspace.yaml                     @GaryOcean428
+pnpm-lock.yaml                          @GaryOcean428
+.github/                                @GaryOcean428

@@ -2,6 +2,26 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.2.1 — 2026-05-06
+
+### Added — redirect-loop circuit breaker (regression guard)
+
+- `signInWithBusinessSuite` now stamps `localStorage['bs_oauth_last_redirect_at']` with `Date.now()` immediately before assigning `window.location.href`. Subsequent calls within 10s throw `BS OAuth redirect attempted within 10s of previous redirect — refusing to loop.` *before* rotating PKCE state, so a tripped breaker leaves session storage clean.
+- This is defense-in-depth: under normal OAuth flow timing the breaker never fires (the browser navigates away the moment `window.location.href` is assigned and does not execute client JS again until well after the round-trip to BSU + consent + callback). The guard exists so that if a future caller — e.g. an `AuthProvider` mount-effect — accidentally re-introduces a redirect loop, production users see a loud error rather than a silent spin.
+- Skipped under SSR / private-browsing / storage-disabled rather than blocking legitimate sign-ins on a storage edge case.
+
+### Why a patch (not a minor)
+
+No public API changes. No behaviour change for any caller that wasn't already in a redirect loop. The added throw is on a code path that should never be exercised by correct callers.
+
+### Manual reset
+
+If a recovery flow or a deliberate retry trips the breaker, clear `localStorage['bs_oauth_last_redirect_at']` from the browser console.
+
+### Reference
+
+- `bsuite_incident_20260506_silent_auth_redirect_loop` (memory) — the `@bsuite/auth@0.2.0` `prompt=none` regression that motivated this guard.
+
 ## 0.2.0 — 2026-05-06
 
 ### Added — OIDC silent re-auth via `prompt=none` (Track B)

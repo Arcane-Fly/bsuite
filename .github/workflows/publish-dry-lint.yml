@@ -1,0 +1,72 @@
+# Publish @bsuite/dry-lint to npm
+#
+# Triggers automatically when packages/dry-lint/package.json changes on main.
+# Skips publish if the current version is already on npm (idempotent).
+#
+# Required GitHub Secret:
+#   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
+
+name: Publish @bsuite/dry-lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/dry-lint/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build, test and publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/dry-lint
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Run tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+      - name: Dry-run publish
+        run: npm publish --dry-run --access public
+      - name: Check if version already published
+        id: version-check
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+          PUBLISHED=$(npm view "@bsuite/dry-lint@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish to npm
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Job summary
+        if: always()
+        env:
+          PKG_VERSION: ${{ steps.version-check.outputs.version }}
+          SKIPPED: ${{ steps.version-check.outputs.skip }}
+        run: |
+          if [ "$SKIPPED" = "true" ]; then
+            echo "### Skipped - already published @ ${PKG_VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published @bsuite/dry-lint@${PKG_VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          fi

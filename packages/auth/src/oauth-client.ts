@@ -145,6 +145,76 @@ export function createOAuthClient(clientId: string): OAuthClient {
   let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
   /**
+   * Redirect-loop circuit breaker — defense-in-depth regression guard.
+   *
+   * Every INTERACTIVE call to `signInWithBusinessSuite` stamps
+   * `localStorage['bs_oauth_last_redirect_at']` with `Date.now()` immediately
+   * before assigning `window.location.href`. Any subsequent interactive
+   * attempt within {@link REDIRECT_LOOP_WINDOW_MS} throws *before* rotating
+   * PKCE state.
+   *
+   * The `prompt=none` silent re-auth slow path (invoked by
+   * `attemptSilentAuth`) is EXEMPT — it neither stamps the sentinel nor
+   * asserts against it. Rationale: BSU may return `error=login_required`
+   * from a silent attempt, and the consumer's login page is then expected
+   * to fall through to an interactive `signInWithBusinessSuite()` call.
+   * That legitimate two-redirect sequence happens well within the 10s
+   * window, so the breaker must not block it.
+   *
+   * Under normal OAuth flow timing this never fires: the browser navigates
+   * away from our origin the moment `window.location.href` is assigned and
+   * does not execute client JS again for at least the round-trip to BSU +
+   * consent + callback — well beyond 10s. The guard exists purely so that
+   * if a caller (e.g. a future AuthProvider mount-effect) ever wires a loop
+   * back in, production users see a loud error rather than a redirect spin.
+   *
+   * To manually reset (e.g. after a recovery flow or a deliberate retry),
+   * clear `localStorage['bs_oauth_last_redirect_at']`.
+   */
+  const REDIRECT_LOOP_KEY = 'bs_oauth_last_redirect_at';
+  const REDIRECT_LOOP_WINDOW_MS = 10_000;
+
+  function assertNoRecentRedirect(): void {
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(REDIRECT_LOOP_KEY);
+    } catch {
+      // SSR / private-browsing / storage-disabled — skip the guard rather
+      // than block a legitimate sign-in on a storage edge case.
+      return;
+    }
+    if (!raw) return;
+    const last = Number(raw);
+    if (!Number.isFinite(last)) return;
+    const now = Date.now();
+    if (now - last < REDIRECT_LOOP_WINDOW_MS) {
+      // Browser-only breadcrumb so a tripped breaker leaves a production
+      // trace. Guarded by `typeof window` so SSR / Node contexts (Next.js
+      // server components, Vitest non-jsdom envs) don't spam stderr with
+      // a log that's only actionable from a browser console.
+      if (typeof window !== 'undefined') {
+        console.warn(
+          '[bs-oauth] Refusing to redirect: last redirect was <10s ago',
+          { lastRedirectAt: last, now, key: REDIRECT_LOOP_KEY }
+        );
+      }
+      throw new Error(
+        `BS OAuth redirect attempted within 10s of previous redirect — refusing to loop. ` +
+          `Clear localStorage['${REDIRECT_LOOP_KEY}'] to reset.`
+      );
+    }
+  }
+
+  function recordRedirectTimestamp(): void {
+    try {
+      localStorage.setItem(REDIRECT_LOOP_KEY, String(Date.now()));
+    } catch {
+      // SSR / private-browsing / quota — the happy path continues without
+      // the loop guard on this call.
+    }
+  }
+
+  /**
    * Initiate the OAuth 2.1 authorization flow with PKCE.
    *
    * Redirects the user to the Business Suite OAuth Server. By default this is
@@ -162,6 +232,15 @@ export function createOAuthClient(clientId: string): OAuthClient {
    * @see OIDC Core 1.0 §3.1.2.1 — Authentication Request
    */
   async function signInWithBusinessSuite(options?: SignInOptions): Promise<void> {
+    // Silent `prompt=none` re-auth is exempt from the circuit breaker —
+    // BSU may return `error=login_required` and the consumer's login page
+    // will then fall through to an interactive sign-in within the same
+    // 10s window. See {@link REDIRECT_LOOP_KEY} for the full rationale.
+    const isInteractive = options?.prompt !== 'none';
+    if (isInteractive) {
+      assertNoRecentRedirect();
+    }
+
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
     const state = generateState();
@@ -192,6 +271,9 @@ export function createOAuthClient(clientId: string): OAuthClient {
       params.set('prompt', options.prompt);
     }
 
+    if (isInteractive) {
+      recordRedirectTimestamp();
+    }
     window.location.href = `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/authorize?${params.toString()}`;
   }
 
@@ -301,6 +383,12 @@ export function createOAuthClient(clientId: string): OAuthClient {
     localStorage.removeItem('bs_refresh_token');
     localStorage.removeItem('bs_user');
     localStorage.removeItem('bs_id_token');
+    // Also clear the redirect-loop sentinel. Without this, a user who
+    // signs out and immediately clicks "Sign in" again (within 10s) would
+    // trip the circuit breaker and see an error instead of the consent
+    // screen. Sign-out is always an intentional reset, so wiping the
+    // sentinel here is correct behaviour, not an escape hatch.
+    localStorage.removeItem(REDIRECT_LOOP_KEY);
   }
 
   /**
