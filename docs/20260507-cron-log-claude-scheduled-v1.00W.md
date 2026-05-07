@@ -115,4 +115,106 @@ The `/ship-all-apps` slash command is a **Claude Code desktop app command** — 
 
 ---
 
-*Filed by claude-code-scheduled · 2026-05-07 · overnight autonomous cron*
+*Filed by claude-code-scheduled · 2026-05-07 · overnight autonomous cron (first fire)*
+
+---
+
+## Second Fire — 2026-05-07T10:22–10:35Z UTC
+
+**Session:** `session_017A4kfrFRnjqE6p3UZbkeDG`  
+**Operator:** offline  
+**Status:** COMPLETE
+
+### Environment Constraints (same as first fire)
+
+| Constraint | Detail |
+|---|---|
+| Memory API blocked | `qig-memory-api.vercel.app` → 403 from Anthropic sandbox proxy (SSL inspection + block). Steps 1–6 of mandatory protocol remain inaccessible. |
+| `gh` CLI unavailable | All GitHub ops via MCP (restricted to `garyocean428/bsuite`). |
+| crm7/BSU/conduit/braden/R80/throughput | MCP scope locked to bsuite only. |
+
+### Work Completed
+
+#### 1. Repo State Assessment
+
+- **Open bsuite PRs at fire start:** 0 — all handoff PRs (#535, #582, #583) and overnight PRs (#634, #636–#644) already merged by earlier cron fires and operator.
+- **Open bsuite issues:** 30 (full scan completed).
+- **Branch state:** `development` was 2 doc-commits ahead of `main` (PRs #643, #644 merged into dev but not yet promoted).
+
+#### 2. dev→main Promotion: PR #645 ✅ MERGED
+
+Promoted 4 doc files that development had over main:
+
+| File | Source PR |
+|---|---|
+| `docs/20260507-red-team-ux-doctrine-v1.00A.md` | #643 |
+| `docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md` | #643 |
+| `docs/plans/uplift/INDEX.md` | #643 |
+| `docs/audits/20260507-bsuite-634-doctrine-backfill-audit-v1.00A.md` | #644 |
+
+All 4 CI checks green. §20 obvious-fix merge. Unblocks W0 (12-primitives library) for claude-code-local per issue #635.
+
+#### 3. CI Bug Fix: PR #646 ✅ MERGED
+
+**Root cause identified:** `refresh-dashboard-data` workflow was failing with 403 on every doc-touching PR merge because the `git push` step (writing refreshed dashboard data back to branch) is blocked by branch protection rules that require PRs.
+
+**Fix:** Removed `push` trigger from workflow. Hourly `schedule` at `:07` still refreshes data. Fix merged into development and promoted to main via PR #648.
+
+#### 4. Branch Sync PRs
+
+| PR | Purpose | Status |
+|---|---|---|
+| #647 | Sync development with main after #645 promotion | ✅ merged |
+| #648 | Promote dev→main (CI workflow fix) | ✅ merged |
+
+#### 5. Open Issues Scan (P1 scope)
+
+30 open issues identified. P1 highlights:
+
+| Issue | Title | Blocker |
+|---|---|---|
+| #635 | Design Language uplift 9-wave tracker | Active — W0 now unblocked (doctrine on main) |
+| #607 | BSU missing VITE_APP_URL | BSU submodule — operator session |
+| #609 | Three-tier branding permission | BSU submodule — operator session |
+| #557 | Register Jodie as GitHub App | Needs-team |
+| #550 | Route all LLM calls through AI Gateway | Needs-team |
+| #211 | TS 6.0.3 migration | External-blocked |
+
+#### 6. /ship-all-apps Assessment
+
+`scripts/ship-all-apps.sh` now EXISTS (created by PR #634 today). However:
+- Requires `VERCEL_TOKEN` in repo secrets (not yet set per PR #637 notes)
+- Cannot be executed from cloud cron without token — operator must set `VERCEL_TOKEN` in GitHub → Settings → Secrets → Actions first
+- `.github/workflows/ship-all-apps.yml` exists for `workflow_dispatch` — operator can trigger via GitHub API once token is set
+
+#### 7. Hygiene Sweep (non-06:00 fire — informational only)
+
+Orphaned branches (no >7d rule applies yet — all recent):
+```
+origin/chore/parent-sync-main-to-dev-20260506-perplexity-batch  (merged PR)
+origin/chore/sync-dev-from-main-20260507-cron3                   (merged PR #638)
+origin/claude/docs/cron-log-2026-05-06* (×5)                    (prior cron logs — no PR needed)
+origin/claude/docs/cron-log-2026-05-07                           (prior cron log)
+origin/claude/feat/ship-all-apps-script                           (merged PR #634)
+```
+Operator can clean via: `git push origin --delete <branch-name>` or GitHub UI.
+
+### Summary
+
+| Item | Result |
+|---|---|
+| Memory API | ❌ Blocked (403 sandbox proxy) |
+| Open PRs at start | ✅ 0 — clean state |
+| dev→main promotion #645 | ✅ Merged (4 doc files: doctrine + design language + audit) |
+| CI refresh fix #646 | ✅ Merged (stops recurring refresh 403 failures) |
+| Branch sync #647 | ✅ Merged |
+| CI fix promoted #648 | ✅ Merged |
+| W0 unblock for #635 | ✅ Doctrine + design language now on main |
+| /ship-all-apps | ⚠️ Script exists — needs VERCEL_TOKEN secret set by operator |
+| Orphaned branches | ℹ️ 9 noted — none >7d, operator cleanup optional |
+
+**North star progress:** Doctrine + uplift design language on main. CI refresh loop fixed. 4 PRs merged cleanly.
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-07 · second fire (10:22–10:35Z UTC)*
