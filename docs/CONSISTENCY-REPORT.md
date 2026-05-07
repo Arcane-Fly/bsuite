@@ -117,3 +117,52 @@ Bootstrap migration (`crm7/supabase/migrations/20260506000100_bootstrap_profile_
 shipped as part of Track A in crm7#487; application to Supabase is tracked
 at bsuite#507 (operator action required — Supabase MCP / `supabase login`
 credentials needed).
+
+## Codehouse parity audit (2026-05-06)
+
+A full parity audit between BSuite and Codehouse Workforce One + OTS
+landed via the `docs/codehouse-parity-and-platform-360-plan` branch
+(PR bsuite#580). Canonical artefacts:
+
+- `docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` — execution plan
+- `docs/plans/20260506-codehouse-parity/` — per-domain rollup notes
+- 13 implementation issues filed on `bsuite/`: **#567 – #579** (parity-codehouse label)
+  - #567 timesheet entry · #568 timesheet approval · #569 pay item / penalty / allowance / timesheet groups
+  - #570 MYOB + Astute payroll adapters + STP EOFY · #571 Twilio SMS dispatcher
+  - #572 geo-fence / kiosk / photo clock-in · #573 leave calendar
+  - #574 reports · #575 pay periods · #576 ABA / PayWay / super exports
+  - #577 Idibu / Onboarded / Secured Signing / Calendly · #578 admin (divisions, PH groups, FBT, etc.)
+  - #579 doc-drift + README over-delivery surfacing (this PR set)
+
+### DOC-DRIFT PR set (bsuite#579)
+
+Filed 2026-05-06 against §3 of `competitor/bsuite-inventory.md`. Each PR
+is docs-only, additive, branch namespace `perplexity/codehouse/doc-drift-*`:
+
+| Repo | Branch | Summary |
+|------|--------|---------|
+| bsuite (parent) | `perplexity/codehouse/doc-drift-bsuite` | README + knowledge.md surface 5 suite-wide over-deliveries; fix throughput submodule note; this CONSISTENCY-REPORT entry |
+| crm7 | `perplexity/codehouse/doc-drift-crm7` | MYOB stub note (links bsuite#570); surface BOOT, AI suite, offline PWA, schema builder, OKLCH; add Codehouse parity status section |
+| business-suite-unified | `perplexity/codehouse/doc-drift-bsu` | Clarify FWC webhook is delegated to crm7/R80.3; surface sub-org hierarchy, OKLCH, Visual Feature Builder Phase 0 (PR #344) |
+| conduit | `perplexity/codehouse/doc-drift-conduit` | Verify AI assistant + 4-portal + Next 16 entries are accurate |
+| R80.3 | `perplexity/codehouse/doc-drift-r80-3` | **Critical:** README React 18.3.1 claim → React 19; Tailwind 3.4 → 4; Vite/Vitest current; surface payday-super + payroll-tax-by-state services + SchemaBuilderView |
+| braden | `perplexity/codehouse/doc-drift-braden` | Fix R80.3 mis-description ("compliance platform" → "GTO charge-rate calculator"); React 18 → 19; Tailwind v4 |
+| throughput | `perplexity/codehouse/doc-drift-throughput` | React 18.3 → 19; surface Monitoring + Teams + collaboration components; expand Groq integration detail |
+
+DOC-DRIFT items are **additive** — no code or `package.json` is
+touched; version-mismatch READMEs are corrected to match `package.json`
+ground truth (the apps already run on the suite-standard stack — only
+the prose lagged).
+
+### Suite-wide over-deliveries (surfaced in DOC-DRIFT PR set)
+
+Five capabilities exceed Codehouse Workforce One / OTS — historically
+under-described in app READMEs. The DOC-DRIFT PR set surfaces them in
+the user-visible documentation surface (parent README, knowledge.md,
+crm7 README, BSU README, R80.3 README):
+
+1. **BOOT Assessment Engine** (`@bsuite/charge-calc/boot`) — Fair Work Act s.193 BOOT.
+2. **20-component AI Assistant** (CRM7) + Conduit `/api/ai/chat` + Throughput Groq GPT-OSS-120B.
+3. **Visual schema builder** (`@bsuite/schema-builder`) — used in 4 apps.
+4. **Offline-first PWA** (CRM7) — SQLite WASM + IndexedDB + bi-directional Supabase sync.
+5. **Multi-tenant sub-organisation hierarchy** + runtime OKLCH branding (BSU).

@@ -66,6 +66,16 @@ pnpm test:packages     # shared @bsuite/* packages
 
 Vercel clones only the individual submodule repo → `workspace:*` and `file:../packages/*` both break. Always use caret npm ranges (`^0.1.0`). After editing a package: build → bump → `npm publish --access public` → bump consumers.
 
+### Suite-wide over-deliveries vs. typical GTO software
+
+Five capabilities exceed anything in Codehouse Workforce One / OTS — surfaced because `docs/` and several submodule READMEs historically under-described them (see `docs/CONSISTENCY-REPORT.md` § Codehouse parity audit):
+
+1. **BOOT Assessment Engine** (`@bsuite/charge-calc/boot`) — Fair Work Act s.193 BOOT with comparator, failure detector, GTO variant, F17 export, annual value calculator. 10 test files. No Codehouse equivalent.
+2. **20-component AI Assistant suite** in CRM7 (`src/components/ai/`) — `AICommandPalette` (Cmd+K), `AISidePanel`, plugin system, Vercel AI SDK 6 streaming. Plus Conduit `/api/ai/chat` (Anthropic + Google) and Throughput Groq GPT-OSS-120B with browser search + Python execution.
+3. **Visual schema builder** (`@bsuite/schema-builder` v0.7.1) — React Flow ER editor with real-time Supabase sync, used in CRM7, BSU, Conduit, R80.3 (11 test files).
+4. **Offline-first PWA** in CRM7 — `src/lib/sqlite-db.ts` (sql.js WASM) + `sync-service.ts` (bi-directional Supabase sync with conflict resolution) + `offline-db.ts` (IndexedDB via `idb`).
+5. **Multi-tenant sub-organisation hierarchy + runtime OKLCH branding** in BSU (`src/pages/Admin/SubOrganizations.tsx`, `BrandingProvider`) — parent/child tenant trees and per-tenant branding inside one OAuth authority.
+
 ### BS OAuth Client IDs (registered with the BSU OAuth server)
 
 | App | Client ID | OAuth client file |

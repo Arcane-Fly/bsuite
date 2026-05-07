@@ -13,6 +13,14 @@ Parent repository for the Business Suite platform. Each application lives in its
 | **Braden** | `braden/` | Corporate website | [braden.com.au](https://www.braden.com.au) |
 | **Throughput** | `throughput/` | Idea management platform (Groq AI assist) | [ideas.crm7.app](https://ideas.crm7.app) |
 
+> **Where the suite over-delivers vs. typical GTO software** (cross-cuts multiple submodules — see [`docs/CONSISTENCY-REPORT.md`](docs/CONSISTENCY-REPORT.md) and [`docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md`](docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md)):
+>
+> 1. **BOOT Assessment Engine** (`@bsuite/charge-calc/boot`) — full Fair Work Act s.193 Better Off Overall Test (comparator, failure detector, GTO variant, F17 export).
+> 2. **20-component AI Assistant suite** in CRM7 (`src/components/ai/`, Cmd+K palette, Vercel AI SDK 6); plus AI in Conduit (`/api/ai/chat`) and Throughput (Groq GPT-OSS-120B).
+> 3. **Visual schema builder** (`@bsuite/schema-builder`) — React Flow ER editor with real-time Supabase sync, used by CRM7, BSU, Conduit, R80.3.
+> 4. **Offline-first PWA** in CRM7 — SQLite WASM + IndexedDB + bi-directional Supabase sync with conflict resolution.
+> 5. **Multi-tenant sub-organisation hierarchy + runtime OKLCH branding** in BSU (`src/pages/Admin/SubOrganizations.tsx`, `BrandingProvider`).
+
 ## Getting Started
 
 ```bash
@@ -66,11 +74,11 @@ bsuite/
 ├── R80.3/                  # R8 calculation engine submodule
 ├── business-suite-unified/ # BSU admin dashboard submodule
 ├── braden/                 # Corporate website submodule
-├── throughput/             # Throughput idea management platform (pending submodule registration)*
+├── throughput/             # Throughput idea management platform submodule
 ├── mobile/                 # Mobile app workspace
-├── packages/               # Shared @bsuite/* npm packages (charge-calc, nav-core)
+├── packages/               # Shared @bsuite/* npm packages — see knowledge.md for the published set (auth, charge-calc, nav-core, page-builder, schema-builder, schema-registry, data-export, theme, ui)
 ├── docs/                   # Cross-project documentation
 └── supabase/               # Shared Supabase config (if any)
 ```
 
-\* `throughput/` exists in the repo tree but is not yet declared in `.gitmodules` alongside the other 5 apps. Tracked separately for registration.
+All six apps (CRM7, Conduit, R80.3, BSU, Braden, Throughput) are registered as git submodules in [`.gitmodules`](.gitmodules).

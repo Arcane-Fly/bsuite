@@ -117,16 +117,29 @@ describe('signInWithBusinessSuite', () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     const client = createOAuthClient(CLIENT_ID)
     await client.signInWithBusinessSuite()
-    expect(sessionMock.getItem('bs_oauth_code_verifier')).toMatch(/^[0-9a-f]+$/)
-    expect(sessionMock.getItem('bs_oauth_state')).toMatch(/^[0-9a-f]+$/)
-    expect(sessionMock.getItem('bs_oauth_nonce')).toMatch(/^[0-9a-f]+$/)
+    // Keys now in localStorage (not sessionStorage) — Stage-3 PKCE fix
+    expect(localMock.getItem('bs_oauth_code_verifier')).toMatch(/^[0-9a-f]+$/)
+    expect(localMock.getItem('bs_oauth_state')).toMatch(/^[0-9a-f]+$/)
+    expect(localMock.getItem('bs_oauth_nonce')).toMatch(/^[0-9a-f]+$/)
+  })
+
+  it('writes started_at timestamp to localStorage alongside the verifier', async () => {
+    // Stage-3: TTL guard requires bs_oauth_started_at to be written
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const before = Date.now()
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    const after = Date.now()
+    const startedAt = Number(localMock.getItem('bs_oauth_started_at'))
+    expect(Number.isFinite(startedAt)).toBe(true)
+    expect(startedAt).toBeGreaterThanOrEqual(before)
+    expect(startedAt).toBeLessThanOrEqual(after)
   })
 
   it('state and nonce are distinct values', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
-    const state = sessionMock.getItem('bs_oauth_state')
-    const nonce = sessionMock.getItem('bs_oauth_nonce')
+    const state = localMock.getItem('bs_oauth_state')
+    const nonce = localMock.getItem('bs_oauth_nonce')
     expect(state).not.toBe(nonce)
   })
 
@@ -142,8 +155,8 @@ describe('signInWithBusinessSuite', () => {
     expect(params.get('scope')).toBe('openid email profile')
     expect(params.get('redirect_uri')).toBe('https://crm.crm7.app/auth/callback')
     expect(params.get('code_challenge')).toBeTruthy()
-    expect(params.get('state')).toBe(sessionMock.getItem('bs_oauth_state'))
-    expect(params.get('nonce')).toBe(sessionMock.getItem('bs_oauth_nonce'))
+    expect(params.get('state')).toBe(localMock.getItem('bs_oauth_state'))
+    expect(params.get('nonce')).toBe(localMock.getItem('bs_oauth_nonce'))
     // Default invocation does NOT include the OIDC prompt parameter.
     expect(params.get('prompt')).toBeNull()
   })
@@ -164,10 +177,11 @@ describe('signInWithBusinessSuite', () => {
     expect(params.get('prompt')).toBe('login')
   })
 
-  it('stashes returnTo into sessionStorage[auth_return_path]', async () => {
+  it('stashes returnTo into localStorage[auth_return_path]', async () => {
+    // Stage-3: auth_return_path now in localStorage (not sessionStorage)
     const { createOAuthClient } = await import('../oauth-client.js')
     await createOAuthClient(CLIENT_ID).signInWithBusinessSuite({ returnTo: '/dashboard?x=1' })
-    expect(sessionMock.getItem('auth_return_path')).toBe('/dashboard?x=1')
+    expect(localMock.getItem('auth_return_path')).toBe('/dashboard?x=1')
   })
 
   it('defaults returnTo to current window.location.href', async () => {
@@ -177,7 +191,7 @@ describe('signInWithBusinessSuite', () => {
       value: { origin: 'https://crm.crm7.app', href: 'https://crm.crm7.app/projects/42' } as Location,
     })
     await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
-    expect(sessionMock.getItem('auth_return_path')).toBe('https://crm.crm7.app/projects/42')
+    expect(localMock.getItem('auth_return_path')).toBe('https://crm.crm7.app/projects/42')
   })
 })
 
@@ -211,16 +225,16 @@ describe('signInWithBusinessSuite redirect-loop circuit breaker', () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     const client = createOAuthClient(CLIENT_ID)
     await client.signInWithBusinessSuite()
-    // Snapshot what the first (successful) call wrote.
-    const firstVerifier = sessionMock.getItem('bs_oauth_code_verifier')
-    const firstState = sessionMock.getItem('bs_oauth_state')
-    const firstNonce = sessionMock.getItem('bs_oauth_nonce')
+    // Snapshot what the first (successful) call wrote — now in localStorage.
+    const firstVerifier = localMock.getItem('bs_oauth_code_verifier')
+    const firstState = localMock.getItem('bs_oauth_state')
+    const firstNonce = localMock.getItem('bs_oauth_nonce')
     expect(firstVerifier).toMatch(/^[0-9a-f]+$/)
     // Rejected call must throw before rotating verifier / state / nonce.
     await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
-    expect(sessionMock.getItem('bs_oauth_code_verifier')).toBe(firstVerifier)
-    expect(sessionMock.getItem('bs_oauth_state')).toBe(firstState)
-    expect(sessionMock.getItem('bs_oauth_nonce')).toBe(firstNonce)
+    expect(localMock.getItem('bs_oauth_code_verifier')).toBe(firstVerifier)
+    expect(localMock.getItem('bs_oauth_state')).toBe(firstState)
+    expect(localMock.getItem('bs_oauth_nonce')).toBe(firstNonce)
   })
 
   it('succeeds again after clearing bs_oauth_last_redirect_at from localStorage', async () => {
@@ -266,16 +280,16 @@ describe('signInWithBusinessSuite redirect-loop circuit breaker', () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     const client = createOAuthClient(CLIENT_ID)
     await client.signInWithBusinessSuite()
-    const firstVerifier = sessionMock.getItem('bs_oauth_code_verifier')
-    const firstState = sessionMock.getItem('bs_oauth_state')
-    const firstNonce = sessionMock.getItem('bs_oauth_nonce')
+    const firstVerifier = localMock.getItem('bs_oauth_code_verifier')
+    const firstState = localMock.getItem('bs_oauth_state')
+    const firstNonce = localMock.getItem('bs_oauth_nonce')
     // Second call within 10s must throw BEFORE any PKCE rotation. If it
     // rotated first and then threw, the first consent round-trip would be
     // invalidated (verifier mismatch on /oauth/token).
     await expect(client.signInWithBusinessSuite()).rejects.toThrow(/refusing to loop/i)
-    expect(sessionMock.getItem('bs_oauth_code_verifier')).toBe(firstVerifier)
-    expect(sessionMock.getItem('bs_oauth_state')).toBe(firstState)
-    expect(sessionMock.getItem('bs_oauth_nonce')).toBe(firstNonce)
+    expect(localMock.getItem('bs_oauth_code_verifier')).toBe(firstVerifier)
+    expect(localMock.getItem('bs_oauth_state')).toBe(firstState)
+    expect(localMock.getItem('bs_oauth_nonce')).toBe(firstNonce)
   })
 
   it('does NOT stamp the sentinel on prompt=none silent redirects', async () => {
@@ -324,10 +338,13 @@ describe('signInWithBusinessSuite redirect-loop circuit breaker', () => {
 // exchangeCodeForTokens — CSRF state guard + happy path
 // ---------------------------------------------------------------------------
 
-function seedPkceState(state: string, verifier: string, nonce?: string) {
-  sessionMock.setItem('bs_oauth_state', state)
-  sessionMock.setItem('bs_oauth_code_verifier', verifier)
-  if (nonce) sessionMock.setItem('bs_oauth_nonce', nonce)
+// Stage-3: PKCE state now in localStorage (not sessionStorage)
+function seedPkceState(state: string, verifier: string, nonce?: string, startedAt?: number) {
+  localMock.setItem('bs_oauth_state', state)
+  localMock.setItem('bs_oauth_code_verifier', verifier)
+  if (nonce) localMock.setItem('bs_oauth_nonce', nonce)
+  // Default started_at to now so TTL guard doesn't trip unless the test overrides it
+  localMock.setItem('bs_oauth_started_at', String(startedAt ?? Date.now()))
 }
 
 function tokensFixture(): BusinessSuiteTokens {
@@ -351,13 +368,15 @@ describe('exchangeCodeForTokens', () => {
 
   it('rejects when code_verifier is missing from storage', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
-    sessionMock.setItem('bs_oauth_state', 's')
+    // Stage-3: state is now in localStorage; only set state (not verifier) to trigger the guard
+    localMock.setItem('bs_oauth_state', 's')
+    localMock.setItem('bs_oauth_started_at', String(Date.now()))
     await expect(
       createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
     ).rejects.toThrow(/PKCE/i)
   })
 
-  it('returns tokens + verified user on success and clears PKCE session storage', async () => {
+  it('returns tokens + verified user on success and clears PKCE localStorage keys', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     seedPkceState('s', 'v', 'n')
     fetchMock.mockResolvedValue({
@@ -382,9 +401,38 @@ describe('exchangeCodeForTokens', () => {
       sub: 'user-1', email: 'a@b.com', name: 'A B', picture: undefined,
       client_id: CLIENT_ID, role: 'authenticated',
     })
-    expect(sessionMock.getItem('bs_oauth_state')).toBeNull()
-    expect(sessionMock.getItem('bs_oauth_code_verifier')).toBeNull()
-    expect(sessionMock.getItem('bs_oauth_nonce')).toBeNull()
+    // Stage-3: all PKCE keys cleared from localStorage after exchange
+    expect(localMock.getItem('bs_oauth_state')).toBeNull()
+    expect(localMock.getItem('bs_oauth_code_verifier')).toBeNull()
+    expect(localMock.getItem('bs_oauth_nonce')).toBeNull()
+    expect(localMock.getItem('bs_oauth_started_at')).toBeNull()
+    expect(localMock.getItem('bs_oauth_inflight_code')).toBeNull()
+  })
+
+  it('rejects when verifier is older than 10 minutes (TTL guard)', async () => {
+    // Stage-3: PKCE state more than 10min old must be rejected
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const elevenMinutesAgo = Date.now() - 11 * 60 * 1000
+    seedPkceState('s', 'v', 'n', elevenMinutesAgo)
+    await expect(
+      createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
+    ).rejects.toThrow(/PKCE state expired/i)
+    // Cleanup: all PKCE keys should be wiped after TTL expiry
+    expect(localMock.getItem('bs_oauth_state')).toBeNull()
+    expect(localMock.getItem('bs_oauth_code_verifier')).toBeNull()
+    expect(localMock.getItem('bs_oauth_started_at')).toBeNull()
+    expect(localMock.getItem('bs_oauth_inflight_code')).toBeNull()
+  })
+
+  it('is idempotent for the same code — second call throws InflightInProgress', async () => {
+    // Stage-3: inflight-code sentinel prevents duplicate exchange of a single-use code
+    const { createOAuthClient } = await import('../oauth-client.js')
+    // Seed the inflight sentinel directly (simulates a second call after the first already started)
+    localMock.setItem('bs_oauth_inflight_code', 'authcode')
+    seedPkceState('s', 'v', 'n')
+    await expect(
+      createOAuthClient(CLIENT_ID).exchangeCodeForTokens('authcode', 's'),
+    ).rejects.toThrow(/Code exchange already in progress/i)
   })
 
   it('raises with server body when token endpoint returns non-OK', async () => {
@@ -415,6 +463,41 @@ describe('exchangeCodeForTokens', () => {
     await expect(
       createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
     ).rejects.toThrow(/nonce mismatch/i)
+  })
+
+  // 0.2.3: ID token aud must be the CLIENT_ID, NOT 'authenticated'.
+  // Per Supabase OAuth Flows §6 + OIDC Core 1.0 §3.1.3.7. Regression guard for
+  // the crm.crm7.app/auth/callback failure on 2026-05-07 where verifyIdToken
+  // was passing audience: 'authenticated' and Supabase rejected with
+  // "unexpected 'aud' claim value" once it began enforcing audience strictly.
+  it('verifies id_token with audience=clientId, NOT "authenticated"', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    seedPkceState('s', 'v', 'nonce-x')
+    fetchMock.mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => tokensFixture(),
+      text: async () => '',
+    })
+    mockJwtVerify
+      .mockResolvedValueOnce({ payload: { sub: 'u', client_id: CLIENT_ID, role: 'authenticated' } }) // verifyAccessToken
+      .mockResolvedValueOnce({ payload: { sub: 'u', nonce: 'nonce-x' } }) // verifyIdToken
+
+    await createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's')
+
+    // First call: verifyAccessToken — audience canonical 'authenticated'
+    expect(mockJwtVerify).toHaveBeenNthCalledWith(
+      1,
+      'access-token-xyz',
+      'jwks-sentinel',
+      expect.objectContaining({ audience: 'authenticated' }),
+    )
+    // Second call: verifyIdToken — audience MUST be CLIENT_ID (NOT 'authenticated')
+    expect(mockJwtVerify).toHaveBeenNthCalledWith(
+      2,
+      'id-token-xyz',
+      'jwks-sentinel',
+      expect.objectContaining({ audience: CLIENT_ID }),
+    )
   })
 })
 
@@ -650,9 +733,10 @@ describe('attemptSilentAuth', () => {
   })
 
   it('forwards returnTo to the prompt=none redirect via auth_return_path', async () => {
+    // Stage-3: auth_return_path now in localStorage (not sessionStorage)
     const { createOAuthClient } = await import('../oauth-client.js')
     await createOAuthClient(CLIENT_ID).attemptSilentAuth({ returnTo: '/projects/42' })
-    expect(sessionMock.getItem('auth_return_path')).toBe('/projects/42')
+    expect(localMock.getItem('auth_return_path')).toBe('/projects/42')
   })
 })
 

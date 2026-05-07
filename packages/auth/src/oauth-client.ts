@@ -69,10 +69,15 @@ function generateState(): string {
 }
 
 /**
- * Verify an access token against the Business Suite JWKS endpoint.
+ * Verify an OAuth-Server-issued access token against the Business Suite JWKS endpoint.
  *
  * Uses asymmetric key verification (RS256/ES256) — the public key is fetched
  * from the Supabase /.well-known/jwks.json endpoint and cached by jose.
+ *
+ * Per [Supabase OAuth Flows §6 "Access token structure"](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows#access-token-structure)
+ * the access token `aud` is canonically `'authenticated'` — same as a native
+ * Supabase session JWT, with an additional `client_id` claim. Do NOT pass the
+ * OAuth clientId here; that's only for ID tokens (see `verifyIdToken`).
  */
 async function verifyAccessToken(token: string): Promise<VerifiedUser> {
   const { payload } = await jwtVerify(token, getJWKS(), {
@@ -91,15 +96,31 @@ async function verifyAccessToken(token: string): Promise<VerifiedUser> {
 }
 
 /**
- * Verify the id_token nonce claim against the expected value.
- * Protects against id_token replay attacks (OIDC Core §3.1.2.2).
- * Only rejects when the server returns a nonce that does NOT match — if the
- * server omits the nonce claim we skip verification rather than hard-fail.
+ * Verify the OIDC id_token against the JWKS endpoint AND the expected nonce.
+ *
+ * Per [Supabase OAuth Server / OAuth Flows §6](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows)
+ * and [OIDC Core 1.0 §3.1.3.7](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation):
+ *   - Access token `aud` is `'authenticated'` (Supabase canonical).
+ *   - **ID token `aud` is the CLIENT ID** of the requesting OAuth client.
+ *
+ * Using `audience: 'authenticated'` here causes jose to throw
+ * "unexpected 'aud' claim value" the moment Supabase enforces audience
+ * strictly on ID tokens — which it now does (verified 2026-05-07 via the
+ * crm.crm7.app/auth/callback regression). Pass the consumer app's clientId
+ * so the audience check matches the issuer's intent.
+ *
+ * Nonce check (OIDC Core §3.1.2.2): only rejects when the server returns a
+ * nonce that does NOT match — if the server omits the nonce claim we skip
+ * verification rather than hard-fail.
  */
-async function verifyIdToken(idToken: string, expectedNonce: string): Promise<void> {
+async function verifyIdToken(
+  idToken: string,
+  expectedNonce: string,
+  clientId: string
+): Promise<void> {
   const { payload } = await jwtVerify(idToken, getJWKS(), {
     issuer: `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1`,
-    audience: 'authenticated',
+    audience: clientId,
   });
   if (payload.nonce !== undefined && payload.nonce !== expectedNonce) {
     throw new Error('id_token nonce mismatch — possible replay attack');
@@ -226,7 +247,7 @@ export function createOAuthClient(clientId: string): OAuthClient {
    * uniformly).
    *
    * Pass `returnTo` to control where the callback navigates after completion.
-   * It is stored at `sessionStorage['auth_return_path']` and consumed by each
+   * It is stored at `localStorage['auth_return_path']` and consumed by each
    * app's callback handler.
    *
    * @see OIDC Core 1.0 §3.1.2.1 — Authentication Request
@@ -246,13 +267,28 @@ export function createOAuthClient(clientId: string): OAuthClient {
     const state = generateState();
     const nonce = generateState(); // Same CSPRNG — 16 random bytes as hex (OIDC Core §3.1.2.1)
 
-    sessionStorage.setItem('bs_oauth_code_verifier', codeVerifier);
-    sessionStorage.setItem('bs_oauth_state', state);
-    sessionStorage.setItem('bs_oauth_nonce', nonce);
+    // Store PKCE state in localStorage (not sessionStorage) so it survives:
+    //   - Page refreshes on the callback URL (auth code is single-use;
+    //     a refresh must replay the exchange with the SAME verifier)
+    //   - ITP/ETP-Strict cross-site navigations in Safari / Firefox
+    //   - Privacy extensions that nuke sessionStorage on cross-origin redirect
+    //   - Login links opened in a new tab/window
+    // Per Supabase PKCE Flow docs: "code exchange must be initiated on the
+    // same browser and device where the flow was started" — localStorage is
+    // per-origin and fulfils this requirement across all the above failure modes.
+    // @see https://supabase.com/docs/guides/auth/sessions/pkce-flow
+    localStorage.setItem('bs_oauth_code_verifier', codeVerifier);
+    localStorage.setItem('bs_oauth_state', state);
+    localStorage.setItem('bs_oauth_nonce', nonce);
+    // TTL sentinel: written alongside the verifier so exchangeCodeForTokens
+    // can reject stale state (>10min) that survived across sessions.
+    // Auth codes are single-use and expire after 10min per Supabase OAuth docs.
+    // @see https://supabase.com/docs/guides/auth/oauth-server/oauth-flows
+    localStorage.setItem('bs_oauth_started_at', String(Date.now()));
 
     const returnTo = options?.returnTo ?? window.location.href;
     try {
-      sessionStorage.setItem('auth_return_path', returnTo);
+      localStorage.setItem('auth_return_path', returnTo);
     } catch {
       // Storage write failures are non-fatal — callback falls back to /dashboard.
     }
@@ -285,15 +321,45 @@ export function createOAuthClient(clientId: string): OAuthClient {
     code: string,
     state: string
   ): Promise<{ tokens: BusinessSuiteTokens; user: VerifiedUser }> {
-    const storedState = sessionStorage.getItem('bs_oauth_state');
-    const codeVerifier = sessionStorage.getItem('bs_oauth_code_verifier');
-    const storedNonce = sessionStorage.getItem('bs_oauth_nonce');
+    // Idempotency sentinel: if the same code is already being exchanged
+    // (e.g. the user refreshed the /auth/callback page mid-flight),
+    // reject immediately rather than sending a second token request.
+    // Auth codes are single-use — a duplicate request would fail with
+    // invalid_grant; the sentinel gives a more descriptive error first.
+    const inflightCode = localStorage.getItem('bs_oauth_inflight_code');
+    if (inflightCode === code) {
+      throw new Error('Code exchange already in progress — please wait or retry sign-in');
+    }
+    localStorage.setItem('bs_oauth_inflight_code', code);
+
+    const storedState = localStorage.getItem('bs_oauth_state');
+    const codeVerifier = localStorage.getItem('bs_oauth_code_verifier');
+    const storedNonce = localStorage.getItem('bs_oauth_nonce');
+    const startedAt = localStorage.getItem('bs_oauth_started_at');
+
+    // TTL guard: auth codes expire after 10 minutes per Supabase OAuth docs.
+    // Reject stale PKCE state that survived across sessions (e.g. user closed
+    // the tab before completing sign-in, then returned later).
+    if (startedAt) {
+      const elapsed = Date.now() - Number(startedAt);
+      if (elapsed > 10 * 60 * 1000) {
+        // Clean up before throwing so the user gets a fresh start on retry.
+        localStorage.removeItem('bs_oauth_code_verifier');
+        localStorage.removeItem('bs_oauth_state');
+        localStorage.removeItem('bs_oauth_nonce');
+        localStorage.removeItem('bs_oauth_started_at');
+        localStorage.removeItem('bs_oauth_inflight_code');
+        throw new Error('PKCE state expired (>10min) — please retry sign-in');
+      }
+    }
 
     if (!storedState || storedState !== state) {
+      localStorage.removeItem('bs_oauth_inflight_code');
       throw new Error('Invalid state parameter - possible CSRF attack');
     }
     if (!codeVerifier) {
-      throw new Error('Missing PKCE code verifier');
+      localStorage.removeItem('bs_oauth_inflight_code');
+      throw new Error('PKCE code verifier not found in storage — sign-in session may have been interrupted. Please retry sign-in.');
     }
 
     const response = await fetch(`${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/token`, {
@@ -308,10 +374,12 @@ export function createOAuthClient(clientId: string): OAuthClient {
       }),
     });
 
-    // Clean up stored PKCE values and nonce
-    sessionStorage.removeItem('bs_oauth_code_verifier');
-    sessionStorage.removeItem('bs_oauth_state');
-    sessionStorage.removeItem('bs_oauth_nonce');
+    // Clean up stored PKCE values, nonce, TTL sentinel, and inflight sentinel
+    localStorage.removeItem('bs_oauth_code_verifier');
+    localStorage.removeItem('bs_oauth_state');
+    localStorage.removeItem('bs_oauth_nonce');
+    localStorage.removeItem('bs_oauth_started_at');
+    localStorage.removeItem('bs_oauth_inflight_code');
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -321,9 +389,11 @@ export function createOAuthClient(clientId: string): OAuthClient {
     const tokens: BusinessSuiteTokens = await response.json();
     const user = await verifyAccessToken(tokens.access_token);
 
-    // Verify id_token nonce to prevent replay attacks (OIDC Core §3.1.2.2)
+    // Verify id_token signature, audience, and nonce (OIDC Core §3.1.3.7 + §3.1.2.2).
+    // Audience MUST be the OAuth clientId per Supabase OAuth Flows §6 (NOT
+    // 'authenticated'). See verifyIdToken() docs for full rationale.
     if (tokens.id_token && storedNonce) {
-      await verifyIdToken(tokens.id_token, storedNonce);
+      await verifyIdToken(tokens.id_token, storedNonce, clientId);
     }
 
     return { tokens, user };
