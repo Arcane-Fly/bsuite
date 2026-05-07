@@ -3,14 +3,8 @@ on:
   schedule:
     - cron: '7 * * * *'  # hourly at :07 (offset to avoid runner congestion)
   workflow_dispatch:
-  push:
-    branches: [main, development]
-    paths:
-      - 'docs/plans/**'
-      - 'docs/**.md'
-      - 'AUTH_CANONICAL.md'
-      - 'packages/auth/package.json'
-      - 'packages/dry-lint/package.json'
+  # push trigger removed: branch protection blocks the bot's git-push back to
+  # main/development. Hourly schedule provides sufficient freshness.
 permissions:
   contents: write
   pull-requests: read
