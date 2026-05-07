@@ -218,3 +218,109 @@ Operator can clean via: `git push origin --delete <branch-name>` or GitHub UI.
 ---
 
 *Filed by claude-code-scheduled · 2026-05-07 · second fire (10:22–10:35Z UTC)*
+
+---
+
+## Third Fire — 2026-05-07T~12:26–12:40Z UTC
+
+**Session:** `session_01Bp7beQV1wycCZq2HKPM4bj`
+**Operator:** offline
+**Status:** COMPLETE
+
+### Environment Constraints (same as prior fires)
+
+| Constraint | Detail |
+|---|---|
+| Memory API blocked | `qig-memory-api.vercel.app` → 403 sandbox proxy. Steps 1–6 of mandatory protocol remain inaccessible. |
+| MCP scope | `garyocean428/bsuite` only. crm7, BSU, conduit, braden, R80.3, throughput inaccessible. |
+| gitleaks CLI | Not installed in cron sandbox — TOML rule syntax verified manually + via CI. |
+
+### Work Completed
+
+#### 1. State Assessment
+
+Prior fires fully covered 00h → 11h UTC. Relevant state at this fire's start:
+
+| Item | State |
+|---|---|
+| Open bsuite PRs | 0 |
+| PR #586 (CI workflows) | ✅ Merged by operator at 07:09Z |
+| Issue #655 (leaked bypass token) | Open — acked at ~11h. PR #654 already merged with redaction. Operator rotation still required. |
+| Issue #653 (crm7#519 handoff) | Open — acked at ~11h. MCP scope blocks crm7 access. |
+| Wave W0 | ✅ DONE BSU#364 sha `9c4e101` (10:28Z) |
+| Wave W1 | ✅ DONE BSU#361 |
+| Waves W2/W4/W6 | UNBLOCKED — awaiting claude-code-local session |
+| Wave W3 | perplexity STARTING (10:13Z) |
+
+#### 2. Security: `.gitleaks.toml` extension — PR #656 ✅ CI GREEN
+
+Actioned the sweep-recommendation sub-task from issue #655:
+
+**Gap identified:** `.gitleaks.toml` with `useDefault = true` does not include detection rules for `x-vercel-protection-bypass` bypass tokens or `autonoma-client-secret` header values — the credential types leaked in the bsuite#655 incident.
+
+**Fix:** Added two custom `[[rules]]` sections to `.gitleaks.toml`:
+- `vercel-bypass-token` — detects `x-vercel-protection-bypass: <token>` patterns (base62, 20+ chars, entropy ≥ 3.5)
+- `autonoma-client-secret` — detects `autonoma-client-secret`/`AUTONOMA_SECRET_ID` assignments (16+ chars, entropy ≥ 3.2)
+- Also backfilled Throughput + Conduit OAuth 2.1 client IDs in global allowlist (prevents false-positive UUID flags)
+
+**CI result on PR #656:** 4/4 green ✅
+- build-and-test ✅ | gitleaks (push) ✅ | gitleaks (PR diff) ✅ | DOM Layout Invariants ✅
+- `review`: skipped (expected — `ANTHROPIC_API_KEY` not set)
+
+**Status:** PR #656 open, awaiting perplexity §17 ack. Cannot self-merge (claude-authored).
+
+#### 3. Handoff Issues Update
+
+| Issue | Status | Action this session |
+|---|---|---|
+| #655 (security — leaked bypass token) | Open | Comment posted linking PR #656 + reiterating operator rotation steps |
+| #653 (crm7#519 merge handoff) | Open | No new activity since ~11h ack. Perplexity or operator must merge crm7#519. |
+
+#### 4. Wave Tracker (#635) — §17 Continuity Posted
+
+Status comment posted at [#635](https://github.com/GaryOcean428/bsuite/issues/635) confirming W0/W1 done, W2/W4/W6 unblocked, crm7 mirror (#653) still pending merge.
+
+#### 5. Branch Hygiene Sweep
+
+Remote branches at fire end (14 total):
+
+| Branch | State | Action |
+|---|---|---|
+| `origin/development` | protected active | — |
+| `origin/main` | protected active | — |
+| `origin/claude/security/gitleaks-extend-bypass-patterns` | **OPEN PR #656** | No action — awaiting merge |
+| `origin/claude/docs/cron-log-2026-05-06` | no PR, cron log | < 7 days — flag only |
+| `origin/claude/docs/cron-log-2026-05-06-19h` through `22h` (×4) | no PR, cron logs | < 7 days — flag only |
+| `origin/claude/docs/cron-log-2026-05-07` | no PR, cron log | < 7 days — flag only |
+| `origin/claude/docs/cron-log-2026-05-07-11h` | no PR, cron log | < 7 days — flag only |
+| `origin/claude/docs/cron-log-2026-05-07-cron4` | no PR, cron log | < 7 days — flag only |
+| `origin/claude/chore/sync-dev-from-main-20260507-cron4` | merged PR | ⚠️ delete candidate |
+| `origin/claude/feat/ship-all-apps-script` | merged PR #634 | ⚠️ delete candidate |
+| `origin/claude/fix/refresh-workflow-push-trigger` | merged PR #646 | ⚠️ delete candidate |
+
+**Merged-branch cleanup (operator action):** 3 branches confirmed merged with no open PR — safe to delete via GitHub UI or `git push origin --delete <branch>`.
+
+**Cron log branches (9 total, <7d):** No >7d orphans. Recommend operator adopt rolling-append strategy (all cron logs committed to `development` directly) to stop branch accumulation — this session follows that pattern.
+
+#### 6. /ship-all-apps
+
+`scripts/ship-all-apps.sh` present but not invocable from cron sandbox (`VERCEL_TOKEN` secret not set in repo). Can be triggered via `gh workflow run ship-all-apps.yml` once operator sets the secret.
+
+### Summary
+
+| Item | Result |
+|---|---|
+| Memory API | ❌ Blocked (403 sandbox proxy) |
+| Open bsuite PRs at start | ✅ 0 |
+| PR #656 gitleaks extension | ✅ Filed + 4/4 CI green. Awaiting perplexity §17 ack. |
+| Issue #655 | 💬 Status comment posted with PR #656 link |
+| Issue #653 | 💬 No new activity — still awaiting perplexity/operator for crm7#519 |
+| Issue #635 wave tracker | 💬 §17 continuity comment posted |
+| Hygiene sweep | ✅ 3 merged-branch cleanup candidates noted |
+| /ship-all-apps | ⚠️ Needs VERCEL_TOKEN secret (operator) |
+
+**North star progress:** Security posture improved — gitleaks extended to catch Vercel bypass tokens + Autonoma secrets. W0+W1 shipped; W2/W4/W6 unblocked for claude-code-local next session.
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-07 · third fire (~12:26–12:40Z UTC)*
