@@ -1,0 +1,54 @@
+name: Refresh plan-dashboard data
+on:
+  schedule:
+    - cron: '7 * * * *'  # hourly at :07 (offset to avoid runner congestion)
+  workflow_dispatch:
+  push:
+    branches: [main, development]
+    paths:
+      - 'docs/plans/**'
+      - 'docs/**.md'
+      - 'AUTH_CANONICAL.md'
+      - 'packages/auth/package.json'
+      - 'packages/dry-lint/package.json'
+permissions:
+  contents: write
+  pull-requests: read
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+      - name: Refresh dashboard data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Build a fresh dashboard-data.json from live state.
+          # The script must be portable (no external deps beyond gh CLI + python3).
+          # See docs/dashboard/refresh-data.py for the data-building logic.
+          if [ -x docs/dashboard/refresh-data.py ]; then
+            python3 docs/dashboard/refresh-data.py > docs/dashboard/data/dashboard-data.json
+          else
+            echo "::warning::docs/dashboard/refresh-data.py not present yet — skipping refresh"
+            exit 0
+          fi
+      - name: Inline data into HTML
+        run: |
+          if [ -x docs/dashboard/inline-data.sh ]; then
+            bash docs/dashboard/inline-data.sh
+          fi
+      - name: Commit refreshed data if changed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          if [ -n "$(git status --porcelain)" ]; then
+            git add docs/dashboard/data/ docs/dashboard/index.html
+            git commit -m "chore(dashboard): hourly data refresh [skip ci]"
+            git push
+          else
+            echo "No changes."
+          fi

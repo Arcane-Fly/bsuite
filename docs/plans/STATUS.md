@@ -23,6 +23,7 @@ dependency status).
 | [#208](https://github.com/GaryOcean428/bsuite/issues/208) | P0 WCAG: Radix Dialog/Sheet DialogTitle | ✅ Done | All 6 submodules verified — see `CONSISTENCY-REPORT.md`. BSU PR #285 fixed the only finding. |
 | [#209](https://github.com/GaryOcean428/bsuite/issues/209) | P0 WCAG: Login/register autoComplete | ✅ Done | Audit on 2026-05-04 found all input-bearing forms compliant. The other three apps redirect to BSU. |
 | [#211](https://github.com/GaryOcean428/bsuite/issues/211) | P1 Deps: TypeScript 6.0 migration EPIC | 🟡 Tracked | Plan: `2026-05-04-typescript-6-migration.md`. Six child issues filed. Execution is gated to the 2026-Q3 maintenance window pending TS 6.0 latest + typescript-eslint compatibility. |
+| TBD (WS-B) | Codehouse Parity & Platform 360 — index plan + 9 portal sub-plans + visual feature builder spec | 🟡 W (working) | Added 2026-05-06. Plan: `20260506-codehouse-parity-and-platform-360-v1.00W.md` + `20260506-codehouse-parity/` (10 sub-plans). 12 grouped issues will be filed by the issue-filer subagent in a parallel PR. Dashboard JSON extension is a follow-up PR (post #535). |
 
 ## 2026-05-06 Plans Audit
 
