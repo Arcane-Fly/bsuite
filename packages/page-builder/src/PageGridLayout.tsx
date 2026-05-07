@@ -30,10 +30,27 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   style: injectedStyle,
   ...rest
 }, ref) {
+    // DnD root-cause fix (2026-05-07): react-draggable@4 (used internally by
+    // react-grid-layout@2) checks the drag handle via
+    // `matchesSelectorAndParentsTo(target, handle, baseNode)` — it walks UP
+    // the ancestor chain from the click target. The previous implementation
+    // rendered `.drag-handle` as a SIBLING of the card content, so clicks on
+    // any visible card content never matched (ancestors are: card-content →
+    // .rounded-3xl → .h-full.w-full.relative → .relative.group; none carry
+    // the class). Drag silently failed.
+    //
+    // Fix: put `.drag-handle` on the outer container. Now any click inside
+    // the GridItem has it as an ancestor → drag fires. Interactive elements
+    // (buttons, inputs, textarea, select, links, [data-no-drag]) are still
+    // protected via the `cancel` selector below in the <Responsive> render.
+    const outerClass = cn(
+      'relative group',
+      isEditing && 'drag-handle cursor-move',
+      injectedClassName
+    );
     return (
-      <div ref={ref} className={cn('relative group', injectedClassName)} style={injectedStyle} {...rest}>
+      <div ref={ref} className={outerClass} style={injectedStyle} {...rest}>
         <div className="h-full w-full relative">
-          {isEditing && <div className="drag-handle absolute inset-0 z-20 cursor-move bg-transparent" />}
           {isEditing && (
             <div className="absolute inset-0 z-10 pointer-events-none rounded-3xl border-2 border-transparent group-hover:border-primary/50 transition-colors bg-black/5" />
           )}
@@ -47,6 +64,8 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
           {isEditing && (
             <button
               className="absolute top-2 right-2 z-30 h-6 w-6 rounded-full flex items-center justify-center bg-destructive/80 hover:bg-destructive text-white shadow transition-colors"
+              data-no-drag
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
                 onRemove(id);
@@ -358,7 +377,18 @@ export function PageGridLayout({
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             rowHeight={32}
             onLayoutChange={onLayoutChange}
-            dragConfig={{ enabled: isEditing, handle: '.drag-handle', bounded: false, cancel: '.react-resizable-handle' }}
+            dragConfig={{
+              enabled: isEditing,
+              handle: '.drag-handle',
+              bounded: false,
+              // Cancel any interactive descendant — react-draggable's
+              // matchesSelectorAndParentsTo walks up; if any ancestor matches
+              // the cancel selector, drag is suppressed. This lets users
+              // click buttons / type in inputs / interact with form controls
+              // inside cards while still being able to drag the card surface.
+              cancel:
+                '.react-resizable-handle, button, input, textarea, select, [contenteditable="true"], [data-no-drag], a[href], [role="button"], [role="combobox"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="switch"], [role="slider"], [role="textbox"]',
+            }}
             resizeConfig={{ enabled: resizeEnabled, handles: resizeHandles }}
             constraints={resizeEnabled ? resizeConstraints : undefined}
             compactor={activeCompactor}
