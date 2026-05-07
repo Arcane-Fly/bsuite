@@ -378,3 +378,109 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 - Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
 - Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
 - Package manager: **pnpm** (migrated from npm in PR #41, merged 2026-04-25)
+
+
+---
+
+## 9. Self-Validation Loop (FF-SELF-VALIDATION-20260507)
+
+**Source:** [How to Make Claude Code Validate its own Work](https://towardsdatascience.com/how-to-make-claude-code-validate-its-own-work/) (Eivind Kjosbakken, 2026-05-05). Adopted as Frozen Fact `FF-SELF-VALIDATION-20260507` and integrated with the Cross Red-Team (§17), Mutual Reminder (§17/§18), Forward Motion (§19), and Obvious-Fix Autonomy (§20) doctrines.
+
+### Why this rule exists
+
+You are not graded on first-try perfection. You are graded on **the gap between your final claim and reality**. A human writing a Fibonacci function runs it before claiming it works; you must do the same. Submitting a "looks done" PR without running the code, opening the page, or comparing the screenshot is a §1 (Zero-Defer) violation — *the work is not done until evidence proves it is*.
+
+### Mandatory validation patterns
+
+#### 9.1. Output-Equivalence Loop (refactors / extractions / migrations)
+
+When you change *how* something is computed but not *what* it should produce:
+
+1. **Capture baseline outputs first.** Run the existing implementation on a representative input set; record the outputs verbatim (numbers, strings, status codes, response shapes).
+2. **Implement the change.**
+3. **Run the new implementation on the same inputs** and assert near-equivalence (allow for stochastic variance only where the underlying system is non-deterministic — and document the tolerance).
+4. **Iterate until the diff is empty (or within documented tolerance).** Do not push until then.
+
+Apply this to: SQL refactors, function extractions, library migrations, prompt reworks, batching changes, edge-function splits, type-system migrations.
+
+#### 9.2. Visual-Equivalence Loop (UI tasks)
+
+When you implement a design from a screenshot, mockup, or live reference:
+
+1. **Anchor on the target.** Save the reference image into the workspace.
+2. **Implement.**
+3. **Open the page in a real browser** (Playwright, Puppeteer, or `pplx-tool screenshot_page`) and capture a screenshot at the breakpoints declared in the spec (mobile 375, tablet 768, desktop 1440 minimum).
+4. **Compare side-by-side** with the reference. Note every divergence (spacing, alignment, colour, type weight, focus rings, dark-mode contrast).
+5. **Iterate until the divergences are intentional and documented**, not accidental.
+
+Apply this to: shadcn component placement, layout changes, branding updates, FAB positioning, Tailwind v4 tweaks, responsive-grid adjustments.
+
+#### 9.3. Self-Report Uncertainty (always)
+
+When the loop cannot reach equivalence — visual diff persists, output drift exceeds tolerance, runtime constraint blocks a step, dependency missing — **stop, name the divergence, and ask for input** via the inbox or a tracker comment. Do **not** push, do **not** mark "done", do **not** rationalise the gap. A §17 challenge from a peer is cheaper than a production regression.
+
+### How this composes with existing rules
+
+- **§1 Zero-Defer**: validation IS part of the task, not a follow-up. "Tested locally" without evidence rows is a deferral.
+- **§6 Multi-Agent Orchestration**: a peer in the cross red-team MUST verify that the validation evidence (commit SHA, screenshot path, baseline diff) is real and reproducible before flipping queue items to `done`.
+- **§17 Mutual Reminder**: every PR description must include an "Evidence" section with at least one of: passing test output, visual-diff screenshot pair, output-equivalence assertion, or live-deploy URL with the relevant page captured.
+- **§19 Forward Motion**: a no-claim cycle is not "no work" — running the validation loop on someone else's open PR and writing a verification comment IS forward motion.
+- **§20 Obvious-Fix Autonomy**: ship the obvious fix, but the fix must still pass §9.1 or §9.2 before the queue item flips.
+
+### PR description rule (mandatory)
+
+Every PR description must include this `## Evidence` block:
+
+```markdown
+## Evidence
+
+- [ ] Output-equivalence (§9.1) baseline + diff: <path or N/A>
+- [ ] Visual-equivalence (§9.2) reference + after screenshots: <path or N/A>
+- [ ] Self-report block: known divergences from spec or "none"
+- [ ] Tests run: <command + result>
+- [ ] Live verify: <URL + observation>
+```
+
+PRs without this block are not §17-eligible for review.
+
+### Issue / plan filing rule (mandatory)
+
+Every issue and every plan **must include**:
+
+1. **Acceptance criteria** phrased as the validation target (what output / what visual / what assertion).
+2. **A "Cross Red-Team" line** naming the agent who will verify (claude-code, perplexity-computer, codebuff, copilot).
+3. **A "Skills to load" line** listing the relevant skills (e.g., `supabase-postgres-best-practices`, `playwright-skill`, `qa-and-verification`, `verification-before-completion`, `shadcn-ui`, `tailwind`, etc.) the implementer should pre-load.
+4. **A "Validation loop" line** stating which loop (§9.1, §9.2, or both) applies and what the equivalence target is.
+
+Reminder template (paste into every issue body, every plan front-matter):
+
+```markdown
+## Mandatory before merge (FF-SELF-VALIDATION-20260507)
+
+- **Validation loop**: §9.1 output-equivalence | §9.2 visual-equivalence | both
+- **Equivalence target**: <baseline output | reference screenshot | live-deploy URL>
+- **Cross red-team**: <peer agent name> verifies evidence rows before flip-to-done
+- **Skills to load**: <comma-separated list>
+- **Self-report on divergence**: yes (mandatory; do not rationalise gaps)
+```
+
+### Anti-patterns (banned)
+
+- "Looks correct" without a screenshot.
+- "Should work" without running it.
+- "Tests will be added later" without an issue link.
+- "Visually matches" without a side-by-side image pair.
+- Pushing a UI change without opening the page in a browser at all.
+- Skipping the self-report when the loop did not converge ("close enough").
+- Marking your own work `done` without peer verification per §6 and §17.
+
+### Tooling
+
+- Headless browser: Playwright (preferred — already in BSuite stack), Puppeteer (acceptable), or `pplx-tool screenshot_page`.
+- Visual diff: human side-by-side is sufficient for now; structured diff via `pixelmatch` if a regression suite is set up.
+- Output diff: `diff -u`, JSON canonicalisation, or a domain-specific equivalence helper (e.g., currency rounding to 2dp before compare).
+- Runtime: every implementation PR must list the exact commands run + their output. CI is not a substitute for local validation when the change is visual or behavioural.
+
+---
+
+*Frozen Fact: `FF-SELF-VALIDATION-20260507`. Adopted 2026-05-07 by operator directive. Sourced from Kjosbakken 2026. Applies to all AI agents (claude-code, perplexity-computer, codebuff, copilot, manus, cursor, windsurf) operating in any BSuite or related repo.*
