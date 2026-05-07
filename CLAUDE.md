@@ -252,6 +252,44 @@ Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..`
 
 ---
 
+## Autonoma E2E Testing (Vercel Integration)
+
+All 6 BSuite apps (CRM7, R80.3, Braden, BSU, Conduit, Throughput) are connected to **Autonoma AI** via the Vercel integration. Autonoma is an agentic e2e testing platform — AI agents navigate the deployed app end-to-end to find bugs.
+
+**Auth env vars (auto-provisioned by Vercel integration in Production + Preview):**
+
+- `AUTONOMA_CLIENT_ID` — public client ID
+- `AUTONOMA_SECRET_ID` — secret (Vercel integration uses this naming; despite the name it is the client secret)
+
+The Vercel integration provisions these per-app on Production + Preview environments. For local development, they live in `.env.local` at the parent monorepo root.
+
+**HTTP header mapping** (when calling the Autonoma API):
+
+```
+autonoma-client-id:     <AUTONOMA_CLIENT_ID value>
+autonoma-client-secret: <AUTONOMA_SECRET_ID value>
+```
+
+**Documentation index:** <https://docs.autonoma.app/llms.txt>
+
+**Deployment checks:** Once an Application + Version is registered via the Autonoma dashboard (e.g. BSU production has Application ID `cmouwgrq209t4013ps6ikkm10`), Autonoma deployment checks run automatically against the deployed Vercel URL on every push that targets that Version.
+
+**API operations supported:**
+
+- Register a web app version: `POST https://autonoma.app/api/web` with `x-platform: web`, multipart-form `name`, `path` (URL), optional `cookies`, `version`, `customID`
+- Trigger a test run: `POST https://autonoma.app/api/test/{test_id}/run` with JSON body `{ application_version_id, source: "api", runtime_metadata: {...} }`
+- Trigger a folder of tests: `POST https://autonoma.app/api/run/folder/{folder_id}`
+
+**Authoring tests:** done via the Autonoma dashboard UI (canvas + natural-language prompts) — not in code. See "Your First Test" guide at <https://docs.autonoma.app/your-first-test>.
+
+**Operator notes:**
+
+- Vercel `x-vercel-protection-bypass` headers are required for Autonoma to access deployments behind Vercel auth — provision per-version in the Autonoma dashboard.
+- Do NOT commit `AUTONOMA_SECRET_ID` to source. The Vercel integration handles distribution.
+- Adoption status: env vars distributed across all 6 apps on Production + Preview (2026-05-07). BSU Application + production/preview Versions registered in Autonoma dashboard. Other 5 apps pending operator-driven registration via dashboard.
+
+---
+
 ## Key Files
 
 - `docs/20260227-contributing-standards-guide-v1.01W.md` — full quality standards
