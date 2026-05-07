@@ -38,4 +38,54 @@ regexes = [
   '''30f76744-3e0b-40bf-abb8-8c587389802e''',
   '''5d804d20-cd1b-4724-9107-86d2a9e51e09''',
   '''dcb7af18-254a-4946-b94d-5c606b01fc3f''',
+
+  # BS OAuth 2.1 client IDs (additional — Throughput + Conduit)
+  '''35f0db49-ef62-4115-baba-7b961f034cc3''',
+  '''da925c19-8f32-40a0-b74d-4eb9540c422f''',
 ]
+
+# ---------- Custom detection rules ----------
+
+# Vercel deployment-protection bypass token
+# These tokens allow bypassing Vercel auth on preview/production URLs.
+# They must never appear in committed files — use Vercel env vars instead.
+# Incident: bsuite PR #654 commit ba95384 (2026-05-07) — see issue #655.
+[[rules]]
+id = "vercel-bypass-token"
+description = "Vercel deployment-protection bypass token"
+regex = '''(?i)x.vercel.protection.bypass\s*[=:]\s*['"]?([a-zA-Z0-9]{20,})['"]?'''
+secretGroup = 1
+entropy = 3.5
+tags = ["vercel", "bypass-token", "high-severity"]
+
+  [rules.allowlist]
+  description = "Allow the key name in documentation headings or CLAUDE.md references"
+  regexes = [
+    # Prose references without an actual token value following
+    '''x-vercel-protection-bypass` headers''',
+    '''x-vercel-protection-bypass` header''',
+    '''Vercel `x-vercel-protection-bypass`''',
+  ]
+
+# Autonoma test-platform client secret
+# The AUTONOMA_SECRET_ID env var and autonoma-client-secret header value
+# must never be committed — Vercel integration distributes them at build time.
+# Ref: CLAUDE.md § "Autonoma E2E Testing".
+[[rules]]
+id = "autonoma-client-secret"
+description = "Autonoma test-platform client secret (AUTONOMA_SECRET_ID / autonoma-client-secret header)"
+regex = '''(?i)(autonoma.client.secret|autonoma.secret.id)\s*[=:]\s*['"]?([a-zA-Z0-9\-_]{16,})['"]?'''
+secretGroup = 2
+entropy = 3.2
+tags = ["autonoma", "secret", "high-severity"]
+
+  [rules.allowlist]
+  description = "Allow env-var placeholder references in docs / .env.example"
+  regexes = [
+    # Placeholder values only — not real secrets
+    '''AUTONOMA_SECRET_ID=<''',
+    '''AUTONOMA_SECRET_ID="<''',
+    '''AUTONOMA_SECRET_ID=your-''',
+    # CLAUDE.md metadata description line (no value)
+    '''`AUTONOMA_SECRET_ID`\s*—''',
+  ]
