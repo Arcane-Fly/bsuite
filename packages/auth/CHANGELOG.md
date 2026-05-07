@@ -2,6 +2,65 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.2.2 — 2026-05-08
+
+### Fixed — Stage-3 PKCE state storage: sessionStorage → localStorage
+
+**Root cause:** The `bs_oauth_code_verifier`, `bs_oauth_state`, `bs_oauth_nonce`, and
+`auth_return_path` keys were written to `sessionStorage`. This caused
+`"PKCE code verifier not found in storage"` failures under real-world conditions:
+- Refreshing `/auth/callback` after redirect (auth code is single-use; the page
+  must re-use the same verifier on reload, but sessionStorage was wiped by the browser)
+- ITP/ETP-Strict cross-site navigation in Safari / Firefox (sessionStorage nuked
+  on cross-origin redirect chain)
+- Privacy extensions that clear sessionStorage on navigation
+- Login links opened in a new tab/window (sessionStorage is not shared across tabs)
+
+The `"unexpected 'aud' claim value"` follow-up error was from the fall-through
+path in the callback trying `supabase.auth.exchangeCodeForSession()` with a
+native-PKCE verifier key that didn't match.
+
+**Fix:** All four keys now written to `localStorage` (per-origin, survives all
+the above failure modes). Per [Supabase PKCE Flow docs](https://supabase.com/docs/guides/auth/sessions/pkce-flow):
+> "code exchange must be initiated on the same browser and device where the
+> flow was started" — localStorage satisfies this while sessionStorage does not.
+
+### Added — 10-minute TTL guard on PKCE state
+
+`signInWithBusinessSuite()` now writes `localStorage['bs_oauth_started_at']` =
+`Date.now()` alongside the verifier. `exchangeCodeForTokens()` rejects with
+`"PKCE state expired (>10min) — please retry sign-in"` if more than 10 minutes
+have elapsed. Auth codes expire after 10 minutes per [Supabase OAuth flows docs](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows),
+so this guard prevents exchanges that would fail anyway. The cleanup on TTL
+expiry gives the user a fresh slate.
+
+### Added — Idempotent exchange via inflight-code sentinel
+
+`exchangeCodeForTokens()` now writes `localStorage['bs_oauth_inflight_code']` =
+`code` at the start of exchange and clears it in the cleanup block. If called a
+second time with the same code (e.g. the user refreshed `/auth/callback`
+mid-flight), it throws `"Code exchange already in progress — please wait or
+retry sign-in"` immediately. Auth codes are single-use, so the duplicate request
+would fail anyway; this gives a clearer error.
+
+### Migration note
+
+- **BREAKING (semver-patch):** PKCE state keys move from `sessionStorage` to `localStorage`.
+  Existing `sessionStorage` entries are abandoned — no migration needed as they
+  expire with the tab.
+- Consumers do not need code changes. The keys are internal to `@bsuite/auth`.
+- `auth_return_path` also moves to `localStorage` — consumer callback handlers
+  reading this key must update their read (CRM7 callback updated in this release).
+
+### References
+
+- [Supabase PKCE Flow](https://supabase.com/docs/guides/auth/sessions/pkce-flow)
+- [Supabase OAuth Flows](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows)
+- [Supabase OAuth Getting Started](https://supabase.com/docs/guides/auth/oauth-server/getting-started)
+- `AUTH_CANONICAL.md` §Canonical pattern — localStorage per-domain token storage
+
+---
+
 ## 0.2.1 — 2026-05-06
 
 ### Added — redirect-loop circuit breaker (regression guard)
