@@ -1,0 +1,58 @@
+name: Ship All Apps to Production
+
+# Trigger manually via GitHub UI or via API (cron agents, CI):
+#   POST /repos/GaryOcean428/bsuite/actions/workflows/ship-all-apps.yml/dispatches
+#   Authorization: Bearer <GH_TOKEN>
+#   Body: {"ref":"main","inputs":{"dry_run":"false"}}
+#
+# Required secrets: VERCEL_TOKEN (repo-level)
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run — log only, no actual Vercel deploys'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  ship:
+    name: Deploy ${{ matrix.app.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - { name: crm7,                   dir: crm7 }
+          - { name: business-suite-unified, dir: business-suite-unified }
+          - { name: conduit,                dir: conduit }
+          - { name: braden,                 dir: braden }
+          - { name: R80.3,                  dir: R80.3 }
+          - { name: throughput,             dir: throughput }
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        if: ${{ !inputs.dry_run }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Vercel CLI
+        if: ${{ !inputs.dry_run }}
+        run: npm install -g vercel@latest
+
+      - name: Deploy ${{ matrix.app.name }} to production
+        if: ${{ !inputs.dry_run }}
+        run: vercel deploy --prod --yes
+        working-directory: ${{ matrix.app.dir }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Dry-run log
+        if: ${{ inputs.dry_run }}
+        run: echo "DRY RUN — would deploy ${{ matrix.app.name }} to Vercel production"
