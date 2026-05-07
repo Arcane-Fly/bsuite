@@ -464,6 +464,41 @@ describe('exchangeCodeForTokens', () => {
       createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
     ).rejects.toThrow(/nonce mismatch/i)
   })
+
+  // 0.2.3: ID token aud must be the CLIENT_ID, NOT 'authenticated'.
+  // Per Supabase OAuth Flows §6 + OIDC Core 1.0 §3.1.3.7. Regression guard for
+  // the crm.crm7.app/auth/callback failure on 2026-05-07 where verifyIdToken
+  // was passing audience: 'authenticated' and Supabase rejected with
+  // "unexpected 'aud' claim value" once it began enforcing audience strictly.
+  it('verifies id_token with audience=clientId, NOT "authenticated"', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    seedPkceState('s', 'v', 'nonce-x')
+    fetchMock.mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => tokensFixture(),
+      text: async () => '',
+    })
+    mockJwtVerify
+      .mockResolvedValueOnce({ payload: { sub: 'u', client_id: CLIENT_ID, role: 'authenticated' } }) // verifyAccessToken
+      .mockResolvedValueOnce({ payload: { sub: 'u', nonce: 'nonce-x' } }) // verifyIdToken
+
+    await createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's')
+
+    // First call: verifyAccessToken — audience canonical 'authenticated'
+    expect(mockJwtVerify).toHaveBeenNthCalledWith(
+      1,
+      'access-token-xyz',
+      'jwks-sentinel',
+      expect.objectContaining({ audience: 'authenticated' }),
+    )
+    // Second call: verifyIdToken — audience MUST be CLIENT_ID (NOT 'authenticated')
+    expect(mockJwtVerify).toHaveBeenNthCalledWith(
+      2,
+      'id-token-xyz',
+      'jwks-sentinel',
+      expect.objectContaining({ audience: CLIENT_ID }),
+    )
+  })
 })
 
 // ---------------------------------------------------------------------------

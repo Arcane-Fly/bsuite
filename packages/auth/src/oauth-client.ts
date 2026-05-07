@@ -69,10 +69,15 @@ function generateState(): string {
 }
 
 /**
- * Verify an access token against the Business Suite JWKS endpoint.
+ * Verify an OAuth-Server-issued access token against the Business Suite JWKS endpoint.
  *
  * Uses asymmetric key verification (RS256/ES256) — the public key is fetched
  * from the Supabase /.well-known/jwks.json endpoint and cached by jose.
+ *
+ * Per [Supabase OAuth Flows §6 "Access token structure"](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows#access-token-structure)
+ * the access token `aud` is canonically `'authenticated'` — same as a native
+ * Supabase session JWT, with an additional `client_id` claim. Do NOT pass the
+ * OAuth clientId here; that's only for ID tokens (see `verifyIdToken`).
  */
 async function verifyAccessToken(token: string): Promise<VerifiedUser> {
   const { payload } = await jwtVerify(token, getJWKS(), {
@@ -91,15 +96,31 @@ async function verifyAccessToken(token: string): Promise<VerifiedUser> {
 }
 
 /**
- * Verify the id_token nonce claim against the expected value.
- * Protects against id_token replay attacks (OIDC Core §3.1.2.2).
- * Only rejects when the server returns a nonce that does NOT match — if the
- * server omits the nonce claim we skip verification rather than hard-fail.
+ * Verify the OIDC id_token against the JWKS endpoint AND the expected nonce.
+ *
+ * Per [Supabase OAuth Server / OAuth Flows §6](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows)
+ * and [OIDC Core 1.0 §3.1.3.7](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation):
+ *   - Access token `aud` is `'authenticated'` (Supabase canonical).
+ *   - **ID token `aud` is the CLIENT ID** of the requesting OAuth client.
+ *
+ * Using `audience: 'authenticated'` here causes jose to throw
+ * "unexpected 'aud' claim value" the moment Supabase enforces audience
+ * strictly on ID tokens — which it now does (verified 2026-05-07 via the
+ * crm.crm7.app/auth/callback regression). Pass the consumer app's clientId
+ * so the audience check matches the issuer's intent.
+ *
+ * Nonce check (OIDC Core §3.1.2.2): only rejects when the server returns a
+ * nonce that does NOT match — if the server omits the nonce claim we skip
+ * verification rather than hard-fail.
  */
-async function verifyIdToken(idToken: string, expectedNonce: string): Promise<void> {
+async function verifyIdToken(
+  idToken: string,
+  expectedNonce: string,
+  clientId: string
+): Promise<void> {
   const { payload } = await jwtVerify(idToken, getJWKS(), {
     issuer: `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1`,
-    audience: 'authenticated',
+    audience: clientId,
   });
   if (payload.nonce !== undefined && payload.nonce !== expectedNonce) {
     throw new Error('id_token nonce mismatch — possible replay attack');
@@ -368,9 +389,11 @@ export function createOAuthClient(clientId: string): OAuthClient {
     const tokens: BusinessSuiteTokens = await response.json();
     const user = await verifyAccessToken(tokens.access_token);
 
-    // Verify id_token nonce to prevent replay attacks (OIDC Core §3.1.2.2)
+    // Verify id_token signature, audience, and nonce (OIDC Core §3.1.3.7 + §3.1.2.2).
+    // Audience MUST be the OAuth clientId per Supabase OAuth Flows §6 (NOT
+    // 'authenticated'). See verifyIdToken() docs for full rationale.
     if (tokens.id_token && storedNonce) {
-      await verifyIdToken(tokens.id_token, storedNonce);
+      await verifyIdToken(tokens.id_token, storedNonce, clientId);
     }
 
     return { tokens, user };
