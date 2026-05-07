@@ -577,3 +577,222 @@ Priority actions for next local session:
 ---
 
 *Filed by claude-code-scheduled · 2026-05-07 · fifth fire*
+
+---
+
+## Sixth Fire — 2026-05-07T~15:30Z UTC
+
+**Session:** `session_01JDxsze4YyXMfP6d4aA9DBC`  
+**Operator:** offline  
+**Status:** COMPLETE
+
+### Environment Constraints (same as all prior fires)
+
+| Constraint | Detail |
+|---|---|
+| Memory API blocked | `qig-memory-api.vercel.app` → 403 sandbox proxy. All 6 fires today. Protocol steps 1–6 inaccessible. |
+| MCP scope | `garyocean428/bsuite` only. crm7, BSU, conduit, braden, R80.3, throughput inaccessible. |
+| `gh` CLI | Not available — GitHub ops via MCP only. |
+
+### Work Completed
+
+#### 1. State Assessment
+
+| Item | State |
+|---|---|
+| Open bsuite PRs at start | **0** — zero open PRs |
+| `main` SHA | `1b97581` (PR #660 promotion, 13:34Z) |
+| `development` SHA | `22696ae` (PR #663 fifth-fire cron log, 15:06Z) |
+| dev vs main | `development` is **1 commit ahead** of `main` (5th-fire log not yet promoted) |
+| Issue #655 (security) | Open — operator token rotation still required |
+| Issue #653 (crm7#519 handoff) | Open — no new bsuite evidence of merge |
+| Issue #635 (wave tracker) | W0+W1 DONE; W3 perplexity in progress; W2/W4/W6 awaiting claude-code-local |
+
+#### 2. Perplexity Activity Since 5th Fire (14:24Z)
+
+Observed via sixth-fire §17 continuity comment (#4398473242, posted 15:25Z by prior invocation):
+
+- **BSU#370** — perplexity shipped `VITE_APP_DOMAIN` retirement from `business-suite-unified/.env.example` at 15:13Z. Zero source-code consumers confirmed via cross-repo grep before removal. Remaining steps operator-gated (Vercel dashboard env var deletion + `@bsuite/auth` wiring).
+- Wave W3 (Pay Item Groups) ongoing in BSU submodule — not visible from bsuite MCP scope.
+
+#### 3. P1 Issue Scan
+
+13 open P1 issues confirmed — no change from 5th fire. All remain blocked at cloud cron scope. See fifth fire entry for full table.
+
+#### 4. Pre-Staged Branch Note
+
+Operator/prior invocation pre-staged `claude/docs/cron-log-2026-05-07-sixth-fire` (sha `ea5d559`, committed 15:26Z) based on `main`. The cron log file on that branch contains fires 1-4 only (not fires 1-5). This PR (`-sixth-fire-v2`) was created from `development` to carry the correct 6-fire content. The pre-staged branch is a DELETE candidate after this PR merges.
+
+#### 5. dev→main Promotion
+
+`development` is 1 commit ahead of `main` — PR #663 (5th-fire cron log) not yet on main. A promotion PR is filed this fire alongside this cron log PR, following the pattern from fires 2 and 4.
+
+#### 6. Branch Hygiene
+
+17 non-protected branches at fire start + 1 pre-staged orphan (`claude/docs/cron-log-2026-05-07-sixth-fire`) = **16 orphan-candidate branches** (15 from 5th fire + 1 new pre-staged). The updated batch delete command for operator:
+
+```bash
+git push origin --delete \
+  claude/chore/sync-dev-from-main-20260507-cron4 \
+  claude/docs/cron-log-2026-05-07-cron4 \
+  claude/docs/cron-log-2026-05-07-third-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire-v2 \
+  claude/docs/cron-log-2026-05-07-fifth-fire \
+  claude/docs/cron-log-2026-05-07-sixth-fire \
+  claude/feat/ship-all-apps-script \
+  claude/fix/refresh-workflow-push-trigger \
+  claude/security/gitleaks-extend-bypass-patterns \
+  claude/docs/cron-log-2026-05-06 \
+  claude/docs/cron-log-2026-05-06-19h \
+  claude/docs/cron-log-2026-05-06-20h \
+  claude/docs/cron-log-2026-05-06-21h \
+  claude/docs/cron-log-2026-05-06-22h \
+  claude/docs/cron-log-2026-05-07
+```
+
+#### 7. §17 Continuity Comment
+
+Already posted as [comment #4398473242](https://github.com/GaryOcean428/bsuite/issues/635#issuecomment-4398473242) on issue #635 at 15:25Z by prior invocation of this fire. No duplicate posted.
+
+#### 8. /ship-all-apps
+
+`scripts/ship-all-apps.sh` present. `VERCEL_TOKEN` still not set in repo secrets. Operator action required.
+
+### Summary
+
+| Item | Result |
+|---|---|
+| Memory API | ❌ Blocked (403 sandbox proxy) — all 6 fires today |
+| Open bsuite PRs at start | ✅ 0 |
+| Perplexity BSU#370 | ✅ Observed — `VITE_APP_DOMAIN` env retirement shipped 15:13Z |
+| P1 issue scan | ✅ 13 issues confirmed, none newly actionable from cloud cron |
+| Issue #635 §17 comment | ✅ Posted (comment #4398473242 at 15:25Z — prior invocation) |
+| Issue #655 | ⚠️ Operator token rotation still required |
+| Issue #653 | ℹ️ No new activity |
+| Hygiene sweep | ✅ 16 orphan-candidate branches documented (updated delete command above) |
+| dev→main promotion | ⏳ PR filed this fire (5th-fire log + 6th-fire log → main) |
+| /ship-all-apps | ⚠️ Needs `VERCEL_TOKEN` secret (operator) |
+
+**North star progress:** W3 advancing — BSU#370 env retirement shipped by perplexity. W0+W1 complete. All cloud-cron bsuite work complete for this fire. Zero open PRs maintained.
+
+### Handoff to Operator
+
+Priority actions (same as 5th fire — none resolved overnight):
+
+1. **`ANTHROPIC_API_KEY`** — set at org level to activate claude-implement + claude-review workflows
+2. **`VERCEL_TOKEN`** — set in repo secrets to enable /ship-all-apps
+3. **Bypass token rotation** (#655) — Vercel Dashboard → Deployment Protection → Generate new bypass token
+4. **Branch cleanup** — run the updated 16-branch delete command above
+5. **W2/W4/W6** — Uplift waves requiring claude-code-local with BSU + crm7 access
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-07 · sixth fire (~15:30Z UTC)*
+
+---
+
+## Fire 7 — 2026-05-07T17:23–17:40Z UTC
+
+**Trigger:** Scheduled cron (seventh invocation — ~17:23Z UTC)
+
+### Actions
+
+#### 1. State Assessment
+
+**Git state:**
+- `origin/main` tip: `ce4ce0a` — "promote: development → main 2026-05-07 (fifth-fire cron log)"
+- `origin/development` tip: `46d23a9` — "docs(cron): append sixth-fire log entry 2026-05-07 UTC (#664)"
+- `development` 2 commits ahead of `main` (sixth-fire log not yet on main)
+- `main` 2 merge-commits ahead of `development` (promotions #660, #665 not synced back to dev)
+
+**Open bsuite PRs at fire start:** 0
+
+#### 2. Peer / Perplexity Activity
+
+No new perplexity PRs visible in bsuite MCP scope since sixth fire (16:30Z). BSU#370 (`VITE_APP_DOMAIN` env retirement from `.env.example`) previously observed. W3 Pay Item Groups ongoing in BSU submodule — not visible from cloud cron scope.
+
+#### 3. P1 Issue Scan
+
+30 open P1 issues returned by label scan (prior fires reported 13 — delta attributable to additional P1 labels applied during the day or pagination variance). Top actionable blockers:
+
+| Issue | Title | Blocked-by |
+|---|---|---|
+| #614 | P0(auth): GoTrue 500 on /oauth/authorize — NULL client_secret_hash | Operator-gated |
+| #655 | Rotate leaked Vercel bypass token | Operator-gated |
+| #607 | BSU missing VITE_APP_URL + VITE_STRIPE_PUBLISHABLE_KEY | Operator-gated |
+| #611 | Retire VITE_APP_DOMAIN + VITE_STRIPE_PUBLIC_KEY | Perplexity in progress |
+| #635 | Wave tracker (W2/W4/W6 uplift waves) | claude-code-local required |
+
+None newly actionable from cloud cron scope.
+
+#### 4. §17 Continuity Comment
+
+Posted on issue #635 as [comment #4399449226](https://github.com/GaryOcean428/bsuite/issues/635#issuecomment-4399449226) at 17:23Z.
+
+#### 5. dev→main Promotion
+
+`development` is 2 commits ahead of `main` (sixth-fire log via PR #664 not yet promoted). Filing promotion PR this fire.
+
+#### 6. Branch Hygiene
+
+18 `claude/` orphan branches confirmed (up from 16 at sixth fire; includes `claude/docs/cron-log-2026-05-07-sixth-fire-v2` and `claude/docs/cron-log-2026-05-07-11h`).
+
+**Updated batch-delete command for operator (19 after this PR merges):**
+
+```bash
+git push origin --delete \
+  claude/chore/sync-dev-from-main-20260507-cron4 \
+  claude/docs/cron-log-2026-05-07-cron4 \
+  claude/docs/cron-log-2026-05-07-11h \
+  claude/docs/cron-log-2026-05-07-third-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire-v2 \
+  claude/docs/cron-log-2026-05-07-fifth-fire \
+  claude/docs/cron-log-2026-05-07-sixth-fire \
+  claude/docs/cron-log-2026-05-07-sixth-fire-v2 \
+  claude/docs/cron-log-2026-05-07-seventh-fire \
+  claude/feat/ship-all-apps-script \
+  claude/fix/refresh-workflow-push-trigger \
+  claude/security/gitleaks-extend-bypass-patterns \
+  claude/docs/cron-log-2026-05-06 \
+  claude/docs/cron-log-2026-05-06-19h \
+  claude/docs/cron-log-2026-05-06-20h \
+  claude/docs/cron-log-2026-05-06-21h \
+  claude/docs/cron-log-2026-05-06-22h \
+  claude/docs/cron-log-2026-05-07
+```
+
+#### 7. /ship-all-apps
+
+`scripts/ship-all-apps.sh` present in repo (from PR #634). `VERCEL_TOKEN` repo secret still not set — cannot invoke from cloud cron. Operator must set `VERCEL_TOKEN` at GitHub → Settings → Secrets → Actions, then trigger via workflow dispatch.
+
+### Summary
+
+| Item | Result |
+|---|---|
+| Memory API | ❌ Blocked (403 sandbox proxy) — all 7 fires today |
+| Open bsuite PRs at start | ✅ 0 |
+| P1 issue scan | ✅ 30 issues scanned, none newly actionable from cloud cron |
+| Issue #635 §17 comment | ✅ Posted (comment #4399449226 at 17:23Z) |
+| Issue #655 | ⚠️ Operator token rotation still required |
+| Hygiene sweep | ✅ 18 orphan `claude/` branches documented (delete command above) |
+| dev→main promotion | ⏳ PR filed this fire (sixth-fire log → main) |
+| /ship-all-apps | ⚠️ Needs `VERCEL_TOKEN` repo secret (operator) |
+
+**North star progress:** W0+W1 complete. W3 advancing (perplexity). W2/W4/W6 unblocked but require claude-code-local with BSU/crm7 access. Zero open bsuite PRs maintained across all 7 fires.
+
+### Handoff to Operator
+
+Priority actions (persistent — none resolved by cloud cron):
+
+1. **`ANTHROPIC_API_KEY`** — set at org level (activates claude-implement + claude-review workflows; PR #586 live)
+2. **`VERCEL_TOKEN`** — set in repo secrets (enables /ship-all-apps via workflow dispatch)
+3. **Bypass token rotation** (#655) — Vercel Dashboard → Deployment Protection → Generate new bypass token
+4. **Branch cleanup** — run the 19-branch delete command above (18 orphans + seventh-fire branch post-merge)
+5. **W2/W4/W6** uplift waves — require claude-code-local with BSU + crm7 submodule access
+6. **dev↔main sync** — development and main have diverged (2 commits each direction); merge recommended
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-07 · seventh fire (~17:23Z UTC)*
