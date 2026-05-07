@@ -2,6 +2,27 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.2.3 — 2026-05-07
+
+### Fixed — ID token `aud` claim verification (post-Stage-3 regression)
+
+**Root cause:** `verifyIdToken()` was passing `audience: 'authenticated'` to `jose.jwtVerify`, but per [Supabase OAuth Flows §6 "Access token structure"](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows#access-token-structure) and [OIDC Core 1.0 §3.1.3.7](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation), the **ID token `aud` is the OAuth client_id**, not `'authenticated'`. The access token's `aud` IS `'authenticated'` — these two tokens have different audience semantics.
+
+When Supabase began enforcing the `aud` claim strictly on ID tokens, every successful `/oauth/token` exchange surfaced "Authentication Error / unexpected 'aud' claim value" on the consumer app's `/auth/callback` page. Symptoms in production (verified 2026-05-07T04:51Z on `crm.crm7.app/auth/callback`):
+- `/oauth/token` returns 200 with valid tokens (server-side OK)
+- Client `verifyIdToken()` throws on the `aud` claim check
+- Callback bails before `setSession()` runs
+- Consumer Supabase REST/RPC queries fall back to anon → 401 on `/rest/v1/rpc/branding_json_for_tenant` and `/rest/v1/platform_branding`
+
+**Fix:** `verifyIdToken(idToken, expectedNonce, clientId)` now takes `clientId` as a third parameter and passes `audience: clientId` to `jwtVerify`. The access token verifier (`verifyAccessToken`) keeps `audience: 'authenticated'` — that's still canonical per Supabase docs.
+
+**Test added:** `verifies id_token with audience=clientId, NOT "authenticated"` — regression guard checking the exact arguments passed to `jose.jwtVerify` for both verifier calls.
+
+**Source citations:**
+- [Supabase OAuth Server / OAuth Flows §6](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows#access-token-structure)
+- [OIDC Core 1.0 §3.1.3.7 ID Token Validation](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation)
+- Internal: `supabase-auth-comprehensive` skill v2.1.0 §10 "ID token vs Access token — `aud` claim differs"
+
 ## 0.2.2 — 2026-05-08
 
 ### Fixed — Stage-3 PKCE state storage: sessionStorage → localStorage
