@@ -1814,3 +1814,168 @@ Priority actions (persistent across fires):
 ---
 
 *Filed by claude-code-scheduled · 2026-05-08 · fifteenth fire*
+
+---
+
+## Fire 16 — 2026-05-08T04:20Z UTC
+
+**Session:** `session_019RxFYxFTSCJgfZFWVV3M3s`
+**Operator:** offline (since 2026-05-06T13:05Z)
+**Status:** COMPLETE
+
+### Environment Constraints (persistent — all 16 fires)
+
+| Constraint | Detail |
+|---|---|
+| Memory API blocked | `qig-memory-api.vercel.app` → "Host not in allowlist" from Anthropic sandbox proxy. All memory steps (protocol read, presence, inbox, workqueue) inaccessible. |
+| `gh` CLI unavailable | All GitHub ops via MCP (scope: `garyocean428/bsuite` only). |
+| Submodule repos | crm7/BSU/conduit/braden/R80.3/throughput code inaccessible from cloud cron. |
+
+### Step 1 — Protocol Read
+
+❌ BLOCKED: `qig-memory-api.vercel.app` → "Host not in allowlist". 16th consecutive fire with this failure. Proceeding from CLAUDE.md + handoff context.
+
+### Step 2–4 — Presence / Inbox / Ack
+
+❌ BLOCKED: Memory API inaccessible. No presence write, no inbox drain, no ack.
+
+### Step 5 — Canonical Workqueue
+
+Operating from handoff snapshot (operator 2026-05-06T13:08Z) + fire 15 state. Workqueue v17 assumed canonical.
+
+### Step 6 — Peer Presence Check
+
+Scanned bsuite open PRs via MCP at fire start: **1 open PR** — #702 (fire-15 log, docs-only, authored by claude-code-scheduled). No perplexity-authored PRs visible in `garyocean428/bsuite`.
+
+### Step 7 — Cross-validate PR #702 (fire-15 cron log)
+
+**§20 4-checkbox red-team:**
+
+| Check | Result | Detail |
+|---|---|---|
+| ✅ Red-team | PASS | Docs-only append to cron log. Content is accurate fire-15 findings. No security issues, no orphan refs, no structural problems. |
+| ✅ Smoke | PASS | build-and-test ✅, DOM Layout Invariants ✅, gitleaks ✅ (×2), review skipped (docs-only expected). |
+| ✅ No-orphan | PASS | Docs only — no new dangling references introduced. |
+| ✅ No-dead-code | PASS | Append-only; no deletions. |
+
+**§20 verdict:** MERGE AUTHORIZED. Marked ready for review, merged with `--merge` method.
+**Merge SHA:** `932b79f54d81af7cac4e0132968ba67028af177c`
+
+### Step 8 — Red-team Peer's Work
+
+No perplexity-authored PRs open in bsuite scope. Step N/A this fire.
+
+### Step 9 — Open Issue Scan (bsuite)
+
+50 open issues. New since fire 15:
+
+| Issue | Labels | Title |
+|---|---|---|
+| #705 | agent-handoff | Handoff: merge BSU#385 (EDGE — assign-tester-license duplicate checkRateLimit) |
+
+BSU#385 is a single-file Deno edge-function fix (duplicate `checkRateLimit` call — effective rate was 15 req/min instead of 30). Requires `GaryOcean428/business-suite-unified` MCP access — not in scope. Operator action needed.
+
+**Operator dashboard progress noted:** Two operator-authored commits landed on `development` since fire 15:
+- `7d82186` — operator-blockers corrected: 3 → 2 remaining
+- `2c421a3` — 4 stale operator-blockers resolved: 7 → 3
+
+This is meaningful operator progress between fires. Remaining blockers: 2.
+
+**Persistent P0/P1 items (unchanged):**
+
+| Issue | Priority | Status |
+|---|---|---|
+| #655 | P0 | Rotate leaked Vercel bypass token — Vercel Dashboard operator action |
+| #635 | P1 | BSuite Unified Design Language uplift (9-wave) — claude-code-local |
+| #609 | P1 | Three-tier branding permission model — BSU submodule |
+| #607 | P1 | BSU missing VITE_APP_URL + VITE_STRIPE_PUBLISHABLE_KEY — BSU submodule |
+| #570 | P1 | MYOB + Astute payroll adapter — CRM7 submodule |
+| #557 | P1 | Register Jodie as GitHub App — needs-team |
+| #554, #548, #547, #544 | P1 | Page-builder canvas features — BSU submodule |
+| #551, #550, #542 | P1 | Jodie AI classifier / AI gateway routing — BSU/CRM7 |
+
+**BSU handoff issues still open (BSU repo out of MCP scope):**
+
+| Issue | PR | Status |
+|---|---|---|
+| #705 | BSU#385 | EDGE — duplicate checkRateLimit (new this fire) |
+| #699 | BSU#380 | DB — tenant_branding_insert TO authenticated |
+| #695 | BSU#378 | A11Y — CommandDialog parity with crm7 |
+| #684 | BSU#376 | W4 Permissions Editor Pass 1 |
+| #680 | BSU#375 | W6 — useBranding stale-CSS-var cleanup |
+
+### Step 10 — /ship-all-apps
+
+`scripts/ship-all-apps.sh` confirmed present. `VERCEL_TOKEN` repo secret still unset — confirmed across all 16 fires. Cloud cron cannot invoke without it. Gap persists.
+
+### Step 11 — Hygiene Sweep
+
+Not a 06:00 UTC fire (actual time: 04:20 UTC). Hygiene sweep skipped per protocol.
+
+**Branch count at fire end:** 13 remote branches.
+
+Orphan branches persisting (11 total — no PRs, operator action needed):
+
+| Branch | Age | Status |
+|---|---|---|
+| `claude/docs/cron-log-2026-05-07` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-11h` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-eleventh-fire` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-fifth-fire` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-fourth-fire` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-fourth-fire-v2` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-seventh-fire` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-sixth-fire` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-third-fire` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-07-twelfth-fire` | 1d | Orphan — no PR |
+| `claude/docs/cron-log-2026-05-08-fifteenth-fire` | <1d | Merged — stale, safe to delete |
+
+Operator delete command (all 11):
+
+```bash
+git push origin --delete \
+  claude/docs/cron-log-2026-05-07 \
+  claude/docs/cron-log-2026-05-07-11h \
+  claude/docs/cron-log-2026-05-07-eleventh-fire \
+  claude/docs/cron-log-2026-05-07-fifth-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire-v2 \
+  claude/docs/cron-log-2026-05-07-seventh-fire \
+  claude/docs/cron-log-2026-05-07-sixth-fire \
+  claude/docs/cron-log-2026-05-07-third-fire \
+  claude/docs/cron-log-2026-05-07-twelfth-fire \
+  claude/docs/cron-log-2026-05-08-fifteenth-fire
+```
+
+### Summary
+
+| Item | Result |
+|---|---|
+| Memory API | ❌ Blocked (16 fires — persistent infra gap) |
+| Open PRs at start | 1 (#702 fire-15 log) |
+| PR #702 §20 merge | ✅ Merged (SHA `932b79f`) |
+| PR cross-validation | ✅ All 4 §20 checkboxes green |
+| New handoff issues | ⚠️ #705 (BSU#385 EDGE) — operator + BSU submodule |
+| Operator dashboard progress | ✅ Blockers reduced 7→3→2 (operator commits) |
+| Issue #655 (P0) | ⚠️ Operator bypass-token rotation still required |
+| Hygiene sweep | ⏭ Skipped (not 06:00 UTC fire) |
+| Orphan branches | ⚠️ 11 total (10 from 05-07 + 1 merged fifteenth-fire) |
+| /ship-all-apps | ⚠️ `VERCEL_TOKEN` unset — all 16 fires confirm gap |
+| Development ahead of main | ✅ 4 commits (fire-15 log + 2 dashboard + fifteenth-fire raw) |
+
+### Handoff to Operator
+
+Priority actions (persistent):
+
+1. **Bypass token rotation (#655)** — Vercel Dashboard → `business-suite` project → Settings → Deployment Protection → Generate new bypass token; re-provision Autonoma BSU Versions; comment on #655 to close.
+2. **Merge BSU handoff PRs** in `GaryOcean428/business-suite-unified`: BSU#385 (#705), BSU#380 (#699), BSU#378 (#695), BSU#376 (#684), BSU#375 (#680).
+3. **`VERCEL_TOKEN`** — GitHub → Settings → Secrets → Actions → New secret (activates `ship-all-apps` workflow).
+4. **`ANTHROPIC_API_KEY`** — org-level secret (activates `claude-implement` + `claude-review` workflows).
+5. **Branch cleanup** — run the 11-branch delete command above.
+6. **W2 uplift wave** — requires claude-code-local with CRM7 + BSU submodule access.
+7. **Memory API allowlist** — add Anthropic cloud cron IPs to `qig-memory-api.vercel.app` (or migrate to GitHub-native store).
+8. **Publish `@bsuite/auth@0.2.1` + `@bsuite/dry-lint@0.4.0`** — operator-blocked publish gate; 7 P1 gaps depend on it.
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-08 · sixteenth fire*
