@@ -40,6 +40,34 @@ git submodule update --remote --merge
 - **Supabase Project**: `tuybltdrdefjblnplpqo`
 - **Package Manager**: pnpm (per-submodule)
 
+## Testing
+
+Each submodule uses Vitest for unit + integration tests. Run the suite from inside the submodule directory:
+
+```bash
+# All tests in the current submodule
+pnpm exec vitest run
+
+# Single file
+pnpm exec vitest run src/lib/__tests__/foo.test.ts
+
+# Pattern match (e.g. all auth tests)
+pnpm exec vitest run --testNamePattern auth
+
+# Watch mode for active development
+pnpm exec vitest
+```
+
+### IDE sidebar caveat (tracked in [bsuite#606](https://github.com/GaryOcean428/bsuite/issues/606))
+
+The Windsurf-Next "Vitest Explorer" VS Code extension (v1.50.4) is currently **incompatible with Vite 6** — it bundles `@vitejs/plugin-react@6.0.1` which imports `vite/internal` (a private subpath not exposed by Vite 6.4.2's `exports` map). Symptom:
+
+```
+Error [ERR_PACKAGE_PATH_NOT_EXPORTED]: Package subpath './internal' is not defined by "exports" in vite/package.json
+```
+
+This is **not a BSuite bug** — the extension's bundled dependency is incompatible with our Vite version. **CLI vitest works perfectly**; use the commands above. The extension issue is tracked for monitoring; once Vitest Explorer ships a release with `@vitejs/plugin-react` 5.x or 6.0.2+, the IDE sidebar will work again.
+
 ## CI/CD
 
 ### Supabase Migrations (`.github/workflows/supabase-migrate.yml`)
