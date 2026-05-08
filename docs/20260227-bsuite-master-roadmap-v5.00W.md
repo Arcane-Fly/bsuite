@@ -1,10 +1,10 @@
 # BSuite Master Roadmap
 
-**Version:** 5.04W
+**Version:** 5.05W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-06 (plans audit — see "2026-05-06 Plans Audit" section)
+**Last Updated:** 2026-05-08 (Recently Completed section refresh — adds doctrine, dashboard, uplift-wave, parity-spec, and Autonoma landmarks shipped 2026-04-15 → 2026-05-08; bsuite#725)
 **Status:** Working
-**Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
+**Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
 > **2026-05-01 ratification note:** Phase 0 is complete. The single execution queue for all remaining work is [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md). This roadmap remains the long-horizon planning reference; the merged backlog is the phase-ordered execution queue with atomic-replace governance per ADRs 0001–0006.
 
@@ -458,6 +458,64 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Unified settings management
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
+
+---
+
+## Recently Completed (as of 2026-05-08 — overnight ship-all-apps + claude-loop cycles)
+
+> ~30 days of two-agent (claude-loop + perplexity-computer + ship-all-apps merge cycle) work since the 2026-04-14 batch. This section captures verifiable doctrine, governance, dashboard, uplift-wave, and parity-spec landmarks. Per-rotation feature/fix work is tracked in the [closed claude-loop rotation issues](https://github.com/GaryOcean428/bsuite/issues?q=is%3Aissue+label%3Aclaude-loop+is%3Aclosed) (issues #555–#718, ~50 cycles); the doctrine, dashboard, and uplift-wave sections below are the structural changes.
+
+**Doctrine & governance — Red-Team-UX Doctrine v1.00A**
+
+- ✅ **Red-Team-UX Doctrine v1.00A** ([bsuite PR #643](https://github.com/GaryOcean428/bsuite/pull/643), 2026-05-07) — canonical `docs/20260507-red-team-ux-doctrine-v1.00A.md`. Authoritative for ALL PRs across the 7-repo workspace: §1 research mandate (primary-source citations only, no blogs), §2 6-role red-team table (UX-DX, Security, Performance, Reliability, Quality, Research-Critic), §3 16-item UX-DX checklist, §4 cron integration, §5 enforcement (3 hard rules, no exceptions), §6 reference patterns. PRs missing §2.2/§3.2/§1.2 blocks are auto-labelled `needs-redteam` by ship-all-apps and skipped from merge until blocks are added.
+- ✅ **BSuite Uplift Design Language v1.00A** (`docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md`) — 12 primitives spec (StepperShell, ScopeSelect, TrackChanges, Picker family, CommandPalette, SortableList, PermissionMatrix, LivePreview, FilterBar, DataTable, EmptyState, TechnicalDetails), vocabulary contract (banned developer jargon — `tenant_id`, `RLS`, `FK`, "chips", `MCP`, `migration`, `JWT`, `schema` — only inside `<TechnicalDetails>` primitive), 9-wave rollout map W0–W8, per-surface mappings, AUTH_CANONICAL.md cross-link.
+- ✅ **FF-SELF-VALIDATION-20260507** ([bsuite PR #612](https://github.com/GaryOcean428/bsuite/pull/612), 2026-05-07) — adopted across AGENTS.md / CLAUDE.md / copilot-instructions. Mandates §9.1 output-equivalence loop (refactors), §9.2 visual-equivalence loop (UI), §9.3 self-report uncertainty. Sourced from Kjosbakken, *How to Make Claude Code Validate its own Work*, 2026-05-05. Every PR description must include an `## Evidence` block; every issue/plan must declare validation loop, equivalence target, cross red-team verifier, skills to load.
+- ✅ **FF-DASHBOARD-20260508** (CLAUDE.md §10, 2026-05-08) — Roadmap Dashboard Update Protocol. Live dashboard at <https://garyocean428.github.io/bsuite/dashboard/>; source of truth `docs/dashboard/data/dashboard-data.json` + every `docs/plans/**/*.md` across parent + 6 submodules. Refresh script `python3 docs/dashboard/refresh-data.py`; inline script `bash docs/dashboard/inline-data.sh`. Mandates same-PR dashboard updates (no deferral), evidence_url required for every status change, schema versioning per top-level section.
+- ✅ **ship-all-apps automation** ([bsuite PR #630](https://github.com/GaryOcean428/bsuite/pull/630)) — `scripts/ship-all-apps.sh` + `workflow_dispatch` GitHub Actions trigger. Reads all open PRs across 7 repos, doctrine-gates per §5.1, merges with `--admin` when CI green and doctrine-compliant, verifies Vercel deployments, recovers failed builds via empty-commit redeploy, runs OAuth/RLS/architecture/Supabase-advisor compliance sweeps, promotes development → default branch (serialized: braden → R80.3 → BSU → throughput → conduit → crm7 → bsuite). Cron 6-hourly.
+
+**Uplift Wave program — bsuite#635**
+
+- ✅ **W0 — 12 primitives library** (claude-code-local owner; [BSU#364](https://github.com/GaryOcean428/business-suite-unified/pull/364), sha `9c4e101`) — `src/components/uplift/` ships the canonical primitive set. First consumer: W4 Pass 1 PermissionsEditor.
+- ✅ **W1 — Feature Builder full redesign** (perplexity-computer owner; [BSU#361](https://github.com/GaryOcean428/business-suite-unified/pull/361), merged 2026-05-07T09:48Z).
+- 🔄 **W4 Pass 1 — Permissions Editor** (claude-code-local owner; [BSU#376](https://github.com/GaryOcean428/business-suite-unified/pull/376), `role_capabilities` table applied via Supabase MCP, 47 caps × 9 domains, 4 role presets, awaiting ship-all-apps merge per [bsuite#684](https://github.com/GaryOcean428/bsuite/issues/684)).
+- 🔄 **W3 — Pay Item Groups + 3 sibling settings** (perplexity-computer owner) — in progress.
+- ✅ Replaces the closed-unmerged BSU#346 with the doctrine-compliant W4 design — scoping doc shipped via [bsuite PR #681](https://github.com/GaryOcean428/bsuite/pull/681).
+
+**Roadmap dashboard — live operator-facing surface**
+
+- ✅ **Live dashboard launched** at <https://garyocean428.github.io/bsuite/dashboard/> — surfaces `summary`, `repos` (7-repo status), `plans[]` (auto-generated from every `docs/plans/**/*.md`), `operator_blockers`, `production_state`, `gap_report.categories`, `parity_status`, `feature_360_status`, `visual_feature_builder`, `portal_coverage`, `apprentice_placements_status`, `doc_drift_status`.
+- ✅ **GTO Compliance Catalogue** (commit `b0daa92`) — 50-report coverage matrix, 8 active gaps tracked as crm7#527–#534.
+- ✅ **Operator-blockers cleared 7 → 0** ([bsuite PR #703](https://github.com/GaryOcean428/bsuite/pull/703), [#706](https://github.com/GaryOcean428/bsuite/pull/706), [#708](https://github.com/GaryOcean428/bsuite/pull/708), [#711](https://github.com/GaryOcean428/bsuite/pull/711)) — Xero OAuth verified end-to-end on Braden Group tenant; baseline branch protection applied; stale blockers (1, 2, 3, 5) resolved.
+
+**Codehouse parity specs — research portion of Codehouse parity matrix closure**
+
+- ✅ **Pay Item Groups** (PARITY-569 / [#569](https://github.com/GaryOcean428/bsuite/issues/569)) — 11 Codehouse gaps, domain C
+- ✅ **Timesheet approval** ([#568](https://github.com/GaryOcean428/bsuite/issues/568)) — 4 gaps
+- ✅ **Comms** ([#571](https://github.com/GaryOcean428/bsuite/issues/571)) — 3 gaps
+- ✅ **Admin** ([#578](https://github.com/GaryOcean428/bsuite/issues/578)) — 14 gaps
+- ✅ **Integrations** ([#577](https://github.com/GaryOcean428/bsuite/issues/577)) — crm7 + conduit
+- ✅ **File-export adapters** ([#576](https://github.com/GaryOcean428/bsuite/issues/576)) — 3 gaps
+- ✅ **Reports / Pay periods / Leave / Timesheet entry / Apprentice placement** specs (2026-05-06) — full set in `docs/20260506-*-parity-spec-v1.00W.md`
+
+**Autonoma E2E testing — Vercel integration adopted on all 6 apps**
+
+- ✅ **Canonical Autonoma doc** ([bsuite PR #619](https://github.com/GaryOcean428/bsuite/pull/619)) — CLAUDE.md "Autonoma E2E Testing" section. AI agents navigate deployed apps end-to-end to find bugs.
+- ✅ **Per-app env var distribution** (2026-05-07) — `AUTONOMA_CLIENT_ID` + `AUTONOMA_SECRET_ID` provisioned on Production + Preview environments for all 6 apps via Vercel integration.
+- ✅ **BSU Application + production/preview Versions registered** in Autonoma dashboard (App ID `cmouwgrq209t4013ps6ikkm10`). Other 5 apps pending operator-driven dashboard registration.
+
+**Defensive rotation work shipped (selection — full list in closed claude-loop tracker issues)**
+
+- ✅ **A11Y — CommandDialog parity with crm7** ([BSU#378](https://github.com/GaryOcean428/business-suite-unified/pull/378)) — DialogTitle/DialogDescription wrapped in VisuallyHidden, aria-hidden on decorative Search icon. WCAG 2.1 SC 4.1.2 / Radix v1.1.15 mandatory-title compliance.
+- ✅ **DB — `tenant_branding_insert` RLS to `authenticated`** ([BSU#380](https://github.com/GaryOcean428/business-suite-unified/pull/380)) — closes the one row missed by the bulk `20260413062306_fix_rls_public_to_authenticated_tenant_policies` migration. Migration applied via Supabase MCP on `tuybltdrdefjblnplpqo`; verified `pg_policies.tenant_branding_insert.roles = {authenticated}`.
+- ✅ **EDGE — `assign-tester-license` duplicate `checkRateLimit`** ([BSU#385](https://github.com/GaryOcean428/business-suite-unified/pull/385)) — restored documented 30 req/min/IP cap (was effectively 15 due to duplicate calls). Tracking [bsuite#704](https://github.com/GaryOcean428/bsuite/issues/704).
+- ✅ **TESTS — Deno test infra + `_shared/rate-limiter.ts` regression suite** ([BSU#388](https://github.com/GaryOcean428/business-suite-unified/pull/388)) — first BSU edge-fn Deno test infrastructure. 11 vitest cases pin documented contract (30 req/min/IP, 60s window, IP-extraction priority). New `.github/workflows/edge-fn-tests.yml` runs `deno test` on `supabase/functions/**` PR touches.
+- ✅ **TESTS — `saveRoleCapabilities` + `loadTenantRoles` unit coverage** ([BSU#387](https://github.com/GaryOcean428/business-suite-unified/pull/387)) — 18 vitest specs across 2 new test files. Closes the W4 Pass 1 persistence-layer coverage gap.
+- ✅ **W6 — `useBranding` stale-CSS-var cleanup** ([BSU#375](https://github.com/GaryOcean428/business-suite-unified/pull/375)) — `applyBrandingVars` pairs every `setProperty` with `removeProperty` in the no-value branch; wipes `tenant-branding-custom-css` `<style>` between tenant switches. Tracking [bsuite#680](https://github.com/GaryOcean428/bsuite/issues/680).
+
+**Cron / log discipline**
+
+- ✅ 19 fire-cycle cron logs appended on 2026-05-07/08 (entries `*-fire log` PRs #657–#724) — every ship-all-apps and claude-loop run since 2026-05-07T10:22Z appended to `docs/20260507-cron-log-claude-scheduled-v1.00W.md` per §4 doctrine cron integration.
+- ✅ **`ship-all-apps` § 20 obvious-fix auto-merge** — adopted as the post-CI-green merge path for single-file, sub-doctrine-threshold work; cron logs tagged `[§20 auto-merge]`.
 
 ---
 
