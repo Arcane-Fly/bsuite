@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.06W
+**Version:** 5.07W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-08 (In Progress / Pending audit + RT-10 done — claude-loop ROADMAP rotation, bsuite#731; complements bsuite#725)
+**Last Updated:** 2026-05-08 (BOOT engine shipped-state audit — claude-loop COMPETE rotation; corrects defensive omission named in bsuite#731 §9.3)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -626,7 +626,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ ~~Stripe end-to-end verification~~ — complete (2026-03-19)
 - ⚠️ SP-3: CRM7 Tier 3-4 page wiring — partial: training-plan progress report ([CRM7#575](https://github.com/GaryOcean428/crm7/pull/575)), host-employer monthly pack ([CRM7#571](https://github.com/GaryOcean428/crm7/pull/571)), Fair Work inspector report ([CRM7#574](https://github.com/GaryOcean428/crm7/pull/574)), STP Phase-2 export ([CRM7#573](https://github.com/GaryOcean428/crm7/pull/573)), apprentice-progress reports ([CRM7#570](https://github.com/GaryOcean428/crm7/pull/570)), portable-LSL multi-state exports ([CRM7#569](https://github.com/GaryOcean428/crm7/pull/569)) — all on `crm7@development` post 2026-05-08T08 promote. Reports tier substantially closed; financial / compliance / WHS / comms tiers still in-progress per Copilot autonomy.
 - ⚠️ Cross-app notifications (Supabase Realtime pub/sub) — pending; tracked as P2 #19; deferred behind the active ship-all-apps cycle work; no scoping doc written yet.
-- ⚠️ BOOT compliance engine (C8-tier, competitive differentiator — foundU + Workforce One are the only competitors with any BOOT support, and Workforce One holds 30% GTO market share specifically on BOOT automation differentiation per CLAUDE-LOOP COMPETE notes); pending; tracked as P2 #14 ("Enterprise Agreement + BOAT validation").
+- ✅ BOOT compliance engine (C8-tier, competitive differentiator vs foundU + Workforce One — the latter holds 30% GTO market share specifically on BOOT-automation differentiation) — **substantially shipped** at `@bsuite/charge-calc@0.2.4` (`packages/charge-calc/src/boot/`, 9 modules / 2013 LOC + 9 spec files + 4 fixtures covering pass/marginal/fail/Building Award; FWC F17 export; GTO multi-placement variant; failure-pattern detector; recommendation engine). Persistence shipped at `R80.3/supabase/migrations/20260227120000_boot_assessments.sql`. CRM7 integration at `src/lib/rates/bootGate.ts` + `src/schemas/bootAssessment.ts`. Engine self-identifies as a BOOT engine in its `package.json` description. **Remaining gap is operator-facing UI** (R80.3 scenario authoring + CRM7 result review + F16 form export + FWC packet bundle) — see `docs/20260508-boot-engine-shipped-audit-v1.00W.md` §6 for the prioritised slice list. P2 #14 reframed below.
 - ✅ ~~@bsuite/charge-calc full convergence (3 independent calc engines → 1 shared package)~~ — convergence achieved at the dependency level: both consumers pin `@bsuite/charge-calc: ^0.2.3` per [`crm7/package.json`](https://github.com/GaryOcean428/crm7/blob/development/package.json) (sha `522b594`) and [`R80.3/package.json`](https://github.com/GaryOcean428/R80.3/blob/development/package.json) (sha `3a27510`) at 2026-05-08T08 audit. Package published to npm at `^0.2.3`. Open: legacy parallel-engine removal verification deferred to next FEATURE / EDGE rotation (out-of-scope for ROADMAP audit per single-cycle rule).
 - ⚠️ Xero payroll integration (5 major TODO blocks in CRM7) — partial: OAuth fixes shipped via 2026-05-08T08 promote ([crm7@main #568](https://github.com/GaryOcean428/crm7/pull/568)); `xero-token-exchange`, `xero-invoice-submit`, `ram-token-exchange` edge fns active with dual-layer rate limiting; `xero-node ^15.0.1` consumed in `crm7/package.json`. Remaining: invoice-line-item mapping, payroll-run sync, multi-tenant Xero org switching.
 
@@ -664,7 +664,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 |---|------|---------|--------|--------|
 | 12 | Unified navigation (`@bsuite/nav-core` + shadcn sidebar) | all | 1w | Claude plan `atomic-hopping-ocean` |
 | 13 | `@bsuite/charge-calc` shared package (3 engines → 1) | R80↔CRM7 | 1w | `r80-crm7-shared-calc-engine` plan |
-| 14 | Enterprise Agreement + BOAT validation | CRM7 | 1w | Claude plans `warm-moseying-liskov` + `velvety-giggling-curry` |
+| 14 | ~~Enterprise Agreement + BOOT validation~~ — **engine substantially shipped** at `@bsuite/charge-calc@0.2.4` (was titled "BOAT" — typo corrected to canonical "BOOT" per Fair Work Act 2009). Remaining gap re-scoped to **operator-facing UI surface** (R80.3 scenario authoring + CRM7 result review + F16 form export + FWC packet bundle). | CRM7 + R80.3 | ~2d UI | Claude plans `warm-moseying-liskov` + `velvety-giggling-curry`; shipped-state evidence: [`docs/20260508-boot-engine-shipped-audit-v1.00W.md`](./20260508-boot-engine-shipped-audit-v1.00W.md) |
 | 15 | Bulk operations and remaining admin data tooling | crm7 | 1w | Feature gap §2A-2D |
 | 16 | ~~CRM7 dashboard layout system~~ — free-canvas edit mode, configurable columns 1-24, bounded drag, responsive view-mode reflow, persist layoutCols | crm7 | ✅ Done | 2026-03-16 |
 | 17 | CRM7 sync schema/query mismatch remediation | crm7 | 2d | Active sync/runtime blocker from dashboard QA |
@@ -767,6 +767,11 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-08 v5.07W** — claude-loop COMPETE rotation. BOOT compliance engine shipped-state audit:
+  - `docs/20260508-boot-engine-shipped-audit-v1.00W.md` filed — full inventory of `@bsuite/charge-calc/src/boot/` (9 modules, 2013 LOC), test coverage matrix, R80.3 persistence, CRM7 integration seam, statutory compliance map (s.193/193A/193(7)/190-191 + Closing Loopholes No. 1 + No. 2 Acts), and Workforce One parity gap table.
+  - In Progress / Pending row 629: BOOT entry flipped ⚠️ pending → ✅ substantially shipped; remaining gap re-scoped to operator-facing UI surface only.
+  - P2 #14 (line 667): BOAT → BOOT typo corrected; row reframed from "1w build" to "~2d UI" with engine-shipped evidence link.
+  - Companion: `bsuite#731` v5.06W ROADMAP audit named this as "defensive omission — implementation absence inferred from no PR refs… not exhaustively grep'd"; this rotation grep'd.
 - **2026-05-08 v5.06W** — claude-loop ROADMAP rotation (bsuite#731). In Progress / Pending audit:
   - Item 9 test coverage: refreshed with W4 admin lib coverage status (BSU#387) + open PermissionsEditor page-level test gap (deferred).
   - Dashboard polish: STRUCK — KeyboardSensor / sortableKeyboardCoordinates / aria-label sweep already shipped (26a + AUD-16 rollup); ai_sessions/ai_messages tables already exist (P0 #2 struck); hero signals + bento grid live via WS-D rollout.
