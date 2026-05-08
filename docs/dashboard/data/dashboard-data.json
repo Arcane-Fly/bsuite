@@ -11,7 +11,7 @@
     "rulebook": "Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)",
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
-    "last_extended": "2026-05-08T16:36:36Z",
+    "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "perplexity-loop 4h sweep",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
   },
@@ -161,7 +161,7 @@
     },
     {
       "id": "p-bsuite-3",
-      "title": "R80\u2194CRM7 integration audit",
+      "title": "R80↔CRM7 integration audit",
       "repo": "bsuite",
       "scope": "parent",
       "source": "in-repo",
@@ -209,7 +209,7 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "WS-1 \u2705, WS-2 active",
+      "phase": "WS-1 ✅, WS-2 active",
       "owner": "crm7 + R80.3",
       "next_step": "WS-3..9 OPEN (invoicing, timesheets, reports, AVETMISS, GTO standards, RLS hardening)",
       "severity": "P0",
@@ -217,7 +217,7 @@
     },
     {
       "id": "p-bsuite-7",
-      "title": "Full 7 audit \u2014 page-builder branding relationships",
+      "title": "Full 7 audit — page-builder branding relationships",
       "repo": "bsuite",
       "scope": "parent",
       "source": "in-repo",
@@ -281,7 +281,7 @@
       "status": "open",
       "phase": "stub",
       "owner": "conduit",
-      "next_step": "Adoption stub from parent CONSISTENCY-REPORT \u00a7A.4",
+      "next_step": "Adoption stub from parent CONSISTENCY-REPORT §A.4",
       "severity": "P2",
       "category": "Stack alignment"
     },
@@ -295,7 +295,7 @@
       "status": "open",
       "phase": "stub",
       "owner": "conduit",
-      "next_step": "Adoption stub from parent FEATURE-SURFACE \u00a7F-7",
+      "next_step": "Adoption stub from parent FEATURE-SURFACE §F-7",
       "severity": "P2",
       "category": "Stack alignment"
     },
@@ -309,7 +309,7 @@
       "status": "open",
       "phase": "stub",
       "owner": "BSU",
-      "next_step": "Adoption stub from parent CONSISTENCY-REPORT \u00a7C CON-8",
+      "next_step": "Adoption stub from parent CONSISTENCY-REPORT §C CON-8",
       "severity": "P2",
       "category": "Stack alignment"
     },
@@ -323,7 +323,7 @@
       "status": "open",
       "phase": "stub",
       "owner": "BSU",
-      "next_step": "Adoption stub from parent FEATURE-SURFACE \u00a7F-7",
+      "next_step": "Adoption stub from parent FEATURE-SURFACE §F-7",
       "severity": "P2",
       "category": "Stack alignment"
     },
@@ -337,7 +337,7 @@
       "status": "operator-blocked",
       "phase": "external action required",
       "owner": "operator",
-      "next_step": "OPERATOR-BLOCKED \u2014 issue #283 label external-blocked (Azure xms_edov + Supabase wildcard)",
+      "next_step": "OPERATOR-BLOCKED — issue #283 label external-blocked (Azure xms_edov + Supabase wildcard)",
       "severity": "P1",
       "category": "Auth",
       "issue": "GaryOcean428/business-suite-unified#283"
@@ -352,7 +352,7 @@
       "status": "open",
       "phase": "scoped",
       "owner": "BSU",
-      "next_step": "OPEN per OUTSTANDING-PLANS \u00a72",
+      "next_step": "OPEN per OUTSTANDING-PLANS §2",
       "severity": "P2",
       "category": "Admin"
     },
@@ -400,14 +400,14 @@
     },
     {
       "id": "ext-1",
-      "title": "5-wave stabilisation (W1\u2013W5)",
+      "title": "5-wave stabilisation (W1–W5)",
       "repo": "bsuite",
       "scope": "external",
       "source": "claude_code/plans/starting-at-parent-docs-soft-shell.md",
       "status": "partial",
-      "phase": "W1\u2013W4 \u2705, W5 open",
+      "phase": "W1–W4 ✅, W5 open",
       "owner": "cross-app",
-      "next_step": "W5 systemic guards remain open; W1\u2013W4 shipped per bsuite_session_20260502_w1_to_w4_complete",
+      "next_step": "W5 systemic guards remain open; W1–W4 shipped per bsuite_session_20260502_w1_to_w4_complete",
       "severity": "P1",
       "category": "Stabilisation"
     },
@@ -433,7 +433,7 @@
       "status": "partial",
       "phase": "Branding/Stripe/DeveloperToolbar shipped",
       "owner": "crm7",
-      "next_step": "CA-8 hex\u2192token sweep + RT-10 day-picker v9 + CC-3 broad refresh remaining pages still in-flight",
+      "next_step": "CA-8 hex→token sweep + RT-10 day-picker v9 + CC-3 broad refresh remaining pages still in-flight",
       "severity": "P2",
       "category": "UI/UX"
     },
@@ -473,7 +473,7 @@
       "status": "deferred",
       "phase": "deferred",
       "owner": "TBD (deferred handoff)",
-      "next_step": "Wait for HANDOFF-3d (drop_tenant_page_layouts migration) to land first, then resume P1-15 work. Already covered indirectly by BSU#301 (P1-15) \u2014 flagged here for traceability.",
+      "next_step": "Wait for HANDOFF-3d (drop_tenant_page_layouts migration) to land first, then resume P1-15 work. Already covered indirectly by BSU#301 (P1-15) — flagged here for traceability.",
       "severity": "P1",
       "category": "Deferred"
     },
@@ -487,14 +487,14 @@
       "status": "open",
       "phase": "process-gap",
       "owner": "Cascade / Claude Code",
-      "next_step": "Add guard rule to AGENTS.md prohibiting `supabase db push` from local checkouts against tuybltdrdefjblnplpqo. Out-of-band migration `20260428085641_repair_tenant_page_layouts_contract` was applied this way, creating a git\u2194production history gap (\u00a7 2.10 doctrine smell).",
+      "next_step": "Add guard rule to AGENTS.md prohibiting `supabase db push` from local checkouts against tuybltdrdefjblnplpqo. Out-of-band migration `20260428085641_repair_tenant_page_layouts_contract` was applied this way, creating a git↔production history gap (§ 2.10 doctrine smell).",
       "severity": "P2",
       "category": "Process Gap"
     },
     {
       "id": "ut-003",
       "title": "@bsuite/dry-lint version sweep: bump 6 consumers from ^0.2.0 to ^0.3.0 (TS-24)",
-      "repo": "bsuite (parent) \u2014 coordinates 6 consumers",
+      "repo": "bsuite (parent) — coordinates 6 consumers",
       "scope": "docs-root",
       "source": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
       "path": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
@@ -515,7 +515,7 @@
       "status": "open",
       "phase": "gap",
       "owner": "Shared packages lead",
-      "next_step": "Create `scripts/verify-tech-stack-matrix.sh` that diffs each `package.json` against the \u00a72 baseline and flags drift. Per-app rows in \u00a72.1-2.5 are inherited from 2026-04-23 audit and need re-verification.",
+      "next_step": "Create `scripts/verify-tech-stack-matrix.sh` that diffs each `package.json` against the §2 baseline and flags drift. Per-app rows in §2.1-2.5 are inherited from 2026-04-23 audit and need re-verification.",
       "severity": "P2",
       "category": "Gap"
     },
@@ -535,7 +535,7 @@
     },
     {
       "id": "ut-006",
-      "title": "Remove --provenance from 3 publish workflows (charge-calc, eslint-config, tsconfig) \u2014 high probability latent risk L1",
+      "title": "Remove --provenance from 3 publish workflows (charge-calc, eslint-config, tsconfig) — high probability latent risk L1",
       "repo": "bsuite (parent)",
       "scope": "docs-root",
       "source": "bsuite/docs/20260504-post-mortem-shared-packages-publish-v1.00W.md",
@@ -585,7 +585,7 @@
       "status": "open",
       "phase": "rca-followup",
       "owner": "Platform lead",
-      "next_step": "Optional one-layer-earlier catch \u2014 adopt husky + lint-staged in parent. Pre-commit runs `pnpm install --frozen-lockfile` if `package.json`/`pnpm-workspace.yaml` staged. Cost: setup friction across 6 submodules. Marked OPTIONAL in post-mortem.",
+      "next_step": "Optional one-layer-earlier catch — adopt husky + lint-staged in parent. Pre-commit runs `pnpm install --frozen-lockfile` if `package.json`/`pnpm-workspace.yaml` staged. Cost: setup friction across 6 submodules. Marked OPTIONAL in post-mortem.",
       "severity": "P3",
       "category": "Rca Followup"
     },
@@ -612,7 +612,7 @@
       "path": "bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md + bsuite/docs/CONSISTENCY-REPORT.md",
       "status": "operator-blocked",
       "phase": "operator-action",
-      "owner": "Operator (Braden) \u2014 needs Supabase MCP / supabase login credentials",
+      "owner": "Operator (Braden) — needs Supabase MCP / supabase login credentials",
       "next_step": "Apply `crm7/supabase/migrations/20260506000100_bootstrap_profile_for_existing_users.sql` to project `tuybltdrdefjblnplpqo`. Tracked at bsuite#507 (NOT in the #100-#503 scan because filed after ship handoff).",
       "severity": "P1",
       "category": "Operator Action"
@@ -627,13 +627,13 @@
       "status": "open",
       "phase": "rca-followup",
       "owner": "QA lead",
-      "next_step": "Re-enable `crm7/tests/e2e/cross-app-auth.spec.ts` once Track B fully ships and Playwright browser binaries are available in the CI runner. Currently asserts no 401/406 on protected fetches after BSU \u2192 crm7 navigation; will fail with redirect to `/auth/login` until Track B is across all 5 consumer apps.",
+      "next_step": "Re-enable `crm7/tests/e2e/cross-app-auth.spec.ts` once Track B fully ships and Playwright browser binaries are available in the CI runner. Currently asserts no 401/406 on protected fetches after BSU → crm7 navigation; will fail with redirect to `/auth/login` until Track B is across all 5 consumer apps.",
       "severity": "P2",
       "category": "Rca Followup"
     },
     {
       "id": "ut-013",
-      "title": "Apply OAuth-token \u2192 Supabase session bridge to remaining BS OAuth client apps",
+      "title": "Apply OAuth-token → Supabase session bridge to remaining BS OAuth client apps",
       "repo": "R80.3 + braden + conduit + throughput",
       "scope": "docs-root",
       "source": "bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md",
@@ -641,17 +641,17 @@
       "status": "open",
       "phase": "rca-followup",
       "owner": "Per-app maintainers",
-      "next_step": "CRM7 shipped the bridge in commit bc4eae77 (callback calls `supabase.auth.setSession({access_token, refresh_token})` after BS OAuth code exchange). Apply same pattern in R80.3, braden, conduit, throughput. Without it, RLS-protected reads 401/406 immediately after BSU\u2192app handoff. Likely bundled with ut-010 silent-reauth wiring.",
+      "next_step": "CRM7 shipped the bridge in commit bc4eae77 (callback calls `supabase.auth.setSession({access_token, refresh_token})` after BS OAuth code exchange). Apply same pattern in R80.3, braden, conduit, throughput. Without it, RLS-protected reads 401/406 immediately after BSU→app handoff. Likely bundled with ut-010 silent-reauth wiring.",
       "severity": "P1",
       "category": "Rca Followup"
     },
     {
       "id": "ut-014",
-      "title": "Promote entity-crosswalk doc D\u2192W after P1 selectors land",
+      "title": "Promote entity-crosswalk doc D→W after P1 selectors land",
       "repo": "bsuite (parent)",
       "scope": "docs-root",
-      "source": "bsuite/docs/OUTSTANDING.md \u00a720260319-entity-crosswalk-v1.00D.md",
-      "path": "bsuite/docs/OUTSTANDING.md \u00a720260319-entity-crosswalk-v1.00D.md",
+      "source": "bsuite/docs/OUTSTANDING.md §20260319-entity-crosswalk-v1.00D.md",
+      "path": "bsuite/docs/OUTSTANDING.md §20260319-entity-crosswalk-v1.00D.md",
       "status": "open",
       "phase": "outstanding-item",
       "owner": "Cascade",
@@ -664,12 +664,12 @@
       "title": "Tighten `pnpm lint --max-warnings 0` after react-hooks counts hit zero (BSU/braden/throughput)",
       "repo": "business-suite-unified + braden + throughput",
       "scope": "docs-root",
-      "source": "bsuite/docs/OUTSTANDING.md \u00a720260420-react-hooks-v7-tech-debt-v1.00W.md",
-      "path": "bsuite/docs/OUTSTANDING.md \u00a720260420-react-hooks-v7-tech-debt-v1.00W.md",
+      "source": "bsuite/docs/OUTSTANDING.md §20260420-react-hooks-v7-tech-debt-v1.00W.md",
+      "path": "bsuite/docs/OUTSTANDING.md §20260420-react-hooks-v7-tech-debt-v1.00W.md",
       "status": "open",
       "phase": "outstanding-item",
       "owner": "Cascade / Claude Code",
-      "next_step": "After react-hooks remediation (#308 BSU 47, #198 braden 21, #100 throughput ~30), promote demoted rules from `warn` \u2192 `error` in `business-suite-unified/eslint.config.js` and `throughput/eslint.config.js`; tighten `pnpm lint` to `--max-warnings 0`. The flip step itself is not an enumerated issue.",
+      "next_step": "After react-hooks remediation (#308 BSU 47, #198 braden 21, #100 throughput ~30), promote demoted rules from `warn` → `error` in `business-suite-unified/eslint.config.js` and `throughput/eslint.config.js`; tighten `pnpm lint` to `--max-warnings 0`. The flip step itself is not an enumerated issue.",
       "severity": "P2",
       "category": "Outstanding Item"
     },
@@ -678,8 +678,8 @@
       "title": "Apply RLS policy update to Supabase Dashboard for tenant-logos bucket reserved prefixes",
       "repo": "operator (Supabase Dashboard)",
       "scope": "docs-root",
-      "source": "bsuite/docs/OUTSTANDING.md \u00a720260421-storage-rls-reserved-prefixes-v1.00W.md",
-      "path": "bsuite/docs/OUTSTANDING.md \u00a720260421-storage-rls-reserved-prefixes-v1.00W.md",
+      "source": "bsuite/docs/OUTSTANDING.md §20260421-storage-rls-reserved-prefixes-v1.00W.md",
+      "path": "bsuite/docs/OUTSTANDING.md §20260421-storage-rls-reserved-prefixes-v1.00W.md",
       "status": "operator-blocked",
       "phase": "operator-action",
       "owner": "Braden (operator)",
@@ -692,26 +692,26 @@
       "title": "Install Supabase realtime blocks (chat / cursor / monaco) feature-flagged",
       "repo": "crm7 + conduit",
       "scope": "docs-root",
-      "source": "bsuite/docs/OUTSTANDING.md \u00a720260421-supabase-realtime-blocks-rollout-v1.00W.md",
-      "path": "bsuite/docs/OUTSTANDING.md \u00a720260421-supabase-realtime-blocks-rollout-v1.00W.md",
+      "source": "bsuite/docs/OUTSTANDING.md §20260421-supabase-realtime-blocks-rollout-v1.00W.md",
+      "path": "bsuite/docs/OUTSTANDING.md §20260421-supabase-realtime-blocks-rollout-v1.00W.md",
       "status": "open",
       "phase": "outstanding-item",
       "owner": "Claude Code",
-      "next_step": "Install `realtime-chat` in CRM7 (separate PR, feature-flagged OFF) \u2192 `realtime-cursor` in Conduit pipeline page \u2192 `realtime-monaco` in CRM7. Add `wss:*.supabase.co` to CSP `connect-src` in each app's `vercel.json`. Not in #100-#503.",
+      "next_step": "Install `realtime-chat` in CRM7 (separate PR, feature-flagged OFF) → `realtime-cursor` in Conduit pipeline page → `realtime-monaco` in CRM7. Add `wss:*.supabase.co` to CSP `connect-src` in each app's `vercel.json`. Not in #100-#503.",
       "severity": "P2",
       "category": "Outstanding Item"
     },
     {
       "id": "ut-018",
-      "title": "F-01..F-03 \u2014 CRM7 settings \u2192 BSU redirect stubs (branding/organization/tester-licenses)",
+      "title": "F-01..F-03 — CRM7 settings → BSU redirect stubs (branding/organization/tester-licenses)",
       "repo": "crm7",
       "scope": "docs-root",
-      "source": "bsuite/docs/OUTSTANDING.md \u00a720260423-misplaced-routes-audit-v1.00W.md",
-      "path": "bsuite/docs/OUTSTANDING.md \u00a720260423-misplaced-routes-audit-v1.00W.md",
+      "source": "bsuite/docs/OUTSTANDING.md §20260423-misplaced-routes-audit-v1.00W.md",
+      "path": "bsuite/docs/OUTSTANDING.md §20260423-misplaced-routes-audit-v1.00W.md",
       "status": "open",
       "phase": "outstanding-item",
       "owner": "Phase 12 follow-up PR",
-      "next_step": "Replace CRM7 `/settings/branding`, `/settings/organization`, `/settings/tester-licenses` with `<RedirectTo>` pointing at BSU equivalents (post-Phase 7 merge \u2014 held by Phase 7 CRM7 checkout). F-04..F-06 (R80.3 side) already covered by R80.3#174 + #178. F-01..F-03 (CRM7 side) not in #100-#503.",
+      "next_step": "Replace CRM7 `/settings/branding`, `/settings/organization`, `/settings/tester-licenses` with `<RedirectTo>` pointing at BSU equivalents (post-Phase 7 merge — held by Phase 7 CRM7 checkout). F-04..F-06 (R80.3 side) already covered by R80.3#174 + #178. F-01..F-03 (CRM7 side) not in #100-#503.",
       "severity": "P2",
       "category": "Outstanding Item"
     },
@@ -767,7 +767,7 @@
       "status": "open",
       "phase": "outstanding-item",
       "owner": "Cascade / per-app maintainer",
-      "next_step": "Sonner's 5s default likely violates SC 2.2.1 (Timing Adjustable). Change to \u226520s default OR make toasts dismissable-on-focus. Suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not explicitly enumerate this fix.",
+      "next_step": "Sonner's 5s default likely violates SC 2.2.1 (Timing Adjustable). Change to ≥20s default OR make toasts dismissable-on-focus. Suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not explicitly enumerate this fix.",
       "severity": "P2",
       "category": "Outstanding Item"
     },
@@ -776,8 +776,8 @@
       "title": "crm7SyncService.ts must push host_charge_rates to Supabase (WS-3 dependency)",
       "repo": "R80.3",
       "scope": "docs-root",
-      "source": "crm7/docs/OUTSTANDING.md \u00a7Cross-repo dependencies",
-      "path": "crm7/docs/OUTSTANDING.md \u00a7Cross-repo dependencies",
+      "source": "crm7/docs/OUTSTANDING.md §Cross-repo dependencies",
+      "path": "crm7/docs/OUTSTANDING.md §Cross-repo dependencies",
       "status": "tracked-as-WSA",
       "phase": "outstanding-item",
       "owner": "R80.3 maintainer",
@@ -790,12 +790,12 @@
       "title": "R80.3 Payday Super gaps 4-6 (timesheet integration, director rules, JSDoc on constants)",
       "repo": "R80.3",
       "scope": "docs-root",
-      "source": "R80.3/docs/20260418-payday-super-feature-v1.00W.md \u00a75 Open Gaps",
-      "path": "R80.3/docs/20260418-payday-super-feature-v1.00W.md \u00a75 Open Gaps",
+      "source": "R80.3/docs/20260418-payday-super-feature-v1.00W.md §5 Open Gaps",
+      "path": "R80.3/docs/20260418-payday-super-feature-v1.00W.md §5 Open Gaps",
       "status": "open",
       "phase": "outstanding-item",
       "owner": "R80.3 maintainer",
-      "next_step": "Three gaps from \u00a75 not enumerated in R80.3#173 (P1.J Payday Super deadline 2026-07-01): (4) timesheet/pay-run pipeline integration to pull QE directly; (5) director/close-associate special handling for working directors; (6) inline JSDoc with ATO source-URL comments on `MAX_CONTRIBUTION_BASE_ANNUAL_2026` + `PAYDAY_SUPER_START_DATE` constants for audit. Loosely covered under P1.J but not enumerated.",
+      "next_step": "Three gaps from §5 not enumerated in R80.3#173 (P1.J Payday Super deadline 2026-07-01): (4) timesheet/pay-run pipeline integration to pull QE directly; (5) director/close-associate special handling for working directors; (6) inline JSDoc with ATO source-URL comments on `MAX_CONTRIBUTION_BASE_ANNUAL_2026` + `PAYDAY_SUPER_START_DATE` constants for audit. Loosely covered under P1.J but not enumerated.",
       "severity": "P3",
       "category": "Outstanding Item"
     },
@@ -804,12 +804,12 @@
       "title": "Throughput-specific WCAG/quality items (8 enumerated tasks, 2-8h each)",
       "repo": "throughput",
       "scope": "docs-root",
-      "source": "throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md \u00a7Next Steps",
-      "path": "throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md \u00a7Next Steps",
+      "source": "throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md §Next Steps",
+      "path": "throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md §Next Steps",
       "status": "open",
       "phase": "outstanding-item",
       "owner": "throughput maintainer",
-      "next_step": "HIGH (next sprint): ARIA labels on buttons (4h), alt text on images (2h), console.log \u2192 logger.ts (8h), form labels (4h). MEDIUM (this month): focus trap for modals (4h), aria-live regions (3h), color contrast audit (6h), keyboard shortcuts (8h). LOW (backlog): screen reader testing (8h), visual regression tests (8h). Throughput #100 covers React hooks; suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not enumerate these throughput-specific items.",
+      "next_step": "HIGH (next sprint): ARIA labels on buttons (4h), alt text on images (2h), console.log → logger.ts (8h), form labels (4h). MEDIUM (this month): focus trap for modals (4h), aria-live regions (3h), color contrast audit (6h), keyboard shortcuts (8h). LOW (backlog): screen reader testing (8h), visual regression tests (8h). Throughput #100 covers React hooks; suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not enumerate these throughput-specific items.",
       "severity": "P2",
       "category": "Outstanding Item"
     }
@@ -981,7 +981,7 @@
           },
           {
             "id": "A-6",
-            "description": "Forbidden-pattern grep CI guard described in AUTH_CANONICAL.md as 'target \u2014 to be enforced' has never landed",
+            "description": "Forbidden-pattern grep CI guard described in AUTH_CANONICAL.md as 'target — to be enforced' has never landed",
             "apps": [
               "crm7",
               "R80.3",
@@ -996,7 +996,7 @@
           },
           {
             "id": "A-7",
-            "description": "verify-silent-auth-wired.sh greps for the bare string 'attemptSilentAuth' \u2014 comments and type-only imports pass the check",
+            "description": "verify-silent-auth-wired.sh greps for the bare string 'attemptSilentAuth' — comments and type-only imports pass the check",
             "apps": [
               "crm7",
               "R80.3",
@@ -1016,7 +1016,7 @@
         "gaps": [
           {
             "id": "B-1",
-            "description": "syncSupabaseSessionToBSOAuth 60s sync interval that re-seeds setSession() after BS OAuth refresh exists ONLY in crm7. After ~55 min, the per-domain Supabase session goes stale on the other 4 apps and PostgREST/RPC/Realtime auth as anon \u2014 same RCA as 2026-05-06 BSU\u2192CRM7 incident, delayed-ignition variant",
+            "description": "syncSupabaseSessionToBSOAuth 60s sync interval that re-seeds setSession() after BS OAuth refresh exists ONLY in crm7. After ~55 min, the per-domain Supabase session goes stale on the other 4 apps and PostgREST/RPC/Realtime auth as anon — same RCA as 2026-05-06 BSU→CRM7 incident, delayed-ignition variant",
             "apps": [
               "R80.3",
               "throughput",
@@ -1177,7 +1177,7 @@
           },
           {
             "id": "D-4",
-            "description": "interaction_required and consent_required errors (OIDC \u00a73.1.2.6 silent-auth failures) handled only by crm7 callback; throughput/R80.3/braden/conduit only handle login_required and fall through other two to generic error display",
+            "description": "interaction_required and consent_required errors (OIDC §3.1.2.6 silent-auth failures) handled only by crm7 callback; throughput/R80.3/braden/conduit only handle login_required and fall through other two to generic error display",
             "apps": [
               "throughput",
               "R80.3",
@@ -1260,7 +1260,7 @@
         "gaps": [
           {
             "id": "F-1",
-            "description": "client_id claim in BS OAuth tokens is NOT used by any RLS policy in BSuite \u2014 same-user via crm7 OAuth has identical RLS-visible row set as direct BSU session. No third-party-OAuth attenuation. Sensitive tables (payment_methods, billing, audit_log) are fully readable by any consenting OAuth client",
+            "description": "client_id claim in BS OAuth tokens is NOT used by any RLS policy in BSuite — same-user via crm7 OAuth has identical RLS-visible row set as direct BSU session. No third-party-OAuth attenuation. Sensitive tables (payment_methods, billing, audit_log) are fully readable by any consenting OAuth client",
             "apps": [
               "crm7",
               "R80.3",
@@ -1284,7 +1284,7 @@
           },
           {
             "id": "F-3",
-            "description": "Multiple call sites use getSession() to extract access tokens for outgoing fetch headers \u2014 permitted by AUTH_CANONICAL.md but the policy text is ambiguous",
+            "description": "Multiple call sites use getSession() to extract access tokens for outgoing fetch headers — permitted by AUTH_CANONICAL.md but the policy text is ambiguous",
             "apps": [
               "crm7",
               "R80.3",
@@ -1294,7 +1294,7 @@
             ],
             "severity": "P3",
             "evidence": "gh search code 'supabase.auth.getSession' org-wide; spot-checks confirm token-extraction usage not auth-gating",
-            "remediation": "Document the exception in AUTH_CANONICAL.md \u00a7Verification preferences"
+            "remediation": "Document the exception in AUTH_CANONICAL.md §Verification preferences"
           }
         ]
       },
@@ -1379,7 +1379,7 @@
             ],
             "severity": "ops",
             "evidence": "GitHub branch-protection settings out-of-band",
-            "remediation": "Operator UI: Settings \u2192 Branches \u2192 Add rule \u2192 main \u2192 Require PR + Require CodeOwner review + Restrict dismissal; repeat for development; for each of 7 repos"
+            "remediation": "Operator UI: Settings → Branches → Add rule → main → Require PR + Require CodeOwner review + Restrict dismissal; repeat for development; for each of 7 repos"
           }
         ]
       },
@@ -1399,7 +1399,7 @@
           },
           {
             "id": "J-2",
-            "description": "All 12 frozen-fact #5 references across 6 repos updated correctly, but only crm7's CLAUDE.md documents the 60s sync; other apps' CLAUDE.md only document the bridge \u2014 asymmetry mirrors B-1 code asymmetry",
+            "description": "All 12 frozen-fact #5 references across 6 repos updated correctly, but only crm7's CLAUDE.md documents the 60s sync; other apps' CLAUDE.md only document the bridge — asymmetry mirrors B-1 code asymmetry",
             "apps": [
               "R80.3",
               "braden",
@@ -1412,7 +1412,7 @@
           },
           {
             "id": "J-3",
-            "description": "AUTH_CANONICAL.md ledger does not mention the freeze claimed by the operator; consistent with the freeze artifacts being absent \u2014 but if they are intended to ship the ledger needs a fourth row",
+            "description": "AUTH_CANONICAL.md ledger does not mention the freeze claimed by the operator; consistent with the freeze artifacts being absent — but if they are intended to ship the ledger needs a fourth row",
             "apps": [
               "bsuite"
             ],
@@ -1422,7 +1422,7 @@
           },
           {
             "id": "J-4",
-            "description": "Doc claims 'Conduit + CRM7 callbacks are dual-purpose'; R80.3/throughput/braden are single-purpose \u2014 Supabase native OAuth flows would fail there",
+            "description": "Doc claims 'Conduit + CRM7 callbacks are dual-purpose'; R80.3/throughput/braden are single-purpose — Supabase native OAuth flows would fail there",
             "apps": [
               "R80.3",
               "throughput",
@@ -1450,7 +1450,7 @@
         "gaps": [
           {
             "id": "K-1",
-            "description": "Spreading setSession 60s sync to other 4 apps \u2014 flagged as forward work but runtime impact justifies P1 not P3",
+            "description": "Spreading setSession 60s sync to other 4 apps — flagged as forward work but runtime impact justifies P1 not P3",
             "apps": [
               "R80.3",
               "throughput",
@@ -1483,7 +1483,7 @@
       "Bridge call (supabase.auth.setSession) present in all 5 consumer callbacks: crm7, R80.3, braden, throughput, conduit",
       "attemptSilentAuth wiring enforced by parent bsuite verify-silent-auth-wired.yml CI workflow on every push",
       "sanitizeReturnPath implemented with decodeURIComponent-aware bypass guards; unit-tested in crm7/src/lib/auth/__tests__/",
-      "OIDC nonce verification present in @bsuite/auth/oauth-client.ts:99-107 (OIDC Core \u00a73.1.2.2)",
+      "OIDC nonce verification present in @bsuite/auth/oauth-client.ts:99-107 (OIDC Core §3.1.2.2)",
       "PKCE hygiene on success: code_verifier/state/nonce deleted from sessionStorage before response.ok check",
       "Silent-auth path-prefix guards consistently implemented in all 5 AuthContext/AuthProvider files (callback, login, reset-password, error=login_required URLs)",
       "AUTH_CANONICAL.md doctrine updates uniform across all 6 CLAUDE.md/AGENTS.md (corrected frozen-fact #5)",
@@ -1529,7 +1529,7 @@
           "contract_test": true,
           "codeowners": true,
           "fully_synced": false,
-          "gap": "pin still on 0.2.0 \u2014 needs 0.2.1 bump"
+          "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
         },
         "throughput": {
           "auth": "0.2.0",
@@ -1537,7 +1537,7 @@
           "contract_test": true,
           "codeowners": true,
           "fully_synced": false,
-          "gap": "pin still on 0.2.0 \u2014 needs 0.2.1 bump"
+          "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
         },
         "business-suite-unified": {
           "auth": "n/a (OAuth server)",
@@ -1548,7 +1548,7 @@
           "gap": "oauth-contract.test.ts MISSING + dry-lint pin stale"
         }
       },
-      "codeowners_path_correction": ".github/CODEOWNERS (audit checked root CODEOWNERS \u2014 wrong path)",
+      "codeowners_path_correction": ".github/CODEOWNERS (audit checked root CODEOWNERS — wrong path)",
       "parent_commits_that_landed_freeze": [
         {
           "sha": "bdf7fa0d",
@@ -1560,7 +1560,7 @@
           "sha": "335cae7b",
           "time": "2026-05-06T07:33Z",
           "pr": 530,
-          "title": "promote: development \u2192 main (publish-dry-lint workflow + sync)"
+          "title": "promote: development → main (publish-dry-lint workflow + sync)"
         }
       ]
     }
@@ -1625,7 +1625,7 @@
         "contract_test": true,
         "codeowners": true,
         "fully_synced": false,
-        "gap": "pin still on 0.2.0 \u2014 needs 0.2.1 bump"
+        "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
       },
       "throughput": {
         "auth": "0.2.0",
@@ -1633,7 +1633,7 @@
         "contract_test": true,
         "codeowners": true,
         "fully_synced": false,
-        "gap": "pin still on 0.2.0 \u2014 needs 0.2.1 bump"
+        "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
       },
       "business-suite-unified": {
         "auth": "n/a (OAuth server)",
@@ -1644,7 +1644,7 @@
         "gap": "oauth-contract.test.ts MISSING + dry-lint pin stale"
       }
     },
-    "codeowners_path_correction": ".github/CODEOWNERS (audit checked root CODEOWNERS \u2014 wrong path)",
+    "codeowners_path_correction": ".github/CODEOWNERS (audit checked root CODEOWNERS — wrong path)",
     "parent_commits_that_landed_freeze": [
       {
         "sha": "bdf7fa0d",
@@ -1656,7 +1656,7 @@
         "sha": "335cae7b",
         "time": "2026-05-06T07:33Z",
         "pr": 530,
-        "title": "promote: development \u2192 main (publish-dry-lint workflow + sync)"
+        "title": "promote: development → main (publish-dry-lint workflow + sync)"
       }
     ]
   },
@@ -1717,21 +1717,21 @@
         "gap": "oauth-contract.test.ts MISSING + dry-lint pin still ^0.2.0"
       }
     },
-    "remaining_gaps": "2 BSU items only: (1) bump @bsuite/dry-lint ^0.2.0 \u2192 0.4.0 (2) add src/__tests__/oauth-contract.test.ts"
+    "remaining_gaps": "2 BSU items only: (1) bump @bsuite/dry-lint ^0.2.0 → 0.4.0 (2) add src/__tests__/oauth-contract.test.ts"
   },
   "branch_protection_audit_2026_05_06": {
     "audit_date": "2026-05-06T08:10Z",
     "org_level_rulesets": 0,
     "classic_protection": {
-      "all_repos_main": "\u2705 enforced \u2014 required PR reviews + status check + enforce_admins=true + force-push DENIED + delete DENIED",
+      "all_repos_main": "✅ enforced — required PR reviews + status check + enforce_admins=true + force-push DENIED + delete DENIED",
       "development_branch": {
-        "crm7": "\u274c NO PROTECTION",
-        "conduit": "\u274c NO PROTECTION",
-        "R80.3": "\u274c NO PROTECTION",
-        "bsuite": "\u2705 protected",
-        "business-suite-unified": "\u2705 protected",
-        "braden": "\u2705 protected",
-        "throughput": "\u2705 protected"
+        "crm7": "❌ NO PROTECTION",
+        "conduit": "❌ NO PROTECTION",
+        "R80.3": "❌ NO PROTECTION",
+        "bsuite": "✅ protected",
+        "business-suite-unified": "✅ protected",
+        "braden": "✅ protected",
+        "throughput": "✅ protected"
       }
     },
     "silent_gaps": [
@@ -1739,8 +1739,8 @@
         "severity": "P1",
         "gap": "PR review count required = 0 across ALL repos",
         "meaning": "A PR can be merged with ZERO approving reviews on every main branch. The existence of the rule satisfies \"PRs required\" but does not require any human or bot to actually review.",
-        "evidence": "gh api repos/GaryOcean428/<r>/branches/main/protection \u2192 required_approving_review_count = 0",
-        "remediation": "Set required_approving_review_count = 1 (or 2 for bsuite parent). Operator-only via GitHub UI Settings \u2192 Branches \u2192 Edit rule."
+        "evidence": "gh api repos/GaryOcean428/<r>/branches/main/protection → required_approving_review_count = 0",
+        "remediation": "Set required_approving_review_count = 1 (or 2 for bsuite parent). Operator-only via GitHub UI Settings → Branches → Edit rule."
       },
       {
         "severity": "P1",
@@ -1753,7 +1753,7 @@
         "severity": "P1",
         "gap": "crm7, conduit, R80.3 development branches have NO protection at all",
         "meaning": "Direct push to development is allowed, force-push is allowed, deletion is allowed (which is exactly how R80.3 + conduit development branches got auto-deleted in earlier ceremonies).",
-        "evidence": "gh api .../branches/development/protection \u2192 \"Branch not protected\" 404",
+        "evidence": "gh api .../branches/development/protection → \"Branch not protected\" 404",
         "remediation": "Apply same classic protection pattern to development on these 3 repos."
       },
       {
@@ -1773,7 +1773,7 @@
       {
         "severity": "P2",
         "gap": "Status check requirements vary per repo and are MINIMAL",
-        "meaning": "Some main branches require only one check: bsuite=gitleaks, crm7=build-and-test, R80.3=quality, throughput=Test Suite. The new `oauth-contract` test in 5 consumers is NOT required by branch protection \u2014 a PR can merge while it fails or never runs.",
+        "meaning": "Some main branches require only one check: bsuite=gitleaks, crm7=build-and-test, R80.3=quality, throughput=Test Suite. The new `oauth-contract` test in 5 consumers is NOT required by branch protection — a PR can merge while it fails or never runs.",
         "evidence": "classic protection contexts: each repo has 1 required check; oauth-contract test absent from required list everywhere",
         "remediation": "Add oauth-contract test to required_status_checks on each consumer repo. Critical given AUTH_CANONICAL.md doctrine."
       },
@@ -1788,26 +1788,26 @@
         "severity": "P3",
         "gap": "No org-level ruleset",
         "meaning": "Each repo configures protection independently. Drift is possible (and observed: crm7/conduit/R80.3 development branches missing protection while braden/BSU/throughput have it).",
-        "evidence": "gh api orgs/GaryOcean428/rulesets \u2192 empty",
+        "evidence": "gh api orgs/GaryOcean428/rulesets → empty",
         "remediation": "Create one org ruleset that targets ~DEFAULT_BRANCH + development + main with the canonical settings, so all 7 repos inherit the same baseline. This is the strongest single fix."
       }
     ],
     "protection_strengths": [
-      "enforce_admins=true everywhere \u2014 admins cannot override the rule",
-      "allow_force_pushes=false everywhere \u2014 no history rewrites possible",
+      "enforce_admins=true everywhere — admins cannot override the rule",
+      "allow_force_pushes=false everywhere — no history rewrites possible",
       "allow_deletions=false on classic-protected branches",
-      "Per-repo rulesets ALSO present (5-6 per repo) layering required_linear_history + non_fast_forward \u2014 defense in depth",
+      "Per-repo rulesets ALSO present (5-6 per repo) layering required_linear_history + non_fast_forward — defense in depth",
       "gitleaks status check required on bsuite parent (secrets scanning)"
     ]
   },
   "freeze_completion_bumps": {
-    "state": "PARTIAL \u2014 5 of 6 consumers fully synced. Only BSU has 2 small gaps.",
+    "state": "PARTIAL — 5 of 6 consumers fully synced. Only BSU has 2 small gaps.",
     "remaining_bumps": [
       {
         "id": "fb-1",
         "severity": "P1",
         "app": "business-suite-unified",
-        "change": "@bsuite/dry-lint ^0.2.0 \u2192 0.4.0 in devDependencies",
+        "change": "@bsuite/dry-lint ^0.2.0 → 0.4.0 in devDependencies",
         "unblocks": "oauth-callback-must-bridge ESLint rule activates in BSU CI. Without this, BSU lint passes even if a future agent removes the setSession bridge from a callback page (BSU has /auth/callback for native Supabase flows AND will get the OIDC consent flow). The rule is the only thing preventing the regression that caused the original 2026-05-06 incident.",
         "effort": "2-line PR (package.json + lockfile)"
       },
@@ -1816,7 +1816,7 @@
         "severity": "P1",
         "app": "business-suite-unified",
         "change": "add src/__tests__/oauth-contract.test.ts",
-        "unblocks": "BSU's auth surface (OAuth server callback handlers, /auth/callback, consent UI) becomes contract-tested. The 5 consumers all have this test pinning frozen invariants (PKCE flow, setSession bridge, no cookie SSO). BSU is the OAuth server itself \u2014 its contract test should pin DIFFERENT invariants: oauth_clients table state, /oauth/authorize prompt=none handling, redirect_uri exact-match, JWKS-only verification. Without this test, BSU's OAuth server can drift silently.",
+        "unblocks": "BSU's auth surface (OAuth server callback handlers, /auth/callback, consent UI) becomes contract-tested. The 5 consumers all have this test pinning frozen invariants (PKCE flow, setSession bridge, no cookie SSO). BSU is the OAuth server itself — its contract test should pin DIFFERENT invariants: oauth_clients table state, /oauth/authorize prompt=none handling, redirect_uri exact-match, JWKS-only verification. Without this test, BSU's OAuth server can drift silently.",
         "effort": "~50-line file modeled on crm7 contract test but pinning server-side invariants"
       }
     ],
@@ -1828,7 +1828,7 @@
         "oauth-contract test active in 6 of 6 CI pipelines (currently 5 of 6)",
         "Closes the bsuite#505 RCA with full evidence-based green flag",
         "Allows bsuite#525 (plans audit PR) to merge cleanly",
-        "Unblocks the operator branch-protection wiring (Q1) \u2014 adding require_code_owner_reviews=true + adding oauth-contract to required_status_checks now becomes a meaningful gate, since every consumer has the test"
+        "Unblocks the operator branch-protection wiring (Q1) — adding require_code_owner_reviews=true + adding oauth-contract to required_status_checks now becomes a meaningful gate, since every consumer has the test"
       ]
     }
   },
@@ -2064,7 +2064,7 @@
       },
       {
         "id": "FB-PHASE-5",
-        "name": "Permissions visual editor (role \u00d7 capability \u00d7 route \u00d7 RLS)",
+        "name": "Permissions visual editor (role × capability × route × RLS)",
         "status": "ready-for-review",
         "claimed_by": "perplexity-computer",
         "blocked_by": "FB-PHASE-0+1",
@@ -2098,9 +2098,9 @@
       }
     ],
     "operator_blockers": [
-      "AI_GATEWAY_API_KEY (Vercel env, BSU project) \u2014 for FB-PHASE-4 AI features",
-      "FEATURE_BUILDER_GH_PAT (Vercel env, BSU project) \u2014 for FB-PHASE-7 PR export",
-      "Jodie GitHub App registration (bsuite#557) \u2014 replaces PAT path long-term"
+      "AI_GATEWAY_API_KEY (Vercel env, BSU project) — for FB-PHASE-4 AI features",
+      "FEATURE_BUILDER_GH_PAT (Vercel env, BSU project) — for FB-PHASE-7 PR export",
+      "Jodie GitHub App registration (bsuite#557) — replaces PAT path long-term"
     ],
     "completed_pct": 22,
     "completed_count": 1,
@@ -2385,7 +2385,7 @@
         "copilot_pr": "crm7#567",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/567",
         "pr_status": "in_review",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G2",
@@ -2398,7 +2398,7 @@
         "copilot_pr": "crm7#569",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/569",
         "pr_status": "in_review",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G3",
@@ -2411,7 +2411,7 @@
         "copilot_pr": "crm7#570",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/570",
         "pr_status": "in_review",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G4",
@@ -2424,7 +2424,7 @@
         "copilot_pr": "crm7#571",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/571",
         "pr_status": "in_review",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G5",
@@ -2437,7 +2437,7 @@
         "copilot_pr": "crm7#572",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/572",
         "pr_status": "in_review",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G6",
@@ -2450,7 +2450,7 @@
         "copilot_pr": "crm7#573",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/573",
         "pr_status": "in_review",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G7",
@@ -2463,7 +2463,7 @@
         "copilot_pr": "crm7#574",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/574",
         "pr_status": "in_review",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G8",
@@ -2476,7 +2476,7 @@
         "copilot_pr": "crm7#575",
         "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/575",
         "pr_status": "in_review_conflicting",
-        "doctrine_status": "missing \u2014 needs-redteam labelled"
+        "doctrine_status": "missing — needs-redteam labelled"
       }
     ],
     "parent_tracker": {
@@ -2518,7 +2518,7 @@
       "prs_mergeable": 7,
       "prs_conflicting": 1,
       "prs_doctrine_compliant": 0,
-      "note": "Copilot drafted all 8 PRs within ~8h. CI green on 7 mergeable PRs (Vercel Preview pass). Doctrine blocks (\u00a71.2/\u00a72.2/\u00a73.2) missing on all 8 \u2014 needs-redteam labels applied + templates posted on each PR. Awaiting Copilot iteration."
+      "note": "Copilot drafted all 8 PRs within ~8h. CI green on 7 mergeable PRs (Vercel Preview pass). Doctrine blocks (§1.2/§2.2/§3.2) missing on all 8 — needs-redteam labels applied + templates posted on each PR. Awaiting Copilot iteration."
     }
   },
   "dashboard_update_protocol": {
@@ -2541,14 +2541,14 @@
       "commit_convention": "PR REQUIRED (branch protection): always create a feature branch (e.g. chore/dashboard-refresh-YYYYMMDD), commit there, open PR to development. PRs running gitleaks must pass. Title format: \"chore(dashboard): <reason>\". Self-merge with --admin --squash --delete-branch once green.",
       "verify_locally": "Open docs/dashboard/index.html in a browser (file:// works) and confirm new section renders",
       "branch_strategy": "NEVER push directly to development (branch-protected as of 2026-05-08T10:56Z, requires gitleaks). Create a feature branch even for data-only refreshes. Bundle dashboard updates with the PR that motivated them when possible. For automated 2h sweep refreshes: branch chore/dashboard-2h-sweep-<TIMESTAMP>, open PR, self-merge when CI green.",
-      "removed_2026_05_08": "The [skip ci] direct-push path for data-only updates is RETIRED. Branch protection enforces PR + gitleaks. No exceptions \u2014 even data-only."
+      "removed_2026_05_08": "The [skip ci] direct-push path for data-only updates is RETIRED. Branch protection enforces PR + gitleaks. No exceptions — even data-only."
     },
     "what_to_update": {
       "summary": "Top-line counters; bump every time a closed/done count changes",
       "plans": "Auto-generated by refresh-data.py from docs/plans/**; do not hand-edit",
       "operator_blockers": "Hand-curated list of items only the human operator can resolve",
       "gap_report.categories": "Promoted/demoted as priorities shift",
-      "parity_status": "Codehouse parity matrix \u2014 update via parity-matrix CSV first, then re-emit",
+      "parity_status": "Codehouse parity matrix — update via parity-matrix CSV first, then re-emit",
       "feature_360_status": "9-portal coverage status",
       "visual_feature_builder": "Phase-by-phase status of the visual feature builder",
       "apprentice_placements_status": "Apprentice placement queue items",
@@ -2556,11 +2556,11 @@
       "gto_compliance_catalogue": "Coverage of the 50-report GTO compliance catalogue (added 2026-05-08); update when issues G1-G8 progress"
     },
     "rules_for_agents": [
-      "Anti-laziness: never claim 'I'll update the dashboard later' \u2014 update it in the same PR/session as the change",
+      "Anti-laziness: never claim 'I'll update the dashboard later' — update it in the same PR/session as the change",
       "Evidence required: every status change needs a URL (PR/commit/issue) in evidence_url field, no orphan claims",
       "Schema versioning: when extending a section, bump its schema_version (1.0 -> 1.1 -> ...). Major shape changes require dashboard-data.json schema validation regen",
-      "Human-readable: every new section should answer 'what does this tell the operator at a glance?' \u2014 include human-readable counts/labels, not opaque IDs",
-      "Truthful counters: if you cannot verify a count from primary state (issues/PRs/files), do not invent it \u2014 use null and explain in `note`",
+      "Human-readable: every new section should answer 'what does this tell the operator at a glance?' — include human-readable counts/labels, not opaque IDs",
+      "Truthful counters: if you cannot verify a count from primary state (issues/PRs/files), do not invent it — use null and explain in `note`",
       "No orphan keys: every top-level key must be rendered by index.html OR documented in this protocol as 'data-only, machine-consumable'"
     ],
     "verification_workflow": [
@@ -2581,17 +2581,17 @@
       "Updating counters without filing the underlying issue (claims without evidence)",
       "Hand-editing the plans[] array (it's auto-generated; edit the source plan .md files instead)",
       "Trying to push directly to development (now branch-protected since 2026-05-08T10:56Z, requires PR + gitleaks)",
-      "Forgetting to fast-forward fetch before branching (multi-agent context \u2014 origin/development advances every few minutes)"
+      "Forgetting to fast-forward fetch before branching (multi-agent context — origin/development advances every few minutes)"
     ],
     "updated_at": "2026-05-08T11:00Z",
-    "breaking_change_2026_05_08": "Branch protection on bsuite/development now requires PR + passing gitleaks check. The previous \"commit data-only directly to development\" path is BLOCKED. All dashboard updates must now go through a PR \u2014 even data-only refreshes."
+    "breaking_change_2026_05_08": "Branch protection on bsuite/development now requires PR + passing gitleaks check. The previous \"commit data-only directly to development\" path is BLOCKED. All dashboard updates must now go through a PR — even data-only refreshes."
   },
   "operator_blockers_resolved": [
     {
       "label": "npm publish @bsuite/auth@0.2.1",
       "resolved_at": "2026-05-08T03:55Z",
       "resolved_by": "claude-code (master-orchestration verification)",
-      "evidence": "Auto-published via .github/workflows/publish-auth.yml on merge to main. The PR that bumped the version landed on 2026-04-30; the workflow ran and published @bsuite/auth@0.2.3. All 6 BSuite apps consume 0.2.3 on main. No operator action was ever required \u2014 the original blocker entry was a misframing."
+      "evidence": "Auto-published via .github/workflows/publish-auth.yml on merge to main. The PR that bumped the version landed on 2026-04-30; the workflow ran and published @bsuite/auth@0.2.3. All 6 BSuite apps consume 0.2.3 on main. No operator action was ever required — the original blocker entry was a misframing."
     },
     {
       "label": "npm publish @bsuite/dry-lint@0.4.0",
@@ -2600,7 +2600,7 @@
       "evidence": "Auto-published via .github/workflows/publish-dry-lint.yml on merge to main. @bsuite/dry-lint@0.4.0 is on the registry; all 6 apps consume 0.4.0 on main. No operator action required."
     },
     {
-      "label": "Bump consumer pins 0.2.0 \u2192 0.2.1 in 5 apps",
+      "label": "Bump consumer pins 0.2.0 → 0.2.1 in 5 apps",
       "resolved_at": "2026-05-08T03:55Z",
       "resolved_by": "claude-code (master-orchestration verification)",
       "evidence": "Auto-applies because each app's PR bumping the version triggers the consumer publish workflow. All 6 apps' main package.json on @bsuite/auth=0.2.3 + @bsuite/dry-lint=0.4.0 (gh API check, 6/6). No manual pin-bump step required."
@@ -2609,7 +2609,7 @@
       "label": "Spread setSession 60s sync interval to R80.3 / throughput / conduit / braden",
       "resolved_at": "2026-05-08T03:55Z",
       "resolved_by": "claude-code (master-orchestration verification)",
-      "evidence": "Done across all non-Next.js apps: R80.3 src/stores/authStore.ts, throughput src/lib/auth/AuthProvider.tsx, braden src/hooks/useAuth.ts (verified 2026-05-08). RULE: Next.js apps are exempt by design \u2014 @supabase/ssr cookie-refresh handles token rotation server-side; the setSession bridge runs only at /auth/callback. Currently only conduit is Next.js, but the rule applies universally to any future Next.js app added to BSuite."
+      "evidence": "Done across all non-Next.js apps: R80.3 src/stores/authStore.ts, throughput src/lib/auth/AuthProvider.tsx, braden src/hooks/useAuth.ts (verified 2026-05-08). RULE: Next.js apps are exempt by design — @supabase/ssr cookie-refresh handles token rotation server-side; the setSession bridge runs only at /auth/callback. Currently only conduit is Next.js, but the rule applies universally to any future Next.js app added to BSuite."
     },
     {
       "label": "Azure xms_edov claim configuration (BSU auth hardening)",
@@ -2627,13 +2627,13 @@
       "label": "GitHub branch protection: code-owner review enforcement (workflow decision)",
       "resolved_at": "2026-05-08T04:35Z",
       "resolved_by": "operator-confirmed (intentional workflow choice)",
-      "evidence": "Operator confirmed: code-owner review enforcement is INTENTIONALLY off. Multi-agent (claude-code, perplexity-computer, codebuff, copilot) self-merge workflow requires no mandatory human review. Baseline branch protection (gitleaks check, no force-push, no delete, enforce admins) IS applied to all 14 branches (7 main + 7 development) as of 2026-05-08T04:00Z. Not a blocker \u2014 a deliberate workflow choice."
+      "evidence": "Operator confirmed: code-owner review enforcement is INTENTIONALLY off. Multi-agent (claude-code, perplexity-computer, codebuff, copilot) self-merge workflow requires no mandatory human review. Baseline branch protection (gitleaks check, no force-push, no delete, enforce admins) IS applied to all 14 branches (7 main + 7 development) as of 2026-05-08T04:00Z. Not a blocker — a deliberate workflow choice."
     },
     {
       "label": "Xero OAuth flow live walkthrough (3-min test on already-logged-in browser)",
       "resolved_at": "2026-05-08T06:36:51Z",
       "resolved_by": "operator-verified (live OAuth round-trip)",
-      "evidence": "OAuth flow completed end-to-end on https://d.crm.crm7.app/settings/integrations against Braden Group tenant. Row in xero_connections: id=19d9dced-9e85-4498-bfd0-ec34c24d0c34, xero_tenant_name='Braden Pty Ltd', xero_tenant_id=111cde13-51d2-4fac-8497-57193705da69, scopes=[accounting.transactions, accounting.contacts, accounting.settings], expires_at=2026-05-08T07:06:50Z. Two server-side bugs caught + fixed during walkthrough: CORS allowlist (crm7#543, deployed live) + ALLOWED_REDIRECT_URIS path correction. Red-team audit per /xero-integration skill identifies 3 P0 (token encryption, multi-org UNIQUE, scope-storage drift), 9 P1, 10 P2 follow-ups \u2014 separate bsuite issues to file."
+      "evidence": "OAuth flow completed end-to-end on https://d.crm.crm7.app/settings/integrations against Braden Group tenant. Row in xero_connections: id=19d9dced-9e85-4498-bfd0-ec34c24d0c34, xero_tenant_name='Braden Pty Ltd', xero_tenant_id=111cde13-51d2-4fac-8497-57193705da69, scopes=[accounting.transactions, accounting.contacts, accounting.settings], expires_at=2026-05-08T07:06:50Z. Two server-side bugs caught + fixed during walkthrough: CORS allowlist (crm7#543, deployed live) + ALLOWED_REDIRECT_URIS path correction. Red-team audit per /xero-integration skill identifies 3 P0 (token encryption, multi-org UNIQUE, scope-storage drift), 9 P1, 10 P2 follow-ups — separate bsuite issues to file."
     }
   ],
   "counters": {
