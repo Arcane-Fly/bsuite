@@ -11,8 +11,8 @@
     "rulebook": "Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)",
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
-    "last_extended": "2026-05-08T10:57Z",
-    "extended_by": "perplexity-loop 2h sweep + branch protection adaptation",
+    "last_extended": "2026-05-08T12:48Z",
+    "extended_by": "perplexity-loop 4h sweep (manual main-session run after cron auth fix)",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
   },
   "summary": {
@@ -55,10 +55,10 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 197,
-    "open_prs_total": 8,
+    "open_issues_total": 189,
+    "open_prs_total": 9,
     "issues_by_repo": {
-      "bsuite": 76,
+      "bsuite": 68,
       "crm7": 67,
       "business-suite-unified": 28,
       "braden": 13,
@@ -67,7 +67,8 @@
       "throughput": 3
     },
     "prs_by_repo": {
-      "crm7": 8
+      "crm7": 8,
+      "bsuite": 1
     }
   },
   "repos": [
@@ -2380,7 +2381,11 @@
         "phase": "Future RTO",
         "issue": "crm7#527",
         "url": "https://github.com/GaryOcean428/crm7/issues/527",
-        "priority": "future"
+        "priority": "future",
+        "copilot_pr": "crm7#567",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/567",
+        "pr_status": "in_review",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       },
       {
         "id": "G2",
@@ -2389,7 +2394,11 @@
         "phase": "3N",
         "issue": "crm7#528",
         "url": "https://github.com/GaryOcean428/crm7/issues/528",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#569",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/569",
+        "pr_status": "in_review",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       },
       {
         "id": "G3",
@@ -2398,7 +2407,11 @@
         "phase": "3N",
         "issue": "crm7#529",
         "url": "https://github.com/GaryOcean428/crm7/issues/529",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#570",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/570",
+        "pr_status": "in_review",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       },
       {
         "id": "G4",
@@ -2407,7 +2420,11 @@
         "phase": "3N+4O",
         "issue": "crm7#530",
         "url": "https://github.com/GaryOcean428/crm7/issues/530",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#571",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/571",
+        "pr_status": "in_review",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       },
       {
         "id": "G5",
@@ -2416,7 +2433,11 @@
         "phase": "3N",
         "issue": "crm7#531",
         "url": "https://github.com/GaryOcean428/crm7/issues/531",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#572",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/572",
+        "pr_status": "in_review",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       },
       {
         "id": "G6",
@@ -2425,7 +2446,11 @@
         "phase": "3M",
         "issue": "crm7#532",
         "url": "https://github.com/GaryOcean428/crm7/issues/532",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#573",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/573",
+        "pr_status": "in_review",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       },
       {
         "id": "G7",
@@ -2434,7 +2459,11 @@
         "phase": "3M",
         "issue": "crm7#533",
         "url": "https://github.com/GaryOcean428/crm7/issues/533",
-        "priority": "p2"
+        "priority": "p2",
+        "copilot_pr": "crm7#574",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/574",
+        "pr_status": "in_review",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       },
       {
         "id": "G8",
@@ -2443,7 +2472,11 @@
         "phase": "3M",
         "issue": "crm7#534",
         "url": "https://github.com/GaryOcean428/crm7/issues/534",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#575",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/575",
+        "pr_status": "in_review_conflicting",
+        "doctrine_status": "missing \u2014 needs-redteam labelled"
       }
     ],
     "parent_tracker": {
@@ -2477,7 +2510,16 @@
         "scope": "Multi-jurisdiction",
         "source": "https://www.fairwork.gov.au/leave/long-service-leave"
       }
-    ]
+    ],
+    "copilot_delegation": {
+      "started_at": "2026-05-08T04:02Z",
+      "assignment_method": "GraphQL replaceActorsForAssignable to copilot-swe-agent (BOT_kgDOC9w8XQ)",
+      "prs_drafted": 8,
+      "prs_mergeable": 7,
+      "prs_conflicting": 1,
+      "prs_doctrine_compliant": 0,
+      "note": "Copilot drafted all 8 PRs within ~8h. CI green on 7 mergeable PRs (Vercel Preview pass). Doctrine blocks (\u00a71.2/\u00a72.2/\u00a73.2) missing on all 8 \u2014 needs-redteam labels applied + templates posted on each PR. Awaiting Copilot iteration."
+    }
   },
   "dashboard_update_protocol": {
     "schema_version": "1.1",
