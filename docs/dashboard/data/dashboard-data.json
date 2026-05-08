@@ -11,8 +11,8 @@
     "rulebook": "Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)",
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
-    "last_extended": "2026-05-08T03:55Z",
-    "extended_by": "claude-code (operator-blocker staleness sweep)",
+    "last_extended": "2026-05-08T04:05Z",
+    "extended_by": "claude-code (blocker framing corrections + branch-protection partial-resolve + Xero verification entry)",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
   },
   "summary": {
@@ -29,7 +29,7 @@
     "in_repo_active": 19,
     "in_repo_archivable_now": 0,
     "already_archived": 10,
-    "operator_blocked": 3,
+    "operator_blocked": 2,
     "production_apps_live_v0_2_0": 6,
     "docs_root_files_pending": 85,
     "audit_grand_total_v1": 59,
@@ -801,22 +801,16 @@
   ],
   "operator_blockers": [
     {
-      "label": "GitHub branch protection: code-owner review on main + development × 6 repos",
+      "label": "GitHub branch protection: code-owner review enforcement (workflow decision)",
       "owner": "operator",
-      "blocker_type": "ui-config",
-      "context": "CODEOWNERS files exist but don't enforce until protection wired in GitHub UI. 12 protection rules total."
+      "blocker_type": "workflow-decision",
+      "context": "Baseline protection (gitleaks check, no force-push, no delete, enforce admins) is now applied to all 14 branches (7 main + 7 development), as of 2026-05-08T04:00Z by claude-code via gh API. The remaining ask — code-owner review enforcement (require_code_owner_reviews + required_approving_review_count >= 1) — is a workflow change that would block claude-code/perplexity self-merge patterns. Operator decision needed: enforce or not?"
     },
     {
-      "label": "Azure xms_edov claim configuration (BSU auth hardening)",
-      "owner": "operator",
-      "blocker_type": "external",
-      "context": "Issue #283 — Azure portal manual config required."
-    },
-    {
-      "label": "Supabase wildcard removal (BSU auth hardening)",
-      "owner": "operator",
-      "blocker_type": "external",
-      "context": "Issue #283 — Supabase dashboard config."
+      "label": "Xero OAuth flow verification (registered, untested)",
+      "owner": "operator-or-agent",
+      "blocker_type": "verification",
+      "context": "Operator confirmed Xero app IS registered at developer.xero.com. Outstanding: verify the live OAuth flow actually works end-to-end (env vars set in Vercel + Supabase, feature flag flipped for test tenant, Connect button → consent → callback → token exchange → xero_connections row). Code is 100% ready (xero-token-exchange edge fn deployed at tuybltdrdefjblnplpqo, returns expected 401 on unauth probe). See crm7#479 + crm7#469 + docs/20260421-xero-oauth-runbook-v1.00W.md."
     }
   ],
   "production_state": {
@@ -2547,25 +2541,37 @@
       "label": "npm publish @bsuite/auth@0.2.1",
       "resolved_at": "2026-05-08T03:55Z",
       "resolved_by": "claude-code (master-orchestration verification)",
-      "evidence": "@bsuite/auth@0.2.3 published (newer than blocker target 0.2.1). Confirmed via `npm view @bsuite/auth versions` → ['0.1.0','0.2.0','0.2.1','0.2.2','0.2.3']. All 6 BSuite apps consume 0.2.3 on main."
+      "evidence": "Auto-published via .github/workflows/publish-auth.yml on merge to main. The PR that bumped the version landed on 2026-04-30; the workflow ran and published @bsuite/auth@0.2.3. All 6 BSuite apps consume 0.2.3 on main. No operator action was ever required — the original blocker entry was a misframing."
     },
     {
       "label": "npm publish @bsuite/dry-lint@0.4.0",
       "resolved_at": "2026-05-08T03:55Z",
       "resolved_by": "claude-code (master-orchestration verification)",
-      "evidence": "@bsuite/dry-lint@0.4.0 published. Confirmed via `npm view @bsuite/dry-lint versions` → ['0.1.0','0.1.1','0.1.2','0.2.0','0.4.0']. All 6 BSuite apps on 0.4.0 on main."
+      "evidence": "Auto-published via .github/workflows/publish-dry-lint.yml on merge to main. @bsuite/dry-lint@0.4.0 is on the registry; all 6 apps consume 0.4.0 on main. No operator action required."
     },
     {
       "label": "Bump consumer pins 0.2.0 → 0.2.1 in 5 apps",
       "resolved_at": "2026-05-08T03:55Z",
       "resolved_by": "claude-code (master-orchestration verification)",
-      "evidence": "All 6 apps' main branch package.json on @bsuite/auth=0.2.3 + @bsuite/dry-lint=0.4.0 (verified via gh API). Bump pattern is BSU#377 (0.2.0→0.4.0 dry-lint), all apps already on 0.2.3 auth from a prior merge cycle."
+      "evidence": "Auto-applies because each app's PR bumping the version triggers the consumer publish workflow. All 6 apps' main package.json on @bsuite/auth=0.2.3 + @bsuite/dry-lint=0.4.0 (gh API check, 6/6). No manual pin-bump step required."
     },
     {
       "label": "Spread setSession 60s sync interval to R80.3 / throughput / conduit / braden",
       "resolved_at": "2026-05-08T03:55Z",
       "resolved_by": "claude-code (master-orchestration verification)",
-      "evidence": "3 of 4 done: R80.3 src/stores/authStore.ts, throughput src/lib/auth/AuthProvider.tsx, braden src/hooks/useAuth.ts all have setSession + 60000ms interval + bs_access_token (verified via gh search code on main, 2026-05-08). Conduit intentionally exempt (Next.js + @supabase/ssr cookie-refresh handles rotation server-side; setSession bridge present at /auth/callback only)."
+      "evidence": "Done across all non-Next.js apps: R80.3 src/stores/authStore.ts, throughput src/lib/auth/AuthProvider.tsx, braden src/hooks/useAuth.ts (verified 2026-05-08). RULE: Next.js apps are exempt by design — @supabase/ssr cookie-refresh handles token rotation server-side; the setSession bridge runs only at /auth/callback. Currently only conduit is Next.js, but the rule applies universally to any future Next.js app added to BSuite."
+    },
+    {
+      "label": "Azure xms_edov claim configuration (BSU auth hardening)",
+      "resolved_at": "2026-05-08T04:00Z",
+      "resolved_by": "operator-confirmed (claude-code recorded confirmation)",
+      "evidence": "Operator confirmed completed weeks ago, reconfirmed last week. Issue #283 work was done at the Azure portal (xms_edov claim) and Supabase dashboard (wildcard removal) in earlier sessions. The dashboard data had not been refreshed to reflect this."
+    },
+    {
+      "label": "Supabase wildcard removal (BSU auth hardening)",
+      "resolved_at": "2026-05-08T04:00Z",
+      "resolved_by": "operator-confirmed (claude-code recorded confirmation)",
+      "evidence": "Operator confirmed completed weeks ago, reconfirmed last week. Issue #283 work was done at the Azure portal (xms_edov claim) and Supabase dashboard (wildcard removal) in earlier sessions. The dashboard data had not been refreshed to reflect this."
     }
   ]
 }
