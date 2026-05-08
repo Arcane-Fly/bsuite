@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.05W
+**Version:** 5.06W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-08 (Recently Completed section refresh — adds doctrine, dashboard, uplift-wave, parity-spec, and Autonoma landmarks shipped 2026-04-15 → 2026-05-08; bsuite#725)
+**Last Updated:** 2026-05-08 (In Progress / Pending audit + RT-10 done — claude-loop ROADMAP rotation, bsuite#731; complements bsuite#725)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -619,14 +619,16 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ## In Progress / Pending
 
-- ⚠️ Item 9: Test coverage — fairwork + auth tests complete, 16 pre-existing failures in AI components remain
-- ⚠️ Dashboard polish: hero signals, bento grid, ai_sessions/ai_messages tables, DND accessibility (KeyboardSensor)
+> **2026-05-08 audit refresh** (claude-loop ROADMAP rotation, bsuite#731). Each item below was re-verified against canonical state at this run's STEP 3 audit; status flags now reflect 2026-05-08 reality. See [`docs/20260508-roadmap-pending-audit-v1.00W.md`](./20260508-roadmap-pending-audit-v1.00W.md) for the full evidence trail (8 items × source SHAs).
+
+- ⚠️ Item 9: Test coverage — fairwork + auth tests complete; W4 admin lib/admin coverage gap closed via [BSU#387](https://github.com/GaryOcean428/business-suite-unified/pull/387) (18 vitest specs, awaiting ship-all-apps merge per bsuite#720). Open: 16 pre-existing AI-component failures in CRM7; PermissionsEditor.tsx page-level integration test (~6 specs, deferred to next TESTS rotation per bsuite#717 follow-up note).
+- ✅ ~~Dashboard polish: hero signals, bento grid, ai_sessions/ai_messages tables, DND accessibility (KeyboardSensor)~~ — complete; KeyboardSensor / sortableKeyboardCoordinates / aria-label sweep struck 2026-05-01 under P0-15 rollup (item 26a + AUD-16); ai_sessions/ai_messages tables already exist in Supabase (P0 item 2 struck); hero signals + bento grid live via D2C Neon Electric rollout (WS-D 9 PRs, see Recently Completed 2026-04-14).
 - ✅ ~~Stripe end-to-end verification~~ — complete (2026-03-19)
-- ⚠️ SP-3: CRM7 Tier 3-4 page wiring — in progress (Claude Code primary)
-- ⚠️ Cross-app notifications (Supabase Realtime pub/sub)
-- ⚠️ BOOT compliance engine (C8-tier, competitive differentiator — foundU is only competitor with any BOOT support)
-- ⚠️ @bsuite/charge-calc full convergence (3 independent calc engines → 1 shared package)
-- ⚠️ Xero payroll integration (5 major TODO blocks in CRM7)
+- ⚠️ SP-3: CRM7 Tier 3-4 page wiring — partial: training-plan progress report ([CRM7#575](https://github.com/GaryOcean428/crm7/pull/575)), host-employer monthly pack ([CRM7#571](https://github.com/GaryOcean428/crm7/pull/571)), Fair Work inspector report ([CRM7#574](https://github.com/GaryOcean428/crm7/pull/574)), STP Phase-2 export ([CRM7#573](https://github.com/GaryOcean428/crm7/pull/573)), apprentice-progress reports ([CRM7#570](https://github.com/GaryOcean428/crm7/pull/570)), portable-LSL multi-state exports ([CRM7#569](https://github.com/GaryOcean428/crm7/pull/569)) — all on `crm7@development` post 2026-05-08T08 promote. Reports tier substantially closed; financial / compliance / WHS / comms tiers still in-progress per Copilot autonomy.
+- ⚠️ Cross-app notifications (Supabase Realtime pub/sub) — pending; tracked as P2 #19; deferred behind the active ship-all-apps cycle work; no scoping doc written yet.
+- ⚠️ BOOT compliance engine (C8-tier, competitive differentiator — foundU + Workforce One are the only competitors with any BOOT support, and Workforce One holds 30% GTO market share specifically on BOOT automation differentiation per CLAUDE-LOOP COMPETE notes); pending; tracked as P2 #14 ("Enterprise Agreement + BOAT validation").
+- ✅ ~~@bsuite/charge-calc full convergence (3 independent calc engines → 1 shared package)~~ — convergence achieved at the dependency level: both consumers pin `@bsuite/charge-calc: ^0.2.3` per [`crm7/package.json`](https://github.com/GaryOcean428/crm7/blob/development/package.json) (sha `522b594`) and [`R80.3/package.json`](https://github.com/GaryOcean428/R80.3/blob/development/package.json) (sha `3a27510`) at 2026-05-08T08 audit. Package published to npm at `^0.2.3`. Open: legacy parallel-engine removal verification deferred to next FEATURE / EDGE rotation (out-of-scope for ROADMAP audit per single-cycle rule).
+- ⚠️ Xero payroll integration (5 major TODO blocks in CRM7) — partial: OAuth fixes shipped via 2026-05-08T08 promote ([crm7@main #568](https://github.com/GaryOcean428/crm7/pull/568)); `xero-token-exchange`, `xero-invoice-submit`, `ram-token-exchange` edge fns active with dual-layer rate limiting; `xero-node ^15.0.1` consumed in `crm7/package.json`. Remaining: invoice-line-item mapping, payroll-run sync, multi-tenant Xero org switching.
 
 ---
 
@@ -721,7 +723,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | SP-4 | Entity crosswalk doc | ✅ Complete |
 | SP-5 | system_notices migration + SystemNoticeBanner rollout | ✅ Complete |
 | CA-8 | BSU hardcoded hex → D2C token sweep | ✅ Complete |
-| RT-10 | BSU react-day-picker v8 → v9 audit | 🔲 Pending |
+| RT-10 | BSU react-day-picker v8 → v9 audit | ✅ Complete (2026-05-08) — `react-day-picker: ^9.14.0` confirmed in `business-suite-unified/package.json` at sha `cc598ee` (pinned alongside React 19.2.5 + date-fns 4.1.0 + Tailwind v4) |
 
 ## Audit Sprint Status (2026-04-14)
 
@@ -765,6 +767,16 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-08 v5.06W** — claude-loop ROADMAP rotation (bsuite#731). In Progress / Pending audit:
+  - Item 9 test coverage: refreshed with W4 admin lib coverage status (BSU#387) + open PermissionsEditor page-level test gap (deferred).
+  - Dashboard polish: STRUCK — KeyboardSensor / sortableKeyboardCoordinates / aria-label sweep already shipped (26a + AUD-16 rollup); ai_sessions/ai_messages tables already exist (P0 #2 struck); hero signals + bento grid live via WS-D rollout.
+  - SP-3 CRM7 Tier 3-4: refreshed with 6 active reports-uplift Copilot PRs landed via 2026-05-08T08 promote (CRM7 #569–575).
+  - charge-calc convergence: STRUCK — both CRM7 + R80.3 consume `@bsuite/charge-calc: ^0.2.3` per `package.json` audit at SHAs `522b594` / `3a27510`.
+  - Xero payroll: refreshed with OAuth fix shipment + remaining 3 sub-tasks named (invoice-line mapping, payroll sync, multi-tenant org switch).
+  - **RT-10 (P3 Sprint Status):** ✅ Complete — `react-day-picker: ^9.14.0` verified in BSU `package.json` at sha `cc598ee`. Closes the last 🔲 Pending row in the P3 Sprint Status table.
+  - Companion evidence document: `docs/20260508-roadmap-pending-audit-v1.00W.md` (full per-item evidence trail).
+- **2026-05-08 v5.05W** — claude-loop DOCS rotation (bsuite#725 / PR #726). Single additive section appended above the prior 2026-04-14 batch; captures doctrine, dashboard, uplift-wave, parity-spec, Autonoma landmarks shipped 2026-04-15 → 2026-05-08.
+- **2026-05-06 v5.04W** — plans audit roll-up (operator-driven; merged via PR #430 doc-unification chain). External corpus reconciliation; 12 plans verified DONE, 11 superseded, 5 actionable.
 - **2026-05-01 v5.03W** — Phase 0 ratification rollup (P0-15 of finish-line roadmap):
   - Citation added: merged execution backlog (`20260501-merged-execution-backlog-v1.00W.md`) as the active phase-ordered execution queue post-ratification.
   - Citation added: Phase 0 ADRs 0001–0006 as governance authority for atomic replace-and-remove.
@@ -808,6 +820,7 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 | BSuite Gap Report (2026-03-16) | [`docs/20260316-bsuite-gap-report-v1.00W.md`](./20260316-bsuite-gap-report-v1.00W.md) |
 | BSuite Gap Report v2 (2026-03-17) | [`docs/20260317-bsuite-gap-report-v2.00W.md`](./20260317-bsuite-gap-report-v2.00W.md) |
 | BSuite Completeness Matrix (2026-03-09) | [`docs/20260309-bsuite-completeness-matrix-v1.00W.md`](./20260309-bsuite-completeness-matrix-v1.00W.md) |
+| In Progress / Pending Audit (2026-05-08) | [`docs/20260508-roadmap-pending-audit-v1.00W.md`](./20260508-roadmap-pending-audit-v1.00W.md) |
 | CRM7 AI Strategic Vision | [`crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md`](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) |
 | Conduit RBAC Architecture Design | [`conduit/docs/20260303-rbac-architecture-design-v1.00W.md`](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md) |
 | R80.3 External Wage Sources Reference | [`R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md`](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |
