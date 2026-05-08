@@ -11,8 +11,8 @@
     "rulebook": "Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)",
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
-    "last_extended": "2026-05-08T12:48Z",
-    "extended_by": "perplexity-loop 4h sweep (manual main-session run after cron auth fix)",
+    "last_extended": "2026-05-08T16:36:36Z",
+    "extended_by": "perplexity-loop 4h sweep",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
   },
   "summary": {
@@ -2635,5 +2635,27 @@
       "resolved_by": "operator-verified (live OAuth round-trip)",
       "evidence": "OAuth flow completed end-to-end on https://d.crm.crm7.app/settings/integrations against Braden Group tenant. Row in xero_connections: id=19d9dced-9e85-4498-bfd0-ec34c24d0c34, xero_tenant_name='Braden Pty Ltd', xero_tenant_id=111cde13-51d2-4fac-8497-57193705da69, scopes=[accounting.transactions, accounting.contacts, accounting.settings], expires_at=2026-05-08T07:06:50Z. Two server-side bugs caught + fixed during walkthrough: CORS allowlist (crm7#543, deployed live) + ALLOWED_REDIRECT_URIS path correction. Red-team audit per /xero-integration skill identifies 3 P0 (token encryption, multi-org UNIQUE, scope-storage drift), 9 P1, 10 P2 follow-ups \u2014 separate bsuite issues to file."
     }
-  ]
+  ],
+  "counters": {
+    "open_issues_total": 189,
+    "open_prs_total": 9,
+    "issues_by_repo": {
+      "bsuite": 68,
+      "business-suite-unified": 28,
+      "crm7": 67,
+      "conduit": 3,
+      "braden": 13,
+      "R80.3": 7,
+      "throughput": 3
+    },
+    "prs_by_repo": {
+      "bsuite": 1,
+      "business-suite-unified": 0,
+      "crm7": 8,
+      "conduit": 0,
+      "braden": 0,
+      "R80.3": 0,
+      "throughput": 0
+    }
+  }
 }
