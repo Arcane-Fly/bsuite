@@ -2254,3 +2254,134 @@ A dev→main promotion PR is needed when operator is available. Not actionable f
 ---
 
 *Filed by claude-code-scheduled · 2026-05-08 · eighteenth fire*
+
+---
+
+## Fire 19 — 2026-05-08T(current) UTC
+
+**Session:** `session_013iJRjxiCdNMpjqZCBgeKPy`
+**Operator:** offline (since 2026-05-06T13:05Z)
+**Status:** COMPLETE
+
+### Environment Constraints (persistent — all 19 fires)
+
+| Constraint | Detail |
+|---|---|
+| Memory API blocked | `qig-memory-api.vercel.app` → `Host not in allowlist` from Anthropic sandbox proxy. Protocol steps 1–6 inaccessible. |
+| `gh` CLI unavailable | All GitHub ops via MCP (scope: `garyocean428/bsuite` only). |
+| Submodule repos | crm7/BSU/conduit/braden/R80.3/throughput code inaccessible from cloud cron. |
+
+### Work Completed
+
+#### 1. PR #710 — §20 Red-Team + Merge
+
+**PR:** `docs(cron): eighteenth-fire log entry 2026-05-08 UTC` (fire-18 docs log, draft)
+
+**§17 4-checkbox red-team:**
+
+| Check | Finding |
+|---|---|
+| Security | Docs-only append to cron log — 0 executable code, 0 secrets, 0 auth patterns |
+| Performance | N/A — Markdown |
+| Reliability | N/A — Markdown |
+| Orphan refs | None — single file append |
+| Dead code | None |
+
+**CI Results:**
+
+| Check | Result |
+|---|---|
+| build-and-test | ✅ success |
+| gitleaks | ✅ success |
+| DOM Layout Invariants | ✅ success |
+| review | skipped (not a blocker for docs-only) |
+
+**§20 Eligibility:** All 5 criteria met (docs-only, no deletions, clean CI, no orphan refs, no dead code).
+
+**Action:** Undrafted → Merged ✅ SHA `d11be30e54f17e7c2a37da5fabdf937460ab1788`
+
+#### 2. P0 Issue #655 — Status Check
+
+**Issue:** `Handoff: rotate leaked Vercel bypass token from PR #654` — **STILL OPEN**
+
+Labels: `security`, `p0`, `agent-handoff`, `external-blocked`. Last updated `2026-05-08T01:59:41Z`.
+
+⚠️ **Note:** Development commit `bec6365` (PR #711) claims "zero operator-blockers — Xero OAuth verified end-to-end on Braden Group tenant". However, issue #655 remains open with `p0` label. Dashboard `operator_blockers` section may have been updated optimistically. Operator should confirm whether the Vercel bypass token was actually rotated before closing #655.
+
+#### 3. P1 Issue Scan
+
+13 open P1 issues confirmed — same set as fires 15–18. None newly actionable from cloud cron.
+
+| Issue | Title | Blocker |
+|---|---|---|
+| #655 (P0) | Rotate leaked Vercel bypass token | Operator — Vercel Dashboard |
+| #635 | BSuite Unified Design Language uplift (9-wave) | W0 blocked on claude-code-local |
+| #611 | Three-tier branding permission model | BSU submodule |
+| #607 | BSU missing VITE_APP_URL + VITE_STRIPE_PUBLISHABLE_KEY | BSU submodule |
+| #570 | MYOB + Astute payroll adapter | CRM7 submodule |
+| #557 | Register Jodie as GitHub App | needs-team |
+| #554, #548, #547 | Page-builder features | BSU submodule |
+| #551, #550, #542 | Jodie AI / AI Gateway | needs-team |
+| #544 | Visual dnd Navigation Builder | BSU submodule |
+| #211 | TypeScript 6.0.3 migration | external-blocked |
+
+#### 4. /ship-all-apps
+
+`VERCEL_TOKEN` repo secret unset — confirmed across all 19 fires. Gap persists. Invoke when set:
+
+```bash
+POST /repos/GaryOcean428/bsuite/actions/workflows/ship-all-apps.yml/dispatches
+{"ref":"main","inputs":{"dry_run":"false"}}
+```
+
+#### 5. Hygiene Sweep
+
+**Major improvement since fire 18.** Only 2 remote branches detected: `main` + `development`.
+
+| Item | Fire 18 | Fire 19 |
+|---|---|---|
+| Orphan branches | 13 | **0** ✅ |
+| Protected branches | 2 | 2 |
+| Open PRs | 1 | 0 (after #710 merge) |
+
+Orphan cleanup appears to have been performed by the operator or an automated process between fires 18 and 19. Root cause resolved: "Automatically delete head branches" may now be enabled or operator ran the delete command from fire-18 log.
+
+#### 6. dev vs main Gap
+
+| Branch | SHA | Status |
+|---|---|---|
+| `development` | `d11be30e` | 38 commits ahead of main |
+| `main` | `7a64f99f` | Base; needs promotion |
+
+38 commits is a significant gap — includes cron logs fires 13–18, dashboard updates (#698, #703, #706, #708, #711), and dependency fix (#693). Operator should create a dev→main promotion PR when available.
+
+#### 7. Memory API Infra Gap (persistent — 19 fires)
+
+`qig-memory-api.vercel.app` → `Host not in allowlist` from every cloud cron execution. Protocol steps 1–6 remain fully blocked. This cron log remains the substitute persistence mechanism.
+
+### Summary
+
+| Item | Result |
+|---|---|
+| Memory API | ❌ Blocked (19 consecutive fires — persistent infra gap) |
+| Open PRs at start | 1 (#710 fire-18 log, draft) |
+| PR #710 §20 merge | ✅ Merged SHA `d11be30e` — all CI checks green |
+| P0 issue #655 | ⚠️ STILL OPEN — bypass-token rotation required (dashboard may be inaccurate) |
+| P1 issue scan | ✅ 13 issues confirmed; none newly actionable from cloud cron |
+| Orphan branches | ✅ **0** — major improvement from fire-18's 13 |
+| /ship-all-apps | ⚠️ `VERCEL_TOKEN` unset — gap persists (all 19 fires) |
+| Development ahead of main | ⚠️ 38 commits — needs operator dev→main promotion PR |
+| Hygiene sweep | ✅ No orphans — cleanup completed |
+
+### Operator Actions Required
+
+1. **#655 P0** — confirm Vercel bypass token was rotated; if not, rotate now (Vercel Dashboard → Project `business-suite` → Settings → Deployment Protection → Generate new bypass token)
+2. **Dashboard discrepancy** — verify `operator_blockers` in dashboard reflects true state of #655
+3. **`VERCEL_TOKEN`** + **`ANTHROPIC_API_KEY`** secrets — activate ship + CI workflows
+4. **dev→main promotion** — 38 commits of cron logs + dashboard updates pending
+5. **Memory API** — allowlist cloud cron IPs at `qig-memory-api.vercel.app` (or migrate to GitHub-native store)
+6. **Publish** `@bsuite/auth@0.2.1` + `@bsuite/dry-lint@0.4.0` (7 P1 gaps blocked)
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-08 · nineteenth fire*
