@@ -11,8 +11,8 @@
     "rulebook": "Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)",
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
-    "last_extended": "2026-05-08T04:35Z",
-    "extended_by": "claude-code (final blocker clean — branch-protection intentional, Xero walkthrough refined with d.* domain evidence)",
+    "last_extended": "2026-05-08T06:40Z",
+    "extended_by": "claude-code (Xero OAuth verified end-to-end; zero operator blockers remaining)",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
   },
   "summary": {
@@ -29,7 +29,7 @@
     "in_repo_active": 19,
     "in_repo_archivable_now": 0,
     "already_archived": 10,
-    "operator_blocked": 1,
+    "operator_blocked": 0,
     "production_apps_live_v0_2_0": 6,
     "docs_root_files_pending": 85,
     "audit_grand_total_v1": 59,
@@ -799,14 +799,7 @@
       "category": "Outstanding Item"
     }
   ],
-  "operator_blockers": [
-    {
-      "label": "Xero OAuth flow live walkthrough (3-min test on already-logged-in browser)",
-      "owner": "operator-3min",
-      "blocker_type": "verification",
-      "context": "Status as of 2026-05-08T04:35Z: Xero app REGISTERED at developer.xero.com (operator confirmed). Edge function xero-token-exchange DEPLOYED + reachable at tuybltdrdefjblnplpqo (verified via 401 UNAUTHORIZED_NO_AUTH_HEADER probe). Server-side secrets present in local .env.local mirror (XERO_CLIENT_ID, XERO_CLIENT_SECRET, XERO_REDIRECT_URI). Route /settings/integrations now SURFACED in nav (crm7#537 merged 04:35:24Z). Auth flow verified end-to-end via Playwright on https://d.crm.crm7.app/settings/integrations: redirected to BSU OAuth Server with CRM7 client_id (30f76744-...), full PKCE params, and d.crm.crm7.app/auth/callback ACCEPTED by OAuth allowlist (no invalid_redirect_uri). Outstanding: operator clicks Connect Xero on a test tenant in their already-logged-in browser, completes Xero consent, verifies xero_connections row appears. ~3 min."
-    }
-  ],
+  "operator_blockers": [],
   "production_state": {
     "all_apps_live_v0_2_0": true,
     "vercel_status": "6/6 success",
@@ -2572,6 +2565,12 @@
       "resolved_at": "2026-05-08T04:35Z",
       "resolved_by": "operator-confirmed (intentional workflow choice)",
       "evidence": "Operator confirmed: code-owner review enforcement is INTENTIONALLY off. Multi-agent (claude-code, perplexity-computer, codebuff, copilot) self-merge workflow requires no mandatory human review. Baseline branch protection (gitleaks check, no force-push, no delete, enforce admins) IS applied to all 14 branches (7 main + 7 development) as of 2026-05-08T04:00Z. Not a blocker — a deliberate workflow choice."
+    },
+    {
+      "label": "Xero OAuth flow live walkthrough (3-min test on already-logged-in browser)",
+      "resolved_at": "2026-05-08T06:36:51Z",
+      "resolved_by": "operator-verified (live OAuth round-trip)",
+      "evidence": "OAuth flow completed end-to-end on https://d.crm.crm7.app/settings/integrations against Braden Group tenant. Row in xero_connections: id=19d9dced-9e85-4498-bfd0-ec34c24d0c34, xero_tenant_name='Braden Pty Ltd', xero_tenant_id=111cde13-51d2-4fac-8497-57193705da69, scopes=[accounting.transactions, accounting.contacts, accounting.settings], expires_at=2026-05-08T07:06:50Z. Two server-side bugs caught + fixed during walkthrough: CORS allowlist (crm7#543, deployed live) + ALLOWED_REDIRECT_URIS path correction. Red-team audit per /xero-integration skill identifies 3 P0 (token encryption, multi-org UNIQUE, scope-storage drift), 9 P1, 10 P2 follow-ups — separate bsuite issues to file."
     }
   ]
 }
