@@ -2095,3 +2095,162 @@ Priority actions (persistent — none resolvable from cloud cron):
 ---
 
 *Filed by claude-code-scheduled · 2026-05-08 · seventeenth fire*
+
+---
+
+## Fire 18 — 2026-05-08T06:xx UTC
+
+**Session:** `session_01Ya6sRE1RegQRTcVJ5j23p1`
+**Operator:** offline (since 2026-05-06T13:05Z)
+**Status:** COMPLETE
+
+### Environment Constraints (persistent — all 18 fires)
+
+| Constraint | Detail |
+|---|---|
+| Memory API blocked | `qig-memory-api.vercel.app` → `403 Host not in allowlist` from Anthropic sandbox proxy. All protocol steps 1–6 (read protocol, update presence, drain inbox, ack messages, find workqueue, check peer presence) inaccessible. |
+| `gh` CLI unavailable | All GitHub ops via MCP (scope: `garyocean428/bsuite` only). |
+| Submodule repos | crm7/BSU/conduit/braden/R80.3/throughput code inaccessible from cloud cron. |
+
+### Work Completed
+
+#### 1. PR #709 — §17 Red-Team + §20 Merge
+
+**PR:** `docs(cron): seventeenth-fire log entry 2026-05-08 UTC` (fire-17 docs log, draft)
+
+**§17 4-checkbox red-team:**
+
+| Check | Finding |
+|---|---|
+| Security | Docs-only append to cron log — 0 executable code, 0 secrets, 0 auth patterns |
+| Performance | N/A — Markdown |
+| Reliability | N/A — Markdown |
+| Orphan refs | None — single file append |
+| Dead code | None |
+
+**CI Results:**
+
+| Check | Result |
+|---|---|
+| build-and-test | ✅ success |
+| gitleaks | ✅ success |
+| DOM Layout Invariants | ✅ success |
+| review | skipped (not a blocker) |
+
+**§20 Eligibility (per PR body — all boxes checked):**
+- Docs-only (0 source/config changes)
+- No deletions
+- No orphan refs
+- No dead code
+
+**Action:** Undrafted → Merged ✅ SHA `83694dd`
+
+#### 2. P1 Issue Scan
+
+13 open P1 issues confirmed — same set as fires 15–17. None newly actionable from cloud cron.
+
+| Issue | Title | Blocker |
+|---|---|---|
+| #655 (P0) | Rotate leaked Vercel bypass token | Operator — Vercel Dashboard |
+| #635 | BSuite Unified Design Language uplift (9-wave) | W0 blocked on claude-code-local |
+| #611 | Three-tier branding permission model | BSU submodule |
+| #607 | BSU missing VITE_APP_URL + VITE_STRIPE_PUBLISHABLE_KEY | BSU submodule |
+| #570 | MYOB + Astute payroll adapter | CRM7 submodule |
+| #557 | Register Jodie as GitHub App | needs-team |
+| #554, #548, #547 | Page-builder features | BSU submodule |
+| #551, #550, #542 | Jodie AI / AI Gateway | needs-team |
+| #544 | Visual dnd Navigation Builder | BSU submodule |
+| #211 | TypeScript 6.0.3 migration | external-blocked |
+
+#### 3. /ship-all-apps
+
+`scripts/ship-all-apps.sh` and `.github/workflows/ship-all-apps.yml` present. Gap: `VERCEL_TOKEN` repo secret unset — confirmed across all 18 fires. Cannot invoke from cloud cron. Trigger command when secret is set:
+
+```bash
+# Via GitHub Actions workflow_dispatch (requires VERCEL_TOKEN in repo secrets):
+POST /repos/GaryOcean428/bsuite/actions/workflows/ship-all-apps.yml/dispatches
+{"ref":"main","inputs":{"dry_run":"false"}}
+```
+
+#### 4. Hygiene Sweep (daily 06:00 UTC fire — this fire ~06:20 UTC)
+
+15 branches total. 2 protected (`main`, `development`). **13 orphan claude/* branches** — none have open PRs.
+
+| Branch | Age | Has Open PR |
+|---|---|---|
+| `claude/docs/cron-log-2026-05-07` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-11h` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-third-fire` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-fourth-fire` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-fourth-fire-v2` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-fifth-fire` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-sixth-fire` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-seventh-fire` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-eleventh-fire` | ~1d | No |
+| `claude/docs/cron-log-2026-05-07-twelfth-fire` | ~1d | No |
+| `claude/docs/cron-log-2026-05-08-fifteenth-fire` | <1d | No |
+| `claude/docs/cron-log-2026-05-08-sixteenth-fire` | <1d | No |
+| `claude/docs/cron-log-2026-05-08-seventeenth-fire` | <1d | No (PR #709 merged) |
+
+**Delete command (operator):**
+```bash
+git push origin --delete \
+  claude/docs/cron-log-2026-05-07 \
+  claude/docs/cron-log-2026-05-07-11h \
+  claude/docs/cron-log-2026-05-07-third-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire \
+  claude/docs/cron-log-2026-05-07-fourth-fire-v2 \
+  claude/docs/cron-log-2026-05-07-fifth-fire \
+  claude/docs/cron-log-2026-05-07-sixth-fire \
+  claude/docs/cron-log-2026-05-07-seventh-fire \
+  claude/docs/cron-log-2026-05-07-eleventh-fire \
+  claude/docs/cron-log-2026-05-07-twelfth-fire \
+  claude/docs/cron-log-2026-05-08-fifteenth-fire \
+  claude/docs/cron-log-2026-05-08-sixteenth-fire \
+  claude/docs/cron-log-2026-05-08-seventeenth-fire
+```
+
+**Root cause of accumulation:** Each cron fire creates a topic branch for its PR. Once merged, the branch is not auto-deleted (branch protection + no delete-branch-on-merge enabled for `development` base). Recommended fix: enable "Automatically delete head branches" in repository settings, or have operator run the delete command above.
+
+#### 5. dev vs main Gap
+
+| Branch | SHA | Status |
+|---|---|---|
+| `development` | `83694dd` | Up to date (includes fires 15–18) |
+| `main` | `7a64f99` | ~8 commits behind development |
+
+A dev→main promotion PR is needed when operator is available. Not actionable from cloud cron (requires merge of protected `main`).
+
+#### 6. Memory API Infra Gap (persistent — 18 fires)
+
+`qig-memory-api.vercel.app` → `Host not in allowlist` from every cloud cron execution. Protocol steps 1–6 remain fully blocked. This cron log is the substitute persistence mechanism.
+
+**Recommended fix:** Enable "Automatically delete head branches" in repository settings, OR migrate memory to a GitHub-native store (repo file, gist, or workflow artifact) accessible via the MCP GitHub tools already available.
+
+### Summary
+
+| Item | Result |
+|---|---|
+| Memory API | ❌ Blocked (18 consecutive fires — persistent infra gap) |
+| Open PRs at start | 1 (#709 fire-17 log, draft) |
+| PR #709 §20 merge | ✅ Merged SHA `83694dd` — all CI checks green |
+| P0 issue #655 | ⚠️ Bypass-token rotation still required (Vercel Dashboard) |
+| P1 issue scan | ✅ 13 issues confirmed; none newly actionable from cloud cron |
+| Orphan branches | ⚠️ 13 total (10 from 05-07 + fifteenth/sixteenth/seventeenth-fire) |
+| /ship-all-apps | ⚠️ `VERCEL_TOKEN` unset — gap persists (all 18 fires) |
+| Development ahead of main | ⚠️ ~8 commits — needs operator dev→main promotion PR |
+| Hygiene sweep | ✅ 13 orphan branches catalogued; delete command above |
+
+### Operator Actions Required
+
+1. **#655 P0** — rotate leaked Vercel bypass token (Vercel Dashboard → Project `business-suite` → Settings → Deployment Protection)
+2. **`VERCEL_TOKEN`** + **`ANTHROPIC_API_KEY`** secrets — activate ship + CI workflows
+3. **Branch cleanup** — run the 13-branch delete command above
+4. **dev→main promotion** — merge development → main (8 commits of cron logs + dashboard updates)
+5. **Memory API** — allowlist cloud cron IPs at `qig-memory-api.vercel.app` (or migrate to GitHub-native store)
+6. **Publish** `@bsuite/auth@0.2.1` + `@bsuite/dry-lint@0.4.0` (7 P1 gaps blocked)
+7. **W2 uplift wave** — requires claude-code-local with CRM7 + BSU submodule access
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-08 · eighteenth fire*
