@@ -1,5 +1,5 @@
 import { Eye, EyeOff, Layers, LayoutGrid, Plus, RotateCcw, Save, Settings2 } from 'lucide-react';
-import React, { startTransition, useEffect, useMemo, useState } from 'react';
+import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, maxSize, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
@@ -214,6 +214,36 @@ export function PageGridLayout({
     [renderableWidgetKeys, visibleKeys],
   );
 
+  // Reset-confirmation dialog: ARIA APG dialog-modal pattern.
+  // - Escape key closes the dialog (WAI-ARIA APG keyboard interaction).
+  // - Initial focus moves to the Cancel button (safe default per APG guidance
+  //   for destructive confirmations).
+  // - Focus returns to the element that invoked the dialog when it closes.
+  const resetCancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!resetConfirmOpen || typeof window === 'undefined') return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setResetConfirmOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [resetConfirmOpen, setResetConfirmOpen]);
+
+  useEffect(() => {
+    if (!resetConfirmOpen || typeof document === 'undefined') return;
+    const previousActiveElement = document.activeElement as HTMLElement | null;
+    resetCancelButtonRef.current?.focus();
+    return () => {
+      previousActiveElement?.focus?.();
+    };
+  }, [resetConfirmOpen]);
+
   return (
     <div className={className}>
       {isEditing && (
@@ -339,23 +369,42 @@ export function PageGridLayout({
       )}
 
       {resetConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="page-grid-reset-title">
-          <div className="max-w-md rounded-lg bg-card p-5 shadow-lg border">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="page-grid-reset-title"
+          aria-describedby="page-grid-reset-description"
+        >
+          <div className="max-w-md rounded-lg bg-card p-5 shadow-lg border border-border">
             <h2 id="page-grid-reset-title" className="text-lg font-semibold">Reset page layout?</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p id="page-grid-reset-description" className="mt-2 text-sm text-muted-foreground">
               This will discard your current layout and restore all widgets to their default positions.
             </p>
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" className="rounded-md border px-3 py-2 text-sm" onClick={() => setResetConfirmOpen(false)}>
+              <button
+                type="button"
+                ref={resetCancelButtonRef}
+                onClick={() => setResetConfirmOpen(false)}
+                className={cn(
+                  'inline-flex items-center rounded-md border border-border px-3 py-2 text-sm transition-colors',
+                  'bg-card text-foreground hover:bg-muted hover:text-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                )}
+              >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
                 onClick={() => {
                   handleReset();
                   setResetConfirmOpen(false);
                 }}
+                className={cn(
+                  'inline-flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'bg-destructive text-white shadow hover:bg-destructive/90',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-1',
+                )}
               >
                 Reset to Default
               </button>

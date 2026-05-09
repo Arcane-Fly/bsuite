@@ -83,6 +83,155 @@ describe('PageGridLayout column-preset chips theming', () => {
   });
 });
 
+describe('PageGridLayout reset-confirmation dialog (ARIA APG dialog-modal)', () => {
+  function openEditorAndClickReset(view: ReturnType<typeof render>) {
+    act(() => {
+      // Dispatch one of the canonical DEFAULT_EDITOR_EVENT_NAMES from
+      // usePageGridLayout to flip isEditing → true, which renders the toolbar
+      // including the "Reset to Default" button.
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+    });
+    const toolbarReset = Array.from(
+      view.container.querySelectorAll<HTMLButtonElement>('button'),
+    ).find((btn) => btn.textContent?.trim() === 'Reset to Default');
+    if (!toolbarReset) {
+      throw new Error('Editor toolbar Reset button not rendered — editor open dispatch failed');
+    }
+    act(() => {
+      toolbarReset.click();
+    });
+  }
+
+  function getDialogButtons(view: ReturnType<typeof render>) {
+    const dialog = view.container.querySelector<HTMLDivElement>('[role="dialog"][aria-modal="true"]');
+    if (!dialog) return { dialog: null, cancel: null, confirm: null };
+    const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('button'));
+    const cancel = buttons.find((btn) => btn.textContent?.trim() === 'Cancel') ?? null;
+    const confirm = buttons.find((btn) => btn.textContent?.trim() === 'Reset to Default') ?? null;
+    return { dialog, cancel, confirm };
+  }
+
+  it('renders the dialog when toolbar Reset is clicked', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-render-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+    openEditorAndClickReset(view);
+
+    const { dialog } = getDialogButtons(view);
+    expect(dialog).not.toBeNull();
+    expect(dialog?.getAttribute('aria-modal')).toBe('true');
+    expect(dialog?.getAttribute('aria-labelledby')).toBe('page-grid-reset-title');
+    expect(dialog?.getAttribute('aria-describedby')).toBe('page-grid-reset-description');
+  });
+
+  it('uses bg-destructive (not bg-primary) for the destructive confirm button', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-destructive-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { confirm } = getDialogButtons(view);
+
+    expect(confirm).not.toBeNull();
+    expect(confirm!.className).toMatch(/bg-destructive\b/);
+    expect(confirm!.className).toMatch(/hover:bg-destructive\/90/);
+    // Regression: destructive action must NOT use the positive primary token.
+    expect(confirm!.className).not.toMatch(/\bbg-primary\b/);
+    expect(confirm!.className).not.toMatch(/\btext-primary-foreground\b/);
+  });
+
+  it('gives both dialog buttons a focus-visible ring (WCAG 2.4.7)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-focus-ring-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel, confirm } = getDialogButtons(view);
+
+    expect(cancel).not.toBeNull();
+    expect(confirm).not.toBeNull();
+    expect(cancel!.className).toMatch(/focus-visible:ring-2/);
+    expect(cancel!.className).toMatch(/focus-visible:ring-ring/);
+    expect(confirm!.className).toMatch(/focus-visible:ring-2/);
+    expect(confirm!.className).toMatch(/focus-visible:ring-destructive\/40/);
+  });
+
+  it('focuses the Cancel button on open (safe default per ARIA APG)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-focus-cancel-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel } = getDialogButtons(view);
+
+    expect(cancel).not.toBeNull();
+    expect(document.activeElement).toBe(cancel);
+  });
+
+  it('closes the dialog when Escape is pressed (ARIA APG dialog-modal)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-escape-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    expect(view.container.querySelector('[role="dialog"]')).not.toBeNull();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+
+    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('Cancel button click closes the dialog without triggering reset', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-cancel-click-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel } = getDialogButtons(view);
+    expect(cancel).not.toBeNull();
+
+    act(() => {
+      cancel!.click();
+    });
+
+    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+  });
+});
+
 describe('PageGridLayout mobile reflow', () => {
   let resizeCallbacks: ResizeObserverCallback[] = [];
   let originalRO: typeof globalThis.ResizeObserver;
