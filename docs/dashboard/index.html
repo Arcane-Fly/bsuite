@@ -184,6 +184,23 @@ a:hover { color:var(--accent-2); text-decoration:underline; }
 .chip.active { background:var(--accent); border-color:var(--accent); color:white; }
 .filter-group { display:flex; gap:var(--s-1); flex-wrap:wrap; }
 
+/*
+ * WCAG 2.1 SC 2.4.7 Focus Visible (Level AA): every keyboard-operable control
+ * needs a visible focus indicator. Token-based ring works in both
+ * [data-theme='light'] and [data-theme='dark'] OKLCH palettes.
+ */
+.chip:focus-visible,
+.iconbtn:focus-visible {
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px var(--bg-2), 0 0 0 4px var(--accent);
+}
+.search:focus-within {
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px var(--accent-faint);
+}
+.search input:focus { outline:none; }
+
 /* Plan table */
 .section-h { display:flex; align-items:center; justify-content:space-between; margin:var(--s-2) 0; }
 .section-h h2 { margin:0; font-size:var(--text-lg); font-weight:600; letter-spacing:-0.01em; }
@@ -196,6 +213,42 @@ a:hover { color:var(--accent-2); text-decoration:underline; }
   transition:all .15s;
 }
 .plan:hover { border-color:var(--border-strong); box-shadow:var(--shadow); }
+
+/*
+ * Empty-state card mirrors the W0 12-primitive EmptyState pattern (BSU#364):
+ * glyph + heading + body + primary action. Doctrine §3.2 #13 mandates
+ * "inviting, not punishing" — list active filters so users see WHY they got
+ * zero results, then offer Reset as a 1-click recovery path.
+ */
+.empty-state {
+  background:var(--surface); border:1px dashed var(--border-strong); border-radius:var(--r-md);
+  padding:var(--s-8) var(--s-6); display:grid; gap:var(--s-3); justify-items:center; text-align:center;
+}
+.empty-state .glyph {
+  width:48px; height:48px; border-radius:50%;
+  background:var(--accent-faint); color:var(--accent);
+  display:flex; align-items:center; justify-content:center;
+}
+.empty-state h3 { margin:0; font-size:var(--text-base); font-weight:600; }
+.empty-state p { margin:0; color:var(--text-muted); font-size:var(--text-sm); max-width:48ch; }
+.empty-state .active-filters {
+  display:flex; flex-wrap:wrap; gap:var(--s-2); justify-content:center;
+}
+.empty-state .active-filters .filter-pill {
+  font-size:var(--text-xs); padding:2px 8px; border-radius:999px;
+  background:var(--bg-2); border:1px solid var(--border); color:var(--text-muted);
+  font-family:var(--font-mono);
+}
+.empty-state .cta {
+  background:var(--accent); color:white; border:1px solid var(--accent);
+  font-size:var(--text-sm); padding:var(--s-2) var(--s-4); border-radius:var(--r-sm);
+  cursor:pointer; font-weight:500; transition:all .15s;
+}
+.empty-state .cta:hover { background:var(--accent-2); border-color:var(--accent-2); }
+.empty-state .cta:focus-visible {
+  outline:none;
+  box-shadow:0 0 0 2px var(--bg-2), 0 0 0 4px var(--accent);
+}
 .plan-row { display:flex; gap:var(--s-3); align-items:flex-start; flex-wrap:wrap; }
 .plan-title { font-weight:600; flex:1; min-width:240px; line-height:1.35; }
 .plan-meta { display:flex; gap:var(--s-2); flex-wrap:wrap; }
@@ -645,7 +698,36 @@ function render() {
     return true;
   });
   document.getElementById('plans-count').textContent = filtered.length + ' / ' + DATA.plans.length + ' shown';
-  document.getElementById('plan-list').innerHTML = filtered.map(p =>
+  const planList = document.getElementById('plan-list');
+  if (filtered.length === 0) {
+    const activeFilters = [];
+    if (state.q) activeFilters.push({ label: 'search', value: state.q });
+    if (state.repo !== 'all') activeFilters.push({ label: 'repo', value: state.repo });
+    if (state.status !== 'all') activeFilters.push({ label: 'status', value: state.status });
+    if (state.sev !== 'all') activeFilters.push({ label: 'severity', value: state.sev });
+    if (state.scope !== 'all') activeFilters.push({ label: 'scope', value: state.scope });
+    const filterPills = activeFilters.length
+      ? `<div class="active-filters" aria-label="Active filters">${activeFilters.map(f => `<span class="filter-pill">${escapeHtml(f.label)}: ${escapeHtml(f.value)}</span>`).join('')}</div>`
+      : '';
+    const cta = activeFilters.length
+      ? `<button type="button" class="cta" id="empty-state-reset">Clear all filters</button>`
+      : '';
+    planList.innerHTML = `<div class="empty-state" role="status" aria-live="polite">
+        <div class="glyph" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <h3>No plans match the current filters</h3>
+        <p>${activeFilters.length ? 'Loosen one or more filters to see plans, or clear them all.' : 'No plans are tracked yet.'}</p>
+        ${filterPills}
+        ${cta}
+      </div>`;
+    const emptyResetButton = document.getElementById('empty-state-reset');
+    if (emptyResetButton) {
+      emptyResetButton.addEventListener('click', () => document.getElementById('reset-filters').click());
+    }
+    return;
+  }
+  planList.innerHTML = filtered.map(p =>
     `<div class="plan">
       <div class="plan-row">
         <div class="plan-title">${escapeHtml(p.title)}</div>
