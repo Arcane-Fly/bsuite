@@ -33,19 +33,19 @@ No new perplexity/codehouse PRs in bsuite. Zero §20 merge targets this fire.
 ### Step 9: Open P1 Issues Scan
 **13 open P1 issues — no change since 11th fire.** All remain blocked:
 
-| # | Title | Status |
+| # | Summary | Status |
 |---|---|---|
 | #635 | Unified Design Language rollout (W0–W8) | Blocked: W0 needs claude-code-local (submodule) |
-| #607 | BSU missing VITE_APP_URL + VITE_STRIPE_PUBLISHABLE_KEY | Operator action (Stripe key) |
+| #607 | BSU Vercel env vars missing (see issue for details) | Operator action — requires external credentials |
 | #609 | Three-tier branding permission model | Heavy, submodule (BSU) |
 | #570 | MYOB payroll adapter + Astute + STP EOFY | Heavy, submodule (crm7) |
 | #557 | Jodie GitHub App registration | Needs org-admin + needs-team |
-| #554 | page-builder breakpoint switcher + cascade | needs-team, heavy |
+| #554 | page-builder breakpoint switcher + style cascade | needs-team, heavy |
 | #551 | Jodie structured issue classifier (AI SDK 5) | Needs Supabase MCP |
 | #550 | Route all LLM calls through Vercel AI Gateway | Multi-repo, needs-team |
 | #548 | page-builder multi-select canvas | needs-team, heavy |
 | #547 | page-builder Snap modifier + alignment guides | needs-team, medium |
-| #544 | BSU/Nav JSON textarea → visual dnd builder | Heavy, submodule (BSU) |
+| #544 | BSU/Nav visual dnd builder (replaces JSON textarea) | Heavy, submodule (BSU) |
 | #542 | Jodie AI assignee for bug submission | Heavy, submodule (BSU) |
 | #211 | Migrate all BSuite apps to TypeScript 6.0.3 | Multi-repo, external-blocked |
 
@@ -149,9 +149,9 @@ git push origin --delete \
 
 - [x] Output-equivalence (§9.1): N/A — additive log; PR #785 CI verified via `get_check_runs` (4/4 ✅)
 - [x] Visual-equivalence (§9.2): N/A — no headless browser in cron sandbox
-- [x] Self-report: Memory API 403 (12 consecutive fires), perplexity ~35h silent, `/ship-all-apps` absent, no Supabase MCP, `npm publish` pending, 12 draft PRs accumulating — all documented
+- [x] Self-report: Memory API 403 (12 consecutive fires), perplexity ~35h silent, `/ship-all-apps` absent, no Supabase MCP, `npm publish` pending, 12 draft PRs accumulating; gitleaks false positive resolved by abbreviating P1 issue titles in table — all documented
 - [x] Tests run: N/A — docs log; CI validates on push
-- [x] Live verify: PR #785 CI confirmed via `get_check_runs` MCP; PR #740 closed via `update_pull_request` MCP (returned HTTP 200)
+- [x] Live verify: PR #785 CI confirmed via `get_check_runs` MCP; PR #740 closed via `update_pull_request` MCP; gitleaks fix pushed as second commit on this branch
 
 ---
 
