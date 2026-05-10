@@ -37,15 +37,10 @@ describe('PageGridLayout column-preset chips theming', () => {
       />,
     );
 
-    // Force the editor open by clicking the editing toggle path: we simulate by
-    // re-rendering with canEditPage already triggers the editor wiring. Instead,
-    // directly assert the chips render once we dispatch the editor-open event.
-    // Simpler path: dispatch the documented edit event hook used elsewhere.
     act(() => {
       window.dispatchEvent(new CustomEvent('page-grid-edit-open'));
     });
 
-    // Find chip buttons by their visible labels (1, 2, 3, 4, 6, 12).
     const presetLabels = ['1', '2', '3', '4', '6', '12'];
     const chips = presetLabels
       .map((label) =>
@@ -55,24 +50,15 @@ describe('PageGridLayout column-preset chips theming', () => {
       )
       .filter((b): b is HTMLButtonElement => Boolean(b));
 
-    // Tests run with editor closed by default — if no chips are present, this
-    // test reduces to an invariant on the source code: ensure no hardcoded
-    // brand hex is referenced inline. We assert the latter directly via the
-    // rendered DOM for any chip that *is* present.
     for (const chip of chips) {
-      // No inline style should set backgroundColor / color / border with a hex.
       const inline = chip.getAttribute('style') ?? '';
       expect(inline.toLowerCase()).not.toMatch(/#2563eb|#f3f4f6|#6b7280|#e5e7eb/);
-      // Class list must drive the active state, not inline style.
       expect(chip.className).toMatch(/data-\[active\]:bg-primary/);
       expect(chip.className).toMatch(/bg-muted/);
       expect(chip.className).toMatch(/text-muted-foreground/);
       expect(chip.className).toMatch(/border-border/);
     }
 
-    // Sanity: at minimum, the rendered subtree must not contain the legacy
-    // hardcoded hex fallbacks anywhere on inline styles for buttons. This
-    // catches any regression that re-introduces inline-style brand fallbacks.
     const allButtons = Array.from(
       view.container.querySelectorAll<HTMLButtonElement>('button'),
     );
@@ -80,6 +66,203 @@ describe('PageGridLayout column-preset chips theming', () => {
       const inline = (btn.getAttribute('style') ?? '').toLowerCase();
       expect(inline).not.toMatch(/#2563eb|#f3f4f6|#6b7280|#e5e7eb/);
     }
+  });
+});
+
+describe('PageGridLayout reset-confirmation dialog (ARIA APG dialog-modal)', () => {
+  function openEditorAndClickReset(view: ReturnType<typeof render>) {
+    act(() => {
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+    });
+    const toolbarReset = Array.from(
+      view.container.querySelectorAll<HTMLButtonElement>('button'),
+    ).find((btn) => btn.textContent?.trim() === 'Reset to Default');
+    if (!toolbarReset) {
+      throw new Error('Editor toolbar Reset button not rendered — editor open dispatch failed');
+    }
+    act(() => {
+      toolbarReset.click();
+    });
+  }
+
+  function getDialogButtons(view: ReturnType<typeof render>) {
+    const dialog = view.container.querySelector<HTMLDivElement>('[role="dialog"][aria-modal="true"]');
+    if (!dialog) return { dialog: null, cancel: null, confirm: null };
+    const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('button'));
+    const cancel = buttons.find((btn) => btn.textContent?.trim() === 'Cancel') ?? null;
+    const confirm = buttons.find((btn) => btn.textContent?.trim() === 'Reset to Default') ?? null;
+    return { dialog, cancel, confirm };
+  }
+
+  it('renders the dialog when toolbar Reset is clicked', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-render-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+    openEditorAndClickReset(view);
+
+    const { dialog } = getDialogButtons(view);
+    expect(dialog).not.toBeNull();
+    expect(dialog?.getAttribute('aria-modal')).toBe('true');
+    expect(dialog?.getAttribute('aria-labelledby')).toBe('page-grid-reset-title');
+    expect(dialog?.getAttribute('aria-describedby')).toBe('page-grid-reset-description');
+  });
+
+  it('uses bg-destructive (not bg-primary) for the destructive confirm button', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-destructive-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { confirm } = getDialogButtons(view);
+
+    expect(confirm).not.toBeNull();
+    expect(confirm!.className).toMatch(/bg-destructive\b/);
+    expect(confirm!.className).toMatch(/hover:bg-destructive\/90/);
+    expect(confirm!.className).not.toMatch(/\bbg-primary\b/);
+    expect(confirm!.className).not.toMatch(/\btext-primary-foreground\b/);
+  });
+
+  it('gives both dialog buttons a focus-visible ring (WCAG 2.4.7)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-focus-ring-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel, confirm } = getDialogButtons(view);
+
+    expect(cancel).not.toBeNull();
+    expect(confirm).not.toBeNull();
+    expect(cancel!.className).toMatch(/focus-visible:ring-2/);
+    expect(cancel!.className).toMatch(/focus-visible:ring-ring/);
+    expect(confirm!.className).toMatch(/focus-visible:ring-2/);
+    expect(confirm!.className).toMatch(/focus-visible:ring-destructive\/40/);
+  });
+
+  it('focuses the Cancel button on open (safe default per ARIA APG)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-focus-cancel-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel } = getDialogButtons(view);
+
+    expect(cancel).not.toBeNull();
+    expect(document.activeElement).toBe(cancel);
+  });
+
+  it('closes the dialog when Escape is pressed (ARIA APG dialog-modal)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-escape-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    expect(view.container.querySelector('[role="dialog"]')).not.toBeNull();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+
+    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('Cancel button click closes the dialog without triggering reset', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-cancel-click-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel } = getDialogButtons(view);
+    expect(cancel).not.toBeNull();
+
+    act(() => {
+      cancel!.click();
+    });
+
+    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('Tab from Reset to Default wraps focus to Cancel (focus trap — ARIA APG SC 2.1.2)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-tab-forward-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel, confirm } = getDialogButtons(view);
+    expect(confirm).not.toBeNull();
+    expect(cancel).not.toBeNull();
+
+    act(() => {
+      confirm!.focus();
+    });
+    expect(document.activeElement).toBe(confirm);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    });
+
+    expect(document.activeElement).toBe(cancel);
+  });
+
+  it('Shift+Tab from Cancel wraps focus to Reset to Default (focus trap — ARIA APG SC 2.1.2)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-tab-backward-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel, confirm } = getDialogButtons(view);
+    expect(cancel).not.toBeNull();
+    expect(confirm).not.toBeNull();
+
+    // Initial focus is on Cancel (from the focus-on-open effect).
+    expect(document.activeElement).toBe(cancel);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
+    });
+
+    expect(document.activeElement).toBe(confirm);
   });
 });
 
