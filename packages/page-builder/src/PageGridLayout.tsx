@@ -214,12 +214,13 @@ export function PageGridLayout({
     [renderableWidgetKeys, visibleKeys],
   );
 
-  // Reset-confirmation dialog: ARIA APG dialog-modal pattern.
-  // - Escape key closes the dialog (WAI-ARIA APG keyboard interaction).
-  // - Initial focus moves to the Cancel button (safe default per APG guidance
-  //   for destructive confirmations).
-  // - Focus returns to the element that invoked the dialog when it closes.
+  // Reset-confirmation dialog: full ARIA APG dialog-modal pattern.
+  // - Escape key closes the dialog.
+  // - Tab / Shift+Tab are trapped within the two dialog buttons (cancel ↔ confirm).
+  // - Initial focus moves to the Cancel button (safe default for destructive actions).
+  // - Focus returns to the invoking element when the dialog closes.
   const resetCancelButtonRef = useRef<HTMLButtonElement>(null);
+  const resetConfirmButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!resetConfirmOpen || typeof window === 'undefined') return;
@@ -227,6 +228,23 @@ export function PageGridLayout({
       if (event.key === 'Escape') {
         event.stopPropagation();
         setResetConfirmOpen(false);
+        return;
+      }
+      if (event.key === 'Tab') {
+        const cancel = resetCancelButtonRef.current;
+        const confirm = resetConfirmButtonRef.current;
+        if (!cancel || !confirm) return;
+        if (event.shiftKey) {
+          if (document.activeElement === cancel) {
+            event.preventDefault();
+            confirm.focus();
+          }
+        } else {
+          if (document.activeElement === confirm) {
+            event.preventDefault();
+            cancel.focus();
+          }
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -396,6 +414,7 @@ export function PageGridLayout({
               </button>
               <button
                 type="button"
+                ref={resetConfirmButtonRef}
                 onClick={() => {
                   handleReset();
                   setResetConfirmOpen(false);
@@ -430,11 +449,6 @@ export function PageGridLayout({
               enabled: isEditing,
               handle: '.drag-handle',
               bounded: false,
-              // Cancel any interactive descendant — react-draggable's
-              // matchesSelectorAndParentsTo walks up; if any ancestor matches
-              // the cancel selector, drag is suppressed. This lets users
-              // click buttons / type in inputs / interact with form controls
-              // inside cards while still being able to drag the card surface.
               cancel:
                 '.react-resizable-handle, button, input, textarea, select, [contenteditable="true"], [data-no-drag], a[href], [role="button"], [role="combobox"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="switch"], [role="slider"], [role="textbox"]',
             }}

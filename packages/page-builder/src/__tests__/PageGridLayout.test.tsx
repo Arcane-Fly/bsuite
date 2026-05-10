@@ -37,15 +37,10 @@ describe('PageGridLayout column-preset chips theming', () => {
       />,
     );
 
-    // Force the editor open by clicking the editing toggle path: we simulate by
-    // re-rendering with canEditPage already triggers the editor wiring. Instead,
-    // directly assert the chips render once we dispatch the editor-open event.
-    // Simpler path: dispatch the documented edit event hook used elsewhere.
     act(() => {
       window.dispatchEvent(new CustomEvent('page-grid-edit-open'));
     });
 
-    // Find chip buttons by their visible labels (1, 2, 3, 4, 6, 12).
     const presetLabels = ['1', '2', '3', '4', '6', '12'];
     const chips = presetLabels
       .map((label) =>
@@ -55,24 +50,15 @@ describe('PageGridLayout column-preset chips theming', () => {
       )
       .filter((b): b is HTMLButtonElement => Boolean(b));
 
-    // Tests run with editor closed by default — if no chips are present, this
-    // test reduces to an invariant on the source code: ensure no hardcoded
-    // brand hex is referenced inline. We assert the latter directly via the
-    // rendered DOM for any chip that *is* present.
     for (const chip of chips) {
-      // No inline style should set backgroundColor / color / border with a hex.
       const inline = chip.getAttribute('style') ?? '';
       expect(inline.toLowerCase()).not.toMatch(/#2563eb|#f3f4f6|#6b7280|#e5e7eb/);
-      // Class list must drive the active state, not inline style.
       expect(chip.className).toMatch(/data-\[active\]:bg-primary/);
       expect(chip.className).toMatch(/bg-muted/);
       expect(chip.className).toMatch(/text-muted-foreground/);
       expect(chip.className).toMatch(/border-border/);
     }
 
-    // Sanity: at minimum, the rendered subtree must not contain the legacy
-    // hardcoded hex fallbacks anywhere on inline styles for buttons. This
-    // catches any regression that re-introduces inline-style brand fallbacks.
     const allButtons = Array.from(
       view.container.querySelectorAll<HTMLButtonElement>('button'),
     );
@@ -86,9 +72,6 @@ describe('PageGridLayout column-preset chips theming', () => {
 describe('PageGridLayout reset-confirmation dialog (ARIA APG dialog-modal)', () => {
   function openEditorAndClickReset(view: ReturnType<typeof render>) {
     act(() => {
-      // Dispatch one of the canonical DEFAULT_EDITOR_EVENT_NAMES from
-      // usePageGridLayout to flip isEditing → true, which renders the toolbar
-      // including the "Reset to Default" button.
       window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
     });
     const toolbarReset = Array.from(
@@ -147,7 +130,6 @@ describe('PageGridLayout reset-confirmation dialog (ARIA APG dialog-modal)', () 
     expect(confirm).not.toBeNull();
     expect(confirm!.className).toMatch(/bg-destructive\b/);
     expect(confirm!.className).toMatch(/hover:bg-destructive\/90/);
-    // Regression: destructive action must NOT use the positive primary token.
     expect(confirm!.className).not.toMatch(/\bbg-primary\b/);
     expect(confirm!.className).not.toMatch(/\btext-primary-foreground\b/);
   });
@@ -229,6 +211,58 @@ describe('PageGridLayout reset-confirmation dialog (ARIA APG dialog-modal)', () 
     });
 
     expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('Tab from Reset to Default wraps focus to Cancel (focus trap — ARIA APG SC 2.1.2)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-tab-forward-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel, confirm } = getDialogButtons(view);
+    expect(confirm).not.toBeNull();
+    expect(cancel).not.toBeNull();
+
+    act(() => {
+      confirm!.focus();
+    });
+    expect(document.activeElement).toBe(confirm);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    });
+
+    expect(document.activeElement).toBe(cancel);
+  });
+
+  it('Shift+Tab from Cancel wraps focus to Reset to Default (focus trap — ARIA APG SC 2.1.2)', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="reset-tab-backward-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditorAndClickReset(view);
+    const { cancel, confirm } = getDialogButtons(view);
+    expect(cancel).not.toBeNull();
+    expect(confirm).not.toBeNull();
+
+    // Initial focus is on Cancel (from the focus-on-open effect).
+    expect(document.activeElement).toBe(cancel);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
+    });
+
+    expect(document.activeElement).toBe(confirm);
   });
 });
 
