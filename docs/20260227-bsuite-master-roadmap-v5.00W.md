@@ -1,10 +1,10 @@
 # BSuite Master Roadmap
 
-**Version:** 5.04W
+**Version:** 5.08W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-06 (plans audit — see "2026-05-06 Plans Audit" section)
+**Last Updated:** 2026-05-10 (claude-loop ROADMAP rotation — codehouse-parity sub-plan README added, 2026-05-09/10 rotation cycle tracked, auth bridge + apprentice placement + conduit reconciliation docs captured)
 **Status:** Working
-**Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified
+**Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
 > **2026-05-01 ratification note:** Phase 0 is complete. The single execution queue for all remaining work is [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md). This roadmap remains the long-horizon planning reference; the merged backlog is the phase-ordered execution queue with atomic-replace governance per ADRs 0001–0006.
 
@@ -334,7 +334,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 AI plugin system + workflow automation ([plan](./plans/20260227-ai-assistant-plugin-system-plan-v1.00W.md))
 - 🔲 Xero integration (OAuth2 + 6 AI tools) + Google Calendar (OAuth2 + 4 AI tools)
 - 🔲 AI cost tracking per tenant
-- 🔲 Enterprise Agreement processing + BOAT validation (AI extraction, rate schedules)
+- ✅ ~~Enterprise Agreement processing + BOAT validation (AI extraction, rate schedules)~~ — engine shipped end-to-end as `@bsuite/charge-calc/boot` v0.2.4 (8 modules, 1,757 LOC + 4,825 LOC tests) + CRM7 consumer at [`src/lib/rates/bootGate.ts`](https://github.com/GaryOcean428/crm7/blob/development/src/lib/rates/bootGate.ts) sha `428820e` + `/compliance/boot` routes + RLS role-separated human-review workflow. See [`docs/20260508-boot-engine-shipped-evidence-v1.00W.md`](./20260508-boot-engine-shipped-evidence-v1.00W.md).
 - 🔶 `@bsuite/charge-calc` shared package — adopted in CRM7 and R80.3; broader convergence work remains ([plan](./plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md))
 - 🔶 Data management — `/settings/data-management`, `/settings/import-export`, and `/settings/audit-log` exist; bulk operations and deeper admin tooling remain
 - 🔲 Compliance automation workflows
@@ -425,7 +425,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔶 **PWA + offline** — `vite-plugin-pwa` and manifest are present; full offline maturity still needs review ([prompt](./claude-code-prompts.md#prompt-4))
 - 🔶 **Wage calculation test suite** — multiple Vitest suites exist; 2026-04-14 R80.3 PR #48 added `fairworkCacheFallback.test.ts` (17 behaviour tests on the in-memory → DB fallback ladder), closing the last uncovered critical path on the legal-compliance critical chain. Broader 90%+ coverage target and logger migration still tracked.
 - 🔶 **`@bsuite/charge-calc` shared package** — package dependency and bridge layer are live; full engine convergence work remains ([plan](./plans/20260228-r80-crm7-shared-calc-engine-v1.00W.md))
-- 🔲 Enterprise Agreement processing + BOAT validation
+- ✅ ~~Enterprise Agreement processing + BOAT validation~~ — see strikethrough above for the same row in the prior P2 zone; engine shipped at `@bsuite/charge-calc/boot` v0.2.4 + CRM7 integration. Evidence: [`docs/20260508-boot-engine-shipped-evidence-v1.00W.md`](./20260508-boot-engine-shipped-evidence-v1.00W.md).
 - 🔲 Performance optimizations (large dataset handling)
 - 🔲 PDF export improvements (print-friendly, multi-page)
 - 🔲 Fair Work API update notifications (real-time)
@@ -458,6 +458,102 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Unified settings management
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
+
+---
+
+## Recently Completed (as of 2026-05-10 — claude-loop rotation cycle + auth bridge + placement docs)
+
+> Captures work landed 2026-05-09 → 2026-05-10 not yet in the 2026-05-08 section below. For the larger 2026-04-15 → 2026-05-08 batch, see that section.
+
+**AUTH — BS OAuth `setSession` bridge + 60s sync (canonical 2026-05-07)**
+
+- ✅ **`bsuite/oauth-callback-must-bridge` lint rule** (`@bsuite/dry-lint` v0.4.0) — enforces `supabase.auth.setSession({access_token, refresh_token})` in every consumer app's `/auth/callback` so BS OAuth Server tokens (`/auth/v1/oauth/token`) become live Supabase sessions. Without the bridge, the per-domain supabase client falls back to anon and RLS-protected reads 401/406 immediately after BSU→app handoff (BSU→CRM7 logged-out incident, 2026-05-06).
+- ✅ **60s `setSession` sync interval in `AuthContext`** — re-seeds the Supabase session whenever `bs_access_token` rotates. Shipped in CRM7 + R80.3 + throughput + braden as of 2026-05-07. `@bsuite/auth` pinned exact in each consumer `package.json` (canonical: `@bsuite/auth: 0.2.3`, `@bsuite/page-builder: ^0.2.6`).
+- ✅ **`oauth-contract.test.ts`** present in all 5 client apps (CRM7, R80.3, throughput, conduit, braden) — CI-enforced bridge contract. Verified by `(crm7|R80.3|throughput|conduit|braden)/src/__tests__/oauth-contract.test.ts`.
+
+**PARITY SPECS — codehouse-parity sub-plans README (2026-05-10)**
+
+- ✅ **[`docs/plans/20260506-codehouse-parity/README.md`](./plans/20260506-codehouse-parity/README.md)** — index for the 9 portal sub-plans + visual feature builder spec. Universal Rulebook §10.5 ("Every `docs/` folder has a README.md index") violation resolved for this directory (10 files, no index).
+
+**APPRENTICE PLACEMENTS — AVETMISS NAT00120 mapping + state machine + form schema (2026-05-06)**
+
+- ✅ **AVETMISS NAT00120 mapping** ([`docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md`](./20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md)) — BSuite apprentice/placement entity → AVETMISS NAT00120 field mapping for STA reporting compliance.
+- ✅ **State machine canon** ([`docs/20260506-apprentice-placement-state-machine-canon-v1.00W.md`](./20260506-apprentice-placement-state-machine-canon-v1.00W.md)) — canonical state transitions for apprentice placement lifecycle.
+- ✅ **Form schema spec** ([`docs/20260506-apprentice-placement-form-schema-spec-v1.00W.md`](./20260506-apprentice-placement-form-schema-spec-v1.00W.md)) — Zod schema + RHF form definitions.
+
+**CONDUIT — schema gap reconciliation (2026-05-06)**
+
+- ✅ **Conduit canonical map reconciliation** ([`docs/20260506-conduit-canonical-map-reconciliation-v1.00W.md`](./20260506-conduit-canonical-map-reconciliation-v1.00W.md)).
+- ✅ **Conduit schema gap decision** ([`docs/20260506-conduit-schema-gap-decision-v1.00W.md`](./20260506-conduit-schema-gap-decision-v1.00W.md)).
+
+**ROTATION — claude-loop overnight rotation cycle (2026-05-09 / 2026-05-10)**
+
+| Issue | Task | Repo | Outcome |
+|---|---|---|---|
+| [bsuite#770](https://github.com/GaryOcean428/bsuite/issues/770) | DB | BSU | search_path lock on 3 functions + advisor sweep — handoff [bsuite#771](https://github.com/GaryOcean428/bsuite/issues/771) (BSU#391) |
+| [bsuite#774](https://github.com/GaryOcean428/bsuite/issues/774) | EDGE | crm7 | `_shared/rate-limiter.ts` vitest contract — handoff [bsuite#775](https://github.com/GaryOcean428/bsuite/issues/775) (crm7#578) |
+| [bsuite#778](https://github.com/GaryOcean428/bsuite/issues/778) | TESTS | crm7 | `_shared/oauth-state.ts` vitest contract — handoff [bsuite#779](https://github.com/GaryOcean428/bsuite/issues/779) (crm7#579) |
+| [bsuite#781](https://github.com/GaryOcean428/bsuite/issues/781) | DOCS | crm7 | `_shared/__tests__/README.md` vitest convention — handoff [bsuite#782](https://github.com/GaryOcean428/bsuite/issues/782) (crm7#580) |
+| [bsuite#784](https://github.com/GaryOcean428/bsuite/issues/784) | PERF | crm7 | preconnect Supabase API origin — handoff [bsuite#787](https://github.com/GaryOcean428/bsuite/issues/787) (crm7#581) |
+| [bsuite#789](https://github.com/GaryOcean428/bsuite/issues/789) | ROADMAP | bsuite | this update — `docs/plans/20260506-codehouse-parity/README.md` + master roadmap v5.08W |
+
+---
+
+## Recently Completed (as of 2026-05-08 — overnight ship-all-apps + claude-loop cycles)
+
+> ~30 days of two-agent (claude-loop + perplexity-computer + ship-all-apps merge cycle) work since the 2026-04-14 batch. This section captures verifiable doctrine, governance, dashboard, uplift-wave, and parity-spec landmarks. Per-rotation feature/fix work is tracked in the [closed claude-loop rotation issues](https://github.com/GaryOcean428/bsuite/issues?q=is%3Aissue+label%3Aclaude-loop+is%3Aclosed) (issues #555–#718, ~50 cycles); the doctrine, dashboard, and uplift-wave sections below are the structural changes.
+
+**Doctrine & governance — Red-Team-UX Doctrine v1.00A**
+
+- ✅ **Red-Team-UX Doctrine v1.00A** ([bsuite PR #643](https://github.com/GaryOcean428/bsuite/pull/643), 2026-05-07) — canonical `docs/20260507-red-team-ux-doctrine-v1.00A.md`. Authoritative for ALL PRs across the 7-repo workspace: §1 research mandate (primary-source citations only, no blogs), §2 6-role red-team table (UX-DX, Security, Performance, Reliability, Quality, Research-Critic), §3 16-item UX-DX checklist, §4 cron integration, §5 enforcement (3 hard rules, no exceptions), §6 reference patterns. PRs missing §2.2/§3.2/§1.2 blocks are auto-labelled `needs-redteam` by ship-all-apps and skipped from merge until blocks are added.
+- ✅ **BSuite Uplift Design Language v1.00A** (`docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md`) — 12 primitives spec (StepperShell, ScopeSelect, TrackChanges, Picker family, CommandPalette, SortableList, PermissionMatrix, LivePreview, FilterBar, DataTable, EmptyState, TechnicalDetails), vocabulary contract (banned developer jargon — `tenant_id`, `RLS`, `FK`, "chips", `MCP`, `migration`, `JWT`, `schema` — only inside `<TechnicalDetails>` primitive), 9-wave rollout map W0–W8, per-surface mappings, AUTH_CANONICAL.md cross-link.
+- ✅ **FF-SELF-VALIDATION-20260507** ([bsuite PR #612](https://github.com/GaryOcean428/bsuite/pull/612), 2026-05-07) — adopted across AGENTS.md / CLAUDE.md / copilot-instructions. Mandates §9.1 output-equivalence loop (refactors), §9.2 visual-equivalence loop (UI), §9.3 self-report uncertainty. Sourced from Kjosbakken, *How to Make Claude Code Validate its own Work*, 2026-05-05. Every PR description must include an `## Evidence` block; every issue/plan must declare validation loop, equivalence target, cross red-team verifier, skills to load.
+- ✅ **FF-DASHBOARD-20260508** (CLAUDE.md §10, 2026-05-08) — Roadmap Dashboard Update Protocol. Live dashboard at <https://garyocean428.github.io/bsuite/dashboard/>; source of truth `docs/dashboard/data/dashboard-data.json` + every `docs/plans/**/*.md` across parent + 6 submodules. Refresh script `python3 docs/dashboard/refresh-data.py`; inline script `bash docs/dashboard/inline-data.sh`. Mandates same-PR dashboard updates (no deferral), evidence_url required for every status change, schema versioning per top-level section.
+- ✅ **ship-all-apps automation** ([bsuite PR #630](https://github.com/GaryOcean428/bsuite/pull/630)) — `scripts/ship-all-apps.sh` + `workflow_dispatch` GitHub Actions trigger. Reads all open PRs across 7 repos, doctrine-gates per §5.1, merges with `--admin` when CI green and doctrine-compliant, verifies Vercel deployments, recovers failed builds via empty-commit redeploy, runs OAuth/RLS/architecture/Supabase-advisor compliance sweeps, promotes development → default branch (serialized: braden → R80.3 → BSU → throughput → conduit → crm7 → bsuite). Cron 6-hourly.
+
+**Uplift Wave program — bsuite#635**
+
+- ✅ **W0 — 12 primitives library** (claude-code-local owner; [BSU#364](https://github.com/GaryOcean428/business-suite-unified/pull/364), sha `9c4e101`) — `src/components/uplift/` ships the canonical primitive set. First consumer: W4 Pass 1 PermissionsEditor.
+- ✅ **W1 — Feature Builder full redesign** (perplexity-computer owner; [BSU#361](https://github.com/GaryOcean428/business-suite-unified/pull/361), merged 2026-05-07T09:48Z).
+- 🔄 **W4 Pass 1 — Permissions Editor** (claude-code-local owner; [BSU#376](https://github.com/GaryOcean428/business-suite-unified/pull/376), `role_capabilities` table applied via Supabase MCP, 47 caps × 9 domains, 4 role presets, awaiting ship-all-apps merge per [bsuite#684](https://github.com/GaryOcean428/bsuite/issues/684)).
+- 🔄 **W3 — Pay Item Groups + 3 sibling settings** (perplexity-computer owner) — in progress.
+- ✅ Replaces the closed-unmerged BSU#346 with the doctrine-compliant W4 design — scoping doc shipped via [bsuite PR #681](https://github.com/GaryOcean428/bsuite/pull/681).
+
+**Roadmap dashboard — live operator-facing surface**
+
+- ✅ **Live dashboard launched** at <https://garyocean428.github.io/bsuite/dashboard/> — surfaces `summary`, `repos` (7-repo status), `plans[]` (auto-generated from every `docs/plans/**/*.md`), `operator_blockers`, `production_state`, `gap_report.categories`, `parity_status`, `feature_360_status`, `visual_feature_builder`, `portal_coverage`, `apprentice_placements_status`, `doc_drift_status`.
+- ✅ **GTO Compliance Catalogue** (commit `b0daa92`) — 50-report coverage matrix, 8 active gaps tracked as crm7#527–#534.
+- ✅ **Operator-blockers cleared 7 → 0** ([bsuite PR #703](https://github.com/GaryOcean428/bsuite/pull/703), [#706](https://github.com/GaryOcean428/bsuite/pull/706), [#708](https://github.com/GaryOcean428/bsuite/pull/708), [#711](https://github.com/GaryOcean428/bsuite/pull/711)) — Xero OAuth verified end-to-end on Braden Group tenant; baseline branch protection applied; stale blockers (1, 2, 3, 5) resolved.
+
+**Codehouse parity specs — research portion of Codehouse parity matrix closure**
+
+- ✅ **Pay Item Groups** (PARITY-569 / [#569](https://github.com/GaryOcean428/bsuite/issues/569)) — 11 Codehouse gaps, domain C
+- ✅ **Timesheet approval** ([#568](https://github.com/GaryOcean428/bsuite/issues/568)) — 4 gaps
+- ✅ **Comms** ([#571](https://github.com/GaryOcean428/bsuite/issues/571)) — 3 gaps
+- ✅ **Admin** ([#578](https://github.com/GaryOcean428/bsuite/issues/578)) — 14 gaps
+- ✅ **Integrations** ([#577](https://github.com/GaryOcean428/bsuite/issues/577)) — crm7 + conduit
+- ✅ **File-export adapters** ([#576](https://github.com/GaryOcean428/bsuite/issues/576)) — 3 gaps
+- ✅ **Reports / Pay periods / Leave / Timesheet entry / Apprentice placement** specs (2026-05-06) — full set in `docs/20260506-*-parity-spec-v1.00W.md`
+
+**Autonoma E2E testing — Vercel integration adopted on all 6 apps**
+
+- ✅ **Canonical Autonoma doc** ([bsuite PR #619](https://github.com/GaryOcean428/bsuite/pull/619)) — CLAUDE.md "Autonoma E2E Testing" section. AI agents navigate deployed apps end-to-end to find bugs.
+- ✅ **Per-app env var distribution** (2026-05-07) — `AUTONOMA_CLIENT_ID` + `AUTONOMA_SECRET_ID` provisioned on Production + Preview environments for all 6 apps via Vercel integration.
+- ✅ **BSU Application + production/preview Versions registered** in Autonoma dashboard (App ID `cmouwgrq209t4013ps6ikkm10`). Other 5 apps pending operator-driven dashboard registration.
+
+**Defensive rotation work shipped (selection — full list in closed claude-loop tracker issues)**
+
+- ✅ **A11Y — CommandDialog parity with crm7** ([BSU#378](https://github.com/GaryOcean428/business-suite-unified/pull/378)) — DialogTitle/DialogDescription wrapped in VisuallyHidden, aria-hidden on decorative Search icon. WCAG 2.1 SC 4.1.2 / Radix v1.1.15 mandatory-title compliance.
+- ✅ **DB — `tenant_branding_insert` RLS to `authenticated`** ([BSU#380](https://github.com/GaryOcean428/business-suite-unified/pull/380)) — closes the one row missed by the bulk `20260413062306_fix_rls_public_to_authenticated_tenant_policies` migration. Migration applied via Supabase MCP on `tuybltdrdefjblnplpqo`; verified `pg_policies.tenant_branding_insert.roles = {authenticated}`.
+- ✅ **EDGE — `assign-tester-license` duplicate `checkRateLimit`** ([BSU#385](https://github.com/GaryOcean428/business-suite-unified/pull/385)) — restored documented 30 req/min/IP cap (was effectively 15 due to duplicate calls). Tracking [bsuite#704](https://github.com/GaryOcean428/bsuite/issues/704).
+- ✅ **TESTS — Deno test infra + `_shared/rate-limiter.ts` regression suite** ([BSU#388](https://github.com/GaryOcean428/business-suite-unified/pull/388)) — first BSU edge-fn Deno test infrastructure. 11 vitest cases pin documented contract (30 req/min/IP, 60s window, IP-extraction priority). New `.github/workflows/edge-fn-tests.yml` runs `deno test` on `supabase/functions/**` PR touches.
+- ✅ **TESTS — `saveRoleCapabilities` + `loadTenantRoles` unit coverage** ([BSU#387](https://github.com/GaryOcean428/business-suite-unified/pull/387)) — 18 vitest specs across 2 new test files. Closes the W4 Pass 1 persistence-layer coverage gap.
+- ✅ **W6 — `useBranding` stale-CSS-var cleanup** ([BSU#375](https://github.com/GaryOcean428/business-suite-unified/pull/375)) — `applyBrandingVars` pairs every `setProperty` with `removeProperty` in the no-value branch; wipes `tenant-branding-custom-css` `<style>` between tenant switches. Tracking [bsuite#680](https://github.com/GaryOcean428/bsuite/issues/680).
+
+**Cron / log discipline**
+
+- ✅ 19 fire-cycle cron logs appended on 2026-05-07/08 (entries `*-fire log` PRs #657–#724) — every ship-all-apps and claude-loop run since 2026-05-07T10:22Z appended to `docs/20260507-cron-log-claude-scheduled-v1.00W.md` per §4 doctrine cron integration.
+- ✅ **`ship-all-apps` § 20 obvious-fix auto-merge** — adopted as the post-CI-green merge path for single-file, sub-doctrine-threshold work; cron logs tagged `[§20 auto-merge]`.
 
 ---
 
@@ -561,14 +657,16 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ## In Progress / Pending
 
-- ⚠️ Item 9: Test coverage — fairwork + auth tests complete, 16 pre-existing failures in AI components remain
-- ⚠️ Dashboard polish: hero signals, bento grid, ai_sessions/ai_messages tables, DND accessibility (KeyboardSensor)
+> **2026-05-08 audit refresh** (claude-loop ROADMAP rotation, bsuite#731). Each item below was re-verified against canonical state at this run's STEP 3 audit; status flags now reflect 2026-05-08 reality. See [`docs/20260508-roadmap-pending-audit-v1.00W.md`](./20260508-roadmap-pending-audit-v1.00W.md) for the full evidence trail (8 items × source SHAs).
+
+- ⚠️ Item 9: Test coverage — fairwork + auth tests complete; W4 admin lib/admin coverage gap closed via [BSU#387](https://github.com/GaryOcean428/business-suite-unified/pull/387) (18 vitest specs, awaiting ship-all-apps merge per bsuite#720). Open: 16 pre-existing AI-component failures in CRM7; PermissionsEditor.tsx page-level integration test (~6 specs, deferred to next TESTS rotation per bsuite#717 follow-up note).
+- ✅ ~~Dashboard polish: hero signals, bento grid, ai_sessions/ai_messages tables, DND accessibility (KeyboardSensor)~~ — complete; KeyboardSensor / sortableKeyboardCoordinates / aria-label sweep struck 2026-05-01 under P0-15 rollup (item 26a + AUD-16); ai_sessions/ai_messages tables already exist in Supabase (P0 item 2 struck); hero signals + bento grid live via D2C Neon Electric rollout (WS-D 9 PRs, see Recently Completed 2026-04-14).
 - ✅ ~~Stripe end-to-end verification~~ — complete (2026-03-19)
-- ⚠️ SP-3: CRM7 Tier 3-4 page wiring — in progress (Claude Code primary)
-- ⚠️ Cross-app notifications (Supabase Realtime pub/sub)
-- ⚠️ BOOT compliance engine (C8-tier, competitive differentiator — foundU is only competitor with any BOOT support)
-- ⚠️ @bsuite/charge-calc full convergence (3 independent calc engines → 1 shared package)
-- ⚠️ Xero payroll integration (5 major TODO blocks in CRM7)
+- ⚠️ SP-3: CRM7 Tier 3-4 page wiring — partial: training-plan progress report ([CRM7#575](https://github.com/GaryOcean428/crm7/pull/575)), host-employer monthly pack ([CRM7#571](https://github.com/GaryOcean428/crm7/pull/571)), Fair Work inspector report ([CRM7#574](https://github.com/GaryOcean428/crm7/pull/574)), STP Phase-2 export ([CRM7#573](https://github.com/GaryOcean428/crm7/pull/573)), apprentice-progress reports ([CRM7#570](https://github.com/GaryOcean428/crm7/pull/570)), portable-LSL multi-state exports ([CRM7#569](https://github.com/GaryOcean428/crm7/pull/569)) — all on `crm7@development` post 2026-05-08T08 promote. Reports tier substantially closed; financial / compliance / WHS / comms tiers still in-progress per Copilot autonomy.
+- ⚠️ Cross-app notifications (Supabase Realtime pub/sub) — pending; tracked as P2 #19; deferred behind the active ship-all-apps cycle work; no scoping doc written yet.
+- ✅ ~~BOOT compliance engine (C8-tier, competitive differentiator — foundU + Workforce One are the only competitors with any BOOT support, and Workforce One holds 30% GTO market share specifically on BOOT automation differentiation per CLAUDE-LOOP COMPETE notes); pending; tracked as P2 #14 ("Enterprise Agreement + BOAT validation").~~ — **engine shipped end-to-end** (correction 2026-05-08, claude-loop COMPETE rotation bsuite#739; the prior "pending" classification was 30+ days stale). Engine package `@bsuite/charge-calc/boot` v0.2.4 with 8 modules covering single-class + GTO multi-placement comparison, FWC Form F17 export, failure-pattern detection, undertaking recommender, non-monetary offsets (1,757 LOC source + 4,825 LOC tests). CRM7 consumer wraps the engine via [`src/lib/rates/bootGate.ts`](https://github.com/GaryOcean428/crm7/blob/development/src/lib/rates/bootGate.ts) (`validateBootCompliance()` + NES s.87/s.96/s.114/s.62 floor checks); UI surfaces `/compliance/boot` (list) + `/compliance/boot/:id` (detail) with F17 JSON export and s.193A human-review enforced via RLS role separation. Feature flag `boot_engine: true` enabled at launch for all tenants. Per [`docs/CONSISTENCY-REPORT.md`](./CONSISTENCY-REPORT.md) line 164 this is **#1 of 5 capabilities BSuite EXCEEDS Codehouse Workforce One / OTS** — the GTO competitive moat is held, not pending. Full evidence trail in [`docs/20260508-boot-engine-shipped-evidence-v1.00W.md`](./20260508-boot-engine-shipped-evidence-v1.00W.md).
+- ✅ ~~@bsuite/charge-calc full convergence (3 independent calc engines → 1 shared package)~~ — convergence achieved at the dependency level: both consumers pin `@bsuite/charge-calc: ^0.2.3` per [`crm7/package.json`](https://github.com/GaryOcean428/crm7/blob/development/package.json) (sha `522b594`) and [`R80.3/package.json`](https://github.com/GaryOcean428/R80.3/blob/development/package.json) (sha `3a27510`) at 2026-05-08T08 audit. Package published to npm at `^0.2.3`. Open: legacy parallel-engine removal verification deferred to next FEATURE / EDGE rotation (out-of-scope for ROADMAP audit per single-cycle rule).
+- ⚠️ Xero payroll integration (5 major TODO blocks in CRM7) — partial: OAuth fixes shipped via 2026-05-08T08 promote ([crm7@main #568](https://github.com/GaryOcean428/crm7/pull/568)); `xero-token-exchange`, `xero-invoice-submit`, `ram-token-exchange` edge fns active with dual-layer rate limiting; `xero-node ^15.0.1` consumed in `crm7/package.json`. Remaining: invoice-line-item mapping, payroll-run sync, multi-tenant Xero org switching.
 
 ---
 
@@ -589,6 +687,8 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 | # | Task | Project | Effort | Agent | Source |
 |---|------|---------|--------|-------|--------|
+| 3a | **9-wave UI uplift program** — W0 + W1 shipped 2026-05-07; W2 (Reports CRM7), W3 (Pay Item Groups + 3 sibling settings), W4 (Permissions Editor — replaces BSU#346), W5 (Tenant Admin), W6 (Branding), W7 (Apprentice placements), W8 (consumer bumps × 4 apps) remain. Ownership locked: claude-loop = W2/W4/W6, perplexity-computer = W3/W5/W7/W8. Tracker: [bsuite#635](https://github.com/GaryOcean428/bsuite/issues/635). | all | 4w | claude-loop + perplexity-computer | [INDEX.md](./plans/uplift/INDEX.md) |
+| 3b | **Codehouse Parity & Platform 360 — WS-A3/B/C/E1–E5/F** — WS-A1/A2/A4/D/E shipped 2026-05-06/07. Remaining: WS-A3 (per-submodule OUTSTANDING + STATUS link rows), WS-B (12 grouped GitHub issues), WS-C (dashboard schema additive extension post-#535), WS-E1–E5 (visual feature builder shipped code), WS-F (doc-drift sweep — 17 items). | all | 3w | TBD | [Plan](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md) |
 | 4 | ~~BSU Stripe billing portal~~ ✅ E2E verified | bsu | ✅ Done | Cascade | 2026-03-19 |
 | 5 | ~~CRM7 PWA~~ (`vite-plugin-pwa`, manifest, service worker hook present) | crm7 | ✅ Built | Claude Code | Prompt 1A |
 | 6 | R80.3 PWA + 90% wage calc tests + logger migration | R80.3 | 5d | Claude Code | Prompt 4 |
@@ -604,7 +704,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 |---|------|---------|--------|--------|
 | 12 | Unified navigation (`@bsuite/nav-core` + shadcn sidebar) | all | 1w | Claude plan `atomic-hopping-ocean` |
 | 13 | `@bsuite/charge-calc` shared package (3 engines → 1) | R80↔CRM7 | 1w | `r80-crm7-shared-calc-engine` plan |
-| 14 | Enterprise Agreement + BOAT validation | CRM7 | 1w | Claude plans `warm-moseying-liskov` + `velvety-giggling-curry` |
+| 14 | ~~Enterprise Agreement + BOAT validation~~ — engine + CRM7 integration shipped end-to-end (`@bsuite/charge-calc/boot` v0.2.4 + `crm7/src/lib/rates/bootGate.ts` sha `428820e` + `/compliance/boot` routes + RLS s.193A workflow). Evidence: [`20260508-boot-engine-shipped-evidence-v1.00W.md`](./20260508-boot-engine-shipped-evidence-v1.00W.md). | CRM7 | ✅ Done | Shipped 2026-03-17 (CRM7 UI doc); confirmed live 2026-05-08 (claude-loop bsuite#739) |
 | 15 | Bulk operations and remaining admin data tooling | crm7 | 1w | Feature gap §2A-2D |
 | 16 | ~~CRM7 dashboard layout system~~ — free-canvas edit mode, configurable columns 1-24, bounded drag, responsive view-mode reflow, persist layoutCols | crm7 | ✅ Done | 2026-03-16 |
 | 17 | CRM7 sync schema/query mismatch remediation | crm7 | 2d | Active sync/runtime blocker from dashboard QA |
@@ -663,7 +763,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | SP-4 | Entity crosswalk doc | ✅ Complete |
 | SP-5 | system_notices migration + SystemNoticeBanner rollout | ✅ Complete |
 | CA-8 | BSU hardcoded hex → D2C token sweep | ✅ Complete |
-| RT-10 | BSU react-day-picker v8 → v9 audit | 🔲 Pending |
+| RT-10 | BSU react-day-picker v8 → v9 audit | ✅ Complete (2026-05-08) — `react-day-picker: ^9.14.0` confirmed in `business-suite-unified/package.json` at sha `cc598ee` (pinned alongside React 19.2.5 + date-fns 4.1.0 + Tailwind v4) |
 
 ## Audit Sprint Status (2026-04-14)
 
@@ -707,6 +807,27 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-10 v5.08W** — claude-loop ROADMAP rotation (issue [bsuite#789](https://github.com/GaryOcean428/bsuite/issues/789)):
+  - Added "Recently Completed (as of 2026-05-10)" section covering 2026-05-09/10 rotation cycle (DB → EDGE → TESTS → DOCS → PERF → ROADMAP), AUTH setSession bridge + 60s sync lint rule + contract tests, APPRENTICE placement docs (AVETMISS/state-machine/form-schema), CONDUIT reconciliation docs, codehouse-parity sub-plans README.
+  - Added P1 #3a (9-wave UI uplift program) and P1 #3b (Codehouse Parity & Platform 360 remaining workstreams) to execution table.
+  - Added 6 entries to Related Documents (Red-Team Doctrine, FF-SELF-VALIDATION, Uplift Design Language, Uplift Wave Index, Codehouse Parity plan, Codehouse Parity sub-plans README).
+  - New: [`docs/plans/20260506-codehouse-parity/README.md`](./plans/20260506-codehouse-parity/README.md) — index for 10 sub-plans (§10.5 violation resolved).
+- **2026-05-08 v5.07W** — claude-loop COMPETE rotation (bsuite#739). BOOT compliance engine shipped-state correction:
+  - **Master roadmap was 30+ days stale on BOOT.** Lines 337, 428, 629, 667 all classified BOOT engine as 🔲 / ⚠️ pending despite the engine + CRM7 integration being shipped end-to-end.
+  - **All 4 stale rows struck** with primary-source evidence URLs to live artifacts: package `@bsuite/charge-calc/boot` v0.2.4 (8 modules, 1,757 LOC source + 4,825 LOC tests), CRM7 wrapper `src/lib/rates/bootGate.ts` sha `428820e`, CRM7 routes `/compliance/boot` + `/compliance/boot/:id`, CRM7 UI scoping doc `docs/reference/20260317-crm7-boot-assessment-ui-v1.00W.md` sha `8f081a7`, RLS migrations `20260301201200_boot_assessments_rls.sql` + `20260317030000_boot_assessments_security_hardening.sql`.
+  - **Companion evidence document:** `docs/20260508-boot-engine-shipped-evidence-v1.00W.md` (full per-artifact evidence trail with line-anchored citations + Fair Work Act primary statute references).
+  - **Competitive context preserved** per [`docs/CONSISTENCY-REPORT.md`](./CONSISTENCY-REPORT.md) line 164: BOOT Assessment Engine is #1 of 5 capabilities BSuite EXCEEDS Codehouse Workforce One / OTS. Workforce One holds 30% GTO market share specifically on BOOT-automation differentiation per CLAUDE-LOOP COMPETE notes — BSuite's stronger implementation (NES floors + GTO multi-placement + s.193A workflow + F17 export + npm-published engine package) holds this moat today, not as a future deliverable.
+  - **No engine, schema, or UI work shipped this run.** Pure correctness fix on roadmap classification — the engine has been live since at least 2026-03-17.
+- **2026-05-08 v5.06W** — claude-loop ROADMAP rotation (bsuite#731). In Progress / Pending audit:
+  - Item 9 test coverage: refreshed with W4 admin lib coverage status (BSU#387) + open PermissionsEditor page-level test gap (deferred).
+  - Dashboard polish: STRUCK — KeyboardSensor / sortableKeyboardCoordinates / aria-label sweep already shipped (26a + AUD-16 rollup); ai_sessions/ai_messages tables already exist (P0 #2 struck); hero signals + bento grid live via WS-D rollout.
+  - SP-3 CRM7 Tier 3-4: refreshed with 6 active reports-uplift Copilot PRs landed via 2026-05-08T08 promote (CRM7 #569–575).
+  - charge-calc convergence: STRUCK — both CRM7 + R80.3 consume `@bsuite/charge-calc: ^0.2.3` per `package.json` audit at SHAs `522b594` / `3a27510`.
+  - Xero payroll: refreshed with OAuth fix shipment + remaining 3 sub-tasks named (invoice-line mapping, payroll sync, multi-tenant org switch).
+  - **RT-10 (P3 Sprint Status):** ✅ Complete — `react-day-picker: ^9.14.0` verified in BSU `package.json` at sha `cc598ee`. Closes the last 🔲 Pending row in the P3 Sprint Status table.
+  - Companion evidence document: `docs/20260508-roadmap-pending-audit-v1.00W.md` (full per-item evidence trail).
+- **2026-05-08 v5.05W** — claude-loop DOCS rotation (bsuite#725 / PR #726). Single additive section appended above the prior 2026-04-14 batch; captures doctrine, dashboard, uplift-wave, parity-spec, Autonoma landmarks shipped 2026-04-15 → 2026-05-08.
+- **2026-05-06 v5.04W** — plans audit roll-up (operator-driven; merged via PR #430 doc-unification chain). External corpus reconciliation; 12 plans verified DONE, 11 superseded, 5 actionable.
 - **2026-05-01 v5.03W** — Phase 0 ratification rollup (P0-15 of finish-line roadmap):
   - Citation added: merged execution backlog (`20260501-merged-execution-backlog-v1.00W.md`) as the active phase-ordered execution queue post-ratification.
   - Citation added: Phase 0 ADRs 0001–0006 as governance authority for atomic replace-and-remove.
@@ -724,6 +845,12 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 | Document | Location |
 |----------|----------|
 | Active execution queue (post-Phase 0) | [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md) |
+| Red-Team + UX-DX Doctrine v1.00A | [`docs/20260507-red-team-ux-doctrine-v1.00A.md`](./20260507-red-team-ux-doctrine-v1.00A.md) |
+| FF-SELF-VALIDATION-20260507 | [`docs/20260507-ff-self-validation-doctrine-v1.00W.md`](./20260507-ff-self-validation-doctrine-v1.00W.md) |
+| BSuite Uplift Design Language | [`docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md`](./plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md) |
+| Uplift Wave Index | [`docs/plans/uplift/INDEX.md`](./plans/uplift/INDEX.md) |
+| Codehouse Parity & Platform 360 | [`docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md`](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md) |
+| Codehouse Parity sub-plans | [`docs/plans/20260506-codehouse-parity/README.md`](./plans/20260506-codehouse-parity/README.md) |
 | Phase 0 ADR index | [`docs/adr/README.md`](./adr/README.md) |
 | Phase 0 completion report | [`docs/20260501-phase-0-completion-report-v1.00W.md`](./20260501-phase-0-completion-report-v1.00W.md) |
 | Contributing Standards | [`docs/20260227-contributing-standards-guide-v1.00W.md`](./20260227-contributing-standards-guide-v1.00W.md) |
@@ -750,6 +877,7 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 | BSuite Gap Report (2026-03-16) | [`docs/20260316-bsuite-gap-report-v1.00W.md`](./20260316-bsuite-gap-report-v1.00W.md) |
 | BSuite Gap Report v2 (2026-03-17) | [`docs/20260317-bsuite-gap-report-v2.00W.md`](./20260317-bsuite-gap-report-v2.00W.md) |
 | BSuite Completeness Matrix (2026-03-09) | [`docs/20260309-bsuite-completeness-matrix-v1.00W.md`](./20260309-bsuite-completeness-matrix-v1.00W.md) |
+| In Progress / Pending Audit (2026-05-08) | [`docs/20260508-roadmap-pending-audit-v1.00W.md`](./20260508-roadmap-pending-audit-v1.00W.md) |
 | CRM7 AI Strategic Vision | [`crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md`](../crm7/docs/20260316-crm7-ai-strategic-vision-v1.00W.md) |
 | Conduit RBAC Architecture Design | [`conduit/docs/20260303-rbac-architecture-design-v1.00W.md`](../conduit/docs/20260303-rbac-architecture-design-v1.00W.md) |
 | R80.3 External Wage Sources Reference | [`R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md`](../R80.3/docs/20260304-r80-external-wage-sources-reference-v1.00W.md) |

@@ -11,8 +11,8 @@
     "rulebook": "Universal AI Agent Rulebook (Anti-Laziness, Zero-Defer, No Downgrades, Red-Team verification, evidence-only closures)",
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
-    "last_extended": "2026-05-08T06:40Z",
-    "extended_by": "claude-code (Xero OAuth verified end-to-end; zero operator blockers remaining)",
+    "last_extended": "2026-05-08T20:38:02Z",
+    "extended_by": "perplexity-loop 4h sweep",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
   },
   "summary": {
@@ -54,7 +54,22 @@
     "doc_drift_prs_open": 6,
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
-    "apprentice_placements_ready_for_review": 1
+    "apprentice_placements_ready_for_review": 1,
+    "open_issues_total": 189,
+    "open_prs_total": 9,
+    "issues_by_repo": {
+      "bsuite": 68,
+      "crm7": 67,
+      "business-suite-unified": 28,
+      "braden": 13,
+      "R80.3": 7,
+      "conduit": 3,
+      "throughput": 3
+    },
+    "prs_by_repo": {
+      "crm7": 8,
+      "bsuite": 1
+    }
   },
   "repos": [
     {
@@ -2366,7 +2381,11 @@
         "phase": "Future RTO",
         "issue": "crm7#527",
         "url": "https://github.com/GaryOcean428/crm7/issues/527",
-        "priority": "future"
+        "priority": "future",
+        "copilot_pr": "crm7#567",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/567",
+        "pr_status": "in_review",
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G2",
@@ -2375,7 +2394,11 @@
         "phase": "3N",
         "issue": "crm7#528",
         "url": "https://github.com/GaryOcean428/crm7/issues/528",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#569",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/569",
+        "pr_status": "in_review",
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G3",
@@ -2384,7 +2407,11 @@
         "phase": "3N",
         "issue": "crm7#529",
         "url": "https://github.com/GaryOcean428/crm7/issues/529",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#570",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/570",
+        "pr_status": "in_review",
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G4",
@@ -2393,7 +2420,11 @@
         "phase": "3N+4O",
         "issue": "crm7#530",
         "url": "https://github.com/GaryOcean428/crm7/issues/530",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#571",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/571",
+        "pr_status": "in_review",
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G5",
@@ -2402,7 +2433,11 @@
         "phase": "3N",
         "issue": "crm7#531",
         "url": "https://github.com/GaryOcean428/crm7/issues/531",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#572",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/572",
+        "pr_status": "in_review",
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G6",
@@ -2411,7 +2446,11 @@
         "phase": "3M",
         "issue": "crm7#532",
         "url": "https://github.com/GaryOcean428/crm7/issues/532",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#573",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/573",
+        "pr_status": "in_review",
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G7",
@@ -2420,7 +2459,11 @@
         "phase": "3M",
         "issue": "crm7#533",
         "url": "https://github.com/GaryOcean428/crm7/issues/533",
-        "priority": "p2"
+        "priority": "p2",
+        "copilot_pr": "crm7#574",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/574",
+        "pr_status": "in_review",
+        "doctrine_status": "missing — needs-redteam labelled"
       },
       {
         "id": "G8",
@@ -2429,7 +2472,11 @@
         "phase": "3M",
         "issue": "crm7#534",
         "url": "https://github.com/GaryOcean428/crm7/issues/534",
-        "priority": "p1"
+        "priority": "p1",
+        "copilot_pr": "crm7#575",
+        "copilot_pr_url": "https://github.com/GaryOcean428/crm7/pull/575",
+        "pr_status": "in_review_conflicting",
+        "doctrine_status": "missing — needs-redteam labelled"
       }
     ],
     "parent_tracker": {
@@ -2463,10 +2510,19 @@
         "scope": "Multi-jurisdiction",
         "source": "https://www.fairwork.gov.au/leave/long-service-leave"
       }
-    ]
+    ],
+    "copilot_delegation": {
+      "started_at": "2026-05-08T04:02Z",
+      "assignment_method": "GraphQL replaceActorsForAssignable to copilot-swe-agent (BOT_kgDOC9w8XQ)",
+      "prs_drafted": 8,
+      "prs_mergeable": 7,
+      "prs_conflicting": 1,
+      "prs_doctrine_compliant": 0,
+      "note": "Copilot drafted all 8 PRs within ~8h. CI green on 7 mergeable PRs (Vercel Preview pass). Doctrine blocks (§1.2/§2.2/§3.2) missing on all 8 — needs-redteam labels applied + templates posted on each PR. Awaiting Copilot iteration."
+    }
   },
   "dashboard_update_protocol": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "added_at": "2026-05-08T02:10Z",
     "purpose": "Defines how AI agents and humans keep this dashboard accurate.",
     "live_url": "https://garyocean428.github.io/bsuite/dashboard/",
@@ -2482,9 +2538,10 @@
       "automated_refresh": "python3 docs/dashboard/refresh-data.py > docs/dashboard/data/dashboard-data.json",
       "inline_into_html": "bash docs/dashboard/inline-data.sh",
       "manual_edits": "Edit docs/dashboard/data/dashboard-data.json directly for sections refresh-data.py does not yet generate (parity_status, feature_360_status, gto_compliance_catalogue, etc). Always bump schema_version when extending shape.",
-      "commit_convention": "chore(dashboard): <short reason> [skip ci] when data-only; chore(dashboard): <reason> when shipping a workflow change",
+      "commit_convention": "PR REQUIRED (branch protection): always create a feature branch (e.g. chore/dashboard-refresh-YYYYMMDD), commit there, open PR to development. PRs running gitleaks must pass. Title format: \"chore(dashboard): <reason>\". Self-merge with --admin --squash --delete-branch once green.",
       "verify_locally": "Open docs/dashboard/index.html in a browser (file:// works) and confirm new section renders",
-      "branch_strategy": "Bundle dashboard updates with the PR that motivates them (file an issue -> update the dashboard JSON in the SAME branch). Do not file 'docs only' PRs unless updates are aggregated weekly."
+      "branch_strategy": "NEVER push directly to development (branch-protected as of 2026-05-08T10:56Z, requires gitleaks). Create a feature branch even for data-only refreshes. Bundle dashboard updates with the PR that motivated them when possible. For automated 2h sweep refreshes: branch chore/dashboard-2h-sweep-<TIMESTAMP>, open PR, self-merge when CI green.",
+      "removed_2026_05_08": "The [skip ci] direct-push path for data-only updates is RETIRED. Branch protection enforces PR + gitleaks. No exceptions — even data-only."
     },
     "what_to_update": {
       "summary": "Top-line counters; bump every time a closed/done count changes",
@@ -2508,20 +2565,26 @@
     ],
     "verification_workflow": [
       "1. Make change (file issue, close issue, merge PR, ship plan)",
-      "2. Edit docs/dashboard/data/dashboard-data.json (or run refresh-data.py for auto sections)",
-      "3. Run bash docs/dashboard/inline-data.sh to inline into index.html",
-      "4. Open docs/dashboard/index.html in browser; verify the affected section renders correctly with new state",
-      "5. Commit with message: chore(dashboard): <one-line summary>",
-      "6. Push to feature branch; PR includes dashboard diff alongside the change that motivated it",
-      "7. After merge to main, hourly cron + deploy-dashboard.yml ships to https://garyocean428.github.io/bsuite/dashboard/"
+      "2. git checkout -b chore/dashboard-<reason>-YYYYMMDD off latest origin/development",
+      "3. Edit docs/dashboard/data/dashboard-data.json (or run refresh-data.py for auto sections)",
+      "4. Run bash docs/dashboard/inline-data.sh to inline into index.html",
+      "5. Open docs/dashboard/index.html in browser; verify the affected section renders correctly",
+      "6. git add + commit with message: chore(dashboard): <reason>",
+      "7. git push -u origin <branch> && gh pr create --base development",
+      "8. Wait for gitleaks + other checks to pass (typically <2 min)",
+      "9. gh pr merge --admin --squash --delete-branch once green",
+      "10. After merge to development, hourly cron + deploy workflow ships to https://garyocean428.github.io/bsuite/dashboard/"
     ],
     "common_mistakes": [
       "Forgetting to run inline-data.sh after editing dashboard-data.json (HTML stays stale)",
       "Editing index.html directly (will be overwritten on next inline)",
       "Updating counters without filing the underlying issue (claims without evidence)",
       "Hand-editing the plans[] array (it's auto-generated; edit the source plan .md files instead)",
-      "Missing the [skip ci] marker on data-only updates (causes redundant workflow runs)"
-    ]
+      "Trying to push directly to development (now branch-protected since 2026-05-08T10:56Z, requires PR + gitleaks)",
+      "Forgetting to fast-forward fetch before branching (multi-agent context — origin/development advances every few minutes)"
+    ],
+    "updated_at": "2026-05-08T11:00Z",
+    "breaking_change_2026_05_08": "Branch protection on bsuite/development now requires PR + passing gitleaks check. The previous \"commit data-only directly to development\" path is BLOCKED. All dashboard updates must now go through a PR — even data-only refreshes."
   },
   "operator_blockers_resolved": [
     {
@@ -2572,5 +2635,27 @@
       "resolved_by": "operator-verified (live OAuth round-trip)",
       "evidence": "OAuth flow completed end-to-end on https://d.crm.crm7.app/settings/integrations against Braden Group tenant. Row in xero_connections: id=19d9dced-9e85-4498-bfd0-ec34c24d0c34, xero_tenant_name='Braden Pty Ltd', xero_tenant_id=111cde13-51d2-4fac-8497-57193705da69, scopes=[accounting.transactions, accounting.contacts, accounting.settings], expires_at=2026-05-08T07:06:50Z. Two server-side bugs caught + fixed during walkthrough: CORS allowlist (crm7#543, deployed live) + ALLOWED_REDIRECT_URIS path correction. Red-team audit per /xero-integration skill identifies 3 P0 (token encryption, multi-org UNIQUE, scope-storage drift), 9 P1, 10 P2 follow-ups — separate bsuite issues to file."
     }
-  ]
+  ],
+  "counters": {
+    "open_issues_total": 189,
+    "open_prs_total": 9,
+    "issues_by_repo": {
+      "bsuite": 68,
+      "business-suite-unified": 28,
+      "crm7": 67,
+      "conduit": 3,
+      "braden": 13,
+      "R80.3": 7,
+      "throughput": 3
+    },
+    "prs_by_repo": {
+      "bsuite": 1,
+      "business-suite-unified": 0,
+      "crm7": 8,
+      "conduit": 0,
+      "braden": 0,
+      "R80.3": 0,
+      "throughput": 0
+    }
+  }
 }

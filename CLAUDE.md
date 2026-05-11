@@ -502,7 +502,9 @@ Reminder template (paste into every issue body, every plan front-matter):
 - After **publishing a new artefact** (XLSX/PDF/MD report) — add a new top-level key with `schema_version: "1.0"`
 - **Before declaring a session complete** — verify the dashboard reflects current state. The Anti-Laziness rule (§1) applies: never claim "I'll update the dashboard later".
 
-### 10.2. How to update
+### 10.2. How to update (v1.1 — branch protection effective 2026-05-08)
+
+> **BREAKING CHANGE 2026-05-08**: `bsuite/development` is branch-protected and requires a PR + passing `gitleaks` check. The previous "commit data-only directly to development" path is BLOCKED. **Every dashboard update — even data-only refreshes — must now go through a PR.**
 
 | Type of change | Action |
 |---|---|
@@ -512,25 +514,42 @@ Reminder template (paste into every issue body, every plan front-matter):
 | Manual section (`parity_status`, `feature_360_status`, `gto_compliance_catalogue`, `dashboard_update_protocol`) | Edit JSON directly; bump that section's `schema_version` if shape changes |
 | New top-level section | Add render code to `docs/dashboard/index.html` AND document the new key in `dashboard_update_protocol.what_to_update` |
 
-After any edit:
+After any edit (PR-based workflow — required):
 
 ```bash
-# 1. (if auto sections changed) refresh
+# 0. Always start from a fresh fast-forward of origin/development
+git fetch origin development
+git checkout development
+git pull --ff-only origin development
+
+# 1. Branch off — even for data-only refreshes
+git checkout -b chore/dashboard-<reason>-YYYYMMDD
+
+# 2. (if auto sections changed) refresh
 python3 docs/dashboard/refresh-data.py > docs/dashboard/data/dashboard-data.json
 
-# 2. inline JSON into HTML
+# 3. inline JSON into HTML
 bash docs/dashboard/inline-data.sh
 
-# 3. verify locally
+# 4. verify locally
 xdg-open docs/dashboard/index.html   # or `open` on macOS
 
-# 4. commit & push (bundle with the change that motivated it)
+# 5. commit
 git add docs/dashboard/data/dashboard-data.json docs/dashboard/index.html
-git commit -m "chore(dashboard): <what changed and why> [skip ci]"
-git push
+git commit -m "chore(dashboard): <what changed and why>"
+
+# 6. push + open PR
+git push -u origin chore/dashboard-<reason>-YYYYMMDD
+gh pr create --base development --title "chore(dashboard): <reason>" --body "<scope>"
+
+# 7. Wait for gitleaks + other checks (typically <2 min)
+# 8. Self-merge once green
+gh pr merge --admin --squash --delete-branch
 ```
 
-The `[skip ci]` marker is only for **data-only** updates. If `index.html` rendering logic changed, omit `[skip ci]` so the deploy workflow runs.
+**No `[skip ci]` shortcut anymore** — gitleaks must run. Bundle dashboard updates with the PR that motivates them when feasible; otherwise file a dedicated `chore(dashboard): <reason>` PR.
+
+For automated 2h sweep refreshes: branch `chore/dashboard-2h-sweep-<TIMESTAMP>`, open PR, self-merge when CI green.
 
 ### 10.3. Rules for AI agents (non-negotiable)
 
@@ -544,21 +563,25 @@ The `[skip ci]` marker is only for **data-only** updates. If `index.html` render
 
 ### 10.4. Common mistakes (banned)
 
+- ❌ **Trying to push directly to `development`** (branch-protected since 2026-05-08T10:56Z, requires PR + gitleaks)
+- ❌ Forgetting to fast-forward fetch before branching (multi-agent context — `origin/development` advances every few minutes)
 - ❌ Forgetting to run `inline-data.sh` after editing the JSON (Pages stays stale)
 - ❌ Editing `index.html` directly to add data (will be overwritten on next inline)
 - ❌ Updating counters without filing the underlying issue (claims without evidence)
 - ❌ Hand-editing the `plans[]` array (it's auto-generated; edit source `.md` files instead)
-- ❌ Missing the `[skip ci]` marker on data-only updates (causes redundant workflow runs)
-- ❌ Filing a "docs only" PR for a dashboard update — bundle with the change that motivated it
+- ❌ Filing a dashboard PR before gitleaks check completes (don't `--admin` merge until checks are green)
 
-### 10.5. Verification checklist (before commit)
+### 10.5. Verification checklist (before opening PR)
 
+- [ ] Branched off latest `origin/development` (`git pull --ff-only` first)
 - [ ] JSON parses cleanly (`python3 -c "import json; json.load(open('docs/dashboard/data/dashboard-data.json'))"`)
 - [ ] `index.html` opened in browser — affected section renders without console errors
 - [ ] Counter math matches reality (cross-checked against `gh issue list` / `gh pr list`)
 - [ ] Every new claim has an `evidence_url`
 - [ ] If shape changed, the section's `schema_version` is bumped
 - [ ] Commit message follows `chore(dashboard): <reason>` convention
+- [ ] PR opened against `development` (NOT default branch)
+- [ ] Wait for `gitleaks` + other CI checks to pass before self-merging
 
 ### 10.6. What's tracked
 
