@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.07W
+**Version:** 5.08W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-08 (BOOT engine shipped-state correction — claude-loop COMPETE rotation, bsuite#739; complements bsuite#731 audit)
+**Last Updated:** 2026-05-10 (claude-loop ROADMAP rotation — codehouse-parity sub-plan README added, 2026-05-09/10 rotation cycle tracked, auth bridge + apprentice placement + conduit reconciliation docs captured)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -461,6 +461,44 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ---
 
+## Recently Completed (as of 2026-05-10 — claude-loop rotation cycle + auth bridge + placement docs)
+
+> Captures work landed 2026-05-09 → 2026-05-10 not yet in the 2026-05-08 section below. For the larger 2026-04-15 → 2026-05-08 batch, see that section.
+
+**AUTH — BS OAuth `setSession` bridge + 60s sync (canonical 2026-05-07)**
+
+- ✅ **`bsuite/oauth-callback-must-bridge` lint rule** (`@bsuite/dry-lint` v0.4.0) — enforces `supabase.auth.setSession({access_token, refresh_token})` in every consumer app's `/auth/callback` so BS OAuth Server tokens (`/auth/v1/oauth/token`) become live Supabase sessions. Without the bridge, the per-domain supabase client falls back to anon and RLS-protected reads 401/406 immediately after BSU→app handoff (BSU→CRM7 logged-out incident, 2026-05-06).
+- ✅ **60s `setSession` sync interval in `AuthContext`** — re-seeds the Supabase session whenever `bs_access_token` rotates. Shipped in CRM7 + R80.3 + throughput + braden as of 2026-05-07. `@bsuite/auth` pinned exact in each consumer `package.json` (canonical: `@bsuite/auth: 0.2.3`, `@bsuite/page-builder: ^0.2.6`).
+- ✅ **`oauth-contract.test.ts`** present in all 5 client apps (CRM7, R80.3, throughput, conduit, braden) — CI-enforced bridge contract. Verified by `(crm7|R80.3|throughput|conduit|braden)/src/__tests__/oauth-contract.test.ts`.
+
+**PARITY SPECS — codehouse-parity sub-plans README (2026-05-10)**
+
+- ✅ **[`docs/plans/20260506-codehouse-parity/README.md`](./plans/20260506-codehouse-parity/README.md)** — index for the 9 portal sub-plans + visual feature builder spec. Universal Rulebook §10.5 ("Every `docs/` folder has a README.md index") violation resolved for this directory (10 files, no index).
+
+**APPRENTICE PLACEMENTS — AVETMISS NAT00120 mapping + state machine + form schema (2026-05-06)**
+
+- ✅ **AVETMISS NAT00120 mapping** ([`docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md`](./20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md)) — BSuite apprentice/placement entity → AVETMISS NAT00120 field mapping for STA reporting compliance.
+- ✅ **State machine canon** ([`docs/20260506-apprentice-placement-state-machine-canon-v1.00W.md`](./20260506-apprentice-placement-state-machine-canon-v1.00W.md)) — canonical state transitions for apprentice placement lifecycle.
+- ✅ **Form schema spec** ([`docs/20260506-apprentice-placement-form-schema-spec-v1.00W.md`](./20260506-apprentice-placement-form-schema-spec-v1.00W.md)) — Zod schema + RHF form definitions.
+
+**CONDUIT — schema gap reconciliation (2026-05-06)**
+
+- ✅ **Conduit canonical map reconciliation** ([`docs/20260506-conduit-canonical-map-reconciliation-v1.00W.md`](./20260506-conduit-canonical-map-reconciliation-v1.00W.md)).
+- ✅ **Conduit schema gap decision** ([`docs/20260506-conduit-schema-gap-decision-v1.00W.md`](./20260506-conduit-schema-gap-decision-v1.00W.md)).
+
+**ROTATION — claude-loop overnight rotation cycle (2026-05-09 / 2026-05-10)**
+
+| Issue | Task | Repo | Outcome |
+|---|---|---|---|
+| [bsuite#770](https://github.com/GaryOcean428/bsuite/issues/770) | DB | BSU | search_path lock on 3 functions + advisor sweep — handoff [bsuite#771](https://github.com/GaryOcean428/bsuite/issues/771) (BSU#391) |
+| [bsuite#774](https://github.com/GaryOcean428/bsuite/issues/774) | EDGE | crm7 | `_shared/rate-limiter.ts` vitest contract — handoff [bsuite#775](https://github.com/GaryOcean428/bsuite/issues/775) (crm7#578) |
+| [bsuite#778](https://github.com/GaryOcean428/bsuite/issues/778) | TESTS | crm7 | `_shared/oauth-state.ts` vitest contract — handoff [bsuite#779](https://github.com/GaryOcean428/bsuite/issues/779) (crm7#579) |
+| [bsuite#781](https://github.com/GaryOcean428/bsuite/issues/781) | DOCS | crm7 | `_shared/__tests__/README.md` vitest convention — handoff [bsuite#782](https://github.com/GaryOcean428/bsuite/issues/782) (crm7#580) |
+| [bsuite#784](https://github.com/GaryOcean428/bsuite/issues/784) | PERF | crm7 | preconnect Supabase API origin — handoff [bsuite#787](https://github.com/GaryOcean428/bsuite/issues/787) (crm7#581) |
+| [bsuite#789](https://github.com/GaryOcean428/bsuite/issues/789) | ROADMAP | bsuite | this update — `docs/plans/20260506-codehouse-parity/README.md` + master roadmap v5.08W |
+
+---
+
 ## Recently Completed (as of 2026-05-08 — overnight ship-all-apps + claude-loop cycles)
 
 > ~30 days of two-agent (claude-loop + perplexity-computer + ship-all-apps merge cycle) work since the 2026-04-14 batch. This section captures verifiable doctrine, governance, dashboard, uplift-wave, and parity-spec landmarks. Per-rotation feature/fix work is tracked in the [closed claude-loop rotation issues](https://github.com/GaryOcean428/bsuite/issues?q=is%3Aissue+label%3Aclaude-loop+is%3Aclosed) (issues #555–#718, ~50 cycles); the doctrine, dashboard, and uplift-wave sections below are the structural changes.
@@ -649,6 +687,8 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 | # | Task | Project | Effort | Agent | Source |
 |---|------|---------|--------|-------|--------|
+| 3a | **9-wave UI uplift program** — W0 + W1 shipped 2026-05-07; W2 (Reports CRM7), W3 (Pay Item Groups + 3 sibling settings), W4 (Permissions Editor — replaces BSU#346), W5 (Tenant Admin), W6 (Branding), W7 (Apprentice placements), W8 (consumer bumps × 4 apps) remain. Ownership locked: claude-loop = W2/W4/W6, perplexity-computer = W3/W5/W7/W8. Tracker: [bsuite#635](https://github.com/GaryOcean428/bsuite/issues/635). | all | 4w | claude-loop + perplexity-computer | [INDEX.md](./plans/uplift/INDEX.md) |
+| 3b | **Codehouse Parity & Platform 360 — WS-A3/B/C/E1–E5/F** — WS-A1/A2/A4/D/E shipped 2026-05-06/07. Remaining: WS-A3 (per-submodule OUTSTANDING + STATUS link rows), WS-B (12 grouped GitHub issues), WS-C (dashboard schema additive extension post-#535), WS-E1–E5 (visual feature builder shipped code), WS-F (doc-drift sweep — 17 items). | all | 3w | TBD | [Plan](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md) |
 | 4 | ~~BSU Stripe billing portal~~ ✅ E2E verified | bsu | ✅ Done | Cascade | 2026-03-19 |
 | 5 | ~~CRM7 PWA~~ (`vite-plugin-pwa`, manifest, service worker hook present) | crm7 | ✅ Built | Claude Code | Prompt 1A |
 | 6 | R80.3 PWA + 90% wage calc tests + logger migration | R80.3 | 5d | Claude Code | Prompt 4 |
@@ -767,6 +807,11 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-10 v5.08W** — claude-loop ROADMAP rotation (issue [bsuite#789](https://github.com/GaryOcean428/bsuite/issues/789)):
+  - Added "Recently Completed (as of 2026-05-10)" section covering 2026-05-09/10 rotation cycle (DB → EDGE → TESTS → DOCS → PERF → ROADMAP), AUTH setSession bridge + 60s sync lint rule + contract tests, APPRENTICE placement docs (AVETMISS/state-machine/form-schema), CONDUIT reconciliation docs, codehouse-parity sub-plans README.
+  - Added P1 #3a (9-wave UI uplift program) and P1 #3b (Codehouse Parity & Platform 360 remaining workstreams) to execution table.
+  - Added 6 entries to Related Documents (Red-Team Doctrine, FF-SELF-VALIDATION, Uplift Design Language, Uplift Wave Index, Codehouse Parity plan, Codehouse Parity sub-plans README).
+  - New: [`docs/plans/20260506-codehouse-parity/README.md`](./plans/20260506-codehouse-parity/README.md) — index for 10 sub-plans (§10.5 violation resolved).
 - **2026-05-08 v5.07W** — claude-loop COMPETE rotation (bsuite#739). BOOT compliance engine shipped-state correction:
   - **Master roadmap was 30+ days stale on BOOT.** Lines 337, 428, 629, 667 all classified BOOT engine as 🔲 / ⚠️ pending despite the engine + CRM7 integration being shipped end-to-end.
   - **All 4 stale rows struck** with primary-source evidence URLs to live artifacts: package `@bsuite/charge-calc/boot` v0.2.4 (8 modules, 1,757 LOC source + 4,825 LOC tests), CRM7 wrapper `src/lib/rates/bootGate.ts` sha `428820e`, CRM7 routes `/compliance/boot` + `/compliance/boot/:id`, CRM7 UI scoping doc `docs/reference/20260317-crm7-boot-assessment-ui-v1.00W.md` sha `8f081a7`, RLS migrations `20260301201200_boot_assessments_rls.sql` + `20260317030000_boot_assessments_security_hardening.sql`.
@@ -800,6 +845,12 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 | Document | Location |
 |----------|----------|
 | Active execution queue (post-Phase 0) | [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md) |
+| Red-Team + UX-DX Doctrine v1.00A | [`docs/20260507-red-team-ux-doctrine-v1.00A.md`](./20260507-red-team-ux-doctrine-v1.00A.md) |
+| FF-SELF-VALIDATION-20260507 | [`docs/20260507-ff-self-validation-doctrine-v1.00W.md`](./20260507-ff-self-validation-doctrine-v1.00W.md) |
+| BSuite Uplift Design Language | [`docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md`](./plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md) |
+| Uplift Wave Index | [`docs/plans/uplift/INDEX.md`](./plans/uplift/INDEX.md) |
+| Codehouse Parity & Platform 360 | [`docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md`](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md) |
+| Codehouse Parity sub-plans | [`docs/plans/20260506-codehouse-parity/README.md`](./plans/20260506-codehouse-parity/README.md) |
 | Phase 0 ADR index | [`docs/adr/README.md`](./adr/README.md) |
 | Phase 0 completion report | [`docs/20260501-phase-0-completion-report-v1.00W.md`](./20260501-phase-0-completion-report-v1.00W.md) |
 | Contributing Standards | [`docs/20260227-contributing-standards-guide-v1.00W.md`](./20260227-contributing-standards-guide-v1.00W.md) |
