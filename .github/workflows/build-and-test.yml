@@ -23,3 +23,7 @@ jobs:
           test -f AGENTS.md
           test -f docs/README.md
           git submodule status --recursive
+
+      - name: Enforce Tailwind v4+
+        shell: bash
+        run: node scripts/check-tailwind-v4.mjs

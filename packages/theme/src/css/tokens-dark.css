@@ -11,12 +11,13 @@
 .dark {
 
   /* ===== Text ===== */
-  --text-primary:        oklch(0.982 0.002 248);
-  --text-secondary:      oklch(0.769 0.015 248);
-  --text-muted:          oklch(0.558 0.016 244.9);
-  --text-disabled:       oklch(0.428 0.015 248.2);
-  --text-on-primary:     oklch(1 0 0);
-  --text-on-surface:     oklch(0.982 0.002 248);
+  --text-primary:        oklch(0.94 0.012 260);
+  --text-secondary:      oklch(0.82 0.015 260);
+  --text-muted:          oklch(0.68 0.018 260);
+  --text-subtle:         oklch(0.56 0.015 260);
+  --text-disabled:       oklch(0.44 0.010 260);
+  --text-on-primary:     oklch(0.99 0 0);
+  --text-on-surface:     oklch(0.94 0.012 260);
   --color-primary-text:  oklch(0.623 0.188 259.8);   /* WCAG AA blue text on dark bg */
   --color-accent-text:   oklch(0.769 0.132 191.7);   /* WCAG AA cyan text on dark bg */
 
@@ -42,26 +43,26 @@
   /* ===== Status (same values in both themes) ===== */
   --color-success: oklch(0.697 0.135 172.1);
   --color-warning: oklch(0.868 0.125 81.4);
-  --color-error:   oklch(0.669 0.219 20.9);
+  --color-error:   oklch(0.568 0.202 283.1);
   --color-info:    oklch(0.769 0.132 191.7);
 
   /* ===== shadcn/ui bridge tokens ===== */
   --background:             oklch(0.166 0.026 269.4);
-  --foreground:             oklch(0.982 0.002 248);
+  --foreground:             var(--text-primary);
   --card:                   oklch(0.242 0.03 269.9);
-  --card-foreground:        oklch(0.982 0.002 248);
+  --card-foreground:        var(--text-primary);
   --popover:                oklch(0.292 0.034 270);
-  --popover-foreground:     oklch(0.982 0.002 248);
+  --popover-foreground:     var(--text-primary);
   --primary:                oklch(0.769 0.132 191.7);  /* Cyan as primary in dark */
   --primary-foreground:     oklch(0.166 0.026 269.4);
   --secondary:              oklch(0.242 0.03 269.9);
-  --secondary-foreground:   oklch(0.982 0.002 248);
+  --secondary-foreground:   var(--text-primary);
   --muted:                  oklch(0.242 0.03 269.9);
-  --muted-foreground:       oklch(0.558 0.016 244.9);
+  --muted-foreground:       var(--text-muted);
   --accent:                 oklch(0.546 0.215 262.9);  /* Blue as accent in dark */
-  --accent-foreground:      oklch(0.982 0.002 248);
-  --destructive:            oklch(0.669 0.219 20.9);
-  --destructive-foreground: oklch(0.982 0.002 248);
+  --accent-foreground:      var(--text-primary);
+  --destructive:            var(--color-error);
+  --destructive-foreground: oklch(0.99 0 0);
   --border:                 oklch(0.769 0.132 191.7 / 0.15);
   --input:                  oklch(0.769 0.132 191.7 / 0.15);
   --ring:                   oklch(0.769 0.132 191.7);  /* Cyan ring in dark */

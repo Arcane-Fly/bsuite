@@ -261,8 +261,9 @@ The correct lockfile has `.:` as the only importer. A broken workspace lockfile 
 2. When any of the 6 apps bumps React, `packages/schema-registry`, `packages/page-builder`, and `packages/nav-core` MUST be bumped in the same PR or the next PR. CI blocks if a shared package is behind the lowest consumer app version by more than one minor.
 3. Peer-dependency ranges for shared packages stay liberal, but devDependencies in each package MUST match the current consumer React version.
 4. Use caret ranges (`^X.Y.Z`) for all dependencies that follow semver.
-5. Run `pnpm update --latest --interactive` monthly.
-6. Triage `pnpm audit` security advisories weekly.
+5. Tailwind CSS MUST be v4 or later in every app/package that declares `tailwindcss`. Tailwind v3 is not permitted in package manifests, resolved lockfile entries, docs, or new implementation paths; run `pnpm lint:tailwind-v4` after dependency changes.
+6. Run `pnpm update --latest --interactive` monthly.
+7. Triage `pnpm audit` security advisories weekly.
 
 ---
 
@@ -304,32 +305,31 @@ docs(r80): update Fair Work API reference
 
 ## Theme System
 
-### D2C Neon Electric (business-suite-unified, crm7, conduit, R80.3)
+### D2C Neon Electric (business-suite-unified, crm7, conduit, R80.3, throughput)
 
-Full spec in `docs/20260228-d2c-theme-specification-v1.00W.md`. Key colors:
+The canonical implementation is `@bsuite/theme@0.3.3+` (`packages/theme/`) and the active plan is `docs/plans/20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md`.
 
-| Color | Hex | Use |
-|-------|-----|-----|
-| Electric Blue | `#2563eb` | Primary actions |
-| Electric Cyan | `#00cec9` | Accents, borders |
-| Electric Green | `#22c55e` | Success |
-| Electric Coral | `#ff4757` | Alerts, destructive |
-| Electric Yellow | `#fdcb6e` | Warnings |
+| Role / token | OKLCH source | Notes |
+|--------------|--------------|-------|
+| `--role-primary` / Electric Blue | `oklch(0.546 0.215 262.9)` | Primary actions and focusable brand affordances |
+| `--role-accent` / Electric Cyan | `oklch(0.769 0.132 191.7)` | Accents, highlights, visible focus in dark mode |
+| `--role-success` | `oklch(0.723 0.192 149.6)` | Success; never rely on colour alone |
+| `--role-warning` / Amber | `oklch(0.728 0.168 22.5)` | Warning; use role aliases, not raw palette names |
+| `--role-error` / `--role-destructive` | `oklch(0.568 0.202 283.1)` | Purple by platform policy: coral/red must not be semantic error/destructive |
 
-Dark mode: deep navy `#0a0e1a`. Light mode: off-white `#f2f2f2`.
-Typography: Inter (body), JetBrains Mono (code).
+D2C consumers import `@bsuite/theme/preset-v4.css` and `@bsuite/theme/css`, bind to role/shadcn tokens (`text-foreground`, `bg-primary`, `text-muted-foreground`, `bg-destructive`), and avoid raw hex, RGB, HSL, `text-white`, and `text-black` in consumer code. Dark-mode text uses the softened five-tier scale capped at `oklch(0.94 ... )`; pure white is only allowed as an inverse token on saturated fills, never as default dark-surface text.
 
-### Corporate Branding (braden only)
+### Corporate Braden Branding (braden only)
 
-| Color | Hex | Use |
-|-------|-----|-----|
-| Braden Red | `#ab233a` | Primary |
-| Braden Dark Red | `#811a2c` | Secondary headers |
-| Braden Gold | `#cbb26a` | Accent |
-| Braden Navy | `#2c3e50` | Business elements |
+Braden is a separate corporate brand, not D2C Neon Electric, but it uses the same architecture: OKLCH source tokens, stable role aliases, shadcn bridge variables, and purple semantic error/destructive roles.
 
-Typography: Montserrat (headings), Inter (body).
-See braden project docs for full brand guide.
+| Corporate token | OKLCH source | Legacy reference | Use |
+|-----------------|--------------|------------------|-----|
+| `--braden-red` | `oklch(0.51 0.17 19)` | `#ab233a` | Corporate primary / identity |
+| `--braden-gold` | `oklch(0.77 0.10 82)` | `#cbb26a` | Corporate accent; use navy text on gold for AA contrast |
+| `--braden-navy` | `oklch(0.34 0.04 250)` | `#2c3e50` | Corporate deep surface / text anchor |
+
+Braden imports `@bsuite/theme/braden-css`, not `@bsuite/theme/css`. Red is allowed as Braden identity, but red-as-error is still banned; `--role-error` and `--role-destructive` stay purple on both brands.
 
 ---
 
@@ -966,10 +966,10 @@ https://conduit.crm7.app/auth/callback
 
 ### Auth Routing Architecture (Expected Behaviour — Not Bugs)
 
-- **Conduit** (`conduit.crm7.app`) sign-in redirects to `suite.crm7.app/login?return_to=conduit&return_path=…` — BSU handles auth, conduit handles the post-auth redirect. Intentional.
-- **R80.3** (`r8.crm7.app`) similarly delegates to BSU. Cookie SSO (`business_suite_auth` on `domain=.crm7.app`) handles session sharing.
-- **Braden** (`www.braden.com.au`) is a different TLD — uses BS OAuth 2.1 PKCE instead of cookie SSO.
-- **Conduit** uses `@supabase/ssr` server-managed cookies and does **not** participate in cross-domain cookie SSO. Isolated by design.
+- **Conduit** (`conduit.crm7.app`) uses Conduit-local `/auth/login` and `/auth/callback` surfaces, then performs BS OAuth 2.1 PKCE against BSU as the OAuth server. It also uses `@supabase/ssr` server-managed cookies on its own host only. No cross-domain cookie sharing.
+- **R80.3** (`r8.crm7.app`) uses BS OAuth 2.1 PKCE + JWKS for cross-app SSO. Cookie SSO (`business_suite_auth` on `domain=.crm7.app`) is removed and must not be reintroduced.
+- **Braden** (`www.braden.com.au`) is a different TLD and uses the same BS OAuth 2.1 PKCE + JWKS client pattern with Braden-specific client ID/callbacks.
+- **All client apps** keep their Supabase native sessions per-domain; silent cross-app SSO happens through BSU `/oauth/authorize?prompt=none`, not shared cookies.
 
 ### Separate Project Warning
 
