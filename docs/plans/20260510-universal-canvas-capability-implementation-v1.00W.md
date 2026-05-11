@@ -17,6 +17,7 @@ dashboard_protocol: FF-DASHBOARD-20260508 (§10 of parent CLAUDE.md applies — 
 |---|---|---|---|
 | 1.00W | 2026-05-10 | claude-code | Initial draft |
 | 1.01W | 2026-05-10 | claude-code (post-red-team) | Applied 20 red-team findings: Phase B sub-split (P0 #1), If-Match precondition for layout writes (P0 #2), per-page evidence table mandatory (P0 #3), Layout-Updated toast ships in Phase A not deferred (P0 #4), Phase C scoped to Sales Pipeline only — Workflow Builder + AI Flow Designer moved to Phase D + E as separate plans (P0 #5), 500ms preference write debounce (P1 #6), stale-tab guard (P1 #7), cross-app OAuth contract test in Phase 0 (P1 #8), a11y contract for edit mode (P1 #9), bundle delta ≤2 kB (P1 #10), bundle analyser proof for Phase C (P1 #11), `<DraggableCardPage brand="corporate">` for braden (P1 #12), explicit RLS predicate audit (P1 #13), plus P2 amendments inline. |
+| 1.02W | 2026-05-11 | claude-code (operator directive) | Added Phase F — Universal date-format localisation. Default `en-AU` with BSU-level per-user toggle to `en-US`. Captures the cross-app doctrine the operator surfaced 2026-05-11: dates currently rendered in mixed formats, must default to Australian, must be switchable. |
 
 # Universal Canvas Capability — Implementation Plan v1.00W
 
@@ -211,8 +212,12 @@ Cross-reference for traceability:
 
 ## 4. Phases
 
-The plan has 5 phases (0 → A → B → C → Ship). Each phase has its own go-signal gate; the
+The plan has **6 phases (0 → A → B → C → F → Ship)**. Each phase has its own go-signal gate; the
 completeness-agent guards each gate.
+
+Phase F (Universal date-format localisation) was added 2026-05-11 per operator directive — it is
+**orthogonal** to A/B/C (canvas + react-flow are unaffected by date rendering) and can ship in
+parallel with Phase B or sequentially after Ship. The plan author recommends after-Ship sequencing.
 
 ### Phase 0 — Auth-flow isolation: ship crm7#579 standalone
 
@@ -470,6 +475,96 @@ deferred to Phase D in a tracked issue.
 
 ---
 
+### Phase F — Universal date-format localisation (Australian default, American opt-in)
+
+**Goal**: Every date rendered in any BSuite app defaults to **`en-AU`** format
+(`DD/MM/YYYY` numeric, `D MMMM YYYY` long, `D MMM YYYY` short). Users with American
+preference set in BSU master toggle render `en-US` (`MM/DD/YYYY` etc).
+No app silently emits American format because of `new Date().toLocaleDateString()`
+without an explicit locale.
+
+**Why this phase exists (operator brief, 2026-05-11)**: dates currently appear in
+mixed formats across CRM7 + sibling apps. The operator is Australian (WA);
+default must be `en-AU`. American format must remain an option (some users + some
+external integrations). The current half-finished state — some dates correct,
+some American by accident — must end here, not get half-fixed again.
+
+**Scope (frozen)**:
+
+- New package: `packages/dates/` → `@bsuite/dates@0.1.0`. Single source of truth for
+  date rendering across all 6 apps. Wraps `Intl.DateTimeFormat` (no moment / dayjs /
+  date-fns — native is sufficient). Exports `formatDate`, `formatDateTime`,
+  `formatTime`, `formatRelative`, `formatDateRange`, `parseDate`, `parseDateRange`,
+  `parseIsoDate`. All take an optional `locale` arg defaulting to the resolved
+  user locale; resolution order: explicit arg → `useLocale()` context → user
+  preference → app default `en-AU`.
+- BSU master preference: extend `user_preferences` with `date_format` enum
+  (`'au' | 'us'`), default `'au'`. Settings page (`/settings/locale` in BSU) lets
+  the user pick. Propagation: BSU is the only writer; consumer apps read via the
+  existing `useScopedPreference` hook with `key='date_format'`, scope=`'global'`
+  (cross-app, not per-app — locale is a user-wide preference).
+- Locale context provider (`<LocaleProvider>`) ships in `@bsuite/dates` with the
+  same React-context shape as `BrandingProvider`. Each app wraps its root with
+  `<LocaleProvider supabaseClient={supabase}>` inside `<ThemeProvider>`.
+- ESLint rule (extend `@bsuite/dry-lint` or add `@bsuite/no-naked-dates`): error
+  on `new Date(...).toLocaleDateString()`, `.toLocaleString()`, `.toString()` for
+  date-rendering paths. Allowed: `formatDate(date)` / `formatDateTime(date)` from
+  the shared package, OR `Intl.DateTimeFormat(locale, opts)` with an explicit
+  non-undefined locale arg sourced from the context. Migration grace: existing
+  call-sites flagged as `warn` (not `error`) during Phase F; flip to `error`
+  after migration sweep.
+- Migration sweep: grep across all 6 apps for `toLocaleDateString`, `toLocaleString`,
+  `.toString().slice(...)` patterns over `Date` objects, and direct
+  `Intl.DateTimeFormat()` calls without an explicit locale. Convert each to
+  `formatDate(...)` or pass an explicit locale.
+
+**Skills + MCPs**: `dry-one-shot-architecture` + `forms-and-validation` (Zod for
+preference schema) + `supabase-postgres-best-practices` (migration for
+`user_preferences.date_format`) + `cross-platform-sync` (AGENTS.md ≡ CLAUDE.md
+amendment) + `Context7` (`Intl.DateTimeFormat` MDN spec confirmation) +
+`react-code-fix-linter` (ESLint rule wiring).
+
+**Sub-agents**: Code-Quality Agent (lead — the migration sweep is large and DRY),
+User-Advocate (default-AU UX rationale + Settings affordance), Reliability Agent
+(timezone + DST handling — Australia spans multiple TZ), Multi-App-Sync Agent
+(all 6 apps must adopt the package; no app left on naked Date methods),
+Brand-Consistency Agent (date typography is part of the design system).
+
+**Steps**:
+
+| # | Action | Skill | MCP | Output |
+|---|---|---|---|---|
+| F.0 | Gate A: `Context7` → confirm `Intl.DateTimeFormat` API surface for `en-AU` + `en-US` (`{dateStyle}`, `{day,month,year}`, `formatToParts`). Confirm Node 24 + supported Vercel runtimes both support it. | `best-practice-research` | `Context7` | Docs cite in PR |
+| F.1 | Scaffold `packages/dates/` (mirror `packages/charge-calc` structure). `package.json` with `@bsuite/dates@0.1.0` + `tsconfig` + `vitest.config`. Source files: `formatDate.ts`, `parseDate.ts`, `useLocale.ts`, `LocaleProvider.tsx`, `index.ts`. | `dry-one-shot-architecture` | — | New package |
+| F.2 | TDD: 20+ vitest cases — `en-AU` numeric / long / short / time / range / relative; `en-US` equivalents; round-trip parse; invalid input returns null; DST boundaries (Apr 1 + Oct 1 in `Australia/Perth`, `Australia/Sydney`); `Intl.DateTimeFormat` parts assertion. | `test-driven-development` | — | Test suite |
+| F.3 | Implement `formatDate`, `formatDateTime`, `formatTime`, `formatRelative`, `formatDateRange`, `parseDate`, `parseDateRange`, `parseIsoDate`. Each takes optional `locale` arg defaulting to context. | `dry-one-shot-architecture` | — | Implementation commits |
+| F.4 | Implement `<LocaleProvider>` — reads `user_preferences.date_format` via `useScopedPreference` global scope; falls back to `en-AU`. Exposes `useLocale()` hook returning `{ locale, dateFormat, setDateFormat }`. | `forms-and-validation` | `Supabase MCP` | Provider commit |
+| F.5 | Supabase migration: add `date_format` column to `user_preferences` (enum `'au'`, `'us'`; default `'au'`). RLS predicate matches existing rows (`auth.uid() = user_id`). | `supabase-postgres-best-practices` | `Supabase MCP` (`apply_migration`) | Migration SQL |
+| F.6 | Build + publish `@bsuite/dates@0.1.0` to npm under `@bsuite` org. | `git-workflow` | — | npm publish log |
+| F.7 | BSU Settings UI: `/settings/locale` page renders `<RadioGroup>` for `Australian (DD/MM/YYYY)` vs `American (MM/DD/YYYY)`. Saves to `user_preferences.date_format`. Brand: shadcn `<RadioGroup>` + oklch tokens. | `shadcn-ui` + `forms-and-validation` + `bsuite-brand-system` | — | Settings page |
+| F.8 | Migration sweep — for each of the 6 apps in parallel: grep for `toLocaleDateString`, `toLocaleString`, `Intl.DateTimeFormat(` (no arg) — replace with `formatDate(...)` from `@bsuite/dates`. Add `<LocaleProvider>` to each app root. | `Explore` + `react-code-fix-linter` | — | Sweep commits per app |
+| F.9 | ESLint rule: extend `@bsuite/dry-lint` with `bsuite/no-naked-dates` (warn first, error after sweep). | `react-code-fix-linter` | — | Lint-rule commit |
+| F.10 | Visual-Equivalence (§9.2): per-app screenshots before/after for the 5 most-visited date-rendering surfaces (dashboard recent activity, reports table dates, settings audit log, financial invoice dates, communications timestamps). Confirm AU format renders + the BSU toggle flips a user to US format. | `chrome-devtools-mcp` | `mcp__plugin_chrome-devtools-mcp_chrome-devtools__*` | Screenshot set |
+| F.11 | Brand check: date typography lines up with shadcn body/caption text scales; no off-pattern naked `<span>` with custom date format. | `bsuite-brand-system` | — | Brand-pass note |
+| F.12 | Auth smoke (per phase). | `playwright` | Playwright MCP | Smoke |
+| F.13 | Open PR per app (6 PRs total + parent submodule PR). Each PR has `## Evidence` block + counts of files changed in the sweep. | `git-workflow` | `claude_ai_github` | PR URLs |
+| F.14 | CI green + preview READY + merge each. | — | Vercel MCP | Merged PRs |
+| F.end | Completeness-agent runs Phase F checklist. | inline | — | Pass/fail |
+
+**Self-validation loop**: §9.1 output-equivalence (every legacy date string → `formatDate(...)` produces identical visible output for `en-AU` users; for `en-US` users the visible output flips to American format ONLY where the user has explicitly opted in).
+
+**Phase F exit criteria**:
+- `@bsuite/dates@0.1.0` published + adopted by all 6 apps
+- Zero remaining naked `.toLocaleDateString()` / `.toLocaleString()` / undefined-locale `Intl.DateTimeFormat` calls in `src/`
+- BSU `/settings/locale` page shipped; toggle persists; AU default
+- ESLint rule active (`error` post-sweep)
+- All 6 production deploys verified showing AU dates by default
+- Memory written: `bsuite_session_<YYYYMMDD>f`
+
+**Ordering vs other phases**: Phase F is independent of Phase A/B/C (orthogonal concern). It can ship **in parallel** with Phase B (different code paths) or **after** Phase Ship. Recommend **after Ship**, because the locale-aware date formatter then naturally flows into any new dates added by canvas pages in Phase B + Sales Pipeline node labels in Phase C.
+
+---
+
 ### Phase Ship — /ship-all-apps to production
 
 **Goal**: Promote all phase outputs from `development` to `main` across all 6 apps + parent
@@ -588,7 +683,8 @@ This plan flips to `status: A` (Approved → shipped) when:
 - [ ] Phase 0 merged + deployed + auth smoke green
 - [ ] Phase A merged + deployed + Reports cards 4-distinct + drag + resize + edit-mode toggle all visually confirmed via chrome-devtools-mcp on `d.crm.crm7.app`
 - [ ] Phase B merged for all 6 apps + per-app live-deploy verified + cross-app drift matrix shows zero drift
-- [ ] Phase C merged with at least Sales Pipeline flow + Workflow Builder; AI Flow Designer either shipped or tracked as Phase D issue
+- [ ] Phase C merged with Sales Pipeline flow (Workflow Builder + AI Flow Designer scoped to Phase D + E plans)
+- [ ] Phase F merged: `@bsuite/dates@0.1.0` adopted in all 6 apps; BSU `/settings/locale` toggle ships; zero remaining naked `toLocale*` calls; all production deploys verified rendering AU dates by default
 - [ ] All production deploys verified READY on Vercel MCP
 - [ ] Dashboard JSON reflects every shipped item with `evidence_url`
 - [ ] Memory written: `bsuite_session_20260510<letter>` for every phase + `bsuite_sleep_packet_20260510` final
