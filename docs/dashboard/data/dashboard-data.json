@@ -13,7 +13,8 @@
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
     "last_extended": "2026-05-08T06:40Z",
     "extended_by": "claude-code (Xero OAuth verified end-to-end; zero operator blockers remaining)",
-    "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
+    "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
+    "last_refresh": "2026-05-11"
   },
   "summary": {
     "external_total": 30,
