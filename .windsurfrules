@@ -155,8 +155,9 @@ CRM7 and Conduit use Vercel AI Gateway for model routing. **Do NOT revert these 
 - TypeScript strict mode everywhere
 - pnpm as package manager (never npm/yarn)
 - Vitest for all projects, including conduit (Next.js)
-- D2C Neon Electric theme for all projects EXCEPT braden (uses Corporate branding)
-- D2C color format: oklch mandatory for all new color tokens. Hex/rgb only acceptable for third-party component defaults or legacy compatibility tokens. Braden is exempt.
+- D2C Neon Electric theme for business-suite-unified, crm7, conduit, R80.3, and throughput. Use `@bsuite/theme@0.3.3+`, OKLCH role tokens, and purple `--role-error` / `--role-destructive`.
+- Braden is a separate corporate brand, but not exempt from token architecture: it imports `@bsuite/theme/braden-css`, uses OKLCH Braden Red/Gold/Navy role bindings, and keeps semantic error/destructive purple.
+- Never add raw hex/RGB/HSL, `text-white`, or `text-black` in consumer UI. Dark-surface text uses the softened OKLCH scale capped at L=0.94; inverse text on fills uses explicit `text-on-*` tokens.
 - Never commit API keys or secrets
 - Conventional commits: `type(scope): description`
 - @bsuite/* packages are on npm — NEVER use `workspace:*` in consumer projects
@@ -208,7 +209,7 @@ Correct lockfile: `.:` as only importer. Broken lockfile: `..` or `../packages/*
 
 Full details in `AGENTS.md` and `docs/AUTH-MAP.md`. Key rules:
 
-- All `.crm7.app` Supabase clients MUST use `cookieStorage` with `domain=.crm7.app`
+- Cookie SSO has been removed suite-wide. Do NOT add `cookieStorage`, `domain=.crm7.app`, or `storageKey: 'business_suite_auth'`; cross-app SSO is BS OAuth 2.1 PKCE + JWKS only.
 - All Supabase clients MUST use `flowType: 'pkce'`
 - Never duplicate the OAuth consent screen — BSU is the only OAuth server
 - BS OAuth tokens are NOT Supabase sessions — they run in parallel

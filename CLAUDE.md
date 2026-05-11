@@ -116,13 +116,17 @@ Scopes: `bsu`, `crm7`, `conduit`, `braden`, `r80`, `throughput`, `shared`, `docs
 
 ### Theme System
 
-- **D2C Neon Electric theme** for: business-suite-unified, crm7, conduit, R80.3
-  - See `docs/20260228-d2c-theme-specification-v1.00A.md` for the active palette and implementation
-  - Primary: Electric Blue `#2563eb`, Accent: Electric Cyan `#00cec9`
-  - Dark mode: deep navy `#0a0e1a`, Light mode: off-white `#f2f2f2`
-- **Corporate branding** for: braden (braden.com.au)
-  - Primary: Braden Red `#ab233a`, Accent: Braden Gold `#cbb26a`
-  - Do NOT apply D2C theme to braden
+- **D2C Neon Electric theme** for: business-suite-unified, crm7, conduit, R80.3, throughput
+  - Canonical package: `@bsuite/theme@0.3.3+` (`packages/theme/`)
+  - Source values are OKLCH role tokens, not hex: `--role-primary` Electric Blue `oklch(0.546 0.215 262.9)`, `--role-accent` Electric Cyan `oklch(0.769 0.132 191.7)`
+  - `--role-error` and `--role-destructive` are Electric Purple `oklch(0.568 0.202 283.1)`. Coral/red must not be semantic error/destructive.
+  - Dark-surface text uses the five-tier anti-glare scale capped at `oklch(0.94 ... )`; do not add `text-white`, `text-black`, raw hex, RGB, or HSL in consumer UI.
+  - Enterprise white-labelling overrides role aliases through `BrandingProvider`; `--role-error` and `--role-destructive` are not tenant-overridable.
+- **Corporate Braden branding** for: braden (braden.com.au)
+  - Separate brand baseline: import `@bsuite/theme/braden-css`, not D2C `@bsuite/theme/css`
+  - Corporate identity anchors: Braden Red `oklch(0.51 0.17 19)` / `#ab233a`, Braden Gold `oklch(0.77 0.10 82)` / `#cbb26a`, Braden Navy `oklch(0.34 0.04 250)` / `#2c3e50`
+  - Same architecture as D2C: OKLCH source, role aliases, shadcn bridge, softened text scale, purple semantic error/destructive roles.
+- **O.11 planning authority:** `docs/plans/20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md` captures the centralised theming POC, feature-placement audit addendum, and docs-coherence pass.
 
 ### Documentation
 
@@ -373,10 +377,10 @@ curl -X PUT https://qig-memory-api.vercel.app/api/memory/bsuite_sleep_packet_YYY
 ### throughput
 
 - Idea Management Platform at `ideas.crm7.app` — capture, refine, launch ideas with AI assistance
-- React 19 + Vite + TypeScript stack (throughput is the only known migration holdout until Phase 5.5 completes)
+- React 19 + Vite + TypeScript stack
 - AI integration via **Groq** (`gpt-oss-120b`) — see `throughput/GROQ_SETUP.md` and `throughput/docs/GROQ_INTEGRATION.md` (submodule-local paths)
 - Auth: Supabase Native Auth + BS OAuth 2.1 PKCE client (id `35f0db49-ef62-4115-baba-7b961f034cc3`)
-- Reads cookie SSO `business_suite_auth` on `.crm7.app` — same pattern as CRM7/R80.3
+- No cookie SSO. Cross-app SSO is BS OAuth 2.1 PKCE + JWKS only.
 - Package manager: **pnpm** (migrated from npm in PR #41, merged 2026-04-25)
 
 

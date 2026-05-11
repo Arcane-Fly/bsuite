@@ -78,7 +78,7 @@ The overnight session and subsequent Claude Code work delivered substantial prog
 | **P1-J12** | OPEN | `strict: true` not enabled in R80.3 + throughput tsconfig | R80.3, throughput | Enable; fix resulting type errors |
 | **P1-J15** | OPEN | CRM7 DialogContent a11y sweep — 81 files missing `<DialogTitle>` | CRM7 | Bulk add `<DialogTitle>` per shadcn pattern |
 | **P1-04** | OPEN | BSU `AdminBranding` writes to Tier 2 (`tenant_branding NULL`) not Tier 1 (`platform_branding`) | BSU | Wire platform tab to `platform_branding` singleton |
-| **P1-09** | OPEN | `throughput` on Tailwind v3 — `preset-v4.css` cannot be consumed | throughput | Upgrade to Tailwind v4; wire preset |
+| **P1-09** | ✅ FIXED | Tailwind v4+ floor enforced across manifests/lockfiles | all | `pnpm lint:tailwind-v4` |
 | **P1-J08** | OPEN | 5 `vercel.json` files missing `Cache-Control: immutable` for `/assets/*` | CRM7, R80.3, braden, throughput, conduit | Add header rules |
 
 **Colourblind (red/green sole-signifier) status:** No confirmed instances of red vs. green as the sole state signifier were found in the CSS/token layer. Status tokens (`--status-success/error`) always accompany icons or labels in the components audited. This remains a watch item for the DialogContent a11y sweep (P1-J15) and any future status badge work.
@@ -323,7 +323,7 @@ Migrate all apps from per-app `business-suite-oauth.ts` copies to `packages/auth
 
 ### Phase 10 — Dependency & Build Standardisation
 
-**Target: all apps on aligned dependency versions; throughput on Tailwind v4; BSU on react-router v7**
+**Target: all apps on aligned dependency versions; Tailwind v4+ enforced; BSU on react-router v7**
 
 | Task | App | Complexity |
 |------|-----|-----------|
@@ -331,7 +331,7 @@ Migrate all apps from per-app `business-suite-oauth.ts` copies to `packages/auth
 | BSU: `react-day-picker` `8.10.1` → `^9.14.0` | BSU | M — full rewrite API |
 | BSU: remove `react-hot-toast`; migrate all usages to `sonner` | BSU | S |
 | BSU: replace `next-themes` with Zustand `useTheme` (CRM7 pattern) | BSU | S |
-| throughput: upgrade Tailwind v3 → v4; wire `@bsuite/theme/preset-v4.css` | throughput | M |
+| all: keep Tailwind v4+ enforced via `pnpm lint:tailwind-v4` | all | S |
 | throughput: upgrade `@supabase/supabase-js` `^2.39.7` → `^2.103.0` | throughput | S |
 | All: upgrade TypeScript `~5.7.3` → `^5.9.3` | crm7, BSU, R80.3 | S |
 | All: upgrade `vitest` `^3.2.4` → `^4.0.18` | BSU, braden, conduit, R80.3 | S |

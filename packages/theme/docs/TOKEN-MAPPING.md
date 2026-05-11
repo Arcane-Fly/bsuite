@@ -2,7 +2,7 @@
 
 **Version:** 0.3.1+
 **Last updated:** 2026-04-25
-**Audience:** Engineers writing or reviewing JSX/TSX with Tailwind classes in BSuite D2C apps (BSU, CRM7, Conduit, R80.3, Throughput). Braden is brand-exempt from this guide.
+**Audience:** Engineers writing or reviewing JSX/TSX with Tailwind classes in BSuite apps. D2C apps use the Neon Electric baseline; Braden uses a separate Corporate baseline with the same OKLCH role-token architecture.
 
 ---
 
@@ -19,7 +19,7 @@ These are the canonical brand-aware tokens. Every semantic background has a part
 | `bg-primary` | `text-primary-foreground` | electric blue / near-white | electric blue / near-black navy `oklch(0.13 0.02 260)` |
 | `bg-secondary` | `text-secondary-foreground` | electric indigo / white | electric indigo / dark navy |
 | `bg-accent` | `text-accent-foreground` | electric cyan / dark | electric cyan / dark |
-| `bg-destructive` | `text-destructive-foreground` | red / white | red / white |
+| `bg-destructive` | `text-destructive-foreground` | purple / near-white | purple / near-white |
 | `bg-card` | `text-card-foreground` | white / foreground | navy / foreground |
 | `bg-muted` | `text-muted-foreground` | light gray / mid-gray | dark gray / light gray |
 | `bg-background` | `text-foreground` | off-white / near-black | navy / near-white |
@@ -32,9 +32,9 @@ These are the canonical brand-aware tokens. Every semantic background has a part
 
 `bg-blue-600`, `bg-green-600`, `bg-red-500`, etc. These resolve to fixed OKLCH values that **do NOT flip between light and dark mode**. Tailwind v4 converts them at build time but they remain semantically a "raw" colour, not a brand token.
 
-**Rule B1:** Pair raw palette utilities with **explicit white/black/foreground tokens** — never with `text-*-foreground`.
+**Rule B1:** Prefer role tokens over raw palette utilities. If a raw palette utility is genuinely required, pair it with an explicit inverse token such as `text-text-on-primary`, `text-text-on-accent`, or `text-foreground` after checking contrast — never with `text-*-foreground`.
 
-**Rule B2:** White-on-saturated-blue (`bg-blue-600 text-white`) passes WCAG AA in both modes (~5:1). This is the established convention for action buttons that intentionally use raw palette colours (see `conduit/src/components/common/ConfirmDialog.tsx`).
+**Rule B2:** Do not add new `text-white` or `text-black` in consumer code. White/black only belong in theme-layer inverse tokens and legacy fallback comments.
 
 ---
 
@@ -56,21 +56,21 @@ Dark mode:
 
 The bug: `text-primary-foreground` flips with the theme, but `bg-blue-600` does not. In dark mode, a near-black foreground over a saturated mid-blue background gives ~3:1 — the text is barely legible.
 
-**The fix:** use `text-white` on raw palette buttons. White stays white in both modes, and white-on-`blue-600` stays at ~5:1 in both modes.
-
-```diff
-- className="bg-blue-600 text-primary-foreground hover:bg-blue-700"
-+ className="bg-blue-600 text-white hover:bg-blue-700"
-```
-
-If the brand intent was actually "primary brand surface", switch the background too:
+**The fix:** switch the whole pair to semantic tokens whenever the intent is a brand action.
 
 ```diff
 - className="bg-blue-600 text-primary-foreground hover:bg-blue-700"
 + className="bg-primary text-primary-foreground hover:bg-primary/90"
 ```
 
-But understand this **changes the visible colour**. BSU's `--primary` is electric blue `oklch(0.546 0.215 262.9)`, very close to but not identical to Tailwind's `blue-600` `oklch(0.546 0.245 262.881)`. If a designer chose `bg-blue-600` deliberately (e.g. for the precise saturated blue), keep it and use `text-white`.
+If the raw palette colour is deliberately required, use an explicit inverse text token and document the contrast check:
+
+```diff
+- className="bg-blue-600 text-primary-foreground hover:bg-blue-700"
++ className="bg-blue-600 text-text-on-primary hover:bg-blue-700"
+```
+
+But understand this **changes the visible colour**. BSU's `--primary` is electric blue `oklch(0.546 0.215 262.9)`, very close to but not identical to Tailwind's `blue-600` `oklch(0.546 0.245 262.881)`. If a designer chose `bg-blue-600` deliberately, keep it only with an explicit inverse token and a recorded contrast check.
 
 ---
 
@@ -107,8 +107,8 @@ The `bsuite/no-hardcoded-colours` ESLint rule's regex `\b(text|bg|border|divide)
 | Intent | Recommended | Notes |
 |--------|-------------|-------|
 | Primary brand action | `bg-primary text-primary-foreground hover:bg-primary/90` | mode-coupled pair, will track tenant white-labelling via `BrandingProvider` |
-| Raw blue confirmation button | `bg-blue-600 text-white hover:bg-blue-700` | matches `ConfirmDialog` convention; mode-invariant |
-| Destructive | `bg-destructive text-destructive-foreground hover:bg-destructive/90` | mode-coupled |
+| Raw blue confirmation button | `bg-blue-600 text-text-on-primary hover:bg-blue-700` | legacy/raw palette exception; document the contrast check |
+| Destructive | `bg-destructive text-destructive-foreground hover:bg-destructive/90` | purple by platform policy; red/coral is not the semantic error role |
 | Secondary / low-emphasis | `bg-muted text-foreground hover:bg-muted/80` | uses neutral surface, foreground text |
 | Outline / ghost | `border border-border bg-background text-foreground hover:bg-muted` | minimal, semantic |
 
@@ -129,7 +129,7 @@ The `bsuite/no-hardcoded-colours` ESLint rule's regex `\b(text|bg|border|divide)
 | Default body text | `text-foreground` |
 | De-emphasised body text | `text-muted-foreground` |
 | Text on `bg-primary` | `text-primary-foreground` |
-| Text on raw `bg-{blue,green,red,amber}-{500,600}` | `text-white` |
+| Text on raw `bg-{blue,green,red,amber}-{500,600}` | explicit inverse token after contrast check; prefer semantic role pairs |
 | Text on `bg-card` | `text-card-foreground` (or `text-foreground`, equivalent) |
 
 ---
@@ -180,7 +180,7 @@ Before you commit any new JSX with colour classes:
 
 1. **Default to semantic tokens.** `bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground` cover ~80% of UI surfaces.
 2. **For brand-coloured actions, use `bg-primary text-primary-foreground`** (mode-coupled pair).
-3. **For raw Tailwind palette buttons (`bg-blue-600` etc.), pair with `text-white` explicitly.** Never `text-primary-foreground`.
+3. **For raw Tailwind palette buttons (`bg-blue-600` etc.), use an explicit inverse token after contrast verification.** Never `text-primary-foreground`, `text-white`, or `text-black` in consumer code.
 4. **For decorative neutral grays, prefer `bg-muted`.** Only fall back to raw `bg-gray-*` for genuinely decorative elements where `bg-muted` resolves to the wrong tone.
 5. **Run `pnpm lint`** — the rule catches the most common mistakes at build time.
 6. **Test in light AND dark mode.** Mode-coupling regressions only surface in one mode.

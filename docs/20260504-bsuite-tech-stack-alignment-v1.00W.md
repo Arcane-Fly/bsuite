@@ -109,11 +109,11 @@ A planned `scripts/verify-tech-stack-matrix.sh` will diff each app's `package.js
 | conduit | v4 ✅ | consumed ✅ | 15 | ✅ | ✅ removed | ✅ |
 | braden | v4 ✅ | consumed ✅ | 27 | ✅ | ✅ removed | ✅ |
 | R80.3 | v4 ✅ | minimal ⚠️ 1 | 1 | ✅ | ✅ removed | ✅ |
-| throughput | **v3 ❌** | none ❌ 0 | 0 | ⚠️ | ✅ removed | ✅ |
+| throughput | v4 ✅ | none ❌ 0 | 0 | ⚠️ | ✅ removed | ✅ |
 
 **Notes:**
 - R80.3 has only 1 Radix primitive because its UI surface is narrow (calculator, settings, login). It still must consume `@bsuite/ui` primitives.
-- Throughput has **zero** Radix/shadcn primitives — still on Tailwind v3 (cannot consume `preset-v4.css`). This is the single biggest tech-stack gap.
+- Throughput has **zero** Radix/shadcn primitives. Tailwind is now v4, so the remaining high-impact UI gap is shared primitive adoption.
 
 ### 2.3 State + data + forms
 
@@ -152,7 +152,7 @@ A planned `scripts/verify-tech-stack-matrix.sh` will diff each app's `package.js
 
 ### 2.6 Shared @bsuite/* consumption (freshly verified 2026-05-04)
 
-Directly verified against each app's `package.json` on `development`. Version cells show the exact pinned version as of 2026-05-04. ❌ means the package is not installed. n/a means the app has no use case for the package. ⚠️ means installed but blocked from effective consumption (e.g., theme on Throughput blocked by Tailwind v3).
+Directly verified against each app's `package.json` on `development`. Version cells show the exact pinned version as of 2026-05-04, with Tailwind status refreshed on 2026-05-11. ❌ means the package is not installed. n/a means the app has no use case for the package.
 
 | App | theme | ui | page-builder | schema-builder | schema-registry | nav-core | data-export | dry-lint | charge-calc | auth |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -161,7 +161,7 @@ Directly verified against each app's `package.json` on `development`. Version ce
 | conduit | ✅ `^0.3.3` | ❌ | ✅ `^0.2.0` | ✅ `^0.7.0` | ✅ `^0.3.0` | ✅ `^0.5.0` | ❌ | ✅ `^0.2.0` | n/a | ✅ `^0.1.0` |
 | braden | ❌ (Corporate palette direct) | ❌ | n/a | n/a | ✅ `^0.3.0` | ✅ `^0.5.0` | n/a | ✅ `^0.2.0` | n/a | ✅ `^0.1.0` |
 | R80.3 | ✅ `^0.3.3` | ✅ `^0.1.0` | ✅ `^0.2.0` | ✅ `^0.7.0` | ✅ `^0.3.0` | ✅ `^0.5.0` | ✅ `^0.1.3` | ✅ `^0.2.0` | ✅ `^0.2.3` | ✅ `^0.1.0` |
-| throughput | ⚠️ `^0.3.3` (Tailwind v3 blocks preset-v4) | ✅ `^0.1.0` (limited use — zero Radix) | ❌ | ❌ | ❌ | ✅ `^0.5.0` | ❌ | ✅ `^0.2.0` | n/a | ✅ `^0.1.0` |
+| throughput | ✅ `^0.3.3` | ✅ `^0.1.0` (limited use — zero Radix) | ❌ | ❌ | ❌ | ✅ `^0.5.0` | ❌ | ✅ `^0.2.0` | n/a | ✅ `^0.1.0` |
 
 **Version-drift observations:**
 
@@ -206,7 +206,7 @@ Except where a feature is intentionally out-of-scope for an app, every BSuite ap
 
 | Feature | BSU | CRM7 | Conduit | Braden | R80.3 | Throughput | Owner package / reference |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|---|
-| **Theme system (oklch, light/dark, FOUC-prevention)** | ✅ | ✅ | ✅ | ✅ (Corporate) | ✅ | ⚠️ Tailwind v3 | `@bsuite/theme` + `docs/20260228-d2c-theme-specification-v1.00A.md` |
+| **Theme system (oklch, light/dark, FOUC-prevention)** | ✅ | ✅ | ✅ | ✅ (Corporate) | ✅ | ✅ Tailwind v4 | `@bsuite/theme` + `docs/20260228-d2c-theme-specification-v1.00A.md` |
 | **shadcn primitives via `@bsuite/ui`** | ⚠️ migrating | ⚠️ migrating | ⚠️ migrating | ⚠️ migrating | ⚠️ migrating | ❌ | `@bsuite/ui` |
 | **Universal canvas (PageGridLayout)** | ✅ 8 pages | ⚠️ ~40% | ⚠️ 0/8 views | n/a (overlay mode) | ⚠️ 0/views | ❌ | `@bsuite/page-builder` |
 | **Dashboard dnd-kit widgets** | ✅ | ✅ canonical | ❌ | n/a | ❌ | ❌ | `@bsuite/page-builder` |
@@ -234,7 +234,7 @@ Each row is a concrete remediation action. Priorities align with `20260423-bsuit
 
 | ID | App | Gap | Remediation | Priority |
 |---|---|---|---|---|
-| TS-01 | throughput | Tailwind v3 — cannot consume `@bsuite/theme/preset-v4.css` | Upgrade to Tailwind v4; wire preset; run hex-sweep | P1 |
+| TS-01 | throughput | Tailwind v4 floor | ✅ Resolved 2026-05-11; `tailwindcss` and `@tailwindcss/vite` are v4, with `pnpm lint:tailwind-v4` guarding against regression | Done |
 | TS-02 | throughput | Zero Radix primitives / no shadcn | After TS-01: install `@bsuite/ui`; consume shared primitives | P1 |
 | TS-03 | throughput | `@supabase/supabase-js` on `^2.39.7` | Upgrade to `^2.103+`; re-run supabase-js integration smoke | P1 |
 | TS-04 | throughput | `business-suite-oauth.ts` was 0 bytes (partially mitigated) | Migrate to `@bsuite/auth`; wire `startBSTokenRefresh()` in AuthProvider | P0 |
@@ -279,7 +279,7 @@ The TS-XX IDs in §5 are the authoritative identifiers. This subsection rekeys t
 | **BRD-01** | TS-06 | Zod `^3.24.0` → `^4.3.6` | P1 | Braden maintainer |
 | **BRD-02** | TS-08 | `@supabase/supabase-js` `^2.99.3` → `^2.103+` | P2 | Braden maintainer |
 | **R80-01** | TS-09a | Enable TS `strict: true` in R80.3 | P1 | R80.3 maintainer |
-| **TP-01** | TS-01 | Tailwind v3 → v4 | P1 | Throughput maintainer |
+| **TP-01** | TS-01 | Tailwind v4 floor regression guard | Done | Throughput maintainer |
 | **TP-02** | TS-02 | Install `@bsuite/ui` + shadcn primitives | P1 | Throughput maintainer |
 | **TP-03** | TS-03 | `@supabase/supabase-js` `^2.39.7` → `^2.103+` | P1 | Throughput maintainer |
 | **TP-04** | TS-04 | Migrate to `@bsuite/auth` | P0 | Throughput maintainer |
@@ -317,7 +317,7 @@ Group the gap register into four execution waves to sequence effort. Each wave c
 - **BSU-01..03, BSU-05** — BSU router/toast/theme/branding migrations
 - **BRD-01, BRD-02** — Braden Zod + Supabase bumps
 - **R80-01, TP-06** — Enable TypeScript strict mode
-- **TP-01..03, TP-05** — Throughput Tailwind v4 + shadcn + supabase-js + Zod bumps
+- **TP-02..03, TP-05** — Throughput shadcn + supabase-js + Zod bumps
 - **CRM7-01** — DialogTitle sweep
 - **SHARED-01** — `@bsuite/auth` adoption (CRM7 → R80.3 → Braden → Throughput → BSU order)
 - **SHARED-08** — OIDC nonce across all clients

@@ -256,7 +256,7 @@ Actual files (verified 2026-05-04):
 
 Key documents: 20+ per-component docs (alert, badge, button, card, input, modal, textarea) + system architecture, Groq architecture/integration, RLS, roadmap, user guide, troubleshooting, navigation UX guide, development, outstanding, quality improvements, conversation map, components guide. See [`throughput/docs/README.md`](../throughput/docs/README.md) for the complete list.
 
-**Cross-app role:** Idea hub + Groq AI experimentation. Largest tech-stack gap (Tailwind v3, zero Radix, outdated supabase-js). See `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` §5 TS-01 → TS-04.
+**Cross-app role:** Idea hub + Groq AI experimentation. Tailwind has been brought to v4; remaining tech-stack gaps are zero Radix/shadcn adoption, outdated Supabase-JS/Zod, and strict-mode work. See `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` §5 TS-02 → TS-04.
 
 ---
 

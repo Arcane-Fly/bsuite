@@ -167,14 +167,13 @@ Update this index whenever a document is added or its status changes.
 
 **Applies to:** business-suite-unified, crm7, conduit, R80.3, throughput
 
-All webapp projects must use the Universal D2C Theme System defined in `docs/20260228-d2c-theme-specification-v1.00W.md`:
+All webapp projects must use `@bsuite/theme@0.3.3+` as the token source. Tailwind CSS must be v4 or later everywhere; Tailwind v3 is not permitted in package manifests, resolved lockfile entries, docs, or new implementation paths. Tailwind v4 apps import `@bsuite/theme/preset-v4.css` and `@bsuite/theme/css`.
 
-- **Tailwind config** extends with neon electric color palette (11 colors)
-- **CSS variables** defined in `globals.css` via `@layer base`
-- **ThemeProvider** wraps the app for light/dark/system mode
-- **Dark mode** uses deep navy backgrounds with neon accents
-- **Light mode** uses off-white backgrounds with electric accents
-- **Semantic colors** for status (success, warning, error, info)
+- **OKLCH source tokens** are mandatory. Hex/RGB/HSL are legacy references or browser fallbacks only.
+- **Role aliases** are the consumer contract: use `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-destructive`, and inverse `text-on-*` tokens rather than raw palette names.
+- **Error/destructive roles** are Electric Purple by platform policy. Coral/red must not be semantic error/destructive.
+- **Dark mode text** uses the five-tier anti-glare scale capped at `oklch(0.94 ... )`; pure white is not a dark-surface text token.
+- **Enterprise white-labelling** is via `BrandingProvider` role-alias overrides. Error/destructive roles are not tenant-overridable.
 - **Typography:** Inter (display/body), JetBrains Mono (code)
 - **Surface language:** Balanced Hybrid shells, elevated cards, restrained glow, and semantic shell tokens rather than hardcoded styling
 
@@ -183,26 +182,29 @@ All webapp projects must use the Universal D2C Theme System defined in `docs/202
 - CRM7 is the reference implementation for the shared D2C shell and high-visibility workflow surfaces.
 - `business-suite-unified`, `conduit`, `R80.3`, and `throughput` should follow the same semantic shell model even when their local token plumbing differs.
 
-**Key colors:**
+**Key roles:**
 
-| Color | Hex | Use |
-|-------|-----|-----|
-| Electric Blue | `#2563eb` | Primary actions |
-| Electric Cyan | `#00cec9` | Accents, borders |
-| Electric Green | `#22c55e` | Success states |
-| Electric Coral | `#ff4757` | Alerts, destructive |
-| Electric Yellow | `#fdcb6e` | Warnings, info |
+| Role / token | OKLCH source | Use |
+|--------------|--------------|-----|
+| `--role-primary` / Electric Blue | `oklch(0.546 0.215 262.9)` | Primary actions, links, focus affordances |
+| `--role-accent` / Electric Cyan | `oklch(0.769 0.132 191.7)` | Accents, highlights, visible focus in dark mode |
+| `--role-success` | `oklch(0.723 0.192 149.6)` | Success states; pair with icon/text |
+| `--role-warning` | `oklch(0.728 0.168 22.5)` | Warning states; pair with icon/text |
+| `--role-error` / `--role-destructive` | `oklch(0.568 0.202 283.1)` | Purple semantic error/destructive role; red/coral is banned for this role |
 
 ### Corporate Branding (braden.com.au)
 
 **Applies to:** braden project only
 
-Braden is being refreshed, but it still uses company branding colors and does not follow the D2C Neon theme.
+Braden is a separate corporate brand, but it follows the same token architecture as D2C: OKLCH source tokens, role aliases, shadcn bridge variables, softened text scale, and purple semantic error/destructive roles. It imports `@bsuite/theme/braden-css`, not `@bsuite/theme/css`.
 
-- Keep Braden Red / Gold / Navy as the visual identity
-- Use corporate typography and professional shadow language
-- Do not import D2C Neon colors, gradients, or glow treatments into Braden
-- See Braden project docs for the project-specific UI and branding rules
+| Corporate token | OKLCH source | Legacy reference | Use |
+|-----------------|--------------|------------------|-----|
+| `--braden-red` | `oklch(0.51 0.17 19)` | `#ab233a` | Corporate primary / identity |
+| `--braden-gold` | `oklch(0.77 0.10 82)` | `#cbb26a` | Corporate accent; use navy text on gold for AA contrast |
+| `--braden-navy` | `oklch(0.34 0.04 250)` | `#2c3e50` | Corporate deep surface / text anchor |
+
+Red is allowed as Braden identity. Red as semantic error/destructive is banned across both brands.
 
 ---
 
