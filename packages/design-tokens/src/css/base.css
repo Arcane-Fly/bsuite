@@ -9,7 +9,7 @@
  * Each app adds its accent override AFTER this import:
  *   :root { --app-primary: #2563eb; --app-accent: #00cec9; }
  *
- * Apps then import their theme-specific CSS (Tailwind v4 @theme or v3 extend)
+ * Apps then import their theme-specific CSS (Tailwind v4+ @theme)
  * on top. This file only defines structural, chromatic-neutral tokens.
  * ────────────────────────────────────────────────────────────────────────────
  */

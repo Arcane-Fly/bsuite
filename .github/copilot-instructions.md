@@ -131,20 +131,24 @@ Do not generate regex for parsing structured data. Use:
 
 ## Theme
 
-### Webapps (business-suite-unified, crm7, conduit, R80.3)
+### Webapps (business-suite-unified, crm7, conduit, R80.3, throughput)
 
-Use D2C Neon Electric theme:
-- Primary: `#2563eb` (Electric Blue)
-- Accent: `#00cec9` (Electric Cyan)
-- Success: `#22c55e`, Warning: `#fdcb6e`, Error: `#ff4757`
-- Dark bg: `#0a0e1a`, Light bg: `#f2f2f2`
-- Font: Inter, code: JetBrains Mono
+Use `@bsuite/theme@0.3.3+` with OKLCH role tokens:
+- Primary: `--role-primary` / Electric Blue `oklch(0.546 0.215 262.9)`
+- Accent: `--role-accent` / Electric Cyan `oklch(0.769 0.132 191.7)`
+- Success: `--role-success`; Warning: `--role-warning`
+- Error/destructive: `--role-error` and `--role-destructive` = Electric Purple `oklch(0.568 0.202 283.1)`. Do not use coral/red for semantic error.
+- Text: use `text-foreground`, `text-muted-foreground`, `text-text-on-primary`, etc. Do not add raw hex/RGB/HSL, `text-white`, or `text-black` in consumer UI.
+- Enterprise white-labelling is via `BrandingProvider` role-alias overrides. Error/destructive roles are not tenant-overridable.
 
 ### braden (braden.com.au)
 
 Uses corporate branding — NOT the D2C theme:
-- Primary: `#ab233a` (Braden Red)
-- Accent: `#cbb26a` (Braden Gold)
+- Import `@bsuite/theme/braden-css`, not `@bsuite/theme/css`
+- Primary identity: Braden Red `oklch(0.51 0.17 19)` / `#ab233a`
+- Accent identity: Braden Gold `oklch(0.77 0.10 82)` / `#cbb26a`
+- Deep surface / text anchor: Braden Navy `oklch(0.34 0.04 250)` / `#2c3e50`
+- Braden red is corporate identity only. Error/destructive roles still map to purple.
 - Font: Montserrat (headings), Inter (body)
 
 ## Shared Packages (npm)

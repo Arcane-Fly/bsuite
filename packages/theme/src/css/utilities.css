@@ -2,7 +2,7 @@
  * @bsuite/theme — utility classes
  *
  * Pure CSS (no Tailwind @apply) so this file is safe to import from any
- * consumer regardless of their Tailwind version (v3 or v4).
+ * consumer on Tailwind v4 or later.
  */
 
 /* ===== Glow effects (oklch with alpha scaled by glow-strength) ===== */

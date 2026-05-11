@@ -23,8 +23,8 @@
  * Eye-strain policy is PRESERVED:
  *   Dark text capped at L=0.94. Light text capped at L=0.22 (navy hue 250).
  *
- * OKLCH format mandatory for all new tokens. HSL values below are for
- * legacy Tailwind v3 interop only, marked with LEGACY comments.
+ * OKLCH format mandatory for all new tokens. Tailwind v4+ is the only
+ * supported Tailwind engine for BSuite consumers.
  */
 
 /* ============================================================
