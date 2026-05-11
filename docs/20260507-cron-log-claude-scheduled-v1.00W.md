@@ -2385,3 +2385,99 @@ Orphan cleanup appears to have been performed by the operator or an automated pr
 ---
 
 *Filed by claude-code-scheduled · 2026-05-08 · nineteenth fire*
+
+---
+
+## Fire 20 — 2026-05-11 (thirteenth PR-series fire)
+
+**Fired:** 2026-05-11 · claude-code-scheduled (Sonnet 4.6)
+**Session:** `session_01Hxi5wKCswrpVhdang6oc4c`
+
+### Constraints (persistent)
+
+| Item | Status |
+|---|---|
+| Memory API `qig-memory-api.vercel.app` | ❌ 403 "Host not in allowlist" — 13th consecutive fire (sandbox egress blocked) |
+| Protocol steps 1–4 (memory read/write, inbox drain) | ❌ Blocked by above |
+| Perplexity-computer (cron 8c20448f) | ⚠️ ~60h+ silent — last seen 2026-05-08T20:38Z |
+| `/ship-all-apps` | ❌ `gh` + `vercel` CLIs absent in sandbox |
+| Supabase MCP | ❌ Not available — DB rotation tasks remain blocked |
+
+### Actions taken
+
+#### 1. Workqueue survey
+
+- 14 open PRs (all drafts on `development` base), 83 open issues (30 on this page).
+- No new perplexity PRs to validate (§20 peer-merge step: zero targets, 13th consecutive fire).
+- Agent-handoff issues scanned: #794, #791, #787, #782, #779, #775, #771, #768, #765, #763, #747 — all reference submodule repos (crm7, BSU, braden, throughput) outside bsuite-cron scope.
+- **bsuite#791 (merge bsuite#790)**: actionable — bsuite parent repo scope.
+
+#### 2. PR #790 — §17 red-team + rebase + merge ✅
+
+**Problem:** PR #790 (`docs(bsuite): roadmap v5.05W + codehouse-parity sub-plan README`) had `mergeable_state: "dirty"` — branched from 5.04W state; development advanced 20 commits to 5.07W, touching the roadmap file multiple times.
+
+**Red-team (§8):** 6-role table all PASS (docs-only; 16/16 new refs verified on disk; no secrets, no RLS, no code). ✅
+
+**Rebase approach:**
+1. Identified non-overlapping content vs 5.07W "Recently Completed (2026-05-08)" section.
+2. New commit `9f088f2` created on `origin/development` HEAD (5.07W → 5.08W):
+   - "Recently Completed (as of 2026-05-10)" section: AUTH setSession bridge + 60s sync lint rule + contract tests, APPRENTICE placement docs (AVETMISS/state-machine/form-schema), CONDUIT reconciliation docs, codehouse-parity README, rotation cycle DB→EDGE→TESTS→DOCS→PERF→ROADMAP.
+   - P1 #3a (9-wave uplift) + P1 #3b (Codehouse Parity remaining workstreams) added to execution table.
+   - 6 Related Documents entries added.
+   - `docs/plans/20260506-codehouse-parity/README.md` created (§10.5 violation fixed).
+3. Force-pushed to `origin/claude/blissful-dijkstra-JPNyn`.
+4. CI triggered → 4/4 green (build-and-test ✅, DOM Layout Invariants ✅, gitleaks ✅×2, review=skipped/expected).
+5. PR undrafted → merged (merge commit `1f603a3`).
+6. Handoff issue #791 closed as `completed`.
+
+**`development` HEAD after merge:** `1f603a3`
+
+#### 3. DEPS issue #795
+
+Branch `claude/inspiring-thompson-KI9xl` not found in remote. Issue #795 targets `conduit` repo (version bumps: `@bsuite/page-builder ^0.2.5→^0.2.6`, `pnpm.overrides.zustand ^5.0.12→^5.0.13`) — submodule scope, outside bsuite-cron. Blocking for next operator/local session.
+
+#### 4. P1 issues
+
+All 8 P0/P1 issues scanned remain blocked:
+- Xero P0 hardening (#712–#714): crm7 submodule scope
+- Vercel bypass token (#655): operator-only
+- BSuite Unified Design Language (#635): perplexity + W0 shipped, W2–W8 need next operator cycle
+- BSU env vars (#607, #609): BSU submodule scope
+
+#### 5. `/ship-all-apps`
+
+Not invocable — `gh` CLI and `vercel` CLI absent in cloud cron sandbox. Script at `scripts/ship-all-apps.sh` exists; needs `gh workflow run` or operator.
+
+### Branch / PR state at end of fire
+
+| PR | Title | Status |
+|---|---|---|
+| **#790** | roadmap v5.08W + codehouse-parity README | ✅ **MERGED** `1f603a3` |
+| **#785** | UX-2 dashboard (theme persist + keyboard shortcut) | 4/4 CI ✅ — operator-merge-ready |
+| #792–#748 | Cron-log drafts (12 PRs) | Draft, awaiting operator batch-merge |
+
+### P0 Blockers for Operator
+
+| Priority | Blocker | Resolution |
+|---|---|---|
+| P0 | Memory API 403 — 13 consecutive fires | Allowlist cron IPs at `qig-memory-api.vercel.app` OR migrate to `docs/agent-memory/*.json` + GitHub MCP |
+| P0 | `/ship-all-apps` not invocable | `gh workflow run ship-all-apps.yml -R GaryOcean428/bsuite` or nightly auto-promote workflow |
+| P0 | Perplexity ~60h+ silent | Verify cron 8c20448f status; re-fire or escalate |
+| P0 | Vercel bypass token #655 | Rotate in Vercel Dashboard |
+| P0 | Xero P0 hardening (#712–#714) | crm7 submodule — local operator session |
+| P1 | DEPS conduit + R80.3 (#795) | conduit submodule — local operator session |
+| P1 | 13 accumulated draft cron-log PRs | Operator batch-merge to `development` |
+| P1 | `development` ahead of `main` by ~20+ commits | dev→main promotion PR |
+| P1 | `npm publish @bsuite/page-builder@0.2.7` pending | Run after consumer bump PRs land |
+
+### Evidence (§9 FF-SELF-VALIDATION-20260507)
+
+- [x] Output-equivalence (§9.1): N/A — additive log + docs; PR #790 rebase verified 12/12 structural checks pass; CI 4/4 ✅ on SHA `9f088f2` before merge.
+- [x] Visual-equivalence (§9.2): N/A — no UI changes this fire.
+- [x] Self-report: Memory API 403 (13 fires), perplexity ~60h+ silent, `/ship-all-apps` absent, no Supabase MCP, Xero P0 + DEPS blocked (submodule scope), 13 draft PRs accumulating — all documented.
+- [x] Tests run: CI 4/4 ✅ on PR #790 SHA `9f088f2` confirmed via `get_check_runs` MCP before merge.
+- [x] Live verify: PR #790 merge confirmed (SHA `1f603a3`); issue #791 closed via GitHub MCP.
+
+---
+
+*Filed by claude-code-scheduled · 2026-05-11 · fire 20 (thirteenth PR-series fire)*
