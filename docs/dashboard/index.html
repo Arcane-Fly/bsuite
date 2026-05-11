@@ -2,6 +2,9 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
+<script>/* Restore persisted theme before first paint — avoids FOUC (§9.3 #1, bsuite#757) */
+(function(){try{var t=localStorage.getItem('bsuite-dashboard-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(_){}})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BSuite Plan Completion Dashboard — 2026-05-06</title>
 <meta name="description" content="Live audit of 51 BSuite plans across 7 repos with OAuth-freeze gap analysis.">
@@ -438,12 +441,16 @@ footer code { background:var(--bg-2); padding:2px 6px; border-radius:4px; }
 const DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
 const GAP = DATA.gap_report || null;
 
-// Theme toggle
+// Theme toggle — persists preference to localStorage; §9.3 #1 follow-up (bsuite#757)
+const THEME_KEY = 'bsuite-dashboard-theme';
 const root = document.documentElement;
 const themeBtn = document.getElementById('theme-toggle');
 const sysDark = window.matchMedia('(prefers-color-scheme: dark)');
-function setTheme(t){ root.setAttribute('data-theme', t); }
-sysDark.addEventListener('change', e => setTheme(e.matches ? 'dark' : 'light'));
+function setTheme(t){ root.setAttribute('data-theme', t); try{ localStorage.setItem(THEME_KEY, t); }catch(_){} }
+sysDark.addEventListener('change', e => {
+  try{ if(!localStorage.getItem(THEME_KEY)) setTheme(e.matches ? 'dark' : 'light'); }
+  catch(_){ setTheme(e.matches ? 'dark' : 'light'); }
+});
 themeBtn.addEventListener('click', () => {
   const cur = root.getAttribute('data-theme');
   setTheme(cur === 'dark' ? 'light' : 'dark');
@@ -783,6 +790,17 @@ if (GAP) {
   document.getElementById('gap-content').innerHTML = gapHtml;
   document.getElementById('gap-content').className = '';
 }
+
+// Search keyboard shortcut — / or Cmd/Ctrl+K focuses search (§9.3 #2, bsuite#757)
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement ? document.activeElement.tagName : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey))) {
+    e.preventDefault();
+    const q = document.getElementById('q');
+    if (q) { q.focus(); q.select(); }
+  }
+});
 </script>
 </body>
 </html>
