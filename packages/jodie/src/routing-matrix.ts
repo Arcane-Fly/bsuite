@@ -87,7 +87,7 @@ export interface PullRequestProtectionState {
   readonly humanApprovalCount: number;
 }
 
-export const canAutoMergeP3Xs = (
+export const meetsProtectionGateRequirements = (
   decision: RoutingDecision,
   protectionState: PullRequestProtectionState,
 ): boolean => {

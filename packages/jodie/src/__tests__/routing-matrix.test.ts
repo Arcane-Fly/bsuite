@@ -4,12 +4,13 @@ import {
   EFFORTS,
   ROUTING_MATRIX,
   SEVERITIES,
-  canAutoMergeP3Xs,
+  checkSlaBreaches,
+  createTrackingRecord,
   getRoutingDecision,
+  meetsProtectionGateRequirements,
   type SlaTrackingRecord,
   type SlaTrackingStore,
 } from '../index';
-import { checkSlaBreaches, createTrackingRecord } from '../sla-tracker';
 
 class InMemorySlaStore implements SlaTrackingStore {
   private readonly records = new Map<number, SlaTrackingRecord>();
@@ -20,7 +21,8 @@ class InMemorySlaStore implements SlaTrackingStore {
   }
 
   async listOpen(_nowIso: string) {
-    return [...this.records.values()];
+    const now = new Date(_nowIso).getTime();
+    return [...this.records.values()].filter((record) => new Date(record.deadlineAt).getTime() <= now);
   }
 
   get(issueNumber: number) {
@@ -42,7 +44,7 @@ describe('ROUTING_MATRIX', () => {
     const decision = ROUTING_MATRIX.P3.XS;
 
     expect(
-      canAutoMergeP3Xs(decision, {
+      meetsProtectionGateRequirements(decision, {
         isBranchProtected: true,
         isCiGreen: true,
         humanApprovalCount: 1,
@@ -50,7 +52,7 @@ describe('ROUTING_MATRIX', () => {
     ).toBe(true);
 
     expect(
-      canAutoMergeP3Xs(decision, {
+      meetsProtectionGateRequirements(decision, {
         isBranchProtected: false,
         isCiGreen: true,
         humanApprovalCount: 1,
@@ -58,7 +60,7 @@ describe('ROUTING_MATRIX', () => {
     ).toBe(false);
 
     expect(
-      canAutoMergeP3Xs(decision, {
+      meetsProtectionGateRequirements(decision, {
         isBranchProtected: true,
         isCiGreen: false,
         humanApprovalCount: 1,
@@ -66,7 +68,7 @@ describe('ROUTING_MATRIX', () => {
     ).toBe(false);
 
     expect(
-      canAutoMergeP3Xs(decision, {
+      meetsProtectionGateRequirements(decision, {
         isBranchProtected: true,
         isCiGreen: true,
         humanApprovalCount: 0,
@@ -84,7 +86,7 @@ describe('SLA tracker', () => {
     expect(record).not.toBeNull();
     await store.upsert(record!);
 
-    const open = await store.listOpen(nowIso);
+    const open = await store.listOpen('2026-05-13T01:00:00.000Z');
     expect(open).toHaveLength(1);
     expect(open[0]?.issueNumber).toBe(101);
     expect(open[0]?.owner).toBe('@copilot');

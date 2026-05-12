@@ -1,6 +1,6 @@
 import {
-  canAutoMergeP3Xs,
   getRoutingDecision,
+  meetsProtectionGateRequirements,
   type Effort,
   type PullRequestProtectionState,
   type Severity,
@@ -28,7 +28,7 @@ export const routeIssueFromQ303Classification = (
 
   return {
     owner: decision.owner,
-    autoMergeAllowed: canAutoMergeP3Xs(decision, prProtectionState),
+    autoMergeAllowed: meetsProtectionGateRequirements(decision, prProtectionState),
     trackingRecord: createTrackingRecord(
       classification.issueNumber,
       classification.severity,

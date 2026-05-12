@@ -1,3 +1,5 @@
+import { addMinutes } from 'date-fns';
+
 import { escalateSeverity, getRoutingDecision, type Effort, type Severity } from './routing-matrix';
 
 export interface SlaTrackingRecord {
@@ -26,12 +28,7 @@ export interface EscalationAction {
   readonly labelsToAdd: ReadonlyArray<string>;
 }
 
-const addMinutes = (iso: string, minutes: number): string => {
-  const timestamp = new Date(iso).getTime();
-  return new Date(timestamp + minutes * 60_000).toISOString();
-};
-
-const shouldTrackSla = (minutes: number | null): minutes is number => minutes !== null;
+const hasSlaDefined = (minutes: number | null): minutes is number => minutes !== null;
 
 export const createTrackingRecord = (
   issueNumber: number,
@@ -41,7 +38,7 @@ export const createTrackingRecord = (
 ): SlaTrackingRecord | null => {
   const decision = getRoutingDecision({ severity, effort });
 
-  if (!shouldTrackSla(decision.slaMinutes)) {
+  if (!hasSlaDefined(decision.slaMinutes)) {
     return null;
   }
 
@@ -50,7 +47,7 @@ export const createTrackingRecord = (
     severity,
     effort,
     owner: decision.owner,
-    deadlineAt: addMinutes(nowIso, decision.slaMinutes),
+    deadlineAt: addMinutes(new Date(nowIso), decision.slaMinutes).toISOString(),
     breachCount: 0,
     escalated: false,
     escalatedAt: null,
@@ -67,7 +64,9 @@ export const checkSlaBreaches = async (
   const actions: EscalationAction[] = [];
 
   for (const record of dueRecords) {
-    if (new Date(record.deadlineAt).getTime() > now) {
+    const deadlineAtMs = new Date(record.deadlineAt).getTime();
+
+    if (deadlineAtMs > now) {
       continue;
     }
 
@@ -82,8 +81,8 @@ export const checkSlaBreaches = async (
       breachCount: nextBreachCount,
       severity: escalatedSeverity,
       owner: pageHuman ? 'human-page' : escalatedDecision.owner,
-      deadlineAt: shouldTrackSla(escalatedDecision.slaMinutes)
-        ? addMinutes(nowIso, escalatedDecision.slaMinutes)
+      deadlineAt: hasSlaDefined(escalatedDecision.slaMinutes)
+        ? addMinutes(new Date(nowIso), escalatedDecision.slaMinutes).toISOString()
         : record.deadlineAt,
       escalated: true,
       escalatedAt,

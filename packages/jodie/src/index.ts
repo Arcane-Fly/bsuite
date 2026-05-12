@@ -4,7 +4,7 @@ export {
   EFFORTS,
   getRoutingDecision,
   escalateSeverity,
-  canAutoMergeP3Xs,
+  meetsProtectionGateRequirements,
   type Severity,
   type Effort,
   type RoutingDecision,
