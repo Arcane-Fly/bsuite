@@ -26,6 +26,7 @@
 		"lint:no-cookie-sso": "node scripts/check-no-cookie-sso.mjs",
 		"lint:node-pin-parity": "node scripts/check-node-pin-parity.mjs",
 		"lint:tailwind-v4": "node scripts/check-tailwind-v4.mjs",
+		"check:autonoma-adoption": "node scripts/check-autonoma-adoption.mjs --strict",
 		"test:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Testing $dir ===\"; (cd $dir && pnpm test -- --run) || exit 1; done",
 		"build:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Building $dir ===\"; (cd $dir && pnpm build) || exit 1; done",
 		"typecheck:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Typechecking $dir ===\"; (cd $dir && pnpm tsc --noEmit) || exit 1; done",

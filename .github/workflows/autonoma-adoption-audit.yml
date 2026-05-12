@@ -1,0 +1,37 @@
+name: Autonoma Adoption Audit
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/autonoma-adoption-audit.yml'
+      - 'scripts/check-autonoma-adoption.mjs'
+      - 'package.json'
+      - '.gitmodules'
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-autonoma-adoption:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v5
+        with:
+          submodules: 'recursive'
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Verify Autonoma artifacts across all 6 apps
+        run: node scripts/check-autonoma-adoption.mjs --strict
+
