@@ -25,6 +25,9 @@
     },
     "./styles.css": "./src/styles/react-grid-layout-overrides.css"
   },
+  "dependencies": {
+    "zustand": "^5.0.13"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",

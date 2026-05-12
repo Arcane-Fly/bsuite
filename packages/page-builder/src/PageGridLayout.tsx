@@ -4,6 +4,8 @@ import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, maxSize, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { BreakpointSwitcher } from './components/BreakpointSwitcher.js';
+import { BREAKPOINT_CANVAS_WIDTH, usePageBuilderStore } from './state/store.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps } from './types.js';
@@ -192,6 +194,9 @@ export function PageGridLayout({
     editorEventNames,
     preferenceAdapter,
   });
+  const currentBreakpoint = usePageBuilderStore((state) => state.currentBreakpoint);
+  const setCurrentBreakpoint = usePageBuilderStore((state) => state.setCurrentBreakpoint);
+  const activeCanvasWidth = BREAKPOINT_CANVAS_WIDTH[currentBreakpoint];
 
   const resizeEnabled = isEditing && isResizable;
   const resizeConstraints = useMemo(
@@ -368,6 +373,11 @@ export function PageGridLayout({
               <span className="text-sm font-mono w-5 text-center tabular-nums">{layoutCols}</span>
             </div>
 
+            <div className="flex items-center gap-2">
+              <span className="text-sm shrink-0 text-muted-foreground">Breakpoint:</span>
+              <BreakpointSwitcher value={currentBreakpoint} onChange={setCurrentBreakpoint} />
+            </div>
+
             <div className="flex items-center gap-1" role="group" aria-label="Column presets">
               {[1, 2, 3, 4, 6, 12].map((columnCount) => (
                 <button
@@ -499,9 +509,16 @@ export function PageGridLayout({
         className={isEditing ? 'min-h-[200px]' : ''}
         style={{ backgroundColor: isEditing ? 'rgb(0 0 0 / 0.03)' : 'transparent' }}
       >
-        <div style={{ opacity: containerWidth > 0 ? 1 : 0 }} aria-busy={containerWidth <= 0}>
+        <div
+          style={{
+            opacity: containerWidth > 0 ? 1 : 0,
+            width: isEditing ? activeCanvasWidth : undefined,
+            maxWidth: isEditing ? activeCanvasWidth : undefined,
+          }}
+          aria-busy={containerWidth <= 0}
+        >
           <Responsive
-            width={Math.max(containerWidth, 1)}
+            width={isEditing ? activeCanvasWidth : Math.max(containerWidth, 1)}
             className="layout"
             layouts={activeLayouts}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}

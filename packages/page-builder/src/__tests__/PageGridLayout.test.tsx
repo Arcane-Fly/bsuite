@@ -404,3 +404,33 @@ describe('PageGridLayout mobile reflow', () => {
     expect(itemWidthPx).toBeGreaterThan(containerWidthPx * 0.85);
   });
 });
+
+describe('PageGridLayout breakpoint switcher', () => {
+  it('renders Desktop/Tablet/Mobile switcher in editor mode', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="breakpoint-switcher-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+    });
+
+    expect(screen.getByRole('button', { name: 'Desktop' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Tablet' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Mobile' })).toBeTruthy();
+
+    const responsiveRoot = view.container.querySelector<HTMLElement>('.react-grid-layout');
+    expect(responsiveRoot?.parentElement?.style.width).toContain('1280');
+
+    act(() => {
+      screen.getByRole('button', { name: 'Mobile' }).click();
+    });
+
+    expect(responsiveRoot?.parentElement?.style.width).toContain('375');
+  });
+});

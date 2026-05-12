@@ -21,6 +21,20 @@ export type {
   ResponsiveBreakpoint,
 } from './buildResponsiveLayouts.js';
 export { useLocalPreference, defaultPreferenceAdapter } from './preferences.js';
+export { BreakpointSwitcher } from './components/BreakpointSwitcher.js';
+export { StylePropertyRow } from './components/StylePropertyRow.js';
+export {
+  BREAKPOINT_CANVAS_WIDTH,
+  getResolvedLayoutStyles,
+  resetPageBuilderStore,
+  useCurrentBreakpoint,
+  usePageBuilderStore,
+} from './state/store.js';
+export {
+  EDITOR_BREAKPOINTS,
+  normalizeResponsiveStyleCascade,
+  resolveStyles,
+} from './utils/cascade.js';
 export type {
   EntityWidgetDetail,
   EntityWidgetFactoryOptions,
@@ -33,3 +47,4 @@ export type {
   UsePageGridLayoutResult,
   WidgetMeta,
 } from './types.js';
+export type { ResponsiveStyleCascade, ResolvedStyles, StyleObj, StyleValue } from './utils/cascade.js';
