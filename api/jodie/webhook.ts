@@ -29,7 +29,7 @@ export default async function handler(request: Request): Promise<Response> {
       webhookSecret: readRequiredEnv('JODIE_GITHUB_WEBHOOK_SECRET'),
       supabaseUrl: readRequiredEnv('SUPABASE_URL'),
       supabaseServiceRoleKey:
-        process.env.SUPABASE_SECRET_KEY ?? readRequiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
+        process.env.SUPABASE_SERVICE_ROLE_KEY ?? readRequiredEnv('SUPABASE_SECRET_KEY'),
     },
   })
 

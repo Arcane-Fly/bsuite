@@ -11,17 +11,13 @@ interface InstallationAuthResponse {
   expiresAt: string
 }
 
-interface AuthFunction {
-  (options: { type: 'installation'; installationId: number }): Promise<InstallationAuthResponse>
-}
-
-interface AuthFactory {
-  (options: { appId: number; privateKey: string }): AuthFunction
-}
-
 interface TokenDeps {
   fetchImpl?: typeof fetch
-  authFactory?: AuthFactory
+  createInstallationAuth?: (options: {
+    appId: number
+    privateKey: string
+    installationId: number
+  }) => Promise<InstallationAuthResponse>
   now?: () => Date
 }
 
@@ -39,6 +35,45 @@ function supabaseHeaders(config: JodieSupabaseConfig): HeadersInit {
 
 function toIso(value: string | Date): string {
   return value instanceof Date ? value.toISOString() : value
+}
+
+function isInstallationAuthResponse(value: unknown): value is InstallationAuthResponse {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  if (!('token' in value) || !('expiresAt' in value)) {
+    return false
+  }
+
+  return (
+    typeof value.token === 'string' &&
+    value.token.length > 0 &&
+    typeof value.expiresAt === 'string' &&
+    value.expiresAt.length > 0
+  )
+}
+
+async function createInstallationAuthWithOctokit(options: {
+  appId: number
+  privateKey: string
+  installationId: number
+}): Promise<InstallationAuthResponse> {
+  const auth = createAppAuth({
+    appId: options.appId,
+    privateKey: options.privateKey,
+  })
+
+  const installationAuth = await auth({
+    type: 'installation',
+    installationId: options.installationId,
+  })
+
+  if (!isInstallationAuthResponse(installationAuth)) {
+    throw new Error('Octokit installation auth response did not include token metadata')
+  }
+
+  return installationAuth
 }
 
 async function readCachedToken(
@@ -82,6 +117,8 @@ async function writeCachedToken(
   expiresAt: string,
 ): Promise<void> {
   const fetchImpl = deps.fetchImpl ?? fetch
+  const now = deps.now ?? (() => new Date())
+  const refreshTimestamp = now().toISOString()
   const endpoint = `${trimTrailingSlash(config.supabaseUrl)}/rest/v1/jodie_app_installations?on_conflict=installation_id`
 
   const response = await fetchImpl(endpoint, {
@@ -94,8 +131,7 @@ async function writeCachedToken(
       installation_id: config.installationId,
       access_token: token,
       token_expires_at: expiresAt,
-      refreshed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      refreshed_at: refreshTimestamp,
     }),
   })
 
@@ -132,14 +168,10 @@ export async function getJodieInstallationToken(
     }
   }
 
-  const authFactory = deps.authFactory ?? ((createAppAuth as unknown) as AuthFactory)
-  const auth = authFactory({
+  const createInstallationAuth = deps.createInstallationAuth ?? createInstallationAuthWithOctokit
+  const installationAuth = await createInstallationAuth({
     appId: config.appId,
     privateKey: config.privateKey,
-  })
-
-  const installationAuth = await auth({
-    type: 'installation',
     installationId: config.installationId,
   })
 

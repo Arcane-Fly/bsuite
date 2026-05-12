@@ -25,18 +25,18 @@ describe('getJodieInstallationToken', () => {
         ),
       )
 
-    const authFactory = vi.fn()
+    const createInstallationAuth = vi.fn()
 
     const result = await getJodieInstallationToken(baseConfig, {
       fetchImpl,
-      authFactory,
+      createInstallationAuth,
       now: () => new Date('2026-05-12T15:50:00.000Z'),
     })
 
     expect(result.cacheHit).toBe(true)
     expect(result.token).toBe('cached-token')
     expect(fetchImpl).toHaveBeenCalledTimes(1)
-    expect(authFactory).not.toHaveBeenCalled()
+    expect(createInstallationAuth).not.toHaveBeenCalled()
   })
 
   it('refreshes and stores a token when cache is stale', async () => {
@@ -55,26 +55,22 @@ describe('getJodieInstallationToken', () => {
       )
       .mockResolvedValueOnce(new Response('', { status: 201 }))
 
-    const auth = vi.fn().mockResolvedValue({
+    const createInstallationAuth = vi.fn().mockResolvedValue({
       token: 'fresh-token',
       expiresAt: '2026-05-12T16:50:00.000Z',
     })
-    const authFactory = vi.fn().mockReturnValue(auth)
 
     const result = await getJodieInstallationToken(baseConfig, {
       fetchImpl,
-      authFactory,
+      createInstallationAuth,
       now: () => new Date('2026-05-12T15:50:00.000Z'),
     })
 
     expect(result.cacheHit).toBe(false)
     expect(result.token).toBe('fresh-token')
-    expect(authFactory).toHaveBeenCalledWith({
+    expect(createInstallationAuth).toHaveBeenCalledWith({
       appId: 123,
       privateKey: baseConfig.privateKey,
-    })
-    expect(auth).toHaveBeenCalledWith({
-      type: 'installation',
       installationId: 456,
     })
     expect(fetchImpl).toHaveBeenCalledTimes(2)

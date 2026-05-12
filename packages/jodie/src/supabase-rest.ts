@@ -4,6 +4,14 @@ interface SupabaseRpcResponse {
   inserted: boolean
 }
 
+function isSupabaseRpcResponse(value: unknown): value is SupabaseRpcResponse {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  return 'inserted' in value && typeof value.inserted === 'boolean'
+}
+
 function trimTrailingSlash(value: string): string {
   return value.endsWith('/') ? value.slice(0, -1) : value
 }
@@ -38,6 +46,10 @@ export async function enqueueWebhookDelivery(
     throw new Error(`Supabase enqueue failed (${response.status}): ${body}`)
   }
 
-  const data = (await response.json()) as SupabaseRpcResponse
+  const data = await response.json()
+  if (!isSupabaseRpcResponse(data)) {
+    throw new Error('Supabase enqueue response did not include inserted boolean')
+  }
+
   return data.inserted
 }

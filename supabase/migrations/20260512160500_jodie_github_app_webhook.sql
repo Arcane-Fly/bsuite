@@ -61,6 +61,8 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  affected_rows INTEGER;
 BEGIN
   INSERT INTO public.jodie_webhook_queue (
     delivery_guid,
@@ -76,7 +78,8 @@ BEGIN
   )
   ON CONFLICT (delivery_guid) DO NOTHING;
 
-  RETURN QUERY SELECT FOUND;
+  GET DIAGNOSTICS affected_rows = ROW_COUNT;
+  RETURN QUERY SELECT affected_rows > 0;
 END;
 $$;
 
