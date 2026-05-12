@@ -13,6 +13,7 @@ const trackedFiles = execSync('git ls-files', { encoding: 'utf8' })
   .filter((file) => /\.(ts|tsx|js|jsx|mjs|cjs)$/.test(file))
   .filter((file) => !file.includes('/node_modules/'))
   .filter((file) => !file.startsWith('docs/'))
+  .filter((file) => file !== 'scripts/check-ai-gateway-compliance.mjs')
 
 const bannedProviderModules = [
   'openai',
@@ -26,6 +27,29 @@ const metadataTokens = ['issueNumber', 'repo', 'agentRole']
 const clientSideGatewayKeySnippets = [
   'VITE_AI_GATEWAY_API_KEY',
   'NEXT_PUBLIC_AI_GATEWAY_API_KEY',
+]
+const CALL_WINDOW_SIZE = 1200
+
+/**
+ * Server/client path heuristics:
+ * - Server paths cover Next.js API routes, Supabase edge functions, and explicit server folders.
+ * - Client paths target common browser-facing folders in Vite/React/Next.js apps.
+ * - A file is considered browser code only when it matches client hints and does not match server hints.
+ */
+const serverPathHints = [
+  '/src/server/',
+  '/app/api/',
+  '/pages/api/',
+  '/supabase/functions/',
+  '/edge-functions/',
+]
+const clientPathHints = [
+  '/src/components/',
+  '/src/pages/',
+  '/src/hooks/',
+  '/src/contexts/',
+  '/app/',
+  '/pages/',
 ]
 
 const violations = []
@@ -43,7 +67,7 @@ function findCallWindows(fileContent, callSnippet) {
   const windows = []
   let currentIndex = fileContent.indexOf(callSnippet)
   while (currentIndex !== -1) {
-    windows.push(fileContent.slice(currentIndex, currentIndex + 1200))
+    windows.push(fileContent.slice(currentIndex, currentIndex + CALL_WINDOW_SIZE))
     currentIndex = fileContent.indexOf(callSnippet, currentIndex + callSnippet.length)
   }
   return windows
@@ -68,7 +92,8 @@ for (const relativeFilePath of trackedFiles) {
     const callWindows = findCallWindows(fileContent, aiCallSnippet)
     callWindows.forEach((windowContent, callIndex) => {
       const missingMetadataTokens = metadataTokens.filter(
-        (token) => !windowContent.includes(token)
+        (token) =>
+          !windowContent.includes(`${token}:`) && !windowContent.includes(`${token},`)
       )
       if (missingMetadataTokens.length > 0) {
         violations.push(
@@ -80,19 +105,18 @@ for (const relativeFilePath of trackedFiles) {
     })
   }
 
-  const isLikelyServerCode = [
-    '/src/server/',
-    '/app/api/',
-    '/pages/api/',
-    '/supabase/functions/',
-    '/edge-functions/',
-  ].some((segment) => relativeFilePath.includes(segment))
-
-  const isLikelyBrowserCode = ['/src/', '/app/', '/pages/'].some((segment) =>
+  const isLikelyServerCode = serverPathHints.some((segment) =>
     relativeFilePath.includes(segment)
   )
 
-  if (isLikelyBrowserCode && !isLikelyServerCode) {
+  const isLikelyBrowserCode = clientPathHints.some((segment) =>
+    relativeFilePath.includes(segment)
+  )
+
+  const hasUseClientDirective =
+    fileContent.startsWith("'use client'") || fileContent.startsWith('"use client"')
+
+  if ((isLikelyBrowserCode || hasUseClientDirective) && !isLikelyServerCode) {
     for (const snippet of clientSideGatewayKeySnippets) {
       lines.forEach((line, index) => {
         if (line.includes(snippet)) {
