@@ -141,7 +141,10 @@ describe('classifyIssue', () => {
 
     for (let index = 0; index < 50; index += 1) {
       const result = await classifyIssue(baseInput, {
-        generateObject: async () => validResponse(),
+        generateObject: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 5));
+          return validResponse();
+        },
       });
       samples.push(result.latencyMs);
     }
@@ -150,6 +153,7 @@ describe('classifyIssue', () => {
     const p95Index = Math.floor(sorted.length * 0.95) - 1;
     const p95 = sorted[Math.max(p95Index, 0)] ?? 0;
 
+    expect(p95).toBeGreaterThanOrEqual(5);
     expect(p95).toBeLessThan(3000);
   });
 });

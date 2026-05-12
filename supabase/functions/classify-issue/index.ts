@@ -135,7 +135,7 @@ serve(async (req) => {
         ok: false,
         error: 'Classification failed',
         details:
-          Deno.env.get('DENO_ENV') === 'development' ? message : 'See edge logs for details',
+          Deno.env.get('JODIE_DEBUG') === 'true' ? message : 'See edge logs for details',
       }),
       {
         status: 400,

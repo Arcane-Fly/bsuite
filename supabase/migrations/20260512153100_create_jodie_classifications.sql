@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.jodie_classifications (
   model_id TEXT NOT NULL,
   taxonomy_version TEXT NOT NULL,
   latency_ms INTEGER NOT NULL CHECK (latency_ms >= 0),
-  cost_usd NUMERIC(12, 6) NOT NULL DEFAULT 0,
+  cost_usd NUMERIC(12, 6) NOT NULL DEFAULT 0 CHECK (cost_usd >= 0),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

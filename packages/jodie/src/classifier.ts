@@ -164,7 +164,11 @@ function estimateCostUsd(usage: ClassifierUsage | undefined, pricing: Classifier
     return 0;
   }
 
-  const inputTokens = usage.inputTokens ?? usage.totalTokens ?? 0;
+  const inputTokens =
+    usage.inputTokens ??
+    (usage.totalTokens !== undefined
+      ? Math.max(usage.totalTokens - (usage.outputTokens ?? 0), 0)
+      : 0);
   // Some providers only expose totalTokens; we treat that as input when inputTokens is absent.
   const outputTokens = usage.outputTokens ?? 0;
 
