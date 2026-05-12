@@ -628,6 +628,128 @@ describe('awardToCalcConfig', () => {
       });
     });
 
+    // ─── BUG-1 regression: annual-allowance /52 normalisation ──────────────
+    // These lock the /52 divide in `converter.mapAllowanceAmount` across
+    // case variants, whitespace, expense allowances, and rate-based annual
+    // allowances. Paired with the mapd-mapper.test.ts invariant suite that
+    // locks the mapper boundary (no phantom divide there).
+
+    it('BUG-1: case-variant "Per Annum" still triggers /52 divide', () => {
+      const titleCase: AwardAllowance = {
+        ...annualAllowance,
+        fixedId: 5610,
+        paymentFrequency: 'Per Annum',
+      };
+      const award = buildAward({ wageAllowances: [titleCase] });
+      const result = awardToCalcConfig(award, defaultCtx);
+      expect(result.allowances[0]).toMatchObject({ type: 'perWeek', amount: 20 });
+    });
+
+    it('BUG-1: case-variant "PER YEAR" still triggers /52 divide', () => {
+      const upper: AwardAllowance = {
+        ...yearlyAllowance,
+        fixedId: 5611,
+        paymentFrequency: 'PER YEAR',
+      };
+      const award = buildAward({ wageAllowances: [upper] });
+      const result = awardToCalcConfig(award, defaultCtx);
+      expect(result.allowances[0]).toMatchObject({ type: 'perWeek', amount: 5 });
+    });
+
+    it('BUG-1: leading/trailing whitespace does not defeat annum detection', () => {
+      const padded: AwardAllowance = {
+        ...annualAllowance,
+        fixedId: 5612,
+        paymentFrequency: '  per annum  ',
+      };
+      const award = buildAward({ wageAllowances: [padded] });
+      const result = awardToCalcConfig(award, defaultCtx);
+      expect(result.allowances[0]).toMatchObject({ type: 'perWeek', amount: 20 });
+    });
+
+    it('BUG-1: AwardAllowance with type="expense" + annum frequency is divided by 52 (shared mapping contract)', () => {
+      // NOTE: converter currently only emits `award.wageAllowances` into
+      // CalcConfig; `expenseAllowances` are not yet wired in. This test
+      // injects an allowance whose internal `type` is `'expense'` through
+      // the `wageAllowances` slot to lock the shared `AwardAllowance`
+      // conversion contract — so that if/when expenses are wired in, the
+      // /52 divide behaviour is already regression-locked.
+      const annualExpense: AwardAllowance = {
+        fixedId: 6610,
+        name: 'Annual tools reimbursement',
+        amount: 2080,
+        rate: null,
+        rateUnit: null,
+        paymentFrequency: 'per annum',
+        isAllPurpose: false,
+        parentAllowance: null,
+        clauseRef: '19.3(z)',
+        type: 'expense',
+      };
+      const award = buildAward({
+        wageAllowances: [annualExpense],
+      });
+      const result = awardToCalcConfig(award, defaultCtx);
+      expect(result.allowances[0]).toMatchObject({ type: 'perWeek', amount: 40 });
+    });
+
+    it('BUG-1: rate-based annual allowance (amount=null, rate=X) is divided by 52', () => {
+      const rateBasedAnnual: AwardAllowance = {
+        ...annualAllowance,
+        fixedId: 5613,
+        amount: null,
+        rate: 520,
+        rateUnit: 'per annum',
+        paymentFrequency: 'per annum',
+      };
+      const award = buildAward({ wageAllowances: [rateBasedAnnual] });
+      const result = awardToCalcConfig(award, defaultCtx);
+      // rate falls through via `a.amount ?? a.rate ?? 0` then /52
+      expect(result.allowances[0]).toMatchObject({ type: 'perWeek', amount: 10 });
+    });
+
+    it('BUG-1: weekly allowance is NOT divided by 52 (no phantom divide)', () => {
+      // Guards against an over-eager "always divide" regression.
+      const award = buildAward({ wageAllowances: [industryAllowance] });
+      const result = awardToCalcConfig(award, defaultCtx);
+      expect(result.allowances[0].amount).toBe(32.59);
+    });
+
+    it('BUG-1: "per shift" falls back to perHour and is NOT divided by 52', () => {
+      const shiftAllowance: AwardAllowance = {
+        ...industryAllowance,
+        fixedId: 5614,
+        amount: 10,
+        paymentFrequency: 'per shift',
+      };
+      const award = buildAward({ wageAllowances: [shiftAllowance] });
+      const result = awardToCalcConfig(award, defaultCtx);
+      expect(result.allowances[0]).toMatchObject({ type: 'perHour', amount: 10 });
+    });
+
+    it('BUG-1 integration: annual $5200 allowance produces ~$100/week addition (calculate)', () => {
+      // End-to-end lock: if /52 regresses to no-op (amount=5200 stays per week),
+      // downstream calculate() will overstate the charge rate by a factor that
+      // this assertion catches. Expected behaviour: 5200/52 = $100/week.
+      const bigAnnual: AwardAllowance = {
+        ...annualAllowance,
+        fixedId: 5615,
+        amount: 5200,
+        isAllPurpose: true,
+      };
+      const awardWith = buildAward({ wageAllowances: [bigAnnual] });
+      const awardWithout = buildAward({ wageAllowances: [] });
+
+      const withAllowance = calculate(awardToCalcConfig(awardWith, defaultCtx));
+      const withoutAllowance = calculate(awardToCalcConfig(awardWithout, defaultCtx));
+
+      // The $100/week addition should land somewhere in a narrow band on the
+      // charge rate. If /52 regresses, the delta would be ~52× larger.
+      const delta = withAllowance.quotedChargeRate - withoutAllowance.quotedChargeRate;
+      expect(delta).toBeGreaterThan(0);
+      expect(delta).toBeLessThan(10); // sanity: properly normalised annual → < $10/hr delta
+    });
+
     it('maps null payment frequency to "perHour" default', () => {
       const nullFreqAllowance: AwardAllowance = {
         ...industryAllowance,
