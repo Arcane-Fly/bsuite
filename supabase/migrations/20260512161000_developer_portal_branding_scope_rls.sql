@@ -96,6 +96,9 @@ BEGIN
 END;
 $$;
 
+ALTER TABLE public.tenant_branding ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tenant_app_branding ENABLE ROW LEVEL SECURITY;
+
 -- tenant_branding policies (Tier 2)
 CREATE POLICY "tenant_branding_select"
   ON public.tenant_branding FOR SELECT
