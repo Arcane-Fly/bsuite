@@ -4,6 +4,12 @@ import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, maxSize, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import {
+  DEFAULT_GENERATED_SECTION_DROP_EVENT_NAMES,
+  DEFAULT_GENERATED_SECTION_STREAM_EVENT_NAMES,
+  isGeneratedSectionDropDetail,
+  isGeneratedSectionStreamDetail,
+} from './aiSectionEvents.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps } from './types.js';
@@ -165,6 +171,12 @@ export function PageGridLayout({
   addEntityWidgetEventNames = DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES,
   createEntityWidget,
   onRegisterEntityWidget,
+  generatedSectionDropEventNames = DEFAULT_GENERATED_SECTION_DROP_EVENT_NAMES,
+  generatedSectionStreamEventNames = DEFAULT_GENERATED_SECTION_STREAM_EVENT_NAMES,
+  createGeneratedSectionWidget,
+  onGeneratedSectionAccept,
+  onGeneratedSectionDiscard,
+  onGeneratedSectionStreamUpdate,
 }: PageGridLayoutProps) {
   const {
     currentLayouts,
@@ -179,6 +191,7 @@ export function PageGridLayout({
     handleReset,
     addWidget,
     removeWidget,
+    replaceLayouts,
     resetConfirmOpen,
     setResetConfirmOpen,
     containerRef,
@@ -205,6 +218,39 @@ export function PageGridLayout({
   );
 
   const [extraWidgetConfigs, setExtraWidgetConfigs] = useState<Record<string, { entityType: string; label?: string }>>({});
+  const [generatedSections, setGeneratedSections] = useState<
+    Record<
+      string,
+      {
+        widgetId: string;
+        title: string;
+        body: string;
+        ctaLabel?: string;
+        tone?: 'primary' | 'accent' | 'success' | 'warning' | 'destructive';
+        defaultSize?: { w?: number; h?: number; minW?: number; minH?: number };
+      }
+    >
+  >({});
+  const [pendingGeneratedWidgetId, setPendingGeneratedWidgetId] = useState<string | null>(null);
+  const [generatedPreviewSnapshot, setGeneratedPreviewSnapshot] = useState<{
+    layouts: GridLayouts;
+    extraWidgetConfigs: Record<string, { entityType: string; label?: string }>;
+    generatedSections: Record<
+      string,
+      {
+        widgetId: string;
+        title: string;
+        body: string;
+        ctaLabel?: string;
+        tone?: 'primary' | 'accent' | 'success' | 'warning' | 'destructive';
+        defaultSize?: { w?: number; h?: number; minW?: number; minH?: number };
+      }
+    >;
+  } | null>(null);
+  const [streamingState, setStreamingState] = useState<{
+    status: 'idle' | 'generating' | 'error';
+    message: string | null;
+  }>({ status: 'idle', message: null });
   const extraWidgets = useMemo(() => {
     const rendered: Record<string, React.ReactNode> = {};
     if (!createEntityWidget) return rendered;
@@ -220,9 +266,54 @@ export function PageGridLayout({
   }, [createEntityWidget, extraWidgetConfigs, isEditing]);
 
   const allWidgets = useMemo(() => ({ ...widgets, ...extraWidgets }), [widgets, extraWidgets]);
+  const generatedWidgetNodes = useMemo(() => {
+    const rendered: Record<string, React.ReactNode> = {};
+    for (const [widgetId, section] of Object.entries(generatedSections)) {
+      rendered[widgetId] = createGeneratedSectionWidget ? (
+        createGeneratedSectionWidget({
+          section,
+          isEditing,
+          isPending: pendingGeneratedWidgetId === widgetId,
+        })
+      ) : (
+        <section className="h-full w-full p-4 bg-card text-foreground border border-border rounded-2xl">
+          <h4 className="text-base font-semibold text-foreground">{section.title}</h4>
+          <p className="mt-2 text-sm text-muted-foreground">{section.body}</p>
+          {section.ctaLabel ? (
+            <button
+              type="button"
+              data-no-drag
+              className={cn(
+                'mt-3 inline-flex items-center rounded-md px-3 py-2 text-xs font-medium transition-colors',
+                section.tone === 'accent' && 'bg-accent text-accent-foreground hover:bg-accent/90',
+                section.tone === 'success' && 'bg-success text-text-on-success hover:bg-success/90',
+                section.tone === 'warning' && 'bg-warning text-text-on-warning hover:bg-warning/90',
+                section.tone === 'destructive' &&
+                  'bg-destructive text-text-on-destructive hover:bg-destructive/90',
+                (!section.tone || section.tone === 'primary') &&
+                  'bg-primary text-primary-foreground hover:bg-primary/90',
+              )}
+            >
+              {section.ctaLabel}
+            </button>
+          ) : null}
+        </section>
+      );
+    }
+    return rendered;
+  }, [createGeneratedSectionWidget, generatedSections, isEditing, pendingGeneratedWidgetId]);
+  const allRenderableWidgets = useMemo(
+    () => ({ ...allWidgets, ...generatedWidgetNodes }),
+    [allWidgets, generatedWidgetNodes],
+  );
   const renderableWidgetKeys = useMemo(
-    () => new Set(Object.keys(allWidgets).filter((key) => allWidgets[key] !== null && allWidgets[key] !== undefined)),
-    [allWidgets],
+    () =>
+      new Set(
+        Object.keys(allRenderableWidgets).filter(
+          (key) => allRenderableWidgets[key] !== null && allRenderableWidgets[key] !== undefined,
+        ),
+      ),
+    [allRenderableWidgets],
   );
   const activeLayouts = useMemo(() => {
     const filtered: GridLayouts = { lg: [] };
@@ -275,6 +366,101 @@ export function PageGridLayout({
     () => [...renderableWidgetKeys].filter((key) => !visibleKeys.has(key)),
     [renderableWidgetKeys, visibleKeys],
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleStream = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (!isGeneratedSectionStreamDetail(detail)) return;
+      onGeneratedSectionStreamUpdate?.(detail);
+      if (detail.status === 'generating') {
+        setStreamingState({ status: 'generating', message: detail.message ?? 'Generating section preview…' });
+      } else if (detail.status === 'error') {
+        setStreamingState({ status: 'error', message: detail.message ?? 'Generation failed. Retry.' });
+      } else {
+        setStreamingState({ status: 'idle', message: null });
+      }
+    };
+    for (const eventName of generatedSectionStreamEventNames) {
+      window.addEventListener(eventName, handleStream);
+    }
+    return () => {
+      for (const eventName of generatedSectionStreamEventNames) {
+        window.removeEventListener(eventName, handleStream);
+      }
+    };
+  }, [generatedSectionStreamEventNames, onGeneratedSectionStreamUpdate]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleGeneratedDrop = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (!isGeneratedSectionDropDetail(detail)) return;
+      if (!generatedPreviewSnapshot) {
+        setGeneratedPreviewSnapshot({
+          layouts: currentLayouts,
+          extraWidgetConfigs,
+          generatedSections,
+        });
+      }
+      setGeneratedSections((previous) => ({ ...previous, [detail.section.widgetId]: detail.section }));
+      const alreadyInLayout = (activeLayouts.lg ?? []).some((item) => item.i === detail.section.widgetId);
+      if (!alreadyInLayout) {
+        addWidget(detail.section.widgetId, detail.section.defaultSize);
+      }
+      setPendingGeneratedWidgetId(detail.section.widgetId);
+      setStreamingState({ status: 'idle', message: null });
+      startTransition(() => setIsEditing(true));
+    };
+    for (const eventName of generatedSectionDropEventNames) {
+      window.addEventListener(eventName, handleGeneratedDrop);
+    }
+    return () => {
+      for (const eventName of generatedSectionDropEventNames) {
+        window.removeEventListener(eventName, handleGeneratedDrop);
+      }
+    };
+  }, [
+    activeLayouts.lg,
+    addWidget,
+    currentLayouts,
+    extraWidgetConfigs,
+    generatedPreviewSnapshot,
+    generatedSectionDropEventNames,
+    generatedSections,
+    setIsEditing,
+  ]);
+
+  const pendingGeneratedSection = pendingGeneratedWidgetId
+    ? generatedSections[pendingGeneratedWidgetId] ?? null
+    : null;
+
+  const handleGeneratedAccept = () => {
+    if (!pendingGeneratedSection) return;
+    onGeneratedSectionAccept?.(pendingGeneratedSection);
+    setPendingGeneratedWidgetId(null);
+    setGeneratedPreviewSnapshot(null);
+  };
+
+  const handleGeneratedDiscard = () => {
+    if (!pendingGeneratedSection) return;
+    onGeneratedSectionDiscard?.(pendingGeneratedSection);
+    if (generatedPreviewSnapshot) {
+      replaceLayouts(generatedPreviewSnapshot.layouts);
+      setExtraWidgetConfigs(generatedPreviewSnapshot.extraWidgetConfigs);
+      setGeneratedSections(generatedPreviewSnapshot.generatedSections);
+    } else {
+      removeWidget(pendingGeneratedSection.widgetId);
+      setGeneratedSections((previous) => {
+        const next = { ...previous };
+        delete next[pendingGeneratedSection.widgetId];
+        return next;
+      });
+    }
+    setPendingGeneratedWidgetId(null);
+    setGeneratedPreviewSnapshot(null);
+    setStreamingState({ status: 'idle', message: null });
+  };
 
   // Reset-confirmation dialog: full ARIA APG dialog-modal pattern.
   // - Escape key closes the dialog.
@@ -353,6 +539,42 @@ export function PageGridLayout({
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border">
+            {streamingState.status !== 'idle' && (
+              <div
+                className={cn(
+                  'basis-full rounded-md border px-3 py-2 text-sm',
+                  streamingState.status === 'error'
+                    ? 'border-destructive/40 bg-destructive/10 text-foreground'
+                    : 'border-primary/30 bg-primary/10 text-foreground',
+                )}
+                aria-live="polite"
+              >
+                {streamingState.message}
+              </div>
+            )}
+            {pendingGeneratedSection && (
+              <div className="basis-full rounded-md border border-primary/40 bg-primary/10 px-3 py-2">
+                <p className="text-sm text-foreground">
+                  AI preview ready: <strong>{pendingGeneratedSection.title}</strong>
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGeneratedAccept}
+                    className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                  >
+                    Accept AI section
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGeneratedDiscard}
+                    className="inline-flex items-center rounded-md border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                  >
+                    Discard AI section
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm shrink-0 text-muted-foreground">Columns:</span>
@@ -528,7 +750,7 @@ export function PageGridLayout({
             margin={[6, 6]}
           >
             {activeLayouts.lg.map((layoutItem) => {
-              const content = allWidgets[layoutItem.i];
+              const content = allRenderableWidgets[layoutItem.i];
               if (content === undefined || content === null) return null;
               return (
                 <GridItem

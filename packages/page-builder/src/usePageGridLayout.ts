@@ -217,6 +217,13 @@ export function usePageGridLayout({
     [currentLayouts, setSavedLayout],
   );
 
+  const replaceLayouts = useCallback(
+    (layouts: GridLayouts) => {
+      startTransition(() => setSavedLayout(layouts));
+    },
+    [setSavedLayout],
+  );
+
   useEffect(() => {
     if (!canEditPage || typeof window === 'undefined') return;
     const handler = (event: Event) => {
@@ -249,6 +256,7 @@ export function usePageGridLayout({
     handleReset,
     addWidget,
     removeWidget,
+    replaceLayouts,
     resetConfirmOpen,
     setResetConfirmOpen,
     canEditPage,

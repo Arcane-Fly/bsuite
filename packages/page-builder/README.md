@@ -8,6 +8,7 @@ Exports:
 - `usePageGridLayout`
 - `rescaleLayout`
 - `GridLayouts`, `GridLayoutItem`, `WidgetMeta`, and related types
+- `emitGeneratedSectionDrop` / `emitGeneratedSectionStream` for prompt-to-section preview flow
 
 Consumer apps must depend on the published npm package, not `workspace:*` or
 `file:` links, because each app deploys independently.

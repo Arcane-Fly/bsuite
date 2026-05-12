@@ -1,5 +1,9 @@
 import type React from 'react';
 import type { Compactor, LayoutItem, ResizeHandleAxis } from 'react-grid-layout';
+import type {
+  GeneratedSectionPreview,
+  GeneratedSectionStreamDetail,
+} from './aiSectionEvents.js';
 
 export type GridLayoutItem = LayoutItem;
 
@@ -54,6 +58,16 @@ export interface PageGridLayoutProps extends UsePageGridLayoutOptions {
   addEntityWidgetEventNames?: readonly string[];
   createEntityWidget?: (options: EntityWidgetFactoryOptions) => React.ReactNode;
   onRegisterEntityWidget?: (options: EntityWidgetDetail & { widgetId: string }) => void;
+  generatedSectionDropEventNames?: readonly string[];
+  generatedSectionStreamEventNames?: readonly string[];
+  createGeneratedSectionWidget?: (options: {
+    section: GeneratedSectionPreview;
+    isEditing: boolean;
+    isPending: boolean;
+  }) => React.ReactNode;
+  onGeneratedSectionAccept?: (section: GeneratedSectionPreview) => void;
+  onGeneratedSectionDiscard?: (section: GeneratedSectionPreview) => void;
+  onGeneratedSectionStreamUpdate?: (detail: GeneratedSectionStreamDetail) => void;
 }
 
 export interface UsePageGridLayoutResult {
@@ -72,6 +86,7 @@ export interface UsePageGridLayoutResult {
     initialSize?: Partial<Pick<GridLayoutItem, 'w' | 'h' | 'minW' | 'minH'>>
   ) => void;
   removeWidget: (widgetKey: string) => void;
+  replaceLayouts: (layouts: GridLayouts) => void;
   resetConfirmOpen: boolean;
   setResetConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
   canEditPage: boolean;

@@ -21,6 +21,21 @@ export type {
   ResponsiveBreakpoint,
 } from './buildResponsiveLayouts.js';
 export { useLocalPreference, defaultPreferenceAdapter } from './preferences.js';
+export {
+  DEFAULT_GENERATED_SECTION_DROP_EVENT_NAMES,
+  DEFAULT_GENERATED_SECTION_STREAM_EVENT_NAMES,
+  emitGeneratedSectionDrop,
+  emitGeneratedSectionStream,
+  isGeneratedSectionDropDetail,
+  isGeneratedSectionStreamDetail,
+} from './aiSectionEvents.js';
+export type {
+  GeneratedSectionDropDetail,
+  GeneratedSectionPreview,
+  GeneratedSectionStreamDetail,
+  GeneratedSectionStreamStatus,
+  GeneratedSectionTone,
+} from './aiSectionEvents.js';
 export type {
   EntityWidgetDetail,
   EntityWidgetFactoryOptions,

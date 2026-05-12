@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { emitGeneratedSectionDrop, emitGeneratedSectionStream } from '../aiSectionEvents.js';
 import { PageGridLayout } from '../PageGridLayout.js';
 import type { GridLayouts } from '../types.js';
 
@@ -402,5 +403,69 @@ describe('PageGridLayout mobile reflow', () => {
     const containerWidthPx = 360;
     const itemWidthPx = Number((widths.values().next().value ?? '0').replace('px', ''));
     expect(itemWidthPx).toBeGreaterThan(containerWidthPx * 0.85);
+  });
+});
+
+describe('PageGridLayout AI generated section preview', () => {
+  it('supports generate/accept/discard flow and restores the previous canvas state on discard', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="ai-preview-test"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+      emitGeneratedSectionStream({
+        status: 'generating',
+        message: 'Generating section preview…',
+      });
+    });
+
+    expect(screen.getByText('Generating section preview…')).toBeTruthy();
+
+    act(() => {
+      emitGeneratedSectionDrop({
+        section: {
+          widgetId: 'ai:hero',
+          title: 'Hero section',
+          body: 'Generated hero body',
+          ctaLabel: 'Get started',
+          defaultSize: { w: 8, h: 6, minW: 4, minH: 3 },
+        },
+      });
+    });
+
+    expect(screen.getByText('AI preview ready:')).toBeTruthy();
+    expect(screen.getAllByText('Hero section').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Generated hero body')).toBeTruthy();
+    expect(view.container.querySelectorAll('.react-grid-item')).toHaveLength(2);
+
+    const discardButton = screen.getByRole('button', { name: 'Discard AI section' });
+    act(() => {
+      discardButton.click();
+    });
+    expect(screen.queryByText('Generated hero body')).toBeNull();
+    expect(view.container.querySelectorAll('.react-grid-item')).toHaveLength(1);
+
+    act(() => {
+      emitGeneratedSectionDrop({
+        section: {
+          widgetId: 'ai:hero',
+          title: 'Hero section',
+          body: 'Generated hero body',
+        },
+      });
+    });
+    const acceptButton = screen.getByRole('button', { name: 'Accept AI section' });
+    act(() => {
+      acceptButton.click();
+    });
+
+    expect(screen.queryByRole('button', { name: 'Accept AI section' })).toBeNull();
+    expect(screen.getByText('Generated hero body')).toBeTruthy();
   });
 });
