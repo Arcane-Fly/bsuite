@@ -1,9 +1,11 @@
-import { Eye, EyeOff, Layers, LayoutGrid, Plus, RotateCcw, Save, Settings2 } from 'lucide-react';
+import { Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2 } from 'lucide-react';
 import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
+import { arrayMove } from '@dnd-kit/sortable';
 import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, maxSize, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { LayersPanel, type LayersPanelMovePayload } from './LayersPanel.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps } from './types.js';
@@ -52,8 +54,11 @@ type GridItemProps = {
   id: string;
   content: React.ReactNode;
   isEditing: boolean;
+  isLocked: boolean;
+  isSelected: boolean;
   label: string;
-  onRemove: (id: string) => void;
+  onHide: (id: string) => void;
+  onSelectLayer: (id: string) => void;
   /**
    * Injected children — react-grid-layout v2 + react-resizable wrap each item
    * with `cloneElement(child, { children: [origChildren, ...resizeHandles] })`.
@@ -71,8 +76,11 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   id,
   content,
   isEditing,
+  isLocked,
+  isSelected,
   label,
-  onRemove,
+  onHide,
+  onSelectLayer,
   children: injectedChildren,
   className: injectedClassName,
   style: injectedStyle,
@@ -93,20 +101,34 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     // protected via the `cancel` selector below in the <Responsive> render.
     const outerClass = cn(
       'relative group',
-      isEditing && 'drag-handle cursor-move',
+      isEditing && !isLocked && 'drag-handle cursor-move',
+      isLocked && 'cursor-not-allowed',
       injectedClassName
     );
     return (
-      <div ref={ref} className={outerClass} style={injectedStyle} {...rest}>
+      <div
+        ref={ref}
+        className={outerClass}
+        style={injectedStyle}
+        data-layer-locked={isLocked || undefined}
+        onClick={() => onSelectLayer(id)}
+        {...rest}
+      >
         <div className="h-full w-full relative">
           {isEditing && (
-            <div className="absolute inset-0 z-10 pointer-events-none rounded-3xl border-2 border-transparent group-hover:border-primary/50 transition-colors bg-black/5" />
+            <div
+              className={cn(
+                'absolute inset-0 z-10 pointer-events-none rounded-3xl border-2 border-transparent transition-colors bg-black/5',
+                isSelected ? 'border-primary' : 'group-hover:border-primary/50',
+              )}
+            />
           )}
           {isEditing && (
             <div className="absolute top-2 left-2 z-30 flex items-center gap-1 pointer-events-none">
               <span className="text-[10px] px-1.5 py-0.5 rounded-md opacity-80 font-medium bg-muted text-muted-foreground">
                 {label}
               </span>
+              {isLocked && <Lock className="h-3 w-3 text-muted-foreground" aria-label={`${label} locked`} />}
             </div>
           )}
           {isEditing && (
@@ -116,7 +138,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
-                onRemove(id);
+                onHide(id);
               }}
               title={`Hide ${label}`}
               aria-label={`Hide ${label}`}
@@ -126,7 +148,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
           )}
           <div
             className="h-full w-full rounded-3xl transition-all flex flex-col bg-card shadow-sm"
-            style={{ contain: 'paint' }}
+            style={{ contain: 'paint', pointerEvents: isLocked ? 'none' : 'auto' }}
           >
             {content}
           </div>
@@ -166,6 +188,14 @@ export function PageGridLayout({
   createEntityWidget,
   onRegisterEntityWidget,
 }: PageGridLayoutProps) {
+  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+  const [layerOrder, setLayerOrder] = useState<string[]>([]);
+  const [layerNames, setLayerNames] = useState<Record<string, string>>({});
+  const [hiddenLayerIds, setHiddenLayerIds] = useState<Record<string, boolean>>({});
+  const [lockedLayerIds, setLockedLayerIds] = useState<Record<string, boolean>>({});
+  const [collapsedLayerIds, setCollapsedLayerIds] = useState<Record<string, boolean>>({});
+  const [layerParents, setLayerParents] = useState<Record<string, string | null>>({});
+
   const {
     currentLayouts,
     layoutCols,
@@ -224,13 +254,148 @@ export function PageGridLayout({
     () => new Set(Object.keys(allWidgets).filter((key) => allWidgets[key] !== null && allWidgets[key] !== undefined)),
     [allWidgets],
   );
+
+  useEffect(() => {
+    const ids = [...renderableWidgetKeys];
+    setLayerOrder((previous) => {
+      const existing = previous.filter((id) => ids.includes(id));
+      const additions = ids.filter((id) => !existing.includes(id));
+      return [...existing, ...additions];
+    });
+    setLayerNames((previous) => {
+      const next: Record<string, string> = {};
+      for (const id of ids) next[id] = previous[id] ?? widgetMeta?.[id]?.label ?? id;
+      return next;
+    });
+    setHiddenLayerIds((previous) => {
+      const next: Record<string, boolean> = {};
+      for (const id of ids) next[id] = previous[id] ?? false;
+      return next;
+    });
+    setLockedLayerIds((previous) => {
+      const next: Record<string, boolean> = {};
+      for (const id of ids) next[id] = previous[id] ?? false;
+      return next;
+    });
+    setCollapsedLayerIds((previous) => {
+      const next: Record<string, boolean> = {};
+      for (const id of ids) next[id] = previous[id] ?? false;
+      return next;
+    });
+    setLayerParents((previous) => {
+      const next: Record<string, string | null> = {};
+      for (const id of ids) {
+        const parentId = previous[id];
+        next[id] = parentId && ids.includes(parentId) ? parentId : null;
+      }
+      return next;
+    });
+    setSelectedLayerId((previous) => (previous && ids.includes(previous) ? previous : ids[0] ?? null));
+  }, [renderableWidgetKeys, widgetMeta]);
+
+  const orderedVisibleIds = useMemo(
+    () => layerOrder.filter((id) => renderableWidgetKeys.has(id)),
+    [layerOrder, renderableWidgetKeys],
+  );
+
+  const layerDepthById = useMemo(() => {
+    const depths: Record<string, number> = {};
+    for (const id of orderedVisibleIds) {
+      let depth = 0;
+      const seen = new Set<string>([id]);
+      let parentId = layerParents[id];
+      while (parentId) {
+        if (seen.has(parentId)) break;
+        seen.add(parentId);
+        depth += 1;
+        parentId = layerParents[parentId];
+      }
+      depths[id] = depth;
+    }
+    return depths;
+  }, [orderedVisibleIds, layerParents]);
+
+  const layerChildrenCountById = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const id of orderedVisibleIds) counts[id] = 0;
+    for (const id of orderedVisibleIds) {
+      const parentId = layerParents[id];
+      if (parentId && counts[parentId] !== undefined) counts[parentId] += 1;
+    }
+    return counts;
+  }, [orderedVisibleIds, layerParents]);
+
+  const visibleLayerRows = useMemo(() => {
+    const rows: Array<{ id: string; depth: number }> = [];
+    const ancestorCollapsed = (id: string): boolean => {
+      let parent = layerParents[id];
+      const seen = new Set<string>();
+      while (parent) {
+        if (seen.has(parent)) break;
+        seen.add(parent);
+        if (collapsedLayerIds[parent]) return true;
+        parent = layerParents[parent];
+      }
+      return false;
+    };
+    for (const id of orderedVisibleIds) {
+      if (ancestorCollapsed(id)) continue;
+      rows.push({ id, depth: layerDepthById[id] ?? 0 });
+    }
+    return rows;
+  }, [collapsedLayerIds, layerDepthById, layerParents, orderedVisibleIds]);
+
+  const panelItems = useMemo(
+    () =>
+      visibleLayerRows.map(({ id, depth }) => ({
+        id,
+        depth,
+        name: layerNames[id] ?? widgetMeta?.[id]?.label ?? id,
+        hidden: hiddenLayerIds[id] ?? false,
+        locked: lockedLayerIds[id] ?? false,
+        hasChildren: (layerChildrenCountById[id] ?? 0) > 0,
+        collapsed: collapsedLayerIds[id] ?? false,
+      })),
+    [collapsedLayerIds, hiddenLayerIds, layerChildrenCountById, layerNames, lockedLayerIds, visibleLayerRows, widgetMeta],
+  );
+
+  const handleMoveLayer = (payload: LayersPanelMovePayload) => {
+    setLayerOrder((previous) => {
+      const activeIndex = previous.indexOf(payload.activeId);
+      const overIndex = previous.indexOf(payload.overId);
+      if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) return previous;
+      return arrayMove(previous, activeIndex, overIndex);
+    });
+    setLayerParents((previous) => {
+      const ordered = arrayMove(layerOrder, layerOrder.indexOf(payload.activeId), layerOrder.indexOf(payload.overId));
+      const next = { ...previous };
+      if (payload.depth <= 0) {
+        next[payload.activeId] = null;
+        return next;
+      }
+      const activeIndex = ordered.indexOf(payload.activeId);
+      let parentId: string | null = null;
+      for (let index = activeIndex - 1; index >= 0; index -= 1) {
+        const candidate = ordered[index];
+        if ((layerDepthById[candidate] ?? 0) === payload.depth - 1) {
+          parentId = candidate;
+          break;
+        }
+      }
+      next[payload.activeId] = parentId;
+      return next;
+    });
+  };
+
   const activeLayouts = useMemo(() => {
     const filtered: GridLayouts = { lg: [] };
     for (const bp in currentLayouts) {
-      filtered[bp] = (currentLayouts[bp] ?? []).filter((item) => renderableWidgetKeys.has(item.i));
+      filtered[bp] = (currentLayouts[bp] ?? []).filter(
+        (item) => renderableWidgetKeys.has(item.i) && !(hiddenLayerIds[item.i] ?? false),
+      );
     }
     return filtered;
-  }, [currentLayouts, renderableWidgetKeys]);
+  }, [currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
 
   useEffect(() => {
     if (!createEntityWidget || typeof window === 'undefined') return;
@@ -398,10 +563,16 @@ export function PageGridLayout({
                     const meta = widgetMeta?.[key];
                     const Icon = meta?.icon;
                     return (
-                      <button
-                        type="button"
-                        key={key}
-                        onClick={() => addWidget(key, meta?.defaultSize)}
+                       <button
+                         type="button"
+                         key={key}
+                         onClick={() => {
+                           if (renderableWidgetKeys.has(key)) {
+                             setHiddenLayerIds((previous) => ({ ...previous, [key]: false }));
+                           } else {
+                             addWidget(key, meta?.defaultSize);
+                           }
+                         }}
                         className={cn(
                           'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
                           'bg-muted text-muted-foreground border-border',
@@ -445,6 +616,33 @@ export function PageGridLayout({
               Reset to Default
             </button>
           </div>
+          <LayersPanel
+            items={panelItems}
+            selectedId={selectedLayerId}
+            onSelect={setSelectedLayerId}
+            onMove={handleMoveLayer}
+            onToggleHidden={(id) => setHiddenLayerIds((previous) => ({ ...previous, [id]: !previous[id] }))}
+            onToggleLocked={(id) => setLockedLayerIds((previous) => ({ ...previous, [id]: !previous[id] }))}
+            onToggleCollapsed={(id) => setCollapsedLayerIds((previous) => ({ ...previous, [id]: !previous[id] }))}
+            onRename={(id, name) => setLayerNames((previous) => ({ ...previous, [id]: name }))}
+            onDuplicate={(id) => {
+              if (typeof window === 'undefined') return;
+              window.dispatchEvent(new CustomEvent('bsuite-page-builder-duplicate-layer', { detail: { id } }));
+            }}
+            onDelete={(id) => {
+              removeWidget(id);
+              setHiddenLayerIds((previous) => ({ ...previous, [id]: false }));
+              setSelectedLayerId((previous) => (previous === id ? null : previous));
+            }}
+            onSaveAsSymbol={(id) => {
+              if (typeof window === 'undefined') return;
+              window.dispatchEvent(new CustomEvent('bsuite-page-builder-save-symbol', { detail: { id } }));
+            }}
+            onWrapInContainer={(id) => {
+              if (typeof window === 'undefined') return;
+              window.dispatchEvent(new CustomEvent('bsuite-page-builder-wrap-container', { detail: { id } }));
+            }}
+          />
         </div>
       )}
 
@@ -536,8 +734,11 @@ export function PageGridLayout({
                   id={layoutItem.i}
                   content={content}
                   isEditing={isEditing}
-                  label={widgetMeta?.[layoutItem.i]?.label ?? layoutItem.i}
-                  onRemove={removeWidget}
+                  isLocked={lockedLayerIds[layoutItem.i] ?? false}
+                  isSelected={selectedLayerId === layoutItem.i}
+                  label={layerNames[layoutItem.i] ?? widgetMeta?.[layoutItem.i]?.label ?? layoutItem.i}
+                  onHide={(id) => setHiddenLayerIds((previous) => ({ ...previous, [id]: true }))}
+                  onSelectLayer={setSelectedLayerId}
                 />
               );
             })}

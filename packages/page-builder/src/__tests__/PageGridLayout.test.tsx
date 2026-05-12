@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PageGridLayout } from '../PageGridLayout.js';
 import type { GridLayouts } from '../types.js';
@@ -402,5 +402,123 @@ describe('PageGridLayout mobile reflow', () => {
     const containerWidthPx = 360;
     const itemWidthPx = Number((widths.values().next().value ?? '0').replace('px', ''));
     expect(itemWidthPx).toBeGreaterThan(containerWidthPx * 0.85);
+  });
+});
+
+describe('PageGridLayout layers panel', () => {
+  function openEditor() {
+    act(() => {
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+    });
+  }
+
+  it('supports keyboard selection and inline rename from the layers tree', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="layers-keyboard-rename"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditor();
+    const tree = view.container.querySelector('[role="tree"]') as HTMLDivElement | null;
+    expect(tree).not.toBeNull();
+
+    act(() => {
+      tree!.focus();
+      fireEvent.keyDown(tree!, { key: 'F2' });
+    });
+
+    const renameInput = view.container.querySelector('input[aria-label="Rename alpha"]') as HTMLInputElement | null;
+    expect(renameInput).not.toBeNull();
+    act(() => {
+      fireEvent.change(renameInput!, { target: { value: 'Revenue Card' } });
+      fireEvent.keyDown(renameInput!, { key: 'Enter' });
+    });
+
+    expect(view.container.querySelector('input[aria-label="Rename alpha"]')).toBeNull();
+    expect(screen.getByTitle('Revenue Card')).toBeTruthy();
+  });
+
+  it('toggles hidden state from layer controls and restores from Add widget', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="layers-hide-toggle"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditor();
+    const hideButton = view.container.querySelector('button[aria-label="Hide alpha"]') as HTMLButtonElement | null;
+    expect(hideButton).not.toBeNull();
+    act(() => {
+      hideButton!.click();
+    });
+    expect(screen.queryByText('Alpha widget')).toBeNull();
+
+    const addBackButton = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('alpha'),
+    );
+    expect(addBackButton).not.toBeUndefined();
+    act(() => {
+      addBackButton!.click();
+    });
+    expect(screen.getByText('Alpha widget')).toBeTruthy();
+  });
+
+  it('opens a context menu with required layer actions', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="layers-context-menu"
+        defaultLayouts={layouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div> }}
+      />,
+    );
+
+    openEditor();
+    const row = view.container.querySelector('[data-layer-row-id="alpha"]');
+    expect(row).not.toBeNull();
+    act(() => {
+      fireEvent.contextMenu(row!);
+    });
+
+    const menu = view.container.querySelector('[role="menu"][aria-label="Layer actions"]');
+    expect(menu).not.toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: 'Save as Symbol' })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: 'Wrap in Container' })).toBeTruthy();
+  });
+
+  it('virtualizes the layers list when more than 100 rows are present', () => {
+    const manyLayouts: GridLayouts = {
+      lg: Array.from({ length: 120 }, (_, index) => ({
+        i: `widget-${index}`,
+        x: 0,
+        y: index,
+        w: 12,
+        h: 1,
+      })),
+    };
+    const manyWidgets = Object.fromEntries(
+      Array.from({ length: 120 }, (_, index) => [`widget-${index}`, <div key={index}>Widget {index}</div>]),
+    );
+    const view = render(
+      <PageGridLayout
+        pageKey="layers-virtualized"
+        defaultLayouts={manyLayouts}
+        canEditPage
+        widgets={manyWidgets}
+      />,
+    );
+
+    openEditor();
+    const virtualizedContainer = view.container.querySelector('[data-virtualized="true"]');
+    expect(virtualizedContainer).not.toBeNull();
   });
 });
