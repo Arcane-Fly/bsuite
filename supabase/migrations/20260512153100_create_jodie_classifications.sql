@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS public.jodie_classifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  issue_url TEXT NOT NULL,
+  issue_url TEXT NOT NULL CHECK (char_length(trim(issue_url)) > 0),
   classification JSONB NOT NULL,
   confidence NUMERIC(4, 3) NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
   model_id TEXT NOT NULL,

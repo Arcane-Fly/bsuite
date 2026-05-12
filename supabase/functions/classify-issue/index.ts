@@ -39,14 +39,25 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const confidenceThreshold = Number(
-    Deno.env.get('JODIE_CONFIDENCE_THRESHOLD') ?? DEFAULT_CONFIDENCE_THRESHOLD
-  );
+  const rawThreshold = Deno.env.get('JODIE_CONFIDENCE_THRESHOLD');
+  const confidenceThreshold =
+    rawThreshold === undefined ? DEFAULT_CONFIDENCE_THRESHOLD : Number(rawThreshold);
   const modelId = Deno.env.get('JODIE_CLASSIFIER_MODEL') ?? DEFAULT_MODEL_ID;
 
   if (!supabaseUrl || !serviceRoleKey) {
     return new Response(
       JSON.stringify({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY' }),
+      { status: 500, headers }
+    );
+  }
+
+  if (
+    Number.isNaN(confidenceThreshold) ||
+    confidenceThreshold < 0 ||
+    confidenceThreshold > 1
+  ) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid JODIE_CONFIDENCE_THRESHOLD (must be 0..1)' }),
       { status: 500, headers }
     );
   }
@@ -118,9 +129,14 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : 'Unexpected error';
     return new Response(
-      JSON.stringify({ ok: false, error: 'Classification failed', details: message }),
+      JSON.stringify({
+        ok: false,
+        error: 'Classification failed',
+        details:
+          Deno.env.get('DENO_ENV') === 'development' ? message : 'See edge logs for details',
+      }),
       {
         status: 400,
         headers,

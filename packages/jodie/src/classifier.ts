@@ -11,6 +11,7 @@ import {
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.7;
 export const DEFAULT_MODEL_ID = 'anthropic/claude-haiku-4';
 const RETRY_ATTEMPTS = 2;
+const MAX_BODY_CHARS = 4000;
 
 const SEVERITY_LABELS = {
   P0: 'jodie:severity:p0',
@@ -122,7 +123,7 @@ const DEFAULT_PRICING: ClassifierPricing = {
 };
 
 function buildClassifierPrompt(input: ClassifierInput): string {
-  const compactBody = input.body.trim().slice(0, 4000);
+  const compactBody = input.body.trim().slice(0, MAX_BODY_CHARS);
   const labels = input.labels.join(', ');
   return [
     'Classify this GitHub issue using only the allowed taxonomy values.',
@@ -164,6 +165,7 @@ function estimateCostUsd(usage: ClassifierUsage | undefined, pricing: Classifier
   }
 
   const inputTokens = usage.inputTokens ?? usage.totalTokens ?? 0;
+  // Some providers only expose totalTokens; we treat that as input when inputTokens is absent.
   const outputTokens = usage.outputTokens ?? 0;
 
   const inputCost = (inputTokens / 1_000_000) * pricing.inputUsdPerMillionTokens;
@@ -197,7 +199,8 @@ export async function classifyIssue(
 
       const parsed = issueClassificationSchema.safeParse(response.object);
       if (!parsed.success) {
-        throw new Error(`Schema validation failed: ${parsed.error.issues[0]?.message ?? 'unknown error'}`);
+        const issues = parsed.error.issues.map((issue) => issue.message).join('; ');
+        throw new Error(`Schema validation failed: ${issues || 'unknown error'}`);
       }
 
       const classification = parsed.data;

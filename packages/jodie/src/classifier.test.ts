@@ -71,7 +71,9 @@ describe('classifyIssue', () => {
       }
     }
 
-    expect(seen.size).toBe(4 * 4 * 7 * 5);
+    expect(seen.size).toBe(
+      SEVERITY_VALUES.length * EFFORT_VALUES.length * AREA_VALUES.length * TYPE_VALUES.length
+    );
   });
 
   it('routes low-confidence results to human review', async () => {
