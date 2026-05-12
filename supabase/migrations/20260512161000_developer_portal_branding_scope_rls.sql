@@ -181,3 +181,7 @@ CREATE POLICY "tenant_app_branding_delete"
 -- Recursive descendant checks in can_manage_tenant_branding() traverse this edge.
 CREATE INDEX IF NOT EXISTS idx_tenants_parent_tenant_id_id
   ON public.tenants (parent_tenant_id, id);
+
+-- Membership filters used by can_manage_tenant_branding().
+CREATE INDEX IF NOT EXISTS idx_user_tenants_scope_lookup
+  ON public.user_tenants (user_id, status, role, tenant_id);
