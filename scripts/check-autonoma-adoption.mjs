@@ -123,4 +123,3 @@ for (const result of results) {
 if (hasFailures) {
   process.exit(1);
 }
-

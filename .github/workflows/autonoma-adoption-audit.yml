@@ -34,4 +34,3 @@ jobs:
 
       - name: Verify Autonoma artifacts across all 6 apps
         run: node scripts/check-autonoma-adoption.mjs --strict
-
