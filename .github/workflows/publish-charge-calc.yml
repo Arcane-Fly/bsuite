@@ -22,7 +22,10 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # Required for npm provenance attestation
+  # id-token: write   # Would be required for provenance attestation; disabled
+  #                   # because bsuite is a private repo — sigstore provenance
+  #                   # only supports public source repos (npm E422). Mirrors
+  #                   # the publish-dates.yml fix in PR #814.
 
 jobs:
   publish:
@@ -75,7 +78,10 @@ jobs:
 
       - name: Publish to npm
         if: steps.version-check.outputs.skip == 'false'
-        run: npm publish --access public --provenance
+        # --provenance intentionally omitted: bsuite is a private repo and
+        # sigstore provenance only supports public source repos (npm E422).
+        # Mirrors the publish-dates.yml fix in PR #814.
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
