@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises';
+import { access, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 const strict = process.argv.includes('--strict');
@@ -41,7 +41,7 @@ function isENOENTError(error) {
 
 async function pathExists(target) {
   try {
-    await stat(target);
+    await access(target);
     return true;
   } catch (error) {
     if (isENOENTError(error)) {
@@ -110,8 +110,8 @@ for (const app of apps) {
     missingFiles.push('autonoma/skills/*.md');
   }
 
-  const qaTests = await getTestFileNames(path.join(appPath, 'autonoma/qa-tests'));
-  if (qaTests.length === 0) {
+  const qaTestFiles = await getTestFileNames(path.join(appPath, 'autonoma/qa-tests'));
+  if (qaTestFiles.length === 0) {
     missingFiles.push('autonoma/qa-tests/*.{spec,test}.{ts,tsx,js,jsx}');
   }
 

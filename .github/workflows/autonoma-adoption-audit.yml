@@ -8,8 +8,8 @@ on:
       - 'package.json'
       - '.gitmodules'
   schedule:
-    # Nightly full-suite run (all apps) at 04:00 UTC (20:00 PST / 21:00 PDT);
-    # PR-triggered runs are limited to workflow/script changes only.
+    # Full-suite nightly run for all apps at 04:00 UTC (20:00 PST / 21:00 PDT).
+    # PR runs are triggered only when this workflow/script/config paths change.
     - cron: '0 4 * * *'
   workflow_dispatch:
 

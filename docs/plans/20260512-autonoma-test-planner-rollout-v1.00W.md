@@ -28,6 +28,6 @@ Track and enforce adoption of Autonoma Test Planner outputs across all six BSuit
 
 - Pilot app should be **throughput** first because its route surface is materially smaller (~10 routes) than BSU (~50+ routes), making first-pass scenario review faster and lower risk.
 - Expand rollout to BSU, CRM7, Conduit, R80.3, and Braden after pilot stability.
-- Confirm vendor env mapping before plugin generation: `AUTONOMA_CLIENT_ID`/`AUTONOMA_SECRET_ID` vs `AUTONOMA_API_KEY`/`AUTONOMA_PROJECT_ID`/`AUTONOMA_API_URL`.
+- Canonical env names for BSuite remain `AUTONOMA_CLIENT_ID` and `AUTONOMA_SECRET_ID`; if plugin docs request `AUTONOMA_API_KEY`/`AUTONOMA_PROJECT_ID`/`AUTONOMA_API_URL`, map those aliases at runtime without changing canonical repo/env naming.
 - CI strategy: keep expensive Autonoma execution out of every PR; use nightly + manual runs and quarantine flaky scenarios before promoting to required status checks.
 - Security rule: never commit `AUTONOMA_SECRET_ID` or any derived secret into repo files.
