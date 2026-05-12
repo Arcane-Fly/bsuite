@@ -7,7 +7,7 @@
 -- Secret handling:
 --   - This migration NEVER inlines a Stripe key.
 --   - Operator must create Vault secret first (outside git history), e.g.:
---       select vault.create_secret('sk_live_...', 'stripe_api_key', 'Stripe Secret Key');
+--       select vault.create_secret('sk_...', 'stripe_api_key', 'Stripe Secret Key');
 -- =====================================================
 
 CREATE EXTENSION IF NOT EXISTS wrappers WITH SCHEMA extensions;
@@ -31,7 +31,7 @@ BEGIN
 
   IF v_stripe_api_key_id IS NULL THEN
     RAISE EXCEPTION
-      'Missing Vault secret "stripe_api_key". Create it first, e.g. vault.create_secret(''sk_live_...'',''stripe_api_key'',''Stripe Secret Key'') before applying this migration.';
+      'Missing Vault secret "stripe_api_key". Create it first, e.g. vault.create_secret(''sk_...'',''stripe_api_key'',''Stripe Secret Key'') before applying this migration.';
   END IF;
 
   IF EXISTS (SELECT 1 FROM pg_foreign_server WHERE srvname = 'stripe_server') THEN
@@ -140,9 +140,11 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth, stripe
 AS $$
+DECLARE
+  caller_role text := coalesce(auth.jwt() ->> 'role', 'none');
 BEGIN
-  IF coalesce(auth.jwt() ->> 'role', '') <> 'service_role' THEN
-    RAISE EXCEPTION 'stripe_customer_by_email requires service_role'
+  IF caller_role <> 'service_role' THEN
+    RAISE EXCEPTION 'stripe_customer_by_email requires service_role (got: %)', caller_role
       USING errcode = '42501';
   END IF;
 
@@ -168,9 +170,11 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth, stripe
 AS $$
+DECLARE
+  caller_role text := coalesce(auth.jwt() ->> 'role', 'none');
 BEGIN
-  IF coalesce(auth.jwt() ->> 'role', '') <> 'service_role' THEN
-    RAISE EXCEPTION 'stripe_subscription_snapshot requires service_role'
+  IF caller_role <> 'service_role' THEN
+    RAISE EXCEPTION 'stripe_subscription_snapshot requires service_role (got: %)', caller_role
       USING errcode = '42501';
   END IF;
 
@@ -182,14 +186,17 @@ BEGIN
     s.current_period_end,
     (
       SELECT coalesce(array_agg(item -> 'price' ->> 'id'), ARRAY[]::text[])
-      FROM jsonb_array_elements(coalesce(s.attrs #> '{items,data}', '[]'::jsonb)) item
+      FROM jsonb_array_elements(subscription_items.items) item
     ) AS price_ids,
     (
       SELECT coalesce(array_agg(item -> 'price' ->> 'product'), ARRAY[]::text[])
-      FROM jsonb_array_elements(coalesce(s.attrs #> '{items,data}', '[]'::jsonb)) item
+      FROM jsonb_array_elements(subscription_items.items) item
     ) AS product_ids,
     s.created
   FROM stripe.subscriptions s
+  CROSS JOIN LATERAL (
+    SELECT coalesce(s.attrs #> '{items,data}', '[]'::jsonb) AS items
+  ) AS subscription_items
   WHERE s.customer = p_customer_id
   ORDER BY s.created DESC
   LIMIT 1;
