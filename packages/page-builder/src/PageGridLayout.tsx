@@ -376,6 +376,16 @@ export function PageGridLayout({
     const handleGeneratedDrop = (event: Event) => {
       const detail = (event as CustomEvent<unknown>).detail;
       if (!isGeneratedSectionDropDetail(detail)) return;
+      if (
+        pendingGeneratedWidgetId &&
+        pendingGeneratedWidgetId !== detail.section.widgetId
+      ) {
+        setStreamingState({
+          status: 'error',
+          message: 'Resolve or discard the current AI preview before generating another section.',
+        });
+        return;
+      }
       if (!generatedPreviewSnapshot) {
         setGeneratedPreviewSnapshot({
           layouts: currentLayouts,
@@ -384,7 +394,7 @@ export function PageGridLayout({
         });
       }
       setGeneratedSections((previous) => ({ ...previous, [detail.section.widgetId]: detail.section }));
-      const alreadyInLayout = Object.values(activeLayouts).some((breakpointLayout) =>
+      const alreadyInLayout = Object.values(currentLayouts).some((breakpointLayout) =>
         (breakpointLayout ?? []).some((item) => item.i === detail.section.widgetId),
       );
       if (!alreadyInLayout) {
@@ -403,13 +413,13 @@ export function PageGridLayout({
       }
     };
   }, [
-    activeLayouts.lg,
     addWidget,
     currentLayouts,
     extraWidgetConfigs,
     generatedPreviewSnapshot,
     generatedSectionDropEventNames,
     generatedSections,
+    pendingGeneratedWidgetId,
     setIsEditing,
   ]);
 

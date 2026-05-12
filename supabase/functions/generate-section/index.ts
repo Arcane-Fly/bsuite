@@ -60,6 +60,14 @@ const MODEL_PRICING_PER_MILLION: Record<string, { input: number; output: number 
   'xai/grok-4.20-reasoning': { input: 2, output: 6 },
   'anthropic/claude-sonnet-4.6': { input: 3, output: 15 },
 };
+const DEFAULT_MODEL_PRICING = MODEL_PRICING_PER_MILLION['anthropic/claude-sonnet-4.6'];
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const AI_GATEWAY_API_KEY = Deno.env.get('AI_GATEWAY_API_KEY');
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !AI_GATEWAY_API_KEY) {
+  throw new Error('Missing SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, or AI_GATEWAY_API_KEY.');
+}
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -106,7 +114,7 @@ function estimateCostUsd(modelId: string, promptTokens: number, completionTokens
   const tokenMillion = 1_000_000;
   const pricing =
     Object.entries(MODEL_PRICING_PER_MILLION).find(([prefix]) => modelId.startsWith(prefix))?.[1] ??
-    MODEL_PRICING_PER_MILLION['anthropic/claude-sonnet-4.6'];
+    DEFAULT_MODEL_PRICING;
   return (promptTokens * pricing.input + completionTokens * pricing.output) / tokenMillion;
 }
 
@@ -237,14 +245,7 @@ serve(async (request) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const aiGatewayKey = Deno.env.get('AI_GATEWAY_API_KEY');
-    if (!supabaseUrl || !supabaseServiceKey || !aiGatewayKey) {
-      throw new Error('Missing SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, or AI_GATEWAY_API_KEY.');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
@@ -265,7 +266,7 @@ serve(async (request) => {
       );
     }
 
-    const generated = await generateSectionWithRetry(parsed.data, getModelSequence(), aiGatewayKey);
+    const generated = await generateSectionWithRetry(parsed.data, getModelSequence(), AI_GATEWAY_API_KEY);
     const requestCostUsd = estimateCostUsd(
       generated.modelId,
       generated.promptTokens,
@@ -289,15 +290,21 @@ serve(async (request) => {
       );
     }
 
-    await recordUsage(
-      supabase,
-      parsed.data,
-      generated.section,
-      generated.modelId,
-      generated.promptTokens,
-      generated.completionTokens,
-      requestCostUsd,
-    );
+    let usageTracked = true;
+    try {
+      await recordUsage(
+        supabase,
+        parsed.data,
+        generated.section,
+        generated.modelId,
+        generated.promptTokens,
+        generated.completionTokens,
+        requestCostUsd,
+      );
+    } catch (recordError) {
+      usageTracked = false;
+      console.error('tenant_ai_usage insert failed', toErrorMessage(recordError));
+    }
 
     return new Response(
       JSON.stringify({
@@ -308,6 +315,7 @@ serve(async (request) => {
           completionTokens: generated.completionTokens,
           costUsd: Number(requestCostUsd.toFixed(6)),
           attempts: generated.attempts,
+          usageTracked,
         },
         budget: {
           dailyCapUsd,
@@ -319,7 +327,8 @@ serve(async (request) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
-  } catch (_error) {
+  } catch (error) {
+    console.error('generate-section request failed', toErrorMessage(error));
     return new Response(
       JSON.stringify({
         error: 'Section generation failed after retry.',
