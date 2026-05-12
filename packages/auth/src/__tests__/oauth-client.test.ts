@@ -50,6 +50,21 @@ let localMock = makeStorageMock()
 let sessionMock = makeStorageMock()
 let fetchMock: ReturnType<typeof vi.fn>
 let originalLocation: Location
+let originalViteAppUrl: string | undefined
+let originalNextPublicAppUrl: string | undefined
+
+function getProcessEnv(): Record<string, string | undefined> {
+  const processLike = globalThis as typeof globalThis & {
+    process?: { env?: Record<string, string | undefined> }
+  }
+  if (!processLike.process) {
+    processLike.process = {}
+  }
+  if (!processLike.process.env) {
+    processLike.process.env = {}
+  }
+  return processLike.process.env
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -71,6 +86,11 @@ beforeEach(() => {
     writable: true,
     value: { origin: 'https://crm.crm7.app', href: '' } as Location,
   })
+  const env = getProcessEnv()
+  originalViteAppUrl = env.VITE_APP_URL
+  originalNextPublicAppUrl = env.NEXT_PUBLIC_APP_URL
+  delete env.VITE_APP_URL
+  delete env.NEXT_PUBLIC_APP_URL
 })
 
 afterEach(() => {
@@ -80,6 +100,17 @@ afterEach(() => {
     writable: true,
     value: originalLocation,
   })
+  const env = getProcessEnv()
+  if (originalViteAppUrl === undefined) {
+    delete env.VITE_APP_URL
+  } else {
+    env.VITE_APP_URL = originalViteAppUrl
+  }
+  if (originalNextPublicAppUrl === undefined) {
+    delete env.NEXT_PUBLIC_APP_URL
+  } else {
+    env.NEXT_PUBLIC_APP_URL = originalNextPublicAppUrl
+  }
 })
 
 // ---------------------------------------------------------------------------
@@ -159,6 +190,15 @@ describe('signInWithBusinessSuite', () => {
     expect(params.get('nonce')).toBe(localMock.getItem('bs_oauth_nonce'))
     // Default invocation does NOT include the OIDC prompt parameter.
     expect(params.get('prompt')).toBeNull()
+  })
+
+  it('prefers VITE_APP_URL for redirect_uri when configured', async () => {
+    getProcessEnv().VITE_APP_URL = 'https://d.crm.crm7.app'
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    const href = window.location.href
+    const params = new URLSearchParams(href.split('?')[1])
+    expect(params.get('redirect_uri')).toBe('https://d.crm.crm7.app/auth/callback')
   })
 
   it('passes prompt=none for OIDC silent re-auth', async () => {
@@ -407,6 +447,32 @@ describe('exchangeCodeForTokens', () => {
     expect(localMock.getItem('bs_oauth_nonce')).toBeNull()
     expect(localMock.getItem('bs_oauth_started_at')).toBeNull()
     expect(localMock.getItem('bs_oauth_inflight_code')).toBeNull()
+  })
+
+  it('uses VITE_APP_URL for token exchange redirect_uri when configured', async () => {
+    getProcessEnv().VITE_APP_URL = 'https://d.crm.crm7.app'
+    const { createOAuthClient } = await import('../oauth-client.js')
+    seedPkceState('s', 'v', 'n')
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => tokensFixture(),
+      text: async () => JSON.stringify(tokensFixture()),
+    })
+    mockJwtVerify.mockResolvedValue({
+      payload: {
+        sub: 'user-1',
+        email: 'a@b.com',
+        name: 'A B',
+        client_id: CLIENT_ID,
+        role: 'authenticated',
+        nonce: 'n',
+      },
+    })
+    await createOAuthClient(CLIENT_ID).exchangeCodeForTokens('authcode', 's')
+    const [, init] = fetchMock.mock.calls[0]
+    const body = new URLSearchParams((init as { body: string }).body)
+    expect(body.get('redirect_uri')).toBe('https://d.crm.crm7.app/auth/callback')
   })
 
   it('rejects when verifier is older than 10 minutes (TTL guard)', async () => {

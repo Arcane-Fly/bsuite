@@ -43,6 +43,23 @@ function getJWKS(): ReturnType<typeof createRemoteJWKSet> {
 }
 
 function getRedirectUri(): string {
+  const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  const processEnv = (
+    globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }
+  ).process?.env;
+  const configuredAppUrl =
+    env?.VITE_APP_URL ??
+    processEnv?.VITE_APP_URL ??
+    processEnv?.NEXT_PUBLIC_APP_URL;
+
+  if (configuredAppUrl) {
+    try {
+      const appUrl = new URL(configuredAppUrl);
+      return `${appUrl.origin}/auth/callback`;
+    } catch {
+      // Fall through to runtime origin when the env value is invalid.
+    }
+  }
   return `${window.location.origin}/auth/callback`;
 }
 
