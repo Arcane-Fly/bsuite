@@ -152,3 +152,7 @@ CREATE POLICY "tenant_app_branding_delete"
   ON public.tenant_app_branding FOR DELETE
   TO authenticated
   USING (public.can_manage_tenant_branding(tenant_id));
+
+-- Recursive ancestry checks in can_manage_tenant_branding() traverse this edge.
+CREATE INDEX IF NOT EXISTS idx_tenants_parent_tenant_id
+  ON public.tenants (parent_tenant_id);
