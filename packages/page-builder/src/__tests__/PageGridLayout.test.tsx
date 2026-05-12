@@ -20,8 +20,19 @@ describe('PageGridLayout', () => {
     );
 
     expect(screen.getByText('Alpha widget')).toBeTruthy();
+    // When not in edit mode (canEditPage=undefined → isEditing=false), the
+    // resize handle is still rendered into the DOM by react-resizable BUT the
+    // grid item carries `.react-resizable-hide` so the handle is hidden via
+    // CSS (`.react-resizable-hide .react-resizable-handle { display: none }`).
+    // The previous assertion `toBeNull()` was a side-effect of the v2 handle
+    // bug fixed in 0.2.9 — our GridItem ignored react-resizable's injected
+    // children, so the handle silently dropped. Now that we render
+    // {injectedChildren} at the outer level, the handle IS in the DOM in both
+    // edit and non-edit states; only the .react-resizable-hide class differs.
     expect(view.container.querySelector('.react-resizable-hide')).toBeTruthy();
-    expect(view.container.querySelector('.react-resizable-handle')).toBeNull();
+    const handle = view.container.querySelector('.react-resizable-handle');
+    expect(handle).toBeTruthy();
+    expect(handle?.closest('.react-resizable-hide')).toBeTruthy();
   });
 });
 
