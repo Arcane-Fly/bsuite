@@ -257,41 +257,51 @@ export function PageGridLayout({
 
   useEffect(() => {
     const ids = [...renderableWidgetKeys];
-    setLayerOrder((previous) => {
-      const existing = previous.filter((id) => ids.includes(id));
-      const additions = ids.filter((id) => !existing.includes(id));
-      return [...existing, ...additions];
+    const stableIds = [
+      ...layerOrder.filter((id) => renderableWidgetKeys.has(id)),
+      ...ids.filter((id) => !layerOrder.includes(id)),
+    ];
+    startTransition(() => {
+      setLayerOrder((previous) => {
+        if (
+          previous.length === stableIds.length &&
+          previous.every((value, index) => value === stableIds[index])
+        ) {
+          return previous;
+        }
+        return stableIds;
+      });
+      setLayerNames((previous) => {
+        const next: Record<string, string> = {};
+        for (const id of stableIds) next[id] = previous[id] ?? widgetMeta?.[id]?.label ?? id;
+        return next;
+      });
+      setHiddenLayerIds((previous) => {
+        const next: Record<string, boolean> = {};
+        for (const id of stableIds) next[id] = previous[id] ?? false;
+        return next;
+      });
+      setLockedLayerIds((previous) => {
+        const next: Record<string, boolean> = {};
+        for (const id of stableIds) next[id] = previous[id] ?? false;
+        return next;
+      });
+      setCollapsedLayerIds((previous) => {
+        const next: Record<string, boolean> = {};
+        for (const id of stableIds) next[id] = previous[id] ?? false;
+        return next;
+      });
+      setLayerParents((previous) => {
+        const next: Record<string, string | null> = {};
+        for (const id of stableIds) {
+          const parentId = previous[id];
+          next[id] = parentId && stableIds.includes(parentId) ? parentId : null;
+        }
+        return next;
+      });
+      setSelectedLayerId((previous) => (previous && stableIds.includes(previous) ? previous : stableIds[0] ?? null));
     });
-    setLayerNames((previous) => {
-      const next: Record<string, string> = {};
-      for (const id of ids) next[id] = previous[id] ?? widgetMeta?.[id]?.label ?? id;
-      return next;
-    });
-    setHiddenLayerIds((previous) => {
-      const next: Record<string, boolean> = {};
-      for (const id of ids) next[id] = previous[id] ?? false;
-      return next;
-    });
-    setLockedLayerIds((previous) => {
-      const next: Record<string, boolean> = {};
-      for (const id of ids) next[id] = previous[id] ?? false;
-      return next;
-    });
-    setCollapsedLayerIds((previous) => {
-      const next: Record<string, boolean> = {};
-      for (const id of ids) next[id] = previous[id] ?? false;
-      return next;
-    });
-    setLayerParents((previous) => {
-      const next: Record<string, string | null> = {};
-      for (const id of ids) {
-        const parentId = previous[id];
-        next[id] = parentId && ids.includes(parentId) ? parentId : null;
-      }
-      return next;
-    });
-    setSelectedLayerId((previous) => (previous && ids.includes(previous) ? previous : ids[0] ?? null));
-  }, [renderableWidgetKeys, widgetMeta]);
+  }, [layerOrder, renderableWidgetKeys, widgetMeta]);
 
   const orderedVisibleIds = useMemo(
     () => layerOrder.filter((id) => renderableWidgetKeys.has(id)),
@@ -364,26 +374,38 @@ export function PageGridLayout({
       const activeIndex = previous.indexOf(payload.activeId);
       const overIndex = previous.indexOf(payload.overId);
       if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) return previous;
-      return arrayMove(previous, activeIndex, overIndex);
-    });
-    setLayerParents((previous) => {
-      const ordered = arrayMove(layerOrder, layerOrder.indexOf(payload.activeId), layerOrder.indexOf(payload.overId));
-      const next = { ...previous };
-      if (payload.depth <= 0) {
-        next[payload.activeId] = null;
-        return next;
-      }
-      const activeIndex = ordered.indexOf(payload.activeId);
-      let parentId: string | null = null;
-      for (let index = activeIndex - 1; index >= 0; index -= 1) {
-        const candidate = ordered[index];
-        if ((layerDepthById[candidate] ?? 0) === payload.depth - 1) {
-          parentId = candidate;
-          break;
+      const ordered = arrayMove(previous, activeIndex, overIndex);
+      setLayerParents((previousParents) => {
+        const next = { ...previousParents };
+        if (payload.depth <= 0) {
+          next[payload.activeId] = null;
+          return next;
         }
-      }
-      next[payload.activeId] = parentId;
-      return next;
+        const getDepth = (id: string): number => {
+          let depth = 0;
+          let parentId = next[id];
+          const seen = new Set<string>([id]);
+          while (parentId) {
+            if (seen.has(parentId)) break;
+            seen.add(parentId);
+            depth += 1;
+            parentId = next[parentId];
+          }
+          return depth;
+        };
+        const movedIndex = ordered.indexOf(payload.activeId);
+        let parentId: string | null = null;
+        for (let index = movedIndex - 1; index >= 0; index -= 1) {
+          const candidate = ordered[index];
+          if (getDepth(candidate) === payload.depth - 1) {
+            parentId = candidate;
+            break;
+          }
+        }
+        next[payload.activeId] = parentId;
+        return next;
+      });
+      return ordered;
     });
   };
 

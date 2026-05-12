@@ -24,6 +24,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from './utils.js';
 
 const INDENTATION_PX = 20;
+const VIRTUALIZATION_THRESHOLD = 100;
+const ROW_HEIGHT_PX = 32;
 
 export interface LayerPanelItem {
   id: string;
@@ -247,13 +249,13 @@ export function LayersPanel({
   const [renameValue, setRenameValue] = useState('');
   const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const shouldVirtualize = items.length > 100;
+  const shouldVirtualize = items.length > VIRTUALIZATION_THRESHOLD;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 32,
+    estimateSize: () => ROW_HEIGHT_PX,
     overscan: 8,
   });
 
@@ -274,7 +276,7 @@ export function LayersPanel({
 
   const visibleItems = shouldVirtualize
     ? virtualizer.getVirtualItems().map((virtualRow) => ({ item: items[virtualRow.index], virtualRow }))
-    : items.map((item, index) => ({ item, virtualRow: { index, start: index * 32, size: 32 } }));
+    : items.map((item, index) => ({ item, virtualRow: { index, start: index * ROW_HEIGHT_PX, size: ROW_HEIGHT_PX } }));
 
   const commitRename = () => {
     if (!renamingId) return;

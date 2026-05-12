@@ -428,6 +428,9 @@ describe('PageGridLayout layers panel', () => {
 
     act(() => {
       tree!.focus();
+    });
+    expect(document.activeElement).toBe(tree);
+    act(() => {
       fireEvent.keyDown(tree!, { key: 'F2' });
     });
 
@@ -520,5 +523,8 @@ describe('PageGridLayout layers panel', () => {
     openEditor();
     const virtualizedContainer = view.container.querySelector('[data-virtualized="true"]');
     expect(virtualizedContainer).not.toBeNull();
+    expect(virtualizedContainer?.getAttribute('style')).toContain('height:');
+    const renderedRows = view.container.querySelectorAll('[data-layer-row-id]');
+    expect(renderedRows.length).toBeLessThan(120);
   });
 });
