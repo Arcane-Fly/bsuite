@@ -158,7 +158,7 @@ Production means: all five apps deployed to Vercel on `main`/`master`, all P0 se
 | 6.14 — `git rm crm7/APPLY_THIS_SQL.sql`; BFG history rewrite if credentials present | CRM7 | P0 | ✅ DONE | File removed in commits `2f4455c5` + `cb15095f` ("fix(crm7): z-200 Tailwind v4 syntax fixes + git rm APPLY_THIS_SQL.sql"); `git ls-tree -r HEAD` confirms absence |
 | 6.15 — Wire BSU platform tab in `AdminBranding.tsx` to `platform_branding` singleton (upsert `WHERE id = 'platform'`) | BSU | P1 | ✅ DONE | `business-suite-unified/src/pages/Admin/AdminBranding.tsx` line 100 — `supabase.from('platform_branding').upsert(platformRow, { onConflict: 'id' })`; Tier-1 platform singleton wired per doctrine |
 
-**Deliverable:** All P0 security findings resolved in code. Remaining Phase 6 work is entirely operator-blocked (Supabase dashboard config + DB migration push + auth-guardian scope).
+**Deliverable:** All code-assignable P0 security findings resolved. 2 P0s remain gated (6.7 Supabase Auth dashboard allowlist — operator-only; 6.11 BSU AuthContext — auth-guardian scope, requires explicit operator opt-in). Remaining P1/P2 work is entirely operator-blocked (Supabase dashboard config + DB migration push + auth-guardian scope).
 
 **Phase 6 scorecard (code-state, 2026-05-12):**
 - **P0 items closed:** 6.0 (superseded), 6.2, 6.3, 6.4, 6.8, 6.14 — **6/8 P0s closed**; remaining 6.7 (operator), 6.11 (auth-guardian)
