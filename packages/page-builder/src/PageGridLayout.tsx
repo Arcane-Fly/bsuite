@@ -12,6 +12,42 @@ const DEFAULT_RESIZE_BOUNDS = { minW: 2, minH: 1, maxW: 12, maxH: 16 } as const;
 const DEFAULT_RESIZE_HANDLES: readonly ResizeHandleAxis[] = ['se'];
 const DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES = ['bsu-add-entity-widget', 'crm7-add-entity-widget'] as const;
 
+/**
+ * Custom resize handle for react-grid-layout v2.
+ *
+ * Why this exists (resize bug fix, 2026-05-12)
+ * --------------------------------------------
+ * react-grid-layout v2 dropped the auto-rendered `.react-resizable-handle`
+ * element that v1 appended to every resizable item. With v2, items still
+ * get the `react-resizable` CSS class (so the existing override CSS targets
+ * the right element) but no handle DOM is created unless the consumer
+ * supplies `resizeConfig.handleComponent`.
+ *
+ * Symptom: operator reported "I can drag but I can't make the cards bigger"
+ * across 5+ apps and 50+ flagged occurrences. Live DOM inspection on
+ * crm.crm7.app/reports confirmed `react-grid-item` had `.react-resizable`
+ * class but 0 `.react-resizable-handle` children — handles literally
+ * weren't in the DOM, so the carefully-tuned override CSS in
+ * `react-grid-layout-overrides.css` had nothing to style.
+ *
+ * Fix: provide a `forwardRef` handle component that renders a span with
+ * the exact class names the override CSS targets (`react-resizable-handle`
+ * + `react-resizable-handle-<axis>`). data-no-drag prevents the parent
+ * drag handler from intercepting pointer-down on the handle.
+ */
+const RGLResizeHandle = React.forwardRef<HTMLSpanElement, { axis?: ResizeHandleAxis } & React.HTMLAttributes<HTMLSpanElement>>(
+  function RGLResizeHandle({ axis = 'se', className: injectedClassName, ...rest }, ref) {
+    return (
+      <span
+        ref={ref}
+        data-no-drag
+        className={`react-resizable-handle react-resizable-handle-${axis}${injectedClassName ? ' ' + injectedClassName : ''}`}
+        {...rest}
+      />
+    );
+  },
+);
+
 type GridItemProps = {
   id: string;
   content: React.ReactNode;
@@ -98,7 +134,12 @@ export function PageGridLayout({
   widgets,
   widgetMeta,
   className,
-  isResizable = false,
+  // Resize default flipped 2026-05-12: rgl v2 dropped auto-handle rendering
+  // (see RGLResizeHandle above). Previously this defaulted false; consumer
+  // adapters then defaulted it back to true. With v2's handle gap fixed,
+  // the safe default is true so any consumer who forgets to set it still
+  // gets a usable canvas. Opt out per-page with isResizable={false}.
+  isResizable = true,
   resizeHandles = DEFAULT_RESIZE_HANDLES,
   addEntityWidgetEventNames = DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES,
   createEntityWidget,
@@ -452,7 +493,14 @@ export function PageGridLayout({
               cancel:
                 '.react-resizable-handle, button, input, textarea, select, [contenteditable="true"], [data-no-drag], a[href], [role="button"], [role="combobox"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="switch"], [role="slider"], [role="textbox"]',
             }}
-            resizeConfig={{ enabled: resizeEnabled, handles: resizeHandles }}
+            resizeConfig={{
+              enabled: resizeEnabled,
+              handles: resizeHandles,
+              // Required for v2 — see RGLResizeHandle comment above.
+              handleComponent: (axis, ref) => (
+                <RGLResizeHandle axis={axis} ref={ref as React.Ref<HTMLSpanElement>} />
+              ),
+            }}
             constraints={resizeEnabled ? resizeConstraints : undefined}
             compactor={activeCompactor}
             cols={activeCols}
