@@ -29,6 +29,10 @@ const testFileSuffixes = [
   '.test.jsx',
 ];
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 function isENOENTError(error) {
   if (!(error instanceof Error)) return false;
   if (!('code' in error)) return false;
@@ -108,7 +112,7 @@ for (const app of apps) {
 
   const qaTests = await getTestFileNames(path.join(appPath, 'autonoma/qa-tests'));
   if (qaTests.length === 0) {
-    missingFiles.push('autonoma/qa-tests/*.(spec|test).{ts,tsx,js,jsx}');
+    missingFiles.push('autonoma/qa-tests/*.{spec,test}.{ts,tsx,js,jsx}');
   }
 
   if (missingFiles.length > 0) {
