@@ -34,29 +34,18 @@ const CALL_WINDOW_SIZE = 1200
 
 const violations = []
 
-function extractQuotedSpecifier(line, marker) {
-  const markerIndex = line.indexOf(marker)
-  if (markerIndex === -1) return null
-
-  const firstSingleQuoteIndex = line.indexOf("'", markerIndex + marker.length)
-  const firstDoubleQuoteIndex = line.indexOf('"', markerIndex + marker.length)
-  const quoteStartIndexCandidates = [firstSingleQuoteIndex, firstDoubleQuoteIndex].filter(
-    (index) => index !== -1
-  )
-
-  if (quoteStartIndexCandidates.length === 0) return null
-  const quoteStartIndex = Math.min(...quoteStartIndexCandidates)
-  const quoteChar = line[quoteStartIndex]
-  const quoteEndIndex = line.indexOf(quoteChar, quoteStartIndex + 1)
-
-  if (quoteEndIndex === -1) return null
-  return line.slice(quoteStartIndex + 1, quoteEndIndex)
+function escapeForRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function lineImportsModule(line, moduleName) {
-  const fromSpecifier = extractQuotedSpecifier(line, 'from')
-  const requireSpecifier = extractQuotedSpecifier(line, 'require(')
-  return fromSpecifier === moduleName || requireSpecifier === moduleName
+function toLineNumber(content, index) {
+  return content.slice(0, index).split('\n').length
+}
+
+function stripComments(content) {
+  return content
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^[ \t]*\/\/.*$/gm, '')
 }
 
 function findCallWindows(fileContent, callSnippet) {
@@ -73,20 +62,29 @@ for (const relativeFilePath of trackedFiles) {
   const absoluteFilePath = path.join(repoRoot, relativeFilePath)
   const fileContent = readFileSync(absoluteFilePath, 'utf8')
   const lines = fileContent.split('\n')
+  const contentWithoutComments = stripComments(fileContent)
 
   for (const moduleName of bannedProviderModules) {
-    lines.forEach((line, index) => {
-      if (lineImportsModule(line, moduleName)) {
-        violations.push(
-          `${relativeFilePath}:${index + 1} banned direct model provider import (${moduleName})`
-        )
-      }
-    })
+    const importPattern = new RegExp(
+      `(?:from\\s*['"]${escapeForRegExp(moduleName)}['"]|require\\(\\s*['"]${escapeForRegExp(
+        moduleName
+      )}['"]\\s*\\))`
+    )
+    const match = importPattern.exec(contentWithoutComments)
+    if (match?.index !== undefined) {
+      violations.push(
+        `${relativeFilePath}:${toLineNumber(
+          contentWithoutComments,
+          match.index
+        )} banned direct model provider import (${moduleName})`
+      )
+    }
   }
 
   for (const aiCallSnippet of aiCallSnippets) {
-    const callWindows = findCallWindows(fileContent, aiCallSnippet)
+    const callWindows = findCallWindows(contentWithoutComments, aiCallSnippet)
     callWindows.forEach((windowContent, callIndex) => {
+      // Exact key spellings are intentional for normalized Gateway observability fields.
       const metadataKeyPatterns = {
         issueNumber: /\bissueNumber\s*[: ,]/,
         repo: /\brepo\s*[: ,]/,
@@ -107,7 +105,9 @@ for (const relativeFilePath of trackedFiles) {
 
   for (const snippet of clientSideGatewayKeySnippets) {
     lines.forEach((line, index) => {
-      if (line.includes(snippet)) {
+      const trimmedLine = line.trim()
+      const isCommentLine = trimmedLine.startsWith('//') || trimmedLine.startsWith('*')
+      if (!isCommentLine && line.includes(snippet)) {
         violations.push(
           `${relativeFilePath}:${index + 1} client-side AI Gateway key usage is forbidden (${snippet})`
         )
