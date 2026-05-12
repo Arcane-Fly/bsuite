@@ -18,12 +18,27 @@ const requiredFiles = [
   'autonoma/scenarios.md',
 ];
 
+const testFileSuffixes = [
+  '.spec.ts',
+  '.spec.tsx',
+  '.spec.js',
+  '.spec.jsx',
+  '.test.ts',
+  '.test.tsx',
+  '.test.js',
+  '.test.jsx',
+];
+
+function isENOENTError(error) {
+  return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT');
+}
+
 async function pathExists(target) {
   try {
     await stat(target);
     return true;
   } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+    if (isENOENTError(error)) {
       return false;
     }
     throw error;
@@ -44,16 +59,7 @@ async function getTestFiles(targetDir) {
   return entries
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
-    .filter((name) =>
-      name.endsWith('.spec.ts') ||
-      name.endsWith('.spec.tsx') ||
-      name.endsWith('.spec.js') ||
-      name.endsWith('.spec.jsx') ||
-      name.endsWith('.test.ts') ||
-      name.endsWith('.test.tsx') ||
-      name.endsWith('.test.js') ||
-      name.endsWith('.test.jsx'),
-    );
+    .filter((name) => testFileSuffixes.some((suffix) => name.endsWith(suffix)));
 }
 
 const results = [];
@@ -65,7 +71,7 @@ for (const app of apps) {
   try {
     appEntries = await readdir(appPath, { withFileTypes: true });
   } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+    if (isENOENTError(error)) {
       hasFailures = true;
       results.push({ app, status: 'FAIL', details: 'App directory not found in checkout' });
       continue;
@@ -92,8 +98,8 @@ for (const app of apps) {
     }
   }
 
-  const skillsMarkdown = await getMarkdownFiles(path.join(appPath, 'autonoma/skills'));
-  if (skillsMarkdown.length === 0) {
+  const skillsFiles = await getMarkdownFiles(path.join(appPath, 'autonoma/skills'));
+  if (skillsFiles.length === 0) {
     missingFiles.push('autonoma/skills/*.md');
   }
 

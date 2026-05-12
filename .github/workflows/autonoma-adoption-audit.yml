@@ -8,6 +8,7 @@ on:
       - 'package.json'
       - '.gitmodules'
   schedule:
+    # Nightly off-peak UTC check to avoid adding latency/noise to daytime PR queues.
     - cron: '0 4 * * *'
   workflow_dispatch:
 
