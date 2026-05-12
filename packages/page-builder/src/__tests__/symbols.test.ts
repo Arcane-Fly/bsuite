@@ -69,16 +69,18 @@ describe('resolveSymbolInstance', () => {
       },
     ) as JsonObject;
 
-    expect((resolved.items as JsonValue[])).toBe(overrideItems);
-    expect(((resolved.items as JsonObject[])[0])).toBe(overrideItems[0]);
+    const resolvedItems = resolved.items as JsonObject[];
+    expect(resolvedItems).toBe(overrideItems);
+    expect(resolvedItems[0]).toBe(overrideItems[0]);
 
     const resolvedWithoutOverride = resolveSymbolInstance(
       { items: defaultItems, style: { padding: 24 } },
       { style: { margin: 8 } },
     ) as JsonObject;
 
-    expect((resolvedWithoutOverride.items as JsonValue[])).toBe(defaultItems);
-    expect(((resolvedWithoutOverride.items as JsonObject[])[0])).toBe(defaultItems[0]);
+    const resolvedDefaultItems = resolvedWithoutOverride.items as JsonObject[];
+    expect(resolvedDefaultItems).toBe(defaultItems);
+    expect(resolvedDefaultItems[0]).toBe(defaultItems[0]);
   });
 
   it('returns a merged object without aliasing merged object branches', () => {

@@ -65,6 +65,10 @@ function isPlainObject(value: unknown): value is JsonObject {
   return typeof value === 'object';
 }
 
+/**
+ * Clones plain-object branches while intentionally preserving array references.
+ * Arrays are treated as atomic override units for symbol propagation.
+ */
 function cloneObjectTreePreservingArrays(value: JsonValue): JsonValue {
   if (!isPlainObject(value)) {
     return value;
@@ -116,12 +120,14 @@ export function resolveSymbolInstance(
 }
 
 export function createSymbolFromResolvedConfig(input: SaveAsSymbolInput): SaveAsSymbolResult {
+  const schemaJson = input.schemaJson ?? {};
+
   return {
     definition: {
       id: input.definitionId,
       tenantId: input.tenantId,
       name: input.name,
-      schemaJson: (cloneObjectTreePreservingArrays(input.schemaJson ?? {}) as JsonObject),
+      schemaJson: cloneObjectTreePreservingArrays(schemaJson) as JsonObject,
       defaultConfigJson: cloneObjectTreePreservingArrays(input.resolvedConfigJson),
     },
     instance: {

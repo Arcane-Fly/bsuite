@@ -117,6 +117,9 @@ DECLARE
   has_definition_access BOOLEAN;
 BEGIN
   -- component_instances inherit tenant access from custom_pages ownership.
+  -- Dependency contract: public.custom_pages must expose at least
+  --   - id UUID primary key
+  --   - tenant_id UUID (tenant owner)
   -- Use dynamic SQL so this helper can be created in environments where
   -- custom_pages has not yet been provisioned.
   IF to_regclass('public.custom_pages') IS NULL THEN
