@@ -1,5 +1,8 @@
 # ADR 0004 — STP Xero Passthrough
 
+> Canonical location: `crm7/docs/adr/0004-stp-xero-passthrough.md`  
+> This archived copy is retained as part of the 2026-04-24 submodule-import audit trail.
+
 **Status:** Accepted  
 **Date:** 2026-07-14  
 **Deciders:** GTO Platform Team  

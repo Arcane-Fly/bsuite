@@ -1,5 +1,8 @@
 # ADR-001 · `@bsuite/charge-calc` as Single-Source Calculation Engine
 
+> Canonical location: `crm7/docs/adr/20260423-calc-engine-single-source.md`  
+> This archived copy is retained as part of the 2026-04-24 submodule-import audit trail.
+
 **Date:** 2026-04-23  
 **Status:** Accepted  
 **Deciders:** Braden Lang (GTO Product Owner), Computer (AI architect)  
