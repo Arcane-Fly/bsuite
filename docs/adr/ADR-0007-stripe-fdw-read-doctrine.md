@@ -20,6 +20,9 @@ The migration baseline before this ADR did not include `wrappers` /
 For all **new Stripe data-read integration paths**, use Supabase Wrappers
 Stripe FDW (`stripe.*` foreign tables) behind controlled SQL RPC wrappers.
 
+For this ADR, **new** means any Stripe read path implemented or materially
+refactored after 2026-05-12.
+
 Scope split:
 
 - **FDW path:** read-only data retrieval from Stripe objects

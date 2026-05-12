@@ -31,7 +31,7 @@ BEGIN
 
   IF v_stripe_api_key_id IS NULL THEN
     RAISE EXCEPTION
-      'Missing Vault secret "stripe_api_key". Create it using vault.create_secret() before applying this migration.';
+      'Missing Vault secret "stripe_api_key". Create it first (for example: vault.create_secret(''sk_...'',''stripe_api_key'',''Stripe Secret Key'')) before applying this migration.';
   END IF;
 
   IF EXISTS (SELECT 1 FROM pg_foreign_server WHERE srvname = 'stripe_server') THEN
@@ -141,10 +141,10 @@ SECURITY DEFINER
 SET search_path = public, auth, stripe
 AS $$
 DECLARE
-  caller_role text := coalesce(auth.jwt() ->> 'role', 'none');
+  caller_role text := coalesce(auth.jwt() ->> 'role', '__invalid__');
 BEGIN
   IF caller_role <> 'service_role' THEN
-    RAISE EXCEPTION 'stripe_customer_by_email requires service_role (got: %)', caller_role
+    RAISE EXCEPTION 'stripe_customer_by_email requires service_role'
       USING errcode = '42501';
   END IF;
 
@@ -171,10 +171,10 @@ SECURITY DEFINER
 SET search_path = public, auth, stripe
 AS $$
 DECLARE
-  caller_role text := coalesce(auth.jwt() ->> 'role', 'none');
+  caller_role text := coalesce(auth.jwt() ->> 'role', '__invalid__');
 BEGIN
   IF caller_role <> 'service_role' THEN
-    RAISE EXCEPTION 'stripe_subscription_snapshot requires service_role (got: %)', caller_role
+    RAISE EXCEPTION 'stripe_subscription_snapshot requires service_role'
       USING errcode = '42501';
   END IF;
 

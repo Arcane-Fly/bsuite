@@ -208,7 +208,7 @@ Cross-cutting Phase 4 items:
 | **BL-006e** | braden CSP security hardening — unchecked TODOs in `20260316-braden-csp-security-v1.00W.md` | braden | `braden/docs/OUTSTANDING.md` §20260316-braden-csp-security |
 | **BL-006f** | braden UI/UX best-practices sweep — unchecked TODOs in `20260316-braden-ui-ux-best-practices-v1.00W.md` | braden | `braden/docs/OUTSTANDING.md` §20260316-braden-ui-ux |
 | **BL-006g** | braden bot-protection hardening — unchecked TODOs in `20260316-braden-bot-protection-v1.00W.md` | braden | `braden/docs/OUTSTANDING.md` §20260316-braden-bot-protection |
-| **BL-013** | Stripe data-read architecture migration — adopt Supabase Wrappers Stripe FDW for new Stripe reads (`wrappers` extension, `stripe_fdw`, `stripe` schema, SECURITY DEFINER service-role RPC wrappers). Keep Stripe webhooks/write flows on edge functions. | BSU + CRM7 + Supabase | bsuite issue: `feat(architecture): adopt Supabase Wrappers Stripe FDW for new Stripe data reads`; ADR-0007 |
+| **BL-013** | Stripe data-read architecture migration — adopt Supabase Wrappers Stripe FDW for new Stripe reads (`wrappers` extension, `stripe_fdw`, `stripe` schema, SECURITY DEFINER service-role RPC wrappers). Keep Stripe webhooks/write flows on edge functions. | BSU + CRM7 + Supabase | `feat(architecture): adopt Supabase Wrappers Stripe FDW for new Stripe data reads`; ADR-0007 |
 
 **Phase 4 exit criteria (testable):**
 
