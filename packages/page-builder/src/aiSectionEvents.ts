@@ -10,13 +10,20 @@ export type GeneratedSectionTone =
   | 'warning'
   | 'destructive';
 
+export interface GeneratedSectionSize {
+  w?: GridLayoutItem['w'];
+  h?: GridLayoutItem['h'];
+  minW?: GridLayoutItem['minW'];
+  minH?: GridLayoutItem['minH'];
+}
+
 export interface GeneratedSectionPreview {
   widgetId: string;
   title: string;
   body: string;
   ctaLabel?: string;
   tone?: GeneratedSectionTone;
-  defaultSize?: Partial<Pick<GridLayoutItem, 'w' | 'h' | 'minW' | 'minH'>>;
+  defaultSize?: GeneratedSectionSize;
 }
 
 export interface GeneratedSectionDropDetail {

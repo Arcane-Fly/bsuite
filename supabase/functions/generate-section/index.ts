@@ -54,7 +54,12 @@ type RequestPayload = z.infer<typeof requestSchema>;
 type GeneratedSection = z.infer<typeof generatedSectionSchema>;
 
 const DEFAULT_DAILY_CAP_USD = 5;
+const MAX_GENERATION_ATTEMPTS = 2;
 const DEFAULT_MODEL_SEQUENCE = ['xai/grok-4.20-reasoning', 'anthropic/claude-sonnet-4.6'] as const;
+const MODEL_PRICING_PER_MILLION: Record<string, { input: number; output: number }> = {
+  'xai/grok-4.20-reasoning': { input: 2, output: 6 },
+  'anthropic/claude-sonnet-4.6': { input: 3, output: 15 },
+};
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -99,13 +104,10 @@ function getModelSequence(): string[] {
 
 function estimateCostUsd(modelId: string, promptTokens: number, completionTokens: number): number {
   const tokenMillion = 1_000_000;
-  if (modelId.startsWith('xai/grok-4.20-reasoning')) {
-    return (promptTokens * 2 + completionTokens * 6) / tokenMillion;
-  }
-  if (modelId.startsWith('anthropic/claude-sonnet-4.6')) {
-    return (promptTokens * 3 + completionTokens * 15) / tokenMillion;
-  }
-  return (promptTokens * 3 + completionTokens * 15) / tokenMillion;
+  const pricing =
+    Object.entries(MODEL_PRICING_PER_MILLION).find(([prefix]) => modelId.startsWith(prefix))?.[1] ??
+    MODEL_PRICING_PER_MILLION['anthropic/claude-sonnet-4.6'];
+  return (promptTokens * pricing.input + completionTokens * pricing.output) / tokenMillion;
 }
 
 function buildSystemPrompt(payload: RequestPayload): string {
@@ -182,7 +184,7 @@ async function generateSectionWithRetry(
   });
 
   let lastError: string | null = null;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
     const modelId = modelIds[attempt % modelIds.length];
     try {
       const { object, usage } = await generateObject({
@@ -317,12 +319,12 @@ serve(async (request) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: 'Section generation failed after retry.',
         canRetry: true,
-        details: toErrorMessage(error),
+        details: 'The generated output did not pass schema validation. Retry to regenerate.',
       }),
       {
         status: 422,

@@ -7,6 +7,7 @@ import 'react-resizable/css/styles.css';
 import {
   DEFAULT_GENERATED_SECTION_DROP_EVENT_NAMES,
   DEFAULT_GENERATED_SECTION_STREAM_EVENT_NAMES,
+  type GeneratedSectionPreview,
   isGeneratedSectionDropDetail,
   isGeneratedSectionStreamDetail,
 } from './aiSectionEvents.js';
@@ -17,6 +18,7 @@ import type { GridLayouts, PageGridLayoutProps } from './types.js';
 const DEFAULT_RESIZE_BOUNDS = { minW: 2, minH: 1, maxW: 12, maxH: 16 } as const;
 const DEFAULT_RESIZE_HANDLES: readonly ResizeHandleAxis[] = ['se'];
 const DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES = ['bsu-add-entity-widget', 'crm7-add-entity-widget'] as const;
+type GeneratedSectionMap = Record<string, GeneratedSectionPreview>;
 
 /**
  * Custom resize handle for react-grid-layout v2.
@@ -218,34 +220,12 @@ export function PageGridLayout({
   );
 
   const [extraWidgetConfigs, setExtraWidgetConfigs] = useState<Record<string, { entityType: string; label?: string }>>({});
-  const [generatedSections, setGeneratedSections] = useState<
-    Record<
-      string,
-      {
-        widgetId: string;
-        title: string;
-        body: string;
-        ctaLabel?: string;
-        tone?: 'primary' | 'accent' | 'success' | 'warning' | 'destructive';
-        defaultSize?: { w?: number; h?: number; minW?: number; minH?: number };
-      }
-    >
-  >({});
+  const [generatedSections, setGeneratedSections] = useState<GeneratedSectionMap>({});
   const [pendingGeneratedWidgetId, setPendingGeneratedWidgetId] = useState<string | null>(null);
   const [generatedPreviewSnapshot, setGeneratedPreviewSnapshot] = useState<{
     layouts: GridLayouts;
     extraWidgetConfigs: Record<string, { entityType: string; label?: string }>;
-    generatedSections: Record<
-      string,
-      {
-        widgetId: string;
-        title: string;
-        body: string;
-        ctaLabel?: string;
-        tone?: 'primary' | 'accent' | 'success' | 'warning' | 'destructive';
-        defaultSize?: { w?: number; h?: number; minW?: number; minH?: number };
-      }
-    >;
+    generatedSections: GeneratedSectionMap;
   } | null>(null);
   const [streamingState, setStreamingState] = useState<{
     status: 'idle' | 'generating' | 'error';
@@ -404,7 +384,9 @@ export function PageGridLayout({
         });
       }
       setGeneratedSections((previous) => ({ ...previous, [detail.section.widgetId]: detail.section }));
-      const alreadyInLayout = (activeLayouts.lg ?? []).some((item) => item.i === detail.section.widgetId);
+      const alreadyInLayout = Object.values(activeLayouts).some((breakpointLayout) =>
+        (breakpointLayout ?? []).some((item) => item.i === detail.section.widgetId),
+      );
       if (!alreadyInLayout) {
         addWidget(detail.section.widgetId, detail.section.defaultSize);
       }
