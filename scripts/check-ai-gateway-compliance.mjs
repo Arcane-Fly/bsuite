@@ -28,39 +28,35 @@ const clientSideGatewayKeySnippets = [
   'VITE_AI_GATEWAY_API_KEY',
   'NEXT_PUBLIC_AI_GATEWAY_API_KEY',
 ]
+// Captures typical AI SDK call options payloads (including metadata objects and headers)
+// without scanning an unbounded amount of source per callsite.
 const CALL_WINDOW_SIZE = 1200
-
-/**
- * Server/client path heuristics:
- * - Server paths cover Next.js API routes, Supabase edge functions, and explicit server folders.
- * - Client paths target common browser-facing folders in Vite/React/Next.js apps.
- * - A file is considered browser code only when it matches client hints and does not match server hints.
- */
-const serverPathHints = [
-  '/src/server/',
-  '/app/api/',
-  '/pages/api/',
-  '/supabase/functions/',
-  '/edge-functions/',
-]
-const clientPathHints = [
-  '/src/components/',
-  '/src/pages/',
-  '/src/hooks/',
-  '/src/contexts/',
-  '/app/',
-  '/pages/',
-]
 
 const violations = []
 
-function lineImportsModule(line, moduleName) {
-  return (
-    line.includes(`from '${moduleName}'`) ||
-    line.includes(`from "${moduleName}"`) ||
-    line.includes(`require('${moduleName}')`) ||
-    line.includes(`require("${moduleName}")`)
+function extractQuotedSpecifier(line, marker) {
+  const markerIndex = line.indexOf(marker)
+  if (markerIndex === -1) return null
+
+  const firstSingleQuoteIndex = line.indexOf("'", markerIndex + marker.length)
+  const firstDoubleQuoteIndex = line.indexOf('"', markerIndex + marker.length)
+  const quoteStartIndexCandidates = [firstSingleQuoteIndex, firstDoubleQuoteIndex].filter(
+    (index) => index !== -1
   )
+
+  if (quoteStartIndexCandidates.length === 0) return null
+  const quoteStartIndex = Math.min(...quoteStartIndexCandidates)
+  const quoteChar = line[quoteStartIndex]
+  const quoteEndIndex = line.indexOf(quoteChar, quoteStartIndex + 1)
+
+  if (quoteEndIndex === -1) return null
+  return line.slice(quoteStartIndex + 1, quoteEndIndex)
+}
+
+function lineImportsModule(line, moduleName) {
+  const fromSpecifier = extractQuotedSpecifier(line, 'from')
+  const requireSpecifier = extractQuotedSpecifier(line, 'require(')
+  return fromSpecifier === moduleName || requireSpecifier === moduleName
 }
 
 function findCallWindows(fileContent, callSnippet) {
@@ -91,9 +87,13 @@ for (const relativeFilePath of trackedFiles) {
   for (const aiCallSnippet of aiCallSnippets) {
     const callWindows = findCallWindows(fileContent, aiCallSnippet)
     callWindows.forEach((windowContent, callIndex) => {
+      const metadataKeyPatterns = {
+        issueNumber: /\bissueNumber\s*[: ,]/,
+        repo: /\brepo\s*[: ,]/,
+        agentRole: /\bagentRole\s*[: ,]/,
+      }
       const missingMetadataTokens = metadataTokens.filter(
-        (token) =>
-          !windowContent.includes(`${token}:`) && !windowContent.includes(`${token},`)
+        (token) => !metadataKeyPatterns[token].test(windowContent)
       )
       if (missingMetadataTokens.length > 0) {
         violations.push(
@@ -105,27 +105,14 @@ for (const relativeFilePath of trackedFiles) {
     })
   }
 
-  const isLikelyServerCode = serverPathHints.some((segment) =>
-    relativeFilePath.includes(segment)
-  )
-
-  const isLikelyBrowserCode = clientPathHints.some((segment) =>
-    relativeFilePath.includes(segment)
-  )
-
-  const hasUseClientDirective =
-    fileContent.startsWith("'use client'") || fileContent.startsWith('"use client"')
-
-  if ((isLikelyBrowserCode || hasUseClientDirective) && !isLikelyServerCode) {
-    for (const snippet of clientSideGatewayKeySnippets) {
-      lines.forEach((line, index) => {
-        if (line.includes(snippet)) {
-          violations.push(
-            `${relativeFilePath}:${index + 1} client-side AI Gateway key usage is forbidden (${snippet})`
-          )
-        }
-      })
-    }
+  for (const snippet of clientSideGatewayKeySnippets) {
+    lines.forEach((line, index) => {
+      if (line.includes(snippet)) {
+        violations.push(
+          `${relativeFilePath}:${index + 1} client-side AI Gateway key usage is forbidden (${snippet})`
+        )
+      }
+    })
   }
 }
 
