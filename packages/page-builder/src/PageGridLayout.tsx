@@ -197,6 +197,8 @@ export function PageGridLayout({
   const currentBreakpoint = usePageBuilderStore((state) => state.currentBreakpoint);
   const setCurrentBreakpoint = usePageBuilderStore((state) => state.setCurrentBreakpoint);
   const activeCanvasWidth = BREAKPOINT_CANVAS_WIDTH[currentBreakpoint];
+  const safeContainerWidth =
+    Number.isFinite(containerWidth) && containerWidth > 0 ? containerWidth : 1;
 
   const resizeEnabled = isEditing && isResizable;
   const resizeConstraints = useMemo(
@@ -518,7 +520,7 @@ export function PageGridLayout({
           aria-busy={containerWidth <= 0}
         >
           <Responsive
-            width={isEditing ? activeCanvasWidth : Math.max(containerWidth, 1)}
+            width={isEditing ? activeCanvasWidth : safeContainerWidth}
             className="layout"
             layouts={activeLayouts}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}

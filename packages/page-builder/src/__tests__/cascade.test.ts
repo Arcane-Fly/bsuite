@@ -48,5 +48,6 @@ describe('resolveStyles', () => {
 
     expect(out.styles).toEqual({ color: '#222222', marginTop: 12, padding: 20 });
     expect([...out.overriddenProperties]).toEqual(['color']);
+    expect(out.overriddenProperties.has('marginTop')).toBe(false);
   });
 });

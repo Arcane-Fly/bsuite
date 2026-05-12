@@ -135,10 +135,11 @@ export const usePageBuilderStore = create<PageBuilderStoreState>((set, get) => (
 
 export function getResolvedLayoutStyles(
   layoutId: string,
-  breakpoint: EditorBreakpoint = usePageBuilderStore.getState().currentBreakpoint,
+  breakpoint?: EditorBreakpoint,
 ): ReturnType<typeof resolveStyles> {
-  const styles = usePageBuilderStore.getState().layoutStyles[layoutId];
-  return resolveStyles(styles, breakpoint);
+  const state = usePageBuilderStore.getState();
+  const styles = state.layoutStyles[layoutId];
+  return resolveStyles(styles, breakpoint ?? state.currentBreakpoint);
 }
 
 export function resetPageBuilderStore(): void {
@@ -148,4 +149,3 @@ export function resetPageBuilderStore(): void {
 export function useCurrentBreakpoint(): EditorBreakpoint {
   return usePageBuilderStore((state) => state.currentBreakpoint);
 }
-

@@ -425,6 +425,7 @@ describe('PageGridLayout breakpoint switcher', () => {
     expect(screen.getByRole('button', { name: 'Mobile' })).toBeTruthy();
 
     const responsiveRoot = view.container.querySelector<HTMLElement>('.react-grid-layout');
+    expect(responsiveRoot).toBeTruthy();
     expect(responsiveRoot?.parentElement?.style.width).toContain('1280');
 
     act(() => {

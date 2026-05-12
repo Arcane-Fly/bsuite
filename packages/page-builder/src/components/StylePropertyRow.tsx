@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { type ChangeEvent, useCallback, useMemo } from 'react';
 import { useCurrentBreakpoint, usePageBuilderStore } from '../state/store.js';
 import { resolveStyles, type StyleValue } from '../utils/cascade.js';
 import { cn } from '../utils.js';
@@ -27,6 +27,15 @@ export function StylePropertyRow({ layoutId, property, label }: StylePropertyRow
 
   const value = resolved.styles[property];
   const isOverridden = resolved.overriddenProperties.has(property);
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      updateStyleProperty(layoutId, property, event.target.value, currentBreakpoint);
+    },
+    [currentBreakpoint, layoutId, property, updateStyleProperty],
+  );
+  const handleReset = useCallback(() => {
+    resetStyleProperty(layoutId, property, currentBreakpoint);
+  }, [currentBreakpoint, layoutId, property, resetStyleProperty]);
 
   return (
     <div className="grid grid-cols-[minmax(8rem,1fr)_minmax(0,2fr)_auto] items-center gap-2">
@@ -36,9 +45,7 @@ export function StylePropertyRow({ layoutId, property, label }: StylePropertyRow
       <input
         id={`${layoutId}-${property}`}
         value={stringifyStyleValue(value)}
-        onChange={(event) =>
-          updateStyleProperty(layoutId, property, event.target.value, currentBreakpoint)
-        }
+        onChange={handleChange}
         className={cn(
           'h-8 rounded border border-border bg-background px-2 text-sm',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
@@ -48,7 +55,7 @@ export function StylePropertyRow({ layoutId, property, label }: StylePropertyRow
       {isOverridden ? (
         <button
           type="button"
-          onClick={() => resetStyleProperty(layoutId, property, currentBreakpoint)}
+          onClick={handleReset}
           className={cn(
             'inline-flex h-8 items-center rounded border border-border px-2 text-xs transition-colors',
             'text-primary hover:bg-primary/10',
