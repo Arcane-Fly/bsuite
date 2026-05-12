@@ -24,7 +24,7 @@ DECLARE
 BEGIN
   SELECT id
   INTO v_stripe_api_key_id
-  FROM vault.decrypted_secrets
+  FROM vault.secrets
   WHERE name = 'stripe_api_key'
   ORDER BY created_at DESC
   LIMIT 1;
@@ -143,6 +143,8 @@ AS $$
 DECLARE
   caller_role text := coalesce(auth.jwt() ->> 'role', '__invalid__');
 BEGIN
+  -- service_role-only gate; any missing JWT context falls back to an invalid sentinel
+  -- so the check fails closed.
   IF caller_role <> 'service_role' THEN
     RAISE EXCEPTION 'stripe_customer_by_email requires service_role'
       USING errcode = '42501';
@@ -173,6 +175,8 @@ AS $$
 DECLARE
   caller_role text := coalesce(auth.jwt() ->> 'role', '__invalid__');
 BEGIN
+  -- service_role-only gate; any missing JWT context falls back to an invalid sentinel
+  -- so the check fails closed.
   IF caller_role <> 'service_role' THEN
     RAISE EXCEPTION 'stripe_subscription_snapshot requires service_role'
       USING errcode = '42501';
@@ -191,16 +195,27 @@ BEGIN
     s.created
   FROM stripe.subscriptions s
   CROSS JOIN LATERAL (
+    WITH parsed_items AS (
+      SELECT
+        price_entry.price_id,
+        price_entry.product_id
+      FROM jsonb_array_elements(coalesce(s.attrs #> '{items,data}', '[]'::jsonb)) item
+      CROSS JOIN LATERAL (
+        SELECT
+          item -> 'price' ->> 'id' AS price_id,
+          item -> 'price' ->> 'product' AS product_id
+      ) AS price_entry
+    )
     SELECT
       coalesce(
-        array_agg(item -> 'price' ->> 'id') FILTER (WHERE item -> 'price' ->> 'id' IS NOT NULL),
+        array_agg(parsed_items.price_id) FILTER (WHERE parsed_items.price_id IS NOT NULL),
         ARRAY[]::text[]
       ) AS price_ids,
       coalesce(
-        array_agg(item -> 'price' ->> 'product') FILTER (WHERE item -> 'price' ->> 'product' IS NOT NULL),
+        array_agg(parsed_items.product_id) FILTER (WHERE parsed_items.product_id IS NOT NULL),
         ARRAY[]::text[]
       ) AS product_ids
-    FROM jsonb_array_elements(coalesce(s.attrs #> '{items,data}', '[]'::jsonb)) item
+    FROM parsed_items
   ) AS subscription_items
   WHERE s.customer = p_customer_id
   ORDER BY s.created DESC
