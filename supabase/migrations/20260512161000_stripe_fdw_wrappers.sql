@@ -31,7 +31,7 @@ BEGIN
 
   IF v_stripe_api_key_id IS NULL THEN
     RAISE EXCEPTION
-      'Missing Vault secret "stripe_api_key". Create it first (for example: vault.create_secret(''sk_...'',''stripe_api_key'',''Stripe Secret Key'')) before applying this migration.';
+      'Missing Vault secret "stripe_api_key". Create it first using vault.create_secret() with your Stripe secret key before applying this migration.';
   END IF;
 
   IF EXISTS (SELECT 1 FROM pg_foreign_server WHERE srvname = 'stripe_server') THEN
@@ -186,26 +186,21 @@ BEGIN
     s.status,
     s.current_period_start,
     s.current_period_end,
-    (
-      SELECT coalesce(
-        array_agg(item -> 'price' ->> 'id')
-        FILTER (WHERE item -> 'price' ->> 'id' IS NOT NULL),
-        ARRAY[]::text[]
-      )
-      FROM jsonb_array_elements(subscription_items.items) item
-    ) AS price_ids,
-    (
-      SELECT coalesce(
-        array_agg(item -> 'price' ->> 'product')
-        FILTER (WHERE item -> 'price' ->> 'product' IS NOT NULL),
-        ARRAY[]::text[]
-      )
-      FROM jsonb_array_elements(subscription_items.items) item
-    ) AS product_ids,
+    subscription_items.price_ids,
+    subscription_items.product_ids,
     s.created
   FROM stripe.subscriptions s
   CROSS JOIN LATERAL (
-    SELECT coalesce(s.attrs #> '{items,data}', '[]'::jsonb) AS items
+    SELECT
+      coalesce(
+        array_agg(item -> 'price' ->> 'id') FILTER (WHERE item -> 'price' ->> 'id' IS NOT NULL),
+        ARRAY[]::text[]
+      ) AS price_ids,
+      coalesce(
+        array_agg(item -> 'price' ->> 'product') FILTER (WHERE item -> 'price' ->> 'product' IS NOT NULL),
+        ARRAY[]::text[]
+      ) AS product_ids
+    FROM jsonb_array_elements(coalesce(s.attrs #> '{items,data}', '[]'::jsonb)) item
   ) AS subscription_items
   WHERE s.customer = p_customer_id
   ORDER BY s.created DESC
