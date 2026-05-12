@@ -201,6 +201,24 @@ describe('signInWithBusinessSuite', () => {
     expect(params.get('redirect_uri')).toBe('https://d.crm.crm7.app/auth/callback')
   })
 
+  it('falls back to NEXT_PUBLIC_APP_URL when VITE_APP_URL is unset', async () => {
+    getProcessEnv().NEXT_PUBLIC_APP_URL = 'https://d.conduit.crm7.app'
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    const href = window.location.href
+    const params = new URLSearchParams(href.split('?')[1])
+    expect(params.get('redirect_uri')).toBe('https://d.conduit.crm7.app/auth/callback')
+  })
+
+  it('falls back to window.location.origin when VITE_APP_URL is malformed', async () => {
+    getProcessEnv().VITE_APP_URL = 'not-a-url'
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    const href = window.location.href
+    const params = new URLSearchParams(href.split('?')[1])
+    expect(params.get('redirect_uri')).toBe('https://crm.crm7.app/auth/callback')
+  })
+
   it('passes prompt=none for OIDC silent re-auth', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     await createOAuthClient(CLIENT_ID).signInWithBusinessSuite({ prompt: 'none' })

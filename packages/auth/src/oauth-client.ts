@@ -57,7 +57,7 @@ function getRedirectUri(): string {
       const appUrl = new URL(configuredAppUrl);
       return `${appUrl.origin}/auth/callback`;
     } catch {
-      // Fall through to runtime origin when the env value is invalid.
+      // Fall through to runtime origin when the env value is not a valid URL.
     }
   }
   return `${window.location.origin}/auth/callback`;
