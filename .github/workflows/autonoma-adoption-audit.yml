@@ -8,7 +8,8 @@ on:
       - 'package.json'
       - '.gitmodules'
   schedule:
-    # Nightly off-peak UTC check to avoid adding latency/noise to daytime PR queues.
+    # Nightly full-suite run (all apps) in off-peak UTC; PR-triggered runs are limited
+    # to changes in this workflow/script so regular PRs do not pick up extra CI noise.
     - cron: '0 4 * * *'
   workflow_dispatch:
 

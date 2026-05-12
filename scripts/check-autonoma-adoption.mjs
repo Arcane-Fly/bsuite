@@ -30,7 +30,9 @@ const testFileSuffixes = [
 ];
 
 function isENOENTError(error) {
-  return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT');
+  if (!(error instanceof Error)) return false;
+  if (!('code' in error)) return false;
+  return error.code === 'ENOENT';
 }
 
 async function pathExists(target) {
@@ -45,7 +47,7 @@ async function pathExists(target) {
   }
 }
 
-async function getMarkdownFiles(targetDir) {
+async function getMarkdownFileNames(targetDir) {
   if (!(await pathExists(targetDir))) return [];
   const entries = await readdir(targetDir, { withFileTypes: true });
   return entries
@@ -53,7 +55,7 @@ async function getMarkdownFiles(targetDir) {
     .map((entry) => entry.name);
 }
 
-async function getTestFiles(targetDir) {
+async function getTestFileNames(targetDir) {
   if (!(await pathExists(targetDir))) return [];
   const entries = await readdir(targetDir, { withFileTypes: true });
   return entries
@@ -80,8 +82,9 @@ for (const app of apps) {
   }
 
   if (appEntries.length === 0) {
-    const status = strict ? 'FAIL' : 'WARN';
-    if (strict) hasFailures = true;
+    const isFailure = strict;
+    const status = isFailure ? 'FAIL' : 'WARN';
+    hasFailures = hasFailures || isFailure;
     results.push({
       app,
       status,
@@ -98,12 +101,12 @@ for (const app of apps) {
     }
   }
 
-  const skillsFiles = await getMarkdownFiles(path.join(appPath, 'autonoma/skills'));
+  const skillsFiles = await getMarkdownFileNames(path.join(appPath, 'autonoma/skills'));
   if (skillsFiles.length === 0) {
     missingFiles.push('autonoma/skills/*.md');
   }
 
-  const qaTests = await getTestFiles(path.join(appPath, 'autonoma/qa-tests'));
+  const qaTests = await getTestFileNames(path.join(appPath, 'autonoma/qa-tests'));
   if (qaTests.length === 0) {
     missingFiles.push('autonoma/qa-tests/*.(spec|test).{ts,tsx,js,jsx}');
   }
