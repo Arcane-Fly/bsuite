@@ -12,8 +12,9 @@
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
     "last_extended": "2026-05-08T20:38:02Z",
-    "extended_by": "perplexity-loop 4h sweep",
-    "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583"
+    "extended_by": "claude-code-scheduled cron 20260512",
+    "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
+    "last_refresh": "2026-05-12"
   },
   "summary": {
     "external_total": 30,
@@ -75,9 +76,9 @@
     {
       "name": "bsuite",
       "type": "parent",
-      "active_plans": 8,
-      "archived": 6,
-      "main_sha": "post-#523",
+      "active_plans": 13,
+      "archived": 0,
+      "main_sha": "9035daa",
       "vercel": "n/a"
     },
     {
@@ -85,7 +86,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 2,
-      "main_sha": "d4fc95e5",
+      "main_sha": "f61337d",
       "vercel": "success"
     },
     {
@@ -93,7 +94,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "a4264a66",
+      "main_sha": "aa7dd78",
       "vercel": "success"
     },
     {
@@ -101,7 +102,7 @@
       "type": "submodule",
       "active_plans": 5,
       "archived": 0,
-      "main_sha": "19781ae5",
+      "main_sha": "356a247",
       "vercel": "success"
     },
     {
@@ -109,7 +110,7 @@
       "type": "submodule",
       "active_plans": 0,
       "archived": 1,
-      "main_sha": "d2f6dfbc",
+      "main_sha": "bf3179d",
       "vercel": "success"
     },
     {
@@ -117,7 +118,7 @@
       "type": "submodule",
       "active_plans": 0,
       "archived": 1,
-      "main_sha": "4f524ee8",
+      "main_sha": "8b9d9f3",
       "vercel": "success"
     },
     {
@@ -125,7 +126,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "ade797e3",
+      "main_sha": "71a8d70",
       "vercel": "success"
     }
   ],
