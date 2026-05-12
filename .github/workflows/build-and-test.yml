@@ -24,6 +24,10 @@ jobs:
           test -f docs/README.md
           git submodule status --recursive
 
+      - name: Verify GitHub App private key is never committed
+        shell: bash
+        run: bash scripts/check-no-github-app-private-key.sh
+
       - name: Enforce Tailwind v4+
         shell: bash
         run: node scripts/check-tailwind-v4.mjs

@@ -1,0 +1,21 @@
+{
+  "name": "@bsuite/jodie",
+  "version": "0.1.0",
+  "description": "GitHub App webhook + installation token primitives for Jodie triage automation",
+  "type": "module",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@octokit/auth-app": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
+  }
+}
