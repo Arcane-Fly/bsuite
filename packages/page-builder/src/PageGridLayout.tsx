@@ -54,6 +54,17 @@ type GridItemProps = {
   isEditing: boolean;
   label: string;
   onRemove: (id: string) => void;
+  /**
+   * Injected children — react-grid-layout v2 + react-resizable wrap each item
+   * with `cloneElement(child, { children: [origChildren, ...resizeHandles] })`.
+   * For the cloned `children` to actually mount in the DOM, our component
+   * MUST render `{children}` somewhere. Without this, the handle silently
+   * drops — bottom-right resize is invisible. Place this at the OUTER level
+   * (sibling of the inner wrapper) so the .react-resizable-handle CSS
+   * positioning targets `.react-grid-item` correctly.
+   * Resize-bug fix, 2026-05-12 (operator-flagged 50+ times).
+   */
+  children?: React.ReactNode;
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'content'>;
 
 const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(function GridItem({
@@ -62,6 +73,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   isEditing,
   label,
   onRemove,
+  children: injectedChildren,
   className: injectedClassName,
   style: injectedStyle,
   ...rest
@@ -119,6 +131,15 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             {content}
           </div>
         </div>
+        {/*
+         * Injected by react-resizable's cloneElement when this item is a child
+         * of <Resizable>. Becomes the .react-resizable-handle-se span (or whatever
+         * RGLResizeHandle renders). Positioned absolute at bottom-right via
+         * react-grid-layout-overrides.css — MUST be a child of .react-grid-item
+         * (this outer div), not the inner wrapper, so the CSS targets the right
+         * positioning origin.
+         */}
+        {injectedChildren}
       </div>
     );
   }));
