@@ -34,7 +34,8 @@ const clientSideGatewayKeySnippets = [
   'NEXT_PUBLIC_AI_GATEWAY_API_KEY',
 ]
 // Captures typical AI SDK call options payloads (including metadata objects and headers)
-// without scanning an unbounded amount of source per callsite.
+// across ~20-40 line invocation blocks while avoiding unbounded scanning per callsite.
+// If callsites grow beyond this, increase this constant alongside tests.
 const CALL_WINDOW_SIZE = 1200
 
 const violations = []
@@ -73,7 +74,7 @@ for (const relativeFilePath of trackedFiles) {
     const importPattern = new RegExp(
       `(?:from\\s*['"]${escapeForRegExp(moduleName)}['"]|require\\(\\s*['"]${escapeForRegExp(
         moduleName
-      )}['"]\\s*\\))`
+      )}['"]\\s*\\)|import\\(\\s*['"]${escapeForRegExp(moduleName)}['"]\\s*\\))`
     )
     const match = importPattern.exec(contentWithoutComments)
     if (match?.index !== undefined) {
