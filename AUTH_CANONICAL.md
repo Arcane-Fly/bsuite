@@ -197,11 +197,12 @@ The BSU Developer Portal uses two role sources and **must not** conflate them:
 | `/developer/tenant` | ✅ all tenants | ✅ enterprise + descendants | ✅ own tenant only |
 | `/developer/schema` | ✅ | ❌ | ❌ |
 | `/developer/tables`, `/logs`, `/functions`, `/notices`, `/routing`, `/embed`, `/rate-limits`, `/platform`, `/nav` | ✅ | ❌ | ❌ |
-| `/developer/access` | ✅ | ✅ read/invite/update own enterprise users only via access module (no `platform_role` mutation) | ❌ |
+| `/developer/access` | ✅ | ✅ read/invite/update own enterprise users only via access module (no `platform_role` mutation; see BSU access/user-management guards) | ❌ |
 
 ### Canonical role semantics for branding scope
 
 - `enterprise_super_admin` and `enterprise_admin`: can manage Tier 2/Tier 3 branding for their enterprise tenant and all descendant sub-org tenants.
+- For branding scope, `enterprise_super_admin` and `enterprise_admin` are intentionally equivalent; other domains may differentiate them, but branding writes do not.
 - `sub_org_admin`: can manage Tier 2/Tier 3 branding for their own tenant only.
 - `owner` and `admin` remain valid direct-tenant admin roles for Tier 2/Tier 3 writes (backward compatibility).
 - Tier 1 (`platform_branding`) remains platform-only.

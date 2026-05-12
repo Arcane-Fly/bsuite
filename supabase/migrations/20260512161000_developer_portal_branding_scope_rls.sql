@@ -25,6 +25,10 @@ AS $$
 DECLARE
   is_platform_role BOOLEAN;
 BEGIN
+  IF auth.uid() IS NULL THEN
+    RETURN FALSE;
+  END IF;
+
   -- STABLE is safe here: auth.uid() is fixed for the statement/JWT context in
   -- which the policy is evaluated, and this helper is read-only.
   SELECT EXISTS (
@@ -83,6 +87,7 @@ BEGIN
       SELECT c.id, c.parent_tenant_id, d.depth + 1
       FROM public.tenants c
       INNER JOIN tenant_descendants d ON c.parent_tenant_id = d.id
+      -- Defensive ceiling against malformed cyclic hierarchies.
       WHERE d.depth < 16
     )
     SELECT 1
@@ -95,7 +100,8 @@ $$;
 COMMENT ON FUNCTION public.can_manage_tenant_branding IS
   'Returns true when auth.uid() can mutate tenant_branding/tenant_app_branding for target tenant. '
   'Allows platform developer/admin globally; enterprise_super_admin/enterprise_admin for enterprise+descendants; '
-  'sub_org_admin/owner/admin for direct tenant only. See AUTH_CANONICAL.md Developer-Portal-Scope.';
+  'sub_org_admin/owner/admin for direct tenant only. SECURITY DEFINER is intentional for cross-tenant membership checks. '
+  'See AUTH_CANONICAL.md Developer-Portal-Scope.';
 
 DO $$
 DECLARE
@@ -125,6 +131,8 @@ ALTER TABLE public.tenant_branding ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenant_app_branding ENABLE ROW LEVEL SECURITY;
 
 -- tenant_branding policies (Tier 2)
+-- Read is intentionally open to authenticated/anon because branding is a
+-- presentational config surface used by app bootstrapping + SSR fallbacks.
 CREATE POLICY "tenant_branding_select"
   ON public.tenant_branding FOR SELECT
   TO authenticated
