@@ -23,9 +23,10 @@ interface JodieAgentRunOptions {
   streamTextFn?: typeof streamText
 }
 
-type DiscoveredToolSet = Record<string, unknown>
+type MCPToolMap = Record<string, unknown>
 type JodieStreamTextResult = ReturnType<typeof streamText>
 type JodieEnv = Record<string, string | undefined>
+const TOOL_PREFIX_SEPARATOR = '__'
 
 type NamedClients = {
   github: MCPClient
@@ -33,8 +34,10 @@ type NamedClients = {
   vercel: MCPClient
 }
 
-function prefixToolNames(prefix: string, tools: DiscoveredToolSet): DiscoveredToolSet {
-  const prefixedEntries = Object.entries(tools).map(([name, tool]) => [`${prefix}__${name}`, tool] as const)
+function prefixToolNames(prefix: string, tools: MCPToolMap): MCPToolMap {
+  const prefixedEntries = Object.entries(tools).map(
+    ([name, tool]) => [`${prefix}${TOOL_PREFIX_SEPARATOR}${name}`, tool] as const,
+  )
   return Object.fromEntries(prefixedEntries)
 }
 
@@ -81,7 +84,7 @@ export async function runJodieAgentLoop(options: JodieAgentRunOptions): Promise<
       clients.vercel.tools({ schemas: schemas.vercel }),
     ])
 
-    const tools: DiscoveredToolSet = {
+    const tools: MCPToolMap = {
       ...prefixToolNames('github', githubTools),
       ...prefixToolNames('supabase', supabaseTools),
       ...prefixToolNames('vercel', vercelTools),
