@@ -11,3 +11,5 @@ Exports:
 
 Consumer apps must depend on the published npm package, not `workspace:*` or
 `file:` links, because each app deploys independently.
+
+- symbol helpers: `resolveSymbolInstance`, `createSymbolFromResolvedConfig`, `detachSymbolInstance`, `rebuildInstanceFromDetachUndo`, `groupSymbolLibraryByScope`

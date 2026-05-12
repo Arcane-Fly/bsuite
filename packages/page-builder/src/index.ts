@@ -33,3 +33,23 @@ export type {
   UsePageGridLayoutResult,
   WidgetMeta,
 } from './types.js';
+
+export {
+  createSymbolFromResolvedConfig,
+  detachSymbolInstance,
+  groupSymbolLibraryByScope,
+  rebuildInstanceFromDetachUndo,
+  resolveSymbolInstance,
+} from './symbols.js';
+export type {
+  ComponentDefinitionRecord,
+  ComponentInstanceRecord,
+  DetachSymbolResult,
+  DetachSymbolUndoEntry,
+  GroupedSymbolLibrary,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
+  SaveAsSymbolInput,
+  SaveAsSymbolResult,
+} from './symbols.js';
