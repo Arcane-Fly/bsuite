@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.08W
+**Version:** 5.09W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-10 (claude-loop ROADMAP rotation — codehouse-parity sub-plan README added, 2026-05-09/10 rotation cycle tracked, auth bridge + apprentice placement + conduit reconciliation docs captured)
+**Last Updated:** 2026-05-12 (claude-loop DOCS rotation — 2026-05-11/12 rotation cycle + page-builder resize-handle dual fix + OAuth client_id trim + O.11 centralised theming + PKCE localStorage hotfix captured)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -461,6 +461,40 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 ---
 
+## Recently Completed (as of 2026-05-12 — claude-loop rotation cycle + page-builder resize fix + OAuth hardening + O.11 theming)
+
+> Captures work landed 2026-05-11 → 2026-05-12 not yet in the 2026-05-10 section below. For the prior 2026-05-09/10 cycle see that section; for the larger 2026-04-15 → 2026-05-08 batch see the 2026-05-08 section.
+
+**PAGE-BUILDER — react-grid-layout v2 resize-handle restored (2026-05-12)**
+
+- ✅ **Render `react-resizable`'s `cloneElement`-injected children** ([bsuite#839](https://github.com/GaryOcean428/bsuite/pull/839), 2026-05-12) — corrective second-pass after [#836](https://github.com/GaryOcean428/bsuite/pull/836). v2 of `react-grid-layout` clones each child with an injected `<resizableHandle>` slot; the prior fix forgot to render `props.children` after `cloneElement`, so the SE handle was present in the DOM tree but invisible. The two-PR sequence (#836 → #839) is recorded as a §9.3 self-report case: the original PR did not pass the §9.2 visual-equivalence loop (handle was not opened in a real browser), and the divergence was caught only after a downstream user reported it.
+
+**AUTH — OAuth `client_id` trim defence-in-depth (2026-05-11)**
+
+- ✅ **`client_id` whitespace trim on the BS OAuth Server** ([bsuite#829](https://github.com/GaryOcean428/bsuite/pull/829) — 6 submodule pointers bumped) — every consumer's `business-suite-oauth.ts` and the BSU `/oauth/authorize` handler now `.trim()` the registered `client_id` before lookup. Defends against the operator-paste / env-var-trailing-whitespace failure mode that produced 400 `unknown_client` on the BSU→Throughput handoff (logged 2026-05-10). Companion to the existing `oauth-callback-must-bridge` lint rule.
+- ✅ **PKCE localStorage hotfix + crm7 migration** ([bsuite#832](https://github.com/GaryOcean428/bsuite/pull/832) — 5 submodule pointers bumped, 2026-05-12) — verifies all 5 consumer Supabase clients use `flowType: 'pkce'` + per-domain `localStorage` storage key. Closes a residual `cookieStorage` reference in a deprecated crm7 helper.
+
+**O.11 — Centralised theming + agent doctrine refresh + Tailwind v4 check (2026-05-11)**
+
+- ✅ **Part O.11 plan + execution kickoff** ([bsuite#825](https://github.com/GaryOcean428/bsuite/pull/825)) — `docs/plans/20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md` is now the planning authority for the centralised-theming POC, the feature-placement audit addendum, and the docs-coherence pass. Establishes `@bsuite/theme@0.3.3+` (`packages/theme/`) as the canonical OKLCH role-token source for the 5 D2C apps + `@bsuite/theme/braden-css` for braden. Mandates the five-tier anti-glare text scale capped at `oklch(0.94 ... )` on dark surfaces; bans raw `text-white`, `text-black`, hex/RGB/HSL in consumer UI; reaffirms purple Electric Purple `oklch(0.568 0.202 283.1)` as the only semantic error/destructive role (not tenant-overridable). CLAUDE.md "Theme System" section refreshed in the same PR.
+
+**ROTATION — claude-loop overnight cycle (2026-05-11 / 2026-05-12)**
+
+| Issue | Task | Repo | Outcome |
+|---|---|---|---|
+| [bsuite#830](https://github.com/GaryOcean428/bsuite/issues/830) | TYPES | bsuite | `data-export/xlsx/index.ts` `any` tightening — [bsuite#831](https://github.com/GaryOcean428/bsuite/pull/831) merged direct |
+| [bsuite#833](https://github.com/GaryOcean428/bsuite/issues/833) | A11Y | BSU | WCAG 2.4.1 skip-to-main-content link in `MainApp` shell — handoff [bsuite#834](https://github.com/GaryOcean428/bsuite/issues/834) (BSU#403, awaiting ship-all-apps merge) |
+| [bsuite#838](https://github.com/GaryOcean428/bsuite/issues/838) | DB | — | Supabase advisor sweep on `tuybltdrdefjblnplpqo` — closed clean |
+| [bsuite#841](https://github.com/GaryOcean428/bsuite/issues/841) | EDGE | — | Edge-fn security review (CORS / OPTIONS / WIF) — closed clean |
+| [bsuite#844](https://github.com/GaryOcean428/bsuite/issues/844) | TESTS | BSU | `AppLauncherTile` vitest render contract (12 cases, `describe.each` × 5 tints) — handoff [bsuite#845](https://github.com/GaryOcean428/bsuite/issues/845) (BSU#418, awaiting ship-all-apps merge) |
+| (this update) | DOCS | bsuite | Master roadmap v5.09W — capture 2026-05-11/12 cycle |
+
+**Dashboard cron sweep — 2026-05-12 (informational)**
+
+- ✅ **Dashboard data refresh** ([bsuite#843](https://github.com/GaryOcean428/bsuite/pull/843) → promotion [#846](https://github.com/GaryOcean428/bsuite/pull/846)) — `bsuite.active_plans` 8 → 13 (5 new plans surfaced under `docs/plans/`); `bsuite.archived` corrected 6 → 0 (`docs/plans/archive/` is empty of `.md` files); `meta.last_refresh` set to 2026-05-12; all 6 submodule SHAs refreshed to current registered pointers; `index.html` re-inlined via `inline-data.sh`.
+
+---
+
 ## Recently Completed (as of 2026-05-10 — claude-loop rotation cycle + auth bridge + placement docs)
 
 > Captures work landed 2026-05-09 → 2026-05-10 not yet in the 2026-05-08 section below. For the larger 2026-04-15 → 2026-05-08 batch, see that section.
@@ -807,6 +841,10 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-12 v5.09W** — claude-loop DOCS rotation:
+  - Added "Recently Completed (as of 2026-05-12)" section covering 2026-05-11/12 rotation cycle (TYPES → A11Y → DB → EDGE → TESTS → DOCS) and the structural items not captured by rotation tracker issues: page-builder resize-handle dual fix (#836 → #839, recorded as §9.3 self-report case), OAuth `client_id` trim defence-in-depth (#829), PKCE localStorage hotfix + crm7 migration (#832), and Part O.11 centralised theming plan adoption (#825).
+  - Dashboard cron sweep (PR #843 → promotion #846) noted for traceability — `bsuite.active_plans` 8 → 13, `bsuite.archived` 6 → 0 correction.
+  - Last Updated line bumped.
 - **2026-05-10 v5.08W** — claude-loop ROADMAP rotation (issue [bsuite#789](https://github.com/GaryOcean428/bsuite/issues/789)):
   - Added "Recently Completed (as of 2026-05-10)" section covering 2026-05-09/10 rotation cycle (DB → EDGE → TESTS → DOCS → PERF → ROADMAP), AUTH setSession bridge + 60s sync lint rule + contract tests, APPRENTICE placement docs (AVETMISS/state-machine/form-schema), CONDUIT reconciliation docs, codehouse-parity sub-plans README.
   - Added P1 #3a (9-wave UI uplift program) and P1 #3b (Codehouse Parity & Platform 360 remaining workstreams) to execution table.
