@@ -210,9 +210,9 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "WS-1 partial (BUG-1 regression); WS-2/3/5/6/7 DONE; WS-4 DB\u2194TS divergence",
+      "phase": "3/9 WS DONE; WS-1 BUG-1 latent; WS-4 DB\u2194TS",
       "owner": "crm7 + R80.3",
-      "next_step": "HF-1 re-land /52 fix in @bsuite/charge-calc + publish 0.2.5 + bump consumers; HF-2 unify WS-4 timesheet_state vocabulary (DB vs TS); HF-3 restore ADRs to crm7/docs/adr/; HF-4 add pgTap harness; WS-9 portals depend on HF-2 resolution.",
+      "next_step": "HF-1 re-land /52 fix in @bsuite/charge-calc (publish 0.2.5, bump consumers); HF-2 unify WS-4 state vocab (DB vs TS); HF-3 restore ADRs to crm7/docs/adr/; HF-4 add pgTap harness; seed WS-5 7 templates; add 5 missing NAT formatters (WS-6); codify apprentice_rate_configs migration.",
       "severity": "P0",
       "category": "Billing"
     },
