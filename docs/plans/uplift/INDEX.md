@@ -22,7 +22,7 @@ Tracker: [bsuite#635](https://github.com/GaryOcean428/bsuite/issues/635).
 | W5 | Tenant Admin | perplexity-computer | 🟡 UNBLOCKED — queued | W0 |
 | W6 | Branding | claude-code-local | 🔄 IN PROGRESS — BSU cleanup PR pending merge (`BSU#375`) | W0 |
 | W7 | Apprentice placements | perplexity-computer | 🟡 UNBLOCKED — queued | W0 |
-| W8 | Conduit/Throughput/R80.3/Braden consumer bumps | perplexity-computer | ⏳ BLOCKED pending W7 | W7 |
+| W8 | Conduit/Throughput/R80.3/Braden consumer bumps | perplexity-computer | ⏳ BLOCKED pending W7 | W0/W1/W2 baseline + W7 sequencing |
 
 ## Hard rules (Doctrine §5.1)
 
