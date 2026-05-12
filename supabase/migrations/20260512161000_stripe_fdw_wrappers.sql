@@ -31,7 +31,7 @@ BEGIN
 
   IF v_stripe_api_key_id IS NULL THEN
     RAISE EXCEPTION
-      'Missing Vault secret "stripe_api_key". Create it with vault.create_secret(...) before applying this migration.';
+      'Missing Vault secret "stripe_api_key". Create it first, e.g. vault.create_secret(''sk_live_...'',''stripe_api_key'',''Stripe Secret Key'') before applying this migration.';
   END IF;
 
   IF EXISTS (SELECT 1 FROM pg_foreign_server WHERE srvname = 'stripe_server') THEN
@@ -160,8 +160,8 @@ RETURNS TABLE (
   status text,
   current_period_start timestamptz,
   current_period_end timestamptz,
-  price_id text,
-  product_id text,
+  price_ids text[],
+  product_ids text[],
   created timestamptz
 )
 LANGUAGE plpgsql
@@ -180,8 +180,14 @@ BEGIN
     s.status,
     s.current_period_start,
     s.current_period_end,
-    s.attrs #>> '{items,data,0,price,id}' AS price_id,
-    s.attrs #>> '{items,data,0,price,product}' AS product_id,
+    (
+      SELECT coalesce(array_agg(item -> 'price' ->> 'id'), ARRAY[]::text[])
+      FROM jsonb_array_elements(coalesce(s.attrs #> '{items,data}', '[]'::jsonb)) item
+    ) AS price_ids,
+    (
+      SELECT coalesce(array_agg(item -> 'price' ->> 'product'), ARRAY[]::text[])
+      FROM jsonb_array_elements(coalesce(s.attrs #> '{items,data}', '[]'::jsonb)) item
+    ) AS product_ids,
     s.created
   FROM stripe.subscriptions s
   WHERE s.customer = p_customer_id
@@ -199,4 +205,4 @@ COMMENT ON FUNCTION public.stripe_customer_by_email(text) IS
   'Service-role-only Stripe FDW reader. New Stripe read paths should call this RPC instead of an edge-function read proxy.';
 
 COMMENT ON FUNCTION public.stripe_subscription_snapshot(text) IS
-  'Service-role-only Stripe FDW reader for subscription status snapshots (pilot replacement for edge-function Stripe reads).';
+  'Service-role-only Stripe FDW reader for subscription status snapshots (pilot replacement for edge-function Stripe reads). Returns all subscription item price/product ids.';

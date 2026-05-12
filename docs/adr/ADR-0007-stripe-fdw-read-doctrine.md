@@ -62,4 +62,4 @@ Scope split:
 
 - Vault secret `stripe_api_key` must exist before applying migration.
 - Any new Stripe read feature PR must cite this ADR and use FDW path unless a
-  documented exception is approved.
+  documented exception is approved by the operator (or superseded by a newer ADR).
