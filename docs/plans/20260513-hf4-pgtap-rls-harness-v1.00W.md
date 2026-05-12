@@ -48,16 +48,26 @@ JWT, and gates CI on it.
 ### CI
 
 `.github/workflows/pgtap.yml` — runs on PR + push when migrations or
-pgTAP files change. Spins up `postgres:15` service, installs
-`postgresql-15-pgtap` + `libtap-parser-sourcehandler-pgtap-perl`,
-bootstraps the auth schema + PostgREST roles + `auth.uid/jwt/role`
-shims, applies every migration in chronological order with
-`ON_ERROR_STOP=1`, then runs `pg_prove` against
-`supabase/tests/pgtap/`.
+pgTAP files change. Uses the **canonical Supabase CLI path** per the
+`supabase` skill doctrine:
+
+1. `supabase/setup-cli@v1` installs the latest CLI.
+2. `supabase init` creates an ephemeral `supabase/config.toml` (the
+   crm7 repo doesn't commit one — team uses hosted Supabase via MCP).
+3. `supabase db start` provisions the **official Supabase Postgres
+   container** which already ships with:
+   - pgTAP extension installed
+   - Real `auth` schema with production `auth.uid()` / `auth.jwt()` /
+     `auth.role()` (sourced from gotrue, **not hand-stubbed**)
+   - `anon` / `authenticated` / `service_role` / `authenticator` roles
+     correctly configured
+   - `pg_hba.conf` pre-configured for password auth
+   - All `supabase/migrations/*.sql` auto-applied in chronological order
+4. `pg_prove` runs every `.sql` file under `supabase/tests/database/`.
 
 ### Docs
 
-- `crm7/supabase/tests/pgtap/README.md` — harness rationale,
+- `crm7/supabase/tests/database/README.md` — harness rationale,
   layout, how to add new suites, how the anon-key simulation works.
 - `crm7/CONTRIBUTING.md` — new "RLS testing (Constraint C10)" section
   explaining the mandatory gate.
@@ -123,10 +133,10 @@ after** a `sign_in_as_*` call.
 
 | Risk                                                              | Mitigation                                                                           |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Stub `auth.uid/jwt/role` drifts from real gotrue implementation   | Shim is a 4-line `current_setting(…)` wrapper identical to what gotrue writes        |
-| Migrations depend on extensions not available in `postgres:15`    | CI installs `pgcrypto` + `pgtap` up front; any other extension must be declared      |
-| `timesheets` / `engagements` tables created in pre-WS migrations  | Fixtures use only the columns the WS-4 RLS policies reference; rest falls to DEFAULT |
-| Workflow flakes because service container takes > 30 s to come up | `wait for Postgres` step polls `pg_isready` 30× with 1 s interval                    |
+| Stub auth schema drifts from real gotrue implementation           | **Eliminated** — we use `supabase db start` which provisions the real `auth` schema |
+| Migrations depend on extensions not available in CI Postgres      | Supabase Postgres image ships pgTAP, pgcrypto, plpgsql, etc. preinstalled            |
+| `timesheets` / `engagements` tables created in pre-WS migrations  | Fixtures use only columns the RLS policies reference; rest falls to DEFAULT          |
+| `supabase db start` slow on cold runner (Docker pull)             | Step has 20-min timeout; subsequent layer cache hits should be < 60 s                |
 | Future migration changes fixture-required columns                 | Suites are self-contained per transaction; only the affected suite needs update      |
 
 ## Rollout
