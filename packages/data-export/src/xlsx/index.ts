@@ -34,6 +34,21 @@ const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
+/** Subset of cell style we write: bold/colour font + solid fill. */
+interface XlsxCellStyle {
+  font?: { bold?: boolean; color?: { rgb: string } };
+  fill?: { patternType: 'solid'; fgColor: { rgb: string } };
+}
+
+/**
+ * WorkSheet augmented with the `!views` freeze-pane property.
+ * `!views` is a valid OOXML worksheet property honoured by @e965/xlsx's
+ * writer but absent from its public TypeScript surface (as of v0.20.x).
+ */
+type WorkSheetWithViews = XLSXType.WorkSheet & {
+  '!views'?: Array<{ state: 'frozen'; ySplit: number; xSplit: number }>;
+};
+
 export interface ToXlsxOptions {
   sanitize?: SanitizeMode;
   coerce?: CoerceOptions;
@@ -74,18 +89,17 @@ async function loadXlsx(): Promise<typeof XLSXType> {
 
 function applyHeaderStyle(
   XLSX: typeof XLSXType,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ws: any,
+  ws: XLSXType.WorkSheet,
   headerCount: number,
   style: HeaderStyle,
 ): void {
   if (headerCount === 0) return;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cellStyle: any = {};
+  const cellStyle: XlsxCellStyle = {};
   if (style.bold || style.fontColor) {
-    cellStyle.font = {};
-    if (style.bold) cellStyle.font.bold = true;
-    if (style.fontColor) cellStyle.font.color = { rgb: style.fontColor };
+    const font: NonNullable<XlsxCellStyle['font']> = {};
+    if (style.bold) font.bold = true;
+    if (style.fontColor) font.color = { rgb: style.fontColor };
+    cellStyle.font = font;
   }
   if (style.fillColor) {
     cellStyle.fill = { patternType: 'solid', fgColor: { rgb: style.fillColor } };
@@ -93,7 +107,8 @@ function applyHeaderStyle(
   if (Object.keys(cellStyle).length === 0) return;
   for (let c = 0; c < headerCount; c++) {
     const addr = XLSX.utils.encode_cell({ r: 0, c });
-    if (ws[addr]) ws[addr].s = cellStyle;
+    const cell = ws[addr] as { s?: XlsxCellStyle } | undefined;
+    if (cell) cell.s = cellStyle;
   }
 }
 
@@ -161,9 +176,7 @@ export async function toXlsx(
     }
 
     if (sheet.freezeHeader) {
-      // `!views` isn't in @e965/xlsx's TS surface but is honoured by the writer.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (ws as any)['!views'] = [{ state: 'frozen', ySplit: 1, xSplit: 0 }];
+      (ws as WorkSheetWithViews)['!views'] = [{ state: 'frozen', ySplit: 1, xSplit: 0 }];
     }
 
     // Excel sheet names max 31 chars, and must not contain : \ / ? * [ ]
