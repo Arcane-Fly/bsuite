@@ -25,6 +25,8 @@ AS $$
 DECLARE
   is_platform_role BOOLEAN;
 BEGIN
+  -- STABLE is safe here: auth.uid() is fixed for the statement/JWT context in
+  -- which the policy is evaluated, and this helper is read-only.
   SELECT EXISTS (
     SELECT 1
     FROM public.profiles

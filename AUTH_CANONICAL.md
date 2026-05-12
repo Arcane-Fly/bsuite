@@ -206,7 +206,7 @@ The BSU Developer Portal uses two role sources and **must not** conflate them:
 - `owner` and `admin` remain valid direct-tenant admin roles for Tier 2/Tier 3 writes (backward compatibility).
 - Tier 1 (`platform_branding`) remains platform-only.
 - Website text must remain platform-only because it is public, shared content on `suite.crm7.app` (not tenant-isolated).
-- `/developer/access` for enterprise admins is tenant-scoped only (read/invite/update within enterprise + descendants) and must never permit setting `app_metadata.platform_role`.
+- `/developer/access` for enterprise admins is tenant-scoped only (read/invite/update within enterprise + descendants) and must never permit setting `app_metadata.platform_role` (enforced in access/user-management authorization paths, not branding-table RLS).
 
 ### Enforcement requirement
 
