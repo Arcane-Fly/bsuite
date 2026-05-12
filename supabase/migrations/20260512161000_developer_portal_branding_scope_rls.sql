@@ -11,6 +11,8 @@
 -- NOTE:
 -- This migration intentionally resets and recreates tenant_branding and
 -- tenant_app_branding policies to avoid permissive legacy-policy overlap.
+-- can_manage_tenant_branding() is SECURITY DEFINER so policy checks can read
+-- membership + hierarchy tables consistently even when caller RLS is tighter.
 -- =====================================================
 
 CREATE OR REPLACE FUNCTION public.can_manage_tenant_branding(p_tenant_id UUID)
@@ -41,16 +43,15 @@ BEGIN
     RETURN FALSE;
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.tenants
+    WHERE id = p_tenant_id
+  ) THEN
+    RETURN FALSE;
+  END IF;
+
   RETURN EXISTS (
-    WITH RECURSIVE tenant_ancestors AS (
-      SELECT t.id, t.parent_tenant_id
-      FROM public.tenants t
-      WHERE t.id = p_tenant_id
-      UNION ALL
-      SELECT p.id, p.parent_tenant_id
-      FROM public.tenants p
-      INNER JOIN tenant_ancestors a ON a.parent_tenant_id = p.id
-    )
     SELECT 1
     FROM public.user_tenants ut
     WHERE ut.user_id = auth.uid()
@@ -59,9 +60,23 @@ BEGIN
         -- Direct tenant-scoped admins (legacy + sub-org explicit role)
         (ut.role IN ('owner', 'admin', 'sub_org_admin') AND ut.tenant_id = p_tenant_id)
         OR
-        -- Enterprise-level admins inherit all descendant sub-orgs
+        -- Enterprise-level admins inherit from their membership tenant downward only.
         (ut.role IN ('enterprise_super_admin', 'enterprise_admin')
-         AND ut.tenant_id IN (SELECT id FROM tenant_ancestors))
+         AND EXISTS (
+           WITH RECURSIVE tenant_descendants AS (
+             SELECT t.id, t.parent_tenant_id, 1 AS depth
+             FROM public.tenants t
+             WHERE t.id = ut.tenant_id
+             UNION ALL
+             SELECT c.id, c.parent_tenant_id, d.depth + 1
+             FROM public.tenants c
+             INNER JOIN tenant_descendants d ON c.parent_tenant_id = d.id
+             WHERE d.depth < 16
+           )
+           SELECT 1
+           FROM tenant_descendants
+           WHERE id = p_tenant_id
+         ))
       )
   );
 END;
@@ -153,6 +168,6 @@ CREATE POLICY "tenant_app_branding_delete"
   TO authenticated
   USING (public.can_manage_tenant_branding(tenant_id));
 
--- Recursive ancestry checks in can_manage_tenant_branding() traverse this edge.
-CREATE INDEX IF NOT EXISTS idx_tenants_parent_tenant_id
-  ON public.tenants (parent_tenant_id);
+-- Recursive descendant checks in can_manage_tenant_branding() traverse this edge.
+CREATE INDEX IF NOT EXISTS idx_tenants_parent_tenant_id_id
+  ON public.tenants (parent_tenant_id, id);
