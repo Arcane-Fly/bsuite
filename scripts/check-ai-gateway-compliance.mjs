@@ -24,6 +24,11 @@ const bannedProviderModules = [
 
 const aiCallSnippets = ['generateText(', 'streamText(', 'generateObject(']
 const metadataTokens = ['issueNumber', 'repo', 'agentRole']
+const metadataKeyPatterns = {
+  issueNumber: /\bissueNumber\s*[: ,]/,
+  repo: /\brepo\s*[: ,]/,
+  agentRole: /\bagentRole\s*[: ,]/,
+}
 const clientSideGatewayKeySnippets = [
   'VITE_AI_GATEWAY_API_KEY',
   'NEXT_PUBLIC_AI_GATEWAY_API_KEY',
@@ -61,8 +66,8 @@ function findCallWindows(fileContent, callSnippet) {
 for (const relativeFilePath of trackedFiles) {
   const absoluteFilePath = path.join(repoRoot, relativeFilePath)
   const fileContent = readFileSync(absoluteFilePath, 'utf8')
-  const lines = fileContent.split('\n')
   const contentWithoutComments = stripComments(fileContent)
+  const uncommentedLines = contentWithoutComments.split('\n')
 
   for (const moduleName of bannedProviderModules) {
     const importPattern = new RegExp(
@@ -85,13 +90,11 @@ for (const relativeFilePath of trackedFiles) {
     const callWindows = findCallWindows(contentWithoutComments, aiCallSnippet)
     callWindows.forEach((windowContent, callIndex) => {
       // Exact key spellings are intentional for normalized Gateway observability fields.
-      const metadataKeyPatterns = {
-        issueNumber: /\bissueNumber\s*[: ,]/,
-        repo: /\brepo\s*[: ,]/,
-        agentRole: /\bagentRole\s*[: ,]/,
-      }
+      const tokenPresence = Object.fromEntries(
+        metadataTokens.map((token) => [token, metadataKeyPatterns[token].test(windowContent)])
+      )
       const missingMetadataTokens = metadataTokens.filter(
-        (token) => !metadataKeyPatterns[token].test(windowContent)
+        (token) => !tokenPresence[token]
       )
       if (missingMetadataTokens.length > 0) {
         violations.push(
@@ -104,10 +107,8 @@ for (const relativeFilePath of trackedFiles) {
   }
 
   for (const snippet of clientSideGatewayKeySnippets) {
-    lines.forEach((line, index) => {
-      const trimmedLine = line.trim()
-      const isCommentLine = trimmedLine.startsWith('//') || trimmedLine.startsWith('*')
-      if (!isCommentLine && line.includes(snippet)) {
+    uncommentedLines.forEach((line, index) => {
+      if (line.includes(snippet)) {
         violations.push(
           `${relativeFilePath}:${index + 1} client-side AI Gateway key usage is forbidden (${snippet})`
         )
