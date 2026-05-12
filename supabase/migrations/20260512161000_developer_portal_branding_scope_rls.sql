@@ -51,33 +51,41 @@ BEGIN
     RETURN FALSE;
   END IF;
 
-  RETURN EXISTS (
+  -- Direct tenant-scoped admins (legacy + sub-org explicit role)
+  IF EXISTS (
     SELECT 1
     FROM public.user_tenants ut
     WHERE ut.user_id = auth.uid()
       AND ut.status = 'active'
-      AND (
-        -- Direct tenant-scoped admins (legacy + sub-org explicit role)
-        (ut.role IN ('owner', 'admin', 'sub_org_admin') AND ut.tenant_id = p_tenant_id)
-        OR
-        -- Enterprise-level admins inherit from their membership tenant downward only.
-        (ut.role IN ('enterprise_super_admin', 'enterprise_admin')
-         AND EXISTS (
-           WITH RECURSIVE tenant_descendants AS (
-             SELECT t.id, t.parent_tenant_id, 1 AS depth
-             FROM public.tenants t
-             WHERE t.id = ut.tenant_id
-             UNION ALL
-             SELECT c.id, c.parent_tenant_id, d.depth + 1
-             FROM public.tenants c
-             INNER JOIN tenant_descendants d ON c.parent_tenant_id = d.id
-             WHERE d.depth < 16
-           )
-           SELECT 1
-           FROM tenant_descendants
-           WHERE id = p_tenant_id
-         ))
-      )
+      AND ut.role IN ('owner', 'admin', 'sub_org_admin')
+      AND ut.tenant_id = p_tenant_id
+  ) THEN
+    RETURN TRUE;
+  END IF;
+
+  -- Enterprise-level admins inherit from their membership tenant downward only.
+  RETURN EXISTS (
+    WITH RECURSIVE
+    enterprise_memberships AS (
+      SELECT DISTINCT ut.tenant_id
+      FROM public.user_tenants ut
+      WHERE ut.user_id = auth.uid()
+        AND ut.status = 'active'
+        AND ut.role IN ('enterprise_super_admin', 'enterprise_admin')
+    ),
+    tenant_descendants AS (
+      SELECT t.id, t.parent_tenant_id, 1 AS depth
+      FROM public.tenants t
+      INNER JOIN enterprise_memberships em ON em.tenant_id = t.id
+      UNION ALL
+      SELECT c.id, c.parent_tenant_id, d.depth + 1
+      FROM public.tenants c
+      INNER JOIN tenant_descendants d ON c.parent_tenant_id = d.id
+      WHERE d.depth < 16
+    )
+    SELECT 1
+    FROM tenant_descendants
+    WHERE id = p_tenant_id
   );
 END;
 $$;

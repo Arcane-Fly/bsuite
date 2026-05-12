@@ -197,7 +197,7 @@ The BSU Developer Portal uses two role sources and **must not** conflate them:
 | `/developer/tenant` | ✅ all tenants | ✅ enterprise + descendants | ✅ own tenant only |
 | `/developer/schema` | ✅ | ❌ | ❌ |
 | `/developer/tables`, `/logs`, `/functions`, `/notices`, `/routing`, `/embed`, `/rate-limits`, `/platform`, `/nav` | ✅ | ❌ | ❌ |
-| `/developer/access` | ✅ | ⚠️ own enterprise users only (no platform-role mutation) | ❌ |
+| `/developer/access` | ✅ | ✅ read/invite/update own enterprise users only (no `platform_role` mutation) | ❌ |
 
 ### Canonical role semantics for branding scope
 
