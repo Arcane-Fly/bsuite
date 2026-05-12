@@ -179,6 +179,26 @@ write didn't land or has whitespace.
 2. **`supabase.auth.getUser()`** — round-trips to Supabase to validate. Use only when you also need fresh user metadata.
 3. **`supabase.auth.getSession()`** — **DO NOT use for auth decisions.** Reads localStorage without verification. Acceptable only for non-security UI hints (e.g. "are we logged in?" boolean for showing/hiding a button).
 
+## Stripe data-read architecture (FDW-first)
+
+For **new Stripe data reads**, BSuite uses Supabase Wrappers Stripe FDW (foreign
+tables in `stripe.*`) instead of adding new edge-function read proxies.
+
+- Installed via migration: `supabase/migrations/20260512161000_stripe_fdw_wrappers.sql`
+- Baseline mapped tables: `stripe.customers`, `stripe.invoices`,
+  `stripe.subscriptions`, `stripe.prices`, `stripe.products`
+- Stripe key is sourced from Supabase Vault secret name `stripe_api_key`
+  (`vault.create_secret(...)` done outside git history)
+
+Security rule:
+
+- Foreign tables do not use RLS in the usual table-policy sense.
+- Access is restricted to `service_role` and exposed through `SECURITY DEFINER`
+  RPC wrappers (`public.stripe_customer_by_email`, `public.stripe_subscription_snapshot`)
+  that explicitly check `auth.jwt() ->> 'role' = 'service_role'`.
+- Webhooks and write paths (e.g. portal session creation, webhook handlers,
+  refunds) stay as edge functions.
+
 ## CI guardrails (target — to be enforced)
 
 - Grep CI rejects any new occurrence of `cookieStorage`, `business_suite_auth`, or `domain.*crm7\.app` in `.ts` / `.tsx` outside `docs/`, `AUTH_CANONICAL.md`, and tests asserting the negative.
