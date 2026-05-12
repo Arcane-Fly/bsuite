@@ -116,11 +116,15 @@ DECLARE
   page_tenant_id UUID;
   has_definition_access BOOLEAN;
 BEGIN
+  -- component_instances inherit tenant access from custom_pages ownership.
+  -- Use dynamic SQL so this helper can be created in environments where
+  -- custom_pages has not yet been provisioned.
   IF to_regclass('public.custom_pages') IS NULL THEN
     RETURN FALSE;
   END IF;
 
-  EXECUTE '
+  BEGIN
+    EXECUTE '
     SELECT cp.tenant_id
     FROM public.custom_pages cp
     WHERE cp.id = $1
@@ -132,6 +136,10 @@ BEGIN
   '
   INTO page_tenant_id
   USING p_page_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      RETURN FALSE;
+  END;
 
   IF page_tenant_id IS NULL THEN
     RETURN FALSE;

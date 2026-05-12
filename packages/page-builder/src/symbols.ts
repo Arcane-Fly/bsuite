@@ -59,7 +59,7 @@ export interface GroupedSymbolLibrary {
   tenant: ComponentDefinitionRecord[];
 }
 
-function isPlainObject(value: JsonValue | undefined | null): value is JsonObject {
+function isPlainObject(value: unknown): value is JsonObject {
   if (value === null || value === undefined) return false;
   if (Array.isArray(value)) return false;
   return typeof value === 'object';

@@ -9,35 +9,44 @@ import {
   type JsonValue,
 } from '../symbols.js';
 
-function randomInt(max: number): number {
-  return Math.floor(Math.random() * max);
+function createDeterministicGenerator(seed: number): () => number {
+  let state = seed;
+  return () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
 }
 
-function randomJson(depth = 0): JsonValue {
+function randomInt(next: () => number, max: number): number {
+  return Math.floor(next() * max);
+}
+
+function randomJson(next: () => number, depth = 0): JsonValue {
   if (depth > 2) {
-    return randomInt(1000);
+    return randomInt(next, 1000);
   }
 
-  const branch = randomInt(4);
-  if (branch === 0) return randomInt(1000);
-  if (branch === 1) return `v-${randomInt(1000)}`;
+  const branch = randomInt(next, 4);
+  if (branch === 0) return randomInt(next, 1000);
+  if (branch === 1) return `v-${randomInt(next, 1000)}`;
   if (branch === 2) {
-    return [randomInt(10), randomInt(10), randomInt(10)];
+    return [randomInt(next, 10), randomInt(next, 10), randomInt(next, 10)];
   }
 
   const output: JsonObject = {};
-  const size = 1 + randomInt(3);
+  const size = 1 + randomInt(next, 3);
   for (let index = 0; index < size; index += 1) {
-    output[`k${index}`] = randomJson(depth + 1);
+    output[`k${index}`] = randomJson(next, depth + 1);
   }
   return output;
 }
 
 describe('resolveSymbolInstance', () => {
   it('is deterministic across repeated invocations for the same inputs', () => {
+    const next = createDeterministicGenerator(20260512);
     for (let index = 0; index < 50; index += 1) {
-      const defaults = randomJson() as JsonObject;
-      const overrides = randomJson() as JsonObject;
+      const defaults = randomJson(next) as JsonObject;
+      const overrides = randomJson(next) as JsonObject;
 
       const first = resolveSymbolInstance(defaults, overrides);
       const second = resolveSymbolInstance(defaults, overrides);
@@ -61,6 +70,7 @@ describe('resolveSymbolInstance', () => {
     ) as JsonObject;
 
     expect((resolved.items as JsonValue[])).toBe(overrideItems);
+    expect(((resolved.items as JsonObject[])[0])).toBe(overrideItems[0]);
 
     const resolvedWithoutOverride = resolveSymbolInstance(
       { items: defaultItems, style: { padding: 24 } },
@@ -68,6 +78,7 @@ describe('resolveSymbolInstance', () => {
     ) as JsonObject;
 
     expect((resolvedWithoutOverride.items as JsonValue[])).toBe(defaultItems);
+    expect(((resolvedWithoutOverride.items as JsonObject[])[0])).toBe(defaultItems[0]);
   });
 
   it('returns a merged object without aliasing merged object branches', () => {
