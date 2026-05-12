@@ -31,7 +31,7 @@ BEGIN
 
   IF v_stripe_api_key_id IS NULL THEN
     RAISE EXCEPTION
-      'Missing Vault secret "stripe_api_key". Create it first, e.g. vault.create_secret(''sk_...'',''stripe_api_key'',''Stripe Secret Key'') before applying this migration.';
+      'Missing Vault secret "stripe_api_key". Create it using vault.create_secret() before applying this migration.';
   END IF;
 
   IF EXISTS (SELECT 1 FROM pg_foreign_server WHERE srvname = 'stripe_server') THEN
@@ -179,17 +179,27 @@ BEGIN
   END IF;
 
   RETURN QUERY
+  -- Stripe subscription line items are read from attrs.items.data[]
+  -- because the FDW stores the full Stripe payload in `attrs`.
   SELECT
     s.id AS subscription_id,
     s.status,
     s.current_period_start,
     s.current_period_end,
     (
-      SELECT coalesce(array_agg(item -> 'price' ->> 'id'), ARRAY[]::text[])
+      SELECT coalesce(
+        array_agg(item -> 'price' ->> 'id')
+        FILTER (WHERE item -> 'price' ->> 'id' IS NOT NULL),
+        ARRAY[]::text[]
+      )
       FROM jsonb_array_elements(subscription_items.items) item
     ) AS price_ids,
     (
-      SELECT coalesce(array_agg(item -> 'price' ->> 'product'), ARRAY[]::text[])
+      SELECT coalesce(
+        array_agg(item -> 'price' ->> 'product')
+        FILTER (WHERE item -> 'price' ->> 'product' IS NOT NULL),
+        ARRAY[]::text[]
+      )
       FROM jsonb_array_elements(subscription_items.items) item
     ) AS product_ids,
     s.created
