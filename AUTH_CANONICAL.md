@@ -218,6 +218,40 @@ write didn't land or has whitespace.
 2. **`supabase.auth.getUser()`** — round-trips to Supabase to validate. Use only when you also need fresh user metadata.
 3. **`supabase.auth.getSession()`** — **DO NOT use for auth decisions.** Reads localStorage without verification. Acceptable only for non-security UI hints (e.g. "are we logged in?" boolean for showing/hiding a button).
 
+## Developer Portal scope model (BSU)
+
+The BSU Developer Portal uses two role sources and **must not** conflate them:
+
+- **Platform roles**: `auth.users.app_metadata.platform_role` (`developer`, `platform_admin`)
+- **Tenant roles**: `public.user_tenants.role` (tenant-scoped roles), resolved against the active tenant and `tenants.parent_tenant_id` hierarchy
+
+### Permission matrix
+
+| Capability | Platform Developer/Admin | Enterprise Super Admin | Sub-Org Admin |
+|---|---|---|---|
+| `/developer/website` (public CMS/copy) | ✅ | ❌ | ❌ |
+| `/developer/branding` Tier 1 (`platform_branding`) | ✅ | ❌ | ❌ |
+| `/developer/branding` Tier 2 (`tenant_branding`) | ✅ all tenants | ✅ enterprise + descendants | ❌ |
+| `/developer/branding` Tier 3 (`tenant_app_branding`) | ✅ all tenants | ✅ enterprise + descendants | ❌ |
+| `/developer/tenant` | ✅ all tenants | ✅ enterprise + descendants | ✅ own tenant only |
+| `/developer/schema` | ✅ | ❌ | ❌ |
+| `/developer/tables`, `/logs`, `/functions`, `/notices`, `/routing`, `/embed`, `/rate-limits`, `/platform`, `/nav` | ✅ | ❌ | ❌ |
+| `/developer/access` | ✅ | ✅ read/invite/update own enterprise users only via access module (no `platform_role` mutation; see BSU access/user-management guards) | ❌ |
+
+### Canonical role semantics for branding scope
+
+- `enterprise_super_admin` and `enterprise_admin`: can manage Tier 2/Tier 3 branding for their enterprise tenant and all descendant sub-org tenants.
+- For branding scope, `enterprise_super_admin` and `enterprise_admin` are intentionally equivalent; other domains may differentiate them, but branding writes do not.
+- `sub_org_admin`: can manage Tier 2/Tier 3 branding for their own tenant only.
+- `owner` and `admin` remain valid direct-tenant admin roles for Tier 2/Tier 3 writes (backward compatibility).
+- Tier 1 (`platform_branding`) remains platform-only.
+- Website text must remain platform-only because it is public, shared content on `suite.crm7.app` (not tenant-isolated).
+- `/developer/access` for enterprise admins is tenant-scoped only (read/invite/update within enterprise + descendants) and must never permit setting `app_metadata.platform_role` (enforced in access/user-management authorization paths, not branding-table RLS).
+
+### Enforcement requirement
+
+Client-side tab visibility/disabled states are UX only. Authorization must be enforced server-side via RLS and helper functions on `tenant_branding` and `tenant_app_branding`.
+
 ## CI guardrails (target — to be enforced)
 
 - Grep CI rejects any new occurrence of `cookieStorage`, `business_suite_auth`, or `domain.*crm7\.app` in `.ts` / `.tsx` outside `docs/`, `AUTH_CANONICAL.md`, and tests asserting the negative.
