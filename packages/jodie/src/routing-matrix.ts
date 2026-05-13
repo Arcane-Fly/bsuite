@@ -71,6 +71,7 @@ export const getRoutingDecision = (classification: Classification): RoutingDecis
 export const escalateSeverity = (severity: Severity): Severity => {
   switch (severity) {
     case 'P0':
+      // P0 is terminal in the escalation ladder; follow-up handling uses breach count/human paging.
       return 'P0';
     case 'P1':
       return 'P0';

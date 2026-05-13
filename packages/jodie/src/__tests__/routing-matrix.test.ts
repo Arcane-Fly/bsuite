@@ -20,8 +20,8 @@ class InMemorySlaStore implements SlaTrackingStore {
     return record;
   }
 
-  async listOpen(_nowIso: string) {
-    const now = new Date(_nowIso).getTime();
+  async listOpen(nowIso: string) {
+    const now = new Date(nowIso).getTime();
     return [...this.records.values()].filter((record) => new Date(record.deadlineAt).getTime() <= now);
   }
 

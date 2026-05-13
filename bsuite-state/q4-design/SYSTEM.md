@@ -16,6 +16,7 @@ Implementation source: `packages/jodie/src/routing-matrix.ts`
 - Cron A reads severity/effort classification from q3-03 output.
 - Cron A creates `jodie_sla_tracking` rows for cells with an SLA.
 - Hourly SLA sweep escalates one severity tier per breach (`P3→P2→P1→P0`).
+- `P0` is terminal in the severity ladder; repeated breaches are handled by breach count policy (human page on second breach).
 - On second breach, Cron A pages a human and applies label `escalated`.
 - Escalation is one-way and breach-counted, preventing escalation loops.
 

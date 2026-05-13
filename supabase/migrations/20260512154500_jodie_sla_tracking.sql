@@ -2,6 +2,7 @@
 -- Migration: jodie_sla_tracking table
 -- =====================================================
 
+-- Keep severity/effort check constraints aligned with packages/jodie/src/routing-matrix.ts.
 CREATE TABLE IF NOT EXISTS public.jodie_sla_tracking (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   issue_number    BIGINT NOT NULL UNIQUE,
