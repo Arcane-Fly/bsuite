@@ -12,6 +12,7 @@ This directory holds the authoritative decisions that govern cross-repo architec
 | [ADR-0004](ADR-0004-oauth-allowlist-doctrine.md) | OAuth Allow-List Doctrine | Accepted | 2026-05-01 | Duplicate allow-lists in operator-handoff-v4 |
 | [ADR-0005](ADR-0005-rams-funding-authoring.md) | RAMS Funding Authoring | Accepted | 2026-05-01 | — |
 | [ADR-0006](ADR-0006-contact-propagation-doctrine.md) | Contact Propagation Doctrine | Accepted | 2026-05-01 | — |
+| [ADR-0007](ADR-0007-stripe-fdw-read-doctrine.md) | Stripe FDW Read Doctrine | Accepted | 2026-05-12 | New Stripe read paths implemented as edge-function proxy chains |
 
 ## Status values
 
