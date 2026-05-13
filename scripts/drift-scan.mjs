@@ -1,0 +1,631 @@
+#!/usr/bin/env node
+/**
+ * drift-scan.mjs — Canonical BSuite pre-merge drift scanner.
+ *
+ * ─── No-Regex-by-Default Exception (knowledge.md §Code) ─────────────────────
+ * This file is lint-tooling for source-code patterns (not structured-data
+ * parsing). Per the same precedent as scripts/check-no-cookie-sso.mjs,
+ * scripts/check-tailwind-v4.mjs, and scripts/check-node-pin-parity.mjs, it
+ * uses regex ONLY where word-boundary, quote-variant, or whitespace-flexible
+ * matching is required. All purely-literal checks use String.prototype.includes.
+ *
+ * Discipline:
+ *  • Every regex is ≤ 80 chars and has no nested unbounded quantifiers (ReDoS-safe).
+ *  • Every regex has an inline comment explaining why regex was needed over .includes().
+ *  • `--regex-audit` self-check enforces these limits on future edits.
+ *
+ * ─── Usage ──────────────────────────────────────────────────────────────────
+ *   node scripts/drift-scan.mjs                           PR-diff vs origin/main merge-base
+ *   node scripts/drift-scan.mjs --base <sha> --head <sha> explicit range (CI)
+ *   node scripts/drift-scan.mjs --full                    scan the full working tree
+ *   node scripts/drift-scan.mjs --json                    emit JSON to stdout
+ *   node scripts/drift-scan.mjs --self-test               run built-in fixtures
+ *   node scripts/drift-scan.mjs --regex-audit             audit every regex literal in SIGNALS
+ *
+ * Exit codes:
+ *   0 — no drift or warn-soft only
+ *   1 — one or more hard-fail signals found
+ *   2 — scanner error
+ *
+ * Canonical authority: bsuite#902
+ */
+import { execSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
+const ARGS = parseArgs(process.argv.slice(2));
+
+// ─── Small, documented regex primitives (each ≤ 80 chars, ReDoS-safe) ─────
+
+// Word-boundary bare token (needed to avoid matching "noncookieStorage" or similar).
+const WORD_COOKIE_STORAGE = /\bcookieStorage\b/;
+const WORD_CREATE_COOKIE_STORAGE = /\bcreateCookieStorage\b/;
+// Quote-variant: `domain: '.crm7.app'` OR `domain: ".crm7.app"` OR `domain='...'`.
+const DOMAIN_CRM7_APP = /domain\s*[:=]\s*["']\.crm7\.app["']/;
+// storageKey variant: single or double quotes, optional whitespace around colon.
+const STORAGE_KEY_LEGACY = /storageKey\s*:\s*["']business_suite_auth["']/;
+// Quote-variant + whitespace-flex for `flowType: 'pkce'` family.
+const FLOWTYPE_IMPLICIT = /flowType\s*:\s*["']implicit["']/;
+const RESPONSE_TYPE_TOKEN = /response_type\s*[=:]\s*["']?token\b/;
+// Hex color detector — only invoked AFTER a color-context literal match.
+// Character class `[0-9a-fA-F]` cannot match greedily past length limit; safe.
+const HEX_COLOR_NARROW = /#([0-9a-fA-F]{3,8})\b/;
+// `as any` with flexible whitespace; word-boundary prevents "classname".
+const AS_ANY = /\bas\s+any\b/;
+// engines.node JSON value: quote-variant + whitespace-flex.
+const ENGINES_NODE_VALUE = /"node"\s*:\s*"([^"]+)"/;
+// (Tailwind v3 utility checks use .includes() — no regex needed; the literal
+// `flex-shrink-0` / `flex-grow-0` is unambiguous because `-0` is the terminator
+// and Tailwind utilities extending with `-` would come BEFORE, not after.)
+// Test-path fragments and file suffixes — hoisted to module scope (hot path).
+// Used only by NEW-HEX-IN-D2C; other signals intentionally still fire on test files.
+const TEST_PATH_FRAGMENTS = ['__tests__/', '/tests/', '/e2e/', '/cypress/', '/playwright/'];
+const TEST_FILE_SUFFIXES = [
+  '.test.ts', '.test.tsx', '.test.js', '.test.jsx',
+  '.spec.ts', '.spec.tsx', '.spec.js', '.spec.jsx',
+  '.stories.ts', '.stories.tsx', '.stories.js', '.stories.jsx',
+];
+
+// Color CSS properties — literal gate list (no regex). Used with .includes().
+const COLOR_PROP_GATES = [
+  'color:', 'color =',
+  'background:', 'backgroundColor:', 'background-color:',
+  'fill:', 'stroke:',
+  'borderColor:', 'border-color:',
+  'borderTopColor:', 'border-top-color:',
+  'borderBottomColor:', 'border-bottom-color:',
+];
+
+// ─── Signal definitions ───────────────────────────────────────────────────
+
+const SIGNALS = [
+  {
+    id: 'COOKIE-SSO',
+    severity: 'fail',
+    rule: 'Cookie SSO removed suite-wide 2025-02-27 — use per-domain localStorage + PKCE',
+    skill: 'auth-setup + AUTH_CANONICAL.md',
+    match: (line, file, fw) => {
+      // Next.js server files legitimately use @supabase/ssr cookies.
+      if (fw === 'nextjs') {
+        if (file.endsWith('middleware.ts') || file.endsWith('route.ts')
+            || file.endsWith('actions.ts') || file.includes('/api/')
+            || file.includes('/server/') || file.includes('/auth/')) return null;
+      }
+      if (WORD_COOKIE_STORAGE.test(line)) return 'cookieStorage is forbidden on browser clients';
+      if (WORD_CREATE_COOKIE_STORAGE.test(line)) return 'createCookieStorage is forbidden';
+      if (DOMAIN_CRM7_APP.test(line)) return 'domain=.crm7.app cookie is forbidden';
+      if (STORAGE_KEY_LEGACY.test(line)) return "storageKey 'business_suite_auth' is forbidden";
+      return null;
+    },
+  },
+  {
+    id: 'STALE-GROK',
+    severity: 'fail',
+    rule: 'Default xAI model is grok-4.20-reasoning — grok-4.1-fast-reasoning retired 2026-04-24',
+    skill: 'vercel-ai-sdk + knowledge.md §crm7 AI Gateway',
+    match: (line) => {
+      // Pure literal check — .includes() suffices.
+      if (line.includes('grok-4.1-fast-reasoning')) {
+        return 'grok-4.1-fast-reasoning retired — use xai/grok-4.20-reasoning';
+      }
+      return null;
+    },
+  },
+  {
+    id: 'WORKSPACE',
+    severity: 'fail',
+    rule: '@bsuite/* consumers must use caret npm ranges — workspace:* and file:../packages/* break Vercel',
+    skill: 'knowledge.md §Shared @bsuite/* packages',
+    match: (line, file) => {
+      if (!file.endsWith('package.json')) return null;
+      if (!line.includes('@bsuite/')) return null;
+      // Literal-after-key check: the line has `"@bsuite/...": "workspace:` or `"..." "file:`.
+      if (line.includes('"workspace:')) return '@bsuite/* uses workspace: — must be caret npm range';
+      if (line.includes('"file:')) return '@bsuite/* uses file: — must be caret npm range';
+      return null;
+    },
+  },
+  {
+    id: 'NODE-PIN-DRIFT',
+    severity: 'fail',
+    rule: 'Node 24 is canonical — .node-version must be "24\\n" and engines.node must be "24"',
+    skill: 'knowledge.md §Quickstart',
+    match: (line, file) => {
+      if (file.endsWith('.node-version')) {
+        const content = line.trim();
+        if (content && content !== '24') return `.node-version must be "24" (saw ${JSON.stringify(content)})`;
+      }
+      if (file.endsWith('package.json') && line.includes('"node"')) {
+        // Regex needed to extract the value from a JSON line with quote-variant whitespace.
+        const m = line.match(ENGINES_NODE_VALUE);
+        if (m && m[1] !== '24') return `engines.node must be "24" (saw ${JSON.stringify(m[1])})`;
+      }
+      return null;
+    },
+  },
+  {
+    id: 'NON-PKCE-FLOW',
+    severity: 'fail',
+    rule: 'All Supabase clients must use flowType: "pkce" — implicit flow forbidden per OAuth 2.1 §4',
+    skill: 'auth-setup + oauth-provider-check.yml',
+    match: (line) => {
+      if (FLOWTYPE_IMPLICIT.test(line)) return 'flowType: "implicit" is forbidden — use "pkce"';
+      if (RESPONSE_TYPE_TOKEN.test(line)) return 'response_type=token is implicit flow — use authorization_code + PKCE';
+      return null;
+    },
+  },
+  {
+    id: 'TAILWIND-V4-DEPREC',
+    severity: 'warn',
+    rule: 'Tailwind v4 — use shrink-0 not flex-shrink-0; grow-0 not flex-grow-0',
+    skill: 'ui-styling + scripts/check-tailwind-v4.mjs',
+    match: (line) => {
+      // Pure literal checks — .includes() suffices (word-boundary unnecessary:
+      // `-0` terminator makes `flex-shrink-0` unambiguous as a class token).
+      const hasShrink = line.includes('flex-shrink-0');
+      const hasGrow = line.includes('flex-grow-0');
+      if (!hasShrink && !hasGrow) return null;
+      // Gate: must appear in a class-attribute or a quoted-string context.
+      const inClassAttr = line.includes('className=') || line.includes('class=')
+                        || line.includes('classNames(') || line.includes('cn(')
+                        || line.includes('clsx(') || line.includes('tw`');
+      const bareInString = line.includes('"') || line.includes("'") || line.includes('`');
+      if (!inClassAttr && !bareInString) return null;
+      if (hasShrink) return 'flex-shrink-0 → shrink-0 (Tailwind v4)';
+      if (hasGrow) return 'flex-grow-0 → grow-0 (Tailwind v4)';
+      return null;
+    },
+  },
+  {
+    id: 'AS-ANY-CAST',
+    severity: 'warn',
+    rule: 'No "as any" casts — AGENTS.md §Code forbids untyped any; use proper types',
+    skill: 'AGENTS.md §Code',
+    match: (line, file) => {
+      if (!file.endsWith('.ts') && !file.endsWith('.tsx')) return null;
+      // Comment skip: leading `//`, `/*`, or `*` after optional whitespace.
+      const stripped = line.replace(/^\s*/, '');
+      if (stripped.startsWith('//') || stripped.startsWith('/*') || stripped.startsWith('*')) return null;
+      // Regex needed: whitespace-flex + word-boundary (`.includes(' as any')` would miss `as any;`).
+      if (AS_ANY.test(line)) return 'as any cast — use a proper type';
+      return null;
+    },
+  },
+  {
+    id: 'NEW-HEX-IN-D2C',
+    severity: 'warn',
+    rule: 'D2C apps use oklch() via --role-* tokens; raw hex is reserved for braden (corporate brand)',
+    skill: 'bsuite-brand-system',
+    match: (line, file, fw, repo) => {
+      if (repo === 'braden') return null; // corporate-brand exception
+      const isUiFile = file.endsWith('.tsx') || file.endsWith('.ts')
+                    || file.endsWith('.jsx') || file.endsWith('.js')
+                    || file.endsWith('.css') || file.endsWith('.scss');
+      if (!isUiFile) return null;
+      // Test fixtures legitimately use hex values to assert cascade/rendering behavior.
+      // Cycle-4 learning: bsuite#879 cascade.test.ts produced 16 false-positive NEW-HEX hits.
+      if (TEST_PATH_FRAGMENTS.some((f) => file.includes(f))) return null;
+      if (TEST_FILE_SUFFIXES.some((s) => file.endsWith(s))) return null;
+      // Comment skip.
+      const stripped = line.replace(/^\s*/, '');
+      if (stripped.startsWith('//') || stripped.startsWith('/*')
+          || stripped.startsWith('*') || stripped.startsWith('<!--')) return null;
+      // Gate: must have at least one color-context literal AND a hex-looking token.
+      if (!line.includes('#')) return null;
+      // Find the earliest color-context gate position in the line.
+      let colorCtxIdx = -1;
+      for (const g of COLOR_PROP_GATES) {
+        const i = line.indexOf(g);
+        if (i !== -1 && (colorCtxIdx === -1 || i < colorCtxIdx)) colorCtxIdx = i;
+      }
+      const styleIdx = line.indexOf('style={{');
+      if (styleIdx !== -1 && (colorCtxIdx === -1 || styleIdx < colorCtxIdx)) colorCtxIdx = styleIdx;
+      if (colorCtxIdx === -1) return null;
+      // Search for hex ONLY in the portion of the line after the color-context gate,
+      // AND before any trailing line-comment. This handles two edge cases:
+      //   (1) multi-hash lines: `const x = "#abc"; style={{ color: "#def" }}`
+      //       — slice starts at `style={{` so we correctly find `#def`, not `#abc`.
+      //   (2) false-positive: `interface Foo { color: string } // see #863`
+      //       — strip mid-line `//` comment before hex-match, so `#863` is excluded.
+      const suffix = line.slice(colorCtxIdx);
+      const commentIdx = suffix.indexOf('//');
+      const searchSpace = commentIdx === -1 ? suffix : suffix.slice(0, commentIdx);
+      // Regex needed: extract the hex value substring for the report; char class bounded.
+      const m = searchSpace.match(HEX_COLOR_NARROW);
+      if (!m) return null;
+      return `raw hex #${m[1]} in color context — use oklch() via --role-* token`;
+    },
+  },
+  {
+    id: 'GETSESSION-AUTHZ',
+    severity: 'warn',
+    rule: 'Use supabase.auth.getClaims() for authz decisions — getSession() returns cached data',
+    skill: 'supabase + AUTH_CANONICAL.md',
+    match: (line, file) => {
+      if (!file.endsWith('.ts') && !file.endsWith('.tsx')) return null;
+      const lowerFile = file.toLowerCase();
+      const inAuthHotpath = lowerFile.includes('auth') || lowerFile.includes('middleware')
+                         || lowerFile.includes('guard') || lowerFile.includes('protected')
+                         || lowerFile.includes('session') || lowerFile.includes('authorize');
+      if (!inAuthHotpath) return null;
+      const stripped = line.replace(/^\s*/, '');
+      if (stripped.startsWith('//') || stripped.startsWith('/*') || stripped.startsWith('*')) return null;
+      // Literal check — .includes() is sufficient for this method-call form.
+      if (line.includes('.auth.getSession()')) return 'auth.getSession() for authz — use getClaims() instead';
+      return null;
+    },
+  },
+];
+
+// ─── Framework detection ──────────────────────────────────────────────────
+
+function detectFramework(repoRoot) {
+  const pkgPath = path.join(repoRoot, 'package.json');
+  if (!existsSync(pkgPath)) return 'unknown';
+  try {
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+    const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
+    if (deps['next']) return 'nextjs';
+    if (deps['@tanstack/start'] || deps['@tanstack/react-start']) return 'tanstack-start';
+    if (deps['vite']) return 'vite-react';
+  } catch {}
+  return 'unknown';
+}
+
+function detectRepoName(repoRoot) {
+  const pkgPath = path.join(repoRoot, 'package.json');
+  if (!existsSync(pkgPath)) return path.basename(repoRoot);
+  try {
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+    return pkg.name || path.basename(repoRoot);
+  } catch {
+    return path.basename(repoRoot);
+  }
+}
+
+// ─── Diff parsing ─────────────────────────────────────────────────────────
+
+function runGit(cmd) {
+  try {
+    return execSync(`git ${cmd}`, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  } catch (err) {
+    throw new Error(`git ${cmd} failed: ${err.message}`);
+  }
+}
+
+function resolveDiffRange() {
+  if (ARGS.base && ARGS.head) return { base: ARGS.base, head: ARGS.head };
+  const base = process.env.GITHUB_BASE_REF;
+  if (base) {
+    try { runGit(`fetch --no-tags --depth=50 origin ${base}`); } catch {}
+    return { base: `origin/${base}`, head: 'HEAD' };
+  }
+  try {
+    const mergeBase = runGit('merge-base origin/main HEAD').trim();
+    return { base: mergeBase, head: 'HEAD' };
+  } catch {
+    return { base: 'HEAD~1', head: 'HEAD' };
+  }
+}
+
+function getUnifiedDiff({ base, head }) {
+  return runGit(`diff --unified=0 ${base}...${head}`);
+}
+
+// Regex NEEDED here: unified-diff header format is fixed by git; parsing by
+// hand is simpler with a narrow regex on the `diff --git` line. Single pattern,
+// 32 chars, bounded capture groups. ReDoS-safe.
+const DIFF_GIT_HEADER = /^diff --git a\/(\S+) b\/(\S+)/;
+
+function parseDiff(diff) {
+  const byFile = {};
+  let current = null;
+  for (const line of diff.split('\n')) {
+    const m = line.match(DIFF_GIT_HEADER);
+    if (m) {
+      current = m[2];
+      byFile[current] = [];
+      continue;
+    }
+    if (!current) continue;
+    if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('@@')) continue;
+    if (line.startsWith('+')) {
+      byFile[current].push(line.slice(1));
+    }
+  }
+  return byFile;
+}
+
+// ─── Scan ─────────────────────────────────────────────────────────────────
+
+function scan({ addedByFile, framework, repoName }) {
+  const hits = [];
+  for (const [file, lines] of Object.entries(addedByFile)) {
+    for (const line of lines) {
+      for (const sig of SIGNALS) {
+        const reason = sig.match(line, file, framework, repoName);
+        if (reason) {
+          hits.push({
+            signal: sig.id,
+            severity: sig.severity,
+            rule: sig.rule,
+            skill: sig.skill,
+            file,
+            line: line.slice(0, 300),
+            reason,
+          });
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+// ─── Output ───────────────────────────────────────────────────────────────
+
+function emitMarkdown(hits, framework, repoName) {
+  if (hits.length === 0) {
+    return `## ✅ BSuite drift scan — clean\n\n0 drift hits across ${SIGNALS.length} signals (framework: \`${framework}\`, repo: \`${repoName}\`).\n\nReference: [bsuite#902](https://github.com/GaryOcean428/bsuite/issues/902)\n`;
+  }
+
+  const fails = hits.filter((h) => h.severity === 'fail');
+  const warns = hits.filter((h) => h.severity === 'warn');
+
+  const header = fails.length > 0
+    ? `## ❌ BSuite drift scan — ${fails.length} hard-fail + ${warns.length} warn\n\nMerge-blocking drift found. Fix hard-fail items before merge.`
+    : `## ⚠️ BSuite drift scan — ${warns.length} warn (no hard-fails)\n\nAdvisory only — not merge-blocking. Please review.`;
+
+  const bySignal = {};
+  for (const h of hits) (bySignal[h.signal] ??= []).push(h);
+
+  const sections = Object.entries(bySignal).map(([sig, items]) => {
+    const sev = items[0].severity === 'fail' ? '🛑 hard-fail' : '⚠️ warn';
+    const { rule, skill } = items[0];
+    const rows = items.map((h) => {
+      // Slice first, then escape pipes — prevents trailing-backslash corruption.
+      const truncated = h.line.slice(0, 160).trim();
+      const escaped = truncated.split('|').join('\\|');
+      return `| \`${h.file}\` | \`${escaped}\` | ${h.reason} |`;
+    }).join('\n');
+    return `### \`${sig}\` — ${sev}\n**Rule:** ${rule}\n**Skill:** ${skill}\n\n| File | Offending line | Reason |\n|------|----------------|--------|\n${rows}`;
+  });
+
+  const footer = `---\nFramework: **${framework}** · Repo: **${repoName}** · Reference: [bsuite#902](https://github.com/GaryOcean428/bsuite/issues/902)\n\n*Auto-generated by \`scripts/drift-scan.mjs\` — updates on each push.*`;
+
+  return [header, '', sections.join('\n\n'), '', footer].join('\n');
+}
+
+// ─── Self-test ────────────────────────────────────────────────────────────
+
+function selfTest() {
+  const fixtures = [
+    { name: 'COOKIE-SSO — browser client flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ["  auth: { storageKey: 'business_suite_auth', flowType: 'pkce' }"] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.severity === 'fail') },
+    { name: 'COOKIE-SSO — Next.js middleware NOT flagged', framework: 'nextjs', repoName: 'conduit',
+      addedByFile: { 'src/middleware.ts': ["  cookies().set('sb-access', token, { httpOnly: true })"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — domain=.crm7.app flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ["  cookieStorage({ domain: '.crm7.app' })"] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO') },
+    { name: 'STALE-GROK — retired model flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/ai.ts': ["  model: 'xai/grok-4.1-fast-reasoning',"] },
+      expect: (hits) => hits.some((h) => h.signal === 'STALE-GROK') },
+    { name: 'WORKSPACE — workspace:* flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'package.json': ['    "@bsuite/auth": "workspace:*",'] },
+      expect: (hits) => hits.some((h) => h.signal === 'WORKSPACE') },
+    { name: 'WORKSPACE — file:../packages flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'package.json': ['    "@bsuite/auth": "file:../packages/auth",'] },
+      expect: (hits) => hits.some((h) => h.signal === 'WORKSPACE') },
+    { name: 'NODE-PIN-DRIFT — .node-version != 24 flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { '.node-version': ['22'] },
+      expect: (hits) => hits.some((h) => h.signal === 'NODE-PIN-DRIFT') },
+    { name: 'NODE-PIN-DRIFT — engines.node != 24 flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'package.json': ['  "engines": { "node": "22" }'] },
+      expect: (hits) => hits.some((h) => h.signal === 'NODE-PIN-DRIFT') },
+    { name: 'TAILWIND-V4-DEPREC — flex-shrink-0 flagged (crm7#679)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/billing/annual-review.tsx': ['      <div className="flex items-center gap-2 flex-shrink-0">'] },
+      expect: (hits) => hits.some((h) => h.signal === 'TAILWIND-V4-DEPREC' && h.severity === 'warn') },
+    { name: 'TAILWIND-V4-DEPREC — flex-grow-0 flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/foo.tsx': ['<div className="flex-grow-0">foo</div>'] },
+      expect: (hits) => hits.some((h) => h.signal === 'TAILWIND-V4-DEPREC') },
+    { name: 'NEW-HEX-IN-D2C — hex in inline style flagged (conduit#224)', framework: 'nextjs', repoName: 'conduit',
+      addedByFile: { 'src/components/settings/PipelineStagesSection.tsx': ["        style={{ backgroundColor: stage.color ?? '#3b82f6' }}"] },
+      expect: (hits) => hits.some((h) => h.signal === 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — braden (corporate) NOT flagged', framework: 'vite-react', repoName: 'braden',
+      addedByFile: { 'src/components/Hero.tsx': ["  background: '#ab233a',"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — comment issue ref #863 NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/foo.tsx': ['// See #863 for context'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — non-comment #863 NOT flagged (no color context)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/foo.tsx': ["  title: 'Fix for #863 and #999'"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — URL fragment /#abc123 NOT flagged', framework: 'nextjs', repoName: 'conduit',
+      addedByFile: { 'src/components/Link.tsx': ['  <a href="/docs/page#abc123">link</a>'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — CSS color: #hex flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/styles/foo.css': ['  color: #2563eb;'] },
+      expect: (hits) => hits.some((h) => h.signal === 'NEW-HEX-IN-D2C') },
+    { name: 'AS-ANY-CAST — flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/foo.ts': ['  const x = bar as any;'] },
+      expect: (hits) => hits.some((h) => h.signal === 'AS-ANY-CAST') },
+    { name: 'AS-ANY-CAST — as any[] also flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/foo.ts': ['  const x = bar as any[];'] },
+      expect: (hits) => hits.some((h) => h.signal === 'AS-ANY-CAST') },
+    { name: 'AS-ANY-CAST — comment NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/foo.ts': ['// avoid as any — use proper types'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'AS-ANY-CAST') },
+    { name: 'GETSESSION-AUTHZ — flagged in auth file', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/auth/guard.ts': ['  const { data } = await supabase.auth.getSession();'] },
+      expect: (hits) => hits.some((h) => h.signal === 'GETSESSION-AUTHZ') },
+    { name: 'GETSESSION-AUTHZ — non-auth file NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/home.tsx': ['  const { data } = await supabase.auth.getSession();'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'GETSESSION-AUTHZ') },
+    { name: 'NON-PKCE-FLOW — implicit flow flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ["  auth: { flowType: 'implicit' }"] },
+      expect: (hits) => hits.some((h) => h.signal === 'NON-PKCE-FLOW') },
+    { name: 'NEW-HEX-IN-D2C — color: string + unrelated #863 NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/types/foo.ts': ['interface Foo { color: string } // see #863'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — multi-hash line: second hex in color context IS flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/foo.tsx': ['const tag = "#abc"; return <div style={{ color: "#def456" }} />;'] },
+      expect: (hits) => hits.some((h) => h.signal === 'NEW-HEX-IN-D2C' && h.reason.includes('#def456')) },
+    { name: 'NEW-HEX-IN-D2C — test file NOT flagged (cycle-4 bsuite#879)', framework: 'vite-react', repoName: 'bsuite',
+      addedByFile: { 'packages/page-builder/src/__tests__/cascade.test.ts': ["  expect(style.color).toBe('#111111');"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — .test.tsx file NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/components/Foo.test.tsx': ["  render(<div style={{ color: '#ff0000' }} />);"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — .stories.tsx NOT flagged (Storybook fixture)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/components/Button.stories.tsx': ["  args: { style: { background: '#2563eb' } },"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — /e2e/ path NOT flagged (Playwright)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'e2e/visual.spec.ts': ["  await expect(el).toHaveCSS('color', '#ff0000');"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'AS-ANY-CAST — still flagged in test file (exemption is NEW-HEX only)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/foo.test.ts': ['  const x = bar as any;'] },
+      expect: (hits) => hits.some((h) => h.signal === 'AS-ANY-CAST') },
+    { name: 'CLEAN — no drift', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/home.tsx': ['export function Home() { return <div>hi</div>; }'] },
+      expect: (hits) => hits.length === 0 },
+  ];
+
+  let pass = 0, fail = 0;
+  for (const f of fixtures) {
+    const hits = scan({ addedByFile: f.addedByFile, framework: f.framework, repoName: f.repoName });
+    const ok = f.expect(hits);
+    if (ok) { pass++; console.log(`  ✓ ${f.name}`); }
+    else {
+      fail++;
+      console.error(`  ✗ ${f.name}`);
+      console.error(`    hits: ${JSON.stringify(hits, null, 2)}`);
+    }
+  }
+  console.log(`\nself-test: ${pass}/${pass + fail} passed`);
+  if (fail > 0) process.exit(1);
+}
+
+// ─── Regex audit (enforces No-Regex-by-Default discipline) ────────────────
+
+function regexAudit() {
+  const MAX_LEN = 80;
+  const regexes = [
+    ['WORD_COOKIE_STORAGE', WORD_COOKIE_STORAGE],
+    ['WORD_CREATE_COOKIE_STORAGE', WORD_CREATE_COOKIE_STORAGE],
+    ['DOMAIN_CRM7_APP', DOMAIN_CRM7_APP],
+    ['STORAGE_KEY_LEGACY', STORAGE_KEY_LEGACY],
+    ['FLOWTYPE_IMPLICIT', FLOWTYPE_IMPLICIT],
+    ['RESPONSE_TYPE_TOKEN', RESPONSE_TYPE_TOKEN],
+    ['HEX_COLOR_NARROW', HEX_COLOR_NARROW],
+    ['AS_ANY', AS_ANY],
+    ['ENGINES_NODE_VALUE', ENGINES_NODE_VALUE],
+    ['DIFF_GIT_HEADER', DIFF_GIT_HEADER],
+  ];
+  let fail = 0;
+  for (const [name, re] of regexes) {
+    const src = re.source;
+    const len = src.length;
+    console.log(`  ${name}: /${src}/ (${len} chars)`);
+    if (len > MAX_LEN) {
+      console.error(`    ✗ ${name} exceeds ${MAX_LEN} chars`);
+      fail++;
+    }
+    // ReDoS smell: nested quantifiers like `(a+)+` or `(.*)*`.
+    if (src.includes(')+') && (src.includes('+)') || src.includes('*)'))) {
+      console.error(`    ✗ ${name} has a nested quantifier — potential ReDoS`);
+      fail++;
+    }
+  }
+  if (fail > 0) {
+    console.error(`\nregex-audit FAILED: ${fail} issue(s)`);
+    process.exit(1);
+  }
+  console.log(`\nregex-audit OK: ${regexes.length} regexes, all within discipline`);
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────
+
+function parseArgs(argv) {
+  const out = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--base') out.base = argv[++i];
+    else if (a === '--head') out.head = argv[++i];
+    else if (a === '--json') out.json = true;
+    else if (a === '--full') out.full = true;
+    else if (a === '--self-test') out.selfTest = true;
+    else if (a === '--regex-audit') out.regexAudit = true;
+    else if (a === '--diff-file') out.diffFile = argv[++i];
+    else if (a === '--repo-name') out.repoNameOverride = argv[++i];
+    else if (a === '--framework') out.frameworkOverride = argv[++i];
+    else if (a === '--help' || a === '-h') out.help = true;
+  }
+  return out;
+}
+
+function printHelp() {
+  console.log(`drift-scan.mjs — ${SIGNALS.length}-signal PR drift scanner
+
+Usage:
+  node scripts/drift-scan.mjs                   PR-diff scan vs origin/main merge-base
+  node scripts/drift-scan.mjs --base X --head Y explicit range
+  node scripts/drift-scan.mjs --full            scan full working tree
+  node scripts/drift-scan.mjs --json            JSON output
+  node scripts/drift-scan.mjs --self-test       run built-in fixtures
+  node scripts/drift-scan.mjs --regex-audit     audit internal regex discipline
+  node scripts/drift-scan.mjs --diff-file P     scan a pre-captured diff file
+                       --repo-name N --framework F  (overrides for offline mode)
+  node scripts/drift-scan.mjs --help            this help
+
+Exit codes: 0 clean/warn-only · 1 hard-fail hit · 2 scanner error`);
+}
+
+async function main() {
+  if (ARGS.help) { printHelp(); return; }
+  if (ARGS.selfTest) { selfTest(); return; }
+  if (ARGS.regexAudit) { regexAudit(); return; }
+
+  const repoRoot = process.cwd();
+  const framework = ARGS.frameworkOverride || detectFramework(repoRoot);
+  const repoName = ARGS.repoNameOverride || detectRepoName(repoRoot);
+
+  let addedByFile;
+  if (ARGS.diffFile) {
+    // Offline mode: scan a pre-captured diff file (e.g. `gh pr diff > pr.diff`).
+    // Useful for cycle-N audits across many PRs without full repo checkouts.
+    const diff = readFileSync(ARGS.diffFile, 'utf8');
+    addedByFile = parseDiff(diff);
+  } else if (ARGS.full) {
+    const files = runGit('ls-files').split('\n').filter(Boolean);
+    addedByFile = {};
+    for (const f of files) {
+      // Literal suffix check, no regex needed.
+      const exts = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.css', '.scss', '.json'];
+      if (!exts.some((e) => f.endsWith(e))) continue;
+      try {
+        addedByFile[f] = readFileSync(path.join(repoRoot, f), 'utf8').split('\n');
+      } catch {}
+    }
+  } else {
+    const range = resolveDiffRange();
+    const diff = getUnifiedDiff(range);
+    addedByFile = parseDiff(diff);
+  }
+
+  const hits = scan({ addedByFile, framework, repoName });
+
+  if (ARGS.json) {
+    console.log(JSON.stringify({ framework, repoName, hits }, null, 2));
+  } else {
+    console.log(emitMarkdown(hits, framework, repoName));
+  }
+
+  const hardFails = hits.filter((h) => h.severity === 'fail');
+  if (hardFails.length > 0) process.exit(1);
+}
+
+main().catch((err) => {
+  console.error(`drift-scan error: ${err.message}`);
+  process.exit(2);
+});
