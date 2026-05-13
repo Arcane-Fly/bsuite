@@ -14,6 +14,7 @@
 4. [Token Storage Map](#4-token-storage-map)
 5. [OAuth Client Registry](#5-oauth-client-registry)
 6. [Domain & Redirect URI Map](#6-domain--redirect-uri-map)
+   - [6.1 Environment Variables (`VITE_APP_URL`, `VITE_STRIPE_PUBLISHABLE_KEY`)](#61-environment-variables-vite_app_url-vite_stripe_publishable_key)
 7. [Dead Code Inventory](#7-dead-code-inventory)
 8. [Cookie / Cross-Subdomain Analysis](#8-cookie--cross-subdomain-analysis)
 9. [Dual Auth Conflict Analysis](#9-dual-auth-conflict-analysis)
@@ -393,6 +394,30 @@ All three clients use the same Supabase project as the authorization server: `tu
 | **CRM7** | `crm.crm7.app` | `crm.crm7.app/auth/callback` | N/A |
 | **R80.3** | `r8.crm7.app` | `r8.crm7.app/auth/callback` | N/A |
 | **Braden** | `www.braden.com.au` | `www.braden.com.au/auth/callback` | ~~N/A~~ ✅ Deleted |
+
+### 6.1 Environment Variables (`VITE_APP_URL`, `VITE_STRIPE_PUBLISHABLE_KEY`)
+
+Per issue `fix(env): BSU missing VITE_APP_URL + VITE_STRIPE_PUBLISHABLE_KEY across Vercel environments`,
+the canonical app URL map is:
+
+| App | Production | Development |
+|-----|------------|-------------|
+| BSU | `https://suite.crm7.app` | `https://d.suite.crm7.app` |
+| CRM7 | `https://crm.crm7.app` | `https://d.crm.crm7.app` |
+| Conduit | `https://conduit.crm7.app` | `https://d.conduit.crm7.app` |
+| R80.3 | `https://r8.crm7.app` | `https://d.r8.crm7.app` |
+| Throughput | `https://ideas.crm7.app` | `https://d.ideas.crm7.app` |
+| Braden | `https://www.braden.com.au` | `https://d.braden.com.au` |
+
+Required Vercel env values per app:
+
+| Variable | Production | Preview | Development |
+|----------|------------|---------|-------------|
+| `VITE_APP_URL` | app production URL | app `d.*` URL (or explicit preview URL strategy) | app `d.*` URL |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` | `pk_test_...` | `pk_test_...` |
+
+Security note: only Stripe publishable keys (`pk_*`) belong in client-side `VITE_*` env vars.
+Stripe secret keys (`sk_*`) remain server-only and must never be prefixed with `VITE_`.
 
 ---
 
