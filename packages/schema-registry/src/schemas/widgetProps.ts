@@ -98,6 +98,10 @@ export const LayoutJsonSchema = z.object({
   widgets: z.array(z.object({
     id: z.string(),
     type: z.string(),
+    // props is intentionally typed as Record<string, unknown> — each widget
+    // type has its own props schema (see WidgetPropsSchema variants above).
+    // LayoutJsonSchema validates the outer envelope; individual props are
+    // narrowed per-type when the widget is rendered.
     props: z.record(z.string(), z.unknown()),
     position: z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }),
   })),

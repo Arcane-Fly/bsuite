@@ -40,9 +40,8 @@
  */
 
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -71,26 +70,22 @@ const FORMAT_FUNCTIONS = [
 ];
 
 /**
- * Build a single RegExp that matches any of the format functions.
- * Captures nothing — simple find-and-replace.
+ * Replacement regex — built once at module initialisation.
  *
  * Pattern explanation:
  *   z\.string\(\)\.    — literal `z.string().`
- *   (email|uuid|...)   — one of the format function names
+ *   (email|uuid|...)   — one of the format function names (longest first to
+ *                        prevent partial matches, e.g. cuid2 before cuid)
  *   \(                 — opening paren of the format call
  *
  * We replace the whole match `z.string().<fn>(` with `z.<fn>(`.
  * The rest of the call (arguments, closing paren, chained methods) is
  * unaffected because we stop at the opening paren.
  */
-function buildReplacementRegex() {
-  // Sort longest first to prevent partial matches (cuid2 before cuid)
+const REPLACEMENT_REGEX = (() => {
   const sorted = [...FORMAT_FUNCTIONS].sort((a, b) => b.length - a.length);
-  const group = sorted.join('|');
-  return new RegExp(`z\\.string\\(\\)\\.(${group})\\(`, 'g');
-}
-
-const REPLACEMENT_REGEX = buildReplacementRegex();
+  return new RegExp(`z\\.string\\(\\)\\.(${sorted.join('|')})\\(`, 'g');
+})();
 
 /**
  * Apply the codemod to the content of a single file.
@@ -218,7 +213,7 @@ function main() {
       targetReplacements += count;
       totalReplacements += count;
 
-      const relPath = file.replace(REPO_ROOT + '/', '');
+      const relPath = relative(REPO_ROOT, file);
       console.log(`[zod4-codemod] ${dryRun ? '(dry) ' : ''}${relPath} — ${count} replacement${count !== 1 ? 's' : ''}`);
 
       if (!dryRun) {
@@ -227,7 +222,7 @@ function main() {
     }
 
     if (targetChanged > 0) {
-      const relTarget = target.replace(REPO_ROOT + '/', '');
+      const relTarget = relative(REPO_ROOT, target);
       stats.push({ target: relTarget, files: targetChanged, replacements: targetReplacements });
     }
   }
