@@ -178,9 +178,10 @@ SELECT ok(
       AND tablename   = 'platform_branding'
       AND (
         -- Match raw auth.uid() that is NOT wrapped in (SELECT …)
-        (qual        ~ 'auth\.uid\(\)' AND qual        !~ '\(SELECT\s+auth\.uid\(\)\)')
+        -- ~* is case-insensitive to match pg_policies normalised output
+        (qual        ~* 'auth\.uid\(\)' AND qual        !~* '\(SELECT\s+auth\.uid\(\)\)')
         OR
-        (with_check  ~ 'auth\.uid\(\)' AND with_check  !~ '\(SELECT\s+auth\.uid\(\)\)')
+        (with_check  ~* 'auth\.uid\(\)' AND with_check  !~* '\(SELECT\s+auth\.uid\(\)\)')
       )
   ),
   'D-4: no remaining raw auth.uid() in any platform_branding policy'

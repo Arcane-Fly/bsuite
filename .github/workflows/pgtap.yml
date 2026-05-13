@@ -58,6 +58,9 @@ jobs:
         #   - All supabase/migrations/*.sql applied in chronological order
 
       - name: Install pgtap extension in test database
+        # pgTAP is pre-installed in the official Supabase Postgres image,
+        # but CREATE EXTENSION is idempotent and guards against any future
+        # image variation that ships it as an available-but-not-loaded extension.
         run: |
           PGPASSWORD=postgres psql \
             -h 127.0.0.1 -p 54322 -U postgres -d postgres \

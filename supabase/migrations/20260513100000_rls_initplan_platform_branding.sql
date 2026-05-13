@@ -1,6 +1,6 @@
 -- migration: 20260513100000_rls_initplan_platform_branding.sql
 -- Phase 2.2 — [hardening 2.2] RLS initplan rewrite: platform_branding
--- Epic: https://github.com/GaryOcean428/bsuite/issues/XXX (hardening 2.2 EPIC)
+-- Epic: https://github.com/GaryOcean428/bsuite/issues (hardening 2.2 EPIC — link sub-issue here)
 --
 -- Replaces raw auth.uid() with (SELECT auth.uid()) in every policy expression on
 -- public.platform_branding so Postgres can hoist the auth call as an initplan
