@@ -66,6 +66,20 @@ const TEST_FILE_SUFFIXES = [
   '.stories.ts', '.stories.tsx', '.stories.js', '.stories.jsx',
 ];
 
+// Self-scan exclusions — lint-tooling files whose source necessarily contains
+// literal strings that match drift signals (regex sources, test fixtures,
+// detector patterns). Excluding them prevents the self-scan paradox where
+// the scanner hard-fails on its own rollout PR, as well as on edits to the
+// sibling check-*.mjs lint scripts (which also contain drift literals by
+// necessity — e.g. check-no-cookie-sso.mjs must contain the token it detects).
+function isSelfScanExcluded(file) {
+  if (file === 'scripts/drift-scan.mjs') return true;
+  if (file === '.github/workflows/pr-drift-scan.yml') return true;
+  // Sibling lint scripts: scripts/check-<something>.mjs
+  if (file.startsWith('scripts/check-') && file.endsWith('.mjs')) return true;
+  return false;
+}
+
 // Color CSS properties — literal gate list (no regex). Used with .includes().
 const COLOR_PROP_GATES = [
   'color:', 'color =',
@@ -341,6 +355,9 @@ function parseDiff(diff) {
 function scan({ addedByFile, framework, repoName }) {
   const hits = [];
   for (const [file, lines] of Object.entries(addedByFile)) {
+    // Skip the scanner's own source + sibling lint scripts — self-scan paradox
+    // prevention (bsuite#902). These files contain drift literals by necessity.
+    if (isSelfScanExcluded(file)) continue;
     for (const line of lines) {
       for (const sig of SIGNALS) {
         const reason = sig.match(line, file, framework, repoName);
@@ -489,6 +506,32 @@ function selfTest() {
     { name: 'CLEAN — no drift', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/pages/home.tsx': ['export function Home() { return <div>hi</div>; }'] },
       expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — drift-scan.mjs own source NOT flagged', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'scripts/drift-scan.mjs': [
+        "const WORD_COOKIE_STORAGE = /\\bcookieStorage\\b/;",
+        "const STORAGE_KEY_LEGACY = /storageKey\\s*:\\s*[\"']business_suite_auth[\"']/;",
+        "      addedByFile: { 'src/lib/ai.ts': [\"  model: 'xai/grok-4.1-fast-reasoning',\"] },",
+        "      addedByFile: { 'src/lib/supabase.ts': [\"  auth: { flowType: 'implicit' }\"] },",
+        "      addedByFile: { 'src/pages/foo.tsx': ['<div className=\"flex-shrink-0\">foo</div>'] },",
+      ] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — pr-drift-scan.yml NOT flagged', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { '.github/workflows/pr-drift-scan.yml': ["name: PR Drift Scan", "  run: node scripts/drift-scan.mjs --self-test"] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — sibling check-no-cookie-sso.mjs NOT flagged (contains cookieStorage by design)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'scripts/check-no-cookie-sso.mjs': [
+        "const FORBIDDEN = ['cookieStorage', 'createCookieStorage', \"domain: '.crm7.app'\", \"storageKey: 'business_suite_auth'\"];",
+      ] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — check-tailwind-v4.mjs NOT flagged (contains flex-shrink-0 by design)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'scripts/check-tailwind-v4.mjs': ["const LEGACY = ['flex-shrink-0', 'flex-grow-0'];"] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — future check-foo.mjs NOT flagged (prefix-match futureproof)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'scripts/check-foo.mjs': ["const patterns = ['grok-4.1-fast-reasoning'];"] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — non-check script IS still scanned (not blanket-exempting scripts/)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'scripts/migrate-users.mjs': ["  auth: { flowType: 'implicit' }"] },
+      expect: (hits) => hits.some((h) => h.signal === 'NON-PKCE-FLOW') },
   ];
 
   let pass = 0, fail = 0;
