@@ -31,3 +31,7 @@ jobs:
       - name: Enforce AI Gateway migration constraints
         shell: bash
         run: node scripts/check-ai-gateway-compliance.mjs
+
+      - name: Enforce Supabase client init requirements (hardening 1.3)
+        shell: bash
+        run: node scripts/check-supabase-client-init.mjs
