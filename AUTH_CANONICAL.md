@@ -83,6 +83,45 @@ Registered with the BSU OAuth server.
 | Throughput | `35f0db49-ef62-4115-baba-7b961f034cc3` | `throughput/src/lib/business-suite-oauth.ts` |
 | Conduit | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit/src/lib/business-suite-oauth.ts` |
 
+## Environment variables required for OAuth + Stripe entrypoints
+
+`VITE_APP_URL` and `VITE_STRIPE_PUBLISHABLE_KEY` are build-time env vars and
+must be present in each Vercel environment where client bundles are built.
+
+- `VITE_APP_URL` is used for absolute URL construction (OAuth callbacks, cross-app links).
+- `VITE_STRIPE_PUBLISHABLE_KEY` is client-safe and must be a Stripe `pk_*` key only.
+- Never expose Stripe secret keys (`sk_*`) via `VITE_`/`NEXT_PUBLIC_`.
+
+### Canonical production + development domains
+
+| App | Production | Development |
+|-----|------------|-------------|
+| BSU | `https://suite.crm7.app` | `https://d.suite.crm7.app` |
+| CRM7 | `https://crm.crm7.app` | `https://d.crm.crm7.app` |
+| Conduit | `https://conduit.crm7.app` | `https://d.conduit.crm7.app` |
+| R80.3 | `https://r8.crm7.app` | `https://d.r8.crm7.app` |
+| Throughput | `https://ideas.crm7.app` | `https://d.ideas.crm7.app` |
+| Braden | `https://www.braden.com.au` | `https://d.braden.com.au` |
+
+### Vercel environment values
+
+For each app:
+
+| Variable | Production | Preview | Development |
+|----------|------------|---------|-------------|
+| `VITE_APP_URL` | app production URL | app `d.*` URL (or preview URL strategy if explicitly chosen) | app `d.*` URL |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` | `pk_test_...` | `pk_test_...` |
+
+For BSU specifically:
+
+| Variable | Production | Preview | Development |
+|----------|------------|---------|-------------|
+| `VITE_APP_URL` | `https://suite.crm7.app` | `https://d.suite.crm7.app` | `https://d.suite.crm7.app` |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` | `pk_test_...` | `pk_test_...` |
+
+Verification path: after redeploy, BSU `/developer` → Environment Flags should show
+both variables as **Set**.
+
 ## Per-app `redirect_uris` registry
 
 Live state of `auth.oauth_clients.redirect_uris` in the Supabase DB
