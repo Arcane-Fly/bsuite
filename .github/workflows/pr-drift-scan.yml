@@ -1,0 +1,122 @@
+name: PR Drift Scan
+
+# BSuite pre-merge drift scanner — auto-comments on every PR with the 9-signal
+# check. Hard-fails on critical signals (COOKIE-SSO, NON-PKCE-FLOW, WORKSPACE,
+# NODE-PIN-DRIFT, STALE-GROK); warns on soft signals (TAILWIND-V4-DEPREC,
+# AS-ANY-CAST, NEW-HEX-IN-D2C, GETSESSION-AUTHZ).
+#
+# Canonical authority: bsuite#902
+# Scanner: scripts/drift-scan.mjs
+# Signal severity split: bsuite#902 §Signal matrix
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: drift-scan-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drift-scan:
+    name: BSuite 9-signal drift scan
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Verify scanner presence
+        shell: bash
+        run: |
+          if [ ! -f scripts/drift-scan.mjs ]; then
+            echo "::warning::scripts/drift-scan.mjs not present on this branch — skipping."
+            echo "SCAN_SKIPPED=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+      - name: Run self-test
+        if: env.SCAN_SKIPPED != 'true'
+        run: node scripts/drift-scan.mjs --self-test
+
+      - name: Run regex-audit (enforces No-Regex-by-Default discipline)
+        if: env.SCAN_SKIPPED != 'true'
+        run: node scripts/drift-scan.mjs --regex-audit
+
+      - name: Run drift scan (JSON)
+        id: scan-json
+        if: env.SCAN_SKIPPED != 'true'
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        shell: bash
+        run: |
+          set +e
+          node scripts/drift-scan.mjs --json > /tmp/drift.json
+          EXIT=$?
+          set -e
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+          cat /tmp/drift.json
+
+      - name: Run drift scan (markdown)
+        id: scan-md
+        if: env.SCAN_SKIPPED != 'true'
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        shell: bash
+        run: |
+          set +e
+          node scripts/drift-scan.mjs > /tmp/drift.md
+          EXIT=$?
+          set -e
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+          cat /tmp/drift.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upsert sticky comment
+        if: env.SCAN_SKIPPED != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/drift.md', 'utf8');
+            const marker = '<!-- bsuite-drift-scan-sticky -->';
+            const fullBody = `${marker}\n${body}`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body: fullBody,
+              });
+              core.info(`Updated sticky comment #${existing.id}`);
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body: fullBody,
+              });
+              core.info('Created new sticky comment');
+            }
+
+      - name: Fail build if hard-fail signal hit
+        if: env.SCAN_SKIPPED != 'true' && steps.scan-md.outputs.exit_code != '0'
+        run: |
+          echo "::error::Hard-fail drift signal detected — see sticky comment on the PR for details."
+          echo "Reference: https://github.com/GaryOcean428/bsuite/issues/902"
+          exit 1
