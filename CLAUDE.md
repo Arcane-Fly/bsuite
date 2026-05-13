@@ -256,41 +256,23 @@ Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..`
 
 ---
 
-## Autonoma E2E Testing (Vercel Integration)
+## E2E Testing — status: NO active integration (2026-05-13)
 
-All 6 BSuite apps (CRM7, R80.3, Braden, BSU, Conduit, Throughput) are connected to **Autonoma AI** via the Vercel integration. Autonoma is an agentic e2e testing platform — AI agents navigate the deployed app end-to-end to find bugs.
+The Autonoma Vercel integration was **removed on 2026-05-13** after evaluation. Reason: deployment-checks fire on every PR but require pre-authored tests in the Autonoma dashboard to pass; without tests, the check defaults to FAILURE and pollutes the PR queue. The plugin install (for local test authoring) was also blocked by an upstream Prisma server-side bug (`Null constraint violation on prisma.apiKey.create`). Autonoma was uninstalled from the Vercel integrations across all 6 apps; per-app `AUTONOMA_CLIENT_ID` + `AUTONOMA_SECRET_ID` env vars were auto-removed from Vercel by the integration uninstall.
 
-**Auth env vars (auto-provisioned by Vercel integration in Production + Preview):**
+**Local cleanup performed:**
 
-- `AUTONOMA_CLIENT_ID` — public client ID
-- `AUTONOMA_SECRET_ID` — secret (Vercel integration uses this naming; despite the name it is the client secret)
+- `.env.local` at the monorepo root: `AUTONOMA_*` lines removed
+- This `CLAUDE.md` section: rewritten as a removal note
+- `docs/20260227-bsuite-master-roadmap-v5.00W.md`: Autonoma adoption section marked as removed
+- `.gitleaks.toml`: defensive `autonoma-client-secret` detection rule **kept** as a guard against accidental future re-introduction
+- `docs/20260507-cron-log-claude-scheduled-v1.00W.md` and other historical activity logs: **NOT edited** (they record what was true on the date they were written)
 
-The Vercel integration provisions these per-app on Production + Preview environments. For local development, they live in `.env.local` at the parent monorepo root.
+**If a future evaluation revisits e2e testing:**
 
-**HTTP header mapping** (when calling the Autonoma API):
-
-```
-autonoma-client-id:     <AUTONOMA_CLIENT_ID value>
-autonoma-client-secret: <AUTONOMA_SECRET_ID value>
-```
-
-**Documentation index:** <https://docs.autonoma.app/llms.txt>
-
-**Deployment checks:** Once an Application + Version is registered via the Autonoma dashboard (e.g. BSU production has Application ID `cmouwgrq209t4013ps6ikkm10`), Autonoma deployment checks run automatically against the deployed Vercel URL on every push that targets that Version.
-
-**API operations supported:**
-
-- Register a web app version: `POST https://autonoma.app/api/web` with `x-platform: web`, multipart-form `name`, `path` (URL), optional `cookies`, `version`, `customID`
-- Trigger a test run: `POST https://autonoma.app/api/test/{test_id}/run` with JSON body `{ application_version_id, source: "api", runtime_metadata: {...} }`
-- Trigger a folder of tests: `POST https://autonoma.app/api/run/folder/{folder_id}`
-
-**Authoring tests:** done via the Autonoma dashboard UI (canvas + natural-language prompts) — not in code. See "Your First Test" guide at <https://docs.autonoma.app/your-first-test>.
-
-**Operator notes:**
-
-- Vercel `x-vercel-protection-bypass` headers are required for Autonoma to access deployments behind Vercel auth — provision per-version in the Autonoma dashboard.
-- Do NOT commit `AUTONOMA_SECRET_ID` to source. The Vercel integration handles distribution.
-- Adoption status: env vars distributed across all 6 apps on Production + Preview (2026-05-07). BSU Application + production/preview Versions registered in Autonoma dashboard. Other 5 apps pending operator-driven registration via dashboard.
+- Alternatives in scope: Playwright (already in BSuite stack), Vercel Agent Review (passive AI code review, currently passes via different check), self-hosted lightweight smoke tests in CI
+- If reconsidering Autonoma specifically, gate adoption on: (a) plugin install no longer hitting the Prisma bug, (b) at least one smoke test authored per app BEFORE re-enabling the deployment-checks integration
+- Re-add the env-var section to this doc + restore `.env.local` entries from the operator's password manager / Vercel integration auto-provision
 
 ---
 

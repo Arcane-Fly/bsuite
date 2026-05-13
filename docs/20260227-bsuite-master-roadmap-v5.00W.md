@@ -609,11 +609,14 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ **File-export adapters** ([#576](https://github.com/GaryOcean428/bsuite/issues/576)) — 3 gaps
 - ✅ **Reports / Pay periods / Leave / Timesheet entry / Apprentice placement** specs (2026-05-06) — full set in `docs/20260506-*-parity-spec-v1.00W.md`
 
-**Autonoma E2E testing — Vercel integration adopted on all 6 apps**
+**Autonoma E2E testing — REMOVED 2026-05-13 after evaluation**
 
-- ✅ **Canonical Autonoma doc** ([bsuite PR #619](https://github.com/GaryOcean428/bsuite/pull/619)) — CLAUDE.md "Autonoma E2E Testing" section. AI agents navigate deployed apps end-to-end to find bugs.
-- ✅ **Per-app env var distribution** (2026-05-07) — `AUTONOMA_CLIENT_ID` + `AUTONOMA_SECRET_ID` provisioned on Production + Preview environments for all 6 apps via Vercel integration.
-- ✅ **BSU Application + production/preview Versions registered** in Autonoma dashboard (App ID `cmouwgrq209t4013ps6ikkm10`). Other 5 apps pending operator-driven dashboard registration.
+- ❌ **Vercel integration uninstalled across all 6 apps (2026-05-13).** Reason: deployment-checks fire on every PR but require pre-authored tests in the Autonoma dashboard to pass; without tests the check defaults to FAILURE and pollutes the PR queue. Plugin install for local test authoring was also blocked by an upstream Prisma server-side bug (`Null constraint violation on prisma.apiKey.create`).
+- ❌ **Per-app env vars auto-removed** by Vercel integration uninstall.
+- ❌ **`AUTONOMA_*` removed from `.env.local`** (parent monorepo root).
+- 📌 **Defensive `.gitleaks.toml` rule kept** — `autonoma-client-secret` detection guard remains in place to catch any accidental future re-introduction.
+- 📌 **Historical context preserved** in `docs/20260507-cron-log-claude-scheduled-v1.00W.md` (frozen log) and `bsuite#619` (PR that originally added the integration).
+- See parent `CLAUDE.md` § "E2E Testing — status: NO active integration" for rationale + re-evaluation gates.
 
 **Defensive rotation work shipped (selection — full list in closed claude-loop tracker issues)**
 
