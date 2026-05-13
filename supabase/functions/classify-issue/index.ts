@@ -8,7 +8,6 @@ import {
   classifyIssue,
   DEFAULT_CONFIDENCE_THRESHOLD,
   DEFAULT_MODEL_ID,
-  issueClassificationSchema,
 } from '../../../packages/jodie/src/index.ts';
 
 const requestSchema = z.object({
@@ -83,8 +82,6 @@ serve(async (req) => {
         };
       },
     });
-
-    issueClassificationSchema.parse(classificationResult.classification);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
