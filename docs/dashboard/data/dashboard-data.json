@@ -14,7 +14,8 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260512",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-05-12"
+    "last_refresh": "2026-05-12",
+    "last_refreshed": "2026-05-13T08:10:17.885744Z"
   },
   "summary": {
     "external_total": 30,
@@ -56,21 +57,18 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 189,
-    "open_prs_total": 9,
+    "open_issues_total": 116,
+    "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 68,
-      "crm7": 67,
-      "business-suite-unified": 28,
-      "braden": 13,
-      "R80.3": 7,
-      "conduit": 3,
-      "throughput": 3
+      "bsuite": 30,
+      "crm7": 30,
+      "business-suite-unified": 27,
+      "braden": 5,
+      "R80.3": 9,
+      "conduit": 15,
+      "throughput": 0
     },
-    "prs_by_repo": {
-      "crm7": 8,
-      "bsuite": 1
-    }
+    "prs_by_repo": {}
   },
   "repos": [
     {
@@ -2658,5 +2656,23 @@
       "R80.3": 0,
       "throughput": 0
     }
+  },
+  "backlog_drive_2026_05_13": {
+    "schema_version": "1.0",
+    "team": "bsuite-backlog-drive-20260513",
+    "completed_at": "2026-05-13T08:10:00Z",
+    "starting_state": {
+      "open_prs": 45,
+      "open_issues": 111
+    },
+    "ending_state": {
+      "open_prs": 0,
+      "open_issues": 116
+    },
+    "prs_closed": 31,
+    "prs_merged": 7,
+    "tracking_issues_filed": 12,
+    "evidence_url": "https://github.com/GaryOcean428/bsuite/pull/932",
+    "note": "PR count to zero across all 7 repos. Issue count slightly up due to consolidated tracking issues filed for codebuff-lane absorption (bsuite#933-#940 + #941, conduit#256, crm7#762/#764, R80.3#248) \u2014 net structural cleanup positive."
   }
 }
