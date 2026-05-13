@@ -1,5 +1,7 @@
 # ADR 0004 — STP Xero Passthrough
 
+> Canonical location: `crm7/docs/adr/0004-stp-xero-passthrough.md`  
+> This archived copy is retained as part of the 2026-04-24 submodule-import audit trail.
 > **⚠️ Archive copy — not the source of truth.**
 > Canonical location (local path): [`crm7/docs/adr/0004-stp-xero-passthrough.md`](../../../../../crm7/docs/adr/0004-stp-xero-passthrough.md)
 > Canonical location (GitHub): <https://github.com/GaryOcean428/crm7/blob/development/docs/adr/0004-stp-xero-passthrough.md>

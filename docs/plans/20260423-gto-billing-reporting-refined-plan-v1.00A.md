@@ -875,7 +875,7 @@ BUG-2 (Payday Super "3 business days") must be corrected in all display strings
 
 Deliverables:
 
-ADR: docs/adr/20260423-calc-engine-single-source.md — documents that @bsuite/charge-calc is canonical, calcBridge pattern is the adapter, no third engine tolerated
+ADR: crm7/docs/adr/20260423-calc-engine-single-source.md — documents that @bsuite/charge-calc is canonical, calcBridge pattern is the adapter, no third engine tolerated
 
 Fix BUG-1 in mapd-mapper.ts + unit test
 
@@ -905,7 +905,7 @@ R80.3/src/utils/calcBridge.ts (pass resolved rate into toCalcConfig)
 
 R80.3/src/types/index.ts (fix JSDoc on superRate)
 
-docs/adr/20260423-calc-engine-single-source.md (new ADR)
+crm7/docs/adr/20260423-calc-engine-single-source.md (new ADR)
 
 Tests required:
 
@@ -1646,7 +1646,7 @@ src/hooks/useFeatureFlags.ts crm7 ✅ modified
 src/pages/settings/feature-flags.tsx crm7 ✅ modified
 src/pages/settings/index.tsx crm7 ✅ modified
 docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md crm7 ✅ 657 lines
-docs/adr/20260423-calc-engine-single-source.md crm7 ✅ ADR-001
+crm7/docs/adr/20260423-calc-engine-single-source.md crm7 ✅ ADR-001
 src/awards/mapd-mapper.ts packages/charge-calc ✅ BUG-1 fixed
 src/__tests__/awards/mapd-mapper.test.ts packages/charge-calc ✅ 64 tests pass
 src/services/fairworkApi.ts R80.3 ✅ BUG-4 fixed
