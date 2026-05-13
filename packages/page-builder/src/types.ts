@@ -71,6 +71,8 @@ export interface UsePageGridLayoutResult {
     widgetKey: string,
     initialSize?: Partial<Pick<GridLayoutItem, 'w' | 'h' | 'minW' | 'minH'>>
   ) => void;
+  moveWidget: (widgetKey: string, direction: 'up' | 'down') => void;
+  setWidgetLocked: (widgetKey: string, locked: boolean) => void;
   removeWidget: (widgetKey: string) => void;
   resetConfirmOpen: boolean;
   setResetConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;

@@ -206,6 +206,49 @@ export function usePageGridLayout({
     [currentLayouts, layoutCols, setSavedLayout],
   );
 
+  const moveWidget = useCallback(
+    (widgetKey: string, direction: 'up' | 'down') => {
+      const updated: GridLayouts = { lg: [] };
+      for (const bp of Object.keys(currentLayouts)) {
+        const items = [...(currentLayouts[bp] ?? [])];
+        const index = items.findIndex((item) => item.i === widgetKey);
+        if (index === -1) {
+          updated[bp] = items;
+          continue;
+        }
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= items.length) {
+          updated[bp] = items;
+          continue;
+        }
+        const [moved] = items.splice(index, 1);
+        items.splice(targetIndex, 0, moved);
+        updated[bp] = items;
+      }
+      startTransition(() => setSavedLayout(updated));
+    },
+    [currentLayouts, setSavedLayout],
+  );
+
+  const setWidgetLocked = useCallback(
+    (widgetKey: string, locked: boolean) => {
+      const updated: GridLayouts = { lg: [] };
+      for (const bp of Object.keys(currentLayouts)) {
+        updated[bp] = (currentLayouts[bp] ?? []).map((item) => {
+          if (item.i !== widgetKey) return item;
+          return {
+            ...item,
+            static: locked,
+            isDraggable: !locked,
+            isResizable: !locked,
+          };
+        });
+      }
+      startTransition(() => setSavedLayout(updated));
+    },
+    [currentLayouts, setSavedLayout],
+  );
+
   const removeWidget = useCallback(
     (widgetKey: string) => {
       const updated: GridLayouts = { lg: [] };
@@ -248,6 +291,8 @@ export function usePageGridLayout({
     handleCompact,
     handleReset,
     addWidget,
+    moveWidget,
+    setWidgetLocked,
     removeWidget,
     resetConfirmOpen,
     setResetConfirmOpen,

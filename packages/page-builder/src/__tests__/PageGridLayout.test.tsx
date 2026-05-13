@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PageGridLayout } from '../PageGridLayout.js';
 import type { GridLayouts } from '../types.js';
@@ -402,5 +402,71 @@ describe('PageGridLayout mobile reflow', () => {
     const containerWidthPx = 360;
     const itemWidthPx = Number((widths.values().next().value ?? '0').replace('px', ''));
     expect(itemWidthPx).toBeGreaterThan(containerWidthPx * 0.85);
+  });
+});
+
+describe('PageGridLayout layers panel', () => {
+  const layeredLayouts: GridLayouts = {
+    lg: [
+      { i: 'alpha', x: 0, y: 0, w: 6, h: 4 },
+      { i: 'beta', x: 6, y: 0, w: 6, h: 4 },
+    ],
+  };
+
+  function openEditor() {
+    act(() => {
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+    });
+  }
+
+  it('supports rename, sort, lock, and hide actions', async () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="layers-panel-test"
+        defaultLayouts={layeredLayouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div>, beta: <div>Beta widget</div> }}
+        widgetMeta={{ alpha: { label: 'Alpha' }, beta: { label: 'Beta' } }}
+      />,
+    );
+
+    openEditor();
+
+    const alphaRenameInput = screen.getByLabelText('Rename Alpha') as HTMLInputElement;
+    fireEvent.change(alphaRenameInput, { target: { value: 'Revenue KPI' } });
+    expect(screen.getByDisplayValue('Revenue KPI')).toBeTruthy();
+
+    const betaMoveUp = screen.getByLabelText('Move Beta up');
+    act(() => {
+      betaMoveUp.click();
+    });
+    const renameInputs = Array.from(
+      view.container.querySelectorAll<HTMLInputElement>('input[aria-label^="Rename "]'),
+    );
+    expect(renameInputs.map((input) => input.value)).toEqual(['Beta', 'Revenue KPI']);
+
+    const lockBeta = screen.getByLabelText('Lock Beta');
+    act(() => {
+      lockBeta.click();
+    });
+    expect(screen.getByLabelText('Unlock Beta')).toBeTruthy();
+    expect(view.container.querySelector('.react-grid-item.static')).toBeTruthy();
+
+    const renamedRow = Array.from(
+      view.container.querySelectorAll('div'),
+    ).find((row) =>
+      row.querySelector('input[aria-label="Rename Revenue KPI"]'),
+    );
+    expect(renamedRow).toBeTruthy();
+    const hideRenamed = renamedRow!.querySelector<HTMLButtonElement>('button[aria-label="Hide Revenue KPI"]');
+    expect(hideRenamed).toBeTruthy();
+    act(() => {
+      hideRenamed!.click();
+    });
+    await waitFor(() => {
+      expect(screen.queryByText('Alpha widget')).toBeNull();
+    });
+    expect(screen.getByText('Add widget:')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Revenue KPI/i })).toBeTruthy();
   });
 });

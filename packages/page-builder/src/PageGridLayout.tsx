@@ -1,9 +1,10 @@
-import { Eye, EyeOff, Layers, LayoutGrid, Plus, RotateCcw, Save, Settings2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
 import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, maxSize, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { defaultPreferenceAdapter } from './preferences.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps } from './types.js';
@@ -178,7 +179,8 @@ export function PageGridLayout({
     handleCompact,
     handleReset,
     addWidget,
-    removeWidget,
+    moveWidget,
+    setWidgetLocked,
     resetConfirmOpen,
     setResetConfirmOpen,
     containerRef,
@@ -205,6 +207,14 @@ export function PageGridLayout({
   );
 
   const [extraWidgetConfigs, setExtraWidgetConfigs] = useState<Record<string, { entityType: string; label?: string }>>({});
+  const { value: layerNames, setValue: setLayerNames } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
+    `page:${pageKey}_grid_layer_names`,
+    {},
+  );
+  const { value: hiddenLayerIds, setValue: setHiddenLayerIds } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
+    `page:${pageKey}_grid_hidden_layers`,
+    {},
+  );
   const extraWidgets = useMemo(() => {
     const rendered: Record<string, React.ReactNode> = {};
     if (!createEntityWidget) return rendered;
@@ -227,10 +237,26 @@ export function PageGridLayout({
   const activeLayouts = useMemo(() => {
     const filtered: GridLayouts = { lg: [] };
     for (const bp in currentLayouts) {
-      filtered[bp] = (currentLayouts[bp] ?? []).filter((item) => renderableWidgetKeys.has(item.i));
+      filtered[bp] = (currentLayouts[bp] ?? []).filter((item) => renderableWidgetKeys.has(item.i) && !hiddenLayerIds[item.i]);
     }
     return filtered;
-  }, [currentLayouts, renderableWidgetKeys]);
+  }, [currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
+
+  const hideWidget = (widgetKey: string) => {
+    setHiddenLayerIds((previous) => ({ ...previous, [widgetKey]: true }));
+  };
+
+  const showWidget = (widgetKey: string, defaultSize?: { w?: number; h?: number; minW?: number; minH?: number }) => {
+    setHiddenLayerIds((previous) => {
+      if (!previous[widgetKey]) return previous;
+      const { [widgetKey]: _removed, ...rest } = previous;
+      return rest;
+    });
+    const existsInLayouts = Object.values(currentLayouts).some((items) => (items ?? []).some((item) => item.i === widgetKey));
+    if (!existsInLayouts) {
+      addWidget(widgetKey, defaultSize);
+    }
+  };
 
   useEffect(() => {
     if (!createEntityWidget || typeof window === 'undefined') return;
@@ -275,6 +301,33 @@ export function PageGridLayout({
     () => [...renderableWidgetKeys].filter((key) => !visibleKeys.has(key)),
     [renderableWidgetKeys, visibleKeys],
   );
+  const layerItems = useMemo(
+    () =>
+      (activeLayouts.lg ?? []).map((item, index, layers) => {
+        const fallbackLabel = widgetMeta?.[item.i]?.label ?? item.i;
+        return {
+          id: item.i,
+          label: layerNames[item.i] || fallbackLabel,
+          locked: Boolean(item.static || item.isDraggable === false || item.isResizable === false),
+          canMoveUp: index > 0,
+          canMoveDown: index < layers.length - 1,
+        };
+      }),
+    [activeLayouts.lg, layerNames, widgetMeta],
+  );
+
+  const handleLayerRename = (widgetId: string, value: string) => {
+    const trimmed = value.trim();
+    setLayerNames((previous) => {
+      if (trimmed.length === 0) {
+        if (!(widgetId in previous)) return previous;
+        const { [widgetId]: _removed, ...rest } = previous;
+        return rest;
+      }
+      if (previous[widgetId] === trimmed) return previous;
+      return { ...previous, [widgetId]: trimmed };
+    });
+  };
 
   // Reset-confirmation dialog: full ARIA APG dialog-modal pattern.
   // - Escape key closes the dialog.
@@ -401,20 +454,79 @@ export function PageGridLayout({
                       <button
                         type="button"
                         key={key}
-                        onClick={() => addWidget(key, meta?.defaultSize)}
+                        onClick={() => showWidget(key, meta?.defaultSize)}
                         className={cn(
                           'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
                           'bg-muted text-muted-foreground border-border',
                           'hover:bg-muted/80 hover:text-foreground hover:border-primary/60',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                         )}
+                        >
+                          <Plus className="h-3 w-3" />
+                          {Icon && <Icon className="h-3 w-3" />}
+                          {layerNames[key] || meta?.label || key}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {layerItems.length > 0 && (
+              <div className="basis-full rounded-md border border-border bg-background/80 p-2">
+                <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <Layers className="h-3.5 w-3.5" />
+                  Layers
+                </div>
+                <div className="flex flex-col gap-1">
+                  {layerItems.map((layer) => (
+                    <div
+                      key={layer.id}
+                      className="flex items-center gap-1 rounded border border-border bg-card px-2 py-1"
+                    >
+                      <input
+                        type="text"
+                        value={layer.label}
+                        onChange={(event) => handleLayerRename(layer.id, event.target.value)}
+                        className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none"
+                        aria-label={`Rename ${layer.label}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => moveWidget(layer.id, 'up')}
+                        disabled={!layer.canMoveUp}
+                        aria-label={`Move ${layer.label} up`}
+                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
                       >
-                        <Plus className="h-3 w-3" />
-                        {Icon && <Icon className="h-3 w-3" />}
-                        {meta?.label ?? key}
+                        <ArrowUp className="h-3.5 w-3.5" />
                       </button>
-                    );
-                  })}
+                      <button
+                        type="button"
+                        onClick={() => moveWidget(layer.id, 'down')}
+                        disabled={!layer.canMoveDown}
+                        aria-label={`Move ${layer.label} down`}
+                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setWidgetLocked(layer.id, !layer.locked)}
+                        aria-label={`${layer.locked ? 'Unlock' : 'Lock'} ${layer.label}`}
+                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        {layer.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => hideWidget(layer.id)}
+                        aria-label={`Hide ${layer.label}`}
+                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <EyeOff className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -536,8 +648,8 @@ export function PageGridLayout({
                   id={layoutItem.i}
                   content={content}
                   isEditing={isEditing}
-                  label={widgetMeta?.[layoutItem.i]?.label ?? layoutItem.i}
-                  onRemove={removeWidget}
+                  label={layerNames[layoutItem.i] || widgetMeta?.[layoutItem.i]?.label || layoutItem.i}
+                  onRemove={hideWidget}
                 />
               );
             })}
