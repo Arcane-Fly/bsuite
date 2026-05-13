@@ -20,3 +20,16 @@ export type {
   PlatformLogoSource,
   ResolvedPlatformLogo,
 } from './usePlatformLogo'
+
+// Components — see ./components/<Name>.tsx
+export {
+  StatusBadge,
+  AutoStatusBadge,
+  getStatusVariant,
+  formatStatusLabel,
+} from './components/StatusBadge'
+export type {
+  BadgeVariant,
+  StatusBadgeProps,
+  AutoStatusBadgeProps,
+} from './components/StatusBadge'
