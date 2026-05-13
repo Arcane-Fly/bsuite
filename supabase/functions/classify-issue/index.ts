@@ -61,10 +61,33 @@ serve(async (req) => {
     );
   }
 
+  let requestBody: unknown;
   try {
-    const parsedRequest = requestSchema.parse(await req.json());
+    requestBody = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON payload' }), {
+      status: 400,
+      headers,
+    });
+  }
 
-    const classificationResult = await classifyIssue(parsedRequest, {
+  const parsedRequest = requestSchema.safeParse(requestBody);
+  if (!parsedRequest.success) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: 'Invalid request payload',
+        details: parsedRequest.error.issues,
+      }),
+      {
+        status: 400,
+        headers,
+      }
+    );
+  }
+
+  try {
+    const classificationResult = await classifyIssue(parsedRequest.data, {
       modelId,
       confidenceThreshold,
       generateObject: async ({ system, prompt, schema }) => {
@@ -108,7 +131,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         ok: true,
-        issue_url: parsedRequest.issueUrl,
+        issue_url: parsedRequest.data.issueUrl,
         classification: classificationResult.classification,
         confidence: classificationResult.classification.confidence,
         confidence_threshold: classificationResult.confidenceThreshold,
@@ -135,7 +158,7 @@ serve(async (req) => {
           Deno.env.get('JODIE_DEBUG') === 'true' ? message : 'See edge logs for details',
       }),
       {
-        status: 400,
+        status: 500,
         headers,
       }
     );
