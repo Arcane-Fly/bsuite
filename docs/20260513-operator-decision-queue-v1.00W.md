@@ -179,22 +179,48 @@ Confirm Option A scope and authorize bsuite-lead to dispatch a multi-PR reconcil
 
 ---
 
-## Footer — Codebuff-lane drafts (no action required)
+## Footer — Codebuff inheritance (RESCINDED 2026-05-13T08:40Z)
 
-Per session memory `bsuite_session_20260513`, the following 12 drafts from the 2026-05-12T15:29Z burst spawn are **deliberate parallel-exploration drafts**. Per operator's stated intent, they remain OPEN as drafts and require NO review/merge action this cycle:
+**The previous "preserved by intent" classification is RESCINDED.** Codebuff was stopped by operator on 2026-05-13. All Codebuff-spawned drafts are now under bsuite-lead ownership and being absorbed via one of four protocols:
 
-**Page-builder wave (5):**
-- bsuite#874 (Layers panel), #877 (routing matrix), #879 (breakpoint switcher), #880 (Global Symbol), #881 (prompt-to-section AI)
+- **FINISH-AND-MERGE** — Has substantive code, aligns with operator preferences (DRY, design system, no `workspace:*`, no frozen-migration violations), resolvable conflicts. Specialists complete the remaining work, mark ready, merge.
+- **CLOSE-OBSOLETE** — Target functionality removed (Autonoma sunset PR #927/#930), superseded by other merged work, or empty zero-diff stub.
+- **CONVERT-TO-OPERATOR-DECISION** — Substantive but conflicts with another active draft, or operator-blocked on external dependency. Added to this decision queue.
+- **REASSIGN-AS-FRESH-PR** — Intent is sound but Codebuff's implementation is bad. Close + reopen with clean implementation by team specialist.
 
-**Jodie GitHub App chain (4):**
-- bsuite#876 (issue classifier), #878 (MCP wiring), #882 (webhook ingestion), #888 (Autonoma audit)
+### Already-actioned this cycle
 
-**Other 2026-05-12 spawn (3):**
-- crm7#675 (per-tenant locations) — **EMPTY PR, will be closed by plans-keeper**
-- crm7#676 (GTO compliance dashboard) — **EMPTY PR, will be closed by plans-keeper**
-- crm7#691 (zero-caller edge fn audit), #689 (delete adobe-sign-webhook), #654 (page layout editing)
+| PR | Repo | Outcome | Evidence |
+|---|---|---|---|
+| #888 | bsuite | **CLOSE-OBSOLETE** — Autonoma removed in PR #927/#930 | https://github.com/GaryOcean428/bsuite/pull/888 |
+| #891 | bsuite | **CLOSE-EMPTY** — 0 file changes; Xero encrypt tracked via crm7#544 + bsuite#712 (decision 5 above) | https://github.com/GaryOcean428/bsuite/pull/891 |
+| #898 | bsuite | **CLOSE-EMPTY** — 0 file changes; current_role qualification tracked via #873 (under #758 reconciliation) | (in plans-keeper batch) |
+| #690 | crm7 | **CLOSE-EMPTY** — 0 file changes; zero-caller audit tracked via crm7#688 | https://github.com/GaryOcean428/crm7/pull/690 |
+| #675 | crm7 | **CLOSE-EMPTY** — 0 file changes | (in plans-keeper batch) |
+| #676 | crm7 | **CLOSE-EMPTY** — 0 file changes | (in plans-keeper batch) |
 
-If operator intent on any specific draft has shifted (e.g. "I actually want #874 promoted"), flag it in this doc's PR comments.
+### In flight this cycle (specialists assigned)
+
+| PR | Repo | LOC | Specialist | Protocol |
+|---|---|---|---|---|
+| #874 | bsuite | +837/-22 (6 files) | design-sheriff (page-builder) | FINISH-AND-MERGE evaluation |
+| #877 | bsuite | +608/-0 (12 files) | platform (cron-a routing) | FINISH-AND-MERGE evaluation |
+| #879 | bsuite | +602/-2 (14 files) | design-sheriff (page-builder) | FINISH-AND-MERGE evaluation |
+| #880 | bsuite | +708/-0 (5 files) | design-sheriff (page-builder) | FINISH-AND-MERGE evaluation |
+| #881 | bsuite | +839/-3 (10 files) | design-sheriff (page-builder) | FINISH-AND-MERGE evaluation |
+| #876 | bsuite | +809/-462 (11 files) | platform (Jodie classifier) | FINISH-AND-MERGE evaluation |
+| #878 | bsuite | +632/-12 (10 files) | platform (Jodie MCP) | FINISH-AND-MERGE evaluation |
+| #882 | bsuite | +1113/-0 (19 files) | platform (Jodie webhook) | FINISH-AND-MERGE evaluation |
+| #889 | bsuite | +14/-13 (3 files) | plans-keeper | FINISH-AND-MERGE (docs trivial) |
+| #894 | bsuite | +7/-3 (3 files) | plans-keeper | FINISH-AND-MERGE (docs trivial) |
+| #689 | crm7 | +5/-304 (3 files) | platform | FINISH-AND-MERGE (vendor cleanup) |
+| #426 | BSU | +136/-35 (3 files) | design-sheriff | FINISH-AND-MERGE (focused brand fix) |
+| #417 | BSU | +1334/-306 (3 files) | design-sheriff | REASSIGN evaluation (developer nav rebuild) |
+| #224 | conduit | **+15569/-86 (14 files)** | platform | REASSIGN-AS-FRESH-PR likely (too bloated to finish) |
+| #242 | conduit | **+14000/-238 (32 files)** | design-sheriff | Already in decision 1 (brand-token storm) |
+| #220, #222, #226, #228, #230, #232, #234, #235 | conduit | 627–1984 LOC each | platform | FINISH-AND-MERGE evaluation per PR |
+
+Specialists report each outcome with evidence (commit SHA / close URL) back to bsuite-lead. Each PR is bsuite-lead's responsibility to drive to conclusion this cycle — no deferrals.
 
 ---
 
