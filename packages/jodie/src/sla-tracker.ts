@@ -16,7 +16,7 @@ export interface SlaTrackingRecord {
 
 export interface SlaTrackingStore {
   upsert(record: SlaTrackingRecord): Promise<SlaTrackingRecord>;
-  listOpen(nowIso: string): Promise<ReadonlyArray<SlaTrackingRecord>>;
+  listDue(nowIso: string): Promise<ReadonlyArray<SlaTrackingRecord>>;
 }
 
 export interface EscalationAction {
@@ -59,7 +59,7 @@ export const checkSlaBreaches = async (
   store: SlaTrackingStore,
   nowIso: string,
 ): Promise<ReadonlyArray<EscalationAction>> => {
-  const dueRecords = await store.listOpen(nowIso);
+  const dueRecords = await store.listDue(nowIso);
   const now = new Date(nowIso).getTime();
   const actions: EscalationAction[] = [];
 

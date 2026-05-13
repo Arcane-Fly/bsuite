@@ -20,7 +20,7 @@ class InMemorySlaStore implements SlaTrackingStore {
     return record;
   }
 
-  async listOpen(nowIso: string) {
+  async listDue(nowIso: string) {
     const now = new Date(nowIso).getTime();
     return [...this.records.values()].filter((record) => new Date(record.deadlineAt).getTime() <= now);
   }
@@ -86,10 +86,10 @@ describe('SLA tracker', () => {
     expect(record).not.toBeNull();
     await store.upsert(record!);
 
-    const open = await store.listOpen('2026-05-13T01:00:00.000Z');
-    expect(open).toHaveLength(1);
-    expect(open[0]?.issueNumber).toBe(101);
-    expect(open[0]?.owner).toBe('@copilot');
+    const due = await store.listDue('2026-05-13T01:00:00.000Z');
+    expect(due).toHaveLength(1);
+    expect(due[0]?.issueNumber).toBe(101);
+    expect(due[0]?.owner).toBe('@copilot');
   });
 
   it('escalates severity on SLA breach using synthetic time travel', async () => {

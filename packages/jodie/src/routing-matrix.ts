@@ -79,6 +79,10 @@ export const escalateSeverity = (severity: Severity): Severity => {
       return 'P1';
     case 'P3':
       return 'P2';
+    default: {
+      const exhaustiveCheck: never = severity;
+      throw new Error(`Unsupported severity: ${String(exhaustiveCheck)}`);
+    }
   }
 };
 
