@@ -196,9 +196,9 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-bsuite-production-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "~50% complete",
+      "phase": "Phase 6 closed (9/16); Phase 7 next",
       "owner": "cross-app",
-      "next_step": "Living register; OPEN: Vault RPC for email tokens, OIDC nonce, contact FK migrations, multiple P1-*",
+      "next_step": "Phase 7 FK migrations + EntitySelector UI. Phase 6 remaining is 4 operator-only + 2 auth-guardian-gated items.",
       "severity": "P0",
       "category": "Production readiness"
     },

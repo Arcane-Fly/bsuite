@@ -850,6 +850,14 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
 - Never commit `.env` / `.env.local` files
 - All client-side vars: `VITE_` (Vite) or `NEXT_PUBLIC_` (Next.js)
 - Server-only vars (API keys): no prefix, access via `process.env`
+- Canonical app URL env var map (`VITE_APP_URL`) for all 6 apps:
+  - BSU: prod `https://suite.crm7.app`, dev `https://d.suite.crm7.app`
+  - CRM7: prod `https://crm.crm7.app`, dev `https://d.crm.crm7.app`
+  - Conduit: prod `https://conduit.crm7.app`, dev `https://d.conduit.crm7.app`
+  - R80.3: prod `https://r8.crm7.app`, dev `https://d.r8.crm7.app`
+  - Throughput: prod `https://ideas.crm7.app`, dev `https://d.ideas.crm7.app`
+  - Braden: prod `https://www.braden.com.au`, dev `https://d.braden.com.au`
+- Stripe key policy: client bundles may use publishable keys only (`VITE_STRIPE_PUBLISHABLE_KEY` = `pk_*`); secret keys (`sk_*`) must remain server-only and unprefixed.
 
 ---
 
