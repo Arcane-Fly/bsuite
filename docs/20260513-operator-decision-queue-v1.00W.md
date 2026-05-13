@@ -188,16 +188,25 @@ Confirm Option A scope and authorize bsuite-lead to dispatch a multi-PR reconcil
 - **CONVERT-TO-OPERATOR-DECISION** — Substantive but conflicts with another active draft, or operator-blocked on external dependency. Added to this decision queue.
 - **REASSIGN-AS-FRESH-PR** — Intent is sound but Codebuff's implementation is bad. Close + reopen with clean implementation by team specialist.
 
-### Already-actioned this cycle
+### Already-actioned this cycle (verified 2026-05-13T09:50Z)
 
-| PR | Repo | Outcome | Evidence |
+| PR/Issue | Repo | Outcome | Evidence URL |
 |---|---|---|---|
-| #888 | bsuite | **CLOSE-OBSOLETE** — Autonoma removed in PR #927/#930 | https://github.com/GaryOcean428/bsuite/pull/888 |
-| #891 | bsuite | **CLOSE-EMPTY** — 0 file changes; Xero encrypt tracked via crm7#544 + bsuite#712 (decision 5 above) | https://github.com/GaryOcean428/bsuite/pull/891 |
-| #898 | bsuite | **CLOSE-EMPTY** — 0 file changes; current_role qualification tracked via #873 (under #758 reconciliation) | (in plans-keeper batch) |
-| #690 | crm7 | **CLOSE-EMPTY** — 0 file changes; zero-caller audit tracked via crm7#688 | https://github.com/GaryOcean428/crm7/pull/690 |
-| #675 | crm7 | **CLOSE-EMPTY** — 0 file changes | (in plans-keeper batch) |
-| #676 | crm7 | **CLOSE-EMPTY** — 0 file changes | (in plans-keeper batch) |
+| PR #888 | bsuite | **CLOSE-OBSOLETE** — Autonoma removed in PR #927/#930 | https://github.com/GaryOcean428/bsuite/pull/888 |
+| PR #891 | bsuite | **CLOSE-EMPTY** — 0 file changes; Xero encrypt tracked via crm7#544 + bsuite#712 (decision 5 above) | https://github.com/GaryOcean428/bsuite/pull/891 |
+| PR #898 | bsuite | **CLOSE-EMPTY** — 0 file changes; current_role qualification redirected to #758 reconciliation per frozen-rule | https://github.com/GaryOcean428/bsuite/pull/898 |
+| PR #690 | crm7 | **CLOSE-EMPTY** — 0 file changes; zero-caller audit tracked via crm7#688 | https://github.com/GaryOcean428/crm7/pull/690 |
+| PR #675 | crm7 | **CLOSE-EMPTY** — 0 file changes | https://github.com/GaryOcean428/crm7/pull/675 |
+| PR #676 | crm7 | **CLOSE-EMPTY** — 0 file changes; redirected to bsuite#727-#734 chain | https://github.com/GaryOcean428/crm7/pull/676 |
+| Issue #923 | bsuite | **CLOSE-STALE** — 4 DEPS PRs already merged in 05:43Z ship cycle | https://github.com/GaryOcean428/bsuite/issues/923 |
+| Issue #908 | bsuite | **CLOSE-STALE** — bsuite#907 already merged 03:24Z | https://github.com/GaryOcean428/bsuite/issues/908 |
+| Issue #919 | bsuite | **CLOSE-STALE** — postcss override satisfied by ship cycle | https://github.com/GaryOcean428/bsuite/issues/919 |
+| R80.3#245 | R80.3 | **READY-FOR-REVIEW flipped** (claude-loop FEATURE — Payday Super jurisdiction picker) | https://github.com/GaryOcean428/R80.3/pull/245 |
+| conduit#249 | conduit | **READY-FOR-REVIEW flipped** (claude-loop COMPETE — kebab menu + URL filters) | https://github.com/GaryOcean428/conduit/pull/249 |
+| throughput#160 | throughput | **READY-FOR-REVIEW flipped** (claude-loop DEPS — page-builder parity) | https://github.com/GaryOcean428/throughput/pull/160 |
+| Issue #873 | bsuite | **REDIRECT-COMMENT** added explaining frozen-rule + ESLint forward-looking guidance | https://github.com/GaryOcean428/bsuite/issues/873#issuecomment-4438687952 |
+| R80.3#220 | R80.3 | **NEEDS-REBASE COMMENT** — migration prefixes 20260512000001-3 lexicographically precede applied 20260512100000 | https://github.com/GaryOcean428/R80.3/pull/220#issuecomment-4438698794 |
+| crm7#762 | crm7 | **OPERATOR-DECISION FILED** — 3-way migration prefix collision (#668/#669/#670 all on 20260512023000) | https://github.com/GaryOcean428/crm7/issues/762 |
 
 ### In flight this cycle (specialists assigned)
 
@@ -211,8 +220,8 @@ Confirm Option A scope and authorize bsuite-lead to dispatch a multi-PR reconcil
 | #876 | bsuite | +809/-462 (11 files) | platform (Jodie classifier) | FINISH-AND-MERGE evaluation |
 | #878 | bsuite | +632/-12 (10 files) | platform (Jodie MCP) | FINISH-AND-MERGE evaluation |
 | #882 | bsuite | +1113/-0 (19 files) | platform (Jodie webhook) | FINISH-AND-MERGE evaluation |
-| #889 | bsuite | +14/-13 (3 files) | plans-keeper | FINISH-AND-MERGE (docs trivial) |
-| #894 | bsuite | +7/-3 (3 files) | plans-keeper | FINISH-AND-MERGE (docs trivial) |
+| ~~#889~~ | bsuite | already MERGED 2026-05-13T05:24:55Z (ship cycle) | n/a | n/a — bsuite-lead dispatch error, no follow-up needed |
+| ~~#894~~ | bsuite | already MERGED 2026-05-13T05:24:53Z (ship cycle) | n/a | n/a — bsuite-lead dispatch error, no follow-up needed |
 | #689 | crm7 | +5/-304 (3 files) | platform | FINISH-AND-MERGE (vendor cleanup) |
 | #426 | BSU | +136/-35 (3 files) | design-sheriff | FINISH-AND-MERGE (focused brand fix) |
 | #417 | BSU | +1334/-306 (3 files) | design-sheriff | REASSIGN evaluation (developer nav rebuild) |
