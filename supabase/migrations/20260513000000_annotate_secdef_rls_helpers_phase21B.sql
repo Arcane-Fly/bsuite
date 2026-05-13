@@ -37,6 +37,9 @@
 DO $$
 DECLARE
   -- The three-line annotation block injected at the top of every body.
+  -- @SD-AUDIT date is intentionally the migration date (2026-05-13), not
+  -- the current date — it records WHEN this function was first annotated
+  -- as part of Phase 2.1B of the bsuite#953 SECURITY DEFINER audit.
   v_comment_block text :=
     '-- @SD-JUSTIFICATION: rls-helper, called from policy USING/WITH-CHECK clauses; INVOKER would defeat the policy purpose' || E'\n' ||
     '-- @SD-CATEGORY: 2.1B' || E'\n' ||
@@ -53,7 +56,7 @@ DECLARE
 BEGIN
   -- -------------------------------------------------------------------------
   -- Iterate over every matching SECURITY DEFINER function in public schema.
-  -- The IN list covers all 24 distinct names; the overloaded is_gto_staff pair
+  -- The IN list covers all 25 distinct names; the overloaded is_gto_staff pair
   -- is handled automatically because both oids match the same proname.
   -- -------------------------------------------------------------------------
   FOR v_fn IN
@@ -97,7 +100,7 @@ BEGIN
     -- -----------------------------------------------------------------------
     -- Idempotency guard: skip if @SD-JUSTIFICATION is already present.
     -- -----------------------------------------------------------------------
-    IF v_def ~ '@SD-JUSTIFICATION' THEN
+    IF v_def ~ '-- @SD-JUSTIFICATION:' THEN
       RAISE NOTICE '[2.1B] % (%) — already annotated, skipping',
                    v_fn.proname, v_fn.arg_sig;
       CONTINUE;
@@ -111,11 +114,18 @@ BEGIN
     -- where <tag> may be empty (→ $$) or a word (→ $function$, $body$, etc.)
     --
     -- Pattern (single-line mode 's', so '.' matches newlines):
-    --   ^(.*\bAS \$[^$]*\$\s*\n)(.*)$
+    --   ^(.*?\bAS \$[a-zA-Z0-9_]*\$[ \t]*\n)(.*)$
+    --   Non-greedy .*? ensures we match the FIRST (and only) AS $tag$\n in
+    --   the header.  Tag chars restricted to [a-zA-Z0-9_] per PostgreSQL
+    --   dollar-quote identifier rules.
     --   Group 1 = header including AS $tag$\n
     --   Group 2 = body text + closing $tag$
+    --
+    -- pg_get_functiondef in PostgreSQL 12+ always ends the AS $tag$ line with
+    -- a newline before the body, so the \n here is reliable.  The fallback
+    -- RAISE WARNING below handles the (theoretical) case where it is absent.
     -- -----------------------------------------------------------------------
-    v_parts := regexp_match(v_def, '^(.*\bAS \$[^$]*\$[ \t]*\n)(.*)$', 's');
+    v_parts := regexp_match(v_def, '^(.*?\bAS \$[a-zA-Z0-9_]*\$[ \t]*\n)(.*)$', 's');
 
     IF v_parts IS NULL THEN
       RAISE WARNING '[2.1B] % (%) — could not locate AS $...$\\n boundary; skipping',
@@ -127,7 +137,13 @@ BEGIN
     v_new_def := v_parts[1] || v_comment_block || v_parts[2];
 
     -- Re-create the function with the annotation added.
-    EXECUTE v_new_def;
+    -- Wrap in a nested exception block so a failure names the offending function.
+    BEGIN
+      EXECUTE v_new_def;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION '[2.1B] Failed to annotate function % (%): %',
+                      v_fn.proname, v_fn.arg_sig, SQLERRM;
+    END;
 
     v_count := v_count + 1;
     RAISE NOTICE '[2.1B] % (%) — annotated (%/26)',
