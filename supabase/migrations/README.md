@@ -1,0 +1,82 @@
+# BSuite Parent Repo Migrations
+
+This directory holds migrations that affect the **shared Supabase project `tuybltdrdefjblnplpqo`** (the same project all 6 BSuite apps connect to). Submodule migrations live under `<submodule>/supabase/migrations/`.
+
+> **Current count:** 12 versioned migrations (as of 2026-05-13).
+
+## Mandatory rule (NEW — 2026-05-13)
+
+### Every new `CREATE TABLE public.<x>` MUST include explicit `GRANT` statements
+
+Per **bsuite#964** + Supabase Data API change effective 2026-10-30: new public-schema tables will NOT be accessible via PostgREST/supabase-js/GraphQL unless explicitly granted to a Data API role. Without an explicit grant, clients hit `42501 permission denied`.
+
+**Required template for every new table:**
+
+```sql
+CREATE TABLE public.<table_name> (
+  ...
+);
+
+ALTER TABLE public.<table_name> ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT                              ON public.<table_name> TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE      ON public.<table_name> TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE      ON public.<table_name> TO service_role;
+
+-- ...then RLS policies
+```
+
+For service-role-only tables (internal webhook queues, encrypted credential stores, audit ledgers), grant only `service_role` and document the intent inline:
+
+```sql
+-- Service-role only: internal webhook receiver, never exposed to clients.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table_name> TO service_role;
+```
+
+CI guard: `.github/workflows/explicit-grant-lint.yml` (added in PR #965, script at [`scripts/explicit-grant-lint.sh`](../../scripts/explicit-grant-lint.sh)) fails any PR that adds a `CREATE TABLE public.<x>` without a matching `GRANT` in the same migration file.
+
+## Auto-apply workflow status
+
+`.github/workflows/supabase-migrate.yml` is the auto-apply workflow that runs on every push to `main` touching `**/supabase/migrations/**`. **It is currently broken** — bsuite#961 — because the default `GITHUB_TOKEN` doesn't have access to the private submodule repos, and the `Detect changed migrations` step fails on submodule clone.
+
+**Workaround until #961 is fixed:** apply migrations manually via Supabase MCP `apply_migration` (transactional) or `execute_sql` (for `CREATE INDEX CONCURRENTLY` and other non-transactional DDL). Then commit the migration file to the bsuite parent so source-prod parity is maintained.
+
+This is the pattern in use throughout the 2026-05-13 hardening session (see migrations 20260513140000–20260513200000 below).
+
+## Per-migration guide for non-transactional DDL
+
+`CREATE INDEX CONCURRENTLY`, `REINDEX CONCURRENTLY`, `ALTER TYPE … ADD VALUE`, `VACUUM`, `CLUSTER` — all of these cannot run inside a transaction block.
+
+- **File naming:** suffix with `.nontx.sql` (per crm7's doctrine in `crm7/supabase/migrations/CLAUDE.md`).
+- **Apply path:** even when the auto-apply workflow is fixed, the standard `supabase db push` will still wrap each migration in a transaction. `.nontx.sql` files need either psql direct application OR Supabase MCP `execute_sql` (one statement per call).
+- **Audit trail:** when applied via MCP, Supabase auto-records the migration in `supabase_migrations.schema_migrations` so a future re-`db push` will skip them.
+
+## Recent migration history (Phase 2.x hardening — 2026-05-13)
+
+| Migration | Phase | Effect |
+|---|---|---|
+| `20260513140000_annotate_secdef_triggers_phase21A.sql` | 2.1A | Annotated 14 trigger SECURITY DEFINER functions with `@SD-JUSTIFICATION` |
+| `20260513150000_annotate_secdef_rls_helpers_phase21B.sql` | 2.1B | Annotated 25 RLS-helper SECURITY DEFINER functions with `@SD-JUSTIFICATION` |
+| `20260513160000_rls_initplan_apprentice_placements.sql` | 2.2 | Wrapped `auth.uid()` → `(SELECT auth.uid())` on 2 policies |
+| `20260513170000_rls_initplan_feature_builder_ai_usage.sql` | 2.2 | Same pattern, 1 policy |
+| `20260513180000_rls_initplan_remaining_7_tables.sql` | 2.2 | Same pattern, 22 policies on 7 tables — closed Phase 2.2 EPIC bsuite#951 |
+| `20260513200000_phase23_combine_permissive_batch1.sql` | 2.3 | Combined 5 PERMISSIVE policy overlaps on 3 tables (team_members + team_invitations + org_members); reduced `multiple_permissive_policies` 56→41 |
+
+## Frozen migration rule (sibling to crm7's doctrine)
+
+Once a migration is applied to prod (`supabase_migrations.schema_migrations` contains the version), it is **immutable**. Subsequent fixes go in NEW migrations.
+
+Editing an applied migration in this directory will:
+1. Have NO effect on prod (the workflow won't re-apply it)
+2. Cause source-prod drift (local file ≠ what was actually executed)
+3. Break the Phase 0 reconciliation invariant (crm7#770)
+
+Reference: bsuite#961, crm7#771 (PG17 syntax break is a frozen-migration follow-up case).
+
+## Cross-references
+
+- bsuite#961 — supabase-migrate workflow fix (private submodule clone)
+- bsuite#964 — explicit-grant CI guard implementation
+- crm7#770 — Phase 2 reconciliation inventory
+- crm7's `supabase/migrations/CLAUDE.md` — sister-repo doctrine (frozen-migration rule, `.nontx.sql` convention)
+- AGENTS.md — global agent rules (Anti-Laziness, FF-SELF-VALIDATION-20260507, etc.)
