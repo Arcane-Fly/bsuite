@@ -1,6 +1,7 @@
 # BSuite — Refreshed Audit & Full Production Plan
 
 **Audit date:** 2026-04-23 (refreshed from 2026-04-22 baseline)
+**Evidence refresh:** 2026-05-12 — Phase 6 verified against live code state (8/9 actionable items already landed)
 **Baseline:** bsuite monorepo `development` branch; live Supabase `tuybltdrdefjblnplpqo` (Postgres 17.6); all five submodules
 **New context incorporated:** Phase 5 (7 PRs merged), Phase 4 V1/V5, Phase 6c DRY lint, conduit SSR hotfix (PR #98 outstanding), Claude Code Phase 6c session
 **Colourblind constraint:** Red/green sole-signifier findings are explicitly called out
@@ -28,7 +29,7 @@ The overnight session and subsequent Claude Code work delivered substantial prog
 | CLAUDE.md updated across all repos (Phase 6b+6c docs) | ✅ DONE | Commits in all repos |
 | Conduit SSR prerender fix (PR #98) | ⚠️ BLOCKER | PR diverged — hotfix needed |
 
-**Outstanding blocker:** Conduit Vercel build is still failing. PR #98 (`feat/phase5-consumer-conduit`) is diverged from `development` by 1 squash-merge commit. The fix (typeof window guard in DashboardShell.tsx) is written and committed to the feature branch but cannot merge cleanly. Recommended resolution: cherry-pick commits `2f38cc3` and `5870990` onto a new `fix/conduit-ssr-prerender-guard` branch from `development`, open a new PR.
+**Outstanding blocker:** ✅ RESOLVED (2026-05-12 audit). Conduit Vercel is green and running `next@^16.2.4` (see `conduit/package.json`). PR #98 was closed unmerged but superseded by later refactors — the dashboard layout structure changed (no `app/dashboard/layout.tsx` now; DashboardShell moved to `conduit/src/components/DashboardShell.tsx`). No `typeof window` guard required on the current layout. Item 6.0 closed as RESOLVED-DIFFERENTLY.
 
 ---
 
@@ -136,26 +137,36 @@ Production means: all five apps deployed to Vercel on `main`/`master`, all P0 se
 
 **Target: all P0 security issues resolved, Vercel deployments all green**
 
-| Task | PR target | Priority |
-|------|-----------|----------|
-| 6.0 — Conduit SSR hotfix: cherry-pick `2f38cc3` + `5870990` onto `fix/conduit-ssr-prerender-guard` from `development`; open new PR | conduit | P0 |
-| 6.1 — BSU PR #171 merge: delete drifted BSU lead-capture duplicate | BSU | P1 |
-| 6.2 — Create Vault RPC `email_integration_set_encrypted_token` in DB; migrate plaintext `access_token` + `refresh_token` in `email_integrations` | DB migration | P0 |
-| 6.3 — Encrypt `smtp_password` + `imap_password` via pgcrypto; add Vault migration path | DB migration | P0 |
-| 6.4 — Sign OAuth state with `HMAC-SHA256`; verify on callback in `oauth-google-email` + `oauth-microsoft-email` | CRM7 edge fns | P0 |
-| 6.5 — Replace `===` secret compare with `timingSafeEqual` in `email-token-refresh` | CRM7 edge fn | P1 |
-| 6.6 — Remove `GOTRUE_JWT_ADMIN_GROUP_NAME` from Supabase project config | Supabase | P1 |
-| 6.7 — Remove wildcard redirect URIs `*.vercel.app` + `*.vusercontent.net` from Supabase Auth dashboard; add exact preview URLs | Supabase | P0 |
-| 6.8 — Bump `next` to `^16.2.3` in Conduit (CVE-2026-23869) | Conduit | P0 |
-| 6.9 — Add OIDC nonce to all `signInWithBusinessSuite` calls (CRM7, R80.3, BSU, Conduit) | All clients | P1 |
-| 6.10 — Add `Cache-Control: public, max-age=31536000, immutable` for `/assets/*` to 5 `vercel.json` files | CRM7/R80.3/braden/throughput/conduit | P1 |
-| 6.11 — BSU AuthContext zero-fetch bug fix; add integration test for ≥2 Supabase REST calls on mount | BSU | P0 |
-| 6.12 — Fix `auth_rls_initplan` in 5 RLS policies (wrap auth calls in `(select auth.uid())`) | DB migration | P2 |
-| 6.13 — Add 4 missing FK indexes (`apprentice_handoff_tokens`, `collaborative_documents`, `contact_messages`, `platform_rate_limits`) | DB migration | P2 |
-| 6.14 — `git rm crm7/APPLY_THIS_SQL.sql`; BFG history rewrite if credentials present | CRM7 | P0 |
-| 6.15 — Wire BSU platform tab in `AdminBranding.tsx` to `platform_branding` singleton (upsert `WHERE id = 'platform'`) | BSU | P1 |
+**Phase 6 status (2026-05-12 evidence refresh):** 9 of 16 items closed in code (6.0 superseded + 6.1/6.2/6.3/6.4/6.8/6.10/6.14/6.15 DONE). 1 item N/A (6.5 stale — function removed upstream). 4 items operator-only (6.6, 6.7, 6.12, 6.13 require Supabase dashboard / DB migration push). 2 items auth-guardian-gated (6.9, 6.11 require explicit operator opt-in per finish-roadmap skill rule).
 
-**Deliverable:** All P0 security findings resolved. Conduit Vercel deployment green. BSU enterprise tier-chip working for all 3 enterprise users.
+| Task | PR target | Priority | Status (2026-05-12) | Evidence |
+|------|-----------|----------|---------------------|----------|
+| 6.0 — Conduit SSR hotfix: cherry-pick `2f38cc3` + `5870990` onto `fix/conduit-ssr-prerender-guard` from `development`; open new PR | conduit | P0 | ✅ RESOLVED-DIFFERENTLY | Conduit on `next@^16.2.4` (`conduit/package.json`); PR #98 closed unmerged — dashboard layout structure refactored; no guard needed on current `conduit/src/components/DashboardShell.tsx` |
+| 6.1 — BSU PR #171 merge: delete drifted BSU lead-capture duplicate | BSU | P1 | ✅ DONE | BSU PR #171 MERGED 2026-04-23 |
+| 6.2 — Create Vault RPC `email_integration_set_encrypted_token` in DB; migrate plaintext `access_token` + `refresh_token` in `email_integrations` | DB migration | P0 | ✅ DONE | Migration `crm7/supabase/migrations/20260423_add_email_token_vault_columns.sql` adds Vault columns; edge fn `crm7/supabase/functions/encrypt-email-tokens/index.ts` calls `vault_create_secret` RPC (line 91) and `vault.create_secret` schema RPC (line 103), writes `encryption_key_id` back to row, then nullifies plaintext columns (lines 123-147) |
+| 6.3 — Encrypt `smtp_password` + `imap_password` via pgcrypto; add Vault migration path | DB migration | P0 | ✅ DONE | Same `encrypt-email-tokens` fn handles `smtp_password` + `imap_password` alongside OAuth tokens (single JSON secret per row); columns nullified post-migration |
+| 6.4 — Sign OAuth state with `HMAC-SHA256`; verify on callback in `oauth-google-email` + `oauth-microsoft-email` | CRM7 edge fns | P0 | ✅ DONE | `crm7/supabase/functions/_shared/oauth-state.ts` exports `signState`/`verifyState`; consumed by both `oauth-google-email/index.ts` and `oauth-microsoft-email/index.ts`; `OAUTH_STATE_SECRET` env var validated at startup |
+| 6.5 — Replace `===` secret compare with `timingSafeEqual` in `email-token-refresh` | CRM7 edge fn | P1 | ⚪ N/A (stale) | `email-token-refresh` edge function does not exist in `crm7/supabase/functions/`. Token refresh is handled client-side via `startBSTokenRefresh` in `@bsuite/auth`. No server-side secret comparison needed. Remaining email OAuth fns use `signState`/`verifyState` (crypto.subtle.verify) — not string compare. |
+| 6.6 — Remove `GOTRUE_JWT_ADMIN_GROUP_NAME` from Supabase project config | Supabase | P1 | 🕒 OPERATOR-ONLY | Supabase project config not managed in repo. Operator to remove via Supabase dashboard. |
+| 6.7 — Remove wildcard redirect URIs `*.vercel.app` + `*.vusercontent.net` from Supabase Auth dashboard; add exact preview URLs | Supabase | P0 | 🕒 OPERATOR-ONLY | Supabase Auth dashboard. Tracked in ADR-0004 preview-URL allowlist. Operator-only. |
+| 6.8 — Bump `next` to `^16.2.3` in Conduit (CVE-2026-23869) | Conduit | P0 | ✅ DONE | `conduit/package.json` declares `"next": "^16.2.4"` — exceeds 16.2.3 floor |
+| 6.9 — Add OIDC nonce to all `signInWithBusinessSuite` calls (CRM7, R80.3, BSU, Conduit) | All clients | P1 | 🕐 AUTH-GUARDIAN SCOPE | Requires cross-app auth changes; gated behind explicit operator opt-in per `finish-roadmap` skill rule |
+| 6.10 — Add `Cache-Control: public, max-age=31536000, immutable` for `/assets/*` to 5 `vercel.json` files | CRM7/R80.3/braden/throughput/conduit | P1 | ✅ DONE (all 5) | `crm7/vercel.json` lines 79-86 (+`/logos/` + `/api/` no-cache); `R80.3/vercel.json` `/assets/(.*)`; `braden/vercel.json` `/assets/(.*)` + `/(.*).html` no-store; `throughput/vercel.json` `/assets/(.*)`; `conduit/vercel.json` `/_next/static/(.*)` + `/fonts/(.*)` (Next.js convention — assets live under `/_next/static`) |
+| 6.11 — BSU AuthContext zero-fetch bug fix; add integration test for ≥2 Supabase REST calls on mount | BSU | P0 | 🕐 AUTH-GUARDIAN SCOPE | Requires BSU auth context rework + integration test; gated behind explicit operator opt-in |
+| 6.12 — Fix `auth_rls_initplan` in 5 RLS policies (wrap auth calls in `(select auth.uid())`) | DB migration | P2 | 🕒 OPERATOR-ONLY | Requires `supabase db push` against production or MCP `apply_migration`; operator-gated per AGENTS.md |
+| 6.13 — Add 4 missing FK indexes (`apprentice_handoff_tokens`, `collaborative_documents`, `contact_messages`, `platform_rate_limits`) | DB migration | P2 | 🕒 OPERATOR-ONLY | Same as 6.12 |
+| 6.14 — `git rm crm7/APPLY_THIS_SQL.sql`; BFG history rewrite if credentials present | CRM7 | P0 | ✅ DONE | File removed in commits `2f4455c5` + `cb15095f` ("fix(crm7): z-200 Tailwind v4 syntax fixes + git rm APPLY_THIS_SQL.sql"); `git ls-tree -r HEAD` confirms absence |
+| 6.15 — Wire BSU platform tab in `AdminBranding.tsx` to `platform_branding` singleton (upsert `WHERE id = 'platform'`) | BSU | P1 | ✅ DONE | `business-suite-unified/src/pages/Admin/AdminBranding.tsx` line 100 — `supabase.from('platform_branding').upsert(platformRow, { onConflict: 'id' })`; Tier-1 platform singleton wired per doctrine |
+
+**Deliverable:** All code-assignable P0 security findings resolved. 2 P0s remain gated (6.7 Supabase Auth dashboard allowlist — operator-only; 6.11 BSU AuthContext — auth-guardian scope, requires explicit operator opt-in). Remaining P1/P2 work is entirely operator-blocked (Supabase dashboard config + DB migration push + auth-guardian scope).
+
+**Phase 6 scorecard (code-state, 2026-05-12):**
+- **P0 items closed:** 6.0 (superseded), 6.2, 6.3, 6.4, 6.8, 6.14 — **6/8 P0s closed**; remaining 6.7 (operator), 6.11 (auth-guardian)
+- **P1 items closed:** 6.1, 6.10, 6.15 — **3/6 P1s closed**; remaining 6.5 (N/A — stale), 6.6 (operator), 6.9 (auth-guardian)
+- **P2 items remaining:** 6.12, 6.13 — both operator-only (DB migration push)
+- **Net:** 9/16 closed, 1 stale, 4 operator-only, 2 auth-guardian-gated
+
+**Next action (Phase 6):** Operator sweep — apply 6.12 + 6.13 migrations via MCP; update Supabase Auth allowlist (6.7) + config (6.6); decide on auth-guardian activation for 6.9 + 6.11.
 
 ---
 
