@@ -67,7 +67,7 @@ export type EntityNodeData = z.infer<typeof EntityNodeDataSchema>;
  * entity-level relations with field IDs left empty.
  */
 export const SchemaRelationSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().optional(),
 
   source: z.object({
