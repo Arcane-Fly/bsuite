@@ -27,3 +27,7 @@ jobs:
       - name: Enforce Tailwind v4+
         shell: bash
         run: node scripts/check-tailwind-v4.mjs
+
+      - name: Enforce AI Gateway migration constraints
+        shell: bash
+        run: node scripts/check-ai-gateway-compliance.mjs
