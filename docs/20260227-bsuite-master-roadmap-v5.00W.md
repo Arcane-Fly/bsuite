@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.09W
+**Version:** 5.10W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-12 (claude-loop DOCS rotation — 2026-05-11/12 rotation cycle + page-builder resize-handle dual fix + OAuth client_id trim + O.11 centralised theming + PKCE localStorage hotfix captured)
+**Last Updated:** 2026-05-13 (claude-loop ROADMAP rotation — capture 2026-05-12 PERF Fontshare async-load + 2026-05-13 ship-cycle-2 work: zustand peer-dep hotfix, CRM7 placement FK selectors, R80.3 DRY ownership + Payday Super public holidays, Braden axe+LHCI + hooks remediation, Conduit schema doctrine, drift-scan CI rollout)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -459,6 +459,46 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
 
+## Recently Completed (as of 2026-05-13 — ship-cycle-2 + claude-loop PERF + cross-app stability)
+
+> Captures work landed 2026-05-12 (post-v5.09W bump at 06:59Z) → 2026-05-13. For the 2026-05-11/12 rotation cycle see the section below; for the prior 2026-05-09/10 cycle see the 2026-05-10 section.
+
+**PERF — dashboard render-blocking CSS removed (2026-05-12)**
+
+- ✅ **Async-load Fontshare CSS to unblock first paint** ([bsuite#856](https://github.com/GaryOcean428/bsuite/pull/856), 2026-05-12) — claude-loop PERF rotation ([bsuite#853](https://github.com/GaryOcean428/bsuite/issues/853)) converted the render-blocking Fontshare `<link rel="stylesheet">` in `docs/dashboard/index.html` to the canonical async-CSS preload pattern with `<noscript>` fallback; added `crossorigin` to the `<link rel="preconnect">` so the connection is reused for CORS-required WOFF2 fetches. Net +3 / −2 LOC, one file. Surface: the live BSuite Plan Dashboard at https://garyocean428.github.io/bsuite/dashboard/ — loaded by every cron + every operator proactive sweep. `inline-data.sh` re-inlining contract preserved (verified by §9.1 output-equivalence: regex scope is the data-script block, cannot reach the head).
+
+**STABILITY — Zustand v5 peer-dep hotfix sweep (2026-05-13)**
+
+- ✅ **r80.crm7.app production white-page resolved** ([R80#240](https://github.com/GaryOcean428/R80.3/pull/240) merged to main; preventive bumps [crm7#748](https://github.com/GaryOcean428/crm7/pull/748) + [conduit#247](https://github.com/GaryOcean428/conduit/pull/247)) — root cause: Zustand v5 made `use-sync-external-store` a peer dependency; `@xyflow/react@^12.10.2` transitively imports `zustand/traditional` which in turn imports `use-sync-external-store/shim/with-selector.js`. Under pnpm strict isolation the package is symlinked into `zustand/`'s per-package `node_modules` but NOT hoisted to top-level, so Rolldown's bundler walking from `@xyflow/react`'s resolution scope failed with `Could not resolve 'use-sync-external-store/shim/with-selector.js' imported by 'zustand'`. Canonical fix per Context7 Zustand v5 migration docs: install `use-sync-external-store@^1.6.0` as a DIRECT dependency in each consumer. Class of bug now closed across all 3 affected apps. **Sibling repos still on Zustand v4 are unaffected.**
+
+**CRM7 — placements form FK-backed selectors + auto-populate + charge-calc UI shell (2026-05-13)**
+
+- ✅ **Placements Phase 2-3 of architect blueprint** ([crm7#749](https://github.com/GaryOcean428/crm7/pull/749) — feature-flagged behind `VITE_PLACEMENT_CHARGE_CALC_V2`) — replaces Person ID / Host Employer ID free-text inputs with FK selectors; converts Supervisor to ContactSelector with employer-primary auto-populate; auto-populates Position Title from selected person's most-recent placement; derives Hourly Rate from Award Rate (with override toggle). New: `ChargeRateCard`, `AllowancesCard`, `usePlacementChargeCalc` hook. Phase 1 deferrals (operator-side): `packages/charge-calc` patch + 0.2.4 publish; Supabase migration: `placements` + 8 nullable columns. Once both ship, the V2 flag flips on.
+
+**R80.3 — DRY one-shot ownership fix + Payday Super public-holiday awareness (2026-05-12)**
+
+- ✅ **R80.3 reader-only on CRM7-owned `apprentices`; owns new `r80_apprentice_calc_state`** ([R80#236](https://github.com/GaryOcean428/R80.3/pull/236), closes [R80#179](https://github.com/GaryOcean428/R80.3/issues/179)) — DRY one-shot ownership audit (P2-26). R80.3 had been writing to CRM7-owned `public.apprentices` from `apprenticeStore.ts:saveApprenticeToDb / deleteApprenticeFromDb / syncToSupabase`. New migration `20260512100000_r80_apprentice_calc_state.sql` creates `public.r80_apprentice_calc_state` (R80-owned) with `cost_config / work_config / billable_options / funding_config / custom_settings / display_name` JSONB columns + `(apprentice_id, tenant_id)` unique constraint; tenant-isolated RLS via `user_tenants` membership (same pattern as `charge_rate_schedules`, `host_charge_rates`); backfill extracts existing calc-state from prior dual-write rows. R80.3 store now READS `apprentices` and WRITES `r80_apprentice_calc_state`.
+- ✅ **Payday Super public-holiday awareness (P1.J slice 1/3)** ([R80#230](https://github.com/GaryOcean428/R80.3/pull/230), closes [R80#173](https://github.com/GaryOcean428/R80.3/issues/173)) — Payday Super (1 July 2026 effective date) requires super contributions to reach the fund within 7 BUSINESS days of payday. The legacy helper in `paydaySuperService.ts` only skipped weekends; a public holiday inside the window silently expired the deadline early and created Superannuation Guarantee Charge (SGC) exposure. New: `src/services/publicHolidays.ts` with `isPublicHoliday / isBusinessDay / addBusinessDays / countPublicHolidaysInRange / getHolidays`. Hard-coded NATIONAL + per-state calendar for 2026 + 2027 (covers the regulatory ship window; data verified against Fair Work Ombudsman + state government pages). Spec-hardcoded per the issue's atomic-funding-derivation constraint (WS-E.4 will atomically swap the source later; consumer interface is stable).
+
+**BRADEN — axe-core + Lighthouse CI gates + React hooks zero-warnings (2026-05-12)**
+
+- ✅ **axe-core + Lighthouse CI gates** ([braden#267](https://github.com/GaryOcean428/braden/pull/267) → promotion [#268](https://github.com/GaryOcean428/braden/pull/268), closes [braden#204](https://github.com/GaryOcean428/braden/issues/204)) — closes the BL-006f UI/UX best-practices tracker. New: `@axe-core/playwright@^4` dev dep; `tests/e2e/a11y.spec.ts` audits 6 public routes against WCAG 2.2 A/AA tags (`wcag2a / wcag2aa / wcag21a / wcag21aa / wcag22aa`), test fails on any `critical` or `serious` impact violation; `.github/workflows/lighthouse-ci.yml` runs `@lhci/cli` on every PR + push to development/main with thresholds (a11y >= 0.85 error blocks merge; perf / best-practices / SEO >= 0.70 warn). Lighthouse audits the prerendered output (`dist/<route>/index.html`) to match what visitors actually see — corrected from initial PR that audited unprerendered SPA routes. Two manual items (NVDA/JAWS keyboard, manual perf waterfall) flagged as out-of-band quarterly tasks.
+- ✅ **React hooks remediation — 0 lint warnings** ([braden#261](https://github.com/GaryOcean428/braden/pull/261), closes [braden#198](https://github.com/GaryOcean428/braden/issues/198)) — two `react-hooks` warnings cleared: (1) `useAdminAuth.ts:102:6` missing dep `shouldAutoRedirect` → added to dep array; (2) `AdminAuth.tsx:64:5` set-state-in-effect cascading-render → moved URL → message computation into a lazy `useState` initializer so the value is computed once during the first render; the useEffect now only handles the URL-cleanup side-effect via `navigate(..., { replace: true })`.
+
+**CONDUIT — cross-app schema migration doctrine (BL-011c) (2026-05-12)**
+
+- ✅ **BSU CRM-domain migration doctrine** ([conduit#178](https://github.com/GaryOcean428/conduit/issues/178) closed via [#243](https://github.com/GaryOcean428/conduit/pull/243)) — process doctrine, not code. Wave 2 directive bans deferral; the deliverable is a doctrine document binding every future BSU CRM-domain schema change to atomic, same-PR, no-dual-path consumer updates across CRM7, conduit, R80.3, braden, and throughput. Highlights: one-PR-per-schema-change rule (no dual paths); banned `@deprecated` markers + runtime `??` fallbacks between old/new shapes; Expand → Migrate → Contract only when atomic is genuinely impossible (each phase a separate PR that compiles + passes tests at HEAD on its own); read-only consumer rule (CRM7 owns CRM-domain entities; conduit/R80.3/braden/throughput READ via PostgREST and WRITE only to app-owned tables); consumer-discovery is a §17 cross-red-team gate (mandatory grep dump in PR body); type-generation deliverable (regenerated Supabase types in every consumer repo in the same PR).
+
+**INFRA — 9-signal drift-scan CI rollout + rule-file alignment (bsuite#902) (2026-05-12 → 2026-05-13)**
+
+- ✅ **9-signal drift-scan CI workflows rolled out to 5 D2C apps** ([crm7#747](https://github.com/GaryOcean428/crm7/pull/747), [R80#241](https://github.com/GaryOcean428/R80.3/pull/241), [conduit#246](https://github.com/GaryOcean428/conduit/pull/246), [braden#270](https://github.com/GaryOcean428/braden/pull/270), [throughput#159](https://github.com/GaryOcean428/throughput/pull/159)) — canonical scanner `scripts/drift-scan.mjs` (10 named regexes, all <=80 chars, ReDoS-safe via `--regex-audit`; framework auto-detection via `package.json`; 36 self-test fixtures including 6 self-scan regression tests after the scanner-self-scan paradox fix; `actions/setup-node@v4` pinned because `@v5` auto-enables `package-manager-cache` when `packageManager` field exists in `package.json` and the drift-scan workflow has zero pnpm/npm deps).
+- ✅ **`.windsurfrules` + `AGENTS.md` aligned to AUTH_CANONICAL + canonical AI Gateway model** ([R80#239](https://github.com/GaryOcean428/R80.3/pull/239), [conduit#245](https://github.com/GaryOcean428/conduit/pull/245), [braden#269](https://github.com/GaryOcean428/braden/pull/269)) — cycle-1 rule-file drift. Aligns rule files with `AUTH_CANONICAL.md` (cookie SSO is gone; OAuth 2.1 PKCE + JWKS only) and the canonical AI Gateway model (`xai/grok-4.20-reasoning`).
+
+**SHIP-CYCLE — 2026-05-13 cycle-2 main → development sync (informational)**
+
+- ✅ **Sync PRs across parent + 5 submodules** ([bsuite#905](https://github.com/GaryOcean428/bsuite/pull/905), [crm7#750](https://github.com/GaryOcean428/crm7/pull/750), [R80#242](https://github.com/GaryOcean428/R80.3/pull/242), [conduit#248](https://github.com/GaryOcean428/conduit/pull/248), [braden#271](https://github.com/GaryOcean428/braden/pull/271), [throughput#160](https://github.com/GaryOcean428/throughput/pull/160)) — operator-authored ship-cycle-2 prep; absorbs the latest hotfix landings (zustand peer-dep fix, drift-scan CI rollout) into `development` before the next dev → main promotion cycle. No production impact. All 5 Vercel-served apps READY at the time of this audit; business-suite production verified via inspector trail (last main promotion `dpl_B9GN8tvSjPA32pU5YcPhca6Womie`).
+
+---
 ---
 
 ## Recently Completed (as of 2026-05-12 — claude-loop rotation cycle + page-builder resize fix + OAuth hardening + O.11 theming)
@@ -841,6 +881,10 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-13 v5.10W** — claude-loop ROADMAP rotation ([bsuite#906](https://github.com/GaryOcean428/bsuite/issues/906)):
+  - Added "Recently Completed (as of 2026-05-13)" section above the prior 2026-05-12 block. Captures: (a) claude-loop PERF rotation ([bsuite#853](https://github.com/GaryOcean428/bsuite/issues/853) → [#856](https://github.com/GaryOcean428/bsuite/pull/856)) — Fontshare async-CSS preload pattern landed AFTER the v5.09W bump and was not in the 2026-05-12 section; (b) Zustand v5 `use-sync-external-store` peer-dep hotfix sweep across R80.3 + crm7 + conduit; (c) CRM7 placements Phase 2-3 FK selectors + charge-calc UI shell (feature-flagged); (d) R80.3 DRY one-shot ownership fix (R80 reader-only on `apprentices`; owns new `r80_apprentice_calc_state`); (e) R80.3 Payday Super public-holiday awareness (P1.J slice 1/3, regulatory effective 1 July 2026); (f) Braden axe-core + Lighthouse CI gates + React hooks zero-warnings; (g) Conduit BSU CRM-domain migration doctrine (BL-011c); (h) 9-signal drift-scan CI rolled out to all 5 D2C apps; (i) rule-file alignment to AUTH_CANONICAL + canonical AI model across R80/conduit/braden; (j) ship-cycle-2 sync PRs (informational).
+  - **§9.3 self-report:** ROADMAP rotation completed via GitHub MCP tools only (no local shell/clone in this run — full-flow via `mcp__github__*` + `mcp__Vercel__*` + `mcp__Supabase__*`). Roadmap correctness preserved; implementation of the highest-priority unimplemented roadmap item (per ROADMAP playbook) deferred to a focused next rotation with build tooling available. This is named as a follow-up rather than skipped silently per zero-defer policy.
+  - Last Updated line bumped.
 - **2026-05-12 v5.09W** — claude-loop DOCS rotation:
   - Added "Recently Completed (as of 2026-05-12)" section covering 2026-05-11/12 rotation cycle (TYPES → A11Y → DB → EDGE → TESTS → DOCS) and the structural items not captured by rotation tracker issues: page-builder resize-handle dual fix (#836 → #839, recorded as §9.3 self-report case), OAuth `client_id` trim defence-in-depth (#829), PKCE localStorage hotfix + crm7 migration (#832), and Part O.11 centralised theming plan adoption (#825).
   - Dashboard cron sweep (PR #843 → promotion #846) noted for traceability — `bsuite.active_plans` 8 → 13, `bsuite.archived` 6 → 0 correction.
