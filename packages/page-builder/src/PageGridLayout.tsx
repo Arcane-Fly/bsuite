@@ -54,7 +54,7 @@ type GridItemProps = {
   content: React.ReactNode;
   isEditing: boolean;
   label: string;
-  onRemove: (id: string) => void;
+  onHide: (id: string) => void;
   /**
    * Injected children — react-grid-layout v2 + react-resizable wrap each item
    * with `cloneElement(child, { children: [origChildren, ...resizeHandles] })`.
@@ -73,7 +73,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   content,
   isEditing,
   label,
-  onRemove,
+  onHide,
   children: injectedChildren,
   className: injectedClassName,
   style: injectedStyle,
@@ -117,7 +117,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
-                onRemove(id);
+                onHide(id);
               }}
               title={`Hide ${label}`}
               aria-label={`Hide ${label}`}
@@ -242,19 +242,19 @@ export function PageGridLayout({
     return filtered;
   }, [currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
 
-  const hideWidget = (widgetKey: string) => {
-    setHiddenLayerIds((previous) => ({ ...previous, [widgetKey]: true }));
+  const hideLayer = (layerId: string) => {
+    setHiddenLayerIds((previous) => ({ ...previous, [layerId]: true }));
   };
 
-  const showWidget = (widgetKey: string, defaultSize?: { w?: number; h?: number; minW?: number; minH?: number }) => {
+  const showLayer = (layerId: string, defaultSize?: { w?: number; h?: number; minW?: number; minH?: number }) => {
     setHiddenLayerIds((previous) => {
-      if (!previous[widgetKey]) return previous;
-      const { [widgetKey]: _removed, ...rest } = previous;
+      if (!previous[layerId]) return previous;
+      const { [layerId]: _removed, ...rest } = previous;
       return rest;
     });
-    const existsInLayouts = Object.values(currentLayouts).some((items) => (items ?? []).some((item) => item.i === widgetKey));
+    const existsInLayouts = Object.values(currentLayouts).some((items) => (items ?? []).some((item) => item.i === layerId));
     if (!existsInLayouts) {
-      addWidget(widgetKey, defaultSize);
+      addWidget(layerId, defaultSize);
     }
   };
 
@@ -316,16 +316,16 @@ export function PageGridLayout({
     [activeLayouts.lg, layerNames, widgetMeta],
   );
 
-  const handleLayerRename = (widgetId: string, value: string) => {
+  const handleLayerRename = (layerId: string, value: string) => {
     const trimmed = value.trim();
     setLayerNames((previous) => {
       if (trimmed.length === 0) {
-        if (!(widgetId in previous)) return previous;
-        const { [widgetId]: _removed, ...rest } = previous;
+        if (!(layerId in previous)) return previous;
+        const { [layerId]: _removed, ...rest } = previous;
         return rest;
       }
-      if (previous[widgetId] === trimmed) return previous;
-      return { ...previous, [widgetId]: trimmed };
+      if (previous[layerId] === trimmed) return previous;
+      return { ...previous, [layerId]: trimmed };
     });
   };
 
@@ -454,7 +454,7 @@ export function PageGridLayout({
                       <button
                         type="button"
                         key={key}
-                        onClick={() => showWidget(key, meta?.defaultSize)}
+                        onClick={() => showLayer(key, meta?.defaultSize)}
                         className={cn(
                           'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
                           'bg-muted text-muted-foreground border-border',
@@ -519,7 +519,7 @@ export function PageGridLayout({
                       </button>
                       <button
                         type="button"
-                        onClick={() => hideWidget(layer.id)}
+                        onClick={() => hideLayer(layer.id)}
                         aria-label={`Hide ${layer.label}`}
                         className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
@@ -649,7 +649,7 @@ export function PageGridLayout({
                   content={content}
                   isEditing={isEditing}
                   label={layerNames[layoutItem.i] || widgetMeta?.[layoutItem.i]?.label || layoutItem.i}
-                  onRemove={hideWidget}
+                  onHide={hideLayer}
                 />
               );
             })}

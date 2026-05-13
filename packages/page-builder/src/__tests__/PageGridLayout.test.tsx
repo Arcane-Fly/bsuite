@@ -440,9 +440,7 @@ describe('PageGridLayout layers panel', () => {
     act(() => {
       betaMoveUp.click();
     });
-    const renameInputs = Array.from(
-      view.container.querySelectorAll<HTMLInputElement>('input[aria-label^="Rename "]'),
-    );
+    const renameInputs = screen.getAllByLabelText(/Rename/i) as HTMLInputElement[];
     expect(renameInputs.map((input) => input.value)).toEqual(['Beta', 'Revenue KPI']);
 
     const lockBeta = screen.getByLabelText('Lock Beta');
@@ -452,11 +450,8 @@ describe('PageGridLayout layers panel', () => {
     expect(screen.getByLabelText('Unlock Beta')).toBeTruthy();
     expect(view.container.querySelector('.react-grid-item.static')).toBeTruthy();
 
-    const renamedRow = Array.from(
-      view.container.querySelectorAll('div'),
-    ).find((row) =>
-      row.querySelector('input[aria-label="Rename Revenue KPI"]'),
-    );
+    const renamedInput = screen.getByLabelText('Rename Revenue KPI');
+    const renamedRow = renamedInput.closest('div');
     expect(renamedRow).toBeTruthy();
     const hideRenamed = renamedRow!.querySelector<HTMLButtonElement>('button[aria-label="Hide Revenue KPI"]');
     expect(hideRenamed).toBeTruthy();

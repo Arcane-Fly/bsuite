@@ -221,9 +221,14 @@ export function usePageGridLayout({
           updated[bp] = items;
           continue;
         }
-        const [moved] = items.splice(index, 1);
-        items.splice(targetIndex, 0, moved);
-        updated[bp] = items;
+        const moved = items[index];
+        const withoutMoved = [...items.slice(0, index), ...items.slice(index + 1)];
+        const nextItems = [
+          ...withoutMoved.slice(0, targetIndex),
+          moved,
+          ...withoutMoved.slice(targetIndex),
+        ];
+        updated[bp] = nextItems;
       }
       startTransition(() => setSavedLayout(updated));
     },
