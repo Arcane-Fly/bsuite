@@ -99,8 +99,10 @@ BEGIN
 
     -- -----------------------------------------------------------------------
     -- Idempotency guard: skip if @SD-JUSTIFICATION is already present.
+    -- The (?m) flag enables multiline mode so ^ anchors to line starts,
+    -- preventing false positives from the string appearing in a body literal.
     -- -----------------------------------------------------------------------
-    IF v_def ~ '-- @SD-JUSTIFICATION:' THEN
+    IF v_def ~ '(?m)^-- @SD-JUSTIFICATION:' THEN
       RAISE NOTICE '[2.1B] % (%) — already annotated, skipping',
                    v_fn.proname, v_fn.arg_sig;
       CONTINUE;
@@ -116,8 +118,8 @@ BEGIN
     -- Pattern (single-line mode 's', so '.' matches newlines):
     --   ^(.*?\bAS \$[a-zA-Z0-9_]*\$[ \t]*\n)(.*)$
     --   Non-greedy .*? ensures we match the FIRST (and only) AS $tag$\n in
-    --   the header.  Tag chars restricted to [a-zA-Z0-9_] per PostgreSQL
-    --   dollar-quote identifier rules.
+    --   the header.  Tag chars follow PostgreSQL dollar-quote rules: either
+    --   empty ($$) or an identifier starting with [a-zA-Z_] ([a-zA-Z0-9_]*).
     --   Group 1 = header including AS $tag$\n
     --   Group 2 = body text + closing $tag$
     --
@@ -125,7 +127,7 @@ BEGIN
     -- a newline before the body, so the \n here is reliable.  The fallback
     -- RAISE WARNING below handles the (theoretical) case where it is absent.
     -- -----------------------------------------------------------------------
-    v_parts := regexp_match(v_def, '^(.*?\bAS \$[a-zA-Z0-9_]*\$[ \t]*\n)(.*)$', 's');
+    v_parts := regexp_match(v_def, '^(.*?\bAS \$(?:[a-zA-Z_][a-zA-Z0-9_]*|)\$[ \t]*\n)(.*)$', 's');
 
     IF v_parts IS NULL THEN
       RAISE WARNING '[2.1B] % (%) — could not locate AS $...$\\n boundary; skipping',
