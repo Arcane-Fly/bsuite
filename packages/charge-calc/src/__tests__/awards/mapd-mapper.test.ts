@@ -384,6 +384,64 @@ describe('mapPaymentFrequency', () => {
   });
 });
 
+describe('BUG-1 regression: annum/year invariants at mapper boundary', () => {
+  // The /52 divide for annual allowances lives in `converter.ts`
+  // (`mapAllowanceAmount` → `AwardAllowance` → `CalcConfig.Allowance`).
+  // This suite locks the INVARIANT that `mapd-mapper.ts` preserves the raw
+  // MAPD `allowance_amount` + raw `payment_frequency` string unchanged —
+  // so that any future attempt to also divide by 52 here would produce a
+  // double-divide regression (1/2704 of actual amount) and fail these tests.
+
+  it('mapWageAllowance preserves raw annual allowance_amount without dividing by 52', () => {
+    const annualWage: MAPDWageAllowance = {
+      ...mapdWageAllowanceFixture,
+      wage_allowance_fixed_id: 5590,
+      allowance: 'Annual licence allowance',
+      allowance_amount: 1040,
+      payment_frequency: 'per annum',
+    };
+    const result = mapWageAllowance(annualWage);
+    // MUST preserve raw annual amount — converter.ts does the /52 normalisation.
+    expect(result.amount).toBe(1040);
+    expect(result.paymentFrequency).toBe('per annum');
+  });
+
+  it('mapExpenseAllowance preserves raw yearly allowance_amount without dividing by 52', () => {
+    const yearlyExpense: MAPDExpenseAllowance = {
+      ...mapdExpenseAllowanceFixture,
+      expense_allowance_fixed_id: 6690,
+      allowance: 'Yearly equipment reimbursement',
+      allowance_amount: 520,
+      payment_frequency: 'per year',
+    };
+    const result = mapExpenseAllowance(yearlyExpense);
+    expect(result.amount).toBe(520);
+    expect(result.paymentFrequency).toBe('per year');
+  });
+
+  it('mapWageAllowance preserves raw "weekly" allowance_amount unchanged (no phantom divide)', () => {
+    // Weekly amounts must also pass through untouched — guards against an
+    // over-eager "always divide" regression.
+    const result = mapWageAllowance({
+      ...mapdWageAllowanceFixture,
+      allowance_amount: 32.59,
+      payment_frequency: 'per week',
+    });
+    expect(result.amount).toBe(32.59);
+    expect(result.paymentFrequency).toBe('per week');
+  });
+
+  it('mapPaymentFrequency treats "per annum" as weekly AllowanceType (normalised unit)', () => {
+    // Complementary contract: the `AllowanceType` discriminant normalises to
+    // perWeek for annum. Converter relies on both pieces being consistent.
+    expect(mapPaymentFrequency('per annum')).toBe('perWeek');
+    expect(mapPaymentFrequency('per year')).toBe('perWeek');
+    expect(mapPaymentFrequency('Per Annum')).toBe('perWeek');
+    expect(mapPaymentFrequency('PER YEAR')).toBe('perWeek');
+    expect(mapPaymentFrequency('  per annum  ')).toBe('perWeek');
+  });
+});
+
 describe('mapWageAllowance', () => {
   it('maps all fields correctly with type=wage', () => {
     const result = mapWageAllowance(mapdWageAllowanceFixture);
