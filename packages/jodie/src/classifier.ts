@@ -10,7 +10,7 @@ import {
 
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.7;
 export const DEFAULT_MODEL_ID = 'anthropic/claude-haiku-4';
-const RETRY_ATTEMPTS = 2;
+const MAX_ATTEMPTS = 2;
 const MAX_BODY_CHARS = 4000;
 
 const SEVERITY_LABELS = {
@@ -164,12 +164,12 @@ function estimateCostUsd(usage: ClassifierUsage | undefined, pricing: Classifier
     return 0;
   }
 
+  // Some providers only expose totalTokens; we treat that as input when inputTokens is absent.
   const inputTokens =
     usage.inputTokens ??
     (usage.totalTokens !== undefined
       ? Math.max(usage.totalTokens - (usage.outputTokens ?? 0), 0)
       : 0);
-  // Some providers only expose totalTokens; we treat that as input when inputTokens is absent.
   const outputTokens = usage.outputTokens ?? 0;
 
   const inputCost = (inputTokens / 1_000_000) * pricing.inputUsdPerMillionTokens;
@@ -191,7 +191,7 @@ export async function classifyIssue(
   let attempts = 0;
   let lastError: unknown;
 
-  while (attempts < RETRY_ATTEMPTS) {
+  while (attempts < MAX_ATTEMPTS) {
     attempts += 1;
 
     try {
@@ -251,6 +251,6 @@ export async function classifyIssue(
   }
 
   throw new Error(
-    `Classification failed after ${RETRY_ATTEMPTS} attempts: ${String(lastError)}`
+    `Classification failed after ${MAX_ATTEMPTS} attempts: ${String(lastError)}`
   );
 }
