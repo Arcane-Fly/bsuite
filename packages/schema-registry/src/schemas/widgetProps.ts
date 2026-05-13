@@ -60,11 +60,11 @@ const AppScopeEnum = z.enum(['bsu', 'crm7', 'conduit', 'r80', 'braden', 'all']);
 export const EntityRefCellPropsSchema = z.object({
   type: z.literal('EntityRefCell'),
   // tenant scoping — server-side RLS still applies; this is a UX hint only.
-  tenant_id: z.string().uuid().optional(),
+  tenant_id: z.uuid().optional(),
   foreign_app_scope: AppScopeEnum,
   // Whitelist of entities this cell can cross-read. Server RLS enforces auth.
   entity: z.string().min(1),
-  entity_id: z.string().uuid(),
+  entity_id: z.uuid(),
   // Which field's value to display. Must not be a system column.
   display_field: z.string().min(1).refine(
     (v) => !['tenant_id', 'user_id', 'auth_id'].includes(v),
@@ -77,7 +77,7 @@ export const EntityRefCellPropsSchema = z.object({
 export const SchemaFieldAdderPropsSchema = z.object({
   type: z.literal('SchemaFieldAdder'),
   widget_id: z.string().min(1),
-  entity_id: z.string().uuid(),
+  entity_id: z.uuid(),
   allowed_types: z.array(z.enum(['text', 'number', 'date', 'link', 'boolean', 'enum'])).default(
     ['text', 'number', 'date', 'link', 'boolean', 'enum']
   ),
@@ -98,7 +98,7 @@ export const LayoutJsonSchema = z.object({
   widgets: z.array(z.object({
     id: z.string(),
     type: z.string(),
-    props: z.record(z.unknown()),
+    props: z.record(z.string(), z.unknown()),
     position: z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }),
   })),
 });
