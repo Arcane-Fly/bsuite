@@ -2,7 +2,7 @@
 
 OAuth 2.1 PKCE client shared across BSuite apps (CRM7, Conduit, R80.3, Braden, Throughput). BSU is the OAuth server; this package is the client every other app uses to consume it.
 
-The package is intentionally small — it hard-codes the BSuite Supabase host (`https://tuybltdrdefjblnplpqo.supabase.co`), assumes redirect URIs of the form `${window.location.origin}/auth/callback`, and depends only on `jose` for JWKS verification.
+The package is intentionally small — it hard-codes the BSuite Supabase host (`https://tuybltdrdefjblnplpqo.supabase.co`), resolves redirect URIs from `VITE_APP_URL` (or `NEXT_PUBLIC_APP_URL`) when available, and falls back to `${window.location.origin}/auth/callback`. It depends only on `jose` for JWKS verification.
 
 ## Install
 
