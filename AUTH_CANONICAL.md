@@ -83,6 +83,45 @@ Registered with the BSU OAuth server.
 | Throughput | `35f0db49-ef62-4115-baba-7b961f034cc3` | `throughput/src/lib/business-suite-oauth.ts` |
 | Conduit | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit/src/lib/business-suite-oauth.ts` |
 
+## Environment variables required for OAuth + Stripe entrypoints
+
+`VITE_APP_URL` and `VITE_STRIPE_PUBLISHABLE_KEY` are build-time env vars and
+must be present in each Vercel environment where client bundles are built.
+
+- `VITE_APP_URL` is used for absolute URL construction (OAuth callbacks, cross-app links).
+- `VITE_STRIPE_PUBLISHABLE_KEY` is client-safe and must be a Stripe `pk_*` key only.
+- Never expose Stripe secret keys (`sk_*`) via `VITE_`/`NEXT_PUBLIC_`.
+
+### Canonical production + development domains
+
+| App | Production | Development |
+|-----|------------|-------------|
+| BSU | `https://suite.crm7.app` | `https://d.suite.crm7.app` |
+| CRM7 | `https://crm.crm7.app` | `https://d.crm.crm7.app` |
+| Conduit | `https://conduit.crm7.app` | `https://d.conduit.crm7.app` |
+| R80.3 | `https://r8.crm7.app` | `https://d.r8.crm7.app` |
+| Throughput | `https://ideas.crm7.app` | `https://d.ideas.crm7.app` |
+| Braden | `https://www.braden.com.au` | `https://d.braden.com.au` |
+
+### Vercel environment values
+
+For each app:
+
+| Variable | Production | Preview | Development |
+|----------|------------|---------|-------------|
+| `VITE_APP_URL` | app production URL | app `d.*` URL (or preview URL strategy if explicitly chosen) | app `d.*` URL |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` | `pk_test_...` | `pk_test_...` |
+
+For BSU specifically:
+
+| Variable | Production | Preview | Development |
+|----------|------------|---------|-------------|
+| `VITE_APP_URL` | `https://suite.crm7.app` | `https://d.suite.crm7.app` | `https://d.suite.crm7.app` |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` | `pk_test_...` | `pk_test_...` |
+
+Verification path: after redeploy, BSU `/developer` → Environment Flags should show
+both variables as **Set**.
+
 ## Per-app `redirect_uris` registry
 
 Live state of `auth.oauth_clients.redirect_uris` in the Supabase DB
@@ -178,6 +217,59 @@ write didn't land or has whitespace.
 1. **`supabase.auth.getClaims()`** — verifies JWT against JWKS locally (no network). **Use this for all auth gates** in API routes, RSC, middleware. Fastest + safest.
 2. **`supabase.auth.getUser()`** — round-trips to Supabase to validate. Use only when you also need fresh user metadata.
 3. **`supabase.auth.getSession()`** — **DO NOT use for auth decisions.** Reads localStorage without verification. Acceptable only for non-security UI hints (e.g. "are we logged in?" boolean for showing/hiding a button).
+
+## Stripe data-read architecture (FDW-first)
+
+For **new Stripe data reads**, BSuite uses Supabase Wrappers Stripe FDW (foreign
+tables in `stripe.*`) instead of adding new edge-function read proxies.
+
+- Installed via migration: `supabase/migrations/20260512161000_stripe_fdw_wrappers.sql`
+- Baseline mapped tables: `stripe.customers`, `stripe.invoices`,
+  `stripe.subscriptions`, `stripe.prices`, `stripe.products`
+- Stripe key is sourced from Supabase Vault secret name `stripe_api_key`
+  (`vault.create_secret(...)` done outside git history)
+
+Security rule:
+
+- Foreign tables do not use RLS in the usual table-policy sense.
+- Access is restricted to `service_role` and exposed through `SECURITY DEFINER`
+  RPC wrappers (`public.stripe_customer_by_email`, `public.stripe_subscription_snapshot`)
+  that explicitly check `auth.jwt() ->> 'role' = 'service_role'`.
+- Webhooks and write paths (e.g. portal session creation, webhook handlers,
+  refunds) stay as edge functions.
+## Developer Portal scope model (BSU)
+
+The BSU Developer Portal uses two role sources and **must not** conflate them:
+
+- **Platform roles**: `auth.users.app_metadata.platform_role` (`developer`, `platform_admin`)
+- **Tenant roles**: `public.user_tenants.role` (tenant-scoped roles), resolved against the active tenant and `tenants.parent_tenant_id` hierarchy
+
+### Permission matrix
+
+| Capability | Platform Developer/Admin | Enterprise Super Admin | Sub-Org Admin |
+|---|---|---|---|
+| `/developer/website` (public CMS/copy) | ✅ | ❌ | ❌ |
+| `/developer/branding` Tier 1 (`platform_branding`) | ✅ | ❌ | ❌ |
+| `/developer/branding` Tier 2 (`tenant_branding`) | ✅ all tenants | ✅ enterprise + descendants | ❌ |
+| `/developer/branding` Tier 3 (`tenant_app_branding`) | ✅ all tenants | ✅ enterprise + descendants | ❌ |
+| `/developer/tenant` | ✅ all tenants | ✅ enterprise + descendants | ✅ own tenant only |
+| `/developer/schema` | ✅ | ❌ | ❌ |
+| `/developer/tables`, `/logs`, `/functions`, `/notices`, `/routing`, `/embed`, `/rate-limits`, `/platform`, `/nav` | ✅ | ❌ | ❌ |
+| `/developer/access` | ✅ | ✅ read/invite/update own enterprise users only via access module (no `platform_role` mutation; see BSU access/user-management guards) | ❌ |
+
+### Canonical role semantics for branding scope
+
+- `enterprise_super_admin` and `enterprise_admin`: can manage Tier 2/Tier 3 branding for their enterprise tenant and all descendant sub-org tenants.
+- For branding scope, `enterprise_super_admin` and `enterprise_admin` are intentionally equivalent; other domains may differentiate them, but branding writes do not.
+- `sub_org_admin`: can manage Tier 2/Tier 3 branding for their own tenant only.
+- `owner` and `admin` remain valid direct-tenant admin roles for Tier 2/Tier 3 writes (backward compatibility).
+- Tier 1 (`platform_branding`) remains platform-only.
+- Website text must remain platform-only because it is public, shared content on `suite.crm7.app` (not tenant-isolated).
+- `/developer/access` for enterprise admins is tenant-scoped only (read/invite/update within enterprise + descendants) and must never permit setting `app_metadata.platform_role` (enforced in access/user-management authorization paths, not branding-table RLS).
+
+### Enforcement requirement
+
+Client-side tab visibility/disabled states are UX only. Authorization must be enforced server-side via RLS and helper functions on `tenant_branding` and `tenant_app_branding`.
 
 ## CI guardrails (target — to be enforced)
 

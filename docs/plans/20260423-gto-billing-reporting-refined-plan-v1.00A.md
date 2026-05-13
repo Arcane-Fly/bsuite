@@ -5,6 +5,66 @@
 
 ---
 
+## Evidence Refresh — 2026-05-12 (zero-defer audit per AGENTS.md §1)
+
+All 9 workstreams re-audited against live code state on branch `origin/development`. Only claims with file/line citations, migration filenames, or published-package verification are marked ✅ DONE.
+
+### WS-level scorecard
+
+| WS | Title | Status | Evidence |
+|---|---|---|---|
+| WS-1 | Calc Engine Convergence | 🟡 **PARTIAL** | BUG-2/4/5 + ADR ✅; **BUG-1 REGRESSION** in published `@bsuite/charge-calc@0.2.3` (see below) |
+| WS-2 | MAPD Edge Function + snapshots | ✅ **DONE** | `crm7/supabase/functions/mapd-sync/index.ts` + migration `20260423110000_ws2_wage_calculation_snapshots.sql` + `crm7/src/services/wageSnapshotService.ts` |
+| WS-3 | Host Invoicing | ✅ **DONE** | Migration `20260423140000_ws3_invoices.sql`, `crm7/src/lib/pipelines/xeroInvoiceAdapter.ts` (idempotency keys L41/65/85), `crm7/src/lib/invoicing/renderInvoicePdf.ts`, subsidy-credit logic in `crm7/src/lib/billingEngine.ts` (+ test `billingEngine.subsidyCredit.test.ts`) |
+| WS-4 | Timesheet state machine + payroll | 🟠 **PARTIAL — DB↔TS DIVERGENCE** | DB migration `20260423150000_ws4_timesheet_state_machine.sql` has 7 states matching plan; **`crm7/src/types/entities.ts:413` `TimesheetState` TS type uses 7 DIFFERENT state names** (see divergence row below). XeroPayrollAdapter ✅ at `crm7/src/lib/pipelines/xeroPayrollAdapter.ts`; STP ADR archived at `docs/archive/crm7/2026-04-24-submodule-import/2026-04/0004-stp-xero-passthrough.md` |
+| WS-5 | Report builder + 7 templates | 🟡 **MOSTLY DONE** | Migration `20260423160000_ws5_report_system.sql`, UI skeleton `crm7/src/pages/reports/` (incl. `deliveries.tsx`, `custom/create.tsx`, `training-plan-progress.tsx`), `pg_cron` delivery migration `20260423190000_ws5_cron_report_delivery.sql` + edge fn `report-delivery/index.ts`. **Not verified:** all 7 mandatory pre-built templates seeded (Apprentice Progress, Billable Hours, Charge-Out Rate Summary, Payroll Liability, Funding Claims, GTO Audit Pack, AVETMISS Summary) |
+| WS-6 | AVETMISS / NCVER Export | 🟡 **MOSTLY DONE** | `crm7/src/lib/avetmiss/` with 4 NAT formatters (`formatNat00010.ts` / `formatNat00090.ts` / `formatNat00120.ts` / `formatNat00130.ts`) + `stateVariants.ts` (WAAMS/STELA/DTET); edge fn `crm7/supabase/functions/avetmiss-export/`; migration `20260423180000_ws6_avetmiss_fields.sql` adds Training Contract Identifier. **Gap:** plan requires 9 formatters (NAT00010/20/30/60/80/85/90/120/130); only 4 verified present — NAT00020/30/60/80/85 not located |
+| WS-7 | GTO National Standards gaps | ✅ **DONE** | Migration `20260423170000_ws7_gto_registers.sql`; Financial Viability (`crm7/src/pages/compliance/financial-viability/`); induction (`onboarding/induction-checklist.tsx`); guardian (`compliance/guardian-consents/`); WHS (`crm7/src/components/whs/host-employer-whs-manager.tsx`); F17 (`crm7/src/lib/compliance/renderF17.tsx` + `renderF17Xlsx.ts`); monitoring-visits & LLN pages under `compliance/` |
+| WS-8 | RLS & Security Hardening | 🟡 **MOSTLY DONE** | Migration `20260423100000_ws8_org_members_gto_role_helpers.sql` with `org_members`, `gto_role` enum, and `is_gto_staff` / `get_user_role` / `get_user_host_employer_id` / `get_user_apprentice_id` `SECURITY DEFINER` helpers; `(SELECT auth.uid())` pattern used throughout new RLS. **Gap:** no `pgtap` tests found (constraint C10 requires anon-key test harness) |
+| WS-9 | Portals (apprentice/host/field officer) | 🟡 **MOSTLY DONE, GATED** | `crm7/src/pages/portal/worker-portal.tsx`, `host-employer.tsx`, `host-reports.tsx`; `crm7/src/pages/field-officers/` tree. Routes gated behind `portal_pages` feature flag in `App.tsx:514-517`. **Depends on WS-4 DB↔TS fix** before full wiring |
+
+**Scorecard:** 3/9 fully DONE (WS-2, WS-3, WS-7) · 6/9 partial or mostly-done with gaps flagged (WS-1 BUG-1 regression; WS-4 DB↔TS divergence; WS-5 templates unverified; WS-6 5 NAT formatters missing; WS-8 pgTap harness missing; WS-9 gated + WS-4 dependent).
+
+### Hard findings (issues to file)
+
+**HF-1: BUG-1 regression in published `@bsuite/charge-calc@0.2.3`** (CRITICAL — impact latent, materialises on `annum` payment_frequency)
+
+The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on the `packages/charge-calc` repo. Verification on 2026-05-12:
+
+- `packages/charge-calc/src/awards/mapd-mapper.ts` in parent-repo view (v0.2.4 unpublished): `mapPaymentFrequency` only re-labels `"per annum"` → `"perWeek"` (line 67 comment `// annualise to weekly`), **does not divide `allowance_amount` by 52**. `mapWageAllowance` and `mapExpenseAllowance` pass `raw.allowance_amount` through unchanged.
+- Published `@bsuite/charge-calc@0.2.3` on npm (consumers `crm7@^0.2.3`, `R80.3@^0.2.3`) — `npm pack` + grep of `dist/awards/mapd-mapper.js` returns NO match for `/ 52`, `isAnnualFrequency`, or equivalent arithmetic.
+- Impact: annual allowances are 52× overstated in charge-rate calculations for both `crm7` and `R80.3` — **but only when MAPD returns a `payment_frequency` of `per annum` / `per year` for a wage or expense allowance**. Impact is latent until a MAPD record with annual frequency is processed; once processed it is CRITICAL (52× overstatement on that allowance's on-cost contribution).
+- This is the CRITICAL bug WS-1 was blocked on.
+- Action: file issue to (a) re-land the fix in the `packages/charge-calc` source, (b) publish a patched `0.2.5`, (c) bump consumers.
+
+**HF-2: WS-4 DB↔TS state-machine divergence** (HIGH)
+
+- DB enum `public.timesheet_state` in migration `20260423150000_ws4_timesheet_state_machine.sql` (7 states per plan): `draft`, `submitted`, `pending_host_approval`, `pending_gto_review`, `approved`, `exported`, `archived`.
+- TS type `TimesheetState` in `crm7/src/types/entities.ts:413` (7 DIFFERENT states): `draft`, `submitted`, `approved`, `disputed`, `processed`, `payroll_locked`, `paid`.
+- `crm7/src/lib/timesheetWorkflow.ts` implements the TS vocabulary; the SQL RLS policies rely on the DB vocabulary. **Zero overlap between mid-flow states**: TS has `disputed/processed/payroll_locked/paid`; DB has `pending_host_approval/pending_gto_review/exported/archived`.
+- Impact: any timesheet transitioned via `timesheetWorkflow.ts` will write a `state` value not present in the DB enum → insert will fail OR (if enum was altered silently) bypass the RLS-enforced role transitions defined in WS-4 spec.
+- Action: file issue to choose the canonical vocabulary and unify — either update TS to match plan/DB, or migrate DB to TS vocabulary and update the plan.
+
+**HF-3: WS-1 ADR-001 and WS-4 STP-path ADR archived, not canonical**
+
+- `20260423-calc-engine-single-source.md` and `0004-stp-xero-passthrough.md` exist only at `docs/archive/crm7/2026-04-24-submodule-import/2026-04/` — the `crm7/docs/adr/` directory does not exist in the crm7 submodule.
+- Impact: ADRs are discoverable only via archive path; new contributors won't find them.
+- Action: restore ADRs to `crm7/docs/adr/` or relocate to parent-repo `docs/adr/` and cross-link.
+
+**HF-4: WS-8 pgTap test harness missing**
+
+- Constraint C10 mandates RLS policies be verified via anon-key test harness (not SQL editor / service role).
+- No `pgtap` or `pg-tap` artefacts found anywhere in `crm7/`.
+- Action: add pgTap workflow and policy tests for the 5 new WS-8 helpers + RLS on `org_members`, `wage_calculation_snapshots`, `timesheets`, `pay_runs`, `payroll_records`.
+
+### Apprentice_rate_configs table — migration provenance note
+
+The WS-2 handoff claimed `apprentice_rate_configs` was seeded with 99 rows via Supabase MCP. No migration file exists in `crm7/supabase/migrations/` for the table itself; only `20260423130000_ws8_arc_anon_public_read.sql` (a follow-on RLS patch). If the table was applied out-of-band via MCP, it should be codified as a backfilled migration so local/CI provisioning stays reproducible. Action: file issue to add the missing `CREATE TABLE apprentice_rate_configs` migration.
+
+*Evidence refresh produced 2026-05-12 per AGENTS.md §1 zero-defer. Auditor: parent-agent (live-code verified, no deferral). Scope: 9 workstreams + archived ADRs + published npm package content.*
+
+---
+
 ## Intent
 
 Build a fully production-ready GTO/labour-hire billing, payroll, and reporting system within the existing BSuite platform (CRM7 + BSU + bsuite monorepo packages). The system must: (1) correctly calculate and invoice charge-out rates including all on-cost components and government subsidy deductions; (2) pay apprentices in compliance with relevant Modern Awards, EBA overrides, and Payday Super (1 Jul 2026); (3) produce fully customisable reports across apprentice progress, billable hours, competency/field activities, payroll records, and funding; and (4) satisfy all Australian regulatory reporting obligations — AVETMISS/NCVER NAT file export, STP Phase 2 via Xero, WAAMS/state STA extract, Fair Work 7-year record retention, and GTO National Standards audit evidence.
@@ -815,7 +875,7 @@ BUG-2 (Payday Super "3 business days") must be corrected in all display strings
 
 Deliverables:
 
-ADR: docs/adr/20260423-calc-engine-single-source.md — documents that @bsuite/charge-calc is canonical, calcBridge pattern is the adapter, no third engine tolerated
+ADR: crm7/docs/adr/20260423-calc-engine-single-source.md — documents that @bsuite/charge-calc is canonical, calcBridge pattern is the adapter, no third engine tolerated
 
 Fix BUG-1 in mapd-mapper.ts + unit test
 
@@ -845,7 +905,7 @@ R80.3/src/utils/calcBridge.ts (pass resolved rate into toCalcConfig)
 
 R80.3/src/types/index.ts (fix JSDoc on superRate)
 
-docs/adr/20260423-calc-engine-single-source.md (new ADR)
+crm7/docs/adr/20260423-calc-engine-single-source.md (new ADR)
 
 Tests required:
 
@@ -1586,7 +1646,7 @@ src/hooks/useFeatureFlags.ts crm7 ✅ modified
 src/pages/settings/feature-flags.tsx crm7 ✅ modified
 src/pages/settings/index.tsx crm7 ✅ modified
 docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md crm7 ✅ 657 lines
-docs/adr/20260423-calc-engine-single-source.md crm7 ✅ ADR-001
+crm7/docs/adr/20260423-calc-engine-single-source.md crm7 ✅ ADR-001
 src/awards/mapd-mapper.ts packages/charge-calc ✅ BUG-1 fixed
 src/__tests__/awards/mapd-mapper.test.ts packages/charge-calc ✅ 64 tests pass
 src/services/fairworkApi.ts R80.3 ✅ BUG-4 fixed

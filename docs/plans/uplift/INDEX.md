@@ -12,17 +12,17 @@ Tracker: [bsuite#635](https://github.com/GaryOcean428/bsuite/issues/635).
 
 ## Wave assignments (locked)
 
-| Wave | Scope | Owner | Gating |
-|---|---|---|---|
-| W0 | 12 primitives library at `src/components/uplift/` | claude-code-local | None (top of dep graph) |
-| W1 | Feature Builder full redesign | perplexity-computer | DONE (BSU#361 merged 2026-05-07T09:48Z) |
-| W2 | Reports CRM7 `/reports/*` | claude-code-local | W0 |
-| W3 | Pay Item Groups + 3 sibling settings | perplexity-computer | W0 |
-| W4 | Permissions Editor (replaces BSU#346) | claude-code-local | W0 |
-| W5 | Tenant Admin | perplexity-computer | W0 |
-| W6 | Branding | claude-code-local | W0 |
-| W7 | Apprentice placements | perplexity-computer | W0 |
-| W8 | Conduit/Throughput/R80.3/Braden consumer bumps | perplexity-computer | W0/W1/W2 (consumer surface dependent) |
+| Wave | Scope | Owner | Status | Gating |
+|---|---|---|---|---|
+| W0 | 12 primitives library at `src/components/uplift/` | claude-code-local | ✅ DONE (BSU#364, sha `9c4e101`) | None (top of dep graph) |
+| W1 | Feature Builder full redesign | perplexity-computer | ✅ DONE (BSU#361 merged 2026-05-07T09:48Z) | W0 |
+| W2 | Reports CRM7 `/reports/*` | claude-code-local | 🟡 UNBLOCKED — awaiting claude-code-local local session | W0 |
+| W3 | Pay Item Groups + 3 sibling settings | perplexity-computer | 🔄 IN PROGRESS (perplexity lane) | W0 |
+| W4 | Permissions Editor (replaces BSU#346) | claude-code-local | 🔄 IN PROGRESS — scoping on `main` (`bsuite#681`), BSU impl PR pending merge (`BSU#376`) | W0 |
+| W5 | Tenant Admin | perplexity-computer | 🟡 UNBLOCKED — queued | W0 |
+| W6 | Branding | claude-code-local | 🔄 IN PROGRESS — BSU cleanup PR pending merge (`BSU#375`) | W0 |
+| W7 | Apprentice placements | perplexity-computer | 🟡 UNBLOCKED — queued | W0 |
+| W8 | Conduit/Throughput/R80.3/Braden consumer bumps | perplexity-computer | ⏳ BLOCKED pending W7 | W0/W1/W2 baseline + W7 sequencing |
 
 ## Hard rules (Doctrine §5.1)
 

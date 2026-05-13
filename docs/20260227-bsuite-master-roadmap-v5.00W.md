@@ -609,11 +609,14 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - ✅ **File-export adapters** ([#576](https://github.com/GaryOcean428/bsuite/issues/576)) — 3 gaps
 - ✅ **Reports / Pay periods / Leave / Timesheet entry / Apprentice placement** specs (2026-05-06) — full set in `docs/20260506-*-parity-spec-v1.00W.md`
 
-**Autonoma E2E testing — Vercel integration adopted on all 6 apps**
+**Autonoma E2E testing — REMOVED 2026-05-13 after evaluation**
 
-- ✅ **Canonical Autonoma doc** ([bsuite PR #619](https://github.com/GaryOcean428/bsuite/pull/619)) — CLAUDE.md "Autonoma E2E Testing" section. AI agents navigate deployed apps end-to-end to find bugs.
-- ✅ **Per-app env var distribution** (2026-05-07) — `AUTONOMA_CLIENT_ID` + `AUTONOMA_SECRET_ID` provisioned on Production + Preview environments for all 6 apps via Vercel integration.
-- ✅ **BSU Application + production/preview Versions registered** in Autonoma dashboard (App ID `cmouwgrq209t4013ps6ikkm10`). Other 5 apps pending operator-driven dashboard registration.
+- ❌ **Vercel integration uninstalled across all 6 apps (2026-05-13).** Reason: deployment-checks fire on every PR but require pre-authored tests in the Autonoma dashboard to pass; without tests the check defaults to FAILURE and pollutes the PR queue. Plugin install for local test authoring was also blocked by an upstream Prisma server-side bug (`Null constraint violation on prisma.apiKey.create`).
+- ❌ **Per-app env vars auto-removed** by Vercel integration uninstall.
+- ❌ **`AUTONOMA_*` removed from `.env.local`** (parent monorepo root).
+- 📌 **Defensive `.gitleaks.toml` rule kept** — `autonoma-client-secret` detection guard remains in place to catch any accidental future re-introduction.
+- 📌 **Historical context preserved** in `docs/20260507-cron-log-claude-scheduled-v1.00W.md` (frozen log) and `bsuite#619` (PR that originally added the integration).
+- See parent `CLAUDE.md` § "E2E Testing — status: NO active integration" for rationale + re-evaluation gates.
 
 **Defensive rotation work shipped (selection — full list in closed claude-loop tracker issues)**
 
@@ -761,7 +764,7 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 
 | # | Task | Project | Effort | Agent | Source |
 |---|------|---------|--------|-------|--------|
-| 3a | **9-wave UI uplift program** — W0 + W1 shipped 2026-05-07; W2 (Reports CRM7), W3 (Pay Item Groups + 3 sibling settings), W4 (Permissions Editor — replaces BSU#346), W5 (Tenant Admin), W6 (Branding), W7 (Apprentice placements), W8 (consumer bumps × 4 apps) remain. Ownership locked: claude-loop = W2/W4/W6, perplexity-computer = W3/W5/W7/W8. Tracker: [bsuite#635](https://github.com/GaryOcean428/bsuite/issues/635). | all | 4w | claude-loop + perplexity-computer | [INDEX.md](./plans/uplift/INDEX.md) |
+| 3a | **9-wave UI uplift program** — W0 + W1 shipped 2026-05-07; W4 scoping landed (`bsuite#681`); BSU implementation PRs for W4/W6 are open (`BSU#376`, `BSU#375`) pending merge. Current active work: W3 (Pay Item Groups + 3 sibling settings). Active queue: W2 (Reports CRM7), W5 (Tenant Admin), W7 (Apprentice placements). W8 (consumer bumps × 4 apps) remains blocked on W7. Ownership locked: claude-loop = W2/W4/W6, perplexity-computer = W3/W5/W7/W8. Tracker: [bsuite#635](https://github.com/GaryOcean428/bsuite/issues/635). | all | 4w | claude-loop + perplexity-computer | [INDEX.md](./plans/uplift/INDEX.md) |
 | 3b | **Codehouse Parity & Platform 360 — WS-A3/B/C/E1–E5/F** — WS-A1/A2/A4/D/E shipped 2026-05-06/07. Remaining: WS-A3 (per-submodule OUTSTANDING + STATUS link rows), WS-B (12 grouped GitHub issues), WS-C (dashboard schema additive extension post-#535), WS-E1–E5 (visual feature builder shipped code), WS-F (doc-drift sweep — 17 items). | all | 3w | TBD | [Plan](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md) |
 | 4 | ~~BSU Stripe billing portal~~ ✅ E2E verified | bsu | ✅ Done | Cascade | 2026-03-19 |
 | 5 | ~~CRM7 PWA~~ (`vite-plugin-pwa`, manifest, service worker hook present) | crm7 | ✅ Built | Claude Code | Prompt 1A |

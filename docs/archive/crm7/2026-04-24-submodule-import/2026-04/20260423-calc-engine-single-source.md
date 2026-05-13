@@ -1,5 +1,7 @@
 # ADR-001 · `@bsuite/charge-calc` as Single-Source Calculation Engine
 
+> Canonical location: `crm7/docs/adr/20260423-calc-engine-single-source.md`  
+> This archived copy is retained as part of the 2026-04-24 submodule-import audit trail.
 > **⚠️ Archive copy — not the source of truth.**
 > Canonical location (local path): [`crm7/docs/adr/20260423-calc-engine-single-source.md`](../../../../../crm7/docs/adr/20260423-calc-engine-single-source.md)
 > Canonical location (GitHub): <https://github.com/GaryOcean428/crm7/blob/development/docs/adr/20260423-calc-engine-single-source.md>

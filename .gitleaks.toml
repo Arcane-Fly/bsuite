@@ -67,25 +67,7 @@ tags = ["vercel", "bypass-token", "high-severity"]
     '''Vercel `x-vercel-protection-bypass`''',
   ]
 
-# Autonoma test-platform client secret
-# The AUTONOMA_SECRET_ID env var and autonoma-client-secret header value
-# must never be committed — Vercel integration distributes them at build time.
-# Ref: CLAUDE.md § "Autonoma E2E Testing".
-[[rules]]
-id = "autonoma-client-secret"
-description = "Autonoma test-platform client secret (AUTONOMA_SECRET_ID / autonoma-client-secret header)"
-regex = '''(?i)(autonoma.client.secret|autonoma.secret.id)\s*[=:]\s*['"]?([a-zA-Z0-9\-_]{16,})['"]?'''
-secretGroup = 2
-entropy = 3.2
-tags = ["autonoma", "secret", "high-severity"]
-
-  [rules.allowlist]
-  description = "Allow env-var placeholder references in docs / .env.example"
-  regexes = [
-    # Placeholder values only — not real secrets
-    '''AUTONOMA_SECRET_ID=<''',
-    '''AUTONOMA_SECRET_ID="<''',
-    '''AUTONOMA_SECRET_ID=your-''',
-    # CLAUDE.md metadata description line (no value)
-    '''`AUTONOMA_SECRET_ID`\s*—''',
-  ]
+# Autonoma `autonoma-client-secret` rule REMOVED 2026-05-13 alongside the
+# Autonoma Vercel integration uninstall. Default gitleaks rules
+# (`useDefault = true` above) catch the underlying high-entropy secret
+# format. See `CLAUDE.md` § "E2E Testing — status: NO active integration".
