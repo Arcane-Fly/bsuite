@@ -1,0 +1,87 @@
+name: pgTAP RLS tests
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+  push:
+    branches: [main, development]
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pgtap:
+    name: pgTAP RLS regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Create a minimal config.toml so `supabase db start` works in CI.
+      # The bsuite parent repo doesn't commit a config.toml (team uses hosted
+      # Supabase via MCP), so we generate one here.
+      - name: Generate ephemeral supabase/config.toml
+        run: |
+          mkdir -p supabase
+          cat > supabase/config.toml << 'EOF'
+          [project]
+          project_id = "bsuite-pgtap-ci"
+
+          [db]
+          port = 54322
+          shadow_port = 54320
+          major_version = 15
+
+          [api]
+          port = 54321
+          EOF
+
+      - name: Start Supabase local stack
+        run: supabase db start
+        # The official Supabase Postgres image ships with:
+        #   - pgTAP extension pre-installed
+        #   - Real auth schema (auth.uid / auth.jwt / auth.role via gotrue)
+        #   - anon / authenticated / service_role / authenticator roles configured
+        #   - All supabase/migrations/*.sql applied in chronological order
+
+      - name: Install pgtap extension in test database
+        run: |
+          PGPASSWORD=postgres psql \
+            -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -c "CREATE EXTENSION IF NOT EXISTS pgtap;"
+
+      - name: Load harness helpers
+        run: |
+          PGPASSWORD=postgres psql \
+            -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -f supabase/tests/database/00_harness_helpers.sql
+
+      - name: Run pgTAP suites
+        run: |
+          pg_prove \
+            --dbname   postgres \
+            --host     127.0.0.1 \
+            --port     54322 \
+            --username postgres \
+            --verbose \
+            --recurse \
+            supabase/tests/database/
+        env:
+          PGPASSWORD: postgres
+
+      - name: Stop Supabase local stack
+        if: always()
+        run: supabase db stop
