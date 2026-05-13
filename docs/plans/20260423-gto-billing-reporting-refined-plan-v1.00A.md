@@ -1039,7 +1039,7 @@ CREATE TABLE payroll_records (
   wage_snapshot_id uuid REFERENCES wage_calculation_snapshots(id),
   created_at       timestamptz DEFAULT now()
 );
-STP Path ADR: After reading chargeToPayroll.ts — it builds PayRunSubmission typed objects and calls PayrollAdapter.submitPayRun(). The adapter interface is not yet implemented with a concrete Xero class — it's abstract. Decision: Xero passthrough (not direct ATO SBR2). Wire XeroPayrollAdapter implementing PayrollAdapter using Xero Payroll AU API. Income type LAB for labour hire workers. Document in docs/adr/20260423-stp-xero-passthrough.md.
+STP Path ADR: After reading chargeToPayroll.ts — it builds PayRunSubmission typed objects and calls PayrollAdapter.submitPayRun(). The adapter interface is not yet implemented with a concrete Xero class — it's abstract. Decision: Xero passthrough (not direct ATO SBR2). Wire XeroPayrollAdapter implementing PayrollAdapter using Xero Payroll AU API. Income type LAB for labour hire workers. Document in crm7/docs/adr/0004-stp-xero-passthrough.md.
 
 WS-5 · Customisable Report Builder (depends on WS-3, WS-4)
 What exists: /reports route with category cards and quick-access favouriting. custom_reports feature flag in LAUNCH_FLAGS.
