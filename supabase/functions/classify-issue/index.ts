@@ -71,16 +71,17 @@ const withCorsHeaders = (origin: string | null, allowedOrigins: Set<string>) => 
 const allowedOrigins = parseAllowedOrigins();
 const textEncoder = new TextEncoder();
 
-const constantTimeEqual = (left: string, right: string): boolean => {
-  const leftBytes = textEncoder.encode(left);
-  const rightBytes = textEncoder.encode(right);
-  if (leftBytes.length !== rightBytes.length) {
-    return false;
-  }
+const constantTimeEqual = (
+  left: string | null | undefined,
+  right: string | null | undefined
+): boolean => {
+  const leftBytes = textEncoder.encode(left ?? '');
+  const rightBytes = textEncoder.encode(right ?? '');
+  const maxLength = Math.max(leftBytes.length, rightBytes.length);
 
-  let diff = 0;
-  for (let index = 0; index < leftBytes.length; index += 1) {
-    diff |= leftBytes[index] ^ rightBytes[index];
+  let diff = leftBytes.length ^ rightBytes.length;
+  for (let index = 0; index < maxLength; index += 1) {
+    diff |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
   }
 
   return diff === 0;
@@ -134,10 +135,10 @@ serve(async (req) => {
   });
 
   const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization');
-  const bearerPrefixMatch = authHeader?.match(/^bearer\s+/i);
-  const bearerToken = bearerPrefixMatch
-    ? authHeader?.slice(bearerPrefixMatch[0].length).trim() ?? null
-    : null;
+  const bearerToken =
+    authHeader && /^bearer\s+/i.test(authHeader)
+      ? authHeader.replace(/^bearer\s+/i, '').trim()
+      : null;
   const internalSecret = Deno.env.get('JODIE_INTERNAL_SECRET');
   const suppliedInternalSecret = req.headers.get('x-jodie-internal-secret');
   const internalAuthPassed =
