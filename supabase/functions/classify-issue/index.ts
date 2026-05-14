@@ -68,18 +68,27 @@ const withCorsHeaders = (origin: string | null, allowedOrigins: Set<string>) => 
   return baseHeaders;
 };
 
-serve(async (req) => {
-  const allowedOrigins = parseAllowedOrigins();
-  const origin = req.headers.get('origin');
-  const originAllowed = !origin || allowedOrigins.has(origin);
-  const headers = withCorsHeaders(origin, allowedOrigins);
+const allowedOrigins = parseAllowedOrigins();
+const textEncoder = new TextEncoder();
 
-  if (!originAllowed) {
-    return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
-      status: 403,
-      headers,
-    });
+const constantTimeEqual = (left: string, right: string): boolean => {
+  const leftBytes = textEncoder.encode(left);
+  const rightBytes = textEncoder.encode(right);
+  if (leftBytes.length !== rightBytes.length) {
+    return false;
   }
+
+  let diff = 0;
+  for (let index = 0; index < leftBytes.length; index += 1) {
+    diff |= leftBytes[index] ^ rightBytes[index];
+  }
+
+  return diff === 0;
+};
+
+serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const headers = withCorsHeaders(origin, allowedOrigins);
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers });
@@ -125,13 +134,16 @@ serve(async (req) => {
   });
 
   const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization');
-  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const bearerPrefixMatch = authHeader?.match(/^bearer\s+/i);
+  const bearerToken = bearerPrefixMatch
+    ? authHeader?.slice(bearerPrefixMatch[0].length).trim() ?? null
+    : null;
   const internalSecret = Deno.env.get('JODIE_INTERNAL_SECRET');
   const suppliedInternalSecret = req.headers.get('x-jodie-internal-secret');
   const internalAuthPassed =
     Boolean(internalSecret) &&
     Boolean(suppliedInternalSecret) &&
-    internalSecret === suppliedInternalSecret;
+    constantTimeEqual(internalSecret, suppliedInternalSecret);
 
   if (!bearerToken && !internalAuthPassed) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -152,6 +164,13 @@ serve(async (req) => {
         headers,
       });
     }
+  }
+
+  if (origin && !allowedOrigins.has(origin)) {
+    return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
+      status: 403,
+      headers,
+    });
   }
 
   let requestBody: unknown;
