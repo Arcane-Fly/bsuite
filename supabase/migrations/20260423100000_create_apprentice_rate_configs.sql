@@ -14,8 +14,11 @@
 CREATE TABLE IF NOT EXISTS public.apprentice_rate_configs (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id       UUID        REFERENCES public.tenants (id) ON DELETE CASCADE,
+  -- DRY exemption: award_code is the external Fair Work identifier (e.g. MA000025); no FK target — Fair Work awards are not stored in our schema
   award_code      TEXT        NOT NULL,
+  -- DRY exemption: award_name is denormalized from the Fair Work dataset; the award entity is external and has no FK in our schema
   award_name      TEXT        NOT NULL,
+  -- DRY exemption: trade_name is a flat descriptor from the Fair Work award definition; no FK target table exists
   trade_name      TEXT        NOT NULL,
   apprentice_type TEXT        NOT NULL
     CHECK (apprentice_type IN ('junior_yr10', 'junior_yr12', 'adult', 'sba_sbt')),
