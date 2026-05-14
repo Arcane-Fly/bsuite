@@ -15,7 +15,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: false
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
       - name: Refresh dashboard data
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

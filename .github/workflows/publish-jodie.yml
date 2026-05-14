@@ -1,0 +1,100 @@
+# Publish @bsuite/jodie to npm
+#
+# Triggers automatically when packages/jodie/package.json changes on main.
+# Skips publish if the current version is already on npm (idempotent).
+#
+# Required GitHub Secret:
+#   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
+#                Create at: https://www.npmjs.com/settings/<user>/tokens
+#                Token type: "Automation" (bypasses 2FA for CI)
+#
+# To trigger manually (e.g. after a version bump merged to main):
+#   gh workflow run publish-jodie.yml
+
+name: Publish @bsuite/jodie
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/jodie/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build, test and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+      # Install at workspace root (not from packages/jodie/) so pnpm
+      # uses the package's own pnpm-lock.yaml resolutions (vite@8 + plugin-react@6),
+      # not the parent workspace lockfile (which pins vite@6.4.2 and breaks
+      # plugin-react@6 due to vite removing the './internal' export path).
+      - name: Install dependencies (filtered to @bsuite/jodie)
+        run: pnpm install --frozen-lockfile --filter @bsuite/jodie...
+
+      - name: Typecheck
+        working-directory: packages/jodie
+        run: pnpm typecheck
+
+      - name: Run tests
+        working-directory: packages/jodie
+        run: pnpm test
+
+      - name: Build
+        working-directory: packages/jodie
+        run: pnpm build
+
+      - name: Dry-run publish (catches missing files or bad exports)
+        working-directory: packages/jodie
+        run: npm publish --dry-run --access public
+
+      - name: Check if version already published
+        id: version-check
+        working-directory: packages/jodie
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+
+          PUBLISHED=$(npm view "@bsuite/jodie@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::@bsuite/jodie@${PKG_VERSION} is already on npm — skipping publish"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Will publish @bsuite/jodie@${PKG_VERSION}"
+          fi
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.skip == 'false'
+        working-directory: packages/jodie
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Job summary
+        if: always()
+        env:
+          VERSION: ${{ steps.version-check.outputs.version }}
+          SKIPPED: ${{ steps.version-check.outputs.skip }}
+        run: |
+          if [ "$SKIPPED" = "true" ]; then
+            echo "### Skipped — already published" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`@bsuite/jodie@${VERSION}\` is already on npm." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published" >> "$GITHUB_STEP_SUMMARY"
+            echo "[\`@bsuite/jodie@${VERSION}\`](https://www.npmjs.com/package/@bsuite/jodie) published to npm." >> "$GITHUB_STEP_SUMMARY"
+          fi
