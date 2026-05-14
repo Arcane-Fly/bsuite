@@ -1,15 +1,19 @@
 /**
  * Wage resolver — pulls hourly wage from one of:
  *
- *   1. live-api (fair-work)        — Modern Award rate from Fair Work API (current or as-of date)
+ *   1. live-api (fair-work)            — Modern Award rate from FWC MAPD (current or as-of)
  *   2. live-api (enterprise-agreement) — EA rate from tenant's stored EA registry
- *   3. live-api (mapd)             — MAPD apprentice/trainee rate (federal AASS dataset)
- *   4. tenant-preference           — flat default for the GTO (e.g. paying above award)
- *   5. host-agreed                 — locked in the placement contract
- *   6. manual                      — user types it in
+ *   3. tenant-preference               — flat default for the GTO (e.g. paying above award)
+ *   4. host-agreed                     — locked in the placement contract
+ *   5. manual                          — user types it in
  *
- * Like training-days, the actual fetch logic lives in a `WageDataAccess`
- * adapter wired up by the consumer app (R80.3 already has fairWorkService.ts).
+ * The actual fetch logic lives in a `WageDataAccess` adapter wired up by the
+ * consumer app (R80.3 already has fairWorkService.ts).
+ *
+ * Note: "MAPD" (FWC Modern Awards Pay Database) IS the Fair Work data source —
+ * the `'mapd'` API kind was removed in 0.4.0 because it resolved through the
+ * same code path as `'fair-work'`. Use `source.api = 'fair-work'` for all FWC
+ * lookups, including apprentice/trainee rates (FWC publishes those too).
  */
 
 import type {
@@ -30,13 +34,6 @@ export interface WageDataAccess {
   fromEnterpriseAgreement(params: {
     agreementId: string;
     classification: string;
-    asOfDate?: string;
-  }): Promise<{ rate: number; effectiveDate: string } | null>;
-
-  /** Fetch a federal AASS / MAPD apprentice rate */
-  fromMapd(params: {
-    qualificationCode: string;
-    apprenticeYear: number;
     asOfDate?: string;
   }): Promise<{ rate: number; effectiveDate: string } | null>;
 
@@ -161,34 +158,6 @@ export class WageResolver implements ValueResolver<number> {
             resolvedAt,
             fromCache: false,
             trace: `EA(${agreementId}/${classification}) → $${result.rate.toFixed(2)}/hr (effective ${result.effectiveDate})`,
-            warning: this.staleWarning(result.effectiveDate),
-          };
-        }
-
-        if (source.api === 'mapd') {
-          const qualificationCode = source.params['qualificationCode'] as string | undefined;
-          const apprenticeYear = source.params['apprenticeYear'] as number | undefined;
-          if (!qualificationCode || !apprenticeYear) {
-            throw new Error(
-              `WageResolver.mapd: missing required params { qualificationCode, apprenticeYear }`,
-            );
-          }
-          const result = await this.dataAccess.fromMapd({
-            qualificationCode,
-            apprenticeYear,
-            asOfDate: source.asOfDate,
-          });
-          if (!result) {
-            throw new Error(
-              `WageResolver.mapd: no rate for ${qualificationCode} year ${apprenticeYear}`,
-            );
-          }
-          return {
-            value: result.rate,
-            source,
-            resolvedAt,
-            fromCache: false,
-            trace: `mapd(${qualificationCode}/Y${apprenticeYear}) → $${result.rate.toFixed(2)}/hr (effective ${result.effectiveDate})`,
             warning: this.staleWarning(result.effectiveDate),
           };
         }
