@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS public.jodie_classifications (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+GRANT SELECT, INSERT ON public.jodie_classifications TO service_role;
+
 ALTER TABLE public.jodie_classifications ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "jodie_classifications_insert_service_role" ON public.jodie_classifications;
@@ -18,13 +20,6 @@ CREATE POLICY "jodie_classifications_insert_service_role"
   FOR INSERT
   TO service_role
   WITH CHECK (true);
-
-DROP POLICY IF EXISTS "jodie_classifications_select_authenticated" ON public.jodie_classifications;
-CREATE POLICY "jodie_classifications_select_authenticated"
-  ON public.jodie_classifications
-  FOR SELECT
-  TO authenticated
-  USING (true);
 
 CREATE INDEX IF NOT EXISTS idx_jodie_classifications_issue_url_created_at
   ON public.jodie_classifications (issue_url, created_at DESC);
