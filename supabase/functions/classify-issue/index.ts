@@ -12,6 +12,9 @@ import {
 
 const requestSchema = z.object({
   issueUrl: z.string().url(),
+  issueNumber: z.number().int().positive(),
+  repo: z.string().min(1).max(200),
+  agentRole: z.string().min(1).max(100),
   title: z.string().min(1).max(500),
   body: z.string().max(50_000).default(''),
   labels: z.array(z.string()).default([]),
@@ -90,12 +93,20 @@ serve(async (req) => {
     const classificationResult = await classifyIssue(parsedRequest.data, {
       modelId,
       confidenceThreshold,
-      generateObject: async ({ system, prompt, schema }) => {
+      generateObject: async ({ system, prompt, schema, metadata }) => {
         const generated = await generateObject({
           model: gateway(modelId),
           schema,
           system,
           prompt,
+          experimental_telemetry: {
+            isEnabled: true,
+            metadata: {
+              issueNumber: metadata.issueNumber,
+              repo: metadata.repo,
+              agentRole: metadata.agentRole,
+            },
+          },
         });
 
         return {

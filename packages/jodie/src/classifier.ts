@@ -59,9 +59,18 @@ export type KnownRoutingLabel =
 
 export interface ClassifierInput {
   issueUrl: string;
+  issueNumber: number;
+  repo: string;
+  agentRole: string;
   title: string;
   body: string;
   labels: readonly string[];
+}
+
+export interface ClassifierTelemetryMetadata {
+  issueNumber: number;
+  repo: string;
+  agentRole: string;
 }
 
 export interface ClassifierUsage {
@@ -89,6 +98,7 @@ export interface ClassifierOptions {
     system: string;
     prompt: string;
     schema: typeof issueClassificationSchema;
+    metadata: ClassifierTelemetryMetadata;
   }) => Promise<ClassifierModelResponse>;
 }
 
@@ -199,6 +209,11 @@ export async function classifyIssue(
         system: buildClassifierSystemPrompt(),
         prompt: buildClassifierPrompt(input),
         schema: issueClassificationSchema,
+        metadata: {
+          issueNumber: input.issueNumber,
+          repo: input.repo,
+          agentRole: input.agentRole,
+        },
       });
 
       const parsed = issueClassificationSchema.safeParse(response.object);
