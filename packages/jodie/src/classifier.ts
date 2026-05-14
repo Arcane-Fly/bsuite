@@ -67,6 +67,10 @@ export interface ClassifierInput {
   labels: readonly string[];
 }
 
+/**
+ * Required observability fields forwarded to AI Gateway telemetry metadata.
+ * These keys intentionally mirror ClassifierInput for cost attribution.
+ */
 export interface ClassifierTelemetryMetadata {
   issueNumber: number;
   repo: string;
@@ -98,6 +102,7 @@ export interface ClassifierOptions {
     system: string;
     prompt: string;
     schema: typeof issueClassificationSchema;
+    /** AI Gateway request-correlation metadata required by compliance checks. */
     metadata: ClassifierTelemetryMetadata;
   }) => Promise<ClassifierModelResponse>;
 }
