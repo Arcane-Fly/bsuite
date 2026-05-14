@@ -1,0 +1,43 @@
+{
+  "name": "@bsuite/jodie",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "directory": "packages/jodie"
+  },
+  "description": "Jodie agent loop with MCP tool wiring for GitHub, Supabase, and Vercel.",
+  "files": [
+    "dist",
+    "docs/tools.md"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "@ai-sdk/mcp": "^1.0.42",
+    "ai": "^6.0.177",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.5"
+  }
+}
