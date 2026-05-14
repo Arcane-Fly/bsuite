@@ -13,3 +13,7 @@ export * from './utils';
 export * from './awards';
 
 export * from './boot';
+
+export * from './sources';
+
+export * from './resolvers';
