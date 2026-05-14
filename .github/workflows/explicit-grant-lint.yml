@@ -1,0 +1,38 @@
+name: Explicit GRANT lint (Supabase Data API readiness)
+
+# Per bsuite#964 — Supabase Data API change effective 2026-10-30:
+# new public-schema tables must include explicit GRANT statements
+# in the same migration. This workflow scans PR-delta migrations and
+# fails the check if any new CREATE TABLE public.<x> lacks a matching
+# GRANT statement.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'packages/db/migrations/**.sql'
+      - 'scripts/explicit-grant-lint.sh'
+      - '.github/workflows/explicit-grant-lint.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  grant-lint:
+    runs-on: ubuntu-latest
+    env:
+      BASE_REF: ${{ github.base_ref }}
+    steps:
+      - name: Checkout (full history required for diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure base ref is available
+        run: |
+          git fetch origin "${BASE_REF}:${BASE_REF}" || true
+
+      - name: Run explicit GRANT lint
+        run: |
+          bash scripts/explicit-grant-lint.sh "origin/${BASE_REF}"
