@@ -2,7 +2,7 @@
 
 This directory holds migrations that affect the **shared Supabase project `tuybltdrdefjblnplpqo`** (the same project all 6 BSuite apps connect to). Submodule migrations live under `<submodule>/supabase/migrations/`.
 
-> **Current count:** 12 versioned migrations (as of 2026-05-13).
+> **Current count:** 14 versioned migrations (as of 2026-05-14).
 
 ## Mandatory rule (NEW — 2026-05-13)
 
@@ -61,6 +61,9 @@ This is the pattern in use throughout the 2026-05-13 hardening session (see migr
 | `20260513170000_rls_initplan_feature_builder_ai_usage.sql` | 2.2 | Same pattern, 1 policy |
 | `20260513180000_rls_initplan_remaining_7_tables.sql` | 2.2 | Same pattern, 22 policies on 7 tables — closed Phase 2.2 EPIC bsuite#951 |
 | `20260513200000_phase23_combine_permissive_batch1.sql` | 2.3 | Combined 5 PERMISSIVE policy overlaps on 3 tables (team_members + team_invitations + org_members); reduced `multiple_permissive_policies` 56→41 |
+| `20260513210000_revoke_execute_secdef_categories_BE.sql` | 2.3 | Revoked public EXECUTE on SECURITY DEFINER helpers categorised as 2.1A/B |
+| `20260514080000_phase23_combine_permissive_batch2_complete.sql` | 2.3 | Completed PERMISSIVE policy consolidation — 17 tables, 37 policy overlaps removed; closed bsuite#963 |
+| `20260423100000_create_apprentice_rate_configs.sql` | backfill | Codified missing `apprentice_rate_configs` CREATE TABLE (WS-2 out-of-band provenance); closes bsuite#865 |
 
 ## Frozen migration rule (sibling to crm7's doctrine)
 
