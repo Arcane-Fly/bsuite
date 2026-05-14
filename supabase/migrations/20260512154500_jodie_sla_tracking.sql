@@ -18,10 +18,19 @@ CREATE TABLE IF NOT EXISTS public.jodie_sla_tracking (
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+GRANT SELECT, INSERT, UPDATE ON public.jodie_sla_tracking TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.jodie_sla_tracking TO service_role;
+-- No anon grant; access remains platform-admin/developer scoped via RLS policies.
+
 CREATE OR REPLACE FUNCTION public.set_jodie_sla_tracking_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = public
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_catalog
 AS $$
+-- @SD-JUSTIFICATION: trigger-context, write-path requires bypass-RLS for cascading-row-mutations
+-- @SD-CATEGORY: 2.1A
+-- @SD-AUDIT: 2026-05-14
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;

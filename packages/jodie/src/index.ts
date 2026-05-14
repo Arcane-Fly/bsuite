@@ -1,3 +1,8 @@
+export { runJodieAgentLoop, getJodieMcpConfigFromEnv } from './agent.js'
+export { defaultJodieMcpToolSchemas } from './schemas.js'
+export type { JodieMcpConfig } from './agent.js'
+export type { JodieMcpToolSchemas } from './schemas.js'
+
 export {
   ROUTING_MATRIX,
   SEVERITIES,
@@ -10,7 +15,7 @@ export {
   type RoutingDecision,
   type Classification,
   type PullRequestProtectionState,
-} from './routing-matrix';
+} from './routing-matrix.js'
 
 export {
   createTrackingRecord,
@@ -18,6 +23,6 @@ export {
   type SlaTrackingRecord,
   type SlaTrackingStore,
   type EscalationAction,
-} from './sla-tracker';
+} from './sla-tracker.js'
 
-export { routeIssueFromQ303Classification, type ClassificationInput, type CronRoutingResult } from './cron-a';
+export { routeIssueFromQ303Classification, type ClassificationInput, type CronRoutingResult } from './cron-a.js'
