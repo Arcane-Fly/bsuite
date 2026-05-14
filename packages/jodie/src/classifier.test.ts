@@ -16,6 +16,9 @@ import {
 
 const baseInput = {
   issueUrl: 'https://github.com/GaryOcean428/bsuite/issues/551',
+  issueNumber: 551,
+  repo: 'GaryOcean428/bsuite',
+  agentRole: 'copilot',
   title: 'Synthetic issue',
   body: 'Synthetic body',
   labels: ['jodie-ai'],
