@@ -77,6 +77,10 @@ function isSelfScanExcluded(file) {
   if (file === '.github/workflows/pr-drift-scan.yml') return true;
   // Sibling lint scripts: scripts/check-<something>.mjs
   if (file.startsWith('scripts/check-') && file.endsWith('.mjs')) return true;
+  // Auto-generated dashboard surfaces — JSON content legitimately mentions
+  // banned tokens as remediation/audit text (e.g., "ensure cookieStorage = 0 hits").
+  if (file === 'docs/dashboard/index.html') return true;
+  if (file.startsWith('docs/dashboard/data/')) return true;
   return false;
 }
 

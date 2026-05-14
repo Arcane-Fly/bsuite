@@ -87,6 +87,21 @@ Automatically applies database migrations when changes to any `*/supabase/migrat
 |----------|-------------|
 | `SUPABASE_PROJECT_ID` | Project ref: `tuybltdrdefjblnplpqo` |
 
+### Edge Function Deployment (`.github/workflows/supabase-functions-deploy.yml`)
+
+Deploys edge functions when source files in any `*/supabase/functions/` directory change and are pushed to `main`. Includes a **CI guard** that queries the Supabase Management API after deployment and fails if any function still has a local-machine `entrypoint_path` (e.g. `file:///home/braden/...`).
+
+**To re-deploy all functions at once** (e.g. to fix entrypoints deployed from a local machine):
+
+1. Navigate to **Actions → Deploy Supabase Edge Functions**
+2. Click **Run workflow**
+3. Set `submodule` = `all`, `force_redeploy` = `true`
+4. Click **Run**
+
+This redeploys every function across all submodules and root, then verifies clean CI entrypoints.
+
+**Webhook functions (`verify_jwt: false`):** Detected automatically from each submodule's `supabase/config.toml`. If the config marks a function with `verify_jwt = false`, the workflow passes `--no-verify-jwt` when deploying.
+
 ### Deployments
 
 Each submodule deploys independently via Vercel Git Integration connected to its own repo. The parent repo does not trigger deployments — Vercel watches each submodule repo directly.

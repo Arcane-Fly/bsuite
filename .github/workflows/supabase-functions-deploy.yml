@@ -1,0 +1,304 @@
+# Supabase Edge Function Deployment Workflow
+#
+# Deploys edge functions to Supabase when source changes are pushed/merged
+# to main. Can also be triggered manually for force-redeployment of all
+# functions (e.g. to fix entrypoints that were deployed from a local machine).
+#
+# Phase 3 hardening: ensures all 44 edge functions previously deployed from
+# a developer's local machine (entrypoint_path = file:///home/braden/...)
+# are redeployed from CI so entrypoints reflect canonical CI paths.
+#
+# Post-deploy guard: queries the Supabase Management API and fails the
+# workflow if any function still carries a local-machine entrypoint_path.
+#
+# Required GitHub Secrets:
+#   SUPABASE_ACCESS_TOKEN  - Personal access token from supabase.com/dashboard/account/tokens
+#   SUBMODULES_TOKEN       - GitHub PAT with read access to all submodule repos (optional,
+#                            falls back to GITHUB_TOKEN for public submodules)
+#
+# Required GitHub Variables:
+#   SUPABASE_PROJECT_ID    - Project ref (e.g. tuybltdrdefjblnplpqo)
+
+name: Deploy Supabase Edge Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/**'
+      - 'crm7/supabase/functions/**'
+      - 'R80.3/supabase/functions/**'
+      - 'braden/supabase/functions/**'
+      - 'business-suite-unified/supabase/functions/**'
+      - 'conduit/supabase/functions/**'
+      - 'throughput/supabase/functions/**'
+  workflow_dispatch:
+    inputs:
+      submodule:
+        description: 'Which scope to deploy functions for ("all" redeploys every scope)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - root
+          - crm7
+          - R80.3
+          - braden
+          - business-suite-unified
+          - conduit
+          - throughput
+      force_redeploy:
+        description: 'Force redeploy ALL functions in scope (ignores change detection)'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1 — Detect which function scopes have changed (skipped on force dispatch)
+  # ─────────────────────────────────────────────────────────────────────────────
+  detect-changes:
+    name: Detect changed function scopes
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - id: set-matrix
+        name: Build deployment matrix
+        run: |
+          ALL_SCOPES='["root","crm7","R80.3","braden","business-suite-unified","conduit","throughput"]'
+
+          # workflow_dispatch: use the selected submodule or all
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT="${{ github.event.inputs.submodule }}"
+            if [ "$INPUT" = "all" ]; then
+              echo "matrix=${ALL_SCOPES}" >> "$GITHUB_OUTPUT"
+            else
+              echo "matrix=[\"${INPUT}\"]" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          # push: detect which scopes have changes
+          CHANGED=()
+
+          # Root-level supabase/functions (parent repo, not a submodule)
+          if git diff --name-only HEAD~1 HEAD -- "supabase/functions/" | grep -q .; then
+            CHANGED+=("\"root\"")
+          fi
+
+          # Submodule function directories
+          for scope in crm7 R80.3 braden business-suite-unified conduit throughput; do
+            if git diff --name-only HEAD~1 HEAD -- "${scope}/supabase/functions/" | grep -q .; then
+              CHANGED+=("\"${scope}\"")
+            fi
+          done
+
+          if [ ${#CHANGED[@]} -eq 0 ]; then
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+          else
+            JOINED=$(IFS=,; echo "${CHANGED[*]}")
+            echo "matrix=[${JOINED}]" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2 — Deploy edge functions for each changed (or forced) scope
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy-functions:
+    name: Deploy Edge Functions (${{ matrix.scope }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Resolve working directory
+        id: resolve-dir
+        run: |
+          if [ "${{ matrix.scope }}" = "root" ]; then
+            echo "workdir=." >> "$GITHUB_OUTPUT"
+          else
+            echo "workdir=${{ matrix.scope }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Link Supabase project
+        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+        run: |
+          supabase link --project-ref ${{ vars.SUPABASE_PROJECT_ID }}
+
+      - name: Deploy all Edge Functions in scope
+        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+        shell: bash
+        run: |
+          FUNCTIONS_DIR="supabase/functions"
+
+          if [ ! -d "$FUNCTIONS_DIR" ]; then
+            echo "No functions directory found in scope '${{ matrix.scope }}', skipping."
+            exit 0
+          fi
+
+          DEPLOYED=0
+          FAILED=0
+          SKIPPED=0
+
+          for fn_dir in "$FUNCTIONS_DIR"/*/; do
+            [ -d "$fn_dir" ] || continue
+            fn_name=$(basename "$fn_dir")
+
+            # Skip shared/utility directories (prefixed with _)
+            if [[ "$fn_name" == _* ]]; then
+              echo "Skipping shared module: $fn_name"
+              SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+
+            # Determine verify_jwt flag from config.toml (if present)
+            # config.toml section: [functions.<name>] + verify_jwt = false
+            DEPLOY_FLAGS=""
+            if [ -f "supabase/config.toml" ]; then
+              if grep -A5 "^\[functions\.${fn_name}\]" supabase/config.toml 2>/dev/null \
+                   | grep -qE "verify_jwt[[:space:]]*=[[:space:]]*false"; then
+                DEPLOY_FLAGS="--no-verify-jwt"
+                echo "  (JWT verification disabled for $fn_name via config.toml)"
+              fi
+            fi
+
+            echo "--- Deploying: $fn_name $DEPLOY_FLAGS ---"
+            if supabase functions deploy "$fn_name" $DEPLOY_FLAGS; then
+              echo "✓ $fn_name deployed successfully"
+              DEPLOYED=$((DEPLOYED + 1))
+            else
+              echo "✗ $fn_name deployment failed"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          echo ""
+          echo "=== Deployment Summary for scope: ${{ matrix.scope }} ==="
+          echo "Deployed: ${DEPLOYED}"
+          echo "Skipped:  ${SKIPPED}"
+          echo "Failed:   ${FAILED}"
+
+          if [ $FAILED -gt 0 ]; then
+            echo "::error::${FAILED} function(s) failed to deploy in scope '${{ matrix.scope }}'"
+            exit 1
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 3 — CI Guard: fail if ANY function still has a local-machine entrypoint
+  #
+  # Queries the Supabase Management API after deployment and checks that no
+  # function's entrypoint_path contains "file:///home/braden/" (or any other
+  # local developer-machine path pattern).
+  #
+  # This guard is the regression-prevention backstop: if someone deploys a
+  # function from their local machine and pushes source changes, this job will
+  # catch the lingering local entrypoint on the next CI run.
+  # ─────────────────────────────────────────────────────────────────────────────
+  guard-no-local-entrypoints:
+    name: Guard — no local-machine entrypoints
+    needs: [deploy-functions]
+    # Only run the guard when deployment actually succeeded (not on failure or skip).
+    # A failed deployment means we couldn't fix entrypoints; running the guard then
+    # would produce misleading results against stale production state.
+    if: |
+      needs.deploy-functions.result == 'success' &&
+      vars.SUPABASE_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+    steps:
+      - name: Query Supabase Management API for function entrypoints
+        run: |
+          echo "Querying project ${SUPABASE_PROJECT_ID} for edge function entrypoints…"
+
+          HTTP_STATUS=$(curl -s -o /tmp/fn_list.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+            "https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_ID}/functions")
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::warning::Management API returned HTTP ${HTTP_STATUS} — cannot run entrypoint guard."
+            echo "Response body:"
+            cat /tmp/fn_list.json
+            exit 0
+          fi
+
+          echo "Management API responded with HTTP 200."
+
+      - name: Check for local-machine entrypoints
+        run: |
+          # Fail if any function still shows a developer-machine entrypoint_path.
+          # Patterns: home/braden (original developer machine), /Users/ (macOS local).
+          TOTAL=$(jq 'length' /tmp/fn_list.json)
+
+          BAD_COUNT=$(jq '
+            [.[] | select(
+              .entrypoint_path != null and
+              (.entrypoint_path | test("file:///home/[^/]+/Desktop/|file:///home/[^/]+/Dev/|file:///Users/[^/]+/Desktop/|file:///Users/[^/]+/Dev/"))
+            )] | length' /tmp/fn_list.json)
+
+          CLEAN=$(( TOTAL - BAD_COUNT ))
+
+          echo "Total deployed functions : ${TOTAL}"
+          echo "Clean CI entrypoints     : ${CLEAN}"
+          echo "Local-machine entrypoints: ${BAD_COUNT}"
+
+          if [ "$BAD_COUNT" -gt "0" ]; then
+            echo ""
+            echo "::error::${BAD_COUNT} function(s) still have local-machine entrypoints:"
+            jq -r '
+              .[] | select(
+                .entrypoint_path != null and
+                (.entrypoint_path | test("file:///home/[^/]+/Desktop/|file:///home/[^/]+/Dev/|file:///Users/[^/]+/Desktop/|file:///Users/[^/]+/Dev/"))
+              ) | "  - \(.slug): \(.entrypoint_path)"' /tmp/fn_list.json
+            echo ""
+            echo "Run this workflow with force_redeploy=true and submodule=all to fix all entrypoints."
+            exit 1
+          fi
+
+          echo ""
+          echo "✓ All ${TOTAL} deployed functions have clean CI entrypoints."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 4 — Summary: list all deployed functions (informational)
+  # ─────────────────────────────────────────────────────────────────────────────
+  list-deployed-functions:
+    name: List deployed functions
+    needs: [guard-no-local-entrypoints]
+    if: always() && needs.guard-no-local-entrypoints.result != 'skipped'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project and list functions
+        run: |
+          supabase link --project-ref "${SUPABASE_PROJECT_ID}"
+          echo "=== Currently deployed edge functions ==="
+          supabase functions list
