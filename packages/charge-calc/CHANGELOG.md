@@ -5,6 +5,74 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.4.0] — 2026-05-14 — Remove vestigial `'mapd'` source kind (BREAKING)
+
+### Why
+
+The `'mapd'` value in `LiveApiSourceSchema.api` was a redundant alias for
+`'fair-work'` — both resolved through the FWC Modern Awards Pay Database
+(developer.fwc.gov.au). Keeping two names for one upstream violated the
+DRY one-shot principle and added a meaningless UX dropdown option.
+
+The naming `MAPD` is retained where it belongs: as the formal name of the
+FWC dataset, in `awards/mapd-types.ts` + `awards/mapd-client.ts` (Zod
+schemas + mapper for the FWC API response shape). Those files are NOT
+affected by this release.
+
+### Breaking changes
+
+- `LiveApiSourceSchema.api`: enum no longer accepts `'mapd'`. Use
+  `'fair-work'` for all FWC lookups, including apprentice/trainee rates
+  (FWC publishes those too).
+- `WageDataAccess.fromMapd()`: interface method removed. Consumers should
+  call `fromFairWork()` with the appropriate `awardCode` + `classification`.
+- `WageResolver`: the `source.api === 'mapd'` dispatch branch is removed.
+  Any code passing `api: 'mapd'` at runtime will now throw at Zod parse.
+
+### Migration
+
+Production has zero rows with `source.api === 'mapd'` in
+`wage_calculation_snapshots.source_provenance` (verified via Supabase MCP
+2026-05-14, before this release). No SQL migration shipped — the JSONB
+column is new (added in crm7#784 on 2026-05-14) and was never populated
+with a `'mapd'` source kind in production.
+
+Consumer apps (`crm7/src/services/chargeCalcSourceAdapters.ts`,
+`R80.3/src/services/chargeCalcSourceAdapters.ts`) have their `fromMapd`
+implementations removed alongside this release in the same PR.
+
+### Tests
+
+- `__tests__/sources.test.ts` — `'mapd live-api'` test case removed;
+  `fromMapd` mock removed from `makeFakeWageDataAccess()`.
+- Consumer `chargeCalcSourceAdapters.test.ts` files — `fromMapd` presence
+  + null-return assertions removed.
+
+---
+
+## [0.3.0] — 2026-05-14 — Value-with-source architecture (R80.3#248 Phase 1)
+
+### Added
+
+- `src/sources.ts` — `ValueSource` 7-kind discriminated union (manual,
+  tenant-preference, live-api, placement-derived, trade-average,
+  trade-year-average, host-agreed), `ResolvedValue<T>`,
+  `ValueResolver<T>`, `manualValue()`, `chainResolvers()`, type-guards.
+- `src/resolvers/training-days.ts` — `TrainingDaysResolver` covering all
+  5 sourcing modes (placement / trade-avg / trade-year-avg / tenant-pref
+  / host-agreed) via a `TrainingDaysDataAccess` adapter.
+- `src/resolvers/wage.ts` — `WageResolver` covering live-api
+  (fair-work / mapd / enterprise-agreement / custom), tenant-preference,
+  host-agreed, manual — with stale-rate warning.
+
+### Notes
+
+See PR [#997](https://github.com/GaryOcean428/bsuite/pull/997) for the
+full surface. Superseded by 0.4.0 (removes the redundant `'mapd'` enum
+value).
+
+---
+
 ## [0.2.5] — 2026-05-12 — BUG-1 regression lock (no behaviour change)
 
 ### Tests

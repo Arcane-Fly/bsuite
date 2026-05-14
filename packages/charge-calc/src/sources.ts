@@ -3,7 +3,7 @@
  *
  * Per operator directive (R80.3#248, 2026-05-14): every numeric input the
  * calc engine consumes should be sourced from one of:
- *   - live API (Fair Work, MAPD, custom)
+ *   - live API (Fair Work, Enterprise Agreement, custom)
  *   - tenant preference (saved in tenant_settings)
  *   - placement record (calculated from the apprentice's actual placement)
  *   - trade average (per-tenant aggregate by trade code)
@@ -33,7 +33,7 @@ export const TenantPreferenceSourceSchema = z.object({
 
 export const LiveApiSourceSchema = z.object({
   kind: z.literal('live-api'),
-  api: z.enum(['fair-work', 'mapd', 'enterprise-agreement', 'custom']),
+  api: z.enum(['fair-work', 'enterprise-agreement', 'custom']),
   /** API-specific lookup parameters (e.g. award code + classification) */
   params: z.record(z.string(), z.unknown()),
   /** Optional ISO date for as-of lookups (e.g. "what was the rate on 2026-04-01") */

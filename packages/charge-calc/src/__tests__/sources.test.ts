@@ -320,11 +320,6 @@ function makeFakeWageDataAccess(): WageDataAccess {
         ? { rate: 32.0, effectiveDate: '2026-01-01' }
         : null,
     ),
-    fromMapd: vi.fn(async (params) =>
-      params.qualificationCode === 'CER40120' && params.apprenticeYear === 3
-        ? { rate: 24.5, effectiveDate: '2026-01-01' }
-        : null,
-    ),
     fromTenantPreference: vi.fn(async (key) => (key === 'default_wage' ? 30.0 : null)),
     fromHostAgreement: vi.fn(async (id) => (id === 'p-agreed' ? 35.0 : null)),
   };
@@ -362,15 +357,6 @@ describe('WageResolver — multi-source', () => {
       params: { agreementId: 'ea-1', classification: 'L3' },
     });
     expect(r.value).toBe(32.0);
-  });
-
-  it('mapd live-api', async () => {
-    const r = await resolver.resolve({
-      kind: 'live-api',
-      api: 'mapd',
-      params: { qualificationCode: 'CER40120', apprenticeYear: 3 },
-    });
-    expect(r.value).toBe(24.5);
   });
 
   it('manual', async () => {
