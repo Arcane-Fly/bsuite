@@ -20,14 +20,67 @@ const requestSchema = z.object({
   labels: z.array(z.string()).default([]),
 });
 
-const headers = {
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://suite.crm7.app',
+  'https://d.suite.crm7.app',
+  'https://crm.crm7.app',
+  'https://d.crm.crm7.app',
+  'https://r8.crm7.app',
+  'https://d.r8.crm7.app',
+  'https://ideas.crm7.app',
+  'https://d.ideas.crm7.app',
+  'https://conduit.crm7.app',
+  'https://d.conduit.crm7.app',
+  'https://www.braden.com.au',
+  'https://d.braden.com.au',
+  'http://localhost:3000',
+  'http://localhost:5173',
+] as const;
+
+const baseHeaders = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+  'Access-Control-Allow-Headers':
+    'authorization, content-type, x-client-info, apikey, x-jodie-internal-secret',
+  Vary: 'Origin',
+};
+
+const parseAllowedOrigins = (): Set<string> => {
+  const raw = Deno.env.get('JODIE_ALLOWED_ORIGINS');
+  const configuredOrigins = raw
+    ? raw
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0)
+    : [];
+
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...configuredOrigins]);
+};
+
+const withCorsHeaders = (origin: string | null, allowedOrigins: Set<string>) => {
+  if (origin && allowedOrigins.has(origin)) {
+    return {
+      ...baseHeaders,
+      'Access-Control-Allow-Origin': origin,
+    };
+  }
+
+  return baseHeaders;
 };
 
 serve(async (req) => {
+  const allowedOrigins = parseAllowedOrigins();
+  const origin = req.headers.get('origin');
+  const originAllowed = !origin || allowedOrigins.has(origin);
+  const headers = withCorsHeaders(origin, allowedOrigins);
+
+  if (!originAllowed) {
+    return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
+      status: 403,
+      headers,
+    });
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers });
   }
@@ -62,6 +115,43 @@ serve(async (req) => {
       JSON.stringify({ error: 'Invalid JODIE_CONFIDENCE_THRESHOLD (must be 0..1)' }),
       { status: 500, headers }
     );
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const internalSecret = Deno.env.get('JODIE_INTERNAL_SECRET');
+  const suppliedInternalSecret = req.headers.get('x-jodie-internal-secret');
+  const internalAuthPassed =
+    Boolean(internalSecret) &&
+    Boolean(suppliedInternalSecret) &&
+    internalSecret === suppliedInternalSecret;
+
+  if (!bearerToken && !internalAuthPassed) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers,
+    });
+  }
+
+  if (bearerToken) {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(bearerToken);
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers,
+      });
+    }
   }
 
   let requestBody: unknown;
@@ -114,13 +204,6 @@ serve(async (req) => {
           usage: generated.usage,
           modelId,
         };
-      },
-    });
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
       },
     });
 
