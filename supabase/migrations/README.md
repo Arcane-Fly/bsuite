@@ -2,7 +2,7 @@
 
 This directory holds migrations that affect the **shared Supabase project `tuybltdrdefjblnplpqo`** (the same project all 6 BSuite apps connect to). Submodule migrations live under `<submodule>/supabase/migrations/`.
 
-> **Current count:** 12 versioned migrations (as of 2026-05-13).
+> **Current count:** 14 versioned migrations (as of 2026-05-14).
 
 ## Mandatory rule (NEW — 2026-05-13)
 
@@ -35,21 +35,25 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table_name> TO service_role;
 
 CI guard: `.github/workflows/explicit-grant-lint.yml` (added in PR #965, script at [`scripts/explicit-grant-lint.sh`](../../scripts/explicit-grant-lint.sh)) fails any PR that adds a `CREATE TABLE public.<x>` without a matching `GRANT` in the same migration file.
 
+**Grant audit baseline:** [`baseline/RECONCILIATION-INVENTORY.md`](baseline/RECONCILIATION-INVENTORY.md) — production audit performed 2026-05-13T12:30Z; all tables compliant except 2 intentionally service-role-only webhook tables.
+
 ## Auto-apply workflow status
 
-`.github/workflows/supabase-migrate.yml` is the auto-apply workflow that runs on every push to `main` touching `**/supabase/migrations/**`. **It is currently broken** — bsuite#961 — because the default `GITHUB_TOKEN` doesn't have access to the private submodule repos, and the `Detect changed migrations` step fails on submodule clone.
+`.github/workflows/supabase-migrate.yml` is the auto-apply workflow that runs on every push to `main` touching `**/supabase/migrations/**`.
 
-**Workaround until #961 is fixed:** apply migrations manually via Supabase MCP `apply_migration` (transactional) or `execute_sql` (for `CREATE INDEX CONCURRENTLY` and other non-transactional DDL). Then commit the migration file to the bsuite parent so source-prod parity is maintained.
+**Current state (2026-05-15):**
+- Issue 1 (PAT for private submodule clone): **FIXED** — PR #989 wired `BSUITE_CROSS_REPO_PAT`. However, prod migration history diverges in braden/throughput/BSU/conduit submodules (need per-submodule baseline-replay or `migration repair` — operator action, tracked in bsuite#961).
+- Issue 2 (`.nontx.sql` CONCURRENTLY migrations): **FIXED** — PR #1008 adds a post-push psql step that applies `.nontx.sql` files via direct DB connection.
 
-This is the pattern in use throughout the 2026-05-13 hardening session (see migrations 20260513140000–20260513200000 below).
+**Workaround for submodule history divergence:** apply migrations manually via Supabase MCP `apply_migration` (transactional) or `execute_sql` (for `CREATE INDEX CONCURRENTLY` and other non-transactional DDL). Then commit the migration file so source-prod parity is maintained.
 
 ## Per-migration guide for non-transactional DDL
 
 `CREATE INDEX CONCURRENTLY`, `REINDEX CONCURRENTLY`, `ALTER TYPE … ADD VALUE`, `VACUUM`, `CLUSTER` — all of these cannot run inside a transaction block.
 
 - **File naming:** suffix with `.nontx.sql` (per crm7's doctrine in `crm7/supabase/migrations/CLAUDE.md`).
-- **Apply path:** even when the auto-apply workflow is fixed, the standard `supabase db push` will still wrap each migration in a transaction. `.nontx.sql` files need either psql direct application OR Supabase MCP `execute_sql` (one statement per call).
-- **Audit trail:** when applied via MCP, Supabase auto-records the migration in `supabase_migrations.schema_migrations` so a future re-`db push` will skip them.
+- **Apply path:** the `supabase-migrate.yml` workflow now handles `.nontx.sql` files automatically (PR #1008) via a direct psql step — no manual intervention needed for root-level migrations.
+- **Audit trail:** when applied via MCP or the workflow's psql step, each version is recorded in `supabase_migrations.schema_migrations` so a future re-push skips them.
 
 ## Recent migration history (Phase 2.x hardening — 2026-05-13)
 
@@ -61,6 +65,9 @@ This is the pattern in use throughout the 2026-05-13 hardening session (see migr
 | `20260513170000_rls_initplan_feature_builder_ai_usage.sql` | 2.2 | Same pattern, 1 policy |
 | `20260513180000_rls_initplan_remaining_7_tables.sql` | 2.2 | Same pattern, 22 policies on 7 tables — closed Phase 2.2 EPIC bsuite#951 |
 | `20260513200000_phase23_combine_permissive_batch1.sql` | 2.3 | Combined 5 PERMISSIVE policy overlaps on 3 tables (team_members + team_invitations + org_members); reduced `multiple_permissive_policies` 56→41 |
+| `20260513210000_revoke_execute_secdef_categories_BE.sql` | 2.3 | Revoked public EXECUTE on SECURITY DEFINER helpers categorised as 2.1A/B |
+| `20260514080000_phase23_combine_permissive_batch2_complete.sql` | 2.3 | Completed PERMISSIVE policy consolidation — 17 tables, 37 policy overlaps removed; closed bsuite#963 |
+| `20260423100000_create_apprentice_rate_configs.sql` | backfill | Codified missing `apprentice_rate_configs` CREATE TABLE (WS-2 out-of-band provenance); closes bsuite#865 |
 
 ## Frozen migration rule (sibling to crm7's doctrine)
 
@@ -75,8 +82,9 @@ Reference: bsuite#961, crm7#771 (PG17 syntax break is a frozen-migration follow-
 
 ## Cross-references
 
-- bsuite#961 — supabase-migrate workflow fix (private submodule clone)
-- bsuite#964 — explicit-grant CI guard implementation
-- crm7#770 — Phase 2 reconciliation inventory
+- bsuite#961 — supabase-migrate workflow fix history + remaining submodule history divergence
+- bsuite#964 — explicit-grant CI guard implementation + Oct 30 2026 enforcement
+- [`baseline/RECONCILIATION-INVENTORY.md`](baseline/RECONCILIATION-INVENTORY.md) — grant audit baseline (2026-05-13)
+- crm7#770 — Phase 2 reconciliation inventory (crm7 submodule)
 - crm7's `supabase/migrations/CLAUDE.md` — sister-repo doctrine (frozen-migration rule, `.nontx.sql` convention)
 - AGENTS.md — global agent rules (Anti-Laziness, FF-SELF-VALIDATION-20260507, etc.)

@@ -11,7 +11,7 @@
     "url": "https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/jodie"
   },
-  "description": "Jodie agent loop with MCP tool wiring for GitHub, Supabase, and Vercel.",
+  "description": "Jodie agent loop with MCP tooling, classification routing, and SLA escalation primitives.",
   "files": [
     "dist",
     "docs/tools.md"
@@ -33,6 +33,7 @@
   "dependencies": {
     "@ai-sdk/mcp": "^1.0.42",
     "ai": "^6.0.177",
+    "date-fns": "^4.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
