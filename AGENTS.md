@@ -1182,3 +1182,101 @@ The dashboard surfaces (live as of 2026-05-08):
 When you add a new top-level section, append it to this list in §10.6 of every agent doc.
 
 ---
+
+## 11. Multi-File Refactor Tooling Patterns (FF-TOOLING-PATTERNS-20260515)
+
+**Source:** Pattern banking across 7 verified rotations (bsuite#981 / #983 / #990 / #993 / #1002 / #1006 / #1009). Adopted 2026-05-15 as Frozen Fact `FF-TOOLING-PATTERNS-20260515`. Complements §9 (Self-Validation), §1 (Anti-Laziness), and the "pnpm Lockfile Generation" rules above.
+
+### Why this rule exists
+
+Multi-file refactors fall into two operational classes that need different tooling — picking the wrong one wastes a CI round or, worse, produces a PR that fails for predictable reasons. This section banks two patterns proven across recent rotations so the next agent doesn't re-derive them. Both patterns operate **outside the bsuite parent tree** to avoid the workspace-lockfile path-poisoning trap documented under "pnpm Lockfile Generation" above.
+
+### Pattern A — GitHub Contents API multi-file source-only refactor
+
+**When to use:**
+
+- Pure source edits where ESLint/tsc don't see broader context per file, e.g. attribute additions (`aria-hidden="true"` decorative-icon sweeps), import-name swaps (`heroicons` → `lucide-react`), `eslint-disable-next-line` annotations, single-line code mods, doc string updates.
+- The build surface is unchanged: no `package.json` edits, no new deps, no test additions, no type signatures touched.
+- CI + Vercel preview are an acceptable verification surface for what you cannot run locally.
+
+**Tooling:**
+
+- Read existing file SHAs + content via `mcp__github__get_file_contents` (or `gh api repos/GaryOcean428/<repo>/contents/<path>?ref=<branch>` if you have shell access).
+- Write atomically via `mcp__github__create_or_update_file` (single file) or `mcp__github__push_files` (multi-file single commit) — see [REST API endpoints for repository contents](https://docs.github.com/en/rest/repos/contents).
+- For new branches, `mcp__github__create_branch` accepts a base SHA from the target branch HEAD.
+- Verification is post-push: Vercel preview Ready + each CI job green is the §9.2 visual-equivalence (UI changes) or §9.1 output-equivalence (build/test diff is empty) target — name them explicitly in the PR's `## Evidence` block.
+
+**Precedents:** bsuite#981 (heroicons → lucide swap across 4 files), bsuite#983 (sibling sweep), bsuite#990 (crm7 anon-view port — 1 migration + 1 consumer edit), bsuite#1003 (braden A11Y aria-hidden — 11 sites / 2 files), bsuite#1010 (conduit TESTS — 3 new files via push_files atomic commit).
+
+**Limits:**
+
+- Cannot run `pnpm typecheck` / `pnpm lint` / `pnpm test` before push — CI is the truth surface.
+- Each `create_or_update_file` call is a separate commit unless wrapped in `push_files`. Prefer `push_files` for atomicity when changing 2+ files.
+- GitHub Contents API enforces a 1MB-per-file size limit; for larger files (rare in source) fall back to Pattern B.
+
+### Pattern B — Local-clone-in-`/tmp` + pnpm install + verify-then-push
+
+**When to use:**
+
+- Changes touch type-system surface (new function signatures, generic parameters, return-type narrowing).
+- Dependency bumps (`package.json` changes need lockfile regen).
+- ESLint sees cross-file context (new exports, removed identifiers, dead-code detection).
+- Tests are added, modified, or need to run to prove behaviour (`pnpm test`).
+- Vercel preview alone is insufficient — local proof the build is green required before the PR opens.
+
+**Tooling:**
+
+```bash
+gh repo clone GaryOcean428/<repo> /tmp/<workdir>
+cd /tmp/<workdir>
+git fetch origin development && git checkout -B <topic>/<slug> origin/development
+pnpm install --frozen-lockfile --ignore-scripts
+# edit files
+pnpm typecheck && pnpm lint && pnpm test    # must all pass before commit
+git add <files>
+git commit -m "type(scope): description"
+git push -u origin <topic>/<slug>
+```
+
+- `--frozen-lockfile` enforces the existing lockfile contract; mismatches surface immediately. See pnpm CLI reference: <https://pnpm.io/cli/install>.
+- `--ignore-scripts` skips lifecycle scripts (speeds install; avoids accidental local builds during install).
+- pnpm's content-addressable store means a second sibling clone reuses cached entries — installs are typically <10s after the first.
+
+**CRITICAL — never run `pnpm install` inside the bsuite parent tree.** The parent's `pnpm-workspace.yaml` would embed `..` paths into the consumer lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE` (per "pnpm Lockfile Generation" above). `/tmp` is outside the bsuite tree.
+
+**Precedents:** bsuite#993 (R80.3 dormant-lint + audit-scan across 5 app repos in `/tmp`), bsuite#1006 (crm7 edge-fn fix with vitest verification), bsuite#1009 (conduit 76-test expansion verified via `pnpm test` / `pnpm typecheck` / `pnpm eslint` before push).
+
+**Limits:**
+
+- Disk + network cost for the clone (typically 1-3s shallow clone + 6-10s pnpm install). Negligible for any non-trivial refactor.
+- Working tree under `/tmp` is reclaimed between sessions by the harness — anything not committed + pushed before session end is lost.
+
+### How to choose
+
+| Question | If yes → use |
+|---|---|
+| Changing imports, types, function signatures, or test files? | Pattern B |
+| Need to run `pnpm test` / `pnpm typecheck` / `pnpm lint` to prove the change works? | Pattern B |
+| Single-attribute add (e.g. `aria-hidden`), single-line `eslint-disable`, or import-name rename? | Pattern A |
+| Only failure mode is a UI/runtime regression Vercel preview will surface? | Pattern A |
+| Touching `package.json` / `pnpm-lock.yaml` / `vercel.json`? | Pattern B (always — these need install/build verification) |
+
+### Anti-patterns (banned)
+
+- ❌ Pattern A for type-system changes — typescript errors won't surface until CI, wasting a feedback round.
+- ❌ Pattern B from inside the bsuite parent tree (lockfile path-poisoning — see "pnpm Lockfile Generation" rules above).
+- ❌ Hand-crafting `git diff` payloads for the Contents API — use `mcp__github__push_files`, it handles SHAs correctly.
+- ❌ Skipping the §9 validation evidence in the PR body just because the pattern was Pattern A — Vercel preview Ready + CI green IS the evidence, name it explicitly in the PR's `## Evidence` block.
+
+### Cross-references
+
+- §1 Anti-Laziness: pick the pattern that yields a green-on-arrival PR; "I'll let CI tell me" when local verify was possible is a deferral.
+- §9 Self-Validation: Pattern B is the natural fit for §9.1 output-equivalence; Pattern A relies on Vercel preview + CI as the §9.2 verification surface (must be named explicitly).
+- §10 Dashboard Update Protocol: dashboard data updates use Pattern A (the `refresh-data.py` + `inline-data.sh` contract is the verification, not `pnpm test`).
+- "pnpm Lockfile Generation" (above): the isolated-tmp rule both patterns reuse — Pattern A by avoiding install entirely, Pattern B by cloning outside the bsuite tree.
+
+---
+
+*Frozen Fact: `FF-TOOLING-PATTERNS-20260515`. Adopted 2026-05-15 by claude-loop DOCS rotation (tracker bsuite#1012) after 4 rotations of cross-rotation §9.3 carry-forward (bsuite#993 / #1002 / #1006 / #1009). Primary-source citations: pnpm CLI docs (<https://pnpm.io/cli/install>), GitHub REST API Contents reference (<https://docs.github.com/en/rest/repos/contents>), GitHub MCP server (<https://github.com/github/github-mcp-server>).*
+
+---
