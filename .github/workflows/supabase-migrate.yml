@@ -2,6 +2,13 @@
 # Automatically applies database migrations when changes are pushed/merged to main.
 # Detects which submodule's migrations changed and applies only those.
 #
+# Two migration types are supported:
+#   *.sql       — standard transactional migrations, applied via `supabase db push`
+#   *.nontx.sql — non-transactional migrations (e.g. CREATE INDEX CONCURRENTLY),
+#                 applied via direct psql after the transactional pass.
+#                 Already-applied versions are detected from schema_migrations to
+#                 ensure idempotency across push and workflow_dispatch runs.
+#
 # Edge Function deployment is handled by a separate dedicated workflow:
 #   .github/workflows/supabase-functions-deploy.yml
 #
@@ -127,6 +134,49 @@ jobs:
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
         run: |
           supabase db push
+
+      - name: Apply non-transactional migrations (.nontx.sql)
+        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          # Ensure psql is available (pre-installed on ubuntu-latest; explicit guard for safety)
+          command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
+
+          # Scan for .nontx.sql files (CONCURRENTLY-only DDL that cannot run inside a transaction)
+          NONTX_COUNT=$(find supabase/migrations -name "*.nontx.sql" 2>/dev/null | wc -l)
+          if [ "$NONTX_COUNT" -eq 0 ]; then
+            echo "No .nontx.sql files found — skipping"
+            exit 0
+          fi
+
+          # Use the direct Supabase DB host (not pooler) — required for CONCURRENTLY DDL
+          DB_HOST="db.${{ vars.SUPABASE_PROJECT_ID }}.supabase.co"
+          DB_URL="postgresql://postgres:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          # Query migration history to find already-applied versions (enables idempotent re-runs)
+          APPLIED=$(psql "$DB_URL" -t -A \
+            -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;" \
+            2>/dev/null || echo "")
+
+          APPLIED_COUNT=0
+          while IFS= read -r -d '' f; do
+            VERSION=$(basename "$f" .nontx.sql)
+            if echo "$APPLIED" | grep -qxF "$VERSION"; then
+              echo "→ Already applied: $VERSION — skipping"
+              continue
+            fi
+            echo "→ Applying non-transactional migration: $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+            psql "$DB_URL" \
+              -c "INSERT INTO supabase_migrations.schema_migrations(version) VALUES ('${VERSION}') ON CONFLICT DO NOTHING;"
+            echo "✓ Applied and recorded: $VERSION"
+            APPLIED_COUNT=$((APPLIED_COUNT + 1))
+          done < <(find supabase/migrations -name "*.nontx.sql" -print0 | sort -z)
+
+          echo "Done: ${APPLIED_COUNT} non-transactional migration(s) applied."
 
       - name: Verify migration status
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
