@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.10W
+**Version:** 5.11W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-13 (claude-loop ROADMAP rotation — capture 2026-05-12 PERF Fontshare async-load + 2026-05-13 ship-cycle-2 work: zustand peer-dep hotfix, CRM7 placement FK selectors, R80.3 DRY ownership + Payday Super public holidays, Braden axe+LHCI + hooks remediation, Conduit schema doctrine, drift-scan CI rollout)
+**Last Updated:** 2026-05-15 (claude-loop DOCS rotation — capture 2026-05-14/15 rotation cycle: TYPES (R80.3 dormant-lint) → A11Y (braden decorative icons) → DB (BSU ping SECURITY INVOKER) → EDGE (crm7 rate-limiter DoS hardening) → TESTS (conduit auth + RBAC +76 tests) → DOCS (AGENTS.md §11 tooling patterns); plus operator baseline grant-audit inventory)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -459,6 +459,40 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
 
+## Recently Completed (as of 2026-05-15 — claude-loop rotation cycle TYPES → A11Y → DB → EDGE → TESTS → DOCS + operator baseline-grant audit)
+
+> Captures work landed 2026-05-14 → 2026-05-15, not yet in the 2026-05-13 section below. Five claude-loop rotations + one operator audit deliverable + one tooling-doctrine bank.
+
+**TYPES — R80.3 dormant `bsuite/no-text-white` sweep (2026-05-14)**
+
+- ✅ **24 dormant ESLint warnings closed** ([R80.3#249](https://github.com/GaryOcean428/R80.3/pull/249), tracker [bsuite#993](https://github.com/GaryOcean428/bsuite/issues/993)) — claude-loop TYPES rotation. Every site was a coloured-background fill (`bg-blue-{500,600}`, `bg-green-500`, `bg-accent`, `bg-linear-to-{r,br}` gradients, `getYearColor()` apprentice badges) — the exact fill-context exception the rule's docstring carves out. 24 single-line `eslint-disable-next-line bsuite/no-text-white -- fill-context:` comments across 14 files plus one className-template collapse in `OnboardingWizard.tsx`. Sibling audit confirmed conduit + BSU + braden CLEAN; throughput carries 92 dormant `@typescript-eslint/no-explicit-any` warnings (queued).
+
+**A11Y — Braden decorative-icon `aria-hidden` sweep (2026-05-15)**
+
+- ✅ **11 WCAG 1.3.1 / 4.1.2 gaps closed on `www.braden.com.au` homepage** ([braden#278](https://github.com/GaryOcean428/braden/pull/278), tracker [bsuite#1002](https://github.com/GaryOcean428/bsuite/issues/1002)) — claude-loop A11Y rotation. Direct completion of bsuite#981 (heroicons → lucide-react swap of 4 contact-flow files). The predecessor PR shipped `aria-hidden="true"` on every decorative icon in `TrustSignals.tsx` + `EnhancedContactForm.tsx` but missed `Contact.tsx` (3 icons: MapPin/Phone/Mail) + `Services.tsx` (8 icons: ShieldCheck/FileText/Lightbulb/Monitor/Rocket/Cog/Briefcase/Globe). Pattern worth banking: when porting decorative-icon usage between libraries, add the a11y attribute at the same time — the icon-import diff is the natural seam.
+
+**DB — BSU `public.ping()` SECURITY INVOKER conversion (2026-05-15)**
+
+- ✅ **1 of 17 Supabase advisor 0029 (`authenticated_security_definer_function_executable`) WARN entries cleared** ([BSU#443](https://github.com/GaryOcean428/business-suite-unified/pull/443), tracker [bsuite#1004](https://github.com/GaryOcean428/bsuite/issues/1004)) — claude-loop DB rotation. `public.ping()` reads only `NOW()` + `current_setting('server_version')`; neither requires elevation, so SECURITY DEFINER served no purpose. Converted to `SECURITY INVOKER SET search_path = 'public', 'pg_temp'`. Other 16 lint-0029 functions have legitimate DEFINER justifications (admin ops, audit logs, cross-tenant lookups, or internal `is_platform_admin()` guards as defence-in-depth) — classified inline in tracker. Migration applied to `tuybltdrdefjblnplpqo` via Supabase MCP 2026-05-15T03:40Z; file-PR is source-of-truth catch-up. `check_auth()` deferred one cycle (multi-app callers, want bake-in).
+
+**EDGE — crm7 rate-limiter shared-bucket DoS-on-others hardening (2026-05-15)**
+
+- ✅ **CWE-770 / OWASP API4 (Unrestricted Resource Consumption) variant closed** ([crm7#794](https://github.com/GaryOcean428/crm7/pull/794), tracker [bsuite#1006](https://github.com/GaryOcean428/bsuite/issues/1006)) — claude-loop EDGE rotation. Pre-fix, when both `x-forwarded-for` and `cf-connecting-ip` were absent, every such request collided into a single bucket keyed by the literal string `"unknown"` — a noisy internal `supabase.functions.invoke` call (or a header-stripping attacker) could saturate the 30/min quota for ALL other unidentified callers across the 8 CRM7 edge functions sharing `_shared/rate-limiter.ts` (`lead-capture`, `document-encryption`, `generate-document`, `ram-token-exchange`, `store-ram-credential`, `xero-invoice-submit`, `xero-token-exchange`, `xero-token-exchange-cc`). Fix: per-request bucket key (`unknown:<crypto.randomUUID()>`); also `.trim()`'d `cf-connecting-ip` for header-whitespace tolerance. Memory bounded by existing 100-entries-per-request prune cap. Test contract: prior 11th assertion pinned the buggy shared-bucket behaviour (drain 30 → 31st denied); new assertion drains `RATE_LIMIT_MAX * 3 = 90` headerless requests and verifies all allowed. **BSU sibling has byte-identical bug** at `business-suite-unified/supabase/functions/_shared/rate-limiter.ts` — queued for next EDGE rotation.
+
+**TESTS — conduit auth-helper + RBAC matrix coverage (2026-05-15)**
+
+- ✅ **76 new vitest cases across 3 previously-zero-coverage files** ([conduit#262](https://github.com/GaryOcean428/conduit/pull/262), tracker [bsuite#1009](https://github.com/GaryOcean428/bsuite/issues/1009)) — claude-loop TESTS rotation. `src/lib/auth/return-path.ts` (27 LOC → 26 tests covering OWASP A01 open-redirect: protocol-relative `//`, backslash `/\`, `http://`, `https://`, `javascript:`, `data:`, embedded `://`, null/undefined/empty + `buildLocalLoginPath` encoding); `src/lib/auth/bs-oauth-cookie.ts` (29 LOC → 16 tests on cookie hygiene Path/Max-Age=3300/SameSite=Lax/Secure-on-https-only, encoded token, empty-token no-op, SSR safety, end-to-end document.cookie round-trip); `src/lib/permissionUtils.ts` (105 LOC → 34 tests on 6-role × 38-permission RBAC matrix — admin-all-perms, recruiter scope, hiring_manager limited-manage, employer read-only-no-AI, candidate self-service, viewer no-export, plus `checkAny/All/single` contracts). Post-PR conduit test suite: **36 files / 661 tests** (was 33 / 585).
+
+**DOCS — operator baseline grant-audit inventory (2026-05-15)**
+
+- ✅ **`supabase/migrations/baseline/RECONCILIATION-INVENTORY.md` added** ([bsuite#1011](https://github.com/GaryOcean428/bsuite/pull/1011), operator-authored, closes [bsuite#964](https://github.com/GaryOcean428/bsuite/issues/964) item 3) — production grant-audit of `tuybltdrdefjblnplpqo` performed 2026-05-13T12:30Z. Verdict: COMPLIANT for Oct 30 2026 Supabase Data API explicit-grant enforcement. All client-facing tables have explicit grants (legacy default-auto-grant behaviour); 2 service-role-only tables (`mapd_webhook_queue`, `mapd_webhook_subscriptions`) intentionally restricted. README workflow status updated: Issue 1 (PAT for private submodule clone) FIXED via [#989](https://github.com/GaryOcean428/bsuite/pull/989); Issue 2 (`.nontx.sql` CONCURRENTLY migrations) FIXED via [#1008](https://github.com/GaryOcean428/bsuite/pull/1008). Submodule history divergence still tracked at [bsuite#961](https://github.com/GaryOcean428/bsuite/issues/961) (operator action).
+
+**DOCS — AGENTS.md §11 Multi-File Refactor Tooling Patterns (2026-05-15)**
+
+- ✅ **Frozen Fact `FF-TOOLING-PATTERNS-20260515` adopted** ([bsuite#1012](https://github.com/GaryOcean428/bsuite/issues/1012)) — claude-loop DOCS rotation. Banks two patterns proven across 7 rotations: **Pattern A** GitHub Contents API multi-file source-only refactor (no local clone — use for single-file-scope attribute adds, import swaps, eslint-disable annotations; precedents bsuite#981 / #983 / #990 / #1003 / #1010) and **Pattern B** local-clone-in-`/tmp` + pnpm install + verify-then-push (use for type-system changes, dep bumps, ESLint cross-file context, test additions; precedents bsuite#993 / #1006 / #1009). Decision table + anti-patterns + cross-references to §1 / §9 / §10 + the pnpm Lockfile Generation rule. Closes 4-rotation §9.3 carry-forward from bsuite#993 / #1002 / #1006 / #1009.
+
+---
+
 ## Recently Completed (as of 2026-05-13 — ship-cycle-2 + claude-loop PERF + cross-app stability)
 
 > Captures work landed 2026-05-12 (post-v5.09W bump at 06:59Z) → 2026-05-13. For the 2026-05-11/12 rotation cycle see the section below; for the prior 2026-05-09/10 cycle see the 2026-05-10 section.
@@ -884,6 +918,11 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-15 v5.11W** — claude-loop DOCS rotation ([bsuite#1012](https://github.com/GaryOcean428/bsuite/issues/1012)):
+  - Added "Recently Completed (as of 2026-05-15)" section above the prior 2026-05-13 block. Captures: (a) claude-loop TYPES rotation ([R80.3#249](https://github.com/GaryOcean428/R80.3/pull/249) — 24 dormant `bsuite/no-text-white` warnings closed across 14 files); (b) claude-loop A11Y rotation ([braden#278](https://github.com/GaryOcean428/braden/pull/278) — 11 WCAG 1.3.1/4.1.2 gaps on www.braden.com.au homepage); (c) claude-loop DB rotation ([BSU#443](https://github.com/GaryOcean428/business-suite-unified/pull/443) — `public.ping()` SECURITY INVOKER, advisor 0029 sweep); (d) claude-loop EDGE rotation ([crm7#794](https://github.com/GaryOcean428/crm7/pull/794) — CWE-770 shared-bucket DoS-on-others variant closed in `_shared/rate-limiter.ts`); (e) claude-loop TESTS rotation ([conduit#262](https://github.com/GaryOcean428/conduit/pull/262) — 76 new vitest cases on return-path / bs-oauth-cookie / permissionUtils, suite 585 → 661); (f) operator baseline grant-audit inventory ([bsuite#1011](https://github.com/GaryOcean428/bsuite/pull/1011) — closes bsuite#964 item 3, Oct 30 2026 enforcement readiness verdict); (g) AGENTS.md §11 Multi-File Refactor Tooling Patterns (`FF-TOOLING-PATTERNS-20260515` — banks Pattern A Contents-API + Pattern B `/tmp` pnpm-verify; closes 4-rotation §9.3 carry-forward).
+  - AGENTS.md: appended §11 with primary-source citations to pnpm CLI docs + GitHub REST API Contents reference + GitHub MCP server.
+  - **§9.3 self-report:** DOCS rotation used Pattern A (no `/tmp` clone needed — bsuite parent edits are markdown-only, no `pnpm typecheck/lint/test` surface). Verification surface: Vercel + CI gitleaks + drift-scan + DOM Layout Invariants must pass post-PR — explicitly named in the PR's §Evidence block.
+  - Last Updated line bumped.
 - **2026-05-13 v5.10W** — claude-loop ROADMAP rotation ([bsuite#906](https://github.com/GaryOcean428/bsuite/issues/906)):
   - Added "Recently Completed (as of 2026-05-13)" section above the prior 2026-05-12 block. Captures: (a) claude-loop PERF rotation ([bsuite#853](https://github.com/GaryOcean428/bsuite/issues/853) → [#856](https://github.com/GaryOcean428/bsuite/pull/856)) — Fontshare async-CSS preload pattern landed AFTER the v5.09W bump and was not in the 2026-05-12 section; (b) Zustand v5 `use-sync-external-store` peer-dep hotfix sweep across R80.3 + crm7 + conduit; (c) CRM7 placements Phase 2-3 FK selectors + charge-calc UI shell (feature-flagged); (d) R80.3 DRY one-shot ownership fix (R80 reader-only on `apprentices`; owns new `r80_apprentice_calc_state`); (e) R80.3 Payday Super public-holiday awareness (P1.J slice 1/3, regulatory effective 1 July 2026); (f) Braden axe-core + Lighthouse CI gates + React hooks zero-warnings; (g) Conduit BSU CRM-domain migration doctrine (BL-011c); (h) 9-signal drift-scan CI rolled out to all 5 D2C apps; (i) rule-file alignment to AUTH_CANONICAL + canonical AI model across R80/conduit/braden; (j) ship-cycle-2 sync PRs (informational).
   - **§9.3 self-report:** ROADMAP rotation completed via GitHub MCP tools only (no local shell/clone in this run — full-flow via `mcp__github__*` + `mcp__Vercel__*` + `mcp__Supabase__*`). Roadmap correctness preserved; implementation of the highest-priority unimplemented roadmap item (per ROADMAP playbook) deferred to a focused next rotation with build tooling available. This is named as a follow-up rather than skipped silently per zero-defer policy.
