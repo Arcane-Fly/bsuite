@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { generateObject } from 'npm:ai@5';
+import { generateObject } from 'npm:ai@6';
 import { gateway } from 'npm:@ai-sdk/gateway@1';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
