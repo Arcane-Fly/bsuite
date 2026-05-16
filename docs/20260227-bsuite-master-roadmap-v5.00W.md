@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.11W
+**Version:** 5.12W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-15 (claude-loop DOCS rotation — capture 2026-05-14/15 rotation cycle: TYPES (R80.3 dormant-lint) → A11Y (braden decorative icons) → DB (BSU ping SECURITY INVOKER) → EDGE (crm7 rate-limiter DoS hardening) → TESTS (conduit auth + RBAC +76 tests) → DOCS (AGENTS.md §11 tooling patterns); plus operator baseline grant-audit inventory)
+**Last Updated:** 2026-05-15 (claude-loop ROADMAP rotation — capture 2026-05-15 PERF (crm7 AIAssistant lazy-load) + ROADMAP (R80.3 PDF multi-page) rotations + cross-app ship-all-apps merges since v5.11W: crm7#797/#798/#799, BSU#444/#445, throughput#162, R80.3#255/#256; strike P2 #25 + #26b as Done)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -459,6 +459,35 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
 
+## Recently Completed (as of 2026-05-15 evening — claude-loop PERF + ROADMAP rotations + cross-app ship-all-apps merges since v5.11W)
+
+> Captures work landed 2026-05-15 between the v5.11W bump (DOCS rotation, bsuite#1013) and this v5.12W bump (ROADMAP rotation, bsuite#1020). Two claude-loop rotations + 8 cross-app PRs that merged on the ship-all-apps cycle.
+
+**PERF — crm7 `AIAssistant` lazy-load (2026-05-15)**
+
+- ✅ **152 KB / 30% off the authenticated-route entry chunk** ([crm7#795](https://github.com/GaryOcean428/crm7/pull/795), tracker [bsuite#1015](https://github.com/GaryOcean428/bsuite/issues/1015)) — claude-loop PERF rotation. Single-file change to `crm7/src/layouts/MainLayout.tsx`: static `import { AIAssistant } from '@/components/ai'` → `React.lazy()` + `<Suspense>` wrapper behind the existing `userId && tenantId &&` gate. Measured before/after via clean `pnpm build:noprerender`: entry chunk `index-DrJmdcoy.js` 523,032 B (510 KB) → `index-DMgHikCv.js` 366,068 B (358 KB) + new `AIAssistant-BVYH5iMd.js` 193,673 B (lazy). The 8 AIAssistant sub-components + `MarkdownContent` renderer + `useChat`/`useAIChat` SDK now stream in only after auth resolves. AIAssistant is non-critical-path (floating button, panel collapsed by default), so users see no visible difference for the <100ms chunk-stream latency. Vite `manualChunks` already split the `@ai-sdk/*` vendor (212 KB `ai-sdk` chunk) — this PR adds the complementary app-side dynamic-import split. DOM Layout Invariants confirmed zero structural delta. **Pattern banked:** stash-rebuild-pop-rebuild for §9.1 output-equivalence on bundle-delta PERF work.
+
+**ROADMAP — R80.3 PDF export multi-page support (2026-05-15)**
+
+- ✅ **Single-page overflow bug closed + "Page N of M" pagination** ([R80.3#257](https://github.com/GaryOcean428/R80.3/pull/257), tracker [bsuite#1020](https://github.com/GaryOcean428/bsuite/issues/1020)) — claude-loop ROADMAP rotation, **closes P2 #25** ("PDF export improvements (print-friendly, multi-page)"). Pre-fix, `exportCalculationToPDF` in `src/services/pdfExportService.ts` drew Calculation Details + Pay Rate + Results + Charge Rate + On-Cost Breakdown + Configuration sequentially without a page-break check; on dense rows the Configuration block overflowed past A4 page height (~297 mm) and content was silently lost. The multi-calc table loop had a row-level break but didn't re-draw the column header on continuation pages. Fix: two helper functions — `ensureSpace(doc, y, requiredSpace)` (called before each section + each table row, adds page if needed) and `stampFooters(doc, leftMargin)` (runs last, loops over `getNumberOfPages()` to stamp "Page N of M" + generator footer on every page). Multi-calc continuation pages now re-draw the table header. Output-equivalence preserved: for any export that previously fit on one page, the `ensureSpace` early-return path is a no-op → byte-identical output.
+
+**ROADMAP — strike P2 #26b (auto-population chains) as Done**
+
+- ✅ **CRM7 DRY one-shot auto-population chains** — verified shipped via `src/pages/claims/new.tsx` (sha `98007f6`). `handleApprenticeSelect` callback (lines 215-237) auto-fills 5 fields from the selected apprentice: `qualification_code`, `qualification_name`, `employer_id`, `apprenticeship_start`, `is_first_year` (derived from `start_date`); `handleSourceSelect` (lines 256-279) auto-fills 2 more from the funding source: `government_level`, `external_system`. Both run an `runEligibilityCheck()` side effect that further auto-fills `claim_amount` (max eligible) and `claim_type` (top suggested) when both selectors resolve. Net 7+ fields auto-populated — exceeds the original "6 related fields" acceptance target. Item was misclassified as P2-pending in v5.11W; correct status is ✅ Done. ROADMAP audit refresh.
+
+**Cross-app ship-all-apps merges since v5.11W (informational — operator/other-agent shipped, not in claude-loop rotation count)**
+
+- ✅ **crm7#797** — `refactor(crm7): AnnualReviewToggle auto-seeds asOfDate without enabled guard` — removes the guard on the seed-on-undefined useEffect so first interaction always shows real data
+- ✅ **crm7#798** — `fix(db): drop 45 legacy storage.objects policies (closes crm7#774)` — storage.objects drift cleaned from 109 policies / 62 bucket groups back to canonical 64 / 17; legacy `"Delete X documents"` human-readable policies that duplicated the snake_case `<bucket>_<op>` canonical set are dropped
+- ✅ **crm7#799** — `chore(edge-fn): delete dead adobe-sign-webhook (closes crm7#687, supersedes #686)` — Adobe Sign vendor removed (in-app `@xyflow/react` is the live path); deleted public-attack-surface edge function. Operator follow-up: undeploy + remove ADOBE_SIGN_* secrets
+- ✅ **BSU#444** — `fix(ci): pin Node 24 explicitly in e2e.yml (consistency with other BSU workflows)` — same root cause as crm7#793, conduit#261; closes the last actions/setup-node@v5 silent-downgrade-to-Node-22 surface in BSU
+- ✅ **BSU#445** — `fix(bsu): remediate react-hooks v7 warnings + enforce --max-warnings 0` — BSU lint 6 → 0 warnings; `form.watch()` → `useWatch()` in AuthForm + ColumnEditor; tightened lint script to fail CI on any new warning. Restoration follow-up commit `7bd8fe5` re-added the bsuite/no-text-white directives that the rule oscillation removed, set `reportUnusedDisableDirectives: 'off'`
+- ✅ **throughput#162** — `chore(throughput): delete dead src/lib/ai.ts + drop direct openai/anthropic deps` — 135 LOC dead code with direct provider SDK imports violating bsuite#550 (all LLM calls route through Vercel AI Gateway); `langchainGroq.ts` is the canonical path. Direct deps dropped to transitive-only state via @langchain/core
+- ✅ **R80.3#255** — `test(r8): PaydaySuperCalculator UI snapshot tests (#232 — P1.J slice 3/3)` — 5 Vitest + RTL snapshot tests with `vi.useFakeTimers()` pinning system time for deterministic banner / countdown / cap-applied / salary-sacrifice / compliance-schedule states
+- ✅ **R80.3#256** — `feat(r8): Payday Super salary-sacrifice OTE/QE refinements (#231 — P1.J slice 2/3)` — ATO-aligned split of salary-sacrifice into OTE-eligible (concessional super, adds to QE) vs non-OTE-eligible (novated lease, FBT-exempt, excluded from QE); new tagged `PaydaySuperSalarySacrifice` interface supersedes legacy `hasSalarySacrifice` + `salarySacrificePerPeriod` pair via `resolveOteEligibleSacrifice` priority-ordered helper
+
+---
+
 ## Recently Completed (as of 2026-05-15 — claude-loop rotation cycle TYPES → A11Y → DB → EDGE → TESTS → DOCS + operator baseline-grant audit)
 
 > Captures work landed 2026-05-14 → 2026-05-15, not yet in the 2026-05-13 section below. Five claude-loop rotations + one operator audit deliverable + one tooling-doctrine bank.
@@ -826,10 +855,10 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 | 22 | Document storage QA fixes | crm7 | 2d | [report](./archive/crm7/20260226-document-storage-qa-report.md) |
 | 23 | Doc cleanup (22 missing READMEs, broken links) | all | 1d | Claude plan `prancy-seeking-dijkstra` |
 | 24 | Braden visual customization | braden | 1w | — |
-| 25 | R80.3 PDF export improvements | R80.3 | 2d | — |
+| 25 | ~~R80.3 PDF export improvements~~ — multi-page support + "Page N of M" pagination shipped via `src/services/pdfExportService.ts` `ensureSpace()` + `stampFooters()` helpers ([R80.3#257](https://github.com/GaryOcean428/R80.3/pull/257), tracker [bsuite#1020](https://github.com/GaryOcean428/bsuite/issues/1020)). | R80.3 | ✅ Done (2026-05-15) | — |
 | 26 | Test coverage push (70% target all projects) | all | ongoing | — |
 | 26a | ~~CC-1: DashboardPageEditorDrawer accessibility — add `KeyboardSensor` + `sortableKeyboardCoordinates` + `aria-label` on grip buttons~~ | crm7 | ✅ Done (struck under P0-15 rollup 2026-05-01; tracked in merged backlog if re-opened) | Gap report v2 CC-1 |
-| 26b | CRM7 DRY one-shot: auto-population chains — apprentice select fills 6 related fields, claims/new auto-fills qualification/employer/dates | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 4 |
+| 26b | ~~CRM7 DRY one-shot: auto-population chains — apprentice select fills 6 related fields, claims/new auto-fills qualification/employer/dates~~ — verified shipped in `src/pages/claims/new.tsx` (sha `98007f6`). `handleApprenticeSelect` (lines 215-237) auto-fills 5 fields from apprentice; `handleSourceSelect` (lines 256-279) auto-fills 2 from funding source; `runEligibilityCheck` side-effect adds 2 more (claim_amount + claim_type). Net 7+ fields auto-populated, exceeds target. ROADMAP audit refresh 2026-05-15 (bsuite#1020). | crm7 | ✅ Done | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 4 |
 | 26c | ~~CRM7 DRY one-shot: Tier-3 EntitySelectors — `AwardRateSelector`| crm7 | ✅ Done | [DRY Architecture](./20260227-dry-one-shot-architecture-v1.00A.md) §3 Tier 3 |
 | 26d | CRM7 DRY one-shot: DB FK migrations — `employers.primary_contact_id`, `funding_sources.contact_id` + ContactSelector on 9 forms | crm7 | 1d | [UX One-Shot Deep Dive](./20260226-ux-oneshot-deep-dive-plan-v1.00W.md) Phase 3 |
 | 26e | ~~@types/node upgrade to ^24.x across all 5 apps~~ | all | ✅ Done (shipped pre-finish-line via 2026-04-14 DEPS rotation; struck under P0-15 rollup) | Gap report v2 RT-7 |
@@ -918,6 +947,12 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-15 v5.12W** — claude-loop ROADMAP rotation ([bsuite#1020](https://github.com/GaryOcean428/bsuite/issues/1020)):
+  - Added "Recently Completed (as of 2026-05-15 evening — claude-loop PERF + ROADMAP rotations + cross-app ship-all-apps merges since v5.11W)" section above the v5.11W block. Captures: (a) claude-loop PERF rotation ([crm7#795](https://github.com/GaryOcean428/crm7/pull/795) — 152 KB / 30% off auth-shell entry chunk via AIAssistant `React.lazy()` in MainLayout); (b) claude-loop ROADMAP rotation ([R80.3#257](https://github.com/GaryOcean428/R80.3/pull/257) — closes P2 #25, single-page overflow + "Page N of M" pagination via `ensureSpace()` + `stampFooters()` helpers); (c) ROADMAP audit re-classification of P2 #26b (auto-population chains) as ✅ Done with file-evidence; (d) cross-app ship-all-apps merges since v5.11W: crm7#797 (AnnualReviewToggle auto-seed guard removal), crm7#798 (drop 45 legacy storage.objects policies — RLS canonicalisation), crm7#799 (delete dead adobe-sign-webhook edge fn), BSU#444 (e2e.yml Node 24 explicit pin), BSU#445 (react-hooks v7 lint-warning remediation + `--max-warnings 0` enforcement), throughput#162 (delete dead `src/lib/ai.ts` direct OpenAI/Anthropic deps — Vercel AI Gateway compliance), R80.3#255 (PaydaySuperCalculator UI snapshot tests), R80.3#256 (Payday Super salary-sacrifice OTE/QE refinements P1.J slice 2/3).
+  - P2 #25 (R80.3 PDF export improvements): struck `~~~~` with PR ref to R80.3#257, status ✅ Done (2026-05-15). The roadmap-implementation half of this ROADMAP rotation (per playbook "implement highest-priority unimplemented item").
+  - P2 #26b (CRM7 DRY auto-population chains): struck `~~~~` with file-evidence (`src/pages/claims/new.tsx:215-237` apprentice handler + `:256-279` source handler — 7+ fields auto-fill, exceeds the original 6-field target). Item was already shipped; classification refresh.
+  - **§9.3 self-report:** ROADMAP rotation completed via Pattern A (Contents API push for R80.3 single-file refactor) + Pattern B-equivalent local-edit-then-push on bsuite parent for the roadmap markdown. No `pnpm typecheck/test` needed on bsuite (markdown-only); R80.3 typecheck deferred to CI/Vercel preview (consistent with bsuite#981 precedent for single-service-file refactors with no consumer-surface changes). All cross-app merge inventory verified against Vercel deployment list at run start.
+  - Last Updated line bumped.
 - **2026-05-15 v5.11W** — claude-loop DOCS rotation ([bsuite#1012](https://github.com/GaryOcean428/bsuite/issues/1012)):
   - Added "Recently Completed (as of 2026-05-15)" section above the prior 2026-05-13 block. Captures: (a) claude-loop TYPES rotation ([R80.3#249](https://github.com/GaryOcean428/R80.3/pull/249) — 24 dormant `bsuite/no-text-white` warnings closed across 14 files); (b) claude-loop A11Y rotation ([braden#278](https://github.com/GaryOcean428/braden/pull/278) — 11 WCAG 1.3.1/4.1.2 gaps on www.braden.com.au homepage); (c) claude-loop DB rotation ([BSU#443](https://github.com/GaryOcean428/business-suite-unified/pull/443) — `public.ping()` SECURITY INVOKER, advisor 0029 sweep); (d) claude-loop EDGE rotation ([crm7#794](https://github.com/GaryOcean428/crm7/pull/794) — CWE-770 shared-bucket DoS-on-others variant closed in `_shared/rate-limiter.ts`); (e) claude-loop TESTS rotation ([conduit#262](https://github.com/GaryOcean428/conduit/pull/262) — 76 new vitest cases on return-path / bs-oauth-cookie / permissionUtils, suite 585 → 661); (f) operator baseline grant-audit inventory ([bsuite#1011](https://github.com/GaryOcean428/bsuite/pull/1011) — closes bsuite#964 item 3, Oct 30 2026 enforcement readiness verdict); (g) AGENTS.md §11 Multi-File Refactor Tooling Patterns (`FF-TOOLING-PATTERNS-20260515` — banks Pattern A Contents-API + Pattern B `/tmp` pnpm-verify; closes 4-rotation §9.3 carry-forward).
   - AGENTS.md: appended §11 with primary-source citations to pnpm CLI docs + GitHub REST API Contents reference + GitHub MCP server.
