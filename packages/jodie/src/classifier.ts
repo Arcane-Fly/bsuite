@@ -9,7 +9,7 @@ import {
 } from './taxonomy.js';
 
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.7;
-export const DEFAULT_MODEL_ID = 'anthropic/claude-haiku-4';
+export const DEFAULT_MODEL_ID = 'anthropic/claude-haiku-4.5';
 const MAX_ATTEMPTS = 2;
 const MAX_BODY_CHARS = 4000;
 
