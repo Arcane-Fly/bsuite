@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.10W
+**Version:** 5.11W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-13 (claude-loop ROADMAP rotation — capture 2026-05-12 PERF Fontshare async-load + 2026-05-13 ship-cycle-2 work: zustand peer-dep hotfix, CRM7 placement FK selectors, R80.3 DRY ownership + Payday Super public holidays, Braden axe+LHCI + hooks remediation, Conduit schema doctrine, drift-scan CI rollout)
+**Last Updated:** 2026-05-17 (claude-loop ROADMAP rotation — P1 SECURITY: harden `public.get_user_analytics_summary` against IDOR / cross-user data leak; flagged 5x without remediation across bsuite#1049/1052/1057/1061/1066, applied via Supabase MCP + throughput source migration this rotation)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -459,6 +459,59 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
 
+## Recently Completed (as of 2026-05-17 — claude-loop ROADMAP rotation: P1 SECURITY IDOR remediation)
+
+> Captures work landed 2026-05-14 → 2026-05-17. Sweeps the 2026-05-13/14 ship-cycle-3 + ship-cycle-3-final dev→main promotions and the 4-day claude-loop rotation chain (DEPS → FEATURE → UI → UX → WL → TYPES → A11Y → DB → EDGE → TESTS → DOCS → PERF) that culminated in this ROADMAP rotation. For the prior 2026-05-12/13 cycle see the section below.
+
+**P1 SECURITY — `get_user_analytics_summary` IDOR remediation (2026-05-17)**
+
+- ✅ **`public.get_user_analytics_summary(p_user_id uuid)` hardened against cross-user data leak** (Supabase MCP apply_migration 2026-05-17T~13:50Z; source migration: throughput PR pending merge per handoff bsuite#1070; tracker bsuite#1069) — pre-fix the function was `SECURITY DEFINER` with NO `auth.uid()` check on `p_user_id`. Any authenticated caller could pass any other user's UUID and read their ideas count, status breakdown, view/edit counts, average launch time, monthly AI usage, and 7-day activity count. This was the canonical **HIGH-PRIORITY P1 SECURITY** carry-forward flagged 5x without remediation across the prior rotation chain (bsuite#1049 DB key finding #1 → bsuite#1052 EDGE carry-forward → bsuite#1057 TESTS carry-forward → bsuite#1061 DOCS carry-forward → bsuite#1066 PERF carry-forward "must be first thing for next DB rotation"). This ROADMAP rotation actioned it. Fix: (1) `SECURITY INVOKER` — defense-in-depth via per-table RLS on the 4 read sources (`ideas`, `idea_analytics`, `ai_usage_metrics`, `user_activity_logs`, all RLS-enabled per pre-fix audit); (2) explicit `auth.uid()` guard — `RAISE` on missing auth OR cross-user with no platform-admin override; (3) platform-admin override via existing `public.is_platform_admin(uid)` helper for support/dashboard use cases; (4) `search_path` tightened from `'public'` to `'public, pg_temp'` (canonical hardened pattern matching `ping`/`branding_json_for_tenant`/`check_auth` sweeps — BSU#443/447/449). JSON-construction body byte-identical to pre-fix. Caller compatibility: zero observed callers in throughput/business-suite-unified/crm7/conduit frontends pass any user_id other than the authenticated user's own (grep verified 2026-05-17T~13:35Z, returned 0 hits). The new RAISE on cross-user is a security improvement, not a behaviour regression.
+
+**Other open carry-forwards re-listed for next rotations (un-remediated this run)**
+
+- 🔲 **`public.list_public_tables()` SECURITY INVOKER conversion** — bsuite#1049 finding #2; safe single-LOC conversion, queued for next **DB** rotation
+- 🔲 **`public.branding_json_for_platform()` advisor audit** — bsuite#1040 §9.3 #2 / bsuite#1041 §9.3 #6; queued for next **DB** rotation
+- 🔲 **Conduit `supabase/functions/_shared/` audit** — bsuite#1052 §9.3 #2; queued for next **EDGE** rotation
+- 🔲 **`supabase/functions/_shared/**`-only path-filter CI optimisation** — bsuite#1052 §9.3 #4; queued for a future CI/INFRA rotation
+- 🔲 **Lint 0029 sweep — 13 remaining DEFINER functions** — classified in bsuite#1004; intentional DEFINER vs convertible candidates; queued for future DB rotations
+- 🔲 **Sentry release tagging via `@sentry/vite-plugin`** — bsuite#1030 §9.3 #1; requires operator env-var action (`SENTRY_AUTH_TOKEN`)
+- 🔲 **AGENTS.md sibling-submodule pointers** — bsuite#1012 §9.3 #1 / bsuite#1062 §9.3 #2; queued for next **DOCS** rotation
+- 🔲 **Dashboard JSON refresh** — bsuite#1020 §9.3 #1; queued for next **DOCS** rotation
+- 🔲 **`useTenantBranding` legacy-shim coverage** — bsuite#1039 §9.3 #7 / bsuite#1041 §9.3 #4 / bsuite#1052 / bsuite#1057; queued for next **TESTS** rotation
+- 🔲 **Cross-app PDF service audit** — bsuite#1020 §9.3 #3; apply §11.1 to crm7 `importExportService` + BSU `analyticsService`; queued for next **TESTS** rotation
+- 🔲 **W6 (Branding) Pass 3** — claude-loop wave owner; UNBLOCKED; rotation-override candidate
+- 🔲 **W4 (Permissions Editor) Pass 2** — claude-loop wave owner; BSU#376 status verification needed; rotation-override candidate
+- 🔲 **W2 (Reports CRM7 /reports/*)** — claude-loop wave owner; UNBLOCKED; rotation-override candidate
+- 🔲 **PERF lazy-shell audit slices 3-6** — bsuite#1015 §9.3 #1; conduit (Next.js 16 `dynamic()`), R80.3, braden, throughput
+
+**PERF — auth-shell lazy-load audit series (slices 1 + 2 landed)**
+
+- ✅ **CRM7 `AIAssistant` lazy-loaded from `MainLayout`** ([crm7#795](https://github.com/GaryOcean428/crm7/pull/795), merged 2026-05-15 ship-cycle, sha `6db53abd`) — claude-loop PERF rotation slice 1. Entry chunk 510 KB → 358 KB (**−152 KB / −30%** off the auth-shell entry chunk that every authenticated route inherits). Lazy chunk `AIAssistant-*.js` 189 KB streams in behind the existing `userId && tenantId &&` gate. Method: `React.lazy()` + `<Suspense fallback>` targeting the floating AI panel + its 8 sub-components + MarkdownContent renderer.
+- ✅ **BSU `NotificationCenter` lazy-loaded from `Header`** ([BSU#451](https://github.com/GaryOcean428/business-suite-unified/pull/451) DRAFT, pending ship-all-apps merge per handoff bsuite#1067; tracker bsuite#1066) — claude-loop PERF rotation slice 2. Entry chunk 56.79 KB gz → 53.86 KB gz (**−12,105 B / −6.48% / −2.93 KB gzipped** off the auth-shell entry). Lazy chunks `NotificationCenter-*.js` 6.2 KB + `notificationStore-*.js` 2.7 KB (Supabase Realtime subscription wiring split out). Method: targeted direct-file lazy-import (NOT barrel import — avoids pulling siblings into the chunk); Suspense fallback `<div className="h-9 w-9" />` exactly matches the bell button's 36×36 footprint to eliminate CLS risk.
+
+**DOCS — AGENTS.md §11 Sandbox Pattern Library (2026-05-17)**
+
+- ✅ **AGENTS.md §11 added — Sandbox Pattern Library** ([bsuite#1062](https://github.com/GaryOcean428/bsuite/pull/1062), tracker bsuite#1061) — banks the two canonical sandbox-cloning patterns observed across 10+ prior claude-loop rotations: Pattern A (HTTP proxy via `http://local_proxy@127.0.0.1:<port>/...`) and Pattern B (`https://$GITHUB_TOKEN@github.com/...` token-URL clone). Banks the canonical "stash-rebuild-pop-rebuild" PERF measurement recipe (§11.1) used by slice 1 of the lazy-shell audit series and the file-export adapter parity audits. Future claude-loop rotations cite §11 directly instead of re-deriving the procedure.
+
+**TESTS — R80.3 `pdfExportService` API surface pinned (2026-05-17)**
+
+- ✅ **R80.3 `pdfExportService.test.ts` — 17 specs pinning the canonical jsPDF call sequence** ([R80.3#258](https://github.com/GaryOcean428/R80.3/pull/258) pending ship-all-apps merge per handoff bsuite#1056; tracker bsuite#1057) — closes the §9.3 #1 follow-up explicitly named by R80.3#257 ("pdfExportService.test.ts — no test file exists for this service; queue for next TESTS rotation") and the cross-rotation carry-forward re-listed by bsuite#1009 §9.3 #4 / bsuite#1020 §9.3 #7. Pre-PR coverage was zero on a wage-compliance-critical user-facing financial artefact (apprentice charge-rate quotes saved by operators). Pins header layout, section headings, charge-rate highlight band, row-count, optional-section toggles, name sanitisation, filename pattern.
+
+**EDGE / DB / TYPES / WL / A11Y / UX / UI / FEATURE / DEPS / COMPETE — full 12-step rotation chain landed 2026-05-15 → 2026-05-17**
+
+- ✅ EDGE — BSU `_shared/rate-limiter.ts` per-request bucket for unidentified IPs (BSU#450 sibling-port of crm7#794 sha `97ff22d3`, closes high-priority EDGE carry-forward bsuite#1006 §9.3 #1)
+- ✅ DB — BSU `check_auth()` SECURITY INVOKER conversion (BSU#449); BSU `branding_json_for_tenant()` SECURITY INVOKER conversion (BSU#447); CRM7 dropped 45 legacy storage.objects policies (crm7#798, closes crm7#774 R1A/R1B RLS regression — 109→64 policies)
+- ✅ TYPES — BSU AuthForm/ColumnEditor `useWatch` migration + `--max-warnings 0` enforced (BSU#445); BSU useBranding stale comment deletion (BSU#448); R80.3 24 fill-context text-white annotations (R80.3#249); braden adminCrudService untyped-table cast centralised (braden#258)
+- ✅ WL — BSU branding_json_for_tenant SECURITY INVOKER conversion as white-label scope (BSU#447 cross-classified)
+- ✅ A11Y — throughput 2 mobile hamburger aria-expanded+aria-controls (throughput#165); throughput scroll-padding-top WCAG 2.4.11 (throughput#165 follow-up); throughput 12 nav buttons focus-visible WCAG 2.4.7 (throughput#164); braden 11 decorative lucide icons aria-hidden (braden#278); braden 8 service-card icons aria-hidden (braden#278)
+- ✅ UX — conduit per-row inline status quick-actions on /jobs (conduit#265, closes doctrine §3.2 #8 "Inline edit beats navigation" — 6 clicks → 2 clicks for status flips); conduit /jobs "More options" + URL-persisted filters (conduit#260)
+- ✅ UI — braden heroicons → lucide-react across 4 contact components (braden#276, closes bsuite#981); throughput dead `src/lib/ai.ts` + direct provider deps removed (throughput#162, closes bsuite#550 — all LLM calls now route through Vercel AI Gateway)
+- ✅ FEATURE — CRM7 production error reporting wired to Sentry across 3 call sites (crm7#800, closes 4 monitoring TODOs); CRM7 annual review dry-run mode (crm7#792)
+- ✅ DEPS — throughput minimatch@9 ^9.0.7 pin (throughput#163, clears 3 high-severity ReDoS GHSA-3ppc/7r86/23c5); throughput @bsuite/page-builder ^0.2.6 → ^0.2.9 declared-min parity (throughput#160); R80.3 @bsuite/charge-calc ^0.3.0 → ^0.4.0 + fromMapd adapter drop (R80.3#253)
+- ✅ COMPETE — conduit bulk selection + sticky action bar on /candidates (conduit#264, closes Lever/Ashby/Workable/Greenhouse 2025/26 ATS parity gap)
+
+---
+
 ## Recently Completed (as of 2026-05-13 — ship-cycle-2 + claude-loop PERF + cross-app stability)
 
 > Captures work landed 2026-05-12 (post-v5.09W bump at 06:59Z) → 2026-05-13. For the 2026-05-11/12 rotation cycle see the section below; for the prior 2026-05-09/10 cycle see the 2026-05-10 section.
@@ -884,6 +937,13 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-17 v5.11W** — claude-loop ROADMAP rotation ([bsuite#1069](https://github.com/GaryOcean428/bsuite/issues/1069)):
+  - **P1 SECURITY remediation shipped this rotation:** `public.get_user_analytics_summary(p_user_id uuid)` hardened against IDOR / cross-user data leak via Supabase MCP `apply_migration` at 2026-05-17T~13:50Z. Pre-fix was SECURITY DEFINER with no `auth.uid()` check on `p_user_id`; post-fix is SECURITY INVOKER + explicit auth guard + platform-admin override + tightened search_path. Flagged 5x without remediation across bsuite#1049/1052/1057/1061/1066 — this rotation actioned the "highest-priority unimplemented item" per the ROADMAP playbook.
+  - Added new "Recently Completed (as of 2026-05-17)" section above the prior 2026-05-13 block. Captures: (a) the P1 SECURITY remediation as the lead item; (b) 11 named open carry-forwards re-listed with rotation targets; (c) the auth-shell lazy-load audit series (slices 1+2 — crm7#795 −152 KB, BSU#451 −12 KB); (d) AGENTS.md §11 Sandbox Pattern Library bank (bsuite#1062); (e) R80.3 pdfExportService 17-spec coverage (R80.3#258); (f) full 12-step rotation chain landings (EDGE/DB/TYPES/WL/A11Y/UX/UI/FEATURE/DEPS/COMPETE).
+  - Last Updated line bumped to flag the P1 security action as the rotation deliverable.
+  - **§1.2 research_evidence (primary-source):** Supabase MCP `apply_migration` API + `pg_get_functiondef` capture (pre-fix); PostgreSQL `SECURITY DEFINER` vs `INVOKER` docs (https://www.postgresql.org/docs/current/sql-createfunction.html, SECURITY clause); Supabase RLS doctrine via Supabase docs `Database > Row Level Security` (https://supabase.com/docs/guides/database/postgres/row-level-security); OWASP API Security Top 10 2023 — API1:2023 Broken Object Level Authorization (https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/); precedent migrations BSU#443/447/449 (ping/branding_json_for_tenant/check_auth INVOKER conversions); CLAUDE.md §1 Anti-Laziness + §6 Multi-Agent Orchestration carry-forward discipline.
+  - **§9 Evidence:** output-equivalence converged (pre-fix vs post-fix function body byte-identical except security wrapper; verified via `pg_get_functiondef` capture before/after); visual N/A (DDL-only); self-report: 0 callers in any consumer frontend pass cross-user IDs (grep verified across throughput/business-suite-unified/crm7/conduit), so the new RAISE is a security improvement not a behaviour regression; tests run: Supabase MCP `execute_sql` post-apply confirms `security='INVOKER'`, `search_path=['public, pg_temp']`, comment landed verbatim; live verify: query against `pg_proc` returns hardened definition.
+  - **Companion doc trail:** throughput PR pending ship-all-apps merge contains the source migration file `supabase/migrations/20260517073000_harden_get_user_analytics_summary_idor_fix.sql` so the DDL is in the throughput repo's migration ledger (canonical source-of-record per the "applied via MCP, also keep source-of-record in repo" doctrine from prior DB rotations BSU#443/447/449).
 - **2026-05-13 v5.10W** — claude-loop ROADMAP rotation ([bsuite#906](https://github.com/GaryOcean428/bsuite/issues/906)):
   - Added "Recently Completed (as of 2026-05-13)" section above the prior 2026-05-12 block. Captures: (a) claude-loop PERF rotation ([bsuite#853](https://github.com/GaryOcean428/bsuite/issues/853) → [#856](https://github.com/GaryOcean428/bsuite/pull/856)) — Fontshare async-CSS preload pattern landed AFTER the v5.09W bump and was not in the 2026-05-12 section; (b) Zustand v5 `use-sync-external-store` peer-dep hotfix sweep across R80.3 + crm7 + conduit; (c) CRM7 placements Phase 2-3 FK selectors + charge-calc UI shell (feature-flagged); (d) R80.3 DRY one-shot ownership fix (R80 reader-only on `apprentices`; owns new `r80_apprentice_calc_state`); (e) R80.3 Payday Super public-holiday awareness (P1.J slice 1/3, regulatory effective 1 July 2026); (f) Braden axe-core + Lighthouse CI gates + React hooks zero-warnings; (g) Conduit BSU CRM-domain migration doctrine (BL-011c); (h) 9-signal drift-scan CI rolled out to all 5 D2C apps; (i) rule-file alignment to AUTH_CANONICAL + canonical AI model across R80/conduit/braden; (j) ship-cycle-2 sync PRs (informational).
   - **§9.3 self-report:** ROADMAP rotation completed via GitHub MCP tools only (no local shell/clone in this run — full-flow via `mcp__github__*` + `mcp__Vercel__*` + `mcp__Supabase__*`). Roadmap correctness preserved; implementation of the highest-priority unimplemented roadmap item (per ROADMAP playbook) deferred to a focused next rotation with build tooling available. This is named as a follow-up rather than skipped silently per zero-defer policy.
