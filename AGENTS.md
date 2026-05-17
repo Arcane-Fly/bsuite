@@ -1280,3 +1280,87 @@ git push -u origin <topic>/<slug>
 *Frozen Fact: `FF-TOOLING-PATTERNS-20260515`. Adopted 2026-05-15 by claude-loop DOCS rotation (tracker bsuite#1012) after 4 rotations of cross-rotation §9.3 carry-forward (bsuite#993 / #1002 / #1006 / #1009). Primary-source citations: pnpm CLI docs (<https://pnpm.io/cli/install>), GitHub REST API Contents reference (<https://docs.github.com/en/rest/repos/contents>), GitHub MCP server (<https://github.com/github/github-mcp-server>).*
 
 ---
+
+## 12. Reusable Code-Level Patterns (FF-CODE-PATTERNS-20260517)
+
+**Source:** Pattern banking for **code-level** gotchas surfaced by rotations — distinct from §11 which covers sandbox/tooling workflow. Adopted 2026-05-17 as Frozen Fact `FF-CODE-PATTERNS-20260517` after the §11.1 carry-forward chain (bsuite#1052 §9.3 #3 → bsuite#1057 §9.3 #2 → bsuite#1061 / bsuite#1062 DOCS rotation).
+
+### Why this rule exists
+
+§11 covers **how to push a change** (Contents API vs `/tmp` clone). This section covers **what to write inside the change** when a specific code-level construct has a known footgun that costs >15 min to figure out. Bank one entry per surfaced gotcha so the next agent can copy-paste-fix instead of re-discovering empirically.
+
+### Pattern 1 — Vitest mock-factory `new`-forwarding
+
+**Surfaced by:** [R80.3#258](https://github.com/GaryOcean428/R80.3/pull/258) test authoring for `pdfExportService` ([bsuite#1057](https://github.com/GaryOcean428/bsuite/issues/1057) TESTS rotation key finding #1).
+
+**Symptom:** First run of a new vitest spec throws `TypeError: () => {...} is not a constructor` against the line that does `new SomeCtor()` inside the SUT — even though the mock factory looks correct at a glance.
+
+**Why it happens:** When a service uses `new ImportedCtor()` and you mock the module with `vi.mock('imported-pkg', () => ({ default: vi.fn(() => instance) }))`, `vi.fn` forwards the `new` call to the inner implementation. **Arrow functions are not constructible** ([MDN — Arrow function expressions § Cannot be used as constructors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors)), so the arrow you passed to `vi.fn` blows up the moment the SUT invokes `new`. Bites any service that uses a `new`-style constructor on a dynamically-imported package: `jspdf`, `xlsx`, `pdfkit`, `mailgun.js`, `pino`, `mongodb.MongoClient`, `Bull`, etc.
+
+**Wrong:**
+
+```ts
+import { vi } from 'vitest';
+
+vi.mock('jspdf', () => {
+  const doc = { addPage: vi.fn(), text: vi.fn(), save: vi.fn() };
+  return {
+    default: vi.fn(() => doc), // ❌ arrow — `new jsPDF()` throws TypeError
+  };
+});
+```
+
+**Right (function declaration — constructible via `new`):**
+
+```ts
+import { vi } from 'vitest';
+
+vi.mock('jspdf', () => {
+  const doc = {
+    addPage: vi.fn(),
+    text: vi.fn(),
+    save: vi.fn(),
+    getNumberOfPages: vi.fn(() => 1),
+    internal: { pageSize: { getHeight: () => 297, getWidth: () => 210 } },
+  };
+  function JsPDFCtor(this: unknown) {
+    return doc;
+  }
+  return {
+    default: JsPDFCtor, // ✅ real function — `new`-invocable
+  };
+});
+```
+
+If you also need to spy on construction call-counts, wrap the function declaration in `vi.fn(JsPDFCtor)` — that preserves `[[Construct]]` on the underlying function and the spy on the surface (`expect(jsPDFModule.default).toHaveBeenCalledTimes(1)`).
+
+**Determinism gotcha (filename / date-derived fixtures):** services that build a filename from `new Date().toISOString().split('T')[0]` drift across CI timezones unless the test pins time:
+
+```ts
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime('2026-05-17T09:30:00.000Z');
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
+```
+
+Apply to any service that uses `new Date()`, `Date.now()`, or `performance.now()` for filename / cache-key / TTL derivation. Bank the time-pin alongside the constructor mock — the two failure modes compound otherwise.
+
+**Cross-app candidates that import this pattern verbatim:** `crm7/src/services/importExportService.ts` + `business-suite-unified/src/lib/analyticsService.ts` (PDF surfaces named by [bsuite#1020](https://github.com/GaryOcean428/bsuite/issues/1020) §9.3 #3).
+
+### Pattern 2 — Reserved (next pattern)
+
+When the next rotation surfaces a banking-worthy code-level pattern, replace this stub with `### Pattern 2 — <name>` and add `### Pattern 3 — Reserved (next pattern)` below it. Keep the chain alive so future agents always know where to land their entry. Distinct from §11 Pattern A/B — those are sandbox-workflow patterns; this section is code-construct patterns.
+
+### Cross-references
+
+- §9 Self-Validation: code-level patterns banked here are the §9.1 output-equivalence baseline-derivation tools — having the right mock means the baseline is real, not vacuous-PASS.
+- §11 Multi-File Refactor Tooling Patterns: how to ship the change; §12 is what to write inside the change. The two are orthogonal — every PR uses both.
+
+---
+
+*Frozen Fact: `FF-CODE-PATTERNS-20260517`. Adopted 2026-05-17 by claude-loop DOCS rotation (tracker bsuite#1061, PR bsuite#1062). Primary-source citations: MDN Arrow function expressions reference (<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors>), Vitest `vi.fn` API reference (<https://vitest.dev/api/vi.html#vi-fn>), Vitest `vi.useFakeTimers` API reference (<https://vitest.dev/api/vi.html#vi-usefaketimers>), in-repo precedent: R80.3#258 commit `57e6273f` `src/services/__tests__/pdfExportService.test.ts`.*
+
+---
