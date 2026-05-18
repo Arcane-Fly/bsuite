@@ -12,10 +12,10 @@
     "plans_audit_pr": "https://github.com/GaryOcean428/bsuite/pull/525",
     "freeze_landed": "2026-05-06T04:30Z by Claude Code",
     "last_extended": "2026-05-08T20:38:02Z",
-    "extended_by": "claude-code-scheduled cron 20260515",
+    "extended_by": "claude-code-scheduled cron 20260518",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-05-17",
-    "last_refreshed": "2026-05-17T04:35:00Z"
+    "last_refresh": "2026-05-18",
+    "last_refreshed": "2026-05-18T07:00:00Z"
   },
   "summary": {
     "external_total": 30,
@@ -57,10 +57,10 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 137,
+    "open_issues_total": 165,
     "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 51,
+      "bsuite": 79,
       "crm7": 30,
       "business-suite-unified": 27,
       "braden": 5,
