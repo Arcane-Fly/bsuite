@@ -26,3 +26,5 @@ export {
 } from './sla-tracker.js'
 
 export { routeIssueFromQ303Classification, type ClassificationInput, type CronRoutingResult } from './cron-a.js'
+export * from './classifier.js';
+export * from './taxonomy.js';

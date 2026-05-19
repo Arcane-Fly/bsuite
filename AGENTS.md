@@ -1182,3 +1182,185 @@ The dashboard surfaces (live as of 2026-05-08):
 When you add a new top-level section, append it to this list in §10.6 of every agent doc.
 
 ---
+
+## 11. Multi-File Refactor Tooling Patterns (FF-TOOLING-PATTERNS-20260515)
+
+**Source:** Pattern banking across 7 verified rotations (bsuite#981 / #983 / #990 / #993 / #1002 / #1006 / #1009). Adopted 2026-05-15 as Frozen Fact `FF-TOOLING-PATTERNS-20260515`. Complements §9 (Self-Validation), §1 (Anti-Laziness), and the "pnpm Lockfile Generation" rules above.
+
+### Why this rule exists
+
+Multi-file refactors fall into two operational classes that need different tooling — picking the wrong one wastes a CI round or, worse, produces a PR that fails for predictable reasons. This section banks two patterns proven across recent rotations so the next agent doesn't re-derive them. Both patterns operate **outside the bsuite parent tree** to avoid the workspace-lockfile path-poisoning trap documented under "pnpm Lockfile Generation" above.
+
+### Pattern A — GitHub Contents API multi-file source-only refactor
+
+**When to use:**
+
+- Pure source edits where ESLint/tsc don't see broader context per file, e.g. attribute additions (`aria-hidden="true"` decorative-icon sweeps), import-name swaps (`heroicons` → `lucide-react`), `eslint-disable-next-line` annotations, single-line code mods, doc string updates.
+- The build surface is unchanged: no `package.json` edits, no new deps, no test additions, no type signatures touched.
+- CI + Vercel preview are an acceptable verification surface for what you cannot run locally.
+
+**Tooling:**
+
+- Read existing file SHAs + content via `mcp__github__get_file_contents` (or `gh api repos/GaryOcean428/<repo>/contents/<path>?ref=<branch>` if you have shell access).
+- Write atomically via `mcp__github__create_or_update_file` (single file) or `mcp__github__push_files` (multi-file single commit) — see [REST API endpoints for repository contents](https://docs.github.com/en/rest/repos/contents).
+- For new branches, `mcp__github__create_branch` accepts a base SHA from the target branch HEAD.
+- Verification is post-push: Vercel preview Ready + each CI job green is the §9.2 visual-equivalence (UI changes) or §9.1 output-equivalence (build/test diff is empty) target — name them explicitly in the PR's `## Evidence` block.
+
+**Precedents:** bsuite#981 (heroicons → lucide swap across 4 files), bsuite#983 (sibling sweep), bsuite#990 (crm7 anon-view port — 1 migration + 1 consumer edit), bsuite#1003 (braden A11Y aria-hidden — 11 sites / 2 files), bsuite#1010 (conduit TESTS — 3 new files via push_files atomic commit).
+
+**Limits:**
+
+- Cannot run `pnpm typecheck` / `pnpm lint` / `pnpm test` before push — CI is the truth surface.
+- Each `create_or_update_file` call is a separate commit unless wrapped in `push_files`. Prefer `push_files` for atomicity when changing 2+ files.
+- GitHub Contents API enforces a 1MB-per-file size limit; for larger files (rare in source) fall back to Pattern B.
+
+### Pattern B — Local-clone-in-`/tmp` + pnpm install + verify-then-push
+
+**When to use:**
+
+- Changes touch type-system surface (new function signatures, generic parameters, return-type narrowing).
+- Dependency bumps (`package.json` changes need lockfile regen).
+- ESLint sees cross-file context (new exports, removed identifiers, dead-code detection).
+- Tests are added, modified, or need to run to prove behaviour (`pnpm test`).
+- Vercel preview alone is insufficient — local proof the build is green required before the PR opens.
+
+**Tooling:**
+
+```bash
+gh repo clone GaryOcean428/<repo> /tmp/<workdir>
+cd /tmp/<workdir>
+git fetch origin development && git checkout -B <topic>/<slug> origin/development
+pnpm install --frozen-lockfile --ignore-scripts
+# edit files
+pnpm typecheck && pnpm lint && pnpm test    # must all pass before commit
+git add <files>
+git commit -m "type(scope): description"
+git push -u origin <topic>/<slug>
+```
+
+- `--frozen-lockfile` enforces the existing lockfile contract; mismatches surface immediately. See pnpm CLI reference: <https://pnpm.io/cli/install>.
+- `--ignore-scripts` skips lifecycle scripts (speeds install; avoids accidental local builds during install).
+- pnpm's content-addressable store means a second sibling clone reuses cached entries — installs are typically <10s after the first.
+
+**CRITICAL — never run `pnpm install` inside the bsuite parent tree.** The parent's `pnpm-workspace.yaml` would embed `..` paths into the consumer lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE` (per "pnpm Lockfile Generation" above). `/tmp` is outside the bsuite tree.
+
+**Precedents:** bsuite#993 (R80.3 dormant-lint + audit-scan across 5 app repos in `/tmp`), bsuite#1006 (crm7 edge-fn fix with vitest verification), bsuite#1009 (conduit 76-test expansion verified via `pnpm test` / `pnpm typecheck` / `pnpm eslint` before push).
+
+**Limits:**
+
+- Disk + network cost for the clone (typically 1-3s shallow clone + 6-10s pnpm install). Negligible for any non-trivial refactor.
+- Working tree under `/tmp` is reclaimed between sessions by the harness — anything not committed + pushed before session end is lost.
+
+### How to choose
+
+| Question | If yes → use |
+|---|---|
+| Changing imports, types, function signatures, or test files? | Pattern B |
+| Need to run `pnpm test` / `pnpm typecheck` / `pnpm lint` to prove the change works? | Pattern B |
+| Single-attribute add (e.g. `aria-hidden`), single-line `eslint-disable`, or import-name rename? | Pattern A |
+| Only failure mode is a UI/runtime regression Vercel preview will surface? | Pattern A |
+| Touching `package.json` / `pnpm-lock.yaml` / `vercel.json`? | Pattern B (always — these need install/build verification) |
+
+### Anti-patterns (banned)
+
+- ❌ Pattern A for type-system changes — typescript errors won't surface until CI, wasting a feedback round.
+- ❌ Pattern B from inside the bsuite parent tree (lockfile path-poisoning — see "pnpm Lockfile Generation" rules above).
+- ❌ Hand-crafting `git diff` payloads for the Contents API — use `mcp__github__push_files`, it handles SHAs correctly.
+- ❌ Skipping the §9 validation evidence in the PR body just because the pattern was Pattern A — Vercel preview Ready + CI green IS the evidence, name it explicitly in the PR's `## Evidence` block.
+
+### Cross-references
+
+- §1 Anti-Laziness: pick the pattern that yields a green-on-arrival PR; "I'll let CI tell me" when local verify was possible is a deferral.
+- §9 Self-Validation: Pattern B is the natural fit for §9.1 output-equivalence; Pattern A relies on Vercel preview + CI as the §9.2 verification surface (must be named explicitly).
+- §10 Dashboard Update Protocol: dashboard data updates use Pattern A (the `refresh-data.py` + `inline-data.sh` contract is the verification, not `pnpm test`).
+- "pnpm Lockfile Generation" (above): the isolated-tmp rule both patterns reuse — Pattern A by avoiding install entirely, Pattern B by cloning outside the bsuite tree.
+
+---
+
+*Frozen Fact: `FF-TOOLING-PATTERNS-20260515`. Adopted 2026-05-15 by claude-loop DOCS rotation (tracker bsuite#1012) after 4 rotations of cross-rotation §9.3 carry-forward (bsuite#993 / #1002 / #1006 / #1009). Primary-source citations: pnpm CLI docs (<https://pnpm.io/cli/install>), GitHub REST API Contents reference (<https://docs.github.com/en/rest/repos/contents>), GitHub MCP server (<https://github.com/github/github-mcp-server>).*
+
+---
+
+## 12. Reusable Code-Level Patterns (FF-CODE-PATTERNS-20260517)
+
+**Source:** Pattern banking for **code-level** gotchas surfaced by rotations — distinct from §11 which covers sandbox/tooling workflow. Adopted 2026-05-17 as Frozen Fact `FF-CODE-PATTERNS-20260517` after the §11.1 carry-forward chain (bsuite#1052 §9.3 #3 → bsuite#1057 §9.3 #2 → bsuite#1061 / bsuite#1062 DOCS rotation).
+
+### Why this rule exists
+
+§11 covers **how to push a change** (Contents API vs `/tmp` clone). This section covers **what to write inside the change** when a specific code-level construct has a known footgun that costs >15 min to figure out. Bank one entry per surfaced gotcha so the next agent can copy-paste-fix instead of re-discovering empirically.
+
+### Pattern 1 — Vitest mock-factory `new`-forwarding
+
+**Surfaced by:** [R80.3#258](https://github.com/GaryOcean428/R80.3/pull/258) test authoring for `pdfExportService` ([bsuite#1057](https://github.com/GaryOcean428/bsuite/issues/1057) TESTS rotation key finding #1).
+
+**Symptom:** First run of a new vitest spec throws `TypeError: () => {...} is not a constructor` against the line that does `new SomeCtor()` inside the SUT — even though the mock factory looks correct at a glance.
+
+**Why it happens:** When a service uses `new ImportedCtor()` and you mock the module with `vi.mock('imported-pkg', () => ({ default: vi.fn(() => instance) }))`, `vi.fn` forwards the `new` call to the inner implementation. **Arrow functions are not constructible** ([MDN — Arrow function expressions § Cannot be used as constructors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors)), so the arrow you passed to `vi.fn` blows up the moment the SUT invokes `new`. Bites any service that uses a `new`-style constructor on a dynamically-imported package: `jspdf`, `xlsx`, `pdfkit`, `mailgun.js`, `pino`, `mongodb.MongoClient`, `Bull`, etc.
+
+**Wrong:**
+
+```ts
+import { vi } from 'vitest';
+
+vi.mock('jspdf', () => {
+  const doc = { addPage: vi.fn(), text: vi.fn(), save: vi.fn() };
+  return {
+    default: vi.fn(() => doc), // ❌ arrow — `new jsPDF()` throws TypeError
+  };
+});
+```
+
+**Right (function declaration — constructible via `new`):**
+
+```ts
+import { vi } from 'vitest';
+
+vi.mock('jspdf', () => {
+  const doc = {
+    addPage: vi.fn(),
+    text: vi.fn(),
+    save: vi.fn(),
+    getNumberOfPages: vi.fn(() => 1),
+    internal: { pageSize: { getHeight: () => 297, getWidth: () => 210 } },
+  };
+  function JsPDFCtor(this: unknown) {
+    return doc;
+  }
+  return {
+    default: JsPDFCtor, // ✅ real function — `new`-invocable
+  };
+});
+```
+
+If you also need to spy on construction call-counts, wrap the function declaration in `vi.fn(JsPDFCtor)` — that preserves `[[Construct]]` on the underlying function and the spy on the surface (`expect(jsPDFModule.default).toHaveBeenCalledTimes(1)`).
+
+**Determinism gotcha (filename / date-derived fixtures):** services that build a filename from `new Date().toISOString().split('T')[0]` drift across CI timezones unless the test pins time:
+
+```ts
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime('2026-05-17T09:30:00.000Z');
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
+```
+
+Apply to any service that uses `new Date()`, `Date.now()`, or `performance.now()` for filename / cache-key / TTL derivation. Bank the time-pin alongside the constructor mock — the two failure modes compound otherwise.
+
+**Cross-app candidates that import this pattern verbatim:** `crm7/src/services/importExportService.ts` + `business-suite-unified/src/lib/analyticsService.ts` (PDF surfaces named by [bsuite#1020](https://github.com/GaryOcean428/bsuite/issues/1020) §9.3 #3).
+
+### Pattern 2 — Reserved (next pattern)
+
+When the next rotation surfaces a banking-worthy code-level pattern, replace this stub with `### Pattern 2 — <name>` and add `### Pattern 3 — Reserved (next pattern)` below it. Keep the chain alive so future agents always know where to land their entry. Distinct from §11 Pattern A/B — those are sandbox-workflow patterns; this section is code-construct patterns.
+
+### Cross-references
+
+- §9 Self-Validation: code-level patterns banked here are the §9.1 output-equivalence baseline-derivation tools — having the right mock means the baseline is real, not vacuous-PASS.
+- §11 Multi-File Refactor Tooling Patterns: how to ship the change; §12 is what to write inside the change. The two are orthogonal — every PR uses both.
+
+---
+
+*Frozen Fact: `FF-CODE-PATTERNS-20260517`. Adopted 2026-05-17 by claude-loop DOCS rotation (tracker bsuite#1061, PR bsuite#1062). Primary-source citations: MDN Arrow function expressions reference (<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors>), Vitest `vi.fn` API reference (<https://vitest.dev/api/vi.html#vi-fn>), Vitest `vi.useFakeTimers` API reference (<https://vitest.dev/api/vi.html#vi-usefaketimers>), in-repo precedent: R80.3#258 commit `57e6273f` `src/services/__tests__/pdfExportService.test.ts`.*
+
+---
