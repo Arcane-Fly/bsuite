@@ -271,6 +271,90 @@ The BSU Developer Portal uses two role sources and **must not** conflate them:
 
 Client-side tab visibility/disabled states are UX only. Authorization must be enforced server-side via RLS and helper functions on `tenant_branding` and `tenant_app_branding`.
 
+## Portal-role OAuth scopes (added 2026-05-19, closes crm7#723)
+
+Portal roles are expressed as OAuth scope claims injected by the Custom Access Token Hook
+(`public.inject_portal_scope_claims`). Sibling agents #724, #725, #726 consume this contract.
+
+### Scope string contract
+
+| Scope | Grants | RLS usage |
+|---|---|---|
+| `portal:host-employer:read` | View placements, timesheets, invoices | `'portal:host-employer:read' = ANY(string_to_array(auth.jwt() ->> 'scope', ' '))` |
+| `portal:host-employer:write` | Approve/reject timesheets, request rotation | same pattern |
+| `portal:apprentice:read` | View training plan, payslips, FO contact | same pattern |
+| `portal:apprentice:write` | Submit timesheets, request leave, raise issues | same pattern |
+| `portal:field-officer:read` | View assigned cohort, visit schedule, KPIs | same pattern |
+| `portal:field-officer:write` | Log site visits, update KPIs, incident reports | same pattern |
+| `portal:training-provider:read` | View enrolled apprentices, progress, qual status | same pattern |
+| `portal:training-provider:write` | Submit AVETMISS, mark unit complete | same pattern |
+
+### JWT shape (access tokens minted by BSU /auth/v1/oauth/token)
+
+```json
+{
+  "iss": "https://tuybltdrdefjblnplpqo.supabase.co/auth/v1",
+  "aud": "authenticated",
+  "sub": "<user-uuid>",
+  "role": "authenticated",
+  "client_id": "<oauth-client-uuid>",
+  "scope": "portal:host-employer:read portal:host-employer:write"
+}
+```
+
+The `scope` claim is a **space-separated** string (RFC 6749 §3.3).
+It is **absent** (not empty string) when no portal scopes apply.
+
+### Per-client scope allowlists
+
+| Client | Allowed portal scopes |
+|---|---|
+| CRM7 (`30f76744-…`) | All 8 |
+| Conduit (`da925c19-…`) | `portal:apprentice:read`, `portal:apprentice:write` |
+| R80.3 (`5d804d20-…`) | `portal:field-officer:read` |
+| Throughput (`35f0db49-…`) | None |
+| Braden (`dcb7af18-…`) | None |
+
+Source of truth: `public.oauth_client_scopes` table (populated by migration `20260519130000_portal_role_oauth_scopes.sql`).
+
+### How to check scope in consumer apps (sibling agents #724/#725/#726)
+
+```typescript
+import { hasScope, SCOPE_HOST_EMPLOYER_READ } from '@bsuite/auth'
+// or, until @bsuite/auth exports it, copy from business-suite-unified/src/lib/oauth/scopes.ts
+
+const token = JSON.parse(localStorage.getItem('bs_access_token_payload') ?? '{}')
+if (!hasScope(token, SCOPE_HOST_EMPLOYER_READ)) {
+  redirect('/unauthorized')
+}
+```
+
+### Important: custom scopes are NOT negotiated via OAuth authorize request
+
+Supabase GoTrue does not support custom scope parameters in `/auth/v1/oauth/authorize`.
+Portal scopes are **injected** by the Custom Access Token Hook — not negotiated by the client.
+Consumer apps MUST NOT attempt to pass `portal:*` in the `scope` query param.
+
+### DB tables
+
+| Table | Purpose |
+|---|---|
+| `public.oauth_client_scopes` | Which portal scopes each client app is permitted to have in tokens |
+| `public.user_portal_roles` | Which portal scopes each user actually holds (per tenant) |
+
+The hook intersects these two sets to produce the final `scope` JWT claim.
+The hook is registered at: Supabase Dashboard → Authentication → Hooks → Custom Access Token.
+
+### Assumption documented (self-report per §9.3)
+
+The ADR (`20260512-portal-cross-app-sso-architecture-decision-v1.00A.md`) references
+`.crm7.app` cookie domain sharing for CRM7's `ProtectedPortalRoute` step 3. This
+contradicts AUTH_CANONICAL.md's cookie-SSO ban. **This implementation does NOT implement
+cookie domain sharing.** The scope claim is in the JWT; consumer apps read `bs_access_token`
+from their own per-domain localStorage and call `hasScope()` locally. If step 3 of the ADR
+flow requires cross-domain cookie sharing, that decision is deferred to crm7#724 and requires
+explicit operator approval before implementation — cookie SSO is BANNED per this document.
+
 ## CI guardrails (target — to be enforced)
 
 - Grep CI rejects any new occurrence of `cookieStorage`, `business_suite_auth`, or `domain.*crm7\.app` in `.ts` / `.tsx` outside `docs/`, `AUTH_CANONICAL.md`, and tests asserting the negative.
