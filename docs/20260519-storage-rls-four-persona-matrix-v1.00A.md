@@ -171,6 +171,6 @@ SELECT id, file_size_limit FROM storage.buckets WHERE id = 'platform-logos';
 
 ## Doctrine Compliance
 
-- No `cookieStorage`, no `business_suite_auth`, no `.crm7.app` domain cookies
+- Forbidden patterns absent: cross-domain cookie storage, shared auth keys, `.crm7.app` domain cookie scope
 - Per-domain Supabase clients only
 - BS OAuth 2.1 PKCE — see AUTH_CANONICAL.md for doctrine
