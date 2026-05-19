@@ -6,7 +6,7 @@ import {
   issueClassificationSchema,
   type IssueSeverity,
   type IssueType,
-} from './taxonomy.js';
+} from './taxonomy.ts';
 
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.7;
 export const DEFAULT_MODEL_ID = 'anthropic/claude-haiku-4.5';
