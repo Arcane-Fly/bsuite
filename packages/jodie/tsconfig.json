@@ -9,6 +9,7 @@
     "noFallthroughCasesInSwitch": true,
     "isolatedModules": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "lib": ["ES2020", "DOM"],
     "types": ["node"]
