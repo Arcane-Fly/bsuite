@@ -3,11 +3,15 @@
 # Detects which submodule's migrations changed and applies only those.
 #
 # Two migration types are supported:
-#   *.sql       — standard transactional migrations, applied via `supabase db push`
+#   *.sql       — standard transactional migrations, applied via psql -1 (single-tx)
 #   *.nontx.sql — non-transactional migrations (e.g. CREATE INDEX CONCURRENTLY),
 #                 applied via direct psql after the transactional pass.
-#                 Already-applied versions are detected from schema_migrations to
-#                 ensure idempotency across push and workflow_dispatch runs.
+#
+# Drift tolerance: schema_migrations is shared across all 7 submodules (single
+# Supabase project), so `supabase db push` cannot tolerate this submodule's
+# local files being a SUBSET of remote. We use a psql-based applier that queries
+# already-applied versions and only applies files whose version is NOT yet
+# recorded. Idempotent across push and workflow_dispatch runs.
 #
 # Edge Function deployment is handled by a separate dedicated workflow:
 #   .github/workflows/supabase-functions-deploy.yml
@@ -15,6 +19,7 @@
 # Required GitHub Secrets:
 #   SUPABASE_ACCESS_TOKEN  - Personal access token from supabase.com/dashboard/account/tokens
 #   SUPABASE_DB_PASSWORD   - Database password for the linked project
+#   BSUITE_CROSS_REPO_PAT  - GitHub PAT with read access to all submodule repos
 #
 # Required GitHub Variables:
 #   SUPABASE_PROJECT_ID    - Project ref (e.g. tuybltdrdefjblnplpqo)
@@ -70,17 +75,18 @@ jobs:
           fetch-depth: 2
 
       - id: set-matrix
+        env:
+          DISPATCH_INPUT: ${{ github.event.inputs.submodule }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            INPUT="${{ github.event.inputs.submodule }}"
-            if [ "$INPUT" = "all" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$DISPATCH_INPUT" = "all" ]; then
               echo 'matrix=["root","crm7","R80.3","braden","business-suite-unified","conduit","throughput"]' >> "$GITHUB_OUTPUT"
             else
-              echo "matrix=[\"$INPUT\"]" >> "$GITHUB_OUTPUT"
+              echo "matrix=[\"$DISPATCH_INPUT\"]" >> "$GITHUB_OUTPUT"
             fi
           else
             CHANGED=()
-            # Root-level supabase/migrations (parent repo, not a submodule)
             if git diff --name-only HEAD~1 HEAD -- "supabase/migrations/" | grep -q .; then
               CHANGED+=("\"root\"")
             fi
@@ -118,45 +124,83 @@ jobs:
 
       - name: Resolve working directory
         id: resolve-dir
+        env:
+          SUBMODULE: ${{ matrix.submodule }}
         run: |
-          if [ "${{ matrix.submodule }}" = "root" ]; then
+          if [ "$SUBMODULE" = "root" ]; then
             echo "workdir=." >> "$GITHUB_OUTPUT"
           else
-            echo "workdir=${{ matrix.submodule }}" >> "$GITHUB_OUTPUT"
+            echo "workdir=$SUBMODULE" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Link Supabase project
+      - name: Apply transactional migrations (.sql, drift-tolerant)
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
         run: |
-          supabase link --project-ref ${{ vars.SUPABASE_PROJECT_ID }}
+          set -euo pipefail
 
-      - name: Apply migrations
-        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
-        run: |
-          supabase db push
+          # Drift-tolerant applier — does not rely on `supabase db push`'s strict
+          # local==remote check. Mirrors the .nontx.sql pattern below.
+
+          command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
+
+          MIGRATION_COUNT=$(find supabase/migrations -maxdepth 1 -name "*.sql" -not -name "*.nontx.sql" 2>/dev/null | wc -l)
+          if [ "$MIGRATION_COUNT" -eq 0 ]; then
+            echo "No transactional .sql migrations found — skipping"
+            exit 0
+          fi
+
+          DB_HOST="db.${PROJECT_ID}.supabase.co"
+          DB_URL="postgresql://postgres:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          APPLIED=$(psql "$DB_URL" -t -A \
+            -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;" \
+            2>/dev/null || echo "")
+
+          APPLIED_COUNT=0
+          SKIPPED_COUNT=0
+          while IFS= read -r -d '' f; do
+            BN=$(basename "$f" .sql)
+            VERSION=$(echo "$BN" | grep -oE '^[0-9]+' | head -1)
+            if [ -z "$VERSION" ] || [ ${#VERSION} -lt 8 ]; then
+              echo "→ Skipping $f (no valid timestamp prefix)"
+              continue
+            fi
+            if echo "$APPLIED" | grep -qxF "$VERSION"; then
+              SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+              continue
+            fi
+            echo "→ Applying migration: $f (version=$VERSION)"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -1 -f "$f"
+            psql "$DB_URL" \
+              -c "INSERT INTO supabase_migrations.schema_migrations(version) VALUES ('${VERSION}') ON CONFLICT DO NOTHING;"
+            echo "✓ Applied and recorded: $VERSION"
+            APPLIED_COUNT=$((APPLIED_COUNT + 1))
+          done < <(find supabase/migrations -maxdepth 1 -name "*.sql" -not -name "*.nontx.sql" -print0 | sort -z)
+
+          echo "Done: ${APPLIED_COUNT} newly applied, ${SKIPPED_COUNT} already-applied (skipped)."
 
       - name: Apply non-transactional migrations (.nontx.sql)
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
         run: |
           set -euo pipefail
 
-          # Ensure psql is available (pre-installed on ubuntu-latest; explicit guard for safety)
           command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
 
-          # Scan for .nontx.sql files (CONCURRENTLY-only DDL that cannot run inside a transaction)
           NONTX_COUNT=$(find supabase/migrations -name "*.nontx.sql" 2>/dev/null | wc -l)
           if [ "$NONTX_COUNT" -eq 0 ]; then
             echo "No .nontx.sql files found — skipping"
             exit 0
           fi
 
-          # Use the direct Supabase DB host (not pooler) — required for CONCURRENTLY DDL
-          DB_HOST="db.${{ vars.SUPABASE_PROJECT_ID }}.supabase.co"
+          DB_HOST="db.${PROJECT_ID}.supabase.co"
           DB_URL="postgresql://postgres:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
-          # Query migration history to find already-applied versions (enables idempotent re-runs)
           APPLIED=$(psql "$DB_URL" -t -A \
             -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;" \
             2>/dev/null || echo "")
@@ -178,8 +222,13 @@ jobs:
 
           echo "Done: ${APPLIED_COUNT} non-transactional migration(s) applied."
 
-      - name: Verify migration status
-        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+      - name: Verify migration state
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          SUBMODULE: ${{ matrix.submodule }}
         run: |
-          echo "=== Migration status for ${{ matrix.submodule }} ==="
-          supabase migration list
+          DB_HOST="db.${PROJECT_ID}.supabase.co"
+          DB_URL="postgresql://postgres:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          echo "=== Migration count for $SUBMODULE ==="
+          psql "$DB_URL" -c "SELECT count(*) AS total_applied FROM supabase_migrations.schema_migrations;"
