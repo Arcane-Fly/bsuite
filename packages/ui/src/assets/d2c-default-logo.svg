@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BSuite default mark">
+  <title>BSuite</title>
+  <!--
+    D2C Neon Electric default mark.
+    Electric Blue ring + Electric Cyan inner accent.
+    Values are the canonical role tokens from @bsuite/theme:
+      Electric Blue  oklch(0.546 0.215 262.9)
+      Electric Cyan  oklch(0.769 0.132 191.7)
+    Inline as raw SVG so the package has no runtime asset dependency.
+  -->
+  <defs>
+    <linearGradient id="bsuite-d2c-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="oklch(0.546 0.215 262.9)" />
+      <stop offset="100%" stop-color="oklch(0.769 0.132 191.7)" />
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="26" fill="none" stroke="url(#bsuite-d2c-ring)" stroke-width="5" />
+  <circle cx="32" cy="32" r="11" fill="oklch(0.769 0.132 191.7)" />
+</svg>

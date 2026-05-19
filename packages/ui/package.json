@@ -1,8 +1,11 @@
 {
   "name": "@bsuite/ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Shared UI primitives for the BSuite apps (D2C Neon Electric + Corporate brands).",
   "repository": {
     "type": "git",
@@ -10,7 +13,8 @@
     "directory": "packages/ui"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/assets"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +30,8 @@
     "./utils": {
       "import": "./dist/utils.js",
       "types": "./dist/utils.d.ts"
-    }
+    },
+    "./assets/d2c-default-logo.svg": "./src/assets/d2c-default-logo.svg"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
