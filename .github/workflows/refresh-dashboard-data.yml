@@ -26,7 +26,12 @@ jobs:
           # The script must be portable (no external deps beyond gh CLI + python3).
           # See docs/dashboard/refresh-data.py for the data-building logic.
           if [ -x docs/dashboard/refresh-data.py ]; then
-            python3 docs/dashboard/refresh-data.py > docs/dashboard/data/dashboard-data.json
+            # Write to tmpfile first — `> docs/dashboard/data/dashboard-data.json`
+            # truncates the file BEFORE the script reads it, and the script reads
+            # the existing JSON to use as a baseline. Direct redirect = empty input
+            # = empty output = corrupted dashboard. Atomic mv protects the canonical file.
+            python3 docs/dashboard/refresh-data.py > /tmp/dashboard-data.new.json
+            mv /tmp/dashboard-data.new.json docs/dashboard/data/dashboard-data.json
           else
             echo "::warning::docs/dashboard/refresh-data.py not present yet — skipping refresh"
             exit 0
