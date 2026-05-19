@@ -4,11 +4,14 @@ import { gateway } from 'npm:@ai-sdk/gateway@1';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
 
+// Direct imports from leaf modules to keep Deno bundle small and avoid
+// transitive `import { ... } from 'ai'` in agent.ts (which is a Node-only
+// MCP runtime). classify-issue only needs the classifier + taxonomy types.
 import {
   classifyIssue,
   DEFAULT_CONFIDENCE_THRESHOLD,
   DEFAULT_MODEL_ID,
-} from '../../../packages/jodie/src/index.ts';
+} from '../../../packages/jodie/src/classifier.ts';
 
 const requestSchema = z.object({
   issueUrl: z.string().url(),
