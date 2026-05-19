@@ -152,8 +152,8 @@ jobs:
             exit 0
           fi
 
-          DB_HOST="db.${PROJECT_ID}.supabase.co"
-          DB_URL="postgresql://postgres:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
           APPLIED=$(psql "$DB_URL" -t -A \
             -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;" \
@@ -198,8 +198,8 @@ jobs:
             exit 0
           fi
 
-          DB_HOST="db.${PROJECT_ID}.supabase.co"
-          DB_URL="postgresql://postgres:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
           APPLIED=$(psql "$DB_URL" -t -A \
             -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;" \
@@ -228,7 +228,7 @@ jobs:
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
           SUBMODULE: ${{ matrix.submodule }}
         run: |
-          DB_HOST="db.${PROJECT_ID}.supabase.co"
-          DB_URL="postgresql://postgres:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
           echo "=== Migration count for $SUBMODULE ==="
           psql "$DB_URL" -c "SELECT count(*) AS total_applied FROM supabase_migrations.schema_migrations;"

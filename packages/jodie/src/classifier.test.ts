@@ -5,14 +5,14 @@ import {
   DEFAULT_MODEL_ID,
   type ClassifierModelResponse,
   DEFAULT_CONFIDENCE_THRESHOLD,
-} from './classifier.js';
+} from './classifier.ts';
 import {
   AREA_VALUES,
   EFFORT_VALUES,
   SEVERITY_VALUES,
   TYPE_VALUES,
   issueClassificationSchema,
-} from './taxonomy.js';
+} from './taxonomy.ts';
 
 const baseInput = {
   issueUrl: 'https://github.com/GaryOcean428/bsuite/issues/551',
