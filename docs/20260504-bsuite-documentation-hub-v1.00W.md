@@ -131,8 +131,8 @@ Actual files (verified 2026-05-04):
 
 | Doc | Purpose |
 |---|---|
-| `OUTSTANDING-SYSTEM.md` | System-level outstanding items |
-| `OUTSTANDING-PLANS.md` | Plan-level outstanding items |
+| ~~`OUTSTANDING-SYSTEM.md`~~ | Removed 2026-05-19 (bsuite#488); content merged into parent `docs/20260501-merged-execution-backlog-v1.00W.md` |
+| ~~`OUTSTANDING-PLANS.md`~~ | Removed 2026-05-19 (bsuite#488); content merged into parent `docs/20260501-merged-execution-backlog-v1.00W.md` |
 | `20260316-bsu-debug-guide-v1.00W.md` | Debug guide |
 | `20260316-bsu-security-reference-v1.00W.md` | Security reference (CSP, auth hardening) |
 | `20260316-bsu-schema-diagram-v1.00W.md` | Unified schema ERD |
@@ -162,7 +162,7 @@ Actual structure (verified 2026-05-04) — richest submodule docs folder:
 
 | Doc / subfolder | Purpose |
 |---|---|
-| `OUTSTANDING.md` | Outstanding work index |
+| ~~`OUTSTANDING.md`~~ | Removed 2026-05-19 (bsuite#488); content merged into parent `docs/20260501-merged-execution-backlog-v1.00W.md`. `crm7/docs/reference/OUTSTANDING.md` (per-area audit) is retained — outside bsuite#488 scope |
 | `20260316-crm7-ai-strategic-vision-v1.00W.md` | AI roadmap and strategic direction |
 | `20260421-xero-oauth-runbook-v1.00W.md` | Xero OAuth activation runbook |
 | `20260309-crm7-gto-owner-flow-completeness-matrix-v1.00W.md` | GTO owner flow completeness matrix |
@@ -187,7 +187,7 @@ Actual files (verified 2026-05-04):
 
 | Doc | Purpose |
 |---|---|
-| `OUTSTANDING.md` | Conduit outstanding items |
+| ~~`OUTSTANDING.md`~~ | Removed 2026-05-19 (bsuite#488); content merged into parent `docs/20260501-merged-execution-backlog-v1.00W.md` |
 | `20260303-rbac-architecture-design-v1.00W.md` | RBAC architecture — portal roles, Conduit roles, 69 permissions |
 | `20260303-theme-system-design-v1.00W.md` | D2C Neon Electric theme implementation for Conduit |
 | `archive/` | Archived per-feature specs |
@@ -204,7 +204,7 @@ Actual files (verified 2026-05-04):
 
 | Doc | Purpose |
 |---|---|
-| `OUTSTANDING.md` | Braden outstanding items |
+| ~~`OUTSTANDING.md`~~ | Removed 2026-05-19 (bsuite#488); content merged into parent `docs/20260501-merged-execution-backlog-v1.00W.md` |
 | `20260316-braden-roadmap-v1.00W.md` | Website customisation roadmap |
 | `20260316-braden-architecture-v1.00W.md` | Architecture + core components |
 | `20260316-braden-bot-protection-v1.00W.md` | Vercel BotID integration |
@@ -266,7 +266,7 @@ Every shared concern should be documented in each submodule where it applies, wi
 
 | Concern | Authoritative source | BSU | CRM7 | Conduit | Braden | R80.3 | Throughput |
 |---|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| OUTSTANDING | `docs/OUTSTANDING.md` | `OUTSTANDING-SYSTEM.md` + `OUTSTANDING-PLANS.md` ✅ | `OUTSTANDING.md` ✅ | `OUTSTANDING.md` ✅ | `OUTSTANDING.md` ✅ | `OUTSTANDING.md` ✅ | `20250427-throughput-outstanding-v1.00W.md` ✅ |
+| OUTSTANDING | `docs/OUTSTANDING.md` (SSoT — `docs/20260501-merged-execution-backlog-v1.00W.md` is the active execution queue) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488); `docs/reference/OUTSTANDING.md` is per-area audit and retained | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | `20250427-throughput-outstanding-v1.00W.md` (throughput-local, out of bsuite#488 scope) |
 | Roadmap | `docs/20260227-bsuite-master-roadmap-v5.00W.md` | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250320-throughput-roadmap-v1.00W.md` ✅ |
 | Auth topology | `AGENTS.md` §Auth + `CLAUDE.md` mirror (archived snapshot: `archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md`) | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap |
 | Theme tokens | `@bsuite/theme@0.3.3` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap | ⚠️ cross-link gap |
