@@ -14,13 +14,13 @@
 1. `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` — P0 / P1 / P2 tables
 2. `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` — P0-P13 priority bands
 3. `docs/20260227-bsuite-master-roadmap-v5.00W.md` — long-horizon roadmap items
-4. Per-submodule OUTSTANDING files:
-   - `crm7/docs/OUTSTANDING.md` + `crm7/docs/reference/OUTSTANDING.md`
-   - `business-suite-unified/docs/OUTSTANDING-SYSTEM.md` + `-PLANS.md`
-   - `R80.3/docs/OUTSTANDING.md`
-   - `conduit/docs/OUTSTANDING.md`
-   - `braden/docs/OUTSTANDING.md`
-   - `throughput/docs/OUTSTANDING.md`
+4. Per-submodule OUTSTANDING files (consolidated and **removed** from each submodule on 2026-05-19 per bsuite#488 / `BL-015`; this backlog is now the only `OUTSTANDING` doc in the BSuite tree):
+   - ~~`crm7/docs/OUTSTANDING.md`~~ — removed (content merged here); `crm7/docs/reference/OUTSTANDING.md` retained as per-area audit, outside bsuite#488 scope
+   - ~~`business-suite-unified/docs/OUTSTANDING-SYSTEM.md` + `-PLANS.md`~~ — both removed (content merged here)
+   - ~~`R80.3/docs/OUTSTANDING.md`~~ — removed (content merged here)
+   - ~~`conduit/docs/OUTSTANDING.md`~~ — removed (content merged here)
+   - ~~`braden/docs/OUTSTANDING.md`~~ — removed (content merged here)
+   - `throughput/docs/OUTSTANDING.md` — never created in this repo (no removal required)
 5. Phase 0 ADR consequences (ADR-0001 through ADR-0006)
 6. Console-log-surfaced production bugs (2026-04-29 evidence): P1-12 / P1-12b / P1-12c
 7. WS-E (One-Shot Propagation Completeness) workstream from consolidated plan

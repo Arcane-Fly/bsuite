@@ -1,10 +1,16 @@
-# BSuite Docs — Outstanding Work Index
+# BSuite Docs — Outstanding Work Index (single source of truth)
 
+**Status:** SINGLE SOURCE OF TRUTH for all outstanding work across the BSuite monorepo + 6 submodules.
 **Generated:** 2026-04-24 (docs reconciliation pass — top-level `docs/*.md` + plan indexes)
+**Updated:** 2026-05-19 — Per-submodule `OUTSTANDING.md` / `OUTSTANDING-SYSTEM.md` / `OUTSTANDING-PLANS.md` files removed (bsuite#488). This file is now the only `OUTSTANDING.md` in the BSuite parent + submodule tree.
 **Scope:** `docs/*.md` at repo root — excludes `docs/archive/*` and `docs/plans/*` (managed separately).
 **Audit authority:** See `docs/plans/README.md` for the plans-layer index.
 
-> **🧭 CANONICAL ACTION LIST:** For the prioritised "what's left to do" roll-up with stable item IDs (P0-*/ P1-* / P2-*/ WS-*), read [`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`](./20260425-bsuite-finish-line-roadmap-v1.00W.md) FIRST. That doc is the single source of truth for remaining work across all 6 apps (154 items, cited to sources). This index remains a per-file status tracker for each living W-status doc; the finish-line roadmap is the cross-cutting action queue.
+> **🧭 CANONICAL EXECUTION QUEUE:** For the active phase-ordered execution queue with stable item IDs (`BL-NNN`, `P0-*`, `P1-*`, `P2-*`, `WS-*`), read [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md) FIRST. That doc consolidates the parent roadmaps **and the six submodule OUTSTANDING files** (per its "Sources merged" section) into a single execution queue. This index remains a per-file status tracker for each living W-status doc in the parent `docs/` tree; the merged execution backlog is the cross-cutting action queue.
+>
+> **For the prioritised P0/P1/P2 finish-line view**, see [`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`](./20260425-bsuite-finish-line-roadmap-v1.00W.md) (154 items, cited to sources).
+>
+> **Submodule files removed by bsuite#488:** `crm7/docs/OUTSTANDING.md`, `R80.3/docs/OUTSTANDING.md`, `conduit/docs/OUTSTANDING.md`, `braden/docs/OUTSTANDING.md`, `business-suite-unified/docs/OUTSTANDING-SYSTEM.md`, `business-suite-unified/docs/OUTSTANDING-PLANS.md`. All their content lives in the merged execution backlog above.
 
 ---
 
@@ -64,7 +70,7 @@ Index plan integrating Codehouse Workforce-One parity tracking with full Platfor
 | 2 | Dashboard JSON additive extension — `parity_status`, `feature_360_status`, `portal_coverage` (WS-C, post PR #535) | Dashboard subagent |
 | 3 | Ship `/dev/feature-builder` route in BSU per spec (WS-E) | BSU / Claude Code |
 | 4 | Doc-drift sweep — 17 items from `bsuite-inventory.md` (WS-F) | Cascade |
-| 5 | 6 submodule `OUTSTANDING.md` + `docs/plans/STATUS.md` link rows (WS-A3) — separate one-line PRs | Cascade |
+| 5 | ~~6 submodule `OUTSTANDING.md` + `docs/plans/STATUS.md` link rows (WS-A3)~~ — Per-submodule OUTSTANDING files removed entirely per bsuite#488 on 2026-05-19; the parent merged backlog is the SSoT. STATUS.md citations remain in scope but are now decoupled from the OUTSTANDING-link sweep. | ✅ OUTSTANDING-side complete |
 | 6 | Red-team review across all 9 portal sub-plans before flipping plan W→A | multi-agent-red-team-planning |
 
 ### `20260317-bsuite-gap-report-v2.00W.md`

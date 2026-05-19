@@ -836,8 +836,8 @@ The following documents require updates when each implementation PR merges:
 |---|---|---|
 | [`competitor/bsuite-inventory.md`](../../../competitor/bsuite-inventory.md) | §C (Pay items, work types) | Change status to ✅ for rows 21–29, 31–32; update "named pay-item group entity absent" item 7 |
 | [`competitor/parity-matrix.md`](../../../competitor/parity-matrix.md) | Rows 21–29, 31–32 | Update status column from 🔴/🟡 to ✅; update "Current BSuite state" cell for each row |
-| [`crm7/OUTSTANDING.md`](../../../crm7/OUTSTANDING.md) | Outstanding gaps | Remove / tick: "Named pay-item group / penalty group entities absent" |
-| [`docs/OUTSTANDING.md`](../../OUTSTANDING.md) | Domain C outstanding | Tick off domain C gaps |
+| ~~`crm7/OUTSTANDING.md`~~ | N/A — removed 2026-05-19 (bsuite#488); the parent `docs/OUTSTANDING.md` row below covers it |
+| [`docs/OUTSTANDING.md`](../../OUTSTANDING.md) | Domain C outstanding | Tick off domain C gaps (SSoT for all submodules per bsuite#488) |
 | [`packages/charge-calc/README.md`](../../../packages/charge-calc/README.md) | Named group types | Add: `pay_item_groups` table is now the canonical source for group IDs; enum aliases remain for backward compat |
 | [`crm7/src/pages/settings/README.md`](../../../crm7/src/pages/settings/README.md) (if exists) | Settings pages | Add: pay-item-groups, timesheet-groups, penalty-groups, allowance-groups, pay-item-rules |
 

@@ -195,7 +195,7 @@ A cross-app workstream tracking 35 Codehouse Workforce-One parity gaps and a Pla
 | WS-D — 9 portal sub-plans | ✅ Shipped (this PR) | Cascade |
 | WS-E — visual feature builder spec | ✅ Shipped (this PR) | Cascade |
 | WS-A2 — parity workstream in merged-execution-backlog | ✅ Shipped (this PR) | Cascade |
-| WS-A3 — submodule OUTSTANDING + STATUS link rows | 🟡 Per-submodule one-line PRs (separate) | Cascade |
+| WS-A3 — submodule OUTSTANDING + STATUS link rows | ✅ OUTSTANDING-side complete — per-submodule OUTSTANDING files removed entirely per bsuite#488 (2026-05-19); parent merged backlog is SSoT. STATUS.md citations now decoupled. | Cascade |
 | WS-B — 12 grouped GitHub issues | 🔲 Follow-up PR (issue-filer subagent) | TBD |
 | WS-C — dashboard schema additive extension | 🔲 Follow-up PR (post #535) | TBD |
 | WS-E1–E5 — `/dev/feature-builder` shipped code | 🔲 Phase P-360 / future | BSU |

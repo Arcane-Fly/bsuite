@@ -40,12 +40,12 @@ Workstreams (verbatim from refined-prompt §Decomposition):
 WS-A. Parity tracking integration
   ├── A1. Add a new top-level plan to bsuite/docs/plans/
   ├── A2. Append parity workstream to the merged-execution-backlog
-  ├── A3. Update each submodule's OUTSTANDING.md + STATUS.md to cite the new plan
+  ├── A3. Update each submodule's STATUS.md to cite the new plan (per-submodule OUTSTANDING.md files removed 2026-05-19 per bsuite#488; the parent's `docs/20260501-merged-execution-backlog-v1.00W.md` is the single execution queue)
   └── A4. Update master-roadmap-v5.00W.md to add a "Codehouse parity" section
 
 WS-B. Issue alignment (depends WS-A1)
   ├── B1. File 12 issues at bsuite for the 35 parity gaps grouped (by domain)
-  ├── B2. Cross-link each issue to its docs/plans/* and OUTSTANDING.md row
+  ├── B2. Cross-link each issue to its docs/plans/* row (parent `docs/OUTSTANDING.md` is the SSoT; per-submodule OUTSTANDING.md files removed per bsuite#488)
   └── B3. Apply standard label set (filed-by-perplexity, research-driven, parity-codehouse, p1/p2, area:*)
 
 WS-C. Dashboard schema extension (depends WS-B for issue numbers)
@@ -89,7 +89,7 @@ WS-F. Doc reconciliation (parallel)
 | Plans README | `docs/plans/README.md` | New row in Active Plans table | — |
 | Outstanding work index | `docs/OUTSTANDING.md` | New row referencing this plan | — |
 | Plan Dashboard | `docs/dashboard/data/dashboard-data.json` | **NOT in this PR** (per operator decision) | Follow-up PR adds `parity_status`, `feature_360_status`, `portal_coverage` keys additively |
-| Submodule outstanding indexes (×6) | `<submodule>/docs/OUTSTANDING.md` | Separate one-line PR per submodule | — |
+| Submodule outstanding indexes (×6) | ~~`<submodule>/docs/OUTSTANDING.md`~~ | **N/A** — removed 2026-05-19 per bsuite#488; parent `docs/OUTSTANDING.md` is the SSoT | — |
 | Submodule plan indexes (×6) | `<submodule>/docs/plans/STATUS.md` | Separate one-line PR per submodule | — |
 
 ---
