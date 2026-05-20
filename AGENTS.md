@@ -1350,9 +1350,64 @@ Apply to any service that uses `new Date()`, `Date.now()`, or `performance.now()
 
 **Cross-app candidates that import this pattern verbatim:** `crm7/src/services/importExportService.ts` + `business-suite-unified/src/lib/analyticsService.ts` (PDF surfaces named by [bsuite#1020](https://github.com/GaryOcean428/bsuite/issues/1020) §9.3 #3).
 
-### Pattern 2 — Reserved (next pattern)
+### Pattern 2 — Constant-time string comparison footguns
 
-When the next rotation surfaces a banking-worthy code-level pattern, replace this stub with `### Pattern 2 — <name>` and add `### Pattern 3 — Reserved (next pattern)` below it. Keep the chain alive so future agents always know where to land their entry. Distinct from §11 Pattern A/B — those are sandbox-workflow patterns; this section is code-construct patterns.
+**Surfaced by:** [crm7#810](https://github.com/GaryOcean428/crm7/pull/810) — `consolidate timing-safe compare + fix 2 inverted call sites` (merged; [bsuite#1125](https://github.com/GaryOcean428/bsuite/issues/1125) EDGE rotation key findings). The audit found a hand-rolled `timingSafeEqual` whose loop bound leaked the secret length, plus two call sites passing the arguments in the wrong order.
+
+**Symptom:** A helper named `timingSafeEqual` (or any secret/HMAC/token comparator) that looks constant-time at a glance but isn't — either its loop bound depends on the *candidate* length, or callers pass `(candidate, secret)` instead of `(secret, candidate)`. No test fails; the leak is a runtime side-channel only an attacker measures.
+
+**Why it happens:**
+
+1. **`Math.min(a.length, b.length)` as a loop bound leaks length.** The loop runs `min(secretLen, candidateLen)` iterations, so total runtime is a function of the *shorter* operand. An attacker who varies the candidate length and measures response latency sees runtime stop growing once the candidate exceeds the secret — that inflection point *is* the secret length ([CWE-208 Observable Timing Discrepancy](https://cwe.mitre.org/data/definitions/208.html): "two separate operations ... require different amounts of time to complete, in a way that is observable to an actor and reveals security-relevant information"). XOR-ing the length difference into the result fixes *correctness* for mismatched lengths but does **not** fix the timing leak — the loop count still varies.
+2. **Argument order is invisible at the call site.** A `timingSafeEqual(a: string, b: string)` signature gives no hint which operand is the trusted secret. Helpers get copy-pasted; call sites drift. crm7#810 found `mapd-sync` and `report-delivery` passing the attacker-controlled token *first*, so the loop iterated over an attacker-controlled length.
+
+**Wrong** (loops over `min` length; opaque parameter names):
+
+```ts
+export function timingSafeEqual(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  const len = Math.min(aBytes.length, bBytes.length); // ❌ runtime leaks min length
+  let result = aBytes.length ^ bBytes.length;
+  for (let i = 0; i < len; i++) {
+    result |= aBytes[i] ^ bBytes[i];
+  }
+  return result === 0;
+}
+```
+
+**Right** (loop count fixed by the secret; ordering contract encoded in parameter names):
+
+```ts
+/**
+ * Ordering contract (REQUIRED): timingSafeEqual(SECRET, CANDIDATE)
+ * - First arg MUST be the trusted secret (cron secret, service-role key, signing secret).
+ * - Second arg MUST be the attacker-controlled candidate (Bearer token, header value).
+ * The loop always iterates `secret.length` times so candidate length cannot be inferred.
+ */
+export function timingSafeEqual(secret: string, candidate: string): boolean {
+  const secretBytes = new TextEncoder().encode(secret);
+  const candidateBytes = new TextEncoder().encode(candidate);
+  let result = secretBytes.length ^ candidateBytes.length;
+  for (let i = 0; i < secretBytes.length; i++) {
+    result |= secretBytes[i] ^ (candidateBytes[i] ?? 0); // ✅ fixed iteration count
+  }
+  return result === 0;
+}
+```
+
+The `?? 0` guards the out-of-bounds read when the candidate is shorter than the secret — `candidateBytes[i]` would otherwise be `undefined`, coerce to `NaN` under `^`, and break the comparison. The runtime stays bound to `secret.length` regardless of candidate length. (Where the runtime is Node rather than Deno, prefer the platform `crypto.timingSafeEqual` — note its [own docs](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) caveat that it does not make the *surrounding* code timing-safe.)
+
+**Two non-negotiables when banking a timing-safe comparator:**
+
+- **Encode the ordering contract in parameter names** (`secret`, `candidate`) and the JSDoc — not in a comment 50 lines away. The contract has to be visible at every import site, because that is the only place the inversion bug is catchable by review.
+- **Add an iteration-count invariant test**, not just correctness tests. Correctness tests (equal → true, unequal → false) pass for *both* the wrong and right versions. The regression-catching test asserts that iteration count does **not** scale with candidate length for a fixed secret — that is the test that fails the moment someone reintroduces a `for (i < candidate.length)` loop.
+
+**Cross-app candidates that need the same audit:** `business-suite-unified/supabase/functions/_shared/cors.ts` ships its own inline `timingSafeEqual`; `crm7/supabase/functions/_shared/xero-webhook-sig.ts` does an HMAC compare. Both are sibling-consolidation candidates named in bsuite#1125's scoped-out follow-ups — verify each uses the fixed-loop shape and `(SECRET, CANDIDATE)` order.
+
+### Pattern 3 — Reserved (next pattern)
+
+When the next rotation surfaces a banking-worthy code-level pattern, replace this stub with `### Pattern 3 — <name>` and add `### Pattern 4 — Reserved (next pattern)` below it. Keep the chain alive so future agents always know where to land their entry. Distinct from §11 Pattern A/B — those are sandbox-workflow patterns; this section is code-construct patterns.
 
 ### Cross-references
 
@@ -1361,6 +1416,6 @@ When the next rotation surfaces a banking-worthy code-level pattern, replace thi
 
 ---
 
-*Frozen Fact: `FF-CODE-PATTERNS-20260517`. Adopted 2026-05-17 by claude-loop DOCS rotation (tracker bsuite#1061, PR bsuite#1062). Primary-source citations: MDN Arrow function expressions reference (<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors>), Vitest `vi.fn` API reference (<https://vitest.dev/api/vi.html#vi-fn>), Vitest `vi.useFakeTimers` API reference (<https://vitest.dev/api/vi.html#vi-usefaketimers>), in-repo precedent: R80.3#258 commit `57e6273f` `src/services/__tests__/pdfExportService.test.ts`.*
+*Frozen Fact: `FF-CODE-PATTERNS-20260517`. Adopted 2026-05-17 by claude-loop DOCS rotation (tracker bsuite#1061, PR bsuite#1062). Pattern 2 added 2026-05-20 by claude-loop DOCS rotation (tracker bsuite#1156). Primary-source citations: MDN Arrow function expressions reference (<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors>), Vitest `vi.fn` API reference (<https://vitest.dev/api/vi.html#vi-fn>), Vitest `vi.useFakeTimers` API reference (<https://vitest.dev/api/vi.html#vi-usefaketimers>), R80.3#258 commit `57e6273f` `src/services/__tests__/pdfExportService.test.ts`; CWE-208 Observable Timing Discrepancy (<https://cwe.mitre.org/data/definitions/208.html>), Node.js `crypto.timingSafeEqual` reference (<https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b>), in-repo precedent crm7#810 commit `7b67d35` `supabase/functions/_shared/timing-safe.ts`.*
 
 ---
