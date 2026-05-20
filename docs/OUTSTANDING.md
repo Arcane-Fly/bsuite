@@ -109,15 +109,15 @@ Delta audit confirming four P2 `#26` subtasks already complete. Rollup is now re
 
 ---
 
-### `20260420-react-hooks-v7-tech-debt-v1.00W.md`
+### ~~`20260420-react-hooks-v7-tech-debt-v1.00W.md`~~ → archived as `v1.00A` (closed 2026-05-19)
 
-ESLint react-hooks v7 warning remediation tracker. 47 warnings in BSU, 21 in braden, ~30 in throughput.
+ESLint react-hooks v7 warning remediation tracker — **COMPLETE**. All five rules promoted from `warn` to `error` across BSU, braden, and throughput. Closure PRs: bsu#235 (2026-05-12), braden#290 (2026-05-19), throughput#179 (2026-05-19). Parent ref-bump PR: `chore/bump-react-hooks-v7-cleanup-refs`. Archived tracker: `docs/archive/parent/2026-04-30-audits-closed/20260420-react-hooks-v7-tech-debt-v1.00A.md`.
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
-| 1 | Remediate BSU 47 react-hooks warnings (batch by rule: `set-state-in-effect` ×30, `refs` ×6, `purity` ×4, `immutability` ×4, `preserve-manual-memoization` ×3) | Claude Code |
-| 2 | Remediate braden 21 react-hooks warnings; tighten `pnpm lint` to `--max-warnings 0` once count reaches zero | Claude Code |
-| 3 | Promote demoted rules from `warn` → `error` in `business-suite-unified/eslint.config.js` and `throughput/eslint.config.js` once counts reach zero | Cascade / Claude Code |
+| 1 | ~~Remediate BSU 47 react-hooks warnings~~ | ✅ Closed bsu#235 (2026-05-12) |
+| 2 | ~~Remediate braden 21 react-hooks warnings~~ | ✅ Closed braden#290 (2026-05-19) — zero findings at close; config-only promotion |
+| 3 | ~~Promote demoted rules from `warn` → `error` in BSU, braden, throughput eslint configs~~ | ✅ Complete in closure PRs |
 
 ---
 
