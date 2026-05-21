@@ -233,7 +233,7 @@ Cookie SSO has been **removed**. Each app's Supabase client uses per-domain defa
 2. **NEVER use `file:../packages/*`** — this also fails on Vercel since the parent directory doesn't exist.
 3. **When modifying a shared package**: build → bump version → `npm publish --access public` → update consumers → `pnpm install`.
 4. **`pnpm-workspace.yaml`** lives only at the bsuite root (scoped to `packages/*`). Individual project repos deployed on Vercel have no workspace config — they are fully standalone.
-5. **Version pinning**: `packageManager: "pnpm@10.30.3"` and `.node-version: 24` — do not change without coordinating across all projects.
+5. **Version pinning**: `packageManager: "pnpm@10.33.0"` and `.node-version: 24` — do not change without coordinating across all projects.
 6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
 7. **Lockfile generation**: NEVER run `pnpm install` from within the bsuite directory tree when updating a project's lockfile. pnpm embeds workspace-relative paths (`..`) into the lockfile, breaking Vercel with `ERR_PNPM_OUTDATED_LOCKFILE`. Always regenerate from outside the bsuite tree:
 
