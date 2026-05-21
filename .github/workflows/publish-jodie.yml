@@ -37,7 +37,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup pnpm
-        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
+        run: corepack enable && corepack prepare pnpm@10.33.3 --activate
 
       # Install at workspace root (not from packages/jodie/) so pnpm
       # uses the package's own pnpm-lock.yaml resolutions (vite@8 + plugin-react@6),

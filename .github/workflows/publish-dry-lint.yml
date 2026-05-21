@@ -32,7 +32,7 @@ jobs:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
       - name: Setup pnpm
-        run: corepack enable && corepack prepare pnpm@10.30.3 --activate
+        run: corepack enable && corepack prepare pnpm@10.33.3 --activate
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck
