@@ -173,7 +173,7 @@ SET search_path = public, pg_temp
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.tenants t
-    WHERE t.id = auth_tenant_id()
+    WHERE t.id IN (SELECT auth_tenant_id())
       AND t.parent_tenant_id IS NULL  -- enterprise = top of hierarchy
       AND EXISTS (
         SELECT 1 FROM public.org_members om
