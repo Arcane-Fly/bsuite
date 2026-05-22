@@ -1,8 +1,8 @@
 # BSuite Master Roadmap
 
-**Version:** 5.11W
+**Version:** 5.12W
 **Date:** 2026-02-27
-**Last Updated:** 2026-05-17 (claude-loop ROADMAP rotation — P1 SECURITY: harden `public.get_user_analytics_summary` against IDOR / cross-user data leak; flagged 5x without remediation across bsuite#1049/1052/1057/1061/1066, applied via Supabase MCP + throughput source migration this rotation)
+**Last Updated:** 2026-05-20 (claude-loop ROADMAP rotation, bsuite#1165 — audit refresh: added "Recently Completed (as of 2026-05-20)" covering the 2026-05-19/20 DB→EDGE→TESTS→DOCS→PERF rotation chain; rotation deliverable — repaired `@bsuite/charge-calc` `test:coverage` by adding the missing `@vitest/coverage-v8` provider, a carry-forward flagged 3x without remediation across bsuite#1153/1156/1160)
 **Status:** Working
 **Scope:** All BSuite projects — CRM7, Conduit, Braden, R80.3, business-suite-unified, throughput
 
@@ -458,6 +458,34 @@ Each entity has a single owning app for create/edit. Schema changes via versione
 - 🔲 Unified settings management
 - 🔲 Usage analytics dashboard
 - 🔲 Unified navigation (`@bsuite/nav-core` shared package + shadcn sidebar migration)
+
+## Recently Completed (as of 2026-05-20 — claude-loop ROADMAP rotation: charge-calc coverage tooling repair + 2026-05-19/20 rotation chain)
+
+> Captures work landed 2026-05-18 → 2026-05-20. Sweeps the 2026-05-19/20 claude-loop rotation chain (DB → EDGE → TESTS → DOCS → PERF) that culminated in this ROADMAP rotation ([bsuite#1165](https://github.com/GaryOcean428/bsuite/issues/1165)). For the prior 2026-05-14 → 17 cycle see the section below.
+
+**ROADMAP rotation deliverable — `@bsuite/charge-calc` `test:coverage` repaired (2026-05-20)**
+
+- ✅ **`@vitest/coverage-v8` added to `@bsuite/charge-calc` devDependencies** (bsuite#1165, this rotation) — `packages/charge-calc/vitest.config.ts` declares `coverage: { provider: 'v8', thresholds: { lines: 90, branches: 85, functions: 90, statements: 90 } }` and `package.json` ships a `test:coverage` script (`vitest run --coverage`), but the v8 provider package was never installed — so `pnpm test:coverage` errored before producing a report and the four coverage thresholds were dead config that CI could not enforce. This was the **"highest-priority unimplemented item"** actioned by this ROADMAP rotation: a concrete, fully-verifiable carry-forward flagged **3x without remediation** across the prior rotation chain (bsuite#1153 TESTS key-findings → bsuite#1156 DOCS carry-forward → bsuite#1160 PERF carry-forward). Fix: `@vitest/coverage-v8` added at `^4.1.6`; `vitest` re-resolved `^4.1.5` → `^4.1.6` so the provider matches the runner version exactly (vitest requires the coverage package to track its own version). Lockfile regenerated outside the bsuite tree per the lockfile-trap rule — importer remains `.:`-only. Verified: `pnpm test:coverage` → exit 0, all four global thresholds clear (statements 94.73%, branches 85.9%, functions 98.55%, lines 96.04%); `pnpm test` 680/680 pass; `pnpm typecheck` exit 0. Directly unblocks roadmap P2 #26 ("Test coverage push — 70% target all projects") for this shared package.
+
+**DB / EDGE / TESTS / DOCS / PERF — 2026-05-19/20 claude-loop rotation chain landed**
+
+- ✅ **DB** — `public.calculate_launch_readiness(p_idea_id uuid)` hardened against a SECURITY DEFINER IDOR (cross-user checklist-ratio disclosure + silent `launch_metrics.readiness_score` tampering); canonical 4-step throughput#166 fix pattern (SECURITY INVOKER + explicit `auth.uid()` guard + `is_platform_admin()` override + tightened `search_path`); applied to prod via Supabase MCP 2026-05-19, source-of-record [throughput#176](https://github.com/GaryOcean428/throughput/pull/176) (claude-loop DB rotation, [bsuite#1117](https://github.com/GaryOcean428/bsuite/issues/1117)).
+- ✅ **EDGE** — BSU `platform-kit-proxy` stopped leaking env-config + privileged-role taxonomy in pre-auth / pre-admin error responses ([BSU#459](https://github.com/GaryOcean428/business-suite-unified/pull/459) merged, CWE-209; [bsuite#1124](https://github.com/GaryOcean428/bsuite/issues/1124)); BSU `email-dispatcher` / `send-notification` / `idea-assistant` replaced the unsafe `atob(token.split('.')[1])` JWT-decode with signature-verifying `supabase.auth.getUser(token)` ([BSU#460](https://github.com/GaryOcean428/business-suite-unified/pull/460), SEC-EDGE-006; [bsuite#1123](https://github.com/GaryOcean428/bsuite/issues/1123)); CRM7 consolidated 5 duplicate `timingSafeEqual` impls into `_shared/timing-safe.ts` and fixed 2 inverted-argument timing-attack call sites in `mapd-sync` + `report-delivery` ([crm7#810](https://github.com/GaryOcean428/crm7/pull/810); [bsuite#1125](https://github.com/GaryOcean428/bsuite/issues/1125)).
+- ✅ **TESTS** — `@bsuite/charge-calc` `src/resolvers/` zero-coverage gap closed: 43 behaviour specs across `wage.test.ts` (24) + `training-days.test.ts` (19) for the compliance-critical wage + training-days resolvers ([bsuite#1154](https://github.com/GaryOcean428/bsuite/pull/1154); [bsuite#1153](https://github.com/GaryOcean428/bsuite/issues/1153)).
+- ✅ **DOCS** — AGENTS.md §12 Pattern 2 banked — "Constant-time string comparison footguns" (`Math.min` loop bound leaks the secret length / CWE-208; opaque `(a, b)` params let call sites invert SECRET/CANDIDATE), the code-level pattern surfaced by the crm7#810 EDGE rotation ([bsuite#1157](https://github.com/GaryOcean428/bsuite/pull/1157) merged to `development`; [bsuite#1156](https://github.com/GaryOcean428/bsuite/issues/1156)).
+- ✅ **PERF** — CRM7 `App.tsx` route trees frozen in module-scope zero-prop `React.memo` components (`PublicRoutes` / `AppRoutes`), stopping the active page from unmount/remounting on `Router`-internal re-renders — the 60s `setSession` auth-sync churn was re-creating ~300 inline `component={() => …}` closures every tick; routing now matches standard React-Router semantics ([crm7#826](https://github.com/GaryOcean428/crm7/pull/826); [bsuite#1160](https://github.com/GaryOcean428/bsuite/issues/1160)).
+
+**Open carry-forwards re-listed for next rotations (un-remediated this run)**
+
+- 🔲 **`@bsuite/charge-calc` per-package coverage CI gate** — with the v8 provider now installed, a future CI / TESTS rotation can wire `test:coverage` into the package's CI job so the 90/85/90/90 thresholds actually gate merges (today they exist but nothing runs them).
+- 🔲 **`xero-webhook-sig.ts` HMAC compare audit** + BSU `_shared/cors.ts` inline `timingSafeEqual` — sibling EDGE follow-ups to crm7#810, named in AGENTS.md §12 Pattern 2 cross-app candidates; queued for next **EDGE** rotation.
+- 🔲 **DB carry-forward** — 8 platform-admin functions caller triage; `public.list_public_tables()` SECURITY INVOKER conversion; `public.branding_json_for_platform()` advisor audit; queued for next **DB** rotation.
+- 🔲 **bsuite#1104 P1 TYPES continuation** — throughput + braden hidden type errors; throughput#177 + braden#287 may have substantially closed it — a future **TYPES** rotation should verify and close bsuite#1104.
+- 🔲 **AGENTS.md sibling-submodule pointers** (bsuite#1012 / #1062 §9.3) — queued for next **DOCS** rotation.
+- 🔲 **PERF lazy-shell audit slices 3-6** — conduit (Next.js 16 `dynamic()`), R80.3, braden, throughput (bsuite#1015 §9.3 #1).
+- 🔲 **W6 (Branding) / W4 (Permissions Editor) / W2 (Reports CRM7)** — claude-loop wave-owned, UNBLOCKED; rotation-override candidates.
+
+---
 
 ## Recently Completed (as of 2026-05-17 — claude-loop ROADMAP rotation: P1 SECURITY IDOR remediation)
 
@@ -937,6 +965,12 @@ _Source: Full doc→roadmap cross-reference across all 6 repos. See [BSuite Gap 
 
 ## Revision log
 
+- **2026-05-20 v5.12W** — claude-loop ROADMAP rotation ([bsuite#1165](https://github.com/GaryOcean428/bsuite/issues/1165)):
+  - **Rotation deliverable shipped this run:** `@bsuite/charge-calc` `test:coverage` repaired by adding the missing `@vitest/coverage-v8` provider to `packages/charge-calc/devDependencies`. The package's `vitest.config.ts` declared a `v8` coverage provider + 90/85/90/90 thresholds and `package.json` shipped a `test:coverage` script, but the provider package was never installed — `pnpm test:coverage` errored before producing a report. This is the "highest-priority unimplemented item" per the ROADMAP playbook: a fully-verifiable carry-forward flagged 3x without remediation (bsuite#1153/1156/1160). `vitest` re-resolved `^4.1.5` → `^4.1.6` so the coverage provider matches the runner version exactly.
+  - Added new "Recently Completed (as of 2026-05-20)" section above the prior 2026-05-17 block. Captures: (a) the charge-calc coverage-tooling repair as the rotation deliverable; (b) the 2026-05-19/20 DB→EDGE→TESTS→DOCS→PERF rotation chain — DB `calculate_launch_readiness` IDOR fix (throughput#176/bsuite#1117), EDGE `platform-kit-proxy` + 3-fn `auth.getUser()` + crm7 timing-safe consolidation (BSU#459/#460, crm7#810; bsuite#1123/1124/1125), TESTS charge-calc resolver specs (bsuite#1154), DOCS AGENTS.md §12 Pattern 2 (bsuite#1157), PERF crm7 route-tree `React.memo` freeze (crm7#826); (c) 7 open carry-forwards re-listed with rotation targets.
+  - Last Updated line bumped to flag the coverage-tooling repair as the rotation deliverable.
+  - **§1.2 research_evidence (primary-source):** `packages/charge-calc/vitest.config.ts` + `package.json` (live source — broken `test:coverage` config); `packages/charge-calc/pnpm-lock.yaml` (pre-fix lockfile pinning `vitest@4.1.5` with no coverage provider); Vitest official coverage guide — "you must install `@vitest/coverage-v8`" and the provider-version-match requirement (https://vitest.dev/guide/coverage); pnpm peer-dependency resolution behaviour observed at install time (`@vitest/coverage-v8`↔`vitest` exact-version peer); carry-forward provenance — bsuite#1153/1156/1160 issue bodies (each names the missing devDependency). No blog posts.
+  - **§9 Evidence:** §9.1 output-equivalence — `pnpm test` 680/680 pass pre- and post-fix (no regression); §9.2 visual N/A (tooling/devDependency change, no UI surface); self-report — `@bsuite/charge-calc` source `dist/` artefact is unchanged (devDependencies are not in the `files: ["dist"]` publish allow-list), so no package version bump and no consumer impact; tests run — `pnpm test:coverage` → exit 0 with all four global thresholds clear (statements 94.73% / branches 85.9% / functions 98.55% / lines 96.04%), `pnpm typecheck` → exit 0; lockfile verified `.:`-only importer (no `..` workspace-relative paths — Vercel-safe).
 - **2026-05-17 v5.11W** — claude-loop ROADMAP rotation ([bsuite#1069](https://github.com/GaryOcean428/bsuite/issues/1069)):
   - **P1 SECURITY remediation shipped this rotation:** `public.get_user_analytics_summary(p_user_id uuid)` hardened against IDOR / cross-user data leak via Supabase MCP `apply_migration` at 2026-05-17T~13:50Z. Pre-fix was SECURITY DEFINER with no `auth.uid()` check on `p_user_id`; post-fix is SECURITY INVOKER + explicit auth guard + platform-admin override + tightened search_path. Flagged 5x without remediation across bsuite#1049/1052/1057/1061/1066 — this rotation actioned the "highest-priority unimplemented item" per the ROADMAP playbook.
   - Added new "Recently Completed (as of 2026-05-17)" section above the prior 2026-05-13 block. Captures: (a) the P1 SECURITY remediation as the lead item; (b) 11 named open carry-forwards re-listed with rotation targets; (c) the auth-shell lazy-load audit series (slices 1+2 — crm7#795 −152 KB, BSU#451 −12 KB); (d) AGENTS.md §11 Sandbox Pattern Library bank (bsuite#1062); (e) R80.3 pdfExportService 17-spec coverage (R80.3#258); (f) full 12-step rotation chain landings (EDGE/DB/TYPES/WL/A11Y/UX/UI/FEATURE/DEPS/COMPETE).
