@@ -175,7 +175,12 @@ AS $$
     SELECT 1 FROM public.tenants t
     WHERE t.id = auth_tenant_id()
       AND t.parent_tenant_id IS NULL  -- enterprise = top of hierarchy
-      AND is_gto_staff_at_tenant(auth.uid(), t.id, 'gto_admin')
+      AND EXISTS (
+        SELECT 1 FROM public.org_members om
+        WHERE om.user_id = auth.uid()
+          AND om.tenant_id = t.id
+          AND om.gto_role = 'gto_admin'
+      )
   );
 $$;
 ```
