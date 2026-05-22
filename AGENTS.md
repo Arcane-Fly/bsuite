@@ -1405,9 +1405,76 @@ The `?? 0` guards the out-of-bounds read when the candidate is shorter than the 
 
 **Cross-app candidates that need the same audit:** `business-suite-unified/supabase/functions/_shared/cors.ts` ships its own inline `timingSafeEqual`; `crm7/supabase/functions/_shared/xero-webhook-sig.ts` does an HMAC compare. Both are sibling-consolidation candidates named in bsuite#1125's scoped-out follow-ups — verify each uses the fixed-loop shape and `(SECRET, CANDIDATE)` order.
 
-### Pattern 3 — Reserved (next pattern)
+### Pattern 3 — Supabase `setSession()` → `getSession()` Propagation Race
 
-When the next rotation surfaces a banking-worthy code-level pattern, replace this stub with `### Pattern 3 — <name>` and add `### Pattern 4 — Reserved (next pattern)` below it. Keep the chain alive so future agents always know where to land their entry. Distinct from §11 Pattern A/B — those are sandbox-workflow patterns; this section is code-construct patterns.
+**Surfaced by:** Production incident 2026-05-20T02:42:26Z — BSU OAuth Server audit log confirmed a successful `oauth_provider_authorization_code` exchange for CRM7 client `30f76744-...`, but all downstream PostgREST/RPC/Realtime queries fired 401/403 on the immediately following page. Root cause: supabase-js's in-memory session state had not propagated by the time the navigation target mounted. Hotfix: [crm7#821](https://github.com/GaryOcean428/crm7/pull/821). Applied uniformly to all 5 BS OAuth client apps ([R80.3#270](https://github.com/GaryOcean428/R80.3/pull/270), [conduit#277](https://github.com/GaryOcean428/conduit/pull/277), [braden#293](https://github.com/GaryOcean428/braden/pull/293), [throughput#181](https://github.com/GaryOcean428/throughput/pull/181)). Bsuite submodule bump: [bsuite commit 7b1b531](https://github.com/GaryOcean428/bsuite/commit/7b1b5312c7c7269e2b3181c5422cacfe3769d7a9).
+
+**Symptom:** An OAuth callback page calls `supabase.auth.setSession({ access_token, refresh_token })`, awaits the resolved promise, then navigates away. The destination page appears logged out: `supabase.auth.getSession()` returns `null`, auth-protected queries get `401/406` from PostgREST, and the user is bounced back to the login screen — even though the OAuth exchange succeeded and the tokens are valid.
+
+**Why it happens:**
+
+1. **`setSession()` resolves before in-memory state is observable by `getSession()`.** `setSession` validates the tokens, writes them to the configured storage adapter (localStorage in browser contexts), and enqueues an internal state-change notification. The promise resolves at write time, but supabase-js's subscriber notification happens asynchronously — in the next microtask batch. A `getSession()` call that races in *before* that batch completes sees the prior (null) in-memory state, not the freshly written one.
+
+2. **`noopLock` prevents React Strict Mode deadlock at the cost of serialisation.** When supabase-js detects an environment where its internal lock would deadlock React Strict Mode's double-invocation of effects, it falls back to a `noopLock` — a lock that immediately grants every request without waiting. This removes the mutual-exclusion guarantee between concurrent auth operations, widening the race window to the full async gap between storage write and subscriber notification.
+
+3. **Immediate navigation is the trigger.** The race only manifests when the callback page navigates synchronously after `await setSession()`. If the page stays mounted for even one event loop tick, the subscriber notification arrives and `getSession()` returns the new session. But `navigate('/dashboard')` unloads the component before that tick completes, so the receiving page starts with a stale in-memory state.
+
+**Wrong** (navigates immediately after `setSession` resolves — races in-memory propagation):
+
+```ts
+// ❌ In src/app/auth/callback/page.tsx (or any OAuth callback)
+const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+if (error) throw error;
+router.push('/dashboard'); // ❌ getSession() on /dashboard may still return null
+```
+
+**Right** (polls until in-memory state is observably consistent, then navigates):
+
+```ts
+// ✅ In src/app/auth/callback/page.tsx (or any OAuth callback)
+const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+if (error) throw error;
+
+// Poll until the in-memory state matches the newly written token.
+// Ceiling: 2 000 ms / interval: 50 ms — tolerable UX; exhaustion is a
+// diagnostic signal (network freeze or auth regression), not normal flow.
+const deadline = Date.now() + 2_000;
+while (Date.now() < deadline) {
+  const { data } = await supabase.auth.getSession();
+  if (data.session?.access_token === access_token) break;
+  await new Promise(resolve => setTimeout(resolve, 50));
+}
+
+const { data: finalCheck } = await supabase.auth.getSession();
+if (!finalCheck.session) {
+  // Throw so the catch block can route to a recoverable "session expired" UI.
+  throw new Error('setSession propagation timeout — session not observable after 2 s');
+}
+
+router.push('/dashboard'); // ✅ session is observably mounted; downstream getSession() returns it
+```
+
+**Three non-negotiables when writing or reviewing an OAuth callback:**
+
+- **Always poll after `setSession()` before navigating.** Treat the resolved `setSession()` promise as "storage write complete", not "in-memory state ready". The polling loop is the bridge.
+- **Bound the poll tightly and fail loudly on exhaustion.** A 2 s ceiling with 50 ms intervals is validated by the 2026-05-20 hotfix. Throwing on timeout (instead of silently continuing) routes the user to a recoverable error screen and surfaces the failure in monitoring — a silent continue produces the original logged-out symptom.
+- **Co-locate the poll with every `setSession()` call, not in a shared hook.** If the poll lives in a `useEffect` or a shared service that may not execute on the callback page, the race reopens. The poll must run in the same execution unit as `setSession()`.
+
+**Cross-app files carrying this pattern** (all fixed as of 2026-05-20 hotfix):
+
+| App | Callback file |
+|---|---|
+| CRM7 | `src/pages/auth/callback.tsx` (dual-purpose: BS OAuth + Supabase native PKCE) |
+| R80.3 | `src/pages/AuthCallback.tsx` |
+| Conduit | `src/app/auth/callback/page.tsx` (dual-purpose) |
+| Braden | `src/pages/auth/AuthCallback.tsx` |
+| Throughput | `src/pages/auth/AuthCallback.tsx` |
+
+Any new app added as a BS OAuth client must apply the same polling pattern in its callback before shipping.
+
+### Pattern 4 — Reserved (next pattern)
+
+When the next rotation surfaces a banking-worthy code-level pattern, replace this stub with `### Pattern 4 — <name>` and add `### Pattern 5 — Reserved (next pattern)` below it. Keep the chain alive so future agents always know where to land their entry. Distinct from §11 Pattern A/B — those are sandbox-workflow patterns; this section is code-construct patterns.
 
 ### Cross-references
 
@@ -1416,6 +1483,6 @@ When the next rotation surfaces a banking-worthy code-level pattern, replace thi
 
 ---
 
-*Frozen Fact: `FF-CODE-PATTERNS-20260517`. Adopted 2026-05-17 by claude-loop DOCS rotation (tracker bsuite#1061, PR bsuite#1062). Pattern 2 added 2026-05-20 by claude-loop DOCS rotation (tracker bsuite#1156). Primary-source citations: MDN Arrow function expressions reference (<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors>), Vitest `vi.fn` API reference (<https://vitest.dev/api/vi.html#vi-fn>), Vitest `vi.useFakeTimers` API reference (<https://vitest.dev/api/vi.html#vi-usefaketimers>), R80.3#258 commit `57e6273f` `src/services/__tests__/pdfExportService.test.ts`; CWE-208 Observable Timing Discrepancy (<https://cwe.mitre.org/data/definitions/208.html>), Node.js `crypto.timingSafeEqual` reference (<https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b>), in-repo precedent crm7#810 commit `7b67d35` `supabase/functions/_shared/timing-safe.ts`.*
+*Frozen Fact: `FF-CODE-PATTERNS-20260517`. Adopted 2026-05-17 by claude-loop DOCS rotation (tracker bsuite#1061, PR bsuite#1062). Pattern 2 added 2026-05-20 by claude-loop DOCS rotation (tracker bsuite#1156). Pattern 3 added 2026-05-22 by claude-code-scheduled cron fire28 — surfaced by production incident 2026-05-20T02:42:26Z; hotfix crm7#821; bsuite submodule bump commit `7b1b531`. Primary-source citations: MDN Arrow function expressions reference (<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions#cannot_be_used_as_constructors>), Vitest `vi.fn` API reference (<https://vitest.dev/api/vi.html#vi-fn>), Vitest `vi.useFakeTimers` API reference (<https://vitest.dev/api/vi.html#vi-usefaketimers>), R80.3#258 commit `57e6273f` `src/services/__tests__/pdfExportService.test.ts`; CWE-208 Observable Timing Discrepancy (<https://cwe.mitre.org/data/definitions/208.html>), Node.js `crypto.timingSafeEqual` reference (<https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b>), in-repo precedent crm7#810 commit `7b67d35` `supabase/functions/_shared/timing-safe.ts`; Supabase JS Auth `setSession` reference (<https://supabase.com/docs/reference/javascript/auth-setsession>), production incident bsuite commit `7b1b531` + crm7#821.*
 
 ---
