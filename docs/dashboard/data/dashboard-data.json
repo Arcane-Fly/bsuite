@@ -14,7 +14,7 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-05-20",
+    "last_refresh": "2026-05-22",
     "last_refreshed": "2026-05-19T07:00:00Z"
   },
   "summary": {
@@ -82,9 +82,9 @@
     {
       "name": "bsuite",
       "type": "parent",
-      "active_plans": 16,
+      "active_plans": 17,
       "archived": 0,
-      "main_sha": "4f7fdcf",
+      "main_sha": "baba1da",
       "vercel": "n/a"
     },
     {
@@ -92,7 +92,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "4f7fdcf",
+      "main_sha": "baba1da",
       "vercel": "success"
     },
     {
@@ -100,7 +100,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "4f7fdcf",
+      "main_sha": "baba1da",
       "vercel": "success"
     },
     {
@@ -108,7 +108,7 @@
       "type": "submodule",
       "active_plans": 5,
       "archived": 0,
-      "main_sha": "4f7fdcf",
+      "main_sha": "baba1da",
       "vercel": "success"
     },
     {
@@ -116,7 +116,7 @@
       "type": "submodule",
       "active_plans": 0,
       "archived": 0,
-      "main_sha": "4f7fdcf",
+      "main_sha": "baba1da",
       "vercel": "success"
     },
     {
@@ -124,7 +124,7 @@
       "type": "submodule",
       "active_plans": 0,
       "archived": 0,
-      "main_sha": "4f7fdcf",
+      "main_sha": "baba1da",
       "vercel": "success"
     },
     {
@@ -132,7 +132,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "4f7fdcf",
+      "main_sha": "baba1da",
       "vercel": "success"
     }
   ],
