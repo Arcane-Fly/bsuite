@@ -764,4 +764,58 @@ chore(dashboard): track reports W2 uplift progress + link plan
 - BSU-side Reports nav additions (the operator may want a Reports surface in BSU too — separate plan)
 - Report scheduling UI uplift (Task 7 only does the backend reliability; UI uplift is a separate W2.5)
 - AI-assisted report builder (`p2 #556` already tracks this — separate roadmap item)
-- Mobile-responsive run page layout (the doctrine recommends this but it's a follow-on after the desktop pattern lands)
+- Mobile-responsive run page layout (the doctrine recommises this but it's a follow-on after the desktop pattern lands)
+
+---
+
+## Addendum 1 — Schema Builder stepper primitives (Q1 decision, 2026-05-21)
+
+**Decision:** Reuse the `@bsuite/schema-builder` stepper primitives. Do NOT clone.
+
+The Schema Builder stepper has 11 test files behind it and is the proven pattern. If `Stepper`, `StepIndicator`, `StepPanel`, and the keyboard-navigation hook are not currently exported as a clean public surface, the right move in Task 3/4 is to **extract** them (either into `@bsuite/schema-builder`'s public exports or a new `@bsuite/schema-builder/stepper` sub-export), bump the package version, and bump the W2 consumer in the same PR or next per Dependency Version Policy §4 item 2.
+
+**Task 3/4 ordering implication:** before the W2 stepper UI is built, Task 3a runs first:
+
+- **Task 3a — Extract stepper primitives from `@bsuite/schema-builder`** — structural-only extraction (no visual changes; that's its own PR with §9.2 evidence per AGENTS.md §9). Publish patch version, update W2 consumer pin.
+- **Task 3b — Compose the W2 5-step shell** with the extracted primitives.
+
+**Anti-pattern banned by this addendum:** "I'll re-create a Stepper inside W2 because extracting is harder" — extraction *is* harder; doing it right means future Schema Builder + W2 + any other stepper-needing surface share one source of truth.
+
+## Addendum 2 — `report_shares` table is deferred, not refused (Q2 decision, 2026-05-21)
+
+**Decision:** Do NOT build a `report_shares(report_id, recipient_user_id)` join table now. The 4-scope hierarchy (platform / enterprise / tenant / user) is the contract. `scope='user'` reports are private to their creator — that is the whole point of that scope.
+
+**Future extensibility — record at the top of the Task 1.5 migration:**
+
+```sql
+-- FUTURE EXTENSIBILITY (FF-REPORTS-W2-20260521 Addendum 2):
+-- Per-recipient sharing of scope='user' reports is additive via a new
+-- `report_shares(report_id uuid, recipient_user_id uuid, shared_by uuid,
+--   shared_at timestamptz, expires_at timestamptz)` join table + an additional
+-- RLS clause:
+--   OR (scope='user' AND id IN (SELECT report_id FROM report_shares WHERE recipient_user_id = auth.uid()))
+-- The scope='user' contract (visible-only-to-creator-by-default) stays intact;
+-- sharing is opt-in per share row. Do NOT pre-build the table — wait for a
+-- real user driver. This comment is the "doors-open" marker.
+```
+
+This addendum makes the future migration shorter (the schema author already knows the extensibility contract) and prevents the next agent from re-litigating the scope hierarchy.
+
+## Addendum 3 — Development-target deployment (2026-05-22 operator directive)
+
+**This session targets `development` only.** No `main`/`master` merges. All preview verification happens against the `d.*` URL aliases (per AGENTS.md Auth Routing Architecture):
+
+| App | Dev preview URL |
+|-----|-----------------|
+| BSU | `d.suite.crm7.app` |
+| CRM7 | `d.crm.crm7.app` |
+| R80.3 | `d.r8.crm7.app` |
+| Conduit | `d.conduit.crm7.app` |
+| Throughput | `d.ideas.crm7.app` |
+| Braden | `d.braden.com.au` |
+
+**Task 8 Playwright matrix runs against `d.crm.crm7.app`** — auth callback is allowlisted on the `d.*` domains per ADR-0004, so the BS OAuth flow works end-to-end.
+
+**Phase 5 — sync-back to `main`** is **deferred to a subsequent session.** This plan's PR chain stops at `development` for now. The `chore/promote-development-to-main-reports-w2-*` PR can be opened once operator signs off via the d.* verification.
+
+**Verification gate addendum:** every PR's `## Evidence` block must include a screenshot taken from the `d.*` URL, not localhost. Localhost-only evidence does not satisfy §9.2.
