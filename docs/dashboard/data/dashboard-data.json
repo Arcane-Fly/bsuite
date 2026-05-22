@@ -15,7 +15,7 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-05-22",
-    "last_refreshed": "2026-05-19T07:00:00Z"
+    "last_refreshed": "2026-05-22T07:30:00Z"
   },
   "summary": {
     "external_total": 30,
@@ -2728,6 +2728,14 @@
         "pr": "crm7#844",
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/844"
+      },
+      {
+        "id": "3b",
+        "title": "compose W2 wizard at /reports/custom/create \u2014 scope picker (4-scope hierarchy), save to report_templates, ScopeSelect hiddenOptions, reportTemplateInsertService, 7-case unit tests",
+        "pr": "crm7#847",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/847",
+        "note": "Implemented without Stepper extraction (3a) \u2014 wizard built directly; 3a unblocked separately"
       }
     ],
     "tasks_deferred": [
@@ -2736,16 +2744,7 @@
         "title": "extract Stepper / StepIndicator / StepPanel + keyboard-nav hook from @bsuite/schema-builder; publish patch + bump consumer pin",
         "status": "pending",
         "blocks": [
-          "3b",
           "4"
-        ]
-      },
-      {
-        "id": "3b",
-        "title": "compose W2 5-step shell at /reports/custom/create with scope picker at Step 3 (Access)",
-        "status": "pending",
-        "blocked_by": [
-          "3a"
         ]
       },
       {
