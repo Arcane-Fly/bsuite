@@ -14,8 +14,9 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-05-22",
-    "last_refreshed": "2026-05-22T07:30:00Z"
+    "last_refresh": "2026-05-24",
+    "last_refreshed": "2026-05-24T11:25:00Z",
+    "last_refreshed_by": "claude-code-scheduled fire44"
   },
   "summary": {
     "external_total": 30,
@@ -58,7 +59,7 @@
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 135,
-    "open_prs_total": 0,
+    "open_prs_total": 1,
     "issues_by_repo": {
       "bsuite": 49,
       "crm7": 30,
@@ -69,7 +70,7 @@
       "throughput": 0
     },
     "prs_by_repo": {
-      "bsuite": 0,
+      "bsuite": 1,
       "crm7": 0,
       "conduit": 0,
       "business-suite-unified": 0,
