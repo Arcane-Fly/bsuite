@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-05-25",
-    "last_refreshed": "2026-05-25T05:10:00Z",
-    "last_refreshed_by": "claude-code-scheduled fire47"
+    "last_refreshed": "2026-05-25T05:30:00Z",
+    "last_refreshed_by": "claude-code-scheduled fire48"
   },
   "summary": {
     "external_total": 30,
@@ -59,8 +59,8 @@
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 135,
-    "open_prs_total": 3,
-    "open_prs_note": "Active: #1195 (dev→main ship cycle, DRAFT, CI green, forward-port confirmed, operator undraft needed) + #1254 (SEC-002/003 theme sanitize, DRAFT, CI green) + #1260 (DB advisor 5-fix, DRAFT, CI green, already applied to prod). #1264 closed this fire (wrong open_issues_total data). Updated fire47 2026-05-25.",
+    "open_prs_total": 1,
+    "open_prs_note": "Active: #1195 (dev→main ship cycle, DRAFT, CI green, mergeable_state:clean — operator undraft+merge to ship). Merged this cycle: #1254 (SEC-002/003 @bsuite/theme 0.4.1 branding sanitize), #1260 (DB advisor 5-fix, anon RPC+initplan+xero RLS), #1271 (ship cycle 2026-05-25 — 6 submodule bumps: 22 PRs incl. a11y, sec, W2 reports, perf). Updated fire48 2026-05-25.",
     "issues_by_repo": {
       "bsuite": 46,
       "crm7": 30,
@@ -71,7 +71,7 @@
       "throughput": 0
     },
     "prs_by_repo": {
-      "bsuite": 3,
+      "bsuite": 1,
       "crm7": 0,
       "conduit": 0,
       "business-suite-unified": 0,
@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "b8bd8be",
+      "main_sha": "599628a",
       "vercel": "n/a"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "b8bd8be",
+      "main_sha": "599628a",
       "vercel": "success"
     },
     {
@@ -102,7 +102,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "b8bd8be",
+      "main_sha": "599628a",
       "vercel": "success"
     },
     {
@@ -110,7 +110,7 @@
       "type": "submodule",
       "active_plans": 5,
       "archived": 0,
-      "main_sha": "b8bd8be",
+      "main_sha": "599628a",
       "vercel": "success"
     },
     {
@@ -118,7 +118,7 @@
       "type": "submodule",
       "active_plans": 0,
       "archived": 0,
-      "main_sha": "b8bd8be",
+      "main_sha": "599628a",
       "vercel": "success"
     },
     {
@@ -126,7 +126,7 @@
       "type": "submodule",
       "active_plans": 0,
       "archived": 0,
-      "main_sha": "b8bd8be",
+      "main_sha": "599628a",
       "vercel": "success"
     },
     {
@@ -134,7 +134,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 0,
-      "main_sha": "b8bd8be",
+      "main_sha": "599628a",
       "vercel": "success"
     }
   ],
