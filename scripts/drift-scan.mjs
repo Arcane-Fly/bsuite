@@ -438,6 +438,26 @@ function getCookieStorageTargetName(node) {
   return null;
 }
 
+function getStandaloneCookieIdentifierName(node, parent) {
+  const name = getCookieStorageTargetName(node);
+  if (!name || node.type !== 'Identifier' || !parent) return null;
+  if ((parent.type === 'MemberExpression' || parent.type === 'OptionalMemberExpression')
+      && parent.property === node && !parent.computed) return null;
+  if ((parent.type === 'Property' || parent.type === 'PropertyDefinition')
+      && parent.key === node && !parent.computed) return null;
+  if (parent.type === 'MethodDefinition' && parent.key === node && !parent.computed) return null;
+  if ((parent.type === 'ImportSpecifier' || parent.type === 'ImportDefaultSpecifier'
+      || parent.type === 'ImportNamespaceSpecifier') && parent.local === node) return null;
+  if ((parent.type === 'VariableDeclarator' || parent.type === 'FunctionDeclaration'
+      || parent.type === 'FunctionExpression' || parent.type === 'ClassDeclaration'
+      || parent.type === 'ClassExpression' || parent.type === 'TSTypeAliasDeclaration'
+      || parent.type === 'TSInterfaceDeclaration') && parent.id === node) return null;
+  if ((parent.type === 'FunctionDeclaration' || parent.type === 'FunctionExpression'
+      || parent.type === 'ArrowFunctionExpression') && parent.params.includes(node)) return null;
+  if (parent.type.startsWith('TS')) return null;
+  return name;
+}
+
 function walkAst(node, visit, parent = null) {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) {
@@ -508,6 +528,16 @@ function scanCookieSsoAst(file, entries) {
       const reason = name === 'createCookieStorage'
         ? 'createCookieStorage import is forbidden'
         : 'cookieStorage import is forbidden on browser clients';
+      addHit(node.loc.start.line, reason);
+      return;
+    }
+
+    if (node.type === 'Identifier') {
+      const name = getStandaloneCookieIdentifierName(node, parent);
+      if (!name || !node.loc?.start?.line) return;
+      const reason = name === 'createCookieStorage'
+        ? 'createCookieStorage is forbidden'
+        : 'cookieStorage is forbidden on browser clients';
       addHit(node.loc.start.line, reason);
       return;
     }
@@ -635,6 +665,9 @@ function selfTest() {
     { name: 'COOKIE-SSO — browser import flagged via AST', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ["import { cookieStorage } from '@supabase/ssr';"] },
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('import')) },
+    { name: 'COOKIE-SSO — browser identifier reference flagged via AST', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ['const store = cookieStorage;'] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('cookieStorage')) },
     { name: 'COOKIE-SSO — Next.js middleware NOT flagged', framework: 'nextjs', repoName: 'conduit',
       addedByFile: { 'src/middleware.ts': ["  cookies().set('sb-access', token, { httpOnly: true })"] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
