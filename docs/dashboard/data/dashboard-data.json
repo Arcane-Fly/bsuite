@@ -14,9 +14,9 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-05-24",
-    "last_refreshed": "2026-05-24T11:25:00Z",
-    "last_refreshed_by": "claude-code-scheduled fire44"
+    "last_refresh": "2026-05-25",
+    "last_refreshed": "2026-05-25T02:30:00Z",
+    "last_refreshed_by": "claude-code-scheduled fire45"
   },
   "summary": {
     "external_total": 30,
@@ -59,9 +59,10 @@
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 135,
-    "open_prs_total": 1,
+    "open_prs_total": 2,
+    "open_prs_note": "Active: #1195 (ship cycle dev→main, operator merge pending) + #1254 (SEC-002/003 theme sanitize, all CI green). #1249 superseded (dirty conflict, pending close). Updated fire45 2026-05-25.",
     "issues_by_repo": {
-      "bsuite": 49,
+      "bsuite": 46,
       "crm7": 30,
       "business-suite-unified": 27,
       "braden": 5,
@@ -70,7 +71,7 @@
       "throughput": 0
     },
     "prs_by_repo": {
-      "bsuite": 1,
+      "bsuite": 2,
       "crm7": 0,
       "conduit": 0,
       "business-suite-unified": 0,
