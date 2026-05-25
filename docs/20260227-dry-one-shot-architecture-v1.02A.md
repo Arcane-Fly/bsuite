@@ -2,7 +2,10 @@
 
 **Applies to:** CRM7 • R8 • BSU • Conduit • braden • throughput • All future modules
 **Source of truth:** Unified Supabase schema (`business-suite-unified/database/` + `crm7/supabase/migrations/`)
-**Last updated:** 2026-05-01 (v1.02A — P1-4(b) consumer-renderer migration: ADR-0001/ADR-0003 ratified, `tenant_page_layouts` dropped, CRM7 `custom_pages` canonical, per-app `CustomPageRenderer` doctrine)
+**Last updated:** 2026-05-25 (v1.03A — Host Employers canonical table corrected to `employers` to match implementation reality)
+
+**Changelog (top):**
+- 2026-05-25 (v1.03A): Updated §1 Entity Ownership Map Host Employers row from `clients` (type=host) to `employers` to match current production implementation.
 
 ---
 
@@ -25,7 +28,7 @@ Other apps may READ the entity but NEVER create or edit it independently.
 | **Contacts** | CRM7 | Contact form | R8, BSU | `contacts` |
 | **Clients** | CRM7 | Client form | R8, BSU | `clients` |
 | **Apprentices** | CRM7 | Apprentice form | R8 (rates), BSU (metrics) | `apprentices` |
-| **Host Employers** | CRM7 | Employer form | R8 (charge-to) | `clients` (type=host) |
+| **Host Employers** | CRM7 | Employer form | R8 (charge-to) | `employers` |
 | **Placements** | CRM7 | Placement form | R8 (context) | `placements` |
 | **Qualifications** | CRM7 | Qualification form | R8 (award lookup) | `qualifications` |
 | **Training Plans** | CRM7 | Training plan form | — | `training_plans` |
