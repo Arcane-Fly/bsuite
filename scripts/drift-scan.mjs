@@ -475,12 +475,14 @@ function scanCookieSsoAst(file, entries) {
   if (!isCookieSsoCodeFile(file)) return [];
   const sourcePath = path.join(process.cwd(), file);
   const sourceCandidates = [];
-  if (existsSync(sourcePath)) sourceCandidates.push(readFileSync(sourcePath, 'utf8'));
-  sourceCandidates.push(entries.map((entry) => entry.text).join('\n'));
+  if (existsSync(sourcePath)) sourceCandidates.push({ source: readFileSync(sourcePath, 'utf8'), usesSnippetLines: false });
+  sourceCandidates.push({ source: entries.map((entry) => entry.text).join('\n'), usesSnippetLines: true });
   let ast = null;
-  for (const source of sourceCandidates) {
+  let usesSnippetLines = false;
+  for (const candidate of sourceCandidates) {
     try {
-      ast = parseCookieSsoAst(source, file);
+      ast = parseCookieSsoAst(candidate.source, file);
+      usesSnippetLines = candidate.usesSnippetLines;
       break;
     } catch {}
   }
@@ -492,6 +494,10 @@ function scanCookieSsoAst(file, entries) {
   const seen = new Set();
 
   function addHit(lineNumber, reason) {
+    const resolvedLineNumber = usesSnippetLines
+      ? (entries[lineNumber - 1]?.lineNumber ?? lineNumber)
+      : lineNumber;
+    lineNumber = resolvedLineNumber;
     if (!addedLineNumbers.has(lineNumber)) return;
     const entry = entriesByLine.get(lineNumber);
     if (!entry) return;
@@ -661,13 +667,13 @@ function selfTest() {
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.severity === 'fail') },
     { name: 'COOKIE-SSO — browser identifier call flagged via AST', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ['const store = cookieStorage();'] },
-      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('cookieStorage')) },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.line.includes('cookieStorage();')) },
     { name: 'COOKIE-SSO — browser import flagged via AST', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ["import { cookieStorage } from '@supabase/ssr';"] },
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('import')) },
     { name: 'COOKIE-SSO — browser identifier reference flagged via AST', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ['const store = cookieStorage;'] },
-      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('cookieStorage')) },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.line.includes('const store = cookieStorage;')) },
     { name: 'COOKIE-SSO — Next.js middleware NOT flagged', framework: 'nextjs', repoName: 'conduit',
       addedByFile: { 'src/middleware.ts': ["  cookies().set('sb-access', token, { httpOnly: true })"] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
@@ -688,7 +694,10 @@ function selfTest() {
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
     { name: 'COOKIE-SSO — test file actual call IS flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/__tests__/portal-scope-contract.test.ts': ['expect(cookieStorage()).toBeDefined();'] },
-      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('cookieStorage')) },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.line.includes('expect(cookieStorage()).toBeDefined();')) },
+    { name: 'COOKIE-SSO — test file createCookieStorage call IS flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/__tests__/portal-scope-contract.test.ts': ['expect(createCookieStorage()).toBeDefined();'] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('createCookieStorage')) },
     { name: 'STALE-GROK — retired model flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/ai.ts': ["  model: 'xai/grok-4.1-fast-reasoning',"] },
       expect: (hits) => hits.some((h) => h.signal === 'STALE-GROK') },
