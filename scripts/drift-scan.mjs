@@ -68,6 +68,8 @@ const TEST_FILE_SUFFIXES = [
 ];
 const CODE_FILE_SUFFIXES = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
 const ROOT_REQUIRE = createRequire(import.meta.url);
+// Workspace fallback: drift-scan lives at repo root, but the parser is currently
+// declared from packages/dry-lint rather than the root package.json.
 const DRY_LINT_REQUIRE = createRequire(new URL('../packages/dry-lint/package.json', import.meta.url));
 const COOKIE_SSO_PARSER_CANDIDATES = [ROOT_REQUIRE, DRY_LINT_REQUIRE];
 let cookieSsoParser = null;
@@ -492,16 +494,14 @@ function scanCookieSsoAst(file, entries) {
   const entriesByLine = new Map(entries.map((entry) => [entry.lineNumber, entry]));
   const hits = [];
   const seen = new Set();
-
   function addHit(lineNumber, reason) {
-    const resolvedLineNumber = usesSnippetLines
+    const finalLineNumber = usesSnippetLines
       ? (entries[lineNumber - 1]?.lineNumber ?? lineNumber)
       : lineNumber;
-    lineNumber = resolvedLineNumber;
-    if (!addedLineNumbers.has(lineNumber)) return;
-    const entry = entriesByLine.get(lineNumber);
+    if (!addedLineNumbers.has(finalLineNumber)) return;
+    const entry = entriesByLine.get(finalLineNumber);
     if (!entry) return;
-    const key = `${lineNumber}:${reason}`;
+    const key = `${finalLineNumber}:${reason}`;
     if (seen.has(key)) return;
     seen.add(key);
     hits.push({
