@@ -67,6 +67,8 @@ const TEST_FILE_SUFFIXES = [
   '.stories.ts', '.stories.tsx', '.stories.js', '.stories.jsx',
 ];
 const CODE_FILE_SUFFIXES = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+// JS regex literals can start after these expression-leading punctuators.
+const COOKIE_SSO_REGEX_PREFIX_CHARS = '([{:;,!=?&|+-*%^~<>';
 const ROOT_REQUIRE = createRequire(import.meta.url);
 // Workspace fallback: drift-scan lives at repo root, but the parser is currently
 // declared from packages/dry-lint rather than the root package.json.
@@ -435,6 +437,11 @@ function findCookieSsoNextSignificant(line, idx) {
   return '';
 }
 
+function maskCookieSsoChar(ch) {
+  // Preserve tabs so sanitized lines keep their original indentation/column shape.
+  return ch === '\t' ? '\t' : ' ';
+}
+
 function sanitizeCookieSsoEntries(entries) {
   const sanitized = [];
   let inBlockComment = false;
@@ -451,26 +458,26 @@ function sanitizeCookieSsoEntries(entries) {
       const next = chars[i + 1] ?? '';
       if (inBlockComment) {
         if (ch === '*' && next === '/') {
-          chars[i] = ' ';
-          chars[i + 1] = ' ';
+          chars[i] = maskCookieSsoChar(ch);
+          chars[i + 1] = maskCookieSsoChar(next);
           i++;
           inBlockComment = false;
-        } else if (ch !== '\t') {
-          chars[i] = ' ';
+        } else {
+          chars[i] = maskCookieSsoChar(ch);
         }
         continue;
       }
       if (quote) {
         if (quote === '`' && !escaped && ch === '$' && next === '{') {
-          chars[i] = ' ';
-          chars[i + 1] = ' ';
+          chars[i] = maskCookieSsoChar(ch);
+          chars[i + 1] = maskCookieSsoChar(next);
           i++;
           quote = '';
           templateExprDepth = 1;
           prevSignificant = '{';
           continue;
         }
-        if (ch !== '\t') chars[i] = ' ';
+        chars[i] = maskCookieSsoChar(ch);
         if (escaped) {
           escaped = false;
           continue;
@@ -483,7 +490,7 @@ function sanitizeCookieSsoEntries(entries) {
         continue;
       }
       if (inRegex) {
-        if (ch !== '\t') chars[i] = ' ';
+        chars[i] = maskCookieSsoChar(ch);
         if (escaped) {
           escaped = false;
           continue;
@@ -505,19 +512,19 @@ function sanitizeCookieSsoEntries(entries) {
       }
       if (ch === '/' && next === '/') {
         for (let j = i; j < chars.length; j++) {
-          if (chars[j] !== '\t') chars[j] = ' ';
+          chars[j] = maskCookieSsoChar(chars[j]);
         }
         break;
       }
       if (ch === '/' && next === '*') {
-        chars[i] = ' ';
-        chars[i + 1] = ' ';
+        chars[i] = maskCookieSsoChar(ch);
+        chars[i + 1] = maskCookieSsoChar(next);
         i++;
         inBlockComment = true;
         continue;
       }
       if (ch === '\'' || ch === '"' || ch === '`') {
-        chars[i] = ' ';
+        chars[i] = maskCookieSsoChar(ch);
         quote = ch;
         continue;
       }
@@ -526,16 +533,16 @@ function sanitizeCookieSsoEntries(entries) {
         if (ch === '}') {
           templateExprDepth--;
           if (templateExprDepth === 0) {
-            chars[i] = ' ';
+            chars[i] = maskCookieSsoChar(ch);
             quote = '`';
             continue;
           }
         }
       }
       if (ch === '/') {
-        const startsRegex = !prevSignificant || '([{:;,!=?&|+-*%^~<>'.includes(prevSignificant);
+        const startsRegex = !prevSignificant || COOKIE_SSO_REGEX_PREFIX_CHARS.includes(prevSignificant);
         if (startsRegex) {
-          chars[i] = ' ';
+          chars[i] = maskCookieSsoChar(ch);
           inRegex = true;
           inRegexClass = false;
           escaped = false;
