@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/ui",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -30,6 +30,10 @@
     "./utils": {
       "import": "./dist/utils.js",
       "types": "./dist/utils.d.ts"
+    },
+    "./branding": {
+      "import": "./dist/branding/index.js",
+      "types": "./dist/branding/index.d.ts"
     },
     "./assets/d2c-default-logo.svg": "./src/assets/d2c-default-logo.svg"
   },

@@ -11,3 +11,13 @@ export {
   type AppSlug,
 } from './Logo.js'
 export { D2CDefaultLogo, type D2CDefaultLogoProps } from './default-logo.js'
+
+// Branding components (v0.3.0+)
+export {
+  BrandingCard,
+  ColorEditorSheet,
+  OklchColorPicker,
+  type BrandingCardProps,
+  type ColorEditorSheetProps,
+  type OklchColorPickerProps,
+} from './branding/index.js'
