@@ -1,6 +1,6 @@
 /**
  * BrandingProvider — runtime enterprise white-labelling
- * Version 0.3.0
+ * Version 0.4.1
  *
  * On mount:
  *  1. Calls supabase.rpc('branding_json_for_tenant') using the user's authed session.
@@ -16,6 +16,15 @@
  *    Colourblind policy (purple error) is a system-level requirement, not a brand pref.
  *  - brand="braden" short-circuits all Supabase calls — Braden corporate site uses
  *    static CSS tokens, not runtime tenant overrides.
+ *  - SEC-002 / SEC-003 (added 0.4.1) — tenant-controlled URL fields
+ *    (`logo_url`, `logo_light_url`, `logo_dark_url`, `mark_url`,
+ *    `favicon_url`) and `font_stack` are routed through `branding-sanitize`
+ *    at the DOM-apply sink. Dangerous schemes (`javascript:`, `data:`,
+ *    `vbscript:`, `blob:`, `file:`) are rejected; the URL is parsed and
+ *    re-serialised so breakout chars are percent-encoded; the `url()`
+ *    token is emitted in the safe quoted form with `"` and `\` escaped;
+ *    font values carrying CSS-breakout tokens (`< > ( ) { } ; @ \ /* *\/`)
+ *    are rejected and the var is cleared so the default font applies.
  *
  * Environment flags:
  *  - VITE_ENABLE_BRANDING_OVERRIDE (default: 'true') — set 'false' as kill switch.
@@ -35,6 +44,11 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  sanitizeBrandingUrl,
+  sanitizeFontFamily,
+  toCssUrl,
+} from './branding-sanitize'
 
 export const BRANDING_STORAGE_KEY = 'bsuite_tenant_branding'
 export const BRANDING_OVERRIDE_FLAG = 'VITE_ENABLE_BRANDING_OVERRIDE'
@@ -177,28 +191,29 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
     }
   }
 
-  if (branding.logo_url) {
-    root.style.setProperty('--logo-url', `url(${branding.logo_url})`)
+  // Tenant-controlled URL and font values pass through `branding-sanitize`
+  // (SEC-002 / SEC-003) so a crafted row cannot break out of the `url(...)`
+  // token or the font declaration and inject arbitrary CSS. Each setter is
+  // paired with a removeProperty fall-through so a malicious value clears
+  // the var (caller falls back to the default) rather than persisting a
+  // previous tenant's URL.
+  const setOrClearUrlVar = (cssVar: string, raw: string | null | undefined): void => {
+    const safe = toCssUrl(sanitizeBrandingUrl(raw))
+    if (safe) root.style.setProperty(cssVar, safe)
+    else root.style.removeProperty(cssVar)
   }
 
-  if (branding.logo_light_url) {
-    root.style.setProperty('--logo-light-url', `url(${branding.logo_light_url})`)
-  }
+  setOrClearUrlVar('--logo-url', branding.logo_url)
+  setOrClearUrlVar('--logo-light-url', branding.logo_light_url)
+  setOrClearUrlVar('--logo-dark-url', branding.logo_dark_url)
+  setOrClearUrlVar('--mark-url', branding.mark_url)
+  setOrClearUrlVar('--favicon-url', branding.favicon_url)
 
-  if (branding.logo_dark_url) {
-    root.style.setProperty('--logo-dark-url', `url(${branding.logo_dark_url})`)
-  }
-
-  if (branding.mark_url) {
-    root.style.setProperty('--mark-url', `url(${branding.mark_url})`)
-  }
-
-  if (branding.favicon_url) {
-    root.style.setProperty('--favicon-url', `url(${branding.favicon_url})`)
-  }
-
-  if (branding.font_stack) {
-    root.style.setProperty('--font-stack', branding.font_stack)
+  const safeFontStack = sanitizeFontFamily(branding.font_stack ?? null)
+  if (safeFontStack) {
+    root.style.setProperty('--font-stack', safeFontStack)
+  } else {
+    root.style.removeProperty('--font-stack')
   }
 
   root.setAttribute('data-branding-loaded', 'true')
