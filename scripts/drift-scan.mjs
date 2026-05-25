@@ -31,6 +31,7 @@
  */
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const ARGS = parseArgs(process.argv.slice(2));
@@ -65,6 +66,11 @@ const TEST_FILE_SUFFIXES = [
   '.spec.ts', '.spec.tsx', '.spec.js', '.spec.jsx',
   '.stories.ts', '.stories.tsx', '.stories.js', '.stories.jsx',
 ];
+const CODE_FILE_SUFFIXES = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+const ROOT_REQUIRE = createRequire(import.meta.url);
+const DRY_LINT_REQUIRE = createRequire(new URL('../packages/dry-lint/package.json', import.meta.url));
+const COOKIE_SSO_PARSER_CANDIDATES = [ROOT_REQUIRE, DRY_LINT_REQUIRE];
+let cookieSsoParser = null;
 
 // Self-scan exclusions — lint-tooling files whose source necessarily contains
 // literal strings that match drift signals (regex sources, test fixtures,
@@ -109,10 +115,6 @@ const SIGNALS = [
             || file.endsWith('actions.ts') || file.includes('/api/')
             || file.includes('/server/') || file.includes('/auth/')) return null;
       }
-      if (WORD_COOKIE_STORAGE.test(line)) return 'cookieStorage is forbidden on browser clients';
-      if (WORD_CREATE_COOKIE_STORAGE.test(line)) return 'createCookieStorage is forbidden';
-      if (DOMAIN_CRM7_APP.test(line)) return 'domain=.crm7.app cookie is forbidden';
-      if (STORAGE_KEY_LEGACY.test(line)) return "storageKey 'business_suite_auth' is forbidden";
       return null;
     },
   },
@@ -334,21 +336,35 @@ function getUnifiedDiff({ base, head }) {
 // hand is simpler with a narrow regex on the `diff --git` line. Single pattern,
 // 32 chars, bounded capture groups. ReDoS-safe.
 const DIFF_GIT_HEADER = /^diff --git a\/(\S+) b\/(\S+)/;
+const DIFF_HUNK_HEADER = /^@@ -\d+(?:,\d+)? \+(\d+)/;
 
 function parseDiff(diff) {
   const byFile = {};
   let current = null;
+  let nextLineNumber = 0;
   for (const line of diff.split('\n')) {
     const m = line.match(DIFF_GIT_HEADER);
     if (m) {
       current = m[2];
       byFile[current] = [];
+      nextLineNumber = 0;
       continue;
     }
     if (!current) continue;
-    if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('@@')) continue;
+    if (line.startsWith('+++') || line.startsWith('---')) continue;
+    const hunk = line.match(DIFF_HUNK_HEADER);
+    if (hunk) {
+      nextLineNumber = Number(hunk[1]);
+      continue;
+    }
     if (line.startsWith('+')) {
-      byFile[current].push(line.slice(1));
+      byFile[current].push({ text: line.slice(1), lineNumber: nextLineNumber });
+      nextLineNumber++;
+      continue;
+    }
+    if (line.startsWith('-')) continue;
+    if (nextLineNumber > 0) {
+      nextLineNumber++;
     }
   }
   return byFile;
@@ -356,14 +372,204 @@ function parseDiff(diff) {
 
 // ─── Scan ─────────────────────────────────────────────────────────────────
 
+function isCookieSsoCodeFile(file) {
+  return CODE_FILE_SUFFIXES.some((ext) => file.endsWith(ext));
+}
+
+function isCookieSsoTestFile(file) {
+  if (TEST_PATH_FRAGMENTS.some((fragment) => file.includes(fragment))) return true;
+  return TEST_FILE_SUFFIXES.some((suffix) => file.endsWith(suffix));
+}
+
+function isNextServerCookieFile(file, fw) {
+  if (fw !== 'nextjs') return false;
+  return file.endsWith('middleware.ts') || file.endsWith('route.ts')
+      || file.endsWith('actions.ts') || file.includes('/api/')
+      || file.includes('/server/') || file.includes('/auth/');
+}
+
+function normalizeAddedLines(lines) {
+  return lines.map((line, idx) => (
+    typeof line === 'string'
+      ? { text: line, lineNumber: idx + 1 }
+      : { text: line.text, lineNumber: line.lineNumber ?? idx + 1 }
+  ));
+}
+
+function getCookieSsoParser() {
+  if (cookieSsoParser) return cookieSsoParser;
+  for (const req of COOKIE_SSO_PARSER_CANDIDATES) {
+    try {
+      cookieSsoParser = req('@typescript-eslint/parser');
+      return cookieSsoParser;
+    } catch {}
+  }
+  throw new Error('COOKIE-SSO scan requires @typescript-eslint/parser (tried repo root and packages/dry-lint)');
+}
+
+function parseCookieSsoAst(source, file) {
+  const parser = getCookieSsoParser();
+  const options = {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    loc: true,
+    range: true,
+    ecmaFeatures: { jsx: file.endsWith('.jsx') || file.endsWith('.tsx') },
+  };
+  try {
+    return parser.parse(source, options);
+  } catch {
+    return parser.parse(source, { ...options, sourceType: 'script' });
+  }
+}
+
+function getCookieStorageTargetName(node) {
+  if (!node || typeof node !== 'object') return null;
+  if (node.type === 'Identifier') {
+    if (node.name === 'cookieStorage') return node.name;
+    if (node.name === 'createCookieStorage') return node.name;
+    return null;
+  }
+  if ((node.type === 'MemberExpression' || node.type === 'OptionalMemberExpression') && !node.computed) {
+    const objectName = getCookieStorageTargetName(node.object);
+    if (objectName) return objectName;
+    return getCookieStorageTargetName(node.property);
+  }
+  return null;
+}
+
+function walkAst(node, visit, parent = null) {
+  if (!node || typeof node !== 'object') return;
+  if (Array.isArray(node)) {
+    for (const child of node) walkAst(child, visit, parent);
+    return;
+  }
+  if (typeof node.type === 'string') visit(node, parent);
+  for (const value of Object.values(node)) {
+    if (!value || typeof value !== 'object') continue;
+    walkAst(value, visit, node);
+  }
+}
+
+function scanCookieSsoAst(file, entries) {
+  if (!isCookieSsoCodeFile(file)) return [];
+  const sourcePath = path.join(process.cwd(), file);
+  const sourceCandidates = [];
+  if (existsSync(sourcePath)) sourceCandidates.push(readFileSync(sourcePath, 'utf8'));
+  sourceCandidates.push(entries.map((entry) => entry.text).join('\n'));
+  let ast = null;
+  for (const source of sourceCandidates) {
+    try {
+      ast = parseCookieSsoAst(source, file);
+      break;
+    } catch {}
+  }
+  if (!ast) return [];
+  const isTestFile = isCookieSsoTestFile(file);
+  const addedLineNumbers = new Set(entries.map((entry) => entry.lineNumber));
+  const entriesByLine = new Map(entries.map((entry) => [entry.lineNumber, entry]));
+  const hits = [];
+  const seen = new Set();
+
+  function addHit(lineNumber, reason) {
+    if (!addedLineNumbers.has(lineNumber)) return;
+    const entry = entriesByLine.get(lineNumber);
+    if (!entry) return;
+    const key = `${lineNumber}:${reason}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    hits.push({
+      signal: 'COOKIE-SSO',
+      severity: 'fail',
+      rule: 'Cookie SSO removed suite-wide 2025-02-27 — use per-domain localStorage + PKCE',
+      skill: 'auth-setup + AUTH_CANONICAL.md',
+      file,
+      line: entry.text.slice(0, 300),
+      reason,
+    });
+  }
+
+  walkAst(ast, (node, parent) => {
+    if (node.type === 'CallExpression' || node.type === 'NewExpression') {
+      const name = getCookieStorageTargetName(node.callee);
+      if (!name || !node.loc?.start?.line) return;
+      const reason = name === 'createCookieStorage'
+        ? 'createCookieStorage is forbidden'
+        : 'cookieStorage is forbidden on browser clients';
+      addHit(node.loc.start.line, reason);
+      return;
+    }
+
+    if (isTestFile) return;
+
+    if (node.type === 'ImportSpecifier' && node.imported?.type === 'Identifier') {
+      const name = getCookieStorageTargetName(node.imported);
+      if (!name || !node.loc?.start?.line) return;
+      const reason = name === 'createCookieStorage'
+        ? 'createCookieStorage import is forbidden'
+        : 'cookieStorage import is forbidden on browser clients';
+      addHit(node.loc.start.line, reason);
+      return;
+    }
+
+    if ((node.type === 'MemberExpression' || node.type === 'OptionalMemberExpression')
+        && parent?.type !== 'CallExpression'
+        && parent?.type !== 'NewExpression') {
+      const name = getCookieStorageTargetName(node);
+      if (!name || !node.loc?.start?.line) return;
+      const reason = name === 'createCookieStorage'
+        ? 'createCookieStorage is forbidden'
+        : 'cookieStorage is forbidden on browser clients';
+      addHit(node.loc.start.line, reason);
+    }
+  });
+
+  return hits;
+}
+
+function scanCookieSsoFile(file, entries, framework) {
+  if (isNextServerCookieFile(file, framework)) return [];
+  const hits = scanCookieSsoAst(file, entries);
+  if (isCookieSsoTestFile(file)) return hits;
+  for (const entry of entries) {
+    if (DOMAIN_CRM7_APP.test(entry.text)) {
+      hits.push({
+        signal: 'COOKIE-SSO',
+        severity: 'fail',
+        rule: 'Cookie SSO removed suite-wide 2025-02-27 — use per-domain localStorage + PKCE',
+        skill: 'auth-setup + AUTH_CANONICAL.md',
+        file,
+        line: entry.text.slice(0, 300),
+        reason: 'domain=.crm7.app cookie is forbidden',
+      });
+    }
+    if (STORAGE_KEY_LEGACY.test(entry.text)) {
+      hits.push({
+        signal: 'COOKIE-SSO',
+        severity: 'fail',
+        rule: 'Cookie SSO removed suite-wide 2025-02-27 — use per-domain localStorage + PKCE',
+        skill: 'auth-setup + AUTH_CANONICAL.md',
+        file,
+        line: entry.text.slice(0, 300),
+        reason: "storageKey 'business_suite_auth' is forbidden",
+      });
+    }
+  }
+  return hits;
+}
+
 function scan({ addedByFile, framework, repoName }) {
   const hits = [];
   for (const [file, lines] of Object.entries(addedByFile)) {
     // Skip the scanner's own source + sibling lint scripts — self-scan paradox
     // prevention (bsuite#902). These files contain drift literals by necessity.
     if (isSelfScanExcluded(file)) continue;
-    for (const line of lines) {
+    const entries = normalizeAddedLines(lines);
+    hits.push(...scanCookieSsoFile(file, entries, framework));
+    for (const entry of entries) {
+      const line = entry.text;
       for (const sig of SIGNALS) {
+        if (sig.id === 'COOKIE-SSO') continue;
         const reason = sig.match(line, file, framework, repoName);
         if (reason) {
           hits.push({
@@ -423,12 +629,33 @@ function selfTest() {
     { name: 'COOKIE-SSO — browser client flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ["  auth: { storageKey: 'business_suite_auth', flowType: 'pkce' }"] },
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.severity === 'fail') },
+    { name: 'COOKIE-SSO — browser identifier call flagged via AST', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ['const store = cookieStorage();'] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('cookieStorage')) },
+    { name: 'COOKIE-SSO — browser import flagged via AST', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ["import { cookieStorage } from '@supabase/ssr';"] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('import')) },
     { name: 'COOKIE-SSO — Next.js middleware NOT flagged', framework: 'nextjs', repoName: 'conduit',
       addedByFile: { 'src/middleware.ts': ["  cookies().set('sb-access', token, { httpOnly: true })"] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
     { name: 'COOKIE-SSO — domain=.crm7.app flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ["  cookieStorage({ domain: '.crm7.app' })"] },
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — non-test string literal NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ["const token = 'cookieStorage';"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — non-test regex literal NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ['const forbidden = /cookieStorage/;'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — negative assertion test NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/__tests__/portal-scope-contract.test.ts': ['expect(src).not.toMatch(/cookieStorage/);'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — legacy token assertion test NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/__tests__/portal-scope-contract.test.ts': ["expect(src).not.toContain('business_suite_auth');"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — test file actual call IS flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/__tests__/portal-scope-contract.test.ts': ['expect(cookieStorage()).toBeDefined();'] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.reason.includes('cookieStorage')) },
     { name: 'STALE-GROK — retired model flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/ai.ts': ["  model: 'xai/grok-4.1-fast-reasoning',"] },
       expect: (hits) => hits.some((h) => h.signal === 'STALE-GROK') },
