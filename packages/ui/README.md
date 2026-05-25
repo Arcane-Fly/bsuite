@@ -30,6 +30,113 @@ import { DotPattern } from '@bsuite/ui'
 Colour control via Tailwind `text-*` utilities or inline `[color:var(...)]`
 (dots use `fill="currentColor"`).
 
+### `Logo`
+
+Slot-aware, theme-aware, branding-aware logo component for all BSuite apps.
+
+```tsx
+import { Logo } from '@bsuite/ui'
+
+<Logo slot="header" colorScheme="auto" />
+```
+
+### `D2CDefaultLogo`
+
+Inline D2C Neon Electric SVG logo (no asset dependency).
+
+```tsx
+import { D2CDefaultLogo } from '@bsuite/ui'
+
+<D2CDefaultLogo className="h-8 w-auto" />
+```
+
+## Branding Components (v0.3.0+)
+
+### `OklchColorPicker`
+
+A color input component for OKLCH color format (BSuite standard).
+
+```tsx
+import { OklchColorPicker } from '@bsuite/ui'
+
+<OklchColorPicker
+  value="oklch(0.546 0.215 262.9)"
+  onChange={(value) => console.log(value)}
+  label="Primary Color"
+  description="Your brand's primary color in OKLCH format"
+/>
+```
+
+**Features:**
+- Live color preview
+- Input fields for L (lightness), C (chroma), H (hue)
+- Slider controls for easy adjustment
+- Validation of OKLCH format
+- Accessible labels and error messages
+
+### `ColorEditorSheet`
+
+A sheet/dialog for editing branding colors with a slot-based color editor.
+
+```tsx
+import { ColorEditorSheet, OklchColorPicker } from '@bsuite/ui'
+
+<ColorEditorSheet
+  open={isOpen}
+  onOpenChange={setIsOpen}
+  title="Edit Primary Color"
+  description="Adjust the OKLCH color values"
+  value="oklch(0.546 0.215 262.9)"
+  onSave={(value) => updateBranding('primary', value)}
+  renderEditor={(props) => <OklchColorPicker {...props} />}
+/>
+```
+
+**Features:**
+- Slide-out sheet interface
+- Slot-based color editor (inject your own picker)
+- Save/Cancel actions
+- Responsive design
+- Accessible dialog implementation
+
+### `BrandingCard`
+
+A card component for displaying and editing tenant branding configuration.
+
+```tsx
+import { BrandingCard, OklchColorPicker } from '@bsuite/ui'
+
+<BrandingCard
+  branding={{
+    primary: "oklch(0.546 0.215 262.9)",
+    accent: "oklch(0.769 0.132 191.7)",
+    logo_url: "https://example.com/logo.svg",
+    company_name: "Acme Corp"
+  }}
+  onUpdate={async (key, value) => {
+    await updateTenantBranding(key, value)
+  }}
+  renderColorEditor={(props) => <OklchColorPicker {...props} />}
+/>
+```
+
+**Features:**
+- Display current branding values (colors, logos, company name)
+- Edit buttons for each branding property
+- Integrated color editing with ColorEditorSheet
+- Image preview for logos
+- Accessible and responsive design
+- Support for light/dark mode logo variants
+
+**Branding Properties:**
+- `primary` - Primary action color (OKLCH)
+- `accent` - Accent/secondary color (OKLCH)
+- `logo_url` - Main logo URL
+- `logo_light_url` - Light mode logo variant (optional)
+- `logo_dark_url` - Dark mode logo variant (optional)
+- `favicon_url` - Favicon URL (16x16 or 32x32)
+- `company_name` - Company name for alt text
+
 ## Utils
 
 ### `cn(...classes)`
@@ -37,6 +144,27 @@ Colour control via Tailwind `text-*` utilities or inline `[color:var(...)]`
 shadcn-style className merger — `clsx` + `tailwind-merge`. Available for
 consumers that want to compose `@bsuite/ui` components with local overrides
 without pulling shadcn again.
+
+## Module Exports
+
+The package provides subpath exports for better tree-shaking:
+
+```tsx
+// Main exports
+import { Logo, BrandingCard } from '@bsuite/ui'
+
+// Dot pattern only
+import { DotPattern } from '@bsuite/ui/dot-pattern'
+
+// Utils only
+import { cn } from '@bsuite/ui/utils'
+
+// Branding components only
+import { BrandingCard, ColorEditorSheet, OklchColorPicker } from '@bsuite/ui/branding'
+
+// SVG asset
+import logoSvg from '@bsuite/ui/assets/d2c-default-logo.svg'
+```
 
 ## Releases
 
