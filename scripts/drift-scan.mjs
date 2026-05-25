@@ -398,6 +398,205 @@ function normalizeAddedLines(lines) {
   ));
 }
 
+function isCookieSsoIdentChar(ch) {
+  return (ch >= 'a' && ch <= 'z')
+      || (ch >= 'A' && ch <= 'Z')
+      || (ch >= '0' && ch <= '9')
+      || ch === '_' || ch === '$';
+}
+
+function findCookieSsoIdentifierIndices(line, name) {
+  const hits = [];
+  let from = 0;
+  while (from < line.length) {
+    const idx = line.indexOf(name, from);
+    if (idx === -1) break;
+    const before = idx === 0 ? '' : line[idx - 1];
+    const after = idx + name.length >= line.length ? '' : line[idx + name.length];
+    if (!isCookieSsoIdentChar(before) && !isCookieSsoIdentChar(after)) hits.push(idx);
+    from = idx + name.length;
+  }
+  return hits;
+}
+
+function findCookieSsoPrevSignificant(line, idx) {
+  for (let i = idx - 1; i >= 0; i--) {
+    const ch = line[i];
+    if (ch !== ' ' && ch !== '\t') return ch;
+  }
+  return '';
+}
+
+function findCookieSsoNextSignificant(line, idx) {
+  for (let i = idx; i < line.length; i++) {
+    const ch = line[i];
+    if (ch !== ' ' && ch !== '\t') return ch;
+  }
+  return '';
+}
+
+function sanitizeCookieSsoEntries(entries) {
+  const sanitized = [];
+  let inBlockComment = false;
+  for (const entry of entries) {
+    const chars = entry.text.split('');
+    let quote = '';
+    let templateExprDepth = 0;
+    let inRegex = false;
+    let inRegexClass = false;
+    let escaped = false;
+    let prevSignificant = '';
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      const next = chars[i + 1] ?? '';
+      if (inBlockComment) {
+        if (ch === '*' && next === '/') {
+          chars[i] = ' ';
+          chars[i + 1] = ' ';
+          i++;
+          inBlockComment = false;
+        } else if (ch !== '\t') {
+          chars[i] = ' ';
+        }
+        continue;
+      }
+      if (quote) {
+        if (quote === '`' && !escaped && ch === '$' && next === '{') {
+          chars[i] = ' ';
+          chars[i + 1] = ' ';
+          i++;
+          quote = '';
+          templateExprDepth = 1;
+          prevSignificant = '{';
+          continue;
+        }
+        if (ch !== '\t') chars[i] = ' ';
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+        if (ch === '\\') {
+          escaped = true;
+          continue;
+        }
+        if (ch === quote) quote = '';
+        continue;
+      }
+      if (inRegex) {
+        if (ch !== '\t') chars[i] = ' ';
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+        if (ch === '\\') {
+          escaped = true;
+          continue;
+        }
+        if (ch === '[') {
+          inRegexClass = true;
+          continue;
+        }
+        if (ch === ']' && inRegexClass) {
+          inRegexClass = false;
+          continue;
+        }
+        if (ch === '/' && !inRegexClass) inRegex = false;
+        continue;
+      }
+      if (ch === '/' && next === '/') {
+        for (let j = i; j < chars.length; j++) {
+          if (chars[j] !== '\t') chars[j] = ' ';
+        }
+        break;
+      }
+      if (ch === '/' && next === '*') {
+        chars[i] = ' ';
+        chars[i + 1] = ' ';
+        i++;
+        inBlockComment = true;
+        continue;
+      }
+      if (ch === '\'' || ch === '"' || ch === '`') {
+        chars[i] = ' ';
+        quote = ch;
+        continue;
+      }
+      if (templateExprDepth > 0) {
+        if (ch === '{') templateExprDepth++;
+        if (ch === '}') {
+          templateExprDepth--;
+          if (templateExprDepth === 0) {
+            chars[i] = ' ';
+            quote = '`';
+            continue;
+          }
+        }
+      }
+      if (ch === '/') {
+        const startsRegex = !prevSignificant || '([{:;,!=?&|+-*%^~<>'.includes(prevSignificant);
+        if (startsRegex) {
+          chars[i] = ' ';
+          inRegex = true;
+          inRegexClass = false;
+          escaped = false;
+          continue;
+        }
+      }
+      if (ch !== ' ' && ch !== '\t') prevSignificant = ch;
+    }
+    sanitized.push({ ...entry, text: chars.join('') });
+  }
+  return sanitized;
+}
+
+function scanCookieSsoWithoutParser(file, entries) {
+  const isTestFile = isCookieSsoTestFile(file);
+  const hits = [];
+  const seen = new Set();
+  const sanitizedEntries = sanitizeCookieSsoEntries(entries);
+  for (let i = 0; i < sanitizedEntries.length; i++) {
+    const entry = sanitizedEntries[i];
+    const originalEntry = entries[i] ?? entry;
+    const line = entry.text;
+    const trimmed = line.trimStart();
+    const fromIdx = line.indexOf(' from ');
+    for (const name of ['cookieStorage', 'createCookieStorage']) {
+      for (const idx of findCookieSsoIdentifierIndices(line, name)) {
+        const next = findCookieSsoNextSignificant(line, idx + name.length);
+        const prev = findCookieSsoPrevSignificant(line, idx);
+        let reason = null;
+        if (next === '(') {
+          reason = name === 'createCookieStorage'
+            ? 'createCookieStorage is forbidden'
+            : 'cookieStorage is forbidden on browser clients';
+        } else if (!isTestFile && trimmed.startsWith('import ') && fromIdx !== -1 && idx < fromIdx) {
+            reason = name === 'createCookieStorage'
+              ? 'createCookieStorage import is forbidden'
+              : 'cookieStorage import is forbidden on browser clients';
+        } else if (!isTestFile && (prev === '=' || prev === '.')) {
+          reason = name === 'createCookieStorage'
+            ? 'createCookieStorage is forbidden'
+            : 'cookieStorage is forbidden on browser clients';
+        }
+        if (!reason) continue;
+        const key = `${entry.lineNumber}:${reason}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        hits.push({
+          signal: 'COOKIE-SSO',
+          severity: 'fail',
+          rule: 'Cookie SSO removed suite-wide 2025-02-27 — use per-domain localStorage + PKCE',
+          skill: 'auth-setup + AUTH_CANONICAL.md',
+          file,
+          line: originalEntry.text.slice(0, 300),
+          reason,
+        });
+      }
+    }
+  }
+  return hits;
+}
+
 function getCookieSsoParser() {
   if (cookieSsoParser) return cookieSsoParser;
   for (const req of COOKIE_SSO_PARSER_CANDIDATES) {
@@ -488,7 +687,7 @@ function scanCookieSsoAst(file, entries) {
       break;
     } catch {}
   }
-  if (!ast) return [];
+  if (!ast) return scanCookieSsoWithoutParser(file, entries);
   const isTestFile = isCookieSsoTestFile(file);
   const addedLineNumbers = new Set(entries.map((entry) => entry.lineNumber));
   const entriesByLine = new Map(entries.map((entry) => [entry.lineNumber, entry]));
@@ -683,9 +882,15 @@ function selfTest() {
     { name: 'COOKIE-SSO — non-test string literal NOT flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ["const token = 'cookieStorage';"] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — non-test template literal NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ['const token = `cookieStorage`;'] },
+      expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
     { name: 'COOKIE-SSO — non-test regex literal NOT flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ['const forbidden = /cookieStorage/;'] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
+    { name: 'COOKIE-SSO — template expression call IS flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ['const token = `${cookieStorage()}`;'] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.line.includes('cookieStorage()')) },
     { name: 'COOKIE-SSO — negative assertion test NOT flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/__tests__/portal-scope-contract.test.ts': ['expect(src).not.toMatch(/cookieStorage/);'] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
