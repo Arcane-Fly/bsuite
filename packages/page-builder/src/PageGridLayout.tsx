@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
 import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
-import { gridBounds, maxSize, minMaxSize, minSize } from 'react-grid-layout/core';
+import { gridBounds, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { defaultPreferenceAdapter } from './preferences.js';
@@ -10,17 +10,24 @@ import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps } from './types.js';
 
 /**
- * Resize bounds for the bottom-right handle.
+ * Default resize bounds applied as a *global* constraint to ALL grid items.
  *
- * `maxH` was 16 (≈512px at rowHeight=32) which clipped data tables holding
- * more than ~7 rows — operators reported "the resize handle hits a wall
- * before all my data fits". Bumped to 48 (≈1536px) which comfortably fits
- * ~20–30 list rows of any density and matches the maximum viewport height
- * on common displays. Cards that still need to show more data should rely
- * on their own internal scroll container (we apply `min-h-0 overflow-auto`
- * to the card body wrapper below) rather than growing without bound.
+ * History
+ * -------
+ * - 0.2.x: maxH=16 (≈512px) — clipped data tables.
+ * - 0.3.0: bumped to maxH=48 (≈1536px) — still a hard ceiling. Operators
+ *   reported "the handle hits a wall before all my data fits" on tall
+ *   data-table cards even after the bump.
+ * - 0.4.0 (this version): **removed the global maxW and maxH ceilings
+ *   entirely.** Width is bounded by `gridBounds` (the active column count)
+ *   so no separate global `maxSize(...)` is needed; per-item
+ *   `LayoutItem.maxW` / `maxH` is honoured via `minMaxSize`. Combined
+ *   with the new internal scroll wrapper around `{content}` (see GridItem
+ *   render below), cards now grow to their bounds and content scrolls
+ *   inside. Per-item `maxH` on `LayoutItem` remains the right knob for
+ *   "this widget shouldn't grow past N rows".
  */
-const DEFAULT_RESIZE_BOUNDS = { minW: 2, minH: 1, maxW: 12, maxH: 48 } as const;
+const DEFAULT_RESIZE_BOUNDS = { minW: 2, minH: 1 } as const;
 const DEFAULT_RESIZE_HANDLES: readonly ResizeHandleAxis[] = ['se'];
 const DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES = ['bsu-add-entity-widget', 'crm7-add-entity-widget'] as const;
 
@@ -140,7 +147,26 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             className="h-full w-full rounded-3xl transition-all flex flex-col bg-card shadow-sm"
             style={{ contain: 'paint' }}
           >
-            {content}
+            {/*
+             * Internal scroll container so card content adapts to whatever
+             * pixel size the user resizes the grid item to. `min-h-0` is
+             * critical — without it, flex children inherit `min-height: auto`
+             * and refuse to shrink below their content size, defeating the
+             * scroll. Pair with `flex-1` so the wrapper claims all remaining
+             * vertical space inside the card chrome.
+             *
+             * Consumer card bodies should NOT apply their own `overflow:hidden`
+             * on a direct child of `{content}` or the scroll will be intercepted
+             * before reaching this container. Internal layout containers in
+             * `{content}` that need their own scroll regions (e.g. tab panels,
+             * data tables) should use `flex-1 min-h-0 overflow-auto` themselves
+             * — those nested scroll containers compose cleanly with this one
+             * because pointer/wheel events bubble up only when the inner one
+             * is at its scroll edge.
+             */}
+            <div className="flex-1 min-h-0 overflow-auto">
+              {content}
+            </div>
           </div>
         </div>
         {/*
@@ -209,10 +235,13 @@ export function PageGridLayout({
   const resizeEnabled = isEditing && isResizable;
   const resizeConstraints = useMemo(
     () => [
+      // `gridBounds` caps width at the active column count, so we don't need
+      // a global maxSize(...). Width and height are unbounded by default;
+      // consumers cap individual widgets via LayoutItem.maxW / maxH which
+      // `minMaxSize` reads per-item.
       gridBounds,
       minMaxSize,
       minSize(DEFAULT_RESIZE_BOUNDS.minW, DEFAULT_RESIZE_BOUNDS.minH),
-      maxSize(DEFAULT_RESIZE_BOUNDS.maxW, DEFAULT_RESIZE_BOUNDS.maxH),
     ],
     [],
   );
