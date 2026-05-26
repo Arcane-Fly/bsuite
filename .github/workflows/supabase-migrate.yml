@@ -149,7 +149,8 @@ jobs:
         run: |
           set +e
           supabase migration up --linked --include-all 2>&1 | tee /tmp/mig-out.log
-          RC=$?
+          # PIPESTATUS[0] captures supabase's exit code; plain $? would capture tee's (always 0).
+          RC=${PIPESTATUS[0]}
           set -e
 
           # CLI may still complain about "remote versions not in local" even with
@@ -163,6 +164,39 @@ jobs:
             echo "::error::Migration apply failed for unknown reason. Check log."
             exit $RC
           fi
+
+      - name: Verify transactional migrations recorded in schema_migrations
+        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+
+          # Find the latest local transactional migration version (exclude .nontx.sql).
+          LATEST_LOCAL=$(find supabase/migrations -name "*.sql" ! -name "*.nontx.sql" \
+            -printf "%f\n" 2>/dev/null | sed 's/\.sql$//' | sort | tail -1)
+
+          if [ -z "$LATEST_LOCAL" ]; then
+            echo "No transactional migrations found locally — skipping verification"
+            exit 0
+          fi
+
+          command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
+
+          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          RECORDED=$(psql "$DB_URL" -t -A \
+            -c "SELECT COUNT(*) FROM supabase_migrations.schema_migrations WHERE version = '${LATEST_LOCAL}';" \
+            2>/dev/null || echo "0")
+
+          if [ "$RECORDED" = "0" ]; then
+            echo "::error::Post-apply verification FAILED: '${LATEST_LOCAL}' not in schema_migrations — transactional step may have silently no-op'd. Verify SUPABASE_ACCESS_TOKEN is valid and SUPABASE_PROJECT_ID is set to the Supabase project ref (not a Vercel project ID)."
+            exit 1
+          fi
+
+          echo "✓ Verification passed: '${LATEST_LOCAL}' is recorded in schema_migrations."
 
       - name: Apply non-transactional migrations (.nontx.sql)
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
