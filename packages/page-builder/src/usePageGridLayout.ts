@@ -26,6 +26,22 @@ export const DEFAULT_EDITOR_EVENT_NAMES = [
   'r80-open-page-editor',
 ] as const;
 
+/**
+ * Event name broadcast on `window` whenever any PageGridLayout transitions
+ * its `isEditing` state. Launcher widgets (e.g. floating "Edit Page" FABs)
+ * subscribe to this so they can hide themselves while the canvas editor is
+ * already active — prevents the redundant-affordance UX issue where a
+ * "Edit Page" button sits in the corner while the editor banner is visible
+ * at the top. `detail.editing` is the new state; `detail.pageKey` lets
+ * launchers scope by page if they handle multiple grids on one screen.
+ */
+export const PAGE_GRID_EDITING_EVENT = 'bsuite-page-grid-editing';
+
+export interface PageGridEditingEventDetail {
+  pageKey: string;
+  editing: boolean;
+}
+
 export function usePageGridLayout({
   pageKey,
   defaultLayouts,
@@ -37,7 +53,24 @@ export function usePageGridLayout({
 }: UsePageGridLayoutOptions): UsePageGridLayoutResult {
   const containerRef = useRef<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditingState] = useState(false);
+  const setIsEditing = useCallback(
+    (next: boolean | ((previous: boolean) => boolean)) => {
+      setIsEditingState((previous) => {
+        const resolved = typeof next === 'function' ? next(previous) : next;
+        if (resolved !== previous && typeof window !== 'undefined') {
+          // Broadcast to FAB launchers so they can hide while the editor is open.
+          window.dispatchEvent(
+            new CustomEvent<PageGridEditingEventDetail>(PAGE_GRID_EDITING_EVENT, {
+              detail: { pageKey, editing: resolved },
+            }),
+          );
+        }
+        return resolved;
+      });
+    },
+    [pageKey],
+  );
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   useLayoutEffect(() => {
@@ -142,12 +175,58 @@ export function usePageGridLayout({
     [isEditing],
   );
 
+  /**
+   * Throttled layout-change handler.
+   *
+   * `react-grid-layout` fires `onLayoutChange` on **every** drag/resize tick
+   * (≈60Hz). The previous implementation called `setSavedLayout` directly,
+   * which delegates to a preference adapter — in apps like crm7 that adapter
+   * writes to localStorage and/or queues a Supabase upsert per call. Operators
+   * reported 6–7s INP blocks on resize gestures (long-task warnings on
+   * `.react-resizable-handle-se` and `.react-grid-layout`).
+   *
+   * Fix: capture the latest layout in a ref each tick (cheap, no React work)
+   * and only commit to the preference adapter on a trailing rAF tick. This
+   * cuts adapter calls from ~60/sec to ~1/sec during a typical drag while
+   * still persisting the final position when the gesture ends. The component
+   * still receives `activeLayouts` from `savedLayout` synchronously, so the
+   * grid keeps following the cursor visually.
+   */
+  const pendingLayoutRef = useRef<GridLayouts | null>(null);
+  const layoutCommitFrameRef = useRef<number | null>(null);
   const onLayoutChange = useCallback(
     (_layout: unknown, layouts: unknown) => {
-      if (isEditing) setSavedLayout(layouts as GridLayouts);
+      if (!isEditing) return;
+      pendingLayoutRef.current = layouts as GridLayouts;
+      if (layoutCommitFrameRef.current !== null) return;
+      if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+        setSavedLayout(layouts as GridLayouts);
+        return;
+      }
+      // Trailing rAF — lets a burst of resize ticks coalesce into one commit.
+      layoutCommitFrameRef.current = window.requestAnimationFrame(() => {
+        layoutCommitFrameRef.current = null;
+        const pending = pendingLayoutRef.current;
+        if (pending) {
+          pendingLayoutRef.current = null;
+          setSavedLayout(pending);
+        }
+      });
     },
     [isEditing, setSavedLayout],
   );
+
+  useEffect(() => {
+    return () => {
+      if (
+        layoutCommitFrameRef.current !== null &&
+        typeof window !== 'undefined' &&
+        typeof window.cancelAnimationFrame === 'function'
+      ) {
+        window.cancelAnimationFrame(layoutCommitFrameRef.current);
+      }
+    };
+  }, []);
 
   const handleColumnChange = useCallback(
     (newCols: number) => {
