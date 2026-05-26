@@ -3,6 +3,15 @@
 # Triggers automatically when packages/schema-builder/package.json changes on main.
 # Skips publish if the current version is already on npm (idempotent).
 #
+# Authentication:
+#   PREFERRED: npm Trusted Publishers (OIDC) — configure at npmjs.com →
+#     package → Settings → Trusted Publisher → GitHub Actions, with
+#     organization GaryOcean428, repository bsuite, workflow filename
+#     matching this file's basename. Requires `id-token: write` (set below).
+#   FALLBACK: NPM_TOKEN secret used by setup-node's auto-generated .npmrc
+#     until the package is migrated. Remove NPM_TOKEN reference here
+#     after the first successful OIDC publish.
+#
 # Required GitHub Secret:
 #   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
 #
@@ -20,8 +29,7 @@ on:
 
 permissions:
   contents: read
-  # Note: --provenance is intentionally NOT used because bsuite is a private
-  # repository and Sigstore provenance requires a public source repo.
+  id-token: write   # OIDC for npm Trusted Publishers (https://docs.npmjs.com/trusted-publishers)
 
 jobs:
   publish:
