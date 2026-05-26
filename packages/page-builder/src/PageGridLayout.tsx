@@ -9,7 +9,18 @@ import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps } from './types.js';
 
-const DEFAULT_RESIZE_BOUNDS = { minW: 2, minH: 1, maxW: 12, maxH: 16 } as const;
+/**
+ * Resize bounds for the bottom-right handle.
+ *
+ * `maxH` was 16 (≈512px at rowHeight=32) which clipped data tables holding
+ * more than ~7 rows — operators reported "the resize handle hits a wall
+ * before all my data fits". Bumped to 48 (≈1536px) which comfortably fits
+ * ~20–30 list rows of any density and matches the maximum viewport height
+ * on common displays. Cards that still need to show more data should rely
+ * on their own internal scroll container (we apply `min-h-0 overflow-auto`
+ * to the card body wrapper below) rather than growing without bound.
+ */
+const DEFAULT_RESIZE_BOUNDS = { minW: 2, minH: 1, maxW: 12, maxH: 48 } as const;
 const DEFAULT_RESIZE_HANDLES: readonly ResizeHandleAxis[] = ['se'];
 const DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES = ['bsu-add-entity-widget', 'crm7-add-entity-widget'] as const;
 
@@ -380,7 +391,22 @@ export function PageGridLayout({
   return (
     <div className={className}>
       {isEditing && (
-        <div className="flex flex-col gap-3 p-4 rounded-xl shadow-lg border-2 mb-4 bg-card border-primary">
+        <div
+          className={cn(
+            // Sticky overlay banner — sits at the top of the scroll container
+            // without pushing the form down. `top-0` anchors to the nearest
+            // scrolling ancestor; `z-30` keeps it above grid items but below
+            // app-level overlays (toaster, dialogs are z-50+).
+            'sticky top-0 z-30 flex flex-col gap-3 p-4 rounded-xl shadow-lg border-2 mb-4',
+            // Subtle translucent background so the form behind it stays
+            // partially visible — mitigates Issue 2 (banner consuming
+            // vertical space). `bg-card/95` + `backdrop-blur` keeps text
+            // legible while showing form context behind the banner.
+            'bg-card/95 supports-[backdrop-filter]:bg-card/80 backdrop-blur border-primary',
+          )}
+          role="region"
+          aria-label="Canvas editor controls"
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full flex items-center justify-center animate-pulse bg-primary/10">
@@ -610,6 +636,7 @@ export function PageGridLayout({
         ref={containerRef as React.Ref<HTMLDivElement>}
         className={isEditing ? 'min-h-[200px]' : ''}
         style={{ backgroundColor: isEditing ? 'rgb(0 0 0 / 0.03)' : 'transparent' }}
+        data-page-grid-editing={isEditing || undefined}
       >
         <div style={{ opacity: containerWidth > 0 ? 1 : 0 }} aria-busy={containerWidth <= 0}>
           <Responsive

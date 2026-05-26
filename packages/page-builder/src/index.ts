@@ -1,5 +1,10 @@
 export { PageGridLayout } from './PageGridLayout.js';
-export { usePageGridLayout, DEFAULT_EDITOR_EVENT_NAMES } from './usePageGridLayout.js';
+export {
+  usePageGridLayout,
+  DEFAULT_EDITOR_EVENT_NAMES,
+  PAGE_GRID_EDITING_EVENT,
+} from './usePageGridLayout.js';
+export type { PageGridEditingEventDetail } from './usePageGridLayout.js';
 export { rescaleLayout } from './rescaleLayout.js';
 export {
   WYSIWYG_REQUIRED_PRIMITIVES,
