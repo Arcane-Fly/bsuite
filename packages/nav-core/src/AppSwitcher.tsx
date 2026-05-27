@@ -16,6 +16,7 @@
 
 import { ChevronDown as ChevronDownRaw } from 'lucide-react'
 import { type ElementType, useEffect, useRef, useState } from 'react'
+import { buildLaunchUrl } from './launchUrl'
 import type { IconComponent } from './types'
 
 // Cast through unknown to dodge React 18 vs 19 @types/react conflicts —
@@ -98,7 +99,16 @@ export function AppSwitcher({ apps, currentApp, className = '' }: AppSwitcherPro
             {apps.map((app) => (
               <a
                 key={app.key}
-                href={app.url}
+                /* Cross-app handoff (2026-05-27): route through the
+                   destination's /auth/login so the user lands authenticated.
+                   Bare app.url strands the user on the destination's
+                   logged-out marketing page because per-app storageKey
+                   isolation means the destination origin has no session
+                   token under its own key. The `app.key === currentApp`
+                   case still uses bare app.url because that's a same-origin
+                   click — the user is already in that app's localStorage. */
+                href={app.key === currentApp ? app.url : buildLaunchUrl(app.url)}
+                data-app-key={app.key}
                 role="menuitem"
                 className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent ${
                   app.key === currentApp ? 'bg-accent/50 font-medium' : ''
