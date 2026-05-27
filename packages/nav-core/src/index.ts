@@ -34,3 +34,4 @@ export {
 export type { BSuiteAppKey, AppMetadata } from './apps';
 
 export { buildLaunchUrl } from './launchUrl';
+export { sanitizeReturnPath } from './sanitizeReturnPath';
