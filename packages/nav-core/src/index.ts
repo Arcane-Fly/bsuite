@@ -32,3 +32,5 @@ export {
   BSUITE_APP_METADATA,
 } from './apps';
 export type { BSuiteAppKey, AppMetadata } from './apps';
+
+export { buildLaunchUrl } from './launchUrl';
