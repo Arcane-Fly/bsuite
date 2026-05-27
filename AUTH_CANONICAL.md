@@ -71,6 +71,157 @@ For fully silent cross-app entry, the target architecture remains: when a user l
 
 This is OIDC-standard silent re-authentication and works across **any** TLD, including Braden's `.braden.com.au`.
 
+## Cross-app launcher handoff (added 2026-05-27)
+
+The section above describes the **mechanism** (OAuth 2.1 PKCE + per-app sessions). This section describes the **navigation pattern** every cross-app launcher MUST use to invoke that mechanism.
+
+### The bug pattern (do NOT do this)
+
+```tsx
+// ❌ WRONG — strands the user on the destination's logged-out marketing page.
+<a href="https://crm.crm7.app">Open CRM7</a>
+<a href={app.url}>{app.name}</a>          // AppSwitcher pre-2026-05-27
+<a href={REDIRECT_TARGETS.crm7}>...</a>
+```
+
+A bare `<a href={appUrl}>` link from one BSuite app to another lands the user **unauthenticated** on the destination's marketing/landing page, even when they have a valid suite-wide session. The destination renders its logged-out home page because per-app `storageKey` isolation (PR #519 + crm7#917) means each origin has its own localStorage namespace (`sb-bsu-auth`, `sb-crm7-auth`, etc.) and the destination origin has no token under its own key.
+
+### The canonical pattern
+
+Every cross-app launcher MUST route through the destination's `/auth/login` entry point:
+
+```tsx
+// ✅ CORRECT — user lands authenticated on /dashboard (or custom return_path).
+import { buildLaunchUrl } from '@bsuite/nav-core'
+
+<a href={buildLaunchUrl('https://crm.crm7.app')}>Open CRM7</a>
+<a href={buildLaunchUrl(app.url, '/admin/users')}>Open CRM7 admin</a>
+```
+
+`buildLaunchUrl` produces:
+
+```
+https://crm.crm7.app/auth/login?return_path=%2Fdashboard
+```
+
+### Handshake sequence
+
+```
+User clicks "Open CRM7" on suite.crm7.app
+  │
+  ▼
+ Browser GET https://crm.crm7.app/auth/login?return_path=%2Fdashboard
+  │
+  ▼
+ CRM7's /auth/login (pages/auth/login.tsx) auto-fires
+   signInWithBusinessSuite({ returnTo: '/dashboard' })
+  │
+  ▼
+ Browser GET https://suite.crm7.app/auth/v1/oauth/authorize?
+   client_id=30f76744-...&prompt=...&code_challenge=...&state=...
+  │
+  ▼
+ BSU OAuth Server recognises suite-wide session, returns authorization code
+   (NO consent screen if previously granted)
+  │
+  ▼
+ Browser GET https://crm.crm7.app/auth/callback?code=...&state=...
+  │
+  ▼
+ CRM7's /auth/callback (pages/auth/callback.tsx) calls
+   exchangeCodeForTokens(code) + supabase.auth.setSession(...)
+   → establishes session under sb-crm7-auth
+  │
+  ▼
+ navigate('/dashboard', { replace: true })
+  │
+  ▼
+ User lands AUTHENTICATED on https://crm.crm7.app/dashboard
+```
+
+### Single source of truth: `@bsuite/nav-core::buildLaunchUrl`
+
+```ts
+// packages/nav-core/src/launchUrl.ts
+export function buildLaunchUrl(
+  appUrl: string,
+  returnPath: string = '/dashboard',
+): string {
+  const base = appUrl.replace(/\/+$/, '');
+  return `${base}/auth/login?return_path=${encodeURIComponent(returnPath)}`;
+}
+```
+
+App-level helpers (e.g. `business-suite-unified/src/lib/supabase.ts::getCrossAppLoginUrl`, `AppLauncherTile.tsx::buildLaunchUrl`) MUST delegate to this implementation. Two implementations of one rule is a drift risk — enforced by code review + the dedupe PR (#524).
+
+### `/auth/login` route on every consuming app
+
+Every BSuite app MUST expose a `/auth/login` route that auto-fires `signInWithBusinessSuite()`. Without this route, any launcher pointing at the app 404s, leaving the user stranded with no recovery path. Throughput aliases `/auth/login → /login` (the same `LoginContent` page served at both paths) for backward compatibility with internal links and external integrations.
+
+| App | `/auth/login` source | Default return_path |
+|---|---|---|
+| `business-suite-unified` (suite) | `src/pages/auth/login.tsx` | `/dashboard` |
+| `crm7` | `src/pages/auth/login.tsx` | `/dashboard` |
+| `conduit` | `src/app/auth/login/page.tsx` | `/` |
+| `R80.3` (r8) | `src/pages/AuthLogin.tsx` (via `main.tsx` path router) | `/dashboard` |
+| `throughput` | `src/pages/Login.tsx` (registered at `/login` AND `/auth/login`) | `/` |
+| `braden` | `src/pages/auth/Login.tsx` | `/admin/branding` |
+
+### Open-redirect defense on every `/auth/login`
+
+The `return_path` query value passes through `sanitizeReturnPath`:
+
+```ts
+function sanitizeReturnPath(raw: string | null | undefined): string {
+  if (!raw) return DEFAULT;
+  if (typeof raw !== 'string') return DEFAULT;
+  if (!raw.startsWith('/')) return DEFAULT;        // rejects absolute URLs
+  if (raw.startsWith('//')) return DEFAULT;        // rejects protocol-relative
+  if (raw.startsWith('/\\')) return DEFAULT;       // rejects IE backslash quirk
+  if (raw.length > 512) return DEFAULT;            // length cap
+  return raw;
+}
+```
+
+Every app's `Login` page (and BSU's `AuthCallback`'s `consent_return` accept path) MUST run an equivalent check before navigating to a `return_path`. Tests for all 4 vectors are in the per-app `Login.test.tsx` (and BSU's `AuthCallback.test.ts`).
+
+### Same-origin click exception
+
+In `AppSwitcher`, the currently-active app's link stays as a bare `app.url`:
+
+```tsx
+href={app.key === currentApp ? app.url : buildLaunchUrl(app.url)}
+```
+
+Clicking the current app is a same-origin navigation — the user already has session storage on that origin, so no handoff is needed.
+
+### Analytics: `data-app-launcher` vs `href`
+
+`AppLauncherTile` exposes BOTH attributes intentionally:
+
+- `href={buildLaunchUrl(appUrl)}` — the **navigation target** (per-request, includes `return_path`)
+- `data-app-launcher={appUrl}` — the **stable destination identity** (just the bare app URL, no query params)
+- `data-app-key={app.key}` (AppSwitcher) — even more stable: the app key (`crm7`, `r8`, etc.)
+
+Analytics consumers aggregate "clicks-from-suite-to-CRM7" using the stable identity, not the per-request launch URL. The two answer different questions and intentionally diverge.
+
+### CI guardrail (future)
+
+A `bsuite/no-bare-cross-app-href` ESLint rule will AST-check any `<a href={...}>` where the URL expression resolves to a cross-origin BSuite app URL (matching `crm7.app`, `braden.com.au`, etc.) and require it pass through `buildLaunchUrl`. Until that rule lands, code review enforces the pattern.
+
+### Migration ledger
+
+| Date | App | Change | PR |
+|---|---|---|---|
+| 2026-05-27 | crm7 | `MarketingHome` surfaces circuit-breaker error + auto-retry once | crm7#920 |
+| 2026-05-27 | `business-suite-unified` | `OAuthProviderButtons` preserves `consent_return` across social-OAuth callback | bsu#521 |
+| 2026-05-27 | `business-suite-unified` | `AppLauncherTile` + `UnifiedDashboard` route through `/auth/login`; new `getCrossAppLoginUrl` helper | bsu#522 |
+| 2026-05-27 | `business-suite-unified` | dedupe `buildLaunchUrl` into thin alias over `getCrossAppLoginUrl` | bsu#524 |
+| 2026-05-27 | `@bsuite/nav-core` | new `buildLaunchUrl` export; `AppSwitcher` uses it for non-current apps | bsuite#1320 |
+| 2026-05-27 | `braden` | new `/auth/login` route mirroring crm7 pattern (default `return_path=/admin/branding`) | braden#306 |
+| 2026-05-27 | `throughput` | register `/auth/login` as route alias of `/login` | throughput#192 |
+| 2026-05-27 | `business-suite-unified` | route `throughputIdeaEditUrl` + `throughputNewIdeaUrl` through `getCrossAppLoginUrl` | bsu#525 |
+
 ## Per-app OAuth client IDs
 
 Registered with the BSU OAuth server.
