@@ -34,7 +34,7 @@ export interface SignInOptions {
   prompt?: OidcPrompt;
   /**
    * Where to navigate back to after a successful callback. Defaults to
-   * `window.location.href`. Stashed under `sessionStorage['auth_return_path']`
+   * `window.location.href`. Stashed under `localStorage['auth_return_path']`
    * so the callback can sanitize and redirect once the auth code arrives.
    */
   returnTo?: string;
