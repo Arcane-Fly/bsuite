@@ -470,6 +470,12 @@ export function createOAuthClient(clientId: string): OAuthClient {
     localStorage.removeItem('bs_refresh_token');
     localStorage.removeItem('bs_user');
     localStorage.removeItem('bs_id_token');
+    localStorage.removeItem('bs_oauth_code_verifier');
+    localStorage.removeItem('bs_oauth_state');
+    localStorage.removeItem('bs_oauth_nonce');
+    localStorage.removeItem('bs_oauth_started_at');
+    localStorage.removeItem('bs_oauth_inflight_code');
+    localStorage.removeItem('auth_return_path');
     // Also clear the redirect-loop sentinel. Without this, a user who
     // signs out and immediately clicks "Sign in" again (within 10s) would
     // trip the circuit breaker and see an error instead of the consent

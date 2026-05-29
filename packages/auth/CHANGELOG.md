@@ -2,6 +2,14 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.2.4 — 2026-05-29
+
+### Fixed — logout cleanup clears PKCE and OAuth callback sentinels
+
+- `clearBSTokens()` now removes all BS OAuth callback and PKCE state from `localStorage`: `bs_oauth_code_verifier`, `bs_oauth_state`, `bs_oauth_nonce`, `bs_oauth_started_at`, `bs_oauth_inflight_code`, and `auth_return_path`.
+- This keeps sign-out as a full browser-side OAuth reset without reintroducing cookie SSO or cross-domain shared cookie storage.
+- Regression coverage added for the expanded cleanup set.
+
 ## 0.2.3 — 2026-05-07
 
 ### Fixed — ID token `aud` claim verification (post-Stage-3 regression)
@@ -9,6 +17,7 @@ All notable changes to this package are documented here. This project adheres to
 **Root cause:** `verifyIdToken()` was passing `audience: 'authenticated'` to `jose.jwtVerify`, but per [Supabase OAuth Flows §6 "Access token structure"](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows#access-token-structure) and [OIDC Core 1.0 §3.1.3.7](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation), the **ID token `aud` is the OAuth client_id**, not `'authenticated'`. The access token's `aud` IS `'authenticated'` — these two tokens have different audience semantics.
 
 When Supabase began enforcing the `aud` claim strictly on ID tokens, every successful `/oauth/token` exchange surfaced "Authentication Error / unexpected 'aud' claim value" on the consumer app's `/auth/callback` page. Symptoms in production (verified 2026-05-07T04:51Z on `crm.crm7.app/auth/callback`):
+
 - `/oauth/token` returns 200 with valid tokens (server-side OK)
 - Client `verifyIdToken()` throws on the `aud` claim check
 - Callback bails before `setSession()` runs
@@ -19,6 +28,7 @@ When Supabase began enforcing the `aud` claim strictly on ID tokens, every succe
 **Test added:** `verifies id_token with audience=clientId, NOT "authenticated"` — regression guard checking the exact arguments passed to `jose.jwtVerify` for both verifier calls.
 
 **Source citations:**
+
 - [Supabase OAuth Server / OAuth Flows §6](https://supabase.com/docs/guides/auth/oauth-server/oauth-flows#access-token-structure)
 - [OIDC Core 1.0 §3.1.3.7 ID Token Validation](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation)
 - Internal: `supabase-auth-comprehensive` skill v2.1.0 §10 "ID token vs Access token — `aud` claim differs"
@@ -30,6 +40,7 @@ When Supabase began enforcing the `aud` claim strictly on ID tokens, every succe
 **Root cause:** The `bs_oauth_code_verifier`, `bs_oauth_state`, `bs_oauth_nonce`, and
 `auth_return_path` keys were written to `sessionStorage`. This caused
 `"PKCE code verifier not found in storage"` failures under real-world conditions:
+
 - Refreshing `/auth/callback` after redirect (auth code is single-use; the page
   must re-use the same verifier on reload, but sessionStorage was wiped by the browser)
 - ITP/ETP-Strict cross-site navigation in Safari / Firefox (sessionStorage nuked
