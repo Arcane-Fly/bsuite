@@ -5,6 +5,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 0.4.0 — 2026-05-26 — Remove vertical resize ceiling + internal card scroll
+
+### Fixed
+
+- **Cards stopped expanding before all content was visible.** Operator-flagged across the platform (CRM7 Contacts / Communications / Analytics / WHS, BSU GTO / Analytics): the bottom-right resize handle hit a wall well before the data inside fully fit. Live DOM inspection confirmed `.react-grid-item` reaching `height: 1536px` and refusing to grow further. Root cause: `DEFAULT_RESIZE_BOUNDS.maxH = 48` was applied as a *global* `maxSize(maxW, maxH)` constraint to **every** widget on **every** page, with no per-page or per-widget override path. The 0.3.0 bump (16 → 48) just moved the wall — it didn't remove it.
+
+  **Fix:** removed the global ceiling entirely. `DEFAULT_RESIZE_BOUNDS` is now `{ minW: 2, minH: 1 }`. The `gridBounds` constraint already caps width at the active column count, so no separate `maxSize(...)` is required. Per-item `maxW`/`maxH` on `LayoutItem` remains the supported knob for "this widget should not grow past N units" — rgl v2's `minMaxSize` constraint reads each item's own `maxW`/`maxH` and is included in the constraint chain.
+
+- **Card content clipped or fought the grid for height.** Without an internal scroll wrapper, tall content inside a `{content}` widget either overflowed the card chrome or forced the grid item to grow past the user's chosen size on the next layout pass. Fixed by wrapping `{content}` in `<div className="flex-1 min-h-0 overflow-auto">` inside the card's flex column. `min-h-0` is critical — flex children inherit `min-height: auto` and refuse to shrink below their content without it.
+
+- **Consumer-page width starvation (platform-wide sweep).** Removed redundant `<div className="container mx-auto …">` wrappers from ~109 pages across CRM7 + BSU. These wrappers re-capped the page at Tailwind's 1280px breakpoint inside an app shell that already provides `max-w-[1680px]` (CRM7 `MainLayout`) or `px-4 md:px-6` (BSU `AppContent` `<main>`) + responsive horizontal padding, starving `<PageGridLayout>` of ~400px on wide displays.
+
+  **Sweep rule (mechanical, applied via `/tmp/strip-container-mx-auto.py`):** strip `container mx-auto` *only* when the className contains NO `max-w-*` and NO `flex` modifier (those signal intentional narrow-form / centered layouts and were preserved). Standalone `px-N` was also dropped because the app shell already provides responsive horizontal padding; responsive variants like `sm:px-6` were kept (intentional page-level overrides). Vertical `py-*` and `space-y-*` were preserved (page rhythm).
+
+  **Counts:** 84 files in `crm7/src/pages/` + 25 files in `business-suite-unified/src/pages/`. R80.3 and Conduit had zero hits (those apps don't use the pattern). Component-level files (`CRM7Footer.tsx`, `OneShotEntryDemo.tsx`, `PricingControls.tsx`, `PricingSections.tsx`) were over-reached by the initial run and reverted — those legitimately need `container mx-auto` for centering since they may render outside the main shell.
+
+  **Visual delta on mobile:** BSU pages that had `container mx-auto px-6` previously rendered with 24px horizontal padding on mobile; they now inherit the app shell's `px-4` (16px) on `<md` viewports and `px-6` (24px) on `md+`. Acceptable per the BSU AppContent shell convention.
+
+  Consumer cards should NOT apply their own `overflow:hidden` on a direct child of `{content}` or the scroll will be intercepted before reaching this container. Nested scroll regions (tab panels, data tables) compose cleanly with this outer scroll because pointer/wheel events bubble up only when the inner one is at its scroll edge — but if a consumer widget already wraps itself in `overflow-auto`, the result is a double-scroll which works but is awkward UX. Several existing widgets (e.g. `contactSidebarWidget`, sidebar/messages cards in CRM7) currently do this and should be retrofitted in a follow-up to drop their outer `overflow-auto` and rely on the new package-provided one.
+
+### Notes
+
+- **Width is still owned by the consumer's app shell.** rgl v2 measures the page-builder `containerRef` via `ResizeObserver` and feeds the pixel value into `<Responsive width=...>`. Setting `width: 100%` on `.react-grid-layout` does NOT expand the grid — only the parent measurement does. Consumer pages that wrap `<PageGridLayout>` in `<div className="container mx-auto …">` will starve the grid of horizontal space because Tailwind's `.container` caps at the breakpoint width (1280px on `lg`). The fix lives in consumer pages, not this package. CRM7 contacts / communications / analytics / WHS host-employers were corrected alongside this release; the remaining ~65 pages are tracked as a follow-up sweep with a precise removal rule (only strip `container mx-auto` when the wrapper has no `max-w-*` and no `flex` modifier — those signal intentional narrow-form / centered layouts).
+- All existing unit tests pass against these changes. The 28-test suite covers per-item `maxW`/`maxH` resize honoring, drag-handle ancestry, and the trailing-rAF coalesced `onLayoutChange` from 0.3.0.
+- Minor version bump (0.3.0 → 0.4.0) reflects the behavioral change to global resize bounds. Per-item `maxW`/`maxH` consumers continue to work unchanged. Pages that were silently relying on the 48-row ceiling to clamp resize behavior should set `maxH` explicitly on their `LayoutItem`s instead.
+
+---
+
 ## 0.3.0 — 2026-05-26 — Canvas editor UX & resize performance
 
 ### Fixed
