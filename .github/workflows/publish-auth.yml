@@ -64,9 +64,6 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Dry-run publish (catches missing files or bad exports)
-        run: npm publish --dry-run --access public
-
       - name: Check if version already published
         id: version-check
         run: |
@@ -82,6 +79,10 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Will publish @bsuite/auth@${PKG_VERSION}"
           fi
+
+      - name: Dry-run publish (catches missing files or bad exports)
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --dry-run --access public
 
       - name: Publish to npm
         if: steps.version-check.outputs.skip == 'false'
