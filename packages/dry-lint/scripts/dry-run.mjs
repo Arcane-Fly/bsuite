@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Dry-run the @bsuite/dry-lint rule across every submodule and print one row
+ * Dry-run the @bsuite/dry-lint rules across every submodule and print one row
  * per violation. Designed to be invoked from anywhere — paths resolve from the
  * package directory.
  *
@@ -8,6 +8,9 @@
  *   pnpm --filter @bsuite/dry-lint build
  * Then run:
  *   node packages/dry-lint/scripts/dry-run.mjs
+ *   node packages/dry-lint/scripts/dry-run.mjs --rule=no-uuid-input-placeholder
+ *
+ * By default scans for ALL bsuite rules. Pass `--rule=<rule-name>` to scope.
  */
 import { Linter } from 'eslint';
 import { readFileSync, statSync, readdirSync } from 'node:fs';
@@ -55,6 +58,25 @@ const SKIP_DIRS = new Set([
 ]);
 
 const linter = new Linter({ configType: 'flat' });
+
+// Optional --rule=<name> filter. When omitted, all bsuite rules report.
+const ruleArg = process.argv.find((a) => a.startsWith('--rule='));
+const ruleFilter = ruleArg ? ruleArg.slice('--rule='.length) : null;
+
+// Default rule set when no --rule= filter is given. Intentionally omits
+// `no-raw-entity-select` and `oauth-callback-must-bridge` because those have
+// legitimate exception sets per consumer (see consumer eslint.config.js
+// overrides) and would spam the dry-run output with already-triaged cases.
+// To dry-run those rules explicitly, pass `--rule=no-raw-entity-select` or
+// `--rule=oauth-callback-must-bridge`.
+const DRY_RUN_DEFAULT_RULES = {
+  'bsuite/no-cross-app-write': 'warn',
+  'bsuite/no-uuid-input-placeholder': 'warn',
+};
+
+const activeRules = ruleFilter
+  ? { [`bsuite/${ruleFilter}`]: 'warn' }
+  : DRY_RUN_DEFAULT_RULES;
 
 function listSourceFiles(rootDir) {
   // Walk only the per-app `src/` (and `app/`/`pages/`/`lib/`/`supabase/functions`
@@ -126,7 +148,7 @@ for (const app of APPS) {
         },
       },
       plugins: { bsuite: bsuiteDryLint },
-      rules: { 'bsuite/no-cross-app-write': 'warn' },
+      rules: activeRules,
     },
   ];
 
@@ -150,9 +172,10 @@ for (const app of APPS) {
       continue;
     }
     for (const m of messages) {
-      if (m.ruleId === 'bsuite/no-cross-app-write') {
+      if (m.ruleId && m.ruleId in activeRules) {
         allViolations.push({
           app: app.name,
+          rule: m.ruleId,
           file: relFilename,
           line: m.line,
           column: m.column,
@@ -164,9 +187,15 @@ for (const app of APPS) {
 }
 
 console.log(`# dry-run report — scanned ${totalFilesScanned} files across ${APPS.length} apps`);
+if (ruleFilter) console.log(`# rule filter: bsuite/${ruleFilter}`);
 console.log('');
 console.log(`Total violations: ${allViolations.length}`);
 console.log('');
 for (const v of allViolations) {
-  console.log(`- [${v.app}] ${v.file}:${v.line}:${v.column} — ${v.message}`);
+  console.log(`- [${v.app}] [${v.rule}] ${v.file}:${v.line}:${v.column} — ${v.message}`);
+}
+
+// Non-zero exit code on violations so CI / pre-commit can wire this in.
+if (allViolations.length > 0) {
+  process.exit(1);
 }

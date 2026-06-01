@@ -2,13 +2,48 @@
 
 ESLint flat-config plugin that enforces the BSuite **one-shot architecture** — every Supabase entity table has a single canonical owner app, and other apps may READ but never WRITE to it.
 
-The plugin currently ships one rule:
+The plugin ships four rules:
 
-| Rule | Purpose |
-|------|---------|
-| `bsuite/no-cross-app-write` | Errors when an app calls `.from('<table>').{insert,update,upsert,delete}()` against a table owned by a different app per the ownership map. |
+| Rule | Default | Purpose |
+|------|---------|---------|
+| `bsuite/no-cross-app-write` | `error` | Errors when an app calls `.from('<table>').{insert,update,upsert,delete}()` against a table owned by a different app per the ownership map. |
+| `bsuite/no-raw-entity-select` | `warn` | Flags raw `.select()` reads against canonical entity tables — encourages going through the typed entity-service layer. |
+| `bsuite/no-uuid-input-placeholder` | `error` | Flags `<Input placeholder="UUID of …">` and similar UUID-prompting placeholders on `<Input>`/`<input>`/`<Textarea>`/`<textarea>`. Operators must pick from a canonical entity selector, not paste a UUID by hand. |
+| `bsuite/oauth-callback-must-bridge` | `error` | Errors when a file calls `exchangeCodeForTokens()` without a corresponding `supabase.auth.setSession()` bridge — prevents the BSU→app handoff from leaving the user anonymous. |
 
-The ownership map lives at [`src/ownership-map.json`](./src/ownership-map.json) and is sourced from `docs/20260227-dry-one-shot-architecture-v1.01A.md §1` plus the V5–V10 findings in `docs/20260423-cross-app-write-audit-v1.00W.md`.
+The ownership map lives at [`src/ownership-map.json`](./src/ownership-map.json) and is sourced from `docs/20260227-dry-one-shot-architecture-v1.02A.md §1` plus the V5–V10 findings in `docs/20260423-cross-app-write-audit-v1.00W.md`.
+
+## `bsuite/no-uuid-input-placeholder`
+
+Forces operators to use canonical entity selectors instead of free-text UUID inputs. Triggered after the 2026-06-01 sweep (PRs #933–#939) which replaced raw UUID inputs across 16 CRM7 pages.
+
+### Detected pattern
+
+```tsx
+// ❌ flagged — operator should pick, not paste
+<Input placeholder="UUID of host employer" />
+<Input placeholder="Enter apprentice UUID" />
+<Input placeholder="Apprentice UUID" />
+```
+
+### Canonical fix
+
+```tsx
+// ✅ pick from a canonical entity selector
+import { EmployerSelector } from '@/components/entity/selectors';
+
+<EmployerSelector
+  value={hostEmployerId}
+  onSelect={(entity) => setHostEmployerId(entity?.id ?? '')}
+/>
+```
+
+If no selector exists, build one mirroring the `IncidentSelector` I4 pattern (tenant-scoped via explicit `.eq('tenant_id', …)` on top of RLS).
+
+### Allowed escapes
+
+- Test, spec, stories, and `__mocks__` paths are skipped automatically.
+- Inline `// eslint-disable-next-line bsuite/no-uuid-input-placeholder` for genuinely-no-canonical-entity surfaces (developer-only debug tools). Document why with a comment.
 
 ---
 
