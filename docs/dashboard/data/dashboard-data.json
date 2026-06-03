@@ -14,9 +14,9 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-06-03",
-    "last_refreshed": "2026-06-03T20:08:00Z",
-    "last_refreshed_by": "copilot-cli W2 consultant KPI update"
+    "last_refresh": "2026-06-04",
+    "last_refreshed": "2026-06-04T04:55:00+08:00",
+    "last_refreshed_by": "copilot-cli CRM7 no-TO RLS hardening update"
   },
   "summary": {
     "external_total": 30,
@@ -58,13 +58,13 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 82,
+    "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Development PR queue is clear. @bsuite/dry-lint@0.5.0 published via GitHub Actions (run #26877685383); all 6 consumers rolled out: crm7#947, R80.3#302, braden#314, business-suite-unified#534, conduit#302, throughput#202. Issue #1352 closed. Dry-lint guardrail complete. Counts verified with gh on 2026-06-03.",
+    "open_prs_note": "Development PR queue is clear after CRM7#961 merged to development. Counts verified with gh on 2026-06-04 before this dashboard PR was opened.",
     "issues_by_repo": {
-      "bsuite": 30,
+      "bsuite": 60,
       "business-suite-unified": 4,
-      "crm7": 30,
+      "crm7": 74,
       "conduit": 11,
       "braden": 3,
       "R80.3": 3,
@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "cc9c82b",
+      "main_sha": "b63315d",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "6e95a5ea",
+      "main_sha": "b020e80a",
       "vercel": "success"
     },
     {
@@ -2764,12 +2764,12 @@
     }
   ],
   "counters": {
-    "open_issues_total": 82,
-    "open_prs_total": 2,
+    "open_issues_total": 156,
+    "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 30,
+      "bsuite": 60,
       "business-suite-unified": 4,
-      "crm7": 30,
+      "crm7": 74,
       "conduit": 11,
       "braden": 3,
       "R80.3": 3,
@@ -2781,7 +2781,7 @@
       "crm7": 0,
       "conduit": 0,
       "braden": 0,
-      "R80.3": 2,
+      "R80.3": 0,
       "throughput": 0
     }
   },
