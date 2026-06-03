@@ -162,7 +162,20 @@ let _id = 100;
 const nid = () => ++_id;
 
 /* ─── UI COMPONENTS ─── */
-const V = { bg: "#080c14", sf: "#0f1520", cd: "#161f2e", inp: "#131a28", brd: "#1c2840", acc: "#e5a526", acc2: "#3b82f6", txt: "#e8edf5", ts: "#8896ab", tm: "#576880", grn: "#34d399", red: "#f87171" };
+const V = {
+  bg: "oklch(0.12 0.025 260)",
+  sf: "oklch(0.16 0.03 260)",
+  cd: "oklch(0.2 0.035 260)",
+  inp: "oklch(0.18 0.03 260)",
+  brd: "oklch(0.24 0.045 260)",
+  acc: "oklch(0.744 0.151 78.7)",
+  acc2: "oklch(0.546 0.215 262.9)",
+  txt: "oklch(0.95 0.012 255)",
+  ts: "oklch(0.67 0.035 260)",
+  tm: "oklch(0.5 0.04 260)",
+  grn: "oklch(0.723 0.192 149.6)",
+  red: "oklch(0.568 0.202 283.1)",
+};
 
 function Inp({ label, value, onChange, suffix, step = "0.01", min = "0", wide }) {
   return (
@@ -253,7 +266,7 @@ function CostRow({ label, val, total, bold }) {
 function RateCard({ label, charge, funded, funding, big, glow }) {
   const hasFunding = funding > 0;
   return (
-    <div className="rounded-lg p-2.5 transition-colors" style={{ background: glow ? "rgba(229,165,38,0.08)" : V.cd, border: `1px solid ${glow ? "rgba(229,165,38,0.25)" : V.brd}` }}>
+    <div className="rounded-lg p-2.5 transition-colors" style={{ background: glow ? "oklch(0.744 0.151 78.7 / 0.08)" : V.cd, border: `1px solid ${glow ? "oklch(0.744 0.151 78.7 / 0.25)" : V.brd}` }}>
       <div className="text-xs mb-0.5" style={{ color: V.tm }}>{label}</div>
       {hasFunding ? (
         <>
@@ -368,7 +381,7 @@ export default function App() {
       `}</style>
 
       {/* HEADER */}
-      <header className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: "rgba(8,12,20,0.9)", borderColor: V.brd }}>
+      <header className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: "oklch(0.12 0.025 260 / 0.9)", borderColor: V.brd }}>
         <div className="max-w-screen-2xl mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold" style={{ background: V.acc, color: V.bg }}>CC</div>
@@ -379,7 +392,7 @@ export default function App() {
           </div>
           <button onClick={() => setCompare(!compare)}
             className="px-3 py-1.5 rounded text-xs font-medium border transition-all"
-            style={{ background: compare ? "rgba(59,130,246,0.1)" : "transparent", borderColor: compare ? "rgba(59,130,246,0.3)" : V.brd, color: compare ? V.acc2 : V.tm }}>
+            style={{ background: compare ? "oklch(0.546 0.215 262.9 / 0.1)" : "transparent", borderColor: compare ? "oklch(0.546 0.215 262.9 / 0.3)" : V.brd, color: compare ? V.acc2 : V.tm }}>
             {compare ? "✓ Comparing" : "Compare Models"}
           </button>
         </div>
@@ -412,7 +425,7 @@ export default function App() {
                 {[{ l: "Standard (39w)", v: 39 }, { l: "ALEX (48w)", v: 48 }, { l: "52 Week", v: 52 }].map(p => (
                   <button key={p.v} onClick={() => setBillableWk(p.v)}
                     className="flex-1 py-1.5 rounded text-xs font-medium border transition-all"
-                    style={{ background: billableWk === p.v ? "rgba(59,130,246,0.1)" : "transparent", borderColor: billableWk === p.v ? "rgba(59,130,246,0.3)" : V.brd, color: billableWk === p.v ? "#93c5fd" : V.tm }}>
+                    style={{ background: billableWk === p.v ? "oklch(0.546 0.215 262.9 / 0.1)" : "transparent", borderColor: billableWk === p.v ? "oklch(0.546 0.215 262.9 / 0.3)" : V.brd, color: billableWk === p.v ? "oklch(0.809 0.105 251.8)" : V.tm }}>
                     {p.l}
                   </button>
                 ))}
@@ -422,9 +435,9 @@ export default function App() {
               <div className="space-y-1.5">
                 <WeekBar label="Billable" weeks={billableWk} color={V.acc} />
                 <WeekBar label="Training" weeks={trainWk} color={V.acc2} />
-                <WeekBar label="Annual Leave" weeks={res.alWk} color="#8b5cf6" />
-                <WeekBar label="Public Hols" weeks={res.phWk} color="#06b6d4" />
-                <WeekBar label="Sick Leave" weeks={res.sickWk} color="#f97316" />
+                <WeekBar label="Annual Leave" weeks={res.alWk} color="oklch(0.568 0.202 283.1)" />
+                <WeekBar label="Public Hols" weeks={res.phWk} color="oklch(0.769 0.132 191.7)" />
+                <WeekBar label="Sick Leave" weeks={res.sickWk} color="oklch(0.728 0.168 22.5)" />
                 <div className="pt-1 border-t flex justify-between text-xs" style={{ borderColor: V.brd, color: V.tm }}>
                   <span>Accounted: {f(billableWk + trainWk + res.alWk + res.phWk + res.sickWk, 1)}w</span>
                   <span>of 52w</span>
@@ -451,7 +464,7 @@ export default function App() {
             <Panel title="Allowances" collapsible>
               <div className="space-y-2">
                 {allowances.map(a => (
-                  <div key={a.id} className="rounded-lg p-2.5 border" style={{ background: V.cd, borderColor: a.enabled ? V.brd : "rgba(28,40,64,0.4)", opacity: a.enabled ? 1 : 0.5 }}>
+                  <div key={a.id} className="rounded-lg p-2.5 border" style={{ background: V.cd, borderColor: a.enabled ? V.brd : "oklch(0.24 0.045 260 / 0.4)", opacity: a.enabled ? 1 : 0.5 }}>
                     <div className="flex items-center gap-2 mb-2">
                       <input type="text" value={a.name} onChange={e => updateAllowance(a.id, "name", e.target.value)}
                         className="flex-1 rounded px-2 py-1 text-xs border focus:outline-none"
@@ -613,7 +626,7 @@ export default function App() {
                         { label: "Oncost / Hour", val: r => r.totOnc },
                         { label: "Funding Discount", val: r => r.fundingPH, color: V.grn, prefix: "−" },
                       ].map((row, i) => (
-                        <tr key={i} style={{ borderBottom: `1px solid ${row.bold ? V.brd : "rgba(28,40,64,0.5)"}` }}>
+                        <tr key={i} style={{ borderBottom: `1px solid ${row.bold ? V.brd : "oklch(0.24 0.045 260 / 0.5)"}` }}>
                           <td className={`py-1.5 text-sm ${row.bold ? "font-semibold" : ""}`} style={{ color: row.bold ? V.acc : V.ts }}>{row.label}</td>
                           {cmpModels.map(m => {
                             const r = cmpRes[m.key];
@@ -631,7 +644,7 @@ export default function App() {
                       ))}
                       <tr><td colSpan={4} className="py-1" /></tr>
                       {penalties.map(pr => (
-                        <tr key={pr.id} style={{ borderBottom: `1px solid rgba(28,40,64,0.3)` }}>
+                        <tr key={pr.id} style={{ borderBottom: `1px solid oklch(0.24 0.045 260 / 0.3)` }}>
                           <td className="py-1 text-xs" style={{ color: V.tm }}>{pr.label} ({pr.mult}× {pr.cat})</td>
                           {cmpModels.map(m => {
                             const r = cmpRes[m.key];
@@ -662,7 +675,7 @@ export default function App() {
                       {res.fundingPH > 0 && (
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-sm font-mono line-through" style={{ color: V.tm }}>{fd(res.rates.ord.charge)}</span>
-                          <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: V.grn }}>
+                          <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: "oklch(0.723 0.192 149.6 / 0.1)", color: V.grn }}>
                             −{fd(res.fundingPH)} funding
                           </span>
                         </div>
@@ -734,7 +747,7 @@ export default function App() {
                         ))}
                       </div>
                       {res.fundingPH > 0 && (
-                        <div className="mt-2 text-xs p-2 rounded" style={{ background: "rgba(52,211,153,0.05)", color: V.grn, border: `1px solid rgba(52,211,153,0.15)` }}>
+                        <div className="mt-2 text-xs p-2 rounded" style={{ background: "oklch(0.723 0.192 149.6 / 0.05)", color: V.grn, border: `1px solid oklch(0.723 0.192 149.6 / 0.15)` }}>
                           Funding discount of {fd(res.fundingPH)}/hr applied flat after penalty calculation — not multiplied by penalty rate
                         </div>
                       )}
@@ -766,7 +779,7 @@ export default function App() {
                               const r = res.rates[pr.id];
                               if (!r) return null;
                               return (
-                                <tr key={pr.id} style={{ borderBottom: `1px solid rgba(28,40,64,0.4)` }}>
+                                <tr key={pr.id} style={{ borderBottom: `1px solid oklch(0.24 0.045 260 / 0.4)` }}>
                                   <td className="py-1" style={{ color: V.ts }}>{pr.label}</td>
                                   <td className="py-1 text-right font-mono">{pr.mult}×</td>
                                   <td className="py-1 text-right" style={{ color: V.tm }}>{pr.cat === "overtime" ? "OT" : "Penalty"}</td>
@@ -889,7 +902,7 @@ export default function App() {
         </div>
 
         <div className="mt-5 pt-2 border-t text-center" style={{ borderColor: V.brd }}>
-          <p className="text-xs" style={{ color: "rgba(87,104,128,0.5)" }}>GTO Charge Rate Calculator • All rates configurable • Super {superRate}% • Apprenticeship {appYears}yr</p>
+          <p className="text-xs" style={{ color: "oklch(0.5 0.04 260 / 0.5)" }}>GTO Charge Rate Calculator • All rates configurable • Super {superRate}% • Apprenticeship {appYears}yr</p>
         </div>
       </div>
     </div>

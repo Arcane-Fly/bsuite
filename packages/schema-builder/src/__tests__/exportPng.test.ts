@@ -36,7 +36,7 @@ describe('exportCanvasToPng', () => {
     const [callEl, opts] = mockedToPng.mock.calls[0];
     expect(callEl).toBe(el);
     expect(opts.pixelRatio).toBe(2);
-    expect(opts.backgroundColor).toBe('#ffffff');
+    expect(opts.backgroundColor).toBe('oklch(1 0 0)');
     expect(opts.cacheBust).toBe(true);
     expect(typeof opts.filter).toBe('function');
   });

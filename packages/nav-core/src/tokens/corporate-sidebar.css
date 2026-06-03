@@ -5,24 +5,24 @@
  * Import this file in the braden.com.au project.
  *
  * Braden corporate palette:
- *   Red    #ab233a   (primary)
- *   Gold   #cbb26a   (accent)
- *   Navy   #2c3e50   (text/headings)
+ *   Red    Braden Red   (primary)
+ *   Gold   Braden Gold  (accent)
+ *   Navy   Braden Navy  (text/headings)
  *
  * Values are HSL channel triplets (H S% L%) consumed by
  * Tailwind's hsl() utility wrappers.
  */
 
 :root {
-  --sidebar-background: 350 66% 38%;       /* #811a2c  dark braden red    */
-  --sidebar-foreground: 0 0% 95%;          /* #f2f2f2  near-white text    */
-  --sidebar-primary: 44 49% 60%;           /* #cbb26a  braden gold        */
-  --sidebar-primary-foreground: 350 66% 15%;/* #3d0d14 deep red text      */
-  --sidebar-accent: 350 66% 32%;           /* #6e1624  deeper red tint    */
-  --sidebar-accent-foreground: 44 49% 75%; /* #ddd0a0  light gold         */
-  --sidebar-border: 350 40% 28%;           /* #5c1520  subtle red border  */
-  --sidebar-ring: 44 49% 60%;              /* #cbb26a  gold ring          */
-  --sidebar-muted-foreground: 0 0% 75%;    /* #bfbfbf  muted text         */
+  --sidebar-background: 350 66% 38%;       /* dark braden red    */
+  --sidebar-foreground: 0 0% 95%;          /* near-white text    */
+  --sidebar-primary: 44 49% 60%;           /* braden gold        */
+  --sidebar-primary-foreground: 350 66% 15%;/* deep red text      */
+  --sidebar-accent: 350 66% 32%;           /* deeper red tint    */
+  --sidebar-accent-foreground: 44 49% 75%; /* light gold         */
+  --sidebar-border: 350 40% 28%;           /* subtle red border  */
+  --sidebar-ring: 44 49% 60%;              /* gold ring          */
+  --sidebar-muted-foreground: 0 0% 75%;    /* muted text         */
 }
 
 /* No .dark variant: corporate sidebar is always red-branded */

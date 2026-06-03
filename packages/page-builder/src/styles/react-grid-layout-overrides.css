@@ -23,7 +23,7 @@
 
 .react-grid-item.react-grid-placeholder {
   border-radius: 1.5rem;
-  background: var(--accent-primary, var(--primary, #2563eb));
+  background: var(--accent-primary, var(--role-primary, var(--primary, oklch(0.546 0.215 262.9))));
   opacity: 0.16;
 }
 
@@ -59,12 +59,12 @@
   bottom: 3px;
   width: 6px;
   height: 6px;
-  border-right: 2px solid var(--text-secondary, rgba(0, 0, 0, 0.45));
-  border-bottom: 2px solid var(--text-secondary, rgba(0, 0, 0, 0.45));
+  border-right: 2px solid var(--text-secondary, oklch(0 0 0 / 0.45));
+  border-bottom: 2px solid var(--text-secondary, oklch(0 0 0 / 0.45));
 }
 
 /* Highlight the marker when hovering the handle itself. */
 .react-grid-item > .react-resizable-handle:hover::after {
-  border-right-color: var(--accent-primary, var(--primary, #2563eb));
-  border-bottom-color: var(--accent-primary, var(--primary, #2563eb));
+  border-right-color: var(--accent-primary, var(--role-primary, var(--primary, oklch(0.546 0.215 262.9))));
+  border-bottom-color: var(--accent-primary, var(--role-primary, var(--primary, oklch(0.546 0.215 262.9))));
 }

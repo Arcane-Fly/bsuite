@@ -103,6 +103,15 @@ export interface BrandingProviderProps {
   applyPersistedOnMount?: boolean
 }
 
+interface ImportMetaWithOptionalEnv {
+  env?: Record<string, string | boolean | undefined>
+}
+
+function isDevEnvironment(): boolean {
+  const env = (import.meta as ImportMetaWithOptionalEnv).env
+  return env?.DEV === true || env?.MODE === 'development'
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // OKLCH validation
 // Accepts: oklch(L C H) or oklch(L C H / A)
@@ -163,7 +172,7 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
 
   if (branding.primary) {
     if (!isValidOklch(branding.primary)) {
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevEnvironment()) {
         console.warn(
           `[BrandingProvider] Rejected primary colour "${branding.primary}" — must be oklch(). ` +
             'Only oklch() values are accepted. Hex/rgb/hsl are not permitted in the token system.',
@@ -179,7 +188,7 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
 
   if (branding.accent) {
     if (!isValidOklch(branding.accent)) {
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevEnvironment()) {
         console.warn(
           `[BrandingProvider] Rejected accent colour "${branding.accent}" — must be oklch().`,
         )
@@ -221,7 +230,7 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
 
 // Warn in dev if a caller tries to set a protected key
 function warnIfProtectedKeyAttempted(branding: TenantBranding): void {
-  if (process.env.NODE_ENV !== 'development') return
+  if (!isDevEnvironment()) return
   // Check for any attempt to set error/destructive via unexpected RPC fields
   const raw = branding as unknown as Record<string, unknown>
   for (const key of Object.keys(raw)) {
@@ -259,8 +268,7 @@ function loadPersistedBranding(): TenantBranding | null {
 
 function isBrandingEnabled(): boolean {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const flag = (import.meta as any).env
+    const flag = (import.meta as ImportMetaWithOptionalEnv).env
     const value = flag?.VITE_ENABLE_BRANDING_OVERRIDE ?? flag?.['VITE_ENABLE_BRANDING_OVERRIDE']
     if (value === 'false' || value === '0') return false
   } catch {
@@ -335,8 +343,7 @@ export function BrandingProvider({
     if (!isBrandingEnabled()) return
     const channel = supabaseClient
       .channel('tenant-branding-updates')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .on('postgres_changes' as any, { event: 'UPDATE', schema: 'public', table: 'tenants' }, (_payload: unknown) => { void fetchBranding() })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tenants' }, () => { void fetchBranding() })
       .subscribe()
     channelRef.current = channel
     return () => {

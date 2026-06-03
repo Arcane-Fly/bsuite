@@ -53,7 +53,7 @@
   --color-info-border:    rgba(56, 189, 248, 0.28);
 
   /* Stat value — D2C electric cyan for dark mode metric display */
-  --stat-value-color: #00cec9;
+  --stat-value-color: oklch(0.769 0.132 191.7);
 
   /* Shadows — deeper, more diffuse on dark backgrounds */
   --shadow-shell:      0 24px 60px -36px rgba(2, 6, 23, 0.80);
