@@ -59,7 +59,7 @@ Before any RLS rewrites or Zod regen against the schema, the source migration tr
 | Step | Findings | Status | Approach |
 |---|---|---|---|
 | 2.0 no-TO RLS policy role scoping | Auth/session/tenant-scoped policies applying to PUBLIC | ✅ DONE | CRM7 PR [#961](https://github.com/GaryOcean428/crm7/pull/961) adds metadata-driven `ALTER POLICY ... TO authenticated` hardening, preserves intentional public reads, covers `auth.jwt()` predicates, and ships pgTAP guardrail `09_harden_no_to_rls_policies.sql`. Closed crm7#825. |
-| 2.1 SECURITY DEFINER lockdown | 47 functions | TODO | One PR per function-group (auth helpers, RLS helpers, RPC handlers). REVOKE + GRANT EXECUTE with explicit roles + SET search_path. |
+| 2.1 SECURITY DEFINER lockdown | 47 functions | ✅ DONE | CRM7 PR [#962](https://github.com/GaryOcean428/crm7/pull/962) completes the remaining public-schema SECURITY DEFINER EXECUTE lockdown: zero unpinned helper search paths, zero PUBLIC/anon EXECUTE grants, authenticated RLS helper grants preserved, and pgTAP guardrail `09_secdef_execute_lockdown.sql` covers the invariant. |
 | 2.2 RLS initplan rewrite | 25 policies | TODO | One PR per table. Each policy DROP + CREATE with `(SELECT auth.uid())` wrapper. pgTAP regression test per table. |
 | 2.3 Multiple permissive consolidation | 56 duplicates | TODO | Per-table PRs. OR' the duplicate predicates into one policy. Plan-time win documented. |
 | 2.4 Unindexed FK btree indexes | 23 FKs | TODO | Single migration is OK here (additive, no breaking change). |
