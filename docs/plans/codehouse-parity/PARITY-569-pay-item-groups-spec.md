@@ -1,10 +1,10 @@
 # Pay Item Groups parity spec — 11 Codehouse gaps domain C (closes #569 research portion)
 
-**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations and PR-C settings UI implemented; PR-D+ remain active
+**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations and PR-C/PR-D settings UI implemented; PR-E+ remain active
 **Owner:** perplexity-computer (autonomous cron — FF-AUTONOMY-20260506)
 **Closes:** [GaryOcean428/bsuite#569](https://github.com/GaryOcean428/bsuite/issues/569) (research portion)
 **Implementation tracker:** PR ladder filed by claude or copilot per Cron A routing matrix
-**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951); PR-C merged in [GaryOcean428/crm7#952](https://github.com/GaryOcean428/crm7/pull/952) on `development`
+**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951); PR-C merged in [GaryOcean428/crm7#952](https://github.com/GaryOcean428/crm7/pull/952); PR-D merged in [GaryOcean428/crm7#953](https://github.com/GaryOcean428/crm7/pull/953) on `development`
 **Live schema verified:** 2026-05-07 via Supabase MCP project `tuybltdrdefjblnplpqo`
 **Source matrix rows:** 21–29, 31–32 (parity-matrix.md domain C)
 **Domain covered:** C (Pay Items — groups, rules, type extensions, sort priority)
@@ -148,6 +148,8 @@ PR-A (pay_item_groups + timesheet_groups schema)
 ### PR-D — penalty-groups + allowance-groups CRUD pages
 
 **Target:** `crm7/src/pages/settings/penalty-groups.tsx`, `crm7/src/pages/settings/allowance-groups.tsx`
+**Status:** ✅ merged to CRM7 `development` via [crm7#953](https://github.com/GaryOcean428/crm7/pull/953)
+**Evidence:** CI passed build/test, e2e, drift scan, DOM layout, OAuth sync, and gitleaks. Local validation passed schema tests, typecheck, lint, full Vitest, production build, formatting check for PR-D files/service, no raw colour scan, design-sheriff review, code review, and browser smoke for `/settings/penalty-groups` + `/settings/allowance-groups`.
 **Stack:** same as PR-C
 **LOC estimate:** ~160 TSX
 **Independently mergeable:** depends on PR-B; PR-C can merge first

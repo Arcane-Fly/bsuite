@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "85b2635",
+      "main_sha": "afbd32e",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "a64a6fcd",
+      "main_sha": "cfdc7928",
       "vercel": "success"
     },
     {
@@ -1995,6 +1995,18 @@
         ],
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/952",
         "notes": "CRM7 settings CRUD landed for pay_item_groups and timesheet_groups with tenant-scoped services, RHF/Zod forms, role-token colour selection, UUID-backed pay item group selector, delete confirmation, dnd-kit sortable reorder, and selected-tenant reorder RPC hardening across pay item, timesheet, penalty, and allowance group catalogues."
+      },
+      {
+        "domain": "C_pay_items",
+        "issue": 569,
+        "phase": "PR-D penalty and allowance group settings UI",
+        "status": "merged",
+        "implemented_rows": [
+          23,
+          24
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/953",
+        "notes": "CRM7 settings CRUD landed for penalty_groups and allowance_groups with tenant-scoped services, RHF/Zod forms, UUID-backed pay item group selectors, Codehouse-compatible toggles for hours_round_up and use_pay_rates, delete confirmation, and dnd-kit sortable reorder via selected-tenant RPCs."
       }
     ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",
