@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "7c87aa6",
+      "main_sha": "fd13a5f",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "1d7cfbe8",
+      "main_sha": "85c610dd",
       "vercel": "success"
     },
     {
@@ -102,7 +102,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "45f0e03",
+      "main_sha": "1620242",
       "vercel": "success"
     },
     {
@@ -110,7 +110,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "a09e0b0",
+      "main_sha": "483e1ef",
       "vercel": "success"
     },
     {
@@ -118,7 +118,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "9b17b5e",
+      "main_sha": "34da48c",
       "vercel": "success"
     },
     {
@@ -126,7 +126,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "8a2da3d",
+      "main_sha": "8813d71",
       "vercel": "success"
     },
     {
@@ -134,7 +134,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "4226205",
+      "main_sha": "a245a1b",
       "vercel": "success"
     }
   ],
@@ -512,7 +512,14 @@
       "owner": "Shared packages lead",
       "next_step": "Source package @bsuite/dry-lint v0.5.0 with no-uuid-input-placeholder published to npm via https://github.com/GaryOcean428/bsuite/actions/runs/26877685383. All 6 consumers (crm7, R80.3, braden, business-suite-unified, conduit, throughput) rolled out to 0.5.0 via merged PRs. Issue #1352 closed. Guardrail complete.",
       "evidence_url": "https://github.com/GaryOcean428/bsuite/actions/runs/26877685383",
-      "consumer_prs": ["https://github.com/GaryOcean428/crm7/pull/947", "https://github.com/GaryOcean428/R80.3/pull/302", "https://github.com/GaryOcean428/braden/pull/314", "https://github.com/GaryOcean428/business-suite-unified/pull/534", "https://github.com/GaryOcean428/conduit/pull/302", "https://github.com/GaryOcean428/throughput/pull/202"],
+      "consumer_prs": [
+        "https://github.com/GaryOcean428/crm7/pull/947",
+        "https://github.com/GaryOcean428/R80.3/pull/302",
+        "https://github.com/GaryOcean428/braden/pull/314",
+        "https://github.com/GaryOcean428/business-suite-unified/pull/534",
+        "https://github.com/GaryOcean428/conduit/pull/302",
+        "https://github.com/GaryOcean428/throughput/pull/202"
+      ],
       "issue_closed": 1352,
       "severity": "P2",
       "category": "Gap"
@@ -1864,7 +1871,7 @@
     ]
   },
   "parity_status": {
-    "schema_version": 1,
+    "schema_version": 1.1,
     "audit_date": "2026-05-06",
     "competitor": "Codehouse Workforce One",
     "scope_pages": 142,
@@ -1952,6 +1959,20 @@
       "p1_count": 7,
       "p2_count": 6
     },
+    "implementation_progress": [
+      {
+        "domain": "C_pay_items",
+        "issue": 569,
+        "phase": "PR-A schema foundation",
+        "status": "merged",
+        "implemented_rows": [
+          21,
+          22
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/950",
+        "notes": "CRM7 owns pay item group CRUD. pay_item_groups and timesheet_groups landed with tenant-scoped RLS, GTO staff writes, composite tenant/pay-item FK enforcement, Zod schemas, and pgTAP coverage in 09_pay_item_groups_rls.sql."
+      }
+    ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",
     "plan_files_count": 12,
     "plan_lines_added": 1424,
