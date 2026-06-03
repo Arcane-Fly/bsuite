@@ -1,10 +1,10 @@
 # Pay Item Groups parity spec — 11 Codehouse gaps domain C (closes #569 research portion)
 
-**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations implemented; PR-C+ remain active
+**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations and PR-C settings UI implemented; PR-D+ remain active
 **Owner:** perplexity-computer (autonomous cron — FF-AUTONOMY-20260506)
 **Closes:** [GaryOcean428/bsuite#569](https://github.com/GaryOcean428/bsuite/issues/569) (research portion)
 **Implementation tracker:** PR ladder filed by claude or copilot per Cron A routing matrix
-**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951) on `development`
+**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951); PR-C merged in [GaryOcean428/crm7#952](https://github.com/GaryOcean428/crm7/pull/952) on `development`
 **Live schema verified:** 2026-05-07 via Supabase MCP project `tuybltdrdefjblnplpqo`
 **Source matrix rows:** 21–29, 31–32 (parity-matrix.md domain C)
 **Domain covered:** C (Pay Items — groups, rules, type extensions, sort priority)
@@ -138,6 +138,8 @@ PR-A (pay_item_groups + timesheet_groups schema)
 ### PR-C — pay-item-groups CRUD page + timesheet-groups CRUD page
 
 **Target:** `crm7/src/pages/settings/pay-item-groups.tsx`, `crm7/src/pages/settings/timesheet-groups.tsx`
+**Status:** ✅ merged to CRM7 `development` via [crm7#952](https://github.com/GaryOcean428/crm7/pull/952)
+**Evidence:** CI passed build/test, e2e, pgTAP RLS, dry-lint, DB migration lint, RLS JWT lint, OAuth sync, drift scan, DOM layout, and gitleaks. Local validation passed targeted placement schema tests, typecheck, lint, full Vitest, production build, 42 affected pgTAP assertions, and browser smoke for `/settings/pay-item-groups` + `/settings/timesheet-groups`.
 **Stack:** RHF + Zod, dnd-kit sortable, TanStack Query mutations, shadcn `DataTable`
 **LOC estimate:** ~180 TSX
 **Independently mergeable:** depends on PR-A
