@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-04",
-    "last_refreshed": "2026-06-04T07:13:35+08:00",
-    "last_refreshed_by": "copilot-cli CRM7 super_admin_action_audit RLS initplan update"
+    "last_refreshed": "2026-06-04T07:36:34+08:00",
+    "last_refreshed_by": "copilot-cli CRM7 apprentice_placements RLS initplan update"
   },
   "summary": {
     "external_total": 30,
@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Development PR queue is clear after CRM7#967 merged to development. Counts verified with gh on 2026-06-04 before this dashboard PR was opened.",
+    "open_prs_note": "Development PR queue is clear after CRM7#968 merged to development. Counts verified with gh on 2026-06-04 before this dashboard PR was opened.",
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "157952c",
+      "main_sha": "871d90f",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "84683c8a",
+      "main_sha": "a1992566",
       "vercel": "success"
     },
     {
