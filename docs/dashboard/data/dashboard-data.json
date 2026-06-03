@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 82,
     "open_prs_total": 0,
-    "open_prs_note": "Development PR queue is clear after merging R80.3#298 and R80.3#299. bsuite#1342 merged @bsuite/dry-lint source v0.5.0 to development; consumers remain on 0.4.0/^0.4.0 until the package is built, verified, published to npm, and bumped intentionally. Counts verified with gh on 2026-06-03.",
+    "open_prs_note": "Development PR queue is clear. @bsuite/dry-lint@0.5.0 published via GitHub Actions (run #26877685383); all 6 consumers rolled out: crm7#947, R80.3#302, braden#314, business-suite-unified#534, conduit#302, throughput#202. Issue #1352 closed. Dry-lint guardrail complete. Counts verified with gh on 2026-06-03.",
     "issues_by_repo": {
       "bsuite": 30,
       "business-suite-unified": 4,
@@ -507,10 +507,13 @@
       "scope": "docs-root",
       "source": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
       "path": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
-      "status": "in-flight",
-      "phase": "source landed; publish/bump pending",
+      "status": "done",
+      "phase": "published 0.5.0 to npm + consumers rolled out",
       "owner": "Shared packages lead",
-      "next_step": "Source package @bsuite/dry-lint v0.5.0 with no-uuid-input-placeholder landed on development via bsuite#1342. Do not bump consumers until 0.5.0 is built, verified, published to npm, then intentionally rolled out per DEPENDENCY-BUMP-CHECKLIST.md.",
+      "next_step": "Source package @bsuite/dry-lint v0.5.0 with no-uuid-input-placeholder published to npm via https://github.com/GaryOcean428/bsuite/actions/runs/26877685383. All 6 consumers (crm7, R80.3, braden, business-suite-unified, conduit, throughput) rolled out to 0.5.0 via merged PRs. Issue #1352 closed. Guardrail complete.",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/actions/runs/26877685383",
+      "consumer_prs": ["https://github.com/GaryOcean428/crm7/pull/947", "https://github.com/GaryOcean428/R80.3/pull/302", "https://github.com/GaryOcean428/braden/pull/314", "https://github.com/GaryOcean428/business-suite-unified/pull/534", "https://github.com/GaryOcean428/conduit/pull/302", "https://github.com/GaryOcean428/throughput/pull/202"],
+      "issue_closed": 1352,
       "severity": "P2",
       "category": "Gap"
     },
@@ -1815,7 +1818,7 @@
     ]
   },
   "freeze_completion_bumps": {
-    "state": "RESOLVED on development — full-tree drift warnings cleared and @bsuite/dry-lint v0.5.0 source rule landed; consumer 0.5.0 rollout remains unpublished/unbumped.",
+    "state": "RESOLVED on development + main — @bsuite/dry-lint v0.5.0 source published to npm and all 6 consumers rolled out. Issue #1352 closed. Guardrail complete.",
     "remaining_bumps": [
       {
         "id": "fb-1",
@@ -1851,6 +1854,12 @@
         "resolved_at": "2026-06-03T07:08Z",
         "resolved_by": "copilot-cli development sweep",
         "evidence": "bsuite#1342 merged to development after dry-lint test/typecheck/build and full drift scan passed. Package is not published or rolled to consumers yet."
+      },
+      {
+        "label": "@bsuite/dry-lint@0.5.0 publication and consumer rollout (issue #1352)",
+        "resolved_at": "2026-06-03T10:30Z",
+        "resolved_by": "dry-lint guardrail automation + manual consumer PRs",
+        "evidence": "Published to npm via https://github.com/GaryOcean428/bsuite/actions/runs/26877685383; all 6 consumers merged: crm7#947, R80.3#302, braden#314, business-suite-unified#534, conduit#302, throughput#202. npm view confirms 0.5.0 on registry. Issue https://github.com/GaryOcean428/bsuite/issues/1352 closed."
       }
     ]
   },
