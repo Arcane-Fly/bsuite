@@ -1,9 +1,10 @@
 # Pay Item Groups parity spec — 11 Codehouse gaps domain C (closes #569 research portion)
 
-**Status:** WORKING (`v1.00W`) — research-lane specification, not yet implemented
+**Status:** WORKING (`v1.00W`) — PR-A schema foundation implemented; PR-B+ remain active
 **Owner:** perplexity-computer (autonomous cron — FF-AUTONOMY-20260506)
 **Closes:** [GaryOcean428/bsuite#569](https://github.com/GaryOcean428/bsuite/issues/569) (research portion)
 **Implementation tracker:** PR ladder filed by claude or copilot per Cron A routing matrix
+**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950) on `development`
 **Live schema verified:** 2026-05-07 via Supabase MCP project `tuybltdrdefjblnplpqo`
 **Source matrix rows:** 21–29, 31–32 (parity-matrix.md domain C)
 **Domain covered:** C (Pay Items — groups, rules, type extensions, sort priority)
@@ -94,7 +95,7 @@ allowance_groups         -- ABSENT (row 24)
 pay_item_rules           -- ABSENT (row 25)
 ```
 
-**RLS expectation:** Every new table must use `public.current_tenant_id()` (or equivalent `(auth.jwt() ->> 'tenant_id')::uuid`) in its isolation predicate, consistent with [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) §"Verification preferences". The `service_role` bypass is never exposed to client code; all client mutations go through `SECURITY INVOKER` RPCs.
+**RLS expectation:** Every new table must use the tenant helpers already present in CRM7 (`public.auth_tenant_id()` for active tenant membership and `public.is_gto_staff(tenant_id)` for staff writes), consistent with [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) §"Verification preferences". The `service_role` bypass is never exposed to client code; all client mutations go through RLS-respecting client calls or `SECURITY INVOKER` RPCs.
 
 ---
 
@@ -120,8 +121,9 @@ PR-A (pay_item_groups + timesheet_groups schema)
 
 ### PR-A — `pay_item_groups` + `timesheet_groups` migrations + Zod schemas (DB-only, no UI)
 
-**Target:** `crm7/supabase/migrations/20260507001000_pay_item_groups.sql`
-**LOC estimate:** ~120 SQL + ~60 TS = ~180 LOC
+**Target:** `crm7/supabase/migrations/20260603010000_pay_item_timesheet_groups.sql`
+**Status:** ✅ merged to CRM7 `development` via [crm7#950](https://github.com/GaryOcean428/crm7/pull/950)
+**Evidence:** 10-suite pgTAP workflow pattern passed (135 tests), including `09_pay_item_groups_rls.sql` with 19 assertions for anon lockout, tenant read, GTO-staff writes, DB/Zod code parity, and cross-tenant composite FK enforcement.
 **Independently mergeable:** yes (no UI; no consumer code changes beyond new Zod exports)
 **Closes rows:** 21 (schema), 22 (schema)
 
