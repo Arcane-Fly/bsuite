@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "afbd32e",
+      "main_sha": "0e8578e",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "cfdc7928",
+      "main_sha": "9e231007",
       "vercel": "success"
     },
     {
@@ -2007,6 +2007,17 @@
         ],
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/953",
         "notes": "CRM7 settings CRUD landed for penalty_groups and allowance_groups with tenant-scoped services, RHF/Zod forms, UUID-backed pay item group selectors, Codehouse-compatible toggles for hours_round_up and use_pay_rates, delete confirmation, and dnd-kit sortable reorder via selected-tenant RPCs."
+      },
+      {
+        "domain": "C_pay_items",
+        "issue": 569,
+        "phase": "PR-E pay item rules and placement assignment",
+        "status": "merged",
+        "implemented_rows": [
+          25
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/954",
+        "notes": "CRM7-owned pay_item_rules landed with tenant-scoped RLS, selected-tenant reorder RPC, Zod validation, Settings Pay Item Rules CRUD/reorder UI, placement ots_rule_id UUID assignment, robust route-contract parsing, and pgTAP coverage in 09_pay_item_rules_rls.sql."
       }
     ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",
