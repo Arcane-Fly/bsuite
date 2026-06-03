@@ -1,10 +1,10 @@
 # Pay Item Groups parity spec — 11 Codehouse gaps domain C (closes #569 research portion)
 
-**Status:** WORKING (`v1.00W`) — PR-A schema foundation implemented; PR-B+ remain active
+**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations implemented; PR-C+ remain active
 **Owner:** perplexity-computer (autonomous cron — FF-AUTONOMY-20260506)
 **Closes:** [GaryOcean428/bsuite#569](https://github.com/GaryOcean428/bsuite/issues/569) (research portion)
 **Implementation tracker:** PR ladder filed by claude or copilot per Cron A routing matrix
-**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950) on `development`
+**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951) on `development`
 **Live schema verified:** 2026-05-07 via Supabase MCP project `tuybltdrdefjblnplpqo`
 **Source matrix rows:** 21–29, 31–32 (parity-matrix.md domain C)
 **Domain covered:** C (Pay Items — groups, rules, type extensions, sort priority)
@@ -129,8 +129,9 @@ PR-A (pay_item_groups + timesheet_groups schema)
 
 ### PR-B — `penalty_groups` + `allowance_groups` migrations + Zod schemas
 
-**Target:** `crm7/supabase/migrations/20260507002000_penalty_allowance_groups.sql`
-**LOC estimate:** ~100 SQL + ~60 TS = ~160 LOC
+**Target:** `crm7/supabase/migrations/20260603020000_penalty_allowance_groups.sql`
+**Status:** ✅ merged to CRM7 `development` via [crm7#951](https://github.com/GaryOcean428/crm7/pull/951)
+**Evidence:** CI passed build/test, e2e, pgTAP RLS, dry-lint, DB migration lint, RLS JWT lint, OAuth sync, drift scan, DOM layout, and gitleaks. Local pgTAP replay passed 11 suites / 158 assertions, including `09_penalty_allowance_groups_rls.sql` with 23 assertions for anon lockout, tenant read, GTO-staff writes, DB/Zod code parity, composite FK enforcement, and cross-tenant isolation.
 **Independently mergeable:** yes (depends on PR-A for `pay_item_group_id` FK)
 **Closes rows:** 23 (schema), 24 (schema)
 
