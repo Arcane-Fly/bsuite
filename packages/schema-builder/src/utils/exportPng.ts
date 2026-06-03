@@ -55,7 +55,7 @@ export async function exportCanvasToPng(
 ): Promise<void> {
   const dataUrl = await toPng(element, {
     pixelRatio: 2,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'oklch(1 0 0)',
     cacheBust: true,
     filter: (node) => {
       if (!(node instanceof HTMLElement)) return true;

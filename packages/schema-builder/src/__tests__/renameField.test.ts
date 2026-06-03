@@ -8,13 +8,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renamePhysicalColumn } from '../service.js';
 
+type RenameClient = Parameters<typeof renamePhysicalColumn>[0];
+
 function mkMockClient(
   rpcResult: { data?: unknown; error?: unknown } = { data: null, error: null },
-) {
+): RenameClient {
   return {
     rpc: vi.fn().mockResolvedValue(rpcResult),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+  } as unknown as RenameClient;
 }
 
 const entityId = '00000000-0000-0000-0000-000000000001';

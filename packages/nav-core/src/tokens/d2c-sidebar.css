@@ -12,26 +12,26 @@
 /* ── Light mode (default) ─────────────────────────────── */
 :root,
 .light {
-  --sidebar-background: 220 20% 98%;       /* #fafbfd  off-white          */
-  --sidebar-foreground: 215 25% 27%;       /* #334155  slate-700          */
-  --sidebar-primary: 217 91% 60%;          /* #2563eb  electric blue      */
-  --sidebar-primary-foreground: 0 0% 100%; /* #f2f2f2  white              */
-  --sidebar-accent: 217 91% 95%;           /* #eff6ff  blue-50 tint       */
-  --sidebar-accent-foreground: 217 91% 40%;/* #1e40af  blue-800           */
-  --sidebar-border: 214 20% 92%;           /* #e5e9f0  cool gray border   */
-  --sidebar-ring: 217 91% 60%;             /* #2563eb  electric blue ring */
-  --sidebar-muted-foreground: 215 15% 55%; /* #7c8aa0  muted text         */
+  --sidebar-background: 220 20% 98%;       /* off-white          */
+  --sidebar-foreground: 215 25% 27%;       /* slate-700          */
+  --sidebar-primary: 217 91% 60%;          /* electric blue      */
+  --sidebar-primary-foreground: 0 0% 100%; /* white              */
+  --sidebar-accent: 217 91% 95%;           /* blue-50 tint       */
+  --sidebar-accent-foreground: 217 91% 40%;/* blue-800           */
+  --sidebar-border: 214 20% 92%;           /* cool gray border   */
+  --sidebar-ring: 217 91% 60%;             /* electric blue ring */
+  --sidebar-muted-foreground: 215 15% 55%; /* muted text         */
 }
 
 /* ── Dark mode ────────────────────────────────────────── */
 .dark {
-  --sidebar-background: 222 47% 7%;        /* #0a0e1a  deep navy          */
-  --sidebar-foreground: 213 20% 75%;       /* #b0bec5  light slate        */
-  --sidebar-primary: 178 100% 40%;         /* #00cec9  electric cyan      */
-  --sidebar-primary-foreground: 222 47% 7%;/* #0a0e1a  deep navy          */
-  --sidebar-accent: 174 100% 8%;           /* #001f1e  cyan tint on dark  */
-  --sidebar-accent-foreground: 174 100% 60%;/* #33e8e4 bright cyan        */
-  --sidebar-border: 220 30% 14%;           /* #1a2332  subtle border      */
-  --sidebar-ring: 178 100% 40%;            /* #00cec9  cyan ring          */
-  --sidebar-muted-foreground: 215 15% 45%; /* #64748b  muted text         */
+  --sidebar-background: 222 47% 7%;        /* deep navy          */
+  --sidebar-foreground: 213 20% 75%;       /* light slate        */
+  --sidebar-primary: 178 100% 40%;         /* electric cyan      */
+  --sidebar-primary-foreground: 222 47% 7%;/* deep navy          */
+  --sidebar-accent: 174 100% 8%;           /* cyan tint on dark  */
+  --sidebar-accent-foreground: 174 100% 60%;/* bright cyan        */
+  --sidebar-border: 220 30% 14%;           /* subtle border      */
+  --sidebar-ring: 178 100% 40%;            /* cyan ring          */
+  --sidebar-muted-foreground: 215 15% 45%; /* muted text         */
 }
