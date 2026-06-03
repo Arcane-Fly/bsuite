@@ -1,24 +1,24 @@
 [submodule "crm7"]
         path = crm7
         url = https://github.com/GaryOcean428/crm7.git
-        branch = main
+        branch = development
 [submodule "R80.3"]
         path = R80.3
         url = https://github.com/GaryOcean428/R80.3.git
-        branch = main
+        branch = development
 [submodule "braden"]
         path = braden
         url = https://github.com/GaryOcean428/braden.git
-        branch = main
+        branch = development
 [submodule "business-suite-unified"]
         path = business-suite-unified
 	url = https://github.com/GaryOcean428/business-suite-unified.git
-        branch = main
+        branch = development
 [submodule "conduit"]
         path = conduit
         url = https://github.com/GaryOcean428/conduit.git
-        branch = main
+        branch = development
 [submodule "throughput"]
         path = throughput
         url = https://github.com/GaryOcean428/throughput.git
-        branch = main
+        branch = development
