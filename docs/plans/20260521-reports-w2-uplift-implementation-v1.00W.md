@@ -27,12 +27,13 @@
 | Task 6.2 | Merged | [crm7#957](https://github.com/GaryOcean428/crm7/pull/957) | `report_hours_by_work_type` RPC backed by existing `timesheets.entries[*].work_type` JSONB data, with canonical CRM7 work-type filters and pgTAP coverage. |
 | Task 6.3 | Merged | [crm7#958](https://github.com/GaryOcean428/crm7/pull/958) | `report_pay_item_group_hours` RPC backed by `timesheets.entries[*].work_type -> timesheet_groups -> pay_item_groups`, with empty-filter handling, duplicate-mapping protection, and pgTAP coverage. `rate`/`amount` remain null until the pay-items rate registry lands. |
 | Task 6.4 | Merged | [crm7#959](https://github.com/GaryOcean428/crm7/pull/959) | `report_pay_items_by_employee` RPC backed by real `invoice_line_items` + `invoices`, preserving billing metadata when present, excluding host-level unassigned invoice lines, and adding pgTAP coverage for RLS, filters, pagination, invalid params, and source amount parity. |
-| Task 6.5-6.6 | Blocked | [bsuite#1237](https://github.com/GaryOcean428/bsuite/issues/1237) | Remaining CoInvest LSL and consultant KPI RPCs need the schema decisions captured in the gap audit. |
+| Task 6.5 | Merged | [crm7#960](https://github.com/GaryOcean428/crm7/pull/960) | `report_consultant_kpi` RPC backed by assigned `people`, `timesheets`, `invoices`, and `invoice_line_items`, gated by selected active tenant plus `org_members.gto_role='field_officer'`. Adds hidden `tenantParam` runner injection and pgTAP coverage for grants, template contract, role gates, tenant isolation, invalid params, and source revenue parity. |
+| Task 6.6 | Blocked | [bsuite#1237](https://github.com/GaryOcean428/bsuite/issues/1237) | Remaining CoInvest LSL RPC still depends on `#573.7` / authority-accrual schema decisions. Do not duplicate an LSL accrual source. |
 | Task 7 | Pending | N/A | Report delivery reliability: timezone, retry, and error metadata. |
 | Task 8 | Merged | [crm7#844](https://github.com/GaryOcean428/crm7/pull/844) | 20-case Playwright scope matrix. |
 | Task 9 | Pending | N/A | Dashboard and outstanding-work linking. |
 
-**Latest development evidence:** crm7 `development` includes [crm7#959](https://github.com/GaryOcean428/crm7/pull/959) at `1079ea68`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
+**Latest development evidence:** crm7 `development` includes [crm7#960](https://github.com/GaryOcean428/crm7/pull/960) at `6e95a5ea`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
 
 ---
 
@@ -642,11 +643,11 @@ Each gets:
 - Performance index (e.g. `idx_timesheets_tenant_week_ending`)
 - pgTAP test: tenant filter, paging boundary, RLS denial for cross-tenant
 
-For `consultant-kpi`: additional role gate (`auth.jwt() ->> 'role' = 'field_officer'` in WHERE clause).
+For `consultant-kpi`: additional selected-tenant role gate via `org_members.gto_role='field_officer'`; do not read role or tenant directly from JWT claims.
 
 For `coinvest-lsl`: depends on `#573.7` — coordinate; do not duplicate.
 
-For `hours-by-work-type`: requires `timesheets.work_type` column — add in this migration if missing.
+For `hours-by-work-type`: shipped via `timesheets.entries[*].work_type` JSONB; do not add a duplicate top-level `timesheets.work_type` column.
 
 **Step 8: Commit per RPC**
 

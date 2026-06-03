@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-03",
-    "last_refreshed": "2026-06-03T07:34:00Z",
-    "last_refreshed_by": "copilot-cli development sweep"
+    "last_refreshed": "2026-06-03T20:08:00Z",
+    "last_refreshed_by": "copilot-cli W2 consultant KPI update"
   },
   "summary": {
     "external_total": 30,
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "1079ea68",
+      "main_sha": "6e95a5ea",
       "vercel": "success"
     },
     {
@@ -2888,6 +2888,14 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/959",
         "note": "Merged to crm7 development at 1079ea68. Implements the W2 pay-items-by-employee report from real invoices + invoice_line_items, preserves pay item metadata when present, excludes host-level unassigned invoice lines, and adds pgTAP coverage for grants, RLS visibility, filters, pagination, invalid params, and source amount parity."
+      },
+      {
+        "id": "6.5",
+        "title": "report_consultant_kpi RPC using assigned people, timesheets, invoices, and invoice line item revenue",
+        "pr": "crm7#960",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/960",
+        "note": "Merged to crm7 development at 6e95a5ea. Implements the W2 consultant KPI report from real assigned people, timesheets, invoices, and invoice_line_items, validates the selected active tenant, gates exact-tenant field_officer access via org_members.gto_role, injects hidden p_tenant_id through template tenantParam metadata, and adds pgTAP coverage for grants, template contract, role gates, tenant isolation, invalid params, and source revenue parity."
       }
     ],
     "tasks_deferred": [
@@ -2912,15 +2920,16 @@
         "title": "7 underlying RPCs (report_timesheet_summary etc.) - one PR per RPC, SECURITY INVOKER + auth_tenant_id() scoping + total_count carrier on row 0",
         "status": "in_progress",
         "blocked_by": [
-          "bsuite#1237 schema gates for remaining CoInvest LSL and consultant KPI RPCs"
+          "bsuite#1237 schema gate for remaining CoInvest LSL RPC"
         ],
         "completed_subtasks": [
           "6.1",
           "6.2",
           "6.3",
-          "6.4"
+          "6.4",
+          "6.5"
         ],
-        "note": "Tasks 6.1-6.4 shipped via crm7#956, crm7#957, crm7#958, and crm7#959; the remaining schema-gated RPCs continue under bsuite#1237."
+        "note": "Tasks 6.1-6.5 shipped via crm7#956, crm7#957, crm7#958, crm7#959, and crm7#960; only the schema-gated CoInvest LSL RPC remains under bsuite#1237."
       },
       {
         "id": "7",
@@ -2941,9 +2950,10 @@
       "Merge order required #841 -> #842 -> #840 -> #843 -> #844 because #841 is the structural anchor (adds scope/user_id/is_default columns + RLS + is_enterprise_admin); #842 seeds depend on those columns; #840 foundation refactor introduces W2 types; #843 generic run page imports from #840; #844 Playwright spec runs against the deployed stack.",
       "Resolved 5 add/add merge conflicts in src/components/reports/ between #840 (W2 doctrine 6.2 versions) and #842 (older parity-spec stubs) - #840 won; then 5 more conflicts on #843 where origin/development (post-#840 canonical) won over #843 stale cherry-pick.",
       "Task 6.1 shipped via crm7#956: report_rejected_timesheets now uses WS-4 returned/bounced semantics, report_timesheet_summary joins canonical employers, and legacy SECURITY DEFINER helpers have anon/public EXECUTE revoked with pgTAP coverage. Remaining W2 RPCs continue under bsuite#1237.",
-      "Task 6.2 shipped via crm7#957: report_hours_by_work_type aggregates existing timesheets.entries[*].work_type data with canonical CRM7 options, avoiding a top-level timesheets.work_type schema addition. Pay-item-group hours and pay-items-by-employee have since shipped in Tasks 6.3 and 6.4; remaining CoInvest LSL and consultant KPI RPCs continue under bsuite#1237.",
-      "Task 6.3 shipped via crm7#958: report_pay_item_group_hours groups entry work-type hours through CRM7-owned timesheet_groups -> pay_item_groups mappings, treats blank optional filters as unfiltered, prevents duplicate mapping double-counts, and keeps rate/amount null until the pay-items rate registry exists. Pay-items-by-employee has since shipped in Task 6.4; remaining CoInvest LSL and consultant KPI RPCs continue under bsuite#1237.",
-      "Task 6.4 shipped via crm7#959: report_pay_items_by_employee reads real generated invoices + invoice_line_items, uses billing metadata for pay item code/name/type when present, filters to employee-backed lines only, and asserts source amount parity plus RLS/filter/pagination behavior in pgTAP. Remaining CoInvest LSL and consultant KPI RPCs continue under bsuite#1237."
+      "Task 6.2 shipped via crm7#957: report_hours_by_work_type aggregates existing timesheets.entries[*].work_type data with canonical CRM7 options, avoiding a top-level timesheets.work_type schema addition. Pay-item-group hours, pay-items-by-employee, and consultant KPI have since shipped in Tasks 6.3, 6.4, and 6.5; remaining CoInvest LSL RPC continues under bsuite#1237.",
+      "Task 6.3 shipped via crm7#958: report_pay_item_group_hours groups entry work-type hours through CRM7-owned timesheet_groups -> pay_item_groups mappings, treats blank optional filters as unfiltered, prevents duplicate mapping double-counts, and keeps rate/amount null until the pay-items rate registry exists. Pay-items-by-employee and consultant KPI have since shipped in Tasks 6.4 and 6.5; remaining CoInvest LSL RPC continues under bsuite#1237.",
+      "Task 6.4 shipped via crm7#959: report_pay_items_by_employee reads real generated invoices + invoice_line_items, uses billing metadata for pay item code/name/type when present, filters to employee-backed lines only, and asserts source amount parity plus RLS/filter/pagination behavior in pgTAP. Consultant KPI has since shipped in Task 6.5; remaining CoInvest LSL RPC continues under bsuite#1237.",
+      "Task 6.5 shipped via crm7#960: report_consultant_kpi reads assigned people, timesheets, invoices, and invoice_line_items for source-backed weekly KPI cards, validates the selected active tenant, gates exact-tenant field_officer access via org_members.gto_role, and uses template tenantParam metadata so p_tenant_id is injected by the runner rather than exposed as a user filter. Remaining CoInvest LSL RPC continues under bsuite#1237."
     ]
   }
 }
