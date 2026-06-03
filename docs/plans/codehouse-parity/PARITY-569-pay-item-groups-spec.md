@@ -1,10 +1,10 @@
 # Pay Item Groups parity spec — 11 Codehouse gaps domain C (closes #569 research portion)
 
-**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations and PR-C/PR-D settings UI implemented; PR-E+ remain active
+**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations and PR-C/PR-D/PR-E settings + placement assignment implemented; PR-F+ remain active
 **Owner:** perplexity-computer (autonomous cron — FF-AUTONOMY-20260506)
 **Closes:** [GaryOcean428/bsuite#569](https://github.com/GaryOcean428/bsuite/issues/569) (research portion)
 **Implementation tracker:** PR ladder filed by claude or copilot per Cron A routing matrix
-**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951); PR-C merged in [GaryOcean428/crm7#952](https://github.com/GaryOcean428/crm7/pull/952); PR-D merged in [GaryOcean428/crm7#953](https://github.com/GaryOcean428/crm7/pull/953) on `development`
+**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951); PR-C merged in [GaryOcean428/crm7#952](https://github.com/GaryOcean428/crm7/pull/952); PR-D merged in [GaryOcean428/crm7#953](https://github.com/GaryOcean428/crm7/pull/953); PR-E merged in [GaryOcean428/crm7#954](https://github.com/GaryOcean428/crm7/pull/954) on `development`
 **Live schema verified:** 2026-05-07 via Supabase MCP project `tuybltdrdefjblnplpqo`
 **Source matrix rows:** 21–29, 31–32 (parity-matrix.md domain C)
 **Domain covered:** C (Pay Items — groups, rules, type extensions, sort priority)
@@ -27,11 +27,11 @@
 
 | Matrix row | Domain | Codehouse name | BSuite state | Gap class |
 |---|---|---|---|---|
-| 21 | C | Pay Item Groups (named groups linking pay items) | types in `@bsuite/charge-calc`; no CRUD page | 🔴 gap |
-| 22 | C | Timesheet Groups (link Pay Item Groups to coded timesheet columns) | enums in `crm7/src/schemas/timesheet.ts`; no CRUD page | 🔴 gap |
-| 23 | C | Penalty Groups (additional penalty rate on top of timesheet group) | arrays in `crm7/src/schemas/payroll.ts`; no CRUD page | 🔴 gap |
-| 24 | C | Allowance Groups (link allowances to pay item groups) | arrays in `crm7/src/schemas/payroll.ts`; no CRUD page | 🔴 gap |
-| 25 | C | Pay Item Rules (award interpretation engine per placement) | calc engine live; no Rule CRUD UI | 🟡 partial |
+| 21 | C | Pay Item Groups (named groups linking pay items) | CRM7-owned schema + CRUD/reorder UI merged to `development`; PR-F extends type flags | 🟢 dev-merged |
+| 22 | C | Timesheet Groups (link Pay Item Groups to coded timesheet columns) | CRM7-owned schema + CRUD/reorder UI merged to `development` | 🟢 dev-merged |
+| 23 | C | Penalty Groups (additional penalty rate on top of timesheet group) | CRM7-owned schema + CRUD/reorder UI merged to `development` | 🟢 dev-merged |
+| 24 | C | Allowance Groups (link allowances to pay item groups) | CRM7-owned schema + CRUD/reorder UI merged to `development` | 🟢 dev-merged |
+| 25 | C | Pay Item Rules (award interpretation engine per placement) | CRM7-owned rule CRUD + placement UUID assignment merged to `development`; downstream calc integration remains in PR-G | 🟢 dev-merged |
 | 26 | C | Salary Sacrifice pay items | deduction arrays only; no `is_salary_sacrifice` flag UI | 🟡 partial |
 | 27 | C | Child Support Deduction pay items | deduction arrays only; no dedicated type | 🟡 partial |
 | 28 | C | RDO Accrual pay items | `WorkType` enum includes RDO; no named pay-item management | 🟡 partial |
@@ -73,7 +73,7 @@ timesheet_events
   RLS: ✅ enabled
 
 placements
-  (id, ...) -- apprentice placements; will receive ots_rule_id FK in PR-E
+  (id, ...) -- apprentice placements; PR-E added ots_rule_id FK
   RLS: ✅ enabled
 
 apprentice_rate_configs
@@ -85,14 +85,14 @@ custom_pay_rates
   RLS: ✅ enabled
 ```
 
-### Absent entities (must be created by this spec's PR ladder)
+### Entities created by this spec's PR ladder
 
 ```
-pay_item_groups          -- ABSENT (rows 21, 26-29, 31-32)
-timesheet_groups         -- ABSENT (row 22)
-penalty_groups           -- ABSENT (row 23)
-allowance_groups         -- ABSENT (row 24)
-pay_item_rules           -- ABSENT (row 25)
+pay_item_groups          -- CREATED in PR-A (rows 21, 26-29, 31-32)
+timesheet_groups         -- CREATED in PR-A (row 22)
+penalty_groups           -- CREATED in PR-B (row 23)
+allowance_groups         -- CREATED in PR-B (row 24)
+pay_item_rules           -- CREATED in PR-E (row 25)
 ```
 
 **RLS expectation:** Every new table must use the tenant helpers already present in CRM7 (`public.auth_tenant_id()` for active tenant membership and `public.is_gto_staff(tenant_id)` for staff writes), consistent with [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) §"Verification preferences". The `service_role` bypass is never exposed to client code; all client mutations go through RLS-respecting client calls or `SECURITY INVOKER` RPCs.
@@ -158,6 +158,8 @@ PR-A (pay_item_groups + timesheet_groups schema)
 ### PR-E — pay-item-rules CRUD page + `placements/[id].tsx` rule assignment dropdown
 
 **Target:** `crm7/src/pages/settings/pay-item-rules.tsx`, `crm7/src/pages/placements/[id].tsx`
+**Status:** ✅ merged to CRM7 `development` via [crm7#954](https://github.com/GaryOcean428/crm7/pull/954)
+**Evidence:** CI passed build/test, e2e, pgTAP RLS, dry-lint, DB migration lint, RLS JWT lint, OAuth sync, drift scan, DOM layout, and gitleaks. Local validation passed targeted schema tests, route contract tests, typecheck, lint, full Vitest, production build, CI-style pgTAP baseline replay for `09_pay_item_rules_rls.sql` (20/20), and browser smoke for `/settings/pay-item-rules`.
 **Stack:** RHF + Zod multi-step form; TanStack Query; shadcn `Select` for placement dropdown
 **LOC estimate:** ~190 TSX
 **Independently mergeable:** depends on PR-A (for group references)
