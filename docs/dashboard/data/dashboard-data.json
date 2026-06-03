@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "0e8578e",
+      "main_sha": "08044d5",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "9e231007",
+      "main_sha": "f2c6e858",
       "vercel": "success"
     },
     {
@@ -2855,6 +2855,14 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/847",
         "note": "Implemented without Stepper extraction (3a) — wizard built directly; 3a unblocked separately"
+      },
+      {
+        "id": "6.1",
+        "title": "report_rejected_timesheets RPC + pgTAP coverage + legacy public function EXECUTE grant hardening",
+        "pr": "crm7#956",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/956",
+        "note": "Merged to crm7 development at f2c6e858. Implements returned/bounced timesheet semantics without adding non-canonical rejected/disputed enum values; remaining Task 6 RPCs stay tracked by bsuite#1237 schema gates."
       }
     ],
     "tasks_deferred": [
@@ -2877,8 +2885,14 @@
       {
         "id": "6",
         "title": "7 underlying RPCs (report_timesheet_summary etc.) - one PR per RPC, SECURITY INVOKER + auth_tenant_id() scoping + total_count carrier on row 0",
-        "status": "pending",
-        "blocked_by": []
+        "status": "in_progress",
+        "blocked_by": [
+          "bsuite#1237 schema gates for remaining RPCs"
+        ],
+        "completed_subtasks": [
+          "6.1"
+        ],
+        "note": "Task 6.1 shipped via crm7#956; Tasks 6.2-6.7 require the schema decisions documented in bsuite#1237."
       },
       {
         "id": "7",
@@ -2897,7 +2911,8 @@
     "engineering_notes": [
       "pgTAP 4-fixture-bug cycle: profiles.user_id is GENERATED ALWAYS AS (id) STORED; org_members_apprentice_scoped CHECK requires apprentice_id NOT NULL for role=apprentice; user_tenants_role_check allows only owner/admin/manager/staff/guest (not member); RLS recursion in visibility policy when subquery hits tenants RLS - fixed via auth_parent_tenant_id() SECURITY DEFINER helper.",
       "Merge order required #841 -> #842 -> #840 -> #843 -> #844 because #841 is the structural anchor (adds scope/user_id/is_default columns + RLS + is_enterprise_admin); #842 seeds depend on those columns; #840 foundation refactor introduces W2 types; #843 generic run page imports from #840; #844 Playwright spec runs against the deployed stack.",
-      "Resolved 5 add/add merge conflicts in src/components/reports/ between #840 (W2 doctrine 6.2 versions) and #842 (older parity-spec stubs) - #840 won; then 5 more conflicts on #843 where origin/development (post-#840 canonical) won over #843 stale cherry-pick."
+      "Resolved 5 add/add merge conflicts in src/components/reports/ between #840 (W2 doctrine 6.2 versions) and #842 (older parity-spec stubs) - #840 won; then 5 more conflicts on #843 where origin/development (post-#840 canonical) won over #843 stale cherry-pick.",
+      "Task 6.1 shipped via crm7#956: report_rejected_timesheets now uses WS-4 returned/bounced semantics, report_timesheet_summary joins canonical employers, and legacy SECURITY DEFINER helpers have anon/public EXECUTE revoked with pgTAP coverage. Remaining W2 RPCs continue under bsuite#1237."
     ]
   }
 }
