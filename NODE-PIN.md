@@ -1,1 +1,1 @@
-# Node 24.14.0 canonical pin
+# Node 24.x canonical line
