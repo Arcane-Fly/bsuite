@@ -218,9 +218,9 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948); WS-1 BUG-1 latent",
+      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; HF-4 pgTAP harness closed in crm7#949); WS-1 BUG-1 latent",
       "owner": "crm7 + R80.3",
-      "next_step": "HF-1 re-land /52 fix in @bsuite/charge-calc (publish 0.2.5, bump consumers); HF-3 restore ADRs to crm7/docs/adr/; HF-4 add pgTap harness; seed WS-5 7 templates; add 5 missing NAT formatters (WS-6); codify apprentice_rate_configs migration.",
+      "next_step": "HF-1 re-land /52 fix in @bsuite/charge-calc (publish 0.2.5, bump consumers); HF-3 restore ADRs to crm7/docs/adr/; seed WS-5 7 templates; add 5 missing NAT formatters (WS-6); codify apprentice_rate_configs migration.",
       "severity": "P0",
       "category": "Billing"
     },
