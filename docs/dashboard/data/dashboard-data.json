@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "c705893",
+      "main_sha": "cc9c82b",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "e579ec00",
+      "main_sha": "1079ea68",
       "vercel": "success"
     },
     {
@@ -2648,7 +2648,7 @@
     }
   },
   "dashboard_update_protocol": {
-    "schema_version": "1.1",
+    "schema_version": "1.2",
     "added_at": "2026-05-08T02:10Z",
     "purpose": "Defines how AI agents and humans keep this dashboard accurate.",
     "live_url": "https://garyocean428.github.io/bsuite/dashboard/",
@@ -2679,7 +2679,8 @@
       "visual_feature_builder": "Phase-by-phase status of the visual feature builder",
       "apprentice_placements_status": "Apprentice placement queue items",
       "doc_drift_status": "Documentation drift PRs",
-      "gto_compliance_catalogue": "Coverage of the 50-report GTO compliance catalogue (added 2026-05-08); update when issues G1-G8 progress"
+      "gto_compliance_catalogue": "Coverage of the 50-report GTO compliance catalogue (added 2026-05-08); update when issues G1-G8 progress",
+      "reports_w2_status": "Reports W2 uplift progress; data-only, machine-consumable unless renderer support is added"
     },
     "rules_for_agents": [
       "Anti-laziness: never claim 'I'll update the dashboard later' — update it in the same PR/session as the change",
@@ -2709,7 +2710,7 @@
       "Trying to push directly to development (now branch-protected since 2026-05-08T10:56Z, requires PR + gitleaks)",
       "Forgetting to fast-forward fetch before branching (multi-agent context — origin/development advances every few minutes)"
     ],
-    "updated_at": "2026-05-08T11:00Z",
+    "updated_at": "2026-06-03T19:11Z",
     "breaking_change_2026_05_08": "Branch protection on bsuite/development now requires PR + passing gitleaks check. The previous \"commit data-only directly to development\" path is BLOCKED. All dashboard updates must now go through a PR — even data-only refreshes."
   },
   "operator_blockers_resolved": [
@@ -2879,6 +2880,14 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/958",
         "note": "Merged to crm7 development at e579ec00. Implements the W2 pay-item-group-hours report as an hours-first RPC using timesheets.entries[*].work_type -> timesheet_groups -> pay_item_groups, with empty-filter handling, duplicate-mapping protection, pgTAP coverage, and null rate/amount until the pay-items rate registry lands."
+      },
+      {
+        "id": "6.4",
+        "title": "report_pay_items_by_employee RPC using invoice line item billing metadata and amounts",
+        "pr": "crm7#959",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/959",
+        "note": "Merged to crm7 development at 1079ea68. Implements the W2 pay-items-by-employee report from real invoices + invoice_line_items, preserves pay item metadata when present, excludes host-level unassigned invoice lines, and adds pgTAP coverage for grants, RLS visibility, filters, pagination, invalid params, and source amount parity."
       }
     ],
     "tasks_deferred": [
@@ -2903,14 +2912,15 @@
         "title": "7 underlying RPCs (report_timesheet_summary etc.) - one PR per RPC, SECURITY INVOKER + auth_tenant_id() scoping + total_count carrier on row 0",
         "status": "in_progress",
         "blocked_by": [
-          "bsuite#1237 schema gates for remaining pay-items-by-employee, CoInvest LSL, and consultant KPI RPCs"
+          "bsuite#1237 schema gates for remaining CoInvest LSL and consultant KPI RPCs"
         ],
         "completed_subtasks": [
           "6.1",
           "6.2",
-          "6.3"
+          "6.3",
+          "6.4"
         ],
-        "note": "Tasks 6.1-6.3 shipped via crm7#956, crm7#957, and crm7#958; the remaining schema-gated RPCs continue under bsuite#1237."
+        "note": "Tasks 6.1-6.4 shipped via crm7#956, crm7#957, crm7#958, and crm7#959; the remaining schema-gated RPCs continue under bsuite#1237."
       },
       {
         "id": "7",
@@ -2931,8 +2941,9 @@
       "Merge order required #841 -> #842 -> #840 -> #843 -> #844 because #841 is the structural anchor (adds scope/user_id/is_default columns + RLS + is_enterprise_admin); #842 seeds depend on those columns; #840 foundation refactor introduces W2 types; #843 generic run page imports from #840; #844 Playwright spec runs against the deployed stack.",
       "Resolved 5 add/add merge conflicts in src/components/reports/ between #840 (W2 doctrine 6.2 versions) and #842 (older parity-spec stubs) - #840 won; then 5 more conflicts on #843 where origin/development (post-#840 canonical) won over #843 stale cherry-pick.",
       "Task 6.1 shipped via crm7#956: report_rejected_timesheets now uses WS-4 returned/bounced semantics, report_timesheet_summary joins canonical employers, and legacy SECURITY DEFINER helpers have anon/public EXECUTE revoked with pgTAP coverage. Remaining W2 RPCs continue under bsuite#1237.",
-      "Task 6.2 shipped via crm7#957: report_hours_by_work_type aggregates existing timesheets.entries[*].work_type data with canonical CRM7 options, avoiding a top-level timesheets.work_type schema addition. Pay-item-group hours has since shipped in Task 6.3; remaining pay-items-by-employee, CoInvest LSL, and consultant KPI RPCs continue under bsuite#1237.",
-      "Task 6.3 shipped via crm7#958: report_pay_item_group_hours groups entry work-type hours through CRM7-owned timesheet_groups -> pay_item_groups mappings, treats blank optional filters as unfiltered, prevents duplicate mapping double-counts, and keeps rate/amount null until the pay-items rate registry exists. Remaining pay-items-by-employee, CoInvest LSL, and consultant KPI RPCs continue under bsuite#1237."
+      "Task 6.2 shipped via crm7#957: report_hours_by_work_type aggregates existing timesheets.entries[*].work_type data with canonical CRM7 options, avoiding a top-level timesheets.work_type schema addition. Pay-item-group hours and pay-items-by-employee have since shipped in Tasks 6.3 and 6.4; remaining CoInvest LSL and consultant KPI RPCs continue under bsuite#1237.",
+      "Task 6.3 shipped via crm7#958: report_pay_item_group_hours groups entry work-type hours through CRM7-owned timesheet_groups -> pay_item_groups mappings, treats blank optional filters as unfiltered, prevents duplicate mapping double-counts, and keeps rate/amount null until the pay-items rate registry exists. Pay-items-by-employee has since shipped in Task 6.4; remaining CoInvest LSL and consultant KPI RPCs continue under bsuite#1237.",
+      "Task 6.4 shipped via crm7#959: report_pay_items_by_employee reads real generated invoices + invoice_line_items, uses billing metadata for pay item code/name/type when present, filters to employee-backed lines only, and asserts source amount parity plus RLS/filter/pagination behavior in pgTAP. Remaining CoInvest LSL and consultant KPI RPCs continue under bsuite#1237."
     ]
   }
 }
