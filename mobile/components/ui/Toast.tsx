@@ -25,27 +25,29 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const TOAST_DURATION = 3000;
+const withAlpha = (color: string, alpha: number): string =>
+  color.endsWith(')') ? color.slice(0, -1) + ` / ${alpha})` : color;
 
 const TOAST_CONFIG: Record<ToastType, { icon: React.ReactNode; bg: string; border: string }> = {
   success: {
     icon: <CheckCircle size={18} color={Colors.success} />,
-    bg: `${Colors.success}15`,
-    border: `${Colors.success}40`,
+    bg: withAlpha(Colors.success, 0.08),
+    border: withAlpha(Colors.success, 0.25),
   },
   error: {
     icon: <AlertCircle size={18} color={Colors.destructive} />,
-    bg: `${Colors.destructive}15`,
-    border: `${Colors.destructive}40`,
+    bg: withAlpha(Colors.destructive, 0.08),
+    border: withAlpha(Colors.destructive, 0.25),
   },
   info: {
     icon: <Info size={18} color={Colors.primary} />,
-    bg: `${Colors.primary}15`,
-    border: `${Colors.primary}40`,
+    bg: withAlpha(Colors.primary, 0.08),
+    border: withAlpha(Colors.primary, 0.25),
   },
   warning: {
     icon: <AlertCircle size={18} color={Colors.warning} />,
-    bg: `${Colors.warning}15`,
-    border: `${Colors.warning}40`,
+    bg: withAlpha(Colors.warning, 0.08),
+    border: withAlpha(Colors.warning, 0.25),
   },
 };
 
@@ -147,7 +149,7 @@ function ToastItem({
         flexDirection: 'row',
         alignItems: 'flex-start',
         gap: 10,
-        shadowColor: '#000',
+        shadowColor: 'oklch(0 0 0)',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

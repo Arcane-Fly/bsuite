@@ -3,21 +3,21 @@
  * Keep in sync with tailwind.config.js and the web apps.
  */
 export const Colors = {
-  primary: '#2563eb',
-  primaryLight: '#60a5fa',
-  primaryDark: '#1e40af',
-  accent: '#00cec9',
-  accentLight: '#67e8f9',
-  background: '#0a0e1a',
-  surface: '#141828',
-  surfaceElevated: '#1c2137',
-  foreground: '#f2f2f2',
-  muted: '#6b7280',
-  mutedForeground: '#9ca3af',
-  destructive: '#ff4757',
-  success: '#22c55e',
-  warning: '#fdcb6e',
-  border: '#1e2436',
+  primary: 'oklch(0.546 0.215 262.9)',
+  primaryLight: 'oklch(0.707 0.165 254.6)',
+  primaryDark: 'oklch(0.424 0.199 265.6)',
+  accent: 'oklch(0.769 0.132 191.7)',
+  accentLight: 'oklch(0.86 0.099 196)',
+  background: 'oklch(0.13 0.02 260)',
+  surface: 'oklch(0.17 0.025 260)',
+  surfaceElevated: 'oklch(0.21 0.03 260)',
+  foreground: 'oklch(0.955 0 0)',
+  muted: 'oklch(0.551 0.027 264.4)',
+  mutedForeground: 'oklch(0.713 0.019 261.3)',
+  destructive: 'oklch(0.568 0.202 283.1)',
+  success: 'oklch(0.723 0.192 149.6)',
+  warning: 'oklch(0.868 0.125 81.4)',
+  border: 'oklch(0.21 0.03 260)',
 } as const;
 
 /** Tab bar icon size (Lucide) */
@@ -47,7 +47,7 @@ export const INCIDENT_TYPE_LABELS: Record<string, string> = {
 export const SEVERITY_COLORS: Record<string, string> = {
   low: Colors.success,
   medium: Colors.warning,
-  high: '#ff6348',
+  high: Colors.warning,
   critical: Colors.destructive,
 } as const;
 

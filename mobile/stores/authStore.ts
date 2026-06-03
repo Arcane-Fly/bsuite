@@ -26,13 +26,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
       set({ isLoading: true });
 
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (error) throw error;
 
       set({
-        user: session?.user ?? null,
-        session,
-        isAuthenticated: !!session,
+        user,
+        session: null,
+        isAuthenticated: !!user,
         isLoading: false,
       });
 

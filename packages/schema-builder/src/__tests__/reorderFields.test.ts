@@ -8,13 +8,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { reorderEntityFields } from '../service.js';
 
+type ReorderClient = Parameters<typeof reorderEntityFields>[0];
+
 function mkMockClient(
   rpcResult: { data?: unknown; error?: unknown } = { data: null, error: null },
-) {
+): ReorderClient {
   return {
     rpc: vi.fn().mockResolvedValue(rpcResult),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+  } as unknown as ReorderClient;
 }
 
 const entityId = '00000000-0000-0000-0000-000000000001';
