@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "b134bce",
+      "main_sha": "c705893",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "e41f55b1",
+      "main_sha": "e579ec00",
       "vercel": "success"
     },
     {
@@ -2871,6 +2871,14 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/957",
         "note": "Merged to crm7 development at e41f55b1. Implements the W2 hours-by-work-type report without adding a top-level timesheets.work_type column; uses existing entries[*].work_type plus pgTAP coverage."
+      },
+      {
+        "id": "6.3",
+        "title": "report_pay_item_group_hours RPC using timesheet entry work types mapped through CRM7 pay item groups",
+        "pr": "crm7#958",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/958",
+        "note": "Merged to crm7 development at e579ec00. Implements the W2 pay-item-group-hours report as an hours-first RPC using timesheets.entries[*].work_type -> timesheet_groups -> pay_item_groups, with empty-filter handling, duplicate-mapping protection, pgTAP coverage, and null rate/amount until the pay-items rate registry lands."
       }
     ],
     "tasks_deferred": [
@@ -2895,13 +2903,14 @@
         "title": "7 underlying RPCs (report_timesheet_summary etc.) - one PR per RPC, SECURITY INVOKER + auth_tenant_id() scoping + total_count carrier on row 0",
         "status": "in_progress",
         "blocked_by": [
-          "bsuite#1237 schema gates for remaining pay item, CoInvest LSL, and consultant KPI RPCs"
+          "bsuite#1237 schema gates for remaining pay-items-by-employee, CoInvest LSL, and consultant KPI RPCs"
         ],
         "completed_subtasks": [
           "6.1",
-          "6.2"
+          "6.2",
+          "6.3"
         ],
-        "note": "Task 6.1 shipped via crm7#956 and Task 6.2 shipped via crm7#957; the remaining schema-gated RPCs continue under bsuite#1237."
+        "note": "Tasks 6.1-6.3 shipped via crm7#956, crm7#957, and crm7#958; the remaining schema-gated RPCs continue under bsuite#1237."
       },
       {
         "id": "7",
@@ -2922,7 +2931,8 @@
       "Merge order required #841 -> #842 -> #840 -> #843 -> #844 because #841 is the structural anchor (adds scope/user_id/is_default columns + RLS + is_enterprise_admin); #842 seeds depend on those columns; #840 foundation refactor introduces W2 types; #843 generic run page imports from #840; #844 Playwright spec runs against the deployed stack.",
       "Resolved 5 add/add merge conflicts in src/components/reports/ between #840 (W2 doctrine 6.2 versions) and #842 (older parity-spec stubs) - #840 won; then 5 more conflicts on #843 where origin/development (post-#840 canonical) won over #843 stale cherry-pick.",
       "Task 6.1 shipped via crm7#956: report_rejected_timesheets now uses WS-4 returned/bounced semantics, report_timesheet_summary joins canonical employers, and legacy SECURITY DEFINER helpers have anon/public EXECUTE revoked with pgTAP coverage. Remaining W2 RPCs continue under bsuite#1237.",
-      "Task 6.2 shipped via crm7#957: report_hours_by_work_type aggregates existing timesheets.entries[*].work_type data with canonical CRM7 options, avoiding a top-level timesheets.work_type schema addition. Remaining pay item, CoInvest LSL, and consultant KPI RPCs continue under bsuite#1237."
+      "Task 6.2 shipped via crm7#957: report_hours_by_work_type aggregates existing timesheets.entries[*].work_type data with canonical CRM7 options, avoiding a top-level timesheets.work_type schema addition. Pay-item-group hours has since shipped in Task 6.3; remaining pay-items-by-employee, CoInvest LSL, and consultant KPI RPCs continue under bsuite#1237.",
+      "Task 6.3 shipped via crm7#958: report_pay_item_group_hours groups entry work-type hours through CRM7-owned timesheet_groups -> pay_item_groups mappings, treats blank optional filters as unfiltered, prevents duplicate mapping double-counts, and keeps rate/amount null until the pay-items rate registry exists. Remaining pay-items-by-employee, CoInvest LSL, and consultant KPI RPCs continue under bsuite#1237."
     ]
   }
 }
