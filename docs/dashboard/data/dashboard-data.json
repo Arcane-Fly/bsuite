@@ -2018,6 +2018,22 @@
         ],
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/954",
         "notes": "CRM7-owned pay_item_rules landed with tenant-scoped RLS, selected-tenant reorder RPC, Zod validation, Settings Pay Item Rules CRUD/reorder UI, placement ots_rule_id UUID assignment, robust route-contract parsing, and pgTAP coverage in 09_pay_item_rules_rls.sql."
+      },
+      {
+        "domain": "C_pay_items",
+        "issue": 569,
+        "phase": "PR-F pay item type extensions and category priority",
+        "status": "merged",
+        "implemented_rows": [
+          26,
+          27,
+          28,
+          29,
+          31,
+          32
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/955",
+        "notes": "CRM7-owned pay_item_groups now includes Codehouse pay item categories, sort_priority, salary-sacrifice, child-support, RDO-accrual, back-pay, and reimbursement flags; Settings Pay Item Groups exposes the fields, payroll schemas carry UUID-backed category metadata, and pgTAP coverage in 09_pay_item_groups_rls.sql validates category/priority constraints."
       }
     ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",

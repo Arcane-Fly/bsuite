@@ -1,10 +1,10 @@
 # Pay Item Groups parity spec — 11 Codehouse gaps domain C (closes #569 research portion)
 
-**Status:** WORKING (`v1.00W`) — PR-A/PR-B schema foundations and PR-C/PR-D/PR-E settings + placement assignment implemented; PR-F+ remain active
+**Status:** WORKING (`v1.00W`) — PR-A through PR-F implemented on `development`; PR-G remains active
 **Owner:** perplexity-computer (autonomous cron — FF-AUTONOMY-20260506)
 **Closes:** [GaryOcean428/bsuite#569](https://github.com/GaryOcean428/bsuite/issues/569) (research portion)
 **Implementation tracker:** PR ladder filed by claude or copilot per Cron A routing matrix
-**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951); PR-C merged in [GaryOcean428/crm7#952](https://github.com/GaryOcean428/crm7/pull/952); PR-D merged in [GaryOcean428/crm7#953](https://github.com/GaryOcean428/crm7/pull/953); PR-E merged in [GaryOcean428/crm7#954](https://github.com/GaryOcean428/crm7/pull/954) on `development`
+**Latest implementation evidence:** PR-A merged in [GaryOcean428/crm7#950](https://github.com/GaryOcean428/crm7/pull/950); PR-B merged in [GaryOcean428/crm7#951](https://github.com/GaryOcean428/crm7/pull/951); PR-C merged in [GaryOcean428/crm7#952](https://github.com/GaryOcean428/crm7/pull/952); PR-D merged in [GaryOcean428/crm7#953](https://github.com/GaryOcean428/crm7/pull/953); PR-E merged in [GaryOcean428/crm7#954](https://github.com/GaryOcean428/crm7/pull/954); PR-F merged in [GaryOcean428/crm7#955](https://github.com/GaryOcean428/crm7/pull/955) on `development`
 **Live schema verified:** 2026-05-07 via Supabase MCP project `tuybltdrdefjblnplpqo`
 **Source matrix rows:** 21–29, 31–32 (parity-matrix.md domain C)
 **Domain covered:** C (Pay Items — groups, rules, type extensions, sort priority)
@@ -27,17 +27,17 @@
 
 | Matrix row | Domain | Codehouse name | BSuite state | Gap class |
 |---|---|---|---|---|
-| 21 | C | Pay Item Groups (named groups linking pay items) | CRM7-owned schema + CRUD/reorder UI merged to `development`; PR-F extends type flags | 🟢 dev-merged |
+| 21 | C | Pay Item Groups (named groups linking pay items) | CRM7-owned schema + CRUD/reorder UI merged to `development`; PR-F extended category/type metadata | 🟢 dev-merged |
 | 22 | C | Timesheet Groups (link Pay Item Groups to coded timesheet columns) | CRM7-owned schema + CRUD/reorder UI merged to `development` | 🟢 dev-merged |
 | 23 | C | Penalty Groups (additional penalty rate on top of timesheet group) | CRM7-owned schema + CRUD/reorder UI merged to `development` | 🟢 dev-merged |
 | 24 | C | Allowance Groups (link allowances to pay item groups) | CRM7-owned schema + CRUD/reorder UI merged to `development` | 🟢 dev-merged |
 | 25 | C | Pay Item Rules (award interpretation engine per placement) | CRM7-owned rule CRUD + placement UUID assignment merged to `development`; downstream calc integration remains in PR-G | 🟢 dev-merged |
-| 26 | C | Salary Sacrifice pay items | deduction arrays only; no `is_salary_sacrifice` flag UI | 🟡 partial |
-| 27 | C | Child Support Deduction pay items | deduction arrays only; no dedicated type | 🟡 partial |
-| 28 | C | RDO Accrual pay items | `WorkType` enum includes RDO; no named pay-item management | 🟡 partial |
-| 29 | C | Back Pay pay items | absent from `crm7/src/schemas/payroll.ts` | 🔴 gap |
-| 31 | C | Reimbursement pay items | allowances array only; no explicit type | 🟡 partial |
-| 32 | C | Pay Item Category Priority (`sort_priority`) | no ordering field on pay-item types | 🔴 gap |
+| 26 | C | Salary Sacrifice pay items | CRM7-owned `pay_item_groups` has `salary_sacrifice` category + `is_salary_sacrifice` UI/payroll schema support | 🟢 dev-merged |
+| 27 | C | Child Support Deduction pay items | CRM7-owned `pay_item_groups` has `child_support` category + `is_child_support` UI/payroll schema support | 🟢 dev-merged |
+| 28 | C | RDO Accrual pay items | CRM7-owned `pay_item_groups` has `rdo_accrual` category + `is_rdo_accrual` UI/payroll schema support | 🟢 dev-merged |
+| 29 | C | Back Pay pay items | CRM7-owned `pay_item_groups` has `back_pay` category + `is_back_pay` UI/payroll schema support | 🟢 dev-merged |
+| 31 | C | Reimbursement pay items | CRM7-owned `pay_item_groups` has `reimbursement` category + `is_reimbursement` UI/payroll schema support | 🟢 dev-merged |
+| 32 | C | Pay Item Category Priority (`sort_priority`) | `pay_item_groups.sort_priority` and payroll category priority schema landed in PR-F | 🟢 dev-merged |
 
 **Evidence source:** [AnyTime Admin Guide WF1_Pay_027](https://help.codehouseworkforce.com.au) pp.39–58; [OTS Set Up WF1_OTS_001](https://help.codehouseworkforce.com.au) pp.1–18; [parity-matrix.md rows 21–29, 31–32](../../../competitor/parity-matrix.md); [bsuite-inventory.md §C](../../../competitor/bsuite-inventory.md).
 
@@ -88,7 +88,7 @@ custom_pay_rates
 ### Entities created by this spec's PR ladder
 
 ```
-pay_item_groups          -- CREATED in PR-A (rows 21, 26-29, 31-32)
+pay_item_groups          -- CREATED in PR-A; EXTENDED in PR-F (rows 21, 26-29, 31-32)
 timesheet_groups         -- CREATED in PR-A (row 22)
 penalty_groups           -- CREATED in PR-B (row 23)
 allowance_groups         -- CREATED in PR-B (row 24)
@@ -167,8 +167,10 @@ PR-A (pay_item_groups + timesheet_groups schema)
 
 ### PR-F — pay item type extensions + `sort_priority`
 
-**Target:** `crm7/supabase/migrations/20260507003000_pay_item_type_extensions.sql`, `crm7/src/schemas/payroll.ts`, `crm7/src/pages/settings/pay-item-groups.tsx` (type extension UI)
-**LOC estimate:** ~80 SQL + ~100 TS = ~180 LOC
+**Target:** `crm7/supabase/migrations/20260603050000_pay_item_type_extensions.sql`, `crm7/src/schemas/payroll.ts`, `crm7/src/pages/settings/pay-item-groups.tsx` (type extension UI)
+**Status:** ✅ merged to CRM7 `development` via [crm7#955](https://github.com/GaryOcean428/crm7/pull/955)
+**Evidence:** CI passed build/test, e2e, pgTAP RLS, dry-lint, DB migration lint, RLS JWT lint, OAuth sync, drift scan, DOM layout, and gitleaks. Local validation passed targeted pay-item/payroll schema tests, typecheck, lint, production build, browser smoke for `/settings/pay-item-groups`, and forbidden raw-hex/auth scan on touched files.
+**LOC estimate:** ~100 SQL + ~250 TS = ~350 LOC
 **Independently mergeable:** depends on PR-A (pay_item_groups table)
 **Closes rows:** 26, 27, 28, 29, 31, 32
 
