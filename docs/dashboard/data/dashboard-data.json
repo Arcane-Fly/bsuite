@@ -14,7 +14,7 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-05-25",
+    "last_refresh": "2026-06-03",
     "last_refreshed": "2026-05-25T05:10:00Z",
     "last_refreshed_by": "claude-code-scheduled fire47"
   },
@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "599628a",
+      "main_sha": "49d9167",
       "vercel": "n/a"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "488541df",
+      "main_sha": "c06026d2",
       "vercel": "success"
     },
     {
@@ -102,7 +102,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "77ad304",
+      "main_sha": "a14776d",
       "vercel": "success"
     },
     {
@@ -110,7 +110,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "f270079",
+      "main_sha": "08fe887",
       "vercel": "success"
     },
     {
@@ -118,7 +118,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "497dac2",
+      "main_sha": "0f8eb58",
       "vercel": "success"
     },
     {
@@ -126,7 +126,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "a0f8a30",
+      "main_sha": "7463ff8",
       "vercel": "success"
     },
     {
@@ -134,7 +134,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "9236b16",
+      "main_sha": "102fe6e",
       "vercel": "success"
     }
   ],
