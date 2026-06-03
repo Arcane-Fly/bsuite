@@ -1,10 +1,19 @@
 import type {
   CalcConfig,
   CalcResult,
+  PayItemGroupRef,
+  PayItemCategory,
   RateResult,
   OncostBreakdown,
   Allowance,
 } from './types';
+
+interface RateKeyResolution {
+  key: string;
+  payItemGroupId?: string;
+  payItemGroup?: PayItemGroupRef;
+  category?: PayItemCategory;
+}
 
 /**
  * Converts an allowance to a per-hour rate.
@@ -29,6 +38,53 @@ function allowanceToPerHour(
       return a.amount; // user enters effective $/hr
     default:
       return 0;
+  }
+}
+
+function validatePayItemGroupId(value: string | undefined, field: string): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    throw new Error(`${field} must be a non-empty pay_item_groups.id when provided`);
+  }
+  return trimmed;
+}
+
+function resolveRateKey(
+  legacyId: string,
+  payItemGroupId: string | undefined,
+  payItemGroup: PayItemGroupRef | undefined,
+  field: string,
+): RateKeyResolution {
+  const explicitId = validatePayItemGroupId(payItemGroupId, `${field}.payItemGroupId`);
+  const refId = validatePayItemGroupId(payItemGroup?.id, `${field}.payItemGroup.id`);
+
+  if (explicitId && refId && explicitId !== refId) {
+    throw new Error(`${field}.payItemGroupId must match ${field}.payItemGroup.id`);
+  }
+
+  const groupId = explicitId ?? refId;
+  return {
+    key: groupId ?? legacyId,
+    payItemGroupId: groupId,
+    payItemGroup,
+    category: payItemGroup?.category,
+  };
+}
+
+function assignRate(
+  rates: Record<string, RateResult>,
+  ratesByPayItemGroupId: Record<string, RateResult>,
+  key: string,
+  legacyKey: string,
+  rate: RateResult,
+): void {
+  rates[key] = rate;
+  if (key !== legacyKey) {
+    rates[legacyKey] = rate;
+  }
+  if (rate.payItemGroupId) {
+    ratesByPayItemGroupId[rate.payItemGroupId] = rate;
   }
 }
 
@@ -208,25 +264,57 @@ export function calculate(cfg: CalcConfig): CalcResult {
 
   // --- Build rates (lines 127-142) ---
   const rates: Record<string, RateResult> = {};
-  rates['ord'] = {
+  const ratesByPayItemGroupId: Record<string, RateResult> = {};
+  const ordinaryRate = resolveRateKey(
+    'ord',
+    cfg.ordinaryPayItemGroupId,
+    cfg.ordinaryPayItemGroup,
+    'ordinary',
+  );
+  assignRate(rates, ratesByPayItemGroupId, ordinaryRate.key, 'ord', {
     charge: quoted,
     funded: quoted - fundingPH,
     funding: fundingPH,
-  };
+    payItemGroupId: ordinaryRate.payItemGroupId,
+    payItemGroup: ordinaryRate.payItemGroup,
+    sourceRateId: 'ord',
+    label: ordinaryRate.payItemGroup?.name ?? 'Ordinary Time',
+    category: ordinaryRate.category ?? 'ordinary_time',
+  });
 
   for (const pr of penalties) {
+    const rateKey = resolveRateKey(
+      pr.id,
+      pr.payItemGroupId,
+      pr.payItemGroup,
+      `penalties[${pr.id}]`,
+    );
     if (pr.cat === 'overtime') {
       const otCharge =
         ot1x * pr.mult + (superOnOT ? otSuperPH * (pr.mult - 1) : 0);
-      rates[pr.id] = { charge: otCharge, funded: otCharge, funding: 0 };
+      assignRate(rates, ratesByPayItemGroupId, rateKey.key, pr.id, {
+        charge: otCharge,
+        funded: otCharge,
+        funding: 0,
+        payItemGroupId: rateKey.payItemGroupId,
+        payItemGroup: rateKey.payItemGroup,
+        sourceRateId: pr.id,
+        label: pr.payItemGroup?.name ?? pr.label,
+        category: rateKey.category,
+      });
     } else if (pr.cat === 'penalty') {
       const penCharge =
         (48 / 52) * penOnc * pr.mult + billedWage * pr.mult + marginPH;
-      rates[pr.id] = {
+      assignRate(rates, ratesByPayItemGroupId, rateKey.key, pr.id, {
         charge: penCharge,
         funded: penCharge - fundingPH,
         funding: fundingPH,
-      };
+        payItemGroupId: rateKey.payItemGroupId,
+        payItemGroup: rateKey.payItemGroup,
+        sourceRateId: pr.id,
+        label: pr.payItemGroup?.name ?? pr.label,
+        category: rateKey.category,
+      });
     }
   }
 
@@ -282,5 +370,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
     allowancePerHour: allowPerHour,
     allowanceSuperPerHour: allowPerHourSuper,
     rates,
+    ratesByPayItemGroupId,
+    ordinaryRateKey: ordinaryRate.key,
   };
 }

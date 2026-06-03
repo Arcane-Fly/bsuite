@@ -2034,6 +2034,17 @@
         ],
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/955",
         "notes": "CRM7-owned pay_item_groups now includes Codehouse pay item categories, sort_priority, salary-sacrifice, child-support, RDO-accrual, back-pay, and reimbursement flags; Settings Pay Item Groups exposes the fields, payroll schemas carry UUID-backed category metadata, and pgTAP coverage in 09_pay_item_groups_rls.sql validates category/priority constraints."
+      },
+      {
+        "domain": "C_pay_items",
+        "issue": 569,
+        "phase": "PR-G charge-calc named pay item group IDs",
+        "status": "blocked_publish_auth",
+        "implemented_rows": [
+          21
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1363",
+        "notes": "@bsuite/charge-calc@0.5.0 source adds named pay_item_groups ID aliases while preserving legacy ord/penalty keys and passed local package tests/typecheck/build/pack dry-run. npm publish is blocked by missing registry auth, so CRM7/R80 consumer bumps are intentionally deferred until publish succeeds."
       }
     ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",
