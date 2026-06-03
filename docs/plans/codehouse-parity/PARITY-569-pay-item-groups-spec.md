@@ -177,7 +177,9 @@ PR-A (pay_item_groups + timesheet_groups schema)
 ### PR-G (optional) — charge-calc package update to use named entity IDs
 
 **Target:** `packages/charge-calc/src/types.ts`, `packages/charge-calc/src/calculate.ts`
-**LOC estimate:** ~120 TS
+**Status:** ⚠️ package source implemented and locally verified; npm publish blocked by missing registry auth ([bsuite#1363](https://github.com/GaryOcean428/bsuite/issues/1363))
+**Evidence:** Local `@bsuite/charge-calc@0.5.0` source passed 728/728 Vitest tests, typecheck, build, and `pnpm pack --dry-run --json`. `npm view` confirmed 0.5.0 is not published; `npm whoami` returned `E401 Unauthorized`; `npm publish --access public` returned a registry permission error. CRM7/R80 consumer bumps remain intentionally blocked until 0.5.0 is published.
+**LOC estimate:** ~180 TS
 **Independently mergeable:** depends on PR-A through PR-F; implement last
 **Closes rows:** row 21 (removes enum-only group references in favour of named entity UUIDs)
 

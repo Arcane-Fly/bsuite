@@ -47,6 +47,48 @@ const result = calculateChargeRate(config);
 // result.breakdown — itemised cost components
 ```
 
+### Named pay item group IDs
+
+`calculate()` accepts CRM7-owned `pay_item_groups.id` values so consumers can
+key rates by named pay-item group UUIDs instead of enum-like strings. Legacy
+keys remain available during migration.
+
+```ts
+import { calculate, DEFAULT_CONFIG } from '@bsuite/charge-calc';
+
+const ordinaryPayItemGroupId = crm7PayItemGroups.ordinary.id;
+const overtimePayItemGroupId = crm7PayItemGroups.overtime15.id;
+
+const result = calculate({
+  ...DEFAULT_CONFIG,
+  ordinaryPayItemGroup: {
+    id: ordinaryPayItemGroupId,
+    name: 'Ordinary Time',
+    code: 'ORD',
+    category: 'ordinary_time',
+    sortPriority: 10,
+  },
+  penalties: DEFAULT_CONFIG.penalties.map((penalty) =>
+    penalty.id === 'ot15'
+      ? {
+          ...penalty,
+          payItemGroup: {
+            id: overtimePayItemGroupId,
+            name: 'Overtime 1.5x',
+            code: 'OT1.5',
+            category: 'overtime_1_5',
+            sortPriority: 20,
+          },
+        }
+      : penalty,
+  ),
+});
+
+result.rates[ordinaryPayItemGroupId]; // canonical named-group lookup
+result.rates['ord']; // legacy compatibility alias
+result.ratesByPayItemGroupId[overtimePayItemGroupId];
+```
+
 ---
 
 ## BOOT Assessment Engine

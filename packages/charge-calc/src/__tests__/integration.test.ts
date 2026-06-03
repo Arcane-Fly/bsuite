@@ -17,6 +17,8 @@ describe('Integration: full pipeline smoke test', () => {
     expect(res.quotedChargeRate).toBeGreaterThan(0);
     expect(res.billableHours).toBeGreaterThan(0);
     expect(res.rates['ord']).toBeDefined();
+    expect(res.ordinaryRateKey).toBe('ord');
+    expect(res.ratesByPayItemGroupId).toEqual({});
   });
 
   it('all billing models with fixed weeks produce valid results', () => {

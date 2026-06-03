@@ -93,6 +93,12 @@ describe('Golden output: Standard GTO scenario', () => {
     expect(res.rates['ot15'].charge).toBeGreaterThan(res.quotedChargeRate);
   });
 
+  it('named default pay item group keys preserve legacy rate outputs', () => {
+    expect(res.ordinaryRateKey).toBe('ord');
+    expect(res.ratesByPayItemGroupId).toEqual({});
+    expect(res.rates['ord'].charge).toBeCloseTo(res.quotedChargeRate, 6);
+  });
+
   // OT has no funding
   it('OT has zero funding', () => {
     expect(res.rates['ot15'].funding).toBe(0);
