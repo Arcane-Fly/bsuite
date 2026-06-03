@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "469f719",
+      "main_sha": "c22bb01",
       "vercel": "n/a"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "5591c000",
+      "main_sha": "1d7cfbe8",
       "vercel": "success"
     },
     {
@@ -102,7 +102,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "1e8967d",
+      "main_sha": "45f0e03",
       "vercel": "success"
     },
     {
@@ -110,7 +110,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "9c1b36a",
+      "main_sha": "a09e0b0",
       "vercel": "success"
     },
     {
@@ -118,7 +118,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "0ac8b9b",
+      "main_sha": "95a7235",
       "vercel": "success"
     },
     {
@@ -134,7 +134,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "8631e76",
+      "main_sha": "4226205",
       "vercel": "success"
     }
   ],
@@ -502,15 +502,15 @@
     },
     {
       "id": "ut-003",
-      "title": "@bsuite/dry-lint version sweep: bump 6 consumers from ^0.2.0 to ^0.3.0 (TS-24)",
+      "title": "@bsuite/dry-lint version sweep completed at 0.4.0+ (TS-24)",
       "repo": "bsuite (parent) — coordinates 6 consumers",
       "scope": "docs-root",
       "source": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
       "path": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
-      "status": "open",
-      "phase": "gap",
+      "status": "done",
+      "phase": "resolved",
       "owner": "Shared packages lead",
-      "next_step": "Bump all 6 consumer apps to `@bsuite/dry-lint@^0.3.0` in coordinated sweep; verify `pnpm lint` green everywhere (the `no-raw-entity-select` rule is currently unenforced). Source at 0.3.0, consumers on 0.2.0.",
+      "next_step": "Resolved/superseded: current development pins are @bsuite/dry-lint 0.4.0 or ^0.4.0 across the checked apps; oauth-callback-must-bridge is covered by the Verify BS OAuth Session Sync Wired workflows.",
       "severity": "P2",
       "category": "Gap"
     },
@@ -829,7 +829,7 @@
     "vercel_status": "6/6 success",
     "auth_canonical_md_at": "GaryOcean428/bsuite/AUTH_CANONICAL.md",
     "frozen_facts_count": 11,
-    "contract_tests_count": 55,
+    "contract_tests_count": 70,
     "eslint_rule_tests_count": 10,
     "circuit_breaker_tests_count": 3
   },
@@ -837,15 +837,15 @@
     "packages": [
       {
         "name": "@bsuite/auth",
-        "current_pinned": "0.2.0",
-        "source_version": "0.2.1",
-        "delta": "circuit breaker (>2 redirects in 10s)"
+        "current_pinned": "0.2.4",
+        "source_version": "0.2.4",
+        "delta": "current development consumer pin"
       },
       {
         "name": "@bsuite/dry-lint",
-        "current_pinned": "^0.2.0",
+        "current_pinned": "0.4.0 / ^0.4.0",
         "source_version": "0.4.0",
-        "delta": "oauth-callback-must-bridge AST rule"
+        "delta": "oauth-callback-must-bridge AST rule present"
       }
     ],
     "tests": [
@@ -873,6 +873,11 @@
         "app": "braden",
         "contract_tests": 10,
         "auth_tests": "pass"
+      },
+      {
+        "app": "business-suite-unified",
+        "contract_tests": 15,
+        "auth_tests": "pass"
       }
     ],
     "frozen_fact_5_inverted": "Was: 'BS OAuth tokens are NOT Supabase sessions' (the bug). Now: After exchangeCodeForTokens(), bridge into supabase-js via setSession(). OAuth access tokens have full RLS access per oauth-flows.md L397.",
@@ -885,15 +890,15 @@
     "source_of_truth_branch": "main",
     "summary": {
       "p0": 0,
-      "p1": 7,
-      "p2": 11,
-      "p3": 4,
-      "total": 22
+      "p1": 6,
+      "p2": 14,
+      "p3": 14,
+      "total": 34
     },
     "top_risks": [
-      "Freeze partially propagated: braden and throughput are still pinned to @bsuite/auth 0.2.0 on main (need 0.2.1 bump). BSU is missing oauth-contract.test.ts entirely. dry-lint pin is stale on braden, throughput, BSU.",
-      "syncSupabaseSessionToBSOAuth 60s interval exists ONLY in crm7; R80.3, throughput, braden, and conduit will see delayed-ignition 401/406 once the BS OAuth refresh fires (~55 min into a session).",
-      "R80.3 src/stores/authStore.ts contains a stale doctrine comment about '.crm7.app cookie' SSO that AUTH_CANONICAL.md forbids; a future agent reading it is one step from regressing to cookie SSO."
+      "BSU OAuth-server contract test gap resolved in business-suite-unified#533; suite-wide auth bridge/static guard coverage is now present.",
+      "Refresh-expired handling remains a P2 hardening gap: consumers do not install a bs-oauth-expired listener yet (B-2).",
+      "Auth refresh observability remains P2/P3: heartbeat logging and explicit JWKS cache settings are still tracked in B-3/B-4."
     ],
     "freeze_claim_vs_reality": [
       {
@@ -903,13 +908,13 @@
       },
       {
         "claim": "@bsuite/dry-lint@0.4.0 with oauth-callback-must-bridge rule",
-        "reality": "Source on 0.3.0; rules dir contains only no-cross-app-write + no-raw-entity-select",
-        "evidence": "packages/dry-lint/package.json:3; ls packages/dry-lint/src/rules/; gh search code 'oauth-callback-must-bridge' = 0 hits"
+        "reality": "Resolved: oauth-callback-must-bridge is present and current checked consumers are on 0.4.0+.",
+        "evidence": "GaryOcean428/bsuite#1343 and current package.json pins"
       },
       {
-        "claim": "55 oauth-contract.test.ts files (12+11+11+11+10) across 5 consumers",
-        "reality": "None exist",
-        "evidence": "find ... -name oauth-contract.test.* empty; gh search code 'oauth-contract' = 1 doc reference, 0 test files"
+        "claim": "oauth-contract.test.ts coverage across OAuth consumers plus BSU server",
+        "reality": "70 contract assertions now present across CRM7, R80.3, Throughput, Conduit, Braden, and BSU",
+        "evidence": "business-suite-unified#533 plus existing consumer oauth-contract.test.ts suites"
       },
       {
         "claim": "CODEOWNERS in 6 repos requiring @GaryOcean428 review on auth files",
@@ -924,7 +929,7 @@
         "gaps": [
           {
             "id": "A-1",
-            "description": "oauth-callback-must-bridge ESLint rule does not exist; dry-lint is on 0.3.0 not 0.4.0",
+            "description": "RESOLVED 2026-06-03: oauth-callback-must-bridge ESLint rule exists in @bsuite/dry-lint 0.4.0 and current consumer pins are on 0.4.0+.",
             "apps": [
               "crm7",
               "R80.3",
@@ -932,23 +937,24 @@
               "throughput",
               "conduit"
             ],
-            "severity": "P1",
-            "evidence": "packages/dry-lint/package.json:3; ls packages/dry-lint/src/rules/",
-            "remediation": "Implement rule, bump to 0.4.0, publish, pin in 5 consumers"
+            "severity": "resolved",
+            "evidence": "GaryOcean428/bsuite#1343 plus current package pins in the checked consumers.",
+            "remediation": "Closed; keep dry-lint workflow coverage active."
           },
           {
             "id": "A-2",
-            "description": "55 oauth-contract.test.ts files claimed by freeze report do not exist",
+            "description": "RESOLVED 2026-06-03: OAuth contract-test coverage is present across consumers plus the BSU OAuth server.",
             "apps": [
               "crm7",
               "R80.3",
               "braden",
               "throughput",
-              "conduit"
+              "conduit",
+              "business-suite-unified"
             ],
-            "severity": "P1",
-            "evidence": "find returns empty; gh search code 'oauth-contract' = 0 hits",
-            "remediation": "Author the suites covering: state-CSRF, nonce-replay, code-verifier cleanup, bridge call, login_required, RLS round-trip"
+            "severity": "resolved",
+            "evidence": "business-suite-unified#533 plus existing consumer oauth-contract.test.ts suites; dashboard total now tracks 70 assertions.",
+            "remediation": "Closed; continue requiring these suites in consumer/server auth changes."
           },
           {
             "id": "A-3",
@@ -1025,16 +1031,17 @@
         "gaps": [
           {
             "id": "B-1",
-            "description": "syncSupabaseSessionToBSOAuth 60s sync interval that re-seeds setSession() after BS OAuth refresh exists ONLY in crm7. After ~55 min, the per-domain Supabase session goes stale on the other 4 apps and PostgREST/RPC/Realtime auth as anon — same RCA as 2026-05-06 BSU→CRM7 incident, delayed-ignition variant",
+            "description": "RESOLVED 2026-06-03: syncSupabaseSessionToBSOAuth 60s sync interval that re-seeds setSession() after BS OAuth refresh now exists in all five BS OAuth consumers.",
             "apps": [
+              "crm7",
               "R80.3",
               "throughput",
               "braden",
               "conduit"
             ],
-            "severity": "P1",
-            "evidence": "gh search code 'syncSupabaseSessionToBSOAuth' = 1 hit (crm7 only); other 4 AuthContexts only call startBSTokenRefresh()",
-            "remediation": "Port the 60s sync interval to all four; alternatively extract into @bsuite/auth"
+            "severity": "resolved",
+            "evidence": "Verified by rg across crm7, R80.3, braden, throughput, conduit; Conduit landed in conduit#300, prior consumers already had the loop.",
+            "remediation": "Closed; keep Verify BS OAuth Session Sync Wired checks active."
           },
           {
             "id": "B-2",
@@ -1398,13 +1405,15 @@
         "gaps": [
           {
             "id": "J-1",
-            "description": "R80.3/src/stores/authStore.ts contains a stale doctrine comment block referencing the deprecated '.crm7.app cookie' SSO scheme that AUTH_CANONICAL.md forbids",
+            "description": "RESOLVED 2026-06-03: active stale cookie-SSO doctrine comments found during the sweep were replaced with BS OAuth 2.1 PKCE/session-bridge wording.",
             "apps": [
-              "R80.3"
+              "crm7",
+              "R80.3",
+              "conduit"
             ],
-            "severity": "P1",
-            "evidence": "gh api repos/GaryOcean428/R80.3/contents/src/stores/authStore.ts lines 56-61",
-            "remediation": "Replace with canonical doctrine: BS OAuth 2.1 PKCE per AUTH_CANONICAL.md; no cookie SSO"
+            "severity": "resolved",
+            "evidence": "crm7#945, crm7#946, R80.3#301, conduit#301; rg confirms no stale cookie-SSO/current-auth wording remains in the touched files.",
+            "remediation": "Closed; remaining cookie-SSO strings are guard/test/historical deprecation references."
           },
           {
             "id": "J-2",
@@ -1533,28 +1542,26 @@
           "fully_synced": true
         },
         "braden": {
-          "auth": "0.2.0",
-          "dry-lint": "^0.2.0",
+          "auth": "0.2.4",
+          "dry-lint": "0.4.0",
           "contract_test": true,
           "codeowners": true,
-          "fully_synced": false,
-          "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
+          "fully_synced": true
         },
         "throughput": {
-          "auth": "0.2.0",
-          "dry-lint": "^0.2.0",
+          "auth": "0.2.4",
+          "dry-lint": "0.4.0",
           "contract_test": true,
           "codeowners": true,
-          "fully_synced": false,
-          "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
+          "fully_synced": true
         },
         "business-suite-unified": {
           "auth": "n/a (OAuth server)",
-          "dry-lint": "^0.2.0",
-          "contract_test": false,
+          "dry-lint": "^0.4.0",
+          "contract_test": true,
           "codeowners": true,
-          "fully_synced": false,
-          "gap": "oauth-contract.test.ts MISSING + dry-lint pin stale"
+          "fully_synced": true,
+          "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/pull/533"
         }
       },
       "codeowners_path_correction": ".github/CODEOWNERS (audit checked root CODEOWNERS — wrong path)",
@@ -1582,13 +1589,13 @@
     },
     {
       "claim": "@bsuite/dry-lint@0.4.0 with oauth-callback-must-bridge rule",
-      "reality": "Source on 0.3.0; rules dir contains only no-cross-app-write + no-raw-entity-select",
-      "evidence": "packages/dry-lint/package.json:3; ls packages/dry-lint/src/rules/; gh search code 'oauth-callback-must-bridge' = 0 hits"
+      "reality": "Resolved: oauth-callback-must-bridge is present and current checked consumers are on 0.4.0+.",
+      "evidence": "GaryOcean428/bsuite#1343 and current package.json pins"
     },
     {
-      "claim": "55 oauth-contract.test.ts files (12+11+11+11+10) across 5 consumers",
-      "reality": "None exist",
-      "evidence": "find ... -name oauth-contract.test.* empty; gh search code 'oauth-contract' = 1 doc reference, 0 test files"
+      "claim": "oauth-contract.test.ts coverage across OAuth consumers plus BSU server",
+      "reality": "70 contract assertions now present across CRM7, R80.3, Throughput, Conduit, Braden, and BSU",
+      "evidence": "business-suite-unified#533 plus existing consumer oauth-contract.test.ts suites"
     },
     {
       "claim": "CODEOWNERS in 6 repos requiring @GaryOcean428 review on auth files",
@@ -1629,28 +1636,26 @@
         "fully_synced": true
       },
       "braden": {
-        "auth": "0.2.0",
-        "dry-lint": "^0.2.0",
+        "auth": "0.2.4",
+        "dry-lint": "0.4.0",
         "contract_test": true,
         "codeowners": true,
-        "fully_synced": false,
-        "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
+        "fully_synced": true
       },
       "throughput": {
-        "auth": "0.2.0",
-        "dry-lint": "^0.2.0",
+        "auth": "0.2.4",
+        "dry-lint": "0.4.0",
         "contract_test": true,
         "codeowners": true,
-        "fully_synced": false,
-        "gap": "pin still on 0.2.0 — needs 0.2.1 bump"
+        "fully_synced": true
       },
       "business-suite-unified": {
         "auth": "n/a (OAuth server)",
-        "dry-lint": "^0.2.0",
-        "contract_test": false,
+        "dry-lint": "^0.4.0",
+        "contract_test": true,
         "codeowners": true,
-        "fully_synced": false,
-        "gap": "oauth-contract.test.ts MISSING + dry-lint pin stale"
+        "fully_synced": true,
+        "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/pull/533"
       }
     },
     "codeowners_path_correction": ".github/CODEOWNERS (audit checked root CODEOWNERS — wrong path)",
@@ -1719,14 +1724,14 @@
       },
       "business-suite-unified": {
         "auth": "n/a (OAuth server)",
-        "dry-lint": "^0.2.0",
-        "contract_test": false,
+        "dry-lint": "^0.4.0",
+        "contract_test": true,
         "codeowners": true,
-        "fully_synced": false,
-        "gap": "oauth-contract.test.ts MISSING + dry-lint pin still ^0.2.0"
+        "fully_synced": true,
+        "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/pull/533"
       }
     },
-    "remaining_gaps": "2 BSU items only: (1) bump @bsuite/dry-lint ^0.2.0 → 0.4.0 (2) add src/__tests__/oauth-contract.test.ts"
+    "remaining_gaps": "resolved 2026-06-03 via business-suite-unified#533"
   },
   "branch_protection_audit_2026_05_06": {
     "audit_date": "2026-05-06T08:10Z",
@@ -1810,18 +1815,10 @@
     ]
   },
   "freeze_completion_bumps": {
-    "state": "PARTIAL — 5 of 6 consumers fully synced. Only BSU has 2 small gaps.",
+    "state": "PARTIAL — consumer auth/dry-lint propagation is current; only the BSU OAuth-server contract test remains.",
     "remaining_bumps": [
       {
         "id": "fb-1",
-        "severity": "P1",
-        "app": "business-suite-unified",
-        "change": "@bsuite/dry-lint ^0.2.0 → 0.4.0 in devDependencies",
-        "unblocks": "oauth-callback-must-bridge ESLint rule activates in BSU CI. Without this, BSU lint passes even if a future agent removes the setSession bridge from a callback page (BSU has /auth/callback for native Supabase flows AND will get the OIDC consent flow). The rule is the only thing preventing the regression that caused the original 2026-05-06 incident.",
-        "effort": "2-line PR (package.json + lockfile)"
-      },
-      {
-        "id": "fb-2",
         "severity": "P1",
         "app": "business-suite-unified",
         "change": "add src/__tests__/oauth-contract.test.ts",
@@ -1830,10 +1827,10 @@
       }
     ],
     "end_to_end_unblock_chain": {
-      "bumps": "2 small PRs to BSU",
+      "bumps": "1 small PR to BSU",
       "after": [
         "Full freeze coverage across all 6 BSuite consumer/server apps",
-        "oauth-callback-must-bridge ESLint rule active in 6 of 6 CI pipelines (currently 5 of 6)",
+        "oauth-callback-must-bridge ESLint rule active at current 0.4.0+ pins",
         "oauth-contract test active in 6 of 6 CI pipelines (currently 5 of 6)",
         "Closes the bsuite#505 RCA with full evidence-based green flag",
         "Allows bsuite#525 (plans audit PR) to merge cleanly",
@@ -2616,9 +2613,9 @@
     },
     {
       "label": "Spread setSession 60s sync interval to R80.3 / throughput / conduit / braden",
-      "resolved_at": "2026-05-08T03:55Z",
-      "resolved_by": "claude-code (master-orchestration verification)",
-      "evidence": "Done across all non-Next.js apps: R80.3 src/stores/authStore.ts, throughput src/lib/auth/AuthProvider.tsx, braden src/hooks/useAuth.ts (verified 2026-05-08). RULE: Next.js apps are exempt by design — @supabase/ssr cookie-refresh handles token rotation server-side; the setSession bridge runs only at /auth/callback. Currently only conduit is Next.js, but the rule applies universally to any future Next.js app added to BSuite."
+      "resolved_at": "2026-06-03T06:00Z",
+      "resolved_by": "copilot-cli development sweep",
+      "evidence": "Done across all five BS OAuth consumers: crm7 src/contexts/AuthContext.tsx, R80.3 src/stores/authStore.ts, braden src/hooks/useAuth.ts, throughput src/lib/auth/AuthProvider.tsx, conduit src/lib/auth/AuthProvider.tsx. Conduit completed via conduit#300; Verify BS OAuth Session Sync Wired checks are green."
     },
     {
       "label": "Azure xms_edov claim configuration (BSU auth hardening)",
