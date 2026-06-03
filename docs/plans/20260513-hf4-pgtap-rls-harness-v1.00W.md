@@ -4,11 +4,13 @@
 | ------------- | ------------------------------------------------------------------------- |
 | Issue         | [bsuite#866](https://github.com/GaryOcean428/bsuite/issues/866)           |
 | Constraint    | C10 (GTO master plan — RLS must be tested via anon key, not SQL editor)   |
-| Status        | W — Working                                                               |
+| Status        | A — Approved / completed on development                                   |
 | Author        | @buffy (automated)                                                        |
 | Created       | 2026-05-13                                                                |
-| Last updated  | 2026-05-13                                                                |
+| Last updated  | 2026-06-03                                                                |
 | Scope         | `crm7/` (primary), `bsuite/` (plan doc + submodule bump)                  |
+
+> **Status: COMPLETED** — HF-4 is merged to CRM7 `development`; [bsuite#866](https://github.com/GaryOcean428/bsuite/issues/866) is closed. Evidence: pgTAP workflow green on CRM7 `development` ([run #26491002652](https://github.com/GaryOcean428/crm7/actions/runs/26491002652)); documentation path drift corrected by [CRM7 PR #949](https://github.com/GaryOcean428/crm7/pull/949), including `Anon-context RLS tests (Constraint C10)` passing.
 
 ## Goal
 
@@ -62,8 +64,8 @@ pgTAP files change. Uses the **canonical Supabase CLI path** per the
    - `anon` / `authenticated` / `service_role` / `authenticator` roles
      correctly configured
    - `pg_hba.conf` pre-configured for password auth
-   - All `supabase/migrations/*.sql` auto-applied in chronological order
-4. `pg_prove` runs every `.sql` file under `supabase/tests/database/`.
+4. The workflow hides historical migrations, replays the canonical production baseline, marks baseline migrations as applied, then applies post-baseline migrations explicitly.
+5. `pg_prove` runs every `.sql` file under `supabase/tests/database/`.
 
 ### Docs
 
@@ -118,7 +120,7 @@ after** a `sign_in_as_*` call.
 
 | # | Criterion                                                                 | Status |
 | - | ------------------------------------------------------------------------- | ------ |
-| 1 | `crm7/supabase/tests/pgtap/` directory exists with anon-context harness   | ✅     |
+| 1 | `crm7/supabase/tests/database/` directory exists with anon-context harness | ✅     |
 | 2 | `.github/workflows/pgtap.yml` spins up Postgres, applies migrations, runs | ✅     |
 | 3 | `org_members_rls.sql`: tenant isolation + gto_admin writes + appr denial  | ✅     |
 | 4 | `security_definer_helpers.sql`: per-role returns + anon revoke            | ✅     |
@@ -144,7 +146,7 @@ after** a `sign_in_as_*` call.
 1. **crm7 PR** (feature branch `fix/hf4-pgtap-rls-harness-20260513`
    → `development`) — all test files, workflow, CONTRIBUTING update.
 2. **bsuite parent PR** (branch
-   `chore/hf4-pgtap-harness-plan-doc-20260513` → `main`) — plan doc +
+   `chore/hf4-pgtap-harness-plan-doc-20260513` → `development`) — plan doc +
    crm7 submodule pointer bump after #1 lands.
 3. Close issue #866 with links to both merged PRs.
 
