@@ -15,7 +15,7 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-03",
-    "last_refreshed": "2026-06-03T06:56:00Z",
+    "last_refreshed": "2026-06-03T07:08:00Z",
     "last_refreshed_by": "copilot-cli development sweep"
   },
   "summary": {
@@ -59,8 +59,8 @@
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 82,
-    "open_prs_total": 3,
-    "open_prs_note": "Active development PRs after warning sweep: bsuite#1342 (@bsuite/dry-lint no-uuid-input-placeholder to development) + R80.3#298/#299. PR #1348 merged to development and cleared full-tree drift warnings. Counts verified with gh on 2026-06-03.",
+    "open_prs_total": 2,
+    "open_prs_note": "Active development PRs after dry-lint source merge: R80.3#298/#299 only. bsuite#1342 merged @bsuite/dry-lint source v0.5.0 to development; consumers remain on 0.4.0/^0.4.0 until the package is built, verified, published to npm, and bumped intentionally. Counts verified with gh on 2026-06-03.",
     "issues_by_repo": {
       "bsuite": 30,
       "business-suite-unified": 4,
@@ -71,7 +71,7 @@
       "throughput": 1
     },
     "prs_by_repo": {
-      "bsuite": 1,
+      "bsuite": 0,
       "business-suite-unified": 0,
       "crm7": 0,
       "conduit": 0,
@@ -86,8 +86,8 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "286ae2e",
-      "vercel": "n/a (development dashboard/static packages)"
+      "main_sha": "9d290f3",
+      "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
       "name": "crm7",
@@ -502,15 +502,15 @@
     },
     {
       "id": "ut-003",
-      "title": "@bsuite/dry-lint version sweep completed at 0.4.0+ (TS-24)",
+      "title": "@bsuite/dry-lint source at 0.5.0 on development; consumers still 0.4.0+ (TS-24)",
       "repo": "bsuite (parent) — coordinates 6 consumers",
       "scope": "docs-root",
       "source": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
       "path": "bsuite/docs/20260504-bsuite-tech-stack-alignment-v1.00W.md",
-      "status": "done",
-      "phase": "resolved",
+      "status": "in-flight",
+      "phase": "source landed; publish/bump pending",
       "owner": "Shared packages lead",
-      "next_step": "Resolved/superseded: current development pins are @bsuite/dry-lint 0.4.0 or ^0.4.0 across the checked apps; oauth-callback-must-bridge is covered by the Verify BS OAuth Session Sync Wired workflows.",
+      "next_step": "Source package @bsuite/dry-lint v0.5.0 with no-uuid-input-placeholder landed on development via bsuite#1342. Do not bump consumers until 0.5.0 is built, verified, published to npm, then intentionally rolled out per DEPENDENCY-BUMP-CHECKLIST.md.",
       "severity": "P2",
       "category": "Gap"
     },
@@ -1515,7 +1515,7 @@
       "freeze_landed_at": "2026-05-06T07:14Z",
       "parent_main_state": {
         "@bsuite/auth_source_version": "0.2.1",
-        "@bsuite/dry-lint_source_version": "0.4.0",
+        "@bsuite/dry-lint_source_version": "0.5.0-development-source",
         "oauth_callback_must_bridge_rule_present": true,
         "rule_test_present": true
       },
@@ -1609,7 +1609,7 @@
     "freeze_landed_at": "2026-05-06T07:14Z",
     "parent_main_state": {
       "@bsuite/auth_source_version": "0.2.1",
-      "@bsuite/dry-lint_source_version": "0.4.0",
+      "@bsuite/dry-lint_source_version": "0.5.0-development-source",
       "oauth_callback_must_bridge_rule_present": true,
       "rule_test_present": true
     },
@@ -1680,7 +1680,7 @@
     "parent_freeze_landed_at": "2026-05-06T07:14Z (PR #526)",
     "parent_state_main": {
       "@bsuite/auth_source": "0.2.1",
-      "@bsuite/dry-lint_source": "0.4.0",
+      "@bsuite/dry-lint_source": "0.5.0-development-source",
       "oauth_callback_must_bridge_rule": true,
       "rule_test": true
     },
@@ -1815,7 +1815,7 @@
     ]
   },
   "freeze_completion_bumps": {
-    "state": "RESOLVED on development — consumer auth/dry-lint propagation current, BSU OAuth-server contract test landed, and full-tree drift warnings cleared.",
+    "state": "RESOLVED on development — full-tree drift warnings cleared and @bsuite/dry-lint v0.5.0 source rule landed; consumer 0.5.0 rollout remains unpublished/unbumped.",
     "remaining_bumps": [
       {
         "id": "fb-1",
@@ -1837,14 +1837,20 @@
         "Unblocks the operator branch-protection wiring (Q1) — adding require_code_owner_reviews=true + adding oauth-contract to required_status_checks now becomes a meaningful gate, since every consumer has the test"
       ]
     },
-    "updated_at": "2026-06-03T06:56Z",
-    "evidence_url": "https://github.com/GaryOcean428/bsuite/pull/1348",
+    "updated_at": "2026-06-03T07:08Z",
+    "evidence_url": "https://github.com/GaryOcean428/bsuite/pull/1342",
     "resolved_items": [
       {
         "label": "Full-tree BSuite drift warning cleanup",
         "resolved_at": "2026-06-03T06:56Z",
         "resolved_by": "copilot-cli development sweep",
         "evidence": "bsuite#1348 merged to development; node scripts/drift-scan.mjs --full reported 0 drift hits across 9 signals."
+      },
+      {
+        "label": "@bsuite/dry-lint no-uuid-input-placeholder source rule",
+        "resolved_at": "2026-06-03T07:08Z",
+        "resolved_by": "copilot-cli development sweep",
+        "evidence": "bsuite#1342 merged to development after dry-lint test/typecheck/build and full drift scan passed. Package is not published or rolled to consumers yet."
       }
     ]
   },
@@ -2654,7 +2660,7 @@
   ],
   "counters": {
     "open_issues_total": 82,
-    "open_prs_total": 3,
+    "open_prs_total": 2,
     "issues_by_repo": {
       "bsuite": 30,
       "business-suite-unified": 4,
@@ -2665,7 +2671,7 @@
       "throughput": 1
     },
     "prs_by_repo": {
-      "bsuite": 1,
+      "bsuite": 0,
       "business-suite-unified": 0,
       "crm7": 0,
       "conduit": 0,
