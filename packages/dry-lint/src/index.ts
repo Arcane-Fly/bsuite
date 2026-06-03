@@ -7,16 +7,25 @@ import {
   noRawEntitySelectRule,
 } from './rules/no-raw-entity-select.js';
 import {
+  NO_UUID_INPUT_PLACEHOLDER_RULE_NAME,
+  noUuidInputPlaceholderRule,
+} from './rules/no-uuid-input-placeholder.js';
+import {
   OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME,
   oauthCallbackMustBridgeRule,
 } from './rules/oauth-callback-must-bridge.js';
 import ownershipMap from './ownership-map.json' with { type: 'json' };
 
 export { detectAppFromPath, type AppKey } from './app-detection.js';
-export { noCrossAppWriteRule, noRawEntitySelectRule, oauthCallbackMustBridgeRule };
+export {
+  noCrossAppWriteRule,
+  noRawEntitySelectRule,
+  noUuidInputPlaceholderRule,
+  oauthCallbackMustBridgeRule,
+};
 
 const PLUGIN_NAME = 'bsuite';
-const PLUGIN_VERSION = '0.4.0';
+const PLUGIN_VERSION = '0.5.0';
 
 /**
  * The `@bsuite/dry-lint` ESLint flat-config plugin.
@@ -52,6 +61,7 @@ const pluginBase = {
   rules: {
     [NO_CROSS_APP_WRITE_RULE_NAME]: noCrossAppWriteRule,
     [NO_RAW_ENTITY_SELECT_RULE_NAME]: noRawEntitySelectRule,
+    [NO_UUID_INPUT_PLACEHOLDER_RULE_NAME]: noUuidInputPlaceholderRule,
     [OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME]: oauthCallbackMustBridgeRule,
   },
 };
@@ -62,6 +72,7 @@ const recommendedConfig = {
   rules: {
     [`${PLUGIN_NAME}/${NO_CROSS_APP_WRITE_RULE_NAME}`]: 'error' as const,
     [`${PLUGIN_NAME}/${NO_RAW_ENTITY_SELECT_RULE_NAME}`]: 'warn' as const,
+    [`${PLUGIN_NAME}/${NO_UUID_INPUT_PLACEHOLDER_RULE_NAME}`]: 'error' as const,
     [`${PLUGIN_NAME}/${OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME}`]: 'error' as const,
   },
 };
@@ -72,6 +83,7 @@ const warnConfig = {
   rules: {
     [`${PLUGIN_NAME}/${NO_CROSS_APP_WRITE_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${NO_RAW_ENTITY_SELECT_RULE_NAME}`]: 'warn' as const,
+    [`${PLUGIN_NAME}/${NO_UUID_INPUT_PLACEHOLDER_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME}`]: 'warn' as const,
   },
 };

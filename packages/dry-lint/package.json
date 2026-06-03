@@ -1,12 +1,12 @@
 {
   "name": "@bsuite/dry-lint",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "ESLint plugin enforcing BSuite one-shot architecture (single-owner Supabase entity tables) and the OAuth callback bridge contract.",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "url": "git+https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/dry-lint"
   },
   "files": [
