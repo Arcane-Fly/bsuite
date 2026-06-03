@@ -24,12 +24,13 @@
 | Task 4 | Pending | N/A | `/reports` list DataTable uplift; blocked by Task 3a. |
 | Task 5 | Merged | [crm7#842](https://github.com/GaryOcean428/crm7/pull/842) | Seven Codehouse parity templates seeded as platform reports. |
 | Task 6.1 | Merged | [crm7#956](https://github.com/GaryOcean428/crm7/pull/956) | `report_rejected_timesheets` RPC, canonical employer join refresh, and legacy public function EXECUTE grant hardening. |
-| Task 6.2-6.7 | Blocked | [bsuite#1237](https://github.com/GaryOcean428/bsuite/issues/1237) | Remaining W2 RPCs need the schema design decisions captured in the gap audit. |
+| Task 6.2 | Merged | [crm7#957](https://github.com/GaryOcean428/crm7/pull/957) | `report_hours_by_work_type` RPC backed by existing `timesheets.entries[*].work_type` JSONB data, with canonical CRM7 work-type filters and pgTAP coverage. |
+| Task 6.3-6.6 | Blocked | [bsuite#1237](https://github.com/GaryOcean428/bsuite/issues/1237) | Remaining pay item, CoInvest LSL, and consultant KPI RPCs need the schema decisions captured in the gap audit. |
 | Task 7 | Pending | N/A | Report delivery reliability: timezone, retry, and error metadata. |
 | Task 8 | Merged | [crm7#844](https://github.com/GaryOcean428/crm7/pull/844) | 20-case Playwright scope matrix. |
 | Task 9 | Pending | N/A | Dashboard and outstanding-work linking. |
 
-**Latest development evidence:** crm7 `development` includes [crm7#956](https://github.com/GaryOcean428/crm7/pull/956) at `f2c6e858`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
+**Latest development evidence:** crm7 `development` includes [crm7#957](https://github.com/GaryOcean428/crm7/pull/957) at `e41f55b1`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
 
 ---
 
