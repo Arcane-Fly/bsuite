@@ -12,6 +12,27 @@
 
 ---
 
+## Implementation status
+
+| Task | Status | Evidence | Notes |
+|------|--------|----------|-------|
+| Task 1 | Merged | [crm7#840](https://github.com/GaryOcean428/crm7/pull/840) | `reportTemplateRunnerService` foundation refactor. |
+| Task 1.5 | Merged | [crm7#841](https://github.com/GaryOcean428/crm7/pull/841) | Four-scope hierarchy, RLS, and `is_enterprise_admin()` foundation. |
+| Task 2 | Merged | [crm7#843](https://github.com/GaryOcean428/crm7/pull/843) | Generic `/reports/[key]` run page. |
+| Task 3a | Pending | N/A | Stepper primitive extraction from `@bsuite/schema-builder`; still blocks Task 4. |
+| Task 3b | Merged | [crm7#847](https://github.com/GaryOcean428/crm7/pull/847) | W2 wizard shipped directly while Task 3a remains a reuse guardrail. |
+| Task 4 | Pending | N/A | `/reports` list DataTable uplift; blocked by Task 3a. |
+| Task 5 | Merged | [crm7#842](https://github.com/GaryOcean428/crm7/pull/842) | Seven Codehouse parity templates seeded as platform reports. |
+| Task 6.1 | Merged | [crm7#956](https://github.com/GaryOcean428/crm7/pull/956) | `report_rejected_timesheets` RPC, canonical employer join refresh, and legacy public function EXECUTE grant hardening. |
+| Task 6.2-6.7 | Blocked | [bsuite#1237](https://github.com/GaryOcean428/bsuite/issues/1237) | Remaining W2 RPCs need the schema design decisions captured in the gap audit. |
+| Task 7 | Pending | N/A | Report delivery reliability: timezone, retry, and error metadata. |
+| Task 8 | Merged | [crm7#844](https://github.com/GaryOcean428/crm7/pull/844) | 20-case Playwright scope matrix. |
+| Task 9 | Pending | N/A | Dashboard and outstanding-work linking. |
+
+**Latest development evidence:** crm7 `development` includes [crm7#956](https://github.com/GaryOcean428/crm7/pull/956) at `f2c6e858`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
+
+---
+
 ## Status of PR #840 (foundation)
 
 PR #840 shipped `ReportFilterForm`, `ReportTable`, `types.ts`, and a `reportParityService.ts`. **Refactor instead of close** — the components are genuinely doctrine-aligned (filter form + table + export bar are §6.2 row 3). The service needs renaming + signature change. Plan below evolves #840 in-place via Task 1.
