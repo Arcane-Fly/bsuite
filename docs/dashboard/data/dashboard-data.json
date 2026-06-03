@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-03",
-    "last_refreshed": "2026-05-25T05:10:00Z",
-    "last_refreshed_by": "claude-code-scheduled fire47"
+    "last_refreshed": "2026-06-03T06:56:00Z",
+    "last_refreshed_by": "copilot-cli development sweep"
   },
   "summary": {
     "external_total": 30,
@@ -58,25 +58,25 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 135,
+    "open_issues_total": 82,
     "open_prs_total": 3,
-    "open_prs_note": "Active: #1195 (dev→main ship cycle, DRAFT, CI green, forward-port confirmed, operator undraft needed) + #1254 (SEC-002/003 theme sanitize, DRAFT, CI green) + #1260 (DB advisor 5-fix, DRAFT, CI green, already applied to prod). #1264 closed this fire (wrong open_issues_total data). Updated fire47 2026-05-25.",
+    "open_prs_note": "Active development PRs after warning sweep: bsuite#1342 (@bsuite/dry-lint no-uuid-input-placeholder to development) + R80.3#298/#299. PR #1348 merged to development and cleared full-tree drift warnings. Counts verified with gh on 2026-06-03.",
     "issues_by_repo": {
-      "bsuite": 46,
+      "bsuite": 30,
+      "business-suite-unified": 4,
       "crm7": 30,
-      "business-suite-unified": 27,
-      "braden": 5,
-      "R80.3": 9,
-      "conduit": 15,
-      "throughput": 0
+      "conduit": 11,
+      "braden": 3,
+      "R80.3": 3,
+      "throughput": 1
     },
     "prs_by_repo": {
-      "bsuite": 3,
+      "bsuite": 1,
+      "business-suite-unified": 0,
       "crm7": 0,
       "conduit": 0,
-      "business-suite-unified": 0,
-      "R80.3": 0,
       "braden": 0,
+      "R80.3": 2,
       "throughput": 0
     }
   },
@@ -86,8 +86,8 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "c22bb01",
-      "vercel": "n/a"
+      "main_sha": "286ae2e",
+      "vercel": "n/a (development dashboard/static packages)"
     },
     {
       "name": "crm7",
@@ -1815,7 +1815,7 @@
     ]
   },
   "freeze_completion_bumps": {
-    "state": "PARTIAL — consumer auth/dry-lint propagation is current; only the BSU OAuth-server contract test remains.",
+    "state": "RESOLVED on development — consumer auth/dry-lint propagation current, BSU OAuth-server contract test landed, and full-tree drift warnings cleared.",
     "remaining_bumps": [
       {
         "id": "fb-1",
@@ -1836,7 +1836,17 @@
         "Allows bsuite#525 (plans audit PR) to merge cleanly",
         "Unblocks the operator branch-protection wiring (Q1) — adding require_code_owner_reviews=true + adding oauth-contract to required_status_checks now becomes a meaningful gate, since every consumer has the test"
       ]
-    }
+    },
+    "updated_at": "2026-06-03T06:56Z",
+    "evidence_url": "https://github.com/GaryOcean428/bsuite/pull/1348",
+    "resolved_items": [
+      {
+        "label": "Full-tree BSuite drift warning cleanup",
+        "resolved_at": "2026-06-03T06:56Z",
+        "resolved_by": "copilot-cli development sweep",
+        "evidence": "bsuite#1348 merged to development; node scripts/drift-scan.mjs --full reported 0 drift hits across 9 signals."
+      }
+    ]
   },
   "parity_status": {
     "schema_version": 1,
@@ -2643,24 +2653,24 @@
     }
   ],
   "counters": {
-    "open_issues_total": 192,
-    "open_prs_total": 9,
+    "open_issues_total": 82,
+    "open_prs_total": 3,
     "issues_by_repo": {
-      "bsuite": 71,
-      "business-suite-unified": 28,
-      "crm7": 67,
-      "conduit": 3,
-      "braden": 13,
-      "R80.3": 7,
-      "throughput": 3
+      "bsuite": 30,
+      "business-suite-unified": 4,
+      "crm7": 30,
+      "conduit": 11,
+      "braden": 3,
+      "R80.3": 3,
+      "throughput": 1
     },
     "prs_by_repo": {
       "bsuite": 1,
       "business-suite-unified": 0,
-      "crm7": 8,
+      "crm7": 0,
       "conduit": 0,
       "braden": 0,
-      "R80.3": 0,
+      "R80.3": 2,
       "throughput": 0
     }
   },
