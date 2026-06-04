@@ -221,10 +221,10 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; WS-5 exact mandatory template seed closed in crm7#998 and tenant-scoped runnable report RPCs closed in crm7#999; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000); WS-1 package publish blocked",
+      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; WS-5 exact mandatory template seed closed in crm7#998 and tenant-scoped runnable report RPCs closed in crm7#999; WS-6 full NAT formatter suite verified from crm7#770; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000); WS-1 package publish blocked",
       "owner": "crm7 + R80.3",
-      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. WS-5 exact template seed/backends are closed via crm7#998/#999, and WS-8 SECDEF search-path/grant hardening is closed via crm7#1000; next unblocked items: add 5 missing NAT formatters (WS-6) and codify apprentice_rate_configs migration.",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1000",
+      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. WS-5 exact template seed/backends are closed via crm7#998/#999, WS-6 full NAT formatter coverage is verified via crm7#770 plus 2026-06-04 formatter tests/typecheck, and WS-8 SECDEF search-path/grant hardening is closed via crm7#1000; next unblocked items: codify apprentice_rate_configs migration, continue WS-6 lodgement/export hardening, and continue WS-5 builder/export polish.",
+      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/770",
       "severity": "P0",
       "category": "Billing"
     },
