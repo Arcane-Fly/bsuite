@@ -2807,7 +2807,7 @@
     "note": "PR count to zero across all 7 repos. Issue count slightly up due to consolidated tracking issues filed for codebuff-lane absorption (bsuite#933-#940 + #941, conduit#256, crm7#762/#764, R80.3#248) — net structural cleanup positive."
   },
   "reports_w2_status": {
-    "schema_version": "1.1",
+    "schema_version": "1.2",
     "added_at": "2026-05-22T05:30Z",
     "frozen_fact": "FF-REPORTS-W2-20260521",
     "plan_doc": "docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md",
@@ -2859,6 +2859,14 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/847",
         "note": "Implemented without Stepper extraction (3a) — wizard built directly; 3a unblocked separately"
+      },
+      {
+        "id": "4",
+        "title": "/reports list uplift - RLS-scoped DataTable grouped by scope + FilterBar chip filters + EmptyState",
+        "pr": "crm7#987",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/987",
+        "note": "Merged to crm7 development at 78ce70e2. Replaces the legacy hardcoded reports dashboard catalogue with live report_templates rows visible through RLS, grouped by platform/enterprise/tenant/user, using canonical FilterBar, DataTable, EmptyState, and TechnicalDetails primitives plus focused Vitest coverage."
       },
       {
         "id": "6.1",
@@ -2929,24 +2937,14 @@
       {
         "id": "3a",
         "title": "extract Stepper / StepIndicator / StepPanel + keyboard-nav hook from @bsuite/schema-builder; publish patch + bump consumer pin",
-        "status": "pending",
-        "blocks": [
-          "4"
-        ]
-      },
-      {
-        "id": "4",
-        "title": "/reports list uplift - TanStack DataTable grouped by scope + FilterBar with chip filters + EmptyState",
-        "status": "pending",
-        "blocked_by": [
-          "3a"
-        ]
+        "status": "deferred",
+        "note": "No longer blocks Task 4: CRM7 development already has local canonical StepperShell, FilterBar, DataTable, and EmptyState primitives. Keep this as a future @bsuite/schema-builder reuse/publish guardrail."
       }
     ],
     "operator_locked_decisions": [
       "Option A (pure schema-driven paramSchema), NOT Option B (fixed base + extras)",
       "4-scope hierarchy: platform / enterprise / tenant / user with parent_tenant_id inheritance for enterprise sub-orgs",
-      "Schema Builder stepper primitives EXTRACTED + reused (not cloned) in Task 3a",
+      "Schema Builder stepper primitive extraction remains a future reuse/publish guardrail; CRM7 Task 4 used existing local canonical uplift primitives and is no longer blocked by Task 3a",
       "report_shares table for per-recipient sharing of scope=user rows DEFERRED but doors-open (additive RLS clause in migration top-of-file comment)",
       "This work cycle targets development only - no main merges; preview verification on d.crm.crm7.app per ADR-0004"
     ],
