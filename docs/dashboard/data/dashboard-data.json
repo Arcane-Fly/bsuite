@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "bb02922",
+      "main_sha": "32b4645",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "2c11a58",
+      "main_sha": "2d818716",
       "vercel": "success"
     },
     {
@@ -221,10 +221,10 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; WS-5 exact mandatory template seed closed in crm7#998, tenant-scoped runnable report RPCs closed in crm7#999, generic runner/export guardrails closed in crm7#1005, per-user report view preferences closed in crm7#1006, and queued large CSV delivery closed in crm7#1007; WS-6 full NAT formatter suite verified from crm7#770, edge validation/source-query hardening landed in crm7#1002, WA/NSW/QLD/SA state TSV extracts landed in crm7#1003, and lodgement package guardrails landed in crm7#1004; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000; apprentice_rate_configs migration/seed/RLS provenance closed in crm7#1001); WS-1 package publish blocked",
+      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948 and Xero payroll adapter schema-contract coverage closed in crm7#1009; WS-5 exact mandatory template seed closed in crm7#998, tenant-scoped runnable report RPCs closed in crm7#999, generic runner/export guardrails closed in crm7#1005, per-user report view preferences closed in crm7#1006, and queued large CSV delivery closed in crm7#1007; WS-6 full NAT formatter suite verified from crm7#770, edge validation/source-query hardening landed in crm7#1002, WA/NSW/QLD/SA state TSV extracts landed in crm7#1003, and lodgement package guardrails landed in crm7#1004; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000; apprentice_rate_configs migration/seed/RLS provenance closed in crm7#1001); WS-1 package publish blocked",
       "owner": "crm7 + R80.3",
-      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. WS-5 exact template seed/backends are closed via crm7#998/#999, runner/export guardrails are closed via crm7#1005, per-user report view preferences are closed via crm7#1006, and queued large CSV delivery is closed via crm7#1007. WS-6 full NAT formatter coverage is verified via crm7#770 plus 2026-06-04 formatter tests/typecheck, edge validation/source-query hardening is closed via crm7#1002, WA/NSW/QLD/SA state TSV extract generation is closed via crm7#1003, and lodgement package guardrails/STA eligibility filtering are closed via crm7#1004. WS-8 SECDEF search-path/grant hardening is closed via crm7#1000, and apprentice_rate_configs migration/seed/RLS provenance is closed via crm7#1001; next unblocked items: continue agency-certified WS-6 STA conformance fixtures and continue WS-5 AG Grid/native Excel decisions plus PDF/chart polish.",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1007",
+      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. WS-4 state vocabulary alignment is closed via crm7#948 and Xero payroll adapter schema-contract coverage is closed via crm7#1009, replacing stale payroll_records aliases with generated Supabase type-backed live columns plus metadata-backed Xero employee/earnings-rate IDs. WS-5 exact template seed/backends are closed via crm7#998/#999, runner/export guardrails are closed via crm7#1005, per-user report view preferences are closed via crm7#1006, and queued large CSV delivery is closed via crm7#1007. WS-6 full NAT formatter coverage is verified via crm7#770 plus 2026-06-04 formatter tests/typecheck, edge validation/source-query hardening is closed via crm7#1002, WA/NSW/QLD/SA state TSV extract generation is closed via crm7#1003, and lodgement package guardrails/STA eligibility filtering are closed via crm7#1004. WS-8 SECDEF search-path/grant hardening is closed via crm7#1000, and apprentice_rate_configs migration/seed/RLS provenance is closed via crm7#1001; next unblocked items: concrete Xero Payroll AU client/export sequencing, agency-certified WS-6 STA conformance fixtures, and WS-5 AG Grid/native Excel decisions plus PDF/chart polish.",
+      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1009",
       "severity": "P0",
       "category": "Billing"
     },
