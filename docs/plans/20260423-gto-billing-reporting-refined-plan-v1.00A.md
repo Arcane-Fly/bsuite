@@ -13,7 +13,7 @@ All 9 workstreams re-audited against live code state on branch `origin/developme
 
 | WS | Title | Status | Evidence |
 |---|---|---|---|
-| WS-1 | Calc Engine Convergence | 🟡 **PARTIAL — PUBLISH BLOCKED** | BUG-2/4/5 + ADR ✅; BUG-1 `/52` conversion is fixed and regression-locked in source `@bsuite/charge-calc@0.5.0`, but npm still serves 0.4.0 and publish is blocked by registry permissions (`bsuite#1408`). |
+| WS-1 | Calc Engine Convergence | 🟡 **PARTIAL — PUBLISH BLOCKED** | BUG-2/4/5 + ADR ✅; BUG-1 `/52` conversion is fixed and regression-locked in source `@bsuite/charge-calc@0.5.0`, but npm still serves 0.4.0 and publish is blocked by registry permissions (`bsuite#1408`). The missing `apprentice_rate_configs` forward migration was codified with 99 FY2025-26 seed rows and RLS/grant coverage via `crm7#1001`. |
 | WS-2 | MAPD Edge Function + snapshots | ✅ **DONE** | `crm7/supabase/functions/mapd-sync/index.ts` + migration `20260423110000_ws2_wage_calculation_snapshots.sql` + `crm7/src/services/wageSnapshotService.ts` |
 | WS-3 | Host Invoicing | ✅ **DONE** | Migration `20260423140000_ws3_invoices.sql`, `crm7/src/lib/pipelines/xeroInvoiceAdapter.ts` (idempotency keys L41/65/85), `crm7/src/lib/invoicing/renderInvoicePdf.ts`, subsidy-credit logic in `crm7/src/lib/billingEngine.ts` (+ test `billingEngine.subsidyCredit.test.ts`) |
 | WS-4 | Timesheet state machine + payroll | 🟡 **MOSTLY DONE — VOCAB ALIGNED** | The DB↔TS timesheet vocabulary divergence was closed via `crm7#948`. DB migration `20260423150000_ws4_timesheet_state_machine.sql` and CRM7 runtime types now share the canonical state vocabulary. XeroPayrollAdapter ✅ at `crm7/src/lib/pipelines/xeroPayrollAdapter.ts`; STP ADR restored under `crm7/docs/adr/`. Remaining WS-4 follow-on work is payroll/export depth, not state vocabulary alignment. |
@@ -23,9 +23,9 @@ All 9 workstreams re-audited against live code state on branch `origin/developme
 | WS-8 | RLS & Security Hardening | 🟡 **MOSTLY DONE** | Migration `20260423100000_ws8_org_members_gto_role_helpers.sql` with `org_members`, `gto_role` enum, and `is_gto_staff` / `get_user_role` / `get_user_host_employer_id` / `get_user_apprentice_id` `SECURITY DEFINER` helpers; `(SELECT auth.uid())` pattern used throughout new RLS. HF-4 anon-context pgTAP harness evidence landed via `crm7#949`; remaining noncanonical `SECURITY DEFINER` search paths and grants were normalized via `crm7#1000`. Extend harness coverage as new WS-4/WS-5/WS-6 tables and policies land. |
 | WS-9 | Portals (apprentice/host/field officer) | 🟡 **MOSTLY DONE, GATED** | `crm7/src/pages/portal/worker-portal.tsx`, `host-employer.tsx`, `host-reports.tsx`; `crm7/src/pages/field-officers/` tree. Routes gated behind `portal_pages` feature flag in `App.tsx:514-517`. **Depends on WS-4 DB↔TS fix** before full wiring |
 
-**Scorecard:** 3/9 fully DONE (WS-2, WS-3, WS-7) · 6/9 partial or mostly-done with gaps flagged (WS-1 package publish blocked; WS-4 alignment evidence already landed via `crm7#948`; WS-5 exact template seed closed via `crm7#998` and tenant-scoped runnable RPC backends closed via `crm7#999`; WS-6 full NAT formatter suite verified via `crm7#770` and 2026-06-04 test/typecheck evidence, with lodgement/state-export hardening still open; WS-8 pgTap harness closed via `crm7#949` and SECDEF search-path/grant normalization landed via `crm7#1000`; WS-9 gated + WS-4 dependent).
+**Scorecard:** 3/9 fully DONE (WS-2, WS-3, WS-7) · 6/9 partial or mostly-done with gaps flagged (WS-1 package publish still blocked, but `apprentice_rate_configs` migration/seed/RLS provenance is closed via `crm7#1001`; WS-4 alignment evidence already landed via `crm7#948`; WS-5 exact template seed closed via `crm7#998` and tenant-scoped runnable RPC backends closed via `crm7#999`; WS-6 full NAT formatter suite verified via `crm7#770` and 2026-06-04 test/typecheck evidence, with lodgement/state-export hardening still open; WS-8 pgTap harness closed via `crm7#949` and SECDEF search-path/grant normalization landed via `crm7#1000`; WS-9 gated + WS-4 dependent).
 
-### Hard findings (issues to file)
+### Hard findings and closure notes
 
 **HF-1: Publish-blocked BUG-1 release drift for `@bsuite/charge-calc`** (CRITICAL — impact latent, materialises on `annum` payment_frequency)
 
@@ -45,7 +45,7 @@ The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on
 - TS type `TimesheetState` in `crm7/src/types/entities.ts:413` (7 DIFFERENT states): `draft`, `submitted`, `approved`, `disputed`, `processed`, `payroll_locked`, `paid`.
 - `crm7/src/lib/timesheetWorkflow.ts` implements the TS vocabulary; the SQL RLS policies rely on the DB vocabulary. **Zero overlap between mid-flow states**: TS has `disputed/processed/payroll_locked/paid`; DB has `pending_host_approval/pending_gto_review/exported/archived`.
 - Impact: any timesheet transitioned via `timesheetWorkflow.ts` will write a `state` value not present in the DB enum → insert will fail OR (if enum was altered silently) bypass the RLS-enforced role transitions defined in WS-4 spec.
-- Action: file issue to choose the canonical vocabulary and unify — either update TS to match plan/DB, or migrate DB to TS vocabulary and update the plan.
+- 2026-06-04 evidence: DB↔TS vocabulary alignment landed via `crm7#948`; remaining WS-4 work is payroll/export depth, not state vocabulary unification.
 
 **HF-3: WS-1 ADR-001 and WS-4 STP-path ADR archived, not canonical**
 
@@ -56,12 +56,12 @@ The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on
 **HF-4: WS-8 pgTap test harness missing**
 
 - Constraint C10 mandates RLS policies be verified via anon-key test harness (not SQL editor / service role).
-- No `pgtap` or `pg-tap` artefacts found anywhere in `crm7/`.
-- Action: add pgTap workflow and policy tests for the 5 new WS-8 helpers + RLS on `org_members`, `wage_calculation_snapshots`, `timesheets`, `pay_runs`, `payroll_records`.
+- Original audit found no `pgtap` or `pg-tap` artefacts in `crm7/`.
+- 2026-06-04 evidence: anon-context pgTAP harness landed via `crm7#949`; remaining WS-8 work is incremental coverage as new WS-4/WS-5/WS-6 tables and policies land.
 
 ### Apprentice_rate_configs table — migration provenance note
 
-The WS-2 handoff claimed `apprentice_rate_configs` was seeded with 99 rows via Supabase MCP. No migration file exists in `crm7/supabase/migrations/` for the table itself; only `20260423130000_ws8_arc_anon_public_read.sql` (a follow-on RLS patch). If the table was applied out-of-band via MCP, it should be codified as a backfilled migration so local/CI provisioning stays reproducible. Action: file issue to add the missing `CREATE TABLE apprentice_rate_configs` migration.
+The WS-2 handoff claimed `apprentice_rate_configs` was seeded with 99 rows via Supabase MCP. That out-of-band state is now codified by `crm7/supabase/migrations/20260423125000_ws2_apprentice_rate_configs.sql` (`crm7#1001`): table shape, tenant/public RLS, least-privilege grants, active-public uniqueness, updated-at trigger, and 99 FY2025-26 public seed rows compile before the follow-on `20260423130000_ws8_arc_anon_public_read.sql` patch.
 
 *Evidence refresh produced 2026-05-12 per AGENTS.md §1 zero-defer. Auditor: parent-agent (live-code verified, no deferral). Scope: 9 workstreams + archived ADRs + published npm package content.*
 
