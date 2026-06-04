@@ -28,12 +28,12 @@
 | Task 6.3 | Merged | [crm7#958](https://github.com/GaryOcean428/crm7/pull/958) | `report_pay_item_group_hours` RPC backed by `timesheets.entries[*].work_type -> timesheet_groups -> pay_item_groups`, with empty-filter handling, duplicate-mapping protection, and pgTAP coverage. `rate`/`amount` remain null until the pay-items rate registry lands. |
 | Task 6.4 | Merged | [crm7#959](https://github.com/GaryOcean428/crm7/pull/959) | `report_pay_items_by_employee` RPC backed by real `invoice_line_items` + `invoices`, preserving billing metadata when present, excluding host-level unassigned invoice lines, and adding pgTAP coverage for RLS, filters, pagination, invalid params, and source amount parity. |
 | Task 6.5 | Merged | [crm7#960](https://github.com/GaryOcean428/crm7/pull/960) | `report_consultant_kpi` RPC backed by assigned `people`, `timesheets`, `invoices`, and `invoice_line_items`, gated by selected active tenant plus `org_members.gto_role='field_officer'`. Adds hidden `tenantParam` runner injection and pgTAP coverage for grants, template contract, role gates, tenant isolation, invalid params, and source revenue parity. |
-| Task 6.6 | Blocked | [bsuite#1237](https://github.com/GaryOcean428/bsuite/issues/1237) | Remaining CoInvest LSL RPC still depends on `#573.7` / authority-accrual schema decisions. Do not duplicate an LSL accrual source. |
+| Task 6.6 | Merged | [crm7#985](https://github.com/GaryOcean428/crm7/pull/985) | `report_coinvest_lsl` RPC backed by CRM7's existing `leave_balances.leave_type='long_service'` snapshots, with `COINVEST_LSL` pay item defaults, per-row `custom_fields` overrides, active owner/admin or `org_members.gto_role='gto_admin'` gating, and pgTAP coverage for grants, template contract, tenant isolation, filters, pagination, role denial, and invalid params. |
 | Task 7 | Pending | N/A | Report delivery reliability: timezone, retry, and error metadata. |
 | Task 8 | Merged | [crm7#844](https://github.com/GaryOcean428/crm7/pull/844) | 20-case Playwright scope matrix. |
 | Task 9 | Pending | N/A | Dashboard and outstanding-work linking. |
 
-**Latest development evidence:** crm7 `development` includes [crm7#960](https://github.com/GaryOcean428/crm7/pull/960) at `6e95a5ea`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
+**Latest development evidence:** crm7 `development` includes [crm7#985](https://github.com/GaryOcean428/crm7/pull/985) at `12390009`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
 
 ---
 
