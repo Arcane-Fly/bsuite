@@ -31,7 +31,7 @@
 | Task 6.6 | Merged | [crm7#985](https://github.com/GaryOcean428/crm7/pull/985) | `report_coinvest_lsl` RPC backed by CRM7's existing `leave_balances.leave_type='long_service'` snapshots, with `COINVEST_LSL` pay item defaults, per-row `custom_fields` overrides, active owner/admin or `org_members.gto_role='gto_admin'` gating, and pgTAP coverage for grants, template contract, tenant isolation, filters, pagination, role denial, and invalid params. |
 | Task 7 | Merged | [crm7#986](https://github.com/GaryOcean428/crm7/pull/986) | Report delivery reliability: `report_deliveries.timezone`, `retry_count`, and `last_attempt_at`; one delayed retry after failed attempts; timezone validation; pgTAP + Vitest coverage. |
 | Task 8 | Merged | [crm7#844](https://github.com/GaryOcean428/crm7/pull/844) | 20-case Playwright scope matrix. |
-| Task 9 | Pending | N/A | Dashboard and outstanding-work linking. |
+| Task 9 | Merged | [bsuite#1395](https://github.com/GaryOcean428/bsuite/pull/1395) | Dashboard `reports_w2_status` updated through Task 7, `docs/OUTSTANDING.md` linked, and the original reports parity spec now points to this implementation ledger as the active tracker. |
 
 **Latest development evidence:** crm7 `development` includes [crm7#986](https://github.com/GaryOcean428/crm7/pull/986) at `e3751647`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
 

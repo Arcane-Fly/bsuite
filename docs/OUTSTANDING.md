@@ -73,6 +73,15 @@ Index plan integrating Codehouse Workforce-One parity tracking with full Platfor
 | 5 | ~~6 submodule `OUTSTANDING.md` + `docs/plans/STATUS.md` link rows (WS-A3)~~ — Per-submodule OUTSTANDING files removed entirely per bsuite#488 on 2026-05-19; the parent merged backlog is the SSoT. STATUS.md citations remain in scope but are now decoupled from the OUTSTANDING-link sweep. | ✅ OUTSTANDING-side complete |
 | 6 | Red-team review across all 9 portal sub-plans before flipping plan W→A | multi-agent-red-team-planning |
 
+### `plans/20260521-reports-w2-uplift-implementation-v1.00W.md` (added 2026-05-21)
+
+Reports W2 uplift execution ledger for Codehouse parity reports. Tasks 6.1-6.6, Task 7, and Task 9 are merged on `development`; remaining work is the deferred Task 3a/4 report-list/stepper uplift and follow-on scheduling UI.
+
+| # | Remaining action | Owner |
+|---|------------------|-------|
+| 1 | ~~Complete Task 9 dashboard/outstanding-work linking and evidence URL refresh~~ | ✅ Complete via bsuite#1395 |
+| 2 | Keep follow-on scheduling UI/report-list uplift linked to the active backlog rather than reopening Task 7 backend reliability | CRM7 implementer |
+
 ### `20260317-bsuite-gap-report-v2.00W.md`
 
 Living gap register — supersedes v1. Accumulates sprint findings.
