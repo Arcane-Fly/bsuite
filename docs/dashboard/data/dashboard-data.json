@@ -2093,6 +2093,21 @@
         ],
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/990",
         "notes": "CRM7 development now adds a live MYOB/Astute payroll credential card to Settings > External Integrations using React Hook Form + Zod. It writes secrets only through the Vault-backed edge function from crm7#989 and reads only redacted connection metadata. bsuite#570 remains open for STP path resolution against ADR 0004 and EOFY finalisation."
+      },
+      {
+        "domain": "L_export_adapters_pay",
+        "issue": 570,
+        "phase": "PR-D STP/EOFY provider status tracking",
+        "status": "partial_merged",
+        "implemented_rows": [
+          99,
+          100
+        ],
+        "implemented_inventory_items": [
+          "bsuite-inventory.md §5 item 6"
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/991",
+        "notes": "CRM7 development now resolves the STP path against ADR 0004 by tracking provider-passthrough STP status and EOFY finalisation state on canonical payroll_runs plus legacy pay_runs, backfilling submitted state from existing provider references, and surfacing STP/EOFY badges on the payroll hub. Direct ATO lodgement is not implemented because Xero remains the accepted STP system of record unless ADR 0004 is superseded."
       }
     ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",
