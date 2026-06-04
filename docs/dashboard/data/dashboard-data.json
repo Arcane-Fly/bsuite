@@ -1370,8 +1370,8 @@
             "description": "bsuite#515 tracks 47 anon-executable SECURITY DEFINER functions; need to confirm none of the auth-flow critical ones (handle_new_user, etc.) are in that bucket",
             "apps": [],
             "severity": "P2",
-            "evidence": "bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md Track A; crm7#993 merged a SECURITY DEFINER search_path CI guardrail and pinned public.enqueue_host_monthly_pack_deliveries() to public, pg_temp.",
-            "progress_evidence_url": "https://github.com/GaryOcean428/crm7/pull/993",
+            "evidence": "bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md Track A; crm7#993 merged a SECURITY DEFINER search_path CI guardrail and pinned public.enqueue_host_monthly_pack_deliveries() to public, pg_temp; crm7#996 normalized 25 legacy SECURITY DEFINER helpers from search_path=public to search_path=public, pg_temp with a pg_proc self-check.",
+            "progress_evidence_url": "https://github.com/GaryOcean428/crm7/pull/996",
             "remediation": "Remaining live-DB confirmation: SELECT proname, prosecdef, proacl, proconfig FROM pg_proc WHERE proname IN ('handle_new_user','resolve_bs_oauth_subject_portal_role','branding_json_for_tenant'); confirm auth-critical functions have least-privilege grants and pinned search_path where SECURITY DEFINER remains required."
           }
         ]
