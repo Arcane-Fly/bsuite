@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-04",
-    "last_refreshed": "2026-06-04T16:06:56+08:00",
-    "last_refreshed_by": "copilot-cli CRM7 payroll credential settings UI slice"
+    "last_refreshed": "2026-06-04T10:26:35Z",
+    "last_refreshed_by": "copilot-cli CRM7 SECURITY DEFINER search-path guardrail"
   },
   "summary": {
     "external_total": 30,
@@ -81,7 +81,7 @@
     },
     "open_prs": 0,
     "last_refreshed_by": "copilot-cli",
-    "last_refreshed_at": "2026-06-04T04:40:19Z"
+    "last_refreshed_at": "2026-06-04T10:26:35Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "f5adaa4",
+      "main_sha": "3bc2889",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "e3751647",
+      "main_sha": "0fed59ae",
       "vercel": "success"
     },
     {
@@ -1370,8 +1370,9 @@
             "description": "bsuite#515 tracks 47 anon-executable SECURITY DEFINER functions; need to confirm none of the auth-flow critical ones (handle_new_user, etc.) are in that bucket",
             "apps": [],
             "severity": "P2",
-            "evidence": "bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md Track A",
-            "remediation": "Operator: SELECT proname, prosecdef, proacl FROM pg_proc WHERE proname IN ('handle_new_user','resolve_bs_oauth_subject_portal_role','branding_json_for_tenant')"
+            "evidence": "bsuite/docs/20260506-cross-app-auth-bug-rca-v1.00A.md Track A; crm7#993 merged a SECURITY DEFINER search_path CI guardrail and pinned public.enqueue_host_monthly_pack_deliveries() to public, pg_temp.",
+            "progress_evidence_url": "https://github.com/GaryOcean428/crm7/pull/993",
+            "remediation": "Remaining live-DB confirmation: SELECT proname, prosecdef, proacl, proconfig FROM pg_proc WHERE proname IN ('handle_new_user','resolve_bs_oauth_subject_portal_role','branding_json_for_tenant'); confirm auth-critical functions have least-privilege grants and pinned search_path where SECURITY DEFINER remains required."
           }
         ]
       },
