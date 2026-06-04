@@ -72,7 +72,7 @@ Index plan integrating Codehouse Workforce-One parity tracking with full Platfor
 | 4 | Doc-drift sweep — 17 items from `bsuite-inventory.md` (WS-F) | Cascade |
 | 5 | ~~6 submodule `OUTSTANDING.md` + `docs/plans/STATUS.md` link rows (WS-A3)~~ — Per-submodule OUTSTANDING files removed entirely per bsuite#488 on 2026-05-19; the parent merged backlog is the SSoT. STATUS.md citations remain in scope but are now decoupled from the OUTSTANDING-link sweep. | ✅ OUTSTANDING-side complete |
 | 6 | Red-team review across all 9 portal sub-plans before flipping plan W→A | multi-agent-red-team-planning |
-| 7 | Continue bsuite#570 after the adapter-export slice — crm7#988 merged MYOB/Astute export adapters; remaining work is tenant credential settings UI, STP submit edge function, and EOFY finalisation flow. | CRM7 implementer |
+| 7 | Continue bsuite#570 after the adapter/credential slices — crm7#988 merged MYOB/Astute export adapters and crm7#989 merged Vault-backed provider credential storage plus Astute DB provider support; remaining work is the settings UI, STP path resolution against ADR 0004, and EOFY finalisation flow. | CRM7 implementer |
 
 ### `plans/20260521-reports-w2-uplift-implementation-v1.00W.md` (added 2026-05-21)
 
