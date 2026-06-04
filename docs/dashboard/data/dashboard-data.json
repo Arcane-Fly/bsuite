@@ -16,7 +16,7 @@
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-04",
     "last_refreshed": "2026-06-04T07:56:26+08:00",
-    "last_refreshed_by": "copilot-cli CRM7 tenants permissive SELECT consolidation"
+    "last_refreshed_by": "copilot-cli CRM7 super_admin_action_audit permissive SELECT consolidation"
   },
   "summary": {
     "external_total": 30,
@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Development PR queue is clear after CRM7#972 merged to development. Counts verified with gh on 2026-06-04 before this dashboard PR was opened.",
+    "open_prs_note": "Development PR queue is clear after CRM7#973 merged to development. Counts verified with gh on 2026-06-04 before this dashboard PR was opened.",
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
@@ -86,7 +86,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "2e047cf",
+      "main_sha": "72f3543",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +94,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "92da59b1",
+      "main_sha": "5735d5f9",
       "vercel": "success"
     },
     {
