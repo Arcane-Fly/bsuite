@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Development PR queue is clear after CRM7#973 merged to development. Counts verified with gh on 2026-06-04 before this dashboard PR was opened.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after CRM7 #974 and BSuite #1381 merges; no open development PRs remained.",
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
@@ -78,7 +78,10 @@
       "braden": 0,
       "R80.3": 0,
       "throughput": 0
-    }
+    },
+    "open_prs": 0,
+    "last_refreshed_by": "copilot-cli",
+    "last_refreshed_at": "2026-06-04T01:45:00Z"
   },
   "repos": [
     {
@@ -86,7 +89,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "72f3543",
+      "main_sha": "8dd9b7f",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -94,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "5735d5f9",
+      "main_sha": "daf561ae",
       "vercel": "success"
     },
     {
