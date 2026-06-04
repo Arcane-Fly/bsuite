@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after CRM7 #976 and BSuite #1383 merges; no open development PRs remained.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after CRM7 #977 and BSuite #1384 merges; no open development PRs remained.",
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
@@ -81,7 +81,7 @@
     },
     "open_prs": 0,
     "last_refreshed_by": "copilot-cli",
-    "last_refreshed_at": "2026-06-04T02:15:00Z"
+    "last_refreshed_at": "2026-06-04T02:30:00Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "e15cda1",
+      "main_sha": "b422d6f",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "655bc099",
+      "main_sha": "a3d054b2",
       "vercel": "success"
     },
     {
