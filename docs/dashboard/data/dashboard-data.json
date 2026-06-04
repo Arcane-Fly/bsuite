@@ -2807,7 +2807,7 @@
     "note": "PR count to zero across all 7 repos. Issue count slightly up due to consolidated tracking issues filed for codebuff-lane absorption (bsuite#933-#940 + #941, conduit#256, crm7#762/#764, R80.3#248) — net structural cleanup positive."
   },
   "reports_w2_status": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "added_at": "2026-05-22T05:30Z",
     "frozen_fact": "FF-REPORTS-W2-20260521",
     "plan_doc": "docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md",
@@ -2899,6 +2899,22 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/960",
         "note": "Merged to crm7 development at 6e95a5ea. Implements the W2 consultant KPI report from real assigned people, timesheets, invoices, and invoice_line_items, validates the selected active tenant, gates exact-tenant field_officer access via org_members.gto_role, injects hidden p_tenant_id through template tenantParam metadata, and adds pgTAP coverage for grants, template contract, role gates, tenant isolation, invalid params, and source revenue parity."
+      },
+      {
+        "id": "6.6",
+        "title": "report_coinvest_lsl RPC using leave_balances.long_service snapshots",
+        "pr": "crm7#985",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/985",
+        "note": "Merged to crm7 development at 12390009. Implements the W2 CoInvest LSL report from existing leave_balances rows, with COINVEST_LSL defaults, per-row custom field overrides, selected employee filters, pagination, role gating, and pgTAP coverage."
+      },
+      {
+        "id": "7",
+        "title": "report_deliveries reliability - timezone metadata, retry_count, last_attempt_at, and one delayed retry",
+        "pr": "crm7#986",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/986",
+        "note": "Merged to crm7 development at e3751647. Adds report delivery timezone/retry metadata, a one-retry policy with a 5-minute delay, timezone validation for queued deliveries, and pgTAP + Vitest coverage. Schedule next-fire UI remains a follow-on because CRM7 currently has only a pg_cron heartbeat, not persisted schedule definitions."
       }
     ],
     "tasks_deferred": [
@@ -2919,26 +2935,11 @@
         ]
       },
       {
-        "id": "6",
-        "title": "7 underlying RPCs (report_timesheet_summary etc.) - one PR per RPC, SECURITY INVOKER + auth_tenant_id() scoping + total_count carrier on row 0",
+        "id": "9",
+        "title": "Documentation + dashboard/outstanding-work linking for the Reports W2 uplift",
         "status": "in_progress",
-        "blocked_by": [
-          "bsuite#1237 schema gate for remaining CoInvest LSL RPC"
-        ],
-        "completed_subtasks": [
-          "6.1",
-          "6.2",
-          "6.3",
-          "6.4",
-          "6.5"
-        ],
-        "note": "Tasks 6.1-6.5 shipped via crm7#956, crm7#957, crm7#958, crm7#959, and crm7#960; only the schema-gated CoInvest LSL RPC remains under bsuite#1237."
-      },
-      {
-        "id": "7",
-        "title": "report_deliveries reliability - timezone + retry_count + last_attempt_at + error_message columns; edge function honors IANA timezone + 1-retry policy",
-        "status": "pending",
-        "blocked_by": []
+        "blocked_by": [],
+        "note": "Dashboard data now tracks Tasks 6.6 and 7; this item remains open until the companion Task 9 docs PR lands and the dashboard evidence URL points at that PR."
       }
     ],
     "operator_locked_decisions": [
@@ -2956,7 +2957,9 @@
       "Task 6.2 shipped via crm7#957: report_hours_by_work_type aggregates existing timesheets.entries[*].work_type data with canonical CRM7 options, avoiding a top-level timesheets.work_type schema addition. Pay-item-group hours, pay-items-by-employee, and consultant KPI have since shipped in Tasks 6.3, 6.4, and 6.5; remaining CoInvest LSL RPC continues under bsuite#1237.",
       "Task 6.3 shipped via crm7#958: report_pay_item_group_hours groups entry work-type hours through CRM7-owned timesheet_groups -> pay_item_groups mappings, treats blank optional filters as unfiltered, prevents duplicate mapping double-counts, and keeps rate/amount null until the pay-items rate registry exists. Pay-items-by-employee and consultant KPI have since shipped in Tasks 6.4 and 6.5; remaining CoInvest LSL RPC continues under bsuite#1237.",
       "Task 6.4 shipped via crm7#959: report_pay_items_by_employee reads real generated invoices + invoice_line_items, uses billing metadata for pay item code/name/type when present, filters to employee-backed lines only, and asserts source amount parity plus RLS/filter/pagination behavior in pgTAP. Consultant KPI has since shipped in Task 6.5; remaining CoInvest LSL RPC continues under bsuite#1237.",
-      "Task 6.5 shipped via crm7#960: report_consultant_kpi reads assigned people, timesheets, invoices, and invoice_line_items for source-backed weekly KPI cards, validates the selected active tenant, gates exact-tenant field_officer access via org_members.gto_role, and uses template tenantParam metadata so p_tenant_id is injected by the runner rather than exposed as a user filter. Remaining CoInvest LSL RPC continues under bsuite#1237."
+      "Task 6.5 shipped via crm7#960: report_consultant_kpi reads assigned people, timesheets, invoices, and invoice_line_items for source-backed weekly KPI cards, validates the selected active tenant, gates exact-tenant field_officer access via org_members.gto_role, and uses template tenantParam metadata so p_tenant_id is injected by the runner rather than exposed as a user filter.",
+      "Task 6.6 shipped via crm7#985: report_coinvest_lsl reads CRM7's canonical leave_balances.long_service snapshots, defaults pay item code to COINVEST_LSL, supports row-level custom_fields overrides, and is gated to tenant owner/admin or gto_admin.",
+      "Task 7 shipped via crm7#986: report_deliveries now carries timezone, retry_count, and last_attempt_at metadata; failed deliveries requeue once after a 5-minute delay before final failed state. Persisted schedule-definition UI remains a follow-on because CRM7 currently has a heartbeat job, not a schedule table."
     ]
   }
 }
