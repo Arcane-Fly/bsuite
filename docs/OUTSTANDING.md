@@ -66,12 +66,13 @@ Index plan integrating Codehouse Workforce-One parity tracking with full Platfor
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
-| 1 | File 12 grouped GitHub issues for the 35 parity gaps (WS-B) | Issue-filer subagent |
-| 2 | Dashboard JSON additive extension — `parity_status`, `feature_360_status`, `portal_coverage` (WS-C, post PR #535) | Dashboard subagent |
+| 1 | ~~File grouped GitHub issues for the Codehouse parity gaps (WS-B)~~ — Filed as bsuite#567–#579; only #570 and #572 remain open as of 2026-06-04. | ✅ Complete |
+| 2 | ~~Dashboard JSON additive extension — `parity_status`, `feature_360_status`, `portal_coverage` (WS-C, post PR #535)~~ — Live in `docs/dashboard/data/dashboard-data.json`; #570 adapter-export progress added via crm7#988. | ✅ Complete |
 | 3 | Ship `/dev/feature-builder` route in BSU per spec (WS-E) | BSU / Claude Code |
 | 4 | Doc-drift sweep — 17 items from `bsuite-inventory.md` (WS-F) | Cascade |
 | 5 | ~~6 submodule `OUTSTANDING.md` + `docs/plans/STATUS.md` link rows (WS-A3)~~ — Per-submodule OUTSTANDING files removed entirely per bsuite#488 on 2026-05-19; the parent merged backlog is the SSoT. STATUS.md citations remain in scope but are now decoupled from the OUTSTANDING-link sweep. | ✅ OUTSTANDING-side complete |
 | 6 | Red-team review across all 9 portal sub-plans before flipping plan W→A | multi-agent-red-team-planning |
+| 7 | Continue bsuite#570 after the adapter-export slice — crm7#988 merged MYOB/Astute export adapters; remaining work is tenant credential settings UI, STP submit edge function, and EOFY finalisation flow. | CRM7 implementer |
 
 ### `plans/20260521-reports-w2-uplift-implementation-v1.00W.md` (added 2026-05-21)
 
