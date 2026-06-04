@@ -2971,7 +2971,7 @@
         "pr": "crm7#1007",
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1007",
-        "note": "Merged to crm7 development at 35a35d4d. /reports/[key] now queues over-50,000-row CSV deliveries through the report-delivery edge function using the caller bearer token; the edge path rejects non-RPC/host-pack/cross-tenant template requests, fetches report pages through a user-scoped anon client, strips internal params before RPC calls, fails user-scoped retries terminally, caps delivery rows, emits BOM/header-labelled CSV, and sanitizes formula-leading values including CR/LF fragments."
+        "note": "Merged to crm7 development at 35a35d4d. /reports/[key] now queues over-50,000-row CSV deliveries through the report-delivery edge function using the caller bearer token; the edge path rejects non-RPC/host-pack/cross-tenant template requests, fetches report pages through a user-scoped anon client, strips internal params before RPC calls, fails user-scoped retries terminally, caps delivery rows, emits BOM/header-labelled CSV, and sanitizes formula-leading values including CR/LF fragments. Follow-up crm7#1008 renamed the edge function user-scoped client env var to SUPABASE_PUBLISHABLE_KEY for canonical secret naming."
       },
       {
         "id": "3b",
@@ -3092,7 +3092,8 @@
       "Task 2.1 shipped via crm7#1005: generic /reports/[key] now executes view-backed and RPC-backed templates through reportTemplateRunnerService, exposes bounded full-result CSV/XLSX exports, blocks stale-filter/template-switch export bugs, and requires deterministic orderBy metadata for multi-page view full exports.",
       "Task 2.2 shipped via crm7#1006: generic /reports/[key] now persists personal report view preferences through saved_views, applies saved column order/visibility and page-local grouping to rendered tables, scopes preference cache entries by template/tenant/user, serializes saves to prevent stale or cross-template writes, and exports the visible ordered columns for page/full CSV/XLSX.",
       "Task 9 ships via bsuite#1395: reports_w2_status is updated through Task 7, docs/OUTSTANDING.md links the W2 implementation ledger, and the original reports parity spec points to the W2 plan for active implementation tracking.",
-      "Task 2.3 shipped via crm7#1007: generic /reports/[key] now queues large over-cap CSV deliveries through report-delivery with the caller bearer token, tenant/template binding, RPC+tenantParam eligibility checks, user-scoped paged RPC fetches, terminal user-scoped failures, internal-param stripping, row caps, BOM/header-labelled CSV output, and formula-injection guards including CR/LF fragment handling."
+      "Task 2.3 shipped via crm7#1007: generic /reports/[key] now queues large over-cap CSV deliveries through report-delivery with the caller bearer token, tenant/template binding, RPC+tenantParam eligibility checks, user-scoped paged RPC fetches, terminal user-scoped failures, internal-param stripping, row caps, BOM/header-labelled CSV output, and formula-injection guards including CR/LF fragment handling.",
+      "Follow-up crm7#1008 renamed report-delivery user-scoped edge client configuration to SUPABASE_PUBLISHABLE_KEY, clearing the parent secret-naming drift guard for the crm7#1007 submodule pointer."
     ]
   }
 }
