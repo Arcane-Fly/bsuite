@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-04",
-    "last_refreshed": "2026-06-04T10:34:32Z",
-    "last_refreshed_by": "copilot-cli BSU OAuth contract dashboard cleanup"
+    "last_refreshed": "2026-06-04T11:07:06Z",
+    "last_refreshed_by": "copilot-cli CRM7 payroll provider acknowledgement evidence"
   },
   "summary": {
     "external_total": 30,
@@ -81,7 +81,7 @@
     },
     "open_prs": 0,
     "last_refreshed_by": "copilot-cli",
-    "last_refreshed_at": "2026-06-04T10:34:32Z"
+    "last_refreshed_at": "2026-06-04T11:07:06Z"
   },
   "repos": [
     {
@@ -1842,7 +1842,7 @@
         "Unblocks the operator branch-protection wiring (Q1) — adding require_code_owner_reviews=true + adding oauth-contract to required_status_checks now becomes a meaningful gate, since every consumer has the test"
       ]
     },
-    "updated_at": "2026-06-04T10:34:32Z",
+    "updated_at": "2026-06-04T11:07:06Z",
     "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/pull/533",
     "resolved_items": [
       {
@@ -2120,6 +2120,20 @@
         ],
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/992",
         "notes": "CRM7 development now adds an EOFY provider finalisation confirmation flow on the payroll hub. Operators see provider, affected employee count, pay period, and total gross before recording a provider handoff; the update is guarded by provider/status/STP eligibility, exact EOFY status compare-and-swap, and returned-row verification so RLS/zero-row/stale updates fail. Direct ATO lodgement remains intentionally out of scope under ADR 0004."
+      },
+      {
+        "domain": "L_export_adapters_pay",
+        "issue": 570,
+        "phase": "PR-F EOFY provider acknowledgement tracking",
+        "status": "partial_merged",
+        "implemented_rows": [
+          100
+        ],
+        "implemented_inventory_items": [
+          "bsuite-inventory.md §5 item 6"
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/994",
+        "notes": "CRM7 development now records explicit EOFY provider acknowledgement/rejection metadata after a provider handoff. Canonical payroll_runs and legacy pay_runs carry acknowledgement status, timestamp, actor, and optional provider message fields; the payroll hub surfaces provider-ack badges and accepted/rejected actions guarded by submitted EOFY state, acknowledgement compare-and-swap, authenticated actor capture, and returned-row verification. Direct ATO lodgement remains intentionally out of scope under ADR 0004 unless superseded."
       }
     ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",
