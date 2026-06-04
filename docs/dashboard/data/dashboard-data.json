@@ -221,10 +221,10 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; WS-5 exact mandatory template seed closed in crm7#998, tenant-scoped runnable report RPCs closed in crm7#999, and generic runner/export guardrails closed in crm7#1005; WS-6 full NAT formatter suite verified from crm7#770, edge validation/source-query hardening landed in crm7#1002, WA/NSW/QLD/SA state TSV extracts landed in crm7#1003, and lodgement package guardrails landed in crm7#1004; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000; apprentice_rate_configs migration/seed/RLS provenance closed in crm7#1001); WS-1 package publish blocked",
+      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; WS-5 exact mandatory template seed closed in crm7#998, tenant-scoped runnable report RPCs closed in crm7#999, generic runner/export guardrails closed in crm7#1005, and per-user report view preferences closed in crm7#1006; WS-6 full NAT formatter suite verified from crm7#770, edge validation/source-query hardening landed in crm7#1002, WA/NSW/QLD/SA state TSV extracts landed in crm7#1003, and lodgement package guardrails landed in crm7#1004; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000; apprentice_rate_configs migration/seed/RLS provenance closed in crm7#1001); WS-1 package publish blocked",
       "owner": "crm7 + R80.3",
-      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. WS-5 exact template seed/backends are closed via crm7#998/#999, and runner/export guardrails are closed via crm7#1005. WS-6 full NAT formatter coverage is verified via crm7#770 plus 2026-06-04 formatter tests/typecheck, edge validation/source-query hardening is closed via crm7#1002, WA/NSW/QLD/SA state TSV extract generation is closed via crm7#1003, and lodgement package guardrails/STA eligibility filtering are closed via crm7#1004. WS-8 SECDEF search-path/grant hardening is closed via crm7#1000, and apprentice_rate_configs migration/seed/RLS provenance is closed via crm7#1001; next unblocked items: continue agency-certified WS-6 STA conformance fixtures and continue WS-5 column/grouping persistence plus >50k AG Grid/PDF/chart polish.",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1005",
+      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. WS-5 exact template seed/backends are closed via crm7#998/#999, runner/export guardrails are closed via crm7#1005, and per-user report view preferences are closed via crm7#1006. WS-6 full NAT formatter coverage is verified via crm7#770 plus 2026-06-04 formatter tests/typecheck, edge validation/source-query hardening is closed via crm7#1002, WA/NSW/QLD/SA state TSV extract generation is closed via crm7#1003, and lodgement package guardrails/STA eligibility filtering are closed via crm7#1004. WS-8 SECDEF search-path/grant hardening is closed via crm7#1000, and apprentice_rate_configs migration/seed/RLS provenance is closed via crm7#1001; next unblocked items: continue agency-certified WS-6 STA conformance fixtures and continue WS-5 >50k AG Grid/PDF/chart polish.",
+      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1006",
       "severity": "P0",
       "category": "Billing"
     },
@@ -2904,7 +2904,7 @@
     "note": "PR count to zero across all 7 repos. Issue count slightly up due to consolidated tracking issues filed for codebuff-lane absorption (bsuite#933-#940 + #941, conduit#256, crm7#762/#764, R80.3#248) — net structural cleanup positive."
   },
   "reports_w2_status": {
-    "schema_version": "1.3",
+    "schema_version": "1.4",
     "added_at": "2026-05-22T05:30Z",
     "frozen_fact": "FF-REPORTS-W2-20260521",
     "plan_doc": "docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md",
@@ -2949,6 +2949,14 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1005",
         "note": "Merged to crm7 development at 4d046850. Full exports are capped at 50,000 rows, use current schema-filtered params rather than stale debounced values, fail closed for unordered multi-page view templates, and seeded WS-5 view templates are backfilled with deterministic orderBy metadata."
+      },
+      {
+        "id": "2.2",
+        "title": "per-user report view preferences - saved column visibility/order, page-local grouping, tenant/user-scoped cache keys, serialized saves, and visible-column exports",
+        "pr": "crm7#1006",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1006",
+        "note": "Merged to crm7 development at 0e321ce. Reuses the existing saved_views ownership/RLS model instead of adding a duplicate preference table; report preference query keys include template, tenant, and user; rapid saves are serialized and controls are disabled while pending."
       },
       {
         "id": "8",
@@ -3074,6 +3082,7 @@
       "Task 7 shipped via crm7#986: report_deliveries now carries timezone, retry_count, and last_attempt_at metadata; failed deliveries requeue once after a 5-minute delay before final failed state. Persisted schedule-definition UI remains a follow-on because CRM7 currently has a heartbeat job, not a schedule table.",
       "Task 7.1 shipped via crm7#995: the /reports catalogue now surfaces report_deliveries reliability health from real RLS-visible data, including status, retry-used, timezone, trigger, last-attempt, and failure error metadata.",
       "Task 2.1 shipped via crm7#1005: generic /reports/[key] now executes view-backed and RPC-backed templates through reportTemplateRunnerService, exposes bounded full-result CSV/XLSX exports, blocks stale-filter/template-switch export bugs, and requires deterministic orderBy metadata for multi-page view full exports.",
+      "Task 2.2 shipped via crm7#1006: generic /reports/[key] now persists personal report view preferences through saved_views, applies saved column order/visibility and page-local grouping to rendered tables, scopes preference cache entries by template/tenant/user, serializes saves to prevent stale or cross-template writes, and exports the visible ordered columns for page/full CSV/XLSX.",
       "Task 9 ships via bsuite#1395: reports_w2_status is updated through Task 7, docs/OUTSTANDING.md links the W2 implementation ledger, and the original reports parity spec points to the W2 plan for active implementation tracking."
     ]
   }
