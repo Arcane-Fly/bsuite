@@ -19,9 +19,9 @@
 | Task 1 | Merged | [crm7#840](https://github.com/GaryOcean428/crm7/pull/840) | `reportTemplateRunnerService` foundation refactor. |
 | Task 1.5 | Merged | [crm7#841](https://github.com/GaryOcean428/crm7/pull/841) | Four-scope hierarchy, RLS, and `is_enterprise_admin()` foundation. |
 | Task 2 | Merged | [crm7#843](https://github.com/GaryOcean428/crm7/pull/843) | Generic `/reports/[key]` run page. |
-| Task 3a | Pending | N/A | Stepper primitive extraction from `@bsuite/schema-builder`; still blocks Task 4. |
+| Task 3a | Deferred | N/A | Stepper primitive extraction from `@bsuite/schema-builder`; no longer blocks Task 4 because CRM7 already has local canonical `StepperShell` / `FilterBar` / `DataTable` primitives. Keep as a future reuse/publish guardrail. |
 | Task 3b | Merged | [crm7#847](https://github.com/GaryOcean428/crm7/pull/847) | W2 wizard shipped directly while Task 3a remains a reuse guardrail. |
-| Task 4 | Pending | N/A | `/reports` list DataTable uplift; blocked by Task 3a. |
+| Task 4 | Merged | [crm7#987](https://github.com/GaryOcean428/crm7/pull/987) | `/reports` catalogue now reads RLS-visible `report_templates`, groups by scope, uses canonical `FilterBar` chip filters + `DataTable` + `EmptyState`, and row-clicks into `/reports/[key]`. |
 | Task 5 | Merged | [crm7#842](https://github.com/GaryOcean428/crm7/pull/842) | Seven Codehouse parity templates seeded as platform reports. |
 | Task 6.1 | Merged | [crm7#956](https://github.com/GaryOcean428/crm7/pull/956) | `report_rejected_timesheets` RPC, canonical employer join refresh, and legacy public function EXECUTE grant hardening. |
 | Task 6.2 | Merged | [crm7#957](https://github.com/GaryOcean428/crm7/pull/957) | `report_hours_by_work_type` RPC backed by existing `timesheets.entries[*].work_type` JSONB data, with canonical CRM7 work-type filters and pgTAP coverage. |
@@ -33,7 +33,7 @@
 | Task 8 | Merged | [crm7#844](https://github.com/GaryOcean428/crm7/pull/844) | 20-case Playwright scope matrix. |
 | Task 9 | Merged | [bsuite#1395](https://github.com/GaryOcean428/bsuite/pull/1395) | Dashboard `reports_w2_status` updated through Task 7, `docs/OUTSTANDING.md` linked, and the original reports parity spec now points to this implementation ledger as the active tracker. |
 
-**Latest development evidence:** crm7 `development` includes [crm7#986](https://github.com/GaryOcean428/crm7/pull/986) at `e3751647`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
+**Latest development evidence:** crm7 `development` includes [crm7#987](https://github.com/GaryOcean428/crm7/pull/987) at `78ce70e2`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
 
 ---
 
