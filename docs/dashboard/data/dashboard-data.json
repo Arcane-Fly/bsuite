@@ -16,7 +16,7 @@
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-04",
     "last_refreshed": "2026-06-04T07:56:26+08:00",
-    "last_refreshed_by": "copilot-cli CRM7 induction_records permissive SELECT consolidation"
+    "last_refreshed_by": "copilot-cli CRM7 R7 interviews/offers permissive SELECT consolidation"
   },
   "summary": {
     "external_total": 30,
@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after CRM7 #979 and BSuite #1386 merges; no open development PRs remained before this tracking PR.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after CRM7 #980 and BSuite #1387 merges; no open development PRs remained before this tracking PR.",
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
@@ -81,7 +81,7 @@
     },
     "open_prs": 0,
     "last_refreshed_by": "copilot-cli",
-    "last_refreshed_at": "2026-06-04T03:04:19Z"
+    "last_refreshed_at": "2026-06-04T03:21:55Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "d57f771",
+      "main_sha": "b0420d5",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "59ca0a66",
+      "main_sha": "808c4fc9",
       "vercel": "success"
     },
     {
