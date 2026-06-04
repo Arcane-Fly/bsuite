@@ -13,7 +13,7 @@ All 9 workstreams re-audited against live code state on branch `origin/developme
 
 | WS | Title | Status | Evidence |
 |---|---|---|---|
-| WS-1 | Calc Engine Convergence | 🟡 **PARTIAL** | BUG-2/4/5 + ADR ✅; **BUG-1 REGRESSION** in published `@bsuite/charge-calc@0.2.3` (see below) |
+| WS-1 | Calc Engine Convergence | 🟡 **PARTIAL — PUBLISH BLOCKED** | BUG-2/4/5 + ADR ✅; BUG-1 `/52` conversion is fixed and regression-locked in source `@bsuite/charge-calc@0.5.0`, but npm still serves 0.4.0 and publish is blocked by registry permissions (`bsuite#1408`). |
 | WS-2 | MAPD Edge Function + snapshots | ✅ **DONE** | `crm7/supabase/functions/mapd-sync/index.ts` + migration `20260423110000_ws2_wage_calculation_snapshots.sql` + `crm7/src/services/wageSnapshotService.ts` |
 | WS-3 | Host Invoicing | ✅ **DONE** | Migration `20260423140000_ws3_invoices.sql`, `crm7/src/lib/pipelines/xeroInvoiceAdapter.ts` (idempotency keys L41/65/85), `crm7/src/lib/invoicing/renderInvoicePdf.ts`, subsidy-credit logic in `crm7/src/lib/billingEngine.ts` (+ test `billingEngine.subsidyCredit.test.ts`) |
 | WS-4 | Timesheet state machine + payroll | 🟠 **PARTIAL — DB↔TS DIVERGENCE** | DB migration `20260423150000_ws4_timesheet_state_machine.sql` has 7 states matching plan; **`crm7/src/types/entities.ts:413` `TimesheetState` TS type uses 7 DIFFERENT state names** (see divergence row below). XeroPayrollAdapter ✅ at `crm7/src/lib/pipelines/xeroPayrollAdapter.ts`; STP ADR archived at `docs/archive/crm7/2026-04-24-submodule-import/2026-04/0004-stp-xero-passthrough.md` |
@@ -27,7 +27,7 @@ All 9 workstreams re-audited against live code state on branch `origin/developme
 
 ### Hard findings (issues to file)
 
-**HF-1: BUG-1 regression in published `@bsuite/charge-calc@0.2.3`** (CRITICAL — impact latent, materialises on `annum` payment_frequency)
+**HF-1: Publish-blocked BUG-1 release drift for `@bsuite/charge-calc`** (CRITICAL — impact latent, materialises on `annum` payment_frequency)
 
 The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on the `packages/charge-calc` repo. Verification on 2026-05-12:
 
@@ -35,7 +35,9 @@ The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on
 - Published `@bsuite/charge-calc@0.2.3` on npm (consumers `crm7@^0.2.3`, `R80.3@^0.2.3`) — `npm pack` + grep of `dist/awards/mapd-mapper.js` returns NO match for `/ 52`, `isAnnualFrequency`, or equivalent arithmetic.
 - Impact: annual allowances are 52× overstated in charge-rate calculations for both `crm7` and `R80.3` — **but only when MAPD returns a `payment_frequency` of `per annum` / `per year` for a wage or expense allowance**. Impact is latent until a MAPD record with annual frequency is processed; once processed it is CRITICAL (52× overstatement on that allowance's on-cost contribution).
 - This is the CRITICAL bug WS-1 was blocked on.
-- Action: file issue to (a) re-land the fix in the `packages/charge-calc` source, (b) publish a patched `0.2.5`, (c) bump consumers.
+- 2026-06-04 verification: source `@bsuite/charge-calc@0.5.0` already keeps the divide in `converter.mapAllowanceAmount`, with mapper-boundary tests preventing double-divide and converter tests covering annual/yearly frequencies. `pnpm --filter @bsuite/charge-calc test` passed 728 tests, `typecheck` passed, `build` passed, and `pnpm publish --dry-run --access public --no-git-checks` produced a valid 0.5.0 tarball.
+- Blocker: real `pnpm publish --access public --no-git-checks` failed from this environment with npm registry permission (`404 ... not found or you do not have permission`), and `npm view @bsuite/charge-calc version` still returns 0.4.0.
+- Action: resolve npm publish permission, publish `@bsuite/charge-calc@0.5.0`, then bump CRM7/R80.3 consumers only after npm confirms the version. Tracked as `bsuite#1408`.
 
 **HF-2: WS-4 DB↔TS state-machine divergence** (HIGH)
 

@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-04",
-    "last_refreshed": "2026-06-04T12:17:49Z",
-    "last_refreshed_by": "copilot-cli CRM7 email OAuth Vault evidence"
+    "last_refreshed": "2026-06-04T12:27:49Z",
+    "last_refreshed_by": "copilot-cli charge-calc publish blocker evidence"
   },
   "summary": {
     "external_total": 30,
@@ -32,7 +32,7 @@
     "in_repo_active": 19,
     "in_repo_archivable_now": 0,
     "already_archived": 10,
-    "operator_blocked": 0,
+    "operator_blocked": 1,
     "production_apps_live_v0_2_0": 6,
     "docs_root_files_pending": 85,
     "audit_grand_total_v1": 59,
@@ -58,11 +58,11 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 156,
+    "open_issues_total": 157,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after CRM7 #984 and BSuite #1391 merges; no open development PRs remained before this tracking PR.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after bsuite#1408 was filed; no open PRs remained before this tracking PR.",
     "issues_by_repo": {
-      "bsuite": 60,
+      "bsuite": 61,
       "business-suite-unified": 4,
       "crm7": 74,
       "conduit": 11,
@@ -81,7 +81,7 @@
     },
     "open_prs": 0,
     "last_refreshed_by": "copilot-cli",
-    "last_refreshed_at": "2026-06-04T11:07:06Z"
+    "last_refreshed_at": "2026-06-04T12:27:49Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "022db03",
+      "main_sha": "c96a383",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -221,9 +221,10 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; HF-4 pgTAP harness closed in crm7#949); WS-1 BUG-1 latent",
+      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948; HF-4 pgTAP harness closed in crm7#949); WS-1 package publish blocked",
       "owner": "crm7 + R80.3",
-      "next_step": "HF-1 re-land /52 fix in @bsuite/charge-calc (publish 0.2.5, bump consumers); HF-3 restore ADRs to crm7/docs/adr/; seed WS-5 7 templates; add 5 missing NAT formatters (WS-6); codify apprentice_rate_configs migration.",
+      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. Next unblocked items: HF-3 restore ADRs to crm7/docs/adr/; seed WS-5 7 templates; add 5 missing NAT formatters (WS-6); codify apprentice_rate_configs migration.",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1408",
       "severity": "P0",
       "category": "Billing"
     },
@@ -837,7 +838,16 @@
       "category": "Outstanding Item"
     }
   ],
-  "operator_blockers": [],
+  "operator_blockers": [
+    {
+      "id": "charge-calc-0.5.0-npm-publish",
+      "title": "Publish @bsuite/charge-calc 0.5.0 before bumping CRM7/R80.3",
+      "repo": "bsuite",
+      "status": "operator-blocked",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1408",
+      "note": "Source package verifies locally and publish dry-run succeeds, but real npm publish failed from this environment with registry permission. Consumers remain on ^0.4.0 until npm serves 0.5.0+."
+    }
+  ],
   "production_state": {
     "all_apps_live_v0_2_0": true,
     "vercel_status": "6/6 success",
