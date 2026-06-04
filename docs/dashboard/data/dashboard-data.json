@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-04",
-    "last_refreshed": "2026-06-04T11:07:06Z",
-    "last_refreshed_by": "copilot-cli CRM7 payroll provider acknowledgement evidence"
+    "last_refreshed": "2026-06-04T12:17:49Z",
+    "last_refreshed_by": "copilot-cli CRM7 email OAuth Vault evidence"
   },
   "summary": {
     "external_total": 30,
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 17,
       "archived": 0,
-      "main_sha": "3bc2889",
+      "main_sha": "022db03",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "0fed59ae",
+      "main_sha": "1bbfb97c",
       "vercel": "success"
     },
     {
@@ -432,7 +432,8 @@
       "status": "partial",
       "phase": "5/7 edge fns live",
       "owner": "cross-app",
-      "next_step": "Phase 3 (email-inbox-sync) + Phase 4 (tasks-sync) + Settings UI Email Tab + Inbox UI OPEN",
+      "next_step": "CRM7 email OAuth storage hardening progressed via crm7#997: Google/Microsoft callbacks now save access/refresh tokens through email_integration_set_encrypted_token per-token Vault columns, clear legacy encryption_key_id, and keep plaintext token columns null. Remaining: Phase 3 (email-inbox-sync) + Phase 4 (tasks-sync) + Settings UI Email Tab + Inbox UI OPEN, plus live DB confirmation that no legacy/plaintext email integration secrets remain.",
+      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/997",
       "severity": "P1",
       "category": "Integration"
     },
