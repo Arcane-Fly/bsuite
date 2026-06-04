@@ -2108,6 +2108,20 @@
         ],
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/991",
         "notes": "CRM7 development now resolves the STP path against ADR 0004 by tracking provider-passthrough STP status and EOFY finalisation state on canonical payroll_runs plus legacy pay_runs, backfilling submitted state from existing provider references, and surfacing STP/EOFY badges on the payroll hub. Direct ATO lodgement is not implemented because Xero remains the accepted STP system of record unless ADR 0004 is superseded."
+      },
+      {
+        "domain": "L_export_adapters_pay",
+        "issue": 570,
+        "phase": "PR-E EOFY provider request flow",
+        "status": "partial_merged",
+        "implemented_rows": [
+          100
+        ],
+        "implemented_inventory_items": [
+          "bsuite-inventory.md §5 item 6"
+        ],
+        "evidence_url": "https://github.com/GaryOcean428/crm7/pull/992",
+        "notes": "CRM7 development now adds an EOFY provider finalisation confirmation flow on the payroll hub. Operators see provider, affected employee count, pay period, and total gross before recording a provider handoff; the update is guarded by provider/status/STP eligibility, exact EOFY status compare-and-swap, and returned-row verification so RLS/zero-row/stale updates fail. Direct ATO lodgement remains intentionally out of scope under ADR 0004."
       }
     ],
     "plan_pr": "https://github.com/GaryOcean428/bsuite/pull/580",
