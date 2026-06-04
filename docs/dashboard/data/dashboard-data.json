@@ -2915,6 +2915,14 @@
         "status": "merged",
         "evidence_url": "https://github.com/GaryOcean428/crm7/pull/986",
         "note": "Merged to crm7 development at e3751647. Adds report delivery timezone/retry metadata, a one-retry policy with a 5-minute delay, timezone validation for queued deliveries, and pgTAP + Vitest coverage. Schedule next-fire UI remains a follow-on because CRM7 currently has only a pg_cron heartbeat, not persisted schedule definitions."
+      },
+      {
+        "id": "9",
+        "title": "Documentation + dashboard/outstanding-work linking for the Reports W2 uplift",
+        "pr": "bsuite#1395",
+        "status": "merged",
+        "evidence_url": "https://github.com/GaryOcean428/bsuite/pull/1395",
+        "note": "Updates reports_w2_status through Task 7, links docs/OUTSTANDING.md to the implementation ledger, and marks the original reports parity spec as superseded for active implementation tracking."
       }
     ],
     "tasks_deferred": [
@@ -2933,13 +2941,6 @@
         "blocked_by": [
           "3a"
         ]
-      },
-      {
-        "id": "9",
-        "title": "Documentation + dashboard/outstanding-work linking for the Reports W2 uplift",
-        "status": "in_progress",
-        "blocked_by": [],
-        "note": "Dashboard data now tracks Tasks 6.6 and 7; this item remains open until the companion Task 9 docs PR lands and the dashboard evidence URL points at that PR."
       }
     ],
     "operator_locked_decisions": [
@@ -2959,7 +2960,8 @@
       "Task 6.4 shipped via crm7#959: report_pay_items_by_employee reads real generated invoices + invoice_line_items, uses billing metadata for pay item code/name/type when present, filters to employee-backed lines only, and asserts source amount parity plus RLS/filter/pagination behavior in pgTAP. Consultant KPI has since shipped in Task 6.5; remaining CoInvest LSL RPC continues under bsuite#1237.",
       "Task 6.5 shipped via crm7#960: report_consultant_kpi reads assigned people, timesheets, invoices, and invoice_line_items for source-backed weekly KPI cards, validates the selected active tenant, gates exact-tenant field_officer access via org_members.gto_role, and uses template tenantParam metadata so p_tenant_id is injected by the runner rather than exposed as a user filter.",
       "Task 6.6 shipped via crm7#985: report_coinvest_lsl reads CRM7's canonical leave_balances.long_service snapshots, defaults pay item code to COINVEST_LSL, supports row-level custom_fields overrides, and is gated to tenant owner/admin or gto_admin.",
-      "Task 7 shipped via crm7#986: report_deliveries now carries timezone, retry_count, and last_attempt_at metadata; failed deliveries requeue once after a 5-minute delay before final failed state. Persisted schedule-definition UI remains a follow-on because CRM7 currently has a heartbeat job, not a schedule table."
+      "Task 7 shipped via crm7#986: report_deliveries now carries timezone, retry_count, and last_attempt_at metadata; failed deliveries requeue once after a 5-minute delay before final failed state. Persisted schedule-definition UI remains a follow-on because CRM7 currently has a heartbeat job, not a schedule table.",
+      "Task 9 ships via bsuite#1395: reports_w2_status is updated through Task 7, docs/OUTSTANDING.md links the W2 implementation ledger, and the original reports parity spec points to the W2 plan for active implementation tracking."
     ]
   }
 }

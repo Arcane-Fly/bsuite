@@ -75,11 +75,11 @@ Index plan integrating Codehouse Workforce-One parity tracking with full Platfor
 
 ### `plans/20260521-reports-w2-uplift-implementation-v1.00W.md` (added 2026-05-21)
 
-Reports W2 uplift execution ledger for Codehouse parity reports. Tasks 6.1-6.6 and Task 7 are merged on CRM7 `development`; Task 9 dashboard/outstanding-work linking is the remaining documentation closure item before the plan can move from Working to Approved.
+Reports W2 uplift execution ledger for Codehouse parity reports. Tasks 6.1-6.6, Task 7, and Task 9 are merged on `development`; remaining work is the deferred Task 3a/4 report-list/stepper uplift and follow-on scheduling UI.
 
 | # | Remaining action | Owner |
 |---|------------------|-------|
-| 1 | Complete Task 9 dashboard/outstanding-work linking and evidence URL refresh | Copilot CLI |
+| 1 | ~~Complete Task 9 dashboard/outstanding-work linking and evidence URL refresh~~ | ✅ Complete via bsuite#1395 |
 | 2 | Keep follow-on scheduling UI/report-list uplift linked to the active backlog rather than reopening Task 7 backend reliability | CRM7 implementer |
 
 ### `20260317-bsuite-gap-report-v2.00W.md`
