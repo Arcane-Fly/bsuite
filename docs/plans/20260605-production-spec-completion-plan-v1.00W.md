@@ -107,6 +107,50 @@ Use these where relevant:
 - **Session/project memory:** session store SQL for recent session lookup; repo docs and dashboard are canonical for persisted project state.
 - **Supabase:** use Supabase MCP SQL tools if available in a future runtime; otherwise create migrations, edge-function tests, and explicit SQL for operator/Supabase SQL editor execution.
 
+## Supabase schema topology and linking doctrine
+
+BSuite uses **one shared Supabase backend**, not one schema repo per app. All
+apps point at project `tuybltdrdefjblnplpqo`; the schema is sharded across the
+parent repo and submodules via their own `supabase/migrations/` folders.
+
+As of the 2026-06-05 Task 7 inventory, SQL migration files are distributed as:
+
+| Scope | SQL migration files | Notes |
+|-------|--------------------:|-------|
+| `crm7` | 289 | Bulk of the table/function/RLS schema and edge-function reference implementation |
+| `business-suite-unified` | 80 | BSU platform/admin/auth-hub schema surfaces |
+| `braden` | 43 | Braden corporate-site/admin/tenant-layout schema surfaces |
+| `R80.3` | 21 | R80-owned calculation/rate-state schema surfaces |
+| parent `bsuite` | 19 | Cross-suite/shared orchestration migrations |
+| `conduit` | 9 | Recruitment/candidate schema surfaces |
+| `packages/schema-builder` | 5 | Shared schema-builder RPC/migration primitives |
+| `throughput` | 4 | Throughput idea-platform schema surfaces |
+
+`schema_migrations` is shared across all scopes. This is why per-submodule
+drift checks must use `supabase migration up --linked --include-all` rather
+than naive `supabase db push`; each submodule only has a subset of the remote
+history.
+
+Operationally:
+
+1. **Project to connect/link:** always use Supabase project
+   `tuybltdrdefjblnplpqo`.
+2. **Pipeline owner:** parent `bsuite` owns the CI connection via
+   `.github/workflows/supabase-migrate.yml`. That workflow detects which
+   submodule changed, runs `supabase link --project-ref "$SUPABASE_PROJECT_ID"`,
+   then applies migrations from that scope with `--include-all`.
+3. **Primary schema authority:** `crm7` contains most of the actual schema and
+   should be treated as the reference implementation for table/function/RLS
+   definitions unless the entity ownership map assigns ownership elsewhere.
+4. **Preferred production applier:** Supabase MCP `apply_migration` remains the
+   operator-preferred path for audited production changes; the CI workflow is the
+   fallback/PR path. Never run local `supabase db push` against
+   `tuybltdrdefjblnplpqo`.
+5. **Braden caveat:** `braden/supabase/config.toml` currently contains
+   `project_id = "iykrauzuutvmnxpqppzk"`. Treat this as stale/local-dev linkage
+   for production work. When linking manually from Braden, explicitly pass
+   `--project-ref tuybltdrdefjblnplpqo`.
+
 ## Global stage gate
 
 Before any stage is marked complete:
@@ -664,4 +708,3 @@ Before any stage is marked complete:
 - If a task touches Conduit runtime behavior, initialise Next.js MCP and use official Next.js docs through the MCP before coding.
 - If a task touches external regulatory/vendor behavior, use Tavily/research and cite current source URLs in the PR.
 - If a task touches AG Grid, use the AG Grid MCP version detector/docs before editing.
-

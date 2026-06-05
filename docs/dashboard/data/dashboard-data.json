@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T06:58:34Z",
-    "last_refreshed_by": "copilot-cli Task 7 package publishes"
+    "last_refreshed": "2026-06-05T07:02:35Z",
+    "last_refreshed_by": "copilot-cli Supabase schema topology note"
   },
   "summary": {
     "external_total": 30,
@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 157,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after filing schema-registry blocker #1432; no open PRs were present.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after adding the Supabase schema-topology note; no open PRs were present.",
     "issues_by_repo": {
       "bsuite": 62,
       "business-suite-unified": 4,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Task 7 package publishes",
-    "last_refreshed_at": "2026-06-05T06:58:34Z"
+    "last_refreshed_by": "copilot-cli Supabase schema topology note",
+    "last_refreshed_at": "2026-06-05T07:02:35Z"
   },
   "repos": [
     {
@@ -264,9 +264,9 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 7 partial: ui/schema-builder/theme published; schema-registry npm permission blocker filed",
+      "phase": "Task 7 package publish slice + Supabase schema topology note recorded; schema-registry blocker remains",
       "owner": "cross-app",
-      "next_step": "Execute package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO/reporting, Conduit handoff, BSU platform, cross-app QA, production ship gate, and docs/dashboard closure in order.",
+      "next_step": "Continue platform panels/Visual Feature Builder work; resolve schema-registry npm permission blocker #1432 before consumer lockfile rollout; use parent bsuite workflow/MCP for shared Supabase project tuybltdrdefjblnplpqo.",
       "severity": "P0",
       "category": "Production readiness",
       "issue": "GaryOcean428/bsuite#1422",
