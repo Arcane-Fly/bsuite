@@ -58,9 +58,9 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 157,
+    "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after adding the Supabase schema-topology note; no open PRs were present.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing throughput#184; no open PRs were present.",
     "issues_by_repo": {
       "bsuite": 62,
       "business-suite-unified": 4,
@@ -68,7 +68,7 @@
       "conduit": 11,
       "braden": 3,
       "R80.3": 3,
-      "throughput": 1
+      "throughput": 0
     },
     "prs_by_repo": {
       "bsuite": 0,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Supabase schema topology note",
-    "last_refreshed_at": "2026-06-05T07:02:35Z"
+    "last_refreshed_by": "copilot-cli throughput semantic token sweep",
+    "last_refreshed_at": "2026-06-05T08:12:33Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "0f5606a",
+      "main_sha": "7df94fd",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -137,7 +137,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "f534679",
+      "main_sha": "5c3da4e",
       "vercel": "success"
     }
   ],
@@ -2922,7 +2922,7 @@
     }
   ],
   "counters": {
-    "open_issues_total": 157,
+    "open_issues_total": 156,
     "open_prs_total": 0,
     "issues_by_repo": {
       "bsuite": 62,
@@ -2931,7 +2931,7 @@
       "conduit": 11,
       "braden": 3,
       "R80.3": 3,
-      "throughput": 1
+      "throughput": 0
     },
     "prs_by_repo": {
       "bsuite": 0,
