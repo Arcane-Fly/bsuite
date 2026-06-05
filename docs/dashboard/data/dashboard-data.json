@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T15:53:00Z",
-    "last_refreshed_by": "copilot-cli throughput PageGrid rollout"
+    "last_refreshed": "2026-06-05T16:22:00Z",
+    "last_refreshed_by": "copilot-cli R80 PageGrid rollout"
   },
   "summary": {
     "external_total": 30,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli throughput PageGrid rollout",
-    "last_refreshed_at": "2026-06-05T15:53:00Z"
+    "last_refreshed_by": "copilot-cli R80 PageGrid rollout",
+    "last_refreshed_at": "2026-06-05T16:22:00Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "0560872",
+      "main_sha": "7ee1418",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "5087dbb",
+      "main_sha": "0909080",
       "vercel": "success"
     },
     {
@@ -264,9 +264,9 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 8 Throughput PageGrid slice merged; ui/schema-registry npm blockers remain",
+      "phase": "Task 8 Throughput and R80 PageGrid slices merged; ui/schema-registry npm blockers remain",
       "owner": "cross-app",
-      "next_step": "Continue Task 8 PageGrid rollout for CRM7/R80.3/BSU/Braden, publish @bsuite/ui@0.4.0 after npm auth blocker #1452, and resolve schema-registry blocker #1432 before consumer lockfile rollout; use parent bsuite workflow/MCP for shared Supabase project tuybltdrdefjblnplpqo.",
+      "next_step": "Continue Task 8 PageGrid rollout for CRM7/BSU/Braden, publish @bsuite/ui@0.4.0 after npm auth blocker #1452, and resolve schema-registry blocker #1432 before consumer lockfile rollout; use parent bsuite workflow/MCP for shared Supabase project tuybltdrdefjblnplpqo.",
       "severity": "P0",
       "category": "Production readiness",
       "issue": "GaryOcean428/bsuite#1422",
