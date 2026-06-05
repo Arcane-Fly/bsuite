@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 153,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing bsuite#476; no open PRs were present.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after merging throughput#207; no open PRs were present.",
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Sentry rollout closure",
-    "last_refreshed_at": "2026-06-05T13:32:06Z"
+    "last_refreshed_by": "copilot-cli Throughput Speed Insights slice",
+    "last_refreshed_at": "2026-06-05T13:47:46Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "7409da5",
+      "main_sha": "a3d6eb1",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -137,7 +137,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "eb3d86a",
+      "main_sha": "c4a6a2e",
       "vercel": "success"
     }
   ],
