@@ -58,13 +58,13 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 153,
+    "open_issues_total": 152,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after merging throughput#207; no open PRs were present.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing CRM7#478; no open PRs were present.",
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
-      "crm7": 72,
+      "crm7": 71,
       "conduit": 11,
       "braden": 3,
       "R80.3": 3,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Throughput Speed Insights slice",
-    "last_refreshed_at": "2026-06-05T13:47:46Z"
+    "last_refreshed_by": "copilot-cli CRM7 feature flags closure",
+    "last_refreshed_at": "2026-06-05T13:56:06Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "a3d6eb1",
+      "main_sha": "ccf1367",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -2922,12 +2922,12 @@
     }
   ],
   "counters": {
-    "open_issues_total": 153,
+    "open_issues_total": 152,
     "open_prs_total": 0,
     "issues_by_repo": {
       "bsuite": 60,
       "business-suite-unified": 4,
-      "crm7": 72,
+      "crm7": 71,
       "conduit": 11,
       "braden": 3,
       "R80.3": 3,
