@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T07:02:35Z",
-    "last_refreshed_by": "copilot-cli Supabase schema topology note"
+    "last_refreshed": "2026-06-05T15:05:27Z",
+    "last_refreshed_by": "copilot-cli ui 0.4.0 package blocker"
   },
   "summary": {
     "external_total": 30,
@@ -32,7 +32,7 @@
     "in_repo_active": 19,
     "in_repo_archivable_now": 0,
     "already_archived": 10,
-    "operator_blocked": 0,
+    "operator_blocked": 2,
     "production_apps_live_v0_2_0": 6,
     "docs_root_files_pending": 85,
     "audit_grand_total_v1": 59,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli E2E smoke closure",
-    "last_refreshed_at": "2026-06-05T14:09:36Z"
+    "last_refreshed_by": "copilot-cli ui 0.4.0 package blocker",
+    "last_refreshed_at": "2026-06-05T15:05:27Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "3335180",
+      "main_sha": "b203219",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "70662691",
+      "main_sha": "7066269",
       "vercel": "success"
     },
     {
@@ -264,9 +264,9 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 7 package publish slice + Supabase schema topology note recorded; schema-registry blocker remains",
+      "phase": "Task 8 shared UI primitive/Storybook source merged; ui and schema-registry npm publish blockers remain",
       "owner": "cross-app",
-      "next_step": "Continue platform panels/Visual Feature Builder work; resolve schema-registry npm permission blocker #1432 before consumer lockfile rollout; use parent bsuite workflow/MCP for shared Supabase project tuybltdrdefjblnplpqo.",
+      "next_step": "Publish @bsuite/ui@0.4.0 after resolving npm auth blocker #1452, resolve schema-registry npm permission blocker #1432 before consumer lockfile rollout, then continue Task 8 component adoption/PageGridLayout/Web Vitals work; use parent bsuite workflow/MCP for shared Supabase project tuybltdrdefjblnplpqo.",
       "severity": "P0",
       "category": "Production readiness",
       "issue": "GaryOcean428/bsuite#1422",
@@ -862,6 +862,14 @@
       "status": "operator-blocked",
       "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1432",
       "note": "Source is 0.3.5 but npm serves 0.3.2; publish workflow reached npm publish and failed with 404/not found or no permission."
+    },
+    {
+      "id": "ui-0.4.0-npm-publish",
+      "title": "Publish @bsuite/ui 0.4.0",
+      "repo": "bsuite",
+      "status": "operator-blocked",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1452",
+      "note": "Source is merged to main/development via bsuite#1451/#1453 but npm still serves 0.3.0; this runtime has no npm auth (`npm whoami` E401) and publish failed with E404/no permission."
     }
   ],
   "production_state": {
@@ -915,11 +923,11 @@
       },
       {
         "name": "@bsuite/ui",
-        "current_pinned": "^0.2.0 / 0.2.0 consumers; source/npm 0.3.0",
-        "source_version": "0.3.0",
+        "current_pinned": "^0.2.0 / 0.2.0 consumers; source 0.4.0, npm 0.3.0",
+        "source_version": "0.4.0",
         "npm_version": "0.3.0",
-        "status": "published",
-        "delta": "0.3.0 published by workflow 26999655947"
+        "status": "operator-blocked npm permission",
+        "delta": "0.4.0 shared primitives + Storybook source merged to main in bsuite#1451 and mirrored to development in bsuite#1453; npm publish blocked by bsuite#1452 because this runtime is not authenticated to npm (`npm whoami` E401; `npm publish` E404/no permission)"
       },
       {
         "name": "@bsuite/schema-registry",
