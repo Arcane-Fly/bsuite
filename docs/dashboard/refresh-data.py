@@ -73,6 +73,21 @@ def head_sha(repo_path: Path, ref: str = "HEAD") -> str | None:
     return sha
 
 
+def submodule_gitlink_sha(name: str) -> str | None:
+    """Return the parent-recorded gitlink SHA for an uninitialized submodule."""
+    out = _run(["git", "ls-tree", "HEAD", name])
+    if not out:
+        return None
+    parts = out.split()
+    if len(parts) < 3 or parts[1] != "commit":
+        return None
+    return parts[2][:7]
+
+
+def is_git_checkout(repo_path: Path) -> bool:
+    return (repo_path / ".git").exists()
+
+
 def package_version(pkg_json_path: Path) -> str | None:
     try:
         return json.loads(pkg_json_path.read_text()).get("version")
@@ -90,13 +105,16 @@ def update_repos(data: dict) -> None:
         repo_path = REPO_ROOT if name == "bsuite" else (REPO_ROOT / name)
         if not repo_path.is_dir():
             continue
-        ap = count_active_plans(repo_path)
-        if ap is not None:
-            row["active_plans"] = ap
-        ar = count_archived_plans(repo_path)
-        if ar is not None:
-            row["archived"] = ar
-        sha = head_sha(repo_path)
+        if name == "bsuite" or is_git_checkout(repo_path):
+            ap = count_active_plans(repo_path)
+            if ap is not None:
+                row["active_plans"] = ap
+            ar = count_archived_plans(repo_path)
+            if ar is not None:
+                row["archived"] = ar
+            sha = head_sha(repo_path)
+        else:
+            sha = submodule_gitlink_sha(name)
         if sha:
             row["main_sha"] = sha
 
