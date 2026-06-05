@@ -163,7 +163,7 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
 
   if (branding.primary) {
     if (!isValidOklch(branding.primary)) {
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevEnvironment()) {
         console.warn(
           `[BrandingProvider] Rejected primary colour "${branding.primary}" — must be oklch(). ` +
             'Only oklch() values are accepted. Hex/rgb/hsl are not permitted in the token system.',
@@ -179,7 +179,7 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
 
   if (branding.accent) {
     if (!isValidOklch(branding.accent)) {
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevEnvironment()) {
         console.warn(
           `[BrandingProvider] Rejected accent colour "${branding.accent}" — must be oklch().`,
         )
@@ -221,7 +221,7 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
 
 // Warn in dev if a caller tries to set a protected key
 function warnIfProtectedKeyAttempted(branding: TenantBranding): void {
-  if (process.env.NODE_ENV !== 'development') return
+  if (!isDevEnvironment()) return
   // Check for any attempt to set error/destructive via unexpected RPC fields
   const raw = branding as unknown as Record<string, unknown>
   for (const key of Object.keys(raw)) {
@@ -233,6 +233,13 @@ function warnIfProtectedKeyAttempted(branding: TenantBranding): void {
       )
     }
   }
+}
+
+function isDevEnvironment(): boolean {
+  const env = (import.meta as ImportMeta & {
+    env?: { DEV?: boolean; MODE?: string; NODE_ENV?: string }
+  }).env
+  return env?.DEV === true || env?.MODE === 'development' || env?.NODE_ENV === 'development'
 }
 
 function persistBranding(branding: TenantBranding | null): void {
