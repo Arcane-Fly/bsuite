@@ -7,8 +7,10 @@ import {
   type FundingConfig,
   type BillingModel,
   type AustralianState,
+  type PayItemGroupRef,
   AllowanceTypeSchema,
   AustralianStateSchema,
+  PayItemCategorySchema,
   PenaltyCategory,
   BILLING_MODEL_WEEKS,
   getSuperRate,
@@ -27,6 +29,12 @@ describe('Type definitions', () => {
   it('PenaltyCategory distinguishes overtime from penalty', () => {
     expect(PenaltyCategory.Overtime).toBe('overtime');
     expect(PenaltyCategory.Penalty).toBe('penalty');
+  });
+
+  it('PayItemCategorySchema validates CRM7-owned pay item categories', () => {
+    expect(PayItemCategorySchema.safeParse('ordinary_time').success).toBe(true);
+    expect(PayItemCategorySchema.safeParse('salary_sacrifice').success).toBe(true);
+    expect(PayItemCategorySchema.safeParse('free_text_group').success).toBe(false);
   });
 
   it('BILLING_MODEL_WEEKS maps to correct weeks', () => {
@@ -75,8 +83,25 @@ describe('Type definitions', () => {
       label: 'Overtime 1.5x',
       mult: 1.5,
       cat: 'overtime',
+      payItemGroup: {
+        id: 'pay-item-group-ot15',
+        name: 'Overtime 1.5x',
+        code: 'OT1.5',
+        category: 'overtime_1_5',
+        sortPriority: 20,
+      },
     };
     expect(penalty.mult).toBe(1.5);
+    expect(penalty.payItemGroup?.category).toBe('overtime_1_5');
+
+    const ordinaryGroup: PayItemGroupRef = {
+      id: 'pay-item-group-ordinary',
+      name: 'Ordinary Time',
+      code: 'ORD',
+      category: 'ordinary_time',
+      sortPriority: 10,
+    };
+    expect(ordinaryGroup.code).toBe('ORD');
 
     const funding: FundingConfig = {
       enabled: false,

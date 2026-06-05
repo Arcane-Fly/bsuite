@@ -5,6 +5,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.5.0] — 2026-06-03 — Named pay item group rate keys
+
+### Added
+
+- `PayItemGroupRef`, `PayItemCategorySchema`, and `PayItemCategory` describe
+  CRM7-owned `pay_item_groups` metadata without duplicating pay item ownership
+  inside the shared calculation package.
+- `CalcConfig.ordinaryPayItemGroupId` / `ordinaryPayItemGroup` and
+  `PenaltyRate.payItemGroupId` / `payItemGroup` let consumers pass named
+  pay-item group UUIDs into charge calculation.
+- `CalcResult.ratesByPayItemGroupId` and `ordinaryRateKey` expose canonical
+  named-group lookup while `rates['ord']` and legacy penalty IDs remain as
+  compatibility aliases.
+
+### Migration
+
+- Consumers can adopt CRM7 `pay_item_groups.id` values incrementally. Existing
+  `rates['ord']` / `rates[penalty.id]` reads are preserved.
+- When both `payItemGroupId` and `payItemGroup.id` are supplied, they must match;
+  mismatches throw rather than silently selecting one ID.
+
+### Tests
+
+- Output-equivalence tests assert named pay item group aliases produce identical
+  charge/funded/funding values to the legacy `ord`/penalty keys.
+
+---
+
 ## [0.4.0] — 2026-05-14 — Remove vestigial `'mapd'` source kind (BREAKING)
 
 ### Why

@@ -1,5 +1,35 @@
 import { z } from 'zod';
 
+// ─── Pay item groups ───
+export const PayItemCategorySchema = z.enum([
+  'ordinary_time',
+  'overtime_1_5',
+  'overtime_2_0',
+  'annual_leave',
+  'sick_leave',
+  'rdo',
+  'public_holiday',
+  'shift_allowance',
+  'tool_allowance',
+  'meal_allowance',
+  'salary_sacrifice',
+  'child_support',
+  'rdo_accrual',
+  'back_pay',
+  'reimbursement',
+  'other',
+]);
+export type PayItemCategory = z.infer<typeof PayItemCategorySchema>;
+
+export interface PayItemGroupRef {
+  /** CRM7-owned pay_item_groups.id UUID. */
+  id: string;
+  name: string;
+  code: string;
+  category?: PayItemCategory;
+  sortPriority?: number;
+}
+
 // ─── Australian States ───
 export const AustralianStateSchema = z.enum([
   'NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT',
@@ -35,11 +65,18 @@ export type PenaltyCategoryType =
   (typeof PenaltyCategory)[keyof typeof PenaltyCategory];
 
 export interface PenaltyRate {
+  /**
+   * Legacy rate key retained for backward compatibility. Prefer
+   * payItemGroupId/payItemGroup for Codehouse named pay-item groups.
+   */
   id: string;
   label: string;
   /** Multiplier applied to base rate (e.g. 1.5 for time-and-a-half) */
   mult: number;
   cat: PenaltyCategoryType;
+  /** CRM7-owned pay_item_groups.id UUID for this rate. */
+  payItemGroupId?: string;
+  payItemGroup?: PayItemGroupRef;
 }
 
 // ─── Billing model ───
@@ -136,6 +173,9 @@ export interface CalcConfig {
   allowances: Allowance[];
 
   // Penalties & OT
+  /** CRM7-owned pay_item_groups.id UUID for ordinary time. */
+  ordinaryPayItemGroupId?: string;
+  ordinaryPayItemGroup?: PayItemGroupRef;
   penalties: PenaltyRate[];
 
   /**
@@ -155,6 +195,13 @@ export interface RateResult {
   charge: number;
   funded: number;
   funding: number;
+  /** Canonical pay_item_groups.id when this rate is linked to a named group. */
+  payItemGroupId?: string;
+  payItemGroup?: PayItemGroupRef;
+  /** Legacy key used before named pay-item groups; retained for migration. */
+  sourceRateId?: string;
+  label?: string;
+  category?: PayItemCategory;
 }
 
 // ─── Oncost breakdown (per-hour) ───
@@ -234,6 +281,12 @@ export interface CalcResult {
 
   // All rates (ordinary + each penalty/OT)
   rates: Record<string, RateResult>;
+  /**
+   * Canonical named-group index. Populated only for rates with a
+   * payItemGroupId/payItemGroup; legacy rates remain available in `rates`.
+   */
+  ratesByPayItemGroupId: Record<string, RateResult>;
+  ordinaryRateKey: string;
 }
 
 // ─── Superannuation schedule ───

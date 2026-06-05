@@ -280,6 +280,64 @@ describe('calculate()', () => {
     });
   });
 
+  describe('named pay item group IDs', () => {
+    it('aliases ordinary and penalty rates by CRM7-owned pay item group IDs without changing amounts', () => {
+      const ordinaryPayItemGroup = {
+        id: 'pig-ordinary',
+        name: 'Ordinary Time',
+        code: 'ORD',
+        category: 'ordinary_time' as const,
+        sortPriority: 10,
+      };
+      const overtimePayItemGroup = {
+        id: 'pig-overtime-1-5',
+        name: 'Overtime 1.5x',
+        code: 'OT1.5',
+        category: 'overtime_1_5' as const,
+        sortPriority: 20,
+      };
+
+      const legacy = calculate(BASE_CONFIG);
+      const named = calculate({
+        ...BASE_CONFIG,
+        ordinaryPayItemGroup,
+        penalties: BASE_CONFIG.penalties.map((penalty) =>
+          penalty.id === 'ot15'
+            ? { ...penalty, payItemGroup: overtimePayItemGroup }
+            : penalty,
+        ),
+      });
+
+      expect(named.ordinaryRateKey).toBe('pig-ordinary');
+      expect(named.rates['pig-ordinary']).toBe(named.rates['ord']);
+      expect(named.ratesByPayItemGroupId['pig-ordinary']).toBe(named.rates['ord']);
+      expect(named.rates['pig-ordinary'].charge).toBeCloseTo(legacy.rates['ord'].charge, 6);
+      expect(named.rates['pig-overtime-1-5']).toBe(named.rates['ot15']);
+      expect(named.ratesByPayItemGroupId['pig-overtime-1-5']).toBe(named.rates['ot15']);
+      expect(named.rates['pig-overtime-1-5'].charge).toBeCloseTo(legacy.rates['ot15'].charge, 6);
+      expect(named.rates['pig-overtime-1-5'].payItemGroup?.code).toBe('OT1.5');
+    });
+
+    it('rejects conflicting explicit and reference pay item group IDs', () => {
+      expect(() =>
+        calculate({
+          ...BASE_CONFIG,
+          penalties: [
+            {
+              ...BASE_CONFIG.penalties[0],
+              payItemGroupId: 'pig-a',
+              payItemGroup: {
+                id: 'pig-b',
+                name: 'Overtime 1.5x',
+                code: 'OT1.5',
+              },
+            },
+          ],
+        }),
+      ).toThrow(/payItemGroupId must match/);
+    });
+  });
+
   describe('date-aware superannuation (C4)', () => {
     it('returns 11.5% before July 2025', async () => {
       const { getSuperRate } = await import('../types');

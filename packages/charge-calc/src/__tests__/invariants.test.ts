@@ -119,4 +119,32 @@ describe('Mathematical invariants', () => {
       2,
     );
   });
+
+  it('named pay item group aliases are output-equivalent to legacy rate keys', () => {
+    const legacy = calculate(makeConfig());
+    const named = calculate(makeConfig({
+      ordinaryPayItemGroupId: 'pig-ordinary',
+      penalties: [
+        {
+          id: 'ot15',
+          label: 'OT 1.5x',
+          mult: 1.5,
+          cat: 'overtime',
+          payItemGroupId: 'pig-ot15',
+        },
+        {
+          id: 'ph',
+          label: 'PH',
+          mult: 2.5,
+          cat: 'penalty',
+          payItemGroupId: 'pig-ph',
+        },
+      ],
+    }));
+
+    expect(named.rates['pig-ordinary'].charge).toBeCloseTo(legacy.rates['ord'].charge, 6);
+    expect(named.rates['pig-ot15'].charge).toBeCloseTo(legacy.rates['ot15'].charge, 6);
+    expect(named.rates['pig-ph'].funded).toBeCloseTo(legacy.rates['ph'].funded, 6);
+    expect(named.ratesByPayItemGroupId['pig-ot15']).toBe(named.rates['ot15']);
+  });
 });
