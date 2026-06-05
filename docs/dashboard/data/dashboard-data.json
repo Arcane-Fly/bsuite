@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T04:03:36Z",
-    "last_refreshed_by": "copilot-cli Task 0 production-spec inventory"
+    "last_refreshed": "2026-06-05T05:05:49Z",
+    "last_refreshed_by": "copilot-cli Task 1 charge-calc rollout"
   },
   "summary": {
     "external_total": 30,
@@ -32,7 +32,7 @@
     "in_repo_active": 19,
     "in_repo_archivable_now": 0,
     "already_archived": 10,
-    "operator_blocked": 1,
+    "operator_blocked": 0,
     "production_apps_live_v0_2_0": 6,
     "docs_root_files_pending": 85,
     "audit_grand_total_v1": 59,
@@ -58,11 +58,11 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 158,
+    "open_issues_total": 157,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 during Task 0 production-spec inventory; no open PRs were present. Production-spec tracker issue #1422 was filed after the initial inventory, bringing open issues to 158.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after charge-calc rollout PRs merged; no open PRs were present.",
     "issues_by_repo": {
-      "bsuite": 62,
+      "bsuite": 61,
       "business-suite-unified": 4,
       "crm7": 74,
       "conduit": 11,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Task 0 production-spec inventory",
-    "last_refreshed_at": "2026-06-05T04:03:36Z"
+    "last_refreshed_by": "copilot-cli Task 1 charge-calc rollout",
+    "last_refreshed_at": "2026-06-05T05:05:49Z"
   },
   "repos": [
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "2d81871",
+      "main_sha": "01c4fa7",
       "vercel": "success"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "34da48c",
+      "main_sha": "2334166",
       "vercel": "success"
     },
     {
@@ -221,10 +221,10 @@
       "source": "in-repo",
       "path": "docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md",
       "status": "in-flight",
-      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948 and Xero payroll adapter schema-contract coverage closed in crm7#1009; WS-5 exact mandatory template seed closed in crm7#998, tenant-scoped runnable report RPCs closed in crm7#999, generic runner/export guardrails closed in crm7#1005, per-user report view preferences closed in crm7#1006, and queued large CSV delivery closed in crm7#1007; WS-6 full NAT formatter suite verified from crm7#770, edge validation/source-query hardening landed in crm7#1002, WA/NSW/QLD/SA state TSV extracts landed in crm7#1003, and lodgement package guardrails landed in crm7#1004; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000; apprentice_rate_configs migration/seed/RLS provenance closed in crm7#1001); WS-1 package publish blocked",
+      "phase": "3/9 WS DONE (incl. WS-4 vocab alignment completed in crm7#948 and Xero payroll adapter schema-contract coverage closed in crm7#1009; WS-5 exact mandatory template seed closed in crm7#998, tenant-scoped runnable report RPCs closed in crm7#999, generic runner/export guardrails closed in crm7#1005, per-user report view preferences closed in crm7#1006, and queued large CSV delivery closed in crm7#1007; WS-6 full NAT formatter suite verified from crm7#770, edge validation/source-query hardening landed in crm7#1002, WA/NSW/QLD/SA state TSV extracts landed in crm7#1003, and lodgement package guardrails landed in crm7#1004; HF-4 pgTAP harness closed in crm7#949; WS-8 SECDEF search-path/grant normalization landed in crm7#1000; apprentice_rate_configs migration/seed/RLS provenance closed in crm7#1001); WS-1 package publish closed",
       "owner": "crm7 + R80.3",
-      "next_step": "HF-1 source is verified in @bsuite/charge-calc@0.5.0 (728 tests, typecheck, build, publish dry-run) but npm publish is blocked by registry permission; see bsuite#1408. Do not bump CRM7/R80.3 until npm serves 0.5.0+. WS-4 state vocabulary alignment is closed via crm7#948 and Xero payroll adapter schema-contract coverage is closed via crm7#1009, replacing stale payroll_records aliases with generated Supabase type-backed live columns plus metadata-backed Xero employee/earnings-rate IDs. WS-5 exact template seed/backends are closed via crm7#998/#999, runner/export guardrails are closed via crm7#1005, per-user report view preferences are closed via crm7#1006, and queued large CSV delivery is closed via crm7#1007. WS-6 full NAT formatter coverage is verified via crm7#770 plus 2026-06-04 formatter tests/typecheck, edge validation/source-query hardening is closed via crm7#1002, WA/NSW/QLD/SA state TSV extract generation is closed via crm7#1003, and lodgement package guardrails/STA eligibility filtering are closed via crm7#1004. WS-8 SECDEF search-path/grant hardening is closed via crm7#1000, and apprentice_rate_configs migration/seed/RLS provenance is closed via crm7#1001; next unblocked items: concrete Xero Payroll AU client/export sequencing, agency-certified WS-6 STA conformance fixtures, and WS-5 AG Grid/native Excel decisions plus PDF/chart polish.",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1009",
+      "next_step": "HF-1 is closed: @bsuite/charge-calc@0.5.0 is published to npm, and CRM7/R80.3 consume ^0.5.0 on development via crm7#1010 and R80.3#303. WS-4 state vocabulary alignment is closed via crm7#948 and Xero payroll adapter schema-contract coverage is closed via crm7#1009, replacing stale payroll_records aliases with generated Supabase type-backed live columns plus metadata-backed Xero employee/earnings-rate IDs. WS-5 exact template seed/backends are closed via crm7#998/#999, runner/export guardrails are closed via crm7#1005, per-user report view preferences are closed via crm7#1006, and queued large CSV delivery is closed via crm7#1007. WS-6 full NAT formatter coverage is verified via crm7#770 plus 2026-06-04 formatter tests/typecheck, edge validation/source-query hardening is closed via crm7#1002, WA/NSW/QLD/SA state TSV extract generation is closed via crm7#1003, and lodgement package guardrails/STA eligibility filtering are closed via crm7#1004. WS-8 SECDEF search-path/grant hardening is closed via crm7#1000, and apprentice_rate_configs migration/seed/RLS provenance is closed via crm7#1001; next unblocked items: concrete Xero Payroll AU client/export sequencing, agency-certified WS-6 STA conformance fixtures, and WS-5 AG Grid/native Excel decisions plus PDF/chart polish.",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1408",
       "severity": "P0",
       "category": "Billing"
     },
@@ -264,7 +264,7 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 0 inventory active",
+      "phase": "Task 1 package lane complete; Task 2 next",
       "owner": "cross-app",
       "next_step": "Execute package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO/reporting, Conduit handoff, BSU platform, cross-app QA, production ship gate, and docs/dashboard closure in order.",
       "severity": "P0",
@@ -854,16 +854,7 @@
       "category": "Outstanding Item"
     }
   ],
-  "operator_blockers": [
-    {
-      "id": "charge-calc-0.5.0-npm-publish",
-      "title": "Publish @bsuite/charge-calc 0.5.0 before bumping CRM7/R80.3",
-      "repo": "bsuite",
-      "status": "operator-blocked",
-      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1408",
-      "note": "Source package verifies locally and publish dry-run succeeds, but real npm publish failed from this environment with registry permission. Consumers remain on ^0.4.0 until npm serves 0.5.0+."
-    }
-  ],
+  "operator_blockers": [],
   "production_state": {
     "all_apps_live_v0_2_0": true,
     "vercel_status": "6/6 success",
@@ -890,11 +881,11 @@
       },
       {
         "name": "@bsuite/charge-calc",
-        "current_pinned": "0.4.0 / ^0.4.0",
+        "current_pinned": "^0.5.0 (CRM7/R80.3 development)",
         "source_version": "0.5.0",
-        "npm_version": "0.4.0",
-        "status": "operator-blocked publish",
-        "delta": "source ahead of npm; consumers must not bump until npm serves 0.5.0+"
+        "npm_version": "0.5.0",
+        "status": "published and rolled out",
+        "delta": "0.5.0 published by bsuite#1424 workflow; CRM7#1010 and R80.3#303 consume ^0.5.0 on development"
       }
     ],
     "tests": [
@@ -2889,10 +2880,10 @@
     }
   ],
   "counters": {
-    "open_issues_total": 158,
+    "open_issues_total": 157,
     "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 62,
+      "bsuite": 61,
       "business-suite-unified": 4,
       "crm7": 74,
       "conduit": 11,
