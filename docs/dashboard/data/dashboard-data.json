@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T06:16:34Z",
-    "last_refreshed_by": "copilot-cli Task 5 GTO issue reconciliation"
+    "last_refreshed": "2026-06-05T06:32:15Z",
+    "last_refreshed_by": "copilot-cli Task 6 Conduit status constraints"
   },
   "summary": {
     "external_total": 30,
@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 156,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing crm7#529; no open PRs were present.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after Conduit status constraints merged; no open PRs were present.",
     "issues_by_repo": {
       "bsuite": 61,
       "business-suite-unified": 4,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Task 5 GTO issue reconciliation",
-    "last_refreshed_at": "2026-06-05T06:16:34Z"
+    "last_refreshed_by": "copilot-cli Task 6 Conduit status constraints",
+    "last_refreshed_at": "2026-06-05T06:32:15Z"
   },
   "repos": [
     {
@@ -105,7 +105,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "721b944",
+      "main_sha": "bc35269",
       "vercel": "success"
     },
     {
@@ -264,7 +264,7 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 5 audit: crm7#529 closed; remaining GTO catalogue/payroll issues open",
+      "phase": "Task 6 partial: Conduit r7 status constraints merged; remaining recruitment handoff issues open",
       "owner": "cross-app",
       "next_step": "Execute package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO/reporting, Conduit handoff, BSU platform, cross-app QA, production ship gate, and docs/dashboard closure in order.",
       "severity": "P0",
