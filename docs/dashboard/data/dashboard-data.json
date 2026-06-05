@@ -14,9 +14,9 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-06-04",
-    "last_refreshed": "2026-06-04T12:27:49Z",
-    "last_refreshed_by": "copilot-cli WS-8 SECDEF hardening evidence"
+    "last_refresh": "2026-06-05",
+    "last_refreshed": "2026-06-05T04:03:36Z",
+    "last_refreshed_by": "copilot-cli Task 0 production-spec inventory"
   },
   "summary": {
     "external_total": 30,
@@ -58,11 +58,11 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 157,
+    "open_issues_total": 158,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-04 after bsuite#1408 was filed; no open PRs remained before this tracking PR.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 during Task 0 production-spec inventory; no open PRs were present. Production-spec tracker issue #1422 was filed after the initial inventory, bringing open issues to 158.",
     "issues_by_repo": {
-      "bsuite": 61,
+      "bsuite": 62,
       "business-suite-unified": 4,
       "crm7": 74,
       "conduit": 11,
@@ -80,16 +80,16 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli",
-    "last_refreshed_at": "2026-06-04T12:27:49Z"
+    "last_refreshed_by": "copilot-cli Task 0 production-spec inventory",
+    "last_refreshed_at": "2026-06-05T04:03:36Z"
   },
   "repos": [
     {
       "name": "bsuite",
       "type": "parent",
-      "active_plans": 17,
+      "active_plans": 18,
       "archived": 0,
-      "main_sha": "32b4645",
+      "main_sha": "3b2d3ed",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "2d818716",
+      "main_sha": "2d81871",
       "vercel": "success"
     },
     {
@@ -255,6 +255,22 @@
       "next_step": "Page/form/custom authoring phases active",
       "severity": "P1",
       "category": "Schema"
+    },
+    {
+      "id": "p-bsuite-10",
+      "title": "Production specification completion execution plan",
+      "repo": "bsuite",
+      "scope": "parent",
+      "source": "in-repo",
+      "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
+      "status": "in-flight",
+      "phase": "Task 0 inventory active",
+      "owner": "cross-app",
+      "next_step": "Execute package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO/reporting, Conduit handoff, BSU platform, cross-app QA, production ship gate, and docs/dashboard closure in order.",
+      "severity": "P0",
+      "category": "Production readiness",
+      "issue": "GaryOcean428/bsuite#1422",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1422"
     },
     {
       "id": "p-crm7-1",
@@ -867,9 +883,18 @@
       },
       {
         "name": "@bsuite/dry-lint",
+        "current_pinned": "0.5.0",
+        "source_version": "0.5.0",
+        "delta": "0.5.0 rolled out to all six consumers",
+        "npm_version": "0.5.0"
+      },
+      {
+        "name": "@bsuite/charge-calc",
         "current_pinned": "0.4.0 / ^0.4.0",
-        "source_version": "0.4.0",
-        "delta": "oauth-callback-must-bridge AST rule present"
+        "source_version": "0.5.0",
+        "npm_version": "0.4.0",
+        "status": "operator-blocked publish",
+        "delta": "source ahead of npm; consumers must not bump until npm serves 0.5.0+"
       }
     ],
     "tests": [
@@ -2864,10 +2889,10 @@
     }
   ],
   "counters": {
-    "open_issues_total": 156,
+    "open_issues_total": 158,
     "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 60,
+      "bsuite": 62,
       "business-suite-unified": 4,
       "crm7": 74,
       "conduit": 11,

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // In-memory localStorage shim. Vitest + jsdom's built-in Storage impl is
 // inconsistent across versions (sometimes missing `.clear()`), so we own
-// the mock here — same pattern the cookieStorage tests use.
+// the mock here, matching the shared storage-adapter test pattern.
 function installLocalStorageMock() {
   const store: Record<string, string> = {}
   const mock = {
