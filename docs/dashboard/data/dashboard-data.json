@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T17:12:00Z",
-    "last_refreshed_by": "copilot-cli CRM7 PageGrid rollout"
+    "last_refreshed": "2026-06-05T17:34:00Z",
+    "last_refreshed_by": "copilot-cli Braden PageGrid rollout"
   },
   "summary": {
     "external_total": 30,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli CRM7 PageGrid rollout",
-    "last_refreshed_at": "2026-06-05T17:12:00Z"
+    "last_refreshed_by": "copilot-cli Braden PageGrid rollout",
+    "last_refreshed_at": "2026-06-05T17:34:00Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "19789c1",
+      "main_sha": "5e69698",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "a92226fe",
+      "main_sha": "a92226f",
       "vercel": "success"
     },
     {
@@ -129,7 +129,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "f284de2",
+      "main_sha": "8b43503",
       "vercel": "success"
     },
     {
@@ -264,9 +264,9 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 8 Throughput/R80/BSU/CRM7 PageGrid slices merged; ui/schema-registry npm blockers remain",
+      "phase": "Task 8 named app PageGrid slices merged; final #479 acceptance decision remains",
       "owner": "cross-app",
-      "next_step": "Continue Task 8 PageGrid decision/rollout for Braden and any deeper CRM7/BSU scope, publish @bsuite/ui@0.4.0 after npm auth blocker #1452, and resolve schema-registry blocker #1432 before consumer lockfile rollout; use parent bsuite workflow/MCP for shared Supabase project tuybltdrdefjblnplpqo.",
+      "next_step": "Decide whether bsuite#479 acceptance allows targeted PageGrid slices plus existing DraggableCardPage coverage, or requires deeper CRM7/BSU full replacement. Continue @bsuite/ui publish blocker #1452 and schema-registry blocker #1432 before consumer lockfile rollout; use parent bsuite workflow/MCP for shared Supabase project tuybltdrdefjblnplpqo.",
       "severity": "P0",
       "category": "Production readiness",
       "issue": "GaryOcean428/bsuite#1422",
