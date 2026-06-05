@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T05:05:49Z",
-    "last_refreshed_by": "copilot-cli Task 1 charge-calc rollout"
+    "last_refreshed": "2026-06-05T05:47:08Z",
+    "last_refreshed_by": "copilot-cli Task 2 auth rollout"
   },
   "summary": {
     "external_total": 30,
@@ -60,7 +60,7 @@
     "apprentice_placements_ready_for_review": 1,
     "open_issues_total": 157,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after charge-calc rollout PRs merged; no open PRs were present.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after auth 0.2.5 rollout PRs merged; no open PRs were present.",
     "issues_by_repo": {
       "bsuite": 61,
       "business-suite-unified": 4,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Task 1 charge-calc rollout",
-    "last_refreshed_at": "2026-06-05T05:05:49Z"
+    "last_refreshed_by": "copilot-cli Task 2 auth rollout",
+    "last_refreshed_at": "2026-06-05T05:47:08Z"
   },
   "repos": [
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "01c4fa7",
+      "main_sha": "aabb99b",
       "vercel": "success"
     },
     {
@@ -105,7 +105,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "1620242",
+      "main_sha": "721b944",
       "vercel": "success"
     },
     {
@@ -113,7 +113,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "483e1ef",
+      "main_sha": "d8c3613",
       "vercel": "success"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "2334166",
+      "main_sha": "1e16b78",
       "vercel": "success"
     },
     {
@@ -129,7 +129,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "8813d71",
+      "main_sha": "9a74da4",
       "vercel": "success"
     },
     {
@@ -137,7 +137,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "a245a1b",
+      "main_sha": "f80359d",
       "vercel": "success"
     }
   ],
@@ -264,7 +264,7 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 1 package lane complete; Task 2 next",
+      "phase": "Task 2 auth package rollout merged; remaining auth/security gaps next",
       "owner": "cross-app",
       "next_step": "Execute package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO/reporting, Conduit handoff, BSU platform, cross-app QA, production ship gate, and docs/dashboard closure in order.",
       "severity": "P0",
@@ -868,9 +868,10 @@
     "packages": [
       {
         "name": "@bsuite/auth",
-        "current_pinned": "0.2.4",
-        "source_version": "0.2.4",
-        "delta": "current development consumer pin"
+        "current_pinned": "0.2.5 (all six consumers on development)",
+        "source_version": "0.2.5",
+        "delta": "0.2.5 published by bsuite#1426 workflow; six consumer PRs crm7#1011, R80.3#304, braden#315, throughput#203, conduit#303, and BSU#535 merged to development",
+        "npm_version": "0.2.5"
       },
       {
         "name": "@bsuite/dry-lint",
