@@ -11,7 +11,9 @@ The script never raises — a degraded refresh is better than a failed commit.
 
 Run from repo root:
 
-    python3 docs/dashboard/refresh-data.py > docs/dashboard/data/dashboard-data.json
+    tmp=$(mktemp)
+    python3 docs/dashboard/refresh-data.py > "$tmp"
+    mv "$tmp" docs/dashboard/data/dashboard-data.json
 """
 from __future__ import annotations
 
@@ -168,7 +170,7 @@ def main() -> int:
     except Exception as e:
         sys.stderr.write(f"::warning::update_meta failed: {e}\n")
 
-    sys.stdout.write(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+    sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2))
     sys.stdout.write("\n")
     return 0
 
