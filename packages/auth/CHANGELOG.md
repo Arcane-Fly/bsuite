@@ -2,6 +2,14 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.2.5 — 2026-06-05
+
+### Added — cross-tab logout and refresh-rejection expiry events
+
+- `startBSTokenRefresh()` now listens for `storage` events where another tab removes `bs_access_token`, clears the remaining BS OAuth keys in the current tab, and dispatches `bs-oauth-expired` with `reason: 'cross_tab_logout'`.
+- Refresh failures now dispatch `bs-oauth-expired` for both non-auth/network failures (`reason: 'network_error'`) and 4xx OAuth rejection failures (`reason: 'refresh_rejected'`) before clearing tokens.
+- The cleanup function returned by `startBSTokenRefresh()` removes the storage listener as well as the interval.
+
 ## 0.2.4 — 2026-05-29
 
 ### Fixed — logout cleanup clears PKCE and OAuth callback sentinels

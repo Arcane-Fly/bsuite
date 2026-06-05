@@ -858,4 +858,72 @@ describe('startBSTokenRefresh', () => {
     await vi.runOnlyPendingTimersAsync()
     expect(fetchMock).not.toHaveBeenCalled()
   })
+
+  it('clears remaining BS tokens and emits an expiry event when another tab removes bs_access_token', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    localMock.setItem('bs_access_token', 'access-old')
+    localMock.setItem('bs_refresh_token', 'refresh-old')
+    localMock.setItem('bs_user', '{"sub":"u"}')
+    localMock.setItem('bs_id_token', 'id-old')
+    const events: Array<CustomEvent<{ reason: string }>> = []
+    window.addEventListener('bs-oauth-expired', ((event: CustomEvent<{ reason: string }>) => {
+      events.push(event)
+    }) as EventListener)
+
+    const stop = createOAuthClient(CLIENT_ID).startBSTokenRefresh()
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'bs_access_token',
+      oldValue: 'access-old',
+      newValue: null,
+    }))
+
+    expect(localMock.getItem('bs_access_token')).toBeNull()
+    expect(localMock.getItem('bs_refresh_token')).toBeNull()
+    expect(localMock.getItem('bs_user')).toBeNull()
+    expect(localMock.getItem('bs_id_token')).toBeNull()
+    expect(events.map((event) => event.detail.reason)).toContain('cross_tab_logout')
+    stop()
+  })
+
+  it('cleanup removes the cross-tab storage listener', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+
+    const stop = createOAuthClient(CLIENT_ID).startBSTokenRefresh()
+    stop()
+
+    expect(removeSpy).toHaveBeenCalledWith('storage', expect.any(Function))
+    removeSpy.mockRestore()
+  })
+
+  it('emits refresh_rejected before clearing tokens when OAuth refresh returns 4xx', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const expiredPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 60 }));
+    localMock.setItem('bs_access_token', `header.${expiredPayload}.signature`)
+    localMock.setItem('bs_refresh_token', 'refresh-old')
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+      text: async () => 'invalid_grant',
+    })
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const events: Array<CustomEvent<{ reason: string }>> = []
+    window.addEventListener('bs-oauth-expired', ((event: CustomEvent<{ reason: string }>) => {
+      events.push(event)
+    }) as EventListener)
+
+    try {
+      const stop = createOAuthClient(CLIENT_ID).startBSTokenRefresh()
+      await vi.runOnlyPendingTimersAsync()
+      stop()
+    } finally {
+      warnSpy.mockRestore()
+    }
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(localMock.getItem('bs_access_token')).toBeNull()
+    expect(localMock.getItem('bs_refresh_token')).toBeNull()
+    expect(events.map((event) => event.detail.reason)).toContain('refresh_rejected')
+  })
 })
