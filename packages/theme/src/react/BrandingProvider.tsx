@@ -103,15 +103,6 @@ export interface BrandingProviderProps {
   applyPersistedOnMount?: boolean
 }
 
-interface ImportMetaWithOptionalEnv {
-  env?: Record<string, string | boolean | undefined>
-}
-
-function isDevEnvironment(): boolean {
-  const env = (import.meta as ImportMetaWithOptionalEnv).env
-  return env?.DEV === true || env?.MODE === 'development'
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // OKLCH validation
 // Accepts: oklch(L C H) or oklch(L C H / A)
@@ -244,6 +235,13 @@ function warnIfProtectedKeyAttempted(branding: TenantBranding): void {
   }
 }
 
+function isDevEnvironment(): boolean {
+  const env = (import.meta as ImportMeta & {
+    env?: { DEV?: boolean; MODE?: string; NODE_ENV?: string }
+  }).env
+  return env?.DEV === true || env?.MODE === 'development' || env?.NODE_ENV === 'development'
+}
+
 function persistBranding(branding: TenantBranding | null): void {
   try {
     if (branding) {
@@ -268,7 +266,8 @@ function loadPersistedBranding(): TenantBranding | null {
 
 function isBrandingEnabled(): boolean {
   try {
-    const flag = (import.meta as ImportMetaWithOptionalEnv).env
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const flag = (import.meta as any).env
     const value = flag?.VITE_ENABLE_BRANDING_OVERRIDE ?? flag?.['VITE_ENABLE_BRANDING_OVERRIDE']
     if (value === 'false' || value === '0') return false
   } catch {
@@ -343,7 +342,8 @@ export function BrandingProvider({
     if (!isBrandingEnabled()) return
     const channel = supabaseClient
       .channel('tenant-branding-updates')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tenants' }, () => { void fetchBranding() })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: 'UPDATE', schema: 'public', table: 'tenants' }, (_payload: unknown) => { void fetchBranding() })
       .subscribe()
     channelRef.current = channel
     return () => {

@@ -15,8 +15,8 @@
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-05",
-    "last_refreshed": "2026-06-05T06:32:15Z",
-    "last_refreshed_by": "copilot-cli Task 6 Conduit status constraints"
+    "last_refreshed": "2026-06-05T06:58:34Z",
+    "last_refreshed_by": "copilot-cli Task 7 package publishes"
   },
   "summary": {
     "external_total": 30,
@@ -58,11 +58,11 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 156,
+    "open_issues_total": 157,
     "open_prs_total": 0,
-    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after Conduit status constraints merged; no open PRs were present.",
+    "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after filing schema-registry blocker #1432; no open PRs were present.",
     "issues_by_repo": {
-      "bsuite": 61,
+      "bsuite": 62,
       "business-suite-unified": 4,
       "crm7": 73,
       "conduit": 11,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli Task 6 Conduit status constraints",
-    "last_refreshed_at": "2026-06-05T06:32:15Z"
+    "last_refreshed_by": "copilot-cli Task 7 package publishes",
+    "last_refreshed_at": "2026-06-05T06:58:34Z"
   },
   "repos": [
     {
@@ -264,7 +264,7 @@
       "source": "in-repo",
       "path": "docs/plans/20260605-production-spec-completion-plan-v1.00W.md",
       "status": "in-flight",
-      "phase": "Task 6 partial: Conduit r7 status constraints merged; remaining recruitment handoff issues open",
+      "phase": "Task 7 partial: ui/schema-builder/theme published; schema-registry npm permission blocker filed",
       "owner": "cross-app",
       "next_step": "Execute package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO/reporting, Conduit handoff, BSU platform, cross-app QA, production ship gate, and docs/dashboard closure in order.",
       "severity": "P0",
@@ -854,7 +854,16 @@
       "category": "Outstanding Item"
     }
   ],
-  "operator_blockers": [],
+  "operator_blockers": [
+    {
+      "id": "schema-registry-0.3.5-npm-publish",
+      "title": "Publish @bsuite/schema-registry 0.3.5",
+      "repo": "bsuite",
+      "status": "operator-blocked",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1432",
+      "note": "Source is 0.3.5 but npm serves 0.3.2; publish workflow reached npm publish and failed with 404/not found or no permission."
+    }
+  ],
   "production_state": {
     "all_apps_live_v0_2_0": true,
     "vercel_status": "6/6 success",
@@ -887,6 +896,38 @@
         "npm_version": "0.5.0",
         "status": "published and rolled out",
         "delta": "0.5.0 published by bsuite#1424 workflow; CRM7#1010 and R80.3#303 consume ^0.5.0 on development"
+      },
+      {
+        "name": "@bsuite/schema-builder",
+        "current_pinned": "^0.7.0 ranges; source/npm 0.7.2",
+        "source_version": "0.7.2",
+        "npm_version": "0.7.2",
+        "status": "published",
+        "delta": "0.7.2 published after bsuite#1431 fixed CSS declaration and use-sync-external-store packaging"
+      },
+      {
+        "name": "@bsuite/theme",
+        "current_pinned": "^0.3.3 ranges; source/npm 0.4.1",
+        "source_version": "0.4.1",
+        "npm_version": "0.4.1",
+        "status": "published",
+        "delta": "0.4.1 published after bsuite#1431 removed process.env from browser package build"
+      },
+      {
+        "name": "@bsuite/ui",
+        "current_pinned": "^0.2.0 / 0.2.0 consumers; source/npm 0.3.0",
+        "source_version": "0.3.0",
+        "npm_version": "0.3.0",
+        "status": "published",
+        "delta": "0.3.0 published by workflow 26999655947"
+      },
+      {
+        "name": "@bsuite/schema-registry",
+        "current_pinned": "^0.3.2 ranges; source 0.3.5, npm 0.3.2",
+        "source_version": "0.3.5",
+        "npm_version": "0.3.2",
+        "status": "operator-blocked npm permission",
+        "delta": "workflow 26999654795 reached npm publish but failed with 404/not found or no permission; tracked in bsuite#1432"
       }
     ],
     "tests": [
@@ -2881,10 +2922,10 @@
     }
   ],
   "counters": {
-    "open_issues_total": 156,
+    "open_issues_total": 157,
     "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 61,
+      "bsuite": 62,
       "business-suite-unified": 4,
       "crm7": 73,
       "conduit": 11,
