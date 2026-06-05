@@ -11,6 +11,30 @@ export {
   type AppSlug,
 } from './Logo.js'
 export { D2CDefaultLogo, type D2CDefaultLogoProps } from './default-logo.js'
+export {
+  Button,
+  type ButtonProps,
+  type ButtonSize,
+  type ButtonVariant,
+} from './button.js'
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+  type DialogContentProps,
+  type DialogOverlayProps,
+} from './dialog.js'
+export { EmptyState, type EmptyStateProps } from './empty-state.js'
+export { ErrorBoundary, type ErrorBoundaryProps } from './error-boundary.js'
+export { LoadingSpinner, type LoadingSpinnerProps } from './loading-spinner.js'
+export { StatusBadge, type StatusBadgeProps, type StatusBadgeTone } from './status-badge.js'
 
 // Branding components (v0.3.0+)
 export {

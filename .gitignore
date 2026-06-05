@@ -54,3 +54,5 @@ clinework.txt
 # Playwright MCP scratch — per-call page snapshots, console logs, downloads
 playwright-report/
 test-results/
+storybook-static/
+*/storybook-static/

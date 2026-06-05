@@ -8,6 +8,38 @@ the Vercel build context. Consumers install from npm with a pinned semver.
 
 ## Components
 
+### Core primitives (v0.4.0+)
+
+The package now owns the shared Tier 1 UI primitives apps should converge on:
+
+```tsx
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  EmptyState,
+  ErrorBoundary,
+  LoadingSpinner,
+  StatusBadge,
+} from '@bsuite/ui'
+```
+
+These primitives use BSuite/shadcn semantic token classes only (`bg-primary`,
+`text-muted-foreground`, `border-border`, `text-status-success`, etc.) so D2C apps can
+skin them through `@bsuite/theme` and Braden can map the same roles to the
+corporate palette.
+
+### Storybook
+
+Run the shared primitive gallery from this package:
+
+```bash
+pnpm -C packages/ui storybook
+pnpm -C packages/ui build-storybook
+```
+
 ### `DotPattern`
 
 Full-viewport dot-pattern background. SVG `<pattern>` tiling — ~1 DOM node
@@ -21,14 +53,14 @@ import { DotPattern } from '@bsuite/ui'
     width={28}
     height={28}
     cr={1.5}
-    className="opacity-[0.35] [color:var(--accent-primary)]"
+    className="opacity-[0.35] text-muted-foreground"
   />
   {/* page content */}
 </div>
 ```
 
-Colour control via Tailwind `text-*` utilities or inline `[color:var(...)]`
-(dots use `fill="currentColor"`).
+Colour control via semantic Tailwind `text-*` utilities (dots use
+`fill="currentColor"`).
 
 ### `Logo`
 
@@ -151,7 +183,7 @@ The package provides subpath exports for better tree-shaking:
 
 ```tsx
 // Main exports
-import { Logo, BrandingCard } from '@bsuite/ui'
+import { Logo, BrandingCard, Button, StatusBadge } from '@bsuite/ui'
 
 // Dot pattern only
 import { DotPattern } from '@bsuite/ui/dot-pattern'
@@ -161,6 +193,11 @@ import { cn } from '@bsuite/ui/utils'
 
 // Branding components only
 import { BrandingCard, ColorEditorSheet, OklchColorPicker } from '@bsuite/ui/branding'
+
+// Primitive subpaths
+import { Button } from '@bsuite/ui/button'
+import { DialogContent } from '@bsuite/ui/dialog'
+import { EmptyState } from '@bsuite/ui/empty-state'
 
 // SVG asset
 import logoSvg from '@bsuite/ui/assets/d2c-default-logo.svg'
