@@ -40,12 +40,12 @@ describe('DotPattern', () => {
   })
 
   it('merges consumer className via tailwind-merge (last wins)', () => {
-    const { container } = render(<DotPattern className="text-blue-500 opacity-30" />)
+    const { container } = render(<DotPattern className="text-primary opacity-30" />)
     const svg = container.querySelector('svg')!
-    // Default class has text-neutral-400/80; tailwind-merge should drop it
-    // in favour of the consumer-provided text-blue-500.
-    expect(svg.className.baseVal).toContain('text-blue-500')
-    expect(svg.className.baseVal).not.toContain('text-neutral-400/80')
+    // Default class has text-muted-foreground/80; tailwind-merge should drop it
+    // in favour of the consumer-provided semantic text-primary token.
+    expect(svg.className.baseVal).toContain('text-primary')
+    expect(svg.className.baseVal).not.toContain('text-muted-foreground/80')
     expect(svg.className.baseVal).toContain('opacity-30')
   })
 

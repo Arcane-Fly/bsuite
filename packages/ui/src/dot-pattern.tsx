@@ -16,7 +16,7 @@ import { cn } from './utils.js'
  *               @keyframes rule in its CSS (kept out of this package so
  *               apps can theme the glow to their brand).
  * @param className Additional classes merged via `tailwind-merge` so
- *               consumers can override the default `text-neutral-400/80`
+ *               consumers can override the default `text-muted-foreground/80`
  *               colour (dots use `fill="currentColor"` so overriding
  *               `text-*` is the supported way to set colour).
  */
@@ -65,7 +65,7 @@ export function DotPattern({
     <svg
       aria-hidden="true"
       className={cn(
-        'pointer-events-none absolute inset-0 h-full w-full text-neutral-400/80',
+        'pointer-events-none absolute inset-0 h-full w-full text-muted-foreground/80',
         glow && 'animate-dot-glow',
         className,
       )}
