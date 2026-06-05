@@ -212,6 +212,10 @@ export function createOAuthClient(clientId: string): OAuthClient {
   const REDIRECT_LOOP_KEY = 'bs_oauth_last_redirect_at';
   const REDIRECT_LOOP_WINDOW_MS = 10_000;
 
+  function dispatchOAuthExpired(reason: 'cross_tab_logout' | 'network_error' | 'refresh_rejected'): void {
+    window.dispatchEvent(new CustomEvent('bs-oauth-expired', { detail: { reason } }));
+  }
+
   function assertNoRecentRedirect(): void {
     let raw: string | null = null;
     try {
@@ -512,9 +516,7 @@ export function createOAuthClient(clientId: string): OAuthClient {
       }
     } catch (err) {
       const isAuthError = err instanceof Error && /^Token refresh failed: 4/.test(err.message);
-      if (!isAuthError) {
-        window.dispatchEvent(new CustomEvent('bs-oauth-expired', { detail: { reason: 'network_error' } }));
-      }
+      dispatchOAuthExpired(isAuthError ? 'refresh_rejected' : 'network_error');
       console.warn('[BS OAuth] Token refresh failed, clearing tokens:', err);
       clearBSTokens();
     }
@@ -598,10 +600,20 @@ export function createOAuthClient(clientId: string): OAuthClient {
    * Returns a cleanup function to stop the interval.
    */
   function startBSTokenRefresh(): () => void {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== 'bs_access_token') return;
+      if (event.oldValue && event.newValue === null) {
+        clearBSTokens();
+        dispatchOAuthExpired('cross_tab_logout');
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
     void checkAndRefreshToken();
     if (refreshIntervalId) clearInterval(refreshIntervalId);
     refreshIntervalId = setInterval(() => void checkAndRefreshToken(), 60_000);
     return () => {
+      window.removeEventListener('storage', handleStorage);
       if (refreshIntervalId) {
         clearInterval(refreshIntervalId);
         refreshIntervalId = null;

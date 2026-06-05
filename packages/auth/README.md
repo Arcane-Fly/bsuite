@@ -126,7 +126,7 @@ interface VerifiedUser {
 - **JWKS verification** — `verifyAccessToken` fetches the Supabase `/.well-known/jwks.json` once and caches it via `jose`'s `createRemoteJWKSet`. RS256/ES256 only.
 - **PKCE S256 mandatory** — no implicit flow, no `plain` challenge.
 - **OIDC nonce verification** — if `id_token` is returned, its `nonce` claim is verified against the value stored in `sessionStorage('bs_oauth_nonce')`. Mismatch throws “id_token nonce mismatch — possible replay attack” (OIDC Core §3.1.2.2).
-- **Token expiry event** — if the auto-refresh loop fails for non-auth reasons (network), the package dispatches a `bs-oauth-expired` `CustomEvent` on `window` so apps can react (e.g. show a banner) before tokens are cleared.
+- **Token expiry event** — if the auto-refresh loop fails or a sibling tab removes `bs_access_token`, the package dispatches a `bs-oauth-expired` `CustomEvent` on `window` so apps can react (e.g. show a banner) before tokens are cleared. Reasons: `network_error`, `refresh_rejected`, `cross_tab_logout`.
 
 ## Per-app OAuth client IDs
 
