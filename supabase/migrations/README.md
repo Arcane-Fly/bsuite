@@ -1,8 +1,31 @@
 # BSuite Parent Repo Migrations
 
-This directory holds migrations that affect the **shared Supabase project `tuybltdrdefjblnplpqo`** (the same project all 6 BSuite apps connect to). Submodule migrations live under `<submodule>/supabase/migrations/`.
+This directory holds migrations that affect the **shared Supabase project `tuybltdrdefjblnplpqo`** (the same project all 6 BSuite apps connect to). Submodule migrations live under `<submodule>/supabase/migrations/`; shared package migrations may also live under `packages/<package>/supabase/migrations/`.
 
-> **Current count:** 14 versioned migrations (as of 2026-05-14).
+> **Current count:** see the generated parent control-plane manifest at [`../schema-manifest.json`](../schema-manifest.json). Refresh it with `node scripts/supabase/generate-schema-manifest.mjs > supabase/schema-manifest.json` from the parent repo root.
+
+## Parent control-plane manifest
+
+The parent repo is the schema/migration control plane for the single shared
+Supabase project. The source of truth for migration scope discovery is:
+
+- [`../migration-scopes.json`](../migration-scopes.json) — human-authored list
+  of parent, app, and package migration scopes.
+- [`../schema-manifest.json`](../schema-manifest.json) — generated inventory of
+  migration files and Edge Function directories.
+
+This manifest lets CI reason about preview-database requirements without
+physically moving every migration into the parent `supabase/migrations/`
+directory. Physical consolidation remains optional; the important invariant is
+that the parent repo knows every scope and can plan/replay them in a stable
+order.
+
+Preview database planning lives in
+`.github/workflows/supabase-preview-db.yml`. Native Supabase GitHub branching
+should be connected to the parent repo with working directory `.` and required
+check `Supabase Preview`; Vercel preview deployments must receive Vite-compatible
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` aliases in addition to any
+Supabase-provided `NEXT_PUBLIC_*` names.
 
 ## Mandatory rule (NEW — 2026-05-13)
 
