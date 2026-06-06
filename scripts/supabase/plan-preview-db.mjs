@@ -110,7 +110,7 @@ function toMarkdown(plan) {
   lines.push('### Recommended next step');
   if (plan.requires_preview_database) {
     lines.push('- Ensure the parent `bsuite` Supabase GitHub integration is connected with working directory `.` and required check `Supabase Preview` enabled, or dispatch a parent preview workflow from the app PR.');
-    lines.push('- Ensure Vercel preview env aliases include Vite-compatible `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or app source supports Supabase-injected `NEXT_PUBLIC_SUPABASE_ANON_KEY`).');
+    lines.push('- Ensure Vercel preview env aliases include canonical `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` for Vite apps and `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for Conduit.');
   } else {
     lines.push('- No Supabase migrations/functions changed. Reuse the normal app preview environment.');
   }
