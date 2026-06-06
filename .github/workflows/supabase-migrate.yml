@@ -7,7 +7,8 @@
 # - .sql       → standard migrations applied via `supabase migration up
 #                --linked --include-all`. The CLI handles auth + pooler.
 #                --include-all skips the strict drift check that `db push`
-#                does (schema_migrations is shared across 7 submodules, so
+#                does (schema_migrations is shared across the parent/app/package
+#                migration scopes, so
 #                each scope's local files are always a subset of remote).
 # - .nontx.sql → non-transactional migrations (e.g. CREATE INDEX CONCURRENTLY)
 #                applied via direct psql after the transactional pass.
@@ -41,6 +42,7 @@ on:
       - 'business-suite-unified/supabase/migrations/**'
       - 'conduit/supabase/migrations/**'
       - 'throughput/supabase/migrations/**'
+      - 'packages/schema-builder/supabase/migrations/**'
   workflow_dispatch:
     inputs:
       submodule:
@@ -57,6 +59,7 @@ on:
           - business-suite-unified
           - conduit
           - throughput
+          - schema-builder
 
 permissions:
   contents: read
@@ -85,7 +88,7 @@ jobs:
         run: |
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             if [ "$DISPATCH_INPUT" = "all" ]; then
-              echo 'matrix=["root","crm7","R80.3","braden","business-suite-unified","conduit","throughput"]' >> "$GITHUB_OUTPUT"
+              echo 'matrix=["root","crm7","R80.3","braden","business-suite-unified","conduit","throughput","schema-builder"]' >> "$GITHUB_OUTPUT"
             else
               echo "matrix=[\"$DISPATCH_INPUT\"]" >> "$GITHUB_OUTPUT"
             fi
@@ -94,9 +97,13 @@ jobs:
             if git diff --name-only HEAD~1 HEAD -- "supabase/migrations/" | grep -q .; then
               CHANGED+=("\"root\"")
             fi
-            for dir in crm7 R80.3 braden business-suite-unified conduit throughput; do
+            for dir in crm7 R80.3 braden business-suite-unified conduit throughput packages/schema-builder; do
               if git diff --name-only HEAD~1 HEAD -- "$dir/supabase/migrations/" | grep -q .; then
-                CHANGED+=("\"$dir\"")
+                if [ "$dir" = "packages/schema-builder" ]; then
+                  CHANGED+=("\"schema-builder\"")
+                else
+                  CHANGED+=("\"$dir\"")
+                fi
               fi
             done
             if [ ${#CHANGED[@]} -eq 0 ]; then
@@ -133,6 +140,8 @@ jobs:
         run: |
           if [ "$SUBMODULE" = "root" ]; then
             echo "workdir=." >> "$GITHUB_OUTPUT"
+          elif [ "$SUBMODULE" = "schema-builder" ]; then
+            echo "workdir=packages/schema-builder" >> "$GITHUB_OUTPUT"
           else
             echo "workdir=$SUBMODULE" >> "$GITHUB_OUTPUT"
           fi
@@ -158,7 +167,7 @@ jobs:
           # workflow — schema_migrations is operator-managed via Supabase MCP.
           if [ $RC -ne 0 ]; then
             if grep -q "Remote migration versions not found in local" /tmp/mig-out.log; then
-              echo "::warning::Drift detected per-submodule view (expected — schema_migrations is shared across 7 scopes). Operator manages migrations via Supabase MCP. No-op for this scope."
+              echo "::warning::Drift detected per-scope view (expected — schema_migrations is shared across parent/app/package migration scopes). Operator manages migrations via Supabase MCP. No-op for this scope."
               exit 0
             fi
             echo "::error::Migration apply failed for unknown reason. Check log."
