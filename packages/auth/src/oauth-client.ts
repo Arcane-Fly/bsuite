@@ -27,7 +27,52 @@ import type {
   VerifiedUser,
 } from './types.js';
 
-const BUSINESS_SUITE_SUPABASE_URL = 'https://tuybltdrdefjblnplpqo.supabase.co';
+const DEFAULT_BUSINESS_SUITE_SUPABASE_URL = 'https://tuybltdrdefjblnplpqo.supabase.co';
+const BUSINESS_SUITE_SUPABASE_URL_ENV_NAMES = [
+  'VITE_BSU_OAUTH_SUPABASE_URL',
+  'NEXT_PUBLIC_BSU_OAUTH_SUPABASE_URL',
+  'BSU_OAUTH_SUPABASE_URL',
+  'VITE_BUSINESS_SUITE_SUPABASE_URL',
+  'NEXT_PUBLIC_BUSINESS_SUITE_SUPABASE_URL',
+  'BUSINESS_SUITE_SUPABASE_URL',
+] as const;
+
+function readRuntimeEnv(name: string): string | undefined {
+  const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  const processEnv = (
+    globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }
+  ).process?.env;
+
+  return env?.[name] ?? processEnv?.[name];
+}
+
+function resolveBusinessSuiteSupabaseUrl(): string {
+  for (const name of BUSINESS_SUITE_SUPABASE_URL_ENV_NAMES) {
+    const value = readRuntimeEnv(name)?.trim();
+    if (!value) continue;
+
+    let parsed: URL;
+    try {
+      parsed = new URL(value);
+    } catch {
+      throw new Error(
+        `${name} must be an absolute Supabase URL in the form https://<project-ref>.supabase.co`
+      );
+    }
+
+    if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('.supabase.co')) {
+      throw new Error(
+        `${name} must be an HTTPS Supabase URL in the form https://<project-ref>.supabase.co`
+      );
+    }
+
+    return parsed.origin;
+  }
+
+  return DEFAULT_BUSINESS_SUITE_SUPABASE_URL;
+}
+
+const BUSINESS_SUITE_SUPABASE_URL = resolveBusinessSuiteSupabaseUrl();
 
 // Lazy-initialized JWKS set — cached by jose, safe to create once per clientId
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
