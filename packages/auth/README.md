@@ -2,7 +2,17 @@
 
 OAuth 2.1 PKCE client shared across BSuite apps (CRM7, Conduit, R80.3, Braden, Throughput). BSU is the OAuth server; this package is the client every other app uses to consume it.
 
-The package is intentionally small — it hard-codes the BSuite Supabase host (`https://tuybltdrdefjblnplpqo.supabase.co`), resolves redirect URIs from `VITE_APP_URL` (or `NEXT_PUBLIC_APP_URL`) when available, and falls back to `${window.location.origin}/auth/callback`. It depends only on `jose` for JWKS verification.
+The package is intentionally small — it defaults to the production BSuite Supabase host (`https://tuybltdrdefjblnplpqo.supabase.co`), supports an explicit OAuth-server override for persistent development Supabase branches, resolves redirect URIs from `VITE_APP_URL` (or `NEXT_PUBLIC_APP_URL`) when available, and falls back to `${window.location.origin}/auth/callback`. It depends only on `jose` for JWKS verification.
+
+## OAuth server environment
+
+Production consumers need no extra configuration; the OAuth server defaults to the production BSuite Supabase project. Long-lived development deployments that use a persistent Supabase branch/project must set one of these variables to that branch URL:
+
+- `VITE_BSU_OAUTH_SUPABASE_URL` for Vite browser builds
+- `NEXT_PUBLIC_BSU_OAUTH_SUPABASE_URL` for Next.js browser builds
+- `BSU_OAUTH_SUPABASE_URL` for server/build-time environments
+
+Accepted aliases are `VITE_BUSINESS_SUITE_SUPABASE_URL`, `NEXT_PUBLIC_BUSINESS_SUITE_SUPABASE_URL`, and `BUSINESS_SUITE_SUPABASE_URL`. Values must be HTTPS Supabase project URLs in the form `https://<project-ref>.supabase.co`; invalid overrides throw before redirecting users into a broken OAuth flow.
 
 ## Install
 
@@ -99,7 +109,7 @@ interface VerifiedUser {
 
 ## Behaviour notes
 
-- **`signInWithBusinessSuite`** generates a PKCE `code_verifier`, `code_challenge` (S256), `state`, and OIDC `nonce`, stores them in `sessionStorage`, then sets `window.location.href` to the BSU `/auth/v1/oauth/authorize` URL. The returned Promise never resolves — the page navigates away.
+- **`signInWithBusinessSuite`** generates a PKCE `code_verifier`, `code_challenge` (S256), `state`, and OIDC `nonce`, stores them in `localStorage` with a 10-minute TTL sentinel, then sets `window.location.href` to the BSU `/auth/v1/oauth/authorize` URL. The returned Promise never resolves — the page navigates away.
 - **`exchangeCodeForTokens`** validates `state` (CSRF), reads the stored PKCE verifier, posts to `/auth/v1/oauth/token`, then JWKS-verifies the access token AND the OIDC `id_token` nonce (replay protection per OIDC Core §3.1.2.2). Throws on state mismatch, missing verifier, non-2xx response, or nonce mismatch.
 - **`refreshBusinessSuiteToken`** posts to `/auth/v1/oauth/token` with `grant_type=refresh_token` and verifies the new access token via JWKS before returning.
 - **`verifyAccessToken`** uses cached JWKS (`jose`'s `createRemoteJWKSet`) with `issuer: "<supabase>/auth/v1"` and `audience: "authenticated"`. RS256/ES256 only.
@@ -116,16 +126,18 @@ interface VerifiedUser {
 | `localStorage` | `bs_refresh_token` | Refresh token | until refresh / sign-out |
 | `localStorage` | `bs_user` | JSON-serialised `VerifiedUser` | until refresh / sign-out |
 | `localStorage` | `bs_id_token` | OIDC id_token (optional) | until refresh / sign-out |
-| `sessionStorage` | `bs_oauth_code_verifier` | PKCE code verifier | sign-in flow only |
-| `sessionStorage` | `bs_oauth_state` | CSRF state | sign-in flow only |
-| `sessionStorage` | `bs_oauth_nonce` | OIDC replay-protection nonce | sign-in flow only |
+| `localStorage` | `bs_oauth_code_verifier` | PKCE code verifier | sign-in flow only, TTL-guarded |
+| `localStorage` | `bs_oauth_state` | CSRF state | sign-in flow only, TTL-guarded |
+| `localStorage` | `bs_oauth_nonce` | OIDC replay-protection nonce | sign-in flow only, TTL-guarded |
+| `localStorage` | `bs_oauth_started_at` | PKCE TTL sentinel | sign-in flow only |
+| `localStorage` | `bs_oauth_inflight_code` | duplicate code-exchange guard | callback only |
 
 ## Design notes
 
 - **Per-domain `localStorage`** — tokens never leave the app's own origin. Cross-app SSO is achieved via OIDC `prompt=none` silent re-auth (`attemptSilentAuth`), NOT cross-domain cookies. The deprecated `business_suite_auth` cookie SSO scheme was removed 2025-02-27; do not reintroduce it.
 - **JWKS verification** — `verifyAccessToken` fetches the Supabase `/.well-known/jwks.json` once and caches it via `jose`'s `createRemoteJWKSet`. RS256/ES256 only.
 - **PKCE S256 mandatory** — no implicit flow, no `plain` challenge.
-- **OIDC nonce verification** — if `id_token` is returned, its `nonce` claim is verified against the value stored in `sessionStorage('bs_oauth_nonce')`. Mismatch throws “id_token nonce mismatch — possible replay attack” (OIDC Core §3.1.2.2).
+- **OIDC nonce verification** — if `id_token` is returned, its `nonce` claim is verified against the value stored in `localStorage('bs_oauth_nonce')`. Mismatch throws “id_token nonce mismatch — possible replay attack” (OIDC Core §3.1.2.2).
 - **Token expiry event** — if the auto-refresh loop fails or a sibling tab removes `bs_access_token`, the package dispatches a `bs-oauth-expired` `CustomEvent` on `window` so apps can react (e.g. show a banner) before tokens are cleared. Reasons: `network_error`, `refresh_rejected`, `cross_tab_logout`.
 
 ## Per-app OAuth client IDs

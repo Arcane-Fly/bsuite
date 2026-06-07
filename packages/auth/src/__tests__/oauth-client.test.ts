@@ -45,6 +45,15 @@ function makeStorageMock() {
 
 const CLIENT_ID = '30f76744-3e0b-40bf-abb8-8c587389802e'
 const BS_URL = 'https://tuybltdrdefjblnplpqo.supabase.co'
+const DEV_BS_URL = 'https://udztobxdhunypbxtwevc.supabase.co'
+const OAUTH_SUPABASE_ENV_NAMES = [
+  'VITE_BSU_OAUTH_SUPABASE_URL',
+  'NEXT_PUBLIC_BSU_OAUTH_SUPABASE_URL',
+  'BSU_OAUTH_SUPABASE_URL',
+  'VITE_BUSINESS_SUITE_SUPABASE_URL',
+  'NEXT_PUBLIC_BUSINESS_SUITE_SUPABASE_URL',
+  'BUSINESS_SUITE_SUPABASE_URL',
+] as const
 
 let localMock = makeStorageMock()
 let sessionMock = makeStorageMock()
@@ -52,6 +61,7 @@ let fetchMock: ReturnType<typeof vi.fn>
 let originalLocation: Location
 let originalViteAppUrl: string | undefined
 let originalNextPublicAppUrl: string | undefined
+let originalOAuthSupabaseEnv: Partial<Record<(typeof OAUTH_SUPABASE_ENV_NAMES)[number], string | undefined>>
 
 function getProcessEnv(): Record<string, string | undefined> {
   const processLike = globalThis as typeof globalThis & {
@@ -89,8 +99,13 @@ beforeEach(() => {
   const env = getProcessEnv()
   originalViteAppUrl = env.VITE_APP_URL
   originalNextPublicAppUrl = env.NEXT_PUBLIC_APP_URL
+  originalOAuthSupabaseEnv = {}
   delete env.VITE_APP_URL
   delete env.NEXT_PUBLIC_APP_URL
+  for (const name of OAUTH_SUPABASE_ENV_NAMES) {
+    originalOAuthSupabaseEnv[name] = env[name]
+    delete env[name]
+  }
 })
 
 afterEach(() => {
@@ -110,6 +125,14 @@ afterEach(() => {
     delete env.NEXT_PUBLIC_APP_URL
   } else {
     env.NEXT_PUBLIC_APP_URL = originalNextPublicAppUrl
+  }
+  for (const name of OAUTH_SUPABASE_ENV_NAMES) {
+    const value = originalOAuthSupabaseEnv[name]
+    if (value === undefined) {
+      delete env[name]
+    } else {
+      env[name] = value
+    }
   }
 })
 
@@ -190,6 +213,18 @@ describe('signInWithBusinessSuite', () => {
     expect(params.get('nonce')).toBe(localMock.getItem('bs_oauth_nonce'))
     // Default invocation does NOT include the OIDC prompt parameter.
     expect(params.get('prompt')).toBeNull()
+  })
+
+  it('uses VITE_BSU_OAUTH_SUPABASE_URL for isolated development OAuth servers', async () => {
+    getProcessEnv().VITE_BSU_OAUTH_SUPABASE_URL = DEV_BS_URL
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    expect(window.location.href.startsWith(`${DEV_BS_URL}/auth/v1/oauth/authorize?`)).toBe(true)
+  })
+
+  it('rejects malformed OAuth Supabase URL overrides before redirecting', async () => {
+    getProcessEnv().VITE_BSU_OAUTH_SUPABASE_URL = 'https://not-supabase.example.com'
+    await expect(import('../oauth-client.js')).rejects.toThrow(/VITE_BSU_OAUTH_SUPABASE_URL/)
   })
 
   it('prefers VITE_APP_URL for redirect_uri when configured', async () => {
@@ -491,6 +526,39 @@ describe('exchangeCodeForTokens', () => {
     const [, init] = fetchMock.mock.calls[0]
     const body = new URLSearchParams((init as { body: string }).body)
     expect(body.get('redirect_uri')).toBe('https://d.crm.crm7.app/auth/callback')
+  })
+
+  it('uses the configured development OAuth server for token exchange and JWKS verification', async () => {
+    getProcessEnv().NEXT_PUBLIC_BSU_OAUTH_SUPABASE_URL = `${DEV_BS_URL}/`
+    const { createOAuthClient } = await import('../oauth-client.js')
+    seedPkceState('s', 'v', 'n')
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => tokensFixture(),
+      text: async () => JSON.stringify(tokensFixture()),
+    })
+    mockJwtVerify.mockResolvedValue({
+      payload: {
+        sub: 'user-1',
+        client_id: CLIENT_ID,
+        role: 'authenticated',
+        nonce: 'n',
+      },
+    })
+
+    await createOAuthClient(CLIENT_ID).exchangeCodeForTokens('authcode', 's')
+
+    expect(fetchMock.mock.calls[0][0]).toBe(`${DEV_BS_URL}/auth/v1/oauth/token`)
+    expect(String(mockCreateRemoteJWKSet.mock.calls[0][0])).toBe(
+      `${DEV_BS_URL}/auth/v1/.well-known/jwks.json`
+    )
+    expect(mockJwtVerify).toHaveBeenNthCalledWith(
+      1,
+      'access-token-xyz',
+      'jwks-sentinel',
+      expect.objectContaining({ issuer: `${DEV_BS_URL}/auth/v1` }),
+    )
   })
 
   it('rejects when verifier is older than 10 minutes (TTL guard)', async () => {
