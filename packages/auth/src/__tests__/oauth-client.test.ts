@@ -10,7 +10,7 @@ import type { BusinessSuiteTokens } from '../types.js'
 // jwtVerify is a vi.fn() we can control per-test. The sentinel is opaque —
 // the module under test never inspects its shape.
 const mockJwtVerify = vi.fn()
-const mockCreateRemoteJWKSet = vi.fn(() => 'jwks-sentinel')
+const mockCreateRemoteJWKSet = vi.fn((_url: URL) => 'jwks-sentinel')
 
 vi.mock('jose', () => ({
   jwtVerify: mockJwtVerify,
