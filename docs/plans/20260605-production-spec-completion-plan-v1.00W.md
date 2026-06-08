@@ -47,7 +47,7 @@ This permission is limited to package-release work:
 1. Build, typecheck, test, and pack the package first.
 2. Bump semver correctly in `packages/*/package.json`.
 3. Merge the package release PR to `main` only when npm publishing requires it.
-4. Publish with `npm publish --access public`.
+4. Publish through the matching GitHub Actions `publish-*.yml` workflow on `main` using npm Trusted Publishers (OIDC); do not default back to `NPM_TOKEN`/manual token publishing.
 5. Confirm `npm view @bsuite/<package> version` returns the new version.
 6. Update consumer apps on `development` using npm semver only.
 7. Regenerate consumer lockfiles from outside the `bsuite` tree.

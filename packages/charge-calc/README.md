@@ -269,4 +269,4 @@ pnpm typecheck  # type-check only, no emit
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and the root [CLAUDE.md](../../CLAUDE.md) for project-wide standards.
 
-When modifying this package: build → bump version in `package.json` → `npm publish --access public` → update consumer `package.json` files → regenerate lockfiles per the **Lockfile generation** rule in CLAUDE.md.
+When modifying this package: build → bump version in `package.json` → merge the package release PR to `main` so `.github/workflows/publish-charge-calc.yml` publishes via npm Trusted Publishers (GitHub Actions OIDC, no `NPM_TOKEN`) → update consumer `package.json` files → regenerate lockfiles per the **Lockfile generation** rule in CLAUDE.md.

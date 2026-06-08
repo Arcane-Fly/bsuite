@@ -231,7 +231,7 @@ Cookie SSO has been **removed**. Each app's Supabase client uses per-domain defa
 
 1. **NEVER use `workspace:*`** for `@bsuite/*` dependencies in consumer projects. Always use the npm version (e.g., `"^0.1.0"`).
 2. **NEVER use `file:../packages/*`** — this also fails on Vercel since the parent directory doesn't exist.
-3. **When modifying a shared package**: build → bump version → `npm publish --access public` → update consumers → `pnpm install`.
+3. **When modifying a shared package**: build → bump version → merge the package release PR to `main` so the package's `publish-*.yml` GitHub Actions workflow publishes via npm Trusted Publishers (OIDC) → update consumers → `pnpm install`. Trusted publishing is the standard; do not default back to local `NPM_TOKEN`/manual token publishing.
 4. **`pnpm-workspace.yaml`** lives only at the bsuite root (scoped to `packages/*`). Individual project repos deployed on Vercel have no workspace config — they are fully standalone.
 5. **Version pinning**: `packageManager: "pnpm@10.33.3"` and `.node-version: 24` — do not change without coordinating across all projects.
 6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
