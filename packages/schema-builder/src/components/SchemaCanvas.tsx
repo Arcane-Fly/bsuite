@@ -19,7 +19,7 @@ import {
   applyNodeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { AlertTriangle, Workflow } from 'lucide-react';
+import { AlertTriangle, Info, Link2, MousePointer2, Workflow } from 'lucide-react';
 import {
   forwardRef,
   useCallback,
@@ -186,6 +186,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             id: entity.id,
             type: 'entity',
             position,
+            dragHandle: '.schema-node-drag-handle',
             data: {
               label: entity.label,
               entity,
@@ -400,6 +401,16 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
     );
 
     const onNodeDoubleClick = useCallback(
+      (_: React.MouseEvent, node: Node<EntityNodeData>) => {
+        const entity = node.data.entity;
+        if (!entity) return;
+        setSelectedEntity(entity);
+        setIsPanelOpen(true);
+      },
+      [],
+    );
+
+    const onNodeClick = useCallback(
       (_: React.MouseEvent, node: Node<EntityNodeData>) => {
         const entity = node.data.entity;
         if (!entity) return;
@@ -625,6 +636,16 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
 
     const showToolbar =
       !controller.isLoading && !controller.loadError && localNodes.length > 0;
+    const searchResults = useMemo(() => {
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) return controller.entities;
+      return controller.entities.filter(
+        (entity) =>
+          entity.label.toLowerCase().includes(q) ||
+          entity.name.toLowerCase().includes(q) ||
+          (entity.description ?? '').toLowerCase().includes(q),
+      );
+    }, [controller.entities, searchQuery]);
 
     const canvasContent = controller.isLoading ? (
       <div className="flex h-full w-full items-center justify-center bg-neutral-50 dark:bg-neutral-950">
@@ -663,16 +684,18 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
         onInit={(inst) => {
           flowRef.current = inst;
         }}
         fitView
+        nodeDragThreshold={8}
         aria-label="Entity relationship diagram"
       >
         <Background gap={16} />
-        <Controls />
-        <MiniMap />
+        <Controls showInteractive={false} />
+        <MiniMap pannable zoomable />
       </ReactFlow>
     );
 
@@ -704,13 +727,33 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         <div ref={wrapperRef} className="relative h-full flex-1">
           {canvasContent}
           {showToolbar ? (
-            <SchemaToolbar
-              onTidyUp={handleTidyUp}
-              onFitView={handleFitView}
-              onSearchChange={setSearchQuery}
-              searchQuery={searchQuery}
-              onExportPng={handleExportPng}
-            />
+            <>
+              <SchemaToolbar
+                onTidyUp={handleTidyUp}
+                onFitView={handleFitView}
+                onSearchChange={setSearchQuery}
+                searchQuery={searchQuery}
+                resultCount={searchResults.length}
+                totalCount={controller.entities.length}
+                onExportPng={handleExportPng}
+              />
+              <div className="absolute bottom-3 left-3 z-10 max-w-sm rounded-lg border border-blue-200 bg-white/95 p-3 text-xs text-neutral-700 shadow-sm backdrop-blur dark:border-blue-900/60 dark:bg-neutral-900/95 dark:text-neutral-200">
+                <div className="flex items-start gap-2">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" aria-hidden="true" />
+                  <div className="space-y-1">
+                    <p className="font-semibold text-neutral-900 dark:text-neutral-100">Schema Builder quick start</p>
+                    <p className="flex gap-1">
+                      <MousePointer2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                      Click a card to inspect fields. Drag the header grip to move it.
+                    </p>
+                    <p className="flex gap-1">
+                      <Link2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                      Drag a blue connector dot to another card to create a relationship.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : null}
         </div>
 
@@ -760,9 +803,9 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
               entityName={entity.name}
               existingFieldNames={existingFieldNames}
               nextSortOrder={entityFields.length}
-              onConfirm={(payload) => {
-                controller
-                  .createField({
+              onConfirm={async (payload) => {
+                try {
+                  await controller.createField({
                     tenant_id: tenantId,
                     entity_id: entity.id,
                     entity_type: entity.name,
@@ -777,9 +820,12 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                     scope: null,
                     is_system: false,
                     is_locked: false,
-                  })
-                  .catch(() => {});
-                setFieldDialogEntityId(null);
+                  });
+                  setFieldDialogEntityId(null);
+                } catch (err) {
+                  onError?.(`Failed to create field for ${entity.label}`, err);
+                  throw err;
+                }
               }}
             />
           );
@@ -813,21 +859,29 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
               entityName={entity.name}
               field={field}
               existingFieldNames={existingFieldNames}
-              onSave={(payload) => {
-                controller
-                  .updateField(field.id, {
+              onSave={async (payload) => {
+                try {
+                  await controller.updateField(field.id, {
                     field_name: payload.field_name,
                     field_type: payload.field_type,
                     label: payload.label,
                     placeholder: payload.placeholder,
                     is_required: payload.is_required,
-                  })
-                  .catch(() => {});
-                setFieldEditContext(null);
+                  });
+                  setFieldEditContext(null);
+                } catch (err) {
+                  onError?.(`Failed to update field ${field.field_name}`, err);
+                  throw err;
+                }
               }}
-              onDelete={() => {
-                controller.deleteField(field.id).catch(() => {});
-                setFieldEditContext(null);
+              onDelete={async () => {
+                try {
+                  await controller.deleteField(field.id);
+                  setFieldEditContext(null);
+                } catch (err) {
+                  onError?.(`Failed to delete field ${field.field_name}`, err);
+                  throw err;
+                }
               }}
               onRenamePhysical={async (newName, opts) => {
                 // Phase 3B: the two-phase dry-run → wet-run flow is owned by

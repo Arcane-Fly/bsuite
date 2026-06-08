@@ -60,8 +60,8 @@ export interface FieldEditDialogProps {
    * the row's own current name automatically).
    */
   existingFieldNames?: string[];
-  onSave: (payload: FieldEditDialogPayload) => void;
-  onDelete: () => void;
+  onSave: (payload: FieldEditDialogPayload) => void | Promise<void>;
+  onDelete: () => void | Promise<void>;
   /**
    * Phase 3B — opt-in physical-column rename. When provided, a disclosure
    * appears under the form whenever `field_name` differs from the initial
@@ -204,6 +204,7 @@ export function FieldEditDialog({
   const [renameState, setRenameState] = useState<PhysicalRenameState>({
     phase: 'idle',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Render-time reset keyed on `field.id`: when the parent swaps this
   // dialog between different fields (or toggles from null -> a field),
@@ -214,6 +215,7 @@ export function FieldEditDialog({
     setPrevFieldId(fieldId);
     if (field) dispatch({ type: 'INIT', field });
     setRenameState({ phase: 'idle' });
+    setIsSubmitting(false);
   }
 
   // Native <dialog> imperative open/close — mirrors FieldCreateDialog.
@@ -247,6 +249,7 @@ export function FieldEditDialog({
   const canSubmit =
     state.fieldName.length > 0 &&
     nameError === null &&
+    !isSubmitting &&
     renameState.phase !== 'running-dry' &&
     renameState.phase !== 'running-wet';
 
@@ -267,7 +270,14 @@ export function FieldEditDialog({
     if (!canSubmit) return;
     // Fast path: no physical rename requested — behave exactly like Phase 2.
     if (!state.physicalRenameRequested || !onRenamePhysical) {
-      onSave(buildPayload());
+      setIsSubmitting(true);
+      try {
+        await onSave(buildPayload());
+      } catch {
+        // Parent onSave owns the visible error sink; keep the dialog open.
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
     // Phase 3B: dry-run first so the user sees the exact DDL + affected
@@ -286,7 +296,7 @@ export function FieldEditDialog({
 
   const handleCancel = () => onOpenChange(false);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const displayName = field.label ?? field.field_name;
     const ok =
       typeof window !== 'undefined' && typeof window.confirm === 'function'
@@ -294,7 +304,15 @@ export function FieldEditDialog({
             `Delete field "${displayName}"? This cannot be undone.`,
           )
         : true;
-    if (ok) onDelete();
+    if (!ok) return;
+    setIsSubmitting(true);
+    try {
+      await onDelete();
+    } catch {
+      // Parent onDelete owns the visible error sink; keep the dialog open.
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleConfirmWetRun = async () => {
@@ -314,7 +332,14 @@ export function FieldEditDialog({
         return;
       }
       setRenameState({ phase: 'idle' });
-      onSave(buildPayload());
+      setIsSubmitting(true);
+      try {
+        await onSave(buildPayload());
+      } catch {
+        // Parent onSave owns the visible error sink; keep the dialog open.
+      } finally {
+        setIsSubmitting(false);
+      }
     } catch (err) {
       setRenameState({
         phase: 'error',
@@ -548,7 +573,9 @@ export function FieldEditDialog({
               >
                 {renameState.phase === 'running-dry'
                   ? 'Checking\u2026'
-                  : 'Save Changes'}
+                  : isSubmitting
+                    ? 'Saving\u2026'
+                    : 'Save Changes'}
               </button>
             </div>
           </div>

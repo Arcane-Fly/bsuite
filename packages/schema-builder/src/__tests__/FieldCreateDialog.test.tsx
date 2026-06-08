@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { FieldCreateDialog } from '../components/FieldCreateDialog.js';
 
@@ -113,7 +113,7 @@ describe('FieldCreateDialog', () => {
     expect(labelInput.value).toBe('Email Address');
   });
 
-  it('fires onConfirm with the correct payload when form is submitted', () => {
+  it('fires onConfirm with the correct payload when form is submitted', async () => {
     const { onConfirm } = setup({ nextSortOrder: 7 });
     fireEvent.change(screen.getByLabelText('Field Name'), {
       target: { value: 'phone_number' },
@@ -127,7 +127,7 @@ describe('FieldCreateDialog', () => {
     fireEvent.click(screen.getByLabelText('Required field'));
     fireEvent.click(screen.getByRole('button', { name: 'Create Field' }));
 
-    expect(onConfirm).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
     expect(onConfirm).toHaveBeenCalledWith({
       field_name: 'phone_number',
       field_type: 'phone',
