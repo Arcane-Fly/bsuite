@@ -464,4 +464,49 @@ describe('PageGridLayout layers panel', () => {
     expect(screen.getByText('Add widget:')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Revenue KPI/i })).toBeTruthy();
   });
+
+  it('keeps editor controls in their own stacking layer above the grid canvas', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="editor-stacking-test"
+        defaultLayouts={layeredLayouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div>, beta: <div>Beta widget</div> }}
+        widgetMeta={{ alpha: { label: 'Alpha' }, beta: { label: 'Beta' } }}
+      />,
+    );
+
+    openEditor();
+
+    const editorControls = view.container.querySelector<HTMLElement>('[data-page-grid-editor-controls]');
+    const editingCanvas = view.container.querySelector<HTMLElement>('[data-page-grid-editing="true"]');
+    const responsiveCanvas = view.container.querySelector<HTMLElement>('.page-grid-canvas');
+
+    expect(editorControls).toBeTruthy();
+    expect(editorControls?.className).toMatch(/\bz-40\b/);
+    expect(editorControls?.className).toMatch(/\bisolate\b/);
+    expect(editingCanvas).toBeTruthy();
+    expect(editingCanvas?.className).toMatch(/\bz-0\b/);
+    expect(responsiveCanvas).toBeTruthy();
+  });
+
+  it('does not paint-contain card chrome while editing, so dragged cards cannot clip editor controls', () => {
+    const view = render(
+      <PageGridLayout
+        pageKey="editor-containment-test"
+        defaultLayouts={layeredLayouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div>, beta: <div>Beta widget</div> }}
+      />,
+    );
+
+    openEditor();
+
+    const containedStyles = Array.from(
+      view.container.querySelectorAll<HTMLElement>('.react-grid-item [style*="contain"]'),
+    ).map((element) => element.getAttribute('style') ?? '');
+
+    expect(containedStyles.some((style) => style.includes('contain: layout style'))).toBe(true);
+    expect(containedStyles.join(' ')).not.toContain('contain: paint');
+  });
 });
