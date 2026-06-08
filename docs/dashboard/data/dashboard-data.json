@@ -16,7 +16,7 @@
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-08",
     "last_refreshed": "2026-06-07T02:38:00Z",
-    "last_refreshed_by": "copilot-cli package blocker reconciliation"
+    "last_refreshed_by": "copilot-cli schema-registry publish verification"
   },
   "summary": {
     "external_total": 30,
@@ -32,7 +32,7 @@
     "in_repo_active": 19,
     "in_repo_archivable_now": 0,
     "already_archived": 10,
-    "operator_blocked": 1,
+    "operator_blocked": 0,
     "production_apps_live_v0_2_0": 6,
     "docs_root_files_pending": 85,
     "audit_grand_total_v1": 59,
@@ -58,11 +58,11 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 152,
+    "open_issues_total": 151,
     "open_prs_total": 0,
     "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing bsuite#478; no open PRs were present.",
     "issues_by_repo": {
-      "bsuite": 59,
+      "bsuite": 58,
       "business-suite-unified": 4,
       "crm7": 72,
       "conduit": 11,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli package blocker reconciliation",
-    "last_refreshed_at": "2026-06-08T23:32:25Z"
+    "last_refreshed_by": "copilot-cli schema-registry publish verification",
+    "last_refreshed_at": "2026-06-08T23:54:15Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "9257e56",
+      "main_sha": "fd20c53",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -859,9 +859,9 @@
       "id": "schema-registry-0.3.5-npm-publish",
       "title": "Publish @bsuite/schema-registry 0.3.5",
       "repo": "bsuite",
-      "status": "operator-blocked",
-      "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1432",
-      "note": "Source is 0.3.5 but npm serves 0.3.2; publish workflow reached npm publish and failed with 404/not found or no permission."
+      "status": "done",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/actions/runs/27174554663",
+      "note": "Resolved: npm Trusted Publisher setup was added for @bsuite/schema-registry and workflow run 27174554663 published 0.3.5. npm view @bsuite/schema-registry version returns 0.3.5."
     },
     {
       "id": "ui-0.4.0-npm-publish",
@@ -2938,10 +2938,10 @@
     }
   ],
   "counters": {
-    "open_issues_total": 152,
+    "open_issues_total": 151,
     "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 59,
+      "bsuite": 58,
       "business-suite-unified": 4,
       "crm7": 72,
       "conduit": 11,
