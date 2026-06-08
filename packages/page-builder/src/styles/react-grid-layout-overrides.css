@@ -14,11 +14,24 @@
 
 .react-grid-layout {
   position: relative;
+  isolation: isolate;
   transition: height 200ms ease;
 }
 
 .react-grid-item {
+  overflow: visible;
   transition: transform 200ms ease, width 200ms ease, height 200ms ease;
+  z-index: 1;
+}
+
+.react-grid-layout .react-grid-item.react-draggable-dragging,
+.react-grid-layout .react-grid-item.resizing {
+  z-index: 20;
+}
+
+.react-grid-layout .react-grid-item.react-grid-placeholder {
+  z-index: 0;
+  pointer-events: none;
 }
 
 .react-grid-item.react-grid-placeholder {
