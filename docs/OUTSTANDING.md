@@ -66,12 +66,23 @@ Index plan integrating Codehouse Workforce-One parity tracking with full Platfor
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
-| 1 | File 12 grouped GitHub issues for the 35 parity gaps (WS-B) | Issue-filer subagent |
-| 2 | Dashboard JSON additive extension — `parity_status`, `feature_360_status`, `portal_coverage` (WS-C, post PR #535) | Dashboard subagent |
+| 1 | ~~File grouped GitHub issues for the Codehouse parity gaps (WS-B)~~ — Filed as bsuite#567–#579; only #570 and #572 remain open as of 2026-06-04. | ✅ Complete |
+| 2 | ~~Dashboard JSON additive extension — `parity_status`, `feature_360_status`, `portal_coverage` (WS-C, post PR #535)~~ — Live in `docs/dashboard/data/dashboard-data.json`; #570 adapter-export progress added via crm7#988. | ✅ Complete |
 | 3 | Ship `/dev/feature-builder` route in BSU per spec (WS-E) | BSU / Claude Code |
 | 4 | Doc-drift sweep — 17 items from `bsuite-inventory.md` (WS-F) | Cascade |
 | 5 | ~~6 submodule `OUTSTANDING.md` + `docs/plans/STATUS.md` link rows (WS-A3)~~ — Per-submodule OUTSTANDING files removed entirely per bsuite#488 on 2026-05-19; the parent merged backlog is the SSoT. STATUS.md citations remain in scope but are now decoupled from the OUTSTANDING-link sweep. | ✅ OUTSTANDING-side complete |
 | 6 | Red-team review across all 9 portal sub-plans before flipping plan W→A | multi-agent-red-team-planning |
+| 7 | Continue bsuite#570 after the adapter/credential/settings/status/EOFY-provider-request slices — crm7#988 merged MYOB/Astute export adapters, crm7#989 merged Vault-backed provider credential storage plus Astute DB provider support, crm7#990 surfaced those credentials in Settings, crm7#991 added ADR-compatible provider-passthrough STP/EOFY status tracking on payroll runs, and crm7#992 added the guarded EOFY provider request confirmation flow. Remaining work is provider API acknowledgement sync beyond the tracked handoff; direct ATO lodgement remains blocked by ADR 0004 unless superseded. | CRM7 implementer |
+
+### `plans/20260521-reports-w2-uplift-implementation-v1.00W.md` (added 2026-05-21)
+
+Reports W2 uplift execution ledger for Codehouse parity reports. Tasks 4, 6.1-6.6, Task 7, and Task 9 are merged on `development`; remaining work is the deferred Task 3a stepper extraction reuse guardrail and follow-on scheduling UI.
+
+| # | Remaining action | Owner |
+|---|------------------|-------|
+| 1 | ~~Complete Task 9 dashboard/outstanding-work linking and evidence URL refresh~~ | ✅ Complete via bsuite#1395 |
+| 2 | ~~Keep report-list uplift linked to the active backlog rather than reopening Task 7 backend reliability~~ | ✅ Complete via crm7#987 |
+| 3 | Keep follow-on scheduling UI linked to the active backlog rather than reopening Task 7 backend reliability | CRM7 implementer |
 
 ### `20260317-bsuite-gap-report-v2.00W.md`
 

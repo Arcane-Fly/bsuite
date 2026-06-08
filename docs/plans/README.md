@@ -27,6 +27,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 | `20260501-universal-wysiwyg-schema-ux-v1.00W.md` | W | Universal WYSIWYG + schema-driven UX (Phase 0 + Schema Builder Phase 1a/1b + schema-builder-specific Phase 3 complete; page/form/custom authoring phases active) |
 | `20260506-codehouse-parity-and-platform-360-v1.00W.md` | W | Codehouse Workforce-One parity + Platform-360 capability spec (index plan + 9 portal sub-plans + 1 visual feature builder spec under `20260506-codehouse-parity/`; refined-prompt provenance under `inputs/`). Permissions remain AUTH_CANONICAL.md + Supabase RLS + BSuite SSO — no new RBAC/ABAC framework. |
 | `20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md` | W | Part O.11 theme centralisation + enterprise white-label POC, O.12 feature-placement audit, and O.13 docs-coherence handoff |
+| `20260605-production-spec-completion-plan-v1.00W.md` | W | Production-spec completion execution plan: package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO, Conduit handoff, BSU platform, cross-app QA, production ship gate, and documentation/dashboard closure |
 
 ### Archived Plans (moved to `docs/archive/`)
 

@@ -56,13 +56,19 @@ pnpm test:packages     # shared @bsuite/* packages
 
 | Package | Latest | Consumers |
 |---------|--------|-----------|
-| `@bsuite/auth` | `0.1.1` | CRM7, Conduit, R80.3, Braden, Throughput |
-| `@bsuite/charge-calc` | `0.2.4` | CRM7, R80.3 |
-| `@bsuite/nav-core` | `0.5.2` | braden, CRM7 |
-| `@bsuite/page-builder` | `0.2.2` | BSU, CRM7, Conduit, R80.3 |
-| `@bsuite/schema-builder` | `0.7.1` | BSU, CRM7, Conduit, R80.3 |
-| `@bsuite/schema-registry` | `0.3.3` | all 6 apps |
-| `@bsuite/data-export` | `0.1.4` | CRM7, R80.3 |
+| `@bsuite/auth` | `0.2.4` | CRM7, Conduit, R80.3, Braden, Throughput, BSU |
+| `@bsuite/charge-calc` | `0.4.0` | CRM7, R80.3 |
+| `@bsuite/nav-core` | `0.7.0` | all 6 apps |
+| `@bsuite/page-builder` | `0.4.0` | BSU, CRM7, Conduit, R80.3, braden, Throughput |
+| `@bsuite/schema-builder` | `0.7.0` | BSU, CRM7, Conduit, R80.3 |
+| `@bsuite/schema-registry` | `0.3.2` | all 6 apps |
+| `@bsuite/data-export` | `0.1.4` | CRM7, R80.3, BSU |
+| `@bsuite/dates` | `0.1.0` | all 6 apps |
+| `@bsuite/theme` | `0.3.3` | CRM7, R80.3, BSU, Conduit, Throughput |
+| `@bsuite/ui` | `0.2.0` | R80.3, BSU, Throughput |
+| `@bsuite/dry-lint` | `0.4.0` | all 6 apps (devDep) |
+
+_Last suite-wide bump: 2026-06-01 (PRs crm7#932, R80.3#297, braden#312, BSU#531, conduit#297, throughput#199, bsuite#1340)._
 
 Vercel clones only the individual submodule repo → `workspace:*` and `file:../packages/*` both break. Always use caret npm ranges (`^0.1.0`). After editing a package: build → bump → `npm publish --access public` → bump consumers.
 

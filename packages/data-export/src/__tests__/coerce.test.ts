@@ -57,20 +57,23 @@ describe('coerceCell', () => {
   });
 
   it('throws TypeError for function values with key hint', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(() => coerceCell((() => 1) as any, undefined, 'callback')).toThrow(
+    expect(() =>
+      coerceCell((() => 1) as unknown as Parameters<typeof coerceCell>[0], undefined, 'callback'),
+    ).toThrow(
       /cannot coerce value of type function \(key: callback\)/,
     );
   });
 
   it('throws TypeError for symbol values', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(() => coerceCell(Symbol('s') as any)).toThrow(TypeError);
+    expect(() =>
+      coerceCell(Symbol('s') as unknown as Parameters<typeof coerceCell>[0]),
+    ).toThrow(TypeError);
   });
 
   it('throws TypeError for plain objects', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(() => coerceCell({ nested: true } as any)).toThrow(TypeError);
+    expect(() =>
+      coerceCell({ nested: true } as unknown as Parameters<typeof coerceCell>[0]),
+    ).toThrow(TypeError);
   });
 });
 

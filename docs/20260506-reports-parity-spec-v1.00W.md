@@ -1,5 +1,7 @@
 # Reports parity spec — close 4 Codehouse gaps (issue #574)
 
+> **Superseded for implementation tracking:** use [`docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md`](./plans/20260521-reports-w2-uplift-implementation-v1.00W.md) for the active execution/evidence ledger. This spec remains retained as the parity source/provenance document.
+
 **Document version:** 1.00W
 **Date:** 2026-05-06
 **Author:** perplexity-computer (research lane per protocol §11)

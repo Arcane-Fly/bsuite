@@ -152,17 +152,17 @@ const SIGNALS = [
   {
     id: 'NODE-PIN-DRIFT',
     severity: 'fail',
-    rule: 'Node 24 is canonical — .node-version must be "24.14.0\n" and engines.node must be "24.14.0" (npm-semver ranges like "24.x" and bare majors like "24" silently fall back to LTS=22.x on actions/setup-node + Vercel Sandbox; only fully-specified versions are honoured)',
+    rule: 'Node 24 is canonical — .node-version must be "24.x\\n" and engines.node must be "24.x" (exact patch pins produce Vercel warnings; bare "24" is ambiguous in setup-node)',
     skill: 'knowledge.md §Quickstart',
     match: (line, file) => {
       if (file.endsWith('.node-version')) {
         const content = line.trim();
-        if (content && content !== '24.14.0') return `.node-version must be "24.14.0" (saw ${JSON.stringify(content)})`;
+        if (content && content !== '24.x') return `.node-version must be "24.x" (saw ${JSON.stringify(content)})`;
       }
       if (file.endsWith('package.json') && line.includes('"node"')) {
         // Regex needed to extract the value from a JSON line with quote-variant whitespace.
         const m = line.match(ENGINES_NODE_VALUE);
-        if (m && m[1] !== '24.14.0') return `engines.node must be "24.14.0" (saw ${JSON.stringify(m[1])})`;
+        if (m && m[1] !== '24.x') return `engines.node must be "24.x" (saw ${JSON.stringify(m[1])})`;
       }
       return null;
     },
@@ -925,14 +925,14 @@ function selfTest() {
     { name: 'NODE-PIN-DRIFT — bare "24" flagged (silent LTS-22 fallback)', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { '.node-version': ['24'] },
       expect: (hits) => hits.some((h) => h.signal === 'NODE-PIN-DRIFT') },
-    { name: 'NODE-PIN-DRIFT — .node-version 24.14.0 NOT flagged', framework: 'vite-react', repoName: 'crm7',
-      addedByFile: { '.node-version': ['24.14.0'] },
+    { name: 'NODE-PIN-DRIFT — .node-version 24.x NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { '.node-version': ['24.x'] },
       expect: (hits) => hits.every((h) => h.signal !== 'NODE-PIN-DRIFT') },
-    { name: 'NODE-PIN-DRIFT — engines.node != 24.14.0 flagged', framework: 'vite-react', repoName: 'crm7',
+    { name: 'NODE-PIN-DRIFT — engines.node != 24.x flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'package.json': ['  "engines": { "node": "22" }'] },
       expect: (hits) => hits.some((h) => h.signal === 'NODE-PIN-DRIFT') },
-    { name: 'NODE-PIN-DRIFT — engines.node 24.14.0 NOT flagged', framework: 'vite-react', repoName: 'crm7',
-      addedByFile: { 'package.json': ['  "engines": { "node": "24.14.0" }'] },
+    { name: 'NODE-PIN-DRIFT — engines.node 24.x NOT flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'package.json': ['  "engines": { "node": "24.x" }'] },
       expect: (hits) => hits.every((h) => h.signal !== 'NODE-PIN-DRIFT') },
     { name: 'TAILWIND-V4-DEPREC — flex-shrink-0 flagged (crm7#679)', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/pages/billing/annual-review.tsx': ['      <div className="flex items-center gap-2 flex-shrink-0">'] },

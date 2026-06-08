@@ -168,31 +168,31 @@ Spec: [`20260506-codehouse-parity/20260506-visual-feature-builder-spec.md`](./20
 
 ## 8. Issue tracker linkage
 
-Issue numbers will be supplied by the issue-filer subagent in a parallel PR (WS-B). They are intentionally `TBD` here — the issue-filer subagent will edit this row block in a follow-up commit. Each row maps a parity-matrix domain to its owning issue.
+Issue numbers were supplied by the issue-filer subagent as bsuite#567–#579. Each row maps a parity-matrix domain to its owning issue where one was filed; `TBD` rows are either better-than-Codehouse domains or broader Platform-360 coverage rows rather than standalone parity gaps.
 
 | Domain | Codehouse area | Owning issue | Owner app |
 |---|---|---|---|
-| A | Timesheet Entry | bsuite#TBD | crm7 |
-| B | Approval Workflow | bsuite#TBD | crm7 |
-| C | Pay Items | bsuite#TBD | crm7 + @bsuite/charge-calc |
+| A | Timesheet Entry | bsuite#567 | crm7 |
+| B | Approval Workflow | bsuite#568 | crm7 |
+| C | Pay Items | bsuite#569 | crm7 + @bsuite/charge-calc |
 | D | Award Interpretation | bsuite#TBD | @bsuite/charge-calc |
-| E | Pay Periods | bsuite#TBD | crm7 |
-| F | Leave | bsuite#TBD | crm7 |
+| E | Pay Periods | bsuite#575 | crm7 |
+| F | Leave | bsuite#573 | crm7 |
 | G | Roles & Permissions | bsuite#TBD | bsu + supabase |
-| H | Hiring / Placements | bsuite#TBD | crm7 + conduit |
+| H | Hiring / Placements | bsuite#578 | crm7 + conduit |
 | I | User Accounts | bsuite#TBD | bsu |
-| J | Notifications | bsuite#TBD | crm7 + edge functions |
-| K | Reporting | bsuite#TBD | crm7 |
-| L | Export / Integrations | bsuite#TBD | crm7 + R80.3 |
-| M | Settings | bsuite#TBD | bsu + crm7 |
-| N | Awards / Compliance | bsuite#TBD | @bsuite/charge-calc |
-| O | Mobile / Portal | bsuite#TBD | crm7 + conduit |
+| J | Notifications | bsuite#571 | crm7 + edge functions |
+| K | Reporting | bsuite#574 | crm7 |
+| L | Export / Integrations | bsuite#570 + bsuite#576 | crm7 + R80.3 |
+| M | Settings | bsuite#578 | bsu + crm7 |
+| N | Awards / Compliance | bsuite#578 | @bsuite/charge-calc |
+| O | Mobile / Portal | bsuite#572 | crm7 + conduit |
 | P | Multi-tenant | bsuite#TBD | bsu |
 | Q | Public Portals | bsuite#TBD | conduit + braden |
 | R | Documents / E-sign | bsuite#TBD | crm7 |
 | S | Workflow / Automation | bsuite#TBD | crm7 |
 | T | Audit | bsuite#TBD | bsu + crm7 |
-| U | Integrations | bsuite#TBD | crm7 + R80.3 |
+| U | Integrations | bsuite#577 | crm7 + R80.3 |
 
 ---
 

@@ -12,6 +12,31 @@
 
 ---
 
+## Implementation status
+
+| Task | Status | Evidence | Notes |
+|------|--------|----------|-------|
+| Task 1 | Merged | [crm7#840](https://github.com/GaryOcean428/crm7/pull/840) | `reportTemplateRunnerService` foundation refactor. |
+| Task 1.5 | Merged | [crm7#841](https://github.com/GaryOcean428/crm7/pull/841) | Four-scope hierarchy, RLS, and `is_enterprise_admin()` foundation. |
+| Task 2 | Merged | [crm7#843](https://github.com/GaryOcean428/crm7/pull/843) | Generic `/reports/[key]` run page. |
+| Task 3a | Deferred | N/A | Stepper primitive extraction from `@bsuite/schema-builder`; no longer blocks Task 4 because CRM7 already has local canonical `StepperShell` / `FilterBar` / `DataTable` primitives. Keep as a future reuse/publish guardrail. |
+| Task 3b | Merged | [crm7#847](https://github.com/GaryOcean428/crm7/pull/847) | W2 wizard shipped directly while Task 3a remains a reuse guardrail. |
+| Task 4 | Merged | [crm7#987](https://github.com/GaryOcean428/crm7/pull/987) | `/reports` catalogue now reads RLS-visible `report_templates`, groups by scope, uses canonical `FilterBar` chip filters + `DataTable` + `EmptyState`, and row-clicks into `/reports/[key]`. |
+| Task 5 | Merged | [crm7#842](https://github.com/GaryOcean428/crm7/pull/842) | Seven Codehouse parity templates seeded as platform reports. |
+| Task 6.1 | Merged | [crm7#956](https://github.com/GaryOcean428/crm7/pull/956) | `report_rejected_timesheets` RPC, canonical employer join refresh, and legacy public function EXECUTE grant hardening. |
+| Task 6.2 | Merged | [crm7#957](https://github.com/GaryOcean428/crm7/pull/957) | `report_hours_by_work_type` RPC backed by existing `timesheets.entries[*].work_type` JSONB data, with canonical CRM7 work-type filters and pgTAP coverage. |
+| Task 6.3 | Merged | [crm7#958](https://github.com/GaryOcean428/crm7/pull/958) | `report_pay_item_group_hours` RPC backed by `timesheets.entries[*].work_type -> timesheet_groups -> pay_item_groups`, with empty-filter handling, duplicate-mapping protection, and pgTAP coverage. `rate`/`amount` remain null until the pay-items rate registry lands. |
+| Task 6.4 | Merged | [crm7#959](https://github.com/GaryOcean428/crm7/pull/959) | `report_pay_items_by_employee` RPC backed by real `invoice_line_items` + `invoices`, preserving billing metadata when present, excluding host-level unassigned invoice lines, and adding pgTAP coverage for RLS, filters, pagination, invalid params, and source amount parity. |
+| Task 6.5 | Merged | [crm7#960](https://github.com/GaryOcean428/crm7/pull/960) | `report_consultant_kpi` RPC backed by assigned `people`, `timesheets`, `invoices`, and `invoice_line_items`, gated by selected active tenant plus `org_members.gto_role='field_officer'`. Adds hidden `tenantParam` runner injection and pgTAP coverage for grants, template contract, role gates, tenant isolation, invalid params, and source revenue parity. |
+| Task 6.6 | Merged | [crm7#985](https://github.com/GaryOcean428/crm7/pull/985) | `report_coinvest_lsl` RPC backed by CRM7's existing `leave_balances.leave_type='long_service'` snapshots, with `COINVEST_LSL` pay item defaults, per-row `custom_fields` overrides, active owner/admin or `org_members.gto_role='gto_admin'` gating, and pgTAP coverage for grants, template contract, tenant isolation, filters, pagination, role denial, and invalid params. |
+| Task 7 | Merged | [crm7#986](https://github.com/GaryOcean428/crm7/pull/986) | Report delivery reliability: `report_deliveries.timezone`, `retry_count`, and `last_attempt_at`; one delayed retry after failed attempts; timezone validation; pgTAP + Vitest coverage. |
+| Task 8 | Merged | [crm7#844](https://github.com/GaryOcean428/crm7/pull/844) | 20-case Playwright scope matrix. |
+| Task 9 | Merged | [bsuite#1395](https://github.com/GaryOcean428/bsuite/pull/1395) | Dashboard `reports_w2_status` updated through Task 7, `docs/OUTSTANDING.md` linked, and the original reports parity spec now points to this implementation ledger as the active tracker. |
+
+**Latest development evidence:** crm7 `development` includes [crm7#987](https://github.com/GaryOcean428/crm7/pull/987) at `78ce70e2`; parent dashboard tracking is updated in the companion BSuite PR that bumps the crm7 submodule pointer.
+
+---
+
 ## Status of PR #840 (foundation)
 
 PR #840 shipped `ReportFilterForm`, `ReportTable`, `types.ts`, and a `reportParityService.ts`. **Refactor instead of close** — the components are genuinely doctrine-aligned (filter form + table + export bar are §6.2 row 3). The service needs renaming + signature change. Plan below evolves #840 in-place via Task 1.
@@ -618,11 +643,11 @@ Each gets:
 - Performance index (e.g. `idx_timesheets_tenant_week_ending`)
 - pgTAP test: tenant filter, paging boundary, RLS denial for cross-tenant
 
-For `consultant-kpi`: additional role gate (`auth.jwt() ->> 'role' = 'field_officer'` in WHERE clause).
+For `consultant-kpi`: additional selected-tenant role gate via `org_members.gto_role='field_officer'`; do not read role or tenant directly from JWT claims.
 
 For `coinvest-lsl`: depends on `#573.7` — coordinate; do not duplicate.
 
-For `hours-by-work-type`: requires `timesheets.work_type` column — add in this migration if missing.
+For `hours-by-work-type`: shipped via `timesheets.entries[*].work_type` JSONB; do not add a duplicate top-level `timesheets.work_type` column.
 
 **Step 8: Commit per RPC**
 
@@ -633,8 +658,11 @@ For `hours-by-work-type`: requires `timesheets.work_type` column — add in this
 ## Task 7: Reliability hardening (independent — parity spec §6)
 
 **Files:**
-- Create: `crm7/supabase/migrations/20260521093000_report_deliveries_reliability.sql`
+- Create: `crm7/supabase/migrations/20260604051244_report_deliveries_reliability.sql`
 - Modify: `crm7/supabase/functions/report-delivery/index.ts` — honor timezone + retry once on failure
+- Create: `crm7/supabase/functions/_shared/report-delivery-reliability.ts`
+- Create: `crm7/supabase/functions/_shared/__tests__/report-delivery-reliability.test.ts`
+- Create: `crm7/supabase/tests/database/18_report_deliveries_reliability.sql`
 
 **Step 1: Migration adds columns**
 
@@ -642,23 +670,24 @@ For `hours-by-work-type`: requires `timesheets.work_type` column — add in this
 ALTER TABLE report_deliveries
   ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'UTC',
   ADD COLUMN IF NOT EXISTS retry_count smallint NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS last_attempt_at timestamptz,
-  ADD COLUMN IF NOT EXISTS error_message text;
+  ADD COLUMN IF NOT EXISTS last_attempt_at timestamptz;
 ALTER TABLE report_deliveries
-  ADD CONSTRAINT report_deliveries_retry_max CHECK (retry_count <= 1);
+  ADD CONSTRAINT chk_report_deliveries_retry_count CHECK (retry_count >= 0 AND retry_count <= 1);
 ```
 
 **Step 2: Edge function honors timezone**
 
-When evaluating cron schedules, convert tenant `timezone` field → IANA → next-fire-time.
+Merged via [crm7#986](https://github.com/GaryOcean428/crm7/pull/986): queued deliveries now store a validated IANA `timezone` value (default `UTC`) and pass it through report params. Current CRM7 has a pg_cron heartbeat but no persisted schedule-definition table, so schedule next-fire evaluation remains a future scheduling-UI concern rather than Task 7 backend reliability work.
 
 **Step 3: Implement 1-retry policy**
 
-On delivery failure: increment `retry_count`, set `last_attempt_at` + `error_message`, schedule one retry after 5min. After the retry fails, `status = 'failed'`.
+Merged via [crm7#986](https://github.com/GaryOcean428/crm7/pull/986): on delivery failure, CRM7 records `last_attempt_at` + `error_message`, requeues once with `retry_count = 1`, and excludes retry rows from batch processing until the 5-minute delay has elapsed. After the retry fails, `status = 'failed'`.
 
 **Step 4: Tests**
 
-`crm7/supabase/functions/report-delivery/index.test.ts` covers happy-path, timezone correctness, retry-then-fail, retry-then-succeed.
+Merged coverage:
+- `crm7/supabase/functions/_shared/__tests__/report-delivery-reliability.test.ts` covers timezone validation, retry cutoff logic, retry scheduling, and final failure state.
+- `crm7/supabase/tests/database/18_report_deliveries_reliability.sql` covers columns, defaults, retry cap constraint, timezone non-empty constraint, and pending-retry readiness index.
 
 **Step 5: Commit**
 

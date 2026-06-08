@@ -13,21 +13,21 @@ All 9 workstreams re-audited against live code state on branch `origin/developme
 
 | WS | Title | Status | Evidence |
 |---|---|---|---|
-| WS-1 | Calc Engine Convergence | 🟡 **PARTIAL** | BUG-2/4/5 + ADR ✅; **BUG-1 REGRESSION** in published `@bsuite/charge-calc@0.2.3` (see below) |
+| WS-1 | Calc Engine Convergence | 🟡 **PARTIAL — PUBLISH BLOCKED** | BUG-2/4/5 + ADR ✅; BUG-1 `/52` conversion is fixed and regression-locked in source `@bsuite/charge-calc@0.5.0`, but npm still serves 0.4.0 and publish is blocked by registry permissions (`bsuite#1408`). The missing `apprentice_rate_configs` forward migration was codified with 99 FY2025-26 seed rows and RLS/grant coverage via `crm7#1001`. |
 | WS-2 | MAPD Edge Function + snapshots | ✅ **DONE** | `crm7/supabase/functions/mapd-sync/index.ts` + migration `20260423110000_ws2_wage_calculation_snapshots.sql` + `crm7/src/services/wageSnapshotService.ts` |
 | WS-3 | Host Invoicing | ✅ **DONE** | Migration `20260423140000_ws3_invoices.sql`, `crm7/src/lib/pipelines/xeroInvoiceAdapter.ts` (idempotency keys L41/65/85), `crm7/src/lib/invoicing/renderInvoicePdf.ts`, subsidy-credit logic in `crm7/src/lib/billingEngine.ts` (+ test `billingEngine.subsidyCredit.test.ts`) |
-| WS-4 | Timesheet state machine + payroll | 🟠 **PARTIAL — DB↔TS DIVERGENCE** | DB migration `20260423150000_ws4_timesheet_state_machine.sql` has 7 states matching plan; **`crm7/src/types/entities.ts:413` `TimesheetState` TS type uses 7 DIFFERENT state names** (see divergence row below). XeroPayrollAdapter ✅ at `crm7/src/lib/pipelines/xeroPayrollAdapter.ts`; STP ADR archived at `docs/archive/crm7/2026-04-24-submodule-import/2026-04/0004-stp-xero-passthrough.md` |
-| WS-5 | Report builder + 7 templates | 🟡 **MOSTLY DONE** | Migration `20260423160000_ws5_report_system.sql`, UI skeleton `crm7/src/pages/reports/` (incl. `deliveries.tsx`, `custom/create.tsx`, `training-plan-progress.tsx`), `pg_cron` delivery migration `20260423190000_ws5_cron_report_delivery.sql` + edge fn `report-delivery/index.ts`. **Not verified:** all 7 mandatory pre-built templates seeded (Apprentice Progress, Billable Hours, Charge-Out Rate Summary, Payroll Liability, Funding Claims, GTO Audit Pack, AVETMISS Summary) |
-| WS-6 | AVETMISS / NCVER Export | 🟡 **MOSTLY DONE** | `crm7/src/lib/avetmiss/` with 4 NAT formatters (`formatNat00010.ts` / `formatNat00090.ts` / `formatNat00120.ts` / `formatNat00130.ts`) + `stateVariants.ts` (WAAMS/STELA/DTET); edge fn `crm7/supabase/functions/avetmiss-export/`; migration `20260423180000_ws6_avetmiss_fields.sql` adds Training Contract Identifier. **Gap:** plan requires 9 formatters (NAT00010/20/30/60/80/85/90/120/130); only 4 verified present — NAT00020/30/60/80/85 not located |
+| WS-4 | Timesheet state machine + payroll | 🟡 **MOSTLY DONE — VOCAB ALIGNED + ADAPTER SCHEMA CONTRACT LOCKED** | The DB↔TS timesheet vocabulary divergence was closed via `crm7#948`. DB migration `20260423150000_ws4_timesheet_state_machine.sql` and CRM7 runtime types now share the canonical state vocabulary. `crm7#1009` refreshed `XeroPayrollAdapter` against the generated `payroll_records` Supabase type and locked its select contract to live columns (`apprentice_id`, `paye_tax`, `super_guarantee_amount`, `income_type`, `metadata`) instead of stale aliases. STP ADR restored under `crm7/docs/adr/`. Remaining WS-4 follow-on work is concrete Xero Payroll AU client/export sequencing and Payday Super UI polish, not state vocabulary or adapter schema alignment. |
+| WS-5 | Report builder + 7 templates | 🟡 **MOSTLY DONE — MANDATORY BACKENDS + EXPORT/PREFERENCE/LARGE-CSV GUARDRAILS LANDED** | Migration `20260423160000_ws5_report_system.sql`, UI skeleton `crm7/src/pages/reports/` (incl. `deliveries.tsx`, `custom/create.tsx`, `training-plan-progress.tsx`), `pg_cron` delivery migration `20260423190000_ws5_cron_report_delivery.sql` + edge fn `report-delivery/index.ts`. The exact 7 mandatory pre-built templates are seeded by `crm7/supabase/migrations/20260604210000_seed_ws5_gto_mandatory_report_templates.sql` (`crm7#998`), their tenant-scoped runnable RPC backends landed in `crm7/supabase/migrations/20260604211000_ws5_gto_mandatory_report_rpcs.sql` (`crm7#999`), generic runner/export guardrails landed via `crm7#1005` (view+RPC runner path, bounded full-result CSV/XLSX, stale-filter/template-switch protection, and stable `orderBy` for view full exports), per-user report view preferences landed via `crm7#1006` (saved column visibility/order, page-local grouping, scoped saved-view cache, serialized saves, and visible-column exports), and queued large CSV delivery landed via `crm7#1007` (over-cap queue affordance, authenticated edge invocation, tenant/template binding, user-scoped RPC fetches, terminal user-scoped failures, row caps, BOM/header output, and CSV formula-injection guards). Remaining WS-5 work is AG Grid/native Excel decisions plus PDF/chart polish. |
+| WS-6 | AVETMISS / NCVER Export | 🟡 **MOSTLY DONE — LODGEMENT PACKAGE GUARDRAILS LANDED** | `crm7/src/lib/avetmiss/` now contains the full mandatory 9-file AVETMISS suite (`formatNat00010.ts`, `formatNat00020.ts`, `formatNat00030.ts`, `formatNat00060.ts`, `formatNat00080.ts`, `formatNat00085.ts`, `formatNat00090.ts`, `formatNat00120.ts`, `formatNat00130.ts`) plus WA/NSW/QLD/SA state extract helpers. Edge fn `crm7/supabase/functions/avetmiss-export/` generates/zips all 9 files, returns validation errors using the frontend `entityId` contract, fails explicitly on source-query errors instead of generating partial exports, includes non-empty WAAMS / NSW Smart and Skilled / QLD User Choice / SA STELA TSV extracts in the export archive, and now rejects structurally malformed generated packages before upload using fixed-width NAT record checks, mandatory-file checks, STA header/row-count checks, and agency-required STA field checks. Migration `20260423180000_ws6_avetmiss_fields.sql` adds Training Contract Identifier. Evidence: formatter/export wiring landed in `crm7#770`; edge validation contract/source-query hardening landed in `crm7#1002`; state STA TSV extract generation and edge zip wiring landed in `crm7#1003`; lodgement package guardrails and STA eligibility filtering landed in `crm7#1004`. Remaining WS-6 work is agency-certified STA conformance depth against external lodgement fixtures, not missing formatter files, edge API contract mismatches, absent state extract generation, or missing generated-package guardrails. |
 | WS-7 | GTO National Standards gaps | ✅ **DONE** | Migration `20260423170000_ws7_gto_registers.sql`; Financial Viability (`crm7/src/pages/compliance/financial-viability/`); induction (`onboarding/induction-checklist.tsx`); guardian (`compliance/guardian-consents/`); WHS (`crm7/src/components/whs/host-employer-whs-manager.tsx`); F17 (`crm7/src/lib/compliance/renderF17.tsx` + `renderF17Xlsx.ts`); monitoring-visits & LLN pages under `compliance/` |
-| WS-8 | RLS & Security Hardening | 🟡 **MOSTLY DONE** | Migration `20260423100000_ws8_org_members_gto_role_helpers.sql` with `org_members`, `gto_role` enum, and `is_gto_staff` / `get_user_role` / `get_user_host_employer_id` / `get_user_apprentice_id` `SECURITY DEFINER` helpers; `(SELECT auth.uid())` pattern used throughout new RLS. **Gap:** no `pgtap` tests found (constraint C10 requires anon-key test harness) |
+| WS-8 | RLS & Security Hardening | 🟡 **MOSTLY DONE** | Migration `20260423100000_ws8_org_members_gto_role_helpers.sql` with `org_members`, `gto_role` enum, and `is_gto_staff` / `get_user_role` / `get_user_host_employer_id` / `get_user_apprentice_id` `SECURITY DEFINER` helpers; `(SELECT auth.uid())` pattern used throughout new RLS. HF-4 anon-context pgTAP harness evidence landed via `crm7#949`; remaining noncanonical `SECURITY DEFINER` search paths and grants were normalized via `crm7#1000`. Extend harness coverage as new WS-4/WS-5/WS-6 tables and policies land. |
 | WS-9 | Portals (apprentice/host/field officer) | 🟡 **MOSTLY DONE, GATED** | `crm7/src/pages/portal/worker-portal.tsx`, `host-employer.tsx`, `host-reports.tsx`; `crm7/src/pages/field-officers/` tree. Routes gated behind `portal_pages` feature flag in `App.tsx:514-517`. **Depends on WS-4 DB↔TS fix** before full wiring |
 
-**Scorecard:** 3/9 fully DONE (WS-2, WS-3, WS-7) · 6/9 partial or mostly-done with gaps flagged (WS-1 BUG-1 regression; WS-4 DB↔TS divergence; WS-5 templates unverified; WS-6 5 NAT formatters missing; WS-8 pgTap harness missing; WS-9 gated + WS-4 dependent).
+**Scorecard:** 3/9 fully DONE (WS-2, WS-3, WS-7) · 6/9 partial or mostly-done with gaps flagged (WS-1 package publish still blocked, but `apprentice_rate_configs` migration/seed/RLS provenance is closed via `crm7#1001`; WS-4 state vocabulary alignment landed via `crm7#948` and Xero payroll adapter schema-contract coverage landed via `crm7#1009`; WS-5 exact template seed closed via `crm7#998`, tenant-scoped runnable RPC backends closed via `crm7#999`, generic runner/export guardrails closed via `crm7#1005`, per-user column/grouping preferences closed via `crm7#1006`, and queued large CSV delivery closed via `crm7#1007`; WS-6 full NAT formatter suite verified via `crm7#770`, edge validation contract/source-query hardening landed via `crm7#1002`, WA/NSW/QLD/SA state TSV extract generation landed via `crm7#1003`, and generated-package lodgement guardrails landed via `crm7#1004`, with external agency-certified STA conformance fixtures still open; WS-8 pgTap harness closed via `crm7#949` and SECDEF search-path/grant normalization landed via `crm7#1000`; WS-9 gated + WS-4 dependent).
 
-### Hard findings (issues to file)
+### Hard findings and closure notes
 
-**HF-1: BUG-1 regression in published `@bsuite/charge-calc@0.2.3`** (CRITICAL — impact latent, materialises on `annum` payment_frequency)
+**HF-1: Publish-blocked BUG-1 release drift for `@bsuite/charge-calc`** (CRITICAL — impact latent, materialises on `annum` payment_frequency)
 
 The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on the `packages/charge-calc` repo. Verification on 2026-05-12:
 
@@ -35,7 +35,9 @@ The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on
 - Published `@bsuite/charge-calc@0.2.3` on npm (consumers `crm7@^0.2.3`, `R80.3@^0.2.3`) — `npm pack` + grep of `dist/awards/mapd-mapper.js` returns NO match for `/ 52`, `isAnnualFrequency`, or equivalent arithmetic.
 - Impact: annual allowances are 52× overstated in charge-rate calculations for both `crm7` and `R80.3` — **but only when MAPD returns a `payment_frequency` of `per annum` / `per year` for a wage or expense allowance**. Impact is latent until a MAPD record with annual frequency is processed; once processed it is CRITICAL (52× overstatement on that allowance's on-cost contribution).
 - This is the CRITICAL bug WS-1 was blocked on.
-- Action: file issue to (a) re-land the fix in the `packages/charge-calc` source, (b) publish a patched `0.2.5`, (c) bump consumers.
+- 2026-06-04 verification: source `@bsuite/charge-calc@0.5.0` already keeps the divide in `converter.mapAllowanceAmount`, with mapper-boundary tests preventing double-divide and converter tests covering annual/yearly frequencies. `pnpm --filter @bsuite/charge-calc test` passed 728 tests, `typecheck` passed, `build` passed, and `pnpm publish --dry-run --access public --no-git-checks` produced a valid 0.5.0 tarball.
+- Blocker: real `pnpm publish --access public --no-git-checks` failed from this environment with npm registry permission (`404 ... not found or you do not have permission`), and `npm view @bsuite/charge-calc version` still returns 0.4.0.
+- Action: resolve npm publish permission, publish `@bsuite/charge-calc@0.5.0`, then bump CRM7/R80.3 consumers only after npm confirms the version. Tracked as `bsuite#1408`.
 
 **HF-2: WS-4 DB↔TS state-machine divergence** (HIGH)
 
@@ -43,7 +45,7 @@ The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on
 - TS type `TimesheetState` in `crm7/src/types/entities.ts:413` (7 DIFFERENT states): `draft`, `submitted`, `approved`, `disputed`, `processed`, `payroll_locked`, `paid`.
 - `crm7/src/lib/timesheetWorkflow.ts` implements the TS vocabulary; the SQL RLS policies rely on the DB vocabulary. **Zero overlap between mid-flow states**: TS has `disputed/processed/payroll_locked/paid`; DB has `pending_host_approval/pending_gto_review/exported/archived`.
 - Impact: any timesheet transitioned via `timesheetWorkflow.ts` will write a `state` value not present in the DB enum → insert will fail OR (if enum was altered silently) bypass the RLS-enforced role transitions defined in WS-4 spec.
-- Action: file issue to choose the canonical vocabulary and unify — either update TS to match plan/DB, or migrate DB to TS vocabulary and update the plan.
+- 2026-06-04 evidence: DB↔TS vocabulary alignment landed via `crm7#948`; Xero payroll adapter schema-contract coverage landed via `crm7#1009`, replacing stale `payroll_records` aliases with generated Supabase type-backed live columns and metadata-backed Xero employee/earnings-rate IDs. Remaining WS-4 work is concrete Xero Payroll AU client/export sequencing and Payday Super polish, not state vocabulary unification or adapter column alignment.
 
 **HF-3: WS-1 ADR-001 and WS-4 STP-path ADR archived, not canonical**
 
@@ -54,12 +56,12 @@ The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on
 **HF-4: WS-8 pgTap test harness missing**
 
 - Constraint C10 mandates RLS policies be verified via anon-key test harness (not SQL editor / service role).
-- No `pgtap` or `pg-tap` artefacts found anywhere in `crm7/`.
-- Action: add pgTap workflow and policy tests for the 5 new WS-8 helpers + RLS on `org_members`, `wage_calculation_snapshots`, `timesheets`, `pay_runs`, `payroll_records`.
+- Original audit found no `pgtap` or `pg-tap` artefacts in `crm7/`.
+- 2026-06-04 evidence: anon-context pgTAP harness landed via `crm7#949`; remaining WS-8 work is incremental coverage as new WS-4/WS-5/WS-6 tables and policies land.
 
 ### Apprentice_rate_configs table — migration provenance note
 
-The WS-2 handoff claimed `apprentice_rate_configs` was seeded with 99 rows via Supabase MCP. No migration file exists in `crm7/supabase/migrations/` for the table itself; only `20260423130000_ws8_arc_anon_public_read.sql` (a follow-on RLS patch). If the table was applied out-of-band via MCP, it should be codified as a backfilled migration so local/CI provisioning stays reproducible. Action: file issue to add the missing `CREATE TABLE apprentice_rate_configs` migration.
+The WS-2 handoff claimed `apprentice_rate_configs` was seeded with 99 rows via Supabase MCP. That out-of-band state is now codified by `crm7/supabase/migrations/20260423125000_ws2_apprentice_rate_configs.sql` (`crm7#1001`): table shape, tenant/public RLS, least-privilege grants, active-public uniqueness, updated-at trigger, and 99 FY2025-26 public seed rows compile before the follow-on `20260423130000_ws8_arc_anon_public_read.sql` patch.
 
 *Evidence refresh produced 2026-05-12 per AGENTS.md §1 zero-defer. Auditor: parent-agent (live-code verified, no deferral). Scope: 9 workstreams + archived ADRs + published npm package content.*
 
@@ -133,10 +135,12 @@ less: subsidy_credit_per_hour (GTO Reimbursement $100/wk ÷ hours_per_week)
   6. **GTO National Standards Audit Pack** — evidence status per sub-standard, gaps, export bundle
   7. **AVETMISS Statistical Summary** — demographic breakdown for pre-lodgement review
 
+**Evidence update 2026-06-04:** the exact seven mandatory platform templates landed via `crm7#998`, tenant-scoped runnable RPC backends for all seven landed via `crm7#999`, and generic runner/export hardening landed via `crm7#1005`: `/reports/[key]` now uses the canonical view/RPC template runner, full-result CSV/XLSX exports are bounded to 50,000 rows, explicit exports use current filters rather than debounced stale values, template switches clear hidden parent params, seeded view templates have deterministic `orderBy` metadata, and unordered multi-page view exports fail closed. `crm7#1006` then reused the existing `saved_views` ownership model for per-user report preferences: saved column visibility/order, page-local grouping, visible-column page/full exports, tenant/user-scoped preference cache keys, and serialized saves so rapid changes cannot create duplicate/stale default report views. `crm7#1007` adds the over-cap queued CSV delivery path without introducing a service-role report-data bypass: the browser calls `report-delivery` with the user's bearer token, the edge function checks tenant membership plus template tenant/system binding, accepts only RPC templates with `tenantParam`, fetches report pages through an anon client carrying the user JWT, fails user-scoped retries terminally if the original request context is absent, strips internal delivery params before RPC invocation, caps delivery rows, emits BOM/header-labelled CSV, and sanitizes formula-leading values including CR/LF fragments. Remaining WS-5 work is AG Grid/native Excel decisions plus PDF/chart polish, not the mandatory backend catalogue, bounded small-export path, queued large CSV path, or column/grouping persistence.
+
 ### WS-6 · AVETMISS / NCVER Export (depends on WS-4, WS-5)
-**What exists:** AVETMISS demographic fields fully implemented in CRM7 `people` table migration `20260304000007` with all codes annotated. `FundingType` enum covers CTF/AASN/ASIP. ZERO export layer exists — this is a high-severity gap.
+**What exists:** AVETMISS demographic fields are implemented in CRM7 `people` table migration `20260304000007` with all codes annotated. `FundingType` enum covers CTF/AASN/ASIP. The full mandatory AVETMISS 8.0 NAT formatter suite exists in `crm7/src/lib/avetmiss/`, and `crm7/supabase/functions/avetmiss-export/index.ts` generates/zips all 9 mandatory NAT files.
 **What's needed:**
-- NAT file generator for full AVETMISS 8.0 suite:
+- Lodgement-grade validation/export hardening for the full AVETMISS 8.0 suite:
   - `NAT00010` — Training Organisation
   - `NAT00020` — Training Organisation Delivery Location
   - `NAT00030` — Course
@@ -148,7 +152,9 @@ less: subsidy_credit_per_hour (GTO Reimbursement $100/wk ÷ hours_per_week)
   - `NAT00130` — Outcome (completion code: 70=continuing, 20=complete, 40=withdrawn)
 - National deadline: **28 February** each year (5pm ACDT)
 - State STA extracts: WAAMS (WA, tab-delimited text v1.4), NSW Smart and Skilled eReporting, QLD DTET Partner Portal, SA STELA (monthly, second Friday)
-- `Training Contract Identifier` field — must be added to `people` / `engagements` table if not present; mandatory in NAT00120 and all STA submissions
+- `Training Contract Identifier` field — keep the `20260423180000_ws6_avetmiss_fields.sql` schema path validated in NAT00120 and all STA submissions
+
+**Evidence update 2026-06-04:** the earlier "NAT00020/30/60/80/85 missing" finding was stale. Those formatter files, their unit coverage, and edge-function generation paths landed in CRM7 via `crm7#770` (`c43e9b3e8b207cf175950ae7a2337603e27526c8`). Validation on CRM7 `development` passed `pnpm vitest run src/lib/avetmiss/__tests__/formatters.test.ts` (49/49) and `pnpm run typecheck`. The edge export API contract/source-query failure path was then hardened via `crm7#1002` (`ab20a2cf`): validation errors now persist/return `entityId` for the frontend drawer, malformed JSON/date/body inputs return explicit 400s, missing edge env returns explicit 500, and source table query failures stop generation instead of silently producing partial NAT archives. State STA TSV generation for WAAMS, NSW Smart and Skilled, QLD User Choice, and SA STELA landed via `crm7#1003` (`cf917321`), including reusable formatter coverage and edge zip/record-count wiring for non-empty state extracts. Focused AVETMISS tests (62/62), `pnpm run typecheck`, edge-file ESLint, and a local edge-runtime load check passed. WS-6 remains open for lodgement validation fixtures and agency-specific STA conformance checks.
 
 ### WS-7 · GTO National Standards Compliance Gaps (depends on WS-4, WS-5)
 Fill the explicitly "Missing" or "Partial" items from the completeness matrix:
@@ -168,6 +174,8 @@ From best-practice research:
 - RLS policies for all new tables using `(SELECT auth.uid())` optimization (not `auth.uid()` inline — prevents per-row function call)
 - Apprentices see only their own timesheets + progress; host supervisors see only their site's timesheets; invoices visible only to billing staff and host contacts
 - pgTap tests for all RLS policies (note: SQL Editor bypasses RLS — must test via application client)
+
+**Evidence update 2026-06-04:** HF-4 anon-context pgTAP harness landed via `crm7#949`; remaining noncanonical `SECURITY DEFINER` helper search paths were normalized with `pg_temp` last and least-privilege grants reasserted via `crm7#1000`. WS-8 remains open for incremental harness coverage as new WS-4/WS-5/WS-6 tables and policies land.
 
 ---
 
@@ -1101,6 +1109,8 @@ CREATE TABLE payroll_records (
 );
 STP Path ADR: After reading chargeToPayroll.ts — it builds PayRunSubmission typed objects and calls PayrollAdapter.submitPayRun(). The adapter interface is not yet implemented with a concrete Xero class — it's abstract. Decision: Xero passthrough (not direct ATO SBR2). Wire XeroPayrollAdapter implementing PayrollAdapter using Xero Payroll AU API. Income type LAB for labour hire workers. Document in crm7/docs/adr/0004-stp-xero-passthrough.md.
 
+Evidence update 2026-06-04: `crm7#1009` refreshed `crm7/src/lib/pipelines/xeroPayrollAdapter.ts` against the generated Supabase `payroll_records` row type and added focused regression coverage for the exact select contract. The adapter now reads `apprentice_id`, `paye_tax`, `super_guarantee_amount`, `income_type`, and metadata-backed Xero employee/earnings-rate IDs; stale `person_id`, `tax_withheld`, and `super_amount` aliases are regression-locked out.
+
 WS-5 · Customisable Report Builder (depends on WS-3, WS-4)
 What exists: /reports route with category cards and quick-access favouriting. custom_reports feature flag in LAUNCH_FLAGS.
 
@@ -1424,7 +1434,7 @@ Hand off to local Claude Code:
 
 WS-1 BUG-1 fix — mapd-mapper.ts annual allowance ÷52 (surgical, high-precision)
 
-WS-4 STP/Xero payroll integration — XeroPayrollAdapter implementation (complex, EarningsRate per award, pay run sequence)
+WS-4 STP/Xero payroll integration — concrete Xero Payroll AU client/export sequencing (adapter schema contract landed via `crm7#1009`; remaining complexity is EarningsRate per award and pay run sequence)
 
 WS-6 AVETMISS NAT file generator — fixed-width file formatting, field validation, state variants (tedious precision work)
 
@@ -1561,7 +1571,7 @@ Timesheet state machine (draft → submitted → host_approved → payroll_flagg
 
 pay_runs + payroll_records tables
 
-XeroPayrollAdapter implementing PayrollAdapter interface (Xero Payroll AU API, income type LAB)
+XeroPayrollAdapter concrete client/export sequencing (schema contract landed via `crm7#1009`; remaining work is Xero Payroll AU API, income type LAB, and EarningsRate mapping)
 
 STP Phase 2 disaggregated gross — chargeToPayroll.ts already builds PayRunSubmission but adapter not wired
 

@@ -1,5 +1,7 @@
 # WS-4 Timesheet State Vocabulary Alignment (HF-2) — Implementation Plan
 
+> **Status: COMPLETED** — Merged to development via [CRM7 PR #948](https://github.com/GaryOcean428/crm7/pull/948) at commit `bf97acf9`. All tests passing (57 vitest + typecheck + eslint). Evidence: CI checks passed (build-and-test, e2e, drift scan, DOM layout, OAuth sync, gitleaks).
+
 > **For Claude:** REQUIRED SUB-SKILL: Use `executing-plans` to implement this plan task-by-task.
 
 **Goal:** Align the TypeScript `TimesheetState` type, Zod schema, workflow state machine, UI components, and tests with the canonical 7-state DB `timesheet_state` ENUM shipped in commit `4baea942` / migration `20260423150000_ws4_timesheet_state_machine.sql`, resolving HF-2 (issue #863).

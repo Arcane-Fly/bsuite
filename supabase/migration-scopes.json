@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "project_ref": "tuybltdrdefjblnplpqo",
+  "description": "BSuite shared Supabase project migration scopes. Parent bsuite is the control-plane repo; app repos and packages may still own their local migrations.",
+  "recommended_control_plane": "bsuite",
+  "scopes": [
+    {
+      "id": "root",
+      "label": "Parent bsuite",
+      "repo": "bsuite",
+      "workdir": ".",
+      "migrations_dir": "supabase/migrations",
+      "functions_dir": "supabase/functions",
+      "owner": "platform"
+    },
+    {
+      "id": "crm7",
+      "label": "CRM7",
+      "repo": "crm7",
+      "workdir": "crm7",
+      "migrations_dir": "crm7/supabase/migrations",
+      "functions_dir": "crm7/supabase/functions",
+      "owner": "crm"
+    },
+    {
+      "id": "business-suite-unified",
+      "label": "Business Suite Unified",
+      "repo": "business-suite-unified",
+      "workdir": "business-suite-unified",
+      "migrations_dir": "business-suite-unified/supabase/migrations",
+      "functions_dir": "business-suite-unified/supabase/functions",
+      "owner": "platform"
+    },
+    {
+      "id": "braden",
+      "label": "Braden",
+      "repo": "braden",
+      "workdir": "braden",
+      "migrations_dir": "braden/supabase/migrations",
+      "functions_dir": "braden/supabase/functions",
+      "owner": "corporate"
+    },
+    {
+      "id": "R80.3",
+      "label": "R80.3",
+      "repo": "R80.3",
+      "workdir": "R80.3",
+      "migrations_dir": "R80.3/supabase/migrations",
+      "functions_dir": "R80.3/supabase/functions",
+      "owner": "wage-calculator"
+    },
+    {
+      "id": "conduit",
+      "label": "Conduit",
+      "repo": "conduit",
+      "workdir": "conduit",
+      "migrations_dir": "conduit/supabase/migrations",
+      "functions_dir": "conduit/supabase/functions",
+      "owner": "ats"
+    },
+    {
+      "id": "throughput",
+      "label": "Throughput",
+      "repo": "throughput",
+      "workdir": "throughput",
+      "migrations_dir": "throughput/supabase/migrations",
+      "functions_dir": "throughput/supabase/functions",
+      "owner": "ideas"
+    },
+    {
+      "id": "schema-builder",
+      "label": "Schema Builder package",
+      "repo": "bsuite",
+      "workdir": "packages/schema-builder",
+      "migrations_dir": "packages/schema-builder/supabase/migrations",
+      "functions_dir": "packages/schema-builder/supabase/functions",
+      "owner": "shared-package"
+    }
+  ],
+  "preview_database": {
+    "preferred": "supabase_branching_github_integration",
+    "native_github_working_directory": ".",
+    "native_required_check": "Supabase Preview",
+    "notes": [
+      "Native Supabase branching only sees the connected GitHub repository working directory. Keep parent bsuite as the control plane.",
+      "For app-repo PRs, add a repository_dispatch bridge to parent bsuite or rely on parent submodule bump PRs to exercise the full migration manifest.",
+      "Vite apps must receive VITE_* Supabase aliases in Vercel previews; Supabase/Vercel integrations commonly inject NEXT_PUBLIC_* names."
+    ]
+  }
+}

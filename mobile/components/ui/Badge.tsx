@@ -27,12 +27,11 @@ function statusToVariant(status: string): BadgeVariant {
   const color = STATUS_COLORS[status];
   if (!color) return 'muted';
 
-  // Map known color hex values to variants
-  if (color === '#22c55e') return 'success';
-  if (color === '#fdcb6e') return 'warning';
-  if (color === '#ff4757') return 'destructive';
-  if (color === '#00cec9') return 'accent';
-  if (color === '#2563eb') return 'default';
+  if (color === STATUS_COLORS.active) return 'success';
+  if (color === STATUS_COLORS.pending) return 'warning';
+  if (color === STATUS_COLORS.rejected) return 'destructive';
+  if (color === STATUS_COLORS.completed) return 'accent';
+  if (color === STATUS_COLORS.investigating) return 'default';
   return 'muted';
 }
 
