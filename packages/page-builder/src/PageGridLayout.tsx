@@ -111,7 +111,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     // (buttons, inputs, textarea, select, links, [data-no-drag]) are still
     // protected via the `cancel` selector below in the <Responsive> render.
     const outerClass = cn(
-      'relative group',
+      'relative group overflow-visible',
       isEditing && 'drag-handle cursor-move',
       injectedClassName
     );
@@ -145,7 +145,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
           )}
           <div
             className="h-full w-full rounded-3xl transition-all flex flex-col bg-card shadow-sm"
-            style={{ contain: 'paint' }}
+            style={{ contain: 'layout style' }}
           >
             {/*
              * Internal scroll container so card content adapts to whatever
@@ -418,15 +418,16 @@ export function PageGridLayout({
   }, [resetConfirmOpen]);
 
   return (
-    <div className={className}>
+    <div className={cn('relative', isEditing && 'isolate', className)}>
       {isEditing && (
         <div
+          data-page-grid-editor-controls
           className={cn(
             // Sticky overlay banner — sits at the top of the scroll container
             // without pushing the form down. `top-0` anchors to the nearest
-            // scrolling ancestor; `z-30` keeps it above grid items but below
+            // scrolling ancestor; `z-40` keeps it above grid items but below
             // app-level overlays (toaster, dialogs are z-50+).
-            'sticky top-0 z-30 flex flex-col gap-3 p-4 rounded-xl shadow-lg border-2 mb-4',
+            'sticky top-0 z-40 isolate flex flex-col gap-3 p-4 rounded-xl shadow-lg border-2 mb-4',
             // Subtle translucent background so the form behind it stays
             // partially visible — mitigates Issue 2 (banner consuming
             // vertical space). `bg-card/95` + `backdrop-blur` keeps text
@@ -663,14 +664,13 @@ export function PageGridLayout({
 
       <div
         ref={containerRef as React.Ref<HTMLDivElement>}
-        className={isEditing ? 'min-h-[200px]' : ''}
-        style={{ backgroundColor: isEditing ? 'rgb(0 0 0 / 0.03)' : 'transparent' }}
+        className={cn('relative z-0 overflow-visible', isEditing && 'min-h-[200px] bg-muted/30')}
         data-page-grid-editing={isEditing || undefined}
       >
-        <div style={{ opacity: containerWidth > 0 ? 1 : 0 }} aria-busy={containerWidth <= 0}>
+        <div className="relative z-0" style={{ opacity: containerWidth > 0 ? 1 : 0 }} aria-busy={containerWidth <= 0}>
           <Responsive
             width={Math.max(containerWidth, 1)}
-            className="layout"
+            className="layout page-grid-canvas"
             layouts={activeLayouts}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             rowHeight={32}
