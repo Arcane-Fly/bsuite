@@ -47,7 +47,7 @@ export interface FieldRowProps {
 }
 
 const HANDLE_CLASS =
-  '!h-2 !w-2 !bg-neutral-400 !border !border-white dark:!border-neutral-900';
+  '!h-3 !w-3 !bg-blue-500 !border-2 !border-white !opacity-80 hover:!opacity-100 dark:!border-neutral-900';
 
 function truncateType(t: string, max = 12): string {
   if (t.length <= max) return t;
@@ -130,6 +130,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         id={`${baseId}.left-target`}
         className={HANDLE_CLASS}
         aria-label={`Target handle for ${field.name}`}
+        title={`Drop a relationship onto ${field.name}`}
       />
       <Handle
         type="source"
@@ -137,6 +138,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         id={`${baseId}.left-source`}
         className={HANDLE_CLASS}
         aria-label={`Source handle for ${field.name}`}
+        title={`Drag from ${field.name} to create a relationship`}
       />
 
       <span className="inline-flex w-4 shrink-0 items-center justify-center">
@@ -185,6 +187,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         id={`${baseId}.right-target`}
         className={HANDLE_CLASS}
         aria-label={`Target handle for ${field.name}`}
+        title={`Drop a relationship onto ${field.name}`}
       />
       <Handle
         type="source"
@@ -192,6 +195,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         id={`${baseId}.right-source`}
         className={HANDLE_CLASS}
         aria-label={`Source handle for ${field.name}`}
+        title={`Drag from ${field.name} to create a relationship`}
       />
     </div>
   );
