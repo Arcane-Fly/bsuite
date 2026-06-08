@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import {
   afterEach,
   beforeAll,
@@ -185,7 +185,7 @@ describe('FieldEditDialog', () => {
     ).toBeEnabled();
   });
 
-  it('fires onSave with the correct payload when submitted', () => {
+  it('fires onSave with the correct payload when submitted', async () => {
     const { onSave } = setup();
     fireEvent.change(screen.getByLabelText('Display Label'), {
       target: { value: 'Primary Email' },
@@ -195,7 +195,7 @@ describe('FieldEditDialog', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
 
-    expect(onSave).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
     expect(onSave).toHaveBeenCalledWith({
       field_name: 'email_address',
       field_type: 'text',
@@ -220,12 +220,12 @@ describe('FieldEditDialog', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it('calls onDelete when the user confirms the delete prompt', () => {
+  it('calls onDelete when the user confirms the delete prompt', async () => {
     window.confirm = vi.fn().mockReturnValue(true);
     const { onDelete } = setup();
     fireEvent.click(screen.getByRole('button', { name: /Delete Field/i }));
     expect(window.confirm).toHaveBeenCalledTimes(1);
-    expect(onDelete).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(onDelete).toHaveBeenCalledTimes(1));
   });
 
   it('does NOT call onDelete when the user cancels the confirm prompt', () => {

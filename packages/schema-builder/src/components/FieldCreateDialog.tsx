@@ -53,7 +53,7 @@ export interface FieldCreateDialogProps {
   existingFieldNames?: string[];
   /** Next `sort_order` value to assign (defaults to 0). */
   nextSortOrder?: number;
-  onConfirm: (payload: FieldCreateDialogPayload) => void;
+  onConfirm: (payload: FieldCreateDialogPayload) => void | Promise<void>;
 }
 
 interface FormState {
@@ -145,6 +145,7 @@ export function FieldCreateDialog({
 }: FieldCreateDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [state, dispatch] = useReducer(formReducer, INITIAL_STATE);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Render-time reset-on-reopen: when `open` flips false -> true, clear every
   // form field so a previous cancelled draft never bleeds into the next
@@ -155,6 +156,7 @@ export function FieldCreateDialog({
     setPrevOpen(open);
     if (open && !prevOpen) {
       dispatch({ type: 'RESET' });
+      setIsSubmitting(false);
     }
   }
 
@@ -167,19 +169,27 @@ export function FieldCreateDialog({
   }, [open]);
 
   const nameError = validateFieldName(state.fieldName, existingFieldNames);
-  const canSubmit = state.fieldName.length > 0 && nameError === null;
+  const canSubmit =
+    state.fieldName.length > 0 && nameError === null && !isSubmitting;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onConfirm({
-      field_name: state.fieldName,
-      field_type: state.fieldType,
-      label: state.label.trim() || state.fieldName,
-      placeholder: state.placeholder.trim() || null,
-      is_required: state.isRequired,
-      sort_order: nextSortOrder,
-    });
+    setIsSubmitting(true);
+    try {
+      await onConfirm({
+        field_name: state.fieldName,
+        field_type: state.fieldType,
+        label: state.label.trim() || state.fieldName,
+        placeholder: state.placeholder.trim() || null,
+        is_required: state.isRequired,
+        sort_order: nextSortOrder,
+      });
+    } catch {
+      // Parent onConfirm owns the visible error sink; keep the dialog open.
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -355,7 +365,7 @@ export function FieldCreateDialog({
             disabled={!canSubmit}
             className="inline-flex h-9 items-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Create Field
+            {isSubmitting ? 'Creating…' : 'Create Field'}
           </button>
         </div>
       </form>
