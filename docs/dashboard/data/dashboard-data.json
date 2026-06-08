@@ -16,7 +16,7 @@
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-08",
     "last_refreshed": "2026-06-07T02:38:00Z",
-    "last_refreshed_by": "copilot-cli single Supabase consolidation"
+    "last_refreshed_by": "copilot-cli package blocker reconciliation"
   },
   "summary": {
     "external_total": 30,
@@ -32,7 +32,7 @@
     "in_repo_active": 19,
     "in_repo_archivable_now": 0,
     "already_archived": 10,
-    "operator_blocked": 2,
+    "operator_blocked": 1,
     "production_apps_live_v0_2_0": 6,
     "docs_root_files_pending": 85,
     "audit_grand_total_v1": 59,
@@ -58,11 +58,11 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 153,
+    "open_issues_total": 152,
     "open_prs_total": 0,
     "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing bsuite#478; no open PRs were present.",
     "issues_by_repo": {
-      "bsuite": 60,
+      "bsuite": 59,
       "business-suite-unified": 4,
       "crm7": 72,
       "conduit": 11,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli single Supabase consolidation",
-    "last_refreshed_at": "2026-06-08T11:32:30Z"
+    "last_refreshed_by": "copilot-cli package blocker reconciliation",
+    "last_refreshed_at": "2026-06-08T23:32:25Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "6ecbfc9",
+      "main_sha": "9257e56",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "210604a",
+      "main_sha": "cbf01be",
       "vercel": "success"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "a65e47b",
+      "main_sha": "04e30d7",
       "vercel": "success"
     },
     {
@@ -129,7 +129,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "8f0a547",
+      "main_sha": "83e42ce",
       "vercel": "success"
     },
     {
@@ -867,9 +867,9 @@
       "id": "ui-0.4.0-npm-publish",
       "title": "Publish @bsuite/ui 0.4.0",
       "repo": "bsuite",
-      "status": "operator-blocked",
+      "status": "done",
       "evidence_url": "https://github.com/GaryOcean428/bsuite/issues/1452",
-      "note": "Source is merged to main/development via bsuite#1451/#1453 but npm still serves 0.3.0; this runtime has no npm auth (`npm whoami` E401) and publish failed with E404/no permission."
+      "note": "Resolved: npm now serves @bsuite/ui@0.4.0, matching packages/ui source version 0.4.0. Closed bsuite#1452 on 2026-06-08."
     },
     {
       "id": "supabase-preview-branching-vercel-env",
@@ -2938,10 +2938,10 @@
     }
   ],
   "counters": {
-    "open_issues_total": 153,
+    "open_issues_total": 152,
     "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 60,
+      "bsuite": 59,
       "business-suite-unified": 4,
       "crm7": 72,
       "conduit": 11,
