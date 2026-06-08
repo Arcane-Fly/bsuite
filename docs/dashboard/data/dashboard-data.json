@@ -58,11 +58,11 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 156,
+    "open_issues_total": 155,
     "open_prs_total": 0,
     "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing bsuite#478; no open PRs were present.",
     "issues_by_repo": {
-      "bsuite": 63,
+      "bsuite": 62,
       "business-suite-unified": 4,
       "crm7": 71,
       "conduit": 11,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 0,
-    "last_refreshed_by": "copilot-cli package workflow reconciliation",
-    "last_refreshed_at": "2026-06-08T06:18:00Z"
+    "last_refreshed_by": "copilot-cli auth package publish reconciliation",
+    "last_refreshed_at": "2026-06-08T06:58:00Z"
   },
   "repos": [
     {
@@ -2938,10 +2938,10 @@
     }
   ],
   "counters": {
-    "open_issues_total": 156,
+    "open_issues_total": 155,
     "open_prs_total": 0,
     "issues_by_repo": {
-      "bsuite": 63,
+      "bsuite": 62,
       "business-suite-unified": 4,
       "crm7": 71,
       "conduit": 11,
@@ -3170,5 +3170,5 @@
       "Follow-up crm7#1008 renamed report-delivery user-scoped edge client configuration to SUPABASE_PUBLISHABLE_KEY, clearing the parent secret-naming drift guard for the crm7#1007 submodule pointer."
     ]
   },
-  "last_refreshed": "2026-06-08T06:18:00Z"
+  "last_refreshed": "2026-06-08T06:58:00Z"
 }
