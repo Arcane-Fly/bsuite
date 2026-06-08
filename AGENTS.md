@@ -895,7 +895,8 @@ pnpm install
 3. **When modifying a shared package** (e.g., `packages/charge-calc/`):
    - Build locally: `pnpm build` in the package directory
    - Bump version in `package.json` (follow semver)
-   - Publish: `cd packages/charge-calc && npm publish --access public`
+   - Publish by merging the package release PR to `main` so the matching `.github/workflows/publish-*.yml` workflow runs through npm Trusted Publishers (GitHub Actions OIDC)
+   - Trusted publishing is the standard for `@bsuite/*`; do not default back to `NPM_TOKEN` or manual token-based publishing unless an operator explicitly approves an emergency fallback
    - Update consumers: change version in CRM7/R80.3/braden `package.json`
    - Run `pnpm install` in each consumer to update lockfile
 4. **`pnpm-workspace.yaml`** in submodule repos (e.g., `crm7/pnpm-workspace.yaml`) references `'../packages/*'` for **local development only**. This does NOT work on Vercel.
