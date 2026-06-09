@@ -30,6 +30,12 @@ dependency status).
 | TBD (WS-B) | Codehouse Parity & Platform 360 — index plan + 9 portal sub-plans + visual feature builder spec | 🟡 W (working) | Added 2026-05-06. Plan: `20260506-codehouse-parity-and-platform-360-v1.00W.md` + `20260506-codehouse-parity/` (10 sub-plans). 12 grouped issues will be filed by the issue-filer subagent in a parallel PR. Dashboard JSON extension is a follow-up PR (post #535). |
 | TBD (O.11/O.12/O.13) | Theme centralisation, feature-placement boundaries, and docs coherence | 🟡 W (working) | Added 2026-05-11. Plan: `20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md`. O.11 BSU theme POC runs before O.12 wizard re-placement; O.13 reconciles ownership/doc drift after the audit returns. |
 
+## 2026-06-09 Production-readiness next-steps plan
+
+| Group | Current status | Next action |
+|-------|----------------|-------------|
+| Next execution plan | Added `20260609-production-readiness-next-steps-plan-v1.00W.md` after package blockers cleared and Claude-for-Chrome visual smoke was requested. Updated with the 2026-06-09 smoke findings: Conduit production outage (`conduit#307`), CRM7 placement `pay_item_rules` schema error (`crm7#1029`), CRM7 dev blank first load (`crm7#1030`), Throughput dev OAuth loop (`throughput#214`), CRM7 reports schema drift (`crm7#1031`), INP popup evidence, TCID/WAAMS wording, and block-release calendar gap. | Review/approve the plan, then execute in a fresh `executing-plans` thread. Gate 0 fixes Conduit production and CRM7 placement P0s before package rollout/feature work unless a package bump is proven necessary for the fix. |
+
 ## 2026-06-05 Production-spec Task 0 inventory matrix
 
 | Group | Current status | Next action |

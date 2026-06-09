@@ -28,6 +28,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 | `20260506-codehouse-parity-and-platform-360-v1.00W.md` | W | Codehouse Workforce-One parity + Platform-360 capability spec (index plan + 9 portal sub-plans + 1 visual feature builder spec under `20260506-codehouse-parity/`; refined-prompt provenance under `inputs/`). Permissions remain AUTH_CANONICAL.md + Supabase RLS + BSuite SSO — no new RBAC/ABAC framework. |
 | `20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md` | W | Part O.11 theme centralisation + enterprise white-label POC, O.12 feature-placement audit, and O.13 docs-coherence handoff |
 | `20260605-production-spec-completion-plan-v1.00W.md` | W | Production-spec completion execution plan: package lane, auth/Supabase security, DB source-of-truth, DRY one-shot entities, CRM7 GTO, Conduit handoff, BSU platform, cross-app QA, production ship gate, and documentation/dashboard closure |
+| `20260609-production-readiness-next-steps-plan-v1.00W.md` | W | Post-package-publish production-readiness plan: package consumer rollout, visual smoke triage, offline notice, TCID/WAAMS, placement identity bridge, block-release calendar, R80/Conduit/Field Officer/host/apprentice propagation, red-team gates |
 
 ### Archived Plans (moved to `docs/archive/`)
 
