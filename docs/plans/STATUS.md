@@ -34,7 +34,7 @@ dependency status).
 
 | Group | Current status | Next action |
 |-------|----------------|-------------|
-| Next execution plan | Added `20260609-production-readiness-next-steps-plan-v1.00W.md` after package blockers cleared and Claude-for-Chrome visual smoke was requested. The plan distributes `master-orchestration`, package rollout, one-shot/RLS, visual QA, red-team, and docs/dashboard workstreams across specialist agents and MCPs. | Review/approve the plan, then execute in a fresh `executing-plans` thread because the work spans package rollout, CRM7 schema/UX, R80 read-only calculation integration, Conduit handoff, visual QA, and production ship gates. |
+| Next execution plan | Added `20260609-production-readiness-next-steps-plan-v1.00W.md` after package blockers cleared and Claude-for-Chrome visual smoke was requested. Updated with the 2026-06-09 smoke findings: Conduit production outage (`conduit#307`), CRM7 placement `pay_item_rules` schema error (`crm7#1029`), CRM7 dev blank first load (`crm7#1030`), Throughput dev OAuth loop (`throughput#214`), INP popup evidence, TCID/WAAMS wording, and block-release calendar gap. | Review/approve the plan, then execute in a fresh `executing-plans` thread. Gate 0 fixes Conduit production and CRM7 placement P0s before package rollout/feature work unless a package bump is proven necessary for the fix. |
 
 ## 2026-06-05 Production-spec Task 0 inventory matrix
 

@@ -30,6 +30,8 @@
 
 ### CRM7 / GTO / training
 
+- `crm7#1029` - production placement detail OTS/pay-item rule schema error: `public.pay_item_rules` missing from schema cache.
+- `crm7#1030` - development dashboard first-load blank screen requiring manual refresh.
 - `crm7#1024` - placements/person/apprentice schism blocks host billing and charge-calc training-day linkage.
 - `crm7#1027` - use TCID as the national training contract label; WAAMS is WA-only alias.
 - `crm7#1028` - make offline-support unavailable notice accurate and non-intrusive.
@@ -43,10 +45,63 @@
 
 ### Cross-app consumers
 
+- `conduit#307` - production Conduit ATS BSuite OAuth/Candidates outage (`Unable to load client details`, error ref `#773sm536`).
+- `throughput#214` - development Throughput BS OAuth redirect-loop protection blocks login.
 - `R80.3#235` - operational reporting: placements, completions, training-hours, margin dashboards.
 - `conduit#225` - field officer assignment, workplace visit, three-way calendar invites.
 - `conduit#227` - offer -> training contract e-sign, AASS lodgement, status state machine.
 - Existing production gate remains: do not promote app repos to `main` until the ship gate passes.
+
+---
+
+## 1.1 Visual smoke report intake - 2026-06-09
+
+**Source:** Claude-for-Chrome / Abacus AI Agent visual smoke test, 12 app/environments, desktop browser with human-visual judgement.
+
+### P0 blockers - execute before package rollout or feature work
+
+1. **Conduit ATS production outage** (`conduit#307`)
+   - Production URL: `https://conduit.crm7.app`.
+   - Symptom: BSuite SSO authorization failed with `Unable to load client details`.
+   - Candidates page error: `Something went wrong`, reference `#773sm536`.
+   - Impact: users cannot access production ATS.
+2. **CRM7 production placement OTS/pay-item schema error** (`crm7#1029`)
+   - Production URL family: `https://crm.crm7.app/placements`.
+   - Symptom: placement detail exposes `Could not find the table 'public.pay_item_rules' in the schema cache`.
+   - Impact: OTS/pay-item/rate calculations broken and raw schema error visible to users.
+
+### P1 major issues
+
+1. **CRM7 development blank first load** (`crm7#1030`)
+   - URL: `https://d.crm.crm7.app`.
+   - Symptom: blank dark/navy dashboard until manual refresh.
+2. **TCID/WAAMS wording wrong in both environments** (`crm7#1027`)
+   - Current copy: `Training Contract Number / WAAMS ID`.
+   - Required copy: `Training Contract ID (TCID)` with WAAMS only as `WAAMS ID (WA only)`.
+3. **Training Details section is development-only**
+   - Present on `https://d.crm.crm7.app/people/new`.
+   - Missing on `https://crm.crm7.app/people/new`.
+   - Do not promote to production until TCID/WAAMS copy and P0 placement schema issue are addressed.
+4. **Block release calendar is not implemented** (`crm7#625`, `crm7#663`)
+   - Current dev UI has parametric fields only: weeks/year, blocks/year, weeks/block, notes.
+   - Required: full-year calendar/date picker with actual block-release dates and exceptions.
+5. **R80 training weeks are manual, not linked to CRM7 schedule**
+   - R80 supports training weeks in charge calculation, but no visible CRM7 apprentice/training schedule link.
+6. **Conduit development lacks built-out e-sign/AASS/Field Officer handoff surfaces** (`conduit#225`, `conduit#227`)
+7. **Throughput development OAuth redirect loop** (`throughput#214`)
+8. **CRM7 INP performance diagnostics visible to end users** (`crm7#833`, `bsuite#483`)
+
+### P2/P3 follow-ups
+
+- Offline support notice was **not observed** in production or development. `crm7#1028` should now explicitly include offline simulation before deciding whether to suppress/remove/reposition it.
+- BSU development ADMIN sidebar vs production absence is likely intentional but should be confirmed during production gate.
+- Braden production/development visual parity is good; success/error post-submit remains unverified without test data.
+
+### Smoke-report acceptance additions
+
+- Every P0/P1 item above must have issue evidence, fix PR, browser re-test evidence, and dashboard update before app main promotion.
+- P0 fixes run before package consumer rollout unless a package bump is proven necessary to fix the P0.
+- Production ship gate is blocked until Conduit production and CRM7 production placement details are functional.
 
 ---
 
@@ -92,9 +147,30 @@
 
 ## 3. Global gates before implementation
 
+### Gate 0 - Emergency smoke P0 triage
+
+**Files/issues:** `conduit#307`, `crm7#1029`, production browser evidence, Vercel/Supabase/Next.js logs.
+
+**Skills/MCPs:** `master-orchestration`, `bsuite-auth-guardian`, `nextjs-app-router`, `vercel-next-best-practices`, `supabase`, `supabase-postgres-best-practices`, `security-audit`, `systematic-debugging`, `playwright-skill`, Next.js MCP, Supabase MCP/SQL, Chrome DevTools MCP, Vercel CLI/MCP, GitHub.
+
+**Steps:**
+1. Reproduce Conduit production OAuth failure in a fresh browser context.
+2. Use Next.js MCP/Vercel logs to locate the Conduit client-details and `#773sm536` runtime failure.
+3. Verify BSU OAuth client registry and Conduit production envs match canonical OAuth client configuration.
+4. Reproduce CRM7 production placement detail `pay_item_rules` schema-cache error.
+5. Use Supabase schema inspection to determine whether `pay_item_rules` is missing, renamed, or stale-cache referenced by deployed code.
+6. Fix only the minimal production blocker path first.
+7. Re-run production browser smoke on Conduit login/Candidates and CRM7 Placements detail.
+
+**Acceptance criteria:**
+- `https://conduit.crm7.app` signs in and loads Candidates without `Unable to load client details` or `#773sm536`.
+- `https://crm.crm7.app/placements` detail renders rates/OTS path without `public.pay_item_rules` schema-cache error.
+- User-safe error boundaries hide raw SQL/schema messages if downstream data is unavailable.
+- Both P0 issue threads contain reproduction, root cause, fix PR, and browser retest evidence.
+
 ### Gate 1 - Visual smoke intake
 
-**Files/issues:** Claude-for-Chrome output, `crm7#1028`, `crm7#1027`, `crm7#625`, `crm7#663`, any new issues from the visual smoke.
+**Files/issues:** Claude-for-Chrome output, `conduit#307`, `crm7#1029`, `crm7#1030`, `throughput#214`, `crm7#1028`, `crm7#1027`, `crm7#625`, `crm7#663`, `crm7#833`, `bsuite#483`, any new issues from the visual smoke.
 
 **Skills/MCPs:** `bsuite-user-advocate`, `qa-and-verification`, `ui-ux-consistency`, `playwright-skill`, Chrome DevTools MCP, GitHub.
 
@@ -107,7 +183,8 @@
 
 **Acceptance criteria:**
 - Every visual finding is either linked to an issue or explicitly marked no-action with rationale.
-- Offline notice, TCID/WAAMS, block-release calendar, R8 interplay, field officer/host/apprentice visibility, and page-editor overlap have screenshot evidence.
+- P0/P1 smoke findings are ordered before feature rollout.
+- Offline simulation, TCID/WAAMS, block-release calendar, R8 interplay, field officer/host/apprentice visibility, INP popup gating, and page-editor overlap have screenshot evidence.
 
 ### Gate 2 - One-shot propagation matrix
 
@@ -188,6 +265,7 @@
 
 **Acceptance criteria:**
 - Matrix identifies every package bump per app and whether it is exact pin or semver range.
+- P0 smoke blockers are either fixed first or explicitly proven to require this package rollout as part of the fix.
 
 ### Task A2 - Lockfile hygiene guard
 
@@ -263,10 +341,11 @@
 
 **Tasks:**
 1. Write a failing test for banner rendering conditions.
-2. Inspect why offline support is unavailable in production/development.
-3. If it is expected, make the notice dismissible/session-scoped and non-overlapping.
-4. If it is unexpected, fix the failing offline init path.
-5. Capture desktop and mobile screenshots in CRM7 development.
+2. Re-run visual smoke with deliberate offline simulation through Chrome DevTools Network -> Offline because the notice was not observed online.
+3. Inspect why offline support is unavailable in production/development.
+4. If it is expected, make the notice dismissible/session-scoped and non-overlapping.
+5. If it is unexpected, fix the failing offline init path.
+6. Capture desktop and mobile screenshots in CRM7 development and production-like preview.
 
 **Acceptance criteria:**
 - Banner is absent when not actionable or appears only as a non-overlapping dismissible warning.
@@ -291,7 +370,8 @@
 **Tasks:**
 1. Search all CRM7 source/docs for WAAMS/TCID/training contract wording.
 2. Define canonical copy:
-   - Primary: `Training Contract ID (TCID)`.
+   - Primary label: `Training Contract ID (TCID)`.
+   - Placeholder: national training contract ID first; WAAMS only as an example when WA context is explicit.
    - Alias/helper: `WAAMS ID (WA only)` when jurisdiction is WA.
 3. Update labels, placeholders, helper text, validation errors, report/export headings.
 4. Add regression tests for visible copy.
@@ -363,7 +443,7 @@
    - Apprentice read own schedule/progress.
    - R80 read-only for calculations.
 4. Replace counts-only block fields with a full-year calendar selector.
-5. Preserve summary fields as derived values.
+5. Preserve `weeks per year`, `blocks per year`, and `weeks per block` as derived/summary values, not the source of truth.
 6. Add exceptions/holiday/non-scheduled weeks.
 7. Add import/manual entry pathway from training plan.
 8. Add tests for weekly, block, flexible, exceptions, and derived weeks/year.
@@ -373,6 +453,7 @@
 - Operator can select actual training dates for the year.
 - Derived counts feed reporting and R80.
 - Calendar dates are visible to field officer/host/apprentice contexts.
+- Production rollout of the existing Training Details section is blocked until TCID wording and P0 placement schema issues are fixed, then promoted through the production gate with browser evidence.
 
 ---
 
@@ -410,8 +491,9 @@
 **Tasks:**
 1. Define read API/view/RPC from CRM7 training schedule data.
 2. Update R80 calculation inputs to read training dates where applicable.
-3. Store calculation snapshots in R80-owned tables for audit.
-4. Add visual smoke comparing one apprentice's CRM7 schedule and R80 rate output.
+3. Keep manual training-week entry available only as an explicit override with provenance if product requires it.
+4. Store calculation snapshots in R80-owned tables for audit.
+5. Add visual smoke comparing one apprentice's CRM7 schedule and R80 rate output.
 
 **Acceptance criteria:**
 - R80 does not require duplicate training schedule entry.
@@ -428,7 +510,7 @@
 **Skills/MCPs:** `nextjs-app-router`, `vercel-next-best-practices`, Next.js MCP, `dry-one-shot-architecture`, `frontend-backend-mapping`, `security-audit`.
 
 **Tasks:**
-1. Use Next.js MCP to inspect routes/errors before edits.
+1. After `conduit#307` production outage is fixed, use Next.js MCP to inspect routes/errors before edits.
 2. Model candidate-stage field officer assignment and workplace visit.
 3. Add offer/training contract e-sign/lodgement status state machine.
 4. On handoff, create/link CRM7 person/apprentice/training contract via owner-approved RPC/API.
@@ -451,15 +533,21 @@
 
 **Tasks:**
 1. Collect human visual smoke output from production and development.
-2. Add mobile/desktop screenshot matrix for all apps.
-3. Add role-scoped screenshots:
+2. Confirm/update issue links for the smoke report:
+   - Conduit production outage -> `conduit#307`.
+   - CRM7 pay item rule schema error -> `crm7#1029`.
+   - CRM7 development blank load -> `crm7#1030`.
+   - Throughput development redirect loop -> `throughput#214`.
+   - INP popups -> `crm7#833` / `bsuite#483`.
+3. Add mobile/desktop screenshot matrix for all apps.
+4. Add role-scoped screenshots:
    - Admin.
    - Field officer.
    - Host.
    - Apprentice.
-4. Verify Braden corporate brand boundary.
-5. Verify D2C apps share shell/toast/button/nav patterns.
-6. Verify no app `main` promotion until:
+5. Verify Braden corporate brand boundary.
+6. Verify D2C apps share shell/toast/button/nav patterns.
+7. Verify no app `main` promotion until:
    - Package rollout complete.
    - P0/P1 visual blockers fixed.
    - Auth/session flows smoke-tested.
@@ -505,6 +593,7 @@
 
 ### Round 2 plan changes
 
+- Added visual-smoke P0/P1 issue map and emergency Gate 0.
 - Added package pre-flight, lockfile gate, staged rollout, rollback gates.
 - Added placement/person identity bridge before training calendar.
 - Added RLS/read-only consumer requirements for R80, Conduit, host, apprentice, field officer.
@@ -545,13 +634,14 @@ Use MCP/tools as assigned in the plan:
 - Vercel CLI/MCP for deploy status and preview/prod verification.
 
 Immediate order:
-1. Ingest Claude-for-Chrome visual smoke output and attach findings to issues.
-2. Execute Workstream A package consumer rollout with lockfile hygiene.
-3. Fix CRM7 offline notice and TCID/WAAMS wording.
-4. Resolve crm7#1024 identity bridge before implementing block-release calendar propagation.
-5. Implement training schedule calendar and downstream R80/Field Officer/host/apprentice/report consumers.
-6. Complete Conduit handoff/R80 read-only integrations.
-7. Run red-team and production ship gate before any app main promotion.
+1. Treat visual smoke P0s as emergency blockers: fix `conduit#307` production OAuth/Candidates outage and `crm7#1029` production placement `pay_item_rules` schema error before package rollout or feature work unless a package bump is proven necessary for the fix.
+2. Triage P1 smoke findings: `crm7#1030` development blank first load, `throughput#214` development OAuth redirect loop, INP popups on `crm7#833`/`bsuite#483`, TCID/WAAMS `crm7#1027`, and Training Details prod gap.
+3. Execute Workstream A package consumer rollout with lockfile hygiene.
+4. Fix CRM7 offline notice via deliberate offline simulation and TCID/WAAMS wording.
+5. Resolve `crm7#1024` identity bridge before implementing block-release calendar propagation.
+6. Implement training schedule calendar and downstream R80/Field Officer/host/apprentice/report consumers.
+7. Complete Conduit handoff/R80 read-only integrations.
+8. Run red-team and production ship gate before any app main promotion.
 
 Hard rules:
 - No `workspace:*` or `file:../packages/*` in deployable app package manifests.
