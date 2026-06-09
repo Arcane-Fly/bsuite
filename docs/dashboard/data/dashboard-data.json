@@ -16,7 +16,7 @@
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
     "last_refresh": "2026-06-09",
     "last_refreshed": "2026-06-07T02:38:00Z",
-    "last_refreshed_by": "copilot-cli smoke-report plan update"
+    "last_refreshed_by": "copilot-cli report-schema plan update"
   },
   "summary": {
     "external_total": 30,
@@ -58,13 +58,13 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 157,
+    "open_issues_total": 158,
     "open_prs_total": 1,
     "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing bsuite#478; no open PRs were present.",
     "issues_by_repo": {
       "bsuite": 58,
       "business-suite-unified": 4,
-      "crm7": 76,
+      "crm7": 77,
       "conduit": 12,
       "braden": 3,
       "R80.3": 3,
@@ -80,8 +80,8 @@
       "throughput": 0
     },
     "open_prs": 1,
-    "last_refreshed_by": "copilot-cli smoke-report plan update",
-    "last_refreshed_at": "2026-06-09T01:38:21Z"
+    "last_refreshed_by": "copilot-cli report-schema plan update",
+    "last_refreshed_at": "2026-06-09T02:00:21Z"
   },
   "repos": [
     {
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 19,
       "archived": 0,
-      "main_sha": "1e5f7df",
+      "main_sha": "5ebbb87",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -2938,12 +2938,12 @@
     }
   ],
   "counters": {
-    "open_issues_total": 157,
+    "open_issues_total": 158,
     "open_prs_total": 1,
     "issues_by_repo": {
       "bsuite": 58,
       "business-suite-unified": 4,
-      "crm7": 76,
+      "crm7": 77,
       "conduit": 12,
       "braden": 3,
       "R80.3": 3,

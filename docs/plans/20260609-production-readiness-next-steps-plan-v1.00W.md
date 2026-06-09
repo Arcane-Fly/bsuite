@@ -30,6 +30,7 @@
 
 ### CRM7 / GTO / training
 
+- `crm7#1031` - reports page schema drift: `report_deliveries.last_attempt_at` missing in live schema, plus related report-page REST failures.
 - `crm7#1029` - production placement detail OTS/pay-item rule schema error: `public.pay_item_rules` missing from schema cache.
 - `crm7#1030` - development dashboard first-load blank screen requiring manual refresh.
 - `crm7#1024` - placements/person/apprentice schism blocks host billing and charge-calc training-day linkage.
@@ -72,24 +73,37 @@
 
 ### P1 major issues
 
-1. **CRM7 development blank first load** (`crm7#1030`)
+1. **CRM7 development reports schema drift** (`crm7#1031`)
+   - Development URL: `https://d.crm.crm7.app/reports`.
+   - Symptom: `Failed to load report templates: column report_deliveries.last_attempt_at does not exist`.
+   - REST evidence:
+     - `report_deliveries` select includes `last_attempt_at`, `retry_count`, `timezone`, `triggered_by` and returns 400.
+     - `apprentice_completions?select=id&status=eq.completed` returns 404.
+     - `user_preferences?select=date_format&user_id=...` returns 400.
+   - Source evidence:
+     - `crm7/src/services/reportTemplateQueries.ts` selects `last_attempt_at` / `retry_count`.
+     - `crm7/src/types/supabase.ts` includes `report_deliveries.last_attempt_at` / `retry_count`.
+     - `crm7/supabase/tests/database/18_report_deliveries_reliability.sql` asserts `last_attempt_at`, retry count, timezone constraints, and retry-ready index.
+     - `crm7/supabase/migrations/20260604051244_report_deliveries_reliability.sql` is the source migration to reconcile with live DB.
+   - Impact: report templates cannot load; reporting source/live schema is drifting.
+2. **CRM7 development blank first load** (`crm7#1030`)
    - URL: `https://d.crm.crm7.app`.
    - Symptom: blank dark/navy dashboard until manual refresh.
-2. **TCID/WAAMS wording wrong in both environments** (`crm7#1027`)
+3. **TCID/WAAMS wording wrong in both environments** (`crm7#1027`)
    - Current copy: `Training Contract Number / WAAMS ID`.
    - Required copy: `Training Contract ID (TCID)` with WAAMS only as `WAAMS ID (WA only)`.
-3. **Training Details section is development-only**
+4. **Training Details section is development-only**
    - Present on `https://d.crm.crm7.app/people/new`.
    - Missing on `https://crm.crm7.app/people/new`.
    - Do not promote to production until TCID/WAAMS copy and P0 placement schema issue are addressed.
-4. **Block release calendar is not implemented** (`crm7#625`, `crm7#663`)
+5. **Block release calendar is not implemented** (`crm7#625`, `crm7#663`)
    - Current dev UI has parametric fields only: weeks/year, blocks/year, weeks/block, notes.
    - Required: full-year calendar/date picker with actual block-release dates and exceptions.
-5. **R80 training weeks are manual, not linked to CRM7 schedule**
+6. **R80 training weeks are manual, not linked to CRM7 schedule**
    - R80 supports training weeks in charge calculation, but no visible CRM7 apprentice/training schedule link.
-6. **Conduit development lacks built-out e-sign/AASS/Field Officer handoff surfaces** (`conduit#225`, `conduit#227`)
-7. **Throughput development OAuth redirect loop** (`throughput#214`)
-8. **CRM7 INP performance diagnostics visible to end users** (`crm7#833`, `bsuite#483`)
+7. **Conduit development lacks built-out e-sign/AASS/Field Officer handoff surfaces** (`conduit#225`, `conduit#227`)
+8. **Throughput development OAuth redirect loop** (`throughput#214`)
+9. **CRM7 INP performance diagnostics visible to end users** (`crm7#833`, `bsuite#483`)
 
 ### P2/P3 follow-ups
 
@@ -170,7 +184,7 @@
 
 ### Gate 1 - Visual smoke intake
 
-**Files/issues:** Claude-for-Chrome output, `conduit#307`, `crm7#1029`, `crm7#1030`, `throughput#214`, `crm7#1028`, `crm7#1027`, `crm7#625`, `crm7#663`, `crm7#833`, `bsuite#483`, any new issues from the visual smoke.
+**Files/issues:** Claude-for-Chrome output, `conduit#307`, `crm7#1029`, `crm7#1031`, `crm7#1030`, `throughput#214`, `crm7#1028`, `crm7#1027`, `crm7#625`, `crm7#663`, `crm7#833`, `bsuite#483`, any new issues from the visual smoke.
 
 **Skills/MCPs:** `bsuite-user-advocate`, `qa-and-verification`, `ui-ux-consistency`, `playwright-skill`, Chrome DevTools MCP, GitHub.
 
@@ -184,7 +198,30 @@
 **Acceptance criteria:**
 - Every visual finding is either linked to an issue or explicitly marked no-action with rationale.
 - P0/P1 smoke findings are ordered before feature rollout.
-- Offline simulation, TCID/WAAMS, block-release calendar, R8 interplay, field officer/host/apprentice visibility, INP popup gating, and page-editor overlap have screenshot evidence.
+- Reports schema drift, offline simulation, TCID/WAAMS, block-release calendar, R8 interplay, field officer/host/apprentice visibility, INP popup gating, and page-editor overlap have screenshot evidence.
+
+### Gate 1a - CRM7 reporting schema/load triage
+
+**Files/issues:** `crm7#1031`, `docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md`, `docs/20260506-reports-parity-spec-v1.00W.md`, `docs/20260519-rpc-report-page-security-review-v1.00A.md`, `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md`, `crm7/src/services/reportTemplateQueries.ts`, `crm7/supabase/migrations/20260604051244_report_deliveries_reliability.sql`, `crm7/supabase/tests/database/18_report_deliveries_reliability.sql`.
+
+**Skills/MCPs:** `documentation-compliance`, `supabase`, `supabase-postgres-best-practices`, `schema-consistency`, `frontend-backend-mapping`, `security-audit`, `qa-and-verification`, Supabase MCP/SQL, Chrome DevTools MCP, GitHub.
+
+**Steps:**
+1. Reproduce `/reports` failure in development with browser/network capture.
+2. Inspect live `report_deliveries` columns and compare to source migration/types/tests.
+3. Decide whether the live DB is missing the source migration or frontend is selecting superseded columns.
+4. Reconcile `report_deliveries.last_attempt_at`, `retry_count`, `timezone`, constraints, and retry index with source-of-truth.
+5. Audit related report-page REST errors:
+   - `apprentice_completions` 404.
+   - `user_preferences.date_format` 400.
+6. Run report pgTAP/database tests and browser smoke `/reports`.
+7. Update reporting docs/plan status and dashboard.
+
+**Acceptance criteria:**
+- `/reports` loads templates/deliveries without `last_attempt_at` REST 400.
+- `apprentice_completions` and `user_preferences.date_format` report-page calls are fixed or removed/replaced by canonical sources.
+- Raw Supabase schema errors are not shown to end users.
+- Evidence is attached to `crm7#1031`.
 
 ### Gate 2 - One-shot propagation matrix
 
@@ -579,6 +616,51 @@
 
 ---
 
+## 13.1 CRM7 reporting docs and plans inventory
+
+Use this inventory before any report-page, report-template, report-delivery, or GTO report work. Historical archive docs may be useful for provenance but must not override current source/tests.
+
+### Current parent docs/plans
+
+- `docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md` - active Reports W2 uplift implementation plan.
+- `docs/20260506-reports-parity-spec-v1.00W.md` - reports parity specification.
+- `docs/20260519-rpc-report-page-security-review-v1.00A.md` - report page/RPC security review.
+- `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md` - approved GTO billing/reporting plan.
+- `docs/20260317-bsuite-gap-report-v2.00W.md` - broader gap report with reporting context.
+- `docs/20260501-phase-0-completion-report-v1.00W.md` - phase completion evidence.
+- `docs/CONSISTENCY-REPORT.md` - parent consistency report.
+
+### CRM7 docs/plans
+
+- `crm7/docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md` - CRM7 GTO master plan.
+- `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` - combined foundations/GTO roadmap.
+- `crm7/docs/CONSISTENCY-REPORT.md` - CRM7 consistency report.
+- Historical CRM7 reporting archive docs under:
+  - `crm7/docs/archive/20251015-report-implementation-complete-v1.00A.md`
+  - `crm7/docs/archive/20260226-report-*.md`
+  - `crm7/docs/archive/2026-04-30-2026-02-26-deploy-cohort/20260226-*.md`
+  - `docs/archive/crm7/2026-04-24-submodule-import/20260226-report-*.md`
+
+### Related cross-app docs
+
+- `R80.3/docs/20260304-r80-billing-models-reference-v1.00W.md`
+- `R80.3/docs/CONSISTENCY-REPORT.md`
+- `business-suite-unified/docs/CONSISTENCY-REPORT.md`
+- `conduit/docs/CONSISTENCY-REPORT.md`
+
+### Active issue anchors
+
+- `crm7#1031` - report-deliveries schema drift and report template loading.
+- `crm7#866` - `/admin/reports/fair-work-inspector` access issue on development.
+- `crm7#744` - reports grid resize/card behavior.
+- `crm7#477` - report builder templates/scheduling.
+- `crm7#527`-`crm7#534` - GTO report catalogue gaps.
+- `crm7#733` - apprentice completion-rate cohort analytics.
+- `bsuite#1237` - Reports W2 RPC schema-gap audit.
+- `bsuite#1221` - report template schema-squash regression audit.
+
+---
+
 ## 14. Red-team planning report
 
 ### Round 1 findings
@@ -635,7 +717,7 @@ Use MCP/tools as assigned in the plan:
 
 Immediate order:
 1. Treat visual smoke P0s as emergency blockers: fix `conduit#307` production OAuth/Candidates outage and `crm7#1029` production placement `pay_item_rules` schema error before package rollout or feature work unless a package bump is proven necessary for the fix.
-2. Triage P1 smoke findings: `crm7#1030` development blank first load, `throughput#214` development OAuth redirect loop, INP popups on `crm7#833`/`bsuite#483`, TCID/WAAMS `crm7#1027`, and Training Details prod gap.
+2. Triage P1 smoke/report findings: `crm7#1031` reports `report_deliveries.last_attempt_at` schema drift, `crm7#1030` development blank first load, `throughput#214` development OAuth redirect loop, INP popups on `crm7#833`/`bsuite#483`, TCID/WAAMS `crm7#1027`, and Training Details prod gap.
 3. Execute Workstream A package consumer rollout with lockfile hygiene.
 4. Fix CRM7 offline notice via deliberate offline simulation and TCID/WAAMS wording.
 5. Resolve `crm7#1024` identity bridge before implementing block-release calendar propagation.
