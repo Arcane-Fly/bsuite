@@ -30,6 +30,12 @@ dependency status).
 | TBD (WS-B) | Codehouse Parity & Platform 360 — index plan + 9 portal sub-plans + visual feature builder spec | 🟡 W (working) | Added 2026-05-06. Plan: `20260506-codehouse-parity-and-platform-360-v1.00W.md` + `20260506-codehouse-parity/` (10 sub-plans). 12 grouped issues will be filed by the issue-filer subagent in a parallel PR. Dashboard JSON extension is a follow-up PR (post #535). |
 | TBD (O.11/O.12/O.13) | Theme centralisation, feature-placement boundaries, and docs coherence | 🟡 W (working) | Added 2026-05-11. Plan: `20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md`. O.11 BSU theme POC runs before O.12 wizard re-placement; O.13 reconciles ownership/doc drift after the audit returns. |
 
+## 2026-06-09 Production-readiness next-steps plan
+
+| Group | Current status | Next action |
+|-------|----------------|-------------|
+| Next execution plan | Added `20260609-production-readiness-next-steps-plan-v1.00W.md` after package blockers cleared and Claude-for-Chrome visual smoke was requested. The plan distributes `master-orchestration`, package rollout, one-shot/RLS, visual QA, red-team, and docs/dashboard workstreams across specialist agents and MCPs. | Review/approve the plan, then execute in a fresh `executing-plans` thread because the work spans package rollout, CRM7 schema/UX, R80 read-only calculation integration, Conduit handoff, visual QA, and production ship gates. |
+
 ## 2026-06-05 Production-spec Task 0 inventory matrix
 
 | Group | Current status | Next action |
