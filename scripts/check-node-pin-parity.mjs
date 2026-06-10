@@ -3,8 +3,11 @@ import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-const CANONICAL_NODE_VERSION = '24';
-const CANONICAL_NODE_VERSION_FILE_CONTENT = '24\n';
+// Must be a semver range ("24.x"), never a bare major ("24"): bare majors
+// silently fall back to LTS 22 on actions/setup-node@v4 and Vercel
+// (incident 2026-05-25, fixed across all 6 apps).
+const CANONICAL_NODE_VERSION = '24.x';
+const CANONICAL_NODE_VERSION_FILE_CONTENT = '24.x\n';
 const APP_REPOS = [
   'business-suite-unified',
   'braden',
@@ -93,10 +96,18 @@ async function selfTest() {
   try {
     const goodRepo = path.join(tmp, 'good-repo');
     await mkdir(goodRepo, { recursive: true });
-    await writeFile(path.join(goodRepo, '.node-version'), '24\n');
+    await writeFile(path.join(goodRepo, '.node-version'), '24.x\n');
     await writeFile(
       path.join(goodRepo, 'package.json'),
-      JSON.stringify({ name: 'good', engines: { node: '24' } }, null, 2),
+      JSON.stringify({ name: 'good', engines: { node: '24.x' } }, null, 2),
+    );
+
+    const bareMajorRepo = path.join(tmp, 'bare-major-repo');
+    await mkdir(bareMajorRepo, { recursive: true });
+    await writeFile(path.join(bareMajorRepo, '.node-version'), '24\n');
+    await writeFile(
+      path.join(bareMajorRepo, 'package.json'),
+      JSON.stringify({ name: 'bare', engines: { node: '24' } }, null, 2),
     );
 
     const driftedRepo = path.join(tmp, 'drifted-repo');
@@ -111,12 +122,27 @@ async function selfTest() {
     await mkdir(noPinsRepo, { recursive: true });
     await writeFile(path.join(noPinsRepo, 'package.json'), JSON.stringify({ name: 'nopins' }, null, 2));
 
-    const results = await runChecks(tmp, ['good-repo', 'drifted-repo', 'no-pins-repo', 'absent-repo']);
+    const results = await runChecks(tmp, [
+      'good-repo',
+      'bare-major-repo',
+      'drifted-repo',
+      'no-pins-repo',
+      'absent-repo',
+    ]);
     const byRepo = Object.fromEntries(results.map((r) => [r.repo, r]));
 
     const assertions = [
       ['good-repo is ok', byRepo['good-repo']?.status === 'ok'],
       ['good-repo has 0 issues', byRepo['good-repo']?.issues.length === 0],
+      ['bare-major-repo is fail (bare "24" falls back to Node 22 on Vercel)', byRepo['bare-major-repo']?.status === 'fail'],
+      [
+        'bare-major-repo names .node-version drift',
+        byRepo['bare-major-repo']?.issues.some((i) => i.includes('.node-version')),
+      ],
+      [
+        'bare-major-repo names engines.node drift',
+        byRepo['bare-major-repo']?.issues.some((i) => i.includes('engines.node')),
+      ],
       ['drifted-repo is fail', byRepo['drifted-repo']?.status === 'fail'],
       [
         'drifted-repo names .node-version drift',

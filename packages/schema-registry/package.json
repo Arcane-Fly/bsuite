@@ -40,7 +40,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@bsuite/nav-core": "^0.5.0",
+    "@bsuite/nav-core": "^0.7.0",
     "@supabase/supabase-js": "^2",
     "@tanstack/react-query": "^5",
     "react": ">=18 <21",
@@ -49,15 +49,15 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^6.0.2",
     "jsdom": "^29.1.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.10",
-    "vitest": "^4.1.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8",
     "zod": "^4.4.3"
   }
 }
