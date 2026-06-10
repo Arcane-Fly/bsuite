@@ -4,19 +4,33 @@
 #
 # Migration model
 # ───────────────
-# - .sql       → standard migrations applied via `supabase migration up
-#                --linked --include-all`. The CLI handles auth + pooler.
-#                --include-all skips the strict drift check that `db push`
-#                does (schema_migrations is shared across the parent/app/package
-#                migration scopes, so
-#                each scope's local files are always a subset of remote).
+# - .sql       → transactional migrations applied via direct psql
+#                (--single-transaction), one per file, then recorded in
+#                supabase_migrations.schema_migrations.
 # - .nontx.sql → non-transactional migrations (e.g. CREATE INDEX CONCURRENTLY)
 #                applied via direct psql after the transactional pass.
-#                Uses the IPv4 dual-stack pooler (aws-0-us-east-1.pooler...).
+# Both passes use the IPv4 dual-stack pooler (aws-0-us-east-1.pooler...).
 #
-# Drift tolerance: the CLI's --include-all bypasses local==remote check.
-# If migrations are already applied via Supabase MCP (operator pattern),
-# they're skipped silently. Workflow exits cleanly.
+# Why psql and NOT `supabase migration up`: schema_migrations is ONE shared
+# table fed by 8 migration scopes (root + 6 apps + schema-builder). The CLI
+# hard-errors with "Remote migration versions not found in local migrations
+# directory" whenever the remote table holds versions from OTHER scopes —
+# --include-all does not bypass that check. A prior version of this workflow
+# swallowed that error as a benign "no-op", which silently applied NOTHING
+# from any scope (bsuite#1492). The psql applier only considers this scope's
+# own missing versions, matching the shared-table reality.
+#
+# Already-applied versions (e.g. via Supabase MCP, the operator pattern) are
+# skipped by the version check. Workflow exits cleanly.
+#
+# MIGRATION_FLOOR: versions BELOW the floor are never applied (or verified)
+# by this workflow. The pre-floor backlog contains files whose content was
+# applied via Supabase MCP under different version stamps — replaying it is
+# owned by the migration-history reconciliation lane (crm7#758 / crm7#831 /
+# bsuite#1492; see crm7 docs/operations/20260610-migration-history-post-
+# baseline-drift doc), which verifies live end-state gaps and ships forward
+# hotfixes instead of replays. Raise the floor only after that lane records
+# or supersedes the older versions.
 #
 # Edge Function deployment is handled by a separate workflow:
 #   .github/workflows/supabase-functions-deploy.yml
@@ -67,6 +81,9 @@ permissions:
 env:
   SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
   SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  # See header comment — pre-floor versions belong to the history-
+  # reconciliation lane, not this pipeline.
+  MIGRATION_FLOOR: '20260605000000'
 
 jobs:
   detect-changes:
@@ -121,6 +138,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # Serialize scopes: concurrent DDL from multiple scopes against the one
+      # shared database risks lock conflicts on shared objects.
+      max-parallel: 1
       matrix:
         submodule: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
     steps:
@@ -128,10 +148,6 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
-
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
 
       - name: Resolve working directory
         id: resolve-dir
@@ -146,33 +162,51 @@ jobs:
             echo "workdir=$SUBMODULE" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Link Supabase project
+      - name: Apply transactional migrations (.sql, via psql)
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
         env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
         run: |
-          supabase link --project-ref "$PROJECT_ID"
+          set -euo pipefail
 
-      - name: Apply transactional migrations (.sql, via CLI)
-        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
-        run: |
-          set +e
-          supabase migration up --linked --include-all 2>&1 | tee /tmp/mig-out.log
-          # PIPESTATUS[0] captures supabase's exit code; plain $? would capture tee's (always 0).
-          RC=${PIPESTATUS[0]}
-          set -e
+          command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
 
-          # CLI may still complain about "remote versions not in local" even with
-          # --include-all (older CLI versions). Surface as warning but pass the
-          # workflow — schema_migrations is operator-managed via Supabase MCP.
-          if [ $RC -ne 0 ]; then
-            if grep -q "Remote migration versions not found in local" /tmp/mig-out.log; then
-              echo "::warning::Drift detected per-scope view (expected — schema_migrations is shared across parent/app/package migration scopes). Operator manages migrations via Supabase MCP. No-op for this scope."
-              exit 0
+          # Pooler endpoint (IPv4 dual-stack) — direct host is IPv6-only.
+          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          APPLIED=$(psql "$DB_URL" -t -A \
+            -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;")
+
+          APPLIED_COUNT=0
+          SKIPPED_COUNT=0
+          while IFS= read -r -d '' f; do
+            BASE=$(basename "$f" .sql)
+            VERSION=${BASE%%_*}
+            # Only versioned migrations (<timestamp>_name.sql) — helper files
+            # like verify_migrations.sql are not migrations (same rule the
+            # Supabase CLI applies).
+            case "$VERSION" in
+              ''|*[!0-9]*) echo "→ Skipping non-versioned file: $f"; continue ;;
+            esac
+            if [ "$VERSION" \< "$MIGRATION_FLOOR" ]; then
+              echo "→ Pre-floor ($MIGRATION_FLOOR): $f — owned by history-reconciliation lane, skipping"
+              continue
             fi
-            echo "::error::Migration apply failed for unknown reason. Check log."
-            exit $RC
-          fi
+            if echo "$APPLIED" | grep -qxF "$VERSION"; then
+              SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+              continue
+            fi
+            echo "→ Applying transactional migration: $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 \
+              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES ('${VERSION}', '${BASE#*_}') ON CONFLICT DO NOTHING;"
+            echo "✓ Applied and recorded: $VERSION"
+            APPLIED_COUNT=$((APPLIED_COUNT + 1))
+          done < <(find supabase/migrations -maxdepth 1 -name "*.sql" ! -name "*.nontx.sql" -print0 | sort -z)
+
+          echo "Done: ${APPLIED_COUNT} applied, ${SKIPPED_COUNT} already recorded."
 
       - name: Verify transactional migrations recorded in schema_migrations
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
@@ -182,12 +216,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Find the latest local transactional migration version (exclude .nontx.sql).
-          LATEST_LOCAL=$(find supabase/migrations -name "*.sql" ! -name "*.nontx.sql" \
-            -printf "%f\n" 2>/dev/null | sed 's/\.sql$//' | sort | tail -1)
+          # Find the latest local transactional migration VERSION (exclude
+          # .nontx.sql and non-versioned helper files like verify_migrations.sql
+          # — those previously won the sort and broke this check).
+          LATEST_LOCAL=$(find supabase/migrations -maxdepth 1 -name "[0-9]*.sql" ! -name "*.nontx.sql" \
+            -printf "%f\n" 2>/dev/null | sed 's/\.sql$//' | sed 's/_.*//' | sort | tail -1)
 
           if [ -z "$LATEST_LOCAL" ]; then
             echo "No transactional migrations found locally — skipping verification"
+            exit 0
+          fi
+
+          if [ "$LATEST_LOCAL" \< "$MIGRATION_FLOOR" ]; then
+            echo "Latest local version ${LATEST_LOCAL} is pre-floor (${MIGRATION_FLOOR}) — owned by the history-reconciliation lane, skipping verification"
             exit 0
           fi
 
@@ -234,6 +275,11 @@ jobs:
           APPLIED_COUNT=0
           while IFS= read -r -d '' f; do
             VERSION=$(basename "$f" .nontx.sql)
+            VERSION=${VERSION%%_*}
+            if [ "$VERSION" \< "$MIGRATION_FLOOR" ]; then
+              echo "→ Pre-floor ($MIGRATION_FLOOR): $f — owned by history-reconciliation lane, skipping"
+              continue
+            fi
             if echo "$APPLIED" | grep -qxF "$VERSION"; then
               echo "→ Already applied: $VERSION — skipping"
               continue
