@@ -424,6 +424,8 @@
 
 **Goal:** Resolve the schism blocking host billing and charge-calc training-day propagation.
 
+**Status: ✅ DONE 2026-06-10** — crm7#1045 merged (operator-approved). FK bridge `placements.person_id`/`apprentices.person_id` → `people` with deterministic backfill + BEFORE-trigger forward population (migration `20260610023056_placement_person_identity_bridge.sql`); billingEngine host-billing crash fixed (incl. `status`→`state` and line-item FK target latent bugs); all four placement charge-calc training-day resolvers functional. Evidence: 11/11 CI checks, 4232 vitest, 33 pgTAP suites / 331 assertions on prod-baseline replay, live-prod read-only coverage 15/15 apprentices. Carry-overs: crm7#1046 (pgTAP CI glob gap), crm7#1047 (orphaned legacy placements), contract-phase NOT NULL deferred until prod population confirmed.
+
 **Subagents:** one-shot reviewer, security reviewer, platform reviewer.
 
 **Skills/MCPs:** `dry-one-shot-architecture`, `supabase`, `supabase-postgres-best-practices`, `schema-consistency`, `frontend-backend-mapping`, `security-audit`, Supabase MCP/SQL.
