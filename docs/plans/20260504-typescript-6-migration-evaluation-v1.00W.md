@@ -1,5 +1,5 @@
 ---
-status: D (Draft)
+status: W (Working)
 date: 2026-05-04
 tracking_issue: GaryOcean428/bsuite#211
 target_window: 2026-Q3 (post Phase 3 deploy stabilisation)
