@@ -9,7 +9,8 @@
 #                supabase_migrations.schema_migrations.
 # - .nontx.sql → non-transactional migrations (e.g. CREATE INDEX CONCURRENTLY)
 #                applied via direct psql after the transactional pass.
-# Both passes use the IPv4 dual-stack pooler (aws-0-us-east-1.pooler...).
+# Both passes use the IPv4 dual-stack Supavisor pooler; the cluster
+# (aws-1 vs aws-0) is probed at runtime by the "Resolve pooler host" step.
 #
 # Why psql and NOT `supabase migration up`: schema_migrations is ONE shared
 # table fed by 8 migration scopes (root + 6 apps + schema-builder). The CLI
