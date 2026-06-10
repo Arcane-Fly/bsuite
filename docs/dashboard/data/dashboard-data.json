@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 19,
       "archived": 0,
-      "main_sha": "7e2ea3f",
+      "main_sha": "8475230",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -137,7 +137,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "0121ff0",
+      "main_sha": "1b87ac4",
       "vercel": "success"
     }
   ],
@@ -148,7 +148,7 @@
       "repo": "bsuite",
       "scope": "parent",
       "source": "in-repo",
-      "path": "docs/plans/2026-05-04-typescript-6-migration.md",
+      "path": "docs/plans/20260504-typescript-6-migration-evaluation-v1.00W.md",
       "status": "open",
       "phase": "deferred",
       "owner": "EPIC #211",
@@ -844,8 +844,8 @@
       "title": "Throughput-specific WCAG/quality items (8 enumerated tasks, 2-8h each)",
       "repo": "throughput",
       "scope": "docs-root",
-      "source": "throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md §Next Steps",
-      "path": "throughput/docs/20250427-throughput-quality-improvements-implementation-v1.00W.md §Next Steps",
+      "source": "throughput/docs/20251014-throughput-quality-improvements-implementation-v1.00W.md §Next Steps",
+      "path": "throughput/docs/20251014-throughput-quality-improvements-implementation-v1.00W.md §Next Steps",
       "status": "open",
       "phase": "outstanding-item",
       "owner": "throughput maintainer",

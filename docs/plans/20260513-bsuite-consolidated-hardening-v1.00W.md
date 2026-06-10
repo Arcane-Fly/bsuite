@@ -45,10 +45,10 @@ Before any RLS rewrites or Zod regen against the schema, the source migration tr
 | Step | Status | Notes |
 |---|---|---|
 | 1.1 JWKS asymmetric keys present | ✅ DONE (pre-flight) | 2 ES256 keys |
-| 1.2 grep `getSession()` server-side, replace with `getClaims()` | TODO | conduit (Next.js SSR) most likely culprit |
-| 1.3 Verify Vite SPAs use `localStorage` (NEVER `sessionStorage`), `persistSession: true`, `autoRefreshToken: true` | TODO | 5 apps to audit |
-| 1.4 Custom Access Token Hooks audit | TODO | Verify all 11 required claims preserved |
-| 1.5 Production SMTP configured (not 2/hr default) | TODO (operator-side via dashboard) | — |
+| 1.2 grep `getSession()` server-side, replace with `getClaims()` | ✅ DONE | conduit PR [#176](https://github.com/GaryOcean428/conduit/pull/176) (2026-05-05) moved server code to `getClaims()`; conduit PR [#259](https://github.com/GaryOcean428/conduit/pull/259) (2026-05-13) added a static-analysis test enforcing zero server-side `getSession()`. Source re-verified 2026-06-10: all remaining `getSession()` call sites are in `'use client'` files; `src/lib/supabase/middleware.ts` deliberately uses `getUser()` (Auth-server revocation check — documented in-file). |
+| 1.3 Verify Vite SPAs use `localStorage` (NEVER `sessionStorage`), `persistSession: true`, `autoRefreshToken: true` | ✅ DONE | bsuite PR [#946](https://github.com/GaryOcean428/bsuite/pull/946) (2026-05-13, closed bsuite#945) ships CI audit script `scripts/check-supabase-client-init.mjs` (requires `flowType: 'pkce'` + `persistSession: true` + `autoRefreshToken: true`; forbids `sessionStorage`/`cookieStorage`/`business_suite_auth`/`.crm7.app`). All 5 SPA clients re-verified compliant in source 2026-06-10. |
+| 1.4 Custom Access Token Hooks audit | DEFERRED (tracked) | → bsuite#1505. No audit evidence found (no PR; zero `custom_access_token` references in any repo, 2026-06-10). |
+| 1.5 Production SMTP configured (not 2/hr default) | DEFERRED (tracked, operator-side via dashboard) | → bsuite#1505. Not in `operator_blockers` as of 2026-06-10; no configuration evidence. |
 
 **Estimated cycles**: 1
 
@@ -71,9 +71,9 @@ Before any RLS rewrites or Zod regen against the schema, the source migration tr
 
 | Step | Status | Notes |
 |---|---|---|
-| 3.1 Re-deploy 46 functions with `file:///` imports | IN PROGRESS | This session: `xero-token-exchange`, `xero-invoice-submit` redeployed. 44 remaining. |
-| 3.2 Replace `file:///` imports with `npm:` / `https://deno.land/...` | TODO | Codemod-able pattern |
-| 3.3 Add CI guard: any function manifest with `file:///` fails | TODO | Single workflow file edit |
+| 3.1 Re-deploy 46 functions with `file:///` imports | ✅ DONE | Tracking issue bsuite#947 closed 2026-05-13 alongside bsuite PR [#948](https://github.com/GaryOcean428/bsuite/pull/948) (CI deploy workflow `.github/workflows/supabase-functions-deploy.yml`). bsuite PR [#1110](https://github.com/GaryOcean428/bsuite/pull/1110) (2026-05-19) cleared 23 of the 25 remaining stragglers; final 2 (`xero-invoice-submit`, `calendar-integration`) self-clear on next source change (CLI no-content-diff shortcut skips metadata-only updates). |
+| 3.2 Replace `file:///` imports with `npm:` / `https://deno.land/...` | ✅ DONE (verified no-op in source) | Grep 2026-06-10: zero `file:///` imports across all 7 `supabase/functions/` source trees (parent + 6 submodules). The `file:///` findings were deployed-manifest `entrypoint_path` values from local-machine deploys, not source imports — remediated by the 3.1 CI redeploy (bsuite#948/#1110). |
+| 3.3 Add CI guard: any function manifest with `file:///` fails | ✅ DONE (softened to warning) | Post-deploy guard shipped in bsuite PR [#948](https://github.com/GaryOcean428/bsuite/pull/948) (2026-05-13) in `supabase-functions-deploy.yml`; downgraded from hard-fail to warning by bsuite PR [#1110](https://github.com/GaryOcean428/bsuite/pull/1110) (2026-05-19) because the Supabase CLI's no-content-diff shortcut leaves stale metadata on unchanged functions. Guard remains active as an informational check. |
 
 **Estimated cycles**: 1-2
 
@@ -81,12 +81,25 @@ Before any RLS rewrites or Zod regen against the schema, the source migration tr
 
 | Step | Status | Notes |
 |---|---|---|
-| 4.1 Sweep `z.string().email()` / `.uuid()` / `.url()` → `z.email()` etc. | TODO | Codemod-able. Hand-write the codemod, run on review-PRs. NOT auto-apply. |
-| 4.2 `z.discriminatedUnion()` for tagged unions (e.g. `apprentice_handoff_tokens.kind`) | TODO | Per-schema work |
-| 4.3 Move duplicated schemas to `packages/schema-registry` | TODO | Per-schema work |
-| 4.4 `safeParse` everywhere on trust boundaries | TODO | Audit per route handler |
+| 4.1 Sweep `z.string().email()` / `.uuid()` / `.url()` → `z.email()` etc. | ⚠️ PARTIAL — packages done, app trees DEFERRED (tracked) | `packages/*` swept by bsuite PR [#950](https://github.com/GaryOcean428/bsuite/pull/950) (2026-05-13, closed bsuite#949). App `src/` trees NOT swept: grep 2026-06-10 finds **436** remaining occurrences across the 6 apps. Remainder → bsuite#1505. |
+| 4.2 `z.discriminatedUnion()` for tagged unions (e.g. `apprentice_handoff_tokens.kind`) | DEFERRED (tracked) | → bsuite#1505. Zero `discriminatedUnion` usages in crm7 src (grep 2026-06-10); no PR evidence. |
+| 4.3 Move duplicated schemas to `packages/schema-registry` | DEFERRED (tracked) | → bsuite#1505. No cross-app schema-dedup PR found (search 2026-06-10). |
+| 4.4 `safeParse` everywhere on trust boundaries | DEFERRED (tracked) | → bsuite#1505. Baseline grep 2026-06-10: crm7 417 call sites, BSU 8, throughput 2, conduit/R80.3/braden 0 — audit not performed. |
 
 **Estimated cycles**: 2-3 (depends on 4.1 codemod fidelity)
+
+## Deferred (tracked) — reconciliation 2026-06-10 (bsuite#1499)
+
+The following rows were verified as genuinely not implemented (no merged PR, no source-tree evidence) and are consolidated under tracking issue **[bsuite#1505](https://github.com/GaryOcean428/bsuite/issues/1505)**:
+
+| Row | Item | Why deferred |
+|---|---|---|
+| 1.4 | Custom Access Token Hooks audit | No PR; zero `custom_access_token` references in any repo. May be N/A if no hook is configured — needs a dashboard check to confirm. |
+| 1.5 | Production SMTP (operator-side) | Operator dashboard action; no evidence, not in `operator_blockers`. |
+| 4.1 (remainder) | Zod 4 format sweep across the 6 app `src/` trees | bsuite#950 covered `packages/*` only; 436 occurrences remain. |
+| 4.2 | `z.discriminatedUnion()` adoption | Per-schema work, never started. |
+| 4.3 | Schema dedup into `packages/schema-registry` | Per-schema work, never started. |
+| 4.4 | `safeParse` trust-boundary audit | Not performed; baseline counts captured in bsuite#1505. |
 
 ## Phase 5 — Skill authorship (in-PR, not separate phase)
 

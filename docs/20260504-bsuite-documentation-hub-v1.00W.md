@@ -266,11 +266,11 @@ Every shared concern should be documented in each submodule where it applies, wi
 
 | Concern | Authoritative source | BSU | CRM7 | Conduit | Braden | R80.3 | Throughput |
 |---|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| OUTSTANDING | `docs/OUTSTANDING.md` (SSoT — `docs/20260501-merged-execution-backlog-v1.00W.md` is the active execution queue) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488); `docs/reference/OUTSTANDING.md` is per-area audit and retained | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | `20250427-throughput-outstanding-v1.00W.md` (throughput-local, out of bsuite#488 scope) |
-| Roadmap | `docs/20260227-bsuite-master-roadmap-v5.00W.md` | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250320-throughput-roadmap-v1.00W.md` ✅ |
+| OUTSTANDING | `docs/OUTSTANDING.md` (SSoT — `docs/20260501-merged-execution-backlog-v1.00W.md` is the active execution queue) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488); `docs/reference/OUTSTANDING.md` is per-area audit and retained | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | `20260425-throughput-outstanding-v1.00W.md` (throughput-local, out of bsuite#488 scope) |
+| Roadmap | `docs/20260227-bsuite-master-roadmap-v5.00W.md` | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250829-throughput-roadmap-v1.00W.md` ✅ |
 | Auth topology | `AGENTS.md` §Auth + `CLAUDE.md` mirror (archived snapshot: `archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md`) | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap |
 | Theme tokens | `@bsuite/theme@0.3.3` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap | ⚠️ cross-link gap |
-| Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap | `20250320-throughput-navigation-ux-guide-v1.00W.md` ✅ |
+| Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap | `20251014-throughput-navigation-ux-guide-v1.00W.md` ✅ |
 | Component library | `packages/ui/` (in progress) | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | full component docs ✅ (20+ files) |
 | DRY architecture | `docs/20260227-dry-one-shot-architecture-v1.02A.md` | ⚠️ cross-link only | ✅ `ENTITY-SELECTORS.md` | ⚠️ cross-link only | n/a | ⚠️ cross-link only | n/a |
 | Tech stack | `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only |
@@ -310,7 +310,7 @@ For each cross-app feature, exactly one app is the **owner** (canonical implemen
 | Fair Work API integration | R80.3 (canonical) | CRM7 (reads) | `R80.3/docs/20260304-r80-fairwork-api-reference-v1.01W.md` |
 | Billing / Stripe | BSU | CRM7 (reads plan) | `business-suite-unified/docs/` |
 | Corporate marketing surface | Braden | — | `braden/docs/20260316-braden-corporate-theme-reference-v1.00W.md` |
-| Idea management + Groq AI | Throughput | — | `throughput/docs/20250320-throughput-system-architecture-v1.00W.md` |
+| Idea management + Groq AI | Throughput | — | `throughput/docs/20250509-throughput-system-architecture-v1.00W.md` |
 | Navigation primitives (shared components) | `@bsuite/nav-core` | Braden (primary); D2C apps migrating | `packages/nav-core/` |
 | Data export (xlsx/csv/pdf) | `@bsuite/data-export` | CRM7, R80.3 (primary); all eligible | `packages/data-export/` |
 | Shared auth client (OAuth 2.1 PKCE + JWKS) | `@bsuite/auth` | all 5 clients (migration in progress) | `packages/auth/` |
