@@ -84,7 +84,11 @@ env:
   SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
   # See header comment — pre-floor versions belong to the history-
   # reconciliation lane, not this pipeline.
-  MIGRATION_FLOOR: '20260605000000'
+  # Raised 20260605000000 -> 20260611000000 on 2026-06-10: the crm7#758
+  # reconciliation lane completed (crm7#1060-#1063, dispatch 27278276928) —
+  # every version >= the 20260513 baseline is now recorded-and-applied,
+  # MCP-equivalent-recorded, or documented drift.
+  MIGRATION_FLOOR: '20260611000000'
 
 jobs:
   detect-changes:
