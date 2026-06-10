@@ -9,7 +9,8 @@
 #                supabase_migrations.schema_migrations.
 # - .nontx.sql → non-transactional migrations (e.g. CREATE INDEX CONCURRENTLY)
 #                applied via direct psql after the transactional pass.
-# Both passes use the IPv4 dual-stack pooler (aws-0-us-east-1.pooler...).
+# Both passes use the IPv4 dual-stack Supavisor pooler; the cluster
+# (aws-1 vs aws-0) is probed at runtime by the "Resolve pooler host" step.
 #
 # Why psql and NOT `supabase migration up`: schema_migrations is ONE shared
 # table fed by 8 migration scopes (root + 6 apps + schema-builder). The CLI
@@ -162,18 +163,40 @@ jobs:
             echo "workdir=$SUBMODULE" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Apply transactional migrations (.sql, via psql)
-        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+      - name: Resolve pooler host
+        id: pooler
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
         run: |
           set -euo pipefail
+          command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
+          # Supavisor tenants live on a numbered cluster per region — newer
+          # projects are on aws-1, older on aws-0. The wrong cluster returns
+          # "(ENOTFOUND) tenant/user ... not found". Probe in order.
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "✓ Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID} — check SUPABASE_DB_PASSWORD and project region."
+          exit 1
+
+      - name: Apply transactional migrations (.sql, via psql)
+        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
 
           command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
 
-          # Pooler endpoint (IPv4 dual-stack) — direct host is IPv6-only.
-          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
           DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
           APPLIED=$(psql "$DB_URL" -t -A \
@@ -213,6 +236,7 @@ jobs:
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
         run: |
           set -euo pipefail
 
@@ -234,12 +258,13 @@ jobs:
 
           command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
 
-          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
           DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
+          # No 2>/dev/null + fallback here: a connection failure must FAIL the
+          # step, not masquerade as "0 recorded" (that masking hid the broken
+          # pooler host for weeks).
           RECORDED=$(psql "$DB_URL" -t -A \
-            -c "SELECT COUNT(*) FROM supabase_migrations.schema_migrations WHERE version = '${LATEST_LOCAL}';" \
-            2>/dev/null || echo "0")
+            -c "SELECT COUNT(*) FROM supabase_migrations.schema_migrations WHERE version = '${LATEST_LOCAL}';")
 
           if [ "$RECORDED" = "0" ]; then
             echo "::error::Post-apply verification FAILED: '${LATEST_LOCAL}' not in schema_migrations — transactional step may have silently no-op'd. Verify SUPABASE_ACCESS_TOKEN is valid and SUPABASE_PROJECT_ID is set to the Supabase project ref (not a Vercel project ID)."
@@ -253,6 +278,7 @@ jobs:
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
         run: |
           set -euo pipefail
 
@@ -264,13 +290,11 @@ jobs:
             exit 0
           fi
 
-          # Pooler endpoint (IPv4 dual-stack) — direct host is IPv6-only.
-          DB_HOST="aws-0-us-east-1.pooler.supabase.com"
           DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
+          # Connection failure must fail the step (no silent-empty fallback).
           APPLIED=$(psql "$DB_URL" -t -A \
-            -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;" \
-            2>/dev/null || echo "")
+            -c "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;")
 
           APPLIED_COUNT=0
           while IFS= read -r -d '' f; do
