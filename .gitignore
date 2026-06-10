@@ -62,3 +62,8 @@ playwright-report/
 test-results/
 storybook-static/
 */storybook-static/
+output/playwright/
+.playwright-cli/
+*/.playwright-cli/*
+.playwright-mcp/
+*/.playwright-mcp/*

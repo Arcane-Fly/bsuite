@@ -14,7 +14,7 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-06-09",
+    "last_refresh": "2026-06-10",
     "last_refreshed": "2026-06-07T02:38:00Z",
     "last_refreshed_by": "copilot-cli report-schema plan update"
   },
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 19,
       "archived": 0,
-      "main_sha": "5ebbb87",
+      "main_sha": "36122e6",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "cbf01be",
+      "main_sha": "21f5e0b6",
       "vercel": "success"
     },
     {
@@ -105,7 +105,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "831fd93",
+      "main_sha": "d52ecae",
       "vercel": "success"
     },
     {
@@ -113,7 +113,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "3422a9b",
+      "main_sha": "2bd8c1a",
       "vercel": "success"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "04e30d7",
+      "main_sha": "756101b",
       "vercel": "success"
     },
     {
@@ -129,7 +129,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "83e42ce",
+      "main_sha": "00e2787",
       "vercel": "success"
     },
     {
@@ -137,7 +137,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "aa85999",
+      "main_sha": "0121ff0",
       "vercel": "success"
     }
   ],

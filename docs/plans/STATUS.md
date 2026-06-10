@@ -1,6 +1,6 @@
 # Plans / Tracking — STATUS
 
-**Last updated:** 2026-06-06
+**Last updated:** 2026-06-10
 
 This is a quick-reference status board for the cross-app tracking issues
 in the parent `bsuite` repo. It complements `docs/OUTSTANDING.md`
@@ -35,6 +35,7 @@ dependency status).
 | Group | Current status | Next action |
 |-------|----------------|-------------|
 | Next execution plan | Added `20260609-production-readiness-next-steps-plan-v1.00W.md` after package blockers cleared and Claude-for-Chrome visual smoke was requested. Updated with the 2026-06-09 smoke findings: Conduit production outage (`conduit#307`), CRM7 placement `pay_item_rules` schema error (`crm7#1029`), CRM7 dev blank first load (`crm7#1030`), Throughput dev OAuth loop (`throughput#214`), CRM7 reports schema drift (`crm7#1031`), INP popup evidence, TCID/WAAMS wording, and block-release calendar gap. | Review/approve the plan, then execute in a fresh `executing-plans` thread. Gate 0 fixes Conduit production and CRM7 placement P0s before package rollout/feature work unless a package bump is proven necessary for the fix. |
+| Workstream A — package consumer rollout (`bsuite#1487`) | ✅ Done 2026-06-10. All six apps merged the latest-compatible refresh on `development`: crm7#1044, conduit#310, R80.3#312, BSU#541, braden#324, throughput#221 — `@bsuite/auth@0.2.6`, `theme@0.4.1`, `ui@0.4.0`, `page-builder@0.4.1`, `schema-builder@0.7.3`, `schema-registry@0.3.5` plus React 19.2.7 / Vite 8.0.16 / TS 6.0.3. Task A2 lockfile guard added as `scripts/check-lockfile-hygiene.mjs` (`lint:lockfile-hygiene`). Browser smoke on all six dev deploys passed, including a real-credential BSU sign-in and a full BS OAuth round-trip into `d.crm.crm7.app/dashboard` with zero console errors. Node-pin regression (bare `24` re-introduced via the parity linter's wrong canonical) reverted to `24.x` and the linter canonical fixed. Conduit dead external noise.svg replaced with a local asset (conduit#311). | Promote app `development` → `main` only after the Task 9 ship gate; throughput#220 promotion awaits operator sign-off. |
 
 ## 2026-06-05 Production-spec Task 0 inventory matrix
 

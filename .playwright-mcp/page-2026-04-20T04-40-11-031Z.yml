@@ -1,6 +1,0 @@
-- generic [ref=e2]:
-  - status "Loading" [ref=e3]:
-    - generic [ref=e4]:
-      - generic [ref=e6]: BS
-      - generic [ref=e11]: Loading Business Suite...
-  - region "Notifications alt+T"

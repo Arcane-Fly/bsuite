@@ -40,6 +40,10 @@ async function walk(dir) {
       continue;
     }
     if (!entry.isFile() || !exts.has(path.extname(entry.name))) continue;
+    // The per-app CI-enforced oauth-contract suites assert these tokens are
+    // ABSENT from app source, so the test files necessarily contain the
+    // literals. They are the guard, not a violation.
+    if (entry.name === 'oauth-contract.test.ts') continue;
     const content = await readFile(full, 'utf8');
     const lines = content.split(/\r?\n/);
     lines.forEach((line, index) => {
