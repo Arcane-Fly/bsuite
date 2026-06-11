@@ -2,7 +2,7 @@
 
 Top-level documentation for the BSuite multi-project workspace. Contains cross-project standards, architecture references, and planning documents shared across all six applications (business-suite-unified, crm7, conduit, braden, R80.3, throughput).
 
-> **Index refreshed 2026-06-11** by the docs/roadmap closure audit (`plans/20260611-docs-roadmap-closure-audit-v1.00W.md`). Evidence-only artifacts (cron logs, completed handoff packets, one-off audits) were moved to `archive/2026-06/`; earlier reference docs live under `archive/parent/2026-04-30-references-approved/`.
+> **Index refreshed 2026-06-11** by the docs/roadmap closure audit (`plans/20260611-docs-roadmap-closure-audit-v1.00A.md`). Evidence-only artifacts (cron logs, completed handoff packets, one-off audits) were moved to `archive/2026-06/`; earlier reference docs live under `archive/parent/2026-04-30-references-approved/`.
 
 ## Documentation Authority
 

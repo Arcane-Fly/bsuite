@@ -1,6 +1,6 @@
 # Plans / Tracking — STATUS
 
-**Last updated:** 2026-06-11 (closure-audit truth-up — see docs/plans/20260611-docs-roadmap-closure-audit-v1.00W.md)
+**Last updated:** 2026-06-11 (closure-audit truth-up — see docs/plans/20260611-docs-roadmap-closure-audit-v1.00A.md)
 
 This is a quick-reference status board for the cross-app tracking issues
 in the parent `bsuite` repo. It complements `docs/OUTSTANDING.md`

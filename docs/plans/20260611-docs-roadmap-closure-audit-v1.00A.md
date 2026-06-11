@@ -1,7 +1,7 @@
 # Docs / Roadmap Closure Audit — Parent Repo Verdict Table
 
 **Date:** 2026-06-11
-**Status:** W (Working — submodule table pending merge)
+**Status:** A (Approved — both halves merged 2026-06-11; submodule tables incorporated)
 **Scope:** Every `.md` under the parent's `docs/` EXCEPT `docs/dashboard/**` and `docs/plans/STATUS.md` (handled separately). `docs/archive/**` is treated as already-resolved (verdict = archived, no action) and is not re-tabulated.
 **Branch:** `docs/closure-audit-parent-20260611`
 
@@ -205,6 +205,44 @@ docs/20260507-w4-permissions-editor-scoping-v1.00{W→A}.md
 ```
 
 Reference fixes applied to living docs only (`docs/README.md` rewritten, `docs/plans/README.md` tables rewritten, `docs/OUTSTANDING.md`, `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`, `docs/20260504-bsuite-documentation-hub-v1.00W.md`, `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md`, `docs/20260227-bsuite-master-roadmap-v5.00W.md`, `docs/CONSISTENCY-REPORT.md`, `docs/plans/20260609-production-readiness-next-steps-plan-v1.00W.md`, `CLAUDE.md` cron-log path). Archived/historical docs were NOT edited.
+
+## Submodule closure-audit verdict tables (2026-06-11)
+
+Merged from the submodule half of the audit. Per-repo PRs (all merged): crm7#1068, conduit#315, R80.3#314, BSU#542, braden#325, throughput#223. Full per-doc tables live in each repo's PR / `docs/archive/2026-06/README.md`; the condensed verdicts:
+
+### crm7 (PR #1068)
+3 archived (`reference/OUTSTANDING.md` refs-audit snapshot, 2× stale 2025-era status/QA references), 1 re-marked A (e-signing architecture — shipped: `documentSigner.ts` + `SignDocumentFlow.tsx`, crm7#687 closed), 8 indexes repaired (~25 dead links from the 2026-04-30 sweep). Kept active: document-storage docs (canonical for OPEN crm7#1056–#1058), GTO master plan + WS-3…WS-9 (crm7#527–#534 OPEN), migration-history drift doc (MIGRATION_FLOOR operational reference), Xero runbook (registration pending).
+
+### conduit (PR #315)
+0 archived. Both `2026-05-04` adopt-plans verified STILL UNIMPLEMENTED (no `components.json`, no `src/components/entity/` — checked 2026-06-11) → keep-active alongside the OPEN conduit#218–#252 backlog. 5 link/status repairs; 1 dead link superseded to the parent archive URL.
+
+### R80.3 (PR #314)
+1 archived (2026-03 roadmap with inline superseded banner), 2 re-marked A (Payday Super — shipped, R80.3#231/#232 closed; training fees — shipped, R80.3#129 closed). Kept active: MAPD/Fair Work API reference (live spec for `fairworkApi.ts`), unified-schema/billing references, plans STATUS (GTO invoicing/payroll OPEN as R80.3#233/#234).
+
+### business-suite-unified (PR #542)
+0 archived. Auth-dashboard hardening doc kept as the canonical operator runbook (bsu#283 closed external-blocked; portal actions still owed). Both adopt-plans verified still unimplemented (no `dashboard_layouts` table, no entity selectors) → keep-active. 2 indexes repaired.
+
+### braden (PR #325)
+0 archived. Roadmap kept (canonical tracking doc for dormant Phase 2–3 visual-editor items per plans/STATUS — rule 4); 3 dead provenance pointers repaired. Corporate theme + security docs all keep-active.
+
+### throughput (PR #223)
+Light pass — yesterday's naming sweep (#222) verified good against git first-commit dates; 11 residual pre-rename cross-links repaired in 2 component docs.
+
+### Cross-repo findings (filed as bsuite#1522)
+1. **Phantom mirror targets:** all 6 submodules' `INDEX.md`/`UNIFIED-ROADMAP.md`/`STACK-AUDIT.md`/`FEATURE-SURFACE.md` claim to mirror parent files that have never existed (verified `git log --all`).
+2. **PARENT-DOCS.md desync:** the 6-way-identical file links three docs this audit archived.
+3. crm7 plans/STATUS sibling banner references two removed OUTSTANDING files.
+
+## Final summary (parent + submodules)
+
+| Verdict | Parent | Submodules | Total |
+|---|---|---|---|
+| keep-active | 62 | ~70 (incl. authority files) | ~132 |
+| archive | 33 | 4 | 37 |
+| supersede | 5 | 2 (dead links → parent archive URLs) | 7 |
+| re-mark-A | 6 | 3 | 9 |
+
+Companion deliverables: STATUS.md truth-up (bsuite#1521 — 13 stale cells), R80.3#235 closed as completed-by-WS-G, crm7#530 re-scoped in-issue, bsuite#1522 filed (mirror debt). The `20260609-production-readiness` plan remains the ACTIVE umbrella per operator directive.
 
 <!-- SUBMODULE-TABLE-MERGE-POINT -->
 
