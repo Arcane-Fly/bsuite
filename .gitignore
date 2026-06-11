@@ -67,4 +67,8 @@ output/playwright/
 */.playwright-cli/*
 .playwright-mcp/
 */.playwright-mcp/*
-crm7-add-block.png
+# Visual verification screenshots + reports (§9.2 artifacts)
+*.png
+advisor-report.json
+perf-findings.md
+visual.md
