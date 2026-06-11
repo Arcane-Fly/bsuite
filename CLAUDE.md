@@ -266,7 +266,7 @@ The Autonoma Vercel integration was **removed on 2026-05-13** after evaluation. 
 - This `CLAUDE.md` section: rewritten as a removal note
 - `docs/20260227-bsuite-master-roadmap-v5.00W.md`: Autonoma adoption section marked as removed
 - `.gitleaks.toml`: defensive `autonoma-client-secret` detection rule **kept** as a guard against accidental future re-introduction
-- `docs/20260507-cron-log-claude-scheduled-v1.00W.md` and other historical activity logs: **NOT edited** (they record what was true on the date they were written)
+- `docs/archive/2026-06/20260507-cron-log-claude-scheduled-v1.00W.md` and other historical activity logs: **NOT edited** (they record what was true on the date they were written)
 
 **If a future evaluation revisits e2e testing:**
 

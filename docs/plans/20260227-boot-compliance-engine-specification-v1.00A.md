@@ -1,5 +1,7 @@
 > **SOURCE:** Ported from Claude memory file on 2026-03-16. Original memory file retained for cross-session persistence.
 
+> **STATUS: A (Approved/complete) — re-marked 2026-06-11 by the docs/roadmap closure audit.** The BOOT compliance engine specified here shipped in `@bsuite/charge-calc` + CRM7 integration. Evidence trail: `../archive/2026-06/20260508-boot-engine-shipped-evidence-v1.00W.md`; `@bsuite/charge-calc@^0.5.0` consumed by crm7 and R80.3.
+
 ---
 
 # BOOT (Better Off Overall Test) Research

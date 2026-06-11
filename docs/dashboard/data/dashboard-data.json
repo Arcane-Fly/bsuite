@@ -87,9 +87,9 @@
     {
       "name": "bsuite",
       "type": "parent",
-      "active_plans": 19,
+      "active_plans": 16,
       "archived": 0,
-      "main_sha": "c9c848e",
+      "main_sha": "39039ed",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "46381471",
+      "main_sha": "e5e33f64",
       "vercel": "success"
     },
     {
@@ -105,7 +105,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "da4231d",
+      "main_sha": "b2c074c",
       "vercel": "success"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "3f406af",
+      "main_sha": "5524697",
       "vercel": "success"
     },
     {

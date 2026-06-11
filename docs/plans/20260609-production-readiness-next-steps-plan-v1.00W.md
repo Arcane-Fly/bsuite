@@ -1,5 +1,11 @@
 # Production Readiness Next Steps Implementation Plan
 
+> **Status as of 2026-06-11 (docs/roadmap closure audit):** This plan remains the **active umbrella** for production readiness — it stays open until `bsuite#1506`, `crm7#1066`, the storage phases (`bsuite#937`–`#939`), and the Workstream E–H tails close.
+>
+> **Shipped:** Workstreams E–H core (training calendar/block release, RTO/qualification/reports, R80 read-only integration, Conduit handoff scaffolding — see closed `crm7#1052`/`#1053`/`#1054`); placement↔people identity bridge (`crm7#1024` closed via `crm7#1045`, follow-ups `crm7#1046`/`#1047` closed); package consumer rollout (`bsuite#1487` closed); migration-pipeline reconciliation (`bsuite#1492`, `bsuite#1499`/`#1500` closed); Supabase advisor sweep (`bsuite#1460` closed; pgTAP advisor-hardening suite `crm7#1067`).
+>
+> **Remaining (open):** `bsuite#1505`, `bsuite#1506`, `crm7#1066`, storage phases `bsuite#937`–`#939`, and E–H tails `crm7#625`/`#663`/`#661`/`#662`/`#534`, `crm7#1056`–`#1058`, `R80.3#233`–`#235`, `conduit#218`/`#219`/`#221`/`#223`/`#225`/`#227`/`#229`/`#231`/`#233`/`#251`/`#252`.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use `executing-plans` to implement this plan task-by-task.
 
 **Goal:** Close the remaining BSuite production-readiness gaps after package publishing, visual-smoke findings, TCID/WAAMS clarification, block-release training calendar review, and single-Supabase consolidation.
@@ -628,8 +634,8 @@ Use this inventory before any report-page, report-template, report-delivery, or 
 - `docs/20260506-reports-parity-spec-v1.00W.md` - reports parity specification.
 - `docs/20260519-rpc-report-page-security-review-v1.00A.md` - report page/RPC security review.
 - `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md` - approved GTO billing/reporting plan.
-- `docs/20260317-bsuite-gap-report-v2.00W.md` - broader gap report with reporting context.
-- `docs/20260501-phase-0-completion-report-v1.00W.md` - phase completion evidence.
+- `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` - broader gap report with reporting context.
+- `docs/archive/2026-06/20260501-phase-0-completion-report-v1.00W.md` - phase completion evidence.
 - `docs/CONSISTENCY-REPORT.md` - parent consistency report.
 
 ### CRM7 docs/plans

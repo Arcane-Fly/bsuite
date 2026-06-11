@@ -1,5 +1,7 @@
 > **SOURCE:** Ported from Claude memory file on 2026-03-16. Original memory file retained for cross-session persistence.
 
+> **STATUS: A (Approved/complete) — re-marked 2026-06-11 by the docs/roadmap closure audit.** Milestones 1–3 delivered: shared calc engine extracted to `@bsuite/charge-calc` (consumed at `^0.5.0` by both crm7 and R80.3 `package.json`); Award IR engine shipped; charge-engine respawn closed via R80.3#248 (closed 2026-05-14).
+
 ---
 
 # R80.3 ↔ CRM7 Cross-Functionality Audit — Reference

@@ -6,7 +6,7 @@
 **Status:** W (Working — active baseline; promote to A once all apps land the remediation table)
 **Scope:** All six BSuite apps (`business-suite-unified`, `crm7`, `conduit`, `braden`, `R80.3`, `throughput`) + all 14 `@bsuite/*` shared packages
 **Authority:** This document is the canonical tech-stack baseline. All consumers must converge on the versions and patterns here. Deviations require an ADR in `docs/adr/`.
-**Supersedes (partially):** tech-stack sections of `20260423-bsuite-production-plan-v1.00W.md` Phase 10, `20260420-react-hooks-v7-tech-debt-v1.00W.md`
+**Supersedes (partially):** tech-stack sections of `archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` Phase 10, `20260420-react-hooks-v7-tech-debt-v1.00W.md`
 **Companions:** `20260504-bsuite-documentation-hub-v1.00W.md` (cross-submodule docs index), `20260227-contributing-standards-guide-v1.01W.md` (code standards)
 
 ---
@@ -85,7 +85,7 @@ Every D2C app (BSU, CRM7, Conduit, R80.3, Throughput) must converge on this base
 **Provenance:**
 
 - **Freshly verified 2026-05-04** (via direct `package.json` inspection this session): Zod versions, `@xyflow/react` versions, Radix primitive counts, and full `@bsuite/*` shared-package consumption per app (§2.5 auth column + §2.6).
-- **Inherited from 2026-04-23 production plan audit** (`docs/plans/20260423-bsuite-production-plan-v1.00W.md`): React / TypeScript strict / Node / pnpm / Vite / Next / Tailwind / Zustand / TanStack / React Hook Form / Framer Motion / Supabase-JS per-app versions, Sonner + react-hot-toast status. These rows should be re-verified before Wave B execution (see §5.2) — tracked as `SHARED-10` in §5.1.
+- **Inherited from 2026-04-23 production plan audit** (`docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md`): React / TypeScript strict / Node / pnpm / Vite / Next / Tailwind / Zustand / TanStack / React Hook Form / Framer Motion / Supabase-JS per-app versions, Sonner + react-hot-toast status. These rows should be re-verified before Wave B execution (see §5.2) — tracked as `SHARED-10` in §5.1.
 
 A planned `scripts/verify-tech-stack-matrix.sh` will diff each app's `package.json` against this baseline so future refreshes are one-command.
 
@@ -230,7 +230,7 @@ Except where a feature is intentionally out-of-scope for an app, every BSuite ap
 
 ## 5. Gap Register + Remediation (actionable)
 
-Each row is a concrete remediation action. Priorities align with `20260423-bsuite-production-plan-v1.00W.md`.
+Each row is a concrete remediation action. Priorities align with `archive/2026-06/20260423-bsuite-production-plan-v1.00W.md`.
 
 | ID | App | Gap | Remediation | Priority |
 |---|---|---|---|---|
@@ -370,7 +370,7 @@ A gap (TS-XX / owner-prefixed ID) is considered **closed** only when all five of
 1. **Lockfile clean** — `pnpm-lock.yaml` regenerated per the AGENTS.md out-of-tree recipe; Vercel build context has no `..` references; no `workspace:*` or `file:` entries for `@bsuite/*` deps
 2. **All four quality gates green** — `pnpm typecheck && pnpm lint && pnpm test && pnpm build` pass on the affected app on a clean clone (not just locally)
 3. **Preview deploy green** — the `d.<app>.crm7.app` (or equivalent alias) preview deploy is READY on the Vercel dashboard; authenticated smoke via cookie SSO succeeds
-4. **Backlog row flipped** — the TS-XX row in §5 (and owner-prefixed row in §5.1) is annotated with ✅ + landed-PR link; if the gap has an entry in `docs/20260501-merged-execution-backlog-v1.00W.md` or `docs/plans/20260423-bsuite-production-plan-v1.00W.md`, that row is also updated in the same PR
+4. **Backlog row flipped** — the TS-XX row in §5 (and owner-prefixed row in §5.1) is annotated with ✅ + landed-PR link; if the gap has an entry in `docs/20260501-merged-execution-backlog-v1.00W.md` or `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md`, that row is also updated in the same PR
 5. **Matrix row flipped** — the per-app row in §2 (and/or feature parity row in §4) is updated in the same PR; if a ❌ becomes ✅, the change log entry here records the flip
 
 Partial fixes (e.g., one primitive migrated of many) do not flip the row — add a ⚠️ note with remaining scope instead. A gap is not closed until its wave's exit criteria are fully met.
@@ -394,7 +394,7 @@ The only permanent deviation sanctioned today is **Braden corporate brand colour
 - **Master roadmap:** `docs/20260227-bsuite-master-roadmap-v5.00W.md`
 - **Finish-line roadmap (execution order):** `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`
 - **Merged execution backlog:** `docs/20260501-merged-execution-backlog-v1.00W.md`
-- **Audit source:** `docs/plans/20260423-bsuite-production-plan-v1.00W.md` (Phase 10 Dependency & Build Standardisation)
+- **Audit source:** `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` (Phase 10 Dependency & Build Standardisation)
 - **DRY architecture:** `docs/20260227-dry-one-shot-architecture-v1.02A.md`
 - **D2C theme:** `docs/20260228-d2c-theme-specification-v1.00A.md`
 - **Auth map:** `docs/20260227-auth-map-reference-v1.00A.md`

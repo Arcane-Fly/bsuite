@@ -57,10 +57,10 @@ Full list in `docs/README.md`. Canonical sources are split into **Living Authori
 | `20260501-merged-execution-backlog-v1.00W.md` | W (active queue) | Active phase-ordered queue post-Phase-0 ratification — single execution queue |
 | `20260227-contributing-standards-guide-v1.01W.md` | W | Universal quality + doc standards (supersedes v1.00A) |
 | `20260227-dry-one-shot-architecture-v1.02A.md` | A | DRY one-shot policy — single owning app per entity |
-| `20260317-bsuite-gap-report-v2.00W.md` | W | Gap report v2 — current authority (with §11 finish-line reconciliation) |
-| `20260319-entity-crosswalk-v1.00D.md` | D | CRM7 entity crosswalk + traceability |
+| `archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` | W | Gap report v2 — current authority (with §11 finish-line reconciliation) |
+| `archive/2026-06/20260319-entity-crosswalk-v1.00D.md` | D | CRM7 entity crosswalk + traceability |
 | `20260424-env-var-contributing-rules-v1.00W.md` | W | Environment variable conventions |
-| `20260501-phase-0-completion-report-v1.00W.md` | W | Phase-0 ratification evidence |
+| `archive/2026-06/20260501-phase-0-completion-report-v1.00W.md` | W | Phase-0 ratification evidence |
 | `20260504-bsuite-tech-stack-alignment-v1.00W.md` | W | **Canonical tech-stack baseline** (this hub's companion) |
 | `20260504-schema-builder-phase-3-plan-v1.00W.md` | W | Schema builder phase 3 plan |
 | `20260504-schema-builder-phase-3-signoff-v1.00W.md` | W | Schema builder phase 3 signoff |
@@ -79,7 +79,7 @@ Some concerns no longer have a living markdown spec — the **package** or **cod
 | Authentication + session topology | `AGENTS.md` §Authentication & OAuth + `CLAUDE.md` mirror | `docs/archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md` |
 | Navigation structure | `crm7/src/config/navigation.ts` (runtime source of truth) | `docs/archive/parent/2026-04-30-references-approved/20260316-navigation-reference-v1.00A.md`, `20260316-navigation-guide-v1.00A.md` |
 | UI architecture + source chain | `packages/ui/` (in progress) + `packages/theme/` | `docs/archive/parent/2026-04-30-references-approved/20260316-ui-reference-v1.00A.md` |
-| Entity + field definitions | `packages/schema-registry/` (@bsuite/schema-registry@0.3.1) | `docs/20260319-entity-crosswalk-v1.00D.md` (living) |
+| Entity + field definitions | `packages/schema-registry/` (@bsuite/schema-registry@0.3.1) | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` (living) |
 | RBAC + permissions | `business-suite-unified/docs/20260316-bsu-crm7-rbac-rls-reference-v1.00W.md` + CRM7 `permissionConstants.ts` | `docs/archive/parent/2026-04-30-references-approved/20260301-crm7-rbac-matrix-v1.00A.md` |
 | Fair Work API integration | `R80.3/docs/20260304-r80-fairwork-api-reference-v1.01W.md` (canonical) + R80.3 + CRM7 src | `docs/archive/parent/2026-04-30-references-approved/20260310-fairwork-reference-v1.00A.md` |
 | GTO National Standards | CRM7 compliance code | `docs/archive/parent/2026-04-30-references-approved/20260228-gto-standards-reference-v1.00A.md` |
@@ -101,12 +101,12 @@ Historical references retained for context. Do **not** consult these for forward
 
 See `docs/plans/README.md` for the live index. Active plans as of 2026-05-04:
 
-- `20260227-boot-compliance-engine-specification-v1.00W.md` — BOOT compliance engine spec
-- `20260302-r80-crm7-integration-audit-v1.00W.md` — R80.3 ↔ CRM7 integration audit
-- `20260316-crm7-broad-ui-refresh-plan-v1.00W.md` — CRM7 broad UI refresh (D2C Neon)
-- `20260423-bsuite-production-plan-v1.00W.md` — Refreshed audit + full production plan
+- `20260227-boot-compliance-engine-specification-v1.00A.md` — BOOT compliance engine spec
+- `20260302-r80-crm7-integration-audit-v1.00A.md` — R80.3 ↔ CRM7 integration audit
+- `archive/2026-06/20260316-crm7-broad-ui-refresh-plan-v1.00W.md` — CRM7 broad UI refresh (D2C Neon)
+- `archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` — Refreshed audit + full production plan
 - `20260423-gto-billing-reporting-refined-plan-v1.00A.md` — Billing / STP2 / Payday Super (Approved)
-- `20260427-full-7-audit-page-builder-branding-relationships-plan-v1.00W.md` — Full-7 audit + UX upgrade
+- `archive/2026-06/20260427-full-7-audit-page-builder-branding-relationships-plan-v1.00W.md` — Full-7 audit + UX upgrade
 - `20260501-universal-wysiwyg-schema-ux-v1.00W.md` — Universal WYSIWYG + schema-driven UX
 
 ### 2.5 Other parent folders
@@ -301,9 +301,9 @@ For each cross-app feature, exactly one app is the **owner** (canonical implemen
 | Dashboard dnd-kit widget pattern | CRM7 (canonical) | BSU, R80.3 | CRM7 dashboard source |
 | AI SDK patterns (streamText, tool calls) | CRM7 (canonical) | Conduit, Throughput | CRM7 AI source + `AGENTS.md` §AI Implementation Standards |
 | Tier-3 EntitySelectors | CRM7 | BSU, R80.3, Conduit | CRM7 components + `docs/20260227-dry-one-shot-architecture-v1.02A.md` |
-| Contact CRUD | CRM7 | all other apps read via Supabase | `docs/20260319-entity-crosswalk-v1.00D.md` |
-| Client CRUD | CRM7 | all other apps read via Supabase | `docs/20260319-entity-crosswalk-v1.00D.md` |
-| Apprentice / Placement CRUD | CRM7 | R80.3, Conduit | `docs/20260319-entity-crosswalk-v1.00D.md` |
+| Contact CRUD | CRM7 | all other apps read via Supabase | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
+| Client CRUD | CRM7 | all other apps read via Supabase | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
+| Apprentice / Placement CRUD | CRM7 | R80.3, Conduit | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
 | Vacancy / Candidate / Application CRUD | Conduit | CRM7 (reads for hire flow) | Conduit source |
 | Public careers page (JobPosting JSON-LD) | Conduit | — | Conduit source |
 | Wage calculation engine | `@bsuite/charge-calc` | CRM7, R80.3 | `packages/charge-calc/` |
@@ -433,10 +433,10 @@ Fast navigation for agents and contributors. Bookmark this section.
 ### Architecture + governance
 
 - [DRY one-shot architecture (Approved)](./20260227-dry-one-shot-architecture-v1.02A.md)
-- [Entity crosswalk](./20260319-entity-crosswalk-v1.00D.md)
-- [Gap report v2](./20260317-bsuite-gap-report-v2.00W.md)
+- [Entity crosswalk](./archive/2026-06/20260319-entity-crosswalk-v1.00D.md)
+- [Gap report v2](./archive/2026-06/20260317-bsuite-gap-report-v2.00W.md)
 - [Env var rules](./20260424-env-var-contributing-rules-v1.00W.md)
-- [Phase-0 completion report](./20260501-phase-0-completion-report-v1.00W.md)
+- [Phase-0 completion report](./archive/2026-06/20260501-phase-0-completion-report-v1.00W.md)
 
 ### Living trackers
 
