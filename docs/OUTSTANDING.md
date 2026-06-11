@@ -84,7 +84,7 @@ Reports W2 uplift execution ledger for Codehouse parity reports. Tasks 4, 6.1-6.
 | 2 | ~~Keep report-list uplift linked to the active backlog rather than reopening Task 7 backend reliability~~ | ✅ Complete via crm7#987 |
 | 3 | Keep follow-on scheduling UI linked to the active backlog rather than reopening Task 7 backend reliability | CRM7 implementer |
 
-### `20260317-bsuite-gap-report-v2.00W.md`
+### `archive/2026-06/20260317-bsuite-gap-report-v2.00W.md`
 
 Living gap register — supersedes v1. Accumulates sprint findings.
 
@@ -96,7 +96,7 @@ Living gap register — supersedes v1. Accumulates sprint findings.
 
 ---
 
-### `20260319-entity-crosswalk-v1.00D.md`
+### `archive/2026-06/20260319-entity-crosswalk-v1.00D.md`
 
 198-entity inventory mapped to DB table, Zustand store, route, selector, gap.
 
@@ -305,7 +305,7 @@ fired.
 | `20260303-crm8u-github-research-v1.00A.md` | Early research — historical |
 | `20260304-ram-credential-government-access-map-v1.00A.md` | Historical government API access map — superseded |
 | `20260309-bsuite-completeness-matrix-v1.00A.md` | Superseded by gap report v2 completeness tracking |
-| `20260316-bsuite-gap-report-v1.00A.md` | Explicitly superseded by v2 (`20260317-bsuite-gap-report-v2.00W.md`) |
+| `20260316-bsuite-gap-report-v1.00A.md` | Explicitly superseded by v2 (`archive/2026-06/20260317-bsuite-gap-report-v2.00W.md`) |
 | `20260316-docs-compliance-audit-v1.00A.md` | One-time audit — remediation complete |
 | `20260316-navigation-guide-v1.00A.md` | Donor/duplicate of `navigation-reference-v1.00A.md`; self-marked ARCHIVED |
 | `20260316-performance-report-v1.00A.md` | Snapshot superseded by `20260407-core-web-vitals-baseline` + theme-centralisation perf work |

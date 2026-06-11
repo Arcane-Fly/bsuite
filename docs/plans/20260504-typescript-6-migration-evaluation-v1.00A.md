@@ -1,5 +1,5 @@
 ---
-status: W (Working)
+status: A (Approved/complete — tracking issue bsuite#211 closed 2026-05-12; re-marked 2026-06-11 by docs/roadmap closure audit)
 date: 2026-05-04
 tracking_issue: GaryOcean428/bsuite#211
 target_window: 2026-Q3 (post Phase 3 deploy stabilisation)

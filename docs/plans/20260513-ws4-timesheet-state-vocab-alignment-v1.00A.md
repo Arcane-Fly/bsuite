@@ -164,7 +164,7 @@ git branch --show-current
 
 ```sql
 -- WS-4 follow-up (HF-2): align timesheets columns with canonical 7-state workflow
--- Ref: docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00W.md
+-- Ref: docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00A.md
 --
 -- Renames:
 --   disputed_at      → host_rejected_at
@@ -241,7 +241,7 @@ host_approved_by type text→uuid with FK to auth.users.
 No data backfill needed: migration 20260423150000 backfill only wrote
 draft/submitted/approved states, so no rows carry the removed vocab.
 
-Refs: issue #863, plan docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00W.md"
+Refs: issue #863, plan docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00A.md"
 ```
 
 ---
@@ -382,7 +382,7 @@ and plan docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md §238.
 TimesheetStatus alias kept for 1-release grace period; no runtime fallback
 for removed states — they were never written to prod rows.
 
-Refs: issue #863, plan docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00W.md"
+Refs: issue #863, plan docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00A.md"
 ```
 
 ---
@@ -889,7 +889,7 @@ Do not grep-replace these as a batch operation. Use exact-file targeted edits on
 
 ## Execution handoff
 
-Plan complete and saved to `docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00W.md`. Two execution options:
+Plan complete and saved to `docs/plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00A.md`. Two execution options:
 
 1. **Subagent-Driven (this session)** — I dispatch fresh subagents for Tasks 2-10, review between each, fast iteration. Est. 5-8 tool-call rounds.
 2. **Parallel Session (separate)** — open new Codebuff session with `executing-plans`, batch execution with checkpoints. Est. one continuous session.
