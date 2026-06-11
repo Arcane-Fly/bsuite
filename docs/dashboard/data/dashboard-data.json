@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 16,
       "archived": 0,
-      "main_sha": "964ee2b",
+      "main_sha": "6766930",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "339d4062",
+      "main_sha": "77266cda",
       "vercel": "success"
     },
     {

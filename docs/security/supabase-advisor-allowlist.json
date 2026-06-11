@@ -53,43 +53,6 @@
       "review": "Re-justify before adding any new function; shrink the list as helpers migrate to SECURITY INVOKER or out of the exposed schema."
     },
     {
-      "lint": "multiple_permissive_policies",
-      "object_type": "table",
-      "objects": [
-        "allowance_groups",
-        "induction_records",
-        "invoice_line_items",
-        "org_members",
-        "pay_item_groups",
-        "pay_item_rules",
-        "payroll_provider_connections",
-        "penalty_groups",
-        "r7_interviews",
-        "r7_offers",
-        "report_deliveries",
-        "report_templates",
-        "timesheet_groups",
-        "timesheets",
-        "training_plan_units"
-      ],
-      "mode": "tracked",
-      "tracked_in": "GaryOcean428/crm7#1066",
-      "reason": "Stacked permissive policies pending consolidation (June-series pattern). Acceptance for crm7#1066: advisor re-run clean for these 15 tables -> then DELETE this rule so regressions fail.",
-      "added": "2026-06-11"
-    },
-    {
-      "lint": "auth_rls_initplan",
-      "object_type": "table",
-      "objects": [
-        "report_deliveries",
-        "payroll_provider_connections"
-      ],
-      "mode": "tracked",
-      "tracked_in": "GaryOcean428/crm7#1066",
-      "reason": "Residual per-row auth re-evaluation: payroll_provider_connections_admin_write WITH CHECK clause (the 20260611010000 rewrite covered USING only) and a report_deliveries_recipient_read sub-expression. Both policies are rebuilt wholesale by the crm7#1066 consolidation - fix there, then DELETE this rule.",
-      "added": "2026-06-11"
-    },
-    {
       "lint": "auth_db_connections_absolute",
       "object_type": "any",
       "objects": [
