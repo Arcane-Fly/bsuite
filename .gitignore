@@ -67,3 +67,4 @@ output/playwright/
 */.playwright-cli/*
 .playwright-mcp/
 */.playwright-mcp/*
+crm7-add-block.png
