@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "_doc": "Accepted-by-design / tracked Supabase advisor findings. Consumed by scripts/check-supabase-advisors.mjs (workflow: supabase-advisor-sweep.yml). Matching: lint name + object identity (functions: name(arguments); tables: table name). INFO-level findings never fail regardless of this file. mode=accepted -> finding is expected, never fails, never files; mode=tracked -> finding is known and owned by tracked_in, never fails, not re-filed; removing a rule makes its findings live again.",
+  "rules": [
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "objects": [
+        "ancestors_of(leaf_id uuid)",
+        "auth_parent_tenant_id()",
+        "auth_tenant_id()",
+        "auth_tenant_id_with_role(allowed_roles text[])",
+        "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
+        "check_user_portal_role(p_user_id uuid, p_tenant_id uuid, p_required_roles text[])",
+        "check_user_tenant_access(p_user_id uuid, p_tenant_id uuid)",
+        "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb)",
+        "create_person_with_contact(payload jsonb, p_tenant_id uuid)",
+        "descendants_of(root_id uuid)",
+        "find_orphan_owned_tenants_for_caller()",
+        "get_apprentice_person_id_for_current_user()",
+        "get_descendant_tenant_ids(p_tenant_id uuid)",
+        "get_sharing_level(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
+        "get_user_apprentice_id()",
+        "get_user_gto_role()",
+        "get_user_host_employer_id()",
+        "get_user_tenant_context(p_user_id uuid)",
+        "get_visible_fields(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
+        "get_visible_tenant_ids(p_user_id uuid)",
+        "gto_assessment_history(p_tenant_id uuid, p_clause_id uuid, p_limit integer, p_offset integer)",
+        "gto_assessment_summary(p_tenant_id uuid, p_year smallint)",
+        "gto_self_assessment_log_history()",
+        "has_parent_admin_access(target_tenant_id uuid)",
+        "is_demo_write_blocked()",
+        "is_dev_mode()",
+        "is_enterprise_admin()",
+        "is_gto_admin()",
+        "is_gto_staff()",
+        "is_gto_staff(p_tenant_id uuid)",
+        "is_platform_admin(uid uuid)",
+        "is_team_admin(p_team_id uuid, p_user_id uuid)",
+        "platform_is_developer_or_admin()",
+        "r7_candidate_id_for_auth_user()",
+        "show_demo_data()",
+        "tenant_branding_is_force_overridden(p_tenant_id uuid)",
+        "training_plan_belongs_to_current_apprentice(p_training_plan_id uuid)",
+        "update_person_with_contact(p_person_id uuid, payload jsonb, p_tenant_id uuid)",
+        "user_has_org_access(p_user_id uuid, p_tenant_id uuid)"
+      ],
+      "mode": "accepted",
+      "reason": "RLS helper + intentional client-RPC class. These MUST stay executable by authenticated: RLS policies evaluate the helpers in the caller's context, and a prior revoke pass broke production RLS (see crm7 20260521024707/20260527022039 hotfix_restore_rls_helper_grants history). Operator directive 2026-06-11: do NOT blanket-fail this class until replaced by a proven alternative. A SECURITY DEFINER function NOT on this list IS a failure - the list is exhaustive, not a category waiver.",
+      "tracked_in": null,
+      "added": "2026-06-11",
+      "review": "Re-justify before adding any new function; shrink the list as helpers migrate to SECURITY INVOKER or out of the exposed schema."
+    },
+    {
+      "lint": "multiple_permissive_policies",
+      "object_type": "table",
+      "objects": [
+        "allowance_groups",
+        "induction_records",
+        "invoice_line_items",
+        "org_members",
+        "pay_item_groups",
+        "pay_item_rules",
+        "payroll_provider_connections",
+        "penalty_groups",
+        "r7_interviews",
+        "r7_offers",
+        "report_deliveries",
+        "report_templates",
+        "timesheet_groups",
+        "timesheets",
+        "training_plan_units"
+      ],
+      "mode": "tracked",
+      "tracked_in": "GaryOcean428/crm7#1066",
+      "reason": "Stacked permissive policies pending consolidation (June-series pattern). Acceptance for crm7#1066: advisor re-run clean for these 15 tables -> then DELETE this rule so regressions fail.",
+      "added": "2026-06-11"
+    },
+    {
+      "lint": "auth_rls_initplan",
+      "object_type": "table",
+      "objects": [
+        "report_deliveries",
+        "payroll_provider_connections"
+      ],
+      "mode": "tracked",
+      "tracked_in": "GaryOcean428/crm7#1066",
+      "reason": "Residual per-row auth re-evaluation: payroll_provider_connections_admin_write WITH CHECK clause (the 20260611010000 rewrite covered USING only) and a report_deliveries_recipient_read sub-expression. Both policies are rebuilt wholesale by the crm7#1066 consolidation - fix there, then DELETE this rule.",
+      "added": "2026-06-11"
+    },
+    {
+      "lint": "auth_db_connections_absolute",
+      "object_type": "any",
+      "objects": [
+        "*"
+      ],
+      "mode": "accepted",
+      "reason": "INFO-level operator-side Auth pool sizing; relevant only at instance scale-up.",
+      "added": "2026-06-11"
+    }
+  ]
+}
