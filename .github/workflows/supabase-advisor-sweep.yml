@@ -1,0 +1,102 @@
+# Supabase Advisor Sweep (§12.1.3 / FF-SUPABASE-GATES-20260610)
+#
+# Runs the Supabase security + performance advisors against the LIVE shared
+# project via the Management API (the CI-available equivalent of the MCP
+# get_advisors tool) and compares findings to the checked-in allowlist
+# docs/security/supabase-advisor-allowlist.json.
+#
+# Verdicts (scripts/check-supabase-advisors.mjs):
+#   - NEW unallowlisted SECURITY finding (WARN/ERROR)  -> job FAILS
+#   - NEW unallowlisted PERFORMANCE finding (WARN/ERROR) -> a tracking issue
+#     is created/updated with the exact advisor payload + remediation
+#   - INFO-level findings never fail (counted in the report artifact)
+#   - mode=accepted / mode=tracked allowlist rules suppress both paths;
+#     "tracked" rules name their owning issue (e.g. crm7#1066) and MUST be
+#     deleted when that issue closes so regressions fail again
+#
+# The accepted RLS-helper SECURITY DEFINER class is enumerated function-by-
+# function in the allowlist — it is NOT a category waiver. A new SECURITY
+# DEFINER function exposed to authenticated FAILS this sweep. The class
+# itself stays accepted until replaced by a proven alternative: a previous
+# blanket revoke broke production RLS (crm7 hotfix_restore_rls_helper_grants
+# history). Operator directive 2026-06-11.
+#
+# Evidence discipline (§12.1.1): only the advisor API + pg catalogs count as
+# evidence — never the Supabase dashboard's per-object counters (known
+# multi-bucket / multi-object attribution artifacts).
+#
+# Triggers:
+#   - weekly schedule (Mon 05:00 AWST = Sun 21:00 UTC)
+#   - manual dispatch
+#   - PRs touching migrations/policies: parent supabase/**, any submodule
+#     pointer (gitlink paths — every submodule migration merge bumps one),
+#     schema-builder, the allowlist, the checker, or this workflow
+
+name: Supabase Advisor Sweep
+
+on:
+  schedule:
+    - cron: '0 21 * * 0'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'crm7'
+      - 'conduit'
+      - 'R80.3'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'throughput'
+      - 'packages/schema-builder/supabase/**'
+      - 'docs/security/supabase-advisor-allowlist.json'
+      - 'scripts/check-supabase-advisors.mjs'
+      - '.github/workflows/supabase-advisor-sweep.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  advisor-sweep:
+    name: Advisor sweep (security fails / performance files)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Run advisor sweep
+        id: sweep
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: node scripts/check-supabase-advisors.mjs
+
+      - name: Upload advisor report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advisor-report
+          path: |
+            advisor-report.json
+            perf-findings.md
+          if-no-files-found: ignore
+
+      - name: File/update performance findings issue
+        if: steps.sweep.outputs.perf_findings == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TITLE="chore(advisors): unallowlisted performance findings (auto-filed by sweep)"
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "in:title \"unallowlisted performance findings\"" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body-file perf-findings.md
+            echo "updated existing issue #$EXISTING"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file perf-findings.md
+          fi
