@@ -60,7 +60,18 @@ npm version <patch|minor|major>    # updates package.json + creates git tag
 #      they need to make. If any are required, the bump is at minimum minor.
 
 # 4. Publish
-npm publish --access public
+#    Standard path: merge the package release PR to main and let the matching
+#    .github/workflows/publish-*.yml workflow publish through npm Trusted
+#    Publishers (GitHub Actions OIDC). Do not default back to NPM_TOKEN/local
+#    token publishing.
+#
+#    npm package Trusted Publisher settings must match:
+#      organization/user: GaryOcean428
+#      repository: bsuite
+#      workflow filename: publish-<package-slug>.yml
+#      environment name: blank unless the workflow declares one
+#      allowed action: Allow npm publish
+gh workflow run publish-<package-slug>.yml --ref main
 
 # 5. Verify the tarball is clean — no leaked test artifacts
 npm view @bsuite/<pkg>@<new-version> files

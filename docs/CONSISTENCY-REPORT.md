@@ -76,7 +76,7 @@ follow this layout:
 
 **Status:** 🟡 **TRACKED** — plan locked, execution scheduled to 2026-Q3 maintenance window.
 
-- Plan: [`docs/plans/2026-05-04-typescript-6-migration.md`](./plans/2026-05-04-typescript-6-migration.md)
+- Plan: [`docs/plans/20260504-typescript-6-migration-evaluation-v1.00A.md`](./plans/20260504-typescript-6-migration-evaluation-v1.00A.md)
 - Per-submodule child issues:
   - GaryOcean428/crm7#433
   - GaryOcean428/conduit#168

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "license": "UNLICENSED",
-  "description": "Shared design tokens for all BSuite apps \u2014 spacing, typography, shadows, radius, motion, and the D2C Neon Electric palette.",
+  "description": "Shared design tokens for all BSuite apps — spacing, typography, shadows, radius, motion, and the D2C Neon Electric palette.",
   "repository": {
     "type": "git",
     "url": "https://github.com/GaryOcean428/bsuite.git",
@@ -30,6 +30,6 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.3"
   }
 }

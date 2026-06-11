@@ -6,6 +6,7 @@ Archived per-project roadmaps and documents that have been superseded by the uni
 
 | Directory | Status | Description |
 |-----------|--------|-------------|
+| [`2026-06/`](2026-06/) | A | 2026-06-11 docs/roadmap closure-audit archive — cron logs, completed handoff packets, session reports, one-off audits, and superseded plans (verdict table: `../plans/20260611-docs-roadmap-closure-audit-v1.00A.md`) |
 | [`braden/`](braden/) | A | Archived braden.com.au roadmap, summaries, and audit reports |
 | [`bsu/`](bsu/) | A | Archived business-suite-unified implementation notes and summaries |
 | [`crm7/`](crm7/) | A | Archived CRM7 roadmap, QA reports, and implementation docs |

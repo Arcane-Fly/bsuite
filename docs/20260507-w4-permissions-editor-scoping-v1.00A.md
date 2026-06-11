@@ -1,6 +1,6 @@
 ---
 title: W4 Permissions Editor — Scoping & Architecture
-status: WORKING
+status: A (scoping deliverable complete — bsuite#679 closed 2026-05-07; W4 implementation tracked in open bsuite#635; re-marked 2026-06-11 by docs/roadmap closure audit)
 owner: claude-loop
 trigger: bsuite#679 (Claude Loop DOCS rotation, 2026-05-07)
 predecessor: BSU#346 (closed unmerged, needs-rebase + dirty)

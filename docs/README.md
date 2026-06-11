@@ -2,88 +2,87 @@
 
 Top-level documentation for the BSuite multi-project workspace. Contains cross-project standards, architecture references, and planning documents shared across all six applications (business-suite-unified, crm7, conduit, braden, R80.3, throughput).
 
+> **Index refreshed 2026-06-11** by the docs/roadmap closure audit (`plans/20260611-docs-roadmap-closure-audit-v1.00A.md`). Evidence-only artifacts (cron logs, completed handoff packets, one-off audits) were moved to `archive/2026-06/`; earlier reference docs live under `archive/parent/2026-04-30-references-approved/`.
+
 ## Documentation Authority
 
 - `20260227-bsuite-master-roadmap-v5.00W.md` is the canonical planning and delivery source of truth
-- `20260227-auth-map-reference-v1.00A.md` is the canonical authentication and session-topology reference
+- [`../AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) is the canonical authentication and session-topology reference (the older `20260227-auth-map-reference-v1.00A.md` is archived under `archive/parent/2026-04-30-references-approved/`)
 - `20260504-bsuite-tech-stack-alignment-v1.00W.md` is the canonical tech-stack baseline — all apps must converge
 - `20260504-bsuite-documentation-hub-v1.00W.md` is the canonical cross-submodule documentation index — start here to find any doc
-- Project `docs/README.md` files are navigation hubs only; each submodule also has `docs/PARENT-DOCS.md` linking back to this folder
+- `OUTSTANDING.md` is the single outstanding-work index; `20260501-merged-execution-backlog-v1.00W.md` is the canonical execution queue
+- Project `docs/README.md` files are navigation hubs only
 - `docs/plans/` contains feeder plans that must reconcile back into the master roadmap
 - `archive/` and imported donor documentation are reference-only and may preserve older naming or topology
 
 ## Contents
 
-| File / Directory | Description |
-|------------------|-------------|
+### Roadmaps & work indexes
+
+| File | Description |
+|------|-------------|
 | `20260227-bsuite-master-roadmap-v5.00W.md` | Single source of truth for BSuite project planning across all projects |
-| `20260504-bsuite-documentation-hub-v1.00W.md` | **Canonical cross-submodule documentation hub** — indexes every `docs/` folder across parent + 6 submodules with like-for-like mapping |
-| `20260504-bsuite-tech-stack-alignment-v1.00W.md` | **Canonical tech-stack baseline** — target versions, per-app matrix, shared `@bsuite/*` package inventory, gap register |
-| `20260227-auth-map-reference-v1.00A.md` | Authentication map for the Business Suite ecosystem (BSU, CRM7, R80.3, Braden) |
-| `20260227-bsuite-deep-audit-report-v1.00A.md` | Deep audit report covering CRM7, BSU, Conduit, braden.com.au, and R80.3 |
-| `20260227-contributing-standards-guide-v1.01W.md` | Universal quality, documentation, and code standards for all BSuite projects (supersedes v1.00A which is archived) |
+| `20260425-bsuite-finish-line-roadmap-v1.00W.md` | Prioritised P0/P1/P2 finish-line view (154 items, cited to sources) |
+| `20260501-merged-execution-backlog-v1.00W.md` | Canonical phase-ordered execution queue (BL-NNN / P0-* / P1-* / P2-* / WS-* item IDs) |
+| `OUTSTANDING.md` | Single source of truth outstanding-work index for parent `docs/*.md` |
+| `CONSISTENCY-REPORT.md` | Cross-app WCAG / a11y / dependency / auth consistency status + plan-tracking convention |
+| `NEW_ISSUES_FOUND.md` | Append-only ledger of pre-existing issues discovered mid-task (Five-Wave Stabilization) |
+
+### Standards & doctrine
+
+| File | Description |
+|------|-------------|
+| `20260227-contributing-standards-guide-v1.01W.md` | Universal quality, documentation, and code standards for all BSuite projects |
 | `20260227-dry-one-shot-architecture-v1.02A.md` | DRY principles and one-shot data entry architecture for all modules (Approved) |
-| `20260301-crm7-page-inventory-v1.00A.md` | CRM7 page inventory — 148 pages audited with data source and status |
-| `20260301-crm7-rbac-matrix-v1.00A.md` | CRM7 RBAC matrix — permission systems audit, role hierarchy, enforcement gaps |
-| `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification (palette, Tailwind config, CSS variables) |
-| `20260407-d2c-wcag-contrast-audit-v1.00A.md` | WCAG AA/AAA contrast audit for D2C Neon Electric theme — failing pairs, semantic token recommendations |
-| `20260425-colour-token-audit-v1.00W.md` | Colour-token audit (WS-D) — `--muted-foreground` cleanup, conduit `text-white`/`text-primary-foreground` mapping (§6.2 corrected post-merge), throughput hex/palette sweep, per-PR checklist + WS-D-followup regressions (status: R) |
-| `20260228-gto-standards-reference-v1.00A.md` | National Standards for Group Training Organisations evidence guide |
-| `20260303-bsuite-competitive-landscape-v1.00A.md` | BSuite competitive landscape & launch strategy — competitor map, BOOT moat, stub audit summary |
-| `20260303-crm8u-code-snippets-v1.00A.md` | Key code patterns, Fair Work API integration stubs, Supabase SSR auth patterns, recommendations for adoption |
-| `20260303-crm8u-github-research-v1.00A.md` | CRM8U (GaryOcean428) GitHub repo analysis: architecture, features, code quality, salvageable assets for BSuite |
-| `20260310-fairwork-reference-v1.00A.md` | Fair Work compliance reference |
-| `20260316-claude-code-prompts-reference-v1.00A.md` | Self-contained prompts for Claude Code to execute remaining roadmap items |
-| `20260316-compliance-reference-v1.00A.md` | Compliance documentation |
-| `20260316-matrix-reference-v1.00A.md` | Requirements/feature matrix |
-| `20260316-mermaid-ui-builder-reference-v1.00A.md` | Mermaid UI builder guide |
-| `20260316-navigation-guide-v1.00A.md` | Navigation guide |
-| `20260316-navigation-reference-v1.00A.md` | Navigation structure |
-| `20260316-performance-report-v1.00A.md` | Performance report |
-| `20260316-pricing-strategy-v1.00A.md` | Pricing and subscription strategy — per-seat pricing with AI add-on tiers |
-| `20260316-ui-reference-v1.00A.md` | Current BSuite UI architecture summary and canonical UI source chain |
-| `20260304-ram-credential-government-access-map-v1.00A.md` | RAM credential and government API access map (USI, ADMS, DTWD) |
-| `20260317-bsuite-gap-report-v2.00W.md` | BSuite gap report v2 — current authority (with §11 finish-line reconciliation, 2026-04-25) |
-| `20260319-entity-crosswalk-v1.00D.md` | CRM7 entity crosswalk and traceability — Draft |
-| `20260407-core-web-vitals-baseline-v1.00A.md` | Core Web Vitals baseline measurements |
-| `20260415-roadmap-audit-delta-v1.00W.md` | 2026-04-15 NU4GF rotation: ROADMAP audit delta — P2 #26 subtasks reconciliation |
-| `20260420-react-hooks-v7-tech-debt-v1.00W.md` | React Hooks v7 tech debt remediation tracker — per-app finding counts |
-| `20260425-orphan-branch-triage-v1.00W.md` | WS-B finish-line: orphan branch triage across 7 repos |
-| `20260425-operator-handoff-v1.00W.md` | Historical operator handoff for finish-line session (2026-04-25); superseded by later operator handoffs |
-| `20260427-bypass-pr-audit-v1.00W.md` | Bypass-PR audit + cherry-pick plan (pre-reconcile gate) — classifies the 26 direct-to-main PRs (10 bsuite + 16 crm7) merged 2026-04-14 to 2026-04-20 against `origin/development` for reconcile safety |
-| `20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` | Consolidated execution ledger for outstanding roadmap, audit, gap-analysis, plan, and app-level backlog items across the parent workspace and submodules |
-| `20260427-visual-smoke-completion-v1.00W.md` | WS-J gap closure: 144 full-matrix visual smoke captures across 6 apps × routes × {light, dark} × {mobile, desktop} via local Playwright; pixel-diff vs WS-J baseline; 0 broken routes, 1 medium finding (Throughput → BSU `/auth/login` mismatch resolved in throughput PR #50) |
-| `20260428-codex-operator-handoff-v4.00W.md` | Current Codex Phase 0 operator handoff — TGA custom config, TGA production enablement, Azure `xms_edov`, and Supabase Auth allow-list doctrine conflict |
-| `20260505-bsuite-dependency-refresh-ts6-migration-v1.00W.md` | TS 5.9→6.0 migration playbook — rootDir on shared-package build tsconfigs, CSS ambient declarations, `global`→`globalThis`, baseUrl deprecation; verification matrix for all 13 packages; reusable for next TS major bump |
-| `20260506-cron-log-claude-18h-v1.00W.md` | claude-code-scheduled cron log 2026-05-06T18:20Z — #592 §17 ack + §20 merge; #586 red-team hold; P1 issue scan; memory API P0 gap; /ship-all-apps gap; operator next-actions |
-| [`plans/20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md`](plans/20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md) | Part O.11 theme centralisation + enterprise white-label POC, O.12 feature-placement audit, and O.13 docs-coherence handoff |
+| `20260424-env-var-contributing-rules-v1.00W.md` | Standing rules for env var naming, scoping, and storage |
+| `20260504-bsuite-documentation-hub-v1.00W.md` | **Canonical cross-submodule documentation hub** — indexes every `docs/` folder across parent + 6 submodules |
+| `20260504-bsuite-tech-stack-alignment-v1.00W.md` | **Canonical tech-stack baseline** — target versions, per-app matrix, shared `@bsuite/*` package inventory |
+| `20260505-bsuite-dependency-refresh-ts6-migration-v1.00W.md` | TS 5.9→6.0 migration playbook — reusable for the next TS major bump |
+| `20260506-dependency-bump-checklist-v1.00A.md` | Dependency bump checklist for `@bsuite/*` consumers (cited by CLAUDE.md) |
+| `20260507-ff-self-validation-doctrine-v1.00W.md` | FF-SELF-VALIDATION-20260507 self-validation loop doctrine (source for CLAUDE.md §9) |
+| `20260507-red-team-ux-doctrine-v1.00A.md` | Red-team UX doctrine (Approved) |
+
+### Auth & security references
+
+| File | Description |
+|------|-------------|
+| `20260506-cross-app-auth-bug-rca-v1.00A.md` | BSU→CRM7 logged-out incident RCA — authority for the OAuth session-bridge frozen-fact correction |
+| `20260519-rpc-report-page-security-review-v1.00A.md` | Report page / RPC security review (Approved) |
+| `20260519-storage-rls-four-persona-matrix-v1.00A.md` | Storage RLS four-persona access matrix (Approved) |
+| `20260519-xero-payroll-au-stp-path-decision-v1.00A.md` | Xero Payroll AU / STP path decision record (Approved) |
+| [`20260428-operator-verification/`](20260428-operator-verification/README.md) | Operator verification sweep — items 3/4/5 (OAUTH_STATE_SECRET, TGA GUCs, TGA sync) remain verified-incomplete; closed items archived under `archive/parent/2026-04-30-operator-verification-closed/` |
+| `security/` | Security data files (Supabase advisor allowlist) |
+
+### Specs & parity (Codehouse parity program)
+
+| File | Description |
+|------|-------------|
+| `20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md` | AVETMISS NAT00120 export research + termination-code mapping |
+| `20260506-apprentice-placement-form-schema-spec-v1.00W.md` | Apprentice placement create/edit form Zod + RHF spec |
+| `20260506-apprentice-placement-state-machine-canon-v1.00W.md` | Apprentice placement state machine canonical reference |
+| `20260506-file-export-adapters-parity-spec-v1.00W.md` | File export adapters parity spec |
+| `20260506-integrations-parity-spec-v1.00W.md` | Integrations parity spec |
+| `20260506-leave-parity-spec-v1.00W.md` | Leave parity spec |
+| `20260506-pay-periods-parity-spec-v1.00W.md` | Pay periods parity spec |
+| `20260506-reports-parity-spec-v1.00W.md` | Reports parity spec |
+| `20260506-timesheet-entry-parity-spec-v1.00W.md` | Timesheet entry parity spec |
+| `20260507-admin-parity-spec-v1.00W.md` | Admin parity spec |
+| `20260507-comms-parity-spec-v1.00W.md` | Comms parity spec |
+| `20260507-timesheet-approval-parity-spec-v1.00W.md` | Timesheet approval parity spec |
+| `20260507-w4-permissions-editor-scoping-v1.00A.md` | W4 permissions editor scoping & architecture (scoping complete — bsuite#679 closed) |
+
+### Directories
+
+| Directory | Description |
+|-----------|-------------|
+| [`adr/`](adr/README.md) | Architecture decision records (ADR-0001…ADR-0007) |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
-| [`archive/`](archive/README.md) | Archived per-project roadmaps + 2026-04-25 finish-line sweep archive (`archive/parent/2026-04-25-finish-line/`) |
-| [`crm13-docs/`](crm13-docs/README.md) | Imported CRM13 donor documentation — reference for feature parity, not active status truth |
+| [`archive/`](archive/README.md) | Archived docs — per-project roadmaps, finish-line sweeps, and the 2026-06 closure-audit archive (`archive/2026-06/`) |
+| [`dashboard/`](dashboard/) | Roadmap dashboard (data + refresh scripts) — see CLAUDE.md §10 |
 | [`email-templates/`](email-templates/README.md) | Supabase email template HTML files (signup, invite, magic link, etc.) |
-| [`operator-screenshots/`](operator-screenshots/) | Operator handoff screenshots referenced from `20260425-operator-handoff-v1.00W.md` |
-| [`plans/`](plans/README.md) | Implementation plans for upcoming features and enhancements |
-| `superpowers/` | D2C theme remediation design specs (no README yet) |
+| `evidence/` | Evidence captures referenced by plans/audits |
+| [`operator-screenshots/`](operator-screenshots/README.md) | Operator handoff screenshots |
+| [`plans/`](plans/README.md) | Implementation plans (active) — archived plans live in `archive/` |
+| `testing/` | Test runbooks (`20260425-cross-app-e2e-runbook-v1.00W.md`) |
 
-> **Recently archived (2026-04-25 WS-H sweep):** `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md`, `20260226-ux-oneshot-deep-dive-plan-v1.00W.md`, `20260309-bsuite-completeness-matrix-v1.00A.md`, `20260316-bsuite-gap-report-v1.00A.md`, `20260316-docs-compliance-audit-v1.00A.md` → see `archive/parent/2026-04-25-finish-line/`.
-
----
-
-## CRM7A Repository Research (2025-03-03) — ARCHIVED
-
-The following three documents are archived historical references (status: WA):
-
-1. **20260303-crm7a-quick-reference-v1.00WA.md** — 2-min read, decision matrix, red flags
-2. **20260303-crm7a-executive-summary-v1.00WA.md** — 5-min read, business/strategic overview
-3. **20260303-crm7a-repository-research-v1.00WA.md** — 15-min read, deep technical analysis
-
-### Key Takeaway
-
-CRM7A is a **3-week-old, experimental monitoring dashboard** with modern UI patterns but **incomplete backend**. Use for **inspiration/reference**, not wholesale adoption. Current CRM7 is more mature and production-grade.
-
-### TL;DR
-
-- **Not production-ready** (0% tests, mock data only, #VERCEL_SKIP markers)
-- **Good for**: Next.js 15 patterns, Radix UI setup, sidebar/table UI inspiration
-- **Bad for**: Backend architecture, data layer, GTO compliance features
-- **Recommendation**: Cherry-pick components, don't fork/merge entire repo
+> **Archived reference sets:** approved references from Feb–Apr 2026 (auth map, theme spec, GTO standards, competitive landscape, pricing, Fair Work, CRM8U research, etc.) → `archive/parent/2026-04-30-references-approved/`; closed audits → `archive/parent/2026-04-30-audits-closed/`; Phase-0 closure handoffs/session reports → `archive/parent/2026-04-30-phase-0-closure/`; 2026-06 closure-audit moves (cron logs, handoff packets, one-off audits, superseded plans) → `archive/2026-06/`.

@@ -9,7 +9,7 @@
 
 The following docs remain the per-topic deep dives; this roadmap is the RAISED-LEVEL index. Each item below cites its source doc for detail.
 
-- `docs/20260317-bsuite-gap-report-v2.00W.md` §11 (2026-04-24 archive-pass)
+- `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §11 (2026-04-24 archive-pass)
 - `docs/20260423-cross-app-write-audit-v1.00W.md` V3–V10
 - `docs/20260423-misplaced-routes-audit-v1.00W.md` F-01..F-10
 - `docs/20260415-roadmap-audit-delta-v1.00W.md` (#26 rollup)
@@ -22,7 +22,7 @@ The following docs remain the per-topic deep dives; this roadmap is the RAISED-L
 - `docs/20260424-env-var-contributing-rules-v1.00W.md`
 - `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md`
 - `docs/OUTSTANDING.md`
-- `docs/plans/20260423-bsuite-production-plan-v1.00W.md`
+- `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md`
 - `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md`
 - `docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`
 - `crm7/docs/00-roadmap/20260423-crm7-schema-page-builder-audit-1.00W.md`
@@ -53,13 +53,13 @@ Items blocking production deploys, live security risks, or sign-off for runbooks
 | ~~P0-5~~ | ~~Fix `crm7/src/lib/pipelines/xeroInvoiceAdapter.ts:62`~~ — **SHIPPED `f2a34d0f`** + edge fn `xero-invoice-submit` deployed; later enhanced in `dbf70c03` to emit one Xero line per `invoice_line_items` row | CRM7 / Claude Code | `grep -rn "VITE_XERO_CLIENT_SECRET" crm7/src` returns 0 matches; edge fn live on Supabase project `tuybltdrdefjblnplpqo` | `docs/20260424-env-var-audit-findings-v1.00A.md` §2.B |
 | P0-6 | Parts A+B+C OAuth preview-redirect sign-off — close all 5 unticked checkboxes: Part C (Supabase allowlist update), Parts B.1–B.4 (CRM7/R80.3/Braden/Throughput `return_origin` patches), end-to-end login on each preview URL | Operator + Claude Code | All 6 checkboxes ticked at runbook end; preview login works on 4 client apps | `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` §Sign-off |
 | ~~P0-7~~ | ~~Remove auth-callback hardcoded-production fallback — R80.3 `src/pages/AuthCallback.tsx:44` + throughput `src/pages/auth/AuthCallback.tsx:48-50`~~ — **SHIPPED** (W4-AUTH-v2) — R80.3@`6f3859b` + throughput@`fa7e874` + crm7@`1fa401e1`; `VITE_BSU_URL` now required at build, 14 files cleaned of hardcoded `https://suite.crm7.app` fallback, 12 Vercel env entries written across the 4 client apps. | R80.3, throughput / Claude Code | `VITE_BSU_URL` is required at build; hardcoded `https://suite.crm7.app` string removed | `docs/20260423-cross-app-write-audit-v1.00W.md` V10 |
-| P0-8 | Conduit SSR hotfix — cherry-pick commits `2f38cc3` + `5870990` onto `fix/conduit-ssr-prerender-guard` from `development`; merge | Conduit / Claude Code | Conduit Vercel build green on `development` | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §Phase 6.0 |
-| ~~P0-9~~ | ~~Bump `next` to `^16.2.3` in Conduit (CVE-2026-23869 RSC DoS, CVSS 7.5)~~ — **SHIPPED-PREEXISTING** (W4-CONDUIT-NEXT NO-OP) — Conduit already on `next@16.2.4` ≥ 16.2.3 at Wave-4 audit time; no bump required. | Conduit / Cascade | `pnpm why next` shows ≥16.2.3; `pnpm audit` clean for this CVE | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J05 |
-| P0-10 | Supabase Vault RPC — create `email_integration_set_encrypted_token`; migrate plaintext `access_token` + `refresh_token` + `smtp_password` + `imap_password` in `email_integrations` | CRM7 edge fns / Claude Code | `SELECT * FROM email_integrations` shows only opaque ciphertext; RPC call returns a vault ref | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-LIVE-01/02 |
-| P0-11 | Sign OAuth state with HMAC-SHA256 + verify on callback in `oauth-google-email` + `oauth-microsoft-email` | CRM7 edge fns / Claude Code | Malformed state rejected 400; Playwright test covers CSRF replay | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-LIVE-03 |
-| ~~P0-12~~ | ~~BSU AuthContext zero-fetch bug — fix `onAuthStateChange` bootstrap race; add integration test for ≥2 Supabase REST calls on mount~~ — **SHIPPED bsu@`86cfb70`** (W4-BSU) — `onAuthStateChange` deadlock avoided per `feedback_auth_state_change_deadlock.md`; bootstrap effect decoupled; integration test added. | BSU / Claude Code | Enterprise tier chip displays correctly for the 3 known enterprise users | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J04 |
-| P0-13 | Remove wildcard redirect URIs `*.vercel.app` + `*.vusercontent.net` from Supabase Auth dashboard; replace with explicit preview URLs | Operator | `SELECT allowed_redirect_uris FROM auth.oauth_clients` shows no wildcards | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J03 |
-| ~~P0-14~~ | ~~`git rm crm7/APPLY_THIS_SQL.sql`~~ — **ALREADY ABSENT** on crm7/development tip (verified 2026-04-25 `ls` returned not-found). History scrub still needed if any historical commit contained credentials; that's the remaining operator action. | CRM7 / Operator | Current tip clean; audit earlier commits via `git log --all -- crm7/APPLY_THIS_SQL.sql` | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P0-J08 |
+| P0-8 | Conduit SSR hotfix — cherry-pick commits `2f38cc3` + `5870990` onto `fix/conduit-ssr-prerender-guard` from `development`; merge | Conduit / Claude Code | Conduit Vercel build green on `development` | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §Phase 6.0 |
+| ~~P0-9~~ | ~~Bump `next` to `^16.2.3` in Conduit (CVE-2026-23869 RSC DoS, CVSS 7.5)~~ — **SHIPPED-PREEXISTING** (W4-CONDUIT-NEXT NO-OP) — Conduit already on `next@16.2.4` ≥ 16.2.3 at Wave-4 audit time; no bump required. | Conduit / Cascade | `pnpm why next` shows ≥16.2.3; `pnpm audit` clean for this CVE | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P0-J05 |
+| P0-10 | Supabase Vault RPC — create `email_integration_set_encrypted_token`; migrate plaintext `access_token` + `refresh_token` + `smtp_password` + `imap_password` in `email_integrations` | CRM7 edge fns / Claude Code | `SELECT * FROM email_integrations` shows only opaque ciphertext; RPC call returns a vault ref | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P0-LIVE-01/02 |
+| P0-11 | Sign OAuth state with HMAC-SHA256 + verify on callback in `oauth-google-email` + `oauth-microsoft-email` | CRM7 edge fns / Claude Code | Malformed state rejected 400; Playwright test covers CSRF replay | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P0-LIVE-03 |
+| ~~P0-12~~ | ~~BSU AuthContext zero-fetch bug — fix `onAuthStateChange` bootstrap race; add integration test for ≥2 Supabase REST calls on mount~~ — **SHIPPED bsu@`86cfb70`** (W4-BSU) — `onAuthStateChange` deadlock avoided per `feedback_auth_state_change_deadlock.md`; bootstrap effect decoupled; integration test added. | BSU / Claude Code | Enterprise tier chip displays correctly for the 3 known enterprise users | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P0-J04 |
+| P0-13 | Remove wildcard redirect URIs `*.vercel.app` + `*.vusercontent.net` from Supabase Auth dashboard; replace with explicit preview URLs | Operator | `SELECT allowed_redirect_uris FROM auth.oauth_clients` shows no wildcards | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P0-J03 |
+| ~~P0-14~~ | ~~`git rm crm7/APPLY_THIS_SQL.sql`~~ — **ALREADY ABSENT** on crm7/development tip (verified 2026-04-25 `ls` returned not-found). History scrub still needed if any historical commit contained credentials; that's the remaining operator action. | CRM7 / Operator | Current tip clean; audit earlier commits via `git log --all -- crm7/APPLY_THIS_SQL.sql` | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P0-J08 |
 | ~~P0-15~~ | ~~Roadmap rollup — bump `docs/20260227-bsuite-master-roadmap-v5.00W.md` to v5.03W, strike `#26a/26e/26f/26g`, mark AUD-15/AUD-16 done~~ — **DONE** (master roadmap header is v5.03W; 26a/26e/26f/26g struck; AUD-15/AUD-16 marked done; revision log records the 2026-05-01 ratification rollup) | Cascade | Master roadmap header = v5.03W; four rows struck; delta doc retained as archived provenance | `docs/archive/parent/2026-04-30-audits-closed/20260415-roadmap-audit-delta-v1.00W.md` §Roadmap rollup request |
 
 ---
@@ -110,13 +110,13 @@ Non-blocking bugs with clear scope; high-signal quality/hardening work.
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-15 | Add OIDC nonce to all `signInWithBusinessSuite` calls (CRM7, R80.3, BSU, Conduit) + verify on token exchange | All / Claude Code | Missing nonce rejected; Playwright covers replay | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P1-J02 |
-| P1-16 | Conduit `/auth/login` + `/auth/register` redirect to BSU `/login?return_to=conduit` for unauthenticated users | Conduit / Claude Code | Unauthenticated traffic lands on BSU login | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §9.1 |
-| P1-17 | `@bsuite/auth` package adoption — migrate 4 client apps from per-app copy to shared pkg | All / Claude Code | `business-suite-oauth.ts` deleted in 4 client apps | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §9.2 |
-| P1-18 | throughput OAuth: copy CRM7 `business-suite-oauth.ts` (was 0 bytes); bump `@supabase/supabase-js` to `^2.103.0`; wire `startBSTokenRefresh()` | Throughput / Claude Code | Throughput users can authenticate via BSU SSO | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §9.3 |
-| P1-19 | Azure `xms_edov` optional claim added + server-side rejection of `xms_edov === 0` in BSU OAuth callback | BSU / Operator + Claude Code | Microsoft-authenticated user with unverified email is rejected | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §9.5 |
-| P1-20 | Replace `===` secret compare with `timingSafeEqual` in `email-token-refresh` | CRM7 edge fn / Claude Code | Timing side-channel closed; test asserts constant-time | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P1-LIVE-01 |
-| P1-21 | Remove `GOTRUE_JWT_ADMIN_GROUP_NAME` deprecation key from Supabase project config | Operator | Auth logs silent on deprecation warning | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P1-LIVE-02 |
+| P1-15 | Add OIDC nonce to all `signInWithBusinessSuite` calls (CRM7, R80.3, BSU, Conduit) + verify on token exchange | All / Claude Code | Missing nonce rejected; Playwright covers replay | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P1-J02 |
+| P1-16 | Conduit `/auth/login` + `/auth/register` redirect to BSU `/login?return_to=conduit` for unauthenticated users | Conduit / Claude Code | Unauthenticated traffic lands on BSU login | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §9.1 |
+| P1-17 | `@bsuite/auth` package adoption — migrate 4 client apps from per-app copy to shared pkg | All / Claude Code | `business-suite-oauth.ts` deleted in 4 client apps | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §9.2 |
+| P1-18 | throughput OAuth: copy CRM7 `business-suite-oauth.ts` (was 0 bytes); bump `@supabase/supabase-js` to `^2.103.0`; wire `startBSTokenRefresh()` | Throughput / Claude Code | Throughput users can authenticate via BSU SSO | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §9.3 |
+| P1-19 | Azure `xms_edov` optional claim added + server-side rejection of `xms_edov === 0` in BSU OAuth callback | BSU / Operator + Claude Code | Microsoft-authenticated user with unverified email is rejected | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §9.5 |
+| P1-20 | Replace `===` secret compare with `timingSafeEqual` in `email-token-refresh` | CRM7 edge fn / Claude Code | Timing side-channel closed; test asserts constant-time | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P1-LIVE-01 |
+| P1-21 | Remove `GOTRUE_JWT_ADMIN_GROUP_NAME` deprecation key from Supabase project config | Operator | Auth logs silent on deprecation warning | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P1-LIVE-02 |
 
 ### P1.D — Env / Secrets hygiene (follow-up from P0)
 
@@ -148,41 +148,41 @@ Non-blocking bugs with clear scope; high-signal quality/hardening work.
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-33 | 7 remaining FK migrations — `employers.primary_contact_id`, `mentors.contact_id`, `training_providers.contact_id`, `funding_sources.contact_id`, `host_agreements.signatory_contact_id`, `opportunities.client_id`, `vacancies.client_id` | CRM7 DB / Claude Code | All FK columns + indexes exist; backfill run; `information_schema` shows the 7 new FKs | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §7.0 |
-| P1-34 | Enforce `people.contact_id NOT NULL` + `UNIQUE(contact_id)`; R80.3 people form routes through `contacts` lookup | CRM7, R80.3 / Claude Code | Constraint live; duplicate person attempts blocked | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §7.1 |
-| P1-35 | Build P1 EntitySelectors: `AwardSelector`, `TrainingPlanSelector`, `PlacementSelector`, `ChargeRateSelector` | CRM7 / Claude Code | All 4 components exist in `src/components/entity/selectors/`; used on ≥1 form each | `docs/OUTSTANDING.md` §Entity crosswalk; `docs/20260319-entity-crosswalk-v1.00D.md` |
-| P1-36 | Wire EntitySelectors on `employers`, `mentors`, `training_providers`, `funding_sources`, `leads`, `contacts`, `opportunities` forms; remove free-text islands | CRM7 / Claude Code | `grep -r '<input.*company\|contact_name' src/` returns zero on CRM7 forms | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §7.2 |
-| P1-37 | Build `EntityLinker` sidebar + wire to 12 entity detail pages (Contact, Client, Apprentice, Placement, Opportunity priority) | CRM7 / Claude Code | Detail pages render related-entity chips; derives from `tenant_entity_relations` (not hardcoded) | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §7.3 |
-| P1-38 | Lead → Contact conversion UI (lead-promote flow — uses `leads.contact_id` FK already live) | CRM7 / Claude Code | "Convert Lead" action wired; promoted lead shows linked contact chip | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §7.4 |
+| P1-33 | 7 remaining FK migrations — `employers.primary_contact_id`, `mentors.contact_id`, `training_providers.contact_id`, `funding_sources.contact_id`, `host_agreements.signatory_contact_id`, `opportunities.client_id`, `vacancies.client_id` | CRM7 DB / Claude Code | All FK columns + indexes exist; backfill run; `information_schema` shows the 7 new FKs | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §7.0 |
+| P1-34 | Enforce `people.contact_id NOT NULL` + `UNIQUE(contact_id)`; R80.3 people form routes through `contacts` lookup | CRM7, R80.3 / Claude Code | Constraint live; duplicate person attempts blocked | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §7.1 |
+| P1-35 | Build P1 EntitySelectors: `AwardSelector`, `TrainingPlanSelector`, `PlacementSelector`, `ChargeRateSelector` | CRM7 / Claude Code | All 4 components exist in `src/components/entity/selectors/`; used on ≥1 form each | `docs/OUTSTANDING.md` §Entity crosswalk; `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
+| P1-36 | Wire EntitySelectors on `employers`, `mentors`, `training_providers`, `funding_sources`, `leads`, `contacts`, `opportunities` forms; remove free-text islands | CRM7 / Claude Code | `grep -r '<input.*company\|contact_name' src/` returns zero on CRM7 forms | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §7.2 |
+| P1-37 | Build `EntityLinker` sidebar + wire to 12 entity detail pages (Contact, Client, Apprentice, Placement, Opportunity priority) | CRM7 / Claude Code | Detail pages render related-entity chips; derives from `tenant_entity_relations` (not hardcoded) | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §7.3 |
+| P1-38 | Lead → Contact conversion UI (lead-promote flow — uses `leads.contact_id` FK already live) | CRM7 / Claude Code | "Convert Lead" action wired; promoted lead shows linked contact chip | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §7.4 |
 
 ### P1.H — BSU platform-kit admin (6 sub-panels)
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-39 | Platform-kit sub-panel — auth (~200 LOC) | BSU / Claude Code | Panel renders list + actions; scoped to platform_admin | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
-| P1-40 | Platform-kit sub-panel — logs (~200 LOC) | BSU / Claude Code | Tail via Management API proxy | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
-| P1-41 | Platform-kit sub-panel — database (~200 LOC) | BSU / Claude Code | RLS-safe query runner with allowlist | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
-| P1-42 | Platform-kit sub-panel — secrets (~150 LOC) | BSU / Claude Code | Masked list + rotate action | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
-| P1-43 | Platform-kit sub-panel — storage (~200 LOC) | BSU / Claude Code | Bucket list + prefix explorer | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
-| P1-44 | Platform-kit sub-panel — dynamic tables (~220 LOC) | BSU / Claude Code | Introspect & manage tenant-custom tables | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
+| P1-39 | Platform-kit sub-panel — auth (~200 LOC) | BSU / Claude Code | Panel renders list + actions; scoped to platform_admin | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
+| P1-40 | Platform-kit sub-panel — logs (~200 LOC) | BSU / Claude Code | Tail via Management API proxy | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
+| P1-41 | Platform-kit sub-panel — database (~200 LOC) | BSU / Claude Code | RLS-safe query runner with allowlist | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
+| P1-42 | Platform-kit sub-panel — secrets (~150 LOC) | BSU / Claude Code | Masked list + rotate action | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
+| P1-43 | Platform-kit sub-panel — storage (~200 LOC) | BSU / Claude Code | Bucket list + prefix explorer | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
+| P1-44 | Platform-kit sub-panel — dynamic tables (~220 LOC) | BSU / Claude Code | Introspect & manage tenant-custom tables | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G2 |
 
 ### P1.I — Auth dashboard + WCAG AA
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-45 | BSU-G1 — Azure Entra ID claim addition (bsu#91) + Supabase wildcard redirect-URL removal (bsu#92) (overlaps with P0-13) | BSU, Operator | Claim landed; wildcards absent | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G1 |
-| P1-46 | BSU-G3 — resolve 5 open WCAG AA manual-review items + roll out to 4 sibling apps | All / Claude Code | `tests/e2e/wcag-aa.spec.ts` green in 5 apps; open items closed | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G3; `business-suite-unified/docs/20260421-wcag-aa-audit-v1.00W.md` |
-| P1-47 | BSU-G4 — SEC-002/003/004 (Low–Medium): CSS injection via tenant `font_stack` / `logo_url`; stale branding cache no-TTL | BSU / Claude Code | Sanitiser in place; TTL added; penetration test clears | `docs/20260317-bsuite-gap-report-v2.00W.md` §BSU-G4 |
-| P1-48 | CRM7 `DialogContent` a11y sweep — bulk-add `<DialogTitle>` (81 files) via codemod | CRM7 / Claude Code | Lint rule passes; axe-core serious/critical = 0 on all Dialog surfaces | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P1-J15 |
+| P1-45 | BSU-G1 — Azure Entra ID claim addition (bsu#91) + Supabase wildcard redirect-URL removal (bsu#92) (overlaps with P0-13) | BSU, Operator | Claim landed; wildcards absent | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G1 |
+| P1-46 | BSU-G3 — resolve 5 open WCAG AA manual-review items + roll out to 4 sibling apps | All / Claude Code | `tests/e2e/wcag-aa.spec.ts` green in 5 apps; open items closed | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G3; `business-suite-unified/docs/20260421-wcag-aa-audit-v1.00W.md` |
+| P1-47 | BSU-G4 — SEC-002/003/004 (Low–Medium): CSS injection via tenant `font_stack` / `logo_url`; stale branding cache no-TTL | BSU / Claude Code | Sanitiser in place; TTL added; penetration test clears | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BSU-G4 |
+| P1-48 | CRM7 `DialogContent` a11y sweep — bulk-add `<DialogTitle>` (81 files) via codemod | CRM7 / Claude Code | Lint rule passes; axe-core serious/critical = 0 on all Dialog surfaces | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P1-J15 |
 
 ### P1.J — R80.3 / Payday Super (1 Jul 2026 go-live)
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-49 | R80-G4 — public-holiday awareness in Payday Super calc (critical pre-1 Jul 2026) | R80.3 / Claude Code | `gov_holidays` table seeded; calc consults it; WA public-holiday test passes | `docs/20260317-bsuite-gap-report-v2.00W.md` §R80-G4 |
-| P1-50 | R80-G5 — salary-sacrifice OTE/QE-eligible dropdown for ATO compliance | R80.3 / Claude Code | UI surfaces selector; result flows to STP fields | `docs/20260317-bsuite-gap-report-v2.00W.md` §R80-G5 |
-| P1-51 | R80-G6 — Payday Super UI snapshot/component tests | R80.3 / Claude Code | Vitest snapshot green for 3+ snapshot configs | `docs/20260317-bsuite-gap-report-v2.00W.md` §R80-G6 |
-| P1-52 | R80-G1/G2/G3 — training-fees UI validation bounds, per-apprentice overrides, inclusion in export/PDF | R80.3 / Claude Code | Max cap enforced; override column persists; appears in export | `docs/20260317-bsuite-gap-report-v2.00W.md` §R80-G1/2/3 |
+| P1-49 | R80-G4 — public-holiday awareness in Payday Super calc (critical pre-1 Jul 2026) | R80.3 / Claude Code | `gov_holidays` table seeded; calc consults it; WA public-holiday test passes | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §R80-G4 |
+| P1-50 | R80-G5 — salary-sacrifice OTE/QE-eligible dropdown for ATO compliance | R80.3 / Claude Code | UI surfaces selector; result flows to STP fields | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §R80-G5 |
+| P1-51 | R80-G6 — Payday Super UI snapshot/component tests | R80.3 / Claude Code | Vitest snapshot green for 3+ snapshot configs | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §R80-G6 |
+| P1-52 | R80-G1/G2/G3 — training-fees UI validation bounds, per-apprentice overrides, inclusion in export/PDF | R80.3 / Claude Code | Max cap enforced; override column persists; appears in export | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §R80-G1/2/3 |
 | P1-53 | Phase 0 hotfix — "3 business days" → "7 business days" in CRM7 Payday Super dashboard widget | CRM7 / Claude Code | Widget label reads "7 business days" | `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` §0.4 |
 | P1-54 | Phase 0 hotfix — annual-allowance ÷52 bug in `mapPaymentFrequency` | CRM7, R80.3 / Claude Code | Unit test covers `"per annum"` → `perWeek` conversion with division | `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` §0.5 |
 
@@ -190,19 +190,19 @@ Non-blocking bugs with clear scope; high-signal quality/hardening work.
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-55 | BRADEN-G3 — Current-sprint 3 tasks: site preview, component placement, layout save/load from DB | Braden / Claude Code | 3 features live; Playwright smoke green | `docs/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G3 |
-| P1-56 | BRADEN-G4 — QA config: reduce 67+ `any` instances, split 5 components >200 lines | Braden / Claude Code | `pnpm typecheck --strict` clean; component LOC gate passes | `docs/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G4 |
-| P1-57 | BRADEN-G5 — 6 accessibility + 5 performance testing items | Braden / Claude Code | Items listed resolved; axe + Lighthouse reports attached | `docs/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G5 |
-| P1-58 | BRADEN-G6 — bot-protection follow-ups: server-side `checkBotId()`, custom route rules, monitoring/alerting, rate-limit integration | Braden / Claude Code | Contact form rejects bot requests server-side; alerts wired | `docs/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G6 |
-| P1-59 | BRADEN-G7 — Phase 5 TenantLayoutSlot for non-`/contact` routes + tenant-authored nav overlays | Braden / Claude Code | At least 3 routes consume `TenantLayoutSlot`; nav overlay lands from DB | `docs/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G7 |
+| P1-55 | BRADEN-G3 — Current-sprint 3 tasks: site preview, component placement, layout save/load from DB | Braden / Claude Code | 3 features live; Playwright smoke green | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G3 |
+| P1-56 | BRADEN-G4 — QA config: reduce 67+ `any` instances, split 5 components >200 lines | Braden / Claude Code | `pnpm typecheck --strict` clean; component LOC gate passes | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G4 |
+| P1-57 | BRADEN-G5 — 6 accessibility + 5 performance testing items | Braden / Claude Code | Items listed resolved; axe + Lighthouse reports attached | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G5 |
+| P1-58 | BRADEN-G6 — bot-protection follow-ups: server-side `checkBotId()`, custom route rules, monitoring/alerting, rate-limit integration | Braden / Claude Code | Contact form rejects bot requests server-side; alerts wired | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G6 |
+| P1-59 | BRADEN-G7 — Phase 5 TenantLayoutSlot for non-`/contact` routes + tenant-authored nav overlays | Braden / Claude Code | At least 3 routes consume `TenantLayoutSlot`; nav overlay lands from DB | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G7 |
 
 ### P1.L — Throughput
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-60 | TP-G1 — email invitations: complete backend email delivery for team-member invite | Throughput / Claude Code | Invite creates user row + sends email; accepted user appears in team | `docs/20260317-bsuite-gap-report-v2.00W.md` §TP-G1 |
-| P1-61 | TP-G3 — README.md:52 doc fix (npm vs pnpm) | Throughput / Claude Code | README reads `npm install` (match current state) | `docs/20260317-bsuite-gap-report-v2.00W.md` §TP-G3 |
-| P1-62 | TP-G4 — reconcile `IMPLEMENTATION_COMPLETE.md` vs CLAUDE.md Phase 5/5.5 deferrals | Throughput / Claude Code | Doc claims match reality | `docs/20260317-bsuite-gap-report-v2.00W.md` §TP-G4 |
+| P1-60 | TP-G1 — email invitations: complete backend email delivery for team-member invite | Throughput / Claude Code | Invite creates user row + sends email; accepted user appears in team | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §TP-G1 |
+| P1-61 | TP-G3 — README.md:52 doc fix (npm vs pnpm) | Throughput / Claude Code | README reads `npm install` (match current state) | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §TP-G3 |
+| P1-62 | TP-G4 — reconcile `IMPLEMENTATION_COMPLETE.md` vs CLAUDE.md Phase 5/5.5 deferrals | Throughput / Claude Code | Doc claims match reality | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §TP-G4 |
 
 ### P1.M — Supabase Realtime blocks
 
@@ -216,13 +216,13 @@ Non-blocking bugs with clear scope; high-signal quality/hardening work.
 
 | ID | Title | App / Owner | Verification | Source |
 |----|-------|-------------|--------------|--------|
-| P1-66 | BSU `react-router-dom` v6 → v7 | BSU / Cascade | `pnpm why react-router-dom` shows v7 only | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §Phase 10 |
-| P1-67 | BSU `react-day-picker` `8.10.1` → `^9.14.0` (breaking API) | BSU / Cascade | Datepicker surfaces render via v9 API; snapshot updated | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §Phase 10; `docs/20260317-bsuite-gap-report-v2.00W.md` §RT-10 |
-| P1-68 | BSU remove `react-hot-toast`; full migration to `sonner`; replace `next-themes` with Zustand `useTheme` | BSU / Cascade | `grep -r 'react-hot-toast\|next-themes' src/` returns zero | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §Phase 10 |
-| P1-69 | Throughput Tailwind v4 floor is enforced; remaining work is `@supabase/supabase-js` `^2.39.7` → `^2.103.0` | Throughput / Cascade | `pnpm lint:tailwind-v4` passes; Supabase-JS smoke passes after dependency bump | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §Phase 10 |
-| P1-70 | Enable `strict: true` in R80.3 + throughput `tsconfig.json`; fix resulting errors | R80.3, Throughput / Cascade | `pnpm typecheck` clean with strict flag | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P1-J12 |
-| P1-71 | Unify sidebar `localStorage` key across all apps | All / Cascade | Grep finds one shared constant; each app reads the same key | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P2-J05 |
-| P1-72 | Add `Cache-Control: public, max-age=31536000, immutable` for `/assets/*` in 5 `vercel.json` files | All (non-BSU) / Cascade | Response header present on first asset request | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §P1-J08 |
+| P1-66 | BSU `react-router-dom` v6 → v7 | BSU / Cascade | `pnpm why react-router-dom` shows v7 only | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §Phase 10 |
+| P1-67 | BSU `react-day-picker` `8.10.1` → `^9.14.0` (breaking API) | BSU / Cascade | Datepicker surfaces render via v9 API; snapshot updated | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §Phase 10; `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §RT-10 |
+| P1-68 | BSU remove `react-hot-toast`; full migration to `sonner`; replace `next-themes` with Zustand `useTheme` | BSU / Cascade | `grep -r 'react-hot-toast\|next-themes' src/` returns zero | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §Phase 10 |
+| P1-69 | Throughput Tailwind v4 floor is enforced; remaining work is `@supabase/supabase-js` `^2.39.7` → `^2.103.0` | Throughput / Cascade | `pnpm lint:tailwind-v4` passes; Supabase-JS smoke passes after dependency bump | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §Phase 10 |
+| P1-70 | Enable `strict: true` in R80.3 + throughput `tsconfig.json`; fix resulting errors | R80.3, Throughput / Cascade | `pnpm typecheck` clean with strict flag | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P1-J12 |
+| P1-71 | Unify sidebar `localStorage` key across all apps | All / Cascade | Grep finds one shared constant; each app reads the same key | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P2-J05 |
+| P1-72 | Add `Cache-Control: public, max-age=31536000, immutable` for `/assets/*` in 5 `vercel.json` files | All (non-BSU) / Cascade | Response header present on first asset request | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §P1-J08 |
 
 ### P1.O — CRM7 schema/page builder Phase 0 critical fixes
 
@@ -291,27 +291,27 @@ Large-scope items that require dedicated planning. Tracked as workstreams (§WS)
 | P2-2 | Schema / page-builder rebuild — full scope | CRM7 + BSU | §WS-B |
 | P2-3 | AVETMISS 8.0 NAT file codegen + State STA extracts | CRM7 | §WS-A phase B-5 |
 | P2-4 | Report builder (7 pre-built templates + JSONB `report_templates` + scheduling) | CRM7 | §WS-A phase B-4 |
-| P2-5 | Braden Phase 2 + Phase 3 (visual editing, advanced customisation, publishing workflow, permissions) | Braden | `docs/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G1/G2 |
-| P2-6 | Storybook in `packages/ui` + primitive centralisation (Button, Dialog, EmptyState, ErrorBoundary, Logo) | Shared / All | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.5/11.9 |
-| P2-7 | Sentry rollout in 5 D2C apps + Conduit (`@sentry/nextjs`) | All / Cascade | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §13.1 |
-| P2-8 | CSP headers in all `vercel.json` (start permissive, tighten) | All / Cascade | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §13.3 |
-| P2-9 | Playwright E2E smoke per app (5 critical-path specs each) | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §13.2 |
-| P2-10 | PageGridLayout rollout completion — CRM7 batches A–H (41 pages), R80.3, Conduit, throughput, braden | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §14.1 |
-| P2-11 | Shared `<Logo />` component in `packages/ui` — 4-level resolution (sub-org → enterprise → platform → default) | Shared / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.4 |
-| P2-12 | Remaining hex → oklch sweep: CRM7/BSU `MarketingHome.tsx` ~62 each, Conduit `ConduitLanding.tsx` ~55, CRM7 AI message rgba | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.1 |
-| P2-13 | Sub-organisation hierarchy — `tenants.parent_tenant_id` + hierarchical branding resolution Tier 0 | BSU / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §12.1 |
-| P2-14 | Feature-flags admin UI — 37 JSONB flags in `tenant_settings.feature_flags` | CRM7 / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §8.4 (P2-J02) |
-| P2-15 | Xero app registration + flip `feature_flags.xero_integration = true` | CRM7 / Operator | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §14.7 |
-| P2-16 | Email/Calendar integration UI — settings tab + inbox + tasks sync badge + `email_messages`/`tasks` migrations | CRM7 / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §14.4 |
-| P2-17 | Conduit candidate documents tab — wire `r7_documents` | Conduit / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §14.6 |
-| P2-18 | CRM7 Tier 3-4 page wiring (SP-3, in progress) — financial, compliance, WHS, comms, reports, payroll, billing, data mgmt | CRM7 / Claude Code | `docs/20260317-bsuite-gap-report-v2.00W.md` §SP-3 |
+| P2-5 | Braden Phase 2 + Phase 3 (visual editing, advanced customisation, publishing workflow, permissions) | Braden | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §BRADEN-G1/G2 |
+| P2-6 | Storybook in `packages/ui` + primitive centralisation (Button, Dialog, EmptyState, ErrorBoundary, Logo) | Shared / All | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §11.5/11.9 |
+| P2-7 | Sentry rollout in 5 D2C apps + Conduit (`@sentry/nextjs`) | All / Cascade | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §13.1 |
+| P2-8 | CSP headers in all `vercel.json` (start permissive, tighten) | All / Cascade | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §13.3 |
+| P2-9 | Playwright E2E smoke per app (5 critical-path specs each) | All / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §13.2 |
+| P2-10 | PageGridLayout rollout completion — CRM7 batches A–H (41 pages), R80.3, Conduit, throughput, braden | All / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §14.1 |
+| P2-11 | Shared `<Logo />` component in `packages/ui` — 4-level resolution (sub-org → enterprise → platform → default) | Shared / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §11.4 |
+| P2-12 | Remaining hex → oklch sweep: CRM7/BSU `MarketingHome.tsx` ~62 each, Conduit `ConduitLanding.tsx` ~55, CRM7 AI message rgba | All / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §11.1 |
+| P2-13 | Sub-organisation hierarchy — `tenants.parent_tenant_id` + hierarchical branding resolution Tier 0 | BSU / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §12.1 |
+| P2-14 | Feature-flags admin UI — 37 JSONB flags in `tenant_settings.feature_flags` | CRM7 / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §8.4 (P2-J02) |
+| P2-15 | Xero app registration + flip `feature_flags.xero_integration = true` | CRM7 / Operator | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §14.7 |
+| P2-16 | Email/Calendar integration UI — settings tab + inbox + tasks sync badge + `email_messages`/`tasks` migrations | CRM7 / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §14.4 |
+| P2-17 | Conduit candidate documents tab — wire `r7_documents` | Conduit / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §14.6 |
+| P2-18 | CRM7 Tier 3-4 page wiring (SP-3, in progress) — financial, compliance, WHS, comms, reports, payroll, billing, data mgmt | CRM7 / Claude Code | `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §SP-3 |
 | P2-19 | F-08 — BSU `/ideas/*` "Open in Throughput" deep-link affordance (keep light portfolio lens) | BSU / Claude Code | `docs/20260423-misplaced-routes-audit-v1.00W.md` §F-08 |
 | P2-20 | F-10 — CRM7 `/billing` → `/financial/invoicing` rename + redirect (namespace collision with BSU subscription billing) | CRM7 / Claude Code | `docs/20260423-misplaced-routes-audit-v1.00W.md` §F-10 |
-| P2-21 | Web Vitals monitoring — `web-vitals` library wired in 5 apps; CRM7 INP (currently 165–357 ms) resolved | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §13.4 |
-| P2-22 | PWA asset completion — BSU `apple-touch-icon.png`+pwa icons; R80.3 webmanifest+apple-touch-icon; Conduit full audit; braden webmanifest+icons; throughput all PWA | All / Claude Code | `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.8 |
-| P2-23 | FOUC prevention — inline theme script in BSU, R80.3, Conduit `layout.tsx` (CRM7 already has it) | BSU, R80.3, Conduit / Claude Code | First paint shows correct theme class — `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.6 |
-| P2-24 | Font alignment — Conduit self-host Inter; BSU confirm `'Inter Variable'`; BSU+R80.3 add `@fontsource/jetbrains-mono` | 3 apps / Claude Code | `--font-mono` resolves; no network font fetch — `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §11.7 |
-| P2-25 | DB maintenance — fix `auth_rls_initplan` in 5 RLS policies; drop 25+ unused indexes (especially `people` — 9 unused); add 4 missing FK indexes | DB / Cascade | Supabase advisors clean — `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §6.12/6.13; §P2-LIVE-01/02/03 |
+| P2-21 | Web Vitals monitoring — `web-vitals` library wired in 5 apps; CRM7 INP (currently 165–357 ms) resolved | All / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §13.4 |
+| P2-22 | PWA asset completion — BSU `apple-touch-icon.png`+pwa icons; R80.3 webmanifest+apple-touch-icon; Conduit full audit; braden webmanifest+icons; throughput all PWA | All / Claude Code | `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §11.8 |
+| P2-23 | FOUC prevention — inline theme script in BSU, R80.3, Conduit `layout.tsx` (CRM7 already has it) | BSU, R80.3, Conduit / Claude Code | First paint shows correct theme class — `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §11.6 |
+| P2-24 | Font alignment — Conduit self-host Inter; BSU confirm `'Inter Variable'`; BSU+R80.3 add `@fontsource/jetbrains-mono` | 3 apps / Claude Code | `--font-mono` resolves; no network font fetch — `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §11.7 |
+| P2-25 | DB maintenance — fix `auth_rls_initplan` in 5 RLS policies; drop 25+ unused indexes (especially `people` — 9 unused); add 4 missing FK indexes | DB / Cascade | Supabase advisors clean — `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §6.12/6.13; §P2-LIVE-01/02/03 |
 | P2-26 | Remaining apprentice-ownership audit: R80.3 must stop writing CRM7-owned `apprentices` (reader-only), persist calc state to R80-owned tables | R80.3 / Claude Code | `grep -rn ".from('apprentices').*\.(insert\|update\|upsert)" R80.3/src/` returns zero — `docs/OUTSTANDING.md` §cross-app-write-audit #1 |
 
 ---
@@ -381,7 +381,7 @@ These are phase-level plans. Each WS has its own doc; the entries below are chec
 
 ### WS-D — Production ship gate (Phase 15)
 
-**Canonical plan:** `docs/plans/20260423-bsuite-production-plan-v1.00W.md` §Phase 15.
+**Canonical plan:** `docs/archive/2026-06/20260423-bsuite-production-plan-v1.00W.md` §Phase 15.
 
 | ID | Checkpoint | Source |
 |----|------------|--------|
@@ -406,7 +406,7 @@ These docs contributed to this roadmap and have no remaining unique open work on
 | `docs/20260421-supabase-realtime-blocks-rollout-v1.00W.md` | P1-63/64/65 all shipped + 14 days green telemetry |
 | `docs/20260422-typescript-6-migration-evaluation-v1.00W.md` | G-1 gate triggered and all 6 apps migrated |
 | `docs/20260424-oauth-preview-redirect-runbook-v1.00W.md` | P0-6 sign-off complete (all 6 checkboxes ticked) |
-| `docs/20260317-bsuite-gap-report-v2.00W.md` §11 only | All §11 items (BSU-G1..G5, CRM7-G1..G6, R80-G1..G6, BRADEN-G1..G7, TP-G1..G4) resolved or moved to dated plans — the rest of the gap report remains live until master roadmap v5.03W supersedes it |
+| `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` §11 only | All §11 items (BSU-G1..G5, CRM7-G1..G6, R80-G1..G6, BRADEN-G1..G7, TP-G1..G4) resolved or moved to dated plans — the rest of the gap report remains live until master roadmap v5.03W supersedes it |
 
 Docs NOT eligible for archive (live references):
 

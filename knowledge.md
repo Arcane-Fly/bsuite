@@ -70,7 +70,7 @@ pnpm test:packages     # shared @bsuite/* packages
 
 _Last suite-wide bump: 2026-06-01 (PRs crm7#932, R80.3#297, braden#312, BSU#531, conduit#297, throughput#199, bsuite#1340)._
 
-Vercel clones only the individual submodule repo → `workspace:*` and `file:../packages/*` both break. Always use caret npm ranges (`^0.1.0`). After editing a package: build → bump → `npm publish --access public` → bump consumers.
+Vercel clones only the individual submodule repo → `workspace:*` and `file:../packages/*` both break. Always use caret npm ranges (`^0.1.0`). After editing a package: build → bump → merge the package release workflow to `main` → publish via npm Trusted Publishers (GitHub Actions OIDC, no `NPM_TOKEN`) → bump consumers.
 
 ### Suite-wide over-deliveries vs. typical GTO software
 

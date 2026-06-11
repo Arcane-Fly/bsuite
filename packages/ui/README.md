@@ -209,7 +209,8 @@ import logoSvg from '@bsuite/ui/assets/d2c-default-logo.svg'
 2. `pnpm -C packages/ui test` — all cases must pass.
 3. `pnpm -C packages/ui build` — emits `dist/`.
 4. Bump version in `package.json` (semver).
-5. `npm publish --access public` from `packages/ui/`.
+5. Merge the package release PR to `main`; `.github/workflows/publish-ui.yml`
+   publishes via npm Trusted Publishers (GitHub Actions OIDC, no `NPM_TOKEN`).
 6. Update consumer `package.json` to the new version, regenerate lockfile
    **outside** the bsuite tree (see root `CLAUDE.md` rule 7), commit the
    lockfile + a consumer-side bump PR.

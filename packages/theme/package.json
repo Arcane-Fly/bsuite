@@ -11,7 +11,7 @@
     "url": "https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/theme"
   },
-  "description": "BSuite Universal theme \u2014 D2C Neon Electric + Braden Corporate baselines. Tailwind v4 preset, CSS vars (5-layer), role aliases, colourblind-safe tokens, eye-strain-safe text scale, BrandingProvider (runtime white-label). Used by BSU, CRM7, conduit, R80.3, throughput (D2C) and braden.com.au (Corporate).",
+  "description": "BSuite Universal theme — D2C Neon Electric + Braden Corporate baselines. Tailwind v4 preset, CSS vars (5-layer), role aliases, colourblind-safe tokens, eye-strain-safe text scale, BrandingProvider (runtime white-label). Used by BSU, CRM7, conduit, R80.3, throughput (D2C) and braden.com.au (Corporate).",
   "files": [
     "dist",
     "src/css",
@@ -61,18 +61,18 @@
     }
   },
   "devDependencies": {
-    "@supabase/supabase-js": "^2.105.3",
+    "@supabase/supabase-js": "^2.108.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^24.12.2",
-    "@types/react": "^19.2.14",
+    "@types/node": "^25.9.2",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^6.0.2",
     "jsdom": "^29.1.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "typescript": "~5.9.3",
-    "vite": "^8.0.10",
-    "vitest": "^4.1.5"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
   }
 }

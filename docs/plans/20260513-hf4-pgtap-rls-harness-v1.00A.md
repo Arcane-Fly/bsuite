@@ -73,7 +73,7 @@ pgTAP files change. Uses the **canonical Supabase CLI path** per the
   layout, how to add new suites, how the anon-key simulation works.
 - `crm7/CONTRIBUTING.md` — new "RLS testing (Constraint C10)" section
   explaining the mandatory gate.
-- This plan doc (`docs/plans/20260513-hf4-pgtap-rls-harness-v1.00W.md`).
+- This plan doc (`docs/plans/20260513-hf4-pgtap-rls-harness-v1.00A.md`).
 
 ## Test strategy
 
