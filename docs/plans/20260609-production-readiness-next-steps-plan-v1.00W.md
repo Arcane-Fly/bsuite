@@ -1,10 +1,10 @@
 # Production Readiness Next Steps Implementation Plan
 
-> **Status as of 2026-06-11 (docs/roadmap closure audit):** This plan remains the **active umbrella** for production readiness — it stays open until `bsuite#1506`, `crm7#1066`, the storage phases (`bsuite#937`–`#939`), and the Workstream E–H tails close.
+> **Status as of 2026-06-12 (storage lane live UX pass):** This plan remains the **active umbrella** for production readiness. `crm7#1056` is closed with live bucket/policy/pgTAP/upload/EICAR evidence. `crm7#1057` and `crm7#1058` remain open for their unimplemented acceptance criteria (sensitive encrypt→download→decrypt/Vault/access-log evidence; self-service portal routes; verification UI transitions; 30d/7d alert scheduling; email notifications; immutable audit evidence), alongside `bsuite#1505` and Workstream E–H tails.
 >
 > **Shipped:** Workstreams E–H core (training calendar/block release, RTO/qualification/reports, R80 read-only integration, Conduit handoff scaffolding — see closed `crm7#1052`/`#1053`/`#1054`); placement↔people identity bridge (`crm7#1024` closed via `crm7#1045`, follow-ups `crm7#1046`/`#1047` closed); package consumer rollout (`bsuite#1487` closed); migration-pipeline reconciliation (`bsuite#1492`, `bsuite#1499`/`#1500` closed); Supabase advisor sweep (`bsuite#1460` closed; pgTAP advisor-hardening suite `crm7#1067`).
 >
-> **Remaining (open):** `bsuite#1505`, `bsuite#1506`, `crm7#1066`, storage phases `bsuite#937`–`#939`, and E–H tails `crm7#625`/`#663`/`#661`/`#662`/`#534`, `crm7#1056`–`#1058`, `R80.3#233`–`#235`, `conduit#218`/`#219`/`#221`/`#223`/`#225`/`#227`/`#229`/`#231`/`#233`/`#251`/`#252`.
+> **Remaining (open):** `bsuite#1505`, `crm7#1057`/`#1058`, E–H tails `crm7#661`/`#662`/`#534`/`#530`, `R80.3#233`/`#234`, and conduit tails `conduit#218`/`#219`/`#221`/`#225`/`#227`/`#229`/`#231`/`#251`/`#252`.
 
 > **For Claude:** REQUIRED SUB-SKILL: Use `executing-plans` to implement this plan task-by-task.
 
