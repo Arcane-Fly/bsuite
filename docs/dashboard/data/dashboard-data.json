@@ -3191,14 +3191,13 @@
   "document_storage_status": {
     "schema_version": "1.0",
     "added_at": "2026-06-17",
-    "status": "in_progress",
-    "summary": "Phase 1 (#1056) closed earlier. Phase 2/3 UI + automation implemented + merged to crm7 development (PR #1085), parent pointer bumped (bsuite#1537), 4 migrations applied via supabase-migrate dispatch + verified live; advisors clean. Closure of #1057/#1058 pending operator signed-in d.* UX evidence (agent has no test-user credentials).",
-    "issues_open": [
+    "status": "done",
+    "summary": "Phases 1/2/3 COMPLETE + CLOSED. UI + cron + in-app notifications shipped (crm7#1085), migrations applied+verified live, advisors clean, signed-in d.* UX verified.",
+    "issues_open": [],
+    "issues_closed": [
+      "crm7#1056",
       "crm7#1057",
       "crm7#1058"
-    ],
-    "issues_closed": [
-      "crm7#1056"
     ],
     "pr_merged": "crm7#1085",
     "parent_pr_merged": "bsuite#1537",
@@ -3215,6 +3214,44 @@
     ],
     "deploy": "crm7 dpl_Amf7qfiA5gNhAUCvNn7ZWKsVLeSX @219cf8bd READY on d.crm.crm7.app",
     "remaining": "signed-in d.* UX capture (operator-gated): upload/verify/download/compliance/self-service screenshots + clean console",
-    "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1085"
+    "evidence_url": "https://github.com/GaryOcean428/crm7/pull/1085",
+    "live_verified": "2026-06-17 signed-in d.crm.crm7.app \u2014 DocumentHub (Jake Morrison) + encrypted upload dialog (Visa/Work Permit \ud83d\udd12 + AES-256-GCM warning + expiry) + /documents/compliance dashboard render clean"
+  },
+  "product_tails_status": {
+    "schema_version": "1.0",
+    "added_at": "2026-06-17",
+    "closed_this_cycle": [
+      "crm7#534 (training plan progress report \u2014 verified+closed)",
+      "conduit#251 (inline status change \u2014 shipped #319)"
+    ],
+    "bsuite_1505": "row 1.4 N/A (no token hook); \u00a74.1 Zod 4 format sweep merged across crm7#1086/throughput#226/conduit#318/BSU#545/braden#328",
+    "remaining_multi_session": {
+      "crm7": [
+        "#661 RTO unify (L)",
+        "#662 units of competency (L)",
+        "#530 host monthly PDF pack (M)"
+      ],
+      "conduit": [
+        "#218 public apply (M/L)",
+        "#219 candidate schema (M)",
+        "#221 stage automation (L)",
+        "#225 FO assignment (M)",
+        "#227 offer e-sign (L)",
+        "#229 talent pool consent (M)",
+        "#231 handoff allowlist (S, blocked on #219)",
+        "#252 saved views (M)"
+      ],
+      "R80.3": [
+        "#233 GTO invoicing (L)",
+        "#234 payroll exports STP2/ABA/SuperStream (M)"
+      ]
+    },
+    "bsuite_1505_remaining": [
+      "\u00a74.2 discriminatedUnion",
+      "\u00a74.3 schema-registry dedup",
+      "\u00a74.4 safeParse audit",
+      "\u00a71.5 production SMTP (operator)"
+    ],
+    "note": "Remaining tails are bounded M/L features; each warrants a focused session/plan."
   }
 }
