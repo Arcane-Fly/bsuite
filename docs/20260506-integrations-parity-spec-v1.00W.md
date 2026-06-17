@@ -15,7 +15,7 @@ Spec for closing 5 integrations parity gaps from #577:
 
 - **Row 137:** Idibu (job board posting + Quick Repost + credit balance)
 - **Row 138:** Onboarded (digital onboarding + payroll pack delivery)
-- **Row 139:** Secured Signing (e-signature alongside Adobe Sign)
+- **Row 139:** E-signature — met by the **in-house** signing architecture (no third-party signing vendor; see §5). Supersedes the original "Secured Signing / Adobe Sign" framing.
 - **Row 140:** Calendly (OAuth + interview scheduling + webhook)
 - **Row 141:** Super funds management — **already covered by #576 spec** (cross-reference, no duplicate work)
 
@@ -325,35 +325,29 @@ Deno.serve(async (req) => {
 
 ---
 
-## 5. Secured Signing adapter (Row 139)
+## 5. E-signature (Row 139) — IN-HOUSE, no third-party signing vendor
 
-### 5.1 API context
+> **Decision (canonical):** BSuite builds and operates its **own** e-signature workflow. We do **not** integrate a third-party signing vendor (Secured Signing, Adobe Sign, DocuSign, HelloSign, etc.). Row 139 parity is met by the in-house architecture, not by a vendor adapter.
 
-Secured Signing is an AU/NZ e-signature platform. OAuth 2.0. Documents sent via API; status polled (no webhooks for free tier; webhooks available paid tier).
+### 5.1 Canonical architecture
 
-### 5.2 Adapter shape
+E-signature is delivered by the in-house path documented in `crm7/docs/20260317-document-esigning-architecture-v1.00A.md` ("zero vendor dependency", AU Electronic Transactions Act 1999 compliant):
 
-Pattern matches Onboarded (OAuth + tokens-in-Vault). Key methods:
+- **Document assembly**: Google Docs template merge → PDF export (`generate-document` edge function, WIF auth) — no Adobe PDF Services.
+- **Viewing**: `react-pdf` (Mozilla pdf.js) — no Adobe Embed API.
+- **Signing + integrity**: `pdf-lib` + `crypto.subtle` SHA-256 in-browser stamping with an appended Certificate of Completion (identity / intent / integrity); `documentSigner.ts` + `SignDocumentFlow.tsx`.
+- **Multi-party ordering**: `@xyflow/react` document flow (e.g. candidate → host → recruiter countersign) runs in-process — no external signing webhooks.
+- **Storage + audit**: Supabase Storage (`documents` bucket) + `document_audit_logs` (IP, user-agent, timestamps per action).
 
-```ts
-async sendDocumentForSigning(integrationId: string, document: PdfDocument, signers: Signer[]): Promise<{ envelope_id: string }>;
-async getSigningStatus(integrationId: string, envelopeId: string): Promise<'sent' | 'viewed' | 'signed' | 'declined' | 'expired'>;
-async downloadSignedDocument(integrationId: string, envelopeId: string): Promise<Uint8Array>;
-```
+### 5.2 Reuse, do not re-integrate
 
-Polling cadence (when no webhook): TanStack Query `useQuery({ queryKey: ['secured-signing-status', envelopeId], refetchInterval: 60_000 })` until status terminal.
+New signing surfaces (e.g. conduit offer → training-contract loop, conduit#227) reuse `documentSigner.ts` + `SignDocumentFlow.tsx` + the `@xyflow/react` flow and record an `esign_flow_id` — they MUST NOT add a vendor adapter or a vendor webhook.
 
-When webhook available: same `vendor_webhook_events` ingestion as Onboarded.
+### 5.3 Removed vendor path (do not reintroduce)
 
-### 5.3 Co-existence with Adobe Sign
+Adobe Sign / DocuSeal / Adobe PDF Services were **removed** fleet-wide on 2026-03-17 (crm7#687). `signatureRequestStore.ts` no longer wraps a vendor; there is no provider selector. The `secured_signing` / `adobe_sign` / `docusign` values are dropped from the e-signature integration scope (they remain only as historical CHECK enum values for non-signing integration rows; no signing adapter is built for them). If a regulated external signer is ever genuinely mandated, it is a fresh ADR — not the default.
 
-`crm7/src/services/signatureRequestStore.ts` already wraps Adobe Sign. Spec extends `signatureRequestStore` to dispatch by `provider` field on the request:
-
-```ts
-// signatureRequestStore.create({ provider: 'adobe' | 'secured_signing', ... })
-```
-
-UI shows a provider selector when both integrations are active. Per-integration default in `vendor_integrations.metadata.is_default_signature_provider`.
+> **AASN lodgement note:** the regulated AASN training-contract lodgement API is **RAMS** (the AASN API). RAMS lodgement is a separate, regulated step that follows the in-house e-signature of the offer/contract — it is not itself an e-signature vendor.
 
 ---
 
