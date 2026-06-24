@@ -67,3 +67,8 @@ output/playwright/
 */.playwright-cli/*
 .playwright-mcp/
 */.playwright-mcp/*
+# Visual verification screenshots + reports (§9.2 artifacts)
+*.png
+advisor-report.json
+perf-findings.md
+visual.md

@@ -47,7 +47,7 @@ Before any RLS rewrites or Zod regen against the schema, the source migration tr
 | 1.1 JWKS asymmetric keys present | ✅ DONE (pre-flight) | 2 ES256 keys |
 | 1.2 grep `getSession()` server-side, replace with `getClaims()` | ✅ DONE | conduit PR [#176](https://github.com/GaryOcean428/conduit/pull/176) (2026-05-05) moved server code to `getClaims()`; conduit PR [#259](https://github.com/GaryOcean428/conduit/pull/259) (2026-05-13) added a static-analysis test enforcing zero server-side `getSession()`. Source re-verified 2026-06-10: all remaining `getSession()` call sites are in `'use client'` files; `src/lib/supabase/middleware.ts` deliberately uses `getUser()` (Auth-server revocation check — documented in-file). |
 | 1.3 Verify Vite SPAs use `localStorage` (NEVER `sessionStorage`), `persistSession: true`, `autoRefreshToken: true` | ✅ DONE | bsuite PR [#946](https://github.com/GaryOcean428/bsuite/pull/946) (2026-05-13, closed bsuite#945) ships CI audit script `scripts/check-supabase-client-init.mjs` (requires `flowType: 'pkce'` + `persistSession: true` + `autoRefreshToken: true`; forbids `sessionStorage`/`cookieStorage`/`business_suite_auth`/`.crm7.app`). All 5 SPA clients re-verified compliant in source 2026-06-10. |
-| 1.4 Custom Access Token Hooks audit | DEFERRED (tracked) | → bsuite#1505. No audit evidence found (no PR; zero `custom_access_token` references in any repo, 2026-06-10). |
+| 1.4 Custom Access Token Hooks audit | ✅ DONE — N/A (no hook configured) | Live audit 2026-06-17 via Supabase MCP against `tuybltdrdefjblnplpqo`: **zero** `*token_hook*` / `*custom_access*` / `*access_token*` functions in `public`; no Custom Access Token Hook is configured. The 11-claim preservation check is therefore N/A — JWTs are issued by GoTrue / the BS OAuth server unmodified. Re-audit if a hook is ever added. |
 | 1.5 Production SMTP configured (not 2/hr default) | DEFERRED (tracked, operator-side via dashboard) | → bsuite#1505. Not in `operator_blockers` as of 2026-06-10; no configuration evidence. |
 
 **Estimated cycles**: 1
@@ -94,7 +94,7 @@ The following rows were verified as genuinely not implemented (no merged PR, no 
 
 | Row | Item | Why deferred |
 |---|---|---|
-| 1.4 | Custom Access Token Hooks audit | No PR; zero `custom_access_token` references in any repo. May be N/A if no hook is configured — needs a dashboard check to confirm. |
+| 1.4 | Custom Access Token Hooks audit | ✅ RESOLVED 2026-06-17 — N/A. Live Supabase MCP audit found no token hook configured (zero `*token_hook*`/`*access_token*` functions). |
 | 1.5 | Production SMTP (operator-side) | Operator dashboard action; no evidence, not in `operator_blockers`. |
 | 4.1 (remainder) | Zod 4 format sweep across the 6 app `src/` trees | bsuite#950 covered `packages/*` only; 436 occurrences remain. |
 | 4.2 | `z.discriminatedUnion()` adoption | Per-schema work, never started. |
