@@ -3170,7 +3170,7 @@
       "Follow-up crm7#1008 renamed report-delivery user-scoped edge client configuration to SUPABASE_PUBLISHABLE_KEY, clearing the parent secret-naming drift guard for the crm7#1007 submodule pointer."
     ]
   },
-  "last_refreshed": "2026-06-08T06:58:00Z",
+  "last_refreshed": "2026-06-24T05:48:41Z",
   "training_calendar_status": {
     "schema_version": "1.0",
     "added_at": "2026-06-11",
@@ -3218,11 +3218,15 @@
     "live_verified": "2026-06-17 signed-in d.crm.crm7.app \u2014 DocumentHub (Jake Morrison) + encrypted upload dialog (Visa/Work Permit \ud83d\udd12 + AES-256-GCM warning + expiry) + /documents/compliance dashboard render clean"
   },
   "product_tails_status": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "added_at": "2026-06-17",
     "closed_this_cycle": [
       "crm7#534 (training plan progress report \u2014 verified+closed)",
-      "conduit#251 (inline status change \u2014 shipped #319)"
+      "conduit#251 (inline status change \u2014 shipped #319)",
+      "conduit#221 (stage-transition automation engine \u2014 shipped, processor cron auth 200, live-verified 2026-06-24)",
+      "conduit#225 (FO assignment + 3-way invites + read-only FO portal \u2014 shipped, scope-verified signed-in prod 2026-06-24)",
+      "conduit#227 (offer e-sign + billing model Standard/ALEX48/W52/Custom + RAMS lodgement \u2014 shipped, dialog verified signed-in prod 2026-06-24)",
+      "conduit#229 (talent-pool consent + public opt-in + matcher \u2014 shipped, public consent DB-flip verified on prod 2026-06-24)"
     ],
     "bsuite_1505": "row 1.4 N/A (no token hook); \u00a74.1 Zod 4 format sweep merged across crm7#1086/throughput#226/conduit#318/BSU#545/braden#328",
     "remaining_multi_session": {
@@ -3234,12 +3238,7 @@
       "conduit": [
         "#218 public apply (M/L)",
         "#219 candidate schema (M)",
-        "#221 stage automation (L)",
-        "#225 FO assignment (M)",
-        "#227 offer e-sign (L)",
-        "#229 talent pool consent (M)",
-        "#231 handoff allowlist (S, blocked on #219)",
-        "#252 saved views (M)"
+        "#231 handoff allowlist (S, blocked on #219)"
       ],
       "R80.3": [
         "#233 GTO invoicing (L)",
@@ -3252,6 +3251,23 @@
       "\u00a74.4 safeParse audit",
       "\u00a71.5 production SMTP (operator)"
     ],
-    "note": "Remaining tails are bounded M/L features; each warrants a focused session/plan."
+    "note": "Recruitment-comms + RAMS cluster (#221/#225/#227/#229) SHIPPED + live-verified 2026-06-24. Remaining conduit tails: #218 public apply (M/L), #219 candidate schema (M), #231 handoff allowlist (S, blocked on #219).",
+    "recruitment_comms_rams_cluster_shipped": {
+      "status": "SHIPPED + signed-in prod-verified",
+      "shipped_at": "2026-06-24",
+      "conduit_main": "3f820b12",
+      "prod_deploy": "dpl_HfkbHAnmWcbvPNga9YTPzMMD1cPz (conduit.crm7.app)",
+      "build_prs": "conduit #324-#332 (merged via #333)",
+      "parent_reconcile_prs": "bsuite #1545 / #1546 / #1547",
+      "db": "migrations 20260618130000-170000 applied+verified live; 3 edge fns ACTIVE; pg_cron Vault secrets seeded (processor cron flipped fail->succeed)",
+      "live_evidence": "public consent opt-in DB flip false->true + token consumed; FO portal recruitment-only scope; offer billing/e-sign/PDF dialog",
+      "advisors": "allowlist triaged; r7_emit_stage_transition_event EXECUTE-revoke tracked in conduit#334",
+      "follow_ups": [
+        "conduit#334 r7_emit EXECUTE revoke",
+        "per-user field_officer identity link (CRM7 owns)",
+        "lodgement_outcome + match lifecycle webhook/poll",
+        "matcher cron cadence + rejection-email deliverability check"
+      ]
+    }
   }
 }
