@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 18,
       "archived": 0,
-      "main_sha": "1a80c64",
+      "main_sha": "50d2971",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "08c8ef9a",
+      "main_sha": "29e32dca",
       "vercel": "success"
     },
     {
@@ -105,7 +105,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "500f310",
+      "main_sha": "2e3e08e",
       "vercel": "success"
     },
     {
@@ -3269,10 +3269,10 @@
         "matcher cron cadence + rejection-email deliverability check"
       ],
       "post_ship_2026_06_24": {
-        "conduit#334": "DONE \u2014 revoked EXECUTE on r7_emit_stage_transition_event (advisors clean)",
-        "conduit#233": "verified done + closed \u2014 all r7_*.status CHECK constraints + matching TS enum mirrors live",
-        "matcher_bug": "FIXED (conduit#336) \u2014 matcher queried non-existent r7_jobs.qualification_area/trade -> 500 for any tenant with an active pool; now resolves the linked qualification; live-verified (match -> queue -> note, 90-day anti-spam)",
-        "fo_identity_link": "SHIPPED \u2014 crm7 field_officers.user_id (live) + conduit FO portal auto-scope (conduit#337); signed-in prod-verified (selector auto-defaults to the linked FO)",
+        "conduit#334": "DONE — revoked EXECUTE on r7_emit_stage_transition_event (advisors clean)",
+        "conduit#233": "verified done + closed — all r7_*.status CHECK constraints + matching TS enum mirrors live",
+        "matcher_bug": "FIXED (conduit#336) — matcher queried non-existent r7_jobs.qualification_area/trade -> 500 for any tenant with an active pool; now resolves the linked qualification; live-verified (match -> queue -> note, 90-day anti-spam)",
+        "fo_identity_link": "SHIPPED — crm7 field_officers.user_id (live) + conduit FO portal auto-scope (conduit#337); signed-in prod-verified (selector auto-defaults to the linked FO)",
         "open_followups": [
           "conduit#338 lodgement/match outcome lifecycle (RAMS-contract-gated)",
           "crm7#1090 FO admin-link UI + tenant-scope the loose field_officers RLS"
