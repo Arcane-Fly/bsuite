@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use `executing-plans` (or `subagent-driven-development`) to implement this plan phase-by-phase. Each phase is its own PR to conduit `development`.
 >
-> **Status: W (Working draft, 2026-06-18).** Supersedes the "operator-blocked" framing of conduit#225/#227/#229/#221 in the product-tails continuation prompt — those were **mislabelled**: the credentials are provisioned and the infrastructure exists (see §1).
+> **Status: A (Approved — SHIPPED + signed-in prod-verified 2026-06-24).** All four issues (conduit #221/#225/#227/#229) built, dual-verified, merged, and live-verified on `conduit.crm7.app`; cron Vault seeded; advisors triaged (conduit#334 done). Post-ship: matcher `r7_jobs` column bug fixed+verified (conduit#336); per-user FO identity link shipped (crm7 `field_officers.user_id` + conduit auto-scope, signed-in-verified). Open follow-ups: conduit#338 (lodgement/match lifecycle, RAMS-contract-gated), crm7#1090 (FO admin-link UI + RLS tightening). Originally superseded the "operator-blocked" framing of conduit#225/#227/#229/#221 — those were **mislabelled**: the credentials are provisioned and the infrastructure exists (see §1).
 
 **Goal:** Finish the recruitment communications + regulated-lodgement cluster in conduit — interview invites actually get delivered, pipeline stages fire automated notifications, offers get e-signed + lodged with RAMS, and rejected candidates can opt into the talent pool — by **wiring conduit into existing shared infrastructure**, not by building new vendors.
 
