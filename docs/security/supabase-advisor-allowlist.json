@@ -61,6 +61,49 @@
       "mode": "accepted",
       "reason": "INFO-level operator-side Auth pool sizing; relevant only at instance scale-up.",
       "added": "2026-06-11"
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "conduit#229 talent-community consent RPCs. r7_issue_talent_pool_consent_token mints a single-use token (re-checks caller tenant membership when auth.uid() is non-null); r7_redeem_talent_pool_consent validates a SHA-256-hashed single-use 30-day token and sets consent. SECURITY DEFINER is required to write across tenant RLS with token-gated authz inside the function. Intentional, live-verified on prod 2026-06-24.",
+      "added": "2026-06-24",
+      "objects": [
+        "r7_issue_talent_pool_consent_token(p_candidate_id uuid)",
+        "r7_redeem_talent_pool_consent(p_token text)"
+      ]
+    },
+    {
+      "lint": "anon_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "conduit#229 public talent-community opt-in. r7_redeem_talent_pool_consent is the ONLY anon-reachable write in conduit by design: it is token-gated (32-byte raw token, SHA-256 hash compare), single-use, 30-day expiry, non-enumerating, returns no PII. Equivalent to a magic-link. Live-verified on prod 2026-06-24 (consent flip + token consumed).",
+      "added": "2026-06-24",
+      "objects": [
+        "r7_redeem_talent_pool_consent(p_token text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "tracked",
+      "tracked_in": "conduit#334",
+      "reason": "conduit#221 AFTER trigger on r7_pipeline_entries \u2014 fired by the trigger, never intended as an RPC. EXECUTE will be revoked from anon/authenticated/PUBLIC via a floor-gated conduit migration (trigger execution needs no EXECUTE grant). Remove this rule when conduit#334 lands.",
+      "added": "2026-06-24",
+      "objects": [
+        "r7_emit_stage_transition_event()"
+      ]
+    },
+    {
+      "lint": "anon_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "tracked",
+      "tracked_in": "conduit#334",
+      "reason": "Same as the authenticated tracked rule \u2014 r7_emit_stage_transition_event is a trigger fn; EXECUTE revoke pending conduit#334.",
+      "added": "2026-06-24",
+      "objects": [
+        "r7_emit_stage_transition_event()"
+      ]
     }
   ]
 }
