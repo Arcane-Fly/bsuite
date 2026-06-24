@@ -82,28 +82,6 @@
       "objects": [
         "r7_redeem_talent_pool_consent(p_token text)"
       ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "tracked",
-      "tracked_in": "conduit#334",
-      "reason": "conduit#221 AFTER trigger on r7_pipeline_entries \u2014 fired by the trigger, never intended as an RPC. EXECUTE will be revoked from anon/authenticated/PUBLIC via a floor-gated conduit migration (trigger execution needs no EXECUTE grant). Remove this rule when conduit#334 lands.",
-      "added": "2026-06-24",
-      "objects": [
-        "r7_emit_stage_transition_event()"
-      ]
-    },
-    {
-      "lint": "anon_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "tracked",
-      "tracked_in": "conduit#334",
-      "reason": "Same as the authenticated tracked rule \u2014 r7_emit_stage_transition_event is a trigger fn; EXECUTE revoke pending conduit#334.",
-      "added": "2026-06-24",
-      "objects": [
-        "r7_emit_stage_transition_event()"
-      ]
     }
   ]
 }
