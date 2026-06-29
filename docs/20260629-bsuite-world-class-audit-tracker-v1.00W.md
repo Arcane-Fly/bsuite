@@ -41,7 +41,7 @@ The audit is not complete until confirmed gaps have a disposition: fixed, verifi
 | Rate/charge calculations | R80.3 | Reads CRM7 placement/training/award data; writes calculation snapshots | In progress | Verify no source-data duplication and consistent snapshot provenance. |
 | Timesheet → invoice → Xero | CRM7 + R80.3 | Approved timesheet to charge to invoice/export | In progress | Trace source data, charge rules, invoice links, and Xero adapter coverage. |
 | Subscription and billing | BSU | Tenant subscription, feature gates, Stripe billing | In progress | Verify feature gates and fail-stale behaviour across apps. |
-| Roles/RLS | BSU + all apps | UI permissions match RLS/JWT claims | In progress | Role-by-role matrix for admin, field officer, host, apprentice, RTO, finance, executive, candidate. |
+| Roles/RLS | BSU + all apps | UI permissions match RLS/JWT claims | Matrix built; 5 parity gaps logged (WC-008…WC-012) | Role-by-role matrix delivered in `20260629-bsuite-role-rls-subscription-parity-matrix-v1.00W.md`; 3 security-sensitive gaps await operator sign-off, 2 low-risk fixes await approval. |
 | Communications/calendar/tasks | CRM7 + Conduit | Every communication linked to canonical actor/entity | In progress | Inventory email/calendar/task surfaces and define/fix one-shot communications model. |
 | UI/UX consistency | All apps | World-class desktop/mobile, WCAG, D2C/corporate brand split | In progress | Browser evidence per critical journey and role; fix P0/P1 UX defects. |
 
@@ -83,6 +83,18 @@ pnpm lint:tailwind-v4
 | `pnpm build` in `crm7` after calendar entity-link update | Pass after related entity metadata added to calendar event creation; prerender optimisation skipped due missing local Chrome but command exited 0. |
 | `pnpm exec vitest run --reporter=dot src/lib/__tests__/task-communication-calendar-linking.test.ts` | Pass: 7/7 helper tests for task, communication, and calendar canonical entity-link payloads. |
 | Browser probe of `/tasks/create`, `/communications/compose`, `/calendar` | Blocked: Playwright browser binaries missing locally (`chromium_headless_shell` not installed), so live DOM screenshots could not be captured in this session. |
+| WC-007 role/RLS/subscription parity matrix | Built from code+schema inspection in `20260629-bsuite-role-rls-subscription-parity-matrix-v1.00W.md`; three role layers (platform / tenant+portal / GTO) mapped to UI gates, RLS helpers, and `module_access` gate with `file:line` anchors. |
+| Role-by-role browser/JWT-decode smoke | Deferred to Batch E (Playwright binaries unavailable). |
+
+## Role/RLS/subscription parity findings (WC-007 → WC-008…WC-012)
+
+| ID | Priority | Finding | Disposition |
+| --- | --- | --- | --- |
+| WC-008 | P2 | `is_platform_admin()` IN-list includes `'super_admin'`, which the `profiles.platform_role` CHECK forbids — dead branch (`is_super_admin` boolean covers it). | Low-risk fix proposed (drop dead literal); awaiting approval. |
+| WC-009 | P1 | UI privilege-bypass sets diverge: crm7 `{developer,tester}`, conduit `{developer,tester,platform_admin}`, DB `{is_super_admin,platform_admin,developer}`. | Security-sensitive; canonical shared predicate proposed; awaiting operator sign-off. |
+| WC-010 | P1 | App code keys host portal on `host_employer`, but DB `portal_role` CHECK only allows `host_contact` → host contacts mis-route to default `viewer`. | Security-sensitive; align token suite-wide (recommend app→`host_contact`); awaiting operator sign-off. |
+| WC-011 | P2 | DB `portal_role='worker'`/`'viewer'` have no app `PortalRole` union member or UI route; `usePortalContext` cast mistypes them. | Low-risk fix proposed (extend union + route `worker`); awaiting approval. |
+| WC-012 | P1 | Conduit RBAC reads `user_tenants.role` (owner/admin/manager/staff/guest) not `portal_role`, so its `candidate`/`employer`/`viewer` mappings are unreachable. | Security-sensitive; switch Conduit to `portal_role` (match CRM7) or document intent; awaiting operator sign-off. |
 
 ## Change log
 
@@ -92,3 +104,4 @@ pnpm lint:tailwind-v4
 - **2026-06-29:** Phase 3 Batch B continues: CRM7 communications compose now captures canonical recipient_type / recipient_id links for linked outbound messages.
 - **2026-06-29:** Phase 3 Batch B continues: CRM7 calendar event creation now embeds canonical entity references in event descriptions for traceability.
 - **2026-06-29:** Phase 3 helper extraction: CRM7 canonical-link payload helpers moved into `src/lib/communications.ts` and `src/lib/calendar.ts`, with unit coverage for task/communication/calendar payload behavior passing.
+- **2026-06-29:** Batch D (WC-007): role/RLS/subscription parity matrix built from code+schema inspection; documents three role layers and surfaces five new parity gaps (WC-008…WC-012), three of which are security-sensitive and await operator sign-off before code changes.
