@@ -111,7 +111,10 @@ export const config = {
 
 ### Next.js 16+: `proxy.ts`
 
-Renamed for clarity - same capabilities, different names:
+The `middleware` filename and named export are deprecated and renamed to
+`proxy` to clarify the network-boundary/routing focus. The `config` export
+name is unchanged; only its property names change (e.g.
+`skipMiddlewareUrlNormalize` → `skipProxyUrlNormalize`).
 
 ```ts
 // proxy.ts (root of project)
@@ -123,17 +126,25 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const proxyConfig = {
+// Note: still exported as `config` (not `proxyConfig`)
+export const config = {
   matcher: ['/dashboard/:path*', '/api/:path*'],
 };
 ```
 
-| Version | File | Export | Config |
-|---------|------|--------|--------|
-| v14-15 | `middleware.ts` | `middleware()` | `config` |
-| v16+ | `proxy.ts` | `proxy()` | `proxyConfig` |
+| Version | File | Export | Config | Runtime |
+|---------|------|--------|--------|---------|
+| v14-15 | `middleware.ts` | `middleware()` | `config` | edge or nodejs |
+| v16+ | `proxy.ts` | `proxy()` | `config` | nodejs only |
 
-**Migration**: Run `npx @next/codemod@latest upgrade` to auto-rename.
+**Edge runtime caveat**: `proxy` runs on the Node.js runtime only and the
+`runtime` option cannot be set (it throws). If you need the edge runtime,
+keep using `middleware.ts`. Type imports also rename: `NextMiddleware` →
+`NextProxy`, `MiddlewareConfig` → `ProxyConfig`.
+
+**Migration**: Run `npx @next/codemod@latest middleware-to-proxy` (or
+`upgrade`) to auto-rename the file, function, config properties, and type
+imports.
 
 ## File Conventions Reference
 

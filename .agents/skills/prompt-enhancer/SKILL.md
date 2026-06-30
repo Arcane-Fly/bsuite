@@ -144,7 +144,7 @@ Example input (condensed from a real Apr-23 turn):
 > and memory sub-agents to every skill, and demo the improvement skill on
 > this prompt."
 
-Tier: **Standard** (7 workstreams, mixed stack, no prod/security stakes).
+Tier: **Heavy** (7 workstreams, mixed stack — 6+ topics forces Heavy).
 
 Pass 1 output: 7-item decomposition, 4 clarifying questions via
 `AskUserQuestion` (attachment model; consolidation aggressiveness;
@@ -161,6 +161,18 @@ guidance (counter: read to end, cite line ranges); silo contamination
 plugin-namespace mirrors (counter: leave `superpowers:*` / `plugin-dev:*`
 alone); naively building 202 agent files (counter: shared pair + harness
 hook).
+
+Pass 4 output (Heavy only — red-team): `multi-agent-red-team-planning`
+roles surface a Security finding (the OAuth-2.1-over-JWT switch must not
+drop the JWKS rotation path), a Reliability finding (skill consolidation
+risks orphaning references other skills still link to), and a Code-Quality
+finding (the memory sub-agent hook needs an idempotency guard). Counters
+folded into the refined prompt.
+
+Pass 5 output (Heavy only — user confirmation): surfaces the two material
+trade-offs for sign-off — (a) consolidation aggressiveness (merge vs.
+alias overlapping skills) and (b) whether to gate the OAuth switch behind
+a feature flag — before the executor acts.
 
 Refined prompt lists skills to use (`skill-creator`,
 `multi-agent-red-team-planning`, `best-practice-research`,

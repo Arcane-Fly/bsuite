@@ -3,12 +3,6 @@ name: vercel-next-cache-components
 description: Next.js 16 Cache Components - PPR, use cache directive, cacheLife, cacheTag, updateTag
 ---
 
-> **⚠️ OKLCH Color Enforcement**: All color values in this skill MUST use the
-> `oklch()` color space. OKLCH provides perceptually uniform lightness, a wider
-> P3 gamut (20–30% more vivid), and better gradient interpolation than hex/HSL/RGB.
-> Never use hex (`#rrggbb`), `hsl()`, or `rgb()` for color definitions.
-> Syntax: `oklch(L C H)` where L=lightness 0–1, C=chroma 0–0.4, H=hue 0–360.
-
 
 
 # Cache Components (Next.js 16+)
