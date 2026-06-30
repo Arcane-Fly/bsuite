@@ -152,6 +152,18 @@ Every project's `docs/` folder **must** have a `README.md` index listing all doc
 
 Update this index whenever a document is added or its status changes.
 
+### Naming Exemptions
+
+The date-prefixed pattern above does not apply to canonical navigation and status docs, including:
+
+- `ADR-NNNN-*.md` architecture decision records
+- `README.md`
+- `INDEX.md`
+- `STATUS.md`
+- `CONSISTENCY-REPORT.md`
+- `STACK-AUDIT.md`
+- other root-level mirror/index docs whose purpose is navigation or status mirroring
+
 ### Documentation Requirements
 
 - **New features** must be documented in `docs/` before merging
