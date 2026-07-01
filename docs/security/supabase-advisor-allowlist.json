@@ -47,7 +47,9 @@
         "user_has_org_access(p_user_id uuid, p_tenant_id uuid)",
         "delete_organization(p_tenant_id uuid, p_confirm_name text)",
         "get_org_deletion_preview(p_tenant_id uuid)",
-        "save_tenant_navigation(p_app_scope text, p_sections jsonb)"
+        "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
+        "fn_publish_page(p_draft_id uuid)",
+        "fn_rollback_page(p_page_id uuid)"
       ],
       "mode": "accepted",
       "reason": "RLS helper + intentional client-RPC class. These MUST stay executable by authenticated: RLS policies evaluate the helpers in the caller's context, and a prior revoke pass broke production RLS (see crm7 20260521024707/20260527022039 hotfix_restore_rls_helper_grants history). Operator directive 2026-06-11: do NOT blanket-fail this class until replaced by a proven alternative. A SECURITY DEFINER function NOT on this list IS a failure - the list is exhaustive, not a category waiver.",
