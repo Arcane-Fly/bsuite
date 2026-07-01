@@ -55,3 +55,25 @@
 3. Close CRM7 `#1090` because it is both security/RLS and UX surface area.
 4. Reconcile the world-class audit tracker Batch E rows after the already-completed cross-app auth and role/RLS dev-deploy validation evidence.
 5. Keep production promotion blocked until the current `d.*` visual verification checklist is complete and documented.
+
+## Execution Log — 2026-07-01 (post-audit build session)
+
+Acting on the remaining-work list above.
+
+### Closed (verified shipped)
+- **conduit intake chain #219 / #218 / #231** — CLOSED. Already merged via PR #339/#340 (2026-06-29); re-verified against the live Supabase catalog (`r7_candidates` RLS + columns + policies, `apprentice_handoff_tokens`, `r7_privacy_notice_versions`). Two stale `feat/r2-*` source branches pruned. (Closure Target #2 ✓)
+- **crm7 #1090 (FO admin link + tenant-scope `field_officers` RLS)** — CLOSED with **§12.3 deployed evidence**: signed in as the test account on `d.crm.crm7.app/field-officers/admin-link`; page renders tenant-scoped (empty-state for a tenant with no FOs, no cross-tenant leak, no access-denied for the authorised user). The over-broad `authenticated_manage_field_officers` policy (a real cross-tenant read/write leak) is removed live and replaced by tenant-scoped SELECT + owner/admin write. (Closure Target #3 ✓)
+
+### Shipped to `development` (code merged + pushed; migrations already live on the shared DB), §12.3 pending deploy fix
+- **throughput** — EntitySelector (ProfileSelector) + Cmd+K palette.
+- **R80.3 #233** — per-host invoice runs (schema + service + 728 tests).
+- **braden #264–#266** — visual layout editor (DnD undo/redo bug fixed; 151 tests).
+- **business-suite-unified** — self-serve org deletion RPC + UI + `save_tenant_navigation` (651 tests).
+
+These four were built by background agents that died before committing; their work was salvaged, real bugs fixed (react-hooks refs / set-state-in-effect), verified via pre-commit (lint + typecheck + tests), and their already-applied migrations committed for source↔DB lockstep.
+
+### ⚠️ Operator-action blocker (pre-existing)
+`throughput` / `R80.3` / `braden` / `business-suite-unified` **`development` Vercel deploys auto-cancel** (throughput/R80/braden) or **do not fire** (BSU) — confirmed by a canceled re-trigger and by Ona's own throughput commit canceling 8h before this session. crm7 deploys fine, so it is per-project Vercel config (Ignored Build Step / connected-branch settings), not a team limit. **No `development` work has reached those four `d.*` domains for 8+ hours.** §12.3 for those four is blocked until the Vercel config is fixed.
+
+### Branch backlog reconciled
+~104 stale branches + 27 leftover parallel-agent worktrees removed (every one had a merged PR = already integrated; the "would-revert-if-merged" ghosts). All repos are now clean (1 worktree each, on `development`). **3 genuinely-unmerged branches remain for a land/abandon decision:** `crm7/feat/ws4-xero-payroll-export-20260604` (blocked Xero cluster), `crm7/fix/dashboard-perf-20260605`, `business-suite-unified/fix/developer-pagegrid-20260606`.
