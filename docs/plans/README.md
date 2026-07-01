@@ -27,6 +27,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 | `20260513-bsuite-consolidated-hardening-v1.00W.md` | W | Consolidated hardening multi-cycle plan (open tails tracked via bsuite#1505 et al.) |
 | `20260521-reports-w2-uplift-implementation-v1.00W.md` | W | Reports W2 uplift — Phase 1 shipped (crm7 PRs #840–#844 merged 2026-05-22); Phases 3a/3b/4/6/7 outstanding |
 | `20260609-production-readiness-next-steps-plan-v1.00W.md` | W | **Umbrella production-readiness plan** — package consumer rollout, visual smoke triage, TCID/WAAMS, placement identity bridge, block-release calendar, workstreams E–H; remains active until bsuite#1506, crm7#1066, storage phases, and E–H tails close |
+| `20260701-docs-plans-closure-audit-v1.00W.md` | W | Current closure audit across parent + six submodules; records archive candidates, stale status corrections, and remaining work by repo |
 
 ### Completed Plans (re-marked A, retained in place)
 

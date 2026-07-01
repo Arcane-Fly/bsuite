@@ -1,6 +1,6 @@
 # Plans / Tracking — STATUS
 
-**Last updated:** 2026-06-11b (execution-order items 1–2 closed; previously: closure-audit truth-up — see docs/plans/20260611-docs-roadmap-closure-audit-v1.00A.md)
+**Last updated:** 2026-07-01 (post-Throughput display-order DB apply + docs/plans closure sweep; see `20260701-docs-plans-closure-audit-v1.00W.md`)
 
 This is a quick-reference status board for the cross-app tracking issues
 in the parent `bsuite` repo. It complements `docs/OUTSTANDING.md`
@@ -22,7 +22,7 @@ dependency status).
 |-------|-------|--------|-------|
 | [#208](https://github.com/GaryOcean428/bsuite/issues/208) | P0 WCAG: Radix Dialog/Sheet DialogTitle | ✅ Done | All 6 submodules verified — see `CONSISTENCY-REPORT.md`. BSU PR #285 fixed the only finding. |
 | [#209](https://github.com/GaryOcean428/bsuite/issues/209) | P0 WCAG: Login/register autoComplete | ✅ Done | Audit on 2026-05-04 found all input-bearing forms compliant. The other three apps redirect to BSU. |
-| [#211](https://github.com/GaryOcean428/bsuite/issues/211) | P1 Deps: TypeScript 6.0 migration EPIC | 🟡 Tracked | Plan: `20260504-typescript-6-migration-evaluation-v1.00W.md`. Six child issues filed. Execution is gated to the 2026-Q3 maintenance window pending TS 6.0 latest + typescript-eslint compatibility. |
+| [#211](https://github.com/GaryOcean428/bsuite/issues/211) | P1 Deps: TypeScript 6.0 migration EPIC | ✅ Done | Closed 2026-05-12. Plan is retained in `README.md` Completed Plans as `20260504-typescript-6-migration-evaluation-v1.00A.md`; all app/package manifests now resolve TypeScript 6-compatible stacks. |
 | [#635](https://github.com/GaryOcean428/bsuite/issues/635) | feat(uplift): BSuite Unified Design Language rollout — 9-wave loop tracker | 🔄 In progress | W0 + W1 done. W4 scoping landed (`bsuite#681`), W4/W6 BSU impl PRs pending merge (`BSU#376`, `BSU#375`). W2/W3/W5/W7 active or queued; W8 remains blocked on W7. Canonical tracker: `docs/plans/uplift/INDEX.md`. |
 | [#1237](https://github.com/GaryOcean428/bsuite/issues/1237) | Reports W2 Uplift — Task 6 RPC schema-gap closure | 🔄 In progress | Tasks 6.1-6.6 shipped via `crm7#956` (`report_rejected_timesheets` + pgTAP + grant hardening), `crm7#957` (`report_hours_by_work_type` from entries JSONB), `crm7#958` (`report_pay_item_group_hours` hours-first pay item group mapping), `crm7#959` (`report_pay_items_by_employee` from invoice line items), `crm7#960` (`report_consultant_kpi` from assigned people/timesheets/invoice lines with selected-tenant field-officer gating), `crm7#985` (`report_coinvest_lsl` from `leave_balances.long_service` with admin/gto_admin gating), `crm7#986` (report delivery timezone/retry/error reliability hardening), and `bsuite#1395` (Task 9 dashboard/outstanding-work links). Remaining Reports W2 work is deferred Task 3a/4 report-list/stepper uplift plus follow-on scheduling UI. Plan: `20260521-reports-w2-uplift-implementation-v1.00W.md`. |
 | [#1408](https://github.com/GaryOcean428/bsuite/issues/1408) | chore(shared): publish `@bsuite/charge-calc` 0.5.0 and bump consumers | ✅ Done | Closed 2026-06-05. `@bsuite/charge-calc@0.5.0` was published by the `bsuite#1424` workflow; `npm view @bsuite/charge-calc version` returns 0.5.0; CRM7#1010 and R80.3#303 consume `^0.5.0` on `development` with frozen installs, typechecks, and tests passing. |
