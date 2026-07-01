@@ -1,6 +1,6 @@
 ---
 name: bsuite-brand-system
-description: "Enforce correct brand styling across all BSuite projects. Two distinct brands exist: D2C Neon Electric (crm7, conduit, business-suite-unified, R80.3) and Corporate (braden.com.au). Use when writing UI components, reviewing styling, adding CSS, or touching any visual element. NEVER mix brands."
+description: "Enforce correct brand styling across all BSuite projects. Two distinct brands exist: D2C Neon Electric (crm7, conduit, business-suite-unified, R80.3, throughput) and Corporate (braden.com.au). Use when writing UI components, reviewing styling, adding CSS, or touching any visual element. NEVER mix brands."
 ---
 
 > **⚠️ OKLCH Color Enforcement**: All color values in this skill MUST use the
@@ -19,7 +19,7 @@ BSuite has **two distinct brands**. Every UI change must use the correct one.
 
 | Brand | Projects | Primary | Accent | Dark BG |
 |-------|----------|---------|--------|---------|
-| **D2C Neon Electric** | crm7, conduit, business-suite-unified, R80.3 | Electric Blue `oklch(0.546 0.215 262.9)` | Cyan `oklch(0.769 0.132 191.7)` | Deep Navy `oklch(0.13 0.02 260)` |
+| **D2C Neon Electric** | crm7, conduit, business-suite-unified, R80.3, throughput | Electric Blue `oklch(0.546 0.215 262.9)` | Cyan `oklch(0.769 0.132 191.7)` | Deep Navy `oklch(0.13 0.02 260)` |
 | **Corporate Braden** | braden (braden.com.au) | Braden Red `oklch(0.488 0.170 17.6)` | Braden Gold `oklch(0.769 0.096 90.9)` | Near Black `oklch(0.04 0 0)` |
 
 <HARD-GATE>
@@ -58,6 +58,7 @@ Brand Identity (per-project):
   BSU:      --app-primary: oklch(0.541 0.247 293.0)  --app-accent: oklch(0.709 0.159 293.5)
   Conduit:  --app-primary: oklch(0.596 0.127 163.3)  --app-accent: oklch(0.773 0.153 163.3)
   R80.3:    --app-primary: oklch(0.666 0.157 58.3)  --app-accent: oklch(0.837 0.164 84.4)
+  Throughput: --app-primary: oklch(0.546 0.215 262.9) --app-accent: oklch(0.769 0.132 191.7)
 ```
 
 ### Semantic Tokens (Use These, Not Raw Colors)
@@ -313,4 +314,5 @@ When reviewing or writing UI code:
 | conduit | postcss + globals | — | `conduit/src/app/globals.css` |
 | BSU | `business-suite-unified/tailwind.config.js` | — | `business-suite-unified/src/index.css` |
 | R80.3 | `R80.3/tailwind.config.js` | `R80.3/src/styles/theme.css` | — |
+| throughput | `throughput/tailwind.config.js` | — | `throughput/src/index.css` |
 | braden | `braden/tailwind.config.ts` | — | `braden/styles/globals.css` |
