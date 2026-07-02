@@ -286,6 +286,9 @@ export function BrandingProvider({
   const [isLoading, setIsLoading] = useState<boolean>(brand !== 'braden')
   const [error, setError] = useState<Error | null>(null)
   const channelRef = useRef<ReturnType<SupabaseClient['channel']> | null>(null)
+  // True when the last fetch was skipped (or failed) for lack of a session —
+  // the SIGNED_IN listener uses this to refetch exactly once when auth lands.
+  const needsAuthedRefetchRef = useRef<boolean>(false)
 
   // ── Braden short-circuit ──────────────────────────────────────────────────
   // Braden corporate uses static CSS from @bsuite/theme/braden-css — no runtime
@@ -307,6 +310,18 @@ export function BrandingProvider({
     setIsLoading(true)
     setError(null)
     try {
+      // branding_json_for_tenant is granted to `authenticated` only — calling
+      // it in anon context is a guaranteed PostgREST 401 (42501). Consumers
+      // can mount this provider before session hydration completes (or on
+      // genuinely public pages); skip the RPC and let defaults stand. The
+      // SIGNED_IN listener below refetches once auth arrives.
+      const { data: sessionData } = await supabaseClient.auth.getSession()
+      if (!sessionData.session) {
+        needsAuthedRefetchRef.current = true
+        setIsLoading(false)
+        return
+      }
+      needsAuthedRefetchRef.current = false
       const { data, error: rpcError } = await supabaseClient.rpc('branding_json_for_tenant')
       if (rpcError) throw new Error(rpcError.message)
       const resolved: TenantBranding | null = data ?? null
@@ -336,6 +351,20 @@ export function BrandingProvider({
   useEffect(() => {
     void fetchBranding()
   }, [fetchBranding])
+
+  // Refetch once when a session arrives after an anon-skipped mount (session
+  // hydration race). Deferred via setTimeout: onAuthStateChange callbacks run
+  // while supabase-js holds the auth lock, and fetchBranding calls
+  // getSession() — invoking it inline would self-deadlock (see the suite-wide
+  // "never await supabase calls inside onAuthStateChange" rule).
+  useEffect(() => {
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event: string) => {
+      if (event === 'SIGNED_IN' && needsAuthedRefetchRef.current) {
+        setTimeout(() => { void fetchBranding() }, 0)
+      }
+    })
+    return () => { subscription.unsubscribe() }
+  }, [supabaseClient, fetchBranding])
 
   // Subscribe to Realtime tenant row changes
   useEffect(() => {
