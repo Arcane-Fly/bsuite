@@ -877,13 +877,13 @@
       "source": "in-repo",
       "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
       "status": "in_progress",
-      "phase": "W2a-applied-W2b-running",
+      "phase": "W2-quote-lifecycle-live",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "W2a APPLIED+LIVE-VERIFIED: boot_assessments (5 RLS policies) + charge_rate_audit_log (append-only) live (migs 20260704060000/060100, run 28673764091, advisors 0 new/2 removed); dead quotes cluster + award cache service deleted (crm7 72c0fe25, 4392/4434 tests); BOOT gate now enforceable. crm7#1109/#1110 filed. W2b agent running: quote-send email (outbox pattern + PDF + signing link) + e-sign generalized to quotes.",
+      "next_step": "W2 quote lifecycle LIVE: BOOT gate enforceable (boot_assessments+audit_log, 72c0fe25); quote SEND email + in-house React E-SIGN (charge-rate-quote-dispatch fn + /quotes/sign/:token + 2 tokened SECDEF RPCs, 8eb37252, mig 20260704090000 live). §12.3 W-live pass fixed 4 blocking bugs incl Edit-Page FAB dead on ~65 routes (b754e94c). 2 real bugs queued: AI add-widget client dispatch never fires; organization_members RLS blocks host picker. Next: R8 BULK port + AI-dispatch fix, then W3 propagation/requote.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/72c0fe251f945dd7c0576c42b8a9cb039c150f53"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/b754e94c"
     }
   ],
   "operator_blockers": [
