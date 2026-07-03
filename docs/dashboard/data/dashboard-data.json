@@ -877,13 +877,13 @@
       "source": "in-repo",
       "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
       "status": "in_progress",
-      "phase": "W3-propagation-requote",
+      "phase": "W3-done-W4-timesheets",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "Add-element renders REAL rows both AI+UI (crm7 f295200f, #1113 CLOSED, live-verified 12 placement + 9 employer rows). W3 agent running: charge_rate_snapshots (calc-input audit, gap item 9) + approved-quote propagation to placement/apprentice + requote-on-rise draft trigger + notices. Filed crm7#1114 (hostSite dead catalog entry). After W3: consolidated operator check-in (iter ~8/10), then W4 timesheets, W5 billing/Xero, W6 portal seed, W7 conduit/Jodie.",
+      "next_step": "W3 SHIPPED+LIVE-VERIFIED: charge_rate_snapshots (calc-input audit, 3 RLS policies) + placement propagation trigger (ENABLE ALWAYS) + apply_charge_rate_quote_to_placement RPC + requoteOnRiseService (draft+notices), migs 20260704130000/140000 applied+recorded, worker_id FK fixed→people, advisors clean (trigger EXECUTE revoked). W0-W3 complete. Next: W4 timesheets loop (fill→host approve→FO/GTO notices, leave_requests, hour classes).",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/f295200f"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/a6d5b8a0"
     }
   ],
   "operator_blockers": [
