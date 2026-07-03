@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W2-quote-lifecycle-live",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "W2 quote lifecycle LIVE: BOOT gate enforceable (boot_assessments+audit_log, 72c0fe25); quote SEND email + in-house React E-SIGN (charge-rate-quote-dispatch fn + /quotes/sign/:token + 2 tokened SECDEF RPCs, 8eb37252, mig 20260704090000 live). §12.3 W-live pass fixed 4 blocking bugs incl Edit-Page FAB dead on ~65 routes (b754e94c). 2 real bugs queued: AI add-widget client dispatch never fires; organization_members RLS blocks host picker. Next: R8 BULK port + AI-dispatch fix, then W3 propagation/requote.",
+      "next_step": "W2 quote lifecycle LIVE (BOOT gate + send + e-sign). W2c: R80.3 labour-hire/casual now flows through the existing 'Calculate All' bulk pipeline (gap-map 'no bulk' premise was stale — ApprenticeManager+ComparativeView already existed); §9.1 single==bulk equivalence proven exact vs real engine (R80.3 8359c09, 789 tests). Filed R80.3#330 (vacuous typecheck CI gate). aifix agent (crm7#1112 AI dispatch) running. Next: W3 rate propagation + requote-on-rise.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/b754e94c"
+      "evidence_url": "https://github.com/GaryOcean428/R80.3/commit/8359c09"
     }
   ],
   "operator_blockers": [
