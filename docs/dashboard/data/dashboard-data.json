@@ -877,13 +877,13 @@
       "source": "in-repo",
       "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
       "status": "in_progress",
-      "phase": "W6-done-W7-onboarding",
+      "phase": "W0-W7-built-operator-review",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "W6 SHIPPED+LIVE-VERIFIED: DEEPEST fix — PortalScopeGate permanently denied EVERY signed-in user on all 7 portal pages (BSU dropped inject_portal_scope_claims → tokens always carry scope → hookPending never fired); fixed usePortalScopes to check portal:-prefixed scope. Both portals render post-fix (host shows 12 apprentices real data). Portal code fixes (columns, host resolution) + test seed (mig 20260704170000 applied: person→auth.uid, 3 timesheets, 2 payroll, placement). 84 tests, advisors clean. W0-W6 complete. Last: W7 conduit+Jodie onboarding/screening/triage.",
+      "next_step": "FULL GTO CYCLE BUILT (W0-W7). W7: conduit applicant screening/triage/correspondence (jodie/Scout) + fixed real bug — AI ToolContext missing caller JWT → all r7_* tools RLS-blocked in prod (conduit#355 closed). Onboarding bridge verified. 40+964 tests. Loop PAUSED for operator review. Open follow-ups: crm7#1109/#1110/#1111/#1114, R80.3#330, BSU email-dispatcher 500, placements.employer_id=NULL data quality, no leave-accrual engine, no live Xero/conduit Playwright pass (creds/browser gaps).",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/7103b386"
+      "evidence_url": "https://github.com/GaryOcean428/conduit/commit/9f56d98"
     }
   ],
   "operator_blockers": [
