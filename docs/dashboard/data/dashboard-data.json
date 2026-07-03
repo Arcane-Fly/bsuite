@@ -866,7 +866,7 @@
       "next_step": "Chunk 2: mount WidgetPalette w/ inline resolveOrCreateEntity, RelatedEntityCardWidget, AI authoring tools, Page-Tools nudge. Foundations SHIPPED: crm7 e3b80520+4198436f; migrations 20260703080000/090000 applied+live-verified",
       "severity": "high",
       "category": "architecture",
-      "issue": null,
+      "issue": "business-suite-unified#303",
       "evidence_url": "https://github.com/GaryOcean428/bsuite/commit/db962cd"
     }
   ],
