@@ -877,13 +877,13 @@
       "source": "in-repo",
       "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
       "status": "in_progress",
-      "phase": "W2-quote-lifecycle-live",
+      "phase": "W3-propagation-requote",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "W2 quote lifecycle LIVE. AI-authoring: add_page_widget now fires client CustomEvent + card appears (crm7 7c0a0b0, #1112 CLOSED, live-verified). W2c: R80.3 labour-hire/casual in bulk calc (8359c09, §9.1 exact). Filed crm7#1113 (added card renders blank — catalog key vs table-name mismatch, both AI+UI paths) — blankfix agent running w/ live verify. R80.3#330 (vacuous typecheck). Next: W3 rate propagation + requote-on-rise.",
+      "next_step": "Add-element renders REAL rows both AI+UI (crm7 f295200f, #1113 CLOSED, live-verified 12 placement + 9 employer rows). W3 agent running: charge_rate_snapshots (calc-input audit, gap item 9) + approved-quote propagation to placement/apprentice + requote-on-rise draft trigger + notices. Filed crm7#1114 (hostSite dead catalog entry). After W3: consolidated operator check-in (iter ~8/10), then W4 timesheets, W5 billing/Xero, W6 portal seed, W7 conduit/Jodie.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/7c0a0b0"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/f295200f"
     }
   ],
   "operator_blockers": [
