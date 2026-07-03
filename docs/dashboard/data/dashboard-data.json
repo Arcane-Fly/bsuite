@@ -861,13 +861,13 @@
       "source": "in-repo",
       "path": "docs/plans/20260703-unified-authoring-surface-plan-v1.00D.md",
       "status": "in_progress",
-      "phase": "phase-1",
+      "phase": "phase-1-chunk-3",
       "owner": "claude-code",
-      "next_step": "Chunk 2: mount WidgetPalette w/ inline resolveOrCreateEntity, RelatedEntityCardWidget, AI authoring tools, Page-Tools nudge. Foundations SHIPPED: crm7 e3b80520+4198436f; migrations 20260703080000/090000 applied+live-verified",
+      "next_step": "Chunk 3 IN PROGRESS (AI event wiring, live FK bind map, SchemaFieldAdder mount, live d.crm verify). SHIPPED: foundations e3b80520/4198436f (migrations 20260703080000/090000 live); chunk 2 f3f7fa27 (WidgetPalette in-context create/add/bind, RelatedEntityCardWidget, 4 AI authoring tools, 132/132 tests); Xero DB-truth 63412b6f; StatCard fill a99610fc; page-builder 0.4.3 on all 6 apps",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/bsuite/commit/db962cd"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/f3f7fa2712d2145cc5d0cf4eda481e7dde9b17df"
     }
   ],
   "operator_blockers": [
