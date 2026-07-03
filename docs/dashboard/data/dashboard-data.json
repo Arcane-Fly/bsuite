@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W2-quote-lifecycle-live",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "W2 quote lifecycle LIVE (BOOT gate + send + e-sign). W2c: R80.3 labour-hire/casual now flows through the existing 'Calculate All' bulk pipeline (gap-map 'no bulk' premise was stale — ApprenticeManager+ComparativeView already existed); §9.1 single==bulk equivalence proven exact vs real engine (R80.3 8359c09, 789 tests). Filed R80.3#330 (vacuous typecheck CI gate). aifix agent (crm7#1112 AI dispatch) running. Next: W3 rate propagation + requote-on-rise.",
+      "next_step": "W2 quote lifecycle LIVE. AI-authoring: add_page_widget now fires client CustomEvent + card appears (crm7 7c0a0b0, #1112 CLOSED, live-verified). W2c: R80.3 labour-hire/casual in bulk calc (8359c09, §9.1 exact). Filed crm7#1113 (added card renders blank — catalog key vs table-name mismatch, both AI+UI paths) — blankfix agent running w/ live verify. R80.3#330 (vacuous typecheck). Next: W3 rate propagation + requote-on-rise.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/R80.3/commit/8359c09"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/7c0a0b0"
     }
   ],
   "operator_blockers": [
