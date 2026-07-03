@@ -868,6 +868,22 @@
       "category": "architecture",
       "issue": "business-suite-unified#303",
       "evidence_url": "https://github.com/GaryOcean428/crm7/commit/d69283e26910"
+    },
+    {
+      "id": "p-bsuite-12",
+      "title": "GTO end-to-end cycle (enquiry→quote→e-sign→timesheets→billing→portals→onboarding)",
+      "repo": "bsuite",
+      "scope": "parent",
+      "source": "in-repo",
+      "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
+      "status": "in_progress",
+      "phase": "W1-done-W2-db-foundations",
+      "owner": "claude-code (loop-engineering)",
+      "next_step": "Gap map SHIPPED (cc535b8, live-verified): charge_rate_quotes live but quotes/quote_line_items dead code; boot_assessments+charge_rate_audit_log+award_rate_cache MISSING live (BOOT gate silently disabled). W2a agent: floor-gated migrations + dead-path resolution + awardRateCacheService repoint. Then quote email+e-sign wiring, R8 bulk port.",
+      "severity": "high",
+      "category": "architecture",
+      "issue": "business-suite-unified#303",
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/commit/cc535b8"
     }
   ],
   "operator_blockers": [
