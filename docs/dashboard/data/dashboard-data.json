@@ -877,13 +877,13 @@
       "source": "in-repo",
       "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
       "status": "in_progress",
-      "phase": "W4-done-W5-billing",
+      "phase": "W5-done-W6-portals",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "W4 SHIPPED+LIVE-VERIFIED: timesheet approval loop + notices (fill→host approve/reject→FO/GTO, app_notifications) + leave_requests workflow (5 RLS policies, GTO/FO approver) + hour classes (leave/non_billable/training split fixed). Fixed real live bug: gtoApprove 400'd on missing approver_id/overtime_approved cols. Migs 20260704150000/150100/150200 applied+recorded, advisors 0 new/2 removed. W0-W4 complete. Next: W5 billing (R80 invoice_runs Xero push + direct send from billable hours).",
+      "next_step": "W5 SHIPPED+LIVE-VERIFIED: R80.3 invoice_runs from approved-timesheet billable hours × charge_rate (host-grouped, Standard/ALEX48/W52) + Xero push via shared xero-invoice-submit edge fn (live xero_connections gated) + direct CSV/PDF send. Fixed 2 real bugs (line_type enum, apprentice_id legacy FK). Mig 20260704160000 (renamed to dodge cross-submodule version collision w/ crm7's 100000). 22 §9.1 tests. W0-W5 complete. Next: W6 portals live-data (worker+host portals exist; verify people.contact_id→auth.users linkage + §9.2 live pass).",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/fe3d33a1"
+      "evidence_url": "https://github.com/GaryOcean428/R80.3/commit/6895bd5"
     }
   ],
   "operator_blockers": [
