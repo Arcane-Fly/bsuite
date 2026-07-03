@@ -852,6 +852,22 @@
       "next_step": "HIGH (next sprint): ARIA labels on buttons (4h), alt text on images (2h), console.log → logger.ts (8h), form labels (4h). MEDIUM (this month): focus trap for modals (4h), aria-live regions (3h), color contrast audit (6h), keyboard shortcuts (8h). LOW (backlog): screen reader testing (8h), visual regression tests (8h). Throughput #100 covers React hooks; suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not enumerate these throughput-specific items.",
       "severity": "P2",
       "category": "Outstanding Item"
+    },
+    {
+      "id": "p-bsuite-11",
+      "title": "Unified in-context authoring surface (Page Builder + Schema Builder + Edit Page + Page Tools)",
+      "repo": "bsuite",
+      "scope": "parent",
+      "source": "in-repo",
+      "path": "docs/plans/20260703-unified-authoring-surface-plan-v1.00D.md",
+      "status": "in_progress",
+      "phase": "phase-1",
+      "owner": "claude-code",
+      "next_step": "Chunk 2: mount WidgetPalette w/ inline resolveOrCreateEntity, RelatedEntityCardWidget, AI authoring tools, Page-Tools nudge. Foundations SHIPPED: crm7 e3b80520+4198436f; migrations 20260703080000/090000 applied+live-verified",
+      "severity": "high",
+      "category": "architecture",
+      "issue": null,
+      "evidence_url": "https://github.com/GaryOcean428/bsuite/commit/db962cd"
     }
   ],
   "operator_blockers": [
