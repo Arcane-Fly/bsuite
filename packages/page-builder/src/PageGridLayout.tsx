@@ -377,46 +377,24 @@ export function PageGridLayout({
   const resetCancelButtonRef = useRef<HTMLButtonElement>(null);
   const resetConfirmButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Collapsed state for the sticky editor banner. On tall pages the expanded
-  // banner (columns + full Layers list + actions) can obscure most of the
-  // viewport while the user is arranging cards below it (operator-reported).
-  // Collapsing reduces it to a single thin row (title + Save & Exit + expand)
-  // so the canvas underneath stays visible. Defaults expanded; auto-collapses
-  // once the user scrolls the banner's scroll-ancestor past a small threshold
-  // so it stops blocking the cards being arranged.
-  const [controlsCollapsed, setControlsCollapsed] = useState(false);
+  // Collapsed state for the sticky editor banner. The expanded banner
+  // (columns + full Layers list + actions) can obscure most of the viewport
+  // while the user arranges cards below it (operator-reported, twice). Two
+  // structural guards keep the canvas usable:
+  //  1. Default COLLAPSED on every open — the banner enters as a thin single
+  //     row (icon + title + Expand + Save & Exit), so the canvas is never
+  //     blocked on entry. The prior scroll-to-collapse heuristic failed on
+  //     short pages: the tall banner ate the scroll room it needed to trigger.
+  //  2. The expanded body is height-capped and scrolls internally (see the
+  //     controls-body className), so even expanded it can never cover more
+  //     than part of the screen regardless of how many layers exist.
+  const [controlsCollapsed, setControlsCollapsed] = useState(true);
   const editorBannerRef = useRef<HTMLDivElement>(null);
-  const userToggledCollapseRef = useRef(false);
   useEffect(() => {
-    if (!isEditing || typeof window === 'undefined') return;
-    // Reset collapse state each time the editor opens (unless the user has
-    // explicitly toggled it this session).
-    userToggledCollapseRef.current = false;
-    setControlsCollapsed(false);
-    const bannerEl = editorBannerRef.current;
-    if (!bannerEl) return;
-    // Find the nearest scrolling ancestor so we collapse on the same scroll
-    // the sticky banner is anchored to (may be the window or an inner pane).
-    const findScrollParent = (node: HTMLElement | null): HTMLElement | Window => {
-      let current = node?.parentElement ?? null;
-      while (current) {
-        const style = window.getComputedStyle(current);
-        if (/(auto|scroll|overlay)/.test(style.overflowY)) return current;
-        current = current.parentElement;
-      }
-      return window;
-    };
-    const scrollParent = findScrollParent(bannerEl);
-    const readScrollTop = () =>
-      scrollParent === window
-        ? window.scrollY
-        : (scrollParent as HTMLElement).scrollTop;
-    const handleScroll = () => {
-      if (userToggledCollapseRef.current) return;
-      setControlsCollapsed(readScrollTop() > 120);
-    };
-    scrollParent.addEventListener('scroll', handleScroll, { passive: true });
-    return () => scrollParent.removeEventListener('scroll', handleScroll);
+    if (!isEditing) return;
+    // Re-collapse on each open so re-entering the editor never re-blocks the
+    // canvas; the user expands via the toggle to reach columns + Layers.
+    setControlsCollapsed(true);
   }, [isEditing]);
 
   useEffect(() => {
@@ -512,10 +490,7 @@ export function PageGridLayout({
                 className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 aria-expanded={!controlsCollapsed}
                 aria-controls="page-grid-editor-controls-body"
-                onClick={() => {
-                  userToggledCollapseRef.current = true;
-                  setControlsCollapsed((previous) => !previous);
-                }}
+                onClick={() => setControlsCollapsed((previous) => !previous)}
               >
                 {controlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 <span className="sr-only sm:not-sr-only">{controlsCollapsed ? 'Expand' : 'Collapse'}</span>
@@ -534,7 +509,7 @@ export function PageGridLayout({
           <div
             id="page-grid-editor-controls-body"
             hidden={controlsCollapsed}
-            className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border">
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border max-h-[60vh] overflow-y-auto">
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm shrink-0 text-muted-foreground">Columns:</span>
