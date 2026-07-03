@@ -877,13 +877,13 @@
       "source": "in-repo",
       "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
       "status": "in_progress",
-      "phase": "W1-done-W2-db-foundations",
+      "phase": "W2a-applied-W2b-running",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "Gap map SHIPPED (cc535b8, live-verified): charge_rate_quotes live but quotes/quote_line_items dead code; boot_assessments+charge_rate_audit_log+award_rate_cache MISSING live (BOOT gate silently disabled). W2a agent: floor-gated migrations + dead-path resolution + awardRateCacheService repoint. Then quote email+e-sign wiring, R8 bulk port.",
+      "next_step": "W2a APPLIED+LIVE-VERIFIED: boot_assessments (5 RLS policies) + charge_rate_audit_log (append-only) live (migs 20260704060000/060100, run 28673764091, advisors 0 new/2 removed); dead quotes cluster + award cache service deleted (crm7 72c0fe25, 4392/4434 tests); BOOT gate now enforceable. crm7#1109/#1110 filed. W2b agent running: quote-send email (outbox pattern + PDF + signing link) + e-sign generalized to quotes.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/bsuite/commit/cc535b8"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/72c0fe251f945dd7c0576c42b8a9cb039c150f53"
     }
   ],
   "operator_blockers": [
