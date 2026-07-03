@@ -71,6 +71,18 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260507-timesheet-approval-parity-spec-v1.00W.md` | Timesheet approval parity spec |
 | `20260507-w4-permissions-editor-scoping-v1.00A.md` | W4 permissions editor scoping & architecture (scoping complete — bsuite#679 closed) |
 
+### Audits, trackers & validation reports
+
+| File | Description |
+|------|-------------|
+| `20260629-bsuite-world-class-audit-tracker-v1.00W.md` | World-class readiness audit tracker — running evidence log (WC-/A-series) |
+| `20260629-bsuite-world-class-feature-inventory-v1.00W.md` | World-class feature inventory companion to the audit tracker |
+| `20260629-bsuite-role-rls-subscription-parity-matrix-v1.00W.md` | Role / RLS / subscription parity matrix (WC-008…WC-012 resolutions) |
+| `20260629-batch-e-rbac-parity-dev-deploy-test-plan-v1.00W.md` | Batch E — RBAC parity (WC-008…012) dev-deploy validation test plan |
+| `20260629-batch-e-rbac-parity-dev-deploy-test-report-v1.00W.md` | Batch E — RBAC parity dev-deploy validation report (conduit Team `joined_at` fix) |
+| `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md` | Cross-app auth validation dev-deploy test plan (5 `d.*` apps) |
+| `20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md` | Cross-app auth validation dev-deploy report (OAuth 2.1 + PKCE + JWKS, 5/5 pass) |
+
 ### Directories
 
 | Directory | Description |

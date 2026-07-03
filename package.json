@@ -29,6 +29,7 @@
     "lint:node-pin-parity": "node scripts/check-node-pin-parity.mjs",
     "lint:lockfile-hygiene": "node scripts/check-lockfile-hygiene.mjs",
     "lint:tailwind-v4": "node scripts/check-tailwind-v4.mjs",
+    "lint:vercel-production": "node scripts/check-vercel-production-readiness.mjs",
     "supabase:manifest": "node scripts/supabase/generate-schema-manifest.mjs > supabase/schema-manifest.json",
     "supabase:preview-plan": "node scripts/supabase/plan-preview-db.mjs --markdown",
     "test:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Testing $dir ===\"; (cd $dir && pnpm test -- --run) || exit 1; done",

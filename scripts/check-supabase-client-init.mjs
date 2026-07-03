@@ -169,7 +169,7 @@ for (const { app, candidates } of APP_CANDIDATES) {
   });
 
   // 3. Verify the file actually contains a createClient call.
-  if (!/createClient\s*\(/.test(content)) {
+  if (!/createClient\s*(?:<[^>]+>)?\s*\(/.test(content)) {
     issues.push('WARNING: createClient() call not found in this file — wrong file?');
   }
 

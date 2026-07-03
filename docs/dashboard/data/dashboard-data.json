@@ -87,9 +87,9 @@
     {
       "name": "bsuite",
       "type": "parent",
-      "active_plans": 20,
+      "active_plans": 21,
       "archived": 0,
-      "main_sha": "77d419b",
+      "main_sha": "7a78a50",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "29e32dca",
+      "main_sha": "9cf25301",
       "vercel": "success"
     },
     {
@@ -105,7 +105,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "2e3e08e",
+      "main_sha": "cc6aa83",
       "vercel": "success"
     },
     {
@@ -113,7 +113,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "b645eed",
+      "main_sha": "4730cc8",
       "vercel": "success"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "a8e8d0b",
+      "main_sha": "b9f8014",
       "vercel": "success"
     },
     {
@@ -129,15 +129,15 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "1afeb43",
+      "main_sha": "50e2035",
       "vercel": "success"
     },
     {
       "name": "throughput",
       "type": "submodule",
-      "active_plans": 3,
-      "archived": 0,
-      "main_sha": "5aa19b1",
+      "active_plans": 2,
+      "archived": 2,
+      "main_sha": "101369e",
       "vercel": "success"
     }
   ],

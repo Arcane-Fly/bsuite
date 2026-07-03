@@ -44,7 +44,12 @@
         "tenant_branding_is_force_overridden(p_tenant_id uuid)",
         "training_plan_belongs_to_current_apprentice(p_training_plan_id uuid)",
         "update_person_with_contact(p_person_id uuid, payload jsonb, p_tenant_id uuid)",
-        "user_has_org_access(p_user_id uuid, p_tenant_id uuid)"
+        "user_has_org_access(p_user_id uuid, p_tenant_id uuid)",
+        "delete_organization(p_tenant_id uuid, p_confirm_name text)",
+        "get_org_deletion_preview(p_tenant_id uuid)",
+        "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
+        "fn_publish_page(p_draft_id uuid)",
+        "fn_rollback_page(p_page_id uuid)"
       ],
       "mode": "accepted",
       "reason": "RLS helper + intentional client-RPC class. These MUST stay executable by authenticated: RLS policies evaluate the helpers in the caller's context, and a prior revoke pass broke production RLS (see crm7 20260521024707/20260527022039 hotfix_restore_rls_helper_grants history). Operator directive 2026-06-11: do NOT blanket-fail this class until replaced by a proven alternative. A SECURITY DEFINER function NOT on this list IS a failure - the list is exhaustive, not a category waiver.",
@@ -81,6 +86,27 @@
       "added": "2026-06-24",
       "objects": [
         "r7_redeem_talent_pool_consent(p_token text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "2026-07-02 Qodo-fix RPCs. search_profiles_by_name: throughput team-member selector — profiles RLS is self-only, so a narrow SECDEF search returning ONLY (id, full_name, company), auth-required, pinned search_path (throughput PR#232 finding 1). r7_submit_public_application: conduit public apply handler — replaced four unsafe anon INSERT policies with one fail-closed SECDEF entrypoint (rate-limited 3/hr rolling window per IP/job, consent-gated sensitive demographics, tenant derived from the job row); authenticated grant is transitive via anon->authenticated inheritance of the public apply path (conduit PR#348 findings 2-4).",
+      "added": "2026-07-02",
+      "objects": [
+        "search_profiles_by_name(p_query text)",
+        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
+      ]
+    },
+    {
+      "lint": "anon_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "conduit#348 public careers apply form — anon-reachable BY DESIGN (job applicants have no account). Fail-closed SECDEF: verifies job is open+published, rolling-window rate limit (3/hr per IP-hash/job), dedupes candidates, consent-gates sensitive demographics at the DB layer, derives tenant from the job row (no caller-supplied tenant). Strictly safer than the four direct anon INSERT policies it replaced (dropped same migration). Applied+catalog-verified 2026-07-02.",
+      "added": "2026-07-02",
+      "objects": [
+        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
       ]
     }
   ]
