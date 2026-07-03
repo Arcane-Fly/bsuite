@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
 import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, minMaxSize, minSize } from 'react-grid-layout/core';
@@ -377,6 +377,48 @@ export function PageGridLayout({
   const resetCancelButtonRef = useRef<HTMLButtonElement>(null);
   const resetConfirmButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Collapsed state for the sticky editor banner. On tall pages the expanded
+  // banner (columns + full Layers list + actions) can obscure most of the
+  // viewport while the user is arranging cards below it (operator-reported).
+  // Collapsing reduces it to a single thin row (title + Save & Exit + expand)
+  // so the canvas underneath stays visible. Defaults expanded; auto-collapses
+  // once the user scrolls the banner's scroll-ancestor past a small threshold
+  // so it stops blocking the cards being arranged.
+  const [controlsCollapsed, setControlsCollapsed] = useState(false);
+  const editorBannerRef = useRef<HTMLDivElement>(null);
+  const userToggledCollapseRef = useRef(false);
+  useEffect(() => {
+    if (!isEditing || typeof window === 'undefined') return;
+    // Reset collapse state each time the editor opens (unless the user has
+    // explicitly toggled it this session).
+    userToggledCollapseRef.current = false;
+    setControlsCollapsed(false);
+    const bannerEl = editorBannerRef.current;
+    if (!bannerEl) return;
+    // Find the nearest scrolling ancestor so we collapse on the same scroll
+    // the sticky banner is anchored to (may be the window or an inner pane).
+    const findScrollParent = (node: HTMLElement | null): HTMLElement | Window => {
+      let current = node?.parentElement ?? null;
+      while (current) {
+        const style = window.getComputedStyle(current);
+        if (/(auto|scroll|overlay)/.test(style.overflowY)) return current;
+        current = current.parentElement;
+      }
+      return window;
+    };
+    const scrollParent = findScrollParent(bannerEl);
+    const readScrollTop = () =>
+      scrollParent === window
+        ? window.scrollY
+        : (scrollParent as HTMLElement).scrollTop;
+    const handleScroll = () => {
+      if (userToggledCollapseRef.current) return;
+      setControlsCollapsed(readScrollTop() > 120);
+    };
+    scrollParent.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollParent.removeEventListener('scroll', handleScroll);
+  }, [isEditing]);
+
   useEffect(() => {
     if (!resetConfirmOpen || typeof window === 'undefined') return;
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -421,13 +463,19 @@ export function PageGridLayout({
     <div className={cn('relative', isEditing && 'isolate', className)}>
       {isEditing && (
         <div
+          ref={editorBannerRef}
           data-page-grid-editor-controls
+          data-collapsed={controlsCollapsed || undefined}
           className={cn(
             // Sticky overlay banner — sits at the top of the scroll container
             // without pushing the form down. `top-0` anchors to the nearest
             // scrolling ancestor; `z-40` keeps it above grid items but below
             // app-level overlays (toaster, dialogs are z-50+).
-            'sticky top-0 z-40 isolate flex flex-col gap-3 p-4 rounded-xl shadow-lg border-2 mb-4',
+            'sticky top-0 z-40 isolate flex flex-col gap-3 rounded-xl shadow-lg border-2 mb-4',
+            // Collapsed → thin single-row bar so the canvas below stays visible
+            // (operator-reported: expanded banner obscured most of the viewport
+            // while arranging cards). Expanded → full controls.
+            controlsCollapsed ? 'p-2' : 'p-4',
             // Subtle translucent background so the form behind it stays
             // partially visible — mitigates Issue 2 (banner consuming
             // vertical space). `bg-card/95` + `backdrop-blur` keeps text
@@ -439,29 +487,54 @@ export function PageGridLayout({
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full flex items-center justify-center animate-pulse bg-primary/10">
-                <Settings2 className="h-5 w-5 text-primary" />
+              <div
+                className={cn(
+                  'rounded-full flex items-center justify-center bg-primary/10',
+                  controlsCollapsed ? 'h-8 w-8' : 'h-10 w-10 animate-pulse',
+                )}
+              >
+                <Settings2 className={cn('text-primary', controlsCollapsed ? 'h-4 w-4' : 'h-5 w-5')} />
               </div>
               <div>
-                <h3 className="font-semibold text-lg text-foreground">
+                <h3 className={cn('font-semibold text-foreground', controlsCollapsed ? 'text-sm' : 'text-lg')}>
                   Canvas Editor Active
                 </h3>
-                <span className="text-sm text-muted-foreground">
-                  Drag anywhere on a card to move it. Resize with the bottom-right handle.
-                </span>
+                {!controlsCollapsed && (
+                  <span className="text-sm text-muted-foreground">
+                    Drag anywhere on a card to move it. Resize with the bottom-right handle.
+                  </span>
+                )}
               </div>
             </div>
-            <button
-              type="button"
-              className="shrink-0 inline-flex items-center rounded-md px-3 py-2 text-sm font-medium bg-primary text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-              onClick={() => startTransition(() => setIsEditing(false))}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save &amp; Exit
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                aria-expanded={!controlsCollapsed}
+                aria-controls="page-grid-editor-controls-body"
+                onClick={() => {
+                  userToggledCollapseRef.current = true;
+                  setControlsCollapsed((previous) => !previous);
+                }}
+              >
+                {controlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                <span className="sr-only sm:not-sr-only">{controlsCollapsed ? 'Expand' : 'Collapse'}</span>
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium bg-primary text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                onClick={() => startTransition(() => setIsEditing(false))}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save &amp; Exit
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border">
+          <div
+            id="page-grid-editor-controls-body"
+            hidden={controlsCollapsed}
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border">
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm shrink-0 text-muted-foreground">Columns:</span>
