@@ -654,6 +654,159 @@ describe('exchangeCodeForTokens', () => {
 })
 
 // ---------------------------------------------------------------------------
+// Concurrent OAuth flows — bs_oauth_flows state-keyed map
+// ---------------------------------------------------------------------------
+// Regression coverage for the crm.crm7.app prod incident: a slower flow's
+// PKCE data got clobbered by a second flow's legacy single-key writes
+// (auto-initiators in PortalScopeGate/MarketingHome/protected-route racing
+// manual clicks, or a second tab), producing "Invalid state parameter -
+// possible CSRF attack" even though the slower flow was never compromised.
+// See the OAUTH_FLOWS_KEY doc comment in oauth-client.ts for the design.
+
+describe('concurrent OAuth flows (bs_oauth_flows map)', () => {
+  function readFlowMap(): Record<string, { verifier: string; nonce: string; startedAt: number }> {
+    const raw = localMock.getItem('bs_oauth_flows')
+    return raw ? JSON.parse(raw) : {}
+  }
+
+  function mockSuccessfulExchange(sub: string) {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => tokensFixture(),
+      text: async () => '',
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub, client_id: CLIENT_ID } })
+  }
+
+  it('dual-writes a state-keyed flow entry alongside the legacy flat keys on sign-in', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+
+    const state = localMock.getItem('bs_oauth_state')!
+    const verifier = localMock.getItem('bs_oauth_code_verifier')!
+    const nonce = localMock.getItem('bs_oauth_nonce')!
+    const startedAt = localMock.getItem('bs_oauth_started_at')!
+
+    const flows = readFlowMap()
+    expect(flows[state]).toEqual({ verifier, nonce, startedAt: Number(startedAt) })
+  })
+
+  it('lets a slower flow (A) exchange successfully after a faster flow (B) clobbers the legacy keys', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+
+    // Flow A starts first (e.g. tab 1 / an auto-initiator's silent re-auth).
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateA = localMock.getItem('bs_oauth_state')!
+
+    // Flow B starts shortly after (e.g. tab 2, or a manual click) and — since
+    // the legacy keys are a single flat slot — overwrites flow A's legacy
+    // data. `prompt: 'none'` keeps both calls exempt from the 10s
+    // redirect-loop breaker so the test can drive both flows back-to-back.
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateB = localMock.getItem('bs_oauth_state')!
+    expect(stateB).not.toBe(stateA)
+    expect(localMock.getItem('bs_oauth_state')).toBe(stateB) // sanity: B clobbered A
+
+    // Flow A's callback arrives with its own (older) state. A legacy-only
+    // lookup would fail here (storedState === B !== A) — the flow map
+    // must rescue it.
+    mockSuccessfulExchange('user-a')
+    const resultA = await client.exchangeCodeForTokens('code-a', stateA)
+    expect(resultA.user.sub).toBe('user-a')
+
+    // Flow B's own callback still succeeds afterwards — its map entry was
+    // untouched by flow A's exchange/cleanup.
+    mockSuccessfulExchange('user-b')
+    const resultB = await client.exchangeCodeForTokens('code-b', stateB)
+    expect(resultB.user.sub).toBe('user-b')
+  })
+
+  it('removes the consumed flow entry from the map after a successful exchange', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+    const state = localMock.getItem('bs_oauth_state')!
+
+    mockSuccessfulExchange('user-1')
+    await client.exchangeCodeForTokens('code-1', state)
+
+    expect(readFlowMap()[state]).toBeUndefined()
+  })
+
+  it('rejects an unknown state that matches neither the map nor the legacy keys (CSRF guard preserved)', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+
+    await expect(
+      client.exchangeCodeForTokens('some-code', 'state-nobody-minted'),
+    ).rejects.toThrow(/CSRF/i)
+  })
+
+  it('ignores a flow-map entry older than the 10-minute TTL (falls back to legacy, which then also fails)', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const staleStartedAt = Date.now() - 11 * 60 * 1000
+    localMock.setItem(
+      'bs_oauth_flows',
+      JSON.stringify({
+        'stale-state': { verifier: 'stale-verifier', nonce: 'stale-nonce', startedAt: staleStartedAt },
+      }),
+    )
+
+    await expect(
+      createOAuthClient(CLIENT_ID).exchangeCodeForTokens('some-code', 'stale-state'),
+    ).rejects.toThrow(/CSRF/i)
+  })
+
+  it('prunes stale entries out of the persisted map when a new flow is started', async () => {
+    const staleStartedAt = Date.now() - 11 * 60 * 1000
+    localMock.setItem(
+      'bs_oauth_flows',
+      JSON.stringify({
+        'stale-state': { verifier: 'stale-verifier', nonce: 'stale-nonce', startedAt: staleStartedAt },
+      }),
+    )
+
+    const { createOAuthClient } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+
+    expect(readFlowMap()['stale-state']).toBeUndefined()
+  })
+
+  it('caps the map at the 5 most recent flows, dropping the oldest first', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    const states: string[] = []
+
+    vi.useFakeTimers()
+    try {
+      for (let i = 0; i < 7; i++) {
+        // Distinct, strictly increasing timestamps per flow — real timers in
+        // a tight loop can tie on Date.now(), which would make eviction
+        // order (oldest-first) non-deterministic.
+        vi.setSystemTime(new Date(2026, 0, 1, 0, 0, i))
+        // prompt: 'none' keeps every call exempt from the 10s redirect-loop
+        // breaker so 7 sequential flows can be started in one test.
+        await client.signInWithBusinessSuite({ prompt: 'none' })
+        states.push(localMock.getItem('bs_oauth_state')!)
+      }
+    } finally {
+      vi.useRealTimers()
+    }
+
+    const flows = readFlowMap()
+    expect(Object.keys(flows)).toHaveLength(5)
+    expect(flows[states[0]]).toBeUndefined()
+    expect(flows[states[1]]).toBeUndefined()
+    for (const state of states.slice(2)) {
+      expect(flows[state]).toBeDefined()
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
 // refreshBusinessSuiteToken
 // ---------------------------------------------------------------------------
 

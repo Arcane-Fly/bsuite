@@ -108,6 +108,39 @@
       "objects": [
         "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
       ]
+    },
+    {
+      "lint": "anon_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Charge-rate-quote signing workflow — anon-reachable BY DESIGN for external signers (host employers, site contacts) who may not have authenticated sessions. Token-gated: validates p_token is a valid signing token, enforces signing context, logs audit trail. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
+      "added": "2026-07-06",
+      "objects": [
+        "get_charge_rate_quote_signing_context(p_token text)",
+        "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Charge-rate-quote signing workflow — authenticated users (applicants, coordinators) redeem signing tokens and apply quotes to placements. Token-gated: validates p_token, enforces signing context, cross-tenant operations required for GTO workflow. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
+      "added": "2026-07-06",
+      "objects": [
+        "get_charge_rate_quote_signing_context(p_token text)",
+        "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
+        "apply_charge_rate_quote_to_placement(p_quote_id uuid, p_placement_id uuid)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Session validation helper — checks if a session UUID is still valid. SECURITY DEFINER required to read auth.sessions across tenant boundaries for RLS policy evaluation. Intentional: session validation is a core auth primitive. Applied 2026-07-06.",
+      "added": "2026-07-06",
+      "objects": [
+        "is_session_valid(session_uuid uuid)"
+      ]
     }
   ]
 }

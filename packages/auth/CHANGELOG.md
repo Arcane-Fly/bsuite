@@ -2,6 +2,24 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.2.7 — 2026-07-06
+
+### Fixed — concurrent OAuth flows no longer clobber each other's PKCE state
+
+**Root cause:** `signInWithBusinessSuite()` persisted PKCE `state`/`code_verifier`/`nonce` in a single fixed set of `localStorage` keys (`bs_oauth_state`, `bs_oauth_code_verifier`, `bs_oauth_nonce`, `bs_oauth_started_at`). `localStorage` is a per-origin singleton shared across tabs, so a second sign-in attempt — an auto-initiator using `prompt: 'none'` silent re-auth racing a manual click, or a genuine second-tab flow — overwrote those keys before the first flow's callback returned. The first flow's `exchangeCodeForTokens()` then compared its returned `state` against the second flow's overwritten value and failed with "Invalid state parameter - possible CSRF attack", even though nothing malicious occurred. Reported against production `crm.crm7.app`.
+
+**Fix:** `signInWithBusinessSuite()` now dual-writes each flow's `{ verifier, nonce, startedAt }` into a state-keyed map at `localStorage['bs_oauth_flows']` (JSON: `{ [state]: { verifier, nonce, startedAt } }`), in addition to the existing legacy flat keys. The map is pruned on every write to the 10-minute PKCE TTL and capped at the 5 most recent entries.
+
+`exchangeCodeForTokens()` now looks up the *returned* `state` in the flow map first. A hit is exactly as CSRF-safe as the legacy single-key comparison — a map entry can only exist if this origin's own `signInWithBusinessSuite()` minted it — so concurrent flows each resolve against their own verifier/nonce regardless of which one last touched the legacy keys. If no map entry is found (older `@bsuite/auth` versions, or a flow started before this release), the code falls back to the legacy single-key path unchanged for one release of backward compatibility. An unknown `state` present in neither the map nor the legacy keys still throws the CSRF error. On successful exchange, the consumed map entry is deleted and the legacy keys are cleared as before.
+
+**Hygiene fix:** on the invalid-state CSRF error path, all stale `bs_oauth_*` keys are now cleared (previously only `bs_oauth_inflight_code` was cleared), so a failed flow doesn't leave orphaned PKCE state behind for the next attempt.
+
+The existing 10-minute PKCE TTL, inflight-code idempotency sentinel, and 10-second redirect-loop circuit breaker in `signInWithBusinessSuite()` are unchanged.
+
+**Tests added:** 7 new cases under `concurrent OAuth flows (bs_oauth_flows map)` — dual-write on sign-in, slower-flow-succeeds-after-clobber (the core regression), map-entry removal on success, unknown-state still throws CSRF, stale map entries beyond the TTL are ignored, the map is pruned to the TTL window on each new flow, and the map is capped at 5 entries with oldest-first eviction.
+
+**Why a patch:** purely additive and backward-compatible — no change to the `OAuthClient` public API, the callback `setSession()` bridge, or existing single-flow behavior.
+
 ## 0.2.5 — 2026-06-05
 
 ### Added — cross-tab logout and refresh-rejection expiry events

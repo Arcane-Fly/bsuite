@@ -114,6 +114,9 @@ ALLOWLIST=(
   'crm7/api/config.ts:*'
   'crm7/api/db/[...path].ts:*'
   'crm7/api/health.ts:*'
+  # ---- crm7 server-side AI tools (edge functions, process.env is correct) ----
+  'crm7/src/lib/ai/tools/ui-builder-tools.ts:*'
+  'crm7/src/lib/ai/tools/ui-builder-tools.test.ts:*'
   # ---- conduit ANON_KEY fallback in src/lib/supabase/cacheable.ts (bsuite#464 cleanup) ----
   'conduit/src/lib/supabase/cacheable.ts:*'
   # ---- BSU edge functions reading SUPABASE_ANON_KEY (bsuite#464 cleanup; runtime-injected by Supabase) ----
@@ -127,6 +130,7 @@ ALLOWLIST=(
   'crm7/supabase/functions/avetmiss-export/index.ts:*'
   'crm7/supabase/functions/generate-document/index.ts:*'
   'crm7/supabase/functions/tga-search/index.ts:*'
+  'crm7/supabase/functions/charge-rate-quote-dispatch/index.ts:*'
   # ---- braden edge functions reading SUPABASE_ANON_KEY (bsuite#464 cleanup) ----
   'braden/supabase/functions/add-admin-user/index.ts:*'
   'braden/supabase/functions/list-hero-images/index.ts:*'
