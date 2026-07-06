@@ -419,6 +419,25 @@ describe('PageGridLayout layers panel', () => {
     });
   }
 
+  it('defaults the controls banner to collapsed on open so the canvas stays visible', () => {
+    render(
+      <PageGridLayout
+        pageKey="collapse-default-test"
+        defaultLayouts={layeredLayouts}
+        canEditPage
+        widgets={{ alpha: <div>Alpha widget</div>, beta: <div>Beta widget</div> }}
+        widgetMeta={{ alpha: { label: 'Alpha' }, beta: { label: 'Beta' } }}
+      />,
+    );
+
+    openEditor();
+
+    const banner = document.querySelector('[data-page-grid-editor-controls]');
+    expect(banner?.getAttribute('data-collapsed')).toBe('true');
+    // The full controls body (columns + Layers) is hidden until the user expands.
+    expect(document.getElementById('page-grid-editor-controls-body')?.hasAttribute('hidden')).toBe(true);
+  });
+
   it('supports rename, sort, lock, and hide actions', async () => {
     const view = render(
       <PageGridLayout
@@ -431,6 +450,13 @@ describe('PageGridLayout layers panel', () => {
     );
 
     openEditor();
+
+    // The controls banner defaults collapsed (0.4.3) so it never blocks the
+    // canvas on entry; expand it to reach the Layers panel the user manages
+    // layers from.
+    act(() => {
+      screen.getByRole('button', { name: /expand/i }).click();
+    });
 
     const alphaRenameInput = screen.getByLabelText('Rename Alpha') as HTMLInputElement;
     fireEvent.change(alphaRenameInput, { target: { value: 'Revenue KPI' } });

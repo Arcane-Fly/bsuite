@@ -14,7 +14,7 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-07-03",
+    "last_refresh": "2026-07-06",
     "last_refreshed": "2026-06-07T02:38:00Z",
     "last_refreshed_by": "copilot-cli report-schema plan update"
   },
@@ -87,9 +87,9 @@
     {
       "name": "bsuite",
       "type": "parent",
-      "active_plans": 22,
+      "active_plans": 21,
       "archived": 0,
-      "main_sha": "af818cc",
+      "main_sha": "69195fe",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
@@ -97,7 +97,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 2,
-      "main_sha": "4198436f",
+      "main_sha": "9cf25301",
       "vercel": "success"
     },
     {
@@ -105,7 +105,7 @@
       "type": "submodule",
       "active_plans": 3,
       "archived": 0,
-      "main_sha": "7ebe7d9",
+      "main_sha": "cc6aa83",
       "vercel": "success"
     },
     {
@@ -113,7 +113,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "af4f3df",
+      "main_sha": "4730cc8",
       "vercel": "success"
     },
     {
@@ -121,7 +121,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "fe255ab",
+      "main_sha": "b9f8014",
       "vercel": "success"
     },
     {
@@ -129,7 +129,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 2,
-      "main_sha": "a3c6a9e",
+      "main_sha": "50e2035",
       "vercel": "success"
     },
     {
@@ -137,7 +137,7 @@
       "type": "submodule",
       "active_plans": 2,
       "archived": 2,
-      "main_sha": "339205a",
+      "main_sha": "101369e",
       "vercel": "success"
     }
   ],
@@ -852,38 +852,6 @@
       "next_step": "HIGH (next sprint): ARIA labels on buttons (4h), alt text on images (2h), console.log → logger.ts (8h), form labels (4h). MEDIUM (this month): focus trap for modals (4h), aria-live regions (3h), color contrast audit (6h), keyboard shortcuts (8h). LOW (backlog): screen reader testing (8h), visual regression tests (8h). Throughput #100 covers React hooks; suite-wide #467 P1.O-1 covers WCAG AA in aggregate but does not enumerate these throughput-specific items.",
       "severity": "P2",
       "category": "Outstanding Item"
-    },
-    {
-      "id": "p-bsuite-11",
-      "title": "Unified in-context authoring surface (Page Builder + Schema Builder + Edit Page + Page Tools)",
-      "repo": "bsuite",
-      "scope": "parent",
-      "source": "in-repo",
-      "path": "docs/plans/20260703-unified-authoring-surface-plan-v1.00D.md",
-      "status": "in_progress",
-      "phase": "phase-1-chunk-3-done",
-      "owner": "claude-code",
-      "next_step": "Chunk 3 SHIPPED + LIVE-VERIFIED on d.crm (Playwright, 0 console errors): AI tool-result→CustomEvent (allowlisted), live FK map (host_employer FKs target clients), SchemaFieldAdder mounted, edge-bundle deploy breakage fixed (pre-existing since chunk 2; '@/' aliases unsupported in edge chain). Next: generalize FK bind past people/[id] exemplar; AI add-widget E2E from chat; Phase 2 (schema-driven config incl. documentCategories + branding app_slug)",
-      "severity": "high",
-      "category": "architecture",
-      "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/d69283e26910"
-    },
-    {
-      "id": "p-bsuite-12",
-      "title": "GTO end-to-end cycle (enquiry→quote→e-sign→timesheets→billing→portals→onboarding)",
-      "repo": "bsuite",
-      "scope": "parent",
-      "source": "in-repo",
-      "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
-      "status": "in_progress",
-      "phase": "operator-items-resolved-xero-portal-step-remains",
-      "owner": "claude-code (loop-engineering)",
-      "next_step": "OPERATOR ITEMS RESOLVED (2026-07-06 3rd wave): XERO connect unblocked — root cause was build-time VITE_XERO_CLIENT_ID absent from Vercel env (bundle baked client_id='' -> Xero 'invalid client id'). Fixed by runtime config: xero-token-exchange edge fn gained authed 'config' action returning the PUBLIC client id from the same XERO_CLIENT_ID Supabase secret (cf0dfe97, edge fn deployed); plus authorize redirect_uri now ALWAYS current origin (de6fd8b1) — the VITE_XERO_REDIRECT_URI override baked prod's URL and broke the PKCE/exchange contract from d.crm. Live-probed: authorize URL carries client_id AD26404C…, redirect d.crm callback, PKCE S256, granular scopes, no invalid-client error. HOST-SITES GO shipped (closes #1117): adopted live sites table (employer_id->employers, tenant RLS), HostSiteSelector/hostSiteStore repointed to real columns, hostSite canonical restored, NEW HostSitesPanel on hosts/[id] Related tab (c6af4e9f) + insert inherits employer tenant (e9017160, live-caught cross-tenant edge). Demo data: 13 sites across 10 hosts (TechForge 2, AutoWorks 2 — one added live through the UI), CyberDefend employer created + client linked + 2 stranded placements backfilled — 0 placements missing employer/client in braden tenants. RESEND: tracking CNAME live-verified (all 5 records verified). REMAINING OPERATOR: register https://d.crm.crm7.app/auth/xero/callback (+ prod URL) in the Xero developer portal, then click Connect on d.crm to seed the vault (60-day cliff). Known noise: tga-search edge fn 400s on integrations page (pre-existing, tracked separately).",
-      "severity": "high",
-      "category": "architecture",
-      "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/e9017160"
     }
   ],
   "operator_blockers": [
@@ -2441,8 +2409,8 @@
     "ready_for_review_count": 1
   },
   "portal_coverage": {
-    "schema_version": "1.1",
-    "audit_date": "2026-07-04",
+    "schema_version": 1,
+    "audit_date": "2026-05-06",
     "rows": [
       {
         "portal": "BSU admin",
@@ -2517,22 +2485,6 @@
         "oklch": false,
         "theme": "corporate red #ab233a / gold #cbb26a (allowed divergence)",
         "status": "production"
-      },
-      {
-        "portal": "CRM7 apprentice/worker portal",
-        "auth": "BS OAuth + PortalScopeGate (RLS-degrade)",
-        "rls_source": "tenant-scoped: people/placements/timesheets/payroll_records/training_plans/leave_requests",
-        "shadcn": "yes",
-        "oklch": "yes (D2C Neon Electric)",
-        "status": "live — scope-gate fixed (crm7 26d01054); renders real data, test seed mig 20260704170000 (person→auth.uid linkage)"
-      },
-      {
-        "portal": "CRM7 host-employer mirror portal",
-        "auth": "BS OAuth + PortalScopeGate (RLS-degrade) + useSharedData canSee",
-        "rls_source": "tenant-scoped: employers/people/timesheets/invoices/placements/site_visits",
-        "shadcn": "yes",
-        "oklch": "yes (D2C Neon Electric)",
-        "status": "live — renders real tenant data (12 active apprentices verified in §9.2 pass)"
       }
     ],
     "consistency_check": {
@@ -2541,8 +2493,7 @@
       "all_shadcn": true,
       "all_oklch_except_braden": true,
       "all_react_19": true
-    },
-    "note": "Added the 2 GTO operational portals (crm7 worker + host-employer) 2026-07-04 — previously absent (doc-drift; they always existed in code)."
+    }
   },
   "apprentice_placements_status": {
     "schema_version": 1,
