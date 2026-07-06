@@ -206,6 +206,92 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 }
 
 /**
+ * Auth-code lifetime — Supabase OAuth codes are single-use and expire after
+ * 10 minutes. Shared by the legacy single-key TTL guard and the concurrent-
+ * flow map below so both mechanisms agree on what "fresh" means.
+ * @see https://supabase.com/docs/guides/auth/oauth-server/oauth-flows
+ */
+const PKCE_TTL_MS = 10 * 60 * 1000;
+
+/** Cap on tracked concurrent flows — oldest survivors are dropped first. */
+const FLOW_MAP_MAX_ENTRIES = 5;
+
+/**
+ * Concurrent-flow safety net — localStorage key for a small map of recent
+ * in-flight PKCE flows, keyed by the `state` value minted for each flow.
+ *
+ * Problem: `signInWithBusinessSuite` also dual-writes a single flat set of
+ * legacy keys (`bs_oauth_state`, `bs_oauth_code_verifier`, `bs_oauth_nonce`,
+ * `bs_oauth_started_at`). Those keys are per-origin and singular, so when two
+ * sign-in attempts race — an auto-initiator (PortalScopeGate / MarketingHome
+ * / protected-route) firing alongside a manual click, or a second tab/window
+ * — the slower flow's legacy keys get clobbered by the faster one before its
+ * redirect round-trip to BSU completes. When the slower flow's callback
+ * finally arrives with its own `state`, the legacy keys now hold the OTHER
+ * flow's data, `storedState !== state`, and the exchange fails with
+ * "Invalid state parameter - possible CSRF attack" even though this flow was
+ * never actually compromised (crm.crm7.app prod incident).
+ *
+ * Fix: every flow ALSO appends `{ [state]: { verifier, nonce, startedAt } }`
+ * to this map. `exchangeCodeForTokens` looks up the RETURNED state directly
+ * in the map first — CSRF safety is preserved because the map can only ever
+ * contain states this origin itself minted via `signInWithBusinessSuite`, so
+ * a hit is exactly as trustworthy as the legacy single-key comparison. If the
+ * map has no entry (storage was cleared, TTL-pruned, or the consumer app is
+ * still on an @bsuite/auth build predating the flow map under a rolling
+ * deploy) we fall back to the legacy single-key path unchanged, for one
+ * release of back-compat.
+ */
+const OAUTH_FLOWS_KEY = 'bs_oauth_flows';
+
+interface OAuthFlowEntry {
+  verifier: string;
+  nonce: string;
+  startedAt: number;
+}
+
+type OAuthFlowMap = Record<string, OAuthFlowEntry>;
+
+function readFlowMap(): OAuthFlowMap {
+  try {
+    const raw = localStorage.getItem(OAUTH_FLOWS_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as OAuthFlowMap;
+    }
+    return {};
+  } catch {
+    // Corrupt JSON / storage-disabled — treat as empty; the legacy
+    // single-key path still covers the non-concurrent case.
+    return {};
+  }
+}
+
+function writeFlowMap(map: OAuthFlowMap): void {
+  try {
+    localStorage.setItem(OAUTH_FLOWS_KEY, JSON.stringify(map));
+  } catch {
+    // Storage write failures are non-fatal — the legacy dual-write keys
+    // still provide a (non-concurrent-safe) fallback path.
+  }
+}
+
+/**
+ * Drop entries older than {@link PKCE_TTL_MS}, then cap to the
+ * {@link FLOW_MAP_MAX_ENTRIES} most recent survivors so localStorage can't
+ * grow unbounded across many abandoned sign-in attempts.
+ */
+function pruneFlowMap(map: OAuthFlowMap): OAuthFlowMap {
+  const now = Date.now();
+  const fresh = Object.entries(map).filter(
+    ([, entry]) => typeof entry?.startedAt === 'number' && now - entry.startedAt <= PKCE_TTL_MS
+  );
+  fresh.sort(([, a], [, b]) => b.startedAt - a.startedAt);
+  return Object.fromEntries(fresh.slice(0, FLOW_MAP_MAX_ENTRIES));
+}
+
+/**
  * Create an OAuth 2.1 PKCE client for a specific BSuite application.
  *
  * Each app passes its OAuth client ID (registered in the Supabase
@@ -352,6 +438,17 @@ export function createOAuthClient(clientId: string): OAuthClient {
     // @see https://supabase.com/docs/guides/auth/oauth-server/oauth-flows
     localStorage.setItem('bs_oauth_started_at', String(Date.now()));
 
+    // Concurrent-flow safety net: append this flow to the state-keyed map
+    // (dual-write alongside the legacy flat keys above) so a slower/earlier
+    // flow's PKCE data survives even if a later flow overwrites those flat
+    // keys — see the OAUTH_FLOWS_KEY doc comment for the full race-condition
+    // rationale and exchangeCodeForTokens for the lookup-by-returned-state
+    // consumer. Pruned for staleness before insertion, then again after so
+    // the size cap accounts for the newly-added entry.
+    const flowMap = pruneFlowMap(readFlowMap());
+    flowMap[state] = { verifier: codeVerifier, nonce, startedAt: Date.now() };
+    writeFlowMap(pruneFlowMap(flowMap));
+
     const returnTo = options?.returnTo ?? window.location.href;
     try {
       localStorage.setItem('auth_return_path', returnTo);
@@ -398,31 +495,60 @@ export function createOAuthClient(clientId: string): OAuthClient {
     }
     localStorage.setItem('bs_oauth_inflight_code', code);
 
-    const storedState = localStorage.getItem('bs_oauth_state');
-    const codeVerifier = localStorage.getItem('bs_oauth_code_verifier');
-    const storedNonce = localStorage.getItem('bs_oauth_nonce');
-    const startedAt = localStorage.getItem('bs_oauth_started_at');
+    // Concurrent-flow lookup: try the state-keyed map first. A hit here is
+    // exactly as CSRF-safe as the legacy single-key comparison below — the
+    // map can only contain states this origin minted via
+    // signInWithBusinessSuite — and it survives a second/faster flow having
+    // clobbered the legacy flat keys in the meantime. See the OAUTH_FLOWS_KEY
+    // doc comment above for the full race-condition rationale.
+    const flowMap = pruneFlowMap(readFlowMap());
+    writeFlowMap(flowMap); // persist the prune even if this exchange fails below
+    const flowEntry: OAuthFlowEntry | undefined = flowMap[state];
+    const usingFlowMap = flowEntry !== undefined;
 
-    // TTL guard: auth codes expire after 10 minutes per Supabase OAuth docs.
-    // Reject stale PKCE state that survived across sessions (e.g. user closed
-    // the tab before completing sign-in, then returned later).
-    if (startedAt) {
-      const elapsed = Date.now() - Number(startedAt);
-      if (elapsed > 10 * 60 * 1000) {
-        // Clean up before throwing so the user gets a fresh start on retry.
+    let codeVerifier: string | null;
+    let storedNonce: string | null;
+
+    if (flowEntry) {
+      codeVerifier = flowEntry.verifier;
+      storedNonce = flowEntry.nonce;
+    } else {
+      // Legacy fallback path — kept for one release of back-compat with
+      // consumers still on an @bsuite/auth build predating the flow map.
+      const storedState = localStorage.getItem('bs_oauth_state');
+      const startedAt = localStorage.getItem('bs_oauth_started_at');
+
+      // TTL guard: auth codes expire after 10 minutes per Supabase OAuth docs.
+      // Reject stale PKCE state that survived across sessions (e.g. user closed
+      // the tab before completing sign-in, then returned later).
+      if (startedAt) {
+        const elapsed = Date.now() - Number(startedAt);
+        if (elapsed > PKCE_TTL_MS) {
+          // Clean up before throwing so the user gets a fresh start on retry.
+          localStorage.removeItem('bs_oauth_code_verifier');
+          localStorage.removeItem('bs_oauth_state');
+          localStorage.removeItem('bs_oauth_nonce');
+          localStorage.removeItem('bs_oauth_started_at');
+          localStorage.removeItem('bs_oauth_inflight_code');
+          throw new Error('PKCE state expired (>10min) — please retry sign-in');
+        }
+      }
+
+      if (!storedState || storedState !== state) {
+        // Hygiene: an unmatched/unknown state means this attempt's own PKCE
+        // data (if any) is unrecoverable — clear the stale flat keys too,
+        // not just the inflight sentinel, so a retry starts clean.
         localStorage.removeItem('bs_oauth_code_verifier');
         localStorage.removeItem('bs_oauth_state');
         localStorage.removeItem('bs_oauth_nonce');
         localStorage.removeItem('bs_oauth_started_at');
         localStorage.removeItem('bs_oauth_inflight_code');
-        throw new Error('PKCE state expired (>10min) — please retry sign-in');
+        throw new Error('Invalid state parameter - possible CSRF attack');
       }
+      codeVerifier = localStorage.getItem('bs_oauth_code_verifier');
+      storedNonce = localStorage.getItem('bs_oauth_nonce');
     }
 
-    if (!storedState || storedState !== state) {
-      localStorage.removeItem('bs_oauth_inflight_code');
-      throw new Error('Invalid state parameter - possible CSRF attack');
-    }
     if (!codeVerifier) {
       localStorage.removeItem('bs_oauth_inflight_code');
       throw new Error('PKCE code verifier not found in storage — sign-in session may have been interrupted. Please retry sign-in.');
@@ -441,11 +567,16 @@ export function createOAuthClient(clientId: string): OAuthClient {
     });
 
     // Clean up stored PKCE values, nonce, TTL sentinel, and inflight sentinel
+    // (legacy dual-write keys) — plus this flow's own entry in the map, if any.
     localStorage.removeItem('bs_oauth_code_verifier');
     localStorage.removeItem('bs_oauth_state');
     localStorage.removeItem('bs_oauth_nonce');
     localStorage.removeItem('bs_oauth_started_at');
     localStorage.removeItem('bs_oauth_inflight_code');
+    if (usingFlowMap) {
+      delete flowMap[state];
+      writeFlowMap(flowMap);
+    }
 
     if (!response.ok) {
       const errorBody = await response.text();
