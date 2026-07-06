@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W0-W7-built-operator-review",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "Email+Xero+Wave3a done. Wave 3a (crm7 b4874b26): #1114 hostSite removed (CLOSED; filed #1117 for wider HostSiteSelector breakage), /leave/[id] detail page, RateApprovalWorkflow manual approve/reject now audited (mig 20260706170000 live, provenance verified, trigger revoke preserved). 23 tests. Wave 3b (R80.3#330 typecheck) running. Remaining: crm7#1110 rate_schedules, #1109 fairwork cache, placements.employer_id, leave-accrual, batch-quote. OPERATOR (time-sensitive): Xero cron secret+Vault seed.",
+      "next_step": "Wave 3 batch 1 DONE: #1114 hostSite (closed), /leave/[id], RateApprovalWorkflow audit provenance (crm7 mig 20260706170000 live); R80.3#330 typecheck gate now REAL+GREEN (tsc --build, 434 errors→0, 811 tests, CLOSED). Batch 2 running: crm7#1110 rate_schedules + placements.employer_id backfill. Remaining: #1109 fairwork cache (compliance), leave-accrual engine (L), batch-quote snapshot, #1117 HostSiteSelector (needs product decision). OPERATOR time-sensitive: Xero cron secret+Vault seed.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/b4874b26"
+      "evidence_url": "https://github.com/GaryOcean428/R80.3/commit/af90ab2"
     }
   ],
   "operator_blockers": [
