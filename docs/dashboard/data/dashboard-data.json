@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W0-W7-built-operator-review",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "EMAIL + XERO waves DONE. Email platform path live-verified (coms.braden.com.au, 200+msgid). crm7 per-user Send-From. Azure email OAuth confirmed live (AZURE_* secrets). XERO: connect/token-exchange already worked; added proactive daily cron refresh (crm7 423a7883, deployed) + truthful connection-health UI (2 cols live) + doc. Cron gracefully DEFERRED until operator seeds 2 Vault secrets + XERO_CRON_REFRESH_SECRET (I have no DB-write path; can't coordinate a self-generated cron secret without logging it). TIME-SENSITIVE: 1 active Xero connection (Braden Pty Ltd) is ~59 days stale, near the 60-day refresh cliff — seed the cron secret ASAP or reconnect. Filed crm7 Xero deno-check type-debt (pre-existing). Next: Wave 3 = 9 issues.",
+      "next_step": "Email+Xero+Wave3a done. Wave 3a (crm7 b4874b26): #1114 hostSite removed (CLOSED; filed #1117 for wider HostSiteSelector breakage), /leave/[id] detail page, RateApprovalWorkflow manual approve/reject now audited (mig 20260706170000 live, provenance verified, trigger revoke preserved). 23 tests. Wave 3b (R80.3#330 typecheck) running. Remaining: crm7#1110 rate_schedules, #1109 fairwork cache, placements.employer_id, leave-accrual, batch-quote. OPERATOR (time-sensitive): Xero cron secret+Vault seed.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/423a7883"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/b4874b26"
     }
   ],
   "operator_blockers": [
