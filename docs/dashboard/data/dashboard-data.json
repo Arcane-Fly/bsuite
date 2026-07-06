@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W0-W7-built-operator-review",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "FULL GTO CYCLE BUILT (W0-W7). W7: conduit applicant screening/triage/correspondence (jodie/Scout) + fixed real bug — AI ToolContext missing caller JWT → all r7_* tools RLS-blocked in prod (conduit#355 closed). Onboarding bridge verified. 40+964 tests. Loop PAUSED for operator review. Open follow-ups: crm7#1109/#1110/#1111/#1114, R80.3#330, BSU email-dispatcher 500, placements.employer_id=NULL data quality, no leave-accrual engine, no live Xero/conduit Playwright pass (creds/browser gaps).",
+      "next_step": "W0-W7 built + live-verified. Follow-up round (operator 'go'): crm7#1111 CLOSED — organization_members RLS self-select (mig 20260704180000, live-verified, pgTAP 6/18→18/18, advisors 0/0) unblocks host-employer picker + 6 tables. BSU email-dispatcher code-fixed+DEPLOYED (f696b0a): 500 no longer masks provider errors → proper 4xx/502 + real Resend error logged (9 deno tests). RESIDUAL (operator): verify Resend key/domain for crm7.app — the fn will now log the exact rejection reason on the next send. Remaining follow-ups: crm7#1109/#1110/#1114, R80.3#330, placements.employer_id data quality, leave-accrual engine + live Xero/conduit UX (operator-gated).",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/conduit/commit/9f56d98"
+      "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/commit/f696b0a"
     }
   ],
   "operator_blockers": [
