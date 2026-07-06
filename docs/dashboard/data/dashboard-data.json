@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W0-W7-built-operator-review",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "Wave 3 batch 1 DONE: #1114 hostSite (closed), /leave/[id], RateApprovalWorkflow audit provenance (crm7 mig 20260706170000 live); R80.3#330 typecheck gate now REAL+GREEN (tsc --build, 434 errors→0, 811 tests, CLOSED). Batch 2 running: crm7#1110 rate_schedules + placements.employer_id backfill. Remaining: #1109 fairwork cache (compliance), leave-accrual engine (L), batch-quote snapshot, #1117 HostSiteSelector (needs product decision). OPERATOR time-sensitive: Xero cron secret+Vault seed.",
+      "next_step": "Wave3 batch2 DONE: #1110 rate_schedules CLOSED (table+RLS+boot FK live-verified, mig 20260706180000; companion tenant_id bug fixed); placements.employer_id NOT backfilled — clients.employer_id bridge NULL on all 13 rows, name-match=fabrication, needs operator sign-off (posted on #1047). Advisors 0/0 across all Wave-3 migs. FINAL batch running: #1109 fairwork dead-path cleanup, batch-quote reachability decision, NES-baseline leave-accrual first cut. OPERATOR: Xero Vault seed (time-sensitive), #1117 host-sites decision, employer_id sign-off.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/R80.3/commit/af90ab2"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/3a885a01"
     }
   ],
   "operator_blockers": [
