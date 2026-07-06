@@ -877,13 +877,13 @@
       "source": "in-repo",
       "path": "docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
       "status": "in_progress",
-      "phase": "W0-W7-built-operator-review",
+      "phase": "whole-list-complete-operator-items-remain",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "Wave3 batch2 DONE: #1110 rate_schedules CLOSED (table+RLS+boot FK live-verified, mig 20260706180000; companion tenant_id bug fixed); placements.employer_id NOT backfilled — clients.employer_id bridge NULL on all 13 rows, name-match=fabrication, needs operator sign-off (posted on #1047). Advisors 0/0 across all Wave-3 migs. FINAL batch running: #1109 fairwork dead-path cleanup, batch-quote reachability decision, NES-baseline leave-accrual first cut. OPERATOR: Xero Vault seed (time-sensitive), #1117 host-sites decision, employer_id sign-off.",
+      "next_step": "WORK-THE-WHOLE-LIST COMPLETE (2026-07-06). Final batch landed: #1109 CLOSED (dead award_rate_cache path removed, -901 LOC, behavior identical); batch_charge_rate_quotes created + snapshot audit parity (mig 20260706190000 live, 4 policies); NES-baseline leave accrual (computeLeaveAccrual + recalculateLeaveBalances + staff-gated /leave action; award/EA rules = documented follow-up). Advisors 0/0. ALL fixable items done: 10 issues closed this arc (crm7 #1109-1115, conduit#355, R80.3#330, +#1110/#1111/#1112/#1113/#1114). REMAINING = OPERATOR-ONLY: Xero Vault seed (TIME-SENSITIVE 60-day cliff), #1117 host-sites product decision, employer_id backfill sign-off (#1047), optional Resend tracking CNAME, conduit BS-OAuth browser live-pass, live Xero network exercise. Loop PAUSED.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/3a885a01"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/88e82a47"
     }
   ],
   "operator_blockers": [
