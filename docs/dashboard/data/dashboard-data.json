@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W0-W7-built-operator-review",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "EMAIL PLATFORM PATH FIXED + LIVE-VERIFIED (operator 'work the whole list'). Root cause: platform sender noreply@crm7.app but Resend only has coms.braden.com.au (DKIM+SPF verified). Fix: DEFAULT_FROM_EMAIL->coms.braden.com.au + sibling send-notification fn (BSU 4cad399, deployed). PROOF: direct Resend crm7.app=403 / coms=200+msgid; deployed dispatcher source=platform=200+msgid to operator inbox. Running: FE-comms (crm7 per-user Gmail/MSGraph/SMTP sending + Google/Azure doc). Next: Xero setup, then 9 issues. Minor: platform sends don't write email_messages audit row (observability follow-up). Optional operator DNS: CNAME links.coms.braden.com.au->links1.resend-dns.com.",
+      "next_step": "EMAIL + XERO waves DONE. Email platform path live-verified (coms.braden.com.au, 200+msgid). crm7 per-user Send-From. Azure email OAuth confirmed live (AZURE_* secrets). XERO: connect/token-exchange already worked; added proactive daily cron refresh (crm7 423a7883, deployed) + truthful connection-health UI (2 cols live) + doc. Cron gracefully DEFERRED until operator seeds 2 Vault secrets + XERO_CRON_REFRESH_SECRET (I have no DB-write path; can't coordinate a self-generated cron secret without logging it). TIME-SENSITIVE: 1 active Xero connection (Braden Pty Ltd) is ~59 days stale, near the 60-day refresh cliff — seed the cron secret ASAP or reconnect. Filed crm7 Xero deno-check type-debt (pre-existing). Next: Wave 3 = 9 issues.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/commit/4cad399"
+      "evidence_url": "https://github.com/GaryOcean428/crm7/commit/423a7883"
     }
   ],
   "operator_blockers": [
