@@ -879,11 +879,11 @@
       "status": "in_progress",
       "phase": "W0-W7-built-operator-review",
       "owner": "claude-code (loop-engineering)",
-      "next_step": "W0-W7 built + live-verified. Follow-up round (operator 'go'): crm7#1111 CLOSED — organization_members RLS self-select (mig 20260704180000, live-verified, pgTAP 6/18→18/18, advisors 0/0) unblocks host-employer picker + 6 tables. BSU email-dispatcher code-fixed+DEPLOYED (f696b0a): 500 no longer masks provider errors → proper 4xx/502 + real Resend error logged (9 deno tests). RESIDUAL (operator): verify Resend key/domain for crm7.app — the fn will now log the exact rejection reason on the next send. Remaining follow-ups: crm7#1109/#1110/#1114, R80.3#330, placements.employer_id data quality, leave-accrual engine + live Xero/conduit UX (operator-gated).",
+      "next_step": "EMAIL PLATFORM PATH FIXED + LIVE-VERIFIED (operator 'work the whole list'). Root cause: platform sender noreply@crm7.app but Resend only has coms.braden.com.au (DKIM+SPF verified). Fix: DEFAULT_FROM_EMAIL->coms.braden.com.au + sibling send-notification fn (BSU 4cad399, deployed). PROOF: direct Resend crm7.app=403 / coms=200+msgid; deployed dispatcher source=platform=200+msgid to operator inbox. Running: FE-comms (crm7 per-user Gmail/MSGraph/SMTP sending + Google/Azure doc). Next: Xero setup, then 9 issues. Minor: platform sends don't write email_messages audit row (observability follow-up). Optional operator DNS: CNAME links.coms.braden.com.au->links1.resend-dns.com.",
       "severity": "high",
       "category": "architecture",
       "issue": "business-suite-unified#303",
-      "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/commit/f696b0a"
+      "evidence_url": "https://github.com/GaryOcean428/business-suite-unified/commit/4cad399"
     }
   ],
   "operator_blockers": [
