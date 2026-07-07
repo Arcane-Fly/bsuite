@@ -1,6 +1,7 @@
 # BSuite Consistency Report
 
 **Generated:** 2026-05-04 (Plan-tracking convention added 2026-05-06)
+**Last updated:** 2026-07-07 (TypeScript 6.0, React 19, Zod 4 migrations complete)
 **Scope:** Cross-app WCAG / a11y / dependency / auth consistency status,
 plus the canonical plan-tracking convention.
 
@@ -74,19 +75,26 @@ follow this layout:
 
 ### bsuite#211 — TypeScript 6.0 migration EPIC
 
-**Status:** 🟡 **TRACKED** — plan locked, execution scheduled to 2026-Q3 maintenance window.
+**Status:** ✅ **DONE** (2026-05-14)
 
 - Plan: [`docs/plans/20260504-typescript-6-migration-evaluation-v1.00A.md`](./plans/20260504-typescript-6-migration-evaluation-v1.00A.md)
-- Per-submodule child issues:
-  - GaryOcean428/crm7#433
-  - GaryOcean428/conduit#168
-  - GaryOcean428/business-suite-unified#286
-  - GaryOcean428/R80.3#157
-  - GaryOcean428/braden#188
-  - GaryOcean428/throughput#90
+- Evidence: commit `1872dc4` — `chore(deps): align root pnpm overrides with TS6/ESLint10 app baseline (#971)`
+- All six consumer apps now resolve TypeScript 6-compatible stacks
+- ESLint 10 aligned across the suite
 
-EPIC remains open with `external-blocked` rationale: deferred to scheduled
-migration window per the universal rulebook's formal-issue requirement.
+EPIC closed 2026-05-14. Plan retained in `docs/plans/README.md` Completed Plans.
+
+## Dependencies
+
+### bsuite#212 — React 19 + Zod 4 + Vite 8 stack modernization
+
+**Status:** ✅ **DONE** (2026-05-13)
+
+- Evidence: commit `3270f80` — `chore(packages): React 19 attestation bumps + nav-core peerDeps + schema-registry publish workflow (#434)`
+- Evidence: commit `fab23e1` — `feat(shared): Zod 4 codemod Phase 4.1 — z.string().format() → z.format() across packages (#950)`
+- All six consumer apps on React ^19.2.4 or ^19.2.5
+- Zod 4 codemod complete across shared packages
+- Shared packages (`@bsuite/nav-core`, `@bsuite/schema-registry`, `@bsuite/page-builder`) attest React 19 peerDeps
 
 ## Authentication
 
