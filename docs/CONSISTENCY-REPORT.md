@@ -1,7 +1,7 @@
 # BSuite Consistency Report
 
 **Generated:** 2026-05-04 (Plan-tracking convention added 2026-05-06)
-**Last updated:** 2026-07-07 (TypeScript 6.0, React 19, Zod 4 migrations complete)
+**Last updated:** 2026-07-07 (TypeScript 6.0, React 19, Zod 4 migrations complete; admin parity schema + contact propagation trigger shipped)
 **Scope:** Cross-app WCAG / a11y / dependency / auth consistency status,
 plus the canonical plan-tracking convention.
 
@@ -174,3 +174,59 @@ crm7 README, BSU README, R80.3 README):
 3. **Visual schema builder** (`@bsuite/schema-builder`) — used in 4 apps.
 4. **Offline-first PWA** (CRM7) — SQLite WASM + IndexedDB + bi-directional Supabase sync.
 5. **Multi-tenant sub-organisation hierarchy** + runtime OKLCH branding (BSU).
+
+## Codehouse parity implementation (2026-07-07)
+
+Schema migrations shipped to close 14 admin parity gaps (bsuite#578) and implement contact propagation doctrine (ADR-0006):
+
+### Admin parity schema (bsuite#578)
+
+**Schema A** — Hiring/Placements/Imports (matrix rows 68, 70, 72-73, 98, 106):
+- `hiring_divisions` — tenant-scoped with super_guarantee_rate
+- `public_holiday_groups` + `public_holiday_dates` — per-state holiday tracking
+- `ots_rules` + `ots_streams` — Over Time Scheme configuration
+- `classifications` — unified parent-child hierarchy (replaces ad-hoc award_classifications usage)
+- `purchase_orders` — placement-scoped PO tracking
+- `employee_imports` — import job tracking with error_rows JSONB
+- Added columns to `placements`: hiring_division_id, ots_rule_id, ots_stream_id, public_holiday_group_id
+
+**Schema B** — Payroll-tax extensions (matrix rows 111-114):
+- `pay_item_types` — seed data for ATO STP Phase 2 (ordinary, overtime, allowance, leave, ETP, lump sums, FBT)
+- `pay_items` — tenant-scoped pay item registry
+- `tfn_declarations` — encrypted TFN storage with pgcrypto + vault integration
+- `citb_levy_config` — single-row-per-tenant CITB levy configuration
+- Added columns to `apprentices`: fbt_reportable_amount, termination_date
+- Helper functions: `encrypt_tfn()`, `decrypt_tfn_last4()` (SECURITY DEFINER, vault-backed)
+
+All tables have RLS enabled with tenant isolation policies (AUTH_CANONICAL.md §5). Admin write policies restrict INSERT/UPDATE to org_admin/gto_admin roles.
+
+### Contact propagation doctrine (ADR-0006)
+
+Trigger function `fn_propagate_contact_changes()` automatically propagates contact updates (email, phone, name) to:
+- `apprentices` (if contact is an apprentice)
+- `supervisors` (if contact is a supervisor)
+- `client_contacts` (if contact is a client contact)
+- `placements` (supervisor contact references)
+
+Ensures single source of truth: `contacts` table is canonical; role junctions inherit changes automatically.
+
+### Leave persistence layer (bsuite#573)
+
+- `leave_types` — configurable leave categories with color coding
+- `leave_requests` — employee leave requests with approval workflow
+- `leave_balances` — per-employee leave accrual tracking
+- All tables tenant-scoped with RLS
+
+### Pay periods infrastructure (bsuite#575)
+
+- `pay_periods` — payroll period tracking with status workflow (open → processing → closed → locked)
+- `pay_period_streams` — per-stream payroll processing within a period
+- Supports bulk operations, CSV export, and reminder dispatch
+
+### UI implementations (in progress)
+
+- **Leave calendar** (`crm7/src/pages/leave/calendar.tsx`) — react-big-calendar with employee/leave type selectors
+- **Pay periods management** (`crm7/src/pages/payroll/periods.tsx`) — create, close, lock, export, send reminders
+- **Admin parity UI** (dispatched to Claude Code) — hiring divisions, PH groups, classifications, import wizard
+- **Timesheet approval** (dispatched to Claude Code) — bulk approve RPC, audit trail, supervisor reminders
+- **Comms parity** (dispatched to agy) — SMS adapter, event triggers, template editor, WHS alerts
