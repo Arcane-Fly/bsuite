@@ -2,13 +2,23 @@
 
 **Status:** SINGLE SOURCE OF TRUTH for all outstanding work across the BSuite monorepo + 6 submodules.
 **Generated:** 2026-04-24 (docs reconciliation pass — top-level `docs/*.md` + plan indexes)
-**Updated:** 2026-05-19 — Per-submodule `OUTSTANDING.md` / `OUTSTANDING-SYSTEM.md` / `OUTSTANDING-PLANS.md` files removed (bsuite#488). This file is now the only `OUTSTANDING.md` in the BSuite parent + submodule tree.
+**Updated:** 2026-07-08 — Pointers updated to reflect current execution queue (see note below); leave/pay-periods/admin-parity parity tables now DONE (see §Updates).
+
+> **2026-07-08 pointer update:** The execution queue reference below points to `docs/20260501-merged-execution-backlog-v1.00W.md` which is now archived (`docs/archive/2026-07/`). The **current** active execution queue is [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md). For GTO-specific work, see [`docs/plans/20260703-gto-e2e-gap-map-v1.00W.md`](./plans/20260703-gto-e2e-gap-map-v1.00W.md).
+>
+> **Items completed since 2026-04-24 that were tracked here as outstanding:**
+> - Leave persistence layer (leave parity spec, 5 tables) — DONE (migs 20260704150000–150200, W4)
+> - Pay periods table — DONE (live, 2026-07-04)
+> - Admin parity tables (4 entities: CITB levy, ETP pay items, PH groups, purchase orders) — DONE (mig 20260708130000)
+> - ADR-0006 contact propagation trigger — DONE (mig 20260708140000, reverse propagation live)
+> - Unified authoring surface Phase 1 — SHIPPED (chunks 1–4, 2026-07-03)
+> - GTO E2E gap map — COMPLETE (W0–W7)
+
+**Updated (original):** 2026-05-19 — Per-submodule `OUTSTANDING.md` / `OUTSTANDING-SYSTEM.md` / `OUTSTANDING-PLANS.md` files removed (bsuite#488). This file is now the only `OUTSTANDING.md` in the BSuite parent + submodule tree.
 **Scope:** `docs/*.md` at repo root — excludes `docs/archive/*` and `docs/plans/*` (managed separately).
 **Audit authority:** See `docs/plans/README.md` for the plans-layer index.
 
-> **🧭 CANONICAL EXECUTION QUEUE:** For the active phase-ordered execution queue with stable item IDs (`BL-NNN`, `P0-*`, `P1-*`, `P2-*`, `WS-*`), read [`docs/20260501-merged-execution-backlog-v1.00W.md`](./20260501-merged-execution-backlog-v1.00W.md) FIRST. That doc consolidates the parent roadmaps **and the six submodule OUTSTANDING files** (per its "Sources merged" section) into a single execution queue. This index remains a per-file status tracker for each living W-status doc in the parent `docs/` tree; the merged execution backlog is the cross-cutting action queue.
->
-> **For the prioritised P0/P1/P2 finish-line view**, see [`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`](./20260425-bsuite-finish-line-roadmap-v1.00W.md) (154 items, cited to sources).
+> **🧭 CANONICAL EXECUTION QUEUE (updated 2026-07-08):** The active phase-ordered execution queue is [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md). The previously referenced `20260501-merged-execution-backlog-v1.00W.md` and `20260425-bsuite-finish-line-roadmap-v1.00W.md` are archived in `docs/archive/2026-07/`. This index remains a per-file status tracker for each living W-status doc in the parent `docs/` tree.
 >
 > **Submodule files removed by bsuite#488:** `crm7/docs/OUTSTANDING.md`, `R80.3/docs/OUTSTANDING.md`, `conduit/docs/OUTSTANDING.md`, `braden/docs/OUTSTANDING.md`, `business-suite-unified/docs/OUTSTANDING-SYSTEM.md`, `business-suite-unified/docs/OUTSTANDING-PLANS.md`. All their content lives in the merged execution backlog above.
 
