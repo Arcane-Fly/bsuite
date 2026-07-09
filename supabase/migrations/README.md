@@ -111,3 +111,25 @@ Reference: bsuite#961, crm7#771 (PG17 syntax break is a frozen-migration follow-
 - crm7#770 — Phase 2 reconciliation inventory (crm7 submodule)
 - crm7's `supabase/migrations/CLAUDE.md` — sister-repo doctrine (frozen-migration rule, `.nontx.sql` convention)
 - AGENTS.md — global agent rules (Anti-Laziness, FF-SELF-VALIDATION-20260507, etc.)
+
+## 2026-07-09 — withdrawn: 6 unapplied 20260707000xxx parent migrations
+
+Six Hermes-authored files (`20260707000010`, `000011`, `000030`, `000031`,
+`000040`, `000060`) were **withdrawn before ever being applied or recorded**
+(verified: no `schema_migrations` rows, and live-catalog check 2026-07-09).
+They referenced the nonexistent helper `current_tenant_id()` (live helper is
+`auth_tenant_id()` returning SETOF uuid) and conflicted with schema that
+shipped through the crm7 lane instead:
+
+| Withdrawn file | Superseded by (applied + live-verified) |
+|---|---|
+| `000010_leave_persistence_layer` | crm7 `20260704150100`/`150200` (people-backed `leave_requests`/`leave_balances`, text `leave_type`) |
+| `000011_pay_items_registry` | crm7 `20260708130000_admin_parity_payroll_entities` (`pay_items` live shape) |
+| `000030/000031_admin_parity_578_schema_a/b` | crm7 `20260707120000_admin_parui_tables` + `20260707130000_admin_parity_rls_hardening` (reconciled to live 2026-07-09) + `20260708130000` |
+| `000040_contact_propagation_trigger` | crm7 `20260708140000_adr0006_contacts_reverse_propagation` |
+| `000060_branding_inheritance_and_platform_marketing` | 3-tier branding tables + `branding_json_for_tenant()` (BSU lane, 2026-07-03) |
+
+`20260707000020`/`000021` (pay_periods / pay_period_streams) are NOT
+withdrawn — they were applied via the sanctioned MCP reconciliation and are
+recorded, hence frozen. Withdrawal of never-applied files does not violate
+the frozen rule (rule attaches at apply/record time).

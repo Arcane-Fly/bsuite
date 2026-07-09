@@ -83,6 +83,13 @@ Archived per-project roadmaps and documents that have been superseded by the uni
 | [20260311-d2c-theme-remediation-plan-v1.00W.md](20260311-d2c-theme-remediation-plan-v1.00W.md) | D2C theme remediation plan — all items complete, archived 2026-04-07 |
 | [20260316-bsuite-entity-reconciliation-plan-v1.00W.md](20260316-bsuite-entity-reconciliation-plan-v1.00W.md) | Entity reconciliation plan (SP-4) — crosswalk delivered, archived 2026-04-07 |
 
+### 2026-07/ (deep-dive docs-vs-code audit, 2026-07-09)
+
+| File | Description |
+|------|-------------|
+| [2026-07/20260709-styling-consistency-audit-resolved.md](2026-07/20260709-styling-consistency-audit-resolved.md) | Hermes cross-app styling audit — all 14 findings resolved (conduit 7fc6c66, crm7 1d820548, R80.3 61a3f4a, BSU e13548c) |
+| [2026-07/throughput/](2026-07/throughput/) | 7 throughput root-level point-in-time session reports (AUTH_FIX_SUMMARY, IMPLEMENTATION_COMPLETE/SUMMARY, QUICK_SUMMARY/START, DEPLOYMENT_READY_CHECKLIST, MIGRATION_GUIDE) — moved from `throughput/` per operator parent-archive ruling |
+
 ### crm7/ (additional archived plans)
 
 | File | Description |

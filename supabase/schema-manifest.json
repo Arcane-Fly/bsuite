@@ -5,10 +5,10 @@
   "recommended_control_plane": "bsuite",
   "summary": {
     "scope_count": 8,
-    "migration_count": 471,
-    "transactional_count": 466,
-    "non_transactional_count": 5,
-    "function_count": 60
+    "migration_count": 566,
+    "transactional_count": 560,
+    "non_transactional_count": 6,
+    "function_count": 67
   },
   "scopes": [
     {
@@ -23,10 +23,10 @@
         "migrations_dir": true,
         "functions_dir": true
       },
-      "migration_count": 19,
-      "transactional_count": 19,
+      "migration_count": 21,
+      "transactional_count": 21,
       "non_transactional_count": 0,
-      "latest_transactional_version": "20260526053000_secdef_lockdown_phase_2_2",
+      "latest_transactional_version": "20260707000021_pay_period_streams_table",
       "latest_non_transactional_version": null,
       "migrations": [
         {
@@ -123,6 +123,16 @@
           "file": "20260526053000_secdef_lockdown_phase_2_2.sql",
           "version": "20260526053000_secdef_lockdown_phase_2_2",
           "kind": "transactional"
+        },
+        {
+          "file": "20260707000020_pay_periods_table.sql",
+          "version": "20260707000020_pay_periods_table",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260707000021_pay_period_streams_table.sql",
+          "version": "20260707000021_pay_period_streams_table",
+          "kind": "transactional"
         }
       ],
       "functions": [
@@ -142,11 +152,11 @@
         "migrations_dir": true,
         "functions_dir": true
       },
-      "migration_count": 289,
-      "transactional_count": 284,
-      "non_transactional_count": 5,
+      "migration_count": 355,
+      "transactional_count": 349,
+      "non_transactional_count": 6,
       "latest_transactional_version": "verify_migrations",
-      "latest_non_transactional_version": "20260513130000_add_fk_indexes_phase24",
+      "latest_non_transactional_version": "20260610002141_reconcile_empty_statement_schema_drift_831",
       "migrations": [
         {
           "file": "20250601_crm7_core_schema.sql",
@@ -1159,11 +1169,6 @@
           "kind": "transactional"
         },
         {
-          "file": "20260508082500_host_monthly_pack_report.sql",
-          "version": "20260508082500_host_monthly_pack_report",
-          "kind": "transactional"
-        },
-        {
           "file": "20260508090000_fair_work_retention_cron.sql",
           "version": "20260508090000_fair_work_retention_cron",
           "kind": "transactional"
@@ -1236,6 +1241,11 @@
         {
           "file": "20260512230000_tenant_locations_and_state_ir_config.sql",
           "version": "20260512230000_tenant_locations_and_state_ir_config",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260513110000_host_monthly_pack_report.sql",
+          "version": "20260513110000_host_monthly_pack_report",
           "kind": "transactional"
         },
         {
@@ -1334,11 +1344,6 @@
           "kind": "transactional"
         },
         {
-          "file": "20260525000001_fix_report_configs_rls.sql",
-          "version": "20260525000001_fix_report_configs_rls",
-          "kind": "transactional"
-        },
-        {
           "file": "20260525120000_canonicalize_host_employers_to_employers.sql",
           "version": "20260525120000_canonicalize_host_employers_to_employers",
           "kind": "transactional"
@@ -1374,208 +1379,543 @@
           "kind": "transactional"
         },
         {
-          "file": "20260603090000_report_rejected_timesheets_rpc.sql",
-          "version": "20260603090000_report_rejected_timesheets_rpc",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603091000_revoke_anon_execute_legacy_public_functions.sql",
-          "version": "20260603091000_revoke_anon_execute_legacy_public_functions",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603100000_report_hours_by_work_type_rpc.sql",
-          "version": "20260603100000_report_hours_by_work_type_rpc",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603110000_report_pay_item_group_hours_rpc.sql",
-          "version": "20260603110000_report_pay_item_group_hours_rpc",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603120000_report_pay_items_by_employee_rpc.sql",
-          "version": "20260603120000_report_pay_items_by_employee_rpc",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603130000_report_consultant_kpi_rpc.sql",
-          "version": "20260603130000_report_consultant_kpi_rpc",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603202056_harden_no_to_rls_policies.sql",
-          "version": "20260603202056_harden_no_to_rls_policies",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603211119_revoke_anon_execute_remaining_secdef_helpers.sql",
-          "version": "20260603211119_revoke_anon_execute_remaining_secdef_helpers",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603212923_feature_builder_rls_initplan_rewrite.sql",
-          "version": "20260603212923_feature_builder_rls_initplan_rewrite",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603215201_role_capabilities_rls_initplan_rewrite.sql",
-          "version": "20260603215201_role_capabilities_rls_initplan_rewrite",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603221424_tenant_locations_rls_initplan_rewrite.sql",
-          "version": "20260603221424_tenant_locations_rls_initplan_rewrite",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603223314_xero_rls_initplan_rewrite.sql",
-          "version": "20260603223314_xero_rls_initplan_rewrite",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603225237_super_admin_action_audit_rls_initplan_rewrite.sql",
-          "version": "20260603225237_super_admin_action_audit_rls_initplan_rewrite",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603231651_apprentice_placements_rls_initplan_rewrite.sql",
-          "version": "20260603231651_apprentice_placements_rls_initplan_rewrite",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260603233928_team_invitations_rls_initplan_rewrite.sql",
-          "version": "20260603233928_team_invitations_rls_initplan_rewrite",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604000020_team_invitations_permissive_select_consolidation.sql",
-          "version": "20260604000020_team_invitations_permissive_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604002313_team_members_permissive_select_consolidation.sql",
-          "version": "20260604002313_team_members_permissive_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604004553_tenants_permissive_select_consolidation.sql",
-          "version": "20260604004553_tenants_permissive_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604010721_super_admin_action_audit_permissive_select_consolidation.sql",
-          "version": "20260604010721_super_admin_action_audit_permissive_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604012806_wage_snapshots_permissive_select_consolidation.sql",
-          "version": "20260604012806_wage_snapshots_permissive_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604014405_timesheets_permissive_select_consolidation.sql",
-          "version": "20260604014405_timesheets_permissive_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604015901_core_hierarchy_select_consolidation.sql",
-          "version": "20260604015901_core_hierarchy_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604021732_financial_records_select_consolidation.sql",
-          "version": "20260604021732_financial_records_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604023302_billing_select_consolidation.sql",
-          "version": "20260604023302_billing_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604024920_induction_records_select_consolidation.sql",
-          "version": "20260604024920_induction_records_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604030805_r7_interviews_offers_select_consolidation.sql",
-          "version": "20260604030805_r7_interviews_offers_select_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604032517_org_members_policy_consolidation.sql",
-          "version": "20260604032517_org_members_policy_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604034210_report_policy_consolidation.sql",
-          "version": "20260604034210_report_policy_consolidation",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604040144_restrict_schema_tooling_rpc_grants.sql",
-          "version": "20260604040144_restrict_schema_tooling_rpc_grants",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604042450_add_missing_fk_indexes.sql",
-          "version": "20260604042450_add_missing_fk_indexes",
-          "kind": "transactional"
-        },
-        {
-          "file": "20260604044753_report_coinvest_lsl_rpc.sql",
-          "version": "20260604044753_report_coinvest_lsl_rpc",
-          "kind": "transactional"
-        },
-        {
           "file": "20260604051244_report_deliveries_reliability.sql",
           "version": "20260604051244_report_deliveries_reliability",
           "kind": "transactional"
         },
         {
-          "file": "20260604145000_payroll_provider_connections.sql",
-          "version": "20260604145000_payroll_provider_connections",
+          "file": "20260609084944_repair_report_deliveries_reliability.sql",
+          "version": "20260609084944_repair_report_deliveries_reliability",
           "kind": "transactional"
         },
         {
-          "file": "20260604170000_payroll_stp_eofy_status.sql",
-          "version": "20260604170000_payroll_stp_eofy_status",
+          "file": "20260610002141_reconcile_empty_statement_schema_drift_831.nontx.sql",
+          "version": "20260610002141_reconcile_empty_statement_schema_drift_831",
+          "kind": "non_transactional"
+        },
+        {
+          "file": "20260610023056_placement_person_identity_bridge.sql",
+          "version": "20260610023056_placement_person_identity_bridge",
           "kind": "transactional"
         },
         {
-          "file": "20260604172000_ws5_report_template_ordering.sql",
-          "version": "20260604172000_ws5_report_template_ordering",
+          "file": "20260610061500_rescue_orphaned_placements_links.sql",
+          "version": "20260610061500_rescue_orphaned_placements_links",
           "kind": "transactional"
         },
         {
-          "file": "20260604183000_harden_host_monthly_pack_secdef_search_path.sql",
-          "version": "20260604183000_harden_host_monthly_pack_secdef_search_path",
+          "file": "20260610100000_people_training_day_pattern_periods.sql",
+          "version": "20260610100000_people_training_day_pattern_periods",
           "kind": "transactional"
         },
         {
-          "file": "20260604193000_payroll_provider_acknowledgements.sql",
-          "version": "20260604193000_payroll_provider_acknowledgements",
+          "file": "20260610200000_training_provider_unification.sql",
+          "version": "20260610200000_training_provider_unification",
           "kind": "transactional"
         },
         {
-          "file": "20260604200000_normalize_legacy_secdef_search_paths.sql",
-          "version": "20260604200000_normalize_legacy_secdef_search_paths",
+          "file": "20260610201000_aass_providers.sql",
+          "version": "20260610201000_aass_providers",
           "kind": "transactional"
         },
         {
-          "file": "20260604210000_seed_ws5_gto_mandatory_report_templates.sql",
-          "version": "20260604210000_seed_ws5_gto_mandatory_report_templates",
+          "file": "20260610202000_training_plan_units_progress.sql",
+          "version": "20260610202000_training_plan_units_progress",
           "kind": "transactional"
         },
         {
-          "file": "20260604211000_ws5_gto_mandatory_report_rpcs.sql",
-          "version": "20260604211000_ws5_gto_mandatory_report_rpcs",
+          "file": "20260610203000_report_gto_training_progress.sql",
+          "version": "20260610203000_report_gto_training_progress",
           "kind": "transactional"
         },
         {
-          "file": "20260604223000_normalize_remaining_secdef_search_paths.sql",
-          "version": "20260604223000_normalize_remaining_secdef_search_paths",
+          "file": "20260610400000_restore_leave_balances.sql",
+          "version": "20260610400000_restore_leave_balances",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610401000_restore_payroll_runs.sql",
+          "version": "20260610401000_restore_payroll_runs",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610402000_group_catalogue_table_grants.sql",
+          "version": "20260610402000_group_catalogue_table_grants",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610403000_host_monthly_pack_restore.sql",
+          "version": "20260610403000_host_monthly_pack_restore",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610405000_history_record_mcp_applied_versions.sql",
+          "version": "20260610405000_history_record_mcp_applied_versions",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410000_fix_report_configs_rls.sql",
+          "version": "20260610410000_fix_report_configs_rls",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410100_report_rejected_timesheets_rpc.sql",
+          "version": "20260610410100_report_rejected_timesheets_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410200_revoke_anon_execute_legacy_public_functions.sql",
+          "version": "20260610410200_revoke_anon_execute_legacy_public_functions",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410300_report_hours_by_work_type_rpc.sql",
+          "version": "20260610410300_report_hours_by_work_type_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410400_report_pay_item_group_hours_rpc.sql",
+          "version": "20260610410400_report_pay_item_group_hours_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410500_report_pay_items_by_employee_rpc.sql",
+          "version": "20260610410500_report_pay_items_by_employee_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410600_report_consultant_kpi_rpc.sql",
+          "version": "20260610410600_report_consultant_kpi_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410700_harden_no_to_rls_policies.sql",
+          "version": "20260610410700_harden_no_to_rls_policies",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410800_revoke_anon_execute_remaining_secdef_helpers.sql",
+          "version": "20260610410800_revoke_anon_execute_remaining_secdef_helpers",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610410900_feature_builder_rls_initplan_rewrite.sql",
+          "version": "20260610410900_feature_builder_rls_initplan_rewrite",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411000_role_capabilities_rls_initplan_rewrite.sql",
+          "version": "20260610411000_role_capabilities_rls_initplan_rewrite",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411100_tenant_locations_rls_initplan_rewrite.sql",
+          "version": "20260610411100_tenant_locations_rls_initplan_rewrite",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411200_xero_rls_initplan_rewrite.sql",
+          "version": "20260610411200_xero_rls_initplan_rewrite",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411300_super_admin_action_audit_rls_initplan_rewrite.sql",
+          "version": "20260610411300_super_admin_action_audit_rls_initplan_rewrite",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411400_apprentice_placements_rls_initplan_rewrite.sql",
+          "version": "20260610411400_apprentice_placements_rls_initplan_rewrite",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411500_team_invitations_rls_initplan_rewrite.sql",
+          "version": "20260610411500_team_invitations_rls_initplan_rewrite",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411600_team_invitations_permissive_select_consolidation.sql",
+          "version": "20260610411600_team_invitations_permissive_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411700_team_members_permissive_select_consolidation.sql",
+          "version": "20260610411700_team_members_permissive_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411800_tenants_permissive_select_consolidation.sql",
+          "version": "20260610411800_tenants_permissive_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610411900_super_admin_action_audit_permissive_select_consolidation.sql",
+          "version": "20260610411900_super_admin_action_audit_permissive_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412000_wage_snapshots_permissive_select_consolidation.sql",
+          "version": "20260610412000_wage_snapshots_permissive_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412100_timesheets_permissive_select_consolidation.sql",
+          "version": "20260610412100_timesheets_permissive_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412200_core_hierarchy_select_consolidation.sql",
+          "version": "20260610412200_core_hierarchy_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412300_financial_records_select_consolidation.sql",
+          "version": "20260610412300_financial_records_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412400_billing_select_consolidation.sql",
+          "version": "20260610412400_billing_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412500_induction_records_select_consolidation.sql",
+          "version": "20260610412500_induction_records_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412600_r7_interviews_offers_select_consolidation.sql",
+          "version": "20260610412600_r7_interviews_offers_select_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412700_org_members_policy_consolidation.sql",
+          "version": "20260610412700_org_members_policy_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412800_report_policy_consolidation.sql",
+          "version": "20260610412800_report_policy_consolidation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610412900_restrict_schema_tooling_rpc_grants.sql",
+          "version": "20260610412900_restrict_schema_tooling_rpc_grants",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413000_add_missing_fk_indexes.sql",
+          "version": "20260610413000_add_missing_fk_indexes",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413100_report_coinvest_lsl_rpc.sql",
+          "version": "20260610413100_report_coinvest_lsl_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413200_payroll_provider_connections.sql",
+          "version": "20260610413200_payroll_provider_connections",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413300_payroll_stp_eofy_status.sql",
+          "version": "20260610413300_payroll_stp_eofy_status",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413400_ws5_report_template_ordering.sql",
+          "version": "20260610413400_ws5_report_template_ordering",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413500_harden_host_monthly_pack_secdef_search_path.sql",
+          "version": "20260610413500_harden_host_monthly_pack_secdef_search_path",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413600_payroll_provider_acknowledgements.sql",
+          "version": "20260610413600_payroll_provider_acknowledgements",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413700_normalize_legacy_secdef_search_paths.sql",
+          "version": "20260610413700_normalize_legacy_secdef_search_paths",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413800_seed_ws5_gto_mandatory_report_templates.sql",
+          "version": "20260610413800_seed_ws5_gto_mandatory_report_templates",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610413900_ws5_gto_mandatory_report_rpcs.sql",
+          "version": "20260610413900_ws5_gto_mandatory_report_rpcs",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610414000_normalize_remaining_secdef_search_paths.sql",
+          "version": "20260610414000_normalize_remaining_secdef_search_paths",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611010000_pin_payroll_trigger_search_path.sql",
+          "version": "20260611010000_pin_payroll_trigger_search_path",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611020000_consolidate_permissive_policies.sql",
+          "version": "20260611020000_consolidate_permissive_policies",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611030000_report_deliveries_email_initplan.sql",
+          "version": "20260611030000_report_deliveries_email_initplan",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611100000_training_calendar_foundation.sql",
+          "version": "20260611100000_training_calendar_foundation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611110000_storage_bucket_policy_coverage.sql",
+          "version": "20260611110000_storage_bucket_policy_coverage",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611110100_revoke_anon_execute_legacy_helpers.sql",
+          "version": "20260611110100_revoke_anon_execute_legacy_helpers",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611110200_document_metadata_workflow.sql",
+          "version": "20260611110200_document_metadata_workflow",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611110300_lock_document_bucket_direct_inserts.sql",
+          "version": "20260611110300_lock_document_bucket_direct_inserts",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611110400_document_metadata_fk_indexes.sql",
+          "version": "20260611110400_document_metadata_fk_indexes",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260611110500_document_records_funding_claim_entity_type.sql",
+          "version": "20260611110500_document_records_funding_claim_entity_type",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260612102000_revoke_document_workflow_authenticated_secdef.sql",
+          "version": "20260612102000_revoke_document_workflow_authenticated_secdef",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260617120000_document_access_log.sql",
+          "version": "20260617120000_document_access_log",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260617120100_document_metadata_self_service_rls.sql",
+          "version": "20260617120100_document_metadata_self_service_rls",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260617120200_document_expiry_alert_sweep.sql",
+          "version": "20260617120200_document_expiry_alert_sweep",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260617120300_document_verification_notification.sql",
+          "version": "20260617120300_document_verification_notification",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260624070000_field_officers_user_id.sql",
+          "version": "20260624070000_field_officers_user_id",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260629120000_wc008_remove_dead_super_admin_branch.sql",
+          "version": "20260629120000_wc008_remove_dead_super_admin_branch",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260701090000_field_officers_tenant_rls.sql",
+          "version": "20260701090000_field_officers_tenant_rls",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702120000_create_signature_requests.sql",
+          "version": "20260702120000_create_signature_requests",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702120100_create_whs_tables.sql",
+          "version": "20260702120100_create_whs_tables",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702120200_field_officers_timestamps.sql",
+          "version": "20260702120200_field_officers_timestamps",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260703080000_authoring_foundations.sql",
+          "version": "20260703080000_authoring_foundations",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260703090000_revoke_ter_trigger_guard_execute.sql",
+          "version": "20260703090000_revoke_ter_trigger_guard_execute",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704060000_boot_assessments_rederive.sql",
+          "version": "20260704060000_boot_assessments_rederive",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704060100_create_charge_rate_audit_log.sql",
+          "version": "20260704060100_create_charge_rate_audit_log",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704090000_charge_rate_quote_signing.sql",
+          "version": "20260704090000_charge_rate_quote_signing",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704100000_rederive_is_session_valid_rpc.sql",
+          "version": "20260704100000_rederive_is_session_valid_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704130000_charge_rate_snapshots_and_propagation.sql",
+          "version": "20260704130000_charge_rate_snapshots_and_propagation",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704140000_revoke_propagate_approval_trigger_execute.sql",
+          "version": "20260704140000_revoke_propagate_approval_trigger_execute",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704150000_timesheets_notice_and_hour_class_columns.sql",
+          "version": "20260704150000_timesheets_notice_and_hour_class_columns",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704150100_create_leave_requests.sql",
+          "version": "20260704150100_create_leave_requests",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704150200_leave_balances_add_employee_fk.sql",
+          "version": "20260704150200_leave_balances_add_employee_fk",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704170000_gto_e2e_w6_portal_test_seed.sql",
+          "version": "20260704170000_gto_e2e_w6_portal_test_seed",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704180000_organization_members_rls_self_select.sql",
+          "version": "20260704180000_organization_members_rls_self_select",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706120000_email_integrations_insert_rls_self_service.sql",
+          "version": "20260706120000_email_integrations_insert_rls_self_service",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706160000_xero_connections_cron_refresh.sql",
+          "version": "20260706160000_xero_connections_cron_refresh",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706170000_charge_rate_audit_log_manual_provenance.sql",
+          "version": "20260706170000_charge_rate_audit_log_manual_provenance",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706180000_create_rate_schedules.sql",
+          "version": "20260706180000_create_rate_schedules",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706190000_create_batch_charge_rate_quotes.sql",
+          "version": "20260706190000_create_batch_charge_rate_quotes",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706210000_link_clients_employers_backfill_placements.sql",
+          "version": "20260706210000_link_clients_employers_backfill_placements",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706230000_canonicalize_secdef_search_paths.sql",
+          "version": "20260706230000_canonicalize_secdef_search_paths",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260706240000_index_wave_fk_columns.sql",
+          "version": "20260706240000_index_wave_fk_columns",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260707000020_pay_periods_table.sql",
+          "version": "20260707000020_pay_periods_table",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260707000021_pay_period_streams_table.sql",
+          "version": "20260707000021_pay_period_streams_table",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260707120000_admin_parui_tables.sql",
+          "version": "20260707120000_admin_parui_tables",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260707130000_admin_parity_rls_hardening.sql",
+          "version": "20260707130000_admin_parity_rls_hardening",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260708000001_fix_training_plans_qualification_fk.sql",
+          "version": "20260708000001_fix_training_plans_qualification_fk",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260708000002_fix_award_rates_fk.sql",
+          "version": "20260708000002_fix_award_rates_fk",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260708000003_fix_award_rates_classification_fk.sql",
+          "version": "20260708000003_fix_award_rates_classification_fk",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260708120000_invoices_bucket_and_xero_contact_id.sql",
+          "version": "20260708120000_invoices_bucket_and_xero_contact_id",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260708130000_admin_parity_payroll_entities.sql",
+          "version": "20260708130000_admin_parity_payroll_entities",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260708140000_adr0006_contacts_reverse_propagation.sql",
+          "version": "20260708140000_adr0006_contacts_reverse_propagation",
           "kind": "transactional"
         },
         {
@@ -1597,10 +1937,14 @@
       "functions": [
         "_shared",
         "avetmiss-export",
+        "charge-rate-quote-dispatch",
         "compliance-scanner",
         "document-encryption",
+        "document-secure-upload",
+        "document-virus-scan",
         "encrypt-email-tokens",
         "generate-document",
+        "invoice-send-direct",
         "lead-capture",
         "oauth-google-email",
         "oauth-microsoft-email",
@@ -1630,10 +1974,10 @@
         "migrations_dir": true,
         "functions_dir": true
       },
-      "migration_count": 80,
-      "transactional_count": 80,
+      "migration_count": 84,
+      "transactional_count": 84,
       "non_transactional_count": 0,
-      "latest_transactional_version": "20260525070000_platform_branding_logo_url_variants",
+      "latest_transactional_version": "20260703010000_platform_branding_per_app_and_precedence",
       "latest_non_transactional_version": null,
       "migrations": [
         {
@@ -2035,6 +2379,26 @@
           "file": "20260525070000_platform_branding_logo_url_variants.sql",
           "version": "20260525070000_platform_branding_logo_url_variants",
           "kind": "transactional"
+        },
+        {
+          "file": "20260701090000_delete_organization_rpc.sql",
+          "version": "20260701090000_delete_organization_rpc",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702000000_fix_save_tenant_navigation_auth_and_stale_id.sql",
+          "version": "20260702000000_fix_save_tenant_navigation_auth_and_stale_id",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260703000000_branding_json_for_tenant_read_tables.sql",
+          "version": "20260703000000_branding_json_for_tenant_read_tables",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260703010000_platform_branding_per_app_and_precedence.sql",
+          "version": "20260703010000_platform_branding_per_app_and_precedence",
+          "kind": "transactional"
         }
       ],
       "functions": [
@@ -2076,10 +2440,10 @@
         "migrations_dir": true,
         "functions_dir": true
       },
-      "migration_count": 43,
-      "transactional_count": 43,
+      "migration_count": 46,
+      "transactional_count": 46,
       "non_transactional_count": 0,
-      "latest_transactional_version": "20260519122433_create_page_drafts",
+      "latest_transactional_version": "20260701150000_harden_layout_editor_secdef_grants",
       "latest_non_transactional_version": null,
       "migrations": [
         {
@@ -2296,6 +2660,21 @@
           "file": "20260519122433_create_page_drafts.sql",
           "version": "20260519122433_create_page_drafts",
           "kind": "transactional"
+        },
+        {
+          "file": "20260701000001_layout_editor_permissions_and_audit.sql",
+          "version": "20260701000001_layout_editor_permissions_and_audit",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260701000002_layout_editor_publish_workflow.sql",
+          "version": "20260701000002_layout_editor_publish_workflow",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260701150000_harden_layout_editor_secdef_grants.sql",
+          "version": "20260701150000_harden_layout_editor_secdef_grants",
+          "kind": "transactional"
         }
       ],
       "functions": [
@@ -2317,10 +2696,10 @@
         "migrations_dir": true,
         "functions_dir": true
       },
-      "migration_count": 21,
-      "transactional_count": 21,
+      "migration_count": 25,
+      "transactional_count": 25,
       "non_transactional_count": 0,
-      "latest_transactional_version": "20260512100000_r80_apprentice_calc_state",
+      "latest_transactional_version": "20260704160000_r80_invoice_run_xero_push",
       "latest_non_transactional_version": null,
       "migrations": [
         {
@@ -2427,6 +2806,26 @@
           "file": "20260512100000_r80_apprentice_calc_state.sql",
           "version": "20260512100000_r80_apprentice_calc_state",
           "kind": "transactional"
+        },
+        {
+          "file": "20260701100000_r80_invoice_runs.sql",
+          "version": "20260701100000_r80_invoice_runs",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702000000_r80_invoice_run_tenant_policy.sql",
+          "version": "20260702000000_r80_invoice_run_tenant_policy",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702130000_award_templates_calendar_year_seed.sql",
+          "version": "20260702130000_award_templates_calendar_year_seed",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260704160000_r80_invoice_run_xero_push.sql",
+          "version": "20260704160000_r80_invoice_run_xero_push",
+          "kind": "transactional"
         }
       ],
       "functions": [
@@ -2448,12 +2847,12 @@
       "functions_dir": "conduit/supabase/functions",
       "exists": {
         "migrations_dir": true,
-        "functions_dir": false
+        "functions_dir": true
       },
-      "migration_count": 10,
-      "transactional_count": 10,
+      "migration_count": 24,
+      "transactional_count": 24,
       "non_transactional_count": 0,
-      "latest_transactional_version": "20260605062203_add_r7_status_constraints",
+      "latest_transactional_version": "20260707180000_communication_templates_event_type",
       "latest_non_transactional_version": null,
       "migrations": [
         {
@@ -2505,9 +2904,83 @@
           "file": "20260605062203_add_r7_status_constraints.sql",
           "version": "20260605062203_add_r7_status_constraints",
           "kind": "transactional"
+        },
+        {
+          "file": "20260610300000_r7_interview_field_officer_workplace_visit.sql",
+          "version": "20260610300000_r7_interview_field_officer_workplace_visit",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260610300100_r7_offer_esign_lodgement_state_machine.sql",
+          "version": "20260610300100_r7_offer_esign_lodgement_state_machine",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260618120000_tenant_user_saved_views.sql",
+          "version": "20260618120000_tenant_user_saved_views",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260618130000_r7_automation_queue.sql",
+          "version": "20260618130000_r7_automation_queue",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260618140000_r7_document_esign.sql",
+          "version": "20260618140000_r7_document_esign",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260618150000_r7_offers_billing_model.sql",
+          "version": "20260618150000_r7_offers_billing_model",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260618160000_r7_talent_pool_consent.sql",
+          "version": "20260618160000_r7_talent_pool_consent",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260618170000_r7_talent_pool_consent_tokens.sql",
+          "version": "20260618170000_r7_talent_pool_consent_tokens",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260624060000_harden_r7_emit_revoke_execute.sql",
+          "version": "20260624060000_harden_r7_emit_revoke_execute",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260629060000_r2_candidate_intake_schema.sql",
+          "version": "20260629060000_r2_candidate_intake_schema",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260629060100_r1_public_apply_rls.sql",
+          "version": "20260629060100_r1_public_apply_rls",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260629130000_wc012_resolve_portal_role_canonical.sql",
+          "version": "20260629130000_wc012_resolve_portal_role_canonical",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702060100_r1_public_apply_secdef.sql",
+          "version": "20260702060100_r1_public_apply_secdef",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260707180000_communication_templates_event_type.sql",
+          "version": "20260707180000_communication_templates_event_type",
+          "kind": "transactional"
         }
       ],
-      "functions": []
+      "functions": [
+        "r7-automation-processor",
+        "r7-lodge-training-contract",
+        "r7-talent-pool-matcher"
+      ]
     },
     {
       "id": "throughput",
@@ -2521,10 +2994,10 @@
         "migrations_dir": true,
         "functions_dir": true
       },
-      "migration_count": 4,
-      "transactional_count": 4,
+      "migration_count": 6,
+      "transactional_count": 6,
       "non_transactional_count": 0,
-      "latest_transactional_version": "20260519055000_harden_calculate_launch_readiness_idor_fix",
+      "latest_transactional_version": "20260702090000_add_search_profiles_rpc",
       "latest_non_transactional_version": null,
       "migrations": [
         {
@@ -2545,6 +3018,16 @@
         {
           "file": "20260519055000_harden_calculate_launch_readiness_idor_fix.sql",
           "version": "20260519055000_harden_calculate_launch_readiness_idor_fix",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260630120000_add_idea_display_order_persistence.sql",
+          "version": "20260630120000_add_idea_display_order_persistence",
+          "kind": "transactional"
+        },
+        {
+          "file": "20260702090000_add_search_profiles_rpc.sql",
+          "version": "20260702090000_add_search_profiles_rpc",
           "kind": "transactional"
         }
       ],
