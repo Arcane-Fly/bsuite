@@ -194,13 +194,48 @@ export function usePageGridLayout({
    */
   const pendingLayoutRef = useRef<GridLayouts | null>(null);
   const layoutCommitFrameRef = useRef<number | null>(null);
+
+  /**
+   * Strips DERIVED measured heights out of a layout before it reaches the
+   * preference adapter. react-grid-layout is rendered with `autoHeightRows`
+   * merged over the saved layout (see `applyAutoHeightRows`), so the layouts
+   * it echoes back through `onLayoutChange` carry the MEASURED `h` for
+   * autoHeight items — persisting that verbatim would smuggle measured
+   * heights into user_preferences through the drag/resize path and drop the
+   * `autoHeight` flag (react-grid-layout does not round-trip custom item
+   * props). Restore `h`/`minH`/`autoHeight` from the un-merged base layout;
+   * user-driven `x`/`y`/`w` (and `h` for non-autoHeight items) pass through
+   * untouched. Reads the base via a ref so the trailing-rAF commit below
+   * never closes over a stale snapshot.
+   */
+  const currentLayoutsForStripRef = useRef<GridLayouts | null>(null);
+  const stripAutoHeightRows = useCallback((layouts: GridLayouts): GridLayouts => {
+    const base = currentLayoutsForStripRef.current;
+    if (!base) return layouts;
+    const result: GridLayouts = { lg: [] };
+    for (const bp of Object.keys(layouts)) {
+      const baseItems = base[bp] ?? base.lg ?? [];
+      const baseByKey = new Map(baseItems.map((item) => [item.i, item]));
+      result[bp] = (layouts[bp] ?? []).map((item) => {
+        const baseItem = baseByKey.get(item.i);
+        if (!baseItem?.autoHeight) return item;
+        return { ...item, autoHeight: true, h: baseItem.h, minH: baseItem.minH };
+      });
+    }
+    return result;
+  }, []);
+
+  useEffect(() => {
+    currentLayoutsForStripRef.current = currentLayouts;
+  }, [currentLayouts]);
+
   const onLayoutChange = useCallback(
     (_layout: unknown, layouts: unknown) => {
       if (!isEditing) return;
       pendingLayoutRef.current = layouts as GridLayouts;
       if (layoutCommitFrameRef.current !== null) return;
       if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
-        setSavedLayout(layouts as GridLayouts);
+        setSavedLayout(stripAutoHeightRows(layouts as GridLayouts));
         return;
       }
       // Trailing rAF — lets a burst of resize ticks coalesce into one commit.
@@ -209,11 +244,11 @@ export function usePageGridLayout({
         const pending = pendingLayoutRef.current;
         if (pending) {
           pendingLayoutRef.current = null;
-          setSavedLayout(pending);
+          setSavedLayout(stripAutoHeightRows(pending));
         }
       });
     },
-    [isEditing, setSavedLayout],
+    [isEditing, setSavedLayout, stripAutoHeightRows],
   );
 
   useEffect(() => {
@@ -344,22 +379,37 @@ export function usePageGridLayout({
     [currentLayouts, setSavedLayout],
   );
 
-  const setWidgetAutoHeightRows = useCallback(
-    (widgetKey: string, rows: number) => {
-      const updated: GridLayouts = { lg: [] };
+  /**
+   * Measured auto-height overrides (widgetKey -> rows). DERIVED, in-memory-
+   * only state (quality-review design ruling, 2026-07-14):
+   *
+   * - Applied for ALL viewers — the map is merged over the saved layout when
+   *   producing the layouts handed to react-grid-layout (see
+   *   `PageGridLayout`'s `activeLayouts` memo), so read-only users get
+   *   full-height cards too.
+   * - NEVER persisted — not even while editing. Measurements re-derive on
+   *   every mount; writing them to the preference adapter would be redundant
+   *   AND would turn mere viewing (e.g. Radix tab switches inside a card,
+   *   which unmount/remount panel content and fire the ResizeObserver) into
+   *   storage upserts for any authenticated viewer.
+   * - Updated FUNCTIONALLY in one combined state update per flush, so two
+   *   cards settling in the same animation frame can never last-writer-wins
+   *   each other through a stale closure.
+   */
+  const [autoHeightRows, setAutoHeightRows] = useState<Record<string, number>>({});
+  const applyAutoHeightRows = useCallback((rowsByWidget: Record<string, number>) => {
+    setAutoHeightRows((previous) => {
       let changed = false;
-      for (const bp of Object.keys(currentLayouts)) {
-        updated[bp] = (currentLayouts[bp] ?? []).map((item) => {
-          if (item.i !== widgetKey) return item;
-          if (item.h === rows && item.minH === rows) return item;
+      const next = { ...previous };
+      for (const [widgetKey, rows] of Object.entries(rowsByWidget)) {
+        if (next[widgetKey] !== rows) {
+          next[widgetKey] = rows;
           changed = true;
-          return { ...item, h: rows, minH: rows };
-        });
+        }
       }
-      if (changed) startTransition(() => setSavedLayout(updated));
-    },
-    [currentLayouts, setSavedLayout],
-  );
+      return changed ? next : previous;
+    });
+  }, []);
 
   useEffect(() => {
     if (!canEditPage || typeof window === 'undefined') return;
@@ -406,7 +456,8 @@ export function usePageGridLayout({
     moveWidget,
     setWidgetLocked,
     removeWidget,
-    setWidgetAutoHeightRows,
+    applyAutoHeightRows,
+    autoHeightRows,
     resetConfirmOpen,
     setResetConfirmOpen,
     canEditPage,

@@ -310,7 +310,8 @@ export function PageGridLayout({
     addWidget,
     moveWidget,
     setWidgetLocked,
-    setWidgetAutoHeightRows,
+    applyAutoHeightRows,
+    autoHeightRows,
     resetConfirmOpen,
     setResetConfirmOpen,
     containerRef,
@@ -325,14 +326,18 @@ export function PageGridLayout({
     preferenceAdapter,
   });
 
-  // Auto-height dispatcher (blueprint amendment A1). `GridItem`'s
-  // ResizeObserver calls this per-widget whenever its measured content
-  // height changes; we rAF-batch the resulting `setWidgetAutoHeightRows`
-  // writes (mirrors the trailing-rAF pattern `onLayoutChange` already uses
-  // in usePageGridLayout.ts) and suppress them entirely while the user is
-  // mid-drag/mid-resize so auto-height never fights a manual gesture. A
-  // suppressed update is queued, not dropped — the drag/resize *Stop
-  // handlers flush whatever's pending the moment the gesture ends.
+  // Auto-height dispatcher (blueprint amendment A1, hardened per quality
+  // review 2026-07-14). `GridItem`'s ResizeObserver calls this per-widget
+  // whenever its measured content height changes; we rAF-batch and flush ALL
+  // pending widgets in ONE `applyAutoHeightRows` call — a single functional
+  // state update, so two cards settling in the same frame (e.g. card2+card3
+  // on /people/:id mount) can never last-writer-wins each other. Measured
+  // rows are DERIVED, in-memory-only state: they merge into `activeLayouts`
+  // below for ALL viewers and are never persisted (see usePageGridLayout).
+  // Updates are suppressed entirely while the user is mid-drag/mid-resize so
+  // auto-height never fights a manual gesture. A suppressed update is
+  // queued, not dropped — the drag/resize *Stop handlers flush whatever's
+  // pending the moment the gesture ends.
   const isInteractingRef = useRef(false);
   const pendingAutoHeightRef = useRef<Map<string, number>>(new Map());
   const autoHeightFrameRef = useRef<number | null>(null);
@@ -350,10 +355,8 @@ export function PageGridLayout({
     const pending = pendingAutoHeightRef.current;
     if (pending.size === 0) return;
     pendingAutoHeightRef.current = new Map();
-    for (const [widgetKey, rows] of pending) {
-      setWidgetAutoHeightRows(widgetKey, rows);
-    }
-  }, [setWidgetAutoHeightRows]);
+    applyAutoHeightRows(Object.fromEntries(pending));
+  }, [applyAutoHeightRows]);
 
   const handleAutoHeightChange = useCallback(
     (widgetKey: string, rows: number) => {
@@ -426,10 +429,25 @@ export function PageGridLayout({
         // amendment A1) — force isResizable: false centrally here so every
         // call site that sets autoHeight: true gets this for free, rather
         // than needing to remember to also set isResizable itself.
-        .map((item) => (item.autoHeight ? { ...item, isResizable: false } : item));
+        //
+        // Measured rows (quality-review design ruling, 2026-07-14) merge
+        // over the saved/base `h`/`minH` HERE — the render layer — so the
+        // grid renders full-height cards for every viewer while the saved
+        // layout (and thus the preference adapter) never sees a measured
+        // height. Until the first measurement lands, `autoHeightRows` has
+        // no entry and the item's seed `h` renders as-is.
+        .map((item) => {
+          if (!item.autoHeight) return item;
+          const measuredRows = autoHeightRows[item.i];
+          return {
+            ...item,
+            isResizable: false,
+            ...(measuredRows !== undefined ? { h: measuredRows, minH: measuredRows } : {}),
+          };
+        });
     }
     return filtered;
-  }, [currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
+  }, [autoHeightRows, currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
 
   const hideLayer = (layerId: string) => {
     setHiddenLayerIds((previous) => ({ ...previous, [layerId]: true }));

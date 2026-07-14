@@ -7,7 +7,44 @@ Exports:
 - `PageGridLayout`
 - `usePageGridLayout`
 - `rescaleLayout`
+- `computeAutoHeightRows`
 - `GridLayouts`, `GridLayoutItem`, `WidgetMeta`, and related types
 
 Consumer apps must depend on the published npm package, not `workspace:*` or
 `file:` links, because each app deploys independently.
+
+## Measured auto-height (`autoHeight`, 0.5.0+)
+
+Opt a widget into content-driven height by setting `autoHeight: true` on its
+`GridLayoutItem`:
+
+```ts
+const defaultLayouts: GridLayouts = {
+  lg: [
+    // Fixed card — user resizes it manually, height persists.
+    { i: 'summary', x: 0, y: 0, w: 6, h: 8 },
+    // Measured card — height tracks rendered content; `h` is only the
+    // initial seed used until the first measurement lands.
+    { i: 'details', x: 6, y: 0, w: 6, h: 20, autoHeight: true },
+  ],
+};
+```
+
+Behaviour and guarantees:
+
+- A `ResizeObserver` on an unconstrained measure wrapper reads the content's
+  intrinsic height; `computeAutoHeightRows` converts px → rows using the
+  same `rowHeight`/`margin` the grid renders with, so the loop converges to
+  a fixed point instead of oscillating.
+- Auto-height items render with `isResizable: false` automatically — do not
+  also wire a manual resize path for them.
+- Measured rows are **derived, in-memory-only state**: merged over the saved
+  layout at render time for every viewer, and **never persisted**. A
+  read-only viewer switching tabs inside a card produces zero preference
+  writes. User-driven `x`/`y`/`w` (and `h` for non-autoHeight items)
+  persistence is unchanged.
+- Updates are rAF-batched (all cards settling in a frame apply as one state
+  update) and suppressed mid-drag/mid-resize, then flushed on gesture end.
+
+When adding `autoHeight` to an existing page's layout, bump that page's
+`layoutVersion` so stale persisted layouts (without the flag) are reset.

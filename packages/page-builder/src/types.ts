@@ -86,13 +86,20 @@ export interface UsePageGridLayoutResult {
   setWidgetLocked: (widgetKey: string, locked: boolean) => void;
   removeWidget: (widgetKey: string) => void;
   /**
-   * Patches a single widget's `h`/`minH` (all breakpoints) to `rows`. Used
-   * by the auto-height mechanism (blueprint amendment A1) to snap an
-   * `autoHeight` item's saved layout to its measured content size. No-op
-   * when the widget already matches (diff-guarded) so it never causes an
-   * unnecessary preference-adapter write.
+   * Applies a batch of measured auto-height row counts (widgetKey -> rows)
+   * in a SINGLE functional state update. Measured heights are DERIVED,
+   * in-memory-only state: they are merged over the saved layout when
+   * producing the layouts handed to react-grid-layout (so every viewer
+   * renders full-height cards) and are NEVER written to the preference
+   * adapter — measurements re-derive on every mount, so persisting them
+   * would be redundant and would cause storage writes from mere viewing
+   * (e.g. switching tabs inside a card). Diff-guarded: returns the previous
+   * map identity when nothing changed, so no re-render occurs.
    */
-  setWidgetAutoHeightRows: (widgetKey: string, rows: number) => void;
+  applyAutoHeightRows: (rowsByWidget: Record<string, number>) => void;
+  /** Current measured auto-height overrides (widgetKey -> rows). In-memory
+   * only; see `applyAutoHeightRows`. */
+  autoHeightRows: Record<string, number>;
   resetConfirmOpen: boolean;
   setResetConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
   canEditPage: boolean;
