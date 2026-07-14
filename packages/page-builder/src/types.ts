@@ -1,7 +1,18 @@
 import type React from 'react';
 import type { Compactor, LayoutItem, ResizeHandleAxis } from 'react-grid-layout';
 
-export type GridLayoutItem = LayoutItem;
+export interface GridLayoutItem extends LayoutItem {
+  /**
+   * When true, this item's height is driven by its own measured content
+   * height rather than manual resize (blueprint amendment A1). `GridItem`
+   * mounts a `ResizeObserver` on an unconstrained content wrapper and
+   * reports the computed row count upward via `computeAutoHeightRows`;
+   * `PageGridLayout` force-sets `isResizable: false` for any item with
+   * `autoHeight: true` (see the `activeLayouts` memo) so callers don't need
+   * to remember to set both fields.
+   */
+  autoHeight?: boolean;
+}
 
 export interface GridLayouts {
   lg: GridLayoutItem[];
@@ -74,6 +85,14 @@ export interface UsePageGridLayoutResult {
   moveWidget: (widgetKey: string, direction: 'up' | 'down') => void;
   setWidgetLocked: (widgetKey: string, locked: boolean) => void;
   removeWidget: (widgetKey: string) => void;
+  /**
+   * Patches a single widget's `h`/`minH` (all breakpoints) to `rows`. Used
+   * by the auto-height mechanism (blueprint amendment A1) to snap an
+   * `autoHeight` item's saved layout to its measured content size. No-op
+   * when the widget already matches (diff-guarded) so it never causes an
+   * unnecessary preference-adapter write.
+   */
+  setWidgetAutoHeightRows: (widgetKey: string, rows: number) => void;
   resetConfirmOpen: boolean;
   setResetConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
   canEditPage: boolean;

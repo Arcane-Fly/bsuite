@@ -344,13 +344,41 @@ export function usePageGridLayout({
     [currentLayouts, setSavedLayout],
   );
 
+  const setWidgetAutoHeightRows = useCallback(
+    (widgetKey: string, rows: number) => {
+      const updated: GridLayouts = { lg: [] };
+      let changed = false;
+      for (const bp of Object.keys(currentLayouts)) {
+        updated[bp] = (currentLayouts[bp] ?? []).map((item) => {
+          if (item.i !== widgetKey) return item;
+          if (item.h === rows && item.minH === rows) return item;
+          changed = true;
+          return { ...item, h: rows, minH: rows };
+        });
+      }
+      if (changed) startTransition(() => setSavedLayout(updated));
+    },
+    [currentLayouts, setSavedLayout],
+  );
+
   useEffect(() => {
     if (!canEditPage || typeof window === 'undefined') return;
     const handler = (event: Event) => {
-      const detail = (event as CustomEvent<{ page?: string; ack?: () => void }>).detail;
+      const detail = (
+        event as CustomEvent<{ page?: string; ack?: () => void; editing?: boolean }>
+      ).detail;
       if (!detail?.page || detail.page === pageKey) {
         detail?.ack?.();
-        setIsEditing(true);
+        // `detail.editing` defaults to `true` when omitted — every existing
+        // dispatcher across all 6 apps only ever sent `{ page, path }` to
+        // OPEN the editor, so this preserves 100% backward compatibility.
+        // An explicit `editing: false` lets a launcher force-close a grid
+        // instance that's still mounted after an in-route navigation (e.g.
+        // wouter's `/people/:id` not remounting between different ids) —
+        // see crm7's `PageEditorLauncher.tsx` navigation-close effect
+        // (blueprint amendment A3). Reuses this exact event channel rather
+        // than introducing a second one.
+        setIsEditing(detail?.editing ?? true);
       }
     };
     for (const eventName of editorEventNames) {
@@ -361,7 +389,7 @@ export function usePageGridLayout({
         window.removeEventListener(eventName, handler as EventListener);
       }
     };
-  }, [canEditPage, editorEventNames, pageKey]);
+  }, [canEditPage, editorEventNames, pageKey, setIsEditing]);
 
   return {
     currentLayouts,
@@ -378,6 +406,7 @@ export function usePageGridLayout({
     moveWidget,
     setWidgetLocked,
     removeWidget,
+    setWidgetAutoHeightRows,
     resetConfirmOpen,
     setResetConfirmOpen,
     canEditPage,
