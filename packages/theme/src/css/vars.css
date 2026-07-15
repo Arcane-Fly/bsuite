@@ -161,6 +161,16 @@
   --shadow-strength: 1;
 
   /* ============================================================
+     CARD SURFACE GLOW — subtle neon separation, dark mode only.
+     Light mode keeps the existing border-only treatment (--role-border);
+     these resolve to `none` here so any consumer applying the utility
+     unconditionally (i.e. without a `dark:` guard) degrades safely.
+     ============================================================ */
+  --card-glow-source: var(--app-accent, var(--role-accent));
+  --glow-card:         none;
+  --glow-card-hover:   none;
+
+  /* ============================================================
      SRGB FALLBACKS (for browsers without oklch support)
      Tested against Chrome 105-. Values are closest sRGB equivalents.
      ============================================================ */
@@ -232,6 +242,23 @@
   /* Glow/shadow scale up in dark mode */
   --glow-strength:   0.6;
   --shadow-strength: 0.8;
+
+  /*
+   * Card glow — subtle neon separation for card surfaces, dark mode only.
+   * Derived from the app's accent colour (--app-accent, falling back to
+   * the shared --role-accent default) via color-mix() so per-tenant
+   * BrandingProvider overrides and per-app brand accents (Conduit green,
+   * R80.3 amber, etc.) automatically re-colour the glow. Two layers:
+   * a 1px accent ring (edge definition, replaces a hard border) plus a
+   * soft negative-spread halo (ambient separation). Kept subtle by
+   * design — this is surface separation, not a decorative outline.
+   */
+  --glow-card:
+    0 0 0 1px color-mix(in oklch, var(--card-glow-source) 30%, transparent),
+    0 0 14px -4px color-mix(in oklch, var(--card-glow-source) 35%, transparent);
+  --glow-card-hover:
+    0 0 0 1px color-mix(in oklch, var(--card-glow-source) 42%, transparent),
+    0 0 20px -4px color-mix(in oklch, var(--card-glow-source) 48%, transparent);
 
   /* Shadcn bridge picks up rebindings automatically via var() chain */
 }
