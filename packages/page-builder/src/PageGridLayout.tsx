@@ -228,7 +228,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             </button>
           )}
           <div
-            className="h-full w-full rounded-3xl transition-all flex flex-col bg-card border border-border shadow-sm dark:shadow-[var(--glow-card)]"
+            className="h-full w-full rounded-3xl transition-all flex flex-col bg-card border border-border shadow-sm dark:shadow-[var(--glow-card,none)]"
             style={{ contain: 'layout style' }}
           >
             {/*

@@ -81,14 +81,15 @@
   /*
    * Card glow — subtle neon separation for card surfaces, dark mode only.
    * Derived from the app's accent colour (--app-accent, falling back to
-   * the shared --accent-secondary default) via color-mix() so per-tenant
+   * the shared --role-accent default, matching the live vars.css) so
+   * per-tenant
    * BrandingProvider overrides and per-app brand accents (Conduit green,
    * R80.3 amber, etc.) automatically re-colour the glow. Two layers:
    * a 1px accent ring (edge definition, replaces a hard border) plus a
    * soft negative-spread halo (ambient separation). Kept subtle by
    * design — this is surface separation, not a decorative outline.
    */
-  --card-glow-source: var(--app-accent, var(--accent-secondary));
+  --card-glow-source: var(--app-accent, var(--role-accent));
   --glow-card:       0 0 0 1px color-mix(in oklch, var(--card-glow-source) 30%, transparent),
                       0 0 14px -4px color-mix(in oklch, var(--card-glow-source) 35%, transparent);
   --glow-card-hover: 0 0 0 1px color-mix(in oklch, var(--card-glow-source) 42%, transparent),
