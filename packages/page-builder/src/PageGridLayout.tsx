@@ -1,13 +1,33 @@
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
-import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
-import { Responsive, type ResizeHandleAxis } from 'react-grid-layout';
+import React, { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Responsive, type EventCallback, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { computeAutoHeightRows } from './autoHeight.js';
 import { defaultPreferenceAdapter } from './preferences.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps } from './types.js';
+
+/**
+ * Single source of truth for the grid's pixel geometry — read by both the
+ * `<Responsive>` props below AND `GridItem`'s auto-height measurement
+ * (blueprint amendment A1). Previously these were separate inline literals
+ * (`rowHeight={32}`, `margin={[6, 6]}`) with no shared reference, which is
+ * exactly the kind of drift the auto-height px→row conversion cannot
+ * tolerate — `computeAutoHeightRows` must use the *same* rowHeight/margin
+ * the grid itself renders with, or the computed row count would target the
+ * wrong pixel size.
+ */
+const DEFAULT_ROW_HEIGHT = 32;
+const DEFAULT_MARGIN: [number, number] = [6, 6];
+/**
+ * Fixed non-content chrome added before converting measured content px to
+ * rows — currently just the unconditional `border border-border` (1px top
+ * + 1px bottom) added to every card surface (blueprint item 1).
+ */
+const DEFAULT_CARD_CHROME_PX = 2;
 
 /**
  * Default resize bounds applied as a *global* constraint to ALL grid items.
@@ -74,6 +94,15 @@ type GridItemProps = {
   label: string;
   onHide: (id: string) => void;
   /**
+   * When true, this item's height tracks its own measured content height
+   * (blueprint amendment A1) instead of being manually resizable. See the
+   * ResizeObserver effect below and `computeAutoHeightRows`.
+   */
+  autoHeight?: boolean;
+  /** Called with the newly-computed row count whenever the measured content
+   * height changes. Only invoked when `autoHeight` is true. */
+  onAutoHeightChange?: (id: string, rows: number) => void;
+  /**
    * Injected children — react-grid-layout v2 + react-resizable wrap each item
    * with `cloneElement(child, { children: [origChildren, ...resizeHandles] })`.
    * For the cloned `children` to actually mount in the DOM, our component
@@ -92,11 +121,66 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   isEditing,
   label,
   onHide,
+  autoHeight,
+  onAutoHeightChange,
   children: injectedChildren,
   className: injectedClassName,
   style: injectedStyle,
   ...rest
 }, ref) {
+    // Auto-height measurement (blueprint amendment A1). `measureRef` wraps
+    // `content` with NO height constraint of its own — its parent has
+    // `overflow-hidden` + `flex-1 min-h-0` (clips *painting* to the current
+    // grid cell height, per MDN's overflow semantics), but that never
+    // shrinks this child's own computed box height. So
+    // `entry.contentRect.height` here is always the content's true
+    // intrinsic size, independent of however many rows the item currently
+    // occupies — the property that makes the auto-height loop converge to
+    // a fixed point instead of oscillating (see autoHeight.ts).
+    const measureRef = useRef<HTMLDivElement | null>(null);
+    const lastReportedRowsRef = useRef<number | null>(null);
+    const measureRafRef = useRef<number | null>(null);
+    useEffect(() => {
+      if (!autoHeight || !onAutoHeightChange) return;
+      const el = measureRef.current;
+      if (!el || typeof ResizeObserver === 'undefined') return;
+      const ro = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        const contentPx = entry.contentRect.height;
+        if (measureRafRef.current !== null) return;
+        const schedule =
+          typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+            ? window.requestAnimationFrame.bind(window)
+            : (cb: () => void) => setTimeout(cb, 0);
+        measureRafRef.current = schedule(() => {
+          measureRafRef.current = null;
+          const rows = computeAutoHeightRows({
+            contentPx,
+            cardChromePx: DEFAULT_CARD_CHROME_PX,
+            rowHeightPx: DEFAULT_ROW_HEIGHT,
+            marginYPx: DEFAULT_MARGIN[1],
+          });
+          if (rows !== lastReportedRowsRef.current) {
+            lastReportedRowsRef.current = rows;
+            onAutoHeightChange(id, rows);
+          }
+        }) as unknown as number;
+      });
+      ro.observe(el);
+      return () => {
+        ro.disconnect();
+        if (
+          measureRafRef.current !== null &&
+          typeof window !== 'undefined' &&
+          typeof window.cancelAnimationFrame === 'function'
+        ) {
+          window.cancelAnimationFrame(measureRafRef.current);
+        }
+        measureRafRef.current = null;
+      };
+    }, [autoHeight, id, onAutoHeightChange]);
+
     // DnD root-cause fix (2026-05-07): react-draggable@4 (used internally by
     // react-grid-layout@2) checks the drag handle via
     // `matchesSelectorAndParentsTo(target, handle, baseNode)` — it walks UP
@@ -144,7 +228,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             </button>
           )}
           <div
-            className="h-full w-full rounded-3xl transition-all flex flex-col bg-card shadow-sm"
+            className="h-full w-full rounded-3xl transition-all flex flex-col bg-card border border-border shadow-sm"
             style={{ contain: 'layout style' }}
           >
             {/*
@@ -163,9 +247,17 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * — those nested scroll containers compose cleanly with this one
              * because pointer/wheel events bubble up only when the inner one
              * is at its scroll edge.
+             *
+             * `autoHeight` items get `overflow-hidden` instead of
+             * `overflow-auto` — the card is sized to fit all of the content
+             * (see the ResizeObserver above), so there's nothing to
+             * manually scroll; `content` is additionally wrapped in an
+             * unconstrained `measureRef` div so the observer reads the
+             * content's true intrinsic height rather than the (currently
+             * clipped) height of this flex-1 wrapper.
              */}
-            <div className="flex-1 min-h-0 overflow-auto">
-              {content}
+            <div className={cn('flex-1 min-h-0', autoHeight ? 'overflow-hidden' : 'overflow-auto')}>
+              {autoHeight ? <div ref={measureRef}>{content}</div> : content}
             </div>
           </div>
         </div>
@@ -218,6 +310,8 @@ export function PageGridLayout({
     addWidget,
     moveWidget,
     setWidgetLocked,
+    applyAutoHeightRows,
+    autoHeightRows,
     resetConfirmOpen,
     setResetConfirmOpen,
     containerRef,
@@ -231,6 +325,58 @@ export function PageGridLayout({
     editorEventNames,
     preferenceAdapter,
   });
+
+  // Auto-height dispatcher (blueprint amendment A1, hardened per quality
+  // review 2026-07-14). `GridItem`'s ResizeObserver calls this per-widget
+  // whenever its measured content height changes; we rAF-batch and flush ALL
+  // pending widgets in ONE `applyAutoHeightRows` call — a single functional
+  // state update, so two cards settling in the same frame (e.g. card2+card3
+  // on /people/:id mount) can never last-writer-wins each other. Measured
+  // rows are DERIVED, in-memory-only state: they merge into `activeLayouts`
+  // below for ALL viewers and are never persisted (see usePageGridLayout).
+  // Updates are suppressed entirely while the user is mid-drag/mid-resize so
+  // auto-height never fights a manual gesture. A suppressed update is
+  // queued, not dropped — the drag/resize *Stop handlers flush whatever's
+  // pending the moment the gesture ends.
+  const isInteractingRef = useRef(false);
+  const pendingAutoHeightRef = useRef<Map<string, number>>(new Map());
+  const autoHeightFrameRef = useRef<number | null>(null);
+
+  const scheduleFrame = useCallback((callback: () => void): number => {
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      return window.requestAnimationFrame(callback);
+    }
+    return setTimeout(callback, 0) as unknown as number;
+  }, []);
+
+  const flushAutoHeightUpdates = useCallback(() => {
+    autoHeightFrameRef.current = null;
+    if (isInteractingRef.current) return;
+    const pending = pendingAutoHeightRef.current;
+    if (pending.size === 0) return;
+    pendingAutoHeightRef.current = new Map();
+    applyAutoHeightRows(Object.fromEntries(pending));
+  }, [applyAutoHeightRows]);
+
+  const handleAutoHeightChange = useCallback(
+    (widgetKey: string, rows: number) => {
+      pendingAutoHeightRef.current.set(widgetKey, rows);
+      if (isInteractingRef.current || autoHeightFrameRef.current !== null) return;
+      autoHeightFrameRef.current = scheduleFrame(flushAutoHeightUpdates);
+    },
+    [flushAutoHeightUpdates, scheduleFrame],
+  );
+
+  const handleInteractionStart = useCallback<EventCallback>(() => {
+    isInteractingRef.current = true;
+  }, []);
+
+  const handleInteractionStop = useCallback<EventCallback>(() => {
+    isInteractingRef.current = false;
+    if (pendingAutoHeightRef.current.size > 0 && autoHeightFrameRef.current === null) {
+      autoHeightFrameRef.current = scheduleFrame(flushAutoHeightUpdates);
+    }
+  }, [flushAutoHeightUpdates, scheduleFrame]);
 
   const resizeEnabled = isEditing && isResizable;
   const resizeConstraints = useMemo(
@@ -277,10 +423,31 @@ export function PageGridLayout({
   const activeLayouts = useMemo(() => {
     const filtered: GridLayouts = { lg: [] };
     for (const bp in currentLayouts) {
-      filtered[bp] = (currentLayouts[bp] ?? []).filter((item) => renderableWidgetKeys.has(item.i) && !hiddenLayerIds[item.i]);
+      filtered[bp] = (currentLayouts[bp] ?? [])
+        .filter((item) => renderableWidgetKeys.has(item.i) && !hiddenLayerIds[item.i])
+        // autoHeight items are measured, not manually resized (blueprint
+        // amendment A1) — force isResizable: false centrally here so every
+        // call site that sets autoHeight: true gets this for free, rather
+        // than needing to remember to also set isResizable itself.
+        //
+        // Measured rows (quality-review design ruling, 2026-07-14) merge
+        // over the saved/base `h`/`minH` HERE — the render layer — so the
+        // grid renders full-height cards for every viewer while the saved
+        // layout (and thus the preference adapter) never sees a measured
+        // height. Until the first measurement lands, `autoHeightRows` has
+        // no entry and the item's seed `h` renders as-is.
+        .map((item) => {
+          if (!item.autoHeight) return item;
+          const measuredRows = autoHeightRows[item.i];
+          return {
+            ...item,
+            isResizable: false,
+            ...(measuredRows !== undefined ? { h: measuredRows, minH: measuredRows } : {}),
+          };
+        });
     }
     return filtered;
-  }, [currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
+  }, [autoHeightRows, currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
 
   const hideLayer = (layerId: string) => {
     setHiddenLayerIds((previous) => ({ ...previous, [layerId]: true }));
@@ -721,7 +888,7 @@ export function PageGridLayout({
             className="layout page-grid-canvas"
             layouts={activeLayouts}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-            rowHeight={32}
+            rowHeight={DEFAULT_ROW_HEIGHT}
             onLayoutChange={onLayoutChange}
             dragConfig={{
               enabled: isEditing,
@@ -741,7 +908,15 @@ export function PageGridLayout({
             constraints={resizeEnabled ? resizeConstraints : undefined}
             compactor={activeCompactor}
             cols={activeCols}
-            margin={[6, 6]}
+            margin={DEFAULT_MARGIN}
+            // Suppress auto-height writes mid-gesture (blueprint amendment
+            // A1) — coexists with dragConfig/resizeConfig above; RGL v2's
+            // grouped config props and top-level *Start/*Stop callbacks are
+            // independent, not mutually exclusive.
+            onDragStart={handleInteractionStart}
+            onDragStop={handleInteractionStop}
+            onResizeStart={handleInteractionStart}
+            onResizeStop={handleInteractionStop}
           >
             {activeLayouts.lg.map((layoutItem) => {
               const content = allWidgets[layoutItem.i];
@@ -754,6 +929,8 @@ export function PageGridLayout({
                   isEditing={isEditing}
                   label={layerNames[layoutItem.i] || widgetMeta?.[layoutItem.i]?.label || layoutItem.i}
                   onHide={hideLayer}
+                  autoHeight={layoutItem.autoHeight}
+                  onAutoHeightChange={handleAutoHeightChange}
                 />
               );
             })}

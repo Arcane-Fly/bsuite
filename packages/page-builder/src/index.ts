@@ -6,6 +6,8 @@ export {
 } from './usePageGridLayout.js';
 export type { PageGridEditingEventDetail } from './usePageGridLayout.js';
 export { rescaleLayout } from './rescaleLayout.js';
+export { computeAutoHeightRows } from './autoHeight.js';
+export type { ComputeAutoHeightRowsOptions } from './autoHeight.js';
 export {
   WYSIWYG_REQUIRED_PRIMITIVES,
   WYSIWYG_SURFACE_CONTRACTS,
