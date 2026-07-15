@@ -5,6 +5,60 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 0.5.0 — 2026-07-14 — Measured auto-height (derived, in-memory) + unconditional card border
+
+### Added
+
+- **`GridLayoutItem.autoHeight?: boolean`** — opt a widget into measured
+  auto-height: the card's grid row count tracks its actual rendered content
+  height instead of a fixed manual-resize value. `h` remains the initial
+  seed row count used until the first measurement lands. Auto-height items
+  are automatically rendered with `isResizable: false` (measurement owns
+  their height; the manual resize handle would fight it).
+- **Measurement pipeline**: each `autoHeight` `GridItem` wraps its content
+  in an unconstrained measure div observed by a `ResizeObserver`. Measured
+  pixel heights convert to rows via the exported pure function
+  `computeAutoHeightRows({ contentPx, cardChromePx, rowHeightPx, marginYPx })`
+  using the exact same `rowHeight`/`margin` the grid renders with. Updates
+  are rAF-batched and suppressed during drag/resize gestures (queued, then
+  flushed on gesture end) so measurement never fights the user.
+- **`usePageGridLayout` API**: `applyAutoHeightRows(rowsByWidget)` applies a
+  batch of measured row counts in ONE functional state update;
+  `autoHeightRows` exposes the current in-memory map.
+- Unconditional `border border-border` on every card surface.
+
+### Design: measured heights are DERIVED, in-memory-only state
+
+- Measured rows live in a separate in-memory map merged over the saved
+  layout when producing the layouts handed to react-grid-layout — so every
+  viewer (including read-only users) renders full-height cards.
+- Measured heights are **never** written to the preference adapter, not
+  even in edit mode: they re-derive on every mount, and persisting them
+  would turn mere viewing (e.g. Radix tab switches inside a card, which
+  remount panel content and fire the ResizeObserver) into storage upserts.
+  A viewer switching tabs produces **zero** preference writes
+  (integration-tested).
+- The batch update is functional, so multiple auto-height cards settling in
+  the same animation frame all keep their measured heights — no
+  last-writer-wins through a stale closure (integration-tested).
+- `onLayoutChange` strips measured `h`/`minH` back to the saved seed (and
+  restores the `autoHeight` flag, which react-grid-layout does not
+  round-trip) before persisting, so user-driven `x`/`y`/`w` changes — and
+  `h` for non-autoHeight items — persist exactly as before while measured
+  heights can never leak into storage through the drag/resize path.
+
+### Notes for consumers
+
+- Opting a card into `autoHeight` changes that page's default layout shape —
+  bump the page's `layoutVersion` so previously-persisted user layouts
+  (which predate the flag) are reset. See crm7 `/people/:id`
+  (`layoutVersion` 1 → 2) for the reference rollout.
+- All 6 consumer apps must bump their pinned `@bsuite/page-builder` version
+  to `0.5.0` per `docs/DEPENDENCY-BUMP-CHECKLIST.md` — caret ranges do not
+  auto-match a new minor in pinned consumers.
+
+---
+
 ## 0.4.0 — 2026-05-26 — Remove vertical resize ceiling + internal card scroll
 
 ### Fixed
