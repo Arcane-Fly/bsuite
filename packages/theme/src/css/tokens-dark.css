@@ -77,8 +77,22 @@
   /* ===== Neon glow helpers ===== */
   --glow-button:       0 0 20px oklch(0.769 0.132 191.7 / 0.3);
   --glow-button-hover: 0 0 30px oklch(0.769 0.132 191.7 / 0.5);
-  --glow-card:         0 0 15px oklch(0.769 0.132 191.7 / 0.08);
-  --glow-card-hover:   0 0 25px oklch(0.769 0.132 191.7 / 0.15);
+
+  /*
+   * Card glow — subtle neon separation for card surfaces, dark mode only.
+   * Derived from the app's accent colour (--app-accent, falling back to
+   * the shared --accent-secondary default) via color-mix() so per-tenant
+   * BrandingProvider overrides and per-app brand accents (Conduit green,
+   * R80.3 amber, etc.) automatically re-colour the glow. Two layers:
+   * a 1px accent ring (edge definition, replaces a hard border) plus a
+   * soft negative-spread halo (ambient separation). Kept subtle by
+   * design — this is surface separation, not a decorative outline.
+   */
+  --card-glow-source: var(--app-accent, var(--accent-secondary));
+  --glow-card:       0 0 0 1px color-mix(in oklch, var(--card-glow-source) 30%, transparent),
+                      0 0 14px -4px color-mix(in oklch, var(--card-glow-source) 35%, transparent);
+  --glow-card-hover: 0 0 0 1px color-mix(in oklch, var(--card-glow-source) 42%, transparent),
+                      0 0 20px -4px color-mix(in oklch, var(--card-glow-source) 48%, transparent);
 
   /* ===== Button shadow ===== */
   --button-shadow:       0 0 20px oklch(0.769 0.132 191.7 / 0.3);
