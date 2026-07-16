@@ -1,0 +1,287 @@
+import { act, renderHook } from '@testing-library/react';
+import { useCallback, useState } from 'react';
+import { cloneLayout, moveElement } from 'react-grid-layout';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { usePageGridLayout } from '../usePageGridLayout.js';
+import type { Compactor } from 'react-grid-layout';
+import type { GridLayoutItem, GridLayouts, PageGridPreferenceFactory } from '../types.js';
+
+/**
+ * Regression suite for bsuite#1588 — "Edit-Page drag/resize gestures never
+ * persist" (pre-existing since the package's first commit).
+ *
+ * Root cause: the edit-mode compactor `{ ...noCompactor, preventCollision:
+ * true }` made react-grid-layout REVERT any gesture landing on an occupied
+ * cell — and `onDragStop` only emits `onLayoutChange` when the layout actually
+ * changed, so a reverted gesture emitted nothing and no mutated value ever
+ * reached the preference adapter.
+ *
+ * The tests below are split in two, because the defect lived in the CONTRACT
+ * between this hook and react-grid-layout, not in the hook's commit path:
+ *
+ *  1. `RGL gesture contract` replays react-grid-layout's OWN `onDragStop`
+ *     using its real `moveElement`/`compact` against the compactor this hook
+ *     hands it. This is where #1588 reproduces.
+ *  2. `commit + reload round-trip` covers the persistence path itself.
+ */
+
+// ---------------------------------------------------------------------------
+// A faithful stand-in for the shipped `useLocalPreference`: React state backed
+// by a durable store. The critical property that the older test fakes lack is
+// that `setValue` actually triggers a re-render, so effects re-run and any
+// clobber-on-next-render would surface.
+// ---------------------------------------------------------------------------
+const store = new Map<string, unknown>();
+const durableAdapter: PageGridPreferenceFactory = <T,>(key: string, fallback: T) => {
+  const [value, setStateValue] = useState<T>(() =>
+    store.has(key) ? (store.get(key) as T) : fallback,
+  );
+  const setValue = useCallback(
+    (next: T | ((previous: T) => T)) => {
+      setStateValue((previous) => {
+        const resolved = typeof next === 'function' ? (next as (p: T) => T)(previous) : next;
+        store.set(key, resolved);
+        return resolved;
+      });
+    },
+    [key],
+  );
+  return { value, setValue, loaded: true };
+};
+
+const savedLayoutsFor = (pageKey: string) =>
+  store.get(`page:${pageKey}_grid_layouts`) as GridLayouts | undefined;
+
+const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+
+/**
+ * Replays react-grid-layout's real `onDragStop` for a single gesture.
+ *
+ * Mirrors `ResponsiveGridLayout`/`GridLayout` exactly (react-grid-layout
+ * v2.2.3, dist/chunk-WGL5FSZH.mjs):
+ *   - knob derivation ...... lines 663-666
+ *   - moveElement call ..... lines 801-814
+ *   - compact + emit guard . lines 815-825
+ *
+ * Returns whether RGL would have emitted `onLayoutChange` at all, plus the
+ * layout it would have emitted. A gesture that RGL reverts emits nothing —
+ * which is precisely how #1588 kept every persisted value at its original.
+ */
+function replayRglDragStop(
+  compactor: Compactor,
+  layout: GridLayoutItem[],
+  id: string,
+  toX: number,
+  toY: number,
+  cols: number,
+): { emitted: boolean; finalLayout: GridLayoutItem[] } {
+  const preventCollision = (compactor as { preventCollision?: boolean }).preventCollision ?? false;
+  const allowOverlap = compactor.allowOverlap;
+  const compactType = compactor.type;
+
+  // Both sides go through RGL's own `cloneLayout` so they carry the same
+  // `moved`/`static` annotations RGL's internal layout state always has —
+  // otherwise the emit guard below would spuriously report a change.
+  const oldLayout = cloneLayout(layout as never) as unknown as GridLayoutItem[];
+  const working = cloneLayout(layout as never) as unknown as GridLayoutItem[];
+  const target = working.find((item) => item.i === id);
+  if (!target) throw new Error(`no layout item ${id}`);
+
+  const moved = moveElement(
+    working as never,
+    target as never,
+    toX,
+    toY,
+    true,
+    preventCollision,
+    compactType as never,
+    cols,
+    allowOverlap,
+  ) as unknown as GridLayoutItem[];
+  const finalLayout = compactor.compact(moved as never, cols) as unknown as GridLayoutItem[];
+  return { emitted: !deepEqual(oldLayout, finalLayout), finalLayout };
+}
+
+/** Canonical (key-order-independent) structural compare — stands in for the
+ *  `deepEqual` react-grid-layout uses in its emit guard. */
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  if (value !== null && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([k, v]) => `${k}:${stableStringify(v)}`).join(',')}}`;
+  }
+  return JSON.stringify(value) ?? 'undefined';
+}
+const deepEqual = (a: unknown, b: unknown) => stableStringify(a) === stableStringify(b);
+
+const yOf = (layout: GridLayoutItem[], id: string) => layout.find((item) => item.i === id)?.y;
+
+function renderGrid(pageKey: string, defaultLayouts: GridLayouts) {
+  return renderHook(() =>
+    usePageGridLayout({ pageKey, defaultLayouts, preferenceAdapter: durableAdapter }),
+  );
+}
+
+describe('usePageGridLayout persistence (bsuite#1588)', () => {
+  beforeEach(() => store.clear());
+
+  describe('RGL gesture contract — the compactor must let gestures take effect', () => {
+    /** Full-width stack: every card spans all 12 cols. The dominant archetype
+     *  on /dashboard and /people/:id, where every reorder target is occupied. */
+    const stack: GridLayouts = {
+      lg: [
+        { i: 'a', x: 0, y: 0, w: 12, h: 4 },
+        { i: 'b', x: 0, y: 4, w: 12, h: 4 },
+        { i: 'c', x: 0, y: 8, w: 12, h: 4 },
+      ],
+    };
+
+    it('does NOT tell react-grid-layout to prevent collisions (the #1588 lever)', () => {
+      const { result } = renderGrid('contract-knobs', stack);
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      const compactor = result.current.activeCompactor as { preventCollision?: boolean };
+      // `preventCollision: true` + no compaction = every colliding gesture is
+      // reverted wholesale, and a reverted gesture never reaches storage.
+      expect(compactor.preventCollision ?? false).toBe(false);
+    });
+
+    it('reordering a full-width stack (drag c above b) takes effect and is emitted', () => {
+      const { result } = renderGrid('contract-stack-drag', stack);
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      const { emitted, finalLayout } = replayRglDragStop(
+        result.current.activeCompactor,
+        stack.lg,
+        'c',
+        0,
+        4,
+        12,
+      );
+
+      // Before the fix: RGL reverted c to y=8 and emitted nothing at all.
+      expect(emitted).toBe(true);
+      expect(yOf(finalLayout, 'c')).toBe(4);
+      // The displaced neighbour moves down rather than the gesture being lost.
+      expect(yOf(finalLayout, 'b')).toBe(8);
+    });
+
+    it('uses the SAME compactor while editing and while viewing, so nothing snaps back on Save & Exit', () => {
+      const { result } = renderGrid('contract-mode-parity', stack);
+      const viewing = result.current.activeCompactor;
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+      const editing = result.current.activeCompactor;
+
+      // A viewer compactor that differs from the editor's re-compacts the
+      // editor's output away — the user's arrangement would never survive.
+      expect(editing).toBe(viewing);
+    });
+  });
+
+  describe('commit + reload round-trip', () => {
+    const sideBySide: GridLayouts = {
+      lg: [
+        { i: 'a', x: 0, y: 0, w: 6, h: 4 },
+        { i: 'b', x: 6, y: 0, w: 6, h: 4 },
+      ],
+    };
+
+    it('persists a committed gesture and survives a remount from storage', async () => {
+      const first = renderGrid('roundtrip', sideBySide);
+      act(() => {
+        first.result.current.setIsEditing(true);
+      });
+
+      // The shape react-grid-layout echoes after the user drags `b` down.
+      const echoed: GridLayouts = {
+        ...first.result.current.currentLayouts,
+        lg: [
+          { i: 'a', x: 0, y: 0, w: 6, h: 4 },
+          { i: 'b', x: 6, y: 10, w: 6, h: 4 },
+        ],
+      };
+
+      await act(async () => {
+        first.result.current.onLayoutChange([], echoed);
+        await nextFrame(); // the commit rides a trailing rAF
+      });
+      first.rerender();
+
+      expect(yOf(savedLayoutsFor('roundtrip')?.lg ?? [], 'b')).toBe(10);
+      expect(yOf(first.result.current.currentLayouts.lg, 'b')).toBe(10);
+
+      first.unmount();
+
+      // Simulated reload: a brand-new mount reading the persisted store.
+      const second = renderGrid('roundtrip', sideBySide);
+      expect(yOf(second.result.current.currentLayouts.lg, 'b')).toBe(10);
+    });
+  });
+
+  describe('responsive re-derivation still works (guard against over-correcting the fix)', () => {
+    const sideBySide: GridLayouts = {
+      lg: [
+        { i: 'a', x: 0, y: 0, w: 6, h: 4 },
+        { i: 'b', x: 6, y: 0, w: 6, h: 4 },
+      ],
+    };
+
+    it('rescales and persists the layout when the column count changes', () => {
+      const { result, rerender } = renderGrid('responsive-cols', sideBySide);
+
+      act(() => {
+        result.current.handleColumnChange(6);
+      });
+      rerender();
+
+      expect(result.current.layoutCols).toBe(6);
+      // 12 -> 6 cols halves every width; the layout is re-derived, not dropped.
+      for (const item of result.current.currentLayouts.lg) {
+        expect(item.w).toBe(3);
+      }
+      expect(savedLayoutsFor('responsive-cols')?.lg).toHaveLength(2);
+    });
+
+    it('a column change does not discard an already-committed gesture', async () => {
+      const { result, rerender } = renderGrid('responsive-keeps-gesture', sideBySide);
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      await act(async () => {
+        result.current.onLayoutChange([], {
+          ...result.current.currentLayouts,
+          lg: [
+            { i: 'a', x: 0, y: 0, w: 6, h: 4 },
+            { i: 'b', x: 6, y: 10, w: 6, h: 4 },
+          ],
+        });
+        await nextFrame();
+      });
+      rerender();
+
+      act(() => {
+        result.current.handleColumnChange(6);
+      });
+      rerender();
+
+      // `rescaleLayout` repacks rows by design, so absolute y is NOT preserved
+      // across a column change — but the gesture's ORDERING must be. Before the
+      // gesture, a and b shared row y=0 side by side (and at 6 cols they still
+      // fit side by side); the drag put b on its own row below a. If the
+      // re-derive had discarded the gesture, b would be back on a's row.
+      const lg = result.current.currentLayouts.lg;
+      expect(yOf(lg, 'b')).toBeGreaterThan(yOf(lg, 'a') as number);
+      const persisted = savedLayoutsFor('responsive-keeps-gesture')?.lg ?? [];
+      expect(yOf(persisted, 'b')).toBeGreaterThan(yOf(persisted, 'a') as number);
+    });
+  });
+});

@@ -5,6 +5,48 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 0.5.2 — 2026-07-16 — Fix: drag/resize gestures never persisted (bsuite#1588)
+
+### Fixed
+
+- **Edit-Page drag and resize gestures now persist.** Present since this
+  package's first commit, the edit-mode compactor
+  `{ ...noCompactor, preventCollision: true }` made react-grid-layout REVERT
+  any gesture that landed on an occupied cell — and because `onDragStop` only
+  emits `onLayoutChange` when the layout actually changed, a reverted gesture
+  emitted **nothing at all**. No mutated value ever reached the preference
+  adapter, so users' page customizations effectively never persisted on any
+  layout with adjacent cards (every reorder target in a full-width stack —
+  the dominant archetype on `/dashboard` and `/people/:id` — is occupied).
+
+  react-grid-layout derives its knobs straight off the compactor object
+  (`preventCollision = compactor.preventCollision ?? false`,
+  `allowOverlap = compactor.allowOverlap`, `compactType = compactor.type`).
+  With `compactType: null` there is no compaction to displace the colliding
+  neighbour, so `preventCollision: true` left a full revert as the only
+  possible outcome. Resize was rejected by the same lever. Gestures still
+  *looked* live because react-draggable/react-resizable transform the DOM node
+  directly, independent of whether the grid accepted the move.
+
+  `usePageGridLayout` now hands react-grid-layout the **same
+  `verticalCompactor` in edit mode and view mode**. Beyond unblocking the
+  gesture, this removes a real editor/viewer mismatch: view mode always
+  compacted vertically, so any free/overlapping arrangement the editor allowed
+  was re-compacted away on Save & Exit regardless — "free placement" was never
+  deliverable. One compactor for both modes means what the user arranges is
+  what they get, and it also removes a spurious `onLayoutChange` that RGL fired
+  on every edit-mode toggle purely because `compactType` changed (that echo
+  carried the pre-gesture layout and was the only write reaching storage).
+
+### Changed
+
+- `usePageGridLayout().activeCompactor` is now always `verticalCompactor`
+  (previously `noCompactor` + `preventCollision` while editing). The field
+  remains on `UsePageGridLayoutResult` — no consumer API change. Cards now
+  reflow/displace on drag instead of silently refusing to move.
+
+---
+
 ## 0.5.0 — 2026-07-14 — Measured auto-height (derived, in-memory) + unconditional card border
 
 ### Added
