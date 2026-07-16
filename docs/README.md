@@ -95,6 +95,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `evidence/` | Evidence captures referenced by plans/audits |
 | [`operator-screenshots/`](operator-screenshots/README.md) | Operator handoff screenshots |
 | [`plans/`](plans/README.md) | Implementation plans (active) — archived plans live in `archive/` |
+| [`runbooks/`](runbooks/README.md) | Operator/platform runbooks — migration dispatch, edge function deploy, parent pointer reconcile, tenant switching & branding tiers, secrets/vault rotation |
 | `testing/` | Test runbooks (`20260425-cross-app-e2e-runbook-v1.00W.md`) |
 
 > **Archived reference sets:** approved references from Feb–Apr 2026 (auth map, theme spec, GTO standards, competitive landscape, pricing, Fair Work, CRM8U research, etc.) → `archive/parent/2026-04-30-references-approved/`; closed audits → `archive/parent/2026-04-30-audits-closed/`; Phase-0 closure handoffs/session reports → `archive/parent/2026-04-30-phase-0-closure/`; 2026-06 closure-audit moves (cron logs, handoff packets, one-off audits, superseded plans) → `archive/2026-06/`.
