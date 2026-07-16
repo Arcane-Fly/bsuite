@@ -43,6 +43,9 @@
     "react-resizable": "^3 || ^4"
   },
   "peerDependenciesMeta": {
+    "@bsuite/theme": {
+      "optional": true
+    },
     "@dnd-kit/core": {
       "optional": true
     },
