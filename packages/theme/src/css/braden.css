@@ -164,6 +164,11 @@
   --shadow-sm:  0 1px 2px oklch(0 0 0 / 0.08);
   --shadow-md:  0 4px 6px oklch(0 0 0 / 0.10), 0 2px 4px oklch(0 0 0 / 0.06);
   --shadow-lg:  0 10px 15px oklch(0 0 0 / 0.10), 0 4px 6px oklch(0 0 0 / 0.05);
+
+  /* Card glow is a dark-mode-only device (see .dark below); light mode
+     stays border-only, consistent with the corporate "no neon glow" rule. */
+  --glow-card:       none;
+  --glow-card-hover: none;
 }
 
 /* ============================================================
@@ -206,4 +211,20 @@
   --muted-foreground:var(--braden-dark-text-muted);
   --border:          oklch(0.30 0.020 250);
   --input:           oklch(0.30 0.020 250);
+
+  /*
+   * Card glow — Braden dark mode gets a restrained gold separation glow,
+   * NOT the D2C neon treatment (no cyan, lower alpha, same two-layer
+   * ring+halo shape for consumer-code parity with @bsuite/theme's D2C
+   * --glow-card). Source is --app-accent (Braden Gold), which is
+   * inherited from :root since this file does not rebind it per-mode.
+   * Deliberately more subdued than D2C to honour the "corporate
+   * subtle, no neon glow" shadow philosophy above, adapted for dark UI
+   * where SOME separation glow is still needed for surface legibility.
+   */
+  --card-glow-source: var(--app-accent, var(--braden-gold-500));
+  --glow-card:       0 0 0 1px color-mix(in oklch, var(--card-glow-source) 18%, transparent),
+                      0 0 10px -4px color-mix(in oklch, var(--card-glow-source) 20%, transparent);
+  --glow-card-hover: 0 0 0 1px color-mix(in oklch, var(--card-glow-source) 26%, transparent),
+                      0 0 14px -4px color-mix(in oklch, var(--card-glow-source) 28%, transparent);
 }
