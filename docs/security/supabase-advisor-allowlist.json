@@ -151,6 +151,16 @@
       "objects": [
         "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
       ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "crm7#1123 wrong-tenant-landing fix. set_current_tenant is the lightweight, MEMBERSHIP-GATED persistence primitive that pins the caller's profiles.current_tenant_id to a tenant they are an ACTIVE member of (checked against user_tenants on auth.uid() inside the function) and does nothing else — so an authenticated caller can only persist a choice among orgs they already belong to. authenticated EXECUTE is the point (signed-in members call it to remember their org across devices); anon EXECUTE is explicitly revoked (20260717143000, verified by pgTAP 08 B2). search_path pinned 'public','pg_temp'. Defense-in-depth only: the client re-validates the stored value against live user_tenants on every read, and RLS independently gates every tenant-scoped write via auth_tenant_id() (NOT current_tenant_id). Same self-authorising-helper pattern as the other accepted entries here.",
+      "added": "2026-07-17",
+      "objects": [
+        "set_current_tenant(p_tenant_id uuid)"
+      ]
     }
   ]
 }
