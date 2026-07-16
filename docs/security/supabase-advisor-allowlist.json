@@ -141,6 +141,27 @@
       "objects": [
         "is_session_valid(session_uuid uuid)"
       ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Tenant switcher (live bug-bash 2026-07-17). The authenticated EXECUTE grant IS the fix: the Super Admin / developer tenant switcher calls this RPC from the browser as the signed-in user and previously failed with 'permission denied for function log_tenant_switch' (EXECUTE was held only by postgres/service_role). The SWITCH is authorised internally and RAISEs on failure — platform_is_developer_or_admin() may switch anywhere, otherwise a user_tenants owner/admin row is required on the target tenant or its parent_tenant_id sub-org. Verified live 2026-07-17 as braden's authenticated role: an authorised switch wrote audit row 0701b958-5dc4-4ad1-8bd0-cc24b173657d; no side effect precedes the auth check; the failure message is generic so it is not a tenant-enumeration oracle; the audit table is genuinely append-only (RLS on, no UPDATE/DELETE policy). Scope note, stated precisely: this rule accepts that an authenticated user can CALL the function — it does not assert the recorded row was unforgeable. The original version took from_tenant_id/ip_address/user_agent straight from the caller; that is fixed in crm7#1147, which derives all three server-side. The remaining direct-INSERT gap on the same table is tracked in crm7#1148. search_path pinned to 'public'. Same self-authorising-helper pattern as the other accepted entries here.",
+      "added": "2026-07-16",
+      "objects": [
+        "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
+      ]
+    },
+    {
+      "lint": "function_search_path_mutable",
+      "object_type": "function",
+      "mode": "tracked",
+      "tracked_in": "crm7#1145",
+      "reason": "TEMPORARY — remove once crm7#1145 is applied. public.set_updated_at() was created without a pinned search_path. This is a real defect being fixed forward (crm7 migration 20260717100000 ALTERs it to search_path = ''), NOT an accepted design. It is tracked rather than accepted because the sweep reads the LIVE database via the Management API, so it structurally cannot go green on the PR that carries the fix: the fix only becomes live after merge -> parent pointer bump -> floor-gated supabase-migrate dispatch. Without this entry the only alternatives are to --admin-merge a red check (which normalises the banned 'red CI is informational' pattern) or to stall the pointer bump that the dispatch itself depends on. Low severity meanwhile: the live catalog shows prosecdef=false, so it is SECURITY INVOKER and carries no privilege to escalate. DELETE THIS RULE once the live catalog shows proconfig = {search_path=\"\"}.",
+      "added": "2026-07-16",
+      "objects": [
+        "set_updated_at()"
+      ]
     }
   ]
 }
