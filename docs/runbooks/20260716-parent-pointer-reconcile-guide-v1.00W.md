@@ -8,7 +8,7 @@
 
 The parent `bsuite` repo does not contain the six apps' source code directly. For each submodule path, the parent's git tree stores a **gitlink** — a single pointer to one exact commit SHA in that submodule's own repository. Nothing about the parent repo "follows" a submodule's `main` or `development` branch automatically. When you clone or check out the parent repo (including in CI, with `submodules: recursive`), every submodule directory is populated at **exactly** the SHA the parent's gitlink records for the ref you checked out — not the submodule's latest commit, not its branch tip, just that one SHA.
 
-This is why "bump the parent pointer" is a distinct, required step any time a submodule's own repo gets new commits that the rest of the system (CI dispatch workflows, other apps reading shared package versions, the roadmap dashboard) needs to see. It is also why a migrate or deploy dispatch can report success while doing nothing — see the [Database Migration Dispatch runbook](20260716-database-migration-dispatch-runbook-v1.00W.md)'s "stale-pointer trap" section.
+This is why "bump the parent pointer" is a distinct, required step any time a submodule's own repo gets new commits that the rest of the system (CI dispatch workflows, other apps reading shared package versions, the roadmap dashboard) needs to see. It is also why a migrate or deploy dispatch can report success while doing nothing — see the [Database Migration Dispatch guide](20260716-database-migration-dispatch-guide-v1.00W.md)'s "stale-pointer trap" section.
 
 ## Why submodules show as "modified" in `git status` (and why that's usually fine)
 
@@ -25,7 +25,7 @@ or
 	modified:   crm7 (untracked content)
 ```
 
-This means the **local working copy** of that submodule directory has commits, or uncommitted content, that the parent's recorded gitlink does not yet point to. It does **not** mean anything is broken or that work has been lost — it means a pointer bump is pending. This is expected and frequent in this workspace because submodule directories get worked in directly (by the operator, and by concurrent agent sessions operating in their own submodule scope) well before the corresponding parent-pointer-bump PR lands. Verified directly in this session: at the start, `R80.3`, `business-suite-unified`, `conduit`, and `crm7` all showed modified; a short time later only `crm7` still did (another agent's in-progress work), because the others had since been reconciled via pointer-bump commits.
+This means the **local working copy** of that submodule directory has commits, or uncommitted content, that the parent's recorded gitlink does not yet point to. It does **not** mean anything is broken or that work has been lost — it means a pointer bump is pending. This is expected and frequent in this workspace because submodule directories get worked in directly (by the operator, and by concurrent agent sessions operating in their own submodule scope) well before the corresponding parent-pointer-bump PR lands — it is routine for several submodules to show modified at once and for that set to shrink over time as each gets its own pointer-bump commit.
 
 **What to check before assuming it's benign:** "new commits" means commits exist somewhere reachable from that submodule directory's current HEAD; "untracked content" can also mean genuinely uncommitted file changes sitting in the submodule's working tree. Run `git -C <submodule> status` and `git -C <submodule> log --oneline -5` to see what's actually there before bumping the pointer — you want to point at a commit that is pushed to the submodule's own remote, not an uncommitted local state.
 
@@ -73,8 +73,8 @@ Several recent commits bump more than one submodule pointer together (e.g. `chor
 
 A pointer bump by itself changes nothing in the live product or database. It only makes the new commit visible to whatever reads the parent tree next:
 
-- If the submodule change included a **migration**, dispatch `supabase-migrate.yml` for that submodule next (see the [Database Migration Dispatch runbook](20260716-database-migration-dispatch-runbook-v1.00W.md)).
-- If it included an **edge function** change, dispatch `supabase-functions-deploy.yml` (see the [Edge Function Deploy runbook](20260716-edge-function-deploy-runbook-v1.00W.md)).
+- If the submodule change included a **migration**, dispatch `supabase-migrate.yml` for that submodule next (see the [Database Migration Dispatch guide](20260716-database-migration-dispatch-guide-v1.00W.md)).
+- If it included an **edge function** change, dispatch `supabase-functions-deploy.yml` (see the [Edge Function Deploy guide](20260716-edge-function-deploy-guide-v1.00W.md)).
 - If it's an app-only change with no DB/function component and the app deploys from its own repo on Vercel, the pointer bump in the parent repo doesn't gate the Vercel deploy at all — that already happened when the submodule's own `main` was pushed. The parent pointer bump in that case is purely so the parent repo (and the roadmap dashboard's `repos[].main_sha` field, refreshed by `docs/dashboard/refresh-data.py`) reflects reality.
 
 ## Failure modes
@@ -85,6 +85,6 @@ A pointer bump by itself changes nothing in the live product or database. It onl
 
 ## Related
 
-- [Database Migration Dispatch runbook](20260716-database-migration-dispatch-runbook-v1.00W.md)
-- [Edge Function Deploy runbook](20260716-edge-function-deploy-runbook-v1.00W.md)
+- [Database Migration Dispatch guide](20260716-database-migration-dispatch-guide-v1.00W.md)
+- [Edge Function Deploy guide](20260716-edge-function-deploy-guide-v1.00W.md)
 - Root `CLAUDE.md` §10 (Roadmap Dashboard Update Protocol)
