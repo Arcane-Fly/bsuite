@@ -51,7 +51,7 @@ export default {
     // path, silently exempting EVERY file in EVERY app. See _shared.js for
     // the full writeup (also covers why a path-anchor fix isn't safe
     // either, given this platform's worktree-based workflow).
-    if (isBradenSubmoduleFile(context.filename)) return {}
+    if (isBradenSubmoduleFile(context.filename, context.cwd ?? process.cwd())) return {}
 
     // ── Exemption: BRADEN-EXEMPT marker in file ───────────────────────────────
     // Also found + fixed 2026-07-17 (same session): `context.getFilename()`/
