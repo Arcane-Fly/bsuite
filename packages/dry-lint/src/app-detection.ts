@@ -1,4 +1,5 @@
-import { sep } from 'node:path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export type AppKey =
   | 'bsu'
@@ -10,76 +11,122 @@ export type AppKey =
   | 'shared';
 
 /**
- * Map filesystem path segments / package directory names to ownership-map app keys.
- * The values are the canonical {@link AppKey}s used throughout the rule + ownership map.
+ * Map a `package.json` `name` field to the canonical {@link AppKey} used
+ * throughout the rule + ownership map. Source of truth for each app's real
+ * `name` field (verified against each repo's `package.json` 2026-07-17):
+ * business-suite-unified, conduit, throughput use their directory name
+ * verbatim; R80.3 is `r80-calculator`; braden is `braden-app`; crm7 is
+ * `crm7-complete`. Any `@bsuite/*`-scoped package (the shared `packages/*`
+ * workspace) maps to `shared`.
  */
-const PATH_SEGMENT_TO_APP: ReadonlyArray<readonly [string, AppKey]> = [
+const KNOWN_PACKAGE_NAMES: ReadonlyMap<string, AppKey> = new Map([
   ['business-suite-unified', 'bsu'],
-  ['business_suite_unified', 'bsu'],
-  ['bsu', 'bsu'],
+  ['crm7-complete', 'crm7'],
   ['crm7', 'crm7'],
   ['conduit', 'conduit'],
-  ['braden', 'braden'],
+  ['braden-app', 'braden'],
+  ['r80-calculator', 'r80'],
   ['r80.3', 'r80'],
-  ['r80', 'r80'],
-  ['r8', 'r80'],
   ['throughput', 'throughput'],
-];
+]);
+
+const VIRTUAL_FILENAMES = new Set(['<input>', '<text>', '']);
 
 /**
- * Marker segments that anchor "this is where the BSuite repo starts". When
- * present, app detection only considers path segments AFTER this marker.
- * Without this anchor a path like `/home/braden/Desktop/Dev/bsuite/crm7/src`
- * would falsely match `braden` (the user-home segment) before `crm7`.
+ * Bounded walk memo — keyed by the resolved starting directory, NOT a bare
+ * scalar. A bare-scalar cache lets the first file linted in a process pin
+ * its answer for every subsequent file/app linted in the same process (the
+ * exact failure class fixed in `@bsuite/eslint-config`'s
+ * `isBradenSubmoduleFile` F1 — see `packages/eslint-config/rules/_shared.js`).
  */
-const REPO_ROOT_MARKERS = new Set(['bsuite']);
+const resultCache = new Map<string, AppKey | undefined>();
+
+function hasGitMarker(dir: string): boolean {
+  try {
+    return fs.existsSync(path.join(dir, '.git'));
+  } catch {
+    return false;
+  }
+}
+
+function findNearestPackageJson(startDir: string): string | null {
+  let dir = startDir;
+  // Bounded walk: stop at the first repo root (a `.git` marker — file or
+  // directory, so git-worktree checkouts where `.git` is a file pointing at
+  // the real gitdir are covered) so a checkout with no package.json at its
+  // own root can never escape into an unrelated ancestor directory (e.g. a
+  // contributor's $HOME). Also capped at 20 levels as a hard backstop.
+  for (let i = 0; i < 20; i++) {
+    const candidate = path.join(dir, 'package.json');
+    if (fs.existsSync(candidate)) return candidate;
+    if (hasGitMarker(dir)) break;
+    const parent = path.dirname(dir);
+    if (parent === dir) break; // reached filesystem root
+    dir = parent;
+  }
+  return null;
+}
 
 /**
  * Detect the BSuite app a source file belongs to from its absolute path.
  *
- * The lint rule needs to know which app is making a write so it can compare
- * to the ownership map. Detection strategy:
+ * bsuite#1623: the previous implementation matched path SEGMENTS (anchored
+ * on a `bsuite/` marker, else a right-to-left scan) rather than reading each
+ * app's own `package.json`. That strategy assumes the checkout directory is
+ * literally named after the app — false for the platform's standard
+ * `git worktree add /home/<user>/Desktop/Dev/<app>-<feature>-worktree`
+ * convention, where the worktree is a SIBLING of `bsuite/` (no `bsuite/`
+ * marker segment at all) and its directory name doesn't equal any entry in
+ * the segment map. The right-to-left fallback then scanned past the
+ * worktree name and matched the contributor's own home-directory segment
+ * (`/home/braden/...` -> `braden`) — misattributing every file in the
+ * worktree to the `braden` app.
  *
- * 1. If a `bsuite/` segment is present anywhere in the path, only consider
- *    segments that come AFTER it. This avoids false matches from
- *    user-home directories (`/home/braden/...`) or unrelated paths.
- * 2. Walk the (possibly trimmed) segments left-to-right, returning the
- *    FIRST matching app — that's the deepest app-root directory the file
- *    sits under.
- * 3. As a fallback (no `bsuite/` marker — e.g. when ESLint is invoked from
- *    a single-app repo on Vercel), walk RIGHT-TO-LEFT so the closest
- *    enclosing app directory wins, and segments earlier in the path
- *    (like a user-home directory) cannot trigger a false match.
+ * Fix: anchor on a filesystem walk from the FILE's own directory (not any
+ * string-matching against the full absolute path), bounded at the first
+ * `.git` marker, reading the app's own `package.json` `name` field as the
+ * authoritative signal. This is immune to worktree directory naming, CI
+ * checkout paths, and contributor home directories simultaneously, because
+ * it never inspects path segments outside the file's own repo root.
  *
- * Returns `undefined` for files outside any known app so the rule no-ops
- * rather than misattribute writes.
+ * Returns `undefined` for files outside any known app (or with no resolvable
+ * `package.json`) so the rule no-ops rather than misattribute writes — fail
+ * closed, matching `isBradenSubmoduleFile`'s safety invariant.
  */
 export function detectAppFromPath(filename: string): AppKey | undefined {
-  if (!filename) return undefined;
-  const allSegments = filename.split(sep);
+  if (!filename || VIRTUAL_FILENAMES.has(filename)) return undefined;
 
-  // Anchor on `bsuite/` if present — only inspect what comes after.
-  const markerIdx = allSegments.findIndex((s) => REPO_ROOT_MARKERS.has(s.toLowerCase()));
-  const candidateSegments = markerIdx >= 0 ? allSegments.slice(markerIdx + 1) : allSegments;
+  const startDir = path.dirname(filename);
+  if (resultCache.has(startDir)) return resultCache.get(startDir);
 
-  if (markerIdx >= 0) {
-    // Strict mode: app dir is the immediate child of `bsuite/`. Only check
-    // the first segment to avoid nested misattribution
-    // (e.g. `bsuite/crm7/.../node_modules/something/braden/...`).
-    const first = candidateSegments[0]?.toLowerCase();
-    if (!first) return undefined;
-    for (const [needle, app] of PATH_SEGMENT_TO_APP) {
-      if (first === needle) return app;
+  let result: AppKey | undefined;
+  try {
+    const pkgPath = findNearestPackageJson(startDir);
+    if (!pkgPath) {
+      result = undefined;
+    } else {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as { name?: unknown };
+      const name = typeof pkg.name === 'string' ? pkg.name.toLowerCase() : undefined;
+      if (name && KNOWN_PACKAGE_NAMES.has(name)) {
+        result = KNOWN_PACKAGE_NAMES.get(name);
+      } else if (name && name.startsWith('@bsuite/')) {
+        result = 'shared';
+      } else {
+        result = undefined;
+      }
     }
-    return undefined;
+  } catch {
+    // Fail closed: "unknown app" just means the rule no-ops for this file,
+    // which is always safe. A false positive attribution is not.
+    result = undefined;
   }
 
-  // Fallback: scan right-to-left so the closest enclosing app dir wins.
-  for (let i = candidateSegments.length - 1; i >= 0; i--) {
-    const normalised = candidateSegments[i]!.toLowerCase();
-    for (const [needle, app] of PATH_SEGMENT_TO_APP) {
-      if (normalised === needle) return app;
-    }
-  }
-  return undefined;
+  resultCache.set(startDir, result);
+  return result;
+}
+
+// Test-only: allows the test suite to reset memoisation between cases so
+// fixture directories created per-test don't bleed into each other's cache.
+export function _resetAppDetectionCacheForTests(): void {
+  resultCache.clear();
 }
