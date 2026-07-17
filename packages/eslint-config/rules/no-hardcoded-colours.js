@@ -12,6 +12,8 @@
  * Fix: replace with a semantic token from @bsuite/theme/docs/TOKEN-MAPPING.md
  */
 
+import { isBradenSubmoduleFile } from './_shared.js'
+
 const TAILWIND_PALETTE_RE = /\b(text|bg|border|divide)-(slate|gray|zinc|neutral)-(\d{2,3})\b/g
 const HEX_RE = /#[0-9a-fA-F]{3,8}\b/g
 const RGBA_RE = /rgba?\(\s*\d/g
@@ -42,12 +44,25 @@ export default {
   },
 
   create(context) {
-    // ── Exemption: braden/ directory ──────────────────────────────────────────
-    const filename = context.getFilename()
-    if (filename.includes('/braden/') || filename.includes('\\braden\\')) return {}
+    // ── Exemption: braden app ──────────────────────────────────────────────
+    // Bug found + fixed 2026-07-17: the previous check was
+    // `filename.includes('/braden/')` — a path-substring match that also
+    // matches a contributor's home directory or a git worktree checkout
+    // path, silently exempting EVERY file in EVERY app. See _shared.js for
+    // the full writeup (also covers why a path-anchor fix isn't safe
+    // either, given this platform's worktree-based workflow).
+    if (isBradenSubmoduleFile(context.filename)) return {}
 
     // ── Exemption: BRADEN-EXEMPT marker in file ───────────────────────────────
-    const sourceCode = context.getSourceCode()
+    // Also found + fixed 2026-07-17 (same session): `context.getFilename()`/
+    // `context.getSourceCode()` are the pre-ESLint-9 legacy accessors and no
+    // longer exist on ESLint 10.x's rule context — calling them threw
+    // `TypeError: context.getFilename is not a function` and crashed the
+    // rule entirely for any consumer on eslint@^10 (verified against the
+    // installed eslint@10.6.0 in the crm7 worktree). `context.filename` /
+    // `context.sourceCode` are the ESLint 9+ replacements this package's
+    // own peerDependencies range (">=9.0.0 <11.0.0") already requires.
+    const sourceCode = context.sourceCode
     const fullText = sourceCode.getText()
     if (fullText.includes('BRADEN-EXEMPT')) return {}
 
