@@ -61,8 +61,22 @@ const PATTERN_SOURCE_EXEMPT_FRAGMENTS: readonly string[] = [
 
 // Signature substrings of the two canonical hand-rolled patterns. Kept as
 // plain literals (no regex) — .includes() is sufficient and unambiguous.
+//
+// These signatures alone are too broad: `radial-gradient(circle` also
+// matches ordinary ambient glow blobs (e.g.
+// `radial-gradient(circle at top, var(--app-primary-glow), transparent 58%)`)
+// and `linear-gradient(90deg,` also matches ordinary shimmer/skeleton
+// gradients. Both canonical primitives — `.bsuite-hero-grid`
+// (packages/theme/src/css/utilities.css) and the dot tile it mirrors —
+// define their repeating tile with the exact `1px, transparent 1px`
+// co-occurrence (a hard-edged 1px line/dot followed by a transparent 1px
+// gap, which is what makes the background tile instead of blend). A glow
+// or shimmer gradient never needs that co-occurrence, so requiring it
+// alongside the signature keeps the rule scoped to actual grid/dot tiling
+// while still catching hand-rolled reproductions of the doctrine pattern.
 const DOT_CSS_SIGNATURE = 'radial-gradient(circle';
 const GRID_CSS_SIGNATURE = 'linear-gradient(90deg,';
+const TILE_FINGERPRINT = '1px, transparent 1px';
 
 function isAuthedShellPath(filePath: string): boolean {
   return AUTHED_PATH_MARKERS.some((marker) => filePath.includes(marker));
@@ -152,7 +166,9 @@ export const noGridDotDoctrineViolationRule = createRule<[], MessageIds>({
         }
         const value = readStaticStringValue(node.value);
         if (!value) return;
-        if (value.includes(DOT_CSS_SIGNATURE) || value.includes(GRID_CSS_SIGNATURE)) {
+        const hasDoctrineSignature =
+          value.includes(DOT_CSS_SIGNATURE) || value.includes(GRID_CSS_SIGNATURE);
+        if (hasDoctrineSignature && value.includes(TILE_FINGERPRINT)) {
           context.report({ node, messageId: 'handRolledPattern' });
         }
       },

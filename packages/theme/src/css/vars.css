@@ -187,18 +187,30 @@
   --card-glow-source: var(--app-accent, var(--role-accent));
   --glow-card:         none;
   --glow-card-hover:   none;
+}
 
-  /* ============================================================
-     SRGB FALLBACKS (for browsers without oklch support) — W3 §3.4
-     True-source hexes, each re-derived directly from its oklch token
-     (OKLCH -> OKLab -> linear-sRGB -> gamma-encoded sRGB) rather than
-     eyeballed against a Tailwind palette. Round-trip-verified: every
-     value below computes ΔE(OKLab) < 0.001 against its oklch token —
-     two orders of magnitude inside the < 0.02 acceptance bar. The
-     prior Tailwind-palette-derived hexes were ΔE 0.03-0.10 off (see
-     docs/TOKEN-MAPPING.md §8 for the full before/after table).
-     ============================================================ */
-  @supports not (color: oklch(0 0 0)) {
+/* ============================================================
+   SRGB FALLBACKS (for browsers without oklch support) — W3 §3.4
+   True-source hexes, each re-derived directly from its oklch token
+   (OKLCH -> OKLab -> linear-sRGB -> gamma-encoded sRGB) rather than
+   eyeballed against a Tailwind palette. Round-trip-verified: every
+   value below computes ΔE(OKLab) < 0.01 against its oklch token —
+   at least twice inside the < 0.02 acceptance bar (most values are
+   one to two orders of magnitude inside it; see docs/TOKEN-MAPPING.md
+   §8 for the full per-token ΔE table). The prior Tailwind-palette-
+   derived hexes were ΔE 0.03-0.10 off.
+
+   Deliberately declared at the TOP LEVEL, not nested inside another
+   `:root { }` block: engines that lack `oklch()` support predate CSS
+   nesting too, so a `@supports` block nested inside `:root` would be
+   silently dropped by exactly the browsers it's meant to serve when
+   this file is consumed raw (unbundled). It works when bundled
+   through the Tailwind v4 / LightningCSS pipeline only because that
+   pipeline hoists nested at-rules — this top-level form is correct
+   for both the raw and the bundled case.
+   ============================================================ */
+@supports not (color: oklch(0 0 0)) {
+  :root {
     --neon-electric-blue:     #2563eb;
     --neon-electric-cyan:     #00cec9;
     --neon-electric-indigo:   #4f46e5;

@@ -79,8 +79,14 @@
     "tailwind-merge": "^3.6.0"
   },
   "peerDependencies": {
+    "@bsuite/theme": ">=0.6.0",
     "react": "^18.3.0 || ^19.0.0",
     "react-dom": "^18.3.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@bsuite/theme": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@bsuite/theme": "^0.5.0",

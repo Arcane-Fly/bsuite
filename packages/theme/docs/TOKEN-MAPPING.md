@@ -230,7 +230,7 @@ Electric Blue → Cyan by default; automatically re-colours for white-labelled t
 
 **Scope — marketing heroes only.** Apply to decorative elements (a hero background swatch, a badge, a thin underline) or to text via `background-clip: text` at the call site. **Never** apply to functional text — labels, body copy, buttons, form fields.
 
-**App-local gradients are quarantined.** crm7's `.crm7-gradient` (`crm7/src/index.css`) terminates on a raw `#39ff13` and measures 1.36:1 contrast on white — it is banned from any new text or thin-line usage and must not be treated as a second canonical gradient. New decorative-gradient work anywhere in the suite uses `--gradient-accent` / `.bsuite-accent-gradient`.
+**App-local gradients are quarantined.** crm7's `.crm7-gradient` (`crm7/src/index.css:1108-1120`) terminates on `var(--accent-secondary)` → `--brand-green: oklch(0.871 0.286 141.5)`, with an accessible fallback and a `forced-colors` guard — token-based, not a raw hex. It still measures 1.36:1 contrast on white, so it is banned from any new text or thin-line usage and must not be treated as a second canonical gradient. New decorative-gradient work anywhere in the suite uses `--gradient-accent` / `.bsuite-accent-gradient`.
 
 ### 8.3 Grid/dot doctrine
 
@@ -272,3 +272,7 @@ Every new value passes the ΔE < 0.02 acceptance bar by roughly two orders of ma
 ### 8.5 `@bsuite/design-tokens` retired
 
 The `packages/design-tokens` package (a second, unused token source) has been deleted. Zero consumers were found across all 7 repos (parent + 6 submodules) — verified by exhaustive grep for `@bsuite/design-tokens` / `design-tokens` across every file type in every repo; the only two references were a stale prose line in `business-suite-unified/README.md` (not a code import) and mentions in historical `docs/archive/`/`docs/plans/` records (left untouched per the project's historical-doc policy). `@bsuite/theme` remains the single source of truth for design tokens.
+
+### 8.6 Five orphaned v0.2.0-era token CSS files removed
+
+`tokens-light.css`, `tokens-dark.css`, `tokens-high-contrast.css`, `tokens-brand-corporate-braden.css`, and `runtime-branding.css` (`packages/theme/src/css/`) have been deleted in 0.6.0. `MIGRATION-v0.2.0.md` originally documented these as shipping "included when you `@import '@bsuite/theme/css'`", but that was never true — `index.css` has only ever imported `vars.css` + `utilities.css` (confirmed by the 2026-07-09 styling-consistency audit, `docs/archive/2026-07/20260709-styling-consistency-audit-resolved.md`). The files were not in the package's `exports` map, had zero `@import`/deep-import consumers anywhere across all 7 repos (parent + 6 submodules — exhaustive grep by filename), and every token they defined already has a live equivalent in `vars.css` Layers 2–4. See `MIGRATION-v0.6.0.md` for the consumer-facing removal note.
