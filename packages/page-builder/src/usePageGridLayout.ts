@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { noCompactor, verticalCompactor } from 'react-grid-layout';
+import { verticalCompactor } from 'react-grid-layout';
 import { buildResponsiveLayouts } from './buildResponsiveLayouts.js';
 import { defaultPreferenceAdapter } from './preferences.js';
 import { rescaleLayout } from './rescaleLayout.js';
@@ -170,10 +170,55 @@ export function usePageGridLayout({
     [layoutCols],
   );
 
-  const activeCompactor = useMemo(
-    () => (isEditing ? { ...noCompactor, preventCollision: true } : verticalCompactor),
-    [isEditing],
-  );
+  /**
+   * The compactor handed to react-grid-layout — the SAME one in edit mode and
+   * view mode (bsuite#1588).
+   *
+   * Why this is NOT `{ ...noCompactor, preventCollision: true }` while editing
+   * -------------------------------------------------------------------------
+   * That was the original edit-mode config, present since this package's first
+   * commit, and it silently made drag/resize gestures unable to persist for
+   * any layout with adjacent cards. react-grid-layout derives three knobs
+   * straight off the compactor object:
+   *
+   *   preventCollision = compactor.preventCollision ?? false   // was true
+   *   allowOverlap     = compactor.allowOverlap                // false
+   *   compactType      = compactor.type                        // was null
+   *
+   * and feeds them to `moveElement`, whose colliding-move branch is:
+   *
+   *   if (hasCollisions && preventCollision) {
+   *     l.x = oldX; l.y = oldY; l.moved = false; return layout;   // full revert
+   *   }
+   *
+   * With `compactType: null` there is NO compaction to displace the colliding
+   * neighbour, so the only outcome for a gesture landing on an occupied cell
+   * is a total revert. `onDragStop` then guards its emit with
+   * `if (oldLayout && !deepEqual(oldLayout, finalLayout)) onLayoutChange(...)`
+   * — a reverted gesture emits NOTHING, so the persisted layout could never
+   * change. Resize is rejected by the same lever (`if (preventCollision &&
+   * !allowOverlap)` restores the old w/h/x/y). The card still tracked the
+   * cursor because react-draggable/react-resizable transform the DOM node
+   * directly, independent of whether RGL accepted the move — which is why the
+   * gesture looked live while nothing ever saved.
+   *
+   * In a full-width stack (every card `w: cols` — the dominant archetype on
+   * /dashboard and /people/:id) EVERY reorder target is occupied, so EVERY
+   * gesture reverted.
+   *
+   * Why `verticalCompactor` in BOTH modes rather than another combination
+   * --------------------------------------------------------------------
+   * View mode always compacted vertically. An edit-mode compactor that allows
+   * free/overlapping placement therefore produces a layout the viewer
+   * immediately re-compacts away — the editor/viewer mismatch meant "free
+   * placement" was never deliverable, and Save & Exit re-compacted regardless.
+   * One compactor for both modes makes what the user arranges exactly what
+   * they get, lets `moveElement` displace neighbours (so reordering a stack
+   * works at all), and removes a spurious `onLayoutChange` that RGL fired on
+   * every edit-mode toggle purely because `compactType` changed — that echo
+   * carried the pre-gesture layout and was the only write reaching storage.
+   */
+  const activeCompactor = verticalCompactor;
 
   /**
    * Throttled layout-change handler.
