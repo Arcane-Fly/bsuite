@@ -146,20 +146,22 @@
       "lint": "authenticated_security_definer_function_executable",
       "object_type": "function",
       "mode": "accepted",
-      "reason": "Tenant switcher (live bug-bash 2026-07-17). The authenticated EXECUTE grant IS the fix: the Super Admin / developer tenant switcher calls this RPC from the browser as the signed-in user and previously failed with 'permission denied for function log_tenant_switch' (EXECUTE was held only by postgres/service_role). The SWITCH is authorised internally and RAISEs on failure — platform_is_developer_or_admin() may switch anywhere, otherwise a user_tenants owner/admin row is required on the target tenant or its parent_tenant_id sub-org. Verified live 2026-07-17 as braden's authenticated role: an authorised switch wrote audit row 0701b958-5dc4-4ad1-8bd0-cc24b173657d; no side effect precedes the auth check; the failure message is generic so it is not a tenant-enumeration oracle; the audit table is genuinely append-only (RLS on, no UPDATE/DELETE policy). Scope note, stated precisely: this rule accepts that an authenticated user can CALL the function — it does not assert the recorded row was unforgeable. The original version took from_tenant_id/ip_address/user_agent straight from the caller; that is fixed in crm7#1147, which derives all three server-side. The remaining direct-INSERT gap on the same table is tracked in crm7#1148. search_path pinned to 'public'. Same self-authorising-helper pattern as the other accepted entries here.",
-      "added": "2026-07-16",
+      "reason": "crm7#1123 tenant-switch authority. set_current_tenant(p_tenant_id) is membership-gated — it raises 'Unauthorized: not an active member of the target tenant' unless the caller has an active public.user_tenants row for p_tenant_id, then persists profiles.current_tenant_id. log_tenant_switch(...) is its audit-write companion (the tenant_switch_audit direct-INSERT forgery fix routes all audit writes through this SECDEF fn rather than allowing direct client INSERT). Both MUST be EXECUTE-grantable to authenticated (they are the client RPCs for switching tenant context); both are SECURITY DEFINER (write profiles / read user_tenants / write audit under RLS) with search_path pinned to 'public, pg_temp'. Live-verified body 2026-07-20 via pg_get_functiondef. Accepted-by-design; not a category waiver.",
+      "added": "2026-07-20",
       "objects": [
+        "set_current_tenant(p_tenant_id uuid)",
         "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
       ]
     },
     {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "crm7#1123 wrong-tenant-landing fix. set_current_tenant is the lightweight, MEMBERSHIP-GATED persistence primitive that pins the caller's profiles.current_tenant_id to a tenant they are an ACTIVE member of (checked against user_tenants on auth.uid() inside the function) and does nothing else — so an authenticated caller can only persist a choice among orgs they already belong to. authenticated EXECUTE is the point (signed-in members call it to remember their org across devices); anon EXECUTE is explicitly revoked (20260717143000, verified by pgTAP 08 B2). search_path pinned 'public','pg_temp'. Defense-in-depth only: the client re-validates the stored value against live user_tenants on every read, and RLS independently gates every tenant-scoped write via auth_tenant_id() (NOT current_tenant_id). Same self-authorising-helper pattern as the other accepted entries here.",
-      "added": "2026-07-17",
+      "lint": "multiple_permissive_policies",
+      "object_type": "table",
+      "mode": "tracked",
+      "tracked_in": "bsuite#1542",
+      "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) — never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542.",
+      "added": "2026-07-20",
       "objects": [
-        "set_current_tenant(p_tenant_id uuid)"
+        "timesheets"
       ]
     }
   ]

@@ -108,20 +108,25 @@ export default [
 
 ## How app detection works
 
-The rule needs to know which app a file belongs to so it can compare against the ownership map. Detection walks the file's absolute path looking for the first directory segment matching one of:
+The rule needs to know which app a file belongs to so it can compare against the ownership map. **Every real app config passes an explicit `appOverride`** (see the "Configuration" examples above — each app's `eslint.config.js` sets `{ appOverride: '<app>' }`), so in practice `appOverride` is what actually determines the app in production; the automatic detector below only runs when `appOverride` is omitted.
 
-| Segment | App key |
-|---------|---------|
-| `business-suite-unified`, `bsu` | `bsu` |
-| `crm7` | `crm7` |
+Detection (`detectAppFromPath()`, `src/app-detection.ts`) walks up from the linted **file's own directory** looking for the nearest `package.json`, bounded at the first `.git` marker (file or directory — covers git-worktree checkouts, where `.git` is a file pointing at the real gitdir). The `package.json` `name` field is matched against:
+
+| `package.json` `name` | App key |
+|---|---|
+| `business-suite-unified` | `bsu` |
+| `crm7-complete`, `crm7` | `crm7` |
 | `conduit` | `conduit` |
-| `braden` | `braden` |
-| `R80.3`, `r80`, `r8` | `r80` |
+| `braden-app` | `braden` |
+| `r80-calculator`, `r80.3` | `r80` |
 | `throughput` | `throughput` |
+| any `@bsuite/*` scoped package | `shared` |
 
-If no segment matches (e.g. when linting `packages/theme/src/`), the rule no-ops on that file.
+If no `package.json` is found before the `.git` boundary, or its `name` doesn't match, the rule no-ops on that file (fail closed — a missed detection is always safe; a false attribution is not).
 
-You can override detection per-config-block via the `appOverride` option.
+**bsuite#1623:** an earlier version of this detector matched path SEGMENTS instead (e.g. treating any `crm7` directory-name segment as the CRM7 app). That broke for the platform's standard `git worktree add /home/<user>/Desktop/Dev/<app>-<feature>-worktree` convention — a worktree checked out as a SIBLING of `bsuite/` with a directory name that doesn't literally equal the app name — and misattributed such files to whichever known app name happened to appear anywhere in the path (including a contributor's own home directory). The `package.json`-based walk above is immune to checkout directory naming entirely.
+
+You can override detection per-config-block via the `appOverride` option — and every shipped app config does.
 
 ---
 

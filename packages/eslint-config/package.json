@@ -1,11 +1,14 @@
 {
   "name": "@bsuite/eslint-config",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Shared ESLint flat config for all BSuite projects",
   "type": "module",
   "main": "index.js",
   "exports": {
     ".": "./index.js"
+  },
+  "scripts": {
+    "test": "node --test rules/*.test.js"
   },
   "peerDependencies": {
     "@eslint/js": ">=9.0.0 <11.0.0",

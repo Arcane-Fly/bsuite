@@ -1,4 +1,6 @@
 export { DotPattern, type DotPatternProps } from './dot-pattern.js'
+export { HeroGrid, type HeroGridProps } from './hero-grid.js'
+export { AppShell, type AppShellProps } from './app-shell.js'
 export { cn } from './utils.js'
 export {
   Logo,

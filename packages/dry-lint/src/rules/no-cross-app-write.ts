@@ -224,8 +224,11 @@ export const noCrossAppWriteRule = createRule<RuleOptions, MessageIds>({
     const warnOnUnknownTable = options?.warnOnUnknownTable ?? false;
     // Prefer the physical disk path so app detection works even when the
     // virtual filename has been processed (e.g. by a code-block parser).
-    const filename =
-      context.physicalFilename ?? context.filename ?? context.getFilename();
+    // `context.filename` is always defined (a getter returning '<input>' for
+    // virtual sources) in every ESLint version this plugin supports, so no
+    // `context.getFilename()` fallback is needed — that legacy method was
+    // removed in ESLint 10 and throws `TypeError` if ever actually invoked.
+    const filename = context.physicalFilename ?? context.filename;
     const detectedApp = appOverride ?? detectAppFromPath(filename);
 
     // If we can't tell which app this file belongs to, the rule cannot make a
