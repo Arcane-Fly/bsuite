@@ -116,12 +116,6 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.2)(@vitest/coverage-v8@4.1.8)(jsdom@29.1.1)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.7.0))
 
-  packages/design-tokens:
-    devDependencies:
-      typescript:
-        specifier: ~6.0.3
-        version: 6.0.3
-
   packages/dry-lint:
     dependencies:
       '@typescript-eslint/utils':
@@ -475,8 +469,8 @@ importers:
         version: 3.6.0
     devDependencies:
       '@bsuite/theme':
-        specifier: ^0.4.1
-        version: 0.4.1(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
+        specifier: ^0.5.0
+        version: 0.5.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
       '@storybook/react-vite':
         specifier: ^10.4.3
         version: 10.4.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.27.7)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(storybook@10.4.3(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.7.0))
@@ -652,19 +646,6 @@ packages:
     peerDependencies:
       react: '>=18 <21'
       react-dom: '>=18 <21'
-
-  '@bsuite/theme@0.4.1':
-    resolution: {integrity: sha512-0VAaqSUxj6x6E5Er4tk4ewxYRDDgGgZFRdaDSuBPm34I+rqW11mNHIM5NQRi9a19WOX9xHbqtQ5LQuFnXgR0yA==}
-    peerDependencies:
-      '@supabase/supabase-js': '>=2.0.0'
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-      tailwindcss: '>=4.0.0'
-    peerDependenciesMeta:
-      '@supabase/supabase-js':
-        optional: true
-      tailwindcss:
-        optional: true
 
   '@bsuite/theme@0.5.0':
     resolution: {integrity: sha512-opl2Fkr9SYDSY5jG3Q0CITdAJikPSPHYvrWW7i8GPEPIJXhWueGFQ6Es/J+2qDSqnNkMaH3H3Jxi9i5rhhfivA==}
@@ -3412,14 +3393,6 @@ snapshots:
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
-
-  '@bsuite/theme@0.4.1(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
-    dependencies:
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-    optionalDependencies:
-      '@supabase/supabase-js': 2.108.1
-      tailwindcss: 4.3.0
 
   '@bsuite/theme@0.5.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
     dependencies:

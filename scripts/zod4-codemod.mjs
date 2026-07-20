@@ -153,7 +153,6 @@ const DEFAULT_TARGETS = [
   join(REPO_ROOT, 'packages', 'charge-calc', 'src'),
   join(REPO_ROOT, 'packages', 'data-export', 'src'),
   join(REPO_ROOT, 'packages', 'dates', 'src'),
-  join(REPO_ROOT, 'packages', 'design-tokens', 'src'),
   join(REPO_ROOT, 'packages', 'dry-lint', 'src'),
   join(REPO_ROOT, 'packages', 'eslint-config'),
   join(REPO_ROOT, 'packages', 'nav-core', 'src'),

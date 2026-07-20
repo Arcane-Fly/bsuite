@@ -1,6 +1,6 @@
 /*
  * @bsuite/theme — CSS custom properties (:root + .dark)
- * Version 0.3.0
+ * Version 0.6.0
  *
  * Architecture — 5 layers (inner → outer):
  *   1. Palette  — frozen oklch primitives (--neon-electric-*, --braden-*)
@@ -52,12 +52,17 @@
   --light-bg-accent:    oklch(1     0     0.5);
 
   /* D2C light text scale — hue 260 (cool blue-grey), capped L=0.22.
-     Verified WCAG AA/AAA on --light-bg-primary oklch(0.961 0 0.5). */
-  --light-text-primary:   oklch(0.22 0.015 260);  /* 13.2:1 ✓ AAA */
-  --light-text-secondary: oklch(0.38 0.018 260);  /*  8.1:1 ✓ AAA */
-  --light-text-muted:     oklch(0.52 0.018 260);  /*  4.9:1 ✓ AA  */
-  --light-text-subtle:    oklch(0.60 0.012 260);  /*  3.8:1 ✓ AA large */
-  --light-text-disabled:  oklch(0.72 0.010 260);  /* pair with icon cue */
+     Measured WCAG contrast vs --light-bg-primary oklch(0.961 0 0.5), OKLCH ->
+     linear-sRGB -> WCAG relative-luminance pipeline, round-trip-verified
+     against 6 known hex references (packages/theme/docs/TOKEN-MAPPING.md §8).
+     Ratios re-measured 2026-07-17 (W3 §3.1) — supersede prior approximate
+     inline values; vs --light-bg-accent (bg-panel, pure white) is always
+     HIGHER, so bg-body is the conservative floor for every tier below. */
+  --light-text-primary:   oklch(0.22 0.015 260);  /* 15.46:1 ✓ AAA (large+normal) */
+  --light-text-secondary: oklch(0.38 0.018 260);  /*  8.94:1 ✓ AAA (large+normal) */
+  --light-text-muted:     oklch(0.52 0.018 260);  /*  4.92:1 ✓ AA  (normal, 4.5:1 floor) */
+  --light-text-subtle:    oklch(0.60 0.012 260);  /*  3.52:1 ✓ AA large only (3:1) — ✗ AA normal */
+  --light-text-disabled:  oklch(0.72 0.010 260);  /*  2.21:1 ✗ fails AA at any size — MUST pair with icon cue */
   /* Legacy aliases (kept for consumers that haven't migrated) */
   --light-text-tertiary:   var(--light-text-muted);
   --light-text-quaternary: var(--light-text-subtle);
@@ -91,13 +96,15 @@
   --role-success:     var(--neon-electric-green);   /* oklch(0.723 0.192 149.6) */
   --role-info:        var(--neon-electric-cyan);    /* oklch(0.769 0.132 191.7) */
 
-  /* Text roles */
-  --role-text-body:        var(--light-text-primary);
-  --role-text-secondary:   var(--light-text-secondary);
-  --role-text-muted:       var(--light-text-muted);
-  --role-text-subtle:      var(--light-text-subtle);
-  --role-text-disabled:    var(--light-text-disabled);
-  --role-text-heading:     oklch(0.20 0.018 263);   /* slightly darker + bluer — 14.5:1 ✓ AAA */
+  /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
+     measured against --role-bg-body (the conservative floor); all tiers
+     score HIGHER against --role-bg-panel/--role-bg-surface. */
+  --role-text-heading:     oklch(0.20 0.018 263);   /* 16.17:1 ✓ AAA (slightly darker + bluer than body) */
+  --role-text-body:        var(--light-text-primary);   /* 15.46:1 ✓ AAA */
+  --role-text-secondary:   var(--light-text-secondary); /*  8.94:1 ✓ AAA */
+  --role-text-muted:       var(--light-text-muted);     /*  4.92:1 ✓ AA normal */
+  --role-text-subtle:      var(--light-text-subtle);    /*  3.52:1 ✓ AA large only */
+  --role-text-disabled:    var(--light-text-disabled);  /*  2.21:1 ✗ icon cue required */
 
   /* Surface roles */
   --role-bg-body:    var(--light-bg-primary);
@@ -155,6 +162,17 @@
   --color-primary-text: oklch(0.485 0.243 263.6);  /* Saturated blue — AA on light bg */
 
   /* ============================================================
+     CANONICAL ACCENT GRADIENT (W3 §3.1) — exactly ONE gradient
+     exists suite-wide. Marketing/pre-auth heroes ONLY — never on
+     functional text (labels, body copy, buttons). Consumed via the
+     `.bsuite-accent-gradient` utility (utilities.css). App-local
+     decorative gradients (e.g. crm7's `.crm7-gradient`) are
+     quarantined and must not be used for new work — see
+     docs/TOKEN-MAPPING.md §8.
+     ============================================================ */
+  --gradient-accent: linear-gradient(135deg, var(--role-primary), var(--role-accent));
+
+  /* ============================================================
      GLOW + SHADOW MULTIPLIERS
      ============================================================ */
   --glow-strength:   0.4;
@@ -169,26 +187,44 @@
   --card-glow-source: var(--app-accent, var(--role-accent));
   --glow-card:         none;
   --glow-card-hover:   none;
+}
 
-  /* ============================================================
-     SRGB FALLBACKS (for browsers without oklch support)
-     Tested against Chrome 105-. Values are closest sRGB equivalents.
-     ============================================================ */
-  @supports not (color: oklch(0 0 0)) {
-    --neon-electric-blue:     #3b82f6;
-    --neon-electric-cyan:     #06b6d4;
-    --neon-electric-indigo:   #6366f1;
-    --neon-electric-purple:   #a855f7;
-    --neon-electric-magenta:  #f472b6;
+/* ============================================================
+   SRGB FALLBACKS (for browsers without oklch support) — W3 §3.4
+   True-source hexes, each re-derived directly from its oklch token
+   (OKLCH -> OKLab -> linear-sRGB -> gamma-encoded sRGB) rather than
+   eyeballed against a Tailwind palette. Round-trip-verified: every
+   value below computes ΔE(OKLab) < 0.01 against its oklch token —
+   at least twice inside the < 0.02 acceptance bar (most values are
+   one to two orders of magnitude inside it; see docs/TOKEN-MAPPING.md
+   §8 for the full per-token ΔE table). The prior Tailwind-palette-
+   derived hexes were ΔE 0.03-0.10 off.
+
+   Deliberately declared at the TOP LEVEL, not nested inside another
+   `:root { }` block: engines that lack `oklch()` support predate CSS
+   nesting too, so a `@supports` block nested inside `:root` would be
+   silently dropped by exactly the browsers it's meant to serve when
+   this file is consumed raw (unbundled). It works when bundled
+   through the Tailwind v4 / LightningCSS pipeline only because that
+   pipeline hoists nested at-rules — this top-level form is correct
+   for both the raw and the bundled case.
+   ============================================================ */
+@supports not (color: oklch(0 0 0)) {
+  :root {
+    --neon-electric-blue:     #2563eb;
+    --neon-electric-cyan:     #00cec9;
+    --neon-electric-indigo:   #4f46e5;
+    --neon-electric-purple:   #6c5ce7;
+    --neon-electric-magenta:  #fd79a8;
     --neon-electric-pink:     #ec4899;
-    --neon-electric-coral:    #f87171;
-    --neon-electric-orange:   #f97316;
-    --neon-electric-yellow:   #fbbf24;
+    --neon-electric-coral:    #ff4757;
+    --neon-electric-orange:   #ff7675;
+    --neon-electric-yellow:   #fdcb6e;
     --neon-electric-green:    #22c55e;
-    --neon-electric-lavender: #c084fc;
-    --role-error:             #a855f7;
-    --role-destructive:       #a855f7;
-    --light-text-primary:     #1e1f2e;
+    --neon-electric-lavender: #a29bfe;
+    --role-error:             #6c5ce7;
+    --role-destructive:       #6c5ce7;
+    --light-text-primary:     #171b22;
     --dark-text-primary:      #e8eaf6;
   }
 }
@@ -207,12 +243,16 @@
   /* D2C dark text scale — hue 260, capped L=0.94.
      Pure white (L=1.0) is BANNED as a text token.
      Eye-strain: 16:1 → ~14:1; perceived glare drops significantly.
-     Verified WCAG AA on --dark-bg-primary oklch(0.166 0.026 269.4). */
-  --dark-text-primary:   oklch(0.94 0.012 260);  /* body     — ~13.9:1 ✓ AAA */
-  --dark-text-secondary: oklch(0.82 0.015 260);  /* labels   —  ~9.8:1 ✓ AAA */
-  --dark-text-muted:     oklch(0.68 0.018 260);  /* metadata —  ~5.6:1 ✓ AA  */
-  --dark-text-subtle:    oklch(0.56 0.015 260);  /* placeholders — ~3.6:1 ✓ AA large */
-  --dark-text-disabled:  oklch(0.44 0.010 260);  /* disabled — pair with icon cue */
+     Measured WCAG contrast vs --dark-bg-primary oklch(0.166 0.026 269.4)
+     via the same OKLCH -> linear-sRGB -> WCAG pipeline as the light scale
+     above (re-measured 2026-07-17, W3 §3.1 — supersedes prior approximate
+     inline values). vs --role-bg-surface/--role-bg-panel is always HIGHER,
+     so bg-body is the conservative floor. */
+  --dark-text-primary:   oklch(0.94 0.012 260);  /* body     — 16.16:1 ✓ AAA */
+  --dark-text-secondary: oklch(0.82 0.015 260);  /* labels   — 11.04:1 ✓ AAA */
+  --dark-text-muted:     oklch(0.68 0.018 260);  /* metadata —  6.69:1 ✓ AA (normal) */
+  --dark-text-subtle:    oklch(0.56 0.015 260);  /* placeholders —  4.14:1 ✓ AA large only — ✗ AA normal */
+  --dark-text-disabled:  oklch(0.44 0.010 260);  /* disabled —  2.48:1 ✗ fails AA at any size — MUST pair with icon cue */
   /* Legacy aliases */
   --dark-text-tertiary:   var(--dark-text-muted);
   --dark-text-quaternary: var(--dark-text-disabled);
@@ -220,13 +260,13 @@
   --dark-border: oklch(0.428 0.015 248.2);
   --dark-hover:  oklch(0.39  0.035 265);
 
-  /* Rebind roles to dark-mode surface values */
-  --role-text-body:      var(--dark-text-primary);
-  --role-text-secondary: var(--dark-text-secondary);
-  --role-text-muted:     var(--dark-text-muted);
-  --role-text-subtle:    var(--dark-text-subtle);
-  --role-text-disabled:  var(--dark-text-disabled);
-  --role-text-heading:   oklch(0.92 0.014 260);  /* ~12.8:1 ✓ AAA */
+  /* Rebind roles to dark-mode surface values — six-tier scale (W3 §3.1). */
+  --role-text-heading:   oklch(0.92 0.014 260);  /* 15.21:1 ✓ AAA */
+  --role-text-body:      var(--dark-text-primary);   /* 16.16:1 ✓ AAA */
+  --role-text-secondary: var(--dark-text-secondary); /* 11.04:1 ✓ AAA */
+  --role-text-muted:     var(--dark-text-muted);     /*  6.69:1 ✓ AA normal */
+  --role-text-subtle:    var(--dark-text-subtle);    /*  4.14:1 ✓ AA large only */
+  --role-text-disabled:  var(--dark-text-disabled);  /*  2.48:1 ✗ icon cue required */
 
   --role-bg-body:    var(--dark-bg-primary);
   --role-bg-surface: var(--dark-bg-secondary);

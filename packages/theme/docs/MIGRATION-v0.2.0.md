@@ -2,6 +2,13 @@
 
 **Status:** A (Approved 2026-04-22)
 
+> **Superseded note (2026-07-20, v0.6.0):** The five "New CSS files" listed
+> below were never actually wired into `@import '@bsuite/theme/css'` (that
+> entry point has only ever imported `vars.css` + `utilities.css`) and had
+> zero consumers across all 7 repos. They were deleted in 0.6.0 — see
+> `MIGRATION-v0.6.0.md`. The rest of this guide (React exports, shadcn
+> bridge OKLCH values, upgrade steps 1/2/4/5/6) remains accurate.
+
 ## What changed
 
 v0.2.0 is **additive and backwards-compatible**. Existing consumers on v0.1.x keep working. New consumers get the full semantic token set.

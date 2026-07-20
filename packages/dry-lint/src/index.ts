@@ -3,6 +3,10 @@ import {
   noCrossAppWriteRule,
 } from './rules/no-cross-app-write.js';
 import {
+  NO_GRID_DOT_DOCTRINE_VIOLATION_RULE_NAME,
+  noGridDotDoctrineViolationRule,
+} from './rules/no-grid-dot-doctrine-violation.js';
+import {
   NO_RAW_ENTITY_SELECT_RULE_NAME,
   noRawEntitySelectRule,
 } from './rules/no-raw-entity-select.js';
@@ -19,13 +23,14 @@ import ownershipMap from './ownership-map.json' with { type: 'json' };
 export { detectAppFromPath, type AppKey } from './app-detection.js';
 export {
   noCrossAppWriteRule,
+  noGridDotDoctrineViolationRule,
   noRawEntitySelectRule,
   noUuidInputPlaceholderRule,
   oauthCallbackMustBridgeRule,
 };
 
 const PLUGIN_NAME = 'bsuite';
-const PLUGIN_VERSION = '0.5.0';
+const PLUGIN_VERSION = '0.6.0';
 
 /**
  * The `@bsuite/dry-lint` ESLint flat-config plugin.
@@ -60,6 +65,7 @@ const pluginBase = {
   meta: { name: PLUGIN_NAME, version: PLUGIN_VERSION },
   rules: {
     [NO_CROSS_APP_WRITE_RULE_NAME]: noCrossAppWriteRule,
+    [NO_GRID_DOT_DOCTRINE_VIOLATION_RULE_NAME]: noGridDotDoctrineViolationRule,
     [NO_RAW_ENTITY_SELECT_RULE_NAME]: noRawEntitySelectRule,
     [NO_UUID_INPUT_PLACEHOLDER_RULE_NAME]: noUuidInputPlaceholderRule,
     [OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME]: oauthCallbackMustBridgeRule,
@@ -71,6 +77,7 @@ const recommendedConfig = {
   plugins: { [PLUGIN_NAME]: pluginBase },
   rules: {
     [`${PLUGIN_NAME}/${NO_CROSS_APP_WRITE_RULE_NAME}`]: 'error' as const,
+    [`${PLUGIN_NAME}/${NO_GRID_DOT_DOCTRINE_VIOLATION_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${NO_RAW_ENTITY_SELECT_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${NO_UUID_INPUT_PLACEHOLDER_RULE_NAME}`]: 'error' as const,
     [`${PLUGIN_NAME}/${OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME}`]: 'error' as const,
@@ -82,6 +89,7 @@ const warnConfig = {
   plugins: { [PLUGIN_NAME]: pluginBase },
   rules: {
     [`${PLUGIN_NAME}/${NO_CROSS_APP_WRITE_RULE_NAME}`]: 'warn' as const,
+    [`${PLUGIN_NAME}/${NO_GRID_DOT_DOCTRINE_VIOLATION_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${NO_RAW_ENTITY_SELECT_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${NO_UUID_INPUT_PLACEHOLDER_RULE_NAME}`]: 'warn' as const,
     [`${PLUGIN_NAME}/${OAUTH_CALLBACK_MUST_BRIDGE_RULE_NAME}`]: 'warn' as const,
