@@ -47,6 +47,47 @@
     box-shadow 300ms ease;
 }
 
+/* ============================================================
+   CANONICAL ACCENT GRADIENT — W3 §3.1
+   Exactly ONE gradient exists suite-wide: --role-primary -> --role-accent
+   (Electric Blue -> Cyan by default; follows tenant BrandingProvider
+   overrides automatically via the var() chain). Marketing/pre-auth hero
+   surfaces ONLY — never functional text, labels, or body copy. Apply to
+   a decorative element (underline, badge, background swatch) or to text
+   via `background-clip: text` at the call site — this utility only
+   supplies the gradient itself.
+   ============================================================ */
+.bsuite-accent-gradient {
+  background-image: var(--gradient-accent);
+}
+
+/* ============================================================
+   HERO GRID — W3 §3.3 grid/dot doctrine
+   Public/pre-auth marketing hero bands ONLY. Localised to the hero
+   wrapper (which must be `position: relative`); never full-viewport,
+   never behind authenticated content. Mutually exclusive with the DOT
+   pattern (packages/ui DotPattern), which is authenticated-shell-only.
+   Consumed via the <HeroGrid> component in @bsuite/ui (packages/ui/src/
+   hero-grid.tsx) — do not hand-roll this pattern; the grid/dot lint rule
+   (@bsuite/dry-lint no-grid-dot-doctrine-violation) flags duplicates.
+   Lifted verbatim from braden's `.platform-hero-grid`
+   (braden/src/index.css) so the corporate and D2C marketing surfaces
+   share one visual language for this specific device.
+   ============================================================ */
+.bsuite-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(oklch(0 0 0 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0 0 0 / 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.dark .bsuite-hero-grid {
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.03) 1px, transparent 1px);
+}
+
 /* ===== prefers-reduced-motion — cap animation duration ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
