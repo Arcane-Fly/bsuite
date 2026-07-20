@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/ui",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -26,6 +26,10 @@
     "./dot-pattern": {
       "import": "./dist/dot-pattern.js",
       "types": "./dist/dot-pattern.d.ts"
+    },
+    "./hero-grid": {
+      "import": "./dist/hero-grid.js",
+      "types": "./dist/hero-grid.d.ts"
     },
     "./utils": {
       "import": "./dist/utils.js",
@@ -79,7 +83,7 @@
     "react-dom": "^18.3.0 || ^19.0.0"
   },
   "devDependencies": {
-    "@bsuite/theme": "^0.4.1",
+    "@bsuite/theme": "^0.5.0",
     "@storybook/react-vite": "^10.4.3",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",

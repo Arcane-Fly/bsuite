@@ -2,8 +2,12 @@ name: PR Drift Scan
 
 # BSuite pre-merge drift scanner — auto-comments on every PR with the 9-signal
 # check. Hard-fails on critical signals (COOKIE-SSO, NON-PKCE-FLOW, WORKSPACE,
-# NODE-PIN-DRIFT, STALE-GROK); warns on soft signals (TAILWIND-V4-DEPREC,
-# AS-ANY-CAST, NEW-HEX-IN-D2C, GETSESSION-AUTHZ).
+# NODE-PIN-DRIFT, STALE-GROK, NEW-HEX-IN-D2C); warns on soft signals
+# (TAILWIND-V4-DEPREC, AS-ANY-CAST, GETSESSION-AUTHZ).
+#
+# NEW-HEX-IN-D2C promoted warn -> hard-fail 2026-07-17 (W3 §3.6) — the signal
+# already scans only NEW lines in the diff, so no legacy-code amnesty was
+# needed for the promotion.
 #
 # Canonical authority: bsuite#902
 # Scanner: scripts/drift-scan.mjs

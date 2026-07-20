@@ -126,6 +126,18 @@ Braden keeps separate corporate identity tokens in `@bsuite/theme/braden-css`: B
 
 WCAG AA compliance: use semantic text tokens (`text-foreground`, `text-muted-foreground`, `text-text-on-primary`, `text-text-on-accent`) rather than raw `text-white`/`text-black`. Dark-surface text is capped at L=0.94 for extended-session comfort.
 
+## Text-role contract (v0.6.0)
+
+Six measured tiers — `--role-text-heading`, `--role-text-body`, `--role-text-secondary`, `--role-text-muted`, `--role-text-subtle`, `--role-text-disabled` — each with documented WCAG contrast in both modes. Full numbers + methodology: `docs/TOKEN-MAPPING.md` §8.1.
+
+## Canonical gradient (v0.6.0)
+
+Exactly one decorative accent gradient exists suite-wide — `--gradient-accent` / `.bsuite-accent-gradient` (`--role-primary` → `--role-accent`). Marketing heroes only, never functional text. `docs/TOKEN-MAPPING.md` §8.2.
+
+## Grid/dot doctrine (v0.6.0)
+
+`<HeroGrid>` (public/pre-auth hero bands) and `<DotPattern>` (authenticated shells, `@bsuite/ui`) are mutually exclusive per context and enforced by `@bsuite/dry-lint`'s `no-grid-dot-doctrine-violation` rule. `docs/TOKEN-MAPPING.md` §8.3.
+
 ## License
 
 UNLICENSED — internal BSuite use only.
