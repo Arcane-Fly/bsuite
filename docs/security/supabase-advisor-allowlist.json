@@ -141,6 +141,28 @@
       "objects": [
         "is_session_valid(session_uuid uuid)"
       ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "crm7#1123 tenant-switch authority. set_current_tenant(p_tenant_id) is membership-gated — it raises 'Unauthorized: not an active member of the target tenant' unless the caller has an active public.user_tenants row for p_tenant_id, then persists profiles.current_tenant_id. log_tenant_switch(...) is its audit-write companion (the tenant_switch_audit direct-INSERT forgery fix routes all audit writes through this SECDEF fn rather than allowing direct client INSERT). Both MUST be EXECUTE-grantable to authenticated (they are the client RPCs for switching tenant context); both are SECURITY DEFINER (write profiles / read user_tenants / write audit under RLS) with search_path pinned to 'public, pg_temp'. Live-verified body 2026-07-20 via pg_get_functiondef. Accepted-by-design; not a category waiver.",
+      "added": "2026-07-20",
+      "objects": [
+        "set_current_tenant(p_tenant_id uuid)",
+        "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
+      ]
+    },
+    {
+      "lint": "multiple_permissive_policies",
+      "object_type": "table",
+      "mode": "tracked",
+      "tracked_in": "bsuite#1542",
+      "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) — never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542.",
+      "added": "2026-07-20",
+      "objects": [
+        "timesheets"
+      ]
     }
   ]
 }
