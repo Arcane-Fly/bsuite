@@ -82,6 +82,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260629-batch-e-rbac-parity-dev-deploy-test-report-v1.00W.md` | Batch E — RBAC parity dev-deploy validation report (conduit Team `joined_at` fix) |
 | `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md` | Cross-app auth validation dev-deploy test plan (5 `d.*` apps) |
 | `20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md` | Cross-app auth validation dev-deploy report (OAuth 2.1 + PKCE + JWKS, 5/5 pass) |
+| `20260722-developer-portal-investigation-v1.00W.md` | Developer Portal surface investigation — tenant_navigation, platform_branding, feature_builder, and schema-builder tables audit |
 
 ### Directories
 
