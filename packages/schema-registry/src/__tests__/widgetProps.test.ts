@@ -357,7 +357,7 @@ describe('EntityRefCellPropsSchema', () => {
     }
   );
 
-  it.each(['bsu', 'crm7', 'conduit', 'r80', 'braden', 'all'] as const)(
+  it.each(['bsu', 'crm7', 'conduit', 'r8', 'braden', 'all'] as const)(
     'accepts app scope %s',
     (scope) => {
       const result = EntityRefCellPropsSchema.safeParse({

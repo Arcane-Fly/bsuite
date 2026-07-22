@@ -45,7 +45,7 @@ describe('EntityRefCellWidget', () => {
       entityDef: { id: 'ent-1' },
       row: { id: baseProps.entity_id, full_name: 'Alice Smith' },
     });
-    render(<EntityRefCellWidget supabase={supabase} appScope="r80" widgetProps={baseProps} />);
+    render(<EntityRefCellWidget supabase={supabase} appScope="r8" widgetProps={baseProps} />);
     await waitFor(() => {
       expect(screen.getByText('Alice Smith')).toBeTruthy();
     });
@@ -59,7 +59,7 @@ describe('EntityRefCellWidget', () => {
       row: null,
     });
     const { container } = render(
-      <EntityRefCellWidget supabase={supabase} appScope="r80" widgetProps={baseProps} />
+      <EntityRefCellWidget supabase={supabase} appScope="r8" widgetProps={baseProps} />
     );
     await waitFor(() => {
       expect(container.textContent ?? '').toContain('unknown');
@@ -72,7 +72,7 @@ describe('EntityRefCellWidget', () => {
       row: null,
     });
     const { container } = render(
-      <EntityRefCellWidget supabase={supabase} appScope="r80" widgetProps={baseProps} />
+      <EntityRefCellWidget supabase={supabase} appScope="r8" widgetProps={baseProps} />
     );
     await waitFor(() => {
       expect(container.textContent ?? '').toContain('unknown');
@@ -87,7 +87,7 @@ describe('EntityRefCellWidget', () => {
     render(
       <EntityRefCellWidget
         supabase={supabase}
-        appScope="r80"
+        appScope="r8"
         widgetProps={{ ...baseProps, href_template: '/custom/{entity}/{id}' }}
       />
     );

@@ -23,11 +23,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * `tenant_entities.app_scope` / `tenant_entity_relations.app_scope`.
  *
  * NOTE: this uses `r8` (the DB CHECK value / R80.3 OAuth domain `r8.crm7.app`),
- * which differs from the package's other `AppScope` in `./types.ts` that uses
- * `r80` for the nav/schema/widget layer. The two are re-exported under
- * DISTINCT names from the barrel (`AppScope` = types.ts / nav layer,
- * `SchemaBuilderAppScope` = this service) to avoid a name collision while the
- * cross-layer `r8` vs `r80` inconsistency is reconciled separately.
+ * which matches the nav-layer `AppScope` in `./types.ts` after the 2026-07-23
+ * r8 normalization (operator ruling: `r80` retired, canonical is `r8`
+ * everywhere). The two declarations are structurally identical and both
+ * exported (`AppScope` from types.ts; `AppScope` here) — kept as separate
+ * declarations to avoid circular imports between the service and types layers.
  */
 export const APP_SCOPES = ['all', 'crm7', 'bsu', 'conduit', 'r8', 'braden'] as const;
 export type AppScope = (typeof APP_SCOPES)[number];

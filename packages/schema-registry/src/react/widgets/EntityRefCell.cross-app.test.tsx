@@ -12,7 +12,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * crm7/tests/e2e/cross-app-entity-linkage.spec.ts (env-gated skip + runbook).
  *
  * This file proves the same behaviour at the unit boundary: when a widget
- * authored with foreign_app_scope='crm7' is rendered inside the r80 app,
+ * authored with foreign_app_scope='crm7' is rendered inside the r8 app,
  * (a) the widget goes through the tenant_entities whitelist path,
  * (b) the fetched row's display_field is shown,
  * (c) a click resolves to the cross-app deep-link URL.
@@ -67,7 +67,7 @@ describe('EntityRefCellWidget — cross-app linkage (must-have #5)', () => {
     render(
       <EntityRefCellWidget
         supabase={supabase}
-        appScope="r80"
+        appScope="r8"
         widgetProps={crm7ContactProps}
       />,
     );
@@ -84,7 +84,7 @@ describe('EntityRefCellWidget — cross-app linkage (must-have #5)', () => {
     render(
       <EntityRefCellWidget
         supabase={supabase}
-        appScope="r80"
+        appScope="r8"
         widgetProps={crm7ContactProps}
       />,
     );
@@ -102,7 +102,7 @@ describe('EntityRefCellWidget — cross-app linkage (must-have #5)', () => {
     render(
       <EntityRefCellWidget
         supabase={supabase}
-        appScope="r80"
+        appScope="r8"
         widgetProps={{
           ...crm7ContactProps,
           href_template: 'https://crm.crm7.app/{entity}/{id}',
@@ -124,7 +124,7 @@ describe('EntityRefCellWidget — cross-app linkage (must-have #5)', () => {
     render(
       <EntityRefCellWidget
         supabase={supabase}
-        appScope="r80"
+        appScope="r8"
         widgetProps={{
           ...crm7ContactProps,
           href_template: 'https://crm.crm7.app/{entity}/{id}',
@@ -148,7 +148,7 @@ describe('EntityRefCellWidget — cross-app linkage (must-have #5)', () => {
     render(
       <EntityRefCellWidget
         supabase={supabase}
-        appScope="r80"
+        appScope="r8"
         widgetProps={crm7ContactProps}
         onClick={onClick}
       />,
@@ -168,7 +168,7 @@ describe('EntityRefCellWidget — cross-app linkage (must-have #5)', () => {
     const { container } = render(
       <EntityRefCellWidget
         supabase={supabase}
-        appScope="r80"
+        appScope="r8"
         widgetProps={{ ...crm7ContactProps, entity: 'auth.users' }}
       />,
     );
