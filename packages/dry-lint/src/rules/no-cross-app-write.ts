@@ -200,7 +200,7 @@ export const noCrossAppWriteRule = createRule<RuleOptions, MessageIds>({
         properties: {
           appOverride: {
             type: 'string',
-            enum: ['bsu', 'crm7', 'conduit', 'braden', 'r80', 'throughput', 'shared'],
+            enum: ['bsu', 'crm7', 'conduit', 'braden', 'r8', 'throughput', 'shared'],
           },
           warnOnUnknownTable: { type: 'boolean' },
         },

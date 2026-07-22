@@ -55,7 +55,7 @@ describe('ownership-map schema (assertOwnershipEntryValid)', () => {
     expect(() =>
       assertOwnershipEntryValid('writers_only', {
         writers: ['bsu', 'crm7'],
-        readers: ['r80'],
+        readers: ['r8'],
       }),
     ).not.toThrow();
   });

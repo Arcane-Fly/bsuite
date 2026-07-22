@@ -39,10 +39,10 @@ ruleTester.run('no-cross-app-write', noCrossAppWriteRule, {
       options: [{ appOverride: 'crm7' }],
     },
     {
-      name: 'r80 may upsert into award_rates (its own table)',
+      name: 'r8 may upsert into award_rates (its own table)',
       code: "supabase.from('award_rates').upsert({ id: 1 });",
       filename: pathFor('r80.3', 'lib/foo.ts'),
-      options: [{ appOverride: 'r80' }],
+      options: [{ appOverride: 'r8' }],
     },
     {
       name: 'bsu may update tenants (multi-writer: bsu listed)',
@@ -85,10 +85,10 @@ ruleTester.run('no-cross-app-write', noCrossAppWriteRule, {
       options: [{ appOverride: 'crm7' }],
     },
     {
-      name: 'r80 may .select() from tenants (reader on multi-writer table)',
+      name: 'r8 may .select() from tenants (reader on multi-writer table)',
       code: "supabase.from('tenants').select('*').eq('id', 1);",
       filename: pathFor('r80.3', 'lib/foo.ts'),
-      options: [{ appOverride: 'r80' }],
+      options: [{ appOverride: 'r8' }],
     },
     {
       name: 'throughput may .select() from team_members',
@@ -104,10 +104,10 @@ ruleTester.run('no-cross-app-write', noCrossAppWriteRule, {
       options: [{ appOverride: 'crm7' }],
     },
     {
-      name: 'r80 may upsert wage_calculation_snapshots (shared audit sink)',
+      name: 'r8 may upsert wage_calculation_snapshots (shared audit sink)',
       code: "supabase.from('wage_calculation_snapshots').upsert({ id: 1 });",
       filename: pathFor('r80.3', 'lib/foo.ts'),
-      options: [{ appOverride: 'r80' }],
+      options: [{ appOverride: 'r8' }],
     },
     {
       name: 'crm7 may upsert apprentice_rate_configs (shared)',
@@ -262,22 +262,22 @@ ruleTester.run('no-cross-app-write', noCrossAppWriteRule, {
       errors: [
         {
           messageId: 'crossAppWrite',
-          data: { app: 'bsu', method: 'delete', table: 'award_rates', owner: 'r80' },
+          data: { app: 'bsu', method: 'delete', table: 'award_rates', owner: 'r8' },
         },
       ],
     },
     // PHASE-3c (@bsuite/dry-lint@0.2.0): multi-writer schema — apps NOT in
     // writers list are flagged with the multi-writer message.
     {
-      name: 'r80 cannot insert tenants (multi-writer: r80 not in writers)',
+      name: 'r8 cannot insert tenants (multi-writer: r80 not in writers)',
       code: "await supabase.from('tenants').insert({ name: 'x' });",
       filename: pathFor('r80.3', 'lib/foo.ts'),
-      options: [{ appOverride: 'r80' }],
+      options: [{ appOverride: 'r8' }],
       errors: [
         {
           messageId: 'crossAppWriteMultiWriter',
           data: {
-            app: 'r80',
+            app: 'r8',
             method: 'insert',
             table: 'tenants',
             writers: 'bsu, crm7',

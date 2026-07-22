@@ -6,7 +6,7 @@ export type AppKey =
   | 'crm7'
   | 'conduit'
   | 'braden'
-  | 'r80'
+  | 'r8'
   | 'throughput'
   | 'shared';
 
@@ -25,8 +25,8 @@ const KNOWN_PACKAGE_NAMES: ReadonlyMap<string, AppKey> = new Map([
   ['crm7', 'crm7'],
   ['conduit', 'conduit'],
   ['braden-app', 'braden'],
-  ['r80-calculator', 'r80'],
-  ['r80.3', 'r80'],
+  ['r80-calculator', 'r8'],
+  ['r80.3', 'r8'],
   ['throughput', 'throughput'],
 ]);
 
