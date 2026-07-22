@@ -3,6 +3,24 @@ export { useTenantNavigation } from './useTenantNavigation.js';
 export { createMinimalClient } from './minimalClient.js';
 export type { AppScope } from './types.js';
 
+// Client-agnostic schema-builder service (v0.4.0) — canonical source for the
+// apps' triplicated src/lib/schemaBuilderService.ts. `AppScope` here (DB CHECK
+// value `r8`) differs from the nav-layer `./types.ts` `AppScope` (`r80`), so it
+// is aliased to `SchemaBuilderAppScope` to avoid a name collision.
+export { createSchemaBuilderService, APP_SCOPES } from './schemaBuilderService.js';
+export type {
+  SchemaBuilderService,
+  TenantEntity,
+  TenantEntityRelation,
+  FieldType,
+  EntityFieldDefinition,
+  AppScope as SchemaBuilderAppScope,
+} from './schemaBuilderService.js';
+
+// Feature-gate hook (v0.4.0) — fail-open `is_feature_enabled` RPC wrapper.
+export { useFeatureEnabled } from './useFeatureEnabled.js';
+export type { FeatureType } from './useFeatureEnabled.js';
+
 // Deprecated shim (0.3.1+) — will be removed in 0.4.0 per ADR-0001/0003.
 export { TenantLayoutSlot } from './TenantLayoutSlot.js';
 export type { TenantLayoutSlotProps } from './TenantLayoutSlot.js';

@@ -2,6 +2,23 @@ export { useTenantSchema } from './react/useTenantSchema.js';
 export { useTenantNavigation } from './react/useTenantNavigation.js';
 export { createMinimalClient } from './react/minimalClient.js';
 export type { AppScope } from './react/types.js';
+
+// Client-agnostic schema-builder service (v0.4.0). `AppScope` here (`r8`)
+// differs from the nav-layer `AppScope` (`r80`), so it is aliased to
+// `SchemaBuilderAppScope` to avoid a name collision.
+export { createSchemaBuilderService, APP_SCOPES } from './react/schemaBuilderService.js';
+export type {
+  SchemaBuilderService,
+  TenantEntity,
+  TenantEntityRelation,
+  FieldType,
+  EntityFieldDefinition,
+  AppScope as SchemaBuilderAppScope,
+} from './react/schemaBuilderService.js';
+
+// Feature-gate hook (v0.4.0) — fail-open `is_feature_enabled` RPC wrapper.
+export { useFeatureEnabled } from './react/useFeatureEnabled.js';
+export type { FeatureType } from './react/useFeatureEnabled.js';
 export {
   DataTablePropsSchema,
   StatGridPropsSchema,
