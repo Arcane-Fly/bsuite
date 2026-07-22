@@ -32,7 +32,7 @@ import { cn } from './utils.js'
 
 export type LogoSlot = 'favicon' | 'sidebar' | 'auth' | 'marketing' | 'header'
 export type LogoColorScheme = 'light' | 'dark' | 'auto'
-export type AppSlug = 'crm7' | 'bsu' | 'conduit' | 'r80' | 'throughput' | 'braden'
+export type AppSlug = 'crm7' | 'bsu' | 'conduit' | 'r8' | 'throughput' | 'braden'
 
 /**
  * Shape consumed by the resolver. Each field corresponds to a branding tier;
