@@ -61,7 +61,7 @@ describe('detectAppFromPath', () => {
     ['crm7-complete', 'crm7'],
     ['conduit', 'conduit'],
     ['braden-app', 'braden'],
-    ['r80-calculator', 'r80'],
+    ['r80-calculator', 'r8'],
     ['throughput', 'throughput'],
   ] as const)('detects package.json name "%s" -> %s', (pkgName, expected) => {
     const appDir = path.join(tmpRoot, 'monorepo-root', pkgName);
@@ -160,7 +160,7 @@ describe('detectAppFromPath', () => {
       const file = path.join(worktreeDir, 'src', 'services', 'x.ts');
       writeFile(file);
 
-      expect(detectAppFromPath(file)).toBe('r80');
+      expect(detectAppFromPath(file)).toBe('r8');
     });
   });
 

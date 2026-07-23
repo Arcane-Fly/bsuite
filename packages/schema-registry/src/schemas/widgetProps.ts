@@ -55,7 +55,7 @@ export const FormRendererPropsSchema = z.object({
 
 // AppScope allow-list — mirrors types.ts AppScope union but re-declared here to
 // avoid circular imports between schema + types layers.
-const AppScopeEnum = z.enum(['bsu', 'crm7', 'conduit', 'r80', 'braden', 'all']);
+const AppScopeEnum = z.enum(['bsu', 'crm7', 'conduit', 'r8', 'braden', 'all']);
 
 export const EntityRefCellPropsSchema = z.object({
   type: z.literal('EntityRefCell'),

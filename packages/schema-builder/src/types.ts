@@ -5,7 +5,7 @@
  * migrations through `20260503000000_add_field_level_relations.sql`.
  */
 
-export const APP_SCOPES = ['all', 'crm7', 'bsu', 'conduit', 'r80', 'braden'] as const;
+export const APP_SCOPES = ['all', 'crm7', 'bsu', 'conduit', 'r8', 'braden'] as const;
 export type AppScope = (typeof APP_SCOPES)[number];
 
 export type EntityMetadata = {
