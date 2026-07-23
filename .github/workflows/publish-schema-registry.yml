@@ -81,7 +81,7 @@ jobs:
 
       - name: Publish to npm
         if: steps.version-check.outputs.skip == 'false'
-        run: npm publish --access public --provenance
+        run: npm publish --access public
 
       - name: Job summary
         if: always()
