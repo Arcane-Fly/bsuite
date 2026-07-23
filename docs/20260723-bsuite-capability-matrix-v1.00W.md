@@ -106,6 +106,7 @@ Sourced from matrix ❌/🟡/❓ cells + roadmap sweep's 125 open items. **P0** 
 - **B5** = P0 #1129 (operator sign-off).
 
 ### P2 (modern surface / incremental — BSuite already leads)
+- **suite.crm7.app landing-page dot-grid pattern missing** (operator-reported 2026-07-23, not urgent): the marketing landing (MarketingHome) doesn't render the D2C dot-grid pattern — the DotPattern layer lives in the authenticated app shell (AppContent), not the public landing. Add the pattern to the landing for brand consistency (dot-pattern.tsx exists in @bsuite/ui).
 - STP Phase 2 / Payday Super integrations (OZEDI/QuickSuper) — integration surface.
 - RCTI support.
 - Xero cluster crm7 #556–#565 (gated on #479).
