@@ -27,6 +27,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `OUTSTANDING.md` | Single source of truth outstanding-work index for parent `docs/*.md` |
 | `CONSISTENCY-REPORT.md` | Cross-app WCAG / a11y / dependency / auth consistency status + plan-tracking convention |
 | `NEW_ISSUES_FOUND.md` | Append-only ledger of pre-existing issues discovered mid-task (Five-Wave Stabilization) |
+| `20260723-bsuite-capability-matrix-v1.00W.md` | Competitor capability matrix (Code House WfO/AnyTime, ReadyTech Ready Recruit, aXcelerate) + prioritised completion ledger + user-manual program seed |
+| `20260723-Anytime-WorkforceOne-Admin-Guide.md` | Code House AnyTime/Workforce One Administrator Guide (competitor reference — full admin/timesheet/award surface) |
 
 ### Standards & doctrine
 
