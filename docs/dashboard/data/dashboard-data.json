@@ -14,7 +14,7 @@
     "last_extended": "2026-05-08T20:38:02Z",
     "extended_by": "claude-code-scheduled cron 20260519",
     "extension_pr": "https://github.com/GaryOcean428/bsuite/pull/583",
-    "last_refresh": "2026-07-22",
+    "last_refresh": "2026-07-23",
     "last_refreshed": "2026-06-07T02:38:00Z",
     "last_refreshed_by": "copilot-cli report-schema plan update"
   },
@@ -89,7 +89,7 @@
       "type": "parent",
       "active_plans": 25,
       "archived": 0,
-      "main_sha": "d3eb339",
+      "main_sha": "8cde0c1",
       "vercel": "n/a (development dry-lint/dashboard/static packages)"
     },
     {
