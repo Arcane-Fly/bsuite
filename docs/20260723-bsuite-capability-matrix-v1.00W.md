@@ -76,13 +76,12 @@
 
 Sourced from matrix ❌/🟡/❓ cells + roadmap sweep's 125 open items. **P0** = competitive-critical or operator-blocked; **P1** = parity; **P2** = modern-surface/incremental.
 
-### P0 (operator-blocked / critical)
-1. **crm7#1129** cross-tenant FK leakage (FutureBuild) — operator sign-off required (data repair).
-2. **bsuite#1322** Supabase → ap-southeast-2 (Sydney) migration — operator-blocked (external).
-3. **crm7#479** Xero app registration + feature-flag flip — operator-blocked.
-4. **bsuite#607** BSU missing VITE_APP_URL + VITE_STRIPE_PUBLISHABLE_KEY — operator quick-add.
-5. **conduit#338** RAMS lodgement status/callback contract — external contract needed.
-6. **crm7#1177** signed-out crm.crm7.app has no public landing (P0 UX).
+### P0 (operator-blocked / critical) — REVISED 2026-07-24 after verification
+1. **crm7#1129** cross-tenant FK leakage (FutureBuild) — REAL but a *data repair*, not code. Cara Sinclair's placement row has `employer_id` pointing at a different tenant's employer record ("Built Management Services"). Gated: DO NOT auto-fix; needs operator sign-off + coordination with FutureBuild exemplar work.
+2. ~~bsuite#1322 Supabase → ap-southeast-2~~ — see note below (still operator decision, unverified this pass).
+3. ~~crm7#479 Xero registration~~ — **REGISTRATION DONE (operator 2026-07-24).** Real remaining work: verify the multi-tenant Xero connect flow — each org authorizes *their own* Xero org against the single registered BSuite Xero app via OAuth auth-code (client_id/secret in env, per-tenant tokens in `xero_connections`), no per-tenant app registration. Then flip `feature_flags.xero_integration = true`. → demoted to P1 verify.
+4. ~~bsuite#607 BSU env vars~~ — **FALSE POSITIVE (verified 2026-07-24).** `VITE_APP_URL` IS set in production; `VITE_STRIPE_PUBLISHABLE_KEY` is referenced only in the Developer Portal env-*checklist* (Platform.tsx), never consumed by checkout (which uses the server-side secret key). The two flag-gaps are cosmetic. → close as not-a-bug (optionally remove the unused key from the checklist).
+5. **conduit#338 RAMS/ADMS lodgement outcome lifecycle** — REAL feature gap (not a block): training-contract `lodgement_outcome` stays `pending` forever; nothing flips to accepted/rejected/needs_info when STA/ADMS responds. Options: (A) RAMS webhook callback, (B) pg_cron poll re-querying status. → P1 build item.
 
 ### P1 (competitive parity — award/timesheet/GTO depth)
 7. **Award-interpretation parity — ARCHITECTURAL (audited 2026-07-23, corrected same-day):** @bsuite/charge-calc BOOT engine (`boot/compare.ts`, `EATerms` vs `AwardSchedule`, per-scenario weeklyBreakdown with Sat/Sun/PH/OT/shift loadings, non-monetary comparison, F17 export) IS the award-interpretation CORE. The genuine gap vs AnyTime is a **per-shift conditional interpreter** (start/end-time, day-of-week, break-detection, auto-coding on timesheet submit) — a layer that *feeds* the BOOT engine, not a rebuild of it. **BOOT scope (operator-corrected):** EBAs arrive pre-BOOT-approved (FWC-ratified) — the engine does NOT re-test them. It BOOT-tests **custom rates**: informal host-employer/worker arrangements trading award provisions for compensation elsewhere (e.g. +$X/hour flat in exchange for foregoing certain allowances) — legal only if better off overall, with the underlying award as fallback for uncovered scenarios or on challenge. Global assessment (not item-by-item), real-world work patterns, reconsideration on change — per Secure Jobs, Better Pay reforms. EBAs may point sections to the award or fully replace it; custom rates likewise sit on top of the award fallback. Candidate home for the interpreter: R80.3 payroll composer (#320/#321 chain) or a new @bsuite/award-interpreter package. Jodie: BOOT checks, custom-rate creation, and interpretation all exposed as Jodie tools (AI-licence-gated).
