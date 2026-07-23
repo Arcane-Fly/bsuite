@@ -24,20 +24,20 @@ Rides the existing mail-connect surface (`crm7/src/services/emailService.ts` —
 4. **Outcome flip:** match the parsed reference to `r7_offers.lodgement_reference` → transition `lodgement_outcome` per `offerStateMachine` → unblock convert-to-apprentice + notify the GTO.
 5. **Audit:** log every ingested STA email + the resulting state transition (email_messages migration from crm7#480 is the persistence surface).
 
-## Per-state STA + portal map (PENDING research lane deleg_2a47a187)
+## Per-state STA + portal map (confirmed 2026-07-24, research lane deleg_2a47a187)
 
 | State/Territory | STA (approves contract) | Portal / System (status tracked) | Approval channel |
 |---|---|---|---|
-| WA | Department of Training & Workforce Development (DTWD) | WAAMS (WA Apprenticeship Management System) | STA email + WAAMS status |
-| VIC | (research) | (research) | (research) |
-| NSW | (research) | (research) | (research) |
-| QLD | (research) | (research) | (research) |
-| SA | (research) | (research) | (research) |
-| TAS | (research) | (research) | (research) |
-| ACT | (research) | (research) | (research) |
-| NT | (research) | (research) | (research) |
+| WA | Apprenticeship Office (Dept of Training & Workforce Development / DTWD) | WAAMS (WA Apprenticeship Management System) | STA email + WAAMS status |
+| VIC | Victorian Registration & Qualifications Authority (VRQA) | Epsilon | STA email + Epsilon status |
+| NSW | Training Services NSW (Dept of Education) | STS Online (Skills Training Services Online) | STA email + STS Online status |
+| QLD | Department of Trade, Employment and Training (DTET) | Partner Portal (portal.desbt.qld.gov.au) | STA letter/email + Partner Portal status |
+| SA | Department of Education (Skills SA) | mySkillsSA (replacing legacy ATLAS) | STA email + mySkillsSA status |
+| TAS | Skills Tasmania | e-VET Portal | STA email + e-VET status |
+| ACT | Skills Canberra | AVETARS (ACT VET Administration Records System) | STA email + AVETARS status |
+| NT | Department of Education and Training | NT Apprenticeships & Traineeships Database (public search DB, NO contract-management portal) | **STA email/letter only** |
 
-> The per-state sender domains + email formats drive the watcher + parsers. Fold the research output here when the lane returns.
+**Notes:** 7 of 8 states have a named contract-management portal. NT is the exception — email/letter only. SA is mid-transition (ATLAS → mySkillsSA). Sources: `australianapprenticeships.gov.au/state-and-territory-training-authorities` + per-state .gov.au pages (see research lane output).
 
 ## Open design questions (for operator when scoping the lane)
 
