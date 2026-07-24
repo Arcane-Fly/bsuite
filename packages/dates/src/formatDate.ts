@@ -86,6 +86,47 @@ export function parseIsoDate(input: string): Date | null {
  * Returns the literal string `'—'` for inputs that cannot be parsed, so the
  * UI shows a typographic dash rather than `Invalid Date` or an empty cell.
  */
+
+/**
+ * Parse a calendar date string to ISO `YYYY-MM-DD`, or null.
+ * Accepts already-ISO strings and rejects Invalid Date (bsuite#1610).
+ * Prefer this over `new Date(s)` when feeding wage/age fields.
+ */
+export function tryParseCalendarDateToIso(input: string, preference: DateFormatPreference = DEFAULT_DATE_FORMAT): string | null {
+  if (typeof input !== 'string' || !input.trim()) return null;
+  const raw = input.trim();
+  // ISO first
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const iso = `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+    const d = parseIsoDate(iso);
+    if (!d) return null;
+    // Verify UTC calendar components round-trip
+    if (
+      d.getUTCFullYear() !== Number(isoMatch[1]) ||
+      d.getUTCMonth() + 1 !== Number(isoMatch[2]) ||
+      d.getUTCDate() !== Number(isoMatch[3])
+    ) {
+      return null;
+    }
+    return iso;
+  }
+  const cleaned = raw.replace(/[^0-9/\-.]/g, '');
+  const parts = cleaned.split(/[/\-.]/).filter(Boolean);
+  if (parts.length !== 3) return null;
+  let day: string, month: string, year: string;
+  if (preference === 'us') {
+    [month, day, year] = parts;
+  } else {
+    [day, month, year] = parts;
+  }
+  if (day.length === 1) day = `0${day}`;
+  if (month.length === 1) month = `0${month}`;
+  if (year.length === 2) year = `${Number(year) > 50 ? '19' : '20'}${year}`;
+  if (year.length !== 4 || day.length !== 2 || month.length !== 2) return null;
+  return tryParseCalendarDateToIso(`${year}-${month}-${day}`, preference);
+}
+
 export function formatDate(
   input: DateInput,
   locale: SupportedLocale = DEFAULT_LOCALE,
