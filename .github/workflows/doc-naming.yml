@@ -1,0 +1,31 @@
+name: Doc naming convention
+
+# bsuite#1606 — warn (non-blocking) until backlog renamed.
+# Exit 0 always when --warn-only; logs violations for visibility.
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '**/docs/**'
+      - 'scripts/check-doc-naming.mjs'
+      - '.github/workflows/doc-naming.yml'
+  push:
+    branches: [main, development]
+    paths:
+      - 'docs/**'
+      - 'scripts/check-doc-naming.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  check-doc-naming:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.0'
+      - name: Check dated doc filenames (warn-only)
+        run: node scripts/check-doc-naming.mjs --warn-only

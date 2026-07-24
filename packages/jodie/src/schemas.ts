@@ -20,13 +20,26 @@ export const githubToolSchemas = {
     outputSchema: z.record(z.string(), z.unknown()),
   },
   issue_write: {
-    inputSchema: z.object({
-      owner: z.string().min(1),
-      repo: z.string().min(1),
-      method: z.enum(['add_comment']),
-      issue_number: z.number().int().positive(),
-      body: z.string().min(1),
-    }),
+    // Discriminated on `method` so each write shape is validated exactly:
+    // `add_comment` targets an existing issue; `create_issue` opens a new one
+    // (used by the docs-gap feedback loop — flag missing documentation).
+    inputSchema: z.discriminatedUnion('method', [
+      z.object({
+        owner: z.string().min(1),
+        repo: z.string().min(1),
+        method: z.literal('add_comment'),
+        issue_number: z.number().int().positive(),
+        body: z.string().min(1),
+      }),
+      z.object({
+        owner: z.string().min(1),
+        repo: z.string().min(1),
+        method: z.literal('create_issue'),
+        title: z.string().min(1),
+        body: z.string().min(1),
+        labels: z.array(z.string().min(1)).optional(),
+      }),
+    ]),
     outputSchema: z.record(z.string(), z.unknown()),
   },
 } as const

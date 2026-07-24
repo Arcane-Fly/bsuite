@@ -50,9 +50,9 @@ on:
           - conduit
           - throughput
       force_redeploy:
-        description: 'Force redeploy ALL functions in scope (ignores change detection)'
+        description: 'Force redeploy ALL functions in scope (ignores change detection). Default false — only redeploy when true (bsuite#1607).'
         required: false
-        default: true
+        default: false
         type: boolean
 
 permissions:

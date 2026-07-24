@@ -10,7 +10,9 @@ Authentication: **GitHub App installation token only** (`JODIE_GITHUB_APP_INSTAL
 |---|---|---|---|
 | `issue_read` | Read issue details/comments/labels/sub-issues | owner, repo, method, issue_number | structured object map |
 | `pull_request_read` | Read PR metadata/files/reviews/comments/checks | owner, repo, pullNumber, method | structured object map |
-| `issue_write` | Post issue comment updates | owner, repo, method=`add_comment`, issue_number, body | structured object map |
+| `issue_write` | Comment on or open an issue | owner, repo, method (discriminated): `add_comment` → issue_number, body · `create_issue` → title, body, optional labels[] | structured object map |
+
+> `issue_write` accepts two methods (discriminated union on `method`): `add_comment` posts to an existing issue; `create_issue` opens a new issue with a title, body, and optional labels. `create_issue` powers the Documentation Program's docs-gap feedback loop — an AI-licensed user asks Jodie to flag missing documentation and Jodie files an issue on the docs repo. Added in `@bsuite/jodie` 0.2.0.
 
 ## Supabase MCP (`supabase-community/supabase-mcp`)
 

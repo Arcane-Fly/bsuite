@@ -6,7 +6,8 @@
     "declarationDir": "dist",
     "outDir": "dist",
     "rootDir": "./src",
-    "sourceMap": true
+    "sourceMap": true,
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["src"],
   "exclude": [

@@ -114,6 +114,7 @@ ALLOWLIST=(
   'crm7/api/config.ts:*'
   'crm7/api/db/[...path].ts:*'
   'crm7/api/health.ts:*'
+  'crm7/api/ai/docs-gap-issue.ts:*'
   # ---- crm7 server-side AI tools (edge functions, process.env is correct) ----
   'crm7/src/lib/ai/tools/ui-builder-tools.ts:*'
   'crm7/src/lib/ai/tools/ui-builder-tools.test.ts:*'
