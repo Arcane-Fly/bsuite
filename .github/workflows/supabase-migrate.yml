@@ -149,6 +149,16 @@ jobs:
       matrix:
         submodule: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
     steps:
+      - name: Guard — require project ref (bsuite#1607)
+        env:
+          SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          if [ -z "${SUPABASE_PROJECT_ID:-}" ]; then
+            echo "::error::SUPABASE_PROJECT_ID variable is empty — refusing to apply migrations (bsuite#1607 ref guard)"
+            exit 1
+          fi
+          echo "Project ref: ${SUPABASE_PROJECT_ID}"
+
       - uses: actions/checkout@v5
         with:
           submodules: recursive

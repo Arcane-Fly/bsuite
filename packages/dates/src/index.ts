@@ -5,6 +5,7 @@ export {
   formatRelative,
   formatDateRange,
   parseIsoDate,
+  tryParseCalendarDateToIso,
   dateFormatToLocale,
   localeToDateFormat,
   DEFAULT_LOCALE,
