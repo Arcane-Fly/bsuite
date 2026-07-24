@@ -78,6 +78,8 @@ Funding is for **registered** apprentices/trainees (employed + host-placed). Off
 
 **Build:** `funding_offsets` table (RLS tenant-scoped) + charge-calc `fundingOffset` term reducing the computed charge + R8 quote-time input (expected) + operative reconciliation view (expected vs received, applied to invoicing via the existing subsidy-credit path) + Jodie "apply the WA GWS subsidy to this placement's rate".
 
+**Custom fields (operator 2026-07-24):** the funding/handover models must support **org-defined custom fields** via the existing `useCustomFieldDefinitions` + `DynamicFieldRenderer` system — orgs add their own funding schemes (beyond the built-in GWS/EIS/per-state set), document types, and correspondence fields WITHOUT code changes, per the roles/permissions-per-org doctrine and the Feature Builder vision (an org can define a custom funding scheme or a custom onboarding-document requirement and have it appear in the handover + offset flows). The `funding_offsets.scheme` field accepts custom scheme keys (not a hardcoded enum), and the handover document set respects org-defined required-document custom fields.
+
 ## Lane plan (per subagent-orchestration doctrine)
 
 | Lane | Repo | Scope |
