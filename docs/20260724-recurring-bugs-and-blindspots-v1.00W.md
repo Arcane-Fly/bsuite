@@ -117,3 +117,14 @@ Honourable mentions after those five: Onboarding-360 ops checklist (#1130), SQL 
 ---
 
 *End of discovery. No code was changed in this pass beyond this document + the refined prompt plan.*
+
+
+## 8. Close-out status (2026-07-24 evening)
+
+| Item | Status | Evidence |
+|------|--------|----------|
+| 1 Reports empty-params | **SHIPPED** | crm7#1201, sanitizeReportParams, #1161 closed |
+| 2 LocalisedDateInput shared package | **PARTIAL** | ISO blur fixed in 5 lagging apps; full @bsuite/dates extract deferred |
+| 3 Gitleaks allowlist | **SHIPPED** | BSU#583, #570 closed |
+| 4 FK-index migration template+CI | **SHIPPED** | check-migration-fk-indexes.mjs + crm7 db-lint.yml + docs checklist |
+| 5 WCAG e2e + free-text CI | **PARTIAL** | Body-text fail-closed added (#1157 comment); migration free-text dry-lint already required CI |
