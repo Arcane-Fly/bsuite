@@ -47,3 +47,4 @@ export {
   type ColorEditorSheetProps,
   type OklchColorPickerProps,
 } from './branding/index.js'
+export { sanitizeCustomCss } from './branding/sanitizeCustomCss.js'

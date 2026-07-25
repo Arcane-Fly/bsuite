@@ -175,6 +175,16 @@
    "objects": [
     "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)"
    ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "conduit STA email confirm atomic RPC (excellence P1 / go-loop 2026-07-25). confirm_sta_email replaces 3 non-transactional client writes (offer lodgement flip + training_contract_status_confirmations audit insert + sta_inbound_emails status) with a single SECURITY DEFINER transaction. Authz is internal: auth.uid() required; caller must be owner/admin on the email's tenant via user_tenants; offer update scoped to that tenant_id. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC/anon, granted authenticated only (server action supabase.rpc). Same intentional client-RPC class as set_current_tenant / redeem_charge_rate_quote_signature. Not a category waiver.",
+   "added": "2026-07-25",
+   "objects": [
+    "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)"
+   ]
   }
  ]
 }
