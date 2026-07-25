@@ -227,3 +227,30 @@ cd R80.3 && npx vitest run src/lib/fundingSchemes.test.ts
 # T5
 cd business-suite-unified && npx vitest run src/lib/manuals
 ```
+
+
+---
+
+## Late RT batch absorption (`deleg_aaed0109`, arrived post-implement)
+
+Full summaries: `~/.hermes/cache/delegation/subagent-summary-{0..3}-20260725_212040_*.txt`
+
+| RT ID | Sev | Disposition vs shipped code |
+|-------|-----|------------------------------|
+| SEC-01 set_current_tenant Jodie | Critical | **AVOIDED** — never added; `rg set_current_tenant crm7/src/lib/ai` = empty |
+| SEC-02 funding wire crm7 without manage_financial | Critical | **AVOIDED** — `createFundingTools` **not** in crm7 registry; R80-only |
+| SEC-03 feature flag write / cross-tenant | High | **MITIGATED** — `set_tenant_feature_flag` requires hierarchy (self or direct child) + `canManageEnterprise`; not bulk-all-tenants |
+| SEC-04 permission before RPC | High | **MITIGATED** — permission check before any fetch; 4 negative/happy tests |
+| SEC-05 weak CSS denylist + dual copy | High | **PARTIAL** — package published 1.0.1 with export; apps keep local dual until pin train (R1). Stronger allowlist = follow-up |
+| SEC-06 KAP amount enforce | High | **SHIPPED** — `amountWindows` + `resolveSchemeAmount`; tool still trusts caller amount until R80 tool binds resolver (follow-up) |
+| R1 publish/pin race | Critical | **PARTIAL** — npm `1.0.1` has sanitize; apps still `^0.6.0` **by design** until lockfile regen train (dual local sanitize stays canonical runtime) |
+| R4 funding double-apply unique | High | **DEFERRED** — unique(placement,scheme) + tool bind resolver = next money integrity sprint |
+| R8 enterprise no API | High | **ADDRESSED** — tools use `/api/db` + `/api/rpc` paths already used by chat tools, not inventing service-role |
+| P-01 initplan track debt | High | **ACCEPTED** this sprint — #1542; hot-path floor next |
+
+### Follow-up backlog (from RT, not false-complete)
+
+1. **Pin train:** bump `@bsuite/ui` to `^1.0.1` per app with isolated lockfile regen; then thin-reexport sanitize from package  
+2. **fundingOffsetTool:** call `resolveSchemeAmount` + `manage_financial`-class gate before insert; unique constraint  
+3. **CSS adversarial suite** beyond current denylist  
+4. **Hot-path auth_rls_initplan** top-N tables only  
