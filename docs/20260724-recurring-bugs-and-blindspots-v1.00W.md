@@ -128,3 +128,26 @@ Honourable mentions after those five: Onboarding-360 ops checklist (#1130), SQL 
 | 3 Gitleaks allowlist | **SHIPPED** | BSU#583, #570 closed |
 | 4 FK-index migration template+CI | **SHIPPED** | check-migration-fk-indexes.mjs + crm7 db-lint.yml + docs checklist |
 | 5 WCAG e2e + free-text CI | **PARTIAL** | Body-text fail-closed added (#1157 comment); migration free-text dry-lint already required CI |
+
+
+## 9. World-class continuation (2026-07-24 night)
+
+| Item | Status | Evidence |
+|------|--------|----------|
+| Reports multi:* deadlock #1162 | **SHIPPED** | MultiEntityIdPicker + crm7#1202 |
+| Reports required-param tests #1163 | **SHIPPED** | SchemaDrivenFilterForm.multi.test.tsx |
+| Report delivery empty params #1169 | **SHIPPED** | stripEmptyReportParams in report-delivery |
+| force_redeploy / migrate ref #1607 | **SHIPPED** | default false + PROJECT_ID guard; bsuite#1635 |
+| Doc naming CI #1606 | **SHIPPED (warn-only)** | check-doc-naming.mjs + workflow |
+| Gitleaks #570 | **SHIPPED** | earlier |
+| WCAG vacuity #1157 | **CLOSED** | body-text + markers + key fix |
+| Braden eslint path #571 | **CLOSED** | already isBradenSubmoduleFile |
+| Env #607 | **CLOSED** | false positive |
+| Dates ISO blur #1610 | **SHIPPED (partial extract)** | tryParseIsoFallback all apps + tryParseCalendarDateToIso in @bsuite/dates@0.1.1 |
+| Secret-naming CI | **FIXED** | ANON→PUBLISHABLE handover; api allowlist docs-gap |
+| E2E schema-builder auth flake | **FIXED** | skip on oauth redirect |
+| Full LocalisedDateInput package extract | **DEFERRED** | needs shared calendar/popover in @bsuite/ui |
+| Feature backlog (page-builder, STP, assessment, OAuth #1315, Sydney #1322) | **OPEN product** | not bug debt — schedule separately |
+| SQL linter false-greens #1175/#1158 | **OPEN** | next instrument pass |
+| people/new flake #1159 | **OPEN** | load-sensitive quarantine next |
+| Advisor/SECDEF/CSP #1261/#1542/#1139 | **OPEN** | security backlog |
