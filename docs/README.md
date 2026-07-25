@@ -6,7 +6,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 ## Documentation Authority
 
-- `20260227-bsuite-master-roadmap-v5.00W.md` is the canonical planning and delivery source of truth
+- `(archived — see archived-repos-docs/20260725-bsuite-cleanup)` is the canonical planning and delivery source of truth
 - [`../AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) is the canonical authentication and session-topology reference (the older `20260227-auth-map-reference-v1.00A.md` is archived under `archive/parent/2026-04-30-references-approved/`)
 - `20260504-bsuite-tech-stack-alignment-v1.00W.md` is the canonical tech-stack baseline — all apps must converge
 - `20260504-bsuite-documentation-hub-v1.00W.md` is the canonical cross-submodule documentation index — start here to find any doc
@@ -21,7 +21,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File | Description |
 |------|-------------|
-| `20260227-bsuite-master-roadmap-v5.00W.md` | Single source of truth for BSuite project planning across all projects |
+| `(archived — see archived-repos-docs/20260725-bsuite-cleanup)` | Single source of truth for BSuite project planning across all projects |
 | `20260425-bsuite-finish-line-roadmap-v1.00W.md` | Prioritised P0/P1/P2 finish-line view (154 items, cited to sources) |
 | `20260501-merged-execution-backlog-v1.00W.md` | Canonical phase-ordered execution queue (BL-NNN / P0-* / P1-* / P2-* / WS-* item IDs) |
 | `OUTSTANDING.md` | Single source of truth outstanding-work index for parent `docs/*.md` |
@@ -31,6 +31,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260724-bsuite-vercel-env-inventory-v1.00W.md` | Vercel production env-var inventory across all 6 apps (per-app matrix, gap notes) — captured via vercel CLI 2026-07-24 |
 | `20260724-oneshot-cross-cutting-audit-v1.00W.md` | Full cross-cutting DRY one-shot audit (2026-07-22→24 ship window) — 5 violations fixed, 4 ownership-map gaps closed, lifecycle-handover exception codified |
 | `20260724-recurring-bugs-and-blindspots-v1.00W.md` | Recurring bug classes (R1–R12) + unexamined clusters (B1–B12) + next-5 investigations — discovery only after prompt-enhancer Standard refine |
+| `plans/20260725-docs-deadcode-archive-refined-v1.00D.md` | Prompt-enhanced plan: docs↔code audit, dead code, archive relocate |
+| `20260725-headroom-learn-notes-v1.00W.md` | Headroom learn on bsuite: 7.1% tool-fail rate; LLM extract blocked (Claude limit / litellm); Qwen 3.8 API 401 |
 | `20260723-Anytime-WorkforceOne-Admin-Guide.md` | Code House AnyTime/Workforce One Administrator Guide (competitor reference — full admin/timesheet/award surface) |
 
 ### Standards & doctrine
