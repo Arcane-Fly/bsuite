@@ -185,6 +185,16 @@
    "objects": [
     "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)"
    ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "W3 excellence atomic sub-org create (2026-07-25). create_sub_organization requires auth.uid(); caller must be owner/admin of p_parent_id via user_tenants; inserts child with parent_tenant_id + owner membership in one transaction. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC. Jodie + BSU Admin call via authenticated JWT only. Not a category waiver.",
+   "added": "2026-07-25",
+   "objects": [
+    "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)"
+   ]
   }
  ]
 }
