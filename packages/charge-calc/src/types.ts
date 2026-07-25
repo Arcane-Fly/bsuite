@@ -223,6 +223,8 @@ export interface OncostBreakdown {
 
 // ─── Full calculation result ───
 export interface CalcResult {
+  /** Annual training fees included in total cost (amortised into costPerHour). */
+  trainingFeesAnnual?: number;
   // Received wage
   receivedWagePerHour: number;
   weeklyPay: number;
