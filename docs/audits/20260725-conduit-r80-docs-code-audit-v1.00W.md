@@ -382,8 +382,8 @@
 | 2 | R80.3 `schemaBuilderService.ts` was 139 lines, rewritten to ~50 | Current file is 50 lines — exact match | MATCH |
 | 3 | Package `@bsuite/schema-registry` at `0.4.0` | `packages/schema-registry/package.json` says `"version": "1.0.0"`; both repos depend on `"^1.0.0"` | **DIVERGENCE** (see §12.2) |
 | 4 | `npm view @bsuite/schema-registry version` → `0.3.6` (latest published) | Not verifiable offline; doc self-reports this | N/A |
-| 5 | conduit `package.json` bumped `^0.3.6` → `^0.4.0` | Actual: `"@bsuite/schema-registry": "^1.0.0"` | **DIVERGENCE** |
-| 6 | R80.3 `package.json` bumped `^0.3.6` → `^0.4.0` | Actual: `"@bsuite/schema-registry": "^1.0.0"` | **DIVERGENCE** |
+| 5 | conduit `package.json` bumped `^0.3.6` → `^1.0.0` | Actual: `"@bsuite/schema-registry": "^1.0.0"` | **DIVERGENCE** |
+| 6 | R80.3 `package.json` bumped `^0.3.6` → `^1.0.0` | Actual: `"@bsuite/schema-registry": "^1.0.0"` | **DIVERGENCE** |
 
 ### 12.2 Divergences
 
@@ -436,7 +436,7 @@
 | 4 | **Low** | R80.3 | Training fees | PDF line references (195–209) drifted; "Margin" claimed in cost-rate block but is absent from actual on-costs array. Core claim (trainingFees absent from PDF) is correct. |
 | 5 | **Low** | R80.3 | Payday super | Test file path: doc says `src/services/paydaySuperService.test.ts`; actual is `src/tests/paydaySuperService.test.ts`. |
 | 6 | **Low** | R80.3 | Invoice runs | Cross-referenced doc `20260304-r80-unified-schema-v1.00W.md` does not exist in `R80.3/docs/`. |
-| 7 | **Low** | Both | Schema-builder consolidation | Docs claim `@bsuite/schema-registry@0.4.0`; actual package is `1.0.0` and both repos depend on `^1.0.0`. Stale version. |
+| 7 | **Low** | Both | Schema-builder consolidation | Docs claim `@bsuite/schema-registry@1.0.0`; actual package is `1.0.0` and both repos depend on `^1.0.0`. Stale version. |
 | 8 | **Low** | R80.3 | Funding offsets | RLS: doc says "member SELECT, admin INSERT/UPDATE" — actual is "tenant-member SELECT via `auth_tenant_id()`, owner/admin/manager INSERT/UPDATE/DELETE via `auth_tenant_id_with_role()`". (Same as #3, restated for completeness.) |
 
 ### Overall Assessment

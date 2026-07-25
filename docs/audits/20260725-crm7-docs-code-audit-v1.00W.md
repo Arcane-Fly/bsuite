@@ -98,7 +98,7 @@ For each major documented feature, the codebase (`src/`, `api/`, `supabase/migra
 
 | Doc claim | Code reality | Verdict |
 |---|---|---|
-| `xero_integration: false` — hidden at launch | `src/hooks/useFeatureFlags.ts:73` — `xero_integration: true` | **STALE-DOC** — flag was flipped to `true` since this doc was written. Doc still says "hidden at launch." |
+| `xero_integration: true` — hidden at launch | `src/hooks/useFeatureFlags.ts:73` — `xero_integration: true` | **STALE-DOC** — flag was flipped to `true` since this doc was written. Doc still says "hidden at launch." |
 | Scopes: `accounting.transactions accounting.contacts accounting.settings offline_access` | `src/lib/ai/plugins/xero/xero-auth.ts:140` — `XERO_GRANULAR_SCOPES` = `accounting.invoices accounting.payments accounting.banktransactions accounting.contacts accounting.settings` + `openid profile email offline_access`. The deprecated `accounting.transactions` is NOT in the current scope set. | **STALE-DOC** — doc lists the deprecated scope set; the 2026-07-06 setup doc is canonical. |
 | `xero_connections` stores `access_token`/`refresh_token` plaintext | `supabase/migrations/20260514054000_xero_encrypt_tokens_via_vault.sql:1` — tokens moved to Vault (`access_token_secret_id`, `refresh_token_secret_id`); plaintext columns dropped. | **STALE-DOC** — doc's schema block shows plaintext columns; Vault migration superseded it. The doc's own "Note" below the schema block acknowledges this, but the schema block itself is misleading. |
 | `xeroAdapter.ts` — "not yet activated" | `src/lib/payroll/xeroAdapter.ts:1` exists. Activation state is controlled by the feature flag (now `true`). | **STALE-DOC** — "not yet activated" framing is stale; flag is on. |
@@ -136,7 +136,7 @@ For each major documented feature, the codebase (`src/`, `api/`, `supabase/migra
 
 | Doc claim | Code reality |
 |---|---|
-| `LAUNCH_FLAGS` registry with 36 flags, `xero_integration: false` | `src/hooks/useFeatureFlags.ts:33` — `LAUNCH_FLAGS` exported. **`xero_integration: true`** at `:73` (doc says `false`). The rest of the 36-flag table matches. |
+| `LAUNCH_FLAGS` registry with 36 flags, `xero_integration: true` | `src/hooks/useFeatureFlags.ts:33` — `LAUNCH_FLAGS` exported. **`xero_integration: true`** at `:73` (doc says `false`). The rest of the 36-flag table matches. |
 | `useFeatureFlags` hook + `FeatureGate` + `withFeatureGate` | `src/hooks/useFeatureFlags.ts:1`, `src/components/common/withFeatureGate.tsx:1`, `src/components/common/FeatureGate.tsx` (referenced). ✓ |
 | 57+ routes wrapped with `withFeatureGate` | `src/App.tsx` uses `withFeatureGate` extensively. ✓ |
 
@@ -285,7 +285,7 @@ The email-entity-assignment doc (`20260726`) references `docs/plans/20260724-rec
 ## Stale-doc findings (doc needs update, not code)
 
 1. **`reference/20260317-crm7-xero-integration-v1.00W.md`** — three stale claims:
-   - Says `xero_integration: false` (hidden at launch); code has `true` (`src/hooks/useFeatureFlags.ts:73`).
+   - Says `xero_integration: true` (hidden at launch); code has `true` (`src/hooks/useFeatureFlags.ts:73`).
    - Lists deprecated scopes (`accounting.transactions`); code uses granular scopes (`xero-auth.ts:140`).
    - Shows `xero_connections` schema with plaintext `access_token`/`refresh_token` columns; Vault migration `20260514054000` moved to `*_secret_id`. The doc's own note below the block partially acknowledges this but the schema block itself is misleading.
    - **Recommendation:** Add a superseded banner pointing to `20260706-xero-integration-setup-v1.00W.md` (same treatment as the 2026-04-21 runbook).

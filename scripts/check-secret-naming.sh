@@ -103,7 +103,6 @@ ALLOWLIST=(
   'braden/src/services/adminCrudService.ts:*'
   'braden/src/services/pagesService.ts:*'
   # ---- crm7 mid-migration dual-read fallbacks in src/ (bsuite#464 cleanup) ----
-  'crm7/src/components/EnvironmentValidator.tsx:*'
   'crm7/src/lib/supabase.ts:*'
   'crm7/src/main.tsx:*'
   'crm7/src/services/emailService.ts:*'

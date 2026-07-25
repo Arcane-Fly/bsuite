@@ -713,7 +713,7 @@ operator is informed with a self-report under §9.3 — never rationalised close
 - Master orchestration discipline: `~/.claude/skills/master-orchestration/SKILL.md`
 - Self-validation FF: `FF-SELF-VALIDATION-20260507` (every app's CLAUDE.md §9)
 - Dashboard FF: `FF-DASHBOARD-20260508` (parent CLAUDE.md §10)
-- DRY one-shot doctrine: `/home/braden/Desktop/Dev/bsuite/docs/20260227-dry-one-shot-architecture-v1.01A.md`
+- DRY one-shot doctrine: `/home/braden/Desktop/Dev/bsuite/docs/20260227-dry-one-shot-architecture-v1.02A.md`
 - D2C theme spec: `/home/braden/Desktop/Dev/bsuite/docs/20260228-d2c-theme-specification-v1.00A.md`
 - Auth canonical: `/home/braden/Desktop/Dev/bsuite/AUTH_CANONICAL.md`
 - Shared packages rule: parent CLAUDE.md §Shared Packages (especially rule 7 — lockfile gen outside tree)

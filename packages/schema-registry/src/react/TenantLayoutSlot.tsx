@@ -62,7 +62,7 @@ interface TenantLayoutSlotProps {
  *   1. Implement `src/components/CustomPageRenderer.tsx` against `custom_pages`
  *      per `docs/20260501-handoff-p1-4b-consumer-renderer-migration-v1.00W.md` §Phase 2.
  *   2. Replace every `<TenantLayoutSlot … />` with `<CustomPageRenderer … />`.
- *   3. Bump `@bsuite/schema-registry` to `^0.4.0` once zero imports remain.
+ *   3. Bump `@bsuite/schema-registry` to `^1.0.0` once zero imports remain.
  *
  * @see docs/adr/ADR-0001-page-builder-ownership.md
  * @see docs/adr/ADR-0003-consumer-renderer-pattern.md

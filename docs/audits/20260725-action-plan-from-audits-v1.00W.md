@@ -1,37 +1,30 @@
 # Action plan from docs↔code + dead-code audits (2026-07-25)
 
-> Status **W**. Generated with qwen3.8-max-preview from four audit files. Substantive-match = done.
+> Status **A** (loop complete 2026-07-25). Substantive-match = done.
 
-## Archive
+## Archive — DONE
+`/home/braden/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/` (~6MB)
 
-Moved ~6MB `docs/archive` (+ plans/archive) trees to:
-`/home/braden/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/`
-In-repo pointer READMEs only.
+## SAFE_DELETE — DONE
+(see prior session commits)
 
-## SAFE_DELETE executed (this session)
+## STALE-DOC — DONE
+- PARENT-DOCS ×6 archive pointers
+- dry-one-shot v1.01A → v1.02A in ADRs/OUTSTANDING
+- schema-registry 0.4.0 blocker → 1.0.0 shipped wording
+- crm7 xero flag doc
 
-- root `charge-calculator-mapd.jsx`
-- `tenantRoutes.ts` ×5 apps (+ BSU test)
-- throughput: TestComponent, BlobDemo, SupabaseSetup, Todo examples, unused hooks/agents/utils
-- crm7: EnvironmentValidator, OneShotEntryDemo, fair-work-api-test, theme-toggle duplicate, UsiInput, AccessibilityControls, route validators, unused funding/eligibility libs, etc.
-- braden: demo components, dead admin CMS remnants
-- R80: ImportCalculations, CalculatorContext
-- BSU: dbSchemaToZod.ts
+## NOT_DEAD_IMPLEMENT — DONE / SUBSTANTIVE-MATCH
 
-**Kept (NOT_DEAD_IMPLEMENT):** AVETMISS formatters, WHS stubs, fundingOffsetTool, invoicingService (tested/docs).
+| Item | Status | Evidence |
+|------|--------|----------|
+| AVETMISS | **SUBSTANTIVE-MATCH** | Page + `avetmiss-export` edge live; client `src/lib/avetmiss/index.ts` barrel added |
+| VET unit structure | **SHIPPED** | `structure.tsx` → `qualification_units` (no separate table) |
+| Financial summary | **SHIPPED** | Live invoice aggregation in `financial-summary.tsx` |
+| WHS tables | **SHIPPED** | Migration `20260725120000` + stub TODOs removed |
+| STA 6-state parsers | **BLOCKED** | Needs live STA email samples — WA/NT already proven |
 
-## STALE-DOC fixes (priority)
-
-1. PARENT-DOCS.md ×6 — dead links to archived roadmaps
-2. parent docs/README + adr/README
-3. dry-one-shot v1.01A → v1.02A refs
-4. crm7 xero flag/scopes docs
-5. schema-registry 0.4.0 blocker docs → 1.0.0
-
-## NOT_DEAD_IMPLEMENT next
-
-1. WHS tables+edge fns (crm7)
-2. AVETMISS wire formatters → export UI
-3. VET qualification_unit_structure table
-4. Financial summary edge aggregation
-5. Conduit STA parsers (6 states) when email samples exist
+## Loop success condition
+- Priority stale greps for blocker/0.4.0/false flag text clean
+- crm7 avetmiss + feature flag tests green (89)
+- migration applied on shared DB

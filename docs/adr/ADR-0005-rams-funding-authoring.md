@@ -1,7 +1,7 @@
 # ADR-0005 — RAMS Funding Authoring
 
 **Status:** Accepted (2026-05-01)
-**Related:** WS-E.4 in consolidated plan; `docs/20260227-dry-one-shot-architecture-v1.01A.md` §1 (`funding_claims`); P1.J Payday Super (1-July-2026 deadline)
+**Related:** WS-E.4 in consolidated plan; `docs/20260227-dry-one-shot-architecture-v1.02A.md` §1 (`funding_claims`); P1.J Payday Super (1-July-2026 deadline)
 
 ---
 
@@ -76,7 +76,7 @@ Single coordinated PR set ships:
 6. **CRM7 placement form** rewrites the funding-amount input as a read-only badge driven by `rams_funding_for(...)`. Hand-entered funding field removed in the same PR. If a legitimately-needed override exists, the audit-trail UI writes to `rams_funding_overrides`.
 7. **Invoice generation, timesheet-derived charges, GTO billing reports (WS-A), funding-forecast views** all switch to `rams_funding_for(...)` in the same PR set. Hand-entered funding fields removed everywhere.
 8. **Realtime subscription** on `rams_funding_matrix` so downstream views refresh without reload when the matrix is updated.
-9. **Documentation:** `docs/20260227-dry-one-shot-architecture-v1.01A.md` §1 gains a `rams_funding_matrix` row under CRM7 ownership; §4 Auto-Population Rules gains a row for funding amount derivation.
+9. **Documentation:** `docs/20260227-dry-one-shot-architecture-v1.02A.md` §1 gains a `rams_funding_matrix` row under CRM7 ownership; §4 Auto-Population Rules gains a row for funding amount derivation.
 
 ### Security
 

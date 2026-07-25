@@ -558,7 +558,7 @@ These components exist but are blocked by missing database tables. The code is N
 | `crm7/src/services/emailService.ts` | 584 | `TODO: Create the DB function:` | Feature incomplete |
 | `crm7/api/ai/chat.ts` | 149 | `TODO: Replace with actual DB lookup once permission tables are in place.` | Feature incomplete |
 | `crm7/src/components/ui/chart.tsx` | 101, 247 | `TODO(bsuite#215): migrate to typed Recharts Tooltip/Legend content slot API` | Type safety debt |
-| `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx` | 112 | `TODO(@bsuite/schema-registry@0.4.0): replace this inline useQuery` | Package upgrade debt |
+| `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx` | 112 | `TODO(@bsuite/schema-registry@1.0.0): replace this inline useQuery` | Package upgrade debt |
 | `crm7/src/pages/placements/create.tsx` | 88 | `TODO(crm7-placement-charge-calc-v2): once charge-calc ≥0.2.4` | Version dependency |
 | `crm7/src/hooks/usePlacementChargeCalc.ts` | 61 | `TODO(crm7-placement-rdo): once charge-calc ≥0.2.4 ships` | Version dependency |
 

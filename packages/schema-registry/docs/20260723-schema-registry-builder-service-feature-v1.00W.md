@@ -1,10 +1,10 @@
 # Schema-Builder Service + Feature-Gate Hook — @bsuite/schema-registry 0.4.0
 
-**Status:** W (Working) · **Date:** 2026-07-23 · **Package:** `@bsuite/schema-registry@0.4.0`
+**Status:** W (Working) · **Date:** 2026-07-23 · **Package:** `@bsuite/schema-registry@1.0.0`
 
 ## Summary
 
-`@bsuite/schema-registry@0.4.0` adds two client-agnostic capabilities so the five
+`@bsuite/schema-registry@1.0.0` adds two client-agnostic capabilities so the five
 BSuite consumer apps (crm7, bsu, conduit, r8, braden) can stop triplicating
 their `src/lib/schemaBuilderService.ts`:
 
@@ -158,7 +158,7 @@ export type { SchemaBuilderAppScope as AppScope } from '@bsuite/schema-registry/
 ```
 
 Per the root `CLAUDE.md` "Consumer Package Gate" (§12.2), the migration is only
-**done** when every consumer pins `@bsuite/schema-registry@^0.4.0`, each CI is
+**done** when every consumer pins `@bsuite/schema-registry@^1.0.0`, each CI is
 green, and at least one deployed consumer verifies no `tenant_*` 400s.
 
 ## Tests

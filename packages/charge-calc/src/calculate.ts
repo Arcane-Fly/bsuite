@@ -121,6 +121,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
     overheadValue: ohVal,
     studyCost: study,
     ppeCost: ppe,
+    trainingFeesAnnual: trainingFees = 0,
     marginType,
     marginValue: marginVal,
     allowances,
@@ -198,7 +199,9 @@ export function calculate(cfg: CalcConfig): CalcResult {
   const payrollTaxAmt = totAnnPay * payrollTaxRate;
 
   // --- Total cost (line 80) ---
-  const totCost = annPkg + study + ppe + wc + oh + payrollTaxAmt;
+  // trainingFeesAnnual: fixed annual training fee amortised into total cost
+  // (feature: R80 training-fees; was silently dropped before 2026-07-25).
+  const totCost = annPkg + study + ppe + wc + oh + payrollTaxAmt + trainingFees;
 
   // --- Hours (lines 82-86) ---
   const bHrs = billableWk * hpw;
@@ -347,6 +350,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
     workersCompAmount: wc,
     overheadAmount: oh,
     totalAnnualCost: totCost,
+    trainingFeesAnnual: trainingFees,
     billableHours: bHrs,
     totalHours: tHrs,
     trainingHours: trainHrs,
