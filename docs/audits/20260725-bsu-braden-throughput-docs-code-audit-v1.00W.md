@@ -69,7 +69,7 @@
 | `docs/20260316-braden-csp-security-v1.00W.md` | **VALIDATED** | CSP in `vercel.json` matches doc claims: `style-src` ✅, `style-src-elem` ✅, `fonts.googleapis.com` ✅, `api.v0.dev` ✅, `connect-src` ✅. |
 | `docs/20260316-braden-bot-protection-v1.00W.md` | **VALIDATED** | Bot protection test at `src/tests/bot-protection.test.ts` ✅. |
 | `docs/20260316-braden-roadmap-v1.00W.md` | **VALIDATED** | Self-marked as "Archived" / superseded by parent master roadmap. File header references v5.00W of the parent roadmap (not its own version) — intentional, not a mismatch. |
-| `docs/20260723-schema-builder-registry-consolidation-chore-v1.00W.md` | **STALE** | **Claim:** `@bsuite/schema-registry` bumped `^0.3.6` → `^0.4.0`, and `0.4.0` is not yet published. **Actual:** `package.json` has `^1.0.0`, installed is `1.0.0`, npm registry shows `1.0.0`. The blocker is resolved — the package jumped past 0.4.0 to 1.0.0. The doc's blocker section is stale. The re-export structure itself is correct ✅. |
+| `docs/20260723-schema-builder-registry-consolidation-chore-v1.00W.md` | **STALE** | **Claim:** `@bsuite/schema-registry` bumped `^0.3.6` → `^1.0.0`, and `0.4.0` is published as 1.0.0. **Actual:** `package.json` has `^1.0.0`, installed is `1.0.0`, npm registry shows `1.0.0`. The blocker is resolved — the package jumped past 0.4.0 to 1.0.0. The doc's blocker section is stale. The re-export structure itself is correct ✅. |
 | `docs/20260723-theme-canonicalisation-decision-v1.00W.md` | **VALIDATED** | Decision to defer `@bsuite/theme` adoption is consistent with code: `src/index.css` has inline comment referencing this doc and #340. `@bsuite/theme` not in package.json ✅. Token drift table verified: `--color-braden-red: oklch(0.465 0.155 14.3)` in index.css ✅. |
 | `docs/20260316-braden-architecture-v1.00W.md` | **VALIDATED** | Architecture descriptions match repo structure (navigation, admin dashboard, media library verified via `src/config/navigation.ts` ✅). |
 | `docs/20260316-braden-getting-started-v1.00W.md` | **VALIDATED** | Setup instructions match `package.json` (pnpm, Node 24 ✅). |
@@ -116,12 +116,12 @@
 | Doc | Verdict | Evidence |
 |-----|---------|----------|
 | `docs/README.md` | **STALE** | Lines 9, 11, 13, 24-26, 46 reference 4 archived/relocated docs as canonical. |
-| `docs/OUTSTANDING.md` | **PARTIAL** | Acknowledges archive (lines 7, 21) and points to current execution queue ✅. But line 42 still cites `20260227-dry-one-shot-architecture-v1.01A.md` for the one-shot compliance gate — actual file is `v1.02A`. |
+| `docs/OUTSTANDING.md` | **PARTIAL** | Acknowledges archive (lines 7, 21) and points to current execution queue ✅. But line 42 still cites `20260227-dry-one-shot-architecture-v1.02A.md` for the one-shot compliance gate — actual file is `v1.02A`. |
 | `docs/20260504-bsuite-documentation-hub-v1.00W.md` | **STALE** | References `20260504-bsuite-tech-stack-alignment-v1.00W.md` as companion (archived). References master-roadmap, finish-line-roadmap, merged-execution-backlog as canonical (all archived/relocated). |
 | `docs/20260724-oneshot-cross-cutting-audit-v1.00W.md` | **VALIDATED** | Audit findings reference real code paths verified during this audit. |
 | `docs/20260724-recurring-bugs-and-blindspots-v1.00W.md` | **VALIDATED** | Findings are discovery-only and reference current code state. |
 | `docs/20260723-bsuite-capability-matrix-v1.00W.md` | **VALIDATED** | References `20260723-Anytime-WorkforceOne-Admin-Guide.md` ✅. |
-| `docs/adr/README.md` | **STALE** | Cross-reference convention cites `docs/20260227-dry-one-shot-architecture-v1.01A.md` (actual: `v1.02A`), `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` (archived), `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` (not found anywhere), `docs/20260501-merged-execution-backlog-v1.00W.md` (archived). |
+| `docs/adr/README.md` | **STALE** | Cross-reference convention cites `docs/20260227-dry-one-shot-architecture-v1.02A.md` (actual: `v1.02A`), `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` (archived), `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` (not found anywhere), `docs/20260501-merged-execution-backlog-v1.00W.md` (archived). |
 | `docs/adr/` (ADR-0004 collision) | **STALE** | `ADR-0004-oauth-allowlist-doctrine.md` and `ADR-0004-schema-builder-consolidation.md` share number 0004. README indexes only the OAuth one — schema-builder consolidation ADR is orphaned. ADR-0006 and ADR-0007 are properly indexed ✅. |
 
 ### Cross-reference breakage: `dry-one-shot-architecture-v1.01A`
