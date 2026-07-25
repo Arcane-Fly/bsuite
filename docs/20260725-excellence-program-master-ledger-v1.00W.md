@@ -72,3 +72,10 @@
 - branding-sanitize 32 tests green  
 - fundingSchemes 16 tests green  
 - Development commits pushed
+
+## Go-loop 2026-07-25 evening
+- Billing prices + Stripe key map
+- Primary token align
+- Invoice $0/orphan, funding budget on paid
+- Payroll FY dynamic
+- STA confirm atomic RPC
