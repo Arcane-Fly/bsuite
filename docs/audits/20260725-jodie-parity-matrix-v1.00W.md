@@ -26,8 +26,11 @@ The registry composes 11 factories. The static tool-name list (`getAllToolNames`
 | 9 | `createEmailLinkTools` | `email-link-tools.ts` | `link_email` |
 | 10 | `createUIBuilderTools` | `ui-builder-tools.ts` | `list_picklists`, `create_picklist_option`, `list_form_layouts`, `add_layout_section`, `add_layout_field`, `list_custom_pages`, `deploy_config`, `authoring_list_catalog`, `authoring_find_or_create_entity`, `authoring_bind_entity`, `authoring_add_page_widget` |
 | 11 | `createDocsTools` | `docs-tools.ts` | `docs_flag_gap` |
+| 12 | `createLeaveTools` | `leave-tools.ts` | `submit_leave_request`, `list_pending_leave_requests` |
+| 13 | `createFieldOfficerTools` | `field-officer-tools.ts` | `create_case_note`, `check_host_capacity` |
+| 14 | `createEnterpriseAdminTools` | `enterprise-admin-tools.ts` | `list_enterprise_sub_orgs`, `create_enterprise_sub_org`, `set_tenant_feature_flag` |
 
-**crm7 total:** 11 factories, 50 named tools.
+**crm7 total:** 14 factories (leave/FO/enterprise added 2026-07-25), 57+ named tools.
 
 ### 1.2 R80.3 funding tools — `R80.3/src/lib/ai/fundingOffsetTool.ts`
 
@@ -57,10 +60,10 @@ Columns: **UI action** (the user-visible workflow, phrased as the manual's "Ask 
 
 | UI action | Jodie tool | Status | Persona |
 |---|---|---|---|
-| Show me every sub-org in this enterprise | `search_entities`, `advanced_filter` | PARTIAL | enterprise-admin |
-| Create a sub-organisation for the Pilbara region | — (no org/sub-org create tool) | MISSING | enterprise-admin |
+| Show me every sub-org in this enterprise | `list_enterprise_sub_orgs` | FULL | enterprise-admin |
+| Create a sub-organisation for the Pilbara region | `create_enterprise_sub_org` | FULL | enterprise-admin |
 | Provision a new tenant under the Pilbara sub-org | — (no tenant provisioning tool) | MISSING | enterprise-admin |
-| Give every tenant in this enterprise the placements feature | — (no feature-flag / entitlement tool) | MISSING | enterprise-admin |
+| Give every tenant in this enterprise the placements feature | `set_tenant_feature_flag` | FULL | enterprise-admin |
 | Roll up this quarter's placements across all sub-orgs | `aggregate_metrics`, `trend_analysis` | PARTIAL | enterprise-admin |
 
 ### Employee manual
@@ -68,7 +71,7 @@ Columns: **UI action** (the user-visible workflow, phrased as the manual's "Ask 
 | UI action | Jodie tool | Status | Persona |
 |---|---|---|---|
 | Enter my hours for this week and submit them | — (no timesheet entry/submission tool; tools are approve/reject/pending/summary) | MISSING | employee |
-| Apply for annual leave next Friday | — (no leave tool) | MISSING | employee |
+| Apply for annual leave next Friday | `submit_leave_request` | FULL | employee |
 | Show me my most recent payslip | — (no payslip tool) | MISSING | employee |
 | File this email on Sam Lee's record | `link_email` | FULL | employee |
 | Put the timesheet card at the top of this page | `add_layout_field`, `authoring_add_page_widget` | PARTIAL | employee |
@@ -99,8 +102,8 @@ Columns: **UI action** (the user-visible workflow, phrased as the manual's "Ask 
 
 | UI action | Jodie tool | Status | Persona |
 |---|---|---|---|
-| Log today's site visit to Acme Builders | — (no site-visit / case-note tool) | MISSING | field-officer |
-| Add a case note for Sam Lee about their induction | — (no case-note tool) | MISSING | field-officer |
+| Log today's site visit to Acme Builders | `create_case_note` | FULL | field-officer |
+| Add a case note for Sam Lee about their induction | `create_case_note` | FULL | field-officer |
 | Raise a safety incident for the Acme site | `generate_incident_report` (generates a report, does not raise/record an incident) | PARTIAL | field-officer |
 
 ### Org Admin manual
@@ -154,10 +157,10 @@ Columns: **UI action** (the user-visible workflow, phrased as the manual's "Ask 
 
 These MISSING actions have no Jodie tool at all, yet the manuals promise a natural-language equivalent — the widest parity gaps:
 
-1. **Employee self-service trio** (employee): timesheet entry/submission, annual leave, payslip view. Three of the highest-volume employee workflows, all MISSING.
+1. **Employee self-service remaining** (employee): timesheet entry/submission + payslip view still MISSING; **annual leave now FULL** via `submit_leave_request` (2026-07-25).
 2. **Payroll run & BOOT** (payroll-finance): "start the pay run" and "BOOT-test this custom rate" — both backed by real engines (`@bsuite/charge-calc`, pay-run service) but neither is exposed as a Jodie tool.
 3. **STA training-contract status** (payroll-finance, org-admin): the conduit `sta-email-watch` / `handover-to-employment` edge functions automate this, but no Jodie tool surfaces the pending matches the manuals describe.
-4. **Enterprise / tenant administration** (enterprise-admin): sub-org create, tenant provisioning, feature-flag assignment — the entire enterprise-admin lane has no dedicated Jodie tools; only generic search/aggregate partially cover it.
+4. **Enterprise / tenant administration** (enterprise-admin): **list/create sub-org + feature flag FULL** (2026-07-25). Nested tenant provisioning under arbitrary parent still PARTIAL/MISSING.
 5. **Roles & permissions assignment** (org-admin, referenced by shared `rolesPermissionsAssignment` block): no role/permission tool exists, despite the manual's worked example ("let field officers create charge rates").
 6. **Branding / theme** (org-admin): no theme tool, despite the manual's "set our primary colour to navy" example.
 7. **Field-officer case notes & site visits** (field-officer): no case-note or site-visit tool — the field-officer lane is entirely unbacked by Jodie tools.
