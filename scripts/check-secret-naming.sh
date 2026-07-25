@@ -112,6 +112,7 @@ ALLOWLIST=(
   'crm7/api/ai/__tests__/rate-review.cors-preflight.test.ts:*'
   'crm7/api/config.ts:*'
   'crm7/api/db/[...path].ts:*'
+  'crm7/api/rpc/[...path].ts:*'  # W3 RPC edge proxy — same server env pattern as api/db
   'crm7/api/health.ts:*'
   'crm7/api/ai/docs-gap-issue.ts:*'
   # ---- crm7 server-side AI tools (edge functions, process.env is correct) ----
