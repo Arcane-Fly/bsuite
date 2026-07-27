@@ -18,6 +18,17 @@
 
 ## Planned — NOW (week 1: live bugs + hygiene)
 
+### N0. Platform-kit gate mismatch — tester renders page, proxy 403s (BSU) — **live prod break, enterprise client**
+- **Evidence (verified 2026-07-27):** `caris@mbawa.com` (`platform_role='tester'`, `is_super_admin=false`) on `suite.crm7.app/admin/platform-kit/auth` → page renders, every `platform-kit-proxy` call → `403 {"error":"Forbidden"}` (console spam "Failed to load users: Proxy 403").
+- **Root cause:** `PlatformKitAuthRoute.tsx:25` `ALLOWED_ROLES = {platform_admin, developer, tester}` — the 'tester' entry rests on a **factually wrong comment** ("proxy checks is_super_admin which maps to tester" — false; proxy gates `platform_admin|developer|is_super_admin`, and tester is neither).
+- **Same class sweep (verified):** `PlatformKitStorage.tsx:278` page-gates `platform_role === 'platform_admin'` **only** — reverse mismatch (proxy allows developer; developer is blocked at page level). `Admin/index.tsx:40` gates developer/platform_admin.
+- **Fix:**
+  1. Align **all** platform-kit route gates to the proxy gate exactly: `platform_admin | developer | is_super_admin`. Remove 'tester' from `PlatformKitAuthRoute`.
+  2. Fail-soft UI: `managementApi` 403 → single AccessDenied state (no repeated console spam, no retry loop) — "Failed to load users: Proxy 403" becomes a rendered permission notice.
+  3. Regression test per route: role matrix (tester→denied-before-fetch; developer→allowed) asserting **zero** `platform-kit-proxy` calls when denied.
+- **Adjacent (same plan item, verify don't build):** enterprise superadmin's actual need is **tenant-scoped** user admin (FutureBuild users), not platform-wide Management API — verify the tenant-scoped users/admin surface works for caris (platform-kit is correctly developer/platform-only). If tenant-scoped user admin is broken for enterprise superadmin, that's a separate P1 feature gap.
+- **AC:** tester sees clean access-denied (no proxy calls); developer/platform_admin pass end-to-end; no 403 console spam; caris's tenant user-admin path documented.
+
 ### N1. Jodie leave/FO tools live-404 — allowlist 3 tables (crm7) — **bug, live, S**
 - **Evidence:** `submit_leave_request`/`create_case_note`/`check_host_capacity` call `/api/db/leave_requests|case_notes|host_capacity_assessments`; none in `ALLOWED_TABLES` → 404.
 - **Safety verified:** `leave_requests_select` uses `USING (tenant_id IN (SELECT public.auth_tenant_id()))` (SETOF form ✓); case_notes tenant-isolation present; body `tenant_id` is context-derived server-side and RLS-enforced.
@@ -71,7 +82,7 @@
 - Built-in schemes pre-fill/clamp from resolver; custom keys free-typed.
 
 ### X6. Jodie + security hardening (crm7/parent)
-- Tool denylist snapshot test (forbid `*migration*`/raw-SQL tool names — SEC-08) · **stored prompt-injection fencing** for LLM-read user content (case notes etc. — S9) · CSS adversarial allowlist suite (SEC-05) · **CSP report-only headers all 6 apps** (S10, promoted) · linter false-greens #1175 + #1158 · flake #1159 · STA dual-site PROVEN constant (R11) · advisor live-baseline doc (R10/#1542).
+- Tool denylist snapshot test (forbid `*migration*`/raw-SQL tool names — SEC-08) · **stored prompt-injection fencing** for LLM-read user content (case notes etc. — S9) · CSS adversarial allowlist suite (SEC-05) · **CSP report-only headers all 6 apps** (S10, promoted) · linter false-greens #1175 + #1158 · flake #1159 · STA dual-site PROVEN constant (R11) · advisor live-baseline doc (R10/#1542) · **role-gate alignment sweep beyond platform-kit** (route gates vs edge-fn gates across all admin surfaces — N0 class).
 
 ### X7. Hygiene
 - Subordinate `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md` to this master (coverage lane: 16/22 items missing there) · SECDEF handoff #1261 consolidation.
