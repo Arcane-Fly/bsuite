@@ -19,6 +19,7 @@
 - [x] N4 funding_sources RLS repair + TO-authenticated fix (crm7#1214)
 - [x] N-CRIT phase 1: en-AU dates, NO hardcoded rate fallbacks, attribute selectors (R80#356)
 - [x] Advisor allowlist vault RPC (parent)
+- [x] RT remediation round (crm7#1215 case_notes RLS+schema, BSU#592 super_admin bypass + FunctionDetail, R80#357 selector refetch + dead-writer delete)
 
 ## In Progress
 
