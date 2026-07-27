@@ -195,6 +195,16 @@
    "objects": [
     "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)"
    ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Email integration vault token read (crm7 emailService + BSU oauth edge fns). 2026-07-27 authz hardening: ownership check (auth.uid()/tenant) added inside fn; EXECUTE authenticated (browser client) + service_role (edge fns); revoked from PUBLIC/anon; search_path pinned. Not a category waiver.",
+   "added": "2026-07-27",
+   "objects": [
+    "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)"
+   ]
   }
  ]
 }
