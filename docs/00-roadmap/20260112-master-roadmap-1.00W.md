@@ -20,6 +20,19 @@
 - [x] N-CRIT phase 1: en-AU dates, NO hardcoded rate fallbacks, attribute selectors (R80#356)
 - [x] Advisor allowlist vault RPC (parent)
 - [x] RT remediation round (crm7#1215 case_notes RLS+schema, BSU#592 super_admin bypass + FunctionDetail, R80#357 selector refetch + dead-writer delete)
+- [x] RT-2 live E2E — case note insert verified against live schema (placement+subject, cleaned)
+- [x] fairwork-enhanced 503 root cause + fix + redeploy (getApiKey phantom api_keys columns) — BSU#593
+
+## Operator notes batch (2026-07-27 doc) — in lanes
+
+- [ ] Lane E: email open/read + connect-your-email empty state (communications)
+- [ ] Lane E: payroll/award-rates — graceful degradation + percent/unit labels
+- [ ] Lane E: leads/create inline new company
+- [ ] Lane E: communications cards individual + half-cut contract test
+- [ ] Lane F: N-CRIT p2 — hierarchy picker, manual % entry + July-1 toast, MAPD validation badge
+- [ ] NEXT: schema-builder UX (tidy/fit icons useless) — redesign
+- [ ] NEXT: dashboard edit-page in-place element/widget/entity adding (regression — was available)
+- [ ] NEXT: portal send/share links for clients/hosts/workers (currently just redirects)
 
 ## In Progress
 
