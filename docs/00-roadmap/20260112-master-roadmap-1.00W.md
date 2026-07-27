@@ -43,6 +43,13 @@
 - **Developer portal client invoicing → Xero:** surface in BSU developer portal to create tenant invoices and submit via existing xero-invoice-submit edge fn; status tracking via webhook.
 - **Automated email:** notify developer on grace invite + on paid reconciliation.
 
+## PROGRAM — Card-unglue sweep (operator 2026-07-27: "no cards anywhere glued")
+
+- Evidence contract: `crm7/src/__tests__/card-unglue-contract.test.ts` — statically fails any page with multi-card-packed widgets; PENDING_UNGLUE_EXCLUSIONS ledger = the burn-down list (~50 pages).
+- Doctrine: every logical card = individually movable CanvasCard with own cardKey; autoHeight default; slightly-transparent backing so dots show through (all apps).
+- Status: module-visibility DONE (crm7#1219); analytics kpiCards DONE; conduit analytics DONE; BSU Analytics/UnifiedDashboard + ~50 crm7 pages in burn-down lanes.
+- Cross-app: same contract test needed for BSU + conduit + R80 pages.
+
 ## Lane-E follow-ups (from lane final report, 2026-07-27)
 
 - [x] **kpiCards packed-widget fix (analytics/index.tsx)** — 4 individual movable widgets (crm7#1217)
