@@ -1,0 +1,33 @@
+# Schema package pin plan — extreme #26 (2026-07-27)
+
+## Problem
+Published: `@bsuite/schema-builder@1.0.1`, `@bsuite/schema-registry@1.0.0`  
+Consumers still on lagging ranges:
+
+| App | schema-builder | schema-registry |
+|-----|----------------|-----------------|
+| crm7 | ^0.7.3 | ^0.3.6 |
+| conduit | ^0.7.3 | ^1.0.0 |
+| BSU | ^0.7.3 | ^1.0.0 |
+| R80.3 | ^0.7.3 | ^1.0.0 |
+| throughput | — | ^0.3.6 |
+| braden | — | ^1.0.0 |
+
+## Doctrine
+Publish-before-pin. Pin exact published versions (or tight `^1.0.x`). Regenerate lockfiles **outside** monorepo workspace tree. Smoke Feature Builder / schema pages per app before promote.
+
+## Ordered execution
+1. **crm7** (Feature Builder owner) — pin builder `^1.0.1` + registry `^1.0.0`; lockfile outside tree; smoke `/developer` Feature Builder + schema-related pages; vitest schema tests.
+2. **BSU** — same pins; smoke schema builder settings if present.
+3. **conduit / R80.3** — builder pin; registry already 1.0.0 on some.
+4. **throughput** — registry `^1.0.0` if it imports registry types.
+5. Parent docs: DEPENDENCY-BUMP-CHECKLIST checklist tick; update inventory caveat.
+
+## Explicit non-goals this PR
+- No API redesign of schema-builder
+- No force-latest of unrelated @bsuite packages
+
+## Success
+- All apps that import builder/registry resolve ≥ published major.minor
+- CI green per app
+- No workspace `..` importers in lockfiles
