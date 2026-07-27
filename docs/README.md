@@ -111,3 +111,5 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [20260727 multi-app agent blindspot investigation ledger](./20260727-multiapp-agent-blindspot-investigation-ledger-v1.00W.md) — escalation council 45-item ranked backlog
 
 - [20260727 extreme-poor agent items execution](./20260727-extreme-poor-agent-items-execution-v1.00W.md)
+
+- [20260727 schema package pin plan](./20260727-schema-package-pin-plan-v1.00W.md)

@@ -79,4 +79,16 @@ This file tracks **execution evidence** for the most extreme items first (ground
 2. Live DB audit for `:= auth_tenant_id()` / policy equality  
 3. Schema-builder/registry pin plan (crm7 first consumer of Feature Builder)  
 4. Money RPC idempotency audit (#28)  
-5. Cross-app SSO E2E (#19)  
+5. Cross-app SSO E2E (#19)
+
+## #28 Money RPC orphan — FIXED (crm7#1226 merged)
+
+- `approve_funding_claim` / `reject_funding_claim` status gate aligned to `submitted|under_review|pending`
+- `fundingService.reviewClaim` calls RPCs
+- `markAsPaid` no longer double-decrements `remaining_budget`
+
+## #25 burn-5 — PR open
+
+- crm7#1227 `feat/unglue-burn-5` — ledger **81** (from 92 after burn-4)
+- 12 commits: funding-sources, incentive-calendar, gto-compliance suite, hosts detail/agreement
+
