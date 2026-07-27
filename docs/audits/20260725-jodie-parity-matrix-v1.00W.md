@@ -133,23 +133,22 @@ Columns: **UI action** (the user-visible workflow, phrased as the manual's "Ask 
 
 | Status | Count | Share |
 |---|---|---|
-| FULL | 5 | 14% |
-| PARTIAL | 12 | 33% |
-| MISSING | 19 | 53% |
-| **Total UI actions audited** | **36** | 100% |
+| FULL | 10 | 27% |
+| PARTIAL | 13 | 35% |
+| MISSING | 14 | 38% |
+| **Total UI actions audited** | **37** | 100% |
 
 ### By persona
 
 | Persona | FULL | PARTIAL | MISSING | Total |
 |---|---|---|---|---|
 | host-client | 2 | 0 | 0 | 2 |
-| enterprise-admin | 0 | 2 | 3 | 5 |
-| employee | 1 | 1 | 3 | 5 |
-| developer | 0 | 4 | 3 | 7 |
+| enterprise-admin | 2 | 1 | 2 | 5 |
+| employee | 2 | 1 | 2 | 5 |
+| developer | 0 | 5 | 2 | 7 |
 | payroll-finance | 0 | 1 | 4 | 5 |
-| field-officer | 0 | 1 | 2 | 3 |
-| org-admin | 2 | 3 | 5 | 10 |
-| shared (all) | 1 | 0 | 0 | 1 |
+| field-officer | 2 | 1 | 0 | 3 |
+| org-admin | 2 | 4 | 4 | 10 |
 
 ---
 
