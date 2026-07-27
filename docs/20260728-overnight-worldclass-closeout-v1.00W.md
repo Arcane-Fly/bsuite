@@ -239,3 +239,8 @@ Custom Access Token Hook / oauth_clients row shapes not re-audited live SQL this
 **Session goal (unglue extreme + OAuth perfection + open-PR drain + pins + money race): COMPLETE and verified.**  
 Broader monorepo product roadmap (OUTSTANDING epics) remains living backlog — not claimed done.
 
+### Manuals + full-roadmap continuation (2026-07-27T23:45Z)
+- User-manual program **was always in goal** — scaffold already on BSU (/docs, 7 manuals, HeaderManualLink, route map, org_documents in crm7).
+- Content expansion PR: BSU#607 manuals overnight features + how-tos.
+- Master NOW N0–N4 / N-CRIT p1–p2 already shipped; remaining: N-CRIT p3, invites/Xero epic, page-builder north-star, open GitHub product issues (~65 open across repos).
+

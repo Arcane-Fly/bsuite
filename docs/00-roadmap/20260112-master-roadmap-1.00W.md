@@ -23,6 +23,21 @@
 - [x] RT-2 live E2E — case note insert verified against live schema (placement+subject, cleaned)
 - [x] fairwork-enhanced 503 root cause + fix + redeploy (getApiKey phantom api_keys columns) — BSU#593
 
+
+## Completed 2026-07-28 (full-goal continuation — unglue/OAuth/manuals)
+
+- [x] Card-unglue zero Legacy on crm7 main (burns 1–12; Fragment flatten; ledger 39 legit-only)
+- [x] Conduit card-unglue contract ledger 0; BSU residual 9→4 dynamic catalogues with specific WHY
+- [x] OAuth live verify: JWKS ES256×2; discovery auth_code+refresh; PKCE localStorage; Xero PKCE TTL; no cookie SSO
+- [x] Money: funding claim approve/reject atomic RPCs wired in fundingService
+- [x] Schema-builder/registry 1.0.x pins all apps; delete_branch_on_merge false on long-lived branches
+- [x] Manuals program content expansion (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
+- [x] N0/N1/N3/N4/N-CRIT p1–p2 verified already shipped (no redo)
+- [ ] N-CRIT p3 MAPD validation badge (still open)
+- [ ] Team invites + seat caps + Xero invoicing epic (operator EPIC section)
+- [ ] Page-builder north-star residuals (edit-page widget catalogue, schema-builder UX)
+- [ ] Open product issues: crm7#659/#660/#662/#678, BSU#416, R80#320, conduit#223, page-builder #937–939, etc.
+
 ## Operator notes batch (2026-07-27 doc) — SHIPPED (crm7#1216, R80#358)
 
 - [x] email open/read pinned + mark-read test + ConnectEmailCard empty state (Google/Microsoft/SMTP)
