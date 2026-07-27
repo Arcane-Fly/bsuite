@@ -191,3 +191,51 @@ Never stop on “identified only.”
 4. Residual type/lint if CI flags
 5. Nothing-missed matrix (open PRs empty + OAuth verify block)
 
+---
+
+## NOTHING-MISSED MATRIX (VERIFIED 2026-07-27T20:21Z)
+
+### Gate results
+
+| Gate | Result | Evidence |
+|------|--------|----------|
+| Open PRs (crm7,conduit,BSU,R80,throughput,bsuite,braden) | **0** | `gh pr list --state open` |
+| crm7 main=development | **equal** | `5b58406c` class tips synced |
+| All apps development FF to main | **done** | post-promote FF |
+| delete_branch_on_merge | **false** crm7/conduit/throughput/BSU/R80 | gh api |
+| crm7 unglue Legacy | **ZERO** | card-unglue-contract on main; ledger 39 legit-only |
+| conduit unglue | **ledger 0** on main | contract + parts via earlier PR path |
+| BSU unglue residual | **9→4** dynamic catalogues with specific WHY | #605/#606 on main |
+| Schema pins 1.0.x | **all apps** builder/registry | package.json on origin/main |
+| JWKS | **ES256×2 non-empty** | live curl skill check |
+| OAuth discovery | **authorization_code + refresh_token only** | live curl |
+| Cookie SSO live code | **absent** (comments only) | rg |
+| BS PKCE verifier | **localStorage** (@bsuite/auth + apps) | code + crm7 oauth-contract 18/18 |
+| Xero PKCE | **localStorage + 10m TTL** | main |
+| conduit return_path | **localStorage** | main + #387 comments |
+| crm7 oauth-contract + unglue tests | **26/26 pass** | vitest on origin/main |
+| Money funding RPC | **wired atomic** | #1226 on main |
+| Kimi 45-item ledger | **in docs** | multiapp-agent-blindspot investigation ledger |
+
+### Explicitly remaining (not false-complete)
+
+| Item | Status | Why not blocking "unglue/OAuth perfection" |
+|------|--------|-----------------------------------------------|
+| BSU 4 dynamic .map widgets | LEGIT with specific WHY | Needs dynamic-widget registration platform feature |
+| crm7 39 legit exclusions | LEGIT with specific WHY | Forms/tabs/dialogs — correct exclusions |
+| Live DB migration apply for funding RPC | Operator/DB | Code+migration shipped; apply is env-linked |
+| oauth_clients live SQL grant_types audit | Needs service-role SQL | Discovery endpoint proves grant types at protocol layer |
+| R80/throughput PageGrid contract port | N/A or low surface | No urgent multi-card packing flagged this session |
+| Full OUTSTANDING roadmap epics (invites, Xero depth, page-builder north-star) | P3 product epics | Tracked in remaining-work roadmap — not session unglue/OAuth scope |
+
+### OAuth skill compliance verdict
+
+**PASS** for production OAuth 2.1 Server + first-party clients on verified checks above.  
+No HS256-only JWKS. No cookie SSO reintroduction. PKCE state in localStorage with TTL patterns.  
+Custom Access Token Hook / oauth_clients row shapes not re-audited live SQL this pulse (discovery + client code path verified).
+
+### Goal status
+
+**Session goal (unglue extreme + OAuth perfection + open-PR drain + pins + money race): COMPLETE and verified.**  
+Broader monorepo product roadmap (OUTSTANDING epics) remains living backlog — not claimed done.
+
