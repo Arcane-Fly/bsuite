@@ -11,7 +11,7 @@
 
 ### 1.1 crm7 `createToolRegistry` — `crm7/src/lib/ai/tools/index.ts`
 
-The registry composes 11 factories. The static tool-name list (`getAllToolNames`) and the factory source files give the authoritative enumeration below.
+The registry composes 14 factories. The static tool-name list (`getAllToolNames`) and the factory source files give the authoritative enumeration below.
 
 | # | Factory (`create*Tools`) | Source file | Tools exported |
 |---|---|---|---|
@@ -41,7 +41,7 @@ The registry composes 11 factories. The static tool-name list (`getAllToolNames`
 R80.3 exposes a single Jodie tool. It mirrors the crm7 tool pattern (zod `inputSchema` + async `execute`) but is framework-agnostic (no `ai` SDK dependency). It enforces an in-tool AI-licence gate (`context.aiLicensed`) because R80.3 has no upstream chat-endpoint licence gate, unlike crm7.
 
 **R80.3 total:** 1 factory, 1 tool.
-**Suite total:** 12 factories, 51 tools.
+**Suite total:** 15 factories, 58 named tools.
 
 ---
 
@@ -60,10 +60,10 @@ Columns: **UI action** (the user-visible workflow, phrased as the manual's "Ask 
 
 | UI action | Jodie tool | Status | Persona |
 |---|---|---|---|
-| Show me every sub-org in this enterprise | `search_entities` (PARTIAL) — dedicated list tool unregistered pending /api/db tenants allowlist | PARTIAL | enterprise-admin |
-| Create a sub-organisation for the Pilbara region | — (draft tools unregistered; BSU Admin UI) | MISSING | enterprise-admin |
-| Provision a new tenant under the Pilbara sub-org | — (no tenant provisioning tool) | MISSING | enterprise-admin |
-| Give every tenant in this enterprise the placements feature | — (draft tools unregistered; BSU feature UI) | MISSING | enterprise-admin |
+| Show me every sub-org in this enterprise | `list_enterprise_sub_orgs` | FULL | enterprise-admin |
+| Create a sub-organisation for the Pilbara region | `create_enterprise_sub_org` | FULL | enterprise-admin |
+| Provision a new tenant under the Pilbara sub-org | — (nested provisioning not a capability; Jodie create is under current enterprise tenant only) | MISSING | enterprise-admin |
+| Give every tenant in this enterprise the placements feature | — (deferred — `set_tenant_feature_flag` NOT_IMPLEMENTED by design; feature-assignment via chat not wired; use BSU feature UI) | MISSING | enterprise-admin |
 | Roll up this quarter's placements across all sub-orgs | `aggregate_metrics`, `trend_analysis` | PARTIAL | enterprise-admin |
 
 ### Employee manual
@@ -160,7 +160,7 @@ These MISSING actions have no Jodie tool at all, yet the manuals promise a natur
 1. **Employee self-service remaining** (employee): timesheet entry/submission + payslip view still MISSING; **annual leave now FULL** via `submit_leave_request` (2026-07-25).
 2. **Payroll run & BOOT** (payroll-finance): "start the pay run" and "BOOT-test this custom rate" — both backed by real engines (`@bsuite/charge-calc`, pay-run service) but neither is exposed as a Jodie tool.
 3. **STA training-contract status** (payroll-finance, org-admin): the conduit `sta-email-watch` / `handover-to-employment` edge functions automate this, but no Jodie tool surfaces the pending matches the manuals describe.
-4. **Enterprise / tenant administration** (enterprise-admin): draft tool module exists but **unregistered** after impl RT (missing /api backends + wrong permission strings). UI path remains BSU Admin.
+4. **Enterprise / tenant administration** (enterprise-admin): `list_enterprise_sub_orgs` and `create_enterprise_sub_org` are **FULL** (crm7#1211/#1212); `set_tenant_feature_flag` deferred (`NOT_IMPLEMENTED` by design — feature migration via chat banned; BSU feature UI is the path); nested tenant provisioning still MISSING (not a product capability — Jodie create is under current enterprise tenant only).
 5. **Roles & permissions assignment** (org-admin, referenced by shared `rolesPermissionsAssignment` block): no role/permission tool exists, despite the manual's worked example ("let field officers create charge rates").
 6. **Branding / theme** (org-admin): no theme tool, despite the manual's "set our primary colour to navy" example.
 7. **Field-officer case notes & site visits** (field-officer): no case-note or site-visit tool — the field-officer lane is entirely unbacked by Jodie tools.
