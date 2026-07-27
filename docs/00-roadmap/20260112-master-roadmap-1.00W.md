@@ -10,9 +10,20 @@
 - [x] Host capacity gate + Jodie leave/FO tools (crm7#1207)
 - [x] Field-officer portal route — **verified already registered** (`App.tsx:3194`); excavation P0-2 stale
 
+## Completed 2026-07-27 (NOW-lane, shipped + promoted)
+
+- [x] N0 platform-kit gates + fail-soft (BSU#591) — caris 403 class closed
+- [x] N1 leave/FO Jodie 404 (crm7#1214)
+- [x] N2 dirty files (parent)
+- [x] N3 email vault authz-inside-fn + authenticated grant (crm7#1214; allowlist)
+- [x] N4 funding_sources RLS repair + TO-authenticated fix (crm7#1214)
+- [x] N-CRIT phase 1: en-AU dates, NO hardcoded rate fallbacks, attribute selectors (R80#356)
+- [x] Advisor allowlist vault RPC (parent)
+
 ## In Progress
 
-- (none — awaiting plan approval)
+- N-CRIT phase 2 (hierarchy picker, MAPD schedule validation, manual % entry + 1-July toast)
+- N6 Sydney pre-flight (dry-run evidence — operator-gated cutover Wed)
 
 ---
 
