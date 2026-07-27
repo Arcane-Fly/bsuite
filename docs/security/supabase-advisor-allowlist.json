@@ -205,6 +205,18 @@
    "objects": [
     "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)"
    ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "X1 money-integrity batch (2026-07-27). Atomic funding claim lifecycle (budget decrement+restore with role check inside), overpay-safe payment (row-lock + amount_due check + DB-computed return). All search_path pinned public,pg_temp; EXECUTE authenticated-only; PUBLIC+anon revoked. Not a category waiver.",
+   "added": "2026-07-27",
+   "objects": [
+    "approve_funding_claim(p_claim_id uuid)",
+    "reject_funding_claim(p_claim_id uuid, p_reason text)",
+    "record_payment_atomic(p_invoice_id uuid, p_amount numeric, p_method text, p_reference text, p_tenant_id uuid)"
+   ]
   }
  ]
 }
