@@ -37,9 +37,14 @@
 
 ## Lane-E follow-ups (from lane final report, 2026-07-27)
 
-- [ ] **kpiCards packed-widget fix (analytics/index.tsx)** — same class as communications: 4 StatCards packed into ONE grid widget with fixed h:4; split into individual movable items (top priority — exact operator complaint class).
+- [x] **kpiCards packed-widget fix (analytics/index.tsx)** — 4 individual movable widgets (crm7#1217)
+- [x] **Modern Awards detail: base-wage classifications** — Classifications & base wages table (crm7#1217)
+- [x] **React #185 compose crash** — useShallow on selectActiveIntegrations + contract test (crm7#1217)
+- [x] **Schema-builder tidy/fit** — grid fallback for disconnected graphs + fit always re-frames (@bsuite/schema-builder 1.0.1, bsuite#1662)
 - [ ] **Cross-app backing-card sweep** — BSU `Analytics.tsx` + `UnifiedDashboard.tsx`, conduit `analytics/_view.tsx` use raw `PageGridLayout` with stat-tile packing (no DraggableCardPage abstraction); apply the individual-movable pattern or port the abstraction.
-- [ ] **Modern Awards detail: base-wage classifications** — only allowances + penalty rates render today; add base-wage table if operator meant base wages (clarify first).
+- [ ] **Edit-page built-in widget catalogue** — entity adds already land in-place via `crm7-add-entity-widget`; built-in palette widgets (stat/chart/etc.) have no grid renderer yet. Needs a generic widget catalogue in @bsuite/page-builder widget map (feature build).
+- [ ] **Portal share links** — role portals exist (/portal/host-employer, /portal/worker, /portal/field-officer, /portal/workplace); /portal itself redirects. Needs an admin "share portal" surface (copy links + email send) (feature build).
+- [ ] **Google OAuth app verification** — operator action: submit Google app verification to remove the "unverified app" screen on Google email connect.
 
 ## In Progress
 
