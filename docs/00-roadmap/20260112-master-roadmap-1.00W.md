@@ -18,6 +18,18 @@
 
 ## Planned — NOW (week 1: live bugs + hygiene)
 
+### N-CRIT. R8 apprentice rate correctness epic (R80.3) — **live money-wrongness in production quotes**
+- **Evidence (user PACT check 2026-07-27):** under-21 1st-year carpentry apprentice, residential, no underground → Fair Work PACT **$17.22/hr**; R8 shows **$23.47/hr** (~36% high). Charge quotes built on this overcharge hosts.
+- **Root cause (verified):** `awardTemplateService.ts` `DEFAULT_AWARD_TEMPLATES` hardcodes year1=$23.47 etc. — flat blanket rates that ignore each award's **clause-19 apprentice schedule**. MAPD guide §3.1.1: apprentice/junior rates are **calculated base rates** (percentage of another classification), award-specific — available via the FWC/MAPD API classifications record. Actual MA000020 pay guide (1 Jul 2026) shows per-occupation, per-cohort, per-year-12 variants (e.g. 4-yr carpenter 1st year: $16.91 no-year-12 / $18.38 year-12 completed; 3-yr residential $18.70), rates **include industry + tool allowances**.
+- **Also broken (user report):** date renders US format (should be en-AU); no junior/adult (under-21) selector; no year-12-completion selector; no occupation/job-title selector; no employment-arrangement selector (FT/PT/school-based for apprentices; FT/PT/**casual** for workers — casual not available for apprentices).
+- **Fix plan:**
+  1. **Consume MAPD calculated base rates** as source of truth (classifications record, percentage-formula rows) per award × classification × cohort — not blanket fallbacks. Verify `$17.22` fixture against PACT for the user's exact parameters.
+  2. **Attribute selectors:** apprentice type (junior <21 / adult), year-12 completion, occupation (award's classification list), employment arrangement with rule: apprentices→{full-time, part-time, school-based}, workers→{full-time, part-time, casual}; casual excluded for apprentices. Feed into X5b hierarchical award→variant picker.
+  3. **Fallback discipline:** if API can't supply a percentage schedule, extract from the award pay guide (stored structured per award) — and support **manual percentage entry** saved per award, with a **1 July yearly toast** to re-check rates. Hardcoded templates become offline-only with a visible "unverified — check PACT" badge; never silently win over API data.
+  4. **Allowances:** model industry/tool allowances per pay guide (or label rate as base-only clearly).
+  5. **Date locale:** hunt the US-format leak; enforce en-AU via @bsuite/dates everywhere.
+- **AC:** PACT-parity fixtures (under-21 1st-yr carpenter residential = $17.22; year-12-completed variant differs correctly; adult differs); no blanket template rate overrides API rows; all four selectors present and feeding rate resolution; date renders DD/MM/YYYY; July-1 toast schedules yearly.
+
 ### N0. Platform-kit gate mismatch — tester renders page, proxy 403s (BSU) — **live prod break, enterprise client**
 - **Evidence (verified 2026-07-27):** `caris@mbawa.com` (`platform_role='tester'`, `is_super_admin=false`) on `suite.crm7.app/admin/platform-kit/auth` → page renders, every `platform-kit-proxy` call → `403 {"error":"Forbidden"}` (console spam "Failed to load users: Proxy 403").
 - **Root cause:** `PlatformKitAuthRoute.tsx:25` `ALLOWED_ROLES = {platform_admin, developer, tester}` — the 'tester' entry rests on a **factually wrong comment** ("proxy checks is_super_admin which maps to tester" — false; proxy gates `platform_admin|developer|is_super_admin`, and tester is neither).
