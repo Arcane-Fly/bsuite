@@ -23,13 +23,14 @@
 - [x] RT-2 live E2E — case note insert verified against live schema (placement+subject, cleaned)
 - [x] fairwork-enhanced 503 root cause + fix + redeploy (getApiKey phantom api_keys columns) — BSU#593
 
-## Operator notes batch (2026-07-27 doc) — in lanes
+## Operator notes batch (2026-07-27 doc) — SHIPPED (crm7#1216, R80#358)
 
-- [ ] Lane E: email open/read + connect-your-email empty state (communications)
-- [ ] Lane E: payroll/award-rates — graceful degradation + percent/unit labels
-- [ ] Lane E: leads/create inline new company
-- [ ] Lane E: communications cards individual + half-cut contract test
-- [ ] Lane F: N-CRIT p2 — hierarchy picker, manual % entry + July-1 toast, MAPD validation badge
+- [x] email open/read pinned + mark-read test + ConnectEmailCard empty state (Google/Microsoft/SMTP)
+- [x] payroll/award-rates graceful degradation (error card + DB rows when service 503s) + human unit labels
+- [x] leads/create inline company — capability existed (EntitySelector + row + handleQuickAddClient); label clarified to "Create new company"
+- [x] communications cards individual + card-autoheight-contract test; half-cut pages listed for platform sweep (BSU Analytics/UnifiedDashboard, conduit analytics/_view candidates)
+- [x] N-CRIT p2 PART 1+2: hierarchical award→variant picker + manual % entry with July-1 review toast
+- [ ] N-CRIT p3 (phase 3): MAPD validation badge (validateApprenticeSchedule) — lane capped before this part
 - [ ] NEXT: schema-builder UX (tidy/fit icons useless) — redesign
 - [ ] NEXT: dashboard edit-page in-place element/widget/entity adding (regression — was available)
 - [ ] NEXT: portal send/share links for clients/hosts/workers (currently just redirects)
