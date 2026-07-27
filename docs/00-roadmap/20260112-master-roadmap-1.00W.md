@@ -35,6 +35,12 @@
 - [ ] NEXT: dashboard edit-page in-place element/widget/entity adding (regression — was available)
 - [ ] NEXT: portal send/share links for clients/hosts/workers (currently just redirects)
 
+## Lane-E follow-ups (from lane final report, 2026-07-27)
+
+- [ ] **kpiCards packed-widget fix (analytics/index.tsx)** — same class as communications: 4 StatCards packed into ONE grid widget with fixed h:4; split into individual movable items (top priority — exact operator complaint class).
+- [ ] **Cross-app backing-card sweep** — BSU `Analytics.tsx` + `UnifiedDashboard.tsx`, conduit `analytics/_view.tsx` use raw `PageGridLayout` with stat-tile packing (no DraggableCardPage abstraction); apply the individual-movable pattern or port the abstraction.
+- [ ] **Modern Awards detail: base-wage classifications** — only allowances + penalty rates render today; add base-wage table if operator meant base wages (clarify first).
+
 ## In Progress
 
 - N-CRIT phase 2 (hierarchy picker, MAPD schedule validation, manual % entry + 1-July toast)
