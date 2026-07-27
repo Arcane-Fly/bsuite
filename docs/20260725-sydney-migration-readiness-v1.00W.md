@@ -34,3 +34,21 @@
 ## Silo
 
 `bsuite_sydney_readiness_2026-07-25` — READY_FOR_OPERATOR when dry-run complete; currently **RUNBOOK_READY**.
+
+## RT-hardened dry-run gate (2026-07-27)
+
+Ordered dry-run (before any cutover decision):
+1. Dump old project (roles + schema + data; exclude infra-noise tables)
+2. Restore into throwaway Sydney project (`--single-transaction --variable ON_ERROR_STOP=1`)
+3. Export + import Vault root key
+4. **Named-secret verify GATE:** `SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'xero_client_refresh_token'` must return plaintext (not garbage). If fail → STOP.
+5. Storage rclone + verify private signed URL resolves
+6. Redeploy edge functions; re-register cron + OAuth clients
+7. Full verify: row counts + RLS isolation + PKCE login per app
+8. THEN pre-stage env vars (set, not deployed)
+
+### Key hygiene (mandatory)
+- Export/import in tmpfs scratch (`/dev/shm/sydney-keyring`), wiped after
+- `HISTFILE=/dev/null` for the key-handling shell session
+- Dry-run project's imported key destroyed after verification
+- No DSNs/keys in runbook or git — scan before commit (gitleaks clean)
