@@ -171,3 +171,23 @@ Never stop on “identified only.”
 - Schema pins all apps 1.0.x done earlier
 - Open: #1240 burn-9 CI, burn-10, residual burns to legit-only
 
+### Progress pulse (2026-07-27T19:50Z) — unglue legacy CLEARED
+
+**Kimi council:** already integrated in `20260727-multiapp-agent-blindspot-investigation-ledger-v1.00W.md` (items 1–30 Kimi + 31–45 research). Late notify acknowledged; no re-run needed.
+
+**Unglue (Extreme #25):**
+- Ledger path: ~123 → **39 legit-only** (zero `Legacy composite page pending sweep`)
+- burn-6..12 shipped; systemic Fragment flatten in DraggableCardPage (#1235)
+- Open: #1245 burn-12 FINAL (build pending), #1246 promote burn-10/11
+
+**OAuth:** JWKS ES256; BS bridge localStorage; Xero PKCE localStorage+TTL on main; conduit return_path localStorage
+
+**Schema pins:** all apps 1.0.x done
+
+**Still for world-class close-out:**
+1. Merge #1245 when build green → promote burn-12 to main
+2. FF development after promote
+3. Parent crm7 pointer bump
+4. Residual type/lint if CI flags
+5. Nothing-missed matrix (open PRs empty + OAuth verify block)
+
