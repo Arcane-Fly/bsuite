@@ -38,6 +38,7 @@ import type {
   TenantEntity,
 } from '../types.js';
 import { computeDagreLayout } from '../utils/autoLayout.js';
+import { computeGridLayout, isDisconnectedGraph } from '../utils/gridLayout.js';
 import { exportCanvasToPng } from '../utils/exportPng.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
 import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
@@ -460,9 +461,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
     );
 
     // Dagre auto-layout. §3.6 item 3.
+    // Disconnected graphs (no relations — fresh tenant) column-stack under
+    // dagre's network-simplex, which reads as broken ("tidy just puts cards
+    // into a column" — operator 2026-07-27). Fall back to a fixed grid there.
     const handleTidyUp = useCallback(() => {
       if (localNodes.length === 0) return;
-      const laidOut = computeDagreLayout(localNodes, localEdges);
+      const laidOut = isDisconnectedGraph(localNodes, localEdges)
+        ? computeGridLayout(localNodes)
+        : computeDagreLayout(localNodes, localEdges);
       setLocalNodes(laidOut);
       const persist = laidOut.map((node) => {
         const entity = (node.data as EntityNodeData | undefined)?.entity;
@@ -473,13 +479,16 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       });
       Promise.all(persist).finally(() => {
         requestAnimationFrame(() => {
-          flowRef.current?.fitView({ duration: 400, padding: 0.1 });
+          flowRef.current?.fitView({ duration: 400, padding: 0.2, maxZoom: 1.2 });
         });
       });
     }, [localNodes, localEdges, controller]);
 
     const handleFitView = useCallback(() => {
-      flowRef.current?.fitView({ duration: 400, padding: 0.1 });
+      // "Fit does nothing" (operator 2026-07-27): the previous padding made the
+      // re-frame visually indistinguishable from the initial fit. Wider padding
+      // + maxZoom cap guarantees a visible re-frame on every press.
+      flowRef.current?.fitView({ duration: 400, padding: 0.2, maxZoom: 1.2 });
     }, []);
 
     const handleExportPng = useCallback(async () => {
