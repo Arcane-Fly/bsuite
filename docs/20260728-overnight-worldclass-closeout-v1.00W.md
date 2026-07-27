@@ -165,3 +165,9 @@ Never stop on “identified only.”
 - residual lint/type/route sweeps if CI flags
 - nothing-missed final matrix
 
+### Progress pulse (2026-07-27T18:45Z)
+- burn-6..9 path: ledger ~123→**48** (burn-9 PR #1240; burn-10 running)
+- #1235 Fragment flatten MERGED; #1236 Xero PKCE MERGED+on main; #1238 burn-8 MERGED; #1239 promote MERGED
+- Schema pins all apps 1.0.x done earlier
+- Open: #1240 burn-9 CI, burn-10, residual burns to legit-only
+
