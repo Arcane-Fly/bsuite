@@ -131,3 +131,37 @@ Skill: supabase-auth-comprehensive
 ## Sub-goal cadence
 Each ~20-turn sub-goal: pick one wave slice → implement → PR → verify → update this file + silo → next.  
 Never stop on “identified only.”
+
+## Progress log (2026-07-27T17:59Z)
+
+### Wave 0 — mainline
+- [x] burn-6 promoted (#1232)
+- [x] burn-7 merged development (#1235) after Fragment flatten fix
+- [ ] promote #1237 development→main (CI)
+- [x] delete_branch_on_merge=false on app repos
+
+### Wave 1 — OAuth
+- [x] JWKS ES256 non-empty (live)
+- [x] OAuth discovery grants authorization_code+refresh_token
+- [x] BS OAuth bridge detection localStorage (#1233)
+- [x] conduit return_path localStorage (#384)
+- [x] Xero PKCE localStorage+TTL PR #1236 (CI)
+- [x] cookie SSO live clients clean (docs/comments only)
+- [ ] Xero #1236 merge + promote
+
+### Wave 3 — unglue
+- ledger path: ~123 → 92 → 81 → 72 → 63 → **57** (burn-8 in flight)
+- systemic fix: DraggableCardPage flattens Fragments (burn-7 CI root cause)
+
+### Wave 4 — schema pins
+- [x] crm7 / conduit / BSU / R80 / throughput on published 1.0.x (origin tips)
+- [x] all apps promoted main=dev tips earlier this session
+
+### Still open this session
+- crm7#1236 Xero PKCE
+- crm7#1237 promote burn-7
+- burn-8 finish → PR → burns until ledger only legit
+- BSU remaining widgets
+- residual lint/type/route sweeps if CI flags
+- nothing-missed final matrix
+
