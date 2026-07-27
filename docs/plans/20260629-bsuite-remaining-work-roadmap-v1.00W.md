@@ -1,5 +1,7 @@
 # BSuite Remaining-Work Roadmap
 
+> **SUBORDINATED (2026-07-27):** The canonical master is `docs/00-roadmap/20260112-master-roadmap-1.00W.md`. This 0629 doc is retained for historical phase context only; its open items have been re-validated in the 2026-07-27 full close-out sweep. Do not execute from this doc without checking the master first.
+
 > **Naming:** `20260629-bsuite-remaining-work-roadmap-v1.00W.md` · Status **W** (Working) · Authority for "what's left" across all 7 repos as of 2026-06-29.
 > **Source-of-truth pairing:** this doc curates the prioritised plan; the live dashboard (`docs/dashboard/`) + `gh issue list` per repo are the machine-truth. Reconcile both when items move.
 > **Skill to execute each item:** `executing-plans` / `subagent-driven-development`; per-item skills are named inline. Every DB item = floor-gated migration + `get_advisors` triage; every user-facing item = §12.3 deployed signed-in verify.
