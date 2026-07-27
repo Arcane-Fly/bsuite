@@ -81,6 +81,12 @@
 ### X5. Quote path consumes `resolveSchemeAmount` (R80.3)
 - Built-in schemes pre-fill/clamp from resolver; custom keys free-typed.
 
+### X5b. Hierarchical award selector (R80.3 `AwardRateSelector`) — **R8 UX defect**
+- **Evidence (user screenshot 2026-07-27):** dropdown shows 4 same-code rows flat: `Building and Construction Award`, `(Adult)`, `(Civil)`, `(Commercial)` — all `MA000020`, all badge 2027. User can't tell which applies.
+- **Data model (verified):** one code with discriminators on `award_templates`: `is_adult`, `sector: residential|commercial|civil`, `has_completed_year12`. `filterType` is derived from apprentice attributes (`isAdult`/`hasCompletedYear12`/`sector` props) but the standard list leaks variant rows.
+- **Fix:** two-level selection — **Level 1: award** (dedupe by `code`, base name only, e.g. "Building and Construction Award · MA000020") → **Level 2: variant** (only if >1 for the code: Base / Adult / Civil / Commercial / Year 12 Completed, each labelled by its discriminator). Auto-pick the variant matching apprentice attributes when derivable; never mix variants into the top-level list. Year badge stays on the award row.
+- **AC:** one row per award code at top level; variant step only for codes with variants; searching "building" shows the single B&C row; selecting it then shows its 4 variants with rate differences visible; tests cover dedupe + hierarchy + auto-variant.
+
 ### X6. Jodie + security hardening (crm7/parent)
 - Tool denylist snapshot test (forbid `*migration*`/raw-SQL tool names — SEC-08) · **stored prompt-injection fencing** for LLM-read user content (case notes etc. — S9) · CSS adversarial allowlist suite (SEC-05) · **CSP report-only headers all 6 apps** (S10, promoted) · linter false-greens #1175 + #1158 · flake #1159 · STA dual-site PROVEN constant (R11) · advisor live-baseline doc (R10/#1542) · **role-gate alignment sweep beyond platform-kit** (route gates vs edge-fn gates across all admin surfaces — N0 class).
 
