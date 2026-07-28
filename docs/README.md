@@ -115,3 +115,5 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [20260727 schema package pin plan](./20260727-schema-package-pin-plan-v1.00W.md)
 
 - [20260728 overnight world-class close-out](./20260728-overnight-worldclass-closeout-v1.00W.md)
+
+- [20260728 migration idempotency audit](./20260728-migration-idempotency-audit-v1.00W.md) — gap-remediation Task 3 (P0-2): verdicts for the 17 above-floor migrations flagged as unrecorded; all SAFE, no guards needed; documents that the ledger gap has since substantially closed
