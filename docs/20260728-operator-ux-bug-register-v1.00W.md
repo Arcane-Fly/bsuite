@@ -229,12 +229,36 @@ The monorepo-wide sweep for asserted 39-week figures found the label was the *sm
   count never belonged there in any form — not even a correct one. (Comma, not nested parens: the
   line template already wraps the label, and nothing parses the description field — verified.)
 
-- **`crm7#1274` — CONFIRMED LIVE, in progress.** `usePlacementChargeCalc.ts:113-118` still hardcodes
-  `Standard: 39` **and `Custom: 39`**, feeding `cfg.billableWeeks` on the placement charge calc.
-  `Custom: 39` is the worse of the two — Custom means operator-defined, and the canonical map has
-  `Custom: null` precisely because no constant exists. Note `:48`'s docstring had *already* been
-  corrected to say weeks are derived, so the comment now describes behaviour the code does not
-  implement — the inverse of the R80.3 defect, in the same file class.
+- **`crm7#1274` — FIXED and merged (`01dd00fb`, signed, 214/214).** `usePlacementChargeCalc.ts`
+  hardcoded `Standard: 39` **and `Custom: 39`** into `BILLING_MODEL_TO_WEEKS`, feeding
+  `cfg.billableWeeks`. `Custom: 39` was the worse of the two — Custom means operator-defined, and the
+  canonical map has `Custom: null` precisely because no constant applies. `:48`'s docstring had
+  *already* been corrected to say weeks are derived, so the comment described behaviour the code did
+  not implement — the inverse of the R80.3 defect, same file class.
+
+  Standard now derives via `calculateBillableWeeks()`; Custom honours a new `customWeeks` and
+  surfaces a **visible warning** on fallback, so the substitution is never silent. Mutation-tested
+  (revert → 4/13 RED incl. `expected 39 to be 17`; restore → 13/13 GREEN).
+
+  **Limitation named, not papered over:** no caller varies the leave inputs today, so Standard still
+  resolves to 39 — now from the config's own values, tracking them if they change, rather than a
+  divergent literal. Real per-apprentice derivation needs `placements/create.tsx` to thread
+  state-specific public holidays and award/year-specific training weeks into override fields,
+  mirroring what `chargeToBilling.ts` already does for batch invoicing. Follow-on work.
+
+### Where this family now stands
+
+All four merged, pushed, GitHub-signature-verified. **One item is NOT delivered:** conduit migration
+`20260728200500` (the DB column comment) requires conduit `development` → `main` plus a parent
+pointer bump before the applier picks it up. Comment-only, so low risk — but merged ≠ shipped.
+
+**Open, and an operator call, not an engineering one:** hosts billed under the Standard model since
+the crm7 batch pipeline shipped were over-charged. Quantifying exposure and deciding remediation
+needs Braden.
+
+**`crm7#1276`** tracks the remaining `Custom` gaps (no UI field for the week count; batch pipeline
+still cannot carry `Custom` at all) — a product question about whether GTO operators need a
+per-placement custom billing basis.
 
 This is the same failure class as `crm7#1265` (VIC payroll tax rendered for every tenant): a
 representative value presented as the record's own.
