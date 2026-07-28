@@ -1,6 +1,9 @@
 # Master roadmap — BSuite (planning layer)
 
-> Companion to `docs/20260227-bsuite-master-roadmap-v5.00W.md`  
+> **Canonical.** This is the single suite-wide master roadmap; no companion file exists above it.
+> *(corrected 2026-07-28 — the previous companion, `docs/20260227-bsuite-master-roadmap-v5.00W.md`,
+> was archived 2026-07-08 and is not to be restored; all 6 submodule `UNIFIED-ROADMAP.md` mirrors
+> and `docs/OUTSTANDING.md` now point here directly.)*  
 > Last updated: 2026-07-26 · **Sydney cutover (Wed 2026-07-29) is operator-gated and EXCLUDED from this plan**  
 > Method: planning-and-roadmapping + multi-agent-red-team-planning (**2 rounds complete**)
 
