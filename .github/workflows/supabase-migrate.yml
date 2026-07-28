@@ -131,7 +131,51 @@ jobs:
               CHANGED+=("\"root\"")
             fi
             for dir in crm7 R80.3 braden business-suite-unified conduit throughput packages/schema-builder; do
+              MATCHED=0
+
+              # Path 1 — in-tree diff. Only ever matches for packages/schema-builder
+              # (a real directory). For the six SUBMODULES this can never match: the
+              # parent tree holds a gitlink, not files, so
+              # `git diff -- conduit/supabase/migrations/` is always empty.
               if git diff --name-only HEAD~1 HEAD -- "$dir/supabase/migrations/" | grep -q .; then
+                MATCHED=1
+              else
+                # Path 2 — gitlink diff. THIS is how submodule migrations are
+                # actually detected. A submodule bump changes only the gitlink SHA,
+                # so compare the submodule's OWN history between the old and new
+                # SHA and look for migration files there.
+                #
+                # Why this exists: the trigger `paths:` above was widened to include
+                # the bare gitlink paths so the workflow FIRES on a pointer bump, but
+                # the detector still used Path 1 only. Result: the run fired, matched
+                # nothing, set matrix=[], skipped apply-migrations, and reported
+                # SUCCESS having applied zero migrations. Every submodule migration
+                # silently never applied while CI stayed green. Proven 2026-07-28 on
+                # run 30372383510 (conduit 20260728200500 absent from
+                # schema_migrations after a green run).
+                OLD_SHA=$(git rev-parse "HEAD~1:$dir" 2>/dev/null || true)
+                NEW_SHA=$(git rev-parse "HEAD:$dir" 2>/dev/null || true)
+                if [ -n "$OLD_SHA" ] && [ -n "$NEW_SHA" ] && [ "$OLD_SHA" != "$NEW_SHA" ]; then
+                  # Ensure both SHAs are present locally before diffing.
+                  git -C "$dir" fetch -q origin "$OLD_SHA" 2>/dev/null || true
+                  git -C "$dir" fetch -q origin "$NEW_SHA" 2>/dev/null || true
+                  if git -C "$dir" cat-file -e "$OLD_SHA^{commit}" 2>/dev/null \
+                     && git -C "$dir" cat-file -e "$NEW_SHA^{commit}" 2>/dev/null; then
+                    if git -C "$dir" diff --name-only "$OLD_SHA" "$NEW_SHA" -- "supabase/migrations/" | grep -q .; then
+                      MATCHED=1
+                    fi
+                  else
+                    # FAIL OPEN. If we cannot compare, assume migrations changed and
+                    # let the applier decide — it is version-keyed and skips anything
+                    # already in schema_migrations, so an extra run is harmless.
+                    # Under-triggering is the silent failure this block exists to kill.
+                    echo "::warning::Cannot diff $dir ($OLD_SHA..$NEW_SHA) — assuming migrations changed (fail-open)"
+                    MATCHED=1
+                  fi
+                fi
+              fi
+
+              if [ "$MATCHED" = "1" ]; then
                 if [ "$dir" = "packages/schema-builder" ]; then
                   CHANGED+=("\"schema-builder\"")
                 else
