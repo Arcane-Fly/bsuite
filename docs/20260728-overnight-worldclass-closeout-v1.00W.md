@@ -244,3 +244,5 @@ Broader monorepo product roadmap (OUTSTANDING epics) remains living backlog — 
 - Content expansion PR: BSU#607 manuals overnight features + how-tos.
 - Master NOW N0–N4 / N-CRIT p1–p2 already shipped; remaining: N-CRIT p3, invites/Xero epic, page-builder north-star, open GitHub product issues (~65 open across repos).
 
+### BSU#416 developer-nav (promoted)
+- Production Nav rebuild on main via #609/#610 — uplift primitives, no mock-only paths.

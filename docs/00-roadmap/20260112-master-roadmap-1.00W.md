@@ -31,7 +31,8 @@
 - [x] OAuth live verify: JWKS ES256×2; discovery auth_code+refresh; PKCE localStorage; Xero PKCE TTL; no cookie SSO
 - [x] Money: funding claim approve/reject atomic RPCs wired in fundingService
 - [x] Schema-builder/registry 1.0.x pins all apps; delete_branch_on_merge false on long-lived branches
-- [x] Manuals program content expansion (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
+- [x] Manuals program content expansion
+- [x] BSU#416 developer-nav uplift rebuild (SortableList/RoutePicker/EmptyState/TechnicalDetails) — #609/#610 on main (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
 - [x] N0/N1/N3/N4/N-CRIT p1–p2 verified already shipped (no redo)
 - [ ] N-CRIT p3 MAPD validation badge (still open)
 - [ ] Team invites + seat caps + Xero invoicing epic (operator EPIC section)
