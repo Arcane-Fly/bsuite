@@ -35,7 +35,7 @@
 - [x] developer-nav uplift rebuild (SortableList/RoutePicker/EmptyState/TechnicalDetails) — #609/#610 on main (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
 - [x] N0/N1/N3/N4/N-CRIT p1–p2 verified already shipped (no redo)
 - [x] N-CRIT p3 MAPD validation badge (R80#363/#364 on main) — validateApprenticeSchedule + AwardRateSelector badge
-- [x] Team invites + seat caps (BSU#611/#612) — evaluateSeatCap + TeamMembers gate; developer uncapped; enterprise 30d grace; billing CTA
+- [ ] Team invites + seat caps (BSU#611/#612) — **partial, not complete**: `evaluateSeatCap` + the TeamMembers UI gate shipped (developer uncapped; enterprise 30d grace; billing CTA), and the `invite_team_member_guarded` RPC exists and enforces the cap when called. But verified live (2026-07-28) that `team_members` and `team_invitations` both carry INSERT policies (`team_members_admin_insert`, `team_invitations_admin_insert`) with `WITH CHECK (auth.role() = 'authenticated' AND is_team_admin(team_id, auth.uid()))` — the same admin predicate as the RPC, with **no seat-cap check**. Any team admin can `POST /rest/v1/team_members` (or `/team_invitations`) directly via PostgREST and bypass the cap entirely; the RPC is not the only write path. Tracked as **business-suite-unified#620 (P0, open)**. Do not re-tick `[x]` until a server-side seat-cap check is enforced at the RLS/trigger layer, not just inside the RPC.
 - [ ] Xero invoicing for grace seats + developer-portal client invoices (operator EPIC remainder; Xero cluster)
 - [ ] Page-builder north-star residuals (edit-page widget catalogue, schema-builder UX)
 - [ ] Open product issues: crm7#659/#660/#662/#678, R80#320, conduit#223, page-builder #937–939, etc.
