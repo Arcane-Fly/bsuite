@@ -23,6 +23,23 @@
 - [x] RT-2 live E2E — case note insert verified against live schema (placement+subject, cleaned)
 - [x] fairwork-enhanced 503 root cause + fix + redeploy (getApiKey phantom api_keys columns) — BSU#593
 
+
+## Completed 2026-07-28 (full-goal continuation — unglue/OAuth/manuals)
+
+- [x] Card-unglue zero Legacy on crm7 main (burns 1–12; Fragment flatten; ledger 39 legit-only)
+- [x] Conduit card-unglue contract ledger 0; BSU residual 9→4 dynamic catalogues with specific WHY
+- [x] OAuth live verify: JWKS ES256×2; discovery auth_code+refresh; PKCE localStorage; Xero PKCE TTL; no cookie SSO
+- [x] Money: funding claim approve/reject atomic RPCs wired in fundingService
+- [x] Schema-builder/registry 1.0.x pins all apps; delete_branch_on_merge false on long-lived branches
+- [x] Manuals program content expansion
+- [x] developer-nav uplift rebuild (SortableList/RoutePicker/EmptyState/TechnicalDetails) — #609/#610 on main (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
+- [x] N0/N1/N3/N4/N-CRIT p1–p2 verified already shipped (no redo)
+- [x] N-CRIT p3 MAPD validation badge (R80#363/#364 on main) — validateApprenticeSchedule + AwardRateSelector badge
+- [x] Team invites + seat caps (BSU#611/#612) — evaluateSeatCap + TeamMembers gate; developer uncapped; enterprise 30d grace; billing CTA
+- [ ] Xero invoicing for grace seats + developer-portal client invoices (operator EPIC remainder; Xero cluster)
+- [ ] Page-builder north-star residuals (edit-page widget catalogue, schema-builder UX)
+- [ ] Open product issues: crm7#659/#660/#662/#678, R80#320, conduit#223, page-builder #937–939, etc.
+
 ## Operator notes batch (2026-07-27 doc) — SHIPPED (crm7#1216, R80#358)
 
 - [x] email open/read pinned + mark-read test + ConnectEmailCard empty state (Google/Microsoft/SMTP)
@@ -30,7 +47,7 @@
 - [x] leads/create inline company — capability existed (EntitySelector + row + handleQuickAddClient); label clarified to "Create new company"
 - [x] communications cards individual + card-autoheight-contract test; half-cut pages listed for platform sweep (BSU Analytics/UnifiedDashboard, conduit analytics/_view candidates)
 - [x] N-CRIT p2 PART 1+2: hierarchical award→variant picker + manual % entry with July-1 review toast
-- [ ] N-CRIT p3 (phase 3): MAPD validation badge (validateApprenticeSchedule) — lane capped before this part
+- [x] N-CRIT p3 (phase 3): MAPD validation badge (validateApprenticeSchedule) — R80#363/#364
 - [ ] NEXT: schema-builder UX (tidy/fit icons useless) — redesign
 - [ ] NEXT: dashboard edit-page in-place element/widget/entity adding (regression — was available)
 - [ ] NEXT: portal send/share links for clients/hosts/workers (currently just redirects)
@@ -39,7 +56,7 @@
 
 - **Team invites + seat caps (BSU Admin/TeamMembers):** invite flow with seat enforcement — `subscriptions.seat_count` vs active members. Developer licence = uncapped. Cap reached → block + redirect to subscription page with increase-seats CTA.
 - **Enterprise/annual-plan grace (e.g. FutureBuild/MBAWA):** invites beyond cap succeed with a 1-month grace window; developer notified (email); invoice for additional licences via Xero; mark paid reconciles via xero-webhook.
-- **Enterprise licence tracking table:** additional-seat events, grace expiry, notified_at, invoiced_at, paid_at, xero_invoice_id.
+- **Enterprise licence tracking table:** SHIPPED (`enterprise_licence_events`, BSU#613/#614) — grace_invite recorded from TeamMembers; Xero paid stamps still open.
 - **Developer portal client invoicing → Xero:** surface in BSU developer portal to create tenant invoices and submit via existing xero-invoice-submit edge fn; status tracking via webhook.
 - **Automated email:** notify developer on grace invite + on paid reconciliation.
 
@@ -63,7 +80,7 @@
 
 ## In Progress
 
-- N-CRIT phase 2 (hierarchy picker, MAPD schedule validation, manual % entry + 1-July toast)
+- N-CRIT phases 1–3 complete on main (hierarchy, manual %, MAPD badge)
 - N6 Sydney pre-flight (dry-run evidence — operator-gated cutover Wed)
 
 ---

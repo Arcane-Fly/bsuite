@@ -33,6 +33,15 @@ on:
       - 'business-suite-unified/supabase/functions/**'
       - 'conduit/supabase/functions/**'
       - 'throughput/supabase/functions/**'
+      # Same T1-01 class as the migrate workflow: pointer-bump commits only
+      # change the gitlink path, so function changes that rode a submodule
+      # merge never triggered a deploy (handover-to-employment class).
+      - 'crm7'
+      - 'R80.3'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
   workflow_dispatch:
     inputs:
       submodule:

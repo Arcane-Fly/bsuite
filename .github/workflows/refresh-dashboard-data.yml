@@ -3,11 +3,10 @@ on:
   schedule:
     - cron: '7 * * * *'  # hourly at :07 (offset to avoid runner congestion)
   workflow_dispatch:
-  # push trigger removed: branch protection blocks the bot's git-push back to
-  # main/development. Hourly schedule provides sufficient freshness.
+  # push trigger removed: bot must not push directly to main (CLAUDE.md 10.2).
 permissions:
   contents: write
-  pull-requests: read
+  pull-requests: write
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -41,18 +40,52 @@ jobs:
           if [ -x docs/dashboard/inline-data.sh ]; then
             bash docs/dashboard/inline-data.sh
           fi
-      - name: Commit refreshed data if changed
-        # continue-on-error: branch protection blocks bot direct pushes to main/development.
-        # Data is still generated correctly; push succeeds when invoked with a PAT that has
-        # bypass permission (workflow_dispatch via BSUITE_BOT_PAT secret).
-        continue-on-error: true
+      - name: Commit and route via PR
+        # Gap-assessment CF-9/CF-10 + CLAUDE.md 10.2:
+        #  1. Never direct-push to main (bot commits were unsigned AND bypassed
+        #     the PR rule — and were the sole cause of the main/development
+        #     divergence).
+        #  2. Drop SHA-only churn commits (the old no-op loop changed only
+        #     main_sha fields, carrying zero information).
+        # Instead: push to a long-lived bot branch and open/auto-merge a PR.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          if [ -n "$(git status --porcelain)" ]; then
-            git add docs/dashboard/data/ docs/dashboard/index.html
-            git commit -m "chore(dashboard): hourly data refresh [skip ci]"
-            git push || echo "::notice::Dashboard data refreshed locally but push to protected branch was blocked. Operator: add BSUITE_BOT_PAT secret with bypass permission, or merge manually."
-          else
+
+          if [ -z "$(git status --porcelain)" ]; then
             echo "No changes — dashboard data is current."
+            exit 0
           fi
+
+          # Drop commits whose only change is `main_sha` fields in the JSON —
+          # that is the no-op loop (zero information content).
+          git add docs/dashboard/data/ docs/dashboard/index.html
+          if git diff --cached --unified=0 \
+              | grep -E '^[+-]' \
+              | grep -vE '^(---|\+\+\+|[+-]\s*"main_sha")' \
+              | grep -qvE '^$'; then
+            REAL_CHANGE=1
+          else
+            echo "Only main_sha fields changed — skipping (no-op loop guard)."
+            git reset
+            exit 0
+          fi
+
+          BRANCH="bot/dashboard-data-refresh"
+          git checkout -B "$BRANCH"
+          git commit -m "chore(dashboard): data refresh [skip ci]"
+          git push -f origin "$BRANCH"
+
+          # Reuse an existing open PR for this branch if present; else create.
+          PR=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state open --json number -q '.[0].number' || true)
+          if [ -z "$PR" ] || [ "$PR" = "null" ]; then
+            PR=$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
+              --title "chore(dashboard): data refresh" \
+              --body "Automated hourly dashboard data refresh. Open-issue counts + last_refreshed recomputed from live state (refresh-data.py update_summary_truth)." \
+              --json number -q .number)
+          fi
+          gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --merge --auto \
+            || echo "::notice::Auto-merge armed; PR merges when checks pass."

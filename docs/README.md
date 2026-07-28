@@ -113,3 +113,5 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [20260727 extreme-poor agent items execution](./20260727-extreme-poor-agent-items-execution-v1.00W.md)
 
 - [20260727 schema package pin plan](./20260727-schema-package-pin-plan-v1.00W.md)
+
+- [20260728 overnight world-class close-out](./20260728-overnight-worldclass-closeout-v1.00W.md)

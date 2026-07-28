@@ -58,7 +58,7 @@
     "doc_drift_prs_merged": 1,
     "apprentice_placements_done": 5,
     "apprentice_placements_ready_for_review": 1,
-    "open_issues_total": 158,
+    "open_issues_total": 85,
     "open_prs_total": 1,
     "open_prs_note": "Open PR count verified across bsuite, business-suite-unified, crm7, conduit, braden, R80.3, and throughput on 2026-06-05 after closing bsuite#478; no open PRs were present.",
     "issues_by_repo": {
@@ -81,7 +81,8 @@
     },
     "open_prs": 1,
     "last_refreshed_by": "copilot-cli report-schema plan update",
-    "last_refreshed_at": "2026-06-09T02:00:21Z"
+    "last_refreshed_at": "2026-06-09T02:00:21Z",
+    "last_refreshed": "2026-07-28T05:20:41Z"
   },
   "repos": [
     {
@@ -113,7 +114,7 @@
       "type": "submodule",
       "active_plans": 4,
       "archived": 0,
-      "main_sha": "8fa950b",
+      "main_sha": "d50a03e",
       "vercel": "success"
     },
     {
@@ -121,7 +122,7 @@
       "type": "submodule",
       "active_plans": 1,
       "archived": 0,
-      "main_sha": "56c4e28",
+      "main_sha": "2b885f1",
       "vercel": "success"
     },
     {

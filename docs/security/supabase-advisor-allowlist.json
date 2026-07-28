@@ -1,222 +1,226 @@
 {
- "schema_version": "1.0",
- "_doc": "Accepted-by-design / tracked Supabase advisor findings. Consumed by scripts/check-supabase-advisors.mjs (workflow: supabase-advisor-sweep.yml). Matching: lint name + object identity (functions: name(arguments); tables: table name). INFO-level findings never fail regardless of this file. mode=accepted -> finding is expected, never fails, never files; mode=tracked -> finding is known and owned by tracked_in, never fails, not re-filed; removing a rule makes its findings live again.",
- "rules": [
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "objects": [
-    "ancestors_of(leaf_id uuid)",
-    "auth_parent_tenant_id()",
-    "auth_tenant_id()",
-    "auth_tenant_id_with_role(allowed_roles text[])",
-    "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
-    "check_user_portal_role(p_user_id uuid, p_tenant_id uuid, p_required_roles text[])",
-    "check_user_tenant_access(p_user_id uuid, p_tenant_id uuid)",
-    "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb)",
-    "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb, p_owner_email text)",
-    "create_person_with_contact(payload jsonb, p_tenant_id uuid)",
-    "descendants_of(root_id uuid)",
-    "find_orphan_owned_tenants_for_caller()",
-    "get_apprentice_person_id_for_current_user()",
-    "get_descendant_tenant_ids(p_tenant_id uuid)",
-    "get_sharing_level(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
-    "get_user_apprentice_id()",
-    "get_user_gto_role()",
-    "get_user_host_employer_id()",
-    "get_user_tenant_context(p_user_id uuid)",
-    "get_visible_fields(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
-    "get_visible_tenant_ids(p_user_id uuid)",
-    "gto_assessment_history(p_tenant_id uuid, p_clause_id uuid, p_limit integer, p_offset integer)",
-    "gto_assessment_summary(p_tenant_id uuid, p_year smallint)",
-    "gto_self_assessment_log_history()",
-    "has_parent_admin_access(target_tenant_id uuid)",
-    "is_demo_write_blocked()",
-    "is_dev_mode()",
-    "is_enterprise_admin()",
-    "is_gto_admin()",
-    "is_gto_staff()",
-    "is_gto_staff(p_tenant_id uuid)",
-    "is_platform_admin(uid uuid)",
-    "is_team_admin(p_team_id uuid, p_user_id uuid)",
-    "platform_is_developer_or_admin()",
-    "r7_candidate_id_for_auth_user()",
-    "show_demo_data()",
-    "tenant_branding_is_force_overridden(p_tenant_id uuid)",
-    "training_plan_belongs_to_current_apprentice(p_training_plan_id uuid)",
-    "update_person_with_contact(p_person_id uuid, payload jsonb, p_tenant_id uuid)",
-    "user_has_org_access(p_user_id uuid, p_tenant_id uuid)",
-    "delete_organization(p_tenant_id uuid, p_confirm_name text)",
-    "get_org_deletion_preview(p_tenant_id uuid)",
-    "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
-    "fn_publish_page(p_draft_id uuid)",
-    "fn_rollback_page(p_page_id uuid)"
-   ],
-   "mode": "accepted",
-   "reason": "RLS helper + intentional client-RPC class. These MUST stay executable by authenticated: RLS policies evaluate the helpers in the caller's context, and a prior revoke pass broke production RLS (see crm7 20260521024707/20260527022039 hotfix_restore_rls_helper_grants history). Operator directive 2026-06-11: do NOT blanket-fail this class until replaced by a proven alternative. A SECURITY DEFINER function NOT on this list IS a failure - the list is exhaustive, not a category waiver.",
-   "tracked_in": null,
-   "added": "2026-06-11",
-   "review": "Re-justify before adding any new function; shrink the list as helpers migrate to SECURITY INVOKER or out of the exposed schema."
-  },
-  {
-   "lint": "auth_db_connections_absolute",
-   "object_type": "any",
-   "objects": [
-    "*"
-   ],
-   "mode": "accepted",
-   "reason": "INFO-level operator-side Auth pool sizing; relevant only at instance scale-up.",
-   "added": "2026-06-11"
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "conduit#229 talent-community consent RPCs. r7_issue_talent_pool_consent_token mints a single-use token (re-checks caller tenant membership when auth.uid() is non-null); r7_redeem_talent_pool_consent validates a SHA-256-hashed single-use 30-day token and sets consent. SECURITY DEFINER is required to write across tenant RLS with token-gated authz inside the function. Intentional, live-verified on prod 2026-06-24.",
-   "added": "2026-06-24",
-   "objects": [
-    "r7_issue_talent_pool_consent_token(p_candidate_id uuid)",
-    "r7_redeem_talent_pool_consent(p_token text)"
-   ]
-  },
-  {
-   "lint": "anon_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "conduit#229 public talent-community opt-in. r7_redeem_talent_pool_consent is the ONLY anon-reachable write in conduit by design: it is token-gated (32-byte raw token, SHA-256 hash compare), single-use, 30-day expiry, non-enumerating, returns no PII. Equivalent to a magic-link. Live-verified on prod 2026-06-24 (consent flip + token consumed).",
-   "added": "2026-06-24",
-   "objects": [
-    "r7_redeem_talent_pool_consent(p_token text)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "2026-07-02 Qodo-fix RPCs. search_profiles_by_name: throughput team-member selector \u2014 profiles RLS is self-only, so a narrow SECDEF search returning ONLY (id, full_name, company), auth-required, pinned search_path (throughput PR#232 finding 1). r7_submit_public_application: conduit public apply handler \u2014 replaced four unsafe anon INSERT policies with one fail-closed SECDEF entrypoint (rate-limited 3/hr rolling window per IP/job, consent-gated sensitive demographics, tenant derived from the job row); authenticated grant is transitive via anon->authenticated inheritance of the public apply path (conduit PR#348 findings 2-4).",
-   "added": "2026-07-02",
-   "objects": [
-    "search_profiles_by_name(p_query text)",
-    "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
-   ]
-  },
-  {
-   "lint": "anon_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "conduit#348 public careers apply form \u2014 anon-reachable BY DESIGN (job applicants have no account). Fail-closed SECDEF: verifies job is open+published, rolling-window rate limit (3/hr per IP-hash/job), dedupes candidates, consent-gates sensitive demographics at the DB layer, derives tenant from the job row (no caller-supplied tenant). Strictly safer than the four direct anon INSERT policies it replaced (dropped same migration). Applied+catalog-verified 2026-07-02.",
-   "added": "2026-07-02",
-   "objects": [
-    "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
-   ]
-  },
-  {
-   "lint": "anon_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "Charge-rate-quote signing workflow \u2014 anon-reachable BY DESIGN for external signers (host employers, site contacts) who may not have authenticated sessions. Token-gated: validates p_token is a valid signing token, enforces signing context, logs audit trail. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
-   "added": "2026-07-06",
-   "objects": [
-    "get_charge_rate_quote_signing_context(p_token text)",
-    "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "Charge-rate-quote signing workflow \u2014 authenticated users (applicants, coordinators) redeem signing tokens and apply quotes to placements. Token-gated: validates p_token, enforces signing context, cross-tenant operations required for GTO workflow. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
-   "added": "2026-07-06",
-   "objects": [
-    "get_charge_rate_quote_signing_context(p_token text)",
-    "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
-    "apply_charge_rate_quote_to_placement(p_quote_id uuid, p_placement_id uuid)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "Session validation helper \u2014 checks if a session UUID is still valid. SECURITY DEFINER required to read auth.sessions across tenant boundaries for RLS policy evaluation. Intentional: session validation is a core auth primitive. Applied 2026-07-06.",
-   "added": "2026-07-06",
-   "objects": [
-    "is_session_valid(session_uuid uuid)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "crm7#1123 tenant-switch authority. set_current_tenant(p_tenant_id) is membership-gated \u2014 it raises 'Unauthorized: not an active member of the target tenant' unless the caller has an active public.user_tenants row for p_tenant_id, then persists profiles.current_tenant_id. log_tenant_switch(...) is its audit-write companion (the tenant_switch_audit direct-INSERT forgery fix routes all audit writes through this SECDEF fn rather than allowing direct client INSERT). Both MUST be EXECUTE-grantable to authenticated (they are the client RPCs for switching tenant context); both are SECURITY DEFINER (write profiles / read user_tenants / write audit under RLS) with search_path pinned to 'public, pg_temp'. Live-verified body 2026-07-20 via pg_get_functiondef. Accepted-by-design; not a category waiver.",
-   "added": "2026-07-20",
-   "objects": [
-    "set_current_tenant(p_tenant_id uuid)",
-    "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
-   ]
-  },
-  {
-   "lint": "multiple_permissive_policies",
-   "object_type": "table",
-   "mode": "tracked",
-   "tracked_in": "bsuite#1542",
-   "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) \u2014 never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542.",
-   "added": "2026-07-20",
-   "objects": [
-    "timesheets"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "Developer-portal Feature Builder apply path (north-star chain, 2026-07-22). Executes author-supplied migration SQL, so it is arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations: (1) hard internal gate \u2014 raises 42501 unless caller's profiles.platform_role IN ('developer','platform_admin'); (2) full audit trail to feature_migration_log (actor, SQL, status, error); (3) search_path pinned to public,pg_temp; (4) EXECUTE revoked from public/anon \u2014 authenticated-only, same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog).",
-   "added": "2026-07-22",
-   "expires": null,
-   "objects": [
-    "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "conduit STA email confirm atomic RPC (excellence P1 / go-loop 2026-07-25). confirm_sta_email replaces 3 non-transactional client writes (offer lodgement flip + training_contract_status_confirmations audit insert + sta_inbound_emails status) with a single SECURITY DEFINER transaction. Authz is internal: auth.uid() required; caller must be owner/admin on the email's tenant via user_tenants; offer update scoped to that tenant_id. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC/anon, granted authenticated only (server action supabase.rpc). Same intentional client-RPC class as set_current_tenant / redeem_charge_rate_quote_signature. Not a category waiver.",
-   "added": "2026-07-25",
-   "objects": [
-    "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "W3 excellence atomic sub-org create (2026-07-25). create_sub_organization requires auth.uid(); caller must be owner/admin of p_parent_id via user_tenants; inserts child with parent_tenant_id + owner membership in one transaction. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC. Jodie + BSU Admin call via authenticated JWT only. Not a category waiver.",
-   "added": "2026-07-25",
-   "objects": [
-    "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "Email integration vault token read (crm7 emailService + BSU oauth edge fns). 2026-07-27 authz hardening: ownership check (auth.uid()/tenant) added inside fn; EXECUTE authenticated (browser client) + service_role (edge fns); revoked from PUBLIC/anon; search_path pinned. Not a category waiver.",
-   "added": "2026-07-27",
-   "objects": [
-    "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)"
-   ]
-  },
-  {
-   "lint": "authenticated_security_definer_function_executable",
-   "object_type": "function",
-   "mode": "accepted",
-   "reason": "X1 money-integrity batch (2026-07-27). Atomic funding claim lifecycle (budget decrement+restore with role check inside), overpay-safe payment (row-lock + amount_due check + DB-computed return). All search_path pinned public,pg_temp; EXECUTE authenticated-only; PUBLIC+anon revoked. Not a category waiver.",
-   "added": "2026-07-27",
-   "objects": [
-    "approve_funding_claim(p_claim_id uuid)",
-    "reject_funding_claim(p_claim_id uuid, p_reason text)",
-    "record_payment_atomic(p_invoice_id uuid, p_amount numeric, p_method text, p_reference text, p_tenant_id uuid)"
-   ]
-  }
- ]
+  "schema_version": "1.0",
+  "_doc": "Accepted-by-design / tracked Supabase advisor findings. Consumed by scripts/check-supabase-advisors.mjs (workflow: supabase-advisor-sweep.yml). Matching: lint name + object identity (functions: name(arguments); tables: table name). INFO-level findings never fail regardless of this file. mode=accepted -> finding is expected, never fails, never files; mode=tracked -> finding is known and owned by tracked_in, never fails, not re-filed; removing a rule makes its findings live again.",
+  "rules": [
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "objects": [
+        "ancestors_of(leaf_id uuid)",
+        "auth_parent_tenant_id()",
+        "auth_tenant_id()",
+        "auth_tenant_id_with_role(allowed_roles text[])",
+        "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
+        "check_user_portal_role(p_user_id uuid, p_tenant_id uuid, p_required_roles text[])",
+        "check_user_tenant_access(p_user_id uuid, p_tenant_id uuid)",
+        "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb)",
+        "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb, p_owner_email text)",
+        "create_person_with_contact(payload jsonb, p_tenant_id uuid)",
+        "descendants_of(root_id uuid)",
+        "find_orphan_owned_tenants_for_caller()",
+        "get_apprentice_person_id_for_current_user()",
+        "get_descendant_tenant_ids(p_tenant_id uuid)",
+        "get_sharing_level(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
+        "get_user_apprentice_id()",
+        "get_user_gto_role()",
+        "get_user_host_employer_id()",
+        "get_user_tenant_context(p_user_id uuid)",
+        "get_visible_fields(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
+        "get_visible_tenant_ids(p_user_id uuid)",
+        "gto_assessment_history(p_tenant_id uuid, p_clause_id uuid, p_limit integer, p_offset integer)",
+        "gto_assessment_summary(p_tenant_id uuid, p_year smallint)",
+        "gto_self_assessment_log_history()",
+        "has_parent_admin_access(target_tenant_id uuid)",
+        "is_demo_write_blocked()",
+        "is_dev_mode()",
+        "is_enterprise_admin()",
+        "is_gto_admin()",
+        "is_gto_staff()",
+        "is_gto_staff(p_tenant_id uuid)",
+        "is_platform_admin(uid uuid)",
+        "is_team_admin(p_team_id uuid, p_user_id uuid)",
+        "platform_is_developer_or_admin()",
+        "r7_candidate_id_for_auth_user()",
+        "show_demo_data()",
+        "tenant_branding_is_force_overridden(p_tenant_id uuid)",
+        "training_plan_belongs_to_current_apprentice(p_training_plan_id uuid)",
+        "update_person_with_contact(p_person_id uuid, payload jsonb, p_tenant_id uuid)",
+        "user_has_org_access(p_user_id uuid, p_tenant_id uuid)",
+        "delete_organization(p_tenant_id uuid, p_confirm_name text)",
+        "get_org_deletion_preview(p_tenant_id uuid)",
+        "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
+        "fn_publish_page(p_draft_id uuid)",
+        "fn_rollback_page(p_page_id uuid)",
+        "invite_team_member_guarded(p_team_id uuid, p_email text, p_role text, p_invited_by uuid)"
+      ],
+      "mode": "accepted",
+      "reason": "RLS helper + intentional client-RPC class. These MUST stay executable by authenticated: RLS policies evaluate the helpers in the caller's context, and a prior revoke pass broke production RLS (see crm7 20260521024707/20260527022039 hotfix_restore_rls_helper_grants history). Operator directive 2026-06-11: do NOT blanket-fail this class until replaced by a proven alternative. A SECURITY DEFINER function NOT on this list IS a failure - the list is exhaustive, not a category waiver.",
+      "tracked_in": null,
+      "added": "2026-06-11",
+      "review": "Re-justify before adding any new function; shrink the list as helpers migrate to SECURITY INVOKER or out of the exposed schema."
+    },
+    {
+      "lint": "auth_db_connections_absolute",
+      "object_type": "any",
+      "objects": [
+        "*"
+      ],
+      "mode": "accepted",
+      "reason": "INFO-level operator-side Auth pool sizing; relevant only at instance scale-up.",
+      "added": "2026-06-11"
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "conduit#229 talent-community consent RPCs. r7_issue_talent_pool_consent_token mints a single-use token (re-checks caller tenant membership when auth.uid() is non-null); r7_redeem_talent_pool_consent validates a SHA-256-hashed single-use 30-day token and sets consent. SECURITY DEFINER is required to write across tenant RLS with token-gated authz inside the function. Intentional, live-verified on prod 2026-06-24.",
+      "added": "2026-06-24",
+      "objects": [
+        "r7_issue_talent_pool_consent_token(p_candidate_id uuid)",
+        "r7_redeem_talent_pool_consent(p_token text)"
+      ]
+    },
+    {
+      "lint": "anon_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "conduit#229 public talent-community opt-in. r7_redeem_talent_pool_consent is the ONLY anon-reachable write in conduit by design: it is token-gated (32-byte raw token, SHA-256 hash compare), single-use, 30-day expiry, non-enumerating, returns no PII. Equivalent to a magic-link. Live-verified on prod 2026-06-24 (consent flip + token consumed).",
+      "added": "2026-06-24",
+      "objects": [
+        "r7_redeem_talent_pool_consent(p_token text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "2026-07-02 Qodo-fix RPCs. search_profiles_by_name: throughput team-member selector \u2014 profiles RLS is self-only, so a narrow SECDEF search returning ONLY (id, full_name, company), auth-required, pinned search_path (throughput PR#232 finding 1). r7_submit_public_application: conduit public apply handler \u2014 replaced four unsafe anon INSERT policies with one fail-closed SECDEF entrypoint (rate-limited 3/hr rolling window per IP/job, consent-gated sensitive demographics, tenant derived from the job row); authenticated grant is transitive via anon->authenticated inheritance of the public apply path (conduit PR#348 findings 2-4).",
+      "added": "2026-07-02",
+      "objects": [
+        "search_profiles_by_name(p_query text)",
+        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
+      ]
+    },
+    {
+      "lint": "anon_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "conduit#348 public careers apply form \u2014 anon-reachable BY DESIGN (job applicants have no account). Fail-closed SECDEF: verifies job is open+published, rolling-window rate limit (3/hr per IP-hash/job), dedupes candidates, consent-gates sensitive demographics at the DB layer, derives tenant from the job row (no caller-supplied tenant). Strictly safer than the four direct anon INSERT policies it replaced (dropped same migration). Applied+catalog-verified 2026-07-02.",
+      "added": "2026-07-02",
+      "objects": [
+        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
+      ]
+    },
+    {
+      "lint": "anon_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Charge-rate-quote signing workflow \u2014 anon-reachable BY DESIGN for external signers (host employers, site contacts) who may not have authenticated sessions. Token-gated: validates p_token is a valid signing token, enforces signing context, logs audit trail. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
+      "added": "2026-07-06",
+      "objects": [
+        "get_charge_rate_quote_signing_context(p_token text)",
+        "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Charge-rate-quote signing workflow \u2014 authenticated users (applicants, coordinators) redeem signing tokens and apply quotes to placements. Token-gated: validates p_token, enforces signing context, cross-tenant operations required for GTO workflow. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
+      "added": "2026-07-06",
+      "objects": [
+        "get_charge_rate_quote_signing_context(p_token text)",
+        "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
+        "apply_charge_rate_quote_to_placement(p_quote_id uuid, p_placement_id uuid)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Session validation helper \u2014 checks if a session UUID is still valid. SECURITY DEFINER required to read auth.sessions across tenant boundaries for RLS policy evaluation. Intentional: session validation is a core auth primitive. Applied 2026-07-06.",
+      "added": "2026-07-06",
+      "objects": [
+        "is_session_valid(session_uuid uuid)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "crm7#1123 tenant-switch authority. set_current_tenant(p_tenant_id) is membership-gated \u2014 it raises 'Unauthorized: not an active member of the target tenant' unless the caller has an active public.user_tenants row for p_tenant_id, then persists profiles.current_tenant_id. log_tenant_switch(...) is its audit-write companion (the tenant_switch_audit direct-INSERT forgery fix routes all audit writes through this SECDEF fn rather than allowing direct client INSERT). Both MUST be EXECUTE-grantable to authenticated (they are the client RPCs for switching tenant context); both are SECURITY DEFINER (write profiles / read user_tenants / write audit under RLS) with search_path pinned to 'public, pg_temp'. Live-verified body 2026-07-20 via pg_get_functiondef. Accepted-by-design; not a category waiver.",
+      "added": "2026-07-20",
+      "objects": [
+        "set_current_tenant(p_tenant_id uuid)",
+        "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
+      ]
+    },
+    {
+      "lint": "multiple_permissive_policies",
+      "object_type": "table",
+      "mode": "tracked",
+      "tracked_in": "bsuite#1542",
+      "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) \u2014 never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542.",
+      "added": "2026-07-20",
+      "objects": [
+        "timesheets"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Developer-portal Feature Builder apply path (north-star chain, 2026-07-22). Executes author-supplied migration SQL, so it is arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations: (1) hard internal gate \u2014 raises 42501 unless caller's profiles.platform_role IN ('developer','platform_admin'); (2) full audit trail to feature_migration_log (actor, SQL, status, error); (3) search_path pinned to public,pg_temp; (4) EXECUTE revoked from public/anon \u2014 authenticated-only, same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog).",
+      "added": "2026-07-22",
+      "expires": null,
+      "objects": [
+        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "conduit STA email confirm atomic RPC (excellence P1 / go-loop 2026-07-25). confirm_sta_email replaces 3 non-transactional client writes (offer lodgement flip + training_contract_status_confirmations audit insert + sta_inbound_emails status) with a single SECURITY DEFINER transaction. Authz is internal: auth.uid() required; caller must be owner/admin on the email's tenant via user_tenants; offer update scoped to that tenant_id. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC/anon, granted authenticated only (server action supabase.rpc). Same intentional client-RPC class as set_current_tenant / redeem_charge_rate_quote_signature. Not a category waiver.",
+      "added": "2026-07-25",
+      "objects": [
+        "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "W3 excellence atomic sub-org create (2026-07-25). create_sub_organization requires auth.uid(); caller must be owner/admin of p_parent_id via user_tenants; inserts child with parent_tenant_id + owner membership in one transaction. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC. Jodie + BSU Admin call via authenticated JWT only. Not a category waiver.",
+      "added": "2026-07-25",
+      "objects": [
+        "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Email integration vault token read (crm7 emailService + BSU oauth edge fns). 2026-07-27 authz hardening: ownership check (auth.uid()/tenant) added inside fn; EXECUTE authenticated (browser client) + service_role (edge fns); revoked from PUBLIC/anon; search_path pinned. Not a category waiver.",
+      "added": "2026-07-27",
+      "objects": [
+        "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)"
+      ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "X1 money-integrity batch (2026-07-27). Atomic funding claim lifecycle (budget decrement+restore with role check inside), overpay-safe payment (row-lock + amount_due check + DB-computed return). All search_path pinned public,pg_temp; EXECUTE authenticated-only; PUBLIC+anon revoked. Not a category waiver.",
+      "added": "2026-07-27",
+      "objects": [
+        "approve_funding_claim(p_claim_id uuid)",
+        "reject_funding_claim(p_claim_id uuid, p_reason text)",
+        "record_payment_atomic(p_invoice_id uuid, p_amount numeric, p_method text, p_reference text, p_tenant_id uuid)"
+      ]
+    }
+  ],
+  "entries": [
+    {}
+  ]
 }
