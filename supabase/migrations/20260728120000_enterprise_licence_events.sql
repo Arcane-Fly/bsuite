@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS public.enterprise_licence_events (
     CHECK (seat_count_at_event >= 0),
   occupied_at_event integer NOT NULL DEFAULT 0
     CHECK (occupied_at_event >= 0),
-  invite_email text NULL,
+  invite_email text NULL, -- DRY exemption: invitee may not have a profiles row yet; email is the durable identity until accept
   invitation_id uuid NULL,
   grace_until timestamptz NULL,
   notified_at timestamptz NULL,
