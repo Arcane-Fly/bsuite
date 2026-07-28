@@ -77,8 +77,7 @@
       "added": "2026-06-24",
       "objects": [
         "r7_issue_talent_pool_consent_token(p_candidate_id uuid)",
-        "r7_redeem_talent_pool_consent(p_token text)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "r7_redeem_talent_pool_consent(p_token text)"
       ]
     },
     {
@@ -99,8 +98,7 @@
       "added": "2026-07-02",
       "objects": [
         "search_profiles_by_name(p_query text)",
-        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text)"
       ]
     },
     {
@@ -133,8 +131,7 @@
       "objects": [
         "get_charge_rate_quote_signing_context(p_token text)",
         "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
-        "apply_charge_rate_quote_to_placement(p_quote_id uuid, p_placement_id uuid)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "apply_charge_rate_quote_to_placement(p_quote_id uuid, p_placement_id uuid)"
       ]
     },
     {
@@ -144,8 +141,7 @@
       "reason": "Session validation helper \u2014 checks if a session UUID is still valid. SECURITY DEFINER required to read auth.sessions across tenant boundaries for RLS policy evaluation. Intentional: session validation is a core auth primitive. Applied 2026-07-06.",
       "added": "2026-07-06",
       "objects": [
-        "is_session_valid(session_uuid uuid)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "is_session_valid(session_uuid uuid)"
       ]
     },
     {
@@ -156,8 +152,7 @@
       "added": "2026-07-20",
       "objects": [
         "set_current_tenant(p_tenant_id uuid)",
-        "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
       ]
     },
     {
@@ -179,8 +174,7 @@
       "added": "2026-07-22",
       "expires": null,
       "objects": [
-        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)"
       ]
     },
     {
@@ -190,8 +184,7 @@
       "reason": "conduit STA email confirm atomic RPC (excellence P1 / go-loop 2026-07-25). confirm_sta_email replaces 3 non-transactional client writes (offer lodgement flip + training_contract_status_confirmations audit insert + sta_inbound_emails status) with a single SECURITY DEFINER transaction. Authz is internal: auth.uid() required; caller must be owner/admin on the email's tenant via user_tenants; offer update scoped to that tenant_id. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC/anon, granted authenticated only (server action supabase.rpc). Same intentional client-RPC class as set_current_tenant / redeem_charge_rate_quote_signature. Not a category waiver.",
       "added": "2026-07-25",
       "objects": [
-        "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)"
       ]
     },
     {
@@ -201,8 +194,7 @@
       "reason": "W3 excellence atomic sub-org create (2026-07-25). create_sub_organization requires auth.uid(); caller must be owner/admin of p_parent_id via user_tenants; inserts child with parent_tenant_id + owner membership in one transaction. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC. Jodie + BSU Admin call via authenticated JWT only. Not a category waiver.",
       "added": "2026-07-25",
       "objects": [
-        "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)"
       ]
     },
     {
@@ -212,8 +204,7 @@
       "reason": "Email integration vault token read (crm7 emailService + BSU oauth edge fns). 2026-07-27 authz hardening: ownership check (auth.uid()/tenant) added inside fn; EXECUTE authenticated (browser client) + service_role (edge fns); revoked from PUBLIC/anon; search_path pinned. Not a category waiver.",
       "added": "2026-07-27",
       "objects": [
-        "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)"
       ]
     },
     {
@@ -225,8 +216,7 @@
       "objects": [
         "approve_funding_claim(p_claim_id uuid)",
         "reject_funding_claim(p_claim_id uuid, p_reason text)",
-        "record_payment_atomic(p_invoice_id uuid, p_amount numeric, p_method text, p_reference text, p_tenant_id uuid)",
-        "invite_team_member_guarded(uuid, text, text, uuid)"
+        "record_payment_atomic(p_invoice_id uuid, p_amount numeric, p_method text, p_reference text, p_tenant_id uuid)"
       ]
     }
   ],
