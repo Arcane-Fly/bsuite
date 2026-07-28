@@ -246,3 +246,7 @@ Broader monorepo product roadmap (OUTSTANDING epics) remains living backlog — 
 
 ### BSU#416 developer-nav (promoted)
 - Production Nav rebuild on main via #609/#610 — uplift primitives, no mock-only paths.
+
+### Seat caps (EPIC partial)
+- BSU#611/#612 on main — production `evaluateSeatCap` + Team Members invite gate.
+- Remaining EPIC: Xero invoice for grace seats + developer portal client invoicing.

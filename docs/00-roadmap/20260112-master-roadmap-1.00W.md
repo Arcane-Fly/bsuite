@@ -35,7 +35,8 @@
 - [x] developer-nav uplift rebuild (SortableList/RoutePicker/EmptyState/TechnicalDetails) — #609/#610 on main (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
 - [x] N0/N1/N3/N4/N-CRIT p1–p2 verified already shipped (no redo)
 - [x] N-CRIT p3 MAPD validation badge (R80#363/#364 on main) — validateApprenticeSchedule + AwardRateSelector badge
-- [ ] Team invites + seat caps + Xero invoicing epic (operator EPIC section)
+- [x] Team invites + seat caps (BSU#611/#612) — evaluateSeatCap + TeamMembers gate; developer uncapped; enterprise 30d grace; billing CTA
+- [ ] Xero invoicing for grace seats + developer-portal client invoices (operator EPIC remainder; Xero cluster)
 - [ ] Page-builder north-star residuals (edit-page widget catalogue, schema-builder UX)
 - [ ] Open product issues: crm7#659/#660/#662/#678, R80#320, conduit#223, page-builder #937–939, etc.
 
@@ -46,7 +47,7 @@
 - [x] leads/create inline company — capability existed (EntitySelector + row + handleQuickAddClient); label clarified to "Create new company"
 - [x] communications cards individual + card-autoheight-contract test; half-cut pages listed for platform sweep (BSU Analytics/UnifiedDashboard, conduit analytics/_view candidates)
 - [x] N-CRIT p2 PART 1+2: hierarchical award→variant picker + manual % entry with July-1 review toast
-- [ ] N-CRIT p3 (phase 3): MAPD validation badge (validateApprenticeSchedule) — lane capped before this part
+- [x] N-CRIT p3 (phase 3): MAPD validation badge (validateApprenticeSchedule) — R80#363/#364
 - [ ] NEXT: schema-builder UX (tidy/fit icons useless) — redesign
 - [ ] NEXT: dashboard edit-page in-place element/widget/entity adding (regression — was available)
 - [ ] NEXT: portal send/share links for clients/hosts/workers (currently just redirects)
@@ -79,7 +80,7 @@
 
 ## In Progress
 
-- N-CRIT phase 2 (hierarchy picker, MAPD schedule validation, manual % entry + 1-July toast)
+- N-CRIT phases 1–3 complete on main (hierarchy, manual %, MAPD badge)
 - N6 Sydney pre-flight (dry-run evidence — operator-gated cutover Wed)
 
 ---
