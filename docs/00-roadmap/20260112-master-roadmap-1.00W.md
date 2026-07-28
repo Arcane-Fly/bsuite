@@ -32,12 +32,12 @@
 - [x] Money: funding claim approve/reject atomic RPCs wired in fundingService
 - [x] Schema-builder/registry 1.0.x pins all apps; delete_branch_on_merge false on long-lived branches
 - [x] Manuals program content expansion
-- [x] BSU#416 developer-nav uplift rebuild (SortableList/RoutePicker/EmptyState/TechnicalDetails) — #609/#610 on main (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
+- [x] developer-nav uplift rebuild (SortableList/RoutePicker/EmptyState/TechnicalDetails) — #609/#610 on main (funding claims, OAuth, card layout, FO/host/employee how-tos) — PR on BSU
 - [x] N0/N1/N3/N4/N-CRIT p1–p2 verified already shipped (no redo)
-- [ ] N-CRIT p3 MAPD validation badge (still open)
+- [x] N-CRIT p3 MAPD validation badge (R80#363/#364 on main) — validateApprenticeSchedule + AwardRateSelector badge
 - [ ] Team invites + seat caps + Xero invoicing epic (operator EPIC section)
 - [ ] Page-builder north-star residuals (edit-page widget catalogue, schema-builder UX)
-- [ ] Open product issues: crm7#659/#660/#662/#678, BSU#416, R80#320, conduit#223, page-builder #937–939, etc.
+- [ ] Open product issues: crm7#659/#660/#662/#678, R80#320, conduit#223, page-builder #937–939, etc.
 
 ## Operator notes batch (2026-07-27 doc) — SHIPPED (crm7#1216, R80#358)
 
