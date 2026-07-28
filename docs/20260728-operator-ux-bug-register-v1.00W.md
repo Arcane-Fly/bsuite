@@ -108,3 +108,53 @@ caveat was correct. Every row below was traced against current `development`, no
 1. **How should crm7 read R80.3's apprentice calculation live?** (#11 and #16 are the same cross-app ownership question.)
 2. **Which TGA backend path gets fixed/enabled first** — the flagged-off bulk sync, or the mis-wired single import? (#13)
 3. **Is School-Based apprentice modelling (incl. Year 11/12 sub-tier) a scoped feature project?** (#9b) — this is domain modelling, not a label change.
+
+---
+
+## Implementation outcomes — 2026-07-28 (verifier-gated loop, all merged)
+
+Every task: implemented → reviewed by a **separate** verifier agent (maker ≠ checker) → merged signed
+to `development`. Zero Critical and zero Important findings across all five reviews.
+
+| Task | Items | Merged | Outcome |
+|---|---|---|---|
+| 1 | #9, #9b | R80.3 `0e87d2e` | #9 already fixed (`7cb5359`), not re-touched. #9b: **three** "Standard" collisions found, not two. Operator's literal wording/order used. School-Based deferred per ruling. |
+| 2 | #9c, #10 | R80.3 `0dc78a3` | #9c funding offsets now in the Set Pay Rate step. **Preview/real-calc disagreement is structurally gone** — one state variable, one `calculateChargeRate` call site. #10 verified already in-calculation. |
+| 3 | #12, #13 | crm7 `d182164e` | #13 Path B **live-verified against the real TGA sandbox** (CPC30220 → 60 units). Path A blocked, filed `crm7#1266`. #12 now derived; also fixed `edit.tsx` reading a non-existent `progress` column. |
+| 4 | #16, #17 | crm7 `92c0c9ca` | #16 `hourly_rate` is the **pay** rate — labels made truthful. #17 corrected `c09e62fc`, which had wired uploads to a legacy table with no list. |
+| 5 | #5, #19 | BSU `1ea084b` | #5 already fixed in `@bsuite/schema-builder@1.0.1`, pinned on `main` — no crm7 change needed. #19 **re-diagnosed**: never coupled to Preview. |
+
+### Root causes worth remembering
+
+- **#13 could never have worked.** `tga-search`'s `import` called `OrganisationService.GetDetails` (RTO)
+  behind a digits-only regex, so alphanumeric qualification codes 400'd before reaching TGA. The
+  pre-existing `TGAImportResult` interface never matched what the handler returned — frontend and
+  backend never agreed.
+- **#19 was not a Preview coupling.** Save's `disabled` was gated on `settingsLoading || brandingLoading`;
+  the Preview link was coincidental timing. Removing the guard naively would have upserted
+  `DEFAULT_BRAND` over real rows — the guard added prevents exactly that.
+- **#17's earlier "fix" was wired to a dead system** — uploads went to legacy `document_records` with no
+  list, so they appeared to succeed and never showed.
+
+### Bugs found while fixing other things (all filed)
+
+- `crm7#1265` **[P0, wrong money]** charge-rate calc uses VIC payroll tax (4.85%) for every tenant; WA is
+  5.5% → GTO under-charges the host by ~$321/apprentice/yr.
+- `bsuite#1684` **[architecture]** one-shot drift — Charge Calculations are R8-owned by doctrine but
+  authored in crm7. Root cause of both `crm7#1265` and #11.
+- `crm7#1266` TGA bulk sync blocked twice over (flag off **and** `runSync()` Stage-2 upsert unimplemented).
+- `R80.3#371` apprentice details modal explains funding from the legacy `fundingConfig.sources`, not the
+  W3 offset actually applied.
+
+### OUTSTANDING — operator action
+
+1. **§12.3 live checks** (code- and test-verified only, no deployed-domain evidence):
+   `crm.crm7.app/settings/schema-builder` → Tidy/Fit reframe; `suite.crm7.app/branding` → Save without Preview.
+2. **`bsuite#1684`** — ruling on which versioned-rate schema is canonical.
+3. **Invoice wording** — line descriptions now render "Standard Billing" / "ALEX 48-Week" / "52-Week".
+   Display-only, enum untouched, reversible; flagged because invoices are a legal artifact.
+
+### Still open from the register (not yet implemented)
+#1 comms read view, #6 dashboard edit-in-place, #7/#20 portal delivery, #21 client→host one-shot,
+#22 pipeline from conduit, #15 docs screenshots, #3/#3b/#3c platform card invariant (hermes A6),
+#11 advanced config (hermes A9).
