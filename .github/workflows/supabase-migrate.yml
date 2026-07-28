@@ -58,6 +58,17 @@ on:
       - 'conduit/supabase/migrations/**'
       - 'throughput/supabase/migrations/**'
       - 'packages/schema-builder/supabase/migrations/**'
+      # Gap-assessment T1-01: submodule pointer-bump commits ('chore: bump <app>')
+      # change only the gitlink path — the nested globs above NEVER match them,
+      # so the applier silently stopped running. Including the bare gitlink
+      # paths re-enables the merge-pipeline apply on every submodule bump
+      # (per-file idempotency is handled inside the job).
+      - 'crm7'
+      - 'R80.3'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
   workflow_dispatch:
     inputs:
       submodule:

@@ -142,6 +142,65 @@ def update_meta(data: dict) -> None:
         meta["last_refresh"] = today
 
 
+def update_summary_truth(data: dict) -> None:
+    """Recompute summary counters from live state (gap-assessment CF-8/CF-9).
+
+    `summary.open_issues_total` and `summary.last_refreshed` were static
+    carried-through fields — the hourly cron never touched them, so the
+    dashboard drifted months out of date while presenting as the source of
+    truth. These fields are now recomputed every run; on any failure the
+    prior value is kept (degraded refresh beats a failed commit).
+    """
+    summary = data.setdefault("summary", {})
+
+    # Live open-issue count across the BSuite repos only. `gh search issues`
+    # with a multi-repo query fails on this org ("repositories cannot be
+    # searched") — the per-repo `gh issue list` loop is the verified source
+    # (returns exactly 85 on 2026-07-28).
+    bsuite_repos = [
+        "bsuite",
+        "crm7",
+        "conduit",
+        "business-suite-unified",
+        "R80.3",
+        "braden",
+        "throughput",
+    ]
+    total = 0
+    counted = 0
+    for repo in bsuite_repos:
+        out = _run(
+            [
+                "gh",
+                "issue",
+                "list",
+                "--repo",
+                f"GaryOcean428/{repo}",
+                "--state",
+                "open",
+                "--limit",
+                "400",
+                "--json",
+                "number",
+                "-q",
+                "length",
+            ]
+        )
+        if out is not None and out.strip().isdigit():
+            total += int(out.strip())
+            counted += 1
+    # Only write when every repo answered — a partial count is worse than
+    # keeping yesterday's (auth blips must not halve the dashboard number).
+    if counted == len(bsuite_repos):
+        summary["open_issues_total"] = total
+
+    # Genuine freshness marker — full UTC timestamp, not a date the prose
+    # authors happened to last edit a narrative row.
+    ts = _run(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"])
+    if ts:
+        summary["last_refreshed"] = ts
+
+
 def main() -> int:
     if not DATA_FILE.is_file():
         # Nothing to overlay onto — emit empty object so the workflow guard
@@ -169,6 +228,10 @@ def main() -> int:
         update_meta(data)
     except Exception as e:
         sys.stderr.write(f"::warning::update_meta failed: {e}\n")
+    try:
+        update_summary_truth(data)
+    except Exception as e:
+        sys.stderr.write(f"::warning::update_summary_truth failed: {e}\n")
 
     sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2))
     sys.stdout.write("\n")
