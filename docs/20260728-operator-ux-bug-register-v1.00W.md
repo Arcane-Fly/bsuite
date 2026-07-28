@@ -67,3 +67,44 @@ Status legend: `VERIFIED-OPEN` / `VERIFIED-FIXED` / `UNVERIFIED` / `NEEDS-PRODUC
 - #2b ↔ CF-7 (`fairwork-enhanced` deployed from operator local path, not CI).
 - #9c/#10/#11/#16 ↔ R80.3 funding-offset wiring (`61c1286`) and `R80.3#367` (bulk path drops the offset).
 - #12/#13/#14 ↔ `crm7#662` (surface units of competency, competency-based progression).
+
+---
+
+## Verified status — 2026-07-28 (PI pass, two subagent clusters)
+
+**Headline: most of this register was already fixed before it was compiled.** The operator's own
+caveat was correct. Every row below was traced against current `development`, not taken on report.
+
+### Communications cluster — 5 of 6 already fixed
+
+| # | Item | Status | Evidence |
+|---|---|---|---|
+| 2 | compose React #185 crash | **VERIFIED-FIXED** | `cfa85c88` — `selectActiveIntegrations` returned a fresh array each call; without `useShallow`, `useSyncExternalStore` saw a new snapshot every render → infinite loop. Screenshot's error-id decodes to 2026-07-27 11:42 AWST, ~4h **before** the 15:58 fix. |
+| 2b | `fairwork-enhanced` 503 | **VERIFIED-FIXED** + red herring | Deployed source byte-identical to `216c267`; no consumer of the fn is even mounted in the compose tree, so the 503 was a stale cross-page log. |
+| 8 | `/leads/create` company | **VERIFIED-FIXED** | `5a81154a` |
+| 23 | module-visibility | **VERIFIED-FIXED** | `48384c43` / `3a128b79` |
+| 4 | award-rates wages/period/description | **VERIFIED-FIXED** | `c4e18b25`, `0da1b7ef` |
+| 1 | emails cannot be opened/read | **VERIFIED-OPEN** | Sent/SMS/Internal/All tabs have no row-click and no detail view. Only the separate Inbox tab (different data source) has a read pane. Needs a new component. |
+
+### R8 / charge-rate / training cluster — 8 open, 1 fixed, 2 mixed
+
+| # | Item | Status | Evidence / root cause |
+|---|---|---|---|
+| 13 | TGA units import | **VERIFIED-OPEN — worse than reported** | Two broken paths, not a missing UI: bulk sync is feature-flagged **off** (`TGA_SYNC_ENABLED=false`, pending schema sign-off), AND the single "Import Qualification" button is wired to `handleImport`, which imports an **RTO/training-provider by numeric code** — a real qualification code fails validation. Building a units-import UI on this ships a button that fails every time. |
+| 11 | charge-rates advanced config | **VERIFIED-OPEN** | `AdvancedConfigSection.tsx` is a *read-only display* of hardcoded `@bsuite/charge-calc` package defaults as plain `<li>` text — never the linked apprentice's values. "Cannot confirm selection" traces to `const [, setSelectedAward] = useState(...)` — the picked value is discarded. |
+| 9 | R8 cramped layout | **VERIFIED-OPEN** | Literal `max-w-5xl` at `R8Calculator.tsx:427`. One-line scope. |
+| 9b | pay-rate hierarchy | **VERIFIED-OPEN — feature, not label** | School-Based apprentices (and the Year 11/12 sub-tier) **do not exist anywhere in the codebase**. "Standard" is overloaded with two unrelated meanings across two components. |
+| 9c | Funding Offsets in-calculation | MIXED | Sub-part fixed; primary flow still open. |
+| 10 | Training Hours in-calculation | MIXED | Sub-part fixed; primary flow still open. |
+| 12 | training plan progress calculated | **VERIFIED-OPEN** | |
+| 14 | units→apprentice one-shot | **VERIFIED-FIXED** | |
+| 16 | placement hourly-rate ambiguity | **VERIFIED-OPEN** | Same cross-app ownership question as #11. |
+| 17 | placement document upload | **VERIFIED-OPEN** | Infrastructure exists (`document-secure-upload`, `document-virus-scan`, `org_documents`) — missing UI wiring only. |
+
+### Closed this pass
+- `R80.3#367` (bulk path fundingOffset) and `R80.3#368` (three inert surfaces) — both fixed in `2bebb31` (signed, `origin/development` HEAD) and closed. Selectors now carry visible `(not yet active)` tags rather than silently doing nothing.
+
+### PRODUCT DECISIONS — operator call required, agents must not invent these
+1. **How should crm7 read R80.3's apprentice calculation live?** (#11 and #16 are the same cross-app ownership question.)
+2. **Which TGA backend path gets fixed/enabled first** — the flagged-off bulk sync, or the mis-wired single import? (#13)
+3. **Is School-Based apprentice modelling (incl. Year 11/12 sub-tier) a scoped feature project?** (#9b) — this is domain modelling, not a label change.
