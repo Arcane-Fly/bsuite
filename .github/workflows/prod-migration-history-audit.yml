@@ -1,0 +1,454 @@
+# Production Migration History Audit
+#
+# Read-only drift detector for supabase_migrations.schema_migrations. This is
+# a PARENT-repo revival of crm7's "Production Migration History Audit", which
+# failed every run since creation (SUPABASE_DB_URL was never provisioned in
+# crm7 — see docs/20260728-weekly-gap-register-v1.00W.md finding S-1). The
+# crm7 workflow has been removed; this is now the only copy of this control.
+#
+# Why the parent and not crm7: supabase_migrations.schema_migrations is ONE
+# table shared by 8 migration scopes (root + crm7 + R80.3 + braden +
+# business-suite-unified + conduit + throughput + packages/schema-builder —
+# see .github/workflows/supabase-migrate.yml header). A crm7-only audit can
+# only ever see crm7's slice. This workflow checks out all scopes via
+# submodules and audits the whole shared table at once.
+#
+# Connectivity reuses the exact secrets and runtime pooler-cluster probe
+# already proven working in supabase-migrate.yml (SUPABASE_DB_PASSWORD +
+# vars.SUPABASE_PROJECT_ID; aws-1/aws-0 Supavisor probe) — no new secret is
+# introduced.
+#
+# Two drift classes are detected (both read-only — nothing is written):
+#
+#   A. Recorded-but-empty: a remote row has statement_count=0 while its
+#      matching local migration file is non-empty. This is the dangerous
+#      "migration repair --status applied" shape: the ledger claims the SQL
+#      ran, but the recorded body is empty, so production may not actually
+#      have the change.
+#
+#      statement_count=0 on its own is NORMAL for this project (many
+#      migrations here are legitimately recorded with no captured statement
+#      body) and is NEVER flagged by itself — only when it contradicts a
+#      non-empty local file.
+#
+#   B. Unrecorded-but-local: a local migration file at/above MIGRATION_FLOOR
+#      has NO row in schema_migrations at all. This is the exact class found
+#      by the 2026-07-28 gap assessment (P0-2: 19 of 27 in-window migrations
+#      applied out-of-band, absent from the ledger). Pre-floor files are
+#      excluded — that backlog is owned by the history-reconciliation lane
+#      (see supabase-migrate.yml header), not this audit.
+#
+# MIGRATION_FLOOR below must be kept in sync with supabase-migrate.yml's
+# MIGRATION_FLOOR env var by hand — GitHub Actions has no cross-workflow env
+# import. Last synced 2026-07-28 against supabase-migrate.yml value
+# '20260611000000'.
+#
+# This workflow fails loudly (non-zero exit) on:
+#   - either drift class above,
+#   - inability to connect to the database (no pooler cluster accepted the
+#     connection, or SUPABASE_PROJECT_ID/SUPABASE_DB_PASSWORD missing),
+#   - malformed/empty audit input.
+# It never exits 0 without having actually run the comparison — see the
+# "Guard" and "Resolve pooler host" steps, which hard-fail instead of
+# masking a connection failure as "0 rows".
+#
+# Required GitHub Secrets (already provisioned, shared with supabase-migrate.yml):
+#   SUPABASE_DB_PASSWORD   - Database password for the linked project
+#   BSUITE_CROSS_REPO_PAT  - GitHub PAT with read access to all submodule repos
+#
+# Required GitHub Variables:
+#   SUPABASE_PROJECT_ID    - Project ref (e.g. tuybltdrdefjblnplpqo)
+
+name: Production Migration History Audit
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # Every 6 hours. The prior crm7 incarnation ran once daily and never
+    # succeeded even once in its lifetime (S-1) — the actual gap this
+    # surfaced (P0-2, 19 unrecorded migrations) went undetected for the
+    # whole assessment window regardless of cadence, because the control
+    # was dead, not because daily was insufficient in principle. But daily
+    # is still a wide blind-spot window for a read-only, cheap-to-run check
+    # against a shared table that multiple out-of-band paths (Supabase MCP,
+    # dashboard SQL editor, CLI) can write to at any time of day. Running
+    # every 6 hours shrinks max detection latency from "up to 24h" to "up to
+    # 6h" for a negligible cost (4 short psql + node runs/day), without the
+    # false-alarm risk of sub-hourly cron on a GitHub Actions scheduler that
+    # is documented to silently skip runs under high load. workflow_dispatch
+    # remains available for on-demand checks after a suspected out-of-band
+    # apply.
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+env:
+  MIGRATION_FLOOR: '20260611000000'
+  # All migration scopes that write into the one shared
+  # supabase_migrations.schema_migrations table.
+  MIGRATION_SCOPE_DIRS: >-
+    supabase/migrations,
+    crm7/supabase/migrations,
+    R80.3/supabase/migrations,
+    braden/supabase/migrations,
+    business-suite-unified/supabase/migrations,
+    conduit/supabase/migrations,
+    throughput/supabase/migrations,
+    packages/schema-builder/supabase/migrations
+
+jobs:
+  production-audit:
+    name: Production migration history drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard — require project ref
+        env:
+          SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_PROJECT_ID:-}" ]; then
+            echo "::error::SUPABASE_PROJECT_ID variable is empty — refusing to run the audit"
+            exit 1
+          fi
+          echo "Project ref: ${SUPABASE_PROJECT_ID}"
+
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+
+      - name: Install psql client
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          # Supavisor tenants live on a numbered cluster per region — newer
+          # projects are on aws-1, older on aws-0. The wrong cluster returns
+          # "(ENOTFOUND) tenant/user ... not found". Probe in order. No
+          # cluster accepting the connection is a hard failure — never
+          # treated as "no drift found".
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "✓ Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID} — check SUPABASE_DB_PASSWORD and project region. Refusing to report a false 'no drift'."
+          exit 1
+
+      - name: Export production migration history
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          # ON_ERROR_STOP=1 + set -e: any SQL error fails this step instead
+          # of producing an empty/partial file that would silently read as
+          # "no drift" downstream.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL' > migration-history.json
+          SELECT COALESCE(json_agg(row_to_json(history_row)), '[]'::json)
+          FROM (
+            SELECT
+              version,
+              name,
+              COALESCE(array_length(statements, 1), 0) AS statement_count
+            FROM supabase_migrations.schema_migrations
+            ORDER BY version
+          ) AS history_row;
+          SQL
+
+          if [ ! -s migration-history.json ]; then
+            echo "::error::migration-history.json is empty — the export query produced no output. Refusing to report a false 'no drift'."
+            exit 1
+          fi
+
+      - name: Write comparison script
+        run: |
+          set -euo pipefail
+          cat > compare-migration-history.mjs <<'NODE_EOF'
+          #!/usr/bin/env node
+          /**
+           * Read-only guard for Supabase migration-history drift across every
+           * scope that shares supabase_migrations.schema_migrations.
+           *
+           * Ported from crm7/scripts/audit-supabase-migration-history.mjs
+           * (which only ever covered crm7's own migrations dir) and extended
+           * to (a) scan every scope dir that feeds the shared table and
+           * (b) also flag local migration files that never made it into the
+           * ledger at all — the exact shape of bsuite gap-assessment P0-2.
+           *
+           * See the parent workflow file for full commentary.
+           */
+          import { existsSync, readFileSync, readdirSync } from 'node:fs';
+          import { basename, join, resolve } from 'node:path';
+
+          const HISTORY_JSON_PATH = process.env.HISTORY_JSON_PATH || 'migration-history.json';
+          const MIGRATION_FLOOR = process.env.MIGRATION_FLOOR || '';
+          const SCOPE_DIRS = (process.env.MIGRATION_SCOPE_DIRS || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+
+          function stripSqlComments(source) {
+            return source
+              .replace(/\/\*[\s\S]*?\*\//g, '')
+              .split('\n')
+              .map((line) => line.replace(/--.*$/, ''))
+              .join('\n');
+          }
+
+          function isNonEmptySql(source) {
+            return stripSqlComments(source).trim().length > 0;
+          }
+
+          function loadRows(historyJsonPath) {
+            const raw = readFileSync(historyJsonPath, 'utf8');
+            const parsed = JSON.parse(raw);
+            const rows = Array.isArray(parsed) ? parsed : parsed.rows;
+            if (!Array.isArray(rows)) {
+              throw new Error('History JSON must be an array or an object with a rows array');
+            }
+            return rows.map((row) => ({
+              version: String(row.version ?? ''),
+              name: row.name == null ? null : String(row.name),
+              statementCount: Number(
+                row.statement_count ?? row.statementCount ?? Number.NaN,
+              ),
+            }));
+          }
+
+          function collectLocalMigrations(dirs) {
+            const migrations = new Map();
+            const divergentCollisions = [];
+            for (const dirRel of dirs) {
+              const dir = resolve(dirRel);
+              if (!existsSync(dir)) {
+                console.log(`(scope skipped — no migrations dir present: ${dirRel})`);
+                continue;
+              }
+              for (const entry of readdirSync(dir, { withFileTypes: true })) {
+                if (!entry.isFile() || !entry.name.endsWith('.sql')) continue;
+                const match = entry.name.match(/^(\d{8,14})_/);
+                if (!match) continue;
+                const version = match[1];
+                const path = join(dir, entry.name);
+                const source = readFileSync(path, 'utf8');
+                const existing = migrations.get(version);
+                if (existing && existing.scope !== dirRel) {
+                  // The shared ledger keys on version only, so two scopes
+                  // claiming the same version is always at least a latent
+                  // ambiguity (whichever scope's applier runs first "wins"
+                  // the ledger row silently for the other — see
+                  // bsuite CLAUDE.md memory note on shared-schema migration
+                  // version collisions). Byte-identical content is harmless
+                  // today (idempotent bodies happen to match) so it is only
+                  // WARNED. Genuinely divergent content for the same version
+                  // is unresolvable ambiguity — record it as a Class C
+                  // violation (below) rather than aborting the whole audit,
+                  // so unrelated drift elsewhere is still reported. The
+                  // first-seen scope wins the map entry arbitrarily; which
+                  // one "wins" here has no bearing on which one actually won
+                  // the live ledger race.
+                  if (existing.source === source) {
+                    console.warn(
+                      `WARNING: duplicate migration ${version} in both ${existing.scope}/${existing.name} ` +
+                        `and ${dirRel}/${entry.name} — content is byte-identical (currently harmless) but ` +
+                        'the shared ledger cannot tell the scopes apart. Consolidate to one scope.',
+                    );
+                  } else if (!MIGRATION_FLOOR || version < MIGRATION_FLOOR) {
+                    // Pre-floor divergent collisions are pre-existing legacy
+                    // noise from before the 8 scopes shared one Supabase
+                    // project/ledger (dozens of these exist back to Feb
+                    // 2026). That backlog is owned by the history-
+                    // reconciliation lane per the MIGRATION_FLOOR doctrine in
+                    // supabase-migrate.yml, not this audit — surfacing them
+                    // here would permanently red this workflow on legacy
+                    // noise instead of the live, actionable case. Log only.
+                    console.warn(
+                      `WARNING (pre-floor, not failing): version collision ${version} — ` +
+                        `${existing.scope}/${existing.name} vs. ${dirRel}/${entry.name} — ` +
+                        'divergent content, but below MIGRATION_FLOOR; owned by the ' +
+                        'history-reconciliation lane.',
+                    );
+                  } else {
+                    divergentCollisions.push({
+                      version,
+                      a: { scope: existing.scope, name: existing.name },
+                      b: { scope: dirRel, name: entry.name },
+                    });
+                  }
+                  continue;
+                }
+                migrations.set(version, {
+                  path,
+                  name: entry.name,
+                  scope: dirRel,
+                  source,
+                  nonEmpty: isNonEmptySql(source),
+                });
+              }
+            }
+            return { migrations, divergentCollisions };
+          }
+
+          function audit(rows, localMigrations) {
+            const remoteVersions = new Set();
+            const emptyStatementViolations = [];
+            let localBacked = 0;
+            let missingLocal = 0;
+
+            for (const row of rows) {
+              if (!row.version) continue;
+              remoteVersions.add(row.version);
+              if (!Number.isFinite(row.statementCount)) {
+                throw new Error(`Invalid statement_count for migration version ${row.version}`);
+              }
+              const local = localMigrations.get(row.version);
+              if (!local) {
+                missingLocal += 1;
+                continue;
+              }
+              localBacked += 1;
+              // statement_count = 0 is NORMAL for this project and is NEVER
+              // flagged on its own. It is only drift when it contradicts a
+              // local file that actually contains SQL.
+              if (row.statementCount === 0 && local.nonEmpty) {
+                emptyStatementViolations.push({ version: row.version, name: row.name, local });
+              }
+            }
+
+            const unrecordedViolations = [];
+            if (MIGRATION_FLOOR) {
+              for (const [version, local] of localMigrations) {
+                if (version < MIGRATION_FLOOR) continue;
+                if (!remoteVersions.has(version)) {
+                  unrecordedViolations.push({ version, local });
+                }
+              }
+            }
+
+            return {
+              totalRemoteRows: rows.length,
+              localFilesScanned: localMigrations.size,
+              localBacked,
+              missingLocal,
+              emptyStatementViolations,
+              unrecordedViolations,
+            };
+          }
+
+          function main() {
+            if (SCOPE_DIRS.length === 0) {
+              throw new Error('MIGRATION_SCOPE_DIRS is empty — refusing to audit with zero local scope coverage');
+            }
+            const rows = loadRows(HISTORY_JSON_PATH);
+            const { migrations: localMigrations, divergentCollisions } = collectLocalMigrations(SCOPE_DIRS);
+            const result = audit(rows, localMigrations);
+
+            console.log(`Migration history rows (remote): ${result.totalRemoteRows}`);
+            console.log(`Local migration files scanned across ${SCOPE_DIRS.length} scope(s): ${result.localFilesScanned}`);
+            console.log(`Remote rows with a matching local file: ${result.localBacked}`);
+            console.log(`Remote rows without a local file (ignored — cannot verify from source): ${result.missingLocal}`);
+            console.log(`Drift class A (recorded-but-empty) violations: ${result.emptyStatementViolations.length}`);
+            console.log(`Drift class B (unrecorded-but-local, >= floor ${MIGRATION_FLOOR || 'unset'}) violations: ${result.unrecordedViolations.length}`);
+            console.log(`Drift class C (cross-scope version collision, divergent content) violations: ${divergentCollisions.length}`);
+
+            let failed = false;
+
+            if (divergentCollisions.length > 0) {
+              failed = true;
+              console.error(
+                '\nDrift class C — the same migration version exists in two different scopes with ' +
+                  'DIFFERENT SQL content. supabase_migrations.schema_migrations keys on version only ' +
+                  'across all 8 scopes, so whichever scope\'s applier runs first silently wins the ' +
+                  'ledger row and the other scope\'s migration is silently skipped forever:',
+              );
+              for (const c of divergentCollisions.slice(0, 50)) {
+                console.error(`  - ${c.version}: ${c.a.scope}/${c.a.name}  vs.  ${c.b.scope}/${c.b.name}`);
+              }
+              if (divergentCollisions.length > 50) {
+                console.error(`  ... ${divergentCollisions.length - 50} more omitted`);
+              }
+              console.error(
+                '\nRename one side to a non-colliding version stamp, then verify via the live ledger ' +
+                  'which one (if either) actually applied to production.',
+              );
+            }
+
+            if (result.emptyStatementViolations.length > 0) {
+              failed = true;
+              console.error(
+                '\nDrift class A — remote row has statement_count=0 but the matching local ' +
+                  'migration file is non-empty. This usually means migration history was ' +
+                  'repaired as applied without ever running the SQL:',
+              );
+              for (const v of result.emptyStatementViolations.slice(0, 50)) {
+                console.error(`  - ${v.version} (${v.name ?? '<unnamed>'}) — ${basename(v.local.path)} [${v.local.scope}] is non-empty`);
+              }
+              if (result.emptyStatementViolations.length > 50) {
+                console.error(`  ... ${result.emptyStatementViolations.length - 50} more omitted`);
+              }
+            }
+
+            if (result.unrecordedViolations.length > 0) {
+              failed = true;
+              console.error(
+                `\nDrift class B — local migration file at/above the floor (${MIGRATION_FLOOR}) has ` +
+                  'NO row in supabase_migrations.schema_migrations at all (applied out-of-band, or ' +
+                  'never applied). This is the exact drift class behind bsuite gap-assessment P0-2 ' +
+                  '(2026-07-28):',
+              );
+              for (const v of result.unrecordedViolations.slice(0, 50)) {
+                console.error(`  - ${v.version} (${basename(v.local.path)}) [${v.local.scope}]`);
+              }
+              if (result.unrecordedViolations.length > 50) {
+                console.error(`  ... ${result.unrecordedViolations.length - 50} more omitted`);
+              }
+              console.error(
+                '\nVerify these objects live before assuming this is safe, then close via the ' +
+                  'floor-gated applier once each migration is confirmed idempotent — do not ' +
+                  'hand-insert ledger rows and do not run the applier from this workflow.',
+              );
+            }
+
+            if (!failed) {
+              console.log('\nNo drift detected.');
+            }
+
+            process.exit(failed ? 1 : 0);
+          }
+
+          try {
+            main();
+          } catch (error) {
+            console.error(`prod-migration-history-audit: ${error.message}`);
+            process.exit(2);
+          }
+          NODE_EOF
+
+      - name: Compare production history with source migrations
+        env:
+          HISTORY_JSON_PATH: migration-history.json
+          MIGRATION_FLOOR: ${{ env.MIGRATION_FLOOR }}
+          MIGRATION_SCOPE_DIRS: ${{ env.MIGRATION_SCOPE_DIRS }}
+        run: node compare-migration-history.mjs
