@@ -44,6 +44,13 @@ CREATE INDEX IF NOT EXISTS enterprise_licence_events_grace_open_idx
   ON public.enterprise_licence_events (tenant_id, grace_until)
   WHERE event_type = 'grace_invite' AND paid_at IS NULL AND invoiced_at IS NULL;
 
+CREATE INDEX IF NOT EXISTS enterprise_licence_events_created_by_idx
+  ON public.enterprise_licence_events (created_by);
+
+CREATE INDEX IF NOT EXISTS enterprise_licence_events_invitation_id_idx
+  ON public.enterprise_licence_events (invitation_id)
+  WHERE invitation_id IS NOT NULL;
+
 COMMENT ON TABLE public.enterprise_licence_events IS
   'Additional-seat / grace-invite audit for enterprise annual plans. Xero fields filled when developer portal invoices and webhooks reconcile.';
 
