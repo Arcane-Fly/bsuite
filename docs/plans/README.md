@@ -10,7 +10,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 
 - [`../20260504-bsuite-documentation-hub-v1.00W.md`](../20260504-bsuite-documentation-hub-v1.00W.md) — Cross-submodule documentation hub (top-level index)
 - [`../20260504-bsuite-tech-stack-alignment-v1.00W.md`](../20260504-bsuite-tech-stack-alignment-v1.00W.md) — Canonical tech-stack baseline
-- [`../20260227-bsuite-master-roadmap-v5.00W.md`](../20260227-bsuite-master-roadmap-v5.00W.md) — Master roadmap (SSoT)
+- [`../00-roadmap/20260112-master-roadmap-1.00W.md`](../00-roadmap/20260112-master-roadmap-1.00W.md) — Master roadmap (SSoT) *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*
 - [`../20260425-bsuite-finish-line-roadmap-v1.00W.md`](../20260425-bsuite-finish-line-roadmap-v1.00W.md) — Finish-line execution order
 - [`../20260501-merged-execution-backlog-v1.00W.md`](../20260501-merged-execution-backlog-v1.00W.md) — Active phase-ordered queue
 
