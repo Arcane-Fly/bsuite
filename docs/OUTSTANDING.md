@@ -6,6 +6,12 @@
 
 > **2026-07-08 pointer update:** The execution queue reference below points to `docs/20260501-merged-execution-backlog-v1.00W.md` which is now archived (`docs/archive/2026-07/`). The **current** active execution queue is [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md). For GTO-specific work, see [`docs/plans/20260703-gto-e2e-gap-map-v1.00W.md`](./plans/20260703-gto-e2e-gap-map-v1.00W.md).
 >
+> **2026-07-28 repoint:** The 2026-06-29 doc referenced above was itself subordinated on 2026-07-27
+> to the suite-wide canonical. The **canonical master roadmap is now**
+> [`docs/00-roadmap/20260112-master-roadmap-1.00W.md`](./00-roadmap/20260112-master-roadmap-1.00W.md)
+> — go there directly rather than via the 0629 doc, which is retained for historical phase context
+> only.
+>
 > **Items completed since 2026-04-24 that were tracked here as outstanding:**
 > - Leave persistence layer (leave parity spec, 5 tables) — DONE (migs 20260704150000–150200, W4)
 > - Pay periods table — DONE (live, 2026-07-04)
@@ -18,7 +24,13 @@
 **Scope:** `docs/*.md` at repo root — excludes `docs/archive/*` and `docs/plans/*` (managed separately).
 **Audit authority:** See `docs/plans/README.md` for the plans-layer index.
 
-> **🧭 CANONICAL EXECUTION QUEUE (updated 2026-07-08):** The active phase-ordered execution queue is [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md). The previously referenced `20260501-merged-execution-backlog-v1.00W.md` and `20260425-bsuite-finish-line-roadmap-v1.00W.md` are archived in `docs/archive/2026-07/`. This index remains a per-file status tracker for each living W-status doc in the parent `docs/` tree.
+> **🧭 CANONICAL MASTER ROADMAP (repointed 2026-07-28):** The suite-wide canonical is
+> [`docs/00-roadmap/20260112-master-roadmap-1.00W.md`](./00-roadmap/20260112-master-roadmap-1.00W.md).
+> The previously-designated queue, [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md),
+> was subordinated to it on 2026-07-27 and is retained for historical phase context only. The
+> earlier `20260501-merged-execution-backlog-v1.00W.md` and `20260425-bsuite-finish-line-roadmap-v1.00W.md`
+> remain archived in `docs/archive/2026-07/`. This index remains a per-file status tracker for each
+> living W-status doc in the parent `docs/` tree.
 >
 > **Submodule files removed by bsuite#488:** `crm7/docs/OUTSTANDING.md`, `R80.3/docs/OUTSTANDING.md`, `conduit/docs/OUTSTANDING.md`, `braden/docs/OUTSTANDING.md`, `business-suite-unified/docs/OUTSTANDING-SYSTEM.md`, `business-suite-unified/docs/OUTSTANDING-PLANS.md`. All their content lives in the merged execution backlog above.
 
@@ -45,7 +57,7 @@ These are authoritative, continuously applicable documents. They evolve in place
 | File | Purpose |
 |------|---------|
 | `20260227-auth-map-reference-v1.00A.md` | Authentication topology across BSU, CRM7, R80.3, Braden — OAuth 2.1, session boundaries, token refresh chains |
-| `20260227-bsuite-master-roadmap-v5.00W.md` | **Primary planning source of truth.** All sprints, P0–P3 gaps, audit sprint status, and recently-completed items live here. Currently at v5.02W (see `20260415-roadmap-audit-delta-v1.00W.md` for pending v5.03W bump). |
+| `00-roadmap/20260112-master-roadmap-1.00W.md` | **Primary planning source of truth.** All sprints, P0–P3 gaps, audit sprint status, and recently-completed items live here. *(repointed 2026-07-28 — the previous entry here, `20260227-bsuite-master-roadmap-v5.00W.md`, was archived 2026-07-08; `20260415-roadmap-audit-delta-v1.00W.md` is retained for historical v5.0xW version-bump context only.)* |
 | `20260227-contributing-standards-guide-v1.01W.md` | Universal code quality, documentation naming, and commit standards for all BSuite projects (supersedes v1.00A which is archived) |
 | `20260227-dry-one-shot-architecture-v1.02A.md` | DRY / one-shot data entry architecture; §1 Entity Ownership Map is the canonical cross-app ownership reference |
 | `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification — OKLCH palette, Tailwind token map, CSS variable contract |

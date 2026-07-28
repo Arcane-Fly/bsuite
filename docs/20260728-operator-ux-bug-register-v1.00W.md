@@ -108,3 +108,162 @@ caveat was correct. Every row below was traced against current `development`, no
 1. **How should crm7 read R80.3's apprentice calculation live?** (#11 and #16 are the same cross-app ownership question.)
 2. **Which TGA backend path gets fixed/enabled first** — the flagged-off bulk sync, or the mis-wired single import? (#13)
 3. **Is School-Based apprentice modelling (incl. Year 11/12 sub-tier) a scoped feature project?** (#9b) — this is domain modelling, not a label change.
+
+---
+
+## Implementation outcomes — 2026-07-28 (verifier-gated loop, all merged)
+
+Every task: implemented → reviewed by a **separate** verifier agent (maker ≠ checker) → merged signed
+to `development`. Zero Critical and zero Important findings across all five reviews.
+
+| Task | Items | Merged | Outcome |
+|---|---|---|---|
+| 1 | #9, #9b | R80.3 `0e87d2e` | #9 already fixed (`7cb5359`), not re-touched. #9b: **three** "Standard" collisions found, not two. Operator's literal wording/order used. School-Based deferred per ruling. |
+| 2 | #9c, #10 | R80.3 `0dc78a3` | #9c funding offsets now in the Set Pay Rate step. **Preview/real-calc disagreement is structurally gone** — one state variable, one `calculateChargeRate` call site. #10 verified already in-calculation. |
+| 3 | #12, #13 | crm7 `d182164e` | #13 Path B **live-verified against the real TGA sandbox** (CPC30220 → 60 units). Path A blocked, filed `crm7#1266`. #12 now derived; also fixed `edit.tsx` reading a non-existent `progress` column. |
+| 4 | #16, #17 | crm7 `92c0c9ca` | #16 `hourly_rate` is the **pay** rate — labels made truthful. #17 corrected `c09e62fc`, which had wired uploads to a legacy table with no list. |
+| 5 | #5, #19 | BSU `1ea084b` | #5 already fixed in `@bsuite/schema-builder@1.0.1`, pinned on `main` — no crm7 change needed. #19 **re-diagnosed**: never coupled to Preview. |
+
+### Root causes worth remembering
+
+- **#13 could never have worked.** `tga-search`'s `import` called `OrganisationService.GetDetails` (RTO)
+  behind a digits-only regex, so alphanumeric qualification codes 400'd before reaching TGA. The
+  pre-existing `TGAImportResult` interface never matched what the handler returned — frontend and
+  backend never agreed.
+- **#19 was not a Preview coupling.** Save's `disabled` was gated on `settingsLoading || brandingLoading`;
+  the Preview link was coincidental timing. Removing the guard naively would have upserted
+  `DEFAULT_BRAND` over real rows — the guard added prevents exactly that.
+- **#17's earlier "fix" was wired to a dead system** — uploads went to legacy `document_records` with no
+  list, so they appeared to succeed and never showed.
+
+### Bugs found while fixing other things (all filed)
+
+- `crm7#1265` **[P0, wrong money]** charge-rate calc uses VIC payroll tax (4.85%) for every tenant; WA is
+  5.5% → GTO under-charges the host by ~$321/apprentice/yr.
+- `bsuite#1684` **[architecture]** one-shot drift — Charge Calculations are R8-owned by doctrine but
+  authored in crm7. Root cause of both `crm7#1265` and #11.
+- `crm7#1266` TGA bulk sync blocked twice over (flag off **and** `runSync()` Stage-2 upsert unimplemented).
+- `R80.3#371` apprentice details modal explains funding from the legacy `fundingConfig.sources`, not the
+  W3 offset actually applied.
+
+### OPERATOR RULINGS — 2026-07-28 (all three now SETTLED)
+
+1. **§12.3 live checks — APPROVED.** `crm.crm7.app/settings/schema-builder` Tidy/Fit reframe and
+   `suite.crm7.app/branding` Save-without-Preview accepted on code + test evidence.
+2. **`bsuite#1684` / OQ1 — RULED.** crm7 `ChargeRateSnapshot` is interim-canonical for persisted
+   charge-rate records, **sourced from R80.3** (R8 owns Award Rates / Charge Calculations / Funding
+   Offsets per one-shot doctrine §1). R8's unwired rate tables are **deprecated, not deleted** — no
+   DROP migration (Feature Protection). Relayed to hermes as binding.
+3. **Invoice wording — REJECTED, and it opened a wider defect class.** The label had been changed to
+   `"Standard (39-Week)"` for symmetry with `"ALEX 48-Week"` / `"52-Week"`. Operator: *"dont hard code
+   figures 39 weeks i still calculable. its standard becasue its common but there is nothing that can
+   be set since there are several variables based on the cercumstance and the award."*
+
+   He is right, and the code already said so. `packages/charge-calc/src/types.ts:85` annotates
+   `Standard: 39` as `// fallback only`. The real derivation is `billing.ts:39-43`:
+   `52 − annualLeaveWeeks − publicHolidayWeeks − sickLeaveWeeks − trainingWeeks` — where public
+   holidays are state-dependent and `trainingWeeks` varies by **award** *and* by **apprentice year**
+   (`calculate.ts:140-141`). **ALEX48 (48) and W52 (52) genuinely are fixed** (`billing.ts:24-27`
+   hard-returns them), so those two labels are correct and stay.
+
+   **Standing rule:** no fixed week count may be asserted for the Standard model anywhere. Hedged
+   forms ("~39", "typically 39 weeks") are equally prohibited — invoices are legal artifacts.
+
+### NEW — defects found by the sweep that ruling triggered
+
+The monorepo-wide sweep for asserted 39-week figures found the label was the *smallest* instance.
+
+- **`crm7#1275` [P0, wrong money] — CONFIRMED AND FIXED (`a84e7ad7`, signed).**
+  `resolveBillableWeeks()` billed a **flat 39 weeks** for every Standard line. A **local**
+  `BILLING_MODEL_WEEKS` (chargeToBilling.ts:43, **lowercase** keys) shadowed the canonical
+  capitalised map, and `billingModel` was typed bare `string` (:493, :731, :763, :801) so the
+  compiler could not see the divergence. Because `CrmChargeRateInput.billingModel` is typed
+  `'standard'|'alex48'|'w52'` (`crmCalcBridge.ts:56`) and reaches the pipeline unconverted, the
+  lowercase lookup **always hit** — the derive branch beneath it was **dead code**.
+
+  **Direction: over-billing the host.** Representative WA Year-1 apprentice (11 gazetted PH days,
+  8 training weeks, $50/hr × 38 hrs/wk): 39 weeks → $74,100/yr vs derived 36 → $68,400/yr =
+  **$5,700/yr over-charged on one worker**. ALEX48/W52 were unaffected (genuinely fixed).
+
+  Fix imports the canonical map, normalises to canonical casing **once at the boundary**
+  (`toCanonicalBillingModel()`), derives Standard/Custom, and makes the constant reachable only
+  when both derivations fail — with a **visible warning**, since the silent fallback *was* the bug.
+  Mutation-tested: reverted → RED (`expected 39 to be 36`), restored → GREEN; 4912 pass, tsc +
+  eslint clean. PI independently verified the casing claim, signature, map removal and logic.
+
+  **Operator decision required:** hosts billed under Standard since this pipeline shipped were
+  over-charged. Quantifying exposure and deciding remediation is a commercial call.
+- **`crm7/src/components/placements/ChargeRateCard.tsx:36`** — `label: 'Standard (39 weeks)'` on a
+  dropdown users select from. Its own help text already says the truth
+  (`'Apprentice — leave-adjusted billable weeks'`); the label contradicts it.
+- **`crm7/src/hooks/usePlacementChargeCalc.ts:44`** — docstring asserts `defaults to 'Standard' (39 weeks)`.
+- **conduit offers — FIXED and merged (`c96bc41`, signed, 1082/1082 pass). The most serious of the
+  four**, because it reached a legally executed document.
+  - `_view.tsx` persisted `billable_weeks = 39` onto **every Standard offer record**. Now `null`
+    unless an operator enters a figure; ALEX48/W52 keep their fixed counts. Justified: the offer
+    dialog collects none of the derivation inputs (no leave days, PH days, sick days, training
+    weeks, daysPerWeek), so deriving here would reproduce 39 in disguise — explicitly ruled out.
+    Column is nullable with `CHECK (billable_weeks IS NULL OR BETWEEN 1 AND 52)`, so `null` is safe.
+  - `entities.ts:482` label `'Standard (39 weeks)'` → `'Standard (Leave-Adjusted)'`, printed on the
+    **e-signed offer PDF** (`offerDocuments.ts:265`, `:308`). "Billable weeks" line now renders
+    `Not specified` rather than `39 weeks`.
+  - **Found unbriefed:** the create/edit dialog rendered *"Implies 39 billable weeks"* for Standard
+    **before any save** — a third instance, visible at data-entry time. Gated to ALEX48/W52.
+  - **Found unbriefed:** migration `20260618150000`'s `COMMENT ON COLUMN` asserted "Standard => 39
+    billable weeks" **in the live DB catalog**. Corrected by additive comment-only migration
+    `20260728200500` (timestamp verified unique across all 6 submodules + parent).
+  - Mutation-tested: reverted → RED (`expected 39 to be null`), restored → GREEN.
+
+  Note: `20260728120000_enterprise_licence_events.sql` exists in **three** places (crm7, BSU,
+  parent). Checked because cross-submodule version collisions silently skip — all three are
+  **byte-identical** (`df6cc7e9…`), so this is deliberate sharing, not divergence. Not a defect.
+- **`R80.3/src/services/invoicingService.ts` — FIXED and merged (`62b584f`, signed, 975/975 pass).**
+  The docstring at `:179-193` had asserted *"`BILLING_MODEL_WEEKS` fixes `Standard` at 39 billable
+  weeks/year"* — the false premise the bad label rested on. Corrected alongside the label, since
+  fixing the return value while leaving the comment would re-teach the error to the next reader.
+
+  Label is now `Standard, Training Not Billed` — non-numeric, and the one differentiator that is
+  **verifiable in the same file**: `includesTraining()` (`:175-177`) returns true only for
+  ALEX48/W52. Rendering the *computed* weeks was considered and rejected: the call sites (`:617`,
+  `:636`, `:833`, `:853`) build **weekly** lines (`… ${weekStart} to ${weekEnd}`), so an *annual*
+  count never belonged there in any form — not even a correct one. (Comma, not nested parens: the
+  line template already wraps the label, and nothing parses the description field — verified.)
+
+- **`crm7#1274` — FIXED and merged (`01dd00fb`, signed, 214/214).** `usePlacementChargeCalc.ts`
+  hardcoded `Standard: 39` **and `Custom: 39`** into `BILLING_MODEL_TO_WEEKS`, feeding
+  `cfg.billableWeeks`. `Custom: 39` was the worse of the two — Custom means operator-defined, and the
+  canonical map has `Custom: null` precisely because no constant applies. `:48`'s docstring had
+  *already* been corrected to say weeks are derived, so the comment described behaviour the code did
+  not implement — the inverse of the R80.3 defect, same file class.
+
+  Standard now derives via `calculateBillableWeeks()`; Custom honours a new `customWeeks` and
+  surfaces a **visible warning** on fallback, so the substitution is never silent. Mutation-tested
+  (revert → 4/13 RED incl. `expected 39 to be 17`; restore → 13/13 GREEN).
+
+  **Limitation named, not papered over:** no caller varies the leave inputs today, so Standard still
+  resolves to 39 — now from the config's own values, tracking them if they change, rather than a
+  divergent literal. Real per-apprentice derivation needs `placements/create.tsx` to thread
+  state-specific public holidays and award/year-specific training weeks into override fields,
+  mirroring what `chargeToBilling.ts` already does for batch invoicing. Follow-on work.
+
+### Where this family now stands
+
+All four merged, pushed, GitHub-signature-verified. **One item is NOT delivered:** conduit migration
+`20260728200500` (the DB column comment) requires conduit `development` → `main` plus a parent
+pointer bump before the applier picks it up. Comment-only, so low risk — but merged ≠ shipped.
+
+**Open, and an operator call, not an engineering one:** hosts billed under the Standard model since
+the crm7 batch pipeline shipped were over-charged. Quantifying exposure and deciding remediation
+needs Braden.
+
+**`crm7#1276`** tracks the remaining `Custom` gaps (no UI field for the week count; batch pipeline
+still cannot carry `Custom` at all) — a product question about whether GTO operators need a
+per-placement custom billing basis.
+
+This is the same failure class as `crm7#1265` (VIC payroll tax rendered for every tenant): a
+representative value presented as the record's own.
+
+### Still open from the register (not yet implemented)
+#1 comms read view, #6 dashboard edit-in-place, #7/#20 portal delivery, #21 client→host one-shot,
+#22 pipeline from conduit, #15 docs screenshots, #3/#3b/#3c platform card invariant (hermes A6),
+#11 advanced config (hermes A9).
