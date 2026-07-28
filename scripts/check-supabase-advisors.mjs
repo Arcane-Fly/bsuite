@@ -87,8 +87,10 @@ function selfTestFixtures() {
     performance: [
       // tracked mpp table -> suppressed
       { name: 'multiple_permissive_policies', level: 'WARN', detail: 'tracked', metadata: { name: 'timesheets', type: 'table' } },
+      // tracked auth_rls_initplan table -> suppressed (bsuite#1542)
+      { name: 'auth_rls_initplan', level: 'WARN', detail: 'tracked initplan', metadata: { name: 'some_new_table', type: 'table' } },
       // NEW perf WARN -> filed, not failed
-      { name: 'auth_rls_initplan', level: 'WARN', detail: 'new initplan issue', metadata: { name: 'some_new_table', type: 'table' } },
+      { name: 'unused_rls_index', level: 'WARN', detail: 'new unused index issue', metadata: { name: 'some_other_table', type: 'table' } },
       // INFO -> report-only
       { name: 'unused_index', level: 'INFO', detail: 'idx', metadata: { name: 'idx_x', type: 'index' } },
     ],
@@ -191,8 +193,8 @@ console.log(summaryLines.join('\n'));
 
 if (selfTest) {
   const ok = newSecurity.length === 1 && newSecurity[0].metadata.name === 'evil_new_fn'
-    && newPerf.length === 1 && newPerf[0].metadata.name === 'some_new_table'
-    && sec.accepted.length === 1 && perf.tracked.length === 1
+    && newPerf.length === 1 && newPerf[0].metadata.name === 'some_other_table'
+    && sec.accepted.length === 1 && perf.tracked.length === 2
     && perf.info.length === 1;
   console.log(ok ? 'SELF-TEST PASS' : 'SELF-TEST FAIL');
   process.exit(ok ? 0 : 1);

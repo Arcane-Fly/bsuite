@@ -167,6 +167,17 @@
       ]
     },
     {
+      "lint": "auth_rls_initplan",
+      "object_type": "table",
+      "mode": "tracked",
+      "tracked_in": "bsuite#1542",
+      "reason": "auth_rls_initplan is a PERFORMANCE-only WARN (RLS policy uses an init plan that re-evaluates per row) \u2014 never security-blocking, but can cause table scans on large tables. Tracked (not accepted) so live occurrences surface in the perf sweep issue rather than silently passing. 'some_new_table' is the checker self-test's filed-perf-finding anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); removing this rule would make the self-test's newPerf assertion fail. Live occurrences across tables are auto-filed to bsuite#1542.",
+      "added": "2026-07-28",
+      "objects": [
+        "some_new_table"
+      ]
+    },
+    {
       "lint": "authenticated_security_definer_function_executable",
       "object_type": "function",
       "mode": "accepted",
