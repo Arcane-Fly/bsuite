@@ -37,7 +37,7 @@ pnpm test:packages     # shared @bsuite/* packages
 
 - **Node:** 24 (pinned via `.node-version` + `engines.node`)
 - **pnpm:** `10.30.3` (via corepack)
-- **Lockfile gotcha:** NEVER run `pnpm install` inside a submodule from the bsuite tree — pnpm embeds `../packages/*` paths that break Vercel. Regenerate from `~/<app>_lockgen/` (see AGENTS.md §"pnpm Lockfile Generation").
+- **Lockfile gotcha:** NEVER run `pnpm install` inside a submodule from the bsuite tree — pnpm embeds `../packages/*` paths that break Vercel. Regenerate from `~/<app>_lockgen/` (see AGENTS.md §"pnpm Lockfile Generation"). Copy `package.json` + `patches/` (if it exists) + the existing `pnpm-lock.yaml` as base, then run `pnpm install --lockfile-only --no-frozen-lockfile` — the base lockfile prevents ~900 lines of transitive dep churn (bsuite#1612).
 
 ## Architecture
 

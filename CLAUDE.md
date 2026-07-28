@@ -239,11 +239,13 @@ Cookie SSO has been **removed**. Each app's Supabase client uses per-domain defa
 
 ```bash
 mkdir ~/crm7_lockgen && cp crm7/package.json ~/crm7_lockgen/
-cd ~/crm7_lockgen && pnpm install
+cp -r crm7/patches ~/crm7_lockgen/        # if patches/ exists (crm7 has one)
+cp crm7/pnpm-lock.yaml ~/crm7_lockgen/    # base lockfile prevents transitive churn
+cd ~/crm7_lockgen && pnpm install --lockfile-only --no-frozen-lockfile
 cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
 ```
 
-Verify: correct lockfile has `.:` as the only importer. Broken lockfile has `..` or `../packages/*`.
+Verify (mandatory — bsuite#1612): correct lockfile has `.:` as the only importer (`grep "^importers:" -A 3 crm7/pnpm-lock.yaml | head -5`). Broken lockfile has `..` or `../packages/*`. Then check `git diff --stat pnpm-lock.yaml` — should show only the intended version bump, NOT hundreds of transitive dep changes (a large diff means the base lockfile was not copied).
 
 ### Dependency Version Policy
 

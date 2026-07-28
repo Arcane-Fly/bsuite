@@ -170,11 +170,13 @@ Uses corporate branding — NOT the D2C theme:
 
 ```bash
 mkdir ~/crm7_lockgen && cp crm7/package.json ~/crm7_lockgen/
-cd ~/crm7_lockgen && pnpm install
+cp -r crm7/patches ~/crm7_lockgen/        # if patches/ exists (crm7 has one)
+cp crm7/pnpm-lock.yaml ~/crm7_lockgen/    # base lockfile prevents transitive churn
+cd ~/crm7_lockgen && pnpm install --lockfile-only --no-frozen-lockfile
 cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml && rm -rf ~/crm7_lockgen
 ```
 
-Correct lockfile: `.:` as only importer. Broken lockfile: `..` or `../packages/*` as importers.
+Correct lockfile: `.:` as only importer. Broken lockfile: `..` or `../packages/*` as importers. Verify `git diff --stat pnpm-lock.yaml` shows only the intended bump, NOT hundreds of transitive dep changes (bsuite#1612).
 
 ## Commits
 

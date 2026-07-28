@@ -248,12 +248,19 @@ Always regenerate lockfiles from an isolated directory **outside** the bsuite tr
 # Example for crm7 — same pattern for all projects
 mkdir ~/crm7_lockgen
 cp crm7/package.json ~/crm7_lockgen/
-cd ~/crm7_lockgen && pnpm install
+cp -r crm7/patches ~/crm7_lockgen/        # if patches/ exists (crm7 has one)
+cp crm7/pnpm-lock.yaml ~/crm7_lockgen/    # base lockfile prevents transitive churn
+cd ~/crm7_lockgen && pnpm install --lockfile-only --no-frozen-lockfile
 cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml
 rm -rf ~/crm7_lockgen
 ```
 
-The correct lockfile has `.:` as the only importer. A broken workspace lockfile will have `..` or `../packages/*` as importers.
+**Verify (mandatory — bsuite#1612):**
+1. The lockfile has `.:` as the only importer. A broken workspace lockfile will have `..` or `../packages/*` as importers:
+   ```bash
+   grep "^importers:" -A 3 crm7/pnpm-lock.yaml | head -5
+   ```
+2. `git diff --stat pnpm-lock.yaml` shows only the intended version bump (a few lines), NOT hundreds of transitive dependency changes. A large diff means the base lockfile was not copied — redo with the existing lockfile as base.
 
 ### Dependency Version Policy
 

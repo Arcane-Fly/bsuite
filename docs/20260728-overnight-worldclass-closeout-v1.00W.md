@@ -242,7 +242,7 @@ Broader monorepo product roadmap (OUTSTANDING epics) remains living backlog — 
 ### Manuals + full-roadmap continuation (2026-07-27T23:45Z)
 - User-manual program **was always in goal** — scaffold already on BSU (/docs, 7 manuals, HeaderManualLink, route map, org_documents in crm7).
 - Content expansion PR: BSU#607 manuals overnight features + how-tos.
-- Master NOW N0–N4 / N-CRIT p1–p2 already shipped; remaining: N-CRIT p3, invites/Xero epic, page-builder north-star, open GitHub product issues (~65 open across repos).
+- Master NOW N0–N4 / N-CRIT p1–p2 already shipped; remaining: N-CRIT p3, invites/Xero epic, page-builder north-star, open GitHub product issues (**97 open across the 7 repos as of 2026-07-28**, measured via `gh issue list --repo GaryOcean428/<repo> --state open`, not "~65" — see the weekly gap register's verified-status appendix for the per-repo breakdown; the count moves throughout the day as issues are filed and closed).
 
 ### BSU#416 developer-nav (promoted)
 - Production Nav rebuild on main via #609/#610 — uplift primitives, no mock-only paths.
@@ -253,4 +253,12 @@ Broader monorepo product roadmap (OUTSTANDING epics) remains living backlog — 
 
 ### Enterprise licence events
 - BSU#613/#614 on main + parent migration `20260728120000_enterprise_licence_events.sql`.
-- Grace invites from seat-cap path write durable rows; Xero invoice/webhook paid stamps still open.
+- **Correction (2026-07-28, verified live):** `enterprise_licence_events` now exists in production
+  (`to_regclass('public.enterprise_licence_events')` resolves, confirmed via Supabase MCP). The
+  write from the grace-invite path is **still fire-and-forget** — it does not "write durable rows"
+  in any guaranteed sense; a failed insert is swallowed silently and the admin still sees a success
+  toast. A fix is prepared but **not yet merged**: business-suite-unified branch
+  `fix/gap-bsu-grace-audit-warning`, commit `2f491f6`, which isolates the audit INSERT via
+  migration `20260728170000` and surfaces write failures as a non-blocking warning instead of
+  silence. Until that merges and the migration applies, do not describe this path as durable.
+  Xero invoice/webhook paid stamps still open regardless.

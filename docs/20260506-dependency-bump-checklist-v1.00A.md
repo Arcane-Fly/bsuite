@@ -92,8 +92,13 @@ cd /path/to/<consumer-repo>     # e.g., crm7/
 #    The OAuth contract test will fail if a caret/tilde is reintroduced.
 
 # 2. Regenerate the lockfile OUTSIDE the bsuite tree (per CLAUDE.md):
+#    Copy package.json + patches/ (if it exists) + the EXISTING lockfile as base.
+#    The base lockfile prevents pnpm from re-resolving all transitive deps
+#    from scratch, which causes ~900 lines of churn (bsuite#1612).
 mkdir ~/lockgen-tmp && cp package.json ~/lockgen-tmp/
-cd ~/lockgen-tmp && pnpm install
+cp -r patches ~/lockgen-tmp/ 2>/dev/null || true              # if patches/ exists
+cp pnpm-lock.yaml ~/lockgen-tmp/                              # base lockfile
+cd ~/lockgen-tmp && pnpm install --lockfile-only --no-frozen-lockfile
 cp ~/lockgen-tmp/pnpm-lock.yaml /path/to/<consumer-repo>/pnpm-lock.yaml
 rm -rf ~/lockgen-tmp
 
@@ -101,6 +106,10 @@ cd /path/to/<consumer-repo>
 
 # 3. Verify the lockfile has `.:` as the only importer (NOT `..` or `../packages/*`)
 grep "^importers:" -A 3 pnpm-lock.yaml | head -5
+
+# 3b. Verify minimal churn — git diff should show only the intended version bump,
+#     NOT hundreds of transitive dependency changes (bsuite#1612)
+git diff --stat pnpm-lock.yaml
 
 # 4. Run the OAuth contract test
 pnpm vitest run src/__tests__/oauth-contract.test.ts

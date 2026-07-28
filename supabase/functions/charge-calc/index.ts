@@ -5,21 +5,34 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 // For Deno edge functions, we'll inline the core calculate function
 // or use an npm specifier: import { calculate } from 'npm:@bsuite/charge-calc';
 
+const ALLOWED_ORIGINS = [
+  'https://crm.crm7.app',
+  'https://d.crm.crm7.app',
+  'https://suite.crm7.app',
+  'https://d.suite.crm7.app',
+  'https://conduit.crm7.app',
+  'https://d.conduit.crm7.app',
+];
+
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    });
+    return new Response(null, { headers: corsHeaders(req) });
   }
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
     });
   }
 
@@ -38,13 +51,13 @@ serve(async (req) => {
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
     return new Response(
       JSON.stringify({ error: 'Invalid calculation config', details: String(error) }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
+      { status: 400, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' } }
     );
   }
 });
