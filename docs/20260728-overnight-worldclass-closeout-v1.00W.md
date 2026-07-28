@@ -250,3 +250,7 @@ Broader monorepo product roadmap (OUTSTANDING epics) remains living backlog — 
 ### Seat caps (EPIC partial)
 - BSU#611/#612 on main — production `evaluateSeatCap` + Team Members invite gate.
 - Remaining EPIC: Xero invoice for grace seats + developer portal client invoicing.
+
+### Enterprise licence events
+- BSU#613/#614 on main + parent migration `20260728120000_enterprise_licence_events.sql`.
+- Grace invites from seat-cap path write durable rows; Xero invoice/webhook paid stamps still open.

@@ -56,7 +56,7 @@
 
 - **Team invites + seat caps (BSU Admin/TeamMembers):** invite flow with seat enforcement — `subscriptions.seat_count` vs active members. Developer licence = uncapped. Cap reached → block + redirect to subscription page with increase-seats CTA.
 - **Enterprise/annual-plan grace (e.g. FutureBuild/MBAWA):** invites beyond cap succeed with a 1-month grace window; developer notified (email); invoice for additional licences via Xero; mark paid reconciles via xero-webhook.
-- **Enterprise licence tracking table:** additional-seat events, grace expiry, notified_at, invoiced_at, paid_at, xero_invoice_id.
+- **Enterprise licence tracking table:** SHIPPED (`enterprise_licence_events`, BSU#613/#614) — grace_invite recorded from TeamMembers; Xero paid stamps still open.
 - **Developer portal client invoicing → Xero:** surface in BSU developer portal to create tenant invoices and submit via existing xero-invoice-submit edge fn; status tracking via webhook.
 - **Automated email:** notify developer on grace invite + on paid reconciliation.
 
