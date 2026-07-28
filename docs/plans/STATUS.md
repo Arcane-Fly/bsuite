@@ -10,7 +10,8 @@ dependency status).
 > **Plans NOT in this register:** sibling submodule `docs/plans/STATUS.md` files
 > (crm7, conduit, business-suite-unified, R80.3, braden, throughput) carry the
 > per-app rows. The long-horizon planning reference is
-> [`docs/20260227-bsuite-master-roadmap-v5.00W.md`](../20260227-bsuite-master-roadmap-v5.00W.md);
+> [`docs/00-roadmap/20260112-master-roadmap-1.00W.md`](../00-roadmap/20260112-master-roadmap-1.00W.md)
+> *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*;
 > the active phase-ordered queue is
 > [`docs/20260501-merged-execution-backlog-v1.00W.md`](../20260501-merged-execution-backlog-v1.00W.md).
 > Cross-app a11y / dependency / auth status lives in
