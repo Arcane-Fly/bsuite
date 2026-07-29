@@ -162,23 +162,82 @@ function isAnnualFrequency(freq: string | null): boolean {
   return lower.includes('annum') || lower.includes('year');
 }
 
-function mapAllowanceAmount(a: AwardAllowance): number {
-  const amount = a.amount ?? a.rate ?? 0;
-  return isAnnualFrequency(a.paymentFrequency) ? amount / 52 : amount;
+/**
+ * `rate_unit` values where `rate` expresses a PERCENTAGE of some base the
+ * allowance applies to (e.g. a percentage of the classification rate) —
+ * as distinct from a dollar-denominated `rate` (e.g. `rateUnit: 'per hour'`,
+ * the FWC "Tool and employee protection allowance" pattern, where `rate` is
+ * a flat cents-per-hour figure standing in for a missing `amount`).
+ * Confirmed real MAPD values include the literal `'percent'` (see
+ * `crm7/src/pages/payroll/award-rates/allowanceFormat.ts`, which formats
+ * this same raw FWC value for display, and `R80.3/src/utils/awardAllowances.ts`
+ * / its tests, which already refuse to annualise a `rateUnit: 'percent'`
+ * row rather than guess).
+ */
+function isPercentageRateUnit(rateUnit: string | null): boolean {
+  if (!rateUnit) return false;
+  const lower = rateUnit.toLowerCase().trim();
+  return lower === '%' || lower.includes('percent');
 }
 
-/** Convert AwardAllowance[] to CalcConfig Allowance[] */
+/**
+ * Resolve an allowance's flat dollar amount (normalising per-annum
+ * frequencies to weekly), or `null` when it cannot be safely converted.
+ *
+ * bsuite#1689: `amount` (dollars) and `rate` (which can be EITHER a
+ * dollar-per-unit figure OR a percentage, disambiguated by `rateUnit`) are
+ * not interchangeable. The historical `a.amount ?? a.rate ?? 0` chain
+ * silently treated every `rate` as dollars, so a genuine percentage
+ * allowance (`rateUnit: 'percent'`, `rate: 0.5` meaning 0.5% of a base) was
+ * consumed as $0.50 — a fabricated compliance figure amplified ~1.7× by
+ * every downstream on-cost (see R80.3#378).
+ *
+ * This function never fabricates: a percentage-based `rate` has no base to
+ * apply against here, so it is refused (`null`) rather than guessed — the
+ * same "never fabricate a compliance figure" precedent as
+ * `R80.3/src/utils/awardAllowances.ts`'s `annualizeAllowanceAmount()`. A
+ * dollar-denominated `rate` (any other `rateUnit`, or `rateUnit: null`) is
+ * still accepted as a stand-in for a missing `amount` — that path is
+ * correct and regression-locked by the existing "Tool allowance" tests.
+ */
+function mapAllowanceAmount(a: AwardAllowance): number | null {
+  if (a.amount !== null) {
+    return isAnnualFrequency(a.paymentFrequency) ? a.amount / 52 : a.amount;
+  }
+  if (a.rate !== null && !isPercentageRateUnit(a.rateUnit)) {
+    return isAnnualFrequency(a.paymentFrequency) ? a.rate / 52 : a.rate;
+  }
+  // Either no usable value at all, or a percentage rate with no base to
+  // convert against — refuse rather than fabricate.
+  return null;
+}
+
+/**
+ * Convert AwardAllowance[] to CalcConfig Allowance[].
+ *
+ * Allowances that cannot be safely reduced to a flat dollar amount (see
+ * `mapAllowanceAmount`) are excluded — silently, at this layer, mirroring
+ * the pre-existing "filters out allowances with null amount and null rate"
+ * behaviour this function already had. This is a low-level engine boundary
+ * with no side channel for surfacing a reason to a user; callers that need
+ * a visible "cannot auto-calculate" UI reason (e.g. R80.3's
+ * `awardAllowances.ts` bridge) resolve amounts independently via
+ * `annualizeAllowanceAmount()` before ever reaching this function.
+ */
 function convertAllowances(
   awardAllowances: AwardAllowance[],
   enabledIds?: number[] | null,
 ): Allowance[] {
   return awardAllowances
-    .filter((a) => a.amount !== null || a.rate !== null)
-    .map((a) => ({
+    .map((a) => ({ source: a, amount: mapAllowanceAmount(a) }))
+    .filter(
+      (x): x is { source: AwardAllowance; amount: number } => x.amount !== null,
+    )
+    .map(({ source: a, amount }) => ({
       id: a.fixedId,
       name: a.name,
       type: mapFrequencyToType(a.paymentFrequency),
-      amount: mapAllowanceAmount(a),
+      amount,
       superApplicable: a.isAllPurpose,
       enabled:
         enabledIds === null
