@@ -49,7 +49,7 @@ export const DEFAULT_CONFIG: CalcConfig = {
   hoursPerWeek: 38,
   hoursPerDay: 7.6,
   daysPerWeek: 5,
-  billableWeeks: 39,
+  billableWeeks: 39, // fallback only — use calculateBillableWeeks() for leave-adjusted value
   trainingWeeks: 5,
   apprenticeshipYears: 4,
   annualLeaveDays: 20,

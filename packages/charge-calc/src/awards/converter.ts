@@ -87,7 +87,7 @@ export function awardToCalcConfig(
     hoursPerWeek: hours.ordinaryHoursPerWeek,
     hoursPerDay: hours.ordinaryHoursPerDay,
     daysPerWeek: hours.ordinaryDaysPerWeek,
-    billableWeeks: overrides?.billableWeeks ?? 39, // Standard default
+    billableWeeks: overrides?.billableWeeks ?? 39, // fallback only — use calculateBillableWeeks() for leave-adjusted value
     trainingWeeks: 5, // default, overridden by currentYear + trainingWeeksPerYear
     currentYear: ctx.currentYear,
     apprenticeshipYears: 4, // default for standard apprenticeship
