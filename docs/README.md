@@ -30,6 +30,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260723-bsuite-capability-matrix-v1.00W.md` | Competitor capability matrix (Code House WfO/AnyTime, ReadyTech Ready Recruit, aXcelerate) + prioritised completion ledger + user-manual program seed |
 | `20260724-bsuite-vercel-env-inventory-v1.00W.md` | Vercel production env-var inventory across all 6 apps (per-app matrix, gap notes) — captured via vercel CLI 2026-07-24 |
 | `20260724-oneshot-cross-cutting-audit-v1.00W.md` | Full cross-cutting DRY one-shot audit (2026-07-22→24 ship window) — 5 violations fixed, 4 ownership-map gaps closed, lifecycle-handover exception codified |
+| `20260724-migration-fk-index-checklist-v1.00W.md` | Every new FK column needs a same-migration btree index (pgTAP A1 / R1); CI script check-migration-fk-indexes.mjs |
 | `20260724-recurring-bugs-and-blindspots-v1.00W.md` | Recurring bug classes (R1–R12) + unexamined clusters (B1–B12) + next-5 investigations — discovery only after prompt-enhancer Standard refine |
 | `plans/20260725-docs-deadcode-archive-refined-v1.00D.md` | Prompt-enhanced plan: docs↔code audit, dead code, archive relocate |
 | `20260725-headroom-learn-notes-v1.00W.md` | Headroom learn on bsuite: 7.1% tool-fail rate; LLM extract blocked (Claude limit / litellm); Qwen 3.8 API 401 |
@@ -117,3 +118,5 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [20260728 overnight world-class close-out](./20260728-overnight-worldclass-closeout-v1.00W.md)
 
 - [20260728 migration idempotency audit](./20260728-migration-idempotency-audit-v1.00W.md) — gap-remediation Task 3 (P0-2): verdicts for the 17 above-floor migrations flagged as unrecorded; all SAFE, no guards needed; documents that the ledger gap has since substantially closed
+
+- [20260729 unified authoring QA audit](./20260729-unified-authoring-qa-audit-v1.00W.md) — comprehensive QA audit across unified authoring, invites, Jodie and the platform kit

@@ -18,6 +18,8 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 
 | File | Status | Description |
 |------|--------|-------------|
+| `20260729-qa-backlog-execution-v1.00W.md` | W | QA backlog execution plan — full red-team completion of the unified-authoring audit findings |
+| `20260729-unified-authoring-redteam-refined-v1.00W.md` | W | Refined prompt for the unified authoring surface red-team + execution plan (prompt-enhancer output) |
 | `20260423-gto-billing-reporting-refined-plan-v1.00A.md` | A | Production billing, STP Phase 2, Payday Super, regulatory reporting (Approved; Xero lane blocked on app registration) |
 | `20260501-universal-wysiwyg-schema-ux-v1.00W.md` | W | Universal WYSIWYG + schema-driven UX (Phase 0 + Schema Builder Phase 1a/1b + schema-builder-specific Phase 3 complete; page/form/custom authoring phases active) |
 | `20260506-codehouse-parity-and-platform-360-v1.00W.md` | W | Codehouse Workforce-One parity + Platform-360 capability spec (index plan + 9 portal sub-plans + 1 visual feature builder spec under `20260506-codehouse-parity/`; refined-prompt provenance under `inputs/`). Permissions remain AUTH_CANONICAL.md + Supabase RLS + BSuite SSO — no new RBAC/ABAC framework. |
