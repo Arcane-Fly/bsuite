@@ -766,6 +766,85 @@ describe('awardToCalcConfig', () => {
       const result = awardToCalcConfig(award, defaultCtx);
       expect(result.allowances).toEqual([]);
     });
+
+    // ─── bsuite#1689: percentage `rate` must never become a dollar amount ──
+    // `amount` (dollars) and `rate` (dollars-per-unit OR a percentage,
+    // disambiguated by `rateUnit`) are not interchangeable. A genuine
+    // percentage allowance (`rateUnit: 'percent'`) must be refused, not
+    // coerced into a dollar figure — see `mapAllowanceAmount` doc comment.
+    describe('bsuite#1689: rate-unit disambiguation', () => {
+      const percentAllowance: AwardAllowance = {
+        fixedId: 5701,
+        name: 'Percentage tool allowance',
+        amount: null,
+        rate: 0.5, // 0.5% of a base this function has no access to
+        rateUnit: 'percent',
+        paymentFrequency: 'per week',
+        isAllPurpose: false,
+        parentAllowance: null,
+        clauseRef: '19.4(a)',
+        type: 'wage',
+      };
+
+      it('refuses (excludes) an allowance whose rate is a percentage (rateUnit: "percent")', () => {
+        const award = buildAward({ wageAllowances: [percentAllowance] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances).toEqual([]);
+      });
+
+      it('refuses a percentage rate even when combined with an all-purpose flag (no silent OTE inflation)', () => {
+        const allPurposePercent: AwardAllowance = { ...percentAllowance, isAllPurpose: true };
+        const award = buildAward({ wageAllowances: [allPurposePercent] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances).toEqual([]);
+      });
+
+      it('is case/whitespace-insensitive when detecting a percentage rateUnit', () => {
+        const messyPercent: AwardAllowance = {
+          ...percentAllowance,
+          fixedId: 5702,
+          rateUnit: '  Percent  ',
+        };
+        const award = buildAward({ wageAllowances: [messyPercent] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances).toEqual([]);
+      });
+
+      it('detects a bare "%" rateUnit as a percentage too', () => {
+        const bareSign: AwardAllowance = { ...percentAllowance, fixedId: 5703, rateUnit: '%' };
+        const award = buildAward({ wageAllowances: [bareSign] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances).toEqual([]);
+      });
+
+      it('still accepts a dollar-denominated rate (rateUnit: "per hour") — no regression on the Tool allowance', () => {
+        const award = buildAward({ wageAllowances: [toolAllowance] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances).toHaveLength(1);
+        expect(result.allowances[0].amount).toBe(0.61);
+      });
+
+      it('still accepts a flat `amount` allowance when `amount` is set (no regression)', () => {
+        const award = buildAward({ wageAllowances: [industryAllowance] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances).toHaveLength(1);
+        expect(result.allowances[0].amount).toBe(32.59);
+      });
+
+      it('prefers `amount` over a percentage `rate` when both are present (amount always wins)', () => {
+        const both: AwardAllowance = { ...percentAllowance, fixedId: 5704, amount: 12.5 };
+        const award = buildAward({ wageAllowances: [both] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances[0].amount).toBe(12.5);
+      });
+
+      it('a null rateUnit with a rate present is still treated as dollar-denominated (backward compatible default)', () => {
+        const nullUnit: AwardAllowance = { ...percentAllowance, fixedId: 5705, rateUnit: null };
+        const award = buildAward({ wageAllowances: [nullUnit] });
+        const result = awardToCalcConfig(award, defaultCtx);
+        expect(result.allowances[0].amount).toBe(0.5);
+      });
+    });
   });
 
   describe('allowance enabling', () => {
