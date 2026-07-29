@@ -118,3 +118,5 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [20260728 overnight world-class close-out](./20260728-overnight-worldclass-closeout-v1.00W.md)
 
 - [20260728 migration idempotency audit](./20260728-migration-idempotency-audit-v1.00W.md) — gap-remediation Task 3 (P0-2): verdicts for the 17 above-floor migrations flagged as unrecorded; all SAFE, no guards needed; documents that the ledger gap has since substantially closed
+
+- [20260729 unified authoring QA audit](./20260729-unified-authoring-qa-audit-v1.00W.md) — comprehensive QA audit across unified authoring, invites, Jodie and the platform kit

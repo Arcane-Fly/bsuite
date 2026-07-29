@@ -75,3 +75,6 @@ visual.md
 
 # machine-local symlink to the canonical skills/agents hub (~/.agents)
 .agents
+
+# Local env/config backups — never commit (see .env.local.bak incident 2026-07-29)
+*.bak
