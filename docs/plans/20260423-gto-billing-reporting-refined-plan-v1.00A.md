@@ -836,7 +836,7 @@ award_rate_cache (Supabase)          apprentice_rate_configs (Supabase)
                          ▼
               @bsuite/charge-calc (calculate())
               [CalcConfig → CalcResult]
-              Billing models: Standard(39w) / ALEX48(48w) / W52(52w)
+              Billing models: Standard (leave/training-derived) / ALEX48(48w) / W52(52w)
               On-costs: super + WC + payroll tax + leave loading + overhead + margin
               Allowances: per-hour / per-day / per-week / percent / perKm
                          │
