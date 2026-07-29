@@ -1,0 +1,67 @@
+name: Migration FK-index lint
+
+# Recurring class R1 / pgTAP A1: a migration adds a FOREIGN KEY but no index
+# leading with that column. Postgres needs a leading-column index both for
+# lookups by the FK and for the referential-action scan when a parent row is
+# deleted; without one, deleting a parent seq-scans the child table.
+#
+# Caught by hand 3x in 2026-07 (org_documents, email_message_links, ...).
+#
+# Scope is deliberately PR-DELTA ONLY. There are ~180 pre-existing violations
+# across the submodules (mostly created_by/approved_by audit columns), so a
+# repo-wide gate could never go green. This blocks NEW debt without demanding
+# a retro-fix sweep first. Backlog for the existing ones:
+# docs/20260724-migration-fk-index-checklist-v1.00W.md
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'packages/db/migrations/**.sql'
+      - 'scripts/check-migration-fk-indexes.mjs'
+      - '.github/workflows/migration-fk-index-lint.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-fk-index-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fk-index-lint:
+    runs-on: ubuntu-latest
+    env:
+      BASE_REF: ${{ github.base_ref }}
+    steps:
+      - name: Checkout (full history required for diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Ensure base ref is available
+        run: git fetch origin "${BASE_REF}:${BASE_REF}" || true
+
+      # A gate whose pass and no-op states are indistinguishable hides defects
+      # (bsuite#1688). Prove the checker can still fail before trusting a pass.
+      - name: Self-test the checker
+        run: node scripts/check-migration-fk-indexes.mjs --self-test
+
+      - name: Collect added/changed migration files in this PR
+        id: delta
+        run: |
+          FILES=$(git diff --name-only --diff-filter=AM "origin/${BASE_REF}...HEAD" \
+                  -- '**/supabase/migrations/*.sql' 'packages/db/migrations/*.sql' \
+                  | tr '\n' ',' | sed 's/,$//')
+          echo "count=$(echo "$FILES" | tr ',' '\n' | grep -c . || true)" >> "$GITHUB_OUTPUT"
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "PR-delta migration files: ${FILES:-<none>}"
+
+      - name: Check FK indexes on PR-delta migrations
+        run: node scripts/check-migration-fk-indexes.mjs --changed-files="${{ steps.delta.outputs.files }}"
