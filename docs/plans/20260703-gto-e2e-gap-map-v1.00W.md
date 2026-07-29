@@ -402,7 +402,7 @@ apprentice/trainee).**
   "casual award application", not a placeholder.
   `crm7/src/components/placements/ChargeRateCard.tsx:38` `W52` billing
   model is explicitly labelled "labour-hire / casual" (52 billable weeks,
-  vs. `Standard` 39-week leave-adjusted apprentice weeks) — the "no training
+  vs. `Standard` leave-adjusted apprentice weeks) — the "no training
   days" requirement maps naturally to this model (training weeks = 0 for
   W52), though a hard UI enforcement of "0 training days for labour-hire"
   was not traced to a specific validation rule in this pass.

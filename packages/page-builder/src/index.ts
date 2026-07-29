@@ -1,4 +1,6 @@
 export { PageGridLayout } from './PageGridLayout.js';
+export { PageEditorLauncher } from './PageEditorLauncher.js';
+export type { WidgetConfig, PageEditorLauncherProps } from './PageEditorLauncher.js';
 export {
   usePageGridLayout,
   DEFAULT_EDITOR_EVENT_NAMES,
