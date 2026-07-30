@@ -580,7 +580,11 @@ function scanCookieSsoWithoutParser(file, entries) {
             reason = name === 'createCookieStorage'
               ? 'createCookieStorage import is forbidden'
               : 'cookieStorage import is forbidden on browser clients';
-        } else if (!isTestFile && (prev === '=' || prev === '.')) {
+        } else if (!isTestFile && (prev === '=' || prev === '.' || prev === ':')) {
+          // `:` is the object-property value position — `storage: cookieStorage,`
+          // inside a createClient auth block. That is THE canonical forbidden
+          // pattern (CLAUDE.md names it first), and omitting `:` here meant the
+          // most important case was the one this rule did not catch.
           reason = name === 'createCookieStorage'
             ? 'createCookieStorage is forbidden'
             : 'cookieStorage is forbidden on browser clients';
@@ -880,6 +884,14 @@ function selfTest() {
     { name: 'COOKIE-SSO — browser identifier reference flagged via AST', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ['const store = cookieStorage;'] },
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.line.includes('const store = cookieStorage;')) },
+    // Regression guard: `storage: cookieStorage,` in a createClient auth block is
+    // THE canonical forbidden pattern (CLAUDE.md names it first). The AST rule
+    // originally accepted only `=` and `.` as assignment context, so the
+    // object-property position — the one that actually appears in real code —
+    // silently passed. crm7's blunter word-match copy caught it; this one did not.
+    { name: 'COOKIE-SSO — object-property value position flagged', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ['  storage: cookieStorage,'] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.severity === 'fail') },
     { name: 'COOKIE-SSO — Next.js middleware NOT flagged', framework: 'nextjs', repoName: 'conduit',
       addedByFile: { 'src/middleware.ts': ["  cookies().set('sb-access', token, { httpOnly: true })"] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
