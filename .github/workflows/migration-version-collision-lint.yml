@@ -50,6 +50,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout — which is how this
+          # gate first failed, before it ever ran. Same fallback chain every
+          # other submodule-consuming workflow here uses (supabase-migrate.yml,
+          # prod-migration-history-audit.yml, secret-naming-drift.yml).
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -63,4 +69,4 @@ jobs:
         run: node scripts/check-migration-version-collisions.mjs --self-test
 
       - name: Check for cross-scope migration version collisions
-        run: node scripts/check-migration-version-collisions.mjs
+        run: node scripts/check-migration-version-collisions.mjs --require-scopes=8

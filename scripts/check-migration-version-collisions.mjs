@@ -388,9 +388,15 @@ const args = process.argv.slice(2)
 if (args.includes('--self-test')) selfTest()
 
 let rootArg = '.'
+let requireScopes = 0
 for (const a of args) {
   if (a.startsWith('--root=')) {
     rootArg = a.slice('--root='.length)
+  } else if (a.startsWith('--require-scopes=')) {
+    requireScopes = Number(a.slice('--require-scopes='.length))
+    if (!Number.isInteger(requireScopes) || requireScopes < 0) {
+      usageError(`--require-scopes must be a non-negative integer, got "${a}"`)
+    }
   } else if (a.startsWith('-')) {
     usageError(`unknown flag "${a}"`)
   } else {
@@ -402,7 +408,38 @@ const root = path.resolve(rootArg)
 if (!fs.existsSync(root)) usageError(`--root path does not exist: ${root}`)
 
 const files = scanScopes(SCOPES, root)
+
+// A gate that reports OK when it scanned nothing is not a gate.
+//
+// In CI this runs after `actions/checkout` with `submodules: recursive`. If the
+// token cannot clone the private sibling repos, checkout can leave the
+// submodule directories EMPTY — and without this guard the scan would find zero
+// files, print "OK", and disarm itself silently. That is the exact
+// green-run-that-checked-nothing failure this whole workstream keeps finding.
+//
+// `--require-scopes=N` makes the expectation explicit and load-bearing: CI
+// passes the number of scopes that must actually contain migrations, and a
+// short count is a hard error, not a pass.
+const scopesFound = new Set(files.map((f) => f.scope))
+if (requireScopes > 0 && scopesFound.size < requireScopes) {
+  console.error(
+    `check-migration-version-collisions: expected migrations in at least ` +
+      `${requireScopes} scope(s) but found ${scopesFound.size} ` +
+      `(${[...scopesFound].join(', ') || 'none'}).\n` +
+      `Submodules are probably not checked out — verify the checkout token can ` +
+      `clone the private sibling repos. Refusing to report OK on an unscanned tree.`,
+  )
+  process.exit(1)
+}
+
 if (files.length === 0) {
+  if (requireScopes > 0) {
+    console.error(
+      'check-migration-version-collisions: no migration files found at all, but ' +
+        `--require-scopes=${requireScopes} was requested. Refusing to pass.`,
+    )
+    process.exit(1)
+  }
   console.log('check-migration-version-collisions: no migration files found — OK')
   process.exit(0)
 }
