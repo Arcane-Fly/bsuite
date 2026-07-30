@@ -5,6 +5,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.5.2] — 2026-07-30 — Publish the #1689 allowance rate-unit fix
+
+### Fixed
+
+- `awards/converter.ts` no longer treats a **percentage** allowance rate as a
+  dollar amount. `AwardAllowance.rate` is dual-purpose — its meaning is
+  disambiguated by `rateUnit`. The converter previously did
+  `a.amount ?? a.rate ?? 0`, so an allowance expressed as a percentage (e.g.
+  `rate: 0.92`, `rateUnit: '%'`) was emitted as **$0.92**. It now returns
+  `null` for a percentage rate with no resolvable base — refusing to fabricate
+  a figure rather than emitting a wrong one. Non-percentage `rate` values
+  (e.g. Tool allowances) still convert, with annual frequencies divided by 52.
+  Fixes bsuite#1689.
+
+### Release note
+
+This fix landed on `main` on 2026-07-29, but **0.5.1 had already been published
+on 2026-07-25**. The version was never bumped afterwards, so every consumer
+resolving `^0.5.0` was getting a 0.5.1 whose `dist/` predates the fix — the
+source was correct and the shipped artifact was not. 0.5.2 exists to actually
+deliver it. Consumers must have their lockfiles refreshed to 0.5.2; a published
+package is not a delivered one (CLAUDE.md §12.2).
+
+---
+
 ## [0.5.0] — 2026-06-03 — Named pay item group rate keys
 
 ### Added
