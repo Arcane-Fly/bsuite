@@ -87,12 +87,20 @@ jobs:
 
       - id: set-matrix
         name: Build deployment matrix
+        # `github` context values go through env, never straight into `run:`.
+        # `submodule` is a `type: choice` so GitHub constrains it today, but an
+        # interpolation in a shell body is an injection surface regardless of
+        # what currently feeds it — and the input type is one edit away from
+        # changing. Flagged by semgrep run-shell-injection.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_SUBMODULE: ${{ github.event.inputs.submodule }}
         run: |
           ALL_SCOPES='["root","crm7","R80.3","braden","business-suite-unified","conduit","throughput"]'
 
           # workflow_dispatch: use the selected submodule or all
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            INPUT="${{ github.event.inputs.submodule }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            INPUT="$INPUT_SUBMODULE"
             if [ "$INPUT" = "all" ]; then
               echo "matrix=${ALL_SCOPES}" >> "$GITHUB_OUTPUT"
             else
@@ -111,7 +119,52 @@ jobs:
 
           # Submodule function directories
           for scope in crm7 R80.3 braden business-suite-unified conduit throughput; do
+            MATCHED=0
+
+            # Path 1 — in-tree diff. For the six SUBMODULES this can NEVER match:
+            # the parent tree holds a gitlink, not files, so
+            # `git diff -- business-suite-unified/supabase/functions/` is always empty.
             if git diff --name-only HEAD~1 HEAD -- "${scope}/supabase/functions/" | grep -q .; then
+              MATCHED=1
+            else
+              # Path 2 — gitlink diff. THIS is how submodule function changes are
+              # actually detected. A submodule bump changes only the gitlink SHA, so
+              # compare the submodule's OWN history between old and new SHA.
+              #
+              # Why this exists: the trigger `paths:` above was widened to include the
+              # bare gitlink paths so the workflow FIRES on a pointer bump, but the
+              # detector still used Path 1 only. Result: the run fired, matched
+              # nothing, set matrix=[], deployed zero functions and reported SUCCESS.
+              #
+              # Proven on run 30543359155 (2026-07-30): the promotion carrying the
+              # fairwork-enhanced allowance-paging fix reported success while
+              # `fairwork-enhanced` stayed on v61 with `{ limit: 100 }` and no `page`
+              # — MA000020's 662 wage-allowance rows still truncated to 100.
+              #
+              # supabase-migrate.yml already carries this exact fix (its own incident,
+              # run 30372383510, 2026-07-28). The sibling workflow with the identical
+              # shape never received it. Ported verbatim rather than approximated.
+              OLD_SHA=$(git rev-parse "HEAD~1:$scope" 2>/dev/null || true)
+              NEW_SHA=$(git rev-parse "HEAD:$scope" 2>/dev/null || true)
+              if [ -n "$OLD_SHA" ] && [ -n "$NEW_SHA" ] && [ "$OLD_SHA" != "$NEW_SHA" ]; then
+                git -C "$scope" fetch -q origin "$OLD_SHA" 2>/dev/null || true
+                git -C "$scope" fetch -q origin "$NEW_SHA" 2>/dev/null || true
+                if git -C "$scope" cat-file -e "$OLD_SHA^{commit}" 2>/dev/null \
+                   && git -C "$scope" cat-file -e "$NEW_SHA^{commit}" 2>/dev/null; then
+                  if git -C "$scope" diff --name-only "$OLD_SHA" "$NEW_SHA" -- "supabase/functions/" | grep -q .; then
+                    MATCHED=1
+                  fi
+                else
+                  # FAIL OPEN. If we cannot compare, assume functions changed. A
+                  # redeploy of unchanged source is idempotent and harmless;
+                  # under-triggering is the silent failure this block exists to kill.
+                  echo "::warning::Cannot diff $scope ($OLD_SHA..$NEW_SHA) — assuming functions changed (fail-open)"
+                  MATCHED=1
+                fi
+              fi
+            fi
+
+            if [ "$MATCHED" = "1" ]; then
               CHANGED+=("\"${scope}\"")
             fi
           done
