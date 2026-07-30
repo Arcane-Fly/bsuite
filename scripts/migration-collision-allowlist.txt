@@ -1,0 +1,69 @@
+# Migration version-collision allowlist (bsuite#1707)
+#
+# All six submodules (crm7, conduit, R80.3, business-suite-unified, braden,
+# throughput) plus the parent repo's own supabase/migrations/ deploy to the
+# SAME shared Supabase project. supabase_migrations.schema_migrations is one
+# table keyed on the 14-digit version string alone, so two scopes carrying a
+# migration with the same version silently skip whichever one the CI
+# applier (.github/workflows/supabase-migrate.yml) reaches SECOND.
+#
+# Format: one entry per line, `<14-digit version><whitespace><reason>`.
+# Blank lines and lines starting with # are ignored. Every entry below was
+# verified by diffing the colliding files (see scripts/check-migration-
+# version-collisions.mjs and the bsuite#1707 investigation notes).
+#
+# Two reason categories:
+#   intentional-duplicate  — the SAME migration content, deliberately
+#                             checked into more than one scope (byte-for-byte
+#                             identical). Applying it twice is a harmless
+#                             no-op (idempotent CREATE ... IF NOT EXISTS /
+#                             CREATE OR REPLACE style DDL), so the "second
+#                             one is skipped" behaviour is actually fine here
+#                             — there is nothing distinct to lose.
+#   coincidental-timestamp — two GENUINELY DIFFERENT migrations that happen
+#                             to share a timestamp by chance (independent
+#                             authors, same minute). These are real risk: if
+#                             the file that is skipped is the one carrying
+#                             the collision, its DDL never runs in
+#                             production. They are allowlisted here only
+#                             because they are historical (predate this gate)
+#                             and have been manually verified as already
+#                             applied in the live database; do NOT use this
+#                             pattern as a template for new migrations — pick
+#                             an unused timestamp instead.
+
+# --- 20 originally reported (six submodules only) -------------------------
+
+20250808012959   intentional-duplicate — braden: 20250808012959_bronze_mountain.sql and 20250808012959_little_king.sql are byte-identical (verified via diff); a stray duplicate export from the same source migration, not two different migrations.
+20260228000000   coincidental-timestamp — crm7 ensure_apprentice_gto_fields vs business-suite-unified add_billing_tables; unrelated schemas, distinct timestamp by chance.
+20260228000001   coincidental-timestamp — crm7 gto_foundation_tables vs braden create_tasks_table; unrelated schemas.
+20260306000001   coincidental-timestamp — crm7 ots_parity_schema vs business-suite-unified create_platform_admin_tables; unrelated schemas.
+20260306000003   coincidental-timestamp — crm7 timesheet_comm_templates vs business-suite-unified wave5_wave10_db_gaps; unrelated schemas.
+20260317000000   coincidental-timestamp — crm7 add_tenant_branding vs business-suite-unified create_app_notifications_table; unrelated schemas.
+20260422000000   coincidental-timestamp — crm7 create_apprentice_handoff_tokens vs business-suite-unified create_platform_api_keys_and_webhooks; unrelated schemas.
+20260423120000   coincidental-timestamp — crm7 ws8_revoke_anon_execute_on_gto_helpers vs business-suite-unified phase12_tenant_hierarchy_hardening; unrelated schemas.
+20260423130000   coincidental-timestamp — crm7 ws8_arc_anon_public_read vs business-suite-unified phase12_hierarchy_rls; unrelated schemas.
+20260423150000   coincidental-timestamp — crm7 ws4_timesheet_state_machine vs business-suite-unified phase6_imap_password_vault; unrelated schemas.
+20260423160000   coincidental-timestamp — crm7 ws5_report_system vs business-suite-unified phase6_11_seed_enterprise_subscriptions; unrelated schemas.
+20260504010000   coincidental-timestamp — three-way: conduit fix_r7_current_tenant_id_search_path, business-suite-unified branding_search_path_no_pgtemp, braden fix_security_definer_search_path; all independent search_path hardening fixes landed the same minute.
+20260506000000   coincidental-timestamp — crm7 backfill_app_metadata_tenant_id vs business-suite-unified rename_physical_column_rpc; unrelated schemas.
+20260512230000   coincidental-timestamp — SAME-SCOPE (crm7 only): people_add_middle_name_and_school_completion vs tenant_locations_and_state_ir_config are two genuinely different migrations that happen to share a timestamp; flagged for a follow-up fix-forward re-stamp (crm7 tracking issue), allowlisted here so the gate does not block on pre-existing history.
+20260519100000   coincidental-timestamp — crm7 gto_standards_clauses vs business-suite-unified branding_walk_parent_tenant_chain; unrelated schemas.
+20260701090000   coincidental-timestamp — crm7 field_officers_tenant_rls vs business-suite-unified delete_organization_rpc; unrelated schemas.
+20260702000000   coincidental-timestamp — R80.3 r80_invoice_run_tenant_policy vs business-suite-unified fix_save_tenant_navigation_auth_and_stale_id; unrelated schemas.
+20260722120000   coincidental-timestamp — crm7 apprentice_placements_add_suspended_status vs business-suite-unified r80_to_r8_canonical_slug; unrelated schemas.
+20260726090000   coincidental-timestamp — crm7 email_message_links vs R80.3 funding_offsets; unrelated schemas.
+20260728120000   intentional-duplicate — crm7 and business-suite-unified both carry enterprise_licence_events.sql, byte-for-byte identical (verified via diff/md5sum); deliberately duplicated so both apps' migration history is self-contained.
+
+# --- 3 additional collisions surfaced only when the parent repo's own
+#     supabase/migrations/ (scope "root") is included, per bsuite#1707's
+#     explicit requirement to scan it -----------------------------------
+
+20260512161000   coincidental-timestamp — SAME-SCOPE (root only): developer_portal_branding_scope_rls vs stripe_fdw_wrappers are two genuinely different migrations (branding RLS rework vs Stripe FDW bootstrap) that happen to share a timestamp; verified via diff. Flag for a follow-up fix-forward re-stamp; allowlisted so the gate does not block on pre-existing history.
+20260707000020   intentional-duplicate — crm7 and root both carry pay_periods_table.sql, byte-for-byte identical (verified via diff).
+20260707000021   intentional-duplicate — crm7 and root both carry pay_period_streams_table.sql, byte-for-byte identical (verified via diff).
+
+# Also note: 20260728120000 above is in fact a THREE-way identical duplicate
+# once root is included (root carries the same enterprise_licence_events.sql
+# byte-for-byte as crm7 and business-suite-unified) — still one allowlist
+# line since the check keys on version, not on pair count.

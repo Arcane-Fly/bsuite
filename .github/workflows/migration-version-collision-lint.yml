@@ -1,0 +1,57 @@
+name: Migration version-collision lint
+
+# bsuite#1707: all six submodules (crm7, conduit, R80.3,
+# business-suite-unified, braden, throughput) plus the parent repo's own
+# supabase/migrations/ deploy to the SAME shared Supabase project, so
+# supabase_migrations.schema_migrations is ONE table keyed on the version
+# string (leading 14 digits of the filename) ALONE. When two scopes carry a
+# migration file with the same version, .github/workflows/supabase-migrate.yml
+# silently SKIPS whichever scope it reaches second — that scope's DDL never
+# runs, but the version reads as applied in the shared table.
+#
+# Scope is deliberately FULL-TREE, not PR-delta: a new file in this PR could
+# collide with an EXISTING file in a different scope that this PR does not
+# touch, so the check must see every scope every time, not just the diff.
+#
+# 23 historical collisions predate this gate (bsuite#1707 investigation) and
+# are carried in scripts/migration-collision-allowlist.txt with a verified
+# reason each. New, un-allowlisted collisions fail the build.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'scripts/check-migration-version-collisions.mjs'
+      - 'scripts/migration-collision-allowlist.txt'
+      - '.github/workflows/migration-version-collision-lint.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-version-collision-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version-collision-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — every scope must be scanned)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides
+      # defects (bsuite#1688 lesson, reapplied here). Prove the checker can
+      # still fail before trusting a pass.
+      - name: Self-test the checker
+        run: node scripts/check-migration-version-collisions.mjs --self-test
+
+      - name: Check for cross-scope migration version collisions
+        run: node scripts/check-migration-version-collisions.mjs
