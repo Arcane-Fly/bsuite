@@ -5,6 +5,51 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.7.0] — 2026-07-30 — RDO (Rostered Day Off) worked-vs-paid modelling
+
+### Added
+
+- `RdoAccrualConfig` and `DEFAULT_RDO_CONFIG` (`src/types.ts`) — explicit
+  configuration for an RDO accrual arrangement (MA000020 cl.16.2: 8h worked /
+  7.6h paid / 0.4h banked per day, 19-worked-day cycle). Defaults to
+  `enabled: false` — no RDO — because RDOs are NOT universal: cl.16.8 permits
+  an employer + majority-of-employees opt-out, many awards never had RDOs,
+  and part-time employees may opt out under cl.16.9(b). See
+  `docs/references/20260730-rdo-flexibility.md` for the full legal basis.
+- `CalcConfig.rdo?: RdoAccrualConfig` — optional, additive field so an RDO
+  arrangement has one canonical place to travel through the pipeline.
+  **Not yet consumed by `calculate()`** — this release only adds the
+  worked-vs-paid vocabulary and stand-alone conversion helpers; wiring it
+  into the core calculation, and bumping the crm7/R80.3 consumers, is
+  separate follow-up work (CLAUDE.md §12.2).
+- `src/rdo.ts` — new module with pure helpers: `workedHoursPerDayFromPaid()`,
+  `paidHoursPerDayFromWorked()`, `workedHoursPerWeekFromPaid()`,
+  `paidHoursPerWeekFromWorked()`, `deriveRdoAccrual()` (banked hours + cycle
+  completion over a run of days worked — reports `cycleCompleted: false`
+  rather than fabricating a completed cycle for short engagements per
+  cl.16.8), and `billableHoursForRdoDayTaken()` (RDOs ARE billable when
+  taken — bills at the worked, not paid, figure for that day).
+- `CalcConfig.hoursPerWeek`/`hoursPerDay` doc comments now state unambiguously
+  that these are the PAID figure — `calculate()` multiplies wage by this
+  value for weekly pay and divides annual cost by it for cost-per-hour, so
+  feeding a worked figure in under an RDO arrangement over-computes super and
+  wage cost by roughly the accrual fraction (~5% for the standard pattern).
+
+### Why
+
+`pay_item_groups.is_rdo_accrual` and `pay_item_category`'s `'rdo'`/
+`'rdo_accrual'` values have existed in the crm7 schema with zero rows and no
+producer/consumer, and `public.timesheets` had no RDO column at all
+(companion crm7 migration `20260730340000_timesheets_rdo_accrual_columns.sql`
+adds `rdo_accrual_hours`/`rdo_taken_hours`). `@bsuite/charge-calc`'s
+`hoursPerWeek`/`hoursPerDay`/`daysPerWeek` had no documentation of whether
+they were worked or paid — paid-vs-worked was entirely unmodelled, and the
+ambiguity was silent. Super and wages are computed on PAID ordinary hours
+(SGAA 1992 s.6(1)); this release gives the package a documented, testable
+place to express the distinction without changing any existing output.
+
+---
+
 ## [0.5.2] — 2026-07-30 — Publish the #1689 allowance rate-unit fix
 
 ### Fixed

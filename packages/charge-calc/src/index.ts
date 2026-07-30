@@ -17,3 +17,5 @@ export * from './boot';
 export * from './sources';
 
 export * from './resolvers';
+
+export * from './rdo';
