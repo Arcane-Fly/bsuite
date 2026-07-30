@@ -1,0 +1,61 @@
+name: Gate-script parity
+
+# bsuite#1710. Three CI gate scripts are maintained as copies in the parent and
+# in crm7. They drifted for months without either side noticing, because each
+# copy kept exiting 0 on its own repo — divergence in a detection gate is
+# silent by construction.
+#
+# The drift was not cosmetic: the parent's newer AST-based COOKIE-SSO rule
+# accepted `=` and `.` as assignment context but not `:`, so
+# `storage: cookieStorage,` — the forbidden pattern CLAUDE.md names FIRST —
+# passed the parent's gate while crm7's older, blunter copy caught it. The more
+# sophisticated copy was the weaker one. Neither was a superset.
+#
+# This workflow makes that condition fail loudly instead of accumulating.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'scripts/drift-scan.mjs'
+      - 'scripts/dry-free-text-where-fk-lint.sh'
+      - 'scripts/check-migration-fk-indexes.mjs'
+      - 'scripts/dry-lint-exemptions.registry'
+      - 'scripts/check-script-parity.sh'
+      - '.github/workflows/script-parity.yml'
+      - 'crm7'
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: script-parity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Parity alone only proves the two copies are identical — identical and
+      # broken is still broken. The self-test proves the surviving copy still
+      # detects what it claims to, which is the property that actually matters.
+      - name: Gate scripts self-test (parent copy)
+        run: node scripts/drift-scan.mjs --self-test
+
+      - name: Gate scripts self-test (crm7 copy)
+        run: node crm7/scripts/drift-scan.mjs --self-test
+
+      - name: Script parity
+        run: bash scripts/check-script-parity.sh
