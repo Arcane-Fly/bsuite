@@ -55,9 +55,23 @@ violations=0
 # We use awk (present on all CI runners) and no regex quantifiers. Suffix
 # match is done via a small set of `index()` tests — no regex engine.
 
+REGISTRY="scripts/dry-lint-exemptions.registry"
+
 for f in $changed_files; do
+    # Registry channel for APPLIED (frozen) migrations: once a migration is in
+    # supabase_migrations.schema_migrations it must not be edited in place
+    # (see supabase/migrations/CLAUDE.md), so in-file `-- DRY exemption:`
+    # comments are impossible retroactively. `<basename>:<column>` entries in
+    # the registry acknowledge those columns instead.
+    exempt_cols=""
+    if [ -f "$REGISTRY" ]; then
+        # `|| true` guards set -euo pipefail: no registry match is the normal
+        # case and must not abort the scan.
+        exempt_cols=$({ grep "^$(basename "$f"):" "$REGISTRY" 2>/dev/null || true; } | cut -d: -f2 | tr '\n' ' ')
+    fi
+
     # Read file into awk with the suspect list as a variable
-    awk -v FILE="$f" -v PATTERNS="$PATTERN_COLS" '
+    awk -v FILE="$f" -v PATTERNS="$PATTERN_COLS" -v EXEMPT=" $exempt_cols " '
 BEGIN {
     split(PATTERNS, suffixes, " ");
     in_block = 0;
@@ -183,7 +197,7 @@ function suffix_matches(name,    i, s) {
         if (is_text_type(col_type_from_decl(line))) {
             nm = col_name_from_decl(line);
             sm = suffix_matches(nm);
-            if (sm != "" && block_has_fk == 1 && prev_was_exemption == 0) {
+            if (sm != "" && block_has_fk == 1 && prev_was_exemption == 0 && index(EXEMPT, " " nm " ") == 0) {
                 # We have to hold judgement until end-of-block to know if
                 # FK truly exists. Collect pending flags.
                 pending_names[++pending_count] = nm;

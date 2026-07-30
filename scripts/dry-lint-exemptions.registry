@@ -1,0 +1,16 @@
+# DRY-lint exemption registry — for APPLIED (frozen) migrations only.
+#
+# Applied migrations must not be edited in place (supabase/migrations/
+# CLAUDE.md), so the in-file `-- DRY exemption:` channel is unavailable
+# retroactively. Acknowledge frozen-file columns here as
+# `<migration basename>:<column>` with the reason alongside.
+#
+# rate_schedules.award_code — FWC award identifier sourced from the Fair Work
+# API at schedule-build time; no canonical local awards row exists to FK for
+# EA/custom schedules, and the code is frozen into the schedule snapshot.
+20260706180000_create_rate_schedules.sql:award_code
+#
+# boot_assessments.award_code — BOOT assessments freeze the FWC award code the
+# assessment was evaluated against (immutable audit snapshot; award data is
+# API-sourced, no local awards row to FK).
+20260704060000_boot_assessments_rederive.sql:award_code

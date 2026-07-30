@@ -114,15 +114,93 @@ export type MarginType = 'flat' | 'percent';
 // ─── Overhead ───
 export type OverheadType = 'flat' | 'percent';
 
+// ─── RDO (Rostered Day Off) accrual ───
+
+/**
+ * Configuration for an RDO (Rostered Day Off) accrual arrangement.
+ *
+ * RDOs are NOT universal. MA000020 (Building and Construction General
+ * On-site Award 2020) cl.16.2 is the canonical pattern — "Ordinary working
+ * hours will be 8 hours in duration each day, of which 0.4 of one hour of
+ * each day worked will accrue towards an RDO and 7.6 hours will be paid" —
+ * but cl.16.8 permits an employer + majority-of-employees agreement to opt
+ * OUT of RDOs entirely (short projects where a 4-week cycle can't complete,
+ * remote/FIFO rosters, continuous-coverage requirements), many awards never
+ * had RDOs at all, and part-time employees may opt out under cl.16.9(b). A
+ * model that assumes RDOs is exactly as wrong as one that ignores them —
+ * see docs/references/20260730-rdo-flexibility.md.
+ *
+ * `enabled: false` (the default via `DEFAULT_RDO_CONFIG`) is a real, common,
+ * fully-supported state — not an unfinished one. When disabled, worked hours
+ * and paid hours are identical and `src/rdo.ts`'s helpers are no-ops.
+ */
+export interface RdoAccrualConfig {
+  /** Whether an RDO accrual arrangement applies. Default: false (no RDO). */
+  enabled: boolean;
+  /**
+   * Hours accrued toward the RDO bank per ordinary day worked (e.g. 0.4 for
+   * the MA000020 cl.16.2 8h-worked/7.6h-paid pattern). Ignored when
+   * `enabled` is false.
+   */
+  accrualHoursPerDay: number;
+  /**
+   * Number of ordinary days worked in one full RDO cycle before an RDO is
+   * taken (MA000020 cl.16: 19 worked days per 4-week/20-day cycle → 1 RDO
+   * day off). Default: 19. Short engagements may never complete a cycle —
+   * see `deriveRdoAccrual()` in `src/rdo.ts`, which reports this explicitly
+   * rather than silently rounding it away.
+   */
+  cycleDays: number;
+}
+
+/**
+ * The default RDO posture: no RDO arrangement. Spread this into a config
+ * rather than hand-rolling `{ enabled: false, accrualHoursPerDay: 0, cycleDays: 19 }`
+ * everywhere, so the "no RDO" default has one canonical source.
+ */
+export const DEFAULT_RDO_CONFIG: RdoAccrualConfig = {
+  enabled: false,
+  accrualHoursPerDay: 0,
+  cycleDays: 19,
+};
+
 // ─── Core Calculation Config ───
 export interface CalcConfig {
   // Base wage
   wage: number;
 
   // Hours & days
+  /**
+   * PAID hours per week — the wage-bearing figure. `calculate()` multiplies
+   * `wage x hoursPerWeek` for weekly pay and divides annual cost by
+   * `billableWeeks x hoursPerWeek` (via `hoursPerDay`/`daysPerWeek`) for
+   * cost-per-hour, so this MUST be the amount the worker is actually paid
+   * for, not the amount they attend for.
+   *
+   * When an RDO accrual arrangement applies (see `rdo` below), WORKED hours
+   * per week are higher than this value (e.g. 40 worked / 38 paid under the
+   * MA000020 cl.16.2 pattern). Use `workedHoursPerDayFromPaid()` /
+   * `paidHoursPerDayFromWorked()` (`src/rdo.ts`) to convert between the two
+   * for timesheet/attendance and host-billing purposes — do not substitute
+   * worked hours here, or wage cost and super are overstated by the
+   * accrual fraction (~5% for the standard 0.4h/8h pattern).
+   */
   hoursPerWeek: number;
+  /** PAID hours per day — same worked-vs-paid caveat as `hoursPerWeek`. */
   hoursPerDay: number;
   daysPerWeek: number;
+
+  /**
+   * RDO accrual arrangement, if any. Optional and additive — `calculate()`
+   * does not yet consume this field itself (bsuite CLAUDE.md §12.2: the
+   * charge-calc consumer chain in crm7/R80.3 is a separate follow-up). It
+   * exists so callers have one canonical, documented place to carry a
+   * worked-vs-paid arrangement through the pipeline instead of inventing
+   * their own shape, and so `hoursPerWeek` above can be unambiguously
+   * documented as PAID. Defaults to `DEFAULT_RDO_CONFIG` (no RDO) when
+   * omitted — see `src/rdo.ts` for the conversion helpers.
+   */
+  rdo?: RdoAccrualConfig;
 
   // Billing
   billableWeeks: number;

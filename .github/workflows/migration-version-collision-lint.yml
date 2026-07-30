@@ -1,0 +1,72 @@
+name: Migration version-collision lint
+
+# bsuite#1707: all 8 migration scopes that write into the shared Supabase
+# project — root, crm7, conduit, R80.3, business-suite-unified, braden,
+# throughput, and packages/schema-builder (matches the applier's own matrix
+# in .github/workflows/supabase-migrate.yml) — deploy to the SAME
+# supabase_migrations.schema_migrations table, keyed on the version string
+# (leading 14 digits of the filename) ALONE. When two files anywhere in that
+# set carry the same version — whether in different scopes OR the same
+# scope — the applier silently SKIPS whichever one it reaches second: that
+# file's DDL never runs, but the version reads as applied.
+#
+# Confirmed real (not theoretical): crm7's own 20260512230000 has two
+# different files sharing a version; the live-catalog check for bsuite#1707
+# found that one of the two never ran in production (repair migration
+# 20260730310000_repair_people_school_completion_columns.sql). Same-scope
+# collisions are flagged by this gate as the HIGHER-risk shape because that
+# loss is deterministic, not dependent on cross-repo job-ordering.
+#
+# Scope is deliberately FULL-TREE, not PR-delta: a new file in this PR could
+# collide with an EXISTING file in a different scope that this PR does not
+# touch, so the check must see every scope every time, not just the diff.
+#
+# 27 historical collisions predate this gate (bsuite#1707 investigation) and
+# are carried in scripts/migration-collision-allowlist.txt with a verified
+# reason and risk annotation each. New, un-allowlisted collisions fail the
+# build.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'scripts/check-migration-version-collisions.mjs'
+      - 'scripts/migration-collision-allowlist.txt'
+      - '.github/workflows/migration-version-collision-lint.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-version-collision-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version-collision-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — every scope must be scanned)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout — which is how this
+          # gate first failed, before it ever ran. Same fallback chain every
+          # other submodule-consuming workflow here uses (supabase-migrate.yml,
+          # prod-migration-history-audit.yml, secret-naming-drift.yml).
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides
+      # defects (bsuite#1688 lesson, reapplied here). Prove the checker can
+      # still fail before trusting a pass.
+      - name: Self-test the checker
+        run: node scripts/check-migration-version-collisions.mjs --self-test
+
+      - name: Check for cross-scope migration version collisions
+        run: node scripts/check-migration-version-collisions.mjs --require-scopes=8
