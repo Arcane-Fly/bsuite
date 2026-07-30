@@ -44,6 +44,34 @@ export const DEFAULT_PENALTIES: PenaltyRate[] = [
   },
 ];
 
+/**
+ * The oncosts that overtime DOES carry.
+ *
+ * Overtime attracts only the levies charged on total wages — workers'
+ * compensation premium and payroll tax. It carries none of the
+ * per-ordinary-hour costs (annual leave, leave loading, sick leave, public
+ * holidays, off-the-job training, study, PPE): an overtime hour accrues no
+ * leave and consumes no training time. Superannuation is handled separately
+ * and correctly by `superOnOT`, which defaults false, because overtime is not
+ * ordinary time earnings (SGAA 1992 s.6(1); ATO SGR 2009/2).
+ *
+ * Exported so a caller that overrides `wcRate` or `payrollTaxRate` can
+ * recompute a consistent overtime factor rather than leaving a stale one
+ * behind. Payroll tax in particular ranges from 0% (under threshold) to about
+ * 6.85% depending on state, so a fixed factor is wrong for most tenants.
+ */
+export function deriveOtOncostFactor(cfg: {
+  wcRate: number;
+  payrollTaxRate: number;
+}): number {
+  return cfg.wcRate + cfg.payrollTaxRate;
+}
+
+/** Workers' compensation rate used by DEFAULT_CONFIG (GTO sector average). */
+const DEFAULT_WC_RATE = 0.047;
+/** Payroll tax rate used by DEFAULT_CONFIG (Victoria; resolve per-state in real use). */
+const DEFAULT_PAYROLL_TAX_RATE = 0.0485;
+
 export const DEFAULT_CONFIG: CalcConfig = {
   wage: 29.5,
   hoursPerWeek: 38,
@@ -58,9 +86,29 @@ export const DEFAULT_CONFIG: CalcConfig = {
   leaveLoadingPercent: 17.5,
   superRate: 0.12,
   superOnOT: false,
-  wcRate: 0.047,
-  payrollTaxRate: 0.0485,
-  otOncostFactor: 0.12,
+  wcRate: DEFAULT_WC_RATE,
+  payrollTaxRate: DEFAULT_PAYROLL_TAX_RATE,
+  // Derived, not magic. Overtime carries only the oncosts that are levied on
+  // total wages — workers' compensation premium and payroll tax. It does NOT
+  // carry the per-ordinary-hour costs (annual leave, leave loading, sick leave,
+  // public holidays, off-the-job training, study, PPE), because overtime hours
+  // earn no leave and consume no training time. Superannuation is excluded
+  // separately and correctly by `superOnOT`, which defaults false — overtime is
+  // not ordinary time earnings (SGAA 1992 s.6(1); ATO SGR 2009/2).
+  //
+  // This was a hardcoded 0.12 whose only documentation was the circular
+  // "OT oncost factor (default 0.12)". It was inherited when the magic
+  // constants were extracted, never derived. 0.12 against a real
+  // wc + payroll tax of 0.0955 over-applies oncosts to overtime by 2.45
+  // percentage points of pay, on every overtime hour of every quote.
+  //
+  // Deriving it from the two rates it is actually made of also means a tenant
+  // in a different state — payroll tax ranges 0% (below threshold) to ~6.85% —
+  // gets the right figure instead of a Victorian-shaped constant.
+  otOncostFactor: deriveOtOncostFactor({
+    wcRate: DEFAULT_WC_RATE,
+    payrollTaxRate: DEFAULT_PAYROLL_TAX_RATE,
+  }),
   penaltyOncostAdder: 0.15,
   overheadType: 'percent',
   overheadValue: 6.5,
