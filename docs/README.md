@@ -120,3 +120,5 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [20260728 migration idempotency audit](./20260728-migration-idempotency-audit-v1.00W.md) — gap-remediation Task 3 (P0-2): verdicts for the 17 above-floor migrations flagged as unrecorded; all SAFE, no guards needed; documents that the ledger gap has since substantially closed
 
 - [20260729 unified authoring QA audit](./20260729-unified-authoring-qa-audit-v1.00W.md) — comprehensive QA audit across unified authoring, invites, Jodie and the platform kit
+
+- [20260730 competitor parity matrix](./20260730-competitor-parity-matrix-v1.00W.md) — R80.3 vs RatesCalc, CRM7 vs Code House Workforce One, crm7 timesheets vs Code House AnyTime, conduit vs Humanforce/LiveHire; evidence-linked gap ledger (2 P0s, 4 P1s, 3 P2s) — confirms LiveHire was absorbed into Humanforce, and that crm7's per-shift penalty interpreter (`penaltyCalculator.ts`) is built but has zero consumers (unwired)
