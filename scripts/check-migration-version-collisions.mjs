@@ -22,11 +22,27 @@
  * never runs, but the version reads as applied. Which one wins depends on
  * matrix job scheduling order, which is not a stable contract.
  *
+ * SAME-SCOPE duplicates are the higher-risk shape and are NOT a theoretical
+ * corner case: crm7's own 20260512230000 has two different files
+ * (people_add_middle_name_and_school_completion.sql and
+ * tenant_locations_and_state_ir_config.sql) sharing a version, and it is
+ * CONFIRMED (live-catalog check, bsuite#1707 follow-up) that the people
+ * file's three columns never made it to production — its DDL was silently
+ * skipped, deterministically, not depending on cross-repo scheduling order,
+ * because within a single scope's own migration loop the first file at a
+ * version is applied-and-recorded and the second is skipped by the same
+ * `$APPLIED` check before the run even reaches another scope. Repair:
+ * 20260730310000_repair_people_school_completion_columns.sql.
+ *
  * This script finds every version that appears in more than one file across
- * all scopes (including two files colliding within the SAME scope, which
- * hits the exact same "$APPLIED already has this version" skip logic) and
+ * all scopes (including two files colliding within the SAME scope) and
  * fails unless the version is on the committed allowlist
- * (scripts/migration-collision-allowlist.txt).
+ * (scripts/migration-collision-allowlist.txt). The reported message always
+ * distinguishes the two shapes:
+ *   - same-scope duplicate  (one file in this exact scope is DEFINITELY
+ *     skipped, regardless of any other scope or job ordering)
+ *   - cross-scope duplicate (one file is skipped depending on which scope
+ *     the applier's matrix job processes second)
  *
  * Implementation note: version extraction is a small anchored check
  * (`^\d{14}_`), not a general-purpose regex parser, per the repo's
@@ -42,7 +58,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 
-/** Every migration scope that writes into the shared schema_migrations table. */
+/**
+ * Every migration scope that writes into the shared schema_migrations table.
+ * Matches the 8-entry matrix in .github/workflows/supabase-migrate.yml
+ * exactly ("root", the 6 submodules, and "schema-builder") — a collision in
+ * ANY of these scopes is applied against the same shared Supabase project,
+ * so all 8 must be scanned, not just the 6 submodules.
+ */
 const SCOPES = [
   { name: 'root', dir: 'supabase/migrations' },
   { name: 'crm7', dir: 'crm7/supabase/migrations' },
@@ -51,6 +73,7 @@ const SCOPES = [
   { name: 'business-suite-unified', dir: 'business-suite-unified/supabase/migrations' },
   { name: 'braden', dir: 'braden/supabase/migrations' },
   { name: 'throughput', dir: 'throughput/supabase/migrations' },
+  { name: 'schema-builder', dir: 'packages/schema-builder/supabase/migrations' },
 ]
 
 const ALLOWLIST_RELATIVE_PATH = 'scripts/migration-collision-allowlist.txt'
@@ -121,9 +144,26 @@ function parseAllowlist(text) {
   return allowed
 }
 
+/** True when every colliding file for this version sits in the SAME scope. */
+function isSameScopeCollision(entries) {
+  const scopes = new Set(entries.map((e) => e.scope))
+  return scopes.size === 1
+}
+
 function describeCollision({ version, entries }) {
   const files = entries.map((e) => `${e.scope}:${e.file}`).join(' and ')
-  return `${version} appears in more than one scope: ${files}`
+  if (isSameScopeCollision(entries)) {
+    const [{ scope }] = entries
+    return (
+      `${version} is a SAME-SCOPE duplicate within "${scope}" (higher risk: one of these ` +
+      `files is DEFINITELY skipped by this scope's own migration loop, independent of any ` +
+      `other scope or job ordering): ${files}`
+    )
+  }
+  return (
+    `${version} is a CROSS-SCOPE duplicate across more than one scope (which file is ` +
+    `skipped depends on matrix job processing order, not a stable contract): ${files}`
+  )
 }
 
 function runCheck({ files, allowlistText }) {
@@ -242,6 +282,38 @@ function selfTest() {
         const files = scanScopes(SCOPES, root)
         const { violations, collisions } = runCheck({ files, allowlistText: '' })
         return violations.length === 0 && collisions.length === 0
+      }),
+  ])
+
+  // Extra: the reported message for a SAME-SCOPE collision must say so, and
+  // must NOT read as a generic cross-scope collision.
+  cases.push([
+    'same-scope collision message says "SAME-SCOPE"',
+    () =>
+      withTempScopes((root) => {
+        writeScopeFile(root, 'crm7/supabase/migrations', '20260302000000_first.sql')
+        writeScopeFile(root, 'crm7/supabase/migrations', '20260302000000_second.sql')
+        const files = scanScopes(SCOPES, root)
+        const { violations } = runCheck({ files, allowlistText: '' })
+        if (violations.length !== 1) return false
+        const msg = describeCollision(violations[0])
+        return msg.includes('SAME-SCOPE') && msg.includes('crm7') && !msg.includes('CROSS-SCOPE')
+      }),
+  ])
+
+  // Extra: the reported message for a CROSS-SCOPE collision must say so, and
+  // must NOT read as a same-scope collision.
+  cases.push([
+    'cross-scope collision message says "CROSS-SCOPE"',
+    () =>
+      withTempScopes((root) => {
+        writeScopeFile(root, 'crm7/supabase/migrations', '20260202000000_a.sql')
+        writeScopeFile(root, 'conduit/supabase/migrations', '20260202000000_b.sql')
+        const files = scanScopes(SCOPES, root)
+        const { violations } = runCheck({ files, allowlistText: '' })
+        if (violations.length !== 1) return false
+        const msg = describeCollision(violations[0])
+        return msg.includes('CROSS-SCOPE') && !msg.includes('SAME-SCOPE')
       }),
   ])
 
