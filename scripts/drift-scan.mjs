@@ -125,12 +125,20 @@ const SIGNALS = [
   {
     id: 'STALE-GROK',
     severity: 'fail',
-    rule: 'Default xAI model is grok-4.20-reasoning — grok-4.1-fast-reasoning retired 2026-04-24',
-    skill: 'vercel-ai-sdk + knowledge.md §crm7 AI Gateway',
+    rule: 'Default xAI model is grok-4.3 — grok-4.1-fast-reasoning retired 2026-04-24',
+    skill: 'vercel-ai-sdk + crm7/src/lib/ai/config.ts',
     match: (line) => {
       // Pure literal check — .includes() suffices.
+      //
+      // Only grok-4.1-fast-REASONING is retired and hard-failed. Deliberately
+      // NOT flagging grok-4.20-*: those models still exist on the gateway, they
+      // simply stopped being our default when grok-4.3 landed (2026-07-31).
+      // Hard-failing a live model would block legitimate use. And
+      // grok-4.1-fast-NON-reasoning is still the active simple tier — the
+      // literal below does not match it, which is why the `-fast-reasoning`
+      // suffix must stay exact.
       if (line.includes('grok-4.1-fast-reasoning')) {
-        return 'grok-4.1-fast-reasoning retired — use xai/grok-4.20-reasoning';
+        return 'grok-4.1-fast-reasoning retired — use xai/grok-4.3';
       }
       return null;
     },

@@ -263,9 +263,15 @@ See `MEMORY_PROTOCOL.md` at project root for full protocol.
   tier routing. Every ID and price there was verified live against the gateway `/v1/models`
   endpoint when the roster was last approved. Do not restate model IDs, context windows, or
   prices in prose — that is exactly what drifted before.
-- Current shape (operator-approved 2026-07-03): a cost-tiered roster — cheap simple tier, a
-  reasoning primary, a non-Anthropic fallback, and an escalation tier for the hardest work.
-  Read `config.ts` for the actual IDs.
+- Current shape (operator-approved 2026-07-31, IDs and prices re-verified live against the
+  gateway that day): a cost-tiered roster — a cheap simple tier, `xai/grok-4.3` as the
+  medium/primary model, a non-Anthropic fallback, and `anthropic/claude-opus-5` as the
+  escalation tier for the hardest work. Read `config.ts` for the authoritative values.
+- Two things that changed on 2026-07-31 and are easy to get wrong: `grok-4.3` is a **single
+  unified model**, so the former medium/primary split now resolves to one model (the tier
+  argument is kept for API compatibility); and the fallback is now cheaper than the primary
+  on **input** while dearer on **output**, so "the primary is cheapest on every axis" is no
+  longer true. `config.test.ts` documents what is asserted instead.
 - **Do not swap providers or model versions without re-confirming against the live gateway
   roster first**, and never downgrade a tier without explicit operator approval.
 
