@@ -5,6 +5,35 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 0.6.1 — 2026-07-31
+
+### Fixed — heal a PERSISTED `isResizable: false` (0.6.0 was not enough)
+
+0.6.0 removed the render-layer `isResizable: false` override, but did not undo
+what 0.5.2 had already written. That override leaked through
+`onLayoutChange` into SAVED layouts, and react-grid-layout resolves:
+
+```js
+typeof l.isResizable === 'boolean' ? l.isResizable : !l.static && gridResizable
+```
+
+so an explicit persisted `false` beats the grid default permanently. Every user
+who had ever loaded an affected page stayed stuck with no resize handles —
+0.6.0 fixed only users with no saved layout.
+
+Confirmed in a real signed-in browser: the saved preference for
+`/financial/invoicing/:id` held `"isResizable":false` on all 6 cards, and
+clearing it by hand did not help because the running build re-persisted it.
+
+A per-item `false` on an `autoHeight` item cannot be a user choice — nothing in
+the UI sets it, and page-level opt-out uses the `isResizable` PROP rather than
+per-item layout — so dropping it is safe.
+
+Guarded by `heals a PERSISTED isResizable:false on an autoHeight item`,
+verified to FAIL without the heal. Suite 55/55.
+
+---
+
 ## 0.6.0 — 2026-07-31
 
 ### Fixed — card resize restored on `autoHeight` items (regression)
