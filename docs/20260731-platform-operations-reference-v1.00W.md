@@ -258,9 +258,16 @@ See `MEMORY_PROTOCOL.md` at project root for full protocol.
 - AI-generated content must be labeled in UI
 - Rate limiting on AI endpoints
 - CRM7 is the canonical reference for AI SDK patterns — other projects port from here
-- **AI Gateway models** — default: `xai/grok-4.20-reasoning`, fallback: `anthropic/claude-sonnet-4.6`, complex: `anthropic/claude-opus-4.6`
-- Config: `src/lib/ai/config.ts`, Router: `src/lib/ai/model-router.ts`
-- **Primary model is `xai/grok-4.20-reasoning`** (supersedes the retired `grok-4.1` fast-reasoning model per 2026-04-24 Vercel AI Gateway roster update). 2M context, 2M max output, $2/M input + $6/M output. Do not downgrade without explicit user approval.
+- **The model roster lives in code, not here** — `crm7/src/lib/ai/config.ts` (`AI_MODELS` +
+  `DEFAULT_MODEL`) is the single source of truth, with `src/lib/ai/model-router.ts` doing the
+  tier routing. Every ID and price there was verified live against the gateway `/v1/models`
+  endpoint when the roster was last approved. Do not restate model IDs, context windows, or
+  prices in prose — that is exactly what drifted before.
+- Current shape (operator-approved 2026-07-03): a cost-tiered roster — cheap simple tier, a
+  reasoning primary, a non-Anthropic fallback, and an escalation tier for the hardest work.
+  Read `config.ts` for the actual IDs.
+- **Do not swap providers or model versions without re-confirming against the live gateway
+  roster first**, and never downgrade a tier without explicit operator approval.
 
 ### R80.3 (Compliance)
 
