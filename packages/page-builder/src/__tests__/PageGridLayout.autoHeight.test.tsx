@@ -181,6 +181,80 @@ describe('PageGridLayout auto-height integration (ResizeObserver -> flush -> ren
     expect(gridItemFor('card3-content').style.height).toBe(`${rowsToPx(card3Rows)}px`);
   });
 
+  // ── Resize is a capability, not a trade-off ──────────────────────────────
+  //
+  // `autoHeight` used to force `isResizable: false` and overwrite `h` with the
+  // measured height. Together those removed card resizing from every page whose
+  // cards use the default, and would have discarded any height a user set.
+  //
+  // Resizable cards are operator-mandated (Braden, 2026-07-31: "no ruling has
+  // ever had my authority to suppress resizing"). autoHeight is now a FLOOR:
+  // content can never be clipped, and a deliberately-set larger height sticks.
+  it('autoHeight does NOT disable resize handles', async () => {
+    await act(async () => {
+      render(
+        <PageGridLayout
+          pageKey="autoheight-resize-enabled"
+          defaultLayouts={defaultLayouts}
+          widgets={widgets}
+          canEditPage
+        />,
+      );
+    });
+
+    // Edit mode is hook state, not a prop — entered via the same event the
+    // real editor toolbar dispatches.
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+    });
+
+    const observer = measureObserverFor('card2-content', 'card3-content');
+    await act(async () => {
+      fireContentHeight(observer, 240);
+      await nextFrame();
+      await nextFrame();
+    });
+
+    // react-grid-layout marks a non-resizable item by omitting the handles.
+    const item = gridItemFor('card2-content');
+    expect(item.className).not.toContain('react-resizable-hide');
+    expect(item.querySelector('.react-resizable-handle')).not.toBeNull();
+  });
+
+  it('a user-set height LARGER than the measured content is preserved, not stomped', async () => {
+    // Seeded h = 20 rows; content measures far smaller. The old code replaced
+    // `h` with the measured value on every re-measure, so a user who enlarged a
+    // card watched it snap back.
+    const tallLayouts: GridLayouts = {
+      lg: [
+        { i: 'card2', x: 0, y: 0, w: 6, h: 20, autoHeight: true },
+        { i: 'card3', x: 6, y: 0, w: 6, h: 6, autoHeight: true },
+      ],
+    };
+
+    await act(async () => {
+      render(
+        <PageGridLayout
+          pageKey="autoheight-user-height-kept"
+          defaultLayouts={tallLayouts}
+          widgets={widgets}
+        />,
+      );
+    });
+
+    const observer = measureObserverFor('card2-content', 'card3-content');
+    const smallContentPx = 120;
+    await act(async () => {
+      fireContentHeight(observer, smallContentPx);
+      await nextFrame();
+      await nextFrame();
+    });
+
+    const measuredRows = expectedRows(smallContentPx);
+    expect(measuredRows).toBeLessThan(20); // the scenario is only meaningful if so
+    expect(gridItemFor('card2-content').style.height).toBe(`${rowsToPx(20)}px`);
+  });
+
   it('a viewer re-measuring (tab switches) produces ZERO preference-adapter writes (CRITICAL #2)', async () => {
     const store = new Map<string, unknown>();
     const state = { writes: 0 };

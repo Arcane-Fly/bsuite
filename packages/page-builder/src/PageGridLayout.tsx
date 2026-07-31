@@ -425,24 +425,44 @@ export function PageGridLayout({
     for (const bp in currentLayouts) {
       filtered[bp] = (currentLayouts[bp] ?? [])
         .filter((item) => renderableWidgetKeys.has(item.i) && !hiddenLayerIds[item.i])
-        // autoHeight items are measured, not manually resized (blueprint
-        // amendment A1) — force isResizable: false centrally here so every
-        // call site that sets autoHeight: true gets this for free, rather
-        // than needing to remember to also set isResizable itself.
+        // autoHeight is a FLOOR, not a lock.
         //
-        // Measured rows (quality-review design ruling, 2026-07-14) merge
-        // over the saved/base `h`/`minH` HERE — the render layer — so the
-        // grid renders full-height cards for every viewer while the saved
-        // layout (and thus the preference adapter) never sees a measured
-        // height. Until the first measurement lands, `autoHeightRows` has
-        // no entry and the item's seed `h` renders as-is.
+        // This block used to force `isResizable: false` on every autoHeight
+        // item and overwrite `h` with the measured height. Between them those
+        // two lines removed card resizing from every page whose cards use the
+        // default `autoHeight: true` — the force-disable killed the handles,
+        // and the unconditional `h` overwrite would have stomped any height a
+        // user did manage to set on the next measurement.
+        //
+        // Resizable cards are an operator-mandated platform capability
+        // (Braden, 2026-07-31: "no ruling has ever had my authority to
+        // suppress resizing"). The earlier internal note that traded resize
+        // away to stop a 192px clipping regression posed a false choice. Both
+        // properties hold at once:
+        //
+        //   minH = measuredRows  -> a card can never be dragged shorter than
+        //                           its content, so the clipping regression
+        //                           that motivated the original change stays
+        //                           fixed.
+        //   h    = max(saved, measured)
+        //                        -> content is never clipped, AND a height the
+        //                           user deliberately set is preserved instead
+        //                           of being reset on every re-measure.
+        //   isResizable untouched -> inherits the grid default (true), so the
+        //                           handles are present.
+        //
+        // Measured rows still merge at the RENDER layer only, so the saved
+        // layout (and the preference adapter) never sees a measured height.
+        // Until the first measurement lands, `autoHeightRows` has no entry and
+        // the item's seed `h` renders as-is.
         .map((item) => {
           if (!item.autoHeight) return item;
           const measuredRows = autoHeightRows[item.i];
+          if (measuredRows === undefined) return item;
           return {
             ...item,
-            isResizable: false,
-            ...(measuredRows !== undefined ? { h: measuredRows, minH: measuredRows } : {}),
+            h: Math.max(item.h ?? 0, measuredRows),
+            minH: measuredRows,
           };
         });
     }
