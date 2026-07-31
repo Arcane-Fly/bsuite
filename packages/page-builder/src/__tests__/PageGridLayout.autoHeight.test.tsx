@@ -221,6 +221,44 @@ describe('PageGridLayout auto-height integration (ResizeObserver -> flush -> ren
     expect(item.querySelector('.react-resizable-handle')).not.toBeNull();
   });
 
+  // 0.6.0 removed the render-layer override but did NOT heal what 0.5.2 had
+  // already written into saved layouts. RGL honours an explicit per-item
+  // boolean over the grid default, so every existing user stayed stuck.
+  // Verified in a real browser before writing this: the saved preference held
+  // `"isResizable":false` on all 6 cards.
+  it('heals a PERSISTED isResizable:false on an autoHeight item', async () => {
+    const poisoned: GridLayouts = {
+      lg: [
+        { i: 'card2', x: 0, y: 0, w: 6, h: 6, autoHeight: true, isResizable: false },
+        { i: 'card3', x: 6, y: 0, w: 6, h: 6, autoHeight: true, isResizable: false },
+      ],
+    };
+
+    await act(async () => {
+      render(
+        <PageGridLayout
+          pageKey="autoheight-heal-persisted"
+          defaultLayouts={poisoned}
+          widgets={widgets}
+          canEditPage
+        />,
+      );
+    });
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('bsuite-open-page-editor'));
+    });
+
+    const observer = measureObserverFor('card2-content', 'card3-content');
+    await act(async () => {
+      fireContentHeight(observer, 240);
+      await nextFrame();
+      await nextFrame();
+    });
+
+    const item = gridItemFor('card2-content');
+    expect(item.className).not.toContain('react-resizable-hide');
+  });
+
   it('a user-set height LARGER than the measured content is preserved, not stomped', async () => {
     // Seeded h = 20 rows; content measures far smaller. The old code replaced
     // `h` with the measured value on every re-measure, so a user who enlarged a

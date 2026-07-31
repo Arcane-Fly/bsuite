@@ -457,11 +457,36 @@ export function PageGridLayout({
         // the item's seed `h` renders as-is.
         .map((item) => {
           if (!item.autoHeight) return item;
+
+          // HEAL a persisted `isResizable: false`.
+          //
+          // 0.5.2 set this at the render layer, and it leaked out through
+          // `onLayoutChange` into the SAVED layout. Removing the override in
+          // 0.6.0 was therefore not enough: react-grid-layout resolves
+          //
+          //   typeof l.isResizable === 'boolean' ? l.isResizable
+          //                                      : !l.static && gridResizable
+          //
+          // so an explicit persisted `false` beats the grid default forever.
+          // Every user who ever loaded an affected page has it stored.
+          //
+          // Confirmed in a real signed-in browser 2026-07-31: the saved
+          // preference for /financial/invoicing/:id held
+          // `"isResizable":false` on all 6 cards; clearing it by hand did not
+          // help, because it was re-persisted on the next load.
+          //
+          // A per-item `false` on an autoHeight item cannot be a user choice —
+          // nothing in the UI sets it, and page-level opt-out uses the
+          // `isResizable` PROP, not per-item layout. So it can only have come
+          // from the 0.5.2 bug, and dropping it is safe.
+          const { isResizable: persisted, ...rest } = item;
+          const healed = persisted === false ? rest : item;
+
           const measuredRows = autoHeightRows[item.i];
-          if (measuredRows === undefined) return item;
+          if (measuredRows === undefined) return healed;
           return {
-            ...item,
-            h: Math.max(item.h ?? 0, measuredRows),
+            ...healed,
+            h: Math.max(healed.h ?? 0, measuredRows),
             minH: measuredRows,
           };
         });
