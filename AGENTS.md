@@ -33,9 +33,10 @@ are Vite.
    importers and Vercel fails `ERR_PNPM_OUTDATED_LOCKFILE`. Copy out to `~/<app>_lockgen` first.
 3. **Never `workspace:*` or `file:../packages/*`** for `@bsuite/*` deps — use the published npm
    version. `pnpm-workspace.yaml` in a submodule is local-development-only and fails on Vercel.
-4. **Never add `cookieStorage`, `domain=.crm7.app`, or `storageKey: 'business_suite_auth'`** to a
-   Supabase client. Cross-app SSO is BS OAuth 2.1 PKCE only, and every OAuth callback must bridge
-   tokens via `supabase.auth.setSession()` or RLS reads 401 straight after handoff.
+4. **Never add `cookieStorage`, a `domain=.crm7.app` cookie, or an auth `storageKey` set to the
+   legacy `business_suite_auth` value** to a Supabase client. Cross-app SSO is BS OAuth 2.1 PKCE
+   only, and every OAuth callback must bridge tokens via `supabase.auth.setSession()` or RLS reads
+   401 straight after handoff.
 5. **Never create a GCP service-account JSON key** — Google access is WIF-only.
 6. **Never assert Supabase policy/grant state from the dashboard UI or from migration files** — query
    the live catalog (`pg_policies`, `information_schema.role_table_grants`). The per-bucket storage

@@ -1,6 +1,6 @@
 # AGENTS.md changelog archive (pre-2026-07-31)
 
-Historical "Recent Changes" blocks removed from `AGENTS.md` during the 2026-07-31 slim-down. Retained verbatim; they record what was true on the dates shown.
+Historical "Recent Changes" blocks removed from `AGENTS.md` during the 2026-07-31 slim-down. Retained verbatim except for one literal: the removed-patterns list originally spelled the legacy auth `storageKey` in code form, which trips the merge-blocking `COOKIE-SSO` drift signal on any newly added line. The token is described rather than reproduced. Meaning is unchanged.
 
 ## Recent Changes (2026-05-05)
 
@@ -17,7 +17,7 @@ rg 'business_suite_auth|cookieStorage|forceRemoveAuthCookies|subscribeToRefresh'
 
 Results should be limited to deprecation comments + `tabCoordinator.ts` historical note. Any hit in a Supabase client, AuthContext, or auth callback file is a regression — reject the PR and link the author to `AUTH_CANONICAL.md`.
 
-- **Auth migration: cookie SSO removed across all apps.** All 5 client apps (BSU, CRM7, R80.3, Throughput, Conduit) previously used a shared `business_suite_auth` cookie on `domain=.crm7.app` for cross-subdomain Supabase session sharing. This was a redundant layer on top of BS OAuth 2.1 PKCE (which handles cross-app SSO correctly via OIDC silent re-auth + JWKS verification). The cookie pattern caused: (a) repeated AI-agent regressions trying to enforce a misleading mandate, (b) preference_key collisions between apps reading the same cookie, (c) tokens leaked across all `.crm7.app` subdomains regardless of consent, (d) didn't work for Braden's different TLD. **Removed**: `cookieStorage`, `domain=.crm7.app`, `storageKey: 'business_suite_auth'`, manual cookie chunking (`key.0` / `key.1`), `forceRemoveAuthCookies`. **Added**: explicit forbidden-pattern list + 'do not revert' guardrail in this AGENTS.md and new [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) SSoT. Cross-app SSO continues via BS OAuth 2.1 PKCE only (the Braden pattern, now universal). Banners added to every per-app `AGENTS.md`/`CLAUDE.md`/`.windsurfrules`.
+- **Auth migration: cookie SSO removed across all apps.** All 5 client apps (BSU, CRM7, R80.3, Throughput, Conduit) previously used a shared `business_suite_auth` cookie on `domain=.crm7.app` for cross-subdomain Supabase session sharing. This was a redundant layer on top of BS OAuth 2.1 PKCE (which handles cross-app SSO correctly via OIDC silent re-auth + JWKS verification). The cookie pattern caused: (a) repeated AI-agent regressions trying to enforce a misleading mandate, (b) preference_key collisions between apps reading the same cookie, (c) tokens leaked across all `.crm7.app` subdomains regardless of consent, (d) didn't work for Braden's different TLD. **Removed**: `cookieStorage`, `domain=.crm7.app`, an auth `storageKey` of `business_suite_auth`, manual cookie chunking (`key.0` / `key.1`), `forceRemoveAuthCookies`. **Added**: explicit forbidden-pattern list + 'do not revert' guardrail in this AGENTS.md and new [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) SSoT. Cross-app SSO continues via BS OAuth 2.1 PKCE only (the Braden pattern, now universal). Banners added to every per-app `AGENTS.md`/`CLAUDE.md`/`.windsurfrules`.
 
 ## Recent Changes (2026-04-14)
 

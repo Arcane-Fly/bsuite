@@ -540,7 +540,7 @@ Each Vercel project has a custom **development-branch** domain assigned in addit
 
 #### Critical Auth Rules
 
-1. **All Supabase clients MUST use per-domain default storage** — NO `cookieStorage`, NO `domain=.crm7.app`, NO `storageKey: 'business_suite_auth'`. Cross-app SSO is exclusively via BS OAuth 2.1 PKCE (`@bsuite/auth`). See "Canonical Architecture (2025-02-27)" above and [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md). **This rule replaces the deprecated 2025 cookie SSO mandate — DO NOT REVERT.**
+1. **All Supabase clients MUST use per-domain default storage** — NO `cookieStorage`, NO `domain=.crm7.app`, NO auth `storageKey` set to the legacy `business_suite_auth` value. Cross-app SSO is exclusively via BS OAuth 2.1 PKCE (`@bsuite/auth`). See "Canonical Architecture (2025-02-27)" above and [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md). **This rule replaces the deprecated 2025 cookie SSO mandate — DO NOT REVERT.**
 2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
 3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server. It was previously copied to Braden by mistake and deleted
 4. **CRM7 and Conduit callbacks are dual-purpose** — check `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
