@@ -284,4 +284,88 @@ describe('usePageGridLayout persistence (bsuite#1588)', () => {
       expect(yOf(persisted, 'b')).toBeGreaterThan(yOf(persisted, 'a') as number);
     });
   });
+
+  // ── crm7#744 — height snaps back on drop, width persists ─────────────────
+  //
+  // Reproduced 2026-07-31 on d.crm.crm7.app running page-builder 0.6.1: the
+  // south-east resize handle visually tracks the drag, but the moment the
+  // gesture ends, the card's HEIGHT reverts to its pre-drag value while its
+  // WIDTH sticks. Deterministic across drag distances.
+  //
+  // Root cause proven here at the `usePageGridLayout` layer (not a render
+  // artifact): `stripAutoHeightRows` — the helper `onLayoutChange` runs on
+  // every commit — unconditionally overwrites `h`/`minH` on ANY item flagged
+  // `autoHeight` with the value from `currentLayoutsForStripRef.current`,
+  // i.e. the layout as it stood BEFORE this commit. That ref restoration was
+  // written to stop a real hazard (a merged/measured height leaking into
+  // storage when react-grid-layout echoes the RENDERED layout, e.g. from a
+  // tab-triggered re-measurement while mid-edit), but the guard has no way to
+  // tell "the render layer merged in a measured height" apart from "the user
+  // just dragged the SE handle to grow the card" — both arrive as an `h` on
+  // an autoHeight item that differs from the base. It reverts both, which
+  // is why width (never touched by this helper) survives every gesture and
+  // height never does.
+  describe('autoHeight resize height persistence (crm7#744)', () => {
+    const singleAutoHeightCard: GridLayouts = {
+      lg: [{ i: 'card', x: 0, y: 0, w: 6, h: 6, autoHeight: true, minH: 6 }],
+    };
+
+    const hOf = (layout: GridLayoutItem[], id: string) =>
+      layout.find((item) => item.i === id)?.h;
+
+    it('a user-dragged height LARGER than the seed/measured height survives the onLayoutChange commit and persists to storage', async () => {
+      const { result, rerender } = renderGrid('resize-height-persist', singleAutoHeightCard);
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      // The shape react-grid-layout echoes after the user drags the SE
+      // handle to grow the card from the seed h=6 to h=20 (298px -> 448px+
+      // in the reported repro; row units here, px is an autoHeight.ts
+      // concern already covered by PageGridLayout.autoHeight.test.tsx).
+      // Content/measured height is unchanged (minH stays 6) — this is a
+      // deliberate user enlargement, not a re-measurement.
+      const echoed: GridLayouts = {
+        ...result.current.currentLayouts,
+        lg: [{ i: 'card', x: 0, y: 0, w: 6, h: 20, autoHeight: true, minH: 6 }],
+      };
+
+      await act(async () => {
+        result.current.onLayoutChange([], echoed);
+        await nextFrame(); // the commit rides a trailing rAF, same as drag/reorder
+      });
+      rerender();
+
+      // What react-grid-layout would be handed back on next render...
+      expect(hOf(result.current.currentLayouts.lg, 'card')).toBe(20);
+      // ...AND what actually reached the preference adapter, so it survives
+      // a reload. Pre-fix, `stripAutoHeightRows` overwrites this back to 6.
+      expect(hOf(savedLayoutsFor('resize-height-persist')?.lg ?? [], 'card')).toBe(20);
+    });
+
+    it('a genuinely SMALLER drag on an autoHeight item is still floored to minH (no regression on the floor invariant)', async () => {
+      const { result, rerender } = renderGrid('resize-height-floor', singleAutoHeightCard);
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      // User drags the handle to shrink below minH — react-grid-layout's own
+      // resize constraints (minSize) are what actually stop this in the real
+      // gesture; this test only asserts the persistence layer doesn't make
+      // things worse by writing something below the floor if it ever arrives.
+      const echoed: GridLayouts = {
+        ...result.current.currentLayouts,
+        lg: [{ i: 'card', x: 0, y: 0, w: 6, h: 6, autoHeight: true, minH: 6 }],
+      };
+
+      await act(async () => {
+        result.current.onLayoutChange([], echoed);
+        await nextFrame();
+      });
+      rerender();
+
+      expect(hOf(result.current.currentLayouts.lg, 'card')).toBe(6);
+      expect(hOf(savedLayoutsFor('resize-height-floor')?.lg ?? [], 'card')).toBe(6);
+    });
+  });
 });
