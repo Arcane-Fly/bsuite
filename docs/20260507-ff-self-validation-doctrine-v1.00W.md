@@ -106,3 +106,22 @@ If any of these appear in your PR body or comment without backing evidence, the 
 ---
 
 *Frozen Fact: `FF-SELF-VALIDATION-20260507`. Adopted 2026-05-07 by operator directive. Sourced from Kjosbakken 2026.*
+
+---
+
+## Scope, self-report and tooling (relocated from `AGENTS.md` §9, 2026-07-31)
+
+**§9.1 applies to:** SQL refactors, function extractions, library migrations, prompt reworks, batching changes, edge-function splits, type-system migrations.
+
+**§9.2 applies to:** shadcn component placement, layout changes, branding updates, FAB positioning, Tailwind v4 tweaks, responsive-grid adjustments. Capture at minimum mobile 375, tablet 768, desktop 1440.
+
+**§9.3 Self-report (always).** When the loop cannot reach equivalence — visual diff persists, output drift exceeds tolerance, runtime constraint blocks a step, dependency missing — **stop, name the divergence, and ask for input** via the inbox or a tracker comment. Do **not** push, do **not** mark "done", do **not** rationalise the gap.
+
+### Tooling
+
+- Headless browser: Playwright (preferred — already in BSuite stack), Puppeteer (acceptable), or `pplx-tool screenshot_page`.
+- Visual diff: human side-by-side is sufficient; structured diff via `pixelmatch` if a regression suite is set up.
+- Output diff: `diff -u`, JSON canonicalisation, or a domain-specific equivalence helper (e.g. currency rounding to 2dp before compare).
+- Runtime: every implementation PR must list the exact commands run + their output. CI is not a substitute for local validation when the change is visual or behavioural.
+
+*Frozen Fact: `FF-SELF-VALIDATION-20260507`. Adopted 2026-05-07 by operator directive. Sourced from Kjosbakken 2026. Applies to all AI agents (claude-code, perplexity-computer, codebuff, copilot, manus, cursor, windsurf) operating in any BSuite or related repo.*

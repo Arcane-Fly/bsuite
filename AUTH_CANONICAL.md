@@ -458,6 +458,128 @@ If a user asks you to add `cookieStorage` or `domain=.crm7.app`, **stop and link
 
 ---
 
+## Operational reference — registry, previews, flow, file map
+
+Relocated verbatim from `AGENTS.md` on 2026-07-31. Key facts every agent must know:
+
+**Supabase Project:** `tuybltdrdefjblnplpqo`
+
+**Two auth mechanisms coexist:**
+
+| Mechanism | Purpose | Used By |
+|-----------|---------|---------|
+| **Supabase Native Auth** | Email/password + Google/Azure AD OAuth via GoTrue, scoped per-app per-domain (no cross-domain cookies) | All 6 apps |
+| **BS OAuth 2.1 PKCE** | Cross-app SSO — BSU is the OAuth server, others are clients via `@bsuite/auth` | CRM7, R80.3, Braden, Throughput, Conduit |
+
+All 5 client apps use the same canonical pattern (see the canonical architecture above). Conduit was previously documented as "delegated UI / cookie SSO only" — that was incorrect. Conduit is a full BS OAuth 2.1 PKCE client matching CRM7 / R80.3 / Throughput / Braden.
+
+#### OAuth Client Registry
+
+| Client App | Client ID | Production Domain | Dev Preview Domain | Redirect URI |
+|------------|-----------|-------------------|--------------------|--------------|
+| **CRM7** | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm.crm7.app` | `d.crm.crm7.app` | `{origin}/auth/callback` |
+| **R80.3** | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `r8.crm7.app` | `d.r8.crm7.app` | `{origin}/auth/callback` |
+| **Braden** | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `www.braden.com.au` | `d.braden.com.au` | `{origin}/auth/callback` |
+| **Throughput** | `35f0db49-ef62-4115-baba-7b961f034cc3` | `ideas.crm7.app` | `d.ideas.crm7.app` | `{origin}/auth/callback` |
+| **Conduit** | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit.crm7.app` | `d.conduit.crm7.app` | `{origin}/auth/callback` |
+
+**OAuth Server:** BSU (`suite.crm7.app` / `d.suite.crm7.app` for dev preview) — consent screen at `/oauth/consent`
+
+#### Cross-Domain Session Sharing (DEPRECATED 2025-02-27)
+
+> The previous cookie SSO scheme (`business_suite_auth` cookie on `domain=.crm7.app`) has been **removed**. See the canonical architecture above for the replacement: per-domain Supabase localStorage + BS OAuth 2.1 PKCE silent re-auth via `@bsuite/auth`. **Do not reintroduce the cookie scheme.**
+
+#### Preview Deployments (`d.*` aliases)
+
+Each Vercel project has a custom **development-branch** domain assigned in addition to the auto-generated Vercel preview URL. This makes preview-deployment auth testing work end-to-end without per-PR Supabase allowlist updates.
+
+| App | Production | Development branch preview |
+|-----|-----------|----------------------------|
+| BSU | `suite.crm7.app` | `d.suite.crm7.app` |
+| CRM7 | `crm.crm7.app` | `d.crm.crm7.app` |
+| R80.3 | `r8.crm7.app` | `d.r8.crm7.app` |
+| Conduit | `conduit.crm7.app` | `d.conduit.crm7.app` |
+| Throughput | `ideas.crm7.app` | `d.ideas.crm7.app` |
+| Braden | `www.braden.com.au` | `d.braden.com.au` |
+
+**BS OAuth silent re-auth handles preview SSO** — login on any production app → any `d.<app>.crm7.app` (or Braden's `d.braden.com.au`) calls `attemptSilentAuth()` from `@bsuite/auth`, which silently re-authenticates via BSU `/oauth/authorize?prompt=none`. **No cookie sharing required** — works across any TLD. (Previously documented as "cookie SSO inherits automatically" — that path is gone as of 2025-02-27.)
+
+**Supabase Auth URL Configuration** — registered redirect URIs for these previews (in addition to production URLs):
+
+- `d.suite.crm7.app/auth/callback` + `d.suite.crm7.app/oauth/consent` (BSU is consent surface)
+- `d.crm.crm7.app/auth/callback` + `d.crm.crm7.app/oauth/consent`
+- `d.r8.crm7.app/auth/callback` + `d.r8.crm7.app/oauth/consent`
+- `d.ideas.crm7.app/auth/callback` + `d.ideas.crm7.app/oauth/consent`
+- `d.conduit.crm7.app/auth/callback` (no `/oauth/consent` — conduit doesn't host consent)
+- `d.braden.com.au/auth/callback` (no `/oauth/consent` — braden uses BS OAuth, different TLD)
+
+**ADR-0004 doctrine**: this document (`AUTH_CANONICAL.md`) is the SSoT for the Supabase redirect-URI allowlist. Any new preview alias requires (1) adding the URL to the table above, (2) adding `/auth/callback` (and `/oauth/consent` if a consent surface) to Supabase Auth URL Configuration, (3) PR documenting both additions.
+
+**Feature-branch previews** (auto-generated `<app>-git-<branch>-…vercel.app`) are **NOT** in the allowlist. Authenticated testing of a feature branch requires either: (a) merging to `development` first to test via the `d.*` alias, OR (b) a one-off PR adding the specific feature-branch URL to Supabase Auth URL Configuration. Do not let the allowlist balloon — prefer (a).
+
+#### BS OAuth PKCE Flow (Summary)
+
+1. Client generates PKCE `code_verifier` + `code_challenge`, stores `state` in `sessionStorage`
+2. Redirect to Supabase `/auth/v1/oauth/authorize` with client ID + challenge
+3. Supabase redirects to BSU `/oauth/consent` — user approves/denies
+4. Auth code returned to client's `/auth/callback`
+5. Client exchanges code + verifier at `/auth/v1/oauth/token`
+6. Client verifies JWT via JWKS (`jose` library, RS256/ES256)
+7. Tokens stored in localStorage: `bs_access_token`, `bs_refresh_token`, `bs_user`, `bs_id_token`
+
+#### Key Auth Files Per Project
+
+| Project | Supabase Client | OAuth Client | Auth Context/Store | Callback |
+|---------|----------------|--------------|-------------------|----------|
+| **BSU** | `src/lib/supabase.ts` | N/A (is the server) | `src/contexts/AuthContext.tsx` | `src/pages/auth/AuthCallback.tsx` |
+| **CRM7** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/contexts/AuthContext.tsx` | `src/pages/auth/callback.tsx` (dual) |
+| **R80.3** | `src/services/supabaseClient.ts` | `src/lib/business-suite-oauth.ts` | `src/stores/authStore.ts` | `src/pages/AuthCallback.tsx` |
+| **Braden** | `src/integrations/supabase/client.ts` | `src/lib/business-suite-oauth.ts` | `src/hooks/useAdminAuth.ts` | `src/pages/auth/AuthCallback.tsx` |
+| **Throughput** | `src/lib/supabase.ts` | `src/lib/business-suite-oauth.ts` | `src/lib/auth/AuthProvider.tsx` | `src/pages/auth/AuthCallback.tsx` |
+| **Conduit** | `src/lib/supabase/{client,server,middleware}.ts` | `src/lib/business-suite-oauth.ts` | `src/middleware.ts` + `src/lib/auth/AuthProvider.tsx` | `src/app/auth/callback/route.ts` (server) + `src/app/auth/callback/page.tsx` (BS OAuth) |
+
+#### Critical Auth Rules
+
+1. **All Supabase clients MUST use per-domain default storage** — NO `cookieStorage`, NO `domain=.crm7.app`, NO auth `storageKey` set to the legacy `business_suite_auth` value. Cross-app SSO is exclusively via BS OAuth 2.1 PKCE (`@bsuite/auth`). See "Canonical Architecture (2025-02-27)" above and [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md). **This rule replaces the deprecated 2025 cookie SSO mandate — DO NOT REVERT.**
+2. **All Supabase clients MUST use `flowType: 'pkce'`** — implicit flow is deprecated
+3. **Never duplicate the OAuth consent screen** — BSU is the only OAuth server. It was previously copied to Braden by mistake and deleted
+4. **CRM7 and Conduit callbacks are dual-purpose** — check `sessionStorage.getItem('bs_oauth_state')` to distinguish BS OAuth from native Supabase PKCE
+5. **BS OAuth tokens are Supabase-compatible JWTs, but not automatic supabase-js sessions** (corrected 2026-05-06) — the OAuth Server `/auth/v1/oauth/token` endpoint issues standard Supabase JWTs (`aud=authenticated`, `role=authenticated`, `sub=<user-uuid>`, plus a `client_id` claim). Each client app's callback MUST bridge them via `supabase.auth.setSession({access_token, refresh_token})` so PostgREST/RPC/Realtime authenticate as the user. Without the bridge, the per-domain supabase client falls back to anon and RLS-protected reads 401/406 immediately after the BSU→app handoff (BSU→CRM7 logged-out incident, 2026-05-06). The `bs_*` localStorage entries remain for `startBSTokenRefresh()`; consumers must also re-seed the Supabase session whenever `bs_access_token` rotates. Verified by `(crm7|R80.3|throughput|conduit|braden)/src/__tests__/oauth-contract.test.ts` (CI-enforced); enforced at lint time by `bsuite/oauth-callback-must-bridge` (`@bsuite/dry-lint` v0.4.0). `@bsuite/auth` is pinned to an exact version in each consumer `package.json` — bumps follow `docs/DEPENDENCY-BUMP-CHECKLIST.md`.
+6. **`startBSTokenRefresh()` is wired** in all 5 client apps (CRM7, R80.3, Braden, Throughput, Conduit) — checks every 60s, refreshes 5min before expiry, clears tokens on failure
+7. **Two OAuth providers are MANDATORY across the entire suite** — see section below. Never add a third provider (e.g. GitHub) without explicit owner instruction.
+
+#### Mandatory OAuth Providers (TWO — Suite-Wide)
+
+> **This is a hard constraint enforced across all apps. Regression is a critical bug.**
+
+Every auth entry point in the BSuite (BSU `AuthForm.tsx`, CRM7 `LoginModal.tsx` + `SignupModal.tsx`, and any future app's login UI) **must** expose exactly the following two providers — no more, no less:
+
+| Provider | Supabase ID | Status | Purpose |
+|----------|------------|--------|----------|
+| **Google** | `google` | ✅ Enabled | Corporate Google Workspace accounts |
+| **Microsoft** | `azure` | ✅ Enabled | Corporate Azure AD / Microsoft 365 — **critical for B2B SSO across the suite**. Users and orgs sign in with their M365 identity; downstream integrations (email sending from corporate Azure mailboxes, Entra ID group sync, M365 calendar access) depend on this provider existing at every auth surface. Removing it breaks corporate org onboarding. |
+| **GitHub** | `github` | ❌ Disabled | **Intentionally removed** — not appropriate for B2B use case. Disabled in Supabase. Button removed from all auth modals. **Never re-add without explicit owner instruction.** |
+
+**Rules:**
+
+- Both providers must be present in **both** Register and Sign In modals/forms — identical lists, always in sync
+- The order is: Google → Microsoft
+- If you modify any auth modal, verify the other modals in the same PR still show only these two providers
+- LLMs often drop Microsoft (treating it as redundant with Google) or re-add GitHub (treating it as harmless). Both are wrong. Google + Microsoft only.
+- Add a sync comment in every file that defines a provider list: `// IMPORTANT: Keep in sync with [other files] — exactly two providers (Google/Microsoft) are mandatory. GitHub is intentionally absent.`
+- For OAuth 2.1 / OIDC / PKCE compliance: Microsoft uses the `azure` provider ID (Azure AD OIDC endpoint, full PKCE support). Never use implicit flow.
+- The Supabase GitHub provider is disabled at the platform level — even if a button were added to the UI, it would fail. Do not attempt to re-enable it.
+
+**Affected files (current):**
+
+- `business-suite-unified`: `src/components/AuthForm.tsx`
+- `crm7`: `src/components/LoginModal.tsx`, `src/components/SignupModal.tsx`
+- Any new app added to the suite must follow this pattern from day one
+
+---
+
+---
+
 ## Migration ledger
 
 | Date | Change | PR |
