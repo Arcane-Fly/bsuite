@@ -81,9 +81,25 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+      # Submodules ARE required here, even though this job builds only a matrix.
+      # The gitlink detector below runs `git -C <scope> diff OLD NEW` inside each
+      # submodule; without a checkout that directory is an empty gitlink with no
+      # git repo, every comparison fails, and the block falls open on EVERY run.
+      #
+      # Observed on run 30596067236 (the first promotion after the detector
+      # landed): `Cannot diff crm7` -> fail-open -> all 26 crm7 functions
+      # redeployed. Safe, but the precise path never executed, so the warning
+      # was permanent rather than exceptional.
+      #
+      # supabase-migrate.yml's equivalent job already checks out submodules with
+      # this token chain — which is why ITS precise path works. The detection
+      # logic was ported without the checkout config it depends on. Same
+      # incomplete-propagation this detector was written to fix.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 2
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
 
       - id: set-matrix
         name: Build deployment matrix
