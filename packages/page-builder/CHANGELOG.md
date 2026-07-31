@@ -5,6 +5,49 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 0.6.2 — 2026-07-31
+
+### Fixed — card HEIGHT snapped back to its seed value on drop; WIDTH persisted correctly (crm7#744)
+
+Reproduced in a real signed-in browser on `d.crm.crm7.app` (page-builder
+0.6.1): dragging the SE resize handle on an `autoHeight` card tracked the
+gesture live and resized visually, but the instant the gesture ended, height
+reverted to its exact pre-drag value while width stuck. Deterministic across
+every drag distance tested (+120px, +150px, +300px).
+
+Root cause proved at the `usePageGridLayout` hook layer (not a render
+artifact) — `stripAutoHeightRows`, which runs on every `onLayoutChange`
+commit, unconditionally overwrote `h`/`minH` for ANY `autoHeight` item with
+the value from *before* the current commit. It existed to stop a real hazard
+— react-grid-layout renders `autoHeight` items with a merged
+`h = max(saved, measured)` (see `activeLayouts` in `PageGridLayout.tsx`), so
+`onLayoutChange` echoes that merged value back on every commit, and
+persisting it verbatim would smuggle a derived measurement into storage. But
+the guard had no way to tell "the render layer merged in a measured height"
+apart from "the user just dragged the SE handle" — both arrive as an `h`
+that differs from the base. It reverted both. `stripAutoHeightRows` never
+touches `w`/`x`/`y`, which is exactly why width survived every gesture and
+height never did.
+
+Fix: only treat an incoming `h` as a measurement echo — and revert it — when
+it exactly equals what react-grid-layout was actually rendered with
+(`max(baseItem.h, measuredRows)`, using the live `autoHeightRows` map, not
+the stale pre-commit base). Anything else is a deliberate resize, bigger or
+smaller, and now persists — still floored by the measured content height so
+nothing can clip.
+
+Guarded by two new tests in `usePageGridLayout.persistence.test.tsx`
+(`autoHeight resize height persistence (crm7#744)`), the first verified to
+FAIL against 0.6.1 (`expected 6 to be 20`) before the fix. A third existing
+test in `usePageGridLayout.test.tsx` that hand-crafted a measurement echo
+without ever recording the measurement via `applyAutoHeightRows` was
+corrected to match the real pipeline (a measurement can only appear in what
+react-grid-layout renders because `applyAutoHeightRows` recorded it first),
+and a sibling test was added proving a genuine resize with NO matching
+recorded measurement survives. Suite 58/58.
+
+---
+
 ## 0.6.1 — 2026-07-31
 
 ### Fixed — heal a PERSISTED `isResizable: false` (0.6.0 was not enough)

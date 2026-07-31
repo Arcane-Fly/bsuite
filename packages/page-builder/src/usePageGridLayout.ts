@@ -241,22 +241,49 @@ export function usePageGridLayout({
   const layoutCommitFrameRef = useRef<number | null>(null);
 
   /**
-   * Strips DERIVED measured heights out of a layout before it reaches the
-   * preference adapter. react-grid-layout is rendered with `autoHeightRows`
-   * merged over the saved layout (see `applyAutoHeightRows`), so the layouts
-   * it echoes back through `onLayoutChange` carry the MEASURED `h` for
-   * autoHeight items — persisting that verbatim would smuggle measured
-   * heights into user_preferences through the drag/resize path and drop the
+   * Strips a DERIVED measured height out of a layout before it reaches the
+   * preference adapter — but only when the incoming `h` is nothing more than
+   * an ECHO of the render-layer merge, not a real user gesture.
+   *
+   * react-grid-layout is rendered with `autoHeightRows` merged over the saved
+   * layout (see `applyAutoHeightRows` / `activeLayouts` in
+   * `PageGridLayout.tsx`: `h = max(saved, measured)`), so the layouts it
+   * echoes back through `onLayoutChange` carry that MERGED `h` for every
+   * autoHeight item, on every commit — including commits that never touched
+   * this particular item (e.g. a re-measurement of a sibling card, or a
+   * column-count change, while mid-edit). Persisting that verbatim would
+   * smuggle a measured height into user_preferences and drop the
    * `autoHeight` flag (react-grid-layout does not round-trip custom item
-   * props). Restore `h`/`minH`/`autoHeight` from the un-merged base layout;
-   * user-driven `x`/`y`/`w` (and `h` for non-autoHeight items) pass through
-   * untouched. Reads the base via a ref so the trailing-rAF commit below
-   * never closes over a stale snapshot.
+   * props).
+   *
+   * crm7#744 (2026-07-31): the previous version of this function restored
+   * `h`/`minH` from the un-merged base layout UNCONDITIONALLY for every
+   * autoHeight item, on every call — which discarded a genuine SE-handle
+   * resize just as thoroughly as it discarded a measurement echo, because
+   * both arrive as "an `h` that differs from the base." Confirmed in a real
+   * signed-in browser: width (never touched by this function) persisted
+   * correctly across a resize; height always snapped back to its pre-drag
+   * value, deterministically, regardless of drag distance.
+   *
+   * Fix: only treat the incoming `h` as an echo — and revert it — when it
+   * exactly equals what react-grid-layout was actually RENDERED with
+   * (`max(baseItem.h, measuredRows)`). Anything else is a deliberate user
+   * resize (larger OR smaller) and must persist, still floored by the
+   * measured content height so nothing can clip. `x`/`y`/`w` (and `h` for
+   * non-autoHeight items) pass through untouched either way.
+   *
+   * Reads both the base layout and the measured rows via refs so the
+   * trailing-rAF commit below never closes over a stale snapshot, and so
+   * this callback's identity stays stable across every ResizeObserver tick
+   * (avoids recreating `onLayoutChange` — and therefore the `<Responsive>`
+   * prop identity react-grid-layout sees — on every measurement).
    */
   const currentLayoutsForStripRef = useRef<GridLayouts | null>(null);
+  const autoHeightRowsForStripRef = useRef<Record<string, number>>({});
   const stripAutoHeightRows = useCallback((layouts: GridLayouts): GridLayouts => {
     const base = currentLayoutsForStripRef.current;
     if (!base) return layouts;
+    const measured = autoHeightRowsForStripRef.current;
     const result: GridLayouts = { lg: [] };
     for (const bp of Object.keys(layouts)) {
       const baseItems = base[bp] ?? base.lg ?? [];
@@ -264,7 +291,24 @@ export function usePageGridLayout({
       result[bp] = (layouts[bp] ?? []).map((item) => {
         const baseItem = baseByKey.get(item.i);
         if (!baseItem?.autoHeight) return item;
-        return { ...item, autoHeight: true, h: baseItem.h, minH: baseItem.minH };
+
+        const measuredRows = measured[item.i];
+        const renderedFloorH =
+          measuredRows === undefined ? baseItem.h : Math.max(baseItem.h ?? 0, measuredRows);
+        if (item.h === renderedFloorH) {
+          // Echo of the render-layer merge (or genuinely unchanged) — not a
+          // user gesture on THIS item. Restore the un-merged base so a
+          // measured bump never persists.
+          return { ...item, autoHeight: true, h: baseItem.h, minH: baseItem.minH };
+        }
+        // A deliberate resize (bigger or smaller than the base) — keep it,
+        // still floored by the measured content height.
+        return {
+          ...item,
+          autoHeight: true,
+          h: measuredRows === undefined ? item.h : Math.max(item.h, measuredRows),
+          minH: measuredRows ?? baseItem.minH,
+        };
       });
     }
     return result;
@@ -432,16 +476,24 @@ export function usePageGridLayout({
    *   producing the layouts handed to react-grid-layout (see
    *   `PageGridLayout`'s `activeLayouts` memo), so read-only users get
    *   full-height cards too.
-   * - NEVER persisted — not even while editing. Measurements re-derive on
-   *   every mount; writing them to the preference adapter would be redundant
-   *   AND would turn mere viewing (e.g. Radix tab switches inside a card,
-   *   which unmount/remount panel content and fire the ResizeObserver) into
-   *   storage upserts for any authenticated viewer.
+   * - NEVER persisted from passive viewing. Measurements re-derive on every
+   *   mount; writing them to the preference adapter on their own would be
+   *   redundant AND would turn mere viewing (e.g. Radix tab switches inside a
+   *   card, which unmount/remount panel content and fire the ResizeObserver)
+   *   into storage upserts for any authenticated viewer — see the CRITICAL #2
+   *   integration test. The one exception (crm7#744) is `minH` on a card the
+   *   user is ACTIVELY, deliberately resizing right now: `stripAutoHeightRows`
+   *   floors that card's persisted `minH` to the live measured value so the
+   *   floor invariant survives the same commit as the resize, which is a
+   *   user-driven write, not a passive one.
    * - Updated FUNCTIONALLY in one combined state update per flush, so two
    *   cards settling in the same animation frame can never last-writer-wins
    *   each other through a stale closure.
    */
   const [autoHeightRows, setAutoHeightRows] = useState<Record<string, number>>({});
+  useEffect(() => {
+    autoHeightRowsForStripRef.current = autoHeightRows;
+  }, [autoHeightRows]);
   const applyAutoHeightRows = useCallback((rowsByWidget: Record<string, number>) => {
     setAutoHeightRows((previous) => {
       let changed = false;

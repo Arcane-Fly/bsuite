@@ -241,6 +241,17 @@ describe('usePageGridLayout', () => {
         result.current.setIsEditing(true);
       });
 
+      // In the real pipeline, an autoHeight item's `h` can only show up as
+      // 27 in what react-grid-layout renders (and therefore echoes back)
+      // because `applyAutoHeightRows` recorded a 27-row measurement first —
+      // that's the ONLY path that produces the `activeLayouts` merge
+      // (`h = max(saved, measured)`) this test is simulating. Record it
+      // before simulating the echo, or the hook (correctly, post-crm7#744)
+      // has no way to tell this apart from a genuine user resize to 27.
+      act(() => {
+        result.current.applyAutoHeightRows({ card2: 27 });
+      });
+
       // react-grid-layout echoes back the RENDERED layout — which carries the
       // MEASURED h (27) for the autoHeight item, and drops custom props like
       // `autoHeight`. Simulate the user having dragged `plain` below card2.
@@ -265,6 +276,46 @@ describe('usePageGridLayout', () => {
       expect(savedCard2).toMatchObject({ h: 20, minH: 2, autoHeight: true });
       // User-driven position change on the non-autoHeight item persists.
       expect(savedPlain).toMatchObject({ x: 0, y: 27, h: 4 });
+    });
+
+    // crm7#744 — a genuine user resize (no matching measurement recorded)
+    // must NOT be mistaken for a measurement echo and must survive the
+    // commit. This is the exact defect: the pre-fix `stripAutoHeightRows`
+    // stripped ANY `h` that differed from the seed on an autoHeight item,
+    // with no way to tell a real drag apart from a measured floor bump.
+    it('onLayoutChange persists a genuine user resize on an autoHeight item (no measurement recorded for that value)', async () => {
+      const { adapter, store } = makeCountingAdapter();
+      const layouts: GridLayouts = {
+        lg: [{ i: 'card2', x: 0, y: 0, w: 6, h: 6, minH: 2, autoHeight: true }],
+      };
+
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'autoheight-genuine-resize-test',
+          defaultLayouts: layouts,
+          preferenceAdapter: adapter,
+        }),
+      );
+
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      // No `applyAutoHeightRows` call — content was already measured at (or
+      // below) the seed height. The user drags the SE handle to grow the
+      // card to 20 rows. react-grid-layout echoes that dragged value.
+      const echoed: GridLayouts = {
+        lg: [{ i: 'card2', x: 0, y: 0, w: 6, h: 20, minH: 2 }],
+      };
+
+      await act(async () => {
+        result.current.onLayoutChange([], echoed);
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      });
+
+      const saved = store.get('page:autoheight-genuine-resize-test_grid_layouts') as GridLayouts;
+      const savedCard2 = saved.lg.find((item) => item.i === 'card2');
+      expect(savedCard2).toMatchObject({ h: 20, autoHeight: true });
     });
   });
 
