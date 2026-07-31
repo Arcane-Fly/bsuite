@@ -5,6 +5,39 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 0.6.0 — 2026-07-31
+
+### Fixed — card resize restored on `autoHeight` items (regression)
+
+`PageGridLayout`'s `activeLayouts` memo force-set `isResizable: false` on every
+item with `autoHeight: true`, and overwrote `h` with the measured content
+height on each re-measure. Because ordinary cards default to `autoHeight: true`,
+this removed card resizing from effectively every consumer page — and would
+have discarded any height a user did manage to set.
+
+Resizable cards are an operator-mandated platform capability. The prior
+internal note that traded resize away to stop a 192px content-clipping
+regression posed a false choice; both properties hold at once:
+
+| property | how |
+|---|---|
+| content can never be clipped | `minH = measuredRows` |
+| a user-set height is preserved | `h = max(saved, measured)` |
+| handles are present | `isResizable` no longer overridden |
+
+`autoHeight` is now documented as a **floor**, not a lock.
+
+Guarded by two tests in `PageGridLayout.autoHeight.test.tsx`, both verified to
+FAIL against the previous implementation:
+- `autoHeight does NOT disable resize handles`
+- `a user-set height LARGER than the measured content is preserved, not stomped`
+
+The existing auto-height regression tests (including the CRITICAL #1
+same-frame settle and CRITICAL #2 zero-preference-write cases) continue to
+pass — 54/54 across 8 files.
+
+---
+
 ## 0.5.2 — 2026-07-16 — Fix: drag/resize gestures never persisted (bsuite#1588)
 
 ### Fixed

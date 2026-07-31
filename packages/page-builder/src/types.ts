@@ -3,13 +3,17 @@ import type { Compactor, LayoutItem, ResizeHandleAxis } from 'react-grid-layout'
 
 export interface GridLayoutItem extends LayoutItem {
   /**
-   * When true, this item's height is driven by its own measured content
-   * height rather than manual resize (blueprint amendment A1). `GridItem`
-   * mounts a `ResizeObserver` on an unconstrained content wrapper and
-   * reports the computed row count upward via `computeAutoHeightRows`;
-   * `PageGridLayout` force-sets `isResizable: false` for any item with
-   * `autoHeight: true` (see the `activeLayouts` memo) so callers don't need
-   * to remember to set both fields.
+   * When true, this item's measured content height acts as a FLOOR on its
+   * height — it is not a substitute for manual resize. `GridItem` mounts a
+   * `ResizeObserver` on an unconstrained content wrapper and reports the
+   * computed row count upward via `computeAutoHeightRows`; `PageGridLayout`
+   * then applies it as `minH` (never clip content) while keeping `h` at
+   * `max(saved, measured)` (never discard a height the user chose).
+   *
+   * `autoHeight` does NOT disable resizing. It previously force-set
+   * `isResizable: false`, which removed card resizing from every page using
+   * the default — corrected 2026-07-31; resizable cards are an
+   * operator-mandated capability. See the `activeLayouts` memo.
    */
   autoHeight?: boolean;
 }
