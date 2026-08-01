@@ -49,6 +49,10 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260506-dependency-bump-checklist-v1.00A.md` | Dependency bump checklist for `@bsuite/*` consumers (cited by CLAUDE.md) |
 | `20260507-ff-self-validation-doctrine-v1.00W.md` | FF-SELF-VALIDATION-20260507 self-validation loop doctrine (source for CLAUDE.md §9) |
 | `20260507-red-team-ux-doctrine-v1.00A.md` | Red-team UX doctrine (Approved) |
+| `20260731-platform-operations-reference-v1.00W.md` | Setup, lockfile generation, shared packages, env vars, GCP WIF, Ship-All-Apps cron, memory protocol, per-project notes (relocated from `AGENTS.md`) |
+| `20260731-agent-engineering-patterns-v1.00W.md` | AI SDK standards, multi-file refactor tooling (FF-TOOLING-PATTERNS), reusable code patterns (FF-CODE-PATTERNS) |
+| `20260731-frontend-layout-zindex-standards-v1.00W.md` | Layout rules, suite-wide z-index scale, 3-prompt DOM autopsy system |
+| `20260731-supabase-verification-gates-v1.00W.md` | FF-SUPABASE-GATES-20260610 policy/consumer/live-UX gates, definition of done, database rules |
 
 ### Auth & security references
 
@@ -99,13 +103,13 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | [`adr/`](adr/README.md) | Architecture decision records (ADR-0001…ADR-0007) |
 | [`ai/`](ai/README.md) | CRM7 AI Assistant documentation — architecture, features, pricing, integrations |
 | [`archive/`](archive/README.md) | Archived docs — per-project roadmaps, finish-line sweeps, and the 2026-06 closure-audit archive (`archive/2026-06/`) |
-| [`dashboard/`](dashboard/) | Roadmap dashboard (data + refresh scripts) — see CLAUDE.md §10 |
+| [`dashboard/`](dashboard/README.md) | Roadmap dashboard (data + refresh scripts) + the canonical FF-DASHBOARD-20260508 update protocol |
 | [`email-templates/`](email-templates/README.md) | Supabase email template HTML files (signup, invite, magic link, etc.) |
 | `evidence/` | Evidence captures referenced by plans/audits |
 | [`operator-screenshots/`](operator-screenshots/README.md) | Operator handoff screenshots |
 | [`plans/`](plans/README.md) | Implementation plans (active) — archived plans live in `archive/` |
 | [`runbooks/`](runbooks/README.md) | Operator/platform runbooks — migration dispatch, edge function deploy, parent pointer reconcile, tenant switching & branding tiers, secrets/vault rotation |
-| `testing/` | Test runbooks (`20260425-cross-app-e2e-runbook-v1.00W.md`) |
+| [`testing/`](testing/README.md) | Cross-app E2E runbook + e2e tooling decision record |
 
 > **Archived reference sets:** approved references from Feb–Apr 2026 (auth map, theme spec, GTO standards, competitive landscape, pricing, Fair Work, CRM8U research, etc.) → `archive/parent/2026-04-30-references-approved/`; closed audits → `archive/parent/2026-04-30-audits-closed/`; Phase-0 closure handoffs/session reports → `archive/parent/2026-04-30-phase-0-closure/`; 2026-06 closure-audit moves (cron logs, handoff packets, one-off audits, superseded plans) → `archive/2026-06/`.
 
