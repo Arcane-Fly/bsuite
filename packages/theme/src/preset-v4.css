@@ -102,6 +102,11 @@
   --color-warning-text: var(--role-warning-text);
   --color-success-text: var(--role-success-text);
 
+  /* Per-app accent (Layer 5). Resolves through [data-app] on <body>,
+     falling back to the shared accent when no app is declared. */
+  --color-app-accent:      var(--app-accent, var(--role-accent));
+  --color-app-accent-text: var(--app-accent-text, var(--role-accent-text));
+
   /* ============================================================
      LAYER 4 — shadcn/ui bridge
      ============================================================ */

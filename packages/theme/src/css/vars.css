@@ -219,6 +219,55 @@
 }
 
 /* ============================================================
+   LAYER 5 — PER-APP ACCENT
+   Added 2026-08-02: the 0.7.0 contract specifies these blocks but the
+   package had never shipped them — only a `var(--app-accent, …)` fallback
+   reference, so every app resolved to the shared cyan and the per-app
+   identity existed on paper only.
+
+   Set `data-app` on <body>. The FILL is the brand hue; the TEXT variants
+   are solved per mode, because a saturated fill colour is not a legible
+   text colour and the accent must never render below AA.
+   ============================================================ */
+[data-app="crm7"] {
+  --app-accent:        oklch(0.769 0.132 191.7);
+  --app-accent-text-l: oklch(0.505 0.132 191.7);
+  --app-accent-text-d: oklch(0.769 0.132 191.7);
+}
+[data-app="bsu"] {
+  --app-accent:        oklch(0.541 0.247 293);
+  --app-accent-text-l: oklch(0.564 0.247 293);
+  --app-accent-text-d: oklch(0.745 0.247 293);
+}
+[data-app="conduit"] {
+  --app-accent:        oklch(0.723 0.192 149.6);
+  --app-accent-text-l: oklch(0.505 0.192 149.6);
+  --app-accent-text-d: oklch(0.723 0.192 149.6);
+}
+[data-app="r80"] {
+  --app-accent:        oklch(0.666 0.157 58.3);
+  --app-accent-text-l: oklch(0.546 0.157 58.3);
+  --app-accent-text-d: oklch(0.703 0.157 58.3);
+}
+/* R8.04 — the rates engine replacing R80.3. Deliberately REUSES r80's
+   orange: it serves the same users doing the same job, and a rates engine
+   is not where people should be re-learning which app they are in.
+   Requested by the r804 lane 2026-08-02. */
+[data-app="r804"] {
+  --app-accent:        oklch(0.666 0.157 58.3);
+  --app-accent-text-l: oklch(0.546 0.157 58.3);
+  --app-accent-text-d: oklch(0.703 0.157 58.3);
+}
+[data-app="throughput"] {
+  --app-accent:        oklch(0.656 0.212 354.3);
+  --app-accent-text-l: oklch(0.564 0.212 354.3);
+  --app-accent-text-d: oklch(0.731 0.212 354.3);
+}
+/* Light/dark rebinding of the text variant. */
+:root      { --app-accent-text: var(--app-accent-text-l); }
+.dark      { --app-accent-text: var(--app-accent-text-d); }
+
+/* ============================================================
    NO sRGB FALLBACK — DELIBERATELY REMOVED 2026-08-02.
    Precedent: precedent__bsuite__20260802__theme_conformance_is_absolute.
 
