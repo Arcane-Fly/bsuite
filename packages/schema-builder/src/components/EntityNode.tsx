@@ -62,7 +62,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
   const fields = data.fields ?? [];
   const hasFields = fields.length > 0;
   const entityHandleClass =
-    '!h-5 !w-5 !border-2 !border-white !bg-blue-500 !opacity-90 hover:!opacity-100 dark:!border-neutral-900';
+    '!h-5 !w-5 !border-2 !border-card !bg-role-primary !opacity-90 hover:!opacity-100';
 
   return (
     <div
@@ -73,10 +73,10 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
       aria-selected={selected}
       tabIndex={0}
       title="Click to inspect fields. Drag the header grip to move. Drag a blue connector dot to another entity to create a relationship."
-      className={`nodrag relative min-w-[240px] rounded-xl border bg-white shadow-md transition-all dark:bg-neutral-900 ${
+      className={`nodrag relative min-w-[240px] rounded-xl border bg-card shadow-md transition-all ${
         selected
-          ? 'border-transparent ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-neutral-900'
-          : 'border-neutral-200 dark:border-neutral-700'
+          ? 'border-transparent ring-2 ring-ring ring-offset-2'
+          : 'border-border'
       }`}
     >
       {/* Entity-level fallback handles. Used when user drags from the card
@@ -91,10 +91,10 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         title={`Drop a relationship onto ${entity.label}`}
       />
 
-      <div className="schema-node-drag-handle flex cursor-grab items-center justify-between gap-3 rounded-t-xl border-b border-neutral-200 bg-neutral-50 p-3 active:cursor-grabbing dark:border-neutral-700 dark:bg-neutral-800">
+      <div className="schema-node-drag-handle flex cursor-grab items-center justify-between gap-3 rounded-t-xl border-b border-border bg-card p-3 active:cursor-grabbing">
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-          <GripVertical className="h-4 w-4 shrink-0 text-neutral-400" aria-label="Drag entity" />
-          <Database className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+          <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" aria-label="Drag entity" />
+          <Database className="h-4 w-4 shrink-0 text-primary-text" />
           {isRenaming ? (
             <input
               autoFocus
@@ -117,7 +117,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
                 }
               }}
               aria-label={`Rename ${entity.label}`}
-              className="nodrag min-w-0 flex-1 rounded bg-transparent px-1 text-sm font-semibold text-neutral-900 outline-none ring-1 ring-blue-500 dark:text-neutral-100"
+              className="nodrag min-w-0 flex-1 rounded bg-transparent px-1 text-sm font-semibold text-foreground outline-none ring-1 ring-ring"
             />
           ) : (
             <div
@@ -139,7 +139,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         </div>
         {entity.is_system ? (
           <span
-            className="h-4 shrink-0 rounded bg-neutral-200 px-1.5 text-[9px] font-medium uppercase leading-4 tracking-wide text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300"
+            className="h-4 shrink-0 rounded bg-muted px-1.5 text-[9px] font-medium uppercase leading-4 tracking-wide text-text-secondary"
             title="System entity: built-in object managed by the platform"
             aria-label="System entity"
           >
@@ -148,13 +148,13 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         ) : null}
       </div>
 
-      <div className="truncate border-b border-neutral-100 px-3 py-1 font-mono text-[10px] text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+      <div className="truncate border-b border-border px-3 py-1 font-mono text-[10px] text-muted-foreground">
         {entity.name}
       </div>
 
       {hasFields ? (
         <div
-          className="divide-y divide-neutral-100 dark:divide-neutral-800"
+          className="divide-y divide-border"
           role="list"
           aria-label={`${fields.length} fields`}
         >
@@ -168,14 +168,14 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
           ))}
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
           <FileText className="h-3 w-3" />
           <span>No custom fields yet</span>
         </div>
       )}
 
-      <div className="rounded-b-xl bg-white p-2 dark:bg-neutral-900">
-        <div className="mb-2 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+      <div className="rounded-b-xl bg-card p-2">
+        <div className="mb-2 rounded-md border border-role-primary/40 bg-role-primary/10 px-2 py-1 text-[10px] text-primary-text">
           <span className="inline-flex items-center gap-1 font-medium">
             <Link2 className="h-3 w-3" aria-hidden="true" />
             Drag blue dots to connect entities.
@@ -184,7 +184,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         <button
           type="button"
           title={`Add ${entity.label} as a widget to a custom page layout`}
-          className="inline-flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-white text-xs font-medium text-neutral-700 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:ring-offset-neutral-900"
+          className="inline-flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-border bg-card text-xs font-medium text-text-secondary hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 dark:hover:bg-muted dark:focus:ring-offset-background"
           onClick={(event) => {
             event.stopPropagation();
             window.dispatchEvent(

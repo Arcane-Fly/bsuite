@@ -231,7 +231,7 @@ export function SmartEdge(
       {label ? (
         <EdgeLabelRenderer>
           <div
-            className="pointer-events-auto absolute rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-700 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+            className="pointer-events-auto absolute rounded-sm border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-text-secondary shadow-sm"
             style={{
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             }}

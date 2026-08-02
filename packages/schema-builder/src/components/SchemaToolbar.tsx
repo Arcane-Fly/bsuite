@@ -39,7 +39,7 @@ export function SchemaToolbar({
 
   return (
     <div
-      className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-col gap-1.5 rounded-lg border border-neutral-200 bg-white/95 p-2 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:gap-2 dark:border-neutral-700 dark:bg-neutral-900/95"
+      className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-col gap-1.5 rounded-lg border border-border bg-card/95 p-2 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:gap-2"
       role="toolbar"
       aria-label="Schema builder toolbar"
     >
@@ -49,7 +49,7 @@ export function SchemaToolbar({
           onClick={onTidyUp}
           title="Tidy up layout (auto-arrange)"
           aria-label="Tidy up layout"
-          className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-transparent px-2 text-xs font-medium text-neutral-600 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-transparent px-2 text-xs font-medium text-text-secondary hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
         >
           <Wand2 className="h-4 w-4" />
           <span className="hidden sm:inline">Tidy</span>
@@ -59,7 +59,7 @@ export function SchemaToolbar({
           onClick={onFitView}
           title="Fit view"
           aria-label="Fit view"
-          className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-transparent px-2 text-xs font-medium text-neutral-600 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-transparent px-2 text-xs font-medium text-text-secondary hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
         >
           <Maximize2 className="h-4 w-4" />
           <span className="hidden sm:inline">Fit</span>
@@ -70,7 +70,7 @@ export function SchemaToolbar({
             onClick={onExportPng}
             title="Export as PNG"
             aria-label="Export schema as PNG"
-            className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-transparent px-2 text-xs font-medium text-neutral-600 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-transparent px-2 text-xs font-medium text-text-secondary hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">PNG</span>
@@ -78,12 +78,12 @@ export function SchemaToolbar({
         ) : null}
       </div>
       <div
-        className="hidden h-5 w-px bg-neutral-200 sm:block dark:bg-neutral-700"
+        className="hidden h-5 w-px bg-muted sm:block"
         aria-hidden="true"
       />
       <div className="relative">
         <Search
-          className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400"
+          className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
         />
         <input
@@ -94,10 +94,10 @@ export function SchemaToolbar({
             onSearchChange(e.target.value)
           }
           aria-label="Search entities"
-          className="h-8 w-[180px] rounded-md border border-neutral-200 bg-white pl-7 pr-2 text-xs text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          className="h-8 w-[180px] rounded-md border border-border bg-card pl-7 pr-2 text-xs text-foreground placeholder:text-text-subtle focus:border-role-primary focus:outline-none focus:ring-1 focus:ring-ring"
         />
         {hasResultCount ? (
-          <div className="mt-1 text-[10px] text-neutral-500 dark:text-neutral-400" role="status">
+          <div className="mt-1 text-[10px] text-muted-foreground" role="status">
             {searchQuery.trim()
               ? `${resultCount} of ${totalCount} entities matched`
               : `${totalCount} entities`}

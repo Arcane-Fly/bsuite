@@ -362,20 +362,20 @@ export function FieldEditDialog({
       <dialog
         ref={dialogRef}
         onClose={() => onOpenChange(false)}
-        className="w-[min(520px,90vw)] rounded-lg border border-neutral-200 bg-white p-0 shadow-xl backdrop:bg-black/50 dark:border-neutral-700 dark:bg-neutral-900"
+        className="w-[min(520px,90vw)] rounded-lg border border-border bg-card p-0 shadow-xl backdrop:bg-black/50"
         aria-labelledby="field-edit-dialog-title"
       >
         <form onSubmit={handleSubmit} className="p-6">
           <h2
             id="field-edit-dialog-title"
-            className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+            className="flex items-center gap-2 text-lg font-semibold text-foreground"
           >
-            <Save className="h-5 w-5 text-blue-500" aria-hidden="true" />
+            <Save className="h-5 w-5 text-primary-text" aria-hidden="true" />
             Edit Field in {entityLabel}
           </h2>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             Entity:{' '}
-            <code className="rounded bg-neutral-100 px-1 font-mono text-xs dark:bg-neutral-800">
+            <code className="rounded bg-muted px-1 font-mono text-xs">
               {entityName}
             </code>
           </p>
@@ -384,7 +384,7 @@ export function FieldEditDialog({
             <div className="space-y-2">
               <label
                 htmlFor="field-edit-name"
-                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+                className="block text-xs font-medium text-text-secondary"
               >
                 Field Name
               </label>
@@ -401,24 +401,24 @@ export function FieldEditDialog({
                   nameError ? 'field-edit-name-error' : 'field-edit-name-hint'
                 }
                 aria-required="true"
-                className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-900 ${
+                className={`w-full rounded-md border bg-card px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-ring ${
                   nameError
-                    ? 'border-red-500 dark:border-red-600'
-                    : 'border-neutral-200 dark:border-neutral-700'
+                    ? 'border-role-error'
+                    : 'border-border'
                 }`}
               />
               {nameError ? (
                 <p
                   id="field-edit-name-error"
                   role="alert"
-                  className="text-[10px] text-red-600 dark:text-red-400"
+                  className="text-[10px] text-error-text"
                 >
                   {nameError}
                 </p>
               ) : (
                 <p
                   id="field-edit-name-hint"
-                  className="text-[10px] text-neutral-500 dark:text-neutral-400"
+                  className="text-[10px] text-muted-foreground"
                 >
                   Column identifier. Lowercase letters, digits, and underscores.
                 </p>
@@ -428,7 +428,7 @@ export function FieldEditDialog({
             <div className="space-y-2">
               <label
                 htmlFor="field-edit-type"
-                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+                className="block text-xs font-medium text-text-secondary"
               >
                 Field Type
               </label>
@@ -441,7 +441,7 @@ export function FieldEditDialog({
                     value: e.target.value as FieldType,
                   })
                 }
-                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {FIELD_TYPE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -454,7 +454,7 @@ export function FieldEditDialog({
             <div className="space-y-2">
               <label
                 htmlFor="field-edit-label"
-                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+                className="block text-xs font-medium text-text-secondary"
               >
                 Display Label
               </label>
@@ -466,12 +466,12 @@ export function FieldEditDialog({
                   dispatch({ type: 'SET_LABEL', value: e.target.value })
                 }
                 placeholder="Shown to end users"
-                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 aria-describedby="field-edit-label-hint"
               />
               <p
                 id="field-edit-label-hint"
-                className="text-[10px] text-neutral-500 dark:text-neutral-400"
+                className="text-[10px] text-muted-foreground"
               >
                 Shown to end users in forms and tables.
               </p>
@@ -480,7 +480,7 @@ export function FieldEditDialog({
             <div className="space-y-2">
               <label
                 htmlFor="field-edit-placeholder"
-                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+                className="block text-xs font-medium text-text-secondary"
               >
                 Placeholder (optional)
               </label>
@@ -492,7 +492,7 @@ export function FieldEditDialog({
                   dispatch({ type: 'SET_PLACEHOLDER', value: e.target.value })
                 }
                 placeholder="e.g. jane@example.com"
-                className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -502,11 +502,11 @@ export function FieldEditDialog({
                 type="checkbox"
                 checked={state.isRequired}
                 onChange={() => dispatch({ type: 'TOGGLE_REQUIRED' })}
-                className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800"
+                className="h-4 w-4 rounded border-border-strong text-primary-text focus:ring-2 focus:ring-ring bg-muted"
               />
               <label
                 htmlFor="field-edit-required"
-                className="text-sm text-neutral-700 dark:text-neutral-300"
+                className="text-sm text-text-secondary"
               >
                 Required field
               </label>
@@ -514,14 +514,14 @@ export function FieldEditDialog({
 
             {showPhysicalDisclosure ? (
               <details
-                className="rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/40"
+                className="rounded-md border border-role-warning/40 bg-role-warning/10 p-3"
                 data-testid="field-edit-physical-disclosure"
               >
-                <summary className="cursor-pointer text-xs font-medium text-amber-800 dark:text-amber-300">
+                <summary className="cursor-pointer text-xs font-medium text-warning-text">
                   Advanced: also rename the underlying Postgres column
                 </summary>
                 <div className="mt-2 space-y-2">
-                  <p className="text-[11px] text-amber-800 dark:text-amber-200">
+                  <p className="text-[11px] text-warning-text">
                     Raw SQL queries and views referencing the old column name
                     will break. Metadata-driven widgets (Form Builder / Page
                     Builder) are unaffected.
@@ -534,11 +534,11 @@ export function FieldEditDialog({
                       onChange={() =>
                         dispatch({ type: 'TOGGLE_PHYSICAL_RENAME' })
                       }
-                      className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-2 focus:ring-amber-500 dark:border-amber-700 dark:bg-amber-950"
+                      className="h-4 w-4 rounded border-role-warning text-warning-text focus:ring-2 focus:ring-role-warning bg-role-warning/10"
                     />
                     <label
                       htmlFor="field-edit-rename-physical"
-                      className="text-xs text-amber-900 dark:text-amber-100"
+                      className="text-xs text-warning-text"
                     >
                       Also rename the underlying Postgres column (advanced,
                       destructive)
@@ -553,7 +553,7 @@ export function FieldEditDialog({
             <button
               type="button"
               onClick={handleDelete}
-              className="inline-flex h-9 items-center gap-1 rounded-md border border-red-300 bg-white px-3 text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-700 dark:bg-neutral-900 dark:text-red-400 dark:hover:bg-red-950"
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-role-error/40 bg-card px-3 text-sm font-medium text-error-text hover:bg-role-error/10 focus:outline-none focus:ring-2 focus:ring-role-error dark:hover:bg-role-error/10"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               Delete Field
@@ -562,14 +562,14 @@ export function FieldEditDialog({
               <button
                 type="button"
                 onClick={handleCancel}
-                className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+                className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="inline-flex h-9 items-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 items-center rounded-md bg-role-primary px-4 text-sm font-medium text-white hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {renameState.phase === 'running-dry'
                   ? 'Checking\u2026'
@@ -589,34 +589,34 @@ export function FieldEditDialog({
       <dialog
         ref={confirmDialogRef}
         onClose={handleCancelConfirm}
-        className="w-[min(560px,92vw)] rounded-lg border border-amber-300 bg-white p-0 shadow-xl backdrop:bg-black/50 dark:border-amber-800 dark:bg-neutral-900"
+        className="w-[min(560px,92vw)] rounded-lg border border-role-warning/40 bg-card p-0 shadow-xl backdrop:bg-black/50"
         aria-labelledby="field-edit-confirm-title"
       >
         <div className="p-6">
           <h3
             id="field-edit-confirm-title"
-            className="text-base font-semibold text-amber-800 dark:text-amber-300"
+            className="text-base font-semibold text-warning-text"
           >
             Confirm physical column rename
           </h3>
-          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-xs text-text-secondary">
             This will execute the following statement against the production
             database. It cannot be rolled back automatically.
           </p>
 
           {confirmResult ? (
             <div className="mt-4 space-y-3">
-              <pre className="overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-3 font-mono text-[11px] text-neutral-800 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100">
+              <pre className="overflow-x-auto rounded-md border border-border bg-card p-3 font-mono text-[11px] text-foreground">
                 {confirmResult.would_execute ?? '(no DDL returned)'}
               </pre>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Affected views ({confirmResult.affected_views?.length ?? 0})
                   </p>
                   {confirmResult.affected_views?.length ? (
-                    <ul className="mt-1 space-y-0.5 text-[11px] text-neutral-700 dark:text-neutral-300">
+                    <ul className="mt-1 space-y-0.5 text-[11px] text-text-secondary">
                       {confirmResult.affected_views.map((v) => (
                         <li key={v} className="font-mono">
                           {v}
@@ -624,16 +624,16 @@ export function FieldEditDialog({
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-1 text-[11px] text-neutral-500">None</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">None</p>
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Affected policies (
                     {confirmResult.affected_policies?.length ?? 0})
                   </p>
                   {confirmResult.affected_policies?.length ? (
-                    <ul className="mt-1 space-y-0.5 text-[11px] text-neutral-700 dark:text-neutral-300">
+                    <ul className="mt-1 space-y-0.5 text-[11px] text-text-secondary">
                       {confirmResult.affected_policies.map((p) => (
                         <li key={p} className="font-mono">
                           {p}
@@ -641,7 +641,7 @@ export function FieldEditDialog({
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-1 text-[11px] text-neutral-500">None</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">None</p>
                   )}
                 </div>
               </div>
@@ -651,7 +651,7 @@ export function FieldEditDialog({
           {renameState.phase === 'error' ? (
             <div
               role="alert"
-              className="mt-4 rounded-md border border-red-300 bg-red-50 p-3 text-[11px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+              className="mt-4 rounded-md border border-role-error/40 bg-role-error/10 p-3 text-[11px] text-error-text"
             >
               {renameState.message}
             </div>
@@ -661,7 +661,7 @@ export function FieldEditDialog({
             <button
               type="button"
               onClick={handleCancelConfirm}
-              className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+              className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
             >
               Cancel
             </button>
@@ -672,7 +672,7 @@ export function FieldEditDialog({
                 renameState.phase !== 'confirming' &&
                 renameState.phase !== 'error'
               }
-              className="inline-flex h-9 items-center rounded-md bg-amber-600 px-4 text-sm font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 items-center rounded-md bg-role-warning px-4 text-sm font-medium text-white hover:bg-role-warning focus:outline-none focus:ring-2 focus:ring-role-warning focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {renameState.phase === 'running-wet'
                 ? 'Renaming\u2026'

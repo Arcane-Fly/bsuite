@@ -91,18 +91,18 @@ export function RelationshipConfigDialog({
     <dialog
       ref={dialogRef}
       onClose={() => onOpenChange(false)}
-      className="w-[min(480px,90vw)] rounded-lg border border-neutral-200 bg-white p-0 shadow-xl backdrop:bg-black/50 dark:border-neutral-700 dark:bg-neutral-900"
+      className="w-[min(480px,90vw)] rounded-lg border border-border bg-card p-0 shadow-xl backdrop:bg-black/50"
       aria-labelledby="relationship-dialog-title"
     >
       <div className="p-6">
         <h2
           id="relationship-dialog-title"
-          className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+          className="flex items-center gap-2 text-lg font-semibold text-foreground"
         >
-          <GitBranch className="h-5 w-5 text-blue-500" />
+          <GitBranch className="h-5 w-5 text-primary-text" />
           Configure Relationship
         </h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           Define the relationship between <strong>{sourceName}</strong> and{' '}
           <strong>{targetName}</strong>.
         </p>
@@ -112,7 +112,7 @@ export function RelationshipConfigDialog({
             <div
               role="alert"
               aria-live="assertive"
-              className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400"
+              className="rounded-md border border-role-error/50 bg-role-error/10 p-3 text-xs text-error-text"
             >
               An entity cannot inherit from itself. Please select a different
               relationship type.
@@ -132,7 +132,7 @@ export function RelationshipConfigDialog({
               onChange={(e) =>
                 setRelationType(e.target.value as RelationType)
               }
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {RELATION_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -156,12 +156,12 @@ export function RelationshipConfigDialog({
               value={sourceLabel}
               onChange={(e) => setSourceLabel(e.target.value)}
               maxLength={100}
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               aria-describedby="source-label-hint"
             />
             <p
               id="source-label-hint"
-              className="text-[10px] text-neutral-500 dark:text-neutral-400"
+              className="text-[10px] text-muted-foreground"
             >
               How <strong>{targetName}</strong> appears when viewed from{' '}
               <strong>{sourceName}</strong>.
@@ -182,12 +182,12 @@ export function RelationshipConfigDialog({
               value={targetLabel}
               onChange={(e) => setTargetLabel(e.target.value)}
               maxLength={100}
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               aria-describedby="target-label-hint"
             />
             <p
               id="target-label-hint"
-              className="text-[10px] text-neutral-500 dark:text-neutral-400"
+              className="text-[10px] text-muted-foreground"
             >
               How <strong>{sourceName}</strong> appears when viewed from{' '}
               <strong>{targetName}</strong>.
@@ -199,7 +199,7 @@ export function RelationshipConfigDialog({
           <button
             type="button"
             onClick={handleCancel}
-            className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+            className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
           >
             Cancel
           </button>
@@ -207,7 +207,7 @@ export function RelationshipConfigDialog({
             type="button"
             onClick={handleConfirm}
             disabled={isInheritsSelf}
-            className="inline-flex h-9 items-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center rounded-md bg-role-primary px-4 text-sm font-medium text-white hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Create Relationship
           </button>

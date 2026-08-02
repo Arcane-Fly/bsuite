@@ -657,30 +657,30 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
     }, [controller.entities, searchQuery]);
 
     const canvasContent = controller.isLoading ? (
-      <div className="flex h-full w-full items-center justify-center bg-neutral-50 dark:bg-neutral-950">
-        <span className="text-sm text-neutral-500">Loading schema...</span>
+      <div className="flex h-full w-full items-center justify-center bg-card">
+        <span className="text-sm text-muted-foreground">Loading schema...</span>
       </div>
     ) : controller.loadError ? (
       <div
-        className="flex h-full w-full flex-col items-center justify-center gap-3 bg-neutral-50 dark:bg-neutral-950"
+        className="flex h-full w-full flex-col items-center justify-center gap-3 bg-card"
         role="alert"
       >
-        <AlertTriangle className="h-10 w-10 text-red-500" />
-        <p className="text-sm font-medium text-red-600 dark:text-red-400">
+        <AlertTriangle className="h-10 w-10 text-error-text" />
+        <p className="text-sm font-medium text-error-text">
           Failed to load schema
         </p>
-        <p className="max-w-sm px-4 text-center text-xs text-neutral-500">
+        <p className="max-w-sm px-4 text-center text-xs text-muted-foreground">
           {controller.loadError.message}
         </p>
       </div>
     ) : localNodes.length === 0 ? (
       <div
-        className="flex h-full w-full flex-col items-center justify-center gap-3 bg-neutral-50 dark:bg-neutral-950"
+        className="flex h-full w-full flex-col items-center justify-center gap-3 bg-card"
         role="status"
       >
-        <Workflow className="h-10 w-10 text-neutral-400" />
-        <p className="text-sm font-medium text-neutral-600">No entities yet</p>
-        <p className="max-w-sm px-4 text-center text-xs text-neutral-500">
+        <Workflow className="h-10 w-10 text-muted-foreground" />
+        <p className="text-sm font-medium text-text-secondary">No entities yet</p>
+        <p className="max-w-sm px-4 text-center text-xs text-muted-foreground">
           Create your first entity to start building the schema.
         </p>
       </div>
@@ -746,11 +746,11 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                 totalCount={controller.entities.length}
                 onExportPng={handleExportPng}
               />
-              <div className="absolute bottom-3 left-3 z-10 max-w-sm rounded-lg border border-blue-200 bg-white/95 p-3 text-xs text-neutral-700 shadow-sm backdrop-blur dark:border-blue-900/60 dark:bg-neutral-900/95 dark:text-neutral-200">
+              <div className="absolute bottom-3 left-3 z-10 max-w-sm rounded-lg border border-role-primary/40 bg-card/95 p-3 text-xs text-text-secondary shadow-sm backdrop-blur">
                 <div className="flex items-start gap-2">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" aria-hidden="true" />
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                   <div className="space-y-1">
-                    <p className="font-semibold text-neutral-900 dark:text-neutral-100">Schema Builder quick start</p>
+                    <p className="font-semibold text-foreground">Schema Builder quick start</p>
                     <p className="flex gap-1">
                       <MousePointer2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
                       Click a card to inspect fields. Drag the header grip to move it.

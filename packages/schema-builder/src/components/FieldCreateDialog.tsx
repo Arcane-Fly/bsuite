@@ -200,20 +200,20 @@ export function FieldCreateDialog({
     <dialog
       ref={dialogRef}
       onClose={() => onOpenChange(false)}
-      className="w-[min(520px,90vw)] rounded-lg border border-neutral-200 bg-white p-0 shadow-xl backdrop:bg-black/50 dark:border-neutral-700 dark:bg-neutral-900"
+      className="w-[min(520px,90vw)] rounded-lg border border-border bg-card p-0 shadow-xl backdrop:bg-black/50"
       aria-labelledby="field-create-dialog-title"
     >
       <form onSubmit={handleSubmit} className="p-6">
         <h2
           id="field-create-dialog-title"
-          className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+          className="flex items-center gap-2 text-lg font-semibold text-foreground"
         >
-          <PlusCircle className="h-5 w-5 text-blue-500" aria-hidden="true" />
+          <PlusCircle className="h-5 w-5 text-primary-text" aria-hidden="true" />
           Add Field to {entityLabel}
         </h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           Entity:{' '}
-          <code className="rounded bg-neutral-100 px-1 font-mono text-xs dark:bg-neutral-800">
+          <code className="rounded bg-muted px-1 font-mono text-xs">
             {entityName}
           </code>
         </p>
@@ -222,7 +222,7 @@ export function FieldCreateDialog({
           <div className="space-y-2">
             <label
               htmlFor="field-create-name"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+              className="block text-xs font-medium text-text-secondary"
             >
               Field Name
             </label>
@@ -240,24 +240,24 @@ export function FieldCreateDialog({
                 nameError ? 'field-create-name-error' : 'field-create-name-hint'
               }
               aria-required="true"
-              className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-900 ${
+              className={`w-full rounded-md border bg-card px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-ring ${
                 nameError
-                  ? 'border-red-500 dark:border-red-600'
-                  : 'border-neutral-200 dark:border-neutral-700'
+                  ? 'border-role-error'
+                  : 'border-border'
               }`}
             />
             {nameError ? (
               <p
                 id="field-create-name-error"
                 role="alert"
-                className="text-[10px] text-red-600 dark:text-red-400"
+                className="text-[10px] text-error-text"
               >
                 {nameError}
               </p>
             ) : (
               <p
                 id="field-create-name-hint"
-                className="text-[10px] text-neutral-500 dark:text-neutral-400"
+                className="text-[10px] text-muted-foreground"
               >
                 Column identifier. Lowercase letters, digits, and underscores.
               </p>
@@ -267,7 +267,7 @@ export function FieldCreateDialog({
           <div className="space-y-2">
             <label
               htmlFor="field-create-type"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+              className="block text-xs font-medium text-text-secondary"
             >
               Field Type
             </label>
@@ -280,7 +280,7 @@ export function FieldCreateDialog({
                   value: e.target.value as FieldType,
                 })
               }
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {FIELD_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -293,7 +293,7 @@ export function FieldCreateDialog({
           <div className="space-y-2">
             <label
               htmlFor="field-create-label"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+              className="block text-xs font-medium text-text-secondary"
             >
               Display Label
             </label>
@@ -305,12 +305,12 @@ export function FieldCreateDialog({
                 dispatch({ type: 'SET_LABEL', value: e.target.value })
               }
               placeholder="Auto-filled from field name"
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               aria-describedby="field-create-label-hint"
             />
             <p
               id="field-create-label-hint"
-              className="text-[10px] text-neutral-500 dark:text-neutral-400"
+              className="text-[10px] text-muted-foreground"
             >
               Shown to end users in forms and tables.
             </p>
@@ -319,7 +319,7 @@ export function FieldCreateDialog({
           <div className="space-y-2">
             <label
               htmlFor="field-create-placeholder"
-              className="block text-xs font-medium text-neutral-700 dark:text-neutral-300"
+              className="block text-xs font-medium text-text-secondary"
             >
               Placeholder (optional)
             </label>
@@ -331,7 +331,7 @@ export function FieldCreateDialog({
                 dispatch({ type: 'SET_PLACEHOLDER', value: e.target.value })
               }
               placeholder="e.g. jane@example.com"
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -341,11 +341,11 @@ export function FieldCreateDialog({
               type="checkbox"
               checked={state.isRequired}
               onChange={() => dispatch({ type: 'TOGGLE_REQUIRED' })}
-              className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800"
+              className="h-4 w-4 rounded border-border-strong text-primary-text focus:ring-2 focus:ring-ring bg-muted"
             />
             <label
               htmlFor="field-create-required"
-              className="text-sm text-neutral-700 dark:text-neutral-300"
+              className="text-sm text-text-secondary"
             >
               Required field
             </label>
@@ -356,14 +356,14 @@ export function FieldCreateDialog({
           <button
             type="button"
             onClick={handleCancel}
-            className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+            className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!canSubmit}
-            className="inline-flex h-9 items-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center rounded-md bg-role-primary px-4 text-sm font-medium text-white hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? 'Creating…' : 'Create Field'}
           </button>
