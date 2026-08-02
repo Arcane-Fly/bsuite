@@ -21,9 +21,9 @@ import {
   PAYROLL_TAX_EXEMPT_STATES,
   resolveEffectivePayrollTaxRate,
   getPayrollTaxRate,
-} from '../defaults';
-import type { AustralianState } from '../types';
-import type { PayrollTaxRateTypeCode } from '../defaults';
+} from '../defaults.js';
+import type { AustralianState } from '../types.js';
+import type { PayrollTaxRateTypeCode } from '../defaults.js';
 
 describe('resolveEffectivePayrollTaxRate', () => {
   it('WA + AP (apprentice) is 0 — the operator primary case the issue got backwards', () => {

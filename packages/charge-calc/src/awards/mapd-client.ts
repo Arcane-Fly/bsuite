@@ -12,15 +12,15 @@ import type {
   MAPDPenalty,
   MAPDWageAllowance,
   MAPDExpenseAllowance,
-} from './mapd-types';
-import type { AwardSchema } from './schema';
-import { AwardSupplementZ } from './schema';
+} from './mapd-types.js';
+import type { AwardSchema } from './schema.js';
+import { AwardSupplementZ } from './schema.js';
 import {
   mapClassification,
   mapPenalty,
   mapWageAllowance,
   mapExpenseAllowance,
-} from './mapd-mapper';
+} from './mapd-mapper.js';
 
 /** Interface for fetching MAPD data -- implemented by edge function or test mock */
 export interface MAPDDataSource {

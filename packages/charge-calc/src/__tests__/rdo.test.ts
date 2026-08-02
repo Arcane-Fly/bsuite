@@ -12,8 +12,8 @@
  */
 import { describe, it, expect } from 'vitest';
 
-import { DEFAULT_RDO_CONFIG } from '../types';
-import type { RdoAccrualConfig } from '../types';
+import { DEFAULT_RDO_CONFIG } from '../types.js';
+import type { RdoAccrualConfig } from '../types.js';
 import {
   workedHoursPerDayFromPaid,
   paidHoursPerDayFromWorked,
@@ -21,7 +21,7 @@ import {
   paidHoursPerWeekFromWorked,
   deriveRdoAccrual,
   billableHoursForRdoDayTaken,
-} from '../rdo';
+} from '../rdo.js';
 
 // The three patterns documented in rdo-flexibility.md, each on the
 // standard 19-worked-day cycle.

@@ -1,6 +1,6 @@
 import { createMCPClient, type MCPClient } from '@ai-sdk/mcp'
 import { stepCountIs, streamText } from 'ai'
-import { defaultJodieMcpToolSchemas, type JodieMcpToolSchemas } from './schemas.ts'
+import { defaultJodieMcpToolSchemas, type JodieMcpToolSchemas } from './schemas.js'
 
 interface JodieMcpServerConfig {
   url: string

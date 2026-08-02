@@ -3,8 +3,8 @@ import {
   computeAnnualEmployeeValue,
   computeLoadedRateAnnualValue,
   type AnnualValueBreakdown,
-} from '../../boot/annual-value';
-import type { MonetaryTerms, RosterScenario } from '../../boot/types';
+} from '../../boot/annual-value.js';
+import type { MonetaryTerms, RosterScenario } from '../../boot/types.js';
 
 // ─── Helper: create MonetaryTerms with sensible defaults ───
 function makeTerms(overrides: Partial<MonetaryTerms> = {}): MonetaryTerms {

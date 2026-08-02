@@ -10,7 +10,7 @@ import {
   meetsProtectionGateRequirements,
   type SlaTrackingRecord,
   type SlaTrackingStore,
-} from '../index';
+} from '../index.js';
 
 class InMemorySlaStore implements SlaTrackingStore {
   private readonly records = new Map<number, SlaTrackingRecord>();

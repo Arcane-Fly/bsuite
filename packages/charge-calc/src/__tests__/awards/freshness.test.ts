@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getFinancialYear, checkRateFreshness } from '../../awards/freshness';
+import { getFinancialYear, checkRateFreshness } from '../../awards/freshness.js';
 
 describe('getFinancialYear()', () => {
   it('returns 2024 for 2024-06-30 (last day of FY2024)', () => {

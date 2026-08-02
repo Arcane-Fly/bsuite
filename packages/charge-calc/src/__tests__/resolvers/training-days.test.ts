@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { TrainingDaysResolver } from '../../resolvers/training-days';
-import type { TrainingDaysDataAccess } from '../../resolvers/training-days';
-import type { ValueSource } from '../../sources';
+import { TrainingDaysResolver } from '../../resolvers/training-days.js';
+import type { TrainingDaysDataAccess } from '../../resolvers/training-days.js';
+import type { ValueSource } from '../../sources.js';
 
 /** A fully-stubbed TrainingDaysDataAccess; tests override only what they exercise. */
 function makeDataAccess(

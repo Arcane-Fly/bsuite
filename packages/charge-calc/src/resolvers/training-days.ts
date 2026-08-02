@@ -17,7 +17,7 @@ import type {
   ValueResolver,
   ValueSource,
   ResolvedValue,
-} from '../sources';
+} from '../sources.js';
 
 /**
  * Adapter the resolver calls into. Implement in R80.3 + CRM7 against

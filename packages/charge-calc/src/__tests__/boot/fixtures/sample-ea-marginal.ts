@@ -1,4 +1,4 @@
-import type { EATerms } from '../../../boot/types';
+import type { EATerms } from '../../../boot/types.js';
 
 /**
  * EA that passes the BOOT marginally (within 5% threshold).

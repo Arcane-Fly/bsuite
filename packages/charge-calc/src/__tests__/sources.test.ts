@@ -26,15 +26,15 @@ import {
   type ValueResolver,
   type ValueSource,
   type ResolvedValue,
-} from '../sources';
+} from '../sources.js';
 import {
   TrainingDaysResolver,
   type TrainingDaysDataAccess,
-} from '../resolvers/training-days';
+} from '../resolvers/training-days.js';
 import {
   WageResolver,
   type WageDataAccess,
-} from '../resolvers/wage';
+} from '../resolvers/wage.js';
 
 describe('ValueSourceSchema validation', () => {
   it('accepts a manual source', () => {

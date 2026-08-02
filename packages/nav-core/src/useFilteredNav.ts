@@ -14,8 +14,8 @@
  */
 
 import { useMemo } from 'react'
-import type { NavSection } from './types'
-import { type Tier, tierSatisfies } from './tier'
+import type { NavSection } from './types.js'
+import { type Tier, tierSatisfies } from './tier.js'
 
 /**
  * Extended NavSection with optional gating metadata. Apps can assign

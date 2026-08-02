@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildLaunchUrl } from '../launchUrl';
+import { buildLaunchUrl } from '../launchUrl.js';
 
 /**
  * buildLaunchUrl is the canonical cross-app handoff URL builder. Every

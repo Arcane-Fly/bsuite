@@ -2,14 +2,14 @@ import { describe, it, expect } from 'vitest';
 
 import {
   awardToCalcConfig,
-} from '../../awards/converter';
+} from '../../awards/converter.js';
 import type {
   EmployeeAwardContext,
   CalcOverrides,
-} from '../../awards/converter';
-import { calculate } from '../../calculate';
-import { AwardSchemaZ } from '../../awards/schema';
-import type { AwardSchema, AwardAllowance, AwardPenalty } from '../../awards/schema';
+} from '../../awards/converter.js';
+import { calculate } from '../../calculate.js';
+import { AwardSchemaZ } from '../../awards/schema.js';
+import type { AwardSchema, AwardAllowance, AwardPenalty } from '../../awards/schema.js';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Realistic Building Award (MA000003) fixture

@@ -2,12 +2,12 @@ import type {
   AwardSchedule, EATerms, RosterScenario, BOOTResult,
   BOOTClassResult, BOOTScenarioResult, TermComparison,
   BOOTVerdict, MarginalConfig, BOOTWarning,
-} from './types';
-import { DEFAULT_MARGINAL_CONFIG, ENGINE_VERSION } from './types';
-import { computeAnnualEmployeeValue, computeLoadedRateAnnualValue } from './annual-value';
-import type { AnnualValueBreakdown } from './annual-value';
-import { compareNonMonetary } from './non-monetary';
-import { roundMoney } from '../utils';
+} from './types.js';
+import { DEFAULT_MARGINAL_CONFIG, ENGINE_VERSION } from './types.js';
+import { computeAnnualEmployeeValue, computeLoadedRateAnnualValue } from './annual-value.js';
+import type { AnnualValueBreakdown } from './annual-value.js';
+import { compareNonMonetary } from './non-monetary.js';
+import { roundMoney } from '../utils.js';
 
 /**
  * Run BOOT comparison: compare EA terms against award schedule(s)

@@ -10,14 +10,14 @@ import type {
   AwardSchema,
   AwardPenalty,
   AwardAllowance,
-} from './schema';
+} from './schema.js';
 import type {
   CalcConfig,
   Allowance,
   PenaltyRate,
   AllowanceType,
   PenaltyCategoryType,
-} from '../types';
+} from '../types.js';
 
 export interface EmployeeAwardContext {
   awardCode: string;

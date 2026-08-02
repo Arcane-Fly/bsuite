@@ -28,7 +28,7 @@
  * ```
  */
 
-import type { NavConfig, NavSection } from './types';
+import type { NavConfig, NavSection } from './types.js';
 
 export function mergeNavConfigs(
   base: NavConfig,

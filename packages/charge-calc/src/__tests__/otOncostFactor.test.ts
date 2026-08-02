@@ -19,8 +19,8 @@
 
 import { describe, it, expect } from 'vitest';
 
-import { calculate } from '../calculate';
-import { DEFAULT_CONFIG, deriveOtOncostFactor } from '../defaults';
+import { calculate } from '../calculate.js';
+import { DEFAULT_CONFIG, deriveOtOncostFactor } from '../defaults.js';
 
 describe('deriveOtOncostFactor', () => {
   it('is workers comp + payroll tax, nothing else', () => {

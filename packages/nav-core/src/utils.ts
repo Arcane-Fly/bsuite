@@ -1,4 +1,4 @@
-import type { NavSection } from './types';
+import type { NavSection } from './types.js';
 
 /** Strip a single trailing slash (unless the path is just `/`). */
 function normalize(p: string): string {

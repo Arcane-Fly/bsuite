@@ -3,7 +3,7 @@ import type {
   AwardSchedule,
   EATerms,
   RosterScenario,
-} from './types';
+} from './types.js';
 
 // ─── Failure Pattern Types ───
 

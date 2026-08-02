@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { roundMoney } from '../utils';
+import { roundMoney } from '../utils.js';
 
 describe('roundMoney', () => {
   it('rounds 0.005 to 2 decimals correctly (banker rounding edge)', () => {

@@ -16,9 +16,9 @@ import type {
   MAPDPenalty,
   MAPDWageAllowance,
   MAPDExpenseAllowance,
-} from './mapd-types';
-import type { AwardClassification, AwardPenalty, AwardAllowance } from './schema';
-import type { AllowanceType } from '../types';
+} from './mapd-types.js';
+import type { AwardClassification, AwardPenalty, AwardAllowance } from './schema.js';
+import type { AllowanceType } from '../types.js';
 
 /** Map MAPD classification to internal format */
 export function mapClassification(raw: MAPDClassification): AwardClassification {

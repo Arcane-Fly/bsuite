@@ -1,5 +1,5 @@
-export { getFinancialYear, checkRateFreshness } from './freshness';
-export type { RateFreshness } from './freshness';
+export { getFinancialYear, checkRateFreshness } from './freshness.js';
+export type { RateFreshness } from './freshness.js';
 
 export {
   MAPDAwardZ,
@@ -7,14 +7,14 @@ export {
   MAPDPenaltyZ,
   MAPDWageAllowanceZ,
   MAPDExpenseAllowanceZ,
-} from './mapd-types';
+} from './mapd-types.js';
 export type {
   MAPDAward,
   MAPDClassification,
   MAPDPenalty,
   MAPDWageAllowance,
   MAPDExpenseAllowance,
-} from './mapd-types';
+} from './mapd-types.js';
 
 export {
   EmployeeRateTypeCodeZ,
@@ -23,7 +23,7 @@ export {
   AwardAllowanceZ,
   AwardSupplementZ,
   AwardSchemaZ,
-} from './schema';
+} from './schema.js';
 export type {
   EmployeeRateTypeCode,
   AwardClassification,
@@ -31,7 +31,7 @@ export type {
   AwardAllowance,
   AwardSupplement,
   AwardSchema,
-} from './schema';
+} from './schema.js';
 
 export {
   mapClassification,
@@ -41,10 +41,10 @@ export {
   mapWageAllowance,
   mapExpenseAllowance,
   filterApprenticeClassifications,
-} from './mapd-mapper';
+} from './mapd-mapper.js';
 
-export { fetchCompleteAward } from './mapd-client';
-export type { MAPDDataSource } from './mapd-client';
+export { fetchCompleteAward } from './mapd-client.js';
+export type { MAPDDataSource } from './mapd-client.js';
 
 export {
   registerAward,
@@ -53,7 +53,7 @@ export {
   validateAward,
   clearAwardCache,
   loadAwardFromMAPD,
-} from './registry';
+} from './registry.js';
 
-export { awardToCalcConfig } from './converter';
-export type { EmployeeAwardContext, CalcOverrides } from './converter';
+export { awardToCalcConfig } from './converter.js';
+export type { EmployeeAwardContext, CalcOverrides } from './converter.js';

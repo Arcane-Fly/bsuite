@@ -1,4 +1,4 @@
-import type { CalcConfig, PenaltyRate, AustralianState } from './types';
+import type { CalcConfig, PenaltyRate, AustralianState } from './types.js';
 
 // ─── State Payroll Tax Rates ───
 export const PAYROLL_TAX_RATES: Record<AustralianState, number> = {

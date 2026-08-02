@@ -16,8 +16,8 @@
  * state in which worked hours and paid hours are simply identical — not as
  * an edge case to special-case around.
  */
-import type { RdoAccrualConfig } from './types';
-import { DEFAULT_RDO_CONFIG } from './types';
+import type { RdoAccrualConfig } from './types.js';
+import { DEFAULT_RDO_CONFIG } from './types.js';
 
 /**
  * Derives WORKED hours/day from PAID hours/day.

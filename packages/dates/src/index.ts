@@ -10,10 +10,10 @@ export {
   localeToDateFormat,
   DEFAULT_LOCALE,
   DEFAULT_DATE_FORMAT,
-} from './formatDate';
+} from './formatDate.js';
 
 export type {
   SupportedLocale,
   DateFormatPreference,
   DateInput,
-} from './formatDate';
+} from './formatDate.js';

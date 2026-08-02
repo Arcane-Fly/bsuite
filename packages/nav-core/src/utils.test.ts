@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isActivePath, isSectionActive } from './utils';
+import { isActivePath, isSectionActive } from './utils.js';
 
 describe('isActivePath', () => {
   it('exact match', () => {

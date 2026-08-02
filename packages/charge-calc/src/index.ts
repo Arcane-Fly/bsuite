@@ -1,21 +1,21 @@
 // @bsuite/charge-calc — shared charge-rate calculation engine
 
-export * from './types';
+export * from './types.js';
 
-export * from './calculate';
+export * from './calculate.js';
 
-export * from './defaults';
+export * from './defaults.js';
 
-export * from './billing';
+export * from './billing.js';
 
-export * from './utils';
+export * from './utils.js';
 
-export * from './awards';
+export * from './awards/index.js';
 
-export * from './boot';
+export * from './boot/index.js';
 
-export * from './sources';
+export * from './sources.js';
 
-export * from './resolvers';
+export * from './resolvers/index.js';
 
-export * from './rdo';
+export * from './rdo.js';

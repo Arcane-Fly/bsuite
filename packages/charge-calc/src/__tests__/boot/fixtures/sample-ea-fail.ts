@@ -1,4 +1,4 @@
-import type { EATerms } from '../../../boot/types';
+import type { EATerms } from '../../../boot/types.js';
 
 /**
  * EA that fails the BOOT: higher base but NO penalty rates.

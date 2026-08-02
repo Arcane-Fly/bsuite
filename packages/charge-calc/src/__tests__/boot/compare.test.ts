@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { compareBOOT } from '../../boot/compare';
-import { compareNonMonetary } from '../../boot/non-monetary';
+import { compareBOOT } from '../../boot/compare.js';
+import { compareNonMonetary } from '../../boot/non-monetary.js';
 import type {
   AwardSchedule,
   EATerms,
   RosterScenario,
   MonetaryTerms,
   NonMonetaryTerms,
-} from '../../boot/types';
+} from '../../boot/types.js';
 
 // ─── Shared Fixtures: Building Award MA000020 ───
 

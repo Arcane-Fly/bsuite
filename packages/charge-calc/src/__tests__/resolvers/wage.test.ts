@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { WageResolver } from '../../resolvers/wage';
-import type { WageDataAccess } from '../../resolvers/wage';
-import type { ValueSource } from '../../sources';
+import { WageResolver } from '../../resolvers/wage.js';
+import type { WageDataAccess } from '../../resolvers/wage.js';
+import type { ValueSource } from '../../sources.js';
 
 /** ISO timestamp `days` days before now — for stale-rate assertions. */
 const isoDaysAgo = (days: number): string =>

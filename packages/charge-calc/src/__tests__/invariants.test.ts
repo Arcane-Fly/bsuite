@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { calculate } from '../calculate';
-import type { CalcConfig } from '../types';
+import { calculate } from '../calculate.js';
+import type { CalcConfig } from '../types.js';
 
 function makeConfig(overrides: Partial<CalcConfig> = {}): CalcConfig {
   return {

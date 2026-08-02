@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { AppSwitcher } from '../AppSwitcher'
+import { AppSwitcher } from '../AppSwitcher.js'
 
 // Simple mock icon component
 const MockIcon = ({ className }: { className?: string }) => (

@@ -6,10 +6,10 @@ import type {
   GTOPlacementSchedule,
   GTOPlacementResult,
   GTOBOOTResult,
-} from './types';
-import { ENGINE_VERSION, DEFAULT_MARGINAL_CONFIG } from './types';
-import { compareBOOT } from './compare';
-import { roundMoney } from '../utils';
+} from './types.js';
+import { ENGINE_VERSION, DEFAULT_MARGINAL_CONFIG } from './types.js';
+import { compareBOOT } from './compare.js';
+import { roundMoney } from '../utils.js';
 
 /**
  * GTO Multi-Placement BOOT Comparison

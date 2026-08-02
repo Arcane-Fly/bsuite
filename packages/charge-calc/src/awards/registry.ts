@@ -6,10 +6,10 @@
  * `registerAward()`. Calling code (R80.3, CRM7, edge functions) is
  * responsible for fetching and caching.
  */
-import type { AwardSchema, AwardSupplement } from './schema';
-import { AwardSchemaZ } from './schema';
-import type { MAPDDataSource } from './mapd-client';
-import { fetchCompleteAward } from './mapd-client';
+import type { AwardSchema, AwardSupplement } from './schema.js';
+import { AwardSchemaZ } from './schema.js';
+import type { MAPDDataSource } from './mapd-client.js';
+import { fetchCompleteAward } from './mapd-client.js';
 import type { ZodError } from 'zod';
 
 /** In-memory cache of assembled award schemas */

@@ -1,4 +1,4 @@
-import type { BillingModel } from './types';
+import type { BillingModel } from './types.js';
 
 export interface BillableWeeksInput {
   billingModel: BillingModel;

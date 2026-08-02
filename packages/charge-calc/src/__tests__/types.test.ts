@@ -14,7 +14,7 @@ import {
   PenaltyCategory,
   BILLING_MODEL_WEEKS,
   getSuperRate,
-} from '../types';
+} from '../types.js';
 
 describe('Type definitions', () => {
   it('AllowanceTypeSchema validates known types', () => {
