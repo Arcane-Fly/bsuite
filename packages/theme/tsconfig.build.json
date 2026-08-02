@@ -13,7 +13,6 @@
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
-    "src/tailwind-preset.js",
     "src/preset-v4.css",
     "src/css/**"
   ]

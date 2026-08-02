@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/theme",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -15,7 +15,6 @@
   "files": [
     "dist",
     "src/css",
-    "src/tailwind-preset.js",
     "src/preset-v4.css"
   ],
   "main": "dist/index.js",
@@ -33,7 +32,6 @@
       "import": "./dist/ssr/index.js",
       "types": "./dist/ssr/index.d.ts"
     },
-    "./tailwind-preset": "./src/tailwind-preset.js",
     "./preset-v4.css": "./src/preset-v4.css",
     "./css": "./src/css/index.css",
     "./vars.css": "./src/css/vars.css",

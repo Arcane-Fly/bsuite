@@ -1,0 +1,785 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D2C Neon Electric — theme source of truth</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   D2C NEON ELECTRIC — proposed @bsuite/theme 0.7.0 contract
+   Layers: 1 palette · 2 surface · 3 role · 4 shadcn · 5 app
+   Rules enforced here:
+     · No pure white (oklch 1.0) and no pure black (oklch 0) anywhere
+     · Error/destructive is purple, never red — colourblind policy
+     · Neon glow is DARK MODE ONLY; light mode uses tinted shadows
+     · Colour is never the sole signifier of state
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── L1 palette (frozen) ────────────────────────────────── */
+  --neon-blue:     oklch(0.546 0.215 262.9);
+  --neon-cyan:     oklch(0.769 0.132 191.7);
+  --neon-indigo:   oklch(0.511 0.230 277);
+  --neon-purple:   oklch(0.568 0.202 283.1);
+  --neon-magenta:  oklch(0.742 0.167 359.5);
+  --neon-pink:     oklch(0.656 0.212 354.3);
+  --neon-coral:    oklch(0.669 0.219  20.9);
+  --neon-orange:   oklch(0.728 0.168  22.5);
+  --neon-yellow:   oklch(0.868 0.125  81.4);
+  --neon-green:    oklch(0.723 0.192 149.6);
+  --neon-lavender: oklch(0.736 0.141 285.6);
+  /* Added 2026-08-02 — semantic set rebuilt for dichromat separation.
+     Measured via Viénot–Brettel simulation; see the Colour-vision panel. */
+  --neon-red:      oklch(0.580 0.230  25);    /* error / destructive */
+  --neon-amber:    oklch(0.800 0.150  75);    /* warning */
+  --neon-teal:     oklch(0.600 0.130 195);    /* success */
+  --neon-deep:      oklch(0.380 0.140 270);    /* secondary action */
+
+  /* ── L2 surfaces — LIGHT (bg-panel is 0.994, never 1.0) ─── */
+  --role-bg-body:    oklch(0.961 0     0.5);
+  --role-bg-surface: oklch(0.982 0.002 248);
+  --role-bg-panel:   oklch(0.994 0.002 260);
+  --role-bg-input:   oklch(0.963 0.003 228.9);
+  --role-bg-sunken:  oklch(0.938 0.004 250);
+  --role-border:     oklch(0.942 0.005 247.9);
+  --role-border-strong: oklch(0.880 0.008 250);
+
+  /* ── L3 heading ramp — 6 levels, hue walks toward the accent
+        as depth increases. Ratios measured vs --role-bg-body. ── */
+  --role-h1: oklch(0.20 0.020 263);  /* 16.17:1 AAA */
+  --role-h2: oklch(0.26 0.026 258);  /* 13.87:1 AAA */
+  --role-h3: oklch(0.31 0.034 248);  /* 11.71:1 AAA */
+  --role-h4: oklch(0.36 0.042 236);  /*  9.62:1 AAA */
+  --role-h5: oklch(0.41 0.050 222);  /*  7.75:1 AAA */
+  --role-h6: oklch(0.45 0.058 208);  /*  6.48:1 AA  */
+  --role-text-heading: var(--role-h1);
+
+  /* ── L3 body scale ──────────────────────────────────────── */
+  --role-text-body:      oklch(0.22 0.015 260);  /* 15.46:1 AAA */
+  --role-text-secondary: oklch(0.38 0.018 260);  /*  8.94:1 AAA */
+  --role-text-muted:     oklch(0.52 0.018 260);  /*  4.92:1 AA  */
+  --role-text-subtle:    oklch(0.60 0.012 260);  /*  3.52:1 AA large only */
+  --role-text-disabled:  oklch(0.72 0.010 260);  /*  2.21:1 — icon cue required */
+
+  /* ── L3 inline modifiers ────────────────────────────────── */
+  --role-text-strong:    oklch(0.16 0.020 262);  /* 17.34:1 AAA */
+  --role-text-emphasis:  oklch(0.40 0.075 215);  /*  7.95:1 AAA */
+  --role-link:           oklch(0.485 0.243 263.6); /* 6.16:1 AA */
+  --role-link-hover:     oklch(0.40 0.200 268);  /*  8.82:1 AAA */
+  --role-link-visited:   oklch(0.44 0.150 295);  /*  7.42:1 AAA */
+  --role-code-text:      oklch(0.40 0.085 198);  /*  7.70:1 AAA */
+  --role-code-bg:        oklch(0.945 0.012 198);
+  --role-quote-text:     oklch(0.42 0.030 250);  /*  7.53:1 AAA */
+  --role-quote-rule:     oklch(0.80 0.060 210);
+  --role-mark-bg:        oklch(0.930 0.060 195);
+  --role-mark-text:      oklch(0.22 0.030 210);
+  --role-kbd-bg:         oklch(0.955 0.004 250);
+  --role-kbd-border:     oklch(0.880 0.008 250);
+
+  /* ── L3 semantic — separation-first, measured under dichromacy ──
+     The invariant is NOT "error is purple". It is: error must be
+     maximally separated from primary under deuteranopia and protanopia.
+     D2C primary is blue, so error is red. Braden's primary IS red, so
+     Braden must solve its own error hue against the same rule.
+     Min ΔE across normal/deut/protan for every pair below: ≥ 0.162.
+     The previous purple-error scored 0.006 against primary. */
+  --role-primary:     var(--neon-blue);
+  --role-secondary:   var(--neon-deep);    /* was indigo — 0.037 from primary */
+  --role-accent:      var(--neon-cyan);
+  --role-error:       var(--neon-red);    /* was purple — 0.006 from primary */
+  --role-destructive: var(--neon-red);
+  --role-warning:     var(--neon-amber);  /* was salmon h22.5 — 0.059 from red */
+  --role-success:     var(--neon-teal);   /* was green — 0.043 from red */
+  --role-info:        var(--neon-cyan);
+
+  /* AA-safe text renderings of saturated roles on light surfaces */
+  --role-primary-text: oklch(0.541 0.215 262.9);  /* 4.71:1 AA */
+  --role-accent-text:  oklch(0.499 0.132 191.7);  /* 4.70:1 AA */
+  --role-error-text:   oklch(0.556 0.230  25);    /* 4.69:1 AA */
+  --role-warning-text: oklch(0.535 0.150  75);    /* 4.70:1 AA */
+  --role-success-text: oklch(0.501 0.130 195);    /* 4.70:1 AA */
+
+  /* ── inverse text on saturated fills (never pure white) ─── */
+  --text-on-light-fill: oklch(0.98 0.006 260);
+  --text-on-dark-fill:  oklch(0.19 0.020 255);
+  --text-on-primary: var(--text-on-light-fill);  /* 4.88:1 AA  */
+  --text-on-error:   var(--text-on-light-fill);  /* 4.55:1 AA  */
+  --text-on-accent:  var(--text-on-dark-fill);   /* 9.38:1 AAA */
+  --text-on-warning: var(--text-on-dark-fill);   /* 9.68:1 AAA */
+  --text-on-success: var(--text-on-dark-fill);   /* 5.17:1 AA  */
+
+  /* ── the ONE text-safe gradient. Marketing heroes only ──── */
+  --gradient-accent: linear-gradient(135deg, var(--role-primary), var(--role-accent));
+  /* decoration-only 5-stop brand spectrum — never behind text */
+  --gradient-spectrum: linear-gradient(90deg,
+    var(--neon-coral), var(--neon-orange), var(--neon-yellow),
+    var(--neon-cyan), var(--neon-lavender));
+
+  /* ── LIGHT elevation: tinted shadows, no glow, no pure black ─ */
+  --shadow-xs: 0 1px 2px  oklch(0.30 0.03 260 / 0.06);
+  --shadow-sm: 0 1px 3px  oklch(0.30 0.03 260 / 0.08), 0 1px 2px oklch(0.30 0.03 260 / 0.04);
+  --shadow-md: 0 4px 10px -3px oklch(0.30 0.03 260 / 0.10), 0 2px 4px -2px oklch(0.30 0.03 260 / 0.06);
+  --shadow-lg: 0 14px 26px -8px oklch(0.28 0.04 260 / 0.14), 0 5px 10px -5px oklch(0.28 0.04 260 / 0.07);
+  --glow-card: none;
+  --glow-card-hover: none;
+  --glow-strength: 0;
+  --panel-hairline: transparent;
+
+  /* ── L5 app accent (default = CRM7) ─────────────────────── */
+  --app-accent: var(--neon-cyan);
+  --app-accent-text-l: oklch(0.505 0.132 191.7);
+  --app-accent-text-d: oklch(0.769 0.132 191.7);
+  --app-accent-text: var(--app-accent-text-l);
+
+  /* ── type ───────────────────────────────────────────────── */
+  /* ── BACKGROUND PATTERNS — W3 §3.3 grid/dot doctrine ─────
+     DOT  = authenticated app shell only  (16px tile, r=1)
+     GRID = public/pre-auth marketing hero only (32px tile)
+     An app never renders both in the same context.
+     Both are tinted with the surface hue — never pure black/white. */
+  --dot-color:   oklch(0.42 0.030 258 / 0.16);
+  --dot-size:    16px;
+  --dot-radius:  1px;
+  --grid-color:  oklch(0.40 0.030 258 / 0.07);
+  --grid-size:   32px;
+
+  /* ── type: CHOSEN 2026-08-02 ─────────────────────────────
+     @fontsource-variable/geist + geist-mono 5.3.0, OFL-1.1.
+     'Geist Variable' is the fontsource family name; bare 'Geist' is the
+     CDN/next-font name and is kept as a fallback so both resolve. */
+  --font-display: 'Geist Variable', Geist, system-ui, sans-serif;
+  --font-body:    'Geist Variable', Geist, system-ui, sans-serif;
+  --font-mono:    'Geist Mono Variable', 'Geist Mono', ui-monospace, monospace;
+  --track-display: -0.028em;
+  --track-heading: -0.018em;
+  --track-body: 0em;
+  --track-eyebrow: 0.09em;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --row-pad: 11px;
+}
+
+/* ═══ DARK — same tokens, cyber-electric rebind ═══ */
+.dark {
+  --role-bg-body:    oklch(0.166 0.026 269.4);
+  --role-bg-surface: oklch(0.212 0.028 269);
+  --role-bg-panel:   oklch(0.190 0.020 260);
+  --role-bg-input:   oklch(0.240 0.020 260);
+  --role-bg-sunken:  oklch(0.145 0.022 268);
+  --role-border:     oklch(0.428 0.015 248.2);
+  --role-border-strong: oklch(0.520 0.020 248);
+
+  --role-h1: oklch(0.95 0.016 262);  /* 16.65:1 AAA */
+  --role-h2: oklch(0.92 0.018 264);  /* 15.20:1 AAA */
+  --role-h3: oklch(0.88 0.026 240);  /* 13.47:1 AAA */
+  --role-h4: oklch(0.84 0.040 220);  /* 11.93:1 AAA */
+  --role-h5: oklch(0.80 0.052 200);  /* 10.52:1 AAA */
+  --role-h6: oklch(0.75 0.062 195);  /*  8.89:1 AAA */
+
+  --role-text-body:      oklch(0.94 0.012 260);  /* 16.16:1 AAA */
+  --role-text-secondary: oklch(0.82 0.015 260);  /* 11.04:1 AAA */
+  --role-text-muted:     oklch(0.68 0.018 260);  /*  6.69:1 AA  */
+  --role-text-subtle:    oklch(0.56 0.015 260);  /*  4.14:1 AA large only */
+  --role-text-disabled:  oklch(0.44 0.010 260);  /*  2.48:1 — icon cue required */
+
+  --role-text-strong:    oklch(0.97 0.010 260);  /* 17.67:1 AAA — not pure white */
+  --role-text-emphasis:  oklch(0.86 0.055 200);  /* 12.84:1 AAA */
+  --role-link:           oklch(0.78 0.120 230);  /*  9.87:1 AAA */
+  --role-link-hover:     oklch(0.86 0.110 195);  /* 13.12:1 AAA */
+  --role-link-visited:   oklch(0.77 0.085 292);  /*  9.10:1 AAA */
+  --role-code-text:      oklch(0.85 0.080 175);  /* 12.59:1 AAA */
+  --role-code-bg:        oklch(0.245 0.028 190);
+  --role-quote-text:     oklch(0.80 0.030 250);  /* 10.34:1 AAA */
+  --role-quote-rule:     oklch(0.55 0.090 200);
+  --role-mark-bg:        oklch(0.34 0.070 195);
+  --role-mark-text:      oklch(0.94 0.020 200);
+  --role-kbd-bg:         oklch(0.250 0.022 260);
+  --role-kbd-border:     oklch(0.400 0.020 255);
+
+  --role-primary-text: oklch(0.721 0.215 262.9);  /* 7.01:1 AAA */
+  --role-accent-text:  var(--neon-cyan);          /* 9.78:1 AAA */
+  --role-error-text:   oklch(0.786 0.230  25);    /* 7.00:1 AAA */
+  --role-warning-text: var(--neon-amber);         /* 10.10:1 AAA */
+  --role-success-text: oklch(0.671 0.130 195);    /* 6.99:1 AAA */
+
+  /* ── DARK elevation: neon glow replaces shadow ──────────── */
+  --glow-strength: 0.6;
+  --shadow-xs: 0 1px 2px oklch(0.08 0.02 268 / 0.5);
+  --shadow-sm: 0 1px 3px oklch(0.08 0.02 268 / 0.55);
+  --shadow-md: 0 6px 16px -6px oklch(0.08 0.02 268 / 0.6);
+  --shadow-lg: 0 18px 34px -12px oklch(0.08 0.02 268 / 0.68);
+  --glow-card:
+    0 0 0 1px color-mix(in oklch, var(--app-accent) 22%, transparent),
+    0 0 14px -4px color-mix(in oklch, var(--app-accent) 30%, transparent);
+  --glow-card-hover:
+    0 0 0 1px color-mix(in oklch, var(--app-accent) 40%, transparent),
+    0 0 22px -4px color-mix(in oklch, var(--app-accent) 48%, transparent);
+  --panel-hairline: color-mix(in oklch, var(--app-accent) 34%, transparent);
+
+  --app-accent-text: var(--app-accent-text-d);
+
+  /* Patterns take a faint accent cast in dark mode — this is where the
+     cyber register lives. Light mode keeps them neutral and quiet. */
+  --dot-color:  color-mix(in oklch, var(--app-accent) 30%, transparent);
+  --grid-color: oklch(0.82 0.020 262 / 0.055);
+}
+
+/* ═══ L5 per-app accent. Fill = brand hue; text variant is
+       solved per mode so the accent is never used below AA. ═══ */
+[data-app="crm7"]       { --app-accent: oklch(0.769 0.132 191.7); --app-accent-text-l: oklch(0.505 0.132 191.7); --app-accent-text-d: oklch(0.769 0.132 191.7); }
+[data-app="bsu"]        { --app-accent: oklch(0.541 0.247 293);   --app-accent-text-l: oklch(0.564 0.247 293);   --app-accent-text-d: oklch(0.745 0.247 293); }
+[data-app="conduit"]    { --app-accent: oklch(0.723 0.192 149.6); --app-accent-text-l: oklch(0.505 0.192 149.6); --app-accent-text-d: oklch(0.723 0.192 149.6); }
+[data-app="r80"]        { --app-accent: oklch(0.666 0.157 58.3);  --app-accent-text-l: oklch(0.546 0.157 58.3);  --app-accent-text-d: oklch(0.703 0.157 58.3); }
+[data-app="throughput"] { --app-accent: oklch(0.656 0.212 354.3); --app-accent-text-l: oklch(0.564 0.212 354.3); --app-accent-text-d: oklch(0.731 0.212 354.3); }
+
+/* ═══════════════════ BASE ═══════════════════ */
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--role-bg-body); color: var(--role-text-body);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.55;
+  letter-spacing: var(--track-body); -webkit-font-smoothing: antialiased;
+  transition: background-color .2s ease, color .2s ease;
+}
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { transition-duration:.01ms!important; animation-duration:.01ms!important; } }
+:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 2px; border-radius: 4px; }
+
+h1,h2,h3,h4,h5,h6 { font-family: var(--font-display); margin: 0; font-weight: 600; letter-spacing: var(--track-heading); }
+h1 { color: var(--role-h1); font-size: 25px; font-weight: 700; letter-spacing: var(--track-display); }
+h2 { color: var(--role-h2); font-size: 19px; }
+h3 { color: var(--role-h3); font-size: 16px; }
+h4 { color: var(--role-h4); font-size: 14px; }
+h5 { color: var(--role-h5); font-size: 13px; }
+h6 { color: var(--role-h6); font-size: 11px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); font-weight: 700; }
+
+strong,b { color: var(--role-text-strong); font-weight: 600; }
+em,i { color: var(--role-text-emphasis); font-style: italic; }
+a { color: var(--role-link); text-decoration-color: color-mix(in oklch, currentColor 45%, transparent); text-underline-offset: 2px; }
+a:hover { color: var(--role-link-hover); text-decoration-color: currentColor; }
+a:visited { color: var(--role-link-visited); }
+code { font-family: var(--font-mono); font-size: .875em; color: var(--role-code-text); background: var(--role-code-bg); padding: 1px 5px; border-radius: 4px; }
+mark { background: var(--role-mark-bg); color: var(--role-mark-text); padding: 0 3px; border-radius: 3px; }
+del { color: var(--role-text-muted); text-decoration-color: var(--role-text-subtle); }
+kbd { font-family: var(--font-mono); font-size: 11px; background: var(--role-kbd-bg); border: 1px solid var(--role-kbd-border); border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px; color: var(--role-text-secondary); }
+blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--role-quote-rule); color: var(--role-quote-text); font-style: italic; }
+abbr[title] { text-decoration: underline dotted var(--role-text-subtle); cursor: help; }
+.num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+
+/* ═══════════════════ RAIL ═══════════════════ */
+.rail { position: sticky; top: 0; z-index: 60; background: var(--role-bg-surface); border-bottom: 1px solid var(--role-border); padding: 9px 16px; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; box-shadow: var(--shadow-sm); }
+.rl { font-size: 10px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; }
+.seg { display: flex; gap: 3px; background: var(--role-bg-input); padding: 3px; border-radius: 8px; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: 12px; font-weight: 500; border: 0; background: transparent; color: var(--role-text-muted); padding: 5px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: background-color .14s, color .14s; }
+.seg button:hover { color: var(--role-text-body); }
+.seg button[aria-pressed="true"] { background: var(--role-primary); color: var(--text-on-primary); }
+.seg.appseg button[aria-pressed="true"] { background: var(--app-accent); color: var(--text-on-dark-fill); }
+.proof { margin-left: auto; display: flex; align-items: center; gap: 13px; border: 1px solid var(--role-border); border-radius: var(--radius); padding: 6px 13px; background: var(--role-bg-panel); box-shadow: var(--glow-card), var(--shadow-xs); }
+.proof-t { font-size: 9px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; }
+.proof-g { font-size: 18px; letter-spacing: .05em; color: var(--role-h2); font-weight: 500; }
+.proof-sep { width: 1px; height: 24px; background: var(--role-border); }
+
+/* ═══════════════════ LAYOUT ═══════════════════ */
+.wrap { max-width: 1220px; margin: 0 auto; padding: 26px 20px 70px; display: flex; flex-direction: column; gap: 26px; }
+.sec-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.sec-head p { margin: 0; font-size: 13px; color: var(--role-text-muted); }
+
+.panel { background: var(--role-bg-panel); border: 1px solid var(--role-border); border-radius: var(--radius); box-shadow: var(--glow-card), var(--shadow-sm); overflow: hidden; position: relative; }
+.panel::before { content:''; position:absolute; inset:0 0 auto 0; height:1px; background: linear-gradient(90deg, transparent, var(--panel-hairline), transparent); pointer-events:none; }
+.p-head { padding: 13px 16px; border-bottom: 1px solid var(--role-border); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.p-body { padding: 16px; }
+.p-note { padding: 12px 16px; font-size: 12.5px; color: var(--role-text-secondary); border-top: 1px solid var(--role-border); background: var(--role-bg-surface); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.three { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+
+/* ═══════════════════ APP PREVIEW ═══════════════════ */
+.app { display: flex; min-height: 430px; }
+.side { width: 194px; flex-shrink: 0; background: var(--role-bg-surface); border-right: 1px solid var(--role-border); padding: 15px 10px; display: flex; flex-direction: column; gap: 18px; }
+.brand { display: flex; align-items: center; gap: 8px; padding: 0 6px; }
+.mark { width: 25px; height: 25px; border-radius: 7px; background: var(--gradient-accent); display: grid; place-items: center; color: var(--text-on-light-fill); font-weight: 700; font-size: 12px; font-family: var(--font-display); }
+.bname { font-family: var(--font-display); font-weight: 600; letter-spacing: var(--track-heading); color: var(--role-h2); font-size: 14px; }
+.nav a { display: flex; justify-content: space-between; padding: 6px 8px; border-radius: var(--radius-sm); color: var(--role-text-secondary); text-decoration: none; font-size: 12.5px; }
+.nav a:hover { background: var(--role-bg-input); color: var(--role-text-body); }
+.nav a[aria-current="page"] { background: color-mix(in oklch, var(--app-accent) 15%, transparent); color: var(--app-accent-text); font-weight: 500; }
+.nav a:visited { color: inherit; }
+.cnt { font-family: var(--font-mono); font-size: 11px; color: var(--role-text-muted); font-variant-numeric: tabular-nums; }
+.appmain { flex: 1; min-width: 0; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--role-border); }
+.crumb { font-size: 12px; color: var(--role-text-muted); }
+.crumb b { color: var(--role-text-secondary); font-weight: 500; }
+.search { margin-left: auto; width: 220px; max-width: 36vw; background: var(--role-bg-input); border: 1px solid var(--role-border); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 12.5px; color: var(--role-text-body); }
+.search::placeholder { color: var(--role-text-subtle); }
+.btn { font: inherit; font-size: 12.5px; font-weight: 500; border: 0; border-radius: 8px; padding: 7px 13px; cursor: pointer; background: var(--role-primary); color: var(--text-on-primary); }
+.btn:hover { filter: brightness(1.09); }
+.btn.ghost { background: transparent; color: var(--app-accent-text); border: 1px solid var(--role-border-strong); }
+.appcontent { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+/* DOT pattern lives on the authenticated shell — behind content, above bg */
+.app { background-color: var(--role-bg-body); }
+.appmain { background-image: radial-gradient(circle at var(--dot-radius) var(--dot-radius), var(--dot-color) var(--dot-radius), transparent 0); background-size: var(--dot-size) var(--dot-size); }
+.side { background-image: radial-gradient(circle at var(--dot-radius) var(--dot-radius), var(--dot-color) var(--dot-radius), transparent 0); background-size: var(--dot-size) var(--dot-size); }
+
+.kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 11px; }
+.kpi { background: var(--role-bg-panel); border: 1px solid var(--role-border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--glow-card), var(--shadow-xs); }
+.kpi h6 { margin-bottom: 6px; }
+.kpi-v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 23px; font-weight: 600; color: var(--role-h1); letter-spacing: -.015em; }
+.kpi-n { font-size: 11.5px; color: var(--role-text-muted); margin-top: 2px; }
+.kpi-n .up { color: var(--app-accent-text); font-weight: 500; }
+
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead th { text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; padding: 8px 14px; border-bottom: 1px solid var(--role-border); white-space: nowrap; background: var(--role-bg-surface); }
+tbody td { padding: var(--row-pad) 14px; border-bottom: 1px solid color-mix(in oklch, var(--role-border) 50%, transparent); }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: color-mix(in oklch, var(--app-accent) 8%, transparent); }
+td.r { text-align: right; }
+.person { font-weight: 600; color: var(--role-h3); }
+.meta { font-size: 11px; color: var(--role-text-muted); }
+.award { font-family: var(--font-mono); font-size: 11.5px; color: var(--role-text-secondary); font-variant-numeric: tabular-nums; }
+.money { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; color: var(--role-h2); }
+.compact { --row-pad: 6px; }
+
+/* pills — colour + shape + label, never colour alone */
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.pill.active   { color: var(--role-primary-text); background: color-mix(in oklch, var(--role-primary) 15%, transparent); }
+.pill.review   { color: var(--role-warning-text); background: color-mix(in oklch, var(--role-warning) 16%, transparent); }
+.pill.blocked  { color: var(--role-error-text);   background: color-mix(in oklch, var(--role-error) 17%, transparent); }
+.pill.done     { color: var(--role-success-text); background: color-mix(in oklch, var(--role-success) 15%, transparent); }
+.pill.info     { color: var(--role-accent-text);  background: color-mix(in oklch, var(--role-accent) 15%, transparent); }
+.pill.blocked::before { border-radius: 2px; transform: rotate(45deg); }
+.pill.review::before { border-radius: 1px; }
+
+/* ═══ PATTERN UTILITIES — mutually exclusive by doctrine ═══ */
+/* DOT — authenticated app shell only. Mirrors <DotPattern> from
+   @bsuite/ui: 16px tile, dot at (1,1), r=1. */
+.bsuite-dots {
+  background-image: radial-gradient(circle at var(--dot-radius) var(--dot-radius),
+                    var(--dot-color) var(--dot-radius), transparent 0);
+  background-size: var(--dot-size) var(--dot-size);
+}
+/* GRID — public / pre-auth marketing hero only. Mirrors
+   .bsuite-hero-grid, retinted off pure black/white and masked so it
+   fades before it reaches the hero edges. */
+.bsuite-hero-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
+          mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
+}
+
+/* ═══ TYPEFACE LOCK BADGE ═══ */
+.typelock { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--role-border); border-left: 3px solid var(--app-accent); border-radius: var(--radius-sm); padding: 4px 11px; background: var(--role-bg-panel); }
+.tl-name { font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: var(--track-heading); color: var(--role-h2); }
+.tl-meta { font-size: 9.5px; color: var(--role-text-muted); }
+
+/* ═══ HERO BAND (pre-auth demo) ═══ */
+.hero { position: relative; overflow: hidden; padding: 44px 28px 48px; background: var(--role-bg-surface); }
+.hero-inner { position: relative; max-width: 48ch; display: flex; flex-direction: column; gap: 13px; }
+.hero h1 { font-size: 34px; line-height: 1.14; letter-spacing: var(--track-display); }
+.hero .grad { background: var(--gradient-accent); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { margin: 0; font-size: 15px; color: var(--role-text-secondary); }
+.hero .cta { display: flex; gap: 9px; margin-top: 5px; flex-wrap: wrap; }
+
+/* ═══════════════════ SPEC TABLES ═══════════════════ */
+.spec { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.spec th { text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; padding: 8px 14px; border-bottom: 1px solid var(--role-border); background: var(--role-bg-surface); }
+.spec td { padding: 10px 14px; border-bottom: 1px solid color-mix(in oklch, var(--role-border) 50%, transparent); vertical-align: middle; }
+.spec tr:last-child td { border-bottom: 0; }
+.tok { font-family: var(--font-mono); font-size: 11px; color: var(--role-text-muted); white-space: nowrap; }
+.ratio { font-family: var(--font-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--role-text-secondary); text-align: right; white-space: nowrap; }
+.badge { font-size: 9.5px; font-weight: 700; letter-spacing: .05em; padding: 2px 6px; border-radius: 4px; }
+.badge.aaa { color: var(--role-accent-text); background: color-mix(in oklch, var(--role-accent) 15%, transparent); }
+.badge.aa  { color: var(--role-primary-text); background: color-mix(in oklch, var(--role-primary) 15%, transparent); }
+.badge.lg  { color: var(--role-warning-text); background: color-mix(in oklch, var(--role-warning) 16%, transparent); }
+.badge.no  { color: var(--role-error-text); background: color-mix(in oklch, var(--role-error) 17%, transparent); }
+
+/* swatches */
+.sws { display: grid; grid-template-columns: repeat(auto-fill,minmax(112px,1fr)); gap: 9px; }
+.sw { border-radius: 8px; overflow: hidden; border: 1px solid var(--role-border); }
+.sw-c { height: 42px; }
+.sw-m { padding: 6px 8px; background: var(--role-bg-surface); }
+.sw-n { font-size: 11px; font-weight: 600; color: var(--role-text-body); }
+.sw-v { font-family: var(--font-mono); font-size: 9.5px; color: var(--role-text-muted); margin-top: 1px; }
+
+/* glow demo */
+.glowgrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 14px; }
+.glowcard { border: 1px solid var(--role-border); border-radius: var(--radius); padding: 14px; background: var(--role-bg-panel); box-shadow: var(--glow-card), var(--shadow-sm); transition: box-shadow .2s ease; }
+.glowcard:hover { box-shadow: var(--glow-card-hover), var(--shadow-md); }
+.glowcard .dot { width: 26px; height: 26px; border-radius: 8px; background: var(--gc); margin-bottom: 9px; }
+.glowcard h5 { margin-bottom: 3px; }
+.glowcard .sub { font-size: 11.5px; color: var(--role-text-muted); }
+.glowcard .amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 600; color: var(--role-h2); margin-top: 8px; }
+
+.elev { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.elev > div { border: 1px solid var(--role-border); border-radius: var(--radius); background: var(--role-bg-panel); padding: 14px 12px; text-align: center; font-size: 11.5px; color: var(--role-text-muted); }
+.e1 { box-shadow: var(--shadow-xs); } .e2 { box-shadow: var(--shadow-sm); }
+.e3 { box-shadow: var(--shadow-md); } .e4 { box-shadow: var(--shadow-lg); }
+.elev .lbl { font-family: var(--font-mono); font-size: 10.5px; color: var(--role-text-secondary); display: block; margin-bottom: 3px; }
+
+.spectrum { height: 22px; border-radius: 6px; background: var(--gradient-spectrum); }
+.gradbar { height: 42px; border-radius: 8px; background: var(--gradient-accent); display: grid; place-items: center; color: var(--text-on-light-fill); font-weight: 600; letter-spacing: var(--track-heading); }
+
+.rules { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.rules > div { padding: 13px 16px; border-bottom: 1px solid color-mix(in oklch,var(--role-border) 50%,transparent); }
+.rules > div:nth-child(odd) { border-right: 1px solid color-mix(in oklch,var(--role-border) 50%,transparent); }
+.rules h6 { margin-bottom: 5px; }
+.rules .do h6 { color: var(--role-h5); }
+.rules .dont h6 { color: var(--role-error-text); }
+.rules p { margin: 0; font-size: 12.5px; color: var(--role-text-secondary); }
+
+.prose { max-width: 62ch; font-size: 14px; }
+.prose p { margin: 0 0 12px; }
+.prose p:last-child { margin-bottom: 0; }
+
+@media (max-width: 980px) {
+  .two,.three,.rules { grid-template-columns: 1fr; }
+  .rules > div:nth-child(odd) { border-right: 0; }
+  .kpis { grid-template-columns: repeat(2,1fr); }
+  .elev { grid-template-columns: repeat(2,1fr); }
+  .proof { margin-left: 0; }
+}
+@media (max-width: 700px) { .side { display: none; } }
+</style>
+
+<body class="dark" data-app="crm7">
+
+<div class="rail">
+  <span class="rl">Typeface</span>
+  <div class="typelock">
+    <span class="tl-name">Geist</span>
+    <span class="tl-meta mono">@fontsource-variable/geist 5.3.0 · OFL-1.1</span>
+  </div>
+  <span class="rl">App</span>
+  <div class="seg appseg" role="group" aria-label="App accent">
+    <button data-app="crm7" aria-pressed="true">CRM7</button>
+    <button data-app="bsu" aria-pressed="false">BSU</button>
+    <button data-app="conduit" aria-pressed="false">Conduit</button>
+    <button data-app="r80" aria-pressed="false">R80.3</button>
+    <button data-app="throughput" aria-pressed="false">Throughput</button>
+  </div>
+  <span class="rl">Mode</span>
+  <div class="seg" role="group" aria-label="Colour mode">
+    <button data-mode="dark" aria-pressed="true">Dark</button>
+    <button data-mode="light" aria-pressed="false">Light</button>
+  </div>
+  <span class="rl">Rows</span>
+  <div class="seg" role="group" aria-label="Density">
+    <button data-density="comfortable" aria-pressed="true">Comfortable</button>
+    <button data-density="compact" aria-pressed="false">Compact</button>
+  </div>
+  <div class="proof">
+    <div><div class="proof-t">Glyph proof</div><div class="proof-g">Il1 · O0 · rn m</div></div>
+    <div class="proof-sep"></div>
+    <div><div class="proof-t">Figures</div><div class="proof-g mono">1,180.75</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ══ 1. LIVE APP ══ -->
+  <section>
+    <div class="sec-head"><h1>D2C Neon Electric</h1><p>Proposed 0.7.0 contract — colour, type, elevation. Every ratio below is measured, not estimated.</p></div>
+  </section>
+
+  <!-- ══ 1a. PRE-AUTH HERO — GRID ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Pre-auth hero</h2><span class="meta">Public marketing surface — <strong>grid</strong> pattern, 32px</span></div>
+    <div class="hero">
+      <div class="bsuite-hero-grid"></div>
+      <div class="hero-inner">
+        <h6>Group training operations</h6>
+        <h1>Quote, place and bill an apprentice <span class="grad">without leaving one system.</span></h1>
+        <p>Charge rates built from the live award, host agreements signed in the same envelope, and billable hours captured against the placement they belong to.</p>
+        <div class="cta">
+          <button class="btn">Book a walkthrough</button>
+          <button class="btn ghost">See a sample quote</button>
+        </div>
+      </div>
+    </div>
+    <div class="p-note"><strong>Grid is external only.</strong> It is scoped to the hero wrapper — never full-viewport, never behind authenticated content — and radially masked so it fades out before it reaches the edges. The accent gradient appears here and nowhere else in the product.</div>
+  </section>
+
+  <!-- ══ 1. LIVE APP — DOT ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Placements</h2><span class="meta">Authenticated shell — <strong>dot</strong> pattern, 16px · rates recalculated 2 August, 06:15 AWST</span></div>
+    <div class="app">
+      <aside class="side">
+        <div class="brand"><div class="mark">B</div><div class="bname">BSuite</div></div>
+        <nav class="nav">
+          <h6>Operations</h6>
+          <a href="#" aria-current="page">Placements <span class="cnt">184</span></a>
+          <a href="#">Host employers <span class="cnt">62</span></a>
+          <a href="#">Timesheets <span class="cnt">1,204</span></a>
+          <a href="#">Field visits <span class="cnt">17</span></a>
+        </nav>
+        <nav class="nav">
+          <h6>Commercial</h6>
+          <a href="#">Quotes <span class="cnt">9</span></a>
+          <a href="#">Charge rates</a>
+          <a href="#">Invoicing</a>
+        </nav>
+        <nav class="nav">
+          <h6>Compliance</h6>
+          <a href="#">Award updates <span class="cnt">3</span></a>
+          <a href="#">Training plans</a>
+        </nav>
+      </aside>
+      <div class="appmain">
+        <div class="topbar">
+          <div class="crumb">Operations / <b>Placements</b></div>
+          <input class="search" placeholder="Search apprentices, hosts, award codes" aria-label="Search">
+          <button class="btn ghost">Export</button>
+          <button class="btn">New placement</button>
+        </div>
+        <div class="appcontent">
+          <div class="kpis">
+            <div class="kpi"><h6>Active placements</h6><div class="kpi-v">184</div><div class="kpi-n"><span class="up">+6</span> since 1 July</div></div>
+            <div class="kpi"><h6>Weighted charge</h6><div class="kpi-v">$58.40</div><div class="kpi-n">per ordinary hour</div></div>
+            <div class="kpi"><h6>Unbilled hours</h6><div class="kpi-v">1,180.75</div><div class="kpi-n">across 41 hosts</div></div>
+            <div class="kpi"><h6>Awards pending</h6><div class="kpi-v">3</div><div class="kpi-n">operative 1 July 2026</div></div>
+          </div>
+          <div class="tw">
+            <table>
+              <thead><tr><th>Apprentice</th><th>Host employer</th><th>Award &amp; classification</th><th class="r">Charge / hr</th><th class="r">Weekly</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><div class="person">Liam O'Donnell</div><div class="meta">Year 3 · Carpentry</div></td><td>Kalgoorlie Build Co<div class="meta">Boulder, WA</div></td><td><span class="award">MA000020</span><div class="meta">CW3 · full-time</div></td><td class="r money">$54.10</td><td class="r money">$2,053.80</td><td><span class="pill active">Active</span></td></tr>
+                <tr><td><div class="person">Isla Whitmore</div><div class="meta">Year 1 · Electrical</div></td><td>Northline Electrical<div class="meta">Osborne Park, WA</div></td><td><span class="award">MA000025</span><div class="meta">Apprentice Y1 · adult</div></td><td class="r money">$61.85</td><td class="r money">$2,350.30</td><td><span class="pill review">Review due</span></td></tr>
+                <tr><td><div class="person">Noah Beaumont</div><div class="meta">Year 4 · Plumbing</div></td><td>Swan Plumbing Group<div class="meta">Bayswater, WA</div></td><td><span class="award">MA000036</span><div class="meta">PT4 · full-time</div></td><td class="r money">$70.05</td><td class="r money">$2,661.90</td><td><span class="pill info">Completing</span></td></tr>
+                <tr><td><div class="person">Ava Ngatai</div><div class="meta">Year 2 · Fabrication</div></td><td>Pilbara Steelworks<div class="meta">Karratha, WA</div></td><td><span class="award">MA000010</span><div class="meta">C11 · full-time</div></td><td class="r money">$66.40</td><td class="r money">$2,523.20</td><td><span class="pill blocked">Suspended</span></td></tr>
+                <tr><td><div class="person">Jack Ellery</div><div class="meta">Year 1 · Bricklaying</div></td><td>Meridian Masonry<div class="meta">Wangara, WA</div></td><td><span class="award">MA000020</span><div class="meta">CW1(a) · junior Y12</div></td><td class="r money">$41.90</td><td class="r money">$1,592.20</td><td><span class="pill done">Signed off</span></td></tr>
+                <tr><td><div class="person">Mia Rasheed</div><div class="meta">Year 2 · Commercial cookery</div></td><td>Ellerslie Hospitality<div class="meta">Fremantle, WA</div></td><td><span class="award">MA000003</span><div class="meta">Level 2 · part-time</div></td><td class="r money">$47.25</td><td class="r money">$1,181.25</td><td><span class="pill review">Review due</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-note"><strong>Judge the money column, not the headline.</strong> If decimal points stop aligning, or <code>MA000010</code> is hard to scan digit by digit, that face is wrong for this app.</div>
+  </section>
+
+  <!-- ══ 2. HEADINGS ══ -->
+  <div class="two">
+    <section class="panel">
+      <div class="p-head"><h2>Heading ramp</h2><span class="meta">Six levels, one hue walk</span></div>
+      <div class="p-body" style="display:flex;flex-direction:column;gap:11px">
+        <h1>Charge rate review — Q1 FY27</h1>
+        <h2>Host employer agreements</h2>
+        <h3>Placement schedule and rate lines</h3>
+        <h4>Funding milestones</h4>
+        <h5>Applied award classifications</h5>
+        <h6>Operative from 1 July 2026</h6>
+      </div>
+      <div class="p-note">Lightness climbs and hue walks from neutral-blue toward the accent as depth increases, so hierarchy survives at a glance even when sizes are close. Contrast <em>falls</em> down the ramp, which matches importance — and the floor is still AA.</div>
+    </section>
+
+    <section class="panel">
+      <div class="p-head"><h2>Measured</h2><span class="meta">vs <code>--role-bg-body</code>, current mode</span></div>
+      <table class="spec" id="headSpec"><thead><tr><th>Token</th><th>Dark</th><th></th><th>Light</th><th></th></tr></thead><tbody>
+        <tr><td class="tok">--role-h1</td><td class="ratio">16.65:1</td><td><span class="badge aaa">AAA</span></td><td class="ratio">16.17:1</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h2</td><td class="ratio">15.20:1</td><td><span class="badge aaa">AAA</span></td><td class="ratio">13.87:1</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h3</td><td class="ratio">13.47:1</td><td><span class="badge aaa">AAA</span></td><td class="ratio">11.71:1</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h4</td><td class="ratio">11.93:1</td><td><span class="badge aaa">AAA</span></td><td class="ratio">9.62:1</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h5</td><td class="ratio">10.52:1</td><td><span class="badge aaa">AAA</span></td><td class="ratio">7.75:1</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h6</td><td class="ratio">8.89:1</td><td><span class="badge aaa">AAA</span></td><td class="ratio">6.48:1</td><td><span class="badge aa">AA</span></td></tr>
+      </tbody></table>
+    </section>
+  </div>
+
+  <!-- ══ 3. INLINE MODIFIERS ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Inline text roles</h2><span class="meta">Every modifier gets its own token — no modifier inherits body colour</span></div>
+    <div class="p-body two">
+      <div class="prose">
+        <p>Funding discounts apply to ordinary hours <strong>including penalty hours</strong>, but <em>never</em> to overtime. The discount is a flat deduction applied after the charge calculation, so it is <mark>not multiplied by the penalty rate</mark>.</p>
+        <p>Rates resolve through <a href="#">the award rate service</a> and fall back to the cached <code>fair_work_rates</code> table when the MAPD endpoint is unavailable. Press <kbd>⌘</kbd> <kbd>K</kbd> to jump to a classification. The <abbr title="Modern Awards Pay Database">MAPD</abbr> response is cached for 24 hours.</p>
+        <p><del>Casual loading applies at 25%</del> — apprentices and trainees cannot be engaged casually under national or state legislation, so this is a database constraint rather than a warning.</p>
+        <blockquote>A GTO is the direct employer. Training is delivered by any provider; the placement sits with the host.</blockquote>
+      </div>
+      <table class="spec"><thead><tr><th>Role</th><th>Token</th><th class="ratio">Dark</th><th class="ratio">Light</th></tr></thead><tbody>
+        <tr><td><strong>Strong</strong></td><td class="tok">--role-text-strong</td><td class="ratio">17.67</td><td class="ratio">17.34</td></tr>
+        <tr><td>Body</td><td class="tok">--role-text-body</td><td class="ratio">16.16</td><td class="ratio">15.46</td></tr>
+        <tr><td><em>Emphasis</em></td><td class="tok">--role-text-emphasis</td><td class="ratio">12.84</td><td class="ratio">7.95</td></tr>
+        <tr><td><a href="#">Link</a></td><td class="tok">--role-link</td><td class="ratio">9.87</td><td class="ratio">6.16</td></tr>
+        <tr><td>Link visited</td><td class="tok">--role-link-visited</td><td class="ratio">9.10</td><td class="ratio">7.42</td></tr>
+        <tr><td><code>Code</code></td><td class="tok">--role-code-text</td><td class="ratio">12.59</td><td class="ratio">7.70</td></tr>
+        <tr><td>Quote</td><td class="tok">--role-quote-text</td><td class="ratio">10.34</td><td class="ratio">7.53</td></tr>
+        <tr><td>Secondary</td><td class="tok">--role-text-secondary</td><td class="ratio">11.04</td><td class="ratio">8.94</td></tr>
+        <tr><td>Muted</td><td class="tok">--role-text-muted</td><td class="ratio">6.69</td><td class="ratio">4.92</td></tr>
+        <tr><td>Subtle <span class="badge lg">LARGE</span></td><td class="tok">--role-text-subtle</td><td class="ratio">4.14</td><td class="ratio">3.52</td></tr>
+        <tr><td>Disabled <span class="badge no">ICON CUE</span></td><td class="tok">--role-text-disabled</td><td class="ratio">2.48</td><td class="ratio">2.21</td></tr>
+      </tbody></table>
+    </div>
+    <div class="p-note"><strong>Subtle</strong> is legal for large text only. <strong>Disabled</strong> fails AA at every size by design — it must always carry a non-colour cue (dimmed icon, <code>aria-disabled</code>, or explanatory text). Never use it for content a person has to read.</div>
+  </section>
+
+  <!-- ══ 4. TYPE SCALE ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Type scale</h2><span class="meta">Size · line height · weight · tracking</span></div>
+    <table class="spec"><thead><tr><th>Token</th><th>Size / leading</th><th>Weight</th><th>Tracking</th><th>Use</th></tr></thead><tbody>
+      <tr><td class="tok">display</td><td class="tok">30 / 36</td><td class="tok">700</td><td class="tok">-0.022em</td><td>Marketing hero only</td></tr>
+      <tr><td class="tok">h1</td><td class="tok">25 / 32</td><td class="tok">700</td><td class="tok">-0.022em</td><td>Page title, one per view</td></tr>
+      <tr><td class="tok">h2</td><td class="tok">19 / 26</td><td class="tok">600</td><td class="tok">-0.014em</td><td>Panel and section titles</td></tr>
+      <tr><td class="tok">h3</td><td class="tok">16 / 24</td><td class="tok">600</td><td class="tok">-0.014em</td><td>Card titles, record names</td></tr>
+      <tr><td class="tok">h4</td><td class="tok">14 / 20</td><td class="tok">600</td><td class="tok">-0.014em</td><td>Sub-groups within a panel</td></tr>
+      <tr><td class="tok">h5</td><td class="tok">13 / 18</td><td class="tok">600</td><td class="tok">-0.014em</td><td>Field-group labels</td></tr>
+      <tr><td class="tok">h6 / eyebrow</td><td class="tok">11 / 16</td><td class="tok">700</td><td class="tok">0.09em caps</td><td>KPI labels, table headers, nav groups</td></tr>
+      <tr><td class="tok">body</td><td class="tok">14 / 22</td><td class="tok">400</td><td class="tok">0</td><td>Default</td></tr>
+      <tr><td class="tok">body-sm</td><td class="tok">12.5 / 18</td><td class="tok">400</td><td class="tok">0</td><td>Dense tables</td></tr>
+      <tr><td class="tok">meta</td><td class="tok">11 / 15</td><td class="tok">400</td><td class="tok">0</td><td>Timestamps, secondary lines</td></tr>
+      <tr><td class="tok">mono</td><td class="tok">12.5 / 18</td><td class="tok">500</td><td class="tok">tabular-nums</td><td><strong>Mandatory</strong> for money, hours, rates, codes, IDs</td></tr>
+    </tbody></table>
+    <div class="p-note"><strong>Ruled 2 August 2026 — D2C is Geist.</strong> <code>@fontsource-variable/geist</code> and <code>@fontsource-variable/geist-mono</code>, both <code>5.3.0</code>, OFL-1.1, weight axis 100–900 with true italics. Two families maximum per brand, matching the corporate side's two-face structure (Open Sans + Lato). Self-host via <code>@fontsource</code> — no font CDN in any app.</div>
+  </section>
+
+  <!-- ══ 5. COLOUR ══ -->
+  <div class="two">
+    <section class="panel">
+      <div class="p-head"><h2>Palette</h2><span class="meta">L1 — frozen, never bound directly</span></div>
+      <div class="p-body">
+        <div class="sws">
+          <div class="sw"><div class="sw-c" style="background:var(--neon-blue)"></div><div class="sw-m"><div class="sw-n">Blue</div><div class="sw-v">primary</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-deep)"></div><div class="sw-m"><div class="sw-n">Deep Blue</div><div class="sw-v">secondary</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-cyan)"></div><div class="sw-m"><div class="sw-n">Cyan</div><div class="sw-v">accent · info</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-teal)"></div><div class="sw-m"><div class="sw-n">Teal</div><div class="sw-v">success</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-amber)"></div><div class="sw-m"><div class="sw-n">Amber</div><div class="sw-v">warning</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-red)"></div><div class="sw-m"><div class="sw-n">Red</div><div class="sw-v">error · destructive</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-indigo)"></div><div class="sw-m"><div class="sw-n">Indigo</div><div class="sw-v">decorative only</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-purple)"></div><div class="sw-m"><div class="sw-n">Purple</div><div class="sw-v">decorative only</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-magenta)"></div><div class="sw-m"><div class="sw-n">Magenta</div><div class="sw-v">decorative</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-pink)"></div><div class="sw-m"><div class="sw-n">Pink</div><div class="sw-v">Throughput accent</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-coral)"></div><div class="sw-m"><div class="sw-n">Coral</div><div class="sw-v">decorative</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-orange)"></div><div class="sw-m"><div class="sw-n">Orange</div><div class="sw-v">decorative</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-yellow)"></div><div class="sw-m"><div class="sw-n">Yellow</div><div class="sw-v">decorative</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-green)"></div><div class="sw-m"><div class="sw-n">Green</div><div class="sw-v">Conduit accent</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--neon-lavender)"></div><div class="sw-m"><div class="sw-n">Lavender</div><div class="sw-v">decorative</div></div></div>
+        </div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <h6>Text-safe gradient — heroes only</h6>
+          <div class="gradbar">People. Employment. Progress.</div>
+          <h6 style="margin-top:8px">Brand spectrum — decoration, never behind text</h6>
+          <div class="spectrum"></div>
+        </div>
+      </div>
+      <div class="p-note"><strong>Purple and indigo are quarantined from semantics.</strong> Under protanopia, indigo and purple both collapse onto primary blue — purple measured <span class="mono">ΔE 0.006</span> against primary, meaning the destructive colour and the primary action colour were the same swatch. They survive as decorative hues only.</div>
+    </section>
+
+    <section class="panel">
+      <div class="p-head"><h2>Status system</h2><span class="meta">Colour, shape and label together</span></div>
+      <div class="p-body" style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="pill active">Active</span>
+          <span class="pill info">Completing</span>
+          <span class="pill review">Review due</span>
+          <span class="pill blocked">Suspended</span>
+          <span class="pill done">Signed off</span>
+        </div>
+        <table class="spec" style="margin:0 -16px -16px;width:calc(100% + 32px)"><thead><tr><th>State</th><th>Role token</th><th>Simulates as</th><th>Shape</th></tr></thead><tbody>
+          <tr><td>Active / in progress</td><td class="tok">--role-primary</td><td class="meta">blue</td><td>circle</td></tr>
+          <tr><td>Informational</td><td class="tok">--role-accent</td><td class="meta">pale blue</td><td>circle</td></tr>
+          <tr><td>Success / complete</td><td class="tok">--role-success</td><td class="meta">deep blue-grey</td><td>circle</td></tr>
+          <tr><td>Warning / attention</td><td class="tok">--role-warning</td><td class="meta">light yellow</td><td>rounded square</td></tr>
+          <tr><td>Error / blocked</td><td class="tok">--role-error</td><td class="meta">dark yellow</td><td>diamond</td></tr>
+        </tbody></table>
+      </div>
+      <div class="p-note"><strong>Warm states separate by lightness, not hue.</strong> Under deuteranopia everything warm becomes yellow, so error is the <em>dark</em> one and warning the <em>light</em> one — simulated luminance 0.212 against 0.529. Cool states stay one hue family and separate the same way. Shape and label carry the meaning regardless.</div>
+    </section>
+  </div>
+
+  <!-- ══ 5b. COLOUR VISION EVIDENCE ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Colour vision</h2><span class="meta">Viénot–Brettel dichromat simulation · ΔE in OKLab · below 0.10 is indistinguishable</span></div>
+    <table class="spec"><thead><tr><th>Pair</th><th class="ratio">Normal</th><th class="ratio">Deuteranopia</th><th class="ratio">Protanopia</th><th>Verdict</th></tr></thead><tbody>
+      <tr><td>primary blue vs <del>error purple</del></td><td class="ratio">0.077</td><td class="ratio">0.031</td><td class="ratio">0.006</td><td><span class="badge no">SAME COLOUR</span></td></tr>
+      <tr><td>primary blue vs <del>secondary indigo</del></td><td class="ratio">0.067</td><td class="ratio">0.037</td><td class="ratio">0.063</td><td><span class="badge no">FAILS</span></td></tr>
+      <tr><td><del>warning salmon</del> vs red</td><td class="ratio">0.078</td><td class="ratio">0.059</td><td class="ratio">0.097</td><td><span class="badge no">FAILS</span></td></tr>
+      <tr><td><del>error red</del> vs <del>success green</del></td><td class="ratio">0.375</td><td class="ratio">0.043</td><td class="ratio">0.241</td><td><span class="badge no">FAILS</span></td></tr>
+      <tr><td><strong>primary blue vs error red</strong></td><td class="ratio">0.391</td><td class="ratio">0.344</td><td class="ratio">0.294</td><td><span class="badge aaa">CLEAR</span></td></tr>
+      <tr><td><strong>error red vs warning amber</strong></td><td class="ratio">0.282</td><td class="ratio">0.214</td><td class="ratio">0.331</td><td><span class="badge aaa">CLEAR</span></td></tr>
+      <tr><td><strong>error red vs success teal</strong></td><td class="ratio">0.359</td><td class="ratio">0.169</td><td class="ratio">0.223</td><td><span class="badge aa">OK</span></td></tr>
+      <tr><td><strong>primary blue vs secondary deep</strong></td><td class="ratio">0.201</td><td class="ratio">0.182</td><td class="ratio">0.194</td><td><span class="badge aa">OK</span></td></tr>
+      <tr><td><strong>info cyan vs success teal</strong></td><td class="ratio">0.169</td><td class="ratio">0.169</td><td class="ratio">0.171</td><td><span class="badge aa">OK</span></td></tr>
+      <tr><td><strong>info cyan vs warning amber</strong></td><td class="ratio">0.242</td><td class="ratio">0.202</td><td class="ratio">0.162</td><td><span class="badge aa">OK</span></td></tr>
+    </tbody></table>
+    <div class="p-note"><strong>Why the palette collapses the way it does.</strong> For a deuteranope the whole space folds onto a blue↔yellow axis plus lightness: blue <code>#2563eb</code> reads <code>#5656eb</code>, cyan reads <code>#b0b0cb</code>, but red <code>#e31029</code> reads <code>#83830f</code>, green <code>#22c55e</code> reads <code>#aaaa63</code> and amber <code>#f5ae39</code> reads <code>#c6c631</code> — three yellows separated only by lightness. So the design rule is one hue family on the cool side, lightness separation on the warm side, and never two cool hues in semantic opposition. Every pair in the shipped set now clears <span class="mono">0.162</span>; the pairing it replaces scored <span class="mono">0.006</span>.</div>
+  </section>
+
+  <!-- ══ 6. ELEVATION ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Elevation</h2><span class="meta" id="elevMode">Dark mode — accent glow. Switch to light for the shadow ladder.</span></div>
+    <div class="p-body" style="display:flex;flex-direction:column;gap:18px">
+      <div>
+        <h6 style="margin-bottom:9px">Ladder</h6>
+        <div class="elev">
+          <div class="e1"><span class="lbl">--shadow-xs</span>inline chips, pills</div>
+          <div class="e2"><span class="lbl">--shadow-sm</span>cards, panels</div>
+          <div class="e3"><span class="lbl">--shadow-md</span>popovers, dropdowns</div>
+          <div class="e4"><span class="lbl">--shadow-lg</span>dialogs, sheets</div>
+        </div>
+      </div>
+      <div>
+        <h6 style="margin-bottom:9px">Per-app accent glow — dark mode only</h6>
+        <div class="glowgrid">
+          <div class="glowcard" data-app="crm7" style="--gc:oklch(0.769 0.132 191.7)"><div class="dot"></div><h5>CRM7</h5><div class="sub">GTO operations · Electric Cyan</div><div class="amt">184 placements</div></div>
+          <div class="glowcard" data-app="bsu" style="--gc:oklch(0.541 0.247 293)"><div class="dot"></div><h5>Business Suite</h5><div class="sub">Portal · Electric Violet</div><div class="amt">6 apps</div></div>
+          <div class="glowcard" data-app="conduit" style="--gc:oklch(0.723 0.192 149.6)"><div class="dot"></div><h5>Conduit</h5><div class="sub">Recruitment · Electric Green</div><div class="amt">42 open roles</div></div>
+          <div class="glowcard" data-app="r80" style="--gc:oklch(0.666 0.157 58.3)"><div class="dot"></div><h5>R80.3</h5><div class="sub">Charge rates · Electric Amber</div><div class="amt">$58.40 / hr</div></div>
+          <div class="glowcard" data-app="throughput" style="--gc:oklch(0.656 0.212 354.3)"><div class="dot"></div><h5>Throughput</h5><div class="sub">Ideas · Electric Pink</div><div class="amt">27 in review</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="p-note"><strong>Glow is a dark-mode device and nothing else.</strong> In light mode <code>--glow-card</code> resolves to <code>none</code>, so any component applying it unconditionally degrades safely to the tinted shadow ladder. Shadows are tinted with the surface hue at low alpha — never pure black.</div>
+  </section>
+
+  <!-- ══ 7. RULES ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Contract rules</h2><span class="meta">What lint should enforce</span></div>
+    <div class="rules">
+      <div class="do"><h6>Do — bind to roles</h6><p>Components reference <code>--role-*</code> and the shadcn bridge. White-labelling mutates roles, so palette-bound components silently ignore tenant branding.</p></div>
+      <div class="dont"><h6>Don't — bind to palette</h6><p>No <code>--neon-*</code>, no raw hex, rgb or hsl, no <code>text-white</code> or <code>text-black</code> in consumer code.</p></div>
+      <div class="do"><h6>Do — separate error from primary</h6><p>The invariant is separation, not a fixed hue. D2C's primary is blue, so error is <strong>red</strong>. Braden's primary is red, so Braden must solve its own error hue against the same rule.</p></div>
+      <div class="dont"><h6>Don't — put two cool hues in opposition</h6><p>Blue, indigo and purple are one colour under protanopia. Never let two of them carry opposing meanings — that was the <span class="mono">ΔE 0.006</span> defect this release fixes.</p></div>
+      <div class="do"><h6>Do — tabular figures</h6><p>Money, hours, rates, award codes and IDs use the mono face with <code>font-variant-numeric: tabular-nums</code>.</p></div>
+      <div class="dont"><h6>Don't — pure white or black</h6><p>Lightness 1.0 and 0 are banned as tokens. Inverse text is <code>oklch(0.98 0.006 260)</code>; the deepest surface is <code>0.145</code>.</p></div>
+      <div class="do"><h6>Do — dot inside auth</h6><p>The 16px dot field is the authenticated app-shell background across all five D2C apps. Use <code>&lt;DotPattern&gt;</code> from <code>@bsuite/ui</code> — never hand-rolled.</p></div>
+      <div class="dont"><h6>Don't — grid inside auth</h6><p>The 32px grid is public/pre-auth marketing only, scoped to the hero wrapper. An app never renders both patterns in the same context.</p></div>
+      <div class="do"><h6>Do — one gradient on text</h6><p>Only <code>--gradient-accent</code> (blue → cyan), and only on marketing heroes.</p></div>
+      <div class="dont"><h6>Don't — glow in light mode</h6><p>Light mode is shadows and hairlines. The cyber register belongs to dark mode only.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+
+document.querySelectorAll('.appseg button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.body.dataset.app = b.dataset.app;
+    document.querySelectorAll('.appseg button').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+  });
+});
+
+const elevMode = document.getElementById('elevMode');
+document.querySelectorAll('[data-mode]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const dark = b.dataset.mode === 'dark';
+    document.body.classList.toggle('dark', dark);
+    elevMode.textContent = dark
+      ? 'Dark mode — accent glow. Switch to light for the shadow ladder.'
+      : 'Light mode — tinted shadow ladder. Glow resolves to none.';
+    document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+  });
+});
+
+document.querySelectorAll('[data-density]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.body.classList.toggle('compact', b.dataset.density === 'compact');
+    document.querySelectorAll('[data-density]').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+  });
+});
+</script>

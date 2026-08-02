@@ -45,9 +45,17 @@ are Vite.
 8. **Never ship mock data**, especially financial or account data. Wire live data or don't ship.
 9. **Never downgrade a dependency or delete a feature** to make something pass. React 19 is the floor.
    Feature flags over deletions; ask before removing.
-10. **Semantic error/destructive is Electric Purple `oklch(0.568 0.202 283.1)`, never red/coral** — on
-    both brands, and not tenant-overridable through `BrandingProvider`. No `text-white`,
-    `text-black`, raw hex, RGB or HSL in consumer UI.
+10. **Never bind a component to a palette colour, and never use a pure endpoint.** Bind to
+    `--role-*` / the shadcn bridge — white-labelling mutates roles, so a palette-bound component
+    silently ignores tenant branding. No `text-white`, `text-black`, raw hex, RGB or HSL in
+    consumer UI, and no `oklch(1 0 0)` / `oklch(0 0 0)` in any role including shadows and alpha
+    forms. Semantic error/destructive is **red** `oklch(0.580 0.230 25)`, not tenant-overridable.
+    The rule is *separation*, not a fixed hue: error must be maximally separated from **primary**
+    under deuteranopia and protanopia. D2C's primary is blue → error is red. Braden Corporate's
+    primary *is* red, so it must solve its own error hue against the same rule. Purple and indigo
+    are quarantined from semantics — purple measured ΔE 0.006 against primary blue under
+    protanopia, i.e. the destructive and primary-action colours were the same swatch. Contract:
+    [`packages/theme/docs/d2c-theme-source-of-truth.html`](packages/theme/docs/d2c-theme-source-of-truth.html).
 
 ## Where the detail lives
 

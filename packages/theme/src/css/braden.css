@@ -78,7 +78,7 @@
      ============================================================ */
   --braden-light-bg-body:    oklch(0.980 0.002 50);   /* warm white */
   --braden-light-bg-surface: oklch(0.996 0.001 50);   /* near white */
-  --braden-light-bg-panel:   oklch(1.000 0     0);    /* white */
+  --braden-light-bg-panel:   oklch(0.994 0.002 250);  /* near-white; pure white is banned in every role */
   --braden-light-bg-input:   oklch(0.972 0.003 250);  /* cool light grey */
 
   /* Braden light text scale — hue 250 (navy cast), capped L=0.22 */
@@ -161,9 +161,9 @@
   /* ============================================================
      SHADOWS — corporate subtle, no neon glow
      ============================================================ */
-  --shadow-sm:  0 1px 2px oklch(0 0 0 / 0.08);
-  --shadow-md:  0 4px 6px oklch(0 0 0 / 0.10), 0 2px 4px oklch(0 0 0 / 0.06);
-  --shadow-lg:  0 10px 15px oklch(0 0 0 / 0.10), 0 4px 6px oklch(0 0 0 / 0.05);
+  --shadow-sm:  0 1px 2px oklch(0.30 0.03 250 / 0.08);
+  --shadow-md:  0 4px 6px oklch(0.30 0.03 250 / 0.10), 0 2px 4px oklch(0.30 0.03 250 / 0.06);
+  --shadow-lg:  0 10px 15px oklch(0.30 0.03 250 / 0.10), 0 4px 6px oklch(0.30 0.03 250 / 0.05);
 
   /* Card glow is a dark-mode-only device (see .dark below); light mode
      stays border-only, consistent with the corporate "no neon glow" rule. */
