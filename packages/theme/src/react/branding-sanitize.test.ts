@@ -22,7 +22,7 @@ import {
   sanitizeBrandingUrl,
   sanitizeFontFamily,
   toCssUrl,
-} from './branding-sanitize'
+} from './branding-sanitize.js'
 
 // ─── sanitizeBrandingUrl — legitimate values pass unchanged ──────────────────
 

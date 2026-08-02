@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolvePlatformLogo } from './usePlatformLogo'
+import { resolvePlatformLogo } from './usePlatformLogo.js'
 
 describe('resolvePlatformLogo', () => {
   it('prefers the dark logo for dark full-logo slots', () => {

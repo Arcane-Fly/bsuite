@@ -48,7 +48,7 @@ import {
   sanitizeBrandingUrl,
   sanitizeFontFamily,
   toCssUrl,
-} from './branding-sanitize'
+} from './branding-sanitize.js'
 
 export const BRANDING_STORAGE_KEY = 'bsuite_tenant_branding'
 export const BRANDING_OVERRIDE_FLAG = 'VITE_ENABLE_BRANDING_OVERRIDE'
