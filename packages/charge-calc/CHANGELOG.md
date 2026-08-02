@@ -5,6 +5,48 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.8.0] — 2026-08-02 — Apprentice/trainee payroll tax exemption
+
+### Added
+
+- `PayrollTaxRateTypeCode` (`src/defaults.ts`) — `'AP' | 'AA' | 'TN' | 'JN'`,
+  moved verbatim (values) from `R80.3/src/services/awardRulesEngine.ts:40`.
+  Named distinctly from the broader MAPD `EmployeeRateTypeCode` already
+  exported from `./awards` (which also covers AD/XT/CA, none of which carry
+  payroll-tax-exemption meaning).
+- `PAYROLL_TAX_EXEMPT_STATES` — moved verbatim from
+  `awardRulesEngine.ts:408-417`. States/territories where AP/AA/TN employees
+  are exempt from payroll tax. Intentionally non-uniform per state — WA/VIC/
+  NSW exempt trainees (TN); QLD/SA/TAS/ACT/NT do not.
+- `resolveEffectivePayrollTaxRate(state, rateTypeCode, generalStateRate)` —
+  the exemption-aware resolver, moved (logic) from
+  `awardRulesEngine.ts:583-610`. The exemption check is a rule about the
+  EMPLOYEE, not the rate SOURCE, and always has the last word on the value
+  handed to a cost calculator — see the doc comment for the full precedence
+  guard.
+
+### Fixed
+
+- `getPayrollTaxRate()`'s doc comment now explicitly warns it is NOT
+  exemption-aware and must never be assigned directly to an apprentice/
+  trainee/junior worker's cost config — crm7#1265 traced a P0 wrong-money
+  defect to exactly this: `@bsuite/charge-calc` owned `PAYROLL_TAX_RATES`
+  but not the exemption logic (which lived only in R80.3, which crm7 cannot
+  import), so crm7's charge-rate path assigned a bare, non-exempt state rate
+  to every worker — a WA apprentice was charged 5.5% payroll tax when the
+  legally correct rate is 0%.
+
+### Why
+
+crm7#1265 / G2 unify-calc-paths: this is the same collapse already done for
+`PAYROLL_TAX_RATES` itself (see the 0.x history below and R80.3's
+`payrollTaxService.ts` G2 comment) — a duplicated exemption table would be
+worse than a duplicated rate table, because it fails silently in the
+compliance direction. R80.3 deletes its copies and re-exports from this
+package in the same PR family.
+
+---
+
 ## [0.7.0] — 2026-07-30 — RDO (Rostered Day Off) worked-vs-paid modelling
 
 ### Added
