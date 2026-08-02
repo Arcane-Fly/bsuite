@@ -11,7 +11,7 @@ import {
   dateFormatToLocale,
   type DateFormatPreference,
   type SupportedLocale,
-} from './formatDate';
+} from './formatDate.js';
 
 /**
  * Shape returned by {@link useLocale}.

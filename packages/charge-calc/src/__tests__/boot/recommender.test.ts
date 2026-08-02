@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { generateRecommendations } from '../../boot/recommender';
+import { generateRecommendations } from '../../boot/recommender.js';
 import type {
   BOOTResult,
   BOOTClassResult,
   BOOTScenarioResult,
-} from '../../boot/types';
-import type { FailurePattern } from '../../boot/failure-detector';
+} from '../../boot/types.js';
+import type { FailurePattern } from '../../boot/failure-detector.js';
 
 // ─── Helpers ───
 

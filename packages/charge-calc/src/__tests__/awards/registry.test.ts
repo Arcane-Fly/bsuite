@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import type { AwardSchema } from '../../awards/schema';
-import type { MAPDDataSource } from '../../awards/mapd-client';
+import type { AwardSchema } from '../../awards/schema.js';
+import type { MAPDDataSource } from '../../awards/mapd-client.js';
 import {
   registerAward,
   getAward,
@@ -9,7 +9,7 @@ import {
   clearAwardCache,
   validateAward,
   loadAwardFromMAPD,
-} from '../../awards/registry';
+} from '../../awards/registry.js';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Fixtures — valid AwardSchema objects

@@ -104,7 +104,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | adr/ADR-0006-contact-propagation-doctrine.md | contacts/clients canonical; junction-not-table | L | Cites `20260423020000_phase4_v1_candidate_contact_merge.sql` | keep (living) |
 | adr/ADR-0007-stripe-fdw-read-doctrine.md | Stripe reads via FDW behind SECDEF wrappers | L | `supabase/migrations/20260512161000_stripe_fdw_wrappers.sql` | keep (living) |
 | adr/README.md | ADR index (0001–0007) | L | Omits ADR-0004-schema-builder-consolidation; duplicate 0004 | keep (living) |
-| ai/README.md | CRM7 AI Assistant overview + status | L | Stale (Grok 4.1 vs grok-4.20-reasoning; Phases 4-6 unchecked) | keep (living) |
+| ai/README.md | CRM7 AI Assistant overview + status | L | Stale (says Grok 4.1; live roster is `xai/grok-4.3` since 2026-07-31 — read `grok-4.20-reasoning` at audit time; Phases 4-6 unchecked) | keep (living) |
 | ai/CONTRIBUTING.md | AI dev standards | L | Stale: recommends `toDataStreamResponse` (banned by AGENTS.md AI §2) | keep (living) |
 | ai/architecture/README.md · ai/development/README.md · ai/diagrams/README.md · ai/integrations/README.md · ai/pricing/README.md · ai/reference/README.md | Stubs — planned, not populated | L | Placeholders | keep (living) |
 | ai/features/20260227-feature-map-complete-v1.00W.md | "49 tools", Phase 1 ✅, full feature map | I | Phases 3-6 unchecked; model Grok 4.1 superseded; no tool-registry impl evidence | keep |
@@ -220,7 +220,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | FEATURE-SURFACE.md | crm7 patterns; "framer-motion absent" | L | `package.json:127 "motion":"^12.40.0"` present → stale | keep (living); fix |
 | CONSISTENCY-REPORT.md · STACK-AUDIT.md · UNIFIED-ROADMAP.md · PARENT-DOCS.md | Mirrors / version matrix | L | Stale: react-query `^5.101.0`, motion `^12.40.0`, charge-calc `^0.5.0`, schema-registry `^0.3.6`, theme `^0.6.0`, ui `^1.0.1`, TS `~6.0.3` | keep (living); refresh |
 | DEPENDENCY-BUMP-CHECKLIST.md | Exact-pin ceremony for `@bsuite/*` | L | `package.json "@bsuite/auth":"0.2.7"` exact pin | keep (living) |
-| 20260316-crm7-ai-strategic-vision-v1.00W.md | AI-native vision; Phases 2–5 | I | "Phases 2–5 open"; model "Grok 4.1" vs `src/lib/ai/config.ts:148 DEFAULT_MODEL='grok-4.20-reasoning'` | keep |
+| 20260316-crm7-ai-strategic-vision-v1.00W.md | AI-native vision; Phases 2–5 | I | "Phases 2–5 open"; model "Grok 4.1" vs `src/lib/ai/config.ts` `DEFAULT_MODEL='grok-4.3'` (read `grok-4.20-reasoning` at audit time; roster moved 2026-07-31 — line number dropped, it drifts) | keep |
 | 20260316-crm7-document-storage-implementation-v1.00W.md | 14-bucket storage impl guide | I | Self-marked "⚠️ PENDING: encryption, UI, portal"; superseded by setup doc 2026-06 evidence | keep |
 | 20260316-crm7-document-storage-setup-v1.00W.md | Bucket/RLS setup runbook | I | crm7#1056/#1057/#1058 OPEN; closure gate = signed-in d.crm.crm7.app UX evidence | keep |
 | 20260317-document-esigning-architecture-v1.00A.md | In-app e-signing (pdf-lib + SHA-256) shipped | C | `src/lib/documentSigner.ts`, `SignDocumentFlow.tsx`, `PdfViewer.tsx`, `pages/documents/signatures.tsx`, `generate-document/index.ts`, migration `20260304000005_document_signing_audit.sql` | archive (leave canonical pointer) |

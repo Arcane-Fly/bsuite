@@ -31,8 +31,11 @@ export type BadgeVariant =
   | 'error'
   /** Blue — Draft, New, Scheduled */
   | 'info'
-  /** Purple — Converted, Promoted */
-  | 'purple'
+  /** Deep blue — Converted, Promoted, Exported, Paid: terminal states that
+   *  have moved past success. Was `purple`, renamed 0.7.0: the variant was
+   *  named for a colour rather than a role, and that colour is quarantined
+   *  from semantics (purple collapses onto primary blue under protanopia). */
+  | 'secondary'
   /** Gray — Inactive, Archived */
   | 'neutral';
 
@@ -47,16 +50,22 @@ export interface StatusBadgeProps {
   'data-testid'?: string;
 }
 
+/*
+ * Role-bound, not palette-bound. Until 0.7.0 these were raw Tailwind palette
+ * classes (`bg-emerald-50`, `bg-red-50`, …), which meant the design-system
+ * component every app imports was invisible to tenant white-labelling —
+ * BrandingProvider mutates the role layer, and these bound below it.
+ *
+ * Tint is derived from the role colour with a slash-opacity fill plus the
+ * AA-safe `*-text` variant for type, so one definition covers light and dark
+ * and no `dark:` duplicate is needed.
+ */
 const variantClasses: Record<BadgeVariant, string> = {
-  success:
-    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
-  warning:
-    'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
-  error:
-    'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800',
-  info: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800',
-  purple:
-    'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800',
+  success: 'bg-role-success/10 text-success-text border-role-success/30',
+  warning: 'bg-role-warning/10 text-warning-text border-role-warning/30',
+  error: 'bg-role-error/10 text-error-text border-role-error/30',
+  info: 'bg-role-info/10 text-accent-text border-role-info/30',
+  secondary: 'bg-role-secondary/10 text-primary-text border-role-secondary/30',
   neutral: 'bg-muted text-muted-foreground border-border',
 };
 
@@ -127,13 +136,13 @@ export function getStatusVariant(
     'draft', 'new', 'scheduled', 'open',
     'applicant', 'interviewing', 'reported',
   ];
-  const PURPLE = ['converted', 'promoted', 'shortlisted'];
+  const SECONDARY = ['converted', 'promoted', 'shortlisted', 'exported', 'paid', 'qualified'];
 
   if (SUCCESS.includes(normalized)) return 'success';
   if (WARNING.includes(normalized)) return 'warning';
   if (ERROR.includes(normalized)) return 'error';
   if (INFO.includes(normalized)) return 'info';
-  if (PURPLE.includes(normalized)) return 'purple';
+  if (SECONDARY.includes(normalized)) return 'secondary';
   return 'neutral';
 }
 

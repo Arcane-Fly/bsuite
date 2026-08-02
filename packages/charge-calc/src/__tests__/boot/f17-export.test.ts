@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateF17Data, F17_DISCLAIMER } from '../../boot/f17-export';
-import type { BOOTResult, EATerms } from '../../boot/types';
+import { generateF17Data, F17_DISCLAIMER } from '../../boot/f17-export.js';
+import type { BOOTResult, EATerms } from '../../boot/types.js';
 
 // ─── Fixtures ───
 

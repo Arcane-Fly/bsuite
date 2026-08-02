@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { BrandingContext } from './BrandingProvider'
+import { BrandingContext } from './BrandingProvider.js'
 
 /**
  * Access the current tenant branding values and loading state.

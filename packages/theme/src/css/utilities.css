@@ -74,18 +74,21 @@
    (braden/src/index.css) so the corporate and D2C marketing surfaces
    share one visual language for this specific device.
    ============================================================ */
+/* Grid lines are hue-matched to the surface, never pure black/white — the
+   contract bans both endpoints in every role, alpha forms included. Light
+   mode stays neutral and quiet; dark mode takes a faint accent cast, which
+   is where the cyber register lives. 32px = the pre-auth marketing tile. */
 .bsuite-hero-grid {
   position: absolute;
   inset: 0;
+  --grid-line: oklch(0.40 0.030 258 / 0.07);
   background-image:
-    linear-gradient(oklch(0 0 0 / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0 0 0 / 0.03) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 .dark .bsuite-hero-grid {
-  background-image:
-    linear-gradient(oklch(1 0 0 / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(1 0 0 / 0.03) 1px, transparent 1px);
+  --grid-line: oklch(0.82 0.020 262 / 0.055);
 }
 
 /* ===== prefers-reduced-motion — cap animation duration ===== */

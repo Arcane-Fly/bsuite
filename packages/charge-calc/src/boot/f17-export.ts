@@ -6,7 +6,7 @@ import type {
   ScenarioType,
   TermComparison,
   NonMonetaryDifference,
-} from './types';
+} from './types.js';
 
 // ─── F17 Interfaces ───
 

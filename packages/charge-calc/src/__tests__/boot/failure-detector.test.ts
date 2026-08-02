@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectFailurePatterns, type FailurePattern, type FailurePatternCode } from '../../boot/failure-detector';
+import { detectFailurePatterns, type FailurePattern, type FailurePatternCode } from '../../boot/failure-detector.js';
 import type {
   BOOTResult,
   BOOTClassResult,
@@ -8,7 +8,7 @@ import type {
   AwardSchedule,
   RosterScenario,
   NonMonetaryDifference,
-} from '../../boot/types';
+} from '../../boot/types.js';
 
 // ─── Helpers: create minimal valid types with sensible defaults ───
 

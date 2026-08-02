@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import type { TenantBranding } from './BrandingProvider'
-import { useBranding } from './useBranding'
+import type { TenantBranding } from './BrandingProvider.js'
+import { useBranding } from './useBranding.js'
 
 export type PlatformLogoSlot = 'header' | 'sidebar' | 'auth' | 'favicon' | 'mark'
 export type PlatformLogoScheme = 'light' | 'dark'

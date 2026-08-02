@@ -7,7 +7,7 @@ import {
   MAPDPenaltyZ,
   MAPDWageAllowanceZ,
   MAPDExpenseAllowanceZ,
-} from '../../awards/mapd-types';
+} from '../../awards/mapd-types.js';
 
 // ─── Internal AwardSchema types ───
 import {
@@ -17,7 +17,7 @@ import {
   AwardAllowanceZ,
   AwardSupplementZ,
   AwardSchemaZ,
-} from '../../awards/schema';
+} from '../../awards/schema.js';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Realistic MAPD API response fixtures

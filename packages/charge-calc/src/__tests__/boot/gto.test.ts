@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { compareGTOBOOT } from '../../boot/gto';
+import { compareGTOBOOT } from '../../boot/gto.js';
 import type {
   AwardSchedule,
   EATerms,
   RosterScenario,
   GTOPlacement,
   GTOPlacementSchedule,
-} from '../../boot/types';
-import { ENGINE_VERSION } from '../../boot/types';
+} from '../../boot/types.js';
+import { ENGINE_VERSION } from '../../boot/types.js';
 
 // ─── Shared Fixtures ───
 

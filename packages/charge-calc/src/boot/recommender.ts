@@ -1,6 +1,6 @@
-import type { BOOTResult } from './types';
-import { DEFAULT_RECONCILIATION } from './types';
-import type { FailurePattern } from './failure-detector';
+import type { BOOTResult } from './types.js';
+import { DEFAULT_RECONCILIATION } from './types.js';
+import type { FailurePattern } from './failure-detector.js';
 
 // ─── Recommendation Types ───
 

@@ -7,11 +7,11 @@
 export type {
   TrainingDaysDataAccess,
   TrainingDaysResolverOptions,
-} from './training-days';
-export { TrainingDaysResolver } from './training-days';
+} from './training-days.js';
+export { TrainingDaysResolver } from './training-days.js';
 
 export type {
   WageDataAccess,
   WageResolverOptions,
-} from './wage';
-export { WageResolver } from './wage';
+} from './wage.js';
+export { WageResolver } from './wage.js';

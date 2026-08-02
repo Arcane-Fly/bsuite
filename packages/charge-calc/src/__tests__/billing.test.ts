@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { calculateBillableWeeks } from '../billing';
-import type { BillableWeeksInput } from '../billing';
+import { calculateBillableWeeks } from '../billing.js';
+import type { BillableWeeksInput } from '../billing.js';
 
 /** Default input matching standard apprentice leave/training */
 const DEFAULT_INPUT: BillableWeeksInput = {

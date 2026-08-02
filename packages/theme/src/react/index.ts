@@ -1,17 +1,17 @@
-export { ThemeProvider } from './ThemeProvider'
-export type { ThemeProviderProps } from './ThemeProvider'
-export { useTheme } from './useTheme'
-export type { ThemeContextValue, ThemeMode, ResolvedTheme } from '../index'
-export { THEME_STORAGE_KEY } from '../index'
+export { ThemeProvider } from './ThemeProvider.js'
+export type { ThemeProviderProps } from './ThemeProvider.js'
+export { useTheme } from './useTheme.js'
+export type { ThemeContextValue, ThemeMode, ResolvedTheme } from '../index.js'
+export { THEME_STORAGE_KEY } from '../index.js'
 export {
   BrandingProvider,
   BrandingContext,
   BRANDING_STORAGE_KEY,
   BRANDING_OVERRIDE_FLAG,
-} from './BrandingProvider'
-export type { TenantBranding, BrandingContextValue } from './BrandingProvider'
-export { useBranding } from './useBranding'
-export { resolvePlatformLogo, usePlatformLogo } from './usePlatformLogo'
+} from './BrandingProvider.js'
+export type { TenantBranding, BrandingContextValue } from './BrandingProvider.js'
+export { useBranding } from './useBranding.js'
+export { resolvePlatformLogo, usePlatformLogo } from './usePlatformLogo.js'
 export type {
   PlatformLogoHookResult,
   PlatformLogoOptions,
@@ -19,7 +19,7 @@ export type {
   PlatformLogoSlot,
   PlatformLogoSource,
   ResolvedPlatformLogo,
-} from './usePlatformLogo'
+} from './usePlatformLogo.js'
 
 // Components — see ./components/<Name>.tsx
 export {
@@ -27,9 +27,9 @@ export {
   AutoStatusBadge,
   getStatusVariant,
   formatStatusLabel,
-} from './components/StatusBadge'
+} from './components/StatusBadge.js'
 export type {
   BadgeVariant,
   StatusBadgeProps,
   AutoStatusBadgeProps,
-} from './components/StatusBadge'
+} from './components/StatusBadge.js'

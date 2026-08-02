@@ -6,7 +6,7 @@ import type {
   RateResult,
   OncostBreakdown,
   Allowance,
-} from './types';
+} from './types.js';
 
 interface RateKeyResolution {
   key: string;

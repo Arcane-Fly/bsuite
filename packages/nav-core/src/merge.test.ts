@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { mergeNavConfigs } from './merge';
-import type { NavConfig, NavSection, IconComponent } from './types';
+import { mergeNavConfigs } from './merge.js';
+import type { NavConfig, NavSection, IconComponent } from './types.js';
 
 // Minimal stub icon — satisfies NavSection's required icon field
 const stubIcon: IconComponent = () => null;

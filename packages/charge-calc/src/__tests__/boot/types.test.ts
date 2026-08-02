@@ -20,7 +20,7 @@ import {
   DEFAULT_MARGINAL_CONFIG,
   DEFAULT_RECONCILIATION,
   ENGINE_VERSION,
-} from '../../boot/types';
+} from '../../boot/types.js';
 
 // ─── EmploymentType ───
 describe('EmploymentTypeZ', () => {

@@ -1,6 +1,6 @@
 import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { MobileSidebarDrawer } from '../MobileSidebarDrawer'
+import { MobileSidebarDrawer } from '../MobileSidebarDrawer.js'
 
 describe('MobileSidebarDrawer', () => {
   it('renders children in a dialog-roled aside', () => {

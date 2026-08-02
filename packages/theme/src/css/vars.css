@@ -12,13 +12,27 @@
  * Consumers should bind to Layer 3 (roles) or Layer 4 (shadcn) — never
  * directly to palette primitives. Roles make white-labelling safe.
  *
- * Colourblind policy (WCAG 1.4.1 + audit constraint):
- *   --role-error / --role-destructive = PURPLE, never red-vs-green.
- *   Only flag where colour is the SOLE signifier of state.
+ * Colourblind policy (WCAG 1.4.1) — REWRITTEN 2026-08-02, contract 0.7.0:
+ *   The invariant is SEPARATION, not a fixed hue. --role-error must be
+ *   maximally separated from --role-primary under deuteranopia and
+ *   protanopia. D2C's primary is blue, so error is RED.
+ *   The previous "error = purple" rule was actively harmful: under
+ *   protanopia purple measured DeltaE 0.006 against primary blue — the
+ *   destructive colour and the primary action colour were the SAME swatch.
+ *   Purple and indigo are therefore quarantined from semantics entirely.
+ *   Warm states (red/amber) separate by LIGHTNESS, not hue — under
+ *   deuteranopia everything warm collapses to yellow, so error is the dark
+ *   one and warning the light one. Never put two cool hues in opposition.
+ *   Colour is never the sole signifier: shape + label always.
+ *   TENANT OVERRIDE BLOCKED on --role-error / --role-destructive.
  *
- * Eye-strain policy:
- *   Dark-mode text capped at L=0.94. Pure white (L=1.0) is banned as a
- *   text token. 5-tier scale verified WCAG AA minimum throughout.
+ * Eye-strain / pure-endpoint policy:
+ *   Pure white (L=1.0) and pure black (L=0) are BANNED in EVERY role —
+ *   text, surface, border, ring and shadow alike (operator ruling
+ *   2026-08-02). The prior text-only scoping of this rule is what let
+ *   --light-bg-accent ship as oklch(1 0 0.5) and render every shadcn card
+ *   and popover pure white. "White" here means oklch(0.982 0.002 248)
+ *   (#f8f9fa); the lightest surface is bg-panel at L=0.994.
  *
  * OKLCH format is MANDATORY for all new tokens. No hex/rgb/hsl.
  * Syntax: oklch(L C H) — L=lightness 0–1, C=chroma 0–0.4, H=hue 0–360.
@@ -41,6 +55,17 @@
   --neon-electric-green:    oklch(0.723 0.192 149.6);
   --neon-electric-lavender: oklch(0.736 0.141 285.6);
 
+  /* Semantic hues — added 2026-08-02 (contract 0.7.0). The 11 above were
+     chosen for looks; these four were chosen for SEPARATION, measured via
+     Vienot-Brettel dichromat simulation. Worst-case DeltaE(OKLab) across
+     normal/deuteranopia/protanopia for every semantic pair is >= 0.156;
+     the pairing these replace scored 0.006. Never bind a component to
+     these directly — bind to the --role-* alias. */
+  --neon-electric-red:   oklch(0.580 0.230  25);   /* error / destructive */
+  --neon-electric-amber: oklch(0.800 0.150  75);   /* warning */
+  --neon-electric-teal:  oklch(0.600 0.130 195);   /* success */
+  --neon-electric-deep:  oklch(0.380 0.140 270);   /* secondary action */
+
   /* ============================================================
      LAYER 2 — SURFACE PRIMITIVES (light mode)
      ============================================================ */
@@ -49,7 +74,10 @@
   --light-bg-primary:   oklch(0.961 0     0.5);
   --light-bg-secondary: oklch(0.982 0.002 248);
   --light-bg-tertiary:  oklch(0.963 0.003 228.9);
-  --light-bg-accent:    oklch(1     0     0.5);
+  /* bg-panel. Was oklch(1 0 0.5) — pure white, and since --card and
+     --popover bridge to it, every shadcn card and popover in all five D2C
+     apps rendered pure white in light mode from this one line. */
+  --light-bg-accent:    oklch(0.994 0.002 260);
 
   /* D2C light text scale — hue 260 (cool blue-grey), capped L=0.22.
      Measured WCAG contrast vs --light-bg-primary oklch(0.961 0 0.5), OKLCH ->
@@ -63,9 +91,6 @@
   --light-text-muted:     oklch(0.52 0.018 260);  /*  4.92:1 ✓ AA  (normal, 4.5:1 floor) */
   --light-text-subtle:    oklch(0.60 0.012 260);  /*  3.52:1 ✓ AA large only (3:1) — ✗ AA normal */
   --light-text-disabled:  oklch(0.72 0.010 260);  /*  2.21:1 ✗ fails AA at any size — MUST pair with icon cue */
-  /* Legacy aliases (kept for consumers that haven't migrated) */
-  --light-text-tertiary:   var(--light-text-muted);
-  --light-text-quaternary: var(--light-text-subtle);
 
   --light-border: oklch(0.942 0.005 247.9);
   --light-hover:  oklch(0.963 0.003 228.9);
@@ -83,18 +108,32 @@
 
   /* Action colours */
   --role-primary:     var(--neon-electric-blue);    /* oklch(0.546 0.215 262.9) */
-  --role-secondary:   var(--neon-electric-indigo);  /* oklch(0.511 0.23  277)   */
+  --role-secondary:   var(--neon-electric-deep);    /* was indigo — 0.037 from primary */
   --role-accent:      var(--neon-electric-cyan);    /* oklch(0.769 0.132 191.7) */
 
-  /* ⚠️  COLOURBLIND POLICY: error = PURPLE — never red/coral.
-         Red-vs-green is the most common colour-vision deficiency (~8% M, ~0.5% F).
-         Purple (hue 283) is unambiguous to deuteranopes and protanopes.
+  /* ⚠️  SEPARATION POLICY (contract 0.7.0). The invariant is NOT a fixed hue —
+         it is that error must be maximally separated from PRIMARY under
+         deuteranopia and protanopia. D2C's primary is blue, so error is RED.
+         Purple scored DeltaE 0.006 against primary under protanopia: the
+         destructive colour and the primary action colour were the same swatch.
+         Purple and indigo are quarantined from semantics entirely.
+         Warm states separate by LIGHTNESS (under deuteranopia red and amber
+         both read yellow — error is the dark one, warning the light one).
          TENANT OVERRIDE BLOCKED: BrandingProvider rejects --role-error changes. */
-  --role-error:       var(--neon-electric-purple);  /* oklch(0.568 0.202 283.1) */
-  --role-destructive: var(--neon-electric-purple);  /* synonym — same value      */
-  --role-warning:     var(--neon-electric-orange);  /* oklch(0.728 0.168  22.5) */
-  --role-success:     var(--neon-electric-green);   /* oklch(0.723 0.192 149.6) */
+  --role-error:       var(--neon-electric-red);     /* was purple — 0.006 from primary */
+  --role-destructive: var(--neon-electric-red);     /* synonym — same value      */
+  --role-warning:     var(--neon-electric-amber);   /* was orange h22.5 — 0.059 from red */
+  --role-success:     var(--neon-electric-teal);    /* was green — 0.043 from red */
   --role-info:        var(--neon-electric-cyan);    /* oklch(0.769 0.132 191.7) */
+
+  /* AA-safe text renderings of the saturated roles on light surfaces.
+     A saturated fill colour is not a legible text colour; these are the
+     text variants and are the ONLY correct token for coloured type. */
+  --role-primary-text: oklch(0.541 0.215 262.9);  /* 4.71:1 ✓ AA */
+  --role-accent-text:  oklch(0.499 0.132 191.7);  /* 4.70:1 ✓ AA */
+  --role-error-text:   oklch(0.556 0.230  25);    /* 4.69:1 ✓ AA */
+  --role-warning-text: oklch(0.535 0.150  75);    /* 4.70:1 ✓ AA */
+  --role-success-text: oklch(0.501 0.130 195);    /* 4.70:1 ✓ AA */
 
   /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
      measured against --role-bg-body (the conservative floor); all tiers
@@ -107,27 +146,24 @@
   --role-text-disabled:    var(--light-text-disabled);  /*  2.21:1 ✗ icon cue required */
 
   /* Surface roles */
-  --role-bg-body:    var(--light-bg-primary);
-  --role-bg-surface: var(--light-bg-secondary);
-  --role-bg-panel:   var(--light-bg-accent);
-  --role-bg-input:   var(--light-bg-tertiary);
-  --role-border:     var(--light-border);
+  --role-bg-body:      var(--light-bg-primary);
+  --role-bg-surface:   var(--light-bg-secondary);
+  --role-bg-panel:     var(--light-bg-accent);
+  --role-bg-input:     var(--light-bg-tertiary);
+  --role-bg-sunken:    oklch(0.938 0.004 250);
+  --role-border:       var(--light-border);
+  --role-border-strong: oklch(0.880 0.008 250);
 
-  /* Inverse text — safe on coloured fills (mid-lightness L≈0.5–0.7) */
-  --text-on-primary:     oklch(0.99 0    0);      /* on blue  L≈0.55 — 5.9:1 ✓ AA */
-  --text-on-accent:      oklch(0.17 0.02 260);    /* on cyan  L≈0.77 — 6.1:1 ✓ AA */
-  --text-on-error:       oklch(0.99 0    0);      /* on purple L≈0.57 */
-  --text-on-success:     oklch(0.17 0.02 260);    /* on green L≈0.72 — dark text */
-  --text-on-warning:     oklch(0.17 0.02 260);    /* on amber L≈0.82 — dark text */
-
-  /* ============================================================
-     LAYER 3 — SEMANTIC STATUS (legacy: keeps --status-* names)
-     Deprecated: prefer --role-* going forward.
-     ============================================================ */
-  --status-success: var(--role-success);
-  --status-warning: var(--role-warning);
-  --status-error:   var(--role-error);     /* was coral; now purple per colourblind policy */
-  --status-info:    var(--role-info);
+  /* Inverse text on coloured fills. Two values only — the fill is either
+     light enough to need dark text, or dark enough to need light text.
+     Neither is a pure endpoint. */
+  --text-on-light-fill:  oklch(0.98 0.006 260);
+  --text-on-dark-fill:   oklch(0.19 0.020 255);
+  --text-on-primary:     var(--text-on-light-fill);  /* on blue  L≈0.55 — 4.88:1 ✓ AA */
+  --text-on-error:       var(--text-on-light-fill);  /* on red   L≈0.58 — 4.55:1 ✓ AA */
+  --text-on-accent:      var(--text-on-dark-fill);   /* on cyan  L≈0.77 — 9.38:1 ✓ AAA */
+  --text-on-warning:     var(--text-on-dark-fill);   /* on amber L≈0.80 — 9.68:1 ✓ AAA */
+  --text-on-success:     var(--text-on-dark-fill);   /* on teal  L≈0.60 — 5.17:1 ✓ AA */
 
   /* ============================================================
      LAYER 4 — SHADCN/UI BRIDGE (light mode)
@@ -153,13 +189,6 @@
   --border:             var(--role-border);
   --input:              var(--role-border);
   --ring:               var(--role-primary);
-
-  /* ============================================================
-     WCAG AA compliant text pairs for raw neon on light bg
-     (neon cyan L=0.77 on light bg is only 1.76:1 — fails 4.5:1)
-     ============================================================ */
-  --color-accent-text:  oklch(0.486 0.084 191.5);  /* Dark cyan — AA on light bg */
-  --color-primary-text: oklch(0.485 0.243 263.6);  /* Saturated blue — AA on light bg */
 
   /* ============================================================
      CANONICAL ACCENT GRADIENT (W3 §3.1) — exactly ONE gradient
@@ -190,44 +219,72 @@
 }
 
 /* ============================================================
-   SRGB FALLBACKS (for browsers without oklch support) — W3 §3.4
-   True-source hexes, each re-derived directly from its oklch token
-   (OKLCH -> OKLab -> linear-sRGB -> gamma-encoded sRGB) rather than
-   eyeballed against a Tailwind palette. Round-trip-verified: every
-   value below computes ΔE(OKLab) < 0.01 against its oklch token —
-   at least twice inside the < 0.02 acceptance bar (most values are
-   one to two orders of magnitude inside it; see docs/TOKEN-MAPPING.md
-   §8 for the full per-token ΔE table). The prior Tailwind-palette-
-   derived hexes were ΔE 0.03-0.10 off.
+   LAYER 5 — PER-APP ACCENT
+   Added 2026-08-02: the 0.7.0 contract specifies these blocks but the
+   package had never shipped them — only a `var(--app-accent, …)` fallback
+   reference, so every app resolved to the shared cyan and the per-app
+   identity existed on paper only.
 
-   Deliberately declared at the TOP LEVEL, not nested inside another
-   `:root { }` block: engines that lack `oklch()` support predate CSS
-   nesting too, so a `@supports` block nested inside `:root` would be
-   silently dropped by exactly the browsers it's meant to serve when
-   this file is consumed raw (unbundled). It works when bundled
-   through the Tailwind v4 / LightningCSS pipeline only because that
-   pipeline hoists nested at-rules — this top-level form is correct
-   for both the raw and the bundled case.
+   Set `data-app` on <body>. The FILL is the brand hue; the TEXT variants
+   are solved per mode, because a saturated fill colour is not a legible
+   text colour and the accent must never render below AA.
    ============================================================ */
-@supports not (color: oklch(0 0 0)) {
-  :root {
-    --neon-electric-blue:     #2563eb;
-    --neon-electric-cyan:     #00cec9;
-    --neon-electric-indigo:   #4f46e5;
-    --neon-electric-purple:   #6c5ce7;
-    --neon-electric-magenta:  #fd79a8;
-    --neon-electric-pink:     #ec4899;
-    --neon-electric-coral:    #ff4757;
-    --neon-electric-orange:   #ff7675;
-    --neon-electric-yellow:   #fdcb6e;
-    --neon-electric-green:    #22c55e;
-    --neon-electric-lavender: #a29bfe;
-    --role-error:             #6c5ce7;
-    --role-destructive:       #6c5ce7;
-    --light-text-primary:     #171b22;
-    --dark-text-primary:      #e8eaf6;
-  }
+[data-app="crm7"] {
+  --app-accent:        oklch(0.769 0.132 191.7);
+  --app-accent-text-l: oklch(0.505 0.132 191.7);
+  --app-accent-text-d: oklch(0.769 0.132 191.7);
 }
+[data-app="bsu"] {
+  --app-accent:        oklch(0.541 0.247 293);
+  --app-accent-text-l: oklch(0.564 0.247 293);
+  --app-accent-text-d: oklch(0.745 0.247 293);
+}
+[data-app="conduit"] {
+  --app-accent:        oklch(0.723 0.192 149.6);
+  --app-accent-text-l: oklch(0.505 0.192 149.6);
+  --app-accent-text-d: oklch(0.723 0.192 149.6);
+}
+[data-app="r80"] {
+  --app-accent:        oklch(0.666 0.157 58.3);
+  --app-accent-text-l: oklch(0.546 0.157 58.3);
+  --app-accent-text-d: oklch(0.703 0.157 58.3);
+}
+/* R8.04 — the rates engine replacing R80.3. Deliberately REUSES r80's
+   orange: it serves the same users doing the same job, and a rates engine
+   is not where people should be re-learning which app they are in.
+   Requested by the r804 lane 2026-08-02. */
+[data-app="r804"] {
+  --app-accent:        oklch(0.666 0.157 58.3);
+  --app-accent-text-l: oklch(0.546 0.157 58.3);
+  --app-accent-text-d: oklch(0.703 0.157 58.3);
+}
+[data-app="throughput"] {
+  --app-accent:        oklch(0.656 0.212 354.3);
+  --app-accent-text-l: oklch(0.564 0.212 354.3);
+  --app-accent-text-d: oklch(0.731 0.212 354.3);
+}
+/* Light/dark rebinding of the text variant. */
+:root      { --app-accent-text: var(--app-accent-text-l); }
+.dark      { --app-accent-text: var(--app-accent-text-d); }
+
+/* ============================================================
+   NO sRGB FALLBACK — DELIBERATELY REMOVED 2026-08-02.
+   Precedent: precedent__bsuite__20260802__theme_conformance_is_absolute.
+
+   The `@supports not (color: oklch(0 0 0))` block that stood here shipped
+   a parallel hex palette. It is gone, and must not be reinstated:
+
+     · OKLCH has been Baseline-available in every evergreen engine since
+       Firefox 113 (May 2023), after Safari 15.4 (2022) and Chrome 111
+       (Mar 2023). It guarded a population that no longer exists.
+     · It was a second source of truth for the same colours, so it drifted:
+       it still bound --role-error to purple after the semantic set moved
+       to red. A fallback that disagrees with the tokens is worse than none.
+
+   If a colour needs to exist in hex (email HTML, PDF, canvas, manifest),
+   derive it at that call site from the oklch token — do not re-introduce a
+   second palette here.
+   ============================================================ */
 
 /* ============================================================
    DARK MODE — Layer 2 surface overrides + Layer 3 role rebind
@@ -253,9 +310,6 @@
   --dark-text-muted:     oklch(0.68 0.018 260);  /* metadata —  6.69:1 ✓ AA (normal) */
   --dark-text-subtle:    oklch(0.56 0.015 260);  /* placeholders —  4.14:1 ✓ AA large only — ✗ AA normal */
   --dark-text-disabled:  oklch(0.44 0.010 260);  /* disabled —  2.48:1 ✗ fails AA at any size — MUST pair with icon cue */
-  /* Legacy aliases */
-  --dark-text-tertiary:   var(--dark-text-muted);
-  --dark-text-quaternary: var(--dark-text-disabled);
 
   --dark-border: oklch(0.428 0.015 248.2);
   --dark-hover:  oklch(0.39  0.035 265);
@@ -270,14 +324,17 @@
 
   --role-bg-body:    var(--dark-bg-primary);
   --role-bg-surface: var(--dark-bg-secondary);
-  --role-bg-panel:   oklch(0.19 0.02 260 / 0.8);
-  --role-bg-input:   oklch(0.24 0.02 260 / 0.6);
+  --role-bg-panel:   oklch(0.190 0.020 260);
+  --role-bg-input:   oklch(0.240 0.020 260);
+  --role-bg-sunken:  oklch(0.145 0.022 268);
   --role-border:     var(--dark-border);
 
-  /* Accent/primary text tokens flip to raw neons in dark mode —
-     contrast on navy bg is already ≥ 9:1 for these values. */
-  --color-accent-text:  oklch(0.769 0.132 191.7);
-  --color-primary-text: oklch(0.623 0.188 259.8);
+  /* Role text variants rebind for the dark surface — all AAA on navy. */
+  --role-primary-text: oklch(0.721 0.215 262.9);  /*  7.01:1 ✓ AAA */
+  --role-accent-text:  var(--neon-electric-cyan); /*  9.78:1 ✓ AAA */
+  --role-error-text:   oklch(0.786 0.230  25);    /*  7.00:1 ✓ AAA */
+  --role-warning-text: var(--neon-electric-amber);/* 10.10:1 ✓ AAA */
+  --role-success-text: oklch(0.671 0.130 195);    /*  6.99:1 ✓ AAA */
 
   /* Glow/shadow scale up in dark mode */
   --glow-strength:   0.6;

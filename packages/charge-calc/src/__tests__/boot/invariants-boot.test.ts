@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { compareBOOT } from '../../boot/compare';
+import { compareBOOT } from '../../boot/compare.js';
 import type {
   AwardSchedule,
   EATerms,
   RosterScenario,
   MonetaryTerms,
-} from '../../boot/types';
-import { BUILDING_AWARD } from './fixtures/building-award';
+} from '../../boot/types.js';
+import { BUILDING_AWARD } from './fixtures/building-award.js';
 
 // ─── Helper: Convert AwardSchedule to EATerms with identical terms ───
 

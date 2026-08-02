@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calculate } from '../calculate';
-import type { CalcConfig } from '../types';
+import { calculate } from '../calculate.js';
+import type { CalcConfig } from '../types.js';
 
 /** Same shape as calculate.test.ts BASE_CONFIG */
 const BASE: CalcConfig = {

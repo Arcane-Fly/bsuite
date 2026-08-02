@@ -4,34 +4,34 @@ export type {
   NavItemGroup,
   NavSection,
   NavConfig,
-} from './types';
+} from './types.js';
 
-export { isActivePath, isSectionActive } from './utils';
+export { isActivePath, isSectionActive } from './utils.js';
 
-export { AppSwitcher } from './AppSwitcher';
-export type { AppEntry, AppSwitcherProps } from './AppSwitcher';
+export { AppSwitcher } from './AppSwitcher.js';
+export type { AppEntry, AppSwitcherProps } from './AppSwitcher.js';
 
-export { useSidebarState } from './useSidebarState';
-export type { UseSidebarStateOptions, SidebarState } from './useSidebarState';
+export { useSidebarState } from './useSidebarState.js';
+export type { UseSidebarStateOptions, SidebarState } from './useSidebarState.js';
 
-export { MobileSidebarDrawer } from './MobileSidebarDrawer';
-export type { MobileSidebarDrawerProps } from './MobileSidebarDrawer';
+export { MobileSidebarDrawer } from './MobileSidebarDrawer.js';
+export type { MobileSidebarDrawerProps } from './MobileSidebarDrawer.js';
 
-export { tierSatisfies, tierRank } from './tier';
-export type { Tier } from './tier';
+export { tierSatisfies, tierRank } from './tier.js';
+export type { Tier } from './tier.js';
 
-export { useFilteredNav } from './useFilteredNav';
-export type { GatedNavSection, UseFilteredNavOptions } from './useFilteredNav';
+export { useFilteredNav } from './useFilteredNav.js';
+export type { GatedNavSection, UseFilteredNavOptions } from './useFilteredNav.js';
 
-export { mergeNavConfigs } from './merge';
+export { mergeNavConfigs } from './merge.js';
 
 export {
   BSUITE_APP_KEYS,
   BSUITE_PROD_URLS,
   BSUITE_DEV_PORTS,
   BSUITE_APP_METADATA,
-} from './apps';
-export type { BSuiteAppKey, AppMetadata } from './apps';
+} from './apps.js';
+export type { BSuiteAppKey, AppMetadata } from './apps.js';
 
-export { buildLaunchUrl } from './launchUrl';
-export { sanitizeReturnPath } from './sanitizeReturnPath';
+export { buildLaunchUrl } from './launchUrl.js';
+export { sanitizeReturnPath } from './sanitizeReturnPath.js';

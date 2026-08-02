@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeReturnPath } from '../sanitizeReturnPath';
+import { sanitizeReturnPath } from '../sanitizeReturnPath.js';
 
 /**
  * Canonical contract for `sanitizeReturnPath` — every BSuite app's

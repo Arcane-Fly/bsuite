@@ -16,8 +16,8 @@
 
 import { ChevronDown as ChevronDownRaw } from 'lucide-react'
 import { type ElementType, useEffect, useRef, useState } from 'react'
-import { buildLaunchUrl } from './launchUrl'
-import type { IconComponent } from './types'
+import { buildLaunchUrl } from './launchUrl.js'
+import type { IconComponent } from './types.js'
 
 // Cast through unknown to dodge React 18 vs 19 @types/react conflicts —
 // lucide-react ships React 19 types in newer versions while this package

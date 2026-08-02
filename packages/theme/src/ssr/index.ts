@@ -1,4 +1,4 @@
-import { THEME_STORAGE_KEY } from '../index'
+import { THEME_STORAGE_KEY } from '../index.js'
 
 export interface InitScriptOptions {
   /** localStorage key to read. Defaults to `THEME_STORAGE_KEY`. */

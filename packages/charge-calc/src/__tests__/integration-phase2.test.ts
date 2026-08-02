@@ -20,7 +20,7 @@ import {
   type MAPDWageAllowance,
   type MAPDExpenseAllowance,
   type MAPDAward,
-} from '../index';
+} from '../index.js';
 
 // ─── Mock MAPD data source ───
 

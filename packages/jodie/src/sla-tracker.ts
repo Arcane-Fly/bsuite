@@ -1,6 +1,6 @@
 import { addMinutes } from 'date-fns';
 
-import { escalateSeverity, getRoutingDecision, type Effort, type Severity } from './routing-matrix';
+import { escalateSeverity, getRoutingDecision, type Effort, type Severity } from './routing-matrix.js';
 
 export interface SlaTrackingRecord {
   readonly issueNumber: number;

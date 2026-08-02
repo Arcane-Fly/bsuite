@@ -1,5 +1,5 @@
-import type { MonetaryTerms, RosterScenario } from './types';
-import { roundMoney } from '../utils';
+import type { MonetaryTerms, RosterScenario } from './types.js';
+import { roundMoney } from '../utils.js';
 
 export interface AnnualValueBreakdown {
   basePay: number;

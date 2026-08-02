@@ -21,7 +21,7 @@ function installLocalStorageMock() {
 let storage = installLocalStorageMock()
 
 // Import after the stub so the hook's initial read sees our mock.
-import { useSidebarState } from '../useSidebarState'
+import { useSidebarState } from '../useSidebarState.js'
 
 beforeEach(() => {
   storage = installLocalStorageMock()

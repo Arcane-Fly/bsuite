@@ -1,4 +1,4 @@
-import type { NonMonetaryTerms, NonMonetaryDifference } from './types';
+import type { NonMonetaryTerms, NonMonetaryDifference } from './types.js';
 
 /**
  * Compare non-monetary terms between award and EA.

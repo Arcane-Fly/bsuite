@@ -1,4 +1,4 @@
-import type { AwardSchedule } from '../../../boot/types';
+import type { AwardSchedule } from '../../../boot/types.js';
 
 /**
  * Building & Construction General On-site Award 2020 (MA000020)

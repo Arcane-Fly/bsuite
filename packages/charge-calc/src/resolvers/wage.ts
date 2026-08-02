@@ -20,7 +20,7 @@ import type {
   ValueResolver,
   ValueSource,
   ResolvedValue,
-} from '../sources';
+} from '../sources.js';
 
 export interface WageDataAccess {
   /** Fetch a Modern Award classification rate from Fair Work */

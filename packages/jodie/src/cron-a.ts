@@ -4,8 +4,8 @@ import {
   type Effort,
   type PullRequestProtectionState,
   type Severity,
-} from './routing-matrix';
-import { createTrackingRecord, type SlaTrackingRecord } from './sla-tracker';
+} from './routing-matrix.js';
+import { createTrackingRecord, type SlaTrackingRecord } from './sla-tracker.js';
 
 export interface ClassificationInput {
   readonly issueNumber: number;

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { THEME_STORAGE_KEY, type ResolvedTheme, type ThemeContextValue, type ThemeMode } from '../index'
+import { THEME_STORAGE_KEY, type ResolvedTheme, type ThemeContextValue, type ThemeMode } from '../index.js'
 
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 

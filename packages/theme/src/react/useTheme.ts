@@ -1,6 +1,6 @@
 import { useContext } from 'react'
-import type { ThemeContextValue } from '../index'
-import { ThemeContext } from './ThemeProvider'
+import type { ThemeContextValue } from '../index.js'
+import { ThemeContext } from './ThemeProvider.js'
 
 /**
  * Hook to read + update the current theme.

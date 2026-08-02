@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { compareBOOT } from '../../boot/compare';
-import { detectFailurePatterns } from '../../boot/failure-detector';
-import { generateRecommendations } from '../../boot/recommender';
-import type { EATerms, RosterScenario } from '../../boot/types';
-import { BUILDING_AWARD } from './fixtures/building-award';
-import { PASSING_EA } from './fixtures/sample-ea-pass';
-import { FAILING_EA } from './fixtures/sample-ea-fail';
-import { MARGINAL_EA } from './fixtures/sample-ea-marginal';
+import { compareBOOT } from '../../boot/compare.js';
+import { detectFailurePatterns } from '../../boot/failure-detector.js';
+import { generateRecommendations } from '../../boot/recommender.js';
+import type { EATerms, RosterScenario } from '../../boot/types.js';
+import { BUILDING_AWARD } from './fixtures/building-award.js';
+import { PASSING_EA } from './fixtures/sample-ea-pass.js';
+import { FAILING_EA } from './fixtures/sample-ea-fail.js';
+import { MARGINAL_EA } from './fixtures/sample-ea-marginal.js';
 
 // ─── Standard Roster Scenarios ───
 

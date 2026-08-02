@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { calculate } from '../calculate';
-import type { CalcConfig } from '../types';
-import type { AustralianState } from '../types';
-import { PAYROLL_TAX_RATES, getPayrollTaxRate } from '../defaults';
+import { calculate } from '../calculate.js';
+import type { CalcConfig } from '../types.js';
+import type { AustralianState } from '../types.js';
+import { PAYROLL_TAX_RATES, getPayrollTaxRate } from '../defaults.js';
 
 /** Standard GTO config matching charge-calculator.jsx defaults */
 const BASE_CONFIG: CalcConfig = {
@@ -340,12 +340,12 @@ describe('calculate()', () => {
 
   describe('date-aware superannuation (C4)', () => {
     it('returns 11.5% before July 2025', async () => {
-      const { getSuperRate } = await import('../types');
+      const { getSuperRate } = await import('../types.js');
       expect(getSuperRate(new Date('2025-06-30'))).toBe(0.115);
     });
 
     it('returns 12% from July 2025 onwards', async () => {
-      const { getSuperRate } = await import('../types');
+      const { getSuperRate } = await import('../types.js');
       expect(getSuperRate(new Date('2025-07-01'))).toBe(0.12);
     });
   });

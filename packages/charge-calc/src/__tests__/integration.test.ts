@@ -9,7 +9,7 @@ import {
   getPayrollTaxRate,
   calculateBillableWeeks,
   DEFAULT_TRAINING_WEEKS_PER_YEAR,
-} from '../index';
+} from '../index.js';
 
 describe('Integration: full pipeline smoke test', () => {
   it('calculates with DEFAULT_CONFIG', () => {

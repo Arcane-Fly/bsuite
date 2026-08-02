@@ -8,10 +8,10 @@ import {
   mapWageAllowance,
   mapExpenseAllowance,
   filterApprenticeClassifications,
-} from '../../awards/mapd-mapper';
+} from '../../awards/mapd-mapper.js';
 
-import { fetchCompleteAward } from '../../awards/mapd-client';
-import type { MAPDDataSource } from '../../awards/mapd-client';
+import { fetchCompleteAward } from '../../awards/mapd-client.js';
+import type { MAPDDataSource } from '../../awards/mapd-client.js';
 
 import type {
   MAPDAward,
@@ -19,14 +19,14 @@ import type {
   MAPDPenalty,
   MAPDWageAllowance,
   MAPDExpenseAllowance,
-} from '../../awards/mapd-types';
+} from '../../awards/mapd-types.js';
 
 import {
   AwardClassificationZ,
   AwardPenaltyZ,
   AwardAllowanceZ,
   AwardSchemaZ,
-} from '../../awards/schema';
+} from '../../awards/schema.js';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Realistic MAPD fixture data — Building Award (MA000003)

@@ -1,4 +1,4 @@
-import type { CalcConfig, PenaltyRate, AustralianState } from './types';
+import type { CalcConfig, PenaltyRate, AustralianState } from './types.js';
 
 // ─── State Payroll Tax Rates ───
 export const PAYROLL_TAX_RATES: Record<AustralianState, number> = {
@@ -13,11 +13,110 @@ export const PAYROLL_TAX_RATES: Record<AustralianState, number> = {
 };
 
 /**
- * Returns the payroll tax rate for a given Australian state or territory.
- * Use this to populate CalcConfig.payrollTaxRate from state selection.
+ * Returns the GENERAL payroll tax rate for a given Australian state or
+ * territory — i.e. the headline state rate a non-exempt employer pays.
+ *
+ * NOT EXEMPTION-AWARE. This function has no idea whether the specific
+ * employee is an exempt apprentice/trainee (see `PAYROLL_TAX_EXEMPT_STATES`
+ * below) — it must never be assigned directly to a cost config's
+ * `payrollTaxRate` (or equivalent) for an apprentice/trainee/junior worker.
+ * For any employee with a `rateTypeCode`, use `resolveEffectivePayrollTaxRate()`
+ * instead, passing this function's result as `generalStateRate`.
  */
 export function getPayrollTaxRate(state: AustralianState): number {
   return PAYROLL_TAX_RATES[state];
+}
+
+// ─── Employee rate type codes (payroll tax) ───
+
+/**
+ * FWC employee_rate_type_code values used for apprentices and trainees, for
+ * the purpose of resolving payroll tax exemption.
+ *  AP = Standard apprentice (any age)
+ *  AA = Adult apprentice (commenced 21+)
+ *  TN = Trainee (under a training contract)
+ *  JN = Junior (under minimum school-leaving age rules)
+ *
+ * Named `PayrollTaxRateTypeCode` (not `EmployeeRateTypeCode`) to avoid
+ * colliding with the broader MAPD `EmployeeRateTypeCode` in
+ * `./awards/schema.ts` (which also includes AD/XT/CA — codes with no
+ * payroll-tax-exemption meaning). R80.3 re-exports this under its own
+ * `EmployeeRateTypeCode` alias for its (narrower, tax-specific) local usage —
+ * see `awardRulesEngine.ts`.
+ *
+ * Moved verbatim (values) from R80.3/src/services/awardRulesEngine.ts:40
+ * (crm7#1265 / G2 unify-calc-paths) — crm7 could import `PAYROLL_TAX_RATES`
+ * from this package but not the exemption logic that lived only in R80.3, so
+ * crm7's charge path used a bare VIC rate for every worker in every state,
+ * apprentice or not.
+ */
+export type PayrollTaxRateTypeCode = 'AP' | 'AA' | 'TN' | 'JN';
+
+/**
+ * States/territories where AP, AA, and/or TN employees are exempt from
+ * payroll tax. Source: State Revenue legislation. Verify annually — rules
+ * change.
+ *
+ * WA, VIC, NSW: full exemption for all three codes
+ * QLD: exemption for AP and AA only
+ * SA, TAS, ACT, NT: exemption for AP and AA only
+ *
+ * Moved verbatim from R80.3/src/services/awardRulesEngine.ts:408-417
+ * (crm7#1265 / G2 unify-calc-paths). The per-state code lists are
+ * deliberately NOT uniform — do not "tidy" this into a single shared list
+ * per state; WA/VIC/NSW exempt TN, the rest do not.
+ */
+export const PAYROLL_TAX_EXEMPT_STATES: Partial<
+  Record<AustralianState, ReadonlyArray<PayrollTaxRateTypeCode>>
+> = {
+  WA: ['AP', 'AA', 'TN'],
+  VIC: ['AP', 'AA', 'TN'],
+  NSW: ['AP', 'AA', 'TN'],
+  QLD: ['AP', 'AA'],
+  SA: ['AP', 'AA'],
+  TAS: ['AP', 'AA'],
+  ACT: ['AP', 'AA'],
+  NT: ['AP', 'AA'],
+};
+
+/**
+ * Resolve the EFFECTIVE payroll tax rate for a specific employee. Returns 0
+ * if the state exempts the employee's rate type code, otherwise returns
+ * `generalStateRate` unchanged.
+ *
+ * Moved verbatim (logic) from
+ * R80.3/src/services/awardRulesEngine.ts:583-610 (crm7#1265 / G2
+ * unify-calc-paths) — this is the collapse of the exemption table into the
+ * same shared package that already owns `PAYROLL_TAX_RATES`, so the two
+ * can't drift the way `HARDCODED_PAYROLL_TAX_RATES` and `PAYROLL_TAX_RATES`
+ * used to (see R80.3's payrollTaxService.ts G2 comment).
+ *
+ * PRECEDENCE GUARD (carried from the original R80.3 doc comment — do not
+ * weaken this): `generalStateRate` is a plain number — this function does
+ * not know or care whether it came from the hardcoded fallback table, a DB
+ * cache, or (future) a tenant's own accounting integration. The exemption
+ * check below ALWAYS runs and ALWAYS wins for an exempt rateTypeCode/state
+ * combination — an exempt apprentice/trainee is 0% even if the general rate
+ * a future Xero-backed resolver reports for the org is non-zero. Exemption
+ * is a legislative rule about the EMPLOYEE, not a property of the rate
+ * SOURCE, so it must never be bypassed by changing where `generalStateRate`
+ * comes from. Do not move this check "below" or "after" a rate-source
+ * resolver — it must stay the LAST WORD on the value handed to the cost
+ * calculator.
+ *
+ * @param state - Two-letter Australian state/territory
+ * @param rateTypeCode - AP, AA, TN, or JN
+ * @param generalStateRate - The standard state payroll tax rate (e.g. from
+ *   `getPayrollTaxRate()` or a tenant-specific resolver) — NOT exemption-aware
+ *   on its own.
+ */
+export function resolveEffectivePayrollTaxRate(
+  state: AustralianState,
+  rateTypeCode: PayrollTaxRateTypeCode,
+  generalStateRate: number,
+): number {
+  const exemptCodes = PAYROLL_TAX_EXEMPT_STATES[state] ?? [];
+  return exemptCodes.includes(rateTypeCode) ? 0 : generalStateRate;
 }
 
 // ─── Default Training Weeks Per Year ───
