@@ -68,7 +68,17 @@ PREFIX='(text|bg|border|divide|ring|ring-offset|outline|fill|stroke|shadow|decor
 C1_TW="(^|[\"' \`])([a-z-]+:)*${PREFIX}-(white|black)(\/[0-9]+)?([\"' \`]|$)"
 
 # C1b pure white/black — literal values in CSS / inline styles / arbitrary classes.
-C1_LIT='#([fF]{3}|[fF]{6}|[fF]{8}|0{3}|0{6})\b|rgba?\(\s*255\s*,?\s*255\s*,?\s*255|rgba?\(\s*0\s*,?\s*0\s*,?\s*0[\s,)]|oklch\(\s*1(\.0+)?\s+0\s+0|oklch\(\s*0\s+0\s+0|:\s*(white|black)\s*[;,)]'
+#
+# The BARE-HSL-TRIPLET alternative at the end is not decoration. shadcn stores
+# its colours as unwrapped triplets (`--card: 0 0% 100%`) that only become a
+# colour when a consumer wraps them: `hsl(var(--card))`. There is no `hsl(` on
+# the declaration line, so every pattern above walks straight past it — and it
+# hid FIVE pure-white declarations that were live in production: braden's
+# --background, --popover and --card (the literal pure-white card this whole
+# effort exists to remove), plus --sidebar-primary-foreground in BSU and in
+# @bsuite/nav-core's shipped token file. Nothing caught them for the entire
+# audit because everyone, including this scanner, was looking for `#fff`.
+C1_LIT='#([fF]{3}|[fF]{6}|[fF]{8}|0{3}|0{6})\b|rgba?\(\s*255\s*,?\s*255\s*,?\s*255|rgba?\(\s*0\s*,?\s*0\s*,?\s*0[\s,)]|oklch\(\s*1(\.0+)?\s+0\s+0|oklch\(\s*0\s+0\s+0|:\s*(white|black)\s*[;,)]|--[a-z-]+:\s*0\s+0%\s+(100|0)%'
 
 # C2 non-OKLCH colour formats in authored source.
 #
