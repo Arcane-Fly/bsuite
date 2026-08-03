@@ -45,7 +45,12 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
 # a defect: email HTML (clients support neither CSS vars nor oklch), PDF/canvas/chart
 # renderers (need concrete values), branding pickers/tests (hex IS the subject matter),
 # and PWA/manifest theme-color metadata.
-EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|PdfDocument|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
+# documentSigner draws signature ink onto a PDF via pdf-lib — the same class as
+# the render*Pdf entries beside it, and black ink on a printed page is correct.
+# shine-border is NOT listed: its `#fff` is a mask stop meaning "fully opaque",
+# which is documented at the call site. Excluding the whole file by name would
+# also hide a real colour if one were added there later.
+EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|PdfDocument|documentSigner|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
 
 # ── Violation-class predicates ────────────────────────────────────────────────
 # C1 pure white/black — Tailwind utilities. All colour-bearing prefixes, with optional
