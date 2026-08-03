@@ -161,6 +161,64 @@
   --radius: 10px;
   --radius-lg: 14px;
   --row-pad: 11px;
+
+  /* ═══ INFORMATIONAL SCALE — categorical, NOT semantic ═══
+     Added 2026-08-03 by operator ruling: "informational hues might be handy
+     to stand out against the style colour palette."
+
+     Role tokens describe STATE. They cannot describe CATEGORY — which
+     pipeline stage, which user role, which product tile. Apps that needed a
+     category reached for raw Tailwind instead, which is how one role-badge
+     table came to use purple, indigo, blue, violet and sky as its only
+     distinguishing signal.
+
+     NUMBERED, NOT NAMED, deliberately. Call one of these "moss green" and
+     it will be used for success within a week. A number says what these
+     are: interchangeable slots carrying no meaning of their own.
+     NEVER use an --info-* for state. State has role tokens.
+
+     Derived, not picked by eye: Vienot-Brettel-Mollon dichromat simulation,
+     DeltaE in OKLab, scored as the WORST case across normal, deuteranope and
+     protanope vision. Two constraints — perceptual distance keeps them
+     DISTINGUISHABLE, a >=28 degree hue gap keeps them looking CATEGORICAL
+     rather than like a light/dark pair of one colour. Every one is also
+     held away from the brand roles, which is what "stand out against the
+     style palette" requires: an informational badge must not read as a
+     primary action or an error.
+     Reproduce with scripts/design-informational-hues.py
+
+     LIMIT: worst-case separation is ~0.06-0.07, against >=0.156 for the
+     semantic pairs. That is 10x better than the purple-vs-blue pairing this
+     system rejected (0.006), but it is NOT the semantic standard and cannot
+     be — 8 mutually-distinct categories that also avoid 6 reserved brand
+     colours is a harder problem than 6 roles. So: colour is never the sole
+     signifier for a category. Always pair with a label or an icon. Past 8
+     categories, stop adding hues and add a second dimension. */
+  --info-1: oklch(0.460 0.140   0.0);
+  --info-2: oklch(0.700 0.140  42.0);
+  --info-3: oklch(0.540 0.140 138.0);
+  --info-4: oklch(0.700 0.140 168.0);
+  --info-5: oklch(0.780 0.140 228.0);
+  --info-6: oklch(0.700 0.140 258.0);
+  --info-7: oklch(0.500 0.140 300.0);
+  --info-8: oklch(0.460 0.140 330.0);
+
+  /* ═══ STAGE RAMP — progression, one hue, ascending lightness ═══
+     For an ORDERED sequence (pipeline stages), not a category set. A ramp
+     encodes direction: "further along" is visible at a glance, and it
+     survives greyscale and both dichromacies because lightness carries it.
+     Arbitrary per-stage hues cannot do that — a reader has to LEARN that
+     sky comes after amber.
+
+     Progression only. OUTCOMES are state, not stage: a hired candidate is
+     --role-success, a rejected one --role-error, a withdrawn one muted.
+     Do not extend this ramp to cover them. */
+  --stage-1: oklch(0.860 0.130 262.9);
+  --stage-2: oklch(0.780 0.130 262.9);
+  --stage-3: oklch(0.700 0.130 262.9);
+  --stage-4: oklch(0.620 0.130 262.9);
+  --stage-5: oklch(0.540 0.130 262.9);
+  --stage-6: oklch(0.460 0.130 262.9);
 }
 
 /* ═══ DARK — same tokens, cyber-electric rebind ═══ */
