@@ -184,6 +184,24 @@ const results = {};
 
 try {
   await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
+
+  // ORIGIN GUARD. An unauthenticated app route redirects to the OAuth server,
+  // and if that server rejects the request you end up on ITS error page — a
+  // different origin entirely. Without this check the gate audits that page and
+  // attributes it to the app: crm7 scored 8 pure endpoints, Times New Roman and
+  // a collapsed ramp on six routes, all of it Supabase's raw JSON 400 rendered
+  // with browser defaults. Every one of those would have been a false finding
+  // filed against a healthy app.
+  const landed = new URL(page.url());
+  const asked = new URL(url);
+  if (landed.origin !== asked.origin) {
+    const msg = `redirected off-origin to ${landed.origin} — not audited`;
+    if (asJson) console.log(JSON.stringify({ app, url, skipped: msg }, null, 2));
+    else console.log(`\n${app} — ${url}\n  – SKIPPED: ${msg}\n    (an authenticated route needs a session; this is not a theme result)`);
+    await browser.close();
+    process.exit(0);
+  }
+
   // A webfont that has not finished loading reports the fallback family, which
   // would fail G6 for a timing reason rather than a real one.
   await page.evaluate(() => document.fonts.ready);
