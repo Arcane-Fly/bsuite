@@ -24,7 +24,7 @@ export function FormRendererWidget({ supabase, entity, fields, submitLabel = 'Su
       <button type="submit" disabled={status === 'submitting'} className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50">
         {status === 'submitting' ? 'Saving…' : submitLabel}
       </button>
-      {status === 'success' && <p className="text-sm text-green-600">Saved.</p>}
+      {status === 'success' && <p className="text-sm text-success-text">Saved.</p>}
       {status === 'error' && <p className="text-sm text-destructive">Error saving.</p>}
     </form>
   );
