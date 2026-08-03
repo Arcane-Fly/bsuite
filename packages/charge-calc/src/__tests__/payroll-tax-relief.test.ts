@@ -20,7 +20,6 @@ import { getPayrollTaxRate } from '../defaults.js';
 
 const WA = () => getPayrollTaxRate('WA');
 const NSW = () => getPayrollTaxRate('NSW');
-const QLD = () => getPayrollTaxRate('QLD');
 
 describe('resolvePayrollTax — structural corrections', () => {
   it('NSW is a REBATE: charge rate still carries the tax', () => {
