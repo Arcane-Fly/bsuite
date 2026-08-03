@@ -50,11 +50,35 @@ jobs:
       contents: read
 
     steps:
+      # Every app is a PRIVATE submodule, so the default GITHUB_TOKEN cannot
+      # clone them — it fails with a bare "Repository not found", which reads
+      # like a typo rather than a permissions problem. The house pattern is the
+      # cross-repo PAT with a GITHUB_TOKEN fallback; see oauth-provider-check.yml.
       - name: Checkout (with submodules — the apps live there)
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 1
+
+      # Without the PAT the submodules are absent, and the scanner would report
+      # a LOW count for missing apps — a false pass, which is worse than a
+      # failure. Check explicitly rather than trusting the number.
+      - name: Assert the submodules actually checked out
+        shell: bash
+        run: |
+          set -uo pipefail
+          missing=""
+          for a in crm7 conduit business-suite-unified R80.3 throughput braden; do
+            [ -d "$a/src" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "The scan would under-count and report a false pass."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (repo: read on each app)."
+            exit 1
+          fi
+          echo "all six submodules present"
 
       - name: Run the theme audit
         id: audit
@@ -135,11 +159,23 @@ jobs:
         with:
           node-version: '24'
 
+      # NOT --frozen-lockfile, deliberately. pnpm no longer reads the `pnpm`
+      # field from package.json ("The following keys were ignored:
+      # pnpm.overrides"), but the lockfile still records the overrides it was
+      # generated with, so a frozen install aborts with
+      # ERR_PNPM_LOCKFILE_CONFIG_MISMATCH before any of this runs.
+      #
+      # That mismatch is PRE-EXISTING and repo-wide — it is not caused by, and
+      # cannot be fixed inside, a theme change. Regenerating the lockfile has to
+      # happen outside the bsuite tree (pnpm embeds `../` workspace paths and
+      # breaks Vercel with ERR_PNPM_OUTDATED_LOCKFILE otherwise), which makes it
+      # its own piece of work. Using a non-frozen install here keeps this gate
+      # functional instead of parking it behind an unrelated blocker.
       - name: Install and build packages
         shell: bash
         run: |
           corepack enable
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
           pnpm -r --filter './packages/**' build
 
       # Six packages once shipped to npm unimportable from Node. The version
