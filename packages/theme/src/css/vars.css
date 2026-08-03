@@ -500,16 +500,36 @@
    hierarchy survives greyscale and both dichromacies rather than relying on
    size alone.
 
-   Scoped to @layer base so any component class still wins — this sets the
-   floor, it does not fight Tailwind utilities. */
+   Scoped to @layer base so any component class ON THE HEADING ITSELF wins.
+   That is a narrower guarantee than it looks, and the earlier version of this
+   comment ("it does not fight Tailwind utilities") was simply wrong.
+
+   WHAT IT DOES OVERRIDE: an INHERITED colour. Inheritance is the last resort in
+   the cascade, so a rule targeting `h1` beats `text-primary-foreground` sitting
+   on an ancestor — specificity never enters into it. Measured on braden
+   2026-08-03: a hero `<h1>` inheriting a near-white foreground from its wrapper
+   rendered dark navy against a dark scrim, i.e. all but invisible, and it was
+   the ONLY heading on the page that moved. That is the signature of this bug —
+   one heading changing is not a small problem, it is the coloured-container
+   case, and coloured containers are where text goes invisible.
+
+   --heading-color is the escape hatch. Any container that colours its own text
+   sets it once and the whole heading subtree defers:
+     <div class="text-primary-foreground [--heading-color:currentColor]">
+   currentColor there resolves to the container's colour, so headings inherit
+   again instead of being repainted. */
 @layer base {
-  h1 { color: var(--role-h1); font-size: 25px; font-weight: 700; letter-spacing: var(--track-display); }
-  h2 { color: var(--role-h2); font-size: 19px; }
-  h3 { color: var(--role-h3); font-size: 16px; }
-  h4 { color: var(--role-h4); font-size: 14px; }
-  h5 { color: var(--role-h5); font-size: 13px; }
+  /* See braden.css: the root element inherits the UA default pure black when
+     nothing sets it, which is the one banned value at the top of the chain. */
+  html { color: var(--role-text-body); background-color: var(--role-bg-base); }
+
+  h1 { color: var(--heading-color, var(--role-h1)); font-size: 25px; font-weight: 700; letter-spacing: var(--track-display); }
+  h2 { color: var(--heading-color, var(--role-h2)); font-size: 19px; }
+  h3 { color: var(--heading-color, var(--role-h3)); font-size: 16px; }
+  h4 { color: var(--heading-color, var(--role-h4)); font-size: 14px; }
+  h5 { color: var(--heading-color, var(--role-h5)); font-size: 13px; }
   h6 {
-    color: var(--role-h6);
+    color: var(--heading-color, var(--role-h6));
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: var(--track-eyebrow);

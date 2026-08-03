@@ -55,6 +55,7 @@ CORP=$(pkg_tokens packages/theme/src/css/braden.css)
 [[ -z $D2C ]] && { echo "could not read package tokens" >&2; exit 2; }
 
 total=0
+scoped=''
 declare -A per_app
 
 for a in "${APPS[@]}"; do
@@ -81,7 +82,31 @@ for a in "${APPS[@]}"; do
       # to be seen. 12 lines covers a real paragraph.
       ctx=$(sed -n "$((n>12?n-12:1)),${n}p" "$f" 2>/dev/null)
       grep -q "$MARKER" <<<"$ctx" && continue
-      hits+="  $f:$n  $tok"$'\n'
+
+      # WHERE it is declared decides whether it is a fork or an adaptation.
+      #
+      # The ruling this gate enforces is about an app REPLACING the package's
+      # value everywhere ("it undermines the whole point of the package"). That
+      # is a declaration at the root — :root, html, body, #root, .dark, * — where
+      # it shadows the package for the entire document and the package's value
+      # never applies again.
+      #
+      # A declaration inside a narrower selector is the opposite: it uses the
+      # package's own token to adapt one surface, which is the mechanism working
+      # as designed. The theme ships exactly this shape itself as
+      # [data-surface='dark']. Counting those as forks pushes every legitimate
+      # adaptation toward a theme-own-ok marker, and a gate whose markers are
+      # routine is weaker than one with a predicate that is actually right.
+      #
+      # So: root-scope still fails. Narrower scope is reported separately, never
+      # silently — an app CAN still fork by scoping to something broad, and that
+      # stays visible in the SCOPED list rather than disappearing.
+      sel=$(awk -v n="$n" 'NR<n && /\{/ { line=$0 } END { print line }' "$f" 2>/dev/null)
+      if grep -qE '(^|[,[:space:]])(:root|html|body|\*|#root|\.dark)([,[:space:]{]|$)' <<<"$sel"; then
+        hits+="  $f:$n  $tok"$'\n'
+      else
+        scoped+="  $a  $f:$n  $tok   in: $(printf '%s' "$sel" | tr -s ' ' | cut -c1-48)"$'\n'
+      fi
     done < <(grep -nE '^\s*--[a-z0-9-]+\s*:' "$f" 2>/dev/null)
   done < <(grep -rlE '^\s*--[a-z0-9-]+\s*:' "$a" --include='*.css' "${EXCLUDE[@]}" 2>/dev/null)
 
@@ -110,4 +135,10 @@ if [[ $total -gt 0 ]]; then
   echo "with 'theme-own-ok: <reason>'. Run with --list to see every site."
   exit 1
 fi
-echo "OK: no app redeclares a package-owned token."
+if [[ -n $scoped ]]; then
+  echo "SCOPED re-points (not failures — the token is adapted for one surface,"
+  echo "not replaced document-wide). Listed so they stay visible:"
+  printf '%s' "$scoped"
+  echo
+fi
+echo "OK: no app redeclares a package-owned token at root scope."
