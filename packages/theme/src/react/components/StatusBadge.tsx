@@ -52,7 +52,7 @@ export interface StatusBadgeProps {
 
 /*
  * Role-bound, not palette-bound. Until 0.7.0 these were raw Tailwind palette
- * classes (`bg-emerald-50`, `bg-red-50`, …), which meant the design-system
+ * theme-audit-ok: prose. classes (`bg-emerald-50`, `bg-red-50`, …), which meant the design-system
  * component every app imports was invisible to tenant white-labelling —
  * BrandingProvider mutates the role layer, and these bound below it.
  *

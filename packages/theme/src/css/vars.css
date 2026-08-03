@@ -482,3 +482,37 @@
 
   /* Shadcn bridge picks up rebindings automatically via var() chain */
 }
+
+/* ============================================================
+   BASE — the heading ramp, APPLIED.
+   ============================================================
+   Added 2026-08-03 after operator review: "borders and heading levels
+   unstyled" (conduit) and "Document Management looks all black" (BSU).
+
+   Both were the same omission. --role-h1..h6 existed as tokens and NOTHING
+   bound them to an actual h1..h6, so every heading fell through to
+   --role-text-body — one flat near-black for all six levels. A ramp nobody
+   applies is not a ramp, it is six unused variables, and that is exactly what
+   an operator sees as "unstyled".
+
+   Values are the contract's, verbatim (d2c-theme-source-of-truth.html and the
+   Corporate equivalent). Each level shifts HUE as well as lightness, so the
+   hierarchy survives greyscale and both dichromacies rather than relying on
+   size alone.
+
+   Scoped to @layer base so any component class still wins — this sets the
+   floor, it does not fight Tailwind utilities. */
+@layer base {
+  h1 { color: var(--role-h1); font-size: 25px; font-weight: 700; letter-spacing: var(--track-display); }
+  h2 { color: var(--role-h2); font-size: 19px; }
+  h3 { color: var(--role-h3); font-size: 16px; }
+  h4 { color: var(--role-h4); font-size: 14px; }
+  h5 { color: var(--role-h5); font-size: 13px; }
+  h6 {
+    color: var(--role-h6);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    font-weight: 700;
+  }
+}

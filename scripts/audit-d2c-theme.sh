@@ -95,10 +95,17 @@ C2_HSL='\bhsla?\(\s*[0-9.]'
 # C3 token bypasses — hardcoded Tailwind palette + arbitrary-value colour classes.
 PALETTE='(slate|gray|grey|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)'
 C3_PALETTE="(^|[\"' \`])([a-z-]+:)*${PREFIX}-${PALETTE}-[0-9]{2,3}(\/[0-9]+)?"
-C3_ARBITRARY="${PREFIX}-\[(#|rgb|hsl|oklch)"
+# An arbitrary value wrapping var(--token) is a TOKEN REFERENCE, not a
+# bypass — `bg-[hsl(var(--sidebar-background))]` is the correct way to reach
+# a token that has no utility bridged for it. Only a LITERAL inside the
+# brackets is a bypass, so the value must not begin with var(.
+C3_ARBITRARY="${PREFIX}-\[(#|rgb\(|hsl\(\s*[0-9.]|oklch\(\s*[0-9.])"
 
 # C4 destructive/error rendered red or coral instead of Electric Purple.
-C4="(destructive|error|danger)[^\n]{0,80}(${PALETTE}-[0-9]|#[0-9a-fA-F]{3,6}|oklch\(0\.6[0-9]+ 0\.2[0-9]+ 2[0-9]\.)|--destructive[^\n]{0,60}oklch\(0\.[0-9]+ 0\.[0-9]+ (1[5-9]|2[0-9])\."
+# The `(?<!\w)` equivalent — a hex preceded by a word char is an issue
+# reference (`crm7#1297`, `R80.3#326`), not a colour, and this repo's comments
+# are dense with them. Two of the four C4 hits were issue numbers.
+C4="(destructive|error|danger)[^\n]{0,80}(${PALETTE}-[0-9]|[^0-9a-zA-Z]#[0-9a-fA-F]{6}\b|oklch\(0\.6[0-9]+ 0\.2[0-9]+ 2[0-9]\.)|--destructive[^\n]{0,60}oklch\(0\.[0-9]+ 0\.[0-9]+ (1[5-9]|2[0-9])\."
 
 # An inline opt-out for a value that is deliberately a pure endpoint.
 #
