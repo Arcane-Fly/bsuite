@@ -72,8 +72,14 @@
   bottom: 3px;
   width: 6px;
   height: 6px;
-  border-right: 2px solid var(--text-secondary, oklch(0 0 0 / 0.45));
-  border-bottom: 2px solid var(--text-secondary, oklch(0 0 0 / 0.45));
+  /* --text-secondary is NOT a token this design system defines — the name is
+     --role-text-secondary. So the fallback was not a fallback, it was the
+     value: every resize handle rendered at pure black 45%, which on a dark
+     surface is very nearly invisible. Named correctly, and the fallback
+     dropped rather than corrected — a fallback here can only ever mask the
+     same mistake again. */
+  border-right: 2px solid var(--role-text-secondary);
+  border-bottom: 2px solid var(--role-text-secondary);
 }
 
 /* Highlight the marker when hovering the handle itself. */

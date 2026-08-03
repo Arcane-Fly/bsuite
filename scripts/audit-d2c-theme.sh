@@ -35,13 +35,31 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
          --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=.superpowers
          --exclude-dir=playwright-report --exclude-dir=test-results
          --exclude-dir=__snapshots__ --exclude=*.min.css --exclude=*.min.js
-         --exclude=*.d.ts --exclude=*.map)
+         --exclude=*.d.ts --exclude=*.map
+         # A lint rule that FORBIDS `text-white` must contain the string
+         # `text-white`. Counting eslint-rules/ as violations charged 34 phantom
+         # hits across four apps against exactly the code enforcing the rule.
+         --exclude-dir=eslint-rules)
 
 # Paths where a literal colour is legitimate and must be reported separately, not as
 # a defect: email HTML (clients support neither CSS vars nor oklch), PDF/canvas/chart
 # renderers (need concrete values), branding pickers/tests (hex IS the subject matter),
 # and PWA/manifest theme-color metadata.
-EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|PdfDocument|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
+# PRINT ARTEFACTS. A PDF page is paper, not a themed screen surface — the
+# anti-glare rationale for banning pure white does not apply to something that
+# gets printed, and pdf-lib/react-pdf need concrete values because CSS variables
+# do not exist in a PDF. `render[A-Za-z]*Pdf` already covered most of these, but
+# it MISSED renderF17 and renderNsgtoStandard2Pack, which are the same kind of
+# file with a different name — so identical code counted as a defect in one and
+# was exempt in the other. Matched on the pdfOklch()/rgb() call sites' files
+# explicitly rather than widening the pattern into something that would swallow
+# unrelated `render*` components.
+#
+# shine-border and border-beam are deliberately NOT listed. Their `#fff`/`#000`
+# are mask stops, where the channel is opacity rather than paint; that is
+# documented at each call site. Excluding those files by name would also hide a
+# real colour if one were added to them later.
+EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
 
 # ── Violation-class predicates ────────────────────────────────────────────────
 # C1 pure white/black — Tailwind utilities. All colour-bearing prefixes, with optional
@@ -50,7 +68,17 @@ PREFIX='(text|bg|border|divide|ring|ring-offset|outline|fill|stroke|shadow|decor
 C1_TW="(^|[\"' \`])([a-z-]+:)*${PREFIX}-(white|black)(\/[0-9]+)?([\"' \`]|$)"
 
 # C1b pure white/black — literal values in CSS / inline styles / arbitrary classes.
-C1_LIT='#([fF]{3}|[fF]{6}|[fF]{8}|0{3}|0{6})\b|rgba?\(\s*255\s*,?\s*255\s*,?\s*255|rgba?\(\s*0\s*,?\s*0\s*,?\s*0[\s,)]|oklch\(\s*1(\.0+)?\s+0\s+0|oklch\(\s*0\s+0\s+0|:\s*(white|black)\s*[;,)]'
+#
+# The BARE-HSL-TRIPLET alternative at the end is not decoration. shadcn stores
+# its colours as unwrapped triplets (`--card: 0 0% 100%`) that only become a
+# colour when a consumer wraps them: `hsl(var(--card))`. There is no `hsl(` on
+# the declaration line, so every pattern above walks straight past it — and it
+# hid FIVE pure-white declarations that were live in production: braden's
+# --background, --popover and --card (the literal pure-white card this whole
+# effort exists to remove), plus --sidebar-primary-foreground in BSU and in
+# @bsuite/nav-core's shipped token file. Nothing caught them for the entire
+# audit because everyone, including this scanner, was looking for `#fff`.
+C1_LIT='#([fF]{3}|[fF]{6}|[fF]{8}|0{3}|0{6})\b|rgba?\(\s*255\s*,?\s*255\s*,?\s*255|rgba?\(\s*0\s*,?\s*0\s*,?\s*0[\s,)]|oklch\(\s*1(\.0+)?\s+0\s+0|oklch\(\s*0\s+0\s+0|:\s*(white|black)\s*[;,)]|--[a-z-]+:\s*0\s+0%\s+(100|0)%'
 
 # C2 non-OKLCH colour formats in authored source.
 #
@@ -71,6 +99,36 @@ C3_ARBITRARY="${PREFIX}-\[(#|rgb|hsl|oklch)"
 
 # C4 destructive/error rendered red or coral instead of Electric Purple.
 C4="(destructive|error|danger)[^\n]{0,80}(${PALETTE}-[0-9]|#[0-9a-fA-F]{3,6}|oklch\(0\.6[0-9]+ 0\.2[0-9]+ 2[0-9]\.)|--destructive[^\n]{0,60}oklch\(0\.[0-9]+ 0\.[0-9]+ (1[5-9]|2[0-9])\."
+
+# An inline opt-out for a value that is deliberately a pure endpoint.
+#
+# WHY THIS EXISTS. A handful of pure endpoints are CORRECT and must never be
+# swept: `prefers-contrast: high` blocks, `#fff`/`#000` inside mask- gradients
+# (where the channel is opacity, not paint), and the contrast picker's
+# measurement swatches. Before this marker they were indistinguishable from
+# defects, which left a permanent floor of ~41 — and a gate that can never
+# reach zero is a gate nobody can enforce. Now the residual is genuinely 0 and
+# any NEW pure endpoint stands out immediately.
+#
+# Usage: put `theme-audit-ok: <reason>` in a comment on the same line, OR on
+# the line immediately above — the eslint-disable-next-line convention. The
+# preceding-line form is REQUIRED for values inside a className string or other
+# string literal, which cannot carry a trailing comment of their own; that is
+# exactly the shape border-beam's mask- utility has.
+# It is deliberately noisy to type, and the reason is not optional.
+AUDIT_OK='theme-audit-ok'
+
+# Emit "path:match" pairs, skipping lines annotated with the marker.
+# Done per-file rather than with a single `grep -ro` because the marker is a
+# LINE-level fact and `grep -o` has already discarded the line by the time we
+# could test it.
+emit() { # $1=regex  $2=path
+  local f
+  while IFS= read -r f; do
+    awk -v ok="$AUDIT_OK" '{ if (index($0,ok) || index(prev,ok)) { prev=$0; next } print; prev=$0 }' "$f" \
+      | grep -oE "$1" | sed "s|^|$f:|"
+  done < <(grep -rEIl "$1" "$2" "${SRC_EXT[@]}" "${EXCLUDE[@]}" 2>/dev/null)
+}
 
 scan() { # $1=regex  $2=path
   grep -rEIl "$1" "$2" "${SRC_EXT[@]}" "${EXCLUDE[@]}" 2>/dev/null
@@ -99,7 +157,7 @@ fi
 # real <matches not in an exception path>  /  exc <matches in an exception path>
 split() { # $1=regex $2=path -> "real exc"
   local out real exc
-  out=$(grep -rEIo "$1" "$2" "${SRC_EXT[@]}" "${EXCLUDE[@]}" 2>/dev/null)
+  out=$(emit "$1" "$2")
   [[ -n "${DUMP:-}" && -n "$out" ]] && printf '%s\n' "$out" >> "$DUMP"
   real=$(printf '%s' "$out" | grep -cEv "$EXCEPTION_RE" 2>/dev/null || echo 0)
   exc=$(printf '%s'  "$out" | grep -cE  "$EXCEPTION_RE" 2>/dev/null || echo 0)

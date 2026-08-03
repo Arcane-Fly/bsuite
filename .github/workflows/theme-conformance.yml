@@ -1,0 +1,209 @@
+# .github/workflows/theme-conformance.yml
+#
+# Theme Conformance Gate
+# ======================
+# Fails a PR that introduces a pure white or pure black in any colour role.
+#
+# WHY A RATCHET AND NOT A FLAT ZERO
+# The C1 count is 14 at the time of writing and every one of those is prose
+# inside a comment — a sentence like "was oklch(1 0 0) — pure white" trips the
+# same regex the value would. Rewording them to dodge the scanner would make the
+# comments worse and the gate no more useful. So the gate compares against a
+# committed baseline and fails on any INCREASE. New pure endpoints are blocked;
+# the residual prose is not a permanent red.
+#
+# The baseline can only go down. Lower it whenever a real one is removed —
+# `scripts/audit-d2c-theme.sh` prints the current numbers.
+#
+# DELIBERATE EXCEPTIONS
+# Some pure endpoints are correct and must never be swept: `prefers-contrast:
+# high` blocks (the user asked their OS for maximum contrast, and honouring that
+# IS the accessibility feature), `#fff`/`#000` inside mask- gradients (where the
+# channel value is opacity, not paint), and the contrast picker's measurement
+# swatches (they are what the displayed ratio is measured against). Annotate
+# those in place with `theme-audit-ok: <reason>` on the same line or the line
+# above. Do NOT add filename exclusions — a marker keeps a NEW pure endpoint in
+# the same file catchable.
+#
+# Runs on: PRs to main/master/development.
+
+name: Theme Conformance
+
+on:
+  push:
+    branches: [main, master]
+  schedule:
+    # Weekly, so a package that becomes unimportable through a transitive
+    # change is caught even in a quiet week.
+    - cron: '17 4 * * 1'
+  pull_request:
+    branches: [main, master, development]
+    paths:
+      - '**/*.css'
+      - '**/*.tsx'
+      - '**/*.ts'
+      - '**/*.jsx'
+      - '**/*.js'
+      - '**/*.html'
+      - 'scripts/audit-d2c-theme.sh'
+      - '.github/workflows/theme-conformance.yml'
+
+jobs:
+  pure-endpoints:
+    name: No new pure white/black
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Every app is a PRIVATE submodule, so the default GITHUB_TOKEN cannot
+      # clone them — it fails with a bare "Repository not found", which reads
+      # like a typo rather than a permissions problem. The house pattern is the
+      # cross-repo PAT with a GITHUB_TOKEN fallback; see oauth-provider-check.yml.
+      - name: Checkout (with submodules — the apps live there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # Without the PAT the submodules are absent, and the scanner would report
+      # a LOW count for missing apps — a false pass, which is worse than a
+      # failure. Check explicitly rather than trusting the number.
+      - name: Assert the submodules actually checked out
+        shell: bash
+        run: |
+          set -uo pipefail
+          missing=""
+          for a in crm7 conduit business-suite-unified R80.3 throughput braden; do
+            [ -d "$a/src" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "The scan would under-count and report a false pass."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (repo: read on each app)."
+            exit 1
+          fi
+          echo "all six submodules present"
+
+      - name: Run the theme audit
+        id: audit
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo "::group::Full scanner output"
+          scripts/audit-d2c-theme.sh | tee /tmp/audit.txt
+          echo "::endgroup::"
+
+          # Column 2 is "real / exempt"; take the real half per submodule row.
+          total=$(awk '
+            /^(crm7|conduit|business-suite-unified|R80\.3|throughput|packages|braden) /{
+              for (i = 1; i <= NF; i++) if ($i == "/") { print $(i-1); break }
+            }' /tmp/audit.txt | paste -sd+ | bc)
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "C1 pure-endpoint total: $total"
+
+      - name: Compare against the committed baseline
+        shell: bash
+        # Passed via env rather than interpolated into the script body. It is a
+        # number this workflow computed itself, not user input, but `${{ }}` is
+        # substituted before bash ever sees the line — so anything reaching a
+        # run: block that way is a shell-injection surface by construction, and
+        # the habit is worth keeping uniform.
+        env:
+          AUDIT_TOTAL: ${{ steps.audit.outputs.total }}
+        run: |
+          set -uo pipefail
+          baseline=$(cat .github/theme-c1-baseline.txt 2>/dev/null || echo 999)
+          total="$AUDIT_TOTAL"
+          case "$total" in ''|*[!0-9]*) echo "::error::audit produced a non-numeric total: '$total'"; exit 1 ;; esac
+          echo "baseline=$baseline  current=$total"
+
+          if [ "$total" -gt "$baseline" ]; then
+            echo "::error::Pure white/black count rose from $baseline to $total."
+            echo ""
+            echo "A pure endpoint is banned in EVERY role — text, surface, border,"
+            echo "ring, shadow, and alpha forms like bg-black/50."
+            echo ""
+            echo "Use a role token instead:"
+            echo "  bg-white          -> bg-card"
+            echo "  text-white        -> text-primary-foreground (or text-text-on-*"
+            echo "                       matching the fill it sits on)"
+            echo "  bg-black/50       -> bg-overlay/50"
+            echo "  0 0% 100%   (HSL) -> 210 17% 98%"
+            echo "  oklch(0 0 0 / a)  -> tint it to the surface hue"
+            echo ""
+            echo "If the light class had a dark: twin, DELETE the twin — role"
+            echo "tokens already flip, and keeping both makes them fight."
+            echo ""
+            echo "If the value is genuinely correct (prefers-contrast block, a mask"
+            echo "stop where the channel is opacity, a contrast-measurement swatch),"
+            echo "annotate it with 'theme-audit-ok: <reason>' on that line or the"
+            echo "line above. The reason is not optional."
+            exit 1
+          fi
+
+          if [ "$total" -lt "$baseline" ]; then
+            echo "::notice::Count fell from $baseline to $total — lower the baseline in .github/theme-c1-baseline.txt."
+          fi
+          echo "OK: $total <= $baseline"
+
+  # NOT run on pull_request, deliberately.
+  #
+  # This job needs a real workspace install, which resolves @bsuite/* from the
+  # registry. The repo enforces a `minimumReleaseAge` supply-chain policy, so a
+  # package published in the last ~24h is REJECTED — including our own. Any PR
+  # opened in the day after a shared-package release would fail here on a clock,
+  # not on a defect, and the obvious "fixes" are all worse: bypassing
+  # minimumReleaseAge disables a real supply-chain control, and `workspace:*`
+  # links are banned because the publish workflows use `npm publish`, which does
+  # not rewrite the protocol and would ship the literal string to consumers.
+  #
+  # So it runs after merge and on a schedule, where the age window has passed.
+  # The thing this job actually guards — a package shipping unimportable to
+  # Node — is a release defect, and catching it on main before anyone installs
+  # it is the point. It does not need to gate every PR to do that.
+  esm-imports:
+    name: Shared packages import under Node ESM
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # NOT --frozen-lockfile, deliberately. pnpm no longer reads the `pnpm`
+      # field from package.json ("The following keys were ignored:
+      # pnpm.overrides"), but the lockfile still records the overrides it was
+      # generated with, so a frozen install aborts with
+      # ERR_PNPM_LOCKFILE_CONFIG_MISMATCH before any of this runs.
+      #
+      # That mismatch is PRE-EXISTING and repo-wide — it is not caused by, and
+      # cannot be fixed inside, a theme change. Regenerating the lockfile has to
+      # happen outside the bsuite tree (pnpm embeds `../` workspace paths and
+      # breaks Vercel with ERR_PNPM_OUTDATED_LOCKFILE otherwise), which makes it
+      # its own piece of work. Using a non-frozen install here keeps this gate
+      # functional instead of parking it behind an unrelated blocker.
+      - name: Install and build packages
+        shell: bash
+        run: |
+          corepack enable
+          pnpm install --no-frozen-lockfile
+          pnpm -r --filter './packages/**' build
+
+      # Six packages once shipped to npm unimportable from Node. The version
+      # resolved, the symbol was in the tarball, `exports` listed the path — and
+      # `import()` still threw, because tsc never rewrites specifiers. The Vite
+      # browser build masks it completely, so `pnpm build` was green throughout.
+      - name: Verify every published entry point actually imports
+        shell: bash
+        run: scripts/verify-esm-imports.sh

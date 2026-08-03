@@ -69,12 +69,12 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/50 p-4 pt-[10vh]"
+      className="fixed inset-0 z-[200] flex items-start justify-center bg-overlay/50 p-4 pt-[10vh]"
       onClick={() => setOpen(false)}
       role="presentation"
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900"
+        className="w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <Command
@@ -84,18 +84,18 @@ export function CommandPalette({
             value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
           }
         >
-          <div className="flex items-center gap-2 border-b border-neutral-200 px-3 dark:border-neutral-700">
-            <Link className="h-4 w-4 text-neutral-400" />
+          <div className="flex items-center gap-2 border-b border-border px-3">
+            <Link className="h-4 w-4 text-muted-foreground" />
             <Command.Input
               placeholder="Find an entity or type a page path..."
-              className="h-11 flex-1 bg-transparent text-sm placeholder:text-neutral-400 focus:outline-none"
+              className="h-11 flex-1 bg-transparent text-sm placeholder:text-text-subtle focus:outline-none"
             />
-            <kbd className="hidden items-center gap-1 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500 sm:inline-flex dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+            <kbd className="hidden items-center gap-1 rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-flex">
               Esc
             </kbd>
           </div>
           <Command.List className="max-h-[50vh] overflow-y-auto p-2">
-            <Command.Empty className="p-4 text-center text-sm text-neutral-500">
+            <Command.Empty className="p-4 text-center text-sm text-muted-foreground">
               No matches.
             </Command.Empty>
 
@@ -106,7 +106,7 @@ export function CommandPalette({
                 prop is provided). */}
             <Command.Group
               heading="Actions"
-              className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-neutral-500"
+              className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground"
             >
               {onTidyUp ? (
                 <Command.Item
@@ -115,12 +115,12 @@ export function CommandPalette({
                     onTidyUp();
                     setOpen(false);
                   }}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                 >
-                  <Wand2 className="h-4 w-4 shrink-0 text-purple-500" />
+                  <Wand2 className="h-4 w-4 shrink-0 text-primary-text" />
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate">Tidy Up Layout</span>
-                    <span className="truncate text-[10px] text-neutral-400">
+                    <span className="truncate text-[10px] text-muted-foreground">
                       Auto-arrange entities left-to-right
                     </span>
                   </div>
@@ -133,12 +133,12 @@ export function CommandPalette({
                     onExportPng();
                     setOpen(false);
                   }}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                 >
-                  <Download className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <Download className="h-4 w-4 shrink-0 text-success-text" />
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate">Export as PNG</span>
-                    <span className="truncate text-[10px] text-neutral-400">
+                    <span className="truncate text-[10px] text-muted-foreground">
                       Download the schema as an image
                     </span>
                   </div>
@@ -154,12 +154,12 @@ export function CommandPalette({
                   }
                   setOpen(false);
                 }}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
               >
-                <PlusCircle className="h-4 w-4 shrink-0 text-blue-500" />
+                <PlusCircle className="h-4 w-4 shrink-0 text-primary-text" />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate">Add Field to Selected Entity</span>
-                  <span className="truncate text-[10px] text-neutral-400">
+                  <span className="truncate text-[10px] text-muted-foreground">
                     Prompt for name + type and create a new column
                   </span>
                 </div>
@@ -169,7 +169,7 @@ export function CommandPalette({
             {entities.length > 0 ? (
               <Command.Group
                 heading="Find Entity"
-                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-neutral-500"
+                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground"
               >
                 {entities.map((entity) => (
                   <Command.Item
@@ -179,11 +179,11 @@ export function CommandPalette({
                       onSelectEntity?.(entity);
                       setOpen(false);
                     }}
-                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                   >
-                    <Database className="h-4 w-4 shrink-0 text-blue-500" />
+                    <Database className="h-4 w-4 shrink-0 text-primary-text" />
                     <span className="truncate">{entity.label}</span>
-                    <span className="ml-auto truncate font-mono text-[10px] text-neutral-400">
+                    <span className="ml-auto truncate font-mono text-[10px] text-muted-foreground">
                       {entity.name}
                     </span>
                   </Command.Item>
@@ -194,7 +194,7 @@ export function CommandPalette({
             {navigationTargets.length > 0 ? (
               <Command.Group
                 heading="Go to"
-                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-neutral-500"
+                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground"
               >
                 {navigationTargets.map((t) => (
                   <Command.Item
@@ -204,12 +204,12 @@ export function CommandPalette({
                       onNavigate?.(t.path);
                       setOpen(false);
                     }}
-                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-900 dark:aria-selected:bg-blue-950 dark:aria-selected:text-blue-100"
+                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                   >
-                    <Navigation className="h-4 w-4 shrink-0 text-neutral-500" />
+                    <Navigation className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate">{t.label}</span>
-                      <span className="truncate font-mono text-[10px] text-neutral-400">
+                      <span className="truncate font-mono text-[10px] text-muted-foreground">
                         {t.path}
                       </span>
                     </div>

@@ -15,7 +15,7 @@
   --sidebar-background: 220 20% 98%;       /* off-white          */
   --sidebar-foreground: 215 25% 27%;       /* slate-700          */
   --sidebar-primary: 217 91% 60%;          /* electric blue      */
-  --sidebar-primary-foreground: 0 0% 100%; /* white              */
+  --sidebar-primary-foreground: 210 17% 98%; /* was 0 0% 100% — pure white; HSL form the audit could not see */
   --sidebar-accent: 217 91% 95%;           /* blue-50 tint       */
   --sidebar-accent-foreground: 217 91% 40%;/* blue-800           */
   --sidebar-border: 214 20% 92%;           /* cool gray border   */

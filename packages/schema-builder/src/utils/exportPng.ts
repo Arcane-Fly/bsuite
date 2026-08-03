@@ -53,9 +53,18 @@ export async function exportCanvasToPng(
   element: HTMLElement,
   filename: string = defaultPngFilename(),
 ): Promise<void> {
+  // Read the plate colour off the live element rather than pinning one. It was
+  // oklch(1 0 0) — pure white, which the ban covers here too: a generated PNG
+  // is a surface like any other. It also meant exporting a dark-mode diagram
+  // stamped it onto a white plate, so the export did not match the screen.
+  // No literal fallback: if the token is somehow absent the option is omitted
+  // and the PNG is transparent, which is recoverable. A wrong opaque plate is
+  // baked in and is not.
+  const plate = getComputedStyle(element).getPropertyValue('--role-bg-panel').trim();
+
   const dataUrl = await toPng(element, {
     pixelRatio: 2,
-    backgroundColor: 'oklch(1 0 0)',
+    backgroundColor: plate || undefined,
     cacheBust: true,
     filter: (node) => {
       if (!(node instanceof HTMLElement)) return true;

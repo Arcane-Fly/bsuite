@@ -44,7 +44,7 @@ export function MobileSidebarDrawer({
   children,
   side = 'left',
   panelClassName = 'w-64',
-  backdropClassName = 'bg-black/50 backdrop-blur-sm',
+  backdropClassName = 'bg-overlay/50 backdrop-blur-sm',
   ariaLabel = 'Navigation',
 }: MobileSidebarDrawerProps) {
   const previousFocus = useRef<HTMLElement | null>(null)

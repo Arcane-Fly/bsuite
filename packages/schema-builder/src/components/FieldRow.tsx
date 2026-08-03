@@ -47,7 +47,7 @@ export interface FieldRowProps {
 }
 
 const HANDLE_CLASS =
-  '!h-3 !w-3 !bg-blue-500 !border-2 !border-white !opacity-80 hover:!opacity-100 dark:!border-neutral-900';
+  '!h-3 !w-3 !bg-role-primary !border-2 !border-card !opacity-80 hover:!opacity-100';
 
 function truncateType(t: string, max = 12): string {
   if (t.length <= max) return t;
@@ -117,7 +117,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
   return (
     <div
       className={`nodrag relative flex h-7 items-center gap-2 px-3 text-[11px] last:rounded-b-xl ${
-        isEditable ? 'hover:bg-neutral-50 dark:hover:bg-neutral-800/60' : ''
+        isEditable ? 'hover:bg-card dark:hover:bg-muted/60' : ''
       }`}
       data-field-id={field.id}
       data-system={isSystemEntity ? 'true' : undefined}
@@ -143,15 +143,15 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
 
       <span className="inline-flex w-4 shrink-0 items-center justify-center">
         {field.isPrimary ? (
-          <Key className="h-3 w-3 text-amber-500" aria-label="Primary key" />
+          <Key className="h-3 w-3 text-warning-text" aria-label="Primary key" />
         ) : null}
       </span>
 
-      <span className="min-w-0 flex-1 truncate font-mono text-neutral-700 dark:text-neutral-200">
+      <span className="min-w-0 flex-1 truncate font-mono text-text-secondary">
         {field.name}
         {showNotNull ? (
           <span
-            className="ml-1 text-[9px] font-semibold text-red-500"
+            className="ml-1 text-[9px] font-semibold text-error-text"
             aria-label="not nullable"
           >
             NOT NULL
@@ -160,7 +160,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
       </span>
 
       <span
-        className="shrink-0 font-mono text-[10px] uppercase text-neutral-400"
+        className="shrink-0 font-mono text-[10px] uppercase text-muted-foreground"
         title={field.type}
       >
         {truncateType(field.type)}
@@ -174,7 +174,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
           aria-label={`Edit field ${field.name}`}
           aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
           title={`Edit field ${field.name} (Alt+\u2191 / Alt+\u2193 to reorder)`}
-          className="nodrag inline-flex h-4 w-4 shrink-0 items-center justify-center rounded text-neutral-500 opacity-50 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-neutral-400"
+          className="nodrag inline-flex h-4 w-4 shrink-0 items-center justify-center rounded text-muted-foreground opacity-50 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <Pencil className="h-3 w-3" aria-hidden="true" />
         </button>

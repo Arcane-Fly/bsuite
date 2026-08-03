@@ -251,7 +251,7 @@ export function PageEditorLauncher({
         <div className="fixed inset-0 z-50 flex">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-overlay/50"
             onClick={() => setPaletteOpen(false)}
             aria-hidden="true"
           />
