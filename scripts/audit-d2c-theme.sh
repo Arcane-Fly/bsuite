@@ -35,7 +35,11 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
          --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=.superpowers
          --exclude-dir=playwright-report --exclude-dir=test-results
          --exclude-dir=__snapshots__ --exclude=*.min.css --exclude=*.min.js
-         --exclude=*.d.ts --exclude=*.map)
+         --exclude=*.d.ts --exclude=*.map
+         # A lint rule that FORBIDS `text-white` must contain the string
+         # `text-white`. Counting eslint-rules/ as violations charged 34 phantom
+         # hits across four apps against exactly the code enforcing the rule.
+         --exclude-dir=eslint-rules)
 
 # Paths where a literal colour is legitimate and must be reported separately, not as
 # a defect: email HTML (clients support neither CSS vars nor oklch), PDF/canvas/chart
