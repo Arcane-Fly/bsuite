@@ -154,6 +154,32 @@
   --role-border:       var(--light-border);
   --role-border-strong: oklch(0.880 0.008 250);
 
+  /* Scrim — the veil behind a modal, and the reason `bg-black/N` survived
+     everywhere else. It was the single most duplicated pure endpoint in the
+     tree (9 sites across nav-core, page-builder and schema-builder) for one
+     reason: no overlay role existed, so every author reached for the only
+     thing that was always available. A banned value with no sanctioned
+     replacement does not get obeyed, it gets re-typed.
+
+     VALUE AND SHAPE ADOPTED FROM crm7, which had already solved this locally
+     (crm7/src/index.css --color-overlay, with the note "pure black banned").
+     Lifting their value rather than minting a competing one is the whole
+     point: two scrim tokens with different values is the duplication this
+     change exists to remove, and theirs was here first.
+
+     OPAQUE — the alpha belongs at the CALL SITE, not in the token. I first
+     baked 0.55 in to stop the /40-vs-/50 drift between page-builder and
+     schema-builder, which would have silently halved crm7's existing
+     `bg-overlay/50` to 0.275 by compounding. Call-site alpha is also simply
+     more useful: a full-page modal scrim and a caption strip over a photo
+     want the same colour at different strengths.
+
+     Declared ONCE — no .dark override. A scrim is not a surface: it veils
+     whatever is behind it, and the dialog above it is --role-bg-panel, which
+     already flips. Giving it a dark twin would move the veil and the panel
+     together and cancel out the separation this exists to create. */
+  --role-overlay:      oklch(0.145 0.022 268);
+
   /* Inverse text on coloured fills. Two values only — the fill is either
      light enough to need dark text, or dark enough to need light text.
      Neither is a pure endpoint. */
@@ -162,6 +188,10 @@
   --text-on-primary:     var(--text-on-light-fill);  /* on blue  L≈0.55 — 4.88:1 ✓ AA */
   --text-on-error:       var(--text-on-light-fill);  /* on red   L≈0.58 — 4.55:1 ✓ AA */
   --text-on-accent:      var(--text-on-dark-fill);   /* on cyan  L≈0.77 — 9.38:1 ✓ AAA */
+  --text-on-overlay:     var(--text-on-light-fill);  /* on scrim L≈0.15 — the scrim is dark in BOTH modes,
+                                                        so this never flips. crm7 declared it as a bare
+                                                        oklch(0.99 0 0); routed through the shared token
+                                                        instead so there is one near-white, not two. */
   --text-on-warning:     var(--text-on-dark-fill);   /* on amber L≈0.80 — 9.68:1 ✓ AAA */
   --text-on-success:     var(--text-on-dark-fill);   /* on teal  L≈0.60 — 5.17:1 ✓ AA */
 

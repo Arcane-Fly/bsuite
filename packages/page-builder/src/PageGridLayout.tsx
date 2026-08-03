@@ -203,7 +203,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       <div ref={ref} className={outerClass} style={injectedStyle} {...rest}>
         <div className="h-full w-full relative">
           {isEditing && (
-            <div className="absolute inset-0 z-10 pointer-events-none rounded-3xl border-2 border-transparent group-hover:border-primary/50 transition-colors bg-black/5" />
+            <div className="absolute inset-0 z-10 pointer-events-none rounded-3xl border-2 border-transparent group-hover:border-primary/50 transition-colors bg-primary/5" />
           )}
           {isEditing && (
             <div className="absolute top-2 left-2 z-30 flex items-center gap-1 pointer-events-none">
@@ -214,7 +214,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
           )}
           {isEditing && (
             <button
-              className="absolute top-2 right-2 z-30 h-6 w-6 rounded-full flex items-center justify-center bg-destructive/80 hover:bg-destructive text-white shadow transition-colors"
+              className="absolute top-2 right-2 z-30 h-6 w-6 rounded-full flex items-center justify-center bg-destructive/80 hover:bg-destructive text-destructive-foreground shadow transition-colors"
               data-no-drag
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
@@ -878,7 +878,7 @@ export function PageGridLayout({
 
       {resetConfirmOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="page-grid-reset-title"
@@ -911,7 +911,7 @@ export function PageGridLayout({
                 }}
                 className={cn(
                   'inline-flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  'bg-destructive text-white shadow hover:bg-destructive/90',
+                  'bg-destructive text-destructive-foreground shadow hover:bg-destructive/90',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-1',
                 )}
               >

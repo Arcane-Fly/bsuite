@@ -129,6 +129,11 @@
   --color-border:                 var(--role-border);
   --color-input:                  var(--role-border);
   --color-ring:                   var(--role-primary);
+  /* Modal scrim. OPAQUE — always write an explicit alpha at the call site
+     (`bg-overlay/50`), never bare `bg-overlay`, which would hide the page
+     entirely. Pairs with `text-text-on-overlay`. */
+  --color-overlay:                var(--role-overlay);
+  --color-text-on-overlay:        var(--text-on-overlay);
 
   /* ============================================================
      LAYER 5 — Inverse text on coloured fills

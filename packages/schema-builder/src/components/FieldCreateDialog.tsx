@@ -200,7 +200,7 @@ export function FieldCreateDialog({
     <dialog
       ref={dialogRef}
       onClose={() => onOpenChange(false)}
-      className="w-[min(520px,90vw)] rounded-lg border border-border bg-card p-0 shadow-xl backdrop:bg-black/50"
+      className="w-[min(520px,90vw)] rounded-lg border border-border bg-card p-0 shadow-xl backdrop:bg-overlay/50"
       aria-labelledby="field-create-dialog-title"
     >
       <form onSubmit={handleSubmit} className="p-6">
@@ -363,7 +363,7 @@ export function FieldCreateDialog({
           <button
             type="submit"
             disabled={!canSubmit}
-            className="inline-flex h-9 items-center rounded-md bg-role-primary px-4 text-sm font-medium text-white hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center rounded-md bg-role-primary px-4 text-sm font-medium text-text-on-primary hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? 'Creating…' : 'Create Field'}
           </button>

@@ -69,7 +69,7 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/50 p-4 pt-[10vh]"
+      className="fixed inset-0 z-[200] flex items-start justify-center bg-overlay/50 p-4 pt-[10vh]"
       onClick={() => setOpen(false)}
       role="presentation"
     >

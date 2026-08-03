@@ -91,7 +91,7 @@ export function RelationshipConfigDialog({
     <dialog
       ref={dialogRef}
       onClose={() => onOpenChange(false)}
-      className="w-[min(480px,90vw)] rounded-lg border border-border bg-card p-0 shadow-xl backdrop:bg-black/50"
+      className="w-[min(480px,90vw)] rounded-lg border border-border bg-card p-0 shadow-xl backdrop:bg-overlay/50"
       aria-labelledby="relationship-dialog-title"
     >
       <div className="p-6">
@@ -207,7 +207,7 @@ export function RelationshipConfigDialog({
             type="button"
             onClick={handleConfirm}
             disabled={isInheritsSelf}
-            className="inline-flex h-9 items-center rounded-md bg-role-primary px-4 text-sm font-medium text-white hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center rounded-md bg-role-primary px-4 text-sm font-medium text-text-on-primary hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Create Relationship
           </button>
