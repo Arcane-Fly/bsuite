@@ -469,8 +469,8 @@ importers:
         version: 3.6.0
     devDependencies:
       '@bsuite/theme':
-        specifier: ^0.7.0
-        version: 0.7.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
+        specifier: workspace:*
+        version: link:../theme
       '@storybook/react-vite':
         specifier: ^10.4.3
         version: 10.4.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.27.7)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(storybook@10.4.3(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.7.0))
@@ -646,19 +646,6 @@ packages:
     peerDependencies:
       react: '>=18 <21'
       react-dom: '>=18 <21'
-
-  '@bsuite/theme@0.7.0':
-    resolution: {integrity: sha512-468VJs6jhderBtDlZ0FiuKqu5MErvLrBgCD+C6wAIn4zUgZ3vWN/XG9N1T6Ayhmv0+GtBG057fu81Pe3pQ10OA==}
-    peerDependencies:
-      '@supabase/supabase-js': '>=2.0.0'
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-      tailwindcss: '>=4.0.0'
-    peerDependenciesMeta:
-      '@supabase/supabase-js':
-        optional: true
-      tailwindcss:
-        optional: true
 
   '@csstools/color-helpers@6.0.2':
     resolution: {integrity: sha512-LMGQLS9EuADloEFkcTBR3BwV/CGHV7zyDxVRtVDTwdI2Ca4it0CCVTT9wCkxSgokjE5Ho41hEPgb8OEUwoXr6Q==}
@@ -3393,14 +3380,6 @@ snapshots:
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
-
-  '@bsuite/theme@0.7.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
-    dependencies:
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-    optionalDependencies:
-      '@supabase/supabase-js': 2.108.1
-      tailwindcss: 4.3.0
 
   '@csstools/color-helpers@6.0.2': {}
 
