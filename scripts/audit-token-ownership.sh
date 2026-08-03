@@ -40,23 +40,27 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
          --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=.superpowers
          --exclude-dir=public --exclude-dir=coverage)
 
-# Tokens the package declares — the authority set.
-pkg_tokens() {
-  grep -ohE '^\s*--[a-z0-9-]+\s*:' \
-    packages/theme/src/css/vars.css \
-    packages/theme/src/css/braden.css \
-    packages/theme/src/preset-v4.css 2>/dev/null \
+# The authority set is BRAND-SPECIFIC. vars.css (D2C) and braden.css
+# (Corporate) are never loaded together, so a D2C app redeclaring a token that
+# only exists in braden.css is not a conflict — nothing would have provided it.
+# Treating both files as one set reported conduit's --radius-sm as a
+# redeclaration when the D2C theme does not define --radius-sm at all.
+pkg_tokens() { # $1 = brand file
+  grep -ohE '^\s*--[a-z0-9-]+\s*:' "$1" packages/theme/src/preset-v4.css 2>/dev/null \
     | tr -d ' :' | sort -u
 }
 
-PKG=$(pkg_tokens)
-[[ -z $PKG ]] && { echo "could not read package tokens" >&2; exit 2; }
+D2C=$(pkg_tokens packages/theme/src/css/vars.css)
+CORP=$(pkg_tokens packages/theme/src/css/braden.css)
+[[ -z $D2C ]] && { echo "could not read package tokens" >&2; exit 2; }
 
 total=0
 declare -A per_app
 
 for a in "${APPS[@]}"; do
   [[ -d $a ]] || continue
+  # braden is Corporate; everything else is D2C.
+  if [[ $a == braden ]]; then PKG="$CORP"; else PKG="$D2C"; fi
   hits=""
   while IFS= read -r f; do
     # Skip a declaration whose line, or the line above, carries the marker.
@@ -91,7 +95,7 @@ for a in "${APPS[@]}"; do
   printf '%-26s %s\n' "$a" "${per_app[$a]:-0}"
 done
 echo
-echo "TOTAL: $total   (package declares $(wc -l <<<"$PKG") tokens)"
+echo "TOTAL: $total   (D2C theme declares $(wc -l <<<"$D2C"); Corporate $(wc -l <<<"$CORP"))"
 echo
 if [[ $total -gt 0 ]]; then
   echo "An app redeclaring a package token has forked the design system."
