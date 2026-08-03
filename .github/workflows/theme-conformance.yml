@@ -30,12 +30,14 @@
 name: Theme Conformance
 
 on:
-  push:
-    branches: [main, master]
+  # The ESM job is NOT on push-to-main either. A push to main is usually a
+  # release, and a release is precisely the moment minimumReleaseAge rejects
+  # the thing that was just published — it failed that way on its first run,
+  # on @bsuite/theme@0.7.1, minutes after publishing it. Weekly plus manual is
+  # the trigger that matches what the job can actually check.
   schedule:
-    # Weekly, so a package that becomes unimportable through a transitive
-    # change is caught even in a quiet week.
     - cron: '17 4 * * 1'
+  workflow_dispatch:
   pull_request:
     branches: [main, master, development]
     paths:
