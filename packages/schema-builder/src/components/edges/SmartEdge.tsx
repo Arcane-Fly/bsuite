@@ -76,8 +76,8 @@ export function buildSmartEdgeStyle(
 ): CSSProperties {
   const isInherits = cardinality === 'inherits_from';
   const defaultStroke = isInherits
-    ? 'var(--accent-secondary, #a855f7)'
-    : 'var(--accent-primary, #3b82f6)';
+    ? 'var(--role-secondary)'
+    : 'var(--role-primary)';
   return {
     stroke: override?.stroke ?? defaultStroke,
     strokeWidth: 2,
@@ -208,7 +208,7 @@ export function SmartEdge(
   );
   const strokeColor =
     (resolvedStyle.stroke as string | undefined) ??
-    'var(--accent-primary, #3b82f6)';
+    'var(--role-primary)';
   const { markerStartId, markerEndId } = getMarkerIdsForCardinality(
     id,
     data?.cardinality,

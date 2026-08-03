@@ -53,13 +53,15 @@ export async function exportCanvasToPng(
   element: HTMLElement,
   filename: string = defaultPngFilename(),
 ): Promise<void> {
-  // Read the plate colour off the live element rather than pinning one. It was
-  // oklch(1 0 0) — pure white, which the ban covers here too: a generated PNG
-  // is a surface like any other. It also meant exporting a dark-mode diagram
-  // stamped it onto a white plate, so the export did not match the screen.
-  // No literal fallback: if the token is somehow absent the option is omitted
-  // and the PNG is transparent, which is recoverable. A wrong opaque plate is
-  // baked in and is not.
+  // Read the plate colour off the live element rather than pinning one.
+  // theme-audit-ok: the value named on the next line is what was REMOVED here.
+  // It was oklch(1 0 0) — pure white, which the ban covers in this position
+  // too: a generated PNG is a surface like any other. It also meant a
+  // dark-mode diagram got stamped onto a white plate, so the export did not
+  // match the screen it came from.
+  // No literal fallback: if the token is absent the option is omitted and the
+  // PNG is transparent, which is recoverable. A wrong opaque plate is baked in
+  // and is not.
   const plate = getComputedStyle(element).getPropertyValue('--role-bg-panel').trim();
 
   const dataUrl = await toPng(element, {

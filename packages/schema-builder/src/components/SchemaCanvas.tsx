@@ -86,8 +86,8 @@ function stylesForRelation(type: RelationType) {
   return {
     stroke:
       type === 'inherits_from'
-        ? 'var(--accent-secondary, #a855f7)'
-        : 'var(--accent-primary, #3b82f6)',
+        ? 'var(--role-secondary)'
+        : 'var(--role-primary)',
     strokeWidth: 2,
   };
 }

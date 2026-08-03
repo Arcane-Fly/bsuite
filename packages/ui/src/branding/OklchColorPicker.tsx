@@ -70,7 +70,7 @@ function formatOklch(components: OklchComponents): string {
 }
 
 export function OklchColorPicker({
-  value = 'oklch(0.5 0.1 0)',
+  value = 'oklch(0.546 0.215 262.9)',
   onChange,
   label,
   disabled = false,
@@ -151,7 +151,7 @@ export function OklchColorPicker({
               'disabled:cursor-not-allowed disabled:opacity-50',
               !isValid && 'border-destructive'
             )}
-            placeholder="oklch(0.5 0.1 0)"
+            placeholder="oklch(0.546 0.215 262.9)"
             aria-label="OKLCH color value"
             aria-invalid={!isValid}
           />
