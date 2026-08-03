@@ -150,6 +150,30 @@ jobs:
           fi
           echo "OK: $total <= $baseline"
 
+      # A hard zero, not a ratchet. The pure-endpoint count has a floor of
+      # comment prose; this one does not, because it skips comments outright —
+      # so it can demand zero, and anything above zero is a colour someone
+      # invented rather than chose.
+      - name: Only contract colours in packages/
+        shell: bash
+        run: |
+          set -uo pipefail
+          if ! scripts/audit-palette-whitelist.py; then
+            echo "::error::Off-palette colour in packages/."
+            echo ""
+            echo "Only colours present in the two source-of-truth documents are"
+            echo "permitted (operator ruling 2026-08-03):"
+            echo "  packages/theme/docs/d2c-theme-source-of-truth.html"
+            echo "  packages/theme/docs/braden-corporate-theme-source-of-truth.html"
+            echo ""
+            echo "Bind to a role token — var(--role-*) — rather than writing a"
+            echo "literal. If the colour is genuinely new it belongs in the"
+            echo "contract FIRST; the document is the source of truth, not the"
+            echo "code. List what is allowed with:"
+            echo "  scripts/audit-palette-whitelist.py --list-allowed"
+            exit 1
+          fi
+
   # NOT run on pull_request, deliberately.
   #
   # This job needs a real workspace install, which resolves @bsuite/* from the
