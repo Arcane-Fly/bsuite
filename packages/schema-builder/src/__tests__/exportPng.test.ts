@@ -30,15 +30,31 @@ describe('exportCanvasToPng', () => {
   it('calls toPng with pixelRatio=2 + backgroundColor + filter', async () => {
     mockedToPng.mockResolvedValue('data:image/png;base64,abc');
     const el = document.createElement('div');
+    el.style.setProperty('--role-bg-panel', 'oklch(0.994 0.002 260)');
     await exportCanvasToPng(el, 'test.png');
 
     expect(mockedToPng).toHaveBeenCalledTimes(1);
     const [callEl, opts] = mockedToPng.mock.calls[0];
     expect(callEl).toBe(el);
     expect(opts.pixelRatio).toBe(2);
-    expect(opts.backgroundColor).toBe('oklch(1 0 0)');
+    // Read from the live element, not pinned. This assertion used to read
+    // `toBe('oklch(1 0 0)')` — it locked in the pure-white plate as an
+    // invariant, so the suite went red on the change that REMOVED it. A test
+    // written from the same assumption as the code cannot detect that
+    // assumption being wrong; it only defends it.
+    expect(opts.backgroundColor).toBe('oklch(0.994 0.002 260)');
     expect(opts.cacheBust).toBe(true);
     expect(typeof opts.filter).toBe('function');
+  });
+
+  it('never falls back to an opaque plate when the token is absent', async () => {
+    mockedToPng.mockResolvedValue('data:image/png;base64,abc');
+    // No --role-bg-panel set: the export must go transparent rather than
+    // guess. A wrong opaque plate is baked into the PNG and unrecoverable;
+    // transparency is not. This is the case that would silently reintroduce
+    // pure white if someone added a literal fallback.
+    await exportCanvasToPng(document.createElement('div'), 'test.png');
+    expect(mockedToPng.mock.calls[0][1].backgroundColor).toBeUndefined();
   });
 
   it('filter excludes minimap, controls, and panel overlays', async () => {
