@@ -97,13 +97,22 @@ jobs:
           scripts/audit-d2c-theme.sh | tee /tmp/audit.txt
           echo "::endgroup::"
 
-          # Column 2 is "real / exempt"; take the real half per submodule row.
-          total=$(awk '
+          # The row is "app  C1r / C1e  C2r / C2e  C3r / C3e  C4r / C4e" — four
+          # "real / exempt" pairs. Reading only the FIRST pair is how a live
+          # purple --destructive in two apps stayed green: the scanner detected
+          # it in C4 every run and nothing ever read that column.
+          col() { awk -v want="$1" '
             /^(crm7|conduit|business-suite-unified|R80\.3|throughput|packages|braden) /{
-              for (i = 1; i <= NF; i++) if ($i == "/") { print $(i-1); break }
-            }' /tmp/audit.txt | paste -sd+ | bc)
+              seen = 0
+              for (i = 1; i <= NF; i++) if ($i == "/") { seen++; if (seen == want) { print $(i-1); break } }
+            }' /tmp/audit.txt | paste -sd+ | bc; }
+          total=$(col 1); c3=$(col 3); c4=$(col 4)
           echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "c3=$c3" >> "$GITHUB_OUTPUT"
+          echo "c4=$c4" >> "$GITHUB_OUTPUT"
           echo "C1 pure-endpoint total: $total"
+          echo "C3 palette-bypass total: $c3"
+          echo "C4 wrong-destructive total: $c4"
 
       - name: Compare against the committed baseline
         shell: bash
@@ -149,6 +158,33 @@ jobs:
             echo "::notice::Count fell from $baseline to $total — lower the baseline in .github/theme-c1-baseline.txt."
           fi
           echo "OK: $total <= $baseline"
+
+      # C4 is a HARD ZERO. A wrong destructive colour is not debt to be
+      # ratcheted down — it is the one semantic the contract says must be
+      # maximally separated from primary, and getting it wrong puts the
+      # destructive action and the primary action in the same perceptual place.
+      # It sat live in two apps while this scanner flagged it every run.
+      - name: Destructive colour matches the contract
+        shell: bash
+        env:
+          C4: ${{ steps.audit.outputs.c4 }}
+        run: |
+          set -uo pipefail
+          case "$C4" in ''|*[!0-9]*) echo "::error::non-numeric C4: '$C4'"; exit 1 ;; esac
+          if [ "$C4" -gt 0 ]; then
+            echo "::error::$C4 site(s) render destructive/error in a colour the contract does not specify."
+            echo ""
+            echo "The rule is SEPARATION FROM PRIMARY, not a fixed hue:"
+            echo "  D2C primary is BLUE  -> error is RED    oklch(0.580 0.230 25)"
+            echo "  Corporate primary is RED -> error is INDIGO (--braden-indigo)"
+            echo ""
+            echo "Purple is quarantined from semantics: it measured DeltaE 0.006"
+            echo "against primary blue under protanopia — the destructive colour"
+            echo "and the primary action colour were the same swatch."
+            scripts/audit-d2c-theme.sh --files C4 || true
+            exit 1
+          fi
+          echo "OK: destructive colour conforms."
 
       # A hard zero, not a ratchet. The pure-endpoint count has a floor of
       # comment prose; this one does not, because it skips comments outright —

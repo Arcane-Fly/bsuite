@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# G4 — no app may redeclare a token the package owns.
+#
+# Operator ruling 2026-08-03: "I'm not liking per app overrides. it undermines
+# the whole point of the package."
+#
+# THE FAILURE THIS CATCHES
+# An app that redeclares --color-card, --font-sans or --role-primary locally is
+# not "customising" — it is forking the design system. The fork then drifts,
+# silently, because nothing compares the two. Measured cases from this session:
+#
+#   · conduit redeclared 86 package tokens, including a blue-tinted background
+#     found nowhere else and --color-primary as GREEN while the suite ran blue.
+#   · Every app declared its own --font-sans, so the estate ran system-ui,
+#     Inter and JetBrains Mono simultaneously against a contract naming one
+#     family.
+#   · 286 headings carried an explicit text-foreground that overrode the
+#     heading ramp back to flat body colour.
+#
+# None of those were visible to a colour scanner: every value was individually
+# legal. What was wrong was WHO DECLARED IT.
+#
+# WHAT IS STILL ALLOWED
+#   · A token the package does not define (an app-specific concept).
+#   · The [data-app] accent mechanism — that lives IN the package, and is how
+#     an app is supposed to differ.
+#   · A declaration carrying `theme-own-ok: <reason>` on the line or the one
+#     above, for a genuine app-level concept that happens to share a name.
+#
+# Usage: scripts/audit-token-ownership.sh [--list]
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+APPS=(crm7 conduit business-suite-unified R80.3 throughput braden)
+MARKER='theme-own-ok'
+# Gate F: a worktree is a full second copy of the tree; counting one makes every
+# number wrong. .vercel holds the compiled bundle.
+EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
+         --exclude-dir=.next --exclude-dir=.vercel --exclude-dir=.git
+         --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=.superpowers
+         --exclude-dir=public --exclude-dir=coverage)
+
+# Tokens the package declares — the authority set.
+pkg_tokens() {
+  grep -ohE '^\s*--[a-z0-9-]+\s*:' \
+    packages/theme/src/css/vars.css \
+    packages/theme/src/css/braden.css \
+    packages/theme/src/preset-v4.css 2>/dev/null \
+    | tr -d ' :' | sort -u
+}
+
+PKG=$(pkg_tokens)
+[[ -z $PKG ]] && { echo "could not read package tokens" >&2; exit 2; }
+
+total=0
+declare -A per_app
+
+for a in "${APPS[@]}"; do
+  [[ -d $a ]] || continue
+  hits=""
+  while IFS= read -r f; do
+    # Skip a declaration whose line, or the line above, carries the marker.
+    while IFS= read -r line; do
+      n=${line%%:*}; rest=${line#*:}
+      tok=$(printf '%s' "$rest" | grep -ohE -- '--[a-z0-9-]+\s*:' | head -1 | tr -d ' :')
+      [[ -z $tok ]] && continue
+      # `--` before the pattern is load-bearing: a token starts with "--", so
+      # without it grep reads the token as an option, errors, and the caller
+      # counts ZERO — a false pass. This gate produced exactly that on its
+      # first run, which is the failure mode it exists to catch.
+      grep -qxF -- "$tok" <<<"$PKG" || continue
+      ctx=$(sed -n "$((n>1?n-1:1)),${n}p" "$f" 2>/dev/null)
+      grep -q "$MARKER" <<<"$ctx" && continue
+      hits+="  $f:$n  $tok"$'\n'
+    done < <(grep -nE '^\s*--[a-z0-9-]+\s*:' "$f" 2>/dev/null)
+  done < <(grep -rlE '^\s*--[a-z0-9-]+\s*:' "$a" --include='*.css' "${EXCLUDE[@]}" 2>/dev/null)
+
+  n=$(printf '%s' "$hits" | grep -c . || true)
+  per_app[$a]=$n
+  total=$((total + n))
+  if [[ ${1:-} == --list && $n -gt 0 ]]; then
+    printf '\n=== %s (%s) ===\n%s' "$a" "$n" "$hits"
+  fi
+done
+
+echo
+printf '%-26s %s\n' 'APP' 'package-owned tokens redeclared'
+printf '%s\n' "$(printf '%.0s─' {1..60})"
+for a in "${APPS[@]}"; do
+  [[ -d $a ]] || continue
+  printf '%-26s %s\n' "$a" "${per_app[$a]:-0}"
+done
+echo
+echo "TOTAL: $total   (package declares $(wc -l <<<"$PKG") tokens)"
+echo
+if [[ $total -gt 0 ]]; then
+  echo "An app redeclaring a package token has forked the design system."
+  echo "Fix by DELETING the local declaration so the package's value applies."
+  echo "If the app genuinely owns the concept, rename it or annotate the line"
+  echo "with 'theme-own-ok: <reason>'. Run with --list to see every site."
+  exit 1
+fi
+echo "OK: no app redeclares a package-owned token."
