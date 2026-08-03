@@ -138,7 +138,18 @@
   /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
      measured against --role-bg-body (the conservative floor); all tiers
      score HIGHER against --role-bg-panel/--role-bg-surface. */
-  --role-text-heading:     oklch(0.20 0.018 263);   /* 16.17:1 ✓ AAA (slightly darker + bluer than body) */
+  /* Six-level heading ramp — contract §heading-ramp. Each level shifts hue as
+     well as lightness, so the hierarchy reads in greyscale and under both
+     dichromacies, not only by size. --role-text-heading is h1 by definition;
+     it used to carry its own literal (chroma 0.018 against the contract's
+     0.020) which is how a token drifts off-palette one hair at a time. */
+  --role-h1: oklch(0.20 0.020 263);
+  --role-h2: oklch(0.26 0.026 258);
+  --role-h3: oklch(0.31 0.034 248);
+  --role-h4: oklch(0.36 0.042 236);
+  --role-h5: oklch(0.41 0.050 222);
+  --role-h6: oklch(0.45 0.058 208);
+  --role-text-heading:     var(--role-h1);          /* 16.17:1 ✓ AAA */
   --role-text-body:        var(--light-text-primary);   /* 15.46:1 ✓ AAA */
   --role-text-secondary:   var(--light-text-secondary); /*  8.94:1 ✓ AAA */
   --role-text-muted:       var(--light-text-muted);     /*  4.92:1 ✓ AA normal */
@@ -320,12 +331,13 @@
    DARK MODE — Layer 2 surface overrides + Layer 3 role rebind
    ============================================================ */
 .dark {
-  /* Dark surface primitives */
+  /* Dark surface primitives.
+     --dark-bg-tertiary, -quaternary, -accent and --dark-hover were DELETED
+     2026-08-03: four tokens, zero consumers anywhere in the monorepo or the
+     five apps, and none of their values appears in the contract. A palette
+     entry nobody binds to is not a spare part — it is a second source of
+     truth waiting for someone to reach for it. */
   --dark-bg-primary:    oklch(0.166 0.026 269.4);
-  --dark-bg-secondary:  oklch(0.242 0.03  269.9);
-  --dark-bg-tertiary:   oklch(0.326 0.036 266.7);
-  --dark-bg-quaternary: oklch(0.39  0.035 265);
-  --dark-bg-accent:     oklch(0.292 0.034 270);
 
   /* D2C dark text scale — hue 260, capped L=0.94.
      Pure white (L=1.0) is BANNED as a text token.
@@ -342,10 +354,19 @@
   --dark-text-disabled:  oklch(0.44 0.010 260);  /* disabled —  2.48:1 ✗ fails AA at any size — MUST pair with icon cue */
 
   --dark-border: oklch(0.428 0.015 248.2);
-  --dark-hover:  oklch(0.39  0.035 265);
+
+  /* Six-level heading ramp — contract §heading-ramp. Every level is a
+     DIFFERENT hue as well as a different lightness, so the hierarchy survives
+     greyscale and both dichromacies rather than relying on size alone. */
+  --role-h1: oklch(0.95 0.016 262);
+  --role-h2: oklch(0.92 0.018 264);
+  --role-h3: oklch(0.88 0.026 240);
+  --role-h4: oklch(0.84 0.040 220);
+  --role-h5: oklch(0.80 0.052 200);
+  --role-h6: oklch(0.75 0.062 195);
 
   /* Rebind roles to dark-mode surface values — six-tier scale (W3 §3.1). */
-  --role-text-heading:   oklch(0.92 0.014 260);  /* 15.21:1 ✓ AAA */
+  --role-text-heading:   var(--role-h1);
   --role-text-body:      var(--dark-text-primary);   /* 16.16:1 ✓ AAA */
   --role-text-secondary: var(--dark-text-secondary); /* 11.04:1 ✓ AAA */
   --role-text-muted:     var(--dark-text-muted);     /*  6.69:1 ✓ AA normal */
@@ -353,7 +374,7 @@
   --role-text-disabled:  var(--dark-text-disabled);  /*  2.48:1 ✗ icon cue required */
 
   --role-bg-body:    var(--dark-bg-primary);
-  --role-bg-surface: var(--dark-bg-secondary);
+  --role-bg-surface: oklch(0.212 0.028 269);
   --role-bg-panel:   oklch(0.190 0.020 260);
   --role-bg-input:   oklch(0.240 0.020 260);
   --role-bg-sunken:  oklch(0.145 0.022 268);

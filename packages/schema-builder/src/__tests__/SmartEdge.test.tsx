@@ -53,14 +53,19 @@ describe('buildSmartEdgeStyle', () => {
     expect(buildSmartEdgeStyle('one_to_many', undefined).strokeDasharray).toBeUndefined();
   });
 
-  it('uses accent-secondary for inherits_from', () => {
+  // Edge colour is CATEGORICAL (relationship type), not a semantic state, so it
+  // binds to the theme's role layer. It previously read
+  // `var(--accent-primary, #3b82f6)` — a token only the APPS define, with a
+  // hardcoded Tailwind hex behind it, so anywhere else the package rendered
+  // the fallback was the value.
+  it('uses role-secondary for inherits_from', () => {
     const style = buildSmartEdgeStyle('inherits_from', 'CASCADE');
-    expect(String(style.stroke)).toContain('accent-secondary');
+    expect(String(style.stroke)).toContain('role-secondary');
   });
 
-  it('uses accent-primary for other cardinalities', () => {
+  it('uses role-primary for other cardinalities', () => {
     const style = buildSmartEdgeStyle('one_to_many', 'CASCADE');
-    expect(String(style.stroke)).toContain('accent-primary');
+    expect(String(style.stroke)).toContain('role-primary');
   });
 
   it('respects override.stroke when provided', () => {
@@ -73,7 +78,7 @@ describe('SmartEdgeMarkers rendering', () => {
   it('renders 2 markers for one_to_many (one at start + crow at end)', () => {
     const { container } = render(
       <svg>
-        <SmartEdgeMarkers edgeId="e1" cardinality="one_to_many" color="#3b82f6" />
+        <SmartEdgeMarkers edgeId="e1" cardinality="one_to_many" color="var(--role-primary)" />
       </svg>,
     );
     const markers = container.querySelectorAll('marker');
@@ -89,7 +94,7 @@ describe('SmartEdgeMarkers rendering', () => {
         <SmartEdgeMarkers
           edgeId="e1"
           cardinality="inherits_from"
-          color="#a855f7"
+          color="var(--role-secondary)"
         />
       </svg>,
     );

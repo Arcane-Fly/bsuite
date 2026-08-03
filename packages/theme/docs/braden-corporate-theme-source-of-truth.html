@@ -1,0 +1,718 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Braden Group — corporate theme source of truth</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400..700;1,400..600&family=Lato:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   BRADEN GROUP — corporate brand contract
+   Sibling of the D2C Neon Electric contract: identical architecture
+   (5 layers, role aliases, measured ramps, grid/dot doctrine), entirely
+   different values. Braden is humanist and print-derived; D2C is
+   geometric and screen-derived.
+
+   Sources of truth:
+     · Brand Guidelines PDF  — core palette + typography (authoritative)
+     · Extended Colour Palette 1.0 — extended hues (authoritative)
+   Rules carried across from D2C:
+     · No pure white (L 1.0) and no pure black (L 0) anywhere
+     · Error must be maximally separated from PRIMARY under dichromacy
+       — on Braden the primary IS red, so error is deep indigo
+     · Colour is never the sole signifier of state
+     · Neon glow is a D2C device; Braden dark mode gets a restrained
+       gold separation glow, light mode gets tinted shadows only
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── L1 CORE PALETTE — Brand Guidelines PDF ────────────── */
+  --braden-red:        oklch(0.488 0.170  17.6);  /* #ab233a */
+  --braden-red-light:  oklch(0.572 0.201  17.9);  /* #d42d49 */
+  --braden-red-dark:   oklch(0.400 0.137  16.8);  /* #811a2c */
+  --braden-gold:       oklch(0.758 0.092  89.9);  /* #c7ae6a */
+  --braden-gold-light: oklch(0.818 0.070  90.0);  /* #d5c28f */
+  --braden-bronze:     oklch(0.698 0.110  89.2);  /* #b99a45 */
+
+  /* ── L1 EXTENDED PALETTE — Extended Colour Palette 1.0 ─── */
+  --braden-navy:       oklch(0.356 0.039 249.0);  /* #2c3e50 */
+  --braden-slate:      oklch(0.710 0.018 201.3);  /* #95a5a6 */
+  --braden-sky:        oklch(0.653 0.135 242.7);  /* #3498db */
+  --braden-forest:     oklch(0.663 0.160 152.4);  /* #27ae60 */
+  --braden-lavender:   oklch(0.577 0.152 315.3);  /* #9b59b6 */
+
+  /* ── L1 SEMANTIC PRIMITIVES — solved 2026-08-02 ─────────
+     Red and Gold occupy the entire warm axis. Under deuteranopia
+     Gold, Bronze, Light Gold and Forest are ONE yellow, so the
+     remaining semantic states have to live on the cool axis and
+     separate by lightness. Worst pair in the shipped set: 0.143. */
+  --braden-indigo:     oklch(0.400 0.200 270);    /* #252fb1 error */
+  --braden-teal-deep:  oklch(0.500 0.140 220);    /* #00739a info  */
+  --braden-aqua:       oklch(0.800 0.130 198);    /* #28d7dc success */
+
+  /* ── L2 SURFACES — LIGHT (warm white; panel is 0.994, not 1.0) ── */
+  --role-bg-body:    oklch(0.980 0.002  50);
+  --role-bg-surface: oklch(0.968 0.004  55);
+  --role-bg-panel:   oklch(0.994 0.001  50);
+  --role-bg-input:   oklch(0.972 0.003 250);
+  --role-bg-sunken:  oklch(0.952 0.005 250);
+  --role-border:     oklch(0.900 0.008 248);
+  --role-border-strong: oklch(0.840 0.012 248);
+
+  /* ── L3 HEADING RAMP — navy hue walk, measured vs --role-bg-body ── */
+  --role-h1: oklch(0.20 0.028 252);  /* 17.07:1 AAA */
+  --role-h2: oklch(0.25 0.034 250);  /* 15.07:1 AAA */
+  --role-h3: oklch(0.30 0.040 246);  /* 12.82:1 AAA */
+  --role-h4: oklch(0.35 0.046 240);  /* 10.59:1 AAA */
+  --role-h5: oklch(0.40 0.052 232);  /*  8.58:1 AAA */
+  --role-h6: oklch(0.44 0.058 224);  /*  7.20:1 AAA */
+  --role-text-heading: var(--role-h1);
+
+  /* ── L3 BODY SCALE ─────────────────────────────────────── */
+  --role-text-body:      oklch(0.22 0.020 250);
+  --role-text-secondary: oklch(0.38 0.018 250);
+  --role-text-muted:     oklch(0.52 0.018 250);
+  --role-text-subtle:    oklch(0.60 0.012 250);  /* large text only  */
+  --role-text-disabled:  oklch(0.72 0.010 250);  /* icon cue required */
+
+  /* ── L3 INLINE MODIFIERS ───────────────────────────────── */
+  --role-text-strong:    oklch(0.16 0.024 252);
+  --role-text-emphasis:  oklch(0.42 0.070 240);
+  --role-link:           oklch(0.480 0.140 245);
+  --role-link-hover:     oklch(0.400 0.150 250);
+  --role-link-visited:   oklch(0.450 0.120 300);
+  --role-code-text:      oklch(0.400 0.090 230);
+  --role-code-bg:        oklch(0.950 0.010 235);
+  --role-quote-text:     oklch(0.400 0.060  25);   /* red-tinted pull quote */
+  --role-quote-rule:     var(--braden-gold);
+  --role-mark-bg:        oklch(0.930 0.060  90);   /* gold highlight */
+  --role-mark-text:      oklch(0.24 0.040  60);
+  --role-kbd-bg:         oklch(0.962 0.004 250);
+  --role-kbd-border:     oklch(0.870 0.010 250);
+
+  /* ── L3 SEMANTIC — separation-first ────────────────────── */
+  --role-primary:     var(--braden-red);
+  --role-secondary:   var(--braden-navy);
+  --role-accent:      var(--braden-gold);
+  --role-error:       var(--braden-indigo);
+  --role-destructive: var(--braden-indigo);
+  --role-warning:     var(--braden-gold);      /* gold IS attention on this brand */
+  --role-success:     var(--braden-aqua);
+  --role-info:        var(--braden-teal-deep);
+
+  /* AA-safe text renderings on light surfaces */
+  --role-primary-text: oklch(0.566 0.170  17.6); /* 4.69:1 AA */
+  --role-accent-text:  oklch(0.544 0.092  89.9); /* 4.71:1 AA */
+  --role-error-text:   oklch(0.562 0.200 270);   /* 4.70:1 AA */
+  --role-warning-text: oklch(0.544 0.092  89.9); /* 4.71:1 AA */
+  --role-success-text: oklch(0.515 0.130 198);   /* 4.69:1 AA */
+  --role-info-text:    oklch(0.519 0.140 220);   /* 4.71:1 AA */
+
+  /* ── inverse text on fills (never pure white) ──────────── */
+  --text-on-light-fill: oklch(0.980 0.006  50);
+  --text-on-dark-fill:  oklch(0.190 0.020 250);
+  --text-on-primary: var(--text-on-light-fill);  /* 6.53:1 AAA */
+  --text-on-error:   var(--text-on-light-fill);  /* 9.57:1 AAA */
+  --text-on-accent:  var(--text-on-dark-fill);   /* 8.53:1 AAA */
+  --text-on-warning: var(--text-on-dark-fill);   /* 8.53:1 AAA */
+  --text-on-success: var(--text-on-dark-fill);   /* 10.38:1 AAA */
+  --text-on-info:    var(--text-on-light-fill);  /* 5.07:1 AA  */
+
+  /* ── gradients — corporate restraint, red→gold only ────── */
+  --gradient-accent: linear-gradient(135deg, var(--braden-red), var(--braden-gold));
+
+  /* ── LIGHT elevation: navy-tinted shadows, no glow ─────── */
+  --shadow-xs: 0 1px 2px  oklch(0.30 0.03 250 / 0.06);
+  --shadow-sm: 0 1px 3px  oklch(0.30 0.03 250 / 0.08), 0 1px 2px oklch(0.30 0.03 250 / 0.04);
+  --shadow-md: 0 4px 10px -3px oklch(0.30 0.03 250 / 0.10), 0 2px 4px -2px oklch(0.30 0.03 250 / 0.06);
+  --shadow-lg: 0 14px 26px -8px oklch(0.28 0.04 250 / 0.14), 0 5px 10px -5px oklch(0.28 0.04 250 / 0.07);
+  --glow-card: none;
+  --glow-card-hover: none;
+  --panel-hairline: transparent;
+
+  /* ── BACKGROUND PATTERNS — same doctrine as D2C ─────────
+     DOT  = authenticated shell only (16px tile, r=1)
+     GRID = public marketing hero only (32px tile)
+     Tinted with the surface hue — never pure black/white. */
+  --dot-color:   oklch(0.42 0.030 250 / 0.14);
+  --dot-size:    16px;
+  --dot-radius:  1px;
+  --grid-color:  oklch(0.40 0.030 250 / 0.07);
+  --grid-size:   32px;
+
+  /* ── TYPE — Brand Guidelines PDF ────────────────────────
+     Header + slogan: Open Sans.  Secondary header: Lato.
+     Mono is NOT specified by the guidelines — JetBrains Mono is a
+     proposal, flagged in the type panel below. */
+  --font-display: 'Open Sans', system-ui, sans-serif;
+  --font-heading: Lato, 'Open Sans', system-ui, sans-serif;
+  --font-body:    'Open Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+  --track-display: -0.018em;
+  --track-heading: -0.008em;
+  --track-body:     0em;
+  --track-eyebrow:  0.10em;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --row-pad: 11px;
+}
+
+/* ═══ DARK — corporate deep navy, restrained gold glow ═══ */
+.dark {
+  --role-bg-body:    oklch(0.140 0.012 252);
+  --role-bg-surface: oklch(0.180 0.016 251);
+  --role-bg-panel:   oklch(0.205 0.018 250);
+  --role-bg-input:   oklch(0.245 0.020 250);
+  --role-bg-sunken:  oklch(0.120 0.010 252);
+  --role-border:     oklch(0.320 0.020 250);
+  --role-border-strong: oklch(0.420 0.024 250);
+
+  --role-h1: oklch(0.95 0.014 250);  /* 17.22:1 AAA */
+  --role-h2: oklch(0.92 0.018 250);  /* 15.73:1 AAA */
+  --role-h3: oklch(0.88 0.024 244);  /* 13.91:1 AAA */
+  --role-h4: oklch(0.84 0.032 236);  /* 12.26:1 AAA */
+  --role-h5: oklch(0.80 0.040 228);  /* 10.76:1 AAA */
+  --role-h6: oklch(0.75 0.048 220);  /*  9.08:1 AAA */
+
+  --role-text-body:      oklch(0.93 0.014 250);
+  --role-text-secondary: oklch(0.80 0.016 250);
+  --role-text-muted:     oklch(0.66 0.018 250);
+  --role-text-subtle:    oklch(0.55 0.015 250);
+  --role-text-disabled:  oklch(0.43 0.010 250);
+
+  --role-text-strong:    oklch(0.97 0.010 250);
+  --role-text-emphasis:  oklch(0.85 0.050 235);
+  --role-link:           oklch(0.780 0.110 240);
+  --role-link-hover:     oklch(0.860 0.095 225);
+  --role-link-visited:   oklch(0.770 0.080 300);
+  --role-code-text:      oklch(0.850 0.070 215);
+  --role-code-bg:        oklch(0.250 0.026 230);
+  --role-quote-text:     oklch(0.840 0.045  40);
+  --role-quote-rule:     var(--braden-gold);
+  --role-mark-bg:        oklch(0.360 0.060  85);
+  --role-mark-text:      oklch(0.94 0.030  85);
+  --role-kbd-bg:         oklch(0.250 0.020 250);
+  --role-kbd-border:     oklch(0.400 0.022 250);
+
+  --role-primary-text: oklch(0.704 0.170  17.6); /* 7.00:1 AAA */
+  --role-accent-text:  oklch(0.683 0.092  89.9); /* 6.99:1 AAA */
+  --role-error-text:   oklch(0.711 0.200 270);   /* 6.99:1 AAA */
+  --role-warning-text: oklch(0.683 0.092  89.9);
+  --role-success-text: oklch(0.662 0.130 198);   /* 7.00:1 AAA */
+  --role-info-text:    oklch(0.667 0.140 220);   /* 7.01:1 AAA */
+
+  /* Gold separation glow — deliberately quieter than D2C's neon ring */
+  --shadow-xs: 0 1px 2px oklch(0.07 0.01 252 / 0.5);
+  --shadow-sm: 0 1px 3px oklch(0.07 0.01 252 / 0.55);
+  --shadow-md: 0 6px 16px -6px oklch(0.07 0.01 252 / 0.6);
+  --shadow-lg: 0 18px 34px -12px oklch(0.07 0.01 252 / 0.68);
+  --glow-card:
+    0 0 0 1px color-mix(in oklch, var(--braden-gold) 18%, transparent),
+    0 0 10px -4px color-mix(in oklch, var(--braden-gold) 20%, transparent);
+  --glow-card-hover:
+    0 0 0 1px color-mix(in oklch, var(--braden-gold) 30%, transparent),
+    0 0 16px -4px color-mix(in oklch, var(--braden-gold) 32%, transparent);
+  --panel-hairline: color-mix(in oklch, var(--braden-gold) 26%, transparent);
+
+  --dot-color:  oklch(0.72 0.060 90 / 0.16);
+  --grid-color: oklch(0.82 0.020 250 / 0.055);
+}
+
+/* ═══════════════════ BASE ═══════════════════ */
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--role-bg-body); color: var(--role-text-body);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .2s ease, color .2s ease;
+}
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { transition-duration:.01ms!important; animation-duration:.01ms!important; } }
+:focus-visible { outline: 2px solid var(--braden-gold); outline-offset: 2px; border-radius: 3px; }
+
+h1,h2,h3,h4,h5,h6 { margin: 0; letter-spacing: var(--track-heading); }
+h1 { font-family: var(--font-display); color: var(--role-h1); font-size: 25px; font-weight: 600; letter-spacing: var(--track-display); }
+h2 { font-family: var(--font-heading); color: var(--role-h2); font-size: 19px; font-weight: 700; }
+h3 { font-family: var(--font-heading); color: var(--role-h3); font-size: 16px; font-weight: 700; }
+h4 { font-family: var(--font-heading); color: var(--role-h4); font-size: 14px; font-weight: 700; }
+h5 { font-family: var(--font-heading); color: var(--role-h5); font-size: 13px; font-weight: 700; }
+h6 { font-family: var(--font-heading); color: var(--role-h6); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-eyebrow); }
+
+strong,b { color: var(--role-text-strong); font-weight: 700; }
+em,i { color: var(--role-text-emphasis); font-style: italic; }
+a { color: var(--role-link); text-decoration-color: color-mix(in oklch, currentColor 45%, transparent); text-underline-offset: 2px; }
+a:hover { color: var(--role-link-hover); text-decoration-color: currentColor; }
+a:visited { color: var(--role-link-visited); }
+code { font-family: var(--font-mono); font-size: .875em; color: var(--role-code-text); background: var(--role-code-bg); padding: 1px 5px; border-radius: 3px; }
+mark { background: var(--role-mark-bg); color: var(--role-mark-text); padding: 0 3px; border-radius: 2px; }
+del { color: var(--role-text-muted); }
+kbd { font-family: var(--font-mono); font-size: 11px; background: var(--role-kbd-bg); border: 1px solid var(--role-kbd-border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: var(--role-text-secondary); }
+blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--role-quote-rule); color: var(--role-quote-text); font-style: italic; }
+abbr[title] { text-decoration: underline dotted var(--role-text-subtle); cursor: help; }
+.num,.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+
+/* ═══ RAIL ═══ */
+.rail { position: sticky; top: 0; z-index: 60; background: var(--role-bg-surface); border-bottom: 1px solid var(--role-border); padding: 9px 16px; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; box-shadow: var(--shadow-sm); }
+.rl { font-family: var(--font-heading); font-size: 10px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; }
+.seg { display: flex; gap: 3px; background: var(--role-bg-input); padding: 3px; border-radius: var(--radius); }
+.seg button { font: inherit; font-family: var(--font-heading); font-size: 12px; font-weight: 700; border: 0; background: transparent; color: var(--role-text-muted); padding: 5px 11px; border-radius: var(--radius-sm); cursor: pointer; transition: background-color .14s, color .14s; }
+.seg button:hover { color: var(--role-text-body); }
+.seg button[aria-pressed="true"] { background: var(--role-primary); color: var(--text-on-primary); }
+.typelock { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--role-border); border-left: 3px solid var(--braden-gold); border-radius: var(--radius-sm); padding: 4px 11px; background: var(--role-bg-panel); }
+.tl-name { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--role-h2); }
+.tl-meta { font-size: 9.5px; color: var(--role-text-muted); }
+.proof { margin-left: auto; display: flex; align-items: center; gap: 13px; border: 1px solid var(--role-border); border-radius: var(--radius); padding: 6px 13px; background: var(--role-bg-panel); box-shadow: var(--glow-card), var(--shadow-xs); }
+.proof-t { font-family: var(--font-heading); font-size: 9px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; }
+.proof-g { font-size: 18px; letter-spacing: .04em; color: var(--role-h2); }
+.proof-sep { width: 1px; height: 24px; background: var(--role-border); }
+
+/* ═══ LAYOUT ═══ */
+.wrap { max-width: 1220px; margin: 0 auto; padding: 26px 20px 70px; display: flex; flex-direction: column; gap: 26px; }
+.sec-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.sec-head p { margin: 0; font-size: 13px; color: var(--role-text-muted); }
+
+.panel { background: var(--role-bg-panel); border: 1px solid var(--role-border); border-radius: var(--radius); box-shadow: var(--glow-card), var(--shadow-sm); overflow: hidden; position: relative; }
+.panel::before { content:''; position:absolute; inset:0 0 auto 0; height:1px; background: linear-gradient(90deg, transparent, var(--panel-hairline), transparent); pointer-events:none; }
+.p-head { padding: 13px 16px; border-bottom: 1px solid var(--role-border); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.p-body { padding: 16px; }
+.p-note { padding: 12px 16px; font-size: 12.5px; color: var(--role-text-secondary); border-top: 1px solid var(--role-border); background: var(--role-bg-surface); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+/* ═══ PATTERNS ═══ */
+.bsuite-hero-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
+          mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
+}
+
+/* ═══ HERO ═══ */
+.hero { position: relative; overflow: hidden; padding: 46px 28px 50px; background: var(--role-bg-surface); }
+.hero-inner { position: relative; max-width: 50ch; display: flex; flex-direction: column; gap: 13px; }
+.hero h1 { font-size: 36px; line-height: 1.15; }
+.hero .rule { width: 54px; height: 3px; background: var(--braden-red); }
+.hero p { margin: 0; font-size: 15.5px; color: var(--role-text-secondary); }
+.hero .tag { font-family: var(--font-heading); font-weight: 900; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--role-accent-text); }
+.hero .cta { display: flex; gap: 9px; margin-top: 6px; flex-wrap: wrap; }
+
+/* ═══ APP SHELL ═══ */
+.app { display: flex; min-height: 420px; background-color: var(--role-bg-body); }
+.side { width: 196px; flex-shrink: 0; background: var(--role-bg-surface); border-right: 1px solid var(--role-border); padding: 15px 10px; display: flex; flex-direction: column; gap: 18px; }
+.brand { display: flex; align-items: center; gap: 9px; padding: 0 6px; }
+.mark { width: 26px; height: 26px; border-radius: var(--radius-sm); background: var(--braden-red); display: grid; place-items: center; color: var(--braden-gold); font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+.bname { font-family: var(--font-display); font-weight: 600; color: var(--role-h2); font-size: 14px; }
+.nav a { display: flex; justify-content: space-between; padding: 6px 8px; border-radius: var(--radius-sm); color: var(--role-text-secondary); text-decoration: none; font-size: 12.5px; }
+.nav a:hover { background: var(--role-bg-input); color: var(--role-text-body); }
+.nav a[aria-current="page"] { background: color-mix(in oklch, var(--braden-red) 13%, transparent); color: var(--role-primary-text); font-weight: 600; border-left: 2px solid var(--braden-red); padding-left: 6px; }
+.nav a:visited { color: inherit; }
+.cnt { font-family: var(--font-mono); font-size: 11px; color: var(--role-text-muted); font-variant-numeric: tabular-nums; }
+.appmain { flex: 1; min-width: 0; }
+/* DOT — authenticated shell only */
+.appmain, .side {
+  background-image: radial-gradient(circle at var(--dot-radius) var(--dot-radius), var(--dot-color) var(--dot-radius), transparent 0);
+  background-size: var(--dot-size) var(--dot-size);
+}
+.topbar { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--role-border); }
+.crumb { font-size: 12px; color: var(--role-text-muted); }
+.crumb b { color: var(--role-text-secondary); font-weight: 600; }
+.search { margin-left: auto; width: 220px; max-width: 36vw; background: var(--role-bg-input); border: 1px solid var(--role-border); border-radius: var(--radius-sm); padding: 6px 10px; font: inherit; font-size: 12.5px; color: var(--role-text-body); }
+.search::placeholder { color: var(--role-text-subtle); }
+.btn { font: inherit; font-family: var(--font-heading); font-size: 12.5px; font-weight: 700; border: 0; border-radius: var(--radius-sm); padding: 8px 15px; cursor: pointer; background: var(--role-primary); color: var(--text-on-primary); }
+.btn:hover { filter: brightness(1.1); }
+.btn.ghost { background: transparent; color: var(--role-primary-text); border: 1px solid var(--role-border-strong); }
+.btn.gold { background: var(--braden-gold); color: var(--text-on-accent); }
+.appcontent { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+
+.kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 11px; }
+.kpi { background: var(--role-bg-panel); border: 1px solid var(--role-border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--glow-card), var(--shadow-xs); }
+.kpi h6 { margin-bottom: 6px; }
+.kpi-v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 23px; font-weight: 600; color: var(--role-h1); }
+.kpi-n { font-size: 11.5px; color: var(--role-text-muted); margin-top: 2px; }
+.kpi-n .up { color: var(--role-accent-text); font-weight: 600; }
+
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead th { font-family: var(--font-heading); text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; padding: 8px 14px; border-bottom: 1px solid var(--role-border); white-space: nowrap; background: var(--role-bg-surface); }
+tbody td { padding: var(--row-pad) 14px; border-bottom: 1px solid color-mix(in oklch, var(--role-border) 50%, transparent); }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: color-mix(in oklch, var(--braden-gold) 10%, transparent); }
+td.r { text-align: right; }
+.person { font-weight: 700; color: var(--role-h3); }
+.meta { font-size: 11px; color: var(--role-text-muted); }
+.money { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; color: var(--role-h2); }
+.compact { --row-pad: 6px; }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-heading); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content:''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.pill.active  { color: var(--role-primary-text); background: color-mix(in oklch, var(--braden-red) 13%, transparent); }
+.pill.info    { color: var(--role-info-text);    background: color-mix(in oklch, var(--braden-teal-deep) 15%, transparent); }
+.pill.done    { color: var(--role-success-text); background: color-mix(in oklch, var(--braden-aqua) 18%, transparent); }
+.pill.review  { color: var(--role-warning-text); background: color-mix(in oklch, var(--braden-gold) 22%, transparent); }
+.pill.blocked { color: var(--role-error-text);   background: color-mix(in oklch, var(--braden-indigo) 16%, transparent); }
+.pill.review::before  { border-radius: 1px; }
+.pill.blocked::before { border-radius: 1px; transform: rotate(45deg); }
+
+/* ═══ SPEC ═══ */
+.spec { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.spec th { font-family: var(--font-heading); text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--role-text-muted); font-weight: 700; padding: 8px 14px; border-bottom: 1px solid var(--role-border); background: var(--role-bg-surface); }
+.spec td { padding: 10px 14px; border-bottom: 1px solid color-mix(in oklch, var(--role-border) 50%, transparent); }
+.spec tr:last-child td { border-bottom: 0; }
+.tok { font-family: var(--font-mono); font-size: 11px; color: var(--role-text-muted); white-space: nowrap; }
+.ratio { font-family: var(--font-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--role-text-secondary); text-align: right; white-space: nowrap; }
+.badge { font-family: var(--font-heading); font-size: 9.5px; font-weight: 700; letter-spacing: .05em; padding: 2px 6px; border-radius: 3px; }
+.badge.aaa { color: var(--role-success-text); background: color-mix(in oklch, var(--braden-aqua) 20%, transparent); }
+.badge.aa  { color: var(--role-info-text);    background: color-mix(in oklch, var(--braden-teal-deep) 15%, transparent); }
+.badge.lg  { color: var(--role-warning-text); background: color-mix(in oklch, var(--braden-gold) 24%, transparent); }
+.badge.no  { color: var(--role-error-text);   background: color-mix(in oklch, var(--braden-indigo) 16%, transparent); }
+
+.sws { display: grid; grid-template-columns: repeat(auto-fill,minmax(118px,1fr)); gap: 9px; }
+.sw { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--role-border); }
+.sw-c { height: 44px; }
+.sw-m { padding: 6px 8px; background: var(--role-bg-surface); }
+.sw-n { font-family: var(--font-heading); font-size: 11px; font-weight: 700; color: var(--role-text-body); }
+.sw-v { font-family: var(--font-mono); font-size: 9.5px; color: var(--role-text-muted); margin-top: 1px; }
+
+.elev { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.elev > div { border: 1px solid var(--role-border); border-radius: var(--radius); background: var(--role-bg-panel); padding: 14px 12px; text-align: center; font-size: 11.5px; color: var(--role-text-muted); }
+.e1 { box-shadow: var(--shadow-xs); } .e2 { box-shadow: var(--shadow-sm); }
+.e3 { box-shadow: var(--shadow-md); } .e4 { box-shadow: var(--shadow-lg); }
+.elev .lbl { font-family: var(--font-mono); font-size: 10.5px; color: var(--role-text-secondary); display: block; margin-bottom: 3px; }
+.glowrow { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 13px; }
+.glowcard { border: 1px solid var(--role-border); border-radius: var(--radius); padding: 14px; background: var(--role-bg-panel); box-shadow: var(--glow-card), var(--shadow-sm); transition: box-shadow .2s ease; }
+.glowcard:hover { box-shadow: var(--glow-card-hover), var(--shadow-md); }
+.glowcard .sub { font-size: 11.5px; color: var(--role-text-muted); margin-top: 3px; }
+
+.rules { display: grid; grid-template-columns: 1fr 1fr; }
+.rules > div { padding: 13px 16px; border-bottom: 1px solid color-mix(in oklch,var(--role-border) 50%,transparent); }
+.rules > div:nth-child(odd) { border-right: 1px solid color-mix(in oklch,var(--role-border) 50%,transparent); }
+.rules h6 { margin-bottom: 5px; }
+.rules .dont h6 { color: var(--role-error-text); }
+.rules p { margin: 0; font-size: 12.5px; color: var(--role-text-secondary); }
+
+.prose { max-width: 62ch; }
+.prose p { margin: 0 0 12px; }
+.prose p:last-child { margin-bottom: 0; }
+
+@media (max-width: 980px) {
+  .two,.rules { grid-template-columns: 1fr; }
+  .rules > div:nth-child(odd) { border-right: 0; }
+  .kpis { grid-template-columns: repeat(2,1fr); }
+  .elev { grid-template-columns: repeat(2,1fr); }
+  .proof { margin-left: 0; }
+}
+@media (max-width: 700px) { .side { display: none; } }
+</style>
+
+<body class="dark">
+
+<div class="rail">
+  <span class="rl">Typeface</span>
+  <div class="typelock">
+    <span class="tl-name">Open Sans + Lato</span>
+    <span class="tl-meta mono">per Brand Guidelines · headers Open Sans, secondary Lato</span>
+  </div>
+  <span class="rl">Mode</span>
+  <div class="seg" role="group" aria-label="Colour mode">
+    <button data-mode="dark" aria-pressed="true">Dark</button>
+    <button data-mode="light" aria-pressed="false">Light</button>
+  </div>
+  <span class="rl">Rows</span>
+  <div class="seg" role="group" aria-label="Density">
+    <button data-density="comfortable" aria-pressed="true">Comfortable</button>
+    <button data-density="compact" aria-pressed="false">Compact</button>
+  </div>
+  <div class="proof">
+    <div><div class="proof-t">Glyph proof</div><div class="proof-g">Il1 · O0 · rn m</div></div>
+    <div class="proof-sep"></div>
+    <div><div class="proof-t">Figures</div><div class="proof-g mono">1,180.75</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="sec-head"><h1>Braden Group</h1><p>Corporate brand contract — the sibling of the D2C Neon Electric system. Same architecture, entirely different values.</p></div>
+  </section>
+
+  <!-- ══ HERO — GRID ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Public hero</h2><span class="meta">Marketing surface — <strong>grid</strong> pattern, 32px</span></div>
+    <div class="hero">
+      <div class="bsuite-hero-grid"></div>
+      <div class="hero-inner">
+        <div class="tag">People. Employment. Progress.</div>
+        <div class="rule"></div>
+        <h1>Workforce solutions built around the people in them.</h1>
+        <p>Braden Group places apprentices and trainees with host employers across Western Australia, and carries the employment, compliance and pastoral obligations so the host doesn't have to.</p>
+        <div class="cta">
+          <button class="btn">Talk to us</button>
+          <button class="btn ghost">Host an apprentice</button>
+        </div>
+      </div>
+    </div>
+    <div class="p-note"><strong>Grid is external only.</strong> Scoped to the hero wrapper, radially masked, never behind authenticated content. The red rule under the tagline is the corporate signature device — the guidelines' own hairline motif, not a decorative addition.</div>
+  </section>
+
+  <!-- ══ APP — DOT ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Admin surface</h2><span class="meta">Authenticated shell — <strong>dot</strong> pattern, 16px</span></div>
+    <div class="app">
+      <aside class="side">
+        <div class="brand"><div class="mark">B</div><div class="bname">Braden Group</div></div>
+        <nav class="nav">
+          <h6>Enquiries</h6>
+          <a href="#" aria-current="page">Inbox <span class="cnt">23</span></a>
+          <a href="#">Host enquiries <span class="cnt">8</span></a>
+          <a href="#">Careers <span class="cnt">41</span></a>
+        </nav>
+        <nav class="nav">
+          <h6>Content</h6>
+          <a href="#">Pages</a>
+          <a href="#">Case studies <span class="cnt">6</span></a>
+          <a href="#">Media library</a>
+        </nav>
+        <nav class="nav">
+          <h6>Settings</h6>
+          <a href="#">Team</a>
+          <a href="#">Domains</a>
+        </nav>
+      </aside>
+      <div class="appmain">
+        <div class="topbar">
+          <div class="crumb">Enquiries / <b>Inbox</b></div>
+          <input class="search" placeholder="Search enquiries" aria-label="Search">
+          <button class="btn ghost">Export</button>
+          <button class="btn gold">New enquiry</button>
+        </div>
+        <div class="appcontent">
+          <div class="kpis">
+            <div class="kpi"><h6>Open enquiries</h6><div class="kpi-v">23</div><div class="kpi-n"><span class="up">+4</span> this week</div></div>
+            <div class="kpi"><h6>Median response</h6><div class="kpi-v">3.2h</div><div class="kpi-n">target under 4h</div></div>
+            <div class="kpi"><h6>Host conversions</h6><div class="kpi-v">61%</div><div class="kpi-n">rolling 90 days</div></div>
+            <div class="kpi"><h6>Placements YTD</h6><div class="kpi-v">184</div><div class="kpi-n">across 62 hosts</div></div>
+          </div>
+          <div class="tw">
+            <table>
+              <thead><tr><th>Contact</th><th>Organisation</th><th>Enquiry</th><th class="r">Value</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><div class="person">Helen Cartwright</div><div class="meta">Operations manager</div></td><td>Kalgoorlie Build Co<div class="meta">Boulder, WA</div></td><td>Host 3 carpentry apprentices<div class="meta">2 August</div></td><td class="r money">$164,300</td><td><span class="pill active">In progress</span></td></tr>
+                <tr><td><div class="person">Daniel Osei</div><div class="meta">Director</div></td><td>Northline Electrical<div class="meta">Osborne Park, WA</div></td><td>Rate review for FY27<div class="meta">1 August</div></td><td class="r money">$88,150</td><td><span class="pill review">Awaiting host</span></td></tr>
+                <tr><td><div class="person">Priya Raman</div><div class="meta">HR lead</div></td><td>Swan Plumbing Group<div class="meta">Bayswater, WA</div></td><td>Agreement renewal<div class="meta">31 July</div></td><td class="r money">$212,900</td><td><span class="pill done">Signed</span></td></tr>
+                <tr><td><div class="person">Tom Vasilev</div><div class="meta">Site supervisor</div></td><td>Pilbara Steelworks<div class="meta">Karratha, WA</div></td><td>WHS incident follow-up<div class="meta">30 July</div></td><td class="r money">—</td><td><span class="pill blocked">Escalated</span></td></tr>
+                <tr><td><div class="person">Grace Ihaka</div><div class="meta">Owner</div></td><td>Meridian Masonry<div class="meta">Wangara, WA</div></td><td>First-time host enquiry<div class="meta">30 July</div></td><td class="r money">$54,600</td><td><span class="pill info">New</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ HEADINGS ══ -->
+  <div class="two">
+    <section class="panel">
+      <div class="p-head"><h2>Heading ramp</h2><span class="meta">Open Sans at h1, Lato beneath</span></div>
+      <div class="p-body" style="display:flex;flex-direction:column;gap:11px">
+        <h1>Group training that holds the obligations</h1>
+        <h2>Host employer agreements</h2>
+        <h3>Apprentice placement schedule</h3>
+        <h4>Pastoral care and field visits</h4>
+        <h5>Training plan milestones</h5>
+        <h6>Effective from 1 July 2026</h6>
+      </div>
+      <div class="p-note"><strong>The face changes once, at h2.</strong> Open Sans carries the page title and the slogan — the two roles the guidelines name it for. Lato takes every heading beneath, which is exactly the "secondary header" role the guidelines assign it. The hue walks toward navy-teal as depth increases; contrast falls but never below AAA.</div>
+    </section>
+
+    <section class="panel">
+      <div class="p-head"><h2>Measured</h2><span class="meta">vs <code>--role-bg-body</code></span></div>
+      <table class="spec"><thead><tr><th>Token</th><th class="ratio">Dark</th><th></th><th class="ratio">Light</th><th></th></tr></thead><tbody>
+        <tr><td class="tok">--role-h1</td><td class="ratio">17.22</td><td><span class="badge aaa">AAA</span></td><td class="ratio">17.07</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h2</td><td class="ratio">15.73</td><td><span class="badge aaa">AAA</span></td><td class="ratio">15.07</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h3</td><td class="ratio">13.91</td><td><span class="badge aaa">AAA</span></td><td class="ratio">12.82</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h4</td><td class="ratio">12.26</td><td><span class="badge aaa">AAA</span></td><td class="ratio">10.59</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h5</td><td class="ratio">10.76</td><td><span class="badge aaa">AAA</span></td><td class="ratio">8.58</td><td><span class="badge aaa">AAA</span></td></tr>
+        <tr><td class="tok">--role-h6</td><td class="ratio">9.08</td><td><span class="badge aaa">AAA</span></td><td class="ratio">7.20</td><td><span class="badge aaa">AAA</span></td></tr>
+      </tbody></table>
+      <div class="p-note">Braden's ramp clears AAA at every level in both modes — one better than D2C, whose h6 lands at AA in light mode. The warm-white body background is slightly lighter than D2C's grey, which buys the extra headroom.</div>
+    </section>
+  </div>
+
+  <!-- ══ MODIFIERS ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Inline text roles</h2><span class="meta">Every modifier has its own token</span></div>
+    <div class="p-body two">
+      <div class="prose">
+        <p>Braden Group is the <strong>direct employer</strong> of every apprentice we place. The host provides the work and the supervision; we carry the wages, the insurance, the <em>compliance obligations</em> and the pastoral care.</p>
+        <p>Host agreements and rate schedules are issued from <a href="#">the enquiry record</a> and rendered from a tenant template. Press <kbd>⌘</kbd> <kbd>K</kbd> to jump to an organisation. Award data comes from the <abbr title="Modern Awards Pay Database">MAPD</abbr> feed and is cached for 24 hours.</p>
+        <p><del>Apprentices may be engaged casually</del> — casual engagement is prohibited under national and state legislation, so the system enforces it as a constraint rather than a warning.</p>
+        <blockquote>People. Employment. Progress.</blockquote>
+      </div>
+      <table class="spec"><thead><tr><th>Role</th><th>Token</th></tr></thead><tbody>
+        <tr><td><strong>Strong</strong></td><td class="tok">--role-text-strong</td></tr>
+        <tr><td>Body</td><td class="tok">--role-text-body</td></tr>
+        <tr><td><em>Emphasis</em></td><td class="tok">--role-text-emphasis</td></tr>
+        <tr><td><a href="#">Link</a></td><td class="tok">--role-link</td></tr>
+        <tr><td><code>Code</code></td><td class="tok">--role-code-text</td></tr>
+        <tr><td>Highlight</td><td class="tok">--role-mark-bg <span class="meta">gold</span></td></tr>
+        <tr><td>Pull quote</td><td class="tok">--role-quote-text <span class="meta">red-tinted, gold rule</span></td></tr>
+        <tr><td>Muted</td><td class="tok">--role-text-muted</td></tr>
+        <tr><td>Subtle <span class="badge lg">LARGE</span></td><td class="tok">--role-text-subtle</td></tr>
+        <tr><td>Disabled <span class="badge no">ICON CUE</span></td><td class="tok">--role-text-disabled</td></tr>
+      </tbody></table>
+    </div>
+    <div class="p-note"><strong>Gold does the highlighting, red does the quoting.</strong> That split comes straight from the extended palette's own usage notes — gold for key points and call-to-action, red for headers and emphasis. Neither is a semantic state.</div>
+  </section>
+
+  <!-- ══ TYPE SCALE ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Type scale</h2><span class="meta">Open Sans · Lato · mono</span></div>
+    <table class="spec"><thead><tr><th>Token</th><th>Face</th><th>Size / leading</th><th>Weight</th><th>Use</th></tr></thead><tbody>
+      <tr><td class="tok">display</td><td>Open Sans</td><td class="tok">36 / 42</td><td class="tok">600</td><td>Hero headline</td></tr>
+      <tr><td class="tok">slogan</td><td>Open Sans</td><td class="tok">12 / 16</td><td class="tok">700 · 0.16em caps</td><td>Tagline lockup</td></tr>
+      <tr><td class="tok">h1</td><td>Open Sans</td><td class="tok">25 / 32</td><td class="tok">600</td><td>Page title</td></tr>
+      <tr><td class="tok">h2–h5</td><td>Lato</td><td class="tok">19 → 13</td><td class="tok">700</td><td>Secondary headers</td></tr>
+      <tr><td class="tok">h6 / eyebrow</td><td>Lato</td><td class="tok">11 / 16</td><td class="tok">700 · 0.10em caps</td><td>Labels, table headers</td></tr>
+      <tr><td class="tok">body</td><td>Open Sans</td><td class="tok">14 / 22</td><td class="tok">400</td><td>Default</td></tr>
+      <tr><td class="tok">mono</td><td>JetBrains Mono</td><td class="tok">12.5 / 18</td><td class="tok">500 · tabular</td><td>Money, dates, IDs</td></tr>
+    </tbody></table>
+    <div class="p-note"><strong>The mono is a proposal, not a ruling.</strong> The Brand Guidelines specify Open Sans and Lato and are silent on a monospace face — but the admin surface needs tabular figures. JetBrains Mono is here because it sits comfortably next to humanist faces; Geist Mono would keep one mono across both brands. That's an open decision.</div>
+  </section>
+
+  <!-- ══ PALETTE + STATUS ══ -->
+  <div class="two">
+    <section class="panel">
+      <div class="p-head"><h2>Palette</h2><span class="meta">Core from the Guidelines, extended from the palette doc</span></div>
+      <div class="p-body">
+        <h6 style="margin-bottom:8px">Core — Brand Guidelines</h6>
+        <div class="sws">
+          <div class="sw"><div class="sw-c" style="background:var(--braden-red)"></div><div class="sw-m"><div class="sw-n">Braden Red</div><div class="sw-v">#ab233a · primary</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-red-light)"></div><div class="sw-m"><div class="sw-n">Light Red</div><div class="sw-v">#d42d49</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-red-dark)"></div><div class="sw-m"><div class="sw-n">Dark Red</div><div class="sw-v">#811a2c</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-gold)"></div><div class="sw-m"><div class="sw-n">Braden Gold</div><div class="sw-v">#c7ae6a · accent</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-gold-light)"></div><div class="sw-m"><div class="sw-n">Light Gold</div><div class="sw-v">#d5c28f</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-bronze)"></div><div class="sw-m"><div class="sw-n">Bronze</div><div class="sw-v">#b99a45</div></div></div>
+        </div>
+        <h6 style="margin:16px 0 8px">Extended — palette doc</h6>
+        <div class="sws">
+          <div class="sw"><div class="sw-c" style="background:var(--braden-navy)"></div><div class="sw-m"><div class="sw-n">Navy</div><div class="sw-v">#2c3e50 · text</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-slate)"></div><div class="sw-m"><div class="sw-n">Slate</div><div class="sw-v">#95a5a6</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-sky)"></div><div class="sw-m"><div class="sw-n">Sky</div><div class="sw-v">#3498db · links</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-forest)"></div><div class="sw-m"><div class="sw-n">Forest</div><div class="sw-v">decorative only</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-lavender)"></div><div class="sw-m"><div class="sw-n">Lavender</div><div class="sw-v">decorative only</div></div></div>
+        </div>
+        <h6 style="margin:16px 0 8px">Semantic — solved for dichromacy</h6>
+        <div class="sws">
+          <div class="sw"><div class="sw-c" style="background:var(--braden-indigo)"></div><div class="sw-m"><div class="sw-n">Indigo</div><div class="sw-v">error · destructive</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-teal-deep)"></div><div class="sw-m"><div class="sw-n">Deep Teal</div><div class="sw-v">info</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-aqua)"></div><div class="sw-m"><div class="sw-n">Aqua</div><div class="sw-v">success</div></div></div>
+        </div>
+      </div>
+      <div class="p-note"><strong>Forest is unusable as success.</strong> Under deuteranopia Braden Green reads <code>#969664</code> and Braden Gold reads <code>#b6b669</code> — ΔE 0.038, effectively the same swatch. It survives as a decorative hue only.</div>
+    </section>
+
+    <section class="panel">
+      <div class="p-head"><h2>Status system</h2><span class="meta">Colour, shape and label together</span></div>
+      <div class="p-body" style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="pill active">In progress</span>
+          <span class="pill info">New</span>
+          <span class="pill done">Signed</span>
+          <span class="pill review">Awaiting host</span>
+          <span class="pill blocked">Escalated</span>
+        </div>
+        <table class="spec" style="margin:0 -16px -16px;width:calc(100% + 32px)"><thead><tr><th>State</th><th>Role</th><th>Simulates as</th><th>Shape</th></tr></thead><tbody>
+          <tr><td>In progress</td><td class="tok">--role-primary</td><td class="meta">dark olive</td><td>circle</td></tr>
+          <tr><td>Awaiting / attention</td><td class="tok">--role-warning</td><td class="meta">light yellow</td><td>rounded square</td></tr>
+          <tr><td>New / informational</td><td class="tok">--role-info</td><td class="meta">mid blue-grey</td><td>circle</td></tr>
+          <tr><td>Complete</td><td class="tok">--role-success</td><td class="meta">pale blue</td><td>circle</td></tr>
+          <tr><td>Escalated / error</td><td class="tok">--role-error</td><td class="meta">deep blue</td><td>diamond</td></tr>
+        </tbody></table>
+      </div>
+      <div class="p-note"><strong>Braden's warm axis is full.</strong> Red is the brand and gold is the accent, so both warm slots are spoken for before any status exists. Every remaining state lives on the cool axis, separated by lightness — deep blue for error, mid for info, pale for success. Shape and label do more work here than they do on D2C.</div>
+    </section>
+  </div>
+
+  <!-- ══ COLOUR VISION ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Colour vision</h2><span class="meta">Viénot–Brettel simulation · ΔE in OKLab · below 0.10 is indistinguishable</span></div>
+    <table class="spec"><thead><tr><th>Pair</th><th class="ratio">min ΔE</th><th>Verdict</th></tr></thead><tbody>
+      <tr><td>Braden Gold vs <del>Forest as success</del></td><td class="ratio">0.038</td><td><span class="badge no">SAME COLOUR</span></td></tr>
+      <tr><td>Braden Gold vs Bronze</td><td class="ratio">0.063</td><td><span class="badge no">FAILS</span></td></tr>
+      <tr><td>Sky vs <del>Lavender as error</del></td><td class="ratio">0.078</td><td><span class="badge no">FAILS</span></td></tr>
+      <tr><td><strong>primary red vs error indigo</strong></td><td class="ratio">0.218</td><td><span class="badge aaa">CLEAR</span></td></tr>
+      <tr><td><strong>error indigo vs warning gold</strong></td><td class="ratio">0.445</td><td><span class="badge aaa">CLEAR</span></td></tr>
+      <tr><td><strong>primary red vs info teal</strong></td><td class="ratio">0.304</td><td><span class="badge aaa">CLEAR</span></td></tr>
+      <tr><td><strong>primary red vs success aqua</strong></td><td class="ratio">0.221</td><td><span class="badge aaa">CLEAR</span></td></tr>
+      <tr><td><strong>warning gold vs success aqua</strong></td><td class="ratio">0.208</td><td><span class="badge aa">OK</span></td></tr>
+      <tr><td><strong>info teal vs success aqua</strong></td><td class="ratio">0.184</td><td><span class="badge aa">OK</span></td></tr>
+      <tr><td><strong>error indigo vs info teal</strong></td><td class="ratio">0.143</td><td><span class="badge lg">WEAKEST</span></td></tr>
+    </tbody></table>
+    <div class="p-note"><strong>Braden is a harder palette than D2C, and the numbers say so.</strong> D2C's worst pair is 0.156; Braden's is 0.143 — error indigo against info deep-teal, both cool, separated mainly by lightness. That's the cost of a brand whose identity colour is also the most semantically loaded colour in a UI. The mitigation is the diamond marker and the label on the error pill, which is why colour-alone signalling is banned harder here than on D2C.</div>
+  </section>
+
+  <!-- ══ ELEVATION ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Elevation</h2><span class="meta" id="elevMode">Dark mode — restrained gold separation. Switch to light for shadows only.</span></div>
+    <div class="p-body" style="display:flex;flex-direction:column;gap:18px">
+      <div>
+        <h6 style="margin-bottom:9px">Ladder</h6>
+        <div class="elev">
+          <div class="e1"><span class="lbl">--shadow-xs</span>chips, pills</div>
+          <div class="e2"><span class="lbl">--shadow-sm</span>cards, panels</div>
+          <div class="e3"><span class="lbl">--shadow-md</span>popovers</div>
+          <div class="e4"><span class="lbl">--shadow-lg</span>dialogs</div>
+        </div>
+      </div>
+      <div>
+        <h6 style="margin-bottom:9px">Surface treatment</h6>
+        <div class="glowrow">
+          <div class="glowcard"><h5>Corporate subtle</h5><div class="sub">Light mode is border and shadow only. No glow, no gradient behind text.</div></div>
+          <div class="glowcard"><h5>Gold separation</h5><div class="sub">Dark mode gets an 18% gold ring — enough to lift a panel off a navy field, well short of neon.</div></div>
+          <div class="glowcard"><h5>Not the D2C ring</h5><div class="sub">Same two-layer shape as the D2C glow so consumer code is identical, deliberately quieter values.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="p-note"><strong>Braden never gets the cyber register.</strong> The D2C dark mode leans electric; Braden's dark mode is a deep navy boardroom with a gold edge. Same token names, different intent — which is what makes them one system rather than two codebases.</div>
+  </section>
+
+  <!-- ══ RULES ══ -->
+  <section class="panel">
+    <div class="p-head"><h2>Contract rules</h2><span class="meta">Where Braden diverges from D2C</span></div>
+    <div class="rules">
+      <div class="do"><h6>Do — red is identity</h6><p>Braden Red is <code>--role-primary</code>: logo, primary action, section rules. It is never a status colour.</p></div>
+      <div class="dont"><h6>Don't — red as error</h6><p>The brand colour and the destructive colour cannot be the same. Error is <code>--braden-indigo</code>; the rule is separation from primary, not a fixed hue.</p></div>
+      <div class="do"><h6>Do — gold is attention</h6><p>Gold carries highlight, call-to-action and warning, exactly as the extended palette specifies. Always with navy text on it.</p></div>
+      <div class="dont"><h6>Don't — gold, bronze and green together</h6><p>All three collapse to one yellow under deuteranopia. Only one warm accent may carry meaning at a time.</p></div>
+      <div class="do"><h6>Do — dot inside auth</h6><p>The 16px dot field is the admin shell background, tinted gold in dark mode.</p></div>
+      <div class="dont"><h6>Don't — grid inside auth</h6><p>The 32px grid is public marketing only, scoped to the hero. Never both patterns in one context.</p></div>
+      <div class="do"><h6>Do — no white-label</h6><p>Braden is the corporate brand. Tenant branding overrides never apply here — this app short-circuits <code>BrandingProvider</code>.</p></div>
+      <div class="dont"><h6>Don't — pure white or black</h6><p>Panel white is <code>oklch(0.994 0.001 50)</code>, warm not neutral. The deepest navy is <code>0.120</code>.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const elevMode = document.getElementById('elevMode');
+document.querySelectorAll('[data-mode]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const dark = b.dataset.mode === 'dark';
+    document.body.classList.toggle('dark', dark);
+    elevMode.textContent = dark
+      ? 'Dark mode — restrained gold separation. Switch to light for shadows only.'
+      : 'Light mode — navy-tinted shadow ladder. No glow anywhere.';
+    document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+  });
+});
+document.querySelectorAll('[data-density]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.body.classList.toggle('compact', b.dataset.density === 'compact');
+    document.querySelectorAll('[data-density]').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+  });
+});
+</script>
