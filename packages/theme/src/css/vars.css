@@ -127,6 +127,19 @@
   --role-success:     var(--neon-electric-teal);    /* was green — 0.043 from red */
   --role-info:        var(--neon-electric-cyan);    /* oklch(0.769 0.132 191.7) */
 
+  /* ═══ TYPE ═══ Lifted from the D2C contract, which specified a font
+     stack this package never shipped. Apps were left to pick their own, so
+     the estate ran system-ui, Inter and JetBrains Mono simultaneously while
+     the contract asked for one family. Same shape of gap as the heading
+     ramp: written down, never implemented. */
+  --font-display:  'Geist Variable', Geist, system-ui, sans-serif;
+  --font-body:     'Geist Variable', Geist, system-ui, sans-serif;
+  --font-mono:     'Geist Mono Variable', 'Geist Mono', ui-monospace, monospace;
+  --track-display: -0.028em;
+  --track-heading: -0.018em;
+  --track-body:    0em;
+  --track-eyebrow: 0.09em;
+
   /* ═══ INFORMATIONAL SCALE — categorical, NOT semantic ═══
      Added 2026-08-03 by operator ruling: "informational hues might be handy
      to stand out against the style colour palette."

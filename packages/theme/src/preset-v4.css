@@ -169,6 +169,17 @@
   --color-text-on-warning: var(--text-on-warning);
 
   /* ============================================================
+     TYPE — the contract's stack, bridged to Tailwind's font-* utilities.
+     `font-sans` and `font-mono` are what components actually write, so
+     without this bridge the tokens exist and nothing uses them. Every D2C
+     app had been declaring its own --font-sans locally instead, which is how
+     the estate came to run system-ui, Inter and JetBrains Mono at once.
+     ============================================================ */
+  --font-sans:    var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono:    var(--font-mono);
+
+  /* ============================================================
      ANIMATIONS
      ============================================================ */
   --animate-pulse-soft:  pulse-soft  3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
