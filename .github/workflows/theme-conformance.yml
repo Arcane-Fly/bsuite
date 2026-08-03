@@ -30,6 +30,12 @@
 name: Theme Conformance
 
 on:
+  push:
+    branches: [main, master]
+  schedule:
+    # Weekly, so a package that becomes unimportable through a transitive
+    # change is caught even in a quiet week.
+    - cron: '17 4 * * 1'
   pull_request:
     branches: [main, master, development]
     paths:
@@ -142,8 +148,24 @@ jobs:
           fi
           echo "OK: $total <= $baseline"
 
+  # NOT run on pull_request, deliberately.
+  #
+  # This job needs a real workspace install, which resolves @bsuite/* from the
+  # registry. The repo enforces a `minimumReleaseAge` supply-chain policy, so a
+  # package published in the last ~24h is REJECTED — including our own. Any PR
+  # opened in the day after a shared-package release would fail here on a clock,
+  # not on a defect, and the obvious "fixes" are all worse: bypassing
+  # minimumReleaseAge disables a real supply-chain control, and `workspace:*`
+  # links are banned because the publish workflows use `npm publish`, which does
+  # not rewrite the protocol and would ship the literal string to consumers.
+  #
+  # So it runs after merge and on a schedule, where the age window has passed.
+  # The thing this job actually guards — a package shipping unimportable to
+  # Node — is a release defect, and catching it on main before anyone installs
+  # it is the point. It does not need to gate every PR to do that.
   esm-imports:
     name: Shared packages import under Node ESM
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
