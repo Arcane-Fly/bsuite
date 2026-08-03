@@ -77,6 +77,19 @@ else
     run "P:$p" "package tests" bash -c "cd 'packages/$p' && timeout 300 pnpm test >/dev/null 2>&1"
   done
   run G9 "packages import under Node ESM" scripts/verify-esm-imports.sh
+
+  # G5/G6 need a running app, so they are opt-in rather than part of the default
+  # sweep. THEY ARE THE ONLY GATES THAT PROVE ANYTHING REACHES A USER — every
+  # other gate here can be satisfied by a token nothing consumes, which is
+  # exactly how a six-level heading ramp shipped, passed every static check, and
+  # rendered as one flat colour.
+  #   THEME_GATE_URL=http://localhost:8081 THEME_GATE_APP=braden scripts/theme-gates.sh
+  if [[ -n ${THEME_GATE_URL:-} ]]; then
+    run G5/G6 "ramp + font reach the DOM (${THEME_GATE_APP:-app})" \
+      node scripts/audit-applied-tokens.mjs "$THEME_GATE_URL" --app "${THEME_GATE_APP:-unknown}"
+  else
+    printf '  \033[33m-\033[0m %-6s %s\n' "G5/G6" "ramp + font in the DOM — set THEME_GATE_URL to run"
+  fi
 fi
 
 echo "───────────────────────────────────────────────────────────────"
