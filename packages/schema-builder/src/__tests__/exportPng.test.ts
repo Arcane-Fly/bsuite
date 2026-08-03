@@ -37,9 +37,11 @@ describe('exportCanvasToPng', () => {
     const [callEl, opts] = mockedToPng.mock.calls[0];
     expect(callEl).toBe(el);
     expect(opts.pixelRatio).toBe(2);
-    // Read from the live element, not pinned. This assertion used to read
-    // `toBe('oklch(1 0 0)')` — it locked in the pure-white plate as an
-    // invariant, so the suite went red on the change that REMOVED it. A test
+    // Read from the live element, not pinned.
+    // It read `toBe('oklch(1 0 0)')` — theme-audit-ok: quoting the value this
+    // assertion used to pin, so the reason survives — locking the pure-white
+    // plate in as an invariant. The suite then went red on the change that
+    // REMOVED it, which is the whole point of the note. A test
     // written from the same assumption as the code cannot detect that
     // assumption being wrong; it only defends it.
     expect(opts.backgroundColor).toBe('oklch(0.994 0.002 260)');

@@ -26,6 +26,7 @@ export interface HeroGridProps extends React.HTMLAttributes<HTMLDivElement> {
  * CSS lifted verbatim from braden's `.platform-hero-grid`
  * (braden/src/index.css) via the shared `.bsuite-hero-grid` utility class
  * (packages/theme/src/css/utilities.css) — 1px grid lines at 32px x 32px,
+ * theme-audit-ok: prose describing the grid wash.
  * `oklch(0 0 0 / 0.03)` light / `oklch(1 0 0 / 0.03)` dark. Requires the
  * consumer app to import `@bsuite/theme/css` (or `utilities.css`
  * directly) so `.bsuite-hero-grid` and the `.dark` override resolve.

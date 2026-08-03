@@ -30,7 +30,8 @@
  *   Pure white (L=1.0) and pure black (L=0) are BANNED in EVERY role —
  *   text, surface, border, ring and shadow alike (operator ruling
  *   2026-08-02). The prior text-only scoping of this rule is what let
- *   --light-bg-accent ship as oklch(1 0 0.5) and render every shadcn card
+ *   --light-bg-accent ship as oklch(1 0 0.5) — theme-audit-ok: naming the
+ *   value that was REMOVED — and render every shadcn card
  *   and popover pure white. "White" here means oklch(0.982 0.002 248)
  *   (#f8f9fa); the lightest surface is bg-panel at L=0.994.
  *
@@ -74,7 +75,7 @@
   --light-bg-primary:   oklch(0.961 0     0.5);
   --light-bg-secondary: oklch(0.982 0.002 248);
   --light-bg-tertiary:  oklch(0.963 0.003 228.9);
-  /* bg-panel. Was oklch(1 0 0.5) — pure white, and since --card and
+  /* bg-panel. theme-audit-ok: prose. Was oklch(1 0 0.5) — pure white, and since --card and
      --popover bridge to it, every shadcn card and popover in all five D2C
      apps rendered pure white in light mode from this one line. */
   --light-bg-accent:    oklch(0.994 0.002 260);
@@ -165,7 +166,7 @@
   --role-border:       var(--light-border);
   --role-border-strong: oklch(0.880 0.008 250);
 
-  /* Scrim — the veil behind a modal, and the reason `bg-black/N` survived
+  /* Scrim — the veil behind a modal, and the reason `bg-black/N` survived   theme-audit-ok: prose
      everywhere else. It was the single most duplicated pure endpoint in the
      tree (9 sites across nav-core, page-builder and schema-builder) for one
      reason: no overlay role existed, so every author reached for the only
@@ -312,7 +313,7 @@
    NO sRGB FALLBACK — DELIBERATELY REMOVED 2026-08-02.
    Precedent: precedent__bsuite__20260802__theme_conformance_is_absolute.
 
-   The `@supports not (color: oklch(0 0 0))` block that stood here shipped
+   theme-audit-ok: prose. The `@supports not (color: oklch(0 0 0))` block that stood here shipped
    a parallel hex palette. It is gone, and must not be reinstated:
 
      · OKLCH has been Baseline-available in every evergreen engine since
