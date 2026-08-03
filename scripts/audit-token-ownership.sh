@@ -73,7 +73,13 @@ for a in "${APPS[@]}"; do
       # counts ZERO — a false pass. This gate produced exactly that on its
       # first run, which is the failure mode it exists to catch.
       grep -qxF -- "$tok" <<<"$PKG" || continue
-      ctx=$(sed -n "$((n>1?n-1:1)),${n}p" "$f" 2>/dev/null)
+      # Scan the WHOLE preceding comment block, not one line. A reason worth
+      # writing is usually several lines long, which puts the marker at the top
+      # of the comment and the value well below it — so a one-line lookback
+      # misses every properly-explained exception and only catches terse ones.
+      # That is backwards: the better the justification, the less likely it was
+      # to be seen. 12 lines covers a real paragraph.
+      ctx=$(sed -n "$((n>12?n-12:1)),${n}p" "$f" 2>/dev/null)
       grep -q "$MARKER" <<<"$ctx" && continue
       hits+="  $f:$n  $tok"$'\n'
     done < <(grep -nE '^\s*--[a-z0-9-]+\s*:' "$f" 2>/dev/null)
