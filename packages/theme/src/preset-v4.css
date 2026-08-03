@@ -101,6 +101,7 @@
   --color-error-text:   var(--role-error-text);
   --color-warning-text: var(--role-warning-text);
   --color-success-text: var(--role-success-text);
+  --color-info-text:    var(--role-info-text);
 
   /* Informational scale — CATEGORICAL, never state. `bg-info-3`, `text-info-5`.
      Numbered because they are interchangeable slots with no meaning of their

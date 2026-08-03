@@ -206,6 +206,9 @@
   --role-error-text:   oklch(0.556 0.230  25);    /* 4.69:1 ✓ AA */
   --role-warning-text: oklch(0.535 0.150  75);    /* 4.70:1 ✓ AA */
   --role-success-text: oklch(0.501 0.130 195);    /* 4.70:1 ✓ AA */
+  /* Pair for --role-info. Every other semantic role had a -text token; info
+     was the only gap, which forced apps to invent a local copy (R80.4). */
+  --role-info-text:    oklch(0.480 0.120 192);    /* 4.70:1 ✓ AA on panel */
 
   /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
      measured against --role-bg-body (the conservative floor); all tiers
@@ -458,6 +461,7 @@
   --role-error-text:   oklch(0.786 0.230  25);    /*  7.00:1 ✓ AAA */
   --role-warning-text: var(--neon-electric-amber);/* 10.10:1 ✓ AAA */
   --role-success-text: oklch(0.671 0.130 195);    /*  6.99:1 ✓ AAA */
+  --role-info-text:    oklch(0.780 0.120 192);    /*  7.0:1 ✓ AAA on dark panel */
 
   /* Glow/shadow scale up in dark mode */
   --glow-strength:   0.6;

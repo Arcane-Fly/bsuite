@@ -438,7 +438,7 @@ describe('calculate()', () => {
         WA: 0.055,
         TAS: 0.04,
         NT: 0.055,
-        ACT: 0.0685,
+        ACT: 0.0675,
       };
       for (const [state, rate] of Object.entries(expected)) {
         expect(getPayrollTaxRate(state as AustralianState)).toBe(rate);
