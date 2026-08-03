@@ -102,6 +102,30 @@
   --color-warning-text: var(--role-warning-text);
   --color-success-text: var(--role-success-text);
 
+  /* Informational scale — CATEGORICAL, never state. `bg-info-3`, `text-info-5`.
+     Numbered because they are interchangeable slots with no meaning of their
+     own; naming one invites it to be used as a semantic. Pair every one with a
+     label or icon — their separation is deliberately below the semantic
+     standard and cannot carry meaning alone. See --info-* in vars.css. */
+  --color-info-1: var(--info-1);
+  --color-info-2: var(--info-2);
+  --color-info-3: var(--info-3);
+  --color-info-4: var(--info-4);
+  --color-info-5: var(--info-5);
+  --color-info-6: var(--info-6);
+  --color-info-7: var(--info-7);
+  --color-info-8: var(--info-8);
+
+  /* Stage ramp — ORDERED progression. `bg-stage-1` .. `bg-stage-6`, lightness
+     descending, so "further along" reads at a glance and survives greyscale.
+     Outcomes are NOT stages: hired is --role-success, rejected --role-error. */
+  --color-stage-1: var(--stage-1);
+  --color-stage-2: var(--stage-2);
+  --color-stage-3: var(--stage-3);
+  --color-stage-4: var(--stage-4);
+  --color-stage-5: var(--stage-5);
+  --color-stage-6: var(--stage-6);
+
   /* Per-app accent (Layer 5). Resolves through [data-app] on <body>,
      falling back to the shared accent when no app is declared. */
   --color-app-accent:      var(--app-accent, var(--role-accent));
