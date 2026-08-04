@@ -27,7 +27,12 @@ cd "$(dirname "$0")/.."
 # Routes worth probing per app. Authenticated routes are deliberately absent —
 # they cannot be reached without a session and would only ever report SKIPPED.
 declare -A ROUTES=(
-  [crm7]="/ /login /auth/callback /404 /unauthorized /privacy /terms"
+  # /auth/callback is deliberately ABSENT. A callback cannot be meaningfully
+  # audited without a live OAuth handshake: opening it directly has no `code`
+  # param, so the app CORRECTLY logs "Missing authorization code" and the audit
+  # records a guaranteed console error that is not a defect. Excluded because it
+  # is not auditable, not because it fails — the token audit still covers it.
+  [crm7]="/ /login /404 /unauthorized /privacy /terms"
   [conduit]="/ /login"
   [business-suite-unified]="/ /login /auth/callback"
   [R80.3]="/ /login"
@@ -83,6 +88,16 @@ for app in "${APPS[@]}"; do
     targets=()
     for r in ${ROUTES[$app]}; do targets+=("$url$r"); done
     out=$(node scripts/audit-applied-tokens.mjs "${targets[@]}" --app "$app" 2>&1)
+    # The STRUCTURAL half. audit-applied-tokens proves the colours and font reach
+    # the DOM; it cannot see a missing nav, a table with no cells, a 404'd logo,
+    # 56px of sideways scroll or a raw `undefined` on screen. Every one of those
+    # is a defect the operator sees first and no colour gate can detect.
+    uiout=$(node scripts/audit-ui-pages.mjs "${targets[@]}" --app "$app" 2>&1)
+    while IFS= read -r l; do
+      case "$l" in
+        "      U"*) fail=$((fail+1)); FAILED+=("$app: ${l##*( )}"); printf '      \033[31m✗\033[0m %s\n' "${l##*( )}" ;;
+      esac
+    done <<<"$uiout" 
     while IFS= read -r line; do
       case "$line" in
         *SKIPPED*) skip=$((skip+1)); printf '      \033[33m-\033[0m %s\n' "${line#*SKIPPED: }" ;;
