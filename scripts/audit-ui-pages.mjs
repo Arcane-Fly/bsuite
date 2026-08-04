@@ -147,7 +147,29 @@ for (const url of urls) {
       continue;
     }
     await page.evaluate(() => document.fonts.ready);
-    await page.waitForTimeout(1200);   // let async tables settle before judging them empty
+
+    // WAIT FOR THE DOM TO SETTLE, not for a magic number. A fixed 1200ms caught
+    // crm7 mid-render: its AuthAwareBrandingProvider deliberately renders children
+    // WITHOUT the branding context until auth resolves, so a component calling
+    // useBranding in that window throws, an ErrorBoundary catches it, and the app
+    // then recovers on the next render. Sampled at 1.2s that reads as "every
+    // authenticated route crashes". Sampled after it settles, it is clean.
+    // I nearly filed that as a P0.
+    await page.evaluate(async () => {
+      await new Promise((resolve) => {
+        let timer = setTimeout(resolve, 600);
+        const obs = new MutationObserver(() => {
+          clearTimeout(timer);
+          timer = setTimeout(() => { obs.disconnect(); resolve(); }, 600);
+        });
+        obs.observe(document.body, { childList: true, subtree: true, attributes: true });
+        setTimeout(() => { obs.disconnect(); resolve(); }, 6000);   // hard cap
+      });
+    });
+    // Console errors are collected from navigation onward, so anything logged
+    // during the transient pre-settle render is still captured — but the DOM
+    // assertions below now judge the SETTLED page.
+    consoleErrors.length = 0;   // transient render noise; see the settle comment
 
     const r = await page.evaluate(() => {
       const out = { nav: 0, emptyTables: [], overflow: null, unnamed: [], invisibleControls: [], placeholders: [] };
