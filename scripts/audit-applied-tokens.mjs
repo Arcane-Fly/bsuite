@@ -25,8 +25,20 @@
  *   P1  no element computes to pure white or pure black in a colour role
  *   P7  no text is invisible: colour != its own background
  *
- * Usage: node scripts/audit-applied-tokens.mjs <url> [--app <name>] [--json]
+ * Usage: node scripts/audit-applied-tokens.mjs <url> [<url> ...] [--app <name>]
+ *        [--json] [--storage <storageState.json>]
  * Requires a running dev server or a preview URL.
+ *
+ * SIGNED-IN RUNS
+ * Most routes in this estate are behind auth, and an unauthenticated hit
+ * redirects to the OAuth server — which rejects a localhost redirect_uri, so it
+ * lands off-origin and is SKIPPED rather than audited. To cover them, sign in
+ * once with playwright, save context.storageState() to a path OUTSIDE the repo,
+ * and pass it with --storage. That file holds live tokens: never commit it.
+ *
+ * Note which OAuth server the target uses. d.r8.crm7.app accepts a
+ * d.suite.crm7.app session; crm7's preview build redirects to PRODUCTION
+ * suite.crm7.app, so a dev session is not enough there.
  */
 // The parent repo has no node_modules of its own — every app installs into its
 // own submodule, and pnpm does not hoist a transitive playwright to a place a
@@ -58,6 +70,12 @@ const { chromium } = resolvePlaywright();
 const appIdx = process.argv.indexOf('--app');
 const app = appIdx > -1 ? process.argv[appIdx + 1] : 'unknown';
 const asJson = process.argv.includes('--json');
+// --storage <playwright storageState.json> runs the sweep SIGNED IN. Without it
+// every authenticated route redirects to the OAuth server, lands off-origin and
+// is skipped — which is most of these apps. The file holds real tokens: keep it
+// outside the repo and never commit it.
+const stIdx = process.argv.indexOf('--storage');
+const storageState = stIdx > -1 ? process.argv[stIdx + 1] : undefined;
 // Every non-flag argument is a URL. Launching a fresh Chromium per route is what
 // made the first version of the sweep unusable: 12 routes meant 12 browser
 // starts, and the run had not finished after fifteen minutes. One browser,
@@ -65,7 +83,7 @@ const asJson = process.argv.includes('--json');
 const urls = [];
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
-  if (a === '--app') { i++; continue; }   // skip the flag AND its value
+  if (a === '--app' || a === '--storage') { i++; continue; }   // skip the flag AND its value
   if (a.startsWith('--')) continue;
   urls.push(a);
 }
@@ -188,7 +206,8 @@ async function launch() {
   }
 }
 const browser = await launch();
-const page = await browser.newPage();
+const context = await browser.newContext(storageState ? { storageState } : {});
+const page = await context.newPage();
 
 let anyFailed = false;
 let skipped = 0;
