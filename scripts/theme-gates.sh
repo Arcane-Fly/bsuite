@@ -54,6 +54,19 @@ run G3 "no palette bypass in app source" bash -c '
   [ "$c3" -eq 0 ] || { echo "C3 palette bypasses: $c3"; exit 1; }'
 run G4 "no app redeclares a package token" scripts/audit-token-ownership.sh
 run G10 "no silently-dropped utilities" scripts/audit-invalid-utilities.sh
+# G11 — an inline `style` attribute is the top of the cascade short of !important,
+# so it beats every layer, utility and class. That is how the Dashboard heading
+# defeated the heading ramp while every other gate reported clean. The codemod is
+# run in DRY mode here: if it can convert anything, someone has added a new inline
+# colour style since the estate was swept to zero.
+run G11 "no NEW convertible inline colour styles" bash -c '
+  t=0
+  for a in crm7 conduit business-suite-unified R80.3 throughput braden; do
+    [ -d "$a" ] || continue
+    n=$(node scripts/codemod-inline-colour-styles.mjs "$a" 2>/dev/null | sed -n "s/^  converted:  \\([0-9]*\\).*/\\1/p")
+    t=$((t + ${n:-0}))
+  done
+  [ "$t" -eq 0 ] || { echo "$t convertible inline colour style(s) — run: node scripts/codemod-inline-colour-styles.mjs <app> --apply"; exit 1; }' 
 run C4 "destructive colour matches the contract" bash -c '
   scripts/audit-d2c-theme.sh > /tmp/tg4.txt 2>&1
   c4=$(awk "/^(crm7|conduit|business-suite-unified|R80\\.3|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==4){print \$(i-1); break}}}" /tmp/tg4.txt | paste -sd+ | bc)

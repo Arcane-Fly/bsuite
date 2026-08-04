@@ -101,3 +101,44 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   GRADIENT TEXT — the display-heading treatment
+   ============================================================
+   Operator ruling 2026-08-04: a page TITLE carries the accent gradient, on
+   authenticated surfaces too. That widens the `.bsuite-accent-gradient` note
+   above, which restricted the gradient to marketing/pre-auth heroes — the ban
+   it was really protecting is on FUNCTIONAL text (labels, body copy, values,
+   anything you read to make a decision), and a page title is none of those.
+
+   Uses --gradient-heading, NOT --gradient-accent. The raw accent gradient ends
+   in cyan at 1.76:1 on the light background, which would leave half the word
+   unreadable; --gradient-heading is built from the AA-verified *-text variants
+   and is correct in both modes. See the token for the measurements.
+
+   background-clip: text requires `color: transparent`, so a gradient that fails
+   to resolve produces INVISIBLE text rather than an ugly one. Both stops
+   therefore come from tokens the package itself defines. */
+.text-gradient-accent {
+  background-image: var(--gradient-heading);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* SHRINK-WRAP, and this is the whole reason the effect is visible.
+     background-clip: text paints the gradient across the ELEMENT BOX, not the
+     glyphs. A block-level h1 spans its container, so a short word samples only
+     the first ~15% of the gradient and the far stop never reaches the screen —
+     it renders as a flat colour, which is indistinguishable from the bug this
+     replaces. fit-content makes the box hug the text so the gradient spans the
+     letters. */
+  width: fit-content;
+  /* A gradient heading must still be selectable and searchable. background-clip
+     keeps the real glyphs, so text selection, find-in-page and screen readers
+     are unaffected — do not reach for an SVG or an image here. */
+}
+
+/* Forced-colours mode drops background-image entirely, which would leave
+   transparent glyphs on screen. Hand the text back to the system palette. */
+@media (forced-colors: active) {
+  .text-gradient-accent { background-image: none; color: CanvasText; }
+}
