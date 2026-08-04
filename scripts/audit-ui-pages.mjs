@@ -116,6 +116,20 @@ for (const url of urls) {
       page.off('console', onErr); page.off('response', onResp);
       continue;
     }
+    // SAME-ORIGIN AUTH REDIRECT. An app can bounce an unauthenticated request to
+    // its OWN /login, which the origin guard above cannot see. Auditing that page
+    // as if it were the route you asked for produces confident nonsense: it has
+    // no navigation by design, so U1 fires and reports the user as "trapped" on
+    // three throughput routes that are simply behind a login. Measured 2026-08-04
+    // — I nearly filed all three.
+    const landedPath = new URL(page.url()).pathname;
+    if (!/\/(login|signin|sign-in|auth)(\/|$)/.test(new URL(url).pathname) &&
+        /\/(login|signin|sign-in|auth)(\/|$)/.test(landedPath)) {
+      results.push({ url, skipped: `redirected to ${landedPath} — needs a session for THIS app` });
+      skipped++;
+      page.off('console', onErr); page.off('response', onResp);
+      continue;
+    }
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(1200);   // let async tables settle before judging them empty
 
