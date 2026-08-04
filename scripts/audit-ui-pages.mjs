@@ -156,8 +156,25 @@ for (const url of urls) {
       // U1 — navigation present with REAL links. `<nav>` alone is not enough; a
       // nav with no anchors is the trap the operator described as "no way to
       // navigate away".
-      const navs = [...document.querySelectorAll('nav, [role="navigation"], aside')];
+      const navs = [...document.querySelectorAll('nav, [role="navigation"], aside, header')];
       out.nav = navs.filter(vis).reduce((n, el) => n + el.querySelectorAll('a[href], button').length, 0);
+      // A page can give the user a way OUT without a <nav>. BSU's /privacy and
+      // /terms are deliberately minimal-chrome and carry "← Back to Business
+      // Suite" as a plain link — the user is not trapped, and reporting them as
+      // trapped was testing the wrong property.
+      // The operator's complaint was FUNCTIONAL — "no way to navigate away" —
+      // so the check is: does an escape route exist? A link home, back, or to
+      // another top-level page counts.
+      if (out.nav === 0) {
+        out.nav = [...document.querySelectorAll('a[href]')].filter((a) => {
+          if (!vis(a)) return false;
+          const href = a.getAttribute('href') || '';
+          const text = (a.textContent || '').toLowerCase();
+          if (/^(mailto:|tel:|#)/.test(href)) return false;      // not an escape
+          return href === '/' || /back|home|return|dashboard|suite/.test(text) ||
+                 (href.startsWith('/') && href !== location.pathname);
+        }).length;
+      }
 
       // U2 — a table with a header row and no body rows and no empty-state text
       // reads as broken. Either render data or say why there is none.
@@ -186,9 +203,23 @@ for (const url of urls) {
       // U6 — accessible names, and controls you can actually SEE.
       for (const el of document.querySelectorAll('button, a[href], input, select, textarea')) {
         if (!vis(el)) continue;
+        // An accessible name can come from a <label for>, an aria-labelledby
+        // target, or a nested control — not just the element's own attributes.
+        // BSU's locale radios carry id={inputId} with a sibling <Label htmlFor>,
+        // which IS a valid association (button is a labelable element), and the
+        // first version of this check reported both as unnamed.
+        const labelledBy = el.getAttribute('aria-labelledby');
+        const fromLabelledBy = labelledBy
+          ? labelledBy.split(/\s+/).map((id) => document.getElementById(id)?.textContent || '').join(' ')
+          : '';
+        const fromLabel = el.id
+          ? (document.querySelector(`label[for="${CSS.escape(el.id)}"]`)?.textContent || '')
+          : '';
+        const fromWrappingLabel = el.closest('label')?.textContent || '';
         const name = (el.getAttribute('aria-label') || el.getAttribute('title') ||
                       el.textContent || el.getAttribute('placeholder') ||
-                      el.getAttribute('alt') || '').trim();
+                      el.getAttribute('alt') || fromLabelledBy || fromLabel ||
+                      fromWrappingLabel || '').trim();
         if (!name && !el.querySelector('svg[aria-label], img[alt]')) {
           out.unnamed.push(`${el.tagName}.${String(el.className).slice(0, 44)}`);
         }
@@ -218,7 +249,7 @@ for (const url of urls) {
     // navigation on it would invite the user to wander off mid-handshake.
     const chromeless = /\/(login|signin|sign-in|auth|callback|logout|oauth)(\/|$)/.test(new URL(url).pathname);
     if (r.nav === 0 && !chromeless) {
-      findings.push('U1 no navigation — page has no nav/aside with links, user is trapped');
+      findings.push('U1 no way out — no nav links and no home/back/top-level link; the user is trapped');
     }
     for (const t of r.emptyTables) findings.push(`U2 table renders a header with no rows and no empty-state (${t})`);
     if (consoleErrors.length) findings.push(`U3 ${consoleErrors.length} console error(s): ${consoleErrors.slice(0, 2).join(' | ')}`);
