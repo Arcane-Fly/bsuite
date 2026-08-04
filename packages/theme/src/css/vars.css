@@ -317,6 +317,20 @@
      ============================================================ */
   --gradient-accent: linear-gradient(135deg, var(--role-primary), var(--role-accent));
 
+  /* HEADING gradient — the same two hues, but built from the *-text role
+     variants rather than the raw ones, and that difference is load-bearing.
+     Measured against the mode backgrounds:
+
+       --role-accent (cyan) on the LIGHT bg ......... 1.76:1   unreadable
+       --role-accent-text   on the LIGHT bg ......... 4.70:1   AA
+
+     So painting a heading with --gradient-accent verbatim leaves the cyan half
+     of the word illegible in light mode. The *-text variants are AA-verified in
+     BOTH modes and already flip under .dark, so one token is correct in both:
+       light  4.71:1 -> 4.70:1        dark  7.01:1 -> 9.78:1
+     No new colour values, so the palette whitelist is unaffected. */
+  --gradient-heading: linear-gradient(135deg, var(--role-primary-text), var(--role-accent-text));
+
   /* ============================================================
      GLOW + SHADOW MULTIPLIERS
      ============================================================ */
