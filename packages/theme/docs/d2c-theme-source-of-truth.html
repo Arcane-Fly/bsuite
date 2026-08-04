@@ -12,13 +12,38 @@
    Layers: 1 palette · 2 surface · 3 role · 4 shadcn · 5 app
    Rules enforced here:
      · No pure white (oklch 1.0) and no pure black (oklch 0) anywhere
-     · Error/destructive is purple, never red — colourblind policy
+     · Error/destructive is RED, never purple — separation policy.
+       CORRECTED 2026-08-04. This line previously read "purple, never red" and
+       CONTRADICTED THIS DOCUMENT'S OWN BODY, which has defined --neon-red as
+       error/destructive since 2026-08-02. The header is what a lane reads first,
+       so the stale line WAS THE ROOT CAUSE: --color-error shipped Electric Purple
+       in crm7, business-suite-unified, R80.3 and throughput, and each of those
+       apps was faithfully following this sentence.
+       The invariant is SEPARATION, not a fixed hue. Error must be maximally
+       separated from PRIMARY under deuteranopia and protanopia. D2C's primary is
+       BLUE, and purple measures DeltaE 0.006 against it under protanopia — the
+       destructive colour and the primary action colour were the SAME SWATCH.
+       Purple and indigo are quarantined from semantics entirely.
+       Warm states separate by LIGHTNESS, not hue: under deuteranopia red and
+       amber both read yellow, so error is the dark one and warning the light one.
+       Operator ruling; blue-vs-purple is the confusable pair, not red.
      · Neon glow is DARK MODE ONLY; light mode uses tinted shadows
      · Colour is never the sole signifier of state
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
   /* ── L1 palette (frozen) ────────────────────────────────── */
+  /* BINDING RULE, added 2026-08-04 by PI ruling. L1 is exposed for DECORATIVE and
+     CATEGORICAL use — charts, pipeline stages, app accents. Bind components to the
+     L3 role tokens below, never to L1, for anything SEMANTIC.
+     Recorded here because it did not exist in this document: a lane cited it as
+     contract, the PI checked, and it was nowhere in the file. A rule that lives
+     only in an inbox message is not a contract — the next lane greps for it, fails
+     to find it, and reopens the question.
+     Categorical maps MAY bind L1 directly (raw Tailwind may not — it sits below
+     the layer BrandingProvider mutates, so it cannot follow a tenant rebrand and is
+     invisible to every palette audit). Any categorical map must ALSO carry a
+     non-colour signifier per the rule above: colour is never the sole signifier. */
   --neon-blue:     oklch(0.546 0.215 262.9);
   --neon-cyan:     oklch(0.769 0.132 191.7);
   --neon-indigo:   oklch(0.511 0.230 277);
