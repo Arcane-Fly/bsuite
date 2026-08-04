@@ -67,6 +67,16 @@ run G11 "no NEW convertible inline colour styles" bash -c '
     t=$((t + ${n:-0}))
   done
   [ "$t" -eq 0 ] || { echo "$t convertible inline colour style(s) — run: node scripts/codemod-inline-colour-styles.mjs <app> --apply"; exit 1; }' 
+# O1 — the one-shot entity-ownership policy has been DOCUMENTED since 2026-02-27
+# and enforced by NOTHING. A documented rule with no gate is a suggestion.
+# RATCHET, not hard-zero, deliberately: 9 cross-app writes exist today and whether
+# each is a violation or a legitimate exception is a PI ruling, not mine. The
+# ratchet stops it getting worse while that is decided, and makes the number
+# visible instead of implicit. Drive to 0 as the ruling lands.
+run O1 "no NEW cross-app entity writes (one-shot policy)" bash -c '
+  n=$(node scripts/audit-one-shot.mjs 2>/dev/null | sed -n "s/^TOTAL cross-app writes: \\([0-9]*\\)/\\1/p")
+  b=$(cat .github/one-shot-baseline.txt 2>/dev/null || echo 0)
+  [ "${n:-99}" -le "$b" ] || { echo "cross-app writes rose to $n against baseline $b — run: node scripts/audit-one-shot.mjs --list"; exit 1; }'
 run C4 "destructive colour matches the contract" bash -c '
   scripts/audit-d2c-theme.sh > /tmp/tg4.txt 2>&1
   c4=$(awk "/^(crm7|conduit|business-suite-unified|R80\\.3|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==4){print \$(i-1); break}}}" /tmp/tg4.txt | paste -sd+ | bc)
