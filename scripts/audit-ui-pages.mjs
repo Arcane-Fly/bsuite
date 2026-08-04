@@ -94,7 +94,23 @@ let anyFailed = false, skipped = 0;
 for (const url of urls) {
   const consoleErrors = [];
   const badRequests = [];
-  const onErr = (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 160)); };
+  // Dev-server noise is not an app defect and CANNOT occur in production. Vite's
+  // HMR socket in particular fails whenever the page is served from a different
+  // port than the one the client was built against — which is every time a dev
+  // server restarts on a new port. Left unfiltered it reported 7 of 7 crm7 pages
+  // as failing, which would have made this audit worthless on its first real run.
+  // Match the SOURCE (@vite/client, the HMR socket) rather than the wording —
+  // Vite emits at least three different phrasings for the same dead socket
+  // ("failed to connect to websocket", "Failed to send error to Vite server",
+  // "WebSocket closed without opened"), and chasing message text one variant at
+  // a time is how a filter stays permanently one release behind.
+  const DEV_NOISE = /@vite\/client|\[vite\]|Vite server|ws:\/\/localhost|failed to connect to websocket|WebSocket closed without opened|HMR|react-refresh|Download the React DevTools/i;
+  const onErr = (m) => {
+    if (m.type() !== 'error') return;
+    const t = m.text();
+    if (DEV_NOISE.test(t)) return;
+    consoleErrors.push(t.slice(0, 160));
+  };
   const onResp = (r) => {
     // Only assets we RENDER. A failed analytics beacon is not a UI defect.
     if (r.status() >= 400 && /\.(png|jpe?g|svg|webp|gif|avif|woff2?)(\?|$)/i.test(r.url())) {
@@ -197,7 +213,13 @@ for (const url of urls) {
       return out;
     });
 
-    if (r.nav === 0) findings.push('U1 no navigation — page has no nav/aside with links, user is trapped');
+    // U1 does not apply to auth screens and OAuth callbacks. They are deliberately
+    // chrome-less — a callback is a transient redirect target, and putting app
+    // navigation on it would invite the user to wander off mid-handshake.
+    const chromeless = /\/(login|signin|sign-in|auth|callback|logout|oauth)(\/|$)/.test(new URL(url).pathname);
+    if (r.nav === 0 && !chromeless) {
+      findings.push('U1 no navigation — page has no nav/aside with links, user is trapped');
+    }
     for (const t of r.emptyTables) findings.push(`U2 table renders a header with no rows and no empty-state (${t})`);
     if (consoleErrors.length) findings.push(`U3 ${consoleErrors.length} console error(s): ${consoleErrors.slice(0, 2).join(' | ')}`);
     if (r.overflow) findings.push(`U4 horizontal overflow ${r.overflow.by}px — ${r.overflow.culprits.join(', ')}`);
