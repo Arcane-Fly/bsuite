@@ -107,6 +107,40 @@ const EXPECT_RAMP = app !== 'braden';
 
 const PURE = new Set(['rgb(255, 255, 255)', 'rgb(0, 0, 0)']);
 
+// ─── G12 — SEMANTIC EQUIVALENCE ──────────────────────────────────────────────
+// Every other gate in this suite compares token NAMES. This one compares what
+// they RESOLVE TO, and it exists because the name-based gates have a permanent
+// blind spot that shipped a real defect to production:
+//
+//   --color-error was Electric Purple in crm7, business-suite-unified, R80.3 and
+//   throughput while --destructive had ALREADY been corrected to red IN THE SAME
+//   FILES. C4 checks --destructive. G4 compares names against the package's
+//   --role-error. Both were green the entire time. business-suite-unified's
+//   index.css literally carried a comment reading "RED. Was purple 283.1..."
+//   twenty lines from three still-purple declarations.
+//
+// The rule: an app-local token that MEANS the same thing as a package role token
+// must RESOLVE to the same value. Names may differ — that is normal and often
+// unavoidable, since ~900 call sites bind the local names. Values may not.
+//
+// Resolved in a real browser rather than by parsing CSS, because the value comes
+// from a var() chain that crosses files, modes and @layer boundaries. Only the
+// engine knows the answer.
+//
+// DELIBERATELY NOT LISTED: pairs that SHOULD differ. --role-error is a fill,
+// chosen to be seen as a block; --role-error-text is its AA-safe text variant.
+// Asserting those equal would be asserting a bug.
+const SEMANTIC_GROUPS = [
+  { concept: 'error',      canonical: '--role-error-text',      aliases: ['--color-error'] },
+  { concept: 'success',    canonical: '--role-success-text',    aliases: ['--color-success'] },
+  { concept: 'warning',    canonical: '--role-warning-text',    aliases: ['--color-warning'] },
+  { concept: 'info',       canonical: '--role-info-text',       aliases: ['--color-info'] },
+  { concept: 'heading',    canonical: '--role-text-heading',    aliases: ['--text-heading'] },
+  { concept: 'body text',  canonical: '--role-text-body',       aliases: ['--text-primary'] },
+  { concept: 'muted text', canonical: '--role-text-muted',      aliases: ['--text-muted'] },
+  { concept: 'secondary',  canonical: '--role-text-secondary',  aliases: ['--text-secondary'] },
+];
+
 // WCAG relative luminance, for P7. The previous test was `color === backgroundColor`,
 // which only catches a heading that is EXACTLY its background — the perfectly
 // invisible case and nothing else. The defect this suite actually keeps meeting is
@@ -127,12 +161,25 @@ function contrast(a, b) {
   return (l1 + 0.05) / (l2 + 0.05);
 }
 
+// Two tokens can be the SAME colour and different strings — the engine serialises
+// oklch() when the chain stayed in oklch and lab() when it passed through a
+// color-mix(). Compare the parsed values, not the text, or the gate reports a
+// conflict between a colour and itself.
+function sameColour(a, b) {
+  if (a === b) return true;
+  const norm = (v) => {
+    const m = /^(?:rgba?|lab|oklch)\(\s*([\d.%-]+)[,\s]+([\d.%-]+)[,\s]+([\d.%-]+)/.exec(v);
+    return m ? `${m[1]}|${m[2]}|${m[3]}` : v;
+  };
+  return norm(a) === norm(b);
+}
+
 async function probe(page, theme) {
   // page.evaluate forwards exactly ONE argument. The previous version passed
   // `theme` as a third, so inside the browser it was undefined and the dark
   // toggle compared undefined === 'dark' — always false. Every 'dark' result
   // this gate would have printed was a second light-mode run.
-  return page.evaluate(({ pure, theme }) => {
+  return page.evaluate(({ pure, theme, groups }) => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     const out = { theme, headings: {}, font: null, pureEndpoints: [], pairs: [] };
 
@@ -147,6 +194,16 @@ async function probe(page, theme) {
 
     // G6 — the family that actually resolved, not the one declared.
     out.font = getComputedStyle(document.body).fontFamily;
+
+    // G12 — resolve every semantic token to its COMPUTED value. getComputedStyle
+    // on documentElement walks the whole var() chain, which is the only way to
+    // learn what a token actually is once it crosses files and modes.
+    out.tokens = {};
+    for (const g of groups) {
+      const read = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+      out.tokens[g.concept] = { canonical: read(g.canonical), aliases: {} };
+      for (const a of g.aliases) { const v = read(a); if (v) out.tokens[g.concept].aliases[a] = v; }
+    }
 
     // P1 + P7 — walk what is really on the page.
     const seen = new Set();
@@ -190,7 +247,7 @@ async function probe(page, theme) {
       out.pairs.push({ tag: el.tagName, text: t.slice(0, 40), fg: cs.color, bg });
     }
     return out;
-  }, { pure: [...PURE], theme });
+  }, { pure: [...PURE], theme, groups: SEMANTIC_GROUPS });
 }
 
 // Playwright's bundled browser is pinned per version and the local cache holds a
@@ -254,7 +311,25 @@ for (const url of urls) {
       if (!EXPECT_FONT.test(r.font)) {
         failures.push(`G6 [${theme}] font resolved to "${r.font}", expected ${EXPECT_FONT}`);
       }
-      if (r.pureEndpoints.length) {
+      // G12 — a token that MEANS the same thing must RESOLVE to the same thing.
+    // Colours are compared after normalising to rgb, because the engine may
+    // serialise the same colour as oklch() in one place and lab() in another
+    // depending on how the var() chain was written — a string compare would
+    // report a false conflict on identical colours.
+    const conflicts = [];
+    for (const [concept, t] of Object.entries(r.tokens || {})) {
+      if (!t.canonical) continue;
+      for (const [alias, val] of Object.entries(t.aliases)) {
+        if (!sameColour(val, t.canonical)) {
+          conflicts.push(`${alias}="${val}" != ${SEMANTIC_GROUPS.find((g) => g.concept === concept).canonical}="${t.canonical}" (${concept})`);
+        }
+      }
+    }
+    if (conflicts.length) {
+      failures.push(`G12 [${theme}] ${conflicts.length} semantic conflict(s) — ${conflicts.slice(0, 3).join(' | ')}`);
+    }
+
+    if (r.pureEndpoints.length) {
         failures.push(`P1 [${theme}] ${r.pureEndpoints.length} pure endpoint(s): ${r.pureEndpoints.slice(0, 3).join(' | ')}`);
       }
       // P7 — real contrast, not exact equality. 3:1 is the WCAG large-text floor and
