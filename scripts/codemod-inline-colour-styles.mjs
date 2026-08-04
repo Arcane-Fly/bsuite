@@ -40,7 +40,15 @@ const app = process.argv[2];
 const APPLY = process.argv.includes('--apply');
 if (!app) { console.error('usage: codemod-inline-colour-styles.mjs <app> [--apply]'); process.exit(2); }
 
+// Semantic text colours. These bind the *-text variants because crm7/BSU's
+// --color-* tokens were repointed at --role-*-text on 2026-08-04 — so the
+// utility and the token now resolve to the SAME value, which is what makes this
+// conversion value-neutral rather than a redesign.
 const COLOR = {
+  '--color-error': 'text-error-text',
+  '--color-success': 'text-success-text',
+  '--color-warning': 'text-warning-text',
+  '--color-info': 'text-info-text',
   '--text-primary': 'text-body',
   '--text-secondary': 'text-secondary',
   '--text-heading': 'text-heading',
@@ -54,10 +62,23 @@ const COLOR = {
   '--role-text-subtle': 'text-subtle',
 };
 const BG = {
+  '--color-error-bg': 'bg-role-error/10',
+  '--color-success-bg': 'bg-role-success/10',
+  '--color-warning-bg': 'bg-role-warning/10',
+  '--color-info-bg': 'bg-role-info/10',
+  '--bg-tertiary': 'bg-sunken',
   '--bg-body': 'bg-body', '--bg-surface': 'bg-surface', '--bg-panel': 'bg-panel',
   '--bg-sunken': 'bg-sunken', '--bg-input': 'bg-input',
   '--role-bg-body': 'bg-body', '--role-bg-surface': 'bg-surface',
   '--role-bg-panel': 'bg-panel', '--role-bg-sunken': 'bg-sunken',
+};
+
+const BORDER = {
+  '--color-error-border': 'border-role-error/30',
+  '--color-success-border': 'border-role-success/30',
+  '--color-warning-border': 'border-role-warning/30',
+  '--color-info-border': 'border-role-info/30',
+  '--role-border': 'border-border',
 };
 
 // execFileSync with an argument array: no shell, so nothing in `app` can be
@@ -79,9 +100,14 @@ function classesFor(body) {
   if (!props.length) return null;
   const out = [];
   for (const prop of props) {
-    const m = /^(color|backgroundColor)\s*:\s*['"`]var\((--[a-z0-9-]+)\)['"`]$/.exec(prop);
+    const m = /^(color|backgroundColor|background|borderColor)\s*:\s*['"`]var\((--[a-z0-9-]+)\)['"`]$/.exec(prop);
     if (!m) { bump('non-static value or unsupported property'); return null; }
-    const util = (m[1] === 'backgroundColor' ? BG : COLOR)[m[2]];
+    // Route by the PROPERTY, not just "is it background". `borderColor` needs the
+    // border-* table; sending it through BG would have produced a bg-* class that
+    // paints the whole element instead of its edge — a wrong answer that still
+    // compiles, which is the kind this codemod exists to avoid.
+    const table = m[1] === 'color' ? COLOR : m[1] === 'borderColor' ? BORDER : BG;
+    const util = table[m[2]];
     if (!util) { bump(`no exact utility for ${m[2]}`); return null; }
     out.push(util);
   }
