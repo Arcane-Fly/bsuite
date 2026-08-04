@@ -87,8 +87,17 @@ else
   if [[ -n ${THEME_GATE_URL:-} ]]; then
     run G5/G6 "ramp + font reach the DOM (${THEME_GATE_APP:-app})" \
       node scripts/audit-applied-tokens.mjs "$THEME_GATE_URL" --app "${THEME_GATE_APP:-unknown}"
+  elif [[ ${THEME_GATE_BROWSER:-0} == 1 ]]; then
+    # Boots each app itself. Slow (six dev servers), so it is opt-in — but it is
+    # opt-in behind a flag rather than behind "go and find a URL yourself",
+    # which is what the old message amounted to and why it never got run.
+    run G5/G6 "ramp + font in the DOM, all six apps" scripts/theme-gates-browser.sh
   else
-    printf '  \033[33m-\033[0m %-6s %s\n' "G5/G6" "ramp + font in the DOM — set THEME_GATE_URL to run"
+    printf '  \033[33m-\033[0m %-6s %s\n' "G5/G6" "ramp + font in the DOM — NOT RUN"
+    printf '     %s\n' "└─ this is the only gate that measures what a user sees; every other"
+    printf '     %s\n' "   gate here can be satisfied by a token nothing consumes."
+    printf '     %s\n' "   Run it:  THEME_GATE_BROWSER=1 scripts/theme-gates.sh"
+    printf '     %s\n' "   or directly:  scripts/theme-gates-browser.sh [app ...]"
   fi
 fi
 

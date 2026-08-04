@@ -55,13 +55,23 @@ function resolvePlaywright() {
 }
 const { chromium } = resolvePlaywright();
 
-const url = process.argv[2];
 const appIdx = process.argv.indexOf('--app');
 const app = appIdx > -1 ? process.argv[appIdx + 1] : 'unknown';
 const asJson = process.argv.includes('--json');
+// Every non-flag argument is a URL. Launching a fresh Chromium per route is what
+// made the first version of the sweep unusable: 12 routes meant 12 browser
+// starts, and the run had not finished after fifteen minutes. One browser,
+// reused across routes, is the whole difference.
+const urls = [];
+for (let i = 2; i < process.argv.length; i++) {
+  const a = process.argv[i];
+  if (a === '--app') { i++; continue; }   // skip the flag AND its value
+  if (a.startsWith('--')) continue;
+  urls.push(a);
+}
 
-if (!url) {
-  console.error('usage: audit-applied-tokens.mjs <url> [--app <name>] [--json]');
+if (!urls.length) {
+  console.error('usage: audit-applied-tokens.mjs <url> [<url> ...] [--app <name>] [--json]');
   process.exit(2);
 }
 
@@ -179,10 +189,15 @@ async function launch() {
 }
 const browser = await launch();
 const page = await browser.newPage();
-const failures = [];
-const results = {};
 
-try {
+let anyFailed = false;
+let skipped = 0;
+
+for (const url of urls) {
+  const failures = [];
+  const results = {};
+  let offOrigin = null;
+
   await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
 
   // ORIGIN GUARD. An unauthenticated app route redirects to the OAuth server,
@@ -195,69 +210,79 @@ try {
   const landed = new URL(page.url());
   const asked = new URL(url);
   if (landed.origin !== asked.origin) {
-    const msg = `redirected off-origin to ${landed.origin} — not audited`;
-    if (asJson) console.log(JSON.stringify({ app, url, skipped: msg }, null, 2));
-    else console.log(`\n${app} — ${url}\n  – SKIPPED: ${msg}\n    (an authenticated route needs a session; this is not a theme result)`);
-    await browser.close();
-    process.exit(0);
+    offOrigin = `redirected off-origin to ${landed.origin} — not audited`;
+    skipped++;
   }
 
-  // A webfont that has not finished loading reports the fallback family, which
-  // would fail G6 for a timing reason rather than a real one.
-  await page.evaluate(() => document.fonts.ready);
+  if (!offOrigin) {
+    // A webfont that has not finished loading reports the fallback family, which
+    // would fail G6 for a timing reason rather than a real one.
+    await page.evaluate(() => document.fonts.ready);
 
-  for (const theme of ['light', 'dark']) {
-    const r = await probe(page, theme);
-    results[theme] = r;
+    for (const theme of ['light', 'dark']) {
+      const r = await probe(page, theme);
+      results[theme] = r;
 
-    if (EXPECT_RAMP) {
-      const distinct = new Set(Object.values(r.headings)).size;
-      if (distinct < 6) {
+      if (EXPECT_RAMP) {
+        const distinct = new Set(Object.values(r.headings)).size;
+        if (distinct < 6) {
+          failures.push(
+            `G5 [${theme}] heading ramp collapsed: ${distinct}/6 distinct colours — ` +
+            Object.entries(r.headings).map(([k, v]) => `${k}=${v}`).join(' ')
+          );
+        }
+      }
+      if (!EXPECT_FONT.test(r.font)) {
+        failures.push(`G6 [${theme}] font resolved to "${r.font}", expected ${EXPECT_FONT}`);
+      }
+      if (r.pureEndpoints.length) {
+        failures.push(`P1 [${theme}] ${r.pureEndpoints.length} pure endpoint(s): ${r.pureEndpoints.slice(0, 3).join(' | ')}`);
+      }
+      // P7 — real contrast, not exact equality. 3:1 is the WCAG large-text floor and
+      // deliberately lenient: this gate is hunting text you cannot read at all, and a
+      // stricter bar on a first pass produces a list nobody acts on.
+      const unreadable = r.pairs
+        .map((q) => ({ ...q, ratio: contrast(parseRgb(q.fg), parseRgb(q.bg)) }))
+        .filter((q) => q.ratio < 3)
+        .sort((a, b) => a.ratio - b.ratio);
+      r.unreadable = unreadable;
+      if (unreadable.length) {
         failures.push(
-          `G5 [${theme}] heading ramp collapsed: ${distinct}/6 distinct colours — ` +
-          Object.entries(r.headings).map(([k, v]) => `${k}=${v}`).join(' ')
+          `P7 [${theme}] ${unreadable.length} below 3:1 — ` +
+          unreadable.slice(0, 3).map((q) => `${q.tag} "${q.text}" ${q.ratio.toFixed(2)}:1`).join(' | ')
         );
       }
     }
-    if (!EXPECT_FONT.test(r.font)) {
-      failures.push(`G6 [${theme}] font resolved to "${r.font}", expected ${EXPECT_FONT}`);
+  }
+
+  if (failures.length) anyFailed = true;
+
+  if (asJson) {
+    console.log(JSON.stringify({ app, url, skipped: offOrigin, failures, results }, null, 2));
+  } else if (offOrigin) {
+    console.log(`\n${app} — ${url}\n  – SKIPPED: ${offOrigin}\n    (an authenticated route needs a session; this is not a theme result)`);
+  } else {
+    console.log(`\n${app} — ${url}`);
+    for (const t of ['light', 'dark']) {
+      const r = results[t];
+      if (!r) continue;
+      console.log(`  ${t}: ${new Set(Object.values(r.headings)).size}/6 distinct headings · font ${r.font.split(',')[0]}`);
     }
-    if (r.pureEndpoints.length) {
-      failures.push(`P1 [${theme}] ${r.pureEndpoints.length} pure endpoint(s): ${r.pureEndpoints.slice(0, 3).join(' | ')}`);
-    }
-    // P7 — real contrast, not exact equality. 3:1 is the WCAG large-text floor and
-    // deliberately lenient: this gate is hunting text you cannot read at all, and a
-    // stricter bar on a first pass produces a list nobody acts on.
-    const unreadable = r.pairs
-      .map((p) => ({ ...p, ratio: contrast(parseRgb(p.fg), parseRgb(p.bg)) }))
-      .filter((p) => p.ratio < 3)
-      .sort((a, b) => a.ratio - b.ratio);
-    r.unreadable = unreadable;
-    if (unreadable.length) {
-      failures.push(
-        `P7 [${theme}] ${unreadable.length} below 3:1 — ` +
-        unreadable.slice(0, 3).map((p) => `${p.tag} "${p.text}" ${p.ratio.toFixed(2)}:1`).join(' | ')
-      );
+    if (failures.length) {
+      console.log('');
+      failures.forEach((f) => console.log(`  ✗ ${f}`));
+    } else {
+      console.log('  ✓ ramp, font, pure endpoints and visibility all clean');
     }
   }
-} finally {
-  await browser.close();
 }
 
-if (asJson) {
-  console.log(JSON.stringify({ app, url, failures, results }, null, 2));
-} else {
-  console.log(`\n${app} — ${url}`);
-  for (const t of ['light', 'dark']) {
-    const r = results[t];
-    if (!r) continue;
-    console.log(`  ${t}: ${new Set(Object.values(r.headings)).size}/6 distinct headings · font ${r.font.split(',')[0]}`);
-  }
-  if (failures.length) {
-    console.log('');
-    failures.forEach((f) => console.log(`  ✗ ${f}`));
-  } else {
-    console.log('  ✓ ramp, font, pure endpoints and visibility all clean');
-  }
+await browser.close();
+
+// A skip is missing coverage, never a pass — but it must not fail the run
+// either, or every auth-gated app would be permanently red for a reason the
+// theme cannot fix. It is surfaced in the exit banner instead.
+if (skipped && !asJson) {
+  console.log(`\n  ${skipped} route(s) skipped — not audited, not passed.`);
 }
-process.exit(failures.length ? 1 : 0);
+process.exit(anyFailed ? 1 : 0);
