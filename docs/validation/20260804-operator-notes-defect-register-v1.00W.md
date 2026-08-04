@@ -18,6 +18,38 @@ been promoted. `merged ≠ shipped` — see `feedback_verify_delivery_surfaces_n
 
 ---
 
+## ⚠️ READ THIS BEFORE TRIAGING ANYTHING BELOW
+
+**`main` is 52 commits behind `development`, and production pins `@bsuite/theme ^0.6.0` while
+development pins `^0.10.3`.** Measured 2026-08-04 from `git show origin/main:package.json` vs
+`origin/development:package.json`.
+
+On a `0.x` version **a caret pins the MINOR** — so `^0.6.0` can never resolve 0.7.0 or later, no
+matter what is published. Production is running theme **0.6.0**.
+
+Everything landed on development between 0.7.0 and 0.10.3 is therefore **absent from
+production**: the heading ramp being applied at all, the Geist font binding, the removal of
+91 app-redeclared tokens, `[data-app]` accents, `--role-info-text`, the root-element colour fix
+(html computed to pure black in both modes), and the pure-white/black endpoint sweep.
+
+**Most of the screenshots in this register are `crm.crm7.app` — production.** So a substantial
+share of the theme and layout complaints in section D, and the docx's "pure white text on dark
+doesn't match D2C / header gradient / glow / nav underline / no pure-white light cards" items,
+are very likely **already fixed on `development` and simply not shipped**.
+
+That does not make them false reports. It makes them a **promotion** problem rather than a code
+problem — and promotion is the operator's call. Until `development` → `main` lands, re-testing
+these on production measures the old build.
+
+**Corollary for this register:** do not open new work on any production-origin theme/layout item
+until it has been re-checked on `d.crm.crm7.app`. `merged ≠ shipped`, and here the gap is 52
+commits wide.
+
+*(A subagent reported this divergence as `@bsuite/page-builder ^0.5.2` vs `^0.6.3`. Checked
+directly: it is `^0.6.2` vs `^0.6.3` — a patch, not the issue. The theme pin is the real gap.)*
+
+---
+
 ## Verification status — 2026-08-04
 
 Only items I verified against the live catalog or the code are listed. Everything else in the
@@ -28,8 +60,9 @@ tables below is **unverified** and must not be reported as fixed.
 | **B1** | **FIXED** — code + test | `0.0485 * 100` is `4.8500000000000005`; measured, and it is the two payroll-tax rates (0.0485, 0.0685) that carry the artefact while 0.115/0.12/0.055 are clean. Added `fractionToPercent()` to `crm7/src/lib/formatters.ts` and applied it at **five** sites, not one — `AdvancedConfigSection.tsx:97` (all percent fields) and `:300` (payroll tax), `RateInfoTab.tsx:226`, `ReviewTab.tsx:322`, `RateScheduleSidebar.tsx:73`. Also fixed the `stored === defaultVal` float-equality test that pins a spurious override one ulp off the statutory default. 35 tests pass. |
 | **C1** | **ROOT CAUSE FOUND + FIXED** — not the defect it looked like | The seed host belongs to **`bsuite Platform`**, not FutureBuild (live catalog). Re-reading the screenshot myself: the switcher and sidebar read "FutureBuild Academy" while the body reads **"You're with bsuite Platform"**. `usePortalContext` ran its own `.eq('user_id').eq('status','active').limit(1).maybeSingle()` — **no tenant filter, no ORDER BY** — so it returned an arbitrary membership. It bypassed `useTenantId()`, the canonical resolver that honours the switcher and gates localStorage against real memberships. **12 call sites** read this hook including `usePermissions`. Rewired; regression test **proven to fail** against the old shape. |
 | **A3** | **RESOLVED IN THE DB; UI needs a live re-check** | `public.enterprise_licence_events` **exists**, RLS enabled, **3 policies**, full grants to `anon`/`authenticated`, 0 rows. Created by `20260728120000_enterprise_licence_events.sql`, which exists in three submodules **byte-identical** (same md5) so the timestamp collision is benign here. The screenshot's PGRST205 was a stale PostgREST schema cache or predates the migration reaching prod. |
+| **A1** | **ALREADY FIXED IN CODE; production serving state UNCONFIRMED** | React #185 on `/communications/compose` is "maximum update depth exceeded". The cause was `useEmailStore(selectActiveIntegrations)` — `selectActiveIntegrations` is `state.integrations.filter(…)`, a fresh array every call, which is the classic Zustand trigger under React 19's `useSyncExternalStore`. Fixed by `cfa85c88` (2026-07-27) with `useShallow`, and guarded by `src/__tests__/react-185-selector-shallow.test.ts`, which asserts no raw `useEmailStore(select…)` exists anywhere in `src/`. `cfa85c88` **is** an ancestor of `origin/main`. **But** the 20 most recent Vercel deployments all have `target: null` — none is a production deploy — so I could not confirm which build `crm.crm7.app` serves. Needs a live check against the served commit before closing. |
 | **A5** | **CONFIRMED LIVE, not yet fixed** | "No classifications found for this award" on MA000020 is the `award_classifications` = 0 rows hole documented since 2026-04-22. Fix is Amendment A.1 in `~/.claude/plans/lazy-hopping-nest.md` — repoint `fromFairWork()` at `fairwork-enhanced`. |
-| **C2** | **CONFIRMED, data-hygiene** | Placement notes read "PILOT synthetic placement … Not a real placement." Needs a cleanup pass, not a code fix. |
+| **C2** | **NOT A CONTAMINATION DEFECT — reclassified** | Measured grouped by tenant, which is the only way this question can be answered honestly: synthetic/seed placements are **Braden Group 8, bsuite Platform 1, FutureBuild Academy 0**. Both carriers are operator-owned dev tenants; the real client has none. So this is dev data in dev tenants, behaving correctly. **The reason it looked like contamination is C1** — the portal was rendering bsuite Platform's records while the chrome said FutureBuild Academy. Fixing C1 removes the symptom. No cleanup migration is warranted, and the seed rows stay: `20260704170000_gto_e2e_w6_portal_test_seed.sql` is load-bearing for the portal e2e path. |
 
 ---
 
