@@ -9,7 +9,7 @@ export const PAYROLL_TAX_RATES: Record<AustralianState, number> = {
   WA: 0.055,
   TAS: 0.04,
   NT: 0.055,
-  ACT: 0.0685,
+  ACT: 0.0675, // 6.75% from 1 July 2026 (threshold $1.75m). Was 6.85%. Verified 2026-08-03.
 };
 
 /**
@@ -66,6 +66,25 @@ export type PayrollTaxRateTypeCode = 'AP' | 'AA' | 'TN' | 'JN';
  * deliberately NOT uniform — do not "tidy" this into a single shared list
  * per state; WA/VIC/NSW exempt TN, the rest do not.
  */
+/**
+ * @deprecated WRONG IN EVERY ROW — do not read this. Superseded 2026-08-03 by
+ * APPRENTICE_RELIEF in ./payroll-tax-relief.
+ *
+ * It modelled relief as a single boolean per state per rate-type code, which
+ * cannot express what the jurisdictions do. Verified against the revenue
+ * offices 2026-08-02: NSW and TAS are REBATES (the wage is taxable and the tax
+ * IS paid); SA's exemption LAPSED in 2022; VIC taxes by default and its
+ * exemption is GTO-specific and conditional; WA does NOT exempt trainees on
+ * contracts registered from 1 July 2019; QLD and NT DO exempt trainees.
+ *
+ * Retained as an export only so the two live copies that still name it
+ * (crm7/src/lib/payrollTax.ts, R80.3/src/services/awardRulesEngine.ts) fail
+ * loudly on the deprecation rather than silently finding nothing. Delete once
+ * both are migrated. Values below are left UNCHANGED and wrong on purpose: a
+ * half-corrected table is worse than an obviously condemned one.
+ *
+ * See precedent__bsuite__20260803__exemption_is_not_rebate.
+ */
 export const PAYROLL_TAX_EXEMPT_STATES: Partial<
   Record<AustralianState, ReadonlyArray<PayrollTaxRateTypeCode>>
 > = {
@@ -109,6 +128,11 @@ export const PAYROLL_TAX_EXEMPT_STATES: Partial<
  * @param generalStateRate - The standard state payroll tax rate (e.g. from
  *   `getPayrollTaxRate()` or a tenant-specific resolver) — NOT exemption-aware
  *   on its own.
+ */
+/**
+ * @deprecated Use `resolvePayrollTax()` from ./payroll-tax-relief instead.
+ * This returns 0 for REBATE jurisdictions (NSW, TAS), which understates cost by
+ * the entire payroll tax line — the wage is taxable there and the tax is paid.
  */
 export function resolveEffectivePayrollTaxRate(
   state: AustralianState,

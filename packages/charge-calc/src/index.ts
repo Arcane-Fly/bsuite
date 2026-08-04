@@ -19,3 +19,8 @@ export * from './sources.js';
 export * from './resolvers/index.js';
 
 export * from './rdo.js';
+
+// Apprentice/trainee payroll tax RELIEF — typed exemption|rebate|none|unverified.
+// Supersedes PAYROLL_TAX_EXEMPT_STATES / resolveEffectivePayrollTaxRate in
+// defaults.ts, which modelled relief as a boolean and was wrong in every row.
+export * from './payroll-tax-relief.js';

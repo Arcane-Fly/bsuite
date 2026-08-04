@@ -193,11 +193,23 @@
   --text-on-warning:    var(--text-on-dark-fill);
   --text-on-success:    var(--text-on-dark-fill);
   --text-on-info:       var(--text-on-light-fill);
+  /* Was MISSING and preset-v4.css references it, so --color-overlay-foreground
+     resolved to nothing and any text on a scrim fell back to whatever it
+     inherited. Measured undefined in the browser on 2026-08-03. The scrim is
+     dark in both modes, so this is light in both. */
+  --text-on-overlay:    var(--text-on-light-fill);
 
 /* ============================================================
    DECORATION — shadow, glow, dot and grid
    ============================================================ */
   --gradient-accent: linear-gradient(135deg, var(--braden-red), var(--braden-gold));
+  /* Same gradient, re-stopped for a DARK backdrop. --gradient-accent is built
+     for fills on a light surface: against the hero scrim (L~0.36) its red stop
+     measures ~1.7:1 and the text half-disappears. This keeps the red hue and
+     chroma exactly (17.6 / 0.17) and lifts only lightness to a value the
+     contract already ships, so both stops clear the scrim and G2 still passes. */
+  --braden-red-on-dark: oklch(0.704 0.170 17.6);
+  --gradient-accent-on-dark: linear-gradient(135deg, var(--braden-red-on-dark), var(--braden-gold));
   --shadow-xs:       0 1px 2px oklch(0.30 0.03 250 / 0.06);
   --shadow-sm:       0 1px 3px oklch(0.30 0.03 250 / 0.08), 0 1px 2px oklch(0.30 0.03 250 / 0.04);
   --shadow-md:       0 4px 10px -3px oklch(0.30 0.03 250 / 0.10), 0 2px 4px -2px oklch(0.30 0.03 250 / 0.06);
@@ -283,15 +295,93 @@
 }
 
 /* ============================================================
-   BASE — the heading ramp, APPLIED. The tokens existed and nothing bound
-   them to an actual h1..h6, so every level rendered as flat body colour.
-   Contract values, verbatim.
-   ============================================================ */
+   BASE — Corporate sets the heading FACE only.
+   ============================================================
+   Not colour, not size, not weight, not transform. Reverted to this after
+   operator review ("well that looks worse") and a measurement that showed
+   why: on the live site the hero H1 picked up the ramp colour while the 25
+   headings below it kept their explicit `text-braden-navy`. One heading
+   stopped matching the rest. That is not a hierarchy.
+
+   A base rule only reaches elements that do not style themselves. In a
+   dense app UI that is most headings, which is the case the ramp was
+   measured against. On a marketing site it is almost none — 59 headings
+   here carry an explicit brand colour and their own size utility — so a
+   base ramp cannot create hierarchy there, only a mismatch on whichever
+   few it happens to reach.
+
+   font-family is the exception: nothing on the page overrides it, so it
+   lands uniformly and is exactly what a base rule is for.
+
+   D2C keeps the full ramp (see vars.css) — those apps ARE the dense-UI
+   case, and the ramp is verified there in a real browser by G5. */
 @layer base {
-  h1 { font-family: var(--font-display); color: var(--role-h1); font-size: 25px; font-weight: 600; letter-spacing: var(--track-display); }
-  h2 { font-family: var(--font-heading); color: var(--role-h2); font-size: 19px; font-weight: 700; }
-  h3 { font-family: var(--font-heading); color: var(--role-h3); font-size: 16px; font-weight: 700; }
-  h4 { font-family: var(--font-heading); color: var(--role-h4); font-size: 14px; font-weight: 700; }
-  h5 { font-family: var(--font-heading); color: var(--role-h5); font-size: 13px; font-weight: 700; }
-  h6 { font-family: var(--font-heading); color: var(--role-h6); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-eyebrow); }
+  h1 { font-family: var(--font-display); }
+  h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+
+  /* The root element's colour was the UA default — measured pure black (L=0)
+     in BOTH modes on 2026-08-03, i.e. the one banned value, sitting at the top
+     of the inheritance chain. Nothing renders text at <html> so it was
+     invisible to review, but every element that does not set a colour and is
+     not under a styled ancestor lands on it. */
+  html { color: var(--role-text-body); background-color: var(--role-bg-base); }
+
+  /* The contract names a family and the package shipped the token, but NOTHING
+     bound it to an element — so every app fell back to whatever it happened
+     to set itself, which is how crm7 ran Inter against a Geist contract and
+     the estate ran four families at once. Same defect as the heading ramp:
+     a token nobody applies is not a font, it is a variable. */
+  body { font-family: var(--font-body); }
+  code, kbd, samp, pre { font-family: var(--font-mono); }
+}
+
+/* ============================================================
+   DARK SURFACES INSIDE LIGHT MODE
+   ============================================================
+   A navy or red panel on a light page is a dark surface, and the mode-sensitive
+   role tokens are still resolving their LIGHT values inside it. That is not a
+   theoretical problem — measured on the contact section 2026-08-03:
+
+     --role-accent-text (light) on bg-braden-navy ....... 2.20:1   FAIL
+     --braden-gold                on bg-braden-navy ..... 5.07:1   AA
+
+   and the mirror holds on a light background, where the brand gold is 2.05:1
+   and the light accent is 4.71:1. No single value passes on both, so this
+   cannot be fixed by picking a better gold — the token has to follow the
+   SURFACE, not just the mode. Mark a dark panel and its accent text flips. */
+[data-surface='dark'] {
+  --role-accent-text: var(--braden-gold);
+  --role-text-body: var(--text-on-light-fill);
+  --role-text-secondary: var(--text-on-light-fill);
+  /* D2C's heading ramp reads this; Corporate has no colour ramp, but a shared
+     surface contract should behave the same in both brands. */
+  --heading-color: currentColor;
+}
+
+/* ============================================================
+   GRADIENT TEXT — the one place the accent gradient paints glyphs.
+   ============================================================
+   background-clip:text needs `color: transparent` to show through, which means
+   a failed gradient produces INVISIBLE TEXT rather than an ugly one. So both
+   stops resolve from tokens defined above in this same file, never from a
+   token an app might or might not have. */
+@layer components {
+  .text-gradient-accent {
+    background-image: var(--gradient-accent);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-accent-on-dark {
+    background-image: var(--gradient-accent-on-dark);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Forced-colours mode drops background-image entirely, which would leave
+     transparent glyphs on screen. Hand the text back to the system palette. */
+  @media (forced-colors: active) {
+    .text-gradient-accent,
+    .text-gradient-accent-on-dark { background-image: none; color: CanvasText; }
+  }
 }

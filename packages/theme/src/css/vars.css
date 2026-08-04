@@ -206,6 +206,9 @@
   --role-error-text:   oklch(0.556 0.230  25);    /* 4.69:1 ✓ AA */
   --role-warning-text: oklch(0.535 0.150  75);    /* 4.70:1 ✓ AA */
   --role-success-text: oklch(0.501 0.130 195);    /* 4.70:1 ✓ AA */
+  /* Pair for --role-info. Every other semantic role had a -text token; info
+     was the only gap, which forced apps to invent a local copy (R80.4). */
+  --role-info-text:    oklch(0.480 0.120 192);    /* 4.70:1 ✓ AA on panel */
 
   /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
      measured against --role-bg-body (the conservative floor); all tiers
@@ -458,6 +461,7 @@
   --role-error-text:   oklch(0.786 0.230  25);    /*  7.00:1 ✓ AAA */
   --role-warning-text: var(--neon-electric-amber);/* 10.10:1 ✓ AAA */
   --role-success-text: oklch(0.671 0.130 195);    /*  6.99:1 ✓ AAA */
+  --role-info-text:    oklch(0.780 0.120 192);    /*  7.0:1 ✓ AAA on dark panel */
 
   /* Glow/shadow scale up in dark mode */
   --glow-strength:   0.6;
@@ -500,16 +504,44 @@
    hierarchy survives greyscale and both dichromacies rather than relying on
    size alone.
 
-   Scoped to @layer base so any component class still wins — this sets the
-   floor, it does not fight Tailwind utilities. */
+   Scoped to @layer base so any component class ON THE HEADING ITSELF wins.
+   That is a narrower guarantee than it looks, and the earlier version of this
+   comment ("it does not fight Tailwind utilities") was simply wrong.
+
+   WHAT IT DOES OVERRIDE: an INHERITED colour. Inheritance is the last resort in
+   the cascade, so a rule targeting `h1` beats `text-primary-foreground` sitting
+   on an ancestor — specificity never enters into it. Measured on braden
+   2026-08-03: a hero `<h1>` inheriting a near-white foreground from its wrapper
+   rendered dark navy against a dark scrim, i.e. all but invisible, and it was
+   the ONLY heading on the page that moved. That is the signature of this bug —
+   one heading changing is not a small problem, it is the coloured-container
+   case, and coloured containers are where text goes invisible.
+
+   --heading-color is the escape hatch. Any container that colours its own text
+   sets it once and the whole heading subtree defers:
+     <div class="text-primary-foreground [--heading-color:currentColor]">
+   currentColor there resolves to the container's colour, so headings inherit
+   again instead of being repainted. */
 @layer base {
-  h1 { color: var(--role-h1); font-size: 25px; font-weight: 700; letter-spacing: var(--track-display); }
-  h2 { color: var(--role-h2); font-size: 19px; }
-  h3 { color: var(--role-h3); font-size: 16px; }
-  h4 { color: var(--role-h4); font-size: 14px; }
-  h5 { color: var(--role-h5); font-size: 13px; }
+  /* See braden.css: the root element inherits the UA default pure black when
+     nothing sets it, which is the one banned value at the top of the chain. */
+  html { color: var(--role-text-body); background-color: var(--role-bg-base); }
+
+  /* The contract names a family and the package shipped the token, but NOTHING
+     bound it to an element — so every app fell back to whatever it happened
+     to set itself, which is how crm7 ran Inter against a Geist contract and
+     the estate ran four families at once. Same defect as the heading ramp:
+     a token nobody applies is not a font, it is a variable. */
+  body { font-family: var(--font-body); }
+  code, kbd, samp, pre { font-family: var(--font-mono); }
+
+  h1 { color: var(--heading-color, var(--role-h1)); font-size: 25px; font-weight: 700; letter-spacing: var(--track-display); }
+  h2 { color: var(--heading-color, var(--role-h2)); font-size: 19px; }
+  h3 { color: var(--heading-color, var(--role-h3)); font-size: 16px; }
+  h4 { color: var(--heading-color, var(--role-h4)); font-size: 14px; }
+  h5 { color: var(--heading-color, var(--role-h5)); font-size: 13px; }
   h6 {
-    color: var(--role-h6);
+    color: var(--heading-color, var(--role-h6));
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: var(--track-eyebrow);

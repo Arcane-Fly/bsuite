@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# G5/G6 for every app, without needing a server already running.
+#
+# WHY THIS EXISTS
+# theme-gates.sh prints "- G5/G6 ... set THEME_GATE_URL to run" and then reports
+# ALL GATES GREEN. That dash is the whole problem: G5/G6 is the ONLY gate that
+# measures what a user actually sees, every other gate in the suite can be
+# satisfied by a token nothing consumes, and it is the one gate the default
+# sweep skips. A green run that skipped it is green about the source, not the
+# screen — which is exactly how a six-level heading ramp shipped, passed every
+# static check, and rendered as one flat colour.
+#
+# So this boots each app itself, probes it, and tears it down.
+#
+# WHAT A SKIP MEANS HERE
+# An app whose routes redirect to the OAuth server lands off-origin, because the
+# server rejects a localhost redirect_uri. audit-applied-tokens.mjs refuses to
+# audit that page — attributing Supabase's raw JSON 400 to the app produced 8
+# pure endpoints, Times New Roman and a collapsed ramp against a healthy crm7.
+# Those routes are reported SKIPPED and counted separately. A skip is coverage
+# this run does not have. It is never a pass.
+#
+# Usage: scripts/theme-gates-browser.sh [app ...]     (default: all six)
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+# Routes worth probing per app. Authenticated routes are deliberately absent —
+# they cannot be reached without a session and would only ever report SKIPPED.
+declare -A ROUTES=(
+  [crm7]="/ /login /auth/callback /404 /unauthorized /privacy /terms"
+  [conduit]="/ /login"
+  [business-suite-unified]="/ /login /auth/callback"
+  [R80.3]="/ /login"
+  [throughput]="/ /login"
+  [braden]="/ /about /services /products /contact"
+)
+APPS=("${@:-}")
+[[ -z ${APPS[0]:-} ]] && APPS=(crm7 conduit business-suite-unified R80.3 throughput braden)
+
+pass=0; fail=0; skip=0
+declare -a FAILED=()
+
+echo
+echo "G5/G6 — RAMP, FONT, ENDPOINTS AND CONTRAST IN A REAL BROWSER"
+echo "───────────────────────────────────────────────────────────────"
+
+for app in "${APPS[@]}"; do
+  [[ -d $app ]] || continue
+  log=$(mktemp); : >"$log"
+  # setsid so the server survives this shell and we can reap it by PID rather
+  # than pkill -f vite, which would also kill an unrelated app the operator has
+  # open. Killing the wrong dev server is a silent way to make a gate lie.
+  ( cd "$app" && setsid nohup pnpm dev >"$log" 2>&1 </dev/null & echo $! >"$log.pid" )
+  sleep 1
+  pid=$(cat "$log.pid" 2>/dev/null)
+
+  url=''
+  for _ in $(seq 1 60); do
+    url=$(grep -oE 'http://localhost:[0-9]+' "$log" 2>/dev/null | head -1)
+    [[ -n $url ]] && curl -s -o /dev/null --max-time 2 "$url/" && break
+    url=''; sleep 2
+  done
+
+  if [[ -z $url ]]; then
+    # Distinguish "the app is broken" from "something else holds the port".
+    # Reporting a stale dev server as an app failure sends you debugging the
+    # wrong thing — this cost a cycle on conduit, whose port was still held by a
+    # server from an earlier manual run.
+    if grep -q 'EADDRINUSE' "$log" 2>/dev/null; then
+      port=$(grep -oE 'port: [0-9]+' "$log" | head -1 | grep -oE '[0-9]+')
+      printf '  \033[31m✗\033[0m %-24s port %s already in use — another server is holding it,\n' "$app" "${port:-?}"
+      printf '      %-24s this is an environment condition, NOT an app or theme failure.\n' ''
+      fail=$((fail+1)); FAILED+=("$app — port ${port:-?} in use (stale server, not the app)")
+    else
+      printf '  \033[31m✗\033[0m %-24s dev server never came up (see %s)\n' "$app" "$log"
+      fail=$((fail+1)); FAILED+=("$app — server did not start")
+    fi
+  else
+    printf '  %-24s %s\n' "$app" "$url"
+    # ALL routes in ONE invocation. The first version spawned a process — and
+    # therefore a whole Chromium — per route; twelve routes had not finished
+    # after fifteen minutes. The auditor now reuses a single browser.
+    targets=()
+    for r in ${ROUTES[$app]}; do targets+=("$url$r"); done
+    out=$(node scripts/audit-applied-tokens.mjs "${targets[@]}" --app "$app" 2>&1)
+    while IFS= read -r line; do
+      case "$line" in
+        *SKIPPED*) skip=$((skip+1)); printf '      \033[33m-\033[0m %s\n' "${line#*SKIPPED: }" ;;
+        *"✓ ramp"*) pass=$((pass+1)) ;;
+        "  ✗ "*)   fail=$((fail+1)); FAILED+=("$app: ${line#  ✗ }"); printf '      \033[31m✗\033[0m %s\n' "${line#  ✗ }" ;;
+      esac
+    done <<<"$out"
+    printf '      %s ok, %s failed so far\n' "$pass" "$fail"
+  fi
+
+  [[ -n ${pid:-} ]] && kill -- -"$pid" 2>/dev/null
+  rm -f "$log.pid"
+done
+
+echo "───────────────────────────────────────────────────────────────"
+printf '  %s routes passed, %s failed, %s skipped\n' "$pass" "$fail" "$skip"
+if [[ $fail -gt 0 ]]; then
+  echo
+  echo "  NOT DONE:"
+  for f in "${FAILED[@]}"; do echo "    · $f"; done
+  echo
+  exit 1
+fi
+if [[ $skip -gt 0 ]]; then
+  echo
+  echo "  $skip route(s) were NOT audited — they redirect to the OAuth server,"
+  echo "  which rejects a localhost redirect_uri. That is missing coverage, not"
+  echo "  a pass. Reaching them needs a signed-in run against the d.* domains."
+fi
+echo
