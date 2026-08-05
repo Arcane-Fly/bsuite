@@ -30,10 +30,6 @@
     "./boot": {
       "import": "./dist/boot/index.js",
       "types": "./dist/boot/index.d.ts"
-    },
-    "./r804": {
-      "import": "./dist/r804/index.js",
-      "types": "./dist/r804/index.d.ts"
     }
   },
   "scripts": {
