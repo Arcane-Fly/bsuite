@@ -212,16 +212,38 @@ for (const url of urls) {
 
         // Composite the real backdrop: walk up through transparent ancestors,
         // and bail if anything paints an image or gradient behind the text.
-        let bg = null, node = el, imaged = false;
-        while (node && node !== document.documentElement) {
+        //
+        // STOPPING AT THE FIRST NON-ZERO-ALPHA BACKGROUND IS WRONG, and wrong in
+        // the direction that manufactures findings. The estate's badges are
+        // `bg-destructive/10 text-destructive` — a 10% wash of the SAME hue as
+        // the text. Take that wash as the backdrop and you have compared the
+        // colour against itself: 1.00:1, ΔE 0, reported as INVISIBLE, on a pill
+        // that renders perfectly legibly because the 90% showing through is the
+        // near-black panel. Every translucent layer has to be composited down
+        // onto what is behind it until something opaque stops the walk.
+        const layers = [];              // top-most first
+        let node = el, imaged = false;
+        while (node) {
           const s = getComputedStyle(node);
           if (s.backgroundImage && s.backgroundImage !== 'none') { imaged = true; break; }
           const c = parse(s.backgroundColor);
-          if (c && c[3] > 0) { bg = c; break; }
+          if (c && c[3] > 0) { layers.push(c); if (c[3] >= 0.999) break; }
           node = node.parentElement;
         }
         if (imaged) continue;
-        if (!bg) { const b = parse(getComputedStyle(document.documentElement).backgroundColor); bg = b && b[3] > 0 ? b : [255, 255, 255, 1]; }
+        // Nothing opaque was found on the way up — the canvas is what shows
+        // through. Only fall back to white once that is also unpainted.
+        if (!layers.length || layers[layers.length - 1][3] < 0.999) {
+          const b = parse(getComputedStyle(document.documentElement).backgroundColor);
+          layers.push(b && b[3] > 0.999 ? b : [255, 255, 255, 1]);
+        }
+        // Composite bottom-up: the deepest layer is the base, each shallower
+        // layer paints over the accumulated result at its own alpha.
+        let bg = layers[layers.length - 1];
+        for (let i = layers.length - 2; i >= 0; i--) {
+          const t = layers[i], a = t[3];
+          bg = [t[0] * a + bg[0] * (1 - a), t[1] * a + bg[1] * (1 - a), t[2] * a + bg[2] * (1 - a), 1];
+        }
 
         // Effective opacity is the PRODUCT of every ancestor's opacity — a 0.5
         // on a wrapper is indistinguishable from a 0.5 on the text itself.
