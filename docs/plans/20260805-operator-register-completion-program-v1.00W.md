@@ -8,6 +8,41 @@ development branch."*
 
 ---
 
+> ## ⚠ CORRECTION — 2026-08-05, same day
+>
+> **The "2.9% wired / 331 hand-rolled" figure below is WRONG and is retained only
+> so the error is visible rather than quietly deleted.**
+>
+> I grepped for the string `PageGrid` and missed `DraggableCardPage` and
+> `CanvasCard` — the primitives that carry almost all of this codebase's card
+> pages. Re-measured with the same page definition:
+>
+> | search | reported wired | of | % |
+> |---|---|---|---|
+> | `PageGrid` only (what I did) | 6 | 319 | **1.9%** |
+> | `PageGrid` OR `DraggableCardPage` OR `CanvasCard` | **286** | 319 | **89.7%** |
+>
+> So the canvas was **not** 97% unwired — it was ~90% wired, and a previous
+> session had already found and solved the "one backing card" defect.
+> `DraggableCardPage`'s own doc comment describes that exact anti-pattern.
+> `PageGridPage` was real but had **3 consumers**, not 331.
+>
+> **The genuine remaining defect was ~19 pages with no grid primitive at all,
+> plus the `PageGridPage` holdout.** That is a real fix and it is being landed —
+> but it is not an explanation for three failed sessions, and I presented it as
+> one to the operator and to every co-agent.
+>
+> This is the third time in one session I manufactured a phantom gap by
+> searching the wrong noun (the others: four wrong table names for email, which
+> is really `email_integrations`; and the triage agent's
+> `handover_to_employment` vs `handover-to-employment`). **A grep that returns
+> nothing is not evidence of absence — it is evidence about the grep.** Before
+> any number becomes a headline, enumerate the alternative names for the thing
+> being counted.
+>
+> What actually explains the operator's experience is recorded below under
+> "What the register really shows".
+
 ## Why the previous three attempts failed
 
 The operator's own words are the diagnosis:
@@ -165,6 +200,34 @@ Every item below is tracked to completion. `→` marks the owning lane.
 47. Multi-repo presenting as one app (Vite Module Federation vs multi-zone routing), entitlement-gated navigation, conforming to Supabase OAuth 2.1 — **needs a PI ruling, not code.** Recorded here so it is not lost.
 
 ---
+
+## What the register really shows
+
+With the false headline removed, the evidence from this session points somewhere
+narrower and more useful. **Work repeatedly reached "merged" without ever
+reaching the operator.** Measured today, five independent instances:
+
+| Feature | State | Why he never saw it |
+|---|---|---|
+| Schema Builder Tidy/Fit | fix published as `@bsuite/schema-builder@1.0.3` | every consumer app pinned `1.0.2` |
+| Email connection | built, merged, **deployed** | dispatcher read `smtp_user`/`smtp_pass`; real columns are `smtp_username`/`smtp_password`, so every send failed the "not configured" guard |
+| Cross-app SSO | `getCrossAppLoginUrl()` built and used by every other launcher | the three tiles he actually clicks never adopted it |
+| EntitySelector | built and used in crm7 | never adopted in BSU or conduit, despite 3-month-old adoption plans in both |
+| Report-scope hardening (this session) | committed by an agent | committed into a worktree's own object store — unreachable from all three repos, nearly lost |
+
+None of these are laziness, and none are "the agent fixed only the page I pointed
+at". They are all the same failure: **completion was declared at merge, and the
+last link — reaching a running app the operator opens — was never checked.**
+
+Two consequences follow, and they are the actual programme:
+
+1. **Definition of done must end at the user, not the merge.** Named artefact,
+   named caller, consumed version, and a check on the deployed surface.
+2. **The operator has no reliable way to see what is live.** Several items in his
+   register are already fixed and shipped — `/branding` save, `fairwork-enhanced`,
+   `enterprise_licence_events`, cards-half-cut-off. He is partly reporting stale
+   state because nothing tells him what changed. That is a feedback-loop defect
+   and it is why the same items recur across sessions.
 
 ## Rules binding every lane
 
