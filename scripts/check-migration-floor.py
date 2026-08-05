@@ -126,7 +126,38 @@ def migrations_in_tree() -> list[Path]:
     )
 
 
+def _git(args: list[str], cwd: Path) -> str:
+    return subprocess.run(
+        ["git", *args], cwd=cwd, capture_output=True, text=True, check=True
+    ).stdout
+
+
+def submodule_paths() -> list[str]:
+    """Submodule paths from .gitmodules — the migration scopes live in these."""
+    gitmodules = REPO_ROOT / ".gitmodules"
+    if not gitmodules.is_file():
+        return []
+    return re.findall(
+        r"^\s*path\s*=\s*(.+?)\s*$", gitmodules.read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+
+
 def migrations_added_since(base: str) -> list[Path]:
+    """
+    Files ADDED since `base`, in the parent AND inside every submodule.
+
+    THE SUBMODULE HALF IS THE IMPORTANT HALF. Migrations live in submodules, so
+    a shipping PR arrives at the parent as a POINTER BUMP: the parent diff
+    contains a changed gitlink and not one .sql path. A parent-only
+    `git diff --diff-filter=A` therefore lists nothing and the gate passes while
+    the stranded migration is merged.
+
+    supabase-migrate.yml already learned this and says so in its own trigger
+    block ("pointer-bump commits only change the gitlink path, so function
+    changes that rode a submodule merge never triggered a deploy"). The first
+    version of this script did not, and would have been decoration.
+    """
     # An unset BASE_REF in CI would otherwise reach git as "origin/" and fail
     # with a raw "ambiguous argument" that reads like a repo problem rather
     # than a misconfigured workflow.
@@ -136,18 +167,65 @@ def migrations_added_since(base: str) -> list[Path]:
             "means BASE_REF was not set on the step. Refusing to run, because "
             "an empty base would silently check zero files and pass."
         )
+
+    added: list[Path] = []
+
+    # ── the parent's own migrations ─────────────────────────────────────────
     try:
-        out = subprocess.run(
-            ["git", "diff", "--name-only", "--diff-filter=A", f"{base}...HEAD"],
-            cwd=REPO_ROOT, capture_output=True, text=True, check=True,
-        ).stdout
+        out = _git(
+            ["diff", "--name-only", "--diff-filter=A", f"{base}...HEAD"], REPO_ROOT
+        )
     except subprocess.CalledProcessError as exc:
         sys.exit(f"FATAL: git diff against '{base}' failed: {exc.stderr.strip()}")
-    return [
+    added += [
         REPO_ROOT / line
         for line in out.splitlines()
         if "/supabase/migrations/" in line and line.endswith(".sql")
     ]
+
+    # ── migrations added INSIDE each submodule between the two pointers ─────
+    try:
+        merge_base = _git(["merge-base", base, "HEAD"], REPO_ROOT).strip()
+    except subprocess.CalledProcessError as exc:
+        sys.exit(f"FATAL: merge-base against '{base}' failed: {exc.stderr.strip()}")
+
+    for sub in submodule_paths():
+        sub_dir = REPO_ROOT / sub
+        if not (sub_dir / ".git").exists():
+            # Refuse rather than skip. A missing submodule checkout would make
+            # this gate silently examine nothing for that scope — the exact
+            # false-clean shape it exists to prevent.
+            sys.exit(
+                f"FATAL: submodule '{sub}' is not checked out, so its migrations "
+                f"cannot be examined. The workflow must check out with "
+                f"submodules: recursive. Refusing to report a clean result on an "
+                f"unexamined scope."
+            )
+        try:
+            old = _git(["rev-parse", f"{merge_base}:{sub}"], REPO_ROOT).strip()
+            new = _git(["rev-parse", f"HEAD:{sub}"], REPO_ROOT).strip()
+        except subprocess.CalledProcessError:
+            continue  # submodule added or removed in this PR; nothing to compare
+        if old == new:
+            continue
+        try:
+            sub_out = _git(
+                ["diff", "--name-only", "--diff-filter=A", old, new], sub_dir
+            )
+        except subprocess.CalledProcessError as exc:
+            sys.exit(
+                f"FATAL: cannot diff {sub} {old[:8]}..{new[:8]} — the submodule "
+                f"clone is missing one of those commits (shallow checkout?).\n"
+                f"       {exc.stderr.strip()}\n"
+                f"       Refusing to pass on a scope that was not examined."
+            )
+        added += [
+            sub_dir / line
+            for line in sub_out.splitlines()
+            if "supabase/migrations/" in line and line.endswith(".sql")
+        ]
+
+    return added
 
 
 def main() -> int:
