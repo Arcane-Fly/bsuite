@@ -38,12 +38,35 @@ const BUSINESS_SUITE_SUPABASE_URL_ENV_NAMES = [
 ] as const;
 
 function readRuntimeEnv(name: string): string | undefined {
-  const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  // SECURITY: never assign `import.meta.env` itself to a variable or read it
+  // dynamically — consumer bundlers (Vite) then inline the ENTIRE env object
+  // into every client bundle, leaking every VITE_* secret. Only the two
+  // VITE_-prefixed candidates can exist on import.meta.env, so reference them
+  // as direct static keys (inlined individually); the rest resolve through
+  // process.env for Next.js/Node contexts.
+  let fromImportMeta: string | undefined;
+  try {
+    switch (name) {
+      case 'VITE_BSU_OAUTH_SUPABASE_URL':
+        fromImportMeta = (
+          import.meta as ImportMeta & { env: { VITE_BSU_OAUTH_SUPABASE_URL?: string } }
+        ).env.VITE_BSU_OAUTH_SUPABASE_URL;
+        break;
+      case 'VITE_BUSINESS_SUITE_SUPABASE_URL':
+        fromImportMeta = (
+          import.meta as ImportMeta & { env: { VITE_BUSINESS_SUITE_SUPABASE_URL?: string } }
+        ).env.VITE_BUSINESS_SUITE_SUPABASE_URL;
+        break;
+    }
+  } catch {
+    // Not in a Vite context — fall through to process.env
+  }
+
   const processEnv = (
     globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }
   ).process?.env;
 
-  return env?.[name] ?? processEnv?.[name];
+  return fromImportMeta ?? processEnv?.[name];
 }
 
 function resolveBusinessSuiteSupabaseUrl(): string {
@@ -88,14 +111,21 @@ function getJWKS(): ReturnType<typeof createRemoteJWKSet> {
 }
 
 function getRedirectUri(): string {
-  const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  // SECURITY: direct static key access only (see readRuntimeEnv) — assigning
+  // `import.meta.env` to a variable makes consumer bundlers inline the entire
+  // env object, leaking every VITE_* secret into client bundles.
+  let viteAppUrl: string | undefined;
+  try {
+    viteAppUrl = (import.meta as ImportMeta & { env: { VITE_APP_URL?: string } }).env.VITE_APP_URL;
+  } catch {
+    // Not in a Vite context — fall through to process.env
+  }
+
   const processEnv = (
     globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }
   ).process?.env;
   const configuredAppUrl =
-    env?.VITE_APP_URL ??
-    processEnv?.VITE_APP_URL ??
-    processEnv?.NEXT_PUBLIC_APP_URL;
+    viteAppUrl ?? processEnv?.VITE_APP_URL ?? processEnv?.NEXT_PUBLIC_APP_URL;
 
   if (configuredAppUrl) {
     try {
@@ -373,7 +403,7 @@ export function createOAuthClient(clientId: string): OAuthClient {
       }
       throw new Error(
         `BS OAuth redirect attempted within 10s of previous redirect — refusing to loop. ` +
-          `Clear localStorage['${REDIRECT_LOOP_KEY}'] to reset.`
+        `Clear localStorage['${REDIRECT_LOOP_KEY}'] to reset.`
       );
     }
   }
