@@ -61,6 +61,7 @@ function isNum(x: unknown): x is number {
 }
 
 import type { AustralianState } from './types.js';
+import type { EmployeeRateTypeCode } from './awards/schema.js';
 export type { AustralianState };
 
 /**
@@ -68,7 +69,45 @@ export type { AustralianState };
  * TN trainee. The apprentice/trainee split is legislative, not cosmetic —
  * WA exempts apprentices and taxes trainees.
  */
-export type RateTypeCode = "AP" | "AA" | "TN" | (string & {});
+export type RateTypeCode = EmployeeRateTypeCode;
+
+/*
+ * WHY THIS IS NOW THE FULL MAPD VOCABULARY, AND CLOSED.
+ *
+ * It was `"AP" | "AA" | "TN" | (string & {})`. Both halves of that were wrong,
+ * in opposite directions, and together they produced a money bug in R80.4 that
+ * the R80.4 lane found and fixed on 2026-08-06:
+ *
+ *   A labour-hire worker with the Adult cohort selected resolved to "AA" —
+ *   Adult Apprentice. Measured in WA, above threshold, conditions confirmed:
+ *     AA (what it sent)            0.00%   exempt
+ *     AP (the fallback default)    0.00%   exempt
+ *     AD (correct for a worker)    5.50%   not exempt
+ *   A silent 5.5%-of-wages under-charge of the host. Nothing failed. Both
+ *   codes are legal and the number is plausible.
+ *
+ * THE UNION WAS THE PRESSURE. It did not name AD, so a caller holding a
+ * qualified adult worker COULD NOT EXPRESS ONE and had to pick something
+ * wrong. And `(string & {})` meant the compiler accepted whatever they picked.
+ * A type that omits the right answer and accepts every wrong one is not
+ * neutral — it is the thing that made the bug easy to write.
+ *
+ * The relief TABLE was fail-closed throughout, and this package already had a
+ * test pinning that (payroll-tax-relief-non-apprentice.test.ts). The table was
+ * never the defect and the test never could have caught this: it asserted that
+ * AD/JN/CA reach no relief rule, while the defect was a caller handing the
+ * table AA. Pinning the table does not pin the caller. The R80.4 lane made
+ * that criticism of my test and it is correct.
+ *
+ * Closing the union is what catches it: widening the same union in R80.4
+ * surfaced their loose call site AT COMPILE TIME, and would have caught
+ * R80.3's too.
+ *
+ * Aliased to `EmployeeRateTypeCode` rather than re-listed, because this
+ * package had THREE rate-type vocabularies that disagreed —
+ * awards/schema.ts (which does carry AD), defaults.ts, and this file — and a
+ * fourth spelling of the same idea is how they diverged in the first place.
+ */
 
 /** How a jurisdiction relieves apprentice/trainee payroll tax, if at all. */
 export const RELIEF_TYPE = {
