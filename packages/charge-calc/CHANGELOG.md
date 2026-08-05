@@ -5,6 +5,57 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.10.0] — 2026-08-05 — R80.4 reference engine, ported (`@bsuite/charge-calc/r804`)
+
+### Added
+
+- New subpath export `@bsuite/charge-calc/r804` — the R80.4 reference
+  calculation engine (`calculate()` + `CalcConfig`/`CalcResult`), ported
+  verbatim from `~/Desktop/Dev/R80.4` (`r80-4-charge-calculator` v9.2.0,
+  private, NOT published) commit `93b8643951cab759dff8428b63a29629975bb294`
+  (2026-08-05T21:06:19+08:00, branch `development`). Binding precedent
+  `precedent__bsuite__20260802__r804_is_the_reference_engine` (tier 1):
+  R80.4's calculations replace R80.3's; where they disagree, R80.4 wins.
+- Ported modules: `calc-types.ts`, `calculate.ts`, `round.ts`,
+  `ordinary-wage-breakdown.ts`, `contingent-costs.ts`, `clause-rules.ts`,
+  `registry.ts` (types + generic machinery; TRACES ships empty — award data
+  is a later pass), `interactions.ts` (types only; catalogue is a later
+  pass), `funding.ts` (milestone model only — no seeded scheme catalogue,
+  per operator directive), `text-normalise.ts`, and the three MA000020
+  modules `calculate()` hard-imports (`ma000020-minimum-engagement.ts`,
+  `ma000020-daily-hire.ts`, `ma000020-supervision.ts`).
+- Ported tests (`src/__tests__/r804/*.test.ts`, adapted only at the
+  vitest-harness boundary — see each file's header comment for the
+  exact, itemised adaptations): `round`, `ordinary-wage-breakdown`,
+  `contingent-costs`, `ma000020-minimum-engagement`, `ma000020-daily-hire`,
+  `ma000020-supervision`, `funding`, `casual`, `clause-rules`,
+  `engine-payguide` (the output-equivalence proof against FWC Pay Guide
+  MA000020 published dollars, unchanged from upstream).
+- The engine natively supports manual entry / no-R8-subscription use: `wage`,
+  `allowances`, and `penalties` are plain caller-supplied values with NO
+  default wages by design; MAPD auto-populate is one way to fill `CalcConfig`,
+  not a requirement.
+
+### Not ported (deferred, scope discipline — "award-specific data modules
+### come next")
+
+- The five `analysis/allowance_trace_*.json` files (MA000010/20/25/36/89)
+  that populate `registry.ts`'s `TRACES`.
+- `interactions.ts`'s `INTERACTION_RULES` / `NTW_REFERENCES` catalogue.
+- Every `ma0000NN-*.ts` award-data module beyond the three MA000020 files
+  `calculate()` hard-imports.
+- `funding-programs.ts`, the seeded named-scheme catalogue — operator
+  directive 2026-08-05: never pre-populate funding or schemes; the caller
+  enters and saves them.
+- The `charge-calculator-v9-2.tsx` UI and everything that only exists to
+  drive it (out of scope for an engine port).
+
+### Not consumed by any app yet
+
+- `crm7` and `R80.3` still import the existing root export surface
+  (`@bsuite/charge-calc`'s `calculate`/`types`), not `/r804`. Wiring a
+  consumer onto the new engine is a separate task.
+
 ## [0.8.0] — 2026-08-02 — Apprentice/trainee payroll tax exemption
 
 ### Added

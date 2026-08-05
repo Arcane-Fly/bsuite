@@ -15,6 +15,9 @@
     "skipLibCheck": true,
     "lib": [
       "ES2020"
+    ],
+    "types": [
+      "node"
     ]
   },
   "include": [
