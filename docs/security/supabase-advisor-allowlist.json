@@ -241,6 +241,16 @@
         "import_qualification_from_catalog(p_tenant_id uuid, p_catalog_code text)",
         "link_training_provider_to_organisation(p_training_provider_id uuid, p_tenant_id uuid)"
       ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Pay-run builder (crm7 20260806043000/053000/060000). Called from the browser by a payroll operator, so an EXECUTE grant to authenticated is the point of it, not an oversight. SECURITY DEFINER is required to write pay_runs and payroll_records atomically across their RLS policies. Authorisation does NOT rest on the grant: the function raises 42501 unless the caller holds owner/admin/manager on p_tenant_id via auth_tenant_id_with_role — a stricter tier than membership, because creating a pay run is a money event. REVOKE EXECUTE FROM PUBLIC, anon; search_path pinned public, pg_temp. It also cannot silently over-pay: it excludes any timesheet already carried by an existing payroll_records row, so a re-run produces an empty run rather than paying twice, and it REFUSES (with a per-person reason) rather than pricing untiered overtime or an ambiguous rate. Every write it makes lands in a DRAFT run with paye_tax and net_pay at 0. Not a category waiver — reviewed against the function body 2026-08-06.",
+      "added": "2026-08-06",
+      "objects": [
+        "build_pay_run_from_timesheets(p_tenant_id uuid, p_period_start date, p_period_end date, p_payment_date date)"
+      ]
     }
   ],
   "entries": [
