@@ -120,12 +120,19 @@
   --role-info:        var(--neon-cyan);
 
   /* AA-safe text renderings of saturated roles on light surfaces */
-  --role-primary-text: oklch(0.541 0.215 262.9);  /* 4.71:1 AA */
-  --role-accent-text:  oklch(0.499 0.132 191.7);  /* 4.70:1 AA */
-  --role-error-text:   oklch(0.556 0.230  25);    /* 4.69:1 AA */
-  --role-warning-text: oklch(0.535 0.150  75);    /* 4.70:1 AA */
-  --role-success-text: oklch(0.501 0.130 195);    /* 4.70:1 AA */
-  --role-info-text:    oklch(0.480 0.120 192);    /* 4.70:1 AA — pair for --role-info */
+  <em>Revised 2026-08-05: the previous values (L 0.480-0.556, all ~4.70:1) were
+  measured against the PAGE BACKGROUND, but these tokens ship on their own /10
+  tint — where they fell below 4.5:1. Each is dropped in lightness until it
+  clears AA on tint with margin. Darkening only ever RAISES contrast against a
+  light backdrop, so the body figures improved too; both are quoted. Dark mode
+  below is unchanged — those variants sit at L 0.67-0.79 and already measure
+  7:1+ AAA on tint.</em>
+  --role-primary-text: oklch(0.499 0.215 262.9);  /* 4.96:1 tint · 5.66:1 body ✓ AA */
+  --role-accent-text:  oklch(0.468 0.132 191.7);  /* 4.96:1 tint · 5.32:1 body ✓ AA */
+  --role-error-text:   oklch(0.482 0.230  25);    /* 4.96:1 tint · 5.83:1 body ✓ AA */
+  --role-warning-text: oklch(0.509 0.150  75);    /* 4.96:1 tint · 5.24:1 body ✓ AA */
+  --role-success-text: oklch(0.463 0.130 195);    /* 4.97:1 tint · 5.46:1 body ✓ AA */
+  --role-info-text:    oklch(0.468 0.120 192);    /* 4.96:1 tint · 5.44:1 body ✓ AA — pair for --role-info */
 
   /* ── inverse text on saturated fills (never pure white) ─── */
   --text-on-light-fill: oklch(0.98 0.006 260);

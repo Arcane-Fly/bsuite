@@ -1,0 +1,89 @@
+name: Migration floor lint
+
+# Rejects a NEW migration stamped below MIGRATION_FLOOR — a file the applier
+# (.github/workflows/supabase-migrate.yml) is DESIGNED never to run, on every
+# deploy, forever. Such a file merges, goes green, and produces no error
+# anywhere: the feature ships, the page renders, and only the network tab knows.
+#
+# This is the one gap the existing migration gates leave open:
+#
+#   * migration-version-collision-lint.yml  — collisions. Not this class.
+#   * prod-migration-history-audit.yml      — ledger drift, but ONLY for files
+#     at/above the floor; it excludes the pre-floor backlog by design (see its
+#     header), which is correct for its purpose and is precisely why a newly
+#     added sub-floor file falls through everything.
+#
+# Found the hard way, 2026-08-05. Two sub-floor migrations were live in the
+# estate and both presented as UI bugs rather than DB errors:
+#   * user_preferences.date_format -> /settings/locale could not read or write
+#     its own setting (42703) since 2026-05-11.
+#   * jodie_bug_reports            -> jodie-bug-create is DEPLOYED and answering
+#     204 while inserting into a table that does not exist, so no Jodie bug
+#     report had EVER persisted.
+# Neither was caught by CI. One was found by a human walking the UI.
+#
+# The script also asserts that prod-migration-history-audit.yml's hand-synced
+# copy of MIGRATION_FLOOR still matches the applier's. That sync is documented
+# as manual and had no alarm on it.
+#
+# PR-delta scope is correct here (unlike the collision lint, which must be
+# full-tree): "below the floor" is a property of the file alone, so a new file
+# cannot make an untouched one newly non-compliant. The 482 pre-existing
+# sub-floor files are the reconciliation lane's backlog and are reported, not
+# failed — a gate that is red on day one gets switched off by day two.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'scripts/check-migration-floor.py'
+      - '.github/workflows/migration-floor-lint.yml'
+      - '.github/workflows/supabase-migrate.yml'
+      - '.github/workflows/prod-migration-history-audit.yml'
+      # BARE GITLINK PATHS — the whole point. Migrations live in submodules, so
+      # a shipping PR reaches the parent as a POINTER BUMP and contains no .sql
+      # path at all. Without these lines the glob above never matches the
+      # commits that actually deliver migrations, and this gate is decoration.
+      # supabase-migrate.yml carries the identical list for the identical
+      # reason (its own comment: "pointer-bump commits only change the gitlink
+      # path, so function changes that rode a submodule merge never triggered a
+      # deploy"). Keep the two lists in step.
+      - 'crm7'
+      - 'R80.3'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-floor-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  floor-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — that is where the migrations are)
+        uses: actions/checkout@v4
+        with:
+          # Full history: the script resolves a merge-base and diffs two
+          # submodule SHAs, and a shallow clone makes those commits unreachable.
+          # It fails loudly in that case rather than reporting a clean scope.
+          fetch-depth: 0
+          submodules: recursive
+          # Same token fallback chain as the other submodule-consuming
+          # workflows (see supabase-functions-deploy.yml).
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Reject new migrations below MIGRATION_FLOOR
+        # base_ref goes through env, not ${{ }} interpolation into the shell:
+        # a branch name is attacker-controlled on a fork PR and would otherwise
+        # be a command-injection vector.
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          python3 scripts/check-migration-floor.py --base "origin/$BASE_REF"

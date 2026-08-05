@@ -115,6 +115,15 @@ ALLOWLIST=(
   'crm7/api/rpc/[...path].ts:*'  # W3 RPC edge proxy — same server env pattern as api/db
   'crm7/api/health.ts:*'
   'crm7/api/ai/docs-gap-issue.ts:*'
+  # ---- throughput server-side API routes (Vercel functions, process.env is correct) ----
+  # throughput/vercel.json declares `functions: { "api/**/*.{js,ts}": ... }`, so
+  # this is a serverless runtime, not Vite client source: `process.env` is the
+  # ONLY way to read config there and the server-side names are canonical per
+  # AGENTS.md. Byte-for-byte the same three-tier fallback as the already-listed
+  # crm7/api/config.ts. It was missing only because throughput's api/ directory
+  # post-dates this allowlist, so the rule started firing on a file that was
+  # correct the whole time.
+  'throughput/api/llm/_shared/auth.ts:*'
   # ---- crm7 server-side AI tools (edge functions, process.env is correct) ----
   'crm7/src/lib/ai/tools/ui-builder-tools.ts:*'
   'crm7/src/lib/ai/tools/ui-builder-tools.test.ts:*'

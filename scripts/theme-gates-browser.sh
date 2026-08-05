@@ -93,6 +93,20 @@ for app in "${APPS[@]}"; do
     # 56px of sideways scroll or a raw `undefined` on screen. Every one of those
     # is a defect the operator sees first and no colour gate can detect.
     uiout=$(node scripts/audit-ui-pages.mjs "${targets[@]}" --app "$app" 2>&1)
+    # G13 — LEGIBILITY. The only check that asks the question the operator asks:
+    # can a human read this? It measures the COMPUTED colour of rendered text
+    # against the COMPUTED colour actually behind it, so it is invariant to
+    # whatever caused the problem — a wrong class, a bad token, a stray opacity.
+    # It exists because I shipped text painted the SAME COLOUR as its background
+    # and every other gate was green: the palette gates check which colours are
+    # legal, G12 checks what a token resolves to, and the defect was which token
+    # the CLASS binds to. Nothing looked at the pixels.
+    lgout=$(node scripts/audit-legibility.mjs "${targets[@]}" --app "$app" 2>&1)
+    lgn=$(sed -n 's/^  \([0-9]*\) finding(s).*/\1/p' <<<"$lgout" | head -1)
+    if [[ ${lgn:-0} -gt 0 ]]; then
+      printf '      \033[33m!\033[0m G13 legibility: %s below AA (ratcheted, see audit-legibility.mjs)\n' "$lgn"
+      grep -E '^\s+[0-9.]+:1' <<<"$lgout" | head -3 | sed 's/^/        /'
+    fi
     while IFS= read -r l; do
       case "$l" in
         "      U"*) fail=$((fail+1)); FAILED+=("$app: ${l##*( )}"); printf '      \033[31m✗\033[0m %s\n' "${l##*( )}" ;;
