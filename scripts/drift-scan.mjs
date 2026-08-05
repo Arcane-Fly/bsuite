@@ -91,6 +91,17 @@ function isSelfScanExcluded(file) {
   // banned tokens as remediation/audit text (e.g., "ensure cookieStorage = 0 hits").
   if (file === 'docs/dashboard/index.html') return true;
   if (file.startsWith('docs/dashboard/data/')) return true;
+  // Investigation records QUOTE the forbidden pattern as the evidence of the
+  // violation they investigated — the same "mentions a banned token as audit
+  // text" case as the dashboard surfaces above. This doc's four hits are all
+  // pasted `src/lib/supabase/*.ts` excerpts from the 2026-04-27 conduit auth
+  // audit, i.e. a record of a breach that was then FIXED. Failing on it asks
+  // for the evidence to be deleted, which is how a finding quietly stops being
+  // discoverable.
+  //
+  // Named explicitly rather than glob-excluding docs/: a document that
+  // INSTRUCTS someone to use cookieStorage is real drift and must still fail.
+  if (file === 'docs/20260427-conduit-auth-doctrine-investigation-v1.00W.md') return true;
   return false;
 }
 
@@ -1052,6 +1063,16 @@ function selfTest() {
     { name: 'SELF-SCAN — non-check script IS still scanned (not blanket-exempting scripts/)', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'scripts/migrate-users.mjs': ["  auth: { flowType: 'implicit' }"] },
       expect: (hits) => hits.some((h) => h.signal === 'NON-PKCE-FLOW') },
+    { name: 'SELF-SCAN — the conduit auth investigation doc NOT flagged (quotes the breach as evidence)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'docs/20260427-conduit-auth-doctrine-investigation-v1.00W.md': [
+        "src/lib/supabase/client.ts:22:        storageKey: 'business_suite_auth',",
+      ] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — a DIFFERENT doc IS still scanned (exclusion is one file, not docs/)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'docs/20260801-some-other-guide-v1.00W.md': [
+        "        storageKey: 'business_suite_auth',",
+      ] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO') },
   ];
 
   let pass = 0, fail = 0;
