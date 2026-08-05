@@ -1,0 +1,184 @@
+# Operator Register — Completion Program
+
+**Date:** 2026-08-05 · **Status:** W (Working) · **Owner:** PI (claude-code-bsuite-pi)
+**Source:** operator register `Downloads/bsuite notes (2).docx` (263 paragraphs, 47 screenshots)
+**Mandate:** *"everything in the bsuite notes (2).docx, and every plan file completed in full …
+noone stops until everything is completed in full. PROVEN and promoted to production via
+development branch."*
+
+---
+
+## Why the previous three attempts failed
+
+The operator's own words are the diagnosis:
+
+> *"These issues are persistent across the app and have been flagged to be fixed across the full
+> app many times. Typically the fixing agent fixes that page i've pointed to but i have always
+> said it is a platform wide consideration that needs addressing."*
+
+**Measured 2026-08-05.** A "card page" = a `.tsx` under `src/pages` containing 2+ `<Card`,
+excluding tests.
+
+| app | wired to the grid | hand-rolled | % wired |
+|---|---|---|---|
+| crm7 | 6 | 313 | 1.9% |
+| business-suite-unified | 2 | 8 | 20.0% |
+| conduit | 0 | 2 | 0% |
+| throughput | 1 | 2 | 33.3% |
+| braden | 1 | 6 | 14.3% |
+| R80.3 | 0 | 0 | — |
+| **TOTAL** | **10** | **331** | **2.9%** |
+
+Fixing one page out of 331 is invisible. That is the whole grievance, quantified.
+
+### And the "fix" was itself the bug
+
+`crm7/src/components/platform/PageGridPage.tsx` hardcodes **one** grid item and puts every child
+inside it:
+
+```ts
+lg: [{ i: 'content', x: 0, y: 0, w: 12, h: rows, minW: 4, minH: minRows }]
+widgets={{ content: children }}
+```
+
+That IS the "common backing card". `src/pages/Dashboard.tsx` — the operator's stated reference
+(*"Dashboard shows how cards should be setup"*) — does **not** use it; it calls `PageGridLayout`
+directly with **7 independent grid items**, each with its own `i/w/h/minW/minH/autoHeight`.
+
+So `PageGridPage` is an anti-pattern that *looks* like the fix. Any agent told "wire this page to
+the grid" reaches for it and reproduces the exact defect. This is almost certainly what happened
+repeatedly.
+
+**Standing rule for this program: no item is closed by fixing one page. Every item is closed by a
+platform-wide change plus a gate that fails when the defect returns, and the gate must be proven
+to fire by planting a violation.**
+
+---
+
+## Ground truth established before dispatch
+
+Verified against production, not assumed:
+
+| Operator claim | Verified reality |
+|---|---|
+| `fairwork-enhanced` 503 | **Already fixed** — OPTIONS 204, POST 401 (gating, not BOOT_ERROR) |
+| `enterprise_licence_events` missing from schema cache | **Table exists** — was schema-cache staleness |
+| `/payroll/award-rates` shows no wages | **Confirmed** — `award_classifications`=0, `award_rates`=0, `award_rate_cache`=0 rows, and no writer |
+| No way to connect SMTP/Google/Azure email | **Confirmed** — no `tenant_email_settings` / `email_accounts` / `smtp_settings` table exists at all. Never built. |
+| FutureBuild sees platform-wide reporting | **Confirmed** — `ScopeSelect` hides only `'public'`; nothing gates `platform`, and the component never reads `platformRole` |
+
+---
+
+## Lanes
+
+Each lane closes with: platform-wide fix → gate → **proof the gate fires** → merged to
+`development` → promoted to `main` → verified live.
+
+| Lane | Scope | Owner | State |
+|---|---|---|---|
+| **A** | Card canvas: per-card grid items, migrate named pages, CI gate against new hand-rolled card pages, "cards half cut off" | subagent (worktree) | running |
+| **B** | Email connection — SMTP first, Google/Azure scaffolded. Table + RLS/secret model + edge fn + settings UI + test send | subagent (worktree) | running |
+| **C** | Cross-app SSO — session lost switching BSU → crm7/R8 | subagent (worktree) | running |
+| **D** | Award rates — empty substrate, no writer | unassigned | queued |
+| **E** | Report scope tenant gating (security) | subagent (worktree) | running |
+| **F** | Portals — `/portal` redirects to dashboard; no shareable portal links; persona-driven UX for worker/host/field-officer | unassigned | queued |
+| **T** | All theme/hue/gradient/pure-white items | **theme lane** (handed off, envelope `fd872127`) | handed off |
+| **P** | Triage of all 80 plan files into a verified open-item register | subagent | running |
+
+---
+
+## Full item register (from the operator document)
+
+Every item below is tracked to completion. `→` marks the owning lane.
+
+### Platform-wide (the recurring class)
+1. Cards attached to a common backing card — cannot be dragged individually → **A**
+2. Card resize regression — individual cards no longer resizable → **A**
+3. Columns to move cards into do not respect the columns slider → **A**
+4. Cards half cut off when the page opens → **A**
+5. Dashboard: 4 cards sit outside the draggable grid (see `Dashboard.tsx` ~L586) → **A**
+
+### Communications
+6. `/communications` — emails cannot be opened and read → **B**
+7. No way to connect SMTP / Google / Azure email (*"in excess of 20 times"*) → **B**
+8. `/communications/compose` — stat cards share one backing card; half cut off → **A**
+
+### Auth / navigation
+9. Selecting another app from inside BSuite lands logged out → **C**
+10. `/portal` just redirects to dashboard → **F**
+11. No way to send clients / hosts / workers their personal portal link → **F**
+
+### Data / integration
+12. `/payroll/award-rates` — no wages, period shows "percent", no description → **D**
+13. TGA: cannot import units on a qualification; RTO qualification scope missing; training providers not populated from TGA; import on user action; training/resource/equipment costs; last entry per qualification authoritative into R8 → **D**
+14. ADMS / funding: how client orgs claim via our RAMS connection; funding validation over time; "create a claim" when the claim lives on CTF's portal; funding amount, timeframes, application (passthrough / offset / top-up); custom priority categories → **D**
+15. AVETMISS funding on `/engagements/create` makes no sense — a GTO records funding available to **employers**, not for training → **D**
+
+### Reporting
+16. FutureBuild sees platform-wide reporting; only a developer account should have it → **E**
+17. Airtable-style report builder is nowhere visible despite being planned and directed many times → **E**
+18. Financial reports / Analytics do not present as the required Airtable-style reporting → **E**
+
+### R8 / rates
+19. UI squeezes too much into a small card when page space is available → **D**
+20. "Standard" pay-rate option is unclear; hierarchy should be Adult / Junior (completed yr12, not completed yr12) / School-based (yr11, yr12) → **D**
+21. Funding Offsets should live inside the calculation, not a separate page → **D**
+22. Training Hours should live in the calculation screen → **D**
+23. No option for workers who are **not** apprentices/trainees — casual, ABN, full/part-time skilled (labour hire) → **D**
+24. `/charge-rates/…/edit` — where do advanced config values come from; why not editable; should pull from the worker's R8 calculation; cannot confirm selection → **D**
+25. Reference: `Downloads/charge-calculator-mapd.jsx` has a far better visual arrangement (calculation is solid aside from hard-coded values) → **D**
+
+### Training / VET
+26. `/training/plans/create` — Progress should be computed from units of competency completed vs remaining → **D**
+27. `/vet/qualifications/…/edit` — cannot import units; should pull from the TGA API like the qualification → **D**
+28. `/training/plans/…` — units associated to the apprentice; needs cross-cutting + one-shot policy applied → **D**
+29. Training plans card shows `/u` and clicking does not navigate to training plans → **A**
+
+### Placements / documents
+30. `/placements/…/edit` — hourly rate ambiguous (pay vs charge); should optionally pull from R8 → **D**
+31. `/placements/…?tab=documents` — requires document upload capability → **F**
+
+### Leads / pipeline
+32. `/leads/create` — cannot create a new company, only select an existing one; wrecks the flow → **A/F**
+33. `/pipeline/kanban` — should be pulled from conduit → **F**
+34. Client-update-to-host bug; leads→clients→host employer one-shot policy compliance → **F**
+
+### Admin / settings / licensing
+35. `/settings/schema-builder` — unusable; "tidy" just stacks into a column; "fit" does nothing → **F**
+36. `/settings/module-visibility` — says 2 hidden modules but none are selectable → **F**
+37. Dashboard edit should add elements/widgets/entities **in place**; currently redirects to page-builder and only creates a whole new page. This capability existed recently and regressed → **A**
+38. Enterprise grace invites: email + in-app notice, grace-end date, auto invoice from Xero, price per additional seat per subscription type, subscription selection at grace signup → **F**
+39. `/branding` — only saves after "Show preview" → **F**
+40. Docs (`/docs/enterprise-admin` and all docs) should include screenshots → **F**
+
+### Portals (persona-driven)
+41. Host / worker / apprentice / trainee portals: *"Navigation f-cking sucks, UX sucks, the portals basically suck."* Take on each persona and design for what they must achieve — upload employment documentation, financial details, timesheets, apply for and browse roles → **F**
+42. Unclear what the field-officer portal achieves → **F**
+43. `/portal/worker` should produce a link for job ads, or post to SEEK with profile scraping and application import → **F**
+
+### Theme — handed to the theme lane (envelope `fd872127`)
+44. Pure white text on dark screens; header gradient + accent glow; nav gradient matching the tenant-switcher underline; card/page headers per D2C; no pure-white light-theme cards → **T**
+45. `/financial` statcards render pure white (`lab(100 0 0 / 0.96)`); border is a 1px box-shadow ring, blurry → **T**
+46. `suite.crm7.app` Jodie AI logo missing → **T**
+
+### Architecture question raised by the operator
+47. Multi-repo presenting as one app (Vite Module Federation vs multi-zone routing), entitlement-gated navigation, conforming to Supabase OAuth 2.1 — **needs a PI ruling, not code.** Recorded here so it is not lost.
+
+---
+
+## Rules binding every lane
+
+1. **Platform-wide or it does not count.** One page is not a fix.
+2. **Every fix ships with a gate, and the gate must be proven to fire** by planting a violation and watching it fail. A gate that has never failed is decoration.
+3. **Verify the premise before building.** Several register items are already fixed (see ground truth). Check before working.
+4. **Built-but-unwired counts as not done.** The canvas was "complete" and 97% unwired.
+5. **Migrations:** timestamp above `20260611000000`, unique across every submodule, file only — never applied by an agent.
+6. **Never `git add -A`.** Explicit pathspecs, re-checked immediately before commit. GPG-signed.
+7. **Never touch the FutureBuild Academy tenant** (`b550d66c`) — real paying client.
+8. **Under-claim.** The operator's chief grievance is claimed fixes he cannot see.
+
+## Definition of done for the program
+
+Every register item is `DONE` (with the artefact, its caller, and the gate named), `SUPERSEDED`
+(with the successor), or `OPERATOR DECISION` (escalated with options). Merged to `development`,
+promoted to `main`, and verified on the live URL.
