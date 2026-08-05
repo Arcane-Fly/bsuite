@@ -101,7 +101,7 @@ const ARBITRARY = new Map([
 
 // An element that renders words says so in its own class list.
 const TYPOGRAPHIC =
-  /\btext-(xs|sm|base|lg|xl|\dxl|\[\d+(px|rem)\])|\bfont-(thin|light|normal|medium|semibold|bold|extrabold|black)|\buppercase\b|\btracking-|\bleading-|\btruncate\b|\bline-clamp-/;
+  /\btext-(xs|sm|base|lg|xl|\dxl|\[\d+(px|rem)\])|\bfont-(thin|light|normal|medium|semibold|bold|extrabold|black)|\buppercase\b|\btracking-|\bleading-|\btruncate\b|\bline-clamp-|\bunderline\b/;
 
 const root = process.argv[2];
 const write = process.argv.includes('--write');
