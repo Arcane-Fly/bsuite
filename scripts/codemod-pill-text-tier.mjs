@@ -50,7 +50,27 @@
  * boundary here is `(?![-\w])` — refuse to match when another name segment
  * follows. This exact trap already cost a full audit once.
  *
- * Usage: node scripts/codemod-pill-text-tier.mjs <app-dir> [--write]
+ * --bare: THE SECOND PASS, AND IT IS DELIBERATELY NARROWER THAN IT LOOKS
+ *
+ * A fill token used as type is wrong whether or not there is a tint behind it
+ * — conduit's active tab is `border-primary text-primary` on a plain card and
+ * measured 3.57:1. But a blind sweep of every bare `text-primary` is the wrong
+ * instrument, for one reason: most of them are ICONS.
+ *
+ *   <Users className="h-4 w-4 text-primary" />
+ *
+ * An icon is a graphic. WCAG asks 3:1 of it, not 4.5:1, and `text-primary`
+ * measures 3.57:1 — it PASSES. Recolouring it would dull a brand accent to fix
+ * a defect that is not there. Across the estate that is 569 sites of pure
+ * churn and visible design regression.
+ *
+ * So --bare fires only where the class string also carries a TYPOGRAPHIC
+ * signal — a text- size, a font- weight, uppercase, tracking-, leading-,
+ * truncate, line-clamp. Those identify an element that renders words. Strings
+ * with neither signal (a bare `text-primary` with no size and no dimensions)
+ * are left alone: ambiguous, and the live gate will catch them if they fail.
+ *
+ * Usage: node scripts/codemod-pill-text-tier.mjs <app-dir> [--write] [--bare]
  *        (default is a dry run that prints every rewrite it would make)
  */
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -79,8 +99,13 @@ const ARBITRARY = new Map([
   ['--color-primary', 'primary-text'],
 ]);
 
+// An element that renders words says so in its own class list.
+const TYPOGRAPHIC =
+  /\btext-(xs|sm|base|lg|xl|\dxl|\[\d+(px|rem)\])|\bfont-(thin|light|normal|medium|semibold|bold|extrabold|black)|\buppercase\b|\btracking-|\bleading-|\btruncate\b|\bline-clamp-/;
+
 const root = process.argv[2];
 const write = process.argv.includes('--write');
+const bare = process.argv.includes('--bare');
 if (!root) { console.error('usage: codemod-pill-text-tier.mjs <app-dir> [--write]'); process.exit(2); }
 
 const files = [];
@@ -107,6 +132,22 @@ for (const f of files) {
       if (!tinted) continue;
       const txt = new RegExp(`(^|[\\s:'"\`])text-${fill}(?![-\\w])`, 'g');
       s = s.replace(txt, (m, pre) => { hits++; return `${pre}text-${tier}`; });
+    }
+    if (bare && TYPOGRAPHIC.test(s)) {
+      for (const [fill, tier] of TIER) {
+        if (new RegExp(`bg-${fill}/\\d+(?![-\\w])`).test(s)) continue;  // pass 1 owns those
+        const txt = new RegExp(`(^|[\\s:'"\`])text-${fill}(?![-\\w])`, 'g');
+        s = s.replace(txt, (m, pre) => { hits++; return `${pre}text-${tier}`; });
+      }
+      // Same defect written in v4 arbitrary syntax. BSU alone has 95 of these
+      // and they measured as low as 2.58:1 — `text-(--color-warning)` is the
+      // raw fill by another spelling.
+      for (const [v, tier] of ARBITRARY) {
+        const esc = v.replace(/[-]/g, '\\-');
+        if (new RegExp(`bg-\\(${esc}\\)/\\d+`).test(s)) continue;
+        const txt = new RegExp(`(^|[\\s:'"\`])text-\\(${esc}\\)`, 'g');
+        s = s.replace(txt, (m, pre) => { hits++; return `${pre}text-${tier}`; });
+      }
     }
     for (const [v, tier] of ARBITRARY) {
       const esc = v.replace(/[-]/g, '\\-');
