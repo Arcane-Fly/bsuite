@@ -127,6 +127,7 @@ Each lane closes with: platform-wide fix → gate → **proof the gate fires** �
 Every item below is tracked to completion. `→` marks the owning lane.
 
 ### Platform-wide (the recurring class)
+
 1. Cards attached to a common backing card — cannot be dragged individually → **A**
 2. Card resize regression — individual cards no longer resizable → **A**
 3. Columns to move cards into do not respect the columns slider → **A**
@@ -134,27 +135,32 @@ Every item below is tracked to completion. `→` marks the owning lane.
 5. Dashboard: 4 cards sit outside the draggable grid (see `Dashboard.tsx` ~L586) → **A**
 
 ### Communications
+
 6. `/communications` — emails cannot be opened and read → **B**
 7. No way to connect SMTP / Google / Azure email (*"in excess of 20 times"*) → **B**
 8. `/communications/compose` — stat cards share one backing card; half cut off → **A**
 
 ### Auth / navigation
+
 9. Selecting another app from inside BSuite lands logged out → **C**
 10. `/portal` just redirects to dashboard → **F**
 11. No way to send clients / hosts / workers their personal portal link → **F**
 
 ### Data / integration
+
 12. `/payroll/award-rates` — no wages, period shows "percent", no description → **D**
 13. TGA: cannot import units on a qualification; RTO qualification scope missing; training providers not populated from TGA; import on user action; training/resource/equipment costs; last entry per qualification authoritative into R8 → **D**
 14. ADMS / funding: how client orgs claim via our RAMS connection; funding validation over time; "create a claim" when the claim lives on CTF's portal; funding amount, timeframes, application (passthrough / offset / top-up); custom priority categories → **D**
 15. AVETMISS funding on `/engagements/create` makes no sense — a GTO records funding available to **employers**, not for training → **D**
 
 ### Reporting
+
 16. FutureBuild sees platform-wide reporting; only a developer account should have it → **E**
-17. Airtable-style report builder is nowhere visible despite being planned and directed many times → **E**
-18. Financial reports / Analytics do not present as the required Airtable-style reporting → **E**
+17. Airtable-style report builder is nowhere visible despite being planned and directed many times → **CLOSED 2026-08-05** (qwen, operator directive overruling PI's defer): crm7#1426 merged `--merge` to development (baabd148), live-verified signed-in on d.crm.crm7.app via headless CDP — wizard retired; grid-first single screen (typed column headers with sort/remove menus, add-field ⌘K palette, add-column control, row-number gutter, zebra rows over the live RLS preview, inline title + one Save, open Visibility & details settings section). Functional pass on the deployed bundle: two fields added via palette rendered as grid columns with 5 live preview rows. Evidence comment + screenshot on the PR. The pre-existing ReportBuilder asset was surfaced, not duplicated (per operator: "double check before duplicating").
+18. Financial reports / Analytics do not present as the required Airtable-style reporting → **E** — follow-on tracked as N43: migrate `/financial/reports` onto ReportBuilder, or rule the two surfaces intentionally different (ops dashboard vs ad-hoc query builder).
 
 ### R8 / rates
+
 19. UI squeezes too much into a small card when page space is available → **D**
 20. "Standard" pay-rate option is unclear; hierarchy should be Adult / Junior (completed yr12, not completed yr12) / School-based (yr11, yr12) → **D**
 21. Funding Offsets should live inside the calculation, not a separate page → **D**
@@ -164,21 +170,25 @@ Every item below is tracked to completion. `→` marks the owning lane.
 25. Reference: `Downloads/charge-calculator-mapd.jsx` has a far better visual arrangement (calculation is solid aside from hard-coded values) → **D**
 
 ### Training / VET
+
 26. `/training/plans/create` — Progress should be computed from units of competency completed vs remaining → **D**
 27. `/vet/qualifications/…/edit` — cannot import units; should pull from the TGA API like the qualification → **D**
 28. `/training/plans/…` — units associated to the apprentice; needs cross-cutting + one-shot policy applied → **D**
 29. Training plans card shows `/u` and clicking does not navigate to training plans → **A**
 
 ### Placements / documents
+
 30. `/placements/…/edit` — hourly rate ambiguous (pay vs charge); should optionally pull from R8 → **D**
 31. `/placements/…?tab=documents` — requires document upload capability → **F**
 
 ### Leads / pipeline
+
 32. `/leads/create` — cannot create a new company, only select an existing one; wrecks the flow → **A/F**
 33. `/pipeline/kanban` — should be pulled from conduit → **F**
 34. Client-update-to-host bug; leads→clients→host employer one-shot policy compliance → **F**
 
 ### Admin / settings / licensing
+
 35. `/settings/schema-builder` — unusable; "tidy" just stacks into a column; "fit" does nothing → **F**
 36. `/settings/module-visibility` — says 2 hidden modules but none are selectable → **F**
 37. Dashboard edit should add elements/widgets/entities **in place**; currently redirects to page-builder and only creates a whole new page. This capability existed recently and regressed → **A**
@@ -187,16 +197,19 @@ Every item below is tracked to completion. `→` marks the owning lane.
 40. Docs (`/docs/enterprise-admin` and all docs) should include screenshots → **F**
 
 ### Portals (persona-driven)
+
 41. Host / worker / apprentice / trainee portals: *"Navigation f-cking sucks, UX sucks, the portals basically suck."* Take on each persona and design for what they must achieve — upload employment documentation, financial details, timesheets, apply for and browse roles → **F**
 42. Unclear what the field-officer portal achieves → **F**
 43. `/portal/worker` should produce a link for job ads, or post to SEEK with profile scraping and application import → **F**
 
 ### Theme — handed to the theme lane (envelope `fd872127`)
+
 44. Pure white text on dark screens; header gradient + accent glow; nav gradient matching the tenant-switcher underline; card/page headers per D2C; no pure-white light-theme cards → **T**
 45. `/financial` statcards render pure white (`lab(100 0 0 / 0.96)`); border is a 1px box-shadow ring, blurry → **T**
 46. `suite.crm7.app` Jodie AI logo missing → **T**
 
 ### Architecture question raised by the operator
+
 47. Multi-repo presenting as one app (Vite Module Federation vs multi-zone routing), entitlement-gated navigation, conforming to Supabase OAuth 2.1 — **needs a PI ruling, not code.** Recorded here so it is not lost.
 
 ---
