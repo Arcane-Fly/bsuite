@@ -82,5 +82,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 Commits: `type(scope): description` — types `feat|fix|docs|style|refactor|test|chore|perf`, scopes
 `bsu|crm7|conduit|braden|r80|throughput|shared|docs|deploy`.
 
-throughput has no `CONTRIBUTING.md` yet; treat `src/lib/supabase.ts` and the Groq integration
-(`gpt-oss-120b`) as protected until one exists.
+throughput's AI stack is the Jodie setup (migrated off Groq `gpt-oss-120b` 2026-08-05): same-origin
+`/api/llm/*` Vercel routes over the Vercel AI Gateway — `xai/grok-4.3` primary, `zai/glm-5.2`
+fallback; roster owned by `crm7/src/lib/ai/config.ts`. No provider keys in the browser; app AI
+never routes around the gateway.

@@ -3032,9 +3032,7 @@
         }
       ],
       "functions": [
-        "bing-search",
-        "generate-llm-response",
-        "groq-responses-api"
+        "bing-search"
       ]
     },
     {
