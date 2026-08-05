@@ -316,6 +316,9 @@ jobs:
             const emptyStatementViolations = [];
             let localBacked = 0;
             let missingLocal = 0;
+            // Counted, never silently dropped: a suppressed number that nobody
+            // prints reads as "covered everything" when it is not.
+            let preFloorEmptyStatements = 0;
 
             for (const row of rows) {
               if (!row.version) continue;
@@ -333,6 +336,26 @@ jobs:
               // flagged on its own. It is only drift when it contradicts a
               // local file that actually contains SQL.
               if (row.statementCount === 0 && local.nonEmpty) {
+                // Floor-scoped, exactly as class B above and class C below
+                // already are, and for the reason class C states in its own
+                // comment: surfacing the pre-floor backlog here "would
+                // permanently red this workflow on legacy noise instead of
+                // the live, actionable case".
+                //
+                // That is not hypothetical — it is what had happened. Measured
+                // 2026-08-05: all 332 class-A violations were BELOW the floor,
+                // and of the 195 ledger rows at/above it, exactly 2 lacked a
+                // local file (already counted separately as missingLocal).
+                // Every at/above-floor item this audit flagged — 3 class B and
+                // 4 class C — was then verified present in the live catalog,
+                // with the class-B function bodies carrying the distinctive
+                // markers of their own migrations. So the workflow was red
+                // with ZERO actionable drift, which means a genuinely new
+                // drift could not have been distinguished from the noise.
+                if (MIGRATION_FLOOR && row.version < MIGRATION_FLOOR) {
+                  preFloorEmptyStatements += 1;
+                  continue;
+                }
                 emptyStatementViolations.push({ version: row.version, name: row.name, local });
               }
             }
@@ -352,6 +375,7 @@ jobs:
               localFilesScanned: localMigrations.size,
               localBacked,
               missingLocal,
+              preFloorEmptyStatements,
               emptyStatementViolations,
               unrecordedViolations,
             };
@@ -369,7 +393,8 @@ jobs:
             console.log(`Local migration files scanned across ${SCOPE_DIRS.length} scope(s): ${result.localFilesScanned}`);
             console.log(`Remote rows with a matching local file: ${result.localBacked}`);
             console.log(`Remote rows without a local file (ignored — cannot verify from source): ${result.missingLocal}`);
-            console.log(`Drift class A (recorded-but-empty) violations: ${result.emptyStatementViolations.length}`);
+            console.log(`Drift class A (recorded-but-empty, >= floor ${MIGRATION_FLOOR}) violations: ${result.emptyStatementViolations.length}`);
+            console.log(`  pre-floor class-A entries NOT failed (reconciliation-lane backlog): ${result.preFloorEmptyStatements}`);
             console.log(`Drift class B (unrecorded-but-local, >= floor ${MIGRATION_FLOOR || 'unset'}) violations: ${result.unrecordedViolations.length}`);
             console.log(`Drift class C (cross-scope version collision, divergent content) violations: ${divergentCollisions.length}`);
 

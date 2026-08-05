@@ -101,11 +101,25 @@ for app in "${APPS[@]}"; do
     # and every other gate was green: the palette gates check which colours are
     # legal, G12 checks what a token resolves to, and the defect was which token
     # the CLASS binds to. Nothing looked at the pixels.
-    lgout=$(node scripts/audit-legibility.mjs "${targets[@]}" --app "$app" 2>&1)
+    #
+    # RATCHETED TO ZERO on 2026-08-05. It ran as a warning only while the
+    # estate-wide number was unknown; it is now measured at 0 across all six
+    # apps, signed in, in BOTH themes — crm7 6 routes, conduit 8, BSU 7,
+    # braden 6, throughput 4, R80.3 1. A warning that nobody has to clear
+    # decays into scenery, so from here a finding FAILS.
+    #
+    # Run it in both themes: dark mode partially rescues the success and
+    # warning fills because their dark values are already light, so a
+    # single-theme run declared half the estate's pill defects clean when they
+    # were not.
+    lgout=$(node scripts/audit-legibility.mjs "${targets[@]}" --app "$app" --theme both 2>&1)
     lgn=$(sed -n 's/^  \([0-9]*\) finding(s).*/\1/p' <<<"$lgout" | head -1)
     if [[ ${lgn:-0} -gt 0 ]]; then
-      printf '      \033[33m!\033[0m G13 legibility: %s below AA (ratcheted, see audit-legibility.mjs)\n' "$lgn"
-      grep -E '^\s+[0-9.]+:1' <<<"$lgout" | head -3 | sed 's/^/        /'
+      fail=$((fail+1)); FAILED+=("$app: G13 legibility — $lgn below AA")
+      printf '      \033[31m✗\033[0m G13 legibility: %s below AA\n' "$lgn"
+      grep -E '^\s+[0-9.]+:1' <<<"$lgout" | head -5 | sed 's/^/        /'
+    else
+      printf '      \033[32m✓\033[0m G13 legibility (both themes)\n'
     fi
     while IFS= read -r l; do
       case "$l" in

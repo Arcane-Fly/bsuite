@@ -78,3 +78,7 @@ visual.md
 
 # Local env/config backups — never commit (see .env.local.bak incident 2026-07-29)
 *.bak
+
+# Python bytecode — scripts/check-migration-floor.py and friends generate this
+__pycache__/
+*.pyc

@@ -207,6 +207,14 @@ for (const url of urls) {
         if (el.matches(':disabled, [aria-disabled="true"], [disabled]')) continue; // WCAG-exempt
         if (el.closest('[inert], [aria-hidden="true"]')) continue;
 
+        // Visually-hidden text is not text on screen. A `sr-only` skip link is
+        // clipped to 1x1px and only paints when focused — where it carries its
+        // own `focus:bg-accent focus:text-accent-foreground` pair — so reading
+        // its resting colour reports a failure on something nobody can see.
+        // Both R80.3 skip links measured 4.47:1 this way.
+        const box = el.getBoundingClientRect();
+        if (box.width < 2 || box.height < 2) continue;
+
         const fg = parse(cs.color);
         if (!fg) continue;
 
@@ -221,6 +229,76 @@ for (const url of urls) {
         // that renders perfectly legibly because the 90% showing through is the
         // near-black panel. Every translucent layer has to be composited down
         // onto what is behind it until something opaque stops the walk.
+        //
+        // AND THE BACKDROP IS NOT ONLY OVERHEAD. A hero is built as a stack of
+        // ABSOLUTELY POSITIONED SIBLINGS: a photo, a dark scrim over it, then
+        // the copy in a separate z-20 layer. None of those siblings is an
+        // ancestor of the text, so an ancestor-only walk sails straight past
+        // the scrim to the white page behind and reports 1:1 INVISIBLE on a
+        // headline that is perfectly legible on navy. braden's home hero
+        // produced exactly that, and "fixing" it would have meant recolouring
+        // correct design to satisfy a broken measurement.
+        //
+        // So before trusting the ancestor chain, look for a positioned element
+        // that geometrically COVERS this text and paints beneath it.
+        const rect = el.getBoundingClientRect();
+        const covers = (r) => r.left <= rect.left + 1 && r.right >= rect.right - 1 &&
+                              r.top <= rect.top + 1 && r.bottom >= rect.bottom - 1;
+        let occluded = false, occludedBy = '';
+        for (let a = el.parentElement; a && !occluded; a = a.parentElement) {
+          // The branch of `a` that actually contains our text — what the
+          // sibling has to be compared AGAINST for paint order.
+          const branch = [...a.children].find((c) => c === el || c.contains(el));
+          if (!branch) continue;
+          const zOf = (n) => { const z = getComputedStyle(n).zIndex; return z === 'auto' ? 0 : (parseInt(z, 10) || 0); };
+          const zBranch = zOf(branch);
+          for (const sib of a.children) {
+            if (sib === branch) continue;
+            const ss = getComputedStyle(sib);
+            if (ss.position === 'static' || ss.display === 'none') continue;
+            if (parseFloat(ss.opacity || '1') < 0.5) continue;
+            if (!covers(sib.getBoundingClientRect())) continue;
+
+            // PAINT ORDER IS THE WHOLE QUESTION, and ignoring it inverted the
+            // answer. crm7's cards carry `pointer-events-none absolute inset-0`
+            // decoration painted IN FRONT of their text; treating those as the
+            // backdrop skipped 13 real measurements per route. braden's hero
+            // scrim sits in a z-0 wrapper UNDER a z-20 copy layer and is a
+            // genuine backdrop. Same shape, opposite meaning — separated only
+            // by z-index, then by document order when the z-indexes tie.
+            const zSib = zOf(sib);
+            const below = zSib < zBranch ||
+              (zSib === zBranch &&
+               (sib.compareDocumentPosition(branch) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0);
+            if (!below) continue;
+
+            // The paint may be on the wrapper OR on something inside it. A hero
+            // is `<div class="absolute inset-0 z-0">` holding a photo and a
+            // scrim: the WRAPPER paints nothing, so checking only the sibling
+            // itself walks straight past the scrim and back to the white page.
+            const paints = (n, st) =>
+              (st.backgroundImage && st.backgroundImage !== 'none') ||
+              (parse(st.backgroundColor)?.[3] ?? 0) >= 0.5;
+            let hit = paints(sib, ss) ? sib : null;
+            if (!hit) {
+              for (const inner of sib.querySelectorAll('*')) {
+                const is = getComputedStyle(inner);
+                if (is.display === 'none' || parseFloat(is.opacity || '1') < 0.5) continue;
+                if (!covers(inner.getBoundingClientRect())) continue;
+                if (paints(inner, is)) { hit = inner; break; }
+              }
+            }
+            if (hit) {
+              const hs = getComputedStyle(hit);
+              occluded = true;
+              occludedBy = hit.tagName + '.' + ((hit.className?.baseVal ?? hit.className ?? '') + '').slice(0, 40) +
+                           ' z=' + zSib + '/' + zBranch + ' img=' + (hs.backgroundImage !== 'none');
+              break;
+            }
+          }
+        }
+        if (occluded) { out.push({ occluded: true, text: text.slice(0,30), by: occludedBy }); continue; }
+
         const layers = [];              // top-most first
         let node = el, imaged = false;
         while (node) {
@@ -258,7 +336,15 @@ for (const url of urls) {
     });
 
     const bad = [];
+    const occluded = samples.filter((s) => s.occluded).length;
+    if (process.env.G13_DEBUG_OCCLUDED) {
+      const byWhat = {};
+      for (const s of samples) if (s.occluded) (byWhat[s.by] ??= []).push(s.text);
+      for (const [k, v] of Object.entries(byWhat)) console.log(`    OCCLUDED x${v.length} by ${k} :: ${v.slice(0,2).join(' | ')}`);
+    }
+    if (occluded) skipped += occluded;
     for (const s of samples) {
+      if (s.occluded) continue;
       const bg = [s.bg[0], s.bg[1], s.bg[2]];
       // fg over bg, including its own alpha and every inherited opacity
       const alpha = s.fg[3] * s.op;
