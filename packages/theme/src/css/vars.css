@@ -200,15 +200,30 @@
 
   /* AA-safe text renderings of the saturated roles on light surfaces.
      A saturated fill colour is not a legible text colour; these are the
-     text variants and are the ONLY correct token for coloured type. */
-  --role-primary-text: oklch(0.541 0.215 262.9);  /* 4.71:1 ✓ AA */
-  --role-accent-text:  oklch(0.499 0.132 191.7);  /* 4.70:1 ✓ AA */
-  --role-error-text:   oklch(0.556 0.230  25);    /* 4.69:1 ✓ AA */
-  --role-warning-text: oklch(0.535 0.150  75);    /* 4.70:1 ✓ AA */
-  --role-success-text: oklch(0.501 0.130 195);    /* 4.70:1 ✓ AA */
+     text variants and are the ONLY correct token for coloured type.
+
+     VERIFIED AGAINST THE TINTED PILL, NOT JUST THE PAGE BACKGROUND. These
+     previously sat at ~4.70:1 measured against --role-bg-body, which is the
+     right floor for a bare coloured word on the page and the wrong one for
+     where they are actually used most: `bg-success/10 text-success-text`, a
+     status pill captioned on a 10% wash of its own hue. That wash pulls the
+     backdrop toward the text, and every one of these measured BELOW 4.5:1 in
+     that setting — error worst at 3.64:1 live. A token can be AA in the
+     context it was measured in and fail in the context it ships in.
+
+     Each is now dropped in lightness until it clears 4.5:1 on its own /10
+     tint with margin. Darkening only ever RAISES contrast against a light
+     backdrop, so the original page-background figures improve rather than
+     regress; both are quoted below. Dark mode is untouched — its variants sit
+     at L 0.67-0.79 and already measure clean on tint (7:1+ AAA). */
+  --role-primary-text: oklch(0.499 0.215 262.9);  /* 4.96:1 tint · 5.66:1 body ✓ AA */
+  --role-accent-text:  oklch(0.468 0.132 191.7);  /* 4.96:1 tint · 5.32:1 body ✓ AA */
+  --role-error-text:   oklch(0.482 0.230  25);    /* 4.96:1 tint · 5.83:1 body ✓ AA */
+  --role-warning-text: oklch(0.509 0.150  75);    /* 4.96:1 tint · 5.24:1 body ✓ AA */
+  --role-success-text: oklch(0.463 0.130 195);    /* 4.97:1 tint · 5.46:1 body ✓ AA */
   /* Pair for --role-info. Every other semantic role had a -text token; info
      was the only gap, which forced apps to invent a local copy (R80.4). */
-  --role-info-text:    oklch(0.480 0.120 192);    /* 4.70:1 ✓ AA on panel */
+  --role-info-text:    oklch(0.468 0.120 192);    /* 4.96:1 tint · 5.44:1 body ✓ AA */
 
   /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
      measured against --role-bg-body (the conservative floor); all tiers
