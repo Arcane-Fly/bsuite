@@ -78,7 +78,14 @@
    ============================================================ */
   --role-text-heading:   var(--role-h1);
   --role-text-body:      oklch(0.22 0.020 250);
-  --role-text-secondary: oklch(0.38 0.018 250);
+  /* -base is what a LIGHT panel nested inside a dark section resets to. A
+     dark brand fill re-scopes the surface tokens for everything inside it,
+     which is right until the section contains a white card — then the card
+     inherits on-dark type and renders light-on-white. The reset cannot
+     hardcode a value because the correct one differs per theme, so it reads
+     this alias instead. */
+  --role-text-secondary-base: oklch(0.38 0.018 250);
+  --role-text-secondary: var(--role-text-secondary-base);
   --role-text-muted:     oklch(0.52 0.018 250);
   --role-text-subtle:    oklch(0.60 0.012 250);
   --role-text-disabled:  oklch(0.72 0.010 250);
@@ -176,7 +183,8 @@
    A saturated fill colour is not a legible text colour.
    ============================================================ */
   --role-primary-text: oklch(0.566 0.170 17.6);
-  --role-accent-text:  oklch(0.544 0.092 89.9);
+  --role-accent-text-base: oklch(0.544 0.092 89.9);
+  --role-accent-text:  var(--role-accent-text-base);
   --role-error-text:   oklch(0.562 0.200 270);
   --role-warning-text: oklch(0.544 0.092 89.9);
   --role-success-text: oklch(0.515 0.130 198);
@@ -260,7 +268,8 @@
   --role-h5:             oklch(0.80 0.040 228);
   --role-h6:             oklch(0.75 0.048 220);
   --role-text-body:      oklch(0.93 0.014 250);
-  --role-text-secondary: oklch(0.80 0.016 250);
+  --role-text-secondary-base: oklch(0.80 0.016 250);
+  --role-text-secondary: var(--role-text-secondary-base);
   --role-text-muted:     oklch(0.66 0.018 250);
   --role-text-subtle:    oklch(0.55 0.015 250);
   --role-text-disabled:  oklch(0.43 0.010 250);
@@ -278,7 +287,8 @@
   --role-kbd-bg:         oklch(0.250 0.020 250);
   --role-kbd-border:     oklch(0.400 0.022 250);
   --role-primary-text:   oklch(0.704 0.170 17.6);
-  --role-accent-text:    oklch(0.683 0.092 89.9);
+  --role-accent-text-base: oklch(0.683 0.092 89.9);
+  --role-accent-text:    var(--role-accent-text-base);
   --role-error-text:     oklch(0.711 0.200 270);
   --role-warning-text:   oklch(0.683 0.092 89.9);
   --role-success-text:   oklch(0.662 0.130 198);
