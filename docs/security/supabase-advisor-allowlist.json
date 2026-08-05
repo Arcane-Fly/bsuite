@@ -251,6 +251,16 @@
       "objects": [
         "build_pay_run_from_timesheets(p_tenant_id uuid, p_period_start date, p_period_end date, p_payment_date date)"
       ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "mode": "accepted",
+      "reason": "Financial-reports summary card (crm7 20260806050000, corrected 20260806065000). READ-ONLY and takes no parameters — it aggregates the CALLER'S OWN invoices and returns four scalars (invoiced, paid, outstanding, overdue count). SECURITY DEFINER is used so the aggregate is computed server-side in one pass rather than shipping every invoice row to the browser to be summed. Tenant scoping is enforced INSIDE the function — `where i.tenant_id in (select auth_tenant_id())` — so a caller can only ever aggregate tenants they belong to, and there is no argument through which another tenant could be named. REVOKE EXECUTE FROM PUBLIC, anon; search_path pinned public, pg_temp. It writes nothing. Not a category waiver — reviewed against the function body 2026-08-06.",
+      "added": "2026-08-06",
+      "objects": [
+        "invoice_summary()"
+      ]
     }
   ],
   "entries": [
