@@ -58,6 +58,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File | Description |
 |------|-------------|
+| `20260427-conduit-auth-doctrine-investigation-v1.00W.md` | Conduit auth doctrine vs reality investigation (recovered from a stash 2026-08-05 — historical, predates the 2026-04-28 BS OAuth migration) |
+| `20260427-security-definer-audit-v1.00W.md` | SECURITY DEFINER privilege-escalation audit — `public.is_team_admin` + WS-G helpers (recovered from a stash 2026-08-05; verify findings against the live catalog before acting) |
 | `20260506-cross-app-auth-bug-rca-v1.00A.md` | BSU→CRM7 logged-out incident RCA — authority for the OAuth session-bridge frozen-fact correction |
 | `20260519-rpc-report-page-security-review-v1.00A.md` | Report page / RPC security review (Approved) |
 | `20260519-storage-rls-four-persona-matrix-v1.00A.md` | Storage RLS four-persona access matrix (Approved) |
@@ -94,6 +96,9 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260629-batch-e-rbac-parity-dev-deploy-test-report-v1.00W.md` | Batch E — RBAC parity dev-deploy validation report (conduit Team `joined_at` fix) |
 | `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md` | Cross-app auth validation dev-deploy test plan (5 `d.*` apps) |
 | `20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md` | Cross-app auth validation dev-deploy report (OAuth 2.1 + PKCE + JWKS, 5/5 pass) |
+| `20260427-dev-main-fork-rca-v1.00W.md` | dev ↔ main fork RCA (parent + crm7) — pre-reconcile gate analysis (recovered from a stash 2026-08-05) |
+| `20260506-supabase-linter-action-plan-v1.00W.md` | Supabase linter action plan — Phases 1+2 ready, Phase 3 deferred (recovered from a stash 2026-08-05; re-run the advisor before acting) |
+| `20260506-table-usage-audit-v1.00W.md` | Table usage audit — conclusions stand, but each drop recommendation needs human sign-off (recovered from a stash 2026-08-05) |
 | `20260722-developer-portal-investigation-v1.00W.md` | Developer Portal surface investigation — tenant_navigation, platform_branding, feature_builder, and schema-builder tables audit |
 
 ### Directories
