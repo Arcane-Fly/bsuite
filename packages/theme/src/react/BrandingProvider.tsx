@@ -41,13 +41,13 @@
  *      {children}
  *    </BrandingProvider>
  */
-import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { ReactNode } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  sanitizeBrandingUrl,
-  sanitizeFontFamily,
-  toCssUrl,
+    sanitizeBrandingUrl,
+    sanitizeFontFamily,
+    toCssUrl,
 } from './branding-sanitize.js'
 
 export const BRANDING_STORAGE_KEY = 'bsuite_tenant_branding'
@@ -236,10 +236,18 @@ function warnIfProtectedKeyAttempted(branding: TenantBranding): void {
 }
 
 function isDevEnvironment(): boolean {
-  const env = (import.meta as ImportMeta & {
-    env?: { DEV?: boolean; MODE?: string; NODE_ENV?: string }
-  }).env
-  return env?.DEV === true || env?.MODE === 'development' || env?.NODE_ENV === 'development'
+  // SECURITY: direct static key access only — assigning `import.meta.env` to a
+  // variable makes consumer bundlers (Vite) inline the ENTIRE env object into
+  // every client bundle, leaking every VITE_* secret. try/catch keeps this
+  // safe in non-Vite runtimes where import.meta.env does not exist.
+  try {
+    return (
+      (import.meta as ImportMeta & { env: { DEV?: boolean } }).env.DEV === true ||
+      (import.meta as ImportMeta & { env: { MODE?: string } }).env.MODE === 'development'
+    )
+  } catch {
+    return false
+  }
 }
 
 function persistBranding(branding: TenantBranding | null): void {
@@ -265,10 +273,12 @@ function loadPersistedBranding(): TenantBranding | null {
 }
 
 function isBrandingEnabled(): boolean {
+  // SECURITY: direct static key access only (see isDevEnvironment) — reading
+  // `import.meta.env` wholesale leaks every VITE_* secret into client bundles.
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const flag = (import.meta as any).env
-    const value = flag?.VITE_ENABLE_BRANDING_OVERRIDE ?? flag?.['VITE_ENABLE_BRANDING_OVERRIDE']
+    const value = (
+      import.meta as ImportMeta & { env: { VITE_ENABLE_BRANDING_OVERRIDE?: string } }
+    ).env.VITE_ENABLE_BRANDING_OVERRIDE
     if (value === 'false' || value === '0') return false
   } catch {
     // Not in a Vite context — default enabled

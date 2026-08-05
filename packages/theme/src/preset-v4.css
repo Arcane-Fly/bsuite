@@ -169,6 +169,31 @@
   --color-text-on-success: var(--text-on-success);
   --color-text-on-warning: var(--text-on-warning);
 
+  /* The two BASE inverse tones, exposed because the semantic roles above do
+     not cover every coloured fill in the system. The stage ramp is the case
+     that forced this: --stage-1..6 is a FIXED light-to-dark scale that does
+     NOT flip with the theme, so a chip painted `bg-stage-1` (L 0.86) needs
+     dark type in BOTH modes. Captioning it `text-foreground` — which DOES
+     flip — measured 1.34:1 in dark mode on conduit's candidate list, the
+     worst reading anywhere in the estate.
+
+     Read the name as describing the TEXT, not the fill: --text-on-dark-fill
+     is the DARK tone, and it is what goes on a LIGHT fill (see
+     --text-on-accent, cyan at L 0.77, which uses it).
+
+     For the stage ramp specifically, the crossover is between 4 and 5:
+
+       stage-1 L 0.86   light 1.52:1   dark 11.49:1
+       stage-2 L 0.78   light 1.93:1   dark  9.01:1
+       stage-3 L 0.70   light 2.55:1   dark  6.84:1
+       stage-4 L 0.62   light 3.48:1   dark  5.01:1   <- still takes DARK
+       stage-5 L 0.54   light 4.85:1   dark  3.59:1   <- flips to LIGHT
+       stage-6 L 0.46   light 6.86:1   dark  2.54:1
+
+     stage-4 is the trap: it reads as "mid, so white type is fine" and is not. */
+  --color-text-on-light-fill: var(--text-on-light-fill);
+  --color-text-on-dark-fill:  var(--text-on-dark-fill);
+
   /* ============================================================
      TYPE — the contract's stack, bridged to Tailwind's font-* utilities.
      `font-sans` and `font-mono` are what components actually write, so
