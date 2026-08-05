@@ -24,3 +24,8 @@ export * from './rdo.js';
 // Supersedes PAYROLL_TAX_EXEMPT_STATES / resolveEffectivePayrollTaxRate in
 // defaults.ts, which modelled relief as a boolean and was wrong in every row.
 export * from './payroll-tax-relief.js';
+
+// apprentice_rate_configs percentage overlay — shared by crm7 and R80.3 so
+// neither grows its own copy of "configRate = lowestAdult × wage_percentage,
+// floored at the FWC rate" (lazy-hopping-nest plan, Amendment A.2).
+export * from './apprentice-overlay.js';
