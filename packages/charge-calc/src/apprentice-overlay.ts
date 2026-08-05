@@ -27,6 +27,8 @@
 // the plan's explicit warning is "a fourth Fair Work integration is the
 // failure mode to avoid".
 
+import { round2 } from './r804/round';
+
 /** The one apprentice_rate_configs row relevant to a given wage resolution. */
 export interface ApprenticeRateConfigOverlayRow {
   /** apprentice_rate_configs.apprentice_type — junior_yr10 | junior_yr12 | adult | sba_sbt */
@@ -92,10 +94,22 @@ export function applyApprenticeRateConfigOverlay(
     };
   }
 
-  // Round half-up to the cent — same convention as the FWC rate itself
-  // (fairworkEnhancedService.roundToCent / R80.3's identical Math.round pattern).
-  const configRate =
-    Math.round(lowestAdultClassificationRate * configRow.wagePercentage * 100) / 100;
+  // Round half-up to the cent using R80.4's `round2`, NOT a local
+  // `Math.round(x * 100) / 100`.
+  //
+  // The plain pattern loses a cent on exact half-cents, because the half is
+  // stored as a binary double just BELOW the boundary. Measured on this very
+  // function's inputs: 27.90 x 0.75 = 20.924999999999997, so the plain pattern
+  // yields $20.92 where the correct figure is $20.93 — an apprentice a cent
+  // light per hour, on a standard wage percentage. R80.4's round.ts records the
+  // same defect costing two of six Building & Construction apprentice rates a
+  // cent each, and notes the fix was written five times across five modules
+  // with one site still carrying the bug. This was the sixth site.
+  //
+  // Operator ruling 2026-08-05: "if there is a conflict. r80.4 wins."
+  // (precedent__bsuite__20260805__r804_wins_any_conflict). This function came
+  // from R80.3; R80.4's rounding governs.
+  const configRate = round2(lowestAdultClassificationRate * configRow.wagePercentage);
 
   if (configRate <= 0) {
     return {

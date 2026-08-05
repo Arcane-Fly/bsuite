@@ -99,3 +99,42 @@ describe('applyApprenticeRateConfigOverlay — overlay is a layer, not a substit
     expect(result.hourlyRate).toBe(16.67);
   });
 });
+
+describe('rounding follows R80.4, not a local Math.round', () => {
+  // R80.4's round.ts records this defect costing two of six Building &
+  // Construction apprentice rates a cent each. `Math.round(x * 100) / 100`
+  // loses a cent on an exact half-cent, because the half is stored as a binary
+  // double just BELOW the boundary. 27.90 x 0.75 = 20.924999999999997.
+  //
+  // Operator ruling 2026-08-05: "if there is a conflict. r80.4 wins."
+  it('does not go a cent light on an exact half-cent', () => {
+    const result = applyApprenticeRateConfigOverlay({
+      fwcFloorRate: 10,
+      lowestAdultClassificationRate: 27.9,
+      configRow: {
+        apprenticeType: 'junior_yr12',
+        yearOfTrade: 3,
+        wagePercentage: 0.75,
+        source: 'fairwork_award',
+      },
+    })
+    // The plain Math.round pattern yields 20.92 here.
+    expect(result.hourlyRate).toBe(20.93)
+    expect(result.overlayApplied).toBe(true)
+  })
+
+  it('leaves a figure that was never on the boundary untouched', () => {
+    // The nudge must be far too small to move anything not already on a half-cent.
+    const result = applyApprenticeRateConfigOverlay({
+      fwcFloorRate: 10,
+      lowestAdultClassificationRate: 40,
+      configRow: {
+        apprenticeType: 'adult',
+        yearOfTrade: 1,
+        wagePercentage: 0.45,
+        source: 'fairwork_award',
+      },
+    })
+    expect(result.hourlyRate).toBe(18)
+  })
+})
