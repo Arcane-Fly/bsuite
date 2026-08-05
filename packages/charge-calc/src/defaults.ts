@@ -1,4 +1,5 @@
 import type { CalcConfig, PenaltyRate, AustralianState } from './types.js';
+import type { EmployeeRateTypeCode } from './awards/schema.js';
 
 // ─── State Payroll Tax Rates ───
 export const PAYROLL_TAX_RATES: Record<AustralianState, number> = {
@@ -50,7 +51,26 @@ export function getPayrollTaxRate(state: AustralianState): number {
  * crm7's charge path used a bare VIC rate for every worker in every state,
  * apprentice or not.
  */
-export type PayrollTaxRateTypeCode = 'AP' | 'AA' | 'TN' | 'JN';
+export type PayrollTaxRateTypeCode = EmployeeRateTypeCode;
+
+/*
+ * WAS `'AP' | 'AA' | 'TN' | 'JN'` — a CLOSED union that omitted 'AD' (Adult).
+ *
+ * That omission is not cosmetic. A caller holding a qualified adult worker —
+ * a labour-hire casual, an ABN contractor, someone who has finished their
+ * apprenticeship — literally could not type the right code, so had to pick a
+ * wrong one. Every code it DID offer (AP, AA, TN) attracts payroll-tax relief
+ * in at least one state. The union's only options were all wrong for a worker,
+ * and one of them was the default.
+ *
+ * That is exactly how R80.4's under-charge happened: a labour-hire worker with
+ * the Adult cohort selected resolved to AA, and WA relieved it to 0.00% where
+ * AD pays 5.50%.
+ *
+ * Now aliased to the canonical MAPD vocabulary in awards/schema.ts, which has
+ * carried AD all along. Three disagreeing vocabularies in one package is how
+ * this drifted; there is now one.
+ */
 
 /**
  * States/territories where AP, AA, and/or TN employees are exempt from
