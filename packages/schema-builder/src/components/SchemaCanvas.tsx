@@ -38,7 +38,11 @@ import type {
   TenantEntity,
 } from '../types.js';
 import { computeDagreLayout } from '../utils/autoLayout.js';
-import { computeGridLayout, isDisconnectedGraph } from '../utils/gridLayout.js';
+import {
+  computeDefaultGridPositions,
+  computeGridLayout,
+  isDisconnectedGraph,
+} from '../utils/gridLayout.js';
 import { exportCanvasToPng } from '../utils/exportPng.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
 import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
@@ -167,8 +171,17 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         controller.entities.map((e) => [e.id, e] as const),
       );
 
+      // Computed once for the whole set: each row's pitch depends on the tallest
+      // card IN THAT ROW, which cannot be derived from a single card in a .map().
+      const defaultGrid = computeDefaultGridPositions(
+        controller.entities.map((e) => ({
+          id: e.id,
+          fieldCount: (controller.fields[e.id] ?? []).length,
+        })),
+      );
+
       const builtNodes: Node<EntityNodeData>[] = controller.entities.map(
-        (entity, i) => {
+        (entity) => {
           // Position precedence:
           //   1. the tenant_schema_layout overlay (the only writable source)
           //   2. entity.metadata.position — legacy, and readable but no longer
@@ -176,20 +189,18 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           //      the overlay existed does not have its diagram reset
           //   3. a computed grid
           //
-          // The grid row pitch is deliberately generous: an EntityNode renders
-          // one row per field, so a fixed short pitch made tall nodes overlap
-          // their neighbours below — which is what "these are stacked" looked
-          // like on a 44-entity canvas even before any save was attempted.
+          // The computed grid comes from computeDefaultGridPositions, which
+          // sizes each row from its TALLEST card. The previous inline version
+          // derived the pitch from the current card's own field count, which
+          // staggered cards within a row and let one wide-schema entity cover
+          // the cards beneath it — on a 44-entity canvas that left 5 drag
+          // handles physically unclickable.
           const meta = entity.metadata as Record<string, unknown> | null;
           const overlayPos = controller.layout.get(entity.id);
-          const fieldCount = (controller.fields[entity.id] ?? []).length;
           const position =
             overlayPos ??
             (meta?.position as { x: number; y: number } | undefined) ??
-            {
-              x: 100 + (i % 4) * 340,
-              y: 100 + Math.floor(i / 4) * (220 + fieldCount * 8),
-            };
+            defaultGrid.get(entity.id) ?? { x: 100, y: 100 };
           const defs = controller.fields[entity.id] ?? [];
           const fields = defs.map((f) => ({
             id: f.id,
