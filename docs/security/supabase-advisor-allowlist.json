@@ -6,6 +6,7 @@
       "lint": "authenticated_security_definer_function_executable",
       "object_type": "function",
       "objects": [
+        "acting_tenant_id()",
         "ancestors_of(leaf_id uuid)",
         "auth_parent_tenant_id()",
         "auth_tenant_id()",
@@ -44,7 +45,10 @@
         "is_gto_staff(p_tenant_id uuid)",
         "is_platform_admin(uid uuid)",
         "is_platform_developer()",
+        "is_platform_super_admin()",
         "is_team_admin(p_team_id uuid, p_user_id uuid)",
+        "platform_admin_act_as(target_tenant_id uuid)",
+        "platform_admin_stop_acting()",
         "platform_is_developer_or_admin()",
         "r7_candidate_id_for_auth_user()",
         "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
@@ -66,7 +70,11 @@
         "is_platform_developer()": "RLS/authorization helper. SECURITY DEFINER so a policy can evaluate it without the caller holding read access to profiles. Returns a boolean only; leaks nothing about other users. Deliberately narrower than is_platform_super_admin() (developer ONLY, excludes tester).",
         "schema_authority_tenant_ids()": "RLS helper on tenant_schema_layout. SECURITY DEFINER so the policy can read user_tenants/tenants without granting the caller access to them. Returns only tenant ids the caller already has authority over; while acting-as it NARROWS to that subtree rather than widening.",
         "tenant_subtree_ids(root_tenant_id uuid)": "Recursive parent_tenant_id walk used by the above. Depth-capped at 10. Takes a tenant id the caller must already be authorized for; returns ids only, no row data.",
-        "update_platform_entity_label(p_entity_id uuid, p_label text, p_description text)": "INTENTIONAL privileged write path, not a helper. It is the ONLY app-level route to a platform-owned tenant_entities row (RLS denies those rows to every user by design). SECURITY DEFINER IS the mechanism; the is_platform_developer() check inside it is the authorization. Restricted to label/description, refuses tenant-owned rows so it cannot become an RLS bypass, and every call is written to platform_schema_audit. Verified live 2026-08-06: a tester and a plain user both get 42501."
+        "update_platform_entity_label(p_entity_id uuid, p_label text, p_description text)": "INTENTIONAL privileged write path, not a helper. It is the ONLY app-level route to a platform-owned tenant_entities row (RLS denies those rows to every user by design). SECURITY DEFINER IS the mechanism; the is_platform_developer() check inside it is the authorization. Restricted to label/description, refuses tenant-owned rows so it cannot become an RLS bypass, and every call is written to platform_schema_audit. Verified live 2026-08-06: a tester and a plain user both get 42501.",
+        "acting_tenant_id()": "RLS helper. Returns the tenant a platform super admin is currently acting as, or nothing. SECURITY DEFINER so policies can read platform_admin_acting_as without granting callers access to it. Gated on is_platform_super_admin() AND expires_at > now(), so a lapsed or unauthorized session yields no rows.",
+        "is_platform_super_admin()": "RLS helper. Boolean only. SECURITY DEFINER so a policy can read profiles without the caller holding access. Admits developer | platform_admin | is_super_admin \u2014 the act-as set. Deliberately WIDER than is_platform_developer(), which alone gates platform schema writes.",
+        "platform_admin_act_as(target_tenant_id uuid)": "INTENTIONAL privileged write, not a helper. Starts an acting-as session; SECURITY DEFINER IS the mechanism because platform_admin_acting_as has no write policies at all. Authorization is the is_platform_super_admin() check inside it, the target tenant must exist, and every start is written to platform_admin_act_as_audit. Sessions carry a hard 12h expires_at.",
+        "platform_admin_stop_acting()": "Counterpart to the above; clears the caller's own acting-as row and audits the stop. SECURITY DEFINER for the same reason. Acts only on auth.uid()'s own row."
       }
     },
     {
