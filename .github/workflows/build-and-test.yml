@@ -35,3 +35,14 @@ jobs:
       - name: Enforce Supabase client init requirements (hardening 1.3)
         shell: bash
         run: node scripts/check-supabase-client-init.mjs
+
+      # The grid ships to crm7 as a byte-identical COPY of packages/data-grid,
+      # because Vercel builds crm7 from its own repo (no parent packages/) and
+      # the npm token cannot create a new @bsuite package. Without this step the
+      # copy is free to become a silent fork. Self-test runs first so a step
+      # that has stopped measuring anything fails loudly instead of passing.
+      - name: Enforce vendored data-grid matches its source
+        shell: bash
+        run: |
+          node scripts/check-data-grid-vendor-drift.mjs --self-test
+          node scripts/check-data-grid-vendor-drift.mjs
