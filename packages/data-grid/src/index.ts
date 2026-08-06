@@ -1,0 +1,38 @@
+/**
+ * @bsuite/data-grid — main entry.
+ *
+ * A virtualized, spreadsheet-feel data grid: row + column virtualization
+ * (@tanstack/react-virtual), sorting/column order/sizing
+ * (@tanstack/react-table), cell-range selection, keyboard grid navigation,
+ * a TSV clipboard round-trip, a fill handle, and an undo/redo stack.
+ *
+ * No consumer app is wired to this package yet — it ships standalone.
+ * Import the pure logic (TSV, selection maths, fill maths, undo stack,
+ * keyboard maths, clipboard glue) independently via `@bsuite/data-grid/lib`
+ * if a host only needs the non-React pieces.
+ */
+export { DataGrid } from './DataGrid.js';
+export {
+  TextEditor,
+  NumberEditor,
+  DateEditor,
+  BooleanEditor,
+  SelectEditor,
+} from './editors/index.js';
+export { formatCellValue, parseCellValue } from './formatting.js';
+export { cn } from './cn.js';
+
+export type {
+  ColumnDataType,
+  SelectOption,
+  CellEditorProps,
+  CellRendererProps,
+  DataGridColumn,
+  CellEdit,
+  DataGridErrorPhase,
+  DataGridError,
+  DataGridHandle,
+  DataGridProps,
+} from './types.js';
+
+export type { CellPosition, CellRange } from './lib/selection.js';
