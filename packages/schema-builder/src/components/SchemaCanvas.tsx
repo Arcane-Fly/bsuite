@@ -414,8 +414,20 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           if (!pc.position) continue;
           const node = localNodes.find((n) => n.id === pc.id);
           if (!node) continue;
-          const entity = node.data.entity as TenantEntity;
-          if (entity.is_system) continue;
+          // NO is_system SKIP.
+          //
+          // This guard used to `continue` on every is_system entity, and all 44
+          // entities in the product are is_system — so the save was never even
+          // attempted for the ones the operator was dragging. It was a
+          // reasonable guard when positions lived on tenant_entities (those rows
+          // are unwritable, so calling would only have produced a denial), but
+          // it means the RLS denial was never the proximate cause: the client
+          // short-circuited first, which is why nothing appeared in any log.
+          //
+          // Positions now live in the per-tenant tenant_schema_layout overlay,
+          // where a platform entity is exactly the case we DO want to persist.
+          // Leaving the skip here would have been a correct fix to code that
+          // never runs.
           await controller
             .updateEntityPosition(pc.id, pc.position)
             .catch(() => {});
@@ -493,14 +505,24 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         ? computeGridLayout(localNodes)
         : computeDagreLayout(localNodes, localEdges);
       setLocalNodes(laidOut);
+      // Same removal as the drag path: is_system entities are precisely the
+      // ones Tidy needs to move. Failures are counted and reported ONCE —
+      // Tidy touches every node, so a per-node toast would mean 44 toasts for
+      // a single click, which buries the message it is trying to deliver.
+      let failed = 0;
       const persist = laidOut.map((node) => {
         const entity = (node.data as EntityNodeData | undefined)?.entity;
-        if (!entity || entity.is_system) return Promise.resolve();
-        return controller
-          .updateEntityPosition(node.id, node.position)
-          .catch(() => {});
+        if (!entity) return Promise.resolve();
+        return controller.updateEntityPosition(node.id, node.position).catch(() => {
+          failed += 1;
+        });
       });
       Promise.all(persist).finally(() => {
+        if (failed > 0) {
+          onError?.(
+            `Tidy could not save ${failed} of ${laidOut.length} card positions`,
+          );
+        }
         requestAnimationFrame(() => {
           flowRef.current?.fitView({ duration: 400, padding: 0.2, maxZoom: 1.2 });
         });
@@ -547,10 +569,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         onError?.('Selected entity not found');
         return;
       }
-      if (entity.is_system) {
-        onError?.('Cannot add fields to a system entity');
-        return;
-      }
+      // NO is_system BLOCK HERE — this is the D4 behaviour, deliberately.
+      //
+      // A tenant may add its OWN fields to a platform entity; it may not modify
+      // the platform's fields. The created row carries tenant_id = this tenant
+      // and entity_id = the platform entity, which is exactly what the
+      // tenant_insert_field_defs policy now permits (it validates the TARGET
+      // entity as well as the new row's tenant). Blocking it client-side made
+      // that capability unreachable.
       setFieldDialogEntityId(targetEntityId);
     }, [controller.entities, pickTargetEntityId, onError]);
 
@@ -578,7 +604,19 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         const { entityId, fieldId, direction } = ce.detail ?? {};
         if (!entityId || !fieldId || !direction) return;
         const entity = controller.entities.find((en) => en.id === entityId);
-        if (!entity || entity.is_system) return;
+        if (!entity) return;
+        if (entity.is_system) {
+          // Reordering rewrites sort_order on EVERY active field of the entity,
+          // and on a platform entity most of those rows are platform-owned and
+          // unwritable by a tenant — the RPC rejects partial arrays, so this
+          // cannot be done for "just my fields". Kept as a block, but no longer
+          // a silent return: an unexplained no-op is the defect class this whole
+          // change exists to remove.
+          onError?.(
+            'Field order on a platform entity is managed by BSuite and is shared across all tenants',
+          );
+          return;
+        }
         const current = (controller.fields[entityId] ?? [])
           .slice()
           .sort((a, b) => {

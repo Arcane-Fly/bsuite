@@ -20,6 +20,7 @@
  * personal override outranks the tenant default.
  */
 
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import {
   getSchemaLayout,
@@ -132,5 +133,63 @@ describe('getSchemaLayout', () => {
     const client = { from: vi.fn() };
     await expect(getSchemaLayout(client, null)).resolves.toEqual([]);
     expect(client.from).not.toHaveBeenCalled();
+  });
+});
+
+describe('the is_system position skip must not come back', () => {
+  /**
+   * The near-miss this guards against.
+   *
+   * SchemaCanvas used to `continue` / return early on `entity.is_system` before
+   * calling updateEntityPosition, in BOTH the drag-stop handler and Tidy. Every
+   * one of the 44 entities in the product is is_system, so the save was never
+   * attempted for any of them — the RLS denial everyone reasoned about was never
+   * even reached, which is why nothing showed up in any log.
+   *
+   * That guard was correct while positions lived on tenant_entities (those rows
+   * genuinely are unwritable). Once positions moved to the per-tenant overlay it
+   * became the thing standing between the fix and the user: a correct write path
+   * that nothing calls. Re-adding it would silently restore the original bug
+   * while every other test here still passed.
+   */
+  it('neither persist path short-circuits on is_system', () => {
+    const src = readFileSync('src/components/SchemaCanvas.tsx', 'utf8');
+
+    // Look only at the two blocks that persist a position.
+    const persistBlocks = src
+      .split('updateEntityPosition')
+      .slice(0, -1)
+      .map((chunk) => chunk.slice(-700));
+
+    expect(persistBlocks.length).toBeGreaterThanOrEqual(2);
+
+    for (const block of persistBlocks) {
+      const offending = block
+        .split('\n')
+        .filter((l) => !l.trimStart().startsWith('//'))
+        .filter((l) => /is_system/.test(l) && /(continue|return)/.test(l));
+
+      expect(
+        offending,
+        `A position-persist path skips is_system entities:\n${offending.join('\n')}\n\n` +
+          'All 44 entities are is_system, so this makes the save unreachable for every ' +
+          'one of them. Positions live in tenant_schema_layout now — platform entities ' +
+          'are exactly the case that must persist.',
+      ).toEqual([]);
+    }
+  });
+
+  it('the scanner would catch the skip if it returned', () => {
+    // A guard that cannot fail is not a guard.
+    const withSkip = `
+      const entity = node.data.entity;
+      if (entity.is_system) continue;
+      await controller.updateEntityPosition(pc.id, pc.position);
+    `;
+    const offending = withSkip
+      .split('\n')
+      .filter((l) => !l.trimStart().startsWith('//'))
+      .filter((l) => /is_system/.test(l) && /(continue|return)/.test(l));
+    expect(offending).toHaveLength(1);
   });
 });
