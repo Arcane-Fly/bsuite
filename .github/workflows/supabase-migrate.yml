@@ -225,15 +225,36 @@ jobs:
           SUBMODULE: ${{ matrix.submodule }}
         run: |
           if [ "$SUBMODULE" = "root" ]; then
-            echo "workdir=." >> "$GITHUB_OUTPUT"
+            WORKDIR="."
           elif [ "$SUBMODULE" = "schema-builder" ]; then
-            echo "workdir=packages/schema-builder" >> "$GITHUB_OUTPUT"
+            WORKDIR="packages/schema-builder"
           else
-            echo "workdir=$SUBMODULE" >> "$GITHUB_OUTPUT"
+            WORKDIR="$SUBMODULE"
+          fi
+          echo "workdir=$WORKDIR" >> "$GITHUB_OUTPUT"
+
+          # Not every app owns database objects. R80.4 replaced R80.3 in the
+          # matrix on 2026-08-06 and has NO supabase/ directory at all (no
+          # @supabase dependency either) — so this job failed the whole
+          # `Supabase Migrations` run while crm7's migrations beside it applied
+          # perfectly. A red applier over a successful apply is worse than
+          # useless: it is the signal people learn to ignore.
+          #
+          # SKIPPED, NOT SILENTLY PASSED. The step prints which scope was
+          # skipped and why, and sets an output the later steps gate on. A
+          # scope that quietly does nothing is how "the applier ran green" comes
+          # to mean nothing — the whole reason this workflow stopped using
+          # `supabase migration up` in the first place.
+          if [ -d "$WORKDIR/supabase/migrations" ]; then
+            echo "has_migrations=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_migrations=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Scope '$SUBMODULE' has no $WORKDIR/supabase/migrations directory — it owns no database objects. Skipping apply and verification for this scope."
           fi
 
       - name: Resolve pooler host
         id: pooler
+        if: steps.resolve-dir.outputs.has_migrations == 'true'
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
@@ -256,6 +277,7 @@ jobs:
           exit 1
 
       - name: Apply transactional migrations (.sql, via psql)
+        if: steps.resolve-dir.outputs.has_migrations == 'true'
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -301,6 +323,7 @@ jobs:
           echo "Done: ${APPLIED_COUNT} applied, ${SKIPPED_COUNT} already recorded."
 
       - name: Verify transactional migrations recorded in schema_migrations
+        if: steps.resolve-dir.outputs.has_migrations == 'true'
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -343,6 +366,7 @@ jobs:
           echo "✓ Verification passed: '${LATEST_LOCAL}' is recorded in schema_migrations."
 
       - name: Apply non-transactional migrations (.nontx.sql)
+        if: steps.resolve-dir.outputs.has_migrations == 'true'
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

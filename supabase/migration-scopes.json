@@ -45,9 +45,9 @@
       "label": "R80.4",
       "repo": "R80.4",
       "workdir": "R80.4",
-      "migrations_dir": "R80.4/supabase/migrations",
-      "functions_dir": "R80.4/supabase/functions",
-      "owner": "wage-calculator"
+      "owner": "wage-calculator",
+      "has_database": false,
+      "note": "R80.4 owns NO database objects \u2014 no supabase/ directory and no @supabase dependency. It replaced R80.3 in the applier matrix on 2026-08-06 and inherited a migrations_dir that never existed, which FAILED the whole Supabase Migrations run while crm7's migrations beside it applied fine. The applier now skips a scope with no migrations directory and says so; this flag records WHY, so the absence reads as deliberate rather than as a missing path."
     },
     {
       "id": "conduit",
