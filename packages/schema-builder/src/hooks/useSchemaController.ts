@@ -266,11 +266,25 @@ export function useSchemaController({
       // which accepts label/description and nothing else.
       const entity = entitiesQuery.data?.find((e) => e.id === id);
       if (entity && entity.tenant_id === null) {
-        const touched = Object.keys(updates);
-        const allowed = touched.every((k) => k === 'label' || k === 'description');
-        if (!allowed) {
+        // Compare against the STORED entity rather than trusting the caller's
+        // key set. EntityPropertiesPanel sends its whole formData -- which is
+        // seeded from the entity and therefore always carries id, tenant_id,
+        // name, metadata and the timestamps -- so a keys-only check rejected
+        // every platform save even when the user had touched nothing but the
+        // label. What matters is which values actually DIFFER.
+        const changed = Object.keys(updates).filter(
+          (k) =>
+            !Object.is(
+              (entity as unknown as Record<string, unknown>)[k],
+              (updates as unknown as Record<string, unknown>)[k],
+            ),
+        );
+        const disallowed = changed.filter(
+          (k) => k !== 'label' && k !== 'description',
+        );
+        if (disallowed.length > 0) {
           throw new Error(
-            `Platform entities allow only label and description to be edited (attempted: ${touched.join(', ')})`,
+            `Platform entities allow only label and description to be edited (attempted to change: ${disallowed.join(', ')})`,
           );
         }
         return updatePlatformEntityLabel(
@@ -376,8 +390,24 @@ export function useSchemaController({
       });
       return { prev };
     },
-    onError: (err, _vars, ctx) => {
-      if (ctx?.prev) qc.setQueryData(layoutKey, ctx.prev);
+    onError: (err, vars, ctx) => {
+      // Roll back ONLY the node that failed.
+      //
+      // Restoring the whole snapshot discards work that succeeded in the
+      // meantime: drag A, then drag B before A resolves; B saves and refetches;
+      // A then fails and the old whole-array restore would reset the cache to a
+      // state that predates B's drag, visibly reverting a position the user had
+      // already been told was saved. Dragging several cards in quick succession
+      // is the normal way to use this canvas, so the race is routine, not exotic.
+      const prevRow = ctx?.prev?.find(
+        (r) => r.entity_id === vars.id && r.user_id === null,
+      );
+      qc.setQueryData<TenantSchemaLayoutRow[]>(layoutKey, (cur = []) => {
+        const without = cur.filter(
+          (r) => !(r.entity_id === vars.id && r.user_id === null),
+        );
+        return prevRow ? [...without, prevRow] : without;
+      });
       onError?.('Could not save canvas position', err);
     },
     onSettled: () => qc.invalidateQueries({ queryKey: layoutKey }),

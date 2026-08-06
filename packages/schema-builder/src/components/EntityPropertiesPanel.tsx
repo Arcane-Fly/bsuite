@@ -292,7 +292,14 @@ export function EntityPropertiesPanel({
         </div>
       </div>
 
-      {!isSystem ? (
+      {/*
+        The footer must also render for a platform developer editing a platform
+        entity. Gating it on `!isSystem` alone shipped the developer-edit feature
+        DEAD: the label/description inputs unlocked, and there was no control to
+        submit them. That is the same built-but-unwired defect this whole change
+        set exists to remove, reintroduced one commit later.
+      */}
+      {!isSystem || canEditPlatformCopy ? (
         <footer className="border-t border-border bg-card/70 p-4">
           <button
             type="button"

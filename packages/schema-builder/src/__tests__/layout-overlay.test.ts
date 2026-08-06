@@ -159,15 +159,15 @@ describe('the is_system position skip must not come back', () => {
     const persistBlocks = src
       .split('updateEntityPosition')
       .slice(0, -1)
-      .map((chunk) => chunk.slice(-700));
+      .map((chunk: string) => chunk.slice(-700));
 
     expect(persistBlocks.length).toBeGreaterThanOrEqual(2);
 
     for (const block of persistBlocks) {
       const offending = block
         .split('\n')
-        .filter((l) => !l.trimStart().startsWith('//'))
-        .filter((l) => /is_system/.test(l) && /(continue|return)/.test(l));
+        .filter((l: string) => !l.trimStart().startsWith('//'))
+        .filter((l: string) => /is_system/.test(l) && /(continue|return)/.test(l));
 
       expect(
         offending,
@@ -188,8 +188,8 @@ describe('the is_system position skip must not come back', () => {
     `;
     const offending = withSkip
       .split('\n')
-      .filter((l) => !l.trimStart().startsWith('//'))
-      .filter((l) => /is_system/.test(l) && /(continue|return)/.test(l));
+      .filter((l: string) => !l.trimStart().startsWith('//'))
+      .filter((l: string) => /is_system/.test(l) && /(continue|return)/.test(l));
     expect(offending).toHaveLength(1);
   });
 });
