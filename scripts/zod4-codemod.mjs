@@ -143,7 +143,7 @@ function walk(dir, results = []) {
 const DEFAULT_TARGETS = [
   // Sub-repos (populated when submodules are checked out)
   join(REPO_ROOT, 'crm7', 'src'),
-  join(REPO_ROOT, 'R80.3', 'src'),
+  join(REPO_ROOT, 'R80.4', 'src'),
   join(REPO_ROOT, 'braden', 'src'),
   join(REPO_ROOT, 'business-suite-unified', 'src'),
   join(REPO_ROOT, 'conduit', 'src'),

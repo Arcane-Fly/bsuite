@@ -50,7 +50,7 @@ on:
       # path, so function changes that rode a submodule merge never triggered a
       # deploy"). Keep the two lists in step.
       - 'crm7'
-      - 'R80.3'
+      - 'R80.4'
       - 'braden'
       - 'business-suite-unified'
       - 'conduit'

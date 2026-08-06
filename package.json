@@ -6,7 +6,7 @@
     "node": "24.x"
   },
   "scripts": {
-    "lint:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Linting $dir ===\"; (cd $dir && pnpm lint) || exit 1; done",
+    "lint:all": "for dir in crm7 R80.4 braden business-suite-unified conduit; do echo \"\\n=== Linting $dir ===\"; (cd $dir && pnpm lint) || exit 1; done",
     "lint:ai-gateway": "node scripts/check-ai-gateway-compliance.mjs",
     "lint:no-cookie-sso": "node scripts/check-no-cookie-sso.mjs",
     "lint:supabase-client-init": "node scripts/check-supabase-client-init.mjs",
@@ -16,9 +16,9 @@
     "lint:vercel-production": "node scripts/check-vercel-production-readiness.mjs",
     "supabase:manifest": "node scripts/supabase/generate-schema-manifest.mjs > supabase/schema-manifest.json",
     "supabase:preview-plan": "node scripts/supabase/plan-preview-db.mjs --markdown",
-    "test:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Testing $dir ===\"; (cd $dir && pnpm test -- --run) || exit 1; done",
-    "build:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Building $dir ===\"; (cd $dir && pnpm build) || exit 1; done",
-    "typecheck:all": "for dir in crm7 R80.3 braden business-suite-unified conduit; do echo \"\\n=== Typechecking $dir ===\"; (cd $dir && pnpm tsc --noEmit) || exit 1; done",
+    "test:all": "for dir in crm7 R80.4 braden business-suite-unified conduit; do echo \"\\n=== Testing $dir ===\"; (cd $dir && pnpm test -- --run) || exit 1; done",
+    "build:all": "for dir in crm7 R80.4 braden business-suite-unified conduit; do echo \"\\n=== Building $dir ===\"; (cd $dir && pnpm build) || exit 1; done",
+    "typecheck:all": "for dir in crm7 R80.4 braden business-suite-unified conduit; do echo \"\\n=== Typechecking $dir ===\"; (cd $dir && pnpm tsc --noEmit) || exit 1; done",
     "test:packages": "pnpm -r --filter './packages/*' test -- --run",
     "lint:migration-fk-indexes": "node scripts/check-migration-fk-indexes.mjs"
   },

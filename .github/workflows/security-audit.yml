@@ -11,7 +11,7 @@ on:
     paths:
       - 'crm7/**'
       - 'conduit/**'
-      - 'R80.3/**'
+      - 'R80.4/**'
       - 'business-suite-unified/**'
       - 'braden/**'
       - 'throughput/**'
@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [crm7, conduit, R80.3, business-suite-unified, braden, throughput]
+        app: [crm7, conduit, R80.4, business-suite-unified, braden, throughput]
     steps:
       - uses: actions/checkout@v5
         with:

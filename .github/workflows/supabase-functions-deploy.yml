@@ -28,7 +28,7 @@ on:
     paths:
       - 'supabase/functions/**'
       - 'crm7/supabase/functions/**'
-      - 'R80.3/supabase/functions/**'
+      - 'R80.4/supabase/functions/**'
       - 'braden/supabase/functions/**'
       - 'business-suite-unified/supabase/functions/**'
       - 'conduit/supabase/functions/**'
@@ -37,7 +37,7 @@ on:
       # change the gitlink path, so function changes that rode a submodule
       # merge never triggered a deploy (handover-to-employment class).
       - 'crm7'
-      - 'R80.3'
+      - 'R80.4'
       - 'braden'
       - 'business-suite-unified'
       - 'conduit'
@@ -53,7 +53,7 @@ on:
           - all
           - root
           - crm7
-          - R80.3
+          - R80.4
           - braden
           - business-suite-unified
           - conduit
@@ -112,7 +112,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_SUBMODULE: ${{ github.event.inputs.submodule }}
         run: |
-          ALL_SCOPES='["root","crm7","R80.3","braden","business-suite-unified","conduit","throughput"]'
+          ALL_SCOPES='["root","crm7","R80.4","braden","business-suite-unified","conduit","throughput"]'
 
           # workflow_dispatch: use the selected submodule or all
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
@@ -134,7 +134,7 @@ jobs:
           fi
 
           # Submodule function directories
-          for scope in crm7 R80.3 braden business-suite-unified conduit throughput; do
+          for scope in crm7 R80.4 braden business-suite-unified conduit throughput; do
             MATCHED=0
 
             # Path 1 — in-tree diff. For the six SUBMODULES this can NEVER match:

@@ -41,12 +41,12 @@
       "owner": "corporate"
     },
     {
-      "id": "R80.3",
-      "label": "R80.3",
-      "repo": "R80.3",
-      "workdir": "R80.3",
-      "migrations_dir": "R80.3/supabase/migrations",
-      "functions_dir": "R80.3/supabase/functions",
+      "id": "R80.4",
+      "label": "R80.4",
+      "repo": "R80.4",
+      "workdir": "R80.4",
+      "migrations_dir": "R80.4/supabase/migrations",
+      "functions_dir": "R80.4/supabase/functions",
       "owner": "wage-calculator"
     },
     {
@@ -86,5 +86,18 @@
       "For app-repo PRs, add a repository_dispatch bridge to parent bsuite or rely on parent submodule bump PRs to exercise the full migration manifest.",
       "Vite apps must receive VITE_* Supabase aliases in Vercel previews; Supabase/Vercel integrations commonly inject NEXT_PUBLIC_* names."
     ]
-  }
+  },
+  "retired_scopes": [
+    {
+      "id": "R80.3",
+      "label": "R80.3 (archived 2026-08-06)",
+      "repo": "R80.3",
+      "archived_path": "/home/braden/Desktop/Dev/archived-repos-docs/R80.3",
+      "migrations_dir": "archived-repos-docs/R80.3/supabase/migrations",
+      "migration_count_at_archive": 31,
+      "owner": "wage-calculator",
+      "why_it_still_matters": "Its 31 migrations are APPLIED to the shared project and their versions remain permanently occupied in supabase_migrations.schema_migrations. The applier keys on the 14-digit version alone, so a NEW migration in any live scope that reuses one of these stamps is silently skipped forever. Any duplicate-stamp check MUST keep scanning the archived path.",
+      "superseded_by": "R80.4"
+    }
+  ]
 }

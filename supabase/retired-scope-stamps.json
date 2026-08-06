@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.0",
+  "_doc": "Migration stamps belonging to RETIRED scopes. A retired repo takes no new migrations, so this snapshot is immutable and cannot drift. It exists because archiving a scope out of the tree removes its stamps from every file-based duplicate check WITHOUT removing them from supabase_migrations.schema_migrations, where the applier keys on the 14-digit version alone. Losing them from the scan turns a real hazard into a green report.",
+  "retired_scopes": [
+    {
+      "id": "R80.3",
+      "archived_to": "/home/braden/Desktop/Dev/archived-repos-docs/R80.3",
+      "archived_on": "2026-08-06",
+      "superseded_by": "R80.4",
+      "count": 30,
+      "measured_effect_of_archiving": "The cross-scope duplicate report dropped from 7 above-floor duplicates to 5. The two that disappeared were 20260702000000 and 20260726090000 \u2014 both REAL, both still latent. schema_migrations records 20260702000000 as the BSU file and 20260726090000 as the crm7 file, so R80.3's r80_invoice_run_tenant_policy and funding_offsets at those stamps were never recorded.",
+      "stamps": [
+        {
+          "version": "20250409065148",
+          "name": "azure_torch"
+        },
+        {
+          "version": "20250409065204",
+          "name": "winter_ember"
+        },
+        {
+          "version": "20250409081801",
+          "name": "orange_salad"
+        },
+        {
+          "version": "20250409091844",
+          "name": "green_brook"
+        },
+        {
+          "version": "20250409091853",
+          "name": "super_lodge"
+        },
+        {
+          "version": "20250409092954",
+          "name": "wooden_ember"
+        },
+        {
+          "version": "20250409094756",
+          "name": "falling_surf"
+        },
+        {
+          "version": "20250429043316",
+          "name": "pink_sunset"
+        },
+        {
+          "version": "20250429043324",
+          "name": "divine_tower"
+        },
+        {
+          "version": "20250501231150",
+          "name": "muddy_haze"
+        },
+        {
+          "version": "20250505022452",
+          "name": "precious_meadow"
+        },
+        {
+          "version": "20250813033754",
+          "name": "damp_recipe"
+        },
+        {
+          "version": "20251014000000",
+          "name": "unified_business_suite_schema"
+        },
+        {
+          "version": "20260227120000",
+          "name": "boot_assessments"
+        },
+        {
+          "version": "20260320100000",
+          "name": "apprentice_ir_profile"
+        },
+        {
+          "version": "20260320100001",
+          "name": "cbp_milestones"
+        },
+        {
+          "version": "20260320100002",
+          "name": "wic_rate_lookup"
+        },
+        {
+          "version": "20260320100003",
+          "name": "charge_rate_schedules"
+        },
+        {
+          "version": "20260320100004",
+          "name": "host_charge_rates"
+        },
+        {
+          "version": "20260512100000",
+          "name": "r80_apprentice_calc_state"
+        },
+        {
+          "version": "20260701100000",
+          "name": "r80_invoice_runs"
+        },
+        {
+          "version": "20260702000000",
+          "name": "r80_invoice_run_tenant_policy"
+        },
+        {
+          "version": "20260702130000",
+          "name": "award_templates_calendar_year_seed"
+        },
+        {
+          "version": "20260704160000",
+          "name": "r80_invoice_run_xero_push"
+        },
+        {
+          "version": "20260725150000",
+          "name": "funding_offsets_placement_scheme_unique"
+        },
+        {
+          "version": "20260726090000",
+          "name": "funding_offsets"
+        },
+        {
+          "version": "20260729140100",
+          "name": "r80_charge_rate_builds"
+        },
+        {
+          "version": "20260729140200",
+          "name": "r80_margin_policy"
+        },
+        {
+          "version": "20260729140400",
+          "name": "r80_payroll_tax_position"
+        },
+        {
+          "version": "20260729141000",
+          "name": "pin_r80_trigger_search_paths"
+        }
+      ]
+    }
+  ]
+}

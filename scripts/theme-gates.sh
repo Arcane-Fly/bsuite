@@ -8,7 +8,7 @@
 #
 #   "packages/ is clean"        -> 62 off-palette colours
 #   "the heading ramp is in"    -> tokens existed, nothing applied them, and in
-#                                  R80.3 the app's own @layer base beat it
+#                                  R80.4 the app's own @layer base beat it
 #   "throughput is fine"        -> did not build against the published theme
 #
 # Contract: docs/plans/20260803-theme-conformance-dod-v1.00W.md
@@ -19,7 +19,7 @@ cd "$(dirname "$0")/.."
 QUICK=0
 [[ ${1:-} == --quick ]] && QUICK=1
 
-APPS=(crm7 conduit business-suite-unified R80.3 throughput braden)
+APPS=(crm7 conduit business-suite-unified R80.4 throughput braden)
 PKGS=(theme ui nav-core page-builder schema-builder)
 
 pass=0; fail=0
@@ -61,7 +61,7 @@ run G10 "no silently-dropped utilities" scripts/audit-invalid-utilities.sh
 # colour style since the estate was swept to zero.
 run G11 "no NEW convertible inline colour styles" bash -c '
   t=0
-  for a in crm7 conduit business-suite-unified R80.3 throughput braden; do
+  for a in crm7 conduit business-suite-unified R80.4 throughput braden; do
     [ -d "$a" ] || continue
     n=$(node scripts/codemod-inline-colour-styles.mjs "$a" 2>/dev/null | sed -n "s/^  converted:  \\([0-9]*\\).*/\\1/p")
     t=$((t + ${n:-0}))

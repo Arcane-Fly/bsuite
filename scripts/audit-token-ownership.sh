@@ -31,7 +31,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-APPS=(crm7 conduit business-suite-unified R80.3 throughput braden)
+APPS=(crm7 conduit business-suite-unified R80.4 throughput braden)
 MARKER='theme-own-ok'
 # Gate F: a worktree is a full second copy of the tree; counting one makes every
 # number wrong. .vercel holds the compiled bundle.

@@ -27,7 +27,7 @@ jobs:
           - { name: business-suite-unified, dir: business-suite-unified }
           - { name: conduit,                dir: conduit }
           - { name: braden,                 dir: braden }
-          - { name: R80.3,                  dir: R80.3 }
+          - { name: R80.4,                  dir: R80.4 }
           - { name: throughput,             dir: throughput }
     steps:
       - name: Checkout with submodules

@@ -35,12 +35,12 @@ declare -A ROUTES=(
   [crm7]="/ /login /404 /unauthorized /privacy /terms"
   [conduit]="/ /login"
   [business-suite-unified]="/ /login /auth/callback"
-  [R80.3]="/ /login"
+  [R80.4]="/ /login"
   [throughput]="/ /login"
   [braden]="/ /about /services /products /contact"
 )
 APPS=("${@:-}")
-[[ -z ${APPS[0]:-} ]] && APPS=(crm7 conduit business-suite-unified R80.3 throughput braden)
+[[ -z ${APPS[0]:-} ]] && APPS=(crm7 conduit business-suite-unified R80.4 throughput braden)
 
 pass=0; fail=0; skip=0
 declare -a FAILED=()
@@ -105,7 +105,7 @@ for app in "${APPS[@]}"; do
     # RATCHETED TO ZERO on 2026-08-05. It ran as a warning only while the
     # estate-wide number was unknown; it is now measured at 0 across all six
     # apps, signed in, in BOTH themes — crm7 6 routes, conduit 8, BSU 7,
-    # braden 6, throughput 4, R80.3 1. A warning that nobody has to clear
+    # braden 6, throughput 4, R80.4 1. A warning that nobody has to clear
     # decays into scenery, so from here a finding FAILS.
     #
     # Run it in both themes: dark mode partially rescues the success and

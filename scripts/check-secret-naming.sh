@@ -3,7 +3,7 @@
 #
 # BSuite secret-naming drift guard.
 # Canonical reference: AGENTS.md §Environment Variables
-#   - Vite apps (BSU, crm7, R80.3, braden, throughput):
+#   - Vite apps (BSU, crm7, R80.4, braden, throughput):
 #       VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
 #       (frontend reads via `import.meta.env.VITE_*`)
 #   - Next.js apps (conduit):
@@ -41,7 +41,7 @@ set -u  # do not set -e — we want to aggregate violations across rules
 REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
-VITE_APPS=(business-suite-unified crm7 R80.3 braden throughput)
+VITE_APPS=(business-suite-unified crm7 R80.4 braden throughput)
 NEXT_APPS=(conduit)
 
 # Source globs scanned per app — keep in sync with the workflow file.
@@ -81,9 +81,9 @@ note() {
 # wildcards. They snapshot the pre-bsuite#464 state — see bsuite#464 to retire
 # them line-by-line.
 ALLOWLIST=(
-  # ---- R80.3 vite/vitest config fallback shims (intentional dual-path) ----
-  'R80.3/vite.config.ts:*'
-  'R80.3/vitest.config.ts:*'
+  # ---- R80.4 vite/vitest config fallback shims (intentional dual-path) ----
+  'R80.4/vite.config.ts:*'
+  'R80.4/vitest.config.ts:*'
   # ---- braden check-env scripts (utility, not bundled to client) ----
   'braden/scripts/check-env.cjs:*'
   'braden/scripts/check-env.js:*'
@@ -335,7 +335,7 @@ fi
   echo ""
   echo "$DIAGNOSTICS"
   echo "Canonical naming per AGENTS.md §Environment Variables:"
-  echo "  Vite apps (BSU, crm7, R80.3, braden, throughput): import.meta.env.VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY"
+  echo "  Vite apps (BSU, crm7, R80.4, braden, throughput): import.meta.env.VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY"
   echo "  Next.js (conduit):                              process.env.NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
   echo "  Server-side (edge fns, API routes):             SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY"
   echo "  NEVER:                                          SUPABASE_ANON_KEY (deprecated since Supabase 2025 rotation)"

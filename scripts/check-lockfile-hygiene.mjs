@@ -13,7 +13,7 @@ const APP_REPOS = [
   'braden',
   'conduit',
   'crm7',
-  'R80.3',
+  'R80.4',
   'throughput',
 ];
 

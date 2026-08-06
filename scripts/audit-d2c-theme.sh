@@ -16,7 +16,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-APPS=(crm7 conduit business-suite-unified R80.3 throughput packages braden)
+APPS=(crm7 conduit business-suite-unified R80.4 throughput packages braden)
 SRC_EXT=(--include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx'
          --include='*.css' --include='*.scss' --include='*.html' --include='*.vue')
 # .vercel/ is the one that matters most: `.vercel/output/static/assets/` holds the
@@ -103,7 +103,7 @@ C3_ARBITRARY="${PREFIX}-\[(#|rgb\(|hsl\(\s*[0-9.]|oklch\(\s*[0-9.])"
 
 # C4 destructive/error rendered red or coral instead of Electric Purple.
 # The `(?<!\w)` equivalent — a hex preceded by a word char is an issue
-# reference (`crm7#1297`, `R80.3#326`), not a colour, and this repo's comments
+# reference (`crm7#1297`, `R80.4#326`), not a colour, and this repo's comments
 # are dense with them. Two of the four C4 hits were issue numbers.
 C4="(destructive|error|danger)[^\n]{0,80}(${PALETTE}-[0-9]|[^0-9a-zA-Z]#[0-9a-fA-F]{6}\b|oklch\(0\.6[0-9]+ 0\.2[0-9]+ 2[0-9]\.)|--destructive[^\n]{0,60}oklch\(0\.[0-9]+ 0\.[0-9]+ (1[5-9]|2[0-9])\."
 

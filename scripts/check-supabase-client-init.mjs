@@ -4,7 +4,7 @@
  *
  * Hardening Phase 1.3 — Vite SPA Supabase client storage + persistSession audit.
  *
- * For each of the 5 Vite SPA apps (crm7, R80.3, braden, business-suite-unified,
+ * For each of the 5 Vite SPA apps (crm7, R80.4, braden, business-suite-unified,
  * throughput) this script:
  *   1. Locates the Supabase client init file (one of several candidate paths).
  *   2. Verifies the `createClient` auth config contains required options.
@@ -50,10 +50,10 @@ const APP_CANDIDATES = [
     ],
   },
   {
-    app: 'R80.3',
+    app: 'R80.4',
     candidates: [
-      'R80.3/src/services/supabaseClient.ts',
-      'R80.3/src/lib/supabase.ts',
+      'R80.4/src/services/supabaseClient.ts',
+      'R80.4/src/lib/supabase.ts',
     ],
   },
   {

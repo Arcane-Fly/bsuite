@@ -41,7 +41,7 @@ const MARKER = 'one-shot-ok';
 
 // Doc app names -> repo directory names.
 const APP_DIR = {
-  CRM7: 'crm7', R8: 'R80.3', BSU: 'business-suite-unified',
+  CRM7: 'crm7', R8: 'R80.4', BSU: 'business-suite-unified',
   Throughput: 'throughput', Conduit: 'conduit', braden: 'braden',
 };
 
@@ -70,7 +70,7 @@ for (const line of readFileSync(DOC, 'utf8').split('\n')) {
 
 if (!owners.size) { console.error(`parsed 0 entities from ${DOC} — table format changed?`); process.exit(2); }
 
-const APPS = ['crm7', 'conduit', 'business-suite-unified', 'R80.3', 'throughput', 'braden'];
+const APPS = ['crm7', 'conduit', 'business-suite-unified', 'R80.4', 'throughput', 'braden'];
 // The write must be in the SAME chained expression as the .from(). A loose
 // [\s\S]{0,400} window spans STATEMENTS and manufactures violations: it matched
 // `.from('user_tenants').select(...)` — a READ, explicitly allowed — against an

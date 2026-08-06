@@ -7,7 +7,7 @@
 # crm7 workflow has been removed; this is now the only copy of this control.
 #
 # Why the parent and not crm7: supabase_migrations.schema_migrations is ONE
-# table shared by 8 migration scopes (root + crm7 + R80.3 + braden +
+# table shared by 8 migration scopes (root + crm7 + R80.4 + braden +
 # business-suite-unified + conduit + throughput + packages/schema-builder —
 # see .github/workflows/supabase-migrate.yml header). A crm7-only audit can
 # only ever see crm7's slice. This workflow checks out all scopes via
@@ -90,7 +90,7 @@ env:
   MIGRATION_SCOPE_DIRS: >-
     supabase/migrations,
     crm7/supabase/migrations,
-    R80.3/supabase/migrations,
+    R80.4/supabase/migrations,
     braden/supabase/migrations,
     business-suite-unified/supabase/migrations,
     conduit/supabase/migrations,
