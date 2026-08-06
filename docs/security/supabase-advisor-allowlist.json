@@ -189,10 +189,10 @@
       "object_type": "table",
       "mode": "tracked",
       "tracked_in": "bsuite#1542",
-      "reason": "auth_rls_initplan is a PERFORMANCE-only WARN (RLS policy uses an init plan that re-evaluates per row) — never security-blocking, but can cause table scans on large tables. Tracked (not accepted) so live occurrences surface in the perf sweep issue rather than silently passing. 'some_new_table' is the checker self-test's filed-perf-finding anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); removing this rule would make the self-test's newPerf assertion fail. Live occurrences across tables are auto-filed to bsuite#1542.",
+      "reason": "auth_rls_initplan is a PERFORMANCE-only WARN (RLS policy uses an init plan that re-evaluates per row) — never security-blocking, but can cause table scans on large tables. Tracked (not accepted) so live occurrences surface in the perf sweep issue rather than silently passing. 'some_new_table' is the checker self-test's filed-perf-finding anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); removing this rule would make the self-test's newPerf assertion fail. Live occurrences across tables are auto-filed to bsuite#1542. WIDENED to '*' on 2026-08-06: the rule matched the lint but enumerated only 'some_new_table' (a self-test anchor), so it matched NO real table and this class resurfaced as blocking across ~16 of them (audit_events, custom_fields, invoice_runs, org_documents, pages, rcti_invoices, tenant_features, tenant_locations, tenant_schema_layout, db_console_migration_exports and more). Supabase now returns this lint on the SECURITY endpoint, where anything unmatched fails — so a per-table list was always going to go stale on the next new table. The decision here is unchanged from 2026-07-28: tracked, not accepted; occurrences still file to bsuite#1542. Self-test is unaffected — its 'new perf' anchor is unused_rls_index, not this lint.",
       "added": "2026-07-28",
       "objects": [
-        "some_new_table"
+        "*"
       ]
     },
     {
@@ -289,17 +289,6 @@
       "added": "2026-08-06",
       "objects": [
         "apprenticeship_title_coverage"
-      ]
-    },
-    {
-      "lint": "rls_initplan",
-      "object_type": "table",
-      "mode": "tracked",
-      "tracked_in": "bsuite#1542",
-      "reason": "SAME FINDING CLASS as the auth_rls_initplan rule above — Supabase renamed the lint. The old rule kept matching nothing while the advisor emitted the new name, so a class this estate had DELIBERATELY tracked-not-blocked since 2026-07-28 silently started failing CI across ~16 tables (audit_events, custom_fields, invoice_runs, org_documents, pages, rcti_invoices, tenant_features, tenant_locations, tenant_schema_layout, db_console_migration_exports and more). This restores the existing decision under the current lint name; it does not make a new one. rls_initplan is a PERFORMANCE finding — an RLS policy re-evaluating an auth function per row instead of once via an InitPlan. It can cause table scans at scale; it is not a data-exposure class. Wildcard because the finding is estate-wide and per-table enumeration would go stale on every new table, which is exactly how the rule above went stale. Live occurrences continue to be auto-filed to bsuite#1542 rather than silently passing.",
-      "added": "2026-08-06",
-      "objects": [
-        "*"
       ]
     }
   ],
