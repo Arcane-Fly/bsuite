@@ -26,11 +26,13 @@ on:
   pull_request:
     paths:
       - '.github/workflows/oauth-provider-check.yml'
+      - 'scripts/check-oauth-redirect-uris.sh'
       - 'AGENTS.md'
   push:
     branches: [main, development]
     paths:
       - '.github/workflows/oauth-provider-check.yml'
+      - 'scripts/check-oauth-redirect-uris.sh'
       - 'AGENTS.md'
   repository_dispatch:
     types: [submodule-auth-changed]
@@ -381,7 +383,32 @@ jobs:
             })
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 3: Remind about PAT setup if missing
+  # JOB 3: Every origin we ship a user to must be a REGISTERED redirect_uri
+  #
+  # The two jobs above check that the right providers are offered and that the
+  # flow is PKCE. Neither notices when the DESTINATION of a cross-app link is an
+  # origin the OAuth server will refuse — which is how crm7 shipped
+  # VITE_R8_URL="https://r8-c.vercel.app" (operator report 2026-08-06). It served
+  # the right app, so it looked fine; it just wasn't in R8's redirect_uris, so
+  # the user landed signed out and could not sign in.
+  #
+  # Needs no secrets: the authorize endpoint validates client_id + redirect_uri
+  # before authenticating anyone, so an unauthenticated GET separates registered
+  # (302) from unregistered (400). Runs on the existing daily cron, so a
+  # dashboard change that de-registers an origin surfaces within a day rather
+  # than when a user hits it.
+  # ─────────────────────────────────────────────────────────────────────────────
+  check-redirect-uri-registration:
+    name: Verify every shipped origin is a registered redirect_uri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe the live OAuth authorize endpoint
+        shell: bash
+        run: ./scripts/check-oauth-redirect-uris.sh
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 4: Remind about PAT setup if missing
   # ─────────────────────────────────────────────────────────────────────────────
   pat-setup-reminder:
     name: Cross-repo PAT setup status
