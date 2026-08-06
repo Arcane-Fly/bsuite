@@ -5,6 +5,72 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.12.0] — 2026-08-06 — ALEX48 returned a constant and discarded its inputs
+
+### Fixed — MONEY DEFECT, silent under-recovery
+
+- `calculateBillableWeeks()` had `case 'ALEX48': return 48`. A **constant**. The
+  function is handed `annualLeaveDays`, `daysPerWeek`, `publicHolidayDays`,
+  `sickLeaveDays` and `trainingWeeks`, and that branch discarded every one of
+  them. The identifier baked the number in, so the model could not be renamed
+  without renaming the figure.
+
+  48 is right for exactly one case — full-time, five days a week, four weeks of
+  leave. Measured against the correct `52 - (annualLeaveDays / daysPerWeek)`:
+
+  | case | correct | ALEX48 said | out by |
+  | --- | --- | --- | --- |
+  | full-time, 4 weeks leave | 48.00w | 48 | 0.0% |
+  | continuous shiftworker, 5 weeks | 47.00w | 48 | 2.1% |
+  | part-time 4 days/week | 47.00w | 48 | 2.1% |
+  | part-time 3 days/week | 45.33w | 48 | **5.9%** |
+
+  It erred in the expensive direction. Too many billable hours spreads the same
+  annual cost thinner, so the hourly rate comes out **low**, and the GTO then
+  bills fewer weeks than the divisor assumed. A part-time apprentice on three
+  days was 5.9% light on every hour, silently.
+
+  Nothing caught it because 48 is right for the default full-time case, which is
+  what every fixture used — and because two tests **asserted the defect**:
+  *"always returns 48 regardless of leave inputs"* and *"returns 48 even with
+  extreme leave values"*. A test that asserts a constant cannot notice the
+  constant is only right once.
+
+- A zero `daysPerWeek` now returns a finite number instead of `Infinity`, which
+  read downstream as an absurdly low rate rather than as an error.
+
+### Added — elections replace the shipped model names
+
+Operator ruling 2026-08-06: *"just election with option to save presets by name.
+so someone could create an Alex preset. or their own name."*
+
+- `BillingElections` — four flags, one per category that can be billed rather
+  than costed: `billAnnualLeave`, `billPublicHoliday`, `billPersonalLeave`,
+  `billTraining`. Billable weeks is 52 less every category **not** billed.
+- `defaultBillingElections()` — worked hours only. Deliberately unnamed, and
+  identical to what `Standard` already did, so an existing caller is unaffected.
+- **No preset name is shipped.** A name we ship is a name we have to be right
+  about in a vocabulary that is not ours, and a shipped ALEX has to *encode*
+  what ALEX means — which is how 48 got hardcoded in the first place.
+
+### Deprecated
+
+- `BillableWeeksInput.billingModel` and `electionsForLegacyModel()`. Pass
+  `elections`. Kept so 0.11.x call sites keep compiling; removed at 1.0.0.
+  `ALEX48` maps to *annual leave excluded and nothing else* and is now
+  **computed** — the name survives the transition, the constant does not.
+
+### Note for consumers
+
+`ALEX48` and `W52` no longer have a fixed week count that can be read from a
+table. `BILLING_MODEL_WEEKS` should not be used to short-circuit
+`calculateBillableWeeks()` — crm7 did exactly that in
+`resolveBillableWeeks()` and so never reached this fix until it was removed
+(crm7 `38229673`). `W52` remains genuinely fixed at 52, because every category
+is billed.
+
+---
+
 ## [0.10.0] — 2026-08-05 — R80.4 reference engine, ported (`@bsuite/charge-calc/r804`)
 
 ### Added
