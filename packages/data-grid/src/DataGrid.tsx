@@ -1,0 +1,889 @@
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactElement,
+} from 'react';
+import {
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type ColumnSizingState,
+  type SortingState,
+} from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+
+import { cn } from './cn.js';
+import { ColumnHeaderCell } from './components/ColumnHeaderCell.js';
+import { FillHandle } from './components/FillHandle.js';
+import { GridCell } from './components/GridCell.js';
+import { BooleanEditor, DateEditor, NumberEditor, SelectEditor, TextEditor } from './editors/index.js';
+import { formatCellValue, parseCellValue } from './formatting.js';
+import { buildCopyText, buildPasteEdits, expandSingleCellPasteToSelection } from './lib/clipboard.js';
+import { computeFillDownExtent, computeFillRange, mapFillTargetToSource, type FillResult } from './lib/fill.js';
+import { isPrintableEditTrigger, moveEnter, moveFocus, moveTab, type GridBounds } from './lib/keyboard.js';
+import { isCellInRange, normalizeRange, rangeToCells, type CellPosition, type CellRange } from './lib/selection.js';
+import { UndoStack } from './lib/undo.js';
+import type {
+  CellEdit,
+  CellEditorProps,
+  DataGridColumn,
+  DataGridError,
+  DataGridErrorPhase,
+  DataGridHandle,
+  DataGridProps,
+} from './types.js';
+
+const DEFAULT_ROW_HEIGHT = 32;
+const DEFAULT_HEADER_HEIGHT = 32;
+const DEFAULT_COLUMN_WIDTH = 150;
+const DEFAULT_MIN_COLUMN_WIDTH = 60;
+const DEFAULT_UNDO_LIMIT = 200;
+
+function overlayKey(rowIndex: number, columnId: string): string {
+  return `${rowIndex}:${columnId}`;
+}
+
+function editorFor<TRow>(column: DataGridColumn<TRow>): (props: CellEditorProps<TRow>) => ReactElement {
+  if (column.renderEditor) return column.renderEditor as (props: CellEditorProps<TRow>) => ReactElement;
+  switch (column.dataType) {
+    case 'number':
+      return NumberEditor as unknown as (props: CellEditorProps<TRow>) => ReactElement;
+    case 'date':
+      return DateEditor as unknown as (props: CellEditorProps<TRow>) => ReactElement;
+    case 'boolean':
+      return BooleanEditor as unknown as (props: CellEditorProps<TRow>) => ReactElement;
+    case 'select':
+      return SelectEditor as unknown as (props: CellEditorProps<TRow>) => ReactElement;
+    default:
+      return TextEditor as unknown as (props: CellEditorProps<TRow>) => ReactElement;
+  }
+}
+
+function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGridHandle>): ReactElement {
+  const {
+    columns,
+    data,
+    getRowId,
+    onCellsEdited,
+    onError,
+    frozenFirstColumn = true,
+    rowHeight = DEFAULT_ROW_HEIGHT,
+    headerHeight = DEFAULT_HEADER_HEIGHT,
+    height = '100%',
+    className,
+    undoLimit = DEFAULT_UNDO_LIMIT,
+    emptyState,
+  } = props;
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const columnConfigById = useMemo(() => new Map(columns.map((c) => [c.id, c] as const)), [columns]);
+
+  const tableColumns = useMemo<ColumnDef<TRow, unknown>[]>(
+    () =>
+      columns.map((col) => ({
+        id: col.id,
+        header: col.header,
+        accessorFn: (row: TRow) => col.accessor(row),
+        enableSorting: col.sortable ?? true,
+        size: col.width ?? DEFAULT_COLUMN_WIDTH,
+        minSize: col.minWidth ?? DEFAULT_MIN_COLUMN_WIDTH,
+        maxSize: col.maxWidth,
+      })),
+    [columns],
+  );
+
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => columns.map((c) => c.id));
+  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
+
+  // Keep columnOrder in sync if the `columns` prop's identity set changes
+  // (columns added/removed) without discarding the user's chosen order.
+  useEffect(() => {
+    setColumnOrder((prev) => {
+      const ids = columns.map((c) => c.id);
+      const idSet = new Set(ids);
+      const kept = prev.filter((id) => idSet.has(id));
+      const missing = ids.filter((id) => !kept.includes(id));
+      const next = [...kept, ...missing];
+      return next.length === prev.length && next.every((id, i) => id === prev[i]) ? prev : next;
+    });
+  }, [columns]);
+
+  const table = useReactTable({
+    data,
+    columns: tableColumns,
+    state: { sorting, columnOrder, columnSizing },
+    onSortingChange: setSorting,
+    onColumnOrderChange: setColumnOrder,
+    onColumnSizingChange: setColumnSizing,
+    columnResizeMode: 'onChange',
+    enableColumnResizing: true,
+    getRowId,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const rows = table.getRowModel().rows;
+  const visibleColumns = table.getVisibleLeafColumns();
+  const headerCells = table.getHeaderGroups()[0]?.headers ?? [];
+  const frozenColumn = frozenFirstColumn ? visibleColumns[0] : undefined;
+  const scrollableColumns = frozenFirstColumn ? visibleColumns.slice(1) : visibleColumns;
+  const frozenWidth = frozenColumn ? frozenColumn.getSize() : 0;
+
+  // ── Overlay: optimistic values layered over `data` until the host's own
+  // re-render catches up, and reverted (with onError fired first) if the
+  // host's onCellsEdited rejects. ──────────────────────────────────────
+  const [overlay, setOverlay] = useState<Map<string, unknown>>(() => new Map());
+  const getEffectiveValue = useCallback(
+    (rowIndex: number, columnId: string): unknown => {
+      const key = overlayKey(rowIndex, columnId);
+      if (overlay.has(key)) return overlay.get(key);
+      const column = columnConfigById.get(columnId);
+      const row = data[rowIndex];
+      return column && row ? column.accessor(row) : undefined;
+    },
+    [overlay, data, columnConfigById],
+  );
+
+  // ── Selection: anchor (drag/shift-click origin) + focus (current cell). ─
+  const [selection, setSelection] = useState<{ anchor: CellPosition; focus: CellPosition } | null>(
+    rows.length > 0 && visibleColumns.length > 0 ? { anchor: { row: 0, col: 0 }, focus: { row: 0, col: 0 } } : null,
+  );
+  const [editingCell, setEditingCell] = useState<CellPosition | null>(null);
+  const [editSeedChar, setEditSeedChar] = useState<string | undefined>(undefined);
+  const [fillPreview, setFillPreview] = useState<FillResult | null>(null);
+
+  const isSelectingRef = useRef(false);
+  const isFillDraggingRef = useRef(false);
+  const fillSourceRef = useRef<CellRange | null>(null);
+
+  const undoStackRef = useRef(new UndoStack<CellEdit<TRow>[]>(undoLimit));
+  const [, forceRender] = useReducer((n: number) => n + 1, 0);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => rowHeight,
+    overscan: 8,
+  });
+
+  const columnVirtualizer = useVirtualizer({
+    horizontal: true,
+    count: scrollableColumns.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (index) => scrollableColumns[index]?.getSize() ?? DEFAULT_COLUMN_WIDTH,
+    overscan: 4,
+  });
+
+  useEffect(() => {
+    columnVirtualizer.measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnSizing]);
+
+  const columnOffsets = useMemo(() => {
+    let acc = 0;
+    return scrollableColumns.map((col) => {
+      const offset = acc;
+      acc += col.getSize();
+      return offset;
+    });
+  }, [scrollableColumns]);
+
+  const totalScrollableWidth = columnOffsets.length > 0
+    ? columnOffsets[columnOffsets.length - 1] + scrollableColumns[columnOffsets.length - 1].getSize()
+    : 0;
+  const totalWidth = frozenWidth + totalScrollableWidth;
+  const totalHeight = headerHeight + rowVirtualizer.getTotalSize();
+
+  const gridBounds: GridBounds = { minRow: 0, maxRow: Math.max(0, rows.length - 1), minCol: 0, maxCol: Math.max(0, visibleColumns.length - 1) };
+
+  function cellRect(pos: CellPosition): { left: number; top: number; width: number; height: number } {
+    const top = headerHeight + pos.row * rowHeight;
+    if (frozenFirstColumn && pos.col === 0) {
+      return { left: 0, top, width: frozenWidth, height: rowHeight };
+    }
+    const scrollIdx = pos.col - (frozenFirstColumn ? 1 : 0);
+    const col = scrollableColumns[scrollIdx];
+    const offset = columnOffsets[scrollIdx] ?? 0;
+    return { left: frozenWidth + offset, top, width: col?.getSize() ?? DEFAULT_COLUMN_WIDTH, height: rowHeight };
+  }
+
+  function getCellPositionFromPoint(clientX: number, clientY: number): CellPosition | null {
+    const el = scrollRef.current;
+    if (!el || rows.length === 0 || visibleColumns.length === 0) return null;
+    const rect = el.getBoundingClientRect();
+    const x = clientX - rect.left + el.scrollLeft;
+    const y = clientY - rect.top + el.scrollTop;
+    const bodyY = y - headerHeight;
+    if (bodyY < 0) return null;
+    const rowIndex = Math.min(rows.length - 1, Math.max(0, Math.floor(bodyY / rowHeight)));
+
+    let colIndex: number;
+    if (frozenFirstColumn && x <= frozenWidth) {
+      colIndex = 0;
+    } else {
+      const sx = x - frozenWidth;
+      let idx = scrollableColumns.length - 1;
+      for (let i = 0; i < columnOffsets.length; i += 1) {
+        if (columnOffsets[i] > sx) {
+          idx = i - 1;
+          break;
+        }
+      }
+      idx = Math.max(0, idx);
+      colIndex = idx + (frozenFirstColumn ? 1 : 0);
+    }
+    return { row: rowIndex, col: Math.min(colIndex, visibleColumns.length - 1) };
+  }
+
+  function scrollCellIntoView(pos: CellPosition): void {
+    rowVirtualizer.scrollToIndex(pos.row);
+    const scrollIdx = pos.col - (frozenFirstColumn ? 1 : 0);
+    if (scrollIdx >= 0) columnVirtualizer.scrollToIndex(scrollIdx);
+  }
+
+  // ── Mutation pipeline ---------------------------------------------------
+
+  async function commitEdits(
+    edits: CellEdit<TRow>[],
+    phase: DataGridErrorPhase,
+    opts?: { skipUndoPush?: boolean },
+  ): Promise<void> {
+    if (edits.length === 0) return;
+    setOverlay((prev) => {
+      const next = new Map(prev);
+      for (const edit of edits) next.set(overlayKey(edit.rowIndex, edit.columnId), edit.value);
+      return next;
+    });
+    if (!opts?.skipUndoPush) {
+      undoStackRef.current.push({
+        before: edits.map((e) => ({ ...e, value: e.previousValue, previousValue: e.value })),
+        after: edits,
+      });
+      forceRender();
+    }
+    try {
+      await onCellsEdited(edits);
+    } catch (err) {
+      if (!opts?.skipUndoPush) undoStackRef.current.discardLast();
+      // Tell the host FIRST. A grid that reverts a failed edit without
+      // surfacing why reproduces the "edited, nothing happened" defect
+      // this package exists to close (see DataGridError doc comment).
+      const error: DataGridError<TRow> = {
+        message: err instanceof Error ? err.message : 'Failed to save the edit.',
+        cause: err,
+        phase,
+        edits,
+      };
+      onError(error);
+      setOverlay((prev) => {
+        const next = new Map(prev);
+        for (const edit of edits) next.delete(overlayKey(edit.rowIndex, edit.columnId));
+        return next;
+      });
+      forceRender();
+    }
+  }
+
+  const handleUndo = useCallback((): void => {
+    const entry = undoStackRef.current.undo();
+    if (!entry) return;
+    forceRender();
+    void commitEdits(entry.before, 'undo', { skipUndoPush: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onCellsEdited, onError, overlay, data, columnConfigById]);
+
+  const handleRedo = useCallback((): void => {
+    const entry = undoStackRef.current.redo();
+    if (!entry) return;
+    forceRender();
+    void commitEdits(entry.after, 'redo', { skipUndoPush: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onCellsEdited, onError, overlay, data, columnConfigById]);
+
+  const handleCopy = useCallback(async (): Promise<void> => {
+    if (!selection) return;
+    const range = normalizeRange(selection.anchor, selection.focus);
+    const text = buildCopyText(range, (pos) => {
+      const row = rows[pos.row];
+      const column = visibleColumns[pos.col];
+      if (!row || !column) return '';
+      const config = columnConfigById.get(column.id);
+      const value = getEffectiveValue(row.index, column.id);
+      return config?.formatValue ? config.formatValue(value, data[row.index]) : formatCellValue(value, config?.dataType);
+    });
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      onError({ message: 'Could not write to the clipboard.', cause: err, phase: 'clipboard', edits: [] });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selection, rows, visibleColumns, columnConfigById, getEffectiveValue, data, onError]);
+
+  async function handleCut(): Promise<void> {
+    await handleCopy();
+    await handleClearSelection();
+  }
+
+  async function handleClearSelection(): Promise<void> {
+    if (!selection) return;
+    const range = normalizeRange(selection.anchor, selection.focus);
+    const edits: CellEdit<TRow>[] = [];
+    for (const pos of rangeToCells(range)) {
+      const row = rows[pos.row];
+      const column = visibleColumns[pos.col];
+      if (!row || !column) continue;
+      const config = columnConfigById.get(column.id);
+      if (config?.editable === false) continue;
+      const previousValue = getEffectiveValue(row.index, column.id);
+      if (previousValue == null || previousValue === '') continue;
+      edits.push({ rowIndex: row.index, columnId: column.id, previousValue, value: null, row: data[row.index] });
+    }
+    if (edits.length > 0) await commitEdits(edits, 'clear');
+  }
+
+  async function handlePaste(): Promise<void> {
+    if (!selection) return;
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch (err) {
+      onError({ message: 'Could not read from the clipboard.', cause: err, phase: 'clipboard', edits: [] });
+      return;
+    }
+    const anchorPos: CellPosition = {
+      row: Math.min(selection.anchor.row, selection.focus.row),
+      col: Math.min(selection.anchor.col, selection.focus.col),
+    };
+    const rawEdits = buildPasteEdits(text, anchorPos, {
+      maxRow: gridBounds.maxRow,
+      maxCol: gridBounds.maxCol,
+    });
+    const currentSelection = normalizeRange(selection.anchor, selection.focus);
+    const expanded = expandSingleCellPasteToSelection(rawEdits, currentSelection);
+
+    const edits: CellEdit<TRow>[] = [];
+    let maxRowSeen = anchorPos.row;
+    let maxColSeen = anchorPos.col;
+    for (const raw of expanded) {
+      const row = rows[raw.row];
+      const column = visibleColumns[raw.col];
+      if (!row || !column) continue;
+      const config = columnConfigById.get(column.id);
+      if (config?.editable === false) continue;
+      const parsed = config?.parseValue
+        ? config.parseValue(raw.value, data[row.index])
+        : parseCellValue(raw.value, config?.dataType);
+      const previousValue = getEffectiveValue(row.index, column.id);
+      edits.push({ rowIndex: row.index, columnId: column.id, previousValue, value: parsed, row: data[row.index] });
+      maxRowSeen = Math.max(maxRowSeen, raw.row);
+      maxColSeen = Math.max(maxColSeen, raw.col);
+    }
+    if (edits.length > 0) {
+      await commitEdits(edits, 'paste');
+      setSelection({ anchor: anchorPos, focus: { row: maxRowSeen, col: maxColSeen } });
+    }
+  }
+
+  function applyFillResult(source: CellRange, result: FillResult): void {
+    if (result.direction === 'none' || result.filledCells.length === 0) return;
+    const edits: CellEdit<TRow>[] = [];
+    for (const targetPos of result.filledCells) {
+      const sourcePos = mapFillTargetToSource(targetPos, source, result.direction);
+      const targetRow = rows[targetPos.row];
+      const sourceRow = rows[sourcePos.row];
+      const targetColumn = visibleColumns[targetPos.col];
+      const sourceColumn = visibleColumns[sourcePos.col];
+      if (!targetRow || !sourceRow || !targetColumn || !sourceColumn) continue;
+      const config = columnConfigById.get(targetColumn.id);
+      if (config?.editable === false) continue;
+      const value = getEffectiveValue(sourceRow.index, sourceColumn.id);
+      const previousValue = getEffectiveValue(targetRow.index, targetColumn.id);
+      edits.push({ rowIndex: targetRow.index, columnId: targetColumn.id, previousValue, value, row: data[targetRow.index] });
+    }
+    if (edits.length > 0) {
+      void commitEdits(edits, 'fill');
+      setSelection({
+        anchor: { row: result.range.startRow, col: result.range.startCol },
+        focus: { row: result.range.endRow, col: result.range.endCol },
+      });
+    }
+  }
+
+  function handleFillDoubleClick(): void {
+    if (!selection) return;
+    const range = normalizeRange(selection.anchor, selection.focus);
+    const adjacentColIndex = range.startCol > 0 ? range.startCol - 1 : range.endCol + 1;
+    const adjacentColumn = visibleColumns[adjacentColIndex];
+    if (!adjacentColumn) return;
+    const extentRow = computeFillDownExtent({
+      startRow: range.endRow,
+      maxRow: gridBounds.maxRow,
+      adjacentColHasValue: (r) => {
+        const dataRow = rows[r]?.index;
+        if (dataRow == null) return false;
+        const val = getEffectiveValue(dataRow, adjacentColumn.id);
+        return val != null && val !== '';
+      },
+    });
+    if (extentRow <= range.endRow) return;
+    const result = computeFillRange(range, { row: extentRow, col: range.endCol });
+    applyFillResult(range, result);
+  }
+
+  // ── Global pointer listeners for drag-select and fill-drag. Registered
+  // once; always dispatches through refs holding the LATEST closures so
+  // there's no stale-state bug without re-subscribing on every render. ───
+  const latestPointerMove = useRef<(e: PointerEvent) => void>(() => {});
+  const latestPointerUp = useRef<(e: PointerEvent) => void>(() => {});
+
+  latestPointerMove.current = (e: PointerEvent): void => {
+    if (isSelectingRef.current) {
+      const pos = getCellPositionFromPoint(e.clientX, e.clientY);
+      if (pos) setSelection((prev) => (prev ? { anchor: prev.anchor, focus: pos } : prev));
+    } else if (isFillDraggingRef.current && fillSourceRef.current) {
+      const pos = getCellPositionFromPoint(e.clientX, e.clientY);
+      if (pos) setFillPreview(computeFillRange(fillSourceRef.current, pos));
+    }
+  };
+
+  latestPointerUp.current = (): void => {
+    if (isSelectingRef.current) {
+      isSelectingRef.current = false;
+    }
+    if (isFillDraggingRef.current) {
+      isFillDraggingRef.current = false;
+      const source = fillSourceRef.current;
+      fillSourceRef.current = null;
+      if (source && fillPreview) applyFillResult(source, fillPreview);
+      setFillPreview(null);
+    }
+  };
+
+  useEffect(() => {
+    const move = (e: PointerEvent): void => latestPointerMove.current(e);
+    const up = (e: PointerEvent): void => latestPointerUp.current(e);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, []);
+
+  // ── Cell interaction ------------------------------------------------
+
+  function beginEditing(pos: CellPosition, seedChar?: string): void {
+    const column = visibleColumns[pos.col];
+    if (!column) return;
+    const config = columnConfigById.get(column.id);
+    if (config?.editable === false) return;
+    setEditSeedChar(seedChar);
+    setEditingCell(pos);
+  }
+
+  function handleEditorCommit(nextValue: unknown): void {
+    const pos = editingCell;
+    setEditingCell(null);
+    setEditSeedChar(undefined);
+    if (!pos) return;
+    const row = rows[pos.row];
+    const column = visibleColumns[pos.col];
+    if (!row || !column) return;
+    const previousValue = getEffectiveValue(row.index, column.id);
+    if (Object.is(previousValue, nextValue)) return;
+    void commitEdits(
+      [{ rowIndex: row.index, columnId: column.id, previousValue, value: nextValue, row: data[row.index] }],
+      'edit',
+    );
+  }
+
+  function handleEditorCancel(): void {
+    setEditingCell(null);
+    setEditSeedChar(undefined);
+  }
+
+  function handleCellMouseDown(pos: CellPosition, e: ReactMouseEvent<HTMLDivElement>): void {
+    if (e.button !== 0) return;
+    // The active editor owns its own uncommitted text in local state and
+    // commits it on blur (see TextEditor/NumberEditor/etc). A plain <div>
+    // cell doesn't steal focus on mousedown, so the editor's <input> would
+    // otherwise stay focused while the selection moves under it — blur it
+    // explicitly so its onBlur commit fires before we move on.
+    if (editingCell && (editingCell.row !== pos.row || editingCell.col !== pos.col)) {
+      (document.activeElement as HTMLElement | null)?.blur();
+    }
+    if (e.shiftKey && selection) {
+      setSelection({ anchor: selection.anchor, focus: pos });
+    } else {
+      setSelection({ anchor: pos, focus: pos });
+      isSelectingRef.current = true;
+    }
+  }
+
+  function handleCellMouseEnter(pos: CellPosition): void {
+    if (isSelectingRef.current) {
+      setSelection((prev) => (prev ? { anchor: prev.anchor, focus: pos } : prev));
+    }
+  }
+
+  function handleKeyDown(e: ReactKeyboardEvent<HTMLDivElement>): void {
+    if (editingCell) return; // the active editor owns its own key handling
+
+    if (!selection) return;
+    const focusCell = selection.focus;
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+    const isEmptyCell = (pos: CellPosition): boolean => {
+      const dataRow = rows[pos.row]?.index;
+      const column = visibleColumns[pos.col];
+      if (dataRow == null || !column) return true;
+      const val = getEffectiveValue(dataRow, column.id);
+      return val == null || val === '';
+    };
+
+    if (ctrlOrCmd && !e.shiftKey && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      handleUndo();
+      return;
+    }
+    if (ctrlOrCmd && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+      e.preventDefault();
+      handleRedo();
+      return;
+    }
+    if (ctrlOrCmd && e.key.toLowerCase() === 'c') {
+      e.preventDefault();
+      void handleCopy();
+      return;
+    }
+    if (ctrlOrCmd && e.key.toLowerCase() === 'x') {
+      e.preventDefault();
+      void handleCut();
+      return;
+    }
+    if (ctrlOrCmd && e.key.toLowerCase() === 'v') {
+      e.preventDefault();
+      void handlePaste();
+      return;
+    }
+
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = moveFocus(focusCell, e.key, gridBounds, { ctrlOrCmd, isEmpty: isEmptyCell });
+      setSelection(e.shiftKey ? { anchor: selection.anchor, focus: next } : { anchor: next, focus: next });
+      scrollCellIntoView(next);
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const next = moveTab(focusCell, gridBounds, e.shiftKey);
+      setSelection({ anchor: next, focus: next });
+      scrollCellIntoView(next);
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const next = moveEnter(focusCell, gridBounds, e.shiftKey);
+      setSelection({ anchor: next, focus: next });
+      scrollCellIntoView(next);
+      return;
+    }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      void handleClearSelection();
+      return;
+    }
+
+    if (isPrintableEditTrigger(e)) {
+      // We're taking over this keystroke to seed the new editor's value
+      // (see TextEditor's `initialInputChar`) — prevent the default so
+      // nothing else (browser find-as-you-type, a testing harness's own
+      // input simulation) also acts on the same keypress.
+      e.preventDefault();
+      beginEditing(focusCell, e.key);
+    }
+  }
+
+  function handleColumnDragEnd(event: DragEndEvent): void {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setColumnOrder((prev) => {
+      const oldIndex = prev.indexOf(String(active.id));
+      const newIndex = prev.indexOf(String(over.id));
+      if (oldIndex <= 0 || newIndex <= 0) return prev; // the frozen column (index 0) never moves
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }
+
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      undo: handleUndo,
+      redo: handleRedo,
+      canUndo: () => undoStackRef.current.canUndo(),
+      canRedo: () => undoStackRef.current.canRedo(),
+      getSelection: () => (selection ? normalizeRange(selection.anchor, selection.focus) : null),
+      getFocusedCell: () => (selection ? selection.focus : null),
+      copySelection: handleCopy,
+    }),
+    [handleUndo, handleRedo, selection, handleCopy],
+  );
+
+  const normalizedSelection = selection ? normalizeRange(selection.anchor, selection.focus) : null;
+  const previewRange = fillPreview && fillPreview.direction !== 'none' ? fillPreview.range : null;
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const virtualColumns = columnVirtualizer.getVirtualItems();
+
+  const style: CSSProperties = { height };
+
+  if (rows.length === 0 && emptyState) {
+    return (
+      <div className={cn('flex items-center justify-center rounded-md border border-border bg-background', className)} style={style}>
+        {emptyState}
+      </div>
+    );
+  }
+
+  return (
+    <DndContext sensors={dndSensors} onDragEnd={handleColumnDragEnd}>
+      <div
+        ref={scrollRef}
+        role="grid"
+        aria-rowcount={rows.length}
+        aria-colcount={visibleColumns.length}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        className={cn(
+          'relative overflow-auto rounded-md border border-border bg-background outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          className,
+        )}
+        style={style}
+      >
+        <div style={{ position: 'relative', height: totalHeight, width: Math.max(totalWidth, 1) }}>
+          {/* Sticky header */}
+          <div
+            role="row"
+            className="sticky top-0 z-20 flex border-b border-border bg-card"
+            style={{ height: headerHeight, width: totalWidth }}
+          >
+            <SortableContext items={scrollableColumns.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
+              {frozenColumn && (() => {
+                const frozenHeader = headerCells.find((h) => h.column.id === frozenColumn.id);
+                return frozenHeader ? (
+                  <ColumnHeaderCell
+                    header={frozenHeader}
+                    frozen
+                    style={{ position: 'sticky', left: 0, zIndex: 30, width: frozenWidth, height: headerHeight }}
+                  />
+                ) : null;
+              })()}
+              {virtualColumns.map((vc) => {
+                const column = scrollableColumns[vc.index];
+                const header = headerCells.find((h) => h.column.id === column.id);
+                if (!header) return null;
+                return (
+                  <ColumnHeaderCell
+                    key={column.id}
+                    header={header}
+                    style={{
+                      position: 'absolute',
+                      left: frozenWidth + vc.start,
+                      top: 0,
+                      width: vc.size,
+                      height: headerHeight,
+                    }}
+                  />
+                );
+              })}
+            </SortableContext>
+          </div>
+
+          {/* Body rows */}
+          {virtualRows.map((vr) => {
+            const row = rows[vr.index];
+            const rowTop = headerHeight + vr.start;
+            return (
+              <div
+                key={row.id}
+                role="row"
+                className="absolute left-0 flex"
+                style={{ top: rowTop, width: totalWidth, height: vr.size }}
+              >
+                {frozenColumn && (
+                  <GridCellRenderer
+                    gridRow={vr.index}
+                    gridCol={0}
+                    frozen
+                    style={{ position: 'sticky', left: 0, zIndex: 10, width: frozenWidth, height: vr.size }}
+                    column={columnConfigById.get(frozenColumn.id)!}
+                    row={row.original}
+                    rowIndex={row.index}
+                    value={getEffectiveValue(row.index, frozenColumn.id)}
+                    isSelected={Boolean(normalizedSelection && isCellInRange({ row: vr.index, col: 0 }, normalizedSelection))}
+                    isActive={Boolean(selection && selection.focus.row === vr.index && selection.focus.col === 0)}
+                    isEditing={Boolean(editingCell && editingCell.row === vr.index && editingCell.col === 0)}
+                    editSeedChar={editSeedChar}
+                    onCommit={handleEditorCommit}
+                    onCancel={handleEditorCancel}
+                    onMouseDown={(e) => handleCellMouseDown({ row: vr.index, col: 0 }, e)}
+                    onMouseEnter={() => handleCellMouseEnter({ row: vr.index, col: 0 })}
+                    onDoubleClick={() => beginEditing({ row: vr.index, col: 0 })}
+                  />
+                )}
+                {virtualColumns.map((vc) => {
+                  const column = scrollableColumns[vc.index];
+                  const gridCol = vc.index + (frozenFirstColumn ? 1 : 0);
+                  const config = columnConfigById.get(column.id);
+                  if (!config) return null;
+                  return (
+                    <GridCellRenderer
+                      key={column.id}
+                      gridRow={vr.index}
+                      gridCol={gridCol}
+                      style={{ position: 'absolute', left: frozenWidth + vc.start, top: 0, width: vc.size, height: vr.size }}
+                      column={config}
+                      row={row.original}
+                      rowIndex={row.index}
+                      value={getEffectiveValue(row.index, column.id)}
+                      isSelected={Boolean(normalizedSelection && isCellInRange({ row: vr.index, col: gridCol }, normalizedSelection))}
+                      isActive={Boolean(selection && selection.focus.row === vr.index && selection.focus.col === gridCol)}
+                      isEditing={Boolean(editingCell && editingCell.row === vr.index && editingCell.col === gridCol)}
+                      editSeedChar={editSeedChar}
+                      onCommit={handleEditorCommit}
+                      onCancel={handleEditorCancel}
+                      onMouseDown={(e) => handleCellMouseDown({ row: vr.index, col: gridCol }, e)}
+                      onMouseEnter={() => handleCellMouseEnter({ row: vr.index, col: gridCol })}
+                      onDoubleClick={() => beginEditing({ row: vr.index, col: gridCol })}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
+
+          {/* Selection border overlay + fill handle */}
+          {normalizedSelection && !editingCell && (
+            <SelectionOverlay
+              range={previewRange ?? normalizedSelection}
+              isPreview={Boolean(previewRange)}
+              cellRect={cellRect}
+              onFillPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                isFillDraggingRef.current = true;
+                fillSourceRef.current = normalizedSelection;
+              }}
+              onFillDoubleClick={handleFillDoubleClick}
+            />
+          )}
+        </div>
+      </div>
+    </DndContext>
+  );
+}
+
+interface GridCellRendererProps<TRow> {
+  gridRow: number;
+  gridCol: number;
+  frozen?: boolean;
+  style: CSSProperties;
+  column: DataGridColumn<TRow>;
+  row: TRow;
+  rowIndex: number;
+  value: unknown;
+  isSelected: boolean;
+  isActive: boolean;
+  isEditing: boolean;
+  editSeedChar?: string;
+  onCommit: (nextValue: unknown) => void;
+  onCancel: () => void;
+  onMouseDown: (e: ReactMouseEvent<HTMLDivElement>) => void;
+  onMouseEnter: () => void;
+  onDoubleClick: () => void;
+}
+
+function GridCellRenderer<TRow>(cellProps: GridCellRendererProps<TRow>): ReactElement {
+  const { column, row, rowIndex, value, ...rest } = cellProps;
+  const Editor = editorFor(column);
+  const content = column.renderCell
+    ? column.renderCell({ value, row, rowIndex, column })
+    : column.dataType === 'boolean'
+      ? (
+          <input type="checkbox" checked={Boolean(value)} readOnly disabled className="h-4 w-4 accent-primary disabled:opacity-100" />
+        )
+      : column.formatValue
+        ? column.formatValue(value, row)
+        : formatCellValue(value, column.dataType);
+
+  return (
+    <GridCell
+      {...rest}
+      column={column}
+      row={row}
+      rowIndex={rowIndex}
+      value={value}
+      content={content}
+      Editor={Editor}
+    />
+  );
+}
+
+interface SelectionOverlayProps {
+  range: CellRange;
+  isPreview: boolean;
+  cellRect: (pos: CellPosition) => { left: number; top: number; width: number; height: number };
+  onFillPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
+  onFillDoubleClick: () => void;
+}
+
+function SelectionOverlay(props: SelectionOverlayProps): ReactElement {
+  const { range, isPreview, cellRect, onFillPointerDown, onFillDoubleClick } = props;
+  const topLeft = cellRect({ row: range.startRow, col: range.startCol });
+  const bottomRight = cellRect({ row: range.endRow, col: range.endCol });
+  const left = topLeft.left;
+  const top = topLeft.top;
+  const width = bottomRight.left + bottomRight.width - topLeft.left;
+  const height = bottomRight.top + bottomRight.height - topLeft.top;
+
+  return (
+    <>
+      <div
+        aria-hidden
+        className={cn('pointer-events-none absolute border-2 border-primary', isPreview && 'border-dashed opacity-70')}
+        style={{ left, top, width, height, zIndex: 25 }}
+      />
+      {!isPreview && (
+        <FillHandle
+          left={left + width}
+          top={top + height}
+          onPointerDown={onFillPointerDown}
+          onDoubleClick={onFillDoubleClick}
+        />
+      )}
+    </>
+  );
+}
+
+export const DataGrid = forwardRef(DataGridInner) as <TRow>(
+  props: DataGridProps<TRow> & { ref?: React.Ref<DataGridHandle> },
+) => ReactElement;
