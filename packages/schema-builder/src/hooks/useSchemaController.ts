@@ -409,8 +409,30 @@ export function useSchemaController({
         return prevRow ? [...without, prevRow] : without;
       });
       onError?.('Could not save canvas position', err);
+      // Resync ONLY on failure. The success path writes the authoritative row
+      // from the RPC, so an unconditional invalidate there is what allowed a
+      // stale refetch to clobber a just-saved position.
+      void qc.invalidateQueries({ queryKey: layoutKey });
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: layoutKey }),
+    onSuccess: (saved) => {
+      // Write the row the RPC returned rather than refetching for it.
+      //
+      // The refetch that used to live in onSettled could be SERVED BEFORE this
+      // insert was visible, and the response then clobbered the optimistic row
+      // with a list that did not contain it — so a card the user had just
+      // dragged snapped back to its computed grid slot even though the position
+      // was already committed. Observed live 2026-08-06: the save returned 200
+      // with pos (80, 976), the refetch came back without that row, the card
+      // reverted, and a reload showed it correctly at (80, 976). The RPC hands
+      // back the authoritative row, so there is nothing a refetch could add.
+      qc.setQueryData<TenantSchemaLayoutRow[]>(layoutKey, (cur = []) => [
+        ...cur.filter(
+          (r) =>
+            !(r.entity_id === saved.entity_id && r.user_id === saved.user_id),
+        ),
+        saved,
+      ]);
+    },
   });
 
   // -----------------------------------------------------------------

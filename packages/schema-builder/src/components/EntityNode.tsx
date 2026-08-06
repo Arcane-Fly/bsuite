@@ -64,6 +64,15 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
   const entityHandleClass =
     '!h-5 !w-5 !border-2 !border-card !bg-role-primary !opacity-90 hover:!opacity-100';
 
+  // The card root deliberately carries NO `nodrag`. React Flow's drag filter is
+  //   !hasSelector(target, '.nodrag', domNode) && hasSelector(target, dragHandle, domNode)
+  // and `hasSelector` walks from the event target UP to the node element, so a
+  // `nodrag` here is an ancestor of the header grip and vetoed every drag before
+  // `dragHandle` was ever consulted. The cards were completely immovable while
+  // still showing a grab cursor and a "drag the header grip to move" tooltip.
+  // The body does not need it: the `dragHandle` clause already means ONLY the
+  // header can start a drag. Interactive children (FieldRow, the rename input)
+  // carry their own `nodrag`, which is where it belongs.
   return (
     <div
       role="group"
@@ -73,7 +82,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
       aria-selected={selected}
       tabIndex={0}
       title="Click to inspect fields. Drag the header grip to move. Drag a blue connector dot to another entity to create a relationship."
-      className={`nodrag relative min-w-[240px] rounded-xl border bg-card shadow-md transition-all ${
+      className={`relative min-w-[240px] rounded-xl border bg-card shadow-md transition-all ${
         selected
           ? 'border-transparent ring-2 ring-ring ring-offset-2'
           : 'border-border'
