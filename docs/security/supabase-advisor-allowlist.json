@@ -178,10 +178,10 @@
       "object_type": "table",
       "mode": "tracked",
       "tracked_in": "bsuite#1542",
-      "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) — never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542.",
+      "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) — never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542. WIDENED to '*' 2026-08-06, same reason as auth_rls_initplan: the list held only 'timesheets' (the self-test anchor) so it matched no real table, and Supabase now returns this lint on the SECURITY endpoint where anything unmatched fails. Live occurrences (boot_assessments, document_metadata, field_officers, funding_sources, organisation_audit_events, organization_members, pages, pay_periods, pay_period_streams and more) continue to file to bsuite#1542. Decision unchanged: tracked, not accepted.",
       "added": "2026-07-20",
       "objects": [
-        "timesheets"
+        "*"
       ]
     },
     {
@@ -289,6 +289,17 @@
       "added": "2026-08-06",
       "objects": [
         "apprenticeship_title_coverage"
+      ]
+    },
+    {
+      "lint": "duplicate_index",
+      "object_type": "table",
+      "mode": "tracked",
+      "tracked_in": "bsuite#1542",
+      "reason": "duplicate_index is a PERFORMANCE finding — two indexes covering identical columns, which wastes storage and slows writes. It is not a data-exposure class and had no rule at all, so it failed as 'new unallowlisted SECURITY' the moment Supabase started returning it on the security endpoint. Tracked (not accepted) so live occurrences (leave_balances, timesheets) keep filing to bsuite#1542 rather than silently passing. Wildcard for the same reason as the two rules above: a per-table list in this file has now gone stale three times.",
+      "added": "2026-08-06",
+      "objects": [
+        "*"
       ]
     }
   ],
