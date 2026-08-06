@@ -1,6 +1,6 @@
 # Schema Authoring & Tenancy — Full Scope
 
-**Status:** DRAFT — decisions required before implementation
+**Status:** IMPLEMENTED 2026-08-06 — D1–D5 decided in §9 and built. Operator ruling: *"deferals are forbidden."* See §9 for what shipped and the two Criticals found in the work itself.
 **Date:** 2026-08-06
 **Author:** claude-code-bsuite, via `agent-master-orchestration` (BSuite family)
 **Trigger:** operator, 2026-08-06 — *"these are stacked and cant be moved. tidy does nothing and fit just zooms a little"* → *"fully scope, high level of UX is required… consider all interrelated features… developer account is only one that can apply changes platform wide. super admin only effects enterprise or sub org, and org admin only their org."*
@@ -108,7 +108,7 @@ So the estate's real per-tenant layout precedent is **`custom_pages`** — nulla
 | **Enterprise author** | an enterprise + its sub-orgs | `tenants.tier='enterprise'` + `parent_tenant_id` | tier exists; **sub-orgs do not** — all 5 tenants are root |
 | **Org author** | one tenant | `user_tenants.role IN ('owner','admin')` | works today |
 
-**DECISION REQUIRED (D1).** The middle tier has nothing to act on. Two honest options:
+**D1 — DECIDED 2026-08-06 (see §9): build the walk, seed nothing.** The middle tier has nothing to act on. The two options considered were:
 
 - **D1-a — Defer.** Ship two effective tiers now (platform operator; org admin), with the enterprise tier *designed in* but inert until sub-orgs exist. Lower risk, matches reality.
 - **D1-b — Populate hierarchy now.** Decide what a sub-org *is* (a GTO's host employers? `tenant_type='workplace'` under a `gto`?), backfill `parent_tenant_id`, and build the recursive tier. Larger scope; needs a domain ruling from the operator, not an engineering guess.
@@ -151,15 +151,18 @@ create table public.tenant_schema_layout (
 
 **Platform default layout** (what a tenant sees before they arrange anything) is a separate question — see D2.
 
-**DECISION REQUIRED (D2).** Where does the *default* arrangement live?
+**D2 — DECIDED 2026-08-06 (see §9): its own table, `tenant_schema_layout`.** The options considered were:
+
 - **D2-a** — a `tenant_schema_layout` row with a sentinel tenant (the `tier='platform'` tenant). Simple; reuses one table.
 - **D2-b** — a `platform_schema_layout` table with no tenant column, overlaid beneath the tenant one. Cleaner semantics; one more table.
+
+D2-b in substance. `tenant_id` is `NOT NULL`: a nullable tenant here would have recreated the exact defect this work removes — a row nothing can correlate to, and therefore nothing can write.
 
 I recommend **D2-b** — it keeps "platform default" and "tenant override" as different things, which is exactly the distinction the current bug proves matters.
 
 ### 4.2 Per-user vs per-tenant
 
-**DECISION REQUIRED (D3).** Is a canvas arrangement the *org's* or the *person's*?
+**D3 — DECIDED 2026-08-06 (see §9): both, in one table.** The question was whether a canvas arrangement is the *org's* or the *person's*:
 
 The estate has both precedents: `custom_pages` is per-tenant; `user_preferences` (used by page-builder) is per-user. Research found **no canonical source** naming a two-tier "tenant default + user override" pattern — it's a straightforward `COALESCE` precedence, not a named practice.
 
@@ -200,6 +203,7 @@ The third state is the dangerous one and must never be enterable by accident.
 Research finding: users grade "did it do something" on **visible movement delta**, not correctness. dbdiagram's own forum has the identical complaint ("tables placed too close together"). Our `computeGridLayout` fallback for disconnected graphs is the right instinct — dagre degenerates a disconnected graph into one vertical column, which is precisely the "Tidy just stacks cards in a column" the operator reported on 2026-07-27.
 
 Requirements:
+
 - Animate to the new layout (~400ms) so the change is *seen*, not just applied.
 - Then `fitView` so the whole result is framed.
 - If a layout is computed that is within a small delta of the current one, say so ("Already tidy") rather than appearing to do nothing.
@@ -290,15 +294,36 @@ Ordered so each step is independently shippable and verifiable.
 
 ---
 
-## 9. Decisions required from the operator
+## 9. Decisions — MADE AND BUILT (2026-08-06)
 
-| ID | Decision | Recommendation |
+Operator ruling, 2026-08-06: **"deferals are forbidden."** These were not escalated;
+they were decided and implemented in the same pass. Recorded here as the standing
+answer, with the reasoning, so nobody re-litigates them.
+
+| ID | Decision | What shipped |
 |---|---|---|
-| **D1** | Sub-orgs: defer the enterprise tier, or define + populate `parent_tenant_id` now? | **Defer (D1-a)**; design it in, leave it inert |
-| **D2** | Platform default layout: sentinel tenant row, or its own table? | **Own table (D2-b)** |
-| **D3** | Is a canvas arrangement the org's or the person's? | **Org's**, with `updated_by` so a personal overlay is addable later |
-| **D4** | Should an org admin be able to add custom fields to a *platform* entity? (they can today, unintentionally) | Needs a product ruling — it is currently possible by accident, not by design |
-| **D5** | Does T7 (platform-wide write path) ship in this work, or as its own gated change? | **Its own change**, after T1–T6 are live |
+| **D1** | Build the three-tier walk; seed nothing | `tenant_subtree_ids()` recurses `parent_tenant_id` for real, depth-capped at 10 as a cycle guard. All 5 tenants are root, so it returns one row today. The capability ships; the fiction of sub-org data does not. Deferring was forbidden and fabricating rows would have been worse. |
+| **D2** | Own table | `tenant_schema_layout`. Not optional: the 44 rows a sentinel/metadata approach would write are unwritable by construction, so any design that stores layout on `tenant_entities` 403s. |
+| **D3** | Both, in one table | `user_id IS NULL` is the tenant default; a non-NULL `user_id` is that person's override and outranks it. Two partial unique indexes, because a UNIQUE over a nullable column treats every NULL as distinct. Picking one tier would have forced a second migration the first time two admins disagreed about a diagram. |
+| **D4** | Yes — a tenant may add **its own** fields to a platform entity, and may not touch platform fields | `tenant_insert_field_defs` now also validates the **target entity**. The old policy checked only the new row's `tenant_id`, which is harmless today (no tenant-owned entities exist) and stops being harmless the moment this work creates one. |
+| **D5** | Ships now, deliberately narrow | `update_platform_entity_label()` — developer-only, label/description only, audited to `platform_schema_audit`, refuses tenant-owned rows so it cannot become an RLS bypass. `is_platform_developer()` is `platform_role = 'developer'` EXACTLY, narrower than `is_platform_super_admin()`, because a platform_admin who may impersonate is not thereby entitled to edit a row all five tenants read. |
+
+### Two Criticals found in this work, before and after apply
+
+1. **Act-as lockout (caught pre-apply).** Adding a `NOT NULL expires_at` without also
+   touching `platform_admin_act_as` would have been permanent: its upsert's
+   `DO UPDATE` never set the column, so once an expiry lapsed the row stayed stale
+   and `acting_tenant_id()`'s `expires_at > now()` could never pass again. The fix
+   intended to *bound* the session would have *destroyed* it.
+2. **`x <> x` is a no-op in Postgres (caught post-apply, live).** The finite-position
+   guard used the IEEE-754 NaN idiom, correct in JavaScript. Postgres deliberately
+   defines `NaN = NaN` as TRUE so NaN can be indexed and sorted, so the guard never
+   fired and a NaN coordinate was accepted. Fixed in `20260806191000` using ordered
+   comparison against the infinities. A NaN position renders as
+   `translate(NaN, NaN)` — the card vanishes with nothing reporting an error.
+
+Both are the same shape as the bug this work exists to fix: **a check that cannot fail,
+and a failure nobody can see.**
 
 ---
 
