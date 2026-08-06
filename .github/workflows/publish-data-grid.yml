@@ -35,6 +35,18 @@ on:
     branches: [main]
     paths:
       - 'packages/data-grid/**'
+      # This workflow's OWN path is in the trigger deliberately, and it is
+      # load-bearing for the very first publish.
+      #
+      # packages/data-grid reached main BEFORE this workflow existed. So the
+      # promotion that carries this file to main changes nothing under
+      # packages/data-grid/** — the filter above would not match, the workflow
+      # would land on main, and it would never run. A gate that cannot fire.
+      # Listing itself makes that first promotion trigger it.
+      #
+      # It also means a future edit to this file re-runs the publish check,
+      # which is the behaviour you want when changing publish logic.
+      - '.github/workflows/publish-data-grid.yml'
   workflow_dispatch:
 
 permissions:
