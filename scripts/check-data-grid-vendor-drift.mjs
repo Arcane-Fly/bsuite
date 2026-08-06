@@ -113,6 +113,42 @@ if (process.argv.includes('--self-test')) {
   }
 }
 
+// Neither repo alone holds both trees: the parent has packages/data-grid, and
+// the vendored copy lives inside the crm7 SUBMODULE. A checkout without
+// submodule contents therefore has nothing to compare, and the first version
+// of this script died there with a raw ENOENT stack — a guard that crashes
+// reads as a broken build rather than as a misconfigured one.
+//
+// This is reported as a hard failure, not skipped. Skipping is what makes a
+// gate measure nothing while still reporting green, and this repo has shipped
+// that mistake before. The workflow must check out submodules.
+for (const [label, dir] of [
+  ['packages/data-grid/src', SOURCE],
+  ['crm7/src/components/data-grid (inside the crm7 SUBMODULE)', VENDOR],
+]) {
+  try {
+    statSync(dir)
+  } catch {
+    console.error(`Cannot compare: ${label} is not present in this checkout.\n`)
+    console.error(
+      [
+        'Both trees are needed and they live in DIFFERENT repositories, so this',
+        'check only works on a checkout that includes submodule contents:',
+        '',
+        '  - uses: actions/checkout@v5',
+        '    with:',
+        '      token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}',
+        '      submodules: recursive',
+        '',
+        'Failing rather than skipping is deliberate — a check that quietly passes',
+        'when it cannot see its inputs is indistinguishable from one that passed.',
+        '',
+      ].join('\n'),
+    )
+    process.exit(1)
+  }
+}
+
 const differences = diffTrees(SOURCE, VENDOR)
 
 if (differences.length > 0) {
