@@ -21,6 +21,14 @@ export interface EntityPropertiesPanelProps {
   onClose: () => void;
   onSave: (updates: Partial<TenantEntity>) => void | Promise<void>;
   onDelete?: (id: string) => void | Promise<void>;
+  /**
+   * True when the signed-in user is a platform developer. Unlocks label and
+   * description on a PLATFORM-owned system entity — the one edit that role is
+   * permitted to make, routed through the audited
+   * `update_platform_entity_label` RPC. The database enforces this
+   * independently, so forcing the prop true client-side yields 42501.
+   */
+  isPlatformDeveloper?: boolean;
 }
 
 const DEFAULT_FORM: Partial<TenantEntity> = {
@@ -55,6 +63,7 @@ export function EntityPropertiesPanel({
   onClose,
   onSave,
   onDelete,
+  isPlatformDeveloper,
 }: EntityPropertiesPanelProps) {
   const [formData, setFormData] = useState<Partial<TenantEntity>>(
     entity ?? DEFAULT_FORM,
@@ -87,6 +96,15 @@ export function EntityPropertiesPanel({
 
   const isEditing = !!entity;
   const isSystem = entity?.is_system === true;
+
+  // Platform-owned rows are shared by every tenant, so they stay locked for
+  // everyone EXCEPT a platform developer, and even then only for the two
+  // descriptive fields. Structural attributes (name, is_system, app_scope) stay
+  // migration-owned regardless of role: a slip there changes the product for
+  // all tenants at once.
+  const isPlatformOwned = entity != null && entity.tenant_id === null;
+  const canEditPlatformCopy = isPlatformOwned && isPlatformDeveloper === true;
+  const descriptiveLocked = isSystem && !canEditPlatformCopy;
 
   const handleNameChange = (raw: string) => {
     const val = raw.toLowerCase().replace(/[^a-z0-9_]/g, '_');
@@ -129,6 +147,16 @@ export function EntityPropertiesPanel({
 
       <div className="flex-1 overflow-y-auto p-5">
         <div className="space-y-5">
+          {isSystem ? (
+            <p
+              className="rounded-md border border-border bg-muted px-3 py-2 text-xs text-text-secondary"
+              role="note"
+            >
+              {canEditPlatformCopy
+                ? 'Platform entity — every tenant sees this. As a platform developer you may edit its label and description; the change is recorded in the platform schema audit. Structure stays migration-owned.'
+                : 'Platform entity — managed by BSuite and shared across all tenants, so its details are read-only here. You can still rearrange it on the canvas, and add your own fields to it.'}
+            </p>
+          ) : null}
           <div className="space-y-2">
             <label
               htmlFor="sb-entity-label"
@@ -144,7 +172,7 @@ export function EntityPropertiesPanel({
                 setFormData((p) => ({ ...p, label: e.target.value }))
               }
               placeholder="e.g. Company Vehicle"
-              disabled={isSystem}
+              disabled={descriptiveLocked}
               aria-required={!isEditing}
               className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
             />
@@ -209,7 +237,7 @@ export function EntityPropertiesPanel({
                 setFormData((p) => ({ ...p, description: e.target.value }))
               }
               placeholder="Brief description"
-              disabled={isSystem}
+              disabled={descriptiveLocked}
               className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
             />
           </div>
@@ -264,7 +292,14 @@ export function EntityPropertiesPanel({
         </div>
       </div>
 
-      {!isSystem ? (
+      {/*
+        The footer must also render for a platform developer editing a platform
+        entity. Gating it on `!isSystem` alone shipped the developer-edit feature
+        DEAD: the label/description inputs unlocked, and there was no control to
+        submit them. That is the same built-but-unwired defect this whole change
+        set exists to remove, reintroduced one commit later.
+      */}
+      {!isSystem || canEditPlatformCopy ? (
         <footer className="border-t border-border bg-card/70 p-4">
           <button
             type="button"

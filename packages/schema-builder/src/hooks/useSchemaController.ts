@@ -28,6 +28,9 @@ import {
   deleteSchemaRelation,
   renamePhysicalColumn,
   reorderEntityFields,
+  resolveLayout,
+  saveSchemaLayoutPosition,
+  updatePlatformEntityLabel,
   updateEntityField,
   updateSchemaEntity,
   updateSchemaRelation,
@@ -35,6 +38,7 @@ import {
 import type {
   LooseSupabaseClient,
   RenamePhysicalColumnResult,
+  TenantSchemaLayoutRow,
 } from '../service.js';
 import type {
   AppScope,
@@ -44,6 +48,7 @@ import type {
 } from '../types.js';
 import {
   schemaEntitiesOptions,
+  schemaLayoutOptions,
   schemaRelationsOptions,
   tenantFieldsOptions,
 } from './queries.js';
@@ -66,6 +71,19 @@ export interface SchemaController {
    * fields are simply absent from the record (not present as `[]`). Phase 1b.2.
    */
   fields: Record<string, TenantFieldDefinition[]>;
+  /**
+   * Resolved canvas position per entity id, from the `tenant_schema_layout`
+   * overlay. Absent entities have never been placed and fall back to the
+   * computed grid in SchemaCanvas.
+   */
+  layout: Map<string, { x: number; y: number }>;
+  /**
+   * True when the signed-in user holds platform_role = 'developer' — the only
+   * role permitted to edit platform-owned schema. Drives whether the properties
+   * panel unlocks label/description on a system entity; the database enforces
+   * the same rule independently, so a tampered client gains nothing.
+   */
+  isPlatformDeveloper: boolean;
   isLoading: boolean;
   loadError: Error | null;
   createEntity: (
@@ -148,6 +166,13 @@ export function useSchemaController({
     ...tenantFieldsOptions(supabase, tenantId),
     enabled: tenantId !== undefined,
   });
+  // The arrangement of the canvas, kept apart from the entities themselves
+  // because the entities are platform-owned and shared while the arrangement is
+  // per-tenant. See getSchemaLayout's header for the full reasoning.
+  const layoutQuery = useQuery({
+    ...schemaLayoutOptions(supabase, tenantId, appScope),
+    enabled: !!tenantId,
+  });
 
   useRealtimeSubscription({
     client: supabase,
@@ -167,6 +192,37 @@ export function useSchemaController({
     appScope,
   ).queryKey;
   const fieldsKey = tenantFieldsOptions(supabase, tenantId).queryKey;
+  const layoutKey = schemaLayoutOptions(supabase, tenantId, appScope).queryKey;
+
+  // Needed only to resolve a personal override over the tenant default. Kept as
+  // its own long-lived query rather than a prop so no consumer has to thread the
+  // user id through; auth identity does not change without a remount.
+  const userQuery = useQuery({
+    queryKey: ['schema-layout-user'] as const,
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return (data?.user?.id as string | undefined) ?? null;
+    },
+    staleTime: Infinity,
+  });
+
+  // Mirrors the SQL is_platform_developer() helper. This is a UI affordance
+  // ONLY — update_platform_entity_label() re-checks it server-side, so a client
+  // that forces this true still gets 42501.
+  const platformDeveloperQuery = useQuery({
+    queryKey: ['is-platform-developer'] as const,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('is_platform_developer');
+      if (error) return false;
+      return data === true;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const resolvedLayout = useMemo(
+    () => resolveLayout(layoutQuery.data ?? [], userQuery.data ?? null),
+    [layoutQuery.data, userQuery.data],
+  );
 
   // Surface fieldsQuery errors to the developer ONCE per error transition
   // without letting them gate the canvas. RLS or missing-grant errors on
@@ -203,8 +259,43 @@ export function useSchemaController({
   });
 
   const updateEntityMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<TenantEntity> }) =>
-      updateSchemaEntity(supabase, id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<TenantEntity> }) => {
+      // A platform-owned entity (tenant_id IS NULL) cannot be written through
+      // ordinary RLS by anyone — that is deliberate, since all five tenants read
+      // the same row. The single audited exception is the developer-only RPC,
+      // which accepts label/description and nothing else.
+      const entity = entitiesQuery.data?.find((e) => e.id === id);
+      if (entity && entity.tenant_id === null) {
+        // Compare against the STORED entity rather than trusting the caller's
+        // key set. EntityPropertiesPanel sends its whole formData -- which is
+        // seeded from the entity and therefore always carries id, tenant_id,
+        // name, metadata and the timestamps -- so a keys-only check rejected
+        // every platform save even when the user had touched nothing but the
+        // label. What matters is which values actually DIFFER.
+        const changed = Object.keys(updates).filter(
+          (k) =>
+            !Object.is(
+              (entity as unknown as Record<string, unknown>)[k],
+              (updates as unknown as Record<string, unknown>)[k],
+            ),
+        );
+        const disallowed = changed.filter(
+          (k) => k !== 'label' && k !== 'description',
+        );
+        if (disallowed.length > 0) {
+          throw new Error(
+            `Platform entities allow only label and description to be edited (attempted to change: ${disallowed.join(', ')})`,
+          );
+        }
+        return updatePlatformEntityLabel(
+          supabase,
+          id,
+          updates.label ?? entity.label,
+          updates.description ?? null,
+        );
+      }
+      return updateSchemaEntity(supabase, id, updates);
+    },
     onMutate: async ({ id, updates }) => {
       await qc.cancelQueries({ queryKey: entitiesKey });
       const prev = qc.getQueryData<TenantEntity[]>(entitiesKey);
@@ -247,36 +338,79 @@ export function useSchemaController({
     onSuccess: () => onSuccess?.('Entity deleted'),
   });
 
+  // Canvas position now writes to the tenant_schema_layout OVERLAY, not to
+  // tenant_entities.metadata.
+  //
+  // The old target was unwritable by construction: all 44 entity rows are
+  // platform-owned (tenant_id IS NULL, is_system = true) and the UPDATE policy
+  // demands both `is_system = false` and `ut.tenant_id = tenant_entities.tenant_id`,
+  // which `NULL = <uuid>` can never satisfy. Every drag produced a denied write,
+  // an optimistic rollback, and a node that snapped home — with no consumer
+  // passing onError, entirely silently.
   const updatePositionMutation = useMutation({
     mutationFn: ({
       id,
-      entity,
       position,
     }: {
       id: string;
       entity: TenantEntity;
       position: { x: number; y: number };
-    }) =>
-      updateSchemaEntity(supabase, id, {
-        metadata: { ...(entity.metadata ?? {}), position },
-      }),
+    }) => {
+      if (!tenantId) {
+        // Refuse rather than pretend. Without a tenant there is no row the
+        // overlay could be attributed to, and a silently-dropped save is the
+        // exact defect this change exists to remove.
+        throw new Error('Cannot save layout without a tenant context');
+      }
+      return saveSchemaLayoutPosition(supabase, {
+        tenantId,
+        entityId: id,
+        x: position.x,
+        y: position.y,
+        appScope,
+      });
+    },
     onMutate: async ({ id, position }) => {
-      await qc.cancelQueries({ queryKey: entitiesKey });
-      const prev = qc.getQueryData<TenantEntity[]>(entitiesKey);
-      qc.setQueryData<TenantEntity[]>(entitiesKey, (old = []) =>
-        old.map((e) =>
-          e.id === id
-            ? { ...e, metadata: { ...(e.metadata ?? {}), position } }
-            : e,
-        ),
-      );
+      await qc.cancelQueries({ queryKey: layoutKey });
+      const prev = qc.getQueryData<TenantSchemaLayoutRow[]>(layoutKey);
+      qc.setQueryData<TenantSchemaLayoutRow[]>(layoutKey, (old = []) => {
+        const next = old.filter(
+          (r) => !(r.entity_id === id && r.user_id === null),
+        );
+        next.push({
+          id: `optimistic:${id}`,
+          tenant_id: tenantId ?? '',
+          user_id: null,
+          entity_id: id,
+          app_scope: appScope,
+          pos_x: position.x,
+          pos_y: position.y,
+        });
+        return next;
+      });
       return { prev };
     },
-    onError: (err, _vars, ctx) => {
-      if (ctx?.prev) qc.setQueryData(entitiesKey, ctx.prev);
+    onError: (err, vars, ctx) => {
+      // Roll back ONLY the node that failed.
+      //
+      // Restoring the whole snapshot discards work that succeeded in the
+      // meantime: drag A, then drag B before A resolves; B saves and refetches;
+      // A then fails and the old whole-array restore would reset the cache to a
+      // state that predates B's drag, visibly reverting a position the user had
+      // already been told was saved. Dragging several cards in quick succession
+      // is the normal way to use this canvas, so the race is routine, not exotic.
+      const prevRow = ctx?.prev?.find(
+        (r) => r.entity_id === vars.id && r.user_id === null,
+      );
+      qc.setQueryData<TenantSchemaLayoutRow[]>(layoutKey, (cur = []) => {
+        const without = cur.filter(
+          (r) => !(r.entity_id === vars.id && r.user_id === null),
+        );
+        return prevRow ? [...without, prevRow] : without;
+      });
       onError?.('Could not save canvas position', err);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: entitiesKey }),
+    onSettled: () => qc.invalidateQueries({ queryKey: layoutKey }),
   });
 
   // -----------------------------------------------------------------
@@ -588,6 +722,8 @@ export function useSchemaController({
     entities: entitiesQuery.data ?? [],
     relations: relationsQuery.data ?? [],
     fields: fieldsByEntity,
+    layout: resolvedLayout,
+    isPlatformDeveloper: platformDeveloperQuery.data === true,
     // Fields are non-critical — loading them must not gate the canvas, and
     // RLS failures on `tenant_field_definitions` (common across consumer
     // apps that haven't applied the Phase 1b.2 migration yet) must NOT

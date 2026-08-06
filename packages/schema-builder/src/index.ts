@@ -109,8 +109,13 @@ export {
   deleteEntityField,
   reorderEntityFields,
   renamePhysicalColumn,
+  getSchemaLayout,
+  resolveLayout,
+  saveSchemaLayoutPosition,
+  updatePlatformEntityLabel,
 } from './service.js';
 export type {
   LooseSupabaseClient,
   RenamePhysicalColumnResult,
+  TenantSchemaLayoutRow,
 } from './service.js';

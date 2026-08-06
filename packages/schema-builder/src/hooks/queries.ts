@@ -9,6 +9,7 @@ import { queryOptions } from '@tanstack/react-query';
 import {
   getEntityFields,
   getSchemaEntities,
+  getSchemaLayout,
   getSchemaRelations,
   getTenantFields,
   type LooseSupabaseClient,
@@ -65,5 +66,22 @@ export const tenantFieldsOptions = (
   queryOptions({
     queryKey: ['schema-tenant-fields', tenantId] as const,
     queryFn: () => getTenantFields(client, tenantId),
+    staleTime: 30_000,
+  });
+
+/**
+ * Canvas layout overlay for a tenant. Separate from `schemaEntitiesOptions`
+ * because the entities are platform-owned and shared across tenants, while the
+ * arrangement is per-tenant (and optionally per-user) — see the header comment
+ * on `getSchemaLayout` for why positions cannot live on the entity row.
+ */
+export const schemaLayoutOptions = (
+  client: LooseSupabaseClient,
+  tenantId: string | null,
+  appScope: AppScope = 'all',
+) =>
+  queryOptions({
+    queryKey: ['schema-layout', tenantId, appScope] as const,
+    queryFn: () => getSchemaLayout(client, tenantId, appScope),
     staleTime: 30_000,
   });
