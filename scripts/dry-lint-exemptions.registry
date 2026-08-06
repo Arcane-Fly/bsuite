@@ -14,3 +14,13 @@
 # assessment was evaluated against (immutable audit snapshot; award data is
 # API-sourced, no local awards row to FK).
 20260704060000_boot_assessments_rederive.sql:award_code
+
+# data_change_sets.table_name — NOT an entity reference.
+# The rule catches a free-text `*_name` sitting where an FK to a canonical
+# table belongs. This column names a DATABASE TABLE (paired with table_schema)
+# in a generic change-set audit row: the bulk-data engine records "a change of
+# this shape was applied to public.<table_name>". There is no entity to FK to —
+# the referent is a catalog object, not a row. Exempt on the same basis as
+# rate_schedules.award_code above: the identifier is real, and the thing it
+# identifies has no local table to point at.
+20260806280000_data_change_sets.sql:table_name
