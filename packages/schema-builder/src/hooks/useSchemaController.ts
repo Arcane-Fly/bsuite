@@ -28,6 +28,8 @@ import {
   deleteSchemaRelation,
   renamePhysicalColumn,
   reorderEntityFields,
+  resolveLayout,
+  saveSchemaLayoutPosition,
   updateEntityField,
   updateSchemaEntity,
   updateSchemaRelation,
@@ -35,6 +37,7 @@ import {
 import type {
   LooseSupabaseClient,
   RenamePhysicalColumnResult,
+  TenantSchemaLayoutRow,
 } from '../service.js';
 import type {
   AppScope,
@@ -44,6 +47,7 @@ import type {
 } from '../types.js';
 import {
   schemaEntitiesOptions,
+  schemaLayoutOptions,
   schemaRelationsOptions,
   tenantFieldsOptions,
 } from './queries.js';
@@ -66,6 +70,12 @@ export interface SchemaController {
    * fields are simply absent from the record (not present as `[]`). Phase 1b.2.
    */
   fields: Record<string, TenantFieldDefinition[]>;
+  /**
+   * Resolved canvas position per entity id, from the `tenant_schema_layout`
+   * overlay. Absent entities have never been placed and fall back to the
+   * computed grid in SchemaCanvas.
+   */
+  layout: Map<string, { x: number; y: number }>;
   isLoading: boolean;
   loadError: Error | null;
   createEntity: (
@@ -148,6 +158,13 @@ export function useSchemaController({
     ...tenantFieldsOptions(supabase, tenantId),
     enabled: tenantId !== undefined,
   });
+  // The arrangement of the canvas, kept apart from the entities themselves
+  // because the entities are platform-owned and shared while the arrangement is
+  // per-tenant. See getSchemaLayout's header for the full reasoning.
+  const layoutQuery = useQuery({
+    ...schemaLayoutOptions(supabase, tenantId, appScope),
+    enabled: !!tenantId,
+  });
 
   useRealtimeSubscription({
     client: supabase,
@@ -167,6 +184,24 @@ export function useSchemaController({
     appScope,
   ).queryKey;
   const fieldsKey = tenantFieldsOptions(supabase, tenantId).queryKey;
+  const layoutKey = schemaLayoutOptions(supabase, tenantId, appScope).queryKey;
+
+  // Needed only to resolve a personal override over the tenant default. Kept as
+  // its own long-lived query rather than a prop so no consumer has to thread the
+  // user id through; auth identity does not change without a remount.
+  const userQuery = useQuery({
+    queryKey: ['schema-layout-user'] as const,
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return (data?.user?.id as string | undefined) ?? null;
+    },
+    staleTime: Infinity,
+  });
+
+  const resolvedLayout = useMemo(
+    () => resolveLayout(layoutQuery.data ?? [], userQuery.data ?? null),
+    [layoutQuery.data, userQuery.data],
+  );
 
   // Surface fieldsQuery errors to the developer ONCE per error transition
   // without letting them gate the canvas. RLS or missing-grant errors on
@@ -247,36 +282,63 @@ export function useSchemaController({
     onSuccess: () => onSuccess?.('Entity deleted'),
   });
 
+  // Canvas position now writes to the tenant_schema_layout OVERLAY, not to
+  // tenant_entities.metadata.
+  //
+  // The old target was unwritable by construction: all 44 entity rows are
+  // platform-owned (tenant_id IS NULL, is_system = true) and the UPDATE policy
+  // demands both `is_system = false` and `ut.tenant_id = tenant_entities.tenant_id`,
+  // which `NULL = <uuid>` can never satisfy. Every drag produced a denied write,
+  // an optimistic rollback, and a node that snapped home — with no consumer
+  // passing onError, entirely silently.
   const updatePositionMutation = useMutation({
     mutationFn: ({
       id,
-      entity,
       position,
     }: {
       id: string;
       entity: TenantEntity;
       position: { x: number; y: number };
-    }) =>
-      updateSchemaEntity(supabase, id, {
-        metadata: { ...(entity.metadata ?? {}), position },
-      }),
+    }) => {
+      if (!tenantId) {
+        // Refuse rather than pretend. Without a tenant there is no row the
+        // overlay could be attributed to, and a silently-dropped save is the
+        // exact defect this change exists to remove.
+        throw new Error('Cannot save layout without a tenant context');
+      }
+      return saveSchemaLayoutPosition(supabase, {
+        tenantId,
+        entityId: id,
+        x: position.x,
+        y: position.y,
+        appScope,
+      });
+    },
     onMutate: async ({ id, position }) => {
-      await qc.cancelQueries({ queryKey: entitiesKey });
-      const prev = qc.getQueryData<TenantEntity[]>(entitiesKey);
-      qc.setQueryData<TenantEntity[]>(entitiesKey, (old = []) =>
-        old.map((e) =>
-          e.id === id
-            ? { ...e, metadata: { ...(e.metadata ?? {}), position } }
-            : e,
-        ),
-      );
+      await qc.cancelQueries({ queryKey: layoutKey });
+      const prev = qc.getQueryData<TenantSchemaLayoutRow[]>(layoutKey);
+      qc.setQueryData<TenantSchemaLayoutRow[]>(layoutKey, (old = []) => {
+        const next = old.filter(
+          (r) => !(r.entity_id === id && r.user_id === null),
+        );
+        next.push({
+          id: `optimistic:${id}`,
+          tenant_id: tenantId ?? '',
+          user_id: null,
+          entity_id: id,
+          app_scope: appScope,
+          pos_x: position.x,
+          pos_y: position.y,
+        });
+        return next;
+      });
       return { prev };
     },
     onError: (err, _vars, ctx) => {
-      if (ctx?.prev) qc.setQueryData(entitiesKey, ctx.prev);
+      if (ctx?.prev) qc.setQueryData(layoutKey, ctx.prev);
       onError?.('Could not save canvas position', err);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: entitiesKey }),
+    onSettled: () => qc.invalidateQueries({ queryKey: layoutKey }),
   });
 
   // -----------------------------------------------------------------
@@ -588,6 +650,7 @@ export function useSchemaController({
     entities: entitiesQuery.data ?? [],
     relations: relationsQuery.data ?? [],
     fields: fieldsByEntity,
+    layout: resolvedLayout,
     // Fields are non-critical — loading them must not gate the canvas, and
     // RLS failures on `tenant_field_definitions` (common across consumer
     // apps that haven't applied the Phase 1b.2 migration yet) must NOT

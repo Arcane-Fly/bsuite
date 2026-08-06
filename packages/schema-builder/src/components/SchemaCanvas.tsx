@@ -169,11 +169,26 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
 
       const builtNodes: Node<EntityNodeData>[] = controller.entities.map(
         (entity, i) => {
+          // Position precedence:
+          //   1. the tenant_schema_layout overlay (the only writable source)
+          //   2. entity.metadata.position — legacy, and readable but no longer
+          //      written; kept so a tenant that HAD a saved arrangement before
+          //      the overlay existed does not have its diagram reset
+          //   3. a computed grid
+          //
+          // The grid row pitch is deliberately generous: an EntityNode renders
+          // one row per field, so a fixed short pitch made tall nodes overlap
+          // their neighbours below — which is what "these are stacked" looked
+          // like on a 44-entity canvas even before any save was attempted.
           const meta = entity.metadata as Record<string, unknown> | null;
+          const overlayPos = controller.layout.get(entity.id);
+          const fieldCount = (controller.fields[entity.id] ?? []).length;
           const position =
-            (meta?.position as { x: number; y: number } | undefined) ?? {
-              x: 100 + (i % 4) * 280,
-              y: 100 + Math.floor(i / 4) * 180,
+            overlayPos ??
+            (meta?.position as { x: number; y: number } | undefined) ??
+            {
+              x: 100 + (i % 4) * 340,
+              y: 100 + Math.floor(i / 4) * (220 + fieldCount * 8),
             };
           const defs = controller.fields[entity.id] ?? [];
           const fields = defs.map((f) => ({
@@ -233,7 +248,15 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         });
 
       return { nodes: builtNodes, edges: builtEdges };
-    }, [controller.entities, controller.relations, controller.fields]);
+      // controller.layout MUST be here: without it the memo keeps the positions
+      // from first render and a saved arrangement never appears until something
+      // else invalidates — which reads exactly like "the save did not work".
+    }, [
+      controller.entities,
+      controller.relations,
+      controller.fields,
+      controller.layout,
+    ]);
 
     // Local visual overlay for pending edits — React Flow needs mutable state
     // to animate drag and edit operations smoothly before controller confirms.

@@ -339,3 +339,121 @@ export async function renamePhysicalColumn(
   }) as unknown as Promise<{ data: unknown; error: unknown }>);
   return assertNoError<RenamePhysicalColumnResult>(res);
 }
+
+// -----------------------------------------------------------------------------
+// Canvas layout overlay
+//
+// WHY THIS IS A SEPARATE TABLE AND NOT `tenant_entities.metadata.position`
+//
+// Measured live 2026-08-06: all 44 tenant_entities rows are platform-owned
+// (`tenant_id IS NULL`, `is_system = true`). The UPDATE policy on that table
+// requires BOTH `is_system = false` AND `ut.tenant_id = tenant_entities.tenant_id`
+// — and `NULL = <uuid>` is NULL, never true — so those rows cannot be written by
+// any user, by construction. Writing positions there produced a denied UPDATE,
+// an optimistic rollback, and a node that snapped back to where it started.
+//
+// Positions now live in `tenant_schema_layout`, keyed by tenant (and optionally
+// by user). Arranging a diagram and altering a shared schema are different
+// powers; keeping them in different tables is what lets a tenant do the first
+// without being granted the second.
+// -----------------------------------------------------------------------------
+
+export interface TenantSchemaLayoutRow {
+  id: string;
+  tenant_id: string;
+  user_id: string | null;
+  entity_id: string;
+  app_scope: string;
+  pos_x: number;
+  pos_y: number;
+}
+
+/**
+ * Every layout row visible to the caller for this tenant/scope — both the
+ * tenant defaults (`user_id IS NULL`) and the caller's own overrides. RLS does
+ * the filtering; resolution between the two happens in `resolveLayout`.
+ */
+export async function getSchemaLayout(
+  client: LooseSupabaseClient,
+  tenantId: string | null,
+  appScope: AppScope = 'all',
+): Promise<TenantSchemaLayoutRow[]> {
+  if (!tenantId) return [];
+  const res = await (client
+    .from('tenant_schema_layout')
+    .select('id,tenant_id,user_id,entity_id,app_scope,pos_x,pos_y')
+    .eq('tenant_id', tenantId)
+    .in('app_scope', [appScope, 'all']) as unknown as Promise<{
+    data: unknown;
+    error: unknown;
+  }>);
+  return assertNoError<TenantSchemaLayoutRow[]>(res);
+}
+
+/**
+ * Collapse the rows into one position per entity. A personal override beats the
+ * tenant default; that ordering is the whole point of allowing both.
+ */
+export function resolveLayout(
+  rows: TenantSchemaLayoutRow[],
+  userId: string | null,
+): Map<string, { x: number; y: number }> {
+  const out = new Map<string, { x: number; y: number }>();
+  for (const r of rows) {
+    if (r.user_id === null) out.set(r.entity_id, { x: r.pos_x, y: r.pos_y });
+  }
+  if (userId) {
+    for (const r of rows) {
+      if (r.user_id === userId) out.set(r.entity_id, { x: r.pos_x, y: r.pos_y });
+    }
+  }
+  return out;
+}
+
+/**
+ * Persist one entity position. Goes through the `save_schema_layout_position`
+ * RPC rather than a bare upsert so the "personal override vs tenant default"
+ * decision is made in exactly one place — three consumer apps render this
+ * canvas and would each re-derive it slightly differently.
+ */
+export async function saveSchemaLayoutPosition(
+  client: LooseSupabaseClient,
+  args: {
+    tenantId: string;
+    entityId: string;
+    x: number;
+    y: number;
+    personal?: boolean;
+    appScope?: AppScope;
+  },
+): Promise<TenantSchemaLayoutRow> {
+  const res = await (client.rpc('save_schema_layout_position', {
+    p_tenant_id: args.tenantId,
+    p_entity_id: args.entityId,
+    p_pos_x: args.x,
+    p_pos_y: args.y,
+    p_personal: args.personal ?? false,
+    p_app_scope: args.appScope ?? 'all',
+  }) as unknown as Promise<{ data: unknown; error: unknown }>);
+  return assertNoError<TenantSchemaLayoutRow>(res);
+}
+
+/**
+ * Developer-only rename of a PLATFORM-owned entity. Every other entity edit
+ * goes through `updateSchemaEntity`; this exists because platform rows are
+ * deliberately unwritable through ordinary RLS, and the RPC is the single
+ * audited exception. It refuses tenant-owned entities server-side.
+ */
+export async function updatePlatformEntityLabel(
+  client: LooseSupabaseClient,
+  entityId: string,
+  label: string,
+  description?: string | null,
+): Promise<TenantEntity> {
+  const res = await (client.rpc('update_platform_entity_label', {
+    p_entity_id: entityId,
+    p_label: label,
+    p_description: description ?? null,
+  }) as unknown as Promise<{ data: unknown; error: unknown }>);
+  return assertNoError<TenantEntity>(res);
+}
