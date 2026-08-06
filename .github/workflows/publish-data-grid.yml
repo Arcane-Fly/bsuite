@@ -1,0 +1,116 @@
+# Publish @bsuite/data-grid to npm
+#
+# Triggers automatically when packages/data-grid/** changes on main.
+# Skips publish if the current version is already on npm (idempotent).
+#
+# WHY THIS FILE HAD TO BE WRITTEN BY HAND
+#   Publishing in this repo is one workflow PER PACKAGE, each hardcoded to
+#   `paths: packages/<name>/**`. Nothing auto-discovers a new package. So a
+#   brand-new package merges to main, every check goes green, and it publishes
+#   NOTHING — and the first symptom is a downstream app failing
+#   ERR_PNPM_OUTDATED_LOCKFILE or ERR_PNPM_FETCH_404 on a version that never
+#   existed. Adding the package is not enough; it needs its own workflow.
+#
+# Authentication:
+#   PREFERRED: npm Trusted Publishers (OIDC) — configure at npmjs.com →
+#     package → Settings → Trusted Publisher → GitHub Actions, with
+#     organization GaryOcean428, repository bsuite, and workflow filename
+#     matching this file's basename. Requires `id-token: write` (set below).
+#   FALLBACK: NPM_TOKEN secret, via setup-node's generated .npmrc. Kept for the
+#     FIRST publish only — a package that does not yet exist on the registry
+#     cannot have a Trusted Publisher configured against it. After the first
+#     successful publish, configure OIDC and delete the NODE_AUTH_TOKEN env
+#     below, matching packages/schema-registry's already-migrated shape.
+#
+# Required GitHub Secret (first publish only):
+#   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
+#
+# To trigger manually (e.g. after a version bump merged to main):
+#   gh workflow run publish-data-grid.yml
+
+name: Publish @bsuite/data-grid
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/data-grid/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # OIDC for npm Trusted Publishers (https://docs.npmjs.com/trusted-publishers)
+
+jobs:
+  publish:
+    name: Build, test and publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/data-grid
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.33.3 --activate
+
+      # Install at the workspace root, not from packages/data-grid, so pnpm
+      # resolves this package's workspace context (it has React peers and
+      # devDeps that only exist in the root lockfile).
+      - name: Install dependencies
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+
+          PUBLISHED=$(npm view "@bsuite/data-grid@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::@bsuite/data-grid@${PKG_VERSION} is already on npm — skipping publish"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Will publish @bsuite/data-grid@${PKG_VERSION}"
+          fi
+
+      - name: Dry-run publish (catches missing files or bad exports)
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --dry-run --access public
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Job summary
+        if: always()
+        env:
+          PKG_VERSION: ${{ steps.version-check.outputs.version }}
+          SKIPPED: ${{ steps.version-check.outputs.skip }}
+        run: |
+          if [ "$SKIPPED" = "true" ]; then
+            echo "### Skipped — already published" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`@bsuite/data-grid@${PKG_VERSION}\` is already on npm." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published" >> "$GITHUB_STEP_SUMMARY"
+            echo "[\`@bsuite/data-grid@${PKG_VERSION}\`](https://www.npmjs.com/package/@bsuite/data-grid) published to npm." >> "$GITHUB_STEP_SUMMARY"
+          fi
