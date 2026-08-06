@@ -56,7 +56,7 @@ const require_ = createRequire(import.meta.url);
 
 function resolvePlaywright() {
   const roots = ['..', '../braden', '../conduit', '../throughput', '../crm7',
-                 '../business-suite-unified', '../R80.3'];
+                 '../business-suite-unified', '../R80.4'];
   for (const r of roots) {
     try { return require_(new URL(`${r}/node_modules/playwright/index.js`, import.meta.url).pathname); } catch {}
   }
@@ -211,7 +211,7 @@ for (const url of urls) {
         // clipped to 1x1px and only paints when focused — where it carries its
         // own `focus:bg-accent focus:text-accent-foreground` pair — so reading
         // its resting colour reports a failure on something nobody can see.
-        // Both R80.3 skip links measured 4.47:1 this way.
+        // Both R80.4 skip links measured 4.47:1 this way.
         const box = el.getBoundingClientRect();
         if (box.width < 2 || box.height < 2) continue;
 

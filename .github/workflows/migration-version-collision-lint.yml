@@ -1,7 +1,7 @@
 name: Migration version-collision lint
 
 # bsuite#1707: all 8 migration scopes that write into the shared Supabase
-# project — root, crm7, conduit, R80.3, business-suite-unified, braden,
+# project — root, crm7, conduit, R80.4, business-suite-unified, braden,
 # throughput, and packages/schema-builder (matches the applier's own matrix
 # in .github/workflows/supabase-migrate.yml) — deploy to the SAME
 # supabase_migrations.schema_migrations table, keyed on the version string

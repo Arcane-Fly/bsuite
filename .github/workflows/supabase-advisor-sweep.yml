@@ -43,7 +43,7 @@ on:
       - 'supabase/**'
       - 'crm7'
       - 'conduit'
-      - 'R80.3'
+      - 'R80.4'
       - 'braden'
       - 'business-suite-unified'
       - 'throughput'

@@ -7,7 +7,7 @@ on:
     paths:
       - 'supabase/**'
       - 'crm7/supabase/**'
-      - 'R80.3/supabase/**'
+      - 'R80.4/supabase/**'
       - 'braden/supabase/**'
       - 'business-suite-unified/supabase/**'
       - 'conduit/supabase/**'

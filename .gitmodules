@@ -2,10 +2,6 @@
         path = crm7
         url = https://github.com/GaryOcean428/crm7.git
         branch = development
-[submodule "R80.3"]
-        path = R80.3
-        url = https://github.com/GaryOcean428/R80.3.git
-        branch = development
 [submodule "braden"]
         path = braden
         url = https://github.com/GaryOcean428/braden.git
@@ -22,3 +18,6 @@
         path = throughput
         url = https://github.com/GaryOcean428/throughput.git
         branch = development
+[submodule "R80.4"]
+	path = R80.4
+	url = https://github.com/GaryOcean428/R80.4.git

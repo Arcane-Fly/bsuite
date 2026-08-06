@@ -10,7 +10,7 @@
  *   · --role-h1..h6 were added and NOTHING bound them to an h1..h6. Grepping
  *     for "--role-h" showed the ramp correctly wired while every heading on
  *     screen was one flat colour.
- *   · Then the binding was added — and R80.3's own @layer base, later in the
+ *   · Then the binding was added — and R80.4's own @layer base, later in the
  *     same layer, set `h1,h2,h3,h4,h5,h6 { color: var(--text-heading) }` and
  *     won the cascade. The ramp was present, bound, and still defeated.
  *   · --font-* was specified in the contract and never shipped, so five apps
@@ -51,7 +51,7 @@ const require_ = createRequire(import.meta.url);
 
 function resolvePlaywright() {
   const roots = ['..', '../braden', '../conduit', '../throughput', '../crm7',
-                 '../business-suite-unified', '../R80.3'];
+                 '../business-suite-unified', '../R80.4'];
   for (const r of roots) {
     try { return require_(new URL(`${r}/node_modules/playwright/index.js`, import.meta.url).pathname); } catch {}
   }
@@ -112,7 +112,7 @@ const PURE = new Set(['rgb(255, 255, 255)', 'rgb(0, 0, 0)']);
 // they RESOLVE TO, and it exists because the name-based gates have a permanent
 // blind spot that shipped a real defect to production:
 //
-//   --color-error was Electric Purple in crm7, business-suite-unified, R80.3 and
+//   --color-error was Electric Purple in crm7, business-suite-unified, R80.4 and
 //   throughput while --destructive had ALREADY been corrected to red IN THE SAME
 //   FILES. C4 checks --destructive. G4 compares names against the package's
 //   --role-error. Both were green the entire time. business-suite-unified's

@@ -77,7 +77,7 @@ jobs:
         run: |
           set -uo pipefail
           missing=""
-          for a in crm7 conduit business-suite-unified R80.3 throughput braden; do
+          for a in crm7 conduit business-suite-unified R80.4 throughput braden; do
             [ -d "$a/src" ] || missing="$missing $a"
           done
           if [ -n "$missing" ]; then

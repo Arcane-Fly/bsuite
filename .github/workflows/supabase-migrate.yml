@@ -52,7 +52,7 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'crm7/supabase/migrations/**'
-      - 'R80.3/supabase/migrations/**'
+      - 'R80.4/supabase/migrations/**'
       - 'braden/supabase/migrations/**'
       - 'business-suite-unified/supabase/migrations/**'
       - 'conduit/supabase/migrations/**'
@@ -64,7 +64,7 @@ on:
       # paths re-enables the merge-pipeline apply on every submodule bump
       # (per-file idempotency is handled inside the job).
       - 'crm7'
-      - 'R80.3'
+      - 'R80.4'
       - 'braden'
       - 'business-suite-unified'
       - 'conduit'
@@ -80,7 +80,7 @@ on:
           - all
           - root
           - crm7
-          - R80.3
+          - R80.4
           - braden
           - business-suite-unified
           - conduit
@@ -121,7 +121,7 @@ jobs:
         run: |
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             if [ "$DISPATCH_INPUT" = "all" ]; then
-              echo 'matrix=["root","crm7","R80.3","braden","business-suite-unified","conduit","throughput","schema-builder"]' >> "$GITHUB_OUTPUT"
+              echo 'matrix=["root","crm7","R80.4","braden","business-suite-unified","conduit","throughput","schema-builder"]' >> "$GITHUB_OUTPUT"
             else
               echo "matrix=[\"$DISPATCH_INPUT\"]" >> "$GITHUB_OUTPUT"
             fi
@@ -130,7 +130,7 @@ jobs:
             if git diff --name-only HEAD~1 HEAD -- "supabase/migrations/" | grep -q .; then
               CHANGED+=("\"root\"")
             fi
-            for dir in crm7 R80.3 braden business-suite-unified conduit throughput packages/schema-builder; do
+            for dir in crm7 R80.4 braden business-suite-unified conduit throughput packages/schema-builder; do
               MATCHED=0
 
               # Path 1 — in-tree diff. Only ever matches for packages/schema-builder

@@ -54,7 +54,7 @@ for (const d of [
   'crm7/docs',
   'conduit/docs',
   'business-suite-unified/docs',
-  'R80.3/docs',
+  'R80.4/docs',
   'braden/docs',
   'throughput/docs',
 ]) {

@@ -48,7 +48,7 @@
 #   --out <dir>          Output directory (default: ./audit-out-<timestamp>).
 #   --db-url <url>       Postgres connection string (overrides env + .env.local).
 #   --apps <csv>         Comma-separated app dirs to scan
-#                        (default: crm7,business-suite-unified,R80.3,throughput,conduit,braden).
+#                        (default: crm7,business-suite-unified,R80.4,throughput,conduit,braden).
 #                        Missing directories are skipped with a warning.
 #
 # Exit codes:
@@ -71,7 +71,7 @@ set -euo pipefail
 PASS="all"
 OUT_DIR=""
 DB_URL=""
-APPS_CSV="crm7,business-suite-unified,R80.3,throughput,conduit,braden"
+APPS_CSV="crm7,business-suite-unified,R80.4,throughput,conduit,braden"
 
 # Use bash parameter expansion rather than external `basename` so the script
 # survives a degraded PATH long enough to report a clean dep-check failure.

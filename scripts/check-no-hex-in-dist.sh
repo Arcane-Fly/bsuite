@@ -14,7 +14,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-APPS=(business-suite-unified crm7 R80.3 conduit throughput)
+APPS=(business-suite-unified crm7 R80.4 conduit throughput)
 FAIL=0
 
 for app in "${APPS[@]}"; do

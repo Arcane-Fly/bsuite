@@ -19,7 +19,7 @@
 #
 # 2. TAILWIND v3 OPACITY UTILITIES — `bg-opacity-50`, `text-opacity-*`,
 #    `border-opacity-*`, `ring-opacity-*`. Removed in v4. `bg-black
-#    bg-opacity-50` renders FULLY OPAQUE, so four R80.3 modals had a solid
+#    bg-opacity-50` renders FULLY OPAQUE, so four R80.4 modals had a solid
 #    black backdrop instead of a 50% scrim.
 #
 # 3. v3 FLEX UTILITIES — `flex-shrink-0` / `flex-grow` are `shrink-0` / `grow`
@@ -29,7 +29,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-APPS=(crm7 conduit business-suite-unified R80.3 throughput braden packages)
+APPS=(crm7 conduit business-suite-unified R80.4 throughput braden packages)
 EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
          --exclude-dir=.next --exclude-dir=.vercel --exclude-dir=.git
          --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=.superpowers

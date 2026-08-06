@@ -2,7 +2,7 @@
 /**
  * check-migration-version-collisions.mjs
  *
- * bsuite#1707: all six submodules (crm7, conduit, R80.3,
+ * bsuite#1707: all six submodules (crm7, conduit, R80.4,
  * business-suite-unified, braden, throughput) — plus the parent repo's own
  * `supabase/migrations/` — deploy to the SAME shared Supabase project, so
  * `supabase_migrations.schema_migrations` is ONE table keyed on the version
@@ -69,7 +69,7 @@ const SCOPES = [
   { name: 'root', dir: 'supabase/migrations' },
   { name: 'crm7', dir: 'crm7/supabase/migrations' },
   { name: 'conduit', dir: 'conduit/supabase/migrations' },
-  { name: 'R80.3', dir: 'R80.3/supabase/migrations' },
+  { name: 'R80.4', dir: 'R80.4/supabase/migrations' },
   { name: 'business-suite-unified', dir: 'business-suite-unified/supabase/migrations' },
   { name: 'braden', dir: 'braden/supabase/migrations' },
   { name: 'throughput', dir: 'throughput/supabase/migrations' },

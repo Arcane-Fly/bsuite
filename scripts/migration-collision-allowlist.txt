@@ -1,6 +1,6 @@
 # Migration version-collision allowlist (bsuite#1707)
 #
-# All six submodules (crm7, conduit, R80.3, business-suite-unified, braden,
+# All six submodules (crm7, conduit, R80.4, business-suite-unified, braden,
 # throughput), the parent repo's own supabase/migrations/ ("root"), and
 # packages/schema-builder/supabase/migrations/ ("schema-builder") deploy to
 # the SAME shared Supabase project — this is the full 8-scope matrix in
@@ -66,9 +66,9 @@
 20260512230000   coincidental-timestamp, SAME-SCOPE (crm7 only) — CONFIRMED-DDL-LOSS. people_add_middle_name_and_school_completion.sql and tenant_locations_and_state_ir_config.sql are two genuinely different migrations sharing a timestamp. Verified against the live catalog (bsuite#1707 follow-up): the migration is recorded under this version, but none of middle_name / highest_school_completion_year / highest_school_completion_month exist in production; tenant_locations and state_ir_config DO exist. The people file's DDL never ran. Repair migration: crm7/supabase/migrations/20260730310000_repair_people_school_completion_columns.sql. This is the confirmed real-world instance of the bug this gate exists to prevent — do NOT read this line as benign.
 20260519100000   coincidental-timestamp, CROSS-SCOPE — crm7 gto_standards_clauses vs business-suite-unified branding_walk_parent_tenant_chain; unrelated schemas. unverified — needs live-catalog check.
 20260701090000   coincidental-timestamp, CROSS-SCOPE — crm7 field_officers_tenant_rls vs business-suite-unified delete_organization_rpc; unrelated schemas. unverified — needs live-catalog check.
-20260702000000   coincidental-timestamp, CROSS-SCOPE — R80.3 r80_invoice_run_tenant_policy vs business-suite-unified fix_save_tenant_navigation_auth_and_stale_id; unrelated schemas. unverified — needs live-catalog check.
+20260702000000   coincidental-timestamp, CROSS-SCOPE — R80.4 r80_invoice_run_tenant_policy vs business-suite-unified fix_save_tenant_navigation_auth_and_stale_id; unrelated schemas. unverified — needs live-catalog check.
 20260722120000   coincidental-timestamp, CROSS-SCOPE — crm7 apprentice_placements_add_suspended_status vs business-suite-unified r80_to_r8_canonical_slug; unrelated schemas. unverified — needs live-catalog check.
-20260726090000   coincidental-timestamp, CROSS-SCOPE — crm7 email_message_links vs R80.3 funding_offsets; unrelated schemas. unverified — needs live-catalog check.
+20260726090000   coincidental-timestamp, CROSS-SCOPE — crm7 email_message_links vs R80.4 funding_offsets; unrelated schemas. unverified — needs live-catalog check.
 20260728120000   intentional-duplicate, CROSS-SCOPE (three-way once root is included, see note below) — crm7 and business-suite-unified both carry enterprise_licence_events.sql, byte-for-byte identical (verified via diff/md5sum); deliberately duplicated so both apps' migration history is self-contained. No verification needed: content is identical.
 
 # --- 3 additional collisions surfaced only when the parent repo's own

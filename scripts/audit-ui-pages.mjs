@@ -42,7 +42,7 @@ const require_ = createRequire(import.meta.url);
 
 function resolvePlaywright() {
   const roots = ['..', '../braden', '../conduit', '../throughput', '../crm7',
-                 '../business-suite-unified', '../R80.3'];
+                 '../business-suite-unified', '../R80.4'];
   for (const r of roots) {
     try { return require_(new URL(`${r}/node_modules/playwright/index.js`, import.meta.url).pathname); } catch {}
   }

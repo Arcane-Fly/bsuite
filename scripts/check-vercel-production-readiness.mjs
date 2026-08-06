@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const apps = [
   { name: 'business-suite-unified', domain: 'suite.crm7.app', framework: 'vite', requiresAnalytics: true },
   { name: 'crm7', domain: 'crm.crm7.app', framework: 'vite', requiresAnalytics: true },
-  { name: 'R80.3', domain: 'r8.crm7.app', framework: 'vite', requiresAnalytics: true },
+  { name: 'R80.4', domain: 'r8.crm7.app', framework: 'vite', requiresAnalytics: true },
   { name: 'conduit', domain: 'conduit.crm7.app', framework: 'nextjs', requiresAnalytics: true },
   { name: 'throughput', domain: 'ideas.crm7.app', framework: 'vite', requiresAnalytics: true },
   { name: 'braden', domain: 'www.braden.com.au', framework: 'vite', requiresAnalytics: true },

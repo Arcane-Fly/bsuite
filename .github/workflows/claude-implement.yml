@@ -50,7 +50,7 @@ jobs:
             - D2C Neon Electric theme tokens for all UI changes — never raw hex colours.
             - Follow BS OAuth 2.1 PKCE rules from AUTH_CANONICAL.md; never add cookieStorage.
             - Do NOT modify submodule directories (crm7/, conduit/, business-suite-unified/,
-              braden/, R80.3/, throughput/) unless the issue explicitly targets them.
+              braden/, R80.4/, throughput/) unless the issue explicitly targets them.
             - Remove all dead code introduced or exposed by your changes.
 
             When implementation is complete:
