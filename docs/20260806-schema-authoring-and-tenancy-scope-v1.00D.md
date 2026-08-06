@@ -214,7 +214,30 @@ Requirements:
 
 ### 5.5 The three drag/save mechanics are already correct
 
-Research confirms `SchemaCanvas.tsx:386-397` already filters `c.type === 'position' && !c.dragging` — the current, documented @xyflow/react v12 pattern for capturing a final position. **No change needed there.** The bug was never the capture; it was the destination.
+**Context7-verified 2026-08-06** against `/websites/reactflow_dev` (installed `@xyflow/react@12.11.2`): `NodePositionChange` carries the `dragging` flag in v12, so `SchemaCanvas.tsx:386-388`'s filter `c.type === 'position' && !c.dragging` is a valid current pattern for capturing a final position. **No change needed there.** The bug was never the capture; it was the destination.
+
+Two notes from the same lookup, neither load-bearing:
+
+- The library's own examples (`node-collisions`, `edge-intersection`, `save-and-restore`) reach for the `onNodeDragStop` callback for drag-stop side effects rather than filtering `onNodesChange`. Both are supported; ours is not wrong, just the less-exemplified of the two.
+- `!c.dragging` is also true when `dragging` is `undefined`, which is the shape a **programmatic** reposition takes. Tidy already persists each node explicitly at `:477`, so a Tidy run can write each position twice. Harmless today because both writes are denied; worth collapsing when T4 makes them succeed.
+
+### 5.6 The exact failure chain (traced 2026-08-06)
+
+Verified end to end by reading the write path, not inferred from the symptom:
+
+1. `scopedQuery` (`service.ts:60-80`) unions `tenant_id.is.null` into the **read** — platform entities are deliberately visible.
+2. Drag → `updateEntityPosition` → `updatePositionMutation.onMutate` optimistically moves the node in the query cache. It visibly moves.
+3. `updateSchemaEntity` UPDATEs `tenant_entities` — RLS denies (§2.1).
+4. `.select('*').single()` turns the 0-row result into a PGRST116 throw, so `onError` fires and **restores `ctx.prev`** — the node snaps back to where it started.
+5. crm7's wrapper (`pages/settings/schema-builder/index.tsx:33`) passes **no `onError` prop**, so the package's `onError?.('Could not save canvas position', err)` is a no-op. Nothing is shown.
+
+So the read path includes exactly what the write path forbids, and the one component that would have reported the denial was never wired. "Stacked, can't be moved, Tidy does nothing" is all four of those at once — and `fitView` "just zooming a little" is the tell that it is the sole control doing no DB write.
+
+**This raises the priority of the error wiring above the layout work.** A silent RLS denial is the same class as the CORS-block-reads-as-empty-state defect: the system reports success while doing nothing. Passing `onError`/`onSuccess` from every consumer is a precondition for trusting any later verification of T4.
+
+### 5.7 Package boundary — T4 is not a one-repo edit
+
+`SchemaCanvas` lives in `packages/schema-builder` (`v1.0.3`), which crm7 consumes as a published dependency `^1.0.3` (installed 1.0.3), not as a workspace link. Every canvas-side change therefore needs **build → version bump → `npm publish` → consumer pin bump → lockfile regen** before it is observable on `d.crm.crm7.app`. conduit and BSU render the same package and inherit the change whether or not they are ready for it. Budget this into T4 rather than discovering it at verification time.
 
 ---
 
@@ -283,7 +306,7 @@ Ordered so each step is independently shippable and verifiable.
 
 Stated plainly rather than filled in from memory:
 
-- **Context7 MCP was not available in this session.** React Flow / dagre guidance came from live reactflow.dev via web search, not a version-pinned doc snapshot. The installed versions were confirmed by reading source: `@xyflow/react@12.11.2`, `@dagrejs/dagre@3.0.0`, no elkjs.
+- ~~**Context7 MCP was not available in this session.**~~ **Resolved 2026-08-06** — operator re-enabled Context7 and the React Flow claim was re-checked against `/websites/reactflow_dev`. The v12 drag-capture pattern at `SchemaCanvas.tsx:386-388` is **confirmed valid**; see §5.5 for the two non-blocking notes the lookup added. The `@dagrejs/dagre` disconnected-graph claim in §5.2 is **still web-sourced only** and was not re-verified. Installed versions confirmed by reading source: `@xyflow/react@12.11.2`, `@dagrejs/dagre@3.0.0`, no elkjs.
 - **No canonical citation exists** for "per-user overlay on per-tenant default" as a named pattern (§4.2), nor for composing RLS recursion-safety with a **3-tier** hierarchy (§4.3) — all worked examples are 2-tier. The 3-tier composition is extrapolated.
 - **No industry guidance** on "locked but arrangeable" entity UX (§5.1) — searched dbdiagram, Prisma, Retool, Airtable, Supabase Schema Visualizer.
 - **`sort_order` vs `display_order`** (§6) — reported as two different columns by the surface map; **not yet confirmed** whether they are the same physical column. Check before unifying.
