@@ -30,6 +30,7 @@ import {
   reorderEntityFields,
   resolveLayout,
   saveSchemaLayoutPosition,
+  updatePlatformEntityLabel,
   updateEntityField,
   updateSchemaEntity,
   updateSchemaRelation,
@@ -76,6 +77,13 @@ export interface SchemaController {
    * computed grid in SchemaCanvas.
    */
   layout: Map<string, { x: number; y: number }>;
+  /**
+   * True when the signed-in user holds platform_role = 'developer' — the only
+   * role permitted to edit platform-owned schema. Drives whether the properties
+   * panel unlocks label/description on a system entity; the database enforces
+   * the same rule independently, so a tampered client gains nothing.
+   */
+  isPlatformDeveloper: boolean;
   isLoading: boolean;
   loadError: Error | null;
   createEntity: (
@@ -198,6 +206,19 @@ export function useSchemaController({
     staleTime: Infinity,
   });
 
+  // Mirrors the SQL is_platform_developer() helper. This is a UI affordance
+  // ONLY — update_platform_entity_label() re-checks it server-side, so a client
+  // that forces this true still gets 42501.
+  const platformDeveloperQuery = useQuery({
+    queryKey: ['is-platform-developer'] as const,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('is_platform_developer');
+      if (error) return false;
+      return data === true;
+    },
+    staleTime: 5 * 60_000,
+  });
+
   const resolvedLayout = useMemo(
     () => resolveLayout(layoutQuery.data ?? [], userQuery.data ?? null),
     [layoutQuery.data, userQuery.data],
@@ -238,8 +259,29 @@ export function useSchemaController({
   });
 
   const updateEntityMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<TenantEntity> }) =>
-      updateSchemaEntity(supabase, id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<TenantEntity> }) => {
+      // A platform-owned entity (tenant_id IS NULL) cannot be written through
+      // ordinary RLS by anyone — that is deliberate, since all five tenants read
+      // the same row. The single audited exception is the developer-only RPC,
+      // which accepts label/description and nothing else.
+      const entity = entitiesQuery.data?.find((e) => e.id === id);
+      if (entity && entity.tenant_id === null) {
+        const touched = Object.keys(updates);
+        const allowed = touched.every((k) => k === 'label' || k === 'description');
+        if (!allowed) {
+          throw new Error(
+            `Platform entities allow only label and description to be edited (attempted: ${touched.join(', ')})`,
+          );
+        }
+        return updatePlatformEntityLabel(
+          supabase,
+          id,
+          updates.label ?? entity.label,
+          updates.description ?? null,
+        );
+      }
+      return updateSchemaEntity(supabase, id, updates);
+    },
     onMutate: async ({ id, updates }) => {
       await qc.cancelQueries({ queryKey: entitiesKey });
       const prev = qc.getQueryData<TenantEntity[]>(entitiesKey);
@@ -651,6 +693,7 @@ export function useSchemaController({
     relations: relationsQuery.data ?? [],
     fields: fieldsByEntity,
     layout: resolvedLayout,
+    isPlatformDeveloper: platformDeveloperQuery.data === true,
     // Fields are non-critical — loading them must not gate the canvas, and
     // RLS failures on `tenant_field_definitions` (common across consumer
     // apps that haven't applied the Phase 1b.2 migration yet) must NOT

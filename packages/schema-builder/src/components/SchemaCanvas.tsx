@@ -799,6 +799,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             }}
             onSave={handleSaveEntity}
             onDelete={handleDeleteEntity}
+            isPlatformDeveloper={controller.isPlatformDeveloper}
           />
         ) : null}
 
