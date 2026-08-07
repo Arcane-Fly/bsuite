@@ -9,17 +9,40 @@
 #   - Next.js apps (conduit):
 #       NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 #       (frontend reads via `process.env.NEXT_PUBLIC_*`)
-#   - Server-side (edge fns, API routes, server actions):
-#       SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-#       (server reads via `process.env.*` or Deno.env.get)
-#   - DEPRECATED everywhere: SUPABASE_ANON_KEY (Supabase rotated to PUBLISHABLE_KEY in 2025).
+#   - Server-side API routes (Vercel functions): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+#   - EDGE FUNCTIONS: do not read a key name directly. Use `getPublishableKey()`
+#       from `supabase/functions/_shared/supabase-keys.ts`.
 #
-# This script enforces 5 rules across the parent monorepo AND each submodule:
+#       READ THIS BEFORE EDITING R4 OR R6. In an Edge Function the PLATFORM sets
+#       the environment, not you. `supabase secrets set` REFUSES any name with the
+#       reserved `SUPABASE_` prefix:
+#           Env name cannot start with SUPABASE_, skipping: SUPABASE_PUBLISHABLE_KEY
+#       So `SUPABASE_PUBLISHABLE_KEY` is UNSETTABLE on hosted and always resolves
+#       to ''. The platform injects the PLURAL `SUPABASE_PUBLISHABLE_KEYS` instead.
+#
+#       And on THIS project `SUPABASE_ANON_KEY` is NOT dead: the 2026-04-22
+#       legacy-key disable made Supabase re-point that injected variable at the
+#       modern publishable key (verified by digest against the live secret list).
+#       It is the WORKING name in an edge function. R4 therefore scopes its ban to
+#       CLIENT source; R6 owns edge functions and bans the unsettable name.
+#
+#       This is not theory. Between 2026-06-05 and 2026-08-06 an earlier version of
+#       R4's diagnostic told authors to use the unsettable name, and 18 edge
+#       functions across crm7 and BSU were migrated onto it — each commit citing
+#       this guard. Every one sent an empty apikey, which the gateway rejects
+#       before any handler runs, and it read at the call site as an expired
+#       session. A gate that fires and is obeyed can be worse than one that never
+#       fires. If you change a rule here, first try to SET the name it mandates and
+#       read the refusal.
+#
+# This script enforces 6 rules across the parent monorepo AND each submodule:
 #   R1) Vite-app source must NOT read `process.env.SUPABASE_*` (server-only names in client bundle).
 #   R2) Vite-app source must NOT read `import.meta.env.NEXT_PUBLIC_SUPABASE_*` (wrong meta-framework).
 #   R3) Next.js (conduit) consumer source must NOT use `import.meta.env` at all.
-#   R4) No source may reference the deprecated `SUPABASE_ANON_KEY` (use `*_PUBLISHABLE_KEY` instead).
+#   R4) CLIENT source must NOT reference `SUPABASE_ANON_KEY` (use the `VITE_`/`NEXT_PUBLIC_`
+#       prefixed publishable names). Edge functions are governed by R6, not by this.
 #   R5) No source may read `process.env.VITE_*` from the client bundle path.
+#   R6) An edge function must NOT read the bare, unsettable `SUPABASE_PUBLISHABLE_KEY`.
 #
 # Exit codes:
 #   0 — clean
