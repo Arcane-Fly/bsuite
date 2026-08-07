@@ -683,3 +683,145 @@ Each of these passed every static gate available.
   a human.
 - **The RBAC/`org_members` posture** — who may author reporting data — is a security-posture
   ruling, not an engineering fix. Evidence filed, nothing patched.
+
+---
+
+## 11. Baseline regeneration — assigned program item (2026-08-07) · **HELD AT DRAFT**
+
+> **Status: crm7#1460 is DRAFT, not merged.** PI's gate is satisfied and the schema proof is
+> complete (§11.3). It is held because regeneration has a consequence neither PI nor I anticipated
+> — it silently drops every migration-seeded row (§11.7) — and closing that requires a per-table
+> privacy ruling on which reference rows may be committed to git. The gate script
+> (`scripts/replay-schema-diff.sh`) IS merged, so the finding is reproducible on demand and nothing
+> is lost by waiting.
+
+Assigned by PI to the supervisor lane after §9.2/§9.3, with the gate stated as: *a regenerated
+baseline must be proven by a **full replay into an empty database** producing a schema that matches
+live, **with the diff shown** — not "it applied cleanly".*
+
+### 11.1 The instrument came first — `crm7 scripts/replay-schema-diff.sh`
+
+Throwaway Docker Postgres 17, own port, removed on exit; never touches production or a local
+Supabase. Applies the baseline, marks its versions, replays every post-baseline migration, then
+diffs the result against live and **exits non-zero if any live table cannot be built from source**.
+
+It classifies the diff by CAUSE — `NO-MIGRATION` / `SKIPPED-PRE-BASELINE` / `MIGRATION-FAILED` —
+rather than reporting a flat number, because its substrate is minimal and 46 migrations fail on
+`storage.objects` / `auth.sessions` / `cron` / `supabase_vault` that a real instance provides.
+**Those failures are the instrument's, not the tree's**, and a flat number would blame the tree for
+them. Only the first two categories fail the gate.
+
+### 11.2 What it measured — and the count it corrected
+
+| | tables |
+|---|---|
+| built by a full replay | 338 |
+| live | 363 |
+| **live but unbuildable from source** | **27** |
+
+26 had no migration at all. The 27th, `rcti_invoices`, is a **second instance of the `audit_events`
+shape**: its migration `20260306000004` is in `applied-versions` so the replay skips it, and the
+baseline contained zero occurrences of the table — so nothing in the tree could create it.
+
+**This superseded two earlier figures of my own: 66 → 33 → 27.** The 33 over-counted by six
+(`custom_fields_legacy_unused` and five `xero_*` *are* created by migrations; the regex missed
+their `CREATE` form). Each revision came from a better instrument and this one is empirical rather
+than textual — which is the argument for replaying over grepping, made against my own numbers.
+
+### 11.3 The regeneration, and the gate satisfied
+
+`pg_dump --schema-only --schema=public` of live, installed as
+`baseline/20260807_prod_baseline_schema_dump.sql` with `applied-versions-20260807.txt` (583
+versions). **Zero migration file versions are absent from live `schema_migrations`**, so nothing
+replays on top — the baseline alone must reproduce live, which is a stronger and simpler property
+than the layered model it replaces.
+
+| after regeneration | |
+|---|---|
+| replay tables / live tables | 363 / 363 |
+| live but unbuildable | **0** |
+| built but not live | **0** |
+| full object inventory (tables, views, functions, triggers, policies, indexes, enums) | **3,397 on both sides, diff empty in BOTH directions** |
+| function bodies (md5 of `pg_get_functiondef`) | 259 / 259, **0 differing** |
+| RLS | 363 enabled / 1 forced — matching live exactly, 0 tables without RLS |
+| baseline errors under the CI's own `ON_ERROR_STOP=1` | **0** |
+
+Not a count that matched — the **sets** matched.
+
+### 11.4 Three defects found by running it rather than reading it
+
+1. **`\restrict` tokens.** `pg_dump` 17.9 emits `\restrict`/`\unrestrict`, which older `psql`
+   clients reject. Stripped.
+2. **A bare `CREATE SCHEMA "public"`.** Errors *already exists* on a provisioned database. CI
+   applies the baseline under `ON_ERROR_STOP=1`, so that **one line would have aborted the entire
+   apply**. The old Supabase-CLI dump used `IF NOT EXISTS`, which is exactly why it had never
+   surfaced. Made idempotent.
+3. **`ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin"` ×12.** On Supabase the connection user is
+   `postgres`, which is **not** superuser and cannot alter another role's defaults — `permission
+   denied to change default privileges`, aborting the apply at line 63409 of 63457. `supabase db
+   dump` silently **filters these**; bare `pg_dump` does not. That undocumented difference is the
+   whole reason the old baseline never hit it. Removed; the 10 `FOR ROLE postgres` remain, and
+   nothing is lost because default privileges govern *future* objects and every provisioned
+   instance already carries `supabase_admin`'s own.
+
+### 11.5 The fourth instrument failure this week — and it found its own first defect
+
+Both workflows applied the baseline as `psql -v ON_ERROR_STOP=1 -f baseline.sql 2>&1 | tail -20`.
+**A pipeline returns `tail`'s status, not `psql`'s.** So `ON_ERROR_STOP=1` aborts the apply and the
+step passes anyway, leaving a partial schema that every pgTAP suite then runs against.
+
+Fixed with `set -o pipefail` in the same PR — and **that fix surfaced defect 3 above within the
+hour**. Without it, the drift job would have compared against a baseline that aborted at line
+63409 of 63457: almost complete, and silently wrong.
+
+The family now has both signs: **a red job can mean zero checks ran** (§9.4), and **a green step
+can mean nothing applied**. In both, the colour reports on the wrong process.
+
+### 11.6 What this retires, and what it does not
+
+**Retires:** the `audit_events` / `rcti_invoices` class — a pre-baseline migration stamped applied,
+never replayed, and absent from the dump, so nothing could build the table. Both are now *in* the
+baseline. Also `workers` and `stp_allowance_types`, which the tree previously **built even though
+they are dropped live** — a rebuilt environment was resurrecting a table the estate deliberately
+retired.
+
+**Does not retire:** their `CREATE` statements in old migrations are now dead source. Stripping
+them is a follow-up, not done here. And per PI's structural finding, **none of this is prevention**
+— required checks are unavailable on this repo's plan, so `replay-schema-diff.sh` is a detector a
+human must read.
+
+### 11.7 Why it is held — a schema-only baseline drops every seeded row
+
+Regenerating records **all 583 versions as applied**, so no migration replays — and the rows those
+migrations *seed* vanish with them. The schema is perfect and the database has no reference data.
+
+PI's own drift guard caught it, and was right to:
+
+```
+##[error] measured 0 active report_catalog_entities rows — refusing to report success on nothing
+```
+
+Fixed for the catalogue by appending a data-only dump of `report_catalog_entities` +
+`report_catalog_fields`, **after verifying** they are product configuration and not customer data:
+84 entities / 1,208 fields, all `tenant_id` NULL, `created_by` NULL on every row, every column
+schema metadata. The drift check then passed.
+
+But **~20 pgTAP suites depend on other migration-seeded data** — `04_timesheets_rls`,
+`07_gto_standards_rls`, `10_seed_codehouse_parity_templates` (30/30), the seven `report_*_rpc`
+suites, `25_storage_bucket_policy_coverage`, and more. Covering them means deciding, per table,
+whether its rows belong in a repo file.
+
+**That is a privacy decision, not a dump flag**, and the heuristic reach for it is dangerous: my
+first pass scored a table "safe to dump" if it had no tenant-scoped rows, and `public.profiles`
+passed — it has no `tenant_id` column at all and holds 15 real users' emails and platform roles.
+Committing that to git would have been irreversible. Escalated to PI with the measured candidate
+set and the explicit exclusions.
+
+**The alternative, tested and rejected:** keeping the old applied-versions list so migrations still
+replay does restore the seeds — but yields 365 tables, **resurrecting `workers` and
+`stp_allowance_types`**, and replays 300+ migrations against a schema that already holds their
+effects (51 tolerated errors). It trades a clean model for a noisy one and reintroduces the
+resurrection defect regeneration was meant to remove.
+
+**Split out and merged separately:** the `set -o pipefail` fix (crm7#1462), which is correct on its
+own and is what surfaced the `permission denied` defect in §11.4.
