@@ -18,6 +18,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 
 | File | Status | Description |
 |------|--------|-------------|
+| `20260807-data-platform-completion-program-v1.00D.md` | D | Data-platform completion: report catalog covers 23 of 363 tables (crm7-only, zero conduit/BSU/throughput/braden); four P4/P5 persistence surfaces at 0 rows; one live silent data-loss bug on `/settings/custom-fields`. Supersedes the 2026-08-06 origami plan, whose P0–P9 merged but whose completion tests never ran. **Decisions D1–D7 required before execution.** |
 | `20260729-qa-backlog-execution-v1.00W.md` | W | QA backlog execution plan — full red-team completion of the unified-authoring audit findings |
 | `20260729-unified-authoring-redteam-refined-v1.00W.md` | W | Refined prompt for the unified authoring surface red-team + execution plan (prompt-enhancer output) |
 | `20260423-gto-billing-reporting-refined-plan-v1.00A.md` | A | Production billing, STP Phase 2, Payday Super, regulatory reporting (Approved; Xero lane blocked on app registration) |
