@@ -55,6 +55,7 @@
         "platform_admin_stop_acting()",
         "platform_is_developer_or_admin()",
         "r7_candidate_id_for_auth_user()",
+        "report_catalog_approve_entity(p_key text)",
         "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
         "schema_authority_tenant_ids()",
         "show_demo_data()",
@@ -78,7 +79,8 @@
         "acting_tenant_id()": "RLS helper. Returns the tenant a platform super admin is currently acting as, or nothing. SECURITY DEFINER so policies can read platform_admin_acting_as without granting callers access to it. Gated on is_platform_super_admin() AND expires_at > now(), so a lapsed or unauthorized session yields no rows.",
         "is_platform_super_admin()": "RLS helper. Boolean only. SECURITY DEFINER so a policy can read profiles without the caller holding access. Admits developer | platform_admin | is_super_admin — the act-as set. Deliberately WIDER than is_platform_developer(), which alone gates platform schema writes.",
         "platform_admin_act_as(target_tenant_id uuid)": "INTENTIONAL privileged write, not a helper. Starts an acting-as session; SECURITY DEFINER IS the mechanism because platform_admin_acting_as has no write policies at all. Authorization is the is_platform_super_admin() check inside it, the target tenant must exist, and every start is written to platform_admin_act_as_audit. Sessions carry a hard 12h expires_at.",
-        "platform_admin_stop_acting()": "Counterpart to the above; clears the caller's own acting-as row and audits the stop. SECURITY DEFINER for the same reason. Acts only on auth.uid()'s own row."
+        "platform_admin_stop_acting()": "Counterpart to the above; clears the caller's own acting-as row and audits the stop. SECURITY DEFINER for the same reason. Acts only on auth.uid()'s own row.",
+        "report_catalog_approve_entity(p_key text)": "INTENTIONAL privileged write path, not a helper — same class as update_platform_entity_label. It is the developer-approval step of the D3 promotion path (schema-builder entity -> DRAFT catalog row -> developer approves -> active), so it MUST be client-callable: an RPC has to be reachable in order to return its denial. SECURITY DEFINER is the mechanism; the is_platform_developer() check inside it is the authorization. anon is already REVOKED (verified live: has_function_privilege('anon',...) = false). Verified live 2026-08-07 inside a guaranteed rollback: a non-developer (owner of Lookn, platform_role='user') calling it is DENIED with 'only a platform developer may approve a proposed entity into the catalog'. Added by the supervisor lane while unblocking bsuite#1796; the implementing lane owns the function."
       }
     },
     {

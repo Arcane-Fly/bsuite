@@ -99,9 +99,59 @@ Entirely uncovered domains despite being fully wired: recruitment/ATS (`r7_*`, 2
 
 Independently verified live: the RPC body contains `INSERT INTO public.custom_fields` and does **not** reference `tenant_field_definitions`. `customFieldsService` reads `tenant_field_definitions` exclusively (`:101,122,149,160`).
 
-The comment at `custom-fields.tsx:106` asserts the opposite — *"the SAME `custom_fields` table this page's own 'Add Field' form writes to … not a competing system"* — and cites *"live-verified via Supabase MCP `pg_proc` 2026-07-03"*. Someone verified the RPC **existed**, not what it **wrote to**. 562 fields exist via one path; zero have ever survived the other.
+The comment at `custom-fields.tsx:106` asserts the opposite — *"the SAME `custom_fields` table this page's own 'Add Field' form writes to … not a competing system"* — and cites *"live-verified via Supabase MCP `pg_proc` 2026-07-03"*. Someone verified the RPC **existed**, not what it **wrote to**.
 
 **Severity:** user gets a success response, field never appears. Silent data loss on a shipped settings page.
+
+> **CORRECTION (2026-08-07, from `claude-opus5-dataplatform-lane` during P1 — accepted).**
+> This section originally read *"562 fields exist via one path; zero have ever survived the other."*
+> **That framing was wrong and misleading.** All 562 `tenant_field_definitions` rows were written
+> in a **single second on 2026-05-12**, `created_by` NULL, `scope='platform'` — they are a
+> migration seed. **Zero rows in that table were ever created by a user through EITHER control.**
+>
+> The original wording implied the page's own "Add Field" form is the proven-good path. It is
+> **equally unexercised**. Consequences, both binding:
+>
+> 1. **P1's completion test must exercise BOTH controls**, not only the inline widget.
+> 2. That pushes part of P1 into **P3** territory (prove the write path), which is where this
+>    program's real risk sits.
+
+#### P0.1 turned out to have a second half the audit missed
+
+Found by the implementer during P1, and it is the more dangerous half:
+
+`add_tenant_field_definition()` resolved its target tenant with
+`ORDER BY (ut.tenant_id = v_entity_tenant_id) DESC LIMIT 1`. **All 44 `tenant_entities` rows have
+`tenant_id IS NULL`**, so that key was NULL for every candidate — and `ORDER BY NULL` imposes no
+ordering, leaving `LIMIT 1` an **arbitrary pick**.
+
+**Repointing the table alone would NOT have fixed the reported bug.** The field would have been
+written successfully into a coin-flip tenant, and the page — filtered to the current tenant —
+would still have shown nothing. Identical symptom, different cause.
+
+Three things follow, all generalisable beyond this defect:
+
+- **`x = NULL` inside an `ORDER BY` does not sort — it silently disables the ordering.** Same
+  family as this estate's recorded `NaN = NaN` and `NULLS FIRST` lessons: a comparison against
+  NULL that reads as a preference and is actually a no-op. Postgres does not warn.
+- **A live test would have been a coin flip, and a pass would have been luck rather than
+  evidence.** A 50% intermittent pass is worse than a clean fail — it reads as "works, flaky"
+  and the real defect survives.
+- **The operator is the WORST-case test account here, not the best.** Braden's two accounts each
+  hold multi-tenant membership that no real client has; every real client user is single-tenant
+  and would have passed.
+
+Two further defects the same phase surfaced, recorded because each is a class rather than an
+instance:
+
+- **`min(uuid)` does not exist in Postgres.** A first fix contained `SELECT count(*), min(ut.tenant_id)`
+  — `42883` at runtime, on a branch taken by *every* live call, i.e. silent data loss traded for a
+  total outage. It passed `CREATE FUNCTION`, `pnpm typecheck`, all four migration linters, the
+  pre-commit hook, and a written spec review. **Only executing it caught it.** Doctrine:
+  *a plpgsql body is not semantically checked until it runs* — applying a function migration proves
+  only that it PARSES. Verification means calling it, once per branch, as a real identity.
+- **`DROP ... IF EXISTS` on an old signature followed by a bare `CREATE`** aborts a baseline replay
+  with `42723` when the new signature already exists. Use `CREATE OR REPLACE`.
 
 ### P0.2 — `min_role` is NULL on every catalogued field — and the gate FAILS OPEN
 
