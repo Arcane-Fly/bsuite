@@ -146,6 +146,21 @@ ALLOWLIST=(
   'braden/supabase/functions/list-hero-images/index.ts:*'
   # ---- throughput deploy-database utility script (Node script, not bundled) ----
   'throughput/src/scripts/deploy-database.js:*'
+  # ---- THE canonical key resolver — the one place allowed to name every variant ----
+  # This helper exists precisely to centralise the fallback chain that R4 and R6
+  # police everywhere else: platform-injected SUPABASE_PUBLISHABLE_KEYS first,
+  # then the injected SUPABASE_ANON_KEY (which this project's 2026-04-22
+  # legacy-key disable re-pointed at the modern publishable key), then the
+  # local-CLI-only singular name. Exempting it is not a broadening of the
+  # amnesty: every OTHER file gets stricter, because they now route through here
+  # instead of reading the unsettable name directly. Tracked by bsuite#465.
+  'crm7/supabase/functions/_shared/supabase-keys.ts:*'
+  'business-suite-unified/supabase/functions/_shared/supabase-keys.ts:*'
+  # ...and its tests, which must NAME every variant in order to assert the
+  # precedence between them. A test that cannot mention `SUPABASE_ANON_KEY` is a
+  # test that cannot pin the fallback that is currently load-bearing.
+  'crm7/supabase/functions/_shared/__tests__/supabase-keys.test.ts:*'
+  'business-suite-unified/supabase/functions/_shared/__tests__/supabase-keys.test.ts:*'
   # ---- BSU e2e test infrastructure (Playwright, runs in Node) ----
   'business-suite-unified/tests/e2e/cross-app-org-creation.spec.ts:*'
   'business-suite-unified/tests/e2e/phase1-braden-lead-notification.spec.ts:*'
@@ -292,7 +307,50 @@ check_r4() {
     issues="${issues}${parent_matches}"$'\n'
   fi
   if [ -n "$issues" ]; then
-    note "R4 VIOLATION — deprecated \`SUPABASE_ANON_KEY\` referenced in source (Supabase rotated to PUBLISHABLE_KEY in 2025; use \`SUPABASE_PUBLISHABLE_KEY\` / \`VITE_SUPABASE_PUBLISHABLE_KEY\` / \`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY\`):"
+    note "R4 VIOLATION — deprecated \`SUPABASE_ANON_KEY\` referenced in source (Supabase rotated to PUBLISHABLE_KEY in 2025; in CLIENT source use \`VITE_SUPABASE_PUBLISHABLE_KEY\` / \`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY\`; in EDGE FUNCTIONS use the \`getPublishableKey()\` helper — see R6, the bare \`SUPABASE_PUBLISHABLE_KEY\` is unsettable there):"
+    note "$issues"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  fi
+}
+
+# ---- R6: the UNSETTABLE bare SUPABASE_PUBLISHABLE_KEY inside edge functions ----
+#
+# Added 2026-08-06 after a live outage. `supabase secrets set` REFUSES the name:
+#
+#   $ supabase secrets set SUPABASE_PUBLISHABLE_KEY=... --project-ref tuybltdrdefjblnplpqo
+#   Env name cannot start with SUPABASE_, skipping: SUPABASE_PUBLISHABLE_KEY
+#
+# The `SUPABASE_` prefix is reserved by the platform, so on hosted runtimes that
+# variable can never hold a value. Per the Supabase docs the platform injects the
+# PLURAL `SUPABASE_PUBLISHABLE_KEYS` (a JSON dictionary); the singular form is
+# documented only as a local-CLI fallback.
+#
+# 16 crm7 edge functions had been migrated onto the singular name — BY THIS VERY
+# GUARD, whose R4 diagnostic recommended it — and every one of them silently
+# resolved to `''`. An empty apikey is a hard gateway 401
+# (`{"message":"No API key found in request"}`), and `handover-to-employment`,
+# which guards on the value, returned HTTP 500 on every production call.
+#
+# This rule is deliberately scoped to `supabase/functions/**`: in Vite/Next
+# CLIENT source the `VITE_`/`NEXT_PUBLIC_` prefixed publishable names are correct
+# and settable, and R1/R2/R5 already govern those.
+check_r6() {
+  local issues=""
+  for app in "${VITE_APPS[@]}" "${NEXT_APPS[@]}"; do
+    [ -d "$app" ] || continue
+    local prefix="${app}/"
+    local matches
+    matches=$(
+      ( cd "$app" && git grep -nE "(Deno\.env\.get\(['\"]|process\.env\.)SUPABASE_PUBLISHABLE_KEY['\"]?" -- \
+          'supabase/functions/**/*.ts' 'supabase/functions/**/*.js' 2>/dev/null
+      ) | filter_matches "$prefix"
+    )
+    if [ -n "$matches" ]; then
+      issues="${issues}${matches}"$'\n'
+    fi
+  done
+  if [ -n "$issues" ]; then
+    note "R6 VIOLATION — edge function reads the UNSETTABLE \`SUPABASE_PUBLISHABLE_KEY\`. The \`SUPABASE_\` prefix is reserved, so \`supabase secrets set\` refuses this name and it resolves to '' on every hosted invocation (→ gateway 401 'No API key found in request'). Use the \`getPublishableKey()\` helper from \`supabase/functions/_shared/supabase-keys.ts\`, which reads the platform-injected \`SUPABASE_PUBLISHABLE_KEYS\` dictionary:"
     note "$issues"
     VIOLATIONS=$((VIOLATIONS + 1))
   fi
@@ -324,6 +382,7 @@ check_r2
 check_r3
 check_r4
 check_r5
+check_r6
 
 if [ "$VIOLATIONS" -eq 0 ]; then
   echo "secret-naming drift check: PASS (canonical names per AGENTS.md §Environment Variables)"
@@ -337,8 +396,12 @@ fi
   echo "Canonical naming per AGENTS.md §Environment Variables:"
   echo "  Vite apps (BSU, crm7, R80.4, braden, throughput): import.meta.env.VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY"
   echo "  Next.js (conduit):                              process.env.NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
-  echo "  Server-side (edge fns, API routes):             SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY"
-  echo "  NEVER:                                          SUPABASE_ANON_KEY (deprecated since Supabase 2025 rotation)"
+  echo "  Server-side (API routes):                       SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY"
+  echo "  Edge functions, publishable key:                getPublishableKey() from _shared/supabase-keys.ts"
+  echo "                                                  (reads the platform-injected SUPABASE_PUBLISHABLE_KEYS dictionary)"
+  echo "  NEVER in client source:                         SUPABASE_ANON_KEY (deprecated since Supabase 2025 rotation)"
+  echo "  NEVER in an edge function:                      bare SUPABASE_PUBLISHABLE_KEY — the SUPABASE_ prefix is"
+  echo "                                                  reserved, so this name is UNSETTABLE and always resolves to ''"
   echo ""
   echo "To opt a single line out (e.g. for a documented legacy compat shim), add:"
   echo "    // legacy compat — remove after YYYY-MM-DD"
