@@ -11,19 +11,24 @@
 #   ERR_PNPM_OUTDATED_LOCKFILE or ERR_PNPM_FETCH_404 on a version that never
 #   existed. Adding the package is not enough; it needs its own workflow.
 #
-# Authentication:
-#   PREFERRED: npm Trusted Publishers (OIDC) — configure at npmjs.com →
-#     package → Settings → Trusted Publisher → GitHub Actions, with
-#     organization GaryOcean428, repository bsuite, and workflow filename
-#     matching this file's basename. Requires `id-token: write` (set below).
-#   FALLBACK: NPM_TOKEN secret, via setup-node's generated .npmrc. Kept for the
-#     FIRST publish only — a package that does not yet exist on the registry
-#     cannot have a Trusted Publisher configured against it. After the first
-#     successful publish, configure OIDC and delete the NODE_AUTH_TOKEN env
-#     below, matching packages/schema-registry's already-migrated shape.
+# Authentication: npm Trusted Publishers (OIDC). Requires `id-token: write`
+#   (set below) and nothing else. Do not add an NPM_TOKEN fallback.
 #
-# Required GitHub Secret (first publish only):
-#   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
+#   Configured at npmjs.com → @bsuite/data-grid → Settings → Trusted Publisher →
+#   GitHub Actions, with organization GaryOcean428, repository bsuite, and
+#   workflow filename matching this file's basename.
+#
+#   THE BOOTSTRAP, recorded because it is not obvious and will recur for the next
+#   new package: a Trusted Publisher is configured AGAINST AN EXISTING PACKAGE,
+#   so it cannot be set up for a name that has never been published. The first
+#   publish therefore has to be manual. This one was, on 2026-08-07 —
+#   @bsuite/data-grid@0.1.0 — and OIDC took over from the second onward.
+#
+#   Until then this file carried an NPM_TOKEN fallback, and it failed every run
+#   with `404 Not Found - PUT`. A 404 on PUT means the token AUTHENTICATED and
+#   lacks CREATE permission in the scope; npm returns 404 rather than 403 so it
+#   does not leak which package names exist. That is now moot — and worth not
+#   re-adding, since granular npm tokens are being retired and require 2FA.
 #
 # To trigger manually (e.g. after a version bump merged to main):
 #   gh workflow run publish-data-grid.yml
@@ -107,42 +112,9 @@ jobs:
         if: steps.version-check.outputs.skip == 'false'
         run: npm publish --dry-run --access public
 
-      # Publishing is expected to FAIL until NPM_TOKEN can create a new package
-      # in the @bsuite scope. That failure is real and should stay visible — but
-      # the bare npm output ("404 Not Found - PUT") reads like a broken build,
-      # so the specific create-permission case is named explicitly. Everything
-      # else still fails with npm's own message untouched.
       - name: Publish to npm
         if: steps.version-check.outputs.skip == 'false'
-        shell: bash
-        run: |
-          set -o pipefail
-          if npm publish --access public 2>&1 | tee /tmp/publish.log; then
-            echo "published"
-            exit 0
-          fi
-          if grep -q 'E404' /tmp/publish.log && grep -q 'PUT' /tmp/publish.log; then
-            {
-              echo "### npm publish blocked on a credential, not on code"
-              echo
-              echo 'The token AUTHENTICATED — it reached `PUT` and got 404, not 401. It cannot'
-              echo 'CREATE a new package in the `@bsuite` scope; it is scoped to packages that'
-              echo 'already exist. `@bsuite/charge-calc` publishes on this same token because it'
-              echo 'is already on the registry.'
-              echo
-              echo '**Fix:** issue an npm token with `@bsuite` scope-wide (or create) permission'
-              echo 'and set it as the `NPM_TOKEN` repository secret. This is an npmjs.com account'
-              echo 'action — no code change will resolve it.'
-              echo
-              echo 'Meanwhile crm7 consumes the grid as a byte-identical vendored copy'
-              echo '(`crm7/src/components/data-grid`, guarded by'
-              echo '`scripts/check-data-grid-vendor-drift.mjs`), so the feature is NOT blocked —'
-              echo 'only the package boundary is.'
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-          exit 1
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 
       - name: Job summary
         if: always()
