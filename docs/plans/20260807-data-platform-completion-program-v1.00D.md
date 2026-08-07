@@ -603,3 +603,225 @@ failure can still be merged past. That is a repo-settings change, not a file cha
 verification of a `SECURITY DEFINER` write path is exactly what §9.2 shows can rot invisibly. The
 standard this programme should hold is the one the catalogue side already met: **a permanent
 in-database guard, plus proof it fails when the thing it guards is removed.**
+
+---
+
+## 10. Delivery record — 2026-08-07 (data-platform lane)
+
+All nine phases executed. Eleven migrations applied and verified against the **live catalogue**,
+never against their own files. Every completion test that could be run has been run. What
+follows records what shipped, and — more usefully — the defects that only surfaced because
+something was actually executed.
+
+### 10.1 What shipped
+
+| Phase | Delivered | Proof |
+|---|---|---|
+| P1 | `add_tenant_field_definition` repointed at `tenant_field_definitions`; `min_role` backfilled + `NOT NULL` + `CHECK` + fail-**closed**; `custom_fields` table renamed | **Completion test as written**: added a field through the inline widget on live `crm.crm7.app` and watched it render. Row confirmed in the database with `created_by` = the signing user |
+| P2 | Catalogue **23 → 84 entities**, 229 → 1,208 fields, 34 → 109 joins. 6.3% → 23% of 363 tables. The `r7_*` ATS line went 0% → catalogued | Engine returns real rows from newly-catalogued entities as a signed-in user with RLS on; `gto_compliance_standards` returns **17 of 34**, i.e. the tenant predicate is applied |
+| P3 | pgTAP **suite 47** — the five persistence surfaces accept a row | **Executed**, 20/20, live *and* in CI's fresh-replay C10 |
+| P4 | Demo Organisation seeded (3 hosts, 6 contacts, 4 apprentices, 6 people, 5 placements, 7 timesheets, ATS rows) | Leak check 0; a query aimed at a non-member tenant is refused `42501` at tenant **selection**, before any row |
+| P5 | Sub-org gap documented **in** `_bulk_data_write_authority`'s own comment (D1: defer + document) | Reads as deliberate, with what the eventual change must ship with |
+| P6 | `workers` retired | The holding lane's gate re-run **verbatim** → 0, and re-asserted **at apply time** |
+| P7 | D3 ruled **hand-curated**; propose → draft → developer-approves path built | Draft is invisible to **both** the read and the write engine; approve is developer-only; double-approve refused |
+| P8 | `xero_connection_health` view | Both live connections now report `never_synced` instead of looking connected |
+| P9 | Tier surfaces analysed | See 10.3 — my headline finding here was **wrong**, and the retraction is the record |
+
+### 10.2 The defects that only executing found
+
+Each of these passed every static gate available.
+
+- **`min(uuid)` does not exist in Postgres.** It sat in a branch taken by *every* live call, so the
+  RPC would have failed 100% of the time — silent data loss traded for a total outage. It passed
+  `CREATE FUNCTION`, typecheck, four migration linters, the pre-commit hook and a written spec
+  review. **A plpgsql body is not semantically checked until it runs**, so applying a function
+  migration proves only that it *parses*.
+- **A regression I caused.** `min_role` has **two** interpreters. I updated the read gate and not
+  the write gate, flipping bulk import/update from allow-all to deny-all. Caught by a test's
+  *control* step, not its attack — without it I would have recorded "cross-tenant write refused"
+  as a pass while nothing could be written at all. **A dead engine refuses attacks perfectly.**
+- **A replay would have aborted.** `DROP IF EXISTS` on the old signature plus a bare `CREATE`
+  fails `42723` on re-run. The file's own header had asserted it was replay-safe.
+- **The e2e fixture had never existed**, for three independent reasons: below `MIGRATION_FLOOR`,
+  an INSERT omitting a `NOT NULL` `field_key`, and a `dotenv` import that is not a dependency.
+  None was ever observed because nothing had executed the chain — **a file that cannot run never
+  gets its second bug found.**
+- **The fixture seeder repointed the ordinary-user identity.** It wrote fixture A into the
+  *unsuffixed* `CRM7_E2E_EMAIL`, read by `auth.setup.ts` and 16 specs, so every run aimed them at
+  the cross-tenant *attacker*. A live probe then spent an hour mutating one account while
+  authenticating as another. **A test that silently changes who it is testing is worse than one
+  that fails** — it still looks convincing.
+- **`replica` mode hollows a trigger assertion.** The pgTAP harness sets
+  `session_replication_role = 'replica'`, which disables every ordinary trigger. Suite 47's
+  catalogue assertion would have passed because the gate *never ran*. Fixed, plus a control
+  proving the trigger is armed.
+
+### 10.3 Corrections to this document and to me
+
+- **§7's premise on P0.1 was too generous.** "562 fields exist via one path" implied the surviving
+  path was proven. All 562 rows were written in *one second* by a migration with `created_by` NULL —
+  **neither** add-field path had ever produced a user-created row.
+- **§P7's figure was wrong.** It recorded "24 of 44 schema-builder entities (55%) can never be
+  reported on". Live: 45 entities, 19 already reportable under the plural table name, 9 fixable
+  immediately, 17 needing a semantic alias nobody has written down.
+- **D4 could not be answered as written.** "The most restrictive value that keeps the field usable"
+  did not exist: `is_gto_staff` reads `org_members`, which holds 3 rows. The obvious reading would
+  have denied 3 of 6 live users every field *while reading like a security improvement*. A
+  `tenant_member` floor tier was added.
+- **I filed a P0 that was wrong, twice over.** "RBAC is inert — 330 of 331 routes developer-only."
+  I had misread the code (`portal_role` is read **first**; I saw only the fallback branch) **and**
+  my live proof moved two variables in one statement. Retracted in full. Confirmed afterwards by
+  real sign-in: a single-membership user with a NULL tenant pin and no bypass role reaches the page.
+  A lane's wrong finding costs a cycle; one filed as a blocker tells everyone else to stop looking.
+
+### 10.4 Deliberately not done
+
+- **The two tombstones** (`workers_legacy_unused`, `custom_fields_legacy_unused`) are renamed, not
+  dropped. The rename already buys what the drop was for — a missed reader fails **loudly** at
+  `42P01` instead of silently reading an empty table, which is the exact defect that left
+  `worker_name` blank on 13 customer-facing quotes for a month. The drop is irreversible and needs
+  a human.
+- **The RBAC/`org_members` posture** — who may author reporting data — is a security-posture
+  ruling, not an engineering fix. Evidence filed, nothing patched.
+
+---
+
+## 11. Baseline regeneration — assigned program item (2026-08-07) · **HELD AT DRAFT**
+
+> **Status: crm7#1460 is DRAFT, not merged.** PI's gate is satisfied and the schema proof is
+> complete (§11.3). It is held because regeneration has a consequence neither PI nor I anticipated
+> — it silently drops every migration-seeded row (§11.7) — and closing that requires a per-table
+> privacy ruling on which reference rows may be committed to git. The gate script
+> (`scripts/replay-schema-diff.sh`) IS merged, so the finding is reproducible on demand and nothing
+> is lost by waiting.
+
+Assigned by PI to the supervisor lane after §9.2/§9.3, with the gate stated as: *a regenerated
+baseline must be proven by a **full replay into an empty database** producing a schema that matches
+live, **with the diff shown** — not "it applied cleanly".*
+
+### 11.1 The instrument came first — `crm7 scripts/replay-schema-diff.sh`
+
+Throwaway Docker Postgres 17, own port, removed on exit; never touches production or a local
+Supabase. Applies the baseline, marks its versions, replays every post-baseline migration, then
+diffs the result against live and **exits non-zero if any live table cannot be built from source**.
+
+It classifies the diff by CAUSE — `NO-MIGRATION` / `SKIPPED-PRE-BASELINE` / `MIGRATION-FAILED` —
+rather than reporting a flat number, because its substrate is minimal and 46 migrations fail on
+`storage.objects` / `auth.sessions` / `cron` / `supabase_vault` that a real instance provides.
+**Those failures are the instrument's, not the tree's**, and a flat number would blame the tree for
+them. Only the first two categories fail the gate.
+
+### 11.2 What it measured — and the count it corrected
+
+| | tables |
+|---|---|
+| built by a full replay | 338 |
+| live | 363 |
+| **live but unbuildable from source** | **27** |
+
+26 had no migration at all. The 27th, `rcti_invoices`, is a **second instance of the `audit_events`
+shape**: its migration `20260306000004` is in `applied-versions` so the replay skips it, and the
+baseline contained zero occurrences of the table — so nothing in the tree could create it.
+
+**This superseded two earlier figures of my own: 66 → 33 → 27.** The 33 over-counted by six
+(`custom_fields_legacy_unused` and five `xero_*` *are* created by migrations; the regex missed
+their `CREATE` form). Each revision came from a better instrument and this one is empirical rather
+than textual — which is the argument for replaying over grepping, made against my own numbers.
+
+### 11.3 The regeneration, and the gate satisfied
+
+`pg_dump --schema-only --schema=public` of live, installed as
+`baseline/20260807_prod_baseline_schema_dump.sql` with `applied-versions-20260807.txt` (583
+versions). **Zero migration file versions are absent from live `schema_migrations`**, so nothing
+replays on top — the baseline alone must reproduce live, which is a stronger and simpler property
+than the layered model it replaces.
+
+| after regeneration | |
+|---|---|
+| replay tables / live tables | 363 / 363 |
+| live but unbuildable | **0** |
+| built but not live | **0** |
+| full object inventory (tables, views, functions, triggers, policies, indexes, enums) | **3,397 on both sides, diff empty in BOTH directions** |
+| function bodies (md5 of `pg_get_functiondef`) | 259 / 259, **0 differing** |
+| RLS | 363 enabled / 1 forced — matching live exactly, 0 tables without RLS |
+| baseline errors under the CI's own `ON_ERROR_STOP=1` | **0** |
+
+Not a count that matched — the **sets** matched.
+
+### 11.4 Three defects found by running it rather than reading it
+
+1. **`\restrict` tokens.** `pg_dump` 17.9 emits `\restrict`/`\unrestrict`, which older `psql`
+   clients reject. Stripped.
+2. **A bare `CREATE SCHEMA "public"`.** Errors *already exists* on a provisioned database. CI
+   applies the baseline under `ON_ERROR_STOP=1`, so that **one line would have aborted the entire
+   apply**. The old Supabase-CLI dump used `IF NOT EXISTS`, which is exactly why it had never
+   surfaced. Made idempotent.
+3. **`ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin"` ×12.** On Supabase the connection user is
+   `postgres`, which is **not** superuser and cannot alter another role's defaults — `permission
+   denied to change default privileges`, aborting the apply at line 63409 of 63457. `supabase db
+   dump` silently **filters these**; bare `pg_dump` does not. That undocumented difference is the
+   whole reason the old baseline never hit it. Removed; the 10 `FOR ROLE postgres` remain, and
+   nothing is lost because default privileges govern *future* objects and every provisioned
+   instance already carries `supabase_admin`'s own.
+
+### 11.5 The fourth instrument failure this week — and it found its own first defect
+
+Both workflows applied the baseline as `psql -v ON_ERROR_STOP=1 -f baseline.sql 2>&1 | tail -20`.
+**A pipeline returns `tail`'s status, not `psql`'s.** So `ON_ERROR_STOP=1` aborts the apply and the
+step passes anyway, leaving a partial schema that every pgTAP suite then runs against.
+
+Fixed with `set -o pipefail` in the same PR — and **that fix surfaced defect 3 above within the
+hour**. Without it, the drift job would have compared against a baseline that aborted at line
+63409 of 63457: almost complete, and silently wrong.
+
+The family now has both signs: **a red job can mean zero checks ran** (§9.4), and **a green step
+can mean nothing applied**. In both, the colour reports on the wrong process.
+
+### 11.6 What this retires, and what it does not
+
+**Retires:** the `audit_events` / `rcti_invoices` class — a pre-baseline migration stamped applied,
+never replayed, and absent from the dump, so nothing could build the table. Both are now *in* the
+baseline. Also `workers` and `stp_allowance_types`, which the tree previously **built even though
+they are dropped live** — a rebuilt environment was resurrecting a table the estate deliberately
+retired.
+
+**Does not retire:** their `CREATE` statements in old migrations are now dead source. Stripping
+them is a follow-up, not done here. And per PI's structural finding, **none of this is prevention**
+— required checks are unavailable on this repo's plan, so `replay-schema-diff.sh` is a detector a
+human must read.
+
+### 11.7 Why it is held — a schema-only baseline drops every seeded row
+
+Regenerating records **all 583 versions as applied**, so no migration replays — and the rows those
+migrations *seed* vanish with them. The schema is perfect and the database has no reference data.
+
+PI's own drift guard caught it, and was right to:
+
+```
+##[error] measured 0 active report_catalog_entities rows — refusing to report success on nothing
+```
+
+Fixed for the catalogue by appending a data-only dump of `report_catalog_entities` +
+`report_catalog_fields`, **after verifying** they are product configuration and not customer data:
+84 entities / 1,208 fields, all `tenant_id` NULL, `created_by` NULL on every row, every column
+schema metadata. The drift check then passed.
+
+But **~20 pgTAP suites depend on other migration-seeded data** — `04_timesheets_rls`,
+`07_gto_standards_rls`, `10_seed_codehouse_parity_templates` (30/30), the seven `report_*_rpc`
+suites, `25_storage_bucket_policy_coverage`, and more. Covering them means deciding, per table,
+whether its rows belong in a repo file.
+
+**That is a privacy decision, not a dump flag**, and the heuristic reach for it is dangerous: my
+first pass scored a table "safe to dump" if it had no tenant-scoped rows, and `public.profiles`
+passed — it has no `tenant_id` column at all and holds 15 real users' emails and platform roles.
+Committing that to git would have been irreversible. Escalated to PI with the measured candidate
+set and the explicit exclusions.
+
+**The alternative, tested and rejected:** keeping the old applied-versions list so migrations still
+replay does restore the seeds — but yields 365 tables, **resurrecting `workers` and
+`stp_allowance_types`**, and replays 300+ migrations against a schema that already holds their
+effects (51 tolerated errors). It trades a clean model for a noisy one and reintroduces the
+resurrection defect regeneration was meant to remove.
+
+**Split out and merged separately:** the `set -o pipefail` fix (crm7#1462), which is correct on its
+own and is what surfaced the `permission denied` defect in §11.4.
