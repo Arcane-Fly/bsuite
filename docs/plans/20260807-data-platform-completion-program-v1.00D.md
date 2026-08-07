@@ -510,3 +510,96 @@ For genuinely global references (`awards`, `anzsco_occupations`) that is correct
 `report_run_catalog_query` and `report_catalog_build_filter` were attacked on identifier injection through entity/field/join/aggregate keys, aggregate-name and type escape, filter-node SQL smuggling, joins to uncatalogued tables, and recursion/condition-count abuse. **Every vector closed.** All identifiers catalog- or server-derived; all values bound parameters via a single `USING` array; all enums through fixed `CASE`s; joins require a live catalog row; tenant predicates `AND`-composed and unloosenable by the client. All 23 catalogued base tables verified `relrowsecurity = true` with a SELECT policy and a real `tenant_id` column.
 
 The INVOKER read engine is genuinely the sound piece the plan claims. **The danger was entirely in the DEFINER write helpers.**
+
+---
+
+## 9. Delivery record — 2026-08-07 (supervisor lane)
+
+§8.3 fixed the cross-tenant write P0 but left it **guarded once, not guarded forever**: the
+catalogue side of the same programme shipped a permanent in-database precondition gate, while
+the write side rested on a hand-run verification. This section records closing that, and the
+three defects that closing it uncovered.
+
+### 9.1 The guard — crm7#1453, `46_bulk_data_cross_tenant_write_isolation.sql`
+
+16 pgTAP assertions covering all three DEFINER entry points, because the family is the unit:
+`bulk_data_update` and `bulk_data_import` carried the row-level tenant check and `bulk_data_undo`
+did not, and diffing them is what located the P0.
+
+| # | path | gate exercised |
+|---|---|---|
+| B1–B4 | `bulk_data_undo` with a forged change set declaring the caller's own tenant | row/tenant gate (the P0 shape) |
+| C1–C3 | `bulk_data_update` against a foreign row id | row/tenant gate |
+| D1 | `bulk_data_import` into a tenant the caller does **not** hold | authority layer (42501) |
+| D3–D4 | `bulk_data_import` into a tenant the caller **does** hold, smuggling a foreign row id | row/tenant gate |
+| D2 | `_bulk_data_write_authority` executable by `authenticated`? | grant lockdown |
+| E1–E2 | same caller, same field, same RPC, **own** tenant | positive control |
+
+**The control that makes it a real test.** The engine runs a **field** gate *before* the **row**
+gate. Measured, not reasoned: attacking `first_name` returns *"cannot undo: this tier cannot write
+field(s)"* — the FIELD gate — so a suite written that way passes and **keeps passing with the
+tenant gate deleted**. The attack therefore targets `trade` (floor-tier, non-PII), and **A3
+asserts the field gate is OPEN**, so the suite fails loudly instead of going vacuous if that ever
+changes.
+
+It also seeds its **own** tenant-scoped catalog entity with `min_role='tenant_member'`, because
+`report_catalog_fields.min_role` is nullable on `development` and `_bulk_data_role_meets_min`
+fails **closed** on NULL — inheriting the platform entry would silently reinstate the field gate
+as the refusal reason under a fresh CI replay.
+
+**Negative control (the point):** disabling *only* the row gates fails 7 of 16, including B3 where
+the victim row is **actually overwritten cross-tenant**. Every control still passes, so the
+failures are specific to the tenant gates. 16/16 pass against the real engine.
+
+### 9.2 The bulk-data engine was never rebuildable from source — crm7#1453
+
+Found by suite 46's **first CI run**, not by review. `20260806280000_data_change_sets.sql` aborts
+on every fresh replay at `relation "public.audit_events" does not exist`. psql autocommits per
+statement, so it leaves **partial schema**: `data_change_sets` created, `data_change_set_items`
+absent, and RLS + all five policies + all grants (everything after line 116) never run. The
+`bulk_data_*` RPCs still CREATE cleanly — plpgsql bodies aren't resolved at definition time — and
+fail only at runtime.
+
+`audit_events` is created by a **pre-baseline** migration (stamped applied, never replays) and is
+**absent from the 2026-05-13 baseline dump**, so nothing in the tree could create it. Repaired by
+forward hotfix `20260807110000` — verified a byte-identical no-op on production (5 policies before
+and after, 0 diff rows) and verified to fix the replay: C10 now `Files=73, Tests=948, Result: PASS`.
+
+**Every prior green C10 run was green over a schema where this engine was half-missing.** The suite
+failing on its first run was the gate working.
+
+### 9.3 33 tables live but unrebuildable — reported, not fixed
+
+The same sweep found **33** tables that exist in production but are created by neither the baseline
+nor any post-baseline migration. 30 of 33 have zero rows; only 5 are referenced from `src/`. So it
+is **latent**, not an outage — but any rebuilt environment lacks them. Clusters: `xero_*`, `r7_*`,
+`r80_*`, `pages`/`page_*`, `invoice_run*`.
+
+Durable fix is to **regenerate the baseline from live**, which retires the whole class, rather than
+33 per-table repairs. Deliberately **not** bundled into a test PR.
+
+*(A first pass reported 66; that was wrong — locale-dependent `comm` sorting plus a regex that
+missed pg_dump's quoted identifiers. Corrected to 33 and the method validated against a known true
+positive before reporting.)*
+
+### 9.4 Two CI gates that were not gating — crm7#1454, #1455, #1457
+
+- **Version collision.** Two lanes stamped `20260807100000` minutes apart. `schema_migrations` is
+  keyed on version and the applier **skips** a file whose version is recorded, so the second sorts
+  last and is *never applied — silently, with the run reporting success*. Renumbered (#1454), and
+  the check is now **enforced in CI** (#1455) rather than recommended.
+- **db-lint was skipping all four migration guardrails on PRs** (#1457). `actions/checkout` fetches
+  full history, then the step re-fetched the base with `--depth=1`, destroying the merge base;
+  `git diff BASE...HEAD` exits 128 and `set -euo pipefail` aborts, skipping every lint below. The
+  job goes red — which looks like the gate working — and since db-lint is **not a required check**
+  the PR merges anyway. That is how the collision reached `development`.
+
+**Still open, stated plainly:** DB Migration Lint remains a non-required check, so a genuine lint
+failure can still be merged past. That is a repo-settings change, not a file change.
+
+### 9.5 Correction to §8.3's framing
+
+§8.3 says the fix was "verified live, both directions". True, and insufficient — a one-time
+verification of a `SECURITY DEFINER` write path is exactly what §9.2 shows can rot invisibly. The
+standard this programme should hold is the one the catalogue side already met: **a permanent
+in-database guard, plus proof it fails when the thing it guards is removed.**
