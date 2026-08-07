@@ -223,14 +223,31 @@ jobs:
             echo "workdir=${{ matrix.scope }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Link Supabase project
-        working-directory: ${{ steps.resolve-dir.outputs.workdir }}
-        run: |
-          supabase link --project-ref ${{ vars.SUPABASE_PROJECT_ID }}
+      # `supabase link` is deliberately NOT used here.
+      #
+      # Its only purpose in this job was to bind the project ref, but on the way
+      # it fetches the project's API keys — and on 2026-08-07 the CLI began
+      # rejecting the response outright:
+      #
+      #   failed to get api keys: SchemaError(Expected a string matching the
+      #   RegExp ...) at [2]["inserted_at"]
+      #
+      # The CLI validates `inserted_at` against a strict RFC3339 pattern and a
+      # key row now carries a format it will not accept. Nothing on our side
+      # changed: the run 8 minutes earlier was green on the same pinned
+      # `version: latest`. Every edge-function deploy in the estate was blocked
+      # by a field this job never reads.
+      #
+      # `functions deploy` takes --project-ref directly and authenticates with
+      # SUPABASE_ACCESS_TOKEN, so the link step — and its dependency on an
+      # unrelated API-keys payload — is not needed at all.
 
       - name: Deploy all Edge Functions in scope
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
         shell: bash
+        env:
+          # Was supplied implicitly by the removed `supabase link` step.
+          SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
         run: |
           FUNCTIONS_DIR="supabase/functions"
 
@@ -266,7 +283,7 @@ jobs:
             fi
 
             echo "--- Deploying: $fn_name $DEPLOY_FLAGS ---"
-            if supabase functions deploy "$fn_name" $DEPLOY_FLAGS; then
+            if supabase functions deploy "$fn_name" --project-ref "$SUPABASE_PROJECT_ID" $DEPLOY_FLAGS; then
               echo "✓ $fn_name deployed successfully"
               DEPLOYED=$((DEPLOYED + 1))
             else
@@ -382,6 +399,7 @@ jobs:
 
       - name: Link project and list functions
         run: |
-          supabase link --project-ref "${SUPABASE_PROJECT_ID}"
+          # No `link` here either — same api-keys SchemaError, and this job
+          # only needs to read a list.
           echo "=== Currently deployed edge functions ==="
-          supabase functions list
+          supabase functions list --project-ref "${SUPABASE_PROJECT_ID}"
