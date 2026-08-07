@@ -603,3 +603,83 @@ failure can still be merged past. That is a repo-settings change, not a file cha
 verification of a `SECURITY DEFINER` write path is exactly what §9.2 shows can rot invisibly. The
 standard this programme should hold is the one the catalogue side already met: **a permanent
 in-database guard, plus proof it fails when the thing it guards is removed.**
+
+---
+
+## 10. Delivery record — 2026-08-07 (data-platform lane)
+
+All nine phases executed. Eleven migrations applied and verified against the **live catalogue**,
+never against their own files. Every completion test that could be run has been run. What
+follows records what shipped, and — more usefully — the defects that only surfaced because
+something was actually executed.
+
+### 10.1 What shipped
+
+| Phase | Delivered | Proof |
+|---|---|---|
+| P1 | `add_tenant_field_definition` repointed at `tenant_field_definitions`; `min_role` backfilled + `NOT NULL` + `CHECK` + fail-**closed**; `custom_fields` table renamed | **Completion test as written**: added a field through the inline widget on live `crm.crm7.app` and watched it render. Row confirmed in the database with `created_by` = the signing user |
+| P2 | Catalogue **23 → 84 entities**, 229 → 1,208 fields, 34 → 109 joins. 6.3% → 23% of 363 tables. The `r7_*` ATS line went 0% → catalogued | Engine returns real rows from newly-catalogued entities as a signed-in user with RLS on; `gto_compliance_standards` returns **17 of 34**, i.e. the tenant predicate is applied |
+| P3 | pgTAP **suite 47** — the five persistence surfaces accept a row | **Executed**, 20/20, live *and* in CI's fresh-replay C10 |
+| P4 | Demo Organisation seeded (3 hosts, 6 contacts, 4 apprentices, 6 people, 5 placements, 7 timesheets, ATS rows) | Leak check 0; a query aimed at a non-member tenant is refused `42501` at tenant **selection**, before any row |
+| P5 | Sub-org gap documented **in** `_bulk_data_write_authority`'s own comment (D1: defer + document) | Reads as deliberate, with what the eventual change must ship with |
+| P6 | `workers` retired | The holding lane's gate re-run **verbatim** → 0, and re-asserted **at apply time** |
+| P7 | D3 ruled **hand-curated**; propose → draft → developer-approves path built | Draft is invisible to **both** the read and the write engine; approve is developer-only; double-approve refused |
+| P8 | `xero_connection_health` view | Both live connections now report `never_synced` instead of looking connected |
+| P9 | Tier surfaces analysed | See 10.3 — my headline finding here was **wrong**, and the retraction is the record |
+
+### 10.2 The defects that only executing found
+
+Each of these passed every static gate available.
+
+- **`min(uuid)` does not exist in Postgres.** It sat in a branch taken by *every* live call, so the
+  RPC would have failed 100% of the time — silent data loss traded for a total outage. It passed
+  `CREATE FUNCTION`, typecheck, four migration linters, the pre-commit hook and a written spec
+  review. **A plpgsql body is not semantically checked until it runs**, so applying a function
+  migration proves only that it *parses*.
+- **A regression I caused.** `min_role` has **two** interpreters. I updated the read gate and not
+  the write gate, flipping bulk import/update from allow-all to deny-all. Caught by a test's
+  *control* step, not its attack — without it I would have recorded "cross-tenant write refused"
+  as a pass while nothing could be written at all. **A dead engine refuses attacks perfectly.**
+- **A replay would have aborted.** `DROP IF EXISTS` on the old signature plus a bare `CREATE`
+  fails `42723` on re-run. The file's own header had asserted it was replay-safe.
+- **The e2e fixture had never existed**, for three independent reasons: below `MIGRATION_FLOOR`,
+  an INSERT omitting a `NOT NULL` `field_key`, and a `dotenv` import that is not a dependency.
+  None was ever observed because nothing had executed the chain — **a file that cannot run never
+  gets its second bug found.**
+- **The fixture seeder repointed the ordinary-user identity.** It wrote fixture A into the
+  *unsuffixed* `CRM7_E2E_EMAIL`, read by `auth.setup.ts` and 16 specs, so every run aimed them at
+  the cross-tenant *attacker*. A live probe then spent an hour mutating one account while
+  authenticating as another. **A test that silently changes who it is testing is worse than one
+  that fails** — it still looks convincing.
+- **`replica` mode hollows a trigger assertion.** The pgTAP harness sets
+  `session_replication_role = 'replica'`, which disables every ordinary trigger. Suite 47's
+  catalogue assertion would have passed because the gate *never ran*. Fixed, plus a control
+  proving the trigger is armed.
+
+### 10.3 Corrections to this document and to me
+
+- **§7's premise on P0.1 was too generous.** "562 fields exist via one path" implied the surviving
+  path was proven. All 562 rows were written in *one second* by a migration with `created_by` NULL —
+  **neither** add-field path had ever produced a user-created row.
+- **§P7's figure was wrong.** It recorded "24 of 44 schema-builder entities (55%) can never be
+  reported on". Live: 45 entities, 19 already reportable under the plural table name, 9 fixable
+  immediately, 17 needing a semantic alias nobody has written down.
+- **D4 could not be answered as written.** "The most restrictive value that keeps the field usable"
+  did not exist: `is_gto_staff` reads `org_members`, which holds 3 rows. The obvious reading would
+  have denied 3 of 6 live users every field *while reading like a security improvement*. A
+  `tenant_member` floor tier was added.
+- **I filed a P0 that was wrong, twice over.** "RBAC is inert — 330 of 331 routes developer-only."
+  I had misread the code (`portal_role` is read **first**; I saw only the fallback branch) **and**
+  my live proof moved two variables in one statement. Retracted in full. Confirmed afterwards by
+  real sign-in: a single-membership user with a NULL tenant pin and no bypass role reaches the page.
+  A lane's wrong finding costs a cycle; one filed as a blocker tells everyone else to stop looking.
+
+### 10.4 Deliberately not done
+
+- **The two tombstones** (`workers_legacy_unused`, `custom_fields_legacy_unused`) are renamed, not
+  dropped. The rename already buys what the drop was for — a missed reader fails **loudly** at
+  `42P01` instead of silently reading an empty table, which is the exact defect that left
+  `worker_name` blank on 13 customer-facing quotes for a month. The drop is irreversible and needs
+  a human.
+- **The RBAC/`org_members` posture** — who may author reporting data — is a security-posture
+  ruling, not an engineering fix. Evidence filed, nothing patched.
