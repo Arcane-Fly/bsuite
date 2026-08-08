@@ -511,11 +511,41 @@ without knowing the table name (F-21 — otherwise "findability" is done by addi
   one developer account has zero `org_members` rows. pgTAP fixture per membership shape:
   user_tenants-only, org_members-only, both, neither. Must stay a live table read — **never**
   cache a tier into a JWT claim.
-- **T1b.5 · Cross-tenant developer access is ACT-AS, not membership (F-03).** The engine
-  refuses any tenant the caller is not a member of, and developers are members of 3 of 7.
-  `platform_admin_acting_as` already exists, is already gated, and `auth_tenant_id()` already
-  makes acting-as *replace* rather than add. **Do not backfill `user_tenants`** — that would
-  silently grant membership in every RLS policy across all six apps.
+- **T1b.5 · Developer reads all, edits all — operator ruling 2026-08-08, and it costs more
+  than the previous draft assumed.**
+
+  > *"developer reads all. edits all. elects which what and scope."*
+
+  The previous draft resolved F-03 with acting-as, one tenant at a time. **That is not "reads
+  all" and the ruling overrides it.**
+
+  Measured after the ruling: the engine's step-0 gate refuses any tenant the caller is not a
+  member of (developers are members of 3 of 7) — but that is only the outer layer. **Of the 84
+  catalogued entities, exactly 1 has a SELECT policy admitting a platform developer.** The
+  other 83 block cross-tenant reads at the RLS layer, *underneath* the engine. Because the
+  engine is INVOKER, relaxing step 0 alone would return zero rows. This capability has never
+  been built.
+
+  Three routes, and the ruling picks the third:
+
+  | Route | Verdict |
+  |---|---|
+  | Backfill `user_tenants` membership for developers in all 7 | **No.** Grants developers access under *every* policy in the shared database — conduit, throughput, braden, BSU, R80.4 — far beyond this tool, and makes a developer indistinguishable from an ordinary member in the audit trail. |
+  | Flip the engine to SECURITY DEFINER | **No.** S-07 — the single most likely route to a cross-tenant leak. |
+  | **Add an explicit `OR is_platform_developer()` clause to the SELECT policy on each of the 83 catalogued tables** | **Yes.** Explicit, auditable per table, one reviewable migration, and it grants exactly the named scope and nothing wider. |
+
+  Note this is **not** the thing S-07 warns against. S-07 is about *per-grant dynamic filters*
+  needing rows RLS denies. This is one fixed, known predicate applied mechanically — the safe
+  branch of the same fork, and the one the security review explicitly recommended taking
+  ("one table, one migration" rather than changing the engine's security context).
+
+  The write path needs the same treatment, and `_bulk_data_write_authority` must gain the
+  developer branch alongside it — "edits all" is half the ruling.
+
+  **Accept:** the developer login lists 7 tenants and **reads and writes a row in each**, on
+  the deployed build. Plus a pgTAP assertion per catalogued entity that a non-developer in
+  tenant A still gets zero rows from tenant B — shown failing with the tenant clause removed.
+  The developer clause must never widen anyone else.
 - **T1b.6 · Client gates in all six apps (F-06)**, not just crm7: BSU `AuthContext` /
   `platformRole` / `isPlatformOperator`, conduit, throughput, braden. BSU still treats
   `tester` as developer-equivalent and 2 accounts hold it.
@@ -528,8 +558,9 @@ without knowing the table name (F-21 — otherwise "findability" is done by addi
   only then drop, gated by a CI grep for the identifier across every submodule.
 
 **Done when:** three real logins land on the right surface with the right nav, **and the
-developer login lists 7 tenants and reads a row from each** (F-22 — "lands on the right
-surface" is passable today; the tenant count is not). Plus pgTAP with each assertion shown
+developer login lists 7 tenants and reads *and writes* a row in each** (F-22 — "lands on the
+right surface" is passable today; the tenant count is not, and per the 2026-08-08 ruling the
+write half is not optional). Plus pgTAP with each assertion shown
 failing when its guard is removed, using a **named** negative-control mechanism per guard
 (transaction-scoped `ALTER POLICY`, `SET LOCAL ROLE`) and asserting
 `session_replication_role = 'origin'` at test start — otherwise the harness property behind
@@ -628,6 +659,14 @@ Nav from the other apps; BSU developer console deep-link; conduit `r7_*` entitie
 **Acceptance: none defined; not v1.**
 
 ## §4 — What needs you
+
+> **These also live in plain language, in a file you can open, at
+> [`20260808-operator-decision-register-1.00W.md`](./20260808-operator-decision-register-1.00W.md)** —
+> including a key to what T1/T2/T3 actually mean. That file is the readable copy and the one
+> to work from; agent memory is a mirror of it, not the other way round.
+>
+> *(This exists because the register was previously kept in agent memory, which the operator
+> cannot read. A decision queue nobody can open is not a queue.)*
 
 Format as you asked: the decision, why, and what informed it.
 
