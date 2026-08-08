@@ -62,6 +62,41 @@ what they do not hold.
 
 ---
 
+## What has actually SHIPPED (2026-08-08)
+
+Merged to `development`, all checks green. This is the "decision 1" work — the
+live security holes — plus two defects found while testing.
+
+| PR | What it closed |
+|---|---|
+| [crm7#1486](https://github.com/GaryOcean428/crm7/pull/1486) | The **phantom "1 descendant org"**. You have zero sub-orgs; the page invented one |
+| [crm7#1488](https://github.com/GaryOcean428/crm7/pull/1488) | **All three live security holes** from decision 1 — self-promotion, the shadowable sensitivity flag, and the world-readable custom fields |
+| [crm7#1489](https://github.com/GaryOcean428/crm7/pull/1489) | The **save engine**: a forgeable audit trail, an undo that could hit someone else's edit, a tenant check that could be raced, and error messages that leaked another client's data |
+| [crm7#1491](https://github.com/GaryOcean428/crm7/pull/1491) | Renumbering, after two of the above collided with other teams' work |
+
+**A fourth hole was found and closed on the way:** an ordinary signed-in user could
+**set their own subscription tier**. The guard that protects the developer flags covers
+only those two fields — nothing was watching billing. Nothing in any of the six apps
+writes those fields from the browser, so closing it cost nothing.
+
+### Two things worth knowing about how that went
+
+**The first version of the security fix did not work, and the tests caught it.**
+Revoking permission on *specific columns* does nothing while a permission on the *whole
+table* exists — so the fix was cosmetic and the old trigger was still the only thing
+standing there, which was the exact problem being fixed. Four test assertions went red in
+CI and forced the real fix. Without those assertions it would have merged looking correct.
+
+**One mistake was mine and is worth recording.** Before merging I ran a check for whether
+another team had claimed the same migration number. It printed a warning. The merge went
+ahead anyway, because I had written the check and the merge as one command — so the merge
+never actually depended on the check's answer. *A check whose result nothing acts on is
+not a gate; it is a printout.* Nothing was lost (the affected step runs from `main`, and
+none of this had reached `main`), and it is corrected — but it is the same shape as the
+"1 descendant org" bug fixed that morning: a guard written correctly that could not fire.
+
+---
+
 ## Everything is filed
 
 Nothing below lives only in this document. The work is tracked:
