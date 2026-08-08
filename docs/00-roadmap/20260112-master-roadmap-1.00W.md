@@ -85,10 +85,42 @@
 
 - N-CRIT phases 1–3 complete on main (hierarchy, manual %, MAPD badge)
 - N6 Sydney pre-flight (dry-run evidence — operator-gated cutover Wed)
+- **Data Workspace program — PLANNED, red-teamed twice, awaiting operator gates.**
+  Plan: [`20260808-data-workspace-implementation-plan-1.00W.md`](./20260808-data-workspace-implementation-plan-1.00W.md).
+  Answers the standing "Airtable-style reports and data manipulation" ask. Key finding:
+  `/settings/data` and `/admin/data` **already exist**, are nav-registered and wired to the
+  bulk-write engine — and have never been used (`data_change_sets` = 0). Ruling: build into
+  those, **no new `/data` route**. Blocked on OP-E..OP-I in `bsuite_operator_tasks` rev 3.
 
 ---
 
 ## Planned — NOW (week 1: live bugs + hygiene)
+
+### N7. Data-workspace T1a — live security posture (parent/crm7) — **verified live defects, S**
+
+Split out of the data-workspace plan on Round 2's recommendation so it does not wait behind a
+multi-week authz refactor. All three verified directly against production, none dependent on
+the rest of that program:
+
+- **N7.1** `authenticated` **and `anon`** hold column-level `UPDATE` on
+  `profiles.platform_role` / `profiles.is_super_admin`; the only UPDATE policy is
+  `auth.uid() = id` with **no column restriction**. Sole control is
+  `trg_guard_profiles_privileged_columns` at `tgenabled='O'` — does not fire under
+  `session_replication_role='replica'`. Fix: `REVOKE` both columns + `ENABLE ALWAYS`.
+  Round 2 verified **no client code in any of the six apps writes `profiles`**, so the revoke
+  breaks no supported path.
+- **N7.2** `report_catalog_fields` has **no unique index** on `(entity_id, column_name)` while
+  its sibling `report_catalog_entities` has both partial uniques; the write policy admits
+  `is_gto_staff` and the resolver prefers the tenant row — so a staff user can shadow a
+  platform field row with `is_pii=false` and unmask all 39 PII fields. Fix: the two partial
+  uniques + narrow the policy to `is_gto_admin`.
+- **N7.3** All **22** catalogued `custom_fields` JSONB columns are `is_filterable`,
+  `is_pii=false`, `min_role='tenant_member'` — including `apprentices`, `whs_incidents`,
+  `r7_candidates`. Any tenant member can read the whole blob today. Fix: `is_filterable=false`.
+
+**Accept:** self-promotion as a disposable account fails, **and still fails with the trigger
+disabled** (proving the revoke, not the trigger, is the control); duplicate catalogue field
+row raises `23505`. Each shown failing first.
 
 ### N-CRIT. R8 apprentice rate correctness epic (R80.3) — **live money-wrongness in production quotes**
 - **Evidence (user PACT check 2026-07-27):** under-21 1st-year carpentry apprentice, residential, no underground → Fair Work PACT **$17.22/hr**; R8 shows **$23.47/hr** (~36% high). Charge quotes built on this overcharge hosts.
