@@ -97,6 +97,40 @@ none of this had reached `main`), and it is corrected — but it is the same sha
 
 ---
 
+## The spreadsheet now exists — go and look
+
+**`/admin/data` → the new "Browse" tab.** Pick a data type, see your rows straight
+away, click a cell, change it, undo it.
+
+That is the thing you have been asking for, and it is the first time this estate
+has had it. It is deliberately narrow — no filters or saved views in that first
+slice, and it is switched on for your developer login only until the permissions
+product exists. But the loop works end to end.
+
+**Why the earlier pages felt so bad, precisely:** they never showed you data.
+Both opened on an empty "choose a data type" box and then asked you to upload a
+file or build a query. One is an import wizard, the other a query console.
+Airtable opens showing you a table; those opened showing you a form. That was
+the whole gap, and no amount of renaming would have closed it — which is what
+your ten minutes proved.
+
+### Also shipped since the last update
+
+| What | Why it matters to you |
+|---|---|
+| **Developer reads all, edits all** | Your ruling. It had never been built — of 84 data types, **not one** let a platform developer read another organisation's rows. Now all of them do, and the query engine lets you through. |
+| **The sub-org that did not exist** | The page claimed "1 descendant org". You have none. It was counting your own organisation. |
+| **The false capability badge** | It claimed you could read and change any organisation's data. The database refused that on 83 of 84 data types. Rather than softening the words, the capability was built — so the claim is now true. |
+| **Alarms** | `/admin/observability`. Every failure in this area was silent: a refusal and an empty table looked identical. The database was already recording every blocked attempt to grant yourself developer access, and **nothing had ever read that table.** |
+| **Blank row numbers** | When a bulk edit rejected a row, "which row?" came back empty, and multi-batch imports were writing nonsense row numbers into the error log. |
+
+### Two more security holes closed on the way
+
+- An ordinary signed-in user could **set their own subscription tier**. The guard protecting the developer flags covered only those two fields — nothing was watching billing.
+- Two duplicate admin functions with the same meaning have become one. A second one was calling a third from inside its body, where nothing tracks the dependency — deleting it would have broken tenant switching at runtime rather than at deploy.
+
+---
+
 ## Everything is filed
 
 Nothing below lives only in this document. The work is tracked:
