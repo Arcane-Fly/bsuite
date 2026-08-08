@@ -26,7 +26,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_FILE = REPO_ROOT / "docs" / "dashboard" / "data" / "dashboard-data.json"
 
-SUBMODULES = ["crm7", "conduit", "business-suite-unified", "R80.3", "braden", "throughput"]
+SUBMODULES = ["crm7", "conduit", "business-suite-unified", "R80.4", "braden", "throughput"]
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> str | None:
@@ -157,12 +157,20 @@ def update_summary_truth(data: dict) -> None:
     # with a multi-repo query fails on this org ("repositories cannot be
     # searched") — the per-repo `gh issue list` loop is the verified source
     # (returns exactly 85 on 2026-07-28).
+    #
+    # R80.4 replaced R80.3 as the rate engine on 2026-08-06. This list still
+    # named R80.3 until 2026-08-08, which meant the dashboard counted 7 issues
+    # on a SUPERSEDED repo and counted ZERO from the live engine. It never
+    # errored: `_run` swallows failures and the caller keeps the prior value
+    # (see the module docstring), so a dead repo name degrades silently into a
+    # frozen number rather than a visible break. If a repo is renamed again,
+    # fix it HERE — a stale name here is invisible by construction.
     bsuite_repos = [
         "bsuite",
         "crm7",
         "conduit",
         "business-suite-unified",
-        "R80.3",
+        "R80.4",
         "braden",
         "throughput",
     ]

@@ -89,7 +89,7 @@ When concluding a development cycle or major task, follow this strict sequence:
 
 ## Context
 
-BSuite is a multi-project workspace with five web applications: business-suite-unified (portal), crm7 (CRM), conduit (ATS), braden (corporate site), and R80.3 (wage calculator). All share Supabase, TypeScript strict mode, React, TailwindCSS, and Zustand.
+BSuite is a multi-project workspace with six web applications: business-suite-unified (portal), crm7 (CRM), conduit (ATS), braden (corporate site), R80.4 (wage calculator) and throughput (idea management). All share Supabase, TypeScript strict mode, React, TailwindCSS, and Zustand.
 
 ## Code Generation Rules
 
@@ -131,7 +131,7 @@ Do not generate regex for parsing structured data. Use:
 
 ## Theme
 
-### Webapps (business-suite-unified, crm7, conduit, R80.3, throughput)
+### Webapps (business-suite-unified, crm7, conduit, R80.4, throughput)
 
 Use `@bsuite/theme@0.3.3+` with OKLCH role tokens:
 - Primary: `--role-primary` / Electric Blue `oklch(0.546 0.215 262.9)`
@@ -157,7 +157,7 @@ Uses corporate branding — NOT the D2C theme:
 
 | Package | npm | Consumers |
 |---------|-----|-----------|
-| `@bsuite/charge-calc` | `^0.1.0` | CRM7, R80.3 |
+| `@bsuite/charge-calc` | `^0.1.0` | CRM7, R80.4 |
 | `@bsuite/nav-core` | `^0.1.0` | braden |
 
 **Rules:**
@@ -192,7 +192,10 @@ Status: W=Working, D=Draft, R=Review, A=Approved, F=Frozen
 
 - **conduit** uses Next.js 16 App Router — server components by default, `'use client'` only when needed
 - **crm7** has AI features via `@ai-sdk/react` — never hardcode API keys
-- **R80.3** wage calculations are compliance-critical — always test with known correct values
+- **R80.4** wage calculations are money-affecting — an arithmetic error changes what a real person
+  is paid and what a host is charged. Always test with known correct values. Note the framing: the
+  engine does arithmetic on values the GTO entered. It does not determine entitlements and the
+  platform takes no position on the law (operator RULING 0.1 / 0.3 / 9.1, 2026-08-08)
 - **braden** has strict CSP headers — don't weaken without approval
 
 
@@ -306,7 +309,7 @@ Reminder template (paste into every issue body, every plan front-matter):
 ## 10. Roadmap Dashboard Update Protocol (FF-DASHBOARD-20260508)
 
 **Live URL**: https://garyocean428.github.io/bsuite/dashboard/
-**Source of truth**: `docs/dashboard/data/dashboard-data.json` (in the **bsuite** parent repo) + every `docs/plans/**/*.md` across the parent and all 6 submodules (crm7, conduit, business-suite-unified, R80.3, braden, throughput).
+**Source of truth**: `docs/dashboard/data/dashboard-data.json` (in the **bsuite** parent repo) + every `docs/plans/**/*.md` across the parent and all 6 submodules (crm7, conduit, business-suite-unified, R80.4, braden, throughput).
 **Refresh script**: `python3 docs/dashboard/refresh-data.py > docs/dashboard/data/dashboard-data.json`
 **Inline script**: `bash docs/dashboard/inline-data.sh` (re-inlines JSON into `index.html` for self-contained rendering)
 
