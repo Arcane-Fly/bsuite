@@ -62,6 +62,45 @@ what they do not hold.
 
 ---
 
+## Everything is filed
+
+Nothing below lives only in this document. The work is tracked:
+
+| Issue | What it is |
+|---|---|
+| [crm7#1478](https://github.com/GaryOcean428/crm7/issues/1478) | **T1a** — the three live security holes in decision 1 |
+| [crm7#1479](https://github.com/GaryOcean428/crm7/issues/1479) | **T2** — fix the save engine |
+| [crm7#1477](https://github.com/GaryOcean428/crm7/issues/1477) | **T3** — the actual spreadsheet |
+| [bsuite#1833](https://github.com/GaryOcean428/bsuite/issues/1833) | **T1b** — the admin tiers + "developer reads all, edits all" |
+| [crm7#1481](https://github.com/GaryOcean428/crm7/issues/1481) | **T4** — who can see and edit what |
+| [crm7#1482](https://github.com/GaryOcean428/crm7/issues/1482) | **T5** — alarms |
+| [crm7#1480](https://github.com/GaryOcean428/crm7/issues/1480) | The two false claims found on the data pages |
+| [crm7#1483](https://github.com/GaryOcean428/crm7/issues/1483) | RULING 10.2 — the interpretation surface |
+
+---
+
+## T0 is ANSWERED — the pages are a form, not a grid
+
+You opened both. The hypothesis that they were merely badly *named* is **refuted**, and
+that is the useful outcome — it kills the cheap fix and confirms the real work.
+
+**Neither page ever shows you your data.** Both open on an empty "Choose an entity"
+dropdown. To get anywhere you must already know which of 84 entities you want, pick it
+blind, and then either upload a file or build a query. One is an import wizard; the other
+is a query console. Airtable opens showing you a table. These open showing you a form.
+
+Two things on those screens are also false, both verified:
+
+- **"1 descendant org"** — there are zero. Every tenant has no parent. The function counts
+  the root itself and the page reads that as a sub-org. That page's own header says the
+  banner is hidden when empty, citing your instruction not to fake that dimension — but the
+  result is never empty, so the guard never fires.
+- **"You may read and change data for any tenant on the platform"** — the database refuses
+  this on 83 of the 84 data types. The badge claims the capability your ruling requires;
+  the capability has not been built.
+
+---
+
 ## Decisions still sitting with you
 
 ### 1 · Ship the live security fixes now, ahead of everything?  *(most time-sensitive)*

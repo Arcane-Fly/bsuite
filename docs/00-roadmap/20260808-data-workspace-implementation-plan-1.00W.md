@@ -376,6 +376,23 @@ gate and the enterprise tier read `org_members.gto_role`. Verified: one develope
 
 ## §3 — Revised task breakdown
 
+### Tracked issues
+
+Every task below is filed. The issue is the unit of work; this document is the reasoning
+behind it.
+
+| Task | Issue | What it is, in plain words |
+|---|---|---|
+| T1a | [crm7#1478](https://github.com/GaryOcean428/crm7/issues/1478) | Three live security holes. Ships alone, ahead of everything |
+| T2 | [crm7#1479](https://github.com/GaryOcean428/crm7/issues/1479) | Fix the save engine before building on it |
+| T3 | [crm7#1477](https://github.com/GaryOcean428/crm7/issues/1477) | **The actual spreadsheet.** The headline |
+| T1b | [bsuite#1833](https://github.com/GaryOcean428/bsuite/issues/1833) | The admin tiers, and "developer reads all, edits all" |
+| T4 | [crm7#1481](https://github.com/GaryOcean428/crm7/issues/1481) | Who can see and edit what — you elect which, what and scope |
+| T5 | [crm7#1482](https://github.com/GaryOcean428/crm7/issues/1482) | Alarms. Every failure here is currently silent |
+| — | [crm7#1480](https://github.com/GaryOcean428/crm7/issues/1480) | Two false claims on the data pages, found while testing |
+| — | [crm7#1483](https://github.com/GaryOcean428/crm7/issues/1483) | RULING 10.2 — the operator-authored interpretation surface |
+
+
 **Round 2 changed the ordering, and this is the most consequential edit in the document.**
 
 The previous version put the whole tier refactor first. Round 2's verdict on that: *"T1
