@@ -132,7 +132,7 @@ See AGENTS.md at project root for full project overview, quality standards, and 
 | crm7 | React + Vite | AI SDK, PWA, sql.js |
 | conduit | Next.js 16 | AI SDK, TanStack Query, SSR |
 | braden | React + Vite | Corporate branding, CSP |
-| R80.3 | React + Vite | PWA, PDF export, Fair Work API |
+| R80.4 | React + Vite | PWA, PDF export, Fair Work API |
 | mobile | Expo / React Native | Camera, biometrics, notifications |
 
 ## AI Model Configuration (Vercel AI Gateway)
@@ -155,8 +155,19 @@ CRM7 and Conduit use Vercel AI Gateway for model routing. **Do NOT revert these 
 - TypeScript strict mode everywhere
 - pnpm as package manager (never npm/yarn)
 - Vitest for all projects, including conduit (Next.js)
-- D2C Neon Electric theme for business-suite-unified, crm7, conduit, R80.3, and throughput. Use `@bsuite/theme@0.3.3+`, OKLCH role tokens, and purple `--role-error` / `--role-destructive`.
-- Braden is a separate corporate brand, but not exempt from token architecture: it imports `@bsuite/theme/braden-css`, uses OKLCH Braden Red/Gold/Navy role bindings, and keeps semantic error/destructive purple.
+- D2C Neon Electric theme for business-suite-unified, crm7, conduit, R80.4, and throughput. Use
+  `@bsuite/theme@0.10.5+` and OKLCH role tokens. **`--role-error` / `--role-destructive` are RED**
+  (`--neon-electric-red`), not purple — see the invariant below. Tenant override on these two is
+  BLOCKED by `BrandingProvider`.
+- **The invariant is separation, not a fixed hue:** error must be maximally separated from *primary*
+  under deuteranopia and protanopia. D2C's primary is blue, so D2C's error is red. Purple and indigo
+  are quarantined from D2C semantics — purple measured ΔE 0.006 against primary blue, i.e. the
+  destructive colour and the primary action colour were the same swatch. (Operator ruling
+  2026-08-02; this file asserted the overturned purple rule until 2026-08-08.)
+- Braden is a separate corporate brand, but not exempt from token architecture: it imports
+  `@bsuite/theme/braden-css` and uses OKLCH Braden Red/Gold/Navy role bindings. Braden's *primary*
+  is red, so it solves the same invariant the other way — its `--role-error` / `--role-destructive`
+  bind to `--braden-indigo` (`packages/theme/src/css/braden.css:117-118`).
 - Never add raw hex/RGB/HSL, `text-white`, or `text-black` in consumer UI. Dark-surface text uses the softened OKLCH scale capped at L=0.94; inverse text on fills uses explicit `text-on-*` tokens.
 - Never commit API keys or secrets
 - Conventional commits: `type(scope): description`

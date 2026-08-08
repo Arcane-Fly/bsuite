@@ -8,7 +8,7 @@ Parent repository for the Business Suite platform. Each application lives in its
 |-----|------|-------------|-----|
 | **CRM7** | `crm7/` | CRM & apprenticeship management | [crm.crm7.app](https://crm.crm7.app) |
 | **Conduit** | `conduit/` | Recruitment ATS | [conduit.crm7.app](https://conduit.crm7.app) |
-| **R8** | `R80.3/` | Calculation engine (charge rates, payroll) | [r8.crm7.app](https://r8.crm7.app) |
+| **R8** | `R80.4/` | Calculation engine (charge rates, payroll) | [r8.crm7.app](https://r8.crm7.app) |
 | **BSU** | `business-suite-unified/` | Admin dashboard & OAuth provider | [suite.crm7.app](https://suite.crm7.app) |
 | **Braden** | `braden/` | Corporate website | [braden.com.au](https://www.braden.com.au) |
 | **Throughput** | `throughput/` | Idea management platform (Groq AI assist) | [ideas.crm7.app](https://ideas.crm7.app) |
@@ -17,7 +17,7 @@ Parent repository for the Business Suite platform. Each application lives in its
 >
 > 1. **BOOT Assessment Engine** (`@bsuite/charge-calc/boot`) — full Fair Work Act s.193 Better Off Overall Test (comparator, failure detector, GTO variant, F17 export).
 > 2. **20-component AI Assistant suite** in CRM7 (`src/components/ai/`, Cmd+K palette, Vercel AI SDK 6); plus AI in Conduit (`/api/ai/chat`) and Throughput (Groq GPT-OSS-120B).
-> 3. **Visual schema builder** (`@bsuite/schema-builder`) — React Flow ER editor with real-time Supabase sync, used by CRM7, BSU, Conduit, R80.3.
+> 3. **Visual schema builder** (`@bsuite/schema-builder`) — React Flow ER editor with real-time Supabase sync, used by CRM7, BSU, Conduit, R80.4.
 > 4. **Offline-first PWA** in CRM7 — SQLite WASM + IndexedDB + bi-directional Supabase sync with conflict resolution.
 > 5. **Multi-tenant sub-organisation hierarchy + runtime OKLCH branding** in BSU (`src/pages/Admin/SubOrganizations.tsx`, `BrandingProvider`).
 
@@ -114,7 +114,7 @@ bsuite/
 ├── .github/workflows/      # CI/CD for the parent repo
 ├── crm7/                   # CRM7 submodule
 ├── conduit/                # Conduit recruitment ATS submodule
-├── R80.3/                  # R8 calculation engine submodule
+├── R80.4/                  # R8 calculation engine submodule
 ├── business-suite-unified/ # BSU admin dashboard submodule
 ├── braden/                 # Corporate website submodule
 ├── throughput/             # Throughput idea management platform submodule
@@ -124,4 +124,4 @@ bsuite/
 └── supabase/               # Shared Supabase config (if any)
 ```
 
-All six apps (CRM7, Conduit, R80.3, BSU, Braden, Throughput) are registered as git submodules in [`.gitmodules`](.gitmodules).
+All six apps (CRM7, Conduit, R80.4, BSU, Braden, Throughput) are registered as git submodules in [`.gitmodules`](.gitmodules).
