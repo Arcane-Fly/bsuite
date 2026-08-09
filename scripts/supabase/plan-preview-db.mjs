@@ -125,7 +125,20 @@ function toMarkdown(plan) {
     '|---|---:|---:|---:|---|',
   ];
   for (const scope of plan.scopes) {
-    lines.push(`| ${scope.id} | ${scope.changed ? 'yes' : 'no'} | ${scope.migration_count} | ${scope.function_count} | \`${scope.workdir}\` |`);
+    // `?` not 0 when the submodule is not in this checkout — see the scopes map above.
+    const mig = scope.migration_count === null ? '?' : scope.migration_count;
+    const fns = scope.function_count === null ? '?' : scope.function_count;
+    lines.push(`| ${scope.id} | ${scope.changed ? 'yes' : 'no'} | ${mig} | ${fns} | \`${scope.workdir}\` |`);
+  }
+  const unseen = plan.scopes.filter((s) => s.contents_visible === false).map((s) => s.id);
+  if (unseen.length > 0) {
+    lines.push('');
+    lines.push(
+      `> \`?\` = this checkout cannot see inside ${unseen.join(', ')}. The workflow checks out with `
+      + '`submodules: false` on purpose (the job runs PR-controlled scripts and must not hold the '
+      + 'cross-repo PAT), so a submodule\'s migration count is unknown here — **not zero**. '
+      + 'A scope is still flagged Changed when its pointer moves.',
+    );
   }
   lines.push('');
   if (plan.changed_files.length > 0) {
@@ -202,10 +215,30 @@ function resolveScopeDirs(scope) {
   };
 }
 
+// "DECLARED to own no database" and "I cannot see its files" are different facts, and
+// conflating them is how this plan lied on its first real run.
+//
+// The workflow checks out with `submodules: false`, deliberately: the job runs
+// PR-controlled scripts and must not hold the cross-repo PAT. So in CI every submodule
+// working directory is EMPTY. An earlier revision of this file inferred "owns no
+// database" from `existsSync(migrationsDir)`, which is true for R80.4 and equally true
+// for crm7 — a repo with 510 migrations. The plan posted on bsuite#1845 accordingly
+// reported `crm7: changed no, 0 migrations`, which is not a smaller version of the truth,
+// it is the opposite of it.
+//
+// So the two are separated:
+//   declaredNoDatabase — the scope SAYS it owns nothing (has_database: false). Trust it.
+//   contentsVisible    — the files are actually here. Absent in CI by design.
+// `changed` keys off the DECLARATION, never off visibility, so a scope is still flagged
+// when its gitlink moves in a checkout that cannot see inside it. Counts key off
+// VISIBILITY and are reported as null — rendered `?` — rather than 0, because a zero in
+// a migration-count column reads as "nothing to apply" and would restore the same lie in
+// a quieter font.
 const scopes = config.scopes.map((scope) => {
   const { migrationsDir, functionsDir, migrationsRel, functionsRel } = resolveScopeDirs(scope);
-  const hasDatabase = migrationsDir !== null && existsSync(migrationsDir);
-  const migrations = hasDatabase
+  const declaredNoDatabase = scope.has_database === false;
+  const contentsVisible = migrationsDir !== null && existsSync(migrationsDir);
+  const migrations = contentsVisible
     ? execFileSync('find', [migrationsRel, '-maxdepth', '1', '-type', 'f', '-name', '*.sql'], { cwd: root, encoding: 'utf8' })
       .split('\n')
       .filter(Boolean)
@@ -215,22 +248,26 @@ const scopes = config.scopes.map((scope) => {
       .split('\n')
       .filter(Boolean)
     : [];
-  if (!hasDatabase) {
-    // Matches the applier's ::notice:: so the two read the same in a log.
-    console.error(`[plan-preview-db] scope '${scope.id}' owns no database objects (no ${migrationsRel ?? 'migrations directory'}) — skipping.`);
+  if (declaredNoDatabase) {
+    // Wording matches the applier's ::notice:: so the two read the same in a log.
+    console.error(`[plan-preview-db] scope '${scope.id}' owns no database objects — skipping.`);
+  } else if (!contentsVisible) {
+    console.error(`[plan-preview-db] scope '${scope.id}': ${migrationsRel} not present in this checkout (submodules: false) — counts reported as unknown, NOT zero.`);
   }
   return {
     id: scope.id,
     workdir: scope.workdir,
     migrations_dir: scope.migrations_dir,
     functions_dir: scope.functions_dir,
-    // A scope that owns no database can never require a preview database, however its
-    // pointer moves. Without this, R80.4's gitlink bumping on a promotion would flip
-    // requires_preview_database to true and demand a preview DB for a wage calculator
-    // with no schema — the conservative gitlink rule in scopeChanged() overshooting.
-    changed: hasDatabase && (options.all || globalScopeChange || explicitChangedScopes.has(scope.id) || scopeChanged(scope, changedFiles)),
-    migration_count: migrations.length,
-    function_count: functions.length,
+    contents_visible: declaredNoDatabase ? true : contentsVisible,
+    // Keyed off the DECLARATION, not off visibility. A scope that declares no database
+    // can never require a preview database however its pointer moves — otherwise R80.4's
+    // gitlink bumping on a promotion would demand a preview DB for a wage calculator with
+    // no schema. Every other scope stays eligible even when its files are not checked out.
+    changed: !declaredNoDatabase
+      && (options.all || globalScopeChange || explicitChangedScopes.has(scope.id) || scopeChanged(scope, changedFiles)),
+    migration_count: declaredNoDatabase ? 0 : (contentsVisible ? migrations.length : null),
+    function_count: declaredNoDatabase ? 0 : (contentsVisible ? functions.length : null),
   };
 });
 
