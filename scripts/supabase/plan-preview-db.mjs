@@ -79,12 +79,38 @@ function normalizeChangedFile(file, sourceRepo) {
 }
 
 function scopeChanged(scope, changedFiles) {
+  const migrationsRel = scope.migrations_dir || (scope.workdir && scope.workdir !== '.' ? `${scope.workdir}/supabase/migrations` : 'supabase/migrations');
+  const functionsRel = scope.functions_dir || (scope.workdir && scope.workdir !== '.' ? `${scope.workdir}/supabase/functions` : 'supabase/functions');
   const prefixes = [
-    `${scope.migrations_dir}/`,
-    `${scope.functions_dir}/`,
+    `${migrationsRel}/`,
+    `${functionsRel}/`,
     scope.workdir === '.' ? 'supabase/config.toml' : `${scope.workdir}/supabase/config.toml`,
   ];
-  return changedFiles.some((file) => prefixes.some((prefix) => file.startsWith(prefix) || file === prefix));
+  if (changedFiles.some((file) => prefixes.some((prefix) => file.startsWith(prefix) || file === prefix))) {
+    return true;
+  }
+
+  // A SUBMODULE POINTER BUMP IS THE ONLY WAY MIGRATIONS REACH PRODUCTION, and until this
+  // was added the planner could not see one.
+  //
+  // On a parent development -> main promotion, `git diff --name-only` does not list
+  // `crm7/supabase/migrations/*.sql`. It lists the gitlink, one entry, exactly `crm7`.
+  // Every prefix above is therefore missed, so the planner reported
+  //     requires_preview_database: false, changed_scopes: []
+  // on bsuite#1845 — a pull request that applies twenty migrations. Measured, not
+  // reasoned: the diff for that range returns R80.4, braden, business-suite-unified,
+  // conduit, crm7, throughput and nothing under any supabase/ path.
+  //
+  // A crash is loud. This was worse: a confident, green "no preview database required"
+  // over a batch nobody had planned. Treating the gitlink as a change to the scope is
+  // deliberately CONSERVATIVE — a pointer move may or may not carry migrations, and the
+  // parent checkout cannot always resolve the submodule's objects to find out. Planning
+  // a scope that turns out to be unchanged costs a wasted plan; missing one costs an
+  // unplanned production apply.
+  if (scope.workdir && scope.workdir !== '.') {
+    return changedFiles.some((file) => file === scope.workdir);
+  }
+  return false;
 }
 
 function toMarkdown(plan) {
@@ -130,25 +156,79 @@ const globalScopeChange = changedFiles.some((file) => (
   || file === 'supabase/config.toml'
 ));
 const explicitChangedScopes = new Set(options.changedScopes);
+
+// A scope may legitimately own no database at all. R80.4 is the live example: it is a
+// wage calculator with no supabase/ directory and no @supabase dependency, and
+// 4c29c213 deliberately DELETED its migrations_dir/functions_dir keys so the applier
+// would stop failing the whole run over a path that never existed.
+//
+// That fix was made in the applier and never propagated here. The applier decides by
+// asking the filesystem (supabase-migrate.yml:252 — "has no $WORKDIR/supabase/migrations
+// directory"), which works whether or not the key is present. This planner instead read
+// the KEY, so `resolve(root, undefined)` threw
+//     TypeError: The "paths[1]" argument must be of type string. Received undefined
+// killing the run before it could post a plan comment. Two consumers of one manifest,
+// one convention, only one of them taught it.
+//
+// `has_database: false` was recorded on that scope at the same time and, until now, had
+// ZERO readers anywhere in the tree — a flag that documented an intention without
+// enforcing it. It is honoured here, so it is a control rather than a note.
+//
+// Resolution order, deliberately the applier's convention first so the two agree:
+//   1. has_database === false            -> no database, skip, say so
+//   2. explicit *_dir key when present   -> use it
+//   3. else derive <workdir>/supabase/*  -> the applier's rule
+//   4. derived path absent               -> no database, skip, say so
+// A scope with neither an explicit key nor a workdir is a malformed manifest, and that
+// fails loudly by name instead of as a TypeError from node:path.
+function resolveScopeDirs(scope) {
+  if (scope.has_database === false) {
+    return { migrationsDir: null, functionsDir: null, migrationsRel: null, functionsRel: null };
+  }
+  if (!scope.migrations_dir && !scope.workdir) {
+    throw new Error(
+      `migration-scopes.json: scope '${scope.id ?? '(no id)'}' has neither migrations_dir nor workdir, `
+      + 'so its migrations directory cannot be resolved. Set migrations_dir, set workdir, '
+      + 'or mark the scope "has_database": false if it owns no database objects.',
+    );
+  }
+  const migrationsRel = scope.migrations_dir || `${scope.workdir}/supabase/migrations`;
+  const functionsRel = scope.functions_dir || `${scope.workdir}/supabase/functions`;
+  return {
+    migrationsRel,
+    functionsRel,
+    migrationsDir: resolve(root, migrationsRel),
+    functionsDir: resolve(root, functionsRel),
+  };
+}
+
 const scopes = config.scopes.map((scope) => {
-  const migrationsDir = resolve(root, scope.migrations_dir);
-  const functionsDir = resolve(root, scope.functions_dir);
-  const migrations = existsSync(migrationsDir)
-    ? execFileSync('find', [scope.migrations_dir, '-maxdepth', '1', '-type', 'f', '-name', '*.sql'], { cwd: root, encoding: 'utf8' })
+  const { migrationsDir, functionsDir, migrationsRel, functionsRel } = resolveScopeDirs(scope);
+  const hasDatabase = migrationsDir !== null && existsSync(migrationsDir);
+  const migrations = hasDatabase
+    ? execFileSync('find', [migrationsRel, '-maxdepth', '1', '-type', 'f', '-name', '*.sql'], { cwd: root, encoding: 'utf8' })
       .split('\n')
       .filter(Boolean)
     : [];
-  const functions = existsSync(functionsDir)
-    ? execFileSync('find', [scope.functions_dir, '-mindepth', '1', '-maxdepth', '1', '-type', 'd'], { cwd: root, encoding: 'utf8' })
+  const functions = functionsDir !== null && existsSync(functionsDir)
+    ? execFileSync('find', [functionsRel, '-mindepth', '1', '-maxdepth', '1', '-type', 'd'], { cwd: root, encoding: 'utf8' })
       .split('\n')
       .filter(Boolean)
     : [];
+  if (!hasDatabase) {
+    // Matches the applier's ::notice:: so the two read the same in a log.
+    console.error(`[plan-preview-db] scope '${scope.id}' owns no database objects (no ${migrationsRel ?? 'migrations directory'}) — skipping.`);
+  }
   return {
     id: scope.id,
     workdir: scope.workdir,
     migrations_dir: scope.migrations_dir,
     functions_dir: scope.functions_dir,
-    changed: options.all || globalScopeChange || explicitChangedScopes.has(scope.id) || scopeChanged(scope, changedFiles),
+    // A scope that owns no database can never require a preview database, however its
+    // pointer moves. Without this, R80.4's gitlink bumping on a promotion would flip
+    // requires_preview_database to true and demand a preview DB for a wage calculator
+    // with no schema — the conservative gitlink rule in scopeChanged() overshooting.
+    changed: hasDatabase && (options.all || globalScopeChange || explicitChangedScopes.has(scope.id) || scopeChanged(scope, changedFiles)),
     migration_count: migrations.length,
     function_count: functions.length,
   };
