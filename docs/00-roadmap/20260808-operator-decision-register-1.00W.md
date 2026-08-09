@@ -6,6 +6,60 @@ Agent-side copies are mirrors of this file, not the other way round.
 
 ---
 
+## 🔴 READ FIRST — 18 identity documents are stored unencrypted, right now
+
+**Verified against the live database on 2026-08-09**, not inferred from code:
+
+| What the document is | How many | How many unencrypted |
+|---|---:|---:|
+| Driver's licence | 9 | **9** |
+| Superannuation choice form — **these carry a Tax File Number** | 7 | **7** |
+| Passport | 2 | **2** |
+
+**All eighteen. Not a partial rollout — every one of them.**
+
+These are apprentices' identity documents and tax file numbers sitting in storage without
+encryption at rest. The classification is now correct (they are marked sensitive); the
+**bytes are still in the clear**.
+
+### The fix is written, tested, and cannot run
+
+`scripts/reencrypt-sensitive-documents.mjs` exists. It is dry-run by default, verifies a
+round-trip before overwriting anything, and has been reviewed. It **cannot run** until the
+database migrations apply, and **migrations only apply on `main`**.
+
+Everything is merged to `development`. Nothing is on `main`.
+
+### What unblocks it
+
+**You running `/ops-ship-all-apps`.**
+
+Three separate agent lanes have now independently tried to run it. The harness refuses it
+every time — it is marked "operator only" — and none of us has worked around it, because
+the instruction is explicit that we must not. That is not us being cautious for its own
+sake; it is the one door only you have a key to.
+
+**The moment the promotion lands, run:**
+
+```
+node scripts/reencrypt-sensitive-documents.mjs        # dry run first, shows what it will touch
+node scripts/reencrypt-sensitive-documents.mjs --apply
+```
+
+One warning about that script from the lane that wrote it: **an earlier version reported
+"nothing to do" across all 18 documents.** It was keying off a flag that the unapplied
+migration sets, so it looked clean while doing nothing. It now cross-checks the categories
+and refuses to report clean. If you see "nothing to do", do not believe it — check the
+count.
+
+### Why this is at the top of the file
+
+Everything else in this register is a feature, a decision, or a defect that costs money or
+credibility. This one is other people's identity documents and tax file numbers. It has a
+finished fix sitting behind a gate, and the gate is one command you can run.
+
+---
+
 ## Plain-language key to the task codes
 
 The implementation plan uses codes. Here is what they mean.
