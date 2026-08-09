@@ -15,6 +15,17 @@ on:
       - 'packages/schema-builder/supabase/**'
       - 'scripts/supabase/**'
       - '.github/workflows/supabase-preview-db.yml'
+      # A submodule POINTER bump changes ONLY the gitlink path, so every
+      # nested glob above misses it — which is why this workflow has never
+      # fired on a development -> main promotion, the one PR shape where a
+      # preview plan matters most. supabase-migrate.yml hit the identical
+      # blindness and was fixed (gap-assessment T1-01); this one was not.
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
   repository_dispatch:
     types: [supabase-preview-plan]
   workflow_dispatch:

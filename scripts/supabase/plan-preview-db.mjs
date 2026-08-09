@@ -80,11 +80,21 @@ function normalizeChangedFile(file, sourceRepo) {
 
 function scopeChanged(scope, changedFiles) {
   const prefixes = [
-    `${scope.migrations_dir}/`,
-    `${scope.functions_dir}/`,
+    // A scope may legitimately own NO database objects — R80.4 is exactly
+    // that, and its manifest entry carries no migrations_dir/functions_dir.
+    // Interpolating undefined produced the prefix "undefined/", which matches
+    // nothing, so the bug was invisible here and fatal at resolve() below.
+    scope.migrations_dir ? `${scope.migrations_dir}/` : null,
+    scope.functions_dir ? `${scope.functions_dir}/` : null,
     scope.workdir === '.' ? 'supabase/config.toml' : `${scope.workdir}/supabase/config.toml`,
-  ];
-  return changedFiles.some((file) => prefixes.some((prefix) => file.startsWith(prefix) || file === prefix));
+    // A submodule POINTER bump is a database change: the gitlink is the only
+    // path that moves, and every glob above is nested inside the submodule, so
+    // none of them ever match a promotion. This is the same blindness that
+    // once silently stopped the applier (supabase-migrate.yml, gap-assessment
+    // T1-01) — fixed there, never fixed here.
+    scope.workdir === '.' ? null : scope.workdir,
+  ].filter(Boolean);
+  return changedFiles.some((file) => prefixes.some((prefix) => file.startsWith(`${prefix}/`) || file === prefix));
 }
 
 function toMarkdown(plan) {
@@ -99,7 +109,10 @@ function toMarkdown(plan) {
     '|---|---:|---:|---:|---|',
   ];
   for (const scope of plan.scopes) {
-    lines.push(`| ${scope.id} | ${scope.changed ? 'yes' : 'no'} | ${scope.migration_count} | ${scope.function_count} | \`${scope.workdir}\` |`);
+    const count = (n) => (n === null
+      ? (scope.owns_database_objects ? 'not counted (submodule not checked out)' : 'owns none')
+      : String(n));
+    lines.push(`| ${scope.id} | ${scope.changed ? 'yes' : 'no'} | ${count(scope.migration_count)} | ${count(scope.function_count)} | \`${scope.workdir}\` |`);
   }
   lines.push('');
   if (plan.changed_files.length > 0) {
@@ -131,26 +144,41 @@ const globalScopeChange = changedFiles.some((file) => (
 ));
 const explicitChangedScopes = new Set(options.changedScopes);
 const scopes = config.scopes.map((scope) => {
-  const migrationsDir = resolve(root, scope.migrations_dir);
-  const functionsDir = resolve(root, scope.functions_dir);
-  const migrations = existsSync(migrationsDir)
+  // A scope with no migrations_dir owns no database objects (R80.4). Before
+  // this guard, resolve(root, undefined) threw ERR_INVALID_ARG_TYPE and killed
+  // the process on EVERY invocation — including --all — so the preview plan
+  // has never posted on any pull request, and the failure looked like the
+  // workflow simply not running.
+  const migrationsDir = scope.migrations_dir ? resolve(root, scope.migrations_dir) : null;
+  const functionsDir = scope.functions_dir ? resolve(root, scope.functions_dir) : null;
+  const migrations = migrationsDir && existsSync(migrationsDir)
     ? execFileSync('find', [scope.migrations_dir, '-maxdepth', '1', '-type', 'f', '-name', '*.sql'], { cwd: root, encoding: 'utf8' })
       .split('\n')
       .filter(Boolean)
     : [];
-  const functions = existsSync(functionsDir)
+  const functions = functionsDir && existsSync(functionsDir)
     ? execFileSync('find', [scope.functions_dir, '-mindepth', '1', '-maxdepth', '1', '-type', 'd'], { cwd: root, encoding: 'utf8' })
       .split('\n')
       .filter(Boolean)
     : [];
+  // The PR job checks out with `submodules: false` (deliberately — it runs
+  // PR-controlled scripts and must not carry the cross-repo PAT). So for a
+  // submodule scope the directory is simply ABSENT, and reporting
+  // `migration_count: 0` would state "this scope has no migrations" when the
+  // truth is "nobody counted". A denial, a skip and a genuine zero must never
+  // render identically.
+  const owns_migrations_dir = Boolean(scope.migrations_dir);
+  const counted = owns_migrations_dir && existsSync(migrationsDir);
   return {
     id: scope.id,
     workdir: scope.workdir,
-    migrations_dir: scope.migrations_dir,
-    functions_dir: scope.functions_dir,
+    migrations_dir: scope.migrations_dir ?? null,
+    functions_dir: scope.functions_dir ?? null,
+    owns_database_objects: owns_migrations_dir,
+    counted,
     changed: options.all || globalScopeChange || explicitChangedScopes.has(scope.id) || scopeChanged(scope, changedFiles),
-    migration_count: migrations.length,
-    function_count: functions.length,
+    migration_count: counted ? migrations.length : null,
+    function_count: counted ? functions.length : null,
   };
 });
 
