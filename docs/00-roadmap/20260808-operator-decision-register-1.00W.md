@@ -70,7 +70,105 @@ it — the earlier version of this section implied otherwise.
 
 ---
 
+## The self-promotion hole is closed. It went to production this morning.
+
+**2026-08-09, 02:40 UTC.** Under your ruling D-23 I pulled the privilege-escalation
+fix out of the twenty-one-migration bundle and shipped it on its own.
+
+Before: any signed-in person could give themselves platform-developer access by editing
+their own account record. One safeguard stood in the way, and it was the kind a
+technical session can step around.
+
+After, checked against the live database rather than the pipeline:
+
+| | Before | Now |
+|---|---:|---:|
+| Privileged fields a signed-in user could rewrite | 7 | **0** |
+| Fields a signed-in user may edit on their own record | all 21 | **14** |
+| Fields a signed-out visitor could rewrite | 21 | **0** |
+| The safeguard | skippable | **always on** |
+
+Nothing else applied with it. One migration, verified alone.
+
+**Nobody's ordinary work changed.** Before merging I checked every place in all six
+apps that writes to a user record — 19 of them — plus the five background jobs and the
+four database routines. None of them touches a field I removed. The tester-licence
+process still works, because it runs with elevated rights rather than a user's.
+
+---
+
+## Why nothing had reached the database for two days, and what I found looking
+
+Three separate pieces of the promotion machinery were broken, and all three were
+invisible for the same reason: **they only misbehave on a promotion, and promotions are
+rare.**
+
+1. The thing that applies database changes could not see a promotion at all. Fixed
+   earlier by another lane.
+2. The thing that previews what a promotion will do **crashed on every single run** —
+   not just promotions — so no pull request has ever received a preview. Then, once
+   fixed, it still answered *"no database changes required"* for a promotion carrying
+   twenty of them. Both closed.
+3. The check that compares safety scripts across repositories was **guaranteed to fail
+   on every promotion**, because it read the wrong branch. A check that is always red
+   when it matters is not a check. Closed.
+
+All three are now demonstrated working on a real promotion pull request, not argued.
+
+---
+
+## The remaining twenty: three of them would have caused harm
+
+I had a 33-agent audit read every file, then a second adversarial pass whose job was to
+prove the first wrong. Three findings survived, and all three are now fixed **before
+anything ran**:
+
+- One file would have **stopped the whole batch** at file six of twenty, tripping over a
+  single test record somebody made on 6 August. I narrowed the check rather than delete
+  the record. Renaming a table takes its contents with it; the record was never at risk
+  from the change, only from the obvious shortcut.
+- One file would have **published a list of your most sensitive documents**. It created
+  a report of files still stored unencrypted — 9 driver's licences, 2 passports and 7
+  superannuation forms carrying tax file numbers — and, as written, that report was
+  readable by anyone on the internet with the app's public key, without signing in. The
+  file exists to flag the gap. It would have advertised it.
+- One file had a window in which a **"restricted guest" permission would have granted
+  everything** — read, add and delete on every person record in the organisation —
+  because the switch was turned on 1,150 lines before the restriction it depends on. The
+  file's own written instruction forbade that ordering.
+
+Your D-29 ruling is what surfaced all three. Asking "which of these touches irreplaceable
+data, and what happens if it stops halfway" is the question that found them.
+
+**Verdict on your ruling: no migration in the batch destroys or damages irreplaceable
+data when it applies.** Your charge-rate trap was right and worth catching — a signed
+quote is evidence of an agreement, not a calculation to be re-run. There are 13 of them,
+plus 3 invoices and 5 invoice lines, and they are all read-only in this batch.
+
+## What I could not do
+
+**I cannot take a database backup, and I cannot prove one would restore.** The tools this
+session has do not offer it, and the only honest test of a restore is to perform one —
+which on your live database is not a test, it is the accident.
+
+So your D-31 is **not met**, and I am not going to write that it is. What I did instead:
+counted every irreplaceable record before the batch — **1,038 of them across 25 tables** —
+and wrote a checker that says plainly, afterwards, whether any went missing. That tells
+you *whether* you need a backup. It does not replace *having* one.
+
+To close D-31 properly someone needs to restore the most recent backup into a **separate
+copy — never over the live one** — and run that checker against it. Until somebody has
+actually done that, the backup is a belief.
+
+---
+
+
 ## Nothing I built this week is in the database yet
+
+> **Partly superseded, 2026-08-09 02:40 UTC.** The self-promotion hole named below
+> is now CLOSED in production — see the section above. The other four rows of that
+> table are still accurate: they remain merged and unapplied, pending your decision on
+> bsuite#1845.
 
 **Correction, 2026-08-09.** I told you three live security defects were closed and that the
 permission product, the interpretation surface and the developer-reads-all grant were
