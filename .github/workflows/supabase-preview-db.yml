@@ -15,6 +15,24 @@ on:
       - 'packages/schema-builder/supabase/**'
       - 'scripts/supabase/**'
       - '.github/workflows/supabase-preview-db.yml'
+      # The submodule GITLINKS, and they are not redundant with the globs above.
+      #
+      # On a development -> main promotion the parent's diff contains no file under any
+      # `<repo>/supabase/**` path. It contains one entry per moved submodule, and that
+      # entry is exactly `crm7` — the gitlink. None of the globs above can match it, so
+      # this workflow NEVER STARTED on a promotion PR. Measured on bsuite#1845: zero runs
+      # for head ac093b29, while the diff listed R80.4, braden, business-suite-unified,
+      # conduit, crm7 and throughput.
+      #
+      # A submodule pointer bump is the only mechanism by which migrations reach
+      # production, so the one PR shape that most needs a plan was the one shape that
+      # could not produce one.
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
   repository_dispatch:
     types: [supabase-preview-plan]
   workflow_dispatch:
