@@ -56,12 +56,36 @@ jobs:
       # That distinction is the whole point: a parity checker that reports
       # "in parity" because it could not see the other copy is the silent pass
       # it exists to prevent.
-      - name: Checkout crm7 (gated submodule)
+      # Read the gitlink the PR ACTUALLY carries, rather than pinning a branch.
+      #
+      # This was `ref: development`, which made the gate compare the parent's
+      # copy against crm7's DEVELOPMENT copy no matter what the PR was. On any
+      # PR targeting `main` those two diverge by construction — main has not
+      # received development's changes yet, that being the entire point of the
+      # promotion under review — so the gate was RED on every single
+      # development -> main promotion PR. A check that is guaranteed red
+      # exactly when someone is reviewing a promotion is not a gate; it is
+      # noise that trains people to merge past it. Observed on bsuite#1851,
+      # where the two committed copies were byte-identical at the gitlink and
+      # the gate still failed.
+      - name: Resolve the crm7 gitlink this PR carries
+        id: gitlink
+        run: |
+          set -euo pipefail
+          SHA=$(git ls-tree HEAD crm7 | awk '{print $3}')
+          if [ -z "$SHA" ]; then
+            echo "::error::could not read the crm7 gitlink from this tree — refusing to fall back to a branch, which is the defect this replaced"
+            exit 2
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "crm7 gitlink: $SHA"
+
+      - name: Checkout crm7 (gated submodule, at the gitlink)
         uses: actions/checkout@v4
         with:
           repository: GaryOcean428/crm7
           path: crm7
-          ref: development
+          ref: ${{ steps.gitlink.outputs.sha }}
           fetch-depth: 1
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
 
