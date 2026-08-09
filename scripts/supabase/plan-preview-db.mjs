@@ -125,7 +125,11 @@ function toMarkdown(plan) {
     '|---|---:|---:|---:|---|',
   ];
   for (const scope of plan.scopes) {
-    lines.push(`| ${scope.id} | ${scope.changed ? 'yes' : 'no'} | ${scope.migration_count} | ${scope.function_count} | \`${scope.workdir}\` |`);
+    const count = (n) => {
+      if (n !== null && n !== undefined) return String(n);
+      return scope.owns_database ? '**not counted** (submodule not in this checkout)' : 'owns none';
+    };
+    lines.push(`| ${scope.id} | ${scope.changed ? 'yes' : 'no'} | ${count(scope.migration_count)} | ${count(scope.function_count)} | \`${scope.workdir}\` |`);
   }
   lines.push('');
   if (plan.changed_files.length > 0) {
@@ -215,9 +219,19 @@ const scopes = config.scopes.map((scope) => {
       .split('\n')
       .filter(Boolean)
     : [];
-  if (!hasDatabase) {
-    // Matches the applier's ::notice:: so the two read the same in a log.
-    console.error(`[plan-preview-db] scope '${scope.id}' owns no database objects (no ${migrationsRel ?? 'migrations directory'}) — skipping.`);
+  // "owns none" and "not checked out" are different facts and must not print
+  // the same. This job checks out with `submodules: false` — deliberately, it
+  // runs PR-controlled scripts and must not carry the cross-repo PAT — so for
+  // every submodule scope the directory is simply ABSENT. Reporting
+  // `migration_count: 0` and "owns no database objects" then states that crm7
+  // has no migrations, when the truth is that nobody counted. On a promotion
+  // PR that is the single most misleading line the plan could print.
+  const ownsDatabase = migrationsRel !== null;
+  const counted = hasDatabase;
+  if (!ownsDatabase) {
+    console.error(`[plan-preview-db] scope '${scope.id}' owns no database objects — skipping.`);
+  } else if (!counted) {
+    console.error(`[plan-preview-db] scope '${scope.id}' NOT COUNTED — ${migrationsRel} is absent from this checkout (submodules: false). This is not "no migrations".`);
   }
   return {
     id: scope.id,
@@ -228,9 +242,23 @@ const scopes = config.scopes.map((scope) => {
     // pointer moves. Without this, R80.4's gitlink bumping on a promotion would flip
     // requires_preview_database to true and demand a preview DB for a wage calculator
     // with no schema — the conservative gitlink rule in scopeChanged() overshooting.
-    changed: hasDatabase && (options.all || globalScopeChange || explicitChangedScopes.has(scope.id) || scopeChanged(scope, changedFiles)),
-    migration_count: migrations.length,
-    function_count: functions.length,
+    // `ownsDatabase`, NOT `hasDatabase`. They differ in exactly the case that
+    // matters: `hasDatabase` also requires the directory to EXIST IN THIS
+    // CHECKOUT, and this job checks out `submodules: false`. So gating on it
+    // made every submodule scope report `changed: false`, and the plan printed
+    // "Requires preview DB: no" on a promotion carrying twenty migrations —
+    // reinstating, by a different route, the exact false-green this function
+    // was rewritten to remove.
+    //
+    // `ownsDatabase` is a MANIFEST fact and therefore checkout-independent,
+    // which is what a gate needs: R80.4 (no migrations dir declared) still
+    // cannot demand a preview database, and crm7 still can.
+    changed: ownsDatabase && (options.all || globalScopeChange || explicitChangedScopes.has(scope.id) || scopeChanged(scope, changedFiles)),
+    owns_database: ownsDatabase,
+    counted,
+    // null, not 0 — see the counted/ownsDatabase comment above.
+    migration_count: counted ? migrations.length : null,
+    function_count: counted ? functions.length : null,
   };
 });
 
