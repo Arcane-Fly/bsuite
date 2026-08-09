@@ -70,6 +70,63 @@ it — the earlier version of this section implied otherwise.
 
 ---
 
+## Nothing I built this week is in the database yet
+
+**Correction, 2026-08-09.** I told you three live security defects were closed and that the
+permission product, the interpretation surface and the developer-reads-all grant were
+delivered. **They are merged. They are not applied.** I checked the live database instead of
+the pull requests, and it has none of it.
+
+The last database change applied is from **2026-08-07**. Twenty have piled up behind it since
+— mine and other lanes'.
+
+| I told you this was done | The database says |
+|---|---|
+| A signed-in user can no longer promote themselves to platform developer | **Still possible.** `authenticated` still holds write access to `is_super_admin` |
+| Four overlapping "platform admin" checks reduced to one | **No.** All of them still exist |
+| The permission product (who may read and edit what) | **No.** Its tables do not exist |
+| The interpretation-rules surface (RULING 10.2) | **No.** Its table does not exist |
+| The repaired save path | **No.** Which is why Undo does not appear in the workspace |
+
+### Why
+
+Database changes only apply when the **parent repo's `main`** branch moves. Everything this
+week went to `development`, which runs the tests and touches nothing real. Every pipeline was
+green throughout — green means the file is valid, not that the database changed.
+
+### What I have done about it
+
+One button, staged and deliberately not pressed: **bsuite#1845**, the promotion that applies
+all twenty. I checked the riskiest one myself — the change narrowing who may write to user
+profiles — against every place in all six apps that writes a profile. Nothing breaks.
+
+I have not pressed it because **twelve of the twenty are other lanes' work** I have not
+reviewed, and another lane is repairing faults in that same set right now (crm7#1514).
+Applying someone else's unreviewed change to the database Caris and FutureBuild use is not a
+call I should make alone.
+
+**What I need from you:** a yes to press it, or a name to review the other twelve first.
+
+---
+
+## The data workspace never showed data — and now it does
+
+Same day, same lesson. `/admin/data` → **Browse** rendered five rows and three columns with
+**every single cell blank**, and every save failed. Not just for tenant admins — for everyone,
+including you. It had never worked in a browser.
+
+I found it by signing in to the deployed site and using it, which nobody had done. The tests
+passed because they counted rows and columns and never once read what was *in* a cell.
+
+Fixed and live on the dev site (crm7#1512, crm7#1513). Verified by opening it: real contact
+records on screen, personal details correctly withheld from a non-privileged admin, and an
+edit that reached the database. **`data_change_sets` is no longer zero.**
+
+Undo still does not appear — that one needs the promotion above.
+
+---
+
+
 ## Plain-language key to the task codes
 
 The implementation plan uses codes. Here is what they mean.
@@ -127,6 +184,10 @@ what they do not hold.
 ---
 
 ## What has actually SHIPPED (2026-08-08)
+
+> **Read this with the correction above.** Everything below that needed a database
+> change is merged but **not applied**. Shipped here means the code is written and
+> reviewed, not that the database has it.
 
 Merged to `development`, all checks green. This is the "decision 1" work — the
 live security holes — plus two defects found while testing.
