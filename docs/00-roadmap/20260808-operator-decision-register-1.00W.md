@@ -6,57 +6,67 @@ Agent-side copies are mirrors of this file, not the other way round.
 
 ---
 
-## 🔴 READ FIRST — 18 identity documents are stored unencrypted, right now
+## Encryption on document categories — a decision for you, not an alarm
 
-**Verified against the live database on 2026-08-09**, not inferred from code:
+**Correction (2026-08-09).** An earlier version of this section led with "🔴 18 identity
+documents are stored unencrypted, right now" and treated it as a live breach that had to be
+remediated before other work could proceed. **That framing was wrong and it was mine.**
 
-| What the document is | How many | How many unencrypted |
+Your **RULING 14.1** says it plainly: *encryption is an option on the document category,
+configured by whoever owns the category.* Whether a category requires encryption at rest is a
+**super-admin decision**, not something an agent gets to declare an incident about and gate
+work behind. Two lanes described it as a live exposure; I amplified that rather than checking
+it against your own ruling.
+
+It also sat badly with **RULING 0.3** — the platform holds your determination, it does not
+reach one. Calling a configuration choice a breach is the platform taking a position.
+
+### The facts, with no verdict attached
+
+Measured against the live database on 2026-08-09:
+
+| Category | Documents | Without encryption at rest |
 |---|---:|---:|
-| Driver's licence | 9 | **9** |
-| Superannuation choice form — **these carry a Tax File Number** | 7 | **7** |
-| Passport | 2 | **2** |
+| Driver's licence | 9 | 9 |
+| Superannuation choice form *(carries a TFN)* | 7 | 7 |
+| Passport | 2 | 2 |
 
-**All eighteen. Not a partial rollout — every one of them.**
+These are facts. Whether that is correct is yours to decide, per category.
 
-These are apprentices' identity documents and tax file numbers sitting in storage without
-encryption at rest. The classification is now correct (they are marked sensitive); the
-**bytes are still in the clear**.
+### What was actually built for this
 
-### The fix is written, tested, and cannot run
+The three-state category model shipped today (crm7#1505). Encryption is now a **per-category
+setting** alongside sensitivity, exactly as 14.1 specified — so this stops being a one-off
+question and becomes a setting a super admin holds and can change.
 
-`scripts/reencrypt-sensitive-documents.mjs` exists. It is dry-run by default, verifies a
-round-trip before overwriting anything, and has been reviewed. It **cannot run** until the
-database migrations apply, and **migrations only apply on `main`**.
+Two properties worth knowing, because they are not symmetrical:
 
-Everything is merged to `development`. Nothing is on `main`.
+- **Changing a sensitivity flag is retroactive.** Effective sensitivity is *computed* from the
+  category plus any per-document override, never copied onto the row, so there is no stale
+  copy to go and fix.
+- **Changing an encryption flag is not.** A flag cannot reach into bytes already written. Files
+  already stored stay as they are until something re-writes them. That gap is now *named* by
+  the `documents_pending_encryption` view rather than being invisible.
 
-### What unblocks it
+### If you decide a category should be encrypted
 
-**You running `/ops-ship-all-apps`.**
-
-Three separate agent lanes have now independently tried to run it. The harness refuses it
-every time — it is marked "operator only" — and none of us has worked around it, because
-the instruction is explicit that we must not. That is not us being cautious for its own
-sake; it is the one door only you have a key to.
-
-**The moment the promotion lands, run:**
+`crm7/scripts/reencrypt-sensitive-documents.mjs` applies it to files already stored. Dry-run by
+default, round-trip verified before it overwrites anything. It needs the migrations applied
+first, because it reads the category settings those migrations create.
 
 ```
-node scripts/reencrypt-sensitive-documents.mjs        # dry run first, shows what it will touch
+node scripts/reencrypt-sensitive-documents.mjs           # shows what it would touch
 node scripts/reencrypt-sensitive-documents.mjs --apply
 ```
 
-One warning about that script from the lane that wrote it: **an earlier version reported
-"nothing to do" across all 18 documents.** It was keying off a flag that the unapplied
-migration sets, so it looked clean while doing nothing. It now cross-checks the categories
-and refuses to report clean. If you see "nothing to do", do not believe it — check the
-count.
+**Do not trust a clean result without checking the count.** An earlier version of that script
+printed "nothing to do" across all eighteen files — it was reading a flag the unapplied
+migration sets, so it looked finished while doing nothing.
 
-### Why this is at the top of the file
+### What this is not
 
-Everything else in this register is a feature, a decision, or a defect that costs money or
-credibility. This one is other people's identity documents and tax file numbers. It has a
-finished fix sitting behind a gate, and the gate is one command you can run.
+It is not a blocker on anything. Nothing is waiting on it, and no other work was gated behind
+it — the earlier version of this section implied otherwise.
 
 ---
 
