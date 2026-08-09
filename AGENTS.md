@@ -3,7 +3,7 @@
 Canonical instructions for every AI agent working in this repo (Claude Code, Copilot, Cursor,
 Windsurf, Manus, Codex). These override default agent behaviour.
 
-Six apps — business-suite-unified, crm7, conduit, braden, R80.3, throughput — over one shared
+Six apps — business-suite-unified, crm7, conduit, braden, R80.4, throughput — over one shared
 Supabase backend (`tuybltdrdefjblnplpqo`). Each is a submodule that deploys standalone from its own
 repo, so **Vercel never sees this parent directory**.
 

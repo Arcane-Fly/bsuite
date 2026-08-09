@@ -101,6 +101,38 @@ function columnAfterBoundary(toks, boundaryIdx) {
   return bare(col)
 }
 
+/**
+ * True when toks[i] sits inside a GRANT or REVOKE statement.
+ *
+ * REFERENCES is BOTH a foreign-key clause and a privilege name, and this lint only
+ * cares about the first. In
+ *     REVOKE TRUNCATE, TRIGGER, REFERENCES ON public.x FROM anon, authenticated;
+ * the token before REFERENCES is a comma, which Form B below treats as a column
+ * boundary, so the lint read the privilege keyword as a column and demanded
+ *     CREATE INDEX ... ON <table> (references)
+ * It failed crm7#1536 that way — a migration that creates no foreign key at all and
+ * could not have satisfied the rule. Without this guard, every future migration that
+ * grants or revokes the REFERENCES privilege is unmergeable.
+ *
+ * Walks back to the start of the current statement and checks the leading keyword.
+ */
+function inGrantOrRevoke(toks, i) {
+  // Scan back to the start of this statement and look for GRANT or REVOKE ANYWHERE in
+  // it, not just as the leading keyword. Checking only toks[0] was not enough — the
+  // self-test caught that
+  //     ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ... REFERENCES ON TABLES FROM anon
+  // begins with ALTER, and that is precisely the form 20260809150000 uses to stop the
+  // privilege being re-granted on every new table.
+  //
+  // No false negatives: a statement that creates a foreign key never also contains GRANT
+  // or REVOKE, because Postgres has no DDL form that mixes them.
+  for (let j = i - 1; j >= 0; j--) {
+    if (toks[j] === ';') return false
+    if (['GRANT', 'REVOKE'].includes(U(toks[j]))) return true
+  }
+  return false
+}
+
 /** Column names that gain a FOREIGN KEY in this file. */
 function fkColumns(toks) {
   const cols = new Set()
@@ -108,6 +140,7 @@ function fkColumns(toks) {
   const BOUND = new Set(['COLUMN', 'ADD', 'TABLE', '(', ','])
   for (let i = 0; i < toks.length; i++) {
     if (U(toks[i]) !== 'REFERENCES') continue
+    if (inGrantOrRevoke(toks, i)) continue   // a privilege, not a foreign key
 
     // Form A: ... FOREIGN KEY ( a, b ) REFERENCES ...
     if (toks[i - 1] === ')') {
@@ -188,6 +221,14 @@ function selfTest() {
     // ADD COLUMN IF NOT EXISTS must resolve to the real column, not "if"
     ['ALTER TABLE public.w ADD COLUMN IF NOT EXISTS o_id uuid REFERENCES public.p(id);', ['o_id']],
     ['ALTER TABLE public.w ADD COLUMN IF NOT EXISTS o_id uuid REFERENCES public.p(id);\nCREATE INDEX IF NOT EXISTS i ON public.w (o_id);', []],
+    // REFERENCES as a PRIVILEGE, not a foreign key (crm7#1536 false positive).
+    // Before the inGrantOrRevoke guard these produced a phantom column "references".
+    ['REVOKE TRUNCATE, TRIGGER, REFERENCES ON public.w FROM anon, authenticated;', []],
+    ['GRANT REFERENCES ON public.w TO some_role;', []],
+    ['ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE TRUNCATE, TRIGGER, REFERENCES ON TABLES FROM anon;', []],
+    // ...and the guard must not blind the lint to a REAL FK elsewhere in the same file
+    ['REVOKE REFERENCES ON public.w FROM anon;\nALTER TABLE public.w ADD COLUMN o_id uuid REFERENCES public.p(id);', ['o_id']],
+    ['REVOKE REFERENCES ON public.w FROM anon;\nALTER TABLE public.w ADD COLUMN o_id uuid REFERENCES public.p(id);\nCREATE INDEX i ON public.w (o_id);', []],
     // no FK at all
     ['CREATE INDEX i ON public.w (a);', []],
   ]

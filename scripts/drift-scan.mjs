@@ -102,6 +102,25 @@ function isSelfScanExcluded(file) {
   // Named explicitly rather than glob-excluding docs/: a document that
   // INSTRUCTS someone to use cookieStorage is real drift and must still fail.
   if (file === 'docs/20260427-conduit-auth-doctrine-investigation-v1.00W.md') return true;
+  // docs/recovered/ is a FROZEN ARCHIVE of superseded requirements documents,
+  // dated 2026-02 to 2026-03 and tracked (2026-08-08) under operator RULINGs 1.2
+  // and 1.3. Its contents are historical by declaration: every file is covered by
+  // docs/recovered/00-READ-THIS-FIRST-corpus-health.md, which states the corpus is
+  // UNTRUSTED until each document is verdicted against code (bsuite#1830).
+  //
+  // These documents necessarily name what was true when they were written —
+  // grok-4.1-fast-reasoning, the pre-2025-02-27 cookie-SSO pattern, Tailwind v3
+  // utilities. "Correcting" them would rewrite the record of what was decided and
+  // when, which is the same harm as deleting the conduit investigation above, and
+  // it is precisely what the R80.3 -> R80.4 sweep on this same PR deliberately did
+  // NOT do to the archived migration-scope entries.
+  //
+  // The boundary is unchanged from the note above: this is scoped to the archive
+  // directory ONLY. A LIVE doc anywhere else that instructs someone to use a
+  // retired model or a removed auth pattern is real drift and must still hard-fail.
+  // If material leaves this directory to become live guidance, it loses the
+  // exemption with it.
+  if (file.startsWith('docs/recovered/')) return true;
   return false;
 }
 
@@ -1073,6 +1092,31 @@ function selfTest() {
         "        storageKey: 'business_suite_auth',",
       ] },
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO') },
+    // docs/recovered/ — the frozen archive of superseded requirements docs, tracked
+    // 2026-08-08 under operator RULINGs 1.2/1.3. These four fixtures are the guard on
+    // that exclusion: it must silence the archive WITHOUT becoming a docs/ escape
+    // hatch. The archive necessarily names retired models and removed auth patterns
+    // because it records what was decided in 2026-02/03.
+    { name: 'SELF-SCAN — docs/recovered/ NOT flagged for a retired model (frozen archive)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'docs/recovered/20260228-conduit-ai-tools-plan-v1.00W.md': [
+        "| **Model** | `xai/grok-4.1-fast-reasoning` default |",
+      ] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — docs/recovered/ NOT flagged for removed cookie SSO (frozen archive)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'docs/recovered/20260301-phase1-coordination-plan.md': [
+        "        storageKey: 'business_suite_auth',",
+      ] },
+      expect: (hits) => hits.length === 0 },
+    { name: 'SELF-SCAN — a LIVE doc IS still flagged for the same retired model (archive exclusion is not a docs/ escape)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'docs/20260808-some-live-guide-v1.00W.md': [
+        "Use `xai/grok-4.1-fast-reasoning` as the default model.",
+      ] },
+      expect: (hits) => hits.some((h) => h.signal === 'STALE-GROK') },
+    { name: 'SELF-SCAN — a path merely CONTAINING "recovered" is still scanned (prefix-anchored, not substring)', framework: 'unknown', repoName: 'bsuite',
+      addedByFile: { 'docs/plans/recovered-work-plan-v1.00W.md': [
+        "Use `xai/grok-4.1-fast-reasoning` as the default model.",
+      ] },
+      expect: (hits) => hits.some((h) => h.signal === 'STALE-GROK') },
   ];
 
   let pass = 0, fail = 0;

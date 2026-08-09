@@ -1,0 +1,43 @@
+{
+  "captured_at": "2026-08-09T02:52:00Z",
+  "source": "live database tuybltdrdefjblnplpqo, before the bsuite#1845 batch",
+  "absent": [
+    "acknowledgements",
+    "collaborative_documents_legacy_unused"
+  ],
+  "counts": {
+    "document_metadata": 425,
+    "training_plan_units": 195,
+    "contacts": 79,
+    "people": 50,
+    "placements": 34,
+    "tenant_switch_audit": 30,
+    "clients": 24,
+    "data_change_sets": 21,
+    "apprentices": 20,
+    "training_plans": 19,
+    "data_change_set_items": 17,
+    "employers": 17,
+    "profiles": 14,
+    "sites": 14,
+    "timesheets": 14,
+    "charge_rate_quotes": 13,
+    "user_tenants": 13,
+    "training_contracts": 8,
+    "tenants": 7,
+    "communications": 5,
+    "invoice_line_items": 5,
+    "org_members": 5,
+    "signature_requests": 5,
+    "invoices": 3,
+    "collaborative_documents": 1,
+    "contracts": 0,
+    "document_access_log": 0,
+    "document_verification_events": 0,
+    "documents": 0,
+    "host_agreements": 0,
+    "host_contracts": 0,
+    "organisation_audit_events": 0,
+    "r7_offers": 0
+  }
+}

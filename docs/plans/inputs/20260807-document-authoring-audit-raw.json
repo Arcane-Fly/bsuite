@@ -1,0 +1,1137 @@
+{
+  "summary": "Estate-wide audit: document/template/email authoring, merge fields, .docx import, per-app capability",
+  "agentCount": 11,
+  "logs": [],
+  "result": {
+    "areas": [
+      {
+        "area": "crm7 Collaborative Documents (/documents/collaborative)",
+        "what_exists": [
+          {
+            "name": "Route registration",
+            "path": "crm7/src/App.tsx:2461-2478 (routes), :267 & :270 (lazy imports)",
+            "state": "working",
+            "detail": "wouter routes `/documents/collaborative/:id` (must precede `/documents/collaborative`) and `/documents/collaborative` both registered behind `ProtectedRoute` with `permission=\"view_documents\"`, lazy-loading `CollaborativeDocumentsList` and `CollaborativeDocumentDetail`. Nav entry at crm7/src/config/navigation.ts:252 ('Collaborative docs')."
+          },
+          {
+            "name": "List page — CollaborativeDocumentsList",
+            "path": "crm7/src/pages/documents/collaborative/index.tsx:33-187",
+            "state": "working",
+            "detail": "Tenant-scoped list via useCollaborativeDocuments() (TanStack Query). 'New document' dialog creates a row (title only) and navigates to /documents/collaborative/<id>. No formatting/preview affordances here — it's just a title + language row list."
+          },
+          {
+            "name": "Detail page — CollaborativeDocumentDetail",
+            "path": "crm7/src/pages/documents/collaborative/[id].tsx:70-308",
+            "state": "working",
+            "detail": "Renders title, a 'language' <Select> (markdown/plaintext/javascript/typescript/json/yaml/sql/html/css — [id].tsx:58-68), rename/delete dialogs, and the editor itself, all inside DraggableCardPage/CanvasCard grid cards."
+          },
+          {
+            "name": "Editor component — RealtimeMonaco",
+            "path": "crm7/src/components/realtime-monaco.tsx:12,31-59; imported at [id].tsx:54-56,242-252",
+            "state": "working",
+            "detail": "Import: `import { Editor } from '@monaco-editor/react';` (realtime-monaco.tsx:12). This is the Monaco code editor (VS Code's editor component), not TipTap/Slate/Lexical, and not a plain <textarea>. It is a syntax-highlighted CODE editor, NOT WYSIWYG — no toolbar, no rendering of markdown/HTML, no rich-text output. Selecting 'markdown' as the language only turns on markdown syntax highlighting in the raw-text pane; there is no separate preview pane anywhere in this component tree. Versions: @monaco-editor/react ^4.7.0, monaco-editor ^0.55.1 (package.json:77,196)."
+          },
+          {
+            "name": "Realtime CRDT binding — useConnectOnMount",
+            "path": "crm7/src/hooks/use-connect-on-mount.ts:44-144",
+            "state": "working",
+            "detail": "Real YJS CRDT, not aspirational: creates a `Y.Doc()`, wraps it in `SupabaseProvider(channel, doc, supabase, {awareness, persistence})` from @supabase-labs/y-supabase (package.json:113; vendored dist confirms the provider opens a Supabase Realtime broadcast channel, dist/index.mjs:314 `supabase.channel(this.channelName)`), and binds it to the Monaco model via y-monaco's `MonacoBinding` (line 121). Peer cursors get per-session OKLCH colors via Yjs awareness (lines 28-117) — this is genuine multi-user live sync, not a stub."
+          },
+          {
+            "name": "Persistence write path",
+            "path": "crm7/src/pages/documents/collaborative/[id].tsx:246-252 (persistence prop) -> @supabase-labs/y-supabase SupabasePersistence",
+            "state": "partial",
+            "detail": "Save path: `persistence={{ table: 'collaborative_documents', schema: 'public', roomColumn: 'id', stateColumn: 'body_yjs_state' }}` passed to RealtimeMonaco. The vendored y-supabase README (node_modules/@supabase-labs/y-supabase/README.md) confirms SupabasePersistence upserts base64-encoded YJS state to that column on a debounced timer (default storeTimeout: 1000ms) and loads it on mount. This is code-complete, real infrastructure — BUT live-DB verification (executed via Supabase MCP against project tuybltdrdefjblnplpqo) shows collaborative_documents has exactly ONE row, title 'Test Document', created 2026-08-06, and body_yjs_state IS NULL. So the only real row that exists has never had content actually synced/persisted through this path — either it was created and abandoned before any edit, or the persistence write has never fired successfully end-to-end. The wiring is real but unproven in production."
+          },
+          {
+            "name": "collaborative_documents table + RLS",
+            "path": "crm7/supabase/migrations/20260421200000_create_collaborative_documents_m4.sql:23-148",
+            "state": "working",
+            "detail": "Real, applied table. Columns: id (uuid PK, also the Realtime channel name 'doc:<id>'), tenant_id, title, body_yjs_state (text, base64 YJS state), owner_id, language, timestamps. RLS: any active tenant member can select/insert/update (collaborative editing), only owner can delete. Confirmed 1 live row via execute_sql against project tuybltdrdefjblnplpqo."
+          },
+          {
+            "name": "Metadata CRUD service/hooks",
+            "path": "crm7/src/services/collaborativeDocumentService.ts:1-117, crm7/src/hooks/useCollaborativeDocuments.ts:1-135",
+            "state": "working",
+            "detail": "Thin PostgREST CRUD for title/language/list/delete; explicitly does NOT touch body_yjs_state (that only flows through the YJS provider) — service.ts:1-11 docstring says so directly."
+          }
+        ],
+        "non_technical_user_can": "Go to /documents/collaborative, click 'New document', give it a title, and land on a Monaco CODE EDITOR pane (the same widget VS Code uses) with syntax highlighting only — no toolbar, no bold/italic/heading buttons, no image button, no table button, no live preview. To get bold text, a heading, or a table, the user must hand-type raw markdown (`**bold**`, `# Heading`, `| a | b |`) or raw HTML (if they switch the 'language' dropdown to html) into that plain-text pane, with nothing rendering it — worse than a markdown editor with a preview pane, because there is no preview at all. They can rename the doc, pick a 'language' (affects syntax coloring only), and delete it if they're the owner. If a second user opens the same URL at the same time, edits genuinely sync live (real YJS/Supabase Realtime CRDT, with colored peer cursors) — that part is real, not fake. There is no image upload anywhere in this surface.",
+        "gaps": [
+          "No WYSIWYG surface exists anywhere in crm7 today — grep of package.json and src/ found zero TipTap/Slate/Lexical/react-quill. Monaco is a code editor; markdown 'language' selection is syntax highlighting only, with no rendering/preview pane in the component tree ([id].tsx / realtime-monaco.tsx).",
+          "No image insertion capability (no upload button, no paste-image handler) anywhere in this feature.",
+          "No table-insert UI — a table can only be produced by hand-typing pipe-delimited markdown or raw <table> HTML with zero visual feedback.",
+          "The persistence path (body_yjs_state) is wired but unproven in production: the single live row has body_yjs_state = NULL, meaning no real document content has ever been confirmed to round-trip through SupabasePersistence in the live database.",
+          "Realtime collaboration itself (YJS + Supabase broadcast + awareness) is real, working infrastructure — the one part of this surface that is NOT aspirational — but it is currently bolted to a plain code editor, so 'collaboration' here means 'two people can watch each other type raw text/markup', not 'two people can co-edit a formatted document'."
+        ],
+        "reusable_assets": [
+          "YJS + Supabase Realtime broadcast + awareness transport layer (SupabaseProvider/@supabase-labs/y-supabase, crm7/src/hooks/use-connect-on-mount.ts) — the sync/persistence/presence plumbing is real and editor-agnostic; it could be re-bound to a different CRDT-aware editor (e.g. a ProseMirror/TipTap y-prosemirror binding) without rebuilding the transport.",
+          "collaborative_documents table + tenant-scoped RLS (crm7/supabase/migrations/20260421200000_create_collaborative_documents_m4.sql) — schema/policy pattern is sound and reusable, though the body_yjs_state text column is CRDT-encoding-specific.",
+          "DraggableCardPage/CanvasCard page-grid wrapper (crm7/src/components/platform/DraggableCardPage) already used consistently for this feature's list/detail pages.",
+          "TanStack Query metadata CRUD hooks (crm7/src/hooks/useCollaborativeDocuments.ts) — clean list/detail/create/rename/delete pattern separable from the body-content mechanism.",
+          "@monaco-editor/react + monaco-editor already installed and proven working — useful to keep as a 'code/plaintext' authoring mode alongside a future WYSIWYG mode, but is not itself a rich-text asset."
+        ]
+      },
+      {
+        "area": "crm7 document templates &amp; document generation",
+        "what_exists": [
+          {
+            "name": "document_metadata — compliance file-upload vault (the 425-row table)",
+            "path": "crm7/supabase/migrations/20260611110200_document_metadata_workflow.sql:7; crm7/src/components/documents/DocumentHub.tsx:1-16; crm7/src/services/documentService.ts:1-9",
+            "state": "working",
+            "detail": "This is a FILE-UPLOAD + verification vault, not a document-authoring/generation system. Users upload existing files (driver's licence, white card, TFN declaration, qualification evidence, etc.) via DocumentHub.tsx, which drives DocumentService.uploadDocument -> document-encryption + document-secure-upload edge functions, a verification workflow (sighted/certified_copy/original/digital/rejected, DocumentHub.tsx:105-121) with an immutable audit trail (document_verification_events), expiry tracking, and encrypted download. Embedded in apprentices/[id], placements/[id], people/[id], portal pages (grep hits in src/pages/apprentices/[id]/index.tsx:108-113, src/pages/placements/[id].tsx:628, src/pages/portal/worker-portal.tsx:356). The 425 live rows are almost certainly uploaded compliance documents against real apprentice/employee/host-employer entities, not template-generated output — no code path writes a document_metadata row from document_templates/generate-document. Note: a duplicate, differently-timed CREATE TABLE document_metadata also exists in the older 20260226000002_create_document_storage.sql — two migrations define the same table name; which one is actually live was not verified against the production catalogue in this pass."
+          },
+          {
+            "name": "generate-document edge function (Google Docs merge -> PDF)",
+            "path": "crm7/supabase/functions/generate-document/index.ts:1-631",
+            "state": "working",
+            "detail": "Real, functioning pipeline GIVEN a pre-registered template: verifies caller JWT (line 147-157), loads a document_templates row by id (line 194-202), loads entity data for person/host_employer/client/training_contract (line 226-275), resolves merge_variables into a flat string map (line 278-302, resolveField at 476-560), exchanges the caller JWT for a Google access token via Workload Identity Federation — no static service-account keys (line 572-631), copies the template Google Doc in Drive, does a batchUpdate replaceAllText on every {{KEY}} placeholder (line 344-369), exports the merged doc to PDF (line 372-384), uploads the PDF to Supabase Storage (line 397-407), and inserts a document_records row (line 410-434). Referenced as the canonical WIF implementation in crm7/CLAUDE.md."
+          },
+          {
+            "name": "GenerateDocumentModal — the only working UI consumer of generate-document",
+            "path": "crm7/src/components/documents/GenerateDocumentModal.tsx:52-237; wired at crm7/src/pages/charge-rates/[id]/index.tsx:1565",
+            "state": "working",
+            "detail": "Lets a user pick an ALREADY-REGISTERED template (must already have google_doc_id + merge_variables set on the row) filtered by entity-type category, then calls supabase.functions.invoke('generate-document', ...) and shows the resulting PDF/Google-Doc links. This is the ONLY place in the whole app that invokes generate-document — grep of src/ for GenerateDocumentModal found exactly one call site."
+          },
+          {
+            "name": "Document Templates page (/documents/templates)",
+            "path": "crm7/src/pages/documents/templates/index.tsx:1-118; route registered at crm7/src/App.tsx:2428",
+            "state": "partial",
+            "detail": "Read-only list of document_templates rows (SELECT * WHERE is_active=true). For rows that already have a google_doc_id it offers 'Edit in Docs' which opens the raw Google Doc in a new tab (line 98-108) — editing template CONTENT always happens outside the app, in Google Docs, using {{VARIABLE}} placeholder syntax the author must get byte-exact (matchCase:true in the merge, generate-document/index.ts:347)."
+          },
+          {
+            "name": "'Register Template' button -> dead route (no way to create a template in-app)",
+            "path": "crm7/src/pages/documents/templates/index.tsx:48-50 (Link href=\"/documents/templates/new\")",
+            "state": "dead",
+            "detail": "Confirmed via full grep of crm7/src/App.tsx and crm7/src: no route, page, or component for /documents/templates/new exists anywhere. This is the only 'create a new template' entry point in the templates list UI and it 404s. There is no in-app form to create a document_templates row, set its google_doc_id, or define its merge_variables/signing_config JSON."
+          },
+          {
+            "name": "document_templates seed data (12 system-default GTO templates)",
+            "path": "crm7/supabase/seed/document_templates_seed.sql:1-65+",
+            "state": "partial",
+            "detail": "Inserts 12 templates with google_doc_id = NULL. Comment on line 5: 'Each tenant must configure their own google_doc_id after deployment' — but no UI mechanism exists to do that configuration (see dead route finding above). Configuration is SQL-only. merge_variables is hand-written JSON (e.g. line 47-56: [{key,source,field,required,description},...]) requiring knowledge of the internal entity data model (source: 'tenant'|'host_employer'|'system' etc, field names) — this is code-equivalent authoring, not a form."
+          },
+          {
+            "name": "clone_system_template SQL RPC + template_self_service columns — built, never wired to any UI",
+            "path": "crm7/supabase/migrations/20260304000006_template_self_service.sql:1-139",
+            "state": "dead",
+            "detail": "A SECURITY DEFINER RPC (clone_system_template, line 82-138) lets a tenant clone a system-default template with a custom name/google_doc_id, and the migration adds source/source_template_id/uploaded_file_path/compliance_reviewed columns including an 'uploaded_docx' source type suggesting a planned DOCX-upload-and-convert flow. Grep of crm7/src for clone_system_template, uploaded_docx, and uploaded_file_path returns zero hits — none of this backend scaffolding is called from anywhere in the frontend. It is unreachable infrastructure."
+          },
+          {
+            "name": "'Legacy' document_templates/document_records CRUD stores (a second, incompatible code path onto the SAME tables)",
+            "path": "crm7/src/stores/documentTemplateStore.ts:1-13; crm7/src/stores/documentRecordStore.ts:1-14; types at crm7/src/types/entities.ts:2072 (LegacyDocumentRecord), :2104 (LegacyDocumentTemplate)",
+            "state": "partial",
+            "detail": "Generic Zustand createEntityStore wrappers around the same document_templates/document_records tables generate-document uses, but with a DIFFERENT TypeScript shape (LegacyDocumentTemplate/LegacyDocumentRecord in entities.ts vs DocumentTemplate/DocumentRecord in types/documents.ts) — two independent, drifted type contracts against one physical table. Consumed by documents/management.tsx and communications/mail-merge.tsx."
+          },
+          {
+            "name": "Document Management page (/documents/management)",
+            "path": "crm7/src/pages/documents/management.tsx:70-339",
+            "state": "stub",
+            "detail": "Lists document_records via useDocumentRecordStore with search/filters (working query/table). BUT the top-level 'Upload Document' button (line 233-236) has no onClick handler at all — a fully rendered, clickable-looking button that does nothing. The EmptyState's 'Upload Document' action (line 311-320) also passes only {label, icon} with no onClick/href — confirmed via EmptyState.tsx:81-90 -> ActionButton.tsx:76-86 that with both undefined it renders <Button onClick={undefined}>, again inert. There is no create/upload flow reachable from this page."
+          },
+          {
+            "name": "Mail Merge batch creator (/communications/mail-merge)",
+            "path": "crm7/src/pages/communications/mail-merge.tsx:110-346; crm7/src/stores/mailMergeBatchStore.ts:1-14",
+            "state": "stub",
+            "detail": "Working-looking dialog: pick a document_template, recipient type, output format, click 'Create Batch' -> inserts a mail_merge_batches row with status:'pending' (handleCreate, line 143-164). Confirmed via repo-wide grep of crm7/supabase/functions/**: there is NO edge function, cron job, or any backend code anywhere that reads or processes mail_merge_batches. The batch is created and permanently stuck at status='pending' — no documents are ever actually produced by this feature. The UI is real; the processing engine behind it does not exist."
+          },
+          {
+            "name": "Documents Hub page (/documents/hub) — distinct from the DocumentHub.tsx component of the same name",
+            "path": "crm7/src/pages/documents/hub/index.tsx:1-118",
+            "state": "stub",
+            "detail": "Reads document_records/document_templates (System B — the Google-Docs-merge pipeline), NOT document_metadata. Its empty-state copy explicitly funnels users to /documents/templates -> 'Register Template' (line 44-49), which is the dead route documented above. Note the naming collision: this route-level page is a different system from the reusable src/components/documents/DocumentHub.tsx component (the working upload/verification vault embedded in entity pages) — same 'DocumentHub' name, two unrelated document concepts (generated/signed documents vs uploaded compliance files), a source of real confusion for both users and future engineers."
+          },
+          {
+            "name": "ChargeRatePdfDocument — a fourth, unrelated PDF-production path (hardcoded, no template system)",
+            "path": "crm7/src/components/rates/ChargeRatePdfDocument.tsx:1-313",
+            "state": "working",
+            "detail": "A fixed-layout @react-pdf/renderer React component that renders a charge-rate schedule PDF straight from calculation data, fully hardcoded (no template_id, no merge_variables, D2C-branded). Not part of document_templates/document_records/document_metadata at all. Proves @react-pdf/renderer is already a working dependency and pattern in this codebase."
+          }
+        ],
+        "non_technical_user_can": "Nothing, for authoring. A non-technical user (a GTO admin) cannot create a new document template, edit an existing template's merge fields, or configure which Google Doc backs a template through the crm7 UI — the only 'Register Template' button in the app links to a route that does not exist (404). The actual template CONTENT is always authored outside crm7 entirely, in Google Docs, using {{VARIABLE}} placeholder tokens that must be typed exactly right (case-sensitive exact-text match at merge time) — this is arguably harder than markdown, since a mistyped placeholder fails silently (the merge just skips it) rather than erroring. Registering that Google Doc as a usable template (setting google_doc_id, writing the merge_variables JSON schema that names which entity field feeds which placeholder) can only be done by someone running SQL directly against Supabase — there is no admin form for it anywhere in the codebase. What a non-technical user CAN do today: (1) upload an existing file (PDF/photo of a licence, certificate, etc.) as a compliance document via DocumentHub on an apprentice/employee/host-employer page — that is real, working, encrypted, and verifiable; (2) if IT/an engineer has already registered a template with a Google Doc ID, pick that template from a dropdown on the Charge Rate detail page and click 'Generate PDF' to merge live entity data into it — but they cannot create, edit, or fix that template themselves; (3) fill in a Mail Merge 'batch' form that creates a database row and then silently does nothing, since no processor reads it — this will look like it worked and never produce a document.",
+        "gaps": [
+          "No UI to create a document_templates row at all — the sole entry point (/documents/templates/new) is a dead link (crm7/src/pages/documents/templates/index.tsx:48).",
+          "No UI to edit an existing template's google_doc_id, merge_variables, or signing_config — these are JSON columns only reachable via direct SQL/migration (supabase/seed/document_templates_seed.sql).",
+          "Template content authoring is 100% external (Google Docs) and requires learning a code-like {{PLACEHOLDER}} convention with exact-match, case-sensitive semantics — no in-app rich-text/merge-field editor exists.",
+          "A self-service cloning RPC (clone_system_template) and DOCX-upload columns were built at the database layer but have zero UI callers — dead, unwired scaffolding that looks like unfinished work rather than an intentional API-only surface.",
+          "Two independent TypeScript type contracts (DocumentTemplate/DocumentRecord in types/documents.ts vs LegacyDocumentTemplate/LegacyDocumentRecord in types/entities.ts) target the SAME physical document_templates/document_records tables via different code paths (generate-document pipeline vs generic CRUD stores) — a drift/consistency risk if either shape changes.",
+          "documents/management.tsx has two dead 'Upload Document' buttons (header button with no onClick; EmptyState action with neither onClick nor href) — clickable UI that does nothing.",
+          "Mail Merge (communications/mail-merge.tsx) creates mail_merge_batches rows with status='pending' but no backend process anywhere in the repo ever reads/advances that table — the feature has a working front door and no engine behind it.",
+          "Naming collision between two unrelated systems both called 'Document Hub': the route /documents/hub (generated/signed documents, document_records) and the component DocumentHub.tsx (uploaded compliance files, document_metadata) — worth resolving before building a unified authoring system so new work doesn't inherit the ambiguity.",
+          "document_metadata may be defined by two different migrations under the same table name (20260226000002_create_document_storage.sql and 20260611110200_document_metadata_workflow.sql) — which one is actually live was not verified against the production catalogue in this pass; flag as 'unknown' rather than guessed.",
+          "Document generation (System B) is entity-type-narrow: generate-document only resolves merge data for person/apprentice, host_employer, client, and training_contract entity types (generate-document/index.ts:226-275) — any other entity type silently produces an empty entityData object and likely fails required-field validation."
+        ],
+        "reusable_assets": [
+          "generate-document edge function's WIF-based Google Docs merge pipeline (crm7/supabase/functions/generate-document/index.ts) — a fully working, security-reviewed template-merge-to-PDF engine; the missing piece is purely the authoring/registration UI in front of document_templates, not the generation engine itself.",
+          "DocumentHub.tsx + documentService.ts + useEntityDocuments.ts — a genuinely working, encrypted, audited file-upload and verification system (document_metadata) that could be the storage/attachment layer for a unified authoring system's OUTPUT documents, independent of how the document content itself gets authored.",
+          "@react-pdf/renderer, already a working dependency (ChargeRatePdfDocument.tsx) for fully in-house, code-defined PDF layouts with no external Google Docs dependency — a candidate foundation if a WYSIWYG/no-code template designer is wanted instead of the Google-Docs-external-authoring model.",
+          "document_templates schema itself (category/subcategory/merge_variables/signing_config/branding_level/requires_guardian_if_minor, plus the self-service source/tags/compliance_reviewed columns from 20260304000006) is a reasonably well-designed data model — the gap is entirely in the missing CRUD UI layer on top of it, not the schema.",
+          "clone_system_template RPC — a working SECURITY DEFINER function for tenant-scoped template cloning that could be wired to a real 'Duplicate & customise' UI action with minimal backend work."
+        ]
+      },
+      {
+        "area": "Email templates + design + sending across crm7 and business-suite-unified",
+        "what_exists": [
+          {
+            "name": "Communication Templates CRUD (crm7)",
+            "path": "crm7/src/pages/communications/templates.tsx, template-create.tsx:1-260, template-edit.tsx:1-311; routed at /communications/templates(+/create,+/:id/edit) in crm7/src/App.tsx:646,1268,1274,1280",
+            "state": "working",
+            "detail": "Real, routed, permission-gated (manage_communications) list/create/edit UI backed by the communication_templates table via crm7/src/stores/communicationTemplateStore.ts and crm7/src/schemas/communicationTemplate.ts (Zod). Body is authored in a plain Textarea (template-create.tsx:177-183) with {{variable}} placeholders auto-detected via regex (template-create.tsx:32-36) and shown as badges. No rich-text/WYSIWYG, no HTML -- this IS the one place a non-technical user can create an email/SMS template. Live row count: 0 (verified via SQL against project tuybltdrdefjblnplpqo) -- never actually used."
+          },
+          {
+            "name": "Compose Message page (crm7) -- the real send path",
+            "path": "crm7/src/pages/communications/compose.tsx:1-428; crm7/src/lib/communications.ts:1-266",
+            "state": "working",
+            "detail": "Lets a user pick a communication_templates row from a dropdown (handleTemplateSelect, compose.tsx:93-104) to prefill subject/body (plain text), pick a recipient via EntitySelector, and Send/Save Draft. submitCommunicationForm() (communications.ts:158-265) does an outbox-pattern insert-then-send via emailStore.sendEmail -> emailService.send() -> POST business-suite-unified's shared email-dispatcher edge function. Body is sent as both body_html and body_text using the identical plain-text string (communications.ts:131-132) -- no formatting is possible or preserved."
+          },
+          {
+            "name": "email_templates table + emailService CRUD",
+            "path": "crm7/src/services/emailService.ts:79-89 (EmailTemplate type), :551-636 (getTemplates/getTemplate/createTemplate/updateTemplate/deleteTemplate)",
+            "state": "dead",
+            "detail": "Full backend CRUD exists but create/update/delete are called from nowhere in the app (grepped). Only getTemplates() is called, and only by crm7/src/components/email/EmailTemplateSelector.tsx:32, which is only rendered inside crm7/src/components/email/EmailComposeDialog.tsx:269-273 -- and EmailComposeDialog itself is never imported/rendered by any page (only appears in its own barrel export components/email/index.ts and in a test that reads its source text as a string, src/__tests__/react-185-selector-shallow.test.ts:22). This entire template system (table, editor path, selector, compose dialog) is unreachable by a real user. Live row count: 0."
+          },
+          {
+            "name": "Two disconnected template tables collide at send time",
+            "path": "crm7/src/lib/communications.ts:135-137 sets options.template_id from a communication_templates row; business-suite-unified/supabase/functions/email-dispatcher/index.ts:212-226 looks that id up in public.email_templates",
+            "state": "partial",
+            "detail": "crm7's compose flow forwards the selected communication_templates.id as template_id to email-dispatcher, but the dispatcher's server-side template substitution queries the different email_templates table. The lookup silently misses (guarded by if(template), dispatcher/index.ts:219) so nothing breaks visibly -- but it proves the two 'template' systems were built independently and never reconciled, and the substitution/variables feature on the dispatcher side is effectively dead for every crm7-originated send."
+          },
+          {
+            "name": "Supabase Auth system emails (reset-password, confirm-signup, invite-user, magic-link, change-email)",
+            "path": "docs/email-templates/*.html (parent bsuite repo) + README.md:1-84; live config lives in Supabase Dashboard -> Auth -> Email Templates, project tuybltdrdefjblnplpqo",
+            "state": "dead",
+            "detail": "No BSuite app UI edits these at all -- they're maintained by hand in the external Supabase Dashboard. docs/email-templates/ is a git 'intended source of truth' that must be manually kept in sync; per commit 6df70da2 ('fix(email): the branded reset template was never the one being sent', authored TODAY 2026-08-07 19:05) it had already drifted from production and caused a real account-lockout: the live reset-password template pointed at an unregistered route, so recovery emails silently failed for every email-only user. The fix updates the git copy but explicitly states the dashboard change is a separate, unshipped operator action -- i.e. even after this commit, the live template may still be wrong until someone pastes it into the dashboard by hand."
+          },
+          {
+            "name": "Shared branded HTML shell (_shared/email-layout.ts)",
+            "path": "business-suite-unified/supabase/functions/_shared/email-layout.ts:1-153 (renderEmail/p/ul/keyValue); wired into email-dispatcher/index.ts:243-245 and send-notification/index.ts:6,28-31,238,245",
+            "state": "working",
+            "detail": "A genuinely well-built, email-client-safe D2C shell (tables not flexbox, inline styles not style blocks, hex not oklch, no pure white/black) added 2026-08-07 in response to an explicit operator complaint ('outbound email is a white page and some text'). It auto-wraps any body_html fragment passed through email-dispatcher or send-notification when source=='platform', but is pure server-side code -- no UI surfaces it, no template author can see or control it, and it explicitly does NOT apply to source=='user' sends (a person's own connected mailbox) by design."
+          },
+          {
+            "name": "Hand-rolled full-HTML emails that bypass the shared shell",
+            "path": "business-suite-unified/supabase/functions/assign-tester-license/index.ts:288-330; crm7/supabase/functions/invoice-send-direct/index.ts:172-260",
+            "state": "partial",
+            "detail": "Both build their own complete html documents in TypeScript template literals, so email-dispatcher's 'already a full document' check (dispatcher/index.ts:243) passes them through unwrapped -- each is an independently-maintained, drifting reimplementation of the same branded-shell idea. invoice-send-direct's version is the worse of the two: it uses a style block, CSS grid/flexbox for the totals layout, and inline oklch() colors in the header background -- all three are things the shared shell's own doc-comment (email-layout.ts:14-24) explicitly says are broken in Outlook/Gmail, and it uses a light theme entirely inconsistent with the dark D2C shell used everywhere else. This is a concrete, currently-shipping instance of 'each sender rolls its own HTML,' with a real rendering-risk bug attached, not just a consistency nit."
+          },
+          {
+            "name": "Other hardcoded email bodies (inline fragments, correctly shell-wrapped)",
+            "path": "crm7/supabase/functions/charge-rate-quote-dispatch/index.ts:310-320; crm7/supabase/functions/tenant-management/index.ts:480-483; crm7/supabase/functions/lead-capture/index.ts:383-425; crm7/supabase/functions/report-delivery/index.ts:1105; business-suite-unified/supabase/functions/jodie-pr-notify/index.ts:198-208 (fetched into send-notification)",
+            "state": "working",
+            "detail": "Each of these composes its own p-only HTML fragment via string concatenation with manual escapeHtml() calls, then sends via email-dispatcher or send-notification (so it DOES get the shared shell applied for platform sends). Functionally fine, but every body is a developer editing Deno/TS source in a PR -- no non-technical user, and no shared component, touches any of this copy."
+          },
+          {
+            "name": "send-notification's 4 hardcoded canned templates (welcome/invoice/alert/reminder)",
+            "path": "business-suite-unified/supabase/functions/send-notification/index.ts:33-108 (templates object); frontend wrapper business-suite-unified/src/lib/notificationService.ts",
+            "state": "dead",
+            "detail": "Fully coded in TypeScript, zero DB row, zero UI. notificationService.ts (the frontend client for this function) has zero consumers anywhere in business-suite-unified's UI (grepped) -- only referenced from Developer > Platform's function registry list and a rate-limit rule targeting its path. The backing notifications table has 0 live rows. This whole path is wired end-to-end but has never been exercised by a real user."
+          },
+          {
+            "name": "Developer > System Notices (in-app banners, NOT email)",
+            "path": "business-suite-unified/src/pages/Developer/Notices.tsx:1-874",
+            "state": "working",
+            "detail": "A genuine, non-technical, plain-textarea-only CRUD (500-char cap, scope/severity pickers) for platform/tenant banners shown across BSuite apps. Not an email surface, but it is the closest existing proof-of-pattern in the codebase for a truly no-markup, non-technical authoring UI. Live: 1 row."
+          }
+        ],
+        "non_technical_user_can": "A non-technical user CAN do exactly one thing end-to-end without touching code: in crm7, go to Communications -> Templates -> New Template, type a Name, pick Email or SMS, optionally type a Subject and a Category/Description, and type a Body into a plain textarea using {{first_name}}-style placeholders (auto-detected and shown as badges) -- Save. Then in Compose Message, pick that template from a dropdown (prefills Subject/Body), edit the recipient/sender, and click Send or Save Draft. That is the full ceiling of no-code authoring in this codebase. They CANNOT apply bold, italic, links, images, buttons, or any layout to that body -- it is one plain-text field, sent verbatim as both body_html and body_text (crm7/src/lib/communications.ts:131-132), so literal markdown syntax like **bold** or a raw anchor tag would ship exactly as typed, unrendered, with no live preview of the actual rendered email. They cannot see, edit, or even know about the branded D2C shell (colors, gradient header, logo) that wraps platform sends -- that lives entirely in Deno source (business-suite-unified/supabase/functions/_shared/email-layout.ts) with zero UI. They have no access whatsoever to: the Supabase Auth system emails (password reset, invite, signup, magic link, email-change -- editable only via the external Supabase project Dashboard by someone with Supabase admin credentials), the invoice email, the charge-rate-quote-signing email, the lead-capture confirmation email, the tenant-invite email, the tester-license email, jodie's PR-notify email, or send-notification's 4 canned templates (welcome/invoice/alert/reminder) -- every one of those bodies is a hardcoded string inside a TypeScript/Deno edge-function file that requires a developer with repo write access and Supabase edge-function deploy rights to change, then a fresh deploy to take effect.",
+        "gaps": [
+          "No rich-text/WYSIWYG anywhere in the whole surface -- every authoring field (communication_templates body, compose body, docs/email-templates HTML files) is either a raw plain-text textarea or hand-written HTML in source; there is no in-between and no non-technical path to a formatted email.",
+          "Two parallel, disconnected 'template' database tables (communication_templates with a working UI, email_templates with full backend CRUD but a dead-code-only UI) that were never reconciled -- email-dispatcher's server-side template lookup queries email_templates, so template_id values coming from crm7's actual compose flow (which reference communication_templates) silently fail to resolve.",
+          "The one shared branding asset (_shared/email-layout.ts renderEmail shell) is pure code with no UI, applies inconsistently (only to source:'platform' fragment sends through email-dispatcher/send-notification), and is bypassed entirely by any function that builds its own full html document -- at least two do (assign-tester-license, invoice-send-direct), and invoice-send-direct's version uses CSS/color techniques (style blocks, flexbox/grid, oklch()) the shell's own documentation says are broken in Outlook/Gmail.",
+          "No preview-against-reality anywhere -- the crm7 template create/edit page's Preview card just echoes the raw subject/body text; it never shows what the email actually looks like once (or if) the branded shell wraps it.",
+          "Supabase Auth system emails are edited exclusively in an external dashboard outside git/CI/any BSuite UI, with a git 'reference copy' that has already drifted from production once and caused a real account-lockout incident (found and partially fixed today, 2026-08-07, commit 6df70da2) -- nothing in the codebase tests or diffs the live dashboard config against the repo copy.",
+          "email_templates, communication_templates, and notifications are all empty (0 rows) in production -- no part of the 'templated email' story has actually been used by a real tenant; the 12 rows in email_messages/email_audit_log come from the hardcoded, non-template send paths (invoice, lead-capture, tenant-invite, report-delivery, etc.), not from any template system."
+        ],
+        "reusable_assets": [
+          "crm7 communication_templates table + communicationTemplateStore (Zustand, createEntityStore-based) + Zod schema + working list/create/edit pages -- the most complete non-technical template-editor pattern in the estate; a unified authoring system's natural starting point, needs a rich-text field swapped in for the plain textarea.",
+          "The {{variable}} auto-detect regex + Badge 'Detected Variables' UI pattern (crm7/src/pages/communications/template-create.tsx:32-36,191-202) -- small, working, reusable merge-field UX already built.",
+          "business-suite-unified/_shared/email-layout.ts's renderEmail()/p()/ul()/keyValue() -- a correctly email-client-safe (tables, inline styles, hex, no pure white/black) branded shell. This is exactly the layout layer a unified system should render authored content into, and it should become the single mandatory wrapper (currently bypassable by any function that ships a full html doc).",
+          "email-dispatcher edge function -- already the single shared, multi-tenant, multi-provider (Resend/Gmail/MS-Graph/SMTP) send path used by both crm7 and business-suite-unified, with existing (if currently dead) template_id + variable-substitution plumbing and audit logging to email_messages/email_audit_log. The right backend to point a real unified template system at once the table split is resolved.",
+          "Developer > Notices (business-suite-unified) -- proof the team can already build a clean, non-technical, plain-text CRUD authoring surface with live preview list, scope/severity pickers, and realtime sync; a UX template to imitate (structurally, not content-wise) for a proper email-template editor."
+        ]
+      },
+      {
+        "area": "Merge fields / mail merge / placeholder token-substitution across the BSuite estate (crm7, conduit, business-suite-unified, R80.4, braden, throughput)",
+        "what_exists": [
+          {
+            "name": "Google Docs document-merge engine (WIF)",
+            "path": "crm7/supabase/functions/generate-document/index.ts:277-370,446-560; crm7/src/services/googleDocsService.ts:1-171",
+            "state": "working",
+            "detail": "Real, working end-to-end pipeline: reads document_templates.merge_variables (JSON [{key,source,field,required}]), resolves values via resolveField() (handles composite fields like full_name, formatted address, ANZSCO code+title, qualification_name), calls Google Docs batchUpdate with replaceAllText on literal '{{KEY}}' strings, exports PDF, uploads to Storage. Only genuinely complete merge pipeline in the estate. BUT the document BODY containing the {{KEY}} placeholders is authored entirely OUTSIDE the app, in Google Docs itself (an external tool) — no in-app document editor or field picker."
+          },
+          {
+            "name": "Document Templates registration page",
+            "path": "crm7/src/pages/documents/templates/index.tsx:39-51; crm7/src/App.tsx:667,2428-2429",
+            "state": "dead",
+            "detail": "Lists document_templates and has a 'Register Template' button linking to /documents/templates/new. That route is not registered anywhere in App.tsx (only /documents/templates -> the list page exists) — dead link. No UI anywhere creates a document_templates row or configures merge_variables; only path in is a raw SQL insert/migration (crm7/supabase/migrations/20260304000001_document_lifecycle.sql, 20260304000006_template_self_service.sql)."
+          },
+          {
+            "name": "Communication Template create/edit pages",
+            "path": "crm7/src/pages/communications/template-create.tsx:32-36,175-202; crm7/src/pages/communications/template-edit.tsx:23-27,225-252",
+            "state": "partial",
+            "detail": "Plain <Textarea> for the message body with a placeholder hint 'Hello {{first_name}}...'. extractVariables() regex-scans the body AFTER typing and shows detected tokens as read-only Badges. There is NO click-to-insert field picker — the user must already know and hand-type the exact {{variable_name}} syntax and the exact field key."
+          },
+          {
+            "name": "Compose Message page (crm7)",
+            "path": "crm7/src/pages/communications/compose.tsx:214-232,379-390; crm7/src/lib/communications.ts:71-148",
+            "state": "partial",
+            "detail": "Shows a static hint 'Use {{variable_name}} syntax for template variables' and lets the user pick a saved template (which pastes its raw body verbatim into the textarea) and pick a recipient entity via EntitySelector. But buildEmailOptions()/buildCommunicationPayload() send form.body VERBATIM as body_html/body_text — no substitution step exists anywhere in this file or emailService.ts. Any {{...}} token typed or pasted from a template is delivered to the real recipient unresolved as literal text (a broken promise, not just a missing picker)."
+          },
+          {
+            "name": "Mail Merge batch page (crm7)",
+            "path": "crm7/src/pages/communications/mail-merge.tsx:110-165; crm7/src/stores/mailMergeBatchStore.ts",
+            "state": "stub",
+            "detail": "'New Batch' dialog lets a user name a batch, pick a recipient type, output format, and template — but recipient_ids is hardcoded to [] (no recipient-selection UI at all) and total_recipients to 0. Grepped crm7/supabase/functions/** and all of crm7/src: there is no processor, edge function, or cron that ever transitions a batch out of status='pending'. The batches list/stat cards (Processing/Completed/Failed counts) are wired to a pipeline that does not exist — a table with rows and no executor, which is a dead feature, not a working one."
+          },
+          {
+            "name": "EmailTemplateSelector + EmailComposeDialog (crm7)",
+            "path": "crm7/src/components/email/EmailTemplateSelector.tsx:1-153; crm7/src/components/email/EmailComposeDialog.tsx:101-103; crm7/src/services/emailService.ts:547-636",
+            "state": "partial",
+            "detail": "A separate template system (table: email_templates, distinct from communication_templates used by the pages above). EmailTemplateSelector is a read-only, searchable/filterable picker of WHOLE templates (click a card -> loads subject+body verbatim into the compose fields) — not a per-field merge picker. emailService.createTemplate/updateTemplate/deleteTemplate exist but are called from ZERO components anywhere in crm7/src (grepped) — a dead write path; email_templates rows can only be seeded via DB/migration, same gap as document_templates."
+          },
+          {
+            "name": "email-dispatcher shared edge function substituteVariables()",
+            "path": "business-suite-unified/supabase/functions/email-dispatcher/index.ts:212-226,607-609",
+            "state": "partial",
+            "detail": "The ONLY real server-side {{var}}->value substitution engine shared across the estate (used by crm7 emailService.send() and conduit communicationService.sendEmail(), both of which POST to this one deployed function). It runs ONLY when payload.template_id resolves to a row in email_templates AND uses payload.template_data for lookups. Grepped every caller in crm7 and conduit: none of them ever populates template_data, so even when this code path fires, every {{key}} is left as literal unresolved text (data[key] undefined -> regex replace falls back to the original match)."
+          },
+          {
+            "name": "Email Templates section — real click-to-insert field picker (conduit)",
+            "path": "conduit/src/components/settings/EmailTemplatesSection.tsx:30-48,130-146,328-345; conduit/src/app/(dashboard)/settings/_view.tsx:4,138",
+            "state": "working",
+            "detail": "THE ONE genuine merge-field picker in the whole estate. 13 predefined variables (candidate_name, job_title, company_name, interview_date, offer_salary, portal_link, etc.) render as human-labeled buttons under 'Insert Variable (click to add to body)'. insertVariable() splices {{key}} into the textarea at the current cursor position (selectionStart/selectionEnd) and restores focus/caret — a non-technical user never needs to know the {{...}} syntax. Also has a live Preview toggle that calls interpolateTemplate() against sample data. Routed and live at /settings (Email Templates section) in conduit's dashboard."
+          },
+          {
+            "name": "Conduit's actual send dialog (ComposeDialog)",
+            "path": "conduit/src/components/communications/ComposeDialog.tsx:1-416",
+            "state": "partial",
+            "detail": "The dialog actually used to send a real email/SMS from a candidate or employer record (via sendEmail()/sendSms() in lib/communicationService.ts) has NO template selector, NO variable list, and NO field picker of any kind — just free-text 'To'/'Subject'/'Body' fields. The field-picker built for EmailTemplatesSection (previous row) is not reachable from this flow; interpolateTemplate() is called only inside the Settings preview, never before a real send."
+          },
+          {
+            "name": "Message templates admin (conduit /admin/templates)",
+            "path": "conduit/src/app/admin/templates/constants.ts:38-87; conduit/src/app/admin/templates/_view.tsx:280-389",
+            "state": "partial",
+            "detail": "Separate SMS/email template CRUD bound to lifecycle events (timesheet_submitted, leave_approved, etc.), backed by communication_templates. Same pattern as crm7's template-create/edit: a dialog description says 'Use {{variable}} placeholders — they are filled in when the message is sent', and extractTemplateVariables() shows detected tokens as read-only Badges AFTER typing. No click-to-insert picker exists here either."
+          },
+          {
+            "name": "Merge-field/token mechanism in R80.4, braden, throughput",
+            "path": "n/a — grepped all three for \\{\\{[a-zA-Z_]+\\}\\} and %VAR% patterns in *.ts/*.tsx under src/",
+            "state": "dead",
+            "detail": "Zero hits in any of the three apps. No template-variable, merge-field, or placeholder-substitution mechanism of any kind exists in these three apps' source trees."
+          }
+        ],
+        "non_technical_user_can": "Across all six apps, there is exactly one place where a non-technical user (no markdown, no code, no knowledge of {{...}} syntax) can insert a merge field: conduit's Settings → Email Templates section, where clicking a labeled button (e.g. \"Candidate Name\") inserts the correct token at the cursor. Everywhere else in the estate — crm7's Communication Templates (create/edit), crm7's Compose Message page, crm7's Document Templates page, and conduit's own /admin/templates Message Templates admin — the only way to add a merge field is to type the literal `{{variable_name}}` syntax by hand into a plain textarea, having already somehow learned the exact field key name, since none of these pages surfaces a list of available fields. For the Google Docs document-merge system (the only fully working merge pipeline, used for apprentice/host-employer PDFs), authoring happens entirely outside the app in Google Docs, and even the underlying merge_variables configuration that maps a key like host_employer.address to a real column has no in-app editor at all (the 'Register Template' button is a dead link) — a non-technical user cannot create or edit a mail-merge document template without an engineer writing SQL. Worse, in crm7's actual send flow (Compose Message) and its EmailComposeDialog whole-template picker, even a user who correctly types or pastes {{first_name}} will have that literal text delivered unresolved to the real recipient, because no caller populates the template_data the shared substitution engine needs — so the one UI hint that looks like a working merge-field feature is functionally broken end-to-end.",
+        "gaps": [
+          "No unified/shared field-picker component exists — at least 4 divergent implementations across crm7 and conduit (regex-detect-after-typing in 3 places, one real click-to-insert picker in 1 place, plus the entirely separate Google-Docs-external-authoring model), none of them sharing code.",
+          "The one working click-to-insert picker (conduit EmailTemplatesSection) is hardcoded to a fixed list of 13 variable keys with no connection to any entity schema/registry, and — critically — is not reachable from the actual send flow (ComposeDialog.tsx has no template/variable support at all).",
+          "Document-template merge-variable authoring (crm7 document_templates.merge_variables) has zero UI — the 'Register Template' route is dead — so the richest field-mapping engine in the estate (composite fields: full_name, formatted address, ANZSCO, qualification_name) is entirely SQL/migration-only to configure.",
+          "Real server-side {{var}}->value substitution exists in exactly one place estate-wide (business-suite-unified's shared email-dispatcher substituteVariables()), but no caller in crm7 or conduit ever populates template_data, so the substitution never actually fires in production sends — merge tokens go out to real recipients unresolved.",
+          "crm7's Mail Merge batch feature implies bulk generate-and-send to many recipients but has no backend processor anywhere in the codebase and no recipient-selection UI — batches are created and then permanently stuck at status='pending'.",
+          "No entity-aware 'available fields for this record type' concept is surfaced anywhere in the UI — a user composing a message to an Apprentice has no way to discover which fields (first_name, employer.address, etc.) are even legal to reference.",
+          "R80.4, braden, and throughput have no merge-field capability whatsoever, so any unified authoring system would be greenfield for those three apps."
+        ],
+        "reusable_assets": [
+          "conduit's insertVariable() cursor-splice pattern (EmailTemplatesSection.tsx:130-146) — a proven, accessible, non-technical-friendly button-to-textarea-cursor insertion mechanism; the right base to generalize into a shared @bsuite package component.",
+          "Three near-duplicate extractVariables()/extractTemplateVariables() pure functions (crm7 template-create.tsx, template-edit.tsx; conduit admin/templates/constants.ts) that already do literal (non-regex-per-BSuite-rules) {{...}} token scanning — trivially consolidatable into one shared, tested function.",
+          "crm7's document_templates.merge_variables schema + resolveField() composite-field resolver (generate-document/index.ts:476-560) — the most sophisticated field-mapping engine in the estate (handles nested/derived fields like formatted address and combined code+title); a real field-picker UI could be built by exposing this mapping via an RPC/API instead of leaving it edge-function-internal.",
+          "business-suite-unified's shared email_templates table (columns: variables jsonb array of {name, description}) and its working substituteVariables() engine — the substitution mechanism itself is sound; it only needs (a) an authoring UI (currently none) and (b) every caller wired to actually pass template_data.",
+          "The existing @bsuite/* npm-published shared-package pattern (page-builder, theme, nav-core, charge-calc) is architectural precedent for shipping a new @bsuite/merge-fields package so crm7 and conduit stop reinventing this independently."
+        ]
+      },
+      {
+        "area": "Upload-an-existing-Word-doc, edit it, and insert a merge field — across crm7, conduit, business-suite-unified, R80.4, braden, throughput",
+        "what_exists": [
+          {
+            "name": "Opaque document upload to Supabase Storage (accepts .docx/.doc/.pdf)",
+            "path": "crm7/src/components/documents/DocumentHub.tsx:539; crm7/src/pages/documents/upload.tsx; crm7/src/services/documentService.ts:291-446; conduit/src/app/(dashboard)/candidates/[id]/documents/_view.tsx:232; business-suite-unified/src/pages/Documents.tsx:123; crm7/supabase/migrations/20260717163000_document_buckets_allow_word_and_outlook.sql",
+            "state": "working",
+            "detail": "File-picker accepts .docx/.doc/.pdf/etc and PUTs the raw bytes into a tenant-scoped Supabase Storage bucket (apprentice-documents, contracts, host-employer-contracts, etc.) with metadata rows in document_records. Confirmed no rich-text/word-processor library exists anywhere in the estate to parse the file's contents (grepped every package.json + pnpm-lock.yaml in root/crm7/conduit/business-suite-unified/R80.4/braden/throughput/mobile/packages for mammoth, docx, docxtemplater, pandoc, officegen, jszip, turndown, html-to-docx — zero hits). The stored .docx is a dead blob: crm7/src/pages/documents/[id].tsx offers only a Download button (Download/File icons, no iframe/embed/viewer). Same pattern in conduit and BSU."
+          },
+          {
+            "name": "Google Docs merge-field template + generate-document pipeline",
+            "path": "crm7/src/services/googleDocsService.ts; crm7/supabase/functions/generate-document/index.ts; crm7/src/components/documents/GenerateDocumentModal.tsx; crm7/src/pages/documents/templates/index.tsx:44-45,98-107",
+            "state": "working",
+            "detail": "A real, live merge-field system: {{VARIABLE}} placeholders in a Google Doc are replaced via the Google Docs API batchUpdate/replaceAllText (WIF-authenticated, no static creds), the merged doc is exported to PDF and stored in Supabase Storage + document_records. BUT the template itself must already exist as a Google Doc — the crm7 UI literally states 'Templates are authored in Google Docs. Register the Doc ID here to enable merge and signing,' and the only in-app action on a template is 'Edit in Docs', which opens docs.google.com/document/d/{id}/edit in a new tab. Creating a merge field means hand-typing the literal string {{full_name}} etc. into Google Docs and knowing the exact key the server resolver (resolveField() in generate-document/index.ts) expects."
+          },
+          {
+            "name": "'uploaded_docx' self-service template source",
+            "path": "crm7/supabase/migrations/20260304000006_template_self_service.sql:9,17 (document_templates.source CHECK constraint value 'uploaded_docx', column uploaded_file_path)",
+            "state": "dead",
+            "detail": "Schema gestures at an 'upload a .docx, we convert it to a Google Doc template' flow — a CHECK constraint admits source='uploaded_docx' and there's an uploaded_file_path text column with a comment 'For DOCX uploads stored in Supabase Storage before Google Docs conversion'. Grepped the entire crm7 tree (app code + all edge functions): zero references to uploaded_file_path or 'uploaded_docx' outside this one migration file. No conversion function, no UI control to pick this source, nothing reads or writes the column. This is a stub column with no implementing code, not a partial feature — it is unreachable from the UI."
+          },
+          {
+            "name": "Collaborative Documents (Monaco + YJS realtime editor)",
+            "path": "crm7/src/pages/documents/collaborative/index.tsx; crm7/src/pages/documents/collaborative/[id].tsx; crm7/src/components/realtime-monaco.tsx; hooks/useCollaborativeDocuments.ts",
+            "state": "working",
+            "detail": "A genuinely working real-time multi-user code editor (Monaco bound to YJS CRDT over Supabase Realtime, persisted as body_yjs_state). Supported languages: markdown, plaintext, javascript, typescript, json, yaml, sql, html, css — this is a code/plaintext editor, not a word processor: no bold/italic/tables/rich formatting, and every document starts blank (no import of an uploaded file, docx or otherwise). A 'merge field' here would just be typing the literal characters {{...}} into the text with zero autocomplete, picker, or resolution — strictly harder than the markdown the operator already rules out."
+          },
+          {
+            "name": "pdf-lib based e-signature stamping / offer-letter generation",
+            "path": "crm7/src/lib/documentSigner.ts; conduit/src/lib/esign/documentSigner.ts; conduit/src/lib/esign/offerDocuments.ts; crm7/src/lib/portable-lsl/pdf.ts",
+            "state": "working",
+            "detail": "pdf-lib draws a signature image and fixed audit-trail text onto an existing PDF at hardcoded x/y coordinates, and separately builds offer-letter/training-contract PDFs from a fixed layout of drawText calls populated from an Offer record. This is programmatic PDF generation/annotation, not a document editor — there's no way for a user to compose or restructure content, only to sign what the system already produced."
+          },
+          {
+            "name": "react-markdown (AI chat rendering)",
+            "path": "crm7/src/components/ai/MarkdownContent.tsx",
+            "state": "working",
+            "detail": "Renders the AI assistant's chat replies as read-only markdown. Unrelated to document authoring — confirmed by grep, this is the only react-markdown/remark/rehype usage in the estate; there is no markdown *editor* surface anywhere."
+          }
+        ],
+        "non_technical_user_can": "Today a non-technical user can either (a) upload a .docx/.doc/.pdf as an opaque attachment via a metadata form (title, category, access level, storage bucket) and later download the unchanged original — no in-app preview or editing, or (b) if a developer/admin has already hand-authored a template directly in Google Docs (typing {{FIELD_NAME}} placeholders themselves) and pasted its Google Doc ID into crm7's 'Register Template' form, the user can pick that pre-built template from a dropdown and click 'Generate PDF' to merge live CRM data into it and download/sign the result. What a non-technical user CANNOT do is upload their own existing Word document and turn it into an editable, merge-field-enabled template inside BSuite — there is no in-app viewer, no in-app editor, no docx parser, and no visual merge-field inserter anywhere in the estate. The only 'editing' surface for a template is Google Docs itself (an external tool), and creating a merge field there requires manually typing raw {{...}} syntax — arguably a higher bar than the markdown the operator already rejects as too technical.",
+        "gaps": [
+          "Zero docx/doc/odt/rtf parsing libraries anywhere in the 6-app estate (mammoth, docx, docxtemplater, pandoc, officegen all absent from every package.json and lockfile) — nothing can read the CONTENTS of an uploaded Word file, only store its raw bytes.",
+          "Zero WYSIWYG/rich-text editor package anywhere (no Tiptap/Slate/Lexical/Quill/CKEditor) to build an in-app document editor on top of.",
+          "No merge-field UI (field picker, autocomplete, 'insert field' button) exists anywhere; every merge-field mechanism in the estate is either hand-typed {{TOKEN}} text in an external Google Doc, or a hardcoded server-side resolver function (resolveField() in generate-document/index.ts) that only understands a fixed, developer-defined set of entity fields.",
+          "The one schema element that gestures at 'upload a docx and use it as a template' (document_templates.source='uploaded_docx', uploaded_file_path) is a dead stub with no implementing code — not a partial feature, unreachable from any UI or edge function.",
+          "Document template authoring/editing is entirely outsourced to Google Workspace (WIF-authenticated Google Docs/Drive API) — there is no BSuite-native document composition surface at all; if a tenant has no Google Docs access, template authoring is impossible.",
+          "No in-app preview exists for uploaded Office documents (no Google Docs Viewer iframe, no Office Online embed, no docx-to-HTML render) — users must download the file locally to view it.",
+          "The Collaborative Documents Monaco editor cannot import an uploaded file of any kind and produces plaintext/code/markdown source, not formatted rich text — it is not a substitute for a word-processor-style editor even though it superficially sounds like one."
+        ],
+        "reusable_assets": [
+          "Supabase Storage document buckets + RLS + document_records/document_templates tables (crm7) — tenant-scoped, virus-scanned (document-virus-scan edge fn), already handle the 'store the raw file' half of any future upload-and-edit flow.",
+          "FileUploadZone component (crm7/src/components/common/FileUploadZone.tsx) — reusable, virus-scan/size-limit-aware upload widget already wired into multiple pages.",
+          "Monaco + YJS + Supabase Realtime collaborative-editing substrate (realtime-monaco.tsx, useCollaborativeDocuments.ts, collaborative_documents.body_yjs_state) — a working live-multiuser-editing CRDT pipeline; swapping Monaco for a rich-text editor (e.g. Tiptap/ProseMirror) bound to the same YJS document would reuse all the sync/persistence plumbing instead of building CRDT infra from scratch.",
+          "Merge-data resolver pattern in generate-document/index.ts (resolveField/MergeVarSpec, entity-to-merge-data mapping for people/employers/training_contracts, composite fields like full_name/address/anzsco) — the DATA side of mail-merge (pulling live CRM values into named fields) is already built and format-agnostic; it could feed a future in-app editor's merge fields just as well as it feeds Google Docs today.",
+          "WIF-based keyless Google API auth (getGoogleAccessTokenViaWIF, duplicated in googleDocsService.ts and generate-document/index.ts) — reusable as-is if the eventual docx pipeline leans on Google Drive's native 'upload + convert=true' endpoint to auto-convert an uploaded .docx into an editable Google Doc, which would satisfy the dead 'uploaded_docx' stub cheaply without adding a new parsing library.",
+          "pdf-lib generation/annotation patterns (documentSigner.ts, offerDocuments.ts) — proven for the 'render final PDF' output stage of any future compose-then-export flow."
+        ]
+      },
+      {
+        "area": "conduit (recruitment ATS, Next.js 16) — document + template authoring capability audit",
+        "what_exists": [
+          {
+            "name": "r7_documents — candidate document catalogue",
+            "path": "conduit/src/app/(dashboard)/candidates/[id]/documents/_view.tsx:79-329; conduit/src/components/portal/DocumentsSection.tsx:1-60; conduit/src/lib/getCandidateProfile.ts:261",
+            "state": "stub",
+            "detail": "Full upload/list/download/delete CRUD is wired against a real, correctly-shaped live table (verified live: entity_type/entity_id polymorphic, file_url, verified/verified_at — 0 rows). But uploads write to storage bucket 'candidate-documents' (_view.tsx:52), which does NOT exist in the live Supabase project tuybltdrdefjblnplpqo (verified via storage.buckets query — only 'contracts' and 'r7-documents' exist). The code has a bespoke toast for exactly this failure ('Storage bucket candidate-documents does not exist', line 166) — the gap is known in-code but unfixed, so every real upload attempt fails. This is raw file attachment only (PDF/DOC/image) — no content authoring."
+          },
+          {
+            "name": "r7_document_records / r7_document_signatories / r7_document_audit_logs — in-house e-sign substrate",
+            "path": "conduit/supabase/migrations/20260618140000_r7_document_esign.sql:1-140; conduit/src/components/esign/offerSigning.ts:1-171; conduit/src/components/esign/SignDocumentFlow.tsx; conduit/src/components/esign/OfferSignModal.tsx",
+            "state": "working",
+            "detail": "Schema, RLS (user_tenants pattern) and the private 'r7-documents' storage bucket are all confirmed live and consistent. Candidate→host→recruiter ordered signature capture with an audit trail is functional (0 rows live, but the migration's own comment records that it deliberately replaced dead crm7 tables after a live-catalog probe). It only signs a PDF that already exists at source_storage_path — no authoring capability of its own."
+          },
+          {
+            "name": "Offer-letter / training-contract PDF generator",
+            "path": "conduit/src/lib/esign/offerDocuments.ts:1-431; invoked from conduit/src/app/(dashboard)/offers/_view.tsx:584-597 via OfferProgressDialog.tsx onGenerateDocument",
+            "state": "working",
+            "detail": "Real, functioning pdf-lib generator (word-wrap, pagination, field rows) that produces a Letter of Offer and a Training Contract PDF and uploads them to the live r7-documents bucket, updating r7_offers.offer_letter_url / training_contract_url. But the wording, headings and paragraph structure are hardcoded TypeScript string literals inside offerDocuments.ts (generateOfferLetterPdf / generateTrainingContractPdf). The only field a user can influence is one free-text 'terms' Textarea on the offer form (offers/_view.tsx:943-952) — everything else is fixed. This is a generator, not an authoring system."
+          },
+          {
+            "name": "communication_templates — SMS/email lifecycle-event template editor",
+            "path": "conduit/src/app/admin/templates/_view.tsx:1-411; conduit/src/app/admin/templates/actions.ts:1-138; conduit/src/app/admin/templates/constants.ts:1-88; conduit/src/app/admin/templates/page.tsx:1-22; conduit/supabase/migrations/20260707180000_communication_templates_event_type.sql",
+            "state": "working",
+            "detail": "A genuine, non-technical authoring UI: name, channel (SMS/email), optional lifecycle-event binding (timesheet_submitted, timesheet_approved, leave_requested, leave_approved, pay_period_closed), a plain Textarea body (+ subject for email) using {{variable}} tokens, with a live extracted-variable badge preview (extractTemplateVariables, constants.ts:66-87). Server actions re-resolve tenant server-side and rely on RLS. 0 rows live but the code path targets the correct live table/columns. This is the closest thing conduit has to real content authoring — but it is scoped to short SMS/email strings, not formatted documents."
+          },
+          {
+            "name": "email_templates — Settings ▸ Email Templates editor (duplicate, broken)",
+            "path": "conduit/src/stores/emailTemplateStore.ts:1-135; conduit/src/components/settings/EmailTemplatesSection.tsx:1-150+; mounted at conduit/src/app/(dashboard)/settings/_view.tsx:138",
+            "state": "dead",
+            "detail": "A second, parallel template editor with a nicer UX (category picker, insert-variable buttons, live preview via interpolateTemplate) that LOOKS like a working authoring tool. It targets table email_templates with a `body` field. Live-schema query (tuybltdrdefjblnplpqo) confirms the real email_templates table has NOT-NULL body_html + nullable body_text — there is NO body column. Every create/update in emailTemplateStore.ts (lines 60-112) will fail at Postgrest with a 'column not found' error the first time a real user tries to save; reads via select('*') succeed but return undefined for the body field the UI relies on. 0 rows live is consistent with this path never having successfully saved anything. This is a dead/broken duplicate of the working communication_templates editor, sitting in Settings where a user would reasonably look for it."
+          },
+          {
+            "name": "correspondenceTemplates.ts — AI-triage deterministic email drafts",
+            "path": "conduit/src/lib/correspondenceTemplates.ts:1-90; called from conduit/src/lib/ai/tools/triage-tools.ts:245",
+            "state": "working",
+            "detail": "Three hardcoded successful/progressing/declined email drafts (subject+body) used as the AI 'Jodie' triage tool's starting draft, always human-reviewed before send. Not user-editable in any UI — pure code string templates, no admin surface."
+          },
+          {
+            "name": "scorecard-templates.ts — interview scorecard criteria sets",
+            "path": "conduit/src/lib/scorecard-templates.ts:1-80",
+            "state": "working",
+            "detail": "Hardcoded criteria lists per interview type (technical/panel/phone/workplace_visit/etc). Not document content and not user-editable; seeds a structured rating form, referenced here only because it was in the 'template' grep sweep."
+          },
+          {
+            "name": "r7_onboarding_templates / r7_onboarding_instances / r7_onboarding_tasks — checklist templates",
+            "path": "conduit/src/stores/onboardingStore.ts:1-135; conduit/src/app/(dashboard)/onboarding/_view.tsx:1-342; type OnboardingTaskTemplate at conduit/src/types/entities.ts:633-641",
+            "state": "partial",
+            "detail": "Full CRUD store exists and the live table schema matches. The create-template form (onboarding/_view.tsx:176-231) only captures name/description/entity_type and always saves tasks:[] (line 97) — OnboardingTaskTemplate is defined in types/entities.ts but grep confirms it is referenced nowhere else in the codebase, i.e. there is no UI to build or edit the actual task checklist inside a template. These are task-checklist templates, not document/letter content, and even the checklist half is only half-built."
+          },
+          {
+            "name": "docx / Google-Docs merge capability",
+            "path": "n/a — searched conduit/src and conduit/supabase for 'docx', 'generate-document', 'googleapis', 'google.docs'",
+            "state": "dead",
+            "detail": "No hits anywhere in conduit. crm7 has a working WIF-based Google Docs merge pipeline (referenced in conduit/CLAUDE.md as 'Reference impl: crm7/supabase/functions/generate-document/index.ts') but conduit has never adopted the equivalent — conduit's only document generator is the hardcoded pdf-lib path in offerDocuments.ts."
+          }
+        ],
+        "non_technical_user_can": "For SMS/email comms bound to lifecycle events (timesheet/leave events), a non-technical user CAN author real message content today at /admin/templates: fill in a name, pick SMS or email, type a plain-English body (and subject for email) into an ordinary text box, and drop in {{first_name}}-style placeholders — no markdown, no HTML, no code, and the UI shows them exactly which placeholders it detected. That is a genuinely working, brutally-simple authoring surface — but it only produces short strings, not formatted documents. For anything that becomes a downloadable/printable/signable document — the offer letter and the training contract, the two artefacts a GTO's whole hiring loop hinges on — a non-technical user CANNOT author or even lightly edit a sentence of the wording. The letter's headings, boilerplate paragraphs, and field layout are hardcoded TypeScript inside offerDocuments.ts; the only knob exposed in the UI is one generic 'terms' free-text box on the offer form. Changing 'We are pleased to offer you the position of...' to anything else requires an engineer to edit source code and redeploy. Worse, a user who goes looking for a document/email template editor in Settings will find one (EmailTemplatesSection, complete with a variable-insert toolbar and live preview) that appears fully functional but silently fails to save on the live database because it targets a column ('body') that doesn't exist on the real table — so that surface is an active decoy, not a degraded-but-usable option. And a user trying to upload a candidate's own resume/ID/qualification document (the most basic 'authoring-adjacent' action — attaching a file) will also fail, because the storage bucket the upload UI writes to was never provisioned in production.",
+        "gaps": [
+          "No document (letter/contract) content authoring UI anywhere — offer letter and training contract wording is 100% hardcoded in offerDocuments.ts; multi-tenant/per-host-employer customisation of legal wording is impossible without a code change.",
+          "The one real authoring UI that exists (communication_templates at /admin/templates) is scoped to short SMS/email strings only — it cannot produce a formatted, brand-headed, multi-page PDF document.",
+          "A second, near-identical-looking template editor (Settings ▸ Email Templates / email_templates table) is live in the UI but broken end-to-end on save — confirmed via live schema query (writes a non-existent 'body' column against a table that actually has body_html/body_text).",
+          "candidate-documents storage bucket referenced by the candidate document-upload UI does not exist in production — every upload fails; the failure mode is already anticipated in a toast string but never fixed.",
+          "No docx / Word / Google-Docs merge capability in conduit at all, unlike crm7's WIF-based generate-document pipeline that conduit's own CLAUDE.md cites as the reference implementation.",
+          "Onboarding templates (r7_onboarding_templates) have no task-builder UI — OnboardingTaskTemplate is a defined type with zero UI consumers; every template is created with an empty task list and stays empty.",
+          "No template versioning, draft/preview-as-PDF, or approval workflow for any of the template systems found.",
+          "No bulk/mail-merge send of an authored template across many candidates at once — every path found is single-record (one offer, one candidate)."
+        ],
+        "reusable_assets": [
+          "communication_templates editor pattern (conduit/src/app/admin/templates/): tenant-scoped server actions + RLS + a dependency-free {{variable}} extractor (extractTemplateVariables, constants.ts:66-87) that already works and is unit-testable — a solid starting point for a broader authoring UI.",
+          "offerDocuments.ts pdf-lib layout primitives (wrapText, drawParagraph, drawField, page-overflow pagination, startDocument header/footer) — a working from-scratch PDF renderer; could be re-parameterised to take an editable template model instead of hardcoded strings.",
+          "r7-documents private storage bucket + tenant-scoped object RLS (live, proven) for storing generated/signed PDFs — already the landing spot for any newly-authored document.",
+          "In-house e-sign substrate (r7_document_records/signatories/audit_logs + SignDocumentFlow.tsx/OfferSignModal.tsx) is artefact-agnostic (keyed on entity_type/entity_id) — any newly-authored PDF could be routed through this same working signing pipeline without new schema.",
+          "r7_documents table + RLS (candidate/employer document catalogue) is correctly shaped and ready to use the moment the missing storage bucket is provisioned.",
+          "crm7's generate-document / WIF Google Docs merge pattern (cited in conduit/CLAUDE.md) is a proven sibling-repo implementation conduit could adopt rather than reinvent."
+        ]
+      },
+      {
+        "area": "Document/template/content authoring across business-suite-unified (BSU), braden, and throughput",
+        "what_exists": [
+          {
+            "name": "content_pages public renderer",
+            "path": "braden/src/pages/DynamicPage.tsx:121-190 (route: braden/src/Routes.tsx:157, catch-all :slug)",
+            "state": "working",
+            "detail": "Fetches a published content_pages row by slug, JSON.parses the TEXT `content` column, requires shape {sections:[{heading,body}], lastUpdated?}, and renders it through a hand-rolled markdown-lite formatter (renderFormattedBody/renderInlineFormatting, lines 24-113) that only understands **bold**, blank-line paragraph breaks, and '- ' bullet lines. Confirmed live: the 2 existing rows are /privacy and /terms."
+          },
+          {
+            "name": "content_pages admin editor #1 (PagesTab)",
+            "path": "braden/src/components/admin/editor/tabs/PagesTab.tsx:94-127 + braden/src/components/admin/hooks/usePagesData.ts:151-235",
+            "state": "dead",
+            "detail": "Bare <Textarea placeholder=\"Page Content\"> that inserts/updates the raw typed string directly into content_pages.content with no JSON wrapping - anything saved here breaks DynamicPage.tsx's parser and the page renders 'Page Not Found'. Mounted in two duplicate SiteEditorLayout.tsx files (braden/src/components/admin/SiteEditorLayout.tsx:118 and braden/src/components/admin/editor/SiteEditorLayout.tsx:113) via ContentManager.tsx, but braden/src/Routes.tsx:189-211 redirects the entire /admin/* prefix (except /admin/branding, /admin/page-builder, /admin/marketing) to a 'Admin Portal Moved' stub pointing at the BSU Developer Portal. No route ever mounts this component - confirmed by grep for Route path= across src/."
+          },
+          {
+            "name": "content_pages admin editor #2 (ContentForm)",
+            "path": "braden/src/components/content/ContentForm.tsx + braden/src/components/content/ContentFormFields.tsx:56-70",
+            "state": "dead",
+            "detail": "Labels its content field 'Content (JSON)' with placeholder {\"blocks\": []} - a shape that doesn't even match what DynamicPage.tsx expects ({sections:[...]}, not {blocks:[...]}). Requires the author to hand-write JSON. Also never referenced from braden/src/Routes.tsx - unrouted, unreachable dead code."
+          },
+          {
+            "name": "/admin/page-builder visual canvas",
+            "path": "braden/src/pages/admin/PageBuilder.tsx:1-329",
+            "state": "stub",
+            "detail": "File's own header comment: 'Phase 2a scaffolding' - empty component palette ('Component palette will land in Phase 2b (#264)'), empty PageGridLayout canvas with zero widgets, Save/Load write an empty layout_json:{} to an unrelated page_drafts table. Not wired to content_pages at all."
+          },
+          {
+            "name": "page_sections reader (home page hero/about/footer)",
+            "path": "braden/src/hooks/useCMSContent.ts:84-128 (usePageSection hook)",
+            "state": "working",
+            "detail": "Reads page_sections by (page_name, section_name), used to hydrate Hero/About/Footer components on braden's homepage with a static-fallback pattern when a section is unauthored."
+          },
+          {
+            "name": "page_sections admin editor (Developer > Website > CMS tab)",
+            "path": "business-suite-unified/src/pages/Developer/Website.tsx:161-316 (route: /developer/website, registered at business-suite-unified/src/pages/Developer/index.tsx:150)",
+            "state": "working",
+            "detail": "The one genuinely working, code-free authoring surface found. Fetches page_sections for page_name='home' (hardcoded), renders one plain <input>/<textarea> per existing JSON key in each section's content (values >80 chars get a textarea), and upserts via TanStack mutation on Save (lines 193-221). No JSON, no markdown, no code required to edit an existing field's text."
+          },
+          {
+            "name": "cms_documents table",
+            "path": "business-suite-unified/supabase/migrations/20260410000000_enable_rls_all_unprotected_tables.sql:26,467 + 20260412100000_consolidate_remaining_permissive_policies.sql:135-172 (schema only)",
+            "state": "dead",
+            "detail": "A file-upload/document-library shaped table (file_url, file_type, cover_image, download_count, visibility - see braden/src/integrations/supabase/types.ts:2015-2035). Grep across business-suite-unified/src, braden/src, throughput/src finds zero reads or writes anywhere except the generated Database type file. RLS/indexes exist; no application code ever touches the table."
+          },
+          {
+            "name": "cms_posts table",
+            "path": "business-suite-unified/supabase/migrations/20260410000000_enable_rls_all_unprotected_tables.sql:154,206 (schema only)",
+            "state": "dead",
+            "detail": "Same pattern as cms_documents - a blog-post-shaped table (author_id, category, content Json) with RLS policies but zero application-code references in any of the 3 apps' src/ trees."
+          },
+          {
+            "name": "email_templates table + send-time reader",
+            "path": "business-suite-unified/supabase/functions/email-dispatcher/index.ts:212-226,243-244; RLS at business-suite-unified/packages/db/migrations/0005_email_enhancements.sql:174-186",
+            "state": "partial",
+            "detail": "Table has columns subject/body_html/body_text, an 'Admins can manage templates' RLS policy, and is actively read+variable-substituted (substituteVariables) at send time by the email-dispatcher edge function, which also wraps platform sends in a branded HTML shell (renderEmail, line 244). But grep across all 3 apps' src/ for email_templates finds zero UI reads or writes - the Developer > Website 'Emails' tab is explicitly read-only per its own file header comment (Website.tsx:7, 'Emails - read-only view of sent email_messages'). No screen anywhere creates or edits an email_templates row; rows must be hand-inserted via SQL/Supabase dashboard."
+          },
+          {
+            "name": "generate-document edge function (invoice/quote/report/contract/receipt)",
+            "path": "business-suite-unified/supabase/functions/generate-document/index.ts:20-48",
+            "state": "working",
+            "detail": "Server-side HTML document generator for 5 document types, but the HTML templates are hardcoded inside the TypeScript function (not a database row, not user-editable). It's a renderer, not an authoring surface."
+          },
+          {
+            "name": "throughput idea CollaborativeEditor",
+            "path": "throughput/src/components/collaboration/CollaborativeEditor.tsx:244-253 (used by throughput/src/pages/IdeaDetail.tsx:148-152)",
+            "state": "working",
+            "detail": "A plain <textarea> (no bold/links/formatting of any kind) with a real-time collaboration layer on top (live cursors, position-anchored comments via CollaborationManager). Edits a single Idea's free-text description field only - not a CMS/page/template surface, but the collab plumbing (participants, cursor sync, comment threads) is a reusable asset if a shared editor wanted live co-authoring."
+          },
+          {
+            "name": "@bsuite/page-builder PageGridLayout canvas + page_drafts table",
+            "path": "braden/src/pages/admin/PageBuilder.tsx:26 (import), business-suite-unified Developer > Branding page (PageGridRoute, braden/src/Routes.tsx:197-204)",
+            "state": "partial",
+            "detail": "A proven drag/resize widget-grid primitive already used for dashboard/branding-page layout (not content authoring). Its page_drafts table (slug, title, layout_json JSONB, UNIQUE(slug, created_by)) exists and round-trips an empty payload today; would need real widget primitives (Phase 2b, tracked as braden#264) before it could serve as a document canvas."
+          }
+        ],
+        "non_technical_user_can": "For braden.com.au marketing/legal pages (content_pages): nothing. There is no reachable UI at all - both admin editors that exist in the codebase (PagesTab and ContentForm) are dead code, never mounted by any route, because /admin/* was redirected suite-wide to a 'moved to BSU Developer Portal' stub. Even if a user found one of the dead editors, one requires typing plain text that silently corrupts the page (falls into 'Page Not Found') and the other explicitly demands hand-written JSON ('Content (JSON)' label, placeholder {\"blocks\": []}). The only two pages that exist today (Privacy, Terms) were authored by an engineer hand-writing a raw JSON payload inside a SQL migration file, using **bold**/'- ' markdown-lite syntax by hand - there has never been a working non-technical path to create or edit a content_pages row. For the braden homepage sections (page_sections: hero/about/footer copy): a logged-in admin CAN go to suite.crm7.app -> Developer -> Website -> CMS tab and edit plain-text fields (no code, no markdown, no JSON visible) and click Save. This is the one real, working, code-free authoring surface in the whole document/content-authoring area - but it only lets you overwrite VALUES for keys that already exist in the database row; you cannot add a new section, add a new field, add a link, add an image, or apply any formatting (bold/italics/lists) through this UI. For email templates: nothing - no screen anywhere lets any user, technical or not, create or edit an email_templates row; someone with direct SQL access has to hand-insert them.",
+        "gaps": [
+          "No routed, functioning UI exists to create or edit content_pages at all - both candidate admin editors in braden are dead code (unrouted since the /admin/* -> 'Portal Moved' redirect) and neither produces data that matches DynamicPage.tsx's expected {sections:[{heading,body}]} JSON shape even if reached.",
+          "No rich-text editor exists anywhere in the estate - grep of package.json in all 3 apps for tiptap/quill/slate/lexical/draft-js/prosemirror returns zero hits. Every text-entry surface found (PagesTab Textarea, ContentFormFields Textarea, Website.tsx CMS tab inputs, throughput CollaborativeEditor textarea) is plain, unstyled text.",
+          "Three incompatible content schemas exist for what is conceptually the same 'editable copy' concept: content_pages.content = free-form {sections:[{heading,body}]} parsed by hand-rolled markdown-lite; page_sections.content = flat Record<string,string>; email_templates = {subject, body_html, body_text} with {{var}} substitution. A shared system needs one canonical block/content schema all three render paths consume.",
+          "The one working editor (Developer > Website CMS tab) can only edit pre-existing keys on pre-existing rows for a single hardcoded page_name='home' on braden - it cannot add sections/fields, has no multi-tenant/multi-app addressing, and has no draft/publish/version workflow (content_pages has only a boolean is_published; page_drafts exists but is disconnected from any real content-rendering path).",
+          "email_templates has a real 'Admins can manage' RLS write policy and a real send-time reader (email-dispatcher with variable substitution) but zero UI ever exercises the write side - an entire, otherwise-working template pipeline is authored exclusively by hand-writing SQL.",
+          "cms_documents and cms_posts are pure schema debt: RLS policies and indexes maintained across multiple migrations for tables that zero application code in any of the 3 apps reads or writes. Should be deleted or built out, not left as invisible unused surface area.",
+          "generate-document's invoice/quote/report/contract/receipt templates are hardcoded in TypeScript, not stored/authorable data - anyone wanting to change document wording needs a code change and deploy, not a content edit.",
+          "No content-authoring UI in any of the 3 apps supports images/media, links, or any block type beyond bold + bullet list + paragraph (and that only inside content_pages' bespoke parser) - there is no shared media-asset picker for authored content."
+        ],
+        "reusable_assets": [
+          "business-suite-unified/src/pages/Developer/Website.tsx CmsTab pattern (lines 161-316) - a working, genuinely code-free 'edit existing JSON keys as plain-text form fields, upsert via TanStack Query' pattern; the strongest existing starting point for a real non-technical editor, but needs generalizing beyond one hardcoded page/tenant plus rich-text + add/remove-field support.",
+          "@bsuite/page-builder PageGridLayout + page_drafts table (braden/src/pages/admin/PageBuilder.tsx) - proven drag/resize widget-grid canvas already used live for the BSU Developer > Branding page; could become the layout/canvas layer of a shared editor once real content-block widgets are built.",
+          "@bsuite/schema-registry PageComposer / NavigationEditor at BSU /developer/pages and /developer/nav, and the tenant_page_layouts / app_scope RLS pattern (per business-suite-unified/CLAUDE.md 'Phase 5 - Schema + Page Builder') - the closest existing precedent for tenant-scoped, role-gated authoring infrastructure to build a shared document system on top of.",
+          "email-dispatcher's substituteVariables + renderEmail branded-shell wrapper (business-suite-unified/supabase/functions/email-dispatcher/index.ts:220-244) - working, tested template-variable substitution and a consistent branded HTML wrapper; only needs an authoring UI placed in front of the existing email_templates table.",
+          "throughput's CollaborationManager / CollaborativeEditor real-time layer (throughput/src/lib/collaboration.ts, throughput/src/components/collaboration/CollaborativeEditor.tsx) - working live-cursor + threaded-comment infrastructure that could be layered onto a shared rich-text editor for live co-authoring.",
+          "content_pages and page_sections already have tenant-scoped RLS, publish flags, and realtime-enabled subscriptions (business-suite-unified/supabase/migrations/20260409000003_enable_realtime_all_tables.sql) - the database layer for a shared system is mostly present; it is specifically the authoring-UI layer, and a single canonical content schema, that are missing."
+        ]
+      },
+      {
+        "area": "R80.4/crm7 — quote & charge-rate document output and signing (does BSuite have a unified document-authoring path?)",
+        "what_exists": [
+          {
+            "name": "Charge-rate quote e-sign email dispatch",
+            "path": "crm7/supabase/functions/charge-rate-quote-dispatch/index.ts:279-353",
+            "state": "working",
+            "detail": "Deployed & ACTIVE (confirmed via Supabase list_edge_functions, entrypoint under crm7). Mints a single-use hashed token into charge_rate_quote_signing_tokens (1 live row), inserts signature_requests (5 live rows), and sends an email via the shared email-dispatcher function. Subject/body (HTML + plaintext) are hardcoded template-literal strings built inline in the function (lines 299-320) — no authoring surface, no CMS, no variables editable outside source."
+          },
+          {
+            "name": "Public charge-rate quote sign page",
+            "path": "crm7/src/pages/quotes/sign/[token].tsx",
+            "state": "working",
+            "detail": "This IS the 'document' the host reads — a hardcoded React/JSX card (host name, rate, effective date, optional oncost breakdown pulled from charge_rate_snapshots). No PDF or HTML file is emailed; the host clicks the link and reads a live-rendered page, then draws or types a signature and calls the redeem_charge_rate_quote_signature RPC. Layout is 100% code, not authored anywhere."
+          },
+          {
+            "name": "Client-side 'Download PDF copy' on the sign page",
+            "path": "crm7/src/pages/quotes/sign/[token].tsx:199-232 + crm7/src/components/rates/ChargeRatePdfDocument.tsx",
+            "state": "working",
+            "detail": "Optional button generates a PDF client-side via @react-pdf/renderer using a fixed, code-defined layout component. Not template-driven, not authored by any user."
+          },
+          {
+            "name": "SendForSignatureDialog (staff send UI)",
+            "path": "crm7/src/components/charge-rates/SendForSignatureDialog.tsx",
+            "state": "working",
+            "detail": "Non-technical GTO staff can pick a host contact (ContactSelector, narrowed by host employer) or type name/email manually, add an optional message, and click Send — no code/markdown required to TRIGGER a send."
+          },
+          {
+            "name": "Google-Docs template merge document generation (GenerateDocumentModal + crm7's generate-document source)",
+            "path": "crm7/src/components/documents/GenerateDocumentModal.tsx:87-101; crm7/supabase/functions/generate-document/index.ts:192-440",
+            "state": "dead",
+            "detail": "Designed to copy a Google Doc template, replace {{VARIABLE}} placeholders via the Docs API (keyless WIF auth), export to PDF. GenerateDocumentModal POSTs {templateId, entityType, entityId, overrides}. BUT the function actually deployed to the shared Supabase project under the slug 'generate-document' (confirmed via mcp__supabase__list_edge_functions, entrypoint_path) is a DIFFERENT source file — business-suite-unified/supabase/functions/generate-document/index.ts — which expects {tenant_id, type, data} and returns 400 'Missing required field: tenant_id' on every call from crm7's modal. crm7's Google-Docs version is shadowed and effectively unreachable in production regardless of template state."
+          },
+          {
+            "name": "document_templates table (schema for the Google-Docs merge above)",
+            "path": "crm7/supabase/migrations/20260304000001_document_lifecycle.sql:3-26 vs live schema",
+            "state": "dead",
+            "detail": "Migration ledger records 20260304000001 as applied, but its `CREATE TABLE IF NOT EXISTS document_templates` silently no-op'd because an earlier migration (20260228140000_create_communications.sql:144-158) already created document_templates with a completely different, simpler shape (document_type, body, variables, custom_fields). Verified live via execute_sql against project tuybltdrdefjblnplpqo: the table has NONE of google_doc_id / merge_variables / signing_config / is_system_default / subcategory / branding_level / requires_guardian_if_minor, and has 0 rows. The seed script (supabase/seed/document_templates_seed.sql) that would insert 12 system templates using those missing columns has therefore never successfully run against production."
+          },
+          {
+            "name": "Document Templates registry page ('Register Template')",
+            "path": "crm7/src/pages/documents/templates/index.tsx:48-50",
+            "state": "stub",
+            "detail": "Says 'Templates are authored in Google Docs. Register the Doc ID here.' The 'Register Template' button links to /documents/templates/new — no such file exists in src/pages/documents/templates/, and the route is not registered in crm7/src/App.tsx (grep confirmed). Even if it existed, it would write to a table missing the columns the rest of the pipeline needs."
+          },
+          {
+            "name": "SignDocumentFlow + documentSigner.ts (in-browser pdf-lib PDF stamping)",
+            "path": "crm7/src/components/documents/SignDocumentFlow.tsx; crm7/src/lib/documentSigner.ts",
+            "state": "dead",
+            "detail": "A complete, more rigorous signer: fetches an existing PDF, embeds a drawn signature image, stamps signer name/date, appends an AU Electronic Transactions Act 1999-style audit-trail page, computes a SHA-256 hash, uploads the signed PDF to Storage, and updates document_signatories/document_records/document_audit_logs. grep across src confirms it is imported by NO page (only self-reference) — fully built but never rendered. document_signatories has 0 live rows, consistent with it never being reached."
+          },
+          {
+            "name": "Digital Signatures list page",
+            "path": "crm7/src/pages/documents/signatures.tsx:167-171",
+            "state": "stub",
+            "detail": "Lists signature_requests (5 live rows, all from the charge-rate flow above). The 'New Request' button has no onClick handler. Page copy says 'DocuSign integration and signature workflow tracking' but there is no DocuSign integration anywhere in the codebase — signing is entirely home-grown."
+          },
+          {
+            "name": "Training-plan e-signature (TripleSignOff / e-signatures.tsx / worker-portal.tsx / field-officer.tsx)",
+            "path": "crm7/src/pages/contracts/training/e-signatures.tsx; crm7/src/lib/data/signatureQueries.ts; crm7/src/pages/portal/worker-portal.tsx:287-307; crm7/src/pages/portal/field-officer.tsx:182-233",
+            "state": "working",
+            "detail": "A SEPARATE, internal signing system for training_plans: apprentice/host_employer/gto_officer/rto co-sign draw-or-type signatures directly inside authenticated crm7 pages (no email, no public token link — the opposite distribution model from the charge-rate flow). Code is wired end to end but training_plan_signatures has 0 live rows — confirmed never exercised in production."
+          },
+          {
+            "name": "Training contract documents",
+            "path": "crm7/src/pages/contracts/training/[id]/index.tsx:623-627 + crm7/src/components/documents/DocumentUploadActions.tsx",
+            "state": "working",
+            "detail": "training_contracts has 8 live rows, but crm7 never authors or signs the contract document itself — the UI is upload-only (DocumentUploadActions renders links to an upload route for 'signed contracts, variations, and AASN lodgement evidence'), consistent with training contracts being executed via a state training authority portal (e.g. WAAMS) outside BSuite and the evidence being uploaded afterward."
+          },
+          {
+            "name": "R80.4 quote output",
+            "path": "R80.4/src/awards/quote-store.ts:1-46, 159-174, 230-245; R80.4/package.json",
+            "state": "working",
+            "detail": "This is a local scratchpad, not a document/signing system. R80.4 has NO @supabase/supabase-js dependency (verified in package.json) and the module's own doc-comment states 'no fetch, no @supabase/supabase-js, no transport of any kind.' A saved quote lives in localStorage only; export produces JSON or CSV that a human copies/downloads to paste into crm7 by hand. R80.4 never emails, never signs, never touches a database — all rendering/signing happens downstream in crm7."
+          },
+          {
+            "name": "R80.3",
+            "path": ".gitmodules:21-23 (only R80.4 is registered)",
+            "state": "dead",
+            "detail": "R80.3 does not exist as a directory or submodule in this checkout — only R80.4 is present. crm7/CLAUDE.md and business-suite-unified/CLAUDE.md still list R80.3 as a live OAuth client app (domain r8.crm7.app) — stale documentation, not a live app."
+          }
+        ],
+        "non_technical_user_can": "For charge-rate quotes ONLY (the one working path): a GTO staff member can, with zero coding, open the charge-rate detail page, click 'Send for e-signature', pick a host contact from a dropdown (or type a name/email), add an optional note, and click Send — this fires a real email containing a real link. The host who receives it needs no account, no login, and no technical skill: they click the link, read a summary card, draw or type their signature, and click Sign. That is the full extent of what a non-technical user can do end to end today. Nobody — staff or host, technical or not — can change a single word of the email copy, the on-screen quote-summary layout, the downloadable PDF layout, or add any new document type (e.g. a host services agreement, an induction pack, an offer letter) without a developer editing TypeScript/JSX/edge-function source and shipping a deploy. There is no template editor, no WYSIWYG, no markdown field, no admin form, no merge-variable UI anywhere that actually works. The one screen that promises exactly that ('Templates are authored in Google Docs. Register the Doc ID here to enable merge and signing.') is a dead end: its only entry point ('Register Template') links to a page that does not exist, and even if it did, it would write into a database table that is missing the very columns (google_doc_id, merge_variables, signing_config) the rest of the pipeline needs, and would invoke an edge function that a completely different, incompatible implementation has silently taken over in production.",
+        "gaps": [
+          "No authoring surface exists anywhere in BSuite for host-facing document or email content — every layout that is actually live (email copy, on-screen quote card, PDF) is hardcoded in source files, so any wording/branding/field change requires a code change and a deploy.",
+          "Two different edge functions share the deployed slug 'generate-document' (crm7's Google-Docs-merge version vs. business-suite-unified's flat-HTML version); the latter is what's actually live, so every call from crm7's GenerateDocumentModal 400s on a payload-shape mismatch — this is not a future risk, it is failing on every invocation today.",
+          "document_templates' production schema silently diverged from its own migration (CREATE TABLE IF NOT EXISTS no-op against an earlier, incompatible table) — the entire template-registration concept has 0 rows and cannot work even if someone tried to use it via SQL directly, without a further migration to add the missing columns.",
+          "The 'Register Template' UI entry point is a dead link (route not implemented, not registered in App.tsx).",
+          "A more rigorous, legally-reasoned PDF-stamping signer (SignDocumentFlow/documentSigner.ts/document_signatories) is fully built but wired into zero pages — pure orphaned code, confirmed by both grep (no importer) and 0 live rows.",
+          "Only ONE document type (charge-rate quotes) has a working external/host-facing send-and-sign path; there is no generalized 'send any document to an external party for signature' capability to build other flows on top of.",
+          "The training-plan e-signature system (TripleSignOff/e-signatures.tsx) works but has 0 live rows — built, wired, but never actually used in production.",
+          "Training contracts (8 live rows) are never authored or signed inside crm7 at all — only uploaded as evidence after execution elsewhere — so there is no in-app analog to the charge-rate flow for this document type.",
+          "Two of the project's own CLAUDE.md files still describe R80.3 as a live client app; it does not exist in this checkout (only R80.4 does), which is itself a documentation-drift finding worth correcting before it misleads more agent sessions."
+        ],
+        "reusable_assets": [
+          "charge_rate_quote_signing_tokens + get_charge_rate_quote_signing_context/redeem_charge_rate_quote_signature SECURITY DEFINER RPCs (crm7/supabase/migrations/20260704090000_charge_rate_quote_signing.sql) — a working, single-use, hashed, 14-day-expiring public token-link pattern that could be generalized beyond charge-rate quotes.",
+          "email-dispatcher shared edge function + communications table — an already-wired, tenant-scoped email send/track pipeline any new document flow could reuse instead of building a new mailer.",
+          "SignatureCanvas component (crm7/src/components/common/SignatureCanvas.tsx) — reusable draw-signature capture UI, already used in 3+ independent flows.",
+          "documentSigner.ts (pdf-lib) — a working, AU Electronic Transactions Act 1999-styled PDF-stamp + SHA-256 hash + audit-trail-page generator; only needs a page to actually call it.",
+          "document_templates/document_records/document_signatories schema DESIGN in 20260304000001_document_lifecycle.sql — a well-thought-out target shape (merge_variables JSON spec, signing_config JSON spec, guardian-if-minor flag, branding_level tiers) that could become the real authoring backbone once the migration collision is fixed and a real UI is built on it.",
+          "TripleSignOff component (crm7/src/components/common/TripleSignOff/) — generic, reusable 1-3-party sequential sign-off UI, already proven on training plans.",
+          "@react-pdf/renderer + the existing ChargeRatePdfDocument component — proves client-side, code-defined PDF generation works cleanly in this stack; could be made template/data-driven rather than hardcoded.",
+          "Google Docs API + Workload Identity Federation integration code in crm7's generate-document (keyless, already-documented WIF flow) — a legitimate, working-in-isolation approach to template merge+export that just needs to be the one actually deployed, and paired with the fixed document_templates schema."
+        ]
+      },
+      {
+        "area": "Document/template authoring reusability vs. existing BSuite authoring stack (page-builder, schema-builder, form-layouts, custom_pages, CustomPageRenderer)",
+        "what_exists": [
+          {
+            "name": "@bsuite/schema-builder — React Flow ER-diagram canvas",
+            "path": "packages/schema-builder/src/index.ts, packages/schema-builder/src/types.ts, packages/schema-builder/src/schemas.ts, packages/schema-builder/src/service.ts",
+            "state": "working",
+            "detail": "This is a database-schema designer, not a content editor. It edits `tenant_entities` / `tenant_entity_relations` / `tenant_field_definitions` (packages/schema-builder/src/types.ts:15-103) on a React Flow canvas with drag-connect relationship edges, cardinality, dagre auto-layout, PNG export. It defines what FIELDS exist on an entity, never prose/body content. Not a plausible base for document authoring; it is the upstream source of the 'fields' that form-layout-builder later arranges."
+          },
+          {
+            "name": "@bsuite/page-builder — dashboard widget grid (react-grid-layout)",
+            "path": "packages/page-builder/src/PageGridLayout.tsx, packages/page-builder/src/PageEditorLauncher.tsx:83-335, packages/page-builder/src/preferences.ts",
+            "state": "working",
+            "detail": "Drag/resize/reposition CARDS on a 2D grid. `PageEditorLauncher` is the authoring UI: a WidgetPalette drawer + save/cancel toolbar + `PageGridLayout` canvas in `canEditPage` mode. Only two widget TYPES are actually registered anywhere in the codebase — `EntityTableWidget` and `RelatedEntityCardWidget` (crm7/src/lib/page-builder/RelatedEntityCardWidget.tsx:1-40, crm7/src/lib/page-builder/EntityTableWidget.tsx) — both are DATA widgets (browse an entity table; show one FK-related record read-only). There is no text/rich-content/note widget type anywhere. Default persistence (`useLocalPreference`, packages/page-builder/src/preferences.ts:1-41) is browser-local `localStorage` only, prefixed `bsuite-page-builder:` — per-user, per-device, NOT shared/tenant-wide unless a consumer wires a custom `preferenceAdapter` (crm7 does this via `pageGridLayoutAdapter.tsx` to reach Supabase for registered custom pages)."
+          },
+          {
+            "name": "crm7 form-layout-builder (dnd-kit field arranger)",
+            "path": "crm7/src/components/ui-customization/FormLayoutBuilder.tsx:62-706, crm7/src/components/ui-customization/FormLayoutRenderer.tsx, crm7/src/pages/settings/form-layout-{create,edit,detail}.tsx",
+            "state": "working",
+            "detail": "The strongest existing 'field picker + WYSIWYG' surface in the stack. Left palette lists unplaced `tenant_field_definitions` fields (draggable, FormLayoutBuilder.tsx:219-258); center canvas is a dnd-kit sortable grid of Sections/Tabs (columns 1-4, collapsible) each holding dropped fields; right panel edits per-field properties (label, placeholder, help text, required/readonly/hidden, column span, FormLayoutBuilder.tsx:556-629) and per-section properties. Reachable route: /settings/form-layouts -> create -> detail (mounts the builder) -> Save calls `saveVersion` which bumps `form_layouts.version` and writes a new revision (crm7/src/pages/settings/form-layout-detail.tsx:64-66,127-135). A `DeployScopeSelector` promotes a tenant-scoped layout to platform scope. Renderer side (`FormLayoutRenderer.tsx:37-274`) supports Tabs/Sections/fields with type-aware inputs (text, textarea, boolean, select/FK-lookup, date, number). Crucially: it only positions FIELDS bound to `tenant_field_definitions` columns. No 'static text', 'heading', or 'image' block exists in this palette — you cannot add a paragraph of prose."
+          },
+          {
+            "name": "custom_pages / custom_page_revisions (Supabase tables)",
+            "path": "crm7/supabase/migrations/20260304100000_ui_customization_system.sql:95-131,300-322; crm7/src/services/customPageService.ts:1-196; crm7/src/types/ui-customization.ts:13,198-226",
+            "state": "working",
+            "detail": "`custom_pages` (slug, title, description, icon, entity_type, page_type, layout jsonb, nav_config, is_published, is_locked, version) + `custom_page_revisions` (page_id, version, layout jsonb, changed_by, change_summary, created_at) with RLS scoping writes to owner/admin. `customPageService.ts` implements full CRUD + `savePageRevision`/`getPageRevisions`/`restorePageRevision` (a genuine, working revision-history pattern: insert-only, version-numbered, restorable). `page_type` enum is `'form' | 'list' | 'dashboard' | 'detail' | 'wizard'` (crm7/src/types/ui-customization.ts:13) — no 'document'/'content' page type exists. `layout` is typed `FormLayoutConfig | Record<string, unknown>` — i.e. either the sections/fields shape from form-layout-builder, or an untyped bag (used for grid-widget pages). This revisioning table+service pair is the single most reusable asset for a document-template system's version history, but its `layout` payload shape today is 'form fields' or 'grid widgets', never 'document body'."
+          },
+          {
+            "name": "CustomPageRenderer (per-app, NOT shared)",
+            "path": "crm7/src/components/ui-customization/CustomPageRenderer.tsx:1-101; crm7/src/components/CustomPageRenderer.tsx; business-suite-unified/src/components/CustomPageRenderer.tsx; braden/src/components/CustomPageRenderer.tsx; conduit/src/components/custom-page-renderer/CustomPageRenderer.tsx; packages/page-builder/src/wysiwygContract.ts:46-52",
+            "state": "partial",
+            "detail": "Each app ships its OWN local renderer (no shared component, per crm7/CLAUDE.md 'Phase 5' section: \"TenantLayoutSlot is GONE... current pattern is the app-local CustomPageRenderer: each consumer app ships its own renderer\"). crm7's variant fetches by slug (`getCustomPageBySlug`) and renders `FormLayoutRenderer` if `layout.sections || layout.tabs` exist, else a 'no layout configured' empty state (CustomPageRenderer.tsx:87-98) — i.e. it can ONLY render form-field layouts, not arbitrary content. The governance file `wysiwygContract.ts` declares `custom-page-renderer` as `interactionPrimitive: 'read-only'` / `persistencePrimitive: 'custom-pages-read-only'`, and crm7's own CLAUDE.md states 'Authoring is Developer-Portal-only (BSU); consumer apps only render.' This is CONTRADICTED by the live code: crm7 globally mounts `PageEditorLauncher` in `MainLayout.tsx:64` and locally authors+writes its own `custom_pages`/`custom_page_revisions` via `customPageService.ts`, independent of BSU. Flagging as unresolved doc/code divergence rather than asserting either as sole truth — do not build on the 'read-only' claim without re-verifying which app your target route lives in."
+          },
+          {
+            "name": "Document Templates (crm7 Documents module)",
+            "path": "crm7/src/pages/documents/templates/index.tsx:1-118; crm7/src/types/documents.ts:43-61; crm7/supabase/migrations/20260304000001_document_lifecycle.sql:3-27; crm7/supabase/functions/generate-document/index.ts:281,344-348",
+            "state": "partial",
+            "detail": "The feature literally named 'document templates' — but it is NOT an in-app editor. The page copy reads verbatim: \"Templates are authored in Google Docs. Register the Doc ID here to enable merge and signing\" (index.tsx:44-46). The in-app UI only manages metadata: name/category/description, a `google_doc_id` pointer, `merge_variables[]` (key/source/field/required/description), and `signing_config[]`. The only content-editing action is an 'Edit in Docs' link that opens `https://docs.google.com/document/d/{id}/edit` in a new tab (index.tsx:98-107) — i.e. content authoring happens 100% OUTSIDE BSuite. Merge substitution uses a hand-typed `{{VARIABLE}}` handlebars token the author must type directly into the Google Doc (generate-document/index.ts:344-348) — there is NO in-app field-picker/inserter to click a field into the document; the user must already know the exact variable key and type it themselves inside Google Docs. `document_templates`/`document_records`/`document_signatories` tables exist with RLS (document_lifecycle.sql:3-85) but store no in-app-editable body/blocks — only the Google Doc pointer and generated PDF paths."
+          },
+          {
+            "name": "Rich text / block editor library",
+            "path": "n/a (searched every package.json in the monorepo)",
+            "state": "dead",
+            "detail": "Zero hits for TipTap, Slate, Lexical, Quill, Draft.js, or Editor.js across every package.json in the repo. There is no WYSIWYG prose surface anywhere in BSuite today — confirmed absent, not merely unused."
+          }
+        ],
+        "non_technical_user_can": "Today, a non-technical user CAN, without writing code or markdown: (1) drag-and-drop existing FORM FIELDS (already defined elsewhere via schema-builder) into sections/tabs on a settings page (crm7 Form Layout Builder) — but cannot add a heading, a paragraph of static explanatory text, or an image, only bound data fields; (2) drag/resize/add/remove DASHBOARD WIDGET cards on a page canvas (page-builder/PageEditorLauncher) — but the only placeable widgets are 'entity table' and 'related entity card', again no free text; (3) register a document template's metadata (name, category, merge-variable list, signatory roles) in a BSuite form. For the actual DOCUMENT CONTENT — the prose of an offer letter, contract, or policy document — the user must leave BSuite entirely, open Google Docs, and hand-type both the document text AND raw `{{VARIABLE}}` merge tokens with no in-app assistance, autocomplete, or field picker to insert them correctly. There is no surface in BSuite today where a non-technical user authors flowing document content (headings, paragraphs, inline formatting, embedded merge fields) inside the product itself — that capability does not exist; it has been fully outsourced to an external tool.",
+        "gaps": [
+          "No rich-text/block content model or editor exists anywhere in the codebase (confirmed by exhaustive package.json search) — a document template needs prose+headings+inline merge tags, which none of the four authoring surfaces (schema-builder, page-builder, form-layout-builder, custom_pages) can represent; `page_type` enum ('form'|'list'|'dashboard'|'detail'|'wizard') has no 'document' variant and `PageGridLayout`'s widget catalogue has no text/note widget type to build on.",
+          "The one feature actually named 'Document Templates' deliberately does NOT own content authoring — it punts to external Google Docs and only owns metadata (merge_variables[], signing_config[], google_doc_id). Any unified authoring decision must explicitly decide whether to keep punting (link-out pattern) or build first-party content editing, since no in-app precedent for the latter exists to reuse.",
+          "Merge-field insertion today requires hand-typing an exact `{{VARIABLE}}` token inside Google Docs with zero in-app picker/autocomplete/validation (generate-document/index.ts:344-348) — worse for a non-technical user than the form-layout-builder's drag-and-drop field palette, which is a strictly better UX pattern that is NOT reused for merge-field insertion.",
+          "page-builder's default persistence is per-browser localStorage, not tenant-shared, unless a consumer manually wires a Supabase-backed preferenceAdapter (packages/page-builder/src/preferences.ts:1-41) — a naive reuse of page-builder for shared document templates would silently persist to the wrong (per-device) store unless this seam is explicitly re-wired, as crm7 had to do for its own custom_pages.",
+          "There is a live, unresolved contradiction between governance (`wysiwygContract.ts` declares custom-page-renderer read-only / BSU-Developer-Portal-authored) and the actual crm7 code (globally mounted, tenant-writable PageEditorLauncher + local customPageService CRUD). Building a new authoring system on top of 'custom_pages' without resolving which claim is current risks either re-centralizing authoring in BSU that crm7 has already decentralized, or vice versa.",
+          "form-layout-builder's field palette is scoped to a single entity_type's tenant_field_definitions (schema-builder output) — it has no notion of composing content that spans multiple entities/records or free constants (e.g. today's date, a static clause of boilerplate legal text), which a real document template will need.",
+          "No in-app document versioning/diff UI was found even though custom_page_revisions supports it structurally — restorePageRevision exists in the service layer (customPageService.ts:161-179) but no UI surfacing browse/compare/restore of prior revisions was found in this pass; treat as unknown rather than confirmed-absent."
+        ],
+        "reusable_assets": [
+          "custom_pages / custom_page_revisions Supabase tables + customPageService.ts CRUD+versioning (crm7/supabase/migrations/20260304100000_ui_customization_system.sql; crm7/src/services/customPageService.ts) — version-numbered, changed_by/change_summary audit trail, RLS-scoped tenant/platform split, restore-from-revision — directly reusable AS SCHEMA/SERVICE PATTERN for a document template's revision history; would need a new `layout`/body payload shape, not new tables.",
+          "FormLayoutBuilder's field-picker + dnd-kit drag/drop/property-panel interaction pattern (crm7/src/components/ui-customization/FormLayoutBuilder.tsx) — the strongest UX precedent in the repo for 'pick something from a palette and place it', worth adapting for a merge-field inserter even though its current target (structured form fields) is wrong for prose.",
+          "DeployScopeSelector (table + recordId + currentScope + isLocked props, used in form-layout-detail.tsx) — an existing, working platform-vs-tenant promotion/lock UI that a document-template system could reuse verbatim for template scope management.",
+          "schema-builder's tenant_field_definitions / tenant_entities as the source of truth for available merge fields — a document-template merge-field picker should read from this same registry rather than inventing a parallel field catalogue.",
+          "@bsuite/page-builder's WYSIWYG governance contract (packages/page-builder/src/wysiwygContract.ts) — an existing pattern for declaring/asserting primitive coverage per authoring surface; a new 'document-authoring' surface should be registered here rather than left ungoverned.",
+          "Existing document_templates/document_records/document_signatories tables + generate-document edge function pipeline (merge + PDF export + Adobe Sign wiring) — reusable AS THE BACK HALF (merge/generate/sign) regardless of what replaces the Google-Docs-authored front half."
+        ]
+      },
+      {
+        "area": "Policies / handbooks / org documents + acknowledgement flow (crm7)",
+        "what_exists": [
+          {
+            "name": "Org Documents — admin authoring list",
+            "path": "crm7/src/pages/settings/org-documents.tsx:208 (route /settings/org-documents, App.tsx:3170)",
+            "state": "working",
+            "detail": "Lists tenant documents with type/status/ack-count badges, 'New document' dialog (title, doc_type dropdown: employee_manual/apprentice_handbook/host_guide/policy/template/other, optional 'start from template'). Calls listOrgDocuments/createOrgDocument/createFromTemplate. Gated by permission='manage_documents' (App.tsx:3167) and by DB RLS to owner/admin roles."
+          },
+          {
+            "name": "Org Document detail — editor + assignment + ack dashboard",
+            "path": "crm7/src/pages/settings/org-document-detail.tsx:106 (route /settings/org-documents/:id, App.tsx:3164)",
+            "state": "working",
+            "detail": "3 tabs. Editor tab: title/doc_type/is_template/requires_ack toggle + Plate.js rich-text body, Save/Publish/Unpublish/Archive lifecycle buttons wired to updateOrgDocument/archiveOrgDocument. Assignments tab: assign the document to a portal role (owner/admin/manager/staff/field_officer/training_provider/host_contact/apprentice/worker/viewer) or an individual tenant member (dropdown of real profiles), list + remove existing assignments. Acknowledgements tab (only when requires_ack): every assigned person with acknowledged/pending badge, via getAckDashboard()."
+          },
+          {
+            "name": "My Org Documents — staff/apprentice portal view",
+            "path": "crm7/src/pages/portal/org-documents.tsx:41 (route /portal/org-documents, nav label 'Manuals & Policies', App.tsx:3440, navigation.ts:404)",
+            "state": "working",
+            "detail": "Lists published documents assigned to the signed-in user (via role or direct assignment), read-only Plate.js viewer, and a 'Mark as read' button that calls acknowledgeDocument() (self-service INSERT, idempotent on unique-violation)."
+          },
+          {
+            "name": "orgDocumentService.ts — CRUD/assignment/ack service layer",
+            "path": "crm7/src/services/orgDocumentService.ts:1",
+            "state": "working",
+            "detail": "listOrgDocuments/createOrgDocument/updateOrgDocument/archiveOrgDocument/duplicateAsTemplate/createFromTemplate/assignDocument/unassignDocument/acknowledgeDocument/getMyAssignedDocuments/getAckDashboard — all direct-Supabase, RLS-backed, no server-side re-implementation of authz."
+          },
+          {
+            "name": "org_documents / org_document_assignments / org_document_acknowledgements schema + RLS",
+            "path": "crm7/supabase/migrations/20260724090000_org_documents.sql:1 (+20260724100000 FK indexes)",
+            "state": "working",
+            "detail": "3 tables, tenant-scoped via auth_tenant_id(), writes gated to owner/admin via check_user_portal_role(); acknowledgements are self-service insert-only, immutable (no UPDATE/DELETE policy). Doc-type CHECK includes 'apprentice_handbook' and 'employee_manual' explicitly. This matches the 4 live-but-empty tables named in the prompt (org_documents, org_document_assignments, org_document_acknowledgements) — the other 5 named tables (whs_policies, insurance_policies, tenant_sharing_policies, document_access_log, document_expiry_alerts) are unrelated, separate features (see gaps)."
+          },
+          {
+            "name": "Plate.js DocumentEditor (shared rich-text editor)",
+            "path": "crm7/src/components/common/DocumentEditor/index.tsx:1",
+            "state": "working",
+            "detail": "WYSIWYG block editor (paragraphs, bold/italic/underline, h1-h3, bullet/numbered lists, tables) with a plain-textarea fallback. This is what lets an author write a handbook without touching markdown/HTML/code."
+          },
+          {
+            "name": "WHS Safety Policies list",
+            "path": "crm7/src/pages/whs/policies.tsx -> src/components/whs/safety-policies-list.tsx:25 (backed by whs_policies table)",
+            "state": "stub",
+            "detail": "Reads whs_policies via useWhsPolicyStore. 'Add New' button has no onClick handler at all (safety-policies-list.tsx:62-65). 'View' opens a dialog whose body is literally the placeholder text 'Document viewer would be integrated here' (line 237). 'Download' button has no handler (line 242-245). No assignment, no acknowledgement, no author flow. A second, uncoordinated, materially less-built 'policy' surface backed by a different table than org_documents."
+          },
+          {
+            "name": "Generic secure file store (uploads)",
+            "path": "crm7/src/services/documentService.ts (portal route /portal/my-documents, backed by document_metadata)",
+            "state": "partial",
+            "detail": "Supports real file uploads (this is the actual upload path in the app), but grep confirms zero references to assignment or acknowledgement in this service — a GTO can upload a PDF here, but cannot assign it to staff/apprentices or track who has read it. document_access_log (20260617120000) logs access to this store, not to org_documents."
+          },
+          {
+            "name": "Insurance policy tracker",
+            "path": "crm7/src/pages/compliance/insurance-tracker.tsx, src/lib/data/insuranceQueries.ts (backed by insurance_policies)",
+            "state": "working",
+            "detail": "A different compliance surface (host-employer insurance certificates: type/provider/policy_number/cover_amount/expiry), not a staff handbook/policy authoring tool. Out of scope for the handbook question but explains why insurance_policies has UI while whs_policies barely does."
+          }
+        ],
+        "non_technical_user_can": "A GTO admin can, entirely through point-and-click UI with zero markdown/HTML/code knowledge required: go to Settings > Org Documents, click \"New document\", type a title, pick \"Apprentice Handbook\" (or Employee Manual / Host Guide / Policy) from a dropdown, write the body in a WYSIWYG editor (bold/italic, headings, bullet lists, tables — like a lightweight Word/Notion editor, not a text box for raw markup), flip a \"Requires acknowledgement\" toggle, click \"Publish\", go to the Assignments tab and click \"Assign role\" (e.g. Apprentice) or \"Assign person\" for named individuals, then open the Acknowledgements tab any time to see a plain list of who has acknowledged and who hasn't. Assigned staff/apprentices see it in their portal under \"Manuals & Policies\", read it, and click one \"Mark as read\" button. This is a real, code-complete, RLS-gated, routed feature — but the two live tables backing the answer to \"uploads a handbook\" show it is compose-in-app only: there is no button anywhere in this surface to upload an existing PDF/Word handbook file — a GTO with an existing handbook document must retype or paste its content into the editor rather than upload the file as-is. All four org_document* tables have 0 live rows, meaning no tenant has actually used this flow in production yet, and this audit did not run a live browser test to confirm the end-to-end path works outside of reading the code (the existing test coverage only asserts the RLS policy SQL text, not runtime behaviour).",
+        "gaps": [
+          "No file-upload/PDF-import path into org_documents — a GTO cannot upload an existing handbook file and have it become the assignable/acknowledgeable document; content must be typed or pasted into the Plate.js editor. The one working file-upload surface in the app (documentService.ts / /portal/my-documents) has no assignment or acknowledgement concept at all.",
+          "Zero live usage: org_documents, org_document_assignments and org_document_acknowledgements all have 0 rows — the feature is built and routed but has never been exercised by a real tenant, and this audit did not perform a live/Playwright verification of the end-to-end flow (create -> publish -> assign -> portal view -> mark as read -> ack dashboard) — only static code and migration-shape unit tests were inspected.",
+          "No version control / re-acknowledgement on edit: updateOrgDocument() only patches the content column on org_documents; there is nothing in the schema or service layer that invalidates or re-requests acknowledgements when a published, already-acknowledged document's content is subsequently edited — a compliance-relevant silent gap (an apprentice's 'read' status stays true against content they never actually read).",
+          "whs_policies-backed 'Safety Policies & Procedures' page (/whs/policies) is a second, uncoordinated, largely non-functional 'policy' surface in the same app — its Add/View/Download actions are non-functional stubs (confirmed by an in-code placeholder string 'Document viewer would be integrated here'). This creates a real risk of an operator or future agent building/duplicating handbook features against the wrong table.",
+          "No expiry/renewal reminders on org_documents itself — document_expiry_alerts (also 0 rows, separate migration) is not wired to org_documents in any file found by this audit; a handbook cannot be flagged for periodic re-issue/re-acknowledgement.",
+          "Acknowledgement is a bare boolean insert with a timestamp — no e-signature, no IP/device capture, no PDF export of the acknowledgement record for an audit/BOOT-style compliance file."
+        ],
+        "reusable_assets": [
+          "org_documents / org_document_assignments / org_document_acknowledgements schema + RLS (20260724090000_org_documents.sql) — tenant-scoped, role-or-person assignment polymorphism, self-service immutable acknowledgement insert, already production-grade and directly extensible (e.g. add a source_file_url column + storage upload step to close the PDF-import gap rather than building a parallel table).",
+          "Plate.js DocumentEditor (src/components/common/DocumentEditor) — shared no-code rich-text authoring component already used for org documents; reusable anywhere else a non-technical author needs to write structured content.",
+          "orgDocumentService.ts — reusable CRUD + assign(role|user) + acknowledgement-dashboard service pattern.",
+          "manage_documents permission constant + PermissionGate — reusable admin-gating pattern already wired through permissionConstants.ts/usePermissions.ts.",
+          "check_user_portal_role() and auth_tenant_id() SECURITY DEFINER RPCs — the canonical tenant-isolation/admin-check helpers this feature (and most of crm7) already relies on."
+        ]
+      }
+    ],
+    "synthesis": {
+      "headline": "There is no document-authoring system in BSuite — there are nine half-systems, and the two that look most complete (Google Docs merge, mail merge) are provably dead in production: the deployed `generate-document` function is business-suite-unified's flat-HTML one, not crm7's Google Docs merger; the live `document_templates` table has no `google_doc_id`/`merge_variables`/`signing_config` columns at all and 0 rows; and `mail_merge_batches` does not exist as a table. The one genuinely promising foundation is newer than the audit assumed: crm7 already ships Plate.js v53 (`platejs` 53.2.4) wired to org_documents — several per-area reports grepped only for tiptap/slate/lexical/quill and wrongly concluded \"no rich-text editor exists anywhere in the estate\". It does exist, it is routed, and it is the right thing to build on — but today it renders with no toolbar, no list plugin, and no way to insert a heading, table or merge field by clicking, so in practice it is a bold/italic/underline-by-keyboard box.",
+      "can_user_upload_docx_today": "No — and not close. A user can upload a .docx and download the same bytes back, nothing more. Verified: zero Word-parsing libraries exist anywhere in the six-app estate (grepped every package.json for mammoth, docx, docxtemplater, pizzip, officegen, html-to-docx, turndown — zero matches), so no code in BSuite can read the CONTENTS of a Word file. There is no in-app viewer either: crm7/src/pages/documents/[id].tsx offers only a Download button. The schema does gesture at this — crm7/supabase/migrations/20260304000006_template_self_service.sql defines `document_templates.source = 'uploaded_docx'` and an `uploaded_file_path` column commented \"For DOCX uploads stored in Supabase Storage before Google Docs conversion\" — but grep of the entire crm7 tree (app + edge functions) returns zero references to either outside that migration file, and the live `document_templates` table does not even have those columns. It is a stub column with no implementing code. What DOES work today is opaque storage: 425 live rows in `document_metadata` (encrypted, virus-scanned, verification-workflowed compliance file uploads via DocumentHub.tsx) — that is the only part of this space with real production usage, and it is filing-cabinet capability, not authoring.",
+      "merge_field_reality": "A merge-field mechanism exists in four incompatible flavours, and a non-coder can usefully reach exactly one of them — in one app, on one screen, for one artefact type. (1) The most sophisticated engine — resolveField() in crm7/supabase/functions/generate-document/index.ts, which resolves composite fields like full_name, formatted address, ANZSCO code+title — is unreachable in production three separate ways: that source file is not the function deployed under the `generate-document` slug (business-suite-unified's is, confirmed via list_edge_functions, and it 400s on crm7's payload shape); the `document_templates` row shape it reads does not exist in the live database; and there are 0 template rows. (2) The shared server-side substituteVariables() in email-dispatcher is real and deployed, but it only fires when `template_id` resolves against `email_templates` — and crm7's compose flow passes a `communication_templates` id into that lookup, so it silently misses, and no caller in crm7 or conduit ever populates `template_data`. Net effect: a user who types {{first_name}} in crm7's Compose Message gets that literal text delivered to a real recipient, unresolved. (3) Three near-duplicate extractVariables() regex scanners (crm7 template-create, template-edit, conduit admin/templates) detect tokens AFTER you type them and show read-only badges — they help you check your typing, they do not help you author. (4) The only true non-technical merge-field UI in the estate is conduit/src/components/settings/EmailTemplatesSection.tsx: 13 human-labelled buttons that splice {{key}} in at the cursor. It is the right pattern and the wrong everything else — the list is hardcoded with no connection to any schema, it is not reachable from conduit's actual send dialog (ComposeDialog.tsx has no template support at all), and the store behind it writes to a `body` column that does not exist on the live `email_templates` table (verified: the real columns are body_html/body_text), so the first time a user clicks Save it fails at PostgREST. Everywhere else, \"insert a merge field\" means hand-typing a case-sensitive {{TOKEN}} into a Google Doc or a plain textarea, having somehow already learned the exact key — a strictly higher bar than the markdown the operator has already ruled out.",
+      "duplication_map": [
+        "FILE VAULTS (4 parallel): document_metadata (crm7, 425 rows — LOAD-BEARING, the only production-used surface in this whole space; encrypted + virus-scanned + verification workflow + expiry) | document_records (crm7, 1 row — generated/signed output register, keep as OUTPUT table only) | r7_documents (conduit, 0 rows — correctly shaped but its `candidate-documents` storage bucket was never provisioned, so every upload fails) | cms_documents (BSU, 0 rows, zero code references in any app — pure schema debt, delete)",
+        "TEMPLATE TABLES (3 parallel, all 0 rows): communication_templates (crm7 + conduit — LOAD-BEARING by default; it is the only one with a working, routed, non-technical create/edit UI in two apps) | email_templates (BSU-owned, read by the deployed email-dispatcher's substitution engine, but no working write UI anywhere — conduit's editor targets a non-existent `body` column, crm7's CRUD is called from dead code) | document_templates (crm7 — TABLE-ONLY and wrong-shaped: live columns are the old document_type/body/variables shape from 20260228140000_create_communications.sql, because 20260304000001's CREATE TABLE IF NOT EXISTS silently no-op'd; the entire Google-Docs pipeline reads columns that do not exist)",
+        "AUTHORED CONTENT BODIES (3 incompatible schemas for one concept): org_documents.content = Plate.js JSON blocks (crm7 — LOAD-BEARING, the only structured rich-text content model in the estate) | content_pages.content = TEXT holding {sections:[{heading,body}]} JSON parsed by a hand-rolled markdown-lite formatter (braden, 2 rows) | page_sections.content = flat Record<string,string> (braden homepage, 3 rows)",
+        "DOCUMENT HUB (naming collision, 2 unrelated systems): route /documents/hub (reads document_records — the generation pipeline, stub) vs component src/components/documents/DocumentHub.tsx (reads document_metadata — the working upload vault). Same name, opposite meanings. The COMPONENT is load-bearing; the route is not.",
+        "SIGNING (4 parallel): charge_rate_quote_signing_tokens + signature_requests (crm7, 5 live rows — LOAD-BEARING, the only externally-exercised send-and-sign path) | r7_document_records/signatories/audit_logs (conduit, 0 rows, but artefact-agnostic and cleanly built) | document_signatories + documentSigner.ts (crm7, 0 rows, imported by NO page — fully built orphan with the best legal reasoning, AU ETA 1999 audit page + SHA-256) | training_plan_signatures (crm7, 0 rows, wired end-to-end, never used)",
+        "PDF RENDERERS (3 parallel, all hardcoded layouts): @react-pdf/renderer ChargeRatePdfDocument (crm7 — LOAD-BEARING, actually reachable from the live quote-sign page) | pdf-lib offerDocuments.ts (conduit offer letter + training contract — wording is TypeScript string literals) | BSU generate-document's 5 hardcoded HTML doc types",
+        "TYPE CONTRACTS: DocumentTemplate/DocumentRecord (types/documents.ts) vs LegacyDocumentTemplate/LegacyDocumentRecord (types/entities.ts) — two drifted TypeScript shapes over the same physical tables, and NEITHER matches the live schema",
+        "MAIL MERGE: crm7/src/stores/mailMergeBatchStore.ts targets `mail_merge_batches` — verified absent from the live database entirely. Not 'a front door with no engine'; a front door onto no building. Every operation errors."
+      ],
+      "per_app_capability": [
+        {
+          "app": "crm7",
+          "today": "The only app with any real authoring. BUILT + ROUTED + non-technical: Settings > Org Documents (/settings/org-documents) — create a handbook/policy, pick doc_type (employee_manual, apprentice_handbook, host_guide, policy), write the body in a Plate.js v53 editor storing jsonb, toggle 'Requires acknowledgement', Publish, assign to a portal role or named person, and watch a who-has-read dashboard; staff/apprentices see it at /portal/org-documents ('Manuals & Policies') and click Mark as read. 0 rows — never used by a tenant. BUT the editor has no toolbar, no list plugin registered (the file's own doc-comment claims bullet/numbered lists; the plugins array is BasicBlocksPlugin/BasicMarksPlugin/TablePlugin only), and no way to click-insert a heading, table or merge field — practically it is Cmd+B/I/U on a contenteditable. Also BUILT: Communications > Templates (communication_templates, plain textarea + {{var}} badge detection, 0 rows) and Compose Message (real send via email-dispatcher, but body ships verbatim as both body_html and body_text and no {{var}} is ever substituted). WORKING and used: document_metadata upload vault (425 rows), charge-rate quote e-sign link (5 signature_requests). DEAD: /documents/templates/new (route does not exist), Google Docs merge (function not deployed + schema missing + 0 rows), mail merge (table does not exist), clone_system_template RPC (0 UI callers), SignDocumentFlow/documentSigner.ts (0 importers), documents/management.tsx Upload buttons (no onClick).",
+          "needs": "Give the Plate editor a toolbar and a merge-field picker; make org_documents the estate's document store rather than a policies-only silo; add DOCX import; delete mail-merge and the Google-Docs template path or fix all three of its breakages."
+        },
+        {
+          "app": "conduit",
+          "today": "SCAFFOLDED with one working island. WORKING non-technical authoring: /admin/templates (communication_templates) — name, SMS/email channel, lifecycle-event binding, plain textarea body, live detected-variable badges. Server actions + RLS, 0 rows. WORKING: the estate's only click-to-insert merge-field picker (EmailTemplatesSection.tsx insertVariable cursor-splice, 13 labelled buttons, live preview) — but it saves to a `body` column that does not exist on the live email_templates table, so it is a decoy that fails on first save, and it is not reachable from ComposeDialog.tsx (the actual send path has no template or variable support at all). WORKING: pdf-lib offer letter + training contract generator, in-house e-sign substrate (r7_document_records/signatories/audit_logs + r7-documents bucket, live and correctly RLS'd). BROKEN: candidate document upload writes to a `candidate-documents` storage bucket that was never provisioned. NONE: no docx, no Google Docs, no merge pipeline.",
+          "needs": "The two artefacts a GTO's hiring loop depends on — offer letter and training contract — have their wording as TypeScript string literals in offerDocuments.ts. Per-host-employer or per-tenant legal wording is impossible without a deploy. This is the single highest-value target for a real template system after crm7."
+        },
+        {
+          "app": "business-suite-unified",
+          "today": "Owns the shared plumbing, has almost no authoring. WORKING and genuinely code-free: Developer > Website > CMS tab (page_sections, 3 rows) — edits plain-text values for keys that already exist on one hardcoded page_name='home'; cannot add a section, field, link, image, or any formatting. WORKING: Developer > System Notices (in-app banners, 500-char textarea, 1 row) — the cleanest non-technical CRUD pattern in the estate. LOAD-BEARING SHARED INFRA: email-dispatcher (single multi-provider send path for crm7 + conduit, with audit logging) and _shared/email-layout.ts renderEmail() — a correctly email-client-safe branded D2C shell (tables, inline styles, hex, no pure white/black) added 2026-08-07 after the operator complained outbound mail was 'a white page and some text'. DEAD: send-notification's 4 canned templates (0 consumers), cms_documents, cms_posts. TABLE-ONLY: email_templates has a real 'Admins can manage' RLS write policy and a real send-time reader, and zero UI in any app ever writes it.",
+          "needs": "It should own the shared authoring package and the mandatory email shell — currently the shell is bypassable by any function that ships a full HTML document, and two do (assign-tester-license, and invoice-send-direct which uses style blocks, flexbox/grid and oklch() that the shell's own doc-comment says break in Outlook/Gmail)."
+        },
+        {
+          "app": "R80.4",
+          "today": "Nothing, correctly. No @supabase/supabase-js dependency at all; quote-store.ts is localStorage-only and its own doc-comment says 'no fetch, no @supabase/supabase-js, no transport of any kind'. Exports JSON/CSV a human pastes into crm7. Note: R80.3 does not exist in this checkout (only R80.4 is in .gitmodules) yet crm7/CLAUDE.md and business-suite-unified/CLAUDE.md still describe it as a live OAuth client app — stale docs worth correcting.",
+          "needs": "Nothing from an authoring system. It is a calculator; its output should land in crm7's document data, not grow its own editor."
+        },
+        {
+          "app": "braden",
+          "today": "Public-site rendering works; authoring is entirely dead. DynamicPage.tsx renders content_pages (2 rows: /privacy, /terms) through a hand-rolled markdown-lite parser understanding only **bold**, blank-line paragraphs and '- ' bullets. BOTH admin editors are unrouted dead code since /admin/* was redirected to an 'Admin Portal Moved' stub: PagesTab writes a raw string that breaks the JSON parser (page renders 'Page Not Found'), and ContentForm demands hand-written JSON with a placeholder shape ({\"blocks\":[]}) that does not even match what the renderer expects ({sections:[...]}). Both live pages were authored by an engineer hand-writing JSON inside a SQL migration. /admin/page-builder is self-described 'Phase 2a scaffolding' with an empty component palette.",
+          "needs": "A renderer for the shared content model plus one route into the shared editor. Do not build braden a third bespoke CMS."
+        },
+        {
+          "app": "throughput",
+          "today": "No document/template/email authoring of any kind. Its CollaborativeEditor is a plain textarea over one Idea's description field — but the collaboration layer under it (CollaborationManager: live cursors, position-anchored comment threads, participants) is genuinely built and reusable.",
+          "needs": "Nothing to author. Its collab layer, and crm7's YJS/Supabase CRDT transport, are the two candidates if co-authoring is ever wanted."
+        }
+      ],
+      "reusable_foundation": [
+        "crm7's Plate.js v53 stack — already installed and paid for: platejs 53.2.4, @platejs/basic-nodes, @platejs/table, @platejs/mention, @platejs/ai. The @platejs/mention plugin is the exact primitive a merge field should be (an inline void node rendering as a labelled pill), and it is already a dependency. This single fact collapses the biggest assumed cost in the whole programme.",
+        "org_documents / org_document_assignments / org_document_acknowledgements + RLS (crm7/supabase/migrations/20260724090000_org_documents.sql) — tenant-scoped via auth_tenant_id(), writes gated by check_user_portal_role(), assignment polymorphic across role-or-person, acknowledgement self-service and immutable (no UPDATE/DELETE policy). content is already jsonb Plate blocks. 0 rows means it is free to reshape. This is the document store; do not create a fourth table.",
+        "business-suite-unified/_shared/email-layout.ts renderEmail()/p()/ul()/keyValue() — a correct, email-client-safe branded D2C shell (tables not flexbox, inline styles not style blocks, hex not oklch, no pure white/black). This is the render target for authored email content and should become mandatory rather than bypassable.",
+        "email-dispatcher edge function (deployed, v66) — the single shared multi-tenant, multi-provider (Resend/Gmail/MS-Graph/SMTP) send path already used by both crm7 and conduit, with audit logging to email_messages/email_audit_log and an existing (currently never-firing) template_id + substituteVariables() path. Point the new system at this; do not build a mailer.",
+        "conduit's insertVariable() cursor-splice UX (EmailTemplatesSection.tsx:130-146) — proven, accessible, non-technical: a labelled button inserts the token and restores the caret. Generalise this into the shared package as a Plate mention node so the user never sees {{ }} at all.",
+        "resolveField() / MergeVarSpec in crm7/supabase/functions/generate-document/index.ts — the field-RESOLUTION half of mail merge is genuinely good (composite full_name, formatted address, ANZSCO code+title, qualification_name) and is format-agnostic. Lift it out of the undeployed edge function into a shared resolver + an RPC that also enumerates available fields per entity type, so the picker and the renderer share one catalogue.",
+        "DocumentHub.tsx + documentService.ts + document_metadata (425 live rows) — encrypted, virus-scanned, verification-workflowed, expiry-tracked, audited. The only production-proven surface here. It is the attachment/output layer for the new system, unchanged.",
+        "@react-pdf/renderer + ChargeRatePdfDocument.tsx — proves code-defined PDF generation works cleanly in this stack and is reachable from a live public page. This is the PDF render target for authored content; it removes any need for Google Docs export.",
+        "crm7's charge-rate signing token pattern (charge_rate_quote_signing_tokens + get_charge_rate_quote_signing_context / redeem_charge_rate_quote_signature SECURITY DEFINER RPCs) — single-use, hashed, 14-day-expiring, no-account-required public link. 5 live signature_requests. The only externally-exercised send-and-sign path; generalise it beyond charge rates.",
+        "crm7's YJS + Supabase Realtime + awareness transport (use-connect-on-mount.ts, @supabase-labs/y-supabase) — genuinely working CRDT sync/presence, currently bolted to a code editor. y-prosemirror binds to Plate/Slate, so live co-authoring is a re-binding, not a rebuild — but treat it as Phase 3, not a requirement.",
+        "crm7's FormLayoutBuilder drag-palette + property-panel pattern and the DeployScopeSelector (tenant-vs-platform promotion with is_locked) — existing, working precedents for 'pick from a palette and place it' and for who owns/locks a template."
+      ],
+      "recommended_shape": "Build ONE authoring surface, shipped as a shared package, where the non-technical user never sees syntax of any kind — no markdown, no HTML, no {{ }}. Concretely: a Plate.js editor with a visible toolbar (bold, italic, heading, bullet/numbered list, table, link, image) and an \"Insert field\" button beside it. Clicking Insert field opens a searchable list of plain-English labels scoped to what the document is about — \"Apprentice's first name\", \"Host employer trading name\", \"Weekly charge rate\", \"Today's date\" — and drops a coloured pill into the text. The pill is a Plate mention node (@platejs/mention is already installed), so the user sees \"Apprentice's first name\", never a token; a Preview toggle swaps every pill for real data from a chosen record. That one interaction is the whole answer to \"even markdown is too much\", and it is also the answer to \"insert a merge field\". Store every authored body as Plate jsonb in ONE table — extend org_documents (already Plate-shaped, correctly RLS'd, 0 rows so it is free to reshape) rather than adding a fourth document table; give it a kind discriminator covering policy, handbook, contract, letter, email. Render that one content model three ways: to HTML through the existing _shared/email-layout.ts shell for email, to PDF through @react-pdf/renderer (already proven by ChargeRatePdfDocument), and to screen through the existing portal viewer. Feed the field picker and the renderer from ONE field catalogue — lift resolveField()'s composite logic out of the undeployed edge function into a shared resolver plus an RPC that enumerates available fields per entity type. Then route every existing send/generate path through it: crm7 Compose, conduit /admin/templates, conduit's offer letter and training contract (whose wording is currently TypeScript string literals — the highest-value single win in the estate), the invoice email, the quote email. On Word: be honest with him. Do NOT promise round-trip .docx editing — that is a genuinely hard problem (headers/footers, numbered clause schemes, nested tables, tracked changes) and nothing in the estate does it. Offer one-way IMPORT: upload a .docx, we convert it once into an editable BSuite document, and from then on BSuite is the source of truth. Two viable routes, both cheap: Google Drive's files.create with convert=true using the WIF auth crm7 already has working, or add mammoth (docx to HTML) and map HTML to Plate blocks. Formatting fidelity will be imperfect on complex legal documents and he should hear that before it surprises him. On size: this is not a week. Phase 1 (toolbar + field picker + one content model + email and PDF render, crm7 only) is a solid multi-week build. Phase 2 (conduit adopts it; offer letter and training contract become editable templates; DOCX import) is comparable again. Phase 3 (versioning with re-acknowledgement on edit, approval workflow, bulk merge send, live co-authoring via the existing YJS transport) is more. Crucially, roughly half the perceived work is deletion, not construction — mail_merge_batches (table does not exist), the crm7 Google-Docs generate-document path (not deployed, schema missing, 0 rows), email_templates-vs-communication_templates (pick communication_templates, migrate the other), cms_documents and cms_posts (zero code references), braden's two dead editors, and the /documents/hub versus DocumentHub.tsx naming collision should all go before anything new is built on top of them.",
+      "open_questions_for_operator": [
+        "Google Workspace — in or out? The WIF keyless auth is genuinely built and working, but keeping Google Docs means document authoring lives outside BSuite permanently and every tenant needs Workspace access. My recommendation is to cut it and author natively in Plate, but that is your call because it also decides whether we fix or delete crm7's generate-document.",
+        "DOCX import fidelity — what loss is acceptable? A one-way import will approximate complex Word layout (headers/footers, auto-numbered clause schemes, nested tables). For a marketing letter that is fine; for a training contract or a host services agreement you may need the original preserved byte-exact as the legal artefact with BSuite holding only an editable derivative. Which documents must stay pixel-faithful?",
+        "Who owns the legal wording? crm7 has a DeployScopeSelector pattern for platform-versus-tenant templates with locking. Should a GTO tenant be free to edit a training contract or offer letter template, or should those be platform-locked and only overridable with compliance sign-off? This shapes the schema, not just the UI.",
+        "Handbook re-acknowledgement — today updateOrgDocument() patches content in place and nothing invalidates prior acknowledgements, so an apprentice's 'read' stays true against wording they never saw. Should any edit to a published, acknowledged document force re-acknowledgement, or only edits you explicitly mark material? This is a compliance judgement, not a technical one.",
+        "Signing — consolidate onto one system or keep several? There are four (charge-rate token links with 5 live rows, conduit's r7 e-sign substrate, crm7's orphaned pdf-lib signer with the AU ETA 1999 audit page, and training-plan TripleSignOff). The orphaned crm7 signer has the strongest legal reasoning but zero usage. Is a single 'send any document to any external party for signature' capability worth building, or is charge-rate quotes genuinely the only external-signature case?",
+        "Email brand shell — mandatory for everything? The D2C shell currently applies only to platform-source fragment sends and is bypassed by any function shipping full HTML. Should it become non-bypassable including for sends from a person's own connected mailbox, or do user-mailbox sends stay unbranded plain text by design?",
+        "Supabase Auth system emails (password reset, invite, magic link) live only in the external Supabase dashboard, and that drift already caused a real account-lockout (fixed in git today as 6df70da2, dashboard paste still outstanding). Do you want these brought into the product as first-class editable templates, or is a CI check that diffs the live dashboard config against the repo copy sufficient?",
+        "Which apps actually need to AUTHOR versus only RENDER? braden, throughput and R80.4 have zero capability today. Adding read-only rendering is cheap; adding authoring to each is not. Is 'crm7 and conduit author, everyone else renders' the right boundary?"
+      ]
+    }
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Audit"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Synthesise"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "audit:crm7-collaborative",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ad0ad75fef1473412",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712457,
+      "queuedAt": 1786110712434,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "crm7 Collaborative Documents (/documents/collaborative)",
+      "promptPreview": "crm7's COLLABORATIVE DOCUMENTS surface — the operator linked\nhttps://crm.crm7.app/documents/collaborative/<uuid>. Find the route and component in /home/braden/Desktop/Dev/bsuite/crm7/src.\nWhat editor does it use (TipTap? Slate? Lexical? plain textarea? markdown?)? Is it WYSIWYG or does it\nrequire markdown/HTML? What does it persist to (collaborative_documents has 1 live row)? Is\ncollaboration real…",
+      "lastProgressAt": 1786110948173,
+      "tokens": 121840,
+      "toolCalls": 25,
+      "durationMs": 235716,
+      "resultPreview": "{\"area\":\"crm7 Collaborative Documents (/documents/collaborative)\",\"what_exists\":[{\"name\":\"Route registration\",\"path\":\"crm7/src/App.tsx:2461-2478 (routes), :267 & :270 (lazy imports)\",\"state\":\"working\",\"detail\":\"wouter routes `/documents/collaborative/:id` (must precede `/documents/collaborative`) and `/documents/collaborative` both registered behind `ProtectedRoute` with `permission=\\\"view_documen…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "audit:crm7-doc-templates",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a40462a6aad415553",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712459,
+      "queuedAt": 1786110712435,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "crm7 document templates &amp; document generation",
+      "promptPreview": "crm7 DOCUMENT TEMPLATES and DOCUMENT GENERATION. Search /home/braden/Desktop/Dev/bsuite/crm7 for document_templates,\ndocuments, document_records, document_metadata (425 live rows — what ARE those?), and the\nsupabase/functions/generate-document edge function. How is a document produced today — from a\ntemplate? Hardcoded HTML? PDF lib? What authors the template, and does authoring require code?\n\nRUL…",
+      "lastProgressAt": 1786111070323,
+      "tokens": 171416,
+      "toolCalls": 38,
+      "durationMs": 357864,
+      "resultPreview": "{\"area\":\"crm7 document templates &amp; document generation\",\"what_exists\":[{\"name\":\"document_metadata — compliance file-upload vault (the 425-row table)\",\"path\":\"crm7/supabase/migrations/20260611110200_document_metadata_workflow.sql:7; crm7/src/components/documents/DocumentHub.tsx:1-16; crm7/src/services/documentService.ts:1-9\",\"state\":\"working\",\"detail\":\"This is a FILE-UPLOAD + verification vault…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "audit:crm7-email",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a1f00c80d6b69ff52",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712460,
+      "queuedAt": 1786110712435,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Email templates + design + sending across crm7 and business…",
+      "promptPreview": "EMAIL templates + design + sending across /home/braden/Desktop/Dev/bsuite/crm7 and /home/braden/Desktop/Dev/bsuite/business-suite-unified.\nTables email_templates (0 rows), communication_templates (0), email_messages (12), email_audit_log (12).\nFind every place an email BODY is authored or defined — edge functions, Supabase Auth templates,\nhardcoded strings. Is there ANY UI to edit an email templat…",
+      "lastProgressAt": 1786111242868,
+      "tokens": 190212,
+      "toolCalls": 56,
+      "durationMs": 530408,
+      "resultPreview": "{\"area\":\"Email templates + design + sending across crm7 and business-suite-unified\",\"what_exists\":[{\"name\":\"Communication Templates CRUD (crm7)\",\"path\":\"crm7/src/pages/communications/templates.tsx, template-create.tsx:1-260, template-edit.tsx:1-311; routed at /communications/templates(+/create,+/:id/edit) in crm7/src/App.tsx:646,1268,1274,1280\",\"state\":\"working\",\"detail\":\"Real, routed, permission-…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "audit:merge-fields",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ab30c49c032ad87ec",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712461,
+      "queuedAt": 1786110712435,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Merge fields / mail merge / placeholder token-substitution …",
+      "promptPreview": "MERGE FIELDS / MAIL MERGE / PLACEHOLDERS across the WHOLE estate: /home/braden/Desktop/Dev/bsuite/crm7,\n/home/braden/Desktop/Dev/bsuite/conduit, /home/braden/Desktop/Dev/bsuite/business-suite-unified, /home/braden/Desktop/Dev/bsuite/R80.4, /home/braden/Desktop/Dev/bsuite/braden, /home/braden/Desktop/Dev/bsuite/throughput.\nSearch for any token-substitution mechanism: {{var}}, {var}, %VAR%, handleba…",
+      "lastProgressAt": 1786111258117,
+      "tokens": 248273,
+      "toolCalls": 63,
+      "durationMs": 545656,
+      "resultPreview": "{\"area\":\"Merge fields / mail merge / placeholder token-substitution across the BSuite estate (crm7, conduit, business-suite-unified, R80.4, braden, throughput)\",\"what_exists\":[{\"name\":\"Google Docs document-merge engine (WIF)\",\"path\":\"crm7/supabase/functions/generate-document/index.ts:277-370,446-560; crm7/src/services/googleDocsService.ts:1-171\",\"state\":\"working\",\"detail\":\"Real, working end-to-end…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "audit:docx-import",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a749b2542a377b231",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712462,
+      "queuedAt": 1786110712435,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Upload-an-existing-Word-doc, edit it, and insert a merge fi…",
+      "promptPreview": "FILE IMPORT of existing documents across the whole estate (/home/braden/Desktop/Dev/bsuite: crm7, conduit,\nbusiness-suite-unified, R80.4, braden, throughput). Is there ANY capability to upload a .docx / .doc /\n.odt / .pdf / .rtf and turn it into an editable document? Check package.json in every app for mammoth,\ndocx, docxtemplater, pandoc, officegen, pdf-lib, pdfjs, jszip, turndown, html-to-docx. …",
+      "lastProgressAt": 1786111046943,
+      "tokens": 181561,
+      "toolCalls": 42,
+      "durationMs": 334481,
+      "resultPreview": "{\"area\":\"Upload-an-existing-Word-doc, edit it, and insert a merge field — across crm7, conduit, business-suite-unified, R80.4, braden, throughput\",\"what_exists\":[{\"name\":\"Opaque document upload to Supabase Storage (accepts .docx/.doc/.pdf)\",\"path\":\"crm7/src/components/documents/DocumentHub.tsx:539; crm7/src/pages/documents/upload.tsx; crm7/src/services/documentService.ts:291-446; conduit/src/app/(…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "audit:conduit-docs",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a591de34be483fbb2",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712462,
+      "queuedAt": 1786110712435,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "conduit (recruitment ATS, Next.js 16) — document + template…",
+      "promptPreview": "/home/braden/Desktop/Dev/bsuite/conduit (recruitment ATS, Next.js 16) document + template capability. Offer letters,\ncandidate comms, contracts, r7_documents / r7_document_records / r7_onboarding_templates (all 0 rows\nlive). What exists in code vs what is a dead table? Does conduit have ANY authoring UI? What document\nartefacts does an ATS need that it cannot currently produce?\n\nRULES:\n- Read real…",
+      "lastProgressAt": 1786111095174,
+      "tokens": 129945,
+      "toolCalls": 43,
+      "durationMs": 382712,
+      "resultPreview": "{\"area\":\"conduit (recruitment ATS, Next.js 16) — document + template authoring capability audit\",\"what_exists\":[{\"name\":\"r7_documents — candidate document catalogue\",\"path\":\"conduit/src/app/(dashboard)/candidates/[id]/documents/_view.tsx:79-329; conduit/src/components/portal/DocumentsSection.tsx:1-60; conduit/src/lib/getCandidateProfile.ts:261\",\"state\":\"stub\",\"detail\":\"Full upload/list/download/de…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 7,
+      "label": "audit:bsu-braden-throughput",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a159f22d108d0fb2a",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712463,
+      "queuedAt": 1786110712435,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Document/template/content authoring across business-suite-u…",
+      "promptPreview": "Document/template/content authoring in /home/braden/Desktop/Dev/bsuite/business-suite-unified (portal + OAuth server),\n/home/braden/Desktop/Dev/bsuite/braden (corporate site), /home/braden/Desktop/Dev/bsuite/throughput. Look for CMS/content authoring (cms_documents,\ncontent_pages 2 rows, page_sections 3 rows), email template editing, any rich-text editor. What\nauthoring capability does each app ha…",
+      "lastProgressAt": 1786111146649,
+      "tokens": 168580,
+      "toolCalls": 36,
+      "durationMs": 434186,
+      "resultPreview": "{\"area\":\"Document/template/content authoring across business-suite-unified (BSU), braden, and throughput\",\"what_exists\":[{\"name\":\"content_pages public renderer\",\"path\":\"braden/src/pages/DynamicPage.tsx:121-190 (route: braden/src/Routes.tsx:157, catch-all :slug)\",\"state\":\"working\",\"detail\":\"Fetches a published content_pages row by slug, JSON.parses the TEXT `content` column, requires shape {section…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 8,
+      "label": "audit:r80-quotes",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "af163d0e0c53097fb",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712464,
+      "queuedAt": 1786110712435,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "R80.4/crm7 — quote & charge-rate document output and signin…",
+      "promptPreview": "/home/braden/Desktop/Dev/bsuite/R80.4 (and R80.3 if present) — quote/charge-rate DOCUMENT output and SIGNING. Live\ntables: charge_rate_quote_signing_tokens (1), signature_requests (5), training_contracts (8),\ndocument_signatories (0), training_plan_signatures (0). How is a quote rendered for a host to read and\nsign? PDF? HTML email? Is the layout authored anywhere, or hardcoded? Does R80.4 even ha…",
+      "lastProgressAt": 1786111365621,
+      "tokens": 216126,
+      "toolCalls": 60,
+      "durationMs": 653157,
+      "resultPreview": "{\"area\":\"R80.4/crm7 — quote & charge-rate document output and signing (does BSuite have a unified document-authoring path?)\",\"what_exists\":[{\"name\":\"Charge-rate quote e-sign email dispatch\",\"path\":\"crm7/supabase/functions/charge-rate-quote-dispatch/index.ts:279-353\",\"state\":\"working\",\"detail\":\"Deployed & ACTIVE (confirmed via Supabase list_edge_functions, entrypoint under crm7). Mints a single-use…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 9,
+      "label": "audit:authoring-stack-reuse",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "aa40df2b47a0c6e98",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712464,
+      "queuedAt": 1786110712436,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Document/template authoring reusability vs. existing BSuite…",
+      "promptPreview": "The EXISTING authoring stack in /home/braden/Desktop/Dev/bsuite: page-builder, schema-builder, form-layouts,\ncustom_pages/custom_page_revisions, @bsuite/schema-registry, CustomPageRenderer. These already let\nsomeone compose something visually. Assess REUSABILITY for document/template authoring: what do they\nuse for editing (drag-drop? block model? JSON schema?), do they have a WYSIWYG, do they hav…",
+      "lastProgressAt": 1786111113937,
+      "tokens": 141402,
+      "toolCalls": 47,
+      "durationMs": 401473,
+      "resultPreview": "{\"area\":\"Document/template authoring reusability vs. existing BSuite authoring stack (page-builder, schema-builder, form-layouts, custom_pages, CustomPageRenderer)\",\"what_exists\":[{\"name\":\"@bsuite/schema-builder — React Flow ER-diagram canvas\",\"path\":\"packages/schema-builder/src/index.ts, packages/schema-builder/src/types.ts, packages/schema-builder/src/schemas.ts, packages/schema-builder/src/serv…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 10,
+      "label": "audit:policies-handbooks",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "aae135a8b1540af54",
+      "model": "claude-sonnet-5",
+      "state": "done",
+      "startedAt": 1786110712465,
+      "queuedAt": 1786110712436,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Policies / handbooks / org documents + acknowledgement flow…",
+      "promptPreview": "POLICIES / HANDBOOKS / ORG DOCUMENTS + acknowledgement flow. Live tables: org_documents (0),\norg_document_assignments (0), org_document_acknowledgements (0), whs_policies (0), insurance_policies\n(0), tenant_sharing_policies (0), document_access_log (0), document_expiry_alerts (0). Search\n/home/braden/Desktop/Dev/bsuite/crm7 for the UI behind these. Is there a surface where a GTO uploads a handbook…",
+      "lastProgressAt": 1786110879064,
+      "tokens": 134405,
+      "toolCalls": 18,
+      "durationMs": 166599,
+      "resultPreview": "{\"area\":\"Policies / handbooks / org documents + acknowledgement flow (crm7)\",\"what_exists\":[{\"name\":\"Org Documents — admin authoring list\",\"path\":\"crm7/src/pages/settings/org-documents.tsx:208 (route /settings/org-documents, App.tsx:3170)\",\"state\":\"working\",\"detail\":\"Lists tenant documents with type/status/ack-count badges, 'New document' dialog (title, doc_type dropdown: employee_manual/apprentic…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 11,
+      "label": "synthesise",
+      "phaseIndex": 2,
+      "phaseTitle": "Synthesise",
+      "agentId": "a7411a01f7f62ffd3",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1786111365646,
+      "queuedAt": 1786111365627,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "There is no document-authoring system in BSuite — there are…",
+      "promptPreview": "Synthesise an estate-wide audit of document/template/email authoring.\n\nPER-AREA FINDINGS:\n[\n  {\n    \"area\": \"crm7 Collaborative Documents (/documents/collaborative)\",\n    \"what_exists\": [\n      {\n        \"name\": \"Route registration\",\n        \"path\": \"crm7/src/App.tsx:2461-2478 (routes), :267 & :270 (lazy imports)\",\n        \"state\": \"working\",\n        \"detail\": \"wouter routes `/documents/collaborat…",
+      "lastProgressAt": 1786111678481,
+      "tokens": 113541,
+      "toolCalls": 19,
+      "durationMs": 312835,
+      "resultPreview": "{\"headline\":\"There is no document-authoring system in BSuite — there are nine half-systems, and the two that look most complete (Google Docs merge, mail merge) are provably dead in production: the deployed `generate-document` function is business-suite-unified's flat-HTML one, not crm7's Google Docs merger; the live `document_templates` table has no `google_doc_id`/`merge_variables`/`signing_confi…"
+    }
+  ],
+  "totalTokens": 1817301,
+  "totalToolCalls": 447
+}
