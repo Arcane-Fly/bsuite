@@ -1,0 +1,79 @@
+name: Inline ESLint rule parity
+
+# Fails when a submodule's inlined copy of a shared ESLint rule has drifted from
+# the monorepo source of truth in packages/eslint-config/rules/.
+#
+# WHY THIS EXISTS (crm7#1579, 2026-08-10)
+#
+# The rules are inlined into each submodule because Vercel clones only that
+# submodule's repo — packages/ does not exist in its build context, so the rule
+# cannot be imported. That is a sound reason to duplicate. Nothing compared the
+# duplicates, which is not.
+#
+# no-hardcoded-colours existed in SIX places. All six carried the same defect:
+# the Tailwind palette regex matched only slate|gray|zinc|neutral, so every
+# chromatic class passed the gate and text-amber-600 shipped to production with
+# a green lint. The copies had ALSO drifted apart in the other direction — the
+# nominal source of truth in packages/ was the one MISSING the (?<![\w#]) guard
+# that stops `crm7#1234` being read as a 4-digit hex colour, a bug that had
+# already failed a build for citing the very issue the change implemented.
+#
+# So "fixed" had come to mean "fixed in the copy I happened to open", and a
+# reader checking the source of truth would have been reading the stalest file
+# of the six. This gate makes that impossible to do quietly.
+#
+# The check compares everything from the first top-level `import` onward. Each
+# copy keeps its own header (it correctly says "generated, do not edit"); only
+# the rule body must be byte-identical.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'packages/eslint-config/rules/**'
+      - 'scripts/sync-inline-eslint-rules.mjs'
+      - '.github/workflows/inline-eslint-rule-parity.yml'
+      - '**/eslint-rules/**'
+      # BARE GITLINK PATHS — the inlined copies live INSIDE the submodules, so a
+      # PR that edits one reaches the parent as a POINTER BUMP containing no
+      # eslint-rules path at all. Without these lines the globs above never match
+      # the commits that actually change a copy, and this gate is decoration.
+      # Same reasoning, same list, as migration-floor-lint.yml. Keep in step.
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: inline-rule-parity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — that is where the copies are)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Every inlined rule copy matches the monorepo source
+        run: node scripts/sync-inline-eslint-rules.mjs --check
+
+      - name: Source-of-truth rule tests
+        # The rule's own test suite. It is negative-controlled: every `invalid`
+        # case is a shape the pre-2026-08-10 rule reported ZERO errors for, so
+        # the suite fails against the old rule rather than passing vacuously.
+        run: node --test 'packages/eslint-config/rules/*.test.js'
