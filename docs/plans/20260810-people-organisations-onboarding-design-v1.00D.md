@@ -211,9 +211,16 @@ Measured 2026-08-10 on the six duplicate pairs:
 | Master Builders Association WA | none | none | cannot confirm |
 | Sample Construction | none | none | cannot confirm |
 
-**Zero of six can be confirmed by ABN.** All six are within the same tenant, so there is no
-cross-tenant merge risk — but the merge cannot be automated on ABN, because the data is not
-there.
+**Zero of six can be confirmed by ABN**, and the merge cannot be automated on it because the
+data is not there.
+
+**CORRECTED 2026-08-10 (was: "all six are within the same tenant").** The six pairs span
+**two** tenants — **Braden Group** (Example Constructions, Sample Construction) and
+**FutureBuild Academy** (ADCO, Builden, Built Management Services, Master Builders WA). Each
+individual *pair* is same-tenant, so the property the plan relies on — no cross-tenant merge —
+still holds. But the original wording was wrong, and it matters for a reason bigger than
+precision: **four of the six are in FutureBuild Academy, a real live client.** This is not
+seed data. Treat the merge accordingly.
 
 Therefore, in order:
 
