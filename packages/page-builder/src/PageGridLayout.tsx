@@ -6,9 +6,10 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { computeAutoHeightRows } from './autoHeight.js';
 import { defaultPreferenceAdapter } from './preferences.js';
+import { isRelationshipWritable } from './relationshipCatalog.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
-import type { GridLayouts, PageGridLayoutProps } from './types.js';
+import type { GridLayouts, PageGridLayoutProps, RelationshipWidgetDetail } from './types.js';
 
 /**
  * Single source of truth for the grid's pixel geometry — read by both the
@@ -50,6 +51,15 @@ const DEFAULT_CARD_CHROME_PX = 2;
 const DEFAULT_RESIZE_BOUNDS = { minW: 2, minH: 1 } as const;
 const DEFAULT_RESIZE_HANDLES: readonly ResizeHandleAxis[] = ['se'];
 const DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES = ['bsu-add-entity-widget', 'crm7-add-entity-widget'] as const;
+/**
+ * Second widget kind (W4-1) — a relationship field, distinct from the
+ * entity-list events above. Named analogously so a consumer wiring both
+ * kinds recognises the pattern immediately.
+ */
+const DEFAULT_ADD_RELATIONSHIP_WIDGET_EVENT_NAMES = [
+  'bsu-add-relationship-widget',
+  'crm7-add-relationship-widget',
+] as const;
 
 /**
  * Custom resize handle for react-grid-layout v2.
@@ -292,9 +302,15 @@ export function PageGridLayout({
   // gets a usable canvas. Opt out per-page with isResizable={false}.
   isResizable = true,
   resizeHandles = DEFAULT_RESIZE_HANDLES,
+  tenantId,
   addEntityWidgetEventNames = DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES,
   createEntityWidget,
   onRegisterEntityWidget,
+  relationshipCatalog,
+  addRelationshipWidgetEventNames = DEFAULT_ADD_RELATIONSHIP_WIDGET_EVENT_NAMES,
+  createRelationshipWidget,
+  onRegisterRelationshipWidget,
+  onRelationshipWidgetRejected,
 }: PageGridLayoutProps) {
   const {
     currentLayouts,
@@ -393,6 +409,9 @@ export function PageGridLayout({
   );
 
   const [extraWidgetConfigs, setExtraWidgetConfigs] = useState<Record<string, { entityType: string; label?: string }>>({});
+  const [extraRelationshipWidgetConfigs, setExtraRelationshipWidgetConfigs] = useState<
+    Record<string, RelationshipWidgetDetail>
+  >({});
   const { value: layerNames, setValue: setLayerNames } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
     `page:${pageKey}_grid_layer_names`,
     {},
@@ -410,12 +429,39 @@ export function PageGridLayout({
         entityType: config.entityType,
         label: config.label,
         isEditing,
+        tenantId,
       });
     }
     return rendered;
-  }, [createEntityWidget, extraWidgetConfigs, isEditing]);
+  }, [createEntityWidget, extraWidgetConfigs, isEditing, tenantId]);
 
-  const allWidgets = useMemo(() => ({ ...widgets, ...extraWidgets }), [widgets, extraWidgets]);
+  // Relationship-field widgets (W4-1) — same shape as the entity-list path
+  // above (config registry -> render via a consumer-supplied factory), kept
+  // as a parallel structure rather than folded in because the two widget
+  // kinds are gated differently: an entity-list widget can always be added,
+  // a relationship widget only when `relationshipCatalog` proves the FK is
+  // real (see the add-relationship-widget listener below).
+  const extraRelationshipWidgets = useMemo(() => {
+    const rendered: Record<string, React.ReactNode> = {};
+    if (!createRelationshipWidget) return rendered;
+    for (const [widgetId, detail] of Object.entries(extraRelationshipWidgetConfigs)) {
+      rendered[widgetId] = createRelationshipWidget({
+        widgetId,
+        hostEntityType: detail.hostEntityType,
+        fkColumn: detail.fkColumn,
+        targetEntityType: detail.targetEntityType,
+        label: detail.label,
+        isEditing,
+        tenantId,
+      });
+    }
+    return rendered;
+  }, [createRelationshipWidget, extraRelationshipWidgetConfigs, isEditing, tenantId]);
+
+  const allWidgets = useMemo(
+    () => ({ ...widgets, ...extraWidgets, ...extraRelationshipWidgets }),
+    [widgets, extraWidgets, extraRelationshipWidgets],
+  );
   const renderableWidgetKeys = useMemo(
     () => new Set(Object.keys(allWidgets).filter((key) => allWidgets[key] !== null && allWidgets[key] !== undefined)),
     [allWidgets],
@@ -545,6 +591,59 @@ export function PageGridLayout({
     addWidget,
     createEntityWidget,
     onRegisterEntityWidget,
+    setIsEditing,
+  ]);
+
+  // Relationship-field widget listener (W4-1/W4-2). Mirrors the
+  // add-entity-widget listener above, with one structural difference: every
+  // request is checked against `relationshipCatalog` via
+  // `isRelationshipWritable` BEFORE a widget is ever created. No catalogue
+  // match means the FK is not proven to exist, so the request is refused —
+  // `onRelationshipWidgetRejected` fires (for the consumer to surface why)
+  // and nothing is added to the layout. This is the only place that gate is
+  // enforced; there is no other path that creates a relationship widget.
+  useEffect(() => {
+    if (!createRelationshipWidget || typeof window === 'undefined') return;
+    const handleAddRelationshipWidget = (event: Event) => {
+      const detail = (event as CustomEvent<RelationshipWidgetDetail>).detail;
+      if (!detail?.hostEntityType || !detail.fkColumn || !detail.targetEntityType) return;
+
+      if (!isRelationshipWritable(relationshipCatalog, detail)) {
+        onRelationshipWidgetRejected?.(detail);
+        return;
+      }
+
+      const widgetId = `relationship:${detail.hostEntityType}:${detail.fkColumn}`;
+      const alreadyInLayout = activeLayouts.lg?.some((item) => item.i === widgetId);
+      if (alreadyInLayout) {
+        startTransition(() => setIsEditing(true));
+        return;
+      }
+
+      onRegisterRelationshipWidget?.({ widgetId, ...detail });
+      setExtraRelationshipWidgetConfigs((previous) => ({
+        ...previous,
+        [widgetId]: detail,
+      }));
+      addWidget(widgetId, { w: 4, h: 3, minW: 3, minH: 2 });
+      startTransition(() => setIsEditing(true));
+    };
+    for (const eventName of addRelationshipWidgetEventNames) {
+      window.addEventListener(eventName, handleAddRelationshipWidget);
+    }
+    return () => {
+      for (const eventName of addRelationshipWidgetEventNames) {
+        window.removeEventListener(eventName, handleAddRelationshipWidget);
+      }
+    };
+  }, [
+    activeLayouts.lg,
+    addRelationshipWidgetEventNames,
+    addWidget,
+    createRelationshipWidget,
+    onRegisterRelationshipWidget,
+    onRelationshipWidgetRejected,
+    relationshipCatalog,
     setIsEditing,
   ]);
 

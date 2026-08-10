@@ -58,7 +58,79 @@ export interface EntityWidgetDetail {
 export interface EntityWidgetFactoryOptions extends EntityWidgetDetail {
   widgetId: string;
   isEditing: boolean;
+  /**
+   * The caller's tenant (Wave 4 / W4-3 — see {@link PageGridLayoutProps.tenantId}).
+   * Threaded through so the entity-list widget is scoped to the caller's
+   * tenant by default instead of each consumer inventing (or forgetting)
+   * its own plumbing — a platform developer and an ordinary tenant user
+   * previously saw identical `entityType`/`label` from this callback with
+   * no way to tell whose rows they were about to render.
+   */
+  tenantId?: string | null;
 }
+
+// ─── Relationship-field widget kind (Wave 4) ───────────────────────────────
+//
+// The entity-list widget above renders a table of every row of an entity —
+// it writes nothing. A relationship field is a second, distinct widget kind:
+// a typeahead over a single entity that writes ONE foreign key on the record
+// being edited. See docs/plans/20260810-people-organisations-onboarding-
+// design-v1.00D.md §4 for the motivating incident (choosing "Client" through
+// the canvas produced a list of every organisation, because a list was the
+// only widget kind that existed).
+
+/**
+ * A single option a {@link RelationshipField} can offer — the row a user
+ * picks to write as the foreign key value. `id` is what gets written;
+ * `label` (and optional `secondaryLabel`) is what gets displayed.
+ */
+export interface RelationshipFieldOption {
+  id: string;
+  label: string;
+  secondaryLabel?: string;
+}
+
+/**
+ * Detail carried by the `crm7-add-relationship-widget` / `bsu-add-relationship-widget`
+ * events — mirrors {@link EntityWidgetDetail} for the entity-list kind.
+ * Unlike a list (which only needs an entity type to render a table), a
+ * relationship field writes a single foreign key, so it must name BOTH
+ * sides: the host record's entity type and FK column, and the entity type
+ * the FK targets.
+ */
+export interface RelationshipWidgetDetail {
+  /** Entity type of the record being edited — the host row the FK lives on. */
+  hostEntityType: string;
+  /** FK column on the host record this widget writes when a value is picked. */
+  fkColumn: string;
+  /** Entity type the FK points at — drives the typeahead's search. */
+  targetEntityType: string;
+  label?: string;
+}
+
+export interface RelationshipWidgetFactoryOptions extends RelationshipWidgetDetail {
+  widgetId: string;
+  isEditing: boolean;
+  /** The caller's tenant — see {@link PageGridLayoutProps.tenantId}. */
+  tenantId?: string | null;
+}
+
+/**
+ * One entry in the relationship catalogue: proof that a host entity's FK
+ * column genuinely points at a target entity, and is therefore safe to
+ * offer as a relationship field. Consumers build this array from a live
+ * schema source — in crm7, the `report_catalog_joins` table, filtered to
+ * `cardinality = 'many_to_one'` and `is_active = true` — never from
+ * inference. `@bsuite/page-builder` itself has no notion of a database and
+ * cannot verify writability on its own; see {@link isRelationshipWritable}.
+ */
+export interface RelationshipCatalogEntry {
+  hostEntityType: string;
+  fkColumn: string;
+  targetEntityType: string;
+}
+
+export type RelationshipCatalog = readonly RelationshipCatalogEntry[];
 
 export interface PageGridLayoutProps extends UsePageGridLayoutOptions {
   widgets: Record<string, React.ReactNode>;
@@ -66,9 +138,36 @@ export interface PageGridLayoutProps extends UsePageGridLayoutOptions {
   className?: string;
   isResizable?: boolean;
   resizeHandles?: readonly ResizeHandleAxis[];
+  /**
+   * The signed-in caller's tenant. Threaded into every widget-factory call
+   * (`createEntityWidget`, `createRelationshipWidget`) as `tenantId` so
+   * both widget kinds are scoped to the caller's tenant BY DEFAULT — the
+   * shared layer hands the scope down explicitly rather than leaving each
+   * consumer to invent (or omit) its own plumbing (W4-3).
+   */
+  tenantId?: string | null;
   addEntityWidgetEventNames?: readonly string[];
   createEntityWidget?: (options: EntityWidgetFactoryOptions) => React.ReactNode;
   onRegisterEntityWidget?: (options: EntityWidgetDetail & { widgetId: string }) => void;
+  /**
+   * Schema facts describing which relationships are actually writable
+   * (W4-2). A relationship field is only ever added when its
+   * `{hostEntityType, fkColumn, targetEntityType}` triple appears here —
+   * consumers build this from a live catalogue, never from inference.
+   * Omitting this prop refuses every relationship field (fail closed): no
+   * catalogue means nothing has been proven writable.
+   */
+  relationshipCatalog?: RelationshipCatalog;
+  addRelationshipWidgetEventNames?: readonly string[];
+  createRelationshipWidget?: (options: RelationshipWidgetFactoryOptions) => React.ReactNode;
+  onRegisterRelationshipWidget?: (options: RelationshipWidgetDetail & { widgetId: string }) => void;
+  /**
+   * Called when an `add-relationship-widget` event names a relationship
+   * that is not present in `relationshipCatalog` — the widget is refused;
+   * this is the hook for surfacing why (e.g. a toast) without
+   * `@bsuite/page-builder` owning any UI copy.
+   */
+  onRelationshipWidgetRejected?: (detail: RelationshipWidgetDetail) => void;
 }
 
 export interface UsePageGridLayoutResult {
