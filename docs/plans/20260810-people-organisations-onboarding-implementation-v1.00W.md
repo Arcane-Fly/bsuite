@@ -174,18 +174,51 @@ never a mirror table, never a free-text field where an entity exists. That doctr
 this wave restores.
 
 ### W2-1 · Populate and validate ABNs — **do this first, no migration**
-**Repo:** crm7 (script) · **Skills:** `check-cleanup-scope-safety`, `biz-au-apprenticeship`
+**Repo:** crm7 · **Skills:** `check-cleanup-scope-safety`, `biz-au-apprenticeship`
 
-ABN cannot yet confirm any of the six duplicate pairs: zero have an ABN on both sides. Until
-that is fixed, every later step in this wave is guesswork.
+**REVISED 2026-08-10 after checking the live data. Two findings change this task.**
 
-1. For the 6 pairs (and ideally all 41 organisation rows), obtain the ABN — ABN Lookup, or by
-   hand for six rows.
-2. Fix `37 602 010 097]` — it has a stray bracket, which proves nothing validates on entry.
-3. Add a modulus-89 ABN checksum validator and wire it into every ABN input.
+**Finding 1 — the validator already exists. Do not write one.**
+`src/lib/validators/au.ts` exports `isValidABN()` implementing the correct ATO weighted
+modulus-89 checksum, plus an `abnSchema` Zod schema with the message *"Invalid ABN — must be
+11 digits with valid checksum"*. The work is **wiring it to the organisation ABN inputs**,
+not building it. Wiring an existing validator is a different, smaller task than authoring
+one — and authoring a second would give the estate two implementations that can disagree.
 
-**Evidence:** each of the six pairs has an ABN on **both** sides, or a written human decision
-recorded in the W2-4 migration explaining why the pair is the same entity without one.
+**Finding 2 — 12 of the 14 ABNs in the database fail that checksum.**
+
+| ABN | Checksum |
+|---|---|
+| `37 602 010 097]` (Built Management, note the stray bracket) | **valid** once normalised |
+| `62681880320` (FutureBuild tenant) | **valid** |
+| `12 345 678 901`, `23 456 789 012`, `34 567 890 123`, `45 678 901 234`, `56 789 012 345`, `67 890 123 456`, `78 901 234 567`, `89 012 345 678`, `90 123 456 789`, `61 234 567 890` | **all fail** — and they are a rolling digit sequence, i.e. seed data |
+| `49 382 197 454` (NSW Health), `51 824 753 612` (TechForge) | fail |
+| `12345` (Lookn tenant) | not 11 digits |
+
+Consequences, and they matter:
+
+- **Validation must be forward-only.** Enforce on write; do not retro-invalidate. A
+  constraint applied retroactively would reject 12 existing rows, most of them demo data
+  that nobody wants to spend a morning on.
+- **ABN cannot dedupe the wider table.** With only two genuine ABNs, an ABN-based merge
+  across all 41 organisations would be meaningless today. It remains the right identity key
+  going forward; it is not a migration tool for the current data.
+- **The stray bracket case is an argument for the generated `abn_normalised` column
+  (W2-6), not against it** — `37 602 010 097]` is a *valid* ABN wearing a typo, and
+  normalising to digits recovers it rather than discarding it.
+
+**Revised steps:**
+
+1. Wire `isValidABN` / `abnSchema` into every organisation ABN input. Forward-only.
+2. Fix the one stray bracket.
+3. For the six duplicate pairs specifically: obtain ABNs (ABN Lookup, or by hand — it is six
+   rows), **or** record a written human decision per pair in the W2-4 migration. Five of the
+   six have no ABN on either side, so expect to be recording decisions, not matching numbers.
+4. Do **not** attempt to correct the seed ABNs as part of this wave. Note them and move on.
+
+**Evidence:** the six pairs each have either matching ABNs or a recorded decision; the
+validator rejects a bad ABN on a new organisation and accepts a good one; no existing row was
+rewritten.
 
 ### W2-2 · Organisation role flags · `20260812010000`
 **Repo:** crm7 · **Skills:** `supabase:supabase`, `bsuite-rls-authz-red-team`
