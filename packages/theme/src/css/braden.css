@@ -24,10 +24,32 @@
  * already false twice over: the 0.7.0 separation-first contract retired purple
  * for semantics, and the Corporate contract binds error to --braden-indigo.
  *
- * ERROR IS INDIGO HERE, NOT RED — deliberately, and for the opposite reason to
- * D2C. D2C's primary is blue, so error must be red to separate from it.
- * Corporate's primary IS red, so a red error would collide with the brand's
- * own primary action colour. Same rule, inverted inputs.
+ * ERROR IS RED HERE — OPERATOR RULING 2026-08-10, superseding the indigo rule.
+ * Braden: "use standard error red not braden corporate red."
+ *
+ * What this overturns. 0.4.0 bound error to --braden-indigo on a
+ * separation-first argument: D2C's primary is blue so error must be red;
+ * Corporate's primary IS red so error must not be. That reasoning was sound
+ * and it is no longer the rule. Error now uses --error-red, the SAME standard
+ * error red the D2C brand uses (oklch(0.580 0.230 25)) — one error colour
+ * across the estate. Recognition beats palette separation: a person reads red
+ * as "danger" before they read it as "Braden".
+ *
+ * --error-red is NOT a Braden brand colour and must never be used as one. It
+ * is permitted here for the error/destructive roles only. It stays inside the
+ * palette whitelist because it is a value the D2C source-of-truth document
+ * already ships; the whitelist pools both contracts.
+ *
+ * THE COST, MEASURED, SO NOBODY REDISCOVERS IT AS A BUG:
+ *   ΔE_oklch(error red, --braden-red) = 0.113   ← now the palette's tightest pair
+ *   ΔE_oklch(old indigo, --braden-red) = 0.312
+ * The Corporate contract's previously-worst pair was 0.143. A destructive
+ * button and a primary button are now both red, separated by lightness (0.092)
+ * and chroma rather than hue, and under deuteranopia lightness is nearly all
+ * that survives. THEREFORE: destructive actions on Corporate must carry an
+ * icon or an explicit verb ("Delete"), never colour alone. The contract
+ * already said shape and label do more work on this brand than on D2C; after
+ * this ruling that is load-bearing rather than advisory.
  */
 
 
@@ -51,6 +73,12 @@
   --braden-indigo:     oklch(0.400 0.200 270);
   --braden-teal-deep:  oklch(0.500 0.140 220);
   --braden-aqua:       oklch(0.800 0.130 198);
+
+  /* NOT A BRAND COLOUR. The estate's single standard error red, identical to
+     D2C's, bound to error/destructive only — operator ruling 2026-08-10.
+     Never bind this to primary, accent, a gradient stop or any decorative
+     surface: doing so puts a non-Braden red on a Braden page. */
+  --error-red:         oklch(0.580 0.230  25);
 
 /* ============================================================
    LAYER 2 — SURFACES AND BORDERS
@@ -109,13 +137,16 @@
 
 /* ============================================================
    LAYER 3 — SEMANTIC ROLES
-   error = --braden-indigo: Corporate primary is RED, so error cannot be.
+   error = --error-red, the estate's standard error red — operator ruling
+   2026-08-10. It is deliberately NOT --braden-red: the brand primary and the
+   destructive colour must still be two different values, even now that both
+   are red. See the header for the measured separation and what it obliges.
    ============================================================ */
   --role-primary:     var(--braden-red);
   --role-secondary:   var(--braden-navy);
   --role-accent:      var(--braden-gold);
-  --role-error:       var(--braden-indigo);
-  --role-destructive: var(--braden-indigo);
+  --role-error:       var(--error-red);
+  --role-destructive: var(--error-red);
   --role-warning:     var(--braden-gold);
   --role-success:     var(--braden-aqua);
   --role-info:        var(--braden-teal-deep);
@@ -185,7 +216,10 @@
   --role-primary-text: oklch(0.566 0.170 17.6);
   --role-accent-text-base: oklch(0.544 0.092 89.9);
   --role-accent-text:  var(--role-accent-text-base);
-  --role-error-text:   oklch(0.562 0.200 270);
+  /* Red, per the 2026-08-10 ruling. Measured on Corporate's own light
+     surfaces, not inherited from D2C's: 6.18:1 on --role-bg-body,
+     6.44:1 on --role-bg-panel. Both ✓ AA. */
+  --role-error-text:   oklch(0.482 0.230  25);
   --role-warning-text: oklch(0.544 0.092 89.9);
   --role-success-text: oklch(0.515 0.130 198);
   --role-info-text:    oklch(0.519 0.140 220);
@@ -196,6 +230,10 @@
   --text-on-light-fill: oklch(0.980 0.006 50);
   --text-on-dark-fill:  oklch(0.190 0.020 250);
   --text-on-primary:    var(--text-on-light-fill);
+  /* On the new error red (L 0.58) this measures 4.54:1 — ✓ AA, but with no
+     headroom. It was 9.35:1 on the old indigo fill (L 0.40). If the error
+     fill is ever lightened, re-measure before shipping: a tenth of a point of
+     lightness drops it below AA. */
   --text-on-error:      var(--text-on-light-fill);
   --text-on-accent:     var(--text-on-dark-fill);
   --text-on-warning:    var(--text-on-dark-fill);
@@ -289,7 +327,9 @@
   --role-primary-text:   oklch(0.704 0.170 17.6);
   --role-accent-text-base: oklch(0.683 0.092 89.9);
   --role-accent-text:    var(--role-accent-text-base);
-  --role-error-text:     oklch(0.711 0.200 270);
+  /* Red, per the 2026-08-10 ruling. 7.24:1 on --role-bg-body,
+     6.51:1 on --role-bg-panel. Both ✓ AA. */
+  --role-error-text:     oklch(0.786 0.230  25);
   --role-warning-text:   oklch(0.683 0.092 89.9);
   --role-success-text:   oklch(0.662 0.130 198);
   --role-info-text:      oklch(0.667 0.140 220);

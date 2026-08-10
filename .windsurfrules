@@ -166,8 +166,17 @@ CRM7 and Conduit use Vercel AI Gateway for model routing. **Do NOT revert these 
   2026-08-02; this file asserted the overturned purple rule until 2026-08-08.)
 - Braden is a separate corporate brand, but not exempt from token architecture: it imports
   `@bsuite/theme/braden-css` and uses OKLCH Braden Red/Gold/Navy role bindings. Braden's *primary*
-  is red, so it solves the same invariant the other way — its `--role-error` / `--role-destructive`
-  bind to `--braden-indigo` (`packages/theme/src/css/braden.css:117-118`).
+  is red, and **as of the operator ruling 2026-08-10 its error is red too** — `--role-error` /
+  `--role-destructive` bind to `--error-red` (`oklch(0.580 0.230 25)`), the same standard error red
+  D2C uses, NOT to `--braden-red`. This **overturns** the indigo binding and, on Corporate only, the
+  separation-first invariant above: Braden: *"use standard error red not braden corporate red."*
+  One error colour across the estate; recognition beats palette separation.
+  **What that obliges:** error red sits ΔE 0.113 from `--braden-red` in normal vision and 0.065
+  under protanopia — the palette's weakest pair by a wide margin — so on Corporate a destructive
+  control MUST carry an icon or an explicit verb and may never signal by colour alone.
+  `--error-red` is not a brand colour; binding it to anything other than error/destructive puts a
+  non-Braden red on a Braden page. (`packages/theme/src/css/braden.css`; requires
+  `@bsuite/theme@0.10.6+` — a PATCH bump deliberately, because `^0.10.x` would never resolve 0.11.)
 - Never add raw hex/RGB/HSL, `text-white`, or `text-black` in consumer UI. Dark-surface text uses the softened OKLCH scale capped at L=0.94; inverse text on fills uses explicit `text-on-*` tokens.
 - Never commit API keys or secrets
 - Conventional commits: `type(scope): description`
