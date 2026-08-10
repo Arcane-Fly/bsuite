@@ -47,9 +47,17 @@
      Gold, Bronze, Light Gold and Forest are ONE yellow, so the
      remaining semantic states have to live on the cool axis and
      separate by lightness. Worst pair in the shipped set: 0.143. */
-  --braden-indigo:     oklch(0.400 0.200 270);    /* #252fb1 error */
+  --braden-indigo:     oklch(0.400 0.200 270);    /* retired from the error role 2026-08-10 */
   --braden-teal-deep:  oklch(0.500 0.140 220);    /* #00739a info  */
   --braden-aqua:       oklch(0.800 0.130 198);    /* #28d7dc success */
+
+  /* OPERATOR RULING 2026-08-10 — "use standard error red not braden corporate
+     red." Error leaves the cool axis. This is the estate's standard error red,
+     the same value D2C uses; it is NOT a Braden brand colour and is bound to
+     error/destructive only. Cost: ΔE_oklch to --braden-red is 0.113, which
+     replaces 0.143 as the palette's tightest pair, so destructive actions must
+     carry an icon or an explicit verb rather than relying on colour. */
+  --error-red:         oklch(0.580 0.230  25);    /* standard error + destructive */
 
   /* ── L2 SURFACES — LIGHT (warm white; panel is 0.994, not 1.0) ── */
   --role-bg-body:    oklch(0.980 0.002  50);
@@ -95,8 +103,8 @@
   --role-primary:     var(--braden-red);
   --role-secondary:   var(--braden-navy);
   --role-accent:      var(--braden-gold);
-  --role-error:       var(--braden-indigo);
-  --role-destructive: var(--braden-indigo);
+  --role-error:       var(--error-red);        /* ruling 2026-08-10 — was --braden-indigo */
+  --role-destructive: var(--error-red);        /* ruling 2026-08-10 — was --braden-indigo */
   --role-warning:     var(--braden-gold);      /* gold IS attention on this brand */
   --role-success:     var(--braden-aqua);
   --role-info:        var(--braden-teal-deep);
@@ -104,7 +112,7 @@
   /* AA-safe text renderings on light surfaces */
   --role-primary-text: oklch(0.566 0.170  17.6); /* 4.69:1 AA */
   --role-accent-text:  oklch(0.544 0.092  89.9); /* 4.71:1 AA */
-  --role-error-text:   oklch(0.562 0.200 270);   /* 4.70:1 AA */
+  --role-error-text:   oklch(0.482 0.230  25);   /* 6.18:1 body · 6.44:1 panel — AA (ruling 2026-08-10) */
   --role-warning-text: oklch(0.544 0.092  89.9); /* 4.71:1 AA */
   --role-success-text: oklch(0.515 0.130 198);   /* 4.69:1 AA */
   --role-info-text:    oklch(0.519 0.140 220);   /* 4.71:1 AA */
@@ -257,7 +265,7 @@
 
   --role-primary-text: oklch(0.704 0.170  17.6); /* 7.00:1 AAA */
   --role-accent-text:  oklch(0.683 0.092  89.9); /* 6.99:1 AAA */
-  --role-error-text:   oklch(0.711 0.200 270);   /* 6.99:1 AAA */
+  --role-error-text:   oklch(0.786 0.230  25);   /* 7.24:1 body · 6.51:1 panel — AA (ruling 2026-08-10) */
   --role-warning-text: oklch(0.683 0.092  89.9);
   --role-success-text: oklch(0.662 0.130 198);   /* 7.00:1 AAA */
   --role-info-text:    oklch(0.667 0.140 220);   /* 7.01:1 AAA */
@@ -411,7 +419,7 @@ td.r { text-align: right; }
 .pill.info    { color: var(--role-info-text);    background: color-mix(in oklch, var(--braden-teal-deep) 15%, transparent); }
 .pill.done    { color: var(--role-success-text); background: color-mix(in oklch, var(--braden-aqua) 18%, transparent); }
 .pill.review  { color: var(--role-warning-text); background: color-mix(in oklch, var(--braden-gold) 22%, transparent); }
-.pill.blocked { color: var(--role-error-text);   background: color-mix(in oklch, var(--braden-indigo) 16%, transparent); }
+.pill.blocked { color: var(--role-error-text);   background: color-mix(in oklch, var(--error-red) 16%, transparent); }
 .pill.review::before  { border-radius: 1px; }
 .pill.blocked::before { border-radius: 1px; transform: rotate(45deg); }
 
@@ -426,7 +434,7 @@ td.r { text-align: right; }
 .badge.aaa { color: var(--role-success-text); background: color-mix(in oklch, var(--braden-aqua) 20%, transparent); }
 .badge.aa  { color: var(--role-info-text);    background: color-mix(in oklch, var(--braden-teal-deep) 15%, transparent); }
 .badge.lg  { color: var(--role-warning-text); background: color-mix(in oklch, var(--braden-gold) 24%, transparent); }
-.badge.no  { color: var(--role-error-text);   background: color-mix(in oklch, var(--braden-indigo) 16%, transparent); }
+.badge.no  { color: var(--role-error-text);   background: color-mix(in oklch, var(--error-red) 16%, transparent); }
 
 .sws { display: grid; grid-template-columns: repeat(auto-fill,minmax(118px,1fr)); gap: 9px; }
 .sw { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--role-border); }
@@ -665,7 +673,8 @@ td.r { text-align: right; }
         </div>
         <h6 style="margin:16px 0 8px">Semantic — solved for dichromacy</h6>
         <div class="sws">
-          <div class="sw"><div class="sw-c" style="background:var(--braden-indigo)"></div><div class="sw-m"><div class="sw-n">Indigo</div><div class="sw-v">error · destructive</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--error-red)"></div><div class="sw-m"><div class="sw-n">Error Red</div><div class="sw-v">error · destructive — not a brand colour</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--braden-indigo)"></div><div class="sw-m"><div class="sw-n">Indigo</div><div class="sw-v">retired from error 2026-08-10</div></div></div>
           <div class="sw"><div class="sw-c" style="background:var(--braden-teal-deep)"></div><div class="sw-m"><div class="sw-n">Deep Teal</div><div class="sw-v">info</div></div></div>
           <div class="sw"><div class="sw-c" style="background:var(--braden-aqua)"></div><div class="sw-m"><div class="sw-n">Aqua</div><div class="sw-v">success</div></div></div>
         </div>
@@ -691,7 +700,7 @@ td.r { text-align: right; }
           <tr><td>Escalated / error</td><td class="tok">--role-error</td><td class="meta">deep blue</td><td>diamond</td></tr>
         </tbody></table>
       </div>
-      <div class="p-note"><strong>Braden's warm axis is full.</strong> Red is the brand and gold is the accent, so both warm slots are spoken for before any status exists. Every remaining state lives on the cool axis, separated by lightness — deep blue for error, mid for info, pale for success. Shape and label do more work here than they do on D2C.</div>
+      <div class="p-note"><strong>Braden's warm axis is full.</strong> Red is the brand and gold is the accent, so both warm slots are spoken for before any status exists. Info and success live on the cool axis, separated by lightness — mid teal for info, pale aqua for success. Error left that axis on 2026-08-10 by operator ruling and is now the estate's standard red, which means the warm axis carries three meanings at once and shape and label do more work here than anywhere else in the estate.</div>
     </section>
   </div>
 
@@ -708,9 +717,11 @@ td.r { text-align: right; }
       <tr><td><strong>primary red vs success aqua</strong></td><td class="ratio">0.221</td><td><span class="badge aaa">CLEAR</span></td></tr>
       <tr><td><strong>warning gold vs success aqua</strong></td><td class="ratio">0.208</td><td><span class="badge aa">OK</span></td></tr>
       <tr><td><strong>info teal vs success aqua</strong></td><td class="ratio">0.184</td><td><span class="badge aa">OK</span></td></tr>
-      <tr><td><strong>error indigo vs info teal</strong></td><td class="ratio">0.143</td><td><span class="badge lg">WEAKEST</span></td></tr>
+      <tr><td><strong>error indigo vs info teal</strong> <em>— retired 2026-08-10, error is no longer indigo</em></td><td class="ratio">0.143</td><td><span class="badge no">RETIRED</span></td></tr>
+      <tr><td><strong>error red vs Braden Red</strong> — the ruling's cost</td><td class="ratio">see note</td><td><span class="badge no">WEAKEST</span></td></tr>
     </tbody></table>
-    <div class="p-note"><strong>Braden is a harder palette than D2C, and the numbers say so.</strong> D2C's worst pair is 0.156; Braden's is 0.143 — error indigo against info deep-teal, both cool, separated mainly by lightness. That's the cost of a brand whose identity colour is also the most semantically loaded colour in a UI. The mitigation is the diamond marker and the label on the error pill, which is why colour-alone signalling is banned harder here than on D2C.</div>
+    <div class="p-note"><strong>Braden is a harder palette than D2C, and the numbers say so.</strong> D2C's worst pair is 0.156; Braden's <em>was</em> 0.143 — error indigo against info deep-teal, both cool, separated mainly by lightness. That's the cost of a brand whose identity colour is also the most semantically loaded colour in a UI. The mitigation is the diamond marker and the label on the error pill, which is why colour-alone signalling is banned harder here than on D2C.</div>
+    <div class="p-note" style="border-left:3px solid var(--error-red)"><strong>Ruling 2026-08-10 — the new weakest pair, measured.</strong> Moving error to the standard error red puts it beside <code>--braden-red</code> on the warm axis. Re-measured independently (Viénot–Brettel–Mollon dichromacy simulation into OKLab, so these figures are <em>not</em> on the same basis as the table above and should not be compared to it row-for-row): error red against Braden Red is <strong>0.113</strong> in normal vision, <strong>0.110</strong> under deuteranopia and <strong>0.065</strong> under protanopia. For scale, the same method puts the retired indigo-vs-teal pair at 0.165 deuteranopic and 0.197 protanopic. So for a red-blind reader the primary button and the delete button are now roughly a third as distinguishable as the worst pair this palette previously shipped. <strong>The operator has accepted this trade.</strong> It makes the existing rule load-bearing rather than advisory: on Corporate, a destructive control carries an icon and an explicit verb, and colour never carries the meaning alone.</div>
   </section>
 
   <!-- ══ ELEVATION ══ -->
@@ -743,7 +754,7 @@ td.r { text-align: right; }
     <div class="p-head"><h2>Contract rules</h2><span class="meta">Where Braden diverges from D2C</span></div>
     <div class="rules">
       <div class="do"><h6>Do — red is identity</h6><p>Braden Red is <code>--role-primary</code>: logo, primary action, section rules. It is never a status colour.</p></div>
-      <div class="dont"><h6>Don't — red as error</h6><p>The brand colour and the destructive colour cannot be the same. Error is <code>--braden-indigo</code>; the rule is separation from primary, not a fixed hue.</p></div>
+      <div class="dont"><h6>Don't — Braden Red as error</h6><p>Error <em>is</em> red here, by operator ruling 2026-08-10 — but it is <code>--error-red</code>, the estate's standard error red, never <code>--braden-red</code>. The brand colour and the destructive colour must still be two different values. Because both are now red and separate only by lightness (ΔE 0.113), <strong>a destructive action must carry an icon or an explicit verb</strong>; colour alone no longer distinguishes it, least of all under deuteranopia.</p></div>
       <div class="do"><h6>Do — gold is attention</h6><p>Gold carries highlight, call-to-action and warning, exactly as the extended palette specifies. Always with navy text on it.</p></div>
       <div class="dont"><h6>Don't — gold, bronze and green together</h6><p>All three collapse to one yellow under deuteranopia. Only one warm accent may carry meaning at a time.</p></div>
       <div class="do"><h6>Do — dot inside auth</h6><p>The 16px dot field is the admin shell background, tinted gold in dark mode.</p></div>
