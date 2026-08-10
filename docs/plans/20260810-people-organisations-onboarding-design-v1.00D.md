@@ -1,7 +1,8 @@
 # People, organisations and onboarding — design
 
-**Status:** design, awaiting one decision (§2). **Date:** 2026-08-10.
-**Operator rulings so far:** C (§2, *provisionally — see the correction*), A (§1).
+**Status:** design — all decisions taken; ready for an implementation plan. **Date:** 2026-08-10.
+**Operator rulings:** A (§1) · **C3** (§2, after the correction) · ABN is the organisation
+identity, scoped to the enterprise (§2a) · self-service portal onboarding (§3).
 **Triggered by:** operator screenshot, `/people/new` — a contact has an employer, the field
 is not on the card, and adding a Client or Employer element through the canvas produced a
 *list of every organisation* instead of a picker.
@@ -135,7 +136,7 @@ most one `clients` row, and give `contacts` an `organisation_id → employers`.
 *No FK moves at all.* Fixes the contact problem and the duplication without a structural
 merge.
 
-### Recommendation
+### Recommendation — RULED: C3, 2026-08-10
 
 **C3 now, C1 later if still wanted.** C3 solves the operator's actual problem — a contact can
 be attached to any organisation, including host employers, training providers and STAs — with
@@ -143,13 +144,87 @@ be attached to any organisation, including host employers, training providers an
 a strict step toward it, because it makes `employers` the spine first. C2 should not be built:
 it moves 31 references including every timesheet and invoice for a cosmetic gain.
 
-**This is the one decision needed before implementation starts.**
+**RULED C3.** Deduplicate and link; move no foreign keys. C1 stays the eventual target.
 
 ### Training providers are a lookup, not organisations
 
 `training_providers` holds **8,119** rows imported from the national register. Those are
 reference data. Only the handful actually dealt with become organisation records; the rest
 stay a list you pick from. Do not merge that table into anything.
+
+---
+
+## 2a. ABN as the organisation identity — and why it cannot be enforced globally
+
+**Ruling:** ABN is the unique identifier for an organisation. **Scoped to the enterprise, not
+the platform.** Two GTOs on the platform that are not part of the same enterprise must each
+be able to hold their own record for the same real company; two tenants under one parent
+enterprise share one.
+
+### Why a plain unique index is wrong
+
+`UNIQUE (abn)` would let one GTO's record block another unrelated GTO from adding the same
+company — a cross-tenant collision, and a visible leak: the failure itself tells you another
+tenant holds that ABN.
+
+`UNIQUE (tenant_id, abn)` is safe but too narrow: every sub-org of one enterprise gets its own
+duplicate, which is the problem this plan exists to remove.
+
+### The design
+
+Denormalise the enterprise root onto the organisation row and make that the scope:
+
+```
+enterprise_root_id  uuid  NOT NULL   -- the top of this tenant's parent_tenant_id chain
+UNIQUE (enterprise_root_id, abn_normalised) WHERE abn_normalised IS NOT NULL
+```
+
+- **`abn_normalised`** is digits only, generated, never typed. Today's data already proves the
+  need: one ABN is stored as `37 602 010 097]` — with a stray bracket — so `12 345 678 901`
+  and `12345678901` would both insert against a raw column.
+- **Partial index**, because ABN is optional: only **12 of 17** employers and **13 of 24**
+  clients have one. A NOT NULL constraint would block legitimate records (overseas entities,
+  sole traders being set up, an org captured before its ABN is known).
+- **`enterprise_root_id` is maintained by trigger**, walking `tenants.parent_tenant_id`. Use
+  `tenant_subtree_ids()` — it is the only cycle-safe walker of the four (`ancestors_of`,
+  `descendants_of`, `get_descendant_tenant_ids` are not).
+- **Re-parenting a tenant must recompute it.** Moving a tenant under a different enterprise
+  changes the scope of every organisation it owns and can surface a collision that did not
+  exist a moment earlier. That is correct behaviour, but it must fail loudly with a message
+  naming the colliding pair, not with a bare constraint violation.
+
+### Validate the ABN, do not just store it
+
+An ABN has a modulus-89 checksum. Validate on entry. The stray-bracket row is evidence that
+nothing validates today, and an unchecked identity key is not an identity key.
+
+### The sequencing problem — ABN cannot confirm the merges it is meant to govern
+
+Measured 2026-08-10 on the six duplicate pairs:
+
+| Pair | Client ABN | Employer ABN | Verdict |
+|---|---|---|---|
+| ADCO Constructions | none | none | cannot confirm |
+| Builden Construction | none | none | cannot confirm |
+| Built Management Services | `37 602 010 097]` | none | cannot confirm |
+| Example Constructions | none | none | cannot confirm |
+| Master Builders Association WA | none | none | cannot confirm |
+| Sample Construction | none | none | cannot confirm |
+
+**Zero of six can be confirmed by ABN.** All six are within the same tenant, so there is no
+cross-tenant merge risk — but the merge cannot be automated on ABN, because the data is not
+there.
+
+Therefore, in order:
+
+1. **Populate ABNs first** — via the ABN Lookup register, or by hand for six rows.
+2. **Confirm each pair by ABN**, or by a human decision recorded in the migration.
+3. **Merge.**
+4. **Then** add the unique index. Adding it earlier enforces nothing on the 5 employers and
+   11 clients with no ABN, which is exactly where duplicates will keep arriving.
+
+Adding the constraint before step 1 would be a gate that never fires — a control that exists
+and protects nothing.
 
 ---
 
@@ -336,9 +411,9 @@ Estimates are relative effort, not calendar.
 
 Stated so the next person does not assume it was checked.
 
-- **Whether the six duplicate pairs are truly the same legal entity.** Matched on exact name.
-  ABNs were not compared, and two organisations can share a trading name. Confirm against ABN
-  before merging any pair.
+- ~~Whether the six duplicate pairs are truly the same legal entity.~~ **Checked 2026-08-10:
+  ABN cannot confirm any of the six — see §2a. All six are within one tenant. Each pair still
+  needs a human decision or an ABN lookup before it is merged.**
 - **Whether `clients` and `employers` carry conflicting data** for the six pairs — different
   addresses, different contacts, different statuses. A merge must decide which wins,
   field by field, and that has not been surveyed.
@@ -346,3 +421,83 @@ Stated so the next person does not assume it was checked.
   audited for that.
 - **What the 55 organisation-less contacts actually are.** They may be leads, imported rows,
   or genuine orphans. They need looking at before a rule is written for them.
+
+---
+
+## 8. Could this be done visually, through the builders?
+
+**Short answer: no — and the reason is worth understanding, because it is not a missing
+button.** The canvas offered a list of organisations because a list was the only thing it
+had. It could not offer a picker, because a picker writes a foreign key and no foreign key
+existed to write.
+
+### What each tool actually does
+
+| Tool | Writes | Effect on the database | Could it have solved this? |
+|---|---|---|---|
+| Schema builder (`@bsuite/schema-builder`) | `tenant_entities`, `tenant_entity_relations` | **none — metadata only** | No |
+| Page / canvas builder (`PageGridLayout`) | layout, entity-list widgets | **none — presentation only** | No |
+| Report catalogue | `report_catalog_*` | **none — describes tables that already exist** | Only exposes what exists |
+| Navigation customiser (`save_tenant_navigation`) | tenant nav config | none | Partly — §1's nav wiring |
+| A migration | real DDL | **yes** | **This is the only path** |
+
+**No builder in the estate emits DDL.** Verified by search across the schema-builder package
+and the crm7 admin surfaces. The word "builder" is doing a lot of work: these tools *describe*
+structure, they do not *create* it.
+
+### Three descriptions of the same data, none agreeing
+
+| Where | Count |
+|---|---:|
+| Schema-builder entities | 45 |
+| Schema-builder **relations** | **0** |
+| Report-catalogue entities | 84 |
+| Real tables in `public` | 380 |
+
+The relations table has **never held a row.** So the one concept that would have expressed
+"a contact belongs to an organisation" inside a builder has never been exercised by anybody.
+
+### What IS available visually today
+
+- Rearrange, resize, add and remove cards on any page, and save per tenant.
+- Drop an entity **list** widget onto a page.
+- Draw entities and relationships in the schema builder as a **proposal**.
+- Build reports and workspace views over anything already in the catalogue.
+- Customise navigation per tenant.
+- Branding and theme.
+
+### What is not, and why each one needs a migration
+
+| Wanted | Blocked by |
+|---|---|
+| "Which organisation" on the contact form | needs a real column + foreign key |
+| A **picker** rather than a list | no relationship-field widget exists (§4) |
+| Role flags — is_client, is_host_employer, is_training_provider, is_sta | column-level DDL |
+| ABN uniqueness scoped to the enterprise | an index and a trigger (§2a) |
+| Changing what a form **saves** | the form's write path is code |
+
+### Recommendation — split it by what is reversible
+
+**Presentation is visual and immediate. Shape of the data is proposed visually and applied by
+review.**
+
+1. **Build the relationship-field widget (§4).** After it exists, any field that already has a
+   foreign key can be placed on any page, by you, with no developer. That covers most of what
+   this request was actually reaching for, permanently.
+2. **Let the schema builder generate a proposed migration** rather than only metadata — a
+   diff a developer approves, applied by the normal pipeline. The approval step already exists
+   in pattern: `report_catalog_approve_entity` is exactly this shape for catalogue entities.
+3. **Do not let a builder write DDL straight to production.** The estate already has six
+   organisation-shaped tables, three disagreeing descriptions of its own schema, and — as of
+   this week — a promotion that added seventeen privileged functions nobody had reviewed. A UI
+   that can create tables would accelerate all three. The constraint is not distrust of the
+   operator; it is that schema changes are the one class of change that cannot be undone by
+   editing a page back.
+
+### The honest summary
+
+You could not have done this visually, and no reasonable amount of builder work would have
+let you — because the field you wanted did not exist in the database. What **should** be true
+after this plan is that the *next* one does not need a developer: once `contacts` has an
+organisation link and the relationship widget exists, adding that picker to any page is a
+drag, and so is putting it on the person page, the placement page, or a report.
