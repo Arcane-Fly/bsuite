@@ -60,13 +60,54 @@ already does by construction, and it would take deliberate effort to break it.
 3. **A shared filter context** so visuals cross-filter. This is the genuinely new part.
 4. **A developer UI to set the default** — "default for everyone / for this tenant / none".
 
-## One correction the ruling exposes
+## A correction to this document — the reference layer already does it
 
-`tenant_scope` on `report_catalog_entities` is the field a developer would read to decide
-"is this common or tenant-specific?" — and it is **wrong for at least two entities**.
-`training_providers` (8,119 rows, every one `tenant_id IS NULL`) and `units_of_competency`
-(160, all NULL) are catalogued `tenant_column` when their data is global.
+**Superseded 2026-08-10, same day.** This section previously said `tenant_scope` was
+mislabelled on `training_providers` and `units_of_competency`, and told the next person to
+fix the labels first. That was wrong, and acting on it would have made things worse. The
+labels are correct. Recorded here rather than deleted, because the misreading is an easy
+one and the reasoning is the useful part.
 
-Run-time behaviour is correct anyway, because RLS decides and not the label. But if the
-dashboard builder surfaces this label to the developer making the common-vs-tenant choice,
-it will tell them the wrong thing. Fix the labels before building the chooser on top of them.
+**What I got wrong.** I read `tenant_scope` as describing who *owns* the data, so 8,119
+rows with `tenant_id IS NULL` looked like global data wearing a tenant-scoped label. The
+vocabulary (set by migration `20260807074000`) describes the **column**, not the data:
+
+| value | meaning |
+|---|---|
+| `tenant_column` | the table HAS its own `tenant_id`; the engine adds a predicate |
+| `global` | no `tenant_id` column EXISTS; adding no predicate is correct |
+| `fk_scoped` | no `tenant_id`; isolation rests on that table's own RLS |
+
+`training_providers` has a nullable `tenant_id`, so `tenant_column` is right. A database
+trigger enforces this and refused the relabel when I tried it.
+
+**And the real design is better than the fix I proposed.** A nullable `tenant_id` makes the
+engine emit `(tenant_id = $1 OR tenant_id IS NULL)`, so a tenant sees **every shared row
+plus any row it added itself**. The schema says so outright — `training_providers.origin`
+is an enum of exactly `official_register | user_added`:
+
+| origin | `tenant_id` | who sees it |
+|---|---|---|
+| `official_register` | NULL | everyone |
+| `user_added` | the tenant's | that tenant only |
+
+That is this ruling's model, already built, at the reference-data layer. A GTO can register
+its own RTO and see it in reports beside the 8,119 national ones, without it leaking to
+anyone else. Flattening those entities to `global` would have thrown that away.
+
+Proven end to end in `crm7/supabase/tests/database/68_global_reference_scope.sql` (11
+assertions, merged as crm7#1574): a tenant user runs one report definition and gets the
+shared row **and** its own, and **not** a rival tenant's.
+
+## The thing that does still need care
+
+The engine's nullable branch carries this comment:
+
+> "Not reachable today (no seeded entity has one) but shaped correctly in case one ever does."
+
+That is false. `training_providers`, `units_of_competency` and `qualifications` all take it.
+Delete it as dead code and 8,279 rows of national training data drop out of every report at
+once — silently, because a report returning nothing reads as "no data", not as a fault.
+
+It is now documented as load-bearing on the function, and suite 68 §B fails if the branch
+ever stops being reachable.
