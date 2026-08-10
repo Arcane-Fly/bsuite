@@ -437,3 +437,98 @@ Per the estate's own recurring-failure record, these are required, not optional:
 - **`glide-data-grid` under React 19 in practice** — the peer range excludes 19, but I did not test whether it runs. If D1(a) is chosen, spike it first.
 - **No industry guidance** was found for tier-scoped catalog visibility as a named pattern; the platform/tenant overlay is extrapolated from this estate's own `custom_pages` precedent.
 - **`workers` / `apprentices` deprecation** — both marked deprecated in table comments; I did not confirm no live reader remains before proposing catalog exclusion.
+
+---
+
+## 11. Delivery record — 2026-08-10 (data-platform lane)
+
+**Operator directive:** implement this plan in full. Sync `development` with `main` first; merge
+everything back to `development` before deciding to promote.
+
+**Sync, verified before starting:** `development` contained every line of `main` in all seven
+repos — `git rev-list origin/main --not origin/development --no-merges` returned **0 everywhere**.
+The "behind" counts routinely reported in this estate are merge commits only. `rev-list --count`
+measures graph distance; only a content diff supports a sync claim.
+
+### The finding that reframes this document
+
+**This plan is far more implemented than it reads, and its central claim is no longer true.**
+§1.1 says "there is no query engine". There is one. Anyone reading this document cold will
+re-derive work that already exists, so read this section first.
+
+| Already live — do not rebuild | Evidence |
+|---|---|
+| L1 catalog | `report_catalog_entities` 84 · `fields` 1,208 · `joins` 124 · `measures` 21 |
+| L2 engine | `report_run_catalog_query(jsonb,uuid,int,int)`, SECURITY INVOKER, catalog-validated identifiers |
+| L3 bulk ops | `bulk_data_import` / `bulk_data_update` / `bulk_data_undo`, all with `p_dry_run` |
+| P0 dead-GUC | **CLOSED** — zero live policies reference `app.current_tenant_id` |
+| P5 consolidation | the three legacy import pages are gone; `/settings/data` is the single surface |
+| P6 console | `Developer/Database/` with panels + a PR-guarded `ProposeMigrationDialog`; `Tables.tsx` and `Marketing.tsx` removed per §6 |
+| P9 (most) | `REPORT_SOURCES` and `JOIN_DEFINITIONS` are gone; the `tester` docstring is corrected |
+
+### What this lane added
+
+| Phase | Delivered | Where |
+|---|---|---|
+| **P3** | The adversarial suite §7 demanded and nobody wrote — suite 57, **18/18**. The engine had run four days unguarded. | crm7#1545 |
+| **P2** | `report_catalog_drift()` + suite 58, **8/8** — the *production-runnable* counterpart to the existing CI script | crm7#1545 |
+| **P5** | Suite 59, **10/10** — "dry-run matches commit exactly" and "undo restores byte-identical", the two P5 properties never tested | crm7#1545 |
+| **D3** | The promotion path's missing surface — `propose`/`approve` shipped 2026-08-07 with **zero callers** | bsu#673 |
+
+Both merged to `development`. **Nothing promoted to `main`.**
+
+**The engine is stronger than this plan specified.** §7 predicted a cross-tenant query returns
+0 rows via RLS. It refuses at the door: `p_tenant_id` must appear in `auth_tenant_id()` or it
+raises `42501` before composing any SQL. Suite 57 pins that as a throw.
+
+### An empty table is not a broken path — proven three times
+
+§1.3 treats zero rows as the estate's dominant failure signature. That reflex is wrong here.
+Each of these was positive-controlled against production inside a guaranteed rollback:
+
+- **`report_templates`** — `user` scope inserts fine; `tenant` scope is correctly refused for a
+  caller with no `org_members` row, **and the UI correctly hides the scope it cannot use**. The
+  page shipped 2026-08-09. Disuse, not defect.
+- **`data_import_jobs`** — a real tenant admin can insert; the pre-`crm7#1288` shape is still
+  correctly refused `42501`.
+- **`saved_views`** — insert succeeds.
+
+### One thing needs Braden, under ruling B3's own escalation clause
+
+`org_members` holds **5 rows for 5 users**; `user_tenants` holds **13 for 9**. Four owner/admin
+users have no `org_members` row — and **54 write policies** gate on `is_gto_staff()` /
+`is_enterprise_admin()`, both of which read `org_members` only. Those four cannot write invoices,
+payments, payroll records, timesheet events, WHS audits or reports.
+
+B3 reserved exactly this: *"if it turns out an ordinary tenant owner would gain authoring rights
+across 331 routes, that comes BACK to him."*
+
+**Recommendation: map the role, don't assume it** — `user_tenants` owner → `gto_admin`, admin →
+`gto_staff`, provisioned at membership creation with one backfill. A GTO owner who cannot raise
+an invoice is a broken product. B6 forbids the shortcut of hand-granting rows to real accounts.
+
+### Two defects found in other people's work, flagged not edited
+
+- **pgTAP suite 47 is a gate that does not gate.** Its D1 asserts a tenant `gto_admin` can save a
+  report — and its own fixture inserts the `org_members` row first. Green over the condition
+  production lacks. `workspace-lane` owns that file.
+- **crm7 has a live duplicate migration stamp**: `20260512230000` is used by two files. Below
+  `MIGRATION_FLOOR` so inert today, but the duplicate-version lint does not fail on it.
+
+### A retraction
+
+I first recorded that this plan's mandatory catalog drift check "was never built". **That was
+wrong.** `scripts/check-report-catalog-drift.mjs` is wired into `db-lint.yml` as the required
+check `report_catalog_* drift vs live schema`, and is in several respects better than my first
+draft. I grepped workflow *filenames*, not contents, then asserted an absence from it. What
+survives is genuinely distinct: that script can only measure the CI replay; nothing measured
+production. `report_catalog_drift()` is the production-runnable counterpart, and its severities
+were aligned to the existing script rather than left to diverge. Live production drift: **zero**,
+124 of 124 joins FK-backed.
+
+### Still open
+
+- **P8** is thin — kanban/calendar/chart, scheduling UI and PDF are roughly one file each.
+  Needs scoping rather than assuming.
+- **P9 remainder** — `employee_imports` contract-phase drop (0 rows; the four references left are
+  a generated type and comments).
