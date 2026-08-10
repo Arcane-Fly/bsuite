@@ -296,6 +296,40 @@
       "objects": [
         "*"
       ]
+    },
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "object_type": "function",
+      "objects": [
+        "data_create_restricted_user(p_tenant_id uuid, p_grantee_user_id uuid, p_entity_key text, p_field_keys text[], p_editable_field_keys text[], p_row_filter_field_key text, p_row_filter_op text, p_row_filter_values jsonb, p_row_filter_date_field_key text, p_row_filter_date_from timestamp with time zone, p_row_filter_date_to timestamp with time zone)",
+        "data_grant_create(p_tenant_id uuid, p_grantee_user_id uuid, p_entity_key text, p_field_keys text[], p_editable_field_keys text[], p_row_filter_field_key text, p_row_filter_op text, p_row_filter_values jsonb, p_row_filter_date_field_key text, p_row_filter_date_from timestamp with time zone, p_row_filter_date_to timestamp with time zone)",
+        "data_grant_entity_permitted(p_tenant_id uuid, p_entity_id uuid)",
+        "data_grant_field_permitted(p_tenant_id uuid, p_entity_id uuid, p_field_id uuid)",
+        "data_grant_revoke(p_grant_id uuid)",
+        "data_grant_row_permit(p_tenant_id uuid, p_entity_id uuid, p_row jsonb)",
+        "data_grant_table_row_permit(p_tenant_id uuid, p_table_schema text, p_table_name text, p_row jsonb)",
+        "data_grant_widest(p_tenant_id uuid, p_entity_id uuid)",
+        "data_grantor_accessible_field_ids(p_tenant_id uuid, p_entity_id uuid)",
+        "data_grantor_is_tier_holder(p_tenant_id uuid)",
+        "data_is_grant_restricted(p_tenant_id uuid)",
+        "person_bank_accounts_for_payment(p_person_ids uuid[], p_purpose text)",
+        "person_ids_for_current_user()",
+        "record_onboarding_block_override(p_person_id uuid, p_consequence text, p_reason text, p_expires_on date)",
+        "record_payroll_remittance_stamp(p_tenant_id uuid, p_scheme text, p_artefact_kind text, p_record_count integer, p_total_cents bigint, p_file_name text, p_as_of date)",
+        "save_person_bank_account(p_person_id uuid, p_account_name text, p_bsb text, p_account_number text, p_allocation_type text, p_allocation_value numeric, p_bank_account_id uuid)",
+        "save_person_tax_declaration(p_person_id uuid, p_tfn text, p_no_tfn_reason text, p_residency_status text, p_claims_tax_free_threshold boolean, p_has_study_loan boolean, p_declaration_signed_at timestamp with time zone)"
+      ],
+      "mode": "accepted",
+      "reason": "The seventeen SECURITY DEFINER functions that arrived with the 2026-08-09 promotion (bsuite#1845): the T4 data-grant machinery (crm7#1481, migrations 20260809030000 / 20260809060000), the payroll vault RPCs (20260808160000), the remittance stamp (20260808190000) and the onboarding block override. Enumerated function-by-function per the standing rule that this list is exhaustive, not a category waiver.\n\nVERIFIED LIVE 2026-08-10 against the production catalog, for all seventeen:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp' — all 17.\n  * has_function_privilege('anon', ...) = FALSE — all 17. None is reachable unauthenticated.\n\nThey fall into two classes.\n\n(1) RLS PREDICATES, the established accepted class. data_grant_entity_permitted, data_grant_field_permitted, data_grant_row_permit, data_grant_table_row_permit, data_grant_widest, data_grantor_accessible_field_ids, data_grantor_is_tier_holder, data_is_grant_restricted, person_ids_for_current_user. These are evaluated INSIDE RLS policies, so they must be executable by the querying role — that is the same reason auth_tenant_id() and is_gto_admin() are already on this list. They return booleans or id lists and expose no row data. SECURITY DEFINER is required so a policy can consult the grant tables without granting the caller read access to them.\n\n(2) INTENTIONAL PRIVILEGED WRITE/READ PATHS, where SECURITY DEFINER IS the mechanism and an explicit check inside the function IS the authorization — the same shape as update_platform_entity_label and the bulk_data_* entry points already accepted. Each was read and its gate confirmed, not assumed:\n  - data_grant_create / data_create_restricted_user: thin wrappers over _data_grant_insert, which is NOT executable by authenticated or anon (verified) and whose FIRST statement raises 42501 unless data_grantor_is_tier_holder(p_tenant_id). It further refuses an unknown entity, an entity absent from data_grant_enabled_entities, and a NULL/empty field list — 'all fields' as a wildcard is rejected outright.\n  - data_grant_revoke: checks auth.uid() and raises.\n  - save_person_bank_account / save_person_tax_declaration: gate on check_user_portal_role(auth.uid(), tenant, ['owner','admin']) OR the person themselves. The function carries its own comment saying authorization is checked there precisely BECAUSE SECURITY DEFINER bypasses the RLS that would otherwise do it.\n  - person_bank_accounts_for_payment: requires owner/admin on the tenant of EVERY person id passed, and refuses the whole call if any one is outside — deliberately, because a partial payment file is worse than a refused one.\n  - record_onboarding_block_override: owner/admin/manager on the person's tenant, and validates the consequence enum.\n  - record_payroll_remittance_stamp: checks auth.uid() and raises.\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: the sweep was RED from 2026-08-09 21:09 because these seventeen were new and unallowlisted. That is the gate working exactly as designed — a new SECURITY DEFINER function exposed to authenticated MUST fail until a human has justified it. This is that justification.",
+      "tracked_in": null,
+      "added": "2026-08-10",
+      "review": "Re-justify if any signature changes — the objects are matched by full signature, so an added parameter creates a NEW unallowlisted finding and correctly re-fails the sweep. Revisit the two payroll writers when the runtime defects noted on bsuite#1845 are fixed (editing a bank account erases the prior verification event; re-saving a tax declaration supersedes a signed one with an unsigned one).",
+      "notes": {
+        "data_grant_create(...)": "Not a helper — the privileged creation path for a restricted-guest grant. Safe because the real work sits in _data_grant_insert, which authenticated cannot call, and which refuses anyone who is not a tier-holder (platform developer, tenant gto_admin, or tenant owner) with 42501.",
+        "person_bank_accounts_for_payment(p_person_ids uuid[], p_purpose text)": "Reads bank details for a payment run and triggers account-number decryption, so it is the highest-value function in this set. All-or-nothing tenant check: owner/admin on every person's tenant, else the entire call is refused. Every decryption is written to payroll_secret_access_log.",
+        "save_person_tax_declaration(...)": "Writes a tax file number. Gated on owner/admin of the person's tenant, or the person themselves. Known runtime defect, tracked on bsuite#1845 rather than here: re-saving to correct one field supersedes a signed declaration with an unsigned one because the signature date is not carried forward. That is a procedure defect, not a privilege defect — it does not change who may call this.",
+        "person_ids_for_current_user()": "RLS/self-service helper. Returns only the person rows linked to auth.uid(); no arguments, so it cannot be pointed at anyone else."
+      }
     }
   ],
   "entries": [
