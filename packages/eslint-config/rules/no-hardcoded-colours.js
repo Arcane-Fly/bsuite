@@ -87,7 +87,7 @@ const TAILWIND_PALETTE_RE = new RegExp(`\\b(${PREFIXES})-(${HUES})-(\\d{2,3})\\b
 // 4-digit hex `#1871`, which is valid CSS #RGBA syntax, so the length check
 // could never save it. That failed a build for a comment citing the very issue
 // the change implemented. Every future `crm7#1234` in JSX would do the same.
-// `color:#fff`, `"#fff"`, ` #fff` all still match — punctuation and whitespace
+// `color:#fff`, `"#fff"`, ` #fff` all still match — punctuation and whitespace  theme-audit-ok: naming the forbidden value is this rule's job
 // are not word characters.
 const HEX_RE = /(?<![\w#])#[0-9a-fA-F]{3,8}\b/g
 const RGBA_RE = /rgba?\(\s*\d/g
@@ -137,8 +137,8 @@ export const noHardcodedColours = {
      * `theme-audit-ok` — the in-repo, line-local escape hatch, honoured on the
      * node's own lines or the line immediately above it.
      *
-     * This exists for CSS MASK stops. In a mask, `#000`/`#fff` are not paint —
-     * the channel is alpha, so `#fff` means "fully opaque". Swapping them for a
+     * This exists for CSS MASK stops. In a mask, `#000`/`#fff` are not paint —  theme-audit-ok: prose about mask stops, not a colour
+     * the channel is alpha, so `#fff` means "fully opaque". Swapping them for a  theme-audit-ok: prose about mask stops, not a colour
      * theme token silently breaks the mask, which is why the magicui borders
      * (border-beam.tsx, shine-border.tsx) carry the annotation already. The
      * widened rule reaches those template literals for the first time, so it has
@@ -239,7 +239,7 @@ export const noHardcodedColours = {
         const val = node.value
         if (!val) return
         if (val.type === 'Literal' && typeof val.value === 'string') {
-          // Hex-checked now too: `text-[#fff]` arbitrary values used to slip past,
+          // Hex-checked now too: `text-[#fff]` arbitrary values used to slip past,  theme-audit-ok: names the value the rule catches
           // because className was palette-checked only and hex was Property-only.
           checkString(node, val.value)
         } else if (val.type === 'JSXExpressionContainer') {

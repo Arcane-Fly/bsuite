@@ -41,6 +41,34 @@ const SYNCED_RULES = [
   },
 ]
 
+/**
+ * Copies known to be out of sync, with the issue that will land them.
+ *
+ * A RATCHET, not an excuse list — same pattern as theme-conformance.yml in this
+ * repo. `--check` fails on any drift NOT listed here, so a NEW divergence is
+ * still caught immediately; it only tolerates the specific backlog below.
+ *
+ * These two are held back because the widened rule finds REAL violations in
+ * them, and syncing the rule before fixing the colours would just break their
+ * lint. Counts measured 2026-08-11 by running the widened rule against each app:
+ *
+ *   business-suite-unified  27 violations
+ *   conduit                  5 violations  (analytics/_view.tsx, talent-pools/_view.tsx,
+ *                                           components/pipeline/KanbanColumn.tsx)
+ *
+ * An earlier measurement reported ZERO for both. It counted chromatic palette
+ * CLASSES only and missed the rule's new return/assignment-position checking —
+ * the instrument had changed and the old number did not carry. That is the same
+ * mistake the 24-entry ignore list in crm7#1579 was measured with.
+ *
+ * The list can only shrink. Remove an entry the moment its app is synced; the
+ * check prints a notice when a listed copy turns out to be in sync already.
+ */
+const KNOWN_DRIFTED = {
+  'business-suite-unified/no-hardcoded-colours.js': 'bsuite#1889 — 27 colour violations to fix first',
+  'conduit/no-hardcoded-colours.js': 'bsuite#1889 — 5 colour violations to fix first',
+}
+
 const INLINE_HEADER = (filename) => `/**
  * Inline copy of @bsuite/eslint-config ${filename.replace(/\.js$/, '')} rule.
  * Inlined so standalone submodule CI can resolve it without the monorepo.
@@ -67,6 +95,7 @@ const only = onlyIdx !== -1 ? args[onlyIdx + 1] : null
 let drifted = 0
 let written = 0
 let skipped = 0
+let waived = 0
 
 for (const rule of SYNCED_RULES) {
   const sourcePath = join(REPO_ROOT, rule.source)
@@ -86,11 +115,25 @@ for (const rule of SYNCED_RULES) {
       continue
     }
     const current = readFileSync(target, 'utf-8')
+    const waiver = KNOWN_DRIFTED[`${submodule}/${rule.filename}`]
     if (body(current) === sourceBody) {
       console.log(`  ✓ ${submodule}/eslint-rules/${rule.filename} — in sync`)
+      if (waiver) {
+        // The list can only shrink, and nothing shrinks it automatically.
+        console.log(
+          `    NOTE: remove "${submodule}/${rule.filename}" from KNOWN_DRIFTED — it is in sync now.`,
+        )
+      }
       continue
     }
     if (checkOnly) {
+      if (waiver) {
+        console.log(
+          `  – ${submodule}/eslint-rules/${rule.filename} — drifted, WAIVED (${waiver})`,
+        )
+        waived++
+        continue
+      }
       console.error(`  ✗ ${submodule}/eslint-rules/${rule.filename} — DRIFTED from ${rule.source}`)
       drifted++
     } else {
@@ -111,6 +154,6 @@ if (checkOnly && drifted > 0) {
 
 console.log(
   checkOnly
-    ? `\nAll inlined rule copies in sync${skipped ? ` (${skipped} absent)` : ''}.`
+    ? `\nNo unexpected drift${waived ? ` (${waived} waived — see KNOWN_DRIFTED)` : ''}${skipped ? `, ${skipped} absent` : ''}.`
     : `\n${written} rewritten, ${skipped} absent.`,
 )

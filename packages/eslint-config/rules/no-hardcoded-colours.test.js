@@ -111,7 +111,7 @@ test('no-hardcoded-colours catches every shape that was previously gate-invisibl
       },
       // Arbitrary hex value inside className.
       {
-        code: `const C = () => <div className="text-[#ffffff]" />`,
+        code: `const C = () => <div className="text-[#ffffff]" />`, // theme-audit-ok: lint fixture — the rule must be seen catching this
         errors: [{ messageId: 'forbiddenHex' }],
       },
       // Style object — the original Property/hex path, must still work.
@@ -144,11 +144,11 @@ test('theme-audit-ok annotates a mask stop without disarming the file', () => {
       // The SAME code without the annotation must still fire — otherwise the
       // "valid" cases above would prove nothing about the hatch.
       {
-        code: `const s = { mask: \`linear-gradient(#fff 0 0)\` }`,
+        code: `const s = { mask: \`linear-gradient(#fff 0 0)\` }`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
         errors: [{ messageId: 'forbiddenHex' }],
       },
       {
-        code: `const M = 'mask-[linear-gradient(#000,#000)]'`,
+        code: `const M = 'mask-[linear-gradient(#000,#000)]'`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
         errors: [{ messageId: 'forbiddenHex' }],
       },
       // The hatch is line-local, not file-wide: an annotated mask stop on one line
