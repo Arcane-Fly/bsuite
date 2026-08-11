@@ -84,7 +84,7 @@ test('no-hardcoded-colours catches every shape that was previously gate-invisibl
       },
       // Concise arrow body — no ReturnStatement node at all.
       {
-        code: `const c = () => '#ff8800'`,
+        code: `const c = () => '#ff8800'`, // theme-audit-ok: lint fixture — an off-palette literal is the point
         errors: [{ messageId: 'forbiddenHex' }],
       },
       // The exact forecast.tsx:323 shape — literal behind a ternary.
@@ -94,7 +94,7 @@ test('no-hardcoded-colours catches every shape that was previously gate-invisibl
       },
       // Variable initialiser.
       {
-        code: `const brand = '#1a2b3c'`,
+        code: `const brand = '#1a2b3c'`, // theme-audit-ok: lint fixture — an off-palette literal is the point
         errors: [{ messageId: 'forbiddenHex' }],
       },
       // hsl() was never checked by the old rule in any position.
@@ -116,12 +116,12 @@ test('no-hardcoded-colours catches every shape that was previously gate-invisibl
       },
       // Style object — the original Property/hex path, must still work.
       {
-        code: `const C = () => <div style={{ color: '#888' }} />`,
+        code: `const C = () => <div style={{ color: '#888' }} />`, // theme-audit-ok: lint fixture
         errors: [{ messageId: 'forbiddenHex' }],
       },
       // The host-employer.tsx:116 shape: a banned literal hiding as a var() fallback.
       {
-        code: `const C = () => <div style={{ color: 'var(--color-muted-foreground, #888)' }} />`,
+        code: `const C = () => <div style={{ color: 'var(--color-muted-foreground, #888)' }} />`, // theme-audit-ok: lint fixture
         errors: [{ messageId: 'forbiddenHex' }],
       },
     ],

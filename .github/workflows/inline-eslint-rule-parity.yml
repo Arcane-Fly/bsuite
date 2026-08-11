@@ -70,7 +70,20 @@ jobs:
           node-version: '24'
 
       - name: Every inlined rule copy matches the monorepo source
+        # Pure file comparison — no dependencies needed, so it runs before the
+        # install and still reports drift even if the install below breaks.
         run: node scripts/sync-inline-eslint-rules.mjs --check
+
+      - name: Install eslint-config dependencies
+        # The rule tests import `eslint` (RuleTester) and `typescript-eslint`
+        # (the JSX/TS parser). Both are devDependencies of packages/eslint-config
+        # and are absent from a bare checkout, so `node --test` died with
+        # ERR_MODULE_NOT_FOUND before running a single assertion — a job that
+        # failed for its own missing setup, not for anything it was gating.
+        working-directory: packages/eslint-config
+        run: |
+          corepack enable
+          pnpm install --ignore-workspace --no-frozen-lockfile
 
       - name: Source-of-truth rule tests
         # The rule's own test suite. It is negative-controlled: every `invalid`
