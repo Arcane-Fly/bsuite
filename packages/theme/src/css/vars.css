@@ -77,8 +77,28 @@
   --light-bg-tertiary:  oklch(0.963 0.003 228.9);
   /* bg-panel. theme-audit-ok: prose. Was oklch(1 0 0.5) — pure white, and since --card and
      --popover bridge to it, every shadcn card and popover in all five D2C
-     apps rendered pure white in light mode from this one line. */
-  --light-bg-accent:    oklch(0.994 0.002 260);
+     apps rendered pure white in light mode from this one line.
+
+     2026-08-10: that first fix moved it to oklch(0.994) — 0.6 lightness points
+     off pure white. It passed the audit, which matches on literal white, and it
+     did not pass the operator, who looked at a rendered page and said "pure
+     white displayed, which is forbidden". He was right: 0.6 points is below any
+     perceptual threshold, so the panel still READ as white even though it no
+     longer WAS white. A colour rule enforced by string match will keep accepting
+     values like that.
+
+     Now oklch(0.98 0.006 260) — 2.0 points below white and 1.9 above
+     --light-bg-primary (0.961), so the panel reads as a raised surface from both
+     directions. Three times the chroma of the old value, which is what actually
+     stops it reading as white: at this lightness the tint does more work than
+     the lightness step.
+
+     CHOSEN FROM THE CONTRACT, NOT INVENTED. The first attempt here used
+     oklch(0.976 0.003 260) and the palette gate rejected it — correctly. Only
+     colours in packages/theme/docs/d2c-theme-source-of-truth.html are permitted
+     (operator ruling 2026-08-03): the document is the source of truth, not the
+     code. This value is already in it. */
+  --light-bg-accent:    oklch(0.98 0.006 260);
 
   /* D2C light text scale — hue 260 (cool blue-grey), capped L=0.22.
      Measured WCAG contrast vs --light-bg-primary oklch(0.961 0 0.5), OKLCH ->
