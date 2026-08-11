@@ -151,6 +151,71 @@ exercised anywhere yet.
 
 ---
 
+## 2B. RULED 2026-08-10 — funding is the exception, and it is a THIRD pattern
+
+> *"Leave funding to fully customizable by the tenant. Since it does change so frequently we need
+> many hands make light work, i.e. the tenants doing for themselves. Users might want to tag something
+> as applicable to all users in a state or nationally within their enterprise, but we shouldn't be
+> pre-populating since it'll be almost immediately out of date."* — Braden
+
+Funding fails condition 3 of §2A — it does **not** stay the same for every tenant, and it moves too
+fast for us to be the ones maintaining it. So funding does **not** get the register pattern. Anyone
+who reads §2A and reaches for `reference_row_origin` here has misread it.
+
+### The shape
+
+**Every funding program is owned by a tenant. `tenant_id` is NOT NULL. There is no global row.**
+
+Visibility comes from the tenant hierarchy we already have, not a new scope enum:
+
+- A program created at the **enterprise root** is visible to the whole enterprise — that is your
+  "nationally within their enterprise".
+- A program created at **one org** is visible to that org only.
+- An optional **state list** narrows it inside that subtree — your "applicable to all users in a state".
+
+Resolve visibility with **`tenant_subtree_ids()`**. Five subtree-ish functions exist in the database
+(`descendants_of`, `get_descendant_tenant_ids`, `get_visible_tenant_ids`, `schema_authority_tenant_ids`,
+`tenant_subtree_ids`) and only that one is cycle-safe. A funding program that becomes invisible because
+someone made a tenant loop is a claim that silently stops being claimable.
+
+### What this ruling collides with — measured, not assumed
+
+**1. Four rows in `funding_programs` are global right now.** All four have `tenant_id = NULL`, seeded
+**yesterday** (2026-08-09) and labelled `PLATFORM_SEED (crm7#1473)`: `CTF`, `AASN`/ACAP, `ASIP`,
+`GTO_WAGE_SUBSIDY`.
+
+In their defence, and it is a real defence: **they carry no funding data at all.** Amounts `{}`,
+conditions `{}`, milestones `[]`, start and end dates NULL. They exist purely as stable identity keys,
+because existing report filters and claims already resolve on those `program_id` values — the AASN row
+even carries an explicit note that its display name reflects only the current occupant and that no
+transition dates should be inferred from it. They are anchors, not content.
+
+**Decision needed: keep them as identity anchors, or delete them and let tenants define their own?**
+Deleting breaks the report filters and claims that already point at those keys. Keeping means four
+global rows exist under a ruling that says funding is tenant-owned. My recommendation is **keep them,
+renamed in intent** — they are the *function* (AASN→AASS→ACAP is one function with three occupants),
+not the money — and forbid anything from ever adding amounts or dates to a global funding row. That is
+consistent with the standing rule that we model the function as an entity and treat occupants as data.
+
+**2. `crm7/src/lib/funding-source-templates.ts` is 647 lines of pre-population with real dollars.**
+About 94 entries covering federal, every state and territory, and industry bodies — carrying named
+2026 rates and payment schedules, headed *"Current as of January 2026"*. That is **seven months stale
+today**, and it is exactly the failure you described. It is at least opt-in — the tenant picks a
+template and it pre-fills a new record — but a stale dollar figure arriving with an official-looking
+program name is worse than an empty field, because nobody re-checks a number that is already filled in.
+
+**Recommendation: a template may carry STRUCTURE, never AMOUNTS or DATES.** Name, provider, government
+level, external system, the shape of the payment schedule — keep. Dollar figures, rate tables, start
+and end dates — strip, leave blank, make the tenant enter them. That keeps "many hands make light work"
+(nobody rebuilds the shape from scratch) while honouring "don't pre-populate what goes stale" (nobody
+inherits a number that looks authoritative and is wrong).
+
+**3. `R80.4/src/awards/funding-programs.ts`, 206 lines** — the engine's own funding model. Needs the
+same read: does it price from tenant data, or from a list baked into the engine? If the latter, it is
+the same defect one layer down.
+
+---
+
 ## 2. The model — four axes, not three
 
 You said three classes, related but independent. There are **four**, and the fourth is the one with no
@@ -265,7 +330,7 @@ errors are less urgent. They are the most urgent thing here.
 | | Item | Exposure |
 |---|---|---|
 | 1.1 | MA000009 Schedule B adult apprentices: engine $16.20 vs published $23.56 | **45% understatement.** Largest known error. |
-| 1.2 | Rule on the D11 schedules extension (20 of 21 awards failing) | Until ruled, the pass state is not trustworthy, so nothing built on it can be trusted either. **Your call — I'll put the argument both ways.** |
+| 1.2 | D11 — see §6. **No longer blocking.** The gate is correct; its failures *are* the rest of this table. One narrower question remains (classification schedules). | |
 | 1.3 | National Training Wage schooling table indexed without its wage level | Up to $29/wk wrong; shared defect across Schedule E. |
 | 1.4 | Penalty card rates "slightly off the card" | Your 6 Aug report, never diagnosed. |
 | 1.5 | Supported Wage System — modelled in 0 of 21 awards | The $113/wk floor binds above the percentage; we currently quote below it. |
@@ -283,6 +348,11 @@ pattern to both halves of a duplicated concept makes the duplication permanent.
 **2.2 Create the three missing registers** — skill sets, non-accredited training, worker licences —
 on the same pattern, and move `skill_records` off free text onto them. This is the one that stops a
 High Risk Work Licence being a string somebody typed.
+
+**2.2a Funding, per §2B** — make `funding_programs.tenant_id` NOT NULL with subtree visibility and an
+optional state narrowing; strip amounts and dates out of crm7's 94 templates leaving structure only;
+audit R80.4's own funding module for the same defect. Runs in the same lane as 2.1/2.2 because it is
+the same migration surface, but it is a **different pattern** — no `origin` column here.
 
 2.3 Publish `award_trades` from the R80.4 engine + drift check · 2.4 Populate title→qualification
 links from data we already hold (free, no guessing) · 2.5 Build the curation screen for the two links
@@ -333,6 +403,78 @@ waits on Wave 2 (the deep link carries the trade id).
    a tenant-added row that later appears in an official register.
 
 **Ruled and closed, 2026-08-10:**
+
 - ~~Four-axis identity model~~ — **approved.** §2.
 - ~~`qualifications` global vs tenant-scoped~~ — **global.** §2A.
 - ~~Do licences fit the rule~~ — **yes**, the generalised test covers them. §2A.
+- ~~Funding global or tenant~~ — **tenant-owned, no pre-population.** §2B.
+
+---
+
+## 6. What D11 is, and why it is no longer blocking
+
+I used "D11" for four turns without ever saying what it meant. It is one of eighteen
+definition-of-done benchmarks the award engine runs (`npm run dod`), numbered D1 to D18. Its own
+source file titles it **"THE ONE THAT DECIDES"**, and the benchmark reads:
+
+> **D11 — No RATE-scope clause or schedule is left PARTIAL.**
+
+Plain version: every provision of an award is classified as **rate** (it changes a rate, a multiplier,
+an on-cost or billable hours), **payrun** (it needs an actual timesheet, so it belongs in crm7), or
+**process**. D11 says we are not finished with an award until every provision marked *rate* is fully
+modelled — none left half-done.
+
+**What changed on 6 August:** D11 originally read only numbered clauses. It was extended to also read
+**schedules**, on the reasoning that the award itself numbers schedule provisions as clauses — MA000020
+cites "clause D.4.1(a)" for its trainee rates. A gate that skips D.4.1(a) is not applying a narrower
+rule; it is applying the rule to half the instrument. The pass rate fell from 21/21 to 20 of 21
+failing, which is why it was escalated for a ruling.
+
+### Measured today — and this is the part that settles it
+
+| | |
+|---|---:|
+| Awards with a coverage ledger | 21 |
+| Awards failing D11 | 20 |
+| Rate-scope rows still partial | **79** |
+| …of which are **clauses** | **0** |
+| …of which are **schedules** | **79** |
+
+**Every numbered clause that moves money is modelled, in all 21 awards.** The entire failure is
+schedules. That is a far better position than "20 of 21 awards are broken" suggests, and it means the
+extension did exactly what a good gate does — it found a whole dimension nobody had looked at.
+
+### What the 79 actually are
+
+| Kind | Count | What it means |
+|---|---:|---|
+| **Supported Wage System** | 20 | Real, unmodelled. The reduced-capacity rules, with a weekly floor that binds *above* the percentage. Genuine money. |
+| **School-based apprentices** | 16 | Real, unmodelled cohort. Genuine money. |
+| **National Training Wage** | 4 | Real, and already known to be indexed without its wage level. |
+| **Summary of Hourly Rates / Monetary Allowances** | 20 | The award's own summary tables. **Not new entitlements — restatements of clauses we already model.** |
+| **Classification structures and definitions** | 7 | Which classification a worker sits in. |
+| Loaded rates, outwork, apprentices (misc) | 12 | Real, unmodelled. |
+
+### So the ruling splits three ways, not two
+
+**1. Keep D11 exactly as it is. Do not loosen it.** It is not over-reaching — it caught the
+MA000009 adult-apprentice error (engine $16.20 against a published $23.56) and the Supported Wage
+System gap across every award. A gate that has just found a 45% understatement has earned its keep.
+
+**2. The 20 summary schedules are a reconciliation job, not a modelling job.** They restate what the
+clauses already say, so modelling them separately would duplicate the engine. But they are the
+*published answer* — which is precisely why the MA000009 error surfaced there. Build the check that our
+clause-derived rate reproduces the published summary, and these 20 close as verification rather than
+as new code.
+
+**3. The 7 classification schedules are probably mis-scoped, and this one needs you.** They define
+which classification a worker falls into. Under the standing ruling that *the user determines
+eligibility, never an engine*, the engine prices a classification — it does not choose one. If that
+holds, these are **process** scope, not **rate**, and the fix is a correction to the coverage ledger
+rather than new modelling. I am not certain: in Manufacturing (MA000010) the classification definitions
+arguably *are* the wage structure. **You are the award-interpretation lawyer — this is your call, and
+it is the only genuinely open question left in D11.**
+
+**Net effect: D11 was never a blocker.** Its 79 failures are, item for item, the Wave 1 backlog already
+listed above — Supported Wage System, school-based, National Training Wage. Nothing is waiting on a
+ruling except the seven classification rows, and those are seven ledger entries, not seven builds.

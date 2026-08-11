@@ -53,10 +53,10 @@ document and a quick grep disagree, re-measure before believing either.**
 
 | # | Item | State |
 |---|---|---|
-| 3.1 | **DONE — PR #1633** ~~`eslint-plugin-jsx-a11y` is not installed~~ (**verified — absent from `package.json` and `eslint.config.js`**) | **IN FLIGHT** — highest-value single action in the whole register: it converts every *future* violation into a lint failure across 443 pages |
-| 3.2 | [#1634](https://github.com/GaryOcean428/crm7/issues/1634) ~~8 images missing alt text~~ **claim did not hold — 4 unlabelled SVGs instead**, including `CRM7Logo` (on every page) and the guardian-consents compliance page | FILED |
+| 3.1 | ~~`eslint-plugin-jsx-a11y` is not installed~~ — **shipped in PR #1633**: 23 rules at `error`, 10 ratcheted at 56 measured violations (#1634). `label-has-associated-control` excluded — it crashes on ESLint 10 and the plugin has no version that supports it (#1635) | **DONE** |
+| 3.2 | [#1634](https://github.com/GaryOcean428/crm7/issues/1634) ~~8 images missing alt text including CRM7Logo~~ — **the claim did not hold.** Zero raw `<img>` without `alt`; the `alt-text` rule reports zero; `CRM7Logo` contains no `<img>` or `<svg>`. Real gap: **4 files with an `<svg>` carrying none of `aria-label`/`aria-hidden`/`role`** — `ProgressTracker`, `MarketingHome`, `OnboardingWizard`, `grid-pattern` | FILED |
 | 3.3 | [#1635](https://github.com/GaryOcean428/crm7/issues/1635) Form-label association thin — 32 `<label>` against hundreds of forms. **Audit the shared field components first**; that fixes most pages | FILED |
-| 3.4 | **IN FLIGHT** Dialog initial-focus unverified; **11 `window.confirm()`** remain (**verified**) despite `ConfirmDeleteDialog` existing — conduit already did this sweep | FILED |
+| 3.4 | Dialog initial-focus unverified; **9 real `window.confirm()`** (the review's 11 includes 2 false positives — `TenantConfirmationGate` has a *prop* named `confirm`) | **IN FLIGHT** |
 | 3.5 | `aria-sort` on `EnhancedDataTable` | **DONE** — #1583, merged and verified live |
 
 ---
