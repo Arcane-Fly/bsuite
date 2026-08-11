@@ -184,16 +184,16 @@ test('gaps found by the business-suite-unified sweep, 2026-08-11', () => {
       // A template literal with a trailing method call: the ReturnStatement's
       // argument is a CallExpression, which the walker does not descend into.
       {
-        code: 'function t() { return `<p style="color:#333">x</p>`.trim() }',
+        code: 'function t() { return `<p style="color:#333">x</p>`.trim() }', // theme-audit-ok: lint fixture
         errors: [{ messageId: 'forbiddenHex' }],
       },
       {
-        code: "const s = `color:#f8f9fa`.trim()",
+        code: "const s = `color:#f8f9fa`.trim()", // theme-audit-ok: lint fixture — off-palette is the point
         errors: [{ messageId: 'forbiddenHex' }],
       },
       // Chained calls must not launder it either.
       {
-        code: "const s = `color:#f8f9fa`.trim().toUpperCase()",
+        code: "const s = `color:#f8f9fa`.trim().toUpperCase()", // theme-audit-ok: lint fixture
         errors: [{ messageId: 'forbiddenHex' }],
       },
     ],
