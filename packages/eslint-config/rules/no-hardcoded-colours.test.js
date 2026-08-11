@@ -112,7 +112,8 @@ test('no-hardcoded-colours catches every shape that was previously gate-invisibl
       // Arbitrary hex value inside className.
       {
         code: `const C = () => <div className="text-[#ffffff]" />`, // theme-audit-ok: lint fixture — the rule must be seen catching this
-        errors: [{ messageId: 'forbiddenHex' }],
+        // TWO errors: the absolute pure-white ban AND the format rule.
+        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
       },
       // Style object — the original Property/hex path, must still work.
       {
@@ -145,11 +146,13 @@ test('theme-audit-ok annotates a mask stop without disarming the file', () => {
       // "valid" cases above would prove nothing about the hatch.
       {
         code: `const s = { mask: \`linear-gradient(#fff 0 0)\` }`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
-        errors: [{ messageId: 'forbiddenHex' }],
+        // Pure white/black now ALSO fires its own absolute ban, so two errors.
+        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
       },
       {
         code: `const M = 'mask-[linear-gradient(#000,#000)]'`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
-        errors: [{ messageId: 'forbiddenHex' }],
+        // Pure white/black now ALSO fires its own absolute ban, so two errors.
+        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
       },
       // The hatch is line-local, not file-wide: an annotated mask stop on one line
       // must not licence an unrelated hardcoded colour further down the file.
@@ -211,6 +214,66 @@ test('EMAIL-HTML-EXEMPT disarms the rule for mail/printable HTML', () => {
       {
         code: `const html = '<td bgcolor="#2563eb">hi</td>'`,
         errors: [{ messageId: 'forbiddenHex' }],
+      },
+    ],
+  })
+})
+
+test('EMAIL-HTML-EXEMPT relaxes the FORMAT but never the pure-white/black ban (crm7#1623)', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      // An ordinary brand hex IS allowed in mail HTML — var() cannot resolve there.
+      { code: `/* EMAIL-HTML-EXEMPT */\nconst html = '<td bgcolor="#2563eb">hi</td>'` },
+    ],
+    invalid: [
+      // THE CONTROL THE ORIGINAL HATCH LACKED. The marker used to `return {}`,
+      // so this produced ZERO errors while the comment above it promised pure
+      // white was still banned. The suite would have stayed green on a silently
+      // permitted violation — which is exactly what was happening.
+      {
+        code: `/* EMAIL-HTML-EXEMPT */\nconst html = '<td bgcolor="#ffffff">x</td>'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `/* EMAIL-HTML-EXEMPT */\nconst html = '<td bgcolor="#fff">x</td>'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `/* EMAIL-HTML-EXEMPT */\nconst c = 'rgb(255, 255, 255)'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // pdf-lib's normalised form — the e-signature certificate title shape.
+      {
+        code: `const c = 'rgb(0, 0, 0)'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+      },
+    ],
+  })
+})
+
+test('the react-pdf carve-out needs a real IMPORT, not a mention (crm7#1623)', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      // A genuine import earns the exemption.
+      {
+        code: `import { Text } from '@react-pdf/renderer'\nconst c = '#ab233a'`,
+      },
+      // The deliberate marker still works — it covers dynamic imports and helpers.
+      { code: `/* REACT-PDF-EXEMPT */\nconst c = '#ab233a'` },
+    ],
+    invalid: [
+      // MENTIONING the library in a comment must NOT exempt the file. This is the
+      // shape that silently exempted the customer-facing quote signing page and
+      // the client invoice email in crm7 — 12 files matched the substring, 6
+      // actually imported it.
+      {
+        code: `// this file deliberately does NOT use @react-pdf/renderer\nconst c = '#ab233a'`,
+        errors: [{ messageId: 'forbiddenHex' }],
+      },
+      // And a mention must not hide pure white either.
+      {
+        code: `// see @react-pdf/renderer for the other flow\nconst c = '#ffffff'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
       },
     ],
   })

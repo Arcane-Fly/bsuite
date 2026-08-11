@@ -102,6 +102,24 @@ const HEX_RE = /(?<![\w#&])#[0-9a-fA-F]{3,8}\b/g
 const RGBA_RE = /rgba?\(\s*\d/g
 const HSLA_RE = /hsla?\(\s*[\d.]/g
 
+// Pure white and pure black, in every notation they get written in.
+//
+// These are banned in EVERY role by standing operator ruling — not a format
+// preference like "use a token", but an absolute. So they survive the email
+// carve-out, which relaxes only the format rules. The estate's near-white and
+// near-black are #f8f9fa and #0a0e1a.
+//
+// rgb(255,255,255) and rgb(0,0,0) are matched with optional spaces and an
+// optional alpha, and pdf-lib's normalised rgb(1,1,1) / rgb(0,0,0) too — the
+// e-signature certificate title was pure black in exactly that form.
+const PURE_RE =
+  /(?<![\w#&])#(?:fff|ffffff|000|000000)\b|rgba?\(\s*(?:255\s*,\s*255\s*,\s*255|0\s*,\s*0\s*,\s*0|1\s*,\s*1\s*,\s*1)\s*(?:,[^)]*)?\)|oklch\(\s*(?:1\s+0\s+0|0\s+0\s+0)\s*\)/gi
+
+const PURE_MESSAGE =
+  'Pure white/black "{{value}}" is banned in EVERY role (operator ruling). ' +
+  'Use the estate near-white/near-black (#f8f9fa / #0a0e1a) or a role token. ' +
+  'This ban is NOT lifted by EMAIL-HTML-EXEMPT — that marker relaxes the format, not the contract.'
+
 const PALETTE_MESSAGE =
   'Hardcoded Tailwind palette class "{{value}}" is forbidden. ' +
   'Use a semantic token (text-foreground, bg-card, text-warning-text, etc.) from @bsuite/theme. ' +
@@ -123,6 +141,7 @@ export const noHardcodedColours = {
     messages: {
       forbiddenPalette: PALETTE_MESSAGE,
       forbiddenHex: HEX_MESSAGE,
+      forbiddenPure: PURE_MESSAGE,
     },
   },
   create(context) {
@@ -133,27 +152,49 @@ export const noHardcodedColours = {
     const sourceCode = context.sourceCode
     const fullText = sourceCode.getText()
     if (fullText.includes('BRADEN-EXEMPT')) return {}
-    // React-PDF / pdfkit renderer files: pdfkit engine only accepts hex/rgb literals,
-    // it does not support Tailwind, CSS vars, or oklch. Hex is the documented format.
-    // Per bsuite-brand-system skill: "Hex/rgb only acceptable for third-party component
-    // defaults or legacy compatibility tokens."
-    if (fullText.includes('@react-pdf/renderer') || fullText.includes('REACT-PDF-EXEMPT')) return {}
-    // EMAIL-HTML-EXEMPT: HTML delivered to a MAIL CLIENT, or a standalone
-    // printable document opened outside the app. Neither has the D2C stylesheet
-    // loaded, so `var(--token)` resolves to nothing and `oklch()` is unsupported
-    // by most mail clients — hex is the only format that renders. Same reasoning
-    // as the react-pdf carve-out: the engine dictates the format.
+    // React-PDF / pdfkit renderer files: the pdfkit engine only accepts hex/rgb
+    // literals — no Tailwind, no CSS vars, no oklch. The engine dictates the format.
     //
-    // A FILE-level marker rather than an `ignores:` entry, deliberately. The
-    // 24-entry ignore list retired in crm7#1579 was correct the day it was
-    // written and wrong every day after, because the reason lived in a config
-    // file nobody opens while editing a template. Put the marker at the top of
-    // the file with the reason, where the next editor will see it.
+    // TRIGGERS ON A REAL IMPORT, not a substring (crm7#1623). `fullText.includes()`
+    // matched ANY mention: a header comment, prose, even a note saying the file does
+    // NOT use the library. In crm7 that exempted 12 files of which only 6 import it.
+    // The six freeloaders included `pages/quotes/sign/[token].tsx` — the CUSTOMER-
+    // FACING QUOTE SIGNING PAGE — and `invoice-send-direct`, the invoice emailed to
+    // clients, which earns its exemption from a stale header comment while line 132
+    // says "no @react-pdf". Its 12 raw hex values, three of them pure white, have
+    // therefore never been reported by anything.
+    const importsReactPdf = (sourceCode.ast?.body ?? []).some(
+      (n) => n.type === 'ImportDeclaration' && n.source?.value === '@react-pdf/renderer',
+    )
+    // REACT-PDF-EXEMPT stays a substring check: unlike a mention, the marker is
+    // deliberate, and it covers what an import check cannot see (dynamic import,
+    // a re-export, a helper called only by a renderer).
+    if (importsReactPdf || fullText.includes('REACT-PDF-EXEMPT')) return {}
+
+    // EMAIL-HTML-EXEMPT: HTML delivered to a MAIL CLIENT, or a standalone printable
+    // document opened outside the app. Neither has the D2C stylesheet loaded, so
+    // `var(--token)` resolves to nothing and most mail clients cannot parse oklch().
+    // Hex is the only format that renders.
     //
-    // It does NOT license bad colour: pure white/black stay banned in email too,
-    // and the palette must still be the estate's — see `_shared/email-branding.ts`
-    // for the canonical hex values every template should be citing.
-    if (fullText.includes('EMAIL-HTML-EXEMPT')) return {}
+    // A FILE-level marker rather than an `ignores:` entry, deliberately — the
+    // 24-entry list retired in crm7#1579 was correct the day it was written and
+    // wrong every day after, because the reason lived where nobody reads it.
+    //
+    // REDUCED, NOT DISARMED (crm7#1623). This used to `return {}`, which switched
+    // the whole rule off for the file while the comment above it promised that
+    // "pure white/black stay banned". The comment was enforced nowhere, and the
+    // rule's own test only asserted that a NORMAL hex stops firing — so the suite
+    // would have stayed green if pure white had been silently permitted, which it
+    // was. An escape hatch whose documentation and behaviour disagree is worse than
+    // no hatch, because the documentation is what the next author trusts.
+    //
+    // So the format rules relax and the ABSOLUTE ban survives: pure white and pure
+    // black are banned in every role, in email too. Anything else hex is allowed
+    // here. Near-white/near-black equivalents exist — see the DEFAULT_PALETTE and
+    // DEFAULT_EMAIL_BRANDING constants in business-suite-unified's
+    // `supabase/functions/email-dispatcher/`. (An earlier version of this comment
+    // cited `_shared/email-branding.ts`, a path that has never existed in any app.)
+    const emailExempt = fullText.includes('EMAIL-HTML-EXEMPT')
 
     const reported = new Set()
     const lines = sourceCode.getLines()
@@ -209,6 +250,16 @@ export const noHardcodedColours = {
     }
 
     function checkString(node, value) {
+      // Pure white/black first, and ALWAYS — including in an email-exempt file.
+      // This is the absolute the carve-out must not reach.
+      PURE_RE.lastIndex = 0
+      let pure
+      while ((pure = PURE_RE.exec(value)) !== null) report(node, 'forbiddenPure', pure[0])
+
+      // Everything below is a FORMAT rule — "prefer a token over a literal" — and
+      // that is what an email template legitimately cannot honour.
+      if (emailExempt) return
+
       for (const [re, messageId] of [
         [TAILWIND_PALETTE_RE, 'forbiddenPalette'],
         [HEX_RE, 'forbiddenHex'],
