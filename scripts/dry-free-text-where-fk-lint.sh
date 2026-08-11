@@ -228,9 +228,24 @@ function suffix_matches(name,    i, s) {
     }
 
     # Outside a CREATE TABLE block: catch ALTER TABLE ... ADD COLUMN
+    #
+    # col_name_from_decl()/col_type_from_decl() only strip a LEADING
+    # "add column " (or "... if not exists ") prefix — they were written for
+    # bare per-column lines inside a CREATE TABLE block. Called on the full
+    # "alter table <table> add column ..." line, the leading token is "alter",
+    # not the column name, so this branch NEVER extracted a real column name
+    # or type: suffix_matches("alter") is always "", so a bare
+    # `ALTER TABLE ... ADD COLUMN foo_name text` -- the dominant single-column
+    # form this repo migrations mostly use (see lint-migrations-revoke-anon.mjs
+    # header comment) -- was silently never flagged, exemption or not. Slice
+    # the line down to the "add column ..." tail first so the same
+    # prefix-stripping the CREATE TABLE path already relies on actually
+    # applies here too.
     if (index(low, "alter table ") == 1 && index(low, " add column ") > 0) {
-        nm = col_name_from_decl(line);
-        tp = col_type_from_decl(line);
+        add_col_pos = index(low, " add column ");
+        decl = substr(line, add_col_pos + 1);
+        nm = col_name_from_decl(decl);
+        tp = col_type_from_decl(decl);
         sm = suffix_matches(nm);
         if (sm != "" && is_text_type(tp) && prev_was_exemption == 0) {
             # We cannot verify from this line alone whether the table has
