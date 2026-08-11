@@ -82,14 +82,23 @@ const PREFIXES = [
 
 const TAILWIND_PALETTE_RE = new RegExp(`\\b(${PREFIXES})-(${HUES})-(\\d{2,3})\\b`, 'g')
 
-// (?<![\w#]) — a hex colour is never preceded directly by a word character.
-// Without it this rule flags ISSUE REFERENCES: `bsuite#1871` matched as the
-// 4-digit hex `#1871`, which is valid CSS #RGBA syntax, so the length check
-// could never save it. That failed a build for a comment citing the very issue
-// the change implemented. Every future `crm7#1234` in JSX would do the same.
+// (?<![\w#&]) — a hex colour is never preceded directly by a word character,
+// another #, or an ampersand.
+//
+// `\w` and `#`: without them this rule flags ISSUE REFERENCES — `bsuite#1871`
+// matched as the 4-digit hex `#1871`, which is valid CSS #RGBA syntax, so the
+// length check could never save it. That failed a build for a comment citing
+// the very issue the change implemented.
+//
+// `&`: without it, HTML NUMERIC CHARACTER ENTITIES match. `&#129514;` (an
+// emoji, in an email template) reads as the 6-digit hex `#129514`. Found by the
+// business-suite-unified sweep, 2026-08-11 — the same false-positive class as
+// the issue references, one character further left. Hex entities (`&#x1F600;`)
+// were already safe: `x` is not a hex digit, so the pattern never engaged.
+//
 // `color:#fff`, `"#fff"`, ` #fff` all still match — punctuation and whitespace  theme-audit-ok: naming the forbidden value is this rule's job
 // are not word characters.
-const HEX_RE = /(?<![\w#])#[0-9a-fA-F]{3,8}\b/g
+const HEX_RE = /(?<![\w#&])#[0-9a-fA-F]{3,8}\b/g
 const RGBA_RE = /rgba?\(\s*\d/g
 const HSLA_RE = /hsla?\(\s*[\d.]/g
 
@@ -129,6 +138,22 @@ export const noHardcodedColours = {
     // Per bsuite-brand-system skill: "Hex/rgb only acceptable for third-party component
     // defaults or legacy compatibility tokens."
     if (fullText.includes('@react-pdf/renderer') || fullText.includes('REACT-PDF-EXEMPT')) return {}
+    // EMAIL-HTML-EXEMPT: HTML delivered to a MAIL CLIENT, or a standalone
+    // printable document opened outside the app. Neither has the D2C stylesheet
+    // loaded, so `var(--token)` resolves to nothing and `oklch()` is unsupported
+    // by most mail clients — hex is the only format that renders. Same reasoning
+    // as the react-pdf carve-out: the engine dictates the format.
+    //
+    // A FILE-level marker rather than an `ignores:` entry, deliberately. The
+    // 24-entry ignore list retired in crm7#1579 was correct the day it was
+    // written and wrong every day after, because the reason lived in a config
+    // file nobody opens while editing a template. Put the marker at the top of
+    // the file with the reason, where the next editor will see it.
+    //
+    // It does NOT license bad colour: pure white/black stay banned in email too,
+    // and the palette must still be the estate's — see `_shared/email-branding.ts`
+    // for the canonical hex values every template should be citing.
+    if (fullText.includes('EMAIL-HTML-EXEMPT')) return {}
 
     const reported = new Set()
     const lines = sourceCode.getLines()
@@ -227,6 +252,23 @@ export const noHardcodedColours = {
         case 'TSAsExpression':
         case 'TSSatisfiesExpression':
           checkValueExpression(expr.expression, depth + 1)
+          break
+        case 'CallExpression':
+          // `` return `<p style="color:#333">`.trim() `` — the ReturnStatement's
+          // argument is the CALL, not the template, so the walker stopped here
+          // and the literal escaped. Found by the business-suite-unified sweep
+          // 2026-08-11: ONE file had ~12 hex literals in sibling templates and
+          // only the 2 without a trailing `.trim()` were ever reported, which
+          // read as "this file is nearly clean" rather than "the walker cannot
+          // see it". Descend through the receiver so `.trim()` / `.replace()`
+          // chains do not launder a colour.
+          //
+          // Arguments are deliberately NOT walked: a string passed to an
+          // arbitrary function is not necessarily a colour, and flagging it
+          // would trade this false negative for a worse false positive.
+          if (expr.callee?.type === 'MemberExpression') {
+            checkValueExpression(expr.callee.object, depth + 1)
+          }
           break
         default:
           break

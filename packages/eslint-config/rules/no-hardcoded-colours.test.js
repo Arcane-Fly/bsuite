@@ -172,3 +172,46 @@ test('BRADEN-EXEMPT and react-pdf escape hatches still disarm the rule', () => {
   })
   assert.ok(true)
 })
+
+test('gaps found by the business-suite-unified sweep, 2026-08-11', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      // HTML numeric character entity — NOT a colour. `&#129514;` is an emoji.
+      { code: `const html = '<p>&#129514; hello</p>'` },
+      { code: `const html = '&#8212; em dash &#160;'` },
+    ],
+    invalid: [
+      // A template literal with a trailing method call: the ReturnStatement's
+      // argument is a CallExpression, which the walker does not descend into.
+      {
+        code: 'function t() { return `<p style="color:#333">x</p>`.trim() }',
+        errors: [{ messageId: 'forbiddenHex' }],
+      },
+      {
+        code: "const s = `color:#f8f9fa`.trim()",
+        errors: [{ messageId: 'forbiddenHex' }],
+      },
+      // Chained calls must not launder it either.
+      {
+        code: "const s = `color:#f8f9fa`.trim().toUpperCase()",
+        errors: [{ messageId: 'forbiddenHex' }],
+      },
+    ],
+  })
+})
+
+test('EMAIL-HTML-EXEMPT disarms the rule for mail/printable HTML', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      { code: `/* EMAIL-HTML-EXEMPT */\nconst html = '<td bgcolor="#2563eb">hi</td>'` },
+    ],
+    invalid: [
+      // Same code without the marker must still fire, or the "valid" case above
+      // proves nothing about the marker.
+      {
+        code: `const html = '<td bgcolor="#2563eb">hi</td>'`,
+        errors: [{ messageId: 'forbiddenHex' }],
+      },
+    ],
+  })
+})
