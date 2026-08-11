@@ -245,8 +245,23 @@ Status as at 2026-08-11.
 | bsuite#1889 | Colour rule to the other four apps | braden + throughput **done**; conduit (5) + BSU (27) in flight | P3 |
 | — | Production promotion `development` → `main` | **Not started** — see below | P1 |
 | — | `uplift` export + inline-edit port into `EnhancedDataTable` (§2.4) | Open | P3 |
-| — | `/portal/org-documents` routed but absent from nav — may be deliberate residue of closed #1469 | Open | P4 |
+| — | ~~`/portal/org-documents` routed but absent from nav~~ | **Closed — not a defect** (below) | — |
 | — | Person-field ownership residuals (emergency contact, guardian, school-based) — needs the AVETMISS wave plan; would duplicate crm7#714 | Open | P4 |
+
+### `/portal/org-documents` — the audit was wrong, and so was I for repeating it
+
+The audit reported this route as "routed and absent from `navigation.ts` —
+confirmed 2/3+", and I carried it forward as a suspected orphan. Checked
+2026-08-11: it is **fully wired**.
+
+- `src/config/navigation.ts:290` and `:452` — "Manuals & Policies"
+- `src/pages/portal/worker-portal.tsx:953` — `navigate('/portal/org-documents')`
+- `src/App.tsx:3662` — the route
+
+`navigation.ts:288` even carries a comment explaining the permission model for
+this exact link. Nothing to do. Recorded because a suspicion repeated without
+re-checking is how a phantom item survives three documents — the item cost more
+to carry than to verify.
 
 ### The promotion needs its own release, not a session-end push
 
