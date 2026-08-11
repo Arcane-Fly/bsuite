@@ -65,8 +65,24 @@ const SYNCED_RULES = [
  * check prints a notice when a listed copy turns out to be in sync already.
  */
 const KNOWN_DRIFTED = {
-  'business-suite-unified/no-hardcoded-colours.js': 'bsuite#1889 — 27 colour violations to fix first',
-  'conduit/no-hardcoded-colours.js': 'bsuite#1889 — 5 colour violations to fix first',
+  // IN FLIGHT — each has an open PR carrying the regenerated copy. The entry
+  // comes out when the PR merges and the parent bumps that submodule's pointer.
+  //
+  // These drifted because the SOURCE moved after they were synced: the BSU sweep
+  // found two more holes in the rule (CallExpression not walked, HTML numeric
+  // entities read as hex) and fixing them re-drifted every copy. That is the
+  // inherent sequencing cost of a generated file living in six repos — the
+  // parent changes first and the copies follow one PR at a time.
+  'crm7/no-hardcoded-colours.js': 'crm7#1622 — regenerated copy in flight',
+  'braden/no-hardcoded-colours.js': 'bsuite#1889 — re-sync needed after the CallExpression fix; 0 violations, mechanical',
+  'throughput/no-hardcoded-colours.js':
+    'bsuite#1889 — re-sync needed after the CallExpression fix; 0 violations, mechanical',
+
+  // BLOCKED ON REAL WORK — these two cannot take the rule until their colours
+  // are fixed, or their lint breaks. Both have PRs doing exactly that.
+  'business-suite-unified/no-hardcoded-colours.js':
+    'bsuite#1889 / BSU#680 — 27 violations, all in edge-function email HTML',
+  'conduit/no-hardcoded-colours.js': 'bsuite#1889 / conduit#428 — 5 violations in chart-colour fallbacks',
 }
 
 const INLINE_HEADER = (filename) => `/**
