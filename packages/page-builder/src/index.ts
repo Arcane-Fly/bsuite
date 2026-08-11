@@ -30,6 +30,9 @@ export type {
   ResponsiveBreakpoint,
 } from './buildResponsiveLayouts.js';
 export { useLocalPreference, defaultPreferenceAdapter } from './preferences.js';
+export { RelationshipField } from './RelationshipField.js';
+export type { RelationshipFieldProps } from './RelationshipField.js';
+export { isRelationshipWritable } from './relationshipCatalog.js';
 export type {
   EntityWidgetDetail,
   EntityWidgetFactoryOptions,
@@ -38,6 +41,11 @@ export type {
   PageGridLayoutProps,
   PageGridPreferenceAdapter,
   PageGridPreferenceFactory,
+  RelationshipCatalog,
+  RelationshipCatalogEntry,
+  RelationshipFieldOption,
+  RelationshipWidgetDetail,
+  RelationshipWidgetFactoryOptions,
   UsePageGridLayoutOptions,
   UsePageGridLayoutResult,
   WidgetMeta,
