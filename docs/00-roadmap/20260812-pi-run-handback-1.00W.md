@@ -262,8 +262,17 @@ I wrote that advancing R80.4's pointer exposed its colour-rule copy and the gate
 proxy then told me R80.4 was **in sync** and absent from the failure. Both of us were wrong, and the
 truth is the third possibility neither of us considered:
 
-**R80.4's copy is DRIFTED, and the gate does not report it.** In the proxy's words — the worst of
-the three, *"because it is the one nobody is looking at."*
+**R80.4's copy is DRIFTED. The CI job reports it; the local run does not.** Refined once more at
+18:50 against a real CI run, which is the fourth pass at this one line and the first that both of
+us can reproduce:
+
+```text
+CI (reads the committed gitlink)   ✗ R80.4/eslint-rules/no-hardcoded-colours.js — DRIFTED
+local --check (reads the tree)     R80.4 not mentioned at all
+```
+
+So it is not unwatched — it is invisible to whoever is standing at a terminal, which is where every
+human and agent looks first.
 
 The cause is a defect in the gate itself, and it is the third instance today of the same shape:
 **`sync-inline-eslint-rules.mjs --check` reads each submodule's WORKING TREE, not the committed
@@ -450,3 +459,53 @@ login page's own copy, one hidden behind an account menu, one matching my own ph
 the substance, a `tail -4` that hid two of three failures, and this gate reading a stale checkout.
 Every one was the instrument, never the code. The estate's recurring failure is not carelessness —
 it is a plausible verdict from a tool nobody positive-controlled.
+
+
+---
+
+## 13. Applied to production today — and the one still waiting
+
+Five live defects were closed **and proven closed by behaviour**, not by reading the code. Both
+migrations went in via `psql --single-transaction` with the ledger row recorded at the same version.
+That is the documented operator pattern, not a bypass: `supabase-migrate.yml` skips already-applied
+versions by version key, so the eventual promotion is a no-op rather than a double-apply.
+
+| repo | defect | state |
+|---|---|---|
+| conduit | anonymous candidate-existence oracle — an email list in, "is this person in your database" out | **closed, live** |
+| conduit | public-apply throttle bypassable by rotating a caller-supplied value | **closed, live** |
+| crm7 | `portal_invite_accept` throttle, same defect class | **closed, live** |
+| crm7 | `log_tenant_switch` stored a forgeable address **as fact** | **closed, live** |
+| crm7 | one super admin could write audit history attributed to another | **closed, live** |
+| crm7 | `xero_audit_log` — same defect class, 76 rows | **still live** |
+
+The refusal on the attribution forgery was proven by **re-querying and showing zero rows landed**,
+not by an error message. An error is not evidence the write did not happen.
+
+### The one still waiting, and why it is different
+
+`20260814050000` fixes `xero_audit_log`, where all 76 rows carry an unlabelled, forgeable IP. It is
+merged and unapplied. **Unlike the other two it cannot be applied alone** — its own header states the
+edge function is fixed in the same change and stamps the provenance field, so the database and the
+function have to move together. Applying the migration by itself would leave the writer stamping
+nothing.
+
+### One risk that turned out to be the opposite
+
+I warned the crm7 lane not to trade an oracle for a denial of service. It found the denial of service
+**already existed**: the old throttle keyed on `coalesce(ip,'')`, so twelve distinct genuine users
+arriving without an IP header shared **one bucket** and were refused on each other's traffic.
+
+```text
+before   1 bucket,  2 refused
+after   12 buckets, 0 refused
+```
+
+The fix removed a live availability defect nobody had reported.
+
+### Named unverified
+
+Whether Supabase's edge supplies `cf-connecting-ip` on real production PostgREST requests is
+**unmeasured**. Both branches are safe by construction — present gives a per-IP bucket, absent gives
+a per-user bucket keyed on `auth.uid()` — so the fix is correct either way. Only which branch real
+traffic takes is unknown.
