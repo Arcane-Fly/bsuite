@@ -233,3 +233,60 @@ have its tables; that happened on 2026-08-11 and three tables were missing under
 **Migration collisions: 25, not the 16 on record** — the corrected checker sees a scope the old one
 could not. The estate gained 13 migrations today across six lanes and added **zero** new collisions;
 version allocation was centralised for exactly that reason.
+
+---
+
+## 10. Closing state, verified at 16:27
+
+```text
+worktrees                     1  (clean)
+open pull requests            0  across all seven repositories
+parent submodule pointers     6 of 6 CURRENT
+branches beyond main/development   1
+```
+
+That one branch is `crm7/fix/ci-guards-deferred-items-20260811`, and it is **deliberate** — it
+holds the `quality.yml` deletion awaiting your ruling (decision **C**). The four uncontroversial
+fixes originally bundled with it were unbundled and landed separately, so nothing else waits behind
+it. Do not delete it; merging it *is* the "yes" answer.
+
+**Nothing was promoted to `main` in any repository.**
+
+---
+
+## 11. The one gate that is red on purpose
+
+Advancing R80.4's pointer exposed its new colour-rule copy to the parity gate for the first time,
+and the gate fired. **That is correct** — R80.4 was registered-but-unwaived precisely so it would
+fire the moment its pointer moved.
+
+The three copies and their source do not agree, and the disagreement runs in both directions:
+
+```text
+crm7 copy      428 lines   AHEAD of source, and stronger
+parent source  359 lines   has two live holes crm7 already closed
+R80.4 copy     252 lines   BEHIND
+```
+
+The parent source — the nominal source of truth — still lets two things through that crm7's copy
+catches: an alpha-suffixed pure white (`#ffffff00`), and the space-separated `rgb(255 255 255)`
+form. Both are banned by your standing rule; both currently pass the "authoritative" copy.
+
+**I ran the generator to see what it would do. It downgraded crm7 to the weaker source and left
+R80.4 unchanged.** Reverted immediately.
+
+So the obvious fix — regenerate everything — silently weakens the app with the largest colour
+surface in the estate. The correct order is:
+
+1. forward-port crm7's four improvements **into** the parent source
+2. *then* regenerate every copy from the corrected source
+3. R80.4 comes up to strength and the gate goes green on its own
+
+That is a scoped follow-up, not something to force at the end of a run. Until it lands, the parity
+gate stays red on parent pull requests — **and it should**. It is not red for no reason, and it is
+not green over a defect. It is a gate honestly reporting a real divergence, which is precisely what
+this run spent the day trying to achieve everywhere else.
+
+This is the third time the estate has found that its nominal source of truth was the stalest copy.
+"The version in `packages/` is authoritative" is not a safe default here. Reconcile on **behaviour**,
+not on location.
