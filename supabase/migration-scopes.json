@@ -45,9 +45,11 @@
       "label": "R80.4",
       "repo": "R80.4",
       "workdir": "R80.4",
+      "migrations_dir": "R80.4/supabase/migrations",
+      "functions_dir": "R80.4/supabase/functions",
       "owner": "wage-calculator",
-      "has_database": false,
-      "note": "R80.4 owns NO database objects \u2014 no supabase/ directory and no @supabase dependency. It replaced R80.3 in the applier matrix on 2026-08-06 and inherited a migrations_dir that never existed, which FAILED the whole Supabase Migrations run while crm7's migrations beside it applied fine. The applier now skips a scope with no migrations directory and says so; this flag records WHY, so the absence reads as deliberate rather than as a missing path."
+      "has_database": true,
+      "note": "R80.4 owned NO database objects when it replaced R80.3 in the applier matrix on 2026-08-06, and this entry carried has_database:false to record that the absence was deliberate rather than a missing path. That stopped being true on 2026-08-12, when R80.4 shipped its first migration (20260814010000_r80_saved_quotes.sql \u2014 'R80.4's save is device-local'). The flag was flipped and migrations_dir added on 2026-08-12 by the migration-rehearsal lane, which found the drift because it refused to trust the manifest over the filesystem. The live applier (supabase-migrate.yml) was never affected \u2014 it tests for the directory on disk \u2014 but plan-preview-db.mjs reads THIS file, so the preview plan silently understated the blast radius of every R80.4 change. A capability flag is a claim about the world, and the world moves: scripts/supabase/rehearse-migrations.mjs now warns when any scope declares has_database:false while carrying migrations on disk."
     },
     {
       "id": "conduit",
