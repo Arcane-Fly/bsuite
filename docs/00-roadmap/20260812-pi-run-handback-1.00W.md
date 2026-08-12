@@ -368,3 +368,63 @@ throughput              Test Suite, gitleaks, eslint-rule-parity
 
 At the start of the run three repositories required it, one had no secret scanning whatsoever, and
 in four the scanner read only a single commit per pull request.
+
+---
+
+## Operator addendum — added 17:15, after this document closed
+
+Written by `operator-proxy-claude`. The PI closed the handback at ~16:50; the finding below is from
+16:57 and did not make it in. It **corrects §11**.
+
+### The parity gate reads the working tree, not the gitlink
+
+`node scripts/sync-inline-eslint-rules.mjs --check` compares against each submodule's **working-tree
+checkout**. Those checkouts drift from the gitlinks the parent actually commits, so the gate names
+the wrong repositories.
+
+| repo | local `--check` says | the **committed refs** say |
+|---|---|---|
+| crm7 | drifted | **differs — AHEAD** (419 body lines vs source 336) |
+| R80.4 | *not mentioned at all* | **differs — BEHIND** (243 vs 336) |
+| braden | drifted | **in sync** (336 = 336) |
+| throughput | drifted | **in sync** (336 = 336) |
+
+Cause, measured: R80.4's working-tree HEAD was `9460037c` while the parent's committed gitlink was
+`2c5cd1df`. Bodies compared with the script's own logic — slice from the first `^import` line.
+
+**Consequence.** CI checks out gitlinks, so CI's answer is crm7 and R80.4. Anyone acting on a local
+run would edit braden and throughput — both already correct — and still leave R80.4 behind.
+
+**Two corrections this forces:**
+
+- **§11 is wrong.** It says advancing R80.4's pointer exposed its copy and the gate fired. The gate
+  did **not** fire for R80.4 in any run reproducible here. R80.4 is **drifted and unreported**,
+  which is worse than either reading, because it is the one nobody is looking at.
+- **My own 16:37 message was also wrong.** I told the PI R80.4 was *in sync*. I inferred that from
+  its absence in a failure list — absence of a finding is not evidence of absence.
+
+**What holds, and matters more:** crm7's copy is **ahead and stronger**, and must be forward-ported
+into `packages/`, never regenerated. The PI established that the right way — it ran the generator,
+watched it downgrade crm7, and reverted. That caught a regression I had ordered at 12:57.
+
+**The defect to fix:** the gate should read the committed gitlink —
+`git -C <sub> show <pinned-sha>:eslint-rules/<rule>` — or hard-fail when a checkout does not match
+its pointer. As written, its answer depends on how recently someone ran a submodule update. Same
+class as row 1.2 and RT-6: the guard is correct and its **scope** is the bug.
+
+### Still open at close
+
+- **Row 4.5** — merged, sound on inspection, **deployment confirmed** (I grepped both served
+  bundles: `d.r8.crm7.app` carries all three `business-suite-origin` markers, `r8.crm7.app` carries
+  none), **session-death unverified**. The A/B control is free *only while R80.4's main is behind*;
+  promoting closes it.
+- **R80.4's rule copy is behind and invisible to the gate** — a live hole, not a closed row.
+- **conduit#433 edge mitigation** — asked three times, unanswered, closed rather than chased.
+
+### A note on the run itself
+
+Five times today an instrument of mine gave a confident wrong answer: a marker that matched the
+login page's own copy, one hidden behind an account menu, one matching my own phrasing rather than
+the substance, a `tail -4` that hid two of three failures, and this gate reading a stale checkout.
+Every one was the instrument, never the code. The estate's recurring failure is not carelessness —
+it is a plausible verdict from a tool nobody positive-controlled.
