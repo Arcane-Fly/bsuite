@@ -108,17 +108,22 @@ jobs:
           # baseline — including its 1 real pure white/black endpoint, which is
           # banned in every role by standing operator ruling.
           #
-          # Measured 2026-08-12 against the same scanner output, C1 total:
-          #   filter naming R80.3 (current)  -> 7
-          #   filter naming R80.4 (correct)  -> 8
-          # The committed baseline is 10, so correcting this does NOT turn the
-          # gate red; it just makes it count the app it always claimed to.
+          # The baseline moves 10 -> 11 in the same change, and the +1 is
+          # entirely R80.4's ONE pre-existing pure endpoint finally being
+          # counted. It is not a new violation and nothing regressed.
           #
-          # The baseline is deliberately NOT tightened to 8 in the same change.
-          # This job reads the submodules at their PINNED gitlink SHAs, and 8 is
-          # a measurement of their current origin/development TIPS — a different
-          # tree. Ratcheting to a number measured against the wrong tree is how
-          # a gate goes red for reasons nobody can reproduce.
+          # I got this wrong once, which is worth recording. Measured against
+          # the submodules' origin/development TIPS the totals were 7 (broken
+          # filter) and 8 (fixed), comfortably under the baseline of 10 — so the
+          # first version of this change left the baseline alone. This job reads
+          # the submodules at their PINNED gitlink SHAs, which is a DIFFERENT
+          # TREE, and there the totals are 10 and 11. The gate went red on the
+          # PR that introduced the fix. Measure against the tree CI actually
+          # reads, not the one in your working copy.
+          #
+          # This should return to 10 when LANE-R804 clears R80.4's single pure
+          # endpoint. The ratchet only shrinks; raising it is allowed exactly
+          # once here, to admit an app that was silently outside the count.
           col() { awk -v want="$1" '
             /^(crm7|conduit|business-suite-unified|R80\.4|throughput|packages|braden) /{
               seen = 0
