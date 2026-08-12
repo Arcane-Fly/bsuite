@@ -27,6 +27,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { execFileSync } from 'node:child_process'
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -85,6 +86,24 @@ const KNOWN_DRIFTED = {
   'conduit/no-hardcoded-colours.js': 'bsuite#1889 / conduit#428 — 5 violations in chart-colour fallbacks',
 }
 
+/**
+ * The waiver list is a RATCHET, and a ratchet needs a stop.
+ *
+ * KNOWN_DRIFTED went from 2 entries to 5 in a single commit (d3f81978), at
+ * which point every one of the five inlined copies was waived and `--check`
+ * reported "No unexpected drift" while nothing was in sync. A list that can
+ * grow without limit is not a ratchet, it is a queue.
+ *
+ * MAX_WAIVED is the high-water mark. Adding a sixth waiver fails until one
+ * comes out. It is a committed number rather than a computed one precisely so
+ * that raising it is a deliberate, reviewable edit with a reason attached.
+ *
+ * It may only ever be REDUCED. When a copy is re-synced, remove its entry and
+ * lower this to match — the check prints the new count on every run so there is
+ * no excuse for it drifting upward unnoticed.
+ */
+const MAX_WAIVED = 5
+
 const INLINE_HEADER = (filename) => `/**
  * Inline copy of @bsuite/eslint-config ${filename.replace(/\.js$/, '')} rule.
  * Inlined so standalone submodule CI can resolve it without the monorepo.
@@ -103,15 +122,113 @@ function body(text) {
   return text.slice(i)
 }
 
+/**
+ * --check-tips: compare each submodule's origin/<branch> TIP, not the pinned SHA.
+ *
+ * THE SCOPE GAP THIS CLOSES. The parent's parity gate reads the submodule
+ * working trees, which CI checks out at the PINNED gitlink SHA. That is the
+ * commit the parent has already promoted — not what the submodule's own branch
+ * has become. So a crm7 PR can merge a weakened copy into crm7's development
+ * and the parent stays green until somebody bumps the pointer, however many
+ * days later. Measured 2026-08-12: the parent's pinned crm7 (b11d9d7) is
+ * byte-identical to the source, while crm7's origin/development tip (7a5e94c)
+ * is missing the PURE_RE pure-white/black ban — an absolute operator ruling —
+ * and the @react-pdf/renderer real-import fix. Every parent run that day
+ * reported success.
+ *
+ * Fixing this properly means the check running inside each submodule's own CI,
+ * which cannot be done from this repo. This mode is the parent-side half: it
+ * looks at where the submodules actually ARE, so the drift is visible the day
+ * it lands rather than at the next pointer bump.
+ *
+ * Advisory by design — it reports and annotates, it does not fail the parent.
+ * A submodule tip is not something a parent PR author can fix, and failing them
+ * for it would be the "permanently red, therefore ignored" trap this branch has
+ * spent three commits removing.
+ */
 const args = process.argv.slice(2)
 const checkOnly = args.includes('--check')
+const checkTips = args.includes('--check-tips')
 const onlyIdx = args.indexOf('--only')
 const only = onlyIdx !== -1 ? args[onlyIdx + 1] : null
+
+/** `git -C <dir> <args>`, or null when the command fails for any reason. */
+function git(dir, ...gitArgs) {
+  try {
+    return execFileSync('git', ['-C', dir, ...gitArgs], {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+  } catch {
+    return null
+  }
+}
+
+function checkSubmoduleTips() {
+  let tipDrift = 0
+  let unresolved = 0
+  for (const rule of SYNCED_RULES) {
+    const sourcePath = join(REPO_ROOT, rule.source)
+    const sourceBody = body(readFileSync(sourcePath, 'utf-8'))
+    for (const submodule of rule.submodules) {
+      const dir = join(REPO_ROOT, submodule)
+      if (!existsSync(dir)) {
+        console.log(`  – ${submodule} — not checked out, tip not inspected`)
+        unresolved++
+        continue
+      }
+      // The branch the submodule's own PRs merge into. Fall back to main.
+      let ref = null
+      for (const candidate of ['origin/development', 'origin/main', 'origin/master']) {
+        if (git(dir, 'rev-parse', '--verify', '--quiet', candidate)) {
+          ref = candidate
+          break
+        }
+      }
+      if (!ref) {
+        console.log(`  – ${submodule} — no origin/development|main|master ref, tip not inspected`)
+        unresolved++
+        continue
+      }
+      const tipSha = (git(dir, 'rev-parse', ref) || '').trim()
+      const pinnedSha = (git(REPO_ROOT, 'rev-parse', `HEAD:${submodule}`) || '').trim()
+      const shown = git(dir, 'show', `${ref}:eslint-rules/${rule.filename}`)
+      if (shown === null) {
+        console.log(`  – ${submodule} — no eslint-rules/${rule.filename} at ${ref}, skipped`)
+        continue
+      }
+      const inSync = body(shown) === sourceBody
+      const same = tipSha && pinnedSha && tipSha === pinnedSha
+      const where = same
+        ? 'tip == pinned'
+        : `tip ${tipSha.slice(0, 8)} != pinned ${pinnedSha.slice(0, 8)}`
+      if (inSync) {
+        console.log(`  ✓ ${submodule} @ ${ref} — in sync (${where})`)
+      } else {
+        tipDrift++
+        const waiver = KNOWN_DRIFTED[`${submodule}/${rule.filename}`]
+        console.log(
+          `::warning title=Inline rule drift at submodule tip::${submodule} @ ${ref} has DRIFTED from ` +
+            `${rule.source} (${where})${waiver ? ` — waived in KNOWN_DRIFTED: ${waiver}` : ' — NOT waived'}`,
+        )
+      }
+    }
+  }
+  console.log(
+    `\nTip check: ${tipDrift} cop${tipDrift === 1 ? 'y' : 'ies'} drifting at the submodule branch tip` +
+      `${unresolved ? `, ${unresolved} not inspectable` : ''}.` +
+      '\nAdvisory only — the parent cannot fix a submodule branch. This exists so the drift is' +
+      '\nvisible the day it lands instead of at the next pointer bump.',
+  )
+  process.exit(0)
+}
 
 let drifted = 0
 let written = 0
 let skipped = 0
 let waived = 0
+
+if (checkTips) checkSubmoduleTips()
 
 for (const rule of SYNCED_RULES) {
   const sourcePath = join(REPO_ROOT, rule.source)
@@ -166,6 +283,29 @@ if (checkOnly && drifted > 0) {
       `Fix: node scripts/sync-inline-eslint-rules.mjs`,
   )
   process.exit(1)
+}
+
+// The waiver count is stated on EVERY run, passing or not. "No unexpected
+// drift (5 waived)" reads like a pass, and it was one — while all five copies
+// diverged from the source. A number nobody prints is a number nobody watches.
+if (checkOnly) {
+  const listed = Object.keys(KNOWN_DRIFTED).length
+  if (waived > 0) {
+    console.log(
+      `\nWAIVER BUDGET: ${waived} cop${waived === 1 ? 'y is' : 'ies are'} drifting under a waiver ` +
+        `(${listed} listed in KNOWN_DRIFTED, ceiling ${MAX_WAIVED}). ` +
+        'A waived copy is a submodule running a WEAKER rule than the monorepo source.',
+    )
+  }
+  if (listed > MAX_WAIVED) {
+    console.error(
+      `\nKNOWN_DRIFTED has ${listed} entries but the committed ceiling is ${MAX_WAIVED}.\n` +
+        'The waiver list is a ratchet: it may only shrink. Re-sync a copy and remove its\n' +
+        'entry, or raise MAX_WAIVED deliberately with a reason if a new copy genuinely\n' +
+        'cannot take the rule yet.',
+    )
+    process.exit(1)
+  }
 }
 
 console.log(
