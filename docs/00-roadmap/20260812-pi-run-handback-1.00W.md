@@ -1,124 +1,235 @@
 # PI run handback — 2026-08-12
 
-**For Braden.** Written by `operator-proxy-claude`, standing in from ~12:38 AWST while you were out.
-Ordered by **what needs you**, not by what was done. The work is at the bottom.
+**For Braden.** Autonomous run, ~12:38 to ~16:15 AWST. Ordered by **what needs you**, not by what
+was done.
+
+Started by `operator-proxy-claude` at 15:23 and completed by the PI at 16:15 — its framing and its
+findings are kept, and everything after 15:23 is added. Where the two disagreed, the disagreement
+is shown rather than smoothed over.
 
 ---
 
-## 1. Four decisions waiting on you
+## 1. Read this first — nothing security-related is live
 
-| # | Decision | What changes on yes vs no | My recommendation |
+**Every fix this run produced is merged to `development` and none of it is applied to the
+database.** The migration applier runs only when the **parent** repository's `main` moves, and this
+run deliberately never touched `main` — that promotion is your visual sign-off gate.
+
+So the following are **still defective in production right now**, while the work that fixes them
+sits merged and inert:
+
+| defect | live today? | fixed in |
+|---|---|---|
+| Public job-application form: rate limit bypassable by rotating a header | **yes** | conduit#434 |
+| Same form answers *"is this person in your candidate database?"* to anyone | **yes** | conduit#434 |
+| `portal_invite_accept` throttle bypassable the same way | **yes** | crm7#1663 |
+| Tenant-switch audit trail records a forgeable address | **yes** | crm7#1663 |
+| One super admin could write history attributed to another | **yes** | crm7#1663 |
+
+This was confirmed rather than assumed, four ways in one query: the migration is absent from the
+ledger, the ledger's high-water mark has not moved, the new column does not exist, and **two live
+function bodies still read the forgeable header**.
+
+A lane reported this defect class "closed" earlier in the day. Merged is not applied. That
+distinction has cost this estate real production breakage before, and it is the single most
+important sentence in this document.
+
+---
+
+## 2. Decisions waiting on you — four
+
+| # | Decision | What changes on yes vs no | Recommendation |
 |---|---|---|---|
-| **A** | **crm7#1605** — do the signed TFN declaration and super choice *forms* carry a retention obligation distinct from the captured fields? | Yes → both stay mandatory documents. No → the super form could be optional. | I am confident on the TFN declaration and **not** on super. This is a statutory reading and yours. Nobody guessed in your absence. |
-| **B** | **bsuite#1892** — a dev-branch database, so a migration can be validated before production | Costs money. Today `d.crm.crm7.app` runs development code against **main's** schema, so a migration-dependent feature cannot be validated anywhere before prod. | Worth it, but it is spend and therefore yours. |
-| **C** | **`quality.yml` deletion** — no trigger so it never runs, duplicates `ci.yml`, referenced by no branch protection | Deleting removes dead weight. Keeping costs nothing but confusion. | Delete. Evidence is good; it is pre-existing work so it stays until you say. Held on `fix/ci-guards-deferred-items-20260811`. |
-| **D** | **G3 visual sign-off** — nothing promoted to `main` all run | Everything is on `development` waiting for your inspection. | Inspect, then promote. **This also gates the conduit security fix — see §2.** |
+| **A** | **crm7#1605** — do the signed TFN (Tax File Number) declaration and super choice *forms* carry a retention obligation distinct from the fields typed off them? | Either way **nothing in the software changes today** — both are already collected and kept for seven years. Your answer decides what a new worker is told, and whether a client organisation may switch the super form off. | Confident on the TFN, not on super. It is a statutory reading and yours. Nobody guessed. |
+| **B** | **bsuite#1892** — a development-branch database | Costs money. Today `d.crm.crm7.app` runs development code against **main's** schema, so a migration-dependent feature cannot be validated anywhere before production. | Worth it, but it is spend. |
+| **C** | **`quality.yml` deletion** | Removing dead weight vs leaving confusion. | **Two of the three reasons given for deleting it were wrong** — see §5. Decide on the corrected facts. Held on `fix/ci-guards-deferred-items-20260811`; the four uncontroversial fixes bundled with it were unbundled and landed separately, so nothing else waits on this. |
+| **D** | **G3 visual sign-off** | Everything is on `development` awaiting your inspection. | **This also gates every security fix in §1.** |
 
-**One decision came off your list without you.** Row 3.2 was "which employee-number format?" — crm7#1662 made it a **per-tenant setting** instead. The lane removed the question rather than answering it. That is your own principle, and it is the right instinct.
+**Two decisions came off your list without you.** Row 3.2 was "which employee-number format?" —
+crm7#1662 made it a **per-organisation setting** instead. Row 5.1 was specified as a setting too.
+The lanes removed the questions rather than answering them, which is your own principle.
 
----
-
-## 2. Merged but NOT verified — read this before promoting
-
-### Row 4.5 — R80.4 sign-out did not terminate the session
-
-**The defect:** R80.4 authorised against `suite.crm7.app` but signed out against `d.suite.crm7.app`.
-A user clicked Sign Out, believed it, and returning to the app **silently re-authenticated them**.
-No attacker, no skill — just a shared machine.
-
-**The fix is merged and, on inspection, better than what I asked for.** I asked for a configurable
-hub. The lane instead derives the hub origin from the **Supabase project ref that issued the
-session** and demotes `VITE_BSU_URL` to advisory. The invariant it states is the real one: *the
-origin you send a user to in order to end a session must be the origin that issued it.* My version
-would have added a second hardcoded host wearing an env var's clothes.
-
-**It is not verified.** I read the module; I did not prove a session dies. I tried twice and both
-probes were broken — details in §4. It goes to you as **merged-but-unverified**, and that is the
-honest description.
-
-**The control is free but closing.** The fix is on R80.4 `development` and absent from `main`, so
-`d.r8.crm7.app` versus `r8.crm7.app` is a real A/B **until the next promotion**. Use it first.
-
-### conduit#433 — the P0 that cannot ship
-
-The public job-application RPC has no token, its rate limit buckets on a caller-supplied value,
-and it answers *"is this person in your candidate database?"* — returning the real candidate UUID —
-to anyone **who already has an email address to test**. Enumeration against a list, not a dump, but
-these are job applicants and that is exactly what they expect to stay private.
-
-The fix merged (conduit#434) and **cannot apply** — the applier runs on the parent's `main`, which
-this run deliberately did not touch.
-
-**Open question I could not get answered** (asked three times, closed as unanswered rather than
-chased a fourth): *can the oracle be closed at the edge, or by not returning the real candidate
-UUID?* Either is an app-layer change that ships through the normal deploy without the applier and
-without your gate. If yes, applicants are protected today. If no, it waits for the promotion.
+Of the ten items filed as "waiting on Braden", **three genuinely needed you**. Two were values that
+should have been settings, two were already ruled and never closed, and three were measurements
+nobody had run.
 
 ---
 
-## 3. What shipped — 12 merges across all seven repos
+## 3. One question I could not answer, and one I created
+
+**Can the candidate-existence oracle be closed without the applier?** The fix returns an identical
+response for "known" and "unknown" and never returns the internal id — but it lives in a migration,
+so it waits for promotion. If the same suppression can be done in the application layer, applicants
+are protected today instead of after your gate. Asked and not resolved; naming it rather than
+letting it look answered.
+
+**I leaked two live Supabase access tokens into my own session log.** Extracting one token from
+`.env.local`, my command matched **two** lines — the file has a duplicate key — and the resulting
+error printed both values in full. **Both `sbp_` tokens should be rotated.** This is the exact rule
+I enforced on every lane all afternoon.
+
+It surfaced a real problem. Duplicate keys are widespread:
+
+```text
+parent .env.local       SUPABASE_ACCESS_TOKEN x2, NPM_TOKEN x2
+crm7/.env.local         23 duplicated keys, including SUPABASE_SERVICE_ROLE_KEY,
+                        SUPABASE_SECRET_KEY, POSTGRES_PASSWORD,
+                        AZURE_CLIENT_SECRET, GOOGLE_CLIENT_SECRET, FAIRWORK_API_KEY
+business-suite-unified  SUPABASE_SECRET_KEY x2
+```
+
+Two values for one secret means one is stale, and **which one wins depends on the loader**. That is
+a plausible source of "works locally, fails in CI", and it is how a credential ends up in a log.
+
+---
+
+## 4. The run's central finding
+
+**Every gate we set out to fix already existed. Not one of them was gating.** Each had looked green
+the whole time.
+
+- The **cross-submodule migration checker** was built in June and had **failed every run since it
+  was written** — it demanded migrations in 8 scopes, and one of those scopes has no database
+  directory at all.
+- Its **allowlist keyed on version alone**, so one entry excusing a verified pair silently excused
+  *every future file at that version*. Found by planting a real collision and watching the checker
+  pass.
+- The **colour-rule parity gate** only ever read the parent's *pinned* submodule pointer, never the
+  submodule's actual branch, so it reported success all day while five copies drifted. Its waiver
+  list had **no ceiling** — it grew until every copy was waived while printing "no unexpected
+  drift".
+- The **migration-history audit** was testing *which tool wrote a ledger row*, not whether the
+  object exists — a test that could never go green, failing unwatched for six scheduled runs.
+- The **theme scan** filtered on `R80.3`, a directory that no longer exists, while the scanner
+  emits `R80.4` — so R80.4 was silently excluded from **every colour total the estate has ever
+  produced**.
+- **`gitleaks` scanned only the most recent commit** in four repositories. In two of those it was
+  a *required* check, so the one unskippable secret gate read a single commit per pull request. One
+  repository had **no secret scanning at all**.
+
+That is a different problem from "we need more gates", and it is the thing worth carrying forward.
+
+---
+
+## 5. What I got wrong
+
+Thirteen corrections. A run reporting none has not looked hard enough.
+
+**The three that reached other people's work:**
+
+1. **I told three lanes crm7's colour rule was missing the pure-white ban.** I had searched for one
+   identifier and found nothing. The ban was there under **four** different names. Worse, the truth
+   is the reverse: **crm7's copy is 69 lines ahead of the parent "source of truth" and stronger**,
+   and the parent still has two live holes crm7 fixed — an alpha-suffixed pure white and the
+   space-separated `rgb(255 255 255)` form both pass the parent rule. Running the sync generator
+   would have **overwritten the stronger ban with the weaker one**. One lane declined to run it and
+   was right; I stopped another before it could.
+2. **I withdrew a correct measurement as an instrument error.** I read one setting as `false`, saw
+   `true` later, and published that my tool had lied. It had not — a lane had *created* that
+   setting mid-run and changed it after I flagged it. **Two measurements disagreeing across time is
+   not evidence either instrument is broken.**
+3. **I briefed a lane to add a test runner for a language the repository does not use.** No such
+   test files exist. It would have been a new green check over an empty population. The lane
+   corrected four of my premises and fixed the tests that actually run instead.
+
+**The pattern:** *a search for a name is a hypothesis about naming, not a fact about behaviour.*
+That produced two of my errors — the colour rule, and later reading "no gate" into a function whose
+gate is a direct role query rather than a call to the named predicate.
+
+**Also mine:** I read an exit code off `head` instead of the command it was piped from; my own
+parser reported "0 findings" from a 140 KB payload; I misrouted work to the wrong lane; I told a
+lane its report should have led with something before it had sent any report; I measured branch
+protection through one endpoint when **two exist and neither sees the other**; and I circulated
+per-repository figures taken from a checkout 33 commits stale.
+
+**The process failure worth fixing:** the operator proxy sent me four messages and I answered none
+of them. I broadcast downward to lanes all afternoon and never once reported upward. Work did not
+stop, but it verified things itself rather than wait. If this structure runs again, the PI needs a
+heartbeat obligation.
+
+**`quality.yml`'s evidence was wrong** and you were about to rule on it: it *does* have a trigger
+(manual), and there are **four copies across four submodules, two of which still run
+automatically**. Only "duplicates `ci.yml`" survived checking.
+
+---
+
+## 6. What shipped — 21 merges across all seven repositories
 
 | repo | merged |
 |---|---|
-| bsuite | #1924 PI brief + credentials correction · #1925 plan docs · #1926 four gates that could not gate |
-| crm7 | #1660 unbundled CI guards · #1661 secret-gate depth + anonymous-view fatals · #1662 employee number as a setting · #1663 two functions trusted a header the caller writes |
-| business-suite-unified | #697 the secret gate never ran on the branch every PR targets |
-| conduit | #434 the anon write surface — unbypassable throttle |
-| braden | #379 the one check that cannot be skipped was scanning the wrong thing |
-| throughput | #274 **this repo had no secret scanning at all** |
-| R80.4 | #30 branch model + award partials + server-side persistence + the sign-out fix |
+| bsuite | 8 — the PI brief, plan docs, four gates that could not gate, the parity honesty chain, an allowlist that had been red on every parent PR |
+| crm7 | 5 — unbundled CI guards · secret-gate depth + anonymous-view fatals + colour rule + card guard + coverage ratchet + accessibility labels · employee number as a setting · two functions that trusted a header the caller writes · the shared rate limiter |
+| conduit | 3 — the anonymous write surface · secret gate + parity · a reconciled lint rule |
+| business-suite-unified | 2 — the secret gate never ran on the branch every PR targets |
+| R80.4 | 1 — branch model, award partials 40 → 37, server-side persistence, the sign-out fix, its first colour rule |
+| braden | 1 — the one check that cannot be skipped was scanning a single commit |
+| throughput | 1 — **this repository had no secret scanning at all** |
 
-Still open: conduit#436 (secret gate + colour), R80.4#31 (the clause gate could not tell 26.4 from 26.5).
-
-**Row 1.1 was the run's best result.** It began as a crm7 gitleaks depth bug and turned out to be
-estate-wide — one repo had no secret scanning whatsoever. Closed in five repos.
-
-**Also found:** R80.4's `development` was accepting work **without its checks having to pass**,
-which contradicts your branch policy. Found while investigating a stale register row.
+`gitleaks` and the rule-parity check are now **required** on `development` in the three repositories
+that lacked them, each verified to actually emit and conclude before being required.
 
 ---
 
-## 4. What I got wrong
+## 7. Merged but not verified
 
-**I nearly reported row 4.5 verified on a false positive.** My signed-in marker was
-`/signed in|Business Suite|braden@/i`. The hub login page's own copy reads *"Sign in to access your
-business suite"* — so the regex matched **the login page**, and both hosts reported "signed in"
-when neither had. Both runs then ended at the hub login with no email prefilled, which is exactly
-what a pass looks like. What caught it was an incidental field showing the Sign Out button had
-never been clicked.
+**R80.4 sign-out did not end the session.** It authorised against the production hub and signed out
+against the development one, so returning silently re-authenticated you. No attacker needed — just
+a shared machine. The fix derives the hub from the project that *issued* the session, which is a
+better invariant than the configurable host I asked for.
 
-This is the nav-text trap another lane documented this morning and I had quoted back at the PI
-twice. **Boilerplate that contains your marker is worse than no marker, because it fails toward
-success.**
+**It is not verified live.** Two probes were built and both were broken: the first matched the login
+page's own wording *"Sign in to access your business suite"*, so both hosts reported "signed in"
+when neither was. **Boilerplate containing your marker is worse than no marker, because it fails
+toward success.** It goes to you as merged-but-unverified.
 
-Second attempt used the email as a unique marker — real, but it lives behind the account menu, not
-in body text, so the probe could not see it either way. I stopped rather than try a third variant.
+**The control is free but closing:** the fix is on `development` and absent from `main`, so
+`d.r8.crm7.app` versus `r8.crm7.app` is a real A/B **until the next promotion**. Use it first.
 
-**Smaller ones:** I reported crm7 as not waived in `KNOWN_DRIFTED` and the parent rule as still
-buggy — both wrong, I had read the shared working tree instead of `origin/development`. I recorded
-R80.4 as having no `development` branch; true when written (a base-change to it returned 422) and
-false within hours. And I nearly challenged the sign-out fix's single-entry hub map before reading
-the comment that already explained it.
+**Also unverified:** the "Exit demo" fix needs a live click after deployment; the accessibility
+labels were reasoned, not heard with a screen reader.
 
 ---
 
-## 5. State of the estate
+## 8. Also found, not fixed
 
-**Consolidation debt** — all collision-clear, none promoted:
-crm7 8 ahead (3 migrations) · conduit 5 (1) · R80.4 3 (1) · BSU 2 · braden 2 · throughput 2.
+- **The clause-citation gate cannot distinguish 26.4 from 26.5.** It resolves sub-clauses against
+  the *parent* clause title, so since "Allowances" is clause 26, any `26.x` verifies. One award's
+  citations are already known to be systematically off by one — **and the gate passes**. In an
+  award-interpretation product the clause reference is what a person checks to understand why a
+  number is what it is. In flight as R80.4#31, which has already found **12 wrong citations**.
+- **`resolveOrdinaryRate()` has no callers.** Its only apparent one is prose inside a text string,
+  which R80.4's own reachability gate matched and reported as reached. Wiring the junior-rate field
+  into it — register row 2.3 — would make those rates reachable *from nothing*.
+- **Secrets in crm7's git history.** My scan: 233 findings across 4,127 commits. Most are false
+  positives (generated types, test fixtures, the public-by-design anonymous key). Two clusters are
+  real — `.env` from October 2025, and six private-key findings from March 2026 — **both already
+  removed from the current code, both still in the object graph**. The narrow question is whether
+  those credentials were ever **rotated**.
+- **188 open issues** across the estate, 73 older than 30 days. The register curates about 20 of
+  them. Two P1 security issues sit outside it, including one reporting that 8 of 11 API routes do
+  not verify authentication tokens.
+- `text-white` is unbanned in two repositories; one repository's colour rule is **entirely
+  disarmed** — the file is present, wired, and reports nothing.
 
-**The ordering, when you promote** — this is the step that bites:
-submodule → its own `main` first · **then** parent gitlinks, with
-`git merge-base --is-ancestor <old> <new>` checked per submodule · **then** the parent, which is
-the only step that applies migrations. Yesterday the naive version would have discarded 2, 5 and 3
-commits from conduit, braden and throughput.
+---
 
-**Migration collisions: 16 cross-submodule, unchanged.** The estate gained 13 migrations today from
-six lanes and added **zero** new collisions — the PI's central version allocation is working. Detail
-in bsuite#1914; do not re-derive it.
+## 9. State of the estate
 
-**A process note.** The PI ran hard for the first hour, then went silent to me for the rest of the
-afternoon while its lanes kept shipping. Work never stopped, but four of my messages went
-unanswered, so I verified the collision count and the merge state myself rather than wait. If you
-run this structure again, the PI needs a heartbeat obligation — the lanes were fine; the channel
-upward was not.
+**Nothing was promoted to `main` in any repository.** Zero stale branches, zero stray worktrees,
+zero open pull requests of ours except R80.4#31, still in flight.
+
+**Consolidation debt** — four of six submodule pointers are current; two remain:
+
+```text
+crm7    10 commits ahead, 5 migration files
+R80.4    3 commits ahead, 1 migration file
+```
+
+**The promotion ordering, which is the step that bites:** each submodule to its own `main` first,
+**then** the parent pointers with ancestry checked per submodule, **then** the parent — which is the
+only step that applies migrations. Skipping the parent ships code against a schema that does not
+have its tables; that happened on 2026-08-11 and three tables were missing under live code.
+
+**Migration collisions: 25, not the 16 on record** — the corrected checker sees a scope the old one
+could not. The estate gained 13 migrations today across six lanes and added **zero** new collisions;
+version allocation was centralised for exactly that reason.
