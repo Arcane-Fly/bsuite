@@ -37,8 +37,8 @@ wall and both said so plainly rather than inventing a check.
 
 | # | Item | Why first |
 |---|---|---|
-| 0.1 | **R80.4 has no dev bypass and no test credentials** | Blocks every live browser proof in R80.4 and the worker + host-employer personas outright. Every UI change shipped tonight — the competency card, the save caveat, the crm7 nav entries — is verified by tests and code-reading and by nobody actually using it. The least-verified layer in the estate is the one a user touches. |
-| 0.2 | **Rotate `braden@braden.com.au`** | Credential hygiene, and it gates doing 0.1 cleanly rather than twice. |
+| 0.1 | **Prove live login on R80.4 — the reported blocker is half false** | Three lanes reported *"R80.4 has NO dev bypass and NO test credentials"*. **Verified 2026-08-12: the credentials exist.** `CRM7_E2E_EMAIL` / `CRM7_E2E_PASSWORD` are in the parent `.env.local`, and R80.4 authenticates through **BSU SSO** (`business-suite-oauth`, `suite.crm7.app`) on the same Supabase identity as crm7 — so the estate credential *is* the R80.4 credential. What is genuinely absent is an in-app role bypass, which does not matter once you can log in. `d.r8.crm7.app` returns 200. **Nobody had opened the file.** Until this is proven with a screenshot, every UI change in the estate is verified by tests and code-reading and by nobody actually using it — the least-verified layer is the one a human touches. |
+| 0.2 | **Rotate `braden@braden.com.au`** | Credential hygiene. Do it *after* 0.1 so the live proof is not invalidated mid-run, then re-prove. |
 | 0.3 | **bsuite#1892 — no environment can validate a migration before production** | `d.crm.crm7.app` runs development code against **main's** schema, one shared Supabase project. A migration-dependent feature cannot be validated anywhere before prod. Until this is closed, every migration ships on reasoning alone. Costs money (a dev branch database) — operator's call. |
 
 ---
@@ -108,6 +108,36 @@ Not oversights. Each needs a design, not a column.
 | 5.2 | **Email templates adopting the palette** — `_shared/email-branding.ts` now exists with nine derived values. Adoption is blocked behind 1.4. |
 
 ---
+
+## Consolidation gates — everything returns to `development` here
+
+Work fans out; convergence must be scheduled, not remembered. **No tier starts before the
+previous tier's gate closes.** Full ritual in `20260812-pi-orchestration-brief-1.00W.md`.
+
+| gate | when | condition |
+|---|---|---|
+| **G0** | before any lane starts | every repo `main`/`development` **tree-identical**, zero open PRs, zero stale local branches, zero worktrees |
+| **G1** | Tier 0 done | live login proven on crm7 **and** R80.4 — screenshot + page-unique marker + bogus-path control; merged to `development` |
+| **G2** | each Tier 1 item | merged to `development` **individually** — a batch that fails is a batch nobody bisects |
+| **G3** | before any `main` promotion | all lanes converged · migration versions collision-checked against **every** submodule · **Braden's visual sign-off** |
+| **G4** | after promotion | applier watched to completion · every new object asserted by `to_regclass` / `to_regprocedure` / a grant query — **never** a `schema_migrations` row |
+
+**Promoting a submodule to its own main applies nothing.** The applier watches the *parent's*
+gitlink. On 2026-08-11 that gap put live production code against a schema missing three of its
+tables.
+
+## Tooling that is not optional
+
+Every lane loads `bsuite-context`, plus: `bsuite-brand-system` for anything visual (pure white
+and pure black banned in **every** role) · `bsuite-page-grid-layout` for card pages
+(`DraggableCardPage` silently drops non-`CanvasCard` children) · `bsuite-rls-authz-red-team` for
+RLS/definer/page gates · `supabase:supabase-postgres-best-practices` for any Postgres change ·
+`biz-au-award-modelling` for Tier 2 · `test-verify-before-completion` then
+`agent-definition-of-done` before claiming anything · **Context7 MCP** for any library fact,
+never memory · **qig-memory MCP** for comms (namespace `bsuite`, prefix `bsuite_`, never `qig_`).
+
+**Operator-facing output goes in a repo file or a GitHub issue.** Braden cannot read the memory
+MCP; "recorded in memory" reads as delivered and is not.
 
 ## Verification discipline — carried forward
 
