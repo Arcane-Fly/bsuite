@@ -101,8 +101,26 @@ jobs:
           # "real / exempt" pairs. Reading only the FIRST pair is how a live
           # purple --destructive in two apps stayed green: the scanner detected
           # it in C4 every run and nothing ever read that column.
+          # R80.4, not R80.3. The submodule was renamed and this filter was not.
+          # scripts/audit-d2c-theme.sh has been emitting a row labelled "R80.4"
+          # ever since, so the pattern matched ZERO rows and R80.4's counts were
+          # silently excluded from every total this gate compares to the
+          # baseline — including its 1 real pure white/black endpoint, which is
+          # banned in every role by standing operator ruling.
+          #
+          # Measured 2026-08-12 against the same scanner output, C1 total:
+          #   filter naming R80.3 (current)  -> 7
+          #   filter naming R80.4 (correct)  -> 8
+          # The committed baseline is 10, so correcting this does NOT turn the
+          # gate red; it just makes it count the app it always claimed to.
+          #
+          # The baseline is deliberately NOT tightened to 8 in the same change.
+          # This job reads the submodules at their PINNED gitlink SHAs, and 8 is
+          # a measurement of their current origin/development TIPS — a different
+          # tree. Ratcheting to a number measured against the wrong tree is how
+          # a gate goes red for reasons nobody can reproduce.
           col() { awk -v want="$1" '
-            /^(crm7|conduit|business-suite-unified|R80\.3|throughput|packages|braden) /{
+            /^(crm7|conduit|business-suite-unified|R80\.4|throughput|packages|braden) /{
               seen = 0
               for (i = 1; i <= NF; i++) if ($i == "/") { seen++; if (seen == want) { print $(i-1); break } }
             }' /tmp/audit.txt | paste -sd+ | bc; }

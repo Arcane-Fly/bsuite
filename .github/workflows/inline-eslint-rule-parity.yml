@@ -74,6 +74,26 @@ jobs:
         # install and still reports drift even if the install below breaks.
         run: node scripts/sync-inline-eslint-rules.mjs --check
 
+      # The step above reads the submodules at their PINNED gitlink SHAs — the
+      # commits the parent has already promoted. It cannot see what the
+      # submodules' own branches have since become, so a weakened copy can sit
+      # in crm7's development for days with the parent green. Measured
+      # 2026-08-12: pinned crm7 b11d9d7 was byte-identical to the source while
+      # crm7's origin/development tip 7a5e94c was missing the pure white/black
+      # ban; every parent run that day reported success.
+      #
+      # Advisory, deliberately. A parent PR author cannot fix a submodule
+      # branch, and failing them for it would rebuild the permanently-red step
+      # this branch has spent three commits dismantling. It annotates instead,
+      # so the drift is visible the day it lands.
+      - name: Fetch submodule branch tips
+        continue-on-error: true
+        run: git submodule foreach 'git fetch -q origin development main master || true'
+
+      - name: Inline rule parity at submodule branch tips (advisory)
+        continue-on-error: true
+        run: node scripts/sync-inline-eslint-rules.mjs --check-tips
+
       - name: Install eslint-config dependencies
         # The rule tests import `eslint` (RuleTester) and `typescript-eslint`
         # (the JSX/TS parser). Both are devDependencies of packages/eslint-config
