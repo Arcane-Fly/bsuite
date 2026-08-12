@@ -256,9 +256,31 @@ it. Do not delete it; merging it *is* the "yes" answer.
 
 ## 11. The one gate that is red on purpose
 
-Advancing R80.4's pointer exposed its new colour-rule copy to the parity gate for the first time,
-and the gate fired. **That is correct** — R80.4 was registered-but-unwaived precisely so it would
-fire the moment its pointer moved.
+**CORRECTED 2026-08-12 18:20 — this section was wrong, and so was the first correction to it.**
+
+I wrote that advancing R80.4's pointer exposed its colour-rule copy and the gate fired. The operator
+proxy then told me R80.4 was **in sync** and absent from the failure. Both of us were wrong, and the
+truth is the third possibility neither of us considered:
+
+**R80.4's copy is DRIFTED, and the gate does not report it.** In the proxy's words — the worst of
+the three, *"because it is the one nobody is looking at."*
+
+The cause is a defect in the gate itself, and it is the third instance today of the same shape:
+**`sync-inline-eslint-rules.mjs --check` reads each submodule's WORKING TREE, not the committed
+gitlink.** Every local run answers a question about somebody's disk rather than about the estate. On
+the committed refs the answer inverts:
+
+```text
+                local --check says      committed refs say
+crm7            DRIFTED                 DIFFERS — AHEAD of source, and stronger
+R80.4           not mentioned at all    DIFFERS — BEHIND
+braden          DRIFTED                 IN SYNC
+throughput      DRIFTED                 IN SYNC
+```
+
+Anyone acting on a local run would have edited two already-correct files and still left R80.4
+behind. The fix is for the gate to read `git -C <sub> show <pinned-sha>:eslint-rules/<rule>`, or to
+hard-fail when a checkout does not match the gitlink. Filed.
 
 The three copies and their source do not agree, and the disagreement runs in both directions:
 
