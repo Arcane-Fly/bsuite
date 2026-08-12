@@ -215,6 +215,32 @@ filter_matches() {
     if printf '%s' "$raw" | grep -qE 'legacy compat — remove after [0-9]{4}-[0-9]{2}-[0-9]{2}'; then
       continue
     fi
+    # Test files are not runtime source and never reach a bundle.
+    #
+    # These rules restrict themselves to "runtime source (src/, app/, pages/,
+    # api/, supabase/functions/)" by their own comment above, so that docs and
+    # .env.example do not trigger. A *.test.ts file sits inside src/ but is no
+    # more shipped than a doc is.
+    #
+    # This matters because in Vitest, assigning process.env.VITE_* is the
+    # SUPPORTED way to control what import.meta.env resolves to. R5 forbids
+    # exactly that, so a correctly-written test of Vite env handling could only
+    # pass by claiming to be "legacy compat — remove after <date>": a marker
+    # that is false when written and expires on code that is permanent.
+    # R80.4's business-suite-origin.test.ts — the test proving the sign-out fix
+    # sends users to the origin that issued their session — hit precisely this.
+    #
+    # This narrows the glob to the rule's OWN stated intent. It is NOT a
+    # broadening of the allowlist, which the header rightly asks to be filed
+    # against a ticket: no line is being excused, the scan is being pointed at
+    # the set it always said it covered.
+    case "$raw" in
+      *.test.ts:*|*.test.tsx:*|*.test.js:*|*.test.jsx:*|\
+      *.spec.ts:*|*.spec.tsx:*|*.spec.js:*|*.spec.jsx:*|\
+      */__tests__/*|*/__mocks__/*)
+        continue
+        ;;
+    esac
     # Strip content past the second colon to get path:line
     local pathline
     pathline=$(printf '%s' "$raw" | awk -F: '{print $1 ":" $2}')
