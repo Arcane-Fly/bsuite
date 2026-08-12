@@ -373,6 +373,57 @@
   --shadow-strength: 1;
 
   /* ============================================================
+     SHADOW INK — the paint every elevation is made of.
+     ============================================================
+     Added 2026-08-12. Until now --shadow-strength had ZERO consumers
+     anywhere in the monorepo or the six apps: a dial wired to nothing.
+     The elevation ramp in preset-v4.css is now the thing it turns.
+
+     WHY A TOKEN AND NOT A LITERAL PER SHADOW
+     theme-audit-ok: prose. Quoting the upstream default this ink replaces.
+     Tailwind's own shadow scale is built on `rgb(0 0 0 / a)` — pure black,
+     which the contract bans in EVERY role, alpha forms included. That ban
+     was silently unenforced for shadows because the value lives inside
+     Tailwind's dist, not in our source, so no scanner here could ever see
+     it. preset-v4.css now rebinds the whole --shadow-* namespace onto this
+     ink, which is how the ban starts applying to the 292 `shadow-sm/md/lg`
+     call sites that were painting pure black.
+
+     --shadow-color carries BOTH the hue and the mode's BASE opacity. The
+     ladder below multiplies that base; `alpha` in relative-colour syntax
+     reads it back, so one token sets a mode's whole shadow density and the
+     four steps keep their relationship to each other.
+
+     WHY THE BASE DIFFERS SO MUCH BETWEEN MODES (0.10 vs 0.70)
+     A shadow is only visible as a difference from the surface under it. In
+     light mode the surface is L 0.96 and the ink is L 0.166, so 10% alpha
+     already reads. In dark mode the surface IS L 0.166 — ink at 10% would
+     be invisible, which is exactly what shipped. The dark ink therefore
+     goes BELOW the page (L 0.08) and much denser. These are not invented
+     numbers: they are the values crm7 and business-suite-unified had each
+     hand-tuned in their own local copies of this ramp, reconciled.
+
+     NOT pure black at either end — L 0.166 is the estate's near-black
+     (--dark-bg-primary), L 0.08 the contract's deepest surface tone. Both
+     are hue-matched to the surface family (~268), so a shadow reads as the
+     page's own shade rather than a grey hole punched in it.
+
+     ⚠ THE FOUR STEPS ARE RE-DECLARED VERBATIM UNDER .dark, AND MUST BE.
+     This looks like duplication begging to be removed. It is not. A var()
+     inside a custom property is substituted at the element where THAT
+     PROPERTY is declared, and the resolved value is what inherits. Declared
+     only here, --shadow-ink resolves against :root's --shadow-color — the
+     LIGHT one — and every .dark descendant inherits that already-resolved
+     light value. Measured: with the ladder at :root alone, all five
+     elevations rendered identical oklch(0.166 … / 0.1) in dark mode.
+     Deleting the .dark copy silently restores that bug. */
+  --shadow-color:     oklch(0.166 0.026 269.4 / 0.10);
+  --shadow-ink-faint: oklch(from var(--shadow-color) l c h / calc(alpha * 0.4 * var(--shadow-strength)));
+  --shadow-ink-soft:  oklch(from var(--shadow-color) l c h / calc(alpha * 0.6 * var(--shadow-strength)));
+  --shadow-ink:       oklch(from var(--shadow-color) l c h / calc(alpha * 1.0 * var(--shadow-strength)));
+  --shadow-ink-deep:  oklch(from var(--shadow-color) l c h / calc(alpha * 1.6 * var(--shadow-strength)));
+
+  /* ============================================================
      CARD SURFACE GLOW — subtle neon separation, dark mode only.
      Light mode keeps the existing border-only treatment (--role-border);
      these resolve to `none` here so any consumer applying the utility
@@ -515,6 +566,24 @@
   /* Glow/shadow scale up in dark mode */
   --glow-strength:   0.6;
   --shadow-strength: 0.8;
+
+  /* Shadow ink for the dark surface. Only the SOURCE rebinds — the four
+     --shadow-ink-* steps are declared once at :root and resolve per element
+     through this token and --shadow-strength, so they follow .dark for free.
+     L 0.08 sits BELOW --dark-bg-primary (L 0.166); a shadow at or above the
+     page's own lightness is not a shadow. Base opacity 0.70, which after
+     --shadow-strength 0.8 puts the main layer at 0.56 — inside the 0.5-0.8
+     band crm7 and BSU had each arrived at independently.
+
+     The four steps below are textually identical to their :root twins and
+     are NOT redundant — see the substitution-timing note at the :root
+     declaration. Only --shadow-color above differs; the ladder is repeated
+     so it re-resolves against it. */
+  --shadow-color:     oklch(0.08 0.02 268 / 0.70);
+  --shadow-ink-faint: oklch(from var(--shadow-color) l c h / calc(alpha * 0.4 * var(--shadow-strength)));
+  --shadow-ink-soft:  oklch(from var(--shadow-color) l c h / calc(alpha * 0.6 * var(--shadow-strength)));
+  --shadow-ink:       oklch(from var(--shadow-color) l c h / calc(alpha * 1.0 * var(--shadow-strength)));
+  --shadow-ink-deep:  oklch(from var(--shadow-color) l c h / calc(alpha * 1.6 * var(--shadow-strength)));
 
   /*
    * Card glow — subtle neon separation for card surfaces, dark mode only.
