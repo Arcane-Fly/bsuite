@@ -1,37 +1,145 @@
 /*
  * D2C Neon Electric — Sidebar Design Tokens
  * ──────────────────────────────────────────
- * Uses shadcn/ui's --sidebar-* CSS variable contract.
- * Import this file in any D2C-themed BSuite app:
- *   CRM7 · Conduit · R80.3 · business-suite-unified
+ * Import from the CSS entry point of any D2C-themed BSuite app — CRM7,
+ * Conduit, R80.4, business-suite-unified, throughput — AFTER the theme:
  *
- * Values are HSL channel triplets (H S% L%) consumed by
- * Tailwind's hsl() utility wrappers.
+ *   @import "tailwindcss";
+ *   @import "@bsuite/theme/css";
+ *   @import "@bsuite/theme/preset-v4.css";
+ *   @import "@bsuite/nav-core/tokens/d2c-sidebar.css";   ← this file
+ *
+ * Order matters twice: `@theme` must follow `@import "tailwindcss"` to
+ * override anything, and every value here resolves through @bsuite/theme's
+ * --role-* layer, which the two imports above define.
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ * WHAT THIS FILE USED TO BE, AND WHY IT WAS REWRITTEN (2026-08-12)
+ * ═══════════════════════════════════════════════════════════════════════
+ * It shipped HSL channel triplets (`220 20% 98%`) on the Tailwind v3
+ * `hsl(var(--token))` contract, under a header naming four consumers. All
+ * of those apps are Tailwind v4, on which that file cannot work — and
+ * nothing imported it: ZERO importers across the estate. A lane that needed
+ * a sidebar read the header, tried it, and had to back it out.
+ *
+ * Two failures, both silent:
+ *
+ *   1. A CUSTOM PROPERTY IN `:root` REGISTERS NO UTILITY ON v4. `bg-sidebar`
+ *      comes from the `--color-*` namespace inside `@theme`, and nowhere
+ *      else. Measured on business-suite-unified's exact setup (v4 + theme +
+ *      these triplets in `:root`): `bg-sidebar`, `bg-sidebar-accent`,
+ *      `text-sidebar-foreground`, `border-sidebar-border` and
+ *      `text-sidebar-muted-foreground` each generated ZERO rules. BSU
+ *      carries a verbatim copy of the old file inline in its index.css, so
+ *      its entire AppSidebar renders with no sidebar colours at all.
+ *
+ *   2. HSL HID A BANNED VALUE FROM THE AUDIT. The old file carried
+ *      `--sidebar-primary-foreground: 210 17% 98%`, annotated "was 0 0% 100%
+ *      — pure white; HSL form the audit could not see". The colour scanner
+ *      reads oklch() and hex, so a bare HSL triplet is invisible to it and a
+ *      pure white lived here undetected until a human read the file. Moving
+ *      to OKLCH closes the blind spot as well as the bug.
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ * WHY EVERY VALUE IS A ROLE REFERENCE AND NOT A LITERAL
+ * ═══════════════════════════════════════════════════════════════════════
+ * The old file was a private palette, and a private palette cannot be
+ * white-labelled: BrandingProvider rebinds --role-*, so a sidebar painted
+ * from its own values is the one surface a tenant's brand never reaches.
+ * Binding to the role layer buys four things at once:
+ *
+ *   · OKLCH throughout, because the role layer is OKLCH — no second format
+ *     to drift, and nothing here for the palette whitelist to admit.
+ *   · Dark mode, without this file knowing dark mode exists.
+ *   · Tenant branding reaches the sidebar.
+ *   · Per-app identity free: the accent resolves --app-accent, so conduit's
+ *     rail takes conduit green and throughput's takes pink, from one file.
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ * WHY THE BRIDGE POINTS AT --role-* AND NOT AT THE --sidebar-* VARS BELOW
+ * ═══════════════════════════════════════════════════════════════════════
+ * This is the subtle one, and getting it wrong reproduces bug (1) in a new
+ * costume — the utilities exist but never change in dark mode.
+ *
+ * A var() inside a CUSTOM PROPERTY is substituted at the element where that
+ * property is DECLARED, and the resolved value is what inherits. So
+ * `:root { --x: var(--role-bg-surface) }` freezes --x to the LIGHT value;
+ * every .dark descendant inherits that frozen light value even though
+ * --role-bg-surface itself rebound. This is true of a plain one-hop alias,
+ * not only of computed forms like color-mix() — measured, both freeze.
+ *
+ * A var() inside a NORMAL property resolves on the element that uses it.
+ * `@theme inline` puts the declared value into the utility rule itself
+ * (`.bg-sidebar { background-color: var(--role-bg-surface) }`), which is a
+ * normal property — so it resolves at the sidebar, in whichever mode the
+ * sidebar is in. Measured: bridge→role follows .dark; bridge→alias does not.
+ *
+ * Hence: the @theme bridge references --role-* DIRECTLY. The --sidebar-*
+ * block exists for components that read `var(--sidebar-background)` by hand
+ * (shadcn's sidebar.tsx pattern), and it is declared TWICE — once per mode —
+ * because of the freezing rule above. The two blocks are textually near
+ * identical on purpose. Do not "DRY" them into one; that is the bug.
  */
 
-/* ── Light mode (default) ─────────────────────────────── */
-:root,
-.light {
-  --sidebar-background: 220 20% 98%;       /* off-white          */
-  --sidebar-foreground: 215 25% 27%;       /* slate-700          */
-  --sidebar-primary: 217 91% 60%;          /* electric blue      */
-  --sidebar-primary-foreground: 210 17% 98%; /* was 0 0% 100% — pure white; HSL form the audit could not see */
-  --sidebar-accent: 217 91% 95%;           /* blue-50 tint       */
-  --sidebar-accent-foreground: 217 91% 40%;/* blue-800           */
-  --sidebar-border: 214 20% 92%;           /* cool gray border   */
-  --sidebar-ring: 217 91% 60%;             /* electric blue ring */
-  --sidebar-muted-foreground: 215 15% 55%; /* muted text         */
+/* ── Layer 1: raw vars, for components that read var(--sidebar-*) directly.
+   Declared per mode. See the freezing note above before touching. ────── */
+:root {
+  /* The rail is a recessed surface, one step back from the page. */
+  --sidebar-background: var(--role-bg-surface);
+  --sidebar-foreground: var(--role-text-body);
+
+  /* Active item. --role-primary so a tenant's brand marks "you are here";
+     --text-on-primary is the AA-solved companion for type on it. */
+  --sidebar-primary: var(--role-primary);
+  --sidebar-primary-foreground: var(--text-on-primary);
+
+  /* Hover / current-section tint, mixed from the app's own accent so each
+     rail reads as its own product. 20%, measured in-browser against the
+     real tokens (canvas sRGB, controls 21:1 / 1:1):
+
+       --sidebar-accent-foreground ON the tint   light 5.04:1 ✓ AA
+                                                 dark  6.36:1 ✓ AA
+       --sidebar-foreground ON the tint          light 14.48:1  dark 10.45:1
+       tint vs the rail itself                   light 1.13     dark 1.42
+
+     20% is the ceiling, not a taste call: the tint darkens as it rises and
+     the accent-foreground contrast falls with it — 30% measures 4.77:1 in
+     light, inside the AA floor's rounding. Do not raise it. */
+  --sidebar-accent: color-mix(in oklch, var(--app-accent, var(--role-accent)) 20%, var(--role-bg-surface));
+  --sidebar-accent-foreground: var(--app-accent-text, var(--role-accent-text));
+
+  --sidebar-border: var(--role-border);
+  --sidebar-ring: var(--role-primary);
+
+  /* Section captions and inactive icons. --role-text-muted is the last tier
+     that still clears AA at normal size; do not reach for -subtle here. */
+  --sidebar-muted-foreground: var(--role-text-muted);
 }
 
-/* ── Dark mode ────────────────────────────────────────── */
 .dark {
-  --sidebar-background: 222 47% 7%;        /* deep navy          */
-  --sidebar-foreground: 213 20% 75%;       /* light slate        */
-  --sidebar-primary: 178 100% 40%;         /* electric cyan      */
-  --sidebar-primary-foreground: 222 47% 7%;/* deep navy          */
-  --sidebar-accent: 174 100% 8%;           /* cyan tint on dark  */
-  --sidebar-accent-foreground: 174 100% 60%;/* bright cyan        */
-  --sidebar-border: 220 30% 14%;           /* subtle border      */
-  --sidebar-ring: 178 100% 40%;            /* cyan ring          */
-  --sidebar-muted-foreground: 215 15% 45%; /* muted text         */
+  --sidebar-background: var(--role-bg-surface);
+  --sidebar-foreground: var(--role-text-body);
+  --sidebar-primary: var(--role-primary);
+  --sidebar-primary-foreground: var(--text-on-primary);
+  --sidebar-accent: color-mix(in oklch, var(--app-accent, var(--role-accent)) 20%, var(--role-bg-surface));
+  --sidebar-accent-foreground: var(--app-accent-text, var(--role-accent-text));
+  --sidebar-border: var(--role-border);
+  --sidebar-ring: var(--role-primary);
+  --sidebar-muted-foreground: var(--role-text-muted);
+}
+
+/* ── Layer 2: the Tailwind v4 bridge — this is what creates the utilities.
+   bg-sidebar, text-sidebar-foreground, border-sidebar-border,
+   ring-sidebar-ring, bg-sidebar-accent, text-sidebar-muted-foreground and
+   the rest come from here and from nothing else in the estate. ───────── */
+@theme inline {
+  --color-sidebar: var(--role-bg-surface);
+  --color-sidebar-foreground: var(--role-text-body);
+  --color-sidebar-primary: var(--role-primary);
+  --color-sidebar-primary-foreground: var(--text-on-primary);
+  --color-sidebar-accent: color-mix(in oklch, var(--app-accent, var(--role-accent)) 20%, var(--role-bg-surface));
+  --color-sidebar-accent-foreground: var(--app-accent-text, var(--role-accent-text));
+  --color-sidebar-border: var(--role-border);
+  --color-sidebar-ring: var(--role-primary);
+  --color-sidebar-muted-foreground: var(--role-text-muted);
 }
