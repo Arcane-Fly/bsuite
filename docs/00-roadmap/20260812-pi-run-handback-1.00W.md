@@ -290,3 +290,81 @@ this run spent the day trying to achieve everywhere else.
 This is the third time the estate has found that its nominal source of truth was the stalest copy.
 "The version in `packages/` is authoritative" is not a safe default here. Reconcile on **behaviour**,
 not on location.
+
+---
+
+## 12. Added after the closing state — the award-citation lane finished last
+
+I called this run complete before this lane reported. It was still working, and it returned the
+most consequential single finding of the day.
+
+### A junior apprentice was quoted at exactly double the correct rate
+
+Register row 2.3 said the junior-rate values existed and nothing could ask for them. That framing
+understated it. **The function did accept a junior query — and answered it with an adult rate.**
+
+```text
+MA000004 / MA000005, Level 1, aged 16
+  resolved:  $1,056.80 / week
+  correct:     $528.40 / week
+```
+
+Exactly double, before on-costs. Not a missing feature — **a wrong answer to a question the code
+already accepted**. Fixed, with six tests running through the shipped resolver rather than a
+test-local re-derivation.
+
+### The clause gate was passing citations to clauses that do not exist
+
+The old gate returned `PASS` for `cl.26.99` — a clause MA000009 does not have. Because every
+reference resolved to the *parent* clause title, any `26.x` verified.
+
+**1,066 citation sites, 882 distinct, 134 amounts checked against the clause they cite. 12 wrong,
+12 fixed.**
+
+| award | wrong | what it was |
+|---|---|---|
+| MA000009 | 6 | the whole allowance tail off by one — the **meal** allowance cited the *tool and equipment* clause |
+| MA000089 | 4 | off by **three**, because three allowances — wet places, glass and slag wool, handling garbage — **were missing from the model entirely** |
+| MA000036 | 4 | one citing a clause that only *lists* the allowance; three citing `cl.15.6/15.7/15.8` when **clause 15 stops at 15.5** |
+| MA000073 | 1 | `cl.20.4` does not exist; clause 20 stops at 20.3 |
+
+The MA000089 gap has a second edge: the code already named `handling_garbage` in a
+highest-only group **with no allowance row behind it**, so that limb could never fire.
+
+### The definition-of-done gate ran on 5 of 21 awards; it now runs on 21 of 21
+
+And the reachability gate was **its own witness** — its exemption list used bare identifiers that
+survived comment-stripping, so a function could read as reached off its own exemption. Corrected,
+it reclassified **53 of 629 functions**; genuinely-reached fell from 106 to 78.
+
+### Not an exposure
+
+The bundled-environment concern I flagged was checked properly and is **not** a leak: the deployed
+bundles carry 33 keys in production and 32 in development, all public by design. A controlled build
+with two deliberately non-public sentinels produced **zero** occurrences. Fixed on hygiene grounds
+only.
+
+### A coordination failure that was mine
+
+Another lane `git reset --hard`'d this lane's branch and later switched it onto `development`
+mid-work, **destroying its uncommitted edits twice**. It recovered by moving to its own worktree.
+Lanes sharing one checkout is a known hazard in this estate and I did not mandate isolated
+worktrees when I dispatched. That is my error, not theirs.
+
+### Secret scanning now covers the whole estate
+
+R80.4 was the last repository without any. `gitleaks` is now a **required** check on `development`
+in **all seven**, each verified to emit and conclude before being required:
+
+```text
+bsuite                  gitleaks
+crm7                    gitleaks
+conduit                 gitleaks
+business-suite-unified  build-and-test, gitleaks, eslint-rule-parity
+R80.4                   build-and-test, gitleaks
+braden                  build-and-test, gitleaks, eslint-rule-parity
+throughput              Test Suite, gitleaks, eslint-rule-parity
+```
+
+At the start of the run three repositories required it, one had no secret scanning whatsoever, and
+in four the scanner read only a single commit per pull request.
