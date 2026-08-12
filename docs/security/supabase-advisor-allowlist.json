@@ -224,11 +224,12 @@
       "lint": "authenticated_security_definer_function_executable",
       "object_type": "function",
       "mode": "accepted",
-      "reason": "Developer-portal Feature Builder apply path (north-star chain, 2026-07-22). Executes author-supplied migration SQL, so it is arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations: (1) hard internal gate — raises 42501 unless caller's profiles.platform_role IN ('developer','platform_admin'); (2) full audit trail to feature_migration_log (actor, SQL, status, error); (3) search_path pinned to public,pg_temp; (4) EXECUTE revoked from public/anon — authenticated-only, same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog).",
+      "reason": "Developer-portal Feature Builder apply/rollback pair (north-star chain, 2026-07-22; rollback added 2026-08-12). Both execute author-supplied or derived DDL, so they are arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations, verified live 2026-08-12 against tuybltdrdefjblnplpqo for BOTH functions: (1) hard internal gate — each raises 'Permission denied: developer or platform_admin role required' unless the caller's profiles.platform_role IN ('developer','platform_admin'), checked by a direct query on id = auth.uid() rather than via is_platform_developer(), which is why a grep for the named predicates reports no gate; (2) rollback escapes its identifier with quote_ident() before EXECUTE and refuses when no prior successful apply exists; (3) full audit trail to feature_migration_log (actor, SQL, status, error); (4) search_path pinned to public,pg_temp on both; (5) EXECUTE revoked from public/anon — authenticated-only (proacl: postgres=X, service_role=X, authenticated=X; has_function_privilege('anon',...) = false), same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog). rollback_feature_migration was omitted when its sibling was allowlisted, which turned the advisor sweep red on every parent PR — a permanently-red gate teaches everyone to ignore it, which is the actual damage.",
       "added": "2026-07-22",
       "expires": null,
       "objects": [
-        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)"
+        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)",
+        "rollback_feature_migration(p_entity_name text, p_force boolean)"
       ]
     },
     {
