@@ -293,6 +293,20 @@
   --drop-shadow-xl:  0 9px 7px var(--shadow-ink);
   --drop-shadow-2xl: 0 25px 25px var(--shadow-ink-deep);
 
+  /* THE BARE DEFAULT KEYS. Added 0.11.1.
+     0.11.0 rebound 26 SUFFIXED keys and missed the two unsuffixed ones, so the
+     `shadow` and `drop-shadow` utilities (no size suffix) kept painting pure
+     black after the upgrade. Found by measuring crm7's compiled bundle after
+     the rollout: pure-black-painting declarations fell 41 -> 18 instead of to
+     the expected floor, and two of the survivors were `.shadow` rules.
+     Verified against the INSTALLED tailwindcss@4.3.3 theme.css, which defines
+     exactly these two bare keys and no bare --inset-shadow or --text-shadow —
+     so only two are rebound here. Do not invent the other two.
+     Geometry and alpha ratios are Tailwind's; only the paint changes.
+     Upstream --shadow equals its --shadow-sm, and that equality is preserved. */
+  --shadow: 0 1px 3px 0 var(--shadow-ink), 0 1px 2px -1px var(--shadow-ink);
+  --drop-shadow: 0 1px 2px var(--shadow-ink), 0 1px 1px var(--shadow-ink-soft);
+
   --text-shadow-2xs: 0px 1px 0px var(--shadow-ink);
   --text-shadow-xs:  0px 1px 1px var(--shadow-ink-deep);
   --text-shadow-sm:  0px 1px 0px var(--shadow-ink-soft), 0px 1px 1px var(--shadow-ink-soft), 0px 2px 2px var(--shadow-ink-soft);
