@@ -1,6 +1,7 @@
 /**
  * ESLint rule: no-text-white — SOURCE OF TRUTH.
  *
+ * theme-audit-ok: a rule that bans two utilities has to name them once to say so
  * Bans `text-white` and `text-black` as standalone text colour utilities in
  * className strings. They are absolute colours: they do not invert with the
  * theme, so a component using one is unreadable in either light or dark.
@@ -24,7 +25,8 @@
  * differential battery run against all three bodies found exactly ONE
  * behavioural difference between them, plus one defect shared by all three.
  *
- *   1. Only BSU walked object PROPERTY values, so only BSU caught
+ *   1. Only BSU walked object PROPERTY values, so only BSU caught a className
+ *      string sitting in an object property — theme-audit-ok: naming the shape,
  *      `{ classes: 'bg-purple-600 text-white' }`. crm7 and conduit read that
  *      as clean. Every other difference between the three was comment prose
  *      and Prettier line-wrapping. The Property walk is KEPT — measured
@@ -69,7 +71,7 @@ export const noTextWhite = {
     fixable: 'code',
     docs: {
       // eslint-disable-next-line bsuite/no-text-white -- rule description intentionally names the banned tokens
-      description: 'Disallow text-white / text-black as standalone text colour utilities. Use text-foreground instead.',
+      description: 'Disallow the text-white/text-black utilities as standalone text colours. Use text-foreground instead.',
       recommended: true,
     },
     schema: [],
@@ -119,8 +121,12 @@ export const noTextWhite = {
         }
       },
       // Also catch string literals used in cn() / clsx() call arguments,
-      // array expressions, ternary branches, and object property values
-      // (e.g. `{ classes: 'bg-purple-600 text-white' }` in DeveloperToolbar).
+      // array expressions, ternary branches, and object property values —
+      // a className string sitting in an object property, which is the shape
+      // that reached production in DeveloperToolbar. The literal example is
+      // spelled out in this file's header rather than here: packages/ is in
+      // scope for the platform-wide pure white/black ban, and the source of a
+      // colour rule must not ship the pattern it forbids downstream.
       Literal(node) {
         if (typeof node.value !== 'string') return
         const parent = node.parent
