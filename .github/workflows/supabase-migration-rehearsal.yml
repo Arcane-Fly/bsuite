@@ -205,11 +205,20 @@ jobs:
         # the instrument and read exactly like defects in the tree — crm7's
         # replay-schema-diff.sh header documents that trap at length.
         #
-        # supabase/migrations at the repo root is EMPTY of anything db start would
-        # auto-apply beyond the root scope; the bootstrap drops public immediately
-        # afterwards regardless, so any auto-apply is discarded before the baseline.
+        # `db start` AUTO-APPLIES everything in supabase/migrations. The parent
+        # owns 22 of them and they are not replayable from empty (they assume the
+        # shared schema already exists), so leaving them in place makes db start
+        # itself fail before the rehearsal has begun. Move them aside first, the
+        # way crm7's pgtap.yml does, and restore immediately after — the rehearsal
+        # engine reads them from disk and MUST see all eight scopes.
         run: |
+          set -euo pipefail
+          mv supabase/migrations /tmp/parent-migrations-stash
+          mkdir -p supabase/migrations
           supabase db start
+          rmdir supabase/migrations
+          mv /tmp/parent-migrations-stash supabase/migrations
+          echo "Parent migrations restored: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l) files"
           psql "$REHEARSAL_DB_URL" -At -c "SELECT 'connected to ' || current_setting('server_version');"
 
       - name: Positive control — the gate must be seen to fail, in both directions
