@@ -9,10 +9,25 @@
 # at the same version — in different scopes OR in the SAME scope — silently
 # skip whichever one the applier reaches SECOND.
 #
-# Format: one entry per line, `<14-digit version><whitespace><reason>`.
+# Format: one entry per line,
+#   `<14-digit version><ws>n=<count><ws><reason>`
 # Blank lines and lines starting with # are ignored. Every entry below was
 # verified by diffing the colliding files (see scripts/check-migration-
 # version-collisions.mjs and the bsuite#1707 investigation notes).
+#
+# `n=<count>` is REQUIRED and is the number of colliding files the entry was
+# verified against. It exists because this list is keyed on the VERSION alone,
+# which meant an entry excusing one known-benign pair silently excused every
+# FUTURE file at that version too. Proven by mutation on 2026-08-12: with
+# 20260701090000 allowlisted for its crm7/business-suite-unified pair, planting
+# an unrelated third migration in conduit at the same version still exited 0.
+# That is the bsuite#1913 shape — a genuinely-losing migration merging because
+# it happened to land on a timestamp somebody had already excused.
+#
+# So: if the group at an allowlisted version GROWS, the entry no longer
+# describes it, and the check fails until a human re-verifies the whole group
+# and updates the count. Adding an entry without `n=` also fails — stating the
+# number you checked is the point.
 #
 # SHAPE (independent of the reason category below):
 #   SAME-SCOPE  — all colliding files sit in ONE scope. Higher risk: one of
@@ -50,34 +65,48 @@
 
 # --- 20 originally reported (six submodules only) -------------------------
 
-20250808012959   intentional-duplicate, SAME-SCOPE (braden) — 20250808012959_bronze_mountain.sql and 20250808012959_little_king.sql are byte-identical (verified via diff); a stray duplicate export from the same source migration, not two different migrations. No verification needed: content is identical, so whichever is skipped loses nothing.
-20260228000000   coincidental-timestamp, CROSS-SCOPE — crm7 ensure_apprentice_gto_fields vs business-suite-unified add_billing_tables; unrelated schemas, distinct timestamp by chance. unverified — needs live-catalog check.
-20260228000001   coincidental-timestamp, CROSS-SCOPE — crm7 gto_foundation_tables vs braden create_tasks_table; unrelated schemas. unverified — needs live-catalog check.
-20260306000001   coincidental-timestamp, CROSS-SCOPE — crm7 ots_parity_schema vs business-suite-unified create_platform_admin_tables; unrelated schemas. unverified — needs live-catalog check.
-20260306000003   coincidental-timestamp, CROSS-SCOPE — crm7 timesheet_comm_templates vs business-suite-unified wave5_wave10_db_gaps; unrelated schemas. unverified — needs live-catalog check.
-20260317000000   coincidental-timestamp, CROSS-SCOPE — crm7 add_tenant_branding vs business-suite-unified create_app_notifications_table; unrelated schemas. unverified — needs live-catalog check.
-20260422000000   coincidental-timestamp, CROSS-SCOPE — crm7 create_apprentice_handoff_tokens vs business-suite-unified create_platform_api_keys_and_webhooks; unrelated schemas. unverified — needs live-catalog check.
-20260423120000   coincidental-timestamp, CROSS-SCOPE — crm7 ws8_revoke_anon_execute_on_gto_helpers vs business-suite-unified phase12_tenant_hierarchy_hardening; unrelated schemas. unverified — needs live-catalog check.
-20260423130000   coincidental-timestamp, CROSS-SCOPE — crm7 ws8_arc_anon_public_read vs business-suite-unified phase12_hierarchy_rls; unrelated schemas. unverified — needs live-catalog check.
-20260423150000   coincidental-timestamp, CROSS-SCOPE — crm7 ws4_timesheet_state_machine vs business-suite-unified phase6_imap_password_vault; unrelated schemas. unverified — needs live-catalog check.
-20260423160000   coincidental-timestamp, CROSS-SCOPE — crm7 ws5_report_system vs business-suite-unified phase6_11_seed_enterprise_subscriptions; unrelated schemas. unverified — needs live-catalog check.
-20260504010000   coincidental-timestamp, CROSS-SCOPE (three-way) — conduit fix_r7_current_tenant_id_search_path, business-suite-unified branding_search_path_no_pgtemp, braden fix_security_definer_search_path; all independent search_path hardening fixes landed the same minute. unverified — needs live-catalog check.
-20260506000000   coincidental-timestamp + intentional-duplicate mixed, CROSS-SCOPE (three-way) — crm7 backfill_app_metadata_tenant_id.sql is a genuinely different, unrelated migration; business-suite-unified rename_physical_column_rpc.sql and schema-builder rename_physical_column_rpc.sql are the canonical migration + its intentional dev-fixture copy (DDL body identical, header comment differs — verified via diff). The crm7 file is the real collision risk here. unverified — needs live-catalog check on the crm7 side.
-20260512230000   coincidental-timestamp, SAME-SCOPE (crm7 only) — CONFIRMED-DDL-LOSS. people_add_middle_name_and_school_completion.sql and tenant_locations_and_state_ir_config.sql are two genuinely different migrations sharing a timestamp. Verified against the live catalog (bsuite#1707 follow-up): the migration is recorded under this version, but none of middle_name / highest_school_completion_year / highest_school_completion_month exist in production; tenant_locations and state_ir_config DO exist. The people file's DDL never ran. Repair migration: crm7/supabase/migrations/20260730310000_repair_people_school_completion_columns.sql. This is the confirmed real-world instance of the bug this gate exists to prevent — do NOT read this line as benign.
-20260519100000   coincidental-timestamp, CROSS-SCOPE — crm7 gto_standards_clauses vs business-suite-unified branding_walk_parent_tenant_chain; unrelated schemas. unverified — needs live-catalog check.
-20260701090000   coincidental-timestamp, CROSS-SCOPE — crm7 field_officers_tenant_rls vs business-suite-unified delete_organization_rpc; unrelated schemas. unverified — needs live-catalog check.
-20260702000000   coincidental-timestamp, CROSS-SCOPE — R80.4 r80_invoice_run_tenant_policy vs business-suite-unified fix_save_tenant_navigation_auth_and_stale_id; unrelated schemas. unverified — needs live-catalog check.
-20260722120000   coincidental-timestamp, CROSS-SCOPE — crm7 apprentice_placements_add_suspended_status vs business-suite-unified r80_to_r8_canonical_slug; unrelated schemas. unverified — needs live-catalog check.
-20260726090000   coincidental-timestamp, CROSS-SCOPE — crm7 email_message_links vs R80.4 funding_offsets; unrelated schemas. unverified — needs live-catalog check.
-20260728120000   intentional-duplicate, CROSS-SCOPE (three-way once root is included, see note below) — crm7 and business-suite-unified both carry enterprise_licence_events.sql, byte-for-byte identical (verified via diff/md5sum); deliberately duplicated so both apps' migration history is self-contained. No verification needed: content is identical.
+20250808012959  n=2  intentional-duplicate, SAME-SCOPE (braden) — 20250808012959_bronze_mountain.sql and 20250808012959_little_king.sql are byte-identical (verified via diff); a stray duplicate export from the same source migration, not two different migrations. No verification needed: content is identical, so whichever is skipped loses nothing.
+20260228000000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 ensure_apprentice_gto_fields vs business-suite-unified add_billing_tables; unrelated schemas, distinct timestamp by chance. unverified — needs live-catalog check.
+20260228000001  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 gto_foundation_tables vs braden create_tasks_table; unrelated schemas. unverified — needs live-catalog check.
+20260306000001  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 ots_parity_schema vs business-suite-unified create_platform_admin_tables; unrelated schemas. unverified — needs live-catalog check.
+20260306000003  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 timesheet_comm_templates vs business-suite-unified wave5_wave10_db_gaps; unrelated schemas. unverified — needs live-catalog check.
+20260317000000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 add_tenant_branding vs business-suite-unified create_app_notifications_table; unrelated schemas. unverified — needs live-catalog check.
+20260422000000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 create_apprentice_handoff_tokens vs business-suite-unified create_platform_api_keys_and_webhooks; unrelated schemas. unverified — needs live-catalog check.
+20260423120000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 ws8_revoke_anon_execute_on_gto_helpers vs business-suite-unified phase12_tenant_hierarchy_hardening; unrelated schemas. unverified — needs live-catalog check.
+20260423130000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 ws8_arc_anon_public_read vs business-suite-unified phase12_hierarchy_rls; unrelated schemas. unverified — needs live-catalog check.
+20260423150000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 ws4_timesheet_state_machine vs business-suite-unified phase6_imap_password_vault; unrelated schemas. unverified — needs live-catalog check.
+20260423160000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 ws5_report_system vs business-suite-unified phase6_11_seed_enterprise_subscriptions; unrelated schemas. unverified — needs live-catalog check.
+20260504010000  n=3  coincidental-timestamp, CROSS-SCOPE (three-way) — conduit fix_r7_current_tenant_id_search_path, business-suite-unified branding_search_path_no_pgtemp, braden fix_security_definer_search_path; all independent search_path hardening fixes landed the same minute. unverified — needs live-catalog check.
+20260506000000  n=3  coincidental-timestamp + intentional-duplicate mixed, CROSS-SCOPE (three-way) — crm7 backfill_app_metadata_tenant_id.sql is a genuinely different, unrelated migration; business-suite-unified rename_physical_column_rpc.sql and schema-builder rename_physical_column_rpc.sql are the canonical migration + its intentional dev-fixture copy (DDL body identical, header comment differs — verified via diff). The crm7 file is the real collision risk here. unverified — needs live-catalog check on the crm7 side.
+20260512230000  n=2  coincidental-timestamp, SAME-SCOPE (crm7 only) — CONFIRMED-DDL-LOSS. people_add_middle_name_and_school_completion.sql and tenant_locations_and_state_ir_config.sql are two genuinely different migrations sharing a timestamp. Verified against the live catalog (bsuite#1707 follow-up): the migration is recorded under this version, but none of middle_name / highest_school_completion_year / highest_school_completion_month exist in production; tenant_locations and state_ir_config DO exist. The people file's DDL never ran. Repair migration: crm7/supabase/migrations/20260730310000_repair_people_school_completion_columns.sql. This is the confirmed real-world instance of the bug this gate exists to prevent — do NOT read this line as benign.
+20260519100000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 gto_standards_clauses vs business-suite-unified branding_walk_parent_tenant_chain; unrelated schemas. unverified — needs live-catalog check.
+20260701090000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 field_officers_tenant_rls vs business-suite-unified delete_organization_rpc; unrelated schemas. unverified — needs live-catalog check.
+# HISTORICAL — no longer a live collision. R80.4 no longer carries a
+# supabase/migrations/ directory at all, so the R80.4 half of each of these
+# pairs is gone and the version now has exactly one file estate-wide.
+# Kept commented rather than deleted: if R80.4 ever regains migrations the
+# collision returns, and the check will fail loudly asking for a fresh
+# verification rather than silently reusing a stale excuse. (LANE-PLATFORM,
+# 2026-08-12)
+# 20260702000000  n=1  coincidental-timestamp, CROSS-SCOPE — R80.4 r80_invoice_run_tenant_policy vs business-suite-unified fix_save_tenant_navigation_auth_and_stale_id; unrelated schemas. unverified — needs live-catalog check.
+20260722120000  n=2  coincidental-timestamp, CROSS-SCOPE — crm7 apprentice_placements_add_suspended_status vs business-suite-unified r80_to_r8_canonical_slug; unrelated schemas. unverified — needs live-catalog check.
+# HISTORICAL — no longer a live collision. R80.4 no longer carries a
+# supabase/migrations/ directory at all, so the R80.4 half of each of these
+# pairs is gone and the version now has exactly one file estate-wide.
+# Kept commented rather than deleted: if R80.4 ever regains migrations the
+# collision returns, and the check will fail loudly asking for a fresh
+# verification rather than silently reusing a stale excuse. (LANE-PLATFORM,
+# 2026-08-12)
+# 20260726090000  n=1  coincidental-timestamp, CROSS-SCOPE — crm7 email_message_links vs R80.4 funding_offsets; unrelated schemas. unverified — needs live-catalog check.
+20260728120000  n=3  intentional-duplicate, CROSS-SCOPE (three-way once root is included, see note below) — crm7 and business-suite-unified both carry enterprise_licence_events.sql, byte-for-byte identical (verified via diff/md5sum); deliberately duplicated so both apps' migration history is self-contained. No verification needed: content is identical.
 
 # --- 3 additional collisions surfaced only when the parent repo's own
 #     supabase/migrations/ (scope "root") is included, per bsuite#1707's
 #     explicit requirement to scan it -----------------------------------
 
-20260512161000   coincidental-timestamp, SAME-SCOPE (root only) — developer_portal_branding_scope_rls.sql vs stripe_fdw_wrappers.sql are two genuinely different migrations (branding RLS rework vs Stripe FDW bootstrap) that happen to share a timestamp; verified via diff that the bodies are unrelated. unverified — needs live-catalog check; no DB access was available to confirm or rule out DDL loss the way 20260512230000 was confirmed. Treat as an open risk, not as benign, until checked.
-20260707000020   intentional-duplicate, CROSS-SCOPE — crm7 and root both carry pay_periods_table.sql, byte-for-byte identical (verified via diff). No verification needed: content is identical.
-20260707000021   intentional-duplicate, CROSS-SCOPE — crm7 and root both carry pay_period_streams_table.sql, byte-for-byte identical (verified via diff). No verification needed: content is identical.
+20260512161000  n=2  coincidental-timestamp, SAME-SCOPE (root only) — developer_portal_branding_scope_rls.sql vs stripe_fdw_wrappers.sql are two genuinely different migrations (branding RLS rework vs Stripe FDW bootstrap) that happen to share a timestamp; verified via diff that the bodies are unrelated. unverified — needs live-catalog check; no DB access was available to confirm or rule out DDL loss the way 20260512230000 was confirmed. Treat as an open risk, not as benign, until checked.
+20260707000020  n=2  intentional-duplicate, CROSS-SCOPE — crm7 and root both carry pay_periods_table.sql, byte-for-byte identical (verified via diff). No verification needed: content is identical.
+20260707000021  n=2  intentional-duplicate, CROSS-SCOPE — crm7 and root both carry pay_period_streams_table.sql, byte-for-byte identical (verified via diff). No verification needed: content is identical.
 
 # Also note: 20260728120000 above is in fact a THREE-way identical duplicate
 # once root is included (root carries the same enterprise_licence_events.sql
@@ -88,10 +117,10 @@
 #     dev-fixture migrations are included as the 8th scope, per the
 #     applier's actual matrix (root, 6 submodules, schema-builder) --------
 
-20260503000000   intentional-duplicate, CROSS-SCOPE — business-suite-unified add_field_level_relations.sql (canonical) vs schema-builder's copy of the same file; only the header comment above the `-- @sync-boundary-below` marker differs (canonical-location note vs dev-fixture-copy note), body below the marker is identical — verified via diff. No live-catalog verification needed: content parity below the sync boundary is already enforced on every PR by the existing `.github/workflows/schema-builder-migration-parity.yml` (confirmed present), independent of this gate.
-20260503000001   intentional-duplicate, CROSS-SCOPE — business-suite-unified revert_field_level_relations.sql (canonical) vs schema-builder's copy; header-only diff above the sync-boundary marker — verified via diff. Covered by schema-builder-migration-parity.yml.
-20260504000000   intentional-duplicate, CROSS-SCOPE — business-suite-unified schema_reflection_rpc.sql (canonical) vs schema-builder's copy; header/inline-comment-only diff above the sync-boundary marker — verified via diff. Covered by schema-builder-migration-parity.yml.
-20260505000000   intentional-duplicate, CROSS-SCOPE — business-suite-unified field_sort_order_and_reorder_rpc.sql (canonical) vs schema-builder's copy; header-only diff above the sync-boundary marker — verified via diff. Covered by schema-builder-migration-parity.yml.
+20260503000000  n=2  intentional-duplicate, CROSS-SCOPE — business-suite-unified add_field_level_relations.sql (canonical) vs schema-builder's copy of the same file; only the header comment above the `-- @sync-boundary-below` marker differs (canonical-location note vs dev-fixture-copy note), body below the marker is identical — verified via diff. No live-catalog verification needed: content parity below the sync boundary is already enforced on every PR by the existing `.github/workflows/schema-builder-migration-parity.yml` (confirmed present), independent of this gate.
+20260503000001  n=2  intentional-duplicate, CROSS-SCOPE — business-suite-unified revert_field_level_relations.sql (canonical) vs schema-builder's copy; header-only diff above the sync-boundary marker — verified via diff. Covered by schema-builder-migration-parity.yml.
+20260504000000  n=2  intentional-duplicate, CROSS-SCOPE — business-suite-unified schema_reflection_rpc.sql (canonical) vs schema-builder's copy; header/inline-comment-only diff above the sync-boundary marker — verified via diff. Covered by schema-builder-migration-parity.yml.
+20260505000000  n=2  intentional-duplicate, CROSS-SCOPE — business-suite-unified field_sort_order_and_reorder_rpc.sql (canonical) vs schema-builder's copy; header-only diff above the sync-boundary marker — verified via diff. Covered by schema-builder-migration-parity.yml.
 
 # packages/schema-builder/supabase/migrations/README.md documents this
 # "canonical in BSU, synced dev-fixture copy in the package" pattern
