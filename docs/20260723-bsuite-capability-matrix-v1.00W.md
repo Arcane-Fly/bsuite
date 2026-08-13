@@ -67,8 +67,10 @@
 | Mobile-native | ❌ (responsive web) | ✅ (mobile app) | 🟡 (PWA) | — |
 | Realtime collab | ❌ | ❓ | ✅ (RealtimeCursors in conduit) | **BSuite advantage** |
 | SSO (Microsoft) | ✅ | ✅ | ✅ (BS OAuth 2.1 + Azure) | Parity |
-| No-code page/feature builder | ❌ | ❌ | ✅ (Feature Builder 8/8 live) | **BSuite advantage (north-star)** |
+| No-code page/feature builder | ❌ | ❌ | 🟡 (Feature Builder — see note below table) | **BSuite advantage (north-star), not yet delivered end-to-end** |
 | AI assistant | ❌ | ❓ | ✅ (Jodie, all apps) | **BSuite advantage** |
+
+> **Feature Builder score correction (2026-08-11).** This row previously read "✅ Feature Builder 8/8 live" — live end-to-end testing the same day found 2 of 6 developer-journey steps actually working: **create ✅, connect ✅, page 🟡 (partial), form ❌ (absent), nav 🟡 (partial), permission 🟡 (partial — required raw SQL for the security policy)**. Root cause for most of the page/form/nav gaps: `apply_feature_migration` created real DDL and never inserted into `tenant_entities`, the one table the page-builder widget palette, the nav-assignment screen, and Feature Builder's own "browse existing" all read — the entity existed in the database and was invisible everywhere a developer would next look for it. `docs/plans/20260811-feature-builder-world-class-refined.md` tracks the fix; `business-suite-unified` PR #691 (2026-08-11) closes the SQL-permission gap (removed the `custom_sql` textarea, added a `tenant_subtree` no-code rule, added a typed-handle relationship canvas with cycle prevention) and the three defects behind the registration/page/nav failures (entity registration, idempotent RLS re-apply, a rollback path) — pending merge and a live re-verification pass before this row can move back to a full ✅. Page (widget-driven page composition), form (a dedicated form-builder surface), and nav (full assignment flow) remain **not yet delivered end-to-end** and are out of scope for PR #691; they are the next slice of this north-star item.
 
 ---
 

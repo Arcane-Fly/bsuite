@@ -34,6 +34,22 @@ on:
       - 'scripts/check-migration-version-collisions.mjs'
       - 'scripts/migration-collision-allowlist.txt'
       - '.github/workflows/migration-version-collision-lint.yml'
+      # BARE GITLINK PATHS. The glob above can only ever match the two scopes
+      # that are real directories in this repo (root and packages/schema-builder).
+      # The six SUBMODULES reach the parent as a POINTER BUMP: the tree holds a
+      # gitlink, not files, so `crm7/supabase/migrations/x.sql` is not a path in
+      # any parent commit and the glob never fires. A PR adding a colliding
+      # migration to crm7 therefore skipped this gate entirely.
+      #
+      # This is the same defect, with the same fix, that supabase-migrate.yml
+      # (gap-assessment T1-01) and inline-eslint-rule-parity.yml already carry.
+      # Keep all three lists in step.
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
 
 permissions:
   contents: read
@@ -69,4 +85,15 @@ jobs:
         run: node scripts/check-migration-version-collisions.mjs --self-test
 
       - name: Check for cross-scope migration version collisions
-        run: node scripts/check-migration-version-collisions.mjs --require-scopes=8
+        # --require-all-scopes, not --require-scopes=8.
+        #
+        # The count form was unsatisfiable and this job failed EVERY run since it
+        # was authored (run 31091770857, 2026-08-06: "expected migrations in at
+        # least 8 scope(s) but found 7"). R80.4 is in the applier's matrix but
+        # has no supabase/ directory at all, so seven is the maximum a healthy
+        # tree can ever produce. A permanently-red gate is not a stricter gate —
+        # it is an ignored one, which is how bsuite#1913 got through.
+        #
+        # The named form also fixes what the count could never express: seven
+        # scopes present is not the same claim as the RIGHT seven present.
+        run: node scripts/check-migration-version-collisions.mjs --require-all-scopes

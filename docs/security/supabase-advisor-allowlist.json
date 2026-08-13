@@ -14,6 +14,7 @@
         "bulk_data_import(p_entity_key text, p_tenant_id uuid, p_rows jsonb, p_update_existing boolean, p_dry_run boolean, p_import_job_id uuid)",
         "bulk_data_undo(p_change_set_id uuid)",
         "bulk_data_update(p_entity_key text, p_tenant_id uuid, p_row_ids uuid[], p_field_updates jsonb, p_dry_run boolean)",
+        "check_archive_recovery_needed(p_source_table text, p_tenant_id uuid, p_from timestamp with time zone, p_to timestamp with time zone)",
         "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
         "check_user_portal_role(p_user_id uuid, p_tenant_id uuid, p_required_roles text[])",
         "check_user_tenant_access(p_user_id uuid, p_tenant_id uuid)",
@@ -29,6 +30,7 @@
         "fn_rollback_page(p_page_id uuid)",
         "get_apprentice_person_id_for_current_user()",
         "get_descendant_tenant_ids(p_tenant_id uuid)",
+        "get_host_agreement_signing_context(p_token text)",
         "get_org_deletion_preview(p_tenant_id uuid)",
         "get_sharing_level(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
         "get_user_apprentice_id()",
@@ -42,6 +44,7 @@
         "gto_self_assessment_log_history()",
         "has_parent_admin_access(target_tenant_id uuid)",
         "invite_team_member_guarded(p_team_id uuid, p_email text, p_role text, p_invited_by uuid)",
+        "is_archive_recovery_authorized(p_tenant_id uuid)",
         "is_demo_write_blocked()",
         "is_dev_mode()",
         "is_enterprise_admin()",
@@ -53,6 +56,7 @@
         "is_platform_developer()",
         "is_platform_super_admin()",
         "is_team_admin(p_team_id uuid, p_user_id uuid)",
+        "mark_recurring_error_fingerprint_closed(p_fingerprint text)",
         "mint_quote_handoff_token(p_payload jsonb)",
         "platform_admin_act_as(target_tenant_id uuid)",
         "platform_admin_stop_acting()",
@@ -60,9 +64,12 @@
         "portal_invite_accept(p_token text)",
         "portal_invite_mint(p_person_id uuid)",
         "r7_candidate_id_for_auth_user()",
+        "rearchive_restored_rows(p_source_table text, p_tenant_id uuid, p_source_ids uuid[], p_reason text)",
+        "redeem_host_agreement_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
         "redeem_quote_handoff_token(p_token text)",
         "report_catalog_approve_entity(p_key text)",
         "resolve_enterprise_root_id(p_tenant_id uuid)",
+        "restore_archived_rows(p_source_table text, p_tenant_id uuid, p_reason text, p_archive_ids uuid[], p_from timestamp with time zone, p_to timestamp with time zone)",
         "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
         "schema_authority_tenant_ids()",
         "show_demo_data()",
@@ -126,21 +133,21 @@
       "lint": "authenticated_security_definer_function_executable",
       "object_type": "function",
       "mode": "accepted",
-      "reason": "2026-07-02 Qodo-fix RPCs. search_profiles_by_name: throughput team-member selector — profiles RLS is self-only, so a narrow SECDEF search returning ONLY (id, full_name, company), auth-required, pinned search_path (throughput PR#232 finding 1). r7_submit_public_application: conduit public apply handler — replaced four unsafe anon INSERT policies with one fail-closed SECDEF entrypoint (rate-limited 3/hr rolling window per IP/job, consent-gated sensitive demographics, tenant derived from the job row); authenticated grant is transitive via anon->authenticated inheritance of the public apply path (conduit PR#348 findings 2-4).",
+      "reason": "2026-07-02 Qodo-fix RPCs. search_profiles_by_name: throughput team-member selector — profiles RLS is self-only, so a narrow SECDEF search returning ONLY (id, full_name, company), auth-required, pinned search_path (throughput PR#232 finding 1). r7_submit_public_application: conduit public apply handler — replaced four unsafe anon INSERT policies with one fail-closed SECDEF entrypoint (rate-limited 3/hr rolling window per IP/job, consent-gated sensitive demographics, tenant derived from the job row); authenticated grant is transitive via anon->authenticated inheritance of the public apply path (conduit PR#348 findings 2-4). SIGNATURE CHANGED 2026-08-12 (conduit#433 / conduit#434, applied to production the same day): p_ip_hash moved from position 2 to LAST and gained a DEFAULT — the expand step of Expand->Migrate->Contract, so the old and new browser call shapes both resolve. The function no longer reads x-forwarded-for at all; the throttle keys on cf-connecting-ip, which Cloudflare rejects when a client supplies it (verified empirically, not from documentation: a spoofed header returns Cloudflare error code 1000 before reaching PostgREST). Entries are REPLACED, not added alongside — the pre-fix signature no longer exists in production (one overload, confirmed via to_regprocedure), and carrying a dead entry is exactly the stale-waiver problem this file's own tooling now self-reports. Contraction tracked at conduit#435.",
       "added": "2026-07-02",
       "objects": [
         "search_profiles_by_name(p_query text)",
-        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text)"
+        "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text, p_ip_hash text)"
       ]
     },
     {
       "lint": "anon_security_definer_function_executable",
       "object_type": "function",
       "mode": "accepted",
-      "reason": "conduit#348 public careers apply form — anon-reachable BY DESIGN (job applicants have no account). Fail-closed SECDEF: verifies job is open+published, rolling-window rate limit (3/hr per IP-hash/job), dedupes candidates, consent-gates sensitive demographics at the DB layer, derives tenant from the job row (no caller-supplied tenant). Strictly safer than the four direct anon INSERT policies it replaced (dropped same migration). Applied+catalog-verified 2026-07-02.",
+      "reason": "conduit#348 public careers apply form — anon-reachable BY DESIGN (job applicants have no account). Fail-closed SECDEF: verifies job is open+published, rolling-window rate limit (3/hr per IP-hash/job), dedupes candidates, consent-gates sensitive demographics at the DB layer, derives tenant from the job row (no caller-supplied tenant). Strictly safer than the four direct anon INSERT policies it replaced (dropped same migration). Applied+catalog-verified 2026-07-02. SIGNATURE CHANGED 2026-08-12 (conduit#433 / conduit#434, applied to production the same day): p_ip_hash moved from position 2 to LAST and gained a DEFAULT — the expand step of Expand->Migrate->Contract, so the old and new browser call shapes both resolve. The function no longer reads x-forwarded-for at all; the throttle keys on cf-connecting-ip, which Cloudflare rejects when a client supplies it (verified empirically, not from documentation: a spoofed header returns Cloudflare error code 1000 before reaching PostgREST). Entries are REPLACED, not added alongside — the pre-fix signature no longer exists in production (one overload, confirmed via to_regprocedure), and carrying a dead entry is exactly the stale-waiver problem this file's own tooling now self-reports. Contraction tracked at conduit#435.",
       "added": "2026-07-02",
       "objects": [
-        "r7_submit_public_application(p_job_id uuid, p_ip_hash text, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text)"
+        "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text, p_ip_hash text)"
       ]
     },
     {
@@ -217,11 +224,12 @@
       "lint": "authenticated_security_definer_function_executable",
       "object_type": "function",
       "mode": "accepted",
-      "reason": "Developer-portal Feature Builder apply path (north-star chain, 2026-07-22). Executes author-supplied migration SQL, so it is arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations: (1) hard internal gate — raises 42501 unless caller's profiles.platform_role IN ('developer','platform_admin'); (2) full audit trail to feature_migration_log (actor, SQL, status, error); (3) search_path pinned to public,pg_temp; (4) EXECUTE revoked from public/anon — authenticated-only, same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog).",
+      "reason": "Developer-portal Feature Builder apply/rollback pair (north-star chain, 2026-07-22; rollback added 2026-08-12). Both execute author-supplied or derived DDL, so they are arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations, verified live 2026-08-12 against tuybltdrdefjblnplpqo for BOTH functions: (1) hard internal gate — each raises 'Permission denied: developer or platform_admin role required' unless the caller's profiles.platform_role IN ('developer','platform_admin'), checked by a direct query on id = auth.uid() rather than via is_platform_developer(), which is why a grep for the named predicates reports no gate; (2) rollback escapes its identifier with quote_ident() before EXECUTE and refuses when no prior successful apply exists; (3) full audit trail to feature_migration_log (actor, SQL, status, error); (4) search_path pinned to public,pg_temp on both; (5) EXECUTE revoked from public/anon — authenticated-only (proacl: postgres=X, service_role=X, authenticated=X; has_function_privilege('anon',...) = false), same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog). rollback_feature_migration was omitted when its sibling was allowlisted, which turned the advisor sweep red on every parent PR — a permanently-red gate teaches everyone to ignore it, which is the actual damage.",
       "added": "2026-07-22",
       "expires": null,
       "objects": [
-        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)"
+        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)",
+        "rollback_feature_migration(p_entity_name text, p_force boolean)"
       ]
     },
     {

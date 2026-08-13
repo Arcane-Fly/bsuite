@@ -1,0 +1,261 @@
+# Supabase Migration Rehearsal
+#
+# THE GAP THIS CLOSES
+# ───────────────────
+# There is ONE Supabase project. `d.crm.crm7.app` runs development CODE against
+# main's SCHEMA. A migration-dependent change therefore has nowhere to be
+# exercised before production — production is the first place the code and the
+# schema ever meet. A Vercel preview cannot stand in: its ephemeral host is not
+# a registered redirect URI and Supabase matches those byte-exactly, so a
+# preview cannot even be signed into.
+#
+# `supabase-preview-db.yml` computes WHICH scopes a PR touches and posts a
+# manifest. It has never built a database; its final step prints a warning that
+# the plan is "advisory". This workflow is the executor that plan was missing.
+# The two are complementary: that one says what would be affected, this one
+# proves it works.
+#
+# WHY A DISPOSABLE LOCAL DATABASE AND NOT SUPABASE BRANCHING
+# ──────────────────────────────────────────────────────────
+# Cost was never the deciding factor. Architecture was:
+#
+#   * Native Supabase branching sees only the CONNECTED REPOSITORY'S working
+#     directory. This estate keeps its schema in EIGHT scopes across seven repos,
+#     and the parent checks out submodules as gitlinks. A branch database built
+#     from the parent would replay the parent's 22 migrations and none of the
+#     other 754. supabase/migration-scopes.json already records this limitation.
+#
+#   * The eight scopes share ONE supabase_migrations.schema_migrations ledger
+#     keyed on the 14-digit version ALONE. supabase-migrate.yml documents why
+#     `supabase migration up` cannot be used against it at all: the CLI errors
+#     with "Remote migration versions not found in local migrations directory"
+#     whenever the ledger holds versions from other scopes, and --include-all
+#     does not bypass it. Branching drives the same CLI machinery.
+#
+#   * A branch database is a real cloud resource reached with a real credential.
+#     This job holds NO Supabase credential of any kind — the database is a
+#     throwaway container on the runner's loopback interface, and the script
+#     refuses any non-loopback host. Nothing here can reach production even by
+#     mistake, which is the property that lets it run on every PR.
+#
+# WHY NOT PER-SCOPE, THE WAY crm7's pgtap.yml DOES IT
+# ───────────────────────────────────────────────────
+# Because six of the eight scopes are not self-contained. Measured 2026-08-12:
+# conduit's OLDEST migration fails on a fresh database with `relation
+# "user_tenants" does not exist` — not conduit's table. A per-scope rehearsal
+# cannot validate conduit at all. This job replays the union of every scope in
+# GLOBAL version order, which is the only order production has ever had.
+#
+# WHAT COUNTS AS PROOF
+# ────────────────────
+# Not a row in schema_migrations. That proves the LEDGER was written; this
+# estate has had three distinct "recorded is not applied" mechanisms in a single
+# day. Proof here is the catalog: to_regclass / to_regprocedure / pg_policies /
+# information_schema grants, plus a before-and-after census that must MOVE.
+#
+# The self-test step is not decoration. It feeds the gate a good migration, a
+# broken one, and a silent no-op, and requires all three verdicts. A gate never
+# seen to fail is not a gate.
+
+name: Supabase Migration Rehearsal
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [development, main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'crm7/supabase/migrations/**'
+      - 'R80.4/supabase/migrations/**'
+      - 'braden/supabase/migrations/**'
+      - 'business-suite-unified/supabase/migrations/**'
+      - 'conduit/supabase/migrations/**'
+      - 'throughput/supabase/migrations/**'
+      - 'packages/schema-builder/supabase/migrations/**'
+      - 'scripts/supabase/**'
+      - '.github/workflows/supabase-migration-rehearsal.yml'
+      # The bare submodule GITLINKS. On a development -> main promotion the
+      # parent diff contains NO file under any <repo>/supabase/** path — it
+      # contains one entry per moved submodule, and that entry is exactly
+      # `crm7`. A submodule pointer bump is the only mechanism by which
+      # migrations reach production, so without these lines the one PR shape
+      # that most needs rehearsing is the one shape that never triggers it.
+      # supabase-preview-db.yml learned this the hard way on bsuite#1845.
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
+  workflow_dispatch:
+    inputs:
+      changed:
+        description: 'Comma-separated migration paths to gate (blank = replay only, gate nothing)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migration-rehearsal-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  SUPABASE_NO_ANALYTICS: '1'
+  # The high-water mark of crm7/supabase/migrations/baseline/20260807_prod_baseline_schema_dump.sql.
+  # That dump is a dump of the SHARED public schema — 364 tables, including
+  # conduit's r7_candidates and the platform's user_tenants — so it is the
+  # estate's baseline, not crm7's. Everything at or below this version is
+  # already inside it and must not be replayed on top.
+  BASELINE_MAX: '20260807110000'
+  MIGRATION_FLOOR: '20260611000000'
+  REHEARSAL_DB_URL: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+
+jobs:
+  rehearse:
+    name: Rehearse migrations on a disposable database
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout (with submodules — a rehearsal missing a scope is not a rehearsal)
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: '.node-version'
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: 2.105.0
+
+      - name: Install psql client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Determine changed migrations
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DISPATCH_CHANGED: ${{ github.event.inputs.changed }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "list=${DISPATCH_CHANGED}" >> "$GITHUB_OUTPUT"
+            echo "Gating (dispatch): ${DISPATCH_CHANGED:-<none>}"
+            exit 0
+          fi
+
+          # Two sources, because a promotion PR shows only gitlinks.
+          #   1. Files changed directly in the parent tree.
+          #   2. For each submodule whose gitlink moved, the migration files
+          #      that changed inside it between the two pointers.
+          CHANGED_LIST=""
+
+          while IFS= read -r f; do
+            case "$f" in
+              *supabase/migrations/*.sql) CHANGED_LIST="${CHANGED_LIST}${f}," ;;
+            esac
+          done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+
+          for dir in crm7 R80.4 braden business-suite-unified conduit throughput; do
+            OLD_SHA=$(git rev-parse "$BASE_SHA:$dir" 2>/dev/null || true)
+            NEW_SHA=$(git rev-parse "$HEAD_SHA:$dir" 2>/dev/null || true)
+            [ -n "$OLD_SHA" ] && [ -n "$NEW_SHA" ] || continue
+            [ "$OLD_SHA" != "$NEW_SHA" ] || continue
+            git -C "$dir" fetch -q origin "$OLD_SHA" 2>/dev/null || true
+            git -C "$dir" fetch -q origin "$NEW_SHA" 2>/dev/null || true
+            if git -C "$dir" cat-file -e "$OLD_SHA^{commit}" 2>/dev/null \
+               && git -C "$dir" cat-file -e "$NEW_SHA^{commit}" 2>/dev/null; then
+              while IFS= read -r f; do
+                case "$f" in
+                  supabase/migrations/*.sql) CHANGED_LIST="${CHANGED_LIST}${dir}/${f}," ;;
+                esac
+              done < <(git -C "$dir" diff --name-only "$OLD_SHA" "$NEW_SHA")
+            else
+              echo "::warning::cannot diff $dir pointers — its changed migrations will be replayed but NOT gated"
+            fi
+          done
+
+          CHANGED_LIST="${CHANGED_LIST%,}"
+          echo "list=${CHANGED_LIST}" >> "$GITHUB_OUTPUT"
+          echo "Gating: ${CHANGED_LIST:-<none>}"
+
+      - name: Plan (which scopes, which order)
+        run: |
+          node scripts/supabase/rehearse-migrations.mjs --plan \
+            --baseline-max "$BASELINE_MAX" --floor "$MIGRATION_FLOOR" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Start disposable database
+        # `supabase db start` boots the REAL Supabase Postgres image, so auth.uid(),
+        # the extensions schema, storage and vault are genuine. A bare postgres
+        # container with a hand-rolled substrate produces failures that belong to
+        # the instrument and read exactly like defects in the tree — crm7's
+        # replay-schema-diff.sh header documents that trap at length.
+        #
+        # `db start` AUTO-APPLIES everything in supabase/migrations. The parent
+        # owns 22 of them and they are not replayable from empty (they assume the
+        # shared schema already exists), so leaving them in place makes db start
+        # itself fail before the rehearsal has begun. Move them aside first, the
+        # way crm7's pgtap.yml does, and restore immediately after — the rehearsal
+        # engine reads them from disk and MUST see all eight scopes.
+        run: |
+          set -euo pipefail
+          mv supabase/migrations /tmp/parent-migrations-stash
+          mkdir -p supabase/migrations
+          supabase db start
+          rmdir supabase/migrations
+          mv /tmp/parent-migrations-stash supabase/migrations
+          echo "Parent migrations restored: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l) files"
+          psql "$REHEARSAL_DB_URL" -At -c "SELECT 'connected to ' || current_setting('server_version');"
+
+      - name: Positive control — the gate must be seen to fail, in both directions
+        # Runs BEFORE the real replay and against the same engine that will judge
+        # it. If this step passes, we know the instrument can distinguish a good
+        # migration from a broken one from a silent no-op. If it were ever to
+        # pass everything, every result below it would be worthless.
+        run: |
+          node scripts/supabase/rehearse-migrations.mjs --self-test \
+            --db-url "$REHEARSAL_DB_URL" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build substrate (production baseline)
+        run: ./scripts/supabase/rehearsal-bootstrap.sh "$REHEARSAL_DB_URL" .
+
+      - name: Rehearse
+        # CHANGED_LIST goes through `env:`, never inline `${{ }}` in the script.
+        # Its contents are file paths from a PR-controlled tree, so a branch
+        # carrying a migration whose NAME contained shell metacharacters would
+        # otherwise execute them on the runner.
+        env:
+          CHANGED_LIST: ${{ steps.changed.outputs.list }}
+        run: |
+          set -o pipefail
+          node scripts/supabase/rehearse-migrations.mjs --apply \
+            --db-url "$REHEARSAL_DB_URL" \
+            --baseline-max "$BASELINE_MAX" \
+            --floor "$MIGRATION_FLOOR" \
+            --changed "$CHANGED_LIST" 2>&1 | tee /tmp/rehearsal.log
+          {
+            echo '<details><summary>Migration rehearsal output</summary>'
+            echo
+            echo '```'
+            cat /tmp/rehearsal.log
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop disposable database
+        if: always()
+        run: supabase stop --no-backup || true

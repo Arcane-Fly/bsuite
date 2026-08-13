@@ -1,13 +1,43 @@
 # crm7 deep-audit remediation — decision record
 
-**Date:** 2026-08-10 · **Status:** W (working) · **Lane:** claude-code
-**PRs:** [crm7#1592](https://github.com/GaryOcean428/crm7/pull/1592) · [bsuite#1888](https://github.com/GaryOcean428/bsuite/pull/1888)
-**Closes:** crm7 #1578, #1579, #1581, #1582, #1583, #1584
+**Date:** 2026-08-10, updated 2026-08-11 · **Status:** W (working) · **Lane:** claude-code
+**Merged:** [crm7#1592](https://github.com/GaryOcean428/crm7/pull/1592) · [bsuite#1888](https://github.com/GaryOcean428/bsuite/pull/1888) · [braden#376](https://github.com/GaryOcean428/braden/pull/376) · [throughput#271](https://github.com/GaryOcean428/throughput/pull/271)
+**Closed:** crm7 #1578, #1579, #1581, #1582, #1583, #1584 — all six, verified live
 **Filed:** crm7 #1595, #1597, #1598 · bsuite #1889
 
 This is the decision half of the work. The code is in the PRs; what follows is
 what was decided, what the audit got wrong, and what is still open — the things
 a diff cannot tell you.
+
+---
+
+## 0. Operator ruling, 2026-08-11 — Google Docs IS intended
+
+**crm7#1595 asked the one question the code could not answer**, and Braden has
+answered it: the Google Docs document-generation integration **is** the intended
+product direction.
+
+So the fix is **expand, not retire**. The `generate-document` edge function stays;
+the missing columns get an `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` migration
+(never `CREATE TABLE IF NOT EXISTS` — that guard is the entire cause); and the
+templates UI stripped in #1592 is restored, now backed by columns that exist.
+
+Consequences that follow and should not be re-litigated:
+
+- Design authority is `docs/recovered/20260317-document-esigning-architecture-v1.00A.md`
+  (status **A**, Approved). Templates carry `{{VARIABLE_NAME}}` tokens; the edge
+  function does a Drive copy → `batchUpdate` replaceAllText → PDF export → Storage.
+- **Adobe is removed.** `adobe_agreement_id` / `adobe_agreement_status` are legacy
+  and must not be reintroduced.
+- Google auth is **WIF only**; static service-account keys stay banned.
+- That architecture doc's illustrative DDL uses column names
+  (`unsigned_file_path`, `signer_name`, …) that do **not** match the live table.
+  **Live schema + the edge function's actual insert are authoritative for names;
+  the doc is authoritative for the design.** Anyone reading the doc alone will
+  build the wrong columns.
+
+Until that migration applies, document generation remains non-functional in
+production — it returns 422 for every template and always has.
 
 ---
 
@@ -205,15 +235,46 @@ process working.
 
 ## 5. Open items
 
-| Ref | Item | Priority |
-|---|---|---|
-| crm7#1595 | `document_records` drift; document generation non-functional | **P1** |
-| crm7#1597 | LLN/WHS create dialogs ungated for `view_compliance` | P2 |
-| crm7#1598 | Suppression register: async continuations invisible; namespace bug may reach `refs`/`purity` | P3 |
-| bsuite#1889 | Propagate widened colour rule to the other four apps | P3 |
-| — | `uplift` export + inline-edit port into `EnhancedDataTable` (§2.4) | P3 |
-| — | `/portal/org-documents` routed but absent from nav — may be deliberate residue of closed #1469 | P4 |
-| — | Person-field ownership residuals (emergency contact, guardian, school-based) — needs the AVETMISS wave plan; would duplicate crm7#714 | P4 |
+Status as at 2026-08-11.
+
+| Ref | Item | State | Priority |
+|---|---|---|---|
+| crm7#1595 | Google-Docs columns; document generation non-functional | **Ruled** (§0) — expand migration `20260813090000` + pgTAP `74` in flight | **P1** |
+| crm7#1597 | LLN/WHS create dialogs ungated for `view_compliance` | In flight | P2 |
+| crm7#1598 | Register blind spots; does the namespace bug reach `refs`/`purity`? | In flight | P3 |
+| bsuite#1889 | Colour rule to the other four apps | braden + throughput **done**; conduit (5) + BSU (27) in flight | P3 |
+| — | Production promotion `development` → `main` | **Not started** — see below | P1 |
+| — | `uplift` export + inline-edit port into `EnhancedDataTable` (§2.4) | Open | P3 |
+| — | ~~`/portal/org-documents` routed but absent from nav~~ | **Closed — not a defect** (below) | — |
+| — | Person-field ownership residuals (emergency contact, guardian, school-based) — needs the AVETMISS wave plan; would duplicate crm7#714 | Open | P4 |
+
+### `/portal/org-documents` — the audit was wrong, and so was I for repeating it
+
+The audit reported this route as "routed and absent from `navigation.ts` —
+confirmed 2/3+", and I carried it forward as a suspected orphan. Checked
+2026-08-11: it is **fully wired**.
+
+- `src/config/navigation.ts:290` and `:452` — "Manuals & Policies"
+- `src/pages/portal/worker-portal.tsx:953` — `navigate('/portal/org-documents')`
+- `src/App.tsx:3662` — the route
+
+`navigation.ts:288` even carries a comment explaining the permission model for
+this exact link. Nothing to do. Recorded because a suspicion repeated without
+re-checking is how a phantom item survives three documents — the item cost more
+to carry than to verify.
+
+### The promotion needs its own release, not a session-end push
+
+crm7 `development` is **82 commits and 14 unapplied migrations** ahead of `main`.
+That set is not this lane's work alone — it includes other lanes' migrations, at
+least one of which is **destructive** (`20260812190000_drop_legacy_contracts_table.sql`).
+
+Promoting is therefore a deliberate release with its own pre-flight, not a tidy-up
+at the end of a working session: the migration applier runs on `main`, and a
+destructive migration written by another lane should be reviewed by someone who
+has read it. Two standing rules apply — a recorded migration is not an applied
+one (assert the objects, not `schema_migrations`), and merged is not shipped
+(compare the live commit SHA against the merged SHA before testing anything).
 
 ---
 

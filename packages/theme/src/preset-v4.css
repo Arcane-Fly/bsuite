@@ -206,6 +206,114 @@
   --font-mono:    var(--font-mono);
 
   /* ============================================================
+     ELEVATION — `shadow-elev-0` .. `shadow-elev-4`
+     ============================================================
+     Added 2026-08-12. Before this, `shadow-elev-*` was a PHANTOM: 25 call
+     sites across crm7 and business-suite-unified, four CLAUDE.md files and
+     the canonical bsuite-brand-system skill all instructed it, and no rule
+     existed anywhere to match. Every one of them computed
+     `box-shadow: none`. Cards drawn as elevated had no elevation.
+
+     crm7 and BSU had each noticed and each written `--shadow-elev-0..4` into
+     their own `:root` — but a `:root` custom property registers no Tailwind
+     v4 utility, so the class still did not exist. Two divergent copies of the
+     ramp, both inert. They are now redundant and should be deleted from both
+     apps (see the rollout note in the PR); this block is the single source.
+
+     WHY DEFINE IT RATHER THAN MIGRATE THE CALL SITES
+     The alternative was rewriting 25 sites onto `shadow-sm/md/lg`. That scale
+     block exists to override; the value is Tailwind's, not ours.
+     theme-audit-ok: prose — the next line quotes the upstream default.
+     is Tailwind's default, which is `rgb(0 0 0 / a)` — the pure black the
+     contract bans in every role. Migrating would have moved working-as-
+     intended markup onto a banned value, and left the docs to be rewritten
+     too. A five-step ramp with an explicit 0 is also the right primitive for
+     a card system whose cards are draggable and resizable: "resting" needs a
+     name, not the absence of a class.
+
+     GEOMETRY is Tailwind's xs/md/lg/xl, which is what crm7 and BSU had both
+     chosen. COLOUR is --shadow-ink-* (vars.css): OKLCH, hue-matched to the
+     surface, never pure black, and scaled by --shadow-strength in both modes.
+
+     `@theme inline`, per this file's doctrine, for a second reason here: the
+     apps still carry their own `:root --shadow-elev-*`. Plain `@theme` would
+     emit ours at :root too, where the app's later copy would silently win and
+     the package would appear to have no effect. `inline` puts the resolved
+     value inside the utility, out of reach of that collision.
+
+     elev-0 is `0 0 0 0 transparent` and NOT `none`. `none` inside the v4
+     composite (`box-shadow: var(--tw-inset-shadow), …, var(--tw-shadow)`)
+     makes the whole declaration invalid, so the browser drops it — taking
+     --tw-ring-shadow with it. Measured: `shadow-elev-0 ring-2` rendered NO
+     FOCUS RING. Tailwind's own `shadow-none` sidesteps this with `0 0 #0000`;
+     `transparent` is the same trick without a pure-black alpha form. */
+  --shadow-elev-0: 0 0 0 0 transparent;
+  --shadow-elev-1: 0 1px 2px 0 var(--shadow-ink-soft);
+  --shadow-elev-2: 0 4px 6px -1px var(--shadow-ink), 0 2px 4px -2px var(--shadow-ink-soft);
+  --shadow-elev-3: 0 10px 15px -3px var(--shadow-ink), 0 4px 6px -4px var(--shadow-ink-soft);
+  --shadow-elev-4: 0 20px 25px -5px var(--shadow-ink), 0 8px 10px -6px var(--shadow-ink-faint);
+
+  /* ------------------------------------------------------------
+     Tailwind's OWN shadow scale, rebound onto the same ink.
+     ------------------------------------------------------------
+     Not cosmetic. `--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*` and
+     theme-audit-ok: prose — the next line quotes the upstream default.
+     `--text-shadow-*` ship from Tailwind as `rgb(0 0 0 / a)`, and 292
+     `shadow-sm|md|lg|xl|2xl` call sites across the five D2C apps and
+     packages/ were painting exactly that. Pure black is banned in every
+     role, alpha forms included — and the theme-conformance scanner could
+     never catch these, because the literal is in node_modules, not in any
+     file it reads. Same class of blind spot as the HSL sidebar tokens.
+
+     In dark mode this is also a correctness fix, not a tint: black at 10%
+     alpha over an L 0.166 navy page is invisible, so every one of those 292
+     sites had no shadow in dark mode at all.
+
+     GEOMETRY IS UNCHANGED from Tailwind's defaults, so nothing shifts
+     position; only the paint changes. The one deliberate departure is 2xl,
+     which drops from 0.25 to 0.16 base alpha (--shadow-ink-deep): at a 50px
+     blur, contract ink at Tailwind's density reads as a smudge rather than
+     a lift. */
+  --shadow-2xs: 0 1px var(--shadow-ink-soft);
+  --shadow-xs:  0 1px 2px 0 var(--shadow-ink-soft);
+  --shadow-sm:  0 1px 3px 0 var(--shadow-ink), 0 1px 2px -1px var(--shadow-ink);
+  --shadow-md:  0 4px 6px -1px var(--shadow-ink), 0 2px 4px -2px var(--shadow-ink);
+  --shadow-lg:  0 10px 15px -3px var(--shadow-ink), 0 4px 6px -4px var(--shadow-ink);
+  --shadow-xl:  0 20px 25px -5px var(--shadow-ink), 0 8px 10px -6px var(--shadow-ink);
+  --shadow-2xl: 0 25px 50px -12px var(--shadow-ink-deep);
+
+  --inset-shadow-2xs: inset 0 1px var(--shadow-ink-soft);
+  --inset-shadow-xs:  inset 0 1px 1px var(--shadow-ink-soft);
+  --inset-shadow-sm:  inset 0 2px 4px var(--shadow-ink-soft);
+
+  --drop-shadow-xs:  0 1px 1px var(--shadow-ink-soft);
+  --drop-shadow-sm:  0 1px 2px var(--shadow-ink);
+  --drop-shadow-md:  0 3px 3px var(--shadow-ink);
+  --drop-shadow-lg:  0 4px 4px var(--shadow-ink);
+  --drop-shadow-xl:  0 9px 7px var(--shadow-ink);
+  --drop-shadow-2xl: 0 25px 25px var(--shadow-ink-deep);
+
+  /* THE BARE DEFAULT KEYS. Added 0.11.1.
+     0.11.0 rebound 26 SUFFIXED keys and missed the two unsuffixed ones, so the
+     `shadow` and `drop-shadow` utilities (no size suffix) kept painting pure
+     black after the upgrade. Found by measuring crm7's compiled bundle after
+     the rollout: pure-black-painting declarations fell 41 -> 18 instead of to
+     the expected floor, and two of the survivors were `.shadow` rules.
+     Verified against the INSTALLED tailwindcss@4.3.3 theme.css, which defines
+     exactly these two bare keys and no bare --inset-shadow or --text-shadow —
+     so only two are rebound here. Do not invent the other two.
+     Geometry and alpha ratios are Tailwind's; only the paint changes.
+     Upstream --shadow equals its --shadow-sm, and that equality is preserved. */
+  --shadow: 0 1px 3px 0 var(--shadow-ink), 0 1px 2px -1px var(--shadow-ink);
+  --drop-shadow: 0 1px 2px var(--shadow-ink), 0 1px 1px var(--shadow-ink-soft);
+
+  --text-shadow-2xs: 0px 1px 0px var(--shadow-ink);
+  --text-shadow-xs:  0px 1px 1px var(--shadow-ink-deep);
+  --text-shadow-sm:  0px 1px 0px var(--shadow-ink-soft), 0px 1px 1px var(--shadow-ink-soft), 0px 2px 2px var(--shadow-ink-soft);
+  --text-shadow-md:  0px 1px 1px var(--shadow-ink), 0px 1px 2px var(--shadow-ink), 0px 2px 4px var(--shadow-ink);
+  --text-shadow-lg:  0px 1px 2px var(--shadow-ink), 0px 3px 2px var(--shadow-ink), 0px 4px 8px var(--shadow-ink);
+
+  /* ============================================================
      ANIMATIONS
      ============================================================ */
   --animate-pulse-soft:  pulse-soft  3s cubic-bezier(0.4, 0, 0.6, 1) infinite;

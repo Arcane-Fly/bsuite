@@ -259,6 +259,55 @@ jobs:
           DEPLOYED=0
           FAILED=0
           SKIPPED=0
+          COLLIDED=0
+
+          # Every scope deploys into ONE Supabase project, so a slug declared in
+          # two scopes has one live artifact and the last deploy wins. Four slugs
+          # are currently declared in both crm7 and business-suite-unified
+          # (generate-document, oauth-google-email, oauth-microsoft-email,
+          # tga-search). Whichever scope ran last silently owns them, and a
+          # routine redeploy of the OTHER scope reverts the live copy to a
+          # different repo's source — with no diff, no failure and no signal.
+          #
+          # Observed 2026-08-12: `tga-search` answered 200 to a garbage JWT
+          # because BSU's copy was live while crm7's auth hardening sat in
+          # crm7's tree, deployed and then overwritten.
+          #
+          # Ownership is not something this workflow can infer, so it refuses to
+          # guess: a colliding slug is SKIPPED and named, and the rest of the
+          # scope still deploys. The check is a directory-existence intersection
+          # across scopes, so it needs no list to maintain — when the duplicate
+          # is deleted the intersection empties and the slug deploys normally.
+          #
+          # The intersection is only as good as the checkout: a submodule that
+          # failed to clone presents as "declares nothing", which makes the guard
+          # fall OPEN and silently deploy a colliding slug. The inventory below
+          # prints what each scope actually contributed, so an empty scope is
+          # visible in the log instead of being indistinguishable from a scope
+          # that genuinely has no functions.
+          ALL_SCOPE_DIRS="crm7 R80.4 braden business-suite-unified conduit throughput"
+
+          echo "=== Slug inventory seen by the collision guard ==="
+          echo "  root: $(ls -1 "${GITHUB_WORKSPACE}/supabase/functions" 2>/dev/null | wc -l)"
+          for s in $ALL_SCOPE_DIRS; do
+            echo "  ${s}: $(ls -1 "${GITHUB_WORKSPACE}/${s}/supabase/functions" 2>/dev/null | wc -l)"
+          done
+          echo ""
+
+          declaring_scopes() {
+            # Echoes the scopes whose supabase/functions/ declares slug $1.
+            local slug="$1" found="" cand
+            if [ -d "${GITHUB_WORKSPACE}/supabase/functions/${slug}" ]; then
+              found="root"
+            fi
+            for s in $ALL_SCOPE_DIRS; do
+              cand="${GITHUB_WORKSPACE}/${s}/supabase/functions/${slug}"
+              if [ -d "$cand" ]; then
+                found="${found} ${s}"
+              fi
+            done
+            echo "$found"
+          }
 
           for fn_dir in "$FUNCTIONS_DIR"/*/; do
             [ -d "$fn_dir" ] || continue
@@ -268,6 +317,14 @@ jobs:
             if [[ "$fn_name" == _* ]]; then
               echo "Skipping shared module: $fn_name"
               SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+
+            OWNERS=$(declaring_scopes "$fn_name")
+            OWNER_COUNT=$(echo $OWNERS | wc -w)
+            if [ "$OWNER_COUNT" -gt 1 ]; then
+              echo "::warning::SKIP ${fn_name} — slug declared in ${OWNER_COUNT} scopes (${OWNERS}). Deploying it would overwrite another repo's live copy. Resolve the duplicate declaration, then redeploy."
+              COLLIDED=$((COLLIDED + 1))
               continue
             fi
 
@@ -295,7 +352,8 @@ jobs:
           echo ""
           echo "=== Deployment Summary for scope: ${{ matrix.scope }} ==="
           echo "Deployed: ${DEPLOYED}"
-          echo "Skipped:  ${SKIPPED}"
+          echo "Skipped:  ${SKIPPED}   (shared _ directories)"
+          echo "Collided: ${COLLIDED}   (slug declared in >1 scope — NOT deployed)"
           echo "Failed:   ${FAILED}"
 
           if [ $FAILED -gt 0 ]; then

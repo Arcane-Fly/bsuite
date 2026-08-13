@@ -1,0 +1,30 @@
+# Supabase CLI config for the PARENT bsuite repo.
+#
+# WHY THIS FILE EXISTS AT ALL
+#
+# supabase/migration-scopes.json names bsuite the control plane
+# ("recommended_control_plane": "bsuite"), but the parent was the one scope with
+# no config.toml — crm7, conduit, braden and business-suite-unified all have
+# one. Nothing noticed, because the production applier (supabase-migrate.yml)
+# drives psql directly and never invokes the CLI.
+#
+# `supabase db start` DOES need it. Without this file the migration-rehearsal
+# workflow cannot boot its disposable database at all.
+#
+# project_id is a LOCAL container-naming key, not the project ref. The estate
+# convention is the repo name (crm7's says "crm7", conduit's says "conduit"), so
+# this says "bsuite". The real ref lives in the SUPABASE_PROJECT_ID GitHub
+# variable and in migration-scopes.json, and must not be duplicated here — two
+# places to change one value is how they come to disagree.
+project_id = "bsuite"
+
+[db]
+# 54322 is the CLI default and what supabase-migration-rehearsal.yml connects
+# to. Kept explicit so a CLI default change cannot silently move it out from
+# under the workflow's REHEARSAL_DB_URL.
+port = 54322
+shadow_port = 54320
+# Production is Postgres 17 (verified against the 20260807 baseline dump header:
+# "Dumped from database version 17.6"). A rehearsal on a different major version
+# is not a rehearsal of this database.
+major_version = 17
