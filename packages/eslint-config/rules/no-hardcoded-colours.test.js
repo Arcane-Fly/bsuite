@@ -290,12 +290,12 @@ test('the forward-ported pure-colour regexes catch every notation, and only thos
       // oklch is the estate's PREFERRED notation, so a raw oklch near-black is not
       // a format violation the way a raw hex is. What matters here is only that
       // the pure ban does not claim it: lightness 0.13 is not 0.
-      { code: `const a = 'oklch(0.13 0.02 260)'` },
+      { code: `const a = 'oklch(0.13 0.02 260)'` }, // theme-audit-ok: fixture — the near-black the pure ban must NOT claim
     ],
     invalid: [
       // Alpha hex — the source's regex ended at \b and never saw these.
-      { code: `const a = '#ffffff00'`, errors: [{ messageId: 'forbiddenPure' }] },
-      { code: `const a = '#fff8'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const a = '#ffffff00'`, errors: [{ messageId: 'forbiddenPure' }] }, // theme-audit-ok: fixture — the banned value under test
+      { code: `const a = '#fff8'`, errors: [{ messageId: 'forbiddenPure' }] }, // theme-audit-ok: fixture — the banned value under test
       // Space-separated rgb, including the slash-alpha form.
       { code: `const a = 'rgba(0 0 0 / 50%)'`, errors: [{ messageId: 'forbiddenPure' }] },
       // pdf-lib's normalised white. This one came from THIS file, not crm7 —
@@ -303,8 +303,8 @@ test('the forward-ported pure-colour regexes catch every notation, and only thos
       // certificate title was written in.
       { code: `const a = 'rgb(1, 1, 1)'`, errors: [{ messageId: 'forbiddenPure' }] },
       // oklch anchored on lightness, so any chroma and hue still count.
-      { code: `const a = 'oklch(1 0.02 260)'`, errors: [{ messageId: 'forbiddenPure' }] },
-      { code: `const a = 'oklch(100% 0 0)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const a = 'oklch(1 0.02 260)'`, errors: [{ messageId: 'forbiddenPure' }] }, // theme-audit-ok: fixture — the banned value under test
+      { code: `const a = 'oklch(100% 0 0)'`, errors: [{ messageId: 'forbiddenPure' }] }, // theme-audit-ok: fixture — the banned value under test
       // hsl lightness is the THIRD component.
       { code: `const a = 'hsl(210 40% 100%)'`, errors: [{ messageId: 'forbiddenPure' }] },
       // Tailwind white/black have no numeric shade, so TAILWIND_PALETTE_RE is
@@ -316,8 +316,8 @@ test('the forward-ported pure-colour regexes catch every notation, and only thos
       // prescribed REPLACEMENTS for pure, so the pure ban must never claim them.
       // They are still hardcoded literals, so the FORMAT rule still fires — the
       // messageId is the whole point of these two cases.
-      { code: `const a = '#f8f9fa'`, errors: [{ messageId: 'forbiddenHex' }] },
-      { code: `const a = '#0a0e1a'`, errors: [{ messageId: 'forbiddenHex' }] },
+      { code: `const a = '#f8f9fa'`, errors: [{ messageId: 'forbiddenHex' }] }, // theme-audit-ok: fixture — the estate near-white, asserted NOT to be pure
+      { code: `const a = '#0a0e1a'`, errors: [{ messageId: 'forbiddenHex' }] }, // theme-audit-ok: fixture — the estate near-black, asserted NOT to be pure
       // Lightness is what makes a colour pure. A dark navy is not black, and a
       // 50%-lightness grey is not white — both are still hardcoded, so the FORMAT
       // rule fires and the pure ban does not. Again, the messageId is the point.
