@@ -101,16 +101,124 @@ const DENOMINATOR_NOUNS = [
   'manifest\\(s\\)', 'lockfile\\(s\\)', 'pair\\(s\\)', 'fix\\(es\\)',
   'declaration\\(s\\)', 'scripts?', 'oklch', 'hex', 'colou?rs?', 'literals?',
 ]
-const DENOMINATOR_RE = new RegExp(
-  String.raw`\b([1-9][0-9,]*)(?:\s*/\s*[0-9]+)?(?:\s+[a-zA-Z][a-zA-Z()/_-]*){0,5}?\s+(?:${DENOMINATOR_NOUNS.join('|')})\b`,
-  'i',
+// REGEX IS FORBIDDEN IN THIS ESTATE — hand-written scanners, AST walks, real
+// tokenisers (Tier 2 doctrine). The first version of this classifier composed
+// a `new RegExp` from the noun list above with nested quantifiers and
+// alternation, which is exactly what that doctrine bans and exactly the shape
+// the colour rule was rewritten AWAY from after its regex silently matched
+// `#ffffff00` as safe. A guard-of-guards has to meet the bar it enforces, so
+// the matching below is a token walk.
+//
+// Nouns are normalised to a bare stem once, at load, rather than carrying
+// `?`/`(?:…)` inflection markers. `file(s)`, `files`, `file` and `FILE(S)` all
+// reduce to `file`.
+function stemNoun(word) {
+  let w = word.toLowerCase()
+  // Trailing punctuation a sentence can attach: "files," "files:" "files."
+  while (w.length > 0 && ':,.;)'.includes(w[w.length - 1]) && !w.endsWith('(s)')) {
+    w = w.slice(0, -1)
+  }
+  for (const suffix of ['(es)', '(s)', 'ies', 'es', 's']) {
+    if (w.length > suffix.length && w.endsWith(suffix)) {
+      return suffix === 'ies' ? `${w.slice(0, -3)}y` : w.slice(0, -suffix.length)
+    }
+  }
+  return w
+}
+
+const NOUN_STEMS = new Set(
+  DENOMINATOR_NOUNS
+    // The list is authored with regex inflection markers; strip them to stems.
+    .map((n) => n.replace('\\(s\\)', '').replace('\\(es\\)', ''))
+    .map((n) => n.split('(')[0])
+    .map((n) => (n.endsWith('?') ? n.slice(0, -1) : n))
+    .map(stemNoun)
+    .filter((n) => n !== ''),
 )
+
+/**
+ * Is this token a positive integer count — "12", "1,204", "25/30", "(10"? Never "0".
+ *
+ * Leading punctuation is stripped because guards write counts inside brackets:
+ * `self-test OK (10 cases)`. The regex this replaced used `\b`, which crossed
+ * the `(` for free; a naive token walk does not, and dropping that case
+ * silently reclassified a passing guard as silent — caught by diffing the full
+ * classification against the pre-rewrite baseline rather than by reading the
+ * code.
+ */
+function positiveCount(token) {
+  let head = token.split('/')[0]
+  let i = 0
+  while (i < head.length && '([{"\''.includes(head[i])) i += 1
+  head = head.slice(i)
+  if (head.length === 0) return false
+  if (head[0] < '1' || head[0] > '9') return false // excludes a bare 0 on purpose
+  for (const ch of head) {
+    if ((ch < '0' || ch > '9') && ch !== ',') return false
+  }
+  return true
+}
+
+/** Character offset of the Nth whitespace-delimited token. */
+function tokenOffsets(text) {
+  const out = []
+  let i = 0
+  while (i < text.length) {
+    while (i < text.length && /* whitespace */ ' \t\n\r'.includes(text[i])) i += 1
+    if (i >= text.length) break
+    const start = i
+    while (i < text.length && !' \t\n\r'.includes(text[i])) i += 1
+    out.push({ text: text.slice(start, i), index: start })
+  }
+  return out
+}
+
+/**
+ * Find a positive integer governed by a denominator noun within the next few
+ * tokens — "181 in-scope SECURITY DEFINER public function(s)".
+ *
+ * The 6-token window is the same span the old pattern allowed and exists for
+ * exactly that shape: modifiers sit between the number and the noun.
+ */
+function findDenominator(text) {
+  const tokens = tokenOffsets(text)
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (!positiveCount(tokens[i].text)) continue
+    const limit = Math.min(tokens.length, i + 7)
+    for (let j = i + 1; j < limit; j += 1) {
+      if (NOUN_STEMS.has(stemNoun(tokens[j].text))) return tokens[i].index
+    }
+  }
+  return -1
+}
 
 // For guards whose "examined nothing" case can be a LEGITIMATE zero (a
 // diff-scoped forward gate on a PR that touches no relevant files): accept
 // an explicit, referenced zero as evidence the diff computation itself ran,
 // rather than requiring a positive count that would be dishonest to print.
-const DIFF_CONTEXT_RE = /\b(?:no changed|0 changed|scanning changed)\b[\s\S]{0,160}?\b(?:vs\.?|against|compared to)\s+\S+/i
+const DIFF_PHRASES = ['no changed', '0 changed', 'scanning changed']
+const DIFF_CONNECTIVES = ['vs.', 'vs ', 'against ', 'compared to ']
+
+/** A diff-scoped guard must name what it diffed AGAINST, within ~160 chars. */
+function findDiffContext(text) {
+  const hay = text.toLowerCase()
+  for (const phrase of DIFF_PHRASES) {
+    let from = 0
+    for (;;) {
+      const at = hay.indexOf(phrase, from)
+      if (at === -1) break
+      const window = hay.slice(at, at + 160 + phrase.length)
+      for (const conn of DIFF_CONNECTIVES) {
+        const cAt = window.indexOf(conn)
+        // Require a non-space token AFTER the connective — "against" alone is
+        // not a reference, "against origin/main" is.
+        if (cAt !== -1 && window.slice(cAt + conn.length).trim() !== '') return at
+      }
+      from = at + 1
+    }
+  }
+  return -1
+}
 
 // Evidence is reported as the whole LINE the match was found on (trimmed),
 // not the bare regex match — a match can legitimately stop at the first
@@ -126,14 +234,14 @@ function lineContaining(text, matchIndex) {
 function classifyOutput(combinedOutput, { diffScoped }) {
   const trimmed = combinedOutput.trim()
   if (trimmed === '') return { ok: false, reason: 'exited 0 with zero output' }
-  const denomMatch = combinedOutput.match(DENOMINATOR_RE)
-  if (denomMatch) {
-    return { ok: true, evidence: lineContaining(combinedOutput, denomMatch.index) }
+  const denomAt = findDenominator(combinedOutput)
+  if (denomAt !== -1) {
+    return { ok: true, evidence: lineContaining(combinedOutput, denomAt) }
   }
   if (diffScoped) {
-    const diffMatch = combinedOutput.match(DIFF_CONTEXT_RE)
-    if (diffMatch) {
-      return { ok: true, evidence: lineContaining(combinedOutput, diffMatch.index) }
+    const diffAt = findDiffContext(combinedOutput)
+    if (diffAt !== -1) {
+      return { ok: true, evidence: lineContaining(combinedOutput, diffAt) }
     }
   }
   return {
