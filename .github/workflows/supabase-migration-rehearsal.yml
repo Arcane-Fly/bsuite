@@ -228,12 +228,33 @@ jobs:
           sudo apt-get install -y postgresql-client
           psql --version
 
+      - name: Prove the migration selector fails closed (bsuite#1964)
+        # The selector decides WHAT gets gated, so it is the one input the rest
+        # of this job cannot check. If it silently returns an empty list, every
+        # step below passes having judged nothing — the "checked nothing vs
+        # found nothing" shape bsuite#1966 tracks estate-wide.
+        #
+        # It is therefore exercised against PLANTED pointers before it is
+        # trusted: one diffable, one diffable only after a targeted fetch, and
+        # two undiffable for two DIFFERENT reasons. The refusal is asserted, not
+        # assumed. A gate never seen to fail is not a gate.
+        run: |
+          bash scripts/supabase/resolve-changed-migrations.sh --self-test \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Determine changed migrations
         id: changed
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           DISPATCH_CHANGED: ${{ github.event.inputs.changed }}
+          # `persist-credentials: false` on the checkout stripped the auth header
+          # from every submodule config, so the selector's recovery fetch needs
+          # the credential handed back explicitly. Without it all six private
+          # submodules would classify as "not fetched" and every promotion PR
+          # would go spuriously red. Same expression as the checkout above:
+          # never on a fork, PAT preferred over GITHUB_TOKEN (bsuite#1781).
+          SUBMODULE_TOKEN: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" != "pull_request" ]; then
@@ -242,104 +263,14 @@ jobs:
             exit 0
           fi
 
-          # Two sources, because a promotion PR shows only gitlinks.
-          #   1. Files changed directly in the parent tree.
-          #   2. For each submodule whose gitlink moved, the migration files
-          #      that changed inside it between the two pointers.
-          CHANGED_LIST=""
-
-          while IFS= read -r f; do
-            case "$f" in
-              *supabase/migrations/*.sql) CHANGED_LIST="${CHANGED_LIST}${f}," ;;
-            esac
-          done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
-
-          # WHY THE FETCH CHANGED SHAPE (bsuite D-88)
-          #
-          # The old form was `git -C "$dir" fetch -q origin "$OLD_SHA"` — a fetch by
-          # BARE SHA. github.com does not enable uploadpack.allowAnySHA1InWant, so
-          # that request is REFUSED, and `persist-credentials: false` on the checkout
-          # above has additionally stripped the auth header from every submodule
-          # config, so it could not authenticate to a private remote even if the
-          # request were allowed. Both failures were swallowed by `|| true`. The
-          # "rare" fallback below was therefore the ROUTINE path.
-          #
-          # The real supply of history is `fetch-depth: 0` on the checkout, which
-          # clones each submodule's full history while credentials still exist. This
-          # loop is a top-up with a PROPER REFSPEC for the case where a pointer sits
-          # on a ref fetched since; it is allowed to fail and says so rather than
-          # hiding it, because it is not what the diff depends on.
-          for dir in crm7 R80.4 braden business-suite-unified conduit throughput; do
-            git -C "$dir" fetch -q --prune --no-tags origin '+refs/heads/*:refs/remotes/origin/*' 2>/dev/null \
-              || echo "::notice::$dir: remote refs not refreshed (persist-credentials is off) — using the full clone from checkout"
-          done
-
-          for dir in crm7 R80.4 braden business-suite-unified conduit throughput; do
-            # --verify --quiet, not a bare rev-parse. Without --verify, rev-parse
-            # falls back to echoing something for an unresolvable `<sha>:<path>`
-            # (measured: it returns the COMMIT sha when the path is absent from that
-            # tree), so a submodule missing from one side read as a moved pointer
-            # with a bogus value. --verify makes an unresolvable path resolve to the
-            # empty string, which is what the `-n` tests below already assume.
-            OLD_SHA=$(git rev-parse --verify --quiet "$BASE_SHA:$dir" 2>/dev/null || true)
-            NEW_SHA=$(git rev-parse --verify --quiet "$HEAD_SHA:$dir" 2>/dev/null || true)
-            [ -n "$OLD_SHA" ] && [ -n "$NEW_SHA" ] || continue
-            [ "$OLD_SHA" != "$NEW_SHA" ] || continue
-
-            if git -C "$dir" cat-file -e "$OLD_SHA^{commit}" 2>/dev/null \
-               && git -C "$dir" cat-file -e "$NEW_SHA^{commit}" 2>/dev/null; then
-              n=0
-              while IFS= read -r f; do
-                case "$f" in
-                  supabase/migrations/*.sql) CHANGED_LIST="${CHANGED_LIST}${dir}/${f},"; n=$((n + 1)) ;;
-                esac
-              done < <(git -C "$dir" diff --name-only "$OLD_SHA" "$NEW_SHA")
-              echo "  $dir: pointer ${OLD_SHA:0:8}..${NEW_SHA:0:8} diffed — $n migration(s) gated"
-              continue
-            fi
-
-            # FAIL CLOSED BY OVER-GATING.
-            #
-            # The pointer MOVED and the diff cannot be computed. The old code warned
-            # and continued, so those migrations were replayed and judged against
-            # nothing — the gate reported success having gated zero of them. Nothing
-            # in the output distinguished that from a clean run.
-            #
-            # Over-gating is the recoverable direction: every migration this scope
-            # carries above the floor is judged, so the PR's real change is
-            # necessarily inside the gated set. rehearse-migrations.mjs already skips
-            # anything at or below BASELINE_MAX ('in-baseline') and anything the
-            # scope has quarantined in KNOWN-BROKEN-IN-CI.txt, so this cannot turn
-            # existing tracked debt into a new red. If the scope has no migrations
-            # directory to over-gate from, there is nothing to judge and no honest
-            # verdict available — that is a hard failure, not a warning.
-            echo "::warning::$dir: pointer moved ${OLD_SHA:0:8}..${NEW_SHA:0:8} but neither commit is resolvable locally — cannot diff."
-            if [ ! -d "$dir/supabase/migrations" ]; then
-              echo "::error::$dir: pointer moved, diff impossible, AND $dir/supabase/migrations does not exist."
-              echo "There is nothing to over-gate and no way to judge this change. Failing closed."
-              exit 1
-            fi
-            n=0
-            while IFS= read -r f; do
-              base="${f##*/}"
-              ver="${base%%_*}"
-              case "$ver" in ''|*[!0-9]*) continue ;; esac
-              [ "${#ver}" -eq 14 ] || continue
-              # Fixed-width 14-digit stamps compare correctly as strings.
-              [ "$ver" \> "$MIGRATION_FLOOR" ] || [ "$ver" = "$MIGRATION_FLOOR" ] || continue
-              CHANGED_LIST="${CHANGED_LIST}${f},"
-              n=$((n + 1))
-            done < <(find "$dir/supabase/migrations" -maxdepth 1 -name '*.sql' | sort)
-            echo "  $dir: OVER-GATED $n migration(s) at or above the floor $MIGRATION_FLOOR."
-            echo "  Decision: pointer moved + diff impossible -> gate the whole scope rather than none of it."
-            if [ "$n" -eq 0 ]; then
-              echo "::error::$dir: over-gating selected ZERO migrations, so the moved pointer is still judged against nothing."
-              echo "Refusing to report a pass for a scope this job did not actually gate."
-              exit 1
-            fi
-          done
-
-          CHANGED_LIST="${CHANGED_LIST%,}"
+          # No `|| true` and no `continue-on-error`. `pipefail` is set so the
+          # selector's refusal survives the pipe into `paste` — without it the
+          # exit status would be paste's, which is always 0, and the fail-closed
+          # posture would be silently undone by the join.
+          CHANGED_LIST=$(
+            bash scripts/supabase/resolve-changed-migrations.sh \
+              --changed "$BASE_SHA" "$HEAD_SHA" | paste -sd, -
+          )
           echo "list=${CHANGED_LIST}" >> "$GITHUB_OUTPUT"
           echo "Gating: ${CHANGED_LIST:-<none>}"
 
