@@ -1,0 +1,88 @@
+name: Edge function slug-collision lint
+
+# bsuite#1943: the parent's own `supabase/functions/` and all six submodules
+# deploy their edge functions to the SAME Supabase project —
+# .github/workflows/supabase-functions-deploy.yml passes the identical
+# `--project-ref "$SUPABASE_PROJECT_ID"` for every scope in its matrix. A
+# Supabase function slug is unique per project, so when two scopes declare a
+# directory of the same name under supabase/functions/, they are not two
+# functions: they are ONE live artifact whose contents are whichever scope
+# deployed last. Nothing errors, nothing warns, and the losing repo goes on
+# believing its own source is running.
+#
+# Confirmed live, not theoretical. crm7 and business-suite-unified both
+# declared tga-search, generate-document, oauth-google-email and
+# oauth-microsoft-email, and overwrote each other repeatedly (crm7's scope ran
+# 2026-08-11T10:23:03Z, BSU's 2026-08-11T10:59:42Z the same morning). The
+# measured consequence: the deployed tga-search was BSU's copy, which never
+# verifies the caller's JWT signature — a garbage bearer token returned HTTP
+# 200 with data, while crm7, the function's only real caller, had shipped a
+# JWKS-verifying version it believed was live.
+#
+# NO `paths:` FILTER — deliberate, two independent reasons:
+#
+#   1. Under-triggering. A collision is introduced by a change inside a
+#      SUBMODULE, and the parent tree holds only a gitlink for each submodule.
+#      A filter like `**/supabase/functions/**` can therefore NEVER match a
+#      submodule's function changes — it would match only the parent's own two
+#      root functions. That is precisely the failure supabase-functions-deploy.yml
+#      and supabase-migrate.yml both had to be repaired for (runs 30543359155
+#      and 30372383510): the workflow fired, matched nothing, and reported
+#      success having deployed zero functions.
+#   2. Required-check deadlock. A required check that is path-filtered never
+#      reports on a PR that misses the filter, and the PR waits forever. This
+#      gate is a directory scan that finishes in seconds, so running it on
+#      every PR is cheaper than reasoning about when it should run.
+#
+# Scope is FULL-TREE, not PR-delta, for the same reason as the sibling
+# migration-collision gate: a slug added in this PR can collide with an
+# EXISTING slug in a scope this PR never touches.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: edge-fn-slug-collision-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  slug-collision-lint:
+    name: Edge function slug collisions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the collision is BETWEEN submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout. Same fallback chain
+          # every other submodule-consuming workflow here uses
+          # (supabase-migrate.yml, migration-version-collision-lint.yml,
+          # prod-migration-history-audit.yml, secret-naming-drift.yml).
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # Run the checker's own self-test FIRST so a pass below is known to come
+      # from a checker that can still fail — including its two anti-prose cases,
+      # which assert a slug named in a comment or a doc does NOT trip the gate.
+      - name: Self-test the checker
+        run: node scripts/check-edge-function-slug-collisions.mjs --self-test
+
+      # --require-scopes=6 is the positive control against a silently unscanned
+      # tree. Six of the seven deployable scopes currently declare at least one
+      # function (R80.4 declares none), so anything less than 6 means the
+      # submodule checkout did not populate — and a "no collisions" result on a
+      # tree with no submodules in it is meaningless, not clean.
+      - name: Check for cross-scope edge function slug collisions
+        run: node scripts/check-edge-function-slug-collisions.mjs --require-scopes=6
