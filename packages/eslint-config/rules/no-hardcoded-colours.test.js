@@ -421,6 +421,133 @@ test('HOLE 3 — the rule must not flag its own sibling’s name', () => {
   })
 })
 
+// ─────────────────────────────────────────────────────────────────────────────
+// bsuite#1962 — a colour passed to a FUNCTION was in a position the scanner
+// never visited.
+//
+//   { backgroundColor: 'oklch(1 0 0)' }            // reported
+//   { backgroundColor: pdfOklch('oklch(1 0 0)') }  // NOT reported
+//
+// Same value, same property, same file. crm7 adapts OKLCH at render time
+// through src/lib/pdf/pdfColor.ts because @react-pdf/renderer drops CSS Color 4
+// OKLCH when pdfkit normalises fill colours — so the app's CORRECT convention
+// for staying token-shaped put every PDF colour in the one place the rule was
+// blind. 17 pure whites sat there across seven files, including
+// ChargeRatePdfDocument.tsx, the PDF the quote signing page renders for a
+// client to sign.
+//
+// Every `invalid` case below produced ZERO errors before this change; measured,
+// not assumed. The `valid` cases are the over-reach controls, and they are the
+// point of the design: the widening narrows the VERDICT inside an argument to
+// the absolute pure-white/black ban instead of declining to look. A widening
+// that also fired the FORMAT rule there would report every legitimate adapter
+// call in the estate, which is how a gate gets switched off.
+// ─────────────────────────────────────────────────────────────────────────────
+test('bsuite#1962 — a colour handed to a function is still a colour', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      // ── OVER-REACH CONTROLS. A string that merely sits in a call must not fire.
+      { code: `const t = translate('checkout.total.label')` },
+      { code: `const t = translate('background.white.label')` },
+      { code: `const t = translate('see crm7#1234')` },
+      { code: `const n = { w: parseInt('255', 10) }` },
+      // The FORMAT rule stays OUT of arguments. A colour handed to an adapter is
+      // already tokenised at the call site; reporting it is the second wave of
+      // noise that gets a rule disabled. These are `forbiddenHex` in a normal
+      // value position and silent here — deliberately asymmetric.
+      { code: `const s = { color: pdfHex('#f8f9fa') }` }, // theme-audit-ok: lint fixture, estate near-white
+      { code: `const s = { color: pdfHex('#0a0e1a') }` }, // theme-audit-ok: lint fixture, estate near-black
+      { code: `const s = { color: pdfRgb('rgb(37 99 235)') }` },
+      // Palette classes are not the absolute ban either.
+      { code: `const d = describe('bg-red-500 handling')` },
+      // Not pure: saturation 0% alone is a legitimate grey.
+      { code: `const s = { color: conv('hsl(0 0% 50%)') }` },
+      // The estate's own deep navy must survive being passed to the adapter.
+      { code: `const s = { color: pdfOklch('oklch(0.13 0.02 260)') }` },
+      // Token-driven components are not a hardcoded colour anywhere.
+      { code: `const s = { color: pdfOklch('var(--role-primary)') }` },
+    ],
+    invalid: [
+      // ── THE EXACT REPORTED SHAPE ──────────────────────────────────────────
+      {
+        code: `const s = { backgroundColor: pdfOklch('oklch(1 0 0)') }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // Pure black through the same adapter.
+      {
+        code: `const s = { color: pdfOklch('oklch(0 0 0)') }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // Surface form cannot evade it, because the ban is a predicate on NUMBERS
+      // and the argument walk feeds the same classifier.
+      {
+        code: `const s = { color: pdfHex('#ffffff00') }`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const s = { color: toPdf('rgb(1,1,1)') }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const s = { color: conv('hsl(0 0% 100%)') }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // An argument that is ITSELF a call.
+      {
+        code: `const s = { color: outer(inner('#ffffff')) }`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // A template literal argument.
+      {
+        code: 'const s = { color: pdfOklch(`oklch(1 0 0)`) }',
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // An array argument — clsx/cn genuinely take arrays.
+      {
+        code: `const c = { className: cn(['bg-white']) }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // Nesting past the walk's former depth cap of 6.
+      {
+        code: `const s = { color: a(b(c(d(e(f(g('#fff'))))))) }`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // ── POSITIONS THAT COULD NOT REACH A CALL AT ALL ──────────────────────
+      // Assignment. Silent even for a DIRECT literal until 2026-08-13, while
+      // this file's header claimed assignment was checked. Canvas and imperative
+      // DOM code put every colour they own here.
+      {
+        code: `function f(ctx) { ctx.fillStyle = '#ffffff' }`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `function f(ctx) { ctx.fillStyle = pdfOklch('oklch(1 0 0)') }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // A call used for effect rather than value.
+      {
+        code: `function f() { applyTheme('oklch(1 0 0)') }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // A bare ARRAY in value position, laundered through `.join()`. The
+      // receiver-chain descent has walked into `.join()` since 2026-08-11, and
+      // then stopped dead on the array — so business-suite-unified's embed
+      // widget, which is served onto THIRD-PARTY customer sites, held pure white
+      // in `btn.style.cssText = [...].join(';')` the whole time. An array is a
+      // value container and inherits the mode; it is not narrowed like a call.
+      {
+        code: `function f(btn) { btn.style.cssText = ['background:#2563eb', 'color:#fff'].join(';') }`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenHex' }, { messageId: 'forbiddenPure' }],
+      },
+      // Pure black in an array, same shape — the modal backdrop.
+      {
+        code: `function f(el) { el.style.cssText = ['inset:0', 'background:rgba(0,0,0,0.6)'].join(';') }`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+    ],
+  })
+})
+
 test('the rule contains no regex — the standing ruling, enforced', () => {
   // A structural assertion, not a style preference. Every detection defect this
   // rule has shipped was a pattern whose assumption about surface form was wrong
