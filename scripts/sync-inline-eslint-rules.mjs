@@ -149,7 +149,9 @@ const SYNCED_RULES = [
     // holding the count at 91. So this row went from silent-pass to genuinely
     // covered, and the comment saying otherwise had already outlived its fact.
     submodules: ALL_SUBMODULES,
-    maxWaived: 3,
+    // 3 -> 1 (bsuite#1945). BSU#701 and conduit#448 merged and their pointers are
+    // bumped in this commit, so only crm7 is still waived. Ceilings shrink only.
+    maxWaived: 1,
   },
   {
     // Reconciled 2026-08-12 from three divergent bodies — see the source file's
@@ -160,7 +162,8 @@ const SYNCED_RULES = [
     source: 'packages/eslint-config/rules/no-text-white.js',
     filename: 'no-text-white.js',
     submodules: ['crm7', 'business-suite-unified', 'conduit'],
-    maxWaived: 2,
+    // 2 -> 1 (bsuite#1945). BSU took the reconciled body in BSU#701; crm7 has not.
+    maxWaived: 1,
   },
 ]
 
@@ -240,12 +243,12 @@ const MANIFEST_EXPECTED = ['business-suite-unified', 'braden', 'throughput', 'co
  * gate that is permanently red blocks every unrelated PR until someone switches
  * it off. It must name an issue, and the ceiling may only shrink.
  */
-const MANIFEST_UNLISTED_WAIVED = {
-  'business-suite-unified/no-text-white.js':
-    'bsuite#1889 / BSU#680 — add no-text-white.js to BSU’s parity-manifest.json when it takes the ' +
-    'reconciled body; until then its copy is checked here but not by BSU’s own parity job',
-}
-const MAX_MANIFEST_UNLISTED = 1
+// EMPTY as of 2026-08-13 (bsuite#1945). BSU#701 adds no-text-white.js to its
+// parity-manifest.json in the same commit that regenerates the copy, so the one
+// unlisted copy in the estate is now listed and verified at the pinned gitlink.
+// The ceiling goes to zero: a new unlisted copy is a hard failure from here.
+const MANIFEST_UNLISTED_WAIVED = {}
+const MAX_MANIFEST_UNLISTED = 0
 
 /**
  * Copies known to be out of sync, with the issue that will land them.
@@ -285,24 +288,23 @@ const KNOWN_DRIFTED = {
     'bsuite#1889 / crm7 — was AHEAD, now BEHIND: the source is a tokeniser and is strictly stronger. ' +
     'Needs a plain regeneration; measured 4 violations, all outside its lint scope.',
 
-  // BLOCKED ON REAL WORK — these two cannot take the rule until their colours
-  // are fixed, or their lint breaks. Both have PRs doing exactly that.
+  // business-suite-unified/no-hardcoded-colours.js and conduit/no-hardcoded-colours.js
+  // are GONE from this list. BSU#701 and conduit#448 regenerated both copies and
+  // their manifests, both merged, and this commit bumps both pointers.
   //
-  // COUNTS RE-MEASURED 2026-08-13 with the tokeniser, because the instrument
-  // changed and the old numbers did not carry — the same mistake this file
-  // already records once. Whole-repo scan, which is a wider denominator than
-  // either repo's own eslint scope:
+  // The counts recorded here on 2026-08-13 — BSU 99 violations (12 pure), conduit 3
+  // (1 pure) — were a WHOLE-REPO scan, and they are not wrong; they are answering a
+  // different question from the one that decides whether a copy can land. Each app's
+  // OWN lint is what its CI runs, with its own config, its own `files` globs and its
+  // own ignore list, and that is the gate the sync has to survive:
   //
-  //   business-suite-unified   508 files, 99 violations (12 pure, 87 literal)
-  //   conduit                  420 files,  3 violations ( 1 pure,  2 literal)
+  //   business-suite-unified   508 files   npx eslint . --max-warnings 0   exit 0
+  //   conduit                  420 files   npx eslint . --max-warnings 0   exit 0
   //
-  // The PURE counts are the newly-surfaced ones: values banned outright that no
-  // previous version of this rule could see.
-  'business-suite-unified/no-hardcoded-colours.js':
-    'bsuite#1889 / BSU#680 — 99 violations (12 pure) under the tokeniser; was recorded as 27 ' +
-    'against the older, weaker rule',
-  'conduit/no-hardcoded-colours.js':
-    'bsuite#1889 / conduit#428 — 3 violations (1 pure) under the tokeniser, in chart-colour fallbacks',
+  // Both merged green on that basis, with their own check-eslint-rule-parity.mjs
+  // reporting the armed-ness probe passing. State WHICH denominator a count used
+  // when recording one here — two honest measurements of the same repo differing by
+  // 99 is exactly how a waiver outlives its reason.
 
   // braden/no-hardcoded-colours.js, throughput/no-hardcoded-colours.js and
   // R80.4/no-hardcoded-colours.js are NOT here. They have already taken the new
@@ -313,9 +315,10 @@ const KNOWN_DRIFTED = {
 
   // no-text-white, newly registered 2026-08-12. Both copies predate the
   // reconciled source; conduit's is regenerated in this cycle.
-  'business-suite-unified/no-text-white.js':
-    'bsuite#1889 / BSU#680 — predates the reconciled source; needs the Property walk + tightened ' +
-    'lookbehind, after which its two self-referential eslint-disable comments can come out',
+  // business-suite-unified/no-text-white.js is GONE: BSU#701 took the reconciled
+  // body, and the two self-referential eslint-disable directives its waiver
+  // predicted would fall out did exactly that — `reportUnusedDisableDirectives`
+  // failed the build on both the moment the copy synced.
   'crm7/no-text-white.js':
     'bsuite#1889 / crm7#1661 — predates the reconciled source; missing the object-Property walk',
 }
@@ -374,15 +377,15 @@ const KNOWN_DRIFTED = {
  * "waiting on a pointer bump" cannot quietly become a parking space: it must
  * return to zero, and it may only shrink.
  */
-const PENDING_POINTER_BUMP = {
-  'R80.4/no-hardcoded-colours.js':
-    'R80.4#35 — regenerated and merged-pending; its lint ratchet holds at 91 (nothing grew)',
-  'braden/no-hardcoded-colours.js':
-    'braden#382 — regenerated and merged-pending; BRADEN-EXEMPT, so no behaviour change there',
-  'throughput/no-hardcoded-colours.js':
-    'throughput#277 — regenerated and merged-pending; 242 files, 0 violations, rule probe-verified armed',
-}
-const MAX_PENDING_POINTER_BUMP = 3
+// EMPTY as of 2026-08-13 (bsuite#1945), because this commit is the bump. All
+// three — R80.4#35, braden#382, throughput#277 — merged, and their gitlinks now
+// point at commits whose copies hash to the live source body. Each SHA was
+// verified against the source before being pinned rather than taken on trust;
+// `update-index --cacheinfo` does not check that a submodule object exists.
+// Ceiling to zero: this list is for a transient state, and leaving a ceiling
+// above the entries would let the next transient sit here unnoticed.
+const PENDING_POINTER_BUMP = {}
+const MAX_PENDING_POINTER_BUMP = 0
 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex')
 

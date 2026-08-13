@@ -70,7 +70,7 @@ export const noTextWhite = {
     type: 'suggestion',
     fixable: 'code',
     docs: {
-      // eslint-disable-next-line bsuite/no-text-white -- rule description intentionally names the banned tokens
+      // eslint-disable-next-line bsuite/no-text-white -- theme-audit-ok: the rule description has to name the two utilities it bans, and PURE_TAILWIND_RE (no-hardcoded-colours) now matches them too
       description: 'Disallow the text-white/text-black utilities as standalone text colours. Use text-foreground instead.',
       recommended: true,
     },
