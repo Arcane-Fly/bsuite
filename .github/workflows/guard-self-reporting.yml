@@ -58,11 +58,21 @@ jobs:
       # needed before the watcher runs. Non-fatal: a guard that can't resolve
       # its base ref will report that itself, which is exactly the kind of
       # thing this workflow exists to surface, not paper over.
-      - name: Ensure origin/main is resolvable in every scope that needs it
+      # `development` joined `main` here for bsuite#1914: the branch-tip
+      # collision guard reads each submodule's `development` TIP, which is the
+      # whole reason it can see collisions the pinned-gitlink guard cannot. It
+      # is the first registered guard that needs a base ref other than main.
+      # crm7 and R80.4 joined the list at the same time — they were absent, so
+      # any guard needing a resolvable base ref in those two scopes never had
+      # one.
+      - name: Ensure origin/main and origin/development are resolvable in every scope
         shell: bash
         run: |
-          for repo in . business-suite-unified conduit braden throughput; do
-            git -C "$repo" fetch origin main:refs/remotes/origin/main 2>/dev/null || true
+          for repo in . crm7 business-suite-unified conduit braden throughput R80.4; do
+            [ -e "$repo/.git" ] || continue
+            for branch in main development; do
+              git -C "$repo" fetch origin "$branch:refs/remotes/origin/$branch" 2>/dev/null || true
+            done
           done
 
       - name: Setup Node

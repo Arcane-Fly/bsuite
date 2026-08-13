@@ -192,6 +192,30 @@ export const GUARDS = [
       'allowlisted)"',
   },
   {
+    id: 'parent-check-migration-collisions-at-branch-tips',
+    label: 'Migration collisions against sibling branch TIPS (merge-time)',
+    repo: '.',
+    command: ['node', 'scripts/check-migration-collisions-at-branch-tips.mjs'],
+    ciWorkflow: '.github/workflows/migration-collision-branch-tips.yml',
+    mode: 'run',
+    // Complements parent-check-migration-version-collisions rather than
+    // duplicating it: that one reads submodules at the PINNED GITLINK, this one
+    // at each submodule's `development` TIP. The gitlink is a snapshot of what
+    // the parent already promoted, so it is structurally blind to a migration
+    // authored on a sibling's development an hour ago — the exact gap that lost
+    // crm7#1715's platform-scope lockdown and bsuite#1913's anon REVOKE.
+    //
+    // Needs `refs/remotes/origin/development` inside each submodule; the
+    // workflow's fetch step provides it. Without it this guard exits 1 naming
+    // the scope it could not read, which is correct self-reporting — it refuses
+    // to call an estate clean when it failed to look at part of it.
+    evidence:
+      '"812 versioned migration file(s); MIGRATION_FLOOR=20260611000000 ... ' +
+      '4 duplicated version(s) with IDENTICAL content ... 23 divergent ' +
+      'duplicate(s) BELOW the floor ... 2 ... allowlisted ... 0 UNRESOLVED ' +
+      'collision(s)" — every scope named with its tip SHA and file count.',
+  },
+  {
     id: 'parent-drift-scan',
     label: 'BSuite 9-signal PR drift scan (parent)',
     repo: '.',
