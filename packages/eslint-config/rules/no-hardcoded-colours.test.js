@@ -463,19 +463,19 @@ test('bsuite#1962 — a colour handed to a function is still a colour', () => {
       // Not pure: saturation 0% alone is a legitimate grey.
       { code: `const s = { color: conv('hsl(0 0% 50%)') }` },
       // The estate's own deep navy must survive being passed to the adapter.
-      { code: `const s = { color: pdfOklch('oklch(0.13 0.02 260)') }` },
+      { code: `const s = { color: pdfOklch('oklch(0.13 0.02 260)') }` }, // theme-audit-ok: lint fixture — the banned value IS the case under test
       // Token-driven components are not a hardcoded colour anywhere.
       { code: `const s = { color: pdfOklch('var(--role-primary)') }` },
     ],
     invalid: [
       // ── THE EXACT REPORTED SHAPE ──────────────────────────────────────────
       {
-        code: `const s = { backgroundColor: pdfOklch('oklch(1 0 0)') }`,
+        code: `const s = { backgroundColor: pdfOklch('oklch(1 0 0)') }`, // theme-audit-ok: lint fixture — the banned value IS the case under test
         errors: [{ messageId: 'forbiddenPure' }],
       },
       // Pure black through the same adapter.
       {
-        code: `const s = { color: pdfOklch('oklch(0 0 0)') }`,
+        code: `const s = { color: pdfOklch('oklch(0 0 0)') }`, // theme-audit-ok: lint fixture — the banned value IS the case under test
         errors: [{ messageId: 'forbiddenPure' }],
       },
       // Surface form cannot evade it, because the ban is a predicate on NUMBERS
@@ -499,7 +499,7 @@ test('bsuite#1962 — a colour handed to a function is still a colour', () => {
       },
       // A template literal argument.
       {
-        code: 'const s = { color: pdfOklch(`oklch(1 0 0)`) }',
+        code: 'const s = { color: pdfOklch(`oklch(1 0 0)`) }', // theme-audit-ok: lint fixture — the banned value IS the case under test
         errors: [{ messageId: 'forbiddenPure' }],
       },
       // An array argument — clsx/cn genuinely take arrays.
@@ -521,12 +521,12 @@ test('bsuite#1962 — a colour handed to a function is still a colour', () => {
         errors: [{ messageId: 'forbiddenPure' }],
       },
       {
-        code: `function f(ctx) { ctx.fillStyle = pdfOklch('oklch(1 0 0)') }`,
+        code: `function f(ctx) { ctx.fillStyle = pdfOklch('oklch(1 0 0)') }`, // theme-audit-ok: lint fixture — the banned value IS the case under test
         errors: [{ messageId: 'forbiddenPure' }],
       },
       // A call used for effect rather than value.
       {
-        code: `function f() { applyTheme('oklch(1 0 0)') }`,
+        code: `function f() { applyTheme('oklch(1 0 0)') }`, // theme-audit-ok: lint fixture — the banned value IS the case under test
         errors: [{ messageId: 'forbiddenPure' }],
       },
       // A bare ARRAY in value position, laundered through `.join()`. The
