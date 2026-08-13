@@ -69,6 +69,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 | Setup, lockfiles, shared packages, env vars, GCP WIF, cron checks, memory protocol | [`docs/20260731-platform-operations-reference-v1.00W.md`](docs/20260731-platform-operations-reference-v1.00W.md) |
 | Self-validation loop (output/visual equivalence, PR Evidence block) | [`docs/20260507-ff-self-validation-doctrine-v1.00W.md`](docs/20260507-ff-self-validation-doctrine-v1.00W.md) |
 | Supabase policy gates, consumer-package gate, definition of done | [`docs/20260731-supabase-verification-gates-v1.00W.md`](docs/20260731-supabase-verification-gates-v1.00W.md) |
+| Trying a migration **before** you ship it (`pnpm supabase:rehearse`) | [`docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md`](docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md) |
 | AI SDK standards, multi-file refactor tooling, reusable code patterns | [`docs/20260731-agent-engineering-patterns-v1.00W.md`](docs/20260731-agent-engineering-patterns-v1.00W.md) |
 | Layout, z-index scale, DOM autopsy | [`docs/20260731-frontend-layout-zindex-standards-v1.00W.md`](docs/20260731-frontend-layout-zindex-standards-v1.00W.md) |
 | Theme tokens, both brands | `packages/theme/README.md` + the `bsuite-brand-system` skill |
