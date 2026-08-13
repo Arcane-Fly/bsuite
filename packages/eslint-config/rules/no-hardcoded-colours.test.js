@@ -20,6 +20,7 @@
 // that once failed a build for citing the very issue it fixed).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { RuleTester } from 'eslint'
 import tseslint from 'typescript-eslint'
 import { noHardcodedColours } from './no-hardcoded-colours.js'
@@ -112,8 +113,9 @@ test('no-hardcoded-colours catches every shape that was previously gate-invisibl
       // Arbitrary hex value inside className.
       {
         code: `const C = () => <div className="text-[#ffffff]" />`, // theme-audit-ok: lint fixture — the rule must be seen catching this
-        // TWO errors: the absolute pure-white ban AND the format rule.
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        // ONE error: pure white is both a banned VALUE and a hardcoded literal,
+        // and the rule now reports the token once, under the more specific message.
+        errors: [{ messageId: 'forbiddenPure' }],
       },
       // Style object — the original Property/hex path, must still work.
       {
@@ -146,13 +148,15 @@ test('theme-audit-ok annotates a mask stop without disarming the file', () => {
       // "valid" cases above would prove nothing about the hatch.
       {
         code: `const s = { mask: \`linear-gradient(#fff 0 0)\` }`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
-        // Pure white/black now ALSO fires its own absolute ban, so two errors.
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        // Pure white/black fires its own absolute ban, which subsumes the format
+        // message for the same token.
+        errors: [{ messageId: 'forbiddenPure' }],
       },
       {
         code: `const M = 'mask-[linear-gradient(#000,#000)]'`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
-        // Pure white/black now ALSO fires its own absolute ban, so two errors.
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        // Pure white/black fires its own absolute ban, which subsumes the format
+        // message for the same token.
+        errors: [{ messageId: 'forbiddenPure' }],
       },
       // The hatch is line-local, not file-wide: an annotated mask stop on one line
       // must not licence an unrelated hardcoded colour further down the file.
@@ -245,7 +249,7 @@ test('EMAIL-HTML-EXEMPT relaxes the FORMAT but never the pure-white/black ban (c
       // pdf-lib's normalised form — the e-signature certificate title shape.
       {
         code: `const c = 'rgb(0, 0, 0)'`, // theme-audit-ok: lint fixture
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        errors: [{ messageId: 'forbiddenPure' }],
       },
     ],
   })
@@ -273,8 +277,165 @@ test('the react-pdf carve-out needs a real IMPORT, not a mention (crm7#1623)', (
       // And a mention must not hide pure white either.
       {
         code: `// see @react-pdf/renderer for the other flow\nconst c = '#ffffff'`, // theme-audit-ok: lint fixture
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        errors: [{ messageId: 'forbiddenPure' }],
       },
     ],
   })
+})
+
+// ===========================================================================
+// THE TWO HOLES THE REGEXES LEFT OPEN  (bsuite#1889, 2026-08-13)
+// ===========================================================================
+//
+// Both of these PASSED the pre-tokeniser source rule. Proven in both directions
+// before this suite was written: the old source reported `forbiddenHex` for them
+// in an ordinary file — never `forbiddenPure` — and reported NOTHING AT ALL in a
+// format-exempt file, where the general hex check is switched off and only the
+// absolute ban should have been left standing.
+//
+// They are two instances of one failure: a regex encodes an assumption about
+// surface form, the assumption is wrong at an edge, and the miss is silent.
+test('HOLE 1 — alpha-suffixed pure white/black is still pure', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      // The guards that must survive: `#ffffff00` is eight hex digits, and so is
+      // half of what these look like.
+      { code: `const m = 'see crm7#1234 and bsuite#1871'` },
+      { code: `const html = '<p>&#129514;</p>'` },
+      // Not a colour: the run continues into non-hex word characters.
+      { code: `const id = '#fffzzz'` },
+    ],
+    invalid: [
+      // THE HOLE. The old alternation spelled the alpha nibbles as more literal
+      // `f`s, so `ffffff` matched and `\b` was then asked to hold between `f` and
+      // `0` — both word characters. It failed, and the alternation gave up
+      // instead of reconsidering the length. White at zero opacity is white.
+      {
+        code: `const c = '#ffffff00'`, // theme-audit-ok: lint fixture — this literal IS the bug
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const c = '#FFFFFF00'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const c = '#00000080'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // 4-digit #RGBA, the short form of the same thing.
+      {
+        code: `const c = '#ffff'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // AND IT SURVIVES THE CARVE-OUT. This is the case the old rule was
+      // completely silent on: no general hex check, and a PURE_RE that could not
+      // see the value.
+      {
+        code: `/* EMAIL-HTML-EXEMPT */\nconst c = '#ffffff00'`, // theme-audit-ok: lint fixture
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+    ],
+  })
+})
+
+test('HOLE 2 — separators are a set, not a shape', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      // Token-driven channels are not a hardcoded colour, in any separator style.
+      { code: `const c = 'rgb(var(--rgb-brand))'` },
+      { code: `const c = 'hsl(var(--h) 50% 50%)'` },
+      // oklch is the MANDATED notation, so writing one is not a defect — only
+      // writing pure white or pure black in one is. L=0.13 is neither.
+      { code: `const c = 'oklch(0.13 0.02 260)'` }, // theme-audit-ok: lint fixture — the value is the test subject, not a token this file ships
+    ],
+    invalid: [
+      // THE HOLE. The old pattern required commas, so the space-separated CSS
+      // Color 4 form passed. A later attempt at `\s*[,\s]\s*` failed differently:
+      // the leading `\s*` swallowed the space and left the separator nothing.
+      {
+        code: `const c = 'rgb(255 255 255)'`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const c = 'rgba(0 0 0 / 50%)'`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      // Same three numbers, four notations, one code path.
+      { code: `const c = 'rgb(255,255,255)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const c = 'rgb(100% 100% 100%)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const c = 'hsl(0 0% 100%)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const c = 'hsl(210, 40%, 0%)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // theme-audit-ok: lint fixture — pure white in the mandated notation is exactly what this asserts is caught
+      { code: `const c = 'oklch(100% 0 0)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const c = 'hwb(0 100% 0%)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const c = 'color(srgb 1 1 1)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // pdf-lib / react-pdf normalise channels to 0..1. crm7's copy LOST this
+      // case when it split the single PURE_RE into four purpose-built ones; the
+      // forward-port is a union of the copies, not a copy of the longest.
+      { code: `const c = 'rgb(1,1,1)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // AND IT SURVIVES THE CARVE-OUT.
+      {
+        code: `/* EMAIL-HTML-EXEMPT */\nconst c = 'rgb(255 255 255)'`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+    ],
+  })
+})
+
+test('HOLE 3 — the rule must not flag its own sibling’s name', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    valid: [
+      // `\b(prefix)-white\b` matched INSIDE `no-text-white`, because `-` is a
+      // non-word character so the boundary holds in front of `text`. Three repos
+      // each answered with a local `eslint-disable` — one fix applied three times
+      // as a workaround. A tokeniser splits on whitespace and then decomposes by
+      // segment: the first segment here is `no`, which is not a utility prefix,
+      // so there is nothing to disable.
+      { code: `const r = 'no-text-white'` },
+      { code: `const r = 'bsuite/no-text-white and bsuite/no-hardcoded-colours'` },
+      { code: `const C = () => <div className="no-text-white" />` },
+      // Neighbouring shapes that were never utilities either.
+      { code: `const C = () => <div className="whitespace-nowrap" />` },
+      { code: `const p = 'src/components/to-white.ts'` },
+    ],
+    invalid: [
+      // THE CONTROL. The real utilities must still fire, or the valid cases above
+      // prove only that the rule is off.
+      {
+        code: `const C = () => <div className="bg-white" />`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const C = () => <div className="dark:hover:text-black" />`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const C = () => <div className="bg-white/50" />`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+      {
+        code: `const C = () => <div className="!border-black" />`,
+        errors: [{ messageId: 'forbiddenPure' }],
+      },
+    ],
+  })
+})
+
+test('the rule contains no regex — the standing ruling, enforced', () => {
+  // A structural assertion, not a style preference. Every detection defect this
+  // rule has shipped was a pattern whose assumption about surface form was wrong
+  // at an edge, and the miss read as a pass. Re-introducing one would be
+  // invisible to every other test here, because a new regex would only be
+  // exercised by the shapes its author happened to think of.
+  const src = readFileSync(new URL('./no-hardcoded-colours.js', import.meta.url), 'utf-8')
+  for (const forbidden of ['new RegExp', '.test(', '.exec(', '.match(', '.matchAll(']) {
+    assert.equal(
+      src.includes(forbidden),
+      false,
+      `no-hardcoded-colours.js must not use ${forbidden} — the detection is a tokeniser (standing ruling, 2026-08-12)`,
+    )
+  }
+  // `.split()` and `.replace()` are permitted ONLY with string arguments; a
+  // regex separator would be the same defect wearing a method call.
+  assert.equal(src.includes(".split('-')"), true, 'segment decomposition should be a string split')
 })
