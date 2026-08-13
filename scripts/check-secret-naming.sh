@@ -237,6 +237,34 @@ filter_matches() {
     if printf '%s' "$raw" | grep -qE 'legacy compat — remove after [0-9]{4}-[0-9]{2}-[0-9]{2}'; then
       continue
     fi
+    # A comment NAMING a variable is documentation of it, not a read of it.
+    #
+    # These rules police what the runtime does. `git grep` has no idea what a
+    # comment is, so until now the sentence "SUPABASE_ANON_KEY happens to work
+    # on this project only because the 2026-04-22 legacy-key disable re-pointed
+    # it at the publishable key" — precisely the explanation an author most
+    # needs to leave behind, and which the header of this very file spends
+    # fifteen lines making — was itself a violation. The guard punished the
+    # documentation of the hazard it exists to prevent, so the incentive it
+    # created was to delete the warning.
+    #
+    # This is the estate's recurring prose-vs-code confusion, running the other
+    # way. The familiar direction is a guard SATISFIED by prose: crm7's OAuth
+    # session-sync check passed with both real `setSession()` calls deleted,
+    # contented by a single doc comment. Same root cause — matching text when
+    # the question is about code — and both directions are defects.
+    #
+    # Line-level, deliberately. A trailing comment after real code still
+    # reports, because that line DOES contain code. The residual failure mode
+    # is therefore a false positive an author can see and reword, never a
+    # missed read. Anything stronger needs a parser per language, and the
+    # globs above span five file types.
+    code_part=${raw#*:}        # strip "path:"
+    code_part=${code_part#*:}  # strip "line:"
+    code_part=${code_part#"${code_part%%[![:space:]]*}"}
+    case "$code_part" in
+      '//'*|'/*'*|'*'*) continue ;;
+    esac
     # Test files are not runtime source and never reach a bundle.
     #
     # These rules restrict themselves to "runtime source (src/, app/, pages/,
