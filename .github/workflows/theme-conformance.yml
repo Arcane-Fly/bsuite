@@ -108,22 +108,35 @@ jobs:
           # baseline — including its 1 real pure white/black endpoint, which is
           # banned in every role by standing operator ruling.
           #
-          # The baseline moves 10 -> 11 in the same change, and the +1 is
+          # The baseline moved 10 -> 11 when that filter was fixed, and the +1 was
           # entirely R80.4's ONE pre-existing pure endpoint finally being
-          # counted. It is not a new violation and nothing regressed.
+          # counted. It was not a new violation and nothing regressed.
           #
-          # I got this wrong once, which is worth recording. Measured against
-          # the submodules' origin/development TIPS the totals were 7 (broken
-          # filter) and 8 (fixed), comfortably under the baseline of 10 — so the
-          # first version of this change left the baseline alone. This job reads
-          # the submodules at their PINNED gitlink SHAs, which is a DIFFERENT
-          # TREE, and there the totals are 10 and 11. The gate went red on the
-          # PR that introduced the fix. Measure against the tree CI actually
-          # reads, not the one in your working copy.
+          # I got the MEASUREMENT wrong once, which is worth keeping. Measured
+          # against the submodules' origin/development TIPS the totals were 7
+          # (broken filter) and 8 (fixed), comfortably under the baseline of 10 —
+          # so the first version of that change left the baseline alone. This job
+          # reads the submodules at their PINNED gitlink SHAs, which is a
+          # DIFFERENT TREE, and there the totals were 10 and 11. The gate went red
+          # on the PR that introduced the fix. Measure against the tree CI
+          # actually reads, not the one in your working copy.
           #
-          # This should return to 10 when LANE-R804 clears R80.4's single pure
-          # endpoint. The ratchet only shrinks; raising it is allowed exactly
-          # once here, to admit an app that was silently outside the count.
+          # HISTORY, so nobody re-derives it from the paragraph above (D-87).
+          # The baseline is 7 TODAY, and 7 is what THIS JOB measures at the pinned
+          # gitlink SHAs — not a working-copy number. Run 31670715641 (development,
+          # head 82da8eb9, 2026-08-13T05:33Z) printed "all six submodules present",
+          # "C1 pure-endpoint total: 7", "baseline=7 current=7". Run 31667305298,
+          # two hours earlier, printed "baseline=11 current=7" — CI itself asked
+          # for the ratchet. The drop 11 -> 7 was not a mismeasurement: the audit
+          # script began classing the colour rule's own documentation as exempt
+          # rather than real, which removed six prose hits, and the mask stops in
+          # the theme source-of-truth documents account for four of the seven that
+          # remain. R80.4 now measures 0 / 0 — its single endpoint is already
+          # cleared, so the earlier note that this "returns to 10 when LANE-R804
+          # clears it" is spent.
+          #
+          # The ratchet only shrinks. The one raise to 11 was allowed exactly once,
+          # to admit an app that was silently outside the count.
           col() { awk -v want="$1" '
             /^(crm7|conduit|business-suite-unified|R80\.4|throughput|packages|braden) /{
               seen = 0
@@ -177,10 +190,35 @@ jobs:
             exit 1
           fi
 
+          # DIVERGENCE IS A FAILURE, NOT A NOTICE (bsuite D-87)
+          #
+          # This was a `::notice::`, which nobody has to act on, so the committed
+          # number and the measured number were free to drift apart. They did: the
+          # count sat at 7 while the file said 11, and every run in that window
+          # reported a pass while silently permitting four new pure endpoints
+          # before the gate would have said a word. A ratchet that tolerates slack
+          # is not a ratchet — it is a ceiling with the ceiling written down wrong.
+          #
+          # So the gate now demands EQUALITY. Above the baseline is a regression;
+          # below it is an un-banked improvement, and banking it is one line in one
+          # file, done in the PR that earned it. That is the whole point: the
+          # number in the repository is the number CI measures, always, and there
+          # is no state in which they disagree quietly.
           if [ "$total" -lt "$baseline" ]; then
-            echo "::notice::Count fell from $baseline to $total — lower the baseline in .github/theme-c1-baseline.txt."
+            echo "::error::Pure white/black count FELL from $baseline to $total — bank it."
+            echo ""
+            echo "Someone removed $(( baseline - total )) pure endpoint(s) without lowering the ratchet."
+            echo "Until the committed baseline matches, the gate would let them come back unnoticed."
+            echo ""
+            echo "Fix, in this PR:"
+            echo "  echo $total > .github/theme-c1-baseline.txt"
+            echo ""
+            echo "The baseline must EQUAL what this job measures at the pinned gitlink SHAs."
+            echo "Do not measure in your working copy — the submodules there are at their branch"
+            echo "tips, which is a different tree and has given a different number before."
+            exit 1
           fi
-          echo "OK: $total <= $baseline"
+          echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
 
       # C4 is a HARD ZERO. A wrong destructive colour is not debt to be
       # ratcheted down — it is the one semantic the contract says must be

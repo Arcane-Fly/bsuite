@@ -71,6 +71,9 @@ on:
       - 'business-suite-unified/supabase/migrations/**'
       - 'conduit/supabase/migrations/**'
       - 'throughput/supabase/migrations/**'
+      # packages/schema-builder is a DIRECTORY IN THIS REPOSITORY, not a submodule,
+      # so it needs no bare gitlink path — its migrations reach the parent diff as
+      # real file paths and the glob above matches them directly (bsuite D-91).
       - 'packages/schema-builder/supabase/migrations/**'
       - 'scripts/supabase/**'
       - '.github/workflows/supabase-migration-rehearsal.yml'
@@ -120,13 +123,94 @@ jobs:
     if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
 
     steps:
+      # Every app is a PRIVATE submodule, so the default GITHUB_TOKEN cannot clone
+      # them — it is scoped to THIS repository and fails with a bare "Repository
+      # not found", which reads like a typo rather than a permissions problem.
+      # bsuite#1781 records the same gap making two other gates never run at all.
+      # The cross-repo PAT is therefore REQUIRED, not a preference; preferring
+      # GITHUB_TOKEN would make `submodules: recursive` fetch nothing and this job
+      # would replay the parent's 22 migrations and none of the other 754.
+      #
+      # The PAT is used only when the head repo is NOT a fork. GitHub already
+      # withholds secrets from fork PRs, so this is belt-and-braces: it states the
+      # intent in the file rather than relying on a platform default, and on a fork
+      # the checkout falls to GITHUB_TOKEN and the assertion below fails LOUDLY
+      # instead of rehearsing a fraction of the estate quietly.
       - name: Checkout (with submodules — a rehearsal missing a scope is not a rehearsal)
         uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
           fetch-depth: 0
           persist-credentials: false
+
+      # THE ASSERTION THIS FILE DID NOT HAVE (bsuite D-86)
+      # ──────────────────────────────────────────────────
+      # theme-conformance.yml follows its PAT checkout with an explicit
+      # submodule-presence check, because "the scanner would report a LOW count for
+      # missing apps — a false pass, which is worse than a failure". This job had
+      # no equivalent. If the PAT is absent, expired, or unavailable (a fork), the
+      # rehearsal checks out no submodules, replays almost nothing, finds no
+      # problem, and reports GREEN — the exact "checked nothing vs found nothing"
+      # failure the estate keeps paying for.
+      #
+      # It is MANIFEST-DRIVEN rather than a hardcoded app list, which closes a
+      # second hole. rehearse-migrations.mjs skips a scope declaring
+      # `has_database: false` whose directory is absent WITHOUT recording it in
+      # missingScopes — so such a scope, if it were also simply not cloned, would
+      # vanish from the rehearsal with no error anywhere. Here the workdir must be
+      # present before an absent migrations directory is accepted as a genuine
+      # absence rather than a failed clone. (No scope carries that flag today —
+      # R80.4's was flipped to true on 2026-08-12 — which is precisely why the hole
+      # is worth closing while it is still latent.)
+      - name: Assert every migration scope actually checked out
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=""
+          for a in crm7 R80.4 braden business-suite-unified conduit throughput; do
+            [ -e "$a/.git" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "The rehearsal would replay only the parent's migrations and report a false pass."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (Contents: read on each app repo) — see bsuite#1781."
+            exit 1
+          fi
+          echo "all six submodules present"
+
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const manifest = JSON.parse(fs.readFileSync("supabase/migration-scopes.json", "utf8"));
+            const bad = [];
+            for (const scope of manifest.scopes) {
+              const workdir = scope.workdir;
+              const dir = scope.migrations_dir || path.posix.join(workdir, "supabase", "migrations");
+              const workdirPresent =
+                workdir === "." || (fs.existsSync(workdir) && fs.readdirSync(workdir).length > 0);
+              if (!workdirPresent) {
+                bad.push(scope.id + ": workdir " + workdir + " is EMPTY — the scope was not checked out");
+                continue;
+              }
+              if (!fs.existsSync(dir)) {
+                if (scope.has_database === false) {
+                  console.log("  " + scope.id.padEnd(24) + " no migrations dir, has_database:false, workdir present — genuine absence");
+                  continue;
+                }
+                bad.push(scope.id + ": " + dir + " is missing while the manifest declares it owns database objects");
+                continue;
+              }
+              const n = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).length;
+              console.log("  " + scope.id.padEnd(24) + String(n).padStart(4) + " migration(s)");
+            }
+            if (bad.length > 0) {
+              for (const b of bad) console.log("::error::" + b);
+              console.log("A rehearsal missing a scope is not a rehearsal. Refusing to report a result.");
+              process.exit(1);
+            }
+            console.log("All " + manifest.scopes.length + " declared scopes are present and readable.");
+          '
 
       - name: Setup Node
         uses: actions/setup-node@v5
@@ -170,22 +254,88 @@ jobs:
             esac
           done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
 
+          # WHY THE FETCH CHANGED SHAPE (bsuite D-88)
+          #
+          # The old form was `git -C "$dir" fetch -q origin "$OLD_SHA"` — a fetch by
+          # BARE SHA. github.com does not enable uploadpack.allowAnySHA1InWant, so
+          # that request is REFUSED, and `persist-credentials: false` on the checkout
+          # above has additionally stripped the auth header from every submodule
+          # config, so it could not authenticate to a private remote even if the
+          # request were allowed. Both failures were swallowed by `|| true`. The
+          # "rare" fallback below was therefore the ROUTINE path.
+          #
+          # The real supply of history is `fetch-depth: 0` on the checkout, which
+          # clones each submodule's full history while credentials still exist. This
+          # loop is a top-up with a PROPER REFSPEC for the case where a pointer sits
+          # on a ref fetched since; it is allowed to fail and says so rather than
+          # hiding it, because it is not what the diff depends on.
           for dir in crm7 R80.4 braden business-suite-unified conduit throughput; do
-            OLD_SHA=$(git rev-parse "$BASE_SHA:$dir" 2>/dev/null || true)
-            NEW_SHA=$(git rev-parse "$HEAD_SHA:$dir" 2>/dev/null || true)
+            git -C "$dir" fetch -q --prune --no-tags origin '+refs/heads/*:refs/remotes/origin/*' 2>/dev/null \
+              || echo "::notice::$dir: remote refs not refreshed (persist-credentials is off) — using the full clone from checkout"
+          done
+
+          for dir in crm7 R80.4 braden business-suite-unified conduit throughput; do
+            # --verify --quiet, not a bare rev-parse. Without --verify, rev-parse
+            # falls back to echoing something for an unresolvable `<sha>:<path>`
+            # (measured: it returns the COMMIT sha when the path is absent from that
+            # tree), so a submodule missing from one side read as a moved pointer
+            # with a bogus value. --verify makes an unresolvable path resolve to the
+            # empty string, which is what the `-n` tests below already assume.
+            OLD_SHA=$(git rev-parse --verify --quiet "$BASE_SHA:$dir" 2>/dev/null || true)
+            NEW_SHA=$(git rev-parse --verify --quiet "$HEAD_SHA:$dir" 2>/dev/null || true)
             [ -n "$OLD_SHA" ] && [ -n "$NEW_SHA" ] || continue
             [ "$OLD_SHA" != "$NEW_SHA" ] || continue
-            git -C "$dir" fetch -q origin "$OLD_SHA" 2>/dev/null || true
-            git -C "$dir" fetch -q origin "$NEW_SHA" 2>/dev/null || true
+
             if git -C "$dir" cat-file -e "$OLD_SHA^{commit}" 2>/dev/null \
                && git -C "$dir" cat-file -e "$NEW_SHA^{commit}" 2>/dev/null; then
+              n=0
               while IFS= read -r f; do
                 case "$f" in
-                  supabase/migrations/*.sql) CHANGED_LIST="${CHANGED_LIST}${dir}/${f}," ;;
+                  supabase/migrations/*.sql) CHANGED_LIST="${CHANGED_LIST}${dir}/${f},"; n=$((n + 1)) ;;
                 esac
               done < <(git -C "$dir" diff --name-only "$OLD_SHA" "$NEW_SHA")
-            else
-              echo "::warning::cannot diff $dir pointers — its changed migrations will be replayed but NOT gated"
+              echo "  $dir: pointer ${OLD_SHA:0:8}..${NEW_SHA:0:8} diffed — $n migration(s) gated"
+              continue
+            fi
+
+            # FAIL CLOSED BY OVER-GATING.
+            #
+            # The pointer MOVED and the diff cannot be computed. The old code warned
+            # and continued, so those migrations were replayed and judged against
+            # nothing — the gate reported success having gated zero of them. Nothing
+            # in the output distinguished that from a clean run.
+            #
+            # Over-gating is the recoverable direction: every migration this scope
+            # carries above the floor is judged, so the PR's real change is
+            # necessarily inside the gated set. rehearse-migrations.mjs already skips
+            # anything at or below BASELINE_MAX ('in-baseline') and anything the
+            # scope has quarantined in KNOWN-BROKEN-IN-CI.txt, so this cannot turn
+            # existing tracked debt into a new red. If the scope has no migrations
+            # directory to over-gate from, there is nothing to judge and no honest
+            # verdict available — that is a hard failure, not a warning.
+            echo "::warning::$dir: pointer moved ${OLD_SHA:0:8}..${NEW_SHA:0:8} but neither commit is resolvable locally — cannot diff."
+            if [ ! -d "$dir/supabase/migrations" ]; then
+              echo "::error::$dir: pointer moved, diff impossible, AND $dir/supabase/migrations does not exist."
+              echo "There is nothing to over-gate and no way to judge this change. Failing closed."
+              exit 1
+            fi
+            n=0
+            while IFS= read -r f; do
+              base="${f##*/}"
+              ver="${base%%_*}"
+              case "$ver" in ''|*[!0-9]*) continue ;; esac
+              [ "${#ver}" -eq 14 ] || continue
+              # Fixed-width 14-digit stamps compare correctly as strings.
+              [ "$ver" \> "$MIGRATION_FLOOR" ] || [ "$ver" = "$MIGRATION_FLOOR" ] || continue
+              CHANGED_LIST="${CHANGED_LIST}${f},"
+              n=$((n + 1))
+            done < <(find "$dir/supabase/migrations" -maxdepth 1 -name '*.sql' | sort)
+            echo "  $dir: OVER-GATED $n migration(s) at or above the floor $MIGRATION_FLOOR."
+            echo "  Decision: pointer moved + diff impossible -> gate the whole scope rather than none of it."
+            if [ "$n" -eq 0 ]; then
+              echo "::error::$dir: over-gating selected ZERO migrations, so the moved pointer is still judged against nothing."
+              echo "Refusing to report a pass for a scope this job did not actually gate."
+              exit 1
             fi
           done
 

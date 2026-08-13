@@ -43,26 +43,34 @@ jobs:
         with:
           node-version: '24.14.0'
 
+      # A MISSING SCANNER IS A FAILING GATE, NOT A SKIPPED ONE (bsuite D-92).
+      #
+      # This used to warn, set SCAN_SKIPPED=true, and exit 0 — and every real step
+      # below is guarded on that flag. So a branch that deleted, renamed or simply
+      # never received scripts/drift-scan.mjs got a green tick from a gate that had
+      # run none of its checks, including the hard-fail signals it exists for. The
+      # scanner is committed to this repository; its absence on a branch is that
+      # branch's defect, and the one thing the gate must never do is agree with it.
       - name: Verify scanner presence
         shell: bash
         run: |
+          set -euo pipefail
           if [ ! -f scripts/drift-scan.mjs ]; then
-            echo "::warning::scripts/drift-scan.mjs not present on this branch — skipping."
-            echo "SCAN_SKIPPED=true" >> "$GITHUB_ENV"
-            exit 0
+            echo "::error::scripts/drift-scan.mjs is not present on this branch."
+            echo "This gate cannot run, and a gate that cannot run must not report a pass."
+            echo "Restore the scanner (it is tracked on development) or rebase onto a branch that has it."
+            exit 1
           fi
+          echo "✓ scripts/drift-scan.mjs present"
 
       - name: Run self-test
-        if: env.SCAN_SKIPPED != 'true'
         run: node scripts/drift-scan.mjs --self-test
 
       - name: Run regex-audit (enforces No-Regex-by-Default discipline)
-        if: env.SCAN_SKIPPED != 'true'
         run: node scripts/drift-scan.mjs --regex-audit
 
       - name: Run drift scan (JSON)
         id: scan-json
-        if: env.SCAN_SKIPPED != 'true'
         env:
           GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
         shell: bash
@@ -76,7 +84,6 @@ jobs:
 
       - name: Run drift scan (markdown)
         id: scan-md
-        if: env.SCAN_SKIPPED != 'true'
         env:
           GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
         shell: bash
@@ -89,7 +96,6 @@ jobs:
           cat /tmp/drift.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upsert sticky comment
-        if: env.SCAN_SKIPPED != 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -119,7 +125,7 @@ jobs:
             }
 
       - name: Fail build if hard-fail signal hit
-        if: env.SCAN_SKIPPED != 'true' && steps.scan-md.outputs.exit_code != '0'
+        if: steps.scan-md.outputs.exit_code != '0'
         run: |
           echo "::error::Hard-fail drift signal detected — see sticky comment on the PR for details."
           echo "Reference: https://github.com/GaryOcean428/bsuite/issues/902"
