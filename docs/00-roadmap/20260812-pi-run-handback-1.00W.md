@@ -632,3 +632,96 @@ All in **bsuite#1951**, with the before/after controls recorded.
 Unchanged from §2, plus one: **two Supabase access tokens need rotating.** I leaked them myself —
 an error message printed them in full because the file had the same key twice and my command
 matched both lines. Everything else in that file is intact; it is the two `sbp_…` tokens only.
+
+---
+
+# 15. Day two, closing state
+
+Everything below is on **`development`**. Nothing has been promoted. Per your instruction the
+estate waits there for your inspection.
+
+## Two things I got wrong today, both corrected in the record
+
+**1. I told you the "unstyled button" was fixed. It is half-fixed.**
+
+Your report was *"one button unstyled"*. The original cause was a button painted the exact colour
+of the page behind it. My fix moved it onto a raised card so the outline had something to sit
+against — and I reported that as done.
+
+Measuring the live page properly: the button's outline is **1.12:1** against the card in light
+mode. The accessibility floor for the edge of a control is **3:1**. It is *technically* an outline
+button and *visually* still isn't one. You were right, and my fix addressed the wrong half.
+
+The reason it needs a decision rather than another quick change: the whole light palette sits
+between 96% and 98% brightness, so **any** border you can actually see is noticeably darker than
+anything currently in the design. That is a look, not a bug fix, and it would change every
+bordered control in four apps. Written up with the numbers in **bsuite#1958**.
+
+**2. "Document generation throws on every call" was wrong, and the truth is worse.** Corrected in
+§14 — it is not deployed at all.
+
+## The dark-mode border was broken everywhere
+
+Chasing your report, I found the theme defines its "strong border" colour **only for light mode**.
+Dark mode silently inherited the light value, so it painted a **near-white line on the navy
+background** — the brightest thing on the panel. It is used in **50 files across four apps**.
+
+The corporate (braden.com.au) theme has always defined both. Only the main theme was half-written,
+which is why nobody comparing the two would spot it. Fixed in **bsuite#1957**.
+
+Worth knowing how it was found: I checked the **actual stylesheet the live site serves** rather
+than reading the source code. That also confirmed your heading really is a gradient now — and it
+was worth confirming, because the previous version of that heading referred to a colour **no
+stylesheet defines**, which with the same technique renders the text *invisible* rather than flat.
+
+## Nine live programs exist that are in no repository
+
+Nine of the small server-side programs running against the live database **have no source code
+anywhere in the estate**. Six were pushed by hand rather than by the build; three come from
+`R80.3`, the wage-calculator repo we retired.
+
+Consequences, in order of seriousness:
+
+- **No check we have can see them.** Not the secret scanner, not the colour rules, not review.
+- **They cannot be rebuilt.** If one is deleted there is nothing to redeploy from.
+- **A fix cannot reach them.** One of them still carries a flaw we have removed twice elsewhere,
+  simply because there was no file to fix.
+
+One needs your attention specifically. **`fairwork-proxy-test`** is reachable by anyone on the
+internet, has been up since 29 July, and its own first comment says *"DELETE THIS FUNCTION after
+testing, or rotate the token."* It will use our paid Fair Work subscription on behalf of anyone
+holding a password that is written into the program itself. Delete it, then rotate that key.
+
+Full detail, including what to do about the other eight: **bsuite#1955**.
+
+## Nothing typechecks the server-side programs
+
+27 of them in CRM7. I checked every one for the first time: **14 clean, 13 carrying 84 real errors
+between them.** That is how a program shipped calling a variable that does not exist.
+
+I did not switch a check on for all 27, because it would be red on day one for 13 pre-existing
+reasons and everyone would learn to ignore it — the same way the permanently-red publish job
+trained everyone to ignore publishing. **bsuite#1953** sets out the design that avoids that.
+
+## The same defect, found three times today, in three different guards
+
+A pattern worth your attention, because it explains why things kept passing:
+
+| guard | what it did |
+|---|---|
+| secret-naming | reported **PASS** having read none of the source, when the sub-projects were not fetched |
+| slug-collision | called a name uniquely owned when a sub-project failed to fetch — and would deploy over another repo's live program |
+| secret-naming (again) | treated a **comment** explaining a hazard as committing the hazard |
+
+The first two are the same mistake: an empty folder looks exactly like a folder with nothing in
+it. All three are now fixed and, more importantly, each now **refuses to answer** rather than
+answering about something it did not read.
+
+## Waiting on you
+
+1. **Deployment rights.** Three security holes stay open and document generation stays broken
+   until someone deploys. I cannot, and did not work around it.
+2. **The promotion** (`development` → `main`, bsuite#1944). Yours to gate. Note the theme fix
+   publishes to npm on that promotion, which is what carries the dark-border fix to the apps.
+3. **Rotate three credentials.** Two Supabase tokens I leaked myself in an error message, plus the
+   Fair Work proxy token above.
