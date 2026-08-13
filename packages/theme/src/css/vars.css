@@ -554,6 +554,23 @@
   --role-bg-input:   oklch(0.240 0.020 260);
   --role-bg-sunken:  oklch(0.145 0.022 268);
   --role-border:     var(--dark-border);
+  /* Dark-mode `--role-border-strong` was MISSING, so `.dark` inherited the
+     light value from `:root` — oklch(0.880 0.008 250), i.e. #d4d8dd. Measured
+     against `--role-bg-panel` that is 12.88:1: a near-white hairline on navy,
+     in the 50 files across crm7, conduit, BSU and throughput that use
+     `border-strong`. Not a subtle miss — the brightest thing on the panel.
+
+     `braden.css` has carried both variants since it was written (0.900/0.840
+     light, 0.320/0.420 dark). Only the D2C theme was half-defined, which is
+     why nobody reading the corporate theme would spot it.
+
+     Value is oklch(0.52 0.02 248) from the D2C source-of-truth document, so
+     the palette whitelist accepts it. It sits +0.09 L above `--dark-border`
+     (0.428), mirroring the light pair's step, and measures 3.36:1 against
+     `--role-bg-panel` and 3.61:1 against `--role-bg-sunken` — clearing the
+     WCAG 1.4.11 non-text-contrast floor of 3:1 on both dark surfaces.
+     `--role-border` itself is 2.26:1, which is why "strong" has to exist. */
+  --role-border-strong: oklch(0.52 0.02 248);
 
   /* Role text variants rebind for the dark surface — all AAA on navy. */
   --role-primary-text: oklch(0.721 0.215 262.9);  /*  7.01:1 ✓ AAA */
