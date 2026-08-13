@@ -1,5 +1,13 @@
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
-import React, { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  startTransition,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Responsive, type EventCallback, type ResizeHandleAxis } from 'react-grid-layout';
 import { gridBounds, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
@@ -150,6 +158,72 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     const measureRef = useRef<HTMLDivElement | null>(null);
     const lastReportedRowsRef = useRef<number | null>(null);
     const measureRafRef = useRef<number | null>(null);
+    /**
+     * Latest measured content height, updated on EVERY ResizeObserver entry.
+     *
+     * D-76 root cause ("cards render half cut off on page open"). The previous
+     * implementation captured `contentPx` in the rAF closure and then bailed
+     * out of any further entry that arrived before that frame ran:
+     *
+     *     if (measureRafRef.current !== null) return;   // <- measurement lost
+     *
+     * That is first-writer-wins inside a frame, and the first writer is
+     * routinely the WRONG one: a card mounts empty or skeletonised, the
+     * observer fires at (say) 90px and schedules the frame, the query resolves
+     * and the observer fires again at 760px — and that second entry returned
+     * early, discarding the real height. The frame then converged the card to
+     * ~3 rows. Because `computeAutoHeightRows` is a pure function of the height
+     * it is given, nothing re-triggered: the card stayed at the empty-state
+     * height with its content clipped by the `overflow-hidden` autoHeight
+     * wrapper until something else happened to resize it.
+     *
+     * Storing the height in a ref and READING IT INSIDE the frame makes it
+     * last-writer-wins, which is the only correct policy for "how tall is this
+     * content right now".
+     */
+    const latestContentPxRef = useRef<number | null>(null);
+
+    const reportRows = useCallback(
+      (contentPx: number) => {
+        if (!onAutoHeightChange) return;
+        const rows = computeAutoHeightRows({
+          contentPx,
+          cardChromePx: DEFAULT_CARD_CHROME_PX,
+          rowHeightPx: DEFAULT_ROW_HEIGHT,
+          marginYPx: DEFAULT_MARGIN[1],
+        });
+        if (rows === lastReportedRowsRef.current) return;
+        lastReportedRowsRef.current = rows;
+        onAutoHeightChange(id, rows);
+      },
+      [id, onAutoHeightChange],
+    );
+
+    /**
+     * First measurement BEFORE paint (second half of D-76).
+     *
+     * A ResizeObserver's initial observation is delivered asynchronously, and
+     * the rAF hop below adds another frame. Until it lands the card renders at
+     * its seed `h` — 6 rows / 192px for a `DraggableCardPage` card — with
+     * `overflow-hidden`, so the first painted frame of a taller card is
+     * literally cut in half. That is what the operator sees "on page open",
+     * every open, on every surface with content taller than its seed.
+     *
+     * Measuring in a layout effect and reporting synchronously puts the correct
+     * row count into state within the same commit, so the browser never paints
+     * the clipped frame. React batches these updates across all GridItems
+     * mounting together, and `applyAutoHeightRows` is a functional update, so N
+     * cards settling at once cost one re-render and cannot clobber each other.
+     */
+    useLayoutEffect(() => {
+      if (!autoHeight || !onAutoHeightChange) return;
+      const el = measureRef.current;
+      if (!el) return;
+      const contentPx = el.getBoundingClientRect().height;
+      latestContentPxRef.current = contentPx;
+      if (contentPx > 0) reportRows(contentPx);
+    }, [autoHeight, onAutoHeightChange, reportRows]);
+
     useEffect(() => {
       if (!autoHeight || !onAutoHeightChange) return;
       const el = measureRef.current;
@@ -157,7 +231,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       const ro = new ResizeObserver((entries) => {
         const entry = entries[0];
         if (!entry) return;
-        const contentPx = entry.contentRect.height;
+        latestContentPxRef.current = entry.contentRect.height;
         if (measureRafRef.current !== null) return;
         const schedule =
           typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
@@ -165,16 +239,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             : (cb: () => void) => setTimeout(cb, 0);
         measureRafRef.current = schedule(() => {
           measureRafRef.current = null;
-          const rows = computeAutoHeightRows({
-            contentPx,
-            cardChromePx: DEFAULT_CARD_CHROME_PX,
-            rowHeightPx: DEFAULT_ROW_HEIGHT,
-            marginYPx: DEFAULT_MARGIN[1],
-          });
-          if (rows !== lastReportedRowsRef.current) {
-            lastReportedRowsRef.current = rows;
-            onAutoHeightChange(id, rows);
-          }
+          const contentPx = latestContentPxRef.current;
+          if (contentPx === null) return;
+          reportRows(contentPx);
         }) as unknown as number;
       });
       ro.observe(el);
@@ -189,7 +256,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
         }
         measureRafRef.current = null;
       };
-    }, [autoHeight, id, onAutoHeightChange]);
+    }, [autoHeight, onAutoHeightChange, reportRows]);
 
     // DnD root-cause fix (2026-05-07): react-draggable@4 (used internally by
     // react-grid-layout@2) checks the drag handle via
@@ -303,6 +370,7 @@ export function PageGridLayout({
   isResizable = true,
   resizeHandles = DEFAULT_RESIZE_HANDLES,
   tenantId,
+  defaultAutoHeight,
   addEntityWidgetEventNames = DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES,
   createEntityWidget,
   onRegisterEntityWidget,
@@ -321,6 +389,7 @@ export function PageGridLayout({
     activeCompactor,
     onLayoutChange,
     handleColumnChange,
+    handleBreakpointChange,
     handleCompact,
     handleReset,
     addWidget,
@@ -340,6 +409,7 @@ export function PageGridLayout({
     canEditPage,
     editorEventNames,
     preferenceAdapter,
+    defaultAutoHeight,
   });
 
   // Auto-height dispatcher (blueprint amendment A1, hardened per quality
@@ -502,9 +572,28 @@ export function PageGridLayout({
         // Until the first measurement lands, `autoHeightRows` has no entry and
         // the item's seed `h` renders as-is.
         .map((item) => {
-          if (!item.autoHeight) return item;
+          // HEAL a persisted `isResizable: false` on ANY item, not just an
+          // autoHeight one (D-75: "individual cards can no longer be resized").
+          //
+          // The 0.6.0 heal was scoped to `item.autoHeight`, which left the
+          // whole non-autoHeight population — every card that opted out, and
+          // every layout persisted before `autoHeight` existed as a concept —
+          // permanently unresizable with no way back: the flag is re-persisted
+          // on each load, so clearing it by hand does not survive a refresh.
+          //
+          // The one legitimate source of a per-item `isResizable: false` is the
+          // Layers "lock" control, which writes it together with `static: true`
+          // and `isDraggable: false`. Requiring that full signature separates a
+          // deliberate lock (kept) from the 0.5.2 leak (dropped), so the heal
+          // can be widened without silently unlocking anything a user locked.
+          const lockedDeliberately = item.static === true || item.isDraggable === false;
+          const needsResizeHeal = item.isResizable === false && !lockedDeliberately;
 
-          // HEAL a persisted `isResizable: false`.
+          if (!item.autoHeight) {
+            if (!needsResizeHeal) return item;
+            const { isResizable: _dropped, ...unlocked } = item;
+            return unlocked;
+          }
           //
           // 0.5.2 set this at the render layer, and it leaked out through
           // `onLayoutChange` into the SAVED layout. Removing the override in
@@ -1034,6 +1123,10 @@ export function PageGridLayout({
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             rowHeight={DEFAULT_ROW_HEIGHT}
             onLayoutChange={onLayoutChange}
+            // Tells the hook which breakpoint a gesture belongs to, so the edit
+            // is folded back onto `lg` instead of into a derived breakpoint
+            // that is regenerated (and therefore discarded) on the next render.
+            onBreakpointChange={handleBreakpointChange}
             dragConfig={{
               enabled: isEditing,
               handle: '.drag-handle',

@@ -126,6 +126,30 @@ Braden keeps separate corporate identity tokens in `@bsuite/theme/braden-css`: B
 
 WCAG AA compliance: use semantic text tokens (`text-foreground`, `text-muted-foreground`, `text-text-on-primary`, `text-text-on-accent`) rather than raw `text-white`/`text-black`. Dark-surface text is capped at L=0.94 for extended-session comfort.
 
+## Elevation (v0.11.0)
+
+`shadow-elev-0` … `shadow-elev-4` — the suite's card-elevation ramp, and the
+first release in which those classes exist at all. 25 call sites across crm7
+and business-suite-unified, four `CLAUDE.md` files and the canonical
+`bsuite-brand-system` skill had instructed `shadow-elev-*` while no rule
+matched it anywhere; every one computed `box-shadow: none`.
+
+- `shadow-elev-0` is a real reset (`0 0 0 0 transparent`), not the absence of
+  a rule. It is deliberately not `none`, which invalidates Tailwind v4's
+  composite `box-shadow` declaration and takes the focus ring with it.
+- Geometry follows Tailwind's `xs`/`md`/`lg`/`xl`; colour comes from
+  `--shadow-ink-*`, an OKLCH ladder derived from `--shadow-color` and scaled
+  by `--shadow-strength`, rebinding under `.dark`.
+- The same release rebinds Tailwind's own `--shadow-*`, `--inset-shadow-*`,
+  `--drop-shadow-*` and `--text-shadow-*` onto that ink. They ship from
+  Tailwind as `rgb(0 0 0 / a)` — pure black, banned in every role, and
+  invisible to the colour audit because the literal lives in `node_modules`.
+  292 `shadow-sm|md|lg|xl|2xl` call sites across the estate were painting it,
+  and in dark mode painting it invisibly.
+
+Geometry is unchanged, so nothing moves; light mode shifts by a hue-tint only.
+Dark mode changes materially, because dark shadows previously did not render.
+
 ## Text-role contract (v0.6.0)
 
 Six measured tiers — `--role-text-heading`, `--role-text-body`, `--role-text-secondary`, `--role-text-muted`, `--role-text-subtle`, `--role-text-disabled` — each with documented WCAG contrast in both modes. Full numbers + methodology: `docs/TOKEN-MAPPING.md` §8.1.

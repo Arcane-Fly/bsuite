@@ -61,6 +61,34 @@
   --neon-amber:    oklch(0.800 0.150  75);    /* warning */
   --neon-teal:     oklch(0.600 0.130 195);    /* success */
   --neon-deep:      oklch(0.380 0.140 270);    /* secondary action */
+  /* Added 2026-08-13. In this system the WORDS "white" and "black" name these
+     two values; the pure endpoints are the banned ones (operator ruling
+     2026-08-02, "white is primary: #f8f9fa"). They were prescribed estate-wide
+     and named in packages/eslint-config/rules/no-hardcoded-colours.js as the
+     sanctioned replacement text, but they were never recorded HERE — so the
+     palette whitelist, which builds its permitted set by reading this file,
+     flagged the very colours the contract requires. Anything that needed them
+     had to carry a theme-audit-ok marker, and an exemption is a shim wearing a
+     different name (precedent__bsuite__20260802__theme_conformance_is_absolute).
+     Recorded as named tokens because the ruling says so in terms: "define
+     --white and --black once in the token source and reference them
+     everywhere; never write either literal inline."
+     The hex on each line is the exact sRGB round-trip of the oklch beside it,
+     not an approximation — verified both directions. --white is the same colour
+     as --role-bg-surface (light) carried to 0.1 more precision in hue; --black
+     is bit-identical to --role-bg-body (dark). They are named here so consumers
+     have a token to reference for the CONCEPT rather than borrowing a surface
+     role that may be re-tuned. Mode-invariant, so declared once in L1 and never
+     overridden in .dark — unlike every L2/L3 token. */
+     DO NOT write the banned pure endpoints anywhere in this file, not even to
+     say they are banned. This document is not prose to the palette gate: it
+     harvests every oklch triple and every hex it can see, comments included,
+     because "the documents ARE the palette". Naming L=1.0 or L=0 here to
+     forbid them would ADD them to the permitted set and silently reopen the
+     hole. Caught on the first run of this very edit — the diff of the allowed
+     set grew by (1.0 0 0) and (0.0 0 0). Describe them in words. */
+  --white:         oklch(0.982 0.002 247.8);  /* #f8f9fa — the near-white */
+  --black:         oklch(0.166 0.026 269.4);  /* #0a0e1a — the near-black */
 
   /* ── L2 surfaces — LIGHT (bg-panel is 0.994, never 1.0) ─── */
   --role-bg-body:    oklch(0.961 0     0.5);
@@ -750,6 +778,8 @@ td.r { text-align: right; }
           <div class="sw"><div class="sw-c" style="background:var(--neon-yellow)"></div><div class="sw-m"><div class="sw-n">Yellow</div><div class="sw-v">decorative</div></div></div>
           <div class="sw"><div class="sw-c" style="background:var(--neon-green)"></div><div class="sw-m"><div class="sw-n">Green</div><div class="sw-v">Conduit accent</div></div></div>
           <div class="sw"><div class="sw-c" style="background:var(--neon-lavender)"></div><div class="sw-m"><div class="sw-n">Lavender</div><div class="sw-v">decorative</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--white)"></div><div class="sw-m"><div class="sw-n">White</div><div class="sw-v">#f8f9fa — not 1.0</div></div></div>
+          <div class="sw"><div class="sw-c" style="background:var(--black)"></div><div class="sw-m"><div class="sw-n">Black</div><div class="sw-v">#0a0e1a — not 0</div></div></div>
         </div>
         <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
           <h6>Text-safe gradient — heroes only</h6>
@@ -837,7 +867,7 @@ td.r { text-align: right; }
       <div class="do"><h6>Do — separate error from primary</h6><p>The invariant is separation, not a fixed hue. D2C's primary is blue, so error is <strong>red</strong>. Braden's primary is red, so Braden must solve its own error hue against the same rule.</p></div>
       <div class="dont"><h6>Don't — put two cool hues in opposition</h6><p>Blue, indigo and purple are one colour under protanopia. Never let two of them carry opposing meanings — that was the <span class="mono">ΔE 0.006</span> defect this release fixes.</p></div>
       <div class="do"><h6>Do — tabular figures</h6><p>Money, hours, rates, award codes and IDs use the mono face with <code>font-variant-numeric: tabular-nums</code>.</p></div>
-      <div class="dont"><h6>Don't — pure white or black</h6><p>Lightness 1.0 and 0 are banned as tokens. Inverse text is <code>oklch(0.98 0.006 260)</code>; the deepest surface is <code>0.145</code>.</p></div>
+      <div class="dont"><h6>Don't — pure white or black</h6><p>Lightness 1.0 and 0 are banned as tokens. In this system the words mean <code>--white</code> <span class="mono">#f8f9fa</span> and <code>--black</code> <span class="mono">#0a0e1a</span> — reference the token, never the literal. Inverse text is <code>oklch(0.98 0.006 260)</code>; the deepest surface is <code>0.145</code>.</p></div>
       <div class="do"><h6>Do — dot inside auth</h6><p>The 16px dot field is the authenticated app-shell background across all five D2C apps. Use <code>&lt;DotPattern&gt;</code> from <code>@bsuite/ui</code> — never hand-rolled.</p></div>
       <div class="dont"><h6>Don't — grid inside auth</h6><p>The 32px grid is public/pre-auth marketing only, scoped to the hero wrapper. An app never renders both patterns in the same context.</p></div>
       <div class="do"><h6>Do — one gradient on text</h6><p>Only <code>--gradient-accent</code> (blue → cyan), and only on marketing heroes.</p></div>

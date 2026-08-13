@@ -67,6 +67,34 @@ cd "$REPO_ROOT"
 VITE_APPS=(business-suite-unified crm7 R80.4 braden throughput)
 NEXT_APPS=(conduit)
 
+# Which submodules are actually checked out.
+#
+# `[ -d "$sub" ]` is NOT this question and was the bug: an uninitialised
+# submodule is an EMPTY DIRECTORY, which passes `-d`. Every rule below then ran
+# `cd "$sub" && git grep`, which git resolves against the PARENT repo — matching
+# nothing, because the parent tracks a gitlink and no files underneath it. The
+# whole check therefore reported a confident PASS on a tree it had not read.
+#
+# `rev-parse --git-dir` does not answer it either: run inside an empty submodule
+# directory it WALKS UP and reports the parent's git dir, so it succeeds for a
+# submodule that is not there. The only sound test is whether the repository
+# rooted at that path IS that path.
+is_initialised_submodule() {
+  local sub="$1" top
+  top=$(git -C "$sub" rev-parse --show-toplevel 2>/dev/null) || return 1
+  [ "$top" = "${REPO_ROOT}/${sub}" ]
+}
+
+# Space-separated on purpose: the membership test below is a `case` glob against
+# `" $ALL_SUBMODULES "`, which needs a SPACE either side of each name. Leaving the
+# newlines that `awk` emits makes `*" crm7 "*` fail to match, every allowlist path
+# then falls back to being parent-relative, and R0 declares all 52 entries dead.
+ALL_SUBMODULES=$(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null | awk '{print $2}' | tr '\n' ' ')
+UNSCANNED=""
+for _sub in $ALL_SUBMODULES; do
+  is_initialised_submodule "$_sub" || UNSCANNED="${UNSCANNED} ${_sub}"
+done
+
 # Source globs scanned per app — keep in sync with the workflow file.
 # We intentionally restrict to runtime source (src/, app/, pages/, api/, supabase/functions/)
 # so that .env.example, docs/, coverage/, README.md, archive/, and similar do not trigger.
@@ -93,6 +121,32 @@ SRC_GLOBS=(
   'supabase/functions/**/*.js'
 )
 
+# R4's scope: CLIENT source only — everything above EXCEPT edge functions.
+#
+# R4's own header has always said "Edge functions are governed by R6, not by
+# this", but it scanned SRC_GLOBS, which includes `supabase/functions/**`. So it
+# policed the one place its documentation disclaims, and the one place where the
+# name it bans is the WORKING name: on this project the 2026-04-22 legacy-key
+# disable re-pointed the injected `SUPABASE_ANON_KEY` at the publishable key.
+# That is not a hypothetical cost — the header records 18 edge functions migrated
+# off it onto the unsettable `SUPABASE_PUBLISHABLE_KEY`, each commit citing this
+# guard, every one of them then sending an empty apikey.
+#
+# It also cost a correct fix: crm7#1672 moved `crm7-generate-document` onto
+# `getPublishableKey()` — exactly what the diagnostic asks for — and R4 still
+# failed it, on the COMMENT explaining why the old name was wrong. A guard that
+# forbids naming the thing it bans cannot be documented around.
+#
+# R6 continues to own edge functions and is unchanged.
+CLIENT_SRC_GLOBS=()
+for _glob in "${SRC_GLOBS[@]}"; do
+  case "$_glob" in
+    supabase/functions/*) ;;
+    *) CLIENT_SRC_GLOBS+=("$_glob") ;;
+  esac
+done
+unset _glob
+
 VIOLATIONS=0
 DIAGNOSTICS=""
 
@@ -104,9 +158,6 @@ note() {
 # wildcards. They snapshot the pre-bsuite#464 state — see bsuite#464 to retire
 # them line-by-line.
 ALLOWLIST=(
-  # ---- R80.4 vite/vitest config fallback shims (intentional dual-path) ----
-  'R80.4/vite.config.ts:*'
-  'R80.4/vitest.config.ts:*'
   # ---- braden check-env scripts (utility, not bundled to client) ----
   'braden/scripts/check-env.cjs:*'
   'braden/scripts/check-env.js:*'
@@ -117,7 +168,6 @@ ALLOWLIST=(
   'braden/src/components/admin/hooks/usePagesData.ts:*'
   'braden/src/components/content/hooks/useContentForm.ts:*'
   'braden/src/components/content/hooks/useContentPages.ts:*'
-  'braden/src/hooks/admin/useSiteEditorData.ts:*'
   'braden/src/integrations/supabase/client.ts:*'
   'braden/src/integrations/supabase/legacyTables.ts:*'
   'braden/src/lib/crmIntegration.js:*'
@@ -136,7 +186,6 @@ ALLOWLIST=(
   'crm7/api/config.ts:*'
   'crm7/api/db/[...path].ts:*'
   'crm7/api/rpc/[...path].ts:*'  # W3 RPC edge proxy — same server env pattern as api/db
-  'crm7/api/health.ts:*'
   'crm7/api/ai/docs-gap-issue.ts:*'
   # ---- throughput server-side API routes (Vercel functions, process.env is correct) ----
   # throughput/vercel.json declares `functions: { "api/**/*.{js,ts}": ... }`, so
@@ -161,7 +210,6 @@ ALLOWLIST=(
   'business-suite-unified/supabase/functions/send-notification/index.ts:*'
   # ---- crm7 edge functions reading SUPABASE_ANON_KEY (bsuite#464 cleanup) ----
   'crm7/supabase/functions/avetmiss-export/index.ts:*'
-  'crm7/supabase/functions/generate-document/index.ts:*'
   'crm7/supabase/functions/tga-search/index.ts:*'
   'crm7/supabase/functions/charge-rate-quote-dispatch/index.ts:*'
   # ---- braden edge functions reading SUPABASE_ANON_KEY (bsuite#464 cleanup) ----
@@ -215,6 +263,60 @@ filter_matches() {
     if printf '%s' "$raw" | grep -qE 'legacy compat — remove after [0-9]{4}-[0-9]{2}-[0-9]{2}'; then
       continue
     fi
+    # A comment NAMING a variable is documentation of it, not a read of it.
+    #
+    # These rules police what the runtime does. `git grep` has no idea what a
+    # comment is, so until now the sentence "SUPABASE_ANON_KEY happens to work
+    # on this project only because the 2026-04-22 legacy-key disable re-pointed
+    # it at the publishable key" — precisely the explanation an author most
+    # needs to leave behind, and which the header of this very file spends
+    # fifteen lines making — was itself a violation. The guard punished the
+    # documentation of the hazard it exists to prevent, so the incentive it
+    # created was to delete the warning.
+    #
+    # This is the estate's recurring prose-vs-code confusion, running the other
+    # way. The familiar direction is a guard SATISFIED by prose: crm7's OAuth
+    # session-sync check passed with both real `setSession()` calls deleted,
+    # contented by a single doc comment. Same root cause — matching text when
+    # the question is about code — and both directions are defects.
+    #
+    # Line-level, deliberately. A trailing comment after real code still
+    # reports, because that line DOES contain code. The residual failure mode
+    # is therefore a false positive an author can see and reword, never a
+    # missed read. Anything stronger needs a parser per language, and the
+    # globs above span five file types.
+    code_part=${raw#*:}        # strip "path:"
+    code_part=${code_part#*:}  # strip "line:"
+    code_part=${code_part#"${code_part%%[![:space:]]*}"}
+    case "$code_part" in
+      '//'*|'/*'*|'*'*) continue ;;
+    esac
+    # Test files are not runtime source and never reach a bundle.
+    #
+    # These rules restrict themselves to "runtime source (src/, app/, pages/,
+    # api/, supabase/functions/)" by their own comment above, so that docs and
+    # .env.example do not trigger. A *.test.ts file sits inside src/ but is no
+    # more shipped than a doc is.
+    #
+    # This matters because in Vitest, assigning process.env.VITE_* is the
+    # SUPPORTED way to control what import.meta.env resolves to. R5 forbids
+    # exactly that, so a correctly-written test of Vite env handling could only
+    # pass by claiming to be "legacy compat — remove after <date>": a marker
+    # that is false when written and expires on code that is permanent.
+    # R80.4's business-suite-origin.test.ts — the test proving the sign-out fix
+    # sends users to the origin that issued their session — hit precisely this.
+    #
+    # This narrows the glob to the rule's OWN stated intent. It is NOT a
+    # broadening of the allowlist, which the header rightly asks to be filed
+    # against a ticket: no line is being excused, the scan is being pointed at
+    # the set it always said it covered.
+    case "$raw" in
+      *.test.ts:*|*.test.tsx:*|*.test.js:*|*.test.jsx:*|\
+      *.spec.ts:*|*.spec.tsx:*|*.spec.js:*|*.spec.jsx:*|\
+      */__tests__/*|*/__mocks__/*)
+        continue
+        ;;
+    esac
     # Strip content past the second colon to get path:line
     local pathline
     pathline=$(printf '%s' "$raw" | awk -F: '{print $1 ":" $2}')
@@ -314,7 +416,7 @@ check_r4() {
     local matches
     matches=$(run_git_grep "$app" \
       '(VITE_|NEXT_PUBLIC_)?SUPABASE_ANON_KEY' \
-      "${SRC_GLOBS[@]}" | filter_matches "$prefix")
+      "${CLIENT_SRC_GLOBS[@]}" | filter_matches "$prefix")
     if [ -n "$matches" ]; then
       issues="${issues}${matches}"$'\n'
     fi
@@ -400,6 +502,69 @@ check_r5() {
   fi
 }
 
+# ---- R0: every allowlist entry must name a file that is actually scanned ----
+#
+# WHY THIS EXISTS. The allowlist is keyed on PATH, so it breaks in two opposite
+# ways when a file moves — and only one of them is visible:
+#
+#   RENAMED -> the exemption stops matching and the rule fires. LOUD. This is how
+#              R0 came to be written: crm7#1669 renamed `generate-document` to
+#              `crm7-generate-document` to clear an edge-function slug collision,
+#              and a deliberate, documented exemption silently stopped applying.
+#              (Chasing that failure turned up two live defects in the renamed
+#              function — crm7#1672 — so the loud direction earns its keep.)
+#
+#   DELETED -> the exemption matches nothing, forever, and NOTHING SAYS SO. This
+#              is the dangerous direction. 4 of the 52 entries were already dead
+#              when R0 was written, against files removed months earlier.
+#
+# A dead entry is not untidiness. It is a STANDING GRANT: recreate a file at that
+# exact path and it is exempt on arrival, with no review. It also inflates the
+# bsuite#464 retirement backlog with rows that cannot be retired because there is
+# nothing left to fix.
+#
+# R0 asks git the same question the scan does — `git grep` searches TRACKED files,
+# so `git ls-files --error-unmatch` is exactly "would the scan below see this?".
+# Deliberately not `test -e`: an untracked file on disk is invisible to the scan,
+# and an entry for one is just as dead.
+check_allowlist_freshness() {
+  local dead="" skipped="" checked=0
+
+  for allowed in "${ALLOWLIST[@]}"; do
+    local path_part="${allowed%:*}"
+    local first="${path_part%%/*}"
+    local repo="." rel="$path_part"
+    case " $ALL_SUBMODULES " in
+      *" $first "*) repo="$first"; rel="${path_part#*/}" ;;
+    esac
+
+    # An uninitialised submodule is not scanned either, so its entries are
+    # neither fresh nor dead — they are UNMEASURED. Saying so is the point: a
+    # skipped repo must never read as a clean one.
+    if [ "$repo" != "." ] && ! is_initialised_submodule "$repo"; then
+      skipped="${skipped}  ${path_part}"$'\n'
+      continue
+    fi
+
+    checked=$((checked + 1))
+    if ! git -C "$repo" ls-files --error-unmatch "$rel" >/dev/null 2>&1; then
+      dead="${dead}  ${path_part}"$'\n'
+    fi
+  done
+
+  if [ -n "$skipped" ]; then
+    note "R0 NOTE — ${#ALLOWLIST[@]} allowlist entries, ${checked} checked; the following could not be checked because their submodule is not initialised (this is NOT a pass for them):"
+    note "$skipped"
+  fi
+
+  if [ -n "$dead" ]; then
+    note "R0 VIOLATION — allowlist entries naming files that no longer exist. Each one is a standing exemption for a path nothing occupies: recreate a file there and it is exempt on arrival, unreviewed. DELETE these lines from ALLOWLIST in scripts/check-secret-naming.sh (if a file MOVED, re-point the entry and re-check that the new copy still deserves the exemption — crm7#1672 is what happened the one time anybody looked):"
+    note "$dead"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  fi
+}
+
+check_allowlist_freshness
 check_r1
 check_r2
 check_r3
@@ -407,8 +572,34 @@ check_r4
 check_r5
 check_r6
 
+# A PASS is a claim about a tree. Refuse to make it about a tree that was not
+# read. Before this guard existed, running the script anywhere the submodules
+# were absent — a fresh `git worktree add`, a shallow CI checkout without
+# `submodules: recursive`, a container that cloned only the parent — printed
+# PASS after scanning six empty directories. Silent-failure-presents-as-empty:
+# the most common way a gate in this estate stops gating.
+if [ -n "$UNSCANNED" ]; then
+  {
+    echo "secret-naming drift check: CANNOT REPORT — submodule(s) not checked out:${UNSCANNED}"
+    echo ""
+    echo "Rules R1-R6 scan submodule working trees. An uninitialised submodule is an"
+    echo "EMPTY DIRECTORY, so those rules would match nothing and this script would"
+    echo "print PASS having read none of the source it exists to police."
+    echo ""
+    echo "Fix the checkout, do not skip the check:"
+    echo "    git submodule update --init --recursive"
+    echo "In GitHub Actions, actions/checkout needs:  with: { submodules: recursive }"
+    if [ -n "$DIAGNOSTICS" ]; then
+      echo ""
+      echo "Findings from the parts that COULD be read (not a complete result):"
+      echo "$DIAGNOSTICS"
+    fi
+  } >&2
+  exit 1
+fi
+
 if [ "$VIOLATIONS" -eq 0 ]; then
-  echo "secret-naming drift check: PASS (canonical names per AGENTS.md §Environment Variables)"
+  echo "secret-naming drift check: PASS — ${#ALLOWLIST[@]} allowlist entries verified live, all submodules scanned"
   exit 0
 fi
 

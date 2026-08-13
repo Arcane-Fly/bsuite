@@ -18,18 +18,29 @@
 # vars.SUPABASE_PROJECT_ID; aws-1/aws-0 Supavisor probe) — no new secret is
 # introduced.
 #
-# Two drift classes are detected (both read-only — nothing is written):
+# Three drift classes are detected (all read-only — nothing is written):
 #
-#   A. Recorded-but-empty: a remote row has statement_count=0 while its
-#      matching local migration file is non-empty. This is the dangerous
-#      "migration repair --status applied" shape: the ledger claims the SQL
-#      ran, but the recorded body is empty, so production may not actually
-#      have the change.
+#   A. Recorded-but-absent: the ledger says a migration applied, but an object
+#      it creates is NOT in the live catalogue. Recorded is not applied.
 #
-#      statement_count=0 on its own is NORMAL for this project (many
-#      migrations here are legitimately recorded with no captured statement
-#      body) and is NEVER flagged by itself — only when it contradicts a
-#      non-empty local file.
+#      A NOTE ON WHAT THIS USED TO BE (bsuite#1898). Class A previously read
+#      the ledger's `statements` column and flagged rows where it was empty
+#      while the local file was not. That test could never go green, because
+#      `statements` records the migration BODY and only the Management-API /
+#      MCP apply path populates it — the file applier this estate runs writes
+#      NULL. Measured live 2026-08-12: 665 rows, 403 NULL, 79 empty, 183
+#      populated, and the NEWEST row in the table (20260813240000) is NULL, so
+#      this is current behaviour and not an old-CLI artefact. The check was
+#      comparing which TOOL wrote the row against file content and flagging the
+#      normal case — 294 violations on the 2026-08-12T00:38 run, every one of
+#      them a migration that had applied fine. Six consecutive scheduled runs
+#      failed on it, which taught the estate to ignore scheduled runs.
+#
+#      It now asserts the thing it only ever claimed to: the objects exist.
+#      Only migrations that HAVE a ledger row are asserted — a file with no row
+#      is class B, and asserting it too would report one defect under two
+#      names. Coverage and blind spots are documented in
+#      scripts/audit-prod-migration-history.mjs.
 #
 #   B. Unrecorded-but-local: a local migration file at/above MIGRATION_FLOOR
 #      has NO row in schema_migrations at all. This is the exact class found
@@ -168,10 +179,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL' > migration-history.json
           SELECT COALESCE(json_agg(row_to_json(history_row)), '[]'::json)
           FROM (
-            SELECT
-              version,
-              name,
-              COALESCE(array_length(statements, 1), 0) AS statement_count
+            SELECT version, name
             FROM supabase_migrations.schema_migrations
             ORDER BY version
           ) AS history_row;
@@ -182,298 +190,48 @@ jobs:
             exit 1
           fi
 
-      - name: Write comparison script
+      - name: Export live catalogue
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        # Class A asserts that objects a recorded migration creates actually
+        # EXIST. That requires the live catalogue, which the old audit never
+        # looked at — it inferred application from the ledger's own `statements`
+        # column, which only records which tool wrote the row.
         run: |
           set -euo pipefail
-          cat > compare-migration-history.mjs <<'NODE_EOF'
-          #!/usr/bin/env node
-          /**
-           * Read-only guard for Supabase migration-history drift across every
-           * scope that shares supabase_migrations.schema_migrations.
-           *
-           * Ported from crm7/scripts/audit-supabase-migration-history.mjs
-           * (which only ever covered crm7's own migrations dir) and extended
-           * to (a) scan every scope dir that feeds the shared table and
-           * (b) also flag local migration files that never made it into the
-           * ledger at all — the exact shape of bsuite gap-assessment P0-2.
-           *
-           * See the parent workflow file for full commentary.
-           */
-          import { existsSync, readFileSync, readdirSync } from 'node:fs';
-          import { basename, join, resolve } from 'node:path';
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
-          const HISTORY_JSON_PATH = process.env.HISTORY_JSON_PATH || 'migration-history.json';
-          const MIGRATION_FLOOR = process.env.MIGRATION_FLOOR || '';
-          const SCOPE_DIRS = (process.env.MIGRATION_SCOPE_DIRS || '')
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean);
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL' > live-catalog.json
+          SELECT json_build_object(
+            'tables',    (SELECT COALESCE(json_agg(tablename ORDER BY tablename), '[]'::json)
+                          FROM pg_tables WHERE schemaname = 'public'),
+            'functions', (SELECT COALESCE(json_agg(DISTINCT p.proname), '[]'::json)
+                          FROM pg_proc p
+                          JOIN pg_namespace n ON n.oid = p.pronamespace
+                          WHERE n.nspname = 'public'),
+            'columns',   (SELECT COALESCE(json_agg(table_name || '.' || column_name), '[]'::json)
+                          FROM information_schema.columns WHERE table_schema = 'public')
+          );
+          SQL
 
-          function stripSqlComments(source) {
-            return source
-              .replace(/\/\*[\s\S]*?\*\//g, '')
-              .split('\n')
-              .map((line) => line.replace(/--.*$/, ''))
-              .join('\n');
-          }
+          if [ ! -s live-catalog.json ]; then
+            echo "::error::live-catalog.json is empty — the catalogue query produced no output. Refusing to report a false 'no drift'."
+            exit 1
+          fi
 
-          function isNonEmptySql(source) {
-            return stripSqlComments(source).trim().length > 0;
-          }
-
-          function loadRows(historyJsonPath) {
-            const raw = readFileSync(historyJsonPath, 'utf8');
-            const parsed = JSON.parse(raw);
-            const rows = Array.isArray(parsed) ? parsed : parsed.rows;
-            if (!Array.isArray(rows)) {
-              throw new Error('History JSON must be an array or an object with a rows array');
-            }
-            return rows.map((row) => ({
-              version: String(row.version ?? ''),
-              name: row.name == null ? null : String(row.name),
-              statementCount: Number(
-                row.statement_count ?? row.statementCount ?? Number.NaN,
-              ),
-            }));
-          }
-
-          function collectLocalMigrations(dirs) {
-            const migrations = new Map();
-            const divergentCollisions = [];
-            for (const dirRel of dirs) {
-              const dir = resolve(dirRel);
-              if (!existsSync(dir)) {
-                console.log(`(scope skipped — no migrations dir present: ${dirRel})`);
-                continue;
-              }
-              for (const entry of readdirSync(dir, { withFileTypes: true })) {
-                if (!entry.isFile() || !entry.name.endsWith('.sql')) continue;
-                const match = entry.name.match(/^(\d{8,14})_/);
-                if (!match) continue;
-                const version = match[1];
-                const path = join(dir, entry.name);
-                const source = readFileSync(path, 'utf8');
-                const existing = migrations.get(version);
-                if (existing && existing.scope !== dirRel) {
-                  // The shared ledger keys on version only, so two scopes
-                  // claiming the same version is always at least a latent
-                  // ambiguity (whichever scope's applier runs first "wins"
-                  // the ledger row silently for the other — see
-                  // bsuite CLAUDE.md memory note on shared-schema migration
-                  // version collisions). Byte-identical content is harmless
-                  // today (idempotent bodies happen to match) so it is only
-                  // WARNED. Genuinely divergent content for the same version
-                  // is unresolvable ambiguity — record it as a Class C
-                  // violation (below) rather than aborting the whole audit,
-                  // so unrelated drift elsewhere is still reported. The
-                  // first-seen scope wins the map entry arbitrarily; which
-                  // one "wins" here has no bearing on which one actually won
-                  // the live ledger race.
-                  if (existing.source === source) {
-                    console.warn(
-                      `WARNING: duplicate migration ${version} in both ${existing.scope}/${existing.name} ` +
-                        `and ${dirRel}/${entry.name} — content is byte-identical (currently harmless) but ` +
-                        'the shared ledger cannot tell the scopes apart. Consolidate to one scope.',
-                    );
-                  } else if (!MIGRATION_FLOOR || version < MIGRATION_FLOOR) {
-                    // Pre-floor divergent collisions are pre-existing legacy
-                    // noise from before the 8 scopes shared one Supabase
-                    // project/ledger (dozens of these exist back to Feb
-                    // 2026). That backlog is owned by the history-
-                    // reconciliation lane per the MIGRATION_FLOOR doctrine in
-                    // supabase-migrate.yml, not this audit — surfacing them
-                    // here would permanently red this workflow on legacy
-                    // noise instead of the live, actionable case. Log only.
-                    console.warn(
-                      `WARNING (pre-floor, not failing): version collision ${version} — ` +
-                        `${existing.scope}/${existing.name} vs. ${dirRel}/${entry.name} — ` +
-                        'divergent content, but below MIGRATION_FLOOR; owned by the ' +
-                        'history-reconciliation lane.',
-                    );
-                  } else {
-                    divergentCollisions.push({
-                      version,
-                      a: { scope: existing.scope, name: existing.name },
-                      b: { scope: dirRel, name: entry.name },
-                    });
-                  }
-                  continue;
-                }
-                migrations.set(version, {
-                  path,
-                  name: entry.name,
-                  scope: dirRel,
-                  source,
-                  nonEmpty: isNonEmptySql(source),
-                });
-              }
-            }
-            return { migrations, divergentCollisions };
-          }
-
-          function audit(rows, localMigrations) {
-            const remoteVersions = new Set();
-            const emptyStatementViolations = [];
-            let localBacked = 0;
-            let missingLocal = 0;
-            // Counted, never silently dropped: a suppressed number that nobody
-            // prints reads as "covered everything" when it is not.
-            let preFloorEmptyStatements = 0;
-
-            for (const row of rows) {
-              if (!row.version) continue;
-              remoteVersions.add(row.version);
-              if (!Number.isFinite(row.statementCount)) {
-                throw new Error(`Invalid statement_count for migration version ${row.version}`);
-              }
-              const local = localMigrations.get(row.version);
-              if (!local) {
-                missingLocal += 1;
-                continue;
-              }
-              localBacked += 1;
-              // statement_count = 0 is NORMAL for this project and is NEVER
-              // flagged on its own. It is only drift when it contradicts a
-              // local file that actually contains SQL.
-              if (row.statementCount === 0 && local.nonEmpty) {
-                // Floor-scoped, exactly as class B above and class C below
-                // already are, and for the reason class C states in its own
-                // comment: surfacing the pre-floor backlog here "would
-                // permanently red this workflow on legacy noise instead of
-                // the live, actionable case".
-                //
-                // That is not hypothetical — it is what had happened. Measured
-                // 2026-08-05: all 332 class-A violations were BELOW the floor,
-                // and of the 195 ledger rows at/above it, exactly 2 lacked a
-                // local file (already counted separately as missingLocal).
-                // Every at/above-floor item this audit flagged — 3 class B and
-                // 4 class C — was then verified present in the live catalog,
-                // with the class-B function bodies carrying the distinctive
-                // markers of their own migrations. So the workflow was red
-                // with ZERO actionable drift, which means a genuinely new
-                // drift could not have been distinguished from the noise.
-                if (MIGRATION_FLOOR && row.version < MIGRATION_FLOOR) {
-                  preFloorEmptyStatements += 1;
-                  continue;
-                }
-                emptyStatementViolations.push({ version: row.version, name: row.name, local });
-              }
-            }
-
-            const unrecordedViolations = [];
-            if (MIGRATION_FLOOR) {
-              for (const [version, local] of localMigrations) {
-                if (version < MIGRATION_FLOOR) continue;
-                if (!remoteVersions.has(version)) {
-                  unrecordedViolations.push({ version, local });
-                }
-              }
-            }
-
-            return {
-              totalRemoteRows: rows.length,
-              localFilesScanned: localMigrations.size,
-              localBacked,
-              missingLocal,
-              preFloorEmptyStatements,
-              emptyStatementViolations,
-              unrecordedViolations,
-            };
-          }
-
-          function main() {
-            if (SCOPE_DIRS.length === 0) {
-              throw new Error('MIGRATION_SCOPE_DIRS is empty — refusing to audit with zero local scope coverage');
-            }
-            const rows = loadRows(HISTORY_JSON_PATH);
-            const { migrations: localMigrations, divergentCollisions } = collectLocalMigrations(SCOPE_DIRS);
-            const result = audit(rows, localMigrations);
-
-            console.log(`Migration history rows (remote): ${result.totalRemoteRows}`);
-            console.log(`Local migration files scanned across ${SCOPE_DIRS.length} scope(s): ${result.localFilesScanned}`);
-            console.log(`Remote rows with a matching local file: ${result.localBacked}`);
-            console.log(`Remote rows without a local file (ignored — cannot verify from source): ${result.missingLocal}`);
-            console.log(`Drift class A (recorded-but-empty, >= floor ${MIGRATION_FLOOR}) violations: ${result.emptyStatementViolations.length}`);
-            console.log(`  pre-floor class-A entries NOT failed (reconciliation-lane backlog): ${result.preFloorEmptyStatements}`);
-            console.log(`Drift class B (unrecorded-but-local, >= floor ${MIGRATION_FLOOR || 'unset'}) violations: ${result.unrecordedViolations.length}`);
-            console.log(`Drift class C (cross-scope version collision, divergent content) violations: ${divergentCollisions.length}`);
-
-            let failed = false;
-
-            if (divergentCollisions.length > 0) {
-              failed = true;
-              console.error(
-                '\nDrift class C — the same migration version exists in two different scopes with ' +
-                  'DIFFERENT SQL content. supabase_migrations.schema_migrations keys on version only ' +
-                  'across all 8 scopes, so whichever scope\'s applier runs first silently wins the ' +
-                  'ledger row and the other scope\'s migration is silently skipped forever:',
-              );
-              for (const c of divergentCollisions.slice(0, 50)) {
-                console.error(`  - ${c.version}: ${c.a.scope}/${c.a.name}  vs.  ${c.b.scope}/${c.b.name}`);
-              }
-              if (divergentCollisions.length > 50) {
-                console.error(`  ... ${divergentCollisions.length - 50} more omitted`);
-              }
-              console.error(
-                '\nRename one side to a non-colliding version stamp, then verify via the live ledger ' +
-                  'which one (if either) actually applied to production.',
-              );
-            }
-
-            if (result.emptyStatementViolations.length > 0) {
-              failed = true;
-              console.error(
-                '\nDrift class A — remote row has statement_count=0 but the matching local ' +
-                  'migration file is non-empty. This usually means migration history was ' +
-                  'repaired as applied without ever running the SQL:',
-              );
-              for (const v of result.emptyStatementViolations.slice(0, 50)) {
-                console.error(`  - ${v.version} (${v.name ?? '<unnamed>'}) — ${basename(v.local.path)} [${v.local.scope}] is non-empty`);
-              }
-              if (result.emptyStatementViolations.length > 50) {
-                console.error(`  ... ${result.emptyStatementViolations.length - 50} more omitted`);
-              }
-            }
-
-            if (result.unrecordedViolations.length > 0) {
-              failed = true;
-              console.error(
-                `\nDrift class B — local migration file at/above the floor (${MIGRATION_FLOOR}) has ` +
-                  'NO row in supabase_migrations.schema_migrations at all (applied out-of-band, or ' +
-                  'never applied). This is the exact drift class behind bsuite gap-assessment P0-2 ' +
-                  '(2026-07-28):',
-              );
-              for (const v of result.unrecordedViolations.slice(0, 50)) {
-                console.error(`  - ${v.version} (${basename(v.local.path)}) [${v.local.scope}]`);
-              }
-              if (result.unrecordedViolations.length > 50) {
-                console.error(`  ... ${result.unrecordedViolations.length - 50} more omitted`);
-              }
-              console.error(
-                '\nVerify these objects live before assuming this is safe, then close via the ' +
-                  'floor-gated applier once each migration is confirmed idempotent — do not ' +
-                  'hand-insert ledger rows and do not run the applier from this workflow.',
-              );
-            }
-
-            if (!failed) {
-              console.log('\nNo drift detected.');
-            }
-
-            process.exit(failed ? 1 : 0);
-          }
-
-          try {
-            main();
-          } catch (error) {
-            console.error(`prod-migration-history-audit: ${error.message}`);
-            process.exit(2);
-          }
-          NODE_EOF
+      # A checker that has only ever been seen failing is not a checker.
+      # This audit failed six consecutive scheduled runs on a class-A test that
+      # could not go green; prove the logic can still both pass and fail before
+      # trusting today's verdict.
+      - name: Self-test the comparison logic
+        run: node scripts/audit-prod-migration-history.mjs --self-test
 
       - name: Compare production history with source migrations
         env:
           HISTORY_JSON_PATH: migration-history.json
+          CATALOG_JSON_PATH: live-catalog.json
           MIGRATION_FLOOR: ${{ env.MIGRATION_FLOOR }}
           MIGRATION_SCOPE_DIRS: ${{ env.MIGRATION_SCOPE_DIRS }}
-        run: node compare-migration-history.mjs
+        run: node scripts/audit-prod-migration-history.mjs

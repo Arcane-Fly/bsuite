@@ -69,7 +69,17 @@ const SCOPES = [
   { name: 'root', dir: 'supabase/migrations' },
   { name: 'crm7', dir: 'crm7/supabase/migrations' },
   { name: 'conduit', dir: 'conduit/supabase/migrations' },
-  { name: 'R80.4', dir: 'R80.4/supabase/migrations' },
+  // R80.4 is in the APPLIER's matrix but has no `supabase/` directory at all —
+  // it is a Vite charge-calculator app whose data lives in `awards/` and whose
+  // only backend is `api/`. It therefore contributes ZERO migrations, and a
+  // presence guard that counts scopes can never be satisfied while it is
+  // listed. That is not hypothetical: CI ran this checker with
+  // `--require-scopes=8` and it failed every time with "expected migrations in
+  // at least 8 scope(s) but found 7" — a gate that was RED BY CONSTRUCTION
+  // from the day it was written (run 31091770857, 2026-08-06). Kept in the list
+  // so the scan still covers R80.4 the moment it gains migrations, and marked
+  // optional so its absence is expected rather than a checkout failure.
+  { name: 'R80.4', dir: 'R80.4/supabase/migrations', optional: true },
   { name: 'business-suite-unified', dir: 'business-suite-unified/supabase/migrations' },
   { name: 'braden', dir: 'braden/supabase/migrations' },
   { name: 'throughput', dir: 'throughput/supabase/migrations' },
@@ -127,7 +137,31 @@ function findCollisions(files) {
   return collisions
 }
 
-/** Parse `VERSION<whitespace>reason` lines; blank lines and `#` comments ignored. */
+/**
+ * Parse `VERSION<ws>n=<count><ws>reason` lines; blanks and `#` comments ignored.
+ *
+ * THE `n=` PIN, AND WHY IT IS REQUIRED
+ *
+ * The allowlist is keyed on the VERSION alone, which means an entry written to
+ * waive one known-benign pair silently waived every future file at that version
+ * too. Proven by mutation, 2026-08-12: 20260701090000 is allowlisted for a
+ * crm7/business-suite-unified pair, and planting a THIRD file at that version in
+ * conduit — a brand-new, unrelated, genuinely-losing migration — still exited 0.
+ * A new colliding migration could therefore merge unnoticed simply by landing on
+ * a timestamp somebody had already excused, which is the exact bsuite#1913 shape
+ * the gate exists to stop.
+ *
+ * `n=<count>` records how many colliding files the entry was VERIFIED against.
+ * If the group later grows, the entry no longer describes it and the check
+ * fails until a human re-verifies and updates the count.
+ *
+ * KNOWN RESIDUAL GAP, stated rather than hidden: a same-count REPLACEMENT (one
+ * colliding file deleted and a different one added at the same version, in the
+ * same scope) keeps the count intact and is not caught. Pinning exact filenames
+ * would close it; that was judged not worth the line-length cost here because
+ * the dominant real-world shape — and the one that has actually cost this estate
+ * a security control — is a NEW migration landing on an existing version.
+ */
 function parseAllowlist(text) {
   const allowed = new Map()
   const lines = text.split('\n')
@@ -137,11 +171,35 @@ function parseAllowlist(text) {
     let i = 0
     while (i < line.length && line[i] >= '0' && line[i] <= '9') i++
     const version = line.slice(0, i)
-    const rest = line.slice(i).trim()
+    let rest = line.slice(i).trim()
     if (version.length !== 14 || !rest) continue
-    allowed.set(version, rest)
+
+    let expectedFiles = null
+    if (rest.startsWith('n=')) {
+      let j = 2
+      while (j < rest.length && rest[j] >= '0' && rest[j] <= '9') j++
+      const digits = rest.slice(2, j)
+      const atBoundary = j === rest.length || rest[j] === ' ' || rest[j] === '\t'
+      if (digits.length && atBoundary) {
+        expectedFiles = Number(digits)
+        rest = rest.slice(j).trim()
+      }
+    }
+    if (!rest) continue
+    allowed.set(version, { reason: rest, expectedFiles })
   }
   return allowed
+}
+
+/**
+ * Names of every non-optional scope that yielded no migration files.
+ *
+ * Pure so the self-test can exercise it directly — the guard it backs was
+ * previously an inline `if` in the CLI section, which is exactly why nobody
+ * noticed it could never be satisfied.
+ */
+function missingRequiredScopes(scopes, scopesFound) {
+  return scopes.filter((s) => !s.optional && !scopesFound.has(s.name)).map((s) => s.name)
 }
 
 /** True when every colliding file for this version sits in the SAME scope. */
@@ -150,8 +208,25 @@ function isSameScopeCollision(entries) {
   return scopes.size === 1
 }
 
-function describeCollision({ version, entries }) {
+function describeCollision({ version, entries, unpinned, pinMismatch }) {
   const files = entries.map((e) => `${e.scope}:${e.file}`).join(' and ')
+  if (pinMismatch) {
+    return (
+      `${version} is ALLOWLISTED for ${pinMismatch.expected} colliding file(s) but now has ` +
+      `${pinMismatch.actual}. The entry was verified against a different set, so it does not ` +
+      `excuse what is there now — a new migration has landed on an already-excused version. ` +
+      `Re-verify the group, then update the \`n=\` count on this entry in ` +
+      `${ALLOWLIST_RELATIVE_PATH}: ${files}`
+    )
+  }
+  if (unpinned) {
+    return (
+      `${version} has an allowlist entry with no \`n=<count>\` pin. Every entry must record how ` +
+      `many colliding files it was verified against, otherwise it silently waives files nobody ` +
+      `has looked at. Add \`n=${entries.length}\` after the version in ` +
+      `${ALLOWLIST_RELATIVE_PATH}: ${files}`
+    )
+  }
   if (isSameScopeCollision(entries)) {
     const [{ scope }] = entries
     return (
@@ -172,11 +247,20 @@ function runCheck({ files, allowlistText }) {
   const violations = []
   const allowlisted = []
   for (const c of collisions) {
-    if (allowlist.has(c.version)) {
-      allowlisted.push(c)
-    } else {
+    const entry = allowlist.get(c.version)
+    if (!entry) {
       violations.push(c)
+      continue
     }
+    if (entry.expectedFiles === null) {
+      violations.push({ ...c, unpinned: true })
+      continue
+    }
+    if (c.entries.length !== entry.expectedFiles) {
+      violations.push({ ...c, pinMismatch: { expected: entry.expectedFiles, actual: c.entries.length } })
+      continue
+    }
+    allowlisted.push(c)
   }
   return { collisions, violations, allowlisted, allowlist }
 }
@@ -243,7 +327,8 @@ function selfTest() {
         const files = scanScopes(SCOPES, root)
         const { violations, allowlisted } = runCheck({
           files,
-          allowlistText: '20260201000000  coincidental timestamp, distinct migrations (test fixture)\n',
+          allowlistText:
+            '20260201000000  n=2  coincidental timestamp, distinct migrations (test fixture)\n',
         })
         return violations.length === 0 && allowlisted.length === 1
       }),
@@ -337,16 +422,148 @@ function selfTest() {
       const text = [
         '# comment line',
         '',
-        '20260101000000  reason one',
+        '20260101000000  n=2  reason one',
         '  # indented comment',
-        '20260102000000   reason two with   spaces',
+        '20260102000000   n=3   reason two with   spaces',
       ].join('\n')
       const allowed = parseAllowlist(text)
       return (
         allowed.size === 2 &&
-        allowed.get('20260101000000') === 'reason one' &&
-        allowed.get('20260102000000') === 'reason two with   spaces'
+        allowed.get('20260101000000').reason === 'reason one' &&
+        allowed.get('20260101000000').expectedFiles === 2 &&
+        allowed.get('20260102000000').reason === 'reason two with   spaces' &&
+        allowed.get('20260102000000').expectedFiles === 3
       )
+    },
+  ])
+
+  // ---- the `n=` pin -------------------------------------------------------
+  //
+  // REGRESSION TEST FOR THE MUTATION-FOUND DEFECT. Before the pin, an entry
+  // written for a two-file collision waived a third file added later at the
+  // same version. Reproduced against the live tree on 2026-08-12 and now
+  // locked down here.
+  cases.push([
+    'a THIRD file at an allowlisted version is NOT waived by the existing entry',
+    () =>
+      withTempScopes((root) => {
+        writeScopeFile(root, 'crm7/supabase/migrations', '20260601000000_a.sql')
+        writeScopeFile(root, 'business-suite-unified/supabase/migrations', '20260601000000_b.sql')
+        const clean = runCheck({
+          files: scanScopes(SCOPES, root),
+          allowlistText: '20260601000000  n=2  verified pair\n',
+        })
+        if (clean.violations.length !== 0) return false
+        // A new, unrelated migration lands on the same excused version.
+        writeScopeFile(root, 'conduit/supabase/migrations', '20260601000000_c.sql')
+        const grown = runCheck({
+          files: scanScopes(SCOPES, root),
+          allowlistText: '20260601000000  n=2  verified pair\n',
+        })
+        return (
+          grown.violations.length === 1 &&
+          grown.violations[0].pinMismatch?.expected === 2 &&
+          grown.violations[0].pinMismatch?.actual === 3 &&
+          describeCollision(grown.violations[0]).includes('ALLOWLISTED for 2')
+        )
+      }),
+  ])
+
+  cases.push([
+    'an allowlist entry with no n= pin is rejected',
+    () =>
+      withTempScopes((root) => {
+        writeScopeFile(root, 'crm7/supabase/migrations', '20260602000000_a.sql')
+        writeScopeFile(root, 'conduit/supabase/migrations', '20260602000000_b.sql')
+        const { violations } = runCheck({
+          files: scanScopes(SCOPES, root),
+          allowlistText: '20260602000000  no count given here\n',
+        })
+        return (
+          violations.length === 1 &&
+          violations[0].unpinned === true &&
+          describeCollision(violations[0]).includes('n=<count>')
+        )
+      }),
+  ])
+
+  cases.push([
+    'the SHIPPED allowlist has an n= pin on every active entry',
+    () => {
+      const text = fs.readFileSync(
+        path.join(path.dirname(process.argv[1]), '..', ALLOWLIST_RELATIVE_PATH),
+        'utf8',
+      )
+      const active = text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith('#'))
+      if (active.length === 0) return false
+      return active.every((l) => {
+        const afterVersion = l.slice(14).trim()
+        return afterVersion.startsWith('n=')
+      })
+    },
+  ])
+
+  // ---- presence guard -----------------------------------------------------
+  //
+  // THE REGRESSION TEST FOR THE DEFECT THIS SECTION EXISTS FOR. The shipped
+  // SCOPES list must be satisfiable by a tree where every submodule is present:
+  // R80.4 has no supabase/ directory anywhere in its repo, so a guard that
+  // demanded migrations from all 8 declared scopes could never pass, and the
+  // gate failed every run from the day it was authored. If a future edit drops
+  // `optional: true` from a scope that genuinely has no migrations, this case
+  // fails immediately rather than after the next promotion goes red.
+  cases.push([
+    'shipped SCOPES list is satisfiable — every non-optional scope can be present',
+    () => {
+      // Simulate the ideal tree: every scope that is not marked optional has
+      // migrations. missingRequiredScopes must then be empty.
+      const found = new Set(SCOPES.filter((s) => !s.optional).map((s) => s.name))
+      return missingRequiredScopes(SCOPES, found).length === 0
+    },
+  ])
+
+  cases.push([
+    'R80.4 is marked optional (it has no supabase/ directory at all)',
+    () => {
+      const r80 = SCOPES.find((s) => s.name === 'R80.4')
+      return Boolean(r80 && r80.optional === true)
+    },
+  ])
+
+  cases.push([
+    'a missing REQUIRED scope is named, not counted',
+    () => {
+      const found = new Set(SCOPES.filter((s) => !s.optional && s.name !== 'crm7').map((s) => s.name))
+      const missing = missingRequiredScopes(SCOPES, found)
+      return missing.length === 1 && missing[0] === 'crm7'
+    },
+  ])
+
+  cases.push([
+    'an absent OPTIONAL scope does not trip the guard',
+    () => {
+      const found = new Set(SCOPES.filter((s) => !s.optional).map((s) => s.name))
+      // R80.4 deliberately absent from `found`.
+      return !found.has('R80.4') && missingRequiredScopes(SCOPES, found).length === 0
+    },
+  ])
+
+  // A count-based guard cannot distinguish "the right 7 scopes" from "the wrong
+  // 7 scopes". This is the failure mode --require-all-scopes replaces: the old
+  // `scopesFound.size < 8` test passes for ANY seven names, including a tree
+  // where crm7 — 584 of the 801 migration files — failed to clone.
+  cases.push([
+    'named guard catches a wrong-scope set that a bare count would pass',
+    () => {
+      const nonOptional = SCOPES.filter((s) => !s.optional).map((s) => s.name)
+      // Same CARDINALITY as a healthy tree, but crm7 swapped for R80.4.
+      const wrong = new Set(nonOptional.filter((n) => n !== 'crm7').concat(['R80.4']))
+      const countWouldPass = wrong.size >= nonOptional.length
+      const named = missingRequiredScopes(SCOPES, wrong)
+      return countWouldPass && named.length === 1 && named[0] === 'crm7'
     },
   ])
 
@@ -379,7 +596,8 @@ function selfTest() {
 function usageError(msg) {
   console.error(`check-migration-version-collisions: ${msg}`)
   console.error(
-    'Usage: node scripts/check-migration-version-collisions.mjs [--root=<path>] | --self-test',
+    'Usage: node scripts/check-migration-version-collisions.mjs ' +
+      '[--root=<path>] [--require-all-scopes] [--require-scopes=<n>] | --self-test',
   )
   process.exit(2)
 }
@@ -389,9 +607,12 @@ if (args.includes('--self-test')) selfTest()
 
 let rootArg = '.'
 let requireScopes = 0
+let requireAllScopes = false
 for (const a of args) {
   if (a.startsWith('--root=')) {
     rootArg = a.slice('--root='.length)
+  } else if (a === '--require-all-scopes') {
+    requireAllScopes = true
   } else if (a.startsWith('--require-scopes=')) {
     requireScopes = Number(a.slice('--require-scopes='.length))
     if (!Number.isInteger(requireScopes) || requireScopes < 0) {
@@ -421,6 +642,41 @@ const files = scanScopes(SCOPES, root)
 // passes the number of scopes that must actually contain migrations, and a
 // short count is a hard error, not a pass.
 const scopesFound = new Set(files.map((f) => f.scope))
+
+// `--require-all-scopes` is the preferred form and the one CI uses. It NAMES
+// the scope that came up empty instead of comparing two integers.
+//
+// The count form it replaces was unsatisfiable: `--require-scopes=8` against a
+// SCOPES list whose 8th entry (R80.4) has no supabase/ directory at all. A
+// count also cannot tell "crm7 failed to clone" from "R80.4 has no migrations"
+// — both just read as 7 — so the one number that was supposed to prove the tree
+// was scanned could be satisfied by the wrong seven scopes. Naming the missing
+// scope removes both failure modes.
+if (requireAllScopes) {
+  const missing = missingRequiredScopes(SCOPES, scopesFound)
+  if (missing.length) {
+    console.error(
+      `check-migration-version-collisions: these required scope(s) contain NO migration ` +
+        `files: ${missing.join(', ')}.\n` +
+        `Found migrations in: ${[...scopesFound].join(', ') || 'none'}.\n` +
+        `The submodules are probably not checked out — verify the checkout token can ` +
+        `clone the private sibling repos. Refusing to report OK on an unscanned tree.`,
+    )
+    process.exit(1)
+  }
+  // Self-healing: if an optional scope has GAINED migrations, it is no longer
+  // optional and the list should say so. Silence here is how a scope drops out
+  // of a presence guard and nobody notices for a year.
+  for (const s of SCOPES) {
+    if (s.optional && scopesFound.has(s.name)) {
+      console.log(
+        `::notice::scope "${s.name}" is marked optional but now contains migrations — ` +
+          `remove \`optional: true\` from SCOPES in ${path.basename(process.argv[1])}.`,
+      )
+    }
+  }
+}
+
 if (requireScopes > 0 && scopesFound.size < requireScopes) {
   console.error(
     `check-migration-version-collisions: expected migrations in at least ` +
@@ -433,10 +689,11 @@ if (requireScopes > 0 && scopesFound.size < requireScopes) {
 }
 
 if (files.length === 0) {
-  if (requireScopes > 0) {
+  if (requireScopes > 0 || requireAllScopes) {
     console.error(
       'check-migration-version-collisions: no migration files found at all, but ' +
-        `--require-scopes=${requireScopes} was requested. Refusing to pass.`,
+        `${requireAllScopes ? '--require-all-scopes' : `--require-scopes=${requireScopes}`} ` +
+        'was requested. Refusing to pass.',
     )
     process.exit(1)
   }
@@ -464,8 +721,15 @@ if (violations.length) {
   process.exit(1)
 }
 
+// Report the number of scopes that ACTUALLY yielded files, not SCOPES.length.
+// The old message said "across 8 scope(s)" unconditionally — including on a run
+// where only 7 had migrations, and equally on a run where six submodules failed
+// to check out and just two scopes were read. A denominator that is a constant
+// is not a denominator; it is decoration that makes an unscanned tree read like
+// a full sweep.
 console.log(
-  `check-migration-version-collisions: OK (${files.length} file(s) scanned across ${SCOPES.length} scope(s), ` +
+  `check-migration-version-collisions: OK (${files.length} file(s) scanned across ` +
+    `${scopesFound.size} of ${SCOPES.length} declared scope(s): ${[...scopesFound].join(', ')}; ` +
     `${collisions.length} known collision(s), all ${allowlisted.length} allowlisted)`,
 )
 process.exit(0)

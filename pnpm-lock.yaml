@@ -410,8 +410,8 @@ importers:
   packages/schema-registry:
     dependencies:
       '@bsuite/nav-core':
-        specifier: ^0.7.0
-        version: 0.7.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: ^0.8.0
+        version: 0.8.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@supabase/supabase-js':
         specifier: ^2
         version: 2.108.1
@@ -522,8 +522,8 @@ importers:
         version: 3.6.0
     devDependencies:
       '@bsuite/theme':
-        specifier: ^0.7.0
-        version: 0.7.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
+        specifier: ^0.11.0
+        version: 0.11.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
       '@storybook/react-vite':
         specifier: ^10.4.3
         version: 10.4.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.27.7)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(storybook@10.4.3(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.7.0))
@@ -694,14 +694,14 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
-  '@bsuite/nav-core@0.7.0':
-    resolution: {integrity: sha512-E7EP2GMpo92Mx1NIEQDBoC9WlvYlbhHaOSPx8XpC1femtphzmApAC/LZnH4ILOIu/BNYoGFM/G4pgsoJUCeo7A==}
+  '@bsuite/nav-core@0.8.0':
+    resolution: {integrity: sha512-hG4CmZSzH7jAzPw772QkapOR9rSf85IdI/Y6Fays1Ns+SrKb8A7yvs+Kxk63ZDgmvBB6QZzUwBOfHPevEQa3RQ==}
     peerDependencies:
       react: '>=18 <21'
       react-dom: '>=18 <21'
 
-  '@bsuite/theme@0.7.0':
-    resolution: {integrity: sha512-468VJs6jhderBtDlZ0FiuKqu5MErvLrBgCD+C6wAIn4zUgZ3vWN/XG9N1T6Ayhmv0+GtBG057fu81Pe3pQ10OA==}
+  '@bsuite/theme@0.11.0':
+    resolution: {integrity: sha512-AJhrhaRtC8ZKbAzxBa6vxwGb3a6NxibQV1y/zS0b7kre3yqrc1sQZdTqyeb0N/eZJM54zzvJKk7feMyE6i0UJA==}
     peerDependencies:
       '@supabase/supabase-js': '>=2.0.0'
       react: '>=18.0.0'
@@ -3472,12 +3472,12 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
-  '@bsuite/nav-core@0.7.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@bsuite/nav-core@0.8.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
-  '@bsuite/theme@0.7.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
+  '@bsuite/theme@0.11.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)

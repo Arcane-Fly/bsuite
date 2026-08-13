@@ -1,28 +1,91 @@
 /*
- * Corporate Branding — Sidebar Design Tokens
- * ───────────────────────────────────────────
- * Uses shadcn/ui's --sidebar-* CSS variable contract.
- * Import this file in the braden.com.au project.
+ * Corporate Braden — Sidebar Design Tokens
+ * ─────────────────────────────────────────
+ * Import from braden.com.au's CSS entry point, AFTER the corporate theme:
  *
- * Braden corporate palette:
- *   Red    Braden Red   (primary)
- *   Gold   Braden Gold  (accent)
- *   Navy   Braden Navy  (text/headings)
+ *   @import "tailwindcss";
+ *   @import "@bsuite/theme/braden-css";
+ *   @import "@bsuite/nav-core/tokens/corporate-sidebar.css";   ← this file
  *
- * Values are HSL channel triplets (H S% L%) consumed by
- * Tailwind's hsl() utility wrappers.
+ * NEVER import this alongside the D2C twin. One brand per app.
+ *
+ * Rewritten 2026-08-12 for exactly the reasons documented at length in
+ * d2c-sidebar.css — read that file's header first; the mechanics are
+ * identical and are not repeated here. In short:
+ *
+ *   · HSL channel triplets on the Tailwind v3 contract could not work in
+ *     any v4 app, and nothing imported this file.
+ *   · A `:root` custom property registers no v4 utility; `bg-sidebar` comes
+ *     from the `--color-*` namespace inside `@theme`.
+ *   · The HSL form hid values from the colour audit, which reads oklch and
+ *     hex only. This file carried `0 0% 95%` and `0 0% 75%` — greys with no
+ *     hue, invisible to the scanner and off the corporate palette.
+ *   · A var() in a custom property freezes at the declaring element, so the
+ *     @theme bridge points at the role and brand primitives DIRECTLY, and
+ *     --sidebar-* block is declared per mode. Do not merge the two blocks.
+ *
+ * THE ONE BRAND DIFFERENCE. The corporate rail is red-branded rather than a
+ * recessed neutral: --braden-red is the surface, not the accent. So unlike
+ * the D2C file, background/foreground here do NOT bind to --role-bg-* /
+ * --role-text-*; they bind to the brand primitives, and the type on them is
+ * solved against the red rather than against the page.
+ *
+ * There is no `.dark` variant, as before: the corporate sidebar is always
+ * red-branded. The block below is therefore declared once, and correctly —
+ * with nothing to freeze against, one declaration is the whole truth.
  */
 
+/* ── Layer 1: raw vars, for components that read var(--sidebar-*). ────── */
 :root {
-  --sidebar-background: 350 66% 38%;       /* dark braden red    */
-  --sidebar-foreground: 0 0% 95%;          /* near-white text    */
-  --sidebar-primary: 44 49% 60%;           /* braden gold        */
-  --sidebar-primary-foreground: 350 66% 15%;/* deep red text      */
-  --sidebar-accent: 350 66% 32%;           /* deeper red tint    */
-  --sidebar-accent-foreground: 44 49% 75%; /* light gold         */
-  --sidebar-border: 350 40% 28%;           /* subtle red border  */
-  --sidebar-ring: 44 49% 60%;              /* gold ring          */
-  --sidebar-muted-foreground: 0 0% 75%;    /* muted text         */
+  /* --braden-red-dark, the deepest brand red — the rail sits below the
+     page rather than beside it. */
+  --sidebar-background: var(--braden-red-dark);
+
+  /* Type on deep red. --text-on-primary is the theme's solved inverse for
+     The next line names the banned endpoint in order to rule it out.
+     theme-audit-ok: prose — naming a value is not using it.
+     coloured fills — the corporate near-white, never oklch(1 0 0). */
+  --sidebar-foreground: var(--text-on-primary);
+
+  /* Gold is the corporate accent and marks the active item. --text-on-accent
+     is the theme's own solved inverse for type on gold: measured 8.49:1
+     against the gold fill, where --braden-red-dark measured 4.58:1 — a
+     hairline AA pass that a slightly lighter gold would have broken. */
+  --sidebar-primary: var(--braden-gold);
+  --sidebar-primary-foreground: var(--text-on-accent);
+
+  /* Hover tint: the rail's own red, lifted toward gold. color-mix keeps it
+     a derivation of two brand primitives rather than a new colour. 10%,
+     measured in-browser (canvas sRGB, control 21:1):
+
+       --sidebar-accent-foreground ON the tint    4.81:1 ✓ AA
+       --sidebar-foreground ON the rail           9.33:1 ✓ AAA
+       --sidebar-muted-foreground ON the rail     5.57:1 ✓ AA
+       tint vs the rail itself                    1.17
+
+     10% and not more: the tint lightens as gold rises and the gold-light
+     foreground loses contrast with it — 14% measures 4.52:1, 18% fails AA
+     outright at 4.23:1. */
+  --sidebar-accent: color-mix(in oklch, var(--braden-gold) 10%, var(--braden-red-dark));
+  --sidebar-accent-foreground: var(--braden-gold-light);
+
+  --sidebar-border: color-mix(in oklch, var(--braden-gold) 20%, var(--braden-red-dark));
+  --sidebar-ring: var(--braden-gold);
+
+  /* Muted captions on the red rail. Gold at low mix stays legible where a
+     neutral grey would go muddy against the red. */
+  --sidebar-muted-foreground: color-mix(in oklch, var(--text-on-primary) 72%, var(--braden-red-dark));
 }
 
-/* No .dark variant: corporate sidebar is always red-branded */
+/* ── Layer 2: the Tailwind v4 bridge — this is what creates the utilities. */
+@theme inline {
+  --color-sidebar: var(--braden-red-dark);
+  --color-sidebar-foreground: var(--text-on-primary);
+  --color-sidebar-primary: var(--braden-gold);
+  --color-sidebar-primary-foreground: var(--text-on-accent);
+  --color-sidebar-accent: color-mix(in oklch, var(--braden-gold) 10%, var(--braden-red-dark));
+  --color-sidebar-accent-foreground: var(--braden-gold-light);
+  --color-sidebar-border: color-mix(in oklch, var(--braden-gold) 20%, var(--braden-red-dark));
+  --color-sidebar-ring: var(--braden-gold);
+  --color-sidebar-muted-foreground: color-mix(in oklch, var(--text-on-primary) 72%, var(--braden-red-dark));
+}

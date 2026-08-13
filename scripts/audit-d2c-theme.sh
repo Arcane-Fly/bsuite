@@ -59,7 +59,24 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
 # are mask stops, where the channel is opacity rather than paint; that is
 # documented at each call site. Excluding those files by name would also hide a
 # real colour if one were added to them later.
-EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
+# packages/eslint-config/rules/ is THE SOURCE OF THE COLOUR RULE ITSELF, and it is
+# here for exactly the reason `--exclude-dir=eslint-rules` exists above: a rule that
+# forbids pure white must name pure white, in its error message and in the comments
+# explaining which forms it once missed.
+#
+# The exclusion above was written for the INLINE COPIES, whose directory is called
+# `eslint-rules`. The original they are generated from lives in a directory called
+# `rules`, so it was never covered — the guard was right and its SCOPE was the bug,
+# which is the same defect this estate has now found in three separate places this
+# week. It stayed invisible only because the old rule named few literals; rewriting
+# the detection as a tokeniser (bsuite#1889) documented the two holes it had been
+# missing, and the count jumped 7 -> 17 against a baseline of 11.
+#
+# Listed here rather than in the grep excludes deliberately: EXCEPTION_RE moves a
+# path into the EXEMPT column, where it stays visible and countable. An
+# `--exclude-dir` would make it disappear, and a colour that is genuinely wrong in
+# the rule's own message should still be readable by someone auditing this.
+EXCEPTION_RE='(packages/eslint-config/rules/|supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
 
 # ── Violation-class predicates ────────────────────────────────────────────────
 # C1 pure white/black — Tailwind utilities. All colour-bearing prefixes, with optional
@@ -166,9 +183,17 @@ split() { # $1=regex $2=path -> "real exc"
   local out real exc
   out=$(emit "$1" "$2")
   [[ -n "${DUMP:-}" && -n "$out" ]] && printf '%s\n' "$out" >> "$DUMP"
-  real=$(printf '%s' "$out" | grep -cEv "$EXCEPTION_RE" 2>/dev/null || echo 0)
-  exc=$(printf '%s'  "$out" | grep -cE  "$EXCEPTION_RE" 2>/dev/null || echo 0)
-  [[ -z "$out" ]] && { real=0; exc=0; }
+  # `grep -c` PRINTS a count and EXITS 1 when that count is zero, so `|| echo 0`
+  # appended a SECOND line rather than supplying a missing one: `real` became
+  # "0\n0", and the `read -r c1r c1e` below then consumed only the first line —
+  # leaving the EXEMPT figure blank in every row whose real count was zero.
+  # Visible in the output as `0 /` with nothing after the slash (braden's C1 row
+  # has read that way for as long as this script has existed). The count itself
+  # was never wrong; the column next to it was silently dropped.
+  real=$(printf '%s' "$out" | grep -cEv "$EXCEPTION_RE" 2>/dev/null || true)
+  exc=$(printf '%s'  "$out" | grep -cE  "$EXCEPTION_RE" 2>/dev/null || true)
+  [[ -z "$out" || -z "$real" ]] && real=0
+  [[ -z "$out" || -z "$exc" ]] && exc=0
   echo "$real $exc"
 }
 

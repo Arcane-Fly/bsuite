@@ -42,6 +42,14 @@ export interface UsePageGridLayoutOptions {
   canEditPage?: boolean;
   editorEventNames?: readonly string[];
   preferenceAdapter?: PageGridPreferenceFactory;
+  /**
+   * Value used for `GridLayoutItem.autoHeight` on any item that does not state
+   * one. Defaults to `true` — cards grow to fit their content rather than
+   * clipping it behind an inner scrollbar (D-76). Pass `false` for a surface
+   * whose items own their own scroll (a virtualized list); an individual item
+   * can always opt out with an explicit `autoHeight: false`.
+   */
+  defaultAutoHeight?: boolean;
 }
 
 export interface WidgetMeta {
@@ -179,6 +187,14 @@ export interface UsePageGridLayoutResult {
   activeCompactor: Compactor;
   onLayoutChange: (_layout: unknown, layouts: unknown) => void;
   handleColumnChange: (newCols: number) => void;
+  /**
+   * Wire to `<Responsive onBreakpointChange>`. The hook needs to know which
+   * breakpoint react-grid-layout is rendering so a gesture is written back to
+   * the breakpoint that owns it — see `canonicaliseLayoutForPersist`. Without
+   * this the hook assumes `lg`, and every edit made at a narrower container
+   * width lands in a derived breakpoint that is then discarded (D-75).
+   */
+  handleBreakpointChange: (breakpoint: string) => void;
   handleCompact: () => void;
   handleReset: () => void;
   addWidget: (

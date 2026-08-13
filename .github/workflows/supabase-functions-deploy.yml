@@ -210,6 +210,34 @@ jobs:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
 
+      # ───────────────────────────────────────────────────────────────────────
+      # Fail CLOSED on an incomplete checkout.
+      #
+      # The collision guard in the deploy step proves slug ownership by
+      # intersecting every scope's supabase/functions/ directory. A submodule
+      # that failed to clone leaves an EMPTY gitlink directory, which is
+      # byte-for-byte indistinguishable from a scope that genuinely declares no
+      # functions. The intersection then sees ONE owner where there are two,
+      # calls the slug uniquely owned, and deploys it over another repo's live
+      # copy: no diff, no failure, no signal. That is the exact `tga-search`
+      # class the guard was written to stop, re-entering through the guard's
+      # own blind spot.
+      #
+      # An inventory printed into the log does not close it — nobody reads a
+      # green run. So the precondition is asserted before any deploy runs, and
+      # this step fails the job when it does not hold.
+      #
+      # The check lives in scripts/verify-submodule-scopes.sh so the deploy
+      # step can re-assert the identical logic without a second copy to drift.
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Verify every submodule scope is checked out
+        id: scopes
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIRS=$("${GITHUB_WORKSPACE}/scripts/verify-submodule-scopes.sh" "${GITHUB_WORKSPACE}")
+          echo "dirs=${DIRS}" >> "$GITHUB_OUTPUT"
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -248,7 +276,41 @@ jobs:
         env:
           # Was supplied implicitly by the removed `supabase link` step.
           SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          # Derived from .gitmodules and verified by the step above. Passed
+          # through env, never interpolated into the shell body.
+          ALL_SCOPE_DIRS: ${{ steps.scopes.outputs.dirs }}
         run: |
+          # ── Checkout precondition, asserted FIRST ───────────────────────────
+          # This runs ahead of everything else in the step, including the
+          # "no functions directory, skipping" early return below. That return
+          # is itself a fail-open path when the DEPLOYING scope is the one that
+          # failed to clone: an uncloned crm7 has no supabase/functions, so the
+          # job would report "skipping" and exit 0 having deployed nothing —
+          # the same under-triggering silent success as run 30543359155.
+          #
+          # The "Verify every submodule scope is checked out" step already
+          # hard-fails the job before this point. It is RE-ASSERTED here rather
+          # than merely sequenced ahead of the deploy: a guard that only runs
+          # earlier in the job is a guard that a step reorder, an `if:`
+          # condition, or a copy of this step into another workflow silently
+          # removes — and its absence looks exactly like success. The
+          # precondition belongs to the destructive action, so it is coupled to
+          # it, using the same script rather than a paraphrase of it.
+          VERIFIED=$("${GITHUB_WORKSPACE}/scripts/verify-submodule-scopes.sh" "${GITHUB_WORKSPACE}")
+
+          # The scope list must also be the one the earlier step verified. A
+          # mismatch means the two ran against different trees, which is not a
+          # condition this job can reason about.
+          if [ -z "${ALL_SCOPE_DIRS:-}" ]; then
+            echo "::error::ALL_SCOPE_DIRS is empty — the scope-verification step did not run or produced nothing. The collision guard cannot prove slug ownership without the full scope list, so this job refuses to deploy."
+            exit 1
+          fi
+          if [ "$VERIFIED" != "$ALL_SCOPE_DIRS" ]; then
+            echo "::error::Scope list changed mid-job: verified '${VERIFIED}' now, '${ALL_SCOPE_DIRS}' before setup. Refusing to deploy on an inventory the guard cannot trust."
+            exit 1
+          fi
+          # ───────────────────────────────────────────────────────────────────
+
           FUNCTIONS_DIR="supabase/functions"
 
           if [ ! -d "$FUNCTIONS_DIR" ]; then
@@ -259,6 +321,66 @@ jobs:
           DEPLOYED=0
           FAILED=0
           SKIPPED=0
+          COLLIDED=0
+
+          # Every scope deploys into ONE Supabase project, so a slug declared in
+          # two scopes has one live artifact and the last deploy wins. Four slugs
+          # are currently declared in both crm7 and business-suite-unified
+          # (generate-document, oauth-google-email, oauth-microsoft-email,
+          # tga-search). Whichever scope ran last silently owns them, and a
+          # routine redeploy of the OTHER scope reverts the live copy to a
+          # different repo's source — with no diff, no failure and no signal.
+          #
+          # Observed 2026-08-12: `tga-search` answered 200 to a garbage JWT
+          # because BSU's copy was live while crm7's auth hardening sat in
+          # crm7's tree, deployed and then overwritten.
+          #
+          # Ownership is not something this workflow can infer, so it refuses to
+          # guess: a colliding slug is SKIPPED and named, and the rest of the
+          # scope still deploys. The check is a directory-existence intersection
+          # across scopes, so it needs no list to maintain — when the duplicate
+          # is deleted the intersection empties and the slug deploys normally.
+          #
+          # The intersection is only as good as the checkout: a submodule that
+          # failed to clone presents as "declares nothing", which makes the guard
+          # fall OPEN and silently deploy a colliding slug over another repo's
+          # live copy. That is closed by the checkout precondition at the top of
+          # this step, which hard-fails rather than guesses and supplies the
+          # verified scope list in $ALL_SCOPE_DIRS.
+          #
+          # Inventory. Every scope is now known to be checked out, so "0" here
+          # means the scope genuinely declares no functions — not that its clone
+          # went missing.
+          scope_inventory() {
+            local dir="$1"
+            if [ ! -d "$dir" ]; then
+              echo "0 (no supabase/functions directory)"
+            else
+              echo "$(find "$dir" -mindepth 1 -maxdepth 1 -type d | wc -l)"
+            fi
+          }
+
+          echo "=== Slug inventory seen by the collision guard ==="
+          echo "  root: $(scope_inventory "${GITHUB_WORKSPACE}/supabase/functions")"
+          for s in $ALL_SCOPE_DIRS; do
+            echo "  ${s}: $(scope_inventory "${GITHUB_WORKSPACE}/${s}/supabase/functions")"
+          done
+          echo ""
+
+          declaring_scopes() {
+            # Echoes the scopes whose supabase/functions/ declares slug $1.
+            local slug="$1" found="" cand
+            if [ -d "${GITHUB_WORKSPACE}/supabase/functions/${slug}" ]; then
+              found="root"
+            fi
+            for s in $ALL_SCOPE_DIRS; do
+              cand="${GITHUB_WORKSPACE}/${s}/supabase/functions/${slug}"
+              if [ -d "$cand" ]; then
+                found="${found} ${s}"
+              fi
+            done
+            echo "$found"
+          }
 
           for fn_dir in "$FUNCTIONS_DIR"/*/; do
             [ -d "$fn_dir" ] || continue
@@ -268,6 +390,14 @@ jobs:
             if [[ "$fn_name" == _* ]]; then
               echo "Skipping shared module: $fn_name"
               SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+
+            OWNERS=$(declaring_scopes "$fn_name")
+            OWNER_COUNT=$(echo $OWNERS | wc -w)
+            if [ "$OWNER_COUNT" -gt 1 ]; then
+              echo "::warning::SKIP ${fn_name} — slug declared in ${OWNER_COUNT} scopes (${OWNERS}). Deploying it would overwrite another repo's live copy. Resolve the duplicate declaration, then redeploy."
+              COLLIDED=$((COLLIDED + 1))
               continue
             fi
 
@@ -295,7 +425,8 @@ jobs:
           echo ""
           echo "=== Deployment Summary for scope: ${{ matrix.scope }} ==="
           echo "Deployed: ${DEPLOYED}"
-          echo "Skipped:  ${SKIPPED}"
+          echo "Skipped:  ${SKIPPED}   (shared _ directories)"
+          echo "Collided: ${COLLIDED}   (slug declared in >1 scope — NOT deployed)"
           echo "Failed:   ${FAILED}"
 
           if [ $FAILED -gt 0 ]; then
@@ -328,12 +459,22 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
     steps:
       - name: Query Supabase Management API for function entrypoints
+        id: fn-list
         run: |
           echo "Querying project ${SUPABASE_PROJECT_ID} for edge function entrypoints…"
 
           HTTP_STATUS=$(curl -s -o /tmp/fn_list.json -w "%{http_code}" \
             -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
             "https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_ID}/functions")
+
+          # COUPLED, NOT SEQUENCED (bsuite D-92). This step used to warn and exit 0
+          # while the NEXT step ran unconditionally over the same /tmp/fn_list.json —
+          # which on a non-200 holds an error body, not an array. `jq length` over
+          # that yields 0, and the guard printed "All 0 deployed functions have clean
+          # CI entrypoints": a clean verdict on an API call that never succeeded. The
+          # status is now an output the consumer must read, so the two cannot drift
+          # apart again by someone reordering or copying a step.
+          echo "status=${HTTP_STATUS}" >> "$GITHUB_OUTPUT"
 
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "::warning::Management API returned HTTP ${HTTP_STATUS} — cannot run entrypoint guard."
@@ -345,6 +486,7 @@ jobs:
           echo "Management API responded with HTTP 200."
 
       - name: Check for local-machine entrypoints
+        if: steps.fn-list.outputs.status == '200'
         run: |
           # Fail if any function still shows a developer-machine entrypoint_path.
           # Patterns: home/braden (original developer machine), /Users/ (macOS local).

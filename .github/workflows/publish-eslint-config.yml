@@ -40,16 +40,76 @@ jobs:
       - name: Setup pnpm
         run: corepack enable && corepack prepare pnpm@10.33.3 --activate
 
-      - name: Check if version already published
+      - name: Decide whether this version can be published
         id: version-check
+        # WHY THIS IS MORE THAN A VERSION COMPARISON (bsuite#1908)
+        #
+        # @bsuite/eslint-config has never existed on npm, and the publish token
+        # can publish to existing packages but cannot CREATE one — a 404 on PUT
+        # means authenticated-but-unauthorised, not missing. So `npm publish`
+        # failed here every single run since 2026-04-22 (6/6 failures; run
+        # 31506126690 is the latest: "404 Not Found - PUT
+        # .../@bsuite%2feslint-config").
+        #
+        # Nothing consumes this package — no package.json in the estate depends
+        # on it; the rules are consumed by inlined copies instead
+        # (scripts/sync-inline-eslint-rules.mjs). So the failure broke nothing.
+        # It just made the Publish step permanently red, and a step that is
+        # always red is a step everyone learns to scroll past. THAT is the
+        # damage, and it is the same shape as the migration collision gate that
+        # was red by construction while bsuite#1913 walked through it.
+        #
+        # `npm view <pkg>@<version>` cannot distinguish "new version of a real
+        # package" from "package that does not exist", which is why the old
+        # check treated both as "publish it". Probing the BARE package name
+        # separates them.
         run: |
+          # `-e` matters as much as `-u` here (bsuite D-90). Without it a failing
+          # command substitution — `PKG_NAME=$(node -p "require('./package.json').name")`
+          # on a malformed or missing package.json — sets PKG_NAME empty and the script
+          # runs ON, probing the registry for the empty name and writing a `skip=`
+          # output from a decision it never actually made. bsuite#1908 is what a
+          # publish step nobody trusts costs: this workflow failed on EVERY promotion
+          # since 2026-04-22 and the redness became scenery. A step that swallows
+          # failures is how that happens. The tolerated failures below are tolerated
+          # EXPLICITLY — the `npm view` probe is an `if`, and the version probe carries
+          # its own `|| echo ""` — which is the only form that should exist here.
+          set -euo pipefail
+          PKG_NAME=$(node -p "require('./package.json').name")
           PKG_VERSION=$(node -p "require('./package.json').version")
           echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
-          PUBLISHED=$(npm view "@bsuite/eslint-config@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+
+          # Only a definitive E404 licenses a skip. A registry outage, a network
+          # blip or an auth failure must NOT be laundered into a green skip —
+          # that would trade a permanently-red step for a silently-broken one,
+          # which is strictly worse because nobody would ever look again.
+          if VIEW_OUT=$(npm view "$PKG_NAME" version 2>&1); then
+            REGISTERED=true
+          elif printf '%s' "$VIEW_OUT" | grep -q 'E404'; then
+            REGISTERED=false
+          else
+            echo "::error title=Registry probe failed::npm view '$PKG_NAME' failed for a reason that is not E404. Refusing to guess whether the package exists."
+            printf '%s\n' "$VIEW_OUT"
+            exit 1
+          fi
+
+          if [ "$REGISTERED" = "false" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "reason=absent" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Publish skipped — package not on the registry::${PKG_NAME} has never been published, and this workflow's token can publish existing packages but cannot create new ones (404 on PUT = authenticated, unauthorised). Nothing in the estate consumes it. To actually publish it, either create the package once with a token that has create rights, or configure an npm Trusted Publisher for it; this job will then publish normally with no change here."
+            exit 0
+          fi
+
+          PUBLISHED=$(npm view "${PKG_NAME}@${PKG_VERSION}" version 2>/dev/null || echo "")
           if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "reason=already-published" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Publish skipped::${PKG_NAME}@${PKG_VERSION} is already on the registry."
           else
+            # The package EXISTS and this version is not on it. A failure from
+            # here is a real publish failure and must stay red.
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "reason=publish" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish to npm

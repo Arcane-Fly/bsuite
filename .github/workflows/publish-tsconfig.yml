@@ -40,16 +40,59 @@ jobs:
       - name: Setup pnpm
         run: corepack enable && corepack prepare pnpm@10.33.3 --activate
 
-      - name: Check if version already published
+      - name: Decide whether this version can be published
         id: version-check
+        # Identical guard to publish-eslint-config.yml (bsuite#1908) — see that
+        # file for the full reasoning. @bsuite/tsconfig is the estate's OTHER
+        # package that has never existed on the registry, measured 2026-08-12:
+        #
+        #   npm view @bsuite/tsconfig version  ->  E404
+        #
+        # It differs from eslint-config only in that `packages/tsconfig/**` has
+        # never changed on main, so this workflow has never actually run and the
+        # failure is latent rather than observed. Fixing it now costs six lines
+        # and stops the first run from being an unexplained red.
         run: |
+          # `-e` matters as much as `-u` here (bsuite D-90). Without it a failing
+          # command substitution — `PKG_NAME=$(node -p "require('./package.json').name")`
+          # on a malformed or missing package.json — sets PKG_NAME empty and the script
+          # runs ON, probing the registry for the empty name and writing a `skip=`
+          # output from a decision it never actually made. bsuite#1908 is what a
+          # publish step nobody trusts costs: this workflow failed on EVERY promotion
+          # since 2026-04-22 and the redness became scenery. A step that swallows
+          # failures is how that happens. The tolerated failures below are tolerated
+          # EXPLICITLY — the `npm view` probe is an `if`, and the version probe carries
+          # its own `|| echo ""` — which is the only form that should exist here.
+          set -euo pipefail
+          PKG_NAME=$(node -p "require('./package.json').name")
           PKG_VERSION=$(node -p "require('./package.json').version")
           echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
-          PUBLISHED=$(npm view "@bsuite/tsconfig@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
+
+          if VIEW_OUT=$(npm view "$PKG_NAME" version 2>&1); then
+            REGISTERED=true
+          elif printf '%s' "$VIEW_OUT" | grep -q 'E404'; then
+            REGISTERED=false
+          else
+            echo "::error title=Registry probe failed::npm view '$PKG_NAME' failed for a reason that is not E404. Refusing to guess whether the package exists."
+            printf '%s\n' "$VIEW_OUT"
+            exit 1
+          fi
+
+          if [ "$REGISTERED" = "false" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "reason=absent" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Publish skipped — package not on the registry::${PKG_NAME} has never been published, and this workflow's token can publish existing packages but cannot create new ones (404 on PUT = authenticated, unauthorised). To actually publish it, create the package once with a token that has create rights, or configure an npm Trusted Publisher for it."
+            exit 0
+          fi
+
+          PUBLISHED=$(npm view "${PKG_NAME}@${PKG_VERSION}" version 2>/dev/null || echo "")
           if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "reason=already-published" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Publish skipped::${PKG_NAME}@${PKG_VERSION} is already on the registry."
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "reason=publish" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish to npm

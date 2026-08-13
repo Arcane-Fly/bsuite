@@ -74,6 +74,72 @@ jobs:
         # install and still reports drift even if the install below breaks.
         run: node scripts/sync-inline-eslint-rules.mjs --check
 
+      # The step above reads the submodules at their PINNED gitlink SHAs — the
+      # commits the parent has already promoted. It cannot see what the
+      # submodules' own branches have since become, so a weakened copy can sit
+      # in crm7's development for days with the parent green. Measured
+      # 2026-08-12: pinned crm7 b11d9d7 was byte-identical to the source while
+      # crm7's origin/development tip 7a5e94c was missing the pure white/black
+      # ban; every parent run that day reported success.
+      #
+      # Advisory, deliberately. A parent PR author cannot fix a submodule
+      # branch, and failing them for it would rebuild the permanently-red step
+      # this branch has spent three commits dismantling. It annotates instead,
+      # so the drift is visible the day it lands.
+      # WHY THIS IS NOT `git fetch origin development main master || true` (D-89)
+      #
+      # That form hardcoded three branch names and suppressed every error. A
+      # submodule whose default branch is none of the three kept whatever stale
+      # remote refs the checkout happened to leave behind, and the `--check-tips`
+      # step below then compared against them and reported success. The step that
+      # FOLLOWS this one is advisory; this one is not. If the refs are stale the
+      # comparison is not "advisory", it is WRONG — it reports a submodule tip as
+      # in sync when what it actually read was a commit from days ago.
+      #
+      # So: fetch with a real refspec, prune deleted branches, resolve each
+      # submodule's OWN default branch from origin/HEAD instead of guessing, and
+      # fail loudly if either step cannot be completed.
+      - name: Fetch submodule branch tips and resolve each default branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=""
+          while IFS= read -r sm; do
+            [ -n "$sm" ] || continue
+            if [ ! -e "$sm/.git" ]; then
+              failed="$failed $sm(not-checked-out)"
+              continue
+            fi
+            if ! git -C "$sm" fetch -q --prune --no-tags origin '+refs/heads/*:refs/remotes/origin/*'; then
+              failed="$failed $sm(fetch-failed)"
+              continue
+            fi
+            # `remote set-head --auto` asks the remote which branch HEAD points at,
+            # so this is the submodule's real default branch, not an assumption.
+            if ! git -C "$sm" remote set-head origin --auto >/dev/null 2>&1; then
+              failed="$failed $sm(no-origin-HEAD)"
+              continue
+            fi
+            head_ref=$(git -C "$sm" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+            if [ -z "$head_ref" ]; then
+              failed="$failed $sm(unresolvable-origin-HEAD)"
+              continue
+            fi
+            echo "  $sm -> $head_ref ($(git -C "$sm" rev-parse --short "$head_ref"))"
+          done < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{ print $2 }')
+
+          if [ -n "$failed" ]; then
+            echo "::error::Could not refresh remote refs for:$failed"
+            echo "The tip comparison that follows would run against STALE refs and still report success."
+            echo "Set BSUITE_CROSS_REPO_PAT (Contents: read on each app repo) — see bsuite#1781."
+            exit 1
+          fi
+          echo "every submodule's remote refs refreshed and default branch resolved"
+
+      - name: Inline rule parity at submodule branch tips (advisory)
+        continue-on-error: true
+        run: node scripts/sync-inline-eslint-rules.mjs --check-tips
+
       - name: Install eslint-config dependencies
         # The rule tests import `eslint` (RuleTester) and `typescript-eslint`
         # (the JSX/TS parser). Both are devDependencies of packages/eslint-config

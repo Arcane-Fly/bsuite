@@ -4,14 +4,25 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 import noHardcodedColours from './rules/no-hardcoded-colours.js'
+import { noTextWhite } from './rules/no-text-white.js'
 
-// Re-export the rule for apps that build their own flat config
-export { noHardcodedColours }
+// Re-export the rules for apps that build their own flat config
+export { noHardcodedColours, noTextWhite }
 
-// Inline plugin object — usable directly in any flat config array
+// Inline plugin object — usable directly in any flat config array.
+//
+// no-text-white is DEFINED here but deliberately NOT bound to a severity in
+// `base` below. Every app that enforces it already binds it itself, at a
+// severity it chose (BSU and conduit both run it at `warn` under
+// `--max-warnings 0`). Switching it on for every consumer of `base` would
+// change three apps' lint results in a commit that is nominally about giving
+// the rule a source of truth. Defining it without binding it costs nothing and
+// makes `bsuite/no-text-white` disable directives resolvable everywhere, which
+// is what stops the "Definition for rule was not found" failure mode.
 export const bsuitePlugin = {
   rules: {
     'no-hardcoded-colours': noHardcodedColours,
+    'no-text-white': noTextWhite,
   },
 }
 
