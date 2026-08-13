@@ -517,10 +517,10 @@ traffic takes is unknown.
 All of this is on `development`. Nothing here has gone to production. Per your instruction, the
 estate stays on `development` until you have inspected and QA'd it.
 
-## The one that matters: document generation has been throwing on every single call
+## The one that matters: document generation is broken in production, and has been all along
 
-CRM7 generates documents (contracts, letters) through a small server-side program. It **fails on
-every authenticated request**, and has been.
+CRM7 generates documents (contracts, letters) through a small server-side program. It has been
+failing in production — in **three different ways in sequence**, which is why nobody pinned it.
 
 The cause is one word. The code asks the login system to check the caller's pass:
 
@@ -549,8 +549,29 @@ code tried to read a field off that nothing before checking whether it had faile
 on precisely the case the check existed to handle. A user with an expired session got a server
 error instead of "please sign in again".
 
-Both are fixed in **crm7#1672**. The fix is in the source. **The live copy does not change until
-someone with deployment rights ships it** — that is still the blocker in §2.
+Both are fixed in **crm7#1672**.
+
+### What is actually live — I checked, and it corrects me
+
+I first wrote that the program "throws on every request". That is wrong about the *deployed*
+state, and the truth is worse. Asking the live account which programs exist:
+
+**CRM7's document generator is not deployed at all.** The name it now calls does not exist there.
+What *is* deployed under the old shared name is **BSU's** program, not CRM7's.
+
+| when | CRM7 asks for | what answers | what the user gets |
+|---|---|---|---|
+| until yesterday | the shared name | **BSU's** program, which expects a different request | an error |
+| right now | its own new name | nothing — never deployed | "not found" |
+| once deployed, without this fix | its own new name | CRM7's program | a crash on every call |
+
+So the feature has been broken throughout. **This fix is required but not sufficient** — it
+removes the crash that would greet the first deployment. Restoring the feature needs someone with
+deployment rights, which is still the blocker in §2.
+
+Yesterday's rename is what introduced the current "not found". That is not a criticism of it: the
+collision it removed was worse — CRM7's configuration was setting a **security flag on BSU's
+program**. It does mean the rename is only half-landed until a deployment happens.
 
 ## I then measured the whole population
 
