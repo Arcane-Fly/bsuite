@@ -121,6 +121,32 @@ SRC_GLOBS=(
   'supabase/functions/**/*.js'
 )
 
+# R4's scope: CLIENT source only — everything above EXCEPT edge functions.
+#
+# R4's own header has always said "Edge functions are governed by R6, not by
+# this", but it scanned SRC_GLOBS, which includes `supabase/functions/**`. So it
+# policed the one place its documentation disclaims, and the one place where the
+# name it bans is the WORKING name: on this project the 2026-04-22 legacy-key
+# disable re-pointed the injected `SUPABASE_ANON_KEY` at the publishable key.
+# That is not a hypothetical cost — the header records 18 edge functions migrated
+# off it onto the unsettable `SUPABASE_PUBLISHABLE_KEY`, each commit citing this
+# guard, every one of them then sending an empty apikey.
+#
+# It also cost a correct fix: crm7#1672 moved `crm7-generate-document` onto
+# `getPublishableKey()` — exactly what the diagnostic asks for — and R4 still
+# failed it, on the COMMENT explaining why the old name was wrong. A guard that
+# forbids naming the thing it bans cannot be documented around.
+#
+# R6 continues to own edge functions and is unchanged.
+CLIENT_SRC_GLOBS=()
+for _glob in "${SRC_GLOBS[@]}"; do
+  case "$_glob" in
+    supabase/functions/*) ;;
+    *) CLIENT_SRC_GLOBS+=("$_glob") ;;
+  esac
+done
+unset _glob
+
 VIOLATIONS=0
 DIAGNOSTICS=""
 
@@ -390,7 +416,7 @@ check_r4() {
     local matches
     matches=$(run_git_grep "$app" \
       '(VITE_|NEXT_PUBLIC_)?SUPABASE_ANON_KEY' \
-      "${SRC_GLOBS[@]}" | filter_matches "$prefix")
+      "${CLIENT_SRC_GLOBS[@]}" | filter_matches "$prefix")
     if [ -n "$matches" ]; then
       issues="${issues}${matches}"$'\n'
     fi
