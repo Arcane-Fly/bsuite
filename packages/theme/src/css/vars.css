@@ -67,6 +67,25 @@
   --neon-electric-teal:  oklch(0.600 0.130 195);   /* success */
   --neon-electric-deep:  oklch(0.380 0.140 270);   /* secondary action */
 
+  /* The two words the estate uses loosely, pinned to values. Operator ruling
+     2026-08-02 ("white is primary: #f8f9fa") in terms: "define --white and
+     --black once in the token source and reference them everywhere; never
+     write either literal inline." This is that definition — it did not exist
+     until 2026-08-13, which is why the sanctioned replacement values named in
+     packages/eslint-config/rules/no-hardcoded-colours.js had no token to point
+     at and every legacy pure-white literal got fixed by inventing a fresh
+     near-white instead.
+     CHOSEN FROM THE CONTRACT, NOT INVENTED — both are now recorded in
+     packages/theme/docs/d2c-theme-source-of-truth.html (L1), which is what the
+     palette gate reads. Mode-invariant on purpose: these name the colours, not
+     a surface role, so they are NOT overridden under .dark. If you want "the
+     page background", that is --role-bg-body and it does flip.
+     Note the banned endpoints are DESCRIBED here and never spelled out. C1
+     scans comments and counts a literal whether or not the sentence around it
+     says "never" — writing one to forbid it raises the ratchet. */
+  --white:               oklch(0.982 0.002 247.8); /* the near-white, #f8f9fa */
+  --black:               oklch(0.166 0.026 269.4); /* the near-black, #0a0e1a */
+
   /* ============================================================
      LAYER 2 — SURFACE PRIMITIVES (light mode)
      ============================================================ */
