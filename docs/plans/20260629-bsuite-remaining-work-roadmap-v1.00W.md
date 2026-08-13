@@ -17,6 +17,30 @@
 - **RBAC parity (2026-06-29, Batch D fixes):** all five world-class-audit parity gaps **WC-008…WC-012 fixed in code** (operator-approved). WC-008 migration drops the dead `super_admin` branch in `is_platform_admin()`; WC-009 aligns crm7 `isPrivileged` to `{developer,tester,platform_admin}` (= conduit + DB); WC-010 renames the portal-role token `host_employer`→`host_contact` suite-wide (the tenant_type `host_employer` is unchanged); WC-011 adds `worker`/`viewer` to the app `PortalRole` union + routes `worker`; WC-012 switches conduit tenant-context reads (`useTenantId`/`getTenantContext`/`middleware`) to canonical `portal_role`. Evidence: audit tracker §WC-008…012 + parity matrix §3/§3.1. Batch E live `d.*` validation gates any merge to main.
 - **Auth (2026-06-29):** `supabase-auth-comprehensive` audit verdict **COMPLIANT** — all 6 apps pass the canonical doctrine (no forbidden patterns, `flowType:'pkce'`, callback `setSession`+`getSession`-poll bridge, `startBSTokenRefresh` wired, `oauth-contract.test.ts` present, BSU-only consent, `@bsuite/auth` uniformly exact-pinned `0.2.6`, `oauth-callback-must-bridge` lint wired). Minor non-security drift only → see §5.
 
+  > **CORRECTION (2026-08-13) — the clause `oauth-callback-must-bridge` lint wired was false when written, and stayed false for six weeks.** The claim above is left in place deliberately: it is the evidence.
+  >
+  > **Measured 2026-08-12 and 2026-08-13, by resolving the effective ESLint config for each app's callback — `npx eslint --print-config <callback-file>` — not by grepping for the rule name.** The rule was wired in **zero of five clients**. It has shipped in `@bsuite/dry-lint` since v0.4.0 and is exported by the installed v0.5.0 build, but no consumer had ever referenced it in a config. In R80.4 the package carrying it was not a dependency at all, so that app could not have wired it even by accident.
+  >
+  > **"All 6 apps" was itself wrong.** `business-suite-unified` is the OAuth **server**, not a client: zero `exchangeCodeForTokens` and zero `auth.setSession` under its `src/`. There are **five** clients — crm7, conduit, throughput, braden, R80.4 — so the audit reported 6/6 compliance over a population that does not exist. A denominator nobody checked is how a sweep reports completeness it never measured.
+  >
+  > What the guard protects: BS OAuth tokens are Supabase-compatible JWTs but **not** automatic supabase-js sessions. A callback that calls `exchangeCodeForTokens()` must also call `supabase.auth.setSession({access_token, refresh_token})` or the per-domain supabase client falls back to `anon` and every RLS-protected read 401/406s immediately after the BSU→app handoff. That is a real incident, 2026-05-06 — the guard the audit ticked off was the one standing between the estate and a repeat of it.
+  >
+  > **Why the original sweep could report this:** the rule name appears in `AUTH_CANONICAL.md`, in both `CLAUDE.md` files, and in every app's `oauth-contract.test.ts` header. A sweep that reads documentation, or greps source for the rule name, finds it everywhere. Only resolving the effective config distinguishes *a rule that is documented* from *a rule that runs*. **`--print-config` is the instrument; prose and `grep` are not.**
+  >
+  > Remediation, per client (all scoped `src/**`, not a callback-directory glob — measured: a decoy handler outside `src/pages/auth/` is caught by the wide glob and is not caught by the narrow one):
+  >
+  > | client | state | evidence |
+  > |---|---|---|
+  > | crm7 | wired, **merged** 2026-08-13 | crm7#1670 — also replaced the grep workflow with an AST walk |
+  > | conduit | wired, **merged** | conduit#443 — **still carries the grep workflow; AST script not yet ported** |
+  > | throughput | wired, PR open | throughput#278 — grep workflow replaced |
+  > | braden | wired, PR open | braden#383 — grep workflow replaced |
+  > | R80.4 | wired, PR open | R80.4#36 — dependency added first; gate added where none existed |
+  >
+  > A second guard failed the same way. `.github/workflows/verify-bs-oauth-session-sync.yml` asserted four fragments with `grep -rq` over `src/`, and **in crm7 it passed on a tree that had already lost both real `setSession()` call sites** — satisfied by a single doc comment. In throughput and braden the same greps returned to PASS after adding **one comment line** to a tree with zero real bridge calls. R80.4 already carries a doc comment (`src/lib/supabase.ts:33`) that would have satisfied them from day one. All replaced by a TypeScript AST walk carrying a self-test that runs before every scan.
+  >
+  > **Standing lesson for anyone citing a compliance verdict from this document:** *documented* is not *wired*, *wired* is not *running*, and a per-app count is worthless until the app list itself is verified. Re-measure with the instrument that observes behaviour, not the one that reads text.
+
 Open-issue counts (post-cleanup): bsuite 30, crm7 ~31 (incl. #1090), conduit 5, BSU 4, R80.3 3, braden 3, throughput 0.
 
 ---
