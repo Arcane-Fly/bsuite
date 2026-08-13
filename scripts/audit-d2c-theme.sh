@@ -59,7 +59,20 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
 # are mask stops, where the channel is opacity rather than paint; that is
 # documented at each call site. Excluding those files by name would also hide a
 # real colour if one were added to them later.
-EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
+#
+# `eslint-config/rules/` is the CANONICAL SOURCE of the lint rules that ban these
+# values, and the reason is the one already written at `--exclude-dir=eslint-rules`
+# below: a rule that forbids `text-white` must contain the string `text-white`.
+# The estate had SIX inlined copies excluded by that directory name and the ONE
+# original scanned, so identical text was a defect in `packages/eslint-config/rules/`
+# and exempt in `crm7/eslint-rules/` — the asymmetry only surfaced when bsuite#1945
+# forward-ported crm7's pure-colour regexes into the source and the C1 count rose
+# by 6, every one of them prose in a comment explaining what the rule catches.
+# EXEMPT, not EXCLUDED: these still appear in the "exempt" column, so the file
+# stays visible and a genuinely new pure endpoint elsewhere in packages/ is
+# unaffected. The directory contains nothing but rule sources and their tests;
+# it ships no colour to any surface.
+EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|eslint-config/rules/|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
 
 # ── Violation-class predicates ────────────────────────────────────────────────
 # C1 pure white/black — Tailwind utilities. All colour-bearing prefixes, with optional
