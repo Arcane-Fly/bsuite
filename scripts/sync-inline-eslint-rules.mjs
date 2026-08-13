@@ -99,7 +99,9 @@ const SYNCED_RULES = [
     // this check goes red and blocks the bump until the copy is right. A gate
     // that fires at the moment of promotion is the gate we want.
     submodules: ALL_SUBMODULES,
-    maxWaived: 3,
+    // 3 -> 1 (bsuite#1945). BSU and conduit regenerated; only crm7 remains, and it
+    // is BEHIND now rather than ahead. A ceiling may only ever shrink.
+    maxWaived: 1,
   },
   {
     // Reconciled 2026-08-12 from three divergent bodies — see the source file's
@@ -110,7 +112,8 @@ const SYNCED_RULES = [
     source: 'packages/eslint-config/rules/no-text-white.js',
     filename: 'no-text-white.js',
     submodules: ['crm7', 'business-suite-unified', 'conduit'],
-    maxWaived: 2,
+    // 2 -> 1 (bsuite#1945). BSU took the reconciled body; crm7 has not yet.
+    maxWaived: 1,
   },
 ]
 
@@ -140,12 +143,22 @@ const SYNCED_RULES = [
  *
  * An entry here is a statement that the FIX DIRECTION IS FORWARD-PORT, source
  * <- copy, and it comes out when the source has absorbed the improvement.
+ *
+ * EMPTY as of 2026-08-13 (bsuite#1945), and that is the entry doing its job
+ * rather than the mechanism being unnecessary. The source has absorbed crm7's
+ * improvement and overtaken it: the tokeniser now classifies every notation
+ * crm7's four regexes did, plus the ones crm7 never had. Established by running
+ * the source's own 8-case suite against crm7's PINNED copy — not by comparing
+ * line counts, which is how the direction was called wrong here once already:
+ *
+ *     ✔ 6 pass
+ *     ✖ the forward-ported pure-colour regexes catch every notation, and only those
+ *     ✖ EMAIL-HTML-EXEMPT relaxes the FORMAT but never the pure-white/black ban
+ *
+ * The direction is therefore REGENERATE, source -> copy, and crm7's remaining
+ * divergence is recorded in KNOWN_DRIFTED below with what it actually costs.
  */
-const AHEAD_OF_SOURCE = {
-  'crm7/no-hardcoded-colours.js':
-    'crm7 is 69 lines ahead: PURE_TAILWIND_RE/PURE_HEX_RE/PURE_RGB_RE/PURE_OKLCH_RE close the ' +
-    '#ffffff00 and rgb(255 255 255) holes the source still has. Forward-port into the source first.',
-}
+const AHEAD_OF_SOURCE = {}
 
 /**
  * Submodules that have adopted eslint-rules/parity-manifest.json and must not
@@ -175,12 +188,12 @@ const MANIFEST_EXPECTED = ['business-suite-unified', 'braden', 'throughput', 'co
  * gate that is permanently red blocks every unrelated PR until someone switches
  * it off. It must name an issue, and the ceiling may only shrink.
  */
-const MANIFEST_UNLISTED_WAIVED = {
-  'business-suite-unified/no-text-white.js':
-    'bsuite#1889 / BSU#680 — add no-text-white.js to BSU’s parity-manifest.json when it takes the ' +
-    'reconciled body; until then its copy is checked here but not by BSU’s own parity job',
-}
-const MAX_MANIFEST_UNLISTED = 1
+// EMPTY as of 2026-08-13 (bsuite#1945). BSU#701 adds no-text-white.js to its
+// parity-manifest.json in the same commit that regenerates the copy, so the one
+// unlisted copy in the estate is now listed and the ceiling goes to zero. A new
+// unlisted copy is a hard failure from here on, which is the point.
+const MANIFEST_UNLISTED_WAIVED = {}
+const MAX_MANIFEST_UNLISTED = 0
 
 /**
  * Copies known to be out of sync, with the issue that will land them.
@@ -189,46 +202,67 @@ const MAX_MANIFEST_UNLISTED = 1
  * repo. `--check` fails on any drift NOT listed here, so a NEW divergence is
  * still caught immediately; it only tolerates the specific backlog below.
  *
- * These two are held back because the widened rule finds REAL violations in
- * them, and syncing the rule before fixing the colours would just break their
- * lint. Counts measured 2026-08-11 by running the widened rule against each app:
+ * A WAIVER'S NUMBER IS PART OF THE WAIVER, AND IT GOES STALE (bsuite#1945).
  *
- *   business-suite-unified  27 violations
- *   conduit                  5 violations  (analytics/_view.tsx, talent-pools/_view.tsx,
- *                                           components/pipeline/KanbanColumn.tsx)
+ * The two entries removed on 2026-08-13 read "27 violations, all in
+ * edge-function email HTML" (BSU) and "violations in chart-colour fallbacks"
+ * (conduit, 5 named files). Re-measured on 2026-08-13 by running each app's OWN
+ * lint over its whole tree, with the copy this cycle ships:
  *
- * An earlier measurement reported ZERO for both. It counted chromatic palette
- * CLASSES only and missed the rule's new return/assignment-position checking —
- * the instrument had changed and the old number did not carry. That is the same
- * mistake the 24-entry ignore list in crm7#1579 was measured with.
+ *   business-suite-unified   508 files   27 -> 2   ZERO in supabase/functions/
+ *   conduit                  420 files    5 -> 0
+ *
+ * Neither number was wrong when it was taken. Both were cleared by OTHER lanes
+ * — the EMAIL-HTML-EXEMPT marker migration and email-branding.ts in BSU,
+ * unrelated chart work in conduit — and neither lane came back here to lower
+ * the count, because nothing connects clearing a violation to editing this
+ * file. So two apps sat waived for two days with nothing left to waive, and the
+ * ratchet read as three times tighter than the estate actually was. Re-measure
+ * an entry before you trust it; a waiver is a claim about a tree, and the tree
+ * moves. Whoever clears the last violation in an app OWNS removing its entry.
  *
  * The list can only shrink. Remove an entry the moment its app is synced; the
  * check prints a notice when a listed copy turns out to be in sync already.
  */
 const KNOWN_DRIFTED = {
-  // AHEAD OF SOURCE — not a backlog item, a forward-port. See AHEAD_OF_SOURCE.
-  // Regenerating this copy would WEAKEN it; write mode refuses to touch it.
+  // BEHIND THE SOURCE, and this entry used to say the opposite.
+  //
+  // Until 2026-08-13 it read "crm7 is AHEAD of the source (four pure-colour
+  // regexes the source lacks); forward-port into packages/ first, do not
+  // regenerate". That was true when written and is now inverted: bsuite#1945
+  // landed the tokeniser, which classifies every notation crm7's regexes did
+  // and several they did not. Measured by running the source's own 8-case suite
+  // against crm7's PINNED copy, because line count cannot tell you direction:
+  //
+  //   ✖ rgb(1, 1, 1) and rgb(1 1 1) — pdf-lib's normalised white — report as
+  //     forbiddenHex, not forbiddenPure. crm7's copy dropped this case when it
+  //     split the old PURE_RE into four, and crm7 is where the e-signature
+  //     certificate lives: the app with the largest colour surface in the
+  //     estate currently cannot see pure black written in the notation its own
+  //     PDF renderer emits.
+  //   ✖ EMAIL-HTML-EXEMPT disarms the pure ban outright rather than relaxing
+  //     only the FORMAT rules, so a pure white in an email template is
+  //     unreported there today.
+  //
+  // The fix direction is REGENERATE (source -> copy) and it needs a crm7 PR;
+  // crm7 carries no parity-manifest.json, so nothing inside that repo checks
+  // this at all. Do not read the age of this entry as "low priority": it is the
+  // one remaining copy that is weaker than the rule the estate believes it runs.
   'crm7/no-hardcoded-colours.js':
-    'bsuite#1889 — crm7 is AHEAD of the source (four pure-colour regexes the source lacks); ' +
-    'forward-port into packages/ first, do not regenerate',
+    'bsuite#1889 / crm7#1623 — crm7 is BEHIND the tokeniser source: pdf-lib rgb(1,1,1) reports as ' +
+    'forbiddenHex not forbiddenPure, and EMAIL-HTML-EXEMPT disarms the pure ban instead of only the ' +
+    'format rules. Regenerate; it is no longer ahead of anything.',
 
-  // BLOCKED ON REAL WORK — these two cannot take the rule until their colours
-  // are fixed, or their lint breaks. Both have PRs doing exactly that.
-  'business-suite-unified/no-hardcoded-colours.js':
-    'bsuite#1889 / BSU#680 — 27 violations, all in edge-function email HTML',
-  'conduit/no-hardcoded-colours.js': 'bsuite#1889 / conduit#428 — violations in chart-colour fallbacks',
+  // business-suite-unified/no-hardcoded-colours.js, conduit/no-hardcoded-colours.js
+  // and business-suite-unified/no-text-white.js were waived here and are NOT any
+  // more — see the header. BSU#701 and conduit#448 regenerate all three copies
+  // and their manifests; this commit advances both gitlinks. The colour ratchet
+  // drops 3 -> 1 and no-text-white 2 -> 1.
 
-  // braden/no-hardcoded-colours.js and throughput/no-hardcoded-colours.js were
-  // waived here and are NOT any more. Both re-synced on their own development
-  // branches; this commit advances their gitlinks, so the copies the parent
-  // reads now match the source byte for byte. Measured 2026-08-12: both bodies
-  // hash to 7d07a2a6…, the live source body. The colour ratchet drops 5 -> 3.
+  // braden/no-hardcoded-colours.js and throughput/no-hardcoded-colours.js came
+  // off this list on 2026-08-12 and stay off: braden#382 and throughput#277
+  // carry the tokeniser body, and this commit advances those gitlinks too.
 
-  // no-text-white, newly registered 2026-08-12. Both copies predate the
-  // reconciled source; conduit's is regenerated in this cycle.
-  'business-suite-unified/no-text-white.js':
-    'bsuite#1889 / BSU#680 — predates the reconciled source; needs the Property walk + tightened ' +
-    'lookbehind, after which its two self-referential eslint-disable comments can come out',
   'crm7/no-text-white.js':
     'bsuite#1889 / crm7#1661 — predates the reconciled source; missing the object-Property walk',
 }
