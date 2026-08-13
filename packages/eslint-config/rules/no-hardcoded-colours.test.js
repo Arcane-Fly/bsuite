@@ -112,8 +112,9 @@ test('no-hardcoded-colours catches every shape that was previously gate-invisibl
       // Arbitrary hex value inside className.
       {
         code: `const C = () => <div className="text-[#ffffff]" />`, // theme-audit-ok: lint fixture — the rule must be seen catching this
-        // TWO errors: the absolute pure-white ban AND the format rule.
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        // ONE error. The literal matches both the pure ban and the format rule,
+        // but the dedup keys on range:value, so the more specific message wins.
+        errors: [{ messageId: 'forbiddenPure' }],
       },
       // Style object — the original Property/hex path, must still work.
       {
@@ -146,13 +147,15 @@ test('theme-audit-ok annotates a mask stop without disarming the file', () => {
       // "valid" cases above would prove nothing about the hatch.
       {
         code: `const s = { mask: \`linear-gradient(#fff 0 0)\` }`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
-        // Pure white/black now ALSO fires its own absolute ban, so two errors.
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        // Pure white/black fires its own absolute ban; the dedup collapses the
+        // duplicate format complaint, so ONE error with the specific message.
+        errors: [{ messageId: 'forbiddenPure' }],
       },
       {
         code: `const M = 'mask-[linear-gradient(#000,#000)]'`, // theme-audit-ok: lint fixture — unannotated mask stop MUST fail
-        // Pure white/black now ALSO fires its own absolute ban, so two errors.
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        // Pure white/black fires its own absolute ban; the dedup collapses the
+        // duplicate format complaint, so ONE error with the specific message.
+        errors: [{ messageId: 'forbiddenPure' }],
       },
       // The hatch is line-local, not file-wide: an annotated mask stop on one line
       // must not licence an unrelated hardcoded colour further down the file.
@@ -245,7 +248,7 @@ test('EMAIL-HTML-EXEMPT relaxes the FORMAT but never the pure-white/black ban (c
       // pdf-lib's normalised form — the e-signature certificate title shape.
       {
         code: `const c = 'rgb(0, 0, 0)'`, // theme-audit-ok: lint fixture
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        errors: [{ messageId: 'forbiddenPure' }],
       },
     ],
   })
@@ -273,8 +276,52 @@ test('the react-pdf carve-out needs a real IMPORT, not a mention (crm7#1623)', (
       // And a mention must not hide pure white either.
       {
         code: `// see @react-pdf/renderer for the other flow\nconst c = '#ffffff'`, // theme-audit-ok: lint fixture
-        errors: [{ messageId: 'forbiddenPure' }, { messageId: 'forbiddenHex' }],
+        errors: [{ messageId: 'forbiddenPure' }],
       },
+    ],
+  })
+})
+
+test('the forward-ported pure-colour regexes catch every notation, and only those', () => {
+  ruleTester.run('no-hardcoded-colours', noHardcodedColours, {
+    // Each of these was INVISIBLE to the single PURE_RE this file replaced. Ported
+    // from crm7's copy, which was ahead of the source — see the rule's own header.
+    valid: [
+      // oklch is the estate's PREFERRED notation, so a raw oklch near-black is not
+      // a format violation the way a raw hex is. What matters here is only that
+      // the pure ban does not claim it: lightness 0.13 is not 0.
+      { code: `const a = 'oklch(0.13 0.02 260)'` },
+    ],
+    invalid: [
+      // Alpha hex — the source's regex ended at \b and never saw these.
+      { code: `const a = '#ffffff00'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const a = '#fff8'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // Space-separated rgb, including the slash-alpha form.
+      { code: `const a = 'rgba(0 0 0 / 50%)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // pdf-lib's normalised white. This one came from THIS file, not crm7 —
+      // preserved through the merge because it is the notation the e-signature
+      // certificate title was written in.
+      { code: `const a = 'rgb(1, 1, 1)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // oklch anchored on lightness, so any chroma and hue still count.
+      { code: `const a = 'oklch(1 0.02 260)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const a = 'oklch(100% 0 0)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // hsl lightness is the THIRD component.
+      { code: `const a = 'hsl(210 40% 100%)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // Tailwind white/black have no numeric shade, so TAILWIND_PALETTE_RE is
+      // structurally blind to them.
+      { code: `const C = () => <div className="bg-white" />`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const C = () => <div className="text-black" />`, errors: [{ messageId: 'forbiddenPure' }] },
+      { code: `const C = () => <div className="bg-white/50" />`, errors: [{ messageId: 'forbiddenPure' }] },
+      // THE OVER-REACH CONTROL. The estate near-white and near-black are the
+      // prescribed REPLACEMENTS for pure, so the pure ban must never claim them.
+      // They are still hardcoded literals, so the FORMAT rule still fires — the
+      // messageId is the whole point of these two cases.
+      { code: `const a = '#f8f9fa'`, errors: [{ messageId: 'forbiddenHex' }] },
+      { code: `const a = '#0a0e1a'`, errors: [{ messageId: 'forbiddenHex' }] },
+      // Lightness is what makes a colour pure. A dark navy is not black, and a
+      // 50%-lightness grey is not white — both are still hardcoded, so the FORMAT
+      // rule fires and the pure ban does not. Again, the messageId is the point.
+      { code: `const a = 'hsl(0 0% 50%)'`, errors: [{ messageId: 'forbiddenHex' }] },
     ],
   })
 })

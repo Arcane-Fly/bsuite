@@ -109,11 +109,40 @@ const HSLA_RE = /hsla?\(\s*[\d.]/g
 // carve-out, which relaxes only the format rules. The estate's near-white and
 // near-black are #f8f9fa and #0a0e1a.
 //
-// rgb(255,255,255) and rgb(0,0,0) are matched with optional spaces and an
-// optional alpha, and pdf-lib's normalised rgb(1,1,1) / rgb(0,0,0) too — the
-// e-signature certificate title was pure black in exactly that form.
-const PURE_RE =
-  /(?<![\w#&])#(?:fff|ffffff|000|000000)\b|rgba?\(\s*(?:255\s*,\s*255\s*,\s*255|0\s*,\s*0\s*,\s*0|1\s*,\s*1\s*,\s*1)\s*(?:,[^)]*)?\)|oklch\(\s*(?:1\s+0\s+0|0\s+0\s+0)\s*\)/gi
+// FORWARD-PORTED from crm7's inlined copy, 2026-08-13, as a UNION rather than a
+// replacement. Neither file was a superset of the other, which is exactly what
+// this script's own header warns about: drift is symmetric, and `--check` can
+// prove two copies differ but not which is right.
+//   crm7 had, and this file did not: alpha hex (#ffffff00), space-separated rgb
+//   (rgba(0 0 0 / 50%)), oklch anchored on LIGHTNESS rather than an exact triple,
+//   hsl, and the Tailwind `bg-white` / `text-black` forms.
+//   THIS FILE had, and crm7 did not: pdf-lib's normalised rgb(1,1,1). That is
+//   preserved below — it is the notation the e-signature certificate title was
+//   written in, so dropping it would have re-opened a defect already fixed.
+//
+// Longest alternatives come first so `fff` cannot claim the first three
+// characters of `#ffffff` and strand the rest.
+const PURE_HEX_RE =
+  /(?<![\w#&])#(?:ffffff(?:[0-9a-f]{2})?|fff[0-9a-f]?|000000(?:[0-9a-f]{2})?|000[0-9a-f]?)\b/gi
+// Space- or comma-separated, so `rgb(255,255,255)` and `rgba(0 0 0 / 50%)` both
+// match. The separator is `[\s,]+` and NOT `\s*[,\s]\s*`: the latter lets the
+// leading `\s*` swallow the space, after which the required separator has
+// nothing left to match and the space-separated form silently misses.
+// `1[\s,]+1[\s,]+1` is pdf-lib's normalised white — see the note above.
+const PURE_RGB_RE =
+  /rgba?\(\s*(?:255[\s,]+255[\s,]+255|0[\s,]+0[\s,]+0|1[\s,]+1[\s,]+1)\b/gi
+// Lightness is oklch's FIRST component, so anchor on it. `oklch(0.13 0.02 260)`
+// does not match: `0` is followed by `.`, not whitespace.
+const PURE_OKLCH_RE = /oklch\(\s*(?:1(?:\.0+)?|100%|0(?:\.0+)?|0%)\s+/gi
+// Lightness is hsl's THIRD component. Saturation 0% alone is a legitimate grey,
+// so `hsl(0 0% 50%)` must NOT match.
+const PURE_HSL_RE = /hsla?\(\s*[\d.]+(?:deg)?[\s,]+[\d.]+%[\s,]+(?:0|100)%/gi
+// `bg-white`, `text-black`, `from-white` and the alpha forms (`bg-white/50`) —
+// none of which TAILWIND_PALETTE_RE can see, because it requires a numeric
+// shade suffix and these have none.
+const PURE_TAILWIND_RE = new RegExp(`\\b(${PREFIXES})-(?:white|black)\\b`, 'g')
+
+const PURE_CHECKS = [PURE_TAILWIND_RE, PURE_HEX_RE, PURE_RGB_RE, PURE_OKLCH_RE, PURE_HSL_RE]
 
 const PURE_MESSAGE =
   'Pure white/black "{{value}}" is banned in EVERY role (operator ruling). ' +
@@ -242,7 +271,14 @@ export const noHardcodedColours = {
     function report(node, messageId, value) {
       // One literal can be reached by two visitors (a Property whose value is also
       // a ConditionalExpression branch). Dedupe so it is reported once.
-      const key = `${node.range?.[0] ?? '?'}:${messageId}:${value}`
+      //
+      // The key deliberately omits messageId: `#ffffff` matches both PURE_HEX_RE
+      // and the general HEX_RE, and reporting the same literal twice on the same
+      // line is noise. PURE runs first, so the more specific message wins.
+      // Ported alongside the pure regexes — they are one change, not two. Keeping
+      // the old messageId-keyed dedup made every pure value report twice, which
+      // this rule's own suite caught immediately.
+      const key = `${node.range?.[0] ?? '?'}:${value}`
       if (reported.has(key)) return
       reported.add(key)
       if (isAnnotatedOk(node)) return
@@ -252,9 +288,22 @@ export const noHardcodedColours = {
     function checkString(node, value) {
       // Pure white/black first, and ALWAYS — including in an email-exempt file.
       // This is the absolute the carve-out must not reach.
-      PURE_RE.lastIndex = 0
-      let pure
-      while ((pure = PURE_RE.exec(value)) !== null) report(node, 'forbiddenPure', pure[0])
+      //
+      // If a pure match fires we STOP: the general format rules would report the
+      // same literal again under a vaguer message. The range:value dedup cannot
+      // collapse those on its own, because the two regexes match different
+      // substrings of one literal — PURE_RGB_RE takes `rgb(0, 0, 0` where the
+      // general RGBA_RE takes `rgb(0`. Two keys, two reports, one problem.
+      let purest = false
+      for (const re of PURE_CHECKS) {
+        re.lastIndex = 0
+        let pure
+        while ((pure = re.exec(value)) !== null) {
+          report(node, 'forbiddenPure', pure[0])
+          purest = true
+        }
+      }
+      if (purest) return
 
       // Everything below is a FORMAT rule — "prefer a token over a literal" — and
       // that is what an email template legitimately cannot honour.
