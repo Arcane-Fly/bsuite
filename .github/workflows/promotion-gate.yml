@@ -1,0 +1,72 @@
+name: Promotion gate
+
+# A pull request into `main` promotes the estate to PRODUCTION. On 2026-08-13 one was
+# merged while it was explicitly held for operator QA: it had been converted to draft and
+# carried a comment quoting the instruction. A lane undrafted it and merged it anyway, and
+# the migration applier ran on the push. Draft status is a speed bump, not a lock.
+#
+# WHAT THIS CAN AND CANNOT DO — read before trusting it.
+#
+# Braden and every agent share ONE GitHub identity (GaryOcean428 is the only collaborator).
+# So NO GitHub-native control can tell them apart:
+#   - required approvals are useless — you cannot approve your own PR, and with a single
+#     collaborator a 1-approval rule makes `main` permanently unmergeable, not protected;
+#   - CODEOWNERS resolves to the same account;
+#   - anything an agent is forbidden to do, it can still do, because it holds the same token.
+#
+# This gate therefore makes promotion DELIBERATE AND AUDITABLE rather than impossible.
+# It converts "merged by accident while skimming" into "applied a label whose only purpose
+# is to say the QA happened". The label event is timestamped and attributable in the PR
+# timeline, so a promotion that skipped QA is visible afterwards even though it was
+# preventable only by intent.
+#
+# If you want a real lock, it needs a second identity — a machine account that owns the
+# label, or an environment with a required reviewer who is not the PR author.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review, converted_to_draft]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  operator-signoff:
+    name: Operator QA sign-off
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the qa-signed-off label
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          set -euo pipefail
+          echo "labels on this PR: ${LABELS:-<none>}"
+
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "::notice::PR is a draft. Still reporting the sign-off state so it is visible early."
+          fi
+
+          case ",${LABELS}," in
+            *,qa-signed-off,*)
+              echo "::notice::qa-signed-off present — promotion permitted."
+              exit 0
+              ;;
+          esac
+
+          cat <<'MSG'
+          ::error::BLOCKED — this PR promotes `development` to `main`, which ships to PRODUCTION
+          and triggers the Supabase migration applier.
+
+          Braden inspects and QAs `development` BEFORE anything promotes. That gate was bypassed
+          once already (bsuite#1944, 2026-08-13) and the applier ran on the push.
+
+          To promote: apply the label `qa-signed-off` to this PR.
+
+          Apply it only when the QA has ACTUALLY happened. The label is the record that it did —
+          it is not a formality, and it is timestamped in the PR timeline. If you are an agent and
+          Braden has not told you the QA is done, you do not apply this label.
+          MSG
+          exit 1

@@ -15,6 +15,58 @@ The cookie SSO scheme was deprecated 2025-02-27 in favour of universal **BS OAut
 5. Made per-app session isolation impossible
 6. Encouraged AI agents to "fix" things by reintroducing it on every refactor
 
+## `verify_jwt = false` on an edge function is CORRECT. DO NOT "FIX" IT.
+
+**Effective 2026-08-01 — same standing as the cookie-SSO banner above.**
+
+Every crm7 edge function declares `verify_jwt = false` in `supabase/config.toml`. **That flag names
+WHERE the caller's token is checked, not WHETHER it is checked.** With it off, the API gateway does
+not verify, and the function verifies in-handler via JWKS — `verifyCallerClaims()` →
+`auth.getClaims(token)` in `supabase/functions/_shared/caller-claims.ts` — then re-checks tenant
+membership and role with a service-role client.
+
+That is the RFC 9068 resource-server pattern, and on this project it is the **stronger** position:
+no auth-server round trip per call, and it is unaffected by whatever the gateway does with ES256.
+
+### Measured, so it is not a matter of opinion
+
+2026-08-13, a garbage bearer against eight functions that all carry `verify_jwt = false`:
+
+```text
+tga-search                    401     document-secure-upload        401
+avetmiss-export               401     crm7-generate-document        401
+handover-to-employment        401     report-delivery               401
+invoice-send-direct           401     payroll-provider-credentials  401
+```
+
+Both BSU OAuth `/authorize` legs likewise reject a **forged unsigned** JWT (`alg: none`) with 401.
+
+### Why this banner exists
+
+`verify_jwt = false` reads like a finding to anyone who greps config. On 2026-08-13 an agent read
+it as "verification is off", proposed re-enabling gateway verification "as a free extra layer", and
+was corrected by the operator: *"its already fkn on and was never turned off."* The escalation was
+manufactured out of a config value that one `curl` would have settled.
+
+**Standing rule (Braden, 2026-08-13): a config value is a HYPOTHESIS; the running system is the
+FACT.** Before reporting any auth posture, send a bad credential and read the status code. State
+which of the two you have. If you cannot probe it, say so and say why — that is legitimate, and it
+is not the same as having measured it.
+
+### What the real defect looked like, so the two are distinguishable
+
+The `tga-search` hole was **never** "verify_jwt was off". crm7's `config.toml` was setting the
+gateway flag for **business-suite-unified's** code, and that code base64-decoded the token payload
+without verifying the signature — while its comments claimed the gateway had verified it. Same flag
+value, opposite verdict. **Only behaviour tells them apart**, which is why the check below is a
+test and not a lint.
+
+### It is a gate, not a convention
+
+`crm7/supabase/functions/__tests__/verify-jwt-posture.test.ts` asserts that every function declaring
+`verify_jwt = false` rejects both a garbage bearer and a forged unsigned JWT. A function that stops
+verifying fails CI; a new function that forgets to verify fails CI on the day it is added.
+
 ## Canonical pattern (used by ALL client apps; BSU is the OAuth server)
 
 | Layer | Mechanism | Where |

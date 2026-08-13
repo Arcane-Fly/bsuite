@@ -82,6 +82,16 @@
  * Adding a notation is one branch in `classifyFunctional`, not an edit to N
  * patterns that must each be got right independently.
  *
+ * POSITIONS, NOT JUST VALUES (bsuite#1962). Answering (a) and (b) correctly is
+ * worth nothing in a position the scanner never visits. A string handed to a
+ * function — `pdfOklch('oklch(1 0 0)')` — was such a position until 2026-08-13,
+ * and because that wrapper is crm7's *correct* convention for keeping PDF
+ * colours token-shaped, the blind spot sat exactly where the colours were.
+ * Call arguments are now walked, with the verdict narrowed to the absolute
+ * pure-white/pure-black ban; see the CallExpression case for the reasoning.
+ * A widening that fires the FORMAT rule there would report every legitimate
+ * adapter call in the estate, which is how a gate gets switched off.
+ *
  * DISTRIBUTION: each submodule carries a byte-identical inline copy at
  * `<submodule>/eslint-rules/no-hardcoded-colours.js` so standalone CI can resolve
  * the rule without the monorepo. `scripts/sync-inline-eslint-rules.mjs --check`
@@ -217,6 +227,19 @@ const PURE_FUNCTIONS = new Set([
  * violation, which is how a gate gets switched off.
  */
 const LITERAL_FUNCTIONS = new Set(['rgb', 'rgba', 'hsl', 'hsla'])
+
+/**
+ * Recursion bound for the value-expression walk.
+ *
+ * Was 6, which was ample while the walk only followed ternaries and receiver
+ * chains. Walking CALL ARGUMENTS (bsuite#1962) spends depth faster — a wrapped
+ * colour inside a `cn([...])` inside a ternary is already four — and a cap that
+ * silently stops descending is the same failure mode the tokeniser exists to
+ * remove: a non-visit is indistinguishable from a clean file. 24 is far past any
+ * real nesting while still bounding the walk, which is all the cap was ever for.
+ * The walk is a tree traversal, so depth costs nothing but stack.
+ */
+const MAX_WALK_DEPTH = 24
 
 // ---------------------------------------------------------------------------
 // STAGE 1 — SCAN.  Find the tokens that could be colours.
@@ -715,11 +738,14 @@ export const noHardcodedColours = {
     const reactPdfExempt =
       referencesReactPdfModule(sourceCode.ast) || fullText.includes('REACT-PDF-EXEMPT')
 
-    // EMAIL-HTML-EXEMPT: HTML delivered to a MAIL CLIENT, or a standalone
-    // printable document opened outside the app. Neither has the D2C stylesheet
-    // loaded, so `var(--token)` resolves to nothing and `oklch()` is unsupported
-    // by most mail clients — hex is the only format that renders. Same reasoning
-    // as the react-pdf carve-out: the engine dictates the format.
+    // EMAIL-HTML-EXEMPT: HTML delivered to a MAIL CLIENT, a standalone
+    // printable document opened outside the app, or a SCRIPT EMBEDDED ON A
+    // THIRD-PARTY PAGE (business-suite-unified/public/embed/widget.js). None of
+    // them has the D2C stylesheet loaded, so `var(--token)` resolves to nothing
+    // and `oklch()` is unsupported by most mail clients — a literal is the only
+    // thing that renders. Same reasoning as the react-pdf carve-out: the engine
+    // dictates the format. The embed case was added 2026-08-13 by naming it
+    // here rather than letting a file quietly widen the marker's meaning.
     //
     // A FILE-level marker rather than an `ignores:` entry, deliberately. The
     // 24-entry ignore list retired in crm7#1579 was correct the day it was
@@ -796,13 +822,20 @@ export const noHardcodedColours = {
       palette: 'forbiddenPalette',
     }
 
-    function checkString(node, value) {
+    /**
+     * `pureOnly` narrows the verdict set to the ABSOLUTE ban, discarding the
+     * format ("prefer a token over a literal") and palette findings. It is set
+     * for one position only: inside a CALL ARGUMENT. See the CallExpression
+     * case in checkValueExpression for why that position is different.
+     */
+    function checkString(node, value, pureOnly = false) {
       const findings = [...scanColourValues(value), ...scanClassUtilities(value)]
       // PURE first, and always — see PURE_MESSAGE. Sorting by kind rather than
       // by position is what makes the dedupe above resolve in favour of the
       // absolute ban when one token is both.
       findings.sort((a, b) => (a.kind === 'pure' ? -1 : 0) - (b.kind === 'pure' ? -1 : 0))
       for (const finding of findings) {
+        if (pureOnly && finding.kind !== 'pure') continue
         // The format carve-outs relax "prefer a token over a literal". They do
         // not, and never did, relax the pure white / pure black ban.
         if (formatExempt && finding.kind !== 'pure') continue
@@ -821,27 +854,47 @@ export const noHardcodedColours = {
      * style. Ternary / `??` / `||` branches are walked because a colour ramp is
      * actually written in that shape.
      */
-    function checkValueExpression(expr, depth = 0) {
-      if (!expr || depth > 6) return
+    function checkValueExpression(expr, depth = 0, pureOnly = false) {
+      if (!expr || depth > MAX_WALK_DEPTH) return
       switch (expr.type) {
         case 'Literal':
-          if (typeof expr.value === 'string') checkString(expr, expr.value)
+          if (typeof expr.value === 'string') checkString(expr, expr.value, pureOnly)
           break
         case 'TemplateLiteral':
-          expr.quasis.forEach((q) => checkString(expr, q.value.raw))
+          expr.quasis.forEach((q) => checkString(expr, q.value.raw, pureOnly))
           break
         case 'ConditionalExpression':
-          checkValueExpression(expr.consequent, depth + 1)
-          checkValueExpression(expr.alternate, depth + 1)
+          checkValueExpression(expr.consequent, depth + 1, pureOnly)
+          checkValueExpression(expr.alternate, depth + 1, pureOnly)
           break
         case 'LogicalExpression':
-          checkValueExpression(expr.left, depth + 1)
-          checkValueExpression(expr.right, depth + 1)
+          checkValueExpression(expr.left, depth + 1, pureOnly)
+          checkValueExpression(expr.right, depth + 1, pureOnly)
           break
         case 'TSAsExpression':
         case 'TSSatisfiesExpression':
-          checkValueExpression(expr.expression, depth + 1)
+          checkValueExpression(expr.expression, depth + 1, pureOnly)
           break
+        case 'ArrayExpression':
+          // An array is a VALUE CONTAINER, so it inherits the current mode —
+          // the same treatment ConditionalExpression and LogicalExpression get.
+          // It is not a call and must not be narrowed like one.
+          //
+          // This was written gated on `pureOnly` first, on the theory that only
+          // `cn(['bg-white', x])` needed reaching. Measuring the estate killed
+          // that: business-suite-unified/public/embed/widget.js builds inline
+          // style with
+          //
+          //     btn.style.cssText = ['background:#2563eb', …, 'color:#fff'].join(';')  theme-audit-ok: prose quoting the defect
+          //
+          // The receiver-chain descent that already existed for `.trim()` walks
+          // straight into that array and stopped dead, so PURE WHITE and (in the
+          // modal backdrop) PURE BLACK sat in a widget served to third-party
+          // customer sites. A gate justified as "avoiding over-reach" was
+          // hiding the exact value class this rule exists for.
+          for (const el of expr.elements ?? []) checkValueExpression(el, depth + 1, pureOnly)
+          break
+        case 'NewExpression':
         case 'CallExpression':
           // `` return `<p style="color:#333">`.trim() `` — the ReturnStatement's
           // argument is the CALL, not the template, so the walker stopped here
@@ -852,11 +905,47 @@ export const noHardcodedColours = {
           // see it". Descend through the receiver so `.trim()` / `.replace()`
           // chains do not launder a colour.
           //
-          // Arguments are deliberately NOT walked: a string passed to an
-          // arbitrary function is not necessarily a colour, and flagging it
-          // would trade this false negative for a worse false positive.
+          // ARGUMENTS ARE WALKED, PURE-ONLY (bsuite#1962).
+          //
+          // Until 2026-08-13 this comment read "arguments are deliberately NOT
+          // walked: a string passed to an arbitrary function is not necessarily
+          // a colour, and flagging it would trade this false negative for a
+          // worse false positive." The reasoning was sound and the conclusion
+          // was wrong, because it weighed the two errors as if they were the
+          // same size. They are not:
+          //
+          //   { backgroundColor: 'oklch(1 0 0)' }            // reported
+          //   { backgroundColor: pdfOklch('oklch(1 0 0)') }  // NOT reported
+          //
+          // Same value, same property, same file. The wrapper was the entire
+          // difference. crm7 adapts OKLCH at render time through
+          // `src/lib/pdf/pdfColor.ts` because @react-pdf/renderer drops CSS
+          // Color 4 OKLCH when pdfkit normalises fill colours — so the app's
+          // CORRECT convention for staying token-shaped put every colour in
+          // every PDF document into the one position the rule could not see.
+          // The convention and the blind spot were the same line. 17 pure
+          // whites sat behind it across seven files, including
+          // ChargeRatePdfDocument.tsx — the PDF the quote signing page renders
+          // for a client to sign.
+          //
+          // The false-positive worry is answered by NARROWING THE VERDICT, not
+          // by declining to look. Inside an argument only the ABSOLUTE ban
+          // fires: pure white and pure black, which are banned in every role by
+          // standing operator ruling and are therefore wrong no matter what the
+          // callee does with them. The format rule ("prefer a token over a
+          // literal") stays out, because a colour handed to an adapter like
+          // `pdfOklch` is already tokenised — firing there would be exactly the
+          // second wave of noise that switches a gate off.
+          //
+          // So `t('checkout.total')`, `parseInt('255')` and `describe('bg')` are
+          // all silent, while `pdfOklch('oklch(1 0 0)')` and `cn('bg-white')`
+          // report. Nesting is walked to MAX_WALK_DEPTH, so an argument that is
+          // itself a call (`outer(inner('#fff'))`) is reached too.
           if (expr.callee?.type === 'MemberExpression') {
-            checkValueExpression(expr.callee.object, depth + 1)
+            checkValueExpression(expr.callee.object, depth + 1, pureOnly)
+          }
+          for (const arg of expr.arguments ?? []) {
+            checkValueExpression(arg, depth + 1, true)
           }
           break
         default:
@@ -891,6 +980,25 @@ export const noHardcodedColours = {
       },
       VariableDeclarator(node) {
         checkValueExpression(node.init)
+      },
+      AssignmentExpression(node) {
+        // `ctx.fillStyle = '#ffffff'` — SILENT until 2026-08-13, directly, with
+        // no wrapper involved at all. This file's own header has claimed since
+        // it was written that it checks "any string returned or ASSIGNED as a
+        // colour value"; there was no AssignmentExpression visitor, so the
+        // claim was false and nothing measured it. Found while negative-
+        // controlling bsuite#1962: the issue's own table lists a canvas
+        // `fillStyle` in guardian-consents/index.tsx, and the call-argument
+        // widening alone would NOT have reached it — assignment is where canvas
+        // and imperative DOM code put every colour they own.
+        checkValueExpression(node.right)
+      },
+      ExpressionStatement(node) {
+        // A call used for effect rather than value — `ctx.setFillColor('#fff')`,  theme-audit-ok: prose naming the shape
+        // `applyTheme('oklch(1 0 0)')`. The CallExpression case below it walks
+        // arguments, but nothing ever reached the call, so the arguments were
+        // unreachable in this position no matter how the walk was widened.
+        checkValueExpression(node.expression)
       },
     }
   },

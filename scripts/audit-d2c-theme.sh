@@ -76,7 +76,52 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
 # path into the EXEMPT column, where it stays visible and countable. An
 # `--exclude-dir` would make it disappear, and a colour that is genuinely wrong in
 # the rule's own message should still be readable by someone auditing this.
-EXCEPTION_RE='(packages/eslint-config/rules/|supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
+# ── THE EXCEPTION IS TWO DIFFERENT CLAIMS, AND THEY ARE NOT INTERCHANGEABLE ───
+#
+# This was ONE regex until 2026-08-13 (bsuite#1962), applied identically to all
+# four classes. That conflated "this file legitimately NAMES a colour" with
+# "this file legitimately needs a non-oklch FORMAT", and the second claim was
+# silently granting the first.
+#
+# What it cost, measured: 17 pure whites sat in crm7's PDF renderers —
+# ChargeRatePdfDocument.tsx among them, the document the quote signing page
+# renders for a client to sign. EVERY ONE of those seven files matched a path
+# pattern below (`PdfDocument`, `render[A-Za-z]*Pdf`, `renderF17`,
+# `renderNsgtoStandard2Pack`, `guardian-consents`), so all 17 were counted in the
+# EXEMPT column. crm7's C1 row read `1 / 32` before the fix and `1 / 15` after:
+# seventeen pure whites left the codebase and THE REAL COLUMN NEVER MOVED. A
+# scanner whose headline number cannot change when the defect it exists to find
+# is removed is not measuring that defect.
+#
+# The split mirrors the ESLint rule's own doctrine exactly — the carve-outs
+# license a FORMAT, never a VALUE:
+#
+#   NAMING   the file's job is to contain the literal as DATA: the colour rule's
+#            own error message, tests asserting the ban, converters and pickers
+#            whose input IS a colour, and a selector that matches white in order
+#            to remove it. Exempt from every class, C1 included.
+#
+#   FORMAT   the engine cannot take a token, so hex/rgb is the only thing that
+#            renders: PDF, email HTML, manifests, index.html. Exempt from the
+#            FORMAT classes only. Pure white and pure black are still REAL here,
+#            because no engine ever required them — that is the whole point.
+#
+# What the split found immediately, both previously filed as EXEMPT: a pure-white
+# spinner in crm7/index.html's error-recovery screen, and pure black on the title
+# of conduit's e-signature Certificate of Completion (crm7 had already fixed the
+# identical line in its own certificate).
+#
+# It also moved two COMMENT-PROSE hits into C1-real in business-suite-unified —
+# `send-team-invite` and `assign-tester-license` each carry a comment saying the
+# pure value "used to" be there. This scanner is a grep and cannot tell prose from
+# code; that is a known limit, and re-listing those two files by name is exactly
+# the path-shaped exemption this block exists to stop. Triage them, do not exempt
+# them. The ESLint rule is the instrument that reads syntax.
+NAMING_EXCEPTION_RE='(packages/eslint-config/rules/|__tests__|\.test\.|\.spec\.|Branding|branding|OklchColorPicker|color-convert|/charts?/|chart\.tsx)'
+FORMAT_EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|manifest|vite\.config|index\.html)'
+# Everything the old single regex covered, for the classes where format latitude
+# is the actual justification.
+EXCEPTION_RE="(${NAMING_EXCEPTION_RE}|${FORMAT_EXCEPTION_RE})"
 
 # ── Violation-class predicates ────────────────────────────────────────────────
 # C1 pure white/black — Tailwind utilities. All colour-bearing prefixes, with optional
@@ -179,8 +224,9 @@ if [[ "${1:-}" == "--files" ]]; then
 fi
 
 # real <matches not in an exception path>  /  exc <matches in an exception path>
-split() { # $1=regex $2=path -> "real exc"
-  local out real exc
+split() { # $1=regex $2=path [$3=exception regex, default EXCEPTION_RE] -> "real exc"
+  local out real exc exception
+  exception="${3:-$EXCEPTION_RE}"
   out=$(emit "$1" "$2")
   [[ -n "${DUMP:-}" && -n "$out" ]] && printf '%s\n' "$out" >> "$DUMP"
   # `grep -c` PRINTS a count and EXITS 1 when that count is zero, so `|| echo 0`
@@ -190,8 +236,8 @@ split() { # $1=regex $2=path -> "real exc"
   # Visible in the output as `0 /` with nothing after the slash (braden's C1 row
   # has read that way for as long as this script has existed). The count itself
   # was never wrong; the column next to it was silently dropped.
-  real=$(printf '%s' "$out" | grep -cEv "$EXCEPTION_RE" 2>/dev/null || true)
-  exc=$(printf '%s'  "$out" | grep -cE  "$EXCEPTION_RE" 2>/dev/null || true)
+  real=$(printf '%s' "$out" | grep -cEv "$exception" 2>/dev/null || true)
+  exc=$(printf '%s'  "$out" | grep -cE  "$exception" 2>/dev/null || true)
   [[ -z "$out" || -z "$real" ]] && real=0
   [[ -z "$out" || -z "$exc" ]] && exc=0
   echo "$real $exc"
@@ -204,7 +250,9 @@ printf '%-24s %14s %14s %14s %14s\n' '' 'real / exempt' 'real / exempt' 'real / 
 
 for a in "${APPS[@]}"; do
   [[ -d $a ]] || { printf '%-24s %14s\n' "$a" 'ABSENT'; continue; }
-  read -r c1r c1e <<<"$(split "$C1_TW|$C1_LIT" "$a")"
+  # C1 is the ABSOLUTE ban: only a NAMING exemption may hide it. Passing the
+  # format exemptions here is what buried 17 pure whites in crm7's PDFs.
+  read -r c1r c1e <<<"$(split "$C1_TW|$C1_LIT" "$a" "$NAMING_EXCEPTION_RE")"
   read -r c2r c2e <<<"$(split "$C2_HEX|$C2_RGB|$C2_HSL" "$a")"
   read -r c3r c3e <<<"$(split "$C3_PALETTE|$C3_ARBITRARY" "$a")"
   read -r c4r c4e <<<"$(split "$C4" "$a")"

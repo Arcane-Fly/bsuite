@@ -191,10 +191,52 @@ jobs:
             fi
           fi
 
+  plan-only:
+    name: Plan (a merge does NOT apply)
+    needs: detect-changes
+    if: github.event_name == 'push' && needs.detect-changes.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report what would apply, and apply nothing
+        env:
+          SCOPES: ${{ needs.detect-changes.outputs.matrix }}
+        run: |
+          {
+            echo "### Migrations detected — NOT applied"
+            echo
+            echo "Scopes with pending migrations: \`${SCOPES}\`"
+            echo
+            echo "A merge to \`main\` no longer applies schema. On 2026-08-13 a promotion PR that was"
+            echo "explicitly held for operator QA was merged anyway, and this applier ran on the push,"
+            echo "so code *and* schema reached production without the inspection."
+            echo
+            echo "**To apply:** run this workflow via *Run workflow* and choose the scope."
+            echo
+            echo "Applying is now a separate, deliberate, attributable act. That is the point."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::Pending migrations in ${SCOPES} were NOT applied. Dispatch this workflow to apply."
+
   apply-migrations:
     name: Apply migrations (${{ matrix.submodule }})
     needs: detect-changes
-    if: needs.detect-changes.outputs.matrix != '[]'
+    # A PUSH MUST NEVER APPLY SCHEMA.
+    #
+    # bsuite#1944 (2026-08-13) was converted to draft and commented as held for Braden's
+    # QA. A lane undrafted and merged it; this workflow triggered on the push and applied
+    # migrations to production. The merge was the accident. The schema change was the
+    # damage. Those are separable, and until now they were not separated.
+    #
+    # A GitHub Environment with a required reviewer is the textbook gate and is NOT
+    # available here: the account's billing plan rejects the required-reviewers rule on a
+    # private repo (verified — HTTP 422). Worse, the failed attempt still CREATES the
+    # environment with ZERO rules, which reads as protected and is not; that environment
+    # was deleted rather than left as false assurance.
+    #
+    # Enforcing the separation here costs nothing, works on any plan, and cannot be
+    # silently half-created.
+    if: >-
+      needs.detect-changes.outputs.matrix != '[]' &&
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

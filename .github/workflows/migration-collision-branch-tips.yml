@@ -1,0 +1,193 @@
+name: Migration collision at branch tips
+
+# bsuite#1914 — the MERGE-TIME half of the version-collision gate.
+#
+# WHAT THIS ADDS THAT migration-version-collision-lint.yml CANNOT
+# ───────────────────────────────────────────────────────────────
+# That workflow is correct and stays. It checks out submodules at the gitlink
+# SHA the PARENT HAS ALREADY PROMOTED — a snapshot of the past. A migration
+# authored on crm7's `development` an hour ago is not in it and will not be
+# until somebody bumps the pointer, so the window between "authored" and
+# "promoted" is completely unguarded. That window is where the estate has lost
+# two security controls:
+#
+#   * 2026-08-13 — version 20260815010000 was claimed by conduit and by crm7
+#     SIXTEEN MINUTES APART, both security migrations. conduit's applied at the
+#     08:46 promotion; crm7's D-66 platform-scope visibility lockdown was
+#     recorded as already-applied, silently skipped, and had to be renumbered
+#     (crm7#1715).
+#   * bsuite#1913 — an `anon` REVOKE lost the same way. `anon` kept DELETE,
+#     INSERT, SELECT, UPDATE on a live table for a day while the fix read as
+#     applied.
+#
+# In both cases the pipeline was GREEN. `supabase_migrations.schema_migrations`
+# is ONE table shared by all eight scopes, keyed on the version string ALONE, so
+# whichever file the applier reaches second is skipped and its DDL never runs.
+#
+# WHY AN AUTHOR-TIME CHECK CANNOT SUBSTITUTE FOR THIS
+# ───────────────────────────────────────────────────
+# The estate-wide check was run for conduit at ~12:00 that day and crm7 came
+# back clean. The colliding branch was created AFTERWARDS. An author-time answer
+# is valid for about an hour. The question only has a durable answer at MERGE
+# time, against the sibling branches as they are THEN — which is why this runs
+# on `pull_request` and re-reads every sibling's `development` tip on every run.
+#
+# THE THREE RULES THAT KEEP IT FROM BEING WAIVED ON DAY ONE
+# ─────────────────────────────────────────────────────────
+#   1. Content hash, not just version. Some migrations are the same file
+#      deliberately copied into two trees that share the database; skipping the
+#      second copy loses nothing. Only same-version-DIFFERENT-content is a
+#      defect. 4 of the 25 duplicated versions in the estate are this shape.
+#   2. Ignore versions below MIGRATION_FLOOR (read from supabase-migrate.yml,
+#      never hardcoded here). The applier skips those on every deploy by design.
+#      23 of the 25 divergent duplicates are sub-floor; without this rule the
+#      gate would open with 23 pre-existing failures.
+#   3. Compare against siblings' CURRENT `development`, not the branch point and
+#      not the gitlink.
+#
+# Measured on today's estate (2026-08-13): 812 versioned files across 8 scopes,
+# 25 duplicated versions, 4 identical-content, 23 divergent sub-floor, 2
+# divergent above the floor — both already carried on the SHARED allowlist with
+# object assertions from bsuite#1914. The gate therefore opens GREEN at 0
+# unresolved, without any exemption being widened for it.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# WHAT THIS GATE CANNOT SEE — stated up front, because a gate that overstates
+# its reach is worse than no gate
+# ═══════════════════════════════════════════════════════════════════════════
+#   • OPEN PR BRANCHES IN THE SUBMODULES. It reads each submodule's
+#     `development` TIP only. Two migrations authored on two unmerged feature
+#     branches still collide invisibly here; the gate catches the second one
+#     only once the first has merged to its `development`. This NARROWS the
+#     unguarded window from "forever" to "until the first one merges" — it does
+#     not close it. Closing it needs a check on the SUBMODULE PRs themselves,
+#     which is a separate piece of work and is not claimed here.
+#   • A gitlink pinned to a SHA that is not an ancestor of `development`
+#     (a hotfix promoted straight off a feature branch).
+#   • Anything already APPLIED to the live ledger that no longer exists in any
+#     tree — prod-migration-history-audit.yml owns that question.
+#   • Sub-floor collisions, by design (rule 2).
+#
+# The script prints this same list on every passing run, so it cannot be lost.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'scripts/check-migration-collisions-at-branch-tips.mjs'
+      - 'scripts/migration-collision-allowlist.txt'
+      - '.github/workflows/migration-collision-branch-tips.yml'
+      # The applier is the authority on MIGRATION_FLOOR and on what a version
+      # is; the script parses both out of it, so a change there changes this
+      # gate's behaviour and must re-run it.
+      - '.github/workflows/supabase-migrate.yml'
+      # BARE GITLINK PATHS. The glob above can only ever match the two scopes
+      # that are real directories in this repo (root and packages/schema-builder).
+      # The six SUBMODULES reach the parent as a POINTER BUMP: the tree holds a
+      # gitlink, not files, so `crm7/supabase/migrations/x.sql` is not a path in
+      # any parent commit and the glob never fires. Without these lines the PRs
+      # that actually deliver migrations would skip this gate entirely — which
+      # is precisely the defect inline-eslint-rule-parity.yml,
+      # migration-floor-lint.yml, supabase-migrate.yml and
+      # migration-version-collision-lint.yml all document and all fix the same
+      # way. Keep the five lists in step.
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-collision-tips-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  branch-tip-collision:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — their git dirs are what we fetch tips into)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout. Same fallback chain
+          # every other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # This runs FIRST and includes both negative controls plus three
+      # end-to-end cases that build a real parent+submodule pair with a real
+      # `refs/remotes/origin/development` and drive the git-reading layer over
+      # it — a planted divergent collision must be FOUND, a planted identical
+      # one must be CLEAN, and a missing tip ref must FAIL LOUDLY.
+      - name: Self-test the checker (negative-controlled both directions)
+        run: node scripts/check-migration-collisions-at-branch-tips.mjs --self-test
+
+      # THE STEP THE WHOLE GATE DEPENDS ON.
+      #
+      # `actions/checkout` leaves each submodule at the pinned gitlink and does
+      # not guarantee any remote-tracking branch refs. Without this fetch the
+      # script has no `refs/remotes/origin/development` to read, and the ONLY
+      # thing separating this workflow from the pinned-SHA one it complements is
+      # exactly those refs.
+      #
+      # It fails loudly rather than continuing. This is deliberate and is the
+      # D-89 lesson from inline-eslint-rule-parity.yml: a fetch that is allowed
+      # to fail leaves whatever stale refs the checkout happened to produce, and
+      # the comparison that follows then reports a submodule tip as in sync when
+      # what it actually read was a commit from days ago. For THIS gate a stale
+      # or missing ref does not degrade the answer, it inverts it — an unfetched
+      # sibling contributes zero migrations and therefore cannot collide with
+      # anything, so the gate would report a clean estate precisely because it
+      # failed to look at it.
+      #
+      # `--prune` so a deleted branch cannot linger as a phantom scope.
+      - name: Fetch every submodule's branch tips
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=""
+          while IFS= read -r sm; do
+            [ -n "$sm" ] || continue
+            if [ ! -e "$sm/.git" ]; then
+              failed="$failed $sm(not-checked-out)"
+              continue
+            fi
+            if ! git -C "$sm" fetch -q --prune --no-tags origin '+refs/heads/*:refs/remotes/origin/*'; then
+              failed="$failed $sm(fetch-failed)"
+              continue
+            fi
+            # The branch this gate compares against is the one .gitmodules
+            # declares for the submodule, defaulting to `development` — resolved
+            # in the script, not guessed here.
+            branch=$(git config --file .gitmodules --get "submodule.$sm.branch" || echo development)
+            branch=${branch:-development}
+            if ! git -C "$sm" rev-parse --verify --quiet "refs/remotes/origin/$branch" >/dev/null; then
+              failed="$failed $sm(no-origin/$branch)"
+              continue
+            fi
+            echo "  $sm -> origin/$branch ($(git -C "$sm" rev-parse --short "refs/remotes/origin/$branch"))"
+          done < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{ print $2 }')
+
+          if [ -n "$failed" ]; then
+            echo "::error::Could not resolve branch tips for:$failed"
+            echo "This gate compares against sibling branch TIPS. A submodule whose tip could not"
+            echo "be read contributes zero migrations and so cannot be reported as colliding —"
+            echo "the run would go green BECAUSE it failed to look. Refusing to continue."
+            echo "Set BSUITE_CROSS_REPO_PAT (Contents: read on each app repo) — see bsuite#1781."
+            exit 1
+          fi
+          echo "every submodule branch tip resolved"
+
+      - name: No migration version collides with a sibling's branch tip
+        run: node scripts/check-migration-collisions-at-branch-tips.mjs
