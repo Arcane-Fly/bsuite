@@ -822,16 +822,30 @@ function checkSubmoduleTips() {
         unresolved++
         continue
       }
-      // The branch the submodule's own PRs merge into. Fall back to main.
+      // The branch the submodule's own PRs merge into. RESOLVE it from
+      // origin/HEAD first — the CI step that fetches these refs runs
+      // `git remote set-head origin --auto`, so origin/HEAD is the submodule's
+      // REAL default branch as the remote reports it. The hardcoded list below is
+      // the fallback for a local checkout where origin/HEAD was never set; a
+      // submodule whose default branch is none of those three would otherwise be
+      // compared against a stale ref, or silently skipped, while this gate
+      // reported success (bsuite D-89).
       let ref = null
-      for (const candidate of ['origin/development', 'origin/main', 'origin/master']) {
-        if (git(dir, 'rev-parse', '--verify', '--quiet', candidate)) {
-          ref = candidate
-          break
+      const originHead = (git(dir, 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD') || '').trim()
+      if (originHead && git(dir, 'rev-parse', '--verify', '--quiet', originHead)) {
+        ref = originHead
+      } else {
+        for (const candidate of ['origin/development', 'origin/main', 'origin/master']) {
+          if (git(dir, 'rev-parse', '--verify', '--quiet', candidate)) {
+            ref = candidate
+            break
+          }
         }
       }
       if (!ref) {
-        console.log(`  – ${submodule} — no origin/development|main|master ref, tip not inspected`)
+        console.log(
+          `  – ${submodule} — no origin/HEAD and no origin/development|main|master ref, tip not inspected`,
+        )
         unresolved++
         continue
       }

@@ -107,8 +107,23 @@ jobs:
         shell: bash
         env:
           APP: ${{ matrix.app }}
+        # `git ls-tree HEAD "$APP"` alone asserted NOTHING (bsuite D-92): it exits 0
+        # with empty output when the path does not match, so a step named "Verify"
+        # verified that git could run. The matrix leg then took the "gitlink not
+        # checked out, skipping" branch below and reported success for an app the
+        # tree does not contain. Require a gitlink entry, and require it to BE a
+        # gitlink (mode 160000) rather than some file that happens to share the name.
         run: |
-          git ls-tree HEAD "$APP"
+          set -euo pipefail
+          ENTRY=$(git ls-tree HEAD "$APP")
+          if [ -z "$ENTRY" ]; then
+            echo "::error::No entry for '$APP' in this tree — the matrix names an app the repository does not carry."
+            exit 1
+          fi
+          case "$ENTRY" in
+            160000\ commit\ *) echo "✓ $APP is a gitlink: $ENTRY" ;;
+            *) echo "::error::'$APP' exists but is not a submodule gitlink: $ENTRY"; exit 1 ;;
+          esac
 
       - name: Validate lockfile integrity
         shell: bash

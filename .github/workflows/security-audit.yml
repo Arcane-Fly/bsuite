@@ -58,14 +58,24 @@ jobs:
         # --audit-level=high means we fail on high + critical, accept moderate/low.
         # --prod limits to production dependencies (we don't block on dev-only CVEs).
         run: |
-          if [ -f package.json ]; then
-            pnpm audit --audit-level=high --prod || {
-              echo "::error::${APP} has high/critical vulnerabilities"
-              exit 1
-            }
-          else
-            echo "::warning::no package.json found in ${APP} — skipping audit"
+          set -euo pipefail
+          # A MISSING package.json IS NOT A CLEAN AUDIT (bsuite D-92).
+          #
+          # This was a `::warning::` and the matrix leg went green having audited
+          # nothing — indistinguishable, in the checks list, from an app with no
+          # vulnerabilities. All six apps carry a package.json (verified
+          # 2026-08-13), so its absence means the submodule did not check out,
+          # which is the PAT gap from bsuite#1781 wearing a green tick.
+          if [ ! -f package.json ]; then
+            echo "::error::No package.json in ${APP} — nothing was audited, and an empty audit is not a passing one."
+            echo "All six apps carry one, so this almost certainly means the submodule did not check out."
+            echo "Set BSUITE_CROSS_REPO_PAT (Contents: read on each app repo) — see bsuite#1781."
+            exit 1
           fi
+          pnpm audit --audit-level=high --prod || {
+            echo "::error::${APP} has high/critical vulnerabilities"
+            exit 1
+          }
 
       - name: Job summary
         if: always()

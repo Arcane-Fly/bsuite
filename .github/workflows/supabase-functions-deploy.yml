@@ -459,12 +459,22 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
     steps:
       - name: Query Supabase Management API for function entrypoints
+        id: fn-list
         run: |
           echo "Querying project ${SUPABASE_PROJECT_ID} for edge function entrypoints…"
 
           HTTP_STATUS=$(curl -s -o /tmp/fn_list.json -w "%{http_code}" \
             -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
             "https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_ID}/functions")
+
+          # COUPLED, NOT SEQUENCED (bsuite D-92). This step used to warn and exit 0
+          # while the NEXT step ran unconditionally over the same /tmp/fn_list.json —
+          # which on a non-200 holds an error body, not an array. `jq length` over
+          # that yields 0, and the guard printed "All 0 deployed functions have clean
+          # CI entrypoints": a clean verdict on an API call that never succeeded. The
+          # status is now an output the consumer must read, so the two cannot drift
+          # apart again by someone reordering or copying a step.
+          echo "status=${HTTP_STATUS}" >> "$GITHUB_OUTPUT"
 
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "::warning::Management API returned HTTP ${HTTP_STATUS} — cannot run entrypoint guard."
@@ -476,6 +486,7 @@ jobs:
           echo "Management API responded with HTTP 200."
 
       - name: Check for local-machine entrypoints
+        if: steps.fn-list.outputs.status == '200'
         run: |
           # Fail if any function still shows a developer-machine entrypoint_path.
           # Patterns: home/braden (original developer machine), /Users/ (macOS local).

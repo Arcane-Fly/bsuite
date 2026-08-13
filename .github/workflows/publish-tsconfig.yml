@@ -53,7 +53,17 @@ jobs:
         # failure is latent rather than observed. Fixing it now costs six lines
         # and stops the first run from being an unexplained red.
         run: |
-          set -uo pipefail
+          # `-e` matters as much as `-u` here (bsuite D-90). Without it a failing
+          # command substitution — `PKG_NAME=$(node -p "require('./package.json').name")`
+          # on a malformed or missing package.json — sets PKG_NAME empty and the script
+          # runs ON, probing the registry for the empty name and writing a `skip=`
+          # output from a decision it never actually made. bsuite#1908 is what a
+          # publish step nobody trusts costs: this workflow failed on EVERY promotion
+          # since 2026-04-22 and the redness became scenery. A step that swallows
+          # failures is how that happens. The tolerated failures below are tolerated
+          # EXPLICITLY — the `npm view` probe is an `if`, and the version probe carries
+          # its own `|| echo ""` — which is the only form that should exist here.
+          set -euo pipefail
           PKG_NAME=$(node -p "require('./package.json').name")
           PKG_VERSION=$(node -p "require('./package.json').version")
           echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
