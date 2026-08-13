@@ -59,20 +59,24 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
 # are mask stops, where the channel is opacity rather than paint; that is
 # documented at each call site. Excluding those files by name would also hide a
 # real colour if one were added to them later.
+# packages/eslint-config/rules/ is THE SOURCE OF THE COLOUR RULE ITSELF, and it is
+# here for exactly the reason `--exclude-dir=eslint-rules` exists above: a rule that
+# forbids pure white must name pure white, in its error message and in the comments
+# explaining which forms it once missed.
 #
-# `eslint-config/rules/` is the CANONICAL SOURCE of the lint rules that ban these
-# values, and the reason is the one already written at `--exclude-dir=eslint-rules`
-# below: a rule that forbids `text-white` must contain the string `text-white`.
-# The estate had SIX inlined copies excluded by that directory name and the ONE
-# original scanned, so identical text was a defect in `packages/eslint-config/rules/`
-# and exempt in `crm7/eslint-rules/` — the asymmetry only surfaced when bsuite#1945
-# forward-ported crm7's pure-colour regexes into the source and the C1 count rose
-# by 6, every one of them prose in a comment explaining what the rule catches.
-# EXEMPT, not EXCLUDED: these still appear in the "exempt" column, so the file
-# stays visible and a genuinely new pure endpoint elsewhere in packages/ is
-# unaffected. The directory contains nothing but rule sources and their tests;
-# it ships no colour to any surface.
-EXCEPTION_RE='(supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|eslint-config/rules/|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
+# The exclusion above was written for the INLINE COPIES, whose directory is called
+# `eslint-rules`. The original they are generated from lives in a directory called
+# `rules`, so it was never covered — the guard was right and its SCOPE was the bug,
+# which is the same defect this estate has now found in three separate places this
+# week. It stayed invisible only because the old rule named few literals; rewriting
+# the detection as a tokeniser (bsuite#1889) documented the two holes it had been
+# missing, and the count jumped 7 -> 17 against a baseline of 11.
+#
+# Listed here rather than in the grep excludes deliberately: EXCEPTION_RE moves a
+# path into the EXEMPT column, where it stays visible and countable. An
+# `--exclude-dir` would make it disappear, and a colour that is genuinely wrong in
+# the rule's own message should still be readable by someone auditing this.
+EXCEPTION_RE='(packages/eslint-config/rules/|supabase/functions/|/email|Email|render[A-Za-z]*Pdf|renderF17|renderNsgtoStandard2Pack|PdfDocument|documentSigner|guardian-consents|/charts?/|chart\.tsx|Branding|branding|OklchColorPicker|__tests__|\.test\.|\.spec\.|manifest|vite\.config|index\.html)'
 
 # ── Violation-class predicates ────────────────────────────────────────────────
 # C1 pure white/black — Tailwind utilities. All colour-bearing prefixes, with optional
@@ -179,9 +183,17 @@ split() { # $1=regex $2=path -> "real exc"
   local out real exc
   out=$(emit "$1" "$2")
   [[ -n "${DUMP:-}" && -n "$out" ]] && printf '%s\n' "$out" >> "$DUMP"
-  real=$(printf '%s' "$out" | grep -cEv "$EXCEPTION_RE" 2>/dev/null || echo 0)
-  exc=$(printf '%s'  "$out" | grep -cE  "$EXCEPTION_RE" 2>/dev/null || echo 0)
-  [[ -z "$out" ]] && { real=0; exc=0; }
+  # `grep -c` PRINTS a count and EXITS 1 when that count is zero, so `|| echo 0`
+  # appended a SECOND line rather than supplying a missing one: `real` became
+  # "0\n0", and the `read -r c1r c1e` below then consumed only the first line —
+  # leaving the EXEMPT figure blank in every row whose real count was zero.
+  # Visible in the output as `0 /` with nothing after the slash (braden's C1 row
+  # has read that way for as long as this script has existed). The count itself
+  # was never wrong; the column next to it was silently dropped.
+  real=$(printf '%s' "$out" | grep -cEv "$EXCEPTION_RE" 2>/dev/null || true)
+  exc=$(printf '%s'  "$out" | grep -cE  "$EXCEPTION_RE" 2>/dev/null || true)
+  [[ -z "$out" || -z "$real" ]] && real=0
+  [[ -z "$out" || -z "$exc" ]] && exc=0
   echo "$real $exc"
 }
 

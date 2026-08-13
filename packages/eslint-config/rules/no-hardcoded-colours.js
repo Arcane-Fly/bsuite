@@ -3,22 +3,91 @@
  *
  * Forbids hardcoded Tailwind palette utilities (text-amber-600, bg-gray-100, etc.)
  * and raw hex/rgb/hsl colour literals in className strings, style objects, and any
- * string returned or assigned as a colour value.
+ * string returned or assigned as a colour value. Pure white and pure black are
+ * banned outright, in every notation and every role.
  *
  * Exemptions:
  *  - Files with /* BRADEN-EXEMPT *\/ comment anywhere in the source
  *  - Files under braden/ directory (path-based check)
  *  - @react-pdf/renderer files (pdfkit accepts hex only) — /* REACT-PDF-EXEMPT *\/
+ *  - HTML delivered to a mail client — /* EMAIL-HTML-EXEMPT *\/
  *  - node_modules, dist, .next, out — skipped via ESLint ignorePatterns / ignores
+ *
+ * The last two license a FORMAT, never a VALUE: the pure white / pure black ban
+ * survives both.
  *
  * Fix: replace with a semantic token from @bsuite/theme/docs/TOKEN-MAPPING.md
  *
+ * ===========================================================================
+ * NO REGEX. THIS RULE IS A TOKENISER.  (standing operator ruling, 2026-08-12)
+ * ===========================================================================
+ *
+ * Every detection defect this rule has shipped was the same defect wearing a
+ * different pattern. A regex encodes an assumption about SURFACE FORM; when the
+ * assumption is wrong at an edge, the match simply does not happen, and a
+ * non-match is indistinguishable from a clean file. The failure is silent and
+ * reads as a pass. The four that were paid for:
+ *
+ *   1. `#ffffff00` — the pure-white alternation spelled the alpha nibbles as
+ *      more literal `f`s (`ffffff|fff`). On `#ffffff00` the `ffffff` branch
+ *      matched, then `\b` was asked to hold between `f` and `0` — both word
+ *      characters — so it failed, and the alternation gave up rather than
+ *      reconsidering the length. Alpha-suffixed pure white PASSED.
+ *
+ *   2. `rgb(255 255 255)` — the separator was written `\s*,\s*`, so the
+ *      space-separated CSS Color 4 form PASSED. A later attempt at `\s*[,\s]\s*`
+ *      failed differently: the leading `\s*` swallowed the space, leaving the
+ *      required separator nothing to match.
+ *
+ *   3. `no-text-white` — a `\b`-anchored `(prefix)-white` pattern matched inside
+ *      the sibling rule's own NAME, because `-` is a non-word character and `\b`
+ *      therefore holds in front of `text`. Three repos each answered with a local
+ *      `eslint-disable`: one fix, applied three times, as a workaround.
+ *
+ *   4. A 600-character cap in an extraction pattern returned a confident ZERO
+ *      against a 2.7 KB object.
+ *
+ * A tokeniser cannot fail in that shape, because it asks a different question.
+ * The regexes asked "does this text LOOK LIKE a banned value?" — which every
+ * pattern must independently answer for every surface form anyone might write.
+ * The scanner below asks two questions in sequence:
+ *
+ *      (a) what COLOUR is this token, if it is a colour at all?
+ *      (b) is that colour banned?
+ *
+ * Surface form is handled exactly once, in (a). The ban in (b) is a predicate on
+ * NUMBERS — `r === 255 && g === 255 && b === 255` — which has no opinion about
+ * commas, spaces, percentages, alpha nibbles or letter case, and so cannot be
+ * evaded by changing any of them. `#ffffff00`, `#FFFF`, `rgb(255 255 255)`,
+ * `rgb(100%,100%,100%)`, `hsl(0 0% 100%)`, `oklch(1 0 0)` and `hwb(0 100% 0%)`
+ * all reduce to the same three numbers, through one code path.
+ *
+ * Three structural consequences worth naming, because they are the whole point:
+ *
+ *   - Token boundaries are established by SCANNING, not asserted by `\b`. The
+ *     hex reader consumes the entire hex-digit run and then decides what it has;
+ *     it can never match a prefix of a longer run and strand the rest, which is
+ *     defect 1. Class names are split on whitespace and then decomposed by
+ *     segment, so `no-text-white` has first segment `no`, which is not a utility
+ *     prefix — defect 3 is structurally unreachable, and the three
+ *     `eslint-disable` workarounds it caused can come out.
+ *
+ *   - Separators are a SET the component splitter knows about (space, comma,
+ *     solidus), not a shape one pattern had to guess — defect 2.
+ *
+ *   - Unparseable input is VISIBLE. A colour function whose components do not
+ *     resolve is still reported as a literal when it is shaped like one, rather
+ *     than falling through to a silent non-match. Fail-closed, not fail-quiet.
+ *
+ * Adding a notation is one branch in `classifyFunctional`, not an edit to N
+ * patterns that must each be got right independently.
+ *
  * DISTRIBUTION: each submodule carries a byte-identical inline copy at
  * `<submodule>/eslint-rules/no-hardcoded-colours.js` so standalone CI can resolve
- * the rule without the monorepo. `scripts/check-inline-rule-parity.mjs` fails CI if
- * a copy drifts. Before that check existed, this file — the nominal source of truth
- * — was itself the STALEST copy: it lacked the `(?<![\w#])` issue-reference guard
- * that every submodule copy already had (crm7#1579).
+ * the rule without the monorepo. `scripts/sync-inline-eslint-rules.mjs --check`
+ * fails CI if a copy drifts. Before that check existed, this file — the nominal
+ * source of truth — was itself the STALEST copy (crm7#1579), and it happened
+ * again on 2026-08-12 when crm7's copy was 69 lines ahead of it.
  */
 
 import { isBradenSubmoduleFile } from './_shared.js'
