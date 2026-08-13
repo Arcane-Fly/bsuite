@@ -509,3 +509,105 @@ Whether Supabase's edge supplies `cf-connecting-ip` on real production PostgREST
 **unmeasured**. Both branches are safe by construction — present gives a per-IP bucket, absent gives
 a per-user bucket keyed on `auth.uid()` — so the fix is correct either way. Only which branch real
 traffic takes is unknown.
+
+---
+
+# 14. Day two — 2026-08-13
+
+All of this is on `development`. Nothing here has gone to production. Per your instruction, the
+estate stays on `development` until you have inspected and QA'd it.
+
+## The one that matters: document generation has been throwing on every single call
+
+CRM7 generates documents (contracts, letters) through a small server-side program. It **fails on
+every authenticated request**, and has been.
+
+The cause is one word. The code asks the login system to check the caller's pass:
+
+```
+getClaims(token)
+```
+
+There is no `token` anywhere in that program. The variable holding the pass is called
+`accessToken`. So the line reaches for something that does not exist and the whole request dies.
+
+**Why nobody caught it.** Two reasons, and the second is the one worth your attention.
+
+1. **Nothing checks these programs for errors.** Not "the tests are thin" — there is *no*
+   type-checking step for them at all. I ran one for the first time yesterday. It found this
+   instantly.
+
+2. **The test that was supposed to protect this code required the bug.** It asserted that the
+   source must contain `getClaims()` — with nothing between the brackets, which is exactly the
+   original defect. When someone later fixed the code to pass the pass in, that test would have
+   gone red and blocked the fix. When the test was eventually corrected and an argument added,
+   nothing existed to notice the argument was the wrong word.
+
+While fixing it I found a second fault in the same eight lines: the "your login has expired"
+response was **unreachable**. When the login system rejects a pass it returns nothing, and this
+code tried to read a field off that nothing before checking whether it had failed — so it crashed
+on precisely the case the check existed to handle. A user with an expired session got a server
+error instead of "please sign in again".
+
+Both are fixed in **crm7#1672**. The fix is in the source. **The live copy does not change until
+someone with deployment rights ships it** — that is still the blocker in §2.
+
+## I then measured the whole population
+
+27 of these server-side programs in CRM7. I type-checked every one:
+
+| | |
+|---|---|
+| clean | **14** |
+| carrying real errors | **13** (84 errors between them) |
+
+Filed as **bsuite#1953** with the list. I did not switch a check on for all 27, because it would
+be red on day one for 13 pre-existing reasons and everyone would learn to ignore it — the same way
+the permanently-red `Publish` job trained everyone to ignore the publish step. The issue specifies
+the design that avoids that.
+
+## A guard that said PASS without reading anything
+
+Chasing why an unrelated check went red on a routine change, I found the estate's secret-naming
+guard had three faults.
+
+**It could report PASS on a tree it had not read.** The guard scans the six sub-projects. It tested
+whether each was present by asking "is there a folder here?" — but a sub-project that has not been
+fetched **is** a folder; it is just an empty one. So on any checkout without them, the guard
+searched six empty folders, found nothing wrong, and said PASS. It now refuses to answer at all
+rather than answer about nothing.
+
+**Five of its 52 exemptions were dead.** The guard keeps a list of files allowed to break a rule.
+That list is keyed on the file's location, which fails two ways when a file moves — and only one is
+visible. If a file is *renamed*, the exemption stops applying and the rule fires; loud, and that is
+what started this. If a file is *deleted*, the exemption sits there forever and nothing says so.
+Four had been dead for months. A dead one is not just clutter: recreate a file at that exact
+location and it is exempt the moment it appears, with nobody reviewing it.
+
+There is now a check that every exemption names a file that actually exists.
+
+**My own first attempt at that check was wrong**, and I caught it only because I had measured the
+answer separately first: it declared all 52 dead. Two bugs of mine, both the kind that look right —
+asking git "is this a repository?" from inside an empty folder makes git walk *upward* and answer
+about the parent, and a list I built was separated by line breaks where the code matching against
+it expected spaces. The independent measurement is the only reason I did not ship a guard that
+failed everything.
+
+All in **bsuite#1951**, with the before/after controls recorded.
+
+## Also landed
+
+- **crm7#1670** — the rule that keeps cross-app sign-in working was documented as enforced and was
+  wired into nothing. Now wired. A *third* guard was found satisfiable by a comment: it passed with
+  both real pieces of code deleted, happy with one sentence of documentation. Replaced with one
+  that reads the actual code and self-tests before every run.
+- **crm7#1669 / BSU#700** — two sub-projects were deploying programs under the same names into the
+  same account, each silently overwriting the other. Four collisions. Worse than "the wrong one
+  wins": CRM7's configuration was setting a **security flag for BSU's code**, which is how two
+  sign-in endpoints came to accept a forged pass.
+
+## Still yours to decide
+
+Unchanged from §2, plus one: **two Supabase access tokens need rotating.** I leaked them myself —
+an error message printed them in full because the file had the same key twice and my command
+matched both lines. Everything else in that file is intact; it is the two `sbp_…` tokens only.
