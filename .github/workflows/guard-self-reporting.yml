@@ -1,0 +1,74 @@
+name: Guard Self-Reporting (LANE-WATCHER)
+
+# The watcher of watchers. Runs scripts/check-guard-self-reporting.mjs, which
+# executes every guard named in scripts/guard-registry.mjs and asserts that a
+# clean-pass (exit 0) output states a NON-ZERO count of what it examined —
+# files scanned, entries verified, scopes checked. A guard that exits 0
+# saying nothing, or saying nothing numeric, fails.
+#
+# This retires the estate's most-repeated failure class: a guard that PASSES
+# WITHOUT HAVING EXAMINED ANYTHING (check-secret-naming.sh on an
+# uninitialised submodule; check-edge-function-slug-collisions.mjs the same
+# way; crm7/scripts/lint-sql-migrations.mjs exiting 0 with zero output on its
+# real CI invocation — see that script's own header). See
+# scripts/check-guard-self-reporting.mjs for the full rationale and
+# scripts/guard-registry.mjs for why a declared registry was chosen over a
+# `--self-report` convention every guard would have to implement first.
+#
+# `submodules: recursive` + a real cross-repo token is not optional here: an
+# uninitialised submodule is an empty directory, and this workflow exists
+# specifically to catch the class of bug where a guard mistakes that for a
+# clean scan. Running LANE-WATCHER on an unchecked-out tree would defeat the
+# entire point.
+
+on:
+  push:
+    branches:
+      - development
+      - main
+  pull_request:
+    branches:
+      - development
+      - main
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: guard-self-reporting-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard-self-reporting:
+    name: LANE-WATCHER — every guard states what it examined
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history, all submodules)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      # Several registered guards are diff-scoped and default to comparing
+      # against `origin/main` (see guard-registry.mjs). `submodules: recursive`
+      # does not guarantee every remote branch is fetched inside each
+      # submodule clone, so make `origin/main` resolvable everywhere it is
+      # needed before the watcher runs. Non-fatal: a guard that can't resolve
+      # its base ref will report that itself, which is exactly the kind of
+      # thing this workflow exists to surface, not paper over.
+      - name: Ensure origin/main is resolvable in every scope that needs it
+        shell: bash
+        run: |
+          for repo in . business-suite-unified conduit braden throughput; do
+            git -C "$repo" fetch origin main:refs/remotes/origin/main 2>/dev/null || true
+          done
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run guard-self-reporting meta-check
+        run: node scripts/check-guard-self-reporting.mjs

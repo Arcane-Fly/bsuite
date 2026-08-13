@@ -68,7 +68,7 @@ async function checkPackageManifests() {
     }
   }
 
-  return failures;
+  return { count: files.length, failures };
 }
 
 async function checkLockfiles() {
@@ -87,12 +87,12 @@ async function checkLockfiles() {
     });
   }
 
-  return failures;
+  return { count: files.length, failures };
 }
 
-const manifestFailures = await checkPackageManifests();
-const lockfileFailures = await checkLockfiles();
-const failures = [...manifestFailures, ...lockfileFailures];
+const manifests = await checkPackageManifests();
+const lockfiles = await checkLockfiles();
+const failures = [...manifests.failures, ...lockfiles.failures];
 
 if (failures.length > 0) {
   console.error('Tailwind v4+ policy failed. Tailwind v3 is not allowed in BSuite.');
@@ -100,4 +100,21 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Tailwind v4+ policy OK: no package manifests or lockfiles resolve Tailwind below v4.');
+// A guard that walked zero manifests and zero lockfiles has not verified the
+// policy — it has verified nothing, from (most likely) the wrong `process.cwd()`.
+// Found live 2026-08-13 by bsuite's guard-self-reporting meta-check (LANE-WATCHER):
+// this script's original clean-pass message named no count at all, so a walk that
+// silently found nothing (wrong cwd, moved directory, ignoredDirs swallowing the
+// whole tree) was indistinguishable from a real, clean scan of the monorepo.
+if (manifests.count === 0 && lockfiles.count === 0) {
+  console.error(
+    `Tailwind v4+ policy: CANNOT REPORT — walked ${root} and found 0 package.json and `
+      + '0 pnpm-lock.yaml files. Refusing to report a clean policy check against nothing.',
+  );
+  process.exit(1);
+}
+
+console.log(
+  `Tailwind v4+ policy OK: ${manifests.count} package manifest(s) and ${lockfiles.count} `
+    + 'lockfile(s) scanned, none resolve Tailwind below v4.',
+);

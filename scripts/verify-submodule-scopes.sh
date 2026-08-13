@@ -176,5 +176,16 @@ if [ "$UNCLONED" != "0" ] || [ "$DRIFTED" != "0" ]; then
   exit 1
 fi
 
-echo "verify-submodule-scopes: ${VERIFIED}" >&2
+# The stdout line below is the machine-readable contract callers capture
+# (`DIRS=$(...)` in supabase-functions-deploy.yml) — its format is fixed and
+# must not change. The stderr line is the human-facing summary, and until
+# 2026-08-13 it named the verified scopes with no COUNT: a caller reading the
+# log saw "verify-submodule-scopes: R80.4 braden business-suite-unified
+# conduit crm7 throughput" and had to count the names themselves to notice if
+# one had silently dropped out. Found by bsuite's guard-self-reporting
+# meta-check (LANE-WATCHER), which runs every guard in the estate and asserts
+# its clean-pass output states how many things it checked, not just what.
+VERIFIED_COUNT=0
+for _scope in $VERIFIED; do VERIFIED_COUNT=$((VERIFIED_COUNT + 1)); done
+echo "verify-submodule-scopes: ${VERIFIED_COUNT} scope(s) verified checked out at the recorded gitlink commit: ${VERIFIED}" >&2
 printf '%s\n' "$VERIFIED"
