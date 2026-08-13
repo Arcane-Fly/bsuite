@@ -149,9 +149,11 @@ const SYNCED_RULES = [
     // holding the count at 91. So this row went from silent-pass to genuinely
     // covered, and the comment saying otherwise had already outlived its fact.
     submodules: ALL_SUBMODULES,
-    // 3 -> 1 (bsuite#1945). BSU#701 and conduit#448 merged and their pointers are
-    // bumped in this commit, so only crm7 is still waived. Ceilings shrink only.
-    maxWaived: 1,
+    // 3 -> 1 (bsuite#1945), 1 -> 0 (bsuite#1970). crm7#1674 regenerated the last
+    // copy and this commit bumps its pointer, so nothing is waived on this rule
+    // anywhere in the estate. Ceilings shrink only; a zero ceiling means the next
+    // divergence on the colour rule is a hard failure with no place to park it.
+    maxWaived: 0,
   },
   {
     // Reconciled 2026-08-12 from three divergent bodies — see the source file's
@@ -162,8 +164,9 @@ const SYNCED_RULES = [
     source: 'packages/eslint-config/rules/no-text-white.js',
     filename: 'no-text-white.js',
     submodules: ['crm7', 'business-suite-unified', 'conduit'],
-    // 2 -> 1 (bsuite#1945). BSU took the reconciled body in BSU#701; crm7 has not.
-    maxWaived: 1,
+    // 2 -> 1 (bsuite#1945), 1 -> 0 (bsuite#1970). crm7#1674 took the reconciled
+    // body in the same commit as the colour rule; all three copies now agree.
+    maxWaived: 0,
   },
 ]
 
@@ -274,19 +277,27 @@ const MAX_MANIFEST_UNLISTED = 0
  * check prints a notice when a listed copy turns out to be in sync already.
  */
 const KNOWN_DRIFTED = {
-  // WAS AHEAD, IS NOW BEHIND. The direction flipped on 2026-08-13: the source
-  // absorbed crm7's improvements and went past them, so this copy needs a plain
-  // regeneration. It is NOT done here — crm7 has active lanes and the parent
-  // must not edit it. Whoever holds crm7 next runs the generator; the expected
-  // body is the one every other copy now carries.
+  // EMPTY as of 2026-08-13 (bsuite#1970). Every entry that was ever here has been
+  // cleared by regenerating the copy, not by raising a ceiling.
   //
-  // Its own violation count under the new rule was measured before saying this:
-  // 2108 files scanned, 4 violations, all in `scripts/drift-scan.mjs`, which its
-  // eslint config does not gate. So the regeneration is safe there — the copy is
-  // the only thing blocking it.
-  'crm7/no-hardcoded-colours.js':
-    'bsuite#1889 / crm7 — was AHEAD, now BEHIND: the source is a tokeniser and is strictly stronger. ' +
-    'Needs a plain regeneration; measured 4 violations, all outside its lint scope.',
+  // crm7/no-hardcoded-colours.js was the last one out (crm7#1674). Its waiver said
+  // "measured 4 violations, all outside its lint scope" against a WHOLE-REPO scan.
+  // Re-measured with crm7's OWN lint, which is the gate the sync actually has to
+  // survive: `npx eslint .` — 2105 files, 0 errors, identical before and after the
+  // swap, and `node scripts/lint-ratchet.mjs` PASS at baseline 0. Positive-controlled
+  // first — a forbidden hex, a 0..1 pure white and a chromatic palette class were
+  // injected into each of the six crm7#1623 files and every one reported — because
+  // an unverified zero is how the 24-entry ignore list in crm7#1579 got written.
+  //
+  // What the regeneration bought there, specifically: crm7's copy already had the
+  // AST-keyed react-pdf carve-out, so the mention-only exemption was closed. What it
+  // did NOT have was `rgb(1,1,1)` classified as pure. pdf-lib and react-pdf normalise
+  // channels to 0..1, so that IS pure white, and as a mere format violation it was
+  // suppressed by both carve-outs — measured NOT REPORTED in a file with a real
+  // `import('@react-pdf/renderer')` and in a file marked EMAIL-HTML-EXEMPT. crm7 is
+  // the app that emits the e-signature certificate and the invoice email, i.e. the
+  // two files carrying those markers. The rule blind to the value ran in the app
+  // that writes it.
 
   // business-suite-unified/no-hardcoded-colours.js and conduit/no-hardcoded-colours.js
   // are GONE from this list. BSU#701 and conduit#448 regenerated both copies and
@@ -319,8 +330,14 @@ const KNOWN_DRIFTED = {
   // body, and the two self-referential eslint-disable directives its waiver
   // predicted would fall out did exactly that — `reportUnusedDisableDirectives`
   // failed the build on both the moment the copy synced.
-  'crm7/no-text-white.js':
-    'bsuite#1889 / crm7#1661 — predates the reconciled source; missing the object-Property walk',
+  //
+  // crm7/no-text-white.js is GONE too (crm7#1674, same commit as its colour rule).
+  // The same self-referential directive surfaces there as a WARNING rather than an
+  // error, because crm7 does not arm `bsuite/no-text-white` over `eslint-rules/`.
+  // Arming it was tried and rejected: that config block arms three other rules,
+  // which then produced 17 errors against the rule files themselves. crm7's gate is
+  // errors-only and still reads 0. Recorded here so the next person does not
+  // rediscover it and "fix" it by editing a generated file.
 }
 
 /**
