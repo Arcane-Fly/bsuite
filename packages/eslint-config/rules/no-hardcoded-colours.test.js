@@ -344,8 +344,9 @@ test('HOLE 2 — separators are a set, not a shape', () => {
       // Token-driven channels are not a hardcoded colour, in any separator style.
       { code: `const c = 'rgb(var(--rgb-brand))'` },
       { code: `const c = 'hsl(var(--h) 50% 50%)'` },
-      // Saturation 0% alone is a legitimate grey — lightness is what is banned.
-      { code: `const c = 'oklch(0.13 0.02 260)'` },
+      // oklch is the MANDATED notation, so writing one is not a defect — only
+      // writing pure white or pure black in one is. L=0.13 is neither.
+      { code: `const c = 'oklch(0.13 0.02 260)'` }, // theme-audit-ok: lint fixture — the value is the test subject, not a token this file ships
     ],
     invalid: [
       // THE HOLE. The old pattern required commas, so the space-separated CSS
@@ -364,6 +365,7 @@ test('HOLE 2 — separators are a set, not a shape', () => {
       { code: `const c = 'rgb(100% 100% 100%)'`, errors: [{ messageId: 'forbiddenPure' }] },
       { code: `const c = 'hsl(0 0% 100%)'`, errors: [{ messageId: 'forbiddenPure' }] },
       { code: `const c = 'hsl(210, 40%, 0%)'`, errors: [{ messageId: 'forbiddenPure' }] },
+      // theme-audit-ok: lint fixture — pure white in the mandated notation is exactly what this asserts is caught
       { code: `const c = 'oklch(100% 0 0)'`, errors: [{ messageId: 'forbiddenPure' }] },
       { code: `const c = 'hwb(0 100% 0%)'`, errors: [{ messageId: 'forbiddenPure' }] },
       { code: `const c = 'color(srgb 1 1 1)'`, errors: [{ messageId: 'forbiddenPure' }] },
