@@ -8,7 +8,11 @@ import {
   useState,
 } from 'react';
 import { verticalCompactor } from 'react-grid-layout';
-import { buildResponsiveLayouts } from './buildResponsiveLayouts.js';
+import {
+  buildResponsiveLayouts,
+  isCanonicalisableBreakpoint,
+  isDerivedBreakpoint,
+} from './buildResponsiveLayouts.js';
 import { defaultPreferenceAdapter } from './preferences.js';
 import { rescaleLayout } from './rescaleLayout.js';
 import type {
@@ -37,6 +41,43 @@ export const DEFAULT_EDITOR_EVENT_NAMES = [
  */
 export const PAGE_GRID_EDITING_EVENT = 'bsuite-page-grid-editing';
 
+/**
+ * Package-wide layout epoch, added to EVERY consumer's `layoutVersion`.
+ *
+ * When a default that governs all grids changes, a saved layout produced under
+ * the old default has to be invalidated — and there is no way to reach ~330
+ * call sites across six apps to hand-bump each one. crm7's `DraggableCardPage`
+ * already solved this locally with its own `LAYOUT_EPOCH`; this is the same
+ * lever one level down, so it also covers the raw `PageGridLayout` consumers
+ * (Dashboard, Billing, GTO, Analytics, the throughput and braden pages) that
+ * no app-level epoch can see.
+ *
+ * 0 -> 1000 (2026-08-13, D-75/D-76): two all-grids defaults changed in the same
+ * release — `autoHeight` now defaults to true for raw consumers, and md/sm no
+ * longer collapse to a full-width stack. Every stored layout predates both and
+ * was additionally polluted with frozen derived breakpoints, so all of them
+ * reset once to the corrected defaults.
+ *
+ * Per-page `layoutVersion` bumps keep working on top; this only moves the
+ * floor.
+ */
+export const PACKAGE_LAYOUT_EPOCH = 1000;
+
+/**
+ * Default for `GridLayoutItem.autoHeight` when an item does not state one.
+ *
+ * D-76 ("cards render half cut off on page open"). `DraggableCardPage` has
+ * defaulted this to true since the E5a flip, but a RAW `PageGridLayout`
+ * consumer builds its layout array by hand and inherits nothing — the flag had
+ * to be written on every item. Sixteen of the eighteen raw consumers across the
+ * suite never did, so their cards were fixed at whatever seed `h` the author
+ * guessed and clipped everything past it behind `overflow-auto`. That is not a
+ * per-page authoring mistake repeated sixteen times; it is a default in the
+ * wrong place. An item that genuinely owns its own scroll (a virtualized list)
+ * opts out with an explicit `autoHeight: false`.
+ */
+const DEFAULT_ITEM_AUTO_HEIGHT = true;
+
 export interface PageGridEditingEventDetail {
   pageKey: string;
   editing: boolean;
@@ -50,7 +91,9 @@ export function usePageGridLayout({
   canEditPage = true,
   editorEventNames = DEFAULT_EDITOR_EVENT_NAMES,
   preferenceAdapter = defaultPreferenceAdapter,
+  defaultAutoHeight,
 }: UsePageGridLayoutOptions): UsePageGridLayoutResult {
+  const effectiveLayoutVersion = layoutVersion + PACKAGE_LAYOUT_EPOCH;
   const containerRef = useRef<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [isEditing, setIsEditingState] = useState(false);
@@ -106,18 +149,18 @@ export function usePageGridLayout({
 
   useEffect(() => {
     if (!prefsLoaded) return;
-    if ((savedLayoutVersion ?? 0) < layoutVersion) {
+    if ((savedLayoutVersion ?? 0) < effectiveLayoutVersion) {
       startTransition(() => {
         setSavedLayout(defaultLayouts);
         setLayoutCols(defaultCols);
         setBaseCols(defaultCols);
-        setSavedLayoutVersion(layoutVersion);
+        setSavedLayoutVersion(effectiveLayoutVersion);
       });
     }
   }, [
     defaultCols,
     defaultLayouts,
-    layoutVersion,
+    effectiveLayoutVersion,
     prefsLoaded,
     savedLayoutVersion,
     setBaseCols,
@@ -131,7 +174,24 @@ export function usePageGridLayout({
 
   const rawLayouts = useMemo(() => {
     if (Object.keys(savedLayout || {}).length === 0) return defaultLayouts;
-    const saved = savedLayout as Record<string, GridLayoutItem[]>;
+    // Drop DERIVED breakpoints out of a stored layout before anything reads it.
+    //
+    // Until 0.8.0 react-grid-layout's `onLayoutChange` echo persisted md/sm/xs/
+    // xxs alongside lg. `buildResponsiveLayouts` then treated them as
+    // consumer-supplied and preserved them verbatim, so a layout derived once —
+    // at whatever column count happened to be active that day — outlived every
+    // later change to `lg` and to the columns slider (D-75). Every user who has
+    // ever dragged a card on any page has that pollution stored, so the fix has
+    // to heal on read rather than wait for a layoutVersion bump; `lg` (the only
+    // breakpoint that was ever authoritative) is preserved untouched, so nobody
+    // loses the arrangement they made.
+    const stored = savedLayout as Record<string, GridLayoutItem[]>;
+    const saved: Record<string, GridLayoutItem[]> = {};
+    for (const bp of Object.keys(stored)) {
+      if (isDerivedBreakpoint(bp)) continue;
+      saved[bp] = stored[bp];
+    }
+    if (!saved.lg) saved.lg = stored.lg ?? defaultLayouts.lg ?? [];
     let changed = false;
     const merged: Record<string, GridLayoutItem[]> = {};
     for (const bp of Object.keys(saved)) {
@@ -148,14 +208,32 @@ export function usePageGridLayout({
         merged[bp] = savedItems;
       }
     }
-    return changed ? (merged as GridLayouts) : savedLayout;
+    // `merged` is always returned (never the raw `savedLayout`) because the
+    // derived-breakpoint filter above may have removed keys even when no
+    // default item was missing — handing back `savedLayout` would smuggle the
+    // stale derived breakpoints straight past the heal.
+    void changed;
+    return merged as GridLayouts;
   }, [savedLayout, defaultLayouts]);
 
   const currentLayouts = useMemo(() => {
     const rescaled =
       baseCols !== layoutCols ? rescaleLayout(rawLayouts, baseCols, layoutCols) : rawLayouts;
-    return buildResponsiveLayouts(rescaled, { cols: layoutCols });
-  }, [rawLayouts, baseCols, layoutCols]);
+    const responsive = buildResponsiveLayouts(rescaled, { cols: layoutCols });
+    // Resolve the autoHeight default HERE rather than at the render layer, so
+    // `stripAutoHeightRows` (which reads this object through
+    // `currentLayoutsForStripRef`) and `PageGridLayout`'s `activeLayouts` agree
+    // on which items are auto-height. They disagreed once before and the
+    // measured height leaked into storage.
+    const resolvedAutoHeight = defaultAutoHeight ?? DEFAULT_ITEM_AUTO_HEIGHT;
+    const resolved: GridLayouts = { lg: [] };
+    for (const bp of Object.keys(responsive)) {
+      resolved[bp] = (responsive[bp] ?? []).map((item) =>
+        item.autoHeight === undefined ? { ...item, autoHeight: resolvedAutoHeight } : item,
+      );
+    }
+    return resolved;
+  }, [rawLayouts, baseCols, layoutCols, defaultAutoHeight]);
 
   useEffect(() => {
     if (baseCols !== layoutCols) {
@@ -318,13 +396,76 @@ export function usePageGridLayout({
     currentLayoutsForStripRef.current = currentLayouts;
   }, [currentLayouts]);
 
+  /**
+   * The breakpoint react-grid-layout is currently rendering, tracked so a
+   * gesture can be written back to the breakpoint that OWNS it.
+   *
+   * Seeded to `lg` and corrected by `<Responsive onBreakpointChange>`, which
+   * fires on mount once the container width is known.
+   */
+  const activeBreakpointRef = useRef<string>('lg');
+  const handleBreakpointChange = useCallback((breakpoint: string) => {
+    activeBreakpointRef.current = breakpoint;
+  }, []);
+
+  /**
+   * Reduce react-grid-layout's all-breakpoints echo down to the ONE breakpoint
+   * that is authoritative — `lg` — or refuse the write.
+   *
+   * Two defects this closes, both reported as D-75:
+   *
+   * 1. **The derived breakpoints froze.** RGL echoes every breakpoint on every
+   *    gesture. Persisting them made them consumer-supplied, so
+   *    `buildResponsiveLayouts` stopped deriving them and the columns slider
+   *    (which rescales `lg`) could no longer reach the breakpoint actually on
+   *    screen. Below a 1200px container — i.e. most real desktop sessions once
+   *    the sidebar is subtracted — moving the slider changed nothing at all.
+   *
+   * 2. **An edit made at `md`/`sm` was invisible at `lg`.** The gesture landed
+   *    in `layouts.md`; `layouts.lg` kept its old values; the same user on a
+   *    wider monitor saw their arrangement revert. `md` and `sm` render the
+   *    same array against the same column count as `lg`, so folding the
+   *    gesture onto `lg` is lossless and makes one arrangement follow the user
+   *    across every window size.
+   *
+   * `xs`/`xxs` return `null` (no write). Those breakpoints render a full-width
+   * stack, so a gesture there carries only a vertical order; applying it to
+   * `lg` would flatten a multi-column desktop arrangement that the user cannot
+   * even see on that device. Refusing the write is the conservative half of
+   * the trade: a phone visit can no longer destroy the desktop layout, at the
+   * cost of phone-only reordering not persisting. Stated in the PR, not hidden.
+   */
+  const canonicaliseLayoutForPersist = useCallback((layouts: GridLayouts): GridLayouts | null => {
+    const breakpoint = activeBreakpointRef.current;
+    if (!isCanonicalisableBreakpoint(breakpoint)) return null;
+    const items = layouts[breakpoint] ?? layouts.lg;
+    if (!items) return null;
+    const next: GridLayouts = { lg: items };
+    // Preserve any breakpoint a CONSUMER supplied deliberately (never a
+    // derived one) so an opt-out layout is not silently discarded.
+    for (const bp of Object.keys(layouts)) {
+      if (bp === 'lg' || isDerivedBreakpoint(bp)) continue;
+      next[bp] = layouts[bp] ?? [];
+    }
+    return next;
+  }, []);
+
+  const commitLayout = useCallback(
+    (layouts: GridLayouts) => {
+      const canonical = canonicaliseLayoutForPersist(layouts);
+      if (!canonical) return;
+      setSavedLayout(stripAutoHeightRows(canonical));
+    },
+    [canonicaliseLayoutForPersist, setSavedLayout, stripAutoHeightRows],
+  );
+
   const onLayoutChange = useCallback(
     (_layout: unknown, layouts: unknown) => {
       if (!isEditing) return;
       pendingLayoutRef.current = layouts as GridLayouts;
       if (layoutCommitFrameRef.current !== null) return;
       if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
-        setSavedLayout(stripAutoHeightRows(layouts as GridLayouts));
+        commitLayout(layouts as GridLayouts);
         return;
       }
       // Trailing rAF — lets a burst of resize ticks coalesce into one commit.
@@ -333,11 +474,11 @@ export function usePageGridLayout({
         const pending = pendingLayoutRef.current;
         if (pending) {
           pendingLayoutRef.current = null;
-          setSavedLayout(stripAutoHeightRows(pending));
+          commitLayout(pending);
         }
       });
     },
-    [isEditing, setSavedLayout, stripAutoHeightRows],
+    [commitLayout, isEditing],
   );
 
   useEffect(() => {
@@ -362,6 +503,26 @@ export function usePageGridLayout({
     [currentLayouts, layoutCols, setBaseCols, setLayoutCols, setSavedLayout],
   );
 
+  /**
+   * Build the object handed to the preference adapter from a new `lg` array.
+   *
+   * Only `lg` and consumer-supplied breakpoints are stored; md/sm/xs/xxs are
+   * re-derived on every render. Before 0.8.0 every mutator below spread
+   * `currentLayouts` (which contains the derived breakpoints) into its write,
+   * which re-froze them one gesture after `rawLayouts` had healed them.
+   */
+  const layoutsWithLg = useCallback(
+    (items: GridLayoutItem[]): GridLayouts => {
+      const next: GridLayouts = { lg: items };
+      for (const bp of Object.keys(currentLayouts)) {
+        if (bp === 'lg' || isDerivedBreakpoint(bp)) continue;
+        next[bp] = currentLayouts[bp] ?? [];
+      }
+      return next;
+    },
+    [currentLayouts],
+  );
+
   const handleCompact = useCallback(() => {
     if (!currentLayouts.lg) return;
     const sorted = [...currentLayouts.lg].sort((a, b) => (a.y !== b.y ? a.y - b.y : a.x - b.x));
@@ -376,8 +537,8 @@ export function usePageGridLayout({
       placed.push(compacted);
       return compacted;
     });
-    startTransition(() => setSavedLayout({ ...currentLayouts, lg: result }));
-  }, [currentLayouts, setSavedLayout]);
+    startTransition(() => setSavedLayout(layoutsWithLg(result)));
+  }, [currentLayouts, layoutsWithLg, setSavedLayout]);
 
   const handleReset = useCallback(() => {
     startTransition(() => {
@@ -389,7 +550,6 @@ export function usePageGridLayout({
 
   const addWidget = useCallback(
     (widgetKey: string, initialSize?: Partial<Pick<GridLayoutItem, 'w' | 'h' | 'minW' | 'minH'>>) => {
-      const bps = Object.keys(currentLayouts);
       const maxY = (currentLayouts.lg ?? []).reduce((max, item) => Math.max(max, item.y + item.h), 0);
       const newItem: GridLayoutItem = {
         i: widgetKey,
@@ -400,72 +560,52 @@ export function usePageGridLayout({
         minW: initialSize?.minW,
         minH: initialSize?.minH,
       };
-      const updated: GridLayouts = { lg: [] };
-      for (const bp of bps) {
-        updated[bp] = [...(currentLayouts[bp] ?? []), newItem];
-      }
-      startTransition(() => setSavedLayout(updated));
+      startTransition(() => setSavedLayout(layoutsWithLg([...(currentLayouts.lg ?? []), newItem])));
     },
-    [currentLayouts, layoutCols, setSavedLayout],
+    [currentLayouts, layoutCols, layoutsWithLg, setSavedLayout],
   );
 
   const moveWidget = useCallback(
     (widgetKey: string, direction: 'up' | 'down') => {
-      const updated: GridLayouts = { lg: [] };
-      for (const bp of Object.keys(currentLayouts)) {
-        const items = [...(currentLayouts[bp] ?? [])];
-        const index = items.findIndex((item) => item.i === widgetKey);
-        if (index === -1) {
-          updated[bp] = items;
-          continue;
-        }
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= items.length) {
-          updated[bp] = items;
-          continue;
-        }
-        const moved = items[index];
-        const withoutMoved = [...items.slice(0, index), ...items.slice(index + 1)];
-        const nextItems = [
-          ...withoutMoved.slice(0, targetIndex),
-          moved,
-          ...withoutMoved.slice(targetIndex),
-        ];
-        updated[bp] = nextItems;
-      }
-      startTransition(() => setSavedLayout(updated));
+      const items = [...(currentLayouts.lg ?? [])];
+      const index = items.findIndex((item) => item.i === widgetKey);
+      if (index === -1) return;
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= items.length) return;
+      const moved = items[index];
+      const withoutMoved = [...items.slice(0, index), ...items.slice(index + 1)];
+      const nextItems = [
+        ...withoutMoved.slice(0, targetIndex),
+        moved,
+        ...withoutMoved.slice(targetIndex),
+      ];
+      startTransition(() => setSavedLayout(layoutsWithLg(nextItems)));
     },
-    [currentLayouts, setSavedLayout],
+    [currentLayouts, layoutsWithLg, setSavedLayout],
   );
 
   const setWidgetLocked = useCallback(
     (widgetKey: string, locked: boolean) => {
-      const updated: GridLayouts = { lg: [] };
-      for (const bp of Object.keys(currentLayouts)) {
-        updated[bp] = (currentLayouts[bp] ?? []).map((item) => {
-          if (item.i !== widgetKey) return item;
-          return {
-            ...item,
-            static: locked,
-            isDraggable: !locked,
-            isResizable: !locked,
-          };
-        });
-      }
-      startTransition(() => setSavedLayout(updated));
+      const nextItems = (currentLayouts.lg ?? []).map((item) => {
+        if (item.i !== widgetKey) return item;
+        return {
+          ...item,
+          static: locked,
+          isDraggable: !locked,
+          isResizable: !locked,
+        };
+      });
+      startTransition(() => setSavedLayout(layoutsWithLg(nextItems)));
     },
-    [currentLayouts, setSavedLayout],
+    [currentLayouts, layoutsWithLg, setSavedLayout],
   );
 
   const removeWidget = useCallback(
     (widgetKey: string) => {
-      const updated: GridLayouts = { lg: [] };
-      for (const bp of Object.keys(currentLayouts)) {
-        updated[bp] = (currentLayouts[bp] ?? []).filter((item) => item.i !== widgetKey);
-      }
-      startTransition(() => setSavedLayout(updated));
+      const nextItems = (currentLayouts.lg ?? []).filter((item) => item.i !== widgetKey);
+      startTransition(() => setSavedLayout(layoutsWithLg(nextItems)));
     },
-    [currentLayouts, setSavedLayout],
+    [currentLayouts, layoutsWithLg, setSavedLayout],
   );
 
   /**
@@ -547,6 +687,7 @@ export function usePageGridLayout({
     activeCompactor,
     onLayoutChange,
     handleColumnChange,
+    handleBreakpointChange,
     handleCompact,
     handleReset,
     addWidget,
