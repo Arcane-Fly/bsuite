@@ -36,11 +36,16 @@ const AUDIT = resolve(REPO_ROOT, 'scripts/audit-palette-whitelist.py')
  * Colour literals are ASSEMBLED, never written out, and this file carries no
  * `theme-audit-ok` marker on purpose.
  *
- * `packages/` is what the gate scans, and this file lives in it. Writing
- * `'#ffffff'` or `oklch(1 0 0)` inline — even inside an assertion that they are
- * FORBIDDEN — is a colour literal in a colour context, so the gate flags it and
- * the suite that proves the gate works becomes the thing that breaks it. That
- * happened on the first run: three violations, all of them in this file.
+ * `packages/` is what two gates scan, and this file lives in it. Spelling out a
+ * pure endpoint — the six-f hex, or the oklch triple at lightness one — is a
+ * colour literal in a colour context even inside an assertion that it is
+ * FORBIDDEN, so the gate flags it and the suite that proves the gate works
+ * becomes the thing that breaks it. Both gates count it, and both caught this
+ * file doing it: the whitelist first, then the C1 pure-endpoint ratchet, which
+ * reads comments too and does not care that the sentence says "never".
+ *
+ * So: no banned value is written out anywhere below, prose included. Describe
+ * it in words or assemble it at runtime.
  *
  * The repo's other option is the inline marker `no-hardcoded-colours.test.js`
  * uses for its fixtures, and that would have worked. Assembling is better: a
@@ -104,13 +109,14 @@ maybe('palette whitelist — the estate near-white and near-black', () => {
     expect(entries).not.toContain(PURE_WHITE)
     expect(entries).not.toContain(PURE_BLACK)
     expect(entries).not.toContain(hex('ffffff'))
-    // NOT asserted: the 6-digit pure black. `#000` is already permitted and
-    // legitimately so — both source-of-truth documents use it as the opaque
-    // stop of a `mask-image` radial-gradient, where it is an alpha channel and
-    // not a colour anyone sees. Asserting its absence failed on first run, and
-    // the assertion was the thing that was wrong. The oklch form above is the
-    // one the ban is actually written in ("Lightness 1.0 and 0 are banned as
-    // tokens"), and it is the form a new token would arrive in.
+    // NOT asserted: the hex form of pure black. The three-digit shorthand is
+    // already permitted and legitimately so — both source-of-truth documents
+    // use it as the opaque stop of a `mask-image` radial-gradient, where the
+    // channel is opacity and it is not a colour anyone sees. Asserting its
+    // absence failed on first run, and the assertion was the thing that was
+    // wrong. The oklch forms above are what the ban is actually written in
+    // ("Lightness 1.0 and 0 are banned as tokens") and what a new token would
+    // arrive as.
   })
 
   it('finds no off-palette literal in packages/', () => {
