@@ -113,3 +113,90 @@ matches it byte for byte, the two apps that were excused no longer need to be,
 and the pure white/black count across the estate fell from 16 to 7. All of that
 merged to `development`. Nothing has gone to production — that still waits on
 your visual sign-off, as always.
+
+---
+
+## Correction, same day, added when the sixth app landed
+
+**The paragraph directly above was written one app early.** When it said "all six
+apps, every copy matches it byte for byte", five matched. **crm7 did not** — it was
+still carrying the older 428-line rule against an 814-line source, and it was the
+one app where that mattered most. It is fixed now (crm7#1674, parent bsuite#1953),
+and the sentence is true as you read it. I am leaving the original wording visible
+rather than editing it silently, because this document's own subject is a number
+that outlived its measurement.
+
+**What crm7's old copy could not see.** `pdf-lib` and `@react-pdf/renderer` write
+colour channels on a 0–1 scale, so in those files `rgb(1,1,1)` **is** pure white —
+the same banned value as `#ffffff`, just in the notation a PDF engine uses. crm7's
+old rule read it as an ordinary "prefer a token" complaint, and both of the
+document-format exemptions switch that complaint off. Measured on the tree, not
+inferred: in a file that genuinely imports the PDF renderer, and again in a file
+marked as email HTML, `rgb(1,1,1)` was **not reported at all**. Under the new rule
+it is reported in both, as banned outright.
+
+That is the part worth your attention: **crm7 is the app that emits the
+e-signature certificate and the client invoice email** — the two files that carry
+exactly those exemption markers. The check that was blind to pure white in a PDF
+was the one running inside the app that writes the PDFs.
+
+**Nothing is waived any more.** The excused list is now empty and its ceiling is
+zero, so the next app that diverges fails the build instead of being added to a
+list. That is the end state item 1 above was asking about — the ownership rule and
+your decision on a clock still apply to whatever gets waived *next*, but there is
+nothing outstanding for them to be stale about today.
+
+---
+
+## A third finding — nothing for you to decide, but you should know
+
+Landing the rule in crm7 turned over a rock. **Seventeen pure whites were sitting
+in the PDF documents your clients actually receive**, and no check has ever
+reported one of them:
+
+| document | pure whites |
+| --- | --- |
+| NSGTO Standard 2 compliance pack | 5 |
+| Invoice PDF | 4 |
+| **Charge-rate quote — the PDF the signing page produces** | **4** |
+| Apprentice report | 1 |
+| F17 | 1 |
+| Fair Work retention | 1 |
+| Guardian-consent signature canvas | 1 |
+
+They are fixed (crm7#1674), replaced with the near-white crm7's own stylesheet
+already uses. Nothing looks different to the eye — that is the point of a
+near-white — but the ruling is absolute and these were breaking it.
+
+**Why nothing caught them.** Two separate checks missed them for two unrelated
+reasons, which is the part that should worry you more than the seventeen.
+
+The *build check* looks for a colour where a colour normally sits. These were
+written as an argument handed to a small converter function, because the PDF
+engine cannot read the modern colour notation and needs it translated first. That
+is the *right* way to write them — it is why the PDF code uses proper tokens
+instead of raw hex — and it happens to be the one place the check does not look.
+
+The *estate-wide count* — the "16 down to 7" number in the paragraph above — did
+find all seventeen, and then filed them as **excused**, because its excuse list
+matches on file names and every one of these files is called something like
+`renderInvoicePdf` or `PdfDocument`. Measured: crm7's row read `1 / 32` before the
+fix and `1 / 15` after. The 7 never moved, and it was never wrong — it was
+answering a question these values had been excluded from.
+
+That list is doing two jobs under one name. "A test file, not product" is a fair
+reason to skip something. "A PDF, which cannot take a modern colour token" is a
+reason to relax the *format*, not the ban on pure white — the same distinction the
+build check already makes correctly. Splitting it is part of bsuite#1962.
+
+**Why I did not widen the check today.** It is one shared implementation, so
+widening it changes all six apps at once, on the same day five of them went green
+and every excuse-ceiling reached zero. Widening before anyone has measured what it
+finds in the other five would turn the whole estate red with nowhere left to park
+it — which is exactly how this rule got switched off the first time. It is written
+up with the measurement and the test it needs, as bsuite#1962, to be done the way
+the last one was: measure each app, fix, then widen.
+
+**Nothing is needed from you on this one.** It is here because "your signed quotes
+contained a banned colour for their whole life" is not something you should read
+in a commit message.
