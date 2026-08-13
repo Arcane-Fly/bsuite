@@ -149,7 +149,7 @@ const SYNCED_RULES = [
     // holding the count at 91. So this row went from silent-pass to genuinely
     // covered, and the comment saying otherwise had already outlived its fact.
     submodules: ALL_SUBMODULES,
-    // 3 -> 1 (bsuite#1945), 1 -> 0 (bsuite#1953). crm7#1674 regenerated the last
+    // 3 -> 1 (bsuite#1945), 1 -> 0 (bsuite#1970). crm7#1674 regenerated the last
     // copy and this commit bumps its pointer, so nothing is waived on this rule
     // anywhere in the estate. Ceilings shrink only; a zero ceiling means the next
     // divergence on the colour rule is a hard failure with no place to park it.
@@ -164,7 +164,7 @@ const SYNCED_RULES = [
     source: 'packages/eslint-config/rules/no-text-white.js',
     filename: 'no-text-white.js',
     submodules: ['crm7', 'business-suite-unified', 'conduit'],
-    // 2 -> 1 (bsuite#1945), 1 -> 0 (bsuite#1953). crm7#1674 took the reconciled
+    // 2 -> 1 (bsuite#1945), 1 -> 0 (bsuite#1970). crm7#1674 took the reconciled
     // body in the same commit as the colour rule; all three copies now agree.
     maxWaived: 0,
   },
@@ -277,7 +277,7 @@ const MAX_MANIFEST_UNLISTED = 0
  * check prints a notice when a listed copy turns out to be in sync already.
  */
 const KNOWN_DRIFTED = {
-  // EMPTY as of 2026-08-13 (bsuite#1953). Every entry that was ever here has been
+  // EMPTY as of 2026-08-13 (bsuite#1970). Every entry that was ever here has been
   // cleared by regenerating the copy, not by raising a ceiling.
   //
   // crm7/no-hardcoded-colours.js was the last one out (crm7#1674). Its waiver said

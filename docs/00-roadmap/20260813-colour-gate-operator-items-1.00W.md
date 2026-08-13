@@ -121,7 +121,7 @@ your visual sign-off, as always.
 **The paragraph directly above was written one app early.** When it said "all six
 apps, every copy matches it byte for byte", five matched. **crm7 did not** — it was
 still carrying the older 428-line rule against an 814-line source, and it was the
-one app where that mattered most. It is fixed now (crm7#1674, parent bsuite#1953),
+one app where that mattered most. It is fixed now (crm7#1674, parent bsuite#1970),
 and the sentence is true as you read it. I am leaving the original wording visible
 rather than editing it silently, because this document's own subject is a number
 that outlived its measurement.
