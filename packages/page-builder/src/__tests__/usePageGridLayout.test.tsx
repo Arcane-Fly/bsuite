@@ -31,7 +31,14 @@ describe('usePageGridLayout', () => {
     expect(layouts.lg).toHaveLength(3);
     expect(layouts.md).toHaveLength(3);
 
-    for (const bp of ['sm', 'xs', 'xxs'] as const) {
+    // D-75: sm mirrors lg — react-grid-layout resolves its breakpoint from the
+    // CONTAINER width, so sm is where most real desktop sessions land once the
+    // app shell's sidebar is subtracted. Collapsing it to a full-width stack
+    // made the columns slider inert on exactly those sessions.
+    expect(layouts.sm).toHaveLength(3);
+    expect(layouts.sm.map((item) => item.w)).toEqual(lgOnly.lg.map((item) => item.w));
+
+    for (const bp of ['xs', 'xxs'] as const) {
       const stacked = layouts[bp];
       expect(stacked).toHaveLength(3);
       for (const item of stacked) {
@@ -115,6 +122,202 @@ describe('usePageGridLayout', () => {
     expect(out.sm?.[1]).toMatchObject({ x: 6, w: 6 });
     expect(out.xs?.every((item) => item.x === 0 && item.w === 12)).toBe(true);
     expect(out.xxs?.every((item) => item.x === 0 && item.w === 12)).toBe(true);
+  });
+
+  // ── D-75 / D-76 regressions (operator directive 2026-08-13) ─────────────
+  describe('breakpoint canonicalisation on persist (D-75)', () => {
+    function makeStatefulAdapter() {
+      const store = new Map<string, unknown>();
+      const adapter: PageGridPreferenceFactory = (key, fallback) => {
+        type T = typeof fallback;
+        const current = (store.has(key) ? store.get(key) : fallback) as T;
+        return {
+          value: current,
+          setValue: (next) => {
+            const previous = (store.has(key) ? store.get(key) : fallback) as T;
+            const resolved = typeof next === 'function' ? (next as (p: T) => T)(previous) : next;
+            store.set(key, resolved);
+          },
+          loaded: true,
+        };
+      };
+      return { adapter, store };
+    }
+
+    /**
+     * `onLayoutChange` commits on a TRAILING requestAnimationFrame so a burst
+     * of ~60Hz resize ticks coalesces into one adapter write. Nothing is stored
+     * until that frame runs, so a test that asserts immediately reads the
+     * pre-gesture value and passes or fails for the wrong reason.
+     */
+    async function flushLayoutCommit() {
+      await act(async () => {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      });
+    }
+
+    const lgOnly: GridLayouts = {
+      lg: [
+        { i: 'a', x: 0, y: 0, w: 6, h: 4 },
+        { i: 'b', x: 6, y: 0, w: 6, h: 4 },
+      ],
+    };
+
+    it('persists ONLY lg, never the derived breakpoints react-grid-layout echoes back', async () => {
+      const { adapter, store } = makeStatefulAdapter();
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'persist-lg-only',
+          defaultLayouts: lgOnly,
+          preferenceAdapter: adapter,
+        }),
+      );
+
+      act(() => result.current.setIsEditing(true));
+
+      // react-grid-layout hands back EVERY breakpoint on every gesture. Before
+      // this fix all five were written straight through, which made the derived
+      // ones "consumer-supplied" and froze them against later changes to lg and
+      // to the columns slider.
+      const echo: GridLayouts = {
+        lg: [{ i: 'a', x: 0, y: 0, w: 4, h: 4 }, { i: 'b', x: 4, y: 0, w: 8, h: 4 }],
+        md: [{ i: 'a', x: 0, y: 0, w: 4, h: 4 }, { i: 'b', x: 4, y: 0, w: 8, h: 4 }],
+        sm: [{ i: 'a', x: 0, y: 0, w: 12, h: 4 }, { i: 'b', x: 0, y: 4, w: 12, h: 4 }],
+        xs: [{ i: 'a', x: 0, y: 0, w: 12, h: 4 }, { i: 'b', x: 0, y: 4, w: 12, h: 4 }],
+        xxs: [{ i: 'a', x: 0, y: 0, w: 12, h: 4 }, { i: 'b', x: 0, y: 4, w: 12, h: 4 }],
+      };
+      act(() => result.current.onLayoutChange(null, echo));
+      await flushLayoutCommit();
+
+      const saved = store.get('page:persist-lg-only_grid_layouts') as GridLayouts;
+      expect(Object.keys(saved)).toEqual(['lg']);
+      expect(saved.lg.map((item) => item.w)).toEqual([4, 8]);
+    });
+
+    it('folds a gesture made at md back onto lg so the arrangement follows the user', async () => {
+      const { adapter, store } = makeStatefulAdapter();
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'persist-from-md',
+          defaultLayouts: lgOnly,
+          preferenceAdapter: adapter,
+        }),
+      );
+
+      act(() => result.current.setIsEditing(true));
+      act(() => result.current.handleBreakpointChange('md'));
+
+      // lg carries the PRE-gesture values; md carries the gesture. Reading lg
+      // verbatim (the old behaviour) discarded the edit for anyone whose
+      // container later resolved to lg.
+      act(() =>
+        result.current.onLayoutChange(null, {
+          lg: [{ i: 'a', x: 0, y: 0, w: 6, h: 4 }, { i: 'b', x: 6, y: 0, w: 6, h: 4 }],
+          md: [{ i: 'a', x: 0, y: 0, w: 2, h: 9 }, { i: 'b', x: 2, y: 0, w: 10, h: 4 }],
+        } as GridLayouts),
+      );
+      await flushLayoutCommit();
+
+      const saved = store.get('page:persist-from-md_grid_layouts') as GridLayouts;
+      expect(saved.lg.map((item) => item.w)).toEqual([2, 10]);
+    });
+
+    it('refuses to write a gesture made at a stacked phone breakpoint', async () => {
+      const { adapter, store } = makeStatefulAdapter();
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'persist-from-xs',
+          defaultLayouts: lgOnly,
+          preferenceAdapter: adapter,
+        }),
+      );
+
+      act(() => result.current.setIsEditing(true));
+      act(() => result.current.handleBreakpointChange('xs'));
+      const before = JSON.stringify(store.get('page:persist-from-xs_grid_layouts'));
+
+      act(() =>
+        result.current.onLayoutChange(null, {
+          lg: lgOnly.lg,
+          xs: [{ i: 'b', x: 0, y: 0, w: 12, h: 4 }, { i: 'a', x: 0, y: 4, w: 12, h: 4 }],
+        } as GridLayouts),
+      );
+      await flushLayoutCommit();
+
+      // A phone renders a full-width stack, so the gesture carries only a
+      // vertical order. Writing it to lg would flatten a multi-column desktop
+      // arrangement the user cannot even see on that device.
+      expect(JSON.stringify(store.get('page:persist-from-xs_grid_layouts'))).toBe(before);
+    });
+
+    it('drops derived breakpoints already frozen into a stored layout', () => {
+      const { adapter, store } = makeStatefulAdapter();
+      // Exactly the shape every existing user has stored: lg plus four frozen
+      // derived breakpoints, sm stretched to full width at the old 12 columns.
+      store.set('page:heal-stored_grid_layouts', {
+        lg: [{ i: 'a', x: 0, y: 0, w: 3, h: 4 }, { i: 'b', x: 3, y: 0, w: 3, h: 4 }],
+        md: [{ i: 'a', x: 0, y: 0, w: 3, h: 4 }, { i: 'b', x: 3, y: 0, w: 3, h: 4 }],
+        sm: [{ i: 'a', x: 0, y: 0, w: 12, h: 4 }, { i: 'b', x: 0, y: 4, w: 12, h: 4 }],
+        xs: [{ i: 'a', x: 0, y: 0, w: 12, h: 4 }, { i: 'b', x: 0, y: 4, w: 12, h: 4 }],
+        xxs: [{ i: 'a', x: 0, y: 0, w: 12, h: 4 }, { i: 'b', x: 0, y: 4, w: 12, h: 4 }],
+      });
+      store.set('page:heal-stored_grid_cols', 6);
+      store.set('page:heal-stored_grid_base_cols', 6);
+
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'heal-stored',
+          defaultLayouts: lgOnly,
+          preferenceAdapter: adapter,
+        }),
+      );
+
+      // sm is re-derived from lg instead of returning the frozen full-width
+      // stack, so the user's 3-wide cards survive at the breakpoint they are
+      // actually rendered at.
+      const out = result.current.currentLayouts;
+      expect(out.sm.map((item) => item.w)).toEqual([3, 3]);
+      expect(out.lg.map((item) => item.w)).toEqual([3, 3]);
+    });
+  });
+
+  describe('autoHeight default for raw consumers (D-76)', () => {
+    it('defaults autoHeight to true on items that do not state one', () => {
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'autoheight-default',
+          // A raw PageGridLayout consumer's hand-written layout array. Sixteen
+          // of the eighteen across the suite look exactly like this.
+          defaultLayouts: { lg: [{ i: 'panel', x: 0, y: 0, w: 12, h: 6 }] },
+          preferenceAdapter: noopPreferenceAdapter,
+        }),
+      );
+      expect(result.current.currentLayouts.lg[0].autoHeight).toBe(true);
+    });
+
+    it('honours an explicit per-item opt-out', () => {
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'autoheight-optout',
+          defaultLayouts: { lg: [{ i: 'virtualized', x: 0, y: 0, w: 12, h: 6, autoHeight: false }] },
+          preferenceAdapter: noopPreferenceAdapter,
+        }),
+      );
+      expect(result.current.currentLayouts.lg[0].autoHeight).toBe(false);
+    });
+
+    it('honours a page-level defaultAutoHeight={false}', () => {
+      const { result } = renderHook(() =>
+        usePageGridLayout({
+          pageKey: 'autoheight-page-optout',
+          defaultLayouts: { lg: [{ i: 'panel', x: 0, y: 0, w: 12, h: 6 }] },
+          preferenceAdapter: noopPreferenceAdapter,
+          defaultAutoHeight: false,
+        }),
+      );
+      expect(result.current.currentLayouts.lg[0].autoHeight).toBe(false);
+    });
   });
 
   describe('applyAutoHeightRows (derived in-memory auto-height — quality-review redesign)', () => {
