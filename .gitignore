@@ -82,3 +82,25 @@ visual.md
 # Python bytecode — scripts/check-migration-floor.py and friends generate this
 __pycache__/
 *.pyc
+
+# ── Environment files — canonical block, KEEP LAST ───────────────────────────
+# Ignore every `.env*` variant; track only templates.
+#
+# Why a glob instead of a list: the rules above enumerated specific names, so
+# anything not on the list fell through — `.env.production`, `.env.staging`,
+# `.env.vercel`, and ad-hoc copies like `.env.bak` / `.env.old` / `.env.save`
+# were all committable. Non-template `.env` files have reached this estate's
+# history before (BSU's "secret incident #27556716", crm7's `.env` carrying a
+# service_role key, JWT secret and Postgres password). An enumerated list only
+# ever covers the names someone thought of.
+#
+# ORDER MATTERS: git applies the LAST matching rule, so the negations must sit
+# below the glob, and this block must stay at the end of the file. A later
+# `.env*` line anywhere below would silently re-ignore the templates.
+#
+# Check a name before trusting it — grep of this file is not the authority:
+#     git check-ignore -v --no-index .env.production
+.env*
+!.env*.example
+!.env*.template
+!.env*.sample
