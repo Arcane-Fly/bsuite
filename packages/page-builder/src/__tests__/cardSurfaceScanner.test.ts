@@ -174,6 +174,33 @@ describe('.map() rendering cards', () => {
     expect(f?.detail).toContain('.map()');
   });
 
+  it('CATCHES a .map() of CLASS surfaces, not just of card components', () => {
+    // Regression: the first version of hasMappedCards built its alternation
+    // from cardTags only and ignored classSurfaces, so `.map(api => <div
+    // className="glass-card">…)` — N cards in one grid slot — read as clean.
+    // This is BSU's Government.tsx#apis shape exactly, and only its
+    // hand-maintained ledger knew about it. Found by the BSU lane while
+    // consuming this scanner.
+    write(
+      'src/pages/mapped-class-surface.tsx',
+      `export const P = () => (
+        <PageGridLayout pageKey="/g" widgets={{
+          apis: (<div>{apis.map(api => <div key={api.id} className="glass-card p-4">{api.name}</div>)}</div>)
+        }} />)`,
+    );
+    const blind = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(blind.findings.some((x) => x.file.endsWith('mapped-class-surface.tsx'))).toBe(false);
+
+    const seeing = scanCardSurfaces({
+      ...BASE,
+      projectRoot: root,
+      classSurfaces: [/glass-card/],
+    });
+    const f = seeing.findings.find((x) => x.file.endsWith('mapped-class-surface.tsx'));
+    expect(f?.idiom).toBe('glued-widget');
+    expect(f?.detail).toContain('.map()');
+  });
+
   it('CATCHES a parenthesised arrow too', () => {
     write(
       'src/pages/mapped-parens.tsx',

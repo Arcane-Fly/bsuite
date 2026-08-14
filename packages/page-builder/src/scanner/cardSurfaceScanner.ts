@@ -164,12 +164,33 @@ function countCardTags(source: string, config: CardSurfaceScannerConfig): number
  */
 function hasMappedCards(source: string, config: CardSurfaceScannerConfig): boolean {
   const tags = config.cardTags.join('|');
-  return (
+  if (
     new RegExp(`\\.map\\s*\\([\\s\\S]*?=>\\s*\\(?\\s*<(${tags})[\\s/>]`).test(source) ||
     new RegExp(`\\.map\\s*\\([\\s\\S]*?\\{[\\s\\S]*?return\\s*\\(?\\s*<(${tags})[\\s/>]`).test(
       source,
     )
-  );
+  )
+    return true;
+
+  // A mapped CLASS surface is still a mapped card.
+  //
+  // This was missed on the first pass: the tag alternation above is built from
+  // `cardTags` only, so `.map(api => <div className="glass-card">…)` produced N
+  // cards inside one grid slot and read as clean. BSU's `Government.tsx#apis`
+  // is exactly that shape, and only its hand-maintained ledger knew — which is
+  // the failure mode this whole module exists to end. `countCardTags` already
+  // counts class surfaces; the mapped check has to as well or the two disagree.
+  for (const re of config.classSurfaces ?? []) {
+    const src = re.source;
+    if (
+      new RegExp(`\\.map\\s*\\([\\s\\S]*?=>\\s*\\(?\\s*<[^>]*?${src}`).test(source) ||
+      new RegExp(`\\.map\\s*\\([\\s\\S]*?\\{[\\s\\S]*?return\\s*\\(?\\s*<[^>]*?${src}`).test(
+        source,
+      )
+    )
+      return true;
+  }
+  return false;
 }
 
 /** Extract the body of every `<CanvasCard …> … </CanvasCard>` block. */
