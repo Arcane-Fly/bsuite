@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/page-builder",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Shared BSuite responsive page-builder grid and layout persistence primitives",
   "type": "module",
   "license": "UNLICENSED",
@@ -23,7 +23,11 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./styles.css": "./src/styles/react-grid-layout-overrides.css"
+    "./styles.css": "./src/styles/react-grid-layout-overrides.css",
+    "./scanner": {
+      "import": "./dist/scanner/index.js",
+      "types": "./dist/scanner/index.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -70,6 +74,7 @@
     "react-resizable": "^4.0.1",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "@types/node": "^25.9.2"
   }
 }
