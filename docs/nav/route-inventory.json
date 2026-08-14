@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "routes": [
     {
       "app": "braden",
@@ -19,6 +19,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -44,6 +45,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -69,6 +71,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -94,6 +97,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -119,6 +123,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -144,6 +149,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -169,6 +175,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -194,6 +201,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -219,6 +227,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -244,6 +253,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -269,6 +279,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -294,6 +305,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -319,6 +331,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -344,6 +357,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -369,6 +383,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -394,6 +409,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -419,6 +435,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -444,6 +461,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -469,6 +487,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -494,6 +513,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -519,6 +539,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -544,6 +565,7 @@
         "icon": "LayoutDashboard",
         "order": 0
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -569,6 +591,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -594,6 +617,7 @@
         "icon": "ShieldCheck",
         "order": 10
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -619,6 +643,7 @@
         "icon": "Palette",
         "order": 14
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -644,6 +669,7 @@
         "icon": "KeyRound",
         "order": 13
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -669,6 +695,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -694,6 +721,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -719,6 +747,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -744,6 +773,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -769,6 +799,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -794,6 +825,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -819,6 +851,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -844,6 +877,7 @@
         "icon": "Building2",
         "order": 11
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -869,6 +903,7 @@
         "icon": "Users",
         "order": 12
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -894,6 +929,7 @@
         "icon": "TrendingUp",
         "order": 2
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -919,6 +955,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -944,6 +981,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -969,6 +1007,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -994,6 +1033,7 @@
         "icon": "CreditCard",
         "order": 8
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1019,6 +1059,7 @@
         "icon": "Palette",
         "order": 5
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1044,6 +1085,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1069,6 +1111,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1096,6 +1139,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1123,6 +1167,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1150,6 +1195,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1177,6 +1223,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1204,6 +1251,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1231,6 +1279,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1258,6 +1307,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1285,6 +1335,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1312,6 +1363,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1339,6 +1391,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1366,6 +1419,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1393,6 +1447,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1420,6 +1475,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1447,6 +1503,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1474,6 +1531,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1501,6 +1559,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1528,6 +1587,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1555,6 +1615,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1582,6 +1643,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1609,6 +1671,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1636,6 +1699,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1663,6 +1727,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1690,6 +1755,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1717,6 +1783,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1744,6 +1811,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1771,6 +1839,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1798,6 +1867,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1825,6 +1895,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1852,6 +1923,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1877,6 +1949,7 @@
         "icon": "BookOpen",
         "order": 3
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1902,6 +1975,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1927,6 +2001,7 @@
         "icon": "FileText",
         "order": 4
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1952,6 +2027,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -1977,6 +2053,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2002,6 +2079,7 @@
         "icon": "Landmark",
         "order": 7
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2027,6 +2105,7 @@
         "icon": "ShieldCheck",
         "order": 6
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2052,6 +2131,7 @@
         "icon": "Lightbulb",
         "order": 1
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2077,6 +2157,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2102,6 +2183,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2127,6 +2209,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2152,6 +2235,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2177,6 +2261,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2202,6 +2287,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2227,6 +2313,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2252,6 +2339,7 @@
         "icon": "CreditCard",
         "order": 9
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2277,6 +2365,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2302,6 +2391,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2327,6 +2417,7 @@
         "icon": "Settings",
         "order": 15
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2352,6 +2443,7 @@
         "icon": "Palette",
         "order": 17
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2377,6 +2469,7 @@
         "icon": "Globe",
         "order": 18
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2402,6 +2495,7 @@
         "icon": "Building2",
         "order": 16
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2427,6 +2521,7 @@
         "icon": "UserCog",
         "order": 19
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2452,6 +2547,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2477,6 +2573,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2502,6 +2599,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2527,6 +2625,7 @@
         "icon": "BarChart3",
         "order": 9
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2552,6 +2651,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2577,6 +2677,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2602,6 +2703,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2627,6 +2729,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2652,6 +2755,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "none",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2677,6 +2781,7 @@
         "icon": "Users",
         "order": 0
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2702,6 +2807,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2727,6 +2833,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2752,6 +2859,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2777,6 +2885,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2802,6 +2911,7 @@
         "icon": "ShieldCheck",
         "order": 8
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2827,6 +2937,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2852,6 +2963,7 @@
         "icon": "CalendarDays",
         "order": 5
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2877,6 +2989,7 @@
         "icon": "Briefcase",
         "order": 2
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2902,6 +3015,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2927,6 +3041,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2952,6 +3067,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2977,6 +3093,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3002,6 +3119,7 @@
         "icon": "FileText",
         "order": 4
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3027,6 +3145,7 @@
         "icon": "ClipboardCheck",
         "order": 7
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3052,6 +3171,7 @@
         "icon": "KanbanSquare",
         "order": 3
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3077,6 +3197,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3102,6 +3223,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3127,6 +3249,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3152,6 +3275,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3177,6 +3301,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3202,6 +3327,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3227,6 +3353,7 @@
         "icon": "UserCheck",
         "order": 6
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3252,6 +3379,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3277,6 +3405,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3302,6 +3431,7 @@
         "icon": "Settings",
         "order": 10
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3327,6 +3457,7 @@
         "icon": "Database",
         "order": 11
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3352,6 +3483,7 @@
         "icon": "FolderOpen",
         "order": 1
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3377,6 +3509,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3402,6 +3535,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3427,6 +3561,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3452,6 +3587,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3477,6 +3613,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3502,6 +3639,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3527,6 +3665,7 @@
         "icon": "Settings",
         "order": 100
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3552,6 +3691,7 @@
         "icon": "Settings",
         "order": 101
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3577,6 +3717,7 @@
         "icon": "ShieldCheck",
         "order": 69
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3602,6 +3743,7 @@
         "icon": "ShieldCheck",
         "order": 68
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3627,6 +3769,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3652,6 +3795,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3677,6 +3821,7 @@
         "icon": "Sparkles",
         "order": 91
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3702,6 +3847,7 @@
         "icon": "BarChart3",
         "order": 30
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3727,6 +3873,7 @@
         "icon": "BarChart3",
         "order": 37
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3752,6 +3899,7 @@
         "icon": "BarChart3",
         "order": 36
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3777,6 +3925,7 @@
         "icon": "BarChart3",
         "order": 38
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3802,6 +3951,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3827,6 +3977,7 @@
         "icon": "Building2",
         "order": 109
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3852,6 +4003,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3877,6 +4029,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3902,6 +4055,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3927,6 +4081,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3952,6 +4107,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -3977,6 +4133,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4002,6 +4159,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4027,6 +4185,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4052,6 +4211,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4077,6 +4237,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4102,6 +4263,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4127,6 +4289,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4152,6 +4315,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4177,6 +4341,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4202,6 +4367,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4227,6 +4393,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4252,6 +4419,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4277,6 +4445,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4302,6 +4471,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4327,6 +4497,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4352,6 +4523,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4377,6 +4549,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4402,6 +4575,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4427,6 +4601,7 @@
         "icon": "DollarSign",
         "order": 47
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4452,6 +4627,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4477,6 +4653,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4502,6 +4679,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4527,6 +4705,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4552,6 +4731,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4577,6 +4757,7 @@
         "icon": "MessageSquare",
         "order": 75
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4602,6 +4783,7 @@
         "icon": "DollarSign",
         "order": 49
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4627,6 +4809,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4652,6 +4835,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4677,6 +4861,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4702,6 +4887,7 @@
         "icon": "DollarSign",
         "order": 50
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4727,6 +4913,7 @@
         "icon": "DollarSign",
         "order": 51
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4752,6 +4939,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4777,6 +4965,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4802,6 +4991,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4827,6 +5017,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4852,6 +5043,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4877,6 +5069,7 @@
         "icon": "Users",
         "order": 4
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4902,6 +5095,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4927,6 +5121,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4952,6 +5147,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -4977,6 +5173,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5002,6 +5199,7 @@
         "icon": "MessageSquare",
         "order": 73
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5027,6 +5225,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5052,6 +5251,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5077,6 +5277,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5102,6 +5303,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5127,6 +5329,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5152,6 +5355,7 @@
         "icon": "BookOpen",
         "order": 90
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5177,6 +5381,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5202,6 +5407,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5227,6 +5433,7 @@
         "icon": "ShieldCheck",
         "order": 61
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5252,6 +5459,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5277,6 +5485,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5302,6 +5511,7 @@
         "icon": "ShieldCheck",
         "order": 67
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5327,6 +5537,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5352,6 +5563,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5377,6 +5589,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5402,6 +5615,7 @@
         "icon": "ShieldCheck",
         "order": 63
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5427,6 +5641,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5452,6 +5667,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5477,6 +5693,7 @@
         "icon": "ShieldCheck",
         "order": 65
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5502,6 +5719,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5527,6 +5745,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5552,6 +5771,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5577,6 +5797,7 @@
         "icon": "ShieldCheck",
         "order": 64
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5602,6 +5823,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5627,6 +5849,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5652,6 +5875,7 @@
         "icon": "Users",
         "order": 0
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5677,6 +5901,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5702,6 +5927,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5727,6 +5953,7 @@
         "icon": "Users",
         "order": 1
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5752,6 +5979,7 @@
         "icon": "Users",
         "order": 2
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5777,6 +6005,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5802,6 +6031,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5827,6 +6057,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5852,6 +6083,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5877,6 +6109,7 @@
         "icon": "Users",
         "order": 3
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5902,6 +6135,7 @@
         "icon": "FileText",
         "order": 77
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5927,6 +6161,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5952,6 +6187,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -5977,6 +6213,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6002,6 +6239,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6027,6 +6265,7 @@
         "icon": "FileText",
         "order": 78
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6052,6 +6291,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6077,6 +6317,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6102,6 +6343,7 @@
         "icon": "LayoutDashboard",
         "order": 112
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6127,6 +6369,7 @@
         "icon": "BarChart3",
         "order": 35
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6152,6 +6395,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6177,6 +6421,7 @@
         "icon": "TrendingUp",
         "order": 29
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6202,6 +6447,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6227,6 +6473,7 @@
         "icon": "FileText",
         "order": 76
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6252,6 +6499,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6277,6 +6525,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6302,6 +6551,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6327,6 +6577,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6352,6 +6603,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6377,6 +6629,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6402,6 +6655,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6427,6 +6681,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6452,6 +6707,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6477,6 +6733,7 @@
         "icon": "Users",
         "order": 14
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6502,6 +6759,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6527,6 +6785,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6552,6 +6811,7 @@
         "icon": "Users",
         "order": 17
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6577,6 +6837,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6602,6 +6863,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6627,6 +6889,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6652,6 +6915,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6677,6 +6941,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6702,6 +6967,7 @@
         "icon": "MapPin",
         "order": 121
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6727,6 +6993,7 @@
         "icon": "MapPin",
         "order": 80
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6752,6 +7019,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6777,6 +7045,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6802,6 +7071,7 @@
         "icon": "MapPin",
         "order": 85
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6827,6 +7097,7 @@
         "icon": "MapPin",
         "order": 81
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6852,6 +7123,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6877,6 +7149,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6902,6 +7175,7 @@
         "icon": "MapPin",
         "order": 82
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6927,6 +7201,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6952,6 +7227,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -6977,6 +7253,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7002,6 +7279,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7027,6 +7305,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7052,6 +7331,7 @@
         "icon": "MapPin",
         "order": 83
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7077,6 +7357,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7102,6 +7383,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7127,6 +7409,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7152,6 +7435,7 @@
         "icon": "MapPin",
         "order": 84
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7177,6 +7461,7 @@
         "icon": "DollarSign",
         "order": 113
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7202,6 +7487,7 @@
         "icon": "DollarSign",
         "order": 39
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7227,6 +7513,7 @@
         "icon": "DollarSign",
         "order": 40
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7252,6 +7539,7 @@
         "icon": "BarChart3",
         "order": 112
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7277,6 +7565,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7302,6 +7591,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7327,6 +7617,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7352,6 +7643,7 @@
         "icon": "DollarSign",
         "order": 42
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7377,6 +7669,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7402,6 +7695,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7427,6 +7721,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7452,6 +7747,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7477,6 +7773,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7502,6 +7799,7 @@
         "icon": "DollarSign",
         "order": 53
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7527,6 +7825,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7552,6 +7851,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7577,6 +7877,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7602,6 +7903,7 @@
         "icon": "DollarSign",
         "order": 52
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7627,6 +7929,7 @@
         "icon": "ShieldCheck",
         "order": 62
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7652,6 +7955,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7677,6 +7981,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7702,6 +8007,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7727,6 +8033,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7752,6 +8059,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7777,6 +8085,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7802,6 +8111,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7827,6 +8137,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7852,6 +8163,7 @@
         "icon": "ShieldCheck",
         "order": 66
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7877,6 +8189,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7902,6 +8215,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7927,6 +8241,7 @@
         "icon": "BarChart3",
         "order": 111
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7952,6 +8267,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -7977,6 +8293,7 @@
         "icon": "Users",
         "order": 6
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8002,6 +8319,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8027,6 +8345,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8052,6 +8371,7 @@
         "icon": "Users",
         "order": 7
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8077,6 +8397,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8102,6 +8423,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8127,6 +8449,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8152,6 +8475,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8177,6 +8501,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8202,6 +8527,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8227,6 +8553,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8252,6 +8579,7 @@
         "icon": "ShieldCheck",
         "order": 55
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8277,6 +8605,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8302,6 +8631,7 @@
         "icon": "Users",
         "order": 8
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8327,6 +8657,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8352,6 +8683,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8377,6 +8709,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8402,6 +8735,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8427,6 +8761,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8452,6 +8787,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8477,6 +8813,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8502,6 +8839,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8527,6 +8865,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8552,6 +8891,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8577,6 +8917,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8602,6 +8943,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8627,6 +8969,7 @@
         "icon": "BarChart3",
         "order": 34
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8652,6 +8995,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8677,6 +9021,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8702,6 +9047,7 @@
         "icon": "TrendingUp",
         "order": 23
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8727,6 +9073,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8752,6 +9099,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8777,6 +9125,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8802,6 +9151,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8827,6 +9177,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8852,6 +9203,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8877,6 +9229,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8902,6 +9255,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8927,6 +9281,7 @@
         "icon": "CalendarOff",
         "order": 119
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8952,6 +9307,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -8977,6 +9333,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9002,6 +9359,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9027,6 +9385,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9052,6 +9411,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9077,6 +9437,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9102,6 +9463,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9127,6 +9489,7 @@
         "icon": "Users",
         "order": 22
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9152,6 +9515,7 @@
         "icon": "TrendingUp",
         "order": 24
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9177,6 +9541,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9202,6 +9567,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9227,6 +9593,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9252,6 +9619,7 @@
         "icon": "DollarSign",
         "order": 44
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9277,6 +9645,7 @@
         "icon": "DollarSign",
         "order": 45
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9302,6 +9671,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9327,6 +9697,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9352,6 +9723,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9377,6 +9749,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9402,6 +9775,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9427,6 +9801,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9452,6 +9827,7 @@
         "icon": "Clock",
         "order": 107
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9477,6 +9853,7 @@
         "icon": "Building2",
         "order": 110
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9502,6 +9879,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9527,6 +9905,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9552,6 +9931,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9577,6 +9957,7 @@
         "icon": "Users",
         "order": 16
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9602,6 +9983,7 @@
         "icon": "Users",
         "order": 12
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9627,6 +10009,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9652,6 +10035,7 @@
         "icon": "Users",
         "order": 10
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9677,6 +10061,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9702,6 +10087,7 @@
         "icon": "Users",
         "order": 21
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9727,6 +10113,7 @@
         "icon": "Users",
         "order": 20
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9752,6 +10139,7 @@
         "icon": "Users",
         "order": 15
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9777,6 +10165,7 @@
         "icon": "Users",
         "order": 19
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9802,6 +10191,7 @@
         "icon": "TrendingUp",
         "order": 25
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9827,6 +10217,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9852,6 +10243,7 @@
         "icon": "TrendingUp",
         "order": 27
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9877,6 +10269,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9902,6 +10295,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9927,6 +10321,7 @@
         "icon": "TrendingUp",
         "order": 28
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9952,6 +10347,7 @@
         "icon": "Building2",
         "order": 110
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9977,6 +10373,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10002,6 +10399,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10027,6 +10425,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10052,6 +10451,7 @@
         "icon": "Globe",
         "order": 116
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10077,6 +10477,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10102,6 +10503,7 @@
         "icon": "GraduationCap",
         "order": 107
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10127,6 +10529,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10152,6 +10555,7 @@
         "icon": "LayoutDashboard",
         "order": 120
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10177,6 +10581,7 @@
         "icon": "FileText",
         "order": 108
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10202,6 +10607,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10227,6 +10633,7 @@
         "icon": "FileText",
         "order": 109
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10252,6 +10659,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10277,6 +10685,7 @@
         "icon": "LayoutDashboard",
         "order": 118
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10302,6 +10711,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10327,6 +10737,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10352,6 +10763,7 @@
         "icon": "ShieldCheck",
         "order": 111
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10377,6 +10789,7 @@
         "icon": "ShieldCheck",
         "order": 71
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10402,6 +10815,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10427,6 +10841,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10452,6 +10867,7 @@
         "icon": "ShieldCheck",
         "order": 72
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10477,6 +10893,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10502,6 +10919,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10527,6 +10945,7 @@
         "icon": "DollarSign",
         "order": 48
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10552,6 +10971,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10577,6 +10997,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10602,6 +11023,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10627,6 +11049,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10652,6 +11075,7 @@
         "icon": "BarChart3",
         "order": 31
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10677,6 +11101,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10702,6 +11127,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10727,6 +11153,7 @@
         "icon": "BarChart3",
         "order": 33
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10752,6 +11179,7 @@
         "icon": "BarChart3",
         "order": 32
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10777,6 +11205,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10802,6 +11231,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10827,6 +11257,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10852,6 +11283,7 @@
         "icon": "TrendingUp",
         "order": 26
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10877,6 +11309,7 @@
         "icon": "Settings",
         "order": 117
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10902,6 +11335,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10927,6 +11361,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10952,6 +11387,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -10977,6 +11413,7 @@
         "icon": "Settings",
         "order": 93
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11002,6 +11439,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11027,6 +11465,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11052,6 +11491,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11077,6 +11517,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11102,6 +11543,7 @@
         "icon": "Settings",
         "order": 103
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11127,6 +11569,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11152,6 +11595,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11177,6 +11621,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11202,6 +11647,7 @@
         "icon": "Settings",
         "order": 99
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11227,6 +11673,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11252,6 +11699,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11277,6 +11725,7 @@
         "icon": "Settings",
         "order": 95
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11302,6 +11751,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11327,6 +11777,7 @@
         "icon": "Settings",
         "order": 98
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11352,6 +11803,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11377,6 +11829,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11402,6 +11855,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11427,6 +11881,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11452,6 +11907,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11477,6 +11933,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11502,6 +11959,7 @@
         "icon": "Settings",
         "order": 104
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11527,6 +11985,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11552,6 +12011,7 @@
         "icon": "Settings",
         "order": 97
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11577,6 +12037,7 @@
         "icon": "Settings",
         "order": 94
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11602,6 +12063,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11627,6 +12089,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11652,6 +12115,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11677,6 +12141,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11702,6 +12167,7 @@
         "icon": "Settings",
         "order": 105
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11727,6 +12193,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11752,6 +12219,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11777,6 +12245,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11802,6 +12271,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11827,6 +12297,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11852,6 +12323,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11877,6 +12349,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11902,6 +12375,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11927,6 +12401,7 @@
         "icon": "Settings",
         "order": 96
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11952,6 +12427,7 @@
         "icon": "Settings",
         "order": 102
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -11977,6 +12453,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12002,6 +12479,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12027,6 +12505,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12052,6 +12531,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12077,6 +12557,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12102,6 +12583,7 @@
         "icon": "MessageSquare",
         "order": 74
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12127,6 +12609,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12152,6 +12635,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12177,6 +12661,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12202,6 +12687,7 @@
         "icon": "FileText",
         "order": 77
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12227,6 +12713,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12252,6 +12739,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12277,6 +12765,7 @@
         "icon": "Clock",
         "order": 106
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12302,6 +12791,7 @@
         "icon": "BookOpen",
         "order": 91
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12327,6 +12817,7 @@
         "icon": "Users",
         "order": 5
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12352,6 +12843,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12377,6 +12869,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12402,6 +12895,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12427,6 +12921,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12452,6 +12947,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12477,6 +12973,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12502,6 +12999,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12527,6 +13025,7 @@
         "icon": "BookOpen",
         "order": 115
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12552,6 +13051,7 @@
         "icon": "BookOpen",
         "order": 86
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12577,6 +13077,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12602,6 +13103,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12627,6 +13129,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12652,6 +13155,7 @@
         "icon": "BookOpen",
         "order": 87
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12677,6 +13181,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12702,6 +13207,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12727,6 +13233,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12752,6 +13259,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12777,6 +13285,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12802,6 +13311,7 @@
         "icon": "BookOpen",
         "order": 88
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12827,6 +13337,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12852,6 +13363,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12877,6 +13389,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12902,6 +13415,7 @@
         "icon": "BookOpen",
         "order": 89
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12927,6 +13441,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12952,6 +13467,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12977,6 +13493,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13002,6 +13519,7 @@
         "icon": "ShieldCheck",
         "order": 114
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13027,6 +13545,7 @@
         "icon": "ShieldCheck",
         "order": 54
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13052,6 +13571,7 @@
         "icon": "ShieldCheck",
         "order": 110
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13077,6 +13597,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13102,6 +13623,7 @@
         "icon": "ShieldCheck",
         "order": 57
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13127,6 +13649,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13152,6 +13675,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13177,6 +13701,7 @@
         "icon": "ShieldCheck",
         "order": 58
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13202,6 +13727,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13227,6 +13753,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13252,6 +13779,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13277,6 +13805,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13302,6 +13831,7 @@
         "icon": "ShieldCheck",
         "order": 110
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13327,6 +13857,7 @@
         "icon": "ShieldCheck",
         "order": 59
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13352,6 +13883,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13377,6 +13909,7 @@
         "icon": "ShieldCheck",
         "order": 60
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13402,6 +13935,7 @@
         "icon": "Sparkles",
         "order": 92
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13427,6 +13961,7 @@
         "icon": "Calculator",
         "order": 0
       },
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13452,6 +13987,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13477,6 +14013,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13502,6 +14039,7 @@
         "icon": "LayoutDashboard",
         "order": 0
       },
+      "reachable_via": "topnav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13527,6 +14065,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13552,6 +14091,7 @@
         "icon": "BarChart3",
         "order": 2
       },
+      "reachable_via": "topnav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13577,6 +14117,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13602,6 +14143,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13627,6 +14169,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13652,6 +14195,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13677,6 +14221,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13702,6 +14247,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "dynamic_from_list",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13727,6 +14273,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "in_page_nav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13752,6 +14299,7 @@
         "icon": "Rocket",
         "order": 1
       },
+      "reachable_via": "topnav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13777,6 +14325,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13802,6 +14351,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13827,6 +14377,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13852,6 +14403,7 @@
         "icon": "CreditCard",
         "order": 4
       },
+      "reachable_via": "topnav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13877,6 +14429,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13902,6 +14455,7 @@
         "icon": null,
         "order": null
       },
+      "reachable_via": "top_level",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -13927,6 +14481,7 @@
         "icon": "User",
         "order": 3
       },
+      "reachable_via": "topnav",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],

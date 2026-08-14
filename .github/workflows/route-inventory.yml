@@ -71,13 +71,26 @@ jobs:
           drift=0
           for p in $PATHS; do
             if ! git diff --quiet -- "$p"; then
-              echo "::error file=$p::Route inventory drifted. Regenerate: python3 docs/nav/build-inventory.py"
-              git --no-pager diff --stat -- "$p"
-              git --no-pager diff -- "$p" | head -40
+              echo "::error file=$p::Route inventory drifted. Regenerate with: python3 docs/nav/build-inventory.py"
+              git --no-pager diff --stat -- "$p" || true
+              # NOT `git diff | head -40`. Under `set -o pipefail`, head closing the
+              # pipe early sends SIGPIPE to git and the step exits 141 instead of the
+              # intended 1 — which is exactly what run 31787346283 reported, turning a
+              # legitimate drift failure into an inscrutable "exit code 141". Capture
+              # first, truncate the variable, never let a pipe carry the exit status.
+              diff_text="$(git --no-pager diff -- "$p" || true)"
+              printf '%s\n' "$diff_text" | awk 'NR<=40'
+              lines=$(printf '%s\n' "$diff_text" | wc -l)
+              if [ "$lines" -gt 40 ]; then
+                echo "  … $((lines - 40)) more diff lines omitted"
+              fi
               drift=1
             fi
           done
-          if [ "$drift" -ne 0 ]; then exit 1; fi
+          if [ "$drift" -ne 0 ]; then
+            echo "::notice::Drift is usually a submodule pointer moving under a stale committed inventory — regenerate and commit BOTH paths."
+            exit 1
+          fi
           echo "Both inventory paths are up to date."
 
       # Belt and braces: even with zero drift, the two files must be identical.
