@@ -66,16 +66,40 @@ jobs:
       - name: Check if version already published
         id: version-check
         run: |
+          set -euo pipefail
+
+          # D-90 / bsuite#1908 — this check must distinguish THREE outcomes,
+          # not two. `npm view ... 2>/dev/null || echo "not-published"` collapsed
+          # "the version is genuinely absent" and "npm was unreachable, or auth
+          # failed, or the registry 5xx'd" into the same string, and then acted
+          # on it. That is D-92's shape inside a publish step: a gate that
+          # cannot tell "checked nothing" from "found nothing".
+          #
+          #   exit 0 + version matches -> already published, skip
+          #   E404                     -> genuinely absent, publish
+          #   anything else            -> UNKNOWN, fail closed
+          #
+          # Failing closed on UNKNOWN is the conservative direction: a missed
+          # publish is a re-run; a wrong one burns a version number forever.
           PKG_VERSION=$(node -p "require('./package.json').version")
           echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
 
-          PUBLISHED=$(npm view "@bsuite/data-export@${PKG_VERSION}" version 2>/dev/null || echo "not-published")
-          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+          set +e
+          VIEW_OUT=$(npm view "@bsuite/data-export@${PKG_VERSION}" version 2>&1)
+          VIEW_RC=$?
+          set -e
+
+          if [ "$VIEW_RC" -eq 0 ] && [ "$VIEW_OUT" = "$PKG_VERSION" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::@bsuite/data-export@${PKG_VERSION} is already on npm — skipping publish"
-          else
+          elif printf '%s' "$VIEW_OUT" | grep -q 'E404'; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Will publish @bsuite/data-export@${PKG_VERSION}"
+            echo "::notice::Will publish @bsuite/data-export@${PKG_VERSION} (registry reports 404 — genuinely absent)"
+          else
+            echo "::error::Cannot determine whether @bsuite/data-export@${PKG_VERSION} is published."
+            echo "::error::npm view exited ${VIEW_RC}; output below. Failing closed rather than guessing."
+            printf '%s\n' "$VIEW_OUT"
+            exit 1
           fi
 
       - name: Dry-run publish (catches missing files or bad exports)
