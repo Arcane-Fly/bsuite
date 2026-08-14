@@ -11,6 +11,8 @@ on:
       - 'conduit/src/app/**/route.ts'
       - 'conduit/src/config/navigation.ts'
       - 'docs/nav/build-inventory.py'
+      - 'docs/nav/route-inventory.json'
+      - 'business-suite-unified/src/data/route-inventory.json'
 
 jobs:
   check-inventory:
@@ -27,11 +29,51 @@ jobs:
       - name: Regenerate route inventory
         run: python3 docs/nav/build-inventory.py
 
+      # Two paths, both generated in the same run.
+      #
+      # business-suite-unified/src/data/route-inventory.json is a VENDORED copy.
+      # The BSU Route Inspector bundles the inventory at build time and cannot
+      # import across the submodule boundary: Vercel clones each submodule as a
+      # standalone repo, so the parent's docs/ does not exist and vite fails with
+      # UNRESOLVED_IMPORT. The copy is what makes the build work, and this check
+      # is what stops the copy going stale.
       - name: Check for drift
         run: |
-          if ! git diff --quiet docs/nav/route-inventory.json; then
-            echo "::warning::Route inventory has drifted — regenerate with: python3 docs/nav/build-inventory.py"
-            git diff docs/nav/route-inventory.json | head -50
+          set -euo pipefail
+          PATHS="docs/nav/route-inventory.json business-suite-unified/src/data/route-inventory.json"
+          drift=0
+          for p in $PATHS; do
+            if ! git diff --quiet -- "$p"; then
+              echo "::error file=$p::Route inventory drifted. Regenerate: python3 docs/nav/build-inventory.py"
+              git --no-pager diff --stat -- "$p"
+              git --no-pager diff -- "$p" | head -40
+              drift=1
+            fi
+          done
+          if [ "$drift" -ne 0 ]; then exit 1; fi
+          echo "Both inventory paths are up to date."
+
+      # Belt and braces: even with zero drift, the two files must be identical.
+      # A future edit to the generator could write them from different data and
+      # the per-path diff check above would not notice.
+      - name: Assert vendored copy is byte-identical
+        run: |
+          set -euo pipefail
+          if ! cmp -s docs/nav/route-inventory.json business-suite-unified/src/data/route-inventory.json; then
+            echo "::error::Vendored copy differs from the canonical inventory."
             exit 1
           fi
-          echo "Route inventory is up to date"
+          echo "Vendored copy is byte-identical to the canonical inventory."
+
+      # The defect this whole check exists to prevent: a source file reaching out
+      # of the submodule into the parent monorepo. Builds locally, dies on Vercel.
+      - name: Assert no cross-submodule imports of parent docs/
+        run: |
+          set -euo pipefail
+          if grep -rnE "from '(\.\./)+docs/" \
+               business-suite-unified/src crm7/src conduit/src throughput/src braden/src R80.4/src \
+               2>/dev/null; then
+            echo "::error::A submodule source file imports from the parent monorepo's docs/. Vercel builds submodules standalone — vendor the file instead."
+            exit 1
+          fi
+          echo "No cross-submodule imports of parent docs/."

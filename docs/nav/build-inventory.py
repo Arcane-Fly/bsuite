@@ -23,6 +23,13 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 OUTPUT_PATH = os.path.join(SCRIPT_DIR, "route-inventory.json")
 
+# Paths (relative to REPO_ROOT) that must receive a byte-identical copy of the
+# inventory because an app bundles it at build time and cannot reach outside its
+# own submodule. See the write block in main() for why this exists.
+VENDORED_COPIES = [
+    "business-suite-unified/src/data/route-inventory.json",
+]
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -1184,6 +1191,34 @@ def main():
 
     total = len(all_routes)
     print(f"\nWrote {total} routes to {OUTPUT_PATH}")
+
+    # ------------------------------------------------------------------
+    # Vendored copies for app bundles.
+    #
+    # The BSU Developer Portal's Route Inspector imports this JSON at build
+    # time. It originally imported it from THIS path with a `../../../../`
+    # escape out of the submodule. That resolves fine in a monorepo checkout
+    # and fails hard on Vercel, which clones each submodule as a standalone
+    # repo — the parent's docs/ simply does not exist there, so `vite build`
+    # dies with UNRESOLVED_IMPORT on the main bundle.
+    #
+    # Writing the copy HERE, from the single generator, is what stops the two
+    # from drifting. A copy made by hand is a copy that goes stale silently;
+    # `.github/workflows/route-inventory.yml` re-runs this script on any PR
+    # touching route files and fails on a diff, which now covers both paths.
+    # ------------------------------------------------------------------
+    for rel in VENDORED_COPIES:
+        dest = os.path.join(REPO_ROOT, rel)
+        if not os.path.isdir(os.path.dirname(os.path.dirname(dest))):
+            # Submodule not checked out in this working tree — skip rather than
+            # fabricate a directory tree inside a missing submodule.
+            print(f"  (skipped vendored copy, submodule absent: {rel})")
+            continue
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "w", encoding="utf-8") as f:
+            json.dump(output, f, indent=2, sort_keys=False, ensure_ascii=False)
+            f.write("\n")
+        print(f"  vendored -> {rel}")
 
     # Summary by app
     from collections import Counter
