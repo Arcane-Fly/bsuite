@@ -74,6 +74,13 @@ def make_route(*, app, path, route_file, component, layout, auth_type,
             "icon": nav_icon,
             "order": nav_order,
         },
+        # (bsuite#2012) `nav.surface` answers "is this in the app's nav CONFIG?".
+        # It does NOT answer "can a user get here?". A page reached through an
+        # in-page tab bar or a parent-section card grid is surface:"none" and was
+        # therefore counted as an orphan — which is how wiring 45 crm7 pages into
+        # sub-navigation (crm7#1732, verified live 3/5 -> 5/5) moved the orphan
+        # count by exactly zero. Populated by annotate_reachability() below.
+        "reachable_via": "unknown",
         "portal": None,
         "owned_entities": [],
         "data_tables": [],
@@ -1126,6 +1133,112 @@ def dedup_routes(routes):
 # Main
 # ---------------------------------------------------------------------------
 
+
+# ---------------------------------------------------------------------------
+# Reachability (bsuite#2012)
+# ---------------------------------------------------------------------------
+
+def annotate_reachability(routes):
+    """
+    Fill each route's `reachable_via`.
+
+    WHY THIS EXISTS
+    ---------------
+    `nav.surface` is parsed from each app's nav CONFIG. It answers "is this route
+    listed in the sidebar/topnav config?" and nothing else. A page reached through
+    an in-page tab bar or a parent-section card grid is `surface: "none"`, so it
+    was counted as an orphan even after it had been made reachable.
+
+    That produced a concretely wrong number: crm7#1732 wired 45 unreachable pages
+    into sub-navigation — verified live on the deployed preview, /documents going
+    from 3/5 to 5/5 probe hits at every breakpoint — and the orphan count did not
+    move by one.
+
+    HOW
+    ---
+    A route is `in_page_nav` when some OTHER route's source file contains its
+    literal path in a link/navigate position. That is deliberately the same signal
+    a human uses when auditing "can I get here from the parent page?", and it is
+    why the detection is cheap: the parent index files are already on disk.
+
+    Precision notes, stated because a reachability metric that silently
+    over-reports is worse than none:
+      - Only paths with >= 2 segments are matched. A bare "/" or "/admin" appears
+        in too many unrelated strings to be evidence of anything.
+      - Parameterised paths (":", "*") are never matched — a literal
+        "/people/:id" is not what a link contains.
+      - The match must be inside quotes, so a path named in a comment does not
+        count as a link.
+    """
+    by_app = {}
+    for r in routes:
+        by_app.setdefault(r["app"], []).append(r)
+
+    # Cache each app's source text once — these files are large and re-read per
+    # route would be O(routes x files).
+    app_dirs = {
+        "crm7": "crm7/src", "bsu": "business-suite-unified/src",
+        "conduit": "conduit/src", "r80": "R80.4/src",
+        "braden": "braden/src", "throughput": "throughput/src",
+    }
+    corpus = {}
+    for app, rel in app_dirs.items():
+        base = os.path.join(REPO_ROOT, rel)
+        blob = []
+        for root, _dirs, files in os.walk(base):
+            if "node_modules" in root:
+                continue
+            for fn in files:
+                if not fn.endswith((".tsx", ".ts")) or ".test." in fn:
+                    continue
+                try:
+                    with open(os.path.join(root, fn), "r", encoding="utf-8") as fh:
+                        blob.append(fh.read())
+                except OSError:
+                    pass
+        corpus[app] = "\n".join(blob)
+
+    for r in routes:
+        surface = r.get("nav", {}).get("surface", "none")
+        if surface in ("sidebar", "topnav", "header", "footer", "bottom"):
+            r["reachable_via"] = surface
+            continue
+        if r.get("status") == "redirect":
+            r["reachable_via"] = "redirect"
+            continue
+
+        path = r["path"]
+        if ":" in path or "*" in path:
+            # Detail/param routes are reached by clicking a row, not by a literal
+            # link. Calling them orphans has always been wrong.
+            r["reachable_via"] = "dynamic_from_list"
+            continue
+        if path.count("/") < 2:
+            r["reachable_via"] = "top_level"
+            continue
+
+        text = corpus.get(r["app"], "")
+        candidates = [path]
+        # Nested routers register children RELATIVELY: the BSU Developer Portal
+        # lists `path: 'route-inspector'`, never '/developer/route-inspector'.
+        # Matching only the absolute form reported a tab that plainly renders in
+        # the UI as unreachable. Only the last segment is added, and only when it
+        # is distinctive enough (>= 4 chars, contains a hyphen or is not a common
+        # word) to avoid matching unrelated strings.
+        last = path.rsplit("/", 1)[-1]
+        if len(last) >= 4 and last not in ("new", "edit", "list", "view", "index", "create"):
+            candidates.append(last)
+        if any(
+            ("'" + c + "'") in text or ('"' + c + '"') in text or ("`" + c + "`") in text
+            for c in candidates
+        ):
+            r["reachable_via"] = "in_page_nav"
+        else:
+            r["reachable_via"] = "none"
+
+    return routes
+
+
 def main():
     print(f"Repo root: {REPO_ROOT}")
     print("Building nav maps...")
@@ -1172,6 +1285,8 @@ def main():
     print(f"  throughput: {len(throughput_routes)} routes")
     all_routes.extend(throughput_routes)
 
+    annotate_reachability(all_routes)
+
     # Dedup
     all_routes = dedup_routes(all_routes)
 
@@ -1179,7 +1294,7 @@ def main():
     all_routes.sort(key=lambda r: (r["app"], r["path"]))
 
     output = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "routes": all_routes,
     }
 
