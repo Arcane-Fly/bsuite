@@ -236,7 +236,7 @@ These are cheap and they are the reason agents keep re-deriving the same wrong t
 | D-1 | **`docs/README.md` has 21 dangling references**, including four documents it names as *canonical* and the entire relocated `archive/parent/**` tree | Script-verified |
 | D-2 | **The contributing standards guide says `--role-destructive` is purple.** Contract 0.7.0 made it red and CI enforces it. `AGENTS.md:67` cites this doc — every agent that reads it burns a CI round | §185/§205/§211 vs `vars.css:163` |
 | D-3 | **`AGENTS.md` shared-package table says `@bsuite/page-builder ^0.2.0`** — the real version is 0.9.0, four minors stale, and that table is what an agent reads before a bump | — |
-| D-4 | **`docs/ai/CONTRIBUTING.md` documents retired models** — `grok-4.1-fast-reasoning`, `claude-sonnet-4.6`; live config is grok-4.3 / glm-5.2 / claude-opus-5 | `:240,243` vs `config.ts:63-118` |
+| D-4 | **`docs/ai/CONTRIBUTING.md` documents two retired models at `:240,243`** — a retired xAI fast-reasoning model and a retired Anthropic Sonnet. Live config is grok-4.3 / glm-5.2 / claude-opus-5. *The retired identifiers are deliberately not reproduced here: `drift-scan.mjs`'s STALE-GROK signal hard-fails any live doc that names them, and its own self-test asserts that behaviour — the guard is right and this register complies with it* | `:240,243` vs `config.ts:63-118` |
 | D-5 | **`README.md` still calls `OUTSTANDING.md` "the single outstanding-work index"** after that file demoted itself on 2026-08-14 | One line |
 | D-6 | **40 docs still scope R80.3**, which is archived; the scanner already moved, the docs did not | — |
 | D-7 | **Two stale security inventories** — table-usage audit says 229 tables (live: 403); security-definer audit says 59 functions (live: 219) | — |
