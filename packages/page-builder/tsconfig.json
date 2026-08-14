@@ -11,7 +11,14 @@
     "noEmit": true,
     "skipLibCheck": true,
     "lib": ["ES2020", "DOM"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    // Needed by the Node-only `src/scanner/**` entry point (`node:fs`,
+    // `node:path`) and by the `process.env.NODE_ENV` dev guard in
+    // DraggableCardPage. This is a TYPE-ONLY addition: the browser entry point
+    // (`./dist/index.js`) imports nothing from node, and the scanner is
+    // published behind a separate `./scanner` export so it never reaches a
+    // browser bundle.
+    "types": ["node"]
   },
   "include": ["src"]
 }

@@ -1,0 +1,72 @@
+name: shared-package contract
+
+# Two gates for two defect classes that were both live in the estate on
+# 2026-08-14 and that NOTHING reported:
+#
+#   1. RANGE LOCKOUT — conduit declared `@bsuite/page-builder ^0.6.3`. A caret
+#      on a 0.x version is MINOR-locked (`^0.6.3` := `>=0.6.3 <0.7.0`), so it
+#      could not resolve 0.8.0 no matter how many times `pnpm install` ran. The
+#      package was fixed, four apps received the fix, one did not, silently, for
+#      two minors. (conduit#460)
+#
+#   2. UNDECLARED NON-OPTIONAL PEER — throughput declared
+#      `@bsuite/page-builder ^0.8.0` but omitted `react-grid-layout` and
+#      `react-resizable`, which that package marks as required peers. It
+#      resolved only through pnpm's `auto-install-peers` default, so it worked
+#      while being undeclared. (throughput#284)
+#
+# Both gates read the LIVE npm registry rather than a doc table, because the
+# doc table is how this went unnoticed: AGENTS.md still listed
+# `@bsuite/page-builder ^0.2.0 (latest 0.2.2)` while the real latest was 0.8.0.
+#
+# Both gates FAIL CLOSED (D-92): if no submodule package.json is readable, they
+# exit non-zero rather than report a confident zero from an empty check.
+
+on:
+  pull_request:
+    paths:
+      - '**/package.json'
+      - 'packages/**'
+      - '.github/workflows/shared-package-contract.yml'
+      - 'scripts/check-shared-package-*.py'
+  push:
+    branches: [development, main]
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          # The submodules are private repos; the default GITHUB_TOKEN cannot
+          # clone them and fails with "Repository not found". Same pattern and
+          # same fallback as theme-conformance.yml.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Assert submodules are actually present
+        # An uninitialised submodule is an EMPTY DIRECTORY, which passes `-d`.
+        # Checking the dir exists is not enough; check for the file the gates read.
+        run: |
+          missing=0
+          for m in crm7 business-suite-unified conduit throughput braden; do
+            if [ ! -f "$m/package.json" ]; then
+              echo "::error::submodule $m has no package.json — checkout did not populate it"
+              missing=1
+            else
+              echo "ok: $m/package.json present"
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: No consumer is range-locked out of a shipped shared-package fix
+        run: python3 scripts/check-shared-package-reach.py
+
+      - name: No consumer omits a non-optional peer of a shared package
+        run: python3 scripts/check-shared-package-peers.py
