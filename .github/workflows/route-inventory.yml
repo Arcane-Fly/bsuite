@@ -1,0 +1,37 @@
+name: Route Inventory
+on:
+  pull_request:
+    paths:
+      - '*/src/App.tsx'
+      - '*/src/Routes.tsx'
+      - '*/src/main.tsx'
+      - '*/src/config/navigation.ts'
+      - '*/src/components/Navigation.tsx'
+      - 'conduit/src/app/**/page.tsx'
+      - 'conduit/src/app/**/route.ts'
+      - 'conduit/src/config/navigation.ts'
+      - 'docs/nav/build-inventory.py'
+
+jobs:
+  check-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Regenerate route inventory
+        run: python3 docs/nav/build-inventory.py
+
+      - name: Check for drift
+        run: |
+          if ! git diff --quiet docs/nav/route-inventory.json; then
+            echo "::warning::Route inventory has drifted — regenerate with: python3 docs/nav/build-inventory.py"
+            git diff docs/nav/route-inventory.json | head -50
+            exit 1
+          fi
+          echo "Route inventory is up to date"
