@@ -67,6 +67,23 @@ const TEST_FILE_SUFFIXES = [
   '.stories.ts', '.stories.tsx', '.stories.js', '.stories.jsx',
 ];
 const CODE_FILE_SUFFIXES = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+// Deliberate-exception marker, shared verbatim with `scripts/audit-d2c-theme.sh`
+// (its `AUDIT_OK`). Two gates gating the same rule MUST honour the same opt-out,
+// or the annotation silences one and the other still blocks the merge — which is
+// exactly what happened on crm7#1724: `vite.config.ts` carries
+//   theme_color: '#2563eb', // theme-audit-ok: webmanifest needs literal hex
+// A PWA webmanifest cannot express oklch(); `theme_color`/`background_color` are
+// required by spec to be literal CSS colours the browser parses before any
+// stylesheet exists. The theme audit accepted that annotation, this scanner did
+// not, and the disagreement read as a code defect when the code was right.
+//
+// Semantics are copied from that awk one-liner exactly — `index($0,ok) ||
+// index(prev,ok)` — i.e. a plain substring on the flagged line OR on the line
+// immediately above it, the eslint-disable-next-line convention. Deliberately
+// NOT restricted to comment syntax: any stricter test would re-open the same
+// disagreement from the other side, letting the shell audit pass a line this
+// scanner still fails.
+const AUDIT_OK_MARKER = 'theme-audit-ok';
 // JS regex literals can start after these expression-leading punctuators.
 const COOKIE_SSO_REGEX_PREFIX_CHARS = '([{:;,!=?&|+-*%^~<>';
 const ROOT_REQUIRE = createRequire(import.meta.url);
@@ -256,8 +273,14 @@ const SIGNALS = [
   {
     id: 'NEW-HEX-IN-D2C',
     severity: 'fail',
-    rule: 'D2C apps use oklch() via --role-* tokens; raw hex is reserved for braden (corporate brand). Promoted warn -> fail 2026-07-17 (W3 §3.6, bsuite#902) — the signal already scans NEW lines only, so no legacy amnesty is needed.',
+    rule: 'D2C apps use oklch() via --role-* tokens; raw hex is reserved for braden (corporate brand). Promoted warn -> fail 2026-07-17 (W3 §3.6, bsuite#902) — the signal already scans NEW lines only, so no legacy amnesty is needed. Annotate a genuine exception with `theme-audit-ok: <reason>`, the same marker scripts/audit-d2c-theme.sh honours.',
     skill: 'bsuite-brand-system',
+    // OPT-IN, per signal — never global. `theme-audit-ok` is a THEME exception and
+    // must not become a blanket "ignore this line" pragma: if the scan loop applied
+    // it to every signal, a one-line comment would also switch off COOKIE-SSO, the
+    // auth gate this scanner exists to enforce. Only signals that carry the flag
+    // below can be suppressed by it, and only NEW-HEX-IN-D2C does.
+    suppressedByAuditOk: true,
     match: (line, file, fw, repo) => {
       if (repo === 'braden') return null; // corporate-brand exception
       const isUiFile = file.endsWith('.tsx') || file.endsWith('.ts')
@@ -436,6 +459,30 @@ function normalizeAddedLines(lines) {
       ? { text: line, lineNumber: idx + 1 }
       : { text: line.text, lineNumber: line.lineNumber ?? idx + 1 }
   ));
+}
+
+// True when `entries[idx]` carries the deliberate-exception marker on its own
+// text, or on the line IMMEDIATELY ABOVE it in the file.
+//
+// Adjacency is tested on `lineNumber`, never on array position. `entries` holds
+// only the ADDED lines of a diff, so entries[idx - 1] is routinely hundreds of
+// lines away in the real file; comparing array positions would let one annotated
+// addition silence an unrelated addition elsewhere in the same file — a hole big
+// enough to drive the whole signal through.
+//
+// Known and accepted limit: when a line is added UNDER a marker comment that
+// already existed, the marker is not part of the diff and this returns false.
+// The scan then reports a hit the shell audit would have suppressed. That
+// direction is the safe one — a false positive is a nuisance, a false negative
+// is drift shipped — and the same-line form has no such gap, which is why the
+// two vite.config.ts webmanifest lines annotate inline.
+function hasAuditOkMarker(entries, idx) {
+  const entry = entries[idx];
+  if (entry.text.includes(AUDIT_OK_MARKER)) return true;
+  if (idx === 0) return false;
+  const prev = entries[idx - 1];
+  if (prev.lineNumber !== entry.lineNumber - 1) return false;
+  return prev.text.includes(AUDIT_OK_MARKER);
 }
 
 function isCookieSsoIdentChar(ch) {
@@ -850,10 +897,15 @@ function scan({ addedByFile, framework, repoName }) {
     if (isSelfScanExcluded(file)) continue;
     const entries = normalizeAddedLines(lines);
     hits.push(...scanCookieSsoFile(file, entries, framework));
-    for (const entry of entries) {
+    for (let idx = 0; idx < entries.length; idx++) {
+      const entry = entries[idx];
       const line = entry.text;
+      // Computed once per line, not once per signal — the marker is a property
+      // of the LINE, and the lookup walks the previous entry.
+      const auditOk = hasAuditOkMarker(entries, idx);
       for (const sig of SIGNALS) {
         if (sig.id === 'COOKIE-SSO') continue;
+        if (auditOk && sig.suppressedByAuditOk) continue;
         const reason = sig.match(line, file, framework, repoName);
         if (reason) {
           hits.push({
@@ -1002,6 +1054,48 @@ function selfTest() {
     { name: 'NEW-HEX-IN-D2C — non-comment #863 NOT flagged (no color context)', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/pages/foo.tsx': ["  title: 'Fix for #863 and #999'"] },
       expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    // ── theme-audit-ok parity (crm7#1724) ────────────────────────────────
+    // Paired by construction: every suppression case is followed by the SAME
+    // line without the marker. A suppression test that only proves the quiet
+    // direction cannot tell "the marker works" from "the signal stopped
+    // working", which is the failure mode that matters for a hard-fail gate.
+    { name: 'NEW-HEX-IN-D2C — same-line theme-audit-ok suppresses (webmanifest, crm7#1724)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'vite.config.ts': ["          theme_color: '#2563eb', // theme-audit-ok: webmanifest needs literal hex"] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — the SAME line without the marker still hard-fails', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'vite.config.ts': ["          theme_color: '#2563eb',"] },
+      expect: (hits) => hits.some((h) => h.signal === 'NEW-HEX-IN-D2C' && h.severity === 'fail') },
+    // #0a0e1a is the estate's prescribed near-black (bsuite#1976) — a
+    // contract-conformant value the scan flagged purely for being hex.
+    { name: 'NEW-HEX-IN-D2C — preceding-line theme-audit-ok suppresses (eslint-disable-next-line form)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'vite.config.ts': [
+        '          // theme-audit-ok: webmanifest needs literal hex',
+        "          background_color: '#0a0e1a',",
+      ] },
+      expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },
+    { name: 'NEW-HEX-IN-D2C — the same pair without the marker still hard-fails', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'vite.config.ts': [
+        '          // webmanifest needs literal hex',
+        "          background_color: '#0a0e1a',",
+      ] },
+      expect: (hits) => hits.some((h) => h.signal === 'NEW-HEX-IN-D2C' && h.severity === 'fail') },
+    // Adjacency is by FILE line number, not array position. Both entries below
+    // are "previous" in the array; only a true line-1 gap may suppress.
+    { name: 'NEW-HEX-IN-D2C — marker on a NON-adjacent added line does NOT suppress', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/pages/foo.tsx': [
+        { text: '  // theme-audit-ok: applies to line 10 only', lineNumber: 10 },
+        { text: "  <div style={{ color: '#ff0000' }} />", lineNumber: 412 },
+      ] },
+      expect: (hits) => hits.some((h) => h.signal === 'NEW-HEX-IN-D2C' && h.severity === 'fail') },
+    // Scoping: the marker is a THEME opt-out and must not become a blanket
+    // line-level pragma. If it silenced every signal, one comment would switch
+    // off the auth gate.
+    { name: 'theme-audit-ok does NOT suppress COOKIE-SSO (opt-in is per signal)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/supabase.ts': ['  storage: cookieStorage, // theme-audit-ok: nice try'] },
+      expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO' && h.severity === 'fail') },
+    { name: 'theme-audit-ok does NOT suppress AS-ANY-CAST (opt-in is per signal)', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'src/lib/foo.ts': ['  const x = y as any; // theme-audit-ok: nice try'] },
+      expect: (hits) => hits.some((h) => h.signal === 'AS-ANY-CAST') },
     { name: 'NEW-HEX-IN-D2C — URL fragment /#abc123 NOT flagged', framework: 'nextjs', repoName: 'conduit',
       addedByFile: { 'src/components/Link.tsx': ['  <a href="/docs/page#abc123">link</a>'] },
       expect: (hits) => hits.every((h) => h.signal !== 'NEW-HEX-IN-D2C') },

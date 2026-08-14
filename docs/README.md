@@ -40,6 +40,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File | Description |
 |------|-------------|
+| `20260814-portals-operator-rulings-v1.00A.md` | **Operator rulings D-93 to D-98** — field officer is staff; a host sees the full charge-rate build-up; a host places staffing orders but does not browse workers; payslips are a viewer; WHS questions match AnyTime; bank/TFN/super are out of scope. Answers `20260813-portals-redesign-brainstorm-v1.00D.md` §1. Cite by D-number; do not re-derive. |
 | `20260227-contributing-standards-guide-v1.01W.md` | Universal quality, documentation, and code standards for all BSuite projects |
 | `20260227-dry-one-shot-architecture-v1.02A.md` | DRY principles and one-shot data entry architecture for all modules (Approved) |
 | `20260424-env-var-contributing-rules-v1.00W.md` | Standing rules for env var naming, scoping, and storage |
@@ -100,6 +101,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260506-supabase-linter-action-plan-v1.00W.md` | Supabase linter action plan — Phases 1+2 ready, Phase 3 deferred (recovered from a stash 2026-08-05; re-run the advisor before acting) |
 | `20260506-table-usage-audit-v1.00W.md` | Table usage audit — conclusions stand, but each drop recommendation needs human sign-off (recovered from a stash 2026-08-05) |
 | `20260722-developer-portal-investigation-v1.00W.md` | Developer Portal surface investigation — tenant_navigation, platform_branding, feature_builder, and schema-builder tables audit |
+| `20260814-notes-backlog-verification-register-v1.00D.md` | Measured state of every defect in the operator's `bsuite notes.docx` and the 2026-08-13 directive (D-59…D-92) — verified against code, live issues and live SQL, not against doc claims. Corrects the directive's own coverage numbers in both directions. |
+| `20260814-phase0-scope-remediation-delivery-v1.00W.md` | Phase 0 delivery + evidence record (crm7#1731, BSU#726). **Records two retractions**: crm7#1728 was not a defect and the filed fix would have taken the shared GTO report catalogue down in every tenant; crm7#1729's original query-scope fix chose the correct layer. Carries the unscoped-SELECT class sweep (12 tables, 4 real) and the Caris ruling. |
 
 ### Directories
 
