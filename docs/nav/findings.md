@@ -4,6 +4,62 @@ Generated from `route-inventory.json` (555 routes across 6 apps: braden, bsu, co
 
 ---
 
+## RESOLUTION LOG — updated 2026-08-14
+
+This section is maintained by hand. The body below is the **original audit snapshot**
+and is deliberately NOT rewritten, so the before/after stays legible.
+
+### What a metric in this document does and does not mean
+
+`nav.surface` is derived from each app's **nav config file** (sidebar / topnav
+arrays). It does **not** measure "reachable from the UI". A page reached through an
+in-page tab bar or a parent-section card grid still reports `surface: "none"`.
+
+That distinction matters for §1: the crm7 remediation below made 45 pages reachable
+without changing a single `nav.surface` value. **The headline orphan count did not
+move, and claiming it did would be false.** A future schema revision should add a
+`reachable_via` field (`sidebar` | `topnav` | `in_page_tabs` | `parent_card` | `none`)
+so reachability is measured directly instead of inferred from sidebar membership.
+
+### Resolved
+
+| § | Finding | Resolution | Evidence |
+|---|---|---|---|
+| §2 | throughput `/todos` nav item with no route (the only `status: orphan`) | Nav entry + unused `ListChecks` import removed | throughput `a1fd202`, PR #285. Orphan count 1 → 0, verified by re-running `build-inventory.py` |
+| §5.1 | Ideas CRUD in bsu + throughput | **Not a violation.** BSU's `/ideas/*` are read-only aggregation with deep-link handoff; throughput owns CRUD. Settled by the V6 cross-app write audit. No change made | `business-suite-unified/src/lib/ideaService.ts` (create/update/delete removed with a comment citing V6) |
+| §5.2 | `/portal/field-officer` live in conduit + crm7 | **SUPERSEDED — see Open below.** A rename shipped before operator ruling D-93 landed | conduit `66f6873`, PR #461 (open, unmerged) |
+| §3 | `/settings/organization`, `/settings/branding` duplicated bsu + crm7 | **Not a violation.** BSU owns branding (`tenant_branding`, `tenant_settings`); crm7 owns org structure (`user_tenants`, `membership_requests`). crm7 `/settings/branding` already redirects to BSU | verified by reading both components' queries |
+| §1 | conduit `/settings/schema-builder` had no nav link | Added to Admin → Settings, gated `view_settings` | conduit `23d1e19`, PR #462 |
+| §1 | throughput `/profile` `/settings` `/notifications` unreachable | Avatar dropdown added (Profile/Settings/Sign Out); notification bell now links to `/notifications`. `/monitoring` left intentionally unlinked (admin diagnostic) | throughput `d350c17`, PR #286 |
+| §1 | crm7 — 45 pages reachable only by URL | In-page sub-nav added to 5 index pages. `/documents` and `/gto-compliance` had **zero** outbound navigation | crm7 `a5b4b9b2`, PR #1732. See the caveat above — `nav.surface` does not move |
+| §1 | braden `/traineeships` linked from nowhere; `/apprenticeships` `/recruitment` footer-only; `/products` app-cards only | All added to primary nav; `/traineeships` also added to footer | braden `b3897e4`, PR #390 |
+| §1 | BSU Developer Portal — 25 `/developer/*` with no sidebar entry | **Not a defect.** All 25 accounted for: 18 tabs + 7 nested detail/create routes. Portal is fully wired | `business-suite-unified/src/pages/Developer/index.tsx` `SUB_NAV_TABS` |
+| §6 | conduit public routes | Audited. RLS double-enforced on `r7_jobs`; anon writes go through `SECURITY DEFINER` RPCs with edge-derived IP throttling; responses are constant (no existence oracle) | issues #1997, #1998 filed for the two real gaps (WAF rate-limit, CAPTCHA) |
+| §6 | crm7 token-gated routes | Audited. All three use 256-bit tokens stored **hash-only**, server-validated, with expiry and single-use `FOR UPDATE` locks. Non-enumerating error responses | no defect; hardening notes in the issues |
+| — | **NEW** — braden AppSwitcher absent (only app without one) | Added, admin-gated, brand-verified against compiled CSS | braden `b3897e4`, PR #390 |
+| — | **NEW** — braden 3 bare cross-app hrefs landing users logged out | Routed through `buildLaunchUrl()` | braden `b3897e4`, PR #390 |
+| — | **NEW** — throughput DB nav overlay wired into a component that is never mounted | Rewired into the live `Navigation.tsx`; `NAV_CONFIG` rebased off real routes to avoid importing ~20 dead links | throughput `296493e`, PR #290 |
+
+### Open / handed across
+
+| Finding | State | Owner |
+|---|---|---|
+| `/portal/field-officer` | **Superseded by operator ruling D-93**: the walled portal is *retired*, not de-duplicated — both instances go, the page becomes a staff dashboard in the main app, caseload becomes an RLS rule. The rename in conduit PR #461 preserves the portal under a new name, which is the opposite outcome. PR left **open and unmerged** pending a keep/close call | `claude-code-bsuite-portals` |
+| **P1** `content_pages` + `custom_pages` have no anon SELECT policy — every anonymous visitor to a braden CMS page gets zero rows and hits "Page Not Found" | Confirmed end-to-end over real PostgREST with positive controls (`r7_jobs` → 2 rows, `platform_branding` → 1 row; targets → `[]`) | handed to portals lane — **issue #2004** |
+| 326 of 403 public tables carry a table-level anon grant with no anon policy to use it. RLS is the only gate, not defence-in-depth | Quantified live | handed to portals lane — **issue #1913** (comment) |
+| `tenant_navigation` CHECK rejects `app_scope='throughput'` | Migration `20260819010000` written + dry-run verified inside a rollback. **Not applied** — the applier runs on `main` | this lane; awaits promotion |
+| braden absent from `BSUITE_APP_KEYS` in `packages/nav-core`, so no app can link *to* braden | Identified, not fixed — shared-package change | unassigned |
+| throughput `MegaMenu` / `MobileBottomNav` / `EnhancedNavigation` are dead code | Identified, left in place — deleting pre-existing work needs owner approval | unassigned |
+| **Phase 5 live visual QA** | **NOT DONE.** No dev servers started, no live screenshots at 375/768/1440, no Lighthouse run. Requires deployed previews of the open PRs | outstanding |
+
+### Verified clean (no action needed)
+
+- **Theme tokens in nav shells** — 0 violations across all 6 apps. An initial grep produced ~30 hits, **all false positives**: GitHub issue refs like `crm7#625` match a naive `#[0-9a-fA-F]{3,4}` pattern. Re-run with a word-boundary lookbehind plus explicit `fill=` / `stroke=` / `bg-[#` / `style={{` patterns → 0. `rgb()` / `rgba()` / `hsl()` → 0.
+- **Mobile nav at 375px** — all 6 apps at parity. Only R80.4 uses the shared `MobileSidebarDrawer`; the other four hand-roll equivalent logic (works, but four reimplementations of a solved problem).
+- **RLS enabled on 100%** of the 403 public tables; 0 disabled.
+
+---
+
 ## Severity Index
 
 | Severity | Count | Sections |
