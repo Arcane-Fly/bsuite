@@ -2,6 +2,83 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use `plan-executing` to implement this plan task-by-task.
 
+---
+
+## EXECUTION OUTCOME — 2026-08-14 (read before re-running any phase)
+
+All eight phases executed. Delivery and the honest gaps are below; the phase text is
+retained unchanged as the original brief.
+
+### Shipped and merged to `development`
+
+| App | PR | What |
+|---|---|---|
+| throughput | #290 | dead `/todos` removed · utility-page nav · DB nav rewired to the component that actually renders |
+| conduit | #465 | Schema Builder nav · dashboard ARIA |
+| braden | #390 | marketing pages into nav · AppSwitcher · 3 bare SSO hrefs fixed |
+| crm7 | #1732 | 45 unreachable pages wired into in-page sub-navigation |
+| R80.4 | #68 | DB nav overlay · lockfile regenerated outside the tree |
+| BSU | #728, #730, #731 | interactive Route Inspector · adversarial-review fixes · **two P0 fixes** |
+
+Eight superseded/mispushed PRs closed with reasons. conduit#461 left **open** — operator
+ruling D-93 superseded it mid-flight and the call belongs to the portals lane.
+
+### The finding that matters most
+
+**A P0 was introduced by this plan's own Phase 4.1 and took the entire BSU app down on the
+preview — every route, dashboard included.** `useTenantNavigation` opens a Supabase Realtime
+channel named `tenant-navigation:<app_scope>`; two subscribers on one channel make the second
+`.on('postgres_changes', …)` after `subscribe()` throw. It happened **twice**, from two
+different causes (a twice-mounted child, then two different components).
+
+Both times, **every gate was green while the app was dead**: typecheck, lint, `pnpm build`,
+`pnpm size`, and 1106 unit tests. Nothing mounted the sidebar and counted subscriptions, so
+nothing *could* have caught it. It was found only by loading the deployed preview.
+
+Two guards now exist, each **positive-controlled** (watched failing before being trusted):
+a subscription-count test, and a static assertion that `RouteInspector` never re-imports the
+hook. The static form is deliberate — rendering the Inspector in jsdom does **not** reproduce
+the fault, because a mocked hook opens no channel.
+
+### Defects found only by live verification, never by reading code
+
+1. **bsuite#2004** — `content_pages`/`custom_pages` have no anon SELECT policy, so every
+   anonymous visitor to a braden CMS page gets zero rows. Reproduced over real PostgREST with
+   passing positive controls. Handed to the portals lane (routes vs policies boundary).
+2. **Vercel build-breaker** — the Inspector imported the inventory from the *parent* monorepo;
+   Vercel clones submodules standalone. Fixed at the generator + a CI guard.
+3. **throughput's DB nav was wired into dead code** — `EnhancedNavigation` is mounted by
+   nothing. Also `tenant_navigation`'s CHECK constraint rejected `app_scope='throughput'`, so
+   the feature was dead twice over (migration `20260819010000` written, dry-run verified, not
+   applied).
+4. **`manualChunks` mis-classification** — `id.includes('/react/')` matched any package with a
+   `react/` subdirectory. Anchoring fixed a size break *and* a pre-existing mis-chunk:
+   critical path 247.18 → **218.41 kB**.
+
+### Corrections to this plan's own instructions
+
+- Phase 6.3 said to use `@dnd-kit`; I then relayed an operator note as a blanket dnd-kit ban.
+  **Both were wrong in different directions.** The note was about the *card grid*
+  (react-grid-layout). `Nav.tsx:16` states "SortableList (dnd-kit) for sections AND items —
+  no ChevronUp/Down-only". Now uses the shared `SortableList`.
+- Phase 6.4's "Edit in Page Builder → `/developer/pages`" targets a route removed by ADR-0001.
+  Retargeted to CRM7 `/settings/custom-pages`.
+
+### Not done, stated plainly
+
+- **`nav.surface` measures nav-config membership, not UI reachability.** Wiring 45 crm7 pages
+  into in-page tabs did **not** move the orphan count. Any future report must not imply it did.
+  A `reachable_via` field is the real fix.
+- **braden is absent from `BSUITE_APP_KEYS`**, so no app can link *to* braden. Unassigned.
+- **throughput `MegaMenu`/`MobileBottomNav`/`EnhancedNavigation` remain dead code** — left in
+  place because deleting pre-existing work needs owner approval.
+- Migration `20260819010000` is **not applied** (the applier runs on `main`).
+
+**Status: D → keep at Draft.** The phases are executed, but conduit#461 is blocked on an
+operator ruling and the items above are open. Do not promote this to `A` on delivery alone.
+
+---
+
 **Goal:** Bring every route across 6 BSuite apps to a verified state: correct auth guard, reachable nav, consistent shell/theme, parity on shared components (`@bsuite/nav-core`, `AppSwitcher`, `MobileSidebarDrawer`, DB nav overlay), and zero DRY violations — verified by live login, Supabase query, and Playwright screenshot, not by code-reading alone.
 
 **Architecture:** 8 phases. Phase 0 syncs branches and fixes P0 breakage (dead nav, broken redirects). Phase 1 resolves DRY violations (Ideas, field-officer portal) and audits entity ownership in Supabase. Phase 2 is a full security audit of the 55 public routes — RLS policies, token validation, rate limiting — verified by Supabase MCP queries and E2E tests. Phase 3 brings nav-surface parity: every orphan route is either wired into a nav surface or documented as intentionally hidden. Phase 4 enforces cross-app consistency: DB nav overlay wiring, AppSwitcher parity, mobile drawer, ARIA, and theme-token compliance in all nav shells. Phase 5 runs a full visual QA at all breakpoints using live deployments. Phase 6 builds a **live Route & Nav Inspector** in the Developer Portal — the in-app equivalent of `docs/nav/index.html` — integrated with the existing Page Builder, Feature Builder, and Nav Editor so operators can manage routes and nav visually, create DB overlays from orphan routes, and inspect cross-app coverage in real time. Phase 7 delivers CI gating, updated findings, and the merge PR.

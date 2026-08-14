@@ -1,0 +1,461 @@
+[
+  {
+    "app": "bsu",
+    "breakpoint": "375",
+    "requestedUrl": "https://d.suite.crm7.app/",
+    "landedUrl": "https://d.suite.crm7.app/",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/bsu/375.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [
+      {
+        "s": "Dashboard",
+        "found": true
+      }
+    ],
+    "probes": [],
+    "probesAbsent": [],
+    "note": null
+  },
+  {
+    "app": "bsu",
+    "breakpoint": "768",
+    "requestedUrl": "https://d.suite.crm7.app/",
+    "landedUrl": "https://d.suite.crm7.app/",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/bsu/768.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [
+      {
+        "s": "Dashboard",
+        "found": true
+      }
+    ],
+    "probes": [],
+    "probesAbsent": [],
+    "note": null
+  },
+  {
+    "app": "bsu",
+    "breakpoint": "1440",
+    "requestedUrl": "https://d.suite.crm7.app/",
+    "landedUrl": "https://d.suite.crm7.app/",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/bsu/1440.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [
+      {
+        "s": "Dashboard",
+        "found": true
+      }
+    ],
+    "probes": [],
+    "probesAbsent": [],
+    "note": null
+  },
+  {
+    "app": "bsu-route-inspector",
+    "breakpoint": "375",
+    "requestedUrl": "https://d.suite.crm7.app/developer/route-inspector",
+    "landedUrl": "https://d.suite.crm7.app/developer/route-inspector",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/bsu-route-inspector/375.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Route Inspector",
+        "found": true
+      },
+      {
+        "s": "App Tree",
+        "found": true
+      },
+      {
+        "s": "Cross-app Matrix",
+        "found": true
+      },
+      {
+        "s": "DB Navigation",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": "Route Inspector tab — expected ABSENT before PR #728, PRESENT after"
+  },
+  {
+    "app": "bsu-route-inspector",
+    "breakpoint": "768",
+    "requestedUrl": "https://d.suite.crm7.app/developer/route-inspector",
+    "landedUrl": "https://d.suite.crm7.app/developer/route-inspector",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/bsu-route-inspector/768.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Route Inspector",
+        "found": true
+      },
+      {
+        "s": "App Tree",
+        "found": true
+      },
+      {
+        "s": "Cross-app Matrix",
+        "found": true
+      },
+      {
+        "s": "DB Navigation",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": "Route Inspector tab — expected ABSENT before PR #728, PRESENT after"
+  },
+  {
+    "app": "bsu-route-inspector",
+    "breakpoint": "1440",
+    "requestedUrl": "https://d.suite.crm7.app/developer/route-inspector",
+    "landedUrl": "https://d.suite.crm7.app/developer/route-inspector",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/bsu-route-inspector/1440.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Route Inspector",
+        "found": true
+      },
+      {
+        "s": "App Tree",
+        "found": true
+      },
+      {
+        "s": "Cross-app Matrix",
+        "found": true
+      },
+      {
+        "s": "DB Navigation",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": "Route Inspector tab — expected ABSENT before PR #728, PRESENT after"
+  },
+  {
+    "app": "crm7",
+    "breakpoint": "375",
+    "requestedUrl": "https://d.crm.crm7.app/dashboard",
+    "landedUrl": "https://d.crm.crm7.app/dashboard",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/crm7/375.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Dashboard",
+        "found": true
+      },
+      {
+        "s": "People",
+        "found": false
+      },
+      {
+        "s": "Settings",
+        "found": false
+      }
+    ],
+    "probesAbsent": [],
+    "note": null
+  },
+  {
+    "app": "crm7",
+    "breakpoint": "768",
+    "requestedUrl": "https://d.crm.crm7.app/dashboard",
+    "landedUrl": "https://d.crm.crm7.app/dashboard",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/crm7/768.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Dashboard",
+        "found": true
+      },
+      {
+        "s": "People",
+        "found": true
+      },
+      {
+        "s": "Settings",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": null
+  },
+  {
+    "app": "crm7",
+    "breakpoint": "1440",
+    "requestedUrl": "https://d.crm.crm7.app/dashboard",
+    "landedUrl": "https://d.crm.crm7.app/dashboard",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/crm7/1440.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Dashboard",
+        "found": true
+      },
+      {
+        "s": "People",
+        "found": true
+      },
+      {
+        "s": "Settings",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": null
+  },
+  {
+    "app": "crm7-documents",
+    "breakpoint": "375",
+    "requestedUrl": "https://d.crm.crm7.app/documents",
+    "landedUrl": "https://d.crm.crm7.app/documents",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/crm7-documents/375.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Hub",
+        "found": true
+      },
+      {
+        "s": "Templates",
+        "found": true
+      },
+      {
+        "s": "Signatures",
+        "found": true
+      },
+      {
+        "s": "Management",
+        "found": true
+      },
+      {
+        "s": "Compliance",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": "documents sub-nav — expected ABSENT before PR #1732"
+  },
+  {
+    "app": "crm7-documents",
+    "breakpoint": "768",
+    "requestedUrl": "https://d.crm.crm7.app/documents",
+    "landedUrl": "https://d.crm.crm7.app/documents",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/crm7-documents/768.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Hub",
+        "found": true
+      },
+      {
+        "s": "Templates",
+        "found": true
+      },
+      {
+        "s": "Signatures",
+        "found": true
+      },
+      {
+        "s": "Management",
+        "found": true
+      },
+      {
+        "s": "Compliance",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": "documents sub-nav — expected ABSENT before PR #1732"
+  },
+  {
+    "app": "crm7-documents",
+    "breakpoint": "1440",
+    "requestedUrl": "https://d.crm.crm7.app/documents",
+    "landedUrl": "https://d.crm.crm7.app/documents",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/crm7-documents/1440.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Hub",
+        "found": true
+      },
+      {
+        "s": "Templates",
+        "found": true
+      },
+      {
+        "s": "Signatures",
+        "found": true
+      },
+      {
+        "s": "Management",
+        "found": true
+      },
+      {
+        "s": "Compliance",
+        "found": true
+      }
+    ],
+    "probesAbsent": [],
+    "note": "documents sub-nav — expected ABSENT before PR #1732"
+  },
+  {
+    "app": "throughput",
+    "breakpoint": "375",
+    "requestedUrl": "https://d.ideas.crm7.app/",
+    "landedUrl": "https://d.ideas.crm7.app/",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/throughput/375.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Dashboard",
+        "found": true
+      },
+      {
+        "s": "Launch Pad",
+        "found": false
+      },
+      {
+        "s": "Analytics",
+        "found": false
+      },
+      {
+        "s": "Teams",
+        "found": false
+      }
+    ],
+    "probesAbsent": [
+      {
+        "s": "Todos",
+        "stillPresent": false
+      }
+    ],
+    "note": null
+  },
+  {
+    "app": "throughput",
+    "breakpoint": "768",
+    "requestedUrl": "https://d.ideas.crm7.app/",
+    "landedUrl": "https://d.ideas.crm7.app/",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/throughput/768.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Dashboard",
+        "found": true
+      },
+      {
+        "s": "Launch Pad",
+        "found": true
+      },
+      {
+        "s": "Analytics",
+        "found": true
+      },
+      {
+        "s": "Teams",
+        "found": true
+      }
+    ],
+    "probesAbsent": [
+      {
+        "s": "Todos",
+        "stillPresent": false
+      }
+    ],
+    "note": null
+  },
+  {
+    "app": "throughput",
+    "breakpoint": "1440",
+    "requestedUrl": "https://d.ideas.crm7.app/",
+    "landedUrl": "https://d.ideas.crm7.app/",
+    "authenticated": true,
+    "httpStatus": 200,
+    "navError": null,
+    "screenshot": "docs/nav/screenshots-authed/after-fixed/throughput/1440.png",
+    "consoleErrorCount": 0,
+    "expectedPresent": [],
+    "probes": [
+      {
+        "s": "Dashboard",
+        "found": true
+      },
+      {
+        "s": "Launch Pad",
+        "found": true
+      },
+      {
+        "s": "Analytics",
+        "found": true
+      },
+      {
+        "s": "Teams",
+        "found": true
+      }
+    ],
+    "probesAbsent": [
+      {
+        "s": "Todos",
+        "stillPresent": false
+      }
+    ],
+    "note": null
+  }
+]

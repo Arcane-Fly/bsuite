@@ -4,6 +4,39 @@ Generated from `route-inventory.json` (555 routes across 6 apps: braden, bsu, co
 
 ---
 
+## POST-MERGE INCIDENT — read this first
+
+**A P0 was introduced by this programme's own Phase 4.1 and caught only on the deployed preview.**
+
+Wiring `useMergedNavConfig` into `SidebarInner` — which `AppSidebar` mounts **twice**
+(mobile drawer + desktop rail) — opened the Supabase Realtime channel
+`tenant-navigation:bsu` twice. The second `.on('postgres_changes', …)` after
+`subscribe()` throws, the app-level error boundary caught it, and **every route in BSU
+rendered "Something went wrong"** — the dashboard included, not just the new tab.
+
+What makes it worth recording is what did NOT catch it:
+
+| Gate | Result while the app was dead |
+|---|---|
+| `tsc --noEmit` | pass |
+| `eslint --max-warnings 0` | pass |
+| `pnpm build` | pass |
+| `pnpm size` | pass |
+| **1101 unit tests** | **pass** |
+
+Nothing in the suite mounted the sidebar and counted subscriptions, so nothing *could*
+have caught it. It was found by loading `d.suite.crm7.app`, reading the console, and
+comparing against the pre-merge capture — a healthy dashboard before, an error boundary
+after. Fixed in BSU#730 by hoisting the hook to the parent, with
+`AppSidebar.realtime.test.tsx` asserting a single subscription. That guard was
+positive-controlled: a second call makes it fail `expected 1 times, but got 3`.
+
+**The lesson for this document:** a green gate set is evidence that specific checks
+passed, not that the software runs. Nothing here should be marked resolved on the
+strength of CI alone.
+
+---
+
 ## RESOLUTION LOG — updated 2026-08-14
 
 This section is maintained by hand. The body below is the **original audit snapshot**
