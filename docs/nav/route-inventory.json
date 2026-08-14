@@ -3294,11 +3294,11 @@
         "feature_flags": []
       },
       "nav": {
-        "surface": "none",
-        "group": null,
-        "label": null,
-        "icon": null,
-        "order": null
+        "surface": "sidebar",
+        "group": "Admin",
+        "label": "Schema Builder",
+        "icon": "Database",
+        "order": 11
       },
       "portal": null,
       "owned_entities": [],
