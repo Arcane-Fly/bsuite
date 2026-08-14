@@ -23,7 +23,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:112",
+      "evidence": "braden/src/Routes.tsx:116",
       "note": null
     },
     {
@@ -48,7 +48,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "braden/src/Routes.tsx:189",
+      "evidence": "braden/src/Routes.tsx:193",
       "note": "→ /"
     },
     {
@@ -73,7 +73,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:136",
+      "evidence": "braden/src/Routes.tsx:140",
       "note": null
     },
     {
@@ -98,7 +98,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:168",
+      "evidence": "braden/src/Routes.tsx:172",
       "note": null
     },
     {
@@ -123,7 +123,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "braden/src/Routes.tsx:184",
+      "evidence": "braden/src/Routes.tsx:188",
       "note": null
     },
     {
@@ -148,7 +148,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "braden/src/Routes.tsx:185",
+      "evidence": "braden/src/Routes.tsx:189",
       "note": null
     },
     {
@@ -173,7 +173,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:156",
+      "evidence": "braden/src/Routes.tsx:160",
       "note": null
     },
     {
@@ -198,7 +198,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:179",
+      "evidence": "braden/src/Routes.tsx:183",
       "note": null
     },
     {
@@ -223,7 +223,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:183",
+      "evidence": "braden/src/Routes.tsx:187",
       "note": null
     },
     {
@@ -248,7 +248,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:180",
+      "evidence": "braden/src/Routes.tsx:184",
       "note": null
     },
     {
@@ -273,7 +273,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:122",
+      "evidence": "braden/src/Routes.tsx:126",
       "note": null
     },
     {
@@ -298,7 +298,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:140",
+      "evidence": "braden/src/Routes.tsx:144",
       "note": null
     },
     {
@@ -323,7 +323,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:148",
+      "evidence": "braden/src/Routes.tsx:152",
       "note": null
     },
     {
@@ -348,7 +348,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:132",
+      "evidence": "braden/src/Routes.tsx:136",
       "note": null
     },
     {
@@ -373,7 +373,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:133",
+      "evidence": "braden/src/Routes.tsx:137",
       "note": null
     },
     {
@@ -398,7 +398,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:125",
+      "evidence": "braden/src/Routes.tsx:129",
       "note": null
     },
     {
@@ -423,7 +423,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:124",
+      "evidence": "braden/src/Routes.tsx:128",
       "note": null
     },
     {
@@ -448,7 +448,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:121",
+      "evidence": "braden/src/Routes.tsx:125",
       "note": null
     },
     {
@@ -473,7 +473,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:134",
+      "evidence": "braden/src/Routes.tsx:138",
       "note": null
     },
     {
@@ -498,7 +498,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "braden/src/Routes.tsx:123",
+      "evidence": "braden/src/Routes.tsx:127",
       "note": null
     },
     {
@@ -523,7 +523,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:391",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:350",
       "note": "→ /"
     },
     {
@@ -548,7 +548,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:278",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:249",
       "note": null
     },
     {
@@ -573,7 +573,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:531",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:490",
       "note": null
     },
     {
@@ -598,7 +598,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:315",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:282",
       "note": null
     },
     {
@@ -606,7 +606,7 @@
       "path": "/admin/branding",
       "route_file": "business-suite-unified/src/components/AppContent.tsx",
       "component": "AdminBranding",
-      "layout": "AppShell+PageGrid",
+      "layout": "AppShell",
       "auth": {
         "type": "authenticated",
         "permissions": [],
@@ -623,7 +623,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:334",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:297",
       "note": null
     },
     {
@@ -648,7 +648,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:316",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:283",
       "note": null
     },
     {
@@ -673,7 +673,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:363",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:322",
       "note": "→ /developer/platform-kit"
     },
     {
@@ -698,7 +698,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:366",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:325",
       "note": "→ /developer/platform-kit/auth"
     },
     {
@@ -723,7 +723,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:368",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:327",
       "note": "→ /developer/database"
     },
     {
@@ -748,7 +748,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:369",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:328",
       "note": "→ /developer/database"
     },
     {
@@ -773,7 +773,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:364",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:323",
       "note": "→ /developer/platform-kit/logs"
     },
     {
@@ -798,7 +798,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:365",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:324",
       "note": "→ /developer/platform-kit/secrets"
     },
     {
@@ -823,7 +823,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:367",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:326",
       "note": "→ /developer/platform-kit/storage"
     },
     {
@@ -848,7 +848,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:317",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:284",
       "note": null
     },
     {
@@ -873,7 +873,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:318",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:285",
       "note": null
     },
     {
@@ -898,7 +898,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:320",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:287",
       "note": null
     },
     {
@@ -923,7 +923,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:481",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:440",
       "note": null
     },
     {
@@ -948,7 +948,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:475",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:434",
       "note": null
     },
     {
@@ -973,7 +973,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:508",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:467",
       "note": null
     },
     {
@@ -998,7 +998,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:294",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:261",
       "note": null
     },
     {
@@ -1006,7 +1006,7 @@
       "path": "/branding",
       "route_file": "business-suite-unified/src/components/AppContent.tsx",
       "component": "Branding",
-      "layout": "AppShell+PageGrid",
+      "layout": "AppShell",
       "auth": {
         "type": "authenticated",
         "permissions": [],
@@ -1023,7 +1023,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:326",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:293",
       "note": null
     },
     {
@@ -1048,7 +1048,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:387",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:346",
       "note": "→ /developer/pages"
     },
     {
@@ -1073,7 +1073,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:376",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:335",
       "note": null
     },
     {
@@ -1100,7 +1100,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:240",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:245",
       "note": null
     },
     {
@@ -1127,7 +1127,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:248",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:253",
       "note": null
     },
     {
@@ -1154,7 +1154,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:193",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:198",
       "note": null
     },
     {
@@ -1181,7 +1181,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:243",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:248",
       "note": null
     },
     {
@@ -1208,7 +1208,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:231",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:236",
       "note": null
     },
     {
@@ -1235,7 +1235,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:192",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:197",
       "note": null
     },
     {
@@ -1262,7 +1262,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:208",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:213",
       "note": null
     },
     {
@@ -1289,7 +1289,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:224",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:229",
       "note": null
     },
     {
@@ -1316,7 +1316,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:217",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:222",
       "note": null
     },
     {
@@ -1343,7 +1343,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:247",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:252",
       "note": null
     },
     {
@@ -1370,7 +1370,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:207",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:212",
       "note": null
     },
     {
@@ -1397,7 +1397,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:270",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:284",
       "note": "→ /developer/website"
     },
     {
@@ -1424,7 +1424,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:246",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:251",
       "note": null
     },
     {
@@ -1451,7 +1451,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:241",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:246",
       "note": null
     },
     {
@@ -1478,7 +1478,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:245",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:250",
       "note": null
     },
     {
@@ -1505,7 +1505,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:259",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:264",
       "note": null
     },
     {
@@ -1532,7 +1532,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:262",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:267",
       "note": null
     },
     {
@@ -1559,7 +1559,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:264",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:269",
       "note": "→ /developer/database"
     },
     {
@@ -1586,7 +1586,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:265",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:270",
       "note": "→ /developer/database"
     },
     {
@@ -1613,7 +1613,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:260",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:265",
       "note": null
     },
     {
@@ -1640,7 +1640,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:261",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:266",
       "note": null
     },
     {
@@ -1667,7 +1667,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:263",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:268",
       "note": null
     },
     {
@@ -1694,7 +1694,34 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:244",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:249",
+      "note": null
+    },
+    {
+      "app": "bsu",
+      "path": "/developer/route-inspector",
+      "route_file": "business-suite-unified/src/pages/Developer/index.tsx",
+      "component": "RouteInspector",
+      "layout": "AppShell",
+      "auth": {
+        "type": "authenticated",
+        "permissions": [
+          "canUsePlatformKit"
+        ],
+        "feature_flags": []
+      },
+      "nav": {
+        "surface": "none",
+        "group": null,
+        "label": null,
+        "icon": null,
+        "order": null
+      },
+      "portal": null,
+      "owned_entities": [],
+      "data_tables": [],
+      "status": "live",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:271",
       "note": null
     },
     {
@@ -1721,7 +1748,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:242",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:247",
       "note": null
     },
     {
@@ -1748,7 +1775,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:206",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:211",
       "note": "→ /developer/database"
     },
     {
@@ -1775,7 +1802,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:190",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:195",
       "note": null
     },
     {
@@ -1802,7 +1829,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:191",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:196",
       "note": null
     },
     {
@@ -1829,7 +1856,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:189",
+      "evidence": "business-suite-unified/src/pages/Developer/index.tsx:194",
       "note": null
     },
     {
@@ -1854,7 +1881,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:527",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:486",
       "note": null
     },
     {
@@ -1879,7 +1906,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:528",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:487",
       "note": null
     },
     {
@@ -1904,7 +1931,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:323",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:290",
       "note": null
     },
     {
@@ -1929,7 +1956,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:514",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:473",
       "note": null
     },
     {
@@ -1954,7 +1981,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:515",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:474",
       "note": null
     },
     {
@@ -1979,7 +2006,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:322",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:289",
       "note": null
     },
     {
@@ -2004,7 +2031,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:321",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:288",
       "note": null
     },
     {
@@ -2029,7 +2056,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:370",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:329",
       "note": null
     },
     {
@@ -2054,7 +2081,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:372",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:331",
       "note": null
     },
     {
@@ -2079,7 +2106,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:371",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:330",
       "note": null
     },
     {
@@ -2104,7 +2131,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:462",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:421",
       "note": null
     },
     {
@@ -2129,7 +2156,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:511",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:470",
       "note": null
     },
     {
@@ -2154,7 +2181,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:302",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:269",
       "note": null
     },
     {
@@ -2179,7 +2206,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:375",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:334",
       "note": null
     },
     {
@@ -2204,7 +2231,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:381",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:340",
       "note": null
     },
     {
@@ -2229,7 +2256,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:303",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:270",
       "note": null
     },
     {
@@ -2254,7 +2281,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:525",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:484",
       "note": null
     },
     {
@@ -2279,7 +2306,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:507",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:466",
       "note": null
     },
     {
@@ -2287,7 +2314,7 @@
       "path": "/settings",
       "route_file": "business-suite-unified/src/components/AppContent.tsx",
       "component": "Settings",
-      "layout": "AppShell+PageGrid",
+      "layout": "AppShell",
       "auth": {
         "type": "authenticated",
         "permissions": [],
@@ -2304,7 +2331,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:286",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:257",
       "note": null
     },
     {
@@ -2329,7 +2356,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:309",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:276",
       "note": "→ /branding"
     },
     {
@@ -2354,7 +2381,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:374",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:333",
       "note": null
     },
     {
@@ -2379,7 +2406,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:319",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:286",
       "note": null
     },
     {
@@ -2404,7 +2431,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:373",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:332",
       "note": null
     },
     {
@@ -2429,7 +2456,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:526",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:485",
       "note": null
     },
     {
@@ -3184,8 +3211,8 @@
     },
     {
       "app": "conduit",
-      "path": "/portal/field-officer",
-      "route_file": "conduit/src/app/portal/field-officer/page.tsx",
+      "path": "/portal/field-officer-assignments",
+      "route_file": "conduit/src/app/portal/field-officer-assignments/page.tsx",
       "component": "Page",
       "layout": "none",
       "auth": {
@@ -3196,7 +3223,7 @@
       "nav": {
         "surface": "sidebar",
         "group": "Pipeline",
-        "label": "Field Officer Portal",
+        "label": "FO Assignments",
         "icon": "UserCheck",
         "order": 6
       },
@@ -3204,7 +3231,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "conduit/src/app/portal/field-officer/page.tsx:1",
+      "evidence": "conduit/src/app/portal/field-officer-assignments/page.tsx:1",
       "note": null
     },
     {
@@ -3294,11 +3321,11 @@
         "feature_flags": []
       },
       "nav": {
-        "surface": "none",
-        "group": null,
-        "label": null,
-        "icon": null,
-        "order": null
+        "surface": "sidebar",
+        "group": "Admin",
+        "label": "Schema Builder",
+        "icon": "Database",
+        "order": 11
       },
       "portal": null,
       "owned_entities": [],
@@ -13823,7 +13850,7 @@
         "group": "Main",
         "label": "Pricing",
         "icon": "CreditCard",
-        "order": 5
+        "order": 4
       },
       "portal": null,
       "owned_entities": [],
@@ -13906,31 +13933,6 @@
       "status": "live",
       "evidence": "throughput/src/App.tsx:197",
       "note": null
-    },
-    {
-      "app": "throughput",
-      "path": "/todos",
-      "route_file": "throughput/src/App.tsx",
-      "component": "None",
-      "layout": "none",
-      "auth": {
-        "type": "authenticated",
-        "permissions": [],
-        "feature_flags": []
-      },
-      "nav": {
-        "surface": "topnav",
-        "group": "Main",
-        "label": "Todos",
-        "icon": "ListChecks",
-        "order": 4
-      },
-      "portal": null,
-      "owned_entities": [],
-      "data_tables": [],
-      "status": "orphan",
-      "evidence": "throughput/src/components/Navigation.tsx:65",
-      "note": "Nav item with no backing route"
     }
   ]
 }

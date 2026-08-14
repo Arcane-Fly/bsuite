@@ -1,8 +1,40 @@
-# BSuite Docs — Outstanding Work Index (single source of truth)
+# BSuite Docs — Outstanding Work Index (HISTORICAL SNAPSHOT — not a source of truth)
 
-**Status:** SINGLE SOURCE OF TRUTH for all outstanding work across the BSuite monorepo + 6 submodules.
+> ## ⚠ DEMOTED 2026-08-14 — do not treat this file as current
+>
+> This document called itself **"SINGLE SOURCE OF TRUTH for all outstanding work"** from
+> 2026-04-24 until 2026-08-14, while:
+>
+> - its content was last reconciled **2026-07-08** — five weeks stale at demotion;
+> - the very next line after the claim **repointed to a different document**, and a second
+>   repoint three weeks later superseded *that* one. A source of truth that opens by
+>   telling you to read something else is an index, not a truth.
+>
+> That is the same failure shape as the plan-completion dashboard retired on 2026-08-10
+> (`docs/20260810-plan-dashboard-retirement-v1.00W.md`), which was "named 'source of
+> truth' in this file for three months while being wrong." Its lesson applies verbatim
+> here: **a status surface must show only what it derives at render time. Anything it
+> cannot recompute belongs in a dated document, where its age is visible.**
+>
+> A stale index is worse than no index — it answers confidently and wrongly.
+>
+> ### Ask the live source instead
+>
+> | Question | Where the answer actually lives |
+> |---|---|
+> | What is open? | `gh issue list` / `gh pr list` |
+> | What is in the database? | `supabase_migrations.schema_migrations` — better, assert the object: `to_regclass`, `pg_policies`, `information_schema` |
+> | Did a promotion apply? | The Supabase Migrations workflow run on `main` |
+> | What was decided, and why? | `docs/00-roadmap/20260808-operator-decision-register-1.00W.md` |
+> | What is the canonical roadmap? | `docs/00-roadmap/20260112-master-roadmap-1.00W.md` |
+> | Is irreplaceable data intact? | `scripts/verify-class-a-preservation.mjs` |
+>
+> The sections below are retained **as a dated 2026-07-08 snapshot** for historical
+> context. Treat every claim in them as a statement about 8 July, not about today.
+
+**Status:** HISTORICAL SNAPSHOT — demoted 2026-08-14. Superseded by the live sources above.
 **Generated:** 2026-04-24 (docs reconciliation pass — top-level `docs/*.md` + plan indexes)
-**Updated:** 2026-07-08 — Pointers updated to reflect current execution queue (see note below); leave/pay-periods/admin-parity parity tables now DONE (see §Updates).
+**Content last reconciled:** 2026-07-08 — pointers updated to the then-current execution queue; leave/pay-periods/admin-parity parity tables marked DONE (see §Updates).
 
 > **2026-07-08 pointer update:** The execution queue reference below points to `docs/20260501-merged-execution-backlog-v1.00W.md` which is now archived (`docs/archive/2026-07/`). The **current** active execution queue is [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md). For GTO-specific work, see [`docs/plans/20260703-gto-e2e-gap-map-v1.00W.md`](./plans/20260703-gto-e2e-gap-map-v1.00W.md).
 >

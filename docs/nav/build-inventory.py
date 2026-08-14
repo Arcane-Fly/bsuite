@@ -23,6 +23,13 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 OUTPUT_PATH = os.path.join(SCRIPT_DIR, "route-inventory.json")
 
+# Paths (relative to REPO_ROOT) that must receive a byte-identical copy of the
+# inventory because an app bundles it at build time and cannot reach outside its
+# own submodule. See the write block in main() for why this exists.
+VENDORED_COPIES = [
+    "business-suite-unified/src/data/route-inventory.json",
+]
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -277,14 +284,13 @@ def build_throughput_nav_map():
     """
     throughput nav items are defined inline in Navigation.tsx navItems array.
     Items: Dashboard (/), Launch Pad (/launch), Analytics (/analytics),
-           Teams (/teams), Todos (/todos — no backing route), Pricing (/pricing).
+           Teams (/teams), Pricing (/pricing).
     """
     items = [
         ("/", "Dashboard", "LayoutDashboard"),
         ("/launch", "Launch Pad", "Rocket"),
         ("/analytics", "Analytics", "BarChart3"),
         ("/teams", "Teams", "User"),
-        ("/todos", "Todos", "ListChecks"),
         ("/pricing", "Pricing", "CreditCard"),
     ]
     nav_map = {}
@@ -1094,26 +1100,8 @@ def extract_throughput_routes(nav_map):
     # Nested child routes for ideas/:id are now handled by the main loop
     # via scope tracking. No separate handler needed.
 
-    # Add /todos as orphan (it's in nav but has no route)
-    todos_nav = nav_map.get("/todos", {})
-    if todos_nav:
-        routes.append(make_route(
-            app="throughput",
-            path="/todos",
-            route_file=route_file,
-            component="None",
-            layout="none",
-            auth_type="authenticated",
-            permissions=[],
-            nav_surface=todos_nav.get("surface", "none"),
-            nav_group=todos_nav.get("group"),
-            nav_label=todos_nav.get("label"),
-            nav_icon=todos_nav.get("icon"),
-            nav_order=todos_nav.get("order"),
-            status="orphan",
-            evidence=f"throughput/src/components/Navigation.tsx:65",
-            note="Nav item with no backing route",
-        ))
+    # /todos was removed (dead nav link, no backing route).
+    # Previously injected as an orphan entry — removed 2026-08-14.
 
     return routes
 
@@ -1203,6 +1191,34 @@ def main():
 
     total = len(all_routes)
     print(f"\nWrote {total} routes to {OUTPUT_PATH}")
+
+    # ------------------------------------------------------------------
+    # Vendored copies for app bundles.
+    #
+    # The BSU Developer Portal's Route Inspector imports this JSON at build
+    # time. It originally imported it from THIS path with a `../../../../`
+    # escape out of the submodule. That resolves fine in a monorepo checkout
+    # and fails hard on Vercel, which clones each submodule as a standalone
+    # repo — the parent's docs/ simply does not exist there, so `vite build`
+    # dies with UNRESOLVED_IMPORT on the main bundle.
+    #
+    # Writing the copy HERE, from the single generator, is what stops the two
+    # from drifting. A copy made by hand is a copy that goes stale silently;
+    # `.github/workflows/route-inventory.yml` re-runs this script on any PR
+    # touching route files and fails on a diff, which now covers both paths.
+    # ------------------------------------------------------------------
+    for rel in VENDORED_COPIES:
+        dest = os.path.join(REPO_ROOT, rel)
+        if not os.path.isdir(os.path.dirname(os.path.dirname(dest))):
+            # Submodule not checked out in this working tree — skip rather than
+            # fabricate a directory tree inside a missing submodule.
+            print(f"  (skipped vendored copy, submodule absent: {rel})")
+            continue
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "w", encoding="utf-8") as f:
+            json.dump(output, f, indent=2, sort_keys=False, ensure_ascii=False)
+            f.write("\n")
+        print(f"  vendored -> {rel}")
 
     # Summary by app
     from collections import Counter
