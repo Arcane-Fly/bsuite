@@ -20,7 +20,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
+          # The submodules are PRIVATE repos. Without this the default
+          # GITHUB_TOKEN gets "Repository not found" for every one of them and
+          # the job dies at checkout — which is what happened on the first real
+          # run of this workflow. Same pattern and same fallback as
+          # theme-conformance.yml and shared-package-contract.yml.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # D-92: assert the inputs BEFORE generating anything. build-inventory.py
+      # walks each submodule's src/; if a submodule were absent it would emit a
+      # SHORT inventory and the drift check below would then "fail" for a reason
+      # that has nothing to do with the PR — or, on a future refactor that made
+      # the generator tolerant, pass while having scanned almost nothing.
+      # An uninitialised submodule is an EMPTY DIRECTORY, so test for a file
+      # inside it, never `-d`.
+      - name: Assert every submodule is populated
+        run: |
+          set -euo pipefail
+          missing=0
+          for m in crm7 braden business-suite-unified conduit throughput R80.4; do
+            if [ ! -e "$m/package.json" ]; then
+              echo "::error::submodule $m is empty — checkout did not populate it, so the inventory would be generated from an incomplete tree"
+              missing=1
+            else
+              echo "ok: $m populated"
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
 
       - uses: actions/setup-python@v5
         with:
