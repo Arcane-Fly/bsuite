@@ -1,5 +1,18 @@
 export { PageGridLayout } from './PageGridLayout.js';
 export { PageEditorLauncher } from './PageEditorLauncher.js';
+export { CanvasCard } from './CanvasCard.js';
+export type { CanvasCardProps } from './CanvasCard.js';
+export { DraggableCardPage } from './DraggableCardPage.js';
+export type { DraggableCardPageProps } from './DraggableCardPage.js';
+export {
+  buildCanvasCardLayout,
+  flattenCanvasCards,
+  isCanvasCardElement,
+  describeNode,
+  clampColumns,
+  CANVAS_GRID_COLUMNS,
+} from './canvasCardLayout.js';
+export type { CanvasCardLayoutResult } from './canvasCardLayout.js';
 export type { WidgetConfig, PageEditorLauncherProps } from './PageEditorLauncher.js';
 export {
   usePageGridLayout,
