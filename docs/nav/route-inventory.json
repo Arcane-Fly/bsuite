@@ -3184,8 +3184,8 @@
     },
     {
       "app": "conduit",
-      "path": "/portal/field-officer",
-      "route_file": "conduit/src/app/portal/field-officer/page.tsx",
+      "path": "/portal/field-officer-assignments",
+      "route_file": "conduit/src/app/portal/field-officer-assignments/page.tsx",
       "component": "Page",
       "layout": "none",
       "auth": {
@@ -3196,7 +3196,7 @@
       "nav": {
         "surface": "sidebar",
         "group": "Pipeline",
-        "label": "Field Officer Portal",
+        "label": "FO Assignments",
         "icon": "UserCheck",
         "order": 6
       },
@@ -3204,7 +3204,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "conduit/src/app/portal/field-officer/page.tsx:1",
+      "evidence": "conduit/src/app/portal/field-officer-assignments/page.tsx:1",
       "note": null
     },
     {
