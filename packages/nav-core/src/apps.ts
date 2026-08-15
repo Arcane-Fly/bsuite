@@ -31,6 +31,14 @@ export type BSuiteAppKey = (typeof BSUITE_APP_KEYS)[number]
  */
 export const BSUITE_TENANT_APP_KEYS = ['bsu', 'crm7', 'conduit', 'r8', 'throughput'] as const
 
+/**
+ * The five internal workspaces, as a type. Without this every consumer that wants
+ * a tenant-only map has to re-derive `(typeof BSUITE_TENANT_APP_KEYS)[number]`
+ * locally — six copies of one definition, which is the duplication the whole
+ * package exists to prevent.
+ */
+export type BSuiteTenantAppKey = (typeof BSUITE_TENANT_APP_KEYS)[number]
+
 /** Every app, including public/marketing surfaces. Opt in explicitly. */
 export const BSUITE_ALL_APP_KEYS = BSUITE_APP_KEYS
 
