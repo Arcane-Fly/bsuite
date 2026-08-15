@@ -10,7 +10,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 - [`../AUTH_CANONICAL.md`](../AUTH_CANONICAL.md) is the canonical authentication and session-topology reference (the older `20260227-auth-map-reference-v1.00A.md` is archived under `archive/parent/2026-04-30-references-approved/`)
 - `20260504-bsuite-tech-stack-alignment-v1.00W.md` is the canonical tech-stack baseline — all apps must converge
 - `20260504-bsuite-documentation-hub-v1.00W.md` is the canonical cross-submodule documentation index — start here to find any doc
-- `OUTSTANDING.md` is the single outstanding-work index; `20260501-merged-execution-backlog-v1.00W.md` is the canonical execution queue
+- **`20260814-estate-remaining-work-register-v2.00W.md` is the canonical remaining-work register** — it supersedes `OUTSTANDING.md` (self-demoted 2026-08-14) and the seven registers listed in its §9. `20260501-merged-execution-backlog-v1.00W.md` remains the phase-ordered execution queue
 - Project `docs/README.md` files are navigation hubs only
 - `docs/plans/` contains feeder plans that must reconcile back into the master roadmap
 - `archive/` and imported donor documentation are reference-only and may preserve older naming or topology
@@ -21,10 +21,11 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File | Description |
 |------|-------------|
+| `20260814-estate-remaining-work-register-v2.00W.md` | **Canonical remaining-work register.** All 264 non-archive docs read; every material claim re-measured against the six repos at `development` HEAD, live SQL, live GitHub state and a live theme-audit re-run. P0 → P3 with sizes, evidence and a sequence. Supersedes seven earlier registers (§9). |
 | `(archived — see archived-repos-docs/20260725-bsuite-cleanup)` | Single source of truth for BSuite project planning across all projects |
 | `20260425-bsuite-finish-line-roadmap-v1.00W.md` | Prioritised P0/P1/P2 finish-line view (154 items, cited to sources) |
 | `20260501-merged-execution-backlog-v1.00W.md` | Canonical phase-ordered execution queue (BL-NNN / P0-* / P1-* / P2-* / WS-* item IDs) |
-| `OUTSTANDING.md` | Single source of truth outstanding-work index for parent `docs/*.md` |
+| `OUTSTANDING.md` | **Superseded 2026-08-14** by `20260814-estate-remaining-work-register-v2.00W.md` — retained for its evidence trail; its counts are stale |
 | `CONSISTENCY-REPORT.md` | Cross-app WCAG / a11y / dependency / auth consistency status + plan-tracking convention |
 | `NEW_ISSUES_FOUND.md` | Append-only ledger of pre-existing issues discovered mid-task (Five-Wave Stabilization) |
 | `20260723-bsuite-capability-matrix-v1.00W.md` | Competitor capability matrix (Code House WfO/AnyTime, ReadyTech Ready Recruit, aXcelerate) + prioritised completion ledger + user-manual program seed |
@@ -86,6 +87,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260507-timesheet-approval-parity-spec-v1.00W.md` | Timesheet approval parity spec |
 | `20260507-w4-permissions-editor-scoping-v1.00A.md` | W4 permissions editor scoping & architecture (scoping complete — bsuite#679 closed) |
 
+> **Parity-spec status correction (2026-08-14):** the nine tracking issues for these specs are closed as `completed`, but each was closed on the day its spec document merged. Measured 2026-08-14, **26 of the 36 tables they define do not exist**. See `20260814-estate-remaining-work-register-v2.00W.md` §3 before treating any of these as delivered.
+
 ### Audits, trackers & validation reports
 
 | File | Description |
@@ -99,10 +102,11 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md` | Cross-app auth validation dev-deploy report (OAuth 2.1 + PKCE + JWKS, 5/5 pass) |
 | `20260427-dev-main-fork-rca-v1.00W.md` | dev ↔ main fork RCA (parent + crm7) — pre-reconcile gate analysis (recovered from a stash 2026-08-05) |
 | `20260506-supabase-linter-action-plan-v1.00W.md` | Supabase linter action plan — Phases 1+2 ready, Phase 3 deferred (recovered from a stash 2026-08-05; re-run the advisor before acting) |
-| `20260506-table-usage-audit-v1.00W.md` | Table usage audit — conclusions stand, but each drop recommendation needs human sign-off (recovered from a stash 2026-08-05) |
+| `20260506-table-usage-audit-v1.00W.md` | Table usage audit — conclusions stand, but each drop recommendation needs human sign-off (recovered from a stash 2026-08-05). **Counts are stale**: 229 tables recorded, 403 live |
 | `20260722-developer-portal-investigation-v1.00W.md` | Developer Portal surface investigation — tenant_navigation, platform_branding, feature_builder, and schema-builder tables audit |
 | `20260814-notes-backlog-verification-register-v1.00D.md` | Measured state of every defect in the operator's `bsuite notes.docx` and the 2026-08-13 directive (D-59…D-92) — verified against code, live issues and live SQL, not against doc claims. Corrects the directive's own coverage numbers in both directions. |
 | `20260814-phase0-scope-remediation-delivery-v1.00W.md` | Phase 0 delivery + evidence record (crm7#1731, BSU#726). **Records two retractions**: crm7#1728 was not a defect and the filed fix would have taken the shared GTO report catalogue down in every tenant; crm7#1729's original query-scope fix chose the correct layer. Carries the unscoped-SELECT class sweep (12 tables, 4 real) and the Caris ruling. |
+| `20260814-estate-remaining-work-register-v2.00W.md` | **Canonical remaining-work register** (also indexed under Roadmaps above) — the full estate audit: 8 P0s, the money/compliance block, the parity-program correction, adoption gaps, verification-integrity holes, theme/perf, portals, doc hygiene, and what no static pass can settle. |
 
 ### Directories
 

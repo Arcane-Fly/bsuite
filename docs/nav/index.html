@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSuite Route Inventory</title>
+<style>
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Design tokens ── */
+:root {
+  --blue:    #3366cc;
+  --cyan:    #44aacc;
+  --red:     #ef4444;
+  --amber:   #f59e0b;
+  --green:   #22c55e;
+  --muted:   #6b7280;
+
+  --bg:          #0d1117;
+  --bg-card:     #161b22;
+  --bg-surface:  #1e2530;
+  --text:        #e6edf3;
+  --text-muted:  #8b949e;
+  --border:      #30363d;
+  --accent:      #44aacc;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:          #f6f8fa;
+    --bg-card:     #ffffff;
+    --bg-surface:  #f0f2f5;
+    --text:        #1f2937;
+    --text-muted:  #6b7280;
+    --border:      #d0d7de;
+    color-scheme: light;
+  }
+}
+[data-theme="light"] {
+  --bg:          #f6f8fa;
+  --bg-card:     #ffffff;
+  --bg-surface:  #f0f2f5;
+  --text:        #1f2937;
+  --text-muted:  #6b7280;
+  --border:      #d0d7de;
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --bg:          #0d1117;
+  --bg-card:     #161b22;
+  --bg-surface:  #1e2530;
+  --text:        #e6edf3;
+  --text-muted:  #8b949e;
+  --border:      #30363d;
+  color-scheme: dark;
+}
+
+/* ── Base ── */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+a { color: var(--cyan); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Layout ── */
+.app-header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.app-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+.app-title span { color: var(--cyan); }
+.header-spacer { flex: 1; }
+.theme-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.theme-btn:hover { background: var(--border); }
+
+/* ── Stats bar ── */
+.stats-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.stat-pill .pill-label { color: var(--text-muted); }
+.stat-pill .pill-value { font-weight: 600; }
+.stat-sep {
+  color: var(--border);
+  font-size: 16px;
+  user-select: none;
+}
+
+/* ── Tabs ── */
+.tabs-row {
+  display: flex;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  gap: 0;
+  overflow-x: auto;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 18px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+/* ── Main content ── */
+.main { padding: 20px; max-width: 1600px; margin: 0 auto; }
+
+/* ── Filters panel ── */
+.filters-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.filter-group label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.filter-select, .filter-input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.filter-select:focus, .filter-input:focus {
+  border-color: var(--cyan);
+}
+.filter-input { min-width: 200px; }
+.filter-clear-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  align-self: flex-end;
+  transition: all 0.15s;
+}
+.filter-clear-btn:hover { color: var(--text); border-color: var(--text-muted); }
+.results-count {
+  margin-left: auto;
+  align-self: flex-end;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── App section ── */
+.app-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.app-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.app-section-header:hover { background: var(--border); }
+.app-section-header[aria-expanded="false"] + .app-section-body { display: none; }
+.chevron {
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.app-section-header[aria-expanded="true"] .chevron { transform: rotate(90deg); }
+.app-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+  min-width: 28px;
+}
+.app-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.app-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Tree ── */
+.tree-body { padding: 8px 0; }
+.tree-node { border-top: 1px solid var(--border); }
+.tree-node:first-child { border-top: none; }
+.tree-row {
+  display: grid;
+  grid-template-columns: 280px 180px 120px 120px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 16px;
+  font-size: 13px;
+  transition: background 0.1s;
+}
+.tree-row:hover { background: var(--bg-surface); }
+.tree-path {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-indent {
+  display: inline-block;
+  width: 16px;
+  flex-shrink: 0;
+}
+.tree-component { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-auth { }
+.tree-nav { color: var(--text-muted); font-size: 12px; }
+.tree-status { }
+
+/* ── Status badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.badge-live     { background: rgba(34,197,94,0.15);  color: #22c55e; }
+.badge-redirect { background: rgba(107,114,128,0.15); color: #9ca3af; }
+.badge-orphan   { background: rgba(239,68,68,0.15);  color: #ef4444; }
+.badge-stub     { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.badge-placeholder { background: rgba(107,114,128,0.12); color: #6b7280; }
+
+.badge-auth-public        { background: rgba(68,170,204,0.15); color: #44aacc; }
+.badge-auth-authenticated { background: rgba(51,102,204,0.15); color: #5588ee; }
+.badge-auth-admin         { background: rgba(239,68,68,0.15);  color: #ef4444; }
+.badge-auth-platform_role { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.badge-auth-tenant_role   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+
+.badge-surface-sidebar  { background: rgba(51,102,204,0.15); color: #5588ee; }
+.badge-surface-topnav   { background: rgba(68,170,204,0.15); color: #44aacc; }
+.badge-surface-none     { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+
+/* ── Tree header ── */
+.tree-header {
+  display: grid;
+  grid-template-columns: 280px 180px 120px 120px 1fr;
+  gap: 8px;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Matrix ── */
+.matrix-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+.matrix-table th, .matrix-table td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: center;
+}
+.matrix-table thead th {
+  background: var(--bg-surface);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.matrix-table thead th:first-child { text-align: left; }
+.matrix-table tbody tr:hover td { background: var(--bg-surface); }
+.matrix-table td:first-child {
+  text-align: left;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--bg-surface);
+}
+.matrix-cell-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.cell-high   { background: rgba(51,102,204,0.35); color: #88aaff; }
+.cell-med    { background: rgba(51,102,204,0.18); color: #7799dd; }
+.cell-low    { background: rgba(51,102,204,0.10); color: #5577bb; }
+.cell-zero   { color: var(--border); font-size: 12px; }
+.matrix-row-total { font-weight: 700; color: var(--cyan); }
+.matrix-col-total { font-weight: 700; color: var(--cyan); font-size: 13px; }
+
+/* ── Filters view ── */
+.filters-results-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.filter-result-item {
+  display: grid;
+  grid-template-columns: 70px 240px 160px 90px 90px 100px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  transition: background 0.1s;
+}
+.filter-result-item:first-child { border-top: none; }
+.filter-result-item:hover { background: var(--bg-surface); }
+.filter-result-header {
+  display: grid;
+  grid-template-columns: 70px 240px 160px 90px 90px 100px 1fr;
+  gap: 8px;
+  padding: 7px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+.result-path {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.result-note { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── App color dots ── */
+.app-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.app-dot-braden     { background: #e879f9; }
+.app-dot-bsu        { background: #3366cc; }
+.app-dot-conduit    { background: #22c55e; }
+.app-dot-crm7       { background: #44aacc; }
+.app-dot-r80        { background: #f59e0b; }
+.app-dot-throughput { background: #ef4444; }
+
+/* ── App label chips ── */
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.app-chip-braden     { background: rgba(232,121,249,0.15); color: #e879f9; }
+.app-chip-bsu        { background: rgba(51,102,204,0.15);  color: #5588ee; }
+.app-chip-conduit    { background: rgba(34,197,94,0.15);   color: #22c55e; }
+.app-chip-crm7       { background: rgba(68,170,204,0.15);  color: #44aacc; }
+.app-chip-r80        { background: rgba(245,158,11,0.15);  color: #f59e0b; }
+.app-chip-throughput { background: rgba(239,68,68,0.15);   color: #ef4444; }
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  gap: 12px;
+}
+.empty-state .icon { font-size: 40px; }
+.empty-state p { font-size: 15px; }
+
+/* ── Loading ── */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+  gap: 14px;
+  font-size: 15px;
+}
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid var(--border);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error state ── */
+.error-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 10px;
+  color: #ef4444;
+  margin: 20px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .tree-header,
+  .tree-row {
+    grid-template-columns: 1fr 80px 70px;
+  }
+  .tree-header *:nth-child(n+4),
+  .tree-row *:nth-child(n+4) { display: none; }
+
+  .filter-result-header,
+  .filter-result-item {
+    grid-template-columns: 60px 1fr 80px 70px;
+  }
+  .filter-result-header *:nth-child(n+5),
+  .filter-result-item *:nth-child(n+5) { display: none; }
+
+  .filters-panel { flex-direction: column; }
+  .filter-group, .filter-input { width: 100%; min-width: unset; }
+}
+@media (max-width: 480px) {
+  .stats-bar { gap: 6px; }
+  .stat-pill { font-size: 11px; padding: 2px 7px; }
+  .app-header { padding: 10px 12px; gap: 10px; }
+  .main { padding: 12px; }
+  .tabs-row { padding: 0 8px; }
+  .tab-btn { padding: 10px 12px; font-size: 13px; }
+}
+
+/* ── Tree sub-nodes ── */
+.tree-children { }
+.tree-node-child .tree-row { background: rgba(0,0,0,0.03); }
+.tree-node-child .tree-row:hover { background: var(--bg-surface); }
+
+/* ── Nav note ── */
+.nav-label-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Tooltip ── */
+.tip {
+  position: relative;
+  cursor: help;
+}
+.tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+}
+.tip:hover::after { opacity: 1; }
+
+/* ── Section info row ── */
+.section-info-bar {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.info-chunk { display: flex; gap: 4px; align-items: center; }
+.info-chunk strong { color: var(--text); }
+
+/* ── View toggle ── */
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.view-toggle-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.view-toggle-btn.active {
+  background: rgba(68,170,204,0.15);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  font-weight: 600;
+}
+.view-toggle-btn:hover { color: var(--text); }
+
+/* ── Sticky sub-header ── */
+.tree-col-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+</style>
+</head>
+<body>
+
+<header class="app-header" role="banner">
+  <div class="app-title">BSuite <span>Route Inventory</span></div>
+  <div class="header-spacer"></div>
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle colour scheme">☀ Light</button>
+</header>
+
+<div class="stats-bar" id="statsBar" role="region" aria-label="Summary statistics">
+  <div class="loading-state" style="padding: 6px 0; gap: 8px;">
+    <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+    Loading…
+  </div>
+</div>
+
+<nav class="tabs-row" role="tablist" aria-label="Views">
+  <button class="tab-btn active" role="tab" aria-selected="true"  id="tab-tree"   data-view="tree"   onclick="switchTab('tree')">App Tree</button>
+  <button class="tab-btn"        role="tab" aria-selected="false" id="tab-matrix" data-view="matrix" onclick="switchTab('matrix')">Cross-app Matrix</button>
+  <button class="tab-btn"        role="tab" aria-selected="false" id="tab-filter" data-view="filter" onclick="switchTab('filter')">Filter &amp; Search</button>
+</nav>
+
+<main class="main" id="mainContent" role="main">
+  <div class="loading-state" id="loadingMsg">
+    <div class="spinner"></div>
+    Loading route inventory…
+  </div>
+</main>
+
+<script>
+'use strict';
+
+/* ── Theme ── */
+(function () {
+  const btn = document.getElementById('themeBtn');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  let dark = prefersDark;
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    btn.textContent = dark ? '☀ Light' : '☾ Dark';
+  }
+  applyTheme();
+  btn.addEventListener('click', () => { dark = !dark; applyTheme(); });
+})();
+
+/* ── State ── */
+let ALL_ROUTES = [];
+let currentTab = 'tree';
+let filterState = { auth: '', surface: '', status: '', search: '' };
+const APP_ORDER = ['braden', 'bsu', 'conduit', 'crm7', 'r80', 'throughput'];
+const APP_LABELS = {
+  braden: 'Braden',
+  bsu: 'BSU',
+  conduit: 'Conduit',
+  crm7: 'CRM7',
+  r80: 'R80',
+  throughput: 'Throughput',
+};
+
+/* ── Fetch data ── */
+fetch('./route-inventory.json')
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(data => {
+    ALL_ROUTES = data.routes || [];
+    renderStats(ALL_ROUTES);
+    renderCurrentTab();
+  })
+  .catch(err => {
+    document.getElementById('mainContent').innerHTML =
+      '<div class="error-state"><span aria-hidden="true">⚠</span>' +
+      '<div><strong>Failed to load route-inventory.json</strong><br>' + escHtml(String(err)) + '</div></div>';
+    document.getElementById('statsBar').innerHTML =
+      '<div class="error-state" style="margin:0;padding:8px 16px;">Data unavailable</div>';
+  });
+
+/* ── Tab switching ── */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const active = b.dataset.view === tab;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', String(active));
+  });
+  renderCurrentTab();
+}
+function renderCurrentTab() {
+  if (!ALL_ROUTES.length) return;
+  if (currentTab === 'tree')   renderTreeView();
+  if (currentTab === 'matrix') renderMatrixView();
+  if (currentTab === 'filter') renderFilterView();
+}
+
+/* ── Utilities ── */
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function statusBadge(s) {
+  const map = {
+    live: 'badge-live',
+    redirect: 'badge-redirect',
+    orphan: 'badge-orphan',
+    stub: 'badge-stub',
+    placeholder: 'badge-placeholder',
+  };
+  const icons = { live: '●', redirect: '↩', orphan: '⚠', stub: '◌', placeholder: '◌' };
+  const cls = map[s] || 'badge-redirect';
+  const icon = icons[s] || '·';
+  return `<span class="badge ${cls}" aria-label="Status: ${escHtml(s)}">${icon} ${escHtml(s)}</span>`;
+}
+
+function authBadge(auth) {
+  const t = auth.type;
+  const cls = 'badge-auth-' + t.replace(/[^a-z_]/gi,'');
+  const icons = { public: '🌐', authenticated: '🔒', admin: '🛡', platform_role: '⚙', tenant_role: '🏢' };
+  const icon = icons[t] || '?';
+  let extra = '';
+  if (auth.permissions && auth.permissions.length) {
+    extra = ` <span title="${escHtml(auth.permissions.join(', '))}" class="tip" data-tip="${escHtml(auth.permissions.join(', '))}">+perm</span>`;
+  }
+  return `<span class="badge ${cls}">${icon} ${escHtml(t)}</span>${extra}`;
+}
+
+function surfaceBadge(nav) {
+  if (!nav || nav.surface === 'none') {
+    return `<span class="badge badge-surface-none">—</span>`;
+  }
+  const cls = 'badge-surface-' + nav.surface;
+  const label = nav.label ? escHtml(nav.label) : escHtml(nav.surface);
+  return `<span class="badge ${cls}" title="${nav.group ? escHtml(nav.group) : ''}">${escHtml(nav.surface)}: ${label}</span>`;
+}
+
+function appChip(app) {
+  return `<span class="app-chip app-chip-${app}"><span class="app-dot app-dot-${app}" aria-hidden="true"></span>${escHtml(APP_LABELS[app] || app)}</span>`;
+}
+
+/* ── Stats bar ── */
+function renderStats(routes) {
+  const byApp = {};
+  const byAuth = {};
+  const byStatus = {};
+  APP_ORDER.forEach(a => byApp[a] = 0);
+  routes.forEach(r => {
+    byApp[r.app] = (byApp[r.app] || 0) + 1;
+    byAuth[r.auth.type] = (byAuth[r.auth.type] || 0) + 1;
+    byStatus[r.status] = (byStatus[r.status] || 0) + 1;
+  });
+
+  const pill = (label, value, color) =>
+    `<span class="stat-pill"><span class="pill-label">${label}</span><span class="pill-value" style="color:${color||'inherit'}">${value}</span></span>`;
+
+  let html = pill('Total', routes.length, 'var(--cyan)');
+  html += '<span class="stat-sep">|</span>';
+  APP_ORDER.forEach(a => { if (byApp[a]) html += pill(APP_LABELS[a], byApp[a]); });
+  html += '<span class="stat-sep">|</span>';
+  html += pill('public', byAuth.public || 0, '#44aacc');
+  html += pill('auth', byAuth.authenticated || 0, '#5588ee');
+  html += pill('admin', byAuth.admin || 0, '#ef4444');
+  if (byAuth.platform_role) html += pill('platform_role', byAuth.platform_role, '#f59e0b');
+  html += '<span class="stat-sep">|</span>';
+  html += pill('live', byStatus.live || 0, '#22c55e');
+  html += pill('redirect', byStatus.redirect || 0, '#9ca3af');
+  if (byStatus.orphan) html += pill('orphan', byStatus.orphan, '#ef4444');
+  if (byStatus.stub) html += pill('stub', byStatus.stub, '#f59e0b');
+
+  document.getElementById('statsBar').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TREE VIEW
+══════════════════════════════════════════════════════════ */
+function renderTreeView() {
+  const mc = document.getElementById('mainContent');
+
+  // Build per-app groups
+  const byApp = {};
+  APP_ORDER.forEach(a => byApp[a] = []);
+  ALL_ROUTES.forEach(r => { if (byApp[r.app]) byApp[r.app].push(r); });
+
+  let html = '';
+
+  APP_ORDER.forEach(app => {
+    const routes = byApp[app];
+    if (!routes.length) return;
+    const liveCount = routes.filter(r => r.status === 'live').length;
+    const authCount = routes.filter(r => r.auth.type !== 'public').length;
+
+    // Build hierarchy
+    const tree = buildTree(routes);
+
+    html += `
+<div class="app-section" id="app-section-${app}">
+  <div class="app-section-header" aria-expanded="true" onclick="toggleSection(this)" role="button" tabindex="0" aria-controls="app-body-${app}">
+    <span class="chevron" aria-hidden="true">▶</span>
+    <span class="app-dot app-dot-${app}" aria-hidden="true" style="width:10px;height:10px;"></span>
+    <span class="app-name">${escHtml(APP_LABELS[app] || app)}</span>
+    <span class="app-badge">${routes.length}</span>
+    <span class="app-subtitle">${liveCount} live · ${authCount} auth-gated</span>
+  </div>
+  <div class="app-section-body" id="app-body-${app}">
+    <div class="tree-header tree-col-header" aria-hidden="true">
+      <div>Path</div>
+      <div>Component</div>
+      <div>Auth</div>
+      <div>Nav</div>
+      <div>Status</div>
+    </div>
+    <div class="tree-body">
+      ${renderTreeNodes(tree, 0)}
+    </div>
+  </div>
+</div>`;
+  });
+
+  mc.innerHTML = html;
+}
+
+function buildTree(routes) {
+  // Sort routes by path, then build nested structure
+  const sorted = [...routes].sort((a, b) => a.path.localeCompare(b.path));
+
+  // Simple flat rendering grouped by top-level segment
+  const groups = {};
+  const groupOrder = [];
+  sorted.forEach(r => {
+    const parts = r.path.replace(/^\//, '').split('/');
+    const top = parts[0] || '(root)';
+    if (!groups[top]) { groups[top] = []; groupOrder.push(top); }
+    groups[top].push(r);
+  });
+
+  return { groups, groupOrder };
+}
+
+function renderTreeNodes(tree, depth) {
+  const { groups, groupOrder } = tree;
+  let html = '';
+  groupOrder.forEach(top => {
+    const routes = groups[top];
+    if (routes.length === 1) {
+      html += renderRouteRow(routes[0], 0);
+    } else {
+      // Multiple routes under same prefix — first route (or synthetic) as collapsible parent
+      const parentId = 'tg_' + Math.random().toString(36).slice(2);
+      // Check if any route IS exactly the top-level path
+      const exactMatch = routes.find(r => {
+        const p = r.path.replace(/^\//, '').split('/');
+        return p.length === 1 && p[0] === top;
+      });
+      const parentRoute = exactMatch || { path: '/' + top, component: '—', auth: {type:'—',permissions:[]}, nav:{surface:'none'}, status:'live', _virtual: true };
+      html += `<div class="tree-node">`;
+      html += `<div class="tree-group-toggle" onclick="toggleGroup('${parentId}')" style="cursor:pointer;">`;
+      html += renderRouteRowGrouped(parentRoute, 0, routes.length, parentId);
+      html += `</div>`;
+      html += `<div class="tree-children" id="${parentId}">`;
+      routes.filter(r => r !== exactMatch).forEach(r => {
+        html += renderRouteRow(r, 1);
+      });
+      html += `</div></div>`;
+    }
+  });
+  return html;
+}
+
+function renderRouteRowGrouped(route, depth, childCount, groupId) {
+  const indent = '&nbsp;'.repeat(depth * 4);
+  const pathDisplay = escHtml(route.path);
+  const chevronId = 'ch_' + groupId;
+  return `<div class="tree-row" style="cursor:pointer;">
+    <div class="tree-path">
+      ${indent}<span id="${chevronId}" style="font-size:10px;color:var(--text-muted);margin-right:4px;display:inline-block;transition:transform 0.2s">▶</span>
+      <code>${pathDisplay}</code>
+      <span style="font-size:11px;color:var(--text-muted);margin-left:4px;">(${childCount})</span>
+    </div>
+    <div class="tree-component">${route._virtual ? '' : escHtml(route.component || '—')}</div>
+    <div class="tree-auth">${route._virtual ? '' : authBadge(route.auth)}</div>
+    <div class="tree-nav">${route._virtual ? '' : surfaceBadge(route.nav)}</div>
+    <div class="tree-status">${route._virtual ? '' : statusBadge(route.status)}</div>
+  </div>`;
+}
+
+function renderRouteRow(route, depth) {
+  const indent = depth > 0 ? `<span class="tree-indent" aria-hidden="true"></span>`.repeat(depth) : '';
+  const pathDisplay = escHtml(route.path);
+  const note = route.note ? ` <span class="tip" data-tip="${escHtml(route.note)}" style="color:var(--text-muted);font-size:11px;" aria-label="Note: ${escHtml(route.note)}">ⓘ</span>` : '';
+  return `<div class="tree-node">
+  <div class="tree-row">
+    <div class="tree-path">${indent}<code>${pathDisplay}</code>${note}</div>
+    <div class="tree-component">${escHtml(route.component || '—')}</div>
+    <div class="tree-auth">${authBadge(route.auth)}</div>
+    <div class="tree-nav">${surfaceBadge(route.nav)}</div>
+    <div class="tree-status">${statusBadge(route.status)}</div>
+  </div>
+</div>`;
+}
+
+function toggleSection(el) {
+  const expanded = el.getAttribute('aria-expanded') === 'true';
+  el.setAttribute('aria-expanded', String(!expanded));
+  const bodyId = el.getAttribute('aria-controls');
+  const body = document.getElementById(bodyId);
+  if (body) body.style.display = expanded ? 'none' : '';
+}
+
+function toggleGroup(id) {
+  const el = document.getElementById(id);
+  const chevronId = 'ch_' + id;
+  const chev = document.getElementById(chevronId);
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  if (chev) chev.style.transform = hidden ? 'rotate(90deg)' : '';
+}
+
+/* ══════════════════════════════════════════════════════════
+   MATRIX VIEW
+══════════════════════════════════════════════════════════ */
+function renderMatrixView() {
+  const mc = document.getElementById('mainContent');
+
+  // Get all top-level path prefixes
+  const prefixSet = new Set();
+  ALL_ROUTES.forEach(r => {
+    const segs = r.path.replace(/^\//, '').split('/');
+    const top = segs[0] || '(root)';
+    prefixSet.add(top);
+  });
+
+  // Sort prefixes, put common ones first
+  const priorityPrefixes = ['(root)', 'dashboard', 'admin', 'settings', 'auth', 'login', 'profile', 'developer'];
+  const allPrefixes = [...prefixSet].sort((a, b) => {
+    const ai = priorityPrefixes.indexOf(a);
+    const bi = priorityPrefixes.indexOf(b);
+    if (ai >= 0 && bi >= 0) return ai - bi;
+    if (ai >= 0) return -1;
+    if (bi >= 0) return 1;
+    return a.localeCompare(b);
+  });
+
+  // Build counts matrix: prefix × app
+  const matrix = {};
+  allPrefixes.forEach(p => {
+    matrix[p] = {};
+    APP_ORDER.forEach(a => matrix[p][a] = 0);
+  });
+  ALL_ROUTES.forEach(r => {
+    const segs = r.path.replace(/^\//, '').split('/');
+    const top = segs[0] || '(root)';
+    if (matrix[top]) matrix[top][r.app] = (matrix[top][r.app] || 0) + 1;
+  });
+
+  // Row totals and col totals
+  const rowTotals = {};
+  const colTotals = {};
+  APP_ORDER.forEach(a => colTotals[a] = 0);
+  allPrefixes.forEach(p => {
+    rowTotals[p] = APP_ORDER.reduce((s, a) => s + (matrix[p][a] || 0), 0);
+    APP_ORDER.forEach(a => colTotals[a] += matrix[p][a] || 0);
+  });
+  const grandTotal = APP_ORDER.reduce((s, a) => s + colTotals[a], 0);
+
+  // Max count for heat scaling
+  const allCounts = allPrefixes.flatMap(p => APP_ORDER.map(a => matrix[p][a]));
+  const maxCount = Math.max(...allCounts, 1);
+
+  function cellClass(n) {
+    if (!n) return 'cell-zero';
+    const ratio = n / maxCount;
+    if (ratio > 0.4) return 'cell-high';
+    if (ratio > 0.1) return 'cell-med';
+    return 'cell-low';
+  }
+
+  // Filter to prefixes with at least 1 route
+  const activePrefix = allPrefixes.filter(p => rowTotals[p] > 0);
+
+  let html = `
+<p style="margin-bottom:14px;color:var(--text-muted);font-size:13px;">
+  Rows = top-level URL path prefix. Columns = apps. Cell = route count for that prefix in that app.
+  <strong style="color:var(--text)">${grandTotal}</strong> routes across <strong style="color:var(--text)">${activePrefix.length}</strong> prefixes.
+  Darker cells = more routes.
+</p>
+<div class="matrix-wrap">
+<table class="matrix-table" role="table" aria-label="Cross-app route coverage matrix">
+  <thead>
+    <tr>
+      <th scope="col" style="text-align:left">Prefix</th>
+      ${APP_ORDER.map(a => `<th scope="col"><span class="app-dot app-dot-${a}" style="display:inline-block;margin-right:4px;"></span>${escHtml(APP_LABELS[a])}</th>`).join('')}
+      <th scope="col">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${activePrefix.map(prefix => {
+      const cells = APP_ORDER.map(a => {
+        const n = matrix[prefix][a];
+        const cls = cellClass(n);
+        if (!n) return `<td><span class="matrix-cell-count cell-zero" aria-label="0 routes">—</span></td>`;
+        return `<td><span class="matrix-cell-count ${cls}" aria-label="${n} routes">${n}</span></td>`;
+      }).join('');
+      return `<tr>
+        <td><code>/${prefix === '(root)' ? '' : escHtml(prefix)}</code></td>
+        ${cells}
+        <td><span class="matrix-row-total">${rowTotals[prefix]}</span></td>
+      </tr>`;
+    }).join('')}
+  </tbody>
+  <tfoot>
+    <tr style="border-top:2px solid var(--border);">
+      <td style="font-weight:700;text-align:left;">Total</td>
+      ${APP_ORDER.map(a => `<td><span class="matrix-col-total">${colTotals[a]}</span></td>`).join('')}
+      <td><span class="matrix-col-total">${grandTotal}</span></td>
+    </tr>
+  </tfoot>
+</table>
+</div>`;
+
+  // Coverage gap analysis
+  const gapPrefixes = activePrefix.filter(p => {
+    const appsWith = APP_ORDER.filter(a => matrix[p][a] > 0);
+    return appsWith.length < APP_ORDER.length && appsWith.length > 0;
+  });
+
+  if (gapPrefixes.length > 0) {
+    html += `
+<div style="margin-top:20px;">
+  <h2 style="font-size:15px;font-weight:700;margin-bottom:12px;">Coverage gaps <span style="font-size:12px;font-weight:400;color:var(--text-muted)">(prefixes present in some apps but not all)</span></h2>
+  <div class="matrix-wrap">
+    <table class="matrix-table">
+      <thead><tr>
+        <th style="text-align:left">Prefix</th>
+        ${APP_ORDER.map(a => `<th><span class="app-dot app-dot-${a}" style="display:inline-block;margin-right:4px;"></span>${escHtml(APP_LABELS[a])}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${gapPrefixes.map(prefix => {
+          const cells = APP_ORDER.map(a => {
+            const n = matrix[prefix][a];
+            if (n) return `<td><span class="matrix-cell-count cell-low">${n}</span></td>`;
+            return `<td style="background:rgba(239,68,68,0.07);"><span style="color:#ef4444;font-size:13px;" aria-label="missing" title="No routes for this prefix in ${APP_LABELS[a]}">✗</span></td>`;
+          }).join('');
+          return `<tr><td><code>/${prefix === '(root)' ? '' : escHtml(prefix)}</code></td>${cells}</tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>
+</div>`;
+  }
+
+  mc.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FILTER VIEW
+══════════════════════════════════════════════════════════ */
+function renderFilterView() {
+  const mc = document.getElementById('mainContent');
+
+  const authTypes = [...new Set(ALL_ROUTES.map(r => r.auth.type))].sort();
+  const surfaces  = [...new Set(ALL_ROUTES.map(r => r.nav.surface || 'none'))].sort();
+  const statuses  = [...new Set(ALL_ROUTES.map(r => r.status))].sort();
+
+  function opt(val, cur, label) {
+    return `<option value="${escHtml(val)}" ${cur === val ? 'selected' : ''}>${escHtml(label || val)}</option>`;
+  }
+
+  const filtersHtml = `
+<div class="filters-panel">
+  <div class="filter-group">
+    <label for="f-search">Search path / component</label>
+    <input type="search" id="f-search" class="filter-input" placeholder="e.g. /settings or Dashboard" value="${escHtml(filterState.search)}" oninput="updateFilter('search', this.value)" aria-label="Search paths and components">
+  </div>
+  <div class="filter-group">
+    <label for="f-auth">Auth level</label>
+    <select id="f-auth" class="filter-select" onchange="updateFilter('auth', this.value)" aria-label="Filter by auth level">
+      ${opt('', filterState.auth, 'All auth types')}
+      ${authTypes.map(t => opt(t, filterState.auth)).join('')}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="f-surface">Nav surface</label>
+    <select id="f-surface" class="filter-select" onchange="updateFilter('surface', this.value)" aria-label="Filter by nav surface">
+      ${opt('', filterState.surface, 'All surfaces')}
+      ${surfaces.map(s => opt(s, filterState.surface)).join('')}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="f-status">Status</label>
+    <select id="f-status" class="filter-select" onchange="updateFilter('status', this.value)" aria-label="Filter by status">
+      ${opt('', filterState.status, 'All statuses')}
+      ${statuses.map(s => opt(s, filterState.status)).join('')}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="f-app">App</label>
+    <select id="f-app" class="filter-select" onchange="updateFilter('app', this.value)" aria-label="Filter by app">
+      ${opt('', filterState.app || '', 'All apps')}
+      ${APP_ORDER.map(a => opt(a, filterState.app || '', APP_LABELS[a])).join('')}
+    </select>
+  </div>
+  <button class="filter-clear-btn" onclick="clearFilters()" aria-label="Clear all filters">Clear filters</button>
+  <span class="results-count" id="filterCount"></span>
+</div>`;
+
+  mc.innerHTML = filtersHtml + '<div id="filterResults"></div>';
+  renderFilterResults();
+}
+
+function updateFilter(key, val) {
+  filterState[key] = val;
+  renderFilterResults();
+}
+
+function clearFilters() {
+  filterState = { auth: '', surface: '', status: '', search: '', app: '' };
+  renderFilterView();
+}
+
+function renderFilterResults() {
+  const { auth, surface, status, search, app } = filterState;
+  const q = search.trim().toLowerCase();
+
+  const filtered = ALL_ROUTES.filter(r => {
+    if (auth && r.auth.type !== auth) return false;
+    if (surface) {
+      const s = r.nav.surface || 'none';
+      if (s !== surface) return false;
+    }
+    if (status && r.status !== status) return false;
+    if (app && r.app !== app) return false;
+    if (q) {
+      const haystack = (r.path + ' ' + (r.component || '') + ' ' + (r.note || '')).toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const countEl = document.getElementById('filterCount');
+  if (countEl) countEl.textContent = `${filtered.length} of ${ALL_ROUTES.length} routes`;
+
+  const container = document.getElementById('filterResults');
+  if (!container) return;
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><span class="icon" aria-hidden="true">🔍</span><p>No routes match the current filters</p></div>`;
+    return;
+  }
+
+  function highlight(str) {
+    if (!q) return escHtml(str);
+    const idx = str.toLowerCase().indexOf(q);
+    if (idx === -1) return escHtml(str);
+    return escHtml(str.slice(0, idx)) +
+      `<mark style="background:rgba(68,170,204,0.3);color:inherit;border-radius:2px;">${escHtml(str.slice(idx, idx + q.length))}</mark>` +
+      escHtml(str.slice(idx + q.length));
+  }
+
+  const rows = filtered.map(r => {
+    const note = r.note ? `<span class="result-note tip" data-tip="${escHtml(r.note)}">${escHtml(r.note)}</span>` : '';
+    return `<div class="filter-result-item" role="row">
+      <div role="cell">${appChip(r.app)}</div>
+      <div class="result-path" role="cell"><code>${highlight(r.path)}</code></div>
+      <div role="cell" style="color:var(--text-muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${highlight(r.component || '—')}</div>
+      <div role="cell">${authBadge(r.auth)}</div>
+      <div role="cell">${surfaceBadge(r.nav)}</div>
+      <div role="cell">${statusBadge(r.status)}</div>
+      <div role="cell">${note}</div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+<div class="filters-results-list" role="table" aria-label="Filtered routes">
+  <div class="filter-result-header" role="row">
+    <div role="columnheader">App</div>
+    <div role="columnheader">Path</div>
+    <div role="columnheader">Component</div>
+    <div role="columnheader">Auth</div>
+    <div role="columnheader">Nav</div>
+    <div role="columnheader">Status</div>
+    <div role="columnheader">Note</div>
+  </div>
+  ${rows}
+</div>`;
+}
+
+/* ── Keyboard accessibility for toggles ── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const el = document.activeElement;
+    if (el && el.getAttribute('role') === 'button') {
+      e.preventDefault();
+      el.click();
+    }
+  }
+});
+</script>
+</body>
+</html>

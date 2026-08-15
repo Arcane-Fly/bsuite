@@ -69,17 +69,20 @@ const SCOPES = [
   { name: 'root', dir: 'supabase/migrations' },
   { name: 'crm7', dir: 'crm7/supabase/migrations' },
   { name: 'conduit', dir: 'conduit/supabase/migrations' },
-  // R80.4 is in the APPLIER's matrix but has no `supabase/` directory at all —
-  // it is a Vite charge-calculator app whose data lives in `awards/` and whose
-  // only backend is `api/`. It therefore contributes ZERO migrations, and a
-  // presence guard that counts scopes can never be satisfied while it is
-  // listed. That is not hypothetical: CI ran this checker with
-  // `--require-scopes=8` and it failed every time with "expected migrations in
-  // at least 8 scope(s) but found 7" — a gate that was RED BY CONSTRUCTION
-  // from the day it was written (run 31091770857, 2026-08-06). Kept in the list
-  // so the scan still covers R80.4 the moment it gains migrations, and marked
-  // optional so its absence is expected rather than a checkout failure.
-  { name: 'R80.4', dir: 'R80.4/supabase/migrations', optional: true },
+  // R80.4 was `optional: true` because it had no `supabase/` directory at all —
+  // a Vite charge-calculator app whose data lived in `awards/` and whose only
+  // backend was `api/`. A presence guard counting scopes could never be
+  // satisfied while it was listed, and CI ran this checker with
+  // `--require-scopes=8` failing every time with "expected migrations in at
+  // least 8 scope(s) but found 7" — RED BY CONSTRUCTION from the day it was
+  // written (run 31091770857, 2026-08-06).
+  //
+  // 2026-08-14: R80.4 now HAS migrations, and the checker said so itself —
+  // it emits a ::notice:: when an optional scope stops being empty, precisely
+  // so this flag cannot rot unnoticed. Dropping `optional` now makes its
+  // absence a failure again, which is the correct state for a scope that
+  // really does contribute migrations to the shared project.
+  { name: 'R80.4', dir: 'R80.4/supabase/migrations' },
   { name: 'business-suite-unified', dir: 'business-suite-unified/supabase/migrations' },
   { name: 'braden', dir: 'braden/supabase/migrations' },
   { name: 'throughput', dir: 'throughput/supabase/migrations' },
@@ -526,10 +529,10 @@ function selfTest() {
   ])
 
   cases.push([
-    'R80.4 is marked optional (it has no supabase/ directory at all)',
+    'R80.4 is REQUIRED — it gained migrations on 2026-08-14',
     () => {
       const r80 = SCOPES.find((s) => s.name === 'R80.4')
-      return Boolean(r80 && r80.optional === true)
+      return Boolean(r80 && !r80.optional)
     },
   ])
 
@@ -545,9 +548,24 @@ function selfTest() {
   cases.push([
     'an absent OPTIONAL scope does not trip the guard',
     () => {
-      const found = new Set(SCOPES.filter((s) => !s.optional).map((s) => s.name))
-      // R80.4 deliberately absent from `found`.
-      return !found.has('R80.4') && missingRequiredScopes(SCOPES, found).length === 0
+      // Synthetic scope list, NOT the shipped SCOPES.
+      //
+      // This case previously asserted against the live config on the
+      // assumption that R80.4 would always be the optional one. When R80.4
+      // legitimately gained migrations and stopped being optional, this test
+      // failed — reporting a defect in the CONFIG as a defect in the CHECKER.
+      // A self-test must verify BEHAVIOUR; coupling it to whichever scope
+      // happens to be optional today makes a correct config change look like
+      // a regression.
+      const synthetic = [
+        { name: 'req-a', dir: 'a' },
+        { name: 'req-b', dir: 'b' },
+        { name: 'opt-c', dir: 'c', optional: true },
+      ]
+      const found = new Set(['req-a', 'req-b'])
+      return (
+        !found.has('opt-c') && missingRequiredScopes(synthetic, found).length === 0
+      )
     },
   ])
 
@@ -558,12 +576,23 @@ function selfTest() {
   cases.push([
     'named guard catches a wrong-scope set that a bare count would pass',
     () => {
-      const nonOptional = SCOPES.filter((s) => !s.optional).map((s) => s.name)
-      // Same CARDINALITY as a healthy tree, but crm7 swapped for R80.4.
-      const wrong = new Set(nonOptional.filter((n) => n !== 'crm7').concat(['R80.4']))
-      const countWouldPass = wrong.size >= nonOptional.length
-      const named = missingRequiredScopes(SCOPES, wrong)
-      return countWouldPass && named.length === 1 && named[0] === 'crm7'
+      // Synthetic, for the same reason as the case above: this previously
+      // swapped crm7 for R80.4 to build a same-cardinality wrong set, which
+      // only worked while R80.4 was optional. Now that R80.4 is required it is
+      // already in the set, the cardinality no longer matches, and the case
+      // failed for a reason unrelated to what it is testing.
+      const synthetic = [
+        { name: 'req-a', dir: 'a' },
+        { name: 'req-b', dir: 'b' },
+        { name: 'req-c', dir: 'c' },
+        { name: 'opt-d', dir: 'd', optional: true },
+      ]
+      const required = synthetic.filter((s) => !s.optional).map((s) => s.name)
+      // Same CARDINALITY as a healthy tree, but req-a swapped for opt-d.
+      const wrong = new Set(required.filter((n) => n !== 'req-a').concat(['opt-d']))
+      const countWouldPass = wrong.size >= required.length
+      const named = missingRequiredScopes(synthetic, wrong)
+      return countWouldPass && named.length === 1 && named[0] === 'req-a'
     },
   ])
 
