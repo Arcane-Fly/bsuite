@@ -1,0 +1,97 @@
+name: Semgrep SAST
+
+# Static application security analysis across all six apps plus the parent's own
+# scripts and workflows, as a shrinking ratchet.
+#
+# WHY NOT CODEQL. The backlog asked for GitHub code scanning. All six app repos
+# are PRIVATE and owned by a personal account, and enabling it returns
+#   422 "Advanced security has not been purchased."
+# GitHub's terms allow the CodeQL CLI free on PUBLIC repositories only; private
+# use needs GitHub Team/Enterprise plus a Code Security licence. Running it here
+# would be a licence violation rather than an unsupported config, and uploading
+# SARIF is gated behind the same purchase. Whether to buy Code Security is a
+# spend decision and belongs to the operator.
+#
+# Semgrep Community Edition is the correctly-licensed substitute: LGPL-2.1
+# engine, free on private proprietary code in CI; registry rules free for
+# internal business use, which is exactly this estate's use.
+#
+# Complements, never replaces, what already runs:
+#   security-audit.yml  — pnpm audit, DEPENDENCY CVEs
+#   gitleaks (per repo) — COMMITTED secrets, scans history
+#   this                — first-party SOURCE defects
+# Full reasoning, including why gitignore is respected, is in
+# scripts/semgrep-sast.mjs's header.
+
+on:
+  pull_request:
+    paths:
+      - 'crm7/**'
+      - 'conduit/**'
+      - 'R80.4/**'
+      - 'business-suite-unified/**'
+      - 'braden/**'
+      - 'throughput/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+      - 'scripts/semgrep-baseline.json'
+  schedule:
+    # 03:00 UTC, an hour after security-audit.yml so the two do not contend for
+    # the same submodule checkout minutes.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sast:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [bsuite, crm7, conduit, R80.4, business-suite-unified, braden, throughput]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: 'recursive'
+          # Submodules are PRIVATE sibling repos. The default GITHUB_TOKEN is
+          # scoped to THIS repo only, so a recursive checkout fails 'Repository
+          # not found' on every one of them (bsuite#1781).
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          # Semgrep needs the worktree, not history — but the guard consults
+          # .gitignore, which needs a real repo, so this is a shallow clone
+          # rather than an export.
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Semgrep CE
+        run: pip install --quiet semgrep
+
+      - name: Scan
+        env:
+          APP: ${{ matrix.app }}
+        # The guard fails hard when it scans 0 files. That is deliberate: an
+        # uninitialised submodule is an empty directory, and an empty directory
+        # yields a flawless scan of nothing — this estate's most-repeated bug.
+        run: node scripts/semgrep-sast.mjs --app "$APP"
+
+      - name: Job summary
+        if: always()
+        env:
+          APP: ${{ matrix.app }}
+          STATUS: ${{ job.status }}
+        run: |
+          {
+            echo "### ${APP} — Semgrep SAST"
+            echo "- Ruleset: \`p/default\` (Semgrep CE, LGPL-2.1)"
+            echo "- Baseline: \`scripts/semgrep-baseline.json\` (shrinking ratchet)"
+            echo "- Status: ${STATUS}"
+          } >> "$GITHUB_STEP_SUMMARY"

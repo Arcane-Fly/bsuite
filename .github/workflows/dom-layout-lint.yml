@@ -38,6 +38,11 @@ jobs:
       - name: Run DOM Layout Invariant Checks
         id: lint
         shell: bash
+        # Interpolations are spliced into the script as CODE before bash parses
+        # it; an env binding arrives as data. Estate precedent:
+        # supabase-functions-deploy.yml, same rule, same reason.
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           set +e  # Don't exit on first error — collect all violations
 
@@ -47,7 +52,7 @@ jobs:
           # ---------------------------------------------------------------
           # Helper: search changed files only (faster on large repos)
           # ---------------------------------------------------------------
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
+          CHANGED_FILES=$(git diff --name-only "origin/${BASE_REF}...HEAD" \
             | grep -E '\.(tsx|ts|css)$' \
             | grep -v 'node_modules\|\.next\|dist\|build\|\.test\.\|\.spec\.\|__snapshots__' \
             || true)
