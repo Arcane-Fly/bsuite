@@ -1,0 +1,83 @@
+name: Edge function typecheck
+
+# WHY THIS GATE EXISTS — register P0-8a, 2026-08-16.
+#
+# `get-fairwork-api-key` ran in production for months containing a reference to
+# an identifier that was never declared:
+#
+#     createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")
+#
+# Every invocation threw ReferenceError, the outer catch fired, and the catch
+# returned the paid Fair Work API key from the environment — so the error path
+# WAS the only path, and it served a shared secret to any authenticated user of
+# any of the seven tenants.
+#
+# Nothing caught it because NOTHING TYPECHECKED EDGE FUNCTIONS. They are Deno,
+# so they sit outside every app's `tsc`; `supabase functions deploy` bundles
+# without checking; and no workflow ran `deno check`. The estate had already hit
+# this class once before — four crm7 functions reached production with undeclared
+# names — and the lesson did not become a control until now.
+#
+# First run measured 18 of 64 functions failing. Those are baselined; the set may
+# SHRINK and may never GROW.
+#
+# WHAT THIS DOES NOT DO — read before trusting a green tick. It type-checks. It
+# has no opinion about authorization. The function above would ALSO have needed a
+# human to notice that handing a shared secret to any logged-in caller is wrong by
+# design. Two live findings this gate cannot see: 33 of 74 deployed functions run
+# `verify_jwt=false`, and the SECURITY DEFINER vault-reader class binds no caller
+# identity. A pass here means "it compiles", not "it is safe".
+
+on:
+  pull_request:
+    paths:
+      - '*/supabase/functions/**'
+      - 'supabase/functions/**'
+      - 'scripts/check-edge-function-types.mjs'
+      - 'scripts/edge-function-typecheck-baseline.json'
+      - '.github/workflows/edge-function-typecheck.yml'
+  workflow_dispatch:
+
+jobs:
+  typecheck:
+    name: Type-check every edge function
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The submodules are PRIVATE. Without this the default GITHUB_TOKEN gets
+          # "Repository not found" for each one and the job dies at checkout — the
+          # same failure route-inventory.yml hit on its first real run.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # Assert the inputs BEFORE checking anything. An uninitialised submodule is
+      # an EMPTY DIRECTORY, so test for a file inside it — never `-d`, which an
+      # empty dir passes while containing no functions to check.
+      - name: Assert every submodule is populated
+        run: |
+          set -euo pipefail
+          missing=0
+          for m in crm7 braden business-suite-unified conduit throughput R80.4; do
+            if [ ! -e "$m/package.json" ]; then
+              echo "::error::submodule $m is empty — checkout did not populate it, so the sweep would silently check fewer functions and still report PASS"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The script self-tests first: it synthesises an undeclared identifier and
+      # asserts `deno check` rejects it, refusing to report at all if that passes.
+      # A gate that cannot fail is worse than no gate — it launders a defect as a
+      # clean sweep. It also exits 2 (not 0) on a zero-function discovery, which is
+      # how a guard survives a directory rename instead of silently passing.
+      - name: Type-check edge functions
+        run: node scripts/check-edge-function-types.mjs
