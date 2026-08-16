@@ -50,9 +50,15 @@ jobs:
 
       - id: set-matrix
         shell: bash
+        # See dom-layout-lint.yml. `inputs.app` is a type: choice today, but the
+        # input type is one edit away from being free text, and by then the
+        # interpolation is already code.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_APP: ${{ github.event.inputs.app }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            INPUT="${{ github.event.inputs.app }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            INPUT="$INPUT_APP"
             if [ "$INPUT" = "all" ]; then
               echo 'matrix=["crm7","conduit","R80.4","business-suite-unified","braden"]' >> "$GITHUB_OUTPUT"
             else

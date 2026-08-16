@@ -104,6 +104,27 @@ export const GUARDS = [
   // Parent monorepo
   // ---------------------------------------------------------------------
   {
+    id: 'parent-semgrep-sast',
+    label: 'Semgrep SAST ratchet (ERROR-severity findings, per app)',
+    repo: '.',
+    // Scoped to the parent's own scripts/ + .github/ rather than the full
+    // 7-app matrix: the watcher runs every registered guard on every
+    // invocation, and a 7-app semgrep sweep is ~15 minutes. One app proves
+    // the guard self-reports; CI runs the full matrix.
+    command: ['node', 'scripts/semgrep-sast.mjs', '--app', 'bsuite'],
+    ciWorkflow: '.github/workflows/semgrep-sast.yml',
+    mode: 'skip',
+    skipReason:
+      'Needs the semgrep binary (pip install semgrep), which this environment ' +
+      'does not have by default. CI installs it explicitly. Verified by hand ' +
+      'against semgrep 1.173.0 on 2026-08-16 — a clean pass prints ' +
+      '"bsuite scanned=  118  ERROR=  0 (baseline 0) ... held" plus a trailing ' +
+      '"semgrep-sast: 1 app(s), 118 file(s) scanned", so it self-reports a ' +
+      'non-zero examined count. Scanning 0 files is a hard failure in the ' +
+      'guard, not a pass.',
+  },
+
+  {
     id: 'parent-check-tailwind-v4',
     label: 'Tailwind v4+ policy (package manifests + lockfiles)',
     repo: '.',

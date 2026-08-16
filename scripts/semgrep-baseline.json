@@ -1,0 +1,86 @@
+{
+  "bsuite": {
+    "errors": 0,
+    "findings": [],
+    "_note": "Clean. Carried 3 run-shell-injection (app-quality-checks.yml, dom-layout-lint.yml, supabase-preview-db.yml) until this gate landed; all three were fixed in the same commit that introduced it, so the gate's first act was to close what it found."
+  },
+  "crm7": {
+    "errors": 5,
+    "_note": "5, ALL TRIAGED BENIGN, none is a live credential. 1 run-shell-injection in .github/workflows/dom-layout-lint.yml \u2014 fixed in crm7#1750, so this drops to 4 on merge. 3 detected-jwt-token: src/lib/supabase.ts:83 is the offline placeholder client (ref=\"placeholder\", signature literally \".placeholder\"); the other two are test fixtures signed \".signature\" and \".fake-service-role\". 1 detect-child-process: scripts/qa-automated-suite.mjs execSync on a hardcoded dev command, no external input.",
+    "findings": [
+      {
+        "rule": "run-shell-injection",
+        "at": "crm7/.github/workflows/dom-layout-lint.yml:41"
+      },
+      {
+        "rule": "detect-child-process",
+        "at": "crm7/scripts/qa-automated-suite.mjs:60"
+      },
+      {
+        "rule": "detected-jwt-token",
+        "at": "crm7/src/lib/__tests__/supabase-auth.test.ts:32"
+      },
+      {
+        "rule": "detected-jwt-token",
+        "at": "crm7/src/lib/supabase.ts:83"
+      },
+      {
+        "rule": "detected-jwt-token",
+        "at": "crm7/supabase/functions/_shared/__tests__/timing-safe.test.ts:158"
+      }
+    ]
+  },
+  "conduit": {
+    "errors": 1,
+    "_note": "1 run-shell-injection in .github/workflows/dom-layout-lint.yml \u2014 fixed in conduit#472, so this drops to 0 on merge.",
+    "findings": [
+      {
+        "rule": "run-shell-injection",
+        "at": "conduit/.github/workflows/dom-layout-lint.yml:38"
+      }
+    ]
+  },
+  "R80.4": {
+    "errors": 1,
+    "_note": "1 detected-jwt-token at src/lib/supabase.ts:149 \u2014 the same offline placeholder client as crm7 (ref=\"placeholder\", signature \".placeholder\"). Not a credential. R80.4 does not carry dom-layout-lint.yml, so it had no injection finding.",
+    "findings": [
+      {
+        "rule": "detected-jwt-token",
+        "at": "R80.4/src/lib/supabase.ts:149"
+      }
+    ]
+  },
+  "business-suite-unified": {
+    "errors": 3,
+    "_note": "3, all triaged. 1 run-shell-injection in .github/workflows/dom-layout-lint.yml \u2014 fixed in BSU#743, so this drops to 2 on merge. 1 detect-child-process at scripts/prerender.mjs:64 is a FALSE POSITIVE: it uses spawn(command, args) with an argv ARRAY and no shell, which is the safe form \u2014 the rule fires on any child_process use. 1 detected-jwt-token at src/lib/bug-report/diagnostics.test.ts:34 is a deliberately fake token whose own comment says it is shaped \"to defeat secret-scanners\"; worth recording that it did not defeat this one.",
+    "findings": [
+      {
+        "rule": "run-shell-injection",
+        "at": "business-suite-unified/.github/workflows/dom-layout-lint.yml:38"
+      },
+      {
+        "rule": "detect-child-process",
+        "at": "business-suite-unified/scripts/prerender.mjs:64"
+      },
+      {
+        "rule": "detected-jwt-token",
+        "at": "business-suite-unified/src/lib/bug-report/diagnostics.test.ts:34"
+      }
+    ]
+  },
+  "braden": {
+    "errors": 1,
+    "_note": "1 run-shell-injection in .github/workflows/dom-layout-lint.yml \u2014 fixed in braden#398, so this drops to 0 on merge.",
+    "findings": [
+      {
+        "rule": "run-shell-injection",
+        "at": "braden/.github/workflows/dom-layout-lint.yml:38"
+      }
+    ]
+  },
+  "throughput": {
+    "errors": 0,
+    "_note": "0. Clean at the ERROR tier from the day the gate landed; it carries neither dom-layout-lint.yml nor a placeholder-client fallback.",
+    "findings": []
+  }
+}
