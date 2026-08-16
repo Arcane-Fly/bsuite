@@ -1,5 +1,7 @@
 {
+  "_note": "Pre-existing failures at gate introduction (2026-08-16, P0-8a). SHRINKING RATCHET: this set may shrink and may never grow. ./classify-issue is here for a different reason from the rest \u2014 packages/jodie uses the Node NodeNext convention of importing a .ts source through a .js specifier, which Deno rejects without --sloppy-imports. That is a real Deno/Node interop defect in a deployed function, not gate noise; it is baselined rather than papered over with --sloppy-imports, which would weaken the check for all 64.",
   "failing": [
+    "./classify-issue",
     "braden/add-admin-user",
     "braden/ensure-guest-storage-access",
     "braden/list-hero-images",

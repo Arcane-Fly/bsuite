@@ -54,18 +54,31 @@ function discover(repo) {
   for (const entry of readdirSync(base, { withFileTypes: true })) {
     if (!entry.isDirectory() || SKIP.has(entry.name)) continue
     const idx = join(base, entry.name, 'index.ts')
-    if (existsSync(idx)) out.push({ repo, slug: entry.name, path: idx })
+    if (!existsSync(idx)) continue
+    // A function may ship its own deno.json import map (classify-issue maps
+    // "zod" -> npm:zod@4). Without --config those bare specifiers are
+    // unresolvable and `deno check` reports TS2307 — an INSTRUMENT failure that
+    // looks exactly like a real defect. This diverged local from CI: locally a
+    // stray resolution made it pass, in CI it did not, so the baseline captured
+    // 18 and CI measured 19. Honour the function's own config.
+    const cfg = ['deno.json', 'deno.jsonc']
+      .map((f) => join(base, entry.name, f))
+      .find((f) => existsSync(f))
+    out.push({ repo, slug: entry.name, path: idx, config: cfg ?? null })
   }
   return out
 }
 
-function checkOne(fnPath) {
+function checkOne(fnPath, config = null) {
   try {
     // --node-modules-dir=auto is REQUIRED, not cosmetic: without it every function
     // importing `npm:@supabase/supabase-js` fails with "Could not find a matching
     // package", which is an instrument failure that looks exactly like a real type
     // error and would bury the genuine findings in noise.
-    execFileSync('deno', ['check', '--no-lock', '--quiet', '--node-modules-dir=auto', fnPath], {
+    const argv = ['check', '--no-lock', '--quiet', '--node-modules-dir=auto']
+    if (config) argv.push('--config', config)
+    argv.push(fnPath)
+    execFileSync('deno', argv, {
       stdio: ['ignore', 'pipe', 'pipe'],
       encoding: 'utf8',
       timeout: 120_000,
@@ -135,7 +148,7 @@ if (fns.length === 0) {
 
 const failures = []
 for (const fn of fns) {
-  const res = checkOne(fn.path)
+  const res = checkOne(fn.path, fn.config)
   if (!res.ok) failures.push({ ...fn, output: res.output })
 }
 
