@@ -87,8 +87,13 @@ jobs:
           SOURCE_REPO: ${{ github.event.client_payload.repo || 'bsuite' }}
           CHANGED_FILES_JSON: ${{ toJson(github.event.client_payload.changed_files) }}
           CHANGED_SCOPES: ${{ github.event.client_payload.changed_scopes || '' }}
+          # These two were read via ${{ }} INSIDE the run body while every other
+          # value in this step was already bound here properly — the block was
+          # right, two lines just did not use it.
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_ALL_SCOPES: ${{ github.event.inputs.all_scopes }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.all_scopes }}" = "true" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_ALL_SCOPES" = "true" ]; then
             node scripts/supabase/plan-preview-db.mjs --all --json > /tmp/supabase-preview-plan.json
             node scripts/supabase/plan-preview-db.mjs --all --markdown > /tmp/supabase-preview-plan.md
           elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
