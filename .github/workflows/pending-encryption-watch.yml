@@ -1,0 +1,215 @@
+name: Pending encryption watch
+
+# WHY THIS EXISTS
+#
+# On 2026-08-16 `public.documents_pending_encryption` held 26 documents — 9
+# drivers' licences, 2 passports, 7 superannuation choice forms and 8
+# photography consents — sitting UNENCRYPTED in storage across three tenants,
+# in categories whose own `document_categories.encrypt_at_rest` says they must
+# not be.
+#
+# The remediation was never broken. `/settings/document-categories` is routed,
+# in the nav, linked from the settings index, and correctly wired to
+# `document-encryption`'s audited, resumable `encrypt_existing_category` pass.
+# The edge function even mints a tenant DEK when none exists.
+#
+# It simply sat there, because NOTHING ANYWHERE SAID SO. The only readers of
+# that view are the app's own hooks, which require a human to already be on the
+# page — so the number could only be discovered by someone who went looking for
+# it. That is what this workflow fixes: not the encryption, the SILENCE.
+#
+# WHY THIS DOES NOT JUST RUN THE PASS ITSELF
+#
+# `document-encryption` verifies a real user JWT via JWKS and then requires
+# `user_tenants.role IN ('owner','admin')` FOR THAT TENANT. There is no
+# service-role path, deliberately — service_role is excluded from this action by
+# design. Minting a user session with the service key to drive it anyway would
+# be defeating that control, not satisfying it. So this workflow REPORTS and
+# NAMES WHO CAN ACT; the run stays with the tenant's owners.
+#
+# That distinction is load-bearing for the FutureBuild Academy rows: they belong
+# to a real client's tenant, and no operator account is a member of it.
+
+on:
+  schedule:
+    # 04:00 UTC daily — after security-audit (02:00) and semgrep-sast (03:00).
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Install psql client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+          psql --version
+
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "✓ Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID}. Refusing to report a false 'nothing pending'."
+          exit 1
+
+      - name: Self-test — prove the detector can fire
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          # A detector nobody has seen fail is not a detector. A synthetic
+          # unencrypted document in an encrypt_at_rest category is inserted
+          # inside a transaction that ALWAYS rolls back, and the same view is
+          # re-counted. If the delta is not +1 the query is broken and any clean
+          # result it produces means nothing — so this step FAILS the job.
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          # Every NOT NULL column without a default is supplied explicitly. A
+          # first draft omitted document_categories.document_type and
+          # document_categories.origin and died on 23502 — which is precisely
+          # why this was dry-run against the live schema before shipping rather
+          # than discovered by the workflow's first scheduled run.
+          DELTA=$(psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL'
+          BEGIN;
+          CREATE TEMP TABLE _b AS SELECT count(*) AS n FROM public.documents_pending_encryption;
+          INSERT INTO public.document_categories
+            (tenant_id, value, label, document_type, origin, is_active, encrypt_at_rest)
+          VALUES (NULL, '__watch_selftest__', 'watch self-test', 'other',
+                  (SELECT origin FROM public.document_categories LIMIT 1), true, true);
+          INSERT INTO public.document_metadata
+            (tenant_id, storage_bucket, storage_path, file_name, file_size, mime_type,
+             document_category, document_type, is_encrypted)
+          SELECT t.id, 'apprentice-documents', 'selftest/probe.pdf', 'probe.pdf', 1,
+                 'application/pdf', '__watch_selftest__', 'other', false
+            FROM public.tenants t LIMIT 1;
+          SELECT (SELECT count(*) FROM public.documents_pending_encryption) - (SELECT n FROM _b);
+          ROLLBACK;
+          SQL
+          )
+          echo "self-test delta: ${DELTA}"
+          if [ "$(echo "$DELTA" | tr -d '[:space:]')" != "1" ]; then
+            echo "::error::Self-test delta was '${DELTA}', expected 1. The pending-encryption query does not detect an unencrypted document in an encrypt_at_rest category. A clean report from it would be meaningless, so this job fails rather than reporting one."
+            exit 1
+          fi
+
+      - name: Count what is pending, and name who can action it
+        id: count
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          # The actionable unit is (tenant, category) — that is exactly the pair
+          # the UI pass takes — plus WHO holds owner/admin there, because the
+          # edge function admits nobody else.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -F'|' <<'SQL' > pending.txt
+          SELECT t.name,
+                 d.document_category,
+                 count(*),
+                 coalesce((
+                   SELECT string_agg(DISTINCT p.email, ', ')
+                     FROM public.user_tenants ut
+                     JOIN public.profiles p ON p.id = ut.user_id
+                    WHERE ut.tenant_id = d.tenant_id
+                      AND ut.status = 'active'
+                      AND ut.role IN ('owner','admin')
+                 ), '(NOBODY — no active owner/admin in this tenant)')
+            FROM public.documents_pending_encryption d
+            JOIN public.tenants t ON t.id = d.tenant_id
+           GROUP BY t.name, d.document_category, d.tenant_id
+           ORDER BY count(*) DESC;
+          SQL
+
+          TOTAL=$(awk -F'|' '{s+=$3} END {print s+0}' pending.txt)
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Documents pending encryption: **${TOTAL}**"
+            echo
+            if [ "$TOTAL" = "0" ]; then
+              echo "Nothing pending. Every document in an \`encrypt_at_rest\` category is encrypted."
+            else
+              echo "Each row is one run of the pass at **Settings → Document Categories**, which"
+              echo "only that tenant's owners/admins can start — \`document-encryption\` admits no"
+              echo "service-role caller for this action."
+              echo
+              echo "| tenant | category | pending | who can run it |"
+              echo "|---|---|---:|---|"
+              awk -F'|' '{printf "| %s | `%s` | %s | %s |\n", $1,$2,$3,$4}' pending.txt
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "pending: ${TOTAL}"
+
+      - name: Open or update the tracking issue
+        if: steps.count.outputs.total != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOTAL: ${{ steps.count.outputs.total }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TITLE="Documents pending encryption at rest"
+          BODY=$(printf '%s\n' \
+            "**${TOTAL}** document(s) sit unencrypted in categories whose \`encrypt_at_rest\` says they must not." \
+            "" \
+            "Per-tenant breakdown, and who can action each, is in the [latest run summary](${RUN_URL})." \
+            "" \
+            "Run the pass at **Settings → Document Categories** in crm7. It is audited and resumable:" \
+            "it writes the encrypted object to a new path, commits metadata, and only then removes the" \
+            "plaintext — a failed cleanup lands as \`cleanup_pending\`, never as a silent success." \
+            "" \
+            "This issue is opened and closed automatically by \`pending-encryption-watch.yml\`." \
+            "It closes itself when the count reaches zero. Do not close it by hand — a hand-closed" \
+            "issue on a still-nonzero count is how this went unnoticed in the first place.")
+
+          NUM=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$TITLE in:title" \
+                  --json number,title --jq ".[] | select(.title==\"$TITLE\") | .number" | head -1)
+          if [ -n "$NUM" ]; then
+            gh issue edit "$NUM" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+            echo "updated issue #${NUM}"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          fi
+
+      - name: Close the tracking issue when clean
+        if: steps.count.outputs.total == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TITLE="Documents pending encryption at rest"
+          NUM=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$TITLE in:title" \
+                  --json number,title --jq ".[] | select(.title==\"$TITLE\") | .number" | head -1)
+          if [ -n "$NUM" ]; then
+            gh issue close "$NUM" --repo "$GITHUB_REPOSITORY" \
+              --comment "Count reached 0 — every document in an \`encrypt_at_rest\` category is now encrypted. Closed automatically by pending-encryption-watch.yml."
+            echo "closed issue #${NUM}"
+          else
+            echo "clean, and no open tracking issue — nothing to do."
+          fi
