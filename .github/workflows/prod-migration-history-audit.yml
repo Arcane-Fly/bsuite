@@ -132,6 +132,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24.14.0'
+          # See pr-drift-scan.yml: setup-node@v5 defaults
+          # `package-manager-cache: true` and reads package.json's
+          # `packageManager` field, which the root gained when it was pinned to
+          # pnpm@10.33.3. This job installs no dependencies, so the cache is
+          # dead weight — and without pnpm on PATH it is a hard failure.
+          package-manager-cache: false
 
       - name: Install psql client
         run: |
