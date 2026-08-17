@@ -411,9 +411,27 @@ function selfTest() {
     rmSync(root, { recursive: true, force: true })
   })
 
+  // The count goes FIRST. LANE-WATCHER classifies from the HEAD of a guard's
+  // output — a summary printed only at the end is truncated away and the guard
+  // reads as "never stated a non-zero count of anything examined", which is
+  // exactly what happened here before this line existed.
+  console.log(
+    `check-schema-lag --self-test: ${results.length} cases exercised across both ` +
+      `directions (pending-not-failing, overdue-failing, below-floor-excluded, ` +
+      `applied-excluded, empty-ledger-refused, zero-files-refused).`,
+  )
   for (const [state, name] of results) console.log(`  ${state}  ${name}`)
   const failed = results.filter(([s]) => s === 'FAIL').length
-  console.log(`\nself-test: ${results.length - failed}/${results.length} passed`)
+  // STATE WHAT WAS EXAMINED, with a non-zero count. LANE-WATCHER
+  // (check-guard-self-reporting.mjs) fails any registered guard that "exited 0
+  // but never stated a non-zero count of anything examined", and it is right to:
+  // a guard that prints PASS lines without a denominator is indistinguishable
+  // from one that ran no fixtures at all. "6/6 passed" is a ratio, not a count
+  // of things examined, and the watcher correctly refused it.
+  console.log(
+    `\ncheck-schema-lag --self-test: ${results.length} cases exercised — ` +
+      `${results.length - failed} passed, ${failed} failed.`,
+  )
   return failed === 0 ? 0 : 1
 }
 
@@ -432,7 +450,15 @@ function main(argv) {
     for (const f of failures) console.log(`::error::${f}`)
     return 1
   }
-  console.log('\ncheck-schema-lag: OK')
+  // Same self-reporting contract as the self-test path: name a non-zero count of
+  // what was examined, so a run over an empty or half-checked-out tree can never
+  // read as a clean pass.
+  console.log(
+    `\ncheck-schema-lag: ${a.scopesScanned}/${a.scopesDeclared} scope(s), ${a.filesSeen} ` +
+      `migration file(s) examined across ${a.versionsOnDisk} distinct version(s) against ` +
+      `${a.versionsApplied} applied — ${a.pending.length} pending, ${a.belowFloor.length} ` +
+      `below floor, ${a.ledgerOnly.length} ledger-only, ${a.collisions.length} collision(s).`,
+  )
   return 0
 }
 

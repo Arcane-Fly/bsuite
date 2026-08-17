@@ -398,7 +398,10 @@ export const GUARDS = [
     //
     // The real invocation runs in CI (schema-lag.yml), daily and on every PR
     // touching a migration, where the secret exists.
-    evidence: '"self-test: 6/6 passed"',
+    evidence:
+      '"check-schema-lag --self-test: 6 cases exercised across both directions ' +
+      '(pending-not-failing, overdue-failing, below-floor-excluded, applied-excluded, ' +
+      'empty-ledger-refused, zero-files-refused)."',
   },
   {
     id: 'parent-check-own-package-freshness',
