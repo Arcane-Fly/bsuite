@@ -1,0 +1,192 @@
+# pg_cron Job Health Audit
+#
+# The reader that did not exist. Fourteen pg_cron jobs run against this database and, before
+# this workflow, NOTHING read `cron.job_run_details` — measured 2026-08-17:
+#
+#   SELECT count(*) FROM cron.job WHERE active;                                    -> 14
+#   SELECT count(*) FROM cron.job WHERE command ILIKE '%job_run_details%';         ->  0
+#   SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+#    WHERE n.nspname='public' AND p.prosrc ILIKE '%job_run_details%';              ->  0
+#
+# A job that starts failing, or that simply stops being scheduled, was therefore
+# indistinguishable from one with nothing to do.
+#
+# WHY THIS EXISTS — AND IT IS NOT A HYPOTHETICAL
+#
+#   `sta-email-watch` (every 15 minutes) failed 462 CONSECUTIVE TIMES between 2026-07-23
+#   10:00 and 2026-07-28 05:15 UTC — five days — with
+#       ERROR: sta-email-watch cron: vault entry missing — seed sta_email_watch_url and
+#              sta_email_watch_token via SELECT vault.create_secret(...).
+#   Every failure was recorded in cron.job_run_details. Nobody read it. It stopped when
+#   somebody seeded the vault secret for an unrelated reason. 462 of that job's 2,378
+#   lifetime runs are failures and no alert was ever raised.
+#
+#   Note what the job did RIGHT: it RAISEd instead of silently no-oping. Raising into a
+#   table nobody queries is still invisible. The missing half was always the READER.
+#
+# WHY THE READER IS IN CI AND NOT IN THE DATABASE
+#
+# A cron job that checks cron jobs cannot report its own death, and RAISEing from it writes
+# to the same `cron.job_run_details` nobody reads — the exact circularity that produced the
+# gap. A GitHub Actions run is visible without anyone querying anything, and a workflow that
+# stops running is itself visible in the Actions tab.
+#
+# SAME POSTURE AS ITS TWO SIBLINGS (prod-migration-history-audit.yml,
+# prod-rls-policy-drift-audit.yml): same secrets, same pooler probe, read-only, no new
+# secret introduced, nothing ever written.
+#
+# THIS ONE DOES FAIL THE RUN, unlike the RLS drift audit. That difference is deliberate.
+# A drift finding there is a QUESTION ("was this intended?"), and a control that cries wolf
+# gets switched off. A cron job in state `failing` or `silent` is not a question — it is a
+# scheduled task that is not doing its work, and the 462-failure incident is what "warn
+# only" looks like in practice.
+#
+# A GREEN RUN MUST MEAN "CHECKED", NEVER "COULD NOT CHECK". The job fails if it cannot
+# resolve the pooler, if `public.cron_job_health()` is absent, if the sweep returns zero
+# jobs, or if the self-test proves the detector cannot fire.
+
+name: pg_cron Job Health Audit
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # Offset from the history audit's :17 and the policy-drift audit's :43 so the three
+    # never contend for the pooler. Every 6 hours is well inside the tightest tolerance
+    # cron_job_health() applies (1 hour for sub-hourly jobs is measured against last_run,
+    # not against this cadence — a job silent for 1h is still silent when observed 5h later).
+    - cron: '29 */6 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  cron-health:
+    name: pg_cron job health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard — require project ref
+        env:
+          SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_PROJECT_ID:-}" ]; then
+            echo "::error::SUPABASE_PROJECT_ID variable is empty — refusing to run the audit"
+            exit 1
+          fi
+          echo "Project ref: ${SUPABASE_PROJECT_ID}"
+
+      - name: Install psql client
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "✓ Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID} — check SUPABASE_DB_PASSWORD and project region. Refusing to report a false 'all jobs healthy'."
+          exit 1
+
+      - name: Self-test — prove the detector can fire
+        # Runs BEFORE the sweep on purpose. A clean sweep from a broken detector is
+        # indistinguishable from a clean sweep from a healthy estate, and the whole point of
+        # this workflow is that "looks fine" was never evidence. Everything happens inside a
+        # transaction that is ALWAYS rolled back — no cron row is ever really written.
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          OUT=$(psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL'
+          BEGIN;
+          -- A synthetic FAILED run for whichever job sorts first. Its verdict must flip
+          -- to 'failing'.
+          INSERT INTO cron.job_run_details
+                 (jobid, runid, job_pid, database, username, command, status,
+                  return_message, start_time, end_time)
+          SELECT jobid, -999999, 0, current_database(), current_user, 'health-audit probe',
+                 'failed', 'synthetic probe — rolled back', now(), now()
+            FROM cron.job ORDER BY jobid LIMIT 1;
+          SELECT 'FIRED=' || count(*) FROM public.cron_job_health(24) WHERE verdict = 'failing';
+          -- ...and the rest of the estate must NOT have been dragged along with it, or the
+          -- detector flags everything, which is the same as flagging nothing.
+          SELECT 'CLEAN=' || count(*) FROM public.cron_job_health(24)
+           WHERE verdict IN ('healthy', 'inactive');
+          ROLLBACK;
+          SQL
+          )
+          echo "$OUT"
+          echo "$OUT" | grep -q '^FIRED=1$' || {
+            echo "::error::cron_job_health() did NOT report the synthetic failed run. The detector is broken and any clean sweep below is meaningless."
+            exit 1
+          }
+          CLEAN=$(echo "$OUT" | sed -n 's/^CLEAN=//p')
+          [ "${CLEAN:-0}" -gt 0 ] || {
+            echo "::error::cron_job_health() classified NOTHING as healthy while one synthetic failure was present. It is flagging everything, which is the same as flagging nothing."
+            exit 1
+          }
+          echo "✓ Fired on the synthetic failure, left ${CLEAN} job(s) healthy, rolled back."
+
+      - name: Sweep — every pg_cron job's health
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -F'|' <<'SQL' > health.txt
+          SELECT jobname, schedule, cadence, verdict,
+                 coalesce(to_char(last_run, 'YYYY-MM-DD HH24:MI'), 'never'),
+                 failures_in_window,
+                 replace(replace(coalesce(left(last_error, 160), ''), '|', '/'), E'\n', ' ')
+            FROM public.cron_job_health(24)
+           ORDER BY (verdict IN ('healthy','inactive')), jobname;
+          SQL
+
+          TOTAL=$(grep -c . health.txt || true)
+          if [ "${TOTAL:-0}" -eq 0 ]; then
+            echo "::error::public.cron_job_health() returned 0 rows. That means 'could not measure', not 'no jobs' — this database has 14 active pg_cron jobs. Refusing to report a pass."
+            exit 1
+          fi
+          BAD=$(awk -F'|' '$4 != "healthy" && $4 != "inactive"' health.txt | wc -l | tr -d ' ')
+
+          # HEAD LINE FIRST — a non-zero count of what was examined, before any verdict.
+          echo "[cron-job-health] ${TOTAL} pg_cron job(s) examined over a 24h window; ${BAD} with a non-healthy verdict."
+
+          {
+            echo "## pg_cron job health — ${TOTAL} job(s) examined"
+            echo
+            echo "| job | schedule | cadence | verdict | last run | failures/24h | last error |"
+            echo "|---|---|---|---|---|---|---|"
+            awk -F'|' '{printf "| `%s` | `%s` | %s | **%s** | %s | %s | %s |\n", $1,$2,$3,$4,$5,$6,$7}' health.txt
+            echo
+            echo "Verdicts: \`failing\` = a non-succeeded run in the window · \`silent\` = no run within this cadence's tolerance · \`never_run\` = scheduled but never fired · \`cadence_unknown\` = the schedule did not classify, so liveness could not be judged (reported, never assumed healthy)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          cat health.txt
+
+          if [ "${BAD}" -ne 0 ]; then
+            awk -F'|' '$4 != "healthy" && $4 != "inactive" { printf "::error::pg_cron job %s is %s (schedule %s, last run %s, %s failure(s) in 24h). %s\n", $1,$4,$2,$5,$6,$7 }' health.txt
+            echo "::error::${BAD} of ${TOTAL} pg_cron job(s) are not healthy. See the job summary."
+            exit 1
+          fi
+          echo "✓ All ${TOTAL} pg_cron job(s) healthy or deliberately inactive."
