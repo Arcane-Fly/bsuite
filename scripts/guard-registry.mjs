@@ -253,8 +253,43 @@ export const GUARDS = [
     ciWorkflow: '.github/workflows/theme-conformance.yml',
     mode: 'run',
     evidence:
-      '"Permitted palette: 223 oklch + 27 hex (from the two source-of-truth ' +
+      '"Permitted palette: 222 oklch + 27 hex (from the two source-of-truth ' +
       'documents)"',
+  },
+  {
+    // The parsed-lightness half of the pure-endpoint ban. audit-d2c-theme.sh
+    // class C1 matches the TEXT of pure white, so oklch(0.994) — visually
+    // indistinguishable from it — passed that gate for weeks. This one parses
+    // the lightness and compares it as a number.
+    //
+    // Expect NOT_EVALUATED rather than PASS until the estate reaches zero: the
+    // guard exits 1 while real findings remain, which is the honest signal.
+    // The denominator it prints ("N oklch colour literals parsed ... across 7
+    // roots") is what LANE-WATCHER reads when it eventually does pass.
+    id: 'parent-audit-oklch-lightness',
+    label: 'Near-pure white/black by parsed OKLCH lightness (all apps + packages)',
+    repo: '.',
+    command: ['python3', 'scripts/audit-oklch-lightness.py'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"1422 oklch colour literals parsed in authored source across 7 roots"',
+  },
+  {
+    // The positive control for the guard above. A scanner that silently matches
+    // nothing prints the same "0" as a clean tree, and this repository has
+    // already shipped one that did — see theme_audit_lib.code_lines. This
+    // asserts the gate still FAILS on a crafted near-pure fixture.
+    id: 'parent-theme-audit-gate-selftest',
+    label: 'Near-pure gate self-test (proves the gate can still fail)',
+    repo: '.',
+    command: ['bash', 'scripts/test-theme-audit-gates.sh'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"Near-pure gate — positive control: 10 cases exercised (clean-silent, 0.994, ' +
+      '99.4%, near-black, suppression-comment, prose-adjacent, prose-only, oklch(from …), ' +
+      'dist/node_modules exclusion, restore-to-silent)."',
   },
   {
     id: 'parent-verify-esm-imports',
@@ -378,6 +413,60 @@ export const GUARDS = [
       "reasonable proxy for \"this guard's reporting logic works\" per this " +
       "registry's stated preference for execution over inspection.",
     evidence: '"audit-prod-migration-history: self-test OK (10 cases)"',
+  },
+  {
+    id: 'parent-check-schema-lag',
+    label: 'Schema lag (what is merged on this ref but NOT yet in the database?)',
+    repo: '.',
+    command: ['node', 'scripts/check-schema-lag.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/schema-lag.yml',
+    mode: 'run',
+    // Registered against `--self-test`, NOT its real invocation, and that is a
+    // deliberate exception to this registry's full-universe preference.
+    //
+    // The real run needs SUPABASE_DB_URL to read
+    // supabase_migrations.schema_migrations — a live production credential. The
+    // watcher holds none, so a `mode: 'run'` registration against the real
+    // command would fail closed on every sweep and record a permanent
+    // COULD_NOT_EXECUTE. Registering the self-test means the watcher verifies
+    // the thing it CAN verify: that the guard's six fixtures still discriminate.
+    //
+    // The real invocation runs in CI (schema-lag.yml), daily and on every PR
+    // touching a migration, where the secret exists.
+    evidence:
+      '"check-schema-lag --self-test: 6 cases exercised across both directions ' +
+      '(pending-not-failing, overdue-failing, below-floor-excluded, applied-excluded, ' +
+      'empty-ledger-refused, zero-files-refused)."',
+  },
+  {
+    id: 'parent-check-own-package-freshness',
+    label: 'Own-package freshness (do the six apps run our latest @bsuite/* publishes?)',
+    repo: '.',
+    command: ['node', 'scripts/check-own-package-freshness.mjs'],
+    ciWorkflow: '.github/workflows/own-package-freshness.yml',
+    mode: 'run',
+    // Registered against its REAL invocation, not its --self-test, per this
+    // registry's full-universe preference. It is read-only and hits only the
+    // public npm registry — none of the `skip` criteria (live credentials,
+    // production infrastructure, state mutation) apply. When the estate IS
+    // stale the guard exits 1, which the watcher records as NOT_EVALUATED;
+    // that is correct — a non-zero exit is a finding, not a false pass.
+    //
+    // PRECONDITION: `yaml` and `semver` must be resolvable (the guard refuses
+    // to grep pnpm-lock.yaml as a fallback and exits 2 naming what is
+    // missing). guard-self-reporting.yml installs both into a scratch prefix
+    // and exports BSUITE_GUARD_NODE_MODULES; spawnSync inherits it.
+    evidence:
+      '"check-own-package-freshness: 6 app(s), 52 @bsuite/* dependency ' +
+      'edge(s) examined across 12 distinct published package(s) via ' +
+      'https://registry.npmjs.org — 52 current, 0 stale-but-in-range, 0 ' +
+      'exact-pinned-behind, 0 range-behind, 0 ahead, 0 embargoed, 0 linked, ' +
+      '0 not-published." — run by hand against this tree 2026-08-17. The ' +
+      'same run against the COMMITTED origin/development gitlinks (the state ' +
+      'CI checks out) exits 1 with "FRESHNESS FAILURE — 21 of 52 edge(s) do ' +
+      'not run our latest", which is the positive control proving the guard ' +
+      'fires: 15 STALE-BUT-IN-RANGE + 6 EXACT-PINNED-BEHIND across all six ' +
+      'apps (@bsuite/theme 0.11.2, nav-core 0.9.1, ui 1.0.3, dry-lint 1.0.1).',
   },
   {
     id: 'parent-check-oauth-redirect-uris',

@@ -71,7 +71,7 @@ jobs:
           # gate first failed, before it ever ran. Same fallback chain every
           # other submodule-consuming workflow here uses (supabase-migrate.yml,
           # prod-migration-history-audit.yml, secret-naming-drift.yml).
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
         uses: actions/setup-node@v4

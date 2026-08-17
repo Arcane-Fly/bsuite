@@ -7,8 +7,14 @@
 import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const APP_REPOS = [
+// THE canonical list of app submodules for parent-repo guards that walk the
+// six consuming apps. Exported so sibling guards import it rather than
+// retyping it — a second copy drifts the moment an app is added or renamed,
+// and a guard walking a stale list reports a clean pass over the app it can
+// no longer see. `scripts/check-own-package-freshness.mjs` consumes this.
+export const APP_REPOS = [
   'business-suite-unified',
   'braden',
   'conduit',
@@ -17,7 +23,7 @@ const APP_REPOS = [
   'throughput',
 ];
 
-async function pathExists(p) {
+export async function pathExists(p) {
   try {
     await stat(p);
     return true;
@@ -161,9 +167,18 @@ async function selfTest() {
   }
 }
 
-const args = process.argv.slice(2);
+// Only run the CLI when this file IS the entry point. Without this guard,
+// `import { APP_REPOS } from './check-lockfile-hygiene.mjs'` would execute a
+// full lockfile scan (and possibly process.exit(1)) as an import side effect.
+const isEntryPoint =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
 
-if (args.includes('--self-test')) {
+const args = isEntryPoint ? process.argv.slice(2) : null;
+
+if (!isEntryPoint) {
+  // imported as a module — expose the list/helpers, run nothing
+} else if (args.includes('--self-test')) {
   await selfTest();
 } else {
   const results = await runChecks(process.cwd(), APP_REPOS);

@@ -117,7 +117,7 @@ jobs:
           # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
           # bare `submodules: recursive` fails at checkout. Same fallback chain
           # every other submodule-consuming workflow here uses.
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
         uses: actions/setup-node@v4

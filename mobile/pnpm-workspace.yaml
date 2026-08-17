@@ -1,0 +1,25 @@
+# pnpm reads `overrides` FROM HERE, not from package.json.
+#
+# pnpm 11 ignores package.json's `pnpm` field outright:
+#   WARN The "pnpm" field in package.json is no longer read by pnpm.
+#        The following keys were ignored: "pnpm.overrides"
+#
+# Verified 2026-08-17 by running both shapes against pnpm 11.22.0: with the
+# overrides in package.json the resulting lockfile carried `overrides: None`
+# and the floors were NOT applied; moved here, the lockfile carries the
+# overrides block and every floor resolves. Leaving them in package.json
+# while bumping pnpm would have silently un-patched this app — including
+# the shell-quote CRITICAL (GHSA-w7jw-789q-3m8p) closed earlier today.
+
+packages:
+  - .
+
+overrides:
+  'shell-quote': '>=1.9.0'
+  'nanoid': '>=3.3.18'
+  'postcss': '>=8.5.23'
+  'uuid': '>=11.1.1'
+  '@babel/core': '>=7.29.6'
+  'ws': '>=8.21.0'
+  'brace-expansion': '>=5.0.9'
+  'js-yaml@^4.1.0': '^4.3.1'

@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/ui",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -51,6 +51,10 @@
       "import": "./dist/empty-state.js",
       "types": "./dist/empty-state.d.ts"
     },
+    "./data-unavailable": {
+      "import": "./dist/data-unavailable.js",
+      "types": "./dist/data-unavailable.d.ts"
+    },
     "./error-boundary": {
       "import": "./dist/error-boundary.js",
       "types": "./dist/error-boundary.d.ts"
@@ -90,7 +94,7 @@
   },
   "devDependencies": {
     "@bsuite/theme": "^0.11.0",
-    "@storybook/react-vite": "^10.4.3",
+    "@storybook/react-vite": "^10.5.8",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -101,7 +105,7 @@
     "jsdom": "^29.1.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "storybook": "^10.4.3",
+    "storybook": "^10.5.8",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
