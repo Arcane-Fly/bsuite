@@ -585,6 +585,46 @@ export const GUARDS = [
       'run — out of scope for a read-mostly survey). Same reason applies ' +
       'to every submodule copy of this script (braden, throughput, R80.4).',
   },
+  {
+    id: 'crm7-check-unscoped-select-selftest',
+    label: 'Unscoped-SELECT policy class — classifier self-test (crm7, crm7#1730)',
+    repo: 'crm7',
+    command: ['node', 'scripts/check-unscoped-select-policies.mjs', '--self-test'],
+    ciWorkflow: 'crm7/.github/workflows/db-lint.yml',
+    mode: 'run',
+    notes:
+      'crm7#1730 found the "scoped writes, open SELECT" class by running a sweep BY ' +
+      'HAND, once, on 2026-08-14. The query lived in a migration header comment and ' +
+      'nowhere else, so nothing re-ran it. This is that sweep wired as a guard. ' +
+      'ORDERING: this entry lands with the crm7-side PR that adds the script; until ' +
+      "the parent's crm7 submodule pointer advances past it, the watcher reports " +
+      'NOT_EVALUATED (node exits 1 on a missing file), which is not a hard failure — ' +
+      'it self-heals into PASS on the pointer bump.',
+    evidence:
+      '"[unscoped-select-sweep] self-test OK (12 cases, 6 of them asserting the gate ' +
+      'FAILS), 9 reviewed allowlist entries, 8 scope tokens."',
+  },
+  {
+    id: 'crm7-check-unscoped-select-live',
+    label: 'Unscoped-SELECT policy class vs replayed schema (crm7, crm7#1730)',
+    repo: 'crm7',
+    command: null,
+    ciWorkflow: 'crm7/.github/workflows/db-lint.yml',
+    mode: 'skip',
+    skipReason:
+      'Needs DATABASE_URL / SUPABASE_DB_URL. Reconstructing the final policy set from ' +
+      '~600 migration files needs a SQL interpreter rather than a parser (the same ' +
+      "conclusion prod-rls-policy-drift-audit.yml reached), so it reads pg_policies " +
+      "from a real database — in CI, the one db-lint.yml's report-catalog-drift job " +
+      'already builds by replaying the baseline plus every post-baseline migration. ' +
+      'GOOD CITIZEN while skipped: run with no credentials it REFUSES with exit 2 — ' +
+      '"DATABASE_URL (or SUPABASE_DB_URL) is required — this gate reads pg_policies ' +
+      'from a real database and will not guess... A check that passes when it could ' +
+      'not look is the defect it exists to catch." Verified by hand against a local ' +
+      'Postgres 17 fixture on 2026-08-17: exit 0 on a compliant schema, exit 1 with ' +
+      '::error:: on each of the three fail modes (new table in the class, allowlist ' +
+      'entry that left the class, allowlist entry whose table was dropped).',
+  },
 
   // ---------------------------------------------------------------------
   // business-suite-unified (BSU)
