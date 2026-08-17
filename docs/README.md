@@ -21,7 +21,8 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File | Description |
 |------|-------------|
-| `20260814-estate-remaining-work-register-v2.00W.md` | **Canonical remaining-work register.** All 264 non-archive docs read; every material claim re-measured against the six repos at `development` HEAD, live SQL, live GitHub state and a live theme-audit re-run. P0 → P3 with sizes, evidence and a sequence. Supersedes seven earlier registers (§9). |
+| `20260814-estate-remaining-work-register-v2.00W.md` | **Canonical remaining-work register — for item definitions and evidence; superseded for *status* by `20260817-estate-completion-ledger-v1.00W.md`.** Covers **266** non-archive docs (the "264" previously stated here and in the register's own Method line was corrected 2026-08-17), at **~93% coverage of the dated set, not 100%**. Every material claim re-measured against the six repos at `development` HEAD, live SQL, live GitHub state and a live theme-audit re-run. P0 → P3 with sizes, evidence and a sequence. Supersedes seven earlier registers (§9). **Its `V-1`…`V-11` are the verification-integrity items** — the Vercel platform audit's findings are `VP-n`. |
+| `20260817-estate-completion-ledger-v1.00W.md` | **Authoritative status** for all 87 register items, re-measured live 2026-08-17: 16 DONE, 3 never defects, 1 settled by ruling, 13 partial, 54 open. Plus §5, the coverage gaps absent from the register. Keeps the register's identifiers. |
 | `(archived — see archived-repos-docs/20260725-bsuite-cleanup)` | Single source of truth for BSuite project planning across all projects |
 | `20260425-bsuite-finish-line-roadmap-v1.00W.md` | Prioritised P0/P1/P2 finish-line view (154 items, cited to sources) |
 | `20260501-merged-execution-backlog-v1.00W.md` | Canonical phase-ordered execution queue (BL-NNN / P0-* / P1-* / P2-* / WS-* item IDs) |

@@ -379,6 +379,17 @@ On the day it was written there were **266**; in the 2026-02-27 → 2026-08-15 w
 basename-dated documents, not the 202 assumed. Six plausible enumerations were tested and none
 yields 202.
 
+> **Enumeration rule, added 2026-08-17 — quote it with the number.** The **266** is exact and
+> independently reproduced: *tracked `*.md` under `docs/`, excluding `docs/archive/**`*, at the
+> register's own commit `b8a9941e` → 266. The **210** is enumeration-sensitive and does **not**
+> reproduce from that rule: counting non-archive `*.md` whose basename matches `^\d{8}-` with
+> `20260227 ≤ date ≤ 20260815` yields **213** at this ledger's commit, and the `recovered/`
+> subcount below (25) includes five documents dated before the window start. Neither pass
+> miscounted — the window boundary and the basename filter are applied differently. Treat 210 as
+> "the coverage pass's set", not as a reproducible constant, and state the rule whenever
+> restating the figure. **The 202 is not a claim the register ever made** — that string appears
+> nowhere in it or in any other document under `docs/`.
+
 **Nine directories are never named once by the register** — `audits/`, `runbooks/`, `recovered/`,
 `testing/`, `research/`, and four `plans/` subdirectories — **49 of the 210 documents**. That is
 where most of the following was found.
@@ -402,9 +413,22 @@ not opened**, so this list is a floor, not a ceiling.
 
 ### Two structural document problems the register does not record
 
-**A numbering collision between two live registers.** The 2026-08-15 platform audit uses
-identifiers **V-1…V-8** for a completely different set than the register's **V-1…V-11**. Two live
-registers, one namespace — this ledger keeps the register's meaning and does not adopt the other's.
+**A numbering collision between two live registers — RESOLVED 2026-08-17.** The 2026-08-15 platform
+audit used identifiers **V-1…V-8** for a completely different set than the register's **V-1…V-11**.
+Two live registers, one namespace. **The platform audit's items were renumbered `V-n` → `VP-n`**
+(1:1, order-preserving), so `V-n` now unambiguously means the register's verification-integrity
+items and every citation in this ledger stands unchanged. The platform audit moved because its
+identifiers had **zero citations outside its own file**, measured across the parent repo, all six
+submodules and both Vercel agent skills with a positive control on each probe, against **22**
+citations of the register's `V-n` in this ledger alone. A distinct prefix was chosen over
+renumbering into `V-12…V-19` so the two namespaces are structurally disjoint rather than merely
+non-overlapping today.
+
+**A second collision of the same shape, also resolved.** `20260728-weekly-gap-register-v1.00W.md`
+defines **P0-1…P0-8** for an entirely different set than the register's **P0-1…P0-8** — exactly
+overlapping ranges, and two other live documents cite its `P0-2` and `P0-4`. That register was
+already superseded by §9 of the 2026-08-14 register but carried no marker on its own face, so a
+reader landing on it directly had no signal. It now carries a supersession banner.
 
 **Status markers that contradict their own contents.** All 210 were scanned and every flag
 hand-verified: **69 flagged, 9 real**. Six documents carry a filename status letter their body

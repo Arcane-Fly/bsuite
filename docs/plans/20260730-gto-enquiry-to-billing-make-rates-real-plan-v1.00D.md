@@ -4,7 +4,7 @@ RECOVERED FROM A CLAUDE CODE SESSION TRANSCRIPT, 2026-08-17.
 This plan was produced in plan mode on 2026-07-30 and approved, but it only ever
 existed inside `~/.claude/projects/-home-braden-Desktop-Dev-bsuite/1853f94c-…jsonl`
 — a session transcript. It was never written to `docs/`, so no later agent could
-read it, and the estate register that claims to have read all 264 documents under
+read it, and the estate register that claims to have read every non-archive document under
 `docs/` could not have seen it either.
 
 2 iterations of this plan exist in that transcript; this is the FINAL one.
