@@ -514,12 +514,35 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          if node scripts/check-colour-ban-reaches-converters.mjs --self-test; then
-            echo "::error::--self-test passed. The probe does not detect a disarmed"
-            echo "argument walk, so its green verdict below means nothing."
-            exit 1
-          fi
-          echo "self-test failed as required — the probe can detect a disarmed rule"
+          # ASSERT THE EXIT CODE EXACTLY — "non-zero" is not good enough.
+          #
+          # This step used to read `if node …; then fail; fi`, i.e. it accepted ANY
+          # non-zero exit as "the self-test failed as required". A self-test that
+          # CRASHES exits non-zero too. On 2026-08-17 that is exactly what happened:
+          # the parent root declares no eslint, `import 'eslint'` threw
+          # ERR_MODULE_NOT_FOUND, and this gate went green while certifying a probe
+          # that had never loaded a single rule file.
+          #
+          #   exit 0 -> the mutant survived. The probe cannot detect a disarmed rule.
+          #   exit 1 -> correct: the probe caught the mutation.
+          #   exit 2 -> the probe could not run. NOT a verdict, and NOT acceptable.
+          set +e
+          node scripts/check-colour-ban-reaches-converters.mjs --self-test
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "::error::--self-test PASSED. The probe does not detect a disarmed"
+               echo "argument walk, so its verdict below would mean nothing."
+               exit 1 ;;
+            1) echo "self-test exited 1 — the probe detected the disarmed rule, as required" ;;
+            2) echo "::error::--self-test could not RUN (exit 2). The probe never loaded its"
+               echo "subject, so neither this control nor the check below proves anything."
+               echo "Most likely cause: a dependency the probe imports is absent from this"
+               echo "install. Fix the environment; do not treat a crash as a passing control."
+               exit 1 ;;
+            *) echo "::error::--self-test exited $rc, which is not a defined outcome."
+               exit 1 ;;
+          esac
 
       - name: The ban is reachable through a converter in every copy
         shell: bash

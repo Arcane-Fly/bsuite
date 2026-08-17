@@ -403,6 +403,24 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(`FAIL: the probe could not run — ${e.stack ?? e.message}`)
-  process.exit(1)
+  // EXIT 2, NOT 1, AND THE DISTINCTION IS THE WHOLE POINT.
+  //
+  // Exit 1 means "the guard ran and reached a verdict". Exit 2 means "the guard
+  // could not run at all". Collapsing them into one code is what let this probe's
+  // own positive control certify a probe that had never executed: the workflow
+  // asserted only that `--self-test` exited non-zero, and a crashing self-test
+  // exits non-zero just as convincingly as one that correctly detected the
+  // disarmed rule.
+  //
+  // Measured 2026-08-17: the parent root declares NO eslint, so `import 'eslint'`
+  // threw ERR_MODULE_NOT_FOUND, the self-test "failed as required", and the gate
+  // went green over a probe that had loaded nothing. Same shape as
+  // check-own-package-freshness, which uses exit 2 for CANNOT RUN for this reason.
+  console.error(`CANNOT RUN: the probe could not execute — ${e.stack ?? e.message}`)
+  console.error(
+    'This is exit 2, not a verdict. Do NOT read it as either a pass or a fail:\n' +
+      '  - a caller checking only "did it exit non-zero" would mistake this for a\n' +
+      '    correctly-detected failure, which is how a dead guard reports healthy.',
+  )
+  process.exit(2)
 })
