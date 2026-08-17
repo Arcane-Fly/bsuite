@@ -15,18 +15,25 @@
  * clauses actually say.
  *
  * THIS MODULE IS THE SINGLE CANONICAL COPY of this clause table across the
- * BSuite estate. It was ported byte-faithfully (same citations, same
- * refusal semantics, same rounding rules) from R80.4's
- * `src/awards/casual-penalty-convention.ts`, which remains the verified
- * origin of every figure below — see that file's git history for the
- * clause-by-clause research trail. R80.4 does not (yet) depend on
- * `@bsuite/charge-calc` as a package (it is a standalone Vite app, not a
- * library consumer, and its own copy lives in a SEPARATE git submodule this
- * fix cannot reach in one PR) — see this repo's compliance-fix PR
- * description for the deliberate, tracked follow-up to delete R80.4's copy
- * once it depends on this package. Until that follow-up lands, R80.4's copy
- * and this one MUST be kept identical by hand; do not edit one without the
- * other.
+ * BSuite estate. It was ported (same citations, same refusal semantics, same
+ * rounding RULES and constants — verified functionally identical, not a
+ * literal byte-for-byte diff: round2/round4 are inlined here rather than
+ * imported, and the MA000020 public-holiday branch is an explicit 2.75
+ * rather than a delegated call, both confirmed to produce the same numbers
+ * as R80.4's originals) from R80.4's `src/awards/casual-penalty-
+ * convention.ts`, which remains the verified origin of every figure below —
+ * see that file's git history (up to its deletion) for the clause-by-clause
+ * research trail.
+ *
+ * CONSOLIDATED, 2026-08-17: R80.4 now depends on `@bsuite/charge-calc` and
+ * imports this module directly — see R80.4 PR #90
+ * (github.com/GaryOcean428/R80.4). R80.4's own copy of this file is DELETED;
+ * this is the only copy left anywhere in the estate. (That PR's dependency
+ * on `@bsuite/charge-calc@^0.13.0` does not resolve until this package
+ * publishes 0.13.0+ to npm, which happens only once this fix promotes from
+ * bsuite's development to main — see that PR's description for the
+ * sequencing. Until then this file and R80.4's deleted one remain the
+ * historical record of what was ported; there is no second copy to drift.)
  *
  * VERIFIED PER AWARD (2026-08-11), against awards/docx-text/<CODE>.txt — the
  * cached plain-text export that preserves (a)/(b)/(c) sub-clause lettering
