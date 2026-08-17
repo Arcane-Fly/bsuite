@@ -1,3 +1,23 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED
+>
+> The unified role system and the new GTO entity tables specified here are live.
+>
+> **Evidence, live database `tuybltdrdefjblnplpqo` (2026-08-17):** `apprentices`, `placements`,
+> `training_providers`, `user_tenants` and `org_members` all exist in `public`. Host entities
+> landed as `host_agreements` / `host_contracts` / `host_charge_rates` rather than a single
+> `host_employers` table.
+> **Migration:** `crm7/supabase/migrations/20260228000001_gto_foundation_tables.sql`.
+>
+> **Marker defect:** no version or status marker in the filename, so a delivered plan is
+> indistinguishable from an open one at a directory listing.
+
+---
+
 # Reconciliation Phase 1: Foundation Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
