@@ -1,3 +1,22 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED — dead coordination board
+>
+> Two-agent parallel task split ("Claude Code + Claude 2") for the reconciliation sweep. The work
+> it coordinates is **delivered** (see the sibling `20260301-reconciliation-phase1-implementation.md`
+> banner); the coordination protocol is obsolete.
+>
+> Its `DO NOT TOUCH — Auth is Working` fence refers to a 2026-03 auth state that has since been
+> replaced by the BSU OAuth 2.1 PKCE bridge. Do not treat that fence as current.
+>
+> **Marker defect:** carries **no version or status marker at all**, against this estate's naming
+> convention — one of 26 such documents counted in the 2026-08-17 completion ledger.
+
+---
+
 # Phase 1 Coordination Plan — Claude Code + Claude 2
 
 > **For Claude:** REQUIRED SUB-SKILL: Use subagent-driven-development to implement your assigned tasks.

@@ -7,7 +7,7 @@ Multi-app monorepo (6 submodules) sharing one Supabase project (`tuybltdrdefjbln
 > - [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) — auth architecture (🛑 do not revert to cookie SSO)
 > - [`MEMORY_PROTOCOL.md`](./MEMORY_PROTOCOL.md) — cross-session state via QIG Memory API
 > - [`docs/20260227-contributing-standards-guide-v1.01W.md`](./docs/20260227-contributing-standards-guide-v1.01W.md) — full quality standards
-> - [`docs/20260227-dry-one-shot-architecture-v1.02A.md`](./docs/20260227-dry-one-shot-architecture-v1.02A.md) — entity ownership
+> - [`docs/20260227-dry-one-shot-architecture-v1.04A.md`](./docs/20260227-dry-one-shot-architecture-v1.04A.md) — entity ownership
 
 **Zero-defer policy (AGENTS.md §1):** Never defer fixes. If you see a lint/type/bug issue, fix it in the same session. No "TODO: implement later" for known problems.
 

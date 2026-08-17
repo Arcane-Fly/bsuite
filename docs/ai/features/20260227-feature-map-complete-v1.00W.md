@@ -1,8 +1,19 @@
 # Complete AI Feature Map
 
-**Version:** 1.0.0
+**Version:** 1.00W
 **Date:** 2026-02-27
-**Status:** Final
+**Status:** Working (W)
+
+> **Marker correction, 2026-08-17.** This read **Version 1.0.0 / Status: Final** against a `v1.00W`
+> filename — two contradictions in three lines. `Final` is not a status in the estate's convention
+> (`W`orking / `D`raft / `R`eview / `A`pproved / `F`rozen), and the version used a three-part
+> semver that the convention does not use.
+>
+> `Working` is also the *truthful* status, which is why the filename won rather than the body: this
+> map is **not** final. The AI surface it describes has moved since 2026-02-27 — the model roster was
+> replaced on 2026-07-31 and `docs/ai/CONTRIBUTING.md` was corrected on 2026-08-17 for naming two
+> models that no longer exist. Treat this map as a working inventory and verify any feature against
+> `crm7/src/lib/ai/` before relying on it.
 **Author:** Development Team
 **Supersedes:** N/A
 
