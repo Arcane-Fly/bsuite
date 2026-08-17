@@ -253,8 +253,43 @@ export const GUARDS = [
     ciWorkflow: '.github/workflows/theme-conformance.yml',
     mode: 'run',
     evidence:
-      '"Permitted palette: 223 oklch + 27 hex (from the two source-of-truth ' +
+      '"Permitted palette: 222 oklch + 27 hex (from the two source-of-truth ' +
       'documents)"',
+  },
+  {
+    // The parsed-lightness half of the pure-endpoint ban. audit-d2c-theme.sh
+    // class C1 matches the TEXT of pure white, so oklch(0.994) — visually
+    // indistinguishable from it — passed that gate for weeks. This one parses
+    // the lightness and compares it as a number.
+    //
+    // Expect NOT_EVALUATED rather than PASS until the estate reaches zero: the
+    // guard exits 1 while real findings remain, which is the honest signal.
+    // The denominator it prints ("N oklch colour literals parsed ... across 7
+    // roots") is what LANE-WATCHER reads when it eventually does pass.
+    id: 'parent-audit-oklch-lightness',
+    label: 'Near-pure white/black by parsed OKLCH lightness (all apps + packages)',
+    repo: '.',
+    command: ['python3', 'scripts/audit-oklch-lightness.py'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"1422 oklch colour literals parsed in authored source across 7 roots"',
+  },
+  {
+    // The positive control for the guard above. A scanner that silently matches
+    // nothing prints the same "0" as a clean tree, and this repository has
+    // already shipped one that did — see theme_audit_lib.code_lines. This
+    // asserts the gate still FAILS on a crafted near-pure fixture.
+    id: 'parent-theme-audit-gate-selftest',
+    label: 'Near-pure gate self-test (proves the gate can still fail)',
+    repo: '.',
+    command: ['bash', 'scripts/test-theme-audit-gates.sh'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"Near-pure gate — positive control: 10 cases exercised (clean-silent, 0.994, ' +
+      '99.4%, near-black, suppression-comment, prose-adjacent, prose-only, oklch(from …), ' +
+      'dist/node_modules exclusion, restore-to-silent)."',
   },
   {
     id: 'parent-verify-esm-imports',

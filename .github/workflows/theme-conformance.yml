@@ -48,6 +48,12 @@ on:
       - '**/*.js'
       - '**/*.html'
       - 'scripts/audit-d2c-theme.sh'
+      - 'scripts/audit-oklch-lightness.py'
+      - 'scripts/audit-palette-whitelist.py'
+      - 'scripts/theme_audit_lib.py'
+      - 'scripts/test-theme-audit-gates.sh'
+      - '.github/theme-c1-baseline.txt'
+      - '.github/theme-near-pure-baseline.txt'
       - '.github/workflows/theme-conformance.yml'
 
 jobs:
@@ -216,6 +222,125 @@ jobs:
             echo "The baseline must EQUAL what this job measures at the pinned gitlink SHAs."
             echo "Do not measure in your working copy — the submodules there are at their branch"
             echo "tips, which is a different tree and has given a different number before."
+            exit 1
+          fi
+          echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
+
+      # ── C1n NEAR-PURE ────────────────────────────────────────────────────
+      #
+      # WHY C1 WAS NOT ENOUGH, IN ONE LINE OF ITS OWN SOURCE
+      # audit-d2c-theme.sh's OKLCH arm is `oklch\(\s*1(\.0+)?\s+0\s+0`. It
+      # recognises the TEXT of pure white, not the colour. `oklch(0.994 0.002
+      # 260)` shares no substring with it, so the panel surface of every D2C app
+      # sat 0.6 lightness points off pure white for weeks with this job green
+      # the entire time. It ended when the operator looked at a RENDERED PAGE
+      # and said "pure white displayed, which is forbidden" — a human eye
+      # catching what the gate structurally could not. vars.css records the
+      # verdict at --light-bg-accent: "A colour rule enforced by string match
+      # will keep accepting values like that."
+      #
+      # So this step does not match text. audit-oklch-lightness.py PARSES the
+      # lightness component and compares it as a number, and the thresholds are
+      # read off the contract rather than chosen for feel: the lightest colour
+      # D2C defines is --white at L 0.982 and the lightest surface is
+      # --role-bg-panel at 0.98, so > 0.985 is a value no token justifies.
+      #
+      # SELF-TEST FIRST, DELIBERATELY. A scanner that matches nothing prints the
+      # same "0" as a clean tree, and this repository has already shipped one
+      # that did: the palette whitelist counted comment delimiters per line and
+      # assumed block comments nest, so the string `bg-overlay/*` written inside
+      # comment PROSE opened a comment that never closed and blinded it to
+      # everything after — 595 of 660 lines in crm7/src/styles/theme.css, and 62%
+      # of packages/theme/src/css/vars.css, the token source itself. The two
+      # tokens this gate exists to catch were inside that blind spot. Running the
+      # positive control before the measurement means a broken scanner fails
+      # loudly instead of reporting a clean estate.
+      - name: Near-pure gate self-test (positive control)
+        shell: bash
+        run: scripts/test-theme-audit-gates.sh
+
+      - name: No new near-pure white/black
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo "::group::Full near-pure scanner output"
+          scripts/audit-oklch-lightness.py | tee /tmp/nearpure.txt || true
+          echo "::endgroup::"
+          total=$(scripts/audit-oklch-lightness.py --count)
+          echo "NEARPURE_TOTAL=$total" >> "$GITHUB_ENV"
+          echo "C1n near-pure total: $total"
+
+      # Same ratchet semantics as C1 above, and for the same reason: a gate that
+      # tolerates slack between the committed number and the measured one is a
+      # ceiling with the ceiling written down wrong (bsuite D-87). Above is a
+      # regression, below is an un-banked improvement, and both are failures.
+      #
+      # BANKED AT 25, MEASURED AT THE PINNED GITLINK SHAs — not in a working
+      # copy, where the submodules sit at their branch tips and have given a
+      # different number before. The 25 breaks down as crm7 7, conduit 1,
+      # throughput 1, business-suite-unified 4, packages 3, braden 9.
+      #
+      # IT DROPS TO 16 THE MOMENT THE POINTERS ADVANCE. The three app-side PRs
+      # in this lane take crm7, conduit and throughput to zero, so whichever PR
+      # advances those gitlinks must lower this file to 16 in the same PR. That
+      # is not a surprise or a bug in the ratchet; it is the ratchet working.
+      #
+      # The 16 that remain are all outside this lane's three repos:
+      #   business-suite-unified  4  Analytics + Embed/Contact inline styles
+      #   packages                3  the Corporate --role-bg-panel and its two
+      #                              lines in the corporate source-of-truth doc.
+      #                              NOT fixed here on purpose: --role-bg-body is
+      #                              0.980, so any value this gate would accept
+      #                              sits at most 0.5 lightness points above the
+      #                              page background — by the operator's own
+      #                              2026-08-10 standard that is below the
+      #                              perceptual threshold, and it would trade
+      #                              "reads as white" for "reads as flat". The
+      #                              real fix re-scales the warm light ramp,
+      #                              which is a Corporate visual decision.
+      #   braden                  9  index.css borders/gradients at L 0.99
+      - name: Compare near-pure against the committed baseline
+        shell: bash
+        run: |
+          set -uo pipefail
+          baseline=$(cat .github/theme-near-pure-baseline.txt 2>/dev/null || echo 999)
+          total="$NEARPURE_TOTAL"
+          case "$total" in ''|*[!0-9]*) echo "::error::non-numeric near-pure total: '$total'"; exit 1 ;; esac
+          echo "baseline=$baseline  current=$total"
+
+          if [ "$total" -gt "$baseline" ]; then
+            echo "::error::Near-pure endpoint count rose from $baseline to $total."
+            echo ""
+            echo "A value this close to an endpoint is banned exactly as the endpoint is."
+            echo "It is not a compromise between the token and pure white — nobody can"
+            echo "see the difference, which is the whole finding."
+            echo ""
+            echo "Bind to the token instead of writing a fresh literal:"
+            echo "  panel / card surface     -> var(--role-bg-panel)   L 0.98"
+            echo "  shell chrome near-white  -> var(--white)           L 0.982  (#f8f9fa)"
+            echo "  near-black               -> var(--black)           L 0.166  (#0a0e1a)"
+            echo "  the same, with alpha     -> color-mix(in oklch, var(--role-bg-panel) 96%, transparent)"
+            echo ""
+            echo "If the value is genuinely correct — a prefers-contrast block, a mask"
+            echo "stop where the channel is opacity, a contrast-measurement swatch —"
+            echo "annotate it with 'theme-audit-ok: <reason>' on that line or the line"
+            echo "above. The reason is not optional."
+            sed -n '1,200p' /tmp/nearpure.txt || true
+            exit 1
+          fi
+
+          if [ "$total" -lt "$baseline" ]; then
+            echo "::error::Near-pure count FELL from $baseline to $total — bank it."
+            echo ""
+            echo "Someone removed $(( baseline - total )) near-pure endpoint(s) without"
+            echo "lowering the ratchet. Until the committed baseline matches, the gate"
+            echo "would let them come back unnoticed."
+            echo ""
+            echo "Fix, in this PR:"
+            echo "  echo $total > .github/theme-near-pure-baseline.txt"
+            echo ""
+            echo "If you just advanced the submodule pointers, this is expected — see"
+            echo "the comment above this step."
             exit 1
           fi
           echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
