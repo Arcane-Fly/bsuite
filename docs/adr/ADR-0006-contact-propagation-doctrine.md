@@ -1,7 +1,47 @@
 # ADR-0006 — Contact Propagation Doctrine
 
-**Status:** Accepted (2026-05-01)
+> ## ⚠️ PARTIALLY SUPERSEDED — the ORGANISATION half of this ADR is stale
+>
+> **The contact half stands. The organisation half does not.** Production
+> canonicalised organisations the *other* way, and **the newer model is the better
+> one** — it is this ADR's text that is out of date, not the database.
+>
+> **What this ADR mandates (§Decision ¶2, invariants 3 & 4):** a `clients.type`
+> discriminator with values `'client' | 'host' | 'both'`, honoured by every selector;
+> and explicitly *"There is no separate `host_employers` table"*.
+>
+> **What production actually has** (live catalog, project `tuybltdrdefjblnplpqo`,
+> measured 2026-08-17):
+>
+> - `clients.type` — **does not exist.** The `clients` table has 31 columns; `type`
+>   is not among them.
+> - A canonical **`employers`** table exists, carrying **four boolean role flags**:
+>   `is_client`, `is_host_employer`, `is_sta`, `is_training_provider`.
+> - `clients.employer_id` (uuid) points at it, plus `clients.parent_employer_id`,
+>   `clients.is_host_employer` and `clients.is_worksite`.
+>
+> **Why the newer model is better:** a single `type` enum cannot express an
+> organisation that is simultaneously a host employer *and* a training provider *and*
+> a State Training Authority. The `'both'` value was already an admission that the
+> discriminator did not fit — it enumerates one pairing out of the eleven combinations
+> four independent roles produce. Independent booleans model the actual domain: roles
+> are *orthogonal*, not mutually exclusive. Adding a fifth role is a column, not a
+> combinatorial enum rewrite.
+>
+> **Consequence for selectors:** invariant 4's `type IN ('client','both')` /
+> `type IN ('host','both')` predicates are **not executable** against this schema.
+> The equivalent is `employers.is_client` / `employers.is_host_employer`.
+>
+> **The superseding decision is recorded**, but was unreachable from either ADR index
+> until this correction:
+> [`crm7/docs/adr/20260525-host-employer-table-canonicalization.md`](../../crm7/docs/adr/20260525-host-employer-table-canonicalization.md).
+>
+> Per estate convention, corrections stay visible: the original text below is
+> **unaltered**. Read §Decision ¶2 and invariants 3–4 as historical only.
+
+**Status:** Accepted — contact half current; **organisation half superseded** (see banner)
 **Related:** `docs/20260227-dry-one-shot-architecture-v1.02A.md` §1 (`contacts`), §2 Flow E (Contact Reuse), §4 Auto-Population Rules; WS-E.1 Client↔Host Employer unification
+**Superseded in part by:** `crm7/docs/adr/20260525-host-employer-table-canonicalization.md`
 
 ---
 
