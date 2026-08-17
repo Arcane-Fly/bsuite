@@ -75,7 +75,7 @@ promotion:
 
 - Vercel/CI must be green on the owning app's `development` branch.
 - The one-shot compliance gate in
-  `20260227-dry-one-shot-architecture-v1.02A.md` must pass for changed data flows.
+  `20260227-dry-one-shot-architecture-v1.04A.md` must pass for changed data flows.
 - `@bsuite/*` consumers must use published npm semver ranges in deployable app
   `package.json` files; `workspace:*` and `file:../packages/*` are local-only.
 - No merge from `development` to `main`/`master` without explicit user approval.
@@ -91,7 +91,7 @@ These are authoritative, continuously applicable documents. They evolve in place
 | `20260227-auth-map-reference-v1.00A.md` | Authentication topology across BSU, CRM7, R80.3, Braden — OAuth 2.1, session boundaries, token refresh chains |
 | `00-roadmap/20260112-master-roadmap-1.00W.md` | **Primary planning source of truth.** All sprints, P0–P3 gaps, audit sprint status, and recently-completed items live here. *(repointed 2026-07-28 — the previous entry here, `20260227-bsuite-master-roadmap-v5.00W.md`, was archived 2026-07-08; `20260415-roadmap-audit-delta-v1.00W.md` is retained for historical v5.0xW version-bump context only.)* |
 | `20260227-contributing-standards-guide-v1.01W.md` | Universal code quality, documentation naming, and commit standards for all BSuite projects (supersedes v1.00A which is archived) |
-| `20260227-dry-one-shot-architecture-v1.02A.md` | DRY / one-shot data entry architecture; §1 Entity Ownership Map is the canonical cross-app ownership reference |
+| `20260227-dry-one-shot-architecture-v1.04A.md` | DRY / one-shot data entry architecture; §1 Entity Ownership Map is the canonical cross-app ownership reference |
 | `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification — OKLCH palette, Tailwind token map, CSS variable contract |
 | `20260228-gto-standards-reference-v1.00A.md` | National Standards for Group Training Organisations evidence guide (GTO compliance) |
 | `20260310-fairwork-reference-v1.00A.md` | Fair Work Act compliance reference for Australian VET sector |
