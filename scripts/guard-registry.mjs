@@ -380,6 +380,36 @@ export const GUARDS = [
     evidence: '"audit-prod-migration-history: self-test OK (10 cases)"',
   },
   {
+    id: 'parent-check-own-package-freshness',
+    label: 'Own-package freshness (do the six apps run our latest @bsuite/* publishes?)',
+    repo: '.',
+    command: ['node', 'scripts/check-own-package-freshness.mjs'],
+    ciWorkflow: '.github/workflows/own-package-freshness.yml',
+    mode: 'run',
+    // Registered against its REAL invocation, not its --self-test, per this
+    // registry's full-universe preference. It is read-only and hits only the
+    // public npm registry — none of the `skip` criteria (live credentials,
+    // production infrastructure, state mutation) apply. When the estate IS
+    // stale the guard exits 1, which the watcher records as NOT_EVALUATED;
+    // that is correct — a non-zero exit is a finding, not a false pass.
+    //
+    // PRECONDITION: `yaml` and `semver` must be resolvable (the guard refuses
+    // to grep pnpm-lock.yaml as a fallback and exits 2 naming what is
+    // missing). guard-self-reporting.yml installs both into a scratch prefix
+    // and exports BSUITE_GUARD_NODE_MODULES; spawnSync inherits it.
+    evidence:
+      '"check-own-package-freshness: 6 app(s), 52 @bsuite/* dependency ' +
+      'edge(s) examined across 12 distinct published package(s) via ' +
+      'https://registry.npmjs.org — 52 current, 0 stale-but-in-range, 0 ' +
+      'exact-pinned-behind, 0 range-behind, 0 ahead, 0 embargoed, 0 linked, ' +
+      '0 not-published." — run by hand against this tree 2026-08-17. The ' +
+      'same run against the COMMITTED origin/development gitlinks (the state ' +
+      'CI checks out) exits 1 with "FRESHNESS FAILURE — 21 of 52 edge(s) do ' +
+      'not run our latest", which is the positive control proving the guard ' +
+      'fires: 15 STALE-BUT-IN-RANGE + 6 EXACT-PINNED-BEHIND across all six ' +
+      'apps (@bsuite/theme 0.11.2, nav-core 0.9.1, ui 1.0.3, dry-lint 1.0.1).',
+  },
+  {
     id: 'parent-check-oauth-redirect-uris',
     label: 'OAuth redirect URI live probe',
     repo: '.',
