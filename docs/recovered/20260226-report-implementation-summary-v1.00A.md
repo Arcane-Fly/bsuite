@@ -1,3 +1,19 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED — historical completion record
+>
+> A summary of fixes implemented on **October 9, 2025** (login button, five-second crash, framework
+> and Vercel best-practice checks). The work described is long since shipped and has been
+> superseded several times over by the deployment and auth work of 2026-03 → 2026-08.
+>
+> Retained as a record of what was done, not as instruction. **Marker defect:** `A` on a
+> retrospective summary, where it reads as a live approved plan.
+
+---
+
 # Implementation Summary - October 9, 2025
 
 ## Overview
