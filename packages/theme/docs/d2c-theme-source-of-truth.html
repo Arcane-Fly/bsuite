@@ -63,7 +63,8 @@
   --neon-deep:      oklch(0.380 0.140 270);    /* secondary action */
   /* Added 2026-08-13. In this system the WORDS "white" and "black" name these
      two values; the pure endpoints are the banned ones (operator ruling
-     2026-08-02, "white is primary: #f8f9fa"). They were prescribed estate-wide
+     2026-08-02, "white is primary: #f8f9fa"). theme-audit-ok: naming the ruling's
+     literal, not consuming it — the token below is oklch. They were prescribed estate-wide
      and named in packages/eslint-config/rules/no-hardcoded-colours.js as the
      sanctioned replacement text, but they were never recorded HERE — so the
      palette whitelist, which builds its permitted set by reading this file,
@@ -505,8 +506,8 @@ td.r { text-align: right; }
     linear-gradient(var(--grid-color) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
-  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
-          mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%); /* theme-audit-ok: mask stop, opacity channel not paint */
+          mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%); /* theme-audit-ok: mask stop, opacity channel not paint */
 }
 
 /* ═══ TYPEFACE LOCK BADGE ═══ */

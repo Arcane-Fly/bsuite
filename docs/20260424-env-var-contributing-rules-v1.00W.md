@@ -5,6 +5,12 @@
 **Sources:** [20260424-env-var-audit-findings-v1.00A.md](20260424-env-var-audit-findings-v1.00A.md) + [20260424-env-var-audit-matrix-v1.00A.md](20260424-env-var-audit-matrix-v1.00A.md) + root [env.example](../env.example)
 **Canonical Supabase project:** `tuybltdrdefjblnplpqo`
 
+> **R80.3 → R80.4 corrected 2026-08-17.** Six rows below (the client-safe stack table, the orphan
+> Fair Work variables note, the prefix-rules table, and the integration-map table) named `R80.3` as
+> a current app. R80.3 left the submodule set on 2026-08-06 (`5e000c35`, operator directive) and
+> R80.4 took its place. This is a living, forward-looking rules document per its own header, so the
+> correction is applied in place.
+
 These are **standing, forward-looking rules** for how env vars are named, scoped, and
 protected across the BSuite monorepo. They are derived from the 2026-04-24 cross-repo env
 audit that found one live auth outage (revoked HS256 anon JWT still referenced by dev
@@ -24,7 +30,7 @@ across all six apps — only the framework prefix differs.
 
 | Stack | Env var | Example |
 |---|---|---|
-| Vite (BSU, CRM7, R80.3, braden, throughput) | `VITE_SUPABASE_URL` | `https://tuybltdrdefjblnplpqo.supabase.co` |
+| Vite (BSU, CRM7, R80.4, braden, throughput) | `VITE_SUPABASE_URL` | `https://tuybltdrdefjblnplpqo.supabase.co` |
 | Vite | `VITE_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…` |
 | Next.js (conduit) | `NEXT_PUBLIC_SUPABASE_URL` | same URL |
 | Next.js | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…` |
@@ -78,8 +84,8 @@ prior audit work. A CI check should eventually fail any PR that introduces any o
 
 ### 2.5 Orphan API variants with no code references
 
-- `FAIRWORK_API_KEY_1`, `FAIRWORK_API_KEY_2`, `FAIRWORK_API_URL` — declared on R80.3;
-  no code reads them. Delete. Keep only `FAIRWORK_API_KEY` on R80.3 and BSU (active
+- `FAIRWORK_API_KEY_1`, `FAIRWORK_API_KEY_2`, `FAIRWORK_API_URL` — declared on R80.4;
+  no code reads them. Delete. Keep only `FAIRWORK_API_KEY` on R80.4 and BSU (active
   Fair Work edge fn consumers).
 - `FAIRWORK_API_KEY`, `FAIRWORK_API_KEY_SECONDARY` on CRM7 — CRM7 does not consume Fair
   Work directly. Delete both.
@@ -102,7 +108,7 @@ prior audit work. A CI check should eventually fail any PR that introduces any o
 |---|---|---|
 | business-suite-unified (BSU) | Vite | `VITE_*` |
 | crm7 | Vite | `VITE_*` |
-| R80.3 | Vite | `VITE_*` |
+| R80.4 | Vite | `VITE_*` |
 | braden | Vite | `VITE_*` |
 | throughput | Vite | `VITE_*` |
 | conduit | Next.js 16 | `NEXT_PUBLIC_*` |
@@ -151,10 +157,10 @@ creates the "deploy-time bomb" pattern that took out CRM7 RAM integration.
 |---|---|---|
 | Supabase (public) | all 6 | `{VITE_,NEXT_PUBLIC_}SUPABASE_URL`, `{VITE_,NEXT_PUBLIC_}SUPABASE_PUBLISHABLE_KEY` |
 | Supabase (server) | all 6 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` |
-| Supabase storage S3 | BSU, R80.3, throughput | `SUPABASE_BUCKET_*` × 4 |
+| Supabase storage S3 | BSU, R80.4, throughput | `SUPABASE_BUCKET_*` × 4 |
 | Stripe | BSU, CRM7 | `STRIPE_PUBLISHABLE_KEY` (client), `STRIPE_SECRET_KEY` (server) |
 | Xero | CRM7 | `XERO_CLIENT_ID` (client OK), `XERO_CLIENT_SECRET` (server), `XERO_REDIRECT_URI` |
-| Fair Work | R80.3, BSU | `FAIRWORK_API_KEY` (server, edge fn) |
+| Fair Work | R80.4, BSU | `FAIRWORK_API_KEY` (server, edge fn) |
 | RAM (ATO M2M) | CRM7 | `RAM_CLIENT_ID`, `RAM_CREDENTIAL_ABN`, `RAM_CREDENTIAL_EXPIRES_AT`, `RAM_CREDENTIAL_ENVIRONMENT`, `RAM_PRIVATE_KEY_PKCS8_B64`, `RAM_LEAF_CERT_B64`, `RAM_TOKEN_ENDPOINTS` — **currently undeclared, deploy-time bomb** |
 | Google OAuth | CRM7, BSU | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_API_KEY` |
 | AI Gateway / Jodie | CRM7, conduit | `AI_GATEWAY_API_KEY`, `JODIE_AI_MODEL_SLUG` |

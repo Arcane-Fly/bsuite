@@ -7,6 +7,10 @@ import type {
   OncostBreakdown,
   Allowance,
 } from './types.js';
+import {
+  casualPenaltyMultiplierForAward,
+  CasualPenaltyConventionUnmodelled,
+} from './awards/casual-penalty-convention.js';
 
 interface RateKeyResolution {
   key: string;
@@ -128,6 +132,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
     penalties,
     funding,
     casualLoading,
+    awardCode,
   } = cfg;
 
   // Suppress unused variable lint — _hpd is destructured for completeness
@@ -163,6 +168,17 @@ export function calculate(cfg: CalcConfig): CalcResult {
   // Casual loading per hour is applied on top of the base wage (replaces leave costs)
   const casualLoadingPH = isCasual ? wage * (casualLoading as number) : 0;
   const recv = wage + allowPerHour + casualLoadingPH;
+  /**
+   * The wage BEFORE any casual loading — identical to `recv` for a
+   * non-casual (casualLoadingPH is 0 there). Penalty/overtime rows must
+   * multiply THIS, never `recv`, once a casual's own effective multiplier
+   * (resolved per-award below) already carries the loading itself —
+   * multiplying the LOADED `recv` by a standard percentage that ALSO
+   * assumes an unloaded base is exactly how "base x 1.25 x 1.50 = 187.5%"
+   * happened instead of the correct "base x 1.75 = 175%" (MA000020
+   * cl.12.5/12.6). See `awards/casual-penalty-convention.ts`.
+   */
+  const recvBase = wage + allowPerHour;
   const superBearingRate = wage + allowPerHourSuper;
   const wkPay = recv * hpw;
   const wkWage = wage * hpw;
@@ -214,6 +230,8 @@ export function calculate(cfg: CalcConfig): CalcResult {
   // does not compound through super, WC, or payroll tax.
   const tafeDayAmortPH = cfg.tafeDayAmortizationPerHour ?? 0;
   const billedWage = (recv * tHrs) / bHrs;
+  /** Unloaded counterpart of `billedWage` — see `recvBase`. */
+  const billedWageBase = (recvBase * tHrs) / bHrs;
   const ordCost = totCost / bHrs + tafeDayAmortPH;
   const billedOnc = ordCost - billedWage;
   const marginPH =
@@ -224,6 +242,8 @@ export function calculate(cfg: CalcConfig): CalcResult {
   const otOnc = (totAnnPay * otOncostFactor) / bHrs;
   const otSuperPH = superOnOT ? superBearingRate * superRate : 0;
   const ot1x = recv + marginPH + otOnc;
+  /** Unloaded counterpart of `ot1x` — see `recvBase`. */
+  const ot1xBase = recvBase + marginPH + otOnc;
 
   // --- Penalty oncosts (line 103) ---
   const penOnc = (study + ppe + wc) / bHrs + penaltyOncostAdder;
@@ -285,6 +305,18 @@ export function calculate(cfg: CalcConfig): CalcResult {
     category: ordinaryRate.category ?? 'ordinary_time',
   });
 
+  /**
+   * Award this `penalties` table was sourced from — only consulted for a
+   * CASUAL worker, to resolve how each row's standard percentage converts
+   * (additive vs multiplicative on the loaded rate; award/category-specific,
+   * never assumed — see `awards/casual-penalty-convention.ts`). Defaults to
+   * MA000020, the sector this package was built for, exactly like R80.4's
+   * own resolver does — never silently applied to a DIFFERENT award's rows
+   * without going through `casualPenaltyMultiplierForAward`'s own refusal.
+   */
+  const resolvedAwardCode = (awardCode || 'MA000020').toUpperCase().trim() || 'MA000020';
+  const casualPenaltyViolations: string[] = [];
+
   for (const pr of penalties) {
     const rateKey = resolveRateKey(
       pr.id,
@@ -292,9 +324,47 @@ export function calculate(cfg: CalcConfig): CalcResult {
       pr.payItemGroup,
       `penalties[${pr.id}]`,
     );
+
+    /**
+     * `effMult` is the multiplier actually applied below. For a non-casual
+     * it is exactly `pr.mult` (the standard award percentage). For a casual
+     * it is the AWARD'S OWN verified casual conversion — additive
+     * (+25 percentage points) or multiplicative (x1.25 on the loaded rate)
+     * depending on award and category — resolved against `billedWageBase`/
+     * `ot1xBase` (the UNLOADED wage) below, never against `billedWage`/
+     * `ot1x` (which already carry the 25% loading once, for ordinary
+     * hours). Combining a loaded wage with a standard percentage is
+     * exactly the double-count this module exists to prevent.
+     *
+     * `casualPenaltyMultiplierForAward` THROWS — never returns a wrong
+     * number — when the (award, category) pair has not been individually
+     * verified. That refusal is caught HERE, per row: the row is left OUT
+     * of `rates` entirely (never a default, never zero — see
+     * `CalcResult.casualPenaltyViolations`) rather than silently priced
+     * under an assumed convention.
+     */
+    let effMult = pr.mult;
+    if (isCasual) {
+      try {
+        effMult = casualPenaltyMultiplierForAward({
+          award: resolvedAwardCode,
+          category: pr.cat,
+          standardMult: pr.mult,
+          isPublicHoliday: pr.id === 'ph',
+          penaltyId: pr.id,
+        }).multiplier;
+      } catch (e) {
+        if (!(e instanceof CasualPenaltyConventionUnmodelled)) throw e;
+        casualPenaltyViolations.push(
+          `${pr.label || pr.id}: cannot price a CASUAL under ${resolvedAwardCode} — ${e.message}`,
+        );
+        continue; // No rates[pr.id] entry — refused, not wrong.
+      }
+    }
+
     if (pr.cat === 'overtime') {
       const otCharge =
-        ot1x * pr.mult + (superOnOT ? otSuperPH * (pr.mult - 1) : 0);
+        ot1xBase * effMult + (superOnOT ? otSuperPH * (effMult - 1) : 0);
       assignRate(rates, ratesByPayItemGroupId, rateKey.key, pr.id, {
         charge: otCharge,
         funded: otCharge,
@@ -307,7 +377,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
       });
     } else if (pr.cat === 'penalty') {
       const penCharge =
-        (48 / 52) * penOnc * pr.mult + billedWage * pr.mult + marginPH;
+        (48 / 52) * penOnc * effMult + billedWageBase * effMult + marginPH;
       assignRate(rates, ratesByPayItemGroupId, rateKey.key, pr.id, {
         charge: penCharge,
         funded: penCharge - fundingPH,
@@ -376,5 +446,6 @@ export function calculate(cfg: CalcConfig): CalcResult {
     rates,
     ratesByPayItemGroupId,
     ordinaryRateKey: ordinaryRate.key,
+    casualPenaltyViolations,
   };
 }

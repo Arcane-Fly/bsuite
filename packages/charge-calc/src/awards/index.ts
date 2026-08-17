@@ -57,3 +57,9 @@ export {
 
 export { awardToCalcConfig } from './converter.js';
 export type { EmployeeAwardContext, CalcOverrides } from './converter.js';
+
+export {
+  casualPenaltyMultiplierForAward,
+  CasualPenaltyConventionUnmodelled,
+} from './casual-penalty-convention.js';
+export type { CasualPenaltyResult } from './casual-penalty-convention.js';
