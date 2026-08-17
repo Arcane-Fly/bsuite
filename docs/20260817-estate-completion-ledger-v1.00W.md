@@ -471,7 +471,14 @@ long enough that the waiting is itself the risk.
 3. **The two colours the rule prescribes but the audit rejects** (G4). Adding a colour to the
    contract is a contract change. A developer obeying one gate currently fails another.
 4. **Whether the legacy custom-fields table is dead** (PF-4c). Dropping it removes 4 of PF-1's 69
-   findings outright — **decide before PF-1 reaches `main`** or those statements are wasted.
+   findings outright.
+
+   > **CORRECTION, 2026-08-17 (same day, hours later): the window this framed closed.** PF-1 was
+   > promoted to `main` in bsuite#2046 and **applied** by the floor-gated applier; the live catalog
+   > confirms the hoisted form on the sampled table. So the 4 statements covering the legacy table
+   > have already run. The decision is now the plainer one — drop the table or keep it — and
+   > dropping it means dropping 4 live policies with it rather than skipping 4 unapplied statements.
+   > Left visible rather than rewritten: the original framing was correct when written.
 5. **Whether the 20 unbuilt parity gaps survive the portal redesign** — carried from the register,
    still unanswered.
 6. **Retirement of a financial reports route** (G11) — deletion needs approval.
@@ -481,9 +488,22 @@ long enough that the waiting is itself the risk.
 
 8. **Training-authority email samples for six states** (G10) — approval, rejection and needs-info
    for each. No amount of code reading produces these.
-9. **Working end-to-end test credentials** (V-1). The current credential is *invalid*, not merely
-   unwired. Until this exists, every visual and runtime verdict in this ledger rests on reading
-   rather than running.
+9. ~~**Working end-to-end test credentials** (V-1).~~ **CLOSED 2026-08-17, hours after this ledger
+   was written.** The ledger was right that the credential was *invalid* rather than merely
+   unwired — and the cause was that the stored GitHub secrets did not match `.env.local`. Both
+   pairs were verified against Supabase's token endpoint directly (HTTP 200, tokens minted) and
+   re-set with `printf` rather than `echo`, because a trailing newline in a password secret is
+   invisible in every UI and fails identically to a wrong password.
+
+   **The suite then ran for the first time: `executed=74 skipped=52`, 51 passed, 23 failed** — up
+   from `executed=1 skipped=125`. Three nested defects had to be cleared first: the secrets were
+   never referenced by any workflow; the auth helper drove a login form that does not exist (crm7's
+   `/auth/login` is a redirect shim to the OAuth hub, and a CI origin can never be a registered
+   redirect URI); and underneath both, the helper's `catch` wrote an EMPTY storage state, which
+   makes every authenticated spec skip itself while Playwright counts a skip as a pass.
+
+   **This does not retroactively validate this ledger's theme claims** — see item 10, which still
+   stands. It means the instrument now exists.
 
 ### Cannot be verified without a live authenticated session
 

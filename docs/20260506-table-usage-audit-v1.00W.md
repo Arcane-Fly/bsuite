@@ -1,8 +1,28 @@
 # Table Usage Audit — 2026-05-06
 
-**Status:** Working (W) — audit complete, conclusions stand but recommendations require per-table human sign-off before any drop migration is written.
-**DB Project:** `tuybltdrdefjblnplpqo` (shared CRM7 / BSU / R80.3 / throughput / conduit / braden Supabase instance)
-**Scope:** All 229 `public.*` tables, audited for usage across 7 independent signal dimensions.
+> ## ⚠ POPULATION SUPERSEDED — re-measured 2026-08-17
+>
+> **This audit covered 229 tables. The live database now has 402.** Measured against
+> `tuybltdrdefjblnplpqo`:
+>
+> ```sql
+> SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+> WHERE n.nspname = 'public' AND c.relkind = 'r';   -- 402
+> ```
+>
+> **173 tables — 43% of the schema — have never been through this audit.** Every per-table finding
+> below is still valid *for the table it names*; what is void is the claim of **coverage**. Do not
+> cite this document as "all `public.*` tables audited", and do not read the "zero tables safe to
+> drop" verdict as covering the schema — it covers the 229 that existed on 2026-05-06.
+>
+> The unaudited remainder is the real finding: a table added after 2026-05-06 has never had its
+> usage signals collected, so nothing here tells you whether it is live, orphaned or duplicated.
+> Re-running the 7-signal sweep over the full 402 is the outstanding work; this banner is not a
+> substitute for it.
+
+**Status:** Working (W) — per-table conclusions stand for the 2026-05-06 population; the population itself is superseded (see banner). Recommendations require per-table human sign-off before any drop migration is written.
+**DB Project:** `tuybltdrdefjblnplpqo` (shared CRM7 / BSU / R80.4 / throughput / conduit / braden Supabase instance — R80.3 was the submodule when this was written; it was replaced by R80.4 on 2026-08-06)
+**Scope:** All 229 `public.*` tables **as at 2026-05-06**, audited for usage across 7 independent signal dimensions. Live count 2026-08-17: **402**.
 
 ## Executive summary
 
@@ -51,7 +71,7 @@ The signal set is strong but not exhaustive. Known gaps — future auditors shou
 
 3. **`.rpc()` call chains hide table usage one indirection away.** If an app calls `supabase.rpc('get_vet_packages')` and the Postgres function internally reads `vet_training_packages`, the table shows zero app refs but is fully wired in through the RPC surface. The Functions signal (#5) catches this on the DB side, but the doc should be explicit that app-code refs underestimate usage wherever `.rpc()` is the call path.
 
-4. **Cross-app ownership is not single-repo.** This audit greps 6 app `/src/` roots (crm7, business-suite-unified, R80.3, throughput, conduit, braden). A table with zero hits across all 6 may still be the owned write-surface of a seventh app not yet in this monorepo, or of an Edge Function the owning team maintains separately. Per `docs/20260227-dry-one-shot-architecture-v1.01A.md`, every entity has exactly ONE owning app; "invisible to crm7" ≠ "unused". Before dropping any table, cross-check the canonical entity-ownership map and confirm with the owning app's maintainer.
+4. **Cross-app ownership is not single-repo.** This audit greps 6 app `/src/` roots (crm7, business-suite-unified, R80.3, throughput, conduit, braden). A table with zero hits across all 6 may still be the owned write-surface of a seventh app not yet in this monorepo, or of an Edge Function the owning team maintains separately. Per `docs/20260227-dry-one-shot-architecture-v1.04A.md`, every entity has exactly ONE owning app; "invisible to crm7" ≠ "unused". Before dropping any table, cross-check the canonical entity-ownership map and confirm with the owning app's maintainer.
 
 5. **Generated type imports are invisible.** Output from `supabase gen types typescript` produces identifiers like `Database['public']['Tables']['<table>']['Row']` that the strict grep doesn't match. Future audits should grep the generated `database.types.ts` files explicitly.
 
@@ -144,7 +164,7 @@ Since the user's bar is “drop only if replacement is already in use,” we exa
 1. **Never** mass-drop tables with zero app refs. The 73 `USED_WEAK` and 12 `UNCLEAR` tables are all legitimately wired in via paths the static grep cannot see (see §Methodology blind spots).
 2. **Never** drop one side of a “similar-name group” without per-schema semantic review. The analysis above demonstrates every similar-name pair in the DB is actually orthogonal.
 3. **Never** trust `pg_stat_user_tables.idx_scan = 0` as proof of disuse — stats reset on Supabase maintenance windows.
-4. **Never** drop a table invisible to crm7 without cross-checking the DRY entity-ownership map (`docs/20260227-dry-one-shot-architecture-v1.01A.md`) AND pinging the likely-owning app's maintainer. A table that looks orphaned from the crm7 vantage point may be load-bearing for BSU, braden, throughput, or a downstream consumer outside this monorepo.
+4. **Never** drop a table invisible to crm7 without cross-checking the DRY entity-ownership map (`docs/20260227-dry-one-shot-architecture-v1.04A.md`) AND pinging the likely-owning app's maintainer. A table that looks orphaned from the crm7 vantage point may be load-bearing for BSU, braden, throughput, or a downstream consumer outside this monorepo.
 5. **Never** use this audit as a basis for a bulk DROP migration. Any drop proposal must be a separate, per-table PR with explicit human sign-off citing which specific replacement is in use and which owning app was consulted.
 
 ## Appendix A — Signal source queries
@@ -200,6 +220,6 @@ This audit is orthogonal to `crm7/supabase/migrations/20260506091830_unindexed_f
 ## References
 
 - Complementary index-level audit: `docs/20260506-supabase-linter-action-plan-v1.00W.md`
-- DRY One-Shot architecture spec (entity-ownership model): `docs/20260227-dry-one-shot-architecture-v1.01A.md`
+- DRY One-Shot architecture spec (entity-ownership model): `docs/20260227-dry-one-shot-architecture-v1.04A.md`
 - Linter categorization taxonomy: Supabase DB Linter v0005 (`unused_index`) + v0001 (`unindexed_foreign_keys`)
 - Audit TSV artifacts (not committed to repo): `/tmp/audit-merged.tsv`, `/tmp/tbl-app-refs.tsv`

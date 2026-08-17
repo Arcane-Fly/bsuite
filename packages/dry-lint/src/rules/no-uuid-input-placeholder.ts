@@ -28,7 +28,7 @@
  *
  * History: this rule landed after the 2026-06-01 sweep (PRs #933–#939)
  * which replaced raw UUID inputs across 16 CRM7 pages with canonical
- * entity selectors. See docs/20260227-dry-one-shot-architecture-v1.02A.md.
+ * entity selectors. See docs/20260227-dry-one-shot-architecture-v1.04A.md.
  */
 
 import { ESLintUtils, AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
@@ -123,7 +123,7 @@ export const noUuidInputPlaceholderRule = createRule<[], MessageIds>({
     schema: [],
     messages: {
       uuidPlaceholder:
-        'Free-text input asks the operator to type/paste a UUID ({{ placeholder }}). This is a DRY one-shot violation — every entity has exactly ONE owning app that provides CRUD UI; everywhere else must pick from a canonical entity selector. Use a selector from `src/components/entity/selectors/` (or build a new tenant-scoped one mirroring the IncidentSelector I4 pattern) and store the row\'s id. See docs/20260227-dry-one-shot-architecture-v1.02A.md.',
+        'Free-text input asks the operator to type/paste a UUID ({{ placeholder }}). This is a DRY one-shot violation — every entity has exactly ONE owning app that provides CRUD UI; everywhere else must pick from a canonical entity selector. Use a selector from `src/components/entity/selectors/` (or build a new tenant-scoped one mirroring the IncidentSelector I4 pattern) and store the row\'s id. See docs/20260227-dry-one-shot-architecture-v1.04A.md.',
     },
   },
   defaultOptions: [],
