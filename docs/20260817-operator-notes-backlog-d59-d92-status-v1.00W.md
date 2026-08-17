@@ -293,7 +293,8 @@ Both figures shown; the right-hand column is current.
 
 ## 5. What needs a decision from you
 
-Three. None can be closed by measurement.
+Four. None can be closed by measurement — two are judgement calls, two are things only you can
+supply.
 
 ### 1. The twelve `unresolved` placements in your demo tenant (D-83)
 
@@ -330,7 +331,15 @@ Unchanged and still first in line, because they decide how much work the portals
 3. **May a host request a worker directly, or must it go through us?** Flagged 5 August, still
    undecided.
 
-### 3. The permanent credential fix for the CI checks (D-86)
+### 3. Two repository secrets, so anything visual can be proven at all
+
+Not a judgement call — a thing only you can supply, listed here because it gates more than any
+other single item in this document. The automated browser tests currently **skip 111 of 126 tests
+and report success**, because `CRM7_E2E_EMAIL` and `CRM7_E2E_PASSWORD` are not set. The code that
+consumes them merged; the secrets were never added. Until they exist, every visual verdict in this
+document and in the completion ledger rests on reading source rather than running the product.
+
+### 4. The permanent credential fix for the CI checks (D-86)
 
 Your instruction was to replace a long-lived personal credential with a short-lived,
 repository-scoped GitHub App token — *"the durable answer for every workflow in the estate using
@@ -409,9 +418,23 @@ apps; `crm7#1778` is hours, once you have chosen.
 
 - **Whether the Fair Work key was rotated (D-64).** Only you can do it and only you can confirm it.
 - **Anything visual.** No browser was driven for this document. Every theme verdict is measured at
-  the stylesheet and source level, and your original complaints were visual. The estate's
-  end-to-end test credential is currently *invalid*, not merely unwired, so this limitation is
-  estate-wide and not specific to this pass.
+  the stylesheet and source level, and your original complaints were visual.
+
+  **A sharper measurement of why, taken today, because it is worse than previously recorded.** The
+  automated browser tests are reported as **passing** on the main working branch. Reading the
+  actual run log rather than the green tick:
+
+  > `[auth.setup] CRM7_E2E_EMAIL / CRM7_E2E_PASSWORD not set. Writing empty storage state — authenticated tests will skip themselves.`
+  > `111 skipped`
+  > `15 passed (24.8s)`
+
+  **111 of 126 tests did not run, and the gate reported success.** That is the D-92 rule —
+  *a gate that cannot distinguish "checked nothing" from "found nothing" is not a gate* — occurring
+  inside the test suite rather than inside a workflow. The work to wire the credential merged
+  (`crm7#1768`); **the credential itself was never set**, which is this estate's most common false
+  "done": merged is not applied. Until two repository secrets exist, every visual and runtime
+  claim about this product — in this document and in every other — rests on reading rather than
+  running. Setting them is yours; nothing in a coding session can do it.
 - **Whether the closed issues stay closed.** Twelve R80.4 issues and four platform-wide issues were
   closed in the last three days. This document verifies the code behind them, not the deployed
   screens.
