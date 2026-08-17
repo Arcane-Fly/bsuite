@@ -1,3 +1,24 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (REFERENCE-ONLY) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: REFERENCE-ONLY — and this is the document that got it right
+>
+> This is the **decision record that rejected Adobe Acrobat Sign** (§9, 2026-03-04) and selected
+> self-hosted signing. It needs no implementation verdict; it is the reason the sibling
+> implementation plan in this directory is a trap.
+>
+> **Its status marker is wrong, though:** it is flagged `W` (Working) when it records a decision
+> that was made, acted on, and shipped on 2026-03-17. A `W` marker on a settled ruling invites a
+> reader to treat the decision as still open. Read it as approved.
+>
+> One caveat: §9's own table still lists `document_signatories` as a table of the selected
+> architecture. That table **is** live today (with an `adobe_participant_id` column, 0 rows),
+> which is why the "no `document_signatories`" claim made elsewhere in this directory is wrong.
+
+---
+
 # Document Lifecycle & E-Signature — Best Practice Research
 
 **Date:** 2026-03-04
