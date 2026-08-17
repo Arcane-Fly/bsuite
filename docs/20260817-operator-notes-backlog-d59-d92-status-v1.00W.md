@@ -293,8 +293,14 @@ Both figures shown; the right-hand column is current.
 
 ## 5. What needs a decision from you
 
-Four. None can be closed by measurement — two are judgement calls, two are things only you can
-supply.
+Three. None can be closed by measurement.
+
+> **A fourth was withdrawn during this pass, and the reason is worth more than the item was.** I
+> had listed *"set two repository secrets so anything visual can be proven"*, on the strength of a
+> test run showing 111 of 126 tests skipped for want of a credential. **That run was from 16
+> August at 15:38. The fix merged at 04:23 on 17 August** — I measured a commit thirteen hours
+> older than the state I was reporting on, which is this estate's defining failure, committed
+> inside the document that warns about it. See §7.
 
 ### 1. The twelve `unresolved` placements in your demo tenant (D-83)
 
@@ -331,15 +337,7 @@ Unchanged and still first in line, because they decide how much work the portals
 3. **May a host request a worker directly, or must it go through us?** Flagged 5 August, still
    undecided.
 
-### 3. Two repository secrets, so anything visual can be proven at all
-
-Not a judgement call — a thing only you can supply, listed here because it gates more than any
-other single item in this document. The automated browser tests currently **skip 111 of 126 tests
-and report success**, because `CRM7_E2E_EMAIL` and `CRM7_E2E_PASSWORD` are not set. The code that
-consumes them merged; the secrets were never added. Until they exist, every visual verdict in this
-document and in the completion ledger rests on reading source rather than running the product.
-
-### 4. The permanent credential fix for the CI checks (D-86)
+### 3. The permanent credential fix for the CI checks (D-86)
 
 Your instruction was to replace a long-lived personal credential with a short-lived,
 repository-scoped GitHub App token — *"the durable answer for every workflow in the estate using
@@ -397,7 +395,44 @@ apps; `crm7#1778` is hours, once you have chosen.
 
 ---
 
-## 7. Suggested sequence
+## 7. A mistake I made writing this, and what it cost
+
+I am recording this in full because it is the estate's defining failure and I committed it inside
+the document that warns about it.
+
+**What I published.** A paragraph in §8 and a fourth operator decision, both saying the automated
+browser tests skip 111 of 126 cases for want of two repository secrets, that *"the credential
+itself was never set"*, and that setting them was yours to do. I quoted a real log line and a real
+count. Every number was accurate.
+
+**Why it was wrong anyway.** The run I read was from **2026-08-16 at 15:38**, at commit
+`3f2843c5`. The fix merged at **2026-08-17 at 04:23** as `crm7#1768`. **I measured a commit
+thirteen hours older than the state I was reporting on** — the *"recorded is not applied"* trap,
+inverted: applied, and I read the record from before it was.
+
+**What is actually true, measured on this document's own pull request rather than on a stale
+branch.** The test job on `crm7#1776` now runs a step called *"Assert the E2E credentials actually
+resolved"* and **that step passes**. A second new step, *"Report how many specs actually
+executed"*, exists specifically so a suite can never again report success over tests it skipped.
+The suite has been running for forty-five minutes rather than the twenty-five seconds it took when
+it was skipping — which is what genuinely executing 126 browser tests looks like.
+
+**The real diagnosis was better than either prior account.** `crm7#1768`'s own title says it:
+*"the E2E credentials were set and no workflow read them"*. Not invalid, as the completion ledger
+recorded. Not missing, as I recorded. **Present, and unread** — a third failure mode neither of us
+considered, and the only one that explains a green tick over 111 skips.
+
+**What it cost.** An operator decision was put in front of you asking you to supply something you
+had already supplied. That is the most expensive kind of wrong: it spends your attention on work
+that was done.
+
+**What prevents the repeat.** Before reporting a CI fact, read the run that belongs to the commit
+under discussion, not the newest run on a branch — a run is dated, and a branch moves under it.
+The same rule the ledger applies to migrations applies to workflow runs.
+
+---
+
+## 8. Suggested sequence
 
 1. **Close the fixed-but-open issues by hand** — `crm7#1675`, `crm7#1568`, `bsuite#1963`. Minutes,
    and it stops the next status report understating the estate again.
@@ -414,27 +449,14 @@ apps; `crm7#1778` is hours, once you have chosen.
 
 ---
 
-## 8. What this pass could not settle
+## 9. What this pass could not settle
 
 - **Whether the Fair Work key was rotated (D-64).** Only you can do it and only you can confirm it.
 - **Anything visual.** No browser was driven for this document. Every theme verdict is measured at
   the stylesheet and source level, and your original complaints were visual.
 
-  **A sharper measurement of why, taken today, because it is worse than previously recorded.** The
-  automated browser tests are reported as **passing** on the main working branch. Reading the
-  actual run log rather than the green tick:
-
-  > `[auth.setup] CRM7_E2E_EMAIL / CRM7_E2E_PASSWORD not set. Writing empty storage state — authenticated tests will skip themselves.`
-  > `111 skipped`
-  > `15 passed (24.8s)`
-
-  **111 of 126 tests did not run, and the gate reported success.** That is the D-92 rule —
-  *a gate that cannot distinguish "checked nothing" from "found nothing" is not a gate* — occurring
-  inside the test suite rather than inside a workflow. The work to wire the credential merged
-  (`crm7#1768`); **the credential itself was never set**, which is this estate's most common false
-  "done": merged is not applied. Until two repository secrets exist, every visual and runtime
-  claim about this product — in this document and in every other — rests on reading rather than
-  running. Setting them is yours; nothing in a coding session can do it.
+  **This limitation is smaller than it was this morning — and I published the wrong version of it
+  first. See §7.**
 - **Whether the closed issues stay closed.** Twelve R80.4 issues and four platform-wide issues were
   closed in the last three days. This document verifies the code behind them, not the deployed
   screens.
