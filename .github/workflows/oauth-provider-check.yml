@@ -43,6 +43,14 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # REQUIRED, not defensive. The sticky-comment step calls
+  # github.rest.issues.{listComments,createComment,updateComment}. Those are
+  # `issues` endpoints even when the target is a pull request, so the `issues`
+  # scope governs them — `pull-requests: write` does NOT cover them. Without
+  # this the step dies on `HttpError: Resource not accessible by integration`.
+  # Surfaced estate-wide when the repo default workflow permission was
+  # tightened to `read`, making the declared block the entire grant.
+  issues: write
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
@@ -178,6 +186,14 @@ jobs:
           exit $FAILED
 
       - name: Comment on PR if providers missing
+        id: sticky
+        # DECOUPLED FROM THE VERDICT ON PURPOSE. This step posts a convenience
+        # comment; it is NOT the gate. A failure here used to fail the whole job,
+        # so an infrastructure fault (a missing token scope) was reported to every
+        # reader as though the CHECK ITSELF had found a problem — indistinguishable
+        # from the real thing. A gate must never confound its instrument with its
+        # measurement. The real verdict decides the build; see the summary step.
+        continue-on-error: true
         if: github.event_name == 'pull_request' && failure()
         uses: actions/github-script@v7
         with:
@@ -210,6 +226,26 @@ jobs:
     name: Verify PKCE flowType in all Supabase client files (no implicit flow)
     runs-on: ubuntu-latest
     steps:
+      # Buys back the silence that `continue-on-error` introduces: silence is
+      # what let the original fault run unseen. State the outcome every run so a
+      # green check with no comment explains itself.
+      - name: Report whether the comment was written
+        if: always()
+        env:
+          STICKY_OUTCOME: ${{ steps.sticky.outcome }}
+        run: |
+          if [ "$STICKY_OUTCOME" = "success" ]; then
+            echo "OAuth provider check comment: written"
+          elif [ "$STICKY_OUTCOME" = "skipped" ]; then
+            echo "OAuth provider check comment: skipped (step condition not met)"
+          else
+            echo "::warning::The OAuth provider check comment could NOT be written (outcome=$STICKY_OUTCOME). This does NOT mean the check found a problem — read the job's own verdict. Most likely cause: GITHUB_TOKEN lacks 'issues: write'."
+            {
+              echo ""
+              echo "> **Note** — the OAuth provider check comment could not be posted (\`$STICKY_OUTCOME\`)."
+              echo "> This does **not** mean a problem was found. The verdict is the job's own conclusion."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Check PKCE compliance via GitHub API
         id: pkce-check
         env:
