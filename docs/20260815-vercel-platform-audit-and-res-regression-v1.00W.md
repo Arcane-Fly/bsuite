@@ -1,7 +1,36 @@
 # Vercel platform audit + the crm7 Real Experience Score regression
 
+> ## ⚠ ITEM IDENTIFIERS RENUMBERED — 2026-08-17: `V-n` → `VP-n`
+>
+> **This document's findings were originally numbered `V-1`…`V-8`. They are now `VP-1`…`VP-8`.**
+> Renumbering is 1:1 and order-preserving — `V-3` here became `VP-3`, and so on for all eight.
+>
+> **Why.** `docs/20260814-estate-remaining-work-register-v2.00W.md` uses `V-1`…`V-11` for its
+> *verification-integrity* items, and that register is the estate's canonical remaining-work
+> index. Two live registers were sharing one identifier namespace: a bare "V-3" meant the dead
+> production migration-history audit in one document and Enterprise-only WAF managed rulesets in
+> this one, and an agent would resolve it to whichever register it had read last.
+>
+> **This document moved, not the register** — measured, not assumed. These identifiers had
+> **zero citations anywhere outside this file** (swept across the parent repo, all six
+> submodules and both Vercel agent skills, each with a positive control). The register's
+> `V-1`…`V-11` had **22 citations in `20260817-estate-completion-ledger-v1.00W.md` alone**, which
+> is the authoritative status document and which deliberately preserves the register's
+> identifiers. Moving the cited set would have invalidated live references; moving this one cost
+> nothing.
+>
+> **A distinct prefix rather than a renumber into `V-12`…`V-19`.** Continuing the register's
+> integer series would have removed today's ambiguity while implying these are one series — a
+> future reader meeting "V-15" would still have to guess which document defines it. `VP-` makes
+> the two namespaces structurally disjoint, so no integer collision between them is possible
+> again, and a bare "VP-3" identifies its own register.
+>
+> **If you hold an old citation:** any `V-n` sourced from *this* document maps to `VP-n`. Any
+> `V-n` sourced from anywhere else is the register's verification-integrity item and is unchanged.
+
 **Document:** `docs/20260815-vercel-platform-audit-and-res-regression-v1.00W.md`
 **Date:** 2026-08-15 · **Version:** 1.00W · **Status:** W — Working
+**Item identifiers:** `VP-1`…`VP-8` (renumbered from `V-1`…`V-8` on 2026-08-17 — see banner above)
 
 **Scope.** Every Vercel URL the operator supplied (≈90, across Agent Stack, Core Platform,
 Security, Tools, Frameworks, SDKs, Build, Learn, Explore, Company, Legal and Social) plus the
@@ -141,7 +170,7 @@ regression, but it is why the shell is empty.
 
 ## 3. Estate-wide findings against Vercel's documented practice
 
-### V-1 — The five Vite SPAs get none of the platform's delivery features
+### VP-1 — The five Vite SPAs get none of the platform's delivery features
 
 Verified in the docs, not inferred. A client-rendered Vite SPA on Vercel does **not** get:
 `next/image` optimisation, `next/font` preloading, ISR, PPR, streaming, **Skew Protection**
@@ -159,14 +188,14 @@ filenames that no longer exist. The service worker's NetworkFirst-for-navigation
 in May precisely because this was happening. That is a workaround for a platform feature we
 cannot use, and it should be recorded as such rather than as a solved problem.
 
-### V-2 — Rate limiting is per-region, and our docs do not say so
+### VP-2 — Rate limiting is per-region, and our docs do not say so
 
 Vercel's WAF rate-limit counters are tracked **per region**. Traffic matching a key in several
 regions can exceed the configured limit in aggregate. Any place we describe a rate limit as a
 global quota is wrong. This applies to the newly-shipped `api/error-report.ts` limiter too —
 which is per-isolate on Edge, a fact the implementer correctly stated rather than glossed.
 
-### V-3 — WAF Managed Rulesets are Enterprise-only
+### VP-3 — WAF Managed Rulesets are Enterprise-only
 
 The security marketing page implies OWASP rulesets are broadly available; the docs limits
 table gates them to Enterprise ("contact sales"). Pro gets 40 custom rules and 40 rate-limit
@@ -176,7 +205,7 @@ account.** If we ever do move to Enterprise, `/auth/callback`, `/oauth/authorize
 enforced — PKCE codes and JWTs in query strings are exactly the shape generic SQLi/XSS
 signatures false-positive on.
 
-### V-4 — BotID is not a one-liner for a Vite SPA
+### VP-4 — BotID is not a one-liner for a Vite SPA
 
 `checkBotId()` must run server-side. Five of six apps ship zero server code. Adding BotID means
 adding a Vercel Function per protected route, plus `vercel.json` rewrites using per-project
@@ -184,7 +213,7 @@ UUID paths that Vercel issues, plus an explicit protected-route list kept in syn
 client and server. Basic mode is free; Deep Analysis is **$1 per 1,000 `checkBotId()` calls**
 on Pro. Worth it for the public lead-capture and careers surfaces; not a blanket rollout.
 
-### V-5 — Deployment Protection would break `d.*` OAuth testing silently
+### VP-5 — Deployment Protection would break `d.*` OAuth testing silently
 
 If Vercel Authentication is ever enabled on a `d.*` domain, the BSU→consumer OAuth redirect is
 a browser navigation and cannot carry a bypass header. It needs the query-param form
@@ -192,7 +221,7 @@ a browser navigation and cannot carry a bypass header. It needs the query-param 
 hypothetical — no project is confirmed to have it enabled — but it fails silently and looks
 like an auth bug, so it belongs in the runbook before someone turns it on.
 
-### V-6 — Rolling Releases cannot auto-gate on Core Web Vitals
+### VP-6 — Rolling Releases cannot auto-gate on Core Web Vitals
 
 The dashboard shows a Speed Insights comparison between canary and current during a rollout;
 every advance and abort is human-triggered. There is no threshold engine. The REST API
@@ -200,7 +229,7 @@ every advance and abort is human-triggered. There is no threshold engine. The RE
 "abort if RES drops" gate is **buildable** — it is not a feature to switch on. Given this
 regression, it is worth building.
 
-### V-7 — Model IDs in our docs are stale in one direction and correct in another
+### VP-7 — Model IDs in our docs are stale in one direction and correct in another
 
 Verified against the live gateway roster (`GET https://ai-gateway.vercel.sh/v1/models`, 327
 models, no auth required). `xai/grok-4.3`, `anthropic/claude-opus-5` and `zai/glm-5.2` are all
@@ -215,7 +244,7 @@ crm7 is on `ai ^6.0.199`, so the documented rule is correct *for the installed v
 the AI Implementation Standards say "always use `toUIMessageStreamResponse()`" without naming a
 version, and that becomes wrong the moment anyone bumps to v7. The rule needs a version qualifier.
 
-### V-8 — Vercel publishes official skills; we hand-wrote ours
+### VP-8 — Vercel publishes official skills; we hand-wrote ours
 
 `skills.sh` hosts a `vercel-labs` publisher, and `npx plugins add vercel/vercel-plugin` bundles
 28 official skills covering Next.js, AI SDK, Functions and Storage — with the stated benefit
