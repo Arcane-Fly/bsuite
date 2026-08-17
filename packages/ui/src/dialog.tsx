@@ -1,3 +1,5 @@
+'use client'
+
 import { forwardRef, type ComponentPropsWithoutRef, type ComponentRef, type HTMLAttributes } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cn } from './utils.js'

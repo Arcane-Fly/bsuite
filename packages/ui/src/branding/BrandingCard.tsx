@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * BrandingCard — A card component for displaying and editing branding settings
  *
