@@ -21,6 +21,20 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # issues: write is REQUIRED, not belt-and-braces. The sticky comment uses
+  # github.rest.issues.{listComments,createComment,updateComment}. Those are
+  # `issues` endpoints even when the target is a pull request, so they are
+  # governed by the `issues` scope — `pull-requests: write` does NOT cover
+  # them (docs.github.com/actions/reference/workflows-and-actions/
+  # workflow-syntax#permissions). Without it the step dies on
+  # `HttpError: Resource not accessible by integration`.
+  #
+  # This went unnoticed because the repo default was `write` until it was
+  # tightened to `read`; the declared block then became the whole grant and
+  # the missing scope surfaced at once, across every workflow that posts a
+  # sticky comment. Confirm with:
+  #   gh api repos/GaryOcean428/bsuite/actions/permissions/workflow
+  issues: write
 
 concurrency:
   group: drift-scan-${{ github.event.pull_request.number || github.ref }}
@@ -106,7 +120,23 @@ jobs:
           echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
           cat /tmp/drift.md >> "$GITHUB_STEP_SUMMARY"
 
+      # DECOUPLED FROM THE VERDICT ON PURPOSE.
+      #
+      # This step posts a convenience comment. It is not the gate — the gate is
+      # "Fail build if hard-fail signal hit" below, which reads the scanner's
+      # own exit code. Until now a failure here failed the whole job, so
+      # `Resource not accessible by integration` (a missing token scope) was
+      # reported to every reader as "BSuite 9-signal drift scan: FAILURE" —
+      # indistinguishable from the scan actually finding drift. Seven pull
+      # requests were read as having drift when the scan had already passed
+      # and only the comment could not be written.
+      #
+      # A gate must never confound its instrument with its measurement. If the
+      # comment cannot be posted, say so loudly in the log and the step
+      # summary, and let the scan's real verdict decide the build.
       - name: Upsert sticky comment
+        id: sticky
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
@@ -134,6 +164,27 @@ jobs:
               });
               core.info('Created new sticky comment');
             }
+
+      # `continue-on-error` above silences the step. Silence is the thing that
+      # let the original defect run unseen, so it is bought back here: the
+      # outcome is stated in the log AND the step summary every run. A reader
+      # who sees a green check with no comment can tell WHY there is no comment.
+      - name: Report whether the sticky comment was written
+        if: always()
+        env:
+          STICKY_OUTCOME: ${{ steps.sticky.outcome }}
+        run: |
+          if [ "$STICKY_OUTCOME" = "success" ]; then
+            echo "sticky comment: written"
+          else
+            echo "::warning::Sticky comment could NOT be written (outcome=$STICKY_OUTCOME). The drift scan itself is unaffected — read its verdict below, not this step. Most likely cause: the GITHUB_TOKEN lacks 'issues: write'."
+            {
+              echo ""
+              echo "> **Note** — the drift-scan sticky comment could not be posted"
+              echo "> (\`$STICKY_OUTCOME\`). This does **not** mean drift was found."
+              echo "> The scan verdict is the job's own conclusion."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Fail build if hard-fail signal hit
         if: steps.scan-md.outputs.exit_code != '0'
