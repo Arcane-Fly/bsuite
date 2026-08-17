@@ -129,6 +129,28 @@ is billed.
 
 ## [0.10.0] — 2026-08-05 — R80.4 reference engine, ported (`@bsuite/charge-calc/r804`)
 
+> **CORRECTION (2026-08-17, M-5 money-chain closeout) — this entry describes
+> work that was never actually shipped.** Verified against three
+> independent artefacts, not the paperwork below: (1) `git log --all` for
+> every filename this entry names (`r804/`, `ordinary-wage-breakdown.ts`,
+> `contingent-costs.ts`, `clause-rules.ts`, `src/__tests__/r804/*`) across
+> every branch in this repository returns zero commits — none of these
+> files were ever committed, anywhere; (2) the current `package.json`
+> `exports` map has exactly four entries — `.`, `./types`, `./awards`,
+> `./boot` — no `/r804`; (3) `npm pack @bsuite/charge-calc@0.10.0` and every
+> later published version's tarball contains no `r804` path at all. The
+> 0.10.0 version itself WAS genuinely published (it exists on the npm
+> registry) — only the `/r804` subpath and everything under "Added" below
+> is fictional. Left in place rather than deleted, so the historical record
+> is honest about having been wrong rather than silently rewritten; do not
+> cite this entry, `@bsuite/charge-calc/r804`, or any file it names as
+> existing. See the money-chain M-5 finding for the real answer to "is
+> R80.4's engine published anywhere": no — R80.4 remains a private,
+> standalone app with its own ~250-file `src/awards/` catalogue, and the
+> ONE piece of it verified to have actually crossed into this package is
+> `casual-penalty-convention.ts` in the 0.13.0 entry above, ported by a
+> real, git-log-verifiable commit (`45590a09`).
+
 ### Added
 
 - New subpath export `@bsuite/charge-calc/r804` — the R80.4 reference
