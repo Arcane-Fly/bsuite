@@ -1,0 +1,75 @@
+name: Hook Suppression Ratchet
+
+# Counts SUPPRESSIONS of `react-hooks/exhaustive-deps` and
+# `react-hooks/set-state-in-effect` across the parent and all six app
+# submodules, and fails when the count moves in EITHER direction.
+#
+# WHY THIS IS NOT COVERED BY THE LINT RATCHETS THAT ALREADY EXIST
+# ---------------------------------------------------------------------------
+# Because none of them can see it, and one of them structurally never will.
+# R80.4/scripts/lint-ratchet.mjs builds R80.4/eslint-baseline.json by counting
+# `file.messages` out of `eslint --format json`. ESLint applies disable
+# directives while building that message list, so a suppressed violation
+# produces no message, contributes nothing to the count, and never acquires a
+# key. Adding these two rules to that baseline would make it worse rather than
+# better: the number it records is the count of UNSUPPRESSED violations, which
+# goes DOWN every time somebody suppresses one. An error-count baseline does
+# not merely miss suppressions, it rewards them. The class needs a counter
+# pointed at the suppressions themselves — see
+# scripts/check-hook-suppression-ratchet.mjs.
+#
+# The same blindness applies for the same structural reason to
+# scripts/semgrep-baseline.json (cannot see a `nosemgrep`) and
+# scripts/edge-function-typecheck-baseline.json (cannot see a
+# `@ts-expect-error`).
+#
+# `submodules: recursive` IS LOAD-BEARING. An uninitialised submodule is an
+# empty directory and an empty directory scans flawlessly. The guard refuses
+# per scope rather than reporting a clean zero, so a broken checkout fails
+# this workflow loudly instead of certifying an estate it never read.
+
+on:
+  push:
+    branches:
+      - development
+      - main
+  pull_request:
+    branches:
+      - development
+      - main
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hook-suppression-ratchet-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hook-suppression-ratchet:
+    name: React-hook lint suppressions may not grow (or shrink unbanked)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (all submodules — an empty one is not a clean one)
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The positive control runs FIRST and gates the real scan. The scanner's
+      # failure mode is silent: a tokeniser regression reports a SMALLER
+      # number, and on this ratchet a smaller number reads as an improvement
+      # rather than as a broken instrument. Proving the counter can still find
+      # a suppression — and still decline to count prose about one — has to
+      # happen before its output is believed.
+      - name: Self-test the scanner (positive control, must pass before the count is believed)
+        run: node scripts/check-hook-suppression-ratchet.mjs --self-test
+
+      - name: Count suppressions against the banked baseline
+        run: node scripts/check-hook-suppression-ratchet.mjs
