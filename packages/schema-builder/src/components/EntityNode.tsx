@@ -73,13 +73,22 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
   // The body does not need it: the `dragHandle` clause already means ONLY the
   // header can start a drag. Interactive children (FieldRow, the rename input)
   // carry their own `nodrag`, which is where it belongs.
+  //
+  // crm7#1770: the root uses `aria-current`, NOT `aria-selected`.
+  // `aria-selected` is not an allowed attribute on role=group — ARIA permits
+  // it only on gridcell/option/row/tab/columnheader/rowheader/treeitem — so
+  // every entity card raised a critical axe `aria-allowed-attr` violation and
+  // blocked the WCAG gate on /settings/schema-builder. `aria-current` conveys
+  // the same "this is the active card" meaning and is valid on role=group;
+  // both facts were verified against axe-core 4.12.1, the exact version
+  // @axe-core/playwright 4.12.1 resolves for the E2E suite.
   return (
     <div
       role="group"
       aria-label={`Entity: ${entity.label}${
         entity.is_system ? ' (system)' : ''
       }`}
-      aria-selected={selected}
+      aria-current={selected ? 'true' : undefined}
       tabIndex={0}
       title="Click to inspect fields. Drag the header grip to move. Drag a blue connector dot to another entity to create a relationship."
       className={`relative min-w-[240px] rounded-xl border bg-card shadow-md transition-all ${
@@ -96,7 +105,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         position={Position.Top}
         id={`${entity.id}.entity.top-target`}
         className={entityHandleClass}
-        aria-label={`Entity-level target connector for ${entity.label}`}
+        aria-hidden="true"
         title={`Drop a relationship onto ${entity.label}`}
       />
 
@@ -213,7 +222,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         position={Position.Bottom}
         id={`${entity.id}.entity.bottom-source`}
         className={entityHandleClass}
-        aria-label={`Entity-level source connector for ${entity.label}`}
+        aria-hidden="true"
         title={`Drag from ${entity.label} to create a relationship`}
       />
     </div>

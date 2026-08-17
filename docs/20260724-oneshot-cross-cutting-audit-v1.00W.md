@@ -1,6 +1,6 @@
 # One-Shot Cross-Cutting Audit — 2026-07-24
 
-> **Naming:** `20260724-oneshot-cross-cutting-audit-v1.00W.md` · Status **W** · Full cross-cutting DRY one-shot compliance audit of everything shipped 2026-07-22→24 (Documentation Program, STA email ingestion, bug-hunt fixes, email/funding expansion). Policy: `20260227-dry-one-shot-architecture-v1.02A.md`.
+> **Naming:** `20260724-oneshot-cross-cutting-audit-v1.00W.md` · Status **W** · Full cross-cutting DRY one-shot compliance audit of everything shipped 2026-07-22→24 (Documentation Program, STA email ingestion, bug-hunt fixes, email/funding expansion). Policy: `20260227-dry-one-shot-architecture-v1.04A.md`.
 
 ## Verdict: mostly compliant — 5 genuine violations (all fixed), 4 registration gaps (all closed)
 

@@ -6,6 +6,62 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.3.1] — 2026-08-17 — WCAG AA: entity card ARIA contract
+
+Fixes the three axe rules that blocked crm7's WCAG AA E2E gate on
+`/settings/schema-builder` in BOTH themes (crm7#1770). All three originated in
+this package — not in React Flow, which was the initial suspicion.
+
+### Fixed
+
+- **`aria-prohibited-attr` (serious) — ~14,016 nodes, the single largest source
+  of violations in the entire crm7 E2E run.** `FieldRow` and `EntityNode` put
+  `aria-label` on `<Handle>`. `@xyflow/react` 12.11.2 renders `<Handle>` as a
+  **role-less `<div>`** and spreads caller props straight onto it (its body is
+  `jsx("div", { "data-handleid": ..., ...rest })`); it contributes **no**
+  `aria-label` of its own. `aria-label` on a generic-role element is prohibited
+  by ARIA and is never exposed by assistive tech, so those labels announced
+  nothing while emitting four violations per field row on every entity. The six
+  handles (four per field row, two entity-level) are now `aria-hidden="true"`,
+  which states the truth: they are mouse-drag-only affordances. The `title`
+  tooltip is retained for mouse users.
+- **`aria-required-children` (critical).** `EntityNode` wraps field rows in
+  `role="list"`, but the rows were plain `<div>`s. `FieldRow`'s root now carries
+  `role="listitem"`.
+- **`aria-allowed-attr` (critical).** `EntityNode`'s root used `aria-selected`
+  on `role="group"`; ARIA permits `aria-selected` only on roles such as
+  `option`/`row`/`tab`/`treeitem`. Replaced with `aria-current`, which conveys
+  the same "active card" meaning and is valid here.
+
+### Added
+
+- `src/__tests__/EntityNode.aria.test.tsx` — locks all three rules in
+  structurally (no axe dependency added; the authoritative axe check remains
+  crm7's E2E gate against the real page).
+- `FieldRow.test.tsx` gained handle-`aria-hidden` and `role="listitem"` guards,
+  and its `@xyflow/react` mock now **spreads** `...rest` like the real Handle
+  instead of cherry-picking named props — the old mock would have hidden this
+  entire defect class.
+
+### Known gap (NOT fixed here)
+
+- There is still **no keyboard or assistive-tech path to create a
+  relationship**: `RelationshipConfigDialog` only opens from a pointer-drag
+  `onConnect`. `aria-hidden` does not shrink that gap — it stops the DOM from
+  advertising an affordance assistive tech could never reach. Tracked
+  separately as a feature gap.
+
+### Verification
+
+- Rules confirmed against **axe-core 4.12.1** — the exact version
+  `@axe-core/playwright` 4.12.1 resolves for the crm7 E2E suite.
+- Before: `aria-prohibited-attr` (serious) + `aria-required-children`
+  (critical) + `aria-allowed-attr` (critical) reproduced on the rendered
+  component. After: **0 violations at any severity** (26 handles, 6 listitems).
+- 143/143 package tests pass; `typecheck` and `build` clean.
+
+---
+
 ## [0.7.1] — 2026-05-05 — Toolchain refresh
 
 ### Changed

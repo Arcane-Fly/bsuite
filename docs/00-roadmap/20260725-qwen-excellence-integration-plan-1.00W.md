@@ -1,5 +1,17 @@
 # Qwen excellence integration plan (post impl-RT)
 
+> ## ⚠ SUPERSEDED — 2026-08-17
+>
+> **Do not execute this plan.** Its target application, **R80.3**, left the submodule set on
+> 2026-08-06 (`5e000c35`, operator directive) and was replaced by **R80.4** — a different codebase.
+> Every R80.3 work item here is aimed at a repository this monorepo no longer builds or deploys.
+>
+> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md).
+>
+> Retained as the record of what the 2026-07-25 excellence loop decided and shipped. If you need an
+> item from here, re-measure it against R80.4 first — do not assume it carries over.
+
+
 > Status **W** · 2026-07-25  
 > Generated via **`qwen -m qwen3.8-max-preview`** (Bailian token plan; user asked `qwen3.8-preview` — that id is not in settings; max-preview is the configured high-end model)  
 > Input: excellence close-out + RT batches `deleg_aaed0109` / `deleg_ae77b2a4`  

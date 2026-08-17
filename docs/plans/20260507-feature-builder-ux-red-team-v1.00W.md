@@ -1,5 +1,19 @@
 # Visual Feature Builder — UX Red-Team & Phase 0.5 Plan (v1.00W)
 
+> ## ⚠ SUPERSEDED — 2026-08-17
+>
+> **Superseded as a plan.** The Feature Builder UX work has moved on twice since this red-team:
+> `@bsuite/schema-builder` is at **1.3.0** (this plan predates 1.0), and the operator re-scoped the
+> surface in the 2026-08-11 *"make it genuinely no-code"* direction.
+>
+> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md);
+> the newer framing is in `20260811-feature-builder-world-class-refined.md` (a **one-shot prompt**,
+> not a plan — see `README.md`).
+>
+> Retained for the FF-FB-UX-REDTEAM-20260507 findings, which are still the best record of the UX
+> failure modes this surface has.
+
+
 **Frozen Fact:** `FF-FB-UX-REDTEAM-20260507`
 **Status:** W (Working — under review by operator + cross-agent red team)
 **Authors:** claude-code-local (consolidated from 4 sub-agents) + perplexity-computer (codehouse parity research, addendum forthcoming)

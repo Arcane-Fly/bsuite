@@ -308,6 +308,32 @@ jobs:
           echo "Parent migrations restored: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l) files"
           psql "$REHEARSAL_DB_URL" -At -c "SELECT 'connected to ' || current_setting('server_version');"
 
+          # Enable pg_cron so the census can SEE scheduled jobs.
+          #
+          # `supabase db start` boots the real Supabase Postgres image, which ships
+          # pg_cron with the required shared_preload_libraries already set — the
+          # extension is simply not created by default. Without it, the census's
+          # cron_jobs probe correctly reports "not observable on this database" both
+          # before AND after, so a migration whose only effect is cron.schedule()
+          # moves nothing and is rejected as a silent no-op.
+          #
+          # That is the instrument failing to observe, not the migration failing to
+          # act, and the two must not produce the same verdict. crm7's
+          # 20260821040000_schedule_orphaned_cleanup_functions.sql is exactly this
+          # shape: its own header records that the REVOKEs are already no-ops, so
+          # scheduling IS the entire change.
+          #
+          # Deliberately NOT `set -e`-fatal. If a future image drops pg_cron, the
+          # census falls back to its guarded absent-probe and says so in the output
+          # rather than taking the whole rehearsal down — and the honest degradation
+          # is visible in the log line below, not silent.
+          if psql "$REHEARSAL_DB_URL" -v ON_ERROR_STOP=1 -c \
+               "CREATE EXTENSION IF NOT EXISTS pg_cron;" >/dev/null 2>&1; then
+            echo "pg_cron: enabled — scheduled jobs are observable by the census"
+          else
+            echo "::warning::pg_cron could not be created; cron-only migrations will read as no-ops"
+          fi
+
       - name: Positive control — the gate must be seen to fail, in both directions
         # Runs BEFORE the real replay and against the same engine that will judge
         # it. If this step passes, we know the instrument can distinguish a good

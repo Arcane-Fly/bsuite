@@ -25,7 +25,7 @@ Executed as a verifier-gated loop (loop-engineering) via subagent-driven-develop
   already fixed. Report VERIFIED-FIXED and stop rather than "fixing" working code.
 - **Search before escalating.** `docs/`, the `bsuite_` memory keys, and
   `/home/braden/Desktop/Dev/archived-repos-docs` hold most answers. Only escalate if all three are silent.
-- **One-shot doctrine is binding** (`docs/20260227-dry-one-shot-architecture-v1.02A.md` §1):
+- **One-shot doctrine is binding** (`docs/20260227-dry-one-shot-architecture-v1.04A.md` §1):
   R8 owns Award Rates / Charge Calculations / Funding Offsets; CRM7 owns Placements / Apprentices /
   Host Employers. Read across the boundary, never duplicate or recompute.
 - Do NOT touch: `.github/workflows/`, `.superpowers/`, or another task's files.

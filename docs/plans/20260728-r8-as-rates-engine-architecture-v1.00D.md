@@ -22,7 +22,7 @@
 
 ## 0. Ownership anchor (do not re-litigate)
 
-Per `docs/20260227-dry-one-shot-architecture-v1.02A.md` §1 (the authoritative on-disk version — see **discrepancy note** below), the following is already settled and this document builds strictly on top of it, never against it:
+Per `docs/20260227-dry-one-shot-architecture-v1.04A.md` §1 (the authoritative on-disk version — see **discrepancy note** below), the following is already settled and this document builds strictly on top of it, never against it:
 
 | Entity | Owner | Read by | Table |
 |---|---|---|---|
