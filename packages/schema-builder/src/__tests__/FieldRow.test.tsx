@@ -1,20 +1,28 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 
-// Mock React Flow's Handle so we can render FieldRow without a provider.
+/*
+ * Mock React Flow's Handle so we can render FieldRow without a provider.
+ *
+ * The mock SPREADS `...rest` onto the div rather than cherry-picking named
+ * props. That mirrors what @xyflow/react 12.11.2 actually does — its Handle
+ * body is `jsx("div", { "data-handleid": ..., ...rest })` — so aria/`title`
+ * props land on the DOM here exactly as they do in production, and the mock
+ * does not silently drop a prop the component starts passing later.
+ */
 vi.mock('@xyflow/react', () => ({
   Handle: ({
     id,
     type,
     position,
     className,
-    'aria-label': ariaLabel,
+    ...rest
   }: {
     id?: string;
     type: string;
     position: string;
     className?: string;
-    'aria-label'?: string;
+    [key: string]: unknown;
   }) => (
     <div
       data-testid="mock-handle"
@@ -22,7 +30,7 @@ vi.mock('@xyflow/react', () => ({
       data-handle-type={type}
       data-handle-position={position}
       className={className}
-      aria-label={ariaLabel}
+      {...rest}
     />
   ),
   Position: {
@@ -67,6 +75,45 @@ describe('FieldRow', () => {
         'entity-1.field-1.right-source',
       ]),
     );
+  });
+
+  /*
+   * crm7#1770 regression guard.
+   *
+   * @xyflow/react 12.11.2 renders <Handle> as a role-less <div> and spreads
+   * caller props onto it. `aria-label` on a generic-role element is PROHIBITED
+   * by ARIA (assistive tech never exposes it), so labelling the handles was
+   * inert — while emitting four serious axe `aria-prohibited-attr` violations
+   * per field row. On a real tenant schema that was ~14,016 violations and it
+   * hard-blocked the WCAG AA gate for /settings/schema-builder in both themes
+   * (crm7 tests/e2e/wcag-aa.spec.ts).
+   */
+  it('handles are aria-hidden and carry NO aria-label (aria-prohibited-attr)', () => {
+    const { getAllByTestId } = render(
+      <FieldRow entityId="entity-1" field={baseField} />,
+    );
+    const handles = getAllByTestId('mock-handle');
+    expect(handles).toHaveLength(4);
+    for (const h of handles) {
+      // aria-label on a role-less div is prohibited and never announced.
+      expect(h.getAttribute('aria-label')).toBeNull();
+      expect(h.getAttribute('aria-hidden')).toBe('true');
+      // The mouse-hover tooltip is the affordance we DO keep.
+      expect(h.getAttribute('title')).toBeTruthy();
+    }
+  });
+
+  /*
+   * crm7#1770: EntityNode wraps rows in a role="list"; ARIA requires that a
+   * list's children be listitems. Without this the entity card raised a
+   * critical axe `aria-required-children` violation.
+   */
+  it('root is a listitem so EntityNode role="list" has required children', () => {
+    const { container } = render(
+      <FieldRow entityId="entity-1" field={baseField} />,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.getAttribute('role')).toBe('listitem');
   });
 
   it('shows NOT NULL tag when !isNullable && !isPrimary', () => {

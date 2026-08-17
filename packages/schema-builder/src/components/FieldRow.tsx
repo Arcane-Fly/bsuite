@@ -21,6 +21,28 @@
  *     and the browser cannot compute an accessible name from a wrapper
  *     that also contains truncated text + badges. The inner button is the
  *     correct accessibility surface.
+ *   - The outer `<div>` DOES carry `role="listitem"`. EntityNode wraps the
+ *     rows in a `role="list"` container, and `list` requires `listitem`
+ *     children — without it every entity card raised a critical axe
+ *     `aria-required-children` violation (crm7#1770).
+ *
+ * Handle accessibility (crm7#1770):
+ *   The four Handles are `aria-hidden="true"`, NOT labelled. @xyflow/react
+ *   12.11.2 renders `<Handle>` as a role-less `<div>` and spreads caller
+ *   props straight onto it (node_modules/@xyflow/react/dist/esm/index.js —
+ *   the Handle return is `jsx("div", { "data-handleid": ..., ...rest })`;
+ *   it adds NO aria-label of its own). `aria-label` on a generic-role
+ *   element is prohibited by ARIA and is never exposed by assistive tech,
+ *   so the labels we used to pass were inert — they announced nothing while
+ *   producing ~14k serious axe `aria-prohibited-attr` violations on
+ *   /settings/schema-builder (four per field row, on every entity).
+ *   `aria-hidden` states the truth: these are mouse-drag-only affordances
+ *   with no keyboard or AT path. `title` is retained for the mouse tooltip.
+ *   NOTE: there is currently NO accessible (keyboard/AT) way to create a
+ *   relationship — RelationshipConfigDialog only opens from a pointer-drag
+ *   `onConnect`. That gap is real and tracked separately; hiding the
+ *   handles does not shrink it, it just stops the DOM from claiming an
+ *   affordance assistive tech could never reach.
  *
  * Memoised — large entities with 30+ fields would otherwise re-render every
  * row on every node drag.
@@ -116,6 +138,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
 
   return (
     <div
+      role="listitem"
       className={`nodrag relative flex h-7 items-center gap-2 px-3 text-[11px] last:rounded-b-xl ${
         isEditable ? 'hover:bg-card dark:hover:bg-muted/60' : ''
       }`}
@@ -129,7 +152,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         position={Position.Left}
         id={`${baseId}.left-target`}
         className={HANDLE_CLASS}
-        aria-label={`Target handle for ${field.name}`}
+        aria-hidden="true"
         title={`Drop a relationship onto ${field.name}`}
       />
       <Handle
@@ -137,7 +160,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         position={Position.Left}
         id={`${baseId}.left-source`}
         className={HANDLE_CLASS}
-        aria-label={`Source handle for ${field.name}`}
+        aria-hidden="true"
         title={`Drag from ${field.name} to create a relationship`}
       />
 
@@ -186,7 +209,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         position={Position.Right}
         id={`${baseId}.right-target`}
         className={HANDLE_CLASS}
-        aria-label={`Target handle for ${field.name}`}
+        aria-hidden="true"
         title={`Drop a relationship onto ${field.name}`}
       />
       <Handle
@@ -194,7 +217,7 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         position={Position.Right}
         id={`${baseId}.right-source`}
         className={HANDLE_CLASS}
-        aria-label={`Source handle for ${field.name}`}
+        aria-hidden="true"
         title={`Drag from ${field.name} to create a relationship`}
       />
     </div>
