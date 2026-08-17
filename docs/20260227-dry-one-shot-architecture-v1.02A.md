@@ -555,7 +555,42 @@ Consumer-side renderer: `@bsuite/schema-registry@^0.1.0` exports `<TenantLayoutS
 1. Open the merge migration in the owning submodule.
 2. Update §1 entity row with: the new column, the FK target, and any new app that READs the entity.
 3. If a violation was closed, append a bullet under §11 with migration filename + fix summary.
-4. Status-bump the doc: v1.01A → v1.02A when §11 gains a new Phase block.
+4. **Do NOT bump a version string in the body.** Add a dated entry to the changelog at the top
+   describing what changed, and leave every version string alone. **The version lives in the
+   filename and nowhere else.**
+
+   > *This step used to read "Status-bump the doc: v1.01A → v1.02A when §11 gains a new Phase
+   > block." **That instruction is what broke this document.*** Two authors followed it —
+   > 2026-05-25 and 2026-07-24 — advancing an in-body version to v1.03A and then v1.04A while the
+   > file on disk never moved and no citation was ever swept. The result was three versions in
+   > circulation at once: the filename, the body, and eleven agent skills pointing at a `v1.01A`
+   > file that had not existed since 2026-08-06 — including one skill's `description` field, the
+   > text an agent reads to decide whether to load it at all. Renaming the file fixes the symptom;
+   > deleting this instruction is what stops it recurring.
+
+5. **If the version must move, the rename is the whole job — and it reaches outside this repo.**
+   A version bump is a breaking change to this document's address. Sweep all three surfaces in the
+   same change, or the next reader gets a path that does not resolve:
+
+   ```bash
+   SPEC=20260227-dry-one-shot-architecture      # match any version
+   git grep -lE "$SPEC-v[0-9]+\.[0-9]+[A-Z]"                      # parent repo
+   for m in crm7 conduit business-suite-unified R80.3 throughput braden; do
+     git -C "$m" grep -lE "$SPEC-v[0-9]+\.[0-9]+[A-Z]"            # every submodule
+   done
+   grep -rlE "$SPEC-v[0-9]+\.[0-9]+[A-Z]" ~/.agents/skills/       # the one nobody remembers
+   ```
+
+   **The skills hub is the surface that has been missed every time.** It is not in any repo, so no
+   CI job and no `git grep` in this tree can see it. `general-dry-one-shot-architecture/scripts/verify.sh`
+   now fails if any skill cites a spec path that does not resolve, or if two skills cite different
+   versions — run it after any rename.
+
+   **Two of the in-repo references are executable, not prose:**
+   `packages/dry-lint/src/ownership-map.json` and `scripts/audit-one-shot.mjs`.
+
+   **Do not rewrite applied migrations or archived logs.** A migration comment naming the filename
+   that was current when it was written is correct history, not a stale pointer.
 
 ---
 
