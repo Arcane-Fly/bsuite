@@ -1,0 +1,143 @@
+name: Development-merge issue closer
+
+# WHY THIS EXISTS (register V-10)
+#
+# GitHub auto-closes a referenced issue ONLY on a merge into the repository's
+# DEFAULT branch. All seven repositories in this estate default to `main`, and
+# every pull request targets `development`. So every `Closes #N` ever written
+# here has been inert, while its author believed it worked. Fifteen
+# fixed-and-open issues were closed by hand on 2026-08-17 — that cleared the
+# backlog and changed nothing about the mechanism, so it would have rebuilt at
+# exactly the same rate.
+#
+# WHY NOT CHANGE THE DEFAULT BRANCH INSTEAD
+#
+# Because `main` IS production. Vercel builds each submodule from its own
+# `main`, the Supabase migration applier runs on `main` only, and
+# promotion-gate.yml keys off the main/development distinction. Making the
+# default `development` would hand the word "default" to the branch that is not
+# production, in the one setting with the widest blast radius in the estate.
+#
+# WHY NOT FAIL THE PR FOR USING A CLOSING KEYWORD
+#
+# It punishes the author for writing the correct, universally-understood thing,
+# and still leaves a human to close the issue by hand afterwards — which is the
+# manual step that produced the backlog. This honours the keyword instead.
+#
+# TWO TRIGGERS, ONE CODE PATH
+#
+#   pull_request(closed)  fires the moment a PR in THIS repository merges, so
+#                         the audit comment lands with the merge. Uses the
+#                         built-in GITHUB_TOKEN; scope is this repo only.
+#   schedule              sweeps all seven repositories hourly, which is how
+#                         the six submodules are covered from one place. Needs
+#                         BSUITE_CROSS_REPO_PAT; without it the run goes RED
+#                         naming the scopes it could not read, rather than
+#                         reporting a comfortable zero.
+#
+# The scheduled sweep is also the backstop for the event path: if a
+# pull_request run is cancelled, rate-limited, or races a reopen, the next
+# sweep picks it up. The script is idempotent — it only ever acts on issues
+# that are currently OPEN and carry no prior marker comment for that PR.
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - development
+  schedule:
+    # Hourly at :17 — off the estate's other cron slots (02:00 security-audit,
+    # 03:00 semgrep, 04:00 pending-encryption-watch).
+    #
+    # !! A `schedule` TRIGGER ONLY EVER RUNS FROM THE DEFAULT BRANCH. !!
+    # This estate's default is `main`, so merging this file to `development`
+    # switches on the pull_request path for THIS repository and NOTHING ELSE.
+    # The hourly estate-wide sweep — the half that covers the six submodules —
+    # does not begin until this workflow is promoted to `main`. Same trap as
+    # "promoting a submodule applies nothing": merged is not running. Verify
+    # after promotion with `gh run list --workflow=development-merge-issue-closer.yml`,
+    # and do not record V-10 as closed until that list is non-empty.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Report what would close without mutating anything'
+        type: boolean
+        default: true
+      lookback_hours:
+        description: 'How far back to look for merged pull requests'
+        type: string
+        default: '48'
+      scopes:
+        description: 'Comma-separated owner/repo, or blank for the whole estate'
+        type: string
+        default: ''
+
+# NO UNTRUSTED CONTENT IS EVER INTERPOLATED INTO A `run:` BLOCK.
+# The pull-request body is the attacker-controlled input here, and it is
+# deliberately NOT passed through `${{ github.event.pull_request.body }}` — the
+# script fetches it from the API itself and treats it purely as data. The only
+# `${{ }}` expansions below land in `env:` values and come from
+# workflow_dispatch inputs (write-access only) or `github.repository`.
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  # Never two closers at once: two runs racing the same issue would both pass
+  # the "is it still open?" check and post two comments.
+  group: development-merge-issue-closer
+  cancel-in-progress: false
+
+jobs:
+  close:
+    name: Honour closing keywords from development merges
+    runs-on: ubuntu-latest
+    # RULE 1 — ONLY A GENUINE MERGE. A pull request closes without merging all
+    # the time (superseded, abandoned, split). `closed` alone must never close
+    # an issue; `merged == true` is the whole gate. The schedule and manual
+    # paths have no pull_request payload, so they pass this condition and rely
+    # on the script's own `merged_at` check, which is the same rule applied to
+    # every PR it surveys.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.merged == true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The parser decides which issues get closed automatically. Running its
+      # self-test here means a broken parser fails the run BEFORE it is pointed
+      # at the live estate, rather than after. LANE-WATCHER also runs it on
+      # every PR (scripts/guard-registry.mjs) — this is the second gate,
+      # deliberately, because this is the one workflow with issues:write.
+      - name: Prove the parser still discriminates
+        run: node scripts/parse-closing-keywords.mjs --self-test
+
+      - name: Close issues named by merged development pull requests
+        env:
+          # Event path: this repository only, with the built-in token.
+          # Sweep path: the whole estate, which needs the cross-repo PAT.
+          GITHUB_TOKEN: >-
+            ${{ github.event_name == 'pull_request'
+                && secrets.GITHUB_TOKEN
+                || (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) }}
+          CLOSER_SCOPES: >-
+            ${{ github.event_name == 'pull_request'
+                && github.repository
+                || inputs.scopes }}
+          CLOSER_BASE_BRANCH: development
+          CLOSER_LOOKBACK_HOURS: >-
+            ${{ github.event_name == 'pull_request' && '2'
+                || (inputs.lookback_hours || '48') }}
+          CLOSER_DRY_RUN: ${{ inputs.dry_run == true && '1' || '0' }}
+        run: node scripts/close-merged-development-issues.mjs

@@ -100,6 +100,23 @@ const DENOMINATOR_NOUNS = [
   'entry\\(s\\)', 'slug\\(s\\)', 'function\\(s\\)', 'collision\\(s\\)',
   'manifest\\(s\\)', 'lockfile\\(s\\)', 'pair\\(s\\)', 'fix\\(es\\)',
   'declaration\\(s\\)', 'scripts?', 'oklch', 'hex', 'colou?rs?', 'literals?',
+  // ADDED 2026-08-17 (bsuite register V-10). `cases?` and `references?` were
+  // already listed, but the stemmer below is ASYMMETRIC for nouns ending in
+  // `e`: it strips the `es` suffix, so the list entry `cases?` stems to `cas`
+  // while the estate's own house style `35 case(s)` stems to `case`, and the
+  // two never meet. That is why `file(s)`, `scope(s)`, `slug(s)` and friends
+  // all had to be added in paren form further up — same bug, worked around one
+  // noun at a time. An honest guard printing "35 case(s) executed" was
+  // classified as having "never stated a non-zero count of anything examined".
+  //
+  // Additive only, and deliberately so: this can only let the classifier
+  // RECOGNISE more honest denominators. A guard that states nothing, or states
+  // zero, still fails — `positiveCount` excludes a bare 0 independently.
+  // The stemmer itself is left alone; correcting it would restem every noun in
+  // this list at once and reclassify guards across seven repositories, which is
+  // not a change to make as a side effect of an unrelated lane.
+  'case\\(s\\)', 'reference\\(s\\)', 'directive\\(s\\)', 'issue\\(s\\)',
+  'directives?', 'issues?', 'mentions?', 'keywords?',
 ]
 // REGEX IS FORBIDDEN IN THIS ESTATE — hand-written scanners, AST walks, real
 // tokenisers (Tier 2 doctrine). The first version of this classifier composed
