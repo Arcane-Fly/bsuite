@@ -47,6 +47,11 @@ jobs:
           node-version: '24.14.0'
           registry-url: 'https://registry.npmjs.org'
 
+          # setup-node@v5 defaults `package-manager-cache: true`, which makes it
+          # resolve the `packageManager` field's pnpm BEFORE corepack has run —
+          # and this job enables corepack further down. The result is a hard
+          # "Unable to locate executable file: pnpm" at the setup-node step.
+          package-manager-cache: false
       - name: Setup pnpm
         run: corepack enable && corepack prepare pnpm@10.33.3 --activate
 
