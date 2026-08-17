@@ -1,3 +1,22 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED — marker and body agree (rare in this directory)
+>
+> Migration from a static Google service-account key to **Workload Identity Federation** completed
+> 2026-03-05, as the body states.
+>
+> **Independently confirmed 2026-08-17:** WIF is the live credential path in
+> `crm7/supabase/functions/crm7-generate-document/index.ts` (ACTIVE v5 in production). No
+> service-account private key remains in the document-generation path.
+>
+> This is the one document in `docs/recovered/` whose status marker (`A`), body claim
+> (*"COMPLETED"*) and live code all agree. No correction needed.
+
+---
+
 # Migrate Google Service Account Key → Workload Identity Federation
 
 ## STATUS: ✅ COMPLETED (2026-03-05)

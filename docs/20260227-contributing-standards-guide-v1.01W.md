@@ -179,11 +179,11 @@ The date-prefixed pattern above does not apply to canonical navigation and statu
 
 **Applies to:** business-suite-unified, crm7, conduit, R80.3, throughput
 
-All webapp projects must use `@bsuite/theme@0.3.3+` as the token source. Tailwind CSS must be v4 or later everywhere; Tailwind v3 is not permitted in package manifests, resolved lockfile entries, docs, or new implementation paths. Tailwind v4 apps import `@bsuite/theme/preset-v4.css` and `@bsuite/theme/css`.
+All webapp projects must use `@bsuite/theme` as the token source (floor `^0.11.0`; published `0.11.2` at 2026-08-17 — check npm rather than trusting this number). Tailwind CSS must be v4 or later everywhere; Tailwind v3 is not permitted in package manifests, resolved lockfile entries, docs, or new implementation paths. Tailwind v4 apps import `@bsuite/theme/preset-v4.css` and `@bsuite/theme/css`.
 
 - **OKLCH source tokens** are mandatory. Hex/RGB/HSL are legacy references or browser fallbacks only.
 - **Role aliases** are the consumer contract: use `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-destructive`, and inverse `text-on-*` tokens rather than raw palette names.
-- **Error/destructive roles** are Electric Purple by platform policy. Coral/red must not be semantic error/destructive.
+- **Error/destructive roles** are **Electric Red** by platform policy (contract 0.7.0, 2026-08-02). Purple and indigo must not be semantic error/destructive — they collide with primary under protanopia. CI enforces red.
 - **Dark mode text** uses the five-tier anti-glare scale capped at `oklch(0.94 ... )`; pure white is not a dark-surface text token.
 - **Enterprise white-labelling** is via `BrandingProvider` role-alias overrides. Error/destructive roles are not tenant-overridable.
 - **Typography:** Inter (display/body), JetBrains Mono (code)
@@ -200,15 +200,30 @@ All webapp projects must use `@bsuite/theme@0.3.3+` as the token source. Tailwin
 |--------------|--------------|-----|
 | `--role-primary` / Electric Blue | `oklch(0.546 0.215 262.9)` | Primary actions, links, focus affordances |
 | `--role-accent` / Electric Cyan | `oklch(0.769 0.132 191.7)` | Accents, highlights, visible focus in dark mode |
-| `--role-success` | `oklch(0.723 0.192 149.6)` | Success states; pair with icon/text |
-| `--role-warning` | `oklch(0.728 0.168 22.5)` | Warning states; pair with icon/text |
-| `--role-error` / `--role-destructive` | `oklch(0.568 0.202 283.1)` | Purple semantic error/destructive role; red/coral is banned for this role |
+| `--role-success` | `oklch(0.600 0.130 195)` | Success states (Electric Teal); pair with icon/text |
+| `--role-warning` | `oklch(0.800 0.150 75)` | Warning states (Electric Amber); pair with icon/text |
+| `--role-error` / `--role-destructive` | `oklch(0.580 0.230 25)` | **RED** (Electric Red). Purple and indigo are quarantined from semantics entirely. Tenant override is BLOCKED on these two tokens. |
+
+> **Corrected 2026-08-17.** The three semantic rows above previously named the pre-0.7.0 values —
+> error/destructive as purple `oklch(0.568 0.202 283.1)`, success as green `oklch(0.723 0.192 149.6)`,
+> warning as orange `oklch(0.728 0.168 22.5)` — and stated that "red/coral is banned for this role".
+> That is inverted: contract **0.7.0** (2026-08-02) made error/destructive **red**, and CI enforces red.
+> Agents reading the old table wrote purple and burned a CI round.
+>
+> The invariant is **SEPARATION, not a fixed hue**, measured by Vienot-Brettel dichromat simulation.
+> D2C's primary is blue, so error must be red: purple scored ΔE 0.006 against primary under
+> protanopia — the destructive colour and the primary action colour were the same swatch. Warm
+> states separate by **lightness** (under deuteranopia red and amber both read yellow — error is the
+> dark one, warning the light one). Worst-case ΔE across every semantic pair is now ≥ 0.156.
+>
+> `--role-primary` and `--role-accent` were re-measured and are unchanged. Source of truth is
+> `packages/theme/src/css/vars.css`; never bind a component to a `--neon-electric-*` value directly.
 
 ### Corporate Branding (braden.com.au)
 
 **Applies to:** braden project only
 
-Braden is a separate corporate brand, but it follows the same token architecture as D2C: OKLCH source tokens, role aliases, shadcn bridge variables, softened text scale, and purple semantic error/destructive roles. It imports `@bsuite/theme/braden-css`, not `@bsuite/theme/css`.
+Braden is a separate corporate brand, but it follows the same token architecture as D2C: OKLCH source tokens, role aliases, shadcn bridge variables, softened text scale, and the same **red** semantic error/destructive roles (`--role-error` / `--role-destructive` → `--error-red`, `packages/theme/src/css/braden.css`). It imports `@bsuite/theme/braden-css`, not `@bsuite/theme/css`.
 
 | Corporate token | OKLCH source | Legacy reference | Use |
 |-----------------|--------------|------------------|-----|

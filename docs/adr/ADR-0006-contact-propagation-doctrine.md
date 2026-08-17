@@ -1,7 +1,57 @@
 # ADR-0006 — Contact Propagation Doctrine
 
-**Status:** Accepted (2026-05-01)
-**Related:** `docs/20260227-dry-one-shot-architecture-v1.02A.md` §1 (`contacts`), §2 Flow E (Contact Reuse), §4 Auto-Population Rules; WS-E.1 Client↔Host Employer unification
+> ## ⚠️ PARTIALLY SUPERSEDED — the ORGANISATION half of this ADR is stale
+>
+> **The contact half stands. The organisation half does not.** Production
+> canonicalised organisations the *other* way, and **the newer model is the better
+> one** — it is this ADR's text that is out of date, not the database.
+>
+> **What this ADR mandates (§Decision ¶2, invariants 3 & 4):** a `clients.type`
+> discriminator with values `'client' | 'host' | 'both'`, honoured by every selector;
+> and explicitly *"There is no separate `host_employers` table"*.
+>
+> **What production actually has** (live catalog, project `tuybltdrdefjblnplpqo`,
+> measured 2026-08-17):
+>
+> - `clients.type` — **does not exist.** The `clients` table has 31 columns; `type`
+>   is not among them.
+> - A canonical **`employers`** table exists, carrying **four boolean role flags**:
+>   `is_client`, `is_host_employer`, `is_sta`, `is_training_provider`.
+> - `clients.employer_id` (uuid) points at it, plus `clients.parent_employer_id`,
+>   `clients.is_host_employer` and `clients.is_worksite`.
+>
+> **Why the newer model is better:** a single `type` enum cannot express an
+> organisation that is simultaneously a host employer *and* a training provider *and*
+> a State Training Authority. The `'both'` value was already an admission that the
+> discriminator did not fit — it enumerates one pairing out of the eleven combinations
+> four independent roles produce. Independent booleans model the actual domain: roles
+> are *orthogonal*, not mutually exclusive. Adding a fifth role is a column, not a
+> combinatorial enum rewrite.
+>
+> **Consequence for selectors:** invariant 4's `type IN ('client','both')` /
+> `type IN ('host','both')` predicates are **not executable** against this schema.
+> The equivalent is `employers.is_client` / `employers.is_host_employer`.
+>
+> **The superseding decision is recorded**, but was unreachable from either ADR index
+> until this correction — `crm7/docs/adr/20260525-host-employer-table-canonicalization.md`
+> ("ADR-002 · Canonicalize Host Employers to `public.employers`", Accepted 2026-05-25,
+> [crm7#866](https://github.com/GaryOcean428/crm7/issues/866)). It states plainly that
+> the `clients (type=host)` alignment is *"deferred to a future cross-app work stream
+> if ever needed"*.
+>
+> `crm7` is a submodule, so that path is a gitlink from this repo — browse it at
+> <https://github.com/GaryOcean428/crm7/blob/development/docs/adr/20260525-host-employer-table-canonicalization.md>.
+>
+> **That file is also missing from crm7's own ADR index**, where it additionally
+> collides on the number "ADR-002" with `20260525-contacts-clients-leads-canonical-source.md`
+> — the same defect as A-4, in a second repo. Fixing it needs a separate crm7 PR.
+>
+> Per estate convention, corrections stay visible: the original text below is
+> **unaltered**. Read §Decision ¶2 and invariants 3–4 as historical only.
+
+**Status:** Accepted — contact half current; **organisation half superseded** (see banner)
+**Related:** `docs/20260227-dry-one-shot-architecture-v1.04A.md` §1 (`contacts`), §2 Flow E (Contact Reuse), §4 Auto-Population Rules; WS-E.1 Client↔Host Employer unification
+**Superseded in part by:** `crm7/docs/adr/20260525-host-employer-table-canonicalization.md`
 
 ---
 
@@ -33,7 +83,7 @@ The following invariants apply:
 ## Rationale
 
 1. **Merge-on-email deduplication is already shipped** (Phase 4 V1 migration `20260423020000_phase4_v1_candidate_contact_merge.sql`, CRM7). The migration established the plumbing; this ADR formalises the expected downstream behaviour so a shipped SQL primitive has a matching doctrine.
-2. **The canonical one-shot spec already documents the principle** (`docs/20260227-dry-one-shot-architecture-v1.02A.md` §2 Flow E, §3 Tier-3 `ContactCard` behaviour). This ADR makes it enforceable rather than aspirational by tying it to the WS-E.1 and WS-E.5 audits.
+2. **The canonical one-shot spec already documents the principle** (`docs/20260227-dry-one-shot-architecture-v1.04A.md` §2 Flow E, §3 Tier-3 `ContactCard` behaviour). This ADR makes it enforceable rather than aspirational by tying it to the WS-E.1 and WS-E.5 audits.
 3. **Free-text person fields are the single most common one-shot violation** surfaced by the `dry-lint/no-free-text-where-fk` rule. Formalising the doctrine gives the lint rule a citable authority; citation enables mechanical enforcement.
 4. **Role-as-discriminator scales** — new roles (e.g. "prospect", "alumnus") require a new discriminator value or a new junction table, never a new person or organisation table. This keeps the schema stable as the business model evolves.
 5. **Schema surface area is minimised** — one `clients` table + one `contacts` table + role junctions is strictly simpler to reason about than parallel `clients`/`host_employers`/`prospects` tables. Fewer tables = fewer RLS policies = fewer cross-table sync bugs.
