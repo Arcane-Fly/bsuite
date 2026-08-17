@@ -159,14 +159,14 @@ static pass can settle" → "Needs an operator ruling", item 2.
 |---|---|---|---|---|
 | AD-1 | Page-builder package reaches 1 of 5 apps | **PARTIAL** | **Version half done** — all five lockfiles resolve 0.9.0 with identical integrity hashes. **Adoption half not** — local copies still exist and are the ones consumed: 294 local imports in the CRM against 9 files touching the package; one app has zero card usage. | M |
 | AD-2 | Shared card scanner adopted by nobody | **OPEN** | The package exports it as a subpath; **zero** apps import it. All five hand-roll the test; the CRM declares its own copy of the function. Positive control confirms the scanner exists in the package. | M |
-| AD-3 | Four-axis identity model — schema shipped, data empty | **OPEN** | Five registers at 0 rows; no global qualification rows; trades cover 1 award code; the expected join column does not exist on placements. **Register partly wrong:** two of the person-level links are 16/50 populated, not 0. | L |
+| AD-3 | Four-axis identity model — schema shipped, data empty | **OPEN** | Five registers at 0 rows; no global qualification rows; `award_trades` 27 rows all `MA000020`. **Register wrong twice:** two person-level links are 16/50 populated, not 0; and the join column DOES exist — `placements.trade_id`, 0/34 populated, no FK. **The FK is IMPOSSIBLE, not missing, and that distinction is the point:** the column is `text` and correctly so (it targets `award_trades.trade_id text`, not `award_trades.id uuid` — `entities.ts:494` and `r80DeepLink.ts:24` both say so). But the only unique index on that pair is `award_trades_global_unique … WHERE tenant_id IS NULL` — a **partial** index, which Postgres will not accept as a foreign-key target. Adding a non-partial unique constraint would work and would also **forbid tenant-scoped trades**, which the partial predicate exists to permit. So this is a design fork, not a missing line of DDL. The real gap remains data population, which no agent can fabricate. | L |
 | AD-4 | Self-service onboarding built and never opened | **OPEN** | **0 of 50** people rows carry a login link; 0 portal invites. The surface has never been exercised once. | S |
 | AD-5 | Entity selector never adopted in two apps | **OPEN** | 65 files in the CRM, **0 and 0** in the two named apps. New: a third app now has 6 — the pattern is spreading, just not where it was asked for. | M |
 | AD-6 | Report catalogue covers 89 of 403 tables | **OPEN** | Confirmed live: **89 entries over 88 distinct tables against 402 base tables (21.9%)**. Only drift is 403→402. | L |
 | AD-7 | Four persistence surfaces at 0 rows | **OPEN** | All four still 0. Only one has code reach (6 call sites) and it has still never been written to. | M |
 | AD-8 | Connection-health view has no reader | **OPEN** | The view returns **2 rows, both `never_synced`**, and zero app source references it (positive control: the sibling table matches 51 files). "Connected but never synced" currently presents as healthy. | S |
 | AD-9 | 14 assistant actions the role manuals promise and no tool implements | **OPEN** | 71 tools across 14 factories; **none** of the seven named categories exists — no submit tool, and zero files for payslip, pay-run, nav-config, branding or the compliance test. | L |
-| AD-10 | Dashboard drag/drop persistence never adopted | **OPEN** | The expected table resolves to null; zero code references anywhere. The shared builder persists to browser storage only — **every rearrangement dies with the browser profile**. | M |
+| AD-10 | Dashboard drag/drop persistence never adopted | **NOT A DEFECT** | **Measured live, and the ledger was wrong.** Persistence works and survives a browser-profile change. `user_preferences` holds 9 rows under `page:bsu-dashboard_grid_layouts`, with `_grid_cols` / `_grid_version` / `_grid_base_cols` each also at 9 — a full round-trip, not a partial write. crm7's own dashboard shows the identical 9-row pattern, so this is the estate's normal architecture. Both registers inferred "no persistence" from the absence of a table literally named `dashboard_layouts`; that table genuinely does not exist, but it was never the mechanism. `UnifiedDashboard.tsx:3,57` renders `DraggableCardPage` whose adapter defaults to `useScopedPreference`, which upserts to `user_preferences` — `localStorage` is only the pre-hydration seed, not the store. | — |
 | AD-11 | Schema-builder Tidy and Fit do nothing | **NOT-A-DEFECT** | See §4. The register grepped a 61-line wrapper; the **installed package** ships the layout engine and wires both buttons with position persistence. | — |
 
 ### V — verification integrity · 2 DONE, 3 PARTIAL, 6 OPEN
@@ -375,6 +375,17 @@ that is a floor because the measurement cannot resolve composed class names.
 - **K-3 mislocates one site and undercounts.** There are **three** fallbacks across **two** files,
   not two — including one the register never registered at all.
 - **AD-3 overstates the emptiness.** Two of the person-level links are **16 of 50** populated, not 0.
+- **AD-10 is not a defect at all** — dashboard drag/drop persistence is live and durable, measured
+  against the production database. Both registers reasoned from the absence of a table named
+  `dashboard_layouts` to the absence of persistence. The table genuinely does not exist; it was
+  never the mechanism. **An expected NAME not resolving is not evidence a CAPABILITY is missing** —
+  ask what the working path actually is before recording a gap.
+- **AD-3's "missing join column" is present, and its missing FK cannot be added.** `placements.trade_id`
+  exists as `text`, correctly targeting `award_trades.trade_id text` rather than the uuid primary
+  key. No foreign key is possible: the only unique index over `(award_code, trade_id)` is **partial**
+  (`WHERE tenant_id IS NULL`), and Postgres will not use a partial index as an FK target. A
+  non-partial constraint would enable the FK *and* forbid tenant-scoped trades, which that predicate
+  exists to allow. Recording it as "missing FK" implies a one-line fix; it is a design fork.
 - **PO-2's premise is wrong.** The supervisor concept **does exist** — role rows and two foreign
   keys, both predating the register. Only the scoping policy is missing.
 - **A-4 calls the orphan ADR "unreachable".** A package README links it directly by path. The
