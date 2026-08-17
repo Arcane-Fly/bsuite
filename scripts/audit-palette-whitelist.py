@@ -63,31 +63,20 @@ HEX = re.compile(
 )
 HEX_LENGTHS = {3, 4, 6, 8}                  # 4 and 8 are the alpha forms
 
-BLOCK_COMMENT = re.compile(r'/\*.*?\*/', re.S)
-LINE_COMMENT = re.compile(r'(^\s*\*|//).*$', re.M)
-
-
-def comment_mask(text: str) -> set:
-    """1-indexed line numbers that lie inside a /* ... */ block.
-
-    Stripping comments line-by-line only works for one-liners. A block comment
-    spanning several lines has middle lines that carry no delimiter at all, so
-    a per-line strip leaves them looking like code — and vars.css documents the
-    values it REMOVED, so those middle lines are full of the exact literals
-    this gate is looking for. Measured per file, once.
-    """
-    inside, out, depth = set(), set(), 0
-    for n, line in enumerate(text.splitlines(), 1):
-        opens, closes = line.count('/*'), line.count('*/')
-        if depth:
-            inside.add(n)
-        elif opens and not (closes and line.rindex('*/') > line.index('/*')):
-            inside.add(n)
-        depth += opens - closes
-        if depth < 0:
-            depth = 0
-    out |= inside
-    return out
+# Comment handling moved to scripts/theme_audit_lib.py — SEE ITS DOCSTRING.
+#
+# This file used to carry a `comment_mask()` that counted `/*` and `*/` per
+# line and accumulated a depth. Block comments do not nest, so one `/*` written
+# inside comment PROSE — `bg-overlay/*`, a Tailwind opacity wildcard — pinned
+# the depth above zero for the rest of the file and made every remaining line
+# invisible to this gate. It was blind to 62% of packages/theme/src/css/vars.css
+# and 100% of packages/eslint-config/rules/no-hardcoded-colours.js.
+#
+# The corrected pass still measures 0 off-palette literals, so nothing was in
+# fact hiding in the blind spot. Nothing was stopping it either, which is the
+# whole point of the gate.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from theme_audit_lib import code_lines  # noqa: E402
 
 MARKER = 'theme-audit-ok'
 SKIP_DIRS = {'node_modules', 'dist', 'build', '.git', 'coverage', '__snapshots__', 'docs'}
@@ -110,10 +99,6 @@ def norm_hex(h: str) -> str:
 def hexes(text: str):
     """HEX has three alternatives, so each match is a tuple with two empties."""
     return [h for groups in HEX.findall(text) for h in groups if h]
-
-
-def strip_comments(text: str) -> str:
-    return LINE_COMMENT.sub('', BLOCK_COMMENT.sub('', text))
 
 
 def main() -> int:
@@ -154,13 +139,15 @@ def main() -> int:
             except OSError:
                 continue
             lines = text.splitlines()
-            in_block = comment_mask(text)
+            code = code_lines(text)
             prev = ''
             for n, raw in enumerate(lines, 1):
-                if MARKER in raw or MARKER in prev or n in in_block:
+                # The marker is read from the RAW line: it lives in a comment
+                # by construction, so the code-only view cannot see it.
+                if MARKER in raw or MARKER in prev:
                     prev = raw
                     continue
-                line = strip_comments(raw)
+                line = code[n - 1]
                 for a, b, c in OKLCH.findall(line):
                     t = (norm_num(a), norm_num(b), norm_num(c))
                     if t not in allowed_ok:

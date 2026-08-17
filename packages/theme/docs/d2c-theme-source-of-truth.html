@@ -90,10 +90,26 @@
   --white:         oklch(0.982 0.002 247.8);  /* #f8f9fa — the near-white */
   --black:         oklch(0.166 0.026 269.4);  /* #0a0e1a — the near-black */
 
-  /* ── L2 surfaces — LIGHT (bg-panel is 0.994, never 1.0) ─── */
+  /* ── L2 surfaces — LIGHT (bg-panel is 0.98, never 1.0) ──── */
   --role-bg-body:    oklch(0.961 0     0.5);
   --role-bg-surface: oklch(0.982 0.002 248);
-  --role-bg-panel:   oklch(0.994 0.002 260);
+  /* This line used to record a lightness of six-thousandths below 1.0, at a
+     third of the chroma below. NOT SPELLED OUT, and the paragraph at the top of
+     this block says why: the allowlist is built from every colour literal in
+     this file, comments included, so writing the retired value here would put
+     it straight back into the permitted set — which is the entire defect being
+     removed. (Caught exactly that way on the first attempt at this edit.)
+
+     The CODE moved off it on 2026-08-10: the operator looked at a rendered page
+     and said "pure white displayed, which is forbidden", and vars.css
+     --light-bg-accent has read the value below ever since. This document did
+     not follow. Because this document IS the allowlist, the stale line was a
+     standing licence to write the retired value back into packages/ — and the
+     C1 gate could not have objected, since it matches the TEXT of pure white
+     rather than the colour. Three times the chroma is what stops the panel
+     reading as white: at this lightness the tint does more work than the
+     lightness step. */
+  --role-bg-panel:   oklch(0.98  0.006 260);
   --role-bg-input:   oklch(0.963 0.003 228.9);
   --role-bg-sunken:  oklch(0.938 0.004 250);
   --role-border:     oklch(0.942 0.005 247.9);
