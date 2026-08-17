@@ -283,7 +283,7 @@ Both figures shown; the right-hand column is current.
 | Notes defects never filed anywhere | 11 | **0** | better |
 | §4 platform-wide items with no issue in any repo | 5 of 6 | **0 of 6** | better |
 | §4 items closed with evidence | 0 | **4 of 6** | better |
-| R8 cluster: fixed in code but issue still open | 14 | **0** | better |
+| Fixed in code but issue still open ("close these") | 14 | **0** | better |
 | Conduit's shared-package version | `^0.6.3`, locked out | **`^0.9.0`, all five apps** | better |
 | Live near-white card tokens | 5 across 3 apps | **0 live; comments only** | better |
 | Apps importing the shared card checker | *(not measured)* | **0 of 5** | the class defect survives |
