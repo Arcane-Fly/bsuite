@@ -77,7 +77,7 @@ jobs:
           submodules: recursive
           # Same token fallback chain as the other submodule-consuming
           # workflows (see supabase-functions-deploy.yml).
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Reject new migrations below MIGRATION_FLOOR
         # base_ref goes through env, not ${{ }} interpolation into the shell:
