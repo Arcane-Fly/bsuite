@@ -49,7 +49,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       # Several registered guards are diff-scoped and default to comparing
       # against `origin/main` (see guard-registry.mjs). `submodules: recursive`
@@ -80,5 +80,23 @@ jobs:
         with:
           node-version: '24'
 
+      # `parent-check-own-package-freshness` needs a real YAML parser and a
+      # real semver implementation, and REFUSES to run without them rather
+      # than degrading to grepping pnpm-lock.yaml (a previous pass did exactly
+      # that and reported the `overrides:` block's KEYS as resolved versions).
+      # Without this step that guard exits 2 and the watcher records
+      # COULD_NOT_EXECUTE — an honest report, but a registered guard that
+      # never actually runs is a guard nobody is watching.
+      #
+      # Scratch prefix, not the repo: `npm install` inside a pnpm workspace
+      # root would rewrite the checkout's node_modules.
+      - name: Install guard parser dependencies (scratch prefix, not the repo)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/guard-deps" \
+            --no-save --no-package-lock --no-audit --no-fund \
+            yaml@^2.9.0 semver@^7.7.4
+
       - name: Run guard-self-reporting meta-check
+        env:
+          BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
         run: node scripts/check-guard-self-reporting.mjs

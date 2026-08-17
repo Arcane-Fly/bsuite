@@ -30,7 +30,7 @@ describe('exportCanvasToPng', () => {
   it('calls toPng with pixelRatio=2 + backgroundColor + filter', async () => {
     mockedToPng.mockResolvedValue('data:image/png;base64,abc');
     const el = document.createElement('div');
-    el.style.setProperty('--role-bg-panel', 'oklch(0.994 0.002 260)');
+    el.style.setProperty('--role-bg-panel', 'oklch(0.98 0.006 260)');
     await exportCanvasToPng(el, 'test.png');
 
     expect(mockedToPng).toHaveBeenCalledTimes(1);
@@ -44,7 +44,7 @@ describe('exportCanvasToPng', () => {
     // REMOVED it, which is the whole point of the note. A test
     // written from the same assumption as the code cannot detect that
     // assumption being wrong; it only defends it.
-    expect(opts.backgroundColor).toBe('oklch(0.994 0.002 260)');
+    expect(opts.backgroundColor).toBe('oklch(0.98 0.006 260)');
     expect(opts.cacheBust).toBe(true);
     expect(typeof opts.filter).toBe('function');
   });

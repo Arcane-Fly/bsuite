@@ -1,0 +1,168 @@
+# Schema Lag
+#
+# bsuite#1892's other half.
+#
+# There is ONE Supabase project. `d.crm.crm7.app` serves `development` CODE
+# against a `main`-STATE database, so a merged, correct, migration-dependent
+# feature renders EMPTY on dev until the next promotion. Both examples in that
+# issue were exactly this — correct code awaiting schema, indistinguishable from
+# a defect.
+#
+# `supabase-migration-rehearsal.yml` already proves a pending migration APPLIES
+# (disposable Supabase container, production baseline, catalog assertions,
+# positive-controlled in both directions). This answers the different question it
+# never asked: WHAT is pending, and for HOW LONG.
+#
+# On 2026-08-17 answering that by hand meant pulling a 699-row ledger out of
+# SQL, listing 802 files across eight scopes, and diffing them in a scratch
+# directory. The answer was ONE migration. The lag was never the problem; having
+# no number was.
+#
+# WHY IT DOES NOT FAIL ON `pending > 0`
+# ────────────────────────────────────
+# Because that is the normal state between a merge to development and the next
+# promotion. A guard that is red during ordinary work gets muted. It fails on a
+# migration pending longer than MAX_PENDING_AGE_DAYS — a stalled promotion, or
+# one everybody forgot — and on scanning nothing, which is how a guard reports
+# success over an empty tree.
+
+name: Schema Lag
+
+on:
+  schedule:
+    # Daily, offset off the hour so it does not pile onto the other scheduled
+    # guards. ~11:40 AWST.
+    - cron: '40 3 * * *'
+  pull_request:
+    branches: [development, main]
+    paths:
+      - 'supabase/migrations/**'
+      - '*/supabase/migrations/**'
+      - 'packages/schema-builder/supabase/migrations/**'
+      - 'supabase/migration-scopes.json'
+      - 'scripts/check-schema-lag.mjs'
+      - '.github/workflows/schema-lag.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: schema-lag-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  schema-lag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard — require project ref
+        env:
+          SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_PROJECT_ID:-}" ]; then
+            echo "::error::SUPABASE_PROJECT_ID is empty — refusing to run"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+        with:
+          # Seven of the eight scopes are submodules. A missing one contributes
+          # zero migrations and the lag would read clean for a scope nobody
+          # looked at — the script treats that as a hard failure, but fetching
+          # them properly is cheaper than discovering it in the log.
+          submodules: recursive
+          fetch-depth: 0 # migration AGE comes from first-commit time
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          # This job installs no dependencies, so the pnpm cache is dead weight —
+          # and setup-node@v5 defaults package-manager-cache:true, which then
+          # hard-fails looking for a pnpm that is not on PATH.
+          package-manager-cache: false
+
+      - name: Prove the guard can fail
+        # Six fixtures covering both directions: a fresh pending migration must
+        # NOT fail, an overdue one MUST, a below-floor one must not count as
+        # pending at all, an empty ledger must be refused rather than read as
+        # "everything is pending", and scanning zero files must be refused
+        # rather than reported as a pass.
+        run: node scripts/check-schema-lag.mjs --self-test
+
+      - name: Install psql client
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        # There is NO `SUPABASE_DB_URL` secret in this repo, and the first
+        # version of this workflow read one. prod-migration-history-audit.yml's
+        # own header records why: SUPABASE_DB_URL "was never provisioned", which
+        # is what made that audit fail every run since creation. The working
+        # pattern — proven by that audit and by supabase-migrate.yml — is
+        # SUPABASE_DB_PASSWORD plus a runtime pooler-cluster probe.
+        #
+        # Supavisor tenants live on a numbered cluster per region: newer projects
+        # on aws-1, older on aws-0. The wrong cluster returns "(ENOTFOUND)
+        # tenant/user ... not found". Probe in order; no cluster accepting the
+        # connection is a HARD FAILURE, never a quiet "no lag found".
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "✓ Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID} — check SUPABASE_DB_PASSWORD and project region. Refusing to report a false 'no lag'."
+          exit 1
+
+      - name: Read the applied ledger
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          # ON_ERROR_STOP=1 + set -e: any SQL error fails here rather than
+          # leaving an empty file that the guard would then refuse anyway — but
+          # with a confusing message about the ledger rather than the connection.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL' > migration-history.json
+          SELECT COALESCE(json_agg(row_to_json(r)), '[]'::json)
+          FROM (
+            SELECT version
+            FROM supabase_migrations.schema_migrations
+            ORDER BY version
+          ) AS r;
+          SQL
+
+          if [ ! -s migration-history.json ]; then
+            echo "::error::migration-history.json is empty — the export produced no output. Refusing to report a false 'no lag'."
+            exit 1
+          fi
+          echo "ledger rows: $(node -e 'console.log(JSON.parse(require("fs").readFileSync("migration-history.json","utf8")).length)')"
+
+      - name: Report the lag
+        run: |
+          set -euo pipefail
+          node scripts/check-schema-lag.mjs | tee lag.txt
+          {
+            echo '### Schema lag'
+            echo ''
+            echo '```'
+            cat lag.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

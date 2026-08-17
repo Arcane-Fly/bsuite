@@ -34,6 +34,14 @@ export {
   type DialogOverlayProps,
 } from './dialog.js'
 export { EmptyState, type EmptyStateProps } from './empty-state.js'
+export {
+  DataUnavailable,
+  resolveDataState,
+  describeError,
+  type DataUnavailableProps,
+  type DataUnavailableState,
+  type QueryLike,
+} from './data-unavailable.js'
 export { ErrorBoundary, type ErrorBoundaryProps } from './error-boundary.js'
 export { LoadingSpinner, type LoadingSpinnerProps } from './loading-spinner.js'
 export { StatusBadge, type StatusBadgeProps, type StatusBadgeTone } from './status-badge.js'

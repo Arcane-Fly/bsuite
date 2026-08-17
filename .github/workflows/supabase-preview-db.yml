@@ -74,6 +74,12 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version-file: '.node-version'
+          # See pr-drift-scan.yml: setup-node@v5 defaults
+          # `package-manager-cache: true` and reads package.json's
+          # `packageManager` field, which the root gained when it was pinned to
+          # pnpm@10.33.3. This job installs no dependencies, so the cache is
+          # dead weight — and without pnpm on PATH it is a hard failure.
+          package-manager-cache: false
 
       - name: Validate committed schema manifest
         run: |
@@ -134,8 +140,28 @@ jobs:
         env:
           SUPABASE_BRANCHING_REQUIRED: ${{ vars.SUPABASE_BRANCHING_REQUIRED }}
         run: |
-          if [ "$SUPABASE_BRANCHING_REQUIRED" = "true" ]; then
-            echo "::notice::This PR changes Supabase files. Require the Supabase native check named 'Supabase Preview' in branch protection."
-          else
-            echo "::warning::This PR changes Supabase files, but SUPABASE_BRANCHING_REQUIRED is not true. Treat the plan as advisory until native Supabase GitHub branching or a custom branch-creation workflow is enabled."
-          fi
+          # THREE states, not two. Previously this was an if/else, so "the
+          # operator ruled branching OFF" and "nobody ever set the variable"
+          # produced the identical ::warning:: telling the reader to treat the
+          # plan as advisory "until native Supabase GitHub branching ... is
+          # enabled" — pending-work phrasing for a question that was decided.
+          # On every Supabase-touching PR, forever. A warning nobody can ever
+          # action is how a team learns to skip warnings.
+          case "$SUPABASE_BRANCHING_REQUIRED" in
+            true)
+              echo "::notice::This PR changes Supabase files. Require the Supabase native check named 'Supabase Preview' in branch protection."
+              ;;
+            false)
+              # Operator ruling, 2026-08-15: Supabase native branching stays OFF.
+              # It is Option 1 in bsuite#1892 and it was considered and declined.
+              # The earlier udztob dev-split was likewise evaluated and reverted
+              # on 2026-06-08. Nothing is pending here.
+              echo "::notice::Supabase files changed. Branching is OFF by operator ruling (bsuite#1892 Option 1, declined) — the migration plan above is informational. Validation happens at promotion to main via the floor-gated applier."
+              ;;
+            *)
+              # Genuinely unset. This IS config drift and deserves a warning:
+              # somebody removed or never created the repository variable, and
+              # the ruling above is no longer recorded anywhere CI can read.
+              echo "::warning::SUPABASE_BRANCHING_REQUIRED is unset. It should be explicitly 'false' to record the 2026-08-15 ruling, or 'true' if that ruling has been reversed. An unset variable and a deliberate 'false' are different states and this gate cannot tell them apart."
+              ;;
+          esac
