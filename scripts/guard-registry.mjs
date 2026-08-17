@@ -592,6 +592,56 @@ export const GUARDS = [
       "before this survey's fix.",
   },
   {
+    id: 'crm7-lint-postgrest-columns',
+    label: 'PostgREST literal column references resolve against the schema (crm7, full-tree)',
+    repo: 'crm7',
+    command: ['node', 'scripts/lint-postgrest-columns.mjs'],
+    ciWorkflow: 'crm7/.github/workflows/postgrest-column-lint.yml',
+    mode: 'run',
+    notes:
+      'Landed 2026-08-17 with crm7#1783. Closes a class TypeScript never ' +
+      'covered: `supabase.from(t).eq(\'col\', …)` addresses columns by string ' +
+      'literal, and `tsc --noEmit` reports ZERO errors on a column that ' +
+      'exists nowhere in the schema — measured by reintroducing the real ' +
+      'defect and re-running the full typecheck. PostgREST rejects the ' +
+      'request at runtime and the near-universal `data ?? []` idiom swallows ' +
+      'it into an empty result, so the surface renders with no data and no ' +
+      'error. The founding incident: the field officer landing page filtered ' +
+      'a `people.field_officer_id` that does not exist (the real column is ' +
+      '`assigned_field_officer_id`) and resolved the signed-in officer ' +
+      'against a FK to `contacts.id` instead of the auth link column — it had ' +
+      'been rendering its full card grid with every panel empty.\n' +
+      '\n' +
+      'Full-tree, not diff-scoped, deliberately: a diff-scoped run on a PR ' +
+      'touching no query files reports a legitimate zero, and that zero is ' +
+      'not evidence of anything.\n' +
+      '\n' +
+      'The baseline carries the 49 pre-existing pairs, each classified ' +
+      'against the LIVE schema rather than the generated types, because the ' +
+      'two disagree: 37 name a column absent from the database (real broken ' +
+      'queries in billing, payroll, invoices, WHS, compliance and VET, owned ' +
+      'by those lanes) and 12 exist live and mean src/types/supabase.ts is ' +
+      'stale. Keyed on `table.column`, never on file path — a path-keyed ' +
+      'allowlist in this estate has died loudly on rename and silently on ' +
+      'delete. The guard fails on a STALE entry as well as a new one, so ' +
+      'fixing a violation forces the baseline update into the same commit, ' +
+      'and fails on any `allowed` entry carrying no live-schema verdict.\n' +
+      '\n' +
+      'Demonstrated to FAIL three ways before being trusted to pass: new ' +
+      'violation (exit 1, names pair and file), stale baseline entry (exit ' +
+      '1), unclassified suppression (exit 1). `--self-test` runs 12 cases in ' +
+      'CI ahead of the scan, including the three false positives the first ' +
+      'draft raised against CORRECT code — embedded-resource filter paths, ' +
+      'embed ordering, and JSON path operators.',
+    evidence:
+      '"lint-postgrest-columns: 1973 source file(s) scanned, 325 table(s) ' +
+      'read from generated types, 937 .from() chain(s) walked, 2250 literal ' +
+      'column reference(s) resolved, 49 distinct unresolved table.column ' +
+      'pair(s) across 59 reference(s)." then "baseline: 49 known pair(s) (37 ' +
+      'absent from the live schema, 12 stale generated types); 0 new, 0 ' +
+      'stale."',
+  },
+  {
     id: 'crm7-lint-migrations-revoke-anon',
     label: 'REVOKE FROM anon pairing for SECURITY DEFINER functions (crm7, full-tree)',
     repo: 'crm7',
