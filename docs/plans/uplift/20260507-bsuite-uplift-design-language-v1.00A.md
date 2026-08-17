@@ -4,7 +4,16 @@
 
 **Operator directive (prior, 2026-05-07T08:00 AWST):** "no task or issue or feature or anything can be done without a red team sweep AND that sweep should include a specific UX agent that advocates for simplest and most intuitive and powerful UX design choices."
 
-**Status:** DRAFT — to be promoted to ACTIVE upon operator review.
+**Status:** A (Approved) — matches the `v1.00A` filename marker.
+
+> **Marker correction, 2026-08-17.** This line read *"DRAFT — to be promoted to ACTIVE upon operator
+> review"* while the filename said `A`. The filename was right and the body was stale: the review
+> happened, the 9-wave rollout was authorised, and it has been executing since under tracking issue
+> **bsuite#635** (W0 and W1 complete, W4 scoped and landed). `docs/plans/uplift/INDEX.md` indexes
+> this file as the design-language spec, and five other documents cite it as settled doctrine.
+> An *Approved* marker sitting on a body that says *awaiting review* invites the next agent to
+> re-open a decision that was already made — which is the whole failure mode this sweep exists to
+> stop. The body now matches.
 
 **Authority:** This document defines the unified design language that ALL BSuite UI work must conform to going forward — Feature Builder, Reports, Pay Item Groups, Permissions, Portal Admin, Tenant Admin, Branding, Schema Builder, Page Builder, every CRUD surface, every read surface.
 
