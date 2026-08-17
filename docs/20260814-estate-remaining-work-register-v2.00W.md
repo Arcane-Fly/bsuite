@@ -1,7 +1,29 @@
 # Estate remaining work — the consolidated register
 
+> ## ⚠ SUPERSEDED FOR STATUS — 2026-08-17
+>
+> **Every verdict and count below is superseded by
+> [`docs/20260817-estate-completion-ledger-v1.00W.md`](20260817-estate-completion-ledger-v1.00W.md).**
+> All 87 items were re-measured against the live database, live advisors, live deployed edge
+> functions, live production probes and resolved lockfiles on 2026-08-17: **16 DONE, 3 never
+> defects, 1 already settled by an operator ruling, 13 partial, 54 open.**
+>
+> **This document's item numbering and evidence remain the reference** — the ledger keeps the same
+> 87 identifiers, so nothing has to be re-mapped. What is *not* reliable here is any status or
+> count. Several were measured wrong, including some in the flattering direction: award partials
+> 37 → **39**, hook suppressions 90 → **97**, docs scoping the archived version 40 → **42**, and
+> `grid-cols-2` 473 → **237** (this document counted the correct responsive pattern as the defect).
+> Four items are not defects at all — see the ledger's §4.
+>
+> **The Method line below does not hold.** "All 264 non-archive documents were read and classified"
+> — there were **266** that day, and a coverage pass found **11 clusters of outstanding work absent
+> from all 87 items**, including the entire D-59…D-92 operator-notes backlog. See the ledger's §5.
+>
+> Read this document for *evidence and item definitions*. Read the ledger for *status*.
+
 **Document:** `docs/20260814-estate-remaining-work-register-v2.00W.md`
 **Date:** 2026-08-14 · **Version:** 2.00W · **Status:** W — Working
+**Superseded for status by:** `docs/20260817-estate-completion-ledger-v1.00W.md` (2026-08-17)
 **Supersedes:** `docs/00-roadmap/20260812-estate-remaining-work-register-1.00W.md` (v1) and, for their remaining-work content, every register listed in §9.
 
 **Method.** All **264 non-archive documents** under `docs/` were read and classified. Every material
