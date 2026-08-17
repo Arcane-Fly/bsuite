@@ -45,6 +45,14 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # REQUIRED, not defensive. The sticky-comment step calls
+  # github.rest.issues.{listComments,createComment,updateComment}. Those are
+  # `issues` endpoints even when the target is a pull request, so the `issues`
+  # scope governs them — `pull-requests: write` does NOT cover them. Without
+  # this the step dies on `HttpError: Resource not accessible by integration`.
+  # Surfaced estate-wide when the repo default workflow permission was
+  # tightened to `read`, making the declared block the entire grant.
+  issues: write
 
 concurrency:
   group: supabase-preview-db-${{ github.event.pull_request.number || github.event.client_payload.pr || github.ref }}
