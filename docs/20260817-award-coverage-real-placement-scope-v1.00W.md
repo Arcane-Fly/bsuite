@@ -62,10 +62,25 @@ Closing M-3/M-4 as "done for the in-scope population" would have recorded that a
 
 **20 active placements have no `award_code` at all, and 8 of them carry a charge rate.**
 
-A placement with a charge rate and no award is a wage being billed with no stated legal
-basis. That is not a coverage gap — it is a placement that cannot be checked against any
-award, and it is invisible to every award-coverage measure precisely because it names no
-award.
+**CORRECTED — my first framing of this overstated it and is left visible.** I wrote "a wage
+being billed with no stated legal basis", which implies someone is being paid wrongly.
+Measured, all 8 are:
+
+- `award_rate_resolution_status = 'manual'` — the honest marker the estate deliberately
+  built, meaning an operator typed the rate rather than an award lookup producing it, and
+- **carrying no apprentice at all** (7 of 8 FutureBuild Academy, 1 Braden Group).
+
+So nobody is being underpaid against a hidden award. These are manually-quoted placements
+with no worker attached yet, and they are labelled correctly.
+
+The real gap is narrower and still worth closing: **a charge rate with no `award_code`
+cannot be reconciled to an award later.** `award_code` is nullable with no constraint tying
+it to the presence of a charge rate — unlike `placements_resolved_rate_required_chk`, which
+already enforces that a charge rate carries a positive resolution marker. The same shape of
+constraint does not exist for the award itself.
+
+And it remains invisible to every award-coverage measure precisely because it names no
+award — which is why it surfaced only when the coverage scope was re-measured.
 
 ## What this changes
 
