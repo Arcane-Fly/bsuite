@@ -1,6 +1,57 @@
 # ADR-0005 — RAMS Funding Authoring
 
-**Status:** Accepted (2026-05-01)
+> ## ⚠️ SUPERSEDED BY OPERATOR RULING (2026-08-06) — DO NOT BUILD THIS
+>
+> **Status: Superseded.** This ADR was never implemented, and it must not be. A later
+> operator ruling reversed its central premise. Building it now would violate standing
+> doctrine, not close a gap.
+>
+> **What this ADR mandated:** funding amounts *derived* from a `(qualification, criteria)`
+> tuple via `rams_funding_for(...)`, propagated **read-only** into every downstream
+> surface, with user-editable funding fields explicitly disallowed.
+>
+> **What the operator ruled on 2026-08-06** (recorded in
+> `crm7/src/lib/funding/index.ts`, shipped as migration `20260806120000_funding_claim_payee`,
+> verified applied in the live ledger):
+>
+> - *"an engine shouldnt check eligability. this is for the user to determine."*
+> - *"pre-seeding funding that changes so frequently would be foolish."*
+>
+> Four modules totalling ~2,056 lines (`eligibilityEngine.ts`, `programCatalog.ts`,
+> `milestoneGenerator.ts`, `claimSubmissionService.ts`) were **removed** on that date.
+> They were not inert: `/claims/new` auto-filled `claim_amount` from a hardcoded
+> catalogue and **blocked submission on its own verdict** — a user could be stopped
+> from filing a legitimate claim by a dead COVID-era scheme table, and a real claim
+> could be pre-filled with an invented figure.
+>
+> **Why no engine can do this job:** federal amounts are date-effective **and
+> grandfathered**. From 1 Jan 2027 the Key Apprenticeship Program Employer Incentive
+> drops $5,000 → $4,000, but an apprenticeship that commenced earlier keeps the old
+> rate — one scheme name pays both amounts simultaneously, decided by a commencement
+> date. Eligibility also turns on a Priority List whose *methodology* changes, and on
+> a 200+ employee exclusion that exempts GTOs.
+>
+> **The replacement doctrine:**
+> - The **user** determines eligibility and enters the amount. crm7 *records*; it does
+>   not decide.
+> - Funding **calculation**, where wanted at all, belongs to **R80.4**, which already
+>   owns versioned date-effective figures.
+> - The only acceptable eligibility feature is **advisory** Jodie AI guidance read live
+>   from user-supplied sources — it must never block, and must disclaim that AI can err.
+>
+> **Measured state (live catalog, project `tuybltdrdefjblnplpqo`, 2026-08-17):**
+> `rams_funding_matrix` — absent. `rams_funding_overrides` — absent. `rams_funding_for(...)`
+> / `rams_funding_diagnose(...)` — absent. Route `crm7/src/pages/developer/funding-rules/`
+> — absent. Positive control: `funding_claims` and `placements` both present via the same
+> probe, so the probe finds what exists.
+>
+> Superseding record: `crm7/src/lib/funding/index.ts` (operator ruling, 2026-08-06);
+> migration `20260806120000_funding_claim_payee`.
+>
+> The text below is retained unaltered as the historical record of a decision the estate
+> later reversed. Do not treat any of it as current instruction.
+
+**Status:** Superseded (ratified 2026-05-01; superseded by operator ruling 2026-08-06)
 **Related:** WS-E.4 in consolidated plan; `docs/20260227-dry-one-shot-architecture-v1.04A.md` §1 (`funding_claims`); P1.J Payday Super (1-July-2026 deadline)
 
 ---

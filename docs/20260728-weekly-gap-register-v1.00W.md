@@ -1,5 +1,25 @@
 # Weekly Gap Register — work of 2026-07-21 → 2026-07-28
 
+> ## ⚠ SUPERSEDED — 2026-08-14 · AND ITS `P0-n` ARE NOT THE ESTATE'S `P0-n`
+>
+> **Superseded for remaining-work purposes by
+> [`docs/20260814-estate-remaining-work-register-v2.00W.md`](20260814-estate-remaining-work-register-v2.00W.md)**
+> (see its §9), whose status is in turn carried by
+> [`docs/20260817-estate-completion-ledger-v1.00W.md`](20260817-estate-completion-ledger-v1.00W.md).
+> That supersession was declared on 2026-08-14; this banner was added 2026-08-17 because the
+> declaration lived only in the *other* document, so a reader landing here directly had no signal.
+>
+> **Identifier warning.** This register's **`P0-1`…`P0-8`** name a completely different set of
+> defects than the estate register's **`P0-1`…`P0-8`** — exactly overlapping ranges, two live
+> documents, one namespace. A bare "P0-4" means *grace-invite audit write is fire-and-forget* here
+> and *`profiles` INSERT column grant survives for `anon`* there. **Always cite `P0-n` with its
+> source document.** Two other live documents
+> (`20260728-migration-idempotency-audit-v1.00W.md`, `plans/20260728-gap-remediation-plan-v1.00W.md`)
+> cite this register's `P0-2` and `P0-4`, and those citations mean *this* document's items.
+>
+> Read this for its evidence trail and its 2026-07-28 measurements. Do not read its counts or
+> statuses as current.
+
 Method: 8 scoped read-only assessors (subagent-driven-development) + controller live verification
 against the production Supabase project (`tuybltdrdefjblnplpqo`), Vercel, and GitHub Actions.
 Workspace: `.superpowers/sdd/20260728-weekly-gap-assessment-plan-v1.00W/`.

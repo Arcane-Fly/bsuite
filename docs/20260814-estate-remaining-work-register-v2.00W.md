@@ -15,9 +15,18 @@
 > `grid-cols-2` 473 → **237** (this document counted the correct responsive pattern as the defect).
 > Four items are not defects at all — see the ledger's §4.
 >
-> **The Method line below does not hold.** "All 264 non-archive documents were read and classified"
-> — there were **266** that day, and a coverage pass found **11 clusters of outstanding work absent
-> from all 87 items**, including the entire D-59…D-92 operator-notes backlog. See the ledger's §5.
+> **The Method line below does not hold, and it is corrected in place below rather than silently
+> edited.** "All 264 non-archive documents were read and classified" — there were **266** that day
+> (re-measured 2026-08-17 at this document's own commit `b8a9941e`; see the corrected Method line
+> for the exact enumeration rule). A coverage pass also found **11 clusters of outstanding work
+> absent from all 87 items**, including the entire D-59…D-92 operator-notes backlog. See the
+> ledger's §5.
+>
+> **`V-n` in this document means verification integrity (§5), and nothing else.** The 2026-08-15
+> Vercel platform audit originally numbered its findings `V-1`…`V-8` for an unrelated set; on
+> 2026-08-17 those were renumbered **`VP-1`…`VP-8`** so the two registers no longer share an
+> identifier namespace. This document's `V-1`…`V-11` are unchanged and every existing citation to
+> them remains valid. See `docs/20260815-vercel-platform-audit-and-res-regression-v1.00W.md`.
 >
 > Read this document for *evidence and item definitions*. Read the ledger for *status*.
 
@@ -26,8 +35,28 @@
 **Superseded for status by:** `docs/20260817-estate-completion-ledger-v1.00W.md` (2026-08-17)
 **Supersedes:** `docs/00-roadmap/20260812-estate-remaining-work-register-1.00W.md` (v1) and, for their remaining-work content, every register listed in §9.
 
-**Method.** All **264 non-archive documents** under `docs/` were read and classified. Every material
-claim was re-measured against: the six repos at `development` HEAD 2026-08-14 (crm7 `4514b7be`,
+**Method.** ~~All **264 non-archive documents** under `docs/` were read and classified.~~
+**Corrected 2026-08-17 — the count was 266, and "read and classified" overstates the coverage.**
+There were **266** non-archive documents under `docs/` on 2026-08-14, not 264. Enumeration rule,
+stated because a bare count with no rule is what let this drift: *tracked `*.md` files under
+`docs/`, excluding `docs/archive/**`*, measured at this document's own commit `b8a9941e`
+(`git ls-tree -r --name-only b8a9941e -- docs/ | grep '\.md$' | grep -v '^docs/archive/' | wc -l`
+→ 266). Of those, 221 carry a `YYYYMMDD-` basename. A coverage pass on 2026-08-17 found 11
+clusters of outstanding work absent from all 87 items, so the correct claim is **~93% coverage of
+the dated set, not 100%** — see the ledger's §5.
+
+*On the "dated window" figure:* the ledger reports **210** basename-dated documents in the
+2026-02-27 → 2026-08-15 window. Re-running the enumeration independently at the ledger's own
+commit yields **213** under the rule *non-archive `*.md` whose basename matches `^\d{8}-` with
+`20260227 ≤ date ≤ 20260815`*; the ledger's own §5 subcount for `recovered/` (25) likewise counts
+five documents dated before the window start. **The two figures differ because the enumeration
+rule differs, not because either pass miscounted** — which is the actual lesson: quote the rule
+with the number or the number will be restated wrongly. The figure sometimes attributed to this
+register, **202, appears nowhere in it or in any other document** (verified by grep across
+`docs/`); it is the ledger's inference of an assumed working figure, not a claim this register
+made.
+
+Every material claim was re-measured against: the six repos at `development` HEAD 2026-08-14 (crm7 `4514b7be`,
 business-suite-unified `55e107f`, conduit `9020047`, throughput `97bf2ec`, braden `071baeb`,
 bsuite `dc6e1825`), R80.4 `6852105`, live read-only SQL on `tuybltdrdefjblnplpqo`, live GitHub
 issue and workflow state, and a live re-run of `scripts/audit-d2c-theme.sh`. Plus one deliberately
@@ -185,6 +214,9 @@ moot rather than outstanding. **Re-scope against the rulings first, then reopen 
 ---
 
 ## 5. P1 — verification integrity: controls that cannot fail
+
+*These are the estate's `V-n` items. The 2026-08-15 Vercel platform audit's findings are `VP-n`
+and are a different set — see the banner at the top of this document.*
 
 | # | Item | Evidence | Size |
 |---|---|---|---|

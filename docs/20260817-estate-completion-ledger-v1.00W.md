@@ -379,6 +379,17 @@ On the day it was written there were **266**; in the 2026-02-27 → 2026-08-15 w
 basename-dated documents, not the 202 assumed. Six plausible enumerations were tested and none
 yields 202.
 
+> **Enumeration rule, added 2026-08-17 — quote it with the number.** The **266** is exact and
+> independently reproduced: *tracked `*.md` under `docs/`, excluding `docs/archive/**`*, at the
+> register's own commit `b8a9941e` → 266. The **210** is enumeration-sensitive and does **not**
+> reproduce from that rule: counting non-archive `*.md` whose basename matches `^\d{8}-` with
+> `20260227 ≤ date ≤ 20260815` yields **213** at this ledger's commit, and the `recovered/`
+> subcount below (25) includes five documents dated before the window start. Neither pass
+> miscounted — the window boundary and the basename filter are applied differently. Treat 210 as
+> "the coverage pass's set", not as a reproducible constant, and state the rule whenever
+> restating the figure. **The 202 is not a claim the register ever made** — that string appears
+> nowhere in it or in any other document under `docs/`.
+
 **Nine directories are never named once by the register** — `audits/`, `runbooks/`, `recovered/`,
 `testing/`, `research/`, and four `plans/` subdirectories — **49 of the 210 documents**. That is
 where most of the following was found.
@@ -402,9 +413,22 @@ not opened**, so this list is a floor, not a ceiling.
 
 ### Two structural document problems the register does not record
 
-**A numbering collision between two live registers.** The 2026-08-15 platform audit uses
-identifiers **V-1…V-8** for a completely different set than the register's **V-1…V-11**. Two live
-registers, one namespace — this ledger keeps the register's meaning and does not adopt the other's.
+**A numbering collision between two live registers — RESOLVED 2026-08-17.** The 2026-08-15 platform
+audit used identifiers **V-1…V-8** for a completely different set than the register's **V-1…V-11**.
+Two live registers, one namespace. **The platform audit's items were renumbered `V-n` → `VP-n`**
+(1:1, order-preserving), so `V-n` now unambiguously means the register's verification-integrity
+items and every citation in this ledger stands unchanged. The platform audit moved because its
+identifiers had **zero citations outside its own file**, measured across the parent repo, all six
+submodules and both Vercel agent skills with a positive control on each probe, against **22**
+citations of the register's `V-n` in this ledger alone. A distinct prefix was chosen over
+renumbering into `V-12…V-19` so the two namespaces are structurally disjoint rather than merely
+non-overlapping today.
+
+**A second collision of the same shape, also resolved.** `20260728-weekly-gap-register-v1.00W.md`
+defines **P0-1…P0-8** for an entirely different set than the register's **P0-1…P0-8** — exactly
+overlapping ranges, and two other live documents cite its `P0-2` and `P0-4`. That register was
+already superseded by §9 of the 2026-08-14 register but carried no marker on its own face, so a
+reader landing on it directly had no signal. It now carries a supersession banner.
 
 **Status markers that contradict their own contents.** All 210 were scanned and every flag
 hand-verified: **69 flagged, 9 real**. Six documents carry a filename status letter their body
@@ -447,7 +471,14 @@ long enough that the waiting is itself the risk.
 3. **The two colours the rule prescribes but the audit rejects** (G4). Adding a colour to the
    contract is a contract change. A developer obeying one gate currently fails another.
 4. **Whether the legacy custom-fields table is dead** (PF-4c). Dropping it removes 4 of PF-1's 69
-   findings outright — **decide before PF-1 reaches `main`** or those statements are wasted.
+   findings outright.
+
+   > **CORRECTION, 2026-08-17 (same day, hours later): the window this framed closed.** PF-1 was
+   > promoted to `main` in bsuite#2046 and **applied** by the floor-gated applier; the live catalog
+   > confirms the hoisted form on the sampled table. So the 4 statements covering the legacy table
+   > have already run. The decision is now the plainer one — drop the table or keep it — and
+   > dropping it means dropping 4 live policies with it rather than skipping 4 unapplied statements.
+   > Left visible rather than rewritten: the original framing was correct when written.
 5. **Whether the 20 unbuilt parity gaps survive the portal redesign** — carried from the register,
    still unanswered.
 6. **Retirement of a financial reports route** (G11) — deletion needs approval.
@@ -457,9 +488,22 @@ long enough that the waiting is itself the risk.
 
 8. **Training-authority email samples for six states** (G10) — approval, rejection and needs-info
    for each. No amount of code reading produces these.
-9. **Working end-to-end test credentials** (V-1). The current credential is *invalid*, not merely
-   unwired. Until this exists, every visual and runtime verdict in this ledger rests on reading
-   rather than running.
+9. ~~**Working end-to-end test credentials** (V-1).~~ **CLOSED 2026-08-17, hours after this ledger
+   was written.** The ledger was right that the credential was *invalid* rather than merely
+   unwired — and the cause was that the stored GitHub secrets did not match `.env.local`. Both
+   pairs were verified against Supabase's token endpoint directly (HTTP 200, tokens minted) and
+   re-set with `printf` rather than `echo`, because a trailing newline in a password secret is
+   invisible in every UI and fails identically to a wrong password.
+
+   **The suite then ran for the first time: `executed=74 skipped=52`, 51 passed, 23 failed** — up
+   from `executed=1 skipped=125`. Three nested defects had to be cleared first: the secrets were
+   never referenced by any workflow; the auth helper drove a login form that does not exist (crm7's
+   `/auth/login` is a redirect shim to the OAuth hub, and a CI origin can never be a registered
+   redirect URI); and underneath both, the helper's `catch` wrote an EMPTY storage state, which
+   makes every authenticated spec skip itself while Playwright counts a skip as a pass.
+
+   **This does not retroactively validate this ledger's theme claims** — see item 10, which still
+   stands. It means the instrument now exists.
 
 ### Cannot be verified without a live authenticated session
 
