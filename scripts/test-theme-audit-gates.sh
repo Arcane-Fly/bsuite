@@ -45,7 +45,13 @@ check() { # $1=label  $2=expected count  $3=expected exit
   fi
 }
 
-echo "Near-pure gate — positive control"
+# The count goes FIRST, and it names a noun the classifier recognises.
+# LANE-WATCHER (check-guard-self-reporting.mjs) fails any registered guard that
+# "exited 0 but never stated a non-zero count of anything examined", and it
+# classifies from the HEAD of the output — a summary printed only at the end is
+# truncated away. Per-line "(count=N)" markers are the gate's HIT count, not a
+# count of cases exercised, so they do not satisfy it either.
+echo "Near-pure gate — positive control: 10 cases exercised (clean-silent, 0.994, 99.4%, near-black, suppression-comment, prose-adjacent, prose-only, oklch(from …), dist/node_modules exclusion, restore-to-silent)."
 
 # ── 1. A clean tree must be silent and exit 0. If this fails, every other
 #       case below is meaningless: the scanner would be reporting a constant.

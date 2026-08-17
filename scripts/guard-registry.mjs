@@ -286,7 +286,10 @@ export const GUARDS = [
     command: ['bash', 'scripts/test-theme-audit-gates.sh'],
     ciWorkflow: '.github/workflows/theme-conformance.yml',
     mode: 'run',
-    evidence: '"ok    0.994 is caught (count=1, exit=1)"',
+    evidence:
+      '"Near-pure gate — positive control: 10 cases exercised (clean-silent, 0.994, ' +
+      '99.4%, near-black, suppression-comment, prose-adjacent, prose-only, oklch(from …), ' +
+      'dist/node_modules exclusion, restore-to-silent)."',
   },
   {
     id: 'parent-verify-esm-imports',
