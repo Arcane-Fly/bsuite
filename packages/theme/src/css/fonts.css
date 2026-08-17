@@ -59,8 +59,14 @@
  *
  * HOW TO USE IT
  * ─────────────
- *     @import '@bsuite/theme/fonts.css';   /* before your token import */
+ *     @import '@bsuite/theme/fonts.css';   <- before the token import
  *     @import '@bsuite/theme/css';
+ *
+ * (Written without an inline comment on purpose: a nested comment terminator
+ * inside this block would CLOSE it early, and everything after would parse as
+ * CSS. That is not hypothetical — it shipped in 0.12.0 and broke every
+ * consumer's build with `Invalid declaration` pointing at the NEXT import,
+ * several lines away from the actual fault.)
  *
  * This is a SEPARATE entry point, not folded into `./css`, on purpose: `braden`
  * is BRADEN-EXEMPT and runs its corporate Open Sans / Montserrat stack, so it
