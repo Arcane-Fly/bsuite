@@ -1,3 +1,22 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED — dead coordination board
+>
+> A shared task board for a **tandem of Cascade (Windsurf) and Claude Code** working non-overlapping
+> domains. That arrangement no longer exists: this estate coordinates agents through `AGENTS.md`,
+> per-lane git worktrees under `~/Desktop/Dev/worktrees/`, and GitHub issues.
+>
+> Its "AGENT REMINDERS (READ EVERY SESSION)" header is the hazard — an agent obeying it would wait
+> for notes from a partner that will never write them, and would honour ownership fences
+> (*"you own CRM7 exclusively"*) that no longer bind anyone.
+>
+> **Marker defect:** flagged `A` (Approved), which reads as standing instruction. It is history.
+
+---
+
 # Cascade ↔ Claude Code: Unified Upgrade Coordination Plan
 
 Shared task board for the tandem upgrade of CRM7, R8, and BSU — both agents work in parallel on non-overlapping domains, leave notes for each other, and cross-check completed work.
