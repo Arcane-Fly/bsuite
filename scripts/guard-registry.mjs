@@ -437,6 +437,38 @@ export const GUARDS = [
       'empty-ledger-refused, zero-files-refused)."',
   },
   {
+    id: 'parent-check-placement-rate-provenance',
+    label: 'Placement rate provenance (does a wage know where it came from?)',
+    repo: '.',
+    command: ['node', 'scripts/check-placement-rate-provenance.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/schema-lag.yml',
+    mode: 'run',
+    // Same deliberate exception as check-schema-lag directly above, for the same
+    // reason: the real run needs a live production credential the watcher does
+    // not hold, so registering the real command would record a permanent
+    // COULD_NOT_EXECUTE. The self-test is registered because it exercises the
+    // identical `evaluate()` the real run calls — the credential changes where
+    // the numbers come from, not what is done with them.
+    //
+    // Worth stating plainly, because this guard exists BECAUSE of it: the
+    // tripwire the 2026-07-30 plan proposed for this table would today pass
+    // vacuously. It asserted `award_rate_resolution_status` is never
+    // 'unresolved' on a placement carrying a charge_rate, and
+    // `placements_resolved_rate_required_chk` has since made that pair
+    // unrepresentable. Measured 2026-08-17: 0 unresolved, 21 'manual', and 0
+    // placements with an `award_rate_id`. The proposed guard would have reported
+    // all-clear over a money chain that has never once resolved a wage from an
+    // award rate. This one reads the foreign key instead, and its self-test
+    // carries a positive control that demonstrates the vacuity rather than
+    // asserting it.
+    evidence:
+      '"check-placement-rate-provenance --self-test: 7 cases exercised across ' +
+      'both directions (manual-passes, award-zero-passes, F1 fabricated, F2 ' +
+      'orphaned, F3 silent, F4 empty-scan-refused, fully-resolved-passes), plus ' +
+      '1 positive control proving the status-string tripwire would pass over a ' +
+      'dead chain."',
+  },
+  {
     id: 'parent-check-own-package-freshness',
     label: 'Own-package freshness (do the six apps run our latest @bsuite/* publishes?)',
     repo: '.',
