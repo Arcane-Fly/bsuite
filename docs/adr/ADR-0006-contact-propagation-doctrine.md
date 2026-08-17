@@ -50,7 +50,7 @@
 > **unaltered**. Read §Decision ¶2 and invariants 3–4 as historical only.
 
 **Status:** Accepted — contact half current; **organisation half superseded** (see banner)
-**Related:** `docs/20260227-dry-one-shot-architecture-v1.02A.md` §1 (`contacts`), §2 Flow E (Contact Reuse), §4 Auto-Population Rules; WS-E.1 Client↔Host Employer unification
+**Related:** `docs/20260227-dry-one-shot-architecture-v1.04A.md` §1 (`contacts`), §2 Flow E (Contact Reuse), §4 Auto-Population Rules; WS-E.1 Client↔Host Employer unification
 **Superseded in part by:** `crm7/docs/adr/20260525-host-employer-table-canonicalization.md`
 
 ---
@@ -83,7 +83,7 @@ The following invariants apply:
 ## Rationale
 
 1. **Merge-on-email deduplication is already shipped** (Phase 4 V1 migration `20260423020000_phase4_v1_candidate_contact_merge.sql`, CRM7). The migration established the plumbing; this ADR formalises the expected downstream behaviour so a shipped SQL primitive has a matching doctrine.
-2. **The canonical one-shot spec already documents the principle** (`docs/20260227-dry-one-shot-architecture-v1.02A.md` §2 Flow E, §3 Tier-3 `ContactCard` behaviour). This ADR makes it enforceable rather than aspirational by tying it to the WS-E.1 and WS-E.5 audits.
+2. **The canonical one-shot spec already documents the principle** (`docs/20260227-dry-one-shot-architecture-v1.04A.md` §2 Flow E, §3 Tier-3 `ContactCard` behaviour). This ADR makes it enforceable rather than aspirational by tying it to the WS-E.1 and WS-E.5 audits.
 3. **Free-text person fields are the single most common one-shot violation** surfaced by the `dry-lint/no-free-text-where-fk` rule. Formalising the doctrine gives the lint rule a citable authority; citation enables mechanical enforcement.
 4. **Role-as-discriminator scales** — new roles (e.g. "prospect", "alumnus") require a new discriminator value or a new junction table, never a new person or organisation table. This keeps the schema stable as the business model evolves.
 5. **Schema surface area is minimised** — one `clients` table + one `contacts` table + role junctions is strictly simpler to reason about than parallel `clients`/`host_employers`/`prospects` tables. Fewer tables = fewer RLS policies = fewer cross-table sync bugs.
