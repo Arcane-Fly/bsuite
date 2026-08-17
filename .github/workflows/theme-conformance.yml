@@ -492,7 +492,32 @@ jobs:
             echo "report green over pages nobody looked at."
             exit 1
           fi
-          echo "all four credentials resolved"
+
+          # NON-EMPTY IS NOT VALID, and this step learned that on its own first
+          # run. All four secrets were populated by `gh secret set --body -`,
+          # which stores the literal string "-" rather than reading stdin. The
+          # presence check above passed — "-" is non-empty — and the failure
+          # surfaced four steps later as `TypeError: Failed to parse URL from
+          # ***/auth/v1/token`. It was only diagnosable because GitHub masks
+          # secret VALUES in the log, so every hyphen in the entire run had
+          # become `***`: `audit***routes.sh`, `sign***in`,
+          # `business***suite***unified`.
+          #
+          # So assert the SHAPE, not just the length. Nothing here echoes a
+          # value; a length and a prefix are enough to tell a credential from a
+          # placeholder.
+          bad=""
+          case "$VITE_SUPABASE_URL" in https://*.supabase.co|https://*.supabase.co/) : ;; *) bad="$bad VITE_SUPABASE_URL" ;; esac
+          case "$VITE_SUPABASE_PUBLISHABLE_KEY" in sb_publishable_*|eyJ*) : ;; *) bad="$bad VITE_SUPABASE_PUBLISHABLE_KEY" ;; esac
+          case "$CRM7_E2E_EMAIL" in *@*.*) : ;; *) bad="$bad CRM7_E2E_EMAIL" ;; esac
+          [ "${#CRM7_E2E_PASSWORD}" -ge 8 ] || bad="$bad CRM7_E2E_PASSWORD"
+          if [ -n "$bad" ]; then
+            echo "::error::secret(s) present but malformed:$bad"
+            echo "A placeholder passes a non-empty check and then fails deep inside"
+            echo "Playwright, where the value is masked and unreadable."
+            exit 1
+          fi
+          echo "all four credentials resolved and well-formed"
 
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
