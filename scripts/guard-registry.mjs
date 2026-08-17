@@ -380,6 +380,30 @@ export const GUARDS = [
     evidence: '"audit-prod-migration-history: self-test OK (10 cases)"',
   },
   {
+    id: 'parent-check-schema-lag',
+    label: 'Schema lag (what is merged on this ref but NOT yet in the database?)',
+    repo: '.',
+    command: ['node', 'scripts/check-schema-lag.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/schema-lag.yml',
+    mode: 'run',
+    // Registered against `--self-test`, NOT its real invocation, and that is a
+    // deliberate exception to this registry's full-universe preference.
+    //
+    // The real run needs SUPABASE_DB_URL to read
+    // supabase_migrations.schema_migrations — a live production credential. The
+    // watcher holds none, so a `mode: 'run'` registration against the real
+    // command would fail closed on every sweep and record a permanent
+    // COULD_NOT_EXECUTE. Registering the self-test means the watcher verifies
+    // the thing it CAN verify: that the guard's six fixtures still discriminate.
+    //
+    // The real invocation runs in CI (schema-lag.yml), daily and on every PR
+    // touching a migration, where the secret exists.
+    evidence:
+      '"check-schema-lag --self-test: 6 cases exercised across both directions ' +
+      '(pending-not-failing, overdue-failing, below-floor-excluded, applied-excluded, ' +
+      'empty-ledger-refused, zero-files-refused)."',
+  },
+  {
     id: 'parent-check-own-package-freshness',
     label: 'Own-package freshness (do the six apps run our latest @bsuite/* publishes?)',
     repo: '.',
