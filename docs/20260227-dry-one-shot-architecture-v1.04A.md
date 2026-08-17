@@ -8,6 +8,14 @@
 > reference was repointed in the same commit. **The six skill files under `~/.agents/skills/` are a
 > separate repository and are NOT fixed by this commit** — see the handback note.
 
+> **R80.3 → R80.4 corrected 2026-08-17.** R80.3 left the submodule set on 2026-08-06 (`5e000c35`,
+> operator directive); R80.4 took its place. Two live operational references below named the
+> retired directory as if it still existed — the §10 Shared Calculation Package table (originally
+> read `CRM7 + R80.3 via npm semver`) and the §"rename sweep" script's submodule loop (originally
+> read `for m in crm7 conduit business-suite-unified R80.3 throughput braden`, which would fail on
+> `git -C R80.3` today). Both now read R80.4. **§11's historical gap-closure narrative (dated
+> 2026-04-22/23) still says R80.3 on purpose** — it is a dated record of what was true when written,
+> per `AGENTS.md`'s "reading a document that says R80.3" rule, and is left untouched.
 
 **Applies to:** CRM7 • R8 • BSU • Conduit • braden • throughput • All future modules
 **Source of truth:** Unified Supabase schema (`business-suite-unified/database/` + `crm7/supabase/migrations/`)
@@ -479,7 +487,7 @@ Schema files: `hostEmployer`, `hostAgreement`, `award`, `vacancy`, `qualificatio
 
 | Package | Path | Used By |
 |---------|------|---------|
-| `@bsuite/charge-calc` | `packages/charge-calc/` | CRM7 + R80.3 via npm semver (`^0.1.0` or later published version) |
+| `@bsuite/charge-calc` | `packages/charge-calc/` | CRM7 + R80.4 via npm semver (`^0.1.0` or later published version) |
 
 **Single source of truth** for all charge rate calculations. Both projects delegate to the
 published package — no duplicated calc logic. In deployable consumer repos, never use
@@ -584,7 +592,7 @@ Consumer-side renderer: `@bsuite/schema-registry@^0.1.0` exports `<TenantLayoutS
    ```bash
    SPEC=20260227-dry-one-shot-architecture      # match any version
    git grep -lE "$SPEC-v[0-9]+\.[0-9]+[A-Z]"                      # parent repo
-   for m in crm7 conduit business-suite-unified R80.3 throughput braden; do
+   for m in crm7 conduit business-suite-unified R80.4 throughput braden; do
      git -C "$m" grep -lE "$SPEC-v[0-9]+\.[0-9]+[A-Z]"            # every submodule
    done
    grep -rlE "$SPEC-v[0-9]+\.[0-9]+[A-Z]" ~/.agents/skills/       # the one nobody remembers
