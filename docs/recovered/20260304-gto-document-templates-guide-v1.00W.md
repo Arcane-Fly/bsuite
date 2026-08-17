@@ -1,3 +1,31 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (STILL-WANTED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # 📋 VERDICT: STILL-WANTED (small; already covered by `crm7#1476` + `crm7#1595`)
+>
+> The inventory of GTO document types below is **genuine outstanding requirement** and is the most
+> reusable content in this directory. It is not covered by any of the completion ledger's 87 items.
+>
+> Measured 2026-08-17 (live project `tuybltdrdefjblnplpqo`): `document_templates` holds **1 row**
+> against the ~20 GTO document types this guide inventories. Effectively unseeded.
+>
+> **One structural defect in this document's assumptions.** It relies on a 4-tier `source` column
+> (`system|cloned|uploaded_docx|custom_google_doc`). The migration that adds it,
+> `crm7/supabase/migrations/20260304000006_template_self_service.sql`, **does exist** — but it is
+> numbered `20260304…`, **below this estate's migration floor of `20260611000000`, so it can never
+> apply.** Confirmed live: `document_templates` has `google_doc_id`, `tenant_id` and `version`, and
+> **no `source` column**. Any plan built on `source` will fail silently.
+>
+> *(This also corrects `crm7#1476`, which states the migration was "never created". It was created;
+> it is unappliable, which is a different and more misleading failure.)*
+>
+> The legacy-template warning in the body still stands — verify content against the Fair Work Act
+> 2009, the NES and applicable Modern Awards before use.
+
+---
+
 # GTO Document Templates — Comprehensive Guide
 
 **Date:** 2026-03-04
