@@ -129,7 +129,9 @@ It is slow because **nothing is on screen until a 129-request, 2.36 MB JavaScrip
 resolves**, and two specific things make that graph worse than it needs to be:
 
 1. **`react-core-<hash>.js` is 1,001,217 B decoded.** It is correctly minified — this is not a
-   dev bundle. It is a `manualChunks` misconfiguration: the chunk contains **385 `zod`
+   dev bundle. It is a `manualChunks` misconfiguration — **or, on Vite 8 / Rolldown, a `manualChunks` block
+that is no longer read at all (corrected 2026-08-17; confirm which before fixing, because the
+two need opposite fixes)**: the chunk contains **385 `zod`
    references, 103 `slate` references, plus `lodash`, `xlsx` and `ai-sdk` markers**. React 19 +
    react-dom is ~150–180 KB; throughput's equivalent chunk is 198 KB. Roughly 800 KB of a
    chunk that *every route downloads* is a rich-text editor and a validation library that most
@@ -170,12 +172,35 @@ regression, but it is why the shell is empty.
 
 ## 3. Estate-wide findings against Vercel's documented practice
 
-### VP-1 — The five Vite SPAs get none of the platform's delivery features
+### VP-1 — The five Vite SPAs get none of the platform's delivery features **as configured**
 
-Verified in the docs, not inferred. A client-rendered Vite SPA on Vercel does **not** get:
-`next/image` optimisation, `next/font` preloading, ISR, PPR, streaming, **Skew Protection**
-(supported for Next.js, SvelteKit, Qwik, Astro, Nuxt — Vite is absent from the list), or the
-2026-07-17 CDN immutable-asset optimisation (Next.js 16.3+ only, Nitro "coming soon").
+> **Corrected 2026-08-17 — read this before acting on the section.** As originally written,
+> V-1 stated four things as platform limits that are configuration choices. The corrections
+> are below and the surrounding text has been amended. The error mattered: a limit closes a
+> question, a choice keeps it open, and this section was closing questions that were open.
+>
+> 1. **ISR and prerendering are available to Vite.** Vercel ships `vite-with-nitro` with both
+>    SSR and ISR ([docs](https://vercel.com/docs/frameworks/full-stack/vite-with-nitro),
+>    `last_updated: 2026-03-09`), and `vite-prerender-plugin` gives build-time prerendering
+>    that preserves the SPA authoring model — no framework migration.
+> 2. **Skew Protection is available to Vite.** Vite is missing from the *zero-config* list,
+>    not from the feature. The documented manual path is to read
+>    `VERCEL_SKEW_PROTECTION_ENABLED` and attach `VERCEL_DEPLOYMENT_ID` via the `dpl` query
+>    param, an `x-deployment-id` header, or a `__vdpl` cookie
+>    ([docs](https://vercel.com/docs/skew-protection), `2026-07-15`) — roughly five lines in
+>    a fetch wrapper. Report it as **not wired**, never as *not possible*.
+> 3. **Routing Middleware runs for any framework, including a static Vite SPA.** It is the
+>    available fix for the logged-out double-boot in the class table below, which this
+>    document had no proposed fix for.
+> 4. **Vite 8 is Rolldown-by-default and object-form `rollupOptions.output.manualChunks` is
+>    gone** ([vite.dev/guide/migration](https://vite.dev/guide/migration); Vite 8 released
+>    2026-03-12). This one changes a *finding*, not just a constraint — see the note on the
+>    `react-core` chunk in §2 and item 1 of §4.
+
+What a client-rendered Vite SPA genuinely does not get, with no configuration change:
+`next/image` optimisation, `next/font` preloading, streaming SSR, and the 2026-07-17 CDN
+immutable-asset optimisation (Next.js 16.3+ with query-param skew protection only; Nitro
+"coming soon"). ISR, prerendering and Skew Protection are **unconfigured, not unavailable**.
 
 Vercel's Vite documentation, last updated 2026-07-01, now says verbatim: *"Deploying your app
 in Multi-Page App mode is recommended for production builds"*, and steers Vite users to Nitro
@@ -185,8 +210,10 @@ instruction to follow this week.
 **The immediate consequence is Skew Protection.** We deploy frequently — 20 times in 48 hours
 on 13–14 August. Without skew protection, a tab open across a deployment requests chunk
 filenames that no longer exist. The service worker's NetworkFirst-for-navigation rule was added
-in May precisely because this was happening. That is a workaround for a platform feature we
-cannot use, and it should be recorded as such rather than as a solved problem.
+in May precisely because this was happening. **Corrected 2026-08-17:** that is a workaround for
+a feature we have **not wired**, not one we cannot use. The manual path above is about five
+lines, and it needs no Nitro migration — which moves this from "accept and document" to
+"small, shippable, and currently unshipped".
 
 ### VP-2 — Rate limiting is per-region, and our docs do not say so
 
@@ -259,8 +286,12 @@ and keeping our own skills for what is BSuite-specific, is the correct split.
 
 **This week — crm7 first paint. All four are small and independently shippable.**
 
-1. **Fix the `react-core` chunk.** Move the `platejs` / `slate` / `zod` / `xlsx` guards above
-   the `/react/` guard, or match on exact package boundaries rather than substrings. Verify by
+1. **Fix the `react-core` chunk — but first confirm the config is executing.** Vite 8 is
+   Rolldown-by-default and object-form `rollupOptions.output.manualChunks` is gone (corrected
+   2026-08-17); the replacement is `build.rolldownOptions.output.advancedChunks`. If the block
+   is being ignored, reordering guards inside it changes nothing and the real fix is to port
+   it. If it *is* executing: move the `platejs` / `slate` / `zod` / `xlsx` guards above the
+   `/react/` guard, or match on exact package boundaries rather than substrings. Verify by
    grepping the built chunk for `slate` and `zod` and finding zero. Expected: ~800 KB off the
    critical path. This is the single highest-leverage change in the estate.
 2. **Stop preloading 86 sub-2 KB modules.** Either raise the `manualChunks` floor so tiny
@@ -286,7 +317,7 @@ to more than one app:
 | Empty `#root` / no prerendered shell | all 5 Vite apps |
 | Font preload + drop legacy `.woff` | all 5 Vite apps |
 | `bsuite-mark.png` served unoptimised at 198 KB | crm7, conduit, BSU |
-| Logged-out double-SPA-boot | R80.4, throughput |
+| Logged-out double-SPA-boot — fixable with Routing Middleware, which is *not* Next.js-only (corrected 2026-08-17) | R80.4, throughput |
 | Oversized PNGs | braden (662/458 KB), BSU (726 KB) |
 
 **Requires a ruling before anyone builds it.**
@@ -295,8 +326,11 @@ to more than one app:
   apps without buying five more Speed Insights seats. Right now five of six apps have no
   real-user performance data at all, and this document is lab-only because of it.
 - Do we adopt **Nitro** for the Vite apps? It is the documented path to Vercel Functions, SSR,
-  Skew Protection and the new CDN optimisation, and Vercel's own Vite docs now steer that way.
-  It is also a real migration across five apps.
+  ISR and the new CDN optimisation, and Vercel's own Vite docs now steer that way. It is also a
+  real migration across five apps. **Corrected 2026-08-17:** Skew Protection is *not* on that
+  list — it needs no Nitro, only the five-line manual wiring in VP-1, so do not let this ruling
+  block it. Nor is prerendering, if `vite-prerender-plugin` is enough; the ruling is genuinely
+  about SSR and Functions, and is smaller than it was written to be.
 - Do we install the **official Vercel plugin** (`npx plugins add vercel/vercel-plugin`) for the
   framework-generic skills, and keep ours for BSuite specifics?
 

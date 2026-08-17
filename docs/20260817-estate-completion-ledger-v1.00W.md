@@ -32,9 +32,14 @@ identical. Separately, a coverage pass re-enumerated the dated document set to t
 
 ## 1. The answer
 
-**Of the 87 items, 20 need no further work — 16 measured DONE, 3 were never defects, 1 was already
+~~**Of the 87 items, 20 need no further work — 16 measured DONE, 3 were never defects, 1 was already
 settled by an operator ruling. The remaining 67 carry real outstanding work: 54 untouched and 13
-part-done.** The whole P0 security class is closed but one, and the transaction-integrity class is
+part-done.**~~ **CORRECTION, 2026-08-17 (same day, hours later): 23 need no further work — 19
+measured DONE, 3 were never defects, 1 was already settled. The remaining 64 carry real outstanding
+work: 50 untouched and 14 part-done.** All four A-series items (A-1…A-4, ratified ADRs never
+implemented) moved: three from OPEN to DONE, one from OPEN to PARTIAL, once their documents were
+corrected in bsuite#2053 — see §2 "A — ratified decisions never implemented" for the row-level
+evidence. The whole P0 security class is closed but one, and the transaction-integrity class is
 closed but one.
 
 **No — the 87 items do not cover the dated document set, and this is the more important finding.**
@@ -56,14 +61,16 @@ register's 264; and the register's own headline "all 264 were read and classifie
 
 | Verdict | Count | Meaning |
 |---|---:|---|
-| **DONE** | **16** | Re-measured fixed, with evidence. No work remains. |
+| **DONE** | ~~16~~ **19** | Re-measured fixed, with evidence. No work remains. |
 | **NOT-A-DEFECT** | **3** | Measured; the item was never a defect. Filed in error or measured wrongly. |
 | **SUPERSEDED** | **1** | Already settled by an operator ruling the register post-dates. |
-| **PARTIAL** | **13** | Half shipped. Real work remains — counted as open below. |
-| **OPEN** | **54** | Untouched, or the fix exists but has not reached the running system. |
+| **PARTIAL** | ~~13~~ **14** | Half shipped. Real work remains — counted as open below. |
+| **OPEN** | ~~54~~ **50** | Untouched, or the fix exists but has not reached the running system. |
 | **Total** | **87** | |
 
-**Closed: 20. Carrying work: 67** (13 partial + 54 open) — roughly **31 small, 23 medium, 13 large**.
+**Closed: ~~20~~ 23. Carrying work: ~~67~~ 64** (14 partial + 50 open) — roughly **31 small, 23
+medium, 13 large** (sizes unchanged; A-series recount does not shift the size buckets). Corrected
+2026-08-17 for the four A-series items — see §2 and §6 item 2.
 
 > **One rule applied throughout, because it is where this estate has repeatedly fooled itself:**
 > a filed issue is never reported as an addressed defect, and neither is a merged migration. Three
@@ -89,7 +96,7 @@ Sizes are S (hours), M (days), L (a week or more).
 | P0-7 | Platform-kit proxy needs redeploy — client gate was narrowed | **DONE** | Fetched the **live deployed function body** (v58): contains the narrowed gate with no super-admin disjunct, byte-identical to the repo file on `main`. Server is no longer wider than the client. | — |
 | P0-8 | Eight live edge functions have no source in any repo (bsuite#1955) | **DONE** | All six survivors now carry repo entrypoints; verified beyond metadata by fetching a deployed bundle and confirming it ships the real shared modules. The other two are deleted, not re-homed. Zero functions estate-wide carry a temp-directory entrypoint. | — |
 
-### M — charge rates and awards · 0 DONE, 3 PARTIAL, 7 OPEN
+### M — charge rates and awards · 0 DONE, 5 PARTIAL, 5 OPEN
 
 This is the block gating the host money view. It is the least-advanced class in the ledger.
 
@@ -97,8 +104,8 @@ This is the block gating the host money view. It is the least-advanced class in 
 |---|---|---|---|---|
 | M-1 | On-costs are platform-wide, not per-tenant | **PARTIAL** | Payroll tax is **already** state-resolved on both live quote paths, snapshot-carried, and refuses to guess rather than substituting a default. Superannuation and workers' comp remain platform-wide. | M |
 | M-2 | Rostered-day-off accrual accepted in the UI, never passed to the calculator | **OPEN** | Blocker gone *and* defect present: the calculator package resolves to 0.12.0 which **does** expose the accrual config, and the database column exists, but the config object in the hook has no `rdo` key. Stale "requires 0.2.4" comment still sits above it. | S |
-| M-3 | 37 partial rate-scope coverage rows across 16 of 21 awards | **OPEN** | Re-counted from the ledgers: **39 partials across 17 of 21 awards**, not 37/16 — it moved the *wrong way*. Worst: MA000071 (6), MA000010 (5), MA000009 and MA000029 (4 each). | L |
-| M-4 | Allowance catalogue covers 8 of 21 awards | **OPEN** | Unchanged: exactly **8** catalogue keys against **21** coverage ledgers. 13 awards fall through to the honest "no allowance catalogue wired yet" branch. | L |
+| M-3 | 37 partial rate-scope coverage rows across 16 of 21 awards | ~~**OPEN**~~ **PARTIAL** | Re-counted from the ledgers: **39 partials across 17 of 21 awards**, not 37/16 — it moved the *wrong way*. Worst: MA000071 (6), MA000010 (5), MA000009 and MA000029 (4 each). **CORRECTION, same day, hours later:** re-scoped honestly rather than thinned estate-wide. Live DB measured (`award_trades`, 2026-08-17): **27/27 rows are MA000020** — no other award carries a single live GTO placement, so MA000020 is the *entire* in-scope population, not a sample of it. MA000020's own rate-scope gap — Schedule C (School-based Apprentices), reopened 2026-08-10 for missing the cl.19.7(b)/cl.14.9 competency-progression limb — is now closed: `schoolBasedStage()` takes an optional caller-supplied `competencyStage` and applies the award's own "whichever is the earlier" rule (`Math.max(timeBasedStage, competencyStage)`), consistent with operator ruling D-68 and the standing "user determines eligibility, never an engine" rule. `node scripts/dod.mjs MA000020` → **DONE, 18/18**, including D11 (no RATE-scope clause or schedule left PARTIAL). Mutation-tested: reverting the `Math.max` turns 4 tests red. PR (unmerged): [R80.4#85](https://github.com/GaryOcean428/R80.4/pull/85). Left **PARTIAL, not DONE**: the other 39 partials across the remaining 16 awards are untouched and carry zero live placements — closing them was explicitly out of scope, not silently dropped. | L |
+| M-4 | Allowance catalogue covers 8 of 21 awards | ~~**OPEN**~~ **PARTIAL** | Unchanged: exactly **8** catalogue keys against **21** coverage ledgers. 13 awards fall through to the honest "no allowance catalogue wired yet" branch. **CORRECTION, same day, hours later:** the "OPEN" verdict understated MA000020's own state even before today — it was already one of the 8 adapted awards, and `award-catalogue-wiring.test.ts` already proved the adapter reaches the calculator end to end (not merely present): the industry allowance is enabled by default, every all-purpose row carries its clause, and the catalogue rows measurably move the ordinary wage. No code change was needed for M-4. Same live-DB fact as M-3: MA000020 is 100% of live placements, so the allowance catalogue is genuinely complete for the whole in-scope population. Left **PARTIAL, not DONE**: 13 of 21 awards (all with zero live placements) still have no adapter. | L |
 | M-5 | The award engine is not wired to the calculator | **OPEN** | Measured, not read: **610 public engine functions, 80 reached, 388 unreached**, of which 362 are per-award constructors. The main rate constructor has zero non-test importers. The calculator says so itself in a source comment. | L |
 | M-6 | Sector-alias bug in the allowance catalogue | **OPEN** | Defect real at the cited line, but **the register names the wrong award**. The resolver exists and is applied on one quote path but not at the two UI call sites. Larger effect is cross-award: the sector defaults to a value belonging to a *different* award for **every** award, silently dropping all 23 sector-tagged rows of MA000017. | S |
 | M-7 | `award_rates` empty while `awards` has 156 | **OPEN** | Confirmed live: **`award_rates` = 0, `awards` = 156**. Sharper than the register: `award_classifications` is **also 0**, and it is the parent key — so rates *cannot* be seeded until classifications are. | M |
@@ -128,30 +135,85 @@ This is the block gating the host money view. It is the least-advanced class in 
 | K-4 | Invented milestones in the field-officer visit schedule | **OPEN** | Four hardcoded dates passed into the same component that receives **live** events from the real store. The two halves render together, so the invented half inherits the live half's credibility. | S |
 | K-5 | Login-client registry hardcoded twice in the admin UI, status asserted not read | **OPEN** | Two copies, every entry with a literal `active` status. **New measurement: three of five domains have drifted** from the live records — the admin screen of the login server currently displays three wrong domains. The live table is not directly readable, so a database function is needed before either copy can read truth. | M |
 
-### A — ratified decisions never implemented · 0 DONE, 4 OPEN
+### A — ratified decisions never implemented · ~~0 DONE, 4 OPEN~~ **3 DONE, 1 PARTIAL — corrected 2026-08-17, same day, hours later**
 
 | # | Item | Verdict | Evidence measured 2026-08-17 | Size |
 |---|---|---|---|---|
-| A-1 | ADR-0005 (funding authoring) never built | **OPEN** | All three named objects resolve to null; positive control on the same queries returns a real table and 5 real functions, so the instrument finds what exists. The ADR's chosen home — a Developer Portal in the CRM — **does not exist in that app at all**. Adjacent progress landed today (program *identity* now reads from a table) but **not amounts**: the amounts field is empty on all 4 rows. Two of the ADR's premises are now stale. | L |
-| A-2 | ADR-0007 (payments foreign-data-wrapper) dead — and unbuildable as filed | **OPEN** | Extension absent, schema null, zero foreign servers. The migration **can never apply from disk** for two independent reasons: it is stamped below the migration floor, *and* its version collides exactly with another file. Its tracking issue was closed "completed" with **zero objects installed**. An operator ruling narrows the blast radius to one surface that does not yet exist. Applied ledger is now **699 entries, not 594**. | M |
-| A-3 | ADR-0006's organisation half is superseded and unrecorded | **OPEN** | The ADR still reads "Accepted" and forbids the model production actually adopted: the discriminator column it mandates **does not exist**, and the table it forbids **exists with 17 rows** and four role flags. Code favours the newer model 30 references to 4. **The code needs no change — the document does.** | S |
-| A-4 | ADR-0004 number collision | **OPEN** | Two different ADRs share number 0004; the index lists only one. Unchanged since at least the 2026-07-25 audit. **One correction:** the register calls the orphan "unreachable" — it is not, a package README links it by path. The defect is the duplicate number plus the index omission. | S |
+| A-1 | ADR-0005 (funding authoring) never built | ~~**OPEN**~~ **DONE** | All three named objects resolve to null; positive control on the same queries returns a real table and 5 real functions, so the instrument finds what exists. The ADR's chosen home — a Developer Portal in the CRM — **does not exist in that app at all**. Adjacent progress landed today (program *identity* now reads from a table) but **not amounts**: the amounts field is empty on all 4 rows. Two of the ADR's premises are now stale. **CORRECTION, same day:** the premises are still stale, and by design — an operator ruling (2026-08-06) already forbade building this, so the fix is not code, it is the record. `docs/adr/ADR-0005-rams-funding-authoring.md` now carries a superseded banner above the unaltered original text, citing the ruling, the 4 removed modules (~2,056 lines), and the live-catalog re-measurement. Merged: [bsuite#2053](https://github.com/GaryOcean428/bsuite/pull/2053). The feature correctly remains unbuilt; what was open was the document's silence, not the missing table. | L |
+| A-2 | ADR-0007 (payments foreign-data-wrapper) dead — and unbuildable as filed | ~~**OPEN**~~ **PARTIAL** | Extension absent, schema null, zero foreign servers. The migration **can never apply from disk** for two independent reasons: it is stamped below the migration floor, *and* its version collides exactly with another file. Its tracking issue was closed "completed" with **zero objects installed**. An operator ruling narrows the blast radius to one surface that does not yet exist. Applied ledger is now **699 entries, not 594**. **CORRECTION, same day:** the document defect is recorded — `docs/adr/ADR-0007-stripe-fdw-read-doctrine.md` carries a banner with the same table above, a retirement recommendation, and explicit acknowledgment that only the operator can change `Status:` from Accepted. Re-verified independently, not just trusted from the banner: `20260512161000` is **below the 20260611000000 floor** *and* collides byte-for-byte with `20260512161000_developer_portal_branding_scope_rls.sql` — confirmed by listing `supabase/migrations/` directly. A full-tree grep (parent repo; submodules not checked out from this worktree) finds `stripe_wrapper`/`stripe_server`/`stripe.*` referenced **only** inside the unapplied migration file itself — nothing reads it because the schema was never created for anything to read. **Retire-or-keep is still an operator call** — see §6 "Needs an operator ruling", item 2, below. Left **PARTIAL**, not DONE, because that call is outstanding. | M |
+| A-3 | ADR-0006's organisation half is superseded and unrecorded | ~~**OPEN**~~ **DONE** | The ADR still reads "Accepted" and forbids the model production actually adopted: the discriminator column it mandates **does not exist**, and the table it forbids **exists with 17 rows** and four role flags. Code favours the newer model 30 references to 4. **The code needs no change — the document does.** **CORRECTION, same day:** it is now recorded. `docs/adr/ADR-0006-contact-propagation-doctrine.md` carries a "PARTIALLY SUPERSEDED" banner naming the live `employers` table and its 4 role-flag columns, citing the superseding decision (`crm7/docs/adr/20260525-host-employer-table-canonicalization.md`, crm7#866) and explaining why 4 orthogonal booleans model the domain better than the one-column enum. Merged: bsuite#2053. **New finding surfaced while re-verifying this item, not yet fixed:** the crm7 file the banner cites is itself unreachable from crm7's own ADR index, and its self-declared title collides on the number "ADR-002" with a second, different crm7 ADR (`20260525-contacts-clients-leads-canonical-source.md`) dated the same day — confirmed live via `gh api repos/GaryOcean428/crm7/contents/docs/adr` and reading both files' headers. Same defect class as A-4, one repo over. Needs its own crm7 PR — out of scope for this (bsuite) lane; flagged here as a follow-up, not tracked under any existing item ID. | S |
+| A-4 | ADR-0004 number collision | ~~**OPEN**~~ **DONE** | Two different ADRs share number 0004; the index lists only one. Unchanged since at least the 2026-07-25 audit. **One correction:** the register calls the orphan "unreachable" — it is not, a package README links it by path. The defect is the duplicate number plus the index omission. **CORRECTION, same day:** fixed. The orphan is renumbered `docs/adr/ADR-0008-schema-builder-consolidation.md` (was the second 0004), the surviving `ADR-0004-oauth-allowlist-doctrine.md` keeps its number unchanged, and `docs/adr/README.md` now lists all eight ADRs with a mandatory `Built?` column plus the renumbering note ("renumbered from ADR-0004 on 2026-08-17; duplicate-number collision"). Verified live: `git ls-tree origin/development -- docs/adr/` shows both files with distinct numbers, no `0004` duplicate remains. Merged: bsuite#2053. | S |
 
-### AD — shipped but not reaching the product · 0 DONE, 1 PARTIAL, 9 OPEN, 1 NOT-A-DEFECT
+**A-series correction summary.** All four items were re-verified 2026-08-17, hours after this ledger
+was written, against `origin/development` HEAD (`d1d49592`), confirming [bsuite#2053](https://github.com/GaryOcean428/bsuite/pull/2053)
+("docs(adr): record measured build state for five ratified-but-unimplemented decisions (A-1…A-4 + G2)")
+is merged and its content live. Left visible rather than rewritten, per estate convention: the
+original framing was correct when this ledger was written that morning — these ADRs genuinely were
+unbuilt-and-unmarked at the time. A-2 is deliberately left **PARTIAL**: gathering the evidence and
+recommending retirement is a lane's job; retiring a ratified ADR is the operator's. See §6 "What no
+static pass can settle" → "Needs an operator ruling", item 2.
+
+### AD — shipped but not reaching the product · 0 DONE, 3 PARTIAL, 6 OPEN, 2 NOT-A-DEFECT
+
+*Count corrected 2026-08-17 alongside the AD-3/AD-5/AD-9 updates below — the original header
+already undercounted NOT-A-DEFECT by one (AD-10 and AD-11 are both non-defect verdicts).*
 
 | # | Item | Verdict | Evidence measured 2026-08-17 | Size |
 |---|---|---|---|---|
 | AD-1 | Page-builder package reaches 1 of 5 apps | **PARTIAL** | **Version half done** — all five lockfiles resolve 0.9.0 with identical integrity hashes. **Adoption half not** — local copies still exist and are the ones consumed: 294 local imports in the CRM against 9 files touching the package; one app has zero card usage. | M |
 | AD-2 | Shared card scanner adopted by nobody | **OPEN** | The package exports it as a subpath; **zero** apps import it. All five hand-roll the test; the CRM declares its own copy of the function. Positive control confirms the scanner exists in the package. | M |
-| AD-3 | Four-axis identity model — schema shipped, data empty | **OPEN** | Five registers at 0 rows; no global qualification rows; trades cover 1 award code; the expected join column does not exist on placements. **Register partly wrong:** two of the person-level links are 16/50 populated, not 0. | L |
+| AD-3 | Four-axis identity model — schema shipped, data empty | **OPEN — population plan below, re-verified 2026-08-17** | Five registers at 0 rows (`skill_sets`, `non_accredited_training`, `worker_licence_classes`, `training_packages`, `qualification_occupation_links`); no global qualification rows; `award_trades` 27 rows all `MA000020`. **Register wrong twice:** two person-level links are 16/50 populated, not 0; and the join column DOES exist — `placements.trade_id`, 0/34 populated, no FK. **The FK is IMPOSSIBLE, not missing, and that distinction is the point:** the column is `text` and correctly so (it targets `award_trades.trade_id text`, not `award_trades.id uuid` — `entities.ts:494` and `r80DeepLink.ts:24` both say so). But the only unique index on that pair is `award_trades_global_unique … WHERE tenant_id IS NULL` — a **partial** index, which Postgres will not accept as a foreign-key target. Adding a non-partial unique constraint would work and would also **forbid tenant-scoped trades**, which the partial predicate exists to permit. So this is a design fork, not a missing line of DDL. The real gap remains data population, which no agent can fabricate — **see "AD-3 — the data-population report" below** for what would populate each register, in what order, and what is blocking the one link that was called "free." | L |
 | AD-4 | Self-service onboarding built and never opened | **OPEN** | **0 of 50** people rows carry a login link; 0 portal invites. The surface has never been exercised once. | S |
-| AD-5 | Entity selector never adopted in two apps | **OPEN** | 65 files in the CRM, **0 and 0** in the two named apps. New: a third app now has 6 — the pattern is spreading, just not where it was asked for. | M |
+| AD-5 | Entity selector never adopted in two apps | ~~**OPEN**~~ **PARTIAL** | 65 files in the CRM, **0 and 0** in the two named apps. New: a third app now has 6 — the pattern is spreading, just not where it was asked for. **CORRECTION, 2026-08-17 — conduit closed, BSU still open, and the two are not symmetric.** This item is 713 lines with real production history (crm7#1284 async-select, one-shot suggestions, cross-schema reads, an error-vs-empty-state fix) — a rushed port would have created the "6th divergent copy" this item exists to prevent, so both apps were investigated for a genuine target before writing anything. **conduit: done.** Ported `EntitySelector.tsx` against conduit's own primitives — `command.tsx`/`popover.tsx` added (conduit already had `cmdk`, `@radix-ui/react-popover`, `dialog.tsx` as dependencies; only the two shadcn wrapper files were missing), `@/lib/supabase/client`'s `createClient()` factory used per-instance via `useMemo` (conduit is Next.js App Router, not crm7's Vite-SPA singleton — matches every other client component in the app), `@/lib/logger`/`@/lib/utils`. Full feature parity, not a trimmed subset. Converted a **genuine** free-text field: job postings' "Award Code" was a bare `<input placeholder="e.g. MA000027">` with zero validation against `awards` (156 rows, globally readable — confirmed live, not from the creation migration) — a typo silently saved a job referencing a non-existent award. Built `AwardSelector.tsx` bridging the id-keyed component against the `code`-keyed `jobs.award_code` column, and — this is the part a rushed conversion would have gotten wrong — a stored code that no longer resolves (pre-existing typo, retired award) is surfaced as an explicit warning, not silently hidden behind the empty-state placeholder. Wired into both `jobs/new` and `jobs/[id]/edit`. `@supabase/postgrest-js` added as a direct dependency (was only transitive) — lockfile diff is 3 lines. 14 new tests (9 component + mutation-tested: proved the code-vs-id bridging red before fixing it), full suite **1231 passed, 0 failed**; `tsc --noEmit` and `eslint` both clean. **BSU: still open, and honestly so.** BSU already has all four required primitives (`badge`/`button`/`command`/`popover` all present, unlike conduit) — the blocker is not technical. Searched BSU's tenant/org creation, user management, and branding surfaces for a free-text field that should reference an existing entity table; found none clean enough to convert without guessing at intent (`Tenants.tsx`'s "Owner email" looks similar but is deliberately free text — it invites a customer who may not exist as a user yet, so an entity picker would be the wrong fix, not the right one, misapplying this item's own pattern). BSU's domain is platform/tenant administration, not the GTO operational entities (people, employers, awards) crm7 and conduit manage — it may genuinely have fewer fields of this shape today. **The one blocker: a confirmed target field in BSU**, not a missing primitive or a technical obstacle. | M→S(conduit done)+?(BSU) |
 | AD-6 | Report catalogue covers 89 of 403 tables | **OPEN** | Confirmed live: **89 entries over 88 distinct tables against 402 base tables (21.9%)**. Only drift is 403→402. | L |
 | AD-7 | Four persistence surfaces at 0 rows | **OPEN** | All four still 0. Only one has code reach (6 call sites) and it has still never been written to. | M |
 | AD-8 | Connection-health view has no reader | **OPEN** | The view returns **2 rows, both `never_synced`**, and zero app source references it (positive control: the sibling table matches 51 files). "Connected but never synced" currently presents as healthy. | S |
-| AD-9 | 14 assistant actions the role manuals promise and no tool implements | **OPEN** | 71 tools across 14 factories; **none** of the seven named categories exists — no submit tool, and zero files for payslip, pay-run, nav-config, branding or the compliance test. | L |
-| AD-10 | Dashboard drag/drop persistence never adopted | **OPEN** | The expected table resolves to null; zero code references anywhere. The shared builder persists to browser storage only — **every rearrangement dies with the browser profile**. | M |
+| AD-9 | 14 assistant actions the role manuals promise and no tool implements | ~~**OPEN**~~ **PARTIAL** | 71 tools across 14 factories; **none** of the seven named categories existed — no submit tool, and zero files for payslip, pay-run, nav-config, branding or the compliance test. **CORRECTION, 2026-08-17:** the five categories this pass was scoped to (payslip, pay-run, nav-config, branding, compliance test) are now built — `payroll-tools.ts`, `nav-config-tools.ts`, `branding-tools.ts`, `compliance-test-tools.ts`, 5 new tools (`get_payslip`, `get_pay_run_status`, `get_nav_config`, `get_tenant_branding`, `get_boot_assessment`, `list_pending_boot_reviews` — 6, one category yielded two tools), wired into `createToolRegistry`/`getAllToolNames`, and read against the **live** table shapes (`payroll_records`, `pay_runs`, `tenant_navigation`, `tenant_branding`, `platform_branding_public`, `boot_assessments` — confirmed by `\d` against project `tuybltdrdefjblnplpqo`, not the creation migrations). All six are **read-only**: `payroll_records`/`pay_runs` because R80.4 owns rate calculation; `tenant_navigation`/`tenant_branding` because BSU is DRY's sole authoring surface for both (crm7's own `settings/branding.tsx` says so in its header, and a source grep found zero writers of `tenant_navigation` in crm7); `boot_assessments` because the rate engine, not Jodie, produces a BOOT verdict. Each refuses cleanly (`found:false`, no invented figure) when the row does not exist yet. Db-proxy allowlist updated (`api/db/[...path].ts`) and the existing allowlist contract test extended and **mutation-tested live** (removed one entry → red; restored → green). 20 new unit tests + 1 extended contract test, all green; full suite 6980 passed / 63 pre-existing skips / 0 failed; `tsc --noEmit` clean; `eslint` clean. **Left PARTIAL, not DONE — verified, not assumed:** the original v2 register named seven categories (`timesheet submit, payslip, pay-run, nav-config, branding, permission-grant, BOOT test`); this pass's scope was the five the operator named. Re-checked the other two directly rather than assuming: **`timesheet submit` is still genuinely absent** — grepped every tool factory, zero matches for `submit_timesheet`. **`permission-grant` exists only as a stub** — `set_tenant_feature_flag` is registered but its own test asserts it returns `NOT_IMPLEMENTED` (`enterprise-admin-tools.test.ts:130`). Both remain open; a future pass closes them, not this one. | L→M |
+| AD-10 | Dashboard drag/drop persistence never adopted | **NOT A DEFECT** | **Measured live, and the ledger was wrong.** Persistence works and survives a browser-profile change. `user_preferences` holds 9 rows under `page:bsu-dashboard_grid_layouts`, with `_grid_cols` / `_grid_version` / `_grid_base_cols` each also at 9 — a full round-trip, not a partial write. crm7's own dashboard shows the identical 9-row pattern, so this is the estate's normal architecture. Both registers inferred "no persistence" from the absence of a table literally named `dashboard_layouts`; that table genuinely does not exist, but it was never the mechanism. `UnifiedDashboard.tsx:3,57` renders `DraggableCardPage` whose adapter defaults to `useScopedPreference`, which upserts to `user_preferences` — `localStorage` is only the pre-hydration seed, not the store. | — |
 | AD-11 | Schema-builder Tidy and Fit do nothing | **NOT-A-DEFECT** | See §4. The register grepped a 61-line wrapper; the **installed package** ships the layout engine and wires both buttons with position persistence. | — |
+
+#### AD-3 — the data-population report
+
+This is what the brief asked for in place of code: no agent can fabricate the rows below, so this
+is the population *path*, re-verified live against `tuybltdrdefjblnplpqo` on 2026-08-17, not
+re-derived from the 2026-08-10 ruling doc's prose. That doc —
+[`20260810-four-axis-identity-model-and-backlog-sequence-1.00W.md`](./00-roadmap/20260810-four-axis-identity-model-and-backlog-sequence-1.00W.md)
+§3 and §4 (Wave 2) — already contains the full design and sequencing; what follows is today's
+measurement against it, including what has moved since it was written and one blocker it did not
+know about yet.
+
+**What has actually shipped since the 8/10 ruling, that the ledger table above does not show.**
+Re-measuring rather than trusting the doc's own age paid off: two of the doc's "wrong by
+construction" tables (`competencies`, `vet_training_packages`) no longer exist — collapsed into
+`units_of_competency` (160 rows) and `training_packages` per §4 item 2.1, exactly as specified.
+Four new registers now exist on the correct pattern (nullable `tenant_id` + `origin` +
+`reference_row_origin` CHECK, confirmed by reading `pg_constraint` directly): `skill_sets`,
+`non_accredited_training`, `worker_licence_classes`, `training_packages`. All four are the §4 item
+2.2 registers (skill sets, non-accredited training, licences) plus the qualification/training-package
+split. **The schema half of Wave 2.1–2.2 is done. The data half — every one of the four — is 0
+rows.** `qualifications.tenant_id` is likewise now nullable with the CHECK constraint live
+(`qualifications_origin_tenant_check`), so the 8/10 finding that the column was "wrong by
+construction" is itself now stale — the column is right; nothing has used the global path yet.
+
+**What would populate each register, in order, with the blocker named where one exists:**
+
+| Register | Rows now | What populates it | Blocker |
+|---|---:|---|---|
+| `skill_sets`, `non_accredited_training`, `worker_licence_classes` | 0 each | Operator/GTO-staff curation, or ingest from a named regulator source per class (WorkSafe HRW licences, WHS modules, etc.) — §2A's generalised test already rules these global once sourced | **No agent can source these; needs either an external register to ingest or a curation screen to enter them by hand.** Neither exists yet. |
+| `training_packages` | 0 | Same TGA ingestion pipeline that would populate `qualifications` (below) — training packages are the parent of qualifications in the TGA data model | Blocked on the same TGA ingestion gap as `qualifications` |
+| `qualification_occupation_links` | 0 | §3's "free, no guessing" link: `apprenticeship_titles.qualification_code` → `qualifications.code`. All 369 title rows already carry a code (295 distinct) | **Re-verified live and this is the one new finding: it is not actually free right now.** `qualifications` holds only 6 rows, and a live join (`apprenticeship_titles.qualification_code = qualifications.code`) resolves only **2 of 369** title rows. The "free" population is real but nearly empty until `qualifications` itself is ingested from TGA at scale — the 8/10 doc named this dependency in principle (item 2.1 before 2.4) but did not show how few rows currently satisfy it. |
+| `qualifications` (global rows) | 0 of 6 (all 6 remain tenant-scoped) | Bulk ingestion from the TGA register (training.gov.au), written with `origin='official_register'`, `tenant_id=NULL` | **No TGA qualifications ingestion pipeline exists yet.** This is the root blocker for three of the five empty registers above, not just `qualifications` itself. |
+| `qualifications` (existing 6 rows, deduplication) | 6 tenant-scoped rows across 3 codes | Once global rows exist, migrate the 3 duplicate-content rows onto them and retire the tenant-scoped copies | **Live proof the 8/10 ruling's concern was not theoretical:** `CPC30220` exists **three times**, once per tenant, with independently-typed content. This is the exact "every client re-types it, every client can spell it differently" failure the ruling was written to prevent, caught live in the data, not hypothesised. |
+| `award_trades` (other 20 awards) | 27 (all `MA000020`) | R80.4 publishes the trade catalogue as a generated artefact (§4 "Where axis 4 lives"), the same pattern already proven for `allowance-catalogue.generated.ts` (`R80.4/scripts/build-allowance-catalogue.mjs` — confirmed to exist, so the pattern is not hypothetical) | **Out of this lane's scope by standing ruling** — R80.4 owns ALL rate calculation, so this is R80.4 lane work, sequenced after Wave 2 per the 8/10 doc's own execution plan (§4 "Serialised"). Not attempted here. |
+| `placements.trade_id`, `people.anzsco_occupation_id`, `people.apprenticeship_title_id` | 0/34, 0/50, 0/50 | Forms move from the free-text `people.trade` (16/50 populated — the only thing anyone fills in today) onto the foreign keys, per §4 items 2.6–2.7 | Waits on `award_trades` (above) and the curation screen for qualification→award-trade correspondences — both upstream |
+
+**Net: the population plan was already fully specified in the 8/10 document; what this pass adds
+is live re-verification (the schema for 4 of 5 empty registers has since been built correctly,
+none populated) plus one blocker the original plan didn't surface — that the "free" title→
+qualification link is currently 2-of-369 free, not 369-of-369, because `qualifications` itself
+is 6 rows deep against a TGA register that should hold thousands. Ingesting `qualifications` at
+scale is the single highest-leverage next step: it unblocks `qualification_occupation_links`,
+`training_packages`, and the deduplication of the 3 duplicate-content rows in one move.**
 
 ### V — verification integrity · 2 DONE, 3 PARTIAL, 6 OPEN
 
@@ -202,7 +264,7 @@ This is the block gating the host money view. It is the least-advanced class in 
 | PO-2 | The supervisor concept does not exist in the data | **PARTIAL** | **The register's premise is measurably wrong** — the role exists with real rows, and the supervisor→worker relation exists as two foreign keys, both predating the register. What is genuinely absent is the **scoping** half: a policy scan for the supervisor column returns **0 rows**, so a supervisor is scoped to the whole employer, never to their own workers. Data also sparse (2 of 34 placements). | M |
 | PO-3 | Host-role limb on contacts | **DONE** | Live policy carries the full host limb with correct negation on the ordinary-staff limb. Helpers are security-definer with a pinned search path, and execute is granted to the service and logged-in roles only — **anon has none**. A cross-tenant first draft was corrected and the live body reflects the fix. | — |
 | PO-4 | Staffing orders, safety questions, payslip viewer, chasing | **OPEN** | **Every one of seven expected tables resolves to null.** Nothing shipped. | L |
-| PO-5 | Host money view gated on M-3, M-4 and M-7 | **OPEN** | Both gates confirmed unchanged (rates 0 of 156; catalogue 8 of 21). **Accuracy risk is real but narrower than filed:** 1 of 19 ladders carries a clause-read allowance scale, not 2 of 21 — the other 18 render a shipped "unverified default" warning. The view itself is not started. | L |
+| PO-5 | Host money view gated on M-3, M-4 and M-7 | **OPEN** | Both gates confirmed unchanged (rates 0 of 156; catalogue 8 of 21). **Accuracy risk is real but narrower than filed:** 1 of 19 ladders carries a clause-read allowance scale, not 2 of 21 — the other 18 render a shipped "unverified default" warning. The view itself is not started. **UPDATE, same day:** M-3 and M-4 are now closed for MA000020 (see their rows above) — the whole live-placement population, per `award_trades` — but that does not move this row. **M-7 alone still fully blocks PO-5**: `award_classifications` is 0 rows for *every* award including MA000020, and it is the parent key rates are seeded from, so the host money view has nothing to render regardless of clause coverage. | L |
 
 ### D — documentation hygiene · 0 DONE, 11 OPEN, 1 NOT-A-DEFECT
 
@@ -359,6 +421,17 @@ that is a floor because the measurement cannot resolve composed class names.
 - **K-3 mislocates one site and undercounts.** There are **three** fallbacks across **two** files,
   not two — including one the register never registered at all.
 - **AD-3 overstates the emptiness.** Two of the person-level links are **16 of 50** populated, not 0.
+- **AD-10 is not a defect at all** — dashboard drag/drop persistence is live and durable, measured
+  against the production database. Both registers reasoned from the absence of a table named
+  `dashboard_layouts` to the absence of persistence. The table genuinely does not exist; it was
+  never the mechanism. **An expected NAME not resolving is not evidence a CAPABILITY is missing** —
+  ask what the working path actually is before recording a gap.
+- **AD-3's "missing join column" is present, and its missing FK cannot be added.** `placements.trade_id`
+  exists as `text`, correctly targeting `award_trades.trade_id text` rather than the uuid primary
+  key. No foreign key is possible: the only unique index over `(award_code, trade_id)` is **partial**
+  (`WHERE tenant_id IS NULL`), and Postgres will not use a partial index as an FK target. A
+  non-partial constraint would enable the FK *and* forbid tenant-scoped trades, which that predicate
+  exists to allow. Recording it as "missing FK" implies a one-line fix; it is a design fork.
 - **PO-2's premise is wrong.** The supervisor concept **does exist** — role rows and two foreign
   keys, both predating the register. Only the scoping policy is missing.
 - **A-4 calls the orphan ADR "unreachable".** A package README links it directly by path. The
@@ -468,6 +541,27 @@ long enough that the waiting is itself the risk.
    closed "completed" with zero objects installed, and a later ruling shrank its scope to a single
    surface that does not yet exist. **The retirement is unrecorded, so the document still reads
    "Accepted".** If retained, the migration must be re-stamped and de-collided before it can ever apply.
+
+   > **CORRECTION, 2026-08-17 (same day, hours later): the retirement is now recorded, the decision
+   > is not.** `docs/adr/ADR-0007-stripe-fdw-read-doctrine.md` (merged in bsuite#2053) carries a
+   > banner stating the measured state, a numbered case for retirement, and an explicit refusal to
+   > flip `Status:` itself — that line is reserved for the operator. Re-verified independently
+   > 2026-08-17, not re-derived from the banner's own claim: `supabase/migrations/` on disk shows
+   > `20260512161000_stripe_fdw_wrappers.sql` sharing its exact 14-digit stamp with
+   > `20260512161000_developer_portal_branding_scope_rls.sql` — a real filename collision, not a
+   > paraphrase — and that stamp sits below the `20260611000000` floor, so the file **cannot apply
+   > even if retained.** A parent-repo-wide grep (submodules not checked out) finds `stripe_wrapper`
+   > / `stripe_server` / `stripe.*` nowhere except inside that one unapplied file — nothing reads it,
+   > because there is nothing live to read. **Deciding factors for the operator:** (a) no live Stripe
+   > billing exists today and none is scheduled, so retiring costs nothing running; (b) keeping it
+   > Accepted means provisioning a live `stripe_api_key` Vault secret to serve zero readers just to
+   > satisfy its own compliance gate; (c) it is cited as governing `BL-013` in the merged execution
+   > backlog, so every day it stays "Accepted" is another day that backlog item reads as
+   > architecturally settled when its substrate does not exist; (d) retirement is cheap to reverse —
+   > a fresh ADR against 2026-08 requirements, not 2026-05 ones, if live billing ever arrives. On
+   > ratification: set `Status:` to `Rejected (retired unbuilt)`, delete the migration file, and
+   > drop the `BL-013` row from the backlog.
+
 3. **The two colours the rule prescribes but the audit rejects** (G4). Adding a colour to the
    contract is a contract change. A developer obeying one gate currently fails another.
 4. **Whether the legacy custom-fields table is dead** (PF-4c). Dropping it removes 4 of PF-1's 69

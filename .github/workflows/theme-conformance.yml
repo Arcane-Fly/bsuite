@@ -52,6 +52,11 @@ on:
       - 'scripts/audit-palette-whitelist.py'
       - 'scripts/theme_audit_lib.py'
       - 'scripts/test-theme-audit-gates.sh'
+      - 'scripts/audit-routes.sh'
+      - 'scripts/theme-session.sh'
+      - 'scripts/audit-applied-tokens.mjs'
+      - 'scripts/audit-ui-pages.mjs'
+      - 'scripts/audit-legibility.mjs'
       - '.github/theme-c1-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
       - '.github/workflows/theme-conformance.yml'
@@ -395,6 +400,151 @@ jobs:
             echo "  scripts/audit-palette-whitelist.py --list-allowed"
             exit 1
           fi
+
+  # ── PER-PAGE VALIDATION (theme DoD § 2) ────────────────────────────────────
+  #
+  # The DoD said "Route inventory lives in scripts/audit-routes.sh" for two
+  # weeks while that file did not exist anywhere in the parent or the six
+  # submodules, so the whole P1–P9 per-page checklist was unimplemented and this
+  # workflow invoked none of the three page auditors. These two jobs are what
+  # makes the sentence true.
+  #
+  # Split in two on purpose. The inventory check is cheap, needs no credentials
+  # and no network, and therefore runs on every PR — it is the ratchet that stops
+  # authenticated coverage being quietly deleted. The sweep needs a real session
+  # against a real deployment, so it runs on the schedule and on demand.
+  per-page-inventory:
+    name: Route inventory is declared and non-empty
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1 }
+
+      # `--require-authenticated 6` is a FLOOR, not a measurement. The measured
+      # numbers are derived by the script from the inventory itself and printed
+      # at the head of every run; this literal only says how far coverage is
+      # allowed to fall. A floor that is out of date can only ever under-claim,
+      # which is the safe direction — the dangerous literal is a hardcoded
+      # "measured" count, and there isn't one. Raise it in the same PR that adds
+      # routes; lowering it is a deliberate act that has to be argued for.
+      - name: Inventory + authenticated-coverage ratchet
+        run: scripts/audit-routes.sh --inventory --require-authenticated 6
+
+  per-page-authenticated:
+    name: Per-page checks on SIGNED-IN routes
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout (with submodules — crm7 carries the auth helper)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # An uninitialised submodule is an EMPTY DIRECTORY and an empty directory
+      # passes `-d`. Test for the FILE this job consumes, or the sweep degrades
+      # into "no session producer found" and reads like a scoping decision
+      # rather than a broken checkout.
+      - name: Assert crm7's auth helper is present
+        run: |
+          set -uo pipefail
+          if [ ! -f crm7/tests/e2e/auth.setup.ts ]; then
+            echo "::error::crm7/tests/e2e/auth.setup.ts is missing — the submodule did not check out."
+            echo "Set BSUITE_CROSS_REPO_PAT (repo: read on crm7)."
+            exit 1
+          fi
+          echo "crm7 auth helper present"
+
+      # Fail CLOSED on missing credentials, before anything else runs.
+      #
+      # auth.setup.ts writes an EMPTY storage state when credentials are absent,
+      # by design, so an ordinary local E2E run still works. Fed to this sweep
+      # that empty state makes every authenticated route bounce to the OAuth
+      # server and report SKIPPED — and a skipped route is indistinguishable
+      # from a route the inventory never claimed. crm7's own e2e.yml learned
+      # this the hard way: the credentials sat set-and-inert in that repo while
+      # the suite reported green over 125 self-skipping specs.
+      #
+      # These four secrets live on GaryOcean428/crm7 already; this job needs
+      # them on the parent too. VITE_SUPABASE_ANON_KEY is exported under the
+      # name the app actually reads (VITE_SUPABASE_PUBLISHABLE_KEY) — the same
+      # rename crm7/.github/workflows/e2e.yml performs, and for the same reason.
+      - name: Assert the E2E credentials resolved
+        env:
+          CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}
+          CRM7_E2E_PASSWORD: ${{ secrets.CRM7_E2E_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -uo pipefail
+          missing=""
+          for v in CRM7_E2E_EMAIL CRM7_E2E_PASSWORD VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::missing secret(s):$missing"
+            echo "Without them every signed-in route is SKIPPED and this job would"
+            echo "report green over pages nobody looked at."
+            exit 1
+          fi
+
+          # NON-EMPTY IS NOT VALID, and this step learned that on its own first
+          # run. All four secrets were populated by `gh secret set --body -`,
+          # which stores the literal string "-" rather than reading stdin. The
+          # presence check above passed — "-" is non-empty — and the failure
+          # surfaced four steps later as `TypeError: Failed to parse URL from
+          # ***/auth/v1/token`. It was only diagnosable because GitHub masks
+          # secret VALUES in the log, so every hyphen in the entire run had
+          # become `***`: `audit***routes.sh`, `sign***in`,
+          # `business***suite***unified`.
+          #
+          # So assert the SHAPE, not just the length. Nothing here echoes a
+          # value; a length and a prefix are enough to tell a credential from a
+          # placeholder.
+          bad=""
+          case "$VITE_SUPABASE_URL" in https://*.supabase.co|https://*.supabase.co/) : ;; *) bad="$bad VITE_SUPABASE_URL" ;; esac
+          case "$VITE_SUPABASE_PUBLISHABLE_KEY" in sb_publishable_*|eyJ*) : ;; *) bad="$bad VITE_SUPABASE_PUBLISHABLE_KEY" ;; esac
+          case "$CRM7_E2E_EMAIL" in *@*.*) : ;; *) bad="$bad CRM7_E2E_EMAIL" ;; esac
+          [ "${#CRM7_E2E_PASSWORD}" -ge 8 ] || bad="$bad CRM7_E2E_PASSWORD"
+          if [ -n "$bad" ]; then
+            echo "::error::secret(s) present but malformed:$bad"
+            echo "A placeholder passes a non-empty check and then fails deep inside"
+            echo "Playwright, where the value is masked and unreadable."
+            exit 1
+          fi
+          echo "all four credentials resolved and well-formed"
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        # Explicit major. actions/setup-node with node-version-file was observed
+        # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
+        with: { node-version: '24.14.0' }
+
+      - name: Install crm7 (Playwright lives there)
+        working-directory: crm7
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        working-directory: crm7
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The sweep. Mints a session via scripts/theme-session.sh (which runs
+      # crm7's own auth.setup.ts — it does not reimplement sign-in) and then
+      # walks every route in the inventory: public routes anonymously,
+      # authenticated routes signed in. A SKIPPED authenticated route fails the
+      # job; that is the whole reason this exists.
+      - name: Walk the route inventory
+        env:
+          CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}
+          CRM7_E2E_PASSWORD: ${{ secrets.CRM7_E2E_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: scripts/audit-routes.sh
 
   # NOT run on pull_request, deliberately.
   #

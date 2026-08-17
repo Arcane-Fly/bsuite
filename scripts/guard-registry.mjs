@@ -345,6 +345,40 @@ export const GUARDS = [
   },
 
   {
+    // The per-page half of the theme DoD, which named
+    // `scripts/audit-routes.sh` as the home of the route inventory while that
+    // file existed nowhere in the parent or the six submodules.
+    //
+    // REGISTERED INVOCATION IS `--inventory`, NOT THE SWEEP, and the reason is
+    // the one this registry's header already states: the command recorded here
+    // must be safe to run — read-only, no credentials, no network. The full
+    // sweep signs in against a live deployment and walks 11 routes through
+    // three Playwright auditors in two themes; it runs on the schedule and on
+    // workflow_dispatch in theme-conformance.yml, not here.
+    //
+    // `--inventory` is not a stub of that. It is the assertion that the sweep
+    // has something to sweep: the inventory is non-empty, every route is
+    // well-formed, none is declared twice, and authenticated coverage has not
+    // fallen below its floor. An inventory that silently emptied would make
+    // the scheduled sweep visit nothing and report success, which is precisely
+    // the vacuous-guard shape LANE-WATCHER exists to catch — so the guard that
+    // guards it belongs here.
+    //
+    // Every count in the head line is DERIVED from the inventory at run time.
+    // The only literal is the ratchet floor, which lives in the workflow, and a
+    // stale floor can only under-claim.
+    id: 'parent-audit-routes-inventory',
+    label: 'Per-page route inventory declared, well-formed, and non-empty (theme DoD § 2)',
+    repo: '.',
+    command: ['bash', 'scripts/audit-routes.sh', '--inventory'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"audit-routes: 11 route(s) across 1 app(s) — 5 public, 6 authenticated" ' +
+      'followed by "✓ inventory valid". Proven able to fail: ' +
+      '`--inventory --require-authenticated 99` exits 1 with "only 6 ' +
+      'authenticated route(s) declared, floor is 99"; and the sweep itself run ' +
+      'as `--no-session` exits 1 with "6 route(s) UNAUDITED" per auditor.',
     // The parser that decides WHICH ISSUES GET CLOSED AUTOMATICALLY when a
     // pull request merges into `development` (register V-10 — GitHub only
     // auto-closes on a merge to the default branch, and all seven repos
