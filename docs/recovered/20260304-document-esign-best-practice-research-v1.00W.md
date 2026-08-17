@@ -1,7 +1,14 @@
 # Document Lifecycle & E-Signature — Best Practice Research
 
 **Date:** 2026-03-04
-**Status:** v2.00W (Working)
+**Status:** v1.00W (Working)
+
+> **Marker correction, 2026-08-17.** This body said `v2.00W` against a `v1.00W` filename. The
+> filename won and the file was **not** renamed: `docs/recovered/` is a frozen archive — it is
+> deliberately exempted from `scripts/drift-scan.mjs`, and `00-READ-THIS-FIRST-corpus-health.md`
+> indexes its 33 files by name under an operator ruling. Renaming an indexed frozen-archive file to
+> satisfy a version marker would break the index to fix a digit. No `v2` of this research exists in
+> the estate.
 **Context:** CRM7 document lifecycle system uses Google Docs API for template merging. This research evaluated Adobe, open-source, and self-hosted alternatives for e-signatures and PDF viewing. **Final decision: self-hosted signing with pdf-lib + SHA-256, react-pdf for viewing, Google Docs API for merging. $0/month API costs.**
 
 ---

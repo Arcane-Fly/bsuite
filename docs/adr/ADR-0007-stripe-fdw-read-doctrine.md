@@ -1,7 +1,54 @@
 # ADR-0007 — Stripe FDW Read Doctrine
 
-**Status:** Accepted (2026-05-12)  
-**Related:** `supabase/migrations/20260512161000_stripe_fdw_wrappers.sql`; `AUTH_CANONICAL.md`; `docs/20260501-merged-execution-backlog-v1.00W.md`
+> ## ⚠️ UNIMPLEMENTED — RETIREMENT RECOMMENDED (awaiting operator ratification)
+>
+> **Nothing in this ADR was ever built.** It has stood as an Accepted doctrine for
+> three months while binding zero code — a standing false signal that tells every
+> future lane a Stripe read path exists when none does.
+>
+> **Measured state** (live catalog, project `tuybltdrdefjblnplpqo`, 2026-08-17):
+>
+> | Prescribed artefact | Measured |
+> |---|---|
+> | `wrappers` extension | **absent** from `pg_extension` |
+> | `stripe` schema | **absent** from `pg_namespace` |
+> | `stripe_server` foreign server | `pg_foreign_server` is **empty** (zero rows) |
+> | `stripe_wrapper` FDW | `pg_foreign_data_wrapper` is **empty** (zero rows) |
+> | Migration `20260512161000_stripe_fdw_wrappers.sql` | **on disk, not in the applied ledger** |
+>
+> Positive controls: the same probes returned `pg_cron` and the `public` schema, and
+> neighbouring same-day migrations `20260512151200` / `20260512220100` / `20260512220200`
+> *are* present in `supabase_migrations.schema_migrations` — so the ledger probe finds
+> what is there. `20260512161000` is genuinely absent, not missed.
+>
+> ### Recommendation: **RETIRE this ADR — do not build it.**
+>
+> 1. **There is no live billing.** The doctrine governs "new Stripe data-read
+>    integration paths". None have been added since ratification, and none are
+>    scheduled. It is optimising a path that carries no traffic.
+> 2. **Its own compliance gate is unmet.** The gate requires the Vault secret
+>    `stripe_api_key` to exist *before* the migration applies. Retiring costs nothing;
+>    building means provisioning a live Stripe credential to serve zero readers.
+> 3. **An unbuilt Accepted ADR is worse than no ADR.** It has already caused a false
+>    signal once — it is cited as governing `BL-013` in the merged execution backlog,
+>    an item that therefore reads as architecturally settled when its substrate does
+>    not exist.
+> 4. **Retirement is cheap to reverse.** If live billing arrives and Stripe read
+>    volume justifies it, a fresh ADR can be written against the requirements as they
+>    actually stand — which will likely differ from the 2026-05 assumptions anyway.
+>
+> **Operator decision required.** This banner records the measurement and the
+> recommendation; it does **not** change `Status:` to Rejected, because retiring a
+> ratified ADR is the operator's call, not a lane's. On ratification: set Status to
+> `Rejected (retired unbuilt)`, delete the unapplied migration
+> `supabase/migrations/20260512161000_stripe_fdw_wrappers.sql`, and drop the `BL-013`
+> row from the merged execution backlog.
+>
+> The alternative — keeping it Accepted — is only defensible if live billing is
+> imminent, in which case it needs an implementation ticket, not a doctrine document.
+
+**Status:** Accepted (2026-05-12) — **unimplemented; retirement recommended, pending operator ratification**  
+**Related:** `supabase/migrations/20260512161000_stripe_fdw_wrappers.sql` (on disk, never applied); `AUTH_CANONICAL.md`; `docs/20260501-merged-execution-backlog-v1.00W.md`
 
 ---
 

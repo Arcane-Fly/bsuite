@@ -11,6 +11,24 @@ is shown rather than smoothed over.
 
 ## 1. Read this first — nothing security-related is live
 
+> ### ⚠ NO LONGER TRUE — corrected 2026-08-17
+>
+> **This section's premise expired on 2026-08-14.** It was written on 2026-08-12 when nothing had
+> been promoted; the estate has promoted to `main` several times since, most recently **2026-08-17**
+> (`60c5ead5`). Every "**live today: yes**" in the table below is now **wrong**.
+>
+> Re-measured against `tuybltdrdefjblnplpqo` on 2026-08-17: all five defects are **closed in
+> production**, and so is the sixth that §13 recorded as still waiting. Migration versions
+> `20260814010000` through `20260814080000` are all present in
+> `supabase_migrations.schema_migrations`, and the fix was verified by its *effect*, not by the
+> ledger row alone — `public.xero_audit_log.ip` now carries the provenance comment that
+> `20260814050000` writes, and the table has grown 76 → 96 rows under the new derivation.
+>
+> **The section is left standing, not rewritten.** Its central sentence — *"merged is not applied"* —
+> is the most important lesson in this document and cost the estate real production breakage.
+> Deleting the evidence that made the point would remove the lesson. Read §1 as a record of what was
+> true on 2026-08-12, and this banner as what is true now.
+
 **Every fix this run produced is merged to `development` and none of it is applied to the
 database.** The migration applier runs only when the **parent** repository's `main` moves, and this
 run deliberately never touched `main` — that promotion is your visual sign-off gate.
@@ -464,6 +482,24 @@ it is a plausible verdict from a tool nobody positive-controlled.
 ---
 
 ## 13. Applied to production today — and the one still waiting
+
+> ### ⚠ THE ONE STILL WAITING IS NO LONGER WAITING — corrected 2026-08-17
+>
+> `20260814050000` (`xero_audit_log`) **is applied.** Verified two ways rather than by the ledger
+> alone, because a recorded migration is not an applied one:
+>
+> 1. the version is present in `supabase_migrations.schema_migrations`; and
+> 2. its *effect* is live — `col_description` on `public.xero_audit_log.ip` returns the provenance
+>    text this migration writes, naming `cf-connecting-ip`, `x-forwarded-for` and
+>    `unverified-legacy-xff`.
+>
+> Two details this section could not have known. The row count is **96**, not the 76 stated below —
+> the table kept taking writes between authoring and apply, so "all 76 rows carry an unlabelled IP"
+> understates the backfill. And the coupling argument below — that the migration *"cannot be applied
+> alone"* because the edge function must move with it — held: both moved together, which is why the
+> comment and the new derivation agree.
+>
+> The rest of this section stands as written.
 
 Five live defects were closed **and proven closed by behaviour**, not by reading the code. Both
 migrations went in via `psql --single-transaction` with the ledger row recorded at the same version.

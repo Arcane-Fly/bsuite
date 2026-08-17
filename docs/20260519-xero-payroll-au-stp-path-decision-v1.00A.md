@@ -1,6 +1,83 @@
 # Xero Payroll AU — STP Phase 2 Path Decision (ADR)
 
-- **Status:** Approved (A) — V1 implementation path locked; V2/V3 triggers documented
+> ## ⚠️ APPROVED BUT NOT SHIPPED — no STP event has ever been lodged from BSuite
+>
+> **Audit 2026-08-17.** The decision below is sound and stands. Its **§4 implementation
+> plan was never executed**, and the tracking issue
+> [bsuite#495](https://github.com/GaryOcean428/bsuite/issues/495) was **closed as
+> "completed" on 2026-05-19** — the same day this ADR was written. The closing comment
+> stated *"The implementation PR is a separate ticket (out of scope for this ADR)."*
+> **That ticket was never created.** Approving the decision closed the issue; building
+> it was never tracked.
+>
+> ### Measured state (live catalog `tuybltdrdefjblnplpqo` + repo, 2026-08-17)
+>
+> | §4 prescribed artefact | Measured |
+> |---|---|
+> | `crm7/supabase/functions/xero-payroll-submit/` | **absent** (positive control: `xero-invoice-submit/` present) |
+> | `_shared/xero-payroll-mapping.ts` | **absent** |
+> | `pay_run_submissions` table (§4.3) | **absent from every schema** (positive control: `pay_runs` present) |
+> | `pay_runs` passthrough columns | ✅ present — `xero_pay_run_id`, `stp_status`, `stp_submitted_at` |
+> | `pay_runs` data | 2 rows, **both `stp_status='pending'`**, **0** with `xero_pay_run_id` |
+>
+> **Nothing has ever been lodged.** Both pay runs sit at the column default.
+>
+> ### It is not a void — it is worse: two competing, unwired implementations
+>
+> Contrary to a "nothing was built" reading, substantial payroll code exists. None of
+> it is reachable in production:
+>
+> - **`crm7/src/lib/payroll/xeroAdapter.ts`** (38 KB) — a real Xero Payroll AU adapter.
+>   `submitPayRun()` POSTs `/PayRuns`, drafts payslips, and implements STP Phase 2
+>   disaggregation (casual loading, bonuses). **`submitPayRun` has no production
+>   caller.**
+> - **`crm7/src/lib/pipelines/xeroPayrollAdapter.ts`** (435 lines) — a *second*,
+>   overlapping adapter taking an injected `XeroPayrollClient`. `pushPayRunToXero` is
+>   called **only from its own test file**; `XeroPayrollClient` is implemented **only
+>   by a test fake**. Its own header comment acknowledges the sibling adapter.
+> - **`crm7/src/pages/payroll/index.tsx`** imports only `eofyFinalisation` and
+>   `stpEofyStatus` — **status display, no submission path.**
+> - **`crm7/src/lib/payroll/providerCredentials.ts`** supports `'myob' | 'astute'`
+>   **only — Xero is not a supported payroll credential provider.**
+>
+> This is the more expensive failure mode: two partial adapters must be reconciled or
+> one deleted before either can ship, and neither has a credential path.
+>
+> ### The §3.5 risk mitigation does not exist
+>
+> §3.5 argues the design is safe because *"BSuite retains the canonical `pay_runs` /
+> `pay_run_lines` audit trail"* and writes rationale to `pay_audit_events`. Measured:
+> **`pay_run_lines` and `pay_audit_events` do not exist in any schema.** The stated
+> fallback — that BSuite-side data survives a Xero outage and re-submission is
+> straightforward — is currently unfounded. §4.4's acceptance criterion (Xero YTD
+> totals reconciled to the cent against `pay_run_lines`) is **not executable**: the
+> table it reconciles against is absent.
+>
+> ### Compliance exposure — stated precisely
+>
+> STP is an ATO reporting obligation: an employer must report each pay event **on or
+> before payday**. Being Approved-but-unbuilt here is therefore a compliance matter,
+> not tidiness — **but the honest measurement is conditional, and I will not overstate
+> it**:
+>
+> - **This is NOT a live breach today.** Measured scale is pilot-only: 7 tenants,
+>   34 placements, 14 timesheets, 2 pay runs, 0 funding claims. No employer is
+>   currently relying on BSuite to lodge STP, so no lodgement deadline is being missed.
+> - **It IS an absolute go-live gate.** The moment one real employer runs one real pay
+>   run through BSuite, an ATO obligation attaches immediately and there is no working
+>   lodgement path — no edge function, no credential provider, no submissions table,
+>   and an audit trail whose tables do not exist. There is no partial-credit position:
+>   a pay event is either reported on time or it is not.
+>
+> **The gate belongs on payroll go-live, not on this ADR.** Do not enable BSuite
+> payroll for any production tenant until the §4 path (or a ratified replacement) is
+> built and reconciled.
+>
+> Tracking issue re-opened / superseded with this evidence — see the audit comment on
+> bsuite#495.
+
+- **Status:** Approved (A) — decision stands; **§4 implementation NOT BUILT** (audit 2026-08-17)
+- **Original status line:** Approved (A) — V1 implementation path locked; V2/V3 triggers documented
 - **Date:** 2026-05-19
 - **Decision owner:** Operator (Braden) + Architecture
 - **Tracks:** `bsuite#495` (G-6 Finish-Line backlog item) — Xero Payroll AU — direct STP path vs passthrough

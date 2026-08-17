@@ -56,7 +56,7 @@ Full list in `docs/README.md`. Canonical sources are split into **Living Authori
 | `20260425-bsuite-finish-line-roadmap-v1.00W.md` | W | Finish-line roadmap — 154-item P0/P1/P2 execution order |
 | `20260501-merged-execution-backlog-v1.00W.md` | W (active queue) | Active phase-ordered queue post-Phase-0 ratification — single execution queue |
 | `20260227-contributing-standards-guide-v1.01W.md` | W | Universal quality + doc standards (supersedes v1.00A) |
-| `20260227-dry-one-shot-architecture-v1.02A.md` | A | DRY one-shot policy — single owning app per entity |
+| `20260227-dry-one-shot-architecture-v1.04A.md` | A | DRY one-shot policy — single owning app per entity |
 | `archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` | W | Gap report v2 — current authority (with §11 finish-line reconciliation) |
 | `archive/2026-06/20260319-entity-crosswalk-v1.00D.md` | D | CRM7 entity crosswalk + traceability |
 | `20260424-env-var-contributing-rules-v1.00W.md` | W | Environment variable conventions |
@@ -272,7 +272,7 @@ Every shared concern should be documented in each submodule where it applies, wi
 | Theme tokens | `@bsuite/theme@0.3.3` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap | ⚠️ cross-link gap |
 | Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap | `20251014-throughput-navigation-ux-guide-v1.00W.md` ✅ |
 | Component library | `packages/ui/` (in progress) | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | full component docs ✅ (20+ files) |
-| DRY architecture | `docs/20260227-dry-one-shot-architecture-v1.02A.md` | ⚠️ cross-link only | ✅ `ENTITY-SELECTORS.md` | ⚠️ cross-link only | n/a | ⚠️ cross-link only | n/a |
+| DRY architecture | `docs/20260227-dry-one-shot-architecture-v1.04A.md` | ⚠️ cross-link only | ✅ `ENTITY-SELECTORS.md` | ⚠️ cross-link only | n/a | ⚠️ cross-link only | n/a |
 | Tech stack | `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only |
 | Charge calc | `@bsuite/charge-calc@0.2.3` package | n/a | `CHARGE-CALC.md` ✅ | n/a | n/a | `CHARGE-CALC.md` ✅ | n/a |
 | Compliance | R80.3 `20260304-r80-fairwork-api-reference-v1.01W.md` + CRM7 code | ⚠️ | ✅ (referenced) | n/a | n/a | ✅ canonical impl | n/a |
@@ -300,7 +300,7 @@ For each cross-app feature, exactly one app is the **owner** (canonical implemen
 | Universal canvas (PageGridLayout) | `@bsuite/page-builder` | BSU, CRM7, Conduit, R80.3 | `packages/page-builder/` |
 | Dashboard dnd-kit widget pattern | CRM7 (canonical) | BSU, R80.3 | CRM7 dashboard source |
 | AI SDK patterns (streamText, tool calls) | CRM7 (canonical) | Conduit, Throughput | CRM7 AI source + `AGENTS.md` §AI Implementation Standards |
-| Tier-3 EntitySelectors | CRM7 | BSU, R80.3, Conduit | CRM7 components + `docs/20260227-dry-one-shot-architecture-v1.02A.md` |
+| Tier-3 EntitySelectors | CRM7 | BSU, R80.3, Conduit | CRM7 components + `docs/20260227-dry-one-shot-architecture-v1.04A.md` |
 | Contact CRUD | CRM7 | all other apps read via Supabase | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
 | Client CRUD | CRM7 | all other apps read via Supabase | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
 | Apprentice / Placement CRUD | CRM7 | R80.3, Conduit | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
@@ -314,7 +314,7 @@ For each cross-app feature, exactly one app is the **owner** (canonical implemen
 | Navigation primitives (shared components) | `@bsuite/nav-core` | Braden (primary); D2C apps migrating | `packages/nav-core/` |
 | Data export (xlsx/csv/pdf) | `@bsuite/data-export` | CRM7, R80.3 (primary); all eligible | `packages/data-export/` |
 | Shared auth client (OAuth 2.1 PKCE + JWKS) | `@bsuite/auth` | all 5 clients (migration in progress) | `packages/auth/` |
-| DRY one-shot ownership enforcement | `@bsuite/dry-lint` | all 6 apps (error level) | `packages/dry-lint/` + `docs/20260227-dry-one-shot-architecture-v1.02A.md` |
+| DRY one-shot ownership enforcement | `@bsuite/dry-lint` | all 6 apps (error level) | `packages/dry-lint/` + `docs/20260227-dry-one-shot-architecture-v1.04A.md` |
 
 **Disputes:** if two apps claim ownership of the same domain, raise an ADR in `docs/adr/` and resolve before merging any related code.
 
@@ -432,7 +432,7 @@ Fast navigation for agents and contributors. Bookmark this section.
 
 ### Architecture + governance
 
-- [DRY one-shot architecture (Approved)](./20260227-dry-one-shot-architecture-v1.02A.md)
+- [DRY one-shot architecture (Approved)](./20260227-dry-one-shot-architecture-v1.04A.md)
 - [Entity crosswalk](./archive/2026-06/20260319-entity-crosswalk-v1.00D.md)
 - [Gap report v2](./archive/2026-06/20260317-bsuite-gap-report-v2.00W.md)
 - [Env var rules](./20260424-env-var-contributing-rules-v1.00W.md)

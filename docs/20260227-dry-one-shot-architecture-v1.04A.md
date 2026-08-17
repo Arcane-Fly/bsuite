@@ -1,5 +1,14 @@
 # DRY Principles & One-Shot Data Entry Architecture
 
+> **Filename corrected 2026-08-17: `v1.02A` → `v1.04A`.** The body advanced through v1.03A
+> (2026-05-25) and v1.04A (2026-07-24) and the filename never followed, so **three different
+> versions were in circulation at once**: the filename said 1.02, this body said 1.04, and six agent
+> skills pointed at a `v1.01A` file that has not existed for months — including one skill's
+> `description` field, the text an agent reads to decide whether to load it at all. Every in-repo
+> reference was repointed in the same commit. **The six skill files under `~/.agents/skills/` are a
+> separate repository and are NOT fixed by this commit** — see the handback note.
+
+
 **Applies to:** CRM7 • R8 • BSU • Conduit • braden • throughput • All future modules
 **Source of truth:** Unified Supabase schema (`business-suite-unified/database/` + `crm7/supabase/migrations/`)
 **Last updated:** 2026-07-24 (v1.04A — Leads/Funding Offsets/Org Documents added to §1; lifecycle-handover exception class documented)
