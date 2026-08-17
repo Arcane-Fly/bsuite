@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/ui",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -50,6 +50,10 @@
     "./empty-state": {
       "import": "./dist/empty-state.js",
       "types": "./dist/empty-state.d.ts"
+    },
+    "./data-unavailable": {
+      "import": "./dist/data-unavailable.js",
+      "types": "./dist/data-unavailable.d.ts"
     },
     "./error-boundary": {
       "import": "./dist/error-boundary.js",
