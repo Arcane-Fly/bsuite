@@ -231,7 +231,7 @@
 
 ### Gate 2 - One-shot propagation matrix
 
-**Files/issues:** `docs/20260227-dry-one-shot-architecture-v1.02A.md`, `crm7#1024`, `crm7#625`, `crm7#663`, `crm7#661`, `crm7#662`, `conduit#225`, `conduit#227`, `R80.3#235`.
+**Files/issues:** `docs/20260227-dry-one-shot-architecture-v1.04A.md`, `crm7#1024`, `crm7#625`, `crm7#663`, `crm7#661`, `crm7#662`, `conduit#225`, `conduit#227`, `R80.3#235`.
 
 **Skills/MCPs:** `dry-one-shot-architecture`, `supabase`, `supabase-postgres-best-practices`, `frontend-backend-mapping`, Supabase MCP/SQL.
 

@@ -14,7 +14,7 @@ max 3 fix rounds, no-progress → escalate.
   compiled. `VERIFIED-FIXED` is a valid and common outcome — report it and stop.
 - **Search before escalating**: `docs/`, the `bsuite_` memory keys, and
   `/home/braden/Desktop/Dev/archived-repos-docs`. Only escalate if all three are silent.
-- **One-shot doctrine binding** (`docs/20260227-dry-one-shot-architecture-v1.02A.md` §1):
+- **One-shot doctrine binding** (`docs/20260227-dry-one-shot-architecture-v1.04A.md` §1):
   CRM7 owns Clients / Host Employers / Placements / Apprentices / Leads. Conduit owns recruitment.
   R8 owns Award Rates / Charge Calculations / Funding Offsets. Read across boundaries; never duplicate.
 - **Ownership fences — hermes owns, do NOT touch:** `crm7/src/pages/charge-rates/`,
