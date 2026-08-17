@@ -32,3 +32,20 @@ overrides:
   'typescript': '~6.0.3'
   'postcss': '^8.5.23'
   'esbuild': '^0.28.1'
+  # nanoid and ws were, until now, at patched versions by ACCIDENT.
+  # nanoid 3.3.18 arrived only because `postcss: ^8.5.23` happens to depend on
+  # it, and ws 8.21.3 only because every consumer's own range happened to
+  # resolve high. Neither had a floor of its own, so the fix for
+  # GHSA-w9r5-qfr3-c47c (nanoid, 18 alerts) and GHSA-96hv-2xvq-fx4p /
+  # GHSA-58qx-3vcg-4xpx (ws) was held up by a side effect of an unrelated
+  # override. Loosen postcss, or let a consumer's range move, and the
+  # advisories silently come back with nothing in this file to say why.
+  # Both floors are SAME-MAJOR and therefore safe unscoped:
+  #   nanoid — this workspace resolves major 3 only (npm latest is 6.0.1, so a
+  #            bare '>=3.3.18' would have smuggled a major bump in as a patch);
+  #            '^3.3.18' caps at <4.0.0.
+  #   ws     — major 8 is the only published major; '^8.21.0' caps at <9.0.0.
+  # Verified no-op on resolution: regenerating with these added changed the
+  # lockfile's overrides block and nothing else.
+  'nanoid': '^3.3.18'
+  'ws': '^8.21.0'
