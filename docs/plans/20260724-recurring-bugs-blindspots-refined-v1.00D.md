@@ -24,7 +24,7 @@ Produce an evidence-backed catalogue of (A) **recurring bug classes** already ob
 
 ## Best-practice citations
 
-- **DRY one-shot** (`docs/20260227-dry-one-shot-architecture-v1.02A.md` v1.04A): entity ownership + lifecycle-handover exception — primary lens for cross-app bugs.
+- **DRY one-shot** (`docs/20260227-dry-one-shot-architecture-v1.04A.md` v1.04A): entity ownership + lifecycle-handover exception — primary lens for cross-app bugs.
 - **pgTAP A1 / FK indexes**: every public FK needs a leading btree index in the **same** migration (caught 3× this session: org_documents, email_message_links, and the audit class).
 - **Vitest parallel flakes**: isolate load-sensitive suites; known class encryptionService/documentService/people/new under full-suite load.
 - **WCAG e2e**: must hit authenticated real pages, not the Supabase-not-configured error shell (crm7#1157).

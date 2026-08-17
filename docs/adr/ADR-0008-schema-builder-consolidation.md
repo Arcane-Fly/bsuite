@@ -1,6 +1,20 @@
-# ADR-0004: Schema Builder Consolidation — `@bsuite/schema-builder`
+# ADR-0008: Schema Builder Consolidation — `@bsuite/schema-builder`
 
-- **Status:** Accepted (2026-05-01)
+> **RENUMBERED 2026-08-17 — was ADR-0004, filename `ADR-0004-schema-builder-consolidation.md`.**
+>
+> This ADR was ratified on 2026-05-01 as "ADR-0004", colliding with
+> [ADR-0004 — OAuth Allow-List Doctrine](ADR-0004-oauth-allowlist-doctrine.md), which
+> was ratified the same day and took the index row. The collision left this document
+> **absent from the ADR index and therefore unreachable** by anyone browsing
+> `docs/adr/README.md` — flagged in the 2026-07-25 and 2026-07-27 documentation audits
+> and never fixed until now.
+>
+> The decision itself is unchanged and remains **Accepted**; only the number and
+> filename moved, to the next free number. Citations to "ADR-0004 (schema builder)"
+> in documents predating this date refer to this file. The OAuth Allow-List Doctrine
+> keeps 0004 because it holds the index row and the wider inbound-citation surface.
+
+- **Status:** Accepted (2026-05-01; renumbered 0004 → 0008 on 2026-08-17)
 - **Supersedes:** N/A
 - **Superseded by:** N/A
 - **Context PRs:** parent bsuite #334 (schema-registry 0.3.1 shim), #335 (Phase 0), #336 (plan v1.04W), #337 (plan v1.05W + archival)

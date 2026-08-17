@@ -1,3 +1,24 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED — confirmed 2026-08-17
+>
+> **This document was already correctly bannered** (2026-05-01) — it is the only file in this
+> directory that had marked its own supersession before this pass, and the banner below is left
+> exactly as written.
+>
+> Confirmed still accurate: superseded by
+> `docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md`. Related open work is the universal
+> editor backlog recorded as **G7** in `docs/20260817-estate-completion-ledger-v1.00W.md` §5
+> (schema/DDL exporters, durable undo/redo, cross-app parity — measured at zero relevant symbols).
+>
+> **Marker defect:** the filename still carries `v1.00W` (Working) on a document whose own first
+> line says SUPERSEDED — the filename and the body disagree.
+
+---
+
 > **⚠️ SUPERSEDED — 2026-05-01**
 >
 > This document has been superseded by:

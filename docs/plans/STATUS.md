@@ -1,19 +1,48 @@
 # Plans / Tracking — STATUS
 
+> ## ⚠ HISTORICAL BOARD — do not plan from this file
+>
+> **Content last re-derived 2026-07-01; this banner added 2026-08-17 — a six-week gap.**
+>
+> This is the first file many agents open in `docs/plans/`, and that is the problem: it reads like
+> a live status board and is not one. Its newest section is dated **2026-06-11**; the estate has
+> promoted to production several times since, most recently 2026-08-17.
+>
+> **For what is actually outstanding, read
+> [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md)** —
+> the canonical register, re-measured against live SQL, live GitHub state and the six repos at
+> `development` HEAD. It explicitly supersedes seven earlier registers, and this board is the same
+> class of artifact.
+>
+> **What this file is still good for:** the evidence trail. Rows here cite PR numbers, dispatch run
+> IDs, migration versions and pgTAP suite counts that are not recorded anywhere else. Cite it for
+> *what happened*, never for *what is true now*.
+>
+> **Two specific traps in the text below.**
+> 1. Rows say **R80.3**. R80.3 left the submodule set on 2026-08-06 (`5e000c35`) and was replaced by
+>    **R80.4**. Issue numbers like `R80.3#312` still resolve on the archived repo; they are not R80.4 issues.
+> 2. Rows say *"do not promote to `main`"* and *"`development` is ahead of `main` in all seven
+>    repos"*. That was true when written. It is **not** true now.
+>
+> It was not rewritten because back-dating an evidence log destroys the only record of what was
+> verified when.
+
 **Last updated:** 2026-07-01 (post-Throughput display-order DB apply + docs/plans closure sweep; see `20260701-docs-plans-closure-audit-v1.00W.md`)
 
 This is a quick-reference status board for the cross-app tracking issues
 in the parent `bsuite` repo. It complements `docs/OUTSTANDING.md`
-(per-doc index) and `docs/CONSISTENCY-REPORT.md` (cross-cutting a11y +
+(**itself superseded 2026-08-14**) and `docs/CONSISTENCY-REPORT.md` (cross-cutting a11y +
 dependency status).
 
 > **Plans NOT in this register:** sibling submodule `docs/plans/STATUS.md` files
-> (crm7, conduit, business-suite-unified, R80.3, braden, throughput) carry the
+> (crm7, conduit, business-suite-unified, R80.4, braden, throughput) carry the
 > per-app rows. The long-horizon planning reference is
 > [`docs/00-roadmap/20260112-master-roadmap-1.00W.md`](../00-roadmap/20260112-master-roadmap-1.00W.md)
 > *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*;
-> the active phase-ordered queue is
-> [`docs/20260501-merged-execution-backlog-v1.00W.md`](../20260501-merged-execution-backlog-v1.00W.md).
+> the phase-ordered queue `docs/20260501-merged-execution-backlog-v1.00W.md` is **archived out of
+> the repo** (`~/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/docs/archive/2026-07/`) —
+> its sequencing was absorbed by
+> [`docs/20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md).
 > Cross-app a11y / dependency / auth status lives in
 > [`docs/CONSISTENCY-REPORT.md`](../CONSISTENCY-REPORT.md).
 

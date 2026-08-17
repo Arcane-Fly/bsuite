@@ -1,3 +1,21 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (REFERENCE-ONLY) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # 📚 VERDICT: REFERENCE-ONLY — standing doctrine, verified good
+>
+> Records **operator RULING 4.3 (2026-08-08)**: the GTO National Standards and the Evidence Guide
+> do not name any apprenticeship support provider, in any form.
+>
+> **This is the one document in `docs/recovered/` that was already verified against source and
+> ships the commands to re-check itself.** Marker `A` and body agree. No correction needed.
+>
+> Read it before adding, seeding or restoring any provider table or provider row. It is a
+> constraint on future work rather than a description of outstanding work.
+
+---
+
 # FINDING — The GTO National Standards do not name apprenticeship support providers
 
 **Status:** A (Approved — operator ruling) · **Version:** 1.00 · **Date:** 2026-08-08

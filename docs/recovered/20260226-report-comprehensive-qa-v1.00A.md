@@ -1,3 +1,22 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (REFERENCE-ONLY) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # 📚 VERDICT: REFERENCE-ONLY — historical snapshot, not a live defect list
+>
+> A CRM7 QA and gap snapshot whose own body is dated **October 14, 2025** — five months before the
+> filename date, and roughly ten months before today. Its findings have been overtaken by the
+> 2026-03-04 audit pair in this directory and then by the 2026-08-17 estate completion ledger.
+>
+> **Do not work this list.** Live outstanding CRM7 defects are tracked as GitHub issues; this file
+> records what was believed in late 2025.
+>
+> **Marker defect:** flagged `A` (Approved). Approval belongs to a decision; a stale severity list
+> flagged Approved reads as an authorised work queue.
+
+---
+
 # CRM7 Comprehensive QA Report & Gap Analysis
 **Date:** October 14, 2025
 **Status:** In Progress

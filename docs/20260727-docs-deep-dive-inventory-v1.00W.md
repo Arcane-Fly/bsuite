@@ -44,7 +44,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | Doc path | Claim | Verdict | Evidence | Action |
 |---|---|---|---|---|
 | 20260227-contributing-standards-guide-v1.01W.md | Universal code/doc/commit standards | L | Referenced by all CONTRIBUTING.md | keep (living) |
-| 20260227-dry-one-shot-architecture-v1.02A.md | DRY one-shot architecture + ownership map | L | Doctrine; "Last updated 2026-07-24 (v1.04A)" | keep (living) |
+| 20260227-dry-one-shot-architecture-v1.04A.md | DRY one-shot architecture + ownership map | L | Doctrine; "Last updated 2026-07-24 (v1.04A)" | keep (living) |
 | 20260424-env-var-contributing-rules-v1.00W.md | Env-var naming/scoping rules | L | "Status W (living document)" | keep (living) |
 | 20260504-bsuite-documentation-hub-v1.00W.md | Cross-submodule doc hub | L | Canonical doc index | keep (living) |
 | 20260505-bsuite-dependency-refresh-ts6-migration-v1.00W.md | TS 5.9→6.0 migration record | C | `packages/auth/tsconfig.build.json:8`; TS `~6.0.3` `crm7/package.json:198` | archive |
@@ -142,15 +142,15 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | plans/20260609-production-readiness-next-steps-plan-v1.00W.md | Active production-readiness umbrella | I | Open bsuite#1505, crm7#661/#662/#530; STATUS.md ACTIVE | keep |
 | plans/20260611-docs-roadmap-closure-audit-v1.00A.md | One-off closure audit; 37 archived + 6 renamed | C | PR bsuite#1520 + #1523 merged 2026-06-11 | archive |
 | plans/20260617-product-tails-continuation-prompt-v1.00W.md | Handoff prompt for remaining product tails | I | Open scope table | keep |
-| plans/20260618-recruitment-comms-rams-cluster-plan-v1.00W.md | Cluster SHIPPED + prod-verified 2026-06-24 | I | conduit#221/#225/#227/#229 CLOSED; §4 ADMS APIM-key / RAMS final-lodgement gap open | keep |
+| plans/20260618-recruitment-comms-rams-cluster-plan-v1.00A.md | Cluster SHIPPED + prod-verified 2026-06-24 | I | conduit#221/#225/#227/#229 CLOSED; §4 ADMS APIM-key / RAMS final-lodgement gap open | keep |
 | plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md | Subordinated remaining-work roadmap | I | CRM7 wizards #659-#662 blocked; R80.3#320 OPEN; #1322/#479 operator-blocked | keep |
 | plans/20260629-remaining-work-continuation-prompt.md | Continuation prompt for 0629 roadmap | I | Points at open items | keep |
 | plans/20260701-docs-plans-closure-audit-v1.00W.md | Working closure audit + execution log | I | conduit#218/#219/#231 + crm7#1090 CLOSED; §12.3 deploy fix pending | keep |
 | plans/20260703-gto-e2e-gap-map-v1.00W.md | W1 file-grounded gap map of GTO cycle | I | `boot_assessments`/`charge_rate_audit_log`/`award_rate_cache` missing live; stages 3/6 MISSING | keep |
-| plans/20260703-unified-authoring-surface-plan-v1.00D.md | In-context authoring surface; Phase-1 authorized | I | §11 BLOCKING pre-work + §10 open; not executed | keep |
+| plans/20260703-unified-authoring-surface-plan-v1.03A.md | In-context authoring surface; Phase-1 authorized | I | §11 BLOCKING pre-work + §10 open; not executed | keep |
 | plans/20260709-hermes-deep-dive-audit-prompt-refined-v1.00W.md | Refined prompt for Hermes audit instructions | I | Prompt artifact | keep |
 | plans/20260716-bsuite-completion-program-plan-v1.00W.md | Completion program orchestration + CC Directive | I | Clusters A-F open; W4/W5/W9/W10 unexecuted | keep |
-| plans/20260723-bsuite-documentation-program-design-v1.00D.md | Two-layer docs program design (Approved) | I | Build lanes L1-L4 not executed | keep |
+| plans/20260723-bsuite-documentation-program-design-v1.00A.md | Two-layer docs program design (Approved) | I | Build lanes L1-L4 not executed | keep |
 | plans/20260723-completion-program-refined-v1.00D.md | Refined prompt for completion program | I | W1 publish chain "blocked on operator npm login" | keep |
 | plans/20260724-bsuite-1322-region-migration-runbook-v1.00D.md · plans/20260724-bsuite-1322-supabase-region-migration-scope-v1.00D.md | Draft Sydney runbook + scope | I | "won't execute without explicit go"; bsuite#1322 OPEN | keep |
 | plans/20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00D.md | Draft email-ingestion build scope for #338 | I | Status D; open design questions | keep |

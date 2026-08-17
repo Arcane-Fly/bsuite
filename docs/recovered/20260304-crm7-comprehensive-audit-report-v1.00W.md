@@ -1,3 +1,24 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED
+>
+> A full CRM7 codebase audit (routes, stores, theme, DRY, regulatory gaps) from 2026-03-04.
+>
+> **Superseded by** `docs/20260817-estate-completion-ledger-v1.00W.md`, which re-derives the
+> outstanding set across the whole estate with live evidence, and by the ~137 open `crm7` issues
+> that now carry the individual defects.
+>
+> **Do not re-open findings from this file directly** — most are either fixed or already carry an
+> issue, and re-filing them is the noise the ledger exists to prevent. Its 404-elimination and
+> stub-replacement tracks are recorded as complete in its own later revisions.
+>
+> **Marker defect:** `W` on a historical audit.
+
+---
+
 # CRM7 Comprehensive Audit Report
 
 **Document ID:** 20260304-crm7-comprehensive-audit-report-v1.00W.md
