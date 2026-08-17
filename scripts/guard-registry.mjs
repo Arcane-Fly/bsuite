@@ -287,9 +287,7 @@ export const GUARDS = [
     ciWorkflow: '.github/workflows/theme-conformance.yml',
     mode: 'run',
     evidence:
-      '"Near-pure gate — positive control: 10 cases exercised (clean-silent, 0.994, ' +
-      '99.4%, near-black, suppression-comment, prose-adjacent, prose-only, oklch(from …), ' +
-      'dist/node_modules exclusion, restore-to-silent)."',
+      '"audit-oklch-lightness: self-test OK (10 cases, 8 of them asserting the gate FAILS)"',
   },
   {
     id: 'parent-verify-esm-imports',
