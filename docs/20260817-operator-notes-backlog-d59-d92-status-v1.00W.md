@@ -58,7 +58,7 @@ submodule commits with a positive control on every zero.
 ### Scoreboard — the 34 directives
 
 | Verdict | Count | Meaning |
-|---|---:|---|
+| --- | ---: | --- |
 | **DONE** | **21** | Re-measured fixed, with evidence. No work remains. |
 | **PARTIAL** | **8** | Half shipped. Real work remains — counted as open below. |
 | **OPEN** | **3** | Untouched, or the fix exists but has not reached the running system. |
@@ -69,7 +69,7 @@ submodule commits with a positive control on every zero.
 ### Scoreboard — the thirty you told us to file (D-80 §5)
 
 | Verdict | Count |
-|---|---:|
+| --- | ---: |
 | **DONE** — filed and since fixed | **2** |
 | **NOT-A-DEFECT** — measured, never a defect | **1** |
 | **PARTIAL** — the surface exists, the capability is unproven | **3** |
@@ -92,14 +92,14 @@ Sizes: **S** = hours, **M** = days, **L** = a week or more.
 ### §0 — the coverage verdict that started this
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-59** | *"Filing is not addressing."* From here, addressed means closed with evidence | **Standing rule — now kept, mechanism still absent** | The practice changed: 12 R80.4 issues closed with evidence on 14 Aug, 15 more estate-wide on 17 Aug, and this document reports no filed issue as an addressed defect. The *mechanism* has not changed — all five repositories still default to `main`, so closing keywords remain inert and the fixed-but-open backlog rebuilds at the same rate. | S |
 | **D-60** | *"The unfiled forty are the worse half."* Named eight clusters verified absent from every tracker | **DONE** | Every named cluster now carries an issue. Of the eleven the 14 Aug register listed as "not filed anywhere", **zero** remain unfiled. The five platform-wide items with no issue anywhere now have `bsuite#1995`, `conduit#460` (covers two), `crm7#1727`, `bsuite#1996`; four of those five are **closed**. | — |
 
 ### §1 — the standing constraints
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-61** | This directive supersedes the earlier filing freeze; filing §5 is required work | **DONE** | All thirty filed as `crm7#1679–#1705` and `business-suite-unified#706–#712`, with four duplicates closed as not-planned. The freeze was not used as an excuse. | — |
 | **D-62** | **Fix the class, not the page.** A PR that fixes only the URL you named is a failed PR | **OPEN** | **This is the one that matters and it is the one still live.** One shared checker was written to end the repeat — it detects five distinct ways a page can glue its cards together, and it is genuinely published: unpacking `@bsuite/page-builder` version 0.9.0 from the public registry shows the checker's compiled files inside. All five apps already depend on that exact version, so nothing blocks them. **No app imports it.** Search across all five app source trees returns zero; the positive control on the same search finds 83 other imports of that package, so the zero is real. All five still run their own hand-written copy, and four of those copies are missing the single check the CRM's own comment calls *"the actual root cause of the operator's platform-wide complaint"*. **Filed today as `bsuite#2055`.** | M |
 | **D-63** | Regressions outrank new work | **DONE** | Observed in the order of work: all six R8 regressions (`#38`–`#43`) were closed on 14 August, ahead of the gap items. | — |
@@ -107,7 +107,7 @@ Sizes: **S** = hours, **M** = days, **L** = a week or more.
 ### §2 — the three P0s
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-64** | Fair Work credentials rendered in the R8 interface. Remove, rotate, confirm | **DONE in code — rotation is yours** | `R80.4#37` closed 14 Aug. The key field and the direct-fetch path are gone; the credentials are not prefixed for the browser bundle, so none is shipped to a visitor; the token moved into a request header and both proxies now refuse the old query-string form. **Rotating the key is still yours to do and cannot be verified from here** — the code fix does not un-expose a key that was on screen. | S (yours) |
 | **D-65** | Supervisors belonging to other host employers are selectable on the placement edit form | **DONE — issue still open** | Both halves are now fixed. The screen half shipped (the narrowing hook is used in seven places including the placement create and edit forms). The **database** half — the one the register said was missing — is live: I read the policy off the production database and it now carries a full host-supervisor limb, so a host supervisor sees only contacts belonging to their own host, while ordinary GTO staff keep tenant-wide visibility. `crm7#1729` closed. **`crm7#1675` is still open and should be closed by hand.** | — |
 | **D-66** | Platform-level scope visible to tenants, in three surfaces — plus *"sweep every feature in every app and report the count"* | **PARTIAL** | **Three named surfaces: all three done.** (a) The custom report builder now grants platform scope to a platform *developer* only — the code carries your ruling verbatim and an explicit warning not to re-admit `platform_admin`, super-admin or tester. (b) The Platform Kit gate no longer admits super-admin at all: the check is now purely "does this account hold a platform role", measured in the source. Recall a super admin in this estate is an **enterprise tenant admin with sub-organisations**, not a platform account — so that disjunct was handing an enterprise customer platform surfaces. (c) Platform branding and Platform Kit are relocated into the Developer Portal. **The sweep is not done.** No count has been reported anywhere for "every feature in every app carrying the same pattern", which was the larger half of what you asked for. `bsuite#1960` open. | M |
@@ -117,7 +117,7 @@ Sizes: **S** = hours, **M** = days, **L** = a week or more.
 **This section is essentially finished.** Twelve issues closed on 14 August; three remain.
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-67** | File every item below as its own issue before starting | **DONE** | Filed as `R80.4#37`–`#58`. | — |
 | — | Rate always $29.54; year wages frozen; allowances always Building & Construction; allowance percentages always 100%; no plumbing trade selector; plumbing shows B&C content | **DONE** — six regressions | `#38`, `#39`, `#40`, `#41`, `#42`, `#43` all closed. | — |
 | — | No commercial construction sector | **DONE** | `#44` closed. | — |
@@ -136,7 +136,7 @@ Sizes: **S** = hours, **M** = days, **L** = a week or more.
 four are closed.
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-74** | Cards share a common backing card, so drag-and-drop moves them as a group | **PARTIAL** | `bsuite#1995` **closed** — the surfaces you named are fixed, and the shared card components were promoted into the package so every app can use one implementation. **What is not done is the class.** See D-62: the shared checker is published and imported by nobody, so roughly ninety surfaces across four apps remain unaudited — not "clean", *unmeasured*. | M |
 | **D-75** | Card resize regression; columns do not respect the slider | **DONE** | Three independent causes were found and fixed in the shared package, and the one app that was version-locked out of the fix is no longer locked out: **all five apps now pin version 0.9.0**, conduit included (it was stuck on 0.6.3 — a caret on a `0.x` version silently pins the minor, so it could never resolve the fix). `conduit#460` closed. | — |
 | **D-76** | Cards render half cut off on page open | **DONE** | Same fix, same package version, same closed issue. The root cause was a default in the wrong place: sixteen of eighteen pages never opted in to content-fitting height, so every card was pinned to whatever seed height its author guessed and clipped the rest. | — |
@@ -155,14 +155,14 @@ four are closed.
 ### §6 — portals (D-81, D-82)
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-81** | The portals need redesign, not repair | **OPEN — waiting on you** | The brainstorm document exists, is correctly gated (*"No code has been written and none will be until you have ruled"*), and asks you three questions before anything is built. Nothing in the portals has changed since. | L |
 | **D-82** | Read the Codehouse document and study their workforce-one layout before proposing a navigation model | **OPEN** | Same gate. | M |
 
 ### §7 — blocked on you (D-83, D-84)
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-83** | The 21 frozen placements. Proceed with the nine; **do not touch the twelve `unresolved` rows**; do not drop the constraint | **PARTIAL — one clause was already spent before you wrote it** | **Two of three clauses satisfied.** The nine are recorded as `manual` with their charge rates intact (8 FutureBuild + 1 Braden Group, measured live). The constraint was not dropped — it is live and now genuinely enforcing rather than merely blocking edits. **The third clause could not be honoured:** the twelve bsuite Platform rows had already been rewritten from `unresolved` to `manual` on **6 August, seven days before your directive**, by a migration that swept `unresolved` and blank together because the distinction you later drew had not been stated. All twelve share one timestamp, so it was a single transaction. **No dollar figure changed.** What was lost is the diagnostic that resolution had *run and failed* in your own demo tenant. **This needs a decision from you — see §5.** Filed as `crm7#1778`. | S |
 | **D-84** | `/documents/collaborative` must go; instead, upload a Word document, edit it, insert merge fields | **DONE** | The collaborative editor route returns **zero matches anywhere in the app** — it is gone per your ruling. Its replacement is real: a Word-document reader is a declared dependency, and the import dialog, the import service with a round-trip test, and a merge-field catalogue with a parity test all ship. | — |
 
@@ -178,7 +178,7 @@ four are closed.
 now fixed, which makes this the best-executed block in the directive.
 
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **D-86** | The migration-rehearsal check has no assertion that the six apps were actually fetched — without the credential it rehearses nothing and reports green | **PARTIAL** | **The assertion exists.** The workflow now fails loudly and names what is missing if the apps did not check out, and it separately verifies every declared scope is present and readable before accepting an empty result. It also refuses the credential on outside contributions, as you asked. **Two of your five instructions remain:** replacing the long-lived credential with a short-lived, repository-scoped **GitHub App token** — the durable answer for every workflow using this pattern; and reporting the **count** of other workflows carrying the same missing-assertion defect. Twenty-four workflows use that credential and no count has been published. `bsuite#1961` open. | M |
 | **D-87** | The theme baseline is a working-copy number and will fail the gate shut | **DONE — issue still open** | The baseline is 7 and the workflow now records *why* 7 is correct here, citing two specific CI runs two hours apart, one of which printed the wrong number and was the evidence that settled it. Your second instruction — a self-check that fails if the committed baseline disagrees with a clean run — is implemented as an **equality** gate: above the baseline is a regression, below it is an un-banked improvement, and both fail. `bsuite#1963` is **fixed-but-open**. | — |
 | **D-88** | Changed-migration gating must fail closed | **DONE** | `bsuite#1964` closed today. The tolerate-and-continue path is gone, the pipe no longer swallows the refusal, and — the part worth noting — the refusal is **exercised against planted cases before it is trusted**: one diffable, one diffable only after a fetch, and two undiffable for two different reasons. The workflow's own comment states the principle: *"A gate never seen to fail is not a gate."* | — |
@@ -197,7 +197,7 @@ Six of the thirty have moved since filing. The rest are filed and untouched — 
 ### Fixed since filing — 2
 
 | § | Item | Issue | Evidence |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 5-2 | `/portal` redirects to the dashboard; no way to send anyone their personal portal | `crm7#1680` **closed** | The redirect is skipped for owner/admin/manager, a share-portal card renders, an invitation action exists with tests, and there is a redemption route for the link. |
 | 5-24 | `/branding` only saves after "Show preview" is clicked | `BSU#708` **closed** | Fixed and regression-locked by a test that fails if the change is reverted. |
 
@@ -212,7 +212,7 @@ Six of the thirty have moved since filing. The rest are filed and untouched — 
 Counted under D-74 and D-78, not here. Recorded so they are not lost between the two lists.
 
 | Item | Issue | State |
-|---|---|---|
+| --- | --- | --- |
 | (a) Subscription tiles share a common backing card | `BSU#720` **closed** | The "cannot be split without a registration mechanism" objection was false and the CRM already disproved it. |
 | (b) App-tile heading text must use the D2C gradient | `BSU#721` **open** | The gradient class exists; the tiles were never wired to it. |
 | (c) Developer portal buttons bypass the shared button contract | `BSU#722` **closed** | A lint rule now exists at error level. **Caveat:** its configuration explicitly exempts the ten files that still contain raw buttons, so it currently polices everything except the remaining violators. |
@@ -220,7 +220,7 @@ Counted under D-74 and D-78, not here. Recorded so they are not lost between the
 ### Part-done — the surface exists, the capability is unproven — 3
 
 | § | Item | Issue | Measured |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 5-30 | No clear way for a client to connect their own email and send from it. *"Raised more than twenty times."* | `crm7#1705` open | **The surface exists and is routed.** `/settings/email-accounts` offers Google, Microsoft and IMAP/SMTP with full host, port and credential fields. **But `email_integrations` holds zero rows** — no tenant has ever connected an account, so the flow has never once been exercised end to end. Separately, the deployed inbox-sync function still reads a password column that no longer exists, so the receiving half would fail on first use. |
 | 5-26 | Switching apps from inside BSuite lands signed-out on the target app's marketing page | `BSU#710` open | Improved from one app to four: the silent re-authentication call is now wired in application code in conduit (4 sites), throughput (2), the CRM (1) and braden (1). **R80.4 still has none**, so a bare-URL visit there still renders logged-out. |
 | 5-21 | Change-of-year records, wage-anniversary reminders, notices to apprentice and host | `crm7#1702` open | A change-of-year page exists and is substantial — an eligibility scan and a triple sign-off, ~1,000 lines. **The reminders and the notices are not built.** |
@@ -230,7 +230,7 @@ Counted under D-74 and D-78, not here. Recorded so they are not lost between the
 Two carry a fresh measurement worth recording even though nothing has moved:
 
 | § | Item | Issue | Measured today |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 5-16 | Training-provider records leave TGA fields empty; qualification scope missing entirely | `crm7#1696` | **8,119 provider rows; zero carry any qualification scope.** Confirmed with numbers. |
 | 5-17 | All TGA providers should be importable on user action, **not pre-loaded** | `crm7#1697` | **8,119 rows are pre-loaded.** Confirmed with numbers. |
 
@@ -279,7 +279,7 @@ because it nearly became a filed defect.
 Both figures shown; the right-hand column is current.
 
 | Item | Register, 14 Aug | Measured 2026-08-17 | Direction |
-|---|---:|---:|---|
+| --- | ---: | ---: | --- |
 | Notes defects never filed anywhere | 11 | **0** | better |
 | §4 platform-wide items with no issue in any repo | 5 of 6 | **0 of 6** | better |
 | §4 items closed with evidence | 0 | **4 of 6** | better |
