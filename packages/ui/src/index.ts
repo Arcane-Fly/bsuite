@@ -62,6 +62,7 @@ export {
   type EntitySelectorProps,
   type EntitySelectorQuery,
   type EntitySelectorLogger,
+  type EntitySelectorSupabaseClient,
 } from './entity-selector.js'
 
 // Branding components (v0.3.0+)

@@ -53,7 +53,6 @@
  */
 
 import type { PostgrestFilterBuilder } from '@supabase/postgrest-js'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -101,6 +100,35 @@ export interface EntitySelectorLogger {
   error: (...args: unknown[]) => void
 }
 
+/**
+ * Structural shape this component needs from a Supabase client — NOT the
+ * nominal `SupabaseClient` class type from `@supabase/supabase-js`.
+ *
+ * Deliberate: this package's own `@supabase/supabase-js` (a devDependency,
+ * used only for the type) and a consumer's own `@supabase/supabase-js` (a
+ * peer dependency, resolved from THEIR lockfile) can end up as two
+ * different installed instances in a pnpm monorepo where every app pins
+ * its own floating range independently — crm7's own copy has drifted to
+ * 2.110.8 against this package's 2.108.1, for instance. TypeScript treats
+ * two structurally-identical classes sourced from different physical
+ * packages as nominally incompatible ("not assignable" even though every
+ * member matches), which would make a real consumer's real client fail to
+ * satisfy a nominal `SupabaseClient` prop type for no functional reason.
+ * A structural interface sidesteps the whole class of failure: any client
+ * with these two methods satisfies it, regardless of which supabase-js
+ * instance produced it. The query builder itself is intentionally
+ * `any`-erased past this point — see {@link EntitySelectorQuery}, the
+ * same escape hatch this component already uses for `filterFn`.
+ */
+export interface EntitySelectorSupabaseClient {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from: (table: string) => any
+  schema: (schemaName: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any
+  }
+}
+
 export interface EntitySelectorProps<T extends Record<string, unknown>> {
   /**
    * The consumer's own Supabase client instance. `@bsuite/ui` does not own a
@@ -108,8 +136,7 @@ export interface EntitySelectorProps<T extends Record<string, unknown>> {
    * per-request factory, different `storageKey`, etc.) — so this is
    * required rather than imported internally.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabaseClient: SupabaseClient<any, any, any>
+  supabaseClient: EntitySelectorSupabaseClient
   /** Diagnostics sink for non-fatal query failures. Defaults to `console`. */
   logger?: EntitySelectorLogger
   /** Supabase table name */
@@ -307,7 +334,7 @@ export function EntitySelector<T extends Record<string, unknown>>({
    * behaviour) unless `schema` is supplied, in which case it queries via
    * `supabaseClient.schema(schema).from(table)` — see the `schema` prop doc.
    *
-   * `SupabaseClient<any, any, any>` above is unparameterised for the same
+   * {@link EntitySelectorSupabaseClient} is structurally typed for the same
    * reason {@link EntitySelectorQuery} is `any`-erased: this package has no
    * generated `Database` type to parameterise against, and each consumer's
    * own generated types differ. `.schema()` is likewise unparameterised
