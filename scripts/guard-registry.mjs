@@ -290,6 +290,61 @@ export const GUARDS = [
       '"audit-oklch-lightness: self-test OK (10 cases, 8 of them asserting the gate FAILS)"',
   },
   {
+    // The suppression counter. Every other lint ratchet in this estate counts
+    // what SURVIVES the linter; this one counts what was switched off before
+    // the linter ever spoke. R80.4/eslint-baseline.json is the worked example
+    // of why that needs its own instrument — it is a map of ruleId -> message
+    // count built from `eslint --format json`, and a directive-suppressed
+    // violation contributes no message, so no amount of suppression can move
+    // it. See the guard's header.
+    //
+    // Registered against its REAL invocation, not a self-test: it is a
+    // read-only source scan over `git ls-files` with no network, no
+    // credentials and no node_modules requirement, so none of the `skip`
+    // criteria apply. ~5s over 4,564 files.
+    //
+    // PRECONDITION: submodules checked out. Without them the guard REFUSES
+    // per scope ("REFUSING to report a count — 0 source files among 1 tracked
+    // file(s)") and exits 1 rather than reporting a clean zero, which is the
+    // behaviour this whole programme wants; verified by hand by emptying
+    // conduit/ (2026-08-17).
+    id: 'parent-check-hook-suppression-ratchet',
+    label: 'React-hook lint SUPPRESSION ratchet (exhaustive-deps + set-state-in-effect)',
+    repo: '.',
+    command: ['node', 'scripts/check-hook-suppression-ratchet.mjs'],
+    ciWorkflow: '.github/workflows/hook-suppression-ratchet.yml',
+    mode: 'run',
+    evidence:
+      '"check-hook-suppression-ratchet: 4,564 source file(s) and 6 eslint ' +
+      'config file(s) scanned across 7 of 7 scope(s) for 2 tracked rule(s)." ' +
+      '— the HEAD line, derived from the scan. Body reports 97 inline ' +
+      'suppression(s), 92 config-scoped file-level suppression(s) and 1 ' +
+      'repository-wide `off` declaration across the seven scopes.',
+  },
+  {
+    // Positive control for the guard above, and the reason it can be trusted
+    // to have found 97 rather than to have matched nothing. The scanner's
+    // failure mode is silent: a tokeniser bug that stops recognising
+    // directives reports a smaller number, and a smaller number on THIS
+    // ratchet reads as an unbanked improvement, not as a broken instrument.
+    // 24 cases, 10 of them asserting the scanner does NOT fire — including
+    // the three false positives a line-grep produces on this estate's own
+    // source (prose about a directive, a rule id named in prose, and
+    // directive text inside a string literal; crm7/eslint.config.js and this
+    // registry entry both contain the first two).
+    id: 'parent-hook-suppression-scanner-selftest',
+    label: 'Hook-suppression scanner self-test (proves the counter can still find and still refuse)',
+    repo: '.',
+    command: ['node', 'scripts/check-hook-suppression-ratchet.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/hook-suppression-ratchet.yml',
+    mode: 'run',
+    evidence:
+      '"check-hook-suppression-ratchet --self-test: 24 cases exercised (10 ' +
+      'of them asserting the scanner does NOT fire, including the three ' +
+      "false positives a line-grep produces on this estate's own source).\"",
+  },
+
+  {
     id: 'parent-verify-esm-imports',
     label: 'Published package entry points import cleanly under Node ESM',
     repo: '.',
