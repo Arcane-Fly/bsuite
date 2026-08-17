@@ -169,6 +169,60 @@ import { BrandingCard, OklchColorPicker } from '@bsuite/ui'
 - `favicon_url` - Favicon URL (16x16 or 32x32)
 - `company_name` - Company name for alt text
 
+## `EntitySelector` (v1.2.0+)
+
+Generic, schema-agnostic searchable combobox for picking a row out of any
+Supabase table. Extracted from crm7 (AD-5, 2026-08-17) — crm7 had 65 files of
+adoption and two other apps had each started hand-porting their own copy at
+the identical path. This is now the sole implementation.
+
+Data access is dependency-injected — the package does not own a Supabase
+client, since every app's client is shaped differently (Vite-SPA singleton,
+per-request `createClient()` factory, distinct `storageKey`, …):
+
+```tsx
+import { EntitySelector } from '@bsuite/ui'
+import { supabase } from '@/lib/supabase' // your app's own client
+
+<EntitySelector<Employer>
+  supabaseClient={supabase}
+  table="employers"
+  value={form.employer_id}
+  onSelect={(emp) => setValue('employer_id', emp?.id ?? null)}
+  displayField={(r) => r.business_name}
+  secondaryField={(r) => r.abn ?? r.industry}
+  searchColumns={['business_name', 'trading_name', 'abn']}
+/>
+```
+
+**Recommended per-app pattern:** wrap the import once in a thin local file
+that binds your app's client, so the rest of the app's ~dozens of call sites
+never repeat `supabaseClient={supabase}`:
+
+```tsx
+// src/components/entity/EntitySelector.tsx
+import { EntitySelector as BaseEntitySelector, type EntitySelectorProps as BaseProps } from '@bsuite/ui'
+import { supabase } from '@/lib/supabase'
+
+export type EntitySelectorProps<T extends Record<string, unknown>> = Omit<BaseProps<T>, 'supabaseClient'>
+
+export function EntitySelector<T extends Record<string, unknown>>(props: EntitySelectorProps<T>) {
+  return <BaseEntitySelector<T> supabaseClient={supabase} {...props} />
+}
+```
+
+**Features:** debounced typeahead (`ilike` across configured columns),
+optional cross-schema reads (`schema` prop), a `filterFn` escape hatch for
+arbitrary PostgREST filter chains, "one-shot" suggested options (rows already
+linked on an earlier screen, shown before any typing), an async-safe
+`onSelect` (no optimistic UI when the caller's select routes through an
+import/RPC step), and a distinct error state (not the same "no results" copy
+a genuine empty search shows).
+
+Also exported for building custom pickers on the same visual language:
+`Command`, `CommandInput`, `CommandList`, `CommandGroup`, `CommandItem`,
+`CommandEmpty`, `Popover`, `PopoverTrigger`, `PopoverContent`.
+
 ## Utils
 
 ### `cn(...classes)`
@@ -198,6 +252,9 @@ import { BrandingCard, ColorEditorSheet, OklchColorPicker } from '@bsuite/ui/bra
 import { Button } from '@bsuite/ui/button'
 import { DialogContent } from '@bsuite/ui/dialog'
 import { EmptyState } from '@bsuite/ui/empty-state'
+import { EntitySelector } from '@bsuite/ui/entity-selector'
+import { Command, CommandInput } from '@bsuite/ui/command'
+import { Popover, PopoverContent } from '@bsuite/ui/popover'
 
 // SVG asset
 import logoSvg from '@bsuite/ui/assets/d2c-default-logo.svg'
