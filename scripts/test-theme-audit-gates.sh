@@ -32,8 +32,12 @@ trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/crm7/src" "$TMP/packages/theme/src"
 
 fail=0
+cases=0
+red_cases=0
 check() { # $1=label  $2=expected count  $3=expected exit
   local got exit_code
+  cases=$((cases + 1))
+  [ "$3" != "0" ] && red_cases=$((red_cases + 1))
   got=$(python3 "$SCANNER" --root "$TMP" --count)
   python3 "$SCANNER" --root "$TMP" >/dev/null 2>&1
   exit_code=$?
@@ -45,13 +49,20 @@ check() { # $1=label  $2=expected count  $3=expected exit
   fi
 }
 
-# The count goes FIRST, and it names a noun the classifier recognises.
+# THE COUNT GOES FIRST, and it is DERIVED, not written down.
+#
 # LANE-WATCHER (check-guard-self-reporting.mjs) fails any registered guard that
 # "exited 0 but never stated a non-zero count of anything examined", and it
 # classifies from the HEAD of the output — a summary printed only at the end is
-# truncated away. Per-line "(count=N)" markers are the gate's HIT count, not a
-# count of cases exercised, so they do not satisfy it either.
-echo "Near-pure gate — positive control: 10 cases exercised (clean-silent, 0.994, 99.4%, near-black, suppression-comment, prose-adjacent, prose-only, oklch(from …), dist/node_modules exclusion, restore-to-silent)."
+# truncated away before it is read. Per-line "(count=N)" markers do not satisfy
+# it either: that N is the GATE'S HIT COUNT on a fixture, not how many cases ran.
+#
+# The number is counted out of this file rather than hardcoded. A literal "10
+# cases" is correct exactly once and then rots the moment somebody adds a case —
+# and a self-report that has drifted from what the script does is worse than no
+# self-report, because it reads as verified.
+planned_cases=$(grep -cE '^check ' "$0")
+echo "audit-oklch-lightness self-test: $planned_cases cases planned (positive control — near-pure white/black by parsed lightness)."
 
 # ── 1. A clean tree must be silent and exit 0. If this fails, every other
 #       case below is meaningless: the scanner would be reporting a constant.
@@ -145,4 +156,10 @@ if [ "$fail" -ne 0 ]; then
   echo "Near-pure gate self-test FAILED — the gate is not measuring what it claims."
   exit 1
 fi
-echo "Near-pure gate self-test passed."
+# The end summary states what ACTUALLY ran, including how many cases assert the
+# gate FAILS — a positive control whose cases all expect success proves nothing.
+if [ "$cases" != "$planned_cases" ]; then
+  echo "  FAIL  planned $planned_cases cases but ran $cases — the head-line count has drifted from the body."
+  exit 1
+fi
+echo "audit-oklch-lightness: self-test OK ($cases cases, $red_cases of them asserting the gate FAILS)"
