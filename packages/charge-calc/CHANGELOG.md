@@ -5,6 +5,62 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.13.0] — 2026-08-17 — casual penalty rows compounded the loading, a 7.14% over-charge
+
+### Fixed — MONEY DEFECT, over-billed to the host, compliance-critical
+
+- `calculate()` multiplied a CASUAL worker's already-loaded wage by the
+  STANDARD penalty/overtime multiplier, unconditionally, on every award:
+  `base x 1.25 (casual loading) x 1.50 (standard Saturday penalty) = 187.5%`.
+  For MA000020 (Building & Construction) cl.12.5/12.6 the correct figure is
+  **175%** — the casual conversion is ADDITIVE (+25 percentage points on the
+  standard multiplier, applied to the BASE rate), not multiplicative on an
+  already-loaded rate. `1.875 / 1.75 = 1.0714` — a **7.14% overstatement**,
+  exact, on every casual Saturday penalty line; **11.11%** on Sunday (200%
+  standard); **13.64%** on public holidays (250% standard). This package's
+  own test file had zero casual-penalty test coverage before this release.
+
+- Ported the verified per-award casual-conversion clause table from
+  R80.4's `casual-penalty-convention.ts` (MA000020 cl.12.5/12.6, MA000004
+  cl.11.1, MA000009 cl.29.2/cl.28.4, MA000036 cl.12.2/cl.23, MA000010
+  cl.11.1(d)) into `src/awards/casual-penalty-convention.ts` — now the
+  single canonical copy this package consumes. Preserves the module's
+  refusal semantics EXACTLY: `casualPenaltyMultiplierForAward()` throws
+  `CasualPenaltyConventionUnmodelled` — never returns a wrong number — for
+  any (award, category) pair not individually verified. `calculate()`
+  catches that per row: the row is left OUT of `rates` entirely (never a
+  default, never zero) and the reason is recorded in the new
+  `CalcResult.casualPenaltyViolations` array.
+
+### Added
+
+- `CalcConfig.awardCode?: string` — the modern award code (e.g.
+  `"MA000020"`) a `penalties` table was sourced from. Only consulted for a
+  casual worker; defaults to `"MA000020"` when omitted, matching R80.4's
+  own resolver default and this package's GTO/Building & Construction
+  origin.
+- `CalcResult.casualPenaltyViolations: string[]` — one entry per casual
+  penalty/overtime row refused because its (award, category) pair has no
+  verified conversion.
+- New exports (also via the existing `@bsuite/charge-calc/awards` subpath):
+  `casualPenaltyMultiplierForAward`, `CasualPenaltyConventionUnmodelled`,
+  `CasualPenaltyResult`.
+
+### Known follow-up (not in this release)
+
+- R80.4 (a separate git submodule/repo, not part of this package's
+  workspace) still carries its own copy of this clause table. It is not
+  yet a consumer of `@bsuite/charge-calc`. A follow-up PR against R80.4
+  should add the `@bsuite/charge-calc` dependency once this version is
+  published and delete R80.4's local copy, so the estate returns to
+  exactly one copy of the clause table. Until then the two copies must be
+  kept in sync by hand — see the header comment in
+  `src/awards/casual-penalty-convention.ts`.
+- Consumers (`crm7`, `conduit`) pin `"@bsuite/charge-calc": "^0.12.0"` —
+  on 0.x a caret range does NOT admit a minor bump, so publishing 0.13.0
+  does not reach them automatically. Each needs its own dependency-bump PR
+  (`^0.13.0`) per `docs/DEPENDENCY-BUMP-CHECKLIST.md`.
+
 ## [0.12.0] — 2026-08-06 — ALEX48 returned a constant and discarded its inputs
 
 ### Fixed — MONEY DEFECT, silent under-recovery
