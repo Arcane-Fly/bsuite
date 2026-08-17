@@ -2,6 +2,7 @@
   "name": "bsuite",
   "version": "0.0.0",
   "private": true,
+  "packageManager": "pnpm@10.33.3",
   "engines": {
     "node": "24.x"
   },
@@ -28,10 +29,5 @@
   "dependencies": {
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "brace-expansion": ">=5.0.9"
-    }
   }
 }
