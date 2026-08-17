@@ -42,6 +42,17 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24.14.0'
+          # setup-node@v5 defaults `package-manager-cache: true` and picks the
+          # manager from package.json's `packageManager` field. This job gained
+          # that field when the root package.json was pinned to pnpm@10.33.3,
+          # so setup-node started trying to prime a pnpm cache and failed with
+          #   Unable to locate executable file: pnpm
+          # because nothing installs pnpm here — and nothing should. Every step
+          # in this job is `node scripts/drift-scan.mjs`; it never installs
+          # dependencies, so the cache was always dead weight and is now a
+          # hard failure. Turned off rather than adding pnpm/action-setup, which
+          # would install a package manager solely to warm a cache nobody reads.
+          package-manager-cache: false
 
       # A MISSING SCANNER IS A FAILING GATE, NOT A SKIPPED ONE (bsuite D-92).
       #
