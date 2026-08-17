@@ -32,9 +32,14 @@ identical. Separately, a coverage pass re-enumerated the dated document set to t
 
 ## 1. The answer
 
-**Of the 87 items, 20 need no further work — 16 measured DONE, 3 were never defects, 1 was already
+~~**Of the 87 items, 20 need no further work — 16 measured DONE, 3 were never defects, 1 was already
 settled by an operator ruling. The remaining 67 carry real outstanding work: 54 untouched and 13
-part-done.** The whole P0 security class is closed but one, and the transaction-integrity class is
+part-done.**~~ **CORRECTION, 2026-08-17 (same day, hours later): 23 need no further work — 19
+measured DONE, 3 were never defects, 1 was already settled. The remaining 64 carry real outstanding
+work: 50 untouched and 14 part-done.** All four A-series items (A-1…A-4, ratified ADRs never
+implemented) moved: three from OPEN to DONE, one from OPEN to PARTIAL, once their documents were
+corrected in bsuite#2053 — see §2 "A — ratified decisions never implemented" for the row-level
+evidence. The whole P0 security class is closed but one, and the transaction-integrity class is
 closed but one.
 
 **No — the 87 items do not cover the dated document set, and this is the more important finding.**
@@ -56,14 +61,16 @@ register's 264; and the register's own headline "all 264 were read and classifie
 
 | Verdict | Count | Meaning |
 |---|---:|---|
-| **DONE** | **16** | Re-measured fixed, with evidence. No work remains. |
+| **DONE** | ~~16~~ **19** | Re-measured fixed, with evidence. No work remains. |
 | **NOT-A-DEFECT** | **3** | Measured; the item was never a defect. Filed in error or measured wrongly. |
 | **SUPERSEDED** | **1** | Already settled by an operator ruling the register post-dates. |
-| **PARTIAL** | **13** | Half shipped. Real work remains — counted as open below. |
-| **OPEN** | **54** | Untouched, or the fix exists but has not reached the running system. |
+| **PARTIAL** | ~~13~~ **14** | Half shipped. Real work remains — counted as open below. |
+| **OPEN** | ~~54~~ **50** | Untouched, or the fix exists but has not reached the running system. |
 | **Total** | **87** | |
 
-**Closed: 20. Carrying work: 67** (13 partial + 54 open) — roughly **31 small, 23 medium, 13 large**.
+**Closed: ~~20~~ 23. Carrying work: ~~67~~ 64** (14 partial + 50 open) — roughly **31 small, 23
+medium, 13 large** (sizes unchanged; A-series recount does not shift the size buckets). Corrected
+2026-08-17 for the four A-series items — see §2 and §6 item 2.
 
 > **One rule applied throughout, because it is where this estate has repeatedly fooled itself:**
 > a filed issue is never reported as an addressed defect, and neither is a merged migration. Three
@@ -128,14 +135,23 @@ This is the block gating the host money view. It is the least-advanced class in 
 | K-4 | Invented milestones in the field-officer visit schedule | **OPEN** | Four hardcoded dates passed into the same component that receives **live** events from the real store. The two halves render together, so the invented half inherits the live half's credibility. | S |
 | K-5 | Login-client registry hardcoded twice in the admin UI, status asserted not read | **OPEN** | Two copies, every entry with a literal `active` status. **New measurement: three of five domains have drifted** from the live records — the admin screen of the login server currently displays three wrong domains. The live table is not directly readable, so a database function is needed before either copy can read truth. | M |
 
-### A — ratified decisions never implemented · 0 DONE, 4 OPEN
+### A — ratified decisions never implemented · ~~0 DONE, 4 OPEN~~ **3 DONE, 1 PARTIAL — corrected 2026-08-17, same day, hours later**
 
 | # | Item | Verdict | Evidence measured 2026-08-17 | Size |
 |---|---|---|---|---|
-| A-1 | ADR-0005 (funding authoring) never built | **OPEN** | All three named objects resolve to null; positive control on the same queries returns a real table and 5 real functions, so the instrument finds what exists. The ADR's chosen home — a Developer Portal in the CRM — **does not exist in that app at all**. Adjacent progress landed today (program *identity* now reads from a table) but **not amounts**: the amounts field is empty on all 4 rows. Two of the ADR's premises are now stale. | L |
-| A-2 | ADR-0007 (payments foreign-data-wrapper) dead — and unbuildable as filed | **OPEN** | Extension absent, schema null, zero foreign servers. The migration **can never apply from disk** for two independent reasons: it is stamped below the migration floor, *and* its version collides exactly with another file. Its tracking issue was closed "completed" with **zero objects installed**. An operator ruling narrows the blast radius to one surface that does not yet exist. Applied ledger is now **699 entries, not 594**. | M |
-| A-3 | ADR-0006's organisation half is superseded and unrecorded | **OPEN** | The ADR still reads "Accepted" and forbids the model production actually adopted: the discriminator column it mandates **does not exist**, and the table it forbids **exists with 17 rows** and four role flags. Code favours the newer model 30 references to 4. **The code needs no change — the document does.** | S |
-| A-4 | ADR-0004 number collision | **OPEN** | Two different ADRs share number 0004; the index lists only one. Unchanged since at least the 2026-07-25 audit. **One correction:** the register calls the orphan "unreachable" — it is not, a package README links it by path. The defect is the duplicate number plus the index omission. | S |
+| A-1 | ADR-0005 (funding authoring) never built | ~~**OPEN**~~ **DONE** | All three named objects resolve to null; positive control on the same queries returns a real table and 5 real functions, so the instrument finds what exists. The ADR's chosen home — a Developer Portal in the CRM — **does not exist in that app at all**. Adjacent progress landed today (program *identity* now reads from a table) but **not amounts**: the amounts field is empty on all 4 rows. Two of the ADR's premises are now stale. **CORRECTION, same day:** the premises are still stale, and by design — an operator ruling (2026-08-06) already forbade building this, so the fix is not code, it is the record. `docs/adr/ADR-0005-rams-funding-authoring.md` now carries a superseded banner above the unaltered original text, citing the ruling, the 4 removed modules (~2,056 lines), and the live-catalog re-measurement. Merged: [bsuite#2053](https://github.com/GaryOcean428/bsuite/pull/2053). The feature correctly remains unbuilt; what was open was the document's silence, not the missing table. | L |
+| A-2 | ADR-0007 (payments foreign-data-wrapper) dead — and unbuildable as filed | ~~**OPEN**~~ **PARTIAL** | Extension absent, schema null, zero foreign servers. The migration **can never apply from disk** for two independent reasons: it is stamped below the migration floor, *and* its version collides exactly with another file. Its tracking issue was closed "completed" with **zero objects installed**. An operator ruling narrows the blast radius to one surface that does not yet exist. Applied ledger is now **699 entries, not 594**. **CORRECTION, same day:** the document defect is recorded — `docs/adr/ADR-0007-stripe-fdw-read-doctrine.md` carries a banner with the same table above, a retirement recommendation, and explicit acknowledgment that only the operator can change `Status:` from Accepted. Re-verified independently, not just trusted from the banner: `20260512161000` is **below the 20260611000000 floor** *and* collides byte-for-byte with `20260512161000_developer_portal_branding_scope_rls.sql` — confirmed by listing `supabase/migrations/` directly. A full-tree grep (parent repo; submodules not checked out from this worktree) finds `stripe_wrapper`/`stripe_server`/`stripe.*` referenced **only** inside the unapplied migration file itself — nothing reads it because the schema was never created for anything to read. **Retire-or-keep is still an operator call** — see §6 "Needs an operator ruling", item 2, below. Left **PARTIAL**, not DONE, because that call is outstanding. | M |
+| A-3 | ADR-0006's organisation half is superseded and unrecorded | ~~**OPEN**~~ **DONE** | The ADR still reads "Accepted" and forbids the model production actually adopted: the discriminator column it mandates **does not exist**, and the table it forbids **exists with 17 rows** and four role flags. Code favours the newer model 30 references to 4. **The code needs no change — the document does.** **CORRECTION, same day:** it is now recorded. `docs/adr/ADR-0006-contact-propagation-doctrine.md` carries a "PARTIALLY SUPERSEDED" banner naming the live `employers` table and its 4 role-flag columns, citing the superseding decision (`crm7/docs/adr/20260525-host-employer-table-canonicalization.md`, crm7#866) and explaining why 4 orthogonal booleans model the domain better than the one-column enum. Merged: bsuite#2053. **New finding surfaced while re-verifying this item, not yet fixed:** the crm7 file the banner cites is itself unreachable from crm7's own ADR index, and its self-declared title collides on the number "ADR-002" with a second, different crm7 ADR (`20260525-contacts-clients-leads-canonical-source.md`) dated the same day — confirmed live via `gh api repos/GaryOcean428/crm7/contents/docs/adr` and reading both files' headers. Same defect class as A-4, one repo over. Needs its own crm7 PR — out of scope for this (bsuite) lane; flagged here as a follow-up, not tracked under any existing item ID. | S |
+| A-4 | ADR-0004 number collision | ~~**OPEN**~~ **DONE** | Two different ADRs share number 0004; the index lists only one. Unchanged since at least the 2026-07-25 audit. **One correction:** the register calls the orphan "unreachable" — it is not, a package README links it by path. The defect is the duplicate number plus the index omission. **CORRECTION, same day:** fixed. The orphan is renumbered `docs/adr/ADR-0008-schema-builder-consolidation.md` (was the second 0004), the surviving `ADR-0004-oauth-allowlist-doctrine.md` keeps its number unchanged, and `docs/adr/README.md` now lists all eight ADRs with a mandatory `Built?` column plus the renumbering note ("renumbered from ADR-0004 on 2026-08-17; duplicate-number collision"). Verified live: `git ls-tree origin/development -- docs/adr/` shows both files with distinct numbers, no `0004` duplicate remains. Merged: bsuite#2053. | S |
+
+**A-series correction summary.** All four items were re-verified 2026-08-17, hours after this ledger
+was written, against `origin/development` HEAD (`d1d49592`), confirming [bsuite#2053](https://github.com/GaryOcean428/bsuite/pull/2053)
+("docs(adr): record measured build state for five ratified-but-unimplemented decisions (A-1…A-4 + G2)")
+is merged and its content live. Left visible rather than rewritten, per estate convention: the
+original framing was correct when this ledger was written that morning — these ADRs genuinely were
+unbuilt-and-unmarked at the time. A-2 is deliberately left **PARTIAL**: gathering the evidence and
+recommending retirement is a lane's job; retiring a ratified ADR is the operator's. See §6 "What no
+static pass can settle" → "Needs an operator ruling", item 2.
 
 ### AD — shipped but not reaching the product · 0 DONE, 1 PARTIAL, 9 OPEN, 1 NOT-A-DEFECT
 
@@ -468,6 +484,27 @@ long enough that the waiting is itself the risk.
    closed "completed" with zero objects installed, and a later ruling shrank its scope to a single
    surface that does not yet exist. **The retirement is unrecorded, so the document still reads
    "Accepted".** If retained, the migration must be re-stamped and de-collided before it can ever apply.
+
+   > **CORRECTION, 2026-08-17 (same day, hours later): the retirement is now recorded, the decision
+   > is not.** `docs/adr/ADR-0007-stripe-fdw-read-doctrine.md` (merged in bsuite#2053) carries a
+   > banner stating the measured state, a numbered case for retirement, and an explicit refusal to
+   > flip `Status:` itself — that line is reserved for the operator. Re-verified independently
+   > 2026-08-17, not re-derived from the banner's own claim: `supabase/migrations/` on disk shows
+   > `20260512161000_stripe_fdw_wrappers.sql` sharing its exact 14-digit stamp with
+   > `20260512161000_developer_portal_branding_scope_rls.sql` — a real filename collision, not a
+   > paraphrase — and that stamp sits below the `20260611000000` floor, so the file **cannot apply
+   > even if retained.** A parent-repo-wide grep (submodules not checked out) finds `stripe_wrapper`
+   > / `stripe_server` / `stripe.*` nowhere except inside that one unapplied file — nothing reads it,
+   > because there is nothing live to read. **Deciding factors for the operator:** (a) no live Stripe
+   > billing exists today and none is scheduled, so retiring costs nothing running; (b) keeping it
+   > Accepted means provisioning a live `stripe_api_key` Vault secret to serve zero readers just to
+   > satisfy its own compliance gate; (c) it is cited as governing `BL-013` in the merged execution
+   > backlog, so every day it stays "Accepted" is another day that backlog item reads as
+   > architecturally settled when its substrate does not exist; (d) retirement is cheap to reverse —
+   > a fresh ADR against 2026-08 requirements, not 2026-05 ones, if live billing ever arrives. On
+   > ratification: set `Status:` to `Rejected (retired unbuilt)`, delete the migration file, and
+   > drop the `BL-013` row from the backlog.
+
 3. **The two colours the rule prescribes but the audit rejects** (G4). Adding a colour to the
    contract is a contract change. A developer obeying one gate currently fails another.
 4. **Whether the legacy custom-fields table is dead** (PF-4c). Dropping it removes 4 of PF-1's 69
