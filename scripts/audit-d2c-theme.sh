@@ -150,7 +150,19 @@ C1_LIT='#([fF]{3}|[fF]{6}|[fF]{8}|0{3}|0{6})\b|rgba?\(\s*255\s*,?\s*255\s*,?\s*2
 # 1725 "hex colours" in crm7; sampling showed the overwhelming majority were issue refs.
 # Colour context = a quoted standalone hex, a CSS declaration value, or a Tailwind
 # arbitrary value. Issue refs match none of the three.
-C2_HEX='["'"'"'`]#[0-9a-fA-F]{3,8}["'"'"'`]|:\s*#[0-9a-fA-F]{3,8}\b|-\[#[0-9a-fA-F]{3,8}\]'
+#
+# The fourth alternative closes a real hole found 2026-08-17 (TH-1 finish pass):
+# `-\[#...\]` only matches a hex sitting immediately after the opening bracket.
+# braden/conduit/business-suite-unified's shared `meteors.tsx` carried
+# `shadow-[0_0_0_1px_#f2f2f210]` — the hex is mid-bracket, preceded by another
+# Tailwind arbitrary-value segment (`1px`) joined with the `_` (space) separator
+# — and every C2_HEX alternative walked past it. Positive-controlled: the OLD
+# regex returns zero matches against that exact string; the NEW alternative
+# below returns one, and it does not match GitHub issue refs (`crm7#217`) because
+# those never have an underscore directly before the `#`. crm7's own copy of the
+# same component had already been converted to oklch — this hole is why the
+# scanner never caught its three siblings.
+C2_HEX='["'"'"'`]#[0-9a-fA-F]{3,8}["'"'"'`]|:\s*#[0-9a-fA-F]{3,8}\b|-\[#[0-9a-fA-F]{3,8}\]|_#[0-9a-fA-F]{3,8}(_|\])'
 C2_RGB='\brgba?\(\s*[0-9]'
 C2_HSL='\bhsla?\(\s*[0-9.]'
 
