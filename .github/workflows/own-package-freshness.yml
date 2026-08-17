@@ -1,0 +1,111 @@
+name: Own-package freshness
+
+# Do the six consuming apps actually RUN the @bsuite/* packages we publish?
+#
+# There are 16 publish-*.yml workflows in this directory. Until this one there
+# was nothing checking whether anybody CONSUMES what they publish, and the gap
+# was exploited twice in a fortnight — both times invisibly:
+#
+#   * @bsuite/dry-lint EXACT-pinned at 0.5.0 in crm7 and business-suite-unified
+#     while 1.0.1 (carrying the grid/dot doctrine rule) was published. Three
+#     real doctrine violations sat live on public marketing pages for as long
+#     as the pin held, and BSU's own oauth-contract.test.ts ASSERTED the pin,
+#     marked "DO NOT WEAKEN" — the test suite defended the defect.
+#
+#   * @bsuite/theme 0.11.2 (dark-mode near-white-hairline fix, caee3fca,
+#     bsuite#1957) published and consumed by NOT ONE of the six apps. Same for
+#     @bsuite/nav-core 0.9.1 in five of six and @bsuite/ui 1.0.3 in all four
+#     consumers. In every case the declared caret range ALREADY ADMITTED the
+#     newer version — only the lockfile pin held it back. package.json looked
+#     correct; the drift lived entirely in pnpm-lock.yaml's resolved column,
+#     which is why no human and no existing check ever saw it.
+#
+# SCHEDULE **AND** PULL_REQUEST, deliberately. A PR-only gate cannot see the
+# class of staleness that arrives with no diff at all: publishing @bsuite/theme
+# 0.11.2 makes all six apps stale without touching a single file in any of
+# them. The daily run is the one that catches that; the PR run stops a
+# regression being merged.
+
+on:
+  schedule:
+    # 19:10 UTC daily — ~03:10 AWST, after the estate's publish workflows have
+    # settled and before the operator's working day.
+    - cron: '10 19 * * *'
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'scripts/check-own-package-freshness.mjs'
+      - 'scripts/check-lockfile-hygiene.mjs'
+      - 'scripts/guard-registry.mjs'
+      - '.github/workflows/own-package-freshness.yml'
+      # BARE GITLINK PATHS. The six apps reach the parent as a POINTER BUMP:
+      # the tree holds a gitlink, not files, so `crm7/package.json` is not a
+      # path in any parent commit and a `**/package.json` glob would never
+      # fire. Same defect, same fix, as migration-version-collision-lint.yml
+      # and inline-eslint-rule-parity.yml already carry — keep the lists in
+      # step.
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: own-package-freshness-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  own-package-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the six apps ARE the subject)
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout. Same fallback chain
+          # every other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          # setup-node@v5 defaults `package-manager-cache: true`, then looks
+          # for the repo's package manager and fails when it cannot find pnpm
+          # — which broke several workflows in this repo recently. This job
+          # runs no pnpm install at all (see the next step), so the cache has
+          # nothing to cache. Turn it off explicitly.
+          package-manager-cache: false
+
+      # The guard needs a real YAML parser and a real semver implementation and
+      # REFUSES to run without them (it will not degrade to grepping
+      # pnpm-lock.yaml — a previous pass did that and reported the
+      # `overrides:` block's KEYS as resolved versions). Both go into a scratch
+      # prefix rather than the repo: `npm install` inside a pnpm workspace root
+      # would rewrite the checkout's node_modules.
+      - name: Install guard parser dependencies (scratch prefix, not the repo)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/guard-deps" \
+            --no-save --no-package-lock --no-audit --no-fund \
+            yaml@^2.9.0 semver@^7.7.4
+
+      # A gate whose pass and no-op states are indistinguishable hides defects
+      # (bsuite#1688). Prove the checker can still FAIL — on a stale-but-in-
+      # range fixture, on an exact pin, on an app with zero deps, on an
+      # uninitialised submodule, and on an unreachable registry — before
+      # trusting anything it says about the real tree.
+      - name: Self-test the checker (proves it can fail)
+        env:
+          BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
+        run: node scripts/check-own-package-freshness.mjs --self-test
+
+      - name: Check the six apps run our latest published packages
+        env:
+          BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
+        run: node scripts/check-own-package-freshness.mjs
