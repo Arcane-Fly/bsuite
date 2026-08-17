@@ -4,6 +4,13 @@
 
 **Supersedes:** `docs/20260227-contributing-standards-guide-v1.00A.md` (kept for historical reference per docs-hygiene frozen-A mandate).
 
+> **R80.3 → R80.4 corrected 2026-08-17.** Four live rows below (Testing, Theme Compliance "Applies
+> to", the D2C implementation-rule bullet, and the Package Managers table) named `R80.3` as a
+> current submodule. R80.3 left the submodule set on 2026-08-06 (`5e000c35`, operator directive);
+> R80.4 took its place and is what serves `r8.crm7.app` today. Per `AGENTS.md`'s standing rule,
+> this document is a living standards guide an agent is expected to act on, not a dated audit, so
+> the correction is applied in place rather than banner-only.
+
 **What changed in v1.01W:**
 
 - §3 Testing — Framework line corrected: **all BSuite projects (including Next.js conduit) use Vitest.** Jest has never been installed in any project; the previous "Vitest (Vite projects) or Jest (Next.js projects)" line was stale from a Next.js 13-era assumption that never materialised. Verified across all 6 apps + 3 shared packages on 2026-04-28 — zero Jest installations monorepo-wide.
@@ -102,7 +109,7 @@ chore(bsu): upgrade Supabase client to v2.50
 
 - **Framework:** **Vitest for all projects, including Next.js conduit** (verified 2026-04-28 — zero Jest installations monorepo-wide).
   - Vitest 4.x for conduit (Next.js 16 supports Vitest natively; the project runs `vitest run` via `pnpm test`, with `vitest.config.ts` + `vitest.setup.ts`).
-  - Vitest 2.x / 3.x for the Vite-based apps (business-suite-unified, crm7, braden, R80.3, throughput) and the shared `@bsuite/*` packages.
+  - Vitest 2.x / 3.x for the Vite-based apps (business-suite-unified, crm7, braden, R80.4, throughput) and the shared `@bsuite/*` packages.
 - **Minimum coverage:** 70% for critical paths (business logic, API handlers, state management)
 - **Test file naming:** `*.test.ts` or `*.spec.ts`, co-located with source
 - **Required test types:**
@@ -177,7 +184,7 @@ The date-prefixed pattern above does not apply to canonical navigation and statu
 
 ### D2C Neon Electric Theme (webapps)
 
-**Applies to:** business-suite-unified, crm7, conduit, R80.3, throughput
+**Applies to:** business-suite-unified, crm7, conduit, R80.4, throughput
 
 All webapp projects must use `@bsuite/theme` as the token source (floor `^0.11.0`; published `0.11.2` at 2026-08-17 — check npm rather than trusting this number). Tailwind CSS must be v4 or later everywhere; Tailwind v3 is not permitted in package manifests, resolved lockfile entries, docs, or new implementation paths. Tailwind v4 apps import `@bsuite/theme/preset-v4.css` and `@bsuite/theme/css`.
 
@@ -192,7 +199,7 @@ All webapp projects must use `@bsuite/theme` as the token source (floor `^0.11.0
 **Implementation rule:**
 
 - CRM7 is the reference implementation for the shared D2C shell and high-visibility workflow surfaces.
-- `business-suite-unified`, `conduit`, `R80.3`, and `throughput` should follow the same semantic shell model even when their local token plumbing differs.
+- `business-suite-unified`, `conduit`, `R80.4`, and `throughput` should follow the same semantic shell model even when their local token plumbing differs.
 
 **Key roles:**
 
@@ -290,7 +297,7 @@ Red is allowed as Braden identity. Red as semantic error/destructive is banned a
 | crm7 | pnpm |
 | conduit | pnpm |
 | braden | pnpm |
-| R80.3 | pnpm |
+| R80.4 | pnpm |
 | throughput | pnpm |
 
 ---
