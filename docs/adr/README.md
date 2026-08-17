@@ -48,7 +48,7 @@ Never edit an Accepted ADR in place except to (a) mark it Deprecated with a succ
 - **Filename:** `ADR-NNNN-kebab-case-title.md` — four-digit zero-padded number, stable across supersession.
 - **Structure:** Context → Decision → Rationale → Consequences (including atomic replace-and-remove list) → What this unblocks → Compliance Gate.
 - **Atomic replace-and-remove:** every ADR that prescribes a change must name the atomic PR set that ships the change and the code/tables/docs that get removed in that same PR set. No dual-path interim states. No `@deprecated` markers shipped.
-- **Cross-reference:** cite the canonical one-shot spec (`docs/20260227-dry-one-shot-architecture-v1.02A.md`), the finish-line roadmap (`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`), the outstanding-work ledger (`docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md`), and the merged execution backlog (`docs/20260501-merged-execution-backlog-v1.00W.md`) where relevant.
+- **Cross-reference:** cite the canonical one-shot spec (`docs/20260227-dry-one-shot-architecture-v1.04A.md`), the finish-line roadmap (`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`), the outstanding-work ledger (`docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md`), and the merged execution backlog (`docs/20260501-merged-execution-backlog-v1.00W.md`) where relevant.
 
 ## Authoring a new ADR
 
