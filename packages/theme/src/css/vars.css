@@ -33,7 +33,8 @@
  *   --light-bg-accent ship as oklch(1 0 0.5) — theme-audit-ok: naming the
  *   value that was REMOVED — and render every shadcn card
  *   and popover pure white. "White" here means oklch(0.982 0.002 248)
- *   (#f8f9fa); the lightest surface is bg-panel at L=0.994.
+ *   theme-audit-ok: naming the equivalent hex for a reader's reference, not
+ *   consuming it — (#f8f9fa); the lightest surface is bg-panel at L=0.994.
  *
  * OKLCH format is MANDATORY for all new tokens. No hex/rgb/hsl.
  * Syntax: oklch(L C H) — L=lightness 0–1, C=chroma 0–0.4, H=hue 0–360.
@@ -68,8 +69,9 @@
   --neon-electric-deep:  oklch(0.380 0.140 270);   /* secondary action */
 
   /* The two words the estate uses loosely, pinned to values. Operator ruling
-     2026-08-02 ("white is primary: #f8f9fa") in terms: "define --white and
-     --black once in the token source and reference them everywhere; never
+     2026-08-02 ("white is primary: #f8f9fa" — theme-audit-ok: naming the
+     ruling's literal, not consuming it; the tokens below are oklch) in terms:
+     "define --white and --black once in the token source and reference them everywhere; never
      write either literal inline." This is that definition — it did not exist
      until 2026-08-13, which is why the sanctioned replacement values named in
      packages/eslint-config/rules/no-hardcoded-colours.js had no token to point
