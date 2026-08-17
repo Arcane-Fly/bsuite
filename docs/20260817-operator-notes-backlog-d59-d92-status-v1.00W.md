@@ -14,8 +14,8 @@
 
 **Of the 34 numbered directives D-59…D-92, 21 are DONE, 8 are PARTIAL, 3 are OPEN, 1 was never a
 defect, and 1 is a standing rule now measurably kept.** Of the separate list of thirty items you
-told us to file (D-80 §5), **all thirty were filed, 5 have since been fixed, and 25 are still
-open**.
+told us to file (D-80 §5), **all thirty were filed, 2 have since been fixed, 1 was never a defect,
+3 are part-done, and 24 are still open**.
 
 **The register's worst finding no longer holds.** On 14 August, five of the six platform-wide
 surface defects — *"the exact class you have raised most often"* — had **no issue in any
@@ -70,11 +70,18 @@ submodule commits with a positive control on every zero.
 
 | Verdict | Count |
 |---|---:|
-| **DONE** — filed and since fixed | **5** |
-| **PARTIAL** — the surface exists, the capability is unproven | **3** |
-| **OPEN** — filed, untouched | **21** |
+| **DONE** — filed and since fixed | **2** |
 | **NOT-A-DEFECT** — measured, never a defect | **1** |
+| **PARTIAL** — the surface exists, the capability is unproven | **3** |
+| **OPEN** — filed, untouched | **24** |
 | **Total** | **30** |
+
+> **A correction to my own first draft, stated rather than quietly fixed.** I initially scored this
+> block 5 DONE / 21 OPEN by counting two of the three items you added on **14 August** — the
+> subscription tiles and the developer-portal buttons — as members of the thirty. They are not;
+> they are separate additions and they belong under D-74 and D-78, where they now sit. Both are
+> genuinely closed, so no work is being over-claimed, but the *denominator* was wrong and this is
+> exactly the class of count error the completion ledger criticised in the register it replaced.
 
 ---
 
@@ -184,44 +191,62 @@ now fixed, which makes this the best-executed block in the directive.
 
 ## 3. The thirty (D-80 §5) — where each one stands
 
-Five have moved since filing. The rest are filed and untouched — which, per D-59, is **not**
-addressed.
+Six of the thirty have moved since filing. The rest are filed and untouched — which, per D-59, is
+**not** addressed.
 
-### Fixed since filing
+### Fixed since filing — 2
 
 | § | Item | Issue | Evidence |
 |---|---|---|---|
 | 5-2 | `/portal` redirects to the dashboard; no way to send anyone their personal portal | `crm7#1680` **closed** | The redirect is skipped for owner/admin/manager, a share-portal card renders, an invitation action exists with tests, and there is a redemption route for the link. |
-| 5-22 | `enterprise_licence_events` missing; the licence grace-seat panel fails to load | `BSU#706` **closed** | Not reproducible — the table, its permissions and the exact foreign key the screen's join names all exist. It was a stale database cache. |
 | 5-24 | `/branding` only saves after "Show preview" is clicked | `BSU#708` **closed** | Fixed and regression-locked by a test that fails if the change is reverted. |
-| 5-31 (14 Aug a) | Subscription tiles share a common backing card | `BSU#720` **closed** | The "cannot be split without a registration mechanism" objection was false and the CRM already disproved it. |
-| 5-33 (14 Aug c) | Developer portal buttons bypass the shared button contract | `BSU#722` **closed** | A lint rule now exists at error level. **Caveat:** the rule's configuration explicitly exempts the ten files that still contain raw buttons, so it currently polices everything except the remaining violators. |
 
-### Built but never exercised — the surface exists, the capability is unproven
+### Never a defect — 1
+
+| § | Item | Issue | Evidence |
+|---|---|---|---|
+| 5-22 | `enterprise_licence_events` missing; the licence grace-seat panel fails to load | `BSU#706` **closed** | **Not reproducible.** The table, its permissions and the exact foreign key the screen's join names all exist. It was a stale database cache, not a missing table. |
+
+### The three items you added on 14 August — separate from the thirty
+
+Counted under D-74 and D-78, not here. Recorded so they are not lost between the two lists.
+
+| Item | Issue | State |
+|---|---|---|
+| (a) Subscription tiles share a common backing card | `BSU#720` **closed** | The "cannot be split without a registration mechanism" objection was false and the CRM already disproved it. |
+| (b) App-tile heading text must use the D2C gradient | `BSU#721` **open** | The gradient class exists; the tiles were never wired to it. |
+| (c) Developer portal buttons bypass the shared button contract | `BSU#722` **closed** | A lint rule now exists at error level. **Caveat:** its configuration explicitly exempts the ten files that still contain raw buttons, so it currently polices everything except the remaining violators. |
+
+### Part-done — the surface exists, the capability is unproven — 3
 
 | § | Item | Issue | Measured |
 |---|---|---|---|
 | 5-30 | No clear way for a client to connect their own email and send from it. *"Raised more than twenty times."* | `crm7#1705` open | **The surface exists and is routed.** `/settings/email-accounts` offers Google, Microsoft and IMAP/SMTP with full host, port and credential fields. **But `email_integrations` holds zero rows** — no tenant has ever connected an account, so the flow has never once been exercised end to end. Separately, the deployed inbox-sync function still reads a password column that no longer exists, so the receiving half would fail on first use. |
 | 5-26 | Switching apps from inside BSuite lands signed-out on the target app's marketing page | `BSU#710` open | Improved from one app to four: the silent re-authentication call is now wired in application code in conduit (4 sites), throughput (2), the CRM (1) and braden (1). **R80.4 still has none**, so a bare-URL visit there still renders logged-out. |
-| 5-16 / 5-17 | Training-provider records leave TGA fields empty; qualification scope missing. Providers should be imported on user action, not pre-loaded | `crm7#1696`, `#1697` open | Measured live: **8,119 training-provider rows are pre-loaded**, and **zero** carry any qualification scope. Both halves of your complaint confirmed, with numbers. |
+| 5-21 | Change-of-year records, wage-anniversary reminders, notices to apprentice and host | `crm7#1702` open | A change-of-year page exists and is substantial — an eligibility scan and a triple sign-off, ~1,000 lines. **The reminders and the notices are not built.** |
 
-### Never a defect
+### Filed and untouched — 24
 
-| § | Item | Measured |
-|---|---|---|
-| — | *(see §4 below — the platform report templates)* | |
+Two carry a fresh measurement worth recording even though nothing has moved:
 
-### Filed and untouched — 21 items
+| § | Item | Issue | Measured today |
+|---|---|---|---|
+| 5-16 | Training-provider records leave TGA fields empty; qualification scope missing entirely | `crm7#1696` | **8,119 provider rows; zero carry any qualification scope.** Confirmed with numbers. |
+| 5-17 | All TGA providers should be importable on user action, **not pre-loaded** | `crm7#1697` | **8,119 rows are pre-loaded.** Confirmed with numbers. |
 
-`crm7`: 1679 (`/leads/create` cannot create a company — confirmed, no inline creation exists),
-1681 (`/portal/worker` job-ad link), 1682 (`/settings/module-visibility` — **fixed today, see §6**),
-1683 (`/payroll/award-rates`), 1684 (`/engagements/create` funding framing), 1685 (training-plan
-units on the apprentice), 1686 (people card borders, stray `/u`), 1687 (`/pipeline/kanban` not
-pulling from conduit), 1688 (client-to-host half-linked), 1690–1694 (the five funding-mechanics
-items), 1698, 1700 (TGA import depth), 1701 (database identifiers shown as the user-facing ID),
-1702 (change-of-year notices), 1703 (`fairwork-enhanced` returns 503).
-`business-suite-unified`: 707 (grace invites), 709 (Jodie logo), 711 (documentation screenshots),
-712 (`/developer/tables`), 721 (app-tile gradient).
+The remaining 22, untouched:
+
+`crm7` — 1679 (`/leads/create` cannot create a company — confirmed, no inline creation exists),
+1681 (`/portal/worker` job-ad link), 1682 (`/settings/module-visibility` — **a fix is open as
+`crm7#1776`; see §6. Not merged, so it is counted here as open**), 1683 (`/payroll/award-rates`),
+1684 (`/engagements/create` funding framing), 1685 (training-plan units on the apprentice),
+1686 (people card borders, stray `/u`), 1687 (`/pipeline/kanban` not pulling from conduit),
+1688 (client-to-host half-linked), 1690–1694 (the five funding-mechanics items), 1698 and 1700
+(TGA import depth), 1701 (database identifiers shown as the user-facing ID), 1703
+(`fairwork-enhanced` returns 503).
+
+`business-suite-unified` — 707 (grace invites), 709 (Jodie logo), 711 (documentation screenshots),
+712 (`/developer/tables`).
 
 ---
 
