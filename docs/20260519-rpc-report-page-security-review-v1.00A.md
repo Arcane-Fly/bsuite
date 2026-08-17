@@ -1,8 +1,25 @@
 # `rpc_report_page` — Security Review & Implementation Specification
 
+> ## ⚠ SUPERSEDED — 2026-08-17
+>
+> **The architecture this review secures was replaced.** It is marked `A` and its own header says
+> *"Approved spec; not yet implemented in production"* — and it never was. The `report_catalog_*`
+> family won instead: **14 functions live** in `public` on `tuybltdrdefjblnplpqo`, verified
+> 2026-08-17, including `report_catalog_resolve_entity`, `report_catalog_build_filter`,
+> `report_catalog_caller_may_access_field` and `report_catalog_verify_entity_scope`.
+>
+> An Approved document describing unbuilt work is how a superseded decision survives, so this banner
+> is the correction rather than a status-letter change.
+>
+> **Do not implement this spec.** Its threat analysis is still worth reading — the field-level PII
+> and tenant-scope concerns it raises are exactly what `report_catalog_caller_may_access_field` and
+> `report_catalog_entity_tenant_scope` exist to answer — but verify any control against the live
+> catalog, never against this document.
+
+
 | Field | Value |
 | --- | --- |
-| Document version | v1.00A (Approved spec; not yet implemented in production) |
+| Document version | v1.00A (Approved spec) — **and never implemented; superseded, see the banner above.** The `A` marker records that this spec *was approved* on 2026-05-19, which is a fact and is why the marker is unchanged. It does **not** mean the design is live: the `report_catalog_*` family was built instead. An Approved marker on unbuilt work is exactly how a superseded decision survives, so the banner, not the letter, carries the status. |
 | Date | 2026-05-19 |
 | Backlog ID | G-5 (`docs/20260501-merged-execution-backlog-v1.00W.md`) |
 | Issue | [bsuite#494](https://github.com/GaryOcean428/bsuite/issues/494) |

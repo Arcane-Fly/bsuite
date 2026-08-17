@@ -96,7 +96,7 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
 | **crm7** | `VITE_` | Supabase Auth |
 | **conduit** | `NEXT_PUBLIC_` | Supabase SSR Auth |
 | **braden** | `VITE_` | Supabase Auth |
-| **R80.3** | `VITE_` | Supabase Auth |
+| **R80.4** | `VITE_` | Supabase Auth |
 | **throughput** | `VITE_` | Supabase Auth + BS OAuth 2.1 |
 
 - Never commit `.env` / `.env.local` files
@@ -106,7 +106,7 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
   - BSU: prod `https://suite.crm7.app`, dev `https://d.suite.crm7.app`
   - CRM7: prod `https://crm.crm7.app`, dev `https://d.crm.crm7.app`
   - Conduit: prod `https://conduit.crm7.app`, dev `https://d.conduit.crm7.app`
-  - R80.3: prod `https://r8.crm7.app`, dev `https://d.r8.crm7.app`
+  - R80.4: prod `https://r8.crm7.app`, dev `https://d.r8.crm7.app`
   - Throughput: prod `https://ideas.crm7.app`, dev `https://d.ideas.crm7.app`
   - Braden: prod `https://www.braden.com.au`, dev `https://d.braden.com.au`
 - Stripe key policy: client bundles may use publishable keys only (`VITE_STRIPE_PUBLISHABLE_KEY` = `pk_*`); secret keys (`sk_*`) must remain server-only and unprefixed.
@@ -130,15 +130,53 @@ pnpm install
 
 ### Published Packages
 
-| Package | npm | Consumers | Source |
-|---------|-----|-----------|--------|
-| `@bsuite/auth` | `^0.1.0` (latest `0.1.1`) | CRM7, Conduit, R80.3, Braden, Throughput | `packages/auth/` |
-| `@bsuite/charge-calc` | `^0.2.0` (latest `0.2.4`) | CRM7, R80.3 | `packages/charge-calc/` |
-| `@bsuite/nav-core` | `^0.5.0` (latest `0.5.2`) | braden, CRM7 | `packages/nav-core/` |
-| `@bsuite/page-builder` | `^0.2.0` (latest `0.2.2`) | BSU, CRM7, Conduit, R80.3 | `packages/page-builder/` |
-| `@bsuite/schema-builder` | `^0.7.0` (latest `0.7.1`) | BSU, CRM7, Conduit, R80.3 | `packages/schema-builder/` |
-| `@bsuite/schema-registry` | `^0.3.0` (latest `0.3.3`) | braden, BSU, Conduit, CRM7, R80.3, Throughput | `packages/schema-registry/` |
-| `@bsuite/data-export` | `^0.1.0` (latest `0.1.4`) | CRM7, R80.3 | `packages/data-export/` |
+> **Re-measured 2026-08-17** with `node scripts/check-own-package-freshness.mjs` (6 apps, **52
+> `@bsuite/*` dependency edges**, 12 published packages, resolved against the npm registry). Every
+> row of the previous table was wrong: each `latest` was one to seven minors behind, `R80.3` was
+> listed as a consumer three months after it left the submodule set, and nine published packages
+> were missing entirely.
+>
+> **Read the LOCK column, not the declared range.** The declared range is an intention; the lockfile
+> is what Vercel installs. Three edges differ between the two today.
+>
+> Do not trust the numbers below either — run the guard. It refuses to report clean against an
+> uninitialised submodule rather than counting an empty directory as a passing app.
+
+| Package | Declared | Lock resolves | npm latest | Consumers (6 apps) | Source |
+|---------|----------|---------------|------------|--------------------|--------|
+| `@bsuite/auth` | `0.2.8` pinned (R80.4 `^0.2.8`) | `0.2.8` | `0.2.8` | **all 6** | `packages/auth/` |
+| `@bsuite/charge-calc` | `^0.12.0` | `0.12.0` | `0.12.0` | Conduit, CRM7 | `packages/charge-calc/` |
+| `@bsuite/data-export` | `^0.1.4` | `0.1.4` | `0.1.4` | BSU, CRM7 | `packages/data-export/` |
+| `@bsuite/data-grid` | `^0.1.0` | `0.1.0` | `0.1.0` | CRM7 | `packages/data-grid/` |
+| `@bsuite/dates` | `^0.1.0` | `0.1.1` | `0.1.1` | BSU, Braden, Conduit, CRM7, Throughput | `packages/dates/` |
+| `@bsuite/dry-lint` | `^1.0.1` | `1.0.1` | `1.0.1` | **all 6** | `packages/dry-lint/` |
+| `@bsuite/nav-core` | `^0.9.0` (Braden `^0.9.1`) | `0.9.1` | `0.9.1` | **all 6** | `packages/nav-core/` |
+| `@bsuite/page-builder` | `^0.9.0` | `0.9.0` | `0.9.0` | BSU, Braden, Conduit, CRM7, Throughput | `packages/page-builder/` |
+| `@bsuite/schema-builder` | `^1.3.0` | `1.3.0` | `1.3.0` | BSU, Conduit, CRM7 | `packages/schema-builder/` |
+| `@bsuite/schema-registry` | `^1.0.2` | `1.0.2` | `1.0.2` | **all 6** | `packages/schema-registry/` |
+| `@bsuite/theme` | `^0.11.1` | `0.11.2` | `0.11.2` | **all 6** | `packages/theme/` |
+| `@bsuite/ui` | `^1.0.2` (BSU `^1.1.0`) | **`1.0.3`** ⚠ | `1.1.0` | BSU, Conduit, CRM7, Throughput | `packages/ui/` |
+
+**Per-app edge counts:** CRM7 12 · BSU 10 · Conduit 10 · Throughput 8 · Braden 7 · R80.4 5.
+
+**One live freshness failure — 3 of 52 edges.** Conduit, CRM7 and Throughput resolve
+`@bsuite/ui@1.0.3` while `1.1.0` is published (BSU is already on `^1.1.0`). Their declared `^1.0.2`
+**already admits 1.1.0** — only the lockfile pin holds them back, so this is fixed by regenerating
+each app's lockfile **outside** the bsuite tree, with no `package.json` edit and no version risk.
+
+**Not published / internal only:** `@bsuite/eslint-config` (`0.3.0`), `@bsuite/jodie` (`0.2.0`),
+`@bsuite/theme-codemod` (`1.0.0`), `@bsuite/tsconfig` (`0.1.0`) — consumed by path inside the parent
+repo, not from npm.
+
+**A caret on a `0.x` version pins the MINOR.** `^0.9.0` will never take `0.10.0`. Seven of the
+twelve packages above are still `0.x`, so bumping any of their minors requires editing every
+consumer manifest — a lockfile refresh alone will not do it.
+
+**Consumer-set correction:** `R80.3` appears in no row. It left the submodule set on 2026-08-06
+(`5e000c35`) to `~/Desktop/Dev/archived-repos-docs/R80.3` and was replaced by **R80.4**, which
+consumes five packages (`auth`, `dry-lint`, `nav-core`, `schema-registry`, `theme`) and is live at
+`r8.crm7.app`. Braden consumes neither `@bsuite/ui` nor `charge-calc`, `data-export`, `data-grid`
+or `schema-builder`.
 
 ### Rules (all agents MUST follow)
 
@@ -149,7 +187,9 @@ pnpm install
    - Bump version in `package.json` (follow semver)
    - Publish by merging the package release PR to `main` so the matching `.github/workflows/publish-*.yml` workflow runs through npm Trusted Publishers (GitHub Actions OIDC)
    - Trusted publishing is the standard for `@bsuite/*`; do not default back to `NPM_TOKEN` or manual token-based publishing unless an operator explicitly approves an emergency fallback
-   - Update consumers: change version in CRM7/R80.3/braden `package.json`
+   - Update consumers: change the version in **every** consumer `package.json` named in the table
+     above — not a remembered subset. A caret on a `0.x` package pins the minor, so a `0.9.x → 0.10.0`
+     bump reaches no consumer until each manifest is edited.
    - Run `pnpm install` in each consumer to update lockfile
 4. **`pnpm-workspace.yaml`** in submodule repos (e.g., `crm7/pnpm-workspace.yaml`) references `'../packages/*'` for **local development only**. This does NOT work on Vercel.
 5. **Version pinning**: `packageManager: "pnpm@10.33.3"` and `.node-version: 24.x` (the `.x` suffix is required) — do not change without coordinating across all projects. Verified against all 6 apps + parent 2026-07-31.
@@ -196,7 +236,7 @@ https://conduit.crm7.app/auth/callback
 ### Auth Routing Architecture (Expected Behaviour — Not Bugs)
 
 - **Conduit** (`conduit.crm7.app`) uses Conduit-local `/auth/login` and `/auth/callback` surfaces, then performs BS OAuth 2.1 PKCE against BSU as the OAuth server. It also uses `@supabase/ssr` server-managed cookies on its own host only. No cross-domain cookie sharing.
-- **R80.3** (`r8.crm7.app`) uses BS OAuth 2.1 PKCE + JWKS for cross-app SSO. Cookie SSO (`business_suite_auth` on `domain=.crm7.app`) is removed and must not be reintroduced.
+- **R80.4** (`r8.crm7.app`) uses BS OAuth 2.1 PKCE + JWKS for cross-app SSO. Cookie SSO (`business_suite_auth` on `domain=.crm7.app`) is removed and must not be reintroduced.
 - **Braden** (`www.braden.com.au`) is a different TLD and uses the same BS OAuth 2.1 PKCE + JWKS client pattern with Braden-specific client ID/callbacks.
 - **All client apps** keep their Supabase native sessions per-domain; silent cross-app SSO happens through BSU `/oauth/authorize?prompt=none`, not shared cookies.
 
@@ -275,7 +315,7 @@ See `MEMORY_PROTOCOL.md` at project root for full protocol.
 - **Do not swap providers or model versions without re-confirming against the live gateway
   roster first**, and never downgrade a tier without explicit operator approval.
 
-### R80.3 (Compliance)
+### R80.4 (Compliance)
 
 - Wage calculations are legally compliance-critical
 - Extra test coverage on calculation logic

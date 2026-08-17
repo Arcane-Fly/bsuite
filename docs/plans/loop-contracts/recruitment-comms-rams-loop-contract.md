@@ -1,7 +1,7 @@
 # Loop Contract — Recruitment-Comms + RAMS Cluster
 
 > **External memory** for the engineered loop completing conduit#225/#221/#227/#229.
-> Plan + grounding: `docs/plans/20260618-recruitment-comms-rams-cluster-plan-v1.00W.md`.
+> Plan + grounding: `docs/plans/20260618-recruitment-comms-rams-cluster-plan-v1.00A.md`.
 > Resumable: any context reads this + the plan, picks the first phase whose status ≠ DONE, runs the Maker→Verifier loop below.
 
 ## GOAL (binary, observable, bounded)
