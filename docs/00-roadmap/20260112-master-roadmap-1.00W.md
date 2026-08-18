@@ -1,5 +1,24 @@
 # Master roadmap — BSuite (planning layer)
 
+> ## ⚠ SUPERSEDED — 2026-08-17
+>
+> **This roadmap is no longer the planning source of truth.** It calls itself "Canonical" two lines
+> below; that line is now false and is left visible rather than deleted, because the estate's
+> convention is to show corrections, not to rewrite history.
+>
+> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md)
+> — re-measured against live SQL, live GitHub state and the six repos at `development` HEAD.
+>
+> Two things date it beyond recovery:
+> - Its content stops at **2026-07-26**, and the Sydney cutover it excludes as "operator-gated" has
+>   been overtaken by events.
+> - It plans work against **R80.3** in four places. R80.3 left the submodule set on 2026-08-06
+>   (`5e000c35`) and was replaced by **R80.4**, which is a different codebase with a different
+>   backlog. Work items aimed at R80.3 have no owner.
+>
+> Retained for its completed-work record and its red-team history.
+
+
 > **Canonical.** This is the single suite-wide master roadmap; no companion file exists above it.
 > *(corrected 2026-07-28 — the previous companion, `docs/20260227-bsuite-master-roadmap-v5.00W.md`,
 > was archived 2026-07-08 and is not to be restored; all 6 submodule `UNIFIED-ROADMAP.md` mirrors

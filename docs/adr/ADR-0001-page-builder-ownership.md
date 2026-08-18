@@ -2,7 +2,7 @@
 
 **Status:** Accepted (2026-05-01)
 **Supersedes:** P1-4 in `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` (AUDIT MISMATCH entry)
-**Related:** `docs/20260227-dry-one-shot-architecture-v1.02A.md` §1, §11 Phase 5; `docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`
+**Related:** `docs/20260227-dry-one-shot-architecture-v1.04A.md` §1, §11 Phase 5; `docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`
 
 ---
 
@@ -33,7 +33,7 @@ Finish-line roadmap P1-4 flagged the overlap as "AUDIT MISMATCH, NEEDS RESCOPE" 
 2. **BSU `tenant_page_layouts` is broken.** The schema/client divergence in Phase 5 (migration vs authored-against plan) has never reached working state in production.
 3. **Consolidation removes two tables, one authoring UI, one migration, one test suite, and one broken code path** — net reduction in surface area.
 4. **CRM7 is the canonical entity owner for the adjacent surfaces** (apprentices, clients, placements, qualifications, timesheets, invoices). Keeping authoring UX co-located with entity ownership reduces cross-app navigation for the primary user.
-5. **The one-shot doctrine** (`20260227-dry-one-shot-architecture-v1.02A.md` §1) requires single-owner CRUD per entity. Having both `custom_pages` and `tenant_page_layouts` violates this.
+5. **The one-shot doctrine** (`20260227-dry-one-shot-architecture-v1.04A.md` §1) requires single-owner CRUD per entity. Having both `custom_pages` and `tenant_page_layouts` violates this.
 
 ## Consequences
 
@@ -70,7 +70,7 @@ A single coordinated PR set ships:
 3. **Realtime subscription cleanup** — remove `tenant_page_layouts` entry from `business-suite-unified/supabase/migrations/20260409000003_enable_realtime_all_tables.sql` via new migration that revokes publication membership.
 4. **Shared-package cleanup** — `@bsuite/schema-registry@^0.1.0` removes the `TenantLayoutSlot` component that queried `tenant_page_layouts`; replacement `CustomPageRenderer` component queries `custom_pages` + `custom_page_blocks`. Bump to 0.2.0 with breaking-change note. All consumer apps bump in the same PR set.
 5. **Ownership map update** — `packages/dry-lint/src/ownership-map.json` updated to remove the "P1-4 pending decision" `$comment` on `custom_pages` and `custom_page_blocks`; comment replaced with an ADR-0001 citation.
-6. **DRY spec update** — `docs/20260227-dry-one-shot-architecture-v1.02A.md` bumped to `v1.02A`, §1 ownership map updated, §11 Phase 5 entry struck-through with ADR-0001 citation, new entry in §11 documenting the consolidation.
+6. **DRY spec update** — `docs/20260227-dry-one-shot-architecture-v1.04A.md` bumped to `v1.02A`, §1 ownership map updated, §11 Phase 5 entry struck-through with ADR-0001 citation, new entry in §11 documenting the consolidation.
 7. **Finish-line roadmap update** — P1-4 "AUDIT MISMATCH" entry replaced with P1-4(b) "CRM7 canonical + BSU removal" linked to this ADR.
 
 No dual-mode interim state. No `@deprecated` markers. No "we'll delete it later" shims. The BSU surface is removed atomically in the same PR that consolidates CRM7 as canonical.

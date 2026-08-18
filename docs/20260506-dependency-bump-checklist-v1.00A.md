@@ -1,7 +1,13 @@
 # Dependency Bump Checklist — `@bsuite/*` packages
 
 **Status:** v1.00A — Approved 2026-05-06
-**Authority:** This is the **canonical** ceremony. Each child repo (`crm7/`, `R80.3/`, `throughput/`, `conduit/`, `braden/`) carries a copy of this file at `docs/DEPENDENCY-BUMP-CHECKLIST.md`. They MUST stay in sync.
+**Authority:** This is the **canonical** ceremony. Each child repo (`crm7/`, `R80.4/`, `throughput/`, `conduit/`, `braden/`) carries a copy of this file at `docs/DEPENDENCY-BUMP-CHECKLIST.md`. They MUST stay in sync.
+
+> **R80.3 → R80.4 corrected 2026-08-17.** The repo list above originally read `R80.3/`. R80.3 left
+> the submodule set on 2026-08-06 (`5e000c35`, operator directive) and R80.4 took its place.
+> **Unverified in this session:** whether `R80.4/docs/DEPENDENCY-BUMP-CHECKLIST.md` exists and is in
+> sync — the submodule was not checked out here. Confirm before relying on the "MUST stay in sync"
+> claim above.
 
 ---
 

@@ -11,6 +11,20 @@ Stack floor, all apps: React 19, TypeScript strict, TailwindCSS, Radix + shadcn 
 React Hook Form + Zod, Supabase, Vitest. pnpm everywhere. conduit is Next.js 16 App Router; the rest
 are Vite.
 
+> **Reading a document that says R80.3.** R80.3 left the submodule set on **2026-08-06** (`5e000c35`,
+> operator directive) to `~/Desktop/Dev/archived-repos-docs/R80.3`, and **R80.4** took its place.
+> R80.4 is what serves `r8.crm7.app` today — verified live 2026-08-17: the deployed title is
+> *GTO Charge Rate Calculator v9.2*, matching `R80.4/package.json@9.2.0`.
+>
+> **117 documents under `docs/` still say R80.3 — 42 of them at the top level.** (The register filed
+> this as 40; re-measured 2026-08-17 it is marginally *worse*, not better.) They have not been
+> rewritten and will not be:
+> almost all are dated audits, plans and RCAs that were *correct when written*, and back-dating them
+> would destroy the record this estate relies on. Treat "R80.3" in any document dated before
+> 2026-08-06 as historical. Anything an agent is expected to *act* on — the platform operations
+> reference, the env/URL map, the shared-package table — has been corrected in place. If you find an
+> **operational instruction** still naming R80.3, that one is a defect: fix it and say so.
+
 ## How you are expected to work
 
 1. **No deferral.** Fix what you find, in the session you find it. "TODO: implement later", "needs a
@@ -65,7 +79,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 |------|------------------|
 | Auth, OAuth, SSO, client registry, `d.*` previews, redirect allowlist | [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) |
 | Code quality, commits, testing, docs naming | [`docs/20260227-contributing-standards-guide-v1.01W.md`](docs/20260227-contributing-standards-guide-v1.01W.md) |
-| Entity ownership, DRY one-shot | [`docs/20260227-dry-one-shot-architecture-v1.02A.md`](docs/20260227-dry-one-shot-architecture-v1.02A.md) |
+| Entity ownership, DRY one-shot | [`docs/20260227-dry-one-shot-architecture-v1.04A.md`](docs/20260227-dry-one-shot-architecture-v1.04A.md) |
 | Setup, lockfiles, shared packages, env vars, GCP WIF, cron checks, memory protocol | [`docs/20260731-platform-operations-reference-v1.00W.md`](docs/20260731-platform-operations-reference-v1.00W.md) |
 | Self-validation loop (output/visual equivalence, PR Evidence block) | [`docs/20260507-ff-self-validation-doctrine-v1.00W.md`](docs/20260507-ff-self-validation-doctrine-v1.00W.md) |
 | Supabase policy gates, consumer-package gate, definition of done | [`docs/20260731-supabase-verification-gates-v1.00W.md`](docs/20260731-supabase-verification-gates-v1.00W.md) |
@@ -82,6 +96,18 @@ Read the destination before your first edit in that area. Do not re-derive from 
 
 Commits: `type(scope): description` — types `feat|fix|docs|style|refactor|test|chore|perf`, scopes
 `bsu|crm7|conduit|braden|r80|throughput|shared|docs|deploy`.
+
+**Write `Closes #123` in the PR body and leave it alone — it works now, and closing by hand is no
+longer the workaround.** It did not work before 2026-08-17: GitHub auto-closes only on a merge to a
+repository's DEFAULT branch, all seven repos here default to `main`, and every PR targets
+`development`, so every closing keyword ever written in this estate was inert. Fifteen issues sat
+fixed-and-open because of it. `.github/workflows/development-merge-issue-closer.yml` now honours the
+keyword on a `development` merge — it comments on the issue naming the merge SHA, then closes it —
+and sweeps all seven repos hourly, so submodule PRs are covered too. It ignores a keyword that
+appears in a blockquote, a checklist item, a code fence, an inline code span, an HTML comment, or
+after a negation, so quoting a review comment cannot close live work. Cross-repo references
+(`GaryOcean428/crm7#123`) are reported, never closed — close those by hand. If any of this changes,
+`scripts/parse-closing-keywords.mjs --self-test` is the contract, and it is a registered guard.
 
 throughput's AI stack is the Jodie setup (migrated off Groq `gpt-oss-120b` 2026-08-05): same-origin
 `/api/llm/*` Vercel routes over the Vercel AI Gateway — `xai/grok-4.3` primary, `zai/glm-5.2`

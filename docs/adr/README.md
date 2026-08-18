@@ -4,15 +4,35 @@ This directory holds the authoritative decisions that govern cross-repo architec
 
 ## Index
 
-| # | Title | Status | Ratified | Supersedes |
-|---|-------|--------|----------|-----------|
-| [ADR-0001](ADR-0001-page-builder-ownership.md) | Page-Builder Ownership | Accepted | 2026-05-01 | P1-4 (AUDIT MISMATCH entry in finish-line roadmap) |
-| [ADR-0002](ADR-0002-schema-builder-ownership.md) | Schema-Builder Ownership | Accepted | 2026-05-01 | — |
-| [ADR-0003](ADR-0003-consumer-renderer-pattern.md) | Consumer-Renderer Pattern | Accepted | 2026-05-01 | — |
-| [ADR-0004](ADR-0004-oauth-allowlist-doctrine.md) | OAuth Allow-List Doctrine | Accepted | 2026-05-01 | Duplicate allow-lists in operator-handoff-v4 |
-| [ADR-0005](ADR-0005-rams-funding-authoring.md) | RAMS Funding Authoring | Accepted | 2026-05-01 | — |
-| [ADR-0006](ADR-0006-contact-propagation-doctrine.md) | Contact Propagation Doctrine | Accepted | 2026-05-01 | — |
-| [ADR-0007](ADR-0007-stripe-fdw-read-doctrine.md) | Stripe FDW Read Doctrine | Accepted | 2026-05-12 | New Stripe read paths implemented as edge-function proxy chains |
+| # | Title | Status | Ratified | Built? | Supersedes |
+|---|-------|--------|----------|--------|-----------|
+| [ADR-0001](ADR-0001-page-builder-ownership.md) | Page-Builder Ownership | Accepted | 2026-05-01 | — | P1-4 (AUDIT MISMATCH entry in finish-line roadmap) |
+| [ADR-0002](ADR-0002-schema-builder-ownership.md) | Schema-Builder Ownership | Accepted | 2026-05-01 | — | — |
+| [ADR-0003](ADR-0003-consumer-renderer-pattern.md) | Consumer-Renderer Pattern | Accepted | 2026-05-01 | — | — |
+| [ADR-0004](ADR-0004-oauth-allowlist-doctrine.md) | OAuth Allow-List Doctrine | Accepted | 2026-05-01 | — | Duplicate allow-lists in operator-handoff-v4 |
+| [ADR-0005](ADR-0005-rams-funding-authoring.md) | RAMS Funding Authoring | **Superseded** | 2026-05-01 | ❌ **never built — and must not be** | superseded by operator ruling 2026-08-06 (`crm7/src/lib/funding/index.ts`) |
+| [ADR-0006](ADR-0006-contact-propagation-doctrine.md) | Contact Propagation Doctrine | Accepted (**org half superseded**) | 2026-05-01 | ⚠️ contacts yes; `clients.type` **never existed** | org half superseded by `crm7/docs/adr/20260525-host-employer-table-canonicalization.md` |
+| [ADR-0007](ADR-0007-stripe-fdw-read-doctrine.md) | Stripe FDW Read Doctrine | Accepted — **retirement recommended** | 2026-05-12 | ❌ **never built** (no `wrappers` ext, no `stripe` schema, migration unapplied) | New Stripe read paths implemented as edge-function proxy chains |
+| [ADR-0008](ADR-0008-schema-builder-consolidation.md) | Schema Builder Consolidation — `@bsuite/schema-builder` | Accepted | 2026-05-01 | ✅ package published | — (**renumbered from ADR-0004** on 2026-08-17; duplicate-number collision) |
+
+> **The `Built?` column is mandatory.** It was added on 2026-08-17 after an audit found
+> that three ratified ADRs had never been implemented and the index gave no way to tell.
+> An ADR index that records only *ratification* turns every unbuilt decision into a
+> standing false signal — a future lane reads "Accepted" and assumes the substrate
+> exists. State the measured build state, and cite the measurement.
+
+### ADRs that live outside this folder
+
+This index historically scanned only `docs/adr/`, which hid ratified decisions filed
+elsewhere. Known decisions held in other locations:
+
+| Decision | Location | Status | Built? |
+|---|---|---|---|
+| Xero Payroll AU — STP Phase 2 path (Option B, passthrough) | [`docs/20260519-xero-payroll-au-stp-path-decision-v1.00A.md`](../20260519-xero-payroll-au-stp-path-decision-v1.00A.md) | **Approved** | ❌ prescribed path unbuilt — see banner in that file |
+| STP Xero Passthrough (`pay_runs` passthrough fields) | `crm7/docs/adr/0004-stp-xero-passthrough.md` | Accepted | ⚠️ columns exist; no submission path wired |
+| Canonicalize Host Employers to `public.employers` | `crm7/docs/adr/20260525-host-employer-table-canonicalization.md` | Accepted | ✅ live (`employers` + 4 role flags) |
+| `@bsuite/charge-calc` as single-source calc engine | `crm7/docs/adr/20260423-calc-engine-single-source.md` | Accepted | ✅ live |
+| Contacts / Clients / Leads three-table design | `crm7/docs/adr/20260525-contacts-clients-leads-canonical-source.md` | Accepted | ✅ live |
 
 ## Status values
 
@@ -28,7 +48,7 @@ Never edit an Accepted ADR in place except to (a) mark it Deprecated with a succ
 - **Filename:** `ADR-NNNN-kebab-case-title.md` — four-digit zero-padded number, stable across supersession.
 - **Structure:** Context → Decision → Rationale → Consequences (including atomic replace-and-remove list) → What this unblocks → Compliance Gate.
 - **Atomic replace-and-remove:** every ADR that prescribes a change must name the atomic PR set that ships the change and the code/tables/docs that get removed in that same PR set. No dual-path interim states. No `@deprecated` markers shipped.
-- **Cross-reference:** cite the canonical one-shot spec (`docs/20260227-dry-one-shot-architecture-v1.02A.md`), the finish-line roadmap (`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`), the outstanding-work ledger (`docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md`), and the merged execution backlog (`docs/20260501-merged-execution-backlog-v1.00W.md`) where relevant.
+- **Cross-reference:** cite the canonical one-shot spec (`docs/20260227-dry-one-shot-architecture-v1.04A.md`), the finish-line roadmap (`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`), the outstanding-work ledger (`docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md`), and the merged execution backlog (`docs/20260501-merged-execution-backlog-v1.00W.md`) where relevant.
 
 ## Authoring a new ADR
 

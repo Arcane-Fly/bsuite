@@ -1,7 +1,7 @@
 # ADR-0003 — Consumer-Renderer Pattern
 
 **Status:** Accepted (2026-05-01)
-**Related:** ADR-0001 (Page-Builder Ownership); `docs/20260227-dry-one-shot-architecture-v1.02A.md` §3 Tier-1
+**Related:** ADR-0001 (Page-Builder Ownership); `docs/20260227-dry-one-shot-architecture-v1.04A.md` §3 Tier-1
 
 ---
 
@@ -53,7 +53,7 @@ One narrow exception: the BSU `Pages.tsx` developer UI that currently writes `te
    - Subscribe to realtime updates on `custom_pages` for live preview
    - Respect `is_developer_only` flag (hide for non-platform-admin users)
 4. **No cross-app mock or abstraction layer** — each renderer is its own self-contained implementation. Tests are per-app.
-5. **Documentation:** `docs/20260227-dry-one-shot-architecture-v1.02A.md` §3 Tier-1 updated to document the canonical renderer pattern (Supabase query shape + widget catalogue contract) without prescribing shared code.
+5. **Documentation:** `docs/20260227-dry-one-shot-architecture-v1.04A.md` §3 Tier-1 updated to document the canonical renderer pattern (Supabase query shape + widget catalogue contract) without prescribing shared code.
 
 ### When we'd revisit this decision
 

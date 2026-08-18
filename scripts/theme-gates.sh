@@ -54,6 +54,11 @@ run G3 "no palette bypass in app source" bash -c '
   [ "$c3" -eq 0 ] || { echo "C3 palette bypasses: $c3"; exit 1; }'
 run G4 "no app redeclares a package token" scripts/audit-token-ownership.sh
 run G10 "no silently-dropped utilities" scripts/audit-invalid-utilities.sh
+# R1 — the per-page checklist in § 2 of the DoD pointed at scripts/audit-routes.sh
+# for two weeks while no such file existed, so none of it ran. This asserts the
+# inventory that file now owns is still there and still non-empty: a sweep over
+# an emptied inventory visits nothing and reports success.
+run R1 "route inventory declared and non-empty" scripts/audit-routes.sh --inventory
 # G11 — an inline `style` attribute is the top of the cascade short of !important,
 # so it beats every layer, utility and class. That is how the Dashboard heading
 # defeated the heading ramp while every other gate reported clean. The codemod is
@@ -121,6 +126,22 @@ else
     printf '     %s\n' "   gate here can be satisfied by a token nothing consumes."
     printf '     %s\n' "   Run it:  THEME_GATE_BROWSER=1 scripts/theme-gates.sh"
     printf '     %s\n' "   or directly:  scripts/theme-gates-browser.sh [app ...]"
+  fi
+
+  # R2 — the SIGNED-IN sweep. G5/G6 above, however it is run, walks logged-out
+  # pages only: `/`, `/login`, `/404`, `/unauthorized`, `/privacy`, `/terms`.
+  # Every authenticated surface — nearly the whole product — was never measured,
+  # and the suite reported green throughout. Opt-in because it needs credentials
+  # and a live deployment, but opt-in behind a flag that names itself, not
+  # behind "go and find a session yourself", which is what the old silence
+  # amounted to and why it never happened.
+  if [[ ${THEME_GATE_ROUTES:-0} == 1 ]]; then
+    run R2 "per-page checks on SIGNED-IN routes" scripts/audit-routes.sh
+  else
+    printf '  \033[33m-\033[0m %-6s %s\n' "R2" "signed-in per-page sweep — NOT RUN"
+    printf '     %s\n' "└─ every gate above this line, G5/G6 included, reads LOGGED-OUT pages."
+    printf '     %s\n' "   Run it:  THEME_GATE_ROUTES=1 scripts/theme-gates.sh"
+    printf '     %s\n' "   or directly:  scripts/audit-routes.sh"
   fi
 fi
 

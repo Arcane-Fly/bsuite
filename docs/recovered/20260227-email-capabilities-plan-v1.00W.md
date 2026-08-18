@@ -1,3 +1,34 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (STILL-WANTED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # 📋 VERDICT: STILL-WANTED in part — the transport shipped, the tenant-facing surface did not
+>
+> At 3,010 lines this is the largest document in the directory. Treat it as **partly delivered**.
+>
+> **Delivered — evidence, live project `tuybltdrdefjblnplpqo` (2026-08-17):** edge functions
+> `email-dispatcher` (v71), `oauth-google-email` (v93), `oauth-microsoft-email` (v94),
+> `email-token-refresh` (v62), `email-inbox-sync` (v43); tables `email_integrations`,
+> `email_messages`, `email_message_links`, `email_audit_log`, `email_templates`.
+>
+> **Still wanted, and NOT covered by the completion ledger's 87 items:**
+>
+> 1. **Email signatures and per-tenant email branding (operator RULING 12.1).** Measured across
+>    `crm7/src`, `business-suite-unified/src` and `conduit/src`: **zero** implementation. Every
+>    "signature" hit in those trees is *document* signing, not an email sign-off block. Positive
+>    control: the same probe returns 50 files for `email_integrations`, so the zero is real.
+>    **This plan never specified them** — saying "it's in the recovery docs" is wrong here.
+> 2. **`email_templates` holds 0 rows** — tenant-scoped with admin RLS, and unseeded.
+>
+> **Already tracked elsewhere:** client-side account connection is `crm7#1705`; the Sent/SMS/
+> Internal read pane is `crm7#1610`; the settings/inbox UI is `crm7#480`.
+>
+> **Body defect:** the document presents itself as the complete email plan while containing no
+> signature or branding requirement at all.
+
+---
+
 # Email Capabilities - Full Implementation Plan
 
 **Version:** 1.00W

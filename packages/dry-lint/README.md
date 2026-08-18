@@ -11,7 +11,7 @@ The plugin ships four rules:
 | `bsuite/no-uuid-input-placeholder` | `error` | Flags `<Input placeholder="UUID of …">` and similar UUID-prompting placeholders on `<Input>`/`<input>`/`<Textarea>`/`<textarea>`. Operators must pick from a canonical entity selector, not paste a UUID by hand. |
 | `bsuite/oauth-callback-must-bridge` | `error` | Errors when a file calls `exchangeCodeForTokens()` without a corresponding `supabase.auth.setSession()` bridge — prevents the BSU→app handoff from leaving the user anonymous. |
 
-The ownership map lives at [`src/ownership-map.json`](./src/ownership-map.json) and is sourced from `docs/20260227-dry-one-shot-architecture-v1.02A.md §1` plus the V5–V10 findings in `docs/20260423-cross-app-write-audit-v1.00W.md`.
+The ownership map lives at [`src/ownership-map.json`](./src/ownership-map.json) and is sourced from `docs/20260227-dry-one-shot-architecture-v1.04A.md §1` plus the V5–V10 findings in `docs/20260423-cross-app-write-audit-v1.00W.md`.
 
 ## `bsuite/no-uuid-input-placeholder`
 

@@ -229,27 +229,41 @@ pnpm run format:check
 
 ## AI Model Standards
 
-### Primary Model: Grok 4.1 Fast Reasoning
+### Primary Model: Grok 4.3
 
-**Always use Grok 4.1 as primary unless explicitly testing fallbacks.**
+**Never write a model identifier into a caller.** Ask `selectModel()` for a tier and let the
+router resolve it. The roster is operator-approved and re-verified live against the gateway
+`/v1/models`; the single source of truth is `crm7/src/lib/ai/config.ts`, and this section is a
+pointer to it, not a second copy.
 
 ```typescript
-// ✅ Good: Use Grok 4.1 primary with automatic fallbacks
+// ✅ Good: ask for a tier, let the router resolve the model
 import { selectModel } from '@/lib/ai/model-router';
 
-const modelId = selectModel('medium'); // Returns 'xai/grok-4.1-fast-reasoning'
+const model = selectModel('medium'); // resolves to the current primary
 
-// ❌ Bad: Hardcoding model directly
-const modelId = 'anthropic/claude-sonnet-4.6'; // Don't do this
+// ❌ Bad: hardcoding any model identifier
+const model = 'anthropic/claude-opus-5'; // Don't do this — even when the id is current
 ```
+
+Hardcoding is the defect, independent of which identifier is used. A pinned string survives a
+roster change silently, which is how retired identifiers outlive their models. `scripts/drift-scan.mjs`
+hard-fails on retired identifiers (signal `STALE-GROK`) in **any** non-archived file, including
+Markdown — so a document that pins a model becomes a CI failure the moment the roster moves.
 
 ### Model Selection Rules
 
-| Task Complexity | Primary Model | Fallback Model | Reasoning |
-|----------------|---------------|----------------|-----------|
-| **Simple** | Grok 4.1 | Claude Haiku 4 | Grok 4.1 smart enough for all tasks |
-| **Medium** | Grok 4.1 | Claude Sonnet 4.6 | Grok 4.1 with 2M context handles most |
-| **Complex** | Grok 4.1 | Claude Opus 4.6 | Grok 4.1 primary, Opus for extreme edge cases |
+Tiers, not models. Resolved values below were read from `crm7/src/lib/ai/config.ts` at
+`development` HEAD (roster change 2026-07-31); re-read that file rather than trusting this table.
+
+| Task Complexity | Primary tier resolves to | Fallback | Reasoning |
+|----------------|--------------------------|----------|-----------|
+| **Simple** | Grok 4.1 Fast Non-Reasoning | GLM 5.2 | ~6× cheaper on input; sized for high-volume lookup/CRUD traffic |
+| **Medium** | Grok 4.3 (1M context) | GLM 5.2 | Everything capability-sensitive routes here |
+| **Complex** | Grok 4.3 (1M context) | Claude Opus 5 | 4.3 is one unified model, so `medium` and `complex` resolve alike; hardest multi-step work escalates to the fallback |
+
+> **Context window:** 1M, not 2M. The superseded pair carried 2M. Nothing batches near 2M today,
+> but a caller relying on >1M input is the constraint that changed.
 
 ### Cost Tracking
 

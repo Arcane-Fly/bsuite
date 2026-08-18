@@ -800,7 +800,7 @@ One-shot policy: Nothing deferred. Every scoped item is implemented fully in thi
 For Claude: REQUIRED SUB-SKILL: Use executing-plans or subagent-driven-development to implement this plan task-by-task.
 
 One-Shot Policy Reference
-All AGENTS.md files across the monorepo (root, crm7, R80.3, BSU, conduit) reference the DRY one-shot pattern from docs/20260227-dry-one-shot-architecture-v1.00A.md:
+All AGENTS.md files across the monorepo (root, crm7, R80.3, BSU, conduit) reference the DRY one-shot pattern from docs/20260227-dry-one-shot-architecture-v1.04A.md:
 
 Enter once, use everywhere.
 Every piece of data has exactly ONE authoritative entry point.

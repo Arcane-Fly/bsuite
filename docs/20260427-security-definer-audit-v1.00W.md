@@ -1,5 +1,36 @@
 # SECURITY DEFINER Privilege-Escalation Audit — `public.is_team_admin` + WS-G Helpers
 
+> ## ⚠ POPULATION SUPERSEDED — re-measured 2026-08-17
+>
+> **This audit covered 59 `SECURITY DEFINER` functions. The live database now has 223.** Measured
+> against `tuybltdrdefjblnplpqo`:
+>
+> ```sql
+> SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+> WHERE n.nspname = 'public' AND p.prosecdef;      -- 223
+> ```
+>
+> **164 definer functions have never been through this audit.** Each finding below still holds for
+> the function it names; the **coverage** claim does not. This document is not evidence that the
+> estate's definer surface is clean.
+>
+> One thing did get better, and it is worth stating precisely because it narrows what is actually
+> outstanding. Every one of the 223 now carries an explicit `search_path` — the highest-risk
+> configuration, a definer function with **no** `search_path` at all, is at **zero**:
+>
+> | `search_path` state | count |
+> |---|---|
+> | none set (worst case) | **0** |
+> | `search_path = ''` (strictest) | 6 |
+> | some other explicit value | 217 |
+>
+> So the search-path-shadowing class this document was written about is contained. What is *not*
+> established for the 164 unaudited functions is the other half of the job: whether each one's
+> **body** is correctly authorised — that it re-checks the caller rather than trusting that being
+> `SECURITY DEFINER` is itself permission. A definer function with a tight `search_path` and a
+> missing tenant predicate still returns another tenant's rows. Re-running the sweep over all 223
+> is the outstanding work.
+
 - **Doc id:** `20260427-security-definer-audit-v1.00W.md`
 - **Date:** 2026-04-27
 - **Auditor:** Claude Opus 4.7 (sub-agent run)

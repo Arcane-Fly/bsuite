@@ -6,6 +6,18 @@
 **Purpose:** Single entry point for finding any BSuite documentation. Like-for-like mapping across apps. Every document in every repo must be discoverable from here or from an app's `docs/README.md`.
 **Companions:** `20260504-bsuite-tech-stack-alignment-v1.00W.md` (tech baseline), `docs/README.md` (parent docs index), `docs/adr/README.md` (ADR index)
 
+> **R80.3 → R80.4 corrected 2026-08-17.** R80.3 left the submodule set on 2026-08-06 (`5e000c35`,
+> operator directive) to `~/Desktop/Dev/archived-repos-docs/R80.3`; R80.4 took its place and is what
+> serves `r8.crm7.app` today. This is a living cross-submodule index (Status: W), so app-name
+> mentions below — the topology tree, the like-for-like mapping tables, the cross-cutting ownership
+> table — are updated to R80.4 in place. **§3.5 is different and is banner-only, not renamed:** its
+> whole content is a verified-2026-05-04 file listing for `R80.3/docs/`, a folder that no longer
+> exists at that path. Renaming it to `R80.4/docs/` would assert this session confirmed R80.4 ships
+> the same files at the same paths, which it did not — so §3.5 is marked superseded instead. The
+> same caution applies to every *specific dated file path* under `R80.3/docs/` referenced elsewhere
+> in this document (the Fair Work row in §2.2 and §4, the §3.5 cross-links, and the closing index) —
+> those are marked unverified rather than repointed to a guessed R80.4 path.
+
 ---
 
 ## 1. Documentation Topology
@@ -19,7 +31,7 @@ bsuite/                          ← parent repo
 ├── crm7/docs/                   ← CRM7 (CRM + AI + canonical AI-SDK patterns)
 ├── conduit/docs/                ← Conduit (ATS — Next.js)
 ├── braden/docs/                 ← Braden (corporate site — corporate theme)
-├── R80.3/docs/                  ← R80.3 (wage calculator — compliance-critical)
+├── R80.4/docs/                  ← R80.4 (wage calculator — compliance-critical; was R80.3/docs/ until 2026-08-06)
 └── throughput/docs/             ← Throughput (idea management — Groq AI)
 ```
 
@@ -56,7 +68,7 @@ Full list in `docs/README.md`. Canonical sources are split into **Living Authori
 | `20260425-bsuite-finish-line-roadmap-v1.00W.md` | W | Finish-line roadmap — 154-item P0/P1/P2 execution order |
 | `20260501-merged-execution-backlog-v1.00W.md` | W (active queue) | Active phase-ordered queue post-Phase-0 ratification — single execution queue |
 | `20260227-contributing-standards-guide-v1.01W.md` | W | Universal quality + doc standards (supersedes v1.00A) |
-| `20260227-dry-one-shot-architecture-v1.02A.md` | A | DRY one-shot policy — single owning app per entity |
+| `20260227-dry-one-shot-architecture-v1.04A.md` | A | DRY one-shot policy — single owning app per entity |
 | `archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` | W | Gap report v2 — current authority (with §11 finish-line reconciliation) |
 | `archive/2026-06/20260319-entity-crosswalk-v1.00D.md` | D | CRM7 entity crosswalk + traceability |
 | `20260424-env-var-contributing-rules-v1.00W.md` | W | Environment variable conventions |
@@ -81,7 +93,7 @@ Some concerns no longer have a living markdown spec — the **package** or **cod
 | UI architecture + source chain | `packages/ui/` (in progress) + `packages/theme/` | `docs/archive/parent/2026-04-30-references-approved/20260316-ui-reference-v1.00A.md` |
 | Entity + field definitions | `packages/schema-registry/` (@bsuite/schema-registry@0.3.1) | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` (living) |
 | RBAC + permissions | `business-suite-unified/docs/20260316-bsu-crm7-rbac-rls-reference-v1.00W.md` + CRM7 `permissionConstants.ts` | `docs/archive/parent/2026-04-30-references-approved/20260301-crm7-rbac-matrix-v1.00A.md` |
-| Fair Work API integration | `R80.3/docs/20260304-r80-fairwork-api-reference-v1.01W.md` (canonical) + R80.3 + CRM7 src | `docs/archive/parent/2026-04-30-references-approved/20260310-fairwork-reference-v1.00A.md` |
+| Fair Work API integration | *unverified 2026-08-17 — was `R80.3/docs/20260304-r80-fairwork-api-reference-v1.01W.md` (canonical) + R80.3 + CRM7 src; R80.3 archived, R80.4 equivalent not confirmed* | `docs/archive/parent/2026-04-30-references-approved/20260310-fairwork-reference-v1.00A.md` |
 | GTO National Standards | CRM7 compliance code | `docs/archive/parent/2026-04-30-references-approved/20260228-gto-standards-reference-v1.00A.md` |
 | RAM credential + gov API access | `crm7/supabase/functions/generate-document/index.ts` (live impl) | `docs/archive/parent/2026-04-30-references-approved/20260304-ram-credential-government-access-map-v1.00A.md` |
 | WCAG contrast audit | Living tokens in `@bsuite/theme` | `docs/archive/parent/2026-04-30-audits-closed/20260407-d2c-wcag-contrast-audit-v1.00A.md` |
@@ -223,11 +235,17 @@ Actual files (verified 2026-05-04):
 
 ---
 
-### 3.5 R80.3 — Wage calculator
+### 3.5 R80.3 — Wage calculator — **SUPERSEDED 2026-08-17**
 
-**Folder:** `R80.3/docs/` | **README:** `R80.3/docs/README.md` | **Cross-links:** `R80.3/docs/PARENT-DOCS.md`
+> R80.3 left the submodule set on 2026-08-06 (`5e000c35`, operator directive); **R80.4** now serves
+> `r8.crm7.app`. This section is left as a historical record of what `R80.3/docs/` held on
+> 2026-05-04 rather than repointed to `R80.4/docs/` — this session did not check out R80.4 to
+> confirm it carries an identical file list, and a guessed rename would be a fabricated reference.
+> Treat every path below as **archived, not live**.
 
-Actual files (verified 2026-05-04):
+**Folder:** `R80.3/docs/` (archived) | **README:** `R80.3/docs/README.md` (archived) | **Cross-links:** `R80.3/docs/PARENT-DOCS.md` (archived)
+
+Actual files (verified 2026-05-04, R80.3 — pre-archive):
 
 | Doc | Purpose |
 |---|---|
@@ -264,21 +282,21 @@ Key documents: 20+ per-component docs (alert, badge, button, card, input, modal,
 
 Every shared concern should be documented in each submodule where it applies, with identical structure and a cross-link back to the parent canonical doc or authoritative source (code/package). This is the target state. Gaps are tracked in `docs/OUTSTANDING.md`.
 
-| Concern | Authoritative source | BSU | CRM7 | Conduit | Braden | R80.3 | Throughput |
+| Concern | Authoritative source | BSU | CRM7 | Conduit | Braden | R80.4 | Throughput |
 |---|---|:-:|:-:|:-:|:-:|:-:|:-:|
 | OUTSTANDING | `docs/OUTSTANDING.md` (SSoT — `docs/20260501-merged-execution-backlog-v1.00W.md` is the active execution queue) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488); `docs/reference/OUTSTANDING.md` is per-area audit and retained | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | `20260425-throughput-outstanding-v1.00W.md` (throughput-local, out of bsuite#488 scope) |
 | Roadmap | `docs/00-roadmap/20260112-master-roadmap-1.00W.md` *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250829-throughput-roadmap-v1.00W.md` ✅ |
-| Auth topology | `AGENTS.md` §Auth + `CLAUDE.md` mirror (archived snapshot: `archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md`) | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap |
-| Theme tokens | `@bsuite/theme@0.3.3` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap | ⚠️ cross-link gap |
-| Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap | `20251014-throughput-navigation-ux-guide-v1.00W.md` ✅ |
-| Component library | `packages/ui/` (in progress) | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | full component docs ✅ (20+ files) |
-| DRY architecture | `docs/20260227-dry-one-shot-architecture-v1.02A.md` | ⚠️ cross-link only | ✅ `ENTITY-SELECTORS.md` | ⚠️ cross-link only | n/a | ⚠️ cross-link only | n/a |
-| Tech stack | `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only |
-| Charge calc | `@bsuite/charge-calc@0.2.3` package | n/a | `CHARGE-CALC.md` ✅ | n/a | n/a | `CHARGE-CALC.md` ✅ | n/a |
-| Compliance | R80.3 `20260304-r80-fairwork-api-reference-v1.01W.md` + CRM7 code | ⚠️ | ✅ (referenced) | n/a | n/a | ✅ canonical impl | n/a |
+| Auth topology | `AGENTS.md` §Auth + `CLAUDE.md` mirror (archived snapshot: `archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md`) | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
+| Theme tokens | `@bsuite/theme@0.3.3` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
+| Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap (R80.4) | `20251014-throughput-navigation-ux-guide-v1.00W.md` ✅ |
+| Component library | `packages/ui/` (in progress) | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap (R80.4) | full component docs ✅ (20+ files) |
+| DRY architecture | `docs/20260227-dry-one-shot-architecture-v1.04A.md` | ⚠️ cross-link only | ✅ `ENTITY-SELECTORS.md` | ⚠️ cross-link only | n/a | ⚠️ cross-link only (R80.4) | n/a |
+| Tech stack | `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only (R80.4) | ⚠️ cross-link only |
+| Charge calc | `@bsuite/charge-calc@0.2.3` package | n/a | `CHARGE-CALC.md` ✅ | n/a | n/a | `CHARGE-CALC.md` — unverified in R80.4 | n/a |
+| Compliance | R80.3 `20260304-r80-fairwork-api-reference-v1.01W.md` + CRM7 code (archived — R80.4 equivalent unverified) | ⚠️ | ✅ (referenced) | n/a | n/a | ✅ canonical impl (R80.4) | n/a |
 | AI integration | CRM7 code + `AGENTS.md` §AI Implementation Standards | n/a | ✅ canonical | ✅ consumer | n/a | n/a | ✅ Groq-specific |
 | Schema builder | `@bsuite/schema-builder@0.7.0` | ✅ UI owner | ⚠️ consumer | ⚠️ consumer | n/a | ⚠️ consumer | n/a |
-| Page builder | `@bsuite/page-builder@0.2.0` | ✅ admin UI | ⚠️ consumer | ⚠️ consumer | n/a | ⚠️ consumer | n/a |
+| Page builder | `@bsuite/page-builder@0.9.0` | ✅ admin UI | ⚠️ consumer | ⚠️ consumer | n/a | ⚠️ consumer (R80.4) | n/a |
 
 **Gaps (⚠️) are the cross-link sweep backlog.** Each submodule has a dedicated `docs/PARENT-DOCS.md` file linking back to the Living Authority docs in §2.1 and the archived snapshots in §2.3. The shared section of those files is intentionally **byte-identical** across all 6 submodules except for the app-specific trailer — any divergence is a bug flagged by the monthly audit. The sweep was performed 2026-05-04 — see `docs/archive/2026-05-04-doc-unification/README.md`.
 
@@ -297,24 +315,24 @@ For each cross-app feature, exactly one app is the **owner** (canonical implemen
 | Platform logo (`usePlatformLogo`) | BSU (DB owner) + `@bsuite/theme` (runtime) | all clients | `packages/theme/` |
 | Schema builder admin UI | BSU | all clients (as consumers) | `packages/schema-builder/` |
 | Page composer admin UI | BSU | all clients (as consumers) | `packages/page-builder/` |
-| Universal canvas (PageGridLayout) | `@bsuite/page-builder` | BSU, CRM7, Conduit, R80.3 | `packages/page-builder/` |
-| Dashboard dnd-kit widget pattern | CRM7 (canonical) | BSU, R80.3 | CRM7 dashboard source |
+| Universal canvas (PageGridLayout) | `@bsuite/page-builder` | BSU, CRM7, Conduit, R80.4 | `packages/page-builder/` |
+| Dashboard dnd-kit widget pattern | CRM7 (canonical) | BSU, R80.4 | CRM7 dashboard source |
 | AI SDK patterns (streamText, tool calls) | CRM7 (canonical) | Conduit, Throughput | CRM7 AI source + `AGENTS.md` §AI Implementation Standards |
-| Tier-3 EntitySelectors | CRM7 | BSU, R80.3, Conduit | CRM7 components + `docs/20260227-dry-one-shot-architecture-v1.02A.md` |
+| Tier-3 EntitySelectors | CRM7 | BSU, R80.4, Conduit | CRM7 components + `docs/20260227-dry-one-shot-architecture-v1.04A.md` |
 | Contact CRUD | CRM7 | all other apps read via Supabase | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
 | Client CRUD | CRM7 | all other apps read via Supabase | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
-| Apprentice / Placement CRUD | CRM7 | R80.3, Conduit | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
+| Apprentice / Placement CRUD | CRM7 | R80.4, Conduit | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` |
 | Vacancy / Candidate / Application CRUD | Conduit | CRM7 (reads for hire flow) | Conduit source |
 | Public careers page (JobPosting JSON-LD) | Conduit | — | Conduit source |
-| Wage calculation engine | `@bsuite/charge-calc` | CRM7, R80.3 | `packages/charge-calc/` |
-| Fair Work API integration | R80.3 (canonical) | CRM7 (reads) | `R80.3/docs/20260304-r80-fairwork-api-reference-v1.01W.md` |
+| Wage calculation engine | `@bsuite/charge-calc` | CRM7, R80.4 | `packages/charge-calc/` |
+| Fair Work API integration | R80.4 (canonical) | CRM7 (reads) | *unverified — was `R80.3/docs/20260304-r80-fairwork-api-reference-v1.01W.md` (archived)* |
 | Billing / Stripe | BSU | CRM7 (reads plan) | `business-suite-unified/docs/` |
 | Corporate marketing surface | Braden | — | `braden/docs/20260316-braden-corporate-theme-reference-v1.00W.md` |
 | Idea management + Groq AI | Throughput | — | `throughput/docs/20250509-throughput-system-architecture-v1.00W.md` |
 | Navigation primitives (shared components) | `@bsuite/nav-core` | Braden (primary); D2C apps migrating | `packages/nav-core/` |
-| Data export (xlsx/csv/pdf) | `@bsuite/data-export` | CRM7, R80.3 (primary); all eligible | `packages/data-export/` |
+| Data export (xlsx/csv/pdf) | `@bsuite/data-export` | CRM7, R80.4 (primary); all eligible | `packages/data-export/` |
 | Shared auth client (OAuth 2.1 PKCE + JWKS) | `@bsuite/auth` | all 5 clients (migration in progress) | `packages/auth/` |
-| DRY one-shot ownership enforcement | `@bsuite/dry-lint` | all 6 apps (error level) | `packages/dry-lint/` + `docs/20260227-dry-one-shot-architecture-v1.02A.md` |
+| DRY one-shot ownership enforcement | `@bsuite/dry-lint` | all 6 apps (error level) | `packages/dry-lint/` + `docs/20260227-dry-one-shot-architecture-v1.04A.md` |
 
 **Disputes:** if two apps claim ownership of the same domain, raise an ADR in `docs/adr/` and resolve before merging any related code.
 
@@ -427,12 +445,12 @@ Fast navigation for agents and contributors. Bookmark this section.
 - [CRM7 docs](../crm7/docs/README.md) · [cross-links](../crm7/docs/PARENT-DOCS.md)
 - [Conduit docs](../conduit/docs/README.md) · [cross-links](../conduit/docs/PARENT-DOCS.md)
 - [Braden docs](../braden/docs/README.md) · [cross-links](../braden/docs/PARENT-DOCS.md)
-- [R80.3 docs](../R80.3/docs/README.md) · [cross-links](../R80.3/docs/PARENT-DOCS.md)
+- [R80.4 docs](../R80.4/docs/README.md) · [cross-links](../R80.4/docs/PARENT-DOCS.md) *(was `../R80.3/docs/`, archived 2026-08-06)*
 - [Throughput docs](../throughput/docs/README.md) · [cross-links](../throughput/docs/PARENT-DOCS.md)
 
 ### Architecture + governance
 
-- [DRY one-shot architecture (Approved)](./20260227-dry-one-shot-architecture-v1.02A.md)
+- [DRY one-shot architecture (Approved)](./20260227-dry-one-shot-architecture-v1.04A.md)
 - [Entity crosswalk](./archive/2026-06/20260319-entity-crosswalk-v1.00D.md)
 - [Gap report v2](./archive/2026-06/20260317-bsuite-gap-report-v2.00W.md)
 - [Env var rules](./20260424-env-var-contributing-rules-v1.00W.md)

@@ -1,3 +1,21 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED
+>
+> The brainstorm companion to the 2026-03-04 audit report above, drawing on 12+ BSuite documents
+> and industry research.
+>
+> **Superseded by** `docs/20260817-estate-completion-ledger-v1.00W.md` and, for competitor scope
+> specifically, by `20260306-workforce-one-parity-analysis-v1.00W.md` in this same directory.
+>
+> Useful as a record of how the gap set was reasoned about in early 2026. Not a work queue.
+> **Marker defect:** `W` on a historical analysis.
+
+---
+
 # CRM7 Comprehensive Gap Analysis & Audit Brainstorm
 
 **Document ID:** 20260304-crm7-comprehensive-gap-analysis-v1.00W.md

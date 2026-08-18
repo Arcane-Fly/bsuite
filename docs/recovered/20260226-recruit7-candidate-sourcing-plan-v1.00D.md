@@ -1,3 +1,27 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (NEVER-BUILT-AND-SHOULD-NOT-BE) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⛔ VERDICT: NEVER-BUILT-AND-SHOULD-NOT-BE
+>
+> This proposes a **new standalone repository `bsuite/recruit7`** for candidate sourcing and
+> onboarding. It was never created and should not be.
+>
+> **Measured:** `.gitmodules` declares six submodules — `crm7`, `braden`,
+> `business-suite-unified`, `conduit`, `throughput`, `R80.4`. There is no `recruit7`.
+>
+> **The capability was built, in Conduit, not in a seventh repo.** Conduit carries the recruitment
+> domain (`r7_*` tables, `r7_talent_pool_matcher` and `r7-automation-processor` edge functions) and
+> its AI tool suite already covers exactly this plan's scope:
+> `conduit/src/lib/ai/tools/candidate-tools.ts`, `job-tools.ts`, `pipeline-tools.ts`,
+> `interview-tools.ts`, `triage-tools.ts`.
+>
+> Standing up `recruit7` now would duplicate Conduit and breach the estate's enter-once-use-
+> everywhere rule. **The competitive-landscape section retains reference value.**
+
+---
+
 # Recruit7 — Candidate Sourcing & Onboarding Platform
 
 New standalone repo (`bsuite/recruit7`) for end-to-end candidate sourcing, job posting, employer/employee onboarding, and candidate progress tracking — purpose-built for GTOs and apprenticeship providers, designed to connect to the bsuite ecosystem via shared Supabase when ready.

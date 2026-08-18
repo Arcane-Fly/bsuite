@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/charge-calc",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Charge-rate calculation and BOOT assessment engine for Australian GTO and labour-hire operators. Includes FWC award comparator, failure-pattern detector, F17 export, and GTO multi-placement variant (ss.193/193A Fair Work Act 2009).",
   "type": "module",
   "license": "UNLICENSED",

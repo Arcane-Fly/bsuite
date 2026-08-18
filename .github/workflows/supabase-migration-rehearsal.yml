@@ -245,6 +245,16 @@ jobs:
         # two undiffable for two DIFFERENT reasons. The refusal is asserted, not
         # assumed. A gate never seen to fail is not a gate.
         run: |
+          # GitHub Actions' DEFAULT shell is `bash -e`, WITHOUT pipefail, so a
+          # pipeline exits with the status of its LAST command. Piping a guard
+          # through `tee` therefore reports tee's success and DISCARDS the guard's
+          # failure. Demonstrated: `bash -e -c 'false | tee /dev/null'` exits 0.
+          #
+          # That mattered most on the positive control below: the step that proves
+          # this gate can fail could itself pass while its self-test was failing —
+          # the guard-of-guards, maskable. Four other steps in this same file
+          # already set `set -euo pipefail`; these three were the ones that did not.
+          set -o pipefail
           bash scripts/supabase/resolve-changed-migrations.sh --self-test \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
@@ -282,6 +292,16 @@ jobs:
 
       - name: Plan (which scopes, which order)
         run: |
+          # GitHub Actions' DEFAULT shell is `bash -e`, WITHOUT pipefail, so a
+          # pipeline exits with the status of its LAST command. Piping a guard
+          # through `tee` therefore reports tee's success and DISCARDS the guard's
+          # failure. Demonstrated: `bash -e -c 'false | tee /dev/null'` exits 0.
+          #
+          # That mattered most on the positive control below: the step that proves
+          # this gate can fail could itself pass while its self-test was failing —
+          # the guard-of-guards, maskable. Four other steps in this same file
+          # already set `set -euo pipefail`; these three were the ones that did not.
+          set -o pipefail
           node scripts/supabase/rehearse-migrations.mjs --plan \
             --baseline-max "$BASELINE_MAX" --floor "$MIGRATION_FLOOR" | tee -a "$GITHUB_STEP_SUMMARY"
 
@@ -308,12 +328,48 @@ jobs:
           echo "Parent migrations restored: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l) files"
           psql "$REHEARSAL_DB_URL" -At -c "SELECT 'connected to ' || current_setting('server_version');"
 
+          # Enable pg_cron so the census can SEE scheduled jobs.
+          #
+          # `supabase db start` boots the real Supabase Postgres image, which ships
+          # pg_cron with the required shared_preload_libraries already set — the
+          # extension is simply not created by default. Without it, the census's
+          # cron_jobs probe correctly reports "not observable on this database" both
+          # before AND after, so a migration whose only effect is cron.schedule()
+          # moves nothing and is rejected as a silent no-op.
+          #
+          # That is the instrument failing to observe, not the migration failing to
+          # act, and the two must not produce the same verdict. crm7's
+          # 20260821040000_schedule_orphaned_cleanup_functions.sql is exactly this
+          # shape: its own header records that the REVOKEs are already no-ops, so
+          # scheduling IS the entire change.
+          #
+          # Deliberately NOT `set -e`-fatal. If a future image drops pg_cron, the
+          # census falls back to its guarded absent-probe and says so in the output
+          # rather than taking the whole rehearsal down — and the honest degradation
+          # is visible in the log line below, not silent.
+          if psql "$REHEARSAL_DB_URL" -v ON_ERROR_STOP=1 -c \
+               "CREATE EXTENSION IF NOT EXISTS pg_cron;" >/dev/null 2>&1; then
+            echo "pg_cron: enabled — scheduled jobs are observable by the census"
+          else
+            echo "::warning::pg_cron could not be created; cron-only migrations will read as no-ops"
+          fi
+
       - name: Positive control — the gate must be seen to fail, in both directions
         # Runs BEFORE the real replay and against the same engine that will judge
         # it. If this step passes, we know the instrument can distinguish a good
         # migration from a broken one from a silent no-op. If it were ever to
         # pass everything, every result below it would be worthless.
         run: |
+          # GitHub Actions' DEFAULT shell is `bash -e`, WITHOUT pipefail, so a
+          # pipeline exits with the status of its LAST command. Piping a guard
+          # through `tee` therefore reports tee's success and DISCARDS the guard's
+          # failure. Demonstrated: `bash -e -c 'false | tee /dev/null'` exits 0.
+          #
+          # That mattered most on the positive control below: the step that proves
+          # this gate can fail could itself pass while its self-test was failing —
+          # the guard-of-guards, maskable. Four other steps in this same file
+          # already set `set -euo pipefail`; these three were the ones that did not.
+          set -o pipefail
           node scripts/supabase/rehearse-migrations.mjs --self-test \
             --db-url "$REHEARSAL_DB_URL" | tee -a "$GITHUB_STEP_SUMMARY"
 

@@ -13,6 +13,33 @@
 > for a `SignDocumentFlow.tsx` that has since been deleted from `crm7/src`. It holds **0 rows**
 > and no application code reads or writes it. Whether it is retained or dropped is an open
 > question recorded in `docs/20260817-coverage-gap-closure-v1.00W.md` §G5.
+>
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED (in its evidence, not its decision)
+>
+> **The architectural decision below is still correct** — self-hosted signing, zero vendor
+> dependency, is the live intent. **Its evidence block is now false**, and this document is
+> marked `A` (Approved), so it is read as settled fact.
+>
+> Measured 2026-08-17 against `crm7`:
+>
+> | This document cites as proof | Reality |
+> |---|---|
+> | `src/lib/documentSigner.ts` | **Deleted** by `crm7#1665` — *"delete … the unreachable signing UI"* |
+> | `src/components/documents/SignDocumentFlow.tsx` | **Deleted** by the same commit |
+> | `src/pages/documents/signatures.tsx` | Still present (positive control — this probe can find files that exist) |
+> | *"Adobe Sign webhook retirement crm7#687 CLOSED"* | **Closed but not done.** The function is **ACTIVE in production today** (v42, redeployed 2026-08-16) and its source was restored to the repo by `bsuite#1955`. |
+>
+> **So the inversion is complete: the selected replacement was deleted from `crm7` as
+> unreachable, while the rejected vendor's endpoint is live.** The surviving self-hosted
+> implementation lives in **conduit** (`conduit/src/lib/esign/documentSigner.ts`), not crm7.
+>
+> Do not cite this document's file list as proof that signing is shipped in crm7. See the index
+> and `crm7#1476`.
 
 ---
 

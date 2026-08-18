@@ -11,13 +11,39 @@
 > The research itself remains sound. The decision it reached was implemented in
 > [`20260317-document-esigning-architecture-v1.00A.md`](./20260317-document-esigning-architecture-v1.00A.md),
 > which is **shipped** and is the current truth.
+>
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (REFERENCE-ONLY) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: REFERENCE-ONLY — and this is the document that got it right
+>
+> This is the **decision record that rejected Adobe Acrobat Sign** (§9, 2026-03-04) and selected
+> self-hosted signing. It needs no implementation verdict; it is the reason the sibling
+> implementation plan in this directory is a trap.
+>
+> **Its status marker is wrong, though:** it is flagged `W` (Working) when it records a decision
+> that was made, acted on, and shipped on 2026-03-17. A `W` marker on a settled ruling invites a
+> reader to treat the decision as still open. Read it as approved.
+>
+> One caveat: §9's own table still lists `document_signatories` as a table of the selected
+> architecture. That table **is** live today (with an `adobe_participant_id` column, 0 rows),
+> which is why the "no `document_signatories`" claim made elsewhere in this directory is wrong.
 
 ---
 
 # Document Lifecycle & E-Signature — Best Practice Research
 
 **Date:** 2026-03-04
-**Status:** v2.00W (Working)
+**Status:** v1.00W (Working)
+
+> **Marker correction, 2026-08-17.** This body said `v2.00W` against a `v1.00W` filename. The
+> filename won and the file was **not** renamed: `docs/recovered/` is a frozen archive — it is
+> deliberately exempted from `scripts/drift-scan.mjs`, and `00-READ-THIS-FIRST-corpus-health.md`
+> indexes its 33 files by name under an operator ruling. Renaming an indexed frozen-archive file to
+> satisfy a version marker would break the index to fix a digit. No `v2` of this research exists in
+> the estate.
 **Context:** CRM7 document lifecycle system uses Google Docs API for template merging. This research evaluated Adobe, open-source, and self-hosted alternatives for e-signatures and PDF viewing. **Final decision: self-hosted signing with pdf-lib + SHA-256, react-pdf for viewing, Google Docs API for merging. $0/month API costs.**
 
 ---

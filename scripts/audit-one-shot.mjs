@@ -3,7 +3,7 @@
  * O1 — ENFORCE the one-shot / DRY entity-ownership policy.
  *
  * The policy has been DOCUMENTED since 2026-02-27 and enforced by nothing:
- *   docs/20260227-dry-one-shot-architecture-v1.02A.md §1
+ *   docs/20260227-dry-one-shot-architecture-v1.04A.md §1
  *   "Every entity has exactly one owning app that provides the create/edit UI.
  *    Other apps may READ the entity but NEVER create or edit it independently."
  *
@@ -36,7 +36,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
-const DOC = 'docs/20260227-dry-one-shot-architecture-v1.02A.md';
+const DOC = 'docs/20260227-dry-one-shot-architecture-v1.04A.md';
 const MARKER = 'one-shot-ok';
 
 // Doc app names -> repo directory names.

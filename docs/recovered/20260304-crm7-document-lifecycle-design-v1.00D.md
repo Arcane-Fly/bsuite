@@ -12,6 +12,25 @@
 >
 > Retained for the requirements and the 20 GTO document types it enumerates, which are still
 > accurate. **The architecture, the vendor and the table shapes are not.**
+>
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED
+>
+> This is the design spec paired with the **rejected-vendor implementation plan** in this same
+> directory. It describes the 2026-03-04 Adobe-era shape (7-state status, separate signatory
+> table, `adobe_agreement_id`).
+>
+> **Superseded by** `20260317-document-esigning-architecture-v1.00A.md` (self-hosted signing) for
+> the signing model, and by `docs/references/20260730-gto-enquiry-to-billing-process-flow-v1.00D.md`
+> §2.4a for the template substrate.
+>
+> Its statement of the *problem* remains accurate and useful — CRM7 had zero functional document
+> generation, PDF buttons were stubs. Its statement of the *solution* names a rejected vendor.
+> Live tracking: `crm7#1476` and `crm7#1595`.
 
 ---
 

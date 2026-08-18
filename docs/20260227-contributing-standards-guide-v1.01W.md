@@ -4,6 +4,13 @@
 
 **Supersedes:** `docs/20260227-contributing-standards-guide-v1.00A.md` (kept for historical reference per docs-hygiene frozen-A mandate).
 
+> **R80.3 → R80.4 corrected 2026-08-17.** Four live rows below (Testing, Theme Compliance "Applies
+> to", the D2C implementation-rule bullet, and the Package Managers table) named `R80.3` as a
+> current submodule. R80.3 left the submodule set on 2026-08-06 (`5e000c35`, operator directive);
+> R80.4 took its place and is what serves `r8.crm7.app` today. Per `AGENTS.md`'s standing rule,
+> this document is a living standards guide an agent is expected to act on, not a dated audit, so
+> the correction is applied in place rather than banner-only.
+
 **What changed in v1.01W:**
 
 - §3 Testing — Framework line corrected: **all BSuite projects (including Next.js conduit) use Vitest.** Jest has never been installed in any project; the previous "Vitest (Vite projects) or Jest (Next.js projects)" line was stale from a Next.js 13-era assumption that never materialised. Verified across all 6 apps + 3 shared packages on 2026-04-28 — zero Jest installations monorepo-wide.
@@ -102,7 +109,7 @@ chore(bsu): upgrade Supabase client to v2.50
 
 - **Framework:** **Vitest for all projects, including Next.js conduit** (verified 2026-04-28 — zero Jest installations monorepo-wide).
   - Vitest 4.x for conduit (Next.js 16 supports Vitest natively; the project runs `vitest run` via `pnpm test`, with `vitest.config.ts` + `vitest.setup.ts`).
-  - Vitest 2.x / 3.x for the Vite-based apps (business-suite-unified, crm7, braden, R80.3, throughput) and the shared `@bsuite/*` packages.
+  - Vitest 2.x / 3.x for the Vite-based apps (business-suite-unified, crm7, braden, R80.4, throughput) and the shared `@bsuite/*` packages.
 - **Minimum coverage:** 70% for critical paths (business logic, API handlers, state management)
 - **Test file naming:** `*.test.ts` or `*.spec.ts`, co-located with source
 - **Required test types:**
@@ -177,13 +184,13 @@ The date-prefixed pattern above does not apply to canonical navigation and statu
 
 ### D2C Neon Electric Theme (webapps)
 
-**Applies to:** business-suite-unified, crm7, conduit, R80.3, throughput
+**Applies to:** business-suite-unified, crm7, conduit, R80.4, throughput
 
-All webapp projects must use `@bsuite/theme@0.3.3+` as the token source. Tailwind CSS must be v4 or later everywhere; Tailwind v3 is not permitted in package manifests, resolved lockfile entries, docs, or new implementation paths. Tailwind v4 apps import `@bsuite/theme/preset-v4.css` and `@bsuite/theme/css`.
+All webapp projects must use `@bsuite/theme` as the token source (floor `^0.11.0`; published `0.11.2` at 2026-08-17 — check npm rather than trusting this number). Tailwind CSS must be v4 or later everywhere; Tailwind v3 is not permitted in package manifests, resolved lockfile entries, docs, or new implementation paths. Tailwind v4 apps import `@bsuite/theme/preset-v4.css` and `@bsuite/theme/css`.
 
 - **OKLCH source tokens** are mandatory. Hex/RGB/HSL are legacy references or browser fallbacks only.
 - **Role aliases** are the consumer contract: use `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-destructive`, and inverse `text-on-*` tokens rather than raw palette names.
-- **Error/destructive roles** are Electric Purple by platform policy. Coral/red must not be semantic error/destructive.
+- **Error/destructive roles** are **Electric Red** by platform policy (contract 0.7.0, 2026-08-02). Purple and indigo must not be semantic error/destructive — they collide with primary under protanopia. CI enforces red.
 - **Dark mode text** uses the five-tier anti-glare scale capped at `oklch(0.94 ... )`; pure white is not a dark-surface text token.
 - **Enterprise white-labelling** is via `BrandingProvider` role-alias overrides. Error/destructive roles are not tenant-overridable.
 - **Typography:** Inter (display/body), JetBrains Mono (code)
@@ -192,7 +199,7 @@ All webapp projects must use `@bsuite/theme@0.3.3+` as the token source. Tailwin
 **Implementation rule:**
 
 - CRM7 is the reference implementation for the shared D2C shell and high-visibility workflow surfaces.
-- `business-suite-unified`, `conduit`, `R80.3`, and `throughput` should follow the same semantic shell model even when their local token plumbing differs.
+- `business-suite-unified`, `conduit`, `R80.4`, and `throughput` should follow the same semantic shell model even when their local token plumbing differs.
 
 **Key roles:**
 
@@ -200,15 +207,30 @@ All webapp projects must use `@bsuite/theme@0.3.3+` as the token source. Tailwin
 |--------------|--------------|-----|
 | `--role-primary` / Electric Blue | `oklch(0.546 0.215 262.9)` | Primary actions, links, focus affordances |
 | `--role-accent` / Electric Cyan | `oklch(0.769 0.132 191.7)` | Accents, highlights, visible focus in dark mode |
-| `--role-success` | `oklch(0.723 0.192 149.6)` | Success states; pair with icon/text |
-| `--role-warning` | `oklch(0.728 0.168 22.5)` | Warning states; pair with icon/text |
-| `--role-error` / `--role-destructive` | `oklch(0.568 0.202 283.1)` | Purple semantic error/destructive role; red/coral is banned for this role |
+| `--role-success` | `oklch(0.600 0.130 195)` | Success states (Electric Teal); pair with icon/text |
+| `--role-warning` | `oklch(0.800 0.150 75)` | Warning states (Electric Amber); pair with icon/text |
+| `--role-error` / `--role-destructive` | `oklch(0.580 0.230 25)` | **RED** (Electric Red). Purple and indigo are quarantined from semantics entirely. Tenant override is BLOCKED on these two tokens. |
+
+> **Corrected 2026-08-17.** The three semantic rows above previously named the pre-0.7.0 values —
+> error/destructive as purple `oklch(0.568 0.202 283.1)`, success as green `oklch(0.723 0.192 149.6)`,
+> warning as orange `oklch(0.728 0.168 22.5)` — and stated that "red/coral is banned for this role".
+> That is inverted: contract **0.7.0** (2026-08-02) made error/destructive **red**, and CI enforces red.
+> Agents reading the old table wrote purple and burned a CI round.
+>
+> The invariant is **SEPARATION, not a fixed hue**, measured by Vienot-Brettel dichromat simulation.
+> D2C's primary is blue, so error must be red: purple scored ΔE 0.006 against primary under
+> protanopia — the destructive colour and the primary action colour were the same swatch. Warm
+> states separate by **lightness** (under deuteranopia red and amber both read yellow — error is the
+> dark one, warning the light one). Worst-case ΔE across every semantic pair is now ≥ 0.156.
+>
+> `--role-primary` and `--role-accent` were re-measured and are unchanged. Source of truth is
+> `packages/theme/src/css/vars.css`; never bind a component to a `--neon-electric-*` value directly.
 
 ### Corporate Branding (braden.com.au)
 
 **Applies to:** braden project only
 
-Braden is a separate corporate brand, but it follows the same token architecture as D2C: OKLCH source tokens, role aliases, shadcn bridge variables, softened text scale, and purple semantic error/destructive roles. It imports `@bsuite/theme/braden-css`, not `@bsuite/theme/css`.
+Braden is a separate corporate brand, but it follows the same token architecture as D2C: OKLCH source tokens, role aliases, shadcn bridge variables, softened text scale, and the same **red** semantic error/destructive roles (`--role-error` / `--role-destructive` → `--error-red`, `packages/theme/src/css/braden.css`). It imports `@bsuite/theme/braden-css`, not `@bsuite/theme/css`.
 
 | Corporate token | OKLCH source | Legacy reference | Use |
 |-----------------|--------------|------------------|-----|
@@ -231,13 +253,42 @@ Red is allowed as Braden identity. Red as semantic error/destructive is banned a
 
 ## 7. Pull Request Process
 
-1. Branch from `main` using `feature/description` or `fix/description`
+1. Branch from `development` using `feature/description` or `fix/description`. **Never branch from
+   or target `main`** — `main` is production and lands only by promotion PR. (This step read
+   "branch from `main`" until 2026-08-17; that contradicted AGENTS.md tripwire 1 and was wrong.)
 2. Write code following all standards above
 3. Ensure tests pass and coverage meets threshold
 4. Update documentation if behavior changes
-5. Use the PR template with deployment notes for DB changes
+5. Fill in [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md), which loads
+   automatically, adding deployment notes for DB changes
 6. Request review; address feedback promptly
 7. Squash-merge when approved
+
+### Closing issues from a pull request
+
+Write `Closes #123` in the PR body and leave it. **Do not close the issue by hand.**
+
+Until 2026-08-17 that keyword did nothing here: GitHub auto-closes only on a merge to a
+repository's **default** branch, every repository in this estate defaults to `main`, and every pull
+request targets `development`. Fifteen issues sat fixed-and-open as a result.
+
+[`.github/workflows/development-merge-issue-closer.yml`](../.github/workflows/development-merge-issue-closer.yml)
+now honours the keyword on a `development` merge — it comments on the issue naming the merge SHA,
+then closes it — and sweeps all seven repositories hourly so submodule pull requests are covered
+from one place.
+
+| Written in the PR body | Result |
+|---|---|
+| `Closes #123`, `Fixes #123`, `Resolves #123` (also `closed`/`fixed`/`resolved`, `Closes: #123`, `GH-123`, a full issue URL) | closed, with an audit comment naming the merge SHA |
+| `Fixes #3, #4 and #5` | all three closed |
+| `Closes the loop on #123` | ignored — the reference must immediately follow the keyword, same as GitHub |
+| `> Closes #123` (blockquote) · `- [ ] Closes #123` (checklist) | ignored, so quoting a review cannot close live work |
+| inside a code fence, an `inline span`, or an HTML comment | ignored |
+| `this does not close #123` | ignored |
+| `GaryOcean428/crm7#123` (cross-repo) | **reported, never closed** — close it by hand |
+
+The parser is `scripts/parse-closing-keywords.mjs`; `--self-test` is its contract and a registered
+guard in `scripts/guard-registry.mjs`. Change the rules there, not by closing issues manually.
 
 ### PR Template for Database Changes
 
@@ -275,7 +326,7 @@ Red is allowed as Braden identity. Red as semantic error/destructive is banned a
 | crm7 | pnpm |
 | conduit | pnpm |
 | braden | pnpm |
-| R80.3 | pnpm |
+| R80.4 | pnpm |
 | throughput | pnpm |
 
 ---

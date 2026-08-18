@@ -1,3 +1,23 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (REFERENCE-ONLY) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # 📚 VERDICT: REFERENCE-ONLY — competitor analysis
+>
+> Feature-parity mapping of **Workforce One** (Code House, Adelaide), the incumbent GTO platform,
+> against BSuite, drawn from public product pages and vendor PDFs.
+>
+> **No implementation verdict applies** — this is competitor research, not a BSuite requirement.
+> Its gap list feeds prioritisation but is not itself a work queue, and several gaps it names have
+> since been closed under their own issues (for example the Codehouse integration parity set,
+> `bsuite#577`, CLOSED).
+>
+> **Marker defect:** `W` (Working) on reference material implies pending work. Its companion
+> extraction `wf1-ots-parity-implementation-229a69.md` is undated and out of this backlog's scope.
+
+---
+
 # Workforce One vs BSuite — Feature Parity Analysis
 
 **Date:** 2026-03-06

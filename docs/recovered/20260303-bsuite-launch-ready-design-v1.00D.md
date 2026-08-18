@@ -1,3 +1,25 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⚠️ VERDICT: SUPERSEDED
+>
+> A cross-app "compete immediately" design sweep covering CRM7, BSU, R80.3, Conduit and
+> braden.com.au, written 2026-03-03.
+>
+> **Superseded on two axes.** *Product scope:* by the 2026-08-17 estate completion ledger
+> (`docs/20260817-estate-completion-ledger-v1.00W.md`), which supersedes every prior completion
+> claim across the estate. *Visual design:* by the D2C Neon Electric brand system and the
+> Unified Design Language rollout (`bsuite#635`, 9 waves, open).
+>
+> One of its named targets no longer exists in the form described: **R80.3 has been retired in
+> favour of R80.4**.
+>
+> Retained for its competitive framing. Do not treat its component or page inventory as current.
+
+---
+
 # BSuite Launch-Ready Design — Compete Immediately
 
 **Document ID:** 20260303-bsuite-launch-ready-design-v1.00D.md

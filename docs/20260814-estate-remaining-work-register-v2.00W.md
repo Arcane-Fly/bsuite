@@ -5,8 +5,11 @@
 > **Every verdict and count below is superseded by
 > [`docs/20260817-estate-completion-ledger-v1.00W.md`](20260817-estate-completion-ledger-v1.00W.md).**
 > All 87 items were re-measured against the live database, live advisors, live deployed edge
-> functions, live production probes and resolved lockfiles on 2026-08-17: **16 DONE, 3 never
-> defects, 1 already settled by an operator ruling, 13 partial, 54 open.**
+> functions, live production probes and resolved lockfiles on 2026-08-17: ~~**16 DONE, 3 never
+> defects, 1 already settled by an operator ruling, 13 partial, 54 open.**~~ **Corrected the same
+> day, hours later: 19 DONE, 3 never defects, 1 already settled, 14 partial, 50 open** — the four
+> `A-`series items (ratified ADRs never implemented) moved once bsuite#2053 fixed the underlying
+> ADRs; see the ledger's own §1 and §2 for the row-level evidence.
 >
 > **This document's item numbering and evidence remain the reference** — the ledger keeps the same
 > 87 identifiers, so nothing has to be re-mapped. What is *not* reliable here is any status or

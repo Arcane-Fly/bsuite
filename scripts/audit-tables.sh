@@ -60,7 +60,7 @@
 # References:
 #   - docs/20260506-table-usage-audit-v1.00W.md              (methodology + verdicts)
 #   - docs/20260506-conduit-canonical-map-reconciliation-v1.00W.md  (r7_* vs conduit_*)
-#   - docs/20260227-dry-one-shot-architecture-v1.02A.md      (entity ownership)
+#   - docs/20260227-dry-one-shot-architecture-v1.04A.md      (entity ownership)
 #
 # ------------------------------------------------------------------------------
 

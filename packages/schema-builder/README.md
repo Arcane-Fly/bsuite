@@ -4,7 +4,7 @@ Canonical Schema Builder canvas, hooks, and Zod schemas for BSuite consumer apps
 (crm7, business-suite-unified, conduit, R80.3).
 
 Consolidates the four previously-duplicated React Flow schema builders per
-[ADR-0004](../../docs/adr/ADR-0004-schema-builder-consolidation.md) and
+[ADR-0008](../../docs/adr/ADR-0008-schema-builder-consolidation.md) and
 [`docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md`](../../docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md)
 Phase 1a. Net removal of ~1500 lines of duplicated code across the suite.
 
@@ -75,7 +75,8 @@ export default function SchemaBuilderPage() {
 - Phase 1a/1b source plan:
   [`docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md`](../../docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md)
 - Consolidation ADR:
-  [`docs/adr/ADR-0004-schema-builder-consolidation.md`](../../docs/adr/ADR-0004-schema-builder-consolidation.md)
+  [`docs/adr/ADR-0008-schema-builder-consolidation.md`](../../docs/adr/ADR-0008-schema-builder-consolidation.md)
+  (renumbered from ADR-0004 on 2026-08-17 to resolve a duplicate-number collision)
 - Phase 3 plan:
   [`docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md`](../../docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md)
 - Phase 3 signoff:

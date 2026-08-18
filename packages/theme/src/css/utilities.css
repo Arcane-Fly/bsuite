@@ -142,3 +142,48 @@
 @media (forced-colors: active) {
   .text-gradient-accent { background-image: none; color: CanvasText; }
 }
+
+/* ── NAV / SWITCHER GRADIENT UNDERLINE ───────────────────────────────────
+   TH-6. Promoted from crm7/src/index.css, 2026-08-17.
+
+   The operator asked for the nav gradient underline in every app. It was
+   unimplementable anywhere but crm7, because the treatment existed only in
+   crm7's own stylesheet — 3 files in one app (the two declarations here plus
+   two call sites), and ZERO occurrences in this package or in the other five
+   apps. A request that needs a copy-paste to satisfy is a packaging defect,
+   not a feature request, and copying it would have produced six declarations
+   drifting apart the way `--bg-shell-elevated` did.
+
+   It paints from --gradient-accent, which this package already owns, so
+   nothing app-specific came with it.
+
+   TWO FORMS, ONE PAINT SOURCE — that pairing is the point. Keeping them
+   adjacent is what makes "the switcher and the active nav item match" a fact
+   about this file rather than two declarations someone has to remember to
+   keep in step:
+
+     `-span`   the caller already renders its own absolutely-positioned
+               element for the rule (crm7's tenant switcher does).
+     `::after` the caller does not, so the rule is generated for it (the
+               navigation items). REQUIRES `position: relative` on the host —
+               without it the rule anchors to the nearest positioned ancestor
+               and lands somewhere else on the page.
+
+   The `-span` form carries no geometry on purpose: the caller owns its own
+   inset/height/opacity, and crm7's switcher sets `opacity-70` with a
+   `group-hover:opacity-100` transition. Only the paint is shared. */
+.bsuite-gradient-underline-span {
+  background: var(--gradient-accent);
+}
+
+.bsuite-gradient-underline::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.5rem;
+  bottom: 0.125rem;
+  height: 0.125rem;
+  border-radius: 9999px;
+  background: var(--gradient-accent);
+  opacity: 0.7;
+  pointer-events: none;
+}
