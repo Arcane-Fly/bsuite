@@ -112,7 +112,7 @@ docs/ai/
 
 ### Features
 
-- [Feature Map](features/20260227-feature-map-complete-v1.0.0.md) - All AI capabilities with diagrams
+- [Feature Map](features/20260227-feature-map-complete-v1.00W.md) - All AI capabilities with diagrams
 - Tool Registry *(planned)* - Complete tool documentation
 - Workflow Automation *(planned)* - Workflow system guide
 
