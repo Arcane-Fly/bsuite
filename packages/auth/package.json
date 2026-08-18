@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/auth",
-  "version": "0.2.8",
+  "version": "1.0.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {

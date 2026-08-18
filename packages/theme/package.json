@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/theme",
-  "version": "0.14.0",
+  "version": "1.0.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {

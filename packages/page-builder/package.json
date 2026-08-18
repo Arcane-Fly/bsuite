@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/page-builder",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Shared BSuite responsive page-builder grid and layout persistence primitives",
   "type": "module",
   "license": "UNLICENSED",
@@ -36,7 +36,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "@bsuite/theme": ">=0.7.1",
+    "@bsuite/theme": "workspace:^",
     "@dnd-kit/core": "^6",
     "@dnd-kit/sortable": "^10",
     "@dnd-kit/utilities": "^3",

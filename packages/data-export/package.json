@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/data-export",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "description": "Shared BSuite data export/import primitives for CSV, XLSX, and JSON. Pure logic, zero React, zero Supabase.",
   "type": "module",
   "license": "UNLICENSED",
