@@ -863,37 +863,18 @@ jobs:
       # and the pnpm lockfile are both untouched; the packages land in the root
       # node_modules, which is exactly where ESM will look. NODE_PATH is not an
       # option here — ESM ignores it.
-      - name: Give the probe its imports (scratch prefix, then link)
-        shell: bash
-        run: |
-          set -euo pipefail
-          # SCRATCH PREFIX, NOT THE REPO. A bare `npm install` at this root dies
-          # on the pnpm workspace:
-          #     npm error Cannot read properties of null (reading 'matches')
-          # npm cannot read pnpm-workspace.yaml's members, and even when it can
-          # it rewrites the checkout's node_modules — which is why the
-          # own-package-freshness guard already installs this way.
-          npm install --prefix "$RUNNER_TEMP/probe-deps" \
-            --no-save --no-package-lock --no-audit --no-fund \
-            eslint typescript-eslint
-
-          # THEN LINK, because ESM cannot be pointed at a directory. `import`
-          # ignores NODE_PATH entirely, so the packages have to be reachable by
-          # walking up from scripts/ — i.e. present in the root node_modules.
-          # Node realpaths the symlink, so eslint resolves its OWN dependencies
-          # inside the scratch prefix where they were installed together.
-          mkdir -p node_modules
-          ln -sfn "$RUNNER_TEMP/probe-deps/node_modules/eslint" node_modules/eslint
-          ln -sfn "$RUNNER_TEMP/probe-deps/node_modules/typescript-eslint" node_modules/typescript-eslint
-
-          # Assert here rather than letting the probe report a confusing FAIL.
-          node --input-type=module -e "await import('eslint'); const t = await import('typescript-eslint'); if (!(t.parser ?? t.default?.parser)) { console.error('typescript-eslint exposes no parser'); process.exit(1) } console.log('probe imports resolve, parser present')"
-
-      # SELF-TEST FIRST, deliberately — the house pattern from the near-pure
-      # gate above. `--self-test` mutates the call-argument walk out of every
-      # inline copy and asserts the guard goes red. A probe that passes with its
-      # own subject removed is measuring nothing, and this repository has
-      # shipped one that did.
+      # NO EXTRA INSTALL STEP HERE, DELIBERATELY. The root package.json now
+      # DECLARES eslint and typescript-eslint as devDependencies, so the
+      # `pnpm install` above places them in the root node_modules — which is
+      # exactly where ESM looks when the probe resolves `await import('eslint')`
+      # by walking up from scripts/.
+      #
+      # An earlier fix installed them into a scratch prefix and symlinked them
+      # in. That worked, but it is now the WRONG mechanism and actively harmful
+      # next to the declaration: the symlink would shadow the pnpm-installed
+      # copy with whatever npm resolved separately, so the version the gate runs
+      # would stop matching the version the repo pins. One mechanism, declared
+      # in the manifest, is the whole point.
       - name: Reachability probe self-test (positive control — must FAIL)
         shell: bash
         run: |
