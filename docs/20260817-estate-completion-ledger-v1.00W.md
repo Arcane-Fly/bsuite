@@ -68,6 +68,14 @@ corrected in bsuite#2053 — see §2 "A — ratified decisions never implemented
 evidence. The whole P0 security class is closed but one, and the transaction-integrity class is
 closed but one.
 
+**SECOND CORRECTION, 2026-08-17 (later the same day, in the full-window docs sweep): 34 need no
+further work — 30 measured DONE, 3 never defects, 1 already settled. The remaining 53 carry real
+outstanding work: 39 untouched and 14 part-done.** All 11 OPEN D-series items (documentation
+hygiene) moved to DONE — 10 by an in-repo hygiene pass this ledger's own "measured 2026-08-17"
+timestamp predates (`a5a05ba7`), and D-10 by advancing two stale submodule pointers
+(`fix/docs-full-window-sweep`) onto fixes that already existed on `throughput` and `braden`'s own
+`origin/development` — see §2 "D — documentation hygiene" for the row-level evidence.
+
 **No — the 87 items do not cover the dated document set, and this is the more important finding.**
 A coverage pass found **11 clusters of genuinely outstanding work that appear nowhere in the 87**,
 including two documents written the day before and the day of the register itself. The register is
@@ -87,19 +95,29 @@ register's 264; and the register's own headline "all 264 were read and classifie
 
 | Verdict | Count | Meaning |
 |---|---:|---|
-| **DONE** | ~~16~~ ~~19~~ ~~22~~ **24** | Re-measured fixed, with evidence. No work remains. |
+| **DONE** | ~~16~~ ~~19~~ ~~22~~ ~~24~~ ~~30~~ ~~33~~ **35** | Re-measured fixed, with evidence. No work remains. |
 | **NOT-A-DEFECT** | **3** | Measured; the item was never a defect. Filed in error or measured wrongly. |
 | **SUPERSEDED** | **1** | Already settled by an operator ruling the register post-dates. |
 | **PARTIAL** | ~~13~~ ~~14~~ ~~13~~ **14** | Half shipped. Real work remains — counted as open below. |
-| **OPEN** | ~~54~~ ~~50~~ ~~48~~ **45** | Untouched, or the fix exists but has not reached the running system. |
+| **OPEN** | ~~54~~ ~~50~~ ~~48~~ ~~45~~ ~~39~~ ~~37~~ **34** | Untouched, or the fix exists but has not reached the running system. |
 | **Total** | **87** | |
 
-**Closed: ~~20~~ ~~23~~ ~~26~~ 28. Carrying work: ~~67~~ ~~64~~ ~~61~~ 59** (14 partial + 45 open). Corrected
-2026-08-17 for the four A-series items — see §2 and §6 item 2 — and again 2026-08-18 for **K-2**
-(OPEN → DONE, fixed here), **AD-1** (PARTIAL → DONE, fixed here) and **AD-2** (OPEN → DONE,
-*already done on `origin/development` before this lane started; the OPEN verdict was an artefact of
-measuring at the submodule pin*). **AD-3 was re-measured the same day and did not move**, which is
-recorded because a re-measurement that changes nothing is evidence too.
+**Closed: ~~20~~ ~~23~~ ~~26~~ ~~28~~ ~~34~~ ~~37~~ 39. Carrying work: ~~67~~ ~~64~~ ~~61~~ ~~59~~ ~~53~~ ~~50~~ 48** (14 partial + 34 open).
+
+*Merged twice on 2026-08-18, both times as a UNION COMPUTED FROM DELTAS against
+the shared ancestor — never by taking a side, because each lane was correct only
+about the class it had measured:*
+
+```
+shared ancestor : DONE 22  PARTIAL 13  OPEN 48   (+3 NOT-A-DEFECT +1 SUPERSEDED) = 87
+this lane       :      +11         +0       -11   the D class (D-1..D-12)
+development     :       +2         +1        -3   AD-4 & AD-7 -> DONE, AD-6 -> PARTIAL
+union           : DONE 35  PARTIAL 14  OPEN 34   ->  35+14+34+3+1 = 87 ✓
+```
+
+*The total is CHECKED to 87 each time rather than asserted. A union of two
+independent count corrections is exactly where an off-by-one stops being
+visible, and this file has now been through three of them.*
 
 > **One rule applied throughout, because it is where this estate has repeatedly fooled itself:**
 > a filed issue is never reported as an addressed defect, and neither is a merged migration. Three
@@ -340,9 +358,35 @@ applied before this pass and one third of it was never a defect at all — see i
 | PO-4 | Staffing orders, safety questions, payslip viewer, chasing | **OPEN** | **Every one of seven expected tables resolves to null.** Nothing shipped. | L |
 | PO-5 | Host money view gated on M-3, M-4 and M-7 | **OPEN** | Both gates confirmed unchanged (rates 0 of 156; catalogue 8 of 21). **Accuracy risk is real but narrower than filed:** 1 of 19 ladders carries a clause-read allowance scale, not 2 of 21 — the other 18 render a shipped "unverified default" warning. The view itself is not started. **UPDATE, same day:** M-3 and M-4 are now closed for MA000020 (see their rows above) — the whole live-placement population, per `award_trades` — but that does not move this row. **M-7 alone still fully blocks PO-5**: `award_classifications` is 0 rows for *every* award including MA000020, and it is the parent key rates are seeded from, so the host money view has nothing to render regardless of clause coverage. | L |
 
-### D — documentation hygiene · 0 DONE, 11 OPEN, 1 NOT-A-DEFECT
+### D — documentation hygiene · ~~0 DONE, 11 OPEN, 1 NOT-A-DEFECT~~ **11 DONE, 0 OPEN, 1 NOT-A-DEFECT — corrected 2026-08-17, later the same day, in the full-window docs sweep**
 
-Cheap, and the reason agents keep re-deriving the same wrong things.
+> **CORRECTION, 2026-08-17 (later the same day).** Every OPEN row below was fixed within hours of
+> this ledger's own "measured 2026-08-17" timestamp — most by a dedicated hygiene pass
+> (`a5a05ba7`, "repair the indexes agents read first"), landed the same morning this ledger was
+> written but not reflected back into these rows. Verified live at `origin/development`, not
+> re-derived from commit messages: D-1 (`docs/README.md` + `plans/README.md`/`STATUS.md`
+> cross-links repointed, 0 dangling); D-2 (destructive-colour rows now read red, matching the live
+> token); D-3/D-6 (page-builder version + R80.3→R80.4 corrected in every *living* reference doc,
+> commit `1078255f`); D-4 (retired model identifiers removed from the AI contributing guide without
+> reproducing them); D-7 (security-inventory counts bannered to the live 402 tables / 222
+> functions); D-8 (references folder indexed, dangling links repointed); D-9 (STATUS.md bannered
+> historical); D-11 (16 named plans bannered superseded, `afb091e3`); D-12 (handback document
+> bannered — promotions are no longer described as absent).
+>
+> **D-10 is the one genuinely closed *after* this ledger, not merely uncredited by it**, and it
+> is the sharpest instance of "merged is not applied" this sweep found: both fixes existed on
+> their submodules' own `origin/development` — `throughput#308` (fills all five component-doc
+> templates) and `braden#409` (corrects the Tailwind v3 claim) — but this repo's pinned submodule
+> commits predated both merges, so nothing in this repo's evidence chain could see them. The
+> docs-sweep branch (`fix/docs-full-window-sweep`) advances both pointers; re-grepped afterward for
+> `[Describe what`/`[Category:`/`[Team/Person`, zero live hits remain (one self-referential banner
+> line in each file quotes the old marker, which is not the same as containing it unfilled).
+>
+> D-5 stands as originally recorded: **NOT-A-DEFECT**.
+
+Cheap, and the reason agents keep re-deriving the same wrong things — this class is now fully
+closed as of the pointer-bump above; the original OPEN verdicts are left visible below rather than
+rewritten, per this estate's docs-hygiene convention.
 
 | # | Item | Verdict | Evidence measured 2026-08-17 | Size |
 |---|---|---|---|---|
@@ -442,9 +486,10 @@ than filed — the credential is invalid, not merely unwired.
 **Theme — 10 items.** TH-3 is urgent for a non-obvious reason: the baseline is stale in the
 direction that **fails the build**, and the next pull request touching any stylesheet trips it.
 
-**Documentation — 11 items, nearly all S.** The whole class is a day's work and it is why agents
+**Documentation — 11 items, nearly all S.** ~~The whole class is a day's work and it is why agents
 keep re-deriving wrong answers. D-2, D-3 and D-4 actively teach falsehoods to every agent that
-reads them.
+reads them.~~ **CORRECTION, 2026-08-17 (later the same day): closed.** All 11 now DONE — see §2
+"D — documentation hygiene".
 
 ---
 
@@ -738,7 +783,8 @@ long enough that the waiting is itself the risk.
 2. **TH-3's re-bank**, before it fails an unrelated pull request red.
 3. **K-0 publish**, then **K-2** — the fabricated compliance score — then the rest of the K class.
 4. **V-1 credentials.** Everything visual stays unproven until this works.
-5. **The D class**, nearly all S — it is a day, and it stops agents learning falsehoods.
+5. ~~**The D class**, nearly all S — it is a day, and it stops agents learning falsehoods.~~
+   **DONE, 2026-08-17 (later the same day)** — see §2 "D — documentation hygiene".
 6. **M-7 → M-3/M-4 → M-5 → PO-5**, the money chain, in that order. *M-5's shipped-path half closed
    2026-08-18 (R80.4#95); M-7 is now the chain's only remaining hard gate, and it needs an operator
    decision — a Fair Work credential and a ruling on global-vs-tenant rate rows — before any of it
