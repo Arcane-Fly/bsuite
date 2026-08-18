@@ -353,8 +353,8 @@ abbr[title] { text-decoration: underline dotted var(--role-text-subtle); cursor:
     linear-gradient(var(--grid-color) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
-  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
-          mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%); /* theme-audit-ok: mask stop, opacity channel not paint */
+          mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 40%, transparent 100%); /* theme-audit-ok: mask stop, opacity channel not paint */
 }
 
 /* ═══ HERO ═══ */

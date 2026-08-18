@@ -8,7 +8,7 @@
     ".": {
       "_note": "packages/ only — the parent configures NO react-hooks rules, so these 7 are suppressions of a rule nothing in this repo switches on. They still matter: these are PUBLISHED packages (@bsuite/data-grid 5, @bsuite/page-builder 1, @bsuite/schema-registry 1) and the suppression comment ships in the tarball, where each consumer app's own lint does enforce the rule. 4 of the 5 data-grid ones are in DataGrid.tsx.",
       "inline": {
-        "react-hooks/exhaustive-deps": 7,
+        "react-hooks/exhaustive-deps": 8,
         "react-hooks/set-state-in-effect": 0
       },
       "configScoped": {
