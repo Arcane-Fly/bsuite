@@ -24,7 +24,7 @@ Sub-plans of the parent index [`../20260506-codehouse-parity-and-platform-360-v1
 ## Cross-references
 
 - Parent plan: [`../20260506-codehouse-parity-and-platform-360-v1.00W.md`](../20260506-codehouse-parity-and-platform-360-v1.00W.md)
-- Master roadmap: [`../../20260227-bsuite-master-roadmap-v5.00W.md`](../../20260227-bsuite-master-roadmap-v5.00W.md) — Cross-Project Initiatives § Codehouse Parity & Platform 360
+- Master roadmap: [`../../20260227-bsuite-master-roadmap-v5.00W.md`](../../archive/README.md) *(archived — was `20260227-bsuite-master-roadmap-v5.00W.md`)* — Cross-Project Initiatives § Codehouse Parity & Platform 360
 - Auth doctrine: [`../../../AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md)
 - Red-team doctrine: [`../../20260507-red-team-ux-doctrine-v1.00A.md`](../../20260507-red-team-ux-doctrine-v1.00A.md)
 - Uplift design language: [`../uplift/20260507-bsuite-uplift-design-language-v1.00A.md`](../uplift/20260507-bsuite-uplift-design-language-v1.00A.md)

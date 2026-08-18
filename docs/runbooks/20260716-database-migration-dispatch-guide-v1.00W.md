@@ -2,7 +2,7 @@
 
 **Status:** W (Working)
 **Audience:** Platform operator (Braden), not an agent
-**Canonical source of truth:** [`crm7/supabase/migrations/CLAUDE.md`](../../crm7/supabase/migrations/CLAUDE.md) (long — read it if anything here seems to contradict it) and root [`CLAUDE.md`](../../CLAUDE.md) §12 (Supabase Policy & Verification Gates)
+**Canonical source of truth:** [`crm7/supabase/migrations/CLAUDE.md`](../archive/README.md) *(archived — was `CLAUDE.md`)* (long — read it if anything here seems to contradict it) and root [`CLAUDE.md`](../../CLAUDE.md) §12 (Supabase Policy & Verification Gates)
 **Workflow file:** [`.github/workflows/supabase-migrate.yml`](../../.github/workflows/supabase-migrate.yml)
 **Related guide:** [Parent Pointer Reconcile](20260716-parent-pointer-reconcile-guide-v1.00W.md) — read that one first if you don't already understand submodule gitlinks
 

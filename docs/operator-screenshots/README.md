@@ -1,7 +1,7 @@
 # Operator Screenshots
 
 This directory holds the supporting screenshots referenced from
-[`docs/20260425-operator-handoff-v1.00W.md`](../20260425-operator-handoff-v1.00W.md).
+[`docs/20260425-operator-handoff-v1.00W.md`](../archive/README.md) *(archived — was `20260425-operator-handoff-v1.00W.md`)*.
 Each screenshot documents a one-shot manual configuration step a human
 operator (Braden / Garrett) must perform in a hosted dashboard
 (Supabase, Azure, etc.). They exist to short-circuit the next operator's
