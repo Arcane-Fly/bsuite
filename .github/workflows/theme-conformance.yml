@@ -57,6 +57,13 @@ on:
       - 'scripts/audit-applied-tokens.mjs'
       - 'scripts/audit-ui-pages.mjs'
       - 'scripts/audit-legibility.mjs'
+      # The audits' shared helpers. Without this line a change to
+      # scripts/lib/settled-or-skip.mjs — the guard that decides whether a route
+      # was measured at all — would not re-run the gate that consumes it, and
+      # the file would be edited under no test. `.mjs` is not covered by the
+      # `**/*.js` glob above, which is why every script here is named
+      # explicitly rather than matched.
+      - 'scripts/lib/**'
       - '.github/theme-c1-baseline.txt'
       - '.github/theme-c2-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
@@ -590,7 +597,33 @@ jobs:
 
   per-page-authenticated:
     name: Per-page checks on SIGNED-IN routes
-    if: github.event_name != 'pull_request'
+    # RUNS ON SAME-REPO PULL REQUESTS TOO (V-9, 2026-08-18).
+    #
+    # It used to be `github.event_name != 'pull_request'`, copied from the
+    # `esm-imports` job below — but the reason stated there does not apply
+    # here. esm-imports is excluded from PRs because it needs a registry
+    # install and `minimumReleaseAge` rejects our own packages for ~24h after
+    # a publish, so it would fail on a clock. THIS job installs crm7 with
+    # `--frozen-lockfile` and walks a deployed origin; it has no such window.
+    #
+    # The cost of the copied condition was that the only gate in the estate
+    # that looks at a SIGNED-IN page ran weekly and on demand, and therefore
+    # gated nothing at merge. Measured 2026-08-18: run 32089259631 (the latest
+    # PR run) reported this job "skipped", and the two dispatch runs that DID
+    # contain it (31996285742, 31996642828) both concluded `failure` on real
+    # defects — a 2.76:1 demo-banner string and two unnamed controls. Both had
+    # been merged past a green PR.
+    #
+    # FORK PRs ARE STILL EXCLUDED, and that exclusion is load-bearing rather
+    # than cautious: `secrets.*` are not exposed to a workflow triggered by a
+    # fork PR, so the four credentials would resolve EMPTY, the "Assert the
+    # E2E credentials resolved" step would fail, and a contributor's first PR
+    # would show a red required check they cannot fix. Skipping is the honest
+    # outcome there — an unmeasured route is missing coverage, and the
+    # scheduled run still covers it after merge.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -761,3 +794,117 @@ jobs:
       - name: Verify every published entry point actually imports
         shell: bash
         run: scripts/verify-esm-imports.sh
+
+  # ---------------------------------------------------------------------------
+  # REACHABILITY — a different question from parity and from armed-ness, and the
+  # only one of the three that would have caught the 17 pure whites sitting in
+  # crm7's customer-facing PDFs, ChargeRatePdfDocument.tsx among them (the
+  # document the quote signing page renders for a client to sign).
+  #
+  # The rule ran in that app the whole time, green, on every commit. It could
+  # not see them because the app's CORRECT convention for keeping PDF colours
+  # token-shaped puts every colour inside a call argument, and that was the one
+  # position the walker never visited:
+  #
+  #     { backgroundColor: 'oklch(1 0 0)' }             reported
+  #     { backgroundColor: pdfOklch('oklch(1 0 0)') }   NOT reported
+  #
+  # Nothing already in CI covers this. `sync-inline-eslint-rules --check` proves
+  # the six copies are BYTE-EQUAL to the source — six identically broken copies
+  # pass it. Each submodule's parity job proves the copy is ARMED, using a bare
+  # hex in a VariableDeclarator, which is the shallowest position the rule has —
+  # a copy that has lost the call-argument walk passes it unchanged. The rule's
+  # unit test runs the SOURCE only and never loads a copy.
+  # ---------------------------------------------------------------------------
+  colour-ban-reachability:
+    name: Pure white/black ban reaches through a converter
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout (with submodules — the six inline copies live there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.0'
+
+      # The probe imports eslint and typescript-eslint to actually EXECUTE each
+      # rule file. Non-frozen for the same reason the esm-imports job below
+      # gives: the lockfile mismatch is pre-existing, repo-wide, and cannot be
+      # fixed inside a theme change.
+      - name: Install
+        shell: bash
+        run: |
+          corepack enable
+          pnpm install --no-frozen-lockfile
+
+      # …AND THAT IS NOT ENOUGH, which is why this step exists.
+      #
+      # `pnpm install` above populates the workspace, but eslint is not a ROOT
+      # dependency — it belongs to packages/eslint-config and packages/dry-lint.
+      # pnpm's isolated node_modules therefore does not place it at the repo
+      # root, and the probe resolves `await import('eslint')` from ITS OWN
+      # directory (scripts/), walking up to the root and finding nothing:
+      #
+      #   FAIL: the probe could not run — ERR_MODULE_NOT_FOUND:
+      #   Cannot find package 'eslint' imported from scripts/check-colour-ban-…
+      #
+      # Note the probe REFUSED rather than passing — that is the design working.
+      # A gate that cannot load its subject must not report a pass, and this one
+      # says so out loud.
+      #
+      # Installed with npm --no-save --no-package-lock so the repo's manifest
+      # and the pnpm lockfile are both untouched; the packages land in the root
+      # node_modules, which is exactly where ESM will look. NODE_PATH is not an
+      # option here — ESM ignores it.
+      - name: Give the probe its imports (scratch prefix, then link)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # SCRATCH PREFIX, NOT THE REPO. A bare `npm install` at this root dies
+          # on the pnpm workspace:
+          #     npm error Cannot read properties of null (reading 'matches')
+          # npm cannot read pnpm-workspace.yaml's members, and even when it can
+          # it rewrites the checkout's node_modules — which is why the
+          # own-package-freshness guard already installs this way.
+          npm install --prefix "$RUNNER_TEMP/probe-deps" \
+            --no-save --no-package-lock --no-audit --no-fund \
+            eslint typescript-eslint
+
+          # THEN LINK, because ESM cannot be pointed at a directory. `import`
+          # ignores NODE_PATH entirely, so the packages have to be reachable by
+          # walking up from scripts/ — i.e. present in the root node_modules.
+          # Node realpaths the symlink, so eslint resolves its OWN dependencies
+          # inside the scratch prefix where they were installed together.
+          mkdir -p node_modules
+          ln -sfn "$RUNNER_TEMP/probe-deps/node_modules/eslint" node_modules/eslint
+          ln -sfn "$RUNNER_TEMP/probe-deps/node_modules/typescript-eslint" node_modules/typescript-eslint
+
+          # Assert here rather than letting the probe report a confusing FAIL.
+          node --input-type=module -e "await import('eslint'); const t = await import('typescript-eslint'); if (!(t.parser ?? t.default?.parser)) { console.error('typescript-eslint exposes no parser'); process.exit(1) } console.log('probe imports resolve, parser present')"
+
+      # SELF-TEST FIRST, deliberately — the house pattern from the near-pure
+      # gate above. `--self-test` mutates the call-argument walk out of every
+      # inline copy and asserts the guard goes red. A probe that passes with its
+      # own subject removed is measuring nothing, and this repository has
+      # shipped one that did.
+      - name: Reachability probe self-test (positive control — must FAIL)
+        shell: bash
+        run: |
+          set -uo pipefail
+          if node scripts/check-colour-ban-reaches-converters.mjs --self-test; then
+            echo "::error::--self-test passed. The probe does not detect a disarmed"
+            echo "argument walk, so its green verdict below means nothing."
+            exit 1
+          fi
+          echo "self-test failed as required — the probe can detect a disarmed rule"
+
+      - name: The ban is reachable through a converter in every copy
+        shell: bash
+        run: node scripts/check-colour-ban-reaches-converters.mjs
