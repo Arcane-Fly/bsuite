@@ -690,7 +690,7 @@ export const GUARDS = [
       '"check-published-peer-ranges: 15 package(s), 62 published dependency ' +
       'edge(s) read from https://registry.npmjs.org — 0 blocking finding(s), 2 ' +
       'awaiting publish." — run by hand 2026-08-18. Those two are real and are ' +
-      'what this guard was  +
+      'what this guard was ' +
       'written for: @bsuite/page-builder@1.0.0 shipped the literal string ' +
       '"workspace:^" as its @bsuite/theme peer, and @bsuite/schema-registry@1.0.2 ' +
       'peers on @bsuite/nav-core ^0.8.0 while nav-core is at 1.0.0. Both are ' +
