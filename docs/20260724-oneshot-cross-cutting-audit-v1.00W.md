@@ -2,6 +2,13 @@
 
 > **Naming:** `20260724-oneshot-cross-cutting-audit-v1.00W.md` · Status **W** · Full cross-cutting DRY one-shot compliance audit of everything shipped 2026-07-22→24 (Documentation Program, STA email ingestion, bug-hunt fixes, email/funding expansion). Policy: `20260227-dry-one-shot-architecture-v1.04A.md`.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Verdict: mostly compliant — 5 genuine violations (all fixed), 4 registration gaps (all closed)
 
 **Clean:** no snapshot/mirror/duplicate tables anywhere; candidate_snapshot handoff token is a transient JSON projection (not a persistent mirror); payrollSourceReader reads live; schemaBuilderService consolidated to shims; funding_offsets is a distinct concept from funding_claims (charge-rate reduction vs claim lifecycle); manuals single-source blocks; charge-calc package has zero DB writes; `tenant_role_permissions` is a crm7-local override table (not a BSU-permissions write).

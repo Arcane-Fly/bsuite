@@ -2,6 +2,13 @@
 
 > **Naming:** `20260724-recruitment-employment-handover-design-v1.00D.md` · Status **D** (Draft — for operator approval) · Brainstorm output per `agents/brainstorming`. Operator directives 2026-07-24.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Operator requirement (this session)
 
 When an apprentice/trainee/worker is recruited: **all correspondence** (resume, qualifications, cover letter, onboarding docs, tax details, bank details — everything employers need to evidence) captured in the application portal must **pass over to the crm7 equivalent record on offer acceptance + employment**, along with **associated emails**. Design all, include trade-offs, triple-check existing infrastructure.

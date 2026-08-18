@@ -3,6 +3,14 @@
 **Date:** 2026-08-10 · **Status:** 1.00W (working) · **Compiled by:** claude-code session `ffb1aa80`
 
 **Sources reconciled:** 7 Claude Code session transcripts for this repo (2026-08-03 → 2026-08-10,
+
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ~370 MB), git history across the parent and all six submodules on every local and remote branch,
 open issues and pull requests in all seven GitHub repositories, the `bsuite_` memory corpus, and
 **live re-runs of the theme gates today** rather than a reading of what they said last time.

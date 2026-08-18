@@ -7,6 +7,13 @@
 > **Skill to execute each item:** `executing-plans` / `subagent-driven-development`; per-item skills are named inline. Every DB item = floor-gated migration + `get_advisors` triage; every user-facing item = §12.3 deployed signed-in verify.
 > **Staleness note (2026-06-29 post-regression):** §0 state claims were written before the submodule-pointer regression was discovered and fixed (PR #1558/#1559). Re-verify all alignment claims before relying on them. The verification recipe must check BOTH branch SHAs AND parent gitlinks — see continuation prompt.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 0. State as of 2026-06-29 (what is DONE)

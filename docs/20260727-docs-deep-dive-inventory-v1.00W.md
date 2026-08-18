@@ -3,6 +3,13 @@
 **Status:** W (Working) · **Lane:** DOCS · **Scope:** parent `docs/` + all six submodule `docs/` trees
 **Method:** Read-only audit. Every capability/feature/standard claim verified against source (`grep`/`read_file`) before a verdict was assigned. No doc was moved or edited; this report is the only file written.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Classification rules (applied uniformly)
 
 - **COMPLETE-archive** — doc claims a capability is shipped AND the claim is backed by a concrete `file:line` citation or merged PR that was actually verified. Action = archive (see archive-target caveat below).

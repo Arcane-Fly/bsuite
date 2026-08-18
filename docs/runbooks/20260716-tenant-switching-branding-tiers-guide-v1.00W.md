@@ -7,7 +7,7 @@
 
 ## Branding tiers
 
-Runtime branding for every D2C app (business-suite-unified, crm7, conduit, R80.3, throughput) resolves through a layered override stack, most-specific tier wins:
+Runtime branding for every D2C app (business-suite-unified, crm7, conduit, R80.4, throughput) resolves through a layered override stack, most-specific tier wins:
 
 | Tier | Table | Scope | Who authors it | Resolved by |
 |---|---|---|---|---|

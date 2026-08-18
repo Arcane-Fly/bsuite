@@ -9,6 +9,13 @@ I now have all the data needed. Let me compile the full structured findings repo
 **Branches:** BSU `fix/developer-portal-sweep-2026-07-22`, Conduit `fix/pipeline-crash-2026-07-22`  
 **No code changes were made.**
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. Branding.tsx — Platform Branding (Tier 1)
