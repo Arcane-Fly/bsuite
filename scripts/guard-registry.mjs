@@ -1011,6 +1011,30 @@ export const GUARDS = [
   // R80.4
   // ---------------------------------------------------------------------
   {
+    // Finds what an exact-path link check structurally cannot: a dangling link
+    // whose target was RENAMED. An exact check calls that a deletion, the
+    // reader concludes the document was lost, and the content gets re-derived.
+    //
+    // REPORT, and it must stay report. A wrong rename target is WORSE than a
+    // dangling link — the reader follows it and believes they arrived. It
+    // suggests; a person decides.
+    id: 'parent-docs-renamed-links',
+    label: 'Dangling doc links whose target was renamed, not deleted',
+    repo: '.',
+    command: ['python3', 'scripts/check-docs-renamed-links.py'],
+    ciWorkflow: null,
+    mode: 'report',
+    evidence:
+      '"RENAMED-LINK candidates: 1 distinct" (2026-08-18, after the scorer was ' +
+      'corrected three times). Found and fixed: v1.02A -> v1.04A across five ' +
+      'PARENT-DOCS copies, feature-map v1.0.0 -> v1.00W, boot-compliance ' +
+      'v1.00W -> v1.00A, and 21 links in two crm7 roadmaps. THE SCORER WAS ' +
+      'WRONG THREE WAYS: first-match resolved dry-one-shot-architecture to ' +
+      'ARCHITECTURE.md; a version tie sent readers to an ARCHIVED v1.00A over ' +
+      'the live v1.04A; an unconditional date bonus paired every two documents ' +
+      'written the same day. All three are documented in the script.',
+  },
+  {
     id: 'r804-env-inline-guard',
     label: 'import.meta.env static-key discipline (R80.4)',
     repo: 'R80.4',
