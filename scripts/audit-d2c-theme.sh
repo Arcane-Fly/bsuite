@@ -34,6 +34,30 @@ EXCLUDE=(--exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
          # endpoints. Any count that includes a worktree is counting the past.
          --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=.superpowers
          --exclude-dir=playwright-report --exclude-dir=test-results
+         # .lighthouseci holds Lighthouse's own generated report bundle — an
+         # `lhr-*.html` per run with the whole audited page inlined, plus its
+         # JSON twin. It is build output in exactly the sense .vercel/output is,
+         # and it was the ONLY generated directory this list missed.
+         #
+         # Measured, on the operator's working checkout with two apps' reports
+         # present (46 files in business-suite-unified alone):
+         #
+         #             C1 real          C2 real
+         #   BSU        1345 -> 1        1369 -> 40
+         #   crm7         65 -> 1          69 -> 6
+         #
+         # That is not a rounding error, it is a different verdict. The gate
+         # itself never saw it — CI checks out fresh and .lighthouseci is
+         # untracked, so the number in this repository was right and the number
+         # a human got from running the documented command was off by 1300.
+         #
+         # Which makes it worse than a wrong count, because the ratchet's whole
+         # contract is "run scripts/audit-d2c-theme.sh, put the number in the
+         # baseline file". Anyone who did that from a working copy with
+         # Lighthouse output in it banked a ceiling 1300 above the real one, and
+         # the gate would then have waved through every pure endpoint anyone
+         # added until someone re-derived it on a clean tree.
+         --exclude-dir=.lighthouseci
          --exclude-dir=__snapshots__ --exclude=*.min.css --exclude=*.min.js
          --exclude=*.d.ts --exclude=*.map
          # A lint rule that FORBIDS `text-white` must contain the string
