@@ -253,13 +253,42 @@ Red is allowed as Braden identity. Red as semantic error/destructive is banned a
 
 ## 7. Pull Request Process
 
-1. Branch from `main` using `feature/description` or `fix/description`
+1. Branch from `development` using `feature/description` or `fix/description`. **Never branch from
+   or target `main`** — `main` is production and lands only by promotion PR. (This step read
+   "branch from `main`" until 2026-08-17; that contradicted AGENTS.md tripwire 1 and was wrong.)
 2. Write code following all standards above
 3. Ensure tests pass and coverage meets threshold
 4. Update documentation if behavior changes
-5. Use the PR template with deployment notes for DB changes
+5. Fill in [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md), which loads
+   automatically, adding deployment notes for DB changes
 6. Request review; address feedback promptly
 7. Squash-merge when approved
+
+### Closing issues from a pull request
+
+Write `Closes #123` in the PR body and leave it. **Do not close the issue by hand.**
+
+Until 2026-08-17 that keyword did nothing here: GitHub auto-closes only on a merge to a
+repository's **default** branch, every repository in this estate defaults to `main`, and every pull
+request targets `development`. Fifteen issues sat fixed-and-open as a result.
+
+[`.github/workflows/development-merge-issue-closer.yml`](../.github/workflows/development-merge-issue-closer.yml)
+now honours the keyword on a `development` merge — it comments on the issue naming the merge SHA,
+then closes it — and sweeps all seven repositories hourly so submodule pull requests are covered
+from one place.
+
+| Written in the PR body | Result |
+|---|---|
+| `Closes #123`, `Fixes #123`, `Resolves #123` (also `closed`/`fixed`/`resolved`, `Closes: #123`, `GH-123`, a full issue URL) | closed, with an audit comment naming the merge SHA |
+| `Fixes #3, #4 and #5` | all three closed |
+| `Closes the loop on #123` | ignored — the reference must immediately follow the keyword, same as GitHub |
+| `> Closes #123` (blockquote) · `- [ ] Closes #123` (checklist) | ignored, so quoting a review cannot close live work |
+| inside a code fence, an `inline span`, or an HTML comment | ignored |
+| `this does not close #123` | ignored |
+| `GaryOcean428/crm7#123` (cross-repo) | **reported, never closed** — close it by hand |
+
+The parser is `scripts/parse-closing-keywords.mjs`; `--self-test` is its contract and a registered
+guard in `scripts/guard-registry.mjs`. Change the rules there, not by closing issues manually.
 
 ### PR Template for Database Changes
 
