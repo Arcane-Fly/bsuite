@@ -52,6 +52,7 @@
  */
 import { createRequire } from 'node:module';
 import { readdirSync } from 'node:fs';
+import { settledOrSkip } from './lib/settled-or-skip.mjs';
 const require_ = createRequire(import.meta.url);
 
 function resolvePlaywright() {
@@ -159,6 +160,13 @@ for (const url of urls) {
         setTimeout(() => { o.disconnect(); res(); }, 6000);
       });
     });
+
+    // THIRD GUARD — the route gate. See scripts/lib/settled-or-skip.mjs: a
+    // full-viewport "Checking access for Contacts..." is same-origin, is not
+    // /login, and passes every check in this file. Measuring it produced three
+    // green ticks over a spinner on 2026-08-18.
+    const gate = await settledOrSkip(page);
+    if (gate) { report.push({ url, theme, skipped: gate }); skipped++; continue; }
 
     const samples = await page.evaluate(() => {
       const out = [];
