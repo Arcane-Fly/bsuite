@@ -737,6 +737,27 @@ export const GUARDS = [
       "and status='active' drops a billed row.\"",
   },
   {
+    id: 'parent-check-docs-table-cells',
+    label: 'Docs tables (does any row drop its own text past the declared columns?)',
+    repo: '.',
+    command: ['node', 'scripts/check-docs-table-cells.mjs'],
+    ciWorkflow: '.github/workflows/doc-naming.yml',
+    mode: 'run',
+    // Pure filesystem read over docs/; no credentials, no network, no state
+    // change, so none of the `skip` criteria apply.
+    evidence:
+      '"check-docs-table-cells: 281 markdown file(s) under docs/ examined, ' +
+      '11437 table row(s) read — 0 dropping content, 44 with a harmless empty ' +
+      'cell." — run by hand 2026-08-19, ' +
+      'immediately after the sweep that repaired 88 such rows (29 in the estate ' +
+      'completion ledger, 31 in the rate-calculation reference). Its --self-test ' +
+      'passes 13/13 in both directions and caught a real defect in the guard ' +
+      'itself first: a naive split on "|" read an ESCAPED pipe as a cell ' +
+      'boundary and manufactured 20 findings where markdownlint reported none. ' +
+      'Only the content-DESTROYING direction gates; a row with too FEW cells ' +
+      'renders an empty cell, loses nothing, and is reported rather than failed.',
+  },
+  {
     id: 'parent-check-published-peer-ranges',
     label: 'Published peer ranges (are our own npm publishes actually installable?)',
     repo: '.',
