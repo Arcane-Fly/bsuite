@@ -590,7 +590,33 @@ jobs:
 
   per-page-authenticated:
     name: Per-page checks on SIGNED-IN routes
-    if: github.event_name != 'pull_request'
+    # RUNS ON SAME-REPO PULL REQUESTS TOO (V-9, 2026-08-18).
+    #
+    # It used to be `github.event_name != 'pull_request'`, copied from the
+    # `esm-imports` job below — but the reason stated there does not apply
+    # here. esm-imports is excluded from PRs because it needs a registry
+    # install and `minimumReleaseAge` rejects our own packages for ~24h after
+    # a publish, so it would fail on a clock. THIS job installs crm7 with
+    # `--frozen-lockfile` and walks a deployed origin; it has no such window.
+    #
+    # The cost of the copied condition was that the only gate in the estate
+    # that looks at a SIGNED-IN page ran weekly and on demand, and therefore
+    # gated nothing at merge. Measured 2026-08-18: run 32089259631 (the latest
+    # PR run) reported this job "skipped", and the two dispatch runs that DID
+    # contain it (31996285742, 31996642828) both concluded `failure` on real
+    # defects — a 2.76:1 demo-banner string and two unnamed controls. Both had
+    # been merged past a green PR.
+    #
+    # FORK PRs ARE STILL EXCLUDED, and that exclusion is load-bearing rather
+    # than cautious: `secrets.*` are not exposed to a workflow triggered by a
+    # fork PR, so the four credentials would resolve EMPTY, the "Assert the
+    # E2E credentials resolved" step would fail, and a contributor's first PR
+    # would show a red required check they cannot fix. Skipping is the honest
+    # outcome there — an unmeasured route is missing coverage, and the
+    # scheduled run still covers it after merge.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read

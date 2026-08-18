@@ -38,6 +38,7 @@
  */
 import { createRequire } from 'node:module';
 import { readdirSync } from 'node:fs';
+import { settledOrSkip } from './lib/settled-or-skip.mjs';
 const require_ = createRequire(import.meta.url);
 
 function resolvePlaywright() {
@@ -170,6 +171,21 @@ for (const url of urls) {
     // during the transient pre-settle render is still captured — but the DOM
     // assertions below now judge the SETTLED page.
     consoleErrors.length = 0;   // transient render noise; see the settle comment
+
+    // THIRD GUARD — the route gate. See scripts/lib/settled-or-skip.mjs. The
+    // settle wait above returns as soon as the DOM stops CHANGING, and a
+    // <ProtectedRoute> spinner is a settled DOM: it stops mutating and sits
+    // there. Same origin, not /login, correct <title>, one heading, no
+    // findings — "1 clean" over a page nobody looked at, measured live on
+    // /contacts on 2026-08-18. A skip is not a pass, and audit-routes.sh fails
+    // the AUTHENTICATED sweep on a skip, which is the outcome this deserves.
+    const gate = await settledOrSkip(page);
+    if (gate) {
+      results.push({ url, skipped: gate });
+      skipped++;
+      page.off('console', onErr); page.off('response', onResp);
+      continue;
+    }
 
     const r = await page.evaluate(() => {
       const out = { nav: 0, emptyTables: [], overflow: null, unnamed: [], invisibleControls: [], placeholders: [] };
