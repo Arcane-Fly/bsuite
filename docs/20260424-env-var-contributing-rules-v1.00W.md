@@ -2,7 +2,7 @@
 
 **Status:** W (Working — living document)
 **Supersedes / amends:** [20260227-contributing-standards-guide-v1.01W.md](20260227-contributing-standards-guide-v1.01W.md) §Env
-**Sources:** [20260424-env-var-audit-findings-v1.00A.md](20260424-env-var-audit-findings-v1.00A.md) + [20260424-env-var-audit-matrix-v1.00A.md](20260424-env-var-audit-matrix-v1.00A.md) + root [env.example](../env.example)
+**Sources:** [20260424-env-var-audit-findings-v1.00A.md](archive/README.md) *(archived — was `20260424-env-var-audit-findings-v1.00A.md`)* + [20260424-env-var-audit-matrix-v1.00A.md](archive/README.md) *(archived — was `20260424-env-var-audit-matrix-v1.00A.md`)* + root [env.example](../env.example)
 **Canonical Supabase project:** `tuybltdrdefjblnplpqo`
 
 > **R80.3 → R80.4 corrected 2026-08-17.** Six rows below (the client-safe stack table, the orphan
@@ -167,7 +167,7 @@ creates the "deploy-time bomb" pattern that took out CRM7 RAM integration.
 | Sentry | all 6 | `{VITE_,NEXT_PUBLIC_}SENTRY_DSN`, `SENTRY_AUTH_TOKEN` (build-only) |
 
 The full 166-variable × 6-project matrix is in
-[20260424-env-var-audit-matrix-v1.00A.md](20260424-env-var-audit-matrix-v1.00A.md). Run the
+[20260424-env-var-audit-matrix-v1.00A.md](archive/README.md) *(archived — was `20260424-env-var-audit-matrix-v1.00A.md`)*. Run the
 matrix before shipping a cross-app integration.
 
 ---

@@ -248,7 +248,7 @@ Status flips W→A only after operator approval AND red-team review of all 9 por
 ## Related documents
 
 - [`./inputs/20260506-codehouse-parity-prompt-enhancer-output.md`](./inputs/20260506-codehouse-parity-prompt-enhancer-output.md) — refined prompt (heavy-tier)
-- [`../20260227-bsuite-master-roadmap-v5.00W.md`](../20260227-bsuite-master-roadmap-v5.00W.md) — master roadmap
-- [`../20260501-merged-execution-backlog-v1.00W.md`](../20260501-merged-execution-backlog-v1.00W.md) — single execution queue
+- [`../20260227-bsuite-master-roadmap-v5.00W.md`](../archive/README.md) *(archived — was `20260227-bsuite-master-roadmap-v5.00W.md`)* — master roadmap
+- [`../20260501-merged-execution-backlog-v1.00W.md`](../archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)* — single execution queue
 - [`../../AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) — auth reference (BS OAuth 2.1 PKCE + Supabase RLS)
 - [`./20260506-codehouse-parity/20260506-visual-feature-builder-spec.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec.md) — WS-E spec

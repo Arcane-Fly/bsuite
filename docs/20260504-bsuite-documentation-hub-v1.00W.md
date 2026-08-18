@@ -289,7 +289,7 @@ Actual files (verified 2026-05-04, R80.3 — pre-archive):
 
 **Folder:** `throughput/docs/` | **README:** `throughput/docs/README.md` (created 2026-05-04) | **Cross-links:** `throughput/docs/PARENT-DOCS.md`
 
-Key documents: 20+ per-component docs (alert, badge, button, card, input, modal, textarea) + system architecture, Groq architecture/integration, RLS, roadmap, user guide, troubleshooting, navigation UX guide, development, outstanding, quality improvements, conversation map, components guide. See [`throughput/docs/README.md`](../throughput/docs/README.md) for the complete list.
+Key documents: 20+ per-component docs (alert, badge, button, card, input, modal, textarea) + system architecture, Groq architecture/integration, RLS, roadmap, user guide, troubleshooting, navigation UX guide, development, outstanding, quality improvements, conversation map, components guide. See [`throughput/docs/README.md`](archive/README.md) *(archived — was `README.md`)* for the complete list.
 
 **Cross-app role:** Idea hub + Groq AI experimentation. Tailwind has been brought to v4; remaining tech-stack gaps are zero Radix/shadcn adoption, outdated Supabase-JS/Zod, and strict-mode work. See `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` §5 TS-02 → TS-04.
 
@@ -448,9 +448,9 @@ Fast navigation for agents and contributors. Bookmark this section.
 ### Governance
 
 - [Master roadmap (SSoT)](./00-roadmap/20260112-master-roadmap-1.00W.md) *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*
-- [Finish-line roadmap](./20260425-bsuite-finish-line-roadmap-v1.00W.md)
-- [Active execution backlog](./20260501-merged-execution-backlog-v1.00W.md)
-- [Tech-stack baseline](./20260504-bsuite-tech-stack-alignment-v1.00W.md)
+- [Finish-line roadmap](archive/README.md) *(archived — was `20260425-bsuite-finish-line-roadmap-v1.00W.md`)*
+- [Active execution backlog](archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)*
+- [Tech-stack baseline](archive/README.md) *(archived — was `20260504-bsuite-tech-stack-alignment-v1.00W.md`)*
 - [Contributing standards](./20260227-contributing-standards-guide-v1.01W.md)
 - [Parent AGENTS.md](../AGENTS.md)
 - [Parent CLAUDE.md](../CLAUDE.md)
@@ -458,20 +458,20 @@ Fast navigation for agents and contributors. Bookmark this section.
 
 ### Per-submodule entry points
 
-- [BSU docs](../business-suite-unified/docs/README.md) · [cross-links](../business-suite-unified/docs/PARENT-DOCS.md)
-- [CRM7 docs](../crm7/docs/README.md) · [cross-links](../crm7/docs/PARENT-DOCS.md)
-- [Conduit docs](../conduit/docs/README.md) · [cross-links](../conduit/docs/PARENT-DOCS.md)
-- [Braden docs](../braden/docs/README.md) · [cross-links](../braden/docs/PARENT-DOCS.md)
-- [R80.4 docs](../R80.4/docs/README.md) · [cross-links](../R80.4/docs/PARENT-DOCS.md) *(was `../R80.3/docs/`, archived 2026-08-06)*
-- [Throughput docs](../throughput/docs/README.md) · [cross-links](../throughput/docs/PARENT-DOCS.md)
+- [BSU docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [CRM7 docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [Conduit docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [Braden docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [R80.4 docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)* *(was `../R80.3/docs/`, archived 2026-08-06)*
+- [Throughput docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
 
 ### Architecture + governance
 
 - [DRY one-shot architecture (Approved)](./20260227-dry-one-shot-architecture-v1.04A.md)
-- [Entity crosswalk](./archive/2026-06/20260319-entity-crosswalk-v1.00D.md)
-- [Gap report v2](./archive/2026-06/20260317-bsuite-gap-report-v2.00W.md)
+- [Entity crosswalk](archive/README.md) *(archived — was `20260319-entity-crosswalk-v1.00D.md`)*
+- [Gap report v2](archive/README.md) *(archived — was `20260317-bsuite-gap-report-v2.00W.md`)*
 - [Env var rules](./20260424-env-var-contributing-rules-v1.00W.md)
-- [Phase-0 completion report](./archive/2026-06/20260501-phase-0-completion-report-v1.00W.md)
+- [Phase-0 completion report](archive/README.md) *(archived — was `20260501-phase-0-completion-report-v1.00W.md`)*
 
 ### Living trackers
 

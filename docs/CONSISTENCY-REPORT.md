@@ -77,7 +77,7 @@ follow this layout:
 
 **Status:** ✅ **DONE** (2026-05-14)
 
-- Plan: [`docs/plans/20260504-typescript-6-migration-evaluation-v1.00A.md`](./plans/20260504-typescript-6-migration-evaluation-v1.00A.md)
+- Plan: [`docs/plans/20260504-typescript-6-migration-evaluation-v1.00A.md`](archive/README.md) *(archived — was `20260504-typescript-6-migration-evaluation-v1.00A.md`)*
 - Evidence: commit `1872dc4` — `chore(deps): align root pnpm overrides with TS6/ESLint10 app baseline (#971)`
 - All six consumer apps now resolve TypeScript 6-compatible stacks
 - ESLint 10 aligned across the suite

@@ -18,5 +18,5 @@ Added 2026-07-16. Naming convention: `YYYYMMDD-descriptive-name-guide-vMAJOR.MIN
 ## Related
 
 - Root [`CLAUDE.md`](../../CLAUDE.md) §12 (Supabase Policy & Verification Gates) — the underlying gates these runbooks operationalize
-- [`crm7/supabase/migrations/CLAUDE.md`](../../crm7/supabase/migrations/CLAUDE.md) — the full, long-form migration-history ledger these runbooks summarize an operator-facing subset of
+- [`crm7/supabase/migrations/CLAUDE.md`](../archive/README.md) *(archived — was `CLAUDE.md`)* — the full, long-form migration-history ledger these runbooks summarize an operator-facing subset of
 - [`20260629-vercel-production-launch-runbook-v1.00W.md`](../20260629-vercel-production-launch-runbook-v1.00W.md) — the sibling deployment/incident-response runbook for the Vercel-hosted apps themselves

@@ -500,7 +500,7 @@ regenerated for deployment.
 
 ## 11. 2026-04-22/23 Gap Closure — Phases 1 through 6 outcomes
 
-The master plan [`docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`](plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md) executed six phases of DRY-violation closure and schema-builder uplift. This section captures the on-disk outcomes so future agents can reconcile §1 (Entity Ownership Map) and §6 (DRY Violations to Watch For) against what actually shipped.
+The master plan [`docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`](archive/README.md) *(archived — was `20260422-entity-linkage-schema-builder-uplift-v1.02W.md`)* executed six phases of DRY-violation closure and schema-builder uplift. This section captures the on-disk outcomes so future agents can reconcile §1 (Entity Ownership Map) and §6 (DRY Violations to Watch For) against what actually shipped.
 
 ### Phase 1 — CRITICAL golden-path FKs + braden lead-notification fix (shipped)
 

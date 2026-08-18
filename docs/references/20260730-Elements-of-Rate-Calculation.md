@@ -804,4 +804,4 @@ Around 1 July each year:
 - [`src/services/fairworkApi.ts`](../src/services/fairworkApi.ts) — implementation
 - [`src/tests/fairworkCacheFallback.test.ts`](../src/tests/fairworkCacheFallback.test.ts) — fallback behaviour suite (PR #48)
 - [`src/tests/fairworkIntegration.test.ts`](../src/tests/fairworkIntegration.test.ts) — happy-path integration suite
-- [`docs/20260304-r80-external-wage-sources-reference-v1.00W.md`](20260304-r80-external-wage-sources-reference-v1.00W.md) — alternative wage sources when neither layer is available
+- [`docs/20260304-r80-external-wage-sources-reference-v1.00W.md`](../archive/README.md) *(archived — was `20260304-r80-external-wage-sources-reference-v1.00W.md`)* — alternative wage sources when neither layer is available

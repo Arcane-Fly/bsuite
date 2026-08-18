@@ -852,7 +852,7 @@ The following documents require updates when each implementation PR merges:
 | ~~`crm7/OUTSTANDING.md`~~ | N/A — removed 2026-05-19 (bsuite#488); the parent `docs/OUTSTANDING.md` row below covers it |
 | [`docs/OUTSTANDING.md`](../../OUTSTANDING.md) | Domain C outstanding | Tick off domain C gaps (SSoT for all submodules per bsuite#488) |
 | [`packages/charge-calc/README.md`](../../../packages/charge-calc/README.md) | Named group types | Add: `pay_item_groups` table is now the canonical source for group IDs; enum aliases remain for backward compat |
-| [`crm7/src/pages/settings/README.md`](../../../crm7/src/pages/settings/README.md) (if exists) | Settings pages | Add: pay-item-groups, timesheet-groups, penalty-groups, allowance-groups, pay-item-rules |
+| [`crm7/src/pages/settings/README.md`](../../archive/README.md) *(archived — was `README.md`)* (if exists) | Settings pages | Add: pay-item-groups, timesheet-groups, penalty-groups, allowance-groups, pay-item-rules |
 
 ---
 
