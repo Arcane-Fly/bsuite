@@ -257,8 +257,8 @@ Under MA000020 cl.16.2 an apprentice accrues 0.4 hours of RDO per 8-hour day wor
 
 | Layer | State |
 |---|---|
-| Calculation package | `rdo.ts` and `RdoAccrualConfig` exist and are correct — but consumed only by their own test file. `calculate.ts` contains the string "rdo" **zero times** |
-| Config field | `types.ts:203` — its own comment: *"calculate() does not yet consume this field itself"* |
+| Calculation package | ~~`rdo.ts` and `RdoAccrualConfig` exist and are correct — but consumed only by their own test file. `calculate.ts` contains the string "rdo" **zero times**~~ **PARTLY CLOSED 2026-08-18 (`@bsuite/charge-calc` 0.14.0, estate ledger M-2):** `calculate()` now consumes `cfg.rdo`, derives `rdoDaysAnnual` / `rdoHoursAnnual`, and folds the banked hours into `billableHours`, so an RDO placement no longer quotes identically to a non-RDO one. **This closes the CHARGE-RATE half only.** It computes the annual accrual a full-time roster implies; it does NOT track an individual's running balance from timesheets, which is what a termination payout needs. |
+| Config field | ~~`types.ts:203` — its own comment: *"calculate() does not yet consume this field itself"*~~ **Comment was true and is now false; corrected in 0.14.0.** The field is consumed, and `hoursPerWeek` stays the PAID week — the accrual moves billable hours, not paid hours, because under cl.16.2 it is deferred pay, not less pay. |
 | Database | `timesheets.rdo_accrual_hours` / `rdo_taken_hours` exist and are applied (confirmed in the production baseline) — and `grep` across all of crm7 returns **zero** reads or writes of either column |
 
 The reviewer went further and checked three adjacent RDO surfaces that might have covered it. All three are separate dead ends:
@@ -270,6 +270,8 @@ The reviewer went further and checked three adjacent RDO surfaces that might hav
 And `hr/termination.tsx` has **zero mentions of "rdo" in any casing.**
 
 The entitlement is not computed-and-hidden. It is **stranded by omission** — a terminated apprentice's RDO balance cannot currently be identified by any workflow in this estate, let alone paid.
+
+**Status 2026-08-18: still high, and still the finding above.** The charge-rate half is closed (see the first two rows), but the balance half — `timesheets.rdo_accrual_hours` / `rdo_taken_hours` with zero readers or writers, the `'rdo'` work-type dumping into `leaveHours`, and `hr/termination.tsx` with zero mentions of RDO in any casing — is untouched. A terminated apprentice's RDO balance still cannot be identified by any workflow in this estate.
 
 ---
 
