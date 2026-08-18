@@ -205,3 +205,116 @@ describe('one-shot: already-linked options', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })
+
+/**
+ * ORDER BEFORE LIMIT.
+ *
+ * A `.limit()` with no `.order()` returns an ARBITRARY subset of the matches —
+ * Postgres hands back whatever the scan reaches first. Once a table holds more
+ * rows matching a search term than `limit`, the row the user just created is
+ * routinely outside the window and the picker reports it does not exist.
+ * Measured in crm7 before the fix: 366 clients matched `%Acme%` against a
+ * limit of 50.
+ *
+ * crm7's local copy was fixed first; this suite exists because the SHARED
+ * component still carried the defect afterwards, and conduit had already
+ * adopted the shared one — so the bug was live in an app that never had it
+ * locally. A fix that lands in a consumer and not in the package it was
+ * extracted from is not fixed.
+ */
+describe('EntitySelector — ordering before limiting', () => {
+  function orderSpyClient(opts: { orderFails?: boolean } = {}) {
+    const calls: Array<{ order?: [string, { ascending: boolean }]; limited: boolean }> = []
+    const make = () => {
+      const rec: { order?: [string, { ascending: boolean }]; limited: boolean } = { limited: false }
+      calls.push(rec)
+      const q: Record<string, unknown> = {}
+      const chain = () => q
+      q.select = chain
+      q.or = chain
+      q.eq = chain
+      q.in = chain
+      q.order = (col: string, o: { ascending: boolean }) => {
+        rec.order = [col, o]
+        return q
+      }
+      q.limit = () => {
+        rec.limited = true
+        return q
+      }
+      q.then = (resolve: (v: unknown) => unknown) =>
+        Promise.resolve(
+          rec.order && opts.orderFails
+            ? { data: null, error: { code: '42703', message: `column "${rec.order[0]}" does not exist` } }
+            : { data: [], error: null },
+        ).then(resolve)
+      return q
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client: any = { from: () => make(), schema: () => ({ from: () => make() }) }
+    return { client, calls }
+  }
+
+  it('orders by created_at descending by default, before the limit truncates', async () => {
+    const { client, calls } = orderSpyClient()
+    render(
+      <EntitySelector<Qual>
+        table="qualifications"
+        supabaseClient={client}
+        searchColumns={['title']}
+        labelKey="title"
+        valueKey="id"
+        onSelect={() => {}}
+      />,
+    )
+    await userEvent.click(screen.getByRole('combobox'))
+    await waitFor(() => expect(calls.some((c) => c.order)).toBe(true))
+    const ordered = calls.find((c) => c.order)!
+    expect(ordered.order![0]).toBe('created_at')
+    expect(ordered.order![1].ascending).toBe(false)
+    expect(ordered.limited).toBe(true)
+  })
+
+  it('honours an explicit orderBy for tables without created_at', async () => {
+    const { client, calls } = orderSpyClient()
+    render(
+      <EntitySelector<Qual>
+        table="award_rates"
+        orderBy="effective_from"
+        orderAscending
+        supabaseClient={client}
+        searchColumns={['title']}
+        labelKey="title"
+        valueKey="id"
+        onSelect={() => {}}
+      />,
+    )
+    await userEvent.click(screen.getByRole('combobox'))
+    await waitFor(() => expect(calls.some((c) => c.order)).toBe(true))
+    const ordered = calls.find((c) => c.order)!
+    expect(ordered.order![0]).toBe('effective_from')
+    expect(ordered.order![1].ascending).toBe(true)
+  })
+
+  it('fails SOFT on an unknown order column — retries unordered rather than breaking the picker', async () => {
+    // `table` is dynamic at some call sites (page-builder relationship widget,
+    // admin data browser), so the default column is not guaranteed to exist.
+    // Converting a working picker into a broken one would be worse than the
+    // unordered behaviour it had before.
+    const { client, calls } = orderSpyClient({ orderFails: true })
+    render(
+      <EntitySelector<Qual>
+        table="some_registry_table"
+        supabaseClient={client}
+        searchColumns={['title']}
+        labelKey="title"
+        valueKey="id"
+        onSelect={() => {}}
+      />,
+    )
+    await userEvent.click(screen.getByRole('combobox'))
+    await waitFor(() => expect(calls.filter((c) => c.limited).length).toBeGreaterThanOrEqual(2))
+    expect(calls.some((c) => c.order)).toBe(true)
+    expect(calls.some((c) => !c.order && c.limited)).toBe(true)
+  })
+})

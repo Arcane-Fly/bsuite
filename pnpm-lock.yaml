@@ -310,8 +310,8 @@ importers:
   packages/page-builder:
     dependencies:
       '@bsuite/theme':
-        specifier: '>=0.7.1'
-        version: 0.7.1(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
+        specifier: workspace:^
+        version: link:../theme
       '@dnd-kit/core':
         specifier: ^6
         version: 6.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -438,8 +438,8 @@ importers:
   packages/schema-registry:
     dependencies:
       '@bsuite/nav-core':
-        specifier: ^0.8.0
-        version: 0.8.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: workspace:^
+        version: link:../nav-core
       '@supabase/supabase-js':
         specifier: ^2
         version: 2.108.1
@@ -559,8 +559,8 @@ importers:
         version: 3.6.0
     devDependencies:
       '@bsuite/theme':
-        specifier: ^0.11.0
-        version: 0.11.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
+        specifier: workspace:^
+        version: link:../theme
       '@storybook/react-vite':
         specifier: ^10.5.8
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(storybook@10.5.8(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.28.2)(jiti@2.7.0))
@@ -733,38 +733,6 @@ packages:
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
-
-  '@bsuite/nav-core@0.8.0':
-    resolution: {integrity: sha512-hG4CmZSzH7jAzPw772QkapOR9rSf85IdI/Y6Fays1Ns+SrKb8A7yvs+Kxk63ZDgmvBB6QZzUwBOfHPevEQa3RQ==}
-    peerDependencies:
-      react: '>=18 <21'
-      react-dom: '>=18 <21'
-
-  '@bsuite/theme@0.11.0':
-    resolution: {integrity: sha512-AJhrhaRtC8ZKbAzxBa6vxwGb3a6NxibQV1y/zS0b7kre3yqrc1sQZdTqyeb0N/eZJM54zzvJKk7feMyE6i0UJA==}
-    peerDependencies:
-      '@supabase/supabase-js': '>=2.0.0'
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-      tailwindcss: '>=4.0.0'
-    peerDependenciesMeta:
-      '@supabase/supabase-js':
-        optional: true
-      tailwindcss:
-        optional: true
-
-  '@bsuite/theme@0.7.1':
-    resolution: {integrity: sha512-KF/cMJF2shbjSWibnNGdU7JBQnBVpfa8F2DazFvD6845AYNG12xeH+gRRSu1yhtY88gmXontG8BEmQZ7rkQg4g==}
-    peerDependencies:
-      '@supabase/supabase-js': '>=2.0.0'
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-      tailwindcss: '>=4.0.0'
-    peerDependenciesMeta:
-      '@supabase/supabase-js':
-        optional: true
-      tailwindcss:
-        optional: true
 
   '@csstools/color-helpers@6.0.2':
     resolution: {integrity: sha512-LMGQLS9EuADloEFkcTBR3BwV/CGHV7zyDxVRtVDTwdI2Ca4it0CCVTT9wCkxSgokjE5Ho41hEPgb8OEUwoXr6Q==}
@@ -3745,27 +3713,6 @@ snapshots:
   '@bramus/specificity@2.4.2':
     dependencies:
       css-tree: 3.2.1
-
-  '@bsuite/nav-core@0.8.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
-    dependencies:
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-
-  '@bsuite/theme@0.11.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
-    dependencies:
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-    optionalDependencies:
-      '@supabase/supabase-js': 2.108.1
-      tailwindcss: 4.3.0
-
-  '@bsuite/theme@0.7.1(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
-    dependencies:
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-    optionalDependencies:
-      '@supabase/supabase-js': 2.108.1
-      tailwindcss: 4.3.0
 
   '@csstools/color-helpers@6.0.2': {}
 
