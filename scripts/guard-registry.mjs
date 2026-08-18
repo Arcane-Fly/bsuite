@@ -349,13 +349,16 @@ export const GUARDS = [
     mode: 'report',
     evidence:
       '"Files scanned: 392 live (52 more skipped as HISTORICAL) — ' +
-      'CHECKS-CLEAN 360, CHECKS-FAILED 32; RECORD pins set aside 57" ' +
-      '(2026-08-18). Actionable: 50 dangling link, 7 stale pin, 1 Tailwind ' +
-      '(itself an audit reporting one), 0 template, 0 version. Refuses with ' +
-      'exit 2 without submodules: every cross-submodule link would report a ' +
-      'false dangling. The version limb previously emitted 12 findings and ALL ' +
-      'TWELVE WERE FALSE — it read the first version-like string in the header, ' +
-      'routinely a cross-reference, and compared "1.0" to "1.00" as unequal.',
+      'CHECKS-CLEAN 365, CHECKS-FAILED 27; RECORD pins set aside 69" ' +
+      '(2026-08-18). Actionable: 50 dangling link, 1 Tailwind (itself an audit ' +
+      'REPORTING one), 0 authority pin, 0 template, 0 version. Refuses with ' +
+      'exit 2 without submodules. TWO LIMBS WERE RETIRED AS PURE FALSE ' +
+      'POSITIVES: the version limb emitted 12 findings and all twelve were ' +
+      'false (it read a cross-reference as the file\'s own version, and ' +
+      'compared "1.0" to "1.00" as unequal); the pin limb emitted 78 and all ' +
+      'but the hub/PARENT-DOCS cases were records, floors (`@x@0.3.3+`) or ' +
+      'plan proposals. Both are documented in the script so nobody restores ' +
+      'the looser match.',
   },
   {
     id: 'parent-colour-ban-reaches-converters',

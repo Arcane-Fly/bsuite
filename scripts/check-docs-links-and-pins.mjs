@@ -123,34 +123,43 @@ for (const file of files) {
     }
   })
 
-  // 2. stale @bsuite/<pkg>@<version> pins — SPLIT BY WHAT THE DOCUMENT IS.
+  // 2. stale @bsuite/<pkg>@<version> pins — INVERTED: flag only AUTHORITY claims.
   //
-  // In a REFERENCE or AUTHORITY document ("the package is the source of
-  // truth" beside a version), the pin is a live claim and drifts into a lie.
-  // In a dated PLAN, REGISTER, AUDIT, INVENTORY or ROADMAP, the version IS the
-  // fact — it records what was planned or measured on a day. Rewriting those
-  // destroys the record and leaves a document that looks current and was never
-  // re-verified.
+  // The first design excluded records and kept everything else, and it was
+  // wrong in a way that took four passes to see. 78 findings became 15 by
+  // filename, then 7 by reading the line, and reading those 7 showed every one
+  // was ALSO a record:
   //
-  // Reported separately because collapsing them overstates the actionable
-  // count by roughly five to one, and a number that overstates gets ignored.
-  // ADRs are decision RECORDS by definition — an ADR naming the version a
-  // package launched at is stating history, and amending it rewrites the
-  // decision. Checklists, doctrines and blindspot registers are the same shape.
-  const isRecord = /(\/plans\/|\/adr\/|-plan-|-register-|-audit-|-inventory-|-roadmap-|-chore-|-backlog-|-checklist-|-doctrine-|-blindspots-|-decision-|CONSISTENCY-REPORT|STACK-AUDIT|STATUS\.md)/i.test(rel)
-  // …and a pin can be historical inside ANY document, if the sentence around it
-  // is reporting rather than prescribing: "@bsuite/auth@0.2.0 regression",
-  // "shipped in @bsuite/dates@0.1.1", "@bsuite/schema-builder@0.1.0 lands in".
-  // Every one of the 15 findings that survived the filename test was this
-  // shape, which is why the test cannot be a filename test alone.
-  const HISTORICAL_LINE = /(regression|shipped|confirmed|lands in|landed|was |were |incident|evidence|previously|at the time|as of \d)/i
+  //   "createSchemaBuilderService first ships in @bsuite/schema-registry@1.0.0"
+  //   "@bsuite/ui@1.0.3 while 1.1.0 is published"
+  //   "STALE: targets @bsuite/schema-builder@1.0.1; live is 1.0.3"
+  //
+  // A version in prose is almost always HISTORY: which release introduced a
+  // symbol, what was observed on a date, what another document claims. Chasing
+  // that with an ever-longer exclusion list is over-fitting — the next phrasing
+  // always slips through, and each near-miss teaches the reader to ignore this
+  // check.
+  //
+  // So flag the narrow case that is genuinely a defect: a pin sitting in a line
+  // that asserts AUTHORITY — "source of truth", "canonical", "authoritative",
+  // "use X@1.2.3". There the version competes with the package for the reader's
+  // trust, and it is the one that never gets updated. That is exactly the shape
+  // found and fixed in the documentation hub and in PARENT-DOCS.md across all
+  // six submodules.
+  const AUTHORITY = /(source of truth|canonical|authoritative|must use|required version|pin(?:ned)? (?:at|to)|consult these)/i
   lines.forEach((ln, i) => {
     if (isRetracted(lines, i)) return
-    for (const m of ln.matchAll(/@bsuite\/([a-z-]+)@(\d+\.\d+\.\d+)/g)) {
+    // `@bsuite/theme@0.3.3+` is a FLOOR, not a pin — 1.0.0 satisfies it, so it
+    // is not stale. And "New package: … → @bsuite/dates@0.1.0" in a plan names
+    // the version a package was PROPOSED to launch at. Both looked like
+    // authority claims and neither is; they were the last two survivors.
+    for (const m of ln.matchAll(/@bsuite\/([a-z-]+)@(\d+\.\d+\.\d+)(\+?)/g)) {
+      if (m[3] === '+') continue
+      if (/new package|→\s*`?@bsuite|first ship|lands in/i.test(ln)) { recordPins++; continue }
       const latest = npmLatest(`@bsuite/${m[1]}`)
       if (!latest || latest === m[2]) continue
-      if (isRecord || HISTORICAL_LINE.test(ln)) recordPins++
-      else findings.push(`stale pin @bsuite/${m[1]}@${m[2]} (published ${latest}, line ${i + 1})`)
+      if (AUTHORITY.test(ln)) findings.push(`AUTHORITY pin @bsuite/${m[1]}@${m[2]} (published ${latest}, line ${i + 1})`)
+      else recordPins++
     }
   })
 
@@ -218,7 +227,7 @@ const dirty = results.filter(r => r.findings.length)
 console.log(`# Estate documentation sweep\n`)
 console.log(`Files scanned: ${results.length}  (parent ${walk(join(ROOT,'docs')).length}, six apps ${results.length - walk(join(ROOT,'docs')).length})`)
 console.log(`HISTORICAL (verdict-bannered / dated-audit, skipped): ${historical}`)
-console.log(`RECORD pins (dated plan/register/audit — the version IS the fact, not rewritten): ${recordPins}`)
+console.log(`RECORD pins (a version in prose is history — not rewritten): ${recordPins}`)
 console.log(`CHECKS-CLEAN: ${clean.length}    CHECKS-FAILED: ${dirty.length}\n`)
 console.log(`## Files with findings\n`)
 for (const r of dirty.sort((a, b) => b.findings.length - a.findings.length)) {
