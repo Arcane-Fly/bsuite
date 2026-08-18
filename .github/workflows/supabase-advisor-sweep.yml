@@ -74,8 +74,30 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
         run: node scripts/check-supabase-advisors.mjs
 
+      # DECOUPLED FROM THE VERDICT ON PURPOSE — same rule pr-drift-scan.yml and
+      # supabase-preview-db.yml already apply to their sticky-comment steps.
+      #
+      # This step preserves a report for a human to read afterwards. It is NOT
+      # the gate; the gate is the sweep step above, which reads the advisors API
+      # and decides. On 2026-08-18 the sweep printed
+      #
+      #   advisor sweep clean (no new unallowlisted security findings)
+      #
+      # and the job still went red on
+      #
+      #   Failed to FinalizeArtifact: Received non-retryable error:
+      #   Failed request: (404) Not Found: artifact not found
+      #
+      # so an artifact-storage fault was reported to every reader of a
+      # PROMOTION PR as "Advisor sweep (security fails / performance files):
+      # FAILURE" — indistinguishable from the sweep finding a real security
+      # regression, on the one PR shape where that distinction matters most.
+      #
+      # A gate must never confound its instrument with its measurement.
       - name: Upload advisor report
+        id: artifact
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: advisor-report
@@ -83,6 +105,28 @@ jobs:
             advisor-report.json
             perf-findings.md
           if-no-files-found: ignore
+
+      # Buys back the silence `continue-on-error` introduces: silence is what
+      # lets an instrument fault run unseen. State the outcome every run, so a
+      # green check with no downloadable report explains itself.
+      - name: Report whether the advisor report was stored
+        if: always()
+        env:
+          ARTIFACT_OUTCOME: ${{ steps.artifact.outcome }}
+        run: |
+          if [ "$ARTIFACT_OUTCOME" = "success" ]; then
+            echo "advisor report artifact: stored"
+          elif [ "$ARTIFACT_OUTCOME" = "skipped" ]; then
+            echo "advisor report artifact: skipped (step condition not met)"
+          else
+            echo "::warning::The advisor report artifact could NOT be stored (outcome=$ARTIFACT_OUTCOME). This does NOT mean the sweep found anything — read the sweep step's own verdict above. The findings themselves are printed to the log and the step summary regardless."
+            {
+              echo ""
+              echo "> **Note** — the advisor report artifact could not be stored (\`$ARTIFACT_OUTCOME\`)."
+              echo "> This does **not** mean a security finding was detected. The verdict is the"
+              echo "> sweep step's own conclusion, printed above and in this summary."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: File/update performance findings issue
         if: steps.sweep.outputs.perf_findings == 'true'
