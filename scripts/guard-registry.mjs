@@ -348,12 +348,11 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"Files scanned: 444 (parent 281, six apps 163) — CHECKS-CLEAN: 358, ' +
-      'CHECKS-FAILED: 86" (2026-08-18, after the version check was corrected). ' +
-      'Breakdown: 90 dangling link, 78 stale pin, 0 unfilled template, 1 ' +
-      'Tailwind v3 (itself an audit REPORTING one), 0 version mismatch. Refuses with exit 2 when submodules are ' +
-      'absent, because every cross-submodule link would otherwise report as a ' +
-      'false dangling. The version limb previously emitted 12 findings and ALL ' +
+      '"Files scanned: 392 live (52 more skipped as HISTORICAL) — ' +
+      'CHECKS-CLEAN 360, CHECKS-FAILED 32; RECORD pins set aside 57" ' +
+      '(2026-08-18). Actionable: 50 dangling link, 7 stale pin, 1 Tailwind ' +
+      '(itself an audit reporting one), 0 template, 0 version. Refuses with ' +
+      'exit 2 without submodules: every cross-submodule link would report a 'false dangling. The version limb previously emitted 12 findings and ALL ' +
       'TWELVE WERE FALSE — it read the first version-like string in the header, ' +
       'routinely a cross-reference, and compared "1.0" to "1.00" as unequal.',
   },

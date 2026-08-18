@@ -80,13 +80,35 @@ if (missingSubs.length) {
   process.exit(2)
 }
 
+
+/**
+ * A document that already declares itself historical is not a document with
+ * stale content — the stale content IS the record. The companion source-path
+ * checker learned this first; without it, dated audits and verdict-bannered
+ * `recovered/` files drown the findings that are actually actionable.
+ */
+function isHistorical(text) {
+  for (const l of text.split('\n').slice(0, 14)) {
+    const t = l.trim()
+    if (!t.startsWith('>')) continue
+    const inner = t.replace(/^>\s*/, '')
+    const heading = inner.replace(/^#+\s*/, '')
+    if (/^#+/.test(inner) && /VERDICT|SUPERSEDED|NO LONGER TRUE|NO LONGER EXISTS|DEAD|re-measured/i.test(heading)) return true
+    if (/^⚠/.test(heading)) return true
+  }
+  return false
+}
+
 const files = [...walk(join(ROOT, 'docs')), ...APPS.flatMap(a => walk(join(ROOT, a, 'docs')))]
 const results = []
+let historical = 0
+let recordPins = 0
 
 for (const file of files) {
   const rel = relative(ROOT, file)
   let text
   try { text = readFileSync(file, 'utf8') } catch { continue }
+  if (isHistorical(text)) { historical++; continue }
   const lines = text.split('\n')
   const findings = []
 
@@ -101,12 +123,34 @@ for (const file of files) {
     }
   })
 
-  // 2. stale @bsuite/<pkg>@<version> pins
+  // 2. stale @bsuite/<pkg>@<version> pins — SPLIT BY WHAT THE DOCUMENT IS.
+  //
+  // In a REFERENCE or AUTHORITY document ("the package is the source of
+  // truth" beside a version), the pin is a live claim and drifts into a lie.
+  // In a dated PLAN, REGISTER, AUDIT, INVENTORY or ROADMAP, the version IS the
+  // fact — it records what was planned or measured on a day. Rewriting those
+  // destroys the record and leaves a document that looks current and was never
+  // re-verified.
+  //
+  // Reported separately because collapsing them overstates the actionable
+  // count by roughly five to one, and a number that overstates gets ignored.
+  // ADRs are decision RECORDS by definition — an ADR naming the version a
+  // package launched at is stating history, and amending it rewrites the
+  // decision. Checklists, doctrines and blindspot registers are the same shape.
+  const isRecord = /(\/plans\/|\/adr\/|-plan-|-register-|-audit-|-inventory-|-roadmap-|-chore-|-backlog-|-checklist-|-doctrine-|-blindspots-|-decision-|CONSISTENCY-REPORT|STACK-AUDIT|STATUS\.md)/i.test(rel)
+  // …and a pin can be historical inside ANY document, if the sentence around it
+  // is reporting rather than prescribing: "@bsuite/auth@0.2.0 regression",
+  // "shipped in @bsuite/dates@0.1.1", "@bsuite/schema-builder@0.1.0 lands in".
+  // Every one of the 15 findings that survived the filename test was this
+  // shape, which is why the test cannot be a filename test alone.
+  const HISTORICAL_LINE = /(regression|shipped|confirmed|lands in|landed|was |were |incident|evidence|previously|at the time|as of \d)/i
   lines.forEach((ln, i) => {
     if (isRetracted(lines, i)) return
     for (const m of ln.matchAll(/@bsuite\/([a-z-]+)@(\d+\.\d+\.\d+)/g)) {
       const latest = npmLatest(`@bsuite/${m[1]}`)
-      if (latest && latest !== m[2]) findings.push(`stale pin @bsuite/${m[1]}@${m[2]} (published ${latest}, line ${i + 1})`)
+      if (!latest || latest === m[2]) continue
+      if (isRecord || HISTORICAL_LINE.test(ln)) recordPins++
+      else findings.push(`stale pin @bsuite/${m[1]}@${m[2]} (published ${latest}, line ${i + 1})`)
     }
   })
 
@@ -173,6 +217,8 @@ const clean = results.filter(r => !r.findings.length)
 const dirty = results.filter(r => r.findings.length)
 console.log(`# Estate documentation sweep\n`)
 console.log(`Files scanned: ${results.length}  (parent ${walk(join(ROOT,'docs')).length}, six apps ${results.length - walk(join(ROOT,'docs')).length})`)
+console.log(`HISTORICAL (verdict-bannered / dated-audit, skipped): ${historical}`)
+console.log(`RECORD pins (dated plan/register/audit — the version IS the fact, not rewritten): ${recordPins}`)
 console.log(`CHECKS-CLEAN: ${clean.length}    CHECKS-FAILED: ${dirty.length}\n`)
 console.log(`## Files with findings\n`)
 for (const r of dirty.sort((a, b) => b.findings.length - a.findings.length)) {
