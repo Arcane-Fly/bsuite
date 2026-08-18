@@ -2,6 +2,13 @@
 
 > **Naming:** `20260724-recurring-bugs-blindspots-refined-v1.00D.md` · Status **D** · prompt-enhancer Standard tier (3 passes). Input: "what are recurring bugs and issues you have found in this codebase. what should we be looking into but haven't." Silo: BSuite.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Intent
 
 Produce an evidence-backed catalogue of (A) **recurring bug classes** already observed in this monorepo (patterns that repeated 2+ times), and (B) **unexamined / under-looked areas** that the recent ship window (docs program, bug-hunt, email/funding, one-shot audit) did **not** touch. Output is a prioritised investigation ledger — **not** a fix pass. No code changes unless the user later approves a fix lane.

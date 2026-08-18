@@ -1,5 +1,12 @@
 # Workforce One OTS Parity — Implementation Plan
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 Close the 14 timesheet/payroll gaps identified in `docs/plans/20260306-workforce-one-parity-analysis-v1.00W.md` across schema, migration, workflow, and UI layers in CRM7, with strict one-shot data entry, DRY wiring, red-team checkpoints, and cross-cutting quality gates.
 
 ---

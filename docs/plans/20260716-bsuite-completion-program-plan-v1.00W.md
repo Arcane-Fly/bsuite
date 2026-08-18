@@ -3,6 +3,13 @@
 **Status:** W (Working) · **Owner:** claude-code (orchestrator) · **Created:** 2026-07-16
 **Operator directive (2026-07-16):** "all via /subagent-driven-development you orchestrate over the top. first plan, and give each team a clear brief." + "don't stop until everything is complete… if you notice UI or UX bugs, something that isn't compliant with the GTO guidelines documented, or anything else then that gets added to the work list… you DO NOT STOP to prompt me."
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## 1. Goal + success condition (loop contract)
 
 **Goal:** BSuite reaches "world class" — 135 open issues across 7 repos triaged to done, with public-facing docs, clean repo, zero known silent-data-loss or wrong-tenant defects.

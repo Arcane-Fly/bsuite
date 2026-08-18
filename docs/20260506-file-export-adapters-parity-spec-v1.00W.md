@@ -7,6 +7,13 @@
 **Closes:** queue item `PARITY-576-DOC` (research portion of issue #576)
 **Cross-references:** `parity-matrix.md` rows 94-96; codehouse PDFs (WF1 FAQ "Recreating Electronic Banking ABA file" / "Prepare Pay Way Visa Export" / "Superannuation Clearing House Export"); Australian Payments Network BECS DE/CE record specification; ATO Super Clearing House requirements; existing `crm7/src/lib/payroll/xeroAdapter.ts` + `R80.3/src/services/paydaySuperService.ts`
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## Executive summary

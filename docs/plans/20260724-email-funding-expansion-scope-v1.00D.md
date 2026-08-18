@@ -2,6 +2,13 @@
 
 > **Naming:** `20260724-email-funding-expansion-scope-v1.00D.md` · Status **D** (Draft — brainstorm per `agents/brainstorming`, needs operator design approval before build) · Operator directives 2026-07-24.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Operator directives (this session)
 
 1. **Email ingestion → recruitment activities**: confirmation emails for job applications, all emails + calendar events tied to recruitment. Needs a recruiter-requirements brainstorm (what recruiters actually require).

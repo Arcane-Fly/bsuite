@@ -1,5 +1,12 @@
 # Extreme-poor agent items — ground-up execution log (2026-07-27)
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 Source ranking: `docs/20260727-multiapp-agent-blindspot-investigation-ledger-v1.00W.md` (higher # = worse).  
 This file tracks **execution evidence** for the most extreme items first (ground-up rebuild of process after older-model era).
 

@@ -8,6 +8,13 @@
 
 **Hard rule applied:** every claim below is either (a) a direct quote/paraphrase of a specific Xero doc page, cited inline by URL, or (b) explicitly marked as inference from our own codebase, never blended silently. Where a previous pass asserted "payroll tax is categorically absent from Xero's API surface" without reading a single page, this pass opened every Payroll AU page, the Accounting TaxRates page, and grepped the full corpus of 47 fetched pages for the literal strings `payroll tax` / `payrolltax` (case-insensitive) — zero hits anywhere. That is the evidence, not a repeated assumption. See §1.2.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. Answer to the operator's question
