@@ -290,6 +290,56 @@ export const GUARDS = [
       '"audit-oklch-lightness: self-test OK (10 cases, 8 of them asserting the gate FAILS)"',
   },
   {
+    // REACHABILITY, which is a different question from parity and from
+    // armed-ness, and the only one of the three that would have caught the 17
+    // pure whites in crm7's customer-facing PDFs (bsuite#1962).
+    //
+    //   sync-inline-eslint-rules --check     proves the six copies are BYTE-EQUAL
+    //                                        to the source. Six identically
+    //                                        broken copies pass it.
+    //   <submodule> eslint-rule-parity       proves ARMED, using `const c =
+    //                                        '#ff8800'` — a bare hex in a
+    //                                        VariableDeclarator, the shallowest
+    //                                        position the rule has. A copy that
+    //                                        has lost the call-argument walk
+    //                                        passes it unchanged.
+    //   the rule's unit test                 runs the SOURCE only, from
+    //                                        packages/. It never loads a copy.
+    //
+    // This one EXECUTES every copy over the four positions that have each hidden
+    // a real pure endpoint in this estate — call argument, nested call argument,
+    // assignment, expression-statement call — and positive-controls the harness
+    // per copy before grading it. `--self-test` mutates the argument walk out of
+    // every inline copy and asserts the guard goes red.
+    id: 'parent-colour-ban-reaches-converters',
+    label: 'Pure white/black ban is reachable through a converter (source + 6 inline copies)',
+    repo: '.',
+    command: ['node', 'scripts/check-colour-ban-reaches-converters.mjs'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"77 assertions executed — 7 colour-rule files x 11 fixtures (7 must-report ' +
+      'positions, 4 must-stay-silent)"; --self-test exits 1 with 36 failures',
+  },
+  {
+    // A RATCHET, not a hard gate: 25 documents in docs/recovered/ still need a
+    // verdict against code, and a gate that fails all of them on day one is
+    // permanently red — which is how the colour rule was disarmed the first
+    // time. The ceiling was measured after bannering the document-lifecycle
+    // chain and may only be lowered.
+    //
+    // Expect PASS at the ceiling. `--self-test` blinds the banner detector and
+    // asserts the count changes, so a constant masquerading as a measurement is
+    // caught.
+    id: 'parent-recovered-doc-verdicts',
+    label: 'Every docs/recovered/ document carries a verdict banner on its own face (ratchet)',
+    repo: '.',
+    command: ['node', 'scripts/check-recovered-doc-verdicts.mjs'],
+    ciWorkflow: '.github/workflows/doc-naming.yml',
+    mode: 'run',
+    evidence:
+      '"33 files examined in docs/recovered — 4 carry a verdict banner, 29 do not ' +
+      '(ceiling 29)"; --self-test exits 1',
     // The suppression counter. Every other lint ratchet in this estate counts
     // what SURVIVES the linter; this one counts what was switched off before
     // the linter ever spoke. R80.4/eslint-baseline.json is the worked example

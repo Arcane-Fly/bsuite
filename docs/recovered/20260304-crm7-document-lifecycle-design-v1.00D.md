@@ -1,3 +1,18 @@
+> # ⛔ VERDICT: DEAD — superseded design for a rejected vendor
+>
+> **Verdicted 2026-08-17 against live code and the live production database.**
+>
+> This is the design specification for the Adobe Acrobat Sign build described in
+> [`20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md`](./20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md).
+> **Adobe Sign was rejected on 2026-03-04, the day both documents were written.** Neither was
+> revised.
+>
+> **Current truth:** [`20260317-document-esigning-architecture-v1.00A.md`](./20260317-document-esigning-architecture-v1.00A.md)
+> — self-hosted, zero vendor dependency, shipped.
+>
+> Retained for the requirements and the 20 GTO document types it enumerates, which are still
+> accurate. **The architecture, the vendor and the table shapes are not.**
+>
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
