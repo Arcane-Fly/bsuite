@@ -726,6 +726,32 @@ export const GUARDS = [
       'split narrows the naive \'no award_code\' count."',
   },
   {
+    id: 'parent-check-published-peer-ranges',
+    label: 'Published peer ranges (are our own npm publishes actually installable?)',
+    repo: '.',
+    command: ['node', 'scripts/check-published-peer-ranges.mjs'],
+    ciWorkflow: '.github/workflows/own-package-freshness.yml',
+    mode: 'run',
+    // Read-only and hits only the public npm registry, so none of the `skip`
+    // criteria apply. It reads the REGISTRY rather than packages/*/package.json
+    // on purpose: whether pnpm rewrites `workspace:^` at pack time is a property
+    // of how a package was published, which the source cannot tell you.
+    evidence:
+      '"check-published-peer-ranges: 15 package(s), 62 published dependency ' +
+      'edge(s) read from https://registry.npmjs.org — 0 blocking finding(s), 2 ' +
+      'awaiting publish." — run by hand 2026-08-18. Those two are real and are ' +
+      'what this guard was ' +
+      'written for: @bsuite/page-builder@1.0.0 shipped the literal string ' +
+      '"workspace:^" as its @bsuite/theme peer, and @bsuite/schema-registry@1.0.2 ' +
+      'peers on @bsuite/nav-core ^0.8.0 while nav-core is at 1.0.0. Both are ' +
+      'reported as FIX-PENDING-PUBLISH rather than failing, because this ' +
+      'checkout already carries the corrected range AND a version bump, so they ' +
+      'ship on merge — a guard that blocks its own fix is unmergeable by ' +
+      'construction. Its --self-test passes 22/22 in both directions and itself ' +
+      'caught a defect in this guard\'s own range parser (`<2` read as ' +
+      'unparseable) before it ever reached CI.',
+  },
+  {
     id: 'parent-check-own-package-freshness',
     label: 'Own-package freshness (do the six apps run our latest @bsuite/* publishes?)',
     repo: '.',

@@ -109,3 +109,14 @@ jobs:
         env:
           BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
         run: node scripts/check-own-package-freshness.mjs
+
+      # Same registry reach as the steps above, and the same class of question —
+      # but asked of the OTHER side of the relationship. `check-own-package-
+      # freshness` asks whether the six apps consume our latest publishes; this
+      # asks whether those publishes are themselves installable. A package can be
+      # perfectly fresh and still ship a peer range no consumer can satisfy.
+      - name: Self-test the published-peer-range guard (proves it can fail)
+        run: node scripts/check-published-peer-ranges.mjs --self-test
+
+      - name: Published packages serve resolvable, current peer ranges
+        run: node scripts/check-published-peer-ranges.mjs
