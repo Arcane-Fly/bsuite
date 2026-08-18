@@ -57,6 +57,13 @@ on:
       - 'scripts/audit-applied-tokens.mjs'
       - 'scripts/audit-ui-pages.mjs'
       - 'scripts/audit-legibility.mjs'
+      # The audits' shared helpers. Without this line a change to
+      # scripts/lib/settled-or-skip.mjs — the guard that decides whether a route
+      # was measured at all — would not re-run the gate that consumes it, and
+      # the file would be edited under no test. `.mjs` is not covered by the
+      # `**/*.js` glob above, which is why every script here is named
+      # explicitly rather than matched.
+      - 'scripts/lib/**'
       - '.github/theme-c1-baseline.txt'
       - '.github/theme-c2-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
