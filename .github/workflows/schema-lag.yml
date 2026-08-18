@@ -207,24 +207,35 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Prove the award-code guard can fail
-        # Eight fixtures plus a positive control, same reason as the provenance
-        # guard directly above: prove the logic can discriminate BEFORE trusting
-        # a green result from the live query.
+        # Ten fixtures plus THREE positive controls, run BEFORE the live check
+        # for the same reason as the provenance guard above: a guard whose logic
+        # is broken reports a clean database exactly as convincingly as a clean
+        # one. The three controls are not decoration — each reproduces one of
+        # the blind spots that made the FIRST version of this guard report
+        # "coherent, ok: true" over eight real apprentices:
+        #   1. `apprentice_id` is written by ONE tenant and it is a DEMO one,
+        #      so an apprentice_id-keyed predicate sees nobody in the real one.
+        #   2. A ratchet over a POOLED cross-tenant count passes on this exact
+        #      live state, because the baseline was frozen at the pooled figure.
+        #   3. `status = 'active'` drops a FutureBuild placement that is still
+        #      being billed.
         run: node scripts/check-placement-award-code.mjs --self-test
 
-      - name: Placement award-code coverage
-        # Narrower question than "Placement rate provenance" above: that step
-        # asks whether a wage came from a real award_rates ROW (award_rate_id).
-        # This asks whether the placement even NAMES an award (award_code) —
-        # they diverge on most of this estate's live data, where an award is
-        # named but no rate row has ever been resolved against it.
-        # `placements_award_code_required_when_claimed_chk` (20260822060000)
-        # closes the fabrication half at the DB level; this step ratchets the
-        # half that migration deliberately leaves open — the honest 'manual'
-        # quote flow — so it stays VISIBLE without being silently forbidden.
-        # Reuses the pooler host this job already resolved, same rationale as
-        # the provenance step: duplicated connection logic is how two guards
-        # come to disagree about which database they are describing.
+      - name: Placement award basis — REAL tenants only
+        # THIS STEP IS EXPECTED TO BE RED, and that is the point.
+        #
+        # The header of this workflow says a guard that is red during ordinary
+        # work gets muted, and that is true of `pending > 0` — a transient state
+        # between a merge and the next promotion. It is NOT true here. An
+        # apprentice billed to a host against a rate that names no award is not
+        # a phase of normal operation; it is the finding. It closes when the
+        # placements are given an award basis, which is the OPERATOR's
+        # determination to make (ruling: "the user determines eligibility, never
+        # an engine") — never this workflow's, and never by editing a constant.
+        #
+        # Scoped per tenant, real tenant first. The previous version pooled one
+        # real tenant with three demo ones into a single ratcheted total, which
+        # is a number true of nothing; see the script header.
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
@@ -232,11 +243,13 @@ jobs:
         run: |
           set -euo pipefail
           export SUPABASE_DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
-          node scripts/check-placement-award-code.mjs | tee award-code.txt
+          rc=0
+          node scripts/check-placement-award-code.mjs | tee award-basis.txt || rc=$?
           {
-            echo '### Placement award-code coverage'
+            echo '### Placement award basis — REAL tenants only'
             echo ''
             echo '```'
-            cat award-code.txt
+            cat award-basis.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"

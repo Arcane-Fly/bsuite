@@ -696,34 +696,45 @@ export const GUARDS = [
   },
   {
     id: 'parent-check-placement-award-code',
-    label: 'Placement award-code coverage (can a claimed charge rate be reconciled to an award later?)',
+    label:
+      'Placement award basis, REAL tenants only (is a real apprentice billed against an unnamed award?)',
     repo: '.',
     command: ['node', 'scripts/check-placement-award-code.mjs', '--self-test'],
     ciWorkflow: '.github/workflows/schema-lag.yml',
     mode: 'run',
-    // Same deliberate exception as check-placement-rate-provenance directly
-    // above, for the same reason: the real run needs a live production
-    // credential the watcher does not hold, so registering the real command
-    // would record a permanent COULD_NOT_EXECUTE. The self-test exercises the
-    // identical `evaluate()` the real run calls.
+    // Same deliberate exception as the two guards above, for the same reason:
+    // the real run needs a live production credential the watcher does not
+    // hold. The self-test drives the identical `evaluate()` the real run calls.
     //
-    // Narrower question than check-placement-rate-provenance: that guard asks
-    // whether a wage came from a real award_rates ROW (award_rate_id); this
-    // one asks whether the placement even NAMES an award (award_code) — the
-    // two diverge on most of this estate's live data, where an award is named
-    // but no specific rate row has ever been resolved against it.
-    // `placements_award_code_required_when_claimed_chk` (20260822060000)
-    // closes the fabrication half at the DB level (claiming resolved/
-    // migrated_to_discontinued with no award_code is now a 23514); this guard
-    // covers the half that migration deliberately leaves open — the honest
-    // 'manual' quote flow, ratcheted at GAP_BASELINE=8 (measured 2026-08-17)
-    // so the gap is visible and cannot silently grow past what was measured.
+    // WHY THIS IS REGISTERED AS A SELF-TEST WHILE THE LIVE RUN IS RED.
+    // The live run currently FAILS, deliberately: 8 of 8 FutureBuild placements
+    // bill a charge_rate for a real attached person while naming no award by
+    // any route. That is the finding, not a broken guard, and it closes on an
+    // operator determination ("the user determines eligibility, never an
+    // engine"), not on a code change. The watcher records the self-test so a
+    // logic regression is still caught; the live red lives in CI where it
+    // belongs.
+    //
+    // WHAT THE FIRST VERSION OF THIS GUARD GOT WRONG — all three reproduced as
+    // positive controls in the self-test, so the fix cannot silently regress:
+    //   1. It POOLED one real tenant with three demo tenants into a single
+    //      ratcheted total and froze GAP_BASELINE at the pooled figure (8 = 7
+    //      real + 1 unrelated demo row), so it could only pass on first run.
+    //      A number averaged across real and demo data is true of nothing.
+    //   2. Its hard-failure limb keyed on `apprentice_id`, a column populated
+    //      in exactly one tenant — a DEMO one. The real tenant carries people
+    //      on `person_id`/`training_contract_id`, so the limb reported "0
+    //      apprentices exposed" over 8 real people it could not see.
+    //   3. It filtered `status = 'active'`, dropping a FutureBuild placement
+    //      that is still billed (8 billed, 7 active).
     evidence:
-      '"check-placement-award-code --self-test: 8 cases exercised across both ' +
-      'directions (at-baseline-passes, below-baseline-passes, G1 rise, G2 ' +
-      'fabricated-shaped, G3 apprentice-attached, G4 empty-scan-refused, ' +
-      'gap-closed-passes), plus 1 positive control proving the manual/no-award ' +
-      'split narrows the naive \'no award_code\' count."',
+      '"check-placement-award-code --self-test: 10 cases exercised in BOTH ' +
+      'directions (live-shape-fails, award-present-passes, 7-of-8-still-fails, ' +
+      'demo-exposure-ignored, bare-quotes-pass, R2 real, R2 demo, R3 empty, ' +
+      'R3 zero-rows, R4 real-tenant-absent), plus 3 positive controls proving ' +
+      "the OLD guard's three blind spots were real: apprentice_id sees nobody " +
+      'in the real tenant, a pooled ratchet passes over this exact live state, ' +
+      "and status='active' drops a billed row.\"",
   },
   {
     id: 'parent-check-published-peer-ranges',
