@@ -59,6 +59,12 @@ def historical(t):
     return False
 def key(s): return re.sub(r'[^a-z0-9]','', s.lower().replace('.md',''))
 found={}
+# SELF-REPORTING COUNTERS. LANE-WATCHER failed this script for "exited 0 but
+# never stated a non-zero count of anything examined", and it was right to: the
+# only number printed was the number of FINDINGS. A findings count alone cannot
+# distinguish "scanned 392 files and 3 links look renamed" from "scanned nothing
+# and therefore found nothing", and the two look identical on a green run.
+n_files=0; n_skipped_historical=0; n_links=0; n_dangling=0; n_resolvable=0
 docdirs=[os.path.join(ROOT,'docs')]+[os.path.join(ROOT,a,'docs') for a in
         ['crm7','conduit','business-suite-unified','R80.4','braden','throughput']]
 for dd in docdirs:
@@ -68,14 +74,18 @@ for dd in docdirs:
             if not fn.endswith('.md'): continue
             p=os.path.join(d,fn)
             raw=open(p,encoding='utf8',errors='replace').read()
-            if historical(raw): continue
+            if historical(raw): n_skipped_historical+=1; continue
+            n_files+=1
             for ln in raw.split('\n'):
                 for m in re.finditer(r'\]\(([^)#\s]+\.md)\)', ln):
                     t=m.group(1)
                     if t.startswith('http'): continue
+                    n_links+=1
                     if os.path.exists(os.path.normpath(os.path.join(d,t))): continue
+                    n_dangling+=1
                     b=os.path.basename(t)
-                    if b in GENERIC or b in names_repo or b in names_arch: continue
+                    if b in GENERIC or b in names_repo or b in names_arch:
+                        n_resolvable+=1; continue
                     kb=key(b)
                     # BEST match, not FIRST. Taking the first substring hit made
                     # `20260227-dry-one-shot-architecture-v1.02A.md` resolve to
@@ -120,6 +130,18 @@ for dd in docdirs:
                     if cand:
                         found.setdefault((os.path.relpath(p,ROOT), b, cand), 0)
                         found[(os.path.relpath(p,ROOT), b, cand)] += 1
+# Denominator FIRST, so a reader sees what was looked at before what was found.
+print(
+    f'check-docs-renamed-links: {n_files} live markdown file(s) examined across '
+    f'{len(docdirs)} docs tree(s) ({n_skipped_historical} skipped as historical), '
+    f'{n_links} relative .md link(s) resolved against an index of {len(all_names)} '
+    f'known filename(s) — {n_dangling} dangling, of which {n_resolvable} name a file '
+    f'that does exist elsewhere, leaving {len(found)} rename candidate(s).'
+)
+if n_files == 0 or n_links == 0:
+    print('::error::Scanned zero files or zero links. A check that examined nothing '
+          'must not report a clean pass.')
+    raise SystemExit(2)
 print(f'RENAMED-LINK candidates (dangling, but a close filename exists): {len(found)} distinct')
 byfile={}
 for (f,b,c),n in found.items(): byfile.setdefault(f,[]).append((b,c,n))
