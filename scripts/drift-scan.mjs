@@ -217,6 +217,27 @@ const SIGNALS = [
       // apps carried ZERO. So the guard was failing PRs over the one place the
       // idiom is correct, and had nothing to say about the place it is not.
       //
+      // THE MEASUREMENT ABOVE IS TRUE. THE GENERALISATION FROM IT WAS NOT.
+      // One tarball was unpacked — @bsuite/ui@1.2.0 — and the conclusion drawn
+      // was that pnpm rewrites `workspace:` for every workspace member. On
+      // 2026-08-18 the registry says otherwise:
+      //
+      //     @bsuite/page-builder@1.0.0
+      //       peerDependencies: { "@bsuite/theme": "workspace:^" }
+      //
+      // The literal string reached npm and no consumer outside this workspace
+      // can satisfy it. Whether the rewrite happens is a property of HOW a
+      // package was published, not of what its source says — so no source-level
+      // check, this one included, can answer the question.
+      //
+      // The exemption is therefore KEPT (flagging packages/* here would put two
+      // guards in disagreement over the same lines, and the louder one wins),
+      // but it is no longer the whole story. The invariant that actually matters
+      // is enforced against the published artefact by
+      // `scripts/check-published-peer-ranges.mjs`, which reads the registry.
+      // Read that guard's verdict, not this exemption, for whether a published
+      // package is installable.
+      //
       // `file:` stays flagged everywhere, including here — a relative path is
       // wrong in a published package too, since it cannot survive packing.
       const isWorkspaceMember = /(^|\/)packages\/[^/]+\/package\.json$/.test(file);

@@ -191,14 +191,21 @@ export interface CalcConfig {
   daysPerWeek: number;
 
   /**
-   * RDO accrual arrangement, if any. Optional and additive — `calculate()`
-   * does not yet consume this field itself (bsuite CLAUDE.md §12.2: the
-   * charge-calc consumer chain in crm7/R80.3 is a separate follow-up). It
-   * exists so callers have one canonical, documented place to carry a
-   * worked-vs-paid arrangement through the pipeline instead of inventing
-   * their own shape, and so `hoursPerWeek` above can be unambiguously
-   * documented as PAID. Defaults to `DEFAULT_RDO_CONFIG` (no RDO) when
-   * omitted — see `src/rdo.ts` for the conversion helpers.
+   * RDO accrual arrangement, if any. CONSUMED by `calculate()` since 0.14.0
+   * (estate ledger M-2): it derives `rdoDaysAnnual`/`rdoHoursAnnual` and adds
+   * the banked hours to `billableHours`, so an RDO placement's
+   * `costPerHour`/`quotedChargeRate` genuinely differ from a non-RDO one.
+   * Before 0.14.0 this field was carried and never read — crm7 populated it
+   * and raised an operator warning to check the rate by hand.
+   *
+   * It does NOT move `hoursPerWeek`. That is the PAID week (see above) and
+   * stays so: under MA000020 cl.16.2 the accrual is deferred pay, not less
+   * pay, and annual paid hours are unchanged. Subtracting it from
+   * `hoursPerWeek` understates wage, super and leave.
+   *
+   * Defaults to `DEFAULT_RDO_CONFIG` (no RDO) when omitted, in which case
+   * every output is byte-identical to pre-0.14.0. See `src/rdo.ts` for the
+   * worked/paid conversion helpers.
    */
   rdo?: RdoAccrualConfig;
 
@@ -336,7 +343,21 @@ export interface CalcResult {
   totalAnnualCost: number;
 
   // Hours
+  /**
+   * Billable hours per year. Includes `rdoHoursAnnual` — the RDO bank is
+   * billable when taken, because the host has already had the work (see
+   * `calculate()`'s RDO block). Equals `billableWeeks x hoursPerWeek` exactly
+   * when no RDO arrangement applies.
+   */
   billableHours: number;
+  /**
+   * RDO days accrued (and therefore taken) per year under `CalcConfig.rdo`.
+   * 0 when `rdo.enabled` is false — the default, and a real state, not an
+   * unfinished one. ~13.0 for the MA000020 cl.16.2 0.4h/7.6h pattern.
+   */
+  rdoDaysAnnual: number;
+  /** `rdoDaysAnnual` expressed in paid hours. 0 when no RDO applies. */
+  rdoHoursAnnual: number;
   totalHours: number;
   trainingHours: number;
   nonBillableHours: number;

@@ -10,6 +10,23 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 > and re-derives it. Every such row below now says *archived*, and where authority moved, it names
 > the document that now holds it.
 
+> **`R80.3/...` paths in older documents do not resolve, and are NOT being rewritten.**
+> Measured 2026-08-18: 47 top-level documents mention R80.3; 10 of them reference an
+> `R80.3/<path>` pointer, 31 references in total. There is no `R80.3` directory — the live
+> repository is `R80.4`.
+>
+> The tempting fix is a blanket `R80.3` → `R80.4` rewrite. It would be wrong. R80.4 is a
+> RESTRUCTURE, not a rename: of the 20 distinct paths referenced, **18 do not exist under
+> R80.4 either** — `src/services/awardRulesEngine.ts`, `src/lib/payroll-export/codes.ts`,
+> `docs/PARENT-DOCS.md` and the rest are simply gone. Rewriting them would replace a pointer
+> that is visibly stale with one that looks current and is still broken, which is the harder
+> defect to notice.
+>
+> So they stand as historical references to the archived version, and this note is the
+> authority that says so. If you need what one of them pointed at, look in
+> `~/Desktop/Dev/archived-repos-docs/`. The two paths that DO survive are `R80.4/docs/`
+> and `R80.4/docs/README.md`.
+
 > **Index refreshed 2026-06-11** by the docs/roadmap closure audit (`plans/20260611-docs-roadmap-closure-audit-v1.00A.md` — **archived**, now at `~/Desktop/Dev/archived-repos-docs/20260727-docs-archive-pass/docs/plans/`). Evidence-only artifacts (cron logs, completed handoff packets, one-off audits) were moved to `archive/2026-06/`; earlier reference docs are **archived out of the repo** under `~/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/docs/archive/parent/2026-04-30-references-approved/`.
 
 ## Documentation Authority

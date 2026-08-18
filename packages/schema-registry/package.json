@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/schema-registry",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Tenant schema, page layout, and navigation hooks for BSuite consumer apps",
   "type": "module",
   "publishConfig": {
@@ -40,7 +40,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@bsuite/nav-core": "^0.8.0",
+    "@bsuite/nav-core": ">=0.8.0 <2",
     "@supabase/supabase-js": "^2",
     "@tanstack/react-query": "^5",
     "react": ">=18 <21",
