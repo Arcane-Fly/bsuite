@@ -317,6 +317,59 @@ const CENSUS_QUERIES = {
       WHERE table_schema NOT IN ('pg_catalog','information_schema','supabase_migrations')
     ) q`,
 
+  // Function EXECUTE grants. `role_table_grants` above is TABLES ONLY, so until
+  // 2026-08-17 this census could not see a single function ACL — and this estate
+  // ships a lot of them: the standing rule after a CREATE FUNCTION is to REVOKE
+  // from PUBLIC *and* from anon (two different routes, neither substituting for
+  // the other) then GRANT to the intended roles. Every such migration applied
+  // cleanly, moved nothing this census watched, and was rejected as a no-op.
+  //
+  // That is worse than it sounds. The rejection message tells the author to
+  // declare the migration DATA ONLY, which would be false and would then exempt
+  // it from verification permanently. A blind spot that instructs you to
+  // mislabel the thing it cannot see is how a class stops being checked.
+  //
+  // Read from pg_proc.proacl rather than information_schema.role_routine_grants:
+  // the latter shows only routines the current role can see, which makes the
+  // census depend on who ran it. grantee 0 is PUBLIC and pg_get_userbyid(0)
+  // errors, so it is spelled out. A NULL proacl is emitted as an explicit
+  // "(default acl)" line rather than dropped, because NULL -> explicit IS the
+  // transition a hardening migration makes, and a dropped row would make the
+  // before and after look identical.
+  routine_grants: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
+      SELECT n.nspname || '.' || p.proname || '(' ||
+             pg_get_function_identity_arguments(p.oid) || ') ' ||
+             CASE WHEN p.proacl IS NULL THEN '(default acl)'
+                  ELSE CASE WHEN a.grantee = 0 THEN 'PUBLIC'
+                            ELSE pg_get_userbyid(a.grantee) END
+                       || ' ' || a.privilege_type END AS x
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      LEFT JOIN LATERAL aclexplode(p.proacl) a ON true
+      WHERE n.nspname NOT IN ('pg_catalog','information_schema','supabase_migrations')
+        AND n.nspname NOT LIKE 'pg_toast%'
+    ) q`,
+
+  // Scheduled jobs. Same blind spot, different surface: a migration whose whole
+  // purpose is cron.schedule() creates no catalog object at all.
+  //
+  // Expressed as a GUARDED probe rather than a CASE, and that is not style. A
+  // `CASE WHEN to_regclass('cron.job') IS NULL THEN … ELSE (SELECT … FROM
+  // cron.job) END` guards RUNTIME but not ANALYSIS: Postgres parses the
+  // unreachable branch too, so on a database without pg_cron the whole census
+  // dies with `relation "cron.job" does not exist`. Found by running this
+  // against a real disposable Postgres 17 rather than reasoning about it.
+  //
+  // A missing extension must read as "not observable here", never as "no jobs".
+  // Those are different facts and only one of them is a finding.
+  cron_jobs: {
+    guard: `SELECT (to_regclass('cron.job') IS NOT NULL)::text`,
+    absent: '(pg_cron not installed — cron jobs not observable on this database)',
+    sql: `SELECT coalesce(string_agg(
+            j.jobname || ' [' || j.schedule || '] active=' || j.active::text,
+            E'\\n' ORDER BY j.jobname), '') FROM cron.job j`,
+  },
+
   indexes: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
       SELECT schemaname || '.' || indexname || ' ' || md5(indexdef) AS x
       FROM pg_indexes
@@ -359,8 +412,20 @@ const CENSUS_QUERIES = {
 
 function takeCensus(dbUrl) {
   const census = {};
-  for (const [name, sql] of Object.entries(CENSUS_QUERIES)) {
-    census[name] = psqlScalar(dbUrl, sql);
+  for (const [name, probe] of Object.entries(CENSUS_QUERIES)) {
+    // A probe is either a bare SQL string, or {guard, sql, absent} for a surface
+    // that may not exist on this database. The guard runs FIRST and its query
+    // never names the guarded object, so an absent extension cannot take the
+    // census down with a parse error — see cron_jobs for why that distinction
+    // cost a debugging round.
+    if (typeof probe === 'string') {
+      census[name] = psqlScalar(dbUrl, probe);
+      continue;
+    }
+    census[name] =
+      psqlScalar(dbUrl, probe.guard).trim() === 'true'
+        ? psqlScalar(dbUrl, probe.sql)
+        : probe.absent;
   }
   return census;
 }
@@ -438,6 +503,40 @@ function runSelfTest(dbUrl, tmpDir) {
       name: 'BROKEN — references a missing relation',
       sql: `SELECT * FROM ${SELF_TEST_SCHEMA}.this_relation_does_not_exist;\n`,
       expect: 'error',
+    },
+    {
+      // Setup for the regression fixture below. Kept SEPARATE on purpose: if
+      // the CREATE and the REVOKE share one case, `functions` moves and the
+      // case passes whether or not the census can see ACLs at all — i.e. the
+      // fixture would not detect the very regression it exists for. Mutation-
+      // tested: deleting the routine_grants probe leaves THIS case green and
+      // turns the next one red, which is the split working.
+      name: 'GOOD — creates a function (setup for the ACL fixture)',
+      sql:
+        `CREATE SCHEMA IF NOT EXISTS ${SELF_TEST_SCHEMA};\n` +
+        `CREATE OR REPLACE FUNCTION ${SELF_TEST_SCHEMA}.acl_probe() RETURNS integer\n` +
+        `  LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog AS $fn$ SELECT 1 $fn$;\n`,
+      expect: 'pass',
+    },
+    {
+      // THE REGRESSION FIXTURE for the 2026-08-17 census gap. A pure ACL change
+      // on an ALREADY-EXISTING function — no new object, nothing but a REVOKE.
+      //
+      // Before `routine_grants` was added, this exact shape applied cleanly,
+      // moved nothing the census watched, and was rejected as a no-op. It is
+      // the estate's most common security migration: the standing rule after
+      // CREATE FUNCTION is REVOKE from PUBLIC *and* from anon (two distinct
+      // routes, neither substituting for the other), then GRANT to the intended
+      // roles.
+      //
+      // If this reports 'noop' again, the census has gone blind to function
+      // ACLs — and the rejection message tells authors to declare such
+      // migrations DATA ONLY, which would be false and would exempt the whole
+      // class from verification permanently. A blind spot that instructs you to
+      // mislabel what it cannot see is how a class stops being checked.
+      name: 'GOOD — function ACL hardening ONLY, on an existing function',
+      sql: `REVOKE ALL ON FUNCTION ${SELF_TEST_SCHEMA}.acl_probe() FROM PUBLIC;\n`,
+      expect: 'pass',
     },
     {
       name: 'NO-OP — CREATE TABLE IF NOT EXISTS on an existing table',

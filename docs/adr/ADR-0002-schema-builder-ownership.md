@@ -1,7 +1,7 @@
 # ADR-0002 — Schema-Builder Ownership
 
 **Status:** Accepted (2026-05-01)
-**Related:** ADR-0001 (Page-Builder Ownership); `docs/20260227-dry-one-shot-architecture-v1.02A.md` §11 Phase 5; `docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`
+**Related:** ADR-0001 (Page-Builder Ownership); `docs/20260227-dry-one-shot-architecture-v1.04A.md` §11 Phase 5; `docs/plans/20260422-entity-linkage-schema-builder-uplift-v1.02W.md`
 
 ---
 
@@ -62,7 +62,7 @@ Single coordinated PR set:
 2. **BSU removal** — delete `business-suite-unified/src/pages/Developer/Schema.tsx` + `Schema.test.tsx`, remove `/developer/schema` route, remove Schema tab from Developer portal nav.
 3. **CRM7 additions** — add `crm7/src/pages/settings/schema-builder/fields/` (new sub-route) reading/writing `tenant_field_definitions` using the same EntitySelector-friendly UX as the ERD tab. Test suite added.
 4. **Ownership-map update** — `packages/dry-lint/src/ownership-map.json` flips `tenant_field_definitions` owner from `bsu` → `crm7`.
-5. **DRY spec update** — `20260227-dry-one-shot-architecture-v1.02A.md` §1 row updated.
+5. **DRY spec update** — `20260227-dry-one-shot-architecture-v1.04A.md` §1 row updated.
 
 No `@deprecated` BSU components. No dual-authoring period. BSU surface is deleted in the same PR that CRM7 gains the replacement.
 

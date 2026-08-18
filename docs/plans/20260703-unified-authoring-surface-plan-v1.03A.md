@@ -1,6 +1,12 @@
 # Unified In-Context Developer Authoring Surface — Implementation Plan
 
-`20260703-unified-authoring-surface-plan-v1.00D.md`
+> **Filename corrected 2026-08-17: `v1.00D` → `v1.03A`.** The body declared
+> `A (Approved — operator 2026-07-03 "the word")` and `v1.03A`; the filename said Draft v1.00. A
+> `D` marker on an operator-approved, build-authorised plan is a Draft marker hiding an authorised
+> build — the next agent reads "draft" and re-plans work that was already signed off.
+
+
+`20260703-unified-authoring-surface-plan-v1.03A.md`
 Status: **A (Approved — operator 2026-07-03 "the word")** · Author: claude-code · Date: 2026-07-03 · **v1.03A** (red-team resolutions §11 folded in; Phase-1 build authorized, starting with §11 BLOCKING pre-work)
 
 > **Operator directive (2026-07-03):** "As developer I should be able to edit a

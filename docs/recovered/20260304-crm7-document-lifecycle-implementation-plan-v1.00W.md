@@ -28,6 +28,58 @@
 > **The rule this document exists to teach:** before treating anything in `recovered/` as a
 > spec, find its successor. Trust the document that claims SHIPPED over the one that claims
 > WORKING, *regardless of length or detail*.
+>
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (NEVER-BUILT-AND-SHOULD-NOT-BE) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ⛔ STOP — DO NOT BUILD FROM THIS DOCUMENT
+>
+> **Verdict: NEVER-BUILT-AND-SHOULD-NOT-BE.** This is a 2,342-line, task-by-task build plan
+> for **Adobe Acrobat Sign — a vendor that was rejected on 2026-03-04, the same day this plan
+> was written.** The plan was never revised. It is the longest and most actionable document in
+> `docs/recovered/`, so it is the one an agent reads first and trusts most. That is what makes
+> it a trap rather than merely stale.
+>
+> **The rejection, same day:** `20260304-document-esign-best-practice-research-v1.00W.md` §9 —
+> *"~~Stay with Adobe Acrobat Sign~~ → SUPERSEDED … the self-hosted approach was selected."*
+> **The replacement, shipped 2026-03-17:** `20260317-document-esigning-architecture-v1.00A.md`
+> — self-hosted signing, *"zero vendor dependency"*.
+>
+> ## This trap has already fired once — it is not hypothetical
+>
+> | When | What happened |
+> |---|---|
+> | 2026-03-04 | This plan written. Adobe rejected the same day. Plan never revised. |
+> | 2026-05-15 | `crm7#687` deletes `adobe-sign-webhook` **source** — *"Adobe Sign vendor was removed"*. Issue **CLOSED** (crm7 `482214dc`). |
+> | — | **The deployed function was never undeployed.** Deleting source does not remove a live edge function; it only makes it sourceless. |
+> | 2026-08-16 | `bsuite#1955` finds it ACTIVE in production **with no source**, and **rehomes it verbatim** (crm7 `d68f6fe3`), then hardens it with careful CORS, rate-limiter and JWT work (`16cfec84`, `69a1517c`, `02ae4657`). |
+>
+> **Net effect: the rejected vendor's public webhook is back in the repo, hardened, deployed,
+> and now reads as legitimate infrastructure.** The 2026-05-15 source deletion *caused* the
+> 2026-08-16 resurrection, because a sourceless live function is exactly what that audit hunted.
+>
+> ## Measured against the live database (project `tuybltdrdefjblnplpqo`, 2026-08-17)
+>
+> - `adobe-sign-webhook` — **ACTIVE**, v42, redeployed 2026-08-16. Source:
+>   `crm7/supabase/functions/adobe-sign-webhook/index.ts` (320 lines).
+> - `public.document_signatories` — **exists**, 12 columns, including **`adobe_participant_id`**.
+> - **`document_signatories` = 0 rows; `adobe_participant_id` non-null = 0 rows.** Nothing has
+>   ever flowed through the Adobe path. It is pure dead surface.
+>
+> **Correction to two other live documents, recorded here rather than silently fixed:**
+> `00-READ-THIS-FIRST-corpus-health.md` and `crm7#1476` both state the live shape has
+> **no** `document_signatories`. **It does.** That table is live today with an Adobe column.
+>
+> ## If you are here to work on document signing
+>
+> Build on the **2026-03-17** shape, and read `crm7#1476` (open) first. Removal of the live
+> Adobe residue is tracked at **`crm7#1779`** (open). Note that `crm7#687`, the issue that
+> claims this was already retired, is **CLOSED and wrong**.
+>
+> *Nothing below this line has been edited. The rejected plan is left legible on purpose —
+> this estate marks corrections, it does not quietly rewrite them.*
 
 ---
 

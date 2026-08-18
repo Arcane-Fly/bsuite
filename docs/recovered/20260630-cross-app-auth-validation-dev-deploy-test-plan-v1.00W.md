@@ -1,3 +1,25 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED
+>
+> The single claim under test — that after a BSU OAuth 2.1 PKCE login each app bridges its `bs_*`
+> tokens into a real Supabase session so RLS reads authenticate as the user — is implemented.
+>
+> **Evidence:** `crm7/src/pages/auth/callback.tsx:209` calls `supabase.auth.setSession({…})`, with
+> the bridge documented at `:67` and the storage/`onAuthStateChange` ordering handled at `:247`.
+> Contract test: `crm7/src/__tests__/oauth-contract.test.ts`.
+>
+> **The test *procedure* below remains useful** as a re-validation runbook for the `d.*`
+> development deploys. Note that a Vercel *preview* host cannot be signed into — only the stable
+> `d.*` development domains work, which is what this plan already targets.
+>
+> **Marker defect:** `W` on delivered work.
+
+---
+
 # Cross-App Auth Validation — Dev-Deploy Test Plan (d.* deploys)
 
 **Date:** 2026-06-30

@@ -7,6 +7,21 @@ primary-roles: [candidate]
 source-routes: ["/portal/candidate", "/portal/candidate/applications", "/portal/candidate/interviews", "/portal/candidate/offers", "/portal/candidate/onboarding", "/portal/candidate/profile"]
 ---
 
+> ## ⚠ SUPERSEDED — 2026-08-17
+>
+> **This portal sub-plan is superseded by operator rulings D-93…D-98**
+> (`../../20260814-portals-operator-rulings-v1.00A.md`, Approved 2026-08-14), and by the
+> remediation programme in `../20260814-portals-and-surface-class-remediation-v1.00D.md`.
+>
+> The rulings decide, on the operator's own authority, several things these sub-plans assumed:
+> a field officer is **staff**, not a portal persona; a host sees the **full charge-rate build-up**;
+> a host **places staffing orders but does not browse workers**; payslips are a **viewer**; WHS
+> questions match AnyTime; and bank/TFN/super are **out of scope** for the portals.
+>
+> **Cite the D-numbers. Do not re-derive a persona or a permission from this file** — that is the
+> exact re-derivation the rulings were written to stop. Retained for its surface inventory.
+
+
 # Portal — Conduit Candidate
 
 > Sub-plan of [`../20260506-codehouse-parity-and-platform-360-v1.00W.md`](../20260506-codehouse-parity-and-platform-360-v1.00W.md). Permissions: [`../../../AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md).

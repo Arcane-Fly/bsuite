@@ -1,3 +1,21 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED
+>
+> Build-time pre-rendering shipped.
+>
+> **Evidence:** `crm7/scripts/prerender.mjs`, `braden/scripts/prerender.mjs`, and a `prerender`
+> entry in the `package.json` of `crm7`, `business-suite-unified` and `braden`. The estate's
+> `build:noprerender` convention exists precisely because pre-rendering is the default path.
+>
+> **Marker defect:** versioned `v1.0.0` with **no status letter**, breaking the estate convention
+> (`YYYYMMDD-name-vN.NNS.md`). Delivered work should read `A`.
+
+---
+
 # Pre-rendering, SEO & Marketing Landing Pages — Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.

@@ -7,9 +7,19 @@ Multi-app monorepo (6 submodules) sharing one Supabase project (`tuybltdrdefjbln
 > - [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) — auth architecture (🛑 do not revert to cookie SSO)
 > - [`MEMORY_PROTOCOL.md`](./MEMORY_PROTOCOL.md) — cross-session state via QIG Memory API
 > - [`docs/20260227-contributing-standards-guide-v1.01W.md`](./docs/20260227-contributing-standards-guide-v1.01W.md) — full quality standards
-> - [`docs/20260227-dry-one-shot-architecture-v1.02A.md`](./docs/20260227-dry-one-shot-architecture-v1.02A.md) — entity ownership
+> - [`docs/20260227-dry-one-shot-architecture-v1.04A.md`](./docs/20260227-dry-one-shot-architecture-v1.04A.md) — entity ownership
 
 **Zero-defer policy (AGENTS.md §1):** Never defer fixes. If you see a lint/type/bug issue, fix it in the same session. No "TODO: implement later" for known problems.
+
+> **R80.3 → R80.4 corrected 2026-08-17.** R80.3 left the submodule set on 2026-08-06 (`5e000c35`,
+> operator directive); R80.4 took its place and is what serves `r8.crm7.app` today. This file is one
+> of the "canonical docs" agents are told to read before substantive work, so the directory name,
+> script description, submodule table, package-consumer lists, and theme app list below are updated
+> in place. **Left unverified:** the R80.3 row's OAuth Client ID in the BS OAuth table — this
+> session did not check R80.4's registered client ID against Supabase, and copying the old ID across
+> if it changed would be worse than leaving the row stale, so it is marked below rather than guessed.
+> The `@bsuite/page-builder` row was also corrected — installed version is `0.9.0`
+> (`packages/page-builder/package.json`), not `0.4.0`.
 
 ## Quickstart
 
@@ -28,7 +38,7 @@ pnpm lint
 pnpm typecheck  # or: pnpm tsc --noEmit
 
 # Root orchestration scripts (5 apps only — throughput + mobile excluded from loop)
-pnpm lint:all          # crm7 R80.3 braden business-suite-unified conduit
+pnpm lint:all          # crm7 R80.4 braden business-suite-unified conduit
 pnpm test:all          # same 5
 pnpm build:all         # same 5
 pnpm typecheck:all     # same 5
@@ -47,7 +57,7 @@ pnpm test:packages     # shared @bsuite/* packages
 |-----|------|-------|----------|-------------|
 | **CRM7** | `crm7/` | React 19 + Vite + AI SDK | [crm.crm7.app](https://crm.crm7.app) | `d.crm.crm7.app` |
 | **Conduit** | `conduit/` | Next.js 16 App Router | [conduit.crm7.app](https://conduit.crm7.app) | `d.conduit.crm7.app` |
-| **R8** | `R80.3/` | React 19 + Vite (wage calc) | [r8.crm7.app](https://r8.crm7.app) | `d.r8.crm7.app` |
+| **R8** | `R80.4/` | React 19 + Vite (wage calc) | [r8.crm7.app](https://r8.crm7.app) | `d.r8.crm7.app` |
 | **BSU** | `business-suite-unified/` | React + Vite + Stripe (OAuth server) | [suite.crm7.app](https://suite.crm7.app) | `d.suite.crm7.app` |
 | **Braden** | `braden/` | React + Vite (corporate site) | [braden.com.au](https://www.braden.com.au) | `d.braden.com.au` |
 | **Throughput** | `throughput/` | React 19 + Vite + Groq | [ideas.crm7.app](https://ideas.crm7.app) | `d.ideas.crm7.app` |
@@ -56,19 +66,19 @@ pnpm test:packages     # shared @bsuite/* packages
 
 | Package | Latest | Consumers |
 |---------|--------|-----------|
-| `@bsuite/auth` | `0.2.4` | CRM7, Conduit, R80.3, Braden, Throughput, BSU |
-| `@bsuite/charge-calc` | `0.4.0` | CRM7, R80.3 |
+| `@bsuite/auth` | `0.2.4` | CRM7, Conduit, R80.4, Braden, Throughput, BSU |
+| `@bsuite/charge-calc` | `0.4.0` | CRM7, R80.4 |
 | `@bsuite/nav-core` | `0.7.0` | all 6 apps |
-| `@bsuite/page-builder` | `0.4.0` | BSU, CRM7, Conduit, R80.3, braden, Throughput |
-| `@bsuite/schema-builder` | `0.7.0` | BSU, CRM7, Conduit, R80.3 |
+| `@bsuite/page-builder` | `0.9.0` | BSU, CRM7, Conduit, R80.4, braden, Throughput |
+| `@bsuite/schema-builder` | `0.7.0` | BSU, CRM7, Conduit, R80.4 |
 | `@bsuite/schema-registry` | `0.3.2` | all 6 apps |
-| `@bsuite/data-export` | `0.1.4` | CRM7, R80.3, BSU |
+| `@bsuite/data-export` | `0.1.4` | CRM7, R80.4, BSU |
 | `@bsuite/dates` | `0.1.0` | all 6 apps |
-| `@bsuite/theme` | `0.3.3` | CRM7, R80.3, BSU, Conduit, Throughput |
-| `@bsuite/ui` | `0.2.0` | R80.3, BSU, Throughput |
+| `@bsuite/theme` | `0.3.3` | CRM7, R80.4, BSU, Conduit, Throughput |
+| `@bsuite/ui` | `0.2.0` | R80.4, BSU, Throughput |
 | `@bsuite/dry-lint` | `0.4.0` | all 6 apps (devDep) |
 
-_Last suite-wide bump: 2026-06-01 (PRs crm7#932, R80.3#297, braden#312, BSU#531, conduit#297, throughput#199, bsuite#1340)._
+_Last suite-wide bump: 2026-06-01 (PRs crm7#932, R80.3#297 — R80.3's own PR number, historical; renamed R80.4 2026-08-06 — braden#312, BSU#531, conduit#297, throughput#199, bsuite#1340)._
 
 Vercel clones only the individual submodule repo → `workspace:*` and `file:../packages/*` both break. Always use caret npm ranges (`^0.1.0`). After editing a package: build → bump → merge the package release workflow to `main` → publish via npm Trusted Publishers (GitHub Actions OIDC, no `NPM_TOKEN`) → bump consumers.
 
@@ -78,7 +88,7 @@ Five capabilities exceed anything in Codehouse Workforce One / OTS — surfaced 
 
 1. **BOOT Assessment Engine** (`@bsuite/charge-calc/boot`) — Fair Work Act s.193 BOOT with comparator, failure detector, GTO variant, F17 export, annual value calculator. 10 test files. No Codehouse equivalent.
 2. **20-component AI Assistant suite** in CRM7 (`src/components/ai/`) — `AICommandPalette` (Cmd+K), `AISidePanel`, plugin system, Vercel AI SDK 6 streaming. Plus Conduit `/api/ai/chat` (Anthropic + Google) and Throughput Groq GPT-OSS-120B with browser search + Python execution.
-3. **Visual schema builder** (`@bsuite/schema-builder` v0.7.1) — React Flow ER editor with real-time Supabase sync, used in CRM7, BSU, Conduit, R80.3 (11 test files).
+3. **Visual schema builder** (`@bsuite/schema-builder` v0.7.1) — React Flow ER editor with real-time Supabase sync, used in CRM7, BSU, Conduit, R80.4 (11 test files).
 4. **Offline-first PWA** in CRM7 — `src/lib/sqlite-db.ts` (sql.js WASM) + `sync-service.ts` (bi-directional Supabase sync with conflict resolution) + `offline-db.ts` (IndexedDB via `idb`).
 5. **Multi-tenant sub-organisation hierarchy + runtime OKLCH branding** in BSU (`src/pages/Admin/SubOrganizations.tsx`, `BrandingProvider`) — parent/child tenant trees and per-tenant branding inside one OAuth authority.
 
@@ -87,7 +97,7 @@ Five capabilities exceed anything in Codehouse Workforce One / OTS — surfaced 
 | App | Client ID | OAuth client file |
 |-----|-----------|-------------------|
 | CRM7 | `30f76744-3e0b-40bf-abb8-8c587389802e` | `crm7/src/lib/business-suite-oauth.ts` |
-| R80.3 | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `R80.3/src/lib/business-suite-oauth.ts` |
+| R80.4 *(client ID unverified — see banner)* | `5d804d20-cd1b-4724-9107-86d2a9e51e09` | `R80.4/src/lib/business-suite-oauth.ts` |
 | Braden | `dcb7af18-254a-4946-b94d-5c606b01fc3f` | `braden/src/lib/business-suite-oauth.ts` |
 | Throughput | `35f0db49-ef62-4115-baba-7b961f034cc3` | `throughput/src/lib/business-suite-oauth.ts` |
 | Conduit | `da925c19-8f32-40a0-b74d-4eb9540c422f` | `conduit/src/lib/business-suite-oauth.ts` |
@@ -122,7 +132,7 @@ Conventional Commits — see AGENTS.md.
 
 ### Theme
 
-- **D2C Neon Electric** (business-suite-unified, crm7, conduit, R80.3): Electric Blue `#2563eb`, Cyan `#00cec9`, dark navy `#0a0e1a`
+- **D2C Neon Electric** (business-suite-unified, crm7, conduit, R80.4): Electric Blue `#2563eb`, Cyan `#00cec9`, dark navy `#0a0e1a`
 - **Corporate** (braden only): Braden Red `#ab233a`, Gold `#cbb26a` — never apply D2C here
 
 ### Auth (see `AUTH_CANONICAL.md` — DO NOT REVERT)

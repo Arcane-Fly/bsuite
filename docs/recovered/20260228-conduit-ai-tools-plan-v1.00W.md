@@ -1,3 +1,21 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED
+>
+> Conduit's AI tool suite for candidate search and pipeline management is live.
+>
+> **Evidence:** `conduit/src/lib/ai/tools/` — `candidate-tools.ts`, `pipeline-tools.ts`,
+> `job-tools.ts`, `interview-tools.ts`, `communication-tools.ts`, `analytics-tools.ts`,
+> `triage-tools.ts`, with tests in `__tests__`. Routing and persona at
+> `conduit/src/lib/ai/router.ts`, `model-router.ts`, `jodie-persona.ts`.
+>
+> **Marker defect:** `W` on delivered work.
+
+---
+
 # P1 #15: Conduit AI Tools — Candidate Search & Pipeline Management
 
 **Version:** 1.00W

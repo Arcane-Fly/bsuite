@@ -1,0 +1,155 @@
+/**
+ * @bsuite/theme/fonts.css — the faces the theme's own tokens name.
+ *
+ * WHY THIS FILE EXISTS
+ * ────────────────────
+ * `vars.css` declares the typography contract:
+ *
+ *     --font-body: 'Geist Variable', Geist, system-ui, sans-serif
+ *     --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, monospace
+ *
+ * and until now this package shipped **zero `@font-face` rules**. A token NAMES a
+ * family; only an `@font-face` makes it EXIST. So six consumers each solved it
+ * independently and they diverged — measured across `origin/development`,
+ * 2026-08-17:
+ *
+ *   business-suite-unified   body ok   mono ok    hand-written @font-face
+ *   crm7                     body ok   mono ok    hand-written (mono added the same day)
+ *   conduit                  body ok   mono ok    whole-package import, ALL FIVE SUBSETS
+ *   throughput               body ok   mono ok    whole-package import, ALL FIVE SUBSETS
+ *   braden                   body ok   mono MISSING   third-party Google Fonts <link>
+ *   R80.4                    body MISSING  mono MISSING   NO WEBFONTS AT ALL
+ *
+ * R80.4 is the sharpest case: the wage calculator imports this theme, inherits
+ * `'Geist Variable'`, and has no Geist anywhere in its repo. It has always
+ * painted in `system-ui`. Its own `index.css` carries a long, careful note about
+ * theme VERSION drift — and the fonts that theme names were never there to drift.
+ *
+ * Six bespoke solutions is the defect, not the symptom. A token and its face
+ * belong together, in the package that owns the token.
+ *
+ * WHAT THIS SHIPS, AND WHAT IT DELIBERATELY DOES NOT
+ * ─────────────────────────────────────────────────
+ * Four faces: Geist Variable and Geist Mono Variable, latin and latin-ext, woff2
+ * only, upright only.
+ *
+ *   - **woff2 only.** Every app targets es2022 / chrome100 / edge100 /
+ *     firefox100 / safari15.4. woff2 has shipped in all of them since 2016, so a
+ *     legacy `.woff` fallback is dead weight BY CONSTRUCTION, not by measurement.
+ *     crm7 was carrying eight JetBrains Mono weights in both formats — sixteen
+ *     files, ~400 KB — for a family nothing in crm7 ever requested.
+ *
+ *   - **latin + latin-ext only.** `@fontsource-variable/geist` publishes no
+ *     per-subset CSS, so `@import '@fontsource-variable/geist'` pulls cyrillic,
+ *     cyrillic-ext and vietnamese too, upright AND italic — ten files per family.
+ *     conduit and throughput are paying for Cyrillic today. An app that genuinely
+ *     needs another subset should add that face itself and say why.
+ *
+ *   - **upright only.** No italic face is declared, so italic text synthesises.
+ *     Verified before deciding: no D2C surface in the estate sets an italic
+ *     `font-family` against these tokens. If one ever does, add the italic file
+ *     here rather than importing the whole package again.
+ *
+ *   - **variable, not static weights.** One file per subset covers 100–900. The
+ *     eight discrete weights it replaces were eight separate downloads.
+ *
+ * THE FILES ARE VENDORED, and that is deliberate rather than lazy. 0.12.x
+ * referenced them as BARE SPECIFIERS —
+ * `url(@fontsource-variable/geist/files/…woff2)` — which a bundler can only
+ * resolve if the CONSUMING app also has @fontsource-variable/geist in its own
+ * resolution. conduit and throughput did, because they had been importing the
+ * package directly, so their builds emitted the four files and looked correct.
+ * R80.4 did not, and its built CSS kept the bare specifier VERBATIM: at runtime
+ * the browser requests a literal path beginning `@fontsource-variable/`, gets a
+ * 404, and silently falls back — the CSS reads correct and fetches nothing.
+ *
+ * Two apps passing was a FALSE POSITIVE caused by their pre-existing
+ * dependency. R80.4 — the one app with no font dependency of its own — was the
+ * honest test, and it is exactly the app this file was written for.
+ *
+ * Four relative `./fonts/*.woff2` files, 83,736 B total, resolve identically in
+ * every consumer with no dependency at all. The package's `dependencies` field
+ * is empty again as a result.
+
+ *
+ * The `unicode-range` values are copied verbatim from crm7's own working faces
+ * rather than re-derived. Re-typing a subset range is how a subset silently loses
+ * a glyph, and those were already correct.
+ *
+ * HOW TO USE IT
+ * ─────────────
+ *     @import '@bsuite/theme/fonts.css';   <- before the token import
+ *     @import '@bsuite/theme/css';
+ *
+ * (Written without an inline comment on purpose: a nested comment terminator
+ * inside this block would CLOSE it early, and everything after would parse as
+ * CSS. That is not hypothetical — it shipped in 0.12.0 and broke every
+ * consumer's build with `Invalid declaration` pointing at the NEXT import,
+ * several lines away from the actual fault.)
+ *
+ * This is a SEPARATE entry point, not folded into `./css`, on purpose: `braden`
+ * is BRADEN-EXEMPT and runs its corporate Open Sans / Montserrat stack, so it
+ * must be able to take the tokens without taking Geist.
+ */
+
+/* ── Geist Variable — the family `--font-body` names ───────────────────────── */
+
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-latin-ext-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+/* ── Geist Mono Variable — the family `--font-mono` names ──────────────────── */
+/*
+ * This is the one that was missing almost everywhere. `--font-mono` resolves to
+ * 'Geist Mono Variable' in the D2C palette, and until 2026-08-17 crm7 declared no
+ * face for it at all — so every `font-mono` element fell through to
+ * `ui-monospace`: TFN and bank-account digits on the payroll card, AASS
+ * registration numbers, the charge-rate build-up tables, code blocks in the AI
+ * assistant's markdown. The theme's mono face had never once rendered as designed.
+ */
+
+@font-face {
+  font-family: 'Geist Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-mono-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Geist Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-mono-latin-ext-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}

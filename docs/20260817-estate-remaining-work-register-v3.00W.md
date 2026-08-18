@@ -1,0 +1,398 @@
+# Estate remaining work — the consolidated register, v3
+
+**Document:** `docs/20260817-estate-remaining-work-register-v3.00W.md`
+**Date:** 2026-08-17 · **Version:** 3.00W · **Status:** W — Working
+**Supersedes:** `docs/20260814-estate-remaining-work-register-v2.00W.md` in full, including three of its
+own findings that this pass proved wrong. v2 read the parent `docs/` only; this reads every
+submodule's `docs/` as well.
+
+---
+
+## Method, and the denominator
+
+**431 documents.** 270 non-archive markdown files under `bsuite/docs`, plus every submodule's own
+tree: crm7 50, throughput 29, business-suite-unified 25, braden 22, R80.4 19, conduit 16. Six
+parallel audits, one per submodule, each reading **every** file in its tree — 50/50, 29/29, 25/25,
+22/22, 19/19, 16/16 — and re-measuring each claim against that repo's code with ripgrep, plus live
+SQL against `tuybltdrdefjblnplpqo` for anything that is a database fact.
+
+**The evidence rule.** A claim about a table is settled by DDL in `supabase/migrations` **and** by
+`to_regclass` against production — those two disagree more often than anyone expects, in both
+directions. A claim about a component is settled by finding a real importer that is not a test and
+not a barrel; a symbol with no importer is `UNREACHABLE`, which is a different and much more common
+status than `OPEN`.
+
+**The operator's tie-break, applied throughout, verbatim:** *prefer the most advanced, UX-friendly,
+cutting-edge version of any feature — e.g. Airtable-style data manipulation is preferred over any
+other report feature.* Where two generations of a capability exist, this register names one winner
+and marks the rest SUPERSEDED. It does not list both.
+
+---
+
+## 0. What this pass changes about the estate's own account of itself
+
+**1. v2 filed two findings that are wrong, and one that was right and has since been fixed.**
+
+Taking the third first, because I nearly recorded it as a retraction and it is not one.
+
+- **P0-3 — "braden CMS returns zero rows to anonymous visitors" was TRUE when filed and is now
+  FIXED.** Live `pg_policies` today shows `anon_read_published_content_pages roles={anon}` and
+  `anon_read_published_custom_pages roles={anon}`, so the public CMS reads fine — but that is
+  because **`business-suite-unified/supabase/migrations/20260820020000_cms_pages_anon_published_read.sql`
+  landed on 2026-08-16**, commit `03c6c4d`, whose subject names P0-3 explicitly. bsuite#2004's
+  positive-controlled anon probe was correct on 2026-08-14. **Close bsuite#2004 as completed, not
+  as not-a-defect.**
+  I record the near-miss because it is the same error as the two below, pointing the other way:
+  reading a current state and concluding a past claim was false. The only thing that separated
+  them was checking *when* the policy arrived.
+
+**The two that are genuinely wrong:**
+
+- **V-6 — "R80.4 tolerates 131 baselined lint violations including 88 `no-hardcoded-colours` and
+  7 `no-undef`" is FALSE as stated.** The real baseline is **35**, and the 88 colour violations
+  were *fixed*, not baselined (commit `3e25f7f`). The 7 `no-undef` were config noise resolved by
+  `languageOptions.globals`, not latent `ReferenceError`s. R80.4's ratchet is working; I read a
+  historical number as a current one.
+- **The z-index table's "HealBanner `z-[1000]` (braden)" is FALSE.** It is `relative z-40`
+  (`src/components/system/HealBanner.tsx:33,49`); `z-[1000]` appears nowhere in braden's `src/`.
+
+The pattern in both retractions is the same and worth naming: **I trusted a document's number
+instead of re-running the measurement** — a historical count in R80.4's case, a stale estate table
+in the z-index case. The doctrine that catches this is already written down; it is why this pass
+measured everything twice, and it is what caught the P0-3 near-miss above before it became a third
+false claim in the opposite direction.
+
+**2. Documentation is not merely stale — in five of six submodules it is now actively misleading.**
+Not "out of date": asserting the opposite of what the code does, in ways that would cause an agent
+to do damage.
+
+- **BSU has four documents asserting it is the canonical page-builder author surface.** ADR-0001
+  dropped `tenant_page_layouts` and removed `/developer/pages` three months ago. The drop migration
+  sits in the same repo as the docs claiming the feature.
+- **Three BSU documents and one conduit document describe cookie SSO as a shipped feature.** It was
+  removed 2025-02-27 and is the single loudest do-not-revert guardrail in `AGENTS.md`. Documents
+  inside the estate are currently pointing agents at the exact regression the guardrail exists to
+  prevent.
+- **crm7's ADR on `xero-node` (Status: Accepted, "do not adopt") is contradicted by shipped code** —
+  `xero-invoice-submit/index.ts:24` imports `xero-node@15.0.1` — and a second crm7 doc describes
+  that same ADR as explaining *why* the SDK is used. Three documents, three incompatible readings.
+- **braden's getting-started guide is a walkthrough of an admin surface with no routes.**
+- **throughput's roadmap contains two contradictory roadmaps in one file**, one marking Stripe, MFA,
+  OAuth and E2E `[x] COMPLETED` and the other marking the same items `[ ]`. Zero Stripe imports
+  exist.
+
+**3. The largest single fabrication class in the estate is in BSU, and it bills customers.**
+`src/pages/Billing.tsx` renders a "Subscription breakdown" and a bold `$N/mo` total computed
+entirely from `src/lib/pricing.ts:20-46`, a hardcoded price table in the client bundle, multiplied
+by a real seat count — and `APP_LINE_ITEMS` bills **every** paying tenant for CRM7 *and* Conduit
+*and* R8 *and* Throughput regardless of entitlement. Nothing on the page reads a Stripe price,
+invoice or line item. The standing rule is *"never display mock data in the UI, especially for
+financial or account-related information."* This is that rule's worst case, live.
+
+**4. R80.4 cannot reach the Fair Work API at all, so every wage it quotes is a bundled snapshot.**
+`scripts/api-availability.mjs MA000020` returns **HTTP 401 on all five MAPD endpoints** with a
+well-formed key present. The repo's own definition-of-done gate reports `NOT DONE — 21 award(s)
+failing something unbaselined`. The governing operator ruling is *"the amounts are pulled from the
+api."* They are not. This is a compliance exposure and it is new to this register.
+
+---
+
+## 1. P0 — live exposure, or one step from it
+
+| # | Item | Repo | Evidence | Size |
+|---|---|---|---|---|
+| **P0-1** | **`tenant_encryption_keys` grants full CRUD to `anon` and `authenticated`** over wrapped tenant DEK material | DB | RLS on, **0 policies**, `relforcerowsecurity=false`. Safe only because zero policies denies all — one permissive policy from anon-readable key material. Carried from v2, unchanged | S |
+| **P0-2** | ~~Migration `20260819010000` merged but not applied~~ | crm7 | **CLOSED 2026-08-15.** Applied by dispatch; live `pg_policies` confirms all four SELECT policies now scoped and `tenant_app_branding_select_anon` gone | — |
+| **P0-3** | ~~braden CMS returns zero rows to anonymous~~ | braden/BSU | **CLOSED 2026-08-16** — `business-suite-unified/.../20260820020000_cms_pages_anon_published_read.sql` (`03c6c4d`) added the anon published-read policies and revoked anon writes. Live `pg_policies` confirms both. Close bsuite#2004 as completed | — |
+| **P0-4** | **The Fair Work MAPD API returns 401 on every endpoint** — every wage and charge rate in R80.4 falls back to a bundled snapshot with no provenance stamp distinguishing it | R80.4 | `api-availability.mjs` → 401 × 5 endpoints; `pnpm run dod` → red, unbaselined, all 21 awards; only `bundled_fallback` is ever stamped (`standard-rate.ts:95`) | S to rotate the key; L to prove the ladder |
+| **P0-5** | **BSU `Billing.tsx` presents fabricated prices as the customer's bill** | BSU | `src/lib/pricing.ts:20-46` → `Billing.tsx:352-383,397`; `APP_LINE_ITEMS:48-52` bills all four apps unconditionally; `stripeService` used only for `openCustomerPortal` | M |
+| **P0-6** | **IMAP/SMTP passwords written to plaintext columns**, read path expects Vault, so the feature is also silently non-functional | crm7 | `emailService.ts` `connectIMAP`/`connectSMTP`; zero triggers on `email_integrations`. Latent only because the table has 0 rows | M |
+| **P0-7** | ~~`api/error-report.ts` unauthenticated, no rate limit, `ACAO: *`~~ | crm7 | **CLOSED 2026-08-17** — crm7#1740: origin allowlist, 30/min sliding window, 64 KB cap on both `Content-Length` and parsed text, defect-injected tests (7 of 10 fail against the pre-fix file) | — |
+| **P0-8** | **`profiles` INSERT column grant on `is_super_admin`/`platform_role` survives for `anon` and `authenticated`**; the guard trigger is `BEFORE UPDATE` only | DB | `information_schema.column_privileges`; `trg_guard_profiles_privileged_columns` is UPDATE-scoped | S |
+| **P0-9** | **Eight live edge functions have no source in any repo** | shared | `email-inbox-sync`, `tasks-sync`, `adobe-sign-webhook`, `refresh-award-rates`, `update-wage-rates` on `file:///tmp/user_fn_…`; `auth-fairwork`, `get-fairwork-api-key`, `sync-award-rates` point at the retired `R80.3/`. bsuite#1955 | M |
+| **P0-10** | **`platform-kit-proxy` needs redeploy** — client gate narrowed, server still wider | BSU | BSU#726 merged, not deployed | S |
+
+---
+
+## 2. P1 — money, compliance and correctness
+
+### 2.1 Wage and charge-rate correctness (R80.4 + crm7)
+
+This block is the estate's legal exposure. Ranked by direction of error — **under-payment is the
+punishable direction**, and three of the top four err that way.
+
+| # | Item | Evidence | Size |
+|---|---|---|---|
+| W-1 | **20 of 21 awards are priced with an empty penalty table.** `charge-calculator-v9-2.tsx:3848` sets `penalties = []` for every award except MA000020. No overtime, weekend, shift or public-holiday loading enters `calculate()`. The UI's own instruction ("Press Load Pay Rates then Replace Penalty Table … that path is real and works today") is a dead end — live FWC returns **0 penalty rows for MA000036** | `resolvePenalties` has zero occurrences repo-wide | L |
+| W-2 | **The award engine is unreachable from the calculator.** Transitive closure from `src/main.tsx`: 67 of 179 modules reachable, 112 unreachable, **all** in `src/awards/`. 19 of 21 awards have zero runtime-reachable engine modules; **20 of 21 have no reachable rate constructor**. The repo's own gate prints it: *"21 awards are MODELLED and one is REACHABLE"* | `scripts/reachability.mjs:127`; `resolveOrdinaryRate`'s only importer is an unreachable barrel | L |
+| W-3 | **MA000017 offers 0 of its 26 allowances**, including the all-purpose Instructor allowance that belongs in the ordinary wage — so it is also missing from the base of every multiplier struck on it. **Fixed on `development` (`718cebd`), still live on `main`** | `allowance-catalogue.ts:98` `r.sector === sector`, no alias; all 26 MA000017 allowances are sector-tagged in a vocabulary the UI cannot produce | S — merge |
+| W-4 | **School-based apprentices under MA000020 are priced at a lower stage than the award requires.** cl.19.7(b) advances on competency **or** 12 months, *whichever is earlier*; `schoolBasedStage()` implements only the time limb. This one **is** reachable | `contingent-costs.ts`, imported at `charge-calculator-v9-2.tsx:45` | M |
+| W-5 | **Provenance is unenforceable — 5 of 6 rungs are never stamped.** `mapd_api`, `mapd_db_cache`, `db_instrument`, `pay_guide`, `manual_override` are produced nowhere reachable. A bundled-table quote is indistinguishable from a live one | `rate-source.ts:84`; only `bundled_fallback` emitted | L |
+| W-6 | **37 rate-scope `partial` coverage rows across 16 of 21 awards** — recounted and confirmed exactly. All 37 are in schedules, none in numbered clauses | `coverage/*-clause-coverage.json`; corroborated by `award-gate-baseline.json` | L |
+| W-7 | **Allowance catalogue covers 8 of 21 awards** (162 allowances) — MA000017 and MA000036 have been added since the last count | `allowance-catalogue.generated.ts` | L |
+| W-8 | **On-costs are platform-wide, not per-tenant** — `superRate 12%`, `wcRate 4.7%`, `payrollTaxRate 4.85%`. Payroll tax is state-based; workers-comp is per-employer. Compounded by `tenant_settings` holding 1 row for 7 tenants | crm7 `chargeRateDefaults.ts:23` + `charge-rates/create/types.ts:24` | M |
+| W-9 | **RDO accrual accepted in the UI, never passed into `CalcConfig`** → billable weeks overstated. **Its stated blocker is gone** — charge-calc is 0.12.0 and the DB columns landed | crm7 `usePlacementChargeCalc.ts:72-80` | M |
+| W-10 | **`penaltyCalculator.ts` has zero consumers** — per-shift penalty interpretation unreachable from the product | crm7; only the barrel and its own test import it | M |
+| W-11 | **`award_rates` is empty (0 rows) while `awards` has 156.** Needs a ruling: do rates live in the DB, or only in R80.4's static corpus? | DB | M |
+| W-12 | **Traineeships, casual, ABN and part-time qualified workers cannot be priced** | R80.4#45, #46 | L |
+| W-13 | **`calculate(cfg)` failure swallowed** — the UI cannot distinguish "no rate" from "bad config" | crm7 `usePlacementChargeCalc.ts:217-220` bare catch | S |
+
+### 2.2 Transaction integrity (crm7)
+
+Unchanged from v2 and all still open: `executeTransition` has no state guard (concurrent host
+approve/reject is last-write-wins); `approveLeaveRequest` can double-approve and double-count
+`taken`; the RCTI invoice number is `Math.random()` against a UNIQUE index with no retry;
+employee-number minting has no 23505 retry; `funding_offsets` DELETE grants `{owner,admin}` while
+INSERT/UPDATE grant `{owner,admin,manager}`, so a manager can create a wrong offset and cannot
+remove it.
+
+### 2.3 Fabricated data rendered as real — a class of eleven, across two apps
+
+The standing rule is *"never display mock data in the UI, especially for financial or
+account-related information."* v2 found five sites in crm7 and BSU. The submodule pass found six
+more, all in BSU, and one of them is worse than anything in v2.
+
+| # | Site | What it fabricates |
+|---|---|---|
+| K-1 | **BSU `Billing.tsx` + `lib/pricing.ts`** | The customer's bill. See P0-5 |
+| K-2 | **BSU `Government.tsx:37-95`** | Fair Work Commission and training.gov.au shown as **`status: 'connected'`** with a `lastSync` recomputed to "1 hour ago" on every page load — and `handleSync` is `await new Promise(r => setTimeout(r, 1500))` then stamps `lastSync = new Date()`. **There is no network call in the file.** A compliance user clicks Sync on the FWC integration, watches a spinner, and is told it synced |
+| K-3 | **BSU `GTO.tsx:200`** | `totalChecks > 0 ? … : 95` — a tenant with zero apprentices, hosts and visits renders a **95% compliance ring**. The catch-path twin was fixed 2026-08-17; this survivor produces the identical lie on a new or empty tenant, which is the most likely state for a first customer |
+| K-4 | **BSU `Developer/Platform.tsx:37-44,222,285`** | Six edge functions badged **"Deployed"** in success-green to any non-`platform_admin`. **Two of the six do not exist** — `lead-capture` and `tenant-management` are absent from every repo |
+| K-5 | **BSU `Admin.tsx:40-46`** | Five OAuth clients with literal `status: 'active'` — **in the app that is the OAuth server**, with `auth.oauth_clients` queryable |
+| K-6 | **BSU `Developer/RateLimits.tsx:65-88`** | The same five clients, plus `KNOWN_ENDPOINTS` offering rate-limit targets including two functions that do not exist — so a developer can author and persist a rule against a nonexistent endpoint |
+| K-7 | **crm7 `/financial/budget`** | `DUMMY_BUDGETS` — `totalPlanned: 450000`, `totalActual: 325780.45`, behind a *simulated* 1-second delay, with a working Export button |
+| K-8 | **crm7 `field-officers/site-visits`** | `MOCK_MILESTONES` — half the timeline live, half invented, so the fake half inherits the real half's credibility |
+| K-9 | **BSU `Developer/Platform.tsx:198-223`** | `PLACEHOLDER_CHECKS` renders "checking…" forever on a *failed* query — an unreachable-truth state rather than a lie |
+| K-10 | **crm7 `Developer/Platform.tsx` `FALLBACK_EDGE_FUNCTIONS`** | Misrepresents deployed surface area |
+| K-11 | **crm7 `GTO.tsx`-equivalent compliance surfaces** | Carried from v2 |
+
+**The in-repo model to rewrite all eleven against is BSU's own `Admin/SystemOverview.tsx:42-88`** —
+`DEFAULT_HEALTH` is `warning` + "Checking..." / "Not monitored", and `runHealthChecks` leaves
+unmonitored subsystems explicitly unmonitored instead of inventing green. Fix the class with one
+honest empty/error-state component; do not patch eleven sites.
+
+### 2.4 ADRs ratified then never implemented
+
+ADR-0005 (RAMS funding matrix) — **confirmed absent in production**: `to_regclass('public.rams_funding_matrix')`
+is null, no function, no route. Funding amounts remain hand-keyed, the exact one-shot violation the
+ADR was written to close. ADR-0007 (Stripe FDW) — no `wrappers` extension, no `stripe` schema, its
+own migration written and never applied. ADR-0006's organisation half is superseded and unrecorded
+(production canonicalised to `employers` + boolean role flags; the ADR mandates `clients.type`,
+which does not exist). ADR-0004 has a **number collision** and crm7 has a second one — two ADRs both
+self-titled ADR-002, with only one in the index.
+
+---
+
+## 3. The generation contests, resolved
+
+This is the section the operator's tie-break exists for. Each row names one winner. Everything else
+is SUPERSEDED and should stop appearing in remaining-work lists.
+
+| Capability | **Winner** | Superseded |
+|---|---|---|
+| **Reporting / data manipulation** | **crm7's catalogue engine + `@bsuite/data-grid` inline-editable grid.** `report_catalog_*` (89 entities / 1,297 fields / 124 joins) + `report_run_catalog_query()` + `report_templates` as saved definitions + `report_configs` as saved views. The 2026-08-17 repair migration deliberately repoints starter reports to `kind:'catalog'` **specifically because catalog-rows is inline-editable** — the Airtable tie-break, already answered by code | `financial_reports` + its 3 screens (deleted, 0 consumers); AG Grid Enterprise (never installed); the `rpc_report_page` generic RPC (never built — per-template RPCs won); collapsing `report_templates` into `custom_pages`; `report_preferences` and `welfare_reports` (dead DDL) |
+| **Report catalogue governance** | **BSU `Developer/Database/panels/ReportCatalogPanel.tsx`** — the only surface in any of the six apps that promotes a proposed entity into the catalogue the grid trusts (`report_catalog_propose_entity` / `_approve_entity`). **This relationship is documented nowhere** | — |
+| **Document generation** | **crm7-native Plate editor + `mammoth` .docx import + `document_merge_fields` catalogue + `signature_requests`** | The Google-Docs/WIF copy-and-find-replace path (`crm7-generate-document`, undeployed — and note the design doc *recommended* Drive and the code went the other way); Monaco/Yjs collaborative editing (deleted); `documentSigner.ts` (deleted); Adobe Sign (`adobe-sign-webhook` edge fn is a live contradiction of crm7#1476 — delete it) |
+| **Page authoring** | **crm7 `custom_pages` + `@bsuite/page-builder@0.9.0`** | BSU `tenant_page_layouts` (dropped by ADR-0001) and `/developer/pages` (removed); braden's ~60-file local Site Editor tree (orphaned); braden's `content_pages`/`custom_components`/`page_layouts` visual-editor generation |
+| **Schema authoring** | **crm7 `/settings/schema-builder` on `@bsuite/schema-registry@1.0.2`** per ADR-0002; BSU keeps a developer-gated wrapper | Every app's local `schemaBuilderService.ts` (braden's has 0 importers; BSU's and conduit's still carry a stale BLOCKER banner claiming the package is unpublished — it is at 1.0.2 and exports the factory) |
+| **UI primitives (admin surfaces)** | **BSU `src/components/uplift/`** — 12-primitive doctrine. **Not one BSU doc names it**, and 13 of ~22 exports have zero importers | ad-hoc `src/components/common/*` |
+| **Card/grid layout** | **`DraggableCardPage` on react-grid-layout via `@bsuite/page-builder`** | `PageGridPage`; every fixed inner CSS grid inside a single `CanvasCard` |
+| **Nav generation** | **`@bsuite/nav-core@0.9.1`** — braden is a first-class `BSUITE_APP_KEYS` member as of 0.9.0 | every local nav generation |
+| **Theme** | **`@bsuite/theme`** — `braden-css` for braden, `preset-v4.css` + `css` for the D2C five. braden's 2026-08-10 red-error ruling wins over the estate purple mandate *for braden only* | standalone local token forks; the 2026-07-23 "defer, don't swap" decision (reversed 2026-08-03) |
+| **Auth** | **BS OAuth 2.1 PKCE via `@bsuite/auth@0.2.8`** (exact-pinned) | cookie SSO — and note **four documents across BSU and conduit still describe it as shipped** |
+| **Bot protection (braden)** | **Cloudflare Turnstile**, wired at both public forms and allowlisted in CSP | Vercel BotID (never landed). braden's bot-protection doc concludes the site has none — wrong |
+| **Lead capture (braden)** | **`contact/EnhancedContactForm` + `useEnhancedContactForm` + `useTurnstile` → BSU `lead-capture`** | the landing-section `ContactForm`/`Contact` shell; `useContactForm.handleFormSubmit` (the only path omitting `turnstile_token`, always overridden) |
+| **AI models** | **`xai/grok-4.3` primary, `zai/glm-5.2` fallback** — crm7 and throughput agree exactly. Provider prefix is **`zai/`, not `glm/`** | `AGENTS.md`'s `xai/grok-4.20-reasoning`; every doc naming Grok 4.1 |
+| **Quote transport R80.4 → crm7** | **Target: `r80_saved_quotes` (now applied in production) + crm7 `charge_rate_quotes` as system of record. Shipped today: clipboard + query-param deep link** | `r80_charge_rate_builds` (0 rows, 0 readers, 0 writers, and its NOT NULL columns are values the calculator structurally cannot supply). **Do not wire the client half before the caveat is removed in the same change** — shipping half makes "Saved" a lie |
+| **Calculator** | **`charge-calculator-v9-2.tsx`** — the only one in the repo | R80.3 entirely (archived; 3 docs still name it a live migration target) |
+
+---
+
+## 4. P1 — shipped, and reaching nobody
+
+The single largest category this pass found, and the one least visible in any register. Code exists,
+passes CI, and no user can reach it.
+
+| # | Item | Repo | Evidence |
+|---|---|---|---|
+| U-1 | **The entire award engine** — 112 modules, 388 unreached public functions | R80.4 | See W-2 |
+| U-2 | **~60-file Site Editor / CMS tree** + 10 admin pages with zero importers | braden | `src/Routes.tsx` registers only `/admin/branding`, `/admin/page-builder`, `/admin/marketing`; all others → `PortalMoved` |
+| U-3 | **The entire `src/components/navigation/` tree** — EnhancedNavigation, MegaMenu, GlobalSearch/Cmd+K, TenantSwitcher, MobileBottomNav, EnhancedBreadcrumbs. The code says so itself: *"none of which are mounted"* | throughput | `navigation.ts:413-415`; 0 external importers |
+| U-4 | **13 of ~22 `uplift/` exports**, including a complete 247-line `CommandPalette` | BSU | Two BSU docs say Cmd+K "❌ / 0 files". It exists and is dead — a materially different piece of work |
+| U-5 | **`xeroAdapter.ts` (633 L) + `xeroPayrollAdapter.ts` (420 L)** and the three `pay_runs` STP columns only they write | crm7 | ADR-0004 cites the adapter as "the batch push implementation" and documents live idempotency/backoff behaviour. Zero non-test callers |
+| U-6 | **LangChain conversation/agent path** — confirmed by build: no `vendor-ai` chunk is emitted, `@langchain/*` fully tree-shaken | throughput | `useConversation` and `baseAgent` have 0 consumers; all three backing tables absent from production |
+| U-7 | **`EntitySelector` reaches 0 files in BSU, conduit and throughput** (throughput's has one *type-only* import). 65 files in crm7 | 3 apps | Direct cause of the recurring "can't create a company inline" complaint |
+| U-8 | **conduit `/admin/templates`** — a complete message-template editor with zero inbound links | conduit | S: add a nav entry |
+| U-9 | **`.bsu-gradient`** defined with zero usages; **`Meteors` + `TypingAnimation`** shipped and barrel-exported while the Magic UI guide lists both as *Rejected Patterns* | BSU, crm7 | |
+| U-10 | **crm7 dead DDL** — `report_preferences`, `welfare_reports`, `invoice_batches`, `cms_documents`/`cms_posts`, `EmailComposeDialog` (only importer is its own barrel) | crm7 | S each: wire or delete |
+| U-11 | **braden `Projects.tsx`, `DndLayoutEditor`, `StoragePolicyAudit`, duplicate `SiteEditorLayout` ×2, root `hooks/` shadowing `src/hooks/`, `cypress.config.ts` with no cypress dependency** | braden | |
+| U-12 | **`xero_connection_health` view has no reader** — both live connections report `never_synced` to nobody | crm7 | |
+
+---
+
+## 5. P1 — features that error at runtime because a migration never applied
+
+Live `to_regclass` against production settles each of these. This is a distinct class from §4: the
+UI is reachable, the table is not there.
+
+| # | Surface | Table | Live check |
+|---|---|---|---|
+| M-1 | crm7 `/communications/mail-merge` — **every operation on the page errors** | `mail_merge_batches` | **null.** DDL is in the repo (`20260228150000:12`) with indexes and RLS; never applied. Two crm7 docs disagree about whether it exists; the runtime claim is the true one |
+| M-2 | conduit's RLS helper for every `r7_*` table | `r7_current_tenant_id()` | **null.** Two migrations create/replace it, including one written specifically to fix its `search_path`. Neither applied |
+| M-3 | throughput MindMap panel, mounted on `IdeaDetail` | `mind_map_nodes` | **null** — no DDL anywhere |
+| M-4 | throughput `/business-plan` route | `business_plans`, `business_plan_sections` | **null** |
+| M-5 | throughput AI feedback history | `llm_feedback` | **null** |
+| M-6 | throughput Research save | `saved_research` | **null** — DDL exists, never applied |
+| M-7 | throughput Export offers PDF / Word / PowerPoint | the `export` edge function | absent — `supabase/functions/` holds only `_shared` and `bing-search` |
+| M-8 | BSU dashboard drag/drop persistence | `dashboard_layouts` | **null** — exists only in plan prose |
+| M-9 | crm7 per-tenant on-costs | `cost_factors` | **null** — appears only in the baseline dump and generated types |
+| M-10 | throughput: **16 of 28 client-referenced tables exist in production with no DDL in the repo**, and 12 referenced tables do not exist at all | — | `ideas.tenant_id` is absent in production despite a migration adding it |
+
+---
+
+## 6. P1 — verification integrity
+
+Carried from v2, all still open, plus what this pass added:
+
+18 of 20 crm7 E2E specs self-skip (credentials in no workflow) and **three unit suites were skipped
+citing that E2E suite as the compensating control**. `/api/ai/rate-review`'s Authorization gate has
+five `describe.skip` blocks and zero executing coverage. `prod-migration-history-audit` is dead in
+both repos. No pg_cron failure alerting exists. Three cleanup functions exist and none is scheduled.
+90 `eslint-disable`s for `react-hooks/exhaustive-deps` (63) and `set-state-in-effect` (27), tracked
+nowhere. `Closes #N` on a PR merged to `development` closes nothing.
+
+**New from this pass:**
+
+- **crm7 `scripts/prerender.mjs:146` swallows any error when `CI` is set**, and `ci.yml:52` runs
+  `pnpm run build`. A prerender failure passes CI silently. crm7's own audit filed this as
+  Finding 3 and it is the only one of six still open.
+- **braden's CI Lighthouse runs `preset: "desktop"` only**, with performance at `warn@0.7` — it
+  cannot fail a build. A mobile regression on the public marketing site is structurally invisible.
+  braden also runs `build:noprerender` in production while LHCI measures a *prerendered* local
+  `dist/` — the CI measures a build production never serves.
+- **crm7 has three pgTAP suites sharing number 69**, the exact flip-condition its own evidence audit
+  named.
+- **throughput's "105 passing tests"** appears in three docs; the real figure is ~310 cases across
+  48 files. Nobody has stated the current number.
+
+---
+
+## 7. P1 — performance, and the one architectural finding behind it
+
+Full detail in `20260815-vercel-platform-audit-and-res-regression-v1.00W.md`. What the submodule
+pass adds:
+
+**conduit is the only SSR app and the fastest by a distance (0.94 mobile vs crm7's 0.66), and the
+mechanism is now identified precisely.** It ships 69,708 B of rendered HTML; every other app ships
+an empty `<div id="root">`. Three things it does that are portable:
+
+1. **Cache Components** (`next.config.ts:30 cacheComponents: true`) with per-tenant `'use cache'`
+   islands and a **cookie-less service-role Supabase client used only inside cache boundaries, with
+   tenant scope enforced twice — in the query and in the cache tag**. **Zero of conduit's 16 docs
+   mention this**, the single largest architectural fact about the app.
+2. **Server snapshot → TanStack Query `initialData` hydration** — the Kanban's first paint has real
+   columns, not a skeleton. Portable to any app with a thin prerender or an inlined bootstrap call.
+3. **`optimizePackageImports`** across 20 barrels. `lucide-react` alone (≈1,500 icons behind one
+   barrel, 53 importing files) is the highest-ROI item and every app has the same import shape.
+
+**Per-app performance items:**
+
+| App | Finding |
+|---|---|
+| crm7 | `react-core` chunk is 1,001,217 B containing slate, zod, lodash and xlsx — a `manualChunks` ordering bug. 86 of 108 `modulepreload` links are under 2 KB. crm7#1742 |
+| throughput | **Same bug class, milder.** The `id.includes('/react/')` guard is also first, and it swallows `@vercel/analytics`, `@vercel/speed-insights` and `@bsuite/schema-registry`'s react subpaths into `vendor-react`. Largest chunk is `vendor-bsuite` at 215,209 B — it bundles `react-grid-layout` + `react-resizable` eagerly for 7 lazily-loaded pages a logged-out visitor never reaches. `vendor-misc` is 133,928 B of `@vercel/blob` + `jose` on the critical path of a page that shows a spinner |
+| throughput + R80.4 | **The logged-out double-boot, quantified: ~1.82 MB of JS to render a login form.** throughput boots 917,417 B to discover there is no session, then hands to BSU which eagerly loads 900,228 B. `attemptSilentAuth()` is not tried before the full boot, and neither `/login` route is code-split from the shared eager vendor set |
+| braden | **The images are not the main cause.** In order: production runs `build:noprerender` so every marketing route is an empty root; `Index.tsx:76-88` then withholds the entire tree — including the LCP `<img>` — behind `supabase.auth.getUser()` + `RoleManager.checkUserRole()`, so an anonymous visitor pays an auth round-trip to learn they are anonymous and the preload scanner never sees the hero. Only then do the bytes matter: 662,265 B hero + 458,029 B 40px-tall nav logo, both `loading="eager"`, **neither carrying any `Cache-Control`** (`vercel.json` sets headers for `/assets/*` only, not `/images/*`). Plus 369,034 B `placeholder-project.png` with zero references, and a 458,029 B byte-identical duplicate that is never painted |
+| R80.4 | **`@vercel/speed-insights` and `@vercel/analytics` are not installed at all** — the one app with no measurement. braden, throughput, crm7 and conduit all mount both |
+
+---
+
+## 8. Documentation — the repair list
+
+**Docs to mark SUPERSEDED or delete, by repo.** Every one is named with its reason in the per-repo
+audit; the count is what matters here: **crm7 12, BSU 14, throughput 11, braden 7, conduit 7,
+R80.4 8, parent 12** — **71 documents**, roughly one in six of the estate.
+
+**The five highest-consequence repairs, because they actively mislead:**
+
+1. **Delete or banner the four cookie-SSO assertions** (BSU ×3, conduit ×1). They point at the
+   estate's loudest forbidden pattern.
+2. **Withdraw BSU's four "canonical page-builder author surface" claims** and the combined-plan
+   instruction to delete `WidgetPalette.tsx`/`widgetRegistry.tsx`/`EntityTableWidget.tsx` — those
+   three files are the *surviving* generation; executing the instruction would delete the winner.
+3. **Supersede crm7's `xero-node` ADR** with a new ADR that records what shipped. Do not edit the
+   old one; the estate's convention is to leave corrections visible.
+4. **Delete the "the table does not exist, every operation errors" phrasing in crm7's documents-UX
+   doc** — it invites deletion of a table whose DDL is in the repo. Replace with M-1's framing: the
+   DDL exists, the migration was never applied.
+5. **Fill or delete throughput's five empty component templates** — they still contain
+   `[Describe what the component does…]` verbatim.
+
+**Index integrity is broken in every repo.** crm7's README links seven documents that do not exist;
+BSU's links three plus a dangling archive path; conduit's links three; throughput's four; R80.4's
+indexes 7 of 19. The archive relocation of 2026-07-25 moved trees out and no index followed.
+
+**Every `STACK-AUDIT.md` / `CONSISTENCY-REPORT.md` / `FEATURE-SURFACE.md` / `PARENT-DOCS.md` mirror
+is wrong on essentially every version row** in all five apps that carry them. They are 2026-05-04
+snapshots of parent files that have since moved. Regenerate from `package.json` or delete — they
+are the most-read and least-accurate files in the estate.
+
+**Silent omission is the larger failure than any single false line.** BSU's `docs/` last changed
+2026-07-28; its `src/` on 2026-08-17. In that window BSU shipped the uplift design language, a
+10-panel database console, the report-catalogue promotion surface, the `is_super_admin` privilege
+narrowing, a `no-raw-button` lint rule and the GTO fabrication fix. **Zero documents record any of
+it.** conduit's Cache Components architecture is likewise undocumented, as is crm7's
+`dashboards.definition` surface.
+
+---
+
+## 9. Sequence
+
+**This week.**
+P0-4 (rotate the FWC key — one action, unblocks the estate's only compliance-critical app),
+P0-5 (BSU billing fabrication — a customer-facing financial lie),
+P0-1 and P0-8 (two `revoke`/trigger-scope migrations),
+W-3 (merge `718cebd` to braden— sorry, to R80.4 `main`; one merge),
+P0-10 (one redeploy).
+
+**Next — the two class fixes with the best ratio of surface to effort.**
+The K-class: one honest empty/error-state component, modelled on BSU's own `SystemOverview`,
+replacing all eleven fabrication sites. And braden's public-visitor chain: change one word in
+`vercel.json` (`build:noprerender` → `build`), lift the auth gate off the landing route, add
+`Cache-Control` for `/images/*`, delete the 369 KB unreferenced PNG. That is a day's work on the
+worst-scoring app in the estate and the only one whose LCP is a commercial number.
+
+**Then — decide the unreachable code, app by app.** §4 is roughly 200 files across five repos. Each
+one is *wire it* or *delete it*; there is no third state, and leaving them is what makes every
+future audit cost this much. R80.4's engine (W-2) is the exception — that is a genuine L-sized
+wiring project and it gates W-1, W-5 and W-6.
+
+**Then — the migration-application gap (§5).** Ten surfaces error at runtime because a migration in
+the repo was never applied. The dispatch path is now proven (P0-2 was applied and verified on
+2026-08-15); this is mechanical, and it should be batched with a re-run of
+`prod-migration-history-audit`, which has been dead for three weeks and exists to catch exactly this.
+
+**Requires a ruling before anyone builds.**
+
+- **Do the 20 unbuilt parity gaps survive D-93–D-98?** Three of those specs predate the portal
+  rulings. Carried from v2, still unanswered, still blocking.
+- **Is ADR-0007 (Stripe FDW) applied or retired?**
+- **Is `award_rates` meant to be populated in the database, or is R80.4's static corpus the record?**
+  (W-11.)
+- **Does the estate get a PSI/CrUX API key?** Free; gives field Core Web Vitals for all six apps.
+- **Do we adopt Nitro for the Vite apps?** It is the documented path to Vercel Functions, SSR and
+  Skew Protection, and Vercel's own Vite docs now steer that way. Five-app migration.
+
+---
+
+## 10. What no static pass can settle
+
+Every visual and runtime claim — no browser was driven against an authenticated route in any of the
+six apps. The 27 `CANNOT-VERIFY` operator-register items. Whether the deployed `dist/` matches the
+audited working-tree build in any app. Edge-function deployment state for `crm7-generate-document`,
+`sta-email-watch`, and the `cron_refresh`-bearing build of `xero-token-exchange`. `cron.job`
+registration and the vault secrets several migrations hard-fail without. Whether R80.4's *production*
+FWC key is dead too, or only the local one — `https://r8.crm7.app/api/fwc?path=…` with a valid bearer
+answers it, and the answer changes P0-4 from "rotate a key" to "the proxy is fine, fix the dev
+environment". Whether braden's `content_pages` rows carry the `tenant_id` the code filters on.
+Credential rotation. 105 of the 108 `authenticated_security_definer` advisories.

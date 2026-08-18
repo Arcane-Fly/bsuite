@@ -1,5 +1,11 @@
 # Schema Authoring & Tenancy — Full Scope
 
+> **Filename corrected 2026-08-17: `v1.00D` → `v1.00A`.** The body's own first line says
+> **IMPLEMENTED 2026-08-06 — D1–D5 decided in §9 and built**. A `D` (Draft) marker on decided,
+> built work is the same defect as above, and it sat on a document whose §9 records operator
+> rulings.
+
+
 **Status:** IMPLEMENTED 2026-08-06 — D1–D5 decided in §9 and built. Operator ruling: *"deferals are forbidden."* See §9 for what shipped and the two Criticals found in the work itself.
 **Date:** 2026-08-06
 **Author:** claude-code-bsuite, via `agent-master-orchestration` (BSuite family)

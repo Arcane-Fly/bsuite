@@ -66,6 +66,34 @@ Route inventory lives in `scripts/audit-routes.sh`. For every route, in **both l
 
 P1–P7 are **hard gates**. P8–P9 produce artefacts for the operator; they are not self-certified.
 
+### Status of § 2 (2026-08-17)
+
+`scripts/audit-routes.sh` **did not exist** when the sentence above was written, and had not been
+written two weeks later — not in the parent and not in any of the six submodules. The whole of § 2
+was therefore unimplemented, and `.github/workflows/theme-conformance.yml` invoked none of the
+three page auditors that do exist. The file exists now and the workflow runs it.
+
+What it covers, and what it does not:
+
+| Dimension | Coverage |
+|---|---|
+| Apps in the inventory | **crm7 only** |
+| Routes | **11** — 5 public, 6 authenticated |
+| Checks per route | P1/P3/P4/P5 via `audit-applied-tokens.mjs`, P2/P7 via `audit-legibility.mjs` (both themes), structural U1–U7 via `audit-ui-pages.mjs` |
+| Not covered | business-suite-unified, conduit, R80.4, throughput, braden |
+
+The five uncovered apps are named in the head of every run rather than left out silently. The
+reason is one file: crm7 is the only app with a `tests/e2e/auth.setup.ts`, and
+`scripts/theme-session.sh` consumes that helper to mint the session — it does not reimplement
+sign-in, so there is nothing to copy except the helper itself. Porting `auth.setup.ts` to another
+app is what unlocks a signed-in sweep there.
+
+**Authenticated routes were previously unmeasured everywhere.** The gates walked `/`, `/login`,
+`/404`, `/unauthorized`, `/privacy`, `/terms` and nothing else; all three auditors had accepted a
+`--storage <storageState.json>` flag for months and no workflow ever passed one. A skipped
+authenticated route now **fails** — measured on this tree, `/dashboard` with no session prints
+`SKIPPED: redirected off-origin` and exits **0**, which is the same exit code as a clean audit.
+
 ---
 
 ## 3. Team + escalation

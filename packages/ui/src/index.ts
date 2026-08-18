@@ -45,6 +45,25 @@ export {
 export { ErrorBoundary, type ErrorBoundaryProps } from './error-boundary.js'
 export { LoadingSpinner, type LoadingSpinnerProps } from './loading-spinner.js'
 export { StatusBadge, type StatusBadgeProps, type StatusBadgeTone } from './status-badge.js'
+export {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from './command.js'
+export { Popover, PopoverTrigger, PopoverContent } from './popover.js'
+export {
+  EntitySelector,
+  type EntitySelectorProps,
+  type EntitySelectorQuery,
+  type EntitySelectorLogger,
+  type EntitySelectorSupabaseClient,
+} from './entity-selector.js'
 
 // Branding components (v0.3.0+)
 export {

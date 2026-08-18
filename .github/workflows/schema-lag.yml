@@ -41,6 +41,8 @@ on:
       - 'packages/schema-builder/supabase/migrations/**'
       - 'supabase/migration-scopes.json'
       - 'scripts/check-schema-lag.mjs'
+      - 'scripts/check-placement-rate-provenance.mjs'
+      - 'scripts/check-placement-award-code.mjs'
       - '.github/workflows/schema-lag.yml'
   workflow_dispatch:
 
@@ -164,5 +166,77 @@ jobs:
             echo ''
             echo '```'
             cat lag.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prove the provenance guard can fail
+        # Seven fixtures plus a positive control. Run BEFORE the live check for
+        # the same reason the lag guard does: a guard whose logic is broken
+        # reports a clean database just as convincingly as a clean one.
+        run: node scripts/check-placement-rate-provenance.mjs --self-test
+
+      - name: Placement rate provenance
+        # Lives in THIS workflow rather than its own because this is the only
+        # job in the repo that has already resolved a working pooler host. A
+        # second workflow would have to duplicate the ~40 lines of cluster
+        # probing above, and duplicated connection logic is how two guards come
+        # to disagree about which database they are describing.
+        #
+        # It answers a question the lag guard cannot: the lag guard reads the
+        # MIGRATION ledger, so it goes green the moment a migration applies.
+        # Whether the DATA that migration governs is coherent is a different
+        # claim, and the 2026-07-30 plan's proposed tripwire could not make it —
+        # it watched `award_rate_resolution_status <> 'unresolved'`, which a
+        # CHECK constraint has since made unreachable. That tripwire would pass
+        # over a table where zero placements have ever resolved a wage from an
+        # award rate. This one reads the foreign key.
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          export SUPABASE_DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          node scripts/check-placement-rate-provenance.mjs | tee provenance.txt
+          {
+            echo '### Placement rate provenance'
+            echo ''
+            echo '```'
+            cat provenance.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prove the award-code guard can fail
+        # Eight fixtures plus a positive control, same reason as the provenance
+        # guard directly above: prove the logic can discriminate BEFORE trusting
+        # a green result from the live query.
+        run: node scripts/check-placement-award-code.mjs --self-test
+
+      - name: Placement award-code coverage
+        # Narrower question than "Placement rate provenance" above: that step
+        # asks whether a wage came from a real award_rates ROW (award_rate_id).
+        # This asks whether the placement even NAMES an award (award_code) —
+        # they diverge on most of this estate's live data, where an award is
+        # named but no rate row has ever been resolved against it.
+        # `placements_award_code_required_when_claimed_chk` (20260822060000)
+        # closes the fabrication half at the DB level; this step ratchets the
+        # half that migration deliberately leaves open — the honest 'manual'
+        # quote flow — so it stays VISIBLE without being silently forbidden.
+        # Reuses the pooler host this job already resolved, same rationale as
+        # the provenance step: duplicated connection logic is how two guards
+        # come to disagree about which database they are describing.
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          export SUPABASE_DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          node scripts/check-placement-award-code.mjs | tee award-code.txt
+          {
+            echo '### Placement award-code coverage'
+            echo ''
+            echo '```'
+            cat award-code.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

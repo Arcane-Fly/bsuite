@@ -1,6 +1,11 @@
 # BSuite Documentation Program — Design
 
-> **Naming:** `20260723-bsuite-documentation-program-design-v1.00D.md` · Status **D** (Draft → Approved by operator 2026-07-23) · Feeds `writing-plans` → execution.
+> **Filename corrected 2026-08-17: `v1.00D` → `v1.00A`.** The body's naming line contradicted
+> itself in a single sentence — `Status **D** (Draft → Approved by operator 2026-07-23)` — recording
+> the approval while keeping the Draft letter.
+
+
+> **Naming:** `20260723-bsuite-documentation-program-design-v1.00A.md` · Status **D** (Draft → Approved by operator 2026-07-23) · Feeds `writing-plans` → execution.
 > **Source:** capability matrix (`20260723-bsuite-capability-matrix-v1.00W.md`) + operator approvals across 4 design sections.
 
 ## Intent

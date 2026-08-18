@@ -52,7 +52,20 @@ on:
       - 'scripts/audit-palette-whitelist.py'
       - 'scripts/theme_audit_lib.py'
       - 'scripts/test-theme-audit-gates.sh'
+      - 'scripts/audit-routes.sh'
+      - 'scripts/theme-session.sh'
+      - 'scripts/audit-applied-tokens.mjs'
+      - 'scripts/audit-ui-pages.mjs'
+      - 'scripts/audit-legibility.mjs'
+      # The audits' shared helpers. Without this line a change to
+      # scripts/lib/settled-or-skip.mjs — the guard that decides whether a route
+      # was measured at all — would not re-run the gate that consumes it, and
+      # the file would be edited under no test. `.mjs` is not covered by the
+      # `**/*.js` glob above, which is why every script here is named
+      # explicitly rather than matched.
+      - 'scripts/lib/**'
       - '.github/theme-c1-baseline.txt'
+      - '.github/theme-c2-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
       - '.github/workflows/theme-conformance.yml'
 
@@ -148,11 +161,13 @@ jobs:
               seen = 0
               for (i = 1; i <= NF; i++) if ($i == "/") { seen++; if (seen == want) { print $(i-1); break } }
             }' /tmp/audit.txt | paste -sd+ | bc; }
-          total=$(col 1); c3=$(col 3); c4=$(col 4)
+          total=$(col 1); c2=$(col 2); c3=$(col 3); c4=$(col 4)
           echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "c2=$c2" >> "$GITHUB_OUTPUT"
           echo "c3=$c3" >> "$GITHUB_OUTPUT"
           echo "c4=$c4" >> "$GITHUB_OUTPUT"
           echo "C1 pure-endpoint total: $total"
+          echo "C2 non-oklch total: $c2"
           echo "C3 palette-bypass total: $c3"
           echo "C4 wrong-destructive total: $c4"
 
@@ -222,6 +237,122 @@ jobs:
             echo "The baseline must EQUAL what this job measures at the pinned gitlink SHAs."
             echo "Do not measure in your working copy — the submodules there are at their branch"
             echo "tips, which is a different tree and has given a different number before."
+            exit 1
+          fi
+          echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
+
+      # ── C2 NON-OKLCH COLOUR FORMATS (ledger TH-1) ────────────────────────
+      #
+      # C2 WAS MEASURED EVERY RUN AND READ BY NOBODY, WHICH IS THE ESTATE'S
+      # SIGNATURE FAILURE AND NOT A NEW ONE.
+      #
+      # The comment above the `col()` helper already records what happens when a
+      # column the scanner prints is never compared: "Reading only the FIRST
+      # pair is how a live purple --destructive in two apps stayed green — the
+      # scanner detected it in C4 every run and nothing ever read that column."
+      # C4 got a gate after that. C2 did not, and it has been in exactly the
+      # same state ever since: printed in the table, visible in the log, bound
+      # to nothing.
+      #
+      # So the whole class was free to grow without a single run going red. The
+      # register measured 235 estate-wide, a triage pass on 2026-08-17 put the
+      # real figure at 143, and a re-measurement at these pinned gitlink SHAs
+      # puts it at 118. Three different numbers for one class in one week is
+      # what "no gate" looks like from the outside — nobody was wrong, there was
+      # simply nothing holding the figure still between measurements.
+      #
+      # WHY A RATCHET AND NOT A HARD ZERO
+      # A hex literal is CORRECT in the places FORMAT_EXCEPTION_RE already
+      # names — email HTML (clients support neither CSS custom properties nor
+      # oklch), PDF and canvas renderers, manifests — and those land in the
+      # EXEMPT column, not this one. What is left in the REAL column is
+      # dominated by two shapes that are arguable rather than plainly wrong:
+      # branding and colour-picker surfaces whose subject matter IS a colour,
+      # and vendored magicui components (magic-card, meteors, bento-grid)
+      # carried verbatim in three apps. Demanding zero today would force those
+      # to be rewritten or path-exempted in the same breath as the gate lands,
+      # and a path-shaped exemption is the thing this file spends forty lines
+      # arguing against. Bank the number, then bring it down deliberately.
+      #
+      # 118 = crm7 6 + conduit 27 + business-suite-unified 40 + R80.4 1 +
+      #       throughput 0 + packages 0 + braden 44.
+      #
+      # MEASURED AT THE PINNED GITLINK SHAs, not in a working copy. Reproduced
+      # locally against run 32089259631's table, row for row, after adding
+      # `--exclude-dir=.lighthouseci` to the scanner — without that exclusion a
+      # working copy that has ever run Lighthouse reports 1369 for
+      # business-suite-unified instead of 40, because .lighthouseci/lhr-*.html
+      # inlines the whole audited page. That fix ships in this same change.
+      #
+      # IT DROPS TO 98 WHEN PR #2103 ADVANCES THE POINTERS, and C1 drops 3 -> 2
+      # in the same move. Both numbers were measured, not guessed: each
+      # submodule was checked out at the SHA that PR sets and the scanner re-run.
+      #
+      #                          C1        C2
+      #   crm7      e8a587c7      1 -> 0    6 -> 0
+      #   conduit   7c6c60e4      1 -> 1   27 -> 25
+      #   BSU       5675ac64      1 -> 1   40 -> 30
+      #   braden    0841ad12      0 -> 0   44 -> 42
+      #   R80.4 / throughput / packages   unchanged
+      #   ─────────────────────────────────────────
+      #   TOTAL                   3 -> 2  118 -> 98
+      #
+      # So whoever merges the pointer advance writes `2` into
+      # .github/theme-c1-baseline.txt and `98` into
+      # .github/theme-c2-baseline.txt IN THAT SAME PR. The gate will otherwise
+      # fail on the FELL arm, which is the ratchet working and not a surprise.
+      - name: Compare C2 against the committed baseline
+        shell: bash
+        env:
+          C2: ${{ steps.audit.outputs.c2 }}
+        run: |
+          set -uo pipefail
+          baseline=$(cat .github/theme-c2-baseline.txt 2>/dev/null || echo 999)
+          total="$C2"
+          case "$total" in ''|*[!0-9]*) echo "::error::audit produced a non-numeric C2 total: '$total'"; exit 1 ;; esac
+          echo "baseline=$baseline  current=$total"
+
+          if [ "$total" -gt "$baseline" ]; then
+            echo "::error::Non-OKLCH colour count rose from $baseline to $total."
+            echo ""
+            echo "Authored source states colour in OKLCH, through a role token."
+            echo "A hex, rgb() or hsl() literal in a component is a colour nobody"
+            echo "can find again and nothing can flip for dark mode."
+            echo ""
+            echo "  bg-[#7c3aed]      -> bg-primary"
+            echo "  color: #f8f9fa    -> color: var(--role-text-primary)"
+            echo "  rgba(0,0,0,.5)    -> color-mix(in oklch, var(--overlay) 50%, transparent)"
+            echo "  hsl(217 91% 60%)  -> var(--role-accent)"
+            echo ""
+            echo "If the ENGINE cannot take a token — email HTML, a PDF or canvas"
+            echo "renderer, a manifest — the file belongs in FORMAT_EXCEPTION_RE in"
+            echo "scripts/audit-d2c-theme.sh, which files it as EXEMPT rather than"
+            echo "hiding it. A format exemption never licenses a pure endpoint: C1"
+            echo "is scored against the naming exemptions only."
+            echo ""
+            echo "The offending files:"
+            scripts/audit-d2c-theme.sh --files C2 || true
+            exit 1
+          fi
+
+          # Same equality semantics as C1, for the reason recorded there: a
+          # ratchet that tolerates slack between the committed number and the
+          # measured one is a ceiling with the ceiling written down wrong. That
+          # drift is not hypothetical here — it is how C1 sat at 7 against a
+          # committed 11 while four new pure endpoints would have passed
+          # unremarked (bsuite D-87).
+          if [ "$total" -lt "$baseline" ]; then
+            echo "::error::Non-OKLCH count FELL from $baseline to $total — bank it."
+            echo ""
+            echo "Someone removed $(( baseline - total )) literal colour(s) without lowering"
+            echo "the ratchet, so the gate would let them come back unnoticed."
+            echo ""
+            echo "Fix, in this PR:"
+            echo "  echo $total > .github/theme-c2-baseline.txt"
+            echo ""
+            echo "If you just advanced the submodule pointers this is expected: the"
+            echo "count is measured at the PINNED gitlink SHAs, so it moves the moment"
+            echo "a pointer does. Do not measure in your working copy."
             exit 1
           fi
           echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
@@ -345,6 +476,43 @@ jobs:
           fi
           echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
 
+      # C3 is a HARD ZERO, and it can be one because it already measures zero.
+      #
+      # This step exists for the same reason the C2 one above does: `c3` was
+      # computed by the audit step, written to $GITHUB_OUTPUT, printed in the
+      # log — and never read by any step in this file. A number nobody compares
+      # is decoration. The estate has now shipped that shape three times (C4
+      # before it was gated, C2 until the step above, and this).
+      #
+      # Zero is the right threshold rather than a ratchet because a C3 hit is a
+      # hardcoded Tailwind palette class (`bg-blue-500`) or an arbitrary literal
+      # (`text-[#7c3aed]`), and neither has a legitimate form: the arbitrary-value
+      # predicate deliberately does NOT match `bg-[hsl(var(--token))]`, which is
+      # the correct way to reach a token with no utility bridged for it. The 16
+      # hits in packages/ are already filed EXEMPT by name, so the real column is
+      # 0 today and any move off it is a genuine bypass.
+      - name: No hardcoded palette or arbitrary colour literals
+        shell: bash
+        env:
+          C3: ${{ steps.audit.outputs.c3 }}
+        run: |
+          set -uo pipefail
+          case "$C3" in ''|*[!0-9]*) echo "::error::non-numeric C3: '$C3'"; exit 1 ;; esac
+          if [ "$C3" -gt 0 ]; then
+            echo "::error::$C3 site(s) bypass the token layer with a palette class or a colour literal."
+            echo ""
+            echo "  bg-blue-500     -> bg-primary"
+            echo "  text-slate-400  -> text-muted-foreground"
+            echo "  border-red-600  -> border-destructive"
+            echo "  bg-[#7c3aed]    -> bg-primary"
+            echo ""
+            echo "Reaching a token that has no utility bridged for it is NOT a bypass"
+            echo "and is not counted: bg-[hsl(var(--sidebar-background))] passes."
+            scripts/audit-d2c-theme.sh --files C3 || true
+            exit 1
+          fi
+          echo "OK: no token bypasses."
+
       # C4 is a HARD ZERO. A wrong destructive colour is not debt to be
       # ratcheted down — it is the one semantic the contract says must be
       # maximally separated from primary, and getting it wrong puts the
@@ -395,6 +563,177 @@ jobs:
             echo "  scripts/audit-palette-whitelist.py --list-allowed"
             exit 1
           fi
+
+  # ── PER-PAGE VALIDATION (theme DoD § 2) ────────────────────────────────────
+  #
+  # The DoD said "Route inventory lives in scripts/audit-routes.sh" for two
+  # weeks while that file did not exist anywhere in the parent or the six
+  # submodules, so the whole P1–P9 per-page checklist was unimplemented and this
+  # workflow invoked none of the three page auditors. These two jobs are what
+  # makes the sentence true.
+  #
+  # Split in two on purpose. The inventory check is cheap, needs no credentials
+  # and no network, and therefore runs on every PR — it is the ratchet that stops
+  # authenticated coverage being quietly deleted. The sweep needs a real session
+  # against a real deployment, so it runs on the schedule and on demand.
+  per-page-inventory:
+    name: Route inventory is declared and non-empty
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1 }
+
+      # `--require-authenticated 6` is a FLOOR, not a measurement. The measured
+      # numbers are derived by the script from the inventory itself and printed
+      # at the head of every run; this literal only says how far coverage is
+      # allowed to fall. A floor that is out of date can only ever under-claim,
+      # which is the safe direction — the dangerous literal is a hardcoded
+      # "measured" count, and there isn't one. Raise it in the same PR that adds
+      # routes; lowering it is a deliberate act that has to be argued for.
+      - name: Inventory + authenticated-coverage ratchet
+        run: scripts/audit-routes.sh --inventory --require-authenticated 6
+
+  per-page-authenticated:
+    name: Per-page checks on SIGNED-IN routes
+    # RUNS ON SAME-REPO PULL REQUESTS TOO (V-9, 2026-08-18).
+    #
+    # It used to be `github.event_name != 'pull_request'`, copied from the
+    # `esm-imports` job below — but the reason stated there does not apply
+    # here. esm-imports is excluded from PRs because it needs a registry
+    # install and `minimumReleaseAge` rejects our own packages for ~24h after
+    # a publish, so it would fail on a clock. THIS job installs crm7 with
+    # `--frozen-lockfile` and walks a deployed origin; it has no such window.
+    #
+    # The cost of the copied condition was that the only gate in the estate
+    # that looks at a SIGNED-IN page ran weekly and on demand, and therefore
+    # gated nothing at merge. Measured 2026-08-18: run 32089259631 (the latest
+    # PR run) reported this job "skipped", and the two dispatch runs that DID
+    # contain it (31996285742, 31996642828) both concluded `failure` on real
+    # defects — a 2.76:1 demo-banner string and two unnamed controls. Both had
+    # been merged past a green PR.
+    #
+    # FORK PRs ARE STILL EXCLUDED, and that exclusion is load-bearing rather
+    # than cautious: `secrets.*` are not exposed to a workflow triggered by a
+    # fork PR, so the four credentials would resolve EMPTY, the "Assert the
+    # E2E credentials resolved" step would fail, and a contributor's first PR
+    # would show a red required check they cannot fix. Skipping is the honest
+    # outcome there — an unmeasured route is missing coverage, and the
+    # scheduled run still covers it after merge.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout (with submodules — crm7 carries the auth helper)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # An uninitialised submodule is an EMPTY DIRECTORY and an empty directory
+      # passes `-d`. Test for the FILE this job consumes, or the sweep degrades
+      # into "no session producer found" and reads like a scoping decision
+      # rather than a broken checkout.
+      - name: Assert crm7's auth helper is present
+        run: |
+          set -uo pipefail
+          if [ ! -f crm7/tests/e2e/auth.setup.ts ]; then
+            echo "::error::crm7/tests/e2e/auth.setup.ts is missing — the submodule did not check out."
+            echo "Set BSUITE_CROSS_REPO_PAT (repo: read on crm7)."
+            exit 1
+          fi
+          echo "crm7 auth helper present"
+
+      # Fail CLOSED on missing credentials, before anything else runs.
+      #
+      # auth.setup.ts writes an EMPTY storage state when credentials are absent,
+      # by design, so an ordinary local E2E run still works. Fed to this sweep
+      # that empty state makes every authenticated route bounce to the OAuth
+      # server and report SKIPPED — and a skipped route is indistinguishable
+      # from a route the inventory never claimed. crm7's own e2e.yml learned
+      # this the hard way: the credentials sat set-and-inert in that repo while
+      # the suite reported green over 125 self-skipping specs.
+      #
+      # These four secrets live on GaryOcean428/crm7 already; this job needs
+      # them on the parent too. VITE_SUPABASE_ANON_KEY is exported under the
+      # name the app actually reads (VITE_SUPABASE_PUBLISHABLE_KEY) — the same
+      # rename crm7/.github/workflows/e2e.yml performs, and for the same reason.
+      - name: Assert the E2E credentials resolved
+        env:
+          CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}
+          CRM7_E2E_PASSWORD: ${{ secrets.CRM7_E2E_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -uo pipefail
+          missing=""
+          for v in CRM7_E2E_EMAIL CRM7_E2E_PASSWORD VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::missing secret(s):$missing"
+            echo "Without them every signed-in route is SKIPPED and this job would"
+            echo "report green over pages nobody looked at."
+            exit 1
+          fi
+
+          # NON-EMPTY IS NOT VALID, and this step learned that on its own first
+          # run. All four secrets were populated by `gh secret set --body -`,
+          # which stores the literal string "-" rather than reading stdin. The
+          # presence check above passed — "-" is non-empty — and the failure
+          # surfaced four steps later as `TypeError: Failed to parse URL from
+          # ***/auth/v1/token`. It was only diagnosable because GitHub masks
+          # secret VALUES in the log, so every hyphen in the entire run had
+          # become `***`: `audit***routes.sh`, `sign***in`,
+          # `business***suite***unified`.
+          #
+          # So assert the SHAPE, not just the length. Nothing here echoes a
+          # value; a length and a prefix are enough to tell a credential from a
+          # placeholder.
+          bad=""
+          case "$VITE_SUPABASE_URL" in https://*.supabase.co|https://*.supabase.co/) : ;; *) bad="$bad VITE_SUPABASE_URL" ;; esac
+          case "$VITE_SUPABASE_PUBLISHABLE_KEY" in sb_publishable_*|eyJ*) : ;; *) bad="$bad VITE_SUPABASE_PUBLISHABLE_KEY" ;; esac
+          case "$CRM7_E2E_EMAIL" in *@*.*) : ;; *) bad="$bad CRM7_E2E_EMAIL" ;; esac
+          [ "${#CRM7_E2E_PASSWORD}" -ge 8 ] || bad="$bad CRM7_E2E_PASSWORD"
+          if [ -n "$bad" ]; then
+            echo "::error::secret(s) present but malformed:$bad"
+            echo "A placeholder passes a non-empty check and then fails deep inside"
+            echo "Playwright, where the value is masked and unreadable."
+            exit 1
+          fi
+          echo "all four credentials resolved and well-formed"
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        # Explicit major. actions/setup-node with node-version-file was observed
+        # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
+        with: { node-version: '24.14.0' }
+
+      - name: Install crm7 (Playwright lives there)
+        working-directory: crm7
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        working-directory: crm7
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The sweep. Mints a session via scripts/theme-session.sh (which runs
+      # crm7's own auth.setup.ts — it does not reimplement sign-in) and then
+      # walks every route in the inventory: public routes anonymously,
+      # authenticated routes signed in. A SKIPPED authenticated route fails the
+      # job; that is the whole reason this exists.
+      - name: Walk the route inventory
+        env:
+          CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}
+          CRM7_E2E_PASSWORD: ${{ secrets.CRM7_E2E_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: scripts/audit-routes.sh
 
   # NOT run on pull_request, deliberately.
   #

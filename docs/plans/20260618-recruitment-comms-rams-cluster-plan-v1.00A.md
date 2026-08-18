@@ -1,5 +1,11 @@
 # Recruitment Communications + RAMS Lodgement Cluster — Implementation Plan
 
+> **Filename corrected 2026-08-17: `v1.00W` → `v1.00A`.** The body says
+> **A (Approved — SHIPPED + signed-in prod-verified 2026-06-24)**, with all four conduit issues
+> merged and live-verified. A `Working` marker on a plan that shipped two months earlier invites
+> re-execution of finished work.
+
+
 > **For Claude:** REQUIRED SUB-SKILL: Use `executing-plans` (or `subagent-driven-development`) to implement this plan phase-by-phase. Each phase is its own PR to conduit `development`.
 >
 > **Status: A (Approved — SHIPPED + signed-in prod-verified 2026-06-24).** All four issues (conduit #221/#225/#227/#229) built, dual-verified, merged, and live-verified on `conduit.crm7.app`; cron Vault seeded; advisors triaged (conduit#334 done). Post-ship: matcher `r7_jobs` column bug fixed+verified (conduit#336); per-user FO identity link shipped (crm7 `field_officers.user_id` + conduit auto-scope, signed-in-verified). Open follow-ups: conduit#338 (lodgement/match lifecycle, RAMS-contract-gated), crm7#1090 (FO admin-link UI + RLS tightening). Originally superseded the "operator-blocked" framing of conduit#225/#227/#229/#221 — those were **mislabelled**: the credentials are provisioned and the infrastructure exists (see §1).

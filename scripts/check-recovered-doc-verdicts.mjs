@@ -84,7 +84,7 @@ const NOT_SUBJECT = new Map([
  * Raising it requires an operator ruling, because raising it means a document
  * was added to an authoritative directory without a verdict.
  */
-const MAX_UNVERDICTED = 29
+const MAX_UNVERDICTED = 8
 
 function hasVerdictBanner(text) {
   const lines = text.split('\n').slice(0, BANNER_WINDOW)

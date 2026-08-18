@@ -16,7 +16,7 @@
 
 1. **E-signature is IN-HOUSE — no third-party signing vendor** (no Adobe Sign / DocuSign / Secured Signing / HelloSign). Reuse the crm7 architecture: `documentSigner.ts` (pdf-lib + `crypto.subtle` SHA-256, AU ETA 1999 Certificate of Completion) + `SignDocumentFlow.tsx` + `react-pdf` + `@xyflow/react` multi-signer flow + `document_audit_logs`. Canonical doc: `crm7/docs/20260317-document-esigning-architecture-v1.00A.md`. Parent spec corrected: `docs/20260506-integrations-parity-spec-v1.00W.md` §5.
 2. **AASN API = RAMS.** The regulated AASN training-contract lodgement API is **RAMS** (supersedes "TYIMS/AASN"). RAMS lodgement is a separate regulated step performed AFTER in-house e-signature — it is NOT a signing vendor. (Acronym note: "RAMS" is also the ADR-0005 `rams_funding_matrix`; consistent — that matrix derives from the AASN/RAMS system.) Apply to conduit#227's lodgement step + any crm7/R80.3 funding-derivation work.
-3. **DRY one-shot:** CRM7 owns apprentice/training/document/business entities; reader apps (conduit, R80.3, portals) read/link — no mirror tables, no duplicated entity forms. `docs/20260227-dry-one-shot-architecture-v1.02A.md`.
+3. **DRY one-shot:** CRM7 owns apprentice/training/document/business entities; reader apps (conduit, R80.3, portals) read/link — no mirror tables, no duplicated entity forms. `docs/20260227-dry-one-shot-architecture-v1.04A.md`.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/ui",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -67,6 +67,18 @@
       "import": "./dist/status-badge.js",
       "types": "./dist/status-badge.d.ts"
     },
+    "./command": {
+      "import": "./dist/command.js",
+      "types": "./dist/command.d.ts"
+    },
+    "./popover": {
+      "import": "./dist/popover.js",
+      "types": "./dist/popover.d.ts"
+    },
+    "./entity-selector": {
+      "import": "./dist/entity-selector.js",
+      "types": "./dist/entity-selector.d.ts"
+    },
     "./assets/d2c-default-logo.svg": "./src/assets/d2c-default-logo.svg"
   },
   "scripts": {
@@ -78,23 +90,31 @@
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.16",
+    "@radix-ui/react-popover": "^1.1.16",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "lucide-react": "^1.17.0",
     "react-error-boundary": "^6.1.2",
     "tailwind-merge": "^3.6.0"
   },
   "peerDependencies": {
     "@bsuite/theme": ">=0.7.0",
+    "@supabase/postgrest-js": "^2",
     "react": "^18.3.0 || ^19.0.0",
     "react-dom": "^18.3.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@bsuite/theme": {
       "optional": true
+    },
+    "@supabase/postgrest-js": {
+      "optional": true
     }
   },
   "devDependencies": {
     "@bsuite/theme": "^0.11.0",
     "@storybook/react-vite": "^10.5.8",
+    "@supabase/postgrest-js": "^2.108.1",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

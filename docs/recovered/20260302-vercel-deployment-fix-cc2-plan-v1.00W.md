@@ -1,3 +1,24 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED
+>
+> The 2026-03-02 Vercel deployment breakage (stale dashboard settings, Node version drift, pnpm
+> mismatch, Conduit missing `vercel.json`, hardcoded URLs) is long resolved — all six apps deploy
+> from CI today, and the estate has since moved through several further deployment hardening
+> passes.
+>
+> **Do not re-apply the specific remedies below.** They target a 2026-03 toolchain: Node and pnpm
+> floors, Supabase client versions and build commands have all moved since. Current deployment
+> doctrine lives in `AGENTS.md` and the `vercel-ops` skill.
+>
+> **Marker defect:** `W` on delivered work; also a session-scoped coordination doc ("CC1 handles
+> R80.3 … zero file overlap") whose partner session no longer exists.
+
+---
+
 # CC2: Vercel Deployment Fix — BSU, CRM7, conduit
 
 **Session**: Claude Code 2

@@ -340,6 +340,130 @@ export const GUARDS = [
     evidence:
       '"33 files examined in docs/recovered — 4 carry a verdict banner, 29 do not ' +
       '(ceiling 29)"; --self-test exits 1',
+    // The suppression counter. Every other lint ratchet in this estate counts
+    // what SURVIVES the linter; this one counts what was switched off before
+    // the linter ever spoke. R80.4/eslint-baseline.json is the worked example
+    // of why that needs its own instrument — it is a map of ruleId -> message
+    // count built from `eslint --format json`, and a directive-suppressed
+    // violation contributes no message, so no amount of suppression can move
+    // it. See the guard's header.
+    //
+    // Registered against its REAL invocation, not a self-test: it is a
+    // read-only source scan over `git ls-files` with no network, no
+    // credentials and no node_modules requirement, so none of the `skip`
+    // criteria apply. ~5s over 4,564 files.
+    //
+    // PRECONDITION: submodules checked out. Without them the guard REFUSES
+    // per scope ("REFUSING to report a count — 0 source files among 1 tracked
+    // file(s)") and exits 1 rather than reporting a clean zero, which is the
+    // behaviour this whole programme wants; verified by hand by emptying
+    // conduit/ (2026-08-17).
+    id: 'parent-check-hook-suppression-ratchet',
+    label: 'React-hook lint SUPPRESSION ratchet (exhaustive-deps + set-state-in-effect)',
+    repo: '.',
+    command: ['node', 'scripts/check-hook-suppression-ratchet.mjs'],
+    ciWorkflow: '.github/workflows/hook-suppression-ratchet.yml',
+    mode: 'run',
+    evidence:
+      '"check-hook-suppression-ratchet: 4,564 source file(s) and 6 eslint ' +
+      'config file(s) scanned across 7 of 7 scope(s) for 2 tracked rule(s)." ' +
+      '— the HEAD line, derived from the scan. Body reports 97 inline ' +
+      'suppression(s), 92 config-scoped file-level suppression(s) and 1 ' +
+      'repository-wide `off` declaration across the seven scopes.',
+  },
+  {
+    // Positive control for the guard above, and the reason it can be trusted
+    // to have found 97 rather than to have matched nothing. The scanner's
+    // failure mode is silent: a tokeniser bug that stops recognising
+    // directives reports a smaller number, and a smaller number on THIS
+    // ratchet reads as an unbanked improvement, not as a broken instrument.
+    // 24 cases, 10 of them asserting the scanner does NOT fire — including
+    // the three false positives a line-grep produces on this estate's own
+    // source (prose about a directive, a rule id named in prose, and
+    // directive text inside a string literal; crm7/eslint.config.js and this
+    // registry entry both contain the first two).
+    id: 'parent-hook-suppression-scanner-selftest',
+    label: 'Hook-suppression scanner self-test (proves the counter can still find and still refuse)',
+    repo: '.',
+    command: ['node', 'scripts/check-hook-suppression-ratchet.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/hook-suppression-ratchet.yml',
+    mode: 'run',
+    evidence:
+      '"check-hook-suppression-ratchet --self-test: 24 cases exercised (10 ' +
+      'of them asserting the scanner does NOT fire, including the three ' +
+      "false positives a line-grep produces on this estate's own source).\"",
+  },
+
+  {
+    // The per-page half of the theme DoD, which named
+    // `scripts/audit-routes.sh` as the home of the route inventory while that
+    // file existed nowhere in the parent or the six submodules.
+    //
+    // REGISTERED INVOCATION IS `--inventory`, NOT THE SWEEP, and the reason is
+    // the one this registry's header already states: the command recorded here
+    // must be safe to run — read-only, no credentials, no network. The full
+    // sweep signs in against a live deployment and walks 11 routes through
+    // three Playwright auditors in two themes; it runs on the schedule and on
+    // workflow_dispatch in theme-conformance.yml, not here.
+    //
+    // `--inventory` is not a stub of that. It is the assertion that the sweep
+    // has something to sweep: the inventory is non-empty, every route is
+    // well-formed, none is declared twice, and authenticated coverage has not
+    // fallen below its floor. An inventory that silently emptied would make
+    // the scheduled sweep visit nothing and report success, which is precisely
+    // the vacuous-guard shape LANE-WATCHER exists to catch — so the guard that
+    // guards it belongs here.
+    //
+    // Every count in the head line is DERIVED from the inventory at run time.
+    // The only literal is the ratchet floor, which lives in the workflow, and a
+    // stale floor can only under-claim.
+    id: 'parent-audit-routes-inventory',
+    label: 'Per-page route inventory declared, well-formed, and non-empty (theme DoD § 2)',
+    repo: '.',
+    command: ['bash', 'scripts/audit-routes.sh', '--inventory'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"audit-routes: 11 route(s) across 1 app(s) — 5 public, 6 authenticated" ' +
+      'followed by "✓ inventory valid". Proven able to fail: ' +
+      '`--inventory --require-authenticated 99` exits 1 with "only 6 ' +
+      'authenticated route(s) declared, floor is 99"; and the sweep itself run ' +
+      'as `--no-session` exits 1 with "6 route(s) UNAUDITED" per auditor.',
+    // The parser that decides WHICH ISSUES GET CLOSED AUTOMATICALLY when a
+    // pull request merges into `development` (register V-10 — GitHub only
+    // auto-closes on a merge to the default branch, and all seven repos
+    // default to `main`, so every `Closes #N` in this estate has been inert).
+    //
+    // This is registered for the same reason parent-theme-audit-gate-selftest
+    // is: the dangerous failure is silent. A parser that quietly stopped
+    // matching would leave issues open — annoying, visible, cheap. A parser
+    // that quietly started matching MENTIONS — a number inside a quoted review
+    // comment, a checklist item, a pasted log — closes somebody's live work,
+    // and nothing in CI would notice. 23 of the 35 cases assert that NO issue
+    // is closed, and because a parser returning nothing at all would satisfy
+    // every one of those, the suite carries an explicit positive control that
+    // fails when the parser closed nothing anywhere in the table.
+    id: 'parent-parse-closing-keywords-selftest',
+    label: 'Closing-keyword parser self-test (which issues a development merge closes)',
+    repo: '.',
+    command: ['node', 'scripts/parse-closing-keywords.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/development-merge-issue-closer.yml',
+    mode: 'run',
+    evidence:
+      '"parse-closing-keywords: self-test OK (35 cases executed, 23 of them ' +
+      'asserting NO issue is closed, 14 issue references legitimately ' +
+      'extracted)." Bare plurals, not the estate\'s usual "35 case(s)": that ' +
+      'form was REJECTED by LANE-WATCHER on first run because its stemmer is ' +
+      'asymmetric for nouns ending in `e` (list entry `cases?` stems to `cas`, ' +
+      'printed `case(s)` stems to `case`). Fixed additively in ' +
+      'check-guard-self-reporting.mjs so the next guard using the house style ' +
+      'is not wrongly failed; re-classifying all 35 recorded evidence strings ' +
+      'under the old and new noun lists flipped nothing but this entry. ' +
+      'Proven to fail three ways on 2026-08-17: a crafted case ' +
+      'asserting a blockquote closes (exit 1, 1 failing); deleting the ' +
+      'blockquote skip (exit 1, 2 failing — including a real directive ' +
+      'gaining a quoted neighbour); and making the parser inert (exit 1, 15 ' +
+      'failing, positive control named explicitly).',
   },
   {
     id: 'parent-verify-esm-imports',
@@ -489,6 +613,69 @@ export const GUARDS = [
       'empty-ledger-refused, zero-files-refused)."',
   },
   {
+    id: 'parent-check-placement-rate-provenance',
+    label: 'Placement rate provenance (does a wage know where it came from?)',
+    repo: '.',
+    command: ['node', 'scripts/check-placement-rate-provenance.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/schema-lag.yml',
+    mode: 'run',
+    // Same deliberate exception as check-schema-lag directly above, for the same
+    // reason: the real run needs a live production credential the watcher does
+    // not hold, so registering the real command would record a permanent
+    // COULD_NOT_EXECUTE. The self-test is registered because it exercises the
+    // identical `evaluate()` the real run calls — the credential changes where
+    // the numbers come from, not what is done with them.
+    //
+    // Worth stating plainly, because this guard exists BECAUSE of it: the
+    // tripwire the 2026-07-30 plan proposed for this table would today pass
+    // vacuously. It asserted `award_rate_resolution_status` is never
+    // 'unresolved' on a placement carrying a charge_rate, and
+    // `placements_resolved_rate_required_chk` has since made that pair
+    // unrepresentable. Measured 2026-08-17: 0 unresolved, 21 'manual', and 0
+    // placements with an `award_rate_id`. The proposed guard would have reported
+    // all-clear over a money chain that has never once resolved a wage from an
+    // award rate. This one reads the foreign key instead, and its self-test
+    // carries a positive control that demonstrates the vacuity rather than
+    // asserting it.
+    evidence:
+      '"check-placement-rate-provenance --self-test: 7 cases exercised across ' +
+      'both directions (manual-passes, award-zero-passes, F1 fabricated, F2 ' +
+      'orphaned, F3 silent, F4 empty-scan-refused, fully-resolved-passes), plus ' +
+      '1 positive control proving the status-string tripwire would pass over a ' +
+      'dead chain."',
+  },
+  {
+    id: 'parent-check-placement-award-code',
+    label: 'Placement award-code coverage (can a claimed charge rate be reconciled to an award later?)',
+    repo: '.',
+    command: ['node', 'scripts/check-placement-award-code.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/schema-lag.yml',
+    mode: 'run',
+    // Same deliberate exception as check-placement-rate-provenance directly
+    // above, for the same reason: the real run needs a live production
+    // credential the watcher does not hold, so registering the real command
+    // would record a permanent COULD_NOT_EXECUTE. The self-test exercises the
+    // identical `evaluate()` the real run calls.
+    //
+    // Narrower question than check-placement-rate-provenance: that guard asks
+    // whether a wage came from a real award_rates ROW (award_rate_id); this
+    // one asks whether the placement even NAMES an award (award_code) — the
+    // two diverge on most of this estate's live data, where an award is named
+    // but no specific rate row has ever been resolved against it.
+    // `placements_award_code_required_when_claimed_chk` (20260822060000)
+    // closes the fabrication half at the DB level (claiming resolved/
+    // migrated_to_discontinued with no award_code is now a 23514); this guard
+    // covers the half that migration deliberately leaves open — the honest
+    // 'manual' quote flow, ratcheted at GAP_BASELINE=8 (measured 2026-08-17)
+    // so the gap is visible and cannot silently grow past what was measured.
+    evidence:
+      '"check-placement-award-code --self-test: 8 cases exercised across both ' +
+      'directions (at-baseline-passes, below-baseline-passes, G1 rise, G2 ' +
+      'fabricated-shaped, G3 apprentice-attached, G4 empty-scan-refused, ' +
+      'gap-closed-passes), plus 1 positive control proving the manual/no-award ' +
+      'split narrows the naive \'no award_code\' count."',
+  },
+  {
     id: 'parent-check-own-package-freshness',
     label: 'Own-package freshness (do the six apps run our latest @bsuite/* publishes?)',
     repo: '.',
@@ -555,6 +742,56 @@ export const GUARDS = [
       'checked in .../crm7/supabase/migrations (580 distinct version(s), ' +
       '0 collision(s))." — was completely empty stdout+stderr, exit 0, ' +
       "before this survey's fix.",
+  },
+  {
+    id: 'crm7-lint-postgrest-columns',
+    label: 'PostgREST literal column references resolve against the schema (crm7, full-tree)',
+    repo: 'crm7',
+    command: ['node', 'scripts/lint-postgrest-columns.mjs'],
+    ciWorkflow: 'crm7/.github/workflows/postgrest-column-lint.yml',
+    mode: 'run',
+    notes:
+      'Landed 2026-08-17 with crm7#1783. Closes a class TypeScript never ' +
+      'covered: `supabase.from(t).eq(\'col\', …)` addresses columns by string ' +
+      'literal, and `tsc --noEmit` reports ZERO errors on a column that ' +
+      'exists nowhere in the schema — measured by reintroducing the real ' +
+      'defect and re-running the full typecheck. PostgREST rejects the ' +
+      'request at runtime and the near-universal `data ?? []` idiom swallows ' +
+      'it into an empty result, so the surface renders with no data and no ' +
+      'error. The founding incident: the field officer landing page filtered ' +
+      'a `people.field_officer_id` that does not exist (the real column is ' +
+      '`assigned_field_officer_id`) and resolved the signed-in officer ' +
+      'against a FK to `contacts.id` instead of the auth link column — it had ' +
+      'been rendering its full card grid with every panel empty.\n' +
+      '\n' +
+      'Full-tree, not diff-scoped, deliberately: a diff-scoped run on a PR ' +
+      'touching no query files reports a legitimate zero, and that zero is ' +
+      'not evidence of anything.\n' +
+      '\n' +
+      'The baseline carries the 49 pre-existing pairs, each classified ' +
+      'against the LIVE schema rather than the generated types, because the ' +
+      'two disagree: 37 name a column absent from the database (real broken ' +
+      'queries in billing, payroll, invoices, WHS, compliance and VET, owned ' +
+      'by those lanes) and 12 exist live and mean src/types/supabase.ts is ' +
+      'stale. Keyed on `table.column`, never on file path — a path-keyed ' +
+      'allowlist in this estate has died loudly on rename and silently on ' +
+      'delete. The guard fails on a STALE entry as well as a new one, so ' +
+      'fixing a violation forces the baseline update into the same commit, ' +
+      'and fails on any `allowed` entry carrying no live-schema verdict.\n' +
+      '\n' +
+      'Demonstrated to FAIL three ways before being trusted to pass: new ' +
+      'violation (exit 1, names pair and file), stale baseline entry (exit ' +
+      '1), unclassified suppression (exit 1). `--self-test` runs 12 cases in ' +
+      'CI ahead of the scan, including the three false positives the first ' +
+      'draft raised against CORRECT code — embedded-resource filter paths, ' +
+      'embed ordering, and JSON path operators.',
+    evidence:
+      '"lint-postgrest-columns: 1973 source file(s) scanned, 325 table(s) ' +
+      'read from generated types, 937 .from() chain(s) walked, 2250 literal ' +
+      'column reference(s) resolved, 49 distinct unresolved table.column ' +
+      'pair(s) across 59 reference(s)." then "baseline: 49 known pair(s) (37 ' +
+      'absent from the live schema, 12 stale generated types); 0 new, 0 ' +
+      'stale."',
   },
   {
     id: 'crm7-lint-migrations-revoke-anon',
@@ -636,6 +873,46 @@ export const GUARDS = [
       'crm7 checkout has no node_modules installed (no `pnpm install` was ' +
       'run — out of scope for a read-mostly survey). Same reason applies ' +
       'to every submodule copy of this script (braden, throughput, R80.4).',
+  },
+  {
+    id: 'crm7-check-unscoped-select-selftest',
+    label: 'Unscoped-SELECT policy class — classifier self-test (crm7, crm7#1730)',
+    repo: 'crm7',
+    command: ['node', 'scripts/check-unscoped-select-policies.mjs', '--self-test'],
+    ciWorkflow: 'crm7/.github/workflows/db-lint.yml',
+    mode: 'run',
+    notes:
+      'crm7#1730 found the "scoped writes, open SELECT" class by running a sweep BY ' +
+      'HAND, once, on 2026-08-14. The query lived in a migration header comment and ' +
+      'nowhere else, so nothing re-ran it. This is that sweep wired as a guard. ' +
+      'ORDERING: this entry lands with the crm7-side PR that adds the script; until ' +
+      "the parent's crm7 submodule pointer advances past it, the watcher reports " +
+      'NOT_EVALUATED (node exits 1 on a missing file), which is not a hard failure — ' +
+      'it self-heals into PASS on the pointer bump.',
+    evidence:
+      '"[unscoped-select-sweep] self-test OK (12 cases, 6 of them asserting the gate ' +
+      'FAILS), 9 reviewed allowlist entries, 8 scope tokens."',
+  },
+  {
+    id: 'crm7-check-unscoped-select-live',
+    label: 'Unscoped-SELECT policy class vs replayed schema (crm7, crm7#1730)',
+    repo: 'crm7',
+    command: null,
+    ciWorkflow: 'crm7/.github/workflows/db-lint.yml',
+    mode: 'skip',
+    skipReason:
+      'Needs DATABASE_URL / SUPABASE_DB_URL. Reconstructing the final policy set from ' +
+      '~600 migration files needs a SQL interpreter rather than a parser (the same ' +
+      "conclusion prod-rls-policy-drift-audit.yml reached), so it reads pg_policies " +
+      "from a real database — in CI, the one db-lint.yml's report-catalog-drift job " +
+      'already builds by replaying the baseline plus every post-baseline migration. ' +
+      'GOOD CITIZEN while skipped: run with no credentials it REFUSES with exit 2 — ' +
+      '"DATABASE_URL (or SUPABASE_DB_URL) is required — this gate reads pg_policies ' +
+      'from a real database and will not guess... A check that passes when it could ' +
+      'not look is the defect it exists to catch." Verified by hand against a local ' +
+      'Postgres 17 fixture on 2026-08-17: exit 0 on a compliant schema, exit 1 with ' +
+      '::error:: on each of the three fail modes (new table in the class, allowlist ' +
+      'entry that left the class, allowlist entry whose table was dropped).',
   },
 
   // ---------------------------------------------------------------------

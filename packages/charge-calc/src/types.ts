@@ -223,6 +223,18 @@ export interface CalcConfig {
    *  (annual leave, sick leave, public holidays) are zeroed and the
    *  loading is applied to the hourly wage base instead. */
   casualLoading?: number;
+  /**
+   * Modern award code (e.g. "MA000020") this `penalties` table was sourced
+   * from — required to resolve how a CASUAL's penalty/overtime rows convert
+   * (additive percentage points vs multiplicative on the loaded rate; see
+   * `awards/casual-penalty-convention.ts`). Only consulted when
+   * `casualLoading` is defined. Defaults to "MA000020" when a casual
+   * calculation omits it, matching the sector this package was built for
+   * (GTO/labour-hire, Building & Construction) — never silently assume a
+   * DIFFERENT award's convention applies just because a code was supplied
+   * that this module has not verified; see `CasualPenaltyConventionUnmodelled`.
+   */
+  awardCode?: string;
 
   // On-costs (as decimals, e.g. 0.12 for 12%)
   superRate: number;
@@ -367,6 +379,17 @@ export interface CalcResult {
    */
   ratesByPayItemGroupId: Record<string, RateResult>;
   ordinaryRateKey: string;
+  /**
+   * One entry per casual penalty/overtime row that was REFUSED because no
+   * verified casual-conversion convention exists for this (awardCode,
+   * category) pair — see `CasualPenaltyConventionUnmodelled` in
+   * `awards/casual-penalty-convention.ts`. A refused row has NO entry in
+   * `rates`/`ratesByPayItemGroupId` — never a wrong, silently-compounded
+   * number. Always empty for a non-casual calculation (`casualLoading`
+   * undefined) or when every configured penalty row's award/category has
+   * been verified.
+   */
+  casualPenaltyViolations: string[];
 }
 
 // ─── Superannuation schedule ───

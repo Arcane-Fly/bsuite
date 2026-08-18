@@ -1,0 +1,102 @@
+{
+  "_doc": "Banked counts of react-hooks/exhaustive-deps and react-hooks/set-state-in-effect SUPPRESSIONS. Written by scripts/check-hook-suppression-ratchet.mjs --update. The ratchet fails on any rise AND on any unbanked fall — see that script's header for why an error-count lint baseline is structurally unable to record this class.",
+  "rules": [
+    "react-hooks/exhaustive-deps",
+    "react-hooks/set-state-in-effect"
+  ],
+  "scopes": {
+    ".": {
+      "_note": "packages/ only — the parent configures NO react-hooks rules, so these 7 are suppressions of a rule nothing in this repo switches on. They still matter: these are PUBLISHED packages (@bsuite/data-grid 5, @bsuite/page-builder 1, @bsuite/schema-registry 1) and the suppression comment ships in the tarball, where each consumer app's own lint does enforce the rule. 4 of the 5 data-grid ones are in DataGrid.tsx.",
+      "inline": {
+        "react-hooks/exhaustive-deps": 8,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configScoped": {
+        "react-hooks/exhaustive-deps": 0,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configGlobal": [],
+      "blanket": 0
+    },
+    "crm7": {
+      "_note": "The estate's largest holding, and the one whose real size was never visible: 51 inline exhaustive-deps comments spread thinly over src/pages (no file above 2), PLUS 92 file-level suppressions declared in eslint.config.js — EXHAUSTIVE_DEPS_FILES (4) and SET_STATE_IN_EFFECT_FILES (88). NOTE: that config's own header comment says 'set-state-in-effect (80 files)'. The array holds 88. The prose register drifted 8 behind the array it describes, which is precisely why this ratchet counts the array and not the comment. Triage for the 92 is in crm7/eslint.config.js lines 70-150 and bsuite#215.",
+      "inline": {
+        "react-hooks/exhaustive-deps": 51,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configScoped": {
+        "react-hooks/exhaustive-deps": 4,
+        "react-hooks/set-state-in-effect": 88
+      },
+      "configGlobal": [],
+      "blanket": 0
+    },
+    "conduit": {
+      "_note": "4 inline exhaustive-deps, and — far more significant — a repository-wide `'react-hooks/set-state-in-effect': 'off'` at eslint.config.mjs:117 in a config object with no `files:` key. That is not 1 suppression, it is an unbounded licence over all 424 source files, and it is the single highest-value item in this baseline to retire. Scoping it to a `files:` list would convert it into a countable, shrinkable number.",
+      "inline": {
+        "react-hooks/exhaustive-deps": 4,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configScoped": {
+        "react-hooks/exhaustive-deps": 0,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configGlobal": [
+        "react-hooks/set-state-in-effect"
+      ],
+      "blanket": 0
+    },
+    "business-suite-unified": {
+      "_note": "Evenly split 3/3. The set-state-in-effect three are magicui vendored animation components (animated-grid-pattern, typing-animation) plus platform/PageEditorLauncher; the typing-animation one is a `/* eslint-disable */.../* eslint-enable */` block pair, counted once at the disable. BSU sets set-state-in-effect to 'error' repo-wide, so these are genuine exceptions against an armed rule.",
+      "inline": {
+        "react-hooks/exhaustive-deps": 3,
+        "react-hooks/set-state-in-effect": 3
+      },
+      "configScoped": {
+        "react-hooks/exhaustive-deps": 0,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configGlobal": [],
+      "blanket": 0
+    },
+    "braden": {
+      "_note": "4 inline exhaustive-deps across src/hooks (2), src/components/magicui (1), src/components/content/hooks (1). set-state-in-effect is 'error' repo-wide with zero suppressions — the cleanest scope with the rule actually armed.",
+      "inline": {
+        "react-hooks/exhaustive-deps": 4,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configScoped": {
+        "react-hooks/exhaustive-deps": 0,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configGlobal": [],
+      "blanket": 0
+    },
+    "throughput": {
+      "_note": "24 set-state-in-effect + 1 exhaustive-deps, every one carrying a `-- reason` suffix (mostly 'bootstrap async fetch on mount' and 'sync prop->state'). eslint.config.js:118 claims 'All set-state-in-effect findings resolved via real refactors' immediately above setting the rule to 'error' — 24 inline suppressions say otherwise. The reasons are honest and several are legitimate; the claim above them is not.",
+      "inline": {
+        "react-hooks/exhaustive-deps": 1,
+        "react-hooks/set-state-in-effect": 24
+      },
+      "configScoped": {
+        "react-hooks/exhaustive-deps": 0,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configGlobal": [],
+      "blanket": 0
+    },
+    "R80.4": {
+      "_note": "Zero, and the zero is UNENFORCED, not clean: R80.4/eslint.config.mjs configures no react-hooks rules at all across 11 .tsx files. Nothing here is switched on to suppress. Arming the rules here is the follow-up that would make this number mean something; until then, treat it as unmeasured rather than as evidence.",
+      "inline": {
+        "react-hooks/exhaustive-deps": 0,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configScoped": {
+        "react-hooks/exhaustive-deps": 0,
+        "react-hooks/set-state-in-effect": 0
+      },
+      "configGlobal": [],
+      "blanket": 0
+    }
+  }
+}

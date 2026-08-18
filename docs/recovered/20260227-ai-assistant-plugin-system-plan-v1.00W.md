@@ -1,3 +1,21 @@
+<!-- G5-VERDICT-BANNER -->
+> **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
+> [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
+> The original document is unchanged below this banner.
+>
+> # ✅ VERDICT: DELIVERED
+>
+> Both halves — the in-app AI assistant and the plugin architecture — are live in CRM7.
+>
+> **Evidence:** `crm7/src/lib/ai/plugins/plugin-registry.ts`, `crm7/src/lib/ai/plugins/index.ts`,
+> and a working first plugin at `crm7/src/lib/ai/plugins/xero/xero-plugin.ts`. Assistant UI at
+> `crm7/src/components/ai/` (`AIAssistant.tsx`, `AICommandPalette.tsx`, `AIFloatingButton.tsx`,
+> `AIHeader.tsx`, `AIInputArea.tsx`), with integration tests alongside.
+>
+> **Marker defect:** still flagged `W` (Working), which reads as in-flight.
+
+---
+
 # AI Assistant + Plugin System Implementation Plan
 
 **Version:** 1.00W

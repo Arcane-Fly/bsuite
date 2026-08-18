@@ -21,6 +21,21 @@ dashboard_protocol: FF-DASHBOARD-20260508 (§10 of parent CLAUDE.md applies — 
 
 # Universal Canvas Capability — Implementation Plan v1.00W
 
+> ## ⚠ SUPERSEDED — 2026-08-17
+>
+> **Shipped.** The universal-canvas capability this plan specifies was delivered as
+> **`@bsuite/page-builder`**, published `0.9.0` and consumed by all five apps
+> (BSU, Braden, Conduit, CRM7, Throughput at `^0.9.0` — verified 2026-08-17 via `npm view` and each
+> submodule's `package.json`).
+>
+> The plan header still reads *"not yet executed"*. That was true when written and is not true now.
+>
+> **Do not re-implement from this document.** For how the shipped grid actually behaves — the
+> per-card registration pattern, `autoHeight`, `layoutVersion` invalidation and the resize
+> regressions fixed along the way — read `packages/page-builder/` and the `bsuite-page-grid-layout`
+> skill. Retained for its red-team amendments, which record *why* the shipped design is what it is.
+
+
 ## Why this plan exists (operator brief)
 
 The operator has flagged the same class of complaint **~50 times**: pages that should be customisable
@@ -713,7 +728,7 @@ operator is informed with a self-report under §9.3 — never rationalised close
 - Master orchestration discipline: `~/.claude/skills/master-orchestration/SKILL.md`
 - Self-validation FF: `FF-SELF-VALIDATION-20260507` (every app's CLAUDE.md §9)
 - Dashboard FF: `FF-DASHBOARD-20260508` (parent CLAUDE.md §10)
-- DRY one-shot doctrine: `/home/braden/Desktop/Dev/bsuite/docs/20260227-dry-one-shot-architecture-v1.02A.md`
+- DRY one-shot doctrine: `/home/braden/Desktop/Dev/bsuite/docs/20260227-dry-one-shot-architecture-v1.04A.md`
 - D2C theme spec: `/home/braden/Desktop/Dev/bsuite/docs/20260228-d2c-theme-specification-v1.00A.md`
 - Auth canonical: `/home/braden/Desktop/Dev/bsuite/AUTH_CANONICAL.md`
 - Shared packages rule: parent CLAUDE.md §Shared Packages (especially rule 7 — lockfile gen outside tree)
