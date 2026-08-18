@@ -199,7 +199,32 @@ const SIGNALS = [
       if (!file.endsWith('package.json')) return null;
       if (!line.includes('@bsuite/')) return null;
       // Literal-after-key check: the line has `"@bsuite/...": "workspace:` or `"..." "file:`.
-      if (line.includes('"workspace:')) return '@bsuite/* uses workspace: — must be caret npm range';
+
+      // THE RULE POLICES CONSUMERS, AND UNTIL NOW IT DID NOT SAY SO IN CODE.
+      // Its own headline is "@bsuite/* CONSUMERS must use caret npm ranges",
+      // and the reason is Vercel: an app deployed from a submodule cannot
+      // resolve `workspace:` because there is no workspace at its build root.
+      // `packages/*` are the OTHER side of that relationship — workspace
+      // MEMBERS, published to npm, never deployed to Vercel — and for them
+      // `workspace:^` is the correct and required idiom, because pnpm rewrites
+      // it to a real range at pack time.
+      //
+      // MEASURED, not assumed. Unpacking the published @bsuite/ui@1.2.0 tarball
+      // shows real npm ranges and no `workspace:` specifier anywhere, while the
+      // source declares `"@bsuite/theme": "workspace:^"` in both
+      // peerDependencies and devDependencies. And every one of the four hits
+      // this signal produced sat in packages/*/package.json; the six consuming
+      // apps carried ZERO. So the guard was failing PRs over the one place the
+      // idiom is correct, and had nothing to say about the place it is not.
+      //
+      // `file:` stays flagged everywhere, including here — a relative path is
+      // wrong in a published package too, since it cannot survive packing.
+      const isWorkspaceMember = /(^|\/)packages\/[^/]+\/package\.json$/.test(file);
+      if (line.includes('"workspace:')) {
+        return isWorkspaceMember
+          ? null
+          : '@bsuite/* uses workspace: — must be caret npm range';
+      }
       if (line.includes('"file:')) return '@bsuite/* uses file: — must be caret npm range';
       return null;
     },
@@ -1020,6 +1045,15 @@ function selfTest() {
       expect: (hits) => hits.some((h) => h.signal === 'WORKSPACE') },
     { name: 'WORKSPACE — file:../packages flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'package.json': ['    "@bsuite/auth": "file:../packages/auth",'] },
+      expect: (hits) => hits.some((h) => h.signal === 'WORKSPACE') },
+    { name: 'WORKSPACE — workspace:^ in a workspace MEMBER is NOT flagged', framework: 'vite-react', repoName: 'bsuite',
+      addedByFile: { 'packages/ui/package.json': ['    "@bsuite/theme": "workspace:^",'] },
+      expect: (hits) => !hits.some((h) => h.signal === 'WORKSPACE') },
+    { name: 'WORKSPACE — a CONSUMER app still flagged after the member exemption', framework: 'vite-react', repoName: 'crm7',
+      addedByFile: { 'package.json': ['    "@bsuite/theme": "workspace:^",'] },
+      expect: (hits) => hits.some((h) => h.signal === 'WORKSPACE') },
+    { name: 'WORKSPACE — file: in a workspace MEMBER is STILL flagged', framework: 'vite-react', repoName: 'bsuite',
+      addedByFile: { 'packages/ui/package.json': ['    "@bsuite/theme": "file:../theme",'] },
       expect: (hits) => hits.some((h) => h.signal === 'WORKSPACE') },
     { name: 'NODE-PIN-DRIFT — .node-version != 24.x flagged (bare "22")', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { '.node-version': ['22'] },
