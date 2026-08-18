@@ -21,6 +21,18 @@ on:
   pull_request:
     branches: [main, master, development]
 
+permissions:
+  contents: read
+  pull-requests: write
+  # `issues: write` is REQUIRED, not belt-and-braces: github.rest.issues.* are
+  # `issues` endpoints even when the target is a pull request, so the issues
+  # scope governs them and `pull-requests: write` does NOT cover them.
+  # This workflow previously declared no permissions at all and inherited the
+  # repository default, which is `read` — so its PR comment could never be
+  # written. Confirm the default with:
+  #   gh api repos/GaryOcean428/<repo>/actions/permissions/workflow
+  issues: write
+
 jobs:
   dom-layout-lint:
     name: DOM Layout Invariants
@@ -215,6 +227,15 @@ jobs:
           fi
 
       - name: Comment on PR
+        # DECOUPLED FROM THE VERDICT ON PURPOSE. This posts a convenience
+        # comment; it is NOT the gate. A failure here used to fail the whole
+        # job, so a GitHub outage or a missing token scope was reported to
+        # every reader as though the CHECK ITSELF had found a problem.
+        # Observed 2026-08-18: this job went red with
+        #   'No server is currently available to service your request'
+        # at the comment step, while the lint had already passed.
+        # A gate must never confound its instrument with its measurement.
+        continue-on-error: true
         if: always() && github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:

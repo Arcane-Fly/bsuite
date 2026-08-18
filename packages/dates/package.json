@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/dates",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Universal date and time localisation for BSuite. Defaults to en-AU (Australian DD/MM/YYYY), with a per-user toggle to en-US. Exposes pure formatters and a React LocaleProvider/useLocale.",
   "type": "module",
   "license": "UNLICENSED",

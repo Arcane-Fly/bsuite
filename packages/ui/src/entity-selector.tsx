@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * EntitySelector<T>
  *
@@ -193,6 +195,23 @@ export interface EntitySelectorProps<T extends Record<string, unknown>> {
   debounceMs?: number
   /** Max results to fetch */
   limit?: number
+  /**
+   * Column used to ORDER the search results before `limit` truncates them.
+   *
+   * A `.limit()` with no `.order()` returns an ARBITRARY subset of the matches —
+   * Postgres hands back whatever the scan reaches first. Once a table holds more
+   * rows matching a search term than `limit`, the row the user is looking for
+   * (typically the one they just created) silently falls outside the window and
+   * the picker claims it does not exist. Measured in crm7: 366 clients matched
+   * `%Acme%` against a limit of 50.
+   *
+   * Defaults to `created_at` descending so the newest match is always offered.
+   * A table WITHOUT that column must pass its own — but an unknown column fails
+   * SOFT (see fetchItems), because `table` is dynamic at some call sites.
+   */
+  orderBy?: string
+  /** Sort direction for {@link orderBy}. Defaults to descending (newest first). */
+  orderAscending?: boolean
   /** Allow clearing the selection */
   clearable?: boolean
   /** Additional className for the trigger button */
@@ -293,6 +312,8 @@ export function EntitySelector<T extends Record<string, unknown>>({
   minChars = 0,
   debounceMs = 250,
   limit = 50,
+  orderBy = 'created_at',
+  orderAscending = false,
   clearable = true,
   className,
   selectedLabel,
@@ -412,29 +433,64 @@ export function EntitySelector<T extends Record<string, unknown>>({
         // consume and return it without callers needing `as` casts. The
         // single widen-cast here replaces the casts every inner selector
         // would otherwise need.
-        let q = fromTable().select(selectColumns) as unknown as EntitySelectorQuery
+        // A Supabase query builder is CONSUMED once awaited, so the query is built
+        // by a factory: the ordered attempt and the unordered fallback below each
+        // need their own instance.
+        const build = (withOrder: boolean) => {
+          // Supabase `.select()` returns a narrow `PostgrestTransformBuilder`
+          // subtype carrying the concrete row schema. We widen it to the
+          // schema-agnostic {@link EntitySelectorQuery} alias so the public
+          // `filterFn` prop type (unparameterised by design) can consume and
+          // return it without callers needing `as` casts.
+          let q = fromTable().select(selectColumns) as unknown as EntitySelectorQuery
 
-        // Apply custom filters
-        if (filterFn) {
-          q = filterFn(q)
+          // Apply custom filters
+          if (filterFn) {
+            q = filterFn(q)
+          }
+
+          // Apply search if term is long enough
+          if (searchTerm.length >= Math.max(minChars, 1)) {
+            const escaped = searchTerm
+              .replace(/\\/g, '\\\\')
+              .replace(/"/g, '\\"')
+              .replace(/,/g, '\\,')
+              .replace(/\(/g, '\\(')
+              .replace(/\)/g, '\\)')
+            const term = `%${escaped}%`
+            const orConditions = searchColumns.map((col) => `${col}.ilike.${term}`).join(',')
+            q = q.or(orConditions)
+          }
+
+          // ORDER BEFORE LIMIT. Without this the picker returns an arbitrary
+          // `limit`-sized slice of the matches, so a freshly created row is
+          // routinely absent from its own results.
+          if (withOrder && orderBy) {
+            q = q.order(orderBy, { ascending: orderAscending })
+          }
+          return q.limit(limit)
         }
 
-        // Apply search if term is long enough
-        if (searchTerm.length >= Math.max(minChars, 1)) {
-          const escaped = searchTerm
-            .replace(/\\/g, '\\\\')
-            .replace(/"/g, '\\"')
-            .replace(/,/g, '\\,')
-            .replace(/\(/g, '\\(')
-            .replace(/\)/g, '\\)')
-          const term = `%${escaped}%`
-          const orConditions = searchColumns.map((col) => `${col}.ilike.${term}`).join(',')
-          q = q.or(orConditions)
+        let { data, error: queryError } = await build(true)
+
+        // Fail SOFT on an unknown order column (Postgres 42703 / PostgREST
+        // PGRST204). `table` is dynamic at some call sites — a page-builder
+        // relationship widget or an admin data browser passes a table name from a
+        // registry — so the default `created_at` is not guaranteed to exist.
+        // Degrading to the previous unordered behaviour keeps those callers
+        // working; the ordering is an improvement, not a precondition.
+        if (queryError && orderBy) {
+          const code = (queryError as { code?: string }).code
+          const msg = queryError.message ?? ''
+          if (code === '42703' || code === 'PGRST204' || msg.includes(orderBy)) {
+            logger.warn(
+              `EntitySelector(${table}): order column "${orderBy}" is not present; ` +
+                `retrying UNORDERED. Results may omit recently created rows — pass an ` +
+                `explicit orderBy for this table to restore ordering.`,
+            )
+            ;({ data, error: queryError } = await build(false))
+          }
         }
-
-        q = q.limit(limit)
-
-        const { data, error: queryError } = await q
 
         if (queryError) {
           logger.warn(`EntitySelector(${table}): search error`, queryError.message)

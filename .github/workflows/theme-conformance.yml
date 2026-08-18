@@ -57,7 +57,15 @@ on:
       - 'scripts/audit-applied-tokens.mjs'
       - 'scripts/audit-ui-pages.mjs'
       - 'scripts/audit-legibility.mjs'
+      # The audits' shared helpers. Without this line a change to
+      # scripts/lib/settled-or-skip.mjs — the guard that decides whether a route
+      # was measured at all — would not re-run the gate that consumes it, and
+      # the file would be edited under no test. `.mjs` is not covered by the
+      # `**/*.js` glob above, which is why every script here is named
+      # explicitly rather than matched.
+      - 'scripts/lib/**'
       - '.github/theme-c1-baseline.txt'
+      - '.github/theme-c2-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
       - '.github/workflows/theme-conformance.yml'
 
@@ -153,11 +161,13 @@ jobs:
               seen = 0
               for (i = 1; i <= NF; i++) if ($i == "/") { seen++; if (seen == want) { print $(i-1); break } }
             }' /tmp/audit.txt | paste -sd+ | bc; }
-          total=$(col 1); c3=$(col 3); c4=$(col 4)
+          total=$(col 1); c2=$(col 2); c3=$(col 3); c4=$(col 4)
           echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "c2=$c2" >> "$GITHUB_OUTPUT"
           echo "c3=$c3" >> "$GITHUB_OUTPUT"
           echo "c4=$c4" >> "$GITHUB_OUTPUT"
           echo "C1 pure-endpoint total: $total"
+          echo "C2 non-oklch total: $c2"
           echo "C3 palette-bypass total: $c3"
           echo "C4 wrong-destructive total: $c4"
 
@@ -227,6 +237,122 @@ jobs:
             echo "The baseline must EQUAL what this job measures at the pinned gitlink SHAs."
             echo "Do not measure in your working copy — the submodules there are at their branch"
             echo "tips, which is a different tree and has given a different number before."
+            exit 1
+          fi
+          echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
+
+      # ── C2 NON-OKLCH COLOUR FORMATS (ledger TH-1) ────────────────────────
+      #
+      # C2 WAS MEASURED EVERY RUN AND READ BY NOBODY, WHICH IS THE ESTATE'S
+      # SIGNATURE FAILURE AND NOT A NEW ONE.
+      #
+      # The comment above the `col()` helper already records what happens when a
+      # column the scanner prints is never compared: "Reading only the FIRST
+      # pair is how a live purple --destructive in two apps stayed green — the
+      # scanner detected it in C4 every run and nothing ever read that column."
+      # C4 got a gate after that. C2 did not, and it has been in exactly the
+      # same state ever since: printed in the table, visible in the log, bound
+      # to nothing.
+      #
+      # So the whole class was free to grow without a single run going red. The
+      # register measured 235 estate-wide, a triage pass on 2026-08-17 put the
+      # real figure at 143, and a re-measurement at these pinned gitlink SHAs
+      # puts it at 118. Three different numbers for one class in one week is
+      # what "no gate" looks like from the outside — nobody was wrong, there was
+      # simply nothing holding the figure still between measurements.
+      #
+      # WHY A RATCHET AND NOT A HARD ZERO
+      # A hex literal is CORRECT in the places FORMAT_EXCEPTION_RE already
+      # names — email HTML (clients support neither CSS custom properties nor
+      # oklch), PDF and canvas renderers, manifests — and those land in the
+      # EXEMPT column, not this one. What is left in the REAL column is
+      # dominated by two shapes that are arguable rather than plainly wrong:
+      # branding and colour-picker surfaces whose subject matter IS a colour,
+      # and vendored magicui components (magic-card, meteors, bento-grid)
+      # carried verbatim in three apps. Demanding zero today would force those
+      # to be rewritten or path-exempted in the same breath as the gate lands,
+      # and a path-shaped exemption is the thing this file spends forty lines
+      # arguing against. Bank the number, then bring it down deliberately.
+      #
+      # 118 = crm7 6 + conduit 27 + business-suite-unified 40 + R80.4 1 +
+      #       throughput 0 + packages 0 + braden 44.
+      #
+      # MEASURED AT THE PINNED GITLINK SHAs, not in a working copy. Reproduced
+      # locally against run 32089259631's table, row for row, after adding
+      # `--exclude-dir=.lighthouseci` to the scanner — without that exclusion a
+      # working copy that has ever run Lighthouse reports 1369 for
+      # business-suite-unified instead of 40, because .lighthouseci/lhr-*.html
+      # inlines the whole audited page. That fix ships in this same change.
+      #
+      # IT DROPS TO 98 WHEN PR #2103 ADVANCES THE POINTERS, and C1 drops 3 -> 2
+      # in the same move. Both numbers were measured, not guessed: each
+      # submodule was checked out at the SHA that PR sets and the scanner re-run.
+      #
+      #                          C1        C2
+      #   crm7      e8a587c7      1 -> 0    6 -> 0
+      #   conduit   7c6c60e4      1 -> 1   27 -> 25
+      #   BSU       5675ac64      1 -> 1   40 -> 30
+      #   braden    0841ad12      0 -> 0   44 -> 42
+      #   R80.4 / throughput / packages   unchanged
+      #   ─────────────────────────────────────────
+      #   TOTAL                   3 -> 2  118 -> 98
+      #
+      # So whoever merges the pointer advance writes `2` into
+      # .github/theme-c1-baseline.txt and `98` into
+      # .github/theme-c2-baseline.txt IN THAT SAME PR. The gate will otherwise
+      # fail on the FELL arm, which is the ratchet working and not a surprise.
+      - name: Compare C2 against the committed baseline
+        shell: bash
+        env:
+          C2: ${{ steps.audit.outputs.c2 }}
+        run: |
+          set -uo pipefail
+          baseline=$(cat .github/theme-c2-baseline.txt 2>/dev/null || echo 999)
+          total="$C2"
+          case "$total" in ''|*[!0-9]*) echo "::error::audit produced a non-numeric C2 total: '$total'"; exit 1 ;; esac
+          echo "baseline=$baseline  current=$total"
+
+          if [ "$total" -gt "$baseline" ]; then
+            echo "::error::Non-OKLCH colour count rose from $baseline to $total."
+            echo ""
+            echo "Authored source states colour in OKLCH, through a role token."
+            echo "A hex, rgb() or hsl() literal in a component is a colour nobody"
+            echo "can find again and nothing can flip for dark mode."
+            echo ""
+            echo "  bg-[#7c3aed]      -> bg-primary"
+            echo "  color: #f8f9fa    -> color: var(--role-text-primary)"
+            echo "  rgba(0,0,0,.5)    -> color-mix(in oklch, var(--overlay) 50%, transparent)"
+            echo "  hsl(217 91% 60%)  -> var(--role-accent)"
+            echo ""
+            echo "If the ENGINE cannot take a token — email HTML, a PDF or canvas"
+            echo "renderer, a manifest — the file belongs in FORMAT_EXCEPTION_RE in"
+            echo "scripts/audit-d2c-theme.sh, which files it as EXEMPT rather than"
+            echo "hiding it. A format exemption never licenses a pure endpoint: C1"
+            echo "is scored against the naming exemptions only."
+            echo ""
+            echo "The offending files:"
+            scripts/audit-d2c-theme.sh --files C2 || true
+            exit 1
+          fi
+
+          # Same equality semantics as C1, for the reason recorded there: a
+          # ratchet that tolerates slack between the committed number and the
+          # measured one is a ceiling with the ceiling written down wrong. That
+          # drift is not hypothetical here — it is how C1 sat at 7 against a
+          # committed 11 while four new pure endpoints would have passed
+          # unremarked (bsuite D-87).
+          if [ "$total" -lt "$baseline" ]; then
+            echo "::error::Non-OKLCH count FELL from $baseline to $total — bank it."
+            echo ""
+            echo "Someone removed $(( baseline - total )) literal colour(s) without lowering"
+            echo "the ratchet, so the gate would let them come back unnoticed."
+            echo ""
+            echo "Fix, in this PR:"
+            echo "  echo $total > .github/theme-c2-baseline.txt"
+            echo ""
+            echo "If you just advanced the submodule pointers this is expected: the"
+            echo "count is measured at the PINNED gitlink SHAs, so it moves the moment"
+            echo "a pointer does. Do not measure in your working copy."
             exit 1
           fi
           echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
@@ -350,6 +476,43 @@ jobs:
           fi
           echo "OK: $total == $baseline (measured at the pinned gitlink SHAs)"
 
+      # C3 is a HARD ZERO, and it can be one because it already measures zero.
+      #
+      # This step exists for the same reason the C2 one above does: `c3` was
+      # computed by the audit step, written to $GITHUB_OUTPUT, printed in the
+      # log — and never read by any step in this file. A number nobody compares
+      # is decoration. The estate has now shipped that shape three times (C4
+      # before it was gated, C2 until the step above, and this).
+      #
+      # Zero is the right threshold rather than a ratchet because a C3 hit is a
+      # hardcoded Tailwind palette class (`bg-blue-500`) or an arbitrary literal
+      # (`text-[#7c3aed]`), and neither has a legitimate form: the arbitrary-value
+      # predicate deliberately does NOT match `bg-[hsl(var(--token))]`, which is
+      # the correct way to reach a token with no utility bridged for it. The 16
+      # hits in packages/ are already filed EXEMPT by name, so the real column is
+      # 0 today and any move off it is a genuine bypass.
+      - name: No hardcoded palette or arbitrary colour literals
+        shell: bash
+        env:
+          C3: ${{ steps.audit.outputs.c3 }}
+        run: |
+          set -uo pipefail
+          case "$C3" in ''|*[!0-9]*) echo "::error::non-numeric C3: '$C3'"; exit 1 ;; esac
+          if [ "$C3" -gt 0 ]; then
+            echo "::error::$C3 site(s) bypass the token layer with a palette class or a colour literal."
+            echo ""
+            echo "  bg-blue-500     -> bg-primary"
+            echo "  text-slate-400  -> text-muted-foreground"
+            echo "  border-red-600  -> border-destructive"
+            echo "  bg-[#7c3aed]    -> bg-primary"
+            echo ""
+            echo "Reaching a token that has no utility bridged for it is NOT a bypass"
+            echo "and is not counted: bg-[hsl(var(--sidebar-background))] passes."
+            scripts/audit-d2c-theme.sh --files C3 || true
+            exit 1
+          fi
+          echo "OK: no token bypasses."
+
       # C4 is a HARD ZERO. A wrong destructive colour is not debt to be
       # ratcheted down — it is the one semantic the contract says must be
       # maximally separated from primary, and getting it wrong puts the
@@ -434,7 +597,33 @@ jobs:
 
   per-page-authenticated:
     name: Per-page checks on SIGNED-IN routes
-    if: github.event_name != 'pull_request'
+    # RUNS ON SAME-REPO PULL REQUESTS TOO (V-9, 2026-08-18).
+    #
+    # It used to be `github.event_name != 'pull_request'`, copied from the
+    # `esm-imports` job below — but the reason stated there does not apply
+    # here. esm-imports is excluded from PRs because it needs a registry
+    # install and `minimumReleaseAge` rejects our own packages for ~24h after
+    # a publish, so it would fail on a clock. THIS job installs crm7 with
+    # `--frozen-lockfile` and walks a deployed origin; it has no such window.
+    #
+    # The cost of the copied condition was that the only gate in the estate
+    # that looks at a SIGNED-IN page ran weekly and on demand, and therefore
+    # gated nothing at merge. Measured 2026-08-18: run 32089259631 (the latest
+    # PR run) reported this job "skipped", and the two dispatch runs that DID
+    # contain it (31996285742, 31996642828) both concluded `failure` on real
+    # defects — a 2.76:1 demo-banner string and two unnamed controls. Both had
+    # been merged past a green PR.
+    #
+    # FORK PRs ARE STILL EXCLUDED, and that exclusion is load-bearing rather
+    # than cautious: `secrets.*` are not exposed to a workflow triggered by a
+    # fork PR, so the four credentials would resolve EMPTY, the "Assert the
+    # E2E credentials resolved" step would fail, and a contributor's first PR
+    # would show a red required check they cannot fix. Skipping is the honest
+    # outcome there — an unmeasured route is missing coverage, and the
+    # scheduled run still covers it after merge.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -605,3 +794,121 @@ jobs:
       - name: Verify every published entry point actually imports
         shell: bash
         run: scripts/verify-esm-imports.sh
+
+  # ---------------------------------------------------------------------------
+  # REACHABILITY — a different question from parity and from armed-ness, and the
+  # only one of the three that would have caught the 17 pure whites sitting in
+  # crm7's customer-facing PDFs, ChargeRatePdfDocument.tsx among them (the
+  # document the quote signing page renders for a client to sign).
+  #
+  # The rule ran in that app the whole time, green, on every commit. It could
+  # not see them because the app's CORRECT convention for keeping PDF colours
+  # token-shaped puts every colour inside a call argument, and that was the one
+  # position the walker never visited:
+  #
+  #     { backgroundColor: 'oklch(1 0 0)' }             reported
+  #     { backgroundColor: pdfOklch('oklch(1 0 0)') }   NOT reported
+  #
+  # Nothing already in CI covers this. `sync-inline-eslint-rules --check` proves
+  # the six copies are BYTE-EQUAL to the source — six identically broken copies
+  # pass it. Each submodule's parity job proves the copy is ARMED, using a bare
+  # hex in a VariableDeclarator, which is the shallowest position the rule has —
+  # a copy that has lost the call-argument walk passes it unchanged. The rule's
+  # unit test runs the SOURCE only and never loads a copy.
+  # ---------------------------------------------------------------------------
+  colour-ban-reachability:
+    name: Pure white/black ban reaches through a converter
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout (with submodules — the six inline copies live there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.0'
+
+      # The probe imports eslint and typescript-eslint to actually EXECUTE each
+      # rule file. Non-frozen for the same reason the esm-imports job below
+      # gives: the lockfile mismatch is pre-existing, repo-wide, and cannot be
+      # fixed inside a theme change.
+      - name: Install
+        shell: bash
+        run: |
+          corepack enable
+          pnpm install --no-frozen-lockfile
+
+      # …AND THAT IS NOT ENOUGH, which is why this step exists.
+      #
+      # `pnpm install` above populates the workspace, but eslint is not a ROOT
+      # dependency — it belongs to packages/eslint-config and packages/dry-lint.
+      # pnpm's isolated node_modules therefore does not place it at the repo
+      # root, and the probe resolves `await import('eslint')` from ITS OWN
+      # directory (scripts/), walking up to the root and finding nothing:
+      #
+      #   FAIL: the probe could not run — ERR_MODULE_NOT_FOUND:
+      #   Cannot find package 'eslint' imported from scripts/check-colour-ban-…
+      #
+      # Note the probe REFUSED rather than passing — that is the design working.
+      # A gate that cannot load its subject must not report a pass, and this one
+      # says so out loud.
+      #
+      # Installed with npm --no-save --no-package-lock so the repo's manifest
+      # and the pnpm lockfile are both untouched; the packages land in the root
+      # node_modules, which is exactly where ESM will look. NODE_PATH is not an
+      # option here — ESM ignores it.
+      # NO EXTRA INSTALL STEP HERE, DELIBERATELY. The root package.json now
+      # DECLARES eslint and typescript-eslint as devDependencies, so the
+      # `pnpm install` above places them in the root node_modules — which is
+      # exactly where ESM looks when the probe resolves `await import('eslint')`
+      # by walking up from scripts/.
+      #
+      # An earlier fix installed them into a scratch prefix and symlinked them
+      # in. That worked, but it is now the WRONG mechanism and actively harmful
+      # next to the declaration: the symlink would shadow the pnpm-installed
+      # copy with whatever npm resolved separately, so the version the gate runs
+      # would stop matching the version the repo pins. One mechanism, declared
+      # in the manifest, is the whole point.
+      - name: Reachability probe self-test (positive control — must FAIL)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # ASSERT THE EXIT CODE EXACTLY — "non-zero" is not good enough.
+          #
+          # This step used to read `if node …; then fail; fi`, i.e. it accepted ANY
+          # non-zero exit as "the self-test failed as required". A self-test that
+          # CRASHES exits non-zero too. On 2026-08-17 that is exactly what happened:
+          # the parent root declares no eslint, `import 'eslint'` threw
+          # ERR_MODULE_NOT_FOUND, and this gate went green while certifying a probe
+          # that had never loaded a single rule file.
+          #
+          #   exit 0 -> the mutant survived. The probe cannot detect a disarmed rule.
+          #   exit 1 -> correct: the probe caught the mutation.
+          #   exit 2 -> the probe could not run. NOT a verdict, and NOT acceptable.
+          set +e
+          node scripts/check-colour-ban-reaches-converters.mjs --self-test
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "::error::--self-test PASSED. The probe does not detect a disarmed"
+               echo "argument walk, so its verdict below would mean nothing."
+               exit 1 ;;
+            1) echo "self-test exited 1 — the probe detected the disarmed rule, as required" ;;
+            2) echo "::error::--self-test could not RUN (exit 2). The probe never loaded its"
+               echo "subject, so neither this control nor the check below proves anything."
+               echo "Most likely cause: a dependency the probe imports is absent from this"
+               echo "install. Fix the environment; do not treat a crash as a passing control."
+               exit 1 ;;
+            *) echo "::error::--self-test exited $rc, which is not a defined outcome."
+               exit 1 ;;
+          esac
+
+      - name: The ban is reachable through a converter in every copy
+        shell: bash
+        run: node scripts/check-colour-ban-reaches-converters.mjs

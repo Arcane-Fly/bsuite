@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/ui",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -98,7 +98,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "peerDependencies": {
-    "@bsuite/theme": ">=0.7.0",
+    "@bsuite/theme": "workspace:^",
     "@supabase/postgrest-js": "^2",
     "react": "^18.3.0 || ^19.0.0",
     "react-dom": "^18.3.0 || ^19.0.0"
@@ -112,7 +112,7 @@
     }
   },
   "devDependencies": {
-    "@bsuite/theme": "^0.11.0",
+    "@bsuite/theme": "workspace:^",
     "@storybook/react-vite": "^10.5.8",
     "@supabase/postgrest-js": "^2.108.1",
     "@tailwindcss/vite": "^4.3.0",

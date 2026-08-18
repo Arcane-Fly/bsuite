@@ -1,0 +1,138 @@
+name: Advance submodule pointers
+
+# The parent records one commit per app (a "gitlink"). SIX workflows READ those
+# gitlinks and, until this one existed, NOTHING WROTE them — they moved only when
+# a human remembered.
+#
+# On 2026-08-18 that produced three separate "findings" in one night, each of
+# which was the stale pointer wearing an app's name:
+#
+#   own-package-freshness  "schema-builder ^1.3.0 is stale"  (apps were on 1.3.1)
+#   migration rehearsal    "FATAL: cannot diff R80.4 …DOES NOT EXIST ON THE REMOTE"
+#   shared-package-reach   "braden LOCKED OUT of theme 0.14.0" (braden declared ^0.14.0)
+#
+# Every guard was right about what it read. None was reading the app that ships.
+#
+# This does NOT push to `development` — that branch is protected with
+# enforce_admins on, and a pointer bump is a real change to what the estate
+# ships, so it belongs in a reviewable diff. It maintains ONE standing PR and
+# force-updates its branch, so repeated runs refresh that PR rather than
+# opening a new one each time.
+
+on:
+  schedule:
+    # Hourly. Fast enough that a stale pointer never survives a working session,
+    # slow enough not to churn the PR while a merge train is running.
+    - cron: '17 * * * *'
+  workflow_dispatch: {}
+  repository_dispatch:
+    # An app repo can notify the parent the moment its development moves, so the
+    # pointer is fresh in seconds rather than up to an hour.
+    types: [submodule-development-moved]
+
+permissions:
+  contents: write
+  pull-requests: write
+  # github.rest.issues.* are `issues` endpoints even against a PR, so the
+  # `issues` scope governs them; `pull-requests: write` does NOT cover them.
+  issues: write
+
+concurrency:
+  group: advance-submodule-pointers
+  cancel-in-progress: false
+
+jobs:
+  advance:
+    name: Advance submodule pointers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout parent (submodules as gitlinks, not contents)
+        uses: actions/checkout@v5
+        with:
+          ref: development
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: true
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      # The script needs each submodule to be a git repo it can fetch, but NOT
+      # a full recursive checkout — it only ever reads refs.
+      - name: Initialise submodule repos (refs only)
+        run: |
+          set -euo pipefail
+          git submodule init
+          git submodule update --depth 50 --single-branch || true
+
+      - name: Prove the checker can fail before trusting what it says
+        run: node scripts/advance-submodule-pointers.mjs --self-test
+
+      - name: Advance the pointers
+        id: advance
+        run: |
+          set -euo pipefail
+          node scripts/advance-submodule-pointers.mjs --write | tee /tmp/advance.md
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or refresh the standing PR
+        if: steps.advance.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BR=chore/auto-advance-submodule-pointers
+          git config user.name  'GaryOcean428'
+          git config user.email 'braden.lang77@gmail.com'
+          git checkout -B "$BR"
+
+          # Build the commit message in a FILE. Inlining a multi-line message with
+          # command substitution inside a YAML block scalar silently mangles the
+          # indentation and breaks the workflow parse.
+          {
+            echo "chore(submodules): advance pointers onto current development heads"
+            echo
+            cat /tmp/advance.md
+            echo
+            echo "Opened automatically: six workflows read these gitlinks and nothing"
+            echo "used to write them. See .github/workflows/advance-submodule-pointers.yml"
+            echo "for the three false findings that motivated it."
+          } > /tmp/commit-msg.txt
+
+          # Committed from the INDEX with no pathspec, deliberately:
+          # `git commit <pathspec>` re-reads those paths from the WORKING TREE and
+          # ignores the index. Submodule dirs here are shallow checkouts, so the
+          # pathspec form can commit nothing and report "working tree clean".
+          git commit -F /tmp/commit-msg.txt
+          git push -f origin "$BR"
+
+          if gh pr view "$BR" --json number >/dev/null 2>&1; then
+            echo "standing PR already open — its branch was force-updated"
+          else
+            {
+              echo "Maintained automatically by \`.github/workflows/advance-submodule-pointers.yml\`."
+              echo
+              echo '```'
+              cat /tmp/advance.md
+              echo '```'
+              echo
+              echo "Six workflows read these gitlinks; nothing wrote them, so they went stale"
+              echo "and three separate guards reported that staleness as an app defect."
+              echo
+              echo "**Forward only.** A pointer whose new commit is not a descendant of the"
+              echo "recorded one is REFUSED, not reset — a backward move silently reverts the"
+              echo "app for everything that reads the gitlink."
+            } > /tmp/pr-body.md
+            gh pr create --base development --head "$BR" \
+              --title "chore(submodules): advance pointers onto current development heads" \
+              --body-file /tmp/pr-body.md
+          fi
+
+      - name: Say so even when there is nothing to do
+        if: steps.advance.outputs.changed != 'true'
+        run: echo "All submodule pointers already match their development heads."

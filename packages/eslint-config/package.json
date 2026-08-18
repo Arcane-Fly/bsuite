@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/eslint-config",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Shared ESLint flat config for all BSuite projects",
   "type": "module",
   "main": "index.js",

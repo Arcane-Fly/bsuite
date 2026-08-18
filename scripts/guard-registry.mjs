@@ -290,6 +290,56 @@ export const GUARDS = [
       '"audit-oklch-lightness: self-test OK (10 cases, 8 of them asserting the gate FAILS)"',
   },
   {
+    // REACHABILITY, which is a different question from parity and from
+    // armed-ness, and the only one of the three that would have caught the 17
+    // pure whites in crm7's customer-facing PDFs (bsuite#1962).
+    //
+    //   sync-inline-eslint-rules --check     proves the six copies are BYTE-EQUAL
+    //                                        to the source. Six identically
+    //                                        broken copies pass it.
+    //   <submodule> eslint-rule-parity       proves ARMED, using `const c =
+    //                                        '#ff8800'` — a bare hex in a
+    //                                        VariableDeclarator, the shallowest
+    //                                        position the rule has. A copy that
+    //                                        has lost the call-argument walk
+    //                                        passes it unchanged.
+    //   the rule's unit test                 runs the SOURCE only, from
+    //                                        packages/. It never loads a copy.
+    //
+    // This one EXECUTES every copy over the four positions that have each hidden
+    // a real pure endpoint in this estate — call argument, nested call argument,
+    // assignment, expression-statement call — and positive-controls the harness
+    // per copy before grading it. `--self-test` mutates the argument walk out of
+    // every inline copy and asserts the guard goes red.
+    id: 'parent-colour-ban-reaches-converters',
+    label: 'Pure white/black ban is reachable through a converter (source + 6 inline copies)',
+    repo: '.',
+    command: ['node', 'scripts/check-colour-ban-reaches-converters.mjs'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"77 assertions executed — 7 colour-rule files x 11 fixtures (7 must-report ' +
+      'positions, 4 must-stay-silent)"; --self-test exits 1 with 36 failures',
+  },
+  {
+    // A RATCHET, not a hard gate: 25 documents in docs/recovered/ still need a
+    // verdict against code, and a gate that fails all of them on day one is
+    // permanently red — which is how the colour rule was disarmed the first
+    // time. The ceiling was measured after bannering the document-lifecycle
+    // chain and may only be lowered.
+    //
+    // Expect PASS at the ceiling. `--self-test` blinds the banner detector and
+    // asserts the count changes, so a constant masquerading as a measurement is
+    // caught.
+    id: 'parent-recovered-doc-verdicts',
+    label: 'Every docs/recovered/ document carries a verdict banner on its own face (ratchet)',
+    repo: '.',
+    command: ['node', 'scripts/check-recovered-doc-verdicts.mjs'],
+    ciWorkflow: '.github/workflows/doc-naming.yml',
+    mode: 'run',
+    evidence:
+      '"33 files examined in docs/recovered — 4 carry a verdict banner, 29 do not ' +
+      '(ceiling 29)"; --self-test exits 1',
     // The suppression counter. Every other lint ratchet in this estate counts
     // what SURVIVES the linter; this one counts what was switched off before
     // the linter ever spoke. R80.4/eslint-baseline.json is the worked example
@@ -379,6 +429,41 @@ export const GUARDS = [
       '`--inventory --require-authenticated 99` exits 1 with "only 6 ' +
       'authenticated route(s) declared, floor is 99"; and the sweep itself run ' +
       'as `--no-session` exits 1 with "6 route(s) UNAUDITED" per auditor.',
+    // The parser that decides WHICH ISSUES GET CLOSED AUTOMATICALLY when a
+    // pull request merges into `development` (register V-10 — GitHub only
+    // auto-closes on a merge to the default branch, and all seven repos
+    // default to `main`, so every `Closes #N` in this estate has been inert).
+    //
+    // This is registered for the same reason parent-theme-audit-gate-selftest
+    // is: the dangerous failure is silent. A parser that quietly stopped
+    // matching would leave issues open — annoying, visible, cheap. A parser
+    // that quietly started matching MENTIONS — a number inside a quoted review
+    // comment, a checklist item, a pasted log — closes somebody's live work,
+    // and nothing in CI would notice. 23 of the 35 cases assert that NO issue
+    // is closed, and because a parser returning nothing at all would satisfy
+    // every one of those, the suite carries an explicit positive control that
+    // fails when the parser closed nothing anywhere in the table.
+    id: 'parent-parse-closing-keywords-selftest',
+    label: 'Closing-keyword parser self-test (which issues a development merge closes)',
+    repo: '.',
+    command: ['node', 'scripts/parse-closing-keywords.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/development-merge-issue-closer.yml',
+    mode: 'run',
+    evidence:
+      '"parse-closing-keywords: self-test OK (35 cases executed, 23 of them ' +
+      'asserting NO issue is closed, 14 issue references legitimately ' +
+      'extracted)." Bare plurals, not the estate\'s usual "35 case(s)": that ' +
+      'form was REJECTED by LANE-WATCHER on first run because its stemmer is ' +
+      'asymmetric for nouns ending in `e` (list entry `cases?` stems to `cas`, ' +
+      'printed `case(s)` stems to `case`). Fixed additively in ' +
+      'check-guard-self-reporting.mjs so the next guard using the house style ' +
+      'is not wrongly failed; re-classifying all 35 recorded evidence strings ' +
+      'under the old and new noun lists flipped nothing but this entry. ' +
+      'Proven to fail three ways on 2026-08-17: a crafted case ' +
+      'asserting a blockquote closes (exit 1, 1 failing); deleting the ' +
+      'blockquote skip (exit 1, 2 failing — including a real directive ' +
+      'gaining a quoted neighbour); and making the parser inert (exit 1, 15 ' +
+      'failing, positive control named explicitly).',
   },
   {
     id: 'parent-verify-esm-imports',
@@ -558,6 +643,37 @@ export const GUARDS = [
       'orphaned, F3 silent, F4 empty-scan-refused, fully-resolved-passes), plus ' +
       '1 positive control proving the status-string tripwire would pass over a ' +
       'dead chain."',
+  },
+  {
+    id: 'parent-check-placement-award-code',
+    label: 'Placement award-code coverage (can a claimed charge rate be reconciled to an award later?)',
+    repo: '.',
+    command: ['node', 'scripts/check-placement-award-code.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/schema-lag.yml',
+    mode: 'run',
+    // Same deliberate exception as check-placement-rate-provenance directly
+    // above, for the same reason: the real run needs a live production
+    // credential the watcher does not hold, so registering the real command
+    // would record a permanent COULD_NOT_EXECUTE. The self-test exercises the
+    // identical `evaluate()` the real run calls.
+    //
+    // Narrower question than check-placement-rate-provenance: that guard asks
+    // whether a wage came from a real award_rates ROW (award_rate_id); this
+    // one asks whether the placement even NAMES an award (award_code) — the
+    // two diverge on most of this estate's live data, where an award is named
+    // but no specific rate row has ever been resolved against it.
+    // `placements_award_code_required_when_claimed_chk` (20260822060000)
+    // closes the fabrication half at the DB level (claiming resolved/
+    // migrated_to_discontinued with no award_code is now a 23514); this guard
+    // covers the half that migration deliberately leaves open — the honest
+    // 'manual' quote flow, ratcheted at GAP_BASELINE=8 (measured 2026-08-17)
+    // so the gap is visible and cannot silently grow past what was measured.
+    evidence:
+      '"check-placement-award-code --self-test: 8 cases exercised across both ' +
+      'directions (at-baseline-passes, below-baseline-passes, G1 rise, G2 ' +
+      'fabricated-shaped, G3 apprentice-attached, G4 empty-scan-refused, ' +
+      'gap-closed-passes), plus 1 positive control proving the manual/no-award ' +
+      'split narrows the naive \'no award_code\' count."',
   },
   {
     id: 'parent-check-own-package-freshness',
