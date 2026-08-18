@@ -97,6 +97,18 @@ Read the destination before your first edit in that area. Do not re-derive from 
 Commits: `type(scope): description` — types `feat|fix|docs|style|refactor|test|chore|perf`, scopes
 `bsu|crm7|conduit|braden|r80|throughput|shared|docs|deploy`.
 
+**Write `Closes #123` in the PR body and leave it alone — it works now, and closing by hand is no
+longer the workaround.** It did not work before 2026-08-17: GitHub auto-closes only on a merge to a
+repository's DEFAULT branch, all seven repos here default to `main`, and every PR targets
+`development`, so every closing keyword ever written in this estate was inert. Fifteen issues sat
+fixed-and-open because of it. `.github/workflows/development-merge-issue-closer.yml` now honours the
+keyword on a `development` merge — it comments on the issue naming the merge SHA, then closes it —
+and sweeps all seven repos hourly, so submodule PRs are covered too. It ignores a keyword that
+appears in a blockquote, a checklist item, a code fence, an inline code span, an HTML comment, or
+after a negation, so quoting a review comment cannot close live work. Cross-repo references
+(`GaryOcean428/crm7#123`) are reported, never closed — close those by hand. If any of this changes,
+`scripts/parse-closing-keywords.mjs --self-test` is the contract, and it is a registered guard.
+
 throughput's AI stack is the Jodie setup (migrated off Groq `gpt-oss-120b` 2026-08-05): same-origin
 `/api/llm/*` Vercel routes over the Vercel AI Gateway — `xai/grok-4.3` primary, `zai/glm-5.2`
 fallback; roster owned by `crm7/src/lib/ai/config.ts`. No provider keys in the browser; app AI
