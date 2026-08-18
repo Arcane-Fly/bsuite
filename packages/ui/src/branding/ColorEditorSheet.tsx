@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * ColorEditorSheet — A sheet/dialog for editing branding colors
  *

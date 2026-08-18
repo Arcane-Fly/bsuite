@@ -1,3 +1,17 @@
+> # ✅ VERDICT: LIVE — this document contains the reversal
+>
+> **Verdicted 2026-08-17.**
+>
+> **§9 of this document is where Adobe Acrobat Sign was rejected**, on 2026-03-04. It is the
+> reason the two sibling documents dated the same day
+> ([implementation plan](./20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md),
+> [design](./20260304-crm7-document-lifecycle-design-v1.00D.md)) are dead. Both were written
+> before the reversal landed and neither was revised.
+>
+> The research itself remains sound. The decision it reached was implemented in
+> [`20260317-document-esigning-architecture-v1.00A.md`](./20260317-document-esigning-architecture-v1.00A.md),
+> which is **shipped** and is the current truth.
+>
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (REFERENCE-ONLY) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
