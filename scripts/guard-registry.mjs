@@ -352,7 +352,8 @@ export const GUARDS = [
       'CHECKS-CLEAN 360, CHECKS-FAILED 32; RECORD pins set aside 57" ' +
       '(2026-08-18). Actionable: 50 dangling link, 7 stale pin, 1 Tailwind ' +
       '(itself an audit reporting one), 0 template, 0 version. Refuses with ' +
-      'exit 2 without submodules: every cross-submodule link would report a 'false dangling. The version limb previously emitted 12 findings and ALL ' +
+      'exit 2 without submodules: every cross-submodule link would report a ' +
+      'false dangling. The version limb previously emitted 12 findings and ALL ' +
       'TWELVE WERE FALSE — it read the first version-like string in the header, ' +
       'routinely a cross-reference, and compared "1.0" to "1.00" as unequal.',
   },
