@@ -7,6 +7,7 @@ import type {
   OncostBreakdown,
   Allowance,
 } from './types.js';
+import { DEFAULT_RDO_CONFIG } from './types.js';
 import {
   casualPenaltyMultiplierForAward,
   CasualPenaltyConventionUnmodelled,
@@ -133,6 +134,7 @@ export function calculate(cfg: CalcConfig): CalcResult {
     funding,
     casualLoading,
     awardCode,
+    rdo,
   } = cfg;
 
   // Suppress unused variable lint — _hpd is destructured for completeness
@@ -219,8 +221,50 @@ export function calculate(cfg: CalcConfig): CalcResult {
   // (feature: R80 training-fees; was silently dropped before 2026-07-25).
   const totCost = annPkg + study + ppe + wc + oh + payrollTaxAmt + trainingFees;
 
+  // --- RDO accrual -> billable hours (ledger M-2) ---
+  /**
+   * `cfg.rdo` used to be carried and never read. crm7's
+   * `usePlacementChargeCalc` populated it, said so in its own comment
+   * ("calculate() itself does not consume cfg.rdo"), and emitted an operator
+   * warning telling them to check the rate by hand. This is where that stops.
+   *
+   * WHICH FIGURE MOVES. `hoursPerWeek` is, and stays, the PAID week (see its
+   * doc comment on `CalcConfig`) — crm7 passes 38 and deliberately leaves it
+   * alone. Subtracting the accrual from it would pay a full-timer for 36
+   * hours and understate wage, super and leave by the accrual fraction: the
+   * money bug in the opposite direction. Under MA000020 cl.16.2 the accrual
+   * is DEFERRED pay, not less pay — annual paid hours are unchanged.
+   *
+   * What the accrual genuinely moves is BILLABLE hours. The host has the
+   * worker on site for 8 hours to fund 7.6 paid, so the banked 0.4h/day is
+   * time the host has already had and is billed for when the RDO is taken.
+   * R80.4's engine (`src/awards/calculate.ts:189-200`), which has priced this
+   * for MA000020 all along, is the reference:
+   *
+   *   0.4 x (D - r) = hpdPaid x r   ->   r = 0.4D / (hpdPaid + 0.4)
+   *
+   * with D = paid days in the year. Accrual continues through paid leave and
+   * public holidays (cl.16.3(a)) and stops only on RDO days themselves, which
+   * is exactly what solving for `r` expresses — hence `52 * dpw`, not
+   * `billableWk * dpw`. At D = 260, hpdPaid = 7.6 this yields r = 13 days =
+   * 98.8 hours, the 19-worked-days-per-RDO the clause states.
+   *
+   * `enabled: false` (the default) is a first-class state, not an edge case:
+   * `rdoHoursAnnual` is 0 and `bHrs` is byte-identical to the pre-M-2 value,
+   * so no existing quote, golden fixture or FWC reconciliation moves.
+   */
+  const rdoCfg = rdo ?? DEFAULT_RDO_CONFIG;
+  const hpdPaid = dpw > 0 ? hpw / dpw : 0;
+  const rdoAccrualPerDay =
+    rdoCfg.enabled && rdoCfg.accrualHoursPerDay > 0 ? rdoCfg.accrualHoursPerDay : 0;
+  const rdoDaysAnnual =
+    rdoAccrualPerDay > 0 && hpdPaid + rdoAccrualPerDay > 0
+      ? (rdoAccrualPerDay * 52 * dpw) / (hpdPaid + rdoAccrualPerDay)
+      : 0;
+  const rdoHoursAnnual = rdoDaysAnnual * hpdPaid;
+
   // --- Hours (lines 82-86) ---
-  const bHrs = billableWk * hpw;
+  const bHrs = billableWk * hpw + rdoHoursAnnual;
   const tHrs = 52 * hpw;
   const trainHrs = trainWk * hpw;
   const nonBillHrs = tHrs - bHrs - trainHrs;
@@ -422,6 +466,8 @@ export function calculate(cfg: CalcConfig): CalcResult {
     totalAnnualCost: totCost,
     trainingFeesAnnual: trainingFees,
     billableHours: bHrs,
+    rdoDaysAnnual,
+    rdoHoursAnnual,
     totalHours: tHrs,
     trainingHours: trainHrs,
     nonBillableHours: nonBillHrs,

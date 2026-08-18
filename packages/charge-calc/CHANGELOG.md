@@ -5,6 +5,74 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.14.0] — 2026-08-18 — `cfg.rdo` was carried and never read; on-costs had no tenant tier
+
+### Fixed — MONEY DEFECT, RDO placements quoted as if no RDO applied (estate ledger M-2)
+
+- `calculate()` did not read `CalcConfig.rdo`. The field existed, was typed,
+  was documented, had a full helper module (`src/rdo.ts`) — and nothing in
+  the engine consumed it. `grep -i rdo` over `src/calculate.ts` returned
+  ZERO hits at 0.13.0 (positive control: `grep -i payrolltax` over the same
+  file returned 5). crm7's `usePlacementChargeCalc` populated `cfg.rdo`,
+  said so in its own comment ("`calculate()` itself does not consume
+  cfg.rdo"), and emitted an operator warning telling them to verify the
+  charge rate by hand. Every MA000020 cl.16.2 placement therefore quoted
+  identically to a placement with no RDO arrangement at all.
+
+- `calculate()` now derives `rdoDaysAnnual` / `rdoHoursAnnual` from
+  `cfg.rdo` and adds the banked hours to `billableHours`. The arithmetic is
+  ported from R80.4's engine (`src/awards/calculate.ts:189-200`), which has
+  priced this for MA000020 all along: solving `accrual x (D - r) = hpdPaid x r`
+  for `r` gives 13 RDO days / 98.8 hours a year on the standard
+  0.4h-per-7.6h-paid-day pattern — exactly the 19-worked-days-per-RDO cl.16
+  states. Accrual continues through paid leave and public holidays
+  (cl.16.3(a)) and stops only on RDO days themselves, which is why the
+  denominator is the paid year and not the billable weeks.
+
+- `hoursPerWeek` is unchanged and remains the PAID week. Deriving paid hours
+  as `hoursPerWeek - accrual x daysPerWeek` would have paid a full-timer for
+  36 hours and understated wage, super and leave by the accrual fraction —
+  the same money defect in the opposite direction. Under cl.16.2 the accrual
+  is DEFERRED pay, not less pay; annual paid hours do not move. What moves is
+  billable hours, because the host has the worker on site for 8 hours to fund
+  7.6 paid and is billed for the bank when the RDO is taken.
+
+- NO EXISTING QUOTE MOVES. `rdo.enabled: false` (the default, via
+  `DEFAULT_RDO_CONFIG`) leaves `billableHours` at exactly
+  `billableWeeks x hoursPerWeek`, byte-identical to 0.13.0. All 851
+  pre-existing tests pass unchanged, including the golden fixtures and the
+  published-FWC-figure reconciliations.
+
+### Added — per-tenant superannuation and workers' compensation (estate ledger M-1)
+
+- `resolveTenantOncosts()` / `applyTenantOncosts()` in
+  `src/resolvers/tenant-oncosts.ts`, reading the `super_rate` / `wc_rate` /
+  `wic_code` columns added to `public.tenant_settings` by bsuite migration
+  `20260827010000_tenant_settings_oncost_config.sql`.
+
+- Measured cause, 2026-08-18, live production project: `charge_rate_snapshots`
+  holds 13 snapshots with exactly ONE distinct `super_rate` and ONE distinct
+  `workers_comp_rate` between them. There was no tenant-level on-cost column
+  anywhere in `public`, so every quote in the estate carried
+  `DEFAULT_CONFIG.superRate` (0.12) and `DEFAULT_WC_RATE` (0.047).
+
+- `applyTenantOncosts()` RECOMPUTES `otOncostFactor` via
+  `deriveOtOncostFactor()`. Setting `wcRate` alone leaves the overtime factor
+  at the platform figure, so a tenant on a 8.9% premium would have ordinary
+  time move and overtime silently not — `defaults.ts` warns about exactly
+  this and nothing enforced it until now.
+
+- A rate outside `[0, 1]` is REFUSED, not coerced: `12` means 12%, not
+  1200%, and accepting it multiplies a tenant's super bill by a hundred.
+  The migration carries a matching CHECK constraint.
+
+- Payroll tax is deliberately NOT tenant-configurable here. It is already
+  state-resolved and snapshot-carried, and apprentice/trainee relief is a
+  legislative rule about the EMPLOYEE — `payroll-tax-relief.ts`'s precedence
+  guard forbids a tenant-scoped source from bypassing it.
+
+---
+
 ## [0.13.0] — 2026-08-17 — casual penalty rows compounded the loading, a 7.14% over-charge
 
 ### Fixed — MONEY DEFECT, over-billed to the host, compliance-critical
