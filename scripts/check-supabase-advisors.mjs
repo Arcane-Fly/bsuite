@@ -59,12 +59,64 @@ async function fetchAdvisors(kind) {
     console.error('::error::SUPABASE_ACCESS_TOKEN / SUPABASE_PROJECT_ID not set');
     process.exit(2);
   }
-  const res = await fetch(
-    `https://api.supabase.com/v1/projects/${ref}/advisors/${kind}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  if (!res.ok) {
-    console.error(`::error::advisor API ${kind} returned HTTP ${res.status}`);
+  // RETRY TRANSIENTS, and say which failure this is.
+  //
+  // 2026-08-18: this gate went red on three PRs with
+  //     ::error::advisor API security returned HTTP 408
+  // A 408 is the advisor API timing out. Nothing was wrong with the database and
+  // nothing had been advised — but the job is named "Advisor sweep (security
+  // fails …)", so every reader saw a SECURITY failure on their change.
+  //
+  // That is the same defect class this estate has hit four times now: an
+  // infrastructure fault wearing a finding's name. A gate must never confound
+  // its instrument with its measurement. Failing when the advisor is genuinely
+  // unreachable is right — an unrun check is not a pass — but it must retry
+  // first, and it must say "could not ASK" rather than implying "was told".
+  const TRANSIENT = new Set([408, 425, 429, 500, 502, 503, 504]);
+  const ATTEMPTS = 4;
+  let res;
+  let lastStatus = 0;
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+    try {
+      res = await fetch(
+        `https://api.supabase.com/v1/projects/${ref}/advisors/${kind}`,
+        { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(45_000) },
+      );
+    } catch (err) {
+      // A network error or our own 45s abort — indistinguishable from a 5xx for
+      // our purposes, and equally worth another attempt.
+      lastStatus = 0;
+      if (attempt === ATTEMPTS) {
+        console.error(
+          `::error::advisor API ${kind} UNREACHABLE after ${ATTEMPTS} attempts (${err?.name ?? 'error'}: ${err?.message ?? 'no message'}). ` +
+            `This is a failure to ASK the advisor, NOT an advisory finding — the database may be perfectly healthy. ` +
+            `The gate still fails, because an unrun check is not a pass.`,
+        );
+        process.exit(2);
+      }
+      await new Promise((r) => setTimeout(r, 2000 * 2 ** (attempt - 1)));
+      continue;
+    }
+    if (res.ok) break;
+    lastStatus = res.status;
+    if (!TRANSIENT.has(res.status) || attempt === ATTEMPTS) {
+      const kindOfFault = TRANSIENT.has(res.status)
+        ? `UNREACHABLE after ${ATTEMPTS} attempts`
+        : 'REFUSED the request';
+      console.error(
+        `::error::advisor API ${kind} ${kindOfFault} — HTTP ${res.status}. ` +
+          `This is a failure to ASK the advisor, NOT an advisory finding. ` +
+          `${res.status === 401 || res.status === 403 ? 'Check SUPABASE_ACCESS_TOKEN.' : ''}`,
+      );
+      process.exit(2);
+    }
+    // Exponential backoff: 2s, 4s, 8s.
+    const waitMs = 2000 * 2 ** (attempt - 1);
+    console.log(`advisor API ${kind} HTTP ${res.status} (transient) — retrying in ${waitMs / 1000}s (attempt ${attempt}/${ATTEMPTS})`);
+    await new Promise((r) => setTimeout(r, waitMs));
+  }
+  if (!res || !res.ok) {
+    console.error(`::error::advisor API ${kind} unreachable (last status ${lastStatus}). Failure to ASK, not a finding.`);
     process.exit(2);
   }
   const body = await res.json();
