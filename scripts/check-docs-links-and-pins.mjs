@@ -135,15 +135,34 @@ for (const file of files) {
   }
 
   // 4. unfilled template placeholders
+  // A TEMPLATE IS SUPPOSED TO CONTAIN PLACEHOLDERS. Flagging the template
+  // itself, or an audit quoting its placeholder text as a finding, is the same
+  // error as reporting an audit's ❌ rows as that audit's defects.
+  const isTemplate = /template/i.test(rel)
   lines.forEach((ln, i) => {
-    if (isRetracted(lines, i)) return
-    if (/\[(Describe what|Category: |Stability: |Team\/Person responsible|1-2 sentence description|YYYY-MM-DD)/.test(ln))
+    if (isTemplate || isRetracted(lines, i)) return
+    // A placeholder QUOTED IN BACKTICKS is a document citing the defect as
+    // evidence, not carrying it. Every survivor of this limb was that shape:
+    // `[Describe what the component does…]` verbatim.
+    const stripped = ln.replace(/`[^`]*`/g, '')
+    if (/\[(Describe what|Category: |Stability: |Team\/Person responsible|1-2 sentence description|YYYY-MM-DD)/.test(stripped))
       findings.push(`unfilled template placeholder (line ${i + 1})`)
   })
 
-  // 5. Tailwind v3 claim
+  // 5. Tailwind v3 claim — but NOT a rule that FORBIDS Tailwind v3.
+  //
+  // Both findings this limb produced were sentences banning it outright:
+  // "Tailwind v3 is not permitted in package manifests, resolved lockfile
+  // entries, docs, or new implementation paths". A doctrine document naming the
+  // thing it prohibits is the opposite of a stale claim, and every app resolves
+  // ^4.3.0 today. Mentioning a version is not asserting it.
+  // Also excludes UPGRADE INSTRUCTIONS. `Tailwind 3.4 → 4` in a remediation
+  // table is telling someone to leave v3, not asserting it is in use — the
+  // last surviving false positive of this limb.
+  const FORBIDS = /(not permitted|must be v?4|is not allowed|banned|forbidden|no longer|prohibit|v4 or later|migrat|→\s*4|->\s*4|to v?4\b)/i
   lines.forEach((ln, i) => {
     if (isRetracted(lines, i)) return
+    if (FORBIDS.test(ln)) return
     if (/Tailwind( CSS)? v?3(\.\d+)*\b/.test(ln)) findings.push(`claims Tailwind v3 (line ${i + 1})`)
   })
 
