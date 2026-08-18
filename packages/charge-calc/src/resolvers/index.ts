@@ -15,3 +15,14 @@ export type {
   WageResolverOptions,
 } from './wage.js';
 export { WageResolver } from './wage.js';
+
+// Per-tenant superannuation / workers' compensation (estate ledger M-1).
+// Reads the tenant_settings columns added by
+// supabase/migrations/20260827010000_tenant_settings_oncost_config.sql.
+export type {
+  TenantOncostSettingsRow,
+  OncostRateSource,
+  ResolvedTenantOncosts,
+  ResolveTenantOncostsInput,
+} from './tenant-oncosts.js';
+export { resolveTenantOncosts, applyTenantOncosts } from './tenant-oncosts.js';
