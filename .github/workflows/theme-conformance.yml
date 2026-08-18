@@ -68,6 +68,35 @@ on:
       - '.github/theme-c2-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
       - '.github/workflows/theme-conformance.yml'
+      # The submodule GITLINKS, and they are NOT redundant with the globs above.
+      #
+      # Every job in this file measures the apps at the parent's PINNED gitlink
+      # SHAs — the near-pure step says so in its own success line, "measured at
+      # the pinned gitlink SHAs". A submodule pointer bump is therefore the ONLY
+      # way the tree this workflow reads can change, and the parent's diff for
+      # such a commit contains no file under any `**/*.css` or `**/*.tsx` path.
+      # It contains one entry per moved submodule, and that entry is exactly
+      # `crm7` — the gitlink. None of the globs above can match it.
+      #
+      # MEASURED, not theorised: bsuite#2140 advanced four pointers and this
+      # workflow did not start. Twenty-one other checks ran on it.
+      #
+      # The estate has already been bitten by this once and fixed it the same
+      # way — see supabase-preview-db.yml, where the identical omission meant
+      # the workflow "NEVER STARTED on a promotion PR", the one shape that most
+      # needed it.
+      #
+      # The consequence here is specific and was live: the ledger's TH-3 row
+      # records that the near-pure gate "has not fired only because recent
+      # commits changed submodule pointers alone and the path filter cannot see
+      # those". A gate that cannot see the only change that moves its inputs is
+      # not a ratchet — it is a decoration that happens to be green.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'R80.4'
+      - 'braden'
+      - 'throughput'
 
 jobs:
   pure-endpoints:
