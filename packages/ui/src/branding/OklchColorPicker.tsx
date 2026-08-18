@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * OklchColorPicker — A color input component for OKLCH color format
  *
