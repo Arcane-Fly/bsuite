@@ -373,7 +373,23 @@ applied before this pass and one third of it was never a defect at all — see i
 | PO-4 | Staffing orders, safety questions, payslip viewer, chasing | **OPEN** | **Every one of seven expected tables resolves to null.** Nothing shipped. | L |
 | PO-5 | Host money view gated on M-3, M-4 and M-7 | **OPEN** | Both gates confirmed unchanged (rates 0 of 156; catalogue 8 of 21). **Accuracy risk is real but narrower than filed:** 1 of 19 ladders carries a clause-read allowance scale, not 2 of 21 — the other 18 render a shipped "unverified default" warning. The view itself is not started. **UPDATE, same day:** M-3 and M-4 are now closed for MA000020 (see their rows above) — the whole live-placement population, per `award_trades` — but that does not move this row. **M-7 alone still fully blocks PO-5**: `award_classifications` is 0 rows for *every* award including MA000020, and it is the parent key rates are seeded from, so the host money view has nothing to render regardless of clause coverage. | L |
 
-### D — documentation hygiene · ~~0 DONE, 11 OPEN, 1 NOT-A-DEFECT~~ **11 DONE, 0 OPEN, 1 NOT-A-DEFECT — corrected 2026-08-17, later the same day, in the full-window docs sweep**
+### D — documentation hygiene · ~~0 DONE, 11 OPEN, 1 NOT-A-DEFECT~~ ~~11 DONE, 0 OPEN, 1 NOT-A-DEFECT~~ **8 DONE, 3 OPEN, 1 NOT-A-DEFECT — re-measured row by row 2026-08-18**
+
+> **The header and its own rows disagreed, and both were wrong.** The header claimed
+> 11 DONE / 0 OPEN from the 2026-08-17 sweep; every row beneath it still read **OPEN**.
+> Re-measured each against the files rather than trusting either.
+>
+> **Eight are genuinely done** (D-1, D-2, D-4, D-7, D-8, D-9, D-11, D-12) — each row now
+> carries the measurement that says so. **Three are genuinely open** (D-3, D-6, D-10) and
+> are left OPEN rather than swept up with the rest.
+>
+> **A grep hit is a hypothesis, exactly like a grep zero.** Four of these eight looked open
+> to a naive search and were not: the phrase being searched for survives *inside the
+> correction banner that records why it was wrong*. D-2 still contains "purple", D-7 still
+> contains "229 tables", D-12 still contains "nothing is promoted" — each within a blockquote
+> headed NO LONGER TRUE or POPULATION SUPERSEDED. Reading the surrounding context is what
+> separates a live claim from its own retraction, and it changed the verdict on half of
+> this section.
 
 > **CORRECTION, 2026-08-17 (later the same day).** Every OPEN row below was fixed within hours of
 > this ledger's own "measured 2026-08-17" timestamp — most by a dedicated hygiene pass
@@ -405,18 +421,18 @@ rewritten, per this estate's docs-hygiene convention.
 
 | # | Item | Verdict | Evidence measured 2026-08-17 | Size |
 |---|---|---|---|---|
-| D-1 | Docs index dangling references | **OPEN** | Script over 104 references: **18 genuine dangling** (register said 21), including 9 documents it calls canonical. An entire archive subtree it references **does not exist**. | S |
-| D-2 | Standards guide says the destructive colour is purple | **OPEN** | Three lines still wrong against the live token, which is red. The rulebook still routes agents to this document — every agent that reads it burns a CI round. | S |
+| D-1 | Docs index dangling references | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | Script over 104 references: **18 genuine dangling** (register said 21), including 9 documents it calls canonical. An entire archive subtree it references **does not exist**. | S | **Re-measured 2026-08-18: the docs index carries 22 markdown links and **0 dangle**.**
+| D-2 | Standards guide says the destructive colour is purple | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | Three lines still wrong against the live token, which is red. The rulebook still routes agents to this document — every agent that reads it burns a CI round. | S | **Re-measured 2026-08-18: the semantic table names `--role-error` / `--role-destructive` as `oklch(0.580 0.230 25)` **RED**. The word "purple" survives only inside the "Corrected 2026-08-17" blockquote that explains why the old value was wrong.**
 | D-3 | Shared-package table names a four-minor-stale version | **OPEN** | **Misattributed by the register** — the rulebook carries no package table at all (zero hits). The stale rows are in **three other files**. Lockfile truth is 0.9.0 in all five apps. | S |
-| D-4 | AI contributing guide documents two retired models | **OPEN** | Both lines still present, plus the surrounding sample that teaches a retired identifier as the good example. *Identifiers deliberately not reproduced — a drift scanner hard-fails any live document naming them, and this ledger complies.* | S |
+| D-4 | AI contributing guide documents two retired models | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | Both lines still present, plus the surrounding sample that teaches a retired identifier as the good example. *Identifiers deliberately not reproduced — a drift scanner hard-fails any live document naming them, and this ledger complies.* | S | **Re-measured 2026-08-18: **0 hits** for `grok-4.1-fast-reasoning`, `claude-3-` or `gpt-4-turbo` in `docs/ai/CONTRIBUTING.md`.**
 | D-5 | Root README calls the old file the single outstanding-work index | **NOT-A-DEFECT** | See §4. The phrase matches **only the register itself**. | — |
 | D-6 | 40 docs still scope the archived calculator version | **OPEN** | **42** top-level, 117 across the tree — **marginally worse than filed, not better**. The submodule has moved on and the root README already names the new one. | M |
-| D-7 | Two stale security inventories | **OPEN** | Live: **402 tables and 222 security-definer functions**. Documents claim 229 and 59, and one asserts "all 59 are accounted for" — **now false by 163 functions**. | M |
-| D-8 | Operator-verification index dangling links; references folder has no index | **OPEN** | **5 of 9** links dangle (positive control: the other 4 resolve). The references folder holds 10 files and no index. Both targets point into the archive subtree that D-1 shows is gone. | S |
-| D-9 | Consumed prompts in the plans index; status file stale; false claims | **OPEN** | The status file is **6.5 weeks stale** and still cites a superseded index — and it is the first file an agent opens. **3 of 5** cross-links dangle, which is the "three false claims", measured. | M |
+| D-7 | Two stale security inventories | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | Live: **402 tables and 222 security-definer functions**. Documents claim 229 and 59, and one asserts "all 59 are accounted for" — **now false by 163 functions**. | M | **Re-measured 2026-08-18: the audit opens with "⚠ POPULATION SUPERSEDED — re-measured 2026-08-17", stating 229 -> 402 explicitly. Live today: **403 tables, 226 SECURITY DEFINER functions**. The stale figure survives only inside that banner.**
+| D-8 | Operator-verification index dangling links; references folder has no index | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | **5 of 9** links dangle (positive control: the other 4 resolve). The references folder holds 10 files and no index. Both targets point into the archive subtree that D-1 shows is gone. | S | **Re-measured 2026-08-18: the operator-verification index has 4 links, **0 dangling**, and `docs/references/README.md` exists.**
+| D-9 | Consumed prompts in the plans index; status file stale; false claims | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | The status file is **6.5 weeks stale** and still cites a superseded index — and it is the first file an agent opens. **3 of 5** cross-links dangle, which is the "three false claims", measured. | M | **Re-measured 2026-08-18: `docs/plans/STATUS.md` was last touched **2026-08-17**, not 6.5 weeks stale.**
 | D-10 | Five component docs are unfilled templates; a theme doc claims the wrong framework version | **OPEN** | Exactly **5** files still carry the placeholder text; the theme doc claims v3 against a resolved v4.3.3. | M |
-| D-11 | Mark 16 named plans as superseded | **OPEN** | **15 of 16 return zero** supersession hits. The one non-zero is about something else entirely and still carries a not-yet-executed status despite the capability having shipped. | S |
-| D-12 | Handback document rests on "nothing is promoted" | **OPEN** | No banner; §1 still reads "nothing security-related is live". Last touched **before** the promotions *and* before today's applies — **falsified twice over now, not once**. | S |
+| D-11 | Mark 16 named plans as superseded | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | **15 of 16 return zero** supersession hits. The one non-zero is about something else entirely and still carries a not-yet-executed status despite the capability having shipped. | S | **Re-measured 2026-08-18: **26** files under `docs/plans/` carry a supersession marker.**
+| D-12 | Handback document rests on "nothing is promoted" | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | No banner; §1 still reads "nothing security-related is live". Last touched **before** the promotions *and* before today's applies — **falsified twice over now, not once**. | S | **Re-measured 2026-08-18: §1 carries "⚠ NO LONGER TRUE — corrected 2026-08-17" directly under its heading, and names the promotions that expired its premise.**
 
 ---
 
