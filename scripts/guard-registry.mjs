@@ -348,10 +348,14 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"Files scanned: 444 (parent 281, six apps 163) — CHECKS-CLEAN: 351, ' +
-      'CHECKS-FAILED: 93, TOTAL FINDINGS: 229" (2026-08-18). Refuses with exit 2 ' +
-      'when submodules are absent, because every cross-submodule link would ' +
-      'otherwise report as a false dangling.',
+      '"Files scanned: 444 (parent 281, six apps 163) — CHECKS-CLEAN: 358, ' +
+      'CHECKS-FAILED: 86" (2026-08-18, after the version check was corrected). ' +
+      'Breakdown: 90 dangling link, 78 stale pin, 7 unfilled template, 3 ' +
+      'Tailwind v3, 0 version mismatch. Refuses with exit 2 when submodules are ' +
+      'absent, because every cross-submodule link would otherwise report as a ' +
+      'false dangling. The version limb previously emitted 12 findings and ALL ' +
+      'TWELVE WERE FALSE — it read the first version-like string in the header, ' +
+      'routinely a cross-reference, and compared "1.0" to "1.00" as unequal.',
   },
   {
     id: 'parent-colour-ban-reaches-converters',

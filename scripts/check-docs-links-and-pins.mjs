@@ -110,12 +110,28 @@ for (const file of files) {
     }
   })
 
-  // 3. filename version vs header version
+  // 3. filename version vs the version the header DECLARES FOR ITSELF.
+  //
+  // The first version of this check took the first `vN.NN` anywhere in the
+  // opening lines, which is routinely a CROSS-REFERENCE to another document.
+  // It reported `20260227-contributing-standards-guide-v1.01W.md` as a
+  // mismatch when that file's header says `**Version:** 1.01W` — an exact
+  // match — and reported a template with no version line at all. Every one of
+  // the 12 findings it produced was false.
+  //
+  // Only an explicit self-declaration counts: `**Version:** X`, `Version: X`
+  // or front-matter `version: X`.
   const fnVer = rel.match(/-v(\d+\.\d+)[A-Z]?\.md$/)
   if (fnVer) {
-    const head = lines.slice(0, 6).join('\n')
-    const hdVer = head.match(/v(\d+\.\d+)[A-Z]?\b/)
-    if (hdVer && hdVer[1] !== fnVer[1]) findings.push(`filename says v${fnVer[1]}, header says v${hdVer[1]}`)
+    const head = lines.slice(0, 12).join('\n')
+    const decl = head.match(/(?:^|\n)[^\n]*?\*{0,2}Version:?\*{0,2}\s*:?\s*v?(\d+\.\d+)[A-Z]?\b/i)
+    // `1.0` and `1.00` are the same version written two ways — comparing the
+    // strings makes that a finding, which is how the last false positive of
+    // twelve survived the first tightening.
+    const norm = (v) => v.split('.').map((n) => String(parseInt(n, 10))).join('.')
+    if (decl && norm(decl[1]) !== norm(fnVer[1])) {
+      findings.push(`filename says v${fnVer[1]}, header declares v${decl[1]}`)
+    }
   }
 
   // 4. unfilled template placeholders
