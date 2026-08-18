@@ -323,6 +323,24 @@ export const GUARDS = [
     // cross-submodule link resolves only when the submodule is present, so in a
     // bare worktree all 14 of them report as dangling — and the "fix" would be
     // to rewrite links that were already correct. That nearly happened.
+    // Companion to parent-docs-links-and-pins, and REPORT for the same reason.
+    // Its four built-in corrections are the point: without them it flags an
+    // audit's own findings as defects, calls a basename collision a file move,
+    // re-reports documents that already declare themselves historical, and
+    // invents ~140 absences when run without submodules.
+    id: 'parent-docs-source-paths',
+    label: 'Source paths cited in docs still resolve (estate-wide)',
+    repo: '.',
+    command: ['node', 'scripts/check-docs-source-paths.mjs'],
+    ciWorkflow: null,
+    mode: 'report',
+    evidence:
+      '"52 documents skipped as HISTORICAL; 666 source-path references checked; ' +
+      'UNRESOLVED 102 — MOVED 10, AMBIGUOUS 4, GONE 88" (2026-08-18). Refuses ' +
+      'with exit 2 without submodules: the same run reports 240 unresolved in a ' +
+      'bare worktree, so more than half those findings would be false.',
+  },
+  {
     id: 'parent-docs-links-and-pins',
     label: 'Docs cross-links resolve and @bsuite/* pins are not stale (estate-wide)',
     repo: '.',
