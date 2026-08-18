@@ -8,7 +8,7 @@
 **Live schema verified:** 2026-05-07 via Supabase MCP project `tuybltdrdefjblnplpqo`
 **Source matrix rows:** 21–29, 31–32 (parity-matrix.md domain C)
 **Domain covered:** C (Pay Items — groups, rules, type extensions, sort priority)
-**Auth canonical:** [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) — every RLS policy below cites this file
+**Auth canonical:** [`AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) — every RLS policy below cites this file
 
 ---
 
@@ -48,7 +48,7 @@
 - Public holiday groups — tracked as row 72 (domain H, PARITY-572 future issue).
 - Leave calendar and leave auto-populate — covered by leave-parity spec.
 - MYOB/Astute payroll export adapters — covered by export-parity spec.
-- Any changes to `@bsuite/auth` (frozen; see [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md)).
+- Any changes to `@bsuite/auth` (frozen; see [`AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md)).
 
 ---
 
@@ -95,7 +95,7 @@ allowance_groups         -- CREATED in PR-B (row 24)
 pay_item_rules           -- CREATED in PR-E (row 25)
 ```
 
-**RLS expectation:** Every new table must use the tenant helpers already present in CRM7 (`public.auth_tenant_id()` for active tenant membership and `public.is_gto_staff(tenant_id)` for staff writes), consistent with [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) §"Verification preferences". The `service_role` bypass is never exposed to client code; all client mutations go through RLS-respecting client calls or `SECURITY INVOKER` RPCs.
+**RLS expectation:** Every new table must use the tenant helpers already present in CRM7 (`public.auth_tenant_id()` for active tenant membership and `public.is_gto_staff(tenant_id)` for staff writes), consistent with [`AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) §"Verification preferences". The `service_role` bypass is never exposed to client code; all client mutations go through RLS-respecting client calls or `SECURITY INVOKER` RPCs.
 
 ---
 
@@ -187,7 +187,7 @@ PR-A (pay_item_groups + timesheet_groups schema)
 
 ## 4. Migrations
 
-> Apply via `mcp__supabase__apply_migration`. Follow [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) for RLS pattern: `public.current_tenant_id()` in every USING + WITH CHECK predicate; `SECURITY INVOKER` on all RPCs.
+> Apply via `mcp__supabase__apply_migration`. Follow [`AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) for RLS pattern: `public.current_tenant_id()` in every USING + WITH CHECK predicate; `SECURITY INVOKER` on all RPCs.
 
 ### Migration 4.A — `pay_item_groups` + `timesheet_groups`
 
@@ -875,7 +875,7 @@ Closes matrix rows 21 (schema) and 22 (schema) from [bsuite#569](https://github.
 - `crm7/src/schemas/pay-item-groups.ts` — new (Zod schemas)
 
 ## Auth / RLS
-- RLS enabled on both tables per [AUTH_CANONICAL.md](../../AUTH_CANONICAL.md) §"Verification preferences"
+- RLS enabled on both tables per [AUTH_CANONICAL.md](../../../AUTH_CANONICAL.md) §"Verification preferences"
 - RPCs are SECURITY INVOKER — service_role never exposed to client
 
 ## Test
@@ -904,7 +904,7 @@ Repeat pattern for PR-B through PR-G substituting the relevant rows, files, and 
 | Sub-agent | Specific concern | How this spec addresses it |
 |---|---|---|
 | **UX-DX** | Four new settings pages must follow `DraggableCardPage` pattern; dnd-kit reorder must be keyboard accessible (WCAG 2.2 SC 2.1.1). Sort order must persist optimistically so drag feels instant. | §3 mandates dnd-kit v6 sortable preset. Reorder RPC is transactional — optimistic update via TanStack Query `onMutate`. Keyboard: dnd-kit sortable keyboard sensor built-in. |
-| **Security** | Cross-tenant group data leakage; `service_role` exposure in client code; unsanitised `code` field used as abbreviation. | §4 RLS on all 5 new tables use `(auth.jwt() ->> 'tenant_id')::uuid`, per [AUTH_CANONICAL.md](../../AUTH_CANONICAL.md). All RPCs `SECURITY INVOKER`. Zod `code` field regex `/^[A-Z0-9_.-]+$/` blocks injection. §7.4 RLS contract Playwright test. |
+| **Security** | Cross-tenant group data leakage; `service_role` exposure in client code; unsanitised `code` field used as abbreviation. | §4 RLS on all 5 new tables use `(auth.jwt() ->> 'tenant_id')::uuid`, per [AUTH_CANONICAL.md](../../../AUTH_CANONICAL.md). All RPCs `SECURITY INVOKER`. Zod `code` field regex `/^[A-Z0-9_.-]+$/` blocks injection. §7.4 RLS contract Playwright test. |
 | **Performance** | Group list queries on large tenants; reorder causing N individual updates. | §4 defines `(tenant_id, sort_order)` composite index on all 5 tables. Reorder RPCs batch all updates in a single PL/pgSQL loop — one RPC call, not N. TanStack Query `staleTime` avoids redundant refetches. |
 | **Reliability** | Deleting a group referenced by a `timesheet_groups`, `penalty_groups`, `allowance_groups`, or `pay_item_rules` row must not leave orphaned FK violations. UI must confirm and list affected entities before delete. | §4 migration uses `ON DELETE RESTRICT` on all FKs into `pay_item_groups`. Service `delete()` must catch `23503` FK violation code and surface a user-readable error with the constraint name. UI shows confirmation dialog listing referencing rows. |
 | **Quality** | `@bsuite/charge-calc` enum arrays continue to be used alongside new named entity IDs, creating dual-source-of-truth. Conventional commits. No dead code. | §3 PR-G explicitly migrates charge-calc to reference named entity UUIDs. PR-F is gated to ship before PR-G. Zod enums in §5 are canonical; charge-calc imports from `crm7/src/schemas/pay-item-groups.ts` or a promoted shared package. |
@@ -971,7 +971,7 @@ Operator-runnable steps to verify each PR ships correctly.
 | Zustand v5 | [https://github.com/pmndrs/zustand](https://github.com/pmndrs/zustand) |
 | pgTAP — PostgreSQL unit testing | [https://pgtap.org](https://pgtap.org) |
 | Playwright test | [https://playwright.dev/docs/intro](https://playwright.dev/docs/intro) |
-| AUTH_CANONICAL.md (internal) | [`AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) |
+| AUTH_CANONICAL.md (internal) | [`AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) |
 | parity-matrix.md (internal) | [`competitor/parity-matrix.md`](../../../competitor/parity-matrix.md) |
 | bsuite-inventory.md §C (internal) | [`competitor/bsuite-inventory.md`](../../../competitor/bsuite-inventory.md) |
 | WCAG 2.2 SC 2.1.1 Keyboard | [https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html) |

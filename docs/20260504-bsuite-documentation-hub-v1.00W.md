@@ -120,10 +120,10 @@ Some concerns no longer have a living markdown spec — the **package** or **cod
 
 Historical references retained for context. Do **not** consult these for forward-looking work — use the "Authoritative source" column above instead.
 
-- [`docs/archive/parent/2026-04-30-references-approved/README.md`](./archive/parent/2026-04-30-references-approved/README.md) — 24 approved reference docs archived 2026-04-30 (auth map, D2C theme, UI/nav/matrix/compliance references, fairwork reference, GTO standards, RAM credential, pricing, competitive landscape, CRM7A research, CRM8U research)
+- [`docs/archive/parent/2026-04-30-references-approved/README.md`](./archive/README.md) — 24 approved reference docs archived 2026-04-30 (auth map, D2C theme, UI/nav/matrix/compliance references, fairwork reference, GTO standards, RAM credential, pricing, competitive landscape, CRM7A research, CRM8U research)
 - [`docs/archive/parent/2026-04-30-audits-closed/README.md`](./archive/parent/2026-04-30-audits-closed/) — closed-loop audits (WCAG contrast, colour-token, Web Vitals baseline)
 - [`docs/archive/parent/2026-04-25-finish-line/README.md`](./archive/parent/2026-04-25-finish-line/) — WS-H sweep (pre-finish-line consolidation)
-- [`docs/archive/2026-05-04-doc-unification/README.md`](./archive/2026-05-04-doc-unification/README.md) — this session's archive (Codex Phase 2 shared-packages plan)
+- [`docs/archive/2026-05-04-doc-unification/README.md`](./archive/README.md) — this session's archive (Codex Phase 2 shared-packages plan)
 - [`docs/archive/README.md`](./archive/README.md) — full archive index
 
 ### 2.4 Active Plans
@@ -482,8 +482,8 @@ Fast navigation for agents and contributors. Bookmark this section.
 ### Archive
 
 - [Archive index](./archive/README.md)
-- [2026-05-04 doc-unification archive](./archive/2026-05-04-doc-unification/README.md)
-- [2026-04-30 references-approved snapshots](./archive/parent/2026-04-30-references-approved/README.md)
+- [2026-05-04 doc-unification archive](./archive/README.md)
+- [2026-04-30 references-approved snapshots](./archive/README.md)
 - [2026-04-30 audits-closed snapshots](./archive/parent/2026-04-30-audits-closed/)
 - [2026-04-25 finish-line archive](./archive/parent/2026-04-25-finish-line/)
 
