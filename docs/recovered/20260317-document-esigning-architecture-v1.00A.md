@@ -1,3 +1,19 @@
+> # ✅ VERDICT: CURRENT TRUTH — shipped, and this is the one to build on
+>
+> **Verdicted 2026-08-17 against live code and the live production database.**
+>
+> This document supersedes both same-vendor documents dated 2026-03-04 in this directory.
+> Measured in production on 2026-08-17: `document_records` (1 row), `document_audit_logs`,
+> `document_templates` (1 row) and `signature_requests` (5 rows) all exist; no Adobe Sign
+> service, module or edge function exists in any submodule.
+>
+> **One correction to the corpus-health note** (`00-READ-THIS-FIRST-corpus-health.md` §1),
+> which says the shipped shape has no `document_signatories`: that table **does** exist in
+> production, recreated 2026-07-30 by `crm7/supabase/migrations/20260730231100_recreate_document_signing.sql`
+> for a `SignDocumentFlow.tsx` that has since been deleted from `crm7/src`. It holds **0 rows**
+> and no application code reads or writes it. Whether it is retained or dropped is an open
+> question recorded in `docs/20260817-coverage-gap-closure-v1.00W.md` §G5.
+>
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).

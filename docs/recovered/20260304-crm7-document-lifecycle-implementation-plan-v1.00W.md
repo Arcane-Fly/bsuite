@@ -1,3 +1,34 @@
+> # ⛔ VERDICT: DEAD — DO NOT BUILD FROM THIS DOCUMENT
+>
+> **Verdicted 2026-08-17 against live code and the live production database.**
+> **This is the live trap named in `docs/recovered/00-READ-THIS-FIRST-corpus-health.md` §1.**
+>
+> Everything below is 2,342 lines of task-by-task instructions for building on
+> **Adobe Acrobat Sign**. Adobe Sign was **rejected on 2026-03-04 — the same day this plan
+> was written** — in `20260304-document-esign-best-practice-research-v1.00W.md` §9, and the
+> replacement shipped on 2026-03-17. This plan was never revised.
+>
+> It is the **longest and most detailed document in this directory**, so it is the one an
+> agent reads first and trusts most. That is the whole danger: the detail was written
+> *before* the reversal made it worthless, and the plan is *older*, so it sorts first.
+>
+> **The successor, and the only current truth:**
+> [`20260317-document-esigning-architecture-v1.00A.md`](./20260317-document-esigning-architecture-v1.00A.md)
+> — *"Replaces: Adobe Sign, DocuSeal, Adobe PDF Services (all removed — zero vendor dependency)."*
+>
+> **Measured, 2026-08-17, not inferred:**
+>
+> | claim | measurement |
+> |---|---|
+> | Adobe Sign is not built | `adobeSignService`/`adobe-sign` appear in **0** application files across all six submodules and `supabase/` (one unrelated test-name match aside). Positive control: the same grep for `document_records` returns 3 crm7 files. |
+> | `document_records` is the live shape | present in production, **1 row** |
+> | `signature_requests` is the live signing surface | present in production, **5 rows** |
+> | `document_signatories` — **the corpus-health note is now stale on this one point** | it says the shipped shape has **no** `document_signatories`. It **exists in production**, recreated by `crm7/supabase/migrations/20260730231100_recreate_document_signing.sql` for a `SignDocumentFlow.tsx` that **no longer exists in `crm7/src`**. **0 rows**, referenced only by generated types. See the deliverable's G5 section — this is an open question, not a licence to build the Adobe shape. |
+>
+> **The rule this document exists to teach:** before treating anything in `recovered/` as a
+> spec, find its successor. Trust the document that claims SHIPPED over the one that claims
+> WORKING, *regardless of length or detail*.
+>
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (NEVER-BUILT-AND-SHOULD-NOT-BE) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
