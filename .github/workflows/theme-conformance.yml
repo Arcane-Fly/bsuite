@@ -844,6 +844,32 @@ jobs:
           corepack enable
           pnpm install --no-frozen-lockfile
 
+      # …AND THAT IS NOT ENOUGH, which is why this step exists.
+      #
+      # `pnpm install` above populates the workspace, but eslint is not a ROOT
+      # dependency — it belongs to packages/eslint-config and packages/dry-lint.
+      # pnpm's isolated node_modules therefore does not place it at the repo
+      # root, and the probe resolves `await import('eslint')` from ITS OWN
+      # directory (scripts/), walking up to the root and finding nothing:
+      #
+      #   FAIL: the probe could not run — ERR_MODULE_NOT_FOUND:
+      #   Cannot find package 'eslint' imported from scripts/check-colour-ban-…
+      #
+      # Note the probe REFUSED rather than passing — that is the design working.
+      # A gate that cannot load its subject must not report a pass, and this one
+      # says so out loud.
+      #
+      # Installed with npm --no-save --no-package-lock so the repo's manifest
+      # and the pnpm lockfile are both untouched; the packages land in the root
+      # node_modules, which is exactly where ESM will look. NODE_PATH is not an
+      # option here — ESM ignores it.
+      - name: Give the probe its imports (no manifest or lockfile change)
+        shell: bash
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund \
+            eslint typescript-eslint
+          node -e "await import('eslint'); await import('typescript-eslint'); console.log('probe imports resolve')" --input-type=module
+
       # SELF-TEST FIRST, deliberately — the house pattern from the near-pure
       # gate above. `--self-test` mutates the call-argument walk out of every
       # inline copy and asserts the guard goes red. A probe that passes with its
