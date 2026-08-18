@@ -73,7 +73,7 @@ For each major documented feature, the codebase (`src/`, `api/`, `supabase/migra
 | Doc claim | Evidence |
 |---|---|
 | Platform (Resend) vs per-user/org (Gmail/MSGraph/SMTP) two-mode dispatch | `src/lib/communications.ts:23` (`integration_id: string`), `:88` (`sender_id: isEmailWithIntegration ? form.integration_id : undefined`), `:143-144` (`if (form.integration_id) options.integration_id = form.integration_id`). `src/services/emailService.ts:414` (`source: options.integration_id ? 'user' : 'platform'`). ✓ |
-| Compose "Send From" picker | `src/pages/communications/compose.tsx:325` (`<Label>Send From</Label>`), `:327` (Select value `form.integration_id || PLATFORM_SENDER_VALUE`), `:345` (integration_id conditional). ✓ |
+| Compose "Send From" picker | `src/pages/communications/compose.tsx:325` (`<Label>Send From</Label>`), `:327` (Select value `form.integration_id PLATFORM_SENDER_VALUE`), `:345` (integration_id conditional). ✓ |
 | `email_integrations` RLS INSERT self-service migration | `supabase/migrations/20260706120000_email_integrations_insert_rls_self_service.sql:1` — re-points INSERT policy at `auth_tenant_id_with_role(ARRAY['owner','admin','manager','staff'])`. ✓ (doc self-reports "not yet applied" to production — that is a deployment-state note, not a code gap) |
 | App-level route gate `/settings/email-accounts` → `manage_communications` | `src/App.tsx:2887` — `permission="manage_communications"`. ✓ (doc's claim of the fix is accurate) |
 | Connect flow `src/pages/settings/email-accounts.tsx` | `src/pages/settings/email-accounts.tsx:1` (24KB, fully implemented). ✓ |

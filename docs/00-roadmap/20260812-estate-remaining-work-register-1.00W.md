@@ -91,10 +91,10 @@ Cheap to implement, blocked purely on a ruling. Grouped so they can be answered 
 
 | # | Item |
 |---|---|
-| 4.1 | **`DraggableCardPage` silently drops any child that is not a `CanvasCard`** | Seven of nine confirm-dialogs would have rendered nothing — button opens a dialog that does not exist, destructive action never fires, and the diff looks perfect. Found by accident. Needs a dev-time warning or a type-level guard. |
-| 4.2 | **Coverage threshold exists (50/40), is unmet (31/26), and never executes** | Worse than having none, because it reads as enforced. |
-| 4.3 | **Four unlabelled SVGs** | The real accessibility gap. *Correction: the earlier claim of "8 images missing alt including CRM7Logo" did not survive verification — zero raw `<img>` lack alt.* |
-| 4.4 | **R80.4 has no `development` branch** | Main-only, so it cannot follow the estate's feat→dev→visual→main process. Either create one or record the exemption. |
+| 4.1 | **`DraggableCardPage` silently drops any child that is not a `CanvasCard`** Seven of nine confirm-dialogs would have rendered nothing — button opens a dialog that does not exist, destructive action never fires, and the diff looks perfect. Found by accident. Needs a dev-time warning or a type-level guard. |
+| 4.2 | **Coverage threshold exists (50/40), is unmet (31/26), and never executes** Worse than having none, because it reads as enforced. |
+| 4.3 | **Four unlabelled SVGs** The real accessibility gap. *Correction: the earlier claim of "8 images missing alt including CRM7Logo" did not survive verification — zero raw `<img>` lack alt.* |
+| 4.4 | **R80.4 has no `development` branch** Main-only, so it cannot follow the estate's feat→dev→visual→main process. Either create one or record the exemption. |
 
 ---
 

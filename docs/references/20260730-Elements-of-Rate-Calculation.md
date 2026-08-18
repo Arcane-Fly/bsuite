@@ -458,7 +458,7 @@ Retrieve all modern awards.
 | `award_fixed_id`         | integer          | Unique fixed code for this award instance.                  |
 | `award_id`               | integer          | Internal identifier of the award.                           |
 | `award_operative_from`   | date             | Date the award came into operation.                         |
-| `award_operative_to`     | date | null | Date the award was revoked (if any).                        |
+| `award_operative_to` | date | null Date the award was revoked (if any). |
 | `code`                   | string           | Award code or number.                                       |
 | `name`                   | string           | Human-readable award title.                                 |
 | `last_modified_datetime` | datetime         | Timestamp of last modification.                             |
@@ -475,24 +475,24 @@ Retrieve all classification pay rates.
 | Field                       | Type             | Description                                                                                      |
 |-----------------------------|------------------|--------------------------------------------------------------------------------------------------|
 | `award_fixed_id`            | integer          | Award reference.                                                                                 |
-| `base_pay_rate_id`          | string | null | Base rate resource ID (prefixed).                                                                 |
-| `base_rate`                 | decimal | null | Base pay rate value.                                                                             |
-| `base_rate_type`            | string | null | Unit of base rate (Weekly, Hourly, etc.).                                                        |
-| `calculate_pay_rate_id`     | string | null | Calculated rate resource ID.                                                                      |
-| `calculated_rate_type`      | string | null | Unit of calculated rate (Hourly, Weekly, etc.).                                                  |
-| `calculated_rate`           | decimal | null | Derived rate value for this classification.                                                      |
+| `base_pay_rate_id` | string | null Base rate resource ID (prefixed). |
+| `base_rate` | decimal | null Base pay rate value. |
+| `base_rate_type` | string | null Unit of base rate (Weekly, Hourly, etc.). |
+| `calculate_pay_rate_id` | string | null Calculated rate resource ID. |
+| `calculated_rate_type` | string | null Unit of calculated rate (Hourly, Weekly, etc.). |
+| `calculated_rate` | decimal | null Derived rate value for this classification. |
 | `classification`            | string           | Sub‑level classification label.                                                                  |
 | `classification_fixed_id`   | integer          | Unique fixed code for this classification instance.                                              |
 | `classification_level`      | integer          | Hierarchy level (1 = lowest).                                                                    |
-| `clause_description`        | string | null | Text description of the clause.                                                                  |
+| `clause_description` | string | null Text description of the clause. |
 | `clause_fixed_id`           | integer          | Fixed code for the clause.                                                                       |
 | `clauses`                   | string           | Clause number.                                                                                   |
-| `employee_rate_type_code`   | string | null | Rate indicator (e.g., `AP` = Apprentice, `CA` = Cadet).                                          |
-| `next_down_classification_fixed_id` | integer | null | Next lower classification code.                                                          |
-| `next_up_classification_fixed_id`   | integer | null | Next higher classification code.                                                         |
+| `employee_rate_type_code` | string | null Rate indicator (e.g., `AP` = Apprentice, `CA` = Cadet). |
+| `next_down_classification_fixed_id` | integer | null Next lower classification code. |
+| `next_up_classification_fixed_id` | integer | null Next higher classification code. |
 | `operative_from`            | date             | Effective date of this classification.                                                           |
-| `operative_to`              | date | null | End date of this classification.                                                                  |
-| `parent_classification_name`| string | null | Parent classification label.                                                                    |
+| `operative_to` | date | null End date of this classification. |
+| `parent_classification_name` | string | null Parent classification label. |
 | `published_year`            | integer          | Year of the annual wage review.                                                                  |
 | `version_number`            | integer          | Resource version.                                                                                |
 
@@ -506,7 +506,7 @@ Retrieve all monetary allowances added to ordinary pay.
 | Field                   | Type             | Description                                                       |
 |-------------------------|------------------|-------------------------------------------------------------------|
 | `allowance`             | string           | Allowance label.                                                  |
-| `allowance_amount`      | decimal | null | Calculated allowance value for current year.                        |
+| `allowance_amount` | decimal | null Calculated allowance value for current year. |
 | `award_fixed_id`        | integer          | Award reference.                                                  |
 | `base_pay_rate_id`      | integer          | Base rate ID used for calculation.                                |
 | `clause_fixed_id`       | integer          | Clause reference.                                                 |
@@ -515,12 +515,12 @@ Retrieve all monetary allowances added to ordinary pay.
 | `is_all_purpose`        | boolean          | `1` = Applies to all; `2` = Specific group.                       |
 | `last_modified_date_time`| datetime        | Last modified timestamp.                                          |
 | `operative_from`        | date             | Effective date.                                                  |
-| `operative_to`          | date | null | End date.                                                        |
-| `parent_allowance`      | string | null | Parent allowance label.                                         |
-| `payment_frequency`     | string | null | Frequency (per week, per hour, etc.).                           |
+| `operative_to` | date | null End date. |
+| `parent_allowance` | string | null Parent allowance label. |
+| `payment_frequency` | string | null Frequency (per week, per hour, etc.). |
 | `published_year`        | integer          | Year of the annual wage review.                                  |
-| `rate`                  | decimal | null | Percentage of standard rate.                                     |
-| `rate_unit`             | string | null | Unit of `rate` (e.g., Percent).                                  |
+| `rate` | decimal | null Percentage of standard rate. |
+| `rate_unit` | string | null Unit of `rate` (e.g., Percent). |
 | `version_number`        | integer          | Resource version.                                                |
 | `wage_allowance_fixed_id`| integer         | Fixed code for this allowance.                                   |
 
@@ -534,20 +534,20 @@ Retrieve all expense-related allowances.
 | Field                      | Type             | Description                                                       |
 |----------------------------|------------------|-------------------------------------------------------------------|
 | `allowance`                | string           | Allowance label.                                                  |
-| `allowance_amount`         | decimal | null | Calculated allowance value for current year.                        |
+| `allowance_amount` | decimal | null Calculated allowance value for current year. |
 | `award_fixed_id`           | integer          | Award reference.                                                  |
 | `clauses`                  | string           | Clause number.                                                   |
 | `clause_fixed_id`          | integer          | Clause reference.                                                 |
 | `code`                     | string           | Award code.                                                      |
-| `cpi_quarter_last_adjusted`| string | null | Last CPI quarter adjusted (populated from 2021).                  |
+| `cpi_quarter_last_adjusted` | string | null Last CPI quarter adjusted (populated from 2021). |
 | `expense_allowance_fixed_id`| integer         | Fixed code for this expense allowance.                           |
 | `is_all_purpose`           | boolean          | `1` = Applies to all; `2` = Specific group.                       |
-| `last_adjusted_year`       | integer | null | Year when allowance was last adjusted.                              |
+| `last_adjusted_year` | integer | null Year when allowance was last adjusted. |
 | `last_modified_date_time`  | datetime         | Last modified timestamp.                                          |
 | `operative_from`           | date             | Effective date.                                                  |
-| `operative_to`             | date | null | End date.                                                        |
-| `parent_allowance`         | string | null | Parent allowance label.                                         |
-| `payment_frequency`        | string | null | Frequency (per meal, per km, etc.).                              |
+| `operative_to` | date | null End date. |
+| `parent_allowance` | string | null Parent allowance label. |
+| `payment_frequency` | string | null Frequency (per meal, per km, etc.). |
 | `published_year`           | integer          | Year of the annual wage review.                                  |
 | `version_number`           | integer          | Resource version.                                                |
 
@@ -561,20 +561,20 @@ Retrieve all penalty rate adjustments.
 | Field                   | Type             | Description                                                       |
 |-------------------------|------------------|-------------------------------------------------------------------|
 | `award_fixed_id`        | integer          | Award reference.                                                  |
-| `base_pay_rate_id`      | string | null | Base rate ID used for calculation.                                |
-| `classification_level`  | integer | null | Hierarchy level for this penalty.                                  |
+| `base_pay_rate_id` | string | null Base rate ID used for calculation. |
+| `classification_level` | integer | null Hierarchy level for this penalty. |
 | `clause_description`    | string           | Description from the award summary.                               |
 | `clause_fixed_id`       | integer          | Clause reference.                                                 |
 | `code`                  | string           | Award code.                                                      |
-| `employee_rate_type_code`| string | null | Rate indicator (e.g., `AP`, `CA`).                                 |
+| `employee_rate_type_code` | string | null Rate indicator (e.g., `AP`, `CA`). |
 | `last_modified_date_time`| datetime        | Last modified timestamp.                                          |
 | `operative_from`        | date             | Effective date.                                                  |
-| `operative_to`          | date | null | End date.                                                        |
-| `penalty_calculated_value`| decimal | null | Calculated penalty rate.                                          |
+| `operative_to` | date | null End date. |
+| `penalty_calculated_value` | decimal | null Calculated penalty rate. |
 | `penalty_description`   | string           | Textual description of the penalty.                               |
 | `penalty_fixed_id`      | integer          | Fixed code for this penalty.                                      |
 | `published_year`        | integer          | Year of the annual wage review.                                  |
-| `rate`                  | decimal | null | Penalty as percentage of ordinary hourly rate.                   |
+| `rate` | decimal | null Penalty as percentage of ordinary hourly rate. |
 | `version_number`        | integer          | Resource version.                                                |
 
 ---
