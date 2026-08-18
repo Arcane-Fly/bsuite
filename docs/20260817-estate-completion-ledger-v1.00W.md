@@ -3,6 +3,21 @@
 **Document:** `docs/20260817-estate-completion-ledger-v1.00W.md`
 **Date:** 2026-08-17, amended 2026-08-18 · **Version:** 1.00W · **Status:** W — Working
 
+> **Amendment, 2026-08-19j — K-0 closes, and that makes FIVE rows in one day that described
+> a real defect accurately and were simply never revisited after it was fixed.**
+> DONE 49 · PARTIAL 20 · OPEN 6.
+>
+> K-0 made three claims and all three are now false: the component is published (`@bsuite/ui`
+> 1.2.0, verified by unpacking the tarball rather than reading workspace source), both apps
+> resolve that version in their lockfiles, and adoption is five files each — in exactly the
+> K-series surfaces the component was built for.
+>
+> **The pattern is worth stating because it changes what the residue is.** M-2, TH-3, V-11,
+> TH-7 and now K-0 were all already fixed in code and stale here. In each case the row was
+> accurate when written and the fix landed without it being revisited. That work was
+> reconciliation, not repair — and it means the rows still open skew harder toward genuine
+> gaps than the counts alone suggest.
+>
 > **Amendment, 2026-08-19i — D-6 and TH-7 close. DONE 48 · PARTIAL 21 · OPEN 6.**
 >
 > **D-6** kept its refusal of a blanket rename and gained the other half of that ruling: if a
@@ -283,10 +298,10 @@ register's 264; and the register's own headline "all 264 were read and classifie
 
 | Verdict | Count | Meaning |
 |---|---:|---|
-| **DONE** | **48** | Re-measured fixed, with evidence. No work remains. |
+| **DONE** | **49** | Re-measured fixed, with evidence. No work remains. |
 | **NOT-A-DEFECT** | **4** | Measured; the item was never a defect. Filed in error or measured wrongly. |
 | **SUPERSEDED** | **1** | Already settled by an operator ruling the register post-dates. |
-| **PARTIAL** | **21** | Half shipped. Real work remains — counted as open below. |
+| **PARTIAL** | **20** | Half shipped. Real work remains — counted as open below. |
 | **OPEN** | **6** | Untouched, or the fix exists but has not reached the running system. |
 | **Total** | **80** | |
 
@@ -408,7 +423,7 @@ This is the block gating the host money view. It is the least-advanced class in 
 
 | # | Item | Verdict | Evidence measured 2026-08-17 | Size |
 |---|---|---|---|---|
-| K-0 | *(class-level, not one of the 87)* The shared "data unavailable" component shipped and nobody can use it | **PARTIAL** | Component exists and is exported, but the package version carrying it is **unpublished** — both apps still resolve the older version. Zero adoption in either app (positive control confirms the grep reaches both trees). **Until it is published the fix is unreachable from the product.** | S+M |
+| K-0 | *(class-level, not one of the 87)* The shared "data unavailable" component shipped and nobody can use it | ~~**PARTIAL**~~ **DONE — re-measured 2026-08-19** | Component exists and is exported, but the package version carrying it is **unpublished** — both apps still resolve the older version. Zero adoption in either app (positive control confirms the grep reaches both trees). **Until it is published the fix is unreachable from the product.** **ALL THREE CLAIMS ARE NOW FALSE, re-measured 2026-08-19.** *Unpublished:* `@bsuite/ui` is at **1.2.0** on the registry and its published `dist/index.d.ts` exports `DataUnavailable` — checked by unpacking the tarball, not by reading the workspace source. *Both apps resolve the older version:* crm7 and business-suite-unified each declare `^1.2.0` and each lockfile resolves `1.2.0`. *Zero adoption:* **five files each**, and the import is `from '@bsuite/ui'` in every case — not a local re-implementation. crm7: `lib/schemaLag.ts`, `components/platform/SchemaLagBanner.tsx`, `pages/financial/budget/`, `pages/hr/termination.tsx`, plus its guard test. BSU: `Developer/Platform.tsx`, `GTO.tsx`, `Admin/SystemOverview.tsx`, `Admin.tsx`, plus its guard test. **The K-series surfaces this component was built for are exactly the ones now using it**, which is the adoption the row asked for rather than a bare export count. | S+M |
 | K-1 | Budget page renders invented figures behind a fake delay, with a working Export | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | Confirmed at the cited lines including the artificial 1-second delay and the export writing fabricated dollar totals to file. **Worse than filed:** zero tables matching `budget` exist in production (positive control found one for a different pattern) — there is no backing store at all, so this is pure fabrication. **Re-measured 2026-08-18 by reading what the page RENDERS, not what it mentions. `crm7/src/pages/financial/budget/index.tsx` now returns a single `DataUnavailable state="unavailable"` block: *"No budgets source is connected. This module has not been built yet — this is not a zero and not an empty list, there is nothing to query."* No `DUMMY_BUDGETS`, no `setTimeout` delay, no export handler — the words survive only in the header comment recording what the surface used to do. 3 tests pass.** | L or S |
 | K-2 | Compliance page returns a fabricated 95% score on any query failure | **DONE — 2026-08-18** | Re-measured: the CATCH half the register names was already fixed on `development` (the block now reads "DO NOT FABRICATE" and rethrows; no `DEMO_STATS` survives). **The surviving half was the divide-by-zero guard:** `GTO.tsx:200` read `totalChecks > 0 ? … : 95`, so a tenant with zero apprentices, zero host employers and zero site visits — the most likely first-customer state — got a green 95% ring computed from an empty set. **Confirmed live in production** before the fix: `curl https://suite.crm7.app/assets/GTO-DMPQFw8A.js` contains `p=d>0?Math.round(f/d*100):95` (positive control: `not_tracked` present in the same chunk, so it is the GTO compliance page). Now `computeOverallScore()` returns `number \ null`, `ComplianceStats.overallScore` is nullable, and `ScoreCard` renders `DataUnavailable state="empty"` instead of a ring. Mutation-tested: restoring `return 95` turns 3 of 8 assertions RED; restoring the fix byte-identically returns 8/8 GREEN. | S |
 | K-3 | Health surfaces fall back to invented state | ~~**OPEN**~~ **DONE — re-measured 2026-08-18** | Confirmed — and the register **mislocated one site**. There are **three** fallbacks across **two** files, not two: two in the platform page, plus an unregistered third asserting "Checking…"/"Not monitored" for database, auth, storage and API. On error these render "checking…" forever. **Re-measured 2026-08-18: `PLACEHOLDER_CHECKS` is gone from `Developer/Platform.tsx`, and the file says why in its own words — *"Deleted outright. The render now branches on the query state instead."* The remaining `Checking…` string is the live button label (`{checking ? 'Checking…' : 'Re-check'}`), not a fallback row. The original defect is worth keeping visible: a health panel that says "Checking…" forever reads as *in progress*, so nobody investigates, and the one surface whose job is to report breakage was structurally unable to report its own.** | S |
