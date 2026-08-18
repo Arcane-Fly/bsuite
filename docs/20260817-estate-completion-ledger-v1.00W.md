@@ -347,6 +347,14 @@ filed: identity and the foreign keys exist; only the scoping policy is missing.
 **Adoption — 11 items.** Things built and never reached the product. AD-4 is the sharpest: a
 self-service onboarding flow that **has never been exercised once**.
 
+*Corrected 2026-08-18.* AD-4 is still the sharpest, but not for the reason given here, and the
+difference decides what to do about it. It was never an adoption gap: the invite action rendered
+only inside a transient wizard step that none of the 50 existing people rows could ever reach, so
+"never exercised" was a **build defect**. It is fixed (crm7#1801), and it — along with AD-6 and
+AD-7 — sat unseen behind a stale parent gitlink, which is the failure mode this whole class should
+be read for. "Things built and never reached the product" has a second, quieter member:
+**things built, merged, and never pointed at**.
+
 **Verification integrity — 9 items.** V-1 is the keystone: until end-to-end credentials work, every
 visual and runtime verdict in this ledger rests on reading rather than running. Note V-1 is *worse*
 than filed — the credential is invalid, not merely unwired.
