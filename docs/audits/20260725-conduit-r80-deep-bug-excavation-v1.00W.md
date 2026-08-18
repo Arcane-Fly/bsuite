@@ -7,6 +7,13 @@
 > **Method:** Static read of source + tests + migrations. No code was executed. Each finding cites exact file:line evidence and notes whether the existing test suite would catch the bug.
 > **Severity scheme:** `Critical` = wrong money/compliance/data-corruption · `High` = silent wrong answer or non-atomic state · `Medium` = feature gap with audit-trail risk · `Low` = latent/edge-case only.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. conduit — STA Parser Stubs

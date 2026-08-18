@@ -40,6 +40,14 @@
 
 **Method.** ~~All **264 non-archive documents** under `docs/` were read and classified.~~
 **Corrected 2026-08-17 — the count was 266, and "read and classified" overstates the coverage.**
+
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 There were **266** non-archive documents under `docs/` on 2026-08-14, not 264. Enumeration rule,
 stated because a bare count with no rule is what let this drift: *tracked `*.md` files under
 `docs/`, excluding `docs/archive/**`*, measured at this document's own commit `b8a9941e`

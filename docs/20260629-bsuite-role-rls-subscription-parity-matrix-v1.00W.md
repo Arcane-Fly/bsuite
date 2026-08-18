@@ -8,6 +8,13 @@
 
 **Update 2026-06-29 (Batch D fixes landed):** all five gaps G1–G5 (WC-008…WC-012) are now **resolved in code** — see §3 Resolution notes per gap and §3.1 for the consolidated change set. Live browser/JWT decode evidence is collected in Batch E against the `d.*` development deploys.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. Role model layers (verified)

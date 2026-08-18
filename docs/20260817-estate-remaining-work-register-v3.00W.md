@@ -20,6 +20,14 @@
 **Document:** `docs/20260817-estate-remaining-work-register-v3.00W.md`
 **Date:** 2026-08-17 · **Version:** 3.00W · **Status:** W — Working
 **Supersedes:** `docs/20260814-estate-remaining-work-register-v2.00W.md` in full, including three of its
+
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 own findings that this pass proved wrong. v2 read the parent `docs/` only; this reads every
 submodule's `docs/` as well.
 

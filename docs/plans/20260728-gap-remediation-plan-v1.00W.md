@@ -4,6 +4,13 @@
 > operation before being committed. Restored from the surviving task briefs in
 > `.superpowers/sdd/20260728-gap-remediation-plan-v1.00W/` and the controller ledger.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 Fixes the residue of [20260728-weekly-gap-register-v1.00W.md](../20260728-weekly-gap-register-v1.00W.md)
 after re-verification. Hermes closed most P0s between the assessment and this plan; only the items
 below remained open, each re-confirmed live at 2026-07-28T07:45Z.

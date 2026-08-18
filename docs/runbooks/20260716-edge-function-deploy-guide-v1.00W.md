@@ -15,7 +15,7 @@ Edge functions live under `<submodule>/supabase/functions/<name>/` (or `supabase
 gh workflow run supabase-functions-deploy.yml --ref main -f submodule=<name>
 ```
 
-- `submodule`: `all`, `root`, `crm7`, `R80.3`, `braden`, `business-suite-unified`, `conduit`, `throughput`.
+- `submodule`: `all`, `root`, `crm7`, `R80.4`, `braden`, `business-suite-unified`, `conduit`, `throughput`.
 - `force_redeploy`: the input exists in the workflow's `workflow_dispatch` declaration but **is never referenced by any job or step** (verified: `grep -n force_redeploy .github/workflows/supabase-functions-deploy.yml` returns only the input declaration). `true` and `false` behave identically. In practice this doesn't matter for the common case, because any manual dispatch already redeploys **every** function in the resolved scope unconditionally — there is no source-diffing on manual dispatch to begin with. Only a push-triggered run scopes to submodules where `supabase/functions/**` changed in the diff between the last two parent-repo commits. **This is tracked as a workflow bug** (dead input, misleading to anyone reading the dispatch form); don't rely on `force_redeploy` doing anything until the workflow is fixed to honor it or the input is removed.
 
 As with the migration workflow, the checkout step uses `submodules: recursive`, so it clones each submodule at the SHA the parent's gitlink currently points to. **If the parent pointer for a submodule is stale, a manual dispatch will happily redeploy the OLD code** — it deploys everything present in the checked-out tree, not everything present upstream. Bump the pointer first (see the [Parent Pointer Reconcile guide](20260716-parent-pointer-reconcile-guide-v1.00W.md)).

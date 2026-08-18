@@ -8,6 +8,13 @@
 
 **Tech Stack:** React 19, Tailwind v4 theme variables, OKLCH CSS colours, shadcn bridge variables, `@bsuite/theme`, Supabase tenant branding data, Playwright/axe for UI verification.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## Mandatory Before Merge (FF-SELF-VALIDATION-20260507)

@@ -2,6 +2,14 @@
 
 **Task:** Gap Remediation Plan Task 3 (P0-2) — reconcile the migration ledger.
 **Scope:** the 18 in-window migrations named in the task brief as "applied out-of-band,
+
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 absent from `supabase_migrations.schema_migrations`" (17 above `MIGRATION_FLOOR`
 `20260611000000` plus one pre-floor file noted for completeness).
 **What this document is:** a per-file idempotency verdict + evidence of a

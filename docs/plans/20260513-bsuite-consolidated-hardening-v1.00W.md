@@ -9,6 +9,13 @@ critical_assessment_by: claude-code session 2026-05-13
 
 # BSuite Consolidated Hardening — Multi-Cycle Execution Plan
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Why this exists
 
 Operator supplied a 7-phase consolidated hardening prompt covering auth posture, DB security/performance, edge-function cleanup, Zod 4 alignment, skill creation, and red-team verification. It cites 47 SECURITY DEFINER findings + 25 RLS initplan + 56 multiple-permissive + 23 unindexed FK + 452 unused index findings from Supabase advisors against `tuybltdrdefjblnplpqo`.

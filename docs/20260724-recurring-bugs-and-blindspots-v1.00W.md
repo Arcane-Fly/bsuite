@@ -2,6 +2,13 @@
 
 > **Naming:** `20260724-recurring-bugs-and-blindspots-v1.00W.md` · Status **W** · Discovery only (no fixes in this pass). Refined via prompt-enhancer Standard tier (`docs/plans/20260724-recurring-bugs-blindspots-refined-v1.00D.md`). Evidence window: 2026-07-22→24 ship + remaining open GH issues as of 2026-07-24.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## 1. Executive summary
 
 The monorepo is **not randomly buggy** — it has a small set of **recurring classes** that reappear whenever a new surface is added without the permanent control that would have blocked them. The 2026-07-22→24 window closed a large batch (docs program, 48 REAL bugs, email/funding expansion, one-shot audit) but deliberately left **process debt**, **reports pipeline**, **CI false-greens**, **shared-component copy-paste**, and **auth/CSP/advisor** workstreams largely untouched.

@@ -1,5 +1,12 @@
 # 20260506 — Codehouse Parity Sub-Plans
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 Sub-plans of the parent index [`../20260506-codehouse-parity-and-platform-360-v1.00W.md`](../20260506-codehouse-parity-and-platform-360-v1.00W.md). Each portal sub-plan defines roles, source-routes, parity matrix coverage, and the WS-D Platform-360 capability gap closure for that surface.
 
 **Permissions baseline:** [`../../../AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) — OAuth 2.1 PKCE + JWKS + Supabase RLS. **No new RBAC/ABAC framework** is introduced by these plans.
