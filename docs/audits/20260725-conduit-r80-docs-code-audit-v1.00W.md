@@ -3,6 +3,30 @@
 > **File:** `20260725-conduit-r80-docs-code-audit-v1.00W.md`
 > **Status:** W (Working) · **Mode:** READ-ONLY (no files modified)
 > **Date:** 2026-07-25
+
+> ## ⚠ §4 AUDITS A REPOSITORY THAT NO LONGER EXISTS — re-measured 2026-08-18
+>
+> **This audit was accurate on 2026-07-25. It is not a document to act on today.**
+>
+> Section 4 is headed *"R80.3 — Funding Offsets"*. **R80.3 was archived**; the live
+> repository is R80.4, which is a RESTRUCTURE rather than a rename, so those paths
+> resolve nowhere. Re-checking every row this audit marks `✅` (exists):
+>
+> | | |
+> |---|---|
+> | rows marked ✅ | **40** |
+> | exact path still resolves | **11** |
+> | file moved — path stale, code alive | **7** |
+> | genuinely gone (almost all §4 / R80.3) | **22** |
+>
+> The 22 cluster: the entire funding-offset feature — migration, `fundingSchemes.ts`,
+> `fundingOffsetTool.ts`, `fundingOffset.ts`, `fundingOffsetsService.ts` and five test
+> files. That feature is not lost; it lives in **crm7 (5 files) and BSU (5 files)**
+> today. What is gone is the R80.3 copy this audit examined.
+>
+> **The table below is NOT corrected, deliberately.** A dated audit's rows are the
+> measurement it was written to preserve; rewriting them destroys the record and
+> leaves a document that looks current and was never re-verified. Read §4 as history.
 > **Scope:** Non-archive feature/reference docs in `conduit/docs/` and `R80.3/docs/`, cross-checked against source code in both repos.
 > **Coverage:** recruitment, STA email ingestion, handover, billing models, charge-calc, funding offsets, payroll (payday super), awards (FWC MAPD), training fees, invoice runs, typecheck gate, schema-builder consolidation, CSP.
 > **Match rule:** SUBSTANTIVE-MATCH = the claimed file/function/symbol/table/column exists and the claim is substantively accurate. Line-number drift and minor wording differences do not fail a claim.
