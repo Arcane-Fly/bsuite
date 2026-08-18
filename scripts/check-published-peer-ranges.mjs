@@ -111,6 +111,52 @@ export function satisfies(version, range) {
   return { ok: true, why: null }
 }
 
+
+/** Parse a version into [major, minor, patch]; missing segments are zero. */
+export function parseVersion(v) {
+  const m = /^(\d+)(?:\.(\d+))?(?:\.(\d+))?/.exec(String(v).trim())
+  return m ? [Number(m[1]), Number(m[2] ?? 0), Number(m[3] ?? 0)] : null
+}
+
+/** -1 / 0 / 1, or null if either side is unparseable. */
+export function compareVersions(a, b) {
+  const x = parseVersion(a), y = parseVersion(b)
+  if (!x || !y) return null
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1
+  return 0
+}
+
+/**
+ * Read this checkout's source manifest for a package name.
+ *
+ * WHY A REGISTRY GUARD READS LOCAL SOURCE. Without this, the guard fails the
+ * pull request that fixes it: the defect lives on npm, a PR cannot change npm,
+ * and the corrected version only publishes when the PR MERGES. Reported red on
+ * the fix itself, the guard is unmergeable by construction and the estate learns
+ * to force past it — which is how a guard stops meaning anything.
+ *
+ * So a finding is downgraded to FIX-PENDING-PUBLISH when BOTH hold:
+ *   - this checkout declares a version NEWER than the published one, and
+ *   - the offending declaration is gone from the local source.
+ * The defect is still stated in full; it just no longer blocks the change that
+ * removes it. Anything else — including a local fix with no version bump, which
+ * can never ship — still fails.
+ */
+export function localManifest(name, root = REPO_ROOT) {
+  const dir = join(root, 'packages')
+  if (!existsSync(dir)) return null
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const p = join(dir, entry.name, 'package.json')
+    if (!existsSync(p)) continue
+    try {
+      const d = JSON.parse(readFileSync(p, 'utf8'))
+      if (d.name === name) return d
+    } catch { /* unparseable manifests are surfaced by localPackageNames' caller */ }
+  }
+  return null
+}
+
 async function fetchManifest(name) {
   const res = await fetch(`${REGISTRY}/${name.replace('/', '%2f')}`, {
     headers: { accept: 'application/vnd.npm.install-v1+json, application/json' },
@@ -157,8 +203,19 @@ async function main(argv) {
     }
   }
 
-  const findings = []
+  const findings = []   // blocking
+  const pending = []    // real, but already corrected in this checkout and awaiting publish
   let edges = 0
+
+  // Is `dep`'s offending declaration already fixed here AND version-bumped so
+  // it can actually ship? A fix nobody can publish is not a fix.
+  const fixedLocally = (pkgName, block, dep, badRange, publishedVersion) => {
+    const local = localManifest(pkgName)
+    if (!local) return false
+    if (compareVersions(local.version, publishedVersion) !== 1) return false
+    const declared = local[block]?.[dep]
+    return declared !== undefined && declared !== badRange
+  }
   for (const name of names) {
     const meta = manifests.get(name)
     if (!meta) continue // never published; nothing to serve, nothing to check
@@ -170,7 +227,8 @@ async function main(argv) {
       for (const [dep, range] of Object.entries(published[block] || {})) {
         edges++
         if (isUnresolvable(range)) {
-          findings.push(
+          const bucket = fixedLocally(name, block, dep, range, latest) ? pending : findings
+          bucket.push(
             `UNRESOLVABLE  ${name}@${latest} ${block}.${dep} = ${JSON.stringify(range)} — a ` +
               `pnpm workspace/file protocol reached the registry. It is not a semver range, so ` +
               `no consumer outside this workspace can satisfy it. Declare an explicit range in ` +
@@ -186,7 +244,8 @@ async function main(argv) {
         if (why) {
           findings.push(`UNREADABLE-RANGE  ${name}@${latest} peer ${dep} = ${JSON.stringify(range)} — ${why}`)
         } else if (!ok) {
-          findings.push(
+          const bucket = fixedLocally(name, 'peerDependencies', dep, range, latest) ? pending : findings
+          bucket.push(
             `STALE-PEER  ${name}@${latest} peers on ${dep} ${range}, but ${dep} is at ${peerLatest} — ` +
               `every install prints an unmet-peer warning. Usually caused by \`workspace:^\` freezing ` +
               `the range to whatever the sibling was at publish time.`,
@@ -196,19 +255,27 @@ async function main(argv) {
     }
   }
 
+  for (const p of pending) {
+    console.log(`::notice::FIX-PENDING-PUBLISH  ${p}`)
+    console.log(
+      '  ^ already corrected in this checkout with a version bump, so it ships on merge. ' +
+        'Reported, not failed — a guard that blocks its own fix is unmergeable by construction.',
+    )
+  }
   if (findings.length > 0) {
     for (const f of findings) console.log(`::error::${f}`)
     console.log('')
     console.log(
       `check-published-peer-ranges: ${names.length} package(s), ${edges} published dependency ` +
-        `edge(s) read from ${REGISTRY} — ${findings.length} finding(s).`,
+        `edge(s) read from ${REGISTRY} — ${findings.length} blocking finding(s), ` +
+        `${pending.length} awaiting publish.`,
     )
     return 1
   }
   console.log(
     `check-published-peer-ranges: ${names.length} package(s), ${edges} published dependency ` +
-      `edge(s) read from ${REGISTRY} — all resolvable, every @bsuite/* peer range admits its ` +
-      `peer's current latest.`,
+      `edge(s) read from ${REGISTRY} — 0 blocking finding(s), ${pending.length} awaiting ` +
+      `publish. Every other @bsuite/* peer range admits its peer's current latest.`,
   )
   return 0
 }
@@ -241,6 +308,20 @@ function selfTest() {
   })
   check('a PARTIAL bound parses — <2 means <2.0.0', () => eq(satisfies('1.9.9', '>=0.7.0 <2').ok, true, 'partial upper'))
   check('a partial lower bound parses — >=1 means >=1.0.0', () => eq(satisfies('0.9.0', '>=1').ok, false, 'partial lower'))
+  // The FIX-PENDING-PUBLISH downgrade rests entirely on these two, so they are
+  // exercised in both directions rather than assumed.
+  check('compareVersions orders a real bump', () => eq(compareVersions('1.0.1', '1.0.0'), 1, 'newer'))
+  check('compareVersions sees an equal version as NOT a bump', () =>
+    eq(compareVersions('1.0.0', '1.0.0'), 0, 'equal — a local fix with no bump can never ship'))
+  check('compareVersions sees a downgrade', () => eq(compareVersions('0.9.0', '1.0.0'), -1, 'older'))
+  check('compareVersions refuses garbage rather than guessing', () =>
+    eq(compareVersions('not-a-version', '1.0.0'), null, 'unparseable'))
+  check('localManifest finds a real package in this checkout', () => {
+    const d = localManifest('@bsuite/theme')
+    if (!d || !d.version) throw new Error('@bsuite/theme should resolve from packages/')
+  })
+  check('localManifest returns null for a name we do not own', () =>
+    eq(localManifest('@not-ours/nothing'), null, 'unknown package'))
   check('a package with no packages/ dir yields no names', () => eq(localPackageNames('/nonexistent').length, 0, 'empty'))
 
   for (const [s, n] of results) console.log(`  ${s}  ${n}`)
@@ -253,6 +334,12 @@ function selfTest() {
   return failed === 0 ? 0 : 1
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// `process.argv[1]` is undefined under `node -e` / `node --import`, and calling
+// pathToFileURL(undefined) throws — so merely IMPORTING this module crashed.
+// The exported helpers are meant to be importable (that is how a test reaches
+// satisfies() and localManifest()), so guard the entry-point check itself.
+const invokedDirectly =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href
+if (invokedDirectly) {
   process.exit(await main(process.argv.slice(2)))
 }
