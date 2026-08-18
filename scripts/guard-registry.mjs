@@ -560,6 +560,37 @@ export const GUARDS = [
       'dead chain."',
   },
   {
+    id: 'parent-check-placement-award-code',
+    label: 'Placement award-code coverage (can a claimed charge rate be reconciled to an award later?)',
+    repo: '.',
+    command: ['node', 'scripts/check-placement-award-code.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/schema-lag.yml',
+    mode: 'run',
+    // Same deliberate exception as check-placement-rate-provenance directly
+    // above, for the same reason: the real run needs a live production
+    // credential the watcher does not hold, so registering the real command
+    // would record a permanent COULD_NOT_EXECUTE. The self-test exercises the
+    // identical `evaluate()` the real run calls.
+    //
+    // Narrower question than check-placement-rate-provenance: that guard asks
+    // whether a wage came from a real award_rates ROW (award_rate_id); this
+    // one asks whether the placement even NAMES an award (award_code) — the
+    // two diverge on most of this estate's live data, where an award is named
+    // but no specific rate row has ever been resolved against it.
+    // `placements_award_code_required_when_claimed_chk` (20260822060000)
+    // closes the fabrication half at the DB level (claiming resolved/
+    // migrated_to_discontinued with no award_code is now a 23514); this guard
+    // covers the half that migration deliberately leaves open — the honest
+    // 'manual' quote flow, ratcheted at GAP_BASELINE=8 (measured 2026-08-17)
+    // so the gap is visible and cannot silently grow past what was measured.
+    evidence:
+      '"check-placement-award-code --self-test: 8 cases exercised across both ' +
+      'directions (at-baseline-passes, below-baseline-passes, G1 rise, G2 ' +
+      'fabricated-shaped, G3 apprentice-attached, G4 empty-scan-refused, ' +
+      'gap-closed-passes), plus 1 positive control proving the manual/no-award ' +
+      'split narrows the naive \'no award_code\' count."',
+  },
+  {
     id: 'parent-check-own-package-freshness',
     label: 'Own-package freshness (do the six apps run our latest @bsuite/* publishes?)',
     repo: '.',
