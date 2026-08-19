@@ -1,8 +1,9 @@
 # Built but unlanded, built but unwired — a machine sweep
 
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
-**Date:** 2026-08-17 · **Version:** 1.00W · **Status:** W — Working
-**Scope:** every git work tree on this laptop, and every source module and edge function in the six apps
+**Date:** 2026-08-17, §9 added 2026-08-19 · **Version:** 1.01W · **Status:** W — Working
+**Scope:** every git work tree on this laptop, every source module and edge function in the six apps,
+and (from 2026-08-19, §9) the operator's running notes file `bsuite notes.docx`
 **Feeds:** `docs/plans/20260817-estate-completion-plan-v1.00D.md` (bsuite#2081) and
 `docs/20260817-estate-remaining-work-register-v3.00W.md` (bsuite#2075)
 
@@ -323,6 +324,10 @@ and §5 as a recurring category, which is the only outcome worth the work.
 
 ## 8. What this sweep did not settle
 
+> **Superseded in one place by §9.** §9.0 records a method correction: the unreferenced-module
+> scan globbed `src/**` and `app/**`, and R80.4's user interface is not under `src/`. Read §8
+> with §9.5's scope note on §1 as well.
+
 - **Runtime reachability.** A module can be imported and still never render. This sweep proves the
   negative (unreachable) and not the positive (reached) — 3.1 is sound, "everything else is wired" is not claimed.
 - **The 60 non-estate repositories** on this machine. `Gary8D` (1,023 commits ahead of its remote HEAD),
@@ -332,3 +337,201 @@ and §5 as a recurring category, which is the only outcome worth the work.
   is understood to mean *nothing in the estate*.
 - **Whether braden's admin surface was abandoned or pre-built.** The git history would say. It is a
   ruling (BU-4) precisely because the answer changes what to do with 1,800 lines.
+
+---
+
+## 9. `bsuite notes.docx` cross-check — 19 August
+
+**Added 2026-08-19.** The operator's running notes file (29.6 MB, saved 16:04 on 19 August;
+68 screenshots; 381 paragraphs of text) was read in full and every checkable claim measured
+against source, the live database, and the live deployments.
+
+`docs/20260814-notes-backlog-verification-register-v1.00D.md` already covers this document as it
+stood on **14 August** (4 dated sections, 67 screenshots, ~90 defects, identifiers `D-59`…`D-92`).
+**This section covers only what is new or has changed since then**, plus every claim in the R8
+block, which that register did not reach. New identifiers are `NX-n` — a distinct prefix, for the
+same reason `VP-` exists: this estate has already paid once for two documents sharing a `V-` series.
+
+### 9.0 The finding that reframes most of the R8 complaints
+
+**R8's entire calculator UI is one 8,720-line, 554 KB file at the repository root:**
+`charge-calculator-v9-2.tsx`, lazy-imported by `src/main.tsx:93` through a relative path that
+escapes `src/`. Everything under `src/` is auth, layout shell, config and four auth pages —
+32 files. The award engine beside it is **408 files, 187 of them tests**.
+
+This single fact explains a cluster of separate-looking complaints:
+
+| The note says | What is actually true |
+|---|---|
+| "Still no option for commercial construction" | The **engine has it**: `src/awards/ma000020-penalty-rows.ts:192` defines the label *Commercial construction*, and `allowance-catalogue.test.ts:65-69` asserts it is offered the general-building industry allowance — exactly the rule the note states. The string `commercial_construction` appears **0 times** in the UI file. |
+| "Only 3 or 4 year apprenticeships — what about a traineeship or labour hire worker?" | The engine has `engagement-term.ts` with `ENGAGEMENTS`/`EngagementType`, `calculate.ts:69` handles labour hire explicitly, `casual.test.ts:129` tests it, and `src/lib/r80-deep-link.ts` **already parses `engagement=worker` from the URL**. The UI offers no control. |
+| "All award allowances are always building and construction" | Hardcoded at three sites in the UI file: `DEFAULT_PENALTIES = penaltiesForSector("general_building")` (206), `DEFAULT_ALLOWANCES` built with `sector: "general_building"` (4129), and `useState<string>("general_building")` (4206). |
+| "Apprentice % of Standard Rate always $29.54 / Yr1 14.725 no matter the award" | **Not a hardcode.** `29.54` appears nowhere in R8's source or the UI file; `14.725` appears only in tests, fixtures and one comment (`charge-calculator-v9-2.tsx:1531`). The card is not re-reading on award change. The fix is wiring, and hunting for literals will find nothing. |
+| "This WAS working before R8.4" / "was done before the merge into the sub modules" | Consistent with the file's history: the engine was modularised into `src/awards/` around a UI monolith that was never rewired to it. |
+
+**This is the same class as §3 and §4 of this document — capability that exists and is not
+reachable — but it is worse, because here the unreachable capability is the product.** The
+engine can price 36 awards; the UI is wired to one sector of one of them.
+
+**Method correction this forces on §0.** The unreferenced-module scan globbed `src/**` and
+`app/**`. R80.4 returned **0 unreferenced modules** partly because *its user interface is not
+under `src/`*. That result stands for what it measured and is not evidence that R80.4 is clean.
+Any future run of that scan must glob the repository root as well.
+
+### 9.1 Verified true and open
+
+| ID | Item | Evidence |
+|---|---|---|
+| **NX-1** | R8's UI is an 8,720-line root-level monolith wired to one sector of one award, over a 408-file engine | `charge-calculator-v9-2.tsx`; `src/main.tsx:93`; lines 206 / 4129 / 4206 |
+| **NX-2** | `api/fwc.js` carries **no rate limit and no quota** while fronting a **metered** Fair Work subscription — and the sign-in redirect that used to shield it was removed by operator ruling 2026-08-18 | `src/main.tsx:146` says so in the code itself: *"NOT YET SAFE TO DEPLOY PUBLICLY … advertising the import buttons to the open internet against a metered subscription needs one first"*. Live probe: `r8.crm7.app/api/fwc` and `d.r8.crm7.app/api/fwc` both answer, JSON 401 without a bearer — so the bearer guard is real, but nothing caps a signed-in caller |
+| **NX-3** | The Fair Work proxy explainer is still rendered in the MAPD card | `charge-calculator-v9-2.tsx:3880` (lane) and `:3685` (`development`) — *"Requests go to this site's own /api/fwc…"*. Present in **both** trees, so this is current, not a stale deployment |
+| **NX-4** | "qualification not captured" is still shipped | line 6143 (lane) / 5622 (`development`) |
+| **NX-5** | BSU formats **money as USD** and dates as US | `business-suite-unified/src/lib/utils.ts` — `formatCurrency` hardcodes `'en-US'` **and `currency: 'USD'`**; `formatDate` and `formatTime` hardcode `'en-US'`. Also `crm7/src/components/dashboard/recent-activity.tsx:102` and `crm7/src/components/whs/training-dashboard.tsx:256`. This is a larger defect than the date complaint that surfaced it |
+| **NX-6** | Award search returns HTML where JSON is expected — `Unexpected token '<', "<!doctype "` | **Mechanism identified, call site not isolated.** `R80.4/vercel.json` rewrites `/((?!api/|assets/|favicon|sw\.js).*)` to `/index.html`, so any fetch URL that loses its `/api/` prefix is answered with the SPA shell instead of a 404. Verified live: `/api/fwc/search` → 404 `text/plain`; `/api/fwc?path=…` → JSON 401. So the failing call is not under `/api/` |
+| **NX-7** | `wage_snapshots` does not exist in the database, and `crm7/src/services/wageSnapshotService.ts` (272 lines) is imported by nothing | `to_regclass('public.wage_snapshots')` → NULL; corroborates §3.1 |
+| **NX-8** | `fairwork-enhanced` (the 503 in the note) lives in **business-suite-unified** and is called from **six crm7 files** | `business-suite-unified/supabase/functions/fairwork-enhanced/`; callers in `crm7/src/components/{awards,common,fair-work}/…` and `crm7/src/lib/awards/index.ts`. A cross-app runtime dependency that neither repository declares — a class worth naming, not a one-off |
+| **NX-9** | Airtable-class reporting still absent; platform-level reporting still offered to non-developers | Completion-plan Phase 3 and ruling D-66; register D1 unanswered since 2026-08-06 |
+| **NX-10** | Cards on a shared backing card, resize regression, half-cut cards — raised "innumerable times", fixed page by page | This is D-62 stated by the operator in their own words. It is the completion plan's `## Class sweep` discipline, and it is the single most-repeated item in the notes |
+
+### 9.2 Already fixed — do not re-file
+
+Three items in the notes are closed in the codebase or the database. Re-filing them would burn a
+rotation and, worse, would make the next reader distrust the rest of the list.
+
+- **`enterprise_licence_events` "not found in the schema cache"** — the table **exists** today
+  (`to_regclass` resolves; 0 rows). The error was true when written.
+- **Competency-based progression in the calculator** — **already removed**, under operator ruling
+  **D-68, 2026-08-13**. `charge-calculator-v9-2.tsx:5453` records the removal and assigns
+  progression records, anniversary reminders and change-of-year notices to crm7 — which is exactly
+  what the 19 August note asks for. The note is describing a build that predates the change, or a
+  deployment that has not caught up. **Check the deployed bundle before acting.**
+- **The placements freeze** — resolved. `placements_award_rate_resolution_status_check` is now
+  **validated**, and **0** rows carry a charge rate with a null status.
+
+### 9.3 The placements fix went further than the analysis proposed — please confirm
+
+The analysis pasted into the notes was explicit about its own limit:
+
+> *"My recommendation: set the 9 NULL-status rows (8 FutureBuild + 1 Braden Group) to `manual`. …
+> The 12 `unresolved` rows in bsuite Platform are a different case — `unresolved` means resolution
+> ran and failed, and they're demo seed in your own tenant, so I'd leave them frozen rather than
+> overwrite a real signal. … What I won't do without you is touch the 12, or drop the constraint."*
+
+Measured today, **all 21 rows read `manual`**, in two batches:
+
+| Tenant | Status | Rows | Stamped |
+|---|---|---|---|
+| bsuite Platform | `manual` | 12 | 2026-08-06 07:03:46 |
+| Braden Group | `manual` | 1 | 2026-08-06 07:03:46 |
+| FutureBuild Academy | `manual` | 8 | 2026-08-19 02:46:31 |
+
+The 12 that were reserved for your decision were changed **first**, in the same statement as the 1
+that was not. `manual` asserts *a human typed this rate*; `unresolved` asserted *resolution ran and
+failed*. If that change was not authorised, a real signal was replaced with a claim about
+provenance — the precise thing the column exists to prevent — and it is not recoverable from the
+row itself. **NX-11: confirm whether the 12 were authorised. If not, the fix is not to flip them
+back — it is to record that their current status is unverified.**
+
+### 9.4 True, but the cause is not what the note assumes
+
+- **`/portal` "just redirects to dashboard."** The page is real — `crm7/src/pages/portal/index.tsx`,
+  and it already contains a `SharePortalCard`. `resolvePortalRoute()` routes apprentice/worker,
+  training-provider and host contacts to their portals, and sends owner/admin/manager on a GTO
+  tenant to `/dashboard` **by design**. So the defect is the *rule*, not a missing page: a GTO
+  admin has no route to the portal selector, which is the surface they need in order to send
+  someone else their portal. **NX-12** — a one-branch change plus an entry point, not a build.
+- **Dates.** R8 is not the offender: it uses `en-AU` for numbers and `en-CA` deliberately, for its
+  `yyyy-mm-dd` shape (`charge-calculator-v9-2.tsx:220`, `4471-4483`). The `08/19/2026` rendering
+  comes from the `en-US` sites in NX-5.
+
+### 9.5 The two R80.4 clones
+
+Both are current as of today and they are **not** the same tree:
+
+| | `Desktop/Dev/bsuite/R80.4` (submodule) | `Desktop/Dev/R80.4` (lane) |
+|---|---|---|
+| Branch | `development` @ `3a92992` | `fix/sbt-rate-type-and-completion-plan` |
+| `charge-calculator-v9-2.tsx` | 8,031 lines | **8,720 lines** |
+| `src/awards` files | 398 | **408** |
+| vs `origin/development` | — | **14 ahead, 1 behind** |
+
+PR **R80.4#113** carries head `592d115`; the lane is further along, and at the moment of
+measurement **two commits existed only on the laptop** — `90cc046` *"The reachability gate caught a
+function of mine that nothing calls"* and a merge above it. **That is in-flight work, not stranded
+work**, and it is the correct scope note on §1 of this document: §1 measured **idle** branches. An
+actively-worked lane will always show unpushed commits, and finding some there is not a defect.
+
+**NX-13 — while two clones exist, every R8 claim must name which tree it was measured in.** The two
+differ by 689 lines of UI and 10 engine files; a finding measured in one and filed against the
+other will be wrong roughly as often as it is right. This document names its tree at each line
+above. That obligation ends when the lane merges and the submodule is again the only local copy.
+
+### 9.6 New, from the 18–19 August entries
+
+Not covered by the 14 August register, and each is small and well-specified by the operator:
+
+| ID | Item |
+|---|---|
+| **NX-14** | Selecting an award in *Award, Trade & Qualification* does not populate the *Fair Work MAPD* card, or the reverse — users pick the award twice. Operator's preference: one control, placed high on the page |
+| **NX-15** | `/settings/data` and `/admin/data` — cannot select all entities; a person renders as `person_id`, and the person's **name is not offered in "add field"** |
+| **NX-16** | Explanatory clause text is filling the cards. Move to a collapsible right-hand panel, and make it exportable as an appendix on the quote |
+| **NX-17** | Left panel should collapse, and should hold quote-thread history that the user can group and save as templates |
+| **NX-18** | "Rates at" appears several times — one effective date, shown once |
+| **NX-19** | Payroll tax must be zeroable, for exempt apprenticeships |
+| **NX-20** | Oncosts card says "WA on all wages (not just super base)" — mixes *base wage* with *ordinary/qualifying earnings*. Super is assessed on qualifying earnings; the wording implies base only |
+| **NX-21** | "Unsuspended" is not a word — the states are **Active** and **Suspended** |
+| **NX-22** | Allowances should not all be visible. Mark which are added by default into the ordinary-hours calculation; add the rest one at a time from a picker, each adding its own calculation row |
+| **NX-23** | No trade selector for MA000036, and the trade list, allowance bands and clauses shown under it are MA000020's — which do not carry across awards |
+| **NX-24** | Export the quote to PDF, push it to a crm7 placement, and send it for eSigning through crm7's email — none of the three exists |
+| **NX-25** | Quote size ordering reads *small / medium / big*; should be *medium / small / big* per the operator's preference |
+
+### 9.7 The architecture question the notes raise, unanswered
+
+The notes carry a worked comparison of **Vite Module Federation** against **multi-zone routing**,
+with the operator's own framing: *"if someone has a CRM subscription it just presents the CRM; if I
+have CRM and reports, the CRM has an additional reports navigation link and I access the reports
+from what still feels like I'm in the CRM environment."*
+
+That is a genuine architectural decision and it interacts with two things already on record:
+
+- It is the same shape as the Airtable-class reporting question (register **D1**, unanswered since
+  2026-08-06, completion-plan Phase 3). A federated "reports" module *is* one credible answer to
+  D1 — decide them together or the second decision will be constrained by the first.
+- The estate's canonical auth already satisfies the hard part. `AUTH_CANONICAL.md` mandates BS
+  OAuth 2.1 PKCE with per-domain sessions and silent re-auth. Both federation and multi-zone work
+  under that; **neither requires reintroducing cookie SSO**, and any advice that appears to is the
+  pattern this estate deprecated on 2025-02-27.
+
+**NX-26 — this is a ruling, not a task.** It belongs beside §9 of the completion plan, and until
+it is made, "make reports look like Airtable" is under-specified: it does not say whether the
+result is a page inside crm7 or a separately deployed module that appears inside crm7.
+
+### 9.8 Where these land
+
+| Item | Phase in `plans/20260817-estate-completion-plan-v1.00D.md` |
+|---|---|
+| NX-2 (metered proxy, no quota, publicly reachable) | **Phase 0 — stop the bleeding.** It is the only item here with an unbounded downside, and the code already says so |
+| NX-11 (the 12 placement rows) | **Phase 0** — a confirmation, not a code change |
+| NX-5 (USD/en-US in shared helpers) | Phase 0 — three files, one class |
+| NX-1, NX-23 (UI wired to one sector of one award) | **Phase 5**, and it changes the phase's shape: this is *wiring an existing engine*, not building a calculation |
+| NX-3, NX-4, NX-16, NX-17, NX-18, NX-20, NX-21, NX-22, NX-25 | Phase 1 and Phase 2 — honest states and first paint; all small |
+| NX-6, NX-8 | Phase 4 — the cross-app and cross-origin call paths nothing declares |
+| NX-9, NX-15, NX-26 | **Phase 3**, gated on ruling D1 + NX-26 together |
+| NX-12 (portal entry point) | Phase 6, with the portal rulings D-93…D-98 |
+| NX-14, NX-19, NX-24 | Phase 5 |
+| NX-13 (name the tree) | Immediate, and it expires when the R80.4 lane merges |
+
+### 9.9 What this cross-check did not settle
+
+- **Whether the deployed bundles match these trees.** Three items (competency progression,
+  `enterprise_licence_events`, the MAPD proxy copy) turn on that, and the note's screenshots are of
+  a running site, not a checkout. Two of the three read as *already fixed in code* — if the
+  operator is still seeing them, the gap is deployment, and that is a different fix.
+- **The exact call site behind NX-6.** The mechanism is proven (`vercel.json` rewrites everything
+  outside `/api/` to the SPA shell); the failing URL was not isolated, and it needs one look at the
+  network tab while reproducing the award search.
+- **68 screenshots.** They were counted, not read. Several notes point at a picture rather than
+  describing the defect ("Borders on people card are still all messed up", "Here's the whole
+  thing"). Those are recorded as unassessed rather than guessed at.
+- **Anything already covered by the 14 August register.** `D-59`…`D-92` and its §7 "not filed
+  anywhere" list are not re-verified here; §9 is a delta, and the two should be read together.
