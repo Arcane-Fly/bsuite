@@ -317,10 +317,14 @@ as **unverified**, not as dead. Settling them takes one look at each external co
 
 ### 4.4 Resolution — 2026-08-19
 
-All 9 edge functions got a verdict. Three questions were asked of each, per §4.1's own framing: an
-app caller, a `cron.job` row, and an external webhook — the third confirmed by reading the
-function's own auth model (a real signature/secret check against an external party's credential is
-evidence *for* the external-caller theory; the register does not claim to see the far end).
+All 9 edge functions got a verdict — the 6 in §4.1, `update-wage-rates` from §4.2, and the 2 in
+§4.3. Three questions were asked of each, per §4.1's own framing: an app caller, a `cron.job` row,
+and an external webhook — the third confirmed by reading the function's own auth model (a real
+signature/secret check against an external party's credential is evidence *for* the
+external-caller theory; the register does not claim to see the far end). `sync-award-rates` is a
+10th row below, added for completeness even though the original §4.1 count did not list it — it is
+*reachable* (via the callee side of `refresh-award-rates`, and now directly via cron), which is
+exactly why it needs the §4.2 correction rather than a WIRE/REMOVE/KEEP-MARKED verdict of its own.
 
 | App | Function | Verdict | Evidence |
 |---|---|---|---|
