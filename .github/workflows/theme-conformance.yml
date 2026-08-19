@@ -769,12 +769,28 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Install Chromium for each covered app
+      # SPLIT from a single "--with-deps" loop (V-9, 2026-08-19): that ran a
+      # full `apt-get update` + OS package install FIVE times, once per app,
+      # even though the OS-level shared libraries are identical across all
+      # five on the same ubuntu-latest runner image. Measured: the combined
+      # loop was still running the Chromium step after 30 minutes on its
+      # first CI run. System deps now install ONCE; each app then only
+      # fetches/verifies its own pinned Chromium browser binary, which does
+      # not need apt and is fast even when the versions differ (crm7 pins
+      # playwright 1.62.0, throughput pins ^1.60.0, etc — the binary a
+      # `playwright install` call fetches is keyed to THAT app's own
+      # resolved version, so this is not a shortcut that silently uses the
+      # wrong browser for an app with an older pin).
+      - name: Install Chromium's OS dependencies (once — shared across apps)
+        working-directory: crm7
+        run: pnpm exec playwright install-deps chromium
+
+      - name: Install the Chromium browser binary for each covered app
         run: |
           set -uo pipefail
           for a in crm7 braden throughput conduit business-suite-unified; do
-            echo "::group::playwright install -- $a"
-            ( cd "$a" && pnpm exec playwright install --with-deps chromium )
+            echo "::group::playwright install (browser only) -- $a"
+            ( cd "$a" && pnpm exec playwright install chromium )
             echo "::endgroup::"
           done
 
