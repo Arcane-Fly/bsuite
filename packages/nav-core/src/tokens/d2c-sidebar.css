@@ -99,6 +99,11 @@
 
        --sidebar-accent-foreground ON the tint   light 5.04:1 ✓ AA
                                                  dark  6.36:1 ✓ AA
+       ^ MEASURED WITH `--app-accent` UNSET, i.e. both the tint and the text
+         falling back to the role tokens together. That is the ONLY case those
+         two numbers describe. See the note on --sidebar-accent-foreground
+         below: once an app or tenant sets --app-accent, the tint moves and the
+         text did not, and the pair measured 4.37 (blue) / 4.48 (magenta).
        --sidebar-foreground ON the tint          light 14.48:1  dark 10.45:1
        tint vs the rail itself                   light 1.13     dark 1.42
 
@@ -106,7 +111,27 @@
      the accent-foreground contrast falls with it — 30% measures 4.77:1 in
      light, inside the AA floor's rounding. Do not raise it. */
   --sidebar-accent: color-mix(in oklch, var(--app-accent, var(--role-accent)) 20%, var(--role-bg-surface));
-  --sidebar-accent-foreground: var(--app-accent-text, var(--role-accent-text));
+  /* THE FOREGROUND MUST DERIVE FROM THE SAME ACCENT AS THE TINT, or the pair
+     drifts the moment an app or a tenant sets one.
+     `--sidebar-accent` is mixed from `--app-accent`; this line used to fall back
+     to `--role-accent-text`, which is the PLATFORM cyan. So the 5.04:1 measured
+     above only ever held when `--app-accent` was UNSET and both sides fell back
+     together. business-suite-unified sets it at runtime from tenant branding
+     (`useBranding.ts`: setOrClear('--app-accent', b.accent_color)) and never sets
+     `--app-accent-text` — the tint moved per tenant, the text did not, and the
+     documented pair stopped being the rendered pair.
+     Measured on the real tokens, text on the 20% tint:
+         platform cyan (no override)   5.02   <- reproduces the 5.04 above
+         tenant blue                   4.37   <- FAILS AA, and is what the agent
+                                                visual gate found on BSU (4.38)
+         tenant magenta                4.48   <- FAILS AA
+     Relative colour syntax fixes it structurally rather than by another constant:
+     take the accent actually in play and pin its LIGHTNESS to the same AA-safe
+     0.468 that `--role-accent-text` uses, keeping its chroma and hue. The result
+     is 5.30 / 5.06 for those tenants and unchanged at 5.02 for the default, so
+     this is a no-op where it already passed. An explicit `--app-accent-text`
+     still wins, for a brand that needs an exact value. */
+  --sidebar-accent-foreground: var(--app-accent-text, oklch(from var(--app-accent, var(--role-accent)) 0.468 c h));
 
   --sidebar-border: var(--role-border);
   --sidebar-ring: var(--role-primary);
@@ -122,7 +147,10 @@
   --sidebar-primary: var(--role-primary);
   --sidebar-primary-foreground: var(--text-on-primary);
   --sidebar-accent: color-mix(in oklch, var(--app-accent, var(--role-accent)) 20%, var(--role-bg-surface));
-  --sidebar-accent-foreground: var(--app-accent-text, var(--role-accent-text));
+  /* Same derivation as the light block above, at dark mode's AA-safe lightness.
+     `--role-accent-text` is the raw neon cyan in dark (9.78:1 there), so 0.769
+     is its lightness — the value that makes an app accent read on the dark tint. */
+  --sidebar-accent-foreground: var(--app-accent-text, oklch(from var(--app-accent, var(--role-accent)) 0.769 c h));
   --sidebar-border: var(--role-border);
   --sidebar-ring: var(--role-primary);
   --sidebar-muted-foreground: var(--role-text-muted);
@@ -137,8 +165,15 @@
   --color-sidebar-foreground: var(--role-text-body);
   --color-sidebar-primary: var(--role-primary);
   --color-sidebar-primary-foreground: var(--text-on-primary);
-  --color-sidebar-accent: color-mix(in oklch, var(--app-accent, var(--role-accent)) 20%, var(--role-bg-surface));
-  --color-sidebar-accent-foreground: var(--app-accent-text, var(--role-accent-text));
+  /* REFERENCE THE CANONICAL PROPS, DO NOT RESTATE THEM. These two used to carry
+     their own copy of the mix and the fallback, and this block is the one that
+     actually generates `bg-sidebar-accent` / `text-sidebar-accent-foreground` —
+     so a correction made in the `:root` / `.dark` blocks above would have landed
+     nowhere a user could see. Two definitions of one value drift by
+     construction; the light/dark blocks above are the definition, and this
+     block points at it so light and dark still resolve from the cascade. */
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--role-border);
   --color-sidebar-ring: var(--role-primary);
   --color-sidebar-muted-foreground: var(--role-text-muted);
