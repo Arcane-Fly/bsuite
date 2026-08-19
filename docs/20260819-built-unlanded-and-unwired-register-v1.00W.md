@@ -310,10 +310,71 @@ should be deleted rather than explained — recommended REMOVE IT below, not del
 
 ### 4.3 Plausibly reached from outside — flagged, not claimed
 
+> **Superseded 2026-08-19 — both were settled, and neither was reached from outside.** The text
+> below is kept as written because the *reasoning error* it contains is the finding. See §4.5.
+
 `crm7/adobe-sign-webhook` (320) and `business-suite-unified/jodie-pr-notify` (239) have no in-app
 caller and no cron job, which is exactly what a webhook receiver and a CI notifier should look like.
 This sweep cannot see Adobe's configuration or a workflow in another repository, so they are recorded
 as **unverified**, not as dead. Settling them takes one look at each external configuration.
+
+### 4.5 Both "unverifiable" functions settled — 2026-08-19
+
+The operator read §4.3 and asked why Adobe was a consideration at all. It should not have been, and
+the answer took four queries. **Neither function was unverifiable; the sweep simply stopped at the
+repository boundary and wrote that boundary up as a property of the world.**
+
+**`crm7/adobe-sign-webhook` — retired 2026-03-17, recovered in error 2026-08-16.**
+
+The retirement is recorded *inside the live database*, in the column comment on
+`public.r7_offers.esign_flow_id`: *"In-house @xyflow/react document-flow id (Adobe Sign removed
+2026-03-17). Signer completions write the `*_signed_at` columns."* Adobe Sign was replaced by
+conduit's own e-sign flow — `src/lib/esign/documentSigner.ts` (196 lines) and
+`src/components/esign/SignDocumentFlow.tsx` (333 lines), consumed by
+`src/components/offers/OfferProgressDialog.tsx`.
+
+Five months later, bsuite#1955 found the function deployed with no source in any repository,
+reconstructed 320 lines of Adobe webhook handling to match the deployed behaviour, hardened it
+properly (constant-time client-id comparison, SSRF-safe agreement-id validation, a 256 KB body cap,
+migration onto the shared rate limiter) and landed it as a live function. Every one of those steps
+was correct work on infrastructure that should not have existed.
+
+| Measured on live, 2026-08-19 | Result |
+|---|---|
+| `public.document_signatories` | **0 rows** |
+| ... with `adobe_participant_id` not null | **0 rows** |
+| `public.signature_requests` (the in-house flow) | **5 rows** |
+| `document_records.adobe_agreement_id` | **column does not exist on live** |
+| Edge invocations, retained log window | **0** |
+| Callers in crm7 application code | **0** |
+
+The recovered function queries `document_records.adobe_agreement_id`. That column is absent from
+live, so it could not have processed a webhook at any point after the retirement — non-functional
+as well as unwanted. Tombstoned to a self-describing 410 Gone in **crm7#1862**; the empty
+`adobe_participant_id` column dropped by `20260829030000`. The directory is not deleted — that
+needs the operator's go-ahead, and the tombstone is what stops a fourth recovery.
+
+**`business-suite-unified/jodie-pr-notify` — unreached, and its upstream has never produced a row.**
+
+| Measured 2026-08-19 | Result |
+|---|---|
+| GitHub webhooks on `bsuite`, `business-suite-unified`, `crm7` | **none, on any of the three** |
+| `JODIE_WEBHOOK_SECRET` in the project's edge secrets | **not set** |
+| `public.jodie_bug_reports` | **0 rows** |
+
+So the function cannot verify a delivery, no delivery is configured, and nothing upstream has ever
+needed notifying. This is not a webhook receiver waiting on an external configuration — it is an
+unfinished feature whose last mile was never done. Note that `jodie-bug-create` already tells a
+reporter *"you will be notified by `jodie-pr-notify` when your PR opens and again when it merges"* —
+a promise the platform currently cannot keep. Zero rows means no user has been told it yet.
+
+**The class, and it is the register's own:** *"cannot verify from the repo"* is a statement about
+where you looked, not about the system. Both of these were answerable from outside the repo in
+minutes — one column comment, one `gh api .../hooks` call, one `supabase secrets list`, one row
+count. Recording an unchecked boundary as an inherent unknown is how Adobe stayed a live
+consideration for five months after it was retired, and it is the same failure as
+[V-3](../.claude/skills/bsuite-ship-visual-promote/SKILL.md): **unevaluable is UNKNOWN only after
+you have tried to evaluate it.**
 
 ### 4.4 Resolution — 2026-08-19
 
@@ -336,8 +397,8 @@ exactly why it needs the §4.2 correction rather than a WIRE/REMOVE/KEEP-MARKED 
 | braden | `send-confirmation` | REMOVE IT (ask) | Superseded: the live contact-form flow calls `lead-capture` (sourced from **crm7**, a cross-app edge-function dependency neither repo declares — worth naming as its own class, not fixed here), which already sends the submitter confirmation via `email-dispatcher` from its service-role context |
 | crm7 | `sync-award-rates` | **Reachable (partially) — register corrected** | See §4.2 correction above. Has a live cron caller (job 175) that has never successfully fired (unseeded secrets); even fully working, does not populate `award_rates`/`award_classifications`. Header added documenting all of this in-repo |
 | crm7 | `update-wage-rates` | REMOVE IT (ask) | Confirmed deprecated proxy, register's own recommendation stands |
-| crm7 | `adobe-sign-webhook` | **UNKNOWN — cannot verify from the repo** | `timingSafeEqual` against `ADOBE_SIGN_CLIENT_ID` (header `x-adobesign-clientid`) — genuinely shaped like an external webhook receiver. Settling it needs Adobe's own dashboard configuration, outside this sweep's reach |
-| business-suite-unified | `jodie-pr-notify` | **UNKNOWN — cannot verify from the repo** | `X-Hub-Signature-256` HMAC against `JODIE_WEBHOOK_SECRET` — a real GitHub-App-shaped webhook receiver (subscribed events documented in its own header). Settling it needs the GitHub App / org-webhook configuration |
+| crm7 | `adobe-sign-webhook` | **RETIRED — settled 2026-08-19, was never UNKNOWN** | Adobe Sign left this estate on **2026-03-17**, replaced by the in-house e-sign flow in conduit. The live DB says so itself, in the column comment on `r7_offers.esign_flow_id`. Tombstoned to a 410 Gone in crm7#1862. See §4.5 |
+| business-suite-unified | `jodie-pr-notify` | **UNREACHED — settled 2026-08-19, was never UNKNOWN** | No GitHub webhook exists on any estate repo, and `JODIE_WEBHOOK_SECRET` is not set as an edge secret — so it could not verify a delivery even if one arrived. Its upstream `jodie_bug_reports` holds **0 rows**, so nothing has ever been waiting on it. See §4.5 |
 
 **Pattern across 3 of the 6 §4.1 unreachable functions** (`tga-organisation-sync`,
 `process-webhook-queue`, `email-token-refresh`) plus `sync-award-rates`'s partial case: built,
@@ -408,7 +469,7 @@ input to one or a small standalone class.
 | **BU-6** | `throughput/src/lib/user-management.ts` — 552 lines, cross-app writes, guard disabled, no importer | Phase 0 | Deleted, or re-enabled under the guard and imported. Not left inert with the rail off |
 | **BU-7** | `bsuite-wage-audit` work tree stages 3,104 deletions of live guard infrastructure on `development` | Immediate | Work tree removed; `git worktree list` no longer shows it |
 | **BU-8** | 35 vendored UI primitives across four apps are never used | Phase 6, low priority | Removed, or a stated policy that the shadcn/magicui set is vendored whole. Either is fine; silence is not |
-| **BU-9** | Two edge functions are unverifiable from inside the estate (`adobe-sign-webhook`, `jodie-pr-notify`) | Phase 7 (doc repair) | Each has a line in its own header naming its external caller, or it is deleted |
+| **BU-9** | ~~Two edge functions are unverifiable from inside the estate~~ — **CLOSED 2026-08-19.** Neither was unverifiable. `adobe-sign-webhook` was retired 2026-03-17 and recovered in error 2026-08-16; `jodie-pr-notify` has no webhook, no secret and a 0-row upstream | Phase 7 (doc repair) | **Met.** Adobe tombstoned to a 410 in crm7#1862 + empty column dropped; jodie's real gap named in §4.5. The finding that outlived it: "cannot verify from the repo" describes where you looked, not the system |
 
 ### The class behind BU-2, BU-3 and BU-5
 
