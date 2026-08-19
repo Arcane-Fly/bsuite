@@ -1,7 +1,8 @@
 # Built but unlanded, built but unwired — a machine sweep
 
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
-**Date:** 2026-08-17, §9 added 2026-08-19 · **Version:** 1.01W · **Status:** W — Working
+**Date:** 2026-08-17, §9 added 2026-08-19, §3.3/§4.4 resolution added 2026-08-19 · **Version:** 1.02W
+· **Status:** W — Working
 **Scope:** every git work tree on this laptop, every source module and edge function in the six apps,
 and (from 2026-08-19, §9) the operator's running notes file `bsuite notes.docx`
 **Feeds:** `docs/plans/20260817-estate-completion-plan-v1.00D.md` (bsuite#2081) and
@@ -193,7 +194,62 @@ the removal happened months earlier in a file nobody reads during a feature revi
 
 **The class, not the file:** a lint exemption should not be able to outlive its subject's last import.
 The durable fix is a guard that fails when `eslint.config.js` names a path that no tracked file
-imports — one script, and it retires all three of these plus any future instance.
+imports — one script, and it retires all three of these plus any future instance. **Not built by
+this resolution pass** (out of scope for a per-item verdict sweep; flagged for a follow-up PR).
+
+### 3.3 Resolution — 2026-08-19
+
+Every one of the 29 feature-code rows above (§3.1, including the 3 named again in §3.2) got exactly
+one of the three verdicts the operator's ledger requires. Evidence for each is the whole-estate
+`git grep -w` on every exported symbol plus the extension-less path, and (where a live counterpart
+was suspected) reading that counterpart's actual imports — not re-running the original stem scan.
+Register corrections are called out inline; **braden's count is 16 files, not 17** — the summary
+table in §3 could not be reconciled to a 17th file by name and is treated as an off-by-one in the
+original count, not a hidden finding.
+
+| App | Module | Verdict | Evidence |
+|---|---|---|---|
+| braden | `DndLayoutEditor.tsx` | REMOVE IT (ask) | Live equivalent: `SiteEditorLayout` → `ComponentsTab` → `ComponentLibrary.tsx`. Predates/superseded by the "Admin Portal Moved" consolidation onto the BSU Developer Portal (`#426`, 2026-08-19) |
+| braden | `useMediaManager.ts` | REMOVE IT (ask) | Live equivalent: `MediaLibrary.tsx` via `MediaTab.tsx` |
+| braden | `AdminLayout.tsx` | REMOVE IT (ask) | No route mounts it; `/admin/*` now resolves to `PortalMoved` except `branding`/`page-builder`/`marketing` (`Routes.tsx`) |
+| braden | `blob-storage.ts` | **KEEP, MARKED UNRELEASED** | Real `@vercel/blob` client, dependency installed for it, live media path still Supabase Storage. Header added |
+| braden | `MediaUploader.tsx` | REMOVE IT (ask) | Same cluster as `useMediaManager.ts` |
+| braden | `StoragePolicyAudit.tsx` | REMOVE IT (ask) | Real, working RLS-audit tool — no live route mounts it, and adding a new braden admin route would contradict the Admin-Portal-Moved consolidation. Worth re-implementing in the BSU Developer Portal, not braden |
+| braden | `schemaBuilderService.ts` | REMOVE IT (ask) | Zero importers even post-`@bsuite/schema-registry` consolidation (braden's own `docs/20260723-...`); braden does not ship the dynamic-entity feature this exists for |
+| braden | `MediaGallery.tsx` | REMOVE IT (ask) | Same cluster as `useMediaManager.ts` |
+| braden | `ClientsCard.tsx`/`EmailsCard.tsx`/`LeadsCard.tsx`/`StaffCard.tsx` | REMOVE IT (ask), all 4 | `src/pages/admin/{Clients,Emails,Leads,Staff}.tsx` are the live equivalents, using `@/services/adminCrudService` directly — do not import these Card components |
+| braden | `Projects.tsx` | REMOVE IT (ask) | Duplicate of the live `Services.tsx` — same `id="work"`/"Our Services" content, not rendered on `Index.tsx` |
+| braden | `useBannerOffset.ts` | **KEEP, MARKED UNRELEASED** | Correct ResizeObserver hook; `CookieConsent.tsx` solves an adjacent problem with a hardcoded `140px` on a *different* CSS var (`--cookie-banner-h`, not `--banner-offset`) — suggestive, not confirmed as the intended target. Header added |
+| braden | `emailService.ts` | REMOVE IT (ask) | Self-documented mock ("Mock implementation..."); live confirmation email flow is `lead-capture` (cross-app, sourced from **crm7**) → `email-dispatcher`, server-side |
+| braden | `ThemeToggle.tsx` | **WIRE IT — done** | Dark mode live app-wide (`ThemeProvider`), no manual toggle existed. Added to desktop nav header. PR [`braden#432`](https://github.com/GaryOcean428/braden/pull/432) |
+| crm7 | `report-form-dialog.tsx` | REMOVE IT (ask) | `/financial/reports/*` explicitly retired 2026-08-13, operator directive **D-79** (crm7#1568/#1656, documented in `App.tsx:433`) — this dialog is the one piece of that retirement nobody deleted |
+| crm7 | `InvoiceLineItemBuilder.tsx` | REMOVE IT (ask) | Superseded: live `invoice-form-dialog.tsx` uses `generateInvoiceFromTimesheets` (`@/lib/billingEngine`), an automated generator, not this manual UI builder |
+| crm7 | `wageSnapshotService.ts` | **KEEP, MARKED UNRELEASED** (pre-existing) | Register NX-7's own worked example — already marked on `development` as of this sweep. Confirmed present, no change needed |
+| crm7 | `smsAdapter.ts` | REMOVE IT (ask) | "OTS Parity — Phase 8" infra; its sibling `communicationSender.ts` (same phase) was already removed as SAFE_DELETE in `bbd04af3` (2026-07-25 dead-code audit) — this one was missed by that sweep, not spared by it |
+| crm7 | `FairWorkUpdateNotification.tsx` | **WIRE IT — done** | Null-safe award-update banner; data source (`fetchAwardUpdates` → `fairwork-enhanced`) confirmed live (NX-8: 6 crm7 callers). Mounted on `/payroll/award-rates` as its own `CanvasCard`. PR [`crm7#1861`](https://github.com/GaryOcean428/crm7/pull/1861) |
+| crm7 | `configSchema.ts` | **KEEP, MARKED UNRELEASED** | Complete Zod validation ported for `fairworkEnhancedService`'s config; wiring it means retrofitting a 1,400+ line, 6-caller live service — out of scope for this sweep. Header added |
+| crm7 | `permission-guard.tsx` | REMOVE IT (ask) | Self-documented `@deprecated` — "Use `PermissionGate` instead", which is confirmed live (imported by `award-rates/index.tsx` among others) |
+| business-suite-unified | `notificationService.ts` | REMOVE IT (ask) | Both halves superseded: inbound (in-app bell) is `notificationStore.ts` (`app_notifications` table, live `NotificationCenter.tsx`); outbound (`send-notification` edge fn) is called directly from `stripe-webhook/index.ts`, bypassing this wrapper entirely |
+| throughput | `user-management.ts` | REMOVE IT (ask) | Superseded: live `TeamManagement.tsx` + `teams`/`team_workspaces` tables. **Also carries §3.2's disabled `bsuite/no-cross-app-write` guard on `profiles`/`team_members`/`team_invitations` writes — highest-priority item in this whole register to resolve, per the register's own §3.2 framing** |
+| throughput | `baseAgent.ts` | **KEEP, MARKED UNRELEASED — done** | Real, current `@langchain/core`/`@langchain/langgraph` deps; built on `LangChainGatewayClient`, which IS live (`useConversation.ts`, `conversationContext.ts`) and correctly routed through the sanctioned AI Gateway proxy. No concrete `BaseAgent` subclass exists yet. PR [`throughput#334`](https://github.com/GaryOcean428/throughput/pull/334) |
+| throughput | `useTodos.ts` | REMOVE IT (ask) | Superseded: `lib/db.ts` and `pages/Page.tsx` already call `.from('todos')` inline |
+| conduit | `AuthShell.tsx` | **WIRE IT — done** | Built on live design tokens (`--bg-shell*`, `--border-shell` — WCAG-tested elsewhere) and a `magicui` component with no other consumer. Wired into `/auth/login` and `/auth/register`. PR [`conduit#514`](https://github.com/GaryOcean428/conduit/pull/514) |
+
+**The 35 vendored shadcn/magicui UI primitives (per-app counts in the §3 table) are a distinct
+class, deliberately not given individual per-file verdicts.** Spot-verified (braden's `magicui/*`
+and `ui/drawer.tsx`) as genuinely zero-importer, but shadcn's and magicui's own delivery model is
+"copy the component source into the repo whether or not it is used yet" — every app here has a
+`src/components/ui/` (shadcn) and, in 4 of 5, a `src/components/magicui/` folder holding more
+primitives than any one feature currently consumes. Giving each of the 35 an "UNRELEASED — blocked
+on a feature needing this" banner would misdescribe a scaffold as a stalled feature. Recorded here
+as **KEEP — vendored design-system primitives, available by design, no gate to mark**; flagged
+plainly so the operator can override this call per app if the intent differs from what shadcn's
+convention implies. No source files in this class were modified.
+
+**REMOVE IT verdicts above are recommendations only — none were deleted.** Per this task's
+constraint, deleting pre-existing work is the operator's call. 20 modules are listed as REMOVE IT
+across the 5 apps (13 braden, 4 crm7, 1 business-suite-unified, 2 throughput); asking is this
+document's job, not a separate step.
 
 ---
 
@@ -220,21 +276,37 @@ vault secret names those jobs dereference (`jodie_error_scan_url`, `tga_sync_url
 
 > `refresh-award-rates / sync-award-rates: invoked by pg_cron`
 
-**There is no such cron job.** The live `cron.job` table holds 16 entries; none references an award
-rate, and no vault secret exists for one. `sync-award-rates` is invoked by `refresh-award-rates`
-(its own header comment says so, `index.ts:81`), and `refresh-award-rates` is invoked by nothing.
-The chain is complete and unreached from end to end.
+~~**There is no such cron job.**~~ **CORRECTED 2026-08-19 — a cron job now exists, and closing it
+proved the deeper claim in this section was still right for a different reason.** Migration
+`20260822040000_schedule_sync_award_rates.sql` (renamed from `20260822010000` mid-collision, authored
+2026-08-17) scheduled `sync-award-rates-weekly` directly against `sync-award-rates` — **bypassing
+`refresh-award-rates` entirely**, which the paragraph above (correctly, at the time) named as the
+caller. Live: `cron.job` id **175**, active. It has **never successfully run** — its two vault
+secrets, `sync_award_rates_url` and `sync_award_rates_token`, are unseeded, so every weekly fire hits
+the migration's own `RAISE EXCEPTION` guard rather than POSTing to a null endpoint.
+
+**Seeding those secrets would not close the gap this section is actually about.** Read the
+scheduling migration's own assertion block: *"It populates `award_rate_cache` only —
+`award_classifications` remains empty and the vacancy dropdown with it."* `sync-award-rates` writes
+`award_rate_cache` and `award_templates` — it **never** writes `award_rates` or
+`award_classifications`, which is what `award_rates` **0 rows** / `award_classifications` **0 rows**
+(against `awards` **156 rows**) actually means: those two tables have **no ingestion path at all**,
+scheduled or not. `refresh-award-rates` is now genuinely orphaned (superseded by the direct cron, not
+merely unwired) — see §3.3/§4.4 resolution below for the verdict on both functions. Documented
+in-repo on `sync-award-rates/index.ts` so this does not have to be re-derived again.
 
 This is not a tidy-up item. The completion plan's Phase 5 is the calculation engine, and the FWC
 Annual Wage Review 2026 became operative on **1 July 2026** — six weeks ago — with a **non-uniform**
 C13/C14 structural adjustment that no flat-percentage path can absorb. A refresh function that never
 runs cannot make rates stale-detectable, and a comment asserting a scheduler that does not exist is
 worse than no comment, because it answers the question "is this wired?" incorrectly for anyone who
-greps for it.
+greps for it. As of this correction the scheduler exists and the comment is still wrong about what
+running it would fix — the same lesson, one layer deeper.
 
 `update-wage-rates` (123 lines) is the benign case in the same family: the repo describes it as
 "a deprecated proxy with no authority of its own", which is consistent with having no caller. It
-should be deleted rather than explained.
+should be deleted rather than explained — recommended REMOVE IT below, not deleted by this sweep
+(operator approval required; see resolution section).
 
 ### 4.3 Plausibly reached from outside — flagged, not claimed
 
@@ -242,6 +314,37 @@ should be deleted rather than explained.
 caller and no cron job, which is exactly what a webhook receiver and a CI notifier should look like.
 This sweep cannot see Adobe's configuration or a workflow in another repository, so they are recorded
 as **unverified**, not as dead. Settling them takes one look at each external configuration.
+
+### 4.4 Resolution — 2026-08-19
+
+All 9 edge functions got a verdict — the 6 in §4.1, `update-wage-rates` from §4.2, and the 2 in
+§4.3. Three questions were asked of each, per §4.1's own framing: an app caller, a `cron.job` row,
+and an external webhook — the third confirmed by reading the function's own auth model (a real
+signature/secret check against an external party's credential is evidence *for* the
+external-caller theory; the register does not claim to see the far end). `sync-award-rates` is a
+10th row below, added for completeness even though the original §4.1 count did not list it — it is
+*reachable* (via the callee side of `refresh-award-rates`, and now directly via cron), which is
+exactly why it needs the §4.2 correction rather than a WIRE/REMOVE/KEEP-MARKED verdict of its own.
+
+| App | Function | Verdict | Evidence |
+|---|---|---|---|
+| crm7 | `refresh-award-rates` | REMOVE IT (ask) | Genuinely orphaned as of the 20260822040000 migration — the new cron calls `sync-award-rates` directly, bypassing this wrapper. Its consecutive-failure tracking (`system_settings`) is real functionality the direct-cron approach does not replicate; flagged, not built, since re-routing the cron through it is a migrations-lane call |
+| crm7 | `tga-organisation-sync` | Root cause documented, not fixed | Scheduling migration (`20260504031000`) silently NOTICE'd and skipped its `cron.schedule()` because pg_cron/pg_net were not installed when it first ran (2026-04-22); nothing has re-triggered it since both extensions went live. Fix is 2 migrations-lane steps (GUC seeding + re-schedule). Header added to `index.ts` |
+| crm7 | `encrypt-email-tokens` | **Special case — not a defect** | Confirmed genuine "service-role-only one-shot migration utility" (register's own test-file comment). Its job (plaintext → vault-encrypted email tokens) is DONE — `ISSUE_VALIDATION_REPORT.md` #454 marked FIXED, columns deprecated, REVOKE applied. Unreachable *by design*, same as a SQL migration file after it applies. Does not map cleanly onto WIRE/REMOVE/KEEP-MARKED-UNRELEASED; recorded as-is, no action |
+| business-suite-unified | `process-webhook-queue` | Root cause documented, not fixed | The receiving half (`fairwork-webhook`) is live and enqueues into `mapd_webhook_queue` today; this processor has never run to drain it — corroborated by a since-applied migration dropping `idx_mapd_webhook_queue_status` as unused. Header added |
+| business-suite-unified | `email-token-refresh` | Root cause documented, not fixed | `supabase/config.toml` documents it as the intended periodic caller of `oauth-google-email`'s `/refresh` route; nothing schedules it. Header added |
+| braden | `send-confirmation` | REMOVE IT (ask) | Superseded: the live contact-form flow calls `lead-capture` (sourced from **crm7**, a cross-app edge-function dependency neither repo declares — worth naming as its own class, not fixed here), which already sends the submitter confirmation via `email-dispatcher` from its service-role context |
+| crm7 | `sync-award-rates` | **Reachable (partially) — register corrected** | See §4.2 correction above. Has a live cron caller (job 175) that has never successfully fired (unseeded secrets); even fully working, does not populate `award_rates`/`award_classifications`. Header added documenting all of this in-repo |
+| crm7 | `update-wage-rates` | REMOVE IT (ask) | Confirmed deprecated proxy, register's own recommendation stands |
+| crm7 | `adobe-sign-webhook` | **UNKNOWN — cannot verify from the repo** | `timingSafeEqual` against `ADOBE_SIGN_CLIENT_ID` (header `x-adobesign-clientid`) — genuinely shaped like an external webhook receiver. Settling it needs Adobe's own dashboard configuration, outside this sweep's reach |
+| business-suite-unified | `jodie-pr-notify` | **UNKNOWN — cannot verify from the repo** | `X-Hub-Signature-256` HMAC against `JODIE_WEBHOOK_SECRET` — a real GitHub-App-shaped webhook receiver (subscribed events documented in its own header). Settling it needs the GitHub App / org-webhook configuration |
+
+**Pattern across 3 of the 6 §4.1 unreachable functions** (`tga-organisation-sync`,
+`process-webhook-queue`, `email-token-refresh`) plus `sync-award-rates`'s partial case: built,
+deployed, correctly authored — and never scheduled. None of these are code defects; all four need a
+cron-scheduling migration (and in two cases, vault-secret seeding) from the migrations lane, which
+this sweep does not own. Documented in-repo on each function so the next reader does not have to
+re-derive it.
 
 ---
 
