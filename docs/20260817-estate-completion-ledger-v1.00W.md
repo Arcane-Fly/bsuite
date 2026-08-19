@@ -3,6 +3,39 @@
 **Document:** `docs/20260817-estate-completion-ledger-v1.00W.md`
 **Date:** 2026-08-17, amended 2026-08-18 · **Version:** 1.00W · **Status:** W — Working
 
+> **Amendment, 2026-08-19m — THE SCOREBOARD HAS BEEN COUNTING 80 ITEMS AND THE LEDGER TRACKS
+> 88.** An independent re-derivation extracted all rows and found the **P0 series (P0-1…P0-8,
+> live-exposure security) is in this document, in the same table, in the same row format, and
+> in neither the 80-item nor the 87-item total.** P0 is 7 DONE + 1 PARTIAL, and that PARTIAL —
+> P0-4, mail-server passwords in plain text — is discussed as live outstanding work in §3 and
+> §7 of this file while appearing in no count. Corrected totals: **88 items, DONE 58 ·
+> NOT-A-DEFECT 4 · SUPERSEDED 1 · PARTIAL 20 · OPEN 5.**
+>
+> Three further corrections from the same pass, each measured against a live source:
+>
+> - **P0-4 is DONE.** The live edge function is now **version 44**, deployed after this
+>   ledger's last check, and its bundled source calls `readEmailCredential` /
+>   `email_integration_service_read_credential`. The plain-text fallback survives only inside
+>   an explanatory comment. The supporting migration and function are confirmed applied.
+> - **V-10 is DONE, and running.** The fix is on bsuite `main`, and the hourly scheduled job
+>   that closes stale issues across all six repos has multiple successful `schedule`-triggered
+>   runs today. Functioning in production, not merely merged.
+> - **PO-2 was WORSE than recorded, and is now fixed.** `20260822020000` narrowed both
+>   `people_select` and `placements_select` for `host_supervisor`. Four days later
+>   `20260826040000` rebuilt `placements_select` for consent-gated parent visibility and
+>   **dropped the supervisor branch on the way past**. `people_select` was untouched, so the
+>   two tables disagreed and it read as a working feature — the people list narrowed, the
+>   placements list did not. Measured live: that supervisor could read **8 placements, 1 of
+>   which was theirs**. Restored in crm7#1864 as a union of both intents, proven **8 → 1**
+>   inside a rolled-back transaction impersonating the real account, with a guard that RAISEs
+>   if either table loses the clause again.
+>
+> **The class behind all four:** this ledger has now been wrong in BOTH directions in one week
+> — overselling nothing, but underselling four items, and silently excluding an entire series
+> from its own arithmetic. A scoreboard that is not re-derived from its own rows drifts from
+> them. See §2's method note: the same rule that forbids reading a fix from `schema_migrations`
+> forbids reading a total from a previous total.
+
 > **Amendment, 2026-08-19l — PF-1 and PF-4(b) are DONE, not open; the ledger read "recorded
 > without a fix applied" when the fix had, in fact, run. PF-3's residual findings have all
 > been individually triaged — no further merge is safe. DONE 51 · PARTIAL 19 · OPEN 5.**
