@@ -310,8 +310,8 @@ importers:
   packages/page-builder:
     dependencies:
       '@bsuite/theme':
-        specifier: workspace:^
-        version: link:../theme
+        specifier: '>=0.7.0 <2'
+        version: 1.0.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)
       '@dnd-kit/core':
         specifier: ^6
         version: 6.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -438,8 +438,8 @@ importers:
   packages/schema-registry:
     dependencies:
       '@bsuite/nav-core':
-        specifier: workspace:^
-        version: link:../nav-core
+        specifier: '>=0.8.0 <2'
+        version: 1.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@supabase/supabase-js':
         specifier: ^2
         version: 2.108.1
@@ -733,6 +733,25 @@ packages:
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
+
+  '@bsuite/nav-core@1.0.0':
+    resolution: {integrity: sha512-HSecDmm8of/mfGJVoMH/i1yPDkOb2BdPJayUSEl3bNYClX6UibZzBky6Omr27iHOO0BkneETfhB/a8JTBOy1zQ==}
+    peerDependencies:
+      react: '>=18 <21'
+      react-dom: '>=18 <21'
+
+  '@bsuite/theme@1.0.0':
+    resolution: {integrity: sha512-vnS6qf3c6MlnVKjeaLRtmauF/W74V7EnhWAYqzPPYnllgrZ1bhc7c3lJsz8Q99puVDebal+bh8kfqpkNBsCPpg==}
+    peerDependencies:
+      '@supabase/supabase-js': '>=2.0.0'
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+      tailwindcss: '>=4.0.0'
+    peerDependenciesMeta:
+      '@supabase/supabase-js':
+        optional: true
+      tailwindcss:
+        optional: true
 
   '@csstools/color-helpers@6.0.2':
     resolution: {integrity: sha512-LMGQLS9EuADloEFkcTBR3BwV/CGHV7zyDxVRtVDTwdI2Ca4it0CCVTT9wCkxSgokjE5Ho41hEPgb8OEUwoXr6Q==}
@@ -3713,6 +3732,19 @@ snapshots:
   '@bramus/specificity@2.4.2':
     dependencies:
       css-tree: 3.2.1
+
+  '@bsuite/nav-core@1.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@bsuite/theme@1.0.0(@supabase/supabase-js@2.108.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.0)':
+    dependencies:
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+    optionalDependencies:
+      '@supabase/supabase-js': 2.108.1
+      tailwindcss: 4.3.0
 
   '@csstools/color-helpers@6.0.2': {}
 
