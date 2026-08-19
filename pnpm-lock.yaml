@@ -309,9 +309,6 @@ importers:
 
   packages/page-builder:
     dependencies:
-      '@bsuite/theme':
-        specifier: workspace:^
-        version: link:../theme
       '@dnd-kit/core':
         specifier: ^6
         version: 6.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -322,6 +319,12 @@ importers:
         specifier: ^3
         version: 3.2.2(react@19.2.7)
     devDependencies:
+      '@bsuite/nav-core':
+        specifier: workspace:^
+        version: link:../nav-core
+      '@bsuite/theme':
+        specifier: workspace:^
+        version: link:../theme
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -437,9 +440,6 @@ importers:
 
   packages/schema-registry:
     dependencies:
-      '@bsuite/nav-core':
-        specifier: workspace:^
-        version: link:../nav-core
       '@supabase/supabase-js':
         specifier: ^2
         version: 2.108.1
@@ -447,6 +447,9 @@ importers:
         specifier: ^5
         version: 5.101.0(react@19.2.7)
     devDependencies:
+      '@bsuite/nav-core':
+        specifier: workspace:^
+        version: link:../nav-core
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
