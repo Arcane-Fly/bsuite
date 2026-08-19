@@ -141,6 +141,81 @@ function describeCollision({ slug, entries }) {
   )
 }
 
+/**
+ * THE OTHER DIRECTION, WHICH THIS GATE DID NOT CHECK.
+ *
+ * A collision is two scopes declaring one slug. The inverse is a scope CALLING
+ * a slug that no scope declares — and until now nothing looked for it.
+ *
+ * Register row NX-8 is the live example: `fairwork-enhanced` is declared ONLY
+ * in business-suite-unified and invoked from SIX files in crm7, which has no
+ * local copy. It works, because every scope deploys to one Supabase project and
+ * a function is project-scoped rather than repo-scoped. But NEITHER REPOSITORY
+ * DECLARES THE DEPENDENCY. Rename or delete it in BSU and crm7's award penalty
+ * rates stop resolving, with nothing in crm7 to explain why.
+ *
+ * That is the same shape as the collision above — one live artifact, two repos,
+ * no record — seen from the opposite side. A guard covering one of two paths
+ * reads like it covers both, which is exactly how this one has read since
+ * bsuite#1943.
+ *
+ * A dangling invoke is reported, not failed, and the distinction is deliberate:
+ * a caller can legitimately name a function deployed from outside this monorepo,
+ * and failing on that would make the gate wrong rather than strict. What it must
+ * not do is stay silent.
+ */
+function scanInvocations(scopes, root) {
+  const INVOKE = /functions\s*\.\s*invoke\s*\(\s*['"`]([a-z0-9][a-z0-9-]*)['"`]/g
+  const REST = /\/functions\/v1\/([a-z0-9][a-z0-9-]*)/g
+  const found = []
+  const walk = (dir, scope) => {
+    let entries
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return }
+    for (const e of entries) {
+      if (e.name === 'node_modules' || e.name === '.git' || e.name === 'dist') continue
+      const full = path.join(dir, e.name)
+      if (e.isDirectory()) { walk(full, scope); continue }
+      if (!/\.(ts|tsx|js|jsx)$/.test(e.name)) continue
+      if (/\.(test|spec)\./.test(e.name) || full.includes('__tests__')) continue
+      let text
+      try { text = fs.readFileSync(full, 'utf8') } catch { continue }
+      for (const re of [INVOKE, REST]) {
+        re.lastIndex = 0
+        let m
+        while ((m = re.exec(text))) found.push({ scope, slug: m[1], file: path.relative(root, full) })
+      }
+    }
+  }
+  for (const scope of scopes) {
+    const srcRoot = path.join(root, scope.dir.replace(/supabase\/functions$/, 'src'))
+    if (fs.existsSync(srcRoot)) walk(srcRoot, scope.name)
+  }
+  return found
+}
+
+/** An invoke whose slug no scope declares, or which only ANOTHER scope declares. */
+function findUndeclaredAndCrossScope(declarations, invocations) {
+  const bySlug = new Map()
+  for (const d of declarations) {
+    if (!bySlug.has(d.slug)) bySlug.set(d.slug, new Set())
+    bySlug.get(d.slug).add(d.scope)
+  }
+  const seen = new Set()
+  const dangling = []
+  const crossScope = []
+  for (const inv of invocations) {
+    const key = `${inv.scope}|${inv.slug}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const owners = bySlug.get(inv.slug)
+    if (!owners) { dangling.push(inv); continue }
+    if (!owners.has(inv.scope)) crossScope.push({ ...inv, owners: [...owners] })
+  }
+  dangling.sort((a, b) => a.slug.localeCompare(b.slug))
+  crossScope.sort((a, b) => a.slug.localeCompare(b.slug))
+  return { dangling, crossScope }
+}
+
 function runCheck({ declarations }) {
   return { violations: findCollisions(declarations) }
 }
@@ -440,4 +515,32 @@ console.log(
   `check-edge-function-slug-collisions: OK — ${declarations.length} function slug(s) ` +
     `across ${scopesFound.size} scope(s) (${[...scopesFound].sort().join(', ')}), no collisions.`,
 )
+
+// The inverse direction. Reported, never failed — see the block above
+// findUndeclaredAndCrossScope for why a dangling invoke can be legitimate.
+const invocations = scanInvocations(SCOPES, root)
+const { dangling, crossScope } = findUndeclaredAndCrossScope(declarations, invocations)
+
+if (crossScope.length) {
+  console.log(
+    `\nCROSS-SCOPE CALLERS — ${crossScope.length}. These work today because every scope\n` +
+      `deploys to one Supabase project, so a slug is project-scoped rather than\n` +
+      `repo-scoped. Neither repository declares the dependency, so renaming or\n` +
+      `deleting the function in its owning repo breaks the caller silently:\n` +
+      crossScope
+        .map((c) => `  - ${c.scope} calls "${c.slug}", declared only in ${c.owners.join(', ')}  (${c.file})`)
+        .join('\n'),
+  )
+}
+
+if (dangling.length) {
+  console.log(
+    `\nUNDECLARED SLUGS — ${dangling.length}. No scope in this monorepo declares these.\n` +
+      `That is not automatically wrong: a caller may legitimately name a function\n` +
+      `deployed from outside the estate. It is listed so the claim is visible rather\n` +
+      `than assumed:\n` +
+      dangling.map((d) => `  - ${d.scope} calls "${d.slug}"  (${d.file})`).join('\n'),
+  )
+}
+
 process.exit(0)
