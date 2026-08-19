@@ -3,6 +3,59 @@
 **Document:** `docs/20260817-estate-completion-ledger-v1.00W.md`
 **Date:** 2026-08-17, amended 2026-08-18 · **Version:** 1.00W · **Status:** W — Working
 
+> **Amendment, 2026-08-19l — PF-1 and PF-4(b) are DONE, not open; the ledger read "recorded
+> without a fix applied" when the fix had, in fact, run. PF-3's residual findings have all
+> been individually triaged — no further merge is safe. DONE 51 · PARTIAL 19 · OPEN 5.**
+>
+> All four measured directly against production (`tuybltdrdefjblnplpqo`, confirmed live via
+> `inet_server_addr()`), not read from `schema_migrations` or from prior rows in this file.
+>
+> **PF-1 is DONE.** The row said "database untouched… absent from the applied ledger and not
+> on `main`". Measured 2026-08-19: **0** unwrapped `auth.*` calls remain in any RLS policy
+> across `public` + `realtime` (417 wrapped, positive control), and all 4 of
+> `custom_fields_legacy_unused`'s policies — PF-4(c)'s dependency — carry the hoisted
+> `(SELECT auth.uid())` form. `supabase_migrations.schema_migrations` does carry a row for
+> `20260817064500`, but with a **NULL** `statements` array — the same "recorded without
+> capturing statement text" shape `crm7/supabase/migrations/CLAUDE.md` documents for other
+> migrations, except read backwards here: a NULL statements array was taken as evidence the
+> DDL never ran, when the live catalog proves it did. Absence of a clean bookkeeping row is
+> not proof the fix is missing, and — the direction that bit this row — a present-but-empty
+> one is not proof it is missing either. Only the live catalog answers that question.
+>
+> **PF-4(b) is DONE, not "awaiting an operator dispatch".** Both doomed indexes
+> (`idx_leave_balances_employee`, `timesheets_placement_id_idx`) are absent live; both
+> survivors (`idx_leave_balances_employee_id`, `idx_timesheets_placement_id`) are present.
+> The SAME migration's PF-3 half also ran: `funding_sources_tenant_read` and
+> `r7_privacy_notice_versions_anon_read_apply` are both gone, survivors intact.
+> `20260822050000_pf3_pf4b_drop_provable_redundancies.sql` already executed against
+> production; the 2026-08-19g amendment's "waiting only on the apply" is stale, not current.
+>
+> **PF-3's residual is answered, not open.** Re-measured live: **64** table×role×command
+> groups with multiple permissive policies remain — exactly **66 reconstructed − 2 dropped**,
+> matching the now-confirmed-applied migration's own pre-apply arithmetic. That migration's
+> header already triaged every one of the 64 individually: **59** are `ALL`-vs-specific-verb
+> overlaps that are structurally unmergeable (merging would grant write access to everyone
+> matching the read predicate — the 2026-08-16 cross-tenant leak, run in reverse); **5** are
+> same-command-different-intent pairs Postgres already ORs safely today but which stay as two
+> policies so editing one intent cannot silently widen the other. The residual advisor noise
+> is 64 answered widest-limb questions, not one unanswered class.
+>
+> **PF-4(a) is still not-a-defect, but the count drifted.** Re-measured live: **11**
+> policy-less RLS-enabled tables, not 9 — `r7_talent_pool_redeem_attempts` and
+> `xero_tax_rate_cache` are new since 2026-08-18. All 11, not just the original 9, grant zero
+> privileges to `anon` or `authenticated` (`has_table_privilege` checked per role × SELECT and
+> INSERT) — the deny-all posture holds across the wider set.
+>
+> **PF-4(c) is unchanged.** `custom_fields_legacy_unused` is still 0 rows live, and dropping
+> it alone remains scope creep against the batch-retirement plan
+> `20260807072000_rename_custom_fields_table_collision.sql` records — that batch's other
+> zero-row orphans are outside the PF cluster's boundary.
+>
+> **No migration was authored this pass.** Nothing safe remained to fix: PF-1 and PF-4(b)
+> needed no fix (already applied), PF-3's two safe merges were already done by a prior
+> migration and the residual is correctly left alone, PF-4(a) is not a defect, and PF-4(c)
+> awaits a batch decision outside this cluster's scope.
+>
 > **Amendment, 2026-08-19k — AD-6 told the reader that a promotion applies migrations. It does
 > not, and that belief is exactly how a set of merged migrations sits unapplied while everyone
 > reads the estate as current.**
@@ -320,11 +373,11 @@ register's 264; and the register's own headline "all 264 were read and classifie
 
 | Verdict | Count | Meaning |
 |---|---:|---|
-| **DONE** | **49** | Re-measured fixed, with evidence. No work remains. |
+| **DONE** | **51** | Re-measured fixed, with evidence. No work remains. |
 | **NOT-A-DEFECT** | **4** | Measured; the item was never a defect. Filed in error or measured wrongly. |
 | **SUPERSEDED** | **1** | Already settled by an operator ruling the register post-dates. |
-| **PARTIAL** | **20** | Half shipped. Real work remains — counted as open below. |
-| **OPEN** | **6** | Untouched, or the fix exists but has not reached the running system. |
+| **PARTIAL** | **19** | Half shipped. Real work remains — counted as open below. |
+| **OPEN** | **5** | Untouched, or the fix exists but has not reached the running system. |
 | **Total** | **80** | |
 
 > **These numbers are COUNTED FROM THE ROWS, 2026-08-18 — and the previous total was wrong.**
@@ -591,14 +644,14 @@ applied before this pass and one third of it was never a defect at all — see i
 | TH-10 | Card grid absent from two apps | **PARTIAL** | One app is **no longer plumbing-only** — 11 render sites across 9 dashboard views. The other is unchanged at zero and does not even carry the dependency. | L |
 | TH-11 | Corporate error hue — operator taste call | **SUPERSEDED** | See §4. The ruling was made 2026-08-10 and is **recorded inline in the stylesheet**; the register carried it as pending seven days later. | — |
 
-### PF — performance · 0 DONE, 1 PARTIAL, 2 OPEN, 1 NOT-A-DEFECT
+### PF — performance · ~~0~~ **2** DONE, ~~1~~ **1** PARTIAL, ~~2~~ **0** OPEN, 1 NOT-A-DEFECT — re-measured live 2026-08-19
 
 | # | Item | Verdict | Evidence measured 2026-08-17 | Size |
 |---|---|---|---|---|
-| PF-1 | 70 policies re-evaluate the session function per row | **PARTIAL** | **Code done, database untouched.** I re-measured independently: **69 unwrapped against 357 wrapped** (the 357 is the positive control proving the detector sees the fixed form), 67 in the main schema plus 2 in a Supabase-managed one. The migration with 69 matching statements is merged to `development` but **absent from the applied ledger** and not on `main`. Register said 70; live is 69. **Watch the 2 managed-schema statements — they may fail on ownership and abort the whole migration.** | S |
+| PF-1 | 70 policies re-evaluate the session function per row | ~~**PARTIAL**~~ **DONE — re-measured live 2026-08-19** | **Code done, database untouched.** I re-measured independently: **69 unwrapped against 357 wrapped** (the 357 is the positive control proving the detector sees the fixed form), 67 in the main schema plus 2 in a Supabase-managed one. The migration with 69 matching statements is merged to `development` but **absent from the applied ledger** and not on `main`. Register said 70; live is 69. **Watch the 2 managed-schema statements — they may fail on ownership and abort the whole migration.** **CORRECTED 2026-08-19: "database untouched" was wrong.** Measured directly against production (`tuybltdrdefjblnplpqo`): **0** unwrapped `auth.*` calls remain across `public`+`realtime` (417 wrapped, positive control), and all 4 of `custom_fields_legacy_unused`'s policies carry the hoisted `(SELECT auth.uid())` form. `schema_migrations` carries a row for `20260817064500` with a NULL `statements` array — bookkeeping drift, not evidence the DDL never ran; the live catalog says it did. **DONE, no further action.** | S |
 | PF-2 | 983 unused indexes | **NOT-A-DEFECT** | See §4. **690 of 974 sit on tables with zero rows.** | — |
-| PF-3 | 68 tables run multiple overlapping permissive policies | ~~**OPEN**~~ **PARTIAL — re-measured 2026-08-18** | Live advisor: **67**, across 63 tables. Long tail is 61 tables with one finding each. Mechanical, but **unlike PF-1 each merge is an authz change** and needs the red-team checklist — it is not a behaviour-preserving rewrite. **Re-measured 2026-08-18 against live production: **21** tables carry more than one PERMISSIVE policy for the same command, against **68** as filed. Two thirds of the class is gone. Left PARTIAL, not DONE: overlapping permissive policies OR together, so each remaining table still has a widest-limb question nobody has answered.** | M |
-| PF-4 | 9 policy-less tables; 2 duplicate indexes; one legacy table | **OPEN — CONFIRMED still open** | Composite. **(a) NOT a defect** — all nine policy-less tables grant to the service role **only**, with zero untrusted grants; that is the intended deny-all posture and adding policies would *loosen* them. **(b) OPEN** — 2 duplicate index pairs confirmed. **(c) OPEN** — the legacy table is live with 4 policies, all 4 among PF-1's 69. **Decide (c) before PF-1 reaches `main`, or 4 of its statements are wasted.** **Re-measured 2026-08-18 against live production: **9** tables have RLS ENABLED and **zero policies** — exactly the figure filed. RLS on with no policy denies every row to every non-superuser, so these are unreachable rather than exposed; the defect is that nobody can say which of the two states was intended. Unchanged since filing.** **(b) NARROWED 2026-08-19 — authored, merged and deployed; only the APPLY remains.** `crm7/supabase/migrations/20260822050000_pf3_pf4b_drop_provable_redundancies.sql` is on `origin/development` AND `origin/main`, and it drops exactly the two pairs the live advisor still reports: `public.leave_balances {idx_leave_balances_employee, idx_leave_balances_employee_id}` keeping the column-named one, and `public.timesheets {idx_timesheets_placement_id, timesheets_placement_id_idx}` keeping the estate's dominant `idx_<table>_<column>` form. It sits in the pending set awaiting an operator `workflow_dispatch`, so the advisor will keep reporting both pairs until that runs — the finding is live, the fix is not applied, and those are different states. **That file also carries its own near-miss, worth reading:** it was renumbered `20260822010000` -> `20260822050000` because three crm7 files claimed the first version and one had already applied. The ledger is shared across eight scopes and keyed on the version alone, so this migration would have been SKIPPED FOREVER, silently, on a green run. **(c) unchanged.** | S |
+| PF-3 | 68 tables run multiple overlapping permissive policies | ~~**OPEN**~~ ~~**PARTIAL — re-measured 2026-08-18**~~ **DONE — closed to the safe limit, re-measured live 2026-08-19** | Live advisor: **67**, across 63 tables. Long tail is 61 tables with one finding each. Mechanical, but **unlike PF-1 each merge is an authz change** and needs the red-team checklist — it is not a behaviour-preserving rewrite. **Re-measured 2026-08-18 against live production: **21** tables carry more than one PERMISSIVE policy for the same command, against **68** as filed. Two thirds of the class is gone. Left PARTIAL, not DONE: overlapping permissive policies OR together, so each remaining table still has a widest-limb question nobody has answered.** **CLOSED 2026-08-19.** `20260822050000` (described 2026-08-19g as "awaiting an operator dispatch") was already live. Re-measured: **64** table×role×command groups remain — exactly **66 reconstructed − 2 dropped**, matching that migration's own pre-apply arithmetic. Every one of the 64 was already individually triaged, not left open: **59** are `ALL`-vs-specific-verb overlaps that are structurally unmergeable (collapsing them would grant write access to everyone matching the read predicate — the 2026-08-16 cross-tenant leak, run in reverse); **5** are same-command-different-intent pairs (candidate-self/tenant-member, field-officer/reviewer, owner/platform-admin, self-upload/staff-upload, tenant-member/platform-admin) Postgres already ORs safely today but which stay as two policies so editing one intent cannot silently widen the other. No further consolidation is safe without re-accepting a risk already refused once. The residual advisor noise is 64 answered widest-limb questions, not an open one. | M |
+| PF-4 | 9 policy-less tables; 2 duplicate indexes; one legacy table | ~~**OPEN — CONFIRMED still open**~~ **PARTIAL — (b) DONE, (a) not-a-defect (count drifted), (c) open by design — re-measured live 2026-08-19** | Composite. **(a) NOT a defect** — all nine policy-less tables grant to the service role **only**, with zero untrusted grants; that is the intended deny-all posture and adding policies would *loosen* them. **(b) OPEN** — 2 duplicate index pairs confirmed. **(c) OPEN** — the legacy table is live with 4 policies, all 4 among PF-1's 69. **Decide (c) before PF-1 reaches `main`, or 4 of its statements are wasted.** **Re-measured 2026-08-18 against live production: **9** tables have RLS ENABLED and **zero policies** — exactly the figure filed. RLS on with no policy denies every row to every non-superuser, so these are unreachable rather than exposed; the defect is that nobody can say which of the two states was intended. Unchanged since filing.** **(b) NARROWED 2026-08-19 — authored, merged and deployed; only the APPLY remains.** `crm7/supabase/migrations/20260822050000_pf3_pf4b_drop_provable_redundancies.sql` is on `origin/development` AND `origin/main`, and it drops exactly the two pairs the live advisor still reports: `public.leave_balances {idx_leave_balances_employee, idx_leave_balances_employee_id}` keeping the column-named one, and `public.timesheets {idx_timesheets_placement_id, timesheets_placement_id_idx}` keeping the estate's dominant `idx_<table>_<column>` form. It sits in the pending set awaiting an operator `workflow_dispatch`, so the advisor will keep reporting both pairs until that runs — the finding is live, the fix is not applied, and those are different states. **That file also carries its own near-miss, worth reading:** it was renumbered `20260822010000` -> `20260822050000` because three crm7 files claimed the first version and one had already applied. The ledger is shared across eight scopes and keyed on the version alone, so this migration would have been SKIPPED FOREVER, silently, on a green run. **(c) unchanged.** **(b) CLOSED 2026-08-19, confirmed live — was not "awaiting dispatch".** Both doomed indexes (`idx_leave_balances_employee`, `timesheets_placement_id_idx`) are absent live; both survivors are present. The migration already ran. **(a) count DRIFTED, still not-a-defect.** Re-measured: **11** policy-less RLS-enabled tables, not 9 — new: `r7_talent_pool_redeem_attempts`, `xero_tax_rate_cache`. All 11 grant zero privileges to `anon`/`authenticated` (checked per role × SELECT/INSERT) — deny-all posture holds across the wider set. **(c) unchanged, re-confirmed** — `custom_fields_legacy_unused` still 0 rows live; dropping it alone remains scope creep against the batch-retirement plan; that batch's other zero-row orphans are outside the PF cluster's boundary. | S |
 
 ### PO — portals · 1 DONE, 1 PARTIAL, 3 OPEN
 
