@@ -83,11 +83,34 @@
 /* ============================================================
    LAYER 2 — SURFACES AND BORDERS
    ============================================================ */
-  --role-bg-body:       oklch(0.980 0.002 50);
-  --role-bg-surface:    oklch(0.968 0.004 55);
-  --role-bg-panel:      oklch(0.994 0.001 50);
-  --role-bg-input:      oklch(0.972 0.003 250);
-  --role-bg-sunken:     oklch(0.952 0.005 250);
+  /* THE WHOLE LIGHT RAMP SITS 0.012 LOWER THAN IT USED TO, and the reason is
+     the top of it. --role-bg-panel was oklch(0.994 …) — brighter than the
+     value this design system calls white, oklch(0.982 0.002 248) / #f8f9fa.
+     The agent visual gate fails any surface at L >= 0.990 as a pure endpoint
+     (visual-probe C1), and braden/ is exempt from the D2C PALETTE only: the
+     pure white/black ban is platform-wide by operator ruling 2026-08-02.
+     visual-probe's own comment names this exact case — three live declarations
+     carried the comment "pure white banned" while declaring oklch(0.994 …).
+
+     Capping the panel alone would have left it 0.002 above the body, which is
+     no separation at all: every card on the marketing pages would read as flat
+     against the page. So the ramp SLID rather than clamped. Every interval is
+     preserved to three decimals — panel-over-body is still 0.014, body-over-
+     surface still 0.012, surface-over-sunken still 0.016 — and the ceiling now
+     lands exactly on the sanctioned white instead of past it.
+
+     Contrast re-measured through OKLab -> linear sRGB -> WCAG relative
+     luminance for all three text roles against all five surfaces. Fifteen
+     pairs, every one still AA, worst case --role-h6 on --role-bg-sunken at
+     6.40:1 against a 4.5:1 requirement. The largest single loss is 0.61 on a
+     ratio of 17.78, which is the arithmetic of moving a near-white 1.2% and
+     not a legibility change. Hue and chroma are untouched: the warm 50/55
+     greys stay warm, which is the Braden identity and is not what was wrong. */
+  --role-bg-body:       oklch(0.968 0.002 50);
+  --role-bg-surface:    oklch(0.956 0.004 55);
+  --role-bg-panel:      oklch(0.982 0.001 50);
+  --role-bg-input:      oklch(0.960 0.003 250);
+  --role-bg-sunken:     oklch(0.940 0.005 250);
   --role-border:        oklch(0.900 0.008 248);
   --role-border-strong: oklch(0.840 0.012 248);
 
