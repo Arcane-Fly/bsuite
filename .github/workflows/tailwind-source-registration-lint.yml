@@ -1,0 +1,78 @@
+name: Tailwind source registration lint
+
+# Tailwind v4 does not scan node_modules. A shared @bsuite package that is not
+# named in a consumer's `@source` directive has EVERY one of its class names
+# dropped from that app's generated CSS — and the failure is silent by
+# construction: a missing utility is not an error, it is an element rendered with
+# one less class than the author wrote. Nothing throws, nothing warns, the build
+# is green, and the page is wrong.
+#
+# Measured 2026-08-19: every app registered @bsuite/ui and @bsuite/nav-core and
+# stopped there, while depending on four more class-shipping packages —
+# schema-builder (749 class occurrences), page-builder (272), schema-registry (94)
+# and data-grid (39). braden had no @source directives at all while importing
+# three of them. The symptom that surfaced it: the served stylesheet on three live
+# d.* deploys DECLARED --glow-card as a real chromatic value and contained no rule
+# that read it, because the utility that reads it lives only inside
+# @bsuite/page-builder. Every dark-mode card in three apps drew a flat achromatic
+# shadow instead of the accent glow.
+#
+# NO `paths:` FILTER — same two reasons as the sibling slug-collision gate:
+#
+#   1. Under-triggering. A new dependency is added inside a SUBMODULE, and the
+#      parent tree holds only a gitlink for each submodule, so a path filter can
+#      never match the change that introduces the defect.
+#   2. Required-check deadlock. A path-filtered required check never reports on a
+#      PR that misses the filter, and the PR waits forever. This gate is a file
+#      scan that finishes in seconds.
+#
+# Scope is FULL-TREE, not PR-delta: a package registered in this PR can still be
+# missing from an app this PR never touches.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tailwind-source-registration-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tailwind-source-registration:
+    name: Tailwind @source registration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the apps being checked ARE the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
+          # `submodules: recursive` fails at checkout. Same fallback chain every
+          # other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # Run the checker's own self-test FIRST so a pass below is known to come
+      # from a checker that can still fail — including its two anti-prose cases,
+      # which assert that a package NAMED in a comment, or pulled in with
+      # @import, does NOT satisfy the @source requirement.
+      - name: Self-test the checker
+        run: node scripts/check-tailwind-sources.mjs --self-test
+
+      # --require-packages=4 is the positive control against a silently unscanned
+      # tree. Class literals are counted from the PARENT's own packages/<name>/src
+      # precisely so this works without installing anything; if that scan comes up
+      # short, the checkout did not populate and a "clean" result would be
+      # meaningless rather than clean.
+      - name: Check every class-shipping package is registered as a Tailwind source
+        run: node scripts/check-tailwind-sources.mjs --require-packages=4

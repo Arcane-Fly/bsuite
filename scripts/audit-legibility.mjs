@@ -214,6 +214,26 @@ for (const url of urls) {
         if ((cs.webkitBackgroundClip || cs.backgroundClip) === 'text') continue;   // gradient text
         if (el.matches(':disabled, [aria-disabled="true"], [disabled]')) continue; // WCAG-exempt
         if (el.closest('[inert], [aria-hidden="true"]')) continue;
+        // A CONTRAST DEMONSTRATION IS NOT A CONTRAST DEFECT.
+        // BSU's OklchColorPicker paints the operator's chosen colour on a white
+        // swatch and on a black one, and prints the measured WCAG ratio beside
+        // each. Reporting that ratio as a failure is reporting the feature. On
+        // the first five-app run this produced 7 of the 8 findings on /branding
+        // — "Aa on white" at 1.97:1 next to a badge that already SAYS 1.97,
+        // plus the badge text itself.
+        //
+        // The estate already has a marker for exactly this claim,
+        // `theme-audit-ok`, but it lives in a SOURCE COMMENT — which the colour
+        // greps can read and a runtime auditor never can. The two swatches
+        // carry it and this auditor could not see it. So the same claim now has
+        // a DOM form, `data-theme-audit-ok`, whose value is the REASON: it has
+        // to be stated rather than merely asserted, and it shows up in devtools
+        // where the next person will look.
+        //
+        // Deliberately narrow. It suppresses a SUBTREE its author explicitly
+        // marked and nothing else — not a path exemption, and it never reads a
+        // route name.
+        if (el.closest('[data-theme-audit-ok]')) continue;
 
         // Visually-hidden text is not text on screen. A `sr-only` skip link is
         // clipped to 1x1px and only paints when focused — where it carries its

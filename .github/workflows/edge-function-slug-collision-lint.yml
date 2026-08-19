@@ -86,3 +86,56 @@ jobs:
       # tree with no submodules in it is meaningless, not clean.
       - name: Check for cross-scope edge function slug collisions
         run: node scripts/check-edge-function-slug-collisions.mjs --require-scopes=6
+
+  # BU-5/BU-6 (docs/20260819-built-unlanded-and-unwired-register-v1.00W.md):
+  # a lint exemption can outlive its subject. Kept in this workflow file
+  # rather than the job above — same trigger conditions, same
+  # `submodules: recursive` checkout need, and the same "one guard, one
+  # measured self-report" shape as the slug-collision job — but given its
+  # OWN job so it does not slow that job's "finishes in seconds" budget
+  # (see its header) with the six per-submodule `pnpm install`s this checker
+  # genuinely needs: it dynamically imports each app's REAL eslint.config.*
+  # (extends, spread conditionals and all) rather than regexing the source,
+  # which is the only way to see the config ESLint itself would actually
+  # resolve — see scripts/check-stale-lint-exemptions.mjs for why that
+  # matters and what it would silently miss otherwise.
+  stale-lint-exemption-lint:
+    name: Stale lint exemptions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the configs being checked live inside them)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Self-test the checker
+        run: node scripts/check-stale-lint-exemptions.mjs --self-test
+
+      # One install per scope, matching the working-directory-scoped pattern
+      # theme-conformance.yml already uses for the same reason: each app's
+      # eslint.config.* imports real devDependencies (@bsuite/dry-lint,
+      # typescript-eslint, eslint-config-next, ...) that a bare checkout does
+      # not provide, and the checker cannot resolve a config it cannot import.
+      - name: Install each scope's dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          for scope in throughput crm7 business-suite-unified conduit braden R80.4; do
+            echo "::group::pnpm install ($scope)"
+            (cd "$scope" && pnpm install --frozen-lockfile)
+            echo "::endgroup::"
+          done
+
+      # --require-scopes=6 is the same positive control as the sibling job —
+      # every one of these six scopes carries at least one path-scoped
+      # exemption today, so anything less means the submodule checkout (or an
+      # install above) silently failed to populate.
+      - name: Check for stale path-scoped lint exemptions
+        run: node scripts/check-stale-lint-exemptions.mjs --require-scopes=6

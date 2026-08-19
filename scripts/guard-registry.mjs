@@ -201,6 +201,29 @@ export const GUARDS = [
       'implementation.',
   },
   {
+    id: 'parent-check-stale-lint-exemptions',
+    label: 'Stale path-scoped lint exemptions across all app configs (BU-5/BU-6)',
+    repo: '.',
+    // Needs each scope's own `pnpm install` first — see the CI job for why
+    // (the checker dynamically imports each app's real eslint.config.*).
+    // `--require-scopes=6` is the same unscanned-tree control the sibling
+    // slug-collision gate uses: every one of these six scopes carries at
+    // least one path-scoped exemption today.
+    command: ['node', 'scripts/check-stale-lint-exemptions.mjs', '--require-scopes=6'],
+    ciWorkflow: '.github/workflows/edge-function-slug-collision-lint.yml',
+    mode: 'run',
+    evidence:
+      '"check-stale-lint-exemptions: checked 204 path-scoped exemption(s) ' +
+      'across 6 scope(s) (R80.4, braden, business-suite-unified, conduit, ' +
+      'crm7, throughput). 0 missing, 6 orphaned (no importer)." — measured ' +
+      '2026-08-19 against each scope\'s pushed feat/stale-lint-exemptions ' +
+      'branch (bsuite BU-5/BU-6 closure). The 6 remaining orphans are ' +
+      'reported, not failed: build-tool entry points and a test file ' +
+      '(tailwind.config.js x2, vite.config.js, next-env.d.ts, ' +
+      'scripts/drift-scan.mjs, useBranding.test.ts) that are structurally ' +
+      'never imported by design, not dead application code.',
+  },
+  {
     id: 'parent-check-migration-version-collisions',
     label: 'Migration version collisions across all scopes',
     repo: '.',
