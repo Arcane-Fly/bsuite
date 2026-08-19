@@ -41,11 +41,13 @@
 # app, not about coverage this run promised.
 #
 # HONEST SCOPE, STATED AT THE HEAD
-# The inventory below covers crm7 only. crm7 is the only app with an
-# auth.setup.ts, so it is the only app where a signed-in sweep is possible
-# today; the other five are named as NOT COVERED in the head block every run,
-# because a gap that is printed is a gap someone can close, and a gap that is
-# merely absent from a route list reads as coverage.
+# The inventory below covers crm7, braden, throughput, conduit and
+# business-suite-unified (V-9, 2026-08-19) — every app with a working
+# tests/e2e/auth.setup.ts. R80.4 is the one remaining gap: it bridges auth via
+# a `bs_*` pair of a different shape than the other five, and porting it was
+# not attempted in this pass. It is named as NOT COVERED in the head block
+# every run, because a gap that is printed is a gap someone can close, and a
+# gap that is merely absent from a route list reads as coverage.
 #
 # Usage:
 #   scripts/audit-routes.sh                       # full sweep, mints a session
@@ -72,29 +74,49 @@ cd "$(dirname "$0")/.."
 # replays a storageState only against the exact origin it was minted for.
 declare -A BASE_URL=(
   [crm7]="${THEME_GATE_BASE_URL_CRM7:-https://d.crm.crm7.app}"
+  [braden]="${THEME_GATE_BASE_URL_BRADEN:-https://d.braden.com.au}"
+  [throughput]="${THEME_GATE_BASE_URL_THROUGHPUT:-https://d.ideas.crm7.app}"
+  [conduit]="${THEME_GATE_BASE_URL_CONDUIT:-https://d.conduit.crm7.app}"
+  [business-suite-unified]="${THEME_GATE_BASE_URL_BSU:-https://d.suite.crm7.app}"
 )
 
-# Public routes. `/auth/login` is deliberately absent: it is a redirect shim to
-# BSU's OAuth server, so it lands off-origin and can only ever report SKIPPED.
-# `/auth/callback` is absent for the reason theme-gates-browser.sh already
-# records — opened without a `code` param it correctly logs "Missing
-# authorization code", which is a guaranteed console error and not a defect.
+# Public routes. `/auth/login` is deliberately absent for the OAuth CLIENT
+# apps (crm7, braden, throughput, conduit): it is a redirect shim to BSU's
+# OAuth server, so it lands off-origin and can only ever report SKIPPED.
+# business-suite-unified IS the OAuth server, so its own `/auth/login` is a
+# real form and is included. `/auth/callback` is absent everywhere for the
+# reason theme-gates-browser.sh already records — opened without a `code`
+# param it correctly logs "Missing authorization code", a guaranteed console
+# error and not a defect. Every route below was loaded live against the `d.*`
+# domain (or, for business-suite-unified, verified via a real signed-in
+# Playwright run) while this file was written — see docs/nav/route-
+# inventory.json for the full per-app inventory these were drawn from.
 declare -A PUBLIC_ROUTES=(
   [crm7]="/ /404 /unauthorized /privacy /terms"
+  [braden]="/ /apprenticeships /contact /products"
+  [throughput]="/pricing /login"
+  [conduit]="/auth/register /portal/candidate /portal/careers /pricing"
+  [business-suite-unified]="/auth/login /auth/reset-password"
 )
 
-# Authenticated routes — the coverage this lane adds. Six, not sixty: each one
-# has to survive three auditors in two themes on every run, and a set that is
-# honest about its size beats one that claims the router's full surface and
-# quietly skips most of it.
+# Authenticated routes — the coverage this lane adds. Small, not exhaustive:
+# each one has to survive three auditors in two themes on every run, and a set
+# that is honest about its size beats one that claims the router's full
+# surface and quietly skips most of it. conduit's `/api/*` "routes" in the
+# inventory are JSON endpoints, not pages, and are deliberately excluded — a
+# DOM/contrast auditor has nothing to measure on an API response.
 declare -A AUTH_ROUTES=(
   [crm7]="/dashboard /contacts /clients /people /apprentices /communications"
+  [braden]="/admin /admin/auth /admin/branding /admin/marketing"
+  [throughput]="/ /analytics /ideas/new /launch /monitoring"
+  [conduit]="/ /analytics /candidates /admin/templates"
+  [business-suite-unified]="/ /admin /admin/branding /billing /analytics /branding"
 )
 
-APP_ORDER=(crm7)
+APP_ORDER=(crm7 braden throughput conduit business-suite-unified)
 
 # Named so the hole is visible in the output rather than implied by silence.
-UNCOVERED="business-suite-unified conduit R80.4 throughput braden"
+UNCOVERED="R80.4"
 
 # ─── arguments ──────────────────────────────────────────────────────────────
 ONLY_APP=''
@@ -141,8 +163,9 @@ n_apps=${#APPS[@]}
 echo
 echo "audit-routes: $n_total route(s) across $n_apps app(s) — $n_public public, $n_auth authenticated"
 echo "  NOT COVERED: $UNCOVERED"
-echo "  (no auth.setup.ts in those five, so no session can be minted for them;"
-echo "   porting that one file is what unlocks a signed-in sweep there)"
+echo "  (no auth.setup.ts there, so no session can be minted; porting that one"
+echo "   file — the pattern crm7/braden/throughput/conduit/business-suite-"
+echo "   unified all now share — is what unlocks a signed-in sweep there)"
 echo "───────────────────────────────────────────────────────────────"
 
 # ─── inventory validation ───────────────────────────────────────────────────
@@ -184,25 +207,48 @@ fi
 [[ $INVENTORY_ONLY -eq 1 ]] && { echo "  ✓ inventory valid"; echo; exit 0; }
 
 # ─── session ────────────────────────────────────────────────────────────────
+# ONE PER APP, not one shared session (V-9, 2026-08-19). Before this pass only
+# crm7 had a producer, so a single global mint was correct. Now every app's
+# storageState is scoped to that app's own origin (or, for conduit, cookie
+# domain) — Playwright will not replay crm7's localStorage against braden's
+# origin, so reusing one session across apps would silently leave every OTHER
+# app's authenticated routes unauditable. Minting therefore happens PER APP,
+# inside the loop below, unless the caller opted out or supplied an explicit
+# override (which then applies to every app in the run — a deliberate escape
+# hatch for reusing one hand-minted state against a single-app `--app` run).
 if [[ $NO_SESSION -eq 1 ]]; then
   echo "  --no-session: authenticated routes will be attempted ANONYMOUSLY."
   echo "  They will bounce to the OAuth server and be reported SKIPPED, which"
   echo "  this runner counts as a failure. That is the point of the flag."
-  SESSION=''
-elif [[ -z $SESSION ]]; then
-  echo "  minting a session (scripts/theme-session.sh -> crm7 auth.setup.ts)"
-  if ! SESSION=$(scripts/theme-session.sh --app crm7 --base-url "${BASE_URL[crm7]}" --quiet 2>/tmp/theme-session.err); then
-    echo "  ✗ could not mint a session:"
-    sed 's/^/      /' /tmp/theme-session.err
-    rm -f /tmp/theme-session.err
-    exit 1
-  fi
-  rm -f /tmp/theme-session.err
-  echo "  session ready"
-elif [[ ! -f $SESSION ]]; then
+elif [[ -n $SESSION && ! -f $SESSION ]]; then
   echo "  ✗ --session '$SESSION' does not exist"
   exit 1
 fi
+EXPLICIT_SESSION=$SESSION
+declare -A APP_SESSION=()
+
+mint_session_for() { # $1=app  -> sets APP_SESSION[$1], returns 1 on failure
+  local a=$1
+  if [[ $NO_SESSION -eq 1 ]]; then
+    APP_SESSION[$a]=''
+    return 0
+  fi
+  if [[ -n $EXPLICIT_SESSION ]]; then
+    APP_SESSION[$a]=$EXPLICIT_SESSION
+    return 0
+  fi
+  echo "  minting a session for $a (scripts/theme-session.sh -> $a auth.setup.ts)"
+  local s
+  if ! s=$(scripts/theme-session.sh --app "$a" --base-url "${BASE_URL[$a]}" --quiet 2>/tmp/theme-session-$a.err); then
+    echo "  ✗ could not mint a session for $a:"
+    sed 's/^/      /' "/tmp/theme-session-$a.err"
+    rm -f "/tmp/theme-session-$a.err"
+    return 1
+  fi
+  rm -f "/tmp/theme-session-$a.err"
+  echo "  session ready for $a"
+  APP_SESSION[$a]=$s
+}
 
 fail=0; skips_public=0
 declare -a FAILED=()
@@ -224,8 +270,18 @@ for app in "${APPS[@]}"; do
   echo "  $app — $base"
 
   for kind in public authenticated; do
-    if [[ $kind == public ]]; then routes=${PUBLIC_ROUTES[$app]:-}; storage=''
-    else routes=${AUTH_ROUTES[$app]:-}; storage=$SESSION; fi
+    if [[ $kind == public ]]; then
+      routes=${PUBLIC_ROUTES[$app]:-}; storage=''
+    else
+      routes=${AUTH_ROUTES[$app]:-}
+      if [[ -n ${routes// /} && $NO_SESSION -ne 1 ]]; then
+        # Lazy: only mint when this app actually HAS authenticated routes to
+        # walk, so a future app with public-only coverage never pays for a
+        # session it does not use.
+        [[ -v APP_SESSION[$app] ]] || mint_session_for "$app" || exit 1
+      fi
+      storage=${APP_SESSION[$app]:-}
+    fi
     [[ -n ${routes// /} ]] || continue
 
     targets=(); for r in $routes; do targets+=("$base$r"); done
