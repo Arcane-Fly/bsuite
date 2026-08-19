@@ -59,12 +59,27 @@
      carry an icon or an explicit verb rather than relying on colour. */
   --error-red:         oklch(0.580 0.230  25);    /* standard error + destructive */
 
-  /* ── L2 SURFACES — LIGHT (warm white; panel is 0.994, not 1.0) ── */
-  --role-bg-body:    oklch(0.980 0.002  50);
-  --role-bg-surface: oklch(0.968 0.004  55);
-  --role-bg-panel:   oklch(0.994 0.001  50);
-  --role-bg-input:   oklch(0.972 0.003 250);
-  --role-bg-sunken:  oklch(0.952 0.005 250);
+  /* ── L2 SURFACES — LIGHT (warm; the panel IS the sanctioned white) ──
+     The whole ramp moved down 0.012 on 2026-08-19. The panel used to be
+     0.994, which is BRIGHTER than the colour this system calls white
+     (0.982 / #f8f9fa) — the agent visual gate fails any surface at
+     L >= 0.990, and the pure white/black ban is platform-wide, not a D2C
+     palette rule braden is exempt from. Sliding rather than clamping keeps
+     every interval: panel over body 0.014, body over surface 0.012,
+     surface over sunken 0.016. Hue and chroma untouched. */
+  --role-bg-body:    oklch(0.968 0.002  50);
+  --role-bg-surface: oklch(0.956 0.004  55);
+  --role-bg-panel:   oklch(0.982 0.001  50);
+  --role-bg-input:   oklch(0.960 0.003 250);
+  --role-bg-sunken:  oklch(0.940 0.005 250);
+
+  /* ── THE TWO NAMED ENDPOINTS — estate constants, not brand choices ──
+     This baseline did not carry them and vars.css did, so `var(--white)`
+     resolved to nothing anywhere braden loaded. Eight hairline rules in
+     braden's own src/index.css spell a near-white literal by hand for
+     exactly that reason. Same values as D2C, deliberately. */
+  --white:           oklch(0.982 0.002 247.8);  /* #f8f9fa */
+  --black:           oklch(0.166 0.026 269);    /* #0a0e1a */
   --role-border:     oklch(0.900 0.008 248);
   --role-border-strong: oklch(0.840 0.012 248);
 
@@ -760,7 +775,7 @@ td.r { text-align: right; }
       <div class="do"><h6>Do — dot inside auth</h6><p>The 16px dot field is the admin shell background, tinted gold in dark mode.</p></div>
       <div class="dont"><h6>Don't — grid inside auth</h6><p>The 32px grid is public marketing only, scoped to the hero. Never both patterns in one context.</p></div>
       <div class="do"><h6>Do — no white-label</h6><p>Braden is the corporate brand. Tenant branding overrides never apply here — this app short-circuits <code>BrandingProvider</code>.</p></div>
-      <div class="dont"><h6>Don't — pure white or black</h6><p>Panel white is <code>oklch(0.994 0.001 50)</code>, warm not neutral. The deepest navy is <code>0.120</code>.</p></div>
+      <div class="dont"><h6>Don't — pure white or black</h6><p>Panel white is <code>oklch(0.982 0.001 50)</code>, warm not neutral — the same lightness as the estate's <code>--white</code>, and never above it. It read <code>0.994</code> until 2026-08-19, which is brighter than the value this system calls white; the visual gate failed it as a pure endpoint. The deepest navy is <code>0.120</code>.</p></div>
     </div>
   </section>
 

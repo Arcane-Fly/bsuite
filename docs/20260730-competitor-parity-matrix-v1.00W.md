@@ -4,6 +4,13 @@
 > **Scope:** Evidence-linked capability comparison for four BSuite↔competitor pairs, commissioned to give the operator (a WA lawyer with GTO/BOOT/award domain expertise) a factual, source-cited view of where BSuite is ahead or behind. Every capability cell carries a source URL or an explicit "no public source found." No claim is drawn from training-data recall of a vendor's product.
 > **Relationship to prior work:** This document is net-new for **RatesCalc**, **Humanforce**, and **LiveHire**. For **Code House Workforce One (WfO) + AnyTime**, it reuses and re-verifies the primary-source evidence already captured in `docs/20260723-bsuite-capability-matrix-v1.00W.md`, `docs/20260723-Anytime-WorkforceOne-Admin-Guide.md` (the AnyTime Administrator's Guide PDF, sourced from Code House's own S3-hosted manuals — see §1.2), and `docs/references/codehouse-knowledgebase-crawl.md`. Where this doc repeats a Code House claim, the source is that local evidence file, not a fresh fetch.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. Scope + method

@@ -85,13 +85,30 @@ Full list in `docs/README.md`. Canonical sources are split into **Living Authori
 
 Some concerns no longer have a living markdown spec — the **package** or **code** is the source of truth.
 
+> **No version numbers appear in this section, deliberately.** Naming a version here
+> creates a SECOND source of truth beside the package, and it is the one that never gets
+> updated. Measured 2026-08-18, every pin this table carried had drifted, several by
+> whole majors:
+>
+> | named here | actually published |
+> |---|---|
+> | `@bsuite/theme@0.3.3` | 1.0.0 |
+> | `@bsuite/schema-registry@0.3.1` | 1.0.2 |
+> | `@bsuite/charge-calc@0.2.3` | 0.14.0 |
+> | `@bsuite/schema-builder@0.7.0` | 1.3.1 |
+> | `@bsuite/page-builder@0.9.0` | 1.0.0 |
+>
+> The row's whole claim is that the PACKAGE is authoritative. `npm view @bsuite/<name>
+> version` answers "which version" in one command and cannot go stale; a number typed
+> into prose can only ever be right on the day it was typed.
+
 | Concern | Authoritative source | Reference snapshot (archive) |
 |---|---|---|
-| D2C theme tokens + preset | `packages/theme/` (@bsuite/theme@0.3.3) — `preset-v4.css`, oklch tokens | `docs/archive/parent/2026-04-30-references-approved/20260228-d2c-theme-specification-v1.00A.md` |
+| D2C theme tokens + preset | `packages/theme/` (@bsuite/theme) — `preset-v4.css`, oklch tokens | `docs/archive/parent/2026-04-30-references-approved/20260228-d2c-theme-specification-v1.00A.md` |
 | Authentication + session topology | `AGENTS.md` §Authentication & OAuth + `CLAUDE.md` mirror | `docs/archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md` |
 | Navigation structure | `crm7/src/config/navigation.ts` (runtime source of truth) | `docs/archive/parent/2026-04-30-references-approved/20260316-navigation-reference-v1.00A.md`, `20260316-navigation-guide-v1.00A.md` |
 | UI architecture + source chain | `packages/ui/` (in progress) + `packages/theme/` | `docs/archive/parent/2026-04-30-references-approved/20260316-ui-reference-v1.00A.md` |
-| Entity + field definitions | `packages/schema-registry/` (@bsuite/schema-registry@0.3.1) | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` (living) |
+| Entity + field definitions | `packages/schema-registry/` (@bsuite/schema-registry) | `docs/archive/2026-06/20260319-entity-crosswalk-v1.00D.md` (living) |
 | RBAC + permissions | `business-suite-unified/docs/20260316-bsu-crm7-rbac-rls-reference-v1.00W.md` + CRM7 `permissionConstants.ts` | `docs/archive/parent/2026-04-30-references-approved/20260301-crm7-rbac-matrix-v1.00A.md` |
 | Fair Work API integration | *unverified 2026-08-17 — was `R80.3/docs/20260304-r80-fairwork-api-reference-v1.01W.md` (canonical) + R80.3 + CRM7 src; R80.3 archived, R80.4 equivalent not confirmed* | `docs/archive/parent/2026-04-30-references-approved/20260310-fairwork-reference-v1.00A.md` |
 | GTO National Standards | CRM7 compliance code | `docs/archive/parent/2026-04-30-references-approved/20260228-gto-standards-reference-v1.00A.md` |
@@ -103,10 +120,10 @@ Some concerns no longer have a living markdown spec — the **package** or **cod
 
 Historical references retained for context. Do **not** consult these for forward-looking work — use the "Authoritative source" column above instead.
 
-- [`docs/archive/parent/2026-04-30-references-approved/README.md`](./archive/parent/2026-04-30-references-approved/README.md) — 24 approved reference docs archived 2026-04-30 (auth map, D2C theme, UI/nav/matrix/compliance references, fairwork reference, GTO standards, RAM credential, pricing, competitive landscape, CRM7A research, CRM8U research)
+- [`docs/archive/parent/2026-04-30-references-approved/README.md`](./archive/README.md) — 24 approved reference docs archived 2026-04-30 (auth map, D2C theme, UI/nav/matrix/compliance references, fairwork reference, GTO standards, RAM credential, pricing, competitive landscape, CRM7A research, CRM8U research)
 - [`docs/archive/parent/2026-04-30-audits-closed/README.md`](./archive/parent/2026-04-30-audits-closed/) — closed-loop audits (WCAG contrast, colour-token, Web Vitals baseline)
 - [`docs/archive/parent/2026-04-25-finish-line/README.md`](./archive/parent/2026-04-25-finish-line/) — WS-H sweep (pre-finish-line consolidation)
-- [`docs/archive/2026-05-04-doc-unification/README.md`](./archive/2026-05-04-doc-unification/README.md) — this session's archive (Codex Phase 2 shared-packages plan)
+- [`docs/archive/2026-05-04-doc-unification/README.md`](./archive/README.md) — this session's archive (Codex Phase 2 shared-packages plan)
 - [`docs/archive/README.md`](./archive/README.md) — full archive index
 
 ### 2.4 Active Plans
@@ -272,7 +289,7 @@ Actual files (verified 2026-05-04, R80.3 — pre-archive):
 
 **Folder:** `throughput/docs/` | **README:** `throughput/docs/README.md` (created 2026-05-04) | **Cross-links:** `throughput/docs/PARENT-DOCS.md`
 
-Key documents: 20+ per-component docs (alert, badge, button, card, input, modal, textarea) + system architecture, Groq architecture/integration, RLS, roadmap, user guide, troubleshooting, navigation UX guide, development, outstanding, quality improvements, conversation map, components guide. See [`throughput/docs/README.md`](../throughput/docs/README.md) for the complete list.
+Key documents: 20+ per-component docs (alert, badge, button, card, input, modal, textarea) + system architecture, Groq architecture/integration, RLS, roadmap, user guide, troubleshooting, navigation UX guide, development, outstanding, quality improvements, conversation map, components guide. See [`throughput/docs/README.md`](archive/README.md) *(archived — was `README.md`)* for the complete list.
 
 **Cross-app role:** Idea hub + Groq AI experimentation. Tailwind has been brought to v4; remaining tech-stack gaps are zero Radix/shadcn adoption, outdated Supabase-JS/Zod, and strict-mode work. See `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` §5 TS-02 → TS-04.
 
@@ -287,16 +304,16 @@ Every shared concern should be documented in each submodule where it applies, wi
 | OUTSTANDING | `docs/OUTSTANDING.md` (SSoT — `docs/20260501-merged-execution-backlog-v1.00W.md` is the active execution queue) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488); `docs/reference/OUTSTANDING.md` is per-area audit and retained | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | `20260425-throughput-outstanding-v1.00W.md` (throughput-local, out of bsuite#488 scope) |
 | Roadmap | `docs/00-roadmap/20260112-master-roadmap-1.00W.md` *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250829-throughput-roadmap-v1.00W.md` ✅ |
 | Auth topology | `AGENTS.md` §Auth + `CLAUDE.md` mirror (archived snapshot: `archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md`) | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
-| Theme tokens | `@bsuite/theme@0.3.3` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
+| Theme tokens | `@bsuite/theme` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
 | Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap (R80.4) | `20251014-throughput-navigation-ux-guide-v1.00W.md` ✅ |
 | Component library | `packages/ui/` (in progress) | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap (R80.4) | full component docs ✅ (20+ files) |
 | DRY architecture | `docs/20260227-dry-one-shot-architecture-v1.04A.md` | ⚠️ cross-link only | ✅ `ENTITY-SELECTORS.md` | ⚠️ cross-link only | n/a | ⚠️ cross-link only (R80.4) | n/a |
 | Tech stack | `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only (R80.4) | ⚠️ cross-link only |
-| Charge calc | `@bsuite/charge-calc@0.2.3` package | n/a | `CHARGE-CALC.md` ✅ | n/a | n/a | `CHARGE-CALC.md` — unverified in R80.4 | n/a |
+| Charge calc | `@bsuite/charge-calc` package | n/a | `CHARGE-CALC.md` ✅ | n/a | n/a | `CHARGE-CALC.md` — unverified in R80.4 | n/a |
 | Compliance | R80.3 `20260304-r80-fairwork-api-reference-v1.01W.md` + CRM7 code (archived — R80.4 equivalent unverified) | ⚠️ | ✅ (referenced) | n/a | n/a | ✅ canonical impl (R80.4) | n/a |
 | AI integration | CRM7 code + `AGENTS.md` §AI Implementation Standards | n/a | ✅ canonical | ✅ consumer | n/a | n/a | ✅ Groq-specific |
-| Schema builder | `@bsuite/schema-builder@0.7.0` | ✅ UI owner | ⚠️ consumer | ⚠️ consumer | n/a | ⚠️ consumer | n/a |
-| Page builder | `@bsuite/page-builder@0.9.0` | ✅ admin UI | ⚠️ consumer | ⚠️ consumer | n/a | ⚠️ consumer (R80.4) | n/a |
+| Schema builder | `@bsuite/schema-builder` | ✅ UI owner | ⚠️ consumer | ⚠️ consumer | n/a | ⚠️ consumer | n/a |
+| Page builder | `@bsuite/page-builder` | ✅ admin UI | ⚠️ consumer | ⚠️ consumer | n/a | ⚠️ consumer (R80.4) | n/a |
 
 **Gaps (⚠️) are the cross-link sweep backlog.** Each submodule has a dedicated `docs/PARENT-DOCS.md` file linking back to the Living Authority docs in §2.1 and the archived snapshots in §2.3. The shared section of those files is intentionally **byte-identical** across all 6 submodules except for the app-specific trailer — any divergence is a bug flagged by the monthly audit. The sweep was performed 2026-05-04 — see `docs/archive/2026-05-04-doc-unification/README.md`.
 
@@ -431,9 +448,9 @@ Fast navigation for agents and contributors. Bookmark this section.
 ### Governance
 
 - [Master roadmap (SSoT)](./00-roadmap/20260112-master-roadmap-1.00W.md) *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*
-- [Finish-line roadmap](./20260425-bsuite-finish-line-roadmap-v1.00W.md)
-- [Active execution backlog](./20260501-merged-execution-backlog-v1.00W.md)
-- [Tech-stack baseline](./20260504-bsuite-tech-stack-alignment-v1.00W.md)
+- [Finish-line roadmap](archive/README.md) *(archived — was `20260425-bsuite-finish-line-roadmap-v1.00W.md`)*
+- [Active execution backlog](archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)*
+- [Tech-stack baseline](archive/README.md) *(archived — was `20260504-bsuite-tech-stack-alignment-v1.00W.md`)*
 - [Contributing standards](./20260227-contributing-standards-guide-v1.01W.md)
 - [Parent AGENTS.md](../AGENTS.md)
 - [Parent CLAUDE.md](../CLAUDE.md)
@@ -441,20 +458,20 @@ Fast navigation for agents and contributors. Bookmark this section.
 
 ### Per-submodule entry points
 
-- [BSU docs](../business-suite-unified/docs/README.md) · [cross-links](../business-suite-unified/docs/PARENT-DOCS.md)
-- [CRM7 docs](../crm7/docs/README.md) · [cross-links](../crm7/docs/PARENT-DOCS.md)
-- [Conduit docs](../conduit/docs/README.md) · [cross-links](../conduit/docs/PARENT-DOCS.md)
-- [Braden docs](../braden/docs/README.md) · [cross-links](../braden/docs/PARENT-DOCS.md)
-- [R80.4 docs](../R80.4/docs/README.md) · [cross-links](../R80.4/docs/PARENT-DOCS.md) *(was `../R80.3/docs/`, archived 2026-08-06)*
-- [Throughput docs](../throughput/docs/README.md) · [cross-links](../throughput/docs/PARENT-DOCS.md)
+- [BSU docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [CRM7 docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [Conduit docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [Braden docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [R80.4 docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)* *(was `../R80.3/docs/`, archived 2026-08-06)*
+- [Throughput docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
 
 ### Architecture + governance
 
 - [DRY one-shot architecture (Approved)](./20260227-dry-one-shot-architecture-v1.04A.md)
-- [Entity crosswalk](./archive/2026-06/20260319-entity-crosswalk-v1.00D.md)
-- [Gap report v2](./archive/2026-06/20260317-bsuite-gap-report-v2.00W.md)
+- [Entity crosswalk](archive/README.md) *(archived — was `20260319-entity-crosswalk-v1.00D.md`)*
+- [Gap report v2](archive/README.md) *(archived — was `20260317-bsuite-gap-report-v2.00W.md`)*
 - [Env var rules](./20260424-env-var-contributing-rules-v1.00W.md)
-- [Phase-0 completion report](./archive/2026-06/20260501-phase-0-completion-report-v1.00W.md)
+- [Phase-0 completion report](archive/README.md) *(archived — was `20260501-phase-0-completion-report-v1.00W.md`)*
 
 ### Living trackers
 
@@ -465,8 +482,8 @@ Fast navigation for agents and contributors. Bookmark this section.
 ### Archive
 
 - [Archive index](./archive/README.md)
-- [2026-05-04 doc-unification archive](./archive/2026-05-04-doc-unification/README.md)
-- [2026-04-30 references-approved snapshots](./archive/parent/2026-04-30-references-approved/README.md)
+- [2026-05-04 doc-unification archive](./archive/README.md)
+- [2026-04-30 references-approved snapshots](./archive/README.md)
 - [2026-04-30 audits-closed snapshots](./archive/parent/2026-04-30-audits-closed/)
 - [2026-04-25 finish-line archive](./archive/parent/2026-04-25-finish-line/)
 

@@ -14,6 +14,13 @@
 > in documents predating this date refer to this file. The OAuth Allow-List Doctrine
 > keeps 0004 because it holds the index row and the wider inbound-citation surface.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 - **Status:** Accepted (2026-05-01; renumbered 0004 → 0008 on 2026-08-17)
 - **Supersedes:** N/A
 - **Superseded by:** N/A

@@ -3,6 +3,30 @@
 > **File:** `20260725-conduit-r80-docs-code-audit-v1.00W.md`
 > **Status:** W (Working) · **Mode:** READ-ONLY (no files modified)
 > **Date:** 2026-07-25
+
+> ## ⚠ §4 AUDITS A REPOSITORY THAT NO LONGER EXISTS — re-measured 2026-08-18
+>
+> **This audit was accurate on 2026-07-25. It is not a document to act on today.**
+>
+> Section 4 is headed *"R80.3 — Funding Offsets"*. **R80.3 was archived**; the live
+> repository is R80.4, which is a RESTRUCTURE rather than a rename, so those paths
+> resolve nowhere. Re-checking every row this audit marks `✅` (exists):
+>
+> | | |
+> |---|---|
+> | rows marked ✅ | **40** |
+> | exact path still resolves | **11** |
+> | file moved — path stale, code alive | **7** |
+> | genuinely gone (almost all §4 / R80.3) | **22** |
+>
+> The 22 cluster: the entire funding-offset feature — migration, `fundingSchemes.ts`,
+> `fundingOffsetTool.ts`, `fundingOffset.ts`, `fundingOffsetsService.ts` and five test
+> files. That feature is not lost; it lives in **crm7 (5 files) and BSU (5 files)**
+> today. What is gone is the R80.3 copy this audit examined.
+>
+> **The table below is NOT corrected, deliberately.** A dated audit's rows are the
+> measurement it was written to preserve; rewriting them destroys the record and
+> leaves a document that looks current and was never re-verified. Read §4 as history.
 > **Scope:** Non-archive feature/reference docs in `conduit/docs/` and `R80.3/docs/`, cross-checked against source code in both repos.
 > **Coverage:** recruitment, STA email ingestion, handover, billing models, charge-calc, funding offsets, payroll (payday super), awards (FWC MAPD), training fees, invoice runs, typecheck gate, schema-builder consolidation, CSP.
 > **Match rule:** SUBSTANTIVE-MATCH = the claimed file/function/symbol/table/column exists and the claim is substantively accurate. Line-number drift and minor wording differences do not fail a claim.
@@ -79,7 +103,7 @@
 | 10 | pg_cron every 15 min, vault-backed | `*/15 * * * *` schedule, reads `vault.decrypted_secrets` for URL + token | MATCH |
 | 11 | WA (WAAMS) + NT proven, other 6 stubbed low-confidence | `staParsers/index.ts` comment: "WA and NT are the proven formats; the other six are generic stubs capped at low confidence" | MATCH |
 | 12 | 49 assertions | 50 `it()/test()` calls, 86 `expect()` calls across 5 test files — substantively accurate | MATCH |
-| 13 | `r7_offers.lodgement_outcome` (`pending → approved | rejected`) | Referenced in migration + `offerStateMachine.ts` | MATCH |
+| 13 | `r7_offers.lodgement_outcome` (`pending → approved | rejected`) MATCH | Referenced in migration + `offerStateMachine.ts` |
 | 14 | `sta_inbound_emails` + `training_contract_status_confirmations` tables | Both `CREATE TABLE` statements in migration | MATCH |
 
 ### 2.3 Self-Report Divergences (doc-acknowledged)
@@ -180,7 +204,7 @@
 
 | # | Claim | Evidence | Verdict |
 |---|---|---|---|
-| 1 | Three billing models: Standard, ALEX48, W52 | `src/types/index.ts:35` — `export type BillingModel = 'Standard' \| 'ALEX48' \| 'W52'` | MATCH |
+| 1 | Three billing models: Standard, ALEX48, W52 | `src/types/index.ts:35` — `export type BillingModel = 'Standard' \ 'W52'` MATCH | 'ALEX48' \ |
 | 2 | Standard: training hours excluded from billable, spread over worked time | `calcBridge.ts:131` — `case 'Standard'` deducts training weeks | MATCH |
 | 3 | ALEX48: only annual leave excluded, training billed directly | `calcBridge.ts:134` — `case 'ALEX48'`; training not deducted (line 297-298) | MATCH |
 | 4 | W52: 52 weeks of work for billing, training billed directly | `calcBridge.ts:135` — `case 'W52'`; same training logic as ALEX48 | MATCH |
@@ -345,7 +369,7 @@
 | 12 | `MIN_BILLABLE_HOURS = 0` | `invoicingService.ts:39` | MATCH |
 | 13 | `round2(n) = Math.round((n + Number.EPSILON) * 100) / 100` | `invoicingService.ts:149-150` — exact match | MATCH |
 | 14 | Payment terms: `due_date = today + 14 days` | `invoicingService.ts:41` — `PAYMENT_TERMS_DAYS = 14` | MATCH |
-| 15 | `invoice_line_items.line_type` is a Postgres ENUM: `wages|service_fee|subsidy_credit|adjustment|training` | `toDbLineType()` maps to these values; the ENUM is pre-existing (not defined in these migrations) | MATCH |
+| 15 | `invoice_line_items.line_type` is a Postgres ENUM: `wages adjustment training` `toDbLineType()` maps to these values; the ENUM is pre-existing (not defined in these migrations) MATCH | service_fee | subsidy_credit |
 
 ### 10.3 Divergences
 

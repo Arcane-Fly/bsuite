@@ -59,6 +59,20 @@ on:
       - 'packages/schema-builder/supabase/migrations/**'
       - 'business-suite-unified/supabase/migrations/**'
       - '.github/workflows/schema-builder-migration-parity.yml'
+      # The submodule GITLINKS. This workflow already watches submodule content
+      # through the globs above, which states the intent — but the parent's diff
+      # for a pointer bump contains NO file under those paths. It contains one
+      # entry per moved submodule, and that entry is exactly `crm7`, the gitlink.
+      # A pointer bump is the ONLY way submodule content changes for the parent,
+      # so without these the globs above can never fire on the change that
+      # matters. Measured on bsuite#2140, where theme-conformance — the same
+      # omission — did not start while twenty-one other checks did.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'R80.4'
+      - 'braden'
+      - 'throughput'
   push:
     branches:
       - development

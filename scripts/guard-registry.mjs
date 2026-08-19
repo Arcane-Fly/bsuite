@@ -311,6 +311,56 @@ export const GUARDS = [
     // assignment, expression-statement call — and positive-controls the harness
     // per copy before grading it. `--self-test` mutates the argument walk out of
     // every inline copy and asserts the guard goes red.
+    // REPORTS, DOES NOT GATE — deliberately, and the number says why.
+    //
+    // First estate-wide run (2026-08-18): 444 markdown files, 93 carrying 229
+    // findings. A hard gate on day one is permanently red, which is how the
+    // colour rule got disarmed the first time. This runs and PRINTS; lowering
+    // the count is a lane's job, and turning it into a ratchet is the change
+    // that should follow the first sweep, not precede it.
+    //
+    // It REFUSES to run without submodules checked out (exit 2). Every
+    // cross-submodule link resolves only when the submodule is present, so in a
+    // bare worktree all 14 of them report as dangling — and the "fix" would be
+    // to rewrite links that were already correct. That nearly happened.
+    // Companion to parent-docs-links-and-pins, and REPORT for the same reason.
+    // Its four built-in corrections are the point: without them it flags an
+    // audit's own findings as defects, calls a basename collision a file move,
+    // re-reports documents that already declare themselves historical, and
+    // invents ~140 absences when run without submodules.
+    id: 'parent-docs-source-paths',
+    label: 'Source paths cited in docs still resolve (estate-wide)',
+    repo: '.',
+    command: ['node', 'scripts/check-docs-source-paths.mjs'],
+    ciWorkflow: null,
+    mode: 'report',
+    evidence:
+      '"52 documents skipped as HISTORICAL; 666 source-path references checked; ' +
+      'UNRESOLVED 102 — MOVED 10, AMBIGUOUS 4, GONE 88" (2026-08-18). Refuses ' +
+      'with exit 2 without submodules: the same run reports 240 unresolved in a ' +
+      'bare worktree, so more than half those findings would be false.',
+  },
+  {
+    id: 'parent-docs-links-and-pins',
+    label: 'Docs cross-links resolve and @bsuite/* pins are not stale (estate-wide)',
+    repo: '.',
+    command: ['node', 'scripts/check-docs-links-and-pins.mjs'],
+    ciWorkflow: null,
+    mode: 'report',
+    evidence:
+      '"Files scanned: 392 live (52 more skipped as HISTORICAL) — ' +
+      'CHECKS-CLEAN 365, CHECKS-FAILED 27; RECORD pins set aside 69" ' +
+      '(2026-08-18). Actionable: 50 dangling link, 1 Tailwind (itself an audit ' +
+      'REPORTING one), 0 authority pin, 0 template, 0 version. Refuses with ' +
+      'exit 2 without submodules. TWO LIMBS WERE RETIRED AS PURE FALSE ' +
+      'POSITIVES: the version limb emitted 12 findings and all twelve were ' +
+      'false (it read a cross-reference as the file\'s own version, and ' +
+      'compared "1.0" to "1.00" as unequal); the pin limb emitted 78 and all ' +
+      'but the hub/PARENT-DOCS cases were records, floors (`@x@0.3.3+`) or ' +
+      'plan proposals. Both are documented in the script so nobody restores ' +
+      'the looser match.',
+  },
+  {
     id: 'parent-colour-ban-reaches-converters',
     label: 'Pure white/black ban is reachable through a converter (source + 6 inline copies)',
     repo: '.',
@@ -646,34 +696,92 @@ export const GUARDS = [
   },
   {
     id: 'parent-check-placement-award-code',
-    label: 'Placement award-code coverage (can a claimed charge rate be reconciled to an award later?)',
+    label:
+      'Placement award basis, REAL tenants only (is a real apprentice billed against an unnamed award?)',
     repo: '.',
     command: ['node', 'scripts/check-placement-award-code.mjs', '--self-test'],
     ciWorkflow: '.github/workflows/schema-lag.yml',
     mode: 'run',
-    // Same deliberate exception as check-placement-rate-provenance directly
-    // above, for the same reason: the real run needs a live production
-    // credential the watcher does not hold, so registering the real command
-    // would record a permanent COULD_NOT_EXECUTE. The self-test exercises the
-    // identical `evaluate()` the real run calls.
+    // Same deliberate exception as the two guards above, for the same reason:
+    // the real run needs a live production credential the watcher does not
+    // hold. The self-test drives the identical `evaluate()` the real run calls.
     //
-    // Narrower question than check-placement-rate-provenance: that guard asks
-    // whether a wage came from a real award_rates ROW (award_rate_id); this
-    // one asks whether the placement even NAMES an award (award_code) — the
-    // two diverge on most of this estate's live data, where an award is named
-    // but no specific rate row has ever been resolved against it.
-    // `placements_award_code_required_when_claimed_chk` (20260822060000)
-    // closes the fabrication half at the DB level (claiming resolved/
-    // migrated_to_discontinued with no award_code is now a 23514); this guard
-    // covers the half that migration deliberately leaves open — the honest
-    // 'manual' quote flow, ratcheted at GAP_BASELINE=8 (measured 2026-08-17)
-    // so the gap is visible and cannot silently grow past what was measured.
+    // WHY THIS IS REGISTERED AS A SELF-TEST WHILE THE LIVE RUN IS RED.
+    // The live run currently FAILS, deliberately: 8 of 8 FutureBuild placements
+    // bill a charge_rate for a real attached person while naming no award by
+    // any route. That is the finding, not a broken guard, and it closes on an
+    // operator determination ("the user determines eligibility, never an
+    // engine"), not on a code change. The watcher records the self-test so a
+    // logic regression is still caught; the live red lives in CI where it
+    // belongs.
+    //
+    // WHAT THE FIRST VERSION OF THIS GUARD GOT WRONG — all three reproduced as
+    // positive controls in the self-test, so the fix cannot silently regress:
+    //   1. It POOLED one real tenant with three demo tenants into a single
+    //      ratcheted total and froze GAP_BASELINE at the pooled figure (8 = 7
+    //      real + 1 unrelated demo row), so it could only pass on first run.
+    //      A number averaged across real and demo data is true of nothing.
+    //   2. Its hard-failure limb keyed on `apprentice_id`, a column populated
+    //      in exactly one tenant — a DEMO one. The real tenant carries people
+    //      on `person_id`/`training_contract_id`, so the limb reported "0
+    //      apprentices exposed" over 8 real people it could not see.
+    //   3. It filtered `status = 'active'`, dropping a FutureBuild placement
+    //      that is still billed (8 billed, 7 active).
     evidence:
-      '"check-placement-award-code --self-test: 8 cases exercised across both ' +
-      'directions (at-baseline-passes, below-baseline-passes, G1 rise, G2 ' +
-      'fabricated-shaped, G3 apprentice-attached, G4 empty-scan-refused, ' +
-      'gap-closed-passes), plus 1 positive control proving the manual/no-award ' +
-      'split narrows the naive \'no award_code\' count."',
+      '"check-placement-award-code --self-test: 10 cases exercised in BOTH ' +
+      'directions (live-shape-fails, award-present-passes, 7-of-8-still-fails, ' +
+      'demo-exposure-ignored, bare-quotes-pass, R2 real, R2 demo, R3 empty, ' +
+      'R3 zero-rows, R4 real-tenant-absent), plus 3 positive controls proving ' +
+      "the OLD guard's three blind spots were real: apprentice_id sees nobody " +
+      'in the real tenant, a pooled ratchet passes over this exact live state, ' +
+      "and status='active' drops a billed row.\"",
+  },
+  {
+    id: 'parent-check-docs-table-cells',
+    label: 'Docs tables (does any row drop its own text past the declared columns?)',
+    repo: '.',
+    command: ['node', 'scripts/check-docs-table-cells.mjs'],
+    ciWorkflow: '.github/workflows/doc-naming.yml',
+    mode: 'run',
+    // Pure filesystem read over docs/; no credentials, no network, no state
+    // change, so none of the `skip` criteria apply.
+    evidence:
+      '"check-docs-table-cells: 281 markdown file(s) under docs/ examined, ' +
+      '11437 table row(s) read — 0 dropping content, 44 with a harmless empty ' +
+      'cell." — run by hand 2026-08-19, ' +
+      'immediately after the sweep that repaired 88 such rows (29 in the estate ' +
+      'completion ledger, 31 in the rate-calculation reference). Its --self-test ' +
+      'passes 13/13 in both directions and caught a real defect in the guard ' +
+      'itself first: a naive split on "|" read an ESCAPED pipe as a cell ' +
+      'boundary and manufactured 20 findings where markdownlint reported none. ' +
+      'Only the content-DESTROYING direction gates; a row with too FEW cells ' +
+      'renders an empty cell, loses nothing, and is reported rather than failed.',
+  },
+  {
+    id: 'parent-check-published-peer-ranges',
+    label: 'Published peer ranges (are our own npm publishes actually installable?)',
+    repo: '.',
+    command: ['node', 'scripts/check-published-peer-ranges.mjs'],
+    ciWorkflow: '.github/workflows/own-package-freshness.yml',
+    mode: 'run',
+    // Read-only and hits only the public npm registry, so none of the `skip`
+    // criteria apply. It reads the REGISTRY rather than packages/*/package.json
+    // on purpose: whether pnpm rewrites `workspace:^` at pack time is a property
+    // of how a package was published, which the source cannot tell you.
+    evidence:
+      '"check-published-peer-ranges: 15 package(s), 62 published dependency ' +
+      'edge(s) read from https://registry.npmjs.org — 0 blocking finding(s), 2 ' +
+      'awaiting publish." — run by hand 2026-08-18. Those two are real and are ' +
+      'what this guard was ' +
+      'written for: @bsuite/page-builder@1.0.0 shipped the literal string ' +
+      '"workspace:^" as its @bsuite/theme peer, and @bsuite/schema-registry@1.0.2 ' +
+      'peers on @bsuite/nav-core ^0.8.0 while nav-core is at 1.0.0. Both are ' +
+      'reported as FIX-PENDING-PUBLISH rather than failing, because this ' +
+      'checkout already carries the corrected range AND a version bump, so they ' +
+      'ship on merge — a guard that blocks its own fix is unmergeable by ' +
+      'construction. Its --self-test passes 22/22 in both directions and itself ' +
+      'caught a defect in this guard\'s own range parser (`<2` read as ' +
+      'unparseable) before it ever reached CI.',
   },
   {
     id: 'parent-check-own-package-freshness',
@@ -1010,6 +1118,30 @@ export const GUARDS = [
   // ---------------------------------------------------------------------
   // R80.4
   // ---------------------------------------------------------------------
+  {
+    // Finds what an exact-path link check structurally cannot: a dangling link
+    // whose target was RENAMED. An exact check calls that a deletion, the
+    // reader concludes the document was lost, and the content gets re-derived.
+    //
+    // REPORT, and it must stay report. A wrong rename target is WORSE than a
+    // dangling link — the reader follows it and believes they arrived. It
+    // suggests; a person decides.
+    id: 'parent-docs-renamed-links',
+    label: 'Dangling doc links whose target was renamed, not deleted',
+    repo: '.',
+    command: ['python3', 'scripts/check-docs-renamed-links.py'],
+    ciWorkflow: null,
+    mode: 'report',
+    evidence:
+      '"RENAMED-LINK candidates: 1 distinct" (2026-08-18, after the scorer was ' +
+      'corrected three times). Found and fixed: v1.02A -> v1.04A across five ' +
+      'PARENT-DOCS copies, feature-map v1.0.0 -> v1.00W, boot-compliance ' +
+      'v1.00W -> v1.00A, and 21 links in two crm7 roadmaps. THE SCORER WAS ' +
+      'WRONG THREE WAYS: first-match resolved dry-one-shot-architecture to ' +
+      'ARCHITECTURE.md; a version tie sent readers to an ARCHIVED v1.00A over ' +
+      'the live v1.04A; an unconditional date bonus paired every two documents ' +
+      'written the same day. All three are documented in the script.',
+  },
   {
     id: 'r804-env-inline-guard',
     label: 'import.meta.env static-key discipline (R80.4)',

@@ -11,6 +11,13 @@ owner: GaryOcean428/bsuite (parent monorepo) + 6 submodule maintainers
 
 > **Index, not a long-form plan.** Detail lives in (a) `parity-matrix.md` (referenced by row number, never restated), (b) per-portal sub-plans in `20260506-codehouse-parity/`, and (c) the visual-feature-builder spec. This file is the entry point and the single source of truth for cross-link integrity.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. Provenance
@@ -248,7 +255,7 @@ Status flips W→A only after operator approval AND red-team review of all 9 por
 ## Related documents
 
 - [`./inputs/20260506-codehouse-parity-prompt-enhancer-output.md`](./inputs/20260506-codehouse-parity-prompt-enhancer-output.md) — refined prompt (heavy-tier)
-- [`../20260227-bsuite-master-roadmap-v5.00W.md`](../20260227-bsuite-master-roadmap-v5.00W.md) — master roadmap
-- [`../20260501-merged-execution-backlog-v1.00W.md`](../20260501-merged-execution-backlog-v1.00W.md) — single execution queue
+- [`../20260227-bsuite-master-roadmap-v5.00W.md`](../archive/README.md) *(archived — was `20260227-bsuite-master-roadmap-v5.00W.md`)* — master roadmap
+- [`../20260501-merged-execution-backlog-v1.00W.md`](../archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)* — single execution queue
 - [`../../AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) — auth reference (BS OAuth 2.1 PKCE + Supabase RLS)
 - [`./20260506-codehouse-parity/20260506-visual-feature-builder-spec.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec.md) — WS-E spec

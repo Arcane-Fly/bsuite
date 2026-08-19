@@ -1,8 +1,33 @@
 # Estate remaining work — the consolidated register, v3
 
+> **VERDICT STATE, measured 2026-08-18.** This register was written as a list of
+> FINDINGS, and 43 of its 46 rows carried no verdict at all — a reader could not
+> tell which were still true. **14 are now measured against live sources** and
+> carry their evidence inline: the whole K series (invented data in shipped UI)
+> is CLOSED, W-10 is closed by deletion, and W-11 and U-12 are CONFIRMED still
+> open with a positive control behind each zero.
+>
+> **K-2 was still live and was fixed in this pass** (BSU#772): `/government`
+> asserted the Fair Work and training.gov.au APIs were *Connected* with a
+> clock-derived "synced an hour ago", and its Sync button waited 1.5s against
+> nothing before stamping a fresh timestamp. Nothing was ever contacted.
+>
+> **29 rows remain unjudged** and are NOT counted as anything —
+> W-1, W-2, W-3, W-4, W-5, W-7, W-12, W-13, U-1, U-2, U-3, U-4, U-5, U-6…. An unmeasured
+> row is not a passing row, and the tally above says so rather than rounding it
+> up.
+
 **Document:** `docs/20260817-estate-remaining-work-register-v3.00W.md`
 **Date:** 2026-08-17 · **Version:** 3.00W · **Status:** W — Working
 **Supersedes:** `docs/20260814-estate-remaining-work-register-v2.00W.md` in full, including three of its
+
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 own findings that this pass proved wrong. v2 read the parent `docs/` only; this reads every
 submodule's `docs/` as well.
 
@@ -132,8 +157,8 @@ punishable direction**, and three of the top four err that way.
 | W-7 | ~~**Allowance catalogue covers 8 of 21 awards**~~ **RE-MEASURED 2026-08-18: 10 of 23** — two adapters and two ledgers both arrived, ratio unchanged at ~43%. Counted from `CATALOGUES`' own keys, not a grep: MA000004/5/9/10/14/17/20/25/26/36. MA000020 is adapted, so the catalogue covers 100% of live placements | `allowance-catalogue.generated.ts` | L |
 | W-8 | **On-costs are platform-wide, not per-tenant** — `superRate 12%`, `wcRate 4.7%`, `payrollTaxRate 4.85%`. Payroll tax is state-based; workers-comp is per-employer. Compounded by `tenant_settings` holding 1 row for 7 tenants. **HALF CLOSED 2026-08-18:** migration `20260827030000` adds `tenant_settings.super_rate / wc_rate / wic_code` (authored, not applied) and `@bsuite/charge-calc` 0.14.0 ships `resolveTenantOncosts()` / `applyTenantOncosts()` to read them. Confirmed live that the defect was real first: `charge_rate_snapshots` holds 13 snapshots with ONE distinct `super_rate` and ONE distinct `workers_comp_rate`. **Still open:** crm7 must call the reader | crm7 `chargeRateDefaults.ts:23` + `charge-rates/create/types.ts:24` | M |
 | W-9 | ~~**RDO accrual accepted in the UI, never passed into `CalcConfig`**~~ **The UI half closed in crm7#1800; the ENGINE half was the live defect and closed 2026-08-18.** `grep -i rdo` over `packages/charge-calc/src/calculate.ts` returned zero hits at 0.13.0 (positive control `grep -i payrolltax` -> 5), so the config travelled and never priced. 0.14.0's `calculate()` folds the accrual into `billableHours` — **not** into `hoursPerWeek`, which is the PAID week; under cl.16.2 the accrual is deferred pay, not less pay. **Still open:** publish 0.14.0, bump crm7, promote crm7 to `main` | crm7 `usePlacementChargeCalc.ts:72-80` | M |
-| W-10 | **`penaltyCalculator.ts` has zero consumers** — per-shift penalty interpretation unreachable from the product | crm7; only the barrel and its own test import it | M |
-| W-11 | **`award_rates` is empty (0 rows) while `awards` has 156.** Needs a ruling: do rates live in the DB, or only in R80.4's static corpus? | DB | M |
+| W-10 | **`penaltyCalculator.ts` has zero consumers** — per-shift penalty interpretation unreachable from the product **DONE — re-measured 2026-08-18.** `penaltyCalculator.ts` no longer exists in crm7 — the only remaining copies are a coverage HTML artefact and a stale git worktree. Deleted rather than wired, which is the correct outcome for an unreachable module. The penalty path that DID survive is consumed by the shipped calculator: `charge-calculator-v9-2.tsx:65` and `:190`. | crm7; only the barrel and its own test import it | M |
+| W-11 | **`award_rates` is empty (0 rows) while `awards` has 156.** Needs a ruling: do rates live in the DB, or only in R80.4's static corpus? **OPEN — CONFIRMED, needs an operator ruling — re-measured 2026-08-18.** Live: `public.awards` **156** rows, `public.award_rates` **0**. Unchanged. Needs a Fair Work credential and a decision on whether rate rows are global or per-tenant before it is engineering work. | DB | M |
 | W-12 | **Traineeships, casual, ABN and part-time qualified workers cannot be priced** | R80.4#45, #46 | L |
 | W-13 | **`calculate(cfg)` failure swallowed** — the UI cannot distinguish "no rate" from "bad config" | crm7 `usePlacementChargeCalc.ts:217-220` bare catch | S |
 
@@ -154,17 +179,17 @@ more, all in BSU, and one of them is worse than anything in v2.
 
 | # | Site | What it fabricates |
 |---|---|---|
-| K-1 | **BSU `Billing.tsx` + `lib/pricing.ts`** | The customer's bill. See P0-5 |
-| K-2 | **BSU `Government.tsx:37-95`** | Fair Work Commission and training.gov.au shown as **`status: 'connected'`** with a `lastSync` recomputed to "1 hour ago" on every page load — and `handleSync` is `await new Promise(r => setTimeout(r, 1500))` then stamps `lastSync = new Date()`. **There is no network call in the file.** A compliance user clicks Sync on the FWC integration, watches a spinner, and is told it synced |
-| K-3 | **BSU `GTO.tsx:200`** | `totalChecks > 0 ? … : 95` — a tenant with zero apprentices, hosts and visits renders a **95% compliance ring**. The catch-path twin was fixed 2026-08-17; this survivor produces the identical lie on a new or empty tenant, which is the most likely state for a first customer |
-| K-4 | **BSU `Developer/Platform.tsx:37-44,222,285`** | Six edge functions badged **"Deployed"** in success-green to any non-`platform_admin`. **Two of the six do not exist** — `lead-capture` and `tenant-management` are absent from every repo |
-| K-5 | **BSU `Admin.tsx:40-46`** | Five OAuth clients with literal `status: 'active'` — **in the app that is the OAuth server**, with `auth.oauth_clients` queryable |
-| K-6 | **BSU `Developer/RateLimits.tsx:65-88`** | The same five clients, plus `KNOWN_ENDPOINTS` offering rate-limit targets including two functions that do not exist — so a developer can author and persist a rule against a nonexistent endpoint |
-| K-7 | **crm7 `/financial/budget`** | `DUMMY_BUDGETS` — `totalPlanned: 450000`, `totalActual: 325780.45`, behind a *simulated* 1-second delay, with a working Export button |
-| K-8 | **crm7 `field-officers/site-visits`** | `MOCK_MILESTONES` — half the timeline live, half invented, so the fake half inherits the real half's credibility |
-| K-9 | **BSU `Developer/Platform.tsx:198-223`** | `PLACEHOLDER_CHECKS` renders "checking…" forever on a *failed* query — an unreachable-truth state rather than a lie |
-| K-10 | **crm7 `Developer/Platform.tsx` `FALLBACK_EDGE_FUNCTIONS`** | Misrepresents deployed surface area |
-| K-11 | **crm7 `GTO.tsx`-equivalent compliance surfaces** | Carried from v2 |
+| K-1 | **BSU `Billing.tsx` + `lib/pricing.ts`** | The customer's bill. See P0-5 **DONE — re-measured 2026-08-18.** `Billing.tsx` reads live data — `.from('billing_events')`, `stripeService`, `openCustomerPortal`. No mock/dummy/random markers remain in it or `lib/pricing.ts`. |
+| K-2 | **BSU `Government.tsx:37-95`** | Fair Work Commission and training.gov.au shown as **`status: 'connected'`** with a `lastSync` recomputed to "1 hour ago" on every page load — and `handleSync` is `await new Promise(r => setTimeout(r, 1500))` then stamps `lastSync = new Date()`. **There is no network call in the file.** A compliance user clicks Sync on the FWC integration, watches a spinner, and is told it synced **DONE — re-measured 2026-08-18.** FIXED THIS PASS — BSU#772. Both government APIs were seeded `status: 'connected'` with `lastSync: new Date(Date.now() - 3600000)`, a clock-derived "synced an hour ago" that could never age. Worse, the Sync button waited 1.5s against nothing and stamped `lastSync` to now. New `unverified` status; button, handler and state REMOVED rather than disabled; 5 assertions, mutation-proved (reinstating the seed turns 2 red). |
+| K-3 | **BSU `GTO.tsx:200`** | `totalChecks > 0 ? … : 95` — a tenant with zero apprentices, hosts and visits renders a **95% compliance ring**. The catch-path twin was fixed 2026-08-17; this survivor produces the identical lie on a new or empty tenant, which is the most likely state for a first customer **DONE — re-measured 2026-08-18.** `GTO.tsx`'s catch no longer returns `DEMO_STATS`. The file says so itself: *"DO NOT FABRICATE. This catch used to `return { stats: DEMO_STATS, items: DEMO_ITEMS }`"* — an RLS denial drew the compliance ring at 95%; it now surfaces the error. |
+| K-4 | **BSU `Developer/Platform.tsx:37-44,222,285`** | Six edge functions badged **"Deployed"** in success-green to any non-`platform_admin`. **Two of the six do not exist** — `lead-capture` and `tenant-management` are absent from every repo **DONE — re-measured 2026-08-18.** `FALLBACK_EDGE_FUNCTIONS` and the green "Deployed" badge are gone from `Developer/Platform.tsx` — both survive only in the comment recording the defect. The page now carries `CURATED_DESCRIPTIONS` (descriptions only, no status assertion). The measured truth it understated: **72** functions deployed, shown as 6. |
+| K-5 | **BSU `Admin.tsx:40-46`** | Five OAuth clients with literal `status: 'active'` — **in the app that is the OAuth server**, with `auth.oauth_clients` queryable **DONE — re-measured 2026-08-18.** `src/lib/oauthClients.ts:74` calls `supabase.rpc('platform_oauth_clients')`; `Admin.tsx` imports `fetchOAuthClients`. The enabling migration `20260821050000_platform_oauth_client_registry.sql` is APPLIED in production. |
+| K-6 | **BSU `Developer/RateLimits.tsx:65-88`** | The same five clients, plus `KNOWN_ENDPOINTS` offering rate-limit targets including two functions that do not exist — so a developer can author and persist a rule against a nonexistent endpoint **DONE — re-measured 2026-08-18.** `Developer/RateLimits.tsx` imports `fetchOAuthClients` and shares `oauthClientsQueryKey` with `Admin.tsx`, so both surfaces resolve the same live registry rather than two hardcoded copies. |
+| K-7 | **crm7 `/financial/budget`** | `DUMMY_BUDGETS` — `totalPlanned: 450000`, `totalActual: 325780.45`, behind a *simulated* 1-second delay, with a working Export button **DONE — re-measured 2026-08-18.** `crm7 /financial/budget` renders one `DataUnavailable` block — *"No budgets source is connected… this is not a zero and not an empty list, there is nothing to query."* `DUMMY_BUDGETS`, the fake delay and the export handler are all gone. 3 tests pass. |
+| K-8 | **crm7 `field-officers/site-visits`** | `MOCK_MILESTONES` — half the timeline live, half invented, so the fake half inherits the real half's credibility **DONE — re-measured 2026-08-18.** `crm7 field-officers/site-visits` carries **zero** date literals, and its tests assert the invented ones absent BY NAME (`expect(body).not.toContain('2025-02-01')` and two more) — a negative assertion, so it cannot silently regress. |
+| K-9 | **BSU `Developer/Platform.tsx:198-223`** | `PLACEHOLDER_CHECKS` renders "checking…" forever on a *failed* query — an unreachable-truth state rather than a lie **DONE — re-measured 2026-08-18.** `PLACEHOLDER_CHECKS` is deleted from BSU `Developer/Platform.tsx` — *"Deleted outright. The render now branches on the query state instead."* The surviving "Checking…" is the live button label. |
+| K-10 | **crm7 `Developer/Platform.tsx` `FALLBACK_EDGE_FUNCTIONS`** | Misrepresents deployed surface area **DONE — re-measured 2026-08-18.** `FALLBACK_EDGE_FUNCTIONS` returns **zero** hits anywhere in `crm7/src`. |
+| K-11 | **crm7 `GTO.tsx`-equivalent compliance surfaces** | Carried from v2 **DONE — re-measured 2026-08-18.** `DEMO_STATS` / `DEMO_ITEMS` / `overallScore: 95` return **zero** hits across crm7 pages. |
 
 **The in-repo model to rewrite all eleven against is BSU's own `Admin/SystemOverview.tsx:42-88`** —
 `DEFAULT_HEALTH` is `warning` + "Checking..." / "Not monitored", and `runHealthChecks` leaves
@@ -226,7 +251,7 @@ passes CI, and no user can reach it.
 | U-9 | **`.bsu-gradient`** defined with zero usages; **`Meteors` + `TypingAnimation`** shipped and barrel-exported while the Magic UI guide lists both as *Rejected Patterns* | BSU, crm7 | |
 | U-10 | **crm7 dead DDL** — `report_preferences`, `welfare_reports`, `invoice_batches`, `cms_documents`/`cms_posts`, `EmailComposeDialog` (only importer is its own barrel) | crm7 | S each: wire or delete |
 | U-11 | **braden `Projects.tsx`, `DndLayoutEditor`, `StoragePolicyAudit`, duplicate `SiteEditorLayout` ×2, root `hooks/` shadowing `src/hooks/`, `cypress.config.ts` with no cypress dependency** | braden | |
-| U-12 | **`xero_connection_health` view has no reader** — both live connections report `never_synced` to nobody | crm7 | |
+| U-12 | **`xero_connection_health` view has no reader** — both live connections report `never_synced` to nobody **OPEN — CONFIRMED, no reader — re-measured 2026-08-18.** Four files mention `xero_connection_health`; every one is prose (a doc comment naming the migration, a test comment about its 48h boundary). An actual read — `.from('xero_connection_health')` / `.rpc(...)` — returns **zero**. POSITIVE CONTROL: the same pattern finds `.from('placements')` at `hostEmployerLink.ts:134` and `hostQueries.ts:18`, so the zero is a working search. | crm7 |  |
 
 ---
 

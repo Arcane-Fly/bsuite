@@ -238,7 +238,26 @@ for app in "${APPS[@]}"; do
       if [[ $AUDIT_RC -ne 0 ]]; then
         fail=$((fail + 1)); FAILED+=("$app $kind — $auditor")
         printf '      \033[31m✗\033[0m %s\n' "$auditor"
-        printf '%s\n' "$AUDIT_OUT" | grep -E '^\s+(✗|[0-9.]+:1|U[0-9])' | head -6 | sed 's/^/          /'
+
+        # STATE WHAT WAS FOUND, ALWAYS. The filter below matches an auditor's
+        # FINDING lines ("  ✗ /dashboard [dark] — 3 below AA", "  3.21:1 …").
+        # It does not match an auditor that fell over — a page that never
+        # loaded, a bad flag, a crash — and on 2026-08-18 that is exactly what
+        # reached CI: a bare red ✗ with nothing under it, so the only way to
+        # learn what failed was to reproduce the whole sweep locally. The
+        # output was captured in AUDIT_OUT the entire time and thrown away.
+        #
+        # So: try the finding filter, and if it matches NOTHING, print the tail
+        # verbatim rather than printing nothing. A gate that cannot say what it
+        # saw is a gate every reader has to re-run.
+        detail=$(printf '%s\n' "$AUDIT_OUT" | grep -E '^[[:space:]]+(✗|[0-9.]+:1|U[0-9])' | head -8)
+        if [[ -n $detail ]]; then
+          printf '%s\n' "$detail" | sed 's/^/          /'
+        else
+          printf '          (no finding lines matched — %s did not report findings, it FAILED.\n' "$auditor"
+          printf '           last 15 lines of its output follow verbatim)\n'
+          printf '%s\n' "$AUDIT_OUT" | tail -15 | sed 's/^/          | /'
+        fi
       elif [[ $kind == authenticated && $n_skipped -gt 0 ]]; then
         # THE WHOLE POINT. A skipped authenticated route is a route this run
         # promised to measure and did not. Passing it through would recreate

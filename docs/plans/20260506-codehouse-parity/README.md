@@ -1,5 +1,12 @@
 # 20260506 — Codehouse Parity Sub-Plans
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 Sub-plans of the parent index [`../20260506-codehouse-parity-and-platform-360-v1.00W.md`](../20260506-codehouse-parity-and-platform-360-v1.00W.md). Each portal sub-plan defines roles, source-routes, parity matrix coverage, and the WS-D Platform-360 capability gap closure for that surface.
 
 **Permissions baseline:** [`../../../AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) — OAuth 2.1 PKCE + JWKS + Supabase RLS. **No new RBAC/ABAC framework** is introduced by these plans.
@@ -24,7 +31,7 @@ Sub-plans of the parent index [`../20260506-codehouse-parity-and-platform-360-v1
 ## Cross-references
 
 - Parent plan: [`../20260506-codehouse-parity-and-platform-360-v1.00W.md`](../20260506-codehouse-parity-and-platform-360-v1.00W.md)
-- Master roadmap: [`../../20260227-bsuite-master-roadmap-v5.00W.md`](../../20260227-bsuite-master-roadmap-v5.00W.md) — Cross-Project Initiatives § Codehouse Parity & Platform 360
+- Master roadmap: [`../../20260227-bsuite-master-roadmap-v5.00W.md`](../../archive/README.md) *(archived — was `20260227-bsuite-master-roadmap-v5.00W.md`)* — Cross-Project Initiatives § Codehouse Parity & Platform 360
 - Auth doctrine: [`../../../AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md)
 - Red-team doctrine: [`../../20260507-red-team-ux-doctrine-v1.00A.md`](../../20260507-red-team-ux-doctrine-v1.00A.md)
 - Uplift design language: [`../uplift/20260507-bsuite-uplift-design-language-v1.00A.md`](../uplift/20260507-bsuite-uplift-design-language-v1.00A.md)

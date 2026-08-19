@@ -5,6 +5,13 @@
 > **Scope:** STRICTLY BSuite. Enumerates every Jodie tool factory in `crm7/src/lib/ai/tools/index.ts` (the `createToolRegistry` aggregator) and the R80.3 funding tool factory (`R80.3/src/lib/ai/fundingOffsetTool.ts` → `createFundingTools`), then maps each user-visible "Ask Jodie" UI action — as authored in the role manuals under `business-suite-unified/src/lib/manuals/` — to the tool that implements it.
 > **Method:** Every `askJodie:` string in the manuals is treated as one user-visible UI action. Each is mapped to the closest named Jodie tool. Status is `FULL` (a tool directly performs the action end-to-end), `PARTIAL` (a tool overlaps but does not cover the whole action, or only an adjacent step exists), or `MISSING` (no Jodie tool covers the action at all).
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. Tool factory enumeration

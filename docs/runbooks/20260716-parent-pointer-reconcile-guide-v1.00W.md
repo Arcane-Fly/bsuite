@@ -2,7 +2,7 @@
 
 **Status:** W (Working)
 **Audience:** Platform operator (Braden), not an agent
-**Config:** [`.gitmodules`](../../.gitmodules) — six submodules (`crm7`, `R80.3`, `braden`, `business-suite-unified`, `conduit`, `throughput`), each tracking its own `development` branch per the `.gitmodules` `branch =` setting
+**Config:** [`.gitmodules`](../../.gitmodules) — six submodules (`crm7`, `R80.4`, `braden`, `business-suite-unified`, `conduit`, `throughput`), each tracking its own `development` branch per the `.gitmodules` `branch =` setting
 
 ## The mental model
 

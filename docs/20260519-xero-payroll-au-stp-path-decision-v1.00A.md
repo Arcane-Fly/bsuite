@@ -76,6 +76,13 @@
 > Tracking issue re-opened / superseded with this evidence — see the audit comment on
 > bsuite#495.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 - **Status:** Approved (A) — decision stands; **§4 implementation NOT BUILT** (audit 2026-08-17)
 - **Original status line:** Approved (A) — V1 implementation path locked; V2/V3 triggers documented
 - **Date:** 2026-05-19

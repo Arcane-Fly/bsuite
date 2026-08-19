@@ -3,6 +3,13 @@
 **Status:** W (Working) · **Lane:** DOCS · **Scope:** parent `docs/` + all six submodule `docs/` trees
 **Method:** Read-only audit. Every capability/feature/standard claim verified against source (`grep`/`read_file`) before a verdict was assigned. No doc was moved or edited; this report is the only file written.
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Classification rules (applied uniformly)
 
 - **COMPLETE-archive** — doc claims a capability is shipped AND the claim is backed by a concrete `file:line` citation or merged PR that was actually verified. Action = archive (see archive-target caveat below).
@@ -419,7 +426,7 @@ No COMPLETE-archive candidates: every file is LIVING or INCOMPLETE (component-do
 | 20260316-braden-corporate-theme-reference-v1.00W.md | Canonical corporate theme; claims "Tailwind v3" + "no dark mode by design" | L (STALE — factually wrong) | `package.json tailwindcss:^4.3.0`; `src/index.css` 27 dark-mode selectors + `next-themes`; landing dark treatment shipped | keep (living); MUST update |
 | 20260316-braden-csp-security-v1.00W.md | CSP config (style-src-elem + fonts; connect-src v0.dev/Vercel/vitals) | I (superseded) | `style-src-elem` + fonts present; doc omits Turnstile/GTM/Pusher/Sentry/`*.crm7.app` (all in `vercel.json`); superseded by 20260519 doc | keep; reconcile or archive as superseded |
 | 20260316-braden-environment-setup-dev-guide-v1.00W.md | Env-var setup guide | L | README + CONTRIBUTING link to `docs/ENVIRONMENT_SETUP.md` which does not exist (real file is dated name) | keep (living); fix inbound links |
-| 20260316-braden-getting-started-v1.00W.md | Getting-started: CMS, DnD editor, "version history", component library | L (stale claim) | DnD shipped; BUT "version history"/rollbacks UI NOT built — zero matches for `version.?history|rollback` in `src/` (braden#266 partial) | keep (living); flag |
+| 20260316-braden-getting-started-v1.00W.md | Getting-started: CMS, DnD editor, "version history", component library | L (stale claim) | DnD shipped; BUT "version history"/rollbacks UI NOT built — zero matches for `version.?history keep (living); flag | rollback` in `src/` (braden#266 partial) |
 | 20260316-braden-qa-configuration-v1.00W.md | QA tooling: `yarn audit:deps`, jscpd, size-limit, health-check | I (heavily stale) | braden is pnpm (`packageManager: pnpm@10.33.3`); no `jscpd`/`size-limit`; scripts lack `audit:*`/`health-check`/`test:coverage` | keep; rewrite or archive |
 | 20260316-braden-rls-policies-v1.00W.md | RLS for `admin_users` + `hero-images`; migration `20250808080000` | L (partial snapshot) | Migration exists (✓); `admin_users` used (`roleManager.ts`). 20+ later migrations (incl. `20260701000001/02`, `20260701150000`) not covered | keep (living); note partial |
 | 20260316-braden-roadmap-v1.00W.md | Website-customization roadmap; self-marked superseded | L (stale) | DnD shipped (#264) yet shown `[ ]`; #265 + #266 DB also landed after | keep (living); note stale checkboxes |

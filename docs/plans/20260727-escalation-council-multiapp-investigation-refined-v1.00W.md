@@ -7,6 +7,13 @@
 **CLI council:** qwen3.8-max-preview (Bailian) + kimi-k3 via Moonshot API (`KIMI_API_KEY`, `https://api.moonshot.ai/v1`)  
 **Pairing keys:** `bsuite_skill_mcp_pairings`, `_user_skill_mcp_pairings`
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ## Intent
 
 Run a **self-verifying loop** that (1) finishes in-flight BSuite multi-app work (unglue burn-down, cross-app contracts, docs archive residuals, branch-protection hazard), and (2) convenes a **Qwen + Kimi escalation council** to produce a **search-validated investigation backlog** of coding-agent failure modes that drive user dissatisfaction on **multi-app SaaS platforms like BSuite** (shared Supabase, multi-submodule monorepo, Vercel multi-deploy, OAuth SSO, money/RLS surfaces).

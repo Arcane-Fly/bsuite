@@ -2,7 +2,7 @@
 
 **Status:** W (Working)
 **Audience:** Platform operator (Braden), not an agent
-**Canonical source of truth:** [`crm7/supabase/migrations/CLAUDE.md`](../../crm7/supabase/migrations/CLAUDE.md) (long — read it if anything here seems to contradict it) and root [`CLAUDE.md`](../../CLAUDE.md) §12 (Supabase Policy & Verification Gates)
+**Canonical source of truth:** [`crm7/supabase/migrations/CLAUDE.md`](../archive/README.md) *(archived — was `CLAUDE.md`)* (long — read it if anything here seems to contradict it) and root [`CLAUDE.md`](../../CLAUDE.md) §12 (Supabase Policy & Verification Gates)
 **Workflow file:** [`.github/workflows/supabase-migrate.yml`](../../.github/workflows/supabase-migrate.yml)
 **Related guide:** [Parent Pointer Reconcile](20260716-parent-pointer-reconcile-guide-v1.00W.md) — read that one first if you don't already understand submodule gitlinks
 
@@ -18,7 +18,7 @@ All six BSuite apps share **one** Supabase project (`tuybltdrdefjblnplpqo`). Mig
    ```bash
    gh workflow run supabase-migrate.yml --ref main -f submodule=<name>
    ```
-   Valid `submodule` values: `all`, `root`, `crm7`, `R80.3`, `braden`, `business-suite-unified`, `conduit`, `throughput`, `schema-builder`. **Use `--ref main`: the dispatched ref determines which parent tree — and therefore which submodule gitlinks — the run reads.** The workflow file itself exists on other branches too (verified: `git ls-tree origin/development .github/workflows/supabase-migrate.yml` returns the same blob as `main`), so dispatching against `development` or a feature branch does **not** fail to find it — it runs, and applies migrations using THAT ref's submodule pointers, which may include commits never promoted to `main`. There is no safety net here; `--ref main` is a hard requirement, not a convenience default.
+   Valid `submodule` values: `all`, `root`, `crm7`, `R80.4`, `braden`, `business-suite-unified`, `conduit`, `throughput`, `schema-builder`. **Use `--ref main`: the dispatched ref determines which parent tree — and therefore which submodule gitlinks — the run reads.** The workflow file itself exists on other branches too (verified: `git ls-tree origin/development .github/workflows/supabase-migrate.yml` returns the same blob as `main`), so dispatching against `development` or a feature branch does **not** fail to find it — it runs, and applies migrations using THAT ref's submodule pointers, which may include commits never promoted to `main`. There is no safety net here; `--ref main` is a hard requirement, not a convenience default.
 4. **Verify the LIVE catalog** — not the workflow's "success" log line, not the on-disk migration file, not the Supabase dashboard's migration list. Query the actual database via Supabase MCP (`execute_sql`, `list_migrations`) or `psql`/the Supabase CLI against `pg_proc`, `pg_policies`, `information_schema.role_table_grants`, `pg_class`, etc., depending on what the migration was supposed to create or change. This is root `CLAUDE.md` §12.1 (Supabase Policy Gate) — it is mandatory for any RLS/storage/grant/function claim, not just a suggestion.
 
 ## The stale-pointer trap (read this one)

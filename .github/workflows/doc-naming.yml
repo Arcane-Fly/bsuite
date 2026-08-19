@@ -46,3 +46,15 @@ jobs:
       - name: Recovered-doc verdict banners (ratchet)
         run: node scripts/check-recovered-doc-verdicts.mjs
 
+      # A table row wider than its header DELETES its own text — every renderer
+      # drops the overflow. 88 rows across the parent's live docs were doing
+      # that when this was first measured, 29 of them in the estate completion
+      # ledger, whose entire purpose is to carry evidence. Nothing lints docs/,
+      # which is why it had persisted. Self-test first, for the usual reason: a
+      # guard whose logic is broken reports a clean tree just as convincingly.
+      - name: Self-test the table-cell guard (proves it can fail)
+        run: node scripts/check-docs-table-cells.mjs --self-test
+
+      - name: No docs table row may drop its own content
+        run: node scripts/check-docs-table-cells.mjs
+

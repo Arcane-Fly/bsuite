@@ -1,3 +1,10 @@
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 name: portal-r80-3-calculator
 description: R80.3 wage calculator portal — apprentice wage / charge / margin / BOOT preview. Compliance-critical (Fair Work Act). Reader-only on CRM7-owned apprentice records.

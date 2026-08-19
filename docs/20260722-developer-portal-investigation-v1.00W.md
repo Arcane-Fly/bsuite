@@ -9,6 +9,13 @@ I now have all the data needed. Let me compile the full structured findings repo
 **Branches:** BSU `fix/developer-portal-sweep-2026-07-22`, Conduit `fix/pipeline-crash-2026-07-22`  
 **No code changes were made.**
 
+> **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
+> that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
+> Paths under `R80.3/` below are HISTORICAL — the originals are in
+> `~/Desktop/Dev/archived-repos-docs/R80.3`. They are deliberately NOT rewritten: R80.4 is a
+> restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
+> looks current and is still broken. Authority: `docs/README.md`.
+
 ---
 
 ## 1. Branding.tsx — Platform Branding (Tier 1)
@@ -58,7 +65,7 @@ I now have all the data needed. Let me compile the full structured findings repo
 | Dimension | Finding |
 |---|---|
 | **WHO** | `developer` + `platform_admin` (gated by parent dispatcher). |
-| **WHAT** | The component header says it's for "Platform-level landing/hero marketing content for CRM7 and other apps" and that it was "moved here from crm7/src/components/marketing/MarketingHome.tsx." However, the actual implementation is a **static, hardcoded marketing landing page** for CRM7 — there is no editing capability, no dynamic data, no form inputs. It renders a fixed hero section, feature cards, benefits section, CTA, and footer with hardcoded text like "CRM7 | Advanced Customer Relationship Management" and "Enterprise CRM platform for Australian GTOs." |
+| **WHAT** | The component header says it's for "Platform-level landing/hero marketing content for CRM7 and other apps" and that it was "moved here from crm7/src/components/marketing/MarketingHome.tsx." However, the actual implementation is a **static, hardcoded marketing landing page** for CRM7 — there is no editing capability, no dynamic data, no form inputs. It renders a fixed hero section, feature cards, benefits section, CTA, and footer with hardcoded text like "CRM7 Advanced Customer Relationship Management" and "Enterprise CRM platform for Australian GTOs." |
 | **ENTRY** | `/developer/marketing` via the "Marketing" sub-nav tab. |
 | **UPSTREAM** | **None.** This component reads from no database table, no API, no config file. All content is hardcoded in JSX with `useMemo` constants. The `platform_marketing` table referenced in the migration README (`000060_branding_inheritance_and_platform_marketing`) was **withdrawn** (never applied) per `supabase/migrations/README.md` line 130. No `platform_marketing` table exists in any migration file — search returned zero results for `CREATE TABLE.*platform_marketing` across all SQL files. |
 | **DOWNSTREAM** | None — this page writes nothing and reads nothing. It's a display-only static page trapped in the developer portal. |
