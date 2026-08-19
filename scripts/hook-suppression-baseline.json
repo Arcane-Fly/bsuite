@@ -21,7 +21,7 @@
     "crm7": {
       "_note": "The estate's largest holding, and the one whose real size was never visible: 51 inline exhaustive-deps comments spread thinly over src/pages (no file above 2), PLUS 92 file-level suppressions declared in eslint.config.js — EXHAUSTIVE_DEPS_FILES (4) and SET_STATE_IN_EFFECT_FILES (88). NOTE: that config's own header comment says 'set-state-in-effect (80 files)'. The array holds 88. The prose register drifted 8 behind the array it describes, which is precisely why this ratchet counts the array and not the comment. Triage for the 92 is in crm7/eslint.config.js lines 70-150 and bsuite#215.",
       "inline": {
-        "react-hooks/exhaustive-deps": 51,
+        "react-hooks/exhaustive-deps": 50,
         "react-hooks/set-state-in-effect": 0
       },
       "configScoped": {
