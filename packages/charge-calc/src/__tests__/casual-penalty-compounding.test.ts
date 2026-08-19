@@ -222,3 +222,68 @@ describe('calculate() — casual penalty conversion is per-award, never compound
     });
   });
 });
+
+/**
+ * THE FLAG THAT NOTHING IN THIS PACKAGE COULD SEE.
+ *
+ * `calculate()` passes `isPublicHoliday: pr.id === 'ph'` into
+ * `casualPenaltyMultiplierForAward`. Deleting that line left this package's
+ * ENTIRE suite green — 17 passed, 0 failed. Mutation-proved 2026-08-19.
+ *
+ * WHY EVERY EXISTING FIXTURE IS BLIND TO IT. They price `ph` at mult 2.5, and
+ * under MA000020 the two limbs COINCIDE exactly there:
+ *
+ *     cl.12.5 additive     2.5 + 0.25 (casual loading)  = 2.75
+ *     cl.12.6 flat PH rate                              = 2.75
+ *
+ * One number reached two ways. An assertion on the result cannot tell which
+ * limb produced it, so it cannot tell whether the flag arrived at all.
+ *
+ * 2.25 IS THE DISCRIMINATING MULTIPLIER — the limbs diverge:
+ *
+ *     additive (flag LOST)   2.25 + 0.25 = 2.50
+ *     flat PH  (flag PASSED)              = 2.75
+ *
+ * That 0.25 is a quarter of an hourly rate on every public holiday worked, on
+ * the award this engine is used for most. `isPublicHoliday?: boolean` is
+ * OPTIONAL in the signature, so dropping it is a silent edit and not a type
+ * error — which is precisely why a test has to hold it.
+ *
+ * Found by the R80.4 lane (R80.4#108) on ITS copy and broadcast to the estate.
+ * This is the same hole in the SHARED package — the one crm7, conduit and R80.4
+ * all consume — so fixing it there did not fix it here.
+ */
+describe('MA000020 public-holiday flag reaches the convention', () => {
+  const PH_225: CalcConfig = {
+    ...CASUAL,
+    penalties: [{ id: 'ph', label: 'Public Holiday', mult: 2.25, cat: 'penalty' }],
+  };
+  const SAT_225: CalcConfig = {
+    ...CASUAL,
+    penalties: [{ id: 'sat', label: 'Saturday', mult: 2.25, cat: 'penalty' }],
+  };
+
+  it('prices a casual public holiday at the FLAT 275%, not the additive 250%', () => {
+    const res = calculate(PH_225);
+    // 2.75 = cl.12.6's flat public-holiday rate.
+    expect(res.rates.ph!.charge).toBeCloseTo(expectedPenaltyCharge(PH_225, 2.75), 6);
+    // 2.50 = 2.25 + 0.25, the additive limb — what you get if the flag never
+    // arrived. Asserting NOT-2.50 is the half that makes this test discriminate.
+    expect(res.rates.ph!.charge).not.toBeCloseTo(expectedPenaltyCharge(PH_225, 2.5), 2);
+  });
+
+  it('a non-public-holiday penalty at the SAME multiplier stays additive — the control', () => {
+    // Without this, the assertion above could be measuring the award rather
+    // than the flag: if both rows read 2.75 the flag proves nothing.
+    const res = calculate(SAT_225);
+    expect(res.rates.sat!.charge).toBeCloseTo(expectedPenaltyCharge(SAT_225, 2.5), 6);
+    expect(res.rates.sat!.charge).not.toBeCloseTo(expectedPenaltyCharge(SAT_225, 2.75), 2);
+  });
+
+  it('dollar quantification — the flag is worth 0.25x the hourly wage on every PH hour', () => {
+    const flat = 30 * 2.75;      // flag passed, cl.12.6
+    const additive = 30 * 2.5;   // flag lost, cl.12.5
+    expect(flat - additive).toBeCloseTo(7.5, 2);
+    expect(flat / additive).toBeCloseTo(1.1, 4);
+  });
+});
