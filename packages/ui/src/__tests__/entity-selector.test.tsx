@@ -262,8 +262,7 @@ describe('EntitySelector — ordering before limiting', () => {
         table="qualifications"
         supabaseClient={client}
         searchColumns={['title']}
-        labelKey="title"
-        valueKey="id"
+        displayField={(r) => r.title}
         onSelect={() => {}}
       />,
     )
@@ -284,8 +283,7 @@ describe('EntitySelector — ordering before limiting', () => {
         orderAscending
         supabaseClient={client}
         searchColumns={['title']}
-        labelKey="title"
-        valueKey="id"
+        displayField={(r) => r.title}
         onSelect={() => {}}
       />,
     )
@@ -307,8 +305,7 @@ describe('EntitySelector — ordering before limiting', () => {
         table="some_registry_table"
         supabaseClient={client}
         searchColumns={['title']}
-        labelKey="title"
-        valueKey="id"
+        displayField={(r) => r.title}
         onSelect={() => {}}
       />,
     )
