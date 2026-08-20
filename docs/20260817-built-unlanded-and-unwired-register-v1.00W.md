@@ -1,7 +1,7 @@
 # Built but unlanded, built but unwired — a machine sweep
 
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
-**Date:** 2026-08-17 · §9 added 2026-08-19 · §9.10 added 2026-08-20 · **Version:** 1.02W · **Status:** W — Working
+**Date:** 2026-08-17 · §9 added 2026-08-19 · §9.10–§9.11 added 2026-08-20 · **Version:** 1.03W · **Status:** W — Working
 **Scope:** every git work tree on this laptop, every source module and edge function in the six apps,
 and (from 2026-08-19, §9) the operator's running notes file `bsuite notes.docx`
 **Feeds:** `docs/plans/20260817-estate-completion-plan-v1.00D.md` (bsuite#2081) and
@@ -345,7 +345,7 @@ and §5 as a recurring category, which is the only outcome worth the work.
 
 ---
 
-## 9. `bsuite notes.docx` cross-check — 19 and 20 August
+## 9. `bsuite notes.docx` cross-check, and the operator feedback loop — 19 and 20 August
 
 **Added 2026-08-19.** The operator's running notes file (29.6 MB, saved 16:04 on 19 August;
 68 screenshots; 381 paragraphs of text) was read in full and every checkable claim measured
@@ -652,3 +652,104 @@ fixing it as a class rather than per page.
 | NX-30 | Phase 2, as part of the existing theme class |
 
 ---
+
+### 9.11 20 August, second pass — three R8 fixes shipped, and two classes worth naming
+
+**Added 2026-08-20.** Three R8 defects were fixed and are live. All three were re-measured
+independently against `R80.4 development @ 8626c50` and hold; the detail lives in
+`R80.4/docs/00-roadmap/20260819-r8-operator-notes-verification-1.00W.md` §2.6 (`ON-16`…`ON-18`).
+Two of them generalise beyond R8, and that is why they are here.
+
+#### NX-31 · The card's bottom border sits below its content — 399 surfaces, one row quantum
+
+> *"see how the card's bottom border is too big for the card. this is an issue platform wide.
+> there are spot fixes but its broad."*
+
+The operator is right that it is broad, and right that spot fixes will not hold, because **the
+cause is a constant in the shared package**, not a class on a page.
+
+`@bsuite/page-builder` sizes every card in whole grid rows. `PageGridLayout.tsx` uses
+`DEFAULT_ROW_HEIGHT` with a 6px vertical margin, so the row unit is **38 px**, and
+`autoHeight.ts` converts measured content to rows with `Math.ceil`. Its own docstring states the
+trade deliberately:
+
+> *"Deliberately uses `Math.ceil`, NOT react-grid-layout's own internal `Math.round` convention —
+> rounding down would silently clip content roughly half the time. Ceiling always over-allocates
+> rather than under-allocates, trading a few pixels of empty card padding for a guarantee that
+> content is never cut off."*
+
+So **up to 37 px of empty space below the content is by design, on every card, in every app**.
+That is the floor. It is a defensible trade — clipped content is worse than a gap — but it was
+chosen inside a package and it shows up as a visual defect on 399 surfaces, which is a different
+conversation from the one the trade was made in.
+
+| App | Files using `DraggableCardPage` |
+|---|---|
+| crm7 | **377** |
+| business-suite-unified | 9 |
+| throughput | 9 |
+| braden | 4 |
+| conduit / R80.4 | 0 (neither uses it) |
+
+**What is not settled, and I am not going to guess it.** The gap in the operator's screenshots of
+`/portal/field-officer` is visibly larger than one row unit — the *Today's Visits* and *My Caseload*
+cards are both in empty states and both show well over 37 px below their last line. Something beyond
+`Math.ceil` is contributing. The candidates are a stored `h` from a layout saved while the card had
+content, side-by-side cards sharing a row height, or `autoHeight` not being on for these cards.
+Distinguishing them means reading the **reported `contentPx` against the allocated `h` in a
+browser** — this session has already produced four findings that were artefacts of reading source
+instead of measuring the running thing, and this would be the fifth.
+
+**Why it must be fixed in the package.** Any per-page fix sets a height that the next auto-height
+recalculation overwrites, which is exactly the shape of "there are spot fixes but it's broad". The
+two real options are a smaller row unit (finer quantisation, less rounding waste) or letting the
+card's own box shrink inside its allocated cell so the border tracks content rather than the grid.
+The second is the one that makes the border correct rather than merely closer.
+
+#### NX-32 · On a rewrite-everything SPA, HTTP status is not evidence of routing
+
+`/calculate` did not exist on R8 and **no probe found it**, because `vercel.json` rewrites every
+path outside `api/`, `assets/`, `favicon` and `sw.js` to `/index.html`. The path answered **HTTP 200
+with the correct `<title>`** and then rendered "Page not found".
+
+That is the *same rewrite rule* behind `NX-6`/`ON-4`, where a fetch that lost its `/api/` prefix
+received the SPA shell and `api/fwc.js` labelled the unparsed 200 as JSON. **One line of
+configuration, two operator-visible bugs, neither detectable by status code.**
+
+The consequence for this estate is concrete: **every route-existence check that reads a status code
+is unsound on all five Vite apps**, because the same rewrite is in each `vercel.json`. A probe must
+assert on rendered content. Any audit in this repository that concluded "the route is present"
+from a 200 needs re-running — including anything I have written.
+
+#### NX-33 · The instrument rule
+
+The R8 pass logged a fourth near-miss: an expand-all loop reported a failure because it *toggled*
+panels and so closed the ones already open; re-run ensuring-open, it gave 14 of 14 and a clean
+result. With this document's own §1 corrections, that is four in one session:
+
+| The probe | What it would have reported |
+|---|---|
+| grep an 8,700-line file for a string literal | three working features "unreachable" (§9.0, §1 of the R8 register) |
+| query only `<select>` elements | commercial construction "missing" — about a button group |
+| read HTTP status to test a route | `/calculate` "present" while it rendered Page not found |
+| toggle panels to expand them | a passing check "failing", by closing what was open |
+
+**The rule: do not report a negative without first checking the instrument would have found a
+positive.** A probe never shown to detect the thing it looks for is not evidence of absence. Three
+of the four above would have been caught by a single positive control, which is the cheapest test
+in any of these sweeps and the one most often skipped.
+
+This belongs in the estate's standards, not in a session summary. It is the same doctrine as
+`LANE-WATCHER — every guard states what it examined`, applied to ad-hoc probes rather than CI gates.
+
+#### Gate status, corrected
+
+**bsuite#2184 is merged and carries `qa-signed-off`.** It was reported here as awaiting that label;
+it is not. What is worth checking is whether the authorisation was *recorded* — the estate's
+standing rule is that an agent-applied promotion label must document who authorised it and when,
+and #2184 promoted three apps on CI alone without the visual gate. The label is the audit artefact;
+if nothing records its provenance, the artefact is the only evidence and it says nothing.
+
+Still open and not softened: **`ON-10`** (R8's collapsible left panel with quote-thread history) is
+not started; crm7's schema drift and throughput's Lighthouse env are **held, not force-merged**,
+which is the correct disposition and is recorded so the hold is not later read as an oversight.
