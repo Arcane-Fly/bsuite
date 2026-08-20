@@ -46,6 +46,5 @@ export function useDismissOnOutsideOrEscape(
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `ref` is stable, `onDismiss` is re-bound intentionally every render
   }, [active, onDismiss]);
 }

@@ -8,7 +8,7 @@ import {
   Wand2,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TenantEntity } from '../types.js';
 
 export interface CommandPaletteNavTarget {
@@ -58,10 +58,13 @@ export function CommandPalette({
   // the palette opened.
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
-  const close = () => {
+  // Stable via useCallback (setOpen and the ref are both stable) so it can
+  // sit in the effect's dependency array below without re-binding the
+  // window listener on every render.
+  const close = useCallback(() => {
     setOpen(false);
     previouslyFocused.current?.focus();
-  };
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -80,8 +83,7 @@ export function CommandPalette({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `close` reads `open` via closure each render, re-binding is intentional
-  }, [open]);
+  }, [open, close]);
 
   if (!open) return null;
 
