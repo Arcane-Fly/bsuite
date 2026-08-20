@@ -105,8 +105,18 @@ declare -A PUBLIC_ROUTES=(
 # surface and quietly skips most of it. conduit's `/api/*` "routes" in the
 # inventory are JSON endpoints, not pages, and are deliberately excluded — a
 # DOM/contrast auditor has nothing to measure on an API response.
+# FORM ROUTES ARE NOT OPTIONAL HERE. Every crm7 entry below used to be a LIST
+# page — /dashboard, /contacts, /clients — and a list page has no primary action
+# to press. The defect the operator reported on 2026-08-20 was a submit button
+# clipped inside its own card and covered by an overlay, on /clients/create. The
+# entire class of page where a primary action LIVES was unwalked, so no auditor
+# could have caught it however good it was.
+#
+# One create form per app, chosen because they exercise the card grid the defect
+# lived in. Still a sample, still small — see the note above about honesty over
+# claimed coverage — but a sample that now includes the shape that broke.
 declare -A AUTH_ROUTES=(
-  [crm7]="/dashboard /contacts /clients /people /apprentices /communications"
+  [crm7]="/dashboard /contacts /clients /people /apprentices /communications /clients/create /contacts/create"
   [braden]="/admin /admin/auth /admin/branding /admin/marketing"
   [throughput]="/ /analytics /ideas/new /launch /monitoring"
   [conduit]="/ /analytics /candidates /admin/templates"
@@ -287,7 +297,7 @@ for app in "${APPS[@]}"; do
     targets=(); for r in $routes; do targets+=("$base$r"); done
     printf '    %s: %s route(s)\n' "$kind" "${#targets[@]}"
 
-    for auditor in audit-applied-tokens audit-ui-pages audit-legibility; do
+    for auditor in audit-applied-tokens audit-ui-pages audit-legibility audit-hittable-actions; do
       run_auditor "$auditor" "$app" "$storage" "${targets[@]}"
       n_skipped=$(printf '%s\n' "$AUDIT_OUT" | grep -c 'SKIPPED' || true)
 
@@ -332,7 +342,19 @@ done
 
 echo
 echo "───────────────────────────────────────────────────────────────"
-echo "  examined $n_total route(s) — $n_public public, $n_auth authenticated"
+# STATE THE DENOMINATOR. This line used to read "examined 42 route(s)" with no
+# total, and it was quoted in promotion sign-offs as though it meant the estate
+# was visually sound. It never did: the inventory holds 552 routes, 398 of them
+# crm7's. A reader — including the agent writing the sign-off — cannot judge a
+# clean result without knowing what fraction it covers.
+INVENTORY_TOTAL=$(node -e 'const d=require("./docs/nav/route-inventory.json");const r=Array.isArray(d)?d:(d.routes||d.entries||[]);console.log(r.length)' 2>/dev/null || echo 0)
+if [[ ${INVENTORY_TOTAL:-0} -gt 0 ]]; then
+  pct=$(( n_total * 100 / INVENTORY_TOTAL ))
+  echo "  examined $n_total of $INVENTORY_TOTAL route(s) in the inventory (${pct}%) — $n_public public, $n_auth authenticated"
+  echo "  this is a CURATED SAMPLE, not the estate. A clean result here means these $n_total pages are clean."
+else
+  echo "  examined $n_total route(s) — $n_public public, $n_auth authenticated"
+fi
 if [[ $skips_public -gt 0 ]]; then
   echo "  $skips_public public route-audit(s) skipped — coverage this run does not have"
 fi
