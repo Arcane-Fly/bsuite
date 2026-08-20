@@ -590,8 +590,26 @@ for (const name of repoPackages.keys()) {
  * fired, and if npm still lacks the version that is the August failure
  * repeating.
  */
-const ON_PRODUCTION_BRANCH =
-  /(^|\/)main$/.test(process.env.GITHUB_REF ?? '') || (process.env.GITHUB_BASE_REF ?? '') === 'main'
+const ON_PRODUCTION_BRANCH = (() => {
+  /*
+   * A PUSH to main, not a PULL REQUEST targeting it.
+   *
+   * The first version of this check also fired on `GITHUB_BASE_REF === 'main'`,
+   * and that deadlocked the very next promotion: merging development into main
+   * is WHAT TRIGGERS THE PUBLISH, so while the promotion PR is open npm cannot
+   * possibly have the new version yet. Failing there blocks the merge that would
+   * fix it — the same self-blocking shape this file was just corrected for, one
+   * step further along.
+   *
+   * After the merge lands, the push event fires, the publish workflow runs, and
+   * a subsequent push to main showing repo > npm means the publish genuinely did
+   * not run. That is the August failure, and that is what still fails.
+   */
+  const ref = process.env.GITHUB_REF ?? ''
+  const event = process.env.GITHUB_EVENT_NAME ?? ''
+  if (event === 'pull_request') return false
+  return /(^|\/)main$/.test(ref)
+})()
 
 let failures = 0
 console.log(`check-shared-package-reach: ${repoPackages.size} published @bsuite/* package(s), ${APPS.length} app(s)`)
