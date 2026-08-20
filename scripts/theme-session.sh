@@ -19,22 +19,52 @@
 # origin cannot be a registered `redirect_uri`, and Supabase matches it
 # byte-exactly).
 #
-# THIS SCRIPT DOES NOT REIMPLEMENT ANY OF THAT. It runs crm7's own
-# `tests/e2e/auth.setup.ts` through crm7's own Playwright config and copies out
-# the storageState that setup project writes. A second implementation of a
+# THIS SCRIPT DOES NOT REIMPLEMENT ANY OF THAT. It runs each app's own
+# `tests/e2e/auth.setup.ts` through that app's own Playwright config and copies
+# out the storageState that setup project writes. A second implementation of a
 # sign-in helper is a second thing to rot: the token endpoint, the grant shape
 # and the per-app storage key would then live in two places and drift silently,
 # and the drift would present as a green gate over an anonymous sweep — exactly
 # the failure crm7's helper was rebuilt to kill.
 #
+# FIVE APPS, NOT ONE (V-9, 2026-08-19)
+# crm7 was the only app with a session producer until this pass. Four more now
+# have their own tests/e2e/auth.setup.ts, ported (not reimplemented) from
+# crm7's: braden and throughput are BS OAuth CLIENTS exactly like crm7, so they
+# use the identical mechanism (Supabase password grant, session seeded into
+# localStorage under each app's own default storageKey). conduit is also a BS
+# OAuth client but its Supabase browser client is `@supabase/ssr`, whose
+# storage is COOKIES — its auth.setup.ts writes the session in that wire
+# format instead (see the long comment in conduit/tests/e2e/auth.setup.ts for
+# how that format was derived and verified against the real package).
+# business-suite-unified is the OAuth SERVER, not a client, so its own
+# auth.setup.ts drives its native `/login` FORM rather than a password grant —
+# that already existed (PR #142) and did not need porting, only a credential
+# fallback (see business-suite-unified/tests/e2e/auth.setup.ts) so it does not
+# need a brand-new secret to be useful here.
+#
+# R80.4 remains OUT OF SCOPE: it bridges auth via a `bs_*` localStorage/cookie
+# pair of a different shape than any of the above, and porting it was not
+# attempted in this pass — see APPS below, which does not list it. Requesting
+# `--app R80.4` fails with a clear "not supported" message rather than
+# pretending to try.
+#
+# CREDENTIALS ARE SHARED ON PURPOSE. Every app below reads CRM7_E2E_EMAIL /
+# CRM7_E2E_PASSWORD (business-suite-unified falls back to them; the other four
+# use them directly) rather than a per-app pair, because the whole estate
+# shares ONE Supabase project (tuybltdrdefjblnplpqo) and that account was
+# verified live against every app's own login path. This means the workflow
+# that already exports these four secrets for crm7 covers all five apps with
+# no new secret to provision.
+#
 # WHY A DEPLOYED TARGET AND NOT A LOCAL SERVER
-# `--base-url` defaults to the app's `d.`-prefixed development domain. crm7's
-# playwright.config.ts boots `pnpm preview --port 5676` for any localhost
-# target, which needs a `dist/` that a fresh checkout does not have; pointing at
-# a real origin skips that block entirely. It also means the storageState's
-# `origins[]` entry matches the origin the sweep then visits — Playwright
-# replays localStorage per exact origin, so a state minted against one host is
-# inert against another.
+# `--base-url` defaults to each app's `d.`-prefixed development domain. Every
+# app's playwright.config.ts boots a local dev/preview server for any
+# localhost target, which needs a `dist/`/install that a fresh checkout does
+# not have; pointing at a real origin skips that block entirely. It also means
+# the storageState's `origins[]`/`cookies[]` entries match the origin the sweep
+# then visits — Playwright replays a stored session only against the exact
+# origin (and, for cookies, domain) it was minted for.
 #
 # THE FILE HOLDS REAL BEARER TOKENS. It is written outside the repository, mode
 # 0600, and must never be committed or echoed.
@@ -61,22 +91,46 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Only crm7 has a session producer today. Naming the others here rather than
-# failing with "unknown app" keeps the gap legible: the answer to "why is BSU
-# unmeasured signed in" is a missing auth.setup.ts, not a missing route list.
-if [[ $APP != crm7 ]]; then
+# Per-app producer config: Playwright project name, the storageState file that
+# project writes (relative to the app dir), and the default deployed base URL.
+# R80.4 is deliberately absent — see the header note above.
+declare -A PROJECT_NAME=(
+  [crm7]=auth-setup
+  [braden]=auth-setup
+  [throughput]=auth-setup
+  [conduit]=auth-setup
+  [business-suite-unified]=setup
+)
+declare -A STATE_REL=(
+  [crm7]=playwright/.auth/user.json
+  [braden]=playwright/.auth/user.json
+  [throughput]=playwright/.auth/user.json
+  [conduit]=playwright/.auth/user.json
+  [business-suite-unified]=playwright/.auth/developer.json
+)
+declare -A DEFAULT_BASE_URL=(
+  [crm7]=https://d.crm.crm7.app
+  [braden]=https://d.braden.com.au
+  [throughput]=https://d.ideas.crm7.app
+  [conduit]=https://d.conduit.crm7.app
+  [business-suite-unified]=https://d.suite.crm7.app
+)
+
+if [[ -z ${PROJECT_NAME[$APP]:-} ]]; then
   echo "theme-session: no session producer exists for '$APP'." >&2
-  echo "  crm7 is the only app with tests/e2e/auth.setup.ts. Porting that file" >&2
-  echo "  to another app is what unlocks a signed-in sweep there; this script" >&2
-  echo "  deliberately does not invent a second sign-in path." >&2
+  echo "  Supported: ${!PROJECT_NAME[*]}" >&2
+  echo "  Each one has its own tests/e2e/auth.setup.ts. Porting that file to a" >&2
+  echo "  new app is what unlocks a signed-in sweep there; this script" >&2
+  echo "  deliberately does not invent a generic sign-in path." >&2
   exit 2
 fi
 
-: "${BASE_URL:=${THEME_GATE_BASE_URL_CRM7:-https://d.crm.crm7.app}}"
+BASE_URL_VAR="THEME_GATE_BASE_URL_$(printf '%s' "$APP" | tr '[:lower:].-' '[:upper:]__')"
+: "${BASE_URL:=${!BASE_URL_VAR:-${DEFAULT_BASE_URL[$APP]}}}"
 : "${OUT:=${XDG_RUNTIME_DIR:-/tmp}/bsuite-theme-session-$APP.json}"
 
 SETUP_SPEC="$REPO_ROOT/$APP/tests/e2e/auth.setup.ts"
-STATE_SRC="$REPO_ROOT/$APP/playwright/.auth/user.json"
+STATE_SRC="$REPO_ROOT/$APP/${STATE_REL[$APP]}"
 
 say() { [[ $QUIET -eq 1 ]] || printf '%s\n' "$*"; }
 
@@ -132,15 +186,16 @@ if [[ ${#missing[@]} -gt 0 ]]; then
   exit 2
 fi
 
-# ── run crm7's own auth setup project ───────────────────────────────────────
+# ── run the app's own auth setup project ────────────────────────────────────
+PROJECT=${PROJECT_NAME[$APP]}
 say "theme-session: minting a session for $APP against $BASE_URL"
 say "  via $APP/tests/e2e/auth.setup.ts (consumed, not reimplemented)"
 rm -f "$STATE_SRC"
 log=$(mktemp)
 if ! ( cd "$REPO_ROOT/$APP" && PLAYWRIGHT_BASE_URL="$BASE_URL" \
-        timeout 300 pnpm exec playwright test --project=auth-setup --reporter=line ) \
+        timeout 300 pnpm exec playwright test --project="$PROJECT" --reporter=line ) \
         >"$log" 2>&1; then
-  echo "theme-session: crm7 auth-setup FAILED — see below." >&2
+  echo "theme-session: $APP $PROJECT FAILED — see below." >&2
   tail -25 "$log" >&2
   rm -f "$log"
   exit 1
@@ -148,7 +203,7 @@ fi
 rm -f "$log"
 
 if [[ ! -f $STATE_SRC ]]; then
-  echo "theme-session: auth-setup exited 0 but wrote no state at $STATE_SRC" >&2
+  echo "theme-session: $PROJECT exited 0 but wrote no state at $STATE_SRC" >&2
   exit 1
 fi
 
@@ -156,15 +211,24 @@ fi
 # `{"cookies":[],"origins":[]}` is a legal storageState and Playwright loads it
 # without complaint. Counting what is actually in it is the difference between
 # a session and a file shaped like one.
+#
+# TWO SHAPES COUNT, not one. Every app but conduit seeds localStorage, so
+# `origins[].localStorage` is where the real content lives. conduit seeds
+# COOKIES (`@supabase/ssr`'s own storage), so its `origins[]` array is
+# legitimately empty and the content lives in the top-level `cookies[]` array
+# instead. Checking only `origins` would misreport every conduit run as an
+# empty-state failure even when the cookie write succeeded.
 read -r n_origins n_keys < <(node -e '
   const s = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))
   const origins = s.origins ?? []
-  const keys = origins.reduce((n, o) => n + (o.localStorage ?? []).length, 0)
-  process.stdout.write(`${origins.length} ${keys}\n`)
+  const cookies = s.cookies ?? []
+  const localKeys = origins.reduce((n, o) => n + (o.localStorage ?? []).length, 0)
+  const keys = localKeys + cookies.length
+  process.stdout.write(`${origins.length + (cookies.length > 0 ? 1 : 0)} ${keys}\n`)
 ' "$STATE_SRC")
 
 if [[ ${n_origins:-0} -eq 0 || ${n_keys:-0} -eq 0 ]]; then
-  echo "theme-session: the minted state is EMPTY ($n_origins origin(s), $n_keys key(s))." >&2
+  echo "theme-session: the minted state is EMPTY ($n_origins origin(s)/domain(s), $n_keys key(s)/cookie(s))." >&2
   echo "  Credentials were present, so this is a real sign-in failure — not the" >&2
   echo "  quiet local-run degradation auth.setup.ts allows when they are absent." >&2
   exit 1
@@ -172,7 +236,7 @@ fi
 
 install -m 600 /dev/null "$OUT"
 cat "$STATE_SRC" >"$OUT"
-say "  minted $n_origins origin(s), $n_keys localStorage key(s) -> $OUT"
+say "  minted $n_origins origin(s)/domain(s), $n_keys key(s)/cookie(s) -> $OUT"
 # stdout contract: the LAST line is the path, so a caller can capture it with
 # `$(scripts/theme-session.sh --quiet)`.
 printf '%s\n' "$OUT"
