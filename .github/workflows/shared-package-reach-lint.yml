@@ -1,0 +1,91 @@
+name: Shared package reach lint
+
+# A shared @bsuite/* package fix that merges to `development` is not "done"
+# the moment it merges. It reaches nobody until every consumer's
+# `pnpm-lock.yaml` actually RESOLVES the new version, and `--frozen-lockfile`
+# — every Vercel `installCommand` in this estate — refuses to move that
+# resolved version on its own.
+#
+# Measured 2026-08-20, @bsuite/schema-builder:
+#
+#   packages/schema-builder/package.json version (on development)   1.4.0
+#   npm latest for @bsuite/schema-builder                           1.3.1
+#   pnpm-lock.yaml pin in crm7 / BSU / conduit                      1.3.1
+#   Vercel installCommand in all three     corepack enable && rm -rf
+#                                           node_modules && pnpm install
+#                                           --frozen-lockfile
+#
+# `publish-schema-builder.yml` fires on push to `main` when
+# `packages/schema-builder/**` changed, so promotion publishes 1.4.0 — but
+# every consumer keeps installing 1.3.1 regardless, because the LOCKFILE
+# refuses the move even though the declared range (^1.3.1) would accept it.
+#
+# This happened TWICE in 48 hours to two different packages (bsuite#2190,
+# bsuite#2189), and re-measuring while building this gate found TWO MORE —
+# @bsuite/schema-registry (all six consumers) and @bsuite/ui (four
+# consumers) — that nobody had reported. See scripts/check-shared-package-
+# reach.mjs's header for the full incident list and how this gate differs
+# from its two similarly-named neighbours (check-shared-package-reach.py and
+# check-own-package-freshness.mjs — neither duplicates this one).
+#
+# NO `paths:` FILTER — same two reasons as the sibling Tailwind-source and
+# dark-variant gates:
+#
+#   1. Under-triggering. The version bump that creates this defect lands
+#      inside a SUBMODULE (a consumer's package.json / pnpm-lock.yaml, or a
+#      package's own package.json), and the parent tree holds only a gitlink
+#      for each submodule — a path filter on the parent's tree can never
+#      match a change that happened inside one.
+#   2. Required-check deadlock. A path-filtered required check never reports
+#      on a PR that misses the filter, and the PR waits forever. This gate is
+#      a file scan that finishes in seconds; there is no cost to running it
+#      on every push and pull request.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shared-package-reach-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared-package-reach:
+    name: Lockfile pin vs repo-declared version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the apps being checked ARE the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout. Same fallback chain
+          # every other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # Run the checker's own self-test FIRST so a pass below is known to come
+      # from a checker that can still fail — including its anti-prose case,
+      # which asserts that a decoy `overrides:` entry in a pnpm-lock.yaml is
+      # never mistaken for the real resolved pin, and that the real (older)
+      # pin still fails even once that decoy is correctly ignored.
+      - name: Self-test the checker
+        run: node scripts/check-shared-package-reach.mjs --self-test
+
+      # --require-edges=40 is the positive control against a silently
+      # unscanned tree. The estate carries 53 @bsuite/* consumer/package
+      # edges today across 6 apps and 15 published packages; if the scan
+      # finds fewer, a submodule checkout did not populate and a "clean"
+      # result would be meaningless rather than clean.
+      - name: Check every lockfile pin reaches the repo's declared version
+        run: node scripts/check-shared-package-reach.mjs --require-edges=40
