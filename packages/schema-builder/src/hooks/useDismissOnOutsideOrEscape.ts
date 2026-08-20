@@ -9,7 +9,12 @@ import { useEffect, type RefObject } from 'react';
  * beside interactive canvas content rather than blocking it, so trapping
  * focus would be wrong. For a true modal, use the package's native
  * `<dialog>` pattern (see RelationshipConfigDialog / FieldCreateDialog),
- * which gets Escape-to-close and a backdrop for free from the browser.
+ * which gets Escape-to-close and a backdrop element from the browser — and
+ * `useLightDismissDialog` beside this file for the backdrop CLICK, which the
+ * browser does NOT give you. An earlier version of this sentence said a
+ * `<dialog>` gets "a backdrop for free", which was read as light dismiss being
+ * free too, and all five modals in this package shipped unable to close on a
+ * click away.
  *
  * Self-contained on purpose: `EntityPropertiesPanel`'s docblock records the
  * package's "zero design-system dependency" rule (plain HTML + Tailwind, no

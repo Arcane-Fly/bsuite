@@ -31,6 +31,24 @@ Escape, and it had no close button.
   participate in that percentage-of-auto collapse, so it holds a sane floor
   regardless of what a consumer's own layout does — protecting BSU, crm7,
   R80.3 and conduit alike from the same class of bug, not just conduit.
+- **All five modal `<dialog>`s now close on a backdrop click** — Field create,
+  Field edit, the rename-confirm, Relationship config, and the entity
+  delete-confirm. The same operator report covered these ("menues ... dont close
+  when the user clicks away"), and the reason they shipped this way is written
+  into the sibling hook's own docblock: it said a native `<dialog>` "gets
+  Escape-to-close and a backdrop for free from the browser". `showModal()` gives
+  you a backdrop ELEMENT; it does not give you backdrop-click dismissal. That is
+  `closedby="any"`, which is not yet safe to rely on across the browsers this
+  estate supports. New `useLightDismissDialog` hook closes via the element's own
+  `close()`, so a backdrop click travels the exact path Escape already does and
+  the two cannot drift apart.
+
+  Two deliberate exclusions: a keyboard-synthesised click (Enter on a focused
+  button reports coordinates `0,0`, outside every rect) does not dismiss, and the
+  rename-confirm does not light-dismiss while the rename is actually running
+  against the database — `confirming` and `error` are states a user may safely
+  back out of, `running-wet` is not.
+
 - **Command palette (Cmd/Ctrl+K) now has a visible close button** in addition
   to its existing outside-click and Escape handling, plus `role="dialog"` +
   `aria-modal="true"` + an accessible name, and focus is returned to
