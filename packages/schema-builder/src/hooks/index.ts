@@ -17,3 +17,4 @@ export type {
   UseSchemaReflectionOptions,
   UseSchemaReflectionResult,
 } from './useSchemaReflection.js';
+export { useDismissOnOutsideOrEscape } from './useDismissOnOutsideOrEscape.js';

@@ -6,8 +6,9 @@ import {
   Navigation,
   PlusCircle,
   Wand2,
+  X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { TenantEntity } from '../types.js';
 
 export interface CommandPaletteNavTarget {
@@ -51,18 +52,35 @@ export function CommandPalette({
   onAddField,
 }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
+  // Focus-return: Cmd/Ctrl+K has no persistent trigger element (it's a
+  // shortcut, not a button), so the closest equivalent to "return focus to
+  // the trigger" is returning it to whatever had focus the instant before
+  // the palette opened.
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  const close = () => {
+    setOpen(false);
+    previouslyFocused.current?.focus();
+  };
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen((v) => {
+          const next = !v;
+          if (next) {
+            previouslyFocused.current = document.activeElement as HTMLElement | null;
+          }
+          return next;
+        });
       } else if (e.key === 'Escape' && open) {
-        setOpen(false);
+        close();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `close` reads `open` via closure each render, re-binding is intentional
   }, [open]);
 
   if (!open) return null;
@@ -70,10 +88,13 @@ export function CommandPalette({
   return (
     <div
       className="fixed inset-0 z-[200] flex items-start justify-center bg-overlay/50 p-4 pt-[10vh]"
-      onClick={() => setOpen(false)}
+      onClick={close}
       role="presentation"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
         className="w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -93,6 +114,14 @@ export function CommandPalette({
             <kbd className="hidden items-center gap-1 rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-flex">
               Esc
             </kbd>
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close command palette"
+              className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
           </div>
           <Command.List className="max-h-[50vh] overflow-y-auto p-2">
             <Command.Empty className="p-4 text-center text-sm text-muted-foreground">
@@ -113,7 +142,7 @@ export function CommandPalette({
                   value="Tidy Up Layout auto arrange dagre"
                   onSelect={() => {
                     onTidyUp();
-                    setOpen(false);
+                    close();
                   }}
                   className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                 >
@@ -131,7 +160,7 @@ export function CommandPalette({
                   value="Export as PNG download image snapshot"
                   onSelect={() => {
                     onExportPng();
-                    setOpen(false);
+                    close();
                   }}
                   className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                 >
@@ -152,7 +181,7 @@ export function CommandPalette({
                   } else {
                     window.dispatchEvent(new CustomEvent('bsuite-add-field'));
                   }
-                  setOpen(false);
+                  close();
                 }}
                 className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
               >
@@ -177,7 +206,7 @@ export function CommandPalette({
                     value={`${entity.label} ${entity.name}`}
                     onSelect={() => {
                       onSelectEntity?.(entity);
-                      setOpen(false);
+                      close();
                     }}
                     className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                   >
@@ -202,7 +231,7 @@ export function CommandPalette({
                     value={`${t.label} ${t.path}`}
                     onSelect={() => {
                       onNavigate?.(t.path);
-                      setOpen(false);
+                      close();
                     }}
                     className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm aria-selected:bg-role-primary/10 aria-selected:text-primary-text dark:aria-selected:bg-role-primary/10 dark:aria-selected:text-primary-text"
                   >
