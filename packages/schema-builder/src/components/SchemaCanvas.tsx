@@ -19,7 +19,7 @@ import {
   applyNodeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { AlertTriangle, Info, Link2, MousePointer2, Workflow } from 'lucide-react';
+import { AlertTriangle, Info, Link2, MousePointer2, Workflow, X } from 'lucide-react';
 import {
   forwardRef,
   useCallback,
@@ -30,6 +30,7 @@ import {
   useState,
 } from 'react';
 
+import { useDismissOnOutsideOrEscape } from '../hooks/useDismissOnOutsideOrEscape.js';
 import type { SchemaController } from '../hooks/useSchemaController.js';
 import type { RenamePhysicalColumnResult } from '../service.js';
 import type {
@@ -124,6 +125,12 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
   ) {
     const [isRelationDialogOpen, setIsRelationDialogOpen] = useState(false);
     const [isPanelOpen, setIsPanelOpen] = useState(false);
+    // Quick-start tip (conduit#… "obscures the page header" report): a
+    // transient hint over the canvas, not page chrome, so it must be
+    // dismissible by outside click, Escape, AND an explicit close button —
+    // see useDismissOnOutsideOrEscape.
+    const [quickStartVisible, setQuickStartVisible] = useState(true);
+    const quickStartRef = useRef<HTMLDivElement>(null);
     const [selectedEntity, setSelectedEntity] = useState<TenantEntity | null>(
       null,
     );
@@ -151,6 +158,10 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       Edge
     > | null>(null);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+    useDismissOnOutsideOrEscape(quickStartRef, quickStartVisible, () =>
+      setQuickStartVisible(false),
+    );
 
     const focusEntityById = useCallback((entityId: string) => {
       const flow = flowRef.current;
@@ -805,7 +816,24 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         >
           {announcement}
         </div>
-        <div ref={wrapperRef} className="relative h-full flex-1">
+        <div
+          ref={wrapperRef}
+          className="relative h-full min-h-[420px] flex-1"
+        >
+          {/*
+            min-h-[420px] above is a deliberate floor, not decoration.
+            SchemaCanvas relies on `h-full` cascading from every ancestor to
+            give the canvas — and this wrapper's own absolutely-positioned
+            children — a real box to measure against. A consumer page that
+            puts this component inside height:auto chrome (conduit's
+            Schema Builder route did exactly this) collapses the whole chain
+            to 0px, and an `absolute bottom-3` child of a 0-height box then
+            renders flush against whatever sits directly above it — which is
+            how the quick-start tip ended up on top of the page header
+            instead of near the canvas. A fixed min-height doesn't
+            participate in that percentage-of-auto collapse, so it holds the
+            floor regardless of what the consumer's own layout does.
+          */}
           {canvasContent}
           {showToolbar ? (
             <>
@@ -818,22 +846,37 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                 totalCount={controller.entities.length}
                 onExportPng={handleExportPng}
               />
-              <div className="absolute bottom-3 left-3 z-10 max-w-sm rounded-lg border border-role-primary/40 bg-card/95 p-3 text-xs text-text-secondary shadow-sm backdrop-blur">
-                <div className="flex items-start gap-2">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
-                  <div className="space-y-1">
-                    <p className="font-semibold text-foreground">Schema Builder quick start</p>
-                    <p className="flex gap-1">
-                      <MousePointer2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-                      Click a card to inspect fields. Drag the header grip to move it.
-                    </p>
-                    <p className="flex gap-1">
-                      <Link2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-                      Drag a blue connector dot to another card to create a relationship.
-                    </p>
+              {quickStartVisible ? (
+                <div
+                  ref={quickStartRef}
+                  role="note"
+                  aria-label="Schema Builder quick start"
+                  className="absolute bottom-3 left-3 z-10 max-w-sm rounded-lg border border-role-primary/40 bg-card/95 p-3 text-xs text-text-secondary shadow-sm backdrop-blur"
+                >
+                  <div className="flex items-start gap-2">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="font-semibold text-foreground">Schema Builder quick start</p>
+                      <p className="flex gap-1">
+                        <MousePointer2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                        Click a card to inspect fields. Drag the header grip to move it.
+                      </p>
+                      <p className="flex gap-1">
+                        <Link2 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                        Drag a blue connector dot to another card to create a relationship.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setQuickStartVisible(false)}
+                      aria-label="Dismiss quick start tips"
+                      className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
                   </div>
                 </div>
-              </div>
+              ) : null}
             </>
           ) : null}
         </div>
