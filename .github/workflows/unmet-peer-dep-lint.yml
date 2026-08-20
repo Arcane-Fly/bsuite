@@ -1,0 +1,86 @@
+name: Unmet peer dependency lint
+
+# A `@bsuite/*` package's PEER dependency is a requirement the CONSUMER installs.
+# When an app does not, nothing errors until the first render that reaches the
+# code path — and then it throws, for every user, on every load.
+#
+# THIS IS NOT HYPOTHETICAL. 2026-08-19, reported by the R80.4 lane:
+#
+#   r8.crm7.app threw "No QueryClient set, use QueryClientProvider to set one"
+#   the moment a session existed. The calculator did not render AT ALL. R8
+#   worked signed OUT and was blank signed IN.
+#
+# `@bsuite/schema-registry/react` declares `@tanstack/react-query: ^5` as a peer.
+# R80.4 never installed it. Six gates reported clean over it:
+#
+#   typecheck  the hook's types resolve; the provider is a RUNTIME requirement
+#   eslint     nothing lexically wrong
+#   tests      no test signs in and renders the shell
+#   build      Vite bundles a missing provider without complaint
+#   DoD        18 benchmarks, none about dependency contracts
+#   pnpm       DOES warn — at install time, in output no gate reads
+#
+# It was found by signing in to production as a real user, and by nothing else.
+#
+# NO `paths:` FILTER — same two reasons as the sibling gates:
+#   1. Under-triggering. The change that breaks this arrives inside a SUBMODULE,
+#      and the parent tree holds only a gitlink, so a path filter cannot match.
+#   2. Required-check deadlock. A path-filtered required check never reports on
+#      a PR that misses the filter, and the PR waits forever.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unmet-peer-dep-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unmet-peer-deps:
+    name: Peer dependencies of every @bsuite package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the apps being checked ARE the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout. Same fallback chain
+          # every other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # Run the checker's own self-test FIRST, so a pass below is known to come
+      # from a checker that can still fail — including the case that decides
+      # this gate's whole value: a peer that IS present but at a version outside
+      # the declared range. pnpm writes that resolution into the lockfile and
+      # only warns, so a presence-only check calls it clean. Replayed against
+      # R80.4's own pre-fix lockfile, this gate reports
+      # `@bsuite/schema-registry@1.0.2 needs @bsuite/nav-core@^0.8.0 got 1.0.1`.
+      - name: Self-test the checker
+        run: node scripts/check-unmet-peer-deps.mjs --self-test
+
+      # --require-edges is the positive control against a silently unscanned
+      # tree. An uninitialised submodule is an empty directory with no
+      # pnpm-lock.yaml, and a scan of nothing reports clean. 100 is set below
+      # the 120 resolved peer edges measured 2026-08-20 so ordinary dependency
+      # churn does not trip it, but a failed submodule checkout does.
+      #
+      # NO INSTALL STEP, deliberately: the gate reads the COMMITTED lockfile,
+      # which is exactly what `--frozen-lockfile` installs and therefore what
+      # the deploy runs. Reading a local node_modules would measure the machine
+      # rather than the deploy — and would have called R8's outage clean,
+      # because react-query existed elsewhere in the estate the whole time.
+      - name: Check every app satisfies its @bsuite packages' peers
+        run: node scripts/check-unmet-peer-deps.mjs --require-edges=100
