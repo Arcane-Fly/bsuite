@@ -18,3 +18,4 @@ export type {
   UseSchemaReflectionResult,
 } from './useSchemaReflection.js';
 export { useDismissOnOutsideOrEscape } from './useDismissOnOutsideOrEscape.js';
+export { useLightDismissDialog } from './useLightDismissDialog.js';
