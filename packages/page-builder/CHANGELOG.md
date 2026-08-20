@@ -5,6 +5,42 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.0.3] — 2026-08-20 — Auto-height cards were one margin short, and clipped their own content
+
+The operator's report was a screenshot of crm7's Add Client page: *"IS THIS WHAT
+THE UI LOOKS LIKE? WHAT AN ABSOLUTE MESS."* He was right, and this is the part of
+it that made the page non-functional.
+
+### Fixed
+
+- **`computeAutoHeightRows` credited every card with one margin it never
+  receives.** react-grid-layout allocates `n` rows as
+  `n * rowHeight + (n - 1) * marginY` — the margin sits BETWEEN rows — so `n`
+  rows are worth one `marginY` LESS than the bare row unit suggests. The
+  conversion divided by the bare unit, and `Math.ceil` cannot rescue that: the
+  shortfall is inside the rounding, not beyond it.
+
+  **Measured on production, 2026-08-20, crm7 `/clients/create` at 1366x768.** The
+  card holding the form's Create/Cancel row came out **32px tall around a 36px
+  button**, with `overflow-hidden`. The button was clipped, and a neighbouring
+  card's helper text was painted over what remained — `elementFromPoint` at the
+  button's centre returned a `<p>`, not the button. **A person could not submit
+  the form.** `ceil((36 + 2) / 38) = 1` row, and one row is 32 pixels.
+
+  The old form clipped whenever the needed height landed 1..`marginY` pixels
+  above a row boundary — **60 of the first 401 content heights, about one card in
+  six.** This package is consumed by crm7, conduit, BSU and throughput, and in
+  crm7 alone **325 pages** render inside this grid.
+
+- **The tests asserted the arithmetic, not the outcome.** They checked the
+  division — "(300 + 2) / 38 -> ceil 8" — and never asked whether 8 rows buy
+  enough pixels. They do not: 8 rows is 298px for 302px of content. **Three of
+  the five encoded a clipping case as the expected answer**, which is how this
+  survived a month with a green suite. Every test now measures against
+  react-grid-layout's own allocation formula, so one can only pass if the content
+  genuinely fits, plus a sweep over 0–400px and an over-allocation check that
+  fails if one row fewer would also have fitted.
+
 ## 0.6.2 — 2026-07-31
 
 ### Fixed — card HEIGHT snapped back to its seed value on drop; WIDTH persisted correctly (crm7#744)
