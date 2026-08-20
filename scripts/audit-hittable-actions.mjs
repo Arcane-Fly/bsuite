@@ -300,6 +300,7 @@ const page = await context.newPage();
 let failures = 0;
 let skipped = 0;
 let checked = 0;
+let notApplicable = 0;
 
 for (const url of urls) {
   let res;
@@ -322,8 +323,23 @@ for (const url of urls) {
   }
 
   if (!res.found) {
-    console.log(`  SKIPPED ${url} — no primary action control on this page`);
-    skipped++;
+    /*
+     * NOT APPLICABLE is not the same as NOT MEASURED, and the word matters
+     * because the sweep harness counts "SKIPPED" as non-coverage and fails on
+     * it — correctly, under the rule that an unevaluable class is UNKNOWN and
+     * UNKNOWN blocks.
+     *
+     * A list page genuinely has no primary action to press. That is a FACT
+     * ABOUT THE PAGE, established by looking, not a failure to look. Calling it
+     * SKIPPED made every list route in the sweep read as unaudited coverage and
+     * failed the job for pages that are fine.
+     *
+     * The genuinely unevaluable cases below — redirected off-origin, could not
+     * be brought into the viewport — keep the word SKIPPED, because those ARE
+     * measurements that did not happen.
+     */
+    console.log(`  n/a ${url} — no primary action control on this page`);
+    notApplicable++;
     continue;
   }
 
@@ -355,6 +371,7 @@ for (const url of urls) {
 
 await browser.close();
 console.log(
-  `audit-hittable-actions: ${checked} action(s) checked, ${failures} unhittable, ${skipped} skipped (${VW}x${VH})`,
+  `audit-hittable-actions: ${checked} action(s) checked, ${failures} unhittable, ` +
+    `${notApplicable} page(s) with no action, ${skipped} skipped (${VW}x${VH})`,
 );
 process.exit(failures > 0 ? 1 : 0);
