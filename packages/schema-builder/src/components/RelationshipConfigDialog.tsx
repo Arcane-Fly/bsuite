@@ -1,6 +1,7 @@
 import { GitBranch } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { RelationType } from '../types.js';
+import { useLightDismissDialog } from '../hooks/useLightDismissDialog.js';
 
 interface RelationshipConfigDialogProps {
   open: boolean;
@@ -49,6 +50,10 @@ export function RelationshipConfigDialog({
   onConfirm,
 }: RelationshipConfigDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Backdrop click closes it, exactly as Escape does. `showModal()` gives
+  // a backdrop ELEMENT, not backdrop-click dismissal — see the hook.
+  useLightDismissDialog(dialogRef, open);
   const [relationType, setRelationType] = useState<RelationType>('one_to_many');
   const [sourceLabel, setSourceLabel] = useState('');
   const [targetLabel, setTargetLabel] = useState('');

@@ -12,6 +12,7 @@
 import { Database, Save, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { APP_SCOPES, type AppScope, type TenantEntity } from '../types.js';
+import { useLightDismissDialog } from '../hooks/useLightDismissDialog.js';
 
 export interface EntityPropertiesPanelProps {
   /** `null` renders the panel in create mode. */
@@ -71,6 +72,10 @@ export function EntityPropertiesPanel({
   const [nameError, setNameError] = useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
+
+  // Backdrop click closes it, exactly as Escape does. `showModal()` gives
+  // a backdrop ELEMENT, not backdrop-click dismissal — see the hook.
+  useLightDismissDialog(confirmDialogRef, confirmDeleteOpen);
 
   // Render-time reset: when the `entity.id` identity changes (including
   // null→entity or entity→null transitions), reset formData + nameError
