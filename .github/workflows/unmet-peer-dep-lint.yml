@@ -63,16 +63,24 @@ jobs:
       # A gate whose pass and no-op states are indistinguishable hides defects.
       # Run the checker's own self-test FIRST, so a pass below is known to come
       # from a checker that can still fail — including the case that decides
-      # this gate's whole value: a peer hoisted to the REPO ROOT must NOT count
-      # as satisfying the app. react-query existed elsewhere in this estate the
-      # entire time R8 was down.
+      # this gate's whole value: a peer that IS present but at a version outside
+      # the declared range. pnpm writes that resolution into the lockfile and
+      # only warns, so a presence-only check calls it clean. Replayed against
+      # R80.4's own pre-fix lockfile, this gate reports
+      # `@bsuite/schema-registry@1.0.2 needs @bsuite/nav-core@^0.8.0 got 1.0.1`.
       - name: Self-test the checker
         run: node scripts/check-unmet-peer-deps.mjs --self-test
 
       # --require-edges is the positive control against a silently unscanned
-      # tree. An uninitialised submodule is an empty directory that reads as
-      # "no @bsuite dependencies", and a scan of nothing reports clean. 100 is
-      # set below the 120 edges measured 2026-08-20 so ordinary dependency
+      # tree. An uninitialised submodule is an empty directory with no
+      # pnpm-lock.yaml, and a scan of nothing reports clean. 100 is set below
+      # the 120 resolved peer edges measured 2026-08-20 so ordinary dependency
       # churn does not trip it, but a failed submodule checkout does.
+      #
+      # NO INSTALL STEP, deliberately: the gate reads the COMMITTED lockfile,
+      # which is exactly what `--frozen-lockfile` installs and therefore what
+      # the deploy runs. Reading a local node_modules would measure the machine
+      # rather than the deploy — and would have called R8's outage clean,
+      # because react-query existed elsewhere in the estate the whole time.
       - name: Check every app satisfies its @bsuite packages' peers
         run: node scripts/check-unmet-peer-deps.mjs --require-edges=100
