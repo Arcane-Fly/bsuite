@@ -28,6 +28,7 @@ import { Save, Trash2 } from 'lucide-react';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { RenamePhysicalColumnResult } from '../service.js';
 import type { FieldType, TenantFieldDefinition } from '../types.js';
+import { useLightDismissDialog } from '../hooks/useLightDismissDialog.js';
 import {
   FIELD_TYPE_OPTIONS,
   SNAKE_CASE_RE,
@@ -196,7 +197,12 @@ export function FieldEditDialog({
   onRenamePhysical,
 }: FieldEditDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Backdrop click closes it, exactly as Escape does. `showModal()` gives
+  // a backdrop ELEMENT, not backdrop-click dismissal — see the hook.
+  useLightDismissDialog(dialogRef, open);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
+
   const [state, dispatch] = useReducer(
     formReducer,
     field ? initialStateFromField(field) : EMPTY_STATE,
@@ -225,6 +231,16 @@ export function FieldEditDialog({
     if (open && !el.open) el.showModal();
     else if (!open && el.open) el.close();
   }, [open]);
+
+  // Light dismiss for the confirm dialog, but NOT while the rename is actually
+  // running. 'confirming' and 'error' are both states a user may safely back
+  // out of; 'running-wet' is a rename in flight against the database, and
+  // closing its dialog would hide an operation that is still happening rather
+  // than stop it.
+  useLightDismissDialog(
+    confirmDialogRef,
+    renameState.phase === 'confirming' || renameState.phase === 'error',
+  );
 
   // Open / close the secondary confirm <dialog> based on rename state.
   useEffect(() => {
