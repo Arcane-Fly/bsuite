@@ -325,7 +325,8 @@ export function usePageGridLayout({
    *
    * react-grid-layout is rendered with `autoHeightRows` merged over the saved
    * layout (see `applyAutoHeightRows` / `activeLayouts` in
-   * `PageGridLayout.tsx`: `h = max(saved, measured)`), so the layouts it
+   * `PageGridLayout.tsx`: `h = hUserSet ? max(saved, measured) : measured`),
+   * so the layouts it
    * echoes back through `onLayoutChange` carry that MERGED `h` for every
    * autoHeight item, on every commit — including commits that never touched
    * this particular item (e.g. a re-measurement of a sibling card, or a
@@ -371,19 +372,40 @@ export function usePageGridLayout({
         if (!baseItem?.autoHeight) return item;
 
         const measuredRows = measured[item.i];
+        // MUST mirror `activeLayouts` in PageGridLayout.tsx exactly, including
+        // its `hUserSet` test. This predicts what the grid was RENDERED with;
+        // predict a floor it was not rendered with and every measurement echo
+        // reads as a deliberate resize and persists — which is the crm7#744
+        // failure with its sign reversed.
         const renderedFloorH =
-          measuredRows === undefined ? baseItem.h : Math.max(baseItem.h ?? 0, measuredRows);
+          measuredRows === undefined
+            ? baseItem.h
+            : baseItem.hUserSet
+              ? Math.max(baseItem.h ?? 0, measuredRows)
+              : measuredRows;
         if (item.h === renderedFloorH) {
           // Echo of the render-layer merge (or genuinely unchanged) — not a
           // user gesture on THIS item. Restore the un-merged base so a
-          // measured bump never persists.
-          return { ...item, autoHeight: true, h: baseItem.h, minH: baseItem.minH };
+          // measured bump never persists. `hUserSet` is carried over by hand
+          // for the same reason `autoHeight` is: react-grid-layout does not
+          // round-trip custom item props, so anything not restored here is
+          // silently dropped on the next commit.
+          return {
+            ...item,
+            autoHeight: true,
+            h: baseItem.h,
+            minH: baseItem.minH,
+            ...(baseItem.hUserSet ? { hUserSet: true } : {}),
+          };
         }
         // A deliberate resize (bigger or smaller than the base) — keep it,
-        // still floored by the measured content height.
+        // still floored by the measured content height. This is the only
+        // moment in the system where a height is known to be a CHOICE rather
+        // than an authored seed, so it is where that fact gets recorded.
         return {
           ...item,
           autoHeight: true,
+          hUserSet: true,
           h: measuredRows === undefined ? item.h : Math.max(item.h, measuredRows),
           minH: measuredRows ?? baseItem.minH,
         };
