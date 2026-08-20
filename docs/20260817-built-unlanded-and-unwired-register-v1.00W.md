@@ -1,7 +1,7 @@
 # Built but unlanded, built but unwired — a machine sweep
 
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
-**Date:** 2026-08-17, §9 added 2026-08-19 · **Version:** 1.01W · **Status:** W — Working
+**Date:** 2026-08-17 · §9 added 2026-08-19 · §9.10–§9.11 added 2026-08-20 · **Version:** 1.03W · **Status:** W — Working
 **Scope:** every git work tree on this laptop, every source module and edge function in the six apps,
 and (from 2026-08-19, §9) the operator's running notes file `bsuite notes.docx`
 **Feeds:** `docs/plans/20260817-estate-completion-plan-v1.00D.md` (bsuite#2081) and
@@ -209,6 +209,11 @@ vault secret names those jobs dereference (`jodie_error_scan_url`, `tga_sync_url
 |---|---|---|
 | crm7 | `refresh-award-rates` | 96 |
 | crm7 | `tga-organisation-sync` | 335 |
+
+> **Corrected 2026-08-20 by §9.10:** `tga-units-sync` was implied in this section to lack a
+> caller. It has one — a *Sync from TGA* button at `crm7/src/pages/vet/units/index.tsx:120`. It is
+> **feature-flagged off**, which is a queue item with the operator's name on it, not an
+> engineering defect. The two are worth telling apart.
 | crm7 | `encrypt-email-tokens` | 185 |
 | business-suite-unified | `process-webhook-queue` | 286 |
 | business-suite-unified | `email-token-refresh` | 189 |
@@ -340,7 +345,7 @@ and §5 as a recurring category, which is the only outcome worth the work.
 
 ---
 
-## 9. `bsuite notes.docx` cross-check — 19 August
+## 9. `bsuite notes.docx` cross-check, and the operator feedback loop — 19 and 20 August
 
 **Added 2026-08-19.** The operator's running notes file (29.6 MB, saved 16:04 on 19 August;
 68 screenshots; 381 paragraphs of text) was read in full and every checkable claim measured
@@ -382,7 +387,7 @@ Any future run of that scan must glob the repository root as well.
 
 | ID | Item | Evidence |
 |---|---|---|
-| **NX-1** | R8's UI is an 8,720-line root-level monolith wired to one sector of one award, over a 408-file engine | `charge-calculator-v9-2.tsx`; `src/main.tsx:93`; lines 206 / 4129 / 4206 |
+| **NX-1** | ~~R8's UI is an 8,720-line root-level monolith wired to one sector of one award~~ **CORRECTED 2026-08-20 — the wiring half is FALSE, measured against the running code.** The engagement picker ("What are you pricing?") renders `ENGAGEMENT_ORDER.map(...)` unconditionally at `charge-calculator-v9-2.tsx:7134`, so apprentice and labour-hire are both selectable. The sector picker at `:6726` renders `SECTORS.map(...)` and IS gated on `selectedAward === "MA000020"` — which is CORRECT, not a limitation: `SECTORS` is imported from `./src/awards/ma000020-penalty-rows.ts` (`:218`), because MA000020 is the award that *has* sector streams. Gating a control on the only award it applies to is the right behaviour. The three lines this row cites (206 / 4129 / 4206) are the page's STARTING DEFAULTS, not limits on what a user can pick; allowance lookups at `:4574` / `:7829` / `:7888` recompute per award and per sector at selection time. The monolith half of the row stands — it is one 8,720-line root-level file. | `charge-calculator-v9-2.tsx:6726, :7134, :218`; defaults at 206 / 4129 / 4206 |
 | **NX-2** | `api/fwc.js` carries **no rate limit and no quota** while fronting a **metered** Fair Work subscription — and the sign-in redirect that used to shield it was removed by operator ruling 2026-08-18 | `src/main.tsx:146` says so in the code itself: *"NOT YET SAFE TO DEPLOY PUBLICLY … advertising the import buttons to the open internet against a metered subscription needs one first"*. Live probe: `r8.crm7.app/api/fwc` and `d.r8.crm7.app/api/fwc` both answer, JSON 401 without a bearer — so the bearer guard is real, but nothing caps a signed-in caller |
 | **NX-3** | The Fair Work proxy explainer is still rendered in the MAPD card | `charge-calculator-v9-2.tsx:3880` (lane) and `:3685` (`development`) — *"Requests go to this site's own /api/fwc…"*. Present in **both** trees, so this is current, not a stale deployment |
 | **NX-4** | "qualification not captured" is still shipped | line 6143 (lane) / 5622 (`development`) |
@@ -535,3 +540,216 @@ result is a page inside crm7 or a separately deployed module that appears inside
   thing"). Those are recorded as unassessed rather than guessed at.
 - **Anything already covered by the 14 August register.** `D-59`…`D-92` and its §7 "not filed
   anywhere" list are not re-verified here; §9 is a delta, and the two should be read together.
+
+### 9.10 The 20 August entries
+
+**Added 2026-08-20.** The notes file was appended again — 29.6 MB → 31.2 MB, saved 08:01, **72
+screenshots** (was 68) and **400 paragraphs** (was 381). The change is purely additive: the previous
+last line is still the 381st, so nothing above it was edited and §9.1–§9.9 stand as written.
+
+Four items, and none of them is what it first looks like.
+
+#### NX-27 · Units of competency — three causes stacked, and the fix is blocked on you
+
+> *"No units of competency available for the qualifications. They need to be linked together, along
+> with training providers who offer them (only those used by the gto once placed there."*
+
+This is a **re-raise**. The same operator asked *"Why can't I import units? Should be pulled from
+the TGA API like the qualification"* on **30 June**, against the same qualification id
+(`6e25b04b-701a-401a-8dfa-5a4d79d89d70`). Seven weeks later it is still empty. Measured live:
+
+| | Rows |
+|---|---|
+| `qualifications` | 6 |
+| `units_of_competency` | 160, **last updated 2026-05-13** |
+| `qualification_units` | 119 links, across **2 of 6** qualifications |
+| `training_providers` | 8,119 |
+
+The linking machinery works. Three separate things stop it reaching this screen:
+
+1. **`qualifications` is tenant-scoped, so a national qualification exists once per tenant.**
+   `CPC30220 Certificate III in Carpentry` exists **three times** — Braden Group (60 units),
+   bsuite Platform (**0**), FutureBuild Academy (**0**). `BSB30120` exists twice — Braden Group
+   (59), FutureBuild Academy (**0**). The row the operator opened is bsuite Platform's copy.
+   **CPC30220's unit list is set by the national register and is identical for every tenant**, so
+   modelling it per tenant means every new tenant starts empty and someone must import it again.
+   This is the architectural finding, and it is the one worth fixing: the *catalogue* (qualifications,
+   units, unit links, RTO scope) is national reference data and belongs at platform level, read-only;
+   only the *selection* — which qualifications this GTO delivers, which RTOs it uses — is tenant data.
+   That is exactly the distinction the note draws with *"only those used by the gto once placed there."*
+2. **The data is three months stale.** `units_of_competency.updated_at` maxes at 2026-05-13.
+3. **The sync is deliberately switched off, waiting on an operator measurement.**
+   `crm7/src/pages/vet/units/index.tsx:120` calls `supabase.functions.invoke('tga-units-sync')` — the
+   button exists. Its own header says the function is **feature-flagged off** (`TGA_UNITS_SYNC_ENABLED`,
+   default false) *"pending an operator-confirmed real Deno CPU-time measurement"*, and that a sync
+   while off *"returns a 'partial' run touching zero rows."* So the operator can press Sync from TGA,
+   be told honestly that nothing happened, and have no way to know the switch is waiting on them.
+
+**This corrects §4 of this document.** `tga-units-sync` was listed there among functions with no
+in-app caller. It has one. What it does not have is a flag turned on. The distinction matters:
+*unreachable* is an engineering defect; *flag-gated pending an operator decision* is a queue item
+with your name on it.
+
+`rto_qualification_scope` **does not exist** (`to_regclass` → NULL), so the second half of the note —
+which RTOs offer a qualification — has nowhere to live. That was also raised on **31 July**
+(*"Qualification Scope is missing. I.e. qualifications delivered by this RTO"*).
+
+#### NX-28 · Vacancies — one half is already done, the other has no path at all
+
+> *"Can this be posted to conduit as a job? Can this be linked to a host?"*
+
+**Linked to a host: already yes.** `crm7/src/pages/hosts/vacancies/new.tsx:224` writes
+`host_employer_id`, and `[id].tsx:200` displays it. Nothing to build.
+
+**Posted to conduit: no path exists.** conduit owns `r7_jobs` (10 rows). crm7 references conduit
+only as a nav entry (`components/appList.ts`) and as three names in a db-proxy allowlist test.
+There is no write path, no edge function, no queue. This is the same seam as the 14 August note on
+the kanban — *"Should be able to be pulled from conduit"* — pointing the other way, which suggests
+the real requirement is **one vacancy record with two surfaces**, not two records kept in step.
+
+The operator's own qualifier is the design constraint and should not be lost: *"Some might be catch
+all for common roles and some might be host specific."*
+
+#### NX-29 · The placement rate block is correct, and still fails the user
+
+> *"Cant easily pull in a rate from R8 or manually put in charges and wages/allowances, unclear how
+> to even do this… This is confusing and misleading. Pay rate usually would be read as ordinary
+> wage. Charge rate is what is billed on billable hours."*
+
+The read-only block at `crm7/src/pages/placements/[id]/edit.tsx:734` is **deliberate**, and the code
+says why, immediately above it: *"Duplicating any of these as a second, form-buffered write path
+would create two sources of truth for the same value."* That reasoning is sound and should not be
+reversed.
+
+But the screen tells the user where the charge rate comes from — *"sourced only from an approved
+charge-rate quote once one is linked"* — **without offering any way to link one**.
+`PlacementRatesCard.tsx` reads `placements`, `charge_rate_quotes` and `charge_rate_snapshots` and
+displays them; nothing on the placement creates or attaches a quote. A correct explanation of an
+unreachable path still leaves the user stuck, and *"unclear how to even do this"* is precisely that.
+
+The fix is an **attach-an-approved-quote action** on the placement, not an editable field — which is
+already `R8` in R80.4's master roadmap (*"Attach-by-quote-id in crm7"*) and the other half of the
+`import-r8` complaint from 7 August. It preserves the single source of truth and closes the loop.
+
+Naming, separately: the note is right that *pay rate* reads as the ordinary wage. The block already
+says *"Not the pay rate above"*, which is a disclaimer where a label would do.
+
+#### NX-30 · Theme, a fresh instance
+
+> *"Heading text no gradient and almost cut off by border."*
+
+On `/hosts/vacancies/new`. This is D-78 and `TH-*`, already open estate-wide; recorded here only
+because it is now the fourth dated section to raise the same class, which is itself the argument for
+fixing it as a class rather than per page.
+
+#### Where the 20 August items land
+
+| ID | Phase in `plans/20260817-estate-completion-plan-v1.00D.md` |
+|---|---|
+| NX-27 | **Needs a ruling first** (the `TGA_UNITS_SYNC_ENABLED` measurement), then Phase 4 — the tenant-vs-platform boundary for national reference data is a data-correctness question, not a UI one |
+| NX-28 | Phase 4 — cross-app write paths nothing declares, with NX-8 |
+| NX-29 | Phase 5, and it is R80.4's `R8` item; the two repos should land it together |
+| NX-30 | Phase 2, as part of the existing theme class |
+
+---
+
+### 9.11 20 August, second pass — three R8 fixes shipped, and two classes worth naming
+
+**Added 2026-08-20.** Three R8 defects were fixed and are live. All three were re-measured
+independently against `R80.4 development @ 8626c50` and hold; the detail lives in
+`R80.4/docs/00-roadmap/20260819-r8-operator-notes-verification-1.00W.md` §2.6 (`ON-16`…`ON-18`).
+Two of them generalise beyond R8, and that is why they are here.
+
+#### NX-31 · The card's bottom border sits below its content — 399 surfaces, one row quantum
+
+> *"see how the card's bottom border is too big for the card. this is an issue platform wide.
+> there are spot fixes but its broad."*
+
+The operator is right that it is broad, and right that spot fixes will not hold, because **the
+cause is a constant in the shared package**, not a class on a page.
+
+`@bsuite/page-builder` sizes every card in whole grid rows. `PageGridLayout.tsx` uses
+`DEFAULT_ROW_HEIGHT` with a 6px vertical margin, so the row unit is **38 px**, and
+`autoHeight.ts` converts measured content to rows with `Math.ceil`. Its own docstring states the
+trade deliberately:
+
+> *"Deliberately uses `Math.ceil`, NOT react-grid-layout's own internal `Math.round` convention —
+> rounding down would silently clip content roughly half the time. Ceiling always over-allocates
+> rather than under-allocates, trading a few pixels of empty card padding for a guarantee that
+> content is never cut off."*
+
+So **up to 37 px of empty space below the content is by design, on every card, in every app**.
+That is the floor. It is a defensible trade — clipped content is worse than a gap — but it was
+chosen inside a package and it shows up as a visual defect on 399 surfaces, which is a different
+conversation from the one the trade was made in.
+
+| App | Files using `DraggableCardPage` |
+|---|---|
+| crm7 | **377** |
+| business-suite-unified | 9 |
+| throughput | 9 |
+| braden | 4 |
+| conduit / R80.4 | 0 (neither uses it) |
+
+**What is not settled, and I am not going to guess it.** The gap in the operator's screenshots of
+`/portal/field-officer` is visibly larger than one row unit — the *Today's Visits* and *My Caseload*
+cards are both in empty states and both show well over 37 px below their last line. Something beyond
+`Math.ceil` is contributing. The candidates are a stored `h` from a layout saved while the card had
+content, side-by-side cards sharing a row height, or `autoHeight` not being on for these cards.
+Distinguishing them means reading the **reported `contentPx` against the allocated `h` in a
+browser** — this session has already produced four findings that were artefacts of reading source
+instead of measuring the running thing, and this would be the fifth.
+
+**Why it must be fixed in the package.** Any per-page fix sets a height that the next auto-height
+recalculation overwrites, which is exactly the shape of "there are spot fixes but it's broad". The
+two real options are a smaller row unit (finer quantisation, less rounding waste) or letting the
+card's own box shrink inside its allocated cell so the border tracks content rather than the grid.
+The second is the one that makes the border correct rather than merely closer.
+
+#### NX-32 · On a rewrite-everything SPA, HTTP status is not evidence of routing
+
+`/calculate` did not exist on R8 and **no probe found it**, because `vercel.json` rewrites every
+path outside `api/`, `assets/`, `favicon` and `sw.js` to `/index.html`. The path answered **HTTP 200
+with the correct `<title>`** and then rendered "Page not found".
+
+That is the *same rewrite rule* behind `NX-6`/`ON-4`, where a fetch that lost its `/api/` prefix
+received the SPA shell and `api/fwc.js` labelled the unparsed 200 as JSON. **One line of
+configuration, two operator-visible bugs, neither detectable by status code.**
+
+The consequence for this estate is concrete: **every route-existence check that reads a status code
+is unsound on all five Vite apps**, because the same rewrite is in each `vercel.json`. A probe must
+assert on rendered content. Any audit in this repository that concluded "the route is present"
+from a 200 needs re-running — including anything I have written.
+
+#### NX-33 · The instrument rule
+
+The R8 pass logged a fourth near-miss: an expand-all loop reported a failure because it *toggled*
+panels and so closed the ones already open; re-run ensuring-open, it gave 14 of 14 and a clean
+result. With this document's own §1 corrections, that is four in one session:
+
+| The probe | What it would have reported |
+|---|---|
+| grep an 8,700-line file for a string literal | three working features "unreachable" (§9.0, §1 of the R8 register) |
+| query only `<select>` elements | commercial construction "missing" — about a button group |
+| read HTTP status to test a route | `/calculate` "present" while it rendered Page not found |
+| toggle panels to expand them | a passing check "failing", by closing what was open |
+
+**The rule: do not report a negative without first checking the instrument would have found a
+positive.** A probe never shown to detect the thing it looks for is not evidence of absence. Three
+of the four above would have been caught by a single positive control, which is the cheapest test
+in any of these sweeps and the one most often skipped.
+
+This belongs in the estate's standards, not in a session summary. It is the same doctrine as
+`LANE-WATCHER — every guard states what it examined`, applied to ad-hoc probes rather than CI gates.
+
+#### Gate status, corrected
+
+**bsuite#2184 is merged and carries `qa-signed-off`.** It was reported here as awaiting that label;
+it is not. What is worth checking is whether the authorisation was *recorded* — the estate's
+standing rule is that an agent-applied promotion label must document who authorised it and when,
+and #2184 promoted three apps on CI alone without the visual gate. The label is the audit artefact;
+if nothing records its provenance, the artefact is the only evidence and it says nothing.
+
+Still open and not softened: **`ON-10`** (R8's collapsible left panel with quote-thread history) is
+not started; crm7's schema drift and throughput's Lighthouse env are **held, not force-merged**,
+which is the correct disposition and is recorded so the hold is not later read as an oversight.

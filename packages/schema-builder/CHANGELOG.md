@@ -6,6 +6,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.4.0] — 2026-08-20 — Quick-start tip is dismissible; canvas gets a height floor
+
+An operator report against conduit's Schema Builder page showed the "Schema
+Builder quick start" tip rendering on top of the page's own header and
+breadcrumb, with no way to dismiss it — not by clicking away, not with
+Escape, and it had no close button.
+
+### Fixed
+
+- **Quick-start tip is now dismissible three ways**: an outside pointer-down,
+  the Escape key, and a visible close button with the accessible name
+  "Dismiss quick start tips". Previously it had zero dismiss affordances —
+  it rendered unconditionally whenever the toolbar was shown.
+- **Canvas wrapper gets a `min-h-[420px]` floor.** The real root cause of the
+  header overlap: the wrapper this tip is `absolute`-positioned inside
+  relies on every ancestor correctly cascading `height: 100%`. conduit's
+  Schema Builder route mounts this package inside a content-flow container
+  with no definite height (a normal scrolling page, not a fixed-height
+  shell), which collapsed the entire `h-full`/`flex-1` chain down to `0px` —
+  and an `absolute bottom-3` child of a 0-height box renders flush against
+  whatever sits directly above it, which is how the tip ended up over the
+  header instead of near the canvas. A fixed `min-height` doesn't
+  participate in that percentage-of-auto collapse, so it holds a sane floor
+  regardless of what a consumer's own layout does — protecting BSU, crm7,
+  R80.3 and conduit alike from the same class of bug, not just conduit.
+- **Command palette (Cmd/Ctrl+K) now has a visible close button** in addition
+  to its existing outside-click and Escape handling, plus `role="dialog"` +
+  `aria-modal="true"` + an accessible name, and focus is returned to
+  whatever was focused before the palette opened.
+
+### Added
+
+- `useDismissOnOutsideOrEscape` hook (`hooks/index.ts`) — small,
+  dependency-free outside-click + Escape dismiss behaviour for non-modal
+  floating surfaces. Kept local to this package (not pulled from
+  `@bsuite/ui`) to preserve the "zero design-system dependency" property
+  documented in `EntityPropertiesPanel`'s file header.
+
 ## [1.3.1] — 2026-08-17 — WCAG AA: entity card ARIA contract
 
 Fixes the three axe rules that blocked crm7's WCAG AA E2E gate on

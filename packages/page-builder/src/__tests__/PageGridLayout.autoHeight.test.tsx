@@ -260,12 +260,19 @@ describe('PageGridLayout auto-height integration (ResizeObserver -> flush -> ren
   });
 
   it('a user-set height LARGER than the measured content is preserved, not stomped', async () => {
-    // Seeded h = 20 rows; content measures far smaller. The old code replaced
-    // `h` with the measured value on every re-measure, so a user who enlarged a
-    // card watched it snap back.
+    // h = 20 rows, MARKED `hUserSet` — the user dragged the SE handle to it.
+    // Content measures far smaller. The old code replaced `h` with the measured
+    // value on every re-measure, so a user who enlarged a card watched it snap
+    // back.
+    //
+    // Until 2026-08-20 this fixture carried no marker, so what it actually
+    // proved was that ANY saved height survives — a seed included. The test's
+    // own comment called the value "seeded" while its name called it
+    // "user-set", which is the conflation the render layer then acted on. See
+    // the sibling test below for the case that separates them.
     const tallLayouts: GridLayouts = {
       lg: [
-        { i: 'card2', x: 0, y: 0, w: 6, h: 20, autoHeight: true },
+        { i: 'card2', x: 0, y: 0, w: 6, h: 20, autoHeight: true, hUserSet: true },
         { i: 'card3', x: 6, y: 0, w: 6, h: 6, autoHeight: true },
       ],
     };
@@ -291,6 +298,47 @@ describe('PageGridLayout auto-height integration (ResizeObserver -> flush -> ren
     const measuredRows = expectedRows(smallContentPx);
     expect(measuredRows).toBeLessThan(20); // the scenario is only meaningful if so
     expect(gridItemFor('card2-content').style.height).toBe(`${rowsToPx(20)}px`);
+  });
+
+  it('an AUTHORED SEED larger than the content shrinks to the content', async () => {
+    // The same shape as the test above with the marker removed — which is the
+    // whole point. An author's seed is a guess made before any content existed;
+    // it carries no user intent, so it has no claim to be preserved.
+    //
+    // This is the case that reached production. Measured signed-in on crm7
+    // /dashboard 2026-08-20: 1,143px of dead space across 7 cards, every
+    // allocation equal to its seed `h` rather than its content.
+    // `recentActivity` seeds 13 rows (488px) and paints 173px — 315px dead.
+    // `Math.ceil` over-allocates by at most one row unit (38px), so rounding
+    // could never account for it; only a floor that never lowers can.
+    const seededTall: GridLayouts = {
+      lg: [
+        { i: 'card2', x: 0, y: 0, w: 6, h: 20, autoHeight: true },
+        { i: 'card3', x: 6, y: 0, w: 6, h: 6, autoHeight: true },
+      ],
+    };
+
+    await act(async () => {
+      render(
+        <PageGridLayout
+          pageKey="autoheight-seed-is-not-a-choice"
+          defaultLayouts={seededTall}
+          widgets={widgets}
+        />,
+      );
+    });
+
+    const observer = measureObserverFor('card2-content', 'card3-content');
+    const smallContentPx = 120;
+    await act(async () => {
+      fireContentHeight(observer, smallContentPx);
+      await nextFrame();
+      await nextFrame();
+    });
+
+    const measuredRows = expectedRows(smallContentPx);
+    expect(measuredRows).toBeLessThan(20); // the scenario is only meaningful if so
+    expect(gridItemFor('card2-content').style.height).toBe(`${rowsToPx(measuredRows)}px`);
   });
 
   it('a viewer re-measuring (tab switches) produces ZERO preference-adapter writes (CRITICAL #2)', async () => {

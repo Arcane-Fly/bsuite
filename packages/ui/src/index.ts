@@ -57,6 +57,7 @@ export {
   CommandShortcut,
 } from './command.js'
 export { Popover, PopoverTrigger, PopoverContent } from './popover.js'
+export { useOnClickOutside } from './hooks/useOnClickOutside.js'
 export {
   EntitySelector,
   type EntitySelectorProps,

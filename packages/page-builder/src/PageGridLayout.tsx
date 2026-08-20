@@ -560,10 +560,20 @@ export function PageGridLayout({
         //                           its content, so the clipping regression
         //                           that motivated the original change stays
         //                           fixed.
-        //   h    = max(saved, measured)
+        //   h    = hUserSet ? max(saved, measured) : measured
         //                        -> content is never clipped, AND a height the
         //                           user deliberately set is preserved instead
         //                           of being reset on every re-measure.
+        //
+        // That `hUserSet` test is the 2026-08-20 correction. Without it the
+        // floor read an AUTHORED SEED as a user choice: every page ships seed
+        // heights, most cards are never resized, so `max(saved, measured)`
+        // pinned each card at its author's guess forever and auto-height could
+        // only grow. Measured signed-in on crm7 /dashboard: 1,143px dead across
+        // 7 cards, every allocation equal to its seed h — `recentActivity`
+        // seeds 13 rows (488px) to paint 173px. Ceiling wastes at most one row
+        // unit (38px), so rounding could never have produced 315px; only a
+        // floor that never lowers can.
         //   isResizable untouched -> inherits the grid default (true), so the
         //                           handles are present.
         //
@@ -621,7 +631,10 @@ export function PageGridLayout({
           if (measuredRows === undefined) return healed;
           return {
             ...healed,
-            h: Math.max(healed.h ?? 0, measuredRows),
+            // A seed the user never touched has no claim to be preserved; a
+            // height they dragged to does. `minH` keeps content unclippable
+            // in both cases, so letting the measurement win here cannot clip.
+            h: healed.hUserSet ? Math.max(healed.h ?? 0, measuredRows) : measuredRows,
             minH: measuredRows,
           };
         });

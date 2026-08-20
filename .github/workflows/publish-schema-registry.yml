@@ -56,6 +56,35 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # BUILD THE WORKSPACE SIBLINGS BEFORE TYPECHECKING AGAINST THEM.
+      #
+      # This package depends on @bsuite/nav-core through `workspace:`, and pnpm links
+      # it straight from packages/ rather than installing a tarball. The link
+      # resolves — the install log says so, `+ @bsuite/nav-core 1.0.1 <- ../nav-core`
+      # — but a linked package is only as useful as its BUILT output, and every
+      # @bsuite package points `types` at `dist/*.d.ts`. A fresh CI checkout has no
+      # dist/, so tsc reported the sibling as missing entirely:
+      #
+      #   src/react/useTenantNavigation.ts(5,53): error TS2307:
+      #   Cannot find module '@bsuite/nav-core'
+      #
+      # That read as a dependency problem and was a build-ordering one. It failed
+      # this workflow four consecutive times (17, 18 and twice on 19 August; last
+      # success 13 August) while npm quietly kept serving the previous version —
+      # a failed publish breaks nothing visible, it just means the fix never ships.
+      #
+      # Exactly the three packages with `workspace:` siblings are the three with
+      # the worst publish records: schema-registry (nav-core), page-builder
+      # (nav-core + theme), ui (theme). Packages with no siblings were unaffected.
+      #
+      # `--filter "<pkg>^..."` builds this package's DEPENDENCIES and not the
+      # package itself, which the Build step below still owns. Run from the repo
+      # root because a filter needs the workspace, and this job's default
+      # working-directory is the package folder.
+      - name: Build workspace dependencies
+        working-directory: .
+        run: pnpm --filter "@bsuite/schema-registry^..." build
+
       - name: Typecheck
         run: pnpm typecheck
 
