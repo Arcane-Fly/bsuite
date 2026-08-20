@@ -614,15 +614,19 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 1 }
 
-      # `--require-authenticated 6` is a FLOOR, not a measurement. The measured
+      # `--require-authenticated N` is a FLOOR, not a measurement. The measured
       # numbers are derived by the script from the inventory itself and printed
       # at the head of every run; this literal only says how far coverage is
       # allowed to fall. A floor that is out of date can only ever under-claim,
       # which is the safe direction — the dangerous literal is a hardcoded
       # "measured" count, and there isn't one. Raise it in the same PR that adds
       # routes; lowering it is a deliberate act that has to be argued for.
+      #
+      # 6 -> 25 (V-9, 2026-08-19): four more apps (braden, throughput, conduit,
+      # business-suite-unified) gained their own auth.setup.ts and joined the
+      # inventory in scripts/audit-routes.sh, on top of crm7's original 6.
       - name: Inventory + authenticated-coverage ratchet
-        run: scripts/audit-routes.sh --inventory --require-authenticated 6
+        run: scripts/audit-routes.sh --inventory --require-authenticated 25
 
   per-page-authenticated:
     name: Per-page checks on SIGNED-IN routes
@@ -657,7 +661,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout (with submodules — crm7 carries the auth helper)
+      - name: Checkout (with submodules — five apps carry an auth helper)
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -667,16 +671,22 @@ jobs:
       # An uninitialised submodule is an EMPTY DIRECTORY and an empty directory
       # passes `-d`. Test for the FILE this job consumes, or the sweep degrades
       # into "no session producer found" and reads like a scoping decision
-      # rather than a broken checkout.
-      - name: Assert crm7's auth helper is present
+      # rather than a broken checkout. Five apps now (V-9, 2026-08-19) — R80.4
+      # is deliberately absent, it has no auth.setup.ts (see scripts/audit-
+      # routes.sh's UNCOVERED note).
+      - name: Assert every covered app's auth helper is present
         run: |
           set -uo pipefail
-          if [ ! -f crm7/tests/e2e/auth.setup.ts ]; then
-            echo "::error::crm7/tests/e2e/auth.setup.ts is missing — the submodule did not check out."
-            echo "Set BSUITE_CROSS_REPO_PAT (repo: read on crm7)."
+          missing=""
+          for a in crm7 braden throughput conduit business-suite-unified; do
+            [ -f "$a/tests/e2e/auth.setup.ts" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::auth.setup.ts missing for:$missing — the submodule(s) did not check out."
+            echo "Set BSUITE_CROSS_REPO_PAT (repo: read on each app)."
             exit 1
           fi
-          echo "crm7 auth helper present"
+          echo "auth helper present in all five covered apps"
 
       # Fail CLOSED on missing credentials, before anything else runs.
       #
@@ -743,19 +753,54 @@ jobs:
         # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
         with: { node-version: '24.14.0' }
 
-      - name: Install crm7 (Playwright lives there)
-        working-directory: crm7
-        run: pnpm install --frozen-lockfile
+      # Every covered app has its OWN pnpm lockfile and its OWN pinned
+      # @playwright/test version (crm7 1.62.0, throughput ^1.60.0, etc.) — a
+      # single shared install cannot stand in for five independent apps, so
+      # each gets its own `--frozen-lockfile` install and its own matching
+      # Chromium binary. Runs in a loop rather than ten separate steps so
+      # adding a sixth covered app is a one-line change to the app list, not a
+      # new pair of steps.
+      - name: Install each covered app (Playwright lives in each)
+        run: |
+          set -uo pipefail
+          for a in crm7 braden throughput conduit business-suite-unified; do
+            echo "::group::pnpm install -- $a"
+            ( cd "$a" && pnpm install --frozen-lockfile )
+            echo "::endgroup::"
+          done
 
-      - name: Install Chromium
+      # SPLIT from a single "--with-deps" loop (V-9, 2026-08-19): that ran a
+      # full `apt-get update` + OS package install FIVE times, once per app,
+      # even though the OS-level shared libraries are identical across all
+      # five on the same ubuntu-latest runner image. Measured: the combined
+      # loop was still running the Chromium step after 30 minutes on its
+      # first CI run. System deps now install ONCE; each app then only
+      # fetches/verifies its own pinned Chromium browser binary, which does
+      # not need apt and is fast even when the versions differ (crm7 pins
+      # playwright 1.62.0, throughput pins ^1.60.0, etc — the binary a
+      # `playwright install` call fetches is keyed to THAT app's own
+      # resolved version, so this is not a shortcut that silently uses the
+      # wrong browser for an app with an older pin).
+      - name: Install Chromium's OS dependencies (once — shared across apps)
         working-directory: crm7
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install-deps chromium
 
-      # The sweep. Mints a session via scripts/theme-session.sh (which runs
-      # crm7's own auth.setup.ts — it does not reimplement sign-in) and then
-      # walks every route in the inventory: public routes anonymously,
-      # authenticated routes signed in. A SKIPPED authenticated route fails the
-      # job; that is the whole reason this exists.
+      - name: Install the Chromium browser binary for each covered app
+        run: |
+          set -uo pipefail
+          for a in crm7 braden throughput conduit business-suite-unified; do
+            echo "::group::playwright install (browser only) -- $a"
+            ( cd "$a" && pnpm exec playwright install chromium )
+            echo "::endgroup::"
+          done
+
+      # The sweep. Mints a SEPARATE session per app via scripts/theme-session.sh
+      # (which runs that app's own auth.setup.ts — it does not reimplement
+      # sign-in) and then walks every route in the inventory: public routes
+      # anonymously, authenticated routes signed in. A SKIPPED authenticated
+      # route fails the job; that is the whole reason this exists. All five
+      # apps read the same four secrets below — one Supabase project, one E2E
+      # identity, verified live against every app's own login path (V-9).
       - name: Walk the route inventory
         env:
           CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}

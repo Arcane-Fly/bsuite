@@ -11,6 +11,7 @@
 import { PlusCircle } from 'lucide-react';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { FieldType } from '../types.js';
+import { useLightDismissDialog } from '../hooks/useLightDismissDialog.js';
 
 export const SNAKE_CASE_RE = /^[a-z_][a-z0-9_]*$/;
 
@@ -144,6 +145,10 @@ export function FieldCreateDialog({
   onConfirm,
 }: FieldCreateDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Backdrop click closes it, exactly as Escape does. `showModal()` gives
+  // a backdrop ELEMENT, not backdrop-click dismissal — see the hook.
+  useLightDismissDialog(dialogRef, open);
   const [state, dispatch] = useReducer(formReducer, INITIAL_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
