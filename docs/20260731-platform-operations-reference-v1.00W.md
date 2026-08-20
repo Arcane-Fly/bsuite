@@ -41,6 +41,7 @@ Always regenerate lockfiles from an isolated directory **outside** the bsuite tr
 # Example for crm7 — same pattern for all projects
 mkdir ~/crm7_lockgen
 cp crm7/package.json ~/crm7_lockgen/
+cp crm7/pnpm-workspace.yaml ~/crm7_lockgen/  # REQUIRED — see warning below
 cp -r crm7/patches ~/crm7_lockgen/        # if patches/ exists (crm7 has one)
 cp crm7/pnpm-lock.yaml ~/crm7_lockgen/    # base lockfile prevents transitive churn
 cd ~/crm7_lockgen && pnpm install --lockfile-only --no-frozen-lockfile
@@ -48,12 +49,26 @@ cp ~/crm7_lockgen/pnpm-lock.yaml crm7/pnpm-lock.yaml
 rm -rf ~/crm7_lockgen
 ```
 
+**`pnpm-workspace.yaml` MUST be copied too — omitting it silently drops every `overrides:` entry.**
+pnpm 11 no longer reads the `pnpm.overrides` field in `package.json`; every app in this estate
+has already moved its overrides into `pnpm-workspace.yaml` (the parent `bsuite/pnpm-workspace.yaml`
+made the same move 2026-08-03). Those entries are security floors — conduit alone carries 13,
+mostly Dependabot-driven pins (nanoid, js-yaml, sharp, brace-expansion, and others). A lockgen
+directory built from `package.json` + `pnpm-lock.yaml` alone still runs and still produces a
+lockfile — it just resolves every overridden package back to whatever range its dependents
+naturally request, with no error and no warning. The tell is `git diff --stat`: a regen missing
+the workspace file produces a diff of **hundreds of lines** (every transitively-affected package
+re-resolving), not the few lines the change under way should cost.
+
 **Verify (mandatory — bsuite#1612):**
 1. The lockfile has `.:` as the only importer. A broken workspace lockfile will have `..` or `../packages/*` as importers:
    ```bash
    grep "^importers:" -A 3 crm7/pnpm-lock.yaml | head -5
    ```
-2. `git diff --stat pnpm-lock.yaml` shows only the intended version bump (a few lines), NOT hundreds of transitive dependency changes. A large diff means the base lockfile was not copied — redo with the existing lockfile as base.
+2. `git diff --stat pnpm-lock.yaml` shows only the intended version bump (a few lines), NOT hundreds of transitive dependency changes. A large diff means the base lockfile — or `pnpm-workspace.yaml` — was not copied. Redo with both the existing lockfile and the existing workspace file as inputs.
+3. If the app's `pnpm-workspace.yaml` declares `overrides:`, confirm the regenerated lockfile still resolves them: `grep -A2 "^overrides:" pnpm-lock.yaml` should list the same packages the source `pnpm-workspace.yaml` does, not `overrides: {}`.
+
+See the `bsuite-pnpm-monorepo` skill for the full mechanics (local installs, stale `node_modules` symlinks, Vercel build-script divergence, submodule pre-commit hooks) — this section covers only what a shared-package version bump needs.
 
 ### Dependency Version Policy
 
@@ -202,8 +217,68 @@ or `schema-builder`.
 5. **Version pinning**: `packageManager: "pnpm@10.33.3"` and `.node-version: 24.x` (the `.x` suffix is required) — do not change without coordinating across all projects. Verified against all 6 apps + parent 2026-07-31.
 6. **Vercel install command**: All projects use `corepack enable && pnpm install` (defined in each project's `vercel.json`).
 
----
+### Publish → Reach Procedure
 
+**A shared package fix is not done when it merges, and it is not done when it publishes to npm
+either — it is done when the running app resolves it.** `check-shared-package-reach.mjs`
+(`.github/workflows/shared-package-reach-lint.yml`) exists because that gap was measured live
+twice in 48 hours: `@bsuite/schema-builder` (bsuite#2190) and `@bsuite/page-builder`
+(bsuite#2189) both merged, both published, and both stayed unreached in every consumer because
+`pnpm install --frozen-lockfile` — the `installCommand` in every app's `vercel.json` — refuses to
+move a lockfile's resolved version on its own, even when the declared `^` range would accept the
+new one. **The publish path has no lockfile-refresh step**, and nothing before this guard checked
+for one.
+
+There is exactly one correct order for landing a shared-package change, and every step in it is
+load-bearing — skip one and the fix sits merged, published, even promoted, while the app the
+operator opens still runs the old code:
+
+1. **Merge the package change to `development`.** This bumps `packages/<name>/package.json` and
+   lands the source fix, but reaches nobody yet — `development` is never what Vercel builds for a
+   consumer app.
+2. **Promote `development` → `main`.** This is what actually fires `publish-<name>.yml` (each
+   workflow triggers on push to `main` with `packages/<name>/**` changed) — the version bump alone,
+   sitting on `development`, publishes nothing.
+3. **Wait for the publish to land on npm and verify it — do not assume the workflow succeeded
+   because it was merged.** `npm view @bsuite/<name> version` must return the version just bumped.
+   This step is why the order matters: **a lockfile cannot pin a version that does not exist on the
+   registry yet.** Attempting step 4 before step 3 either fails outright (pnpm cannot resolve a
+   nonexistent version) or, worse, silently re-resolves to whatever the OLD latest still is,
+   producing a lockfile that looks refreshed and is not.
+4. **Refresh each consumer's lockfile to the new version**, from an isolated directory **outside**
+   the bsuite tree (see "pnpm Lockfile Generation" above) — never `pnpm install` inside the
+   monorepo tree, which embeds `..` workspace paths Vercel cannot resolve. **Copy
+   `pnpm-workspace.yaml` along with `package.json` and the base `pnpm-lock.yaml`.** Every one of
+   the six apps keeps its dependency-security `overrides:` in `pnpm-workspace.yaml`, not
+   `package.json` (pnpm 11 stopped reading `pnpm.overrides` there); conduit alone carries 13 such
+   entries, mostly Dependabot-driven CVE pins. Omitting the workspace file does not error — it
+   just silently drops every override back to its natural (older, sometimes vulnerable)
+   resolution. **A large `git diff --stat pnpm-lock.yaml` is the tell that an input was missing**:
+   a correct regen against the same base lockfile changes only the lines the version bump touches;
+   hundreds of changed lines means the base lockfile or the workspace file was not copied, and the
+   regen must be redone rather than committed.
+5. **Promote the consumers** whose lockfiles just changed — this is what actually deploys the new
+   `node_modules` to Vercel.
+6. **Measure on the running host — not on a merge, not on a green CI, not on "published".** Open
+   the live URL (or hit the API) and confirm the fix is actually present. `check-own-package-
+   freshness.mjs` and `check-shared-package-reach.mjs` both prove the *lockfile* is correct; neither
+   proves Vercel served a build from that lockfile. D-85: closed with evidence means measured on
+   the host the operator opens.
+
+**Three related, non-duplicate guards cover different parts of this sequence — know which one
+told you what:**
+
+| Guard | Compares | Catches |
+|---|---|---|
+| `scripts/check-shared-package-reach.py` | consumer's declared **range** vs npm **latest** | a caret that can never structurally reach latest (a `0.x` minor lock) |
+| `scripts/check-shared-package-reach.mjs` | consumer's **lockfile pin** vs the **repo's own** `packages/<name>/package.json` version | step 1–2 landed but step 4 has not — visible even before step 3 (npm) has happened |
+| `scripts/check-own-package-freshness.mjs` | consumer's **lockfile pin** vs npm **latest** | the same defect, but only visible *after* step 3 — the guard this estate had until `check-shared-package-reach.mjs` closed the earlier-detection gap |
+
+Run `node scripts/check-shared-package-reach.mjs` for the live table of every `@bsuite/*`
+package's reach across all six apps — declared repo version, what each lockfile actually pins, and
+current npm latest.
+
+---
 
 ## Automated Deployment Checks (Ship-All-Apps Cron)
 
