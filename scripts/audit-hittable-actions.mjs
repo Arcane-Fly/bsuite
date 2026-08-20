@@ -193,19 +193,79 @@ const FIND_PRIMARY = () => {
   const r = target.getBoundingClientRect();
   const label = (target.textContent || target.value || '').trim().slice(0, 40);
 
-  // Clipped by an ancestor that hides its overflow? A half-visible button is a
-  // defect even when its centre happens to be hittable.
+  /*
+   * Is the CONTROL ITSELF cut off? A half-visible button is a defect even when
+   * its centre happens to be hittable.
+   *
+   * THE FIRST VERSION REPORTED THE WRONG THING, and it did so on the first real
+   * run. It walked up to the nearest `overflow: hidden` ancestor whose content
+   * exceeded its box and called the button clipped. On BSU's login page that
+   * ancestor was the PAGE SHELL — 860px of content in a 768px box — while the
+   * "Create Account" button sat comfortably at y=531, fully visible and
+   * genuinely clickable. The page was losing 92px; the button was not clipped at
+   * all.
+   *
+   * A gate that misnames what it found is only marginally better than one that
+   * finds nothing: the first person to check it sees a visible, working button
+   * and learns to distrust the gate.
+   *
+   * So: the control is CLIPPED only when its own rectangle extends past the
+   * clipper's visible box. An ancestor that clips content ELSEWHERE on the page
+   * is reported separately, as `pageClips`, because it is a real defect — unless
+   * something between it and the control scrolls, in which case the overflow is
+   * reachable and there is nothing to report.
+   */
   let clipped = null;
+  let pageClips = null;
   for (let e = target.parentElement; e; e = e.parentElement) {
     const cs = getComputedStyle(e);
-    if ((cs.overflowY === 'hidden' || cs.overflow === 'hidden') && e.scrollHeight > e.clientHeight + 2) {
-      clipped = { lostPx: e.scrollHeight - e.clientHeight, boxH: e.clientHeight, contentH: e.scrollHeight };
+    const scrolls = /(auto|scroll)/.test(cs.overflowY) && e.scrollHeight > e.clientHeight + 2;
+    // A scrollable ancestor absorbs the overflow: anything above it is reachable.
+    if (scrolls) break;
+    const hides = (cs.overflowY === 'hidden' || cs.overflow === 'hidden') && e.scrollHeight > e.clientHeight + 2;
+    if (!hides) continue;
+
+    const box = e.getBoundingClientRect();
+    const cut = r.bottom > box.bottom + 1 || r.top < box.top - 1;
+    if (cut) {
+      clipped = { lostPx: Math.round(Math.max(r.bottom - box.bottom, box.top - r.top)), boxH: e.clientHeight, contentH: e.scrollHeight };
       break;
+    }
+    /*
+     * OVERFLOW IS NOT LOSS UNLESS SOMETHING REAL IS IN IT.
+     *
+     * Caught on the first run, on BSU's login page: this reported 92px of the
+     * page as unreachable. Nothing was down there. The shell is
+     * `flex min-h-svh items-center justify-center overflow-hidden` — a CENTRING
+     * container whose `overflow-hidden` exists precisely to clip a decorative
+     * background that extends past the fold. `scrollHeight` exceeded
+     * `clientHeight` because of the decoration, not because content was lost.
+     *
+     * A gate that cries wolf on the sign-in page is worse than no gate: the
+     * first person to look sees a page that is obviously fine and stops
+     * believing the next finding, which might be real.
+     *
+     * So the region is only LOST if it contains something a person would need —
+     * an interactive control, or a leaf element carrying text.
+     */
+    if (!pageClips) {
+      const box = e.getBoundingClientRect();
+      const realContentBelow = [...e.querySelectorAll('a,button,input,select,textarea,[role=button],p,h1,h2,h3,li,td,label,span')]
+        .some((n) => {
+          const nr = n.getBoundingClientRect();
+          if (nr.top < box.bottom - 2 || nr.height < 4) return false;
+          const interactive = /^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(n.tagName) || n.getAttribute('role') === 'button';
+          return interactive || ((n.textContent || '').trim().length > 0 && n.children.length === 0);
+        });
+      if (realContentBelow) {
+        pageClips = { lostPx: e.scrollHeight - e.clientHeight, boxH: e.clientHeight, contentH: e.scrollHeight,
+                      where: `${e.tagName}${e.className ? '.' + String(e.className).slice(0, 30) : ''}` };
+      }
     }
   }
 
   const inViewport = r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth;
-  if (!inViewport) return { found: true, label, inViewport: false, clipped };
+  if (!inViewport) return { found: true, label, inViewport: false, clipped, pageClips };
 
   const cx = Math.round(r.left + r.width / 2);
   const cy = Math.round(r.top + r.height / 2);
@@ -217,6 +277,7 @@ const FIND_PRIMARY = () => {
     inViewport: true,
     hittable,
     clipped,
+    pageClips,
     coveredBy: hittable ? null : `${hit?.tagName}${hit?.className ? '.' + String(hit.className).slice(0, 30) : ''}`,
     coveredByText: hittable ? null : (hit?.textContent || '').trim().slice(0, 40),
   };
@@ -254,6 +315,15 @@ if (process.argv.includes('--self-test')) {
       <button type=button style="height:36px">Create Client</button></form></main></main>`,
     noAction: `<!doctype html><meta charset=utf-8><main><main><p>A list page.</p>
       <button type=button>Toggle theme</button></main></main>`,
+    // A CENTRING shell whose overflow-hidden clips DECORATION, not content —
+    // BSU's login page. The button sits comfortably inside; the only thing past
+    // the fold is a background blob. Reporting this is a false positive, and a
+    // gate that cries wolf on the sign-in page stops being believed.
+    decorativeOverflow: `<!doctype html><meta charset=utf-8><style>body{margin:0}
+      .shell{position:relative;display:flex;min-height:100vh;align-items:center;justify-content:center;overflow:hidden}
+      .blob{position:absolute;top:100vh;height:200px;width:400px;background:#333}</style>
+      <div class=shell><span class=blob></span><main><main><form><input placeholder=name>
+      <button type=button style="height:36px">Create Account</button></form></main></main></div>`,
   };
   for (const [name, html] of Object.entries(FIXTURES)) writeFileSync(join(dir, `${name}.html`), html);
 
@@ -267,6 +337,7 @@ if (process.argv.includes('--self-test')) {
     if (!r.found) return 'skip';
     if (r.clipped) return 'clipped';
     if (r.inViewport === false) return 'skip';
+    if (r.pageClips) return 'pageClips';
     return r.hittable ? 'ok' : 'covered';
   };
 
@@ -275,6 +346,7 @@ if (process.argv.includes('--self-test')) {
     ['an overflow-hidden ancestor shorter than the button is CAUGHT', 'clipped', 'clipped'],
     ['a clean button passes', 'clean', 'ok'],
     ['a page with no commit action is SKIPPED, not measured', 'noAction', 'skip'],
+    ['DECORATIVE overflow behind a centring shell is NOT reported as lost content', 'decorativeOverflow', 'ok'],
   ];
   let bad = 0;
   for (const [label, fixture, expected] of cases) {
@@ -347,8 +419,24 @@ for (const url of urls) {
     failures++;
     checked++;
     console.log(
-      `  ✗ ${url} — "${res.label}" is CLIPPED by an overflow-hidden ancestor: ` +
-        `${res.clipped.boxH}px box around ${res.clipped.contentH}px of content, ${res.clipped.lostPx}px lost`,
+      `  ✗ ${url} — "${res.label}" is CLIPPED: its own box extends ${res.clipped.lostPx}px past an ` +
+        `overflow-hidden ancestor (${res.clipped.boxH}px box around ${res.clipped.contentH}px of content)`,
+    );
+    continue;
+  }
+  /*
+   * The control is fine, but something above it hides content with no scroll
+   * anywhere in between — that content is unreachable by any means. Reported and
+   * FAILED, because unreachable page content is a defect even when the primary
+   * action happens to sit above the cut.
+   */
+  if (res.pageClips) {
+    failures++;
+    checked++;
+    console.log(
+      `  ✗ ${url} — "${res.label}" is reachable, but ${res.pageClips.lostPx}px of the page below it is NOT: ` +
+        `${res.pageClips.where} holds ${res.pageClips.contentH}px in a ${res.pageClips.boxH}px overflow-hidden box ` +
+        `and nothing between it and the control scrolls`,
     );
     continue;
   }
