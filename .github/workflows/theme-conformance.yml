@@ -56,6 +56,7 @@ on:
       - 'scripts/theme-session.sh'
       - 'scripts/audit-applied-tokens.mjs'
       - 'scripts/audit-ui-pages.mjs'
+      - 'scripts/audit-hittable-actions.mjs'
       - 'scripts/audit-legibility.mjs'
       # The audits' shared helpers. Without this line a change to
       # scripts/lib/settled-or-skip.mjs — the guard that decides whether a route
@@ -801,6 +802,14 @@ jobs:
       # route fails the job; that is the whole reason this exists. All five
       # apps read the same four secrets below — one Supabase project, one E2E
       # identity, verified live against every app's own login path (V-9).
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # Prove the hittability detector can still fail BEFORE trusting the sweep
+      # below — it is the only auditor here that asks whether a person can
+      # actually press the button, and it is new, so a silent pass from it would
+      # be indistinguishable from it never having run.
+      - name: Self-test the hittability auditor
+        run: node scripts/audit-hittable-actions.mjs --self-test
+
       - name: Walk the route inventory
         env:
           CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}
