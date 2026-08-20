@@ -367,5 +367,56 @@ describe('usePageGridLayout persistence (bsuite#1588)', () => {
       expect(hOf(result.current.currentLayouts.lg, 'card')).toBe(6);
       expect(hOf(savedLayoutsFor('resize-height-floor')?.lg ?? [], 'card')).toBe(6);
     });
+
+    // The render layer only preserves a height marked `hUserSet`. If the
+    // marker were never written, or were written on every commit, the fix
+    // would either protect nothing or protect everything — i.e. the bug it
+    // replaced. Both halves are asserted.
+    const hUserSetOf = (layout: GridLayoutItem[], id: string) =>
+      layout.find((item) => item.i === id)?.hUserSet;
+
+    it('a deliberate resize STAMPS hUserSet, so the height is still recognised as a choice after a reload', async () => {
+      const { result, rerender } = renderGrid('resize-marks-choice', singleAutoHeightCard);
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      const echoed: GridLayouts = {
+        ...result.current.currentLayouts,
+        lg: [{ i: 'card', x: 0, y: 0, w: 6, h: 20, autoHeight: true, minH: 6 }],
+      };
+
+      await act(async () => {
+        result.current.onLayoutChange([], echoed);
+        await nextFrame();
+      });
+      rerender();
+
+      // Must reach STORAGE, not just the in-memory layout: the whole purpose
+      // of the marker is to survive the reload that erases the gesture.
+      expect(hUserSetOf(savedLayoutsFor('resize-marks-choice')?.lg ?? [], 'card')).toBe(true);
+    });
+
+    it('a commit that does NOT resize this item leaves it unmarked, so its seed stays a seed', async () => {
+      const { result, rerender } = renderGrid('echo-marks-nothing', singleAutoHeightCard);
+      act(() => {
+        result.current.setIsEditing(true);
+      });
+
+      // Same height as the base — a sibling's re-measurement, a column change,
+      // any commit that swept this item along without touching it.
+      const echoed: GridLayouts = {
+        ...result.current.currentLayouts,
+        lg: [{ i: 'card', x: 0, y: 0, w: 6, h: 6, autoHeight: true, minH: 6 }],
+      };
+
+      await act(async () => {
+        result.current.onLayoutChange([], echoed);
+        await nextFrame();
+      });
+      rerender();
+
+      expect(hUserSetOf(savedLayoutsFor('echo-marks-nothing')?.lg ?? [], 'card')).toBeUndefined();
+    });
   });
 });

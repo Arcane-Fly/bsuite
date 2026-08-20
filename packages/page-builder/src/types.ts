@@ -16,6 +16,28 @@ export interface GridLayoutItem extends LayoutItem {
    * operator-mandated capability. See the `activeLayouts` memo.
    */
   autoHeight?: boolean;
+  /**
+   * True once the user has resized this item with the SE handle.
+   *
+   * The floor above says "never discard a height the user chose". Until this
+   * flag existed the code could not tell a chosen height from an AUTHORED
+   * SEED, so it defended both — and a seed is the common case, because every
+   * page ships one and most cards are never resized. `max(saved, measured)`
+   * then pinned each card at whatever its author guessed, permanently, and
+   * auto-height could only ever grow.
+   *
+   * Measured in a signed-in browser on crm7 `/dashboard`, 2026-08-20:
+   * 1,143px of dead space across 7 cards, every allocation equal to its seed
+   * `h` rather than to its content. `recentActivity` seeds `h: 13` (488px)
+   * and paints 173px — 315px dead, 8.3 row units. `Math.ceil` can waste at
+   * most ONE row unit, so rounding was never a candidate cause.
+   *
+   * Set by `stripAutoHeightRows` at the moment it identifies a deliberate
+   * resize — the one place that already distinguishes a real gesture from a
+   * measurement echo. Absent (legacy layouts, seeds) means the measured
+   * height wins outright.
+   */
+  hUserSet?: boolean;
 }
 
 export interface GridLayouts {
