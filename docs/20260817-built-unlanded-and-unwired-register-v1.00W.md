@@ -1,7 +1,7 @@
 # Built but unlanded, built but unwired — a machine sweep
 
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
-**Date:** 2026-08-17, §9 added 2026-08-19 · **Version:** 1.01W · **Status:** W — Working
+**Date:** 2026-08-17 · §9 added 2026-08-19 · §9.10 added 2026-08-20 · **Version:** 1.02W · **Status:** W — Working
 **Scope:** every git work tree on this laptop, every source module and edge function in the six apps,
 and (from 2026-08-19, §9) the operator's running notes file `bsuite notes.docx`
 **Feeds:** `docs/plans/20260817-estate-completion-plan-v1.00D.md` (bsuite#2081) and
@@ -209,6 +209,11 @@ vault secret names those jobs dereference (`jodie_error_scan_url`, `tga_sync_url
 |---|---|---|
 | crm7 | `refresh-award-rates` | 96 |
 | crm7 | `tga-organisation-sync` | 335 |
+
+> **Corrected 2026-08-20 by §9.10:** `tga-units-sync` was implied in this section to lack a
+> caller. It has one — a *Sync from TGA* button at `crm7/src/pages/vet/units/index.tsx:120`. It is
+> **feature-flagged off**, which is a queue item with the operator's name on it, not an
+> engineering defect. The two are worth telling apart.
 | crm7 | `encrypt-email-tokens` | 185 |
 | business-suite-unified | `process-webhook-queue` | 286 |
 | business-suite-unified | `email-token-refresh` | 189 |
@@ -340,7 +345,7 @@ and §5 as a recurring category, which is the only outcome worth the work.
 
 ---
 
-## 9. `bsuite notes.docx` cross-check — 19 August
+## 9. `bsuite notes.docx` cross-check — 19 and 20 August
 
 **Added 2026-08-19.** The operator's running notes file (29.6 MB, saved 16:04 on 19 August;
 68 screenshots; 381 paragraphs of text) was read in full and every checkable claim measured
@@ -535,3 +540,115 @@ result is a page inside crm7 or a separately deployed module that appears inside
   thing"). Those are recorded as unassessed rather than guessed at.
 - **Anything already covered by the 14 August register.** `D-59`…`D-92` and its §7 "not filed
   anywhere" list are not re-verified here; §9 is a delta, and the two should be read together.
+
+### 9.10 The 20 August entries
+
+**Added 2026-08-20.** The notes file was appended again — 29.6 MB → 31.2 MB, saved 08:01, **72
+screenshots** (was 68) and **400 paragraphs** (was 381). The change is purely additive: the previous
+last line is still the 381st, so nothing above it was edited and §9.1–§9.9 stand as written.
+
+Four items, and none of them is what it first looks like.
+
+#### NX-27 · Units of competency — three causes stacked, and the fix is blocked on you
+
+> *"No units of competency available for the qualifications. They need to be linked together, along
+> with training providers who offer them (only those used by the gto once placed there."*
+
+This is a **re-raise**. The same operator asked *"Why can't I import units? Should be pulled from
+the TGA API like the qualification"* on **30 June**, against the same qualification id
+(`6e25b04b-701a-401a-8dfa-5a4d79d89d70`). Seven weeks later it is still empty. Measured live:
+
+| | Rows |
+|---|---|
+| `qualifications` | 6 |
+| `units_of_competency` | 160, **last updated 2026-05-13** |
+| `qualification_units` | 119 links, across **2 of 6** qualifications |
+| `training_providers` | 8,119 |
+
+The linking machinery works. Three separate things stop it reaching this screen:
+
+1. **`qualifications` is tenant-scoped, so a national qualification exists once per tenant.**
+   `CPC30220 Certificate III in Carpentry` exists **three times** — Braden Group (60 units),
+   bsuite Platform (**0**), FutureBuild Academy (**0**). `BSB30120` exists twice — Braden Group
+   (59), FutureBuild Academy (**0**). The row the operator opened is bsuite Platform's copy.
+   **CPC30220's unit list is set by the national register and is identical for every tenant**, so
+   modelling it per tenant means every new tenant starts empty and someone must import it again.
+   This is the architectural finding, and it is the one worth fixing: the *catalogue* (qualifications,
+   units, unit links, RTO scope) is national reference data and belongs at platform level, read-only;
+   only the *selection* — which qualifications this GTO delivers, which RTOs it uses — is tenant data.
+   That is exactly the distinction the note draws with *"only those used by the gto once placed there."*
+2. **The data is three months stale.** `units_of_competency.updated_at` maxes at 2026-05-13.
+3. **The sync is deliberately switched off, waiting on an operator measurement.**
+   `crm7/src/pages/vet/units/index.tsx:120` calls `supabase.functions.invoke('tga-units-sync')` — the
+   button exists. Its own header says the function is **feature-flagged off** (`TGA_UNITS_SYNC_ENABLED`,
+   default false) *"pending an operator-confirmed real Deno CPU-time measurement"*, and that a sync
+   while off *"returns a 'partial' run touching zero rows."* So the operator can press Sync from TGA,
+   be told honestly that nothing happened, and have no way to know the switch is waiting on them.
+
+**This corrects §4 of this document.** `tga-units-sync` was listed there among functions with no
+in-app caller. It has one. What it does not have is a flag turned on. The distinction matters:
+*unreachable* is an engineering defect; *flag-gated pending an operator decision* is a queue item
+with your name on it.
+
+`rto_qualification_scope` **does not exist** (`to_regclass` → NULL), so the second half of the note —
+which RTOs offer a qualification — has nowhere to live. That was also raised on **31 July**
+(*"Qualification Scope is missing. I.e. qualifications delivered by this RTO"*).
+
+#### NX-28 · Vacancies — one half is already done, the other has no path at all
+
+> *"Can this be posted to conduit as a job? Can this be linked to a host?"*
+
+**Linked to a host: already yes.** `crm7/src/pages/hosts/vacancies/new.tsx:224` writes
+`host_employer_id`, and `[id].tsx:200` displays it. Nothing to build.
+
+**Posted to conduit: no path exists.** conduit owns `r7_jobs` (10 rows). crm7 references conduit
+only as a nav entry (`components/appList.ts`) and as three names in a db-proxy allowlist test.
+There is no write path, no edge function, no queue. This is the same seam as the 14 August note on
+the kanban — *"Should be able to be pulled from conduit"* — pointing the other way, which suggests
+the real requirement is **one vacancy record with two surfaces**, not two records kept in step.
+
+The operator's own qualifier is the design constraint and should not be lost: *"Some might be catch
+all for common roles and some might be host specific."*
+
+#### NX-29 · The placement rate block is correct, and still fails the user
+
+> *"Cant easily pull in a rate from R8 or manually put in charges and wages/allowances, unclear how
+> to even do this… This is confusing and misleading. Pay rate usually would be read as ordinary
+> wage. Charge rate is what is billed on billable hours."*
+
+The read-only block at `crm7/src/pages/placements/[id]/edit.tsx:734` is **deliberate**, and the code
+says why, immediately above it: *"Duplicating any of these as a second, form-buffered write path
+would create two sources of truth for the same value."* That reasoning is sound and should not be
+reversed.
+
+But the screen tells the user where the charge rate comes from — *"sourced only from an approved
+charge-rate quote once one is linked"* — **without offering any way to link one**.
+`PlacementRatesCard.tsx` reads `placements`, `charge_rate_quotes` and `charge_rate_snapshots` and
+displays them; nothing on the placement creates or attaches a quote. A correct explanation of an
+unreachable path still leaves the user stuck, and *"unclear how to even do this"* is precisely that.
+
+The fix is an **attach-an-approved-quote action** on the placement, not an editable field — which is
+already `R8` in R80.4's master roadmap (*"Attach-by-quote-id in crm7"*) and the other half of the
+`import-r8` complaint from 7 August. It preserves the single source of truth and closes the loop.
+
+Naming, separately: the note is right that *pay rate* reads as the ordinary wage. The block already
+says *"Not the pay rate above"*, which is a disclaimer where a label would do.
+
+#### NX-30 · Theme, a fresh instance
+
+> *"Heading text no gradient and almost cut off by border."*
+
+On `/hosts/vacancies/new`. This is D-78 and `TH-*`, already open estate-wide; recorded here only
+because it is now the fourth dated section to raise the same class, which is itself the argument for
+fixing it as a class rather than per page.
+
+#### Where the 20 August items land
+
+| ID | Phase in `plans/20260817-estate-completion-plan-v1.00D.md` |
+|---|---|
+| NX-27 | **Needs a ruling first** (the `TGA_UNITS_SYNC_ENABLED` measurement), then Phase 4 — the tenant-vs-platform boundary for national reference data is a data-correctness question, not a UI one |
+| NX-28 | Phase 4 — cross-app write paths nothing declares, with NX-8 |
+| NX-29 | Phase 5, and it is R80.4's `R8` item; the two repos should land it together |
+| NX-30 | Phase 2, as part of the existing theme class |
+
+---
