@@ -1,0 +1,86 @@
+name: Dark variant strategy lint
+
+# Tailwind v4's DEFAULT dark variant is `@media (prefers-color-scheme: dark)`.
+# Every BSuite app instead toggles a `.dark` CLASS on <html> from its own theme
+# provider, because the estate has an in-app theme switcher and a stored
+# preference. Those two facts only agree if the app declares a class-based dark
+# variant — `darkMode: 'class'` in a Tailwind config it references with
+# `@config`, or the CSS-first `@custom-variant dark`.
+#
+# When it does not, NOTHING ERRORS. The utilities are generated, just behind the
+# wrong selector — so they apply when the OPERATING SYSTEM is dark and never
+# when the user picks dark in the app. Tokens defined as literal
+# `.dark { --x }` custom properties keep working, which is why the page looks
+# NEARLY right and the failure reads as "the borders look hard" rather than as
+# a broken build.
+#
+# Measured 2026-08-20 on live production, served stylesheets:
+#
+#   conduit   @media prefers-color-scheme:dark = 1     .dark-scoped rules = 35
+#   crm7      @media prefers-color-scheme:dark = 0     .dark-scoped rules = 99
+#
+# conduit shipped with no `tailwind.config.*` and no `@config` at all. It
+# consumes @bsuite/page-builder (the single `dark:shadow-[var(--glow-card,none)]`
+# utility that paints the dark-mode card glow) and @bsuite/schema-builder (28
+# more). All 29 were dead, plus 19 in conduit's own source. The operator
+# reported it as "on conduit the borders look hard without shadow or glow".
+#
+# R80.4 had the same missing config while consuming neither package, so it was
+# unaffected — a fact about its dependency graph, not a property of the app.
+# That is precisely why this is a gate and not a note.
+#
+# NO `paths:` FILTER — same two reasons as the sibling Tailwind-source gate:
+#
+#   1. Under-triggering. The change that breaks this arrives inside a SUBMODULE,
+#      and the parent tree holds only a gitlink for each submodule, so a path
+#      filter can never match it.
+#   2. Required-check deadlock. A path-filtered required check never reports on
+#      a PR that misses the filter, and the PR waits forever. This gate is a
+#      file scan that finishes in seconds.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dark-variant-strategy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dark-variant-strategy:
+    name: Class-based dark variant
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the apps being checked ARE the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
+          # `submodules: recursive` fails at checkout. Same fallback chain every
+          # other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # Run the checker's own self-test FIRST so a pass below is known to come
+      # from a checker that can still fail — including its anti-prose case, which
+      # asserts that a COMMENT mentioning the dark class is not a toggle, and its
+      # `darkMode: 'media'` case, which must not be mistaken for 'class'.
+      - name: Self-test the checker
+        run: node scripts/check-dark-variant-strategy.mjs --self-test
+
+      # --require-apps=5 is the positive control against a silently unscanned
+      # tree. Five of the six apps demonstrably toggle a .dark class; if the scan
+      # finds fewer, the submodule checkout did not populate and a "clean" result
+      # would be meaningless rather than clean.
+      - name: Check every app that toggles .dark declares a matching variant
+        run: node scripts/check-dark-variant-strategy.mjs --require-apps=5
