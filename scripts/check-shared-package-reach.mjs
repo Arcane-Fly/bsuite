@@ -251,7 +251,30 @@ export function classify(repoVersion, lockVersion, npmLatest) {
   return {
     unreachable,
     repoAheadOfNpm,
-    status: unreachable ? 'UNREACHABLE-FIX' : lockCmp > 0 ? 'LOCK-AHEAD-OF-REPO' : 'OK',
+    /*
+     * TWO REASONS A LOCKFILE CAN SIT BEHIND THE REPO. They are not the same
+     * problem, and collapsing them made this guard block every version bump —
+     * the one change that MUST be able to merge, because merging is what
+     * triggers the publish.
+     *
+     *   AWAITING-PUBLISH  npm does not have this version. No lockfile CAN point
+     *                     at it. Expected on a bump; a real defect on main.
+     *   UNREACHABLE-FIX   npm HAS it and the lockfile still trails. Actionable
+     *                     right now: regenerate the lockfile.
+     *
+     * The tell is `npm-latest == lock-pin`: when those agree and both trail the
+     * repo, the publish never ran. Reading that as stale lockfiles is what cost
+     * four days in August (bsuite#2189). The SEVERITY IS UNCHANGED ON MAIN —
+     * see the branch policy at the call site — only the label and the branch it
+     * blocks have moved.
+     */
+    status: unreachable
+      ? repoAheadOfNpm
+        ? 'AWAITING-PUBLISH'
+        : 'UNREACHABLE-FIX'
+      : lockCmp > 0
+        ? 'LOCK-AHEAD-OF-REPO'
+        : 'OK',
   }
 }
 
@@ -366,13 +389,24 @@ if (process.argv.includes('--self-test')) {
     { specifier: null, version: null, kind: null },
   )
   // Proves the two halves together: the real pin (1.3.1) read from the decoy
-  // fixture must still classify UNREACHABLE-FIX against repo 1.4.0 — the
-  // anti-prose fix does not relax the failure.
+  // fixture must still be UNREACHABLE against repo 1.4.0 — the anti-prose fix
+  // does not relax the failure.
+  //
+  // Asserts `unreachable`, not the status string. With npm at 1.3.1 the precise
+  // verdict is AWAITING-PUBLISH (the publish has not run); with npm at 1.4.0 it
+  // is UNREACHABLE-FIX (the lockfile is genuinely stale). What this fixture is
+  // FOR is that the decoy `overrides:` entry does not mask the real pin — so it
+  // pins the reachability, and both npm states are covered explicitly.
   {
     const pin = readLockPin(DECOY_OVERRIDES_LOCK, '@bsuite/schema-builder')
     check(
-      'REGRESSION PIN: the decoy fixture still classifies UNREACHABLE-FIX against repo 1.4.0',
-      classify('1.4.0', pin.version, '1.3.1').status,
+      'REGRESSION PIN: the decoy fixture is still UNREACHABLE against repo 1.4.0 (npm behind)',
+      classify('1.4.0', pin.version, '1.3.1').unreachable,
+      true,
+    )
+    check(
+      'REGRESSION PIN: and once npm HAS 1.4.0 it is the actionable UNREACHABLE-FIX',
+      classify('1.4.0', pin.version, '1.4.0').status,
       'UNREACHABLE-FIX',
     )
   }
@@ -392,15 +426,45 @@ if (process.argv.includes('--self-test')) {
   check('leading/trailing space on a bare version is still exact', isExactSpecifier('  1.0.0  '), true)
 
   // --- classify: the three verdicts ----------------------------------------
+  /*
+   * THE TWO REGRESSION FIXTURES, RECLASSIFIED — READ THIS BEFORE CHANGING THEM.
+   *
+   * Both encode the same real incident: a package version sat in the repo while
+   * npm still had the old one, and it was read as a stale-lockfile problem for
+   * four days. `npm-latest == lock-pin` is the tell, and these fixtures exist so
+   * that state can never be called OK.
+   *
+   * They now expect AWAITING-PUBLISH rather than UNREACHABLE-FIX. That is a
+   * RENAME OF THE DIAGNOSIS, NOT A RELAXATION: on main the state still fails,
+   * and now with a message that names the actual cause instead of sending
+   * someone to regenerate a lockfile that has nowhere to go. The two cases
+   * immediately below pin both halves of that policy, so a future edit cannot
+   * quietly turn the main-branch failure off.
+   *
+   * What DID change: on a branch it no longer blocks. It had to — a version bump
+   * necessarily declares a version npm does not have yet, so the old behaviour
+   * made every bump unmergeable, including the one fixing a P1 the operator had
+   * just reported.
+   */
   check(
     'THE SCHEMA-BUILDER REGRESSION FIXTURE — lock 1.3.1 behind repo 1.4.0, npm still 1.3.1',
     classify('1.4.0', '1.3.1', '1.3.1'),
-    { unreachable: true, repoAheadOfNpm: true, status: 'UNREACHABLE-FIX' },
+    { unreachable: true, repoAheadOfNpm: true, status: 'AWAITING-PUBLISH' },
   )
   check(
     'THE PAGE-BUILDER REGRESSION FIXTURE — lock 1.0.1 behind repo 1.0.2, npm still 1.0.1 (bsuite#2189)',
     classify('1.0.2', '1.0.1', '1.0.1'),
-    { unreachable: true, repoAheadOfNpm: true, status: 'UNREACHABLE-FIX' },
+    { unreachable: true, repoAheadOfNpm: true, status: 'AWAITING-PUBLISH' },
+  )
+  check(
+    'npm HAS the version and the lockfile still trails — that is the actionable one, and it stays UNREACHABLE-FIX',
+    classify('1.4.0', '1.3.1', '1.4.0'),
+    { unreachable: true, repoAheadOfNpm: false, status: 'UNREACHABLE-FIX' },
+  )
+  check(
+    'AWAITING-PUBLISH and UNREACHABLE-FIX are never the same verdict for the same inputs',
+    classify('1.4.0', '1.3.1', '1.3.1').status === classify('1.4.0', '1.3.1', '1.4.0').status,
+    false,
   )
   check(
     'a lockfile pin equal to repo, npm already caught up: clean OK, no report',
@@ -520,6 +584,15 @@ for (const name of repoPackages.keys()) {
   npmLatest.set(name, await fetchNpmLatest(name))
 }
 
+/*
+ * The reach guard is STRICTER on production. On a branch a version bump is in
+ * flight and npm cannot have it yet; on main the publish should already have
+ * fired, and if npm still lacks the version that is the August failure
+ * repeating.
+ */
+const ON_PRODUCTION_BRANCH =
+  /(^|\/)main$/.test(process.env.GITHUB_REF ?? '') || (process.env.GITHUB_BASE_REF ?? '') === 'main'
+
 let failures = 0
 console.log(`check-shared-package-reach: ${repoPackages.size} published @bsuite/* package(s), ${APPS.length} app(s)`)
 console.log('')
@@ -541,7 +614,23 @@ for (const r of rows) {
   console.log(
     `${r.app.padEnd(25)}${r.name.padEnd(24)}${r.repoVersion.padEnd(10)}${r.lockVersion.padEnd(12)}${String(npmCol).padEnd(12)}${verdict.status}`,
   )
-  if (verdict.unreachable) {
+  if (verdict.status === 'AWAITING-PUBLISH') {
+    if (ON_PRODUCTION_BRANCH) {
+      failures++
+      console.error(
+        `  FAIL: ${r.name}@${r.repoVersion} is on main but npm's latest is ${npmCol}. THE PUBLISH DID NOT RUN. ` +
+          `A green publish job is not evidence — it SKIPS when the version already exists. Dispatch ` +
+          `publish-${r.name.replace('@bsuite/', '')}.yml on main, then confirm with \`npm view ${r.name} version\`. ` +
+          `This is the shape that went unnoticed for four days (bsuite#2189).`,
+      )
+    } else {
+      console.log(
+        `  awaiting publish: ${r.app} pins ${r.name}@${r.lockVersion}, repo declares ${r.repoVersion}, npm has ` +
+          `${npmCol}. There is nothing to regenerate a lockfile TO yet — the publish fires on merge to main. ` +
+          `Not a failure on a branch. It becomes one there.`,
+      )
+    }
+  } else if (verdict.unreachable) {
     failures++
     const fixAdvice = isExactSpecifier(r.specifier)
       ? `${r.app}'s package.json EXACT-pins ${r.specifier} — a lockfile regen alone cannot reach ` +
