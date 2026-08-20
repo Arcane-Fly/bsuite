@@ -224,6 +224,17 @@ export function compareVersions(a, b) {
 }
 
 /**
+ * Is this specifier an EXACT pin (no ^ ~ >= workspace: catalog: etc)? An
+ * exact pin cannot be fixed by regenerating the lockfile alone — the
+ * package.json specifier itself has to move first, the same distinction
+ * check-own-package-freshness.mjs's EXACT-PINNED-BEHIND status draws. Used
+ * only to sharpen the FAIL message below; it does not change the verdict.
+ */
+export function isExactSpecifier(spec) {
+  return typeof spec === 'string' && /^\d+\.\d+\.\d+/.test(spec.trim())
+}
+
+/**
  * The decision at the heart of the guard, pure so --self-test exercises the
  * real logic rather than a paraphrase of it.
  *
@@ -372,6 +383,13 @@ if (process.argv.includes('--self-test')) {
   check('newer > older (minor)', compareVersions('1.4.0', '1.3.1'), 1)
   check('handles differing segment counts', compareVersions('1.3', '1.3.1'), -1)
   check('double-digit segments sort numerically, not lexically', compareVersions('1.9.0', '1.10.0'), -1)
+
+  // --- isExactSpecifier -----------------------------------------------------
+  check('a caret range is not exact', isExactSpecifier('^1.3.1'), false)
+  check('a tilde range is not exact', isExactSpecifier('~1.3.1'), false)
+  check('workspace: is not exact', isExactSpecifier('workspace:*'), false)
+  check('a bare version IS exact — the dry-lint 0.5.0 shape', isExactSpecifier('1.3.1'), true)
+  check('leading/trailing space on a bare version is still exact', isExactSpecifier('  1.0.0  '), true)
 
   // --- classify: the three verdicts ----------------------------------------
   check(
@@ -525,10 +543,15 @@ for (const r of rows) {
   )
   if (verdict.unreachable) {
     failures++
+    const fixAdvice = isExactSpecifier(r.specifier)
+      ? `${r.app}'s package.json EXACT-pins ${r.specifier} — a lockfile regen alone cannot reach ` +
+        `${r.repoVersion}; edit the specifier first (the @bsuite/dry-lint 0.5.0 shape).`
+      : `This fix cannot reach ${r.app} until its lockfile is regenerated — the declared specifier ` +
+        `${r.specifier} already admits ${r.repoVersion}.`
     console.error(
       `  FAIL: ${r.app} pins ${r.name}@${r.lockVersion} (specifier ${r.specifier}) but the repo declares ` +
-        `${r.repoVersion}. This fix cannot reach ${r.app} until its lockfile is regenerated — see the ` +
-        `publish -> reach procedure in docs/20260731-platform-operations-reference-v1.00W.md.`,
+        `${r.repoVersion}. ${fixAdvice} See the publish -> reach procedure in ` +
+        `docs/20260731-platform-operations-reference-v1.00W.md.`,
     )
   } else if (verdict.repoAheadOfNpm) {
     console.log(
