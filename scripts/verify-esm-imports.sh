@@ -86,4 +86,42 @@ if [[ $fail -gt 0 ]]; then
   echo "only gates how EXTERNAL consumers address a package."
   exit 1
 fi
-echo "PASS: all $checked built packages import cleanly under Node ESM."
+# A ZERO DENOMINATOR IS NOT A PASS.
+#
+# `checked` only increments for a package that has dist/index.js. This script's
+# CI precondition is `pnpm -r --filter "./packages/**" build` (theme-conformance
+# .yml, "Install and build packages"). If that step is ever skipped, mistyped,
+# or partially fails, EVERY package lands in `skipped` and this used to print
+#
+#     PASS: all 0 built packages import cleanly under Node ESM.
+#
+# — exit 0, green tick, nothing imported. LANE-WATCHER filed exactly that
+# (guard-registry knownSilentReason for parent-verify-esm-imports): the guard
+# had no floor requiring a non-zero built-package count, unlike
+# check-secret-naming.sh's UNSCANNED refusal.
+#
+# The number of packages that EXIST is the honest denominator to check against,
+# because "nothing was built" and "there are no packages" are different faults
+# and neither is a pass.
+present=0
+for dir in packages/*/; do [[ -f "$dir/package.json" ]] && present=$((present + 1)); done
+
+if [[ $present -eq 0 ]]; then
+  echo "REFUSING TO PASS: found no packages under packages/ at all."
+  echo "Either this is not the repo root, or the package tree is missing."
+  echo "A check that examined nothing has not verified anything."
+  exit 1
+fi
+
+if [[ $checked -eq 0 ]]; then
+  echo "REFUSING TO PASS: $present package(s) exist, 0 were importable-checked."
+  echo "Every one was skipped — ${#skipped[@]} skip(s) listed above."
+  echo
+  echo "This almost always means the build precondition did not run. This script"
+  echo "imports from dist/, so it needs \`pnpm -r --filter \"./packages/**\" build\`"
+  echo "first (theme-conformance.yml, \"Install and build packages\")."
+  echo "Passing here would rubber-stamp an unbuilt tree."
+  exit 1
+fi
+
+echo "PASS: $checked subpath(s) across $present package(s) import cleanly under Node ESM (${#skipped[@]} skipped)."
