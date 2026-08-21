@@ -63,5 +63,46 @@ jobs:
           echo "files=$FILES" >> "$GITHUB_OUTPUT"
           echo "PR-delta migration files: ${FILES:-<none>}"
 
+      # CROSS-CHECK THE DIFF AGAINST AN INDEPENDENT SOURCE.
+      #
+      # The step above is the ONLY thing that decides what gets checked, and its
+      # empty result used to be indistinguishable from a clean PR: the guard
+      # printed "no files — OK" and exited 0. If that git diff ever silently
+      # returned nothing — a bad base ref, a shallow fetch, a pathspec typo —
+      # this gate would green-light every migration in the estate and look
+      # green doing it. LANE-WATCHER filed exactly that (guard-registry
+      # knownSilentReason for parent-check-migration-fk-indexes).
+      #
+      # A gate cannot validate its own input, so ask GitHub instead. If the API
+      # says this PR touches migrations and our diff found none, the diff is
+      # broken — fail loudly rather than pass quietly.
+      #
+      # Note this workflow ALSO triggers when the checker script itself changes,
+      # so an empty delta is legitimate on a script-only PR. That is exactly why
+      # --require-files is conditional on the API's answer rather than always on.
+      - name: Cross-check the delta against the GitHub API
+        id: crosscheck
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          API_COUNT=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+                        --paginate --jq '[.[] | select(.filename | test("supabase/migrations/.*\\.sql$|packages/db/migrations/.*\\.sql$")) | select(.status != "removed")] | length')
+          DIFF_COUNT="${{ steps.delta.outputs.count }}"
+          echo "api_migration_files=$API_COUNT  local_diff_files=$DIFF_COUNT"
+          if [ "$API_COUNT" -gt 0 ] && [ "$DIFF_COUNT" -eq 0 ]; then
+            echo "::error::Diff/API disagree — GitHub reports $API_COUNT changed migration file(s), the local git diff found 0. The diff is broken; refusing to pass."
+            exit 1
+          fi
+          if [ "$API_COUNT" -gt 0 ]; then
+            echo "require=--require-files" >> "$GITHUB_OUTPUT"
+          else
+            echo "require=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check FK indexes on PR-delta migrations
-        run: node scripts/check-migration-fk-indexes.mjs --changed-files="${{ steps.delta.outputs.files }}"
+        run: |
+          node scripts/check-migration-fk-indexes.mjs \
+            --changed-files="${{ steps.delta.outputs.files }}" \
+            --base-ref="origin/${BASE_REF}" \
+            ${{ steps.crosscheck.outputs.require }}

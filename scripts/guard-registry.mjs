@@ -619,20 +619,35 @@ export const GUARDS = [
     id: 'parent-check-migration-fk-indexes',
     label: 'FK-on-REFERENCES-needs-index lint (parent, real diff-scoped CI shape)',
     repo: '.',
-    command: ['node', 'scripts/check-migration-fk-indexes.mjs', '--changed-files='],
+    command: [
+      'node',
+      'scripts/check-migration-fk-indexes.mjs',
+      '--changed-files=',
+      '--base-ref=origin/development',
+    ],
     ciWorkflow: '.github/workflows/migration-fk-index-lint.yml',
     mode: 'run',
     diffScoped: true,
-    knownSilent: true,
-    knownSilentReason:
-      'Real CI shape (`--changed-files=` with the diff\'s file list, empty ' +
-      'on a PR touching no migrations) prints the bare line ' +
-      '"check-migration-fk-indexes: no files — OK" — no base ref named, no ' +
-      'count, nothing that would look different if the upstream diff ' +
-      'computation silently broke and always returned empty. The crm7 copy ' +
-      '(scripts/check-migration-fk-indexes.mjs) has the identical defect — ' +
-      'same lineage, filed together. Filed, not fixed in this pass.',
-    evidence: '"check-migration-fk-indexes: no files — OK"',
+    notes:
+      'FIXED 2026-08-21. Previously knownSilent: the real CI shape ' +
+      '(`--changed-files=` empty) printed the bare line ' +
+      '"check-migration-fk-indexes: no files — OK" — no base ref, no count, ' +
+      'and nothing that would have looked different if the upstream diff ' +
+      'computation silently broke and always returned empty. That gate would ' +
+      'have green-lit every migration in the estate while reading green. ' +
+      'Now the empty case states the count (0), names WHICH cause produced it ' +
+      '(flag-supplied-and-empty vs no-arguments-at-all) and names the base ' +
+      'ref, and a caller that knows files must exist can pass --require-files ' +
+      'to turn the empty case into a hard failure. A guard cannot validate ' +
+      'its own input, so migration-fk-index-lint.yml now cross-checks the ' +
+      'local git diff against the GitHub PR-files API and fails when they ' +
+      'disagree; --require-files is set from the API answer, which keeps a ' +
+      'script-only PR (legitimately zero migrations) passing. The crm7 copy ' +
+      'shares this lineage and is fixed in a companion PR.',
+    evidence:
+      '"check-migration-fk-indexes: 0 file(s) examined — --changed-files= was ' +
+      'supplied and resolved to ZERO paths, base ref origin/development. ' +
+      'Nothing was checked; this is not a pass over any migration."',
   },
   {
     id: 'parent-check-supabase-advisors',
