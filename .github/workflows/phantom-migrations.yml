@@ -1,0 +1,165 @@
+name: Phantom migrations
+
+# A migration RECORDED AS APPLIED whose objects do not exist.
+#
+# Measured on the live database 2026-08-21. `schema_migrations` held a row for
+# `20260304090001`, and every one of the three features it defines was absent:
+#
+#   to_regclass('public.rate_adjustments')    NULL
+#   to_regclass('public.billing_cycles')      NULL
+#   gto_complaints.external_referral column   ABSENT
+#
+# Five months. 742 recorded migrations. Nothing noticed — because a table that
+# was never created looks EXACTLY like a feature nobody has built yet. It
+# surfaced only when another lane tripped over the hole while asking for a role
+# gate on one of the missing tables, and reported itself blocked on a
+# permissions model. There was no permissions problem. There was nothing to gate.
+#
+# A second instance was then found by this gate on its first real run:
+# `20260708120000` runs an unguarded ALTER and a CREATE INDEX against
+# `public.host_employers`, a table that has never existed. Production was
+# unaffected — the column lives on `employers` — but a baseline replay aborts
+# there. Live-but-unrebuildable is the class.
+#
+# THE LEDGER IS NOT EVIDENCE. A version in `schema_migrations` says a file was
+# RECORDED, not that its statements ran. `CREATE TABLE IF NOT EXISTS` is a
+# silent no-op; a `DO $$ ... $$` block that throws aborts the rest of the file;
+# a hand `migration repair` writes the row with no SQL at all. Each leaves the
+# same footprint: a green ledger and a missing object.
+#
+# WHY THE SELF-TEST RUNS FIRST, AND WHY IT HAS FOURTEEN CASES
+#
+# The first production run of this checker reported TWENTY-TWO phantoms. Every
+# single one was the checker's fault — five distinct false-positive classes:
+# non-`public` schemas missing from the state query, scratch helpers created and
+# dropped inside the same migration, objects dropped by a LATER migration,
+# `pg_temp` functions (session-scoped by definition), and renamed columns. Had
+# it shipped in that state it would have reported 22 confident falsehoods and
+# the one real finding would have been indistinguishable from the noise.
+#
+# Every one of those classes now has a self-test. A gate that cannot fail is not
+# a gate, and a gate whose failures are mostly its own is worse than none.
+
+on:
+  schedule:
+    - cron: '20 4 * * *'
+  pull_request:
+    branches: [development, main]
+    paths:
+      - '**/supabase/migrations/**'
+      - 'scripts/check-phantom-migrations.mjs'
+      - '.github/workflows/phantom-migrations.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phantom-migrations-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phantom-migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard — require project ref
+        env:
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PROJECT_ID:-}" ]; then
+            echo "::error::SUPABASE_PROJECT_ID is not set. Refusing to report 'no phantoms' without reading a database."
+            exit 1
+          fi
+
+      - name: Checkout (with submodules — the migrations being checked ARE the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # Run the self-test BEFORE touching the database, so a clean result below is
+      # known to come from a checker that can still fail — including its five
+      # false-positive cases, each of which it got wrong on its first real run.
+      - name: Self-test the checker
+        run: node scripts/check-phantom-migrations.mjs --self-test
+
+      - name: Install psql client
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        # Same probe the schema-lag workflow uses, and for the reason its header
+        # records: there is NO SUPABASE_DB_URL secret in this repo. Supavisor
+        # tenants live on a numbered cluster per region — newer projects on aws-1,
+        # older on aws-0 — and the wrong one returns "tenant/user not found".
+        # No cluster accepting the connection is a HARD FAILURE, never a quiet pass.
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "✓ Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID}. Refusing to report a false 'no phantoms'."
+          exit 1
+
+      - name: Read what the database actually has
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        # EVERY schema, not just public. A public-only column list makes every
+        # `catalog.*` column look missing — that was one of the five false-positive
+        # classes, and it accounted for five of the original twenty-two.
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL' > db-state.json
+          SELECT json_build_object(
+            'applied',   (SELECT COALESCE(json_agg(version), '[]'::json)
+                            FROM supabase_migrations.schema_migrations),
+            'tables',    (SELECT COALESCE(json_agg(schemaname||'.'||tablename), '[]'::json)
+                            FROM pg_tables
+                           WHERE schemaname NOT IN ('pg_catalog','information_schema')),
+            'functions', (SELECT COALESCE(json_agg(DISTINCT n.nspname||'.'||p.proname), '[]'::json)
+                            FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+                           WHERE n.nspname NOT IN ('pg_catalog','information_schema')),
+            'columns',   (SELECT COALESCE(json_agg(table_schema||'.'||table_name||'.'||column_name), '[]'::json)
+                            FROM information_schema.columns
+                           WHERE table_schema NOT IN ('pg_catalog','information_schema'))
+          );
+          SQL
+          test -s db-state.json || { echo "::error::db-state.json is empty."; exit 1; }
+
+      # The checker carries its own positive control: fewer than 50 tables or 100
+      # applied migrations exits 3, because a phantom scan against an empty state
+      # says either that everything is missing or that nothing is — and both read
+      # as a confident answer.
+      - name: Check every recorded migration's objects exist
+        run: |
+          node scripts/check-phantom-migrations.mjs \
+            --db-state=db-state.json \
+            crm7/supabase/migrations \
+            business-suite-unified/supabase/migrations \
+            conduit/supabase/migrations \
+            braden/supabase/migrations \
+            throughput/supabase/migrations \
+            R80.4/supabase/migrations \
+            supabase/migrations
