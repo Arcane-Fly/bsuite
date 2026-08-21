@@ -1,0 +1,86 @@
+name: setup-node pnpm guard
+
+# Every `actions/setup-node@v5` step must set `package-manager-cache: false`.
+#
+# setup-node@v5 defaults that input to `true`, which makes it resolve the
+# `packageManager` field's pnpm BEFORE any corepack step in the job has run:
+#
+#     ##[error] Unable to locate executable file: pnpm.
+#
+# This estate has been bitten twice:
+#
+#   1. 2026-08-19 — EVERY publish-*.yml died at setup-node. Nothing could
+#      publish. PR #2048 fixed it by hand across the affected workflows.
+#
+#   2. That hand-applied sweep guarded 21 of 22 and MISSED
+#      advance-submodule-pointers.yml, which then failed 20 of 20 scheduled
+#      runs between 2026-08-20T07:29 and 2026-08-21T02:40 with nobody watching.
+#
+# The second one cost more than a stale pointer. advance-submodule-pointers is
+# the estate's ONLY WRITER of submodule gitlinks and six workflows READ them —
+# so while it was silent, six green guards confidently reported stale pointers
+# as findings against the apps. Its own header records three such false
+# findings in a single night on 2026-08-18.
+#
+# A hand-applied sweep across 22 files needs a guard. This is that guard.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/check-setup-node-pnpm-guard.mjs'
+      - 'scripts/guard-registry.mjs'
+  push:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/check-setup-node-pnpm-guard.mjs'
+  # A workflow file can be edited by a merge that touched nothing this guard
+  # watches (a revert, a submodule pointer bump carrying a workflow change).
+  # The daily run is the backstop for that.
+  schedule:
+    - cron: '40 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: setup-node pnpm guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+          # The very condition this workflow enforces. Guarding the guard is
+          # not decoration: without it, this job dies at setup-node and the
+          # check silently stops running — the exact failure mode it exists
+          # to catch, with itself as the victim.
+          package-manager-cache: false
+
+      - name: Prove the checker can fail before trusting what it says
+        run: |
+          set -euo pipefail
+          cp .github/workflows/setup-node-pnpm-guard.yml /tmp/guard-backup.yml
+          # Strip this workflow's own guard line and require a non-zero exit.
+          # A checker that has never once detected the thing it looks for is
+          # not evidence, and a clean pass from an unproven probe is the
+          # estate's most-repeated failure class.
+          sed -i '/package-manager-cache: false/d' .github/workflows/setup-node-pnpm-guard.yml
+          if node scripts/check-setup-node-pnpm-guard.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — the guard passed a tree with a known-missing package-manager-cache. The checker is broken; its clean passes mean nothing."
+            cp /tmp/guard-backup.yml .github/workflows/setup-node-pnpm-guard.yml
+            exit 1
+          fi
+          cp /tmp/guard-backup.yml .github/workflows/setup-node-pnpm-guard.yml
+          echo "positive control ok — checker detects a planted omission"
+
+      - name: Check every setup-node@v5 step is guarded
+        run: node scripts/check-setup-node-pnpm-guard.mjs
