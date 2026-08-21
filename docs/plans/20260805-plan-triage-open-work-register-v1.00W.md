@@ -68,7 +68,7 @@ Full 55-item list with `plan_file`, `blocked_by`, and per-item evidence is in th
 2. **`uplift/INDEX.md`** calls itself the canonical wave tracker but hasn't been updated in 3
    months while `bsuite#635` remains actively worked (confirmed OPEN, last activity
    2026-07-28) — a documentation-wiring gap.
-3. **`scripts/audit-applied-tokens.sh` / `scripts/audit-routes.sh`** — named as required gates
+3. **`scripts/audit-applied-tokens.mjs` / `scripts/audit-routes.sh`** — named as required gates
    (G5, G6, P1-P9) in the approved `20260803-theme-conformance-dod` plan, but neither script
    exists. The gates they would enforce cannot be verified until they're written.
 
