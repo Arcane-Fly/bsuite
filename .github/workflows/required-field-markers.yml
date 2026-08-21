@@ -1,0 +1,99 @@
+name: Required field markers
+
+# A form's validation knows which fields are compulsory. The page has to say so
+# BEFORE the user presses the button, not after.
+#
+# Measured on production 2026-08-21, CRM7 /clients/create — the page the operator
+# reported as unusable: 15 form controls, ZERO required markers anywhere, while
+# the form's own validation read
+#   name: z.string().min(1, 'Business name is required')
+# The only way to learn the field was mandatory was to fill the form, submit, and
+# be rejected. No aria-required either, so a screen reader was never told at all.
+# A sweep found 39 such fields across 17 pages, then 13 more where a form marked
+# SOME required fields and left others bare — which is worse, because an unmarked
+# field beside marked ones actively reads as optional.
+#
+# NOTHING ERRORS when this happens. The form works, typecheck passes, the schema
+# is right. The defect lives entirely in what the page does not say, which is why
+# no build gate and no test saw it, and why it needs a gate of its own.
+#
+# THE TEST IS CONSISTENCY, NOT ASTERISK COUNT
+#
+# The estate uses BOTH conventions and each is correct on its own terms:
+#
+#   POSITIVE  mark the required ones      "Business Name *"       (CRM7)
+#   INVERSE   mark the optional ones      "Industry (optional)"   (BSU)
+#
+# BSU has 95 labelled fields and not one asterisk, and is RIGHT — its
+# Organization/CreateOrganization.tsx is 5-for-5 against its schema. A gate that
+# counted asterisks would have condemned a correct form and sent someone to
+# "fix" it. So the checker infers the convention from the markers already present
+# and tests each form against its own.
+#
+# NO `paths:` FILTER — same two reasons as the sibling Tailwind and dark-variant
+# gates:
+#
+#   1. Under-triggering. The change that breaks this arrives inside a SUBMODULE,
+#      and the parent tree holds only a gitlink for each submodule, so a path
+#      filter can never match it.
+#   2. Required-check deadlock. A path-filtered required check never reports on
+#      a PR that misses the filter, and the PR waits forever. This gate is a
+#      file scan that finishes in seconds.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: required-field-markers-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  required-field-markers:
+    name: Forms say which fields are required
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the apps being checked ARE the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
+          # `submodules: recursive` fails at checkout. Same fallback chain every
+          # other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects, and
+      # THIS checker has already shipped two bugs that did exactly that: an
+      # attribute window bounded by the next '>' (which an arrow function contains,
+      # so it closed mid-tag and reported present attributes as missing), and a zod
+      # parser that expected `z.` on the same line as the field name (so a
+      # multi-line field read as ABSENT from the schema rather than as UNMARKED —
+      # a silent false negative that let `qcr-code` pass a clean scan).
+      #
+      # Both are covered below. Run the self-test FIRST so a pass in the next step
+      # is known to come from a checker that can still fail, including its
+      # inverse-convention case, which asserts that BSU's zero-asterisk form is
+      # CLEAN rather than defective.
+      - name: Self-test the checker
+        run: node scripts/check-required-field-markers.mjs --self-test
+
+      # --require-fields is the positive control against a silently unscanned tree.
+      # The scan currently matches 177 fields to a schema across the estate; if it
+      # finds far fewer, the submodule checkout did not populate and a "clean"
+      # result would be meaningless rather than clean. A scan that examines nothing
+      # also reports zero findings, and that has read as a pass here before.
+      - name: Check every schema-backed form marks its fields consistently
+        run: |
+          node scripts/check-required-field-markers.mjs \
+            crm7/src business-suite-unified/src conduit/src braden/src \
+            --require-fields=150
