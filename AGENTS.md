@@ -71,6 +71,16 @@ are Vite.
     protanopia, i.e. the destructive and primary-action colours were the same swatch. Contract:
     [`packages/theme/docs/d2c-theme-source-of-truth.html`](packages/theme/docs/d2c-theme-source-of-truth.html).
 
+11. **Never triage an external review until its cited paths resolve.** Run
+    `node scripts/check-review-citations.mjs <review-file>` first. On 2026-08-20 an external
+    reviewer produced eight ready-to-run agent prompts citing files that exist nowhere on the
+    machine — it had matched **DeepMind's `bsuite`**, an unrelated Python reinforcement-learning
+    benchmark that shares only the name, and written the findings as though measured, with line
+    numbers and quoted code. One prompt instructed deleting `packages/*`, which holds 17 shared
+    packages consumed by all six apps. Line numbers are the cheapest thing to invent and the most
+    convincing thing to read: treat them as claims, not credentials. A passing check means the
+    review is worth reading, never that it is right. Incident: bsuite#2201.
+
 ## Where the detail lives
 
 Read the destination before your first edit in that area. Do not re-derive from memory.
