@@ -121,14 +121,34 @@ const RULES = [
   },
 ];
 
+/* R80.4 lives in two places depending on who is looking. In CI it is a
+ * submodule of this repo (`R80.4/`); on the operator's workstation it sits
+ * BESIDE bsuite (`../R80.4`). The first CI run of this gate hard-failed with
+ * "../R80.4/src does not exist" — correctly, because a missing app directory
+ * must never be silently skipped, but for a layout reason rather than a real
+ * one. Each app is therefore resolved against its candidates, and only a name
+ * that resolves NOWHERE is the hard failure it should be. */
 const APPS = [
-  'crm7',
-  'conduit',
-  'business-suite-unified',
-  'braden',
-  'throughput',
-  '../R80.4',
+  { name: 'crm7', candidates: ['crm7'] },
+  { name: 'conduit', candidates: ['conduit'] },
+  { name: 'business-suite-unified', candidates: ['business-suite-unified'] },
+  { name: 'braden', candidates: ['braden'] },
+  { name: 'throughput', candidates: ['throughput'] },
+  { name: 'R80.4', candidates: ['R80.4', '../R80.4'] },
 ];
+
+/** First candidate whose `src/` is a real directory, or null. */
+function resolveApp(app) {
+  for (const c of app.candidates) {
+    const srcDir = join(c, 'src');
+    try {
+      if (statSync(srcDir).isDirectory()) return { dir: c, srcDir };
+    } catch {
+      /* try the next candidate */
+    }
+  }
+  return null;
+}
 
 /** Directories whose contents DEFINE primitives rather than use them. */
 const EXCLUDED_SEGMENTS = ['/components/ui/', '/node_modules/', '/.next/', '/dist/'];
@@ -232,20 +252,18 @@ function main() {
 
   for (const rule of RULES) {
     for (const app of APPS) {
-      const srcDir = join(app, 'src');
-      if (!existsSync(srcDir)) {
+      const found = resolveApp(app);
+      if (!found) {
         console.error(
-          `FAIL: ${srcDir} does not exist. The app list is stale or this is not ` +
-            `the repo root — either way the scan cannot be trusted.`,
+          `FAIL: ${app.name} has no src/ directory at any of its known ` +
+            `locations (${app.candidates.join(', ')}). The app list is stale, ` +
+            `submodules are not checked out, or this is not the repo root — ` +
+            `either way the scan cannot be trusted, and an app that cannot be ` +
+            `read must not be silently skipped.`,
         );
         process.exit(1);
       }
-      try {
-        if (!statSync(srcDir).isDirectory()) throw new Error('not a directory');
-      } catch {
-        console.error(`FAIL: ${srcDir} is not a directory.`);
-        process.exit(1);
-      }
+      const { srcDir } = found;
 
       const files = walk(srcDir).filter((f) => !isExcluded(f));
       totalFilesScanned += files.length;
@@ -268,7 +286,7 @@ function main() {
         }
       }
 
-      const name = app.replace('../', '');
+      const name = app.name;
       rows.push({ name, files: files.length, callerFiles, mounts });
 
       if (callerFiles > 0 && mounts === 0) {
