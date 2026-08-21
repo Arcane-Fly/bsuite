@@ -619,11 +619,21 @@ export const GUARDS = [
     id: 'parent-check-migration-fk-indexes',
     label: 'FK-on-REFERENCES-needs-index lint (parent, real diff-scoped CI shape)',
     repo: '.',
+    /* LANE-WATCHER requires a NON-ZERO examined count on a clean pass, and it
+     * is right to. The previous registry command was the empty shape
+     * (`--changed-files=`), which legitimately examines nothing — so even after
+     * the fix it still printed "0 file(s) examined" and was still classified a
+     * silent guard. Correctly: the entry must exercise the WORKING path, so it
+     * points at real migrations and reports how many it read. The empty shape
+     * is now self-describing (it names the count, the cause and the base ref)
+     * and is covered by the workflow's API cross-check rather than by this
+     * entry. */
     command: [
       'node',
       'scripts/check-migration-fk-indexes.mjs',
-      '--changed-files=',
+      '--changed-files=supabase/migrations/20260822000000_browse_schema_with_tenant_names.sql,supabase/migrations/20260827030000_tenant_settings_oncost_config.sql',
       '--base-ref=origin/development',
+      '--require-files',
     ],
     ciWorkflow: '.github/workflows/migration-fk-index-lint.yml',
     mode: 'run',

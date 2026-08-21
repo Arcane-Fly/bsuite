@@ -24,6 +24,9 @@ on:
 
 permissions:
   contents: read
+  # The cross-check below asks the PR-files API what changed. Without this
+  # the call 403s, API_COUNT is empty, and `[ "" -gt 0 ]` kills the step.
+  pull-requests: read
 
 concurrency:
   group: migration-fk-index-${{ github.event.pull_request.number || github.ref }}
@@ -86,8 +89,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          API_COUNT=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
-                        --paginate --jq '[.[] | select(.filename | test("supabase/migrations/.*\\.sql$|packages/db/migrations/.*\\.sql$")) | select(.status != "removed")] | length')
+          # If the API cannot answer, REFUSE. Passing here would restore exactly
+          # the blindness this PR removes: a cross-check that silently skips
+          # itself is worse than none, because the log still reads green.
+          # (First run of this step 403'd for want of `pull-requests: read`,
+          # left API_COUNT empty, and died on `[ "" -gt 0 ]` — loud, but for the
+          # wrong reason and with no explanation.)
+          if ! API_JSON=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --paginate 2>&1); then
+            echo "::error::Cross-check could not reach the PR-files API — $API_JSON. Refusing to pass: a gate that could not look must not report clean."
+            exit 1
+          fi
+          API_COUNT=$(printf '%s' "$API_JSON" | jq '[.[] | select(.filename | test("supabase/migrations/.*\\.sql$|packages/db/migrations/.*\\.sql$")) | select(.status != "removed")] | length')
+          if ! [ "$API_COUNT" -ge 0 ] 2>/dev/null; then
+            echo "::error::Cross-check got a non-numeric answer from the PR-files API (got: '$API_COUNT'). Refusing to pass."
+            exit 1
+          fi
           DIFF_COUNT="${{ steps.delta.outputs.count }}"
           echo "api_migration_files=$API_COUNT  local_diff_files=$DIFF_COUNT"
           if [ "$API_COUNT" -gt 0 ] && [ "$DIFF_COUNT" -eq 0 ]; then
