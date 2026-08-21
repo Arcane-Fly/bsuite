@@ -39,6 +39,12 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 1
+          # The six app repos are PRIVATE. The default GITHUB_TOKEN cannot clone
+          # them, and the first run of this workflow died with
+          # "Repository not found ... Failed to clone 'crm7'". Same shape the
+          # rest of the estate uses, fork guard included: a PR from a fork must
+          # not be handed the org PAT.
+          token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v5
         with:
