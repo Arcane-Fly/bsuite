@@ -70,7 +70,9 @@ vs found nothing").
 
 ## 2. Visual gate — evidence
 
-Run per `references/visual-inspection-protocol.md`. `scripts/visual-probe.js` executed
+Run per `bsuite-ship-visual-promote/references/visual-inspection-protocol.md`. That skill's
+~~`scripts/visual-probe.js`~~ — it lives in `~/.agents/skills/bsuite-ship-visual-promote/`, NOT this repo, and a bare `scripts/` prefix
+reads as in-repo and resolves nowhere) executed
 **verbatim, once per cell**, via Playwright 1.62 against `d.crm.crm7.app`. Screenshots and
 raw JSON in `/tmp/sb-gate/out/` (ephemeral — re-run before relying on them).
 

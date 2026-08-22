@@ -155,7 +155,13 @@ When the UX-DX agent flags a UX gap, it must propose a fix in the same comment, 
 
 **Proposed fix:**
 - Replace `<Input name="target">` at `src/components/CTAEditor.tsx:87` with `<RoutePicker tenantId={tenantId} />`
-- RoutePicker exists at `packages/ui/RoutePicker.tsx` (currently used in nav builder)
+- ~~RoutePicker exists at `packages/ui/RoutePicker.tsx` (currently used in nav builder)~~
+  **Corrected 2026-08-22: it does not exist.** No file named `RoutePicker` is present
+  anywhere in the estate, under any path. The proposed fix above therefore has a
+  prerequisite this doc did not state — the component has to be BUILT, not swapped in —
+  and the "≈30 min, single component swap" estimate on the next line is costed against a
+  component that was never there. An `A` (Approved) marker on a doc makes a claim like
+  this one read as verified.
 - Effort: ≈30 min, scope = single component swap, no schema change
 - Skills required: shadcn-ui, dnd-kit (for drag-from-palette variant)
 
