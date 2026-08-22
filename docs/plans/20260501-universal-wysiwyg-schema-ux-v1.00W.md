@@ -926,15 +926,34 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 7. Base-stack-only rule (per v1.02W §2.5): no new runtime dependency may
    be added to any app or shared package without updating §2.5 + §6 of
    the master plan in the same PR. A CI lint script
-   (`scripts/check-base-stack-only.sh`, delivered in Phase 6) diffs each
+   (~~`scripts/check-base-stack-only.sh`, delivered in Phase 6~~ — see the note
+   below: it shipped 2026-08-22 as `scripts/check-base-stack-only.mjs`) diffs each
    PR's package.json changes against the allow-list and blocks on violation.
 
-   > **STILL OPEN as at 2026-08-22 — this is the one item on this list that was not
-   > delivered under another name.** Nothing in `scripts/` or `.github/workflows/`
-   > gates a new runtime dependency against an allow-list; the only allow-list in the
-   > estate is `migration-collision-allowlist.txt`, which is unrelated. The rule is
-   > written down and unenforced, which is the weakest of the three possible states —
-   > weaker than having no rule, because a rule on paper reads as a control.
+   > **DELIVERED 2026-08-22 — it was the one item on this list that had not shipped
+   > under any name, and it stayed invisible for exactly that reason: six of the seven
+   > obligations here WERE real under different filenames, so a reader spot-checking the
+   > list finds most items genuine and stops checking.**
+   >
+   > For two and a half months the estate had a dependency policy that read as enforced
+   > and was not — the weakest of the three possible states, weaker than having no rule,
+   > because nobody looks for a control they believe they already have.
+   >
+   > Shipped as `scripts/check-base-stack-only.mjs` (not `.sh` — it parses 27 manifests,
+   > and a shell wrapper existing only to match a filename in this paragraph would be
+   > cargo cult), wired by `.github/workflows/base-stack-only.yml`, with the allow-list
+   > at `.github/base-stack-allowlist.txt`.
+   >
+   > **Seeded from reality, not from §2.5.** The table below describes the base stack as
+   > designed; the estate installs 159 distinct runtime dependencies as built. Gating
+   > against the designed list would fail every PR on day one and be switched off within
+   > a week. So the gate answers the question the rule actually asks — *is this
+   > dependency new?* — and presence on the allow-list means "already installed", never
+   > "reviewed and approved".
+   >
+   > It uses equality rather than a ceiling, like the estate's other ratchets: an entry
+   > still listed after the dependency was removed would let it return unnoticed.
+   > `--bank` rewrites the file, so satisfying the removal side costs one command.
    The script can reuse the same `pnpm dlx syncpack@latest list-mismatches`
    invocation used for peer-dep enforcement (item 8), extended with an
    allow-list check against the §2.5 + §6 tables so one tool catches both
@@ -948,9 +967,9 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
      - `.syncpackrc.json` at repo root declaring a single pinned version
        group for `react`, `react-dom`, `@types/react`, `@types/react-dom`
        (all pinned to the latest active major — currently `^19.2.x`)
-     - `scripts/check-peer-deps.sh` wrapping
+     - ~~`scripts/check-peer-deps.sh` wrapping
        `pnpm dlx syncpack@latest list-mismatches` with a non-zero exit on
-       any detected mismatch
+       any detected mismatch~~ — never written; superseded, see below
 
        > **DELIVERED by a different mechanism.** syncpack was never adopted — there is
        > no `.syncpackrc.json`. Peer-dependency enforcement ships as
