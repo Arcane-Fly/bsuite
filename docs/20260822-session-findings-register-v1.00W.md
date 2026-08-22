@@ -402,3 +402,64 @@ The estate's real defects were sitting behind that noise. `funding_offsets` is t
 clearest case: an operator ruling made on 2026-08-20, committed the same day, reached
 nothing that enforces it for two days — and the only signal was a red workflow run
 nobody looked at, in a publish that had been failing since 2026-08-17.
+
+---
+
+## 12. Every named domain, measured — 2026-08-22
+
+The operator's list is *"theme consistency, ux, oneshot policy, cross cutting, route checks,
+lints, types, barrels, indexes, security"*. Reporting a subset and calling it a sweep is the
+defect this session kept finding in other people's work, so here is every one with its
+evidence and its exit code, run against the promoted tree.
+
+| Domain | Evidence | Result |
+|---|---|---|
+| **types** | `pnpm typecheck` in all six apps | 6/6 exit 0 |
+| **lints** | `pnpm lint` in all six apps | 6/6 exit 0 |
+| **barrels + indexes** | `verify-esm-imports.sh` imports **every published subpath** under Node ESM — the barrel surface *is* the subpath list. App-level barrels are covered by typecheck, which a broken re-export fails. | 44 subpaths, 16 packages, exit 0 |
+| **theme consistency** | `audit-d2c-theme.sh` C1/C2 ratchets + the near-pure ratchet + `dark-variant-strategy-lint.yml` | C1=2, C2=94 at baseline; near-pure **0** |
+| **ux** | `visual-probe.js` on the `d.*` deploys, signed in, route × theme × width | one FAIL found and fixed (BSU dark glow); see §below |
+| **one-shot / DRY** | `audit-one-shot.mjs` + `dry-lint.yml`, ratcheted at 2 | exit 0 |
+| **route checks** | `audit-routes.sh --inventory --require-authenticated 25` | 47 routes, **6 of 6 apps** covered |
+| **security** | `check-no-cookie-sso`, `check-secret-naming`, `check-oauth-boot-wiring`, gitleaks in CI | exit 0 |
+| **cross-cutting** | `check-script-parity.sh`, `check-migration-parity.sh`, `check-base-stack-only.mjs`, `check-guard-self-reporting.mjs` | exit 0 |
+| **docs** | `check-doc-naming`, `check-doc-classification`, `check-recovered-doc-verdicts`, `audit-doc-completion` | exit 0; **0 dead citations** |
+
+**`check-unscoped-select-policies` does not exist under that name** — it is cited in
+`20260817-estate-completion-ledger`. The live equivalent is the RLS work under
+`db-lint.yml`. Recorded rather than silently omitted.
+
+## 13. canvasColumns — CLOSED, and it was never a gap in the app
+
+Carried as UNKNOWN on three promotion PRs. Resolved 2026-08-22, and both halves are worth
+keeping because each one nearly produced a wrong answer.
+
+**Reaching the control is three clicks, not one.** The probe said *"open the Canvas Editor
+first"*, which reads as a single action:
+
+1. the **"Edit page"** affordance is **icon-only** — an aria-label with no text node, so
+   `button:has-text("Edit page")` finds zero
+2. it opens a **dialog**; it does not enter the editor. The button that does is
+   `[data-testid="page-editor-edit"]` inside it
+3. the controls body starts **collapsed** — the slider is in the DOM and not visible,
+   which reads exactly like a missing control
+
+Reached at step 3: `input[aria-label="Column count"]`, six presets, slider max 24.
+
+**Then the obvious confirmation nearly produced a false defect.** Driving the control and
+watching the layout is the natural test. The layout does not move — and that is CORRECT.
+`handleColumnChange` calls `rescaleLayout`, which maps every span proportionally
+(`Math.round(item.w * toCols / fromCols)`), so a full-width card is full-width at 1 column
+and at 24.
+
+Measured on `/gto-compliance/complaints`: the slider tracked every click exactly
+(1 → 2 → 4 → 1) and both cards stayed at **1068px** throughout. That was written down as
+*"CONTROL REGISTERED, LAYOUT DID NOT MOVE"* — one sentence from filing V-C6 against working
+code, and the third time in one session a measurement needed a second look before it became
+a finding.
+
+**The class is unevaluable on a uniform-span page for a reason belonging to the PAGE**, not
+to the app and not to whoever runs the probe. Exercising it needs a card at partial span:
+12 → 1 turns a half-width card full-width, because `Math.round(6*1/12)` clamps to the
+one-column minimum. Both lessons are now in the probe's own messages
+(`.github-private` #2) so the next person does not spend the hour again.
