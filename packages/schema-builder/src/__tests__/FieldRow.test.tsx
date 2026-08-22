@@ -39,6 +39,10 @@ vi.mock('@xyflow/react', () => ({
     Top: 'top',
     Bottom: 'bottom',
   },
+  // FieldRow converts the WCAG device-px target floor into CSS px using the
+  // live zoom, so it subscribes to the transform scalar.
+  useStore: (selector: (s: { transform: [number, number, number] }) => unknown) =>
+    selector({ transform: [0, 0, 1] }),
 }));
 
 import { FieldRow } from '../components/FieldRow.js';

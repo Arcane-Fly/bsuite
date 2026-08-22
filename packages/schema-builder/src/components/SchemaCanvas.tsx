@@ -19,7 +19,15 @@ import {
   applyNodeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { AlertTriangle, Info, Link2, MousePointer2, Workflow, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Info,
+  Link2,
+  MousePointer2,
+  Plus,
+  Workflow,
+  X,
+} from 'lucide-react';
 import {
   forwardRef,
   useCallback,
@@ -708,20 +716,28 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       return () => window.removeEventListener('bsuite-edit-field', handler);
     }, []);
 
+    // Hoisted out of the imperative handle so the empty state can call the same
+    // function. It previously existed ONLY on the ref, and crm7 never attached
+    // one — so on a zero-entity tenant the screen said "Create your first
+    // entity" and shipped no way to do it. A surface must not depend on a
+    // consumer remembering to wire a ref for its primary action to exist.
+    const openCreateEntity = useCallback(() => {
+      setSelectedEntity(null);
+      setIsPanelOpen(true);
+    }, []);
+
     useImperativeHandle(
       ref,
       () => ({
         focusEntity: focusEntityById,
-        openCreateEntity: () => {
-          setSelectedEntity(null);
-          setIsPanelOpen(true);
-        },
+        openCreateEntity,
         tidyUp: handleTidyUp,
         exportPng: handleExportPng,
         addFieldToSelectedEntity,
       }),
       [
         focusEntityById,
+        openCreateEntity,
         handleTidyUp,
         handleExportPng,
         addFieldToSelectedEntity,
@@ -787,6 +803,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         <p className="max-w-sm px-4 text-center text-xs text-muted-foreground">
           Create your first entity to start building the schema.
         </p>
+        <button
+          type="button"
+          onClick={openCreateEntity}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-role-primary px-4 text-sm font-medium text-text-on-primary hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Create entity
+        </button>
       </div>
     ) : (
       <ReactFlow
@@ -891,7 +915,12 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                   ref={quickStartRef}
                   role="note"
                   aria-label="Schema Builder quick start"
-                  className="absolute bottom-3 left-3 z-10 max-w-sm rounded-lg border border-role-primary/40 bg-card/95 p-3 text-xs text-text-secondary shadow-sm backdrop-blur"
+                  // `left-3` put this directly on top of React Flow's
+                  // <Controls>, which also sits bottom-left and at a LOWER
+                  // z-index (5 vs 10) — so the note won, and zoom/fit were
+                  // covered by a tip telling the user how to use the canvas.
+                  // The controls column is ~28px wide; left-16 clears it.
+                  className="absolute bottom-3 left-16 z-10 max-w-sm rounded-lg border border-role-primary/40 bg-card/95 p-3 text-xs text-text-secondary shadow-sm backdrop-blur"
                 >
                   <div className="flex items-start gap-2">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
