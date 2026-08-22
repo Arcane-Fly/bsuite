@@ -1252,7 +1252,7 @@ function selfTest() {
       ] },
       expect: (hits) => hits.length === 0 },
     { name: 'SELF-SCAN — docs/recovered/ NOT flagged for removed cookie SSO (frozen archive)', framework: 'unknown', repoName: 'bsuite',
-      addedByFile: { 'docs/recovered/20260301-phase1-coordination-plan.md': [
+      addedByFile: { 'docs/recovered/20260301-phase1-coordination-plan-v1.00W.md': [
         "        storageKey: 'business_suite_auth',",
       ] },
       expect: (hits) => hits.length === 0 },

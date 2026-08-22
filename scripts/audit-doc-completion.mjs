@@ -59,7 +59,7 @@ export function isCompletionMarked(filename) {
 // A LINE THAT SAYS A GATE IS GONE IS NOT CITING IT AS EVIDENCE.
 //
 // The same shape as the prohibition guard in check-no-cookie-sso.mjs, and it bit
-// here for the same reason. `crm7/docs/audits/20260811-ci-guards-deferred-items-1.00D.md`
+// here for the same reason. `crm7/docs/audits/20260811-ci-guards-deferred-items-v1.00D.md`
 // exists TO RECORD that `quality.yml` was deleted; the sentence is
 // "`.github/workflows/quality.yml` is deleted". The auditor read the filename,
 // could not find the file, and reported the doc as citing a ghost — i.e. it

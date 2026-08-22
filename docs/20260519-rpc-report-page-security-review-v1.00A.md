@@ -23,7 +23,7 @@
 | Date | 2026-05-19 |
 | Backlog ID | G-5 (`docs/20260501-merged-execution-backlog-v1.00W.md`) |
 | Issue | [bsuite#494](https://github.com/GaryOcean428/bsuite/issues/494) |
-| Source resolution | `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` §IS-5, §IS-5b |
+| Source resolution | `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-v1.00W.md` §IS-5, §IS-5b |
 | Status | **SPEC ONLY — function does not exist in production** (verified 2026-05-19 via Supabase MCP) |
 | Cross red-team | Pending — implementer must name verifier before merge |
 | Validation loop | §9.1 output-equivalence (per-template baseline vs RPC) + role-matrix Playwright |
@@ -683,7 +683,7 @@ Items 1–11 must all be **GO** before the function executes in production. Item
 ## 15. Cross-References
 
 - Backlog: `docs/20260501-merged-execution-backlog-v1.00W.md` (Stable ID G-5)
-- Source roadmap: `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` (IS-5, IS-5b, line 411 task B-4.2, line 431, line 523, line 554)
+- Source roadmap: `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-v1.00W.md` (IS-5, IS-5b, line 411 task B-4.2, line 431, line 523, line 554)
 - WS-8 GTO helpers: `crm7/supabase/migrations/20260423100000_ws8_org_members_gto_role_helpers.sql`
 - Tenant helper: `crm7/supabase/migrations/20260226000004_fix_rls_infinite_recursion.sql`
 - Existing audit table: `crm7/supabase/migrations/20260228130200_create_audit_trail.sql`

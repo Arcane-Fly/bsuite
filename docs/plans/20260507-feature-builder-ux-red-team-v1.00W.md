@@ -7,7 +7,7 @@
 > surface in the 2026-08-11 *"make it genuinely no-code"* direction.
 >
 > **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md);
-> the newer framing is in `20260811-feature-builder-world-class-refined.md` (a **one-shot prompt**,
+> the newer framing is in `20260811-feature-builder-world-class-refined-v1.00W.md` (a **one-shot prompt**,
 > not a plan — see `README.md`).
 >
 > Retained for the FF-FB-UX-REDTEAM-20260507 findings, which are still the best record of the UX

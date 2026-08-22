@@ -112,7 +112,7 @@ Not oversights. Each needs a design, not a column.
 ## Consolidation gates — everything returns to `development` here
 
 Work fans out; convergence must be scheduled, not remembered. **No tier starts before the
-previous tier's gate closes.** Full ritual in `20260812-pi-orchestration-brief-1.00W.md`.
+previous tier's gate closes.** Full ritual in `20260812-pi-orchestration-brief-v1.00W.md`.
 
 | gate | when | condition |
 |---|---|---|

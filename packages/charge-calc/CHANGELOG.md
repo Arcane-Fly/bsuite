@@ -320,7 +320,7 @@ package in the same PR family.
   `enabled: false` — no RDO — because RDOs are NOT universal: cl.16.8 permits
   an employer + majority-of-employees opt-out, many awards never had RDOs,
   and part-time employees may opt out under cl.16.9(b). See
-  `docs/references/20260730-rdo-flexibility.md` for the full legal basis.
+  `docs/references/20260730-rdo-flexibility-v1.00W.md` for the full legal basis.
 - `CalcConfig.rdo?: RdoAccrualConfig` — optional, additive field so an RDO
   arrangement has one canonical place to travel through the pipeline.
   **Not yet consumed by `calculate()`** — this release only adds the

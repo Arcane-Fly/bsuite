@@ -36,7 +36,7 @@
 **Document:** `docs/20260814-estate-remaining-work-register-v2.00W.md`
 **Date:** 2026-08-14 · **Version:** 2.00W · **Status:** W — Working
 **Superseded for status by:** `docs/20260817-estate-completion-ledger-v1.00W.md` (2026-08-17)
-**Supersedes:** `docs/00-roadmap/20260812-estate-remaining-work-register-1.00W.md` (v1) and, for their remaining-work content, every register listed in §9.
+**Supersedes:** `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` (v1) and, for their remaining-work content, every register listed in §9.
 
 **Method.** ~~All **264 non-archive documents** under `docs/` were read and classified.~~
 **Corrected 2026-08-17 — the count was 266, and "read and classified" overstates the coverage.**
@@ -308,17 +308,17 @@ These are cheap and they are the reason agents keep re-deriving the same wrong t
 | D-8 | **`20260428-operator-verification/README.md` links to five files that do not exist**; `docs/references/` has no README index, contrary to the standards guide | — |
 | D-9 | **Nine consumed one-shot prompts sit in the plans index as though they were plans**; `plans/STATUS.md` is six weeks stale and is the first file an agent opens; `plans/README.md` carries three false claims | — |
 | D-10 | **Five throughput component docs are unfilled templates** (`[Describe what…]`); braden's theme reference claims Tailwind v3 against an installed v4.3 | — |
-| D-11 | **Mark as SUPERSEDED:** `00-roadmap/20260112-master-roadmap-1.00W.md`, both `20260725-*` excellence plans (they target the archived R80.3), the nine `20260506-codehouse-parity/` portal sub-plans (superseded by D-93–D-98), `20260510-universal-canvas` (shipped as page-builder 0.9.0), `20260507-feature-builder-ux-red-team`, `20260519-rpc-report-page-security-review` (the `report_catalog_*` family won) | — |
-| D-12 | **`00-roadmap/20260812-pi-run-handback-1.00W.md` §1 and §13 are actively misleading** — they rest on "nothing is promoted", which stopped being true on 2026-08-14. Banner it; the estate's convention is to leave corrections visible | — |
+| D-11 | **Mark as SUPERSEDED:** `00-roadmap/20260112-master-roadmap-v1.00W.md`, both `20260725-*` excellence plans (they target the archived R80.3), the nine `20260506-codehouse-parity/` portal sub-plans (superseded by D-93–D-98), `20260510-universal-canvas` (shipped as page-builder 0.9.0), `20260507-feature-builder-ux-red-team`, `20260519-rpc-report-page-security-review` (the `report_catalog_*` family won) | — |
+| D-12 | **`00-roadmap/20260812-pi-run-handback-v1.00W.md` §1 and §13 are actively misleading** — they rest on "nothing is promoted", which stopped being true on 2026-08-14. Banner it; the estate's convention is to leave corrections visible | — |
 
 ---
 
 ## 9. Registers this supersedes
 
-For remaining-work purposes, this document replaces: `00-roadmap/20260812-estate-remaining-work-register-1.00W.md`,
-`00-roadmap/20260811-crm7-full-spectrum-review-register-1.00W.md`,
-`00-roadmap/20260810-theme-ui-ux-outstanding-register-1.00W.md`,
-`00-roadmap/20260810-r804-carryover-register-1.00W.md`, `docs/OUTSTANDING.md` (already self-demoted),
+For remaining-work purposes, this document replaces: `00-roadmap/20260812-estate-remaining-work-register-v1.00W.md`,
+`00-roadmap/20260811-crm7-full-spectrum-review-register-v1.00W.md`,
+`00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md`,
+`00-roadmap/20260810-r804-carryover-register-v1.00W.md`, `docs/OUTSTANDING.md` (already self-demoted),
 `20260728-weekly-gap-register-v1.00W.md`, `20260728-operator-ux-bug-register-v1.00W.md`, and
 `validation/20260805-operator-notes-defect-register-v1.00W.md`.
 

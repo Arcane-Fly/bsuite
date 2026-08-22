@@ -1,7 +1,7 @@
 # The four-axis identity model, and how we work through the backlog
 
 **Date:** 2026-08-10 · **Status:** 1.00W (working — needs your ruling on §2 before anyone builds)
-**Companion to:** [20260810-r804-carryover-register-1.00W.md](./20260810-r804-carryover-register-1.00W.md)
+**Companion to:** [20260810-r804-carryover-register-v1.00W.md](./20260810-r804-carryover-register-v1.00W.md)
 
 Every number in §1 was measured against the live database today, not read off a plan.
 

@@ -82,7 +82,7 @@ fresh.
 
 ## 5. What is verified-good in here
 
-`20260808-standards-do-not-name-providers-FINDING-v1.00A.md` — re-verified 2026-08-08, and
+`20260808-standards-do-not-name-providers-finding-v1.00A.md` — re-verified 2026-08-08, and
 the commands to re-check it are printed in the file.
 
 ---

@@ -56,7 +56,7 @@ The WS-1 handoff claimed BUG-1 was committed to `feat/phase5-schema-registry` on
 
 **HF-3: WS-1 ADR-001 and WS-4 STP-path ADR archived, not canonical**
 
-- `20260423-calc-engine-single-source.md` and `0004-stp-xero-passthrough.md` exist only at `docs/archive/crm7/2026-04-24-submodule-import/2026-04/` — the `crm7/docs/adr/` directory does not exist in the crm7 submodule.
+- `20260423-calc-engine-single-source-v1.00W.md` and `0004-stp-xero-passthrough.md` exist only at `docs/archive/crm7/2026-04-24-submodule-import/2026-04/` — the `crm7/docs/adr/` directory does not exist in the crm7 submodule.
 - Impact: ADRs are discoverable only via archive path; new contributors won't find them.
 - Action: restore ADRs to `crm7/docs/adr/` or relocate to parent-repo `docs/adr/` and cross-link.
 
@@ -785,7 +785,7 @@ BUG-5 (LOW) — R80.3
 
 types/index.ts CostConfig.superRate JSDoc updated to 0.12 (from 0.115)
 
-ADR-001 — crm7/docs/adr/20260423-calc-engine-single-source.md written; documents @bsuite/charge-calc as canonical engine, calc-bridge pattern, data flow authority table, and all WS-1 bug fixes
+ADR-001 — crm7/docs/adr/20260423-calc-engine-single-source-v1.00W.md written; documents @bsuite/charge-calc as canonical engine, calc-bridge pattern, data flow authority table, and all WS-1 bug fixes
 
 Commits
 crm7/development → f8718a3
@@ -890,7 +890,7 @@ BUG-2 (Payday Super "3 business days") must be corrected in all display strings
 
 Deliverables:
 
-ADR: crm7/docs/adr/20260423-calc-engine-single-source.md — documents that @bsuite/charge-calc is canonical, calcBridge pattern is the adapter, no third engine tolerated
+ADR: crm7/docs/adr/20260423-calc-engine-single-source-v1.00W.md — documents that @bsuite/charge-calc is canonical, calcBridge pattern is the adapter, no third engine tolerated
 
 Fix BUG-1 in mapd-mapper.ts + unit test
 
@@ -920,7 +920,7 @@ R80.3/src/utils/calcBridge.ts (pass resolved rate into toCalcConfig)
 
 R80.3/src/types/index.ts (fix JSDoc on superRate)
 
-crm7/docs/adr/20260423-calc-engine-single-source.md (new ADR)
+crm7/docs/adr/20260423-calc-engine-single-source-v1.00W.md (new ADR)
 
 Tests required:
 
@@ -1510,7 +1510,7 @@ BUG-4 HIGH R80.3/src/services/fairworkApi.ts — fetchApprenticeRateConfigs(awar
 
 BUG-5 LOW R80.3/src/types/index.ts CostConfig.superRate JSDoc updated to 0.12.
 
-ADR-001 written: crm7/docs/adr/20260423-calc-engine-single-source.md
+ADR-001 written: crm7/docs/adr/20260423-calc-engine-single-source-v1.00W.md
 
 OPEN PR
 CRM7 PR #297 — development → main — https://github.com/GaryOcean428/crm7/pull/297 — apprentice-rate-configs feature. Do NOT merge to main yet — only working to development per instructions.
@@ -1663,7 +1663,7 @@ src/hooks/useFeatureFlags.ts crm7 ✅ modified
 src/pages/settings/feature-flags.tsx crm7 ✅ modified
 src/pages/settings/index.tsx crm7 ✅ modified
 docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md crm7 ✅ 657 lines
-crm7/docs/adr/20260423-calc-engine-single-source.md crm7 ✅ ADR-001
+crm7/docs/adr/20260423-calc-engine-single-source-v1.00W.md crm7 ✅ ADR-001
 src/awards/mapd-mapper.ts packages/charge-calc ✅ BUG-1 fixed
 src/__tests__/awards/mapd-mapper.test.ts packages/charge-calc ✅ 64 tests pass
 src/services/fairworkApi.ts R80.3 ✅ BUG-4 fixed

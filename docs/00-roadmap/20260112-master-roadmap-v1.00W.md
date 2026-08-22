@@ -105,7 +105,7 @@
 - N-CRIT phases 1–3 complete on main (hierarchy, manual %, MAPD badge)
 - N6 Sydney pre-flight (dry-run evidence — operator-gated cutover Wed)
 - **Data Workspace program — PLANNED, red-teamed twice, awaiting operator gates.**
-  Plan: [`20260808-data-workspace-implementation-plan-1.00W.md`](./20260808-data-workspace-implementation-plan-1.00W.md).
+  Plan: [`20260808-data-workspace-implementation-plan-v1.00W.md`](./20260808-data-workspace-implementation-plan-v1.00W.md).
   Answers the standing "Airtable-style reports and data manipulation" ask. Key finding:
   `/settings/data` and `/admin/data` **already exist**, are nav-registered and wired to the
   bulk-write engine — and have never been used (`data_change_sets` = 0). Ruling: build into

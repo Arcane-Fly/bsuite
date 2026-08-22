@@ -20,7 +20,7 @@ Provide an in-product, dev-account-only path to design new BSuite features visua
 auth.jwt().app_metadata.platform_role IN ('developer', 'platform_admin')
 ```
 
-(Cite [`../../../AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) and [`./20260506-portal-bsu-admin.md`](./20260506-portal-bsu-admin.md). No new RBAC/ABAC framework — strictly Supabase JWT claim + RLS check.)
+(Cite [`../../../AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) and [`./20260506-portal-bsu-admin-v1.00W.md`](./20260506-portal-bsu-admin-v1.00W.md). No new RBAC/ABAC framework — strictly Supabase JWT claim + RLS check.)
 
 **Out of scope (locked):** production-runtime visual editing for non-dev users; custom logic / scripting blocks; runtime-mutable RLS policies. Anything beyond the entity → migration → page → preview → PR-export loop is OUT OF SCOPE for the WS-E ship.
 

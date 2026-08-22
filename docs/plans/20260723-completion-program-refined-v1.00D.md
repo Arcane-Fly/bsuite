@@ -44,7 +44,7 @@ Take BSuite from "6.5/7 ledger items shipped" to **world-class, competitively-au
 >
 > **P1 (parallel read-only lanes, no mutations):**
 > - Lane A (W2): sweep all 15 roadmap files; output a dated, deduped, status-ranked OPEN-items ledger with per-item evidence (file:section + issue# or commit).
-> - Lane B (W3-local): extract the full capability surface from `docs/20260723-Anytime-WorkforceOne-Admin-Guide.md` (all TOC sections) into a structured capability list.
+> - Lane B (W3-local): extract the full capability surface from `docs/20260723-anytime-workforceone-admin-guide-v1.00W.md` (all TOC sections) into a structured capability list.
 > - Lane C (W3-remote): crawl the Code House document library (browser; "Load more" paginates — click through) and extract every article's capability claims; then research 3–5 leading AU GTO/apprenticeship management platforms for their publicized feature sets.
 > - Lane D (W5): run the 7-probe OAuth 2.1 verification from `agents/supabase-auth-comprehensive` §Verification against project tuybltdrdefjblnplpqo + all 5 app codebases (PKCE storage grep, JWKS health, oauth_clients shape, claim structure, refresh-rotation handling, audit-log vocabulary). Output COMPLIANT/DRIFT per app with evidence.
 >

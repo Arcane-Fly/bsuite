@@ -678,7 +678,7 @@ Nav from the other apps; BSU developer console deep-link; conduit `r7_*` entitie
 ## §4 — What needs you
 
 > **These also live in plain language, in a file you can open, at
-> [`20260808-operator-decision-register-1.00W.md`](./20260808-operator-decision-register-1.00W.md)** —
+> [`20260808-operator-decision-register-v1.00W.md`](./20260808-operator-decision-register-v1.00W.md)** —
 > including a key to what T1/T2/T3 actually mean. That file is the readable copy and the one
 > to work from; agent memory is a mirror of it, not the other way round.
 >

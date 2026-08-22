@@ -17,16 +17,16 @@ Sub-plans of the parent index [`../20260506-codehouse-parity-and-platform-360-v1
 
 | File | Type | Owner App | Description |
 |------|------|-----------|-------------|
-| [`20260506-portal-bsu-admin.md`](./20260506-portal-bsu-admin.md) | portal-sub-plan | business-suite-unified | Platform admin portal — OAuth server, tenant lifecycle, sub-organisation hierarchy, runtime OKLCH branding, `/dev/feature-builder` (WS-E). |
-| [`20260506-portal-bsu-tenant-admin.md`](./20260506-portal-bsu-tenant-admin.md) | portal-sub-plan | business-suite-unified | Tenant-scoped admin portal — per-tenant user/role management, branding, billing, sub-organisation tree, feature flags. |
-| [`20260506-portal-conduit-candidate.md`](./20260506-portal-conduit-candidate.md) | portal-sub-plan | conduit | Candidate self-service portal — apply, track applications, schedule interviews, sign offers, complete onboarding. |
-| [`20260506-portal-conduit-careers.md`](./20260506-portal-conduit-careers.md) | portal-sub-plan | conduit | Public unauthenticated careers / job-board portal — search, view detail, apply (anonymous → candidate on submit). |
-| [`20260506-portal-conduit-employer.md`](./20260506-portal-conduit-employer.md) | portal-sub-plan | conduit | Employer (host / client) portal — submit job orders, review candidates, approve placements, sign timesheets at host level. |
-| [`20260506-portal-conduit-recruiter.md`](./20260506-portal-conduit-recruiter.md) | portal-sub-plan | conduit | Recruiter dashboard — candidate pipeline, drag-and-drop kanban, interview scheduling, offers, ATS reporting. |
-| [`20260506-portal-crm7-internal.md`](./20260506-portal-crm7-internal.md) | portal-sub-plan | crm7 | Internal portal for consultants/coordinators/payroll officers — timesheets, placements, pay-item groups, BOOT compliance, AI assistant, offline-first PWA. |
-| [`20260506-portal-r80-3-calculator.md`](./20260506-portal-r80-3-calculator.md) | portal-sub-plan | R80.3 | Wage calculator portal — apprentice wage / charge / margin / BOOT preview. Compliance-critical (Fair Work Act). Reader-only on CRM7-owned apprentice records. |
-| [`20260506-portal-braden-marketing.md`](./20260506-portal-braden-marketing.md) | portal-sub-plan | braden | Corporate marketing site (braden.com.au) — public CMS-driven content + CSP-hardened. Corporate red/gold branding — D2C theme NOT applied. |
-| [`20260506-visual-feature-builder-spec.md`](./20260506-visual-feature-builder-spec.md) | spec | business-suite-unified | WS-E spec for the dev-account-only `/dev/feature-builder` route in BSU. Three panels (Entity / Page / AI). Output is a "feature bundle" exported as a PR. |
+| [`20260506-portal-bsu-admin-v1.00W.md`](./20260506-portal-bsu-admin-v1.00W.md) | portal-sub-plan | business-suite-unified | Platform admin portal — OAuth server, tenant lifecycle, sub-organisation hierarchy, runtime OKLCH branding, `/dev/feature-builder` (WS-E). |
+| [`20260506-portal-bsu-tenant-admin-v1.00W.md`](./20260506-portal-bsu-tenant-admin-v1.00W.md) | portal-sub-plan | business-suite-unified | Tenant-scoped admin portal — per-tenant user/role management, branding, billing, sub-organisation tree, feature flags. |
+| [`20260506-portal-conduit-candidate-v1.00W.md`](./20260506-portal-conduit-candidate-v1.00W.md) | portal-sub-plan | conduit | Candidate self-service portal — apply, track applications, schedule interviews, sign offers, complete onboarding. |
+| [`20260506-portal-conduit-careers-v1.00W.md`](./20260506-portal-conduit-careers-v1.00W.md) | portal-sub-plan | conduit | Public unauthenticated careers / job-board portal — search, view detail, apply (anonymous → candidate on submit). |
+| [`20260506-portal-conduit-employer-v1.00W.md`](./20260506-portal-conduit-employer-v1.00W.md) | portal-sub-plan | conduit | Employer (host / client) portal — submit job orders, review candidates, approve placements, sign timesheets at host level. |
+| [`20260506-portal-conduit-recruiter-v1.00W.md`](./20260506-portal-conduit-recruiter-v1.00W.md) | portal-sub-plan | conduit | Recruiter dashboard — candidate pipeline, drag-and-drop kanban, interview scheduling, offers, ATS reporting. |
+| [`20260506-portal-crm7-internal-v1.00W.md`](./20260506-portal-crm7-internal-v1.00W.md) | portal-sub-plan | crm7 | Internal portal for consultants/coordinators/payroll officers — timesheets, placements, pay-item groups, BOOT compliance, AI assistant, offline-first PWA. |
+| [`20260506-portal-r80-3-calculator-v1.00W.md`](./20260506-portal-r80-3-calculator-v1.00W.md) | portal-sub-plan | R80.3 | Wage calculator portal — apprentice wage / charge / margin / BOOT preview. Compliance-critical (Fair Work Act). Reader-only on CRM7-owned apprentice records. |
+| [`20260506-portal-braden-marketing-v1.00W.md`](./20260506-portal-braden-marketing-v1.00W.md) | portal-sub-plan | braden | Corporate marketing site (braden.com.au) — public CMS-driven content + CSP-hardened. Corporate red/gold branding — D2C theme NOT applied. |
+| [`20260506-visual-feature-builder-spec-v1.00W.md`](./20260506-visual-feature-builder-spec-v1.00W.md) | spec | business-suite-unified | WS-E spec for the dev-account-only `/dev/feature-builder` route in BSU. Three panels (Entity / Page / AI). Output is a "feature bundle" exported as a PR. |
 
 ## Cross-references
 

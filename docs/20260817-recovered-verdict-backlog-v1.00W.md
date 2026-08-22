@@ -110,7 +110,7 @@ about the code?
 | # | Document | Verdict | Evidence | Marker defect |
 |---|---|---|---|---|
 | 1 | `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md` | **SUPERSEDED** | Cascade/Windsurf tandem no longer exists; coordination is `AGENTS.md` + worktrees + issues | **Marker** — `A` reads as standing instruction on a dead board |
-| 2 | `20260226-prerender-seo-marketing-plan-v1.0.0.md` | **DELIVERED** | `crm7/scripts/prerender.mjs`, `braden/scripts/prerender.mjs`; `prerender` in 3 `package.json` | **Marker** — `v1.0.0`, no status letter at all |
+| 2 | `20260226-prerender-seo-marketing-plan-v1.0.0-v1.00W.md` | **DELIVERED** | `crm7/scripts/prerender.mjs`, `braden/scripts/prerender.mjs`; `prerender` in 3 `package.json` | **Marker** — `v1.0.0`, no status letter at all |
 | 3 | `20260226-recruit7-candidate-sourcing-plan-v1.00D.md` | **NEVER-BUILT-AND-SHOULD-NOT-BE** | No `recruit7` in `.gitmodules` (6 submodules). Conduit owns recruitment: `conduit/src/lib/ai/tools/candidate-tools.ts` + `r7_*` tables | **Marker** — `D` implies pending; it is dead |
 | 4 | `20260226-report-comprehensive-qa-v1.00A.md` | **REFERENCE-ONLY** | Body dated **October 14, 2025**; overtaken by the 2026-08-17 ledger | **Marker** — `A` on a stale severity list reads as an approved queue |
 | 5 | `20260226-report-implementation-summary-v1.00A.md` | **DELIVERED** | Retrospective of fixes shipped 2025-10-09 | **Marker** — `A` on a retrospective |
@@ -118,8 +118,8 @@ about the code?
 | 7 | `20260227-e2e-flows-google-azure-setup-v1.00W.md` | **DELIVERED** | Live: `oauth-google-email` v93, `oauth-microsoft-email` v94, `email-token-refresh` v62 | **Marker** — `W` on shipped work |
 | 8 | `20260227-email-capabilities-plan-v1.00W.md` | **STILL-WANTED** (partly) | Transport live (5 functions, 5 tables). **Signatures + branding absent estate-wide**; `email_templates` 0 rows | **Body** — presents as the complete email plan with zero signature/branding requirement |
 | 9 | `20260228-conduit-ai-tools-plan-v1.00W.md` | **DELIVERED** | `conduit/src/lib/ai/tools/` — 7 tool modules + tests | **Marker** — `W` on shipped work |
-| 10 | `20260301-phase1-coordination-plan.md` | **SUPERSEDED** | Two-agent split; work delivered (#11), protocol obsolete | **Marker** — no version or status marker at all |
-| 11 | `20260301-reconciliation-phase1-implementation.md` | **DELIVERED** | Live tables `apprentices`, `placements`, `training_providers`, `user_tenants`, `org_members`; `crm7/supabase/migrations/20260228000001_gto_foundation_tables.sql` | **Marker** — none in filename |
+| 10 | `20260301-phase1-coordination-plan-v1.00W.md` | **SUPERSEDED** | Two-agent split; work delivered (#11), protocol obsolete | **Marker** — no version or status marker at all |
+| 11 | `20260301-reconciliation-phase1-implementation-v1.00W.md` | **DELIVERED** | Live tables `apprentices`, `placements`, `training_providers`, `user_tenants`, `org_members`; `crm7/supabase/migrations/20260228000001_gto_foundation_tables.sql` | **Marker** — none in filename |
 | 12 | `20260302-vercel-deployment-fix-cc2-plan-v1.00W.md` | **DELIVERED** | All six apps deploy from CI; remedies target a 2026-03 toolchain — do not re-apply | **Marker** — `W` on shipped work |
 | 13 | `20260303-bsuite-launch-ready-design-v1.00D.md` | **SUPERSEDED** | By the 2026-08-17 ledger (scope) and `bsuite#635` design-language rollout (visual). Names R80.3, now retired for R80.4 | **Marker** — `D` on superseded work |
 | 14 | `20260304-crm7-comprehensive-audit-report-v1.00W.md` | **SUPERSEDED** | By the 2026-08-17 ledger + ~137 open `crm7` issues | **Marker** — `W` on a historical audit |
@@ -133,7 +133,7 @@ about the code?
 | 22 | `20260317-document-esigning-architecture-v1.00A.md` | **SUPERSEDED** (evidence, not decision) | Decision still right. But 2 of its 3 cited files deleted by `crm7#1665`; its *"webhook retirement crm7#687 CLOSED"* claim is **false** — it is live | **Body** — an `A` marker over a falsified evidence block |
 | 23 | `20260425-universal-canvas-master-execution-plan-v1.00W.md` | **SUPERSEDED** | Already self-bannered 2026-05-01 — the only one that was. Confirmed accurate; related open work is ledger **G7** | **Marker** — filename says `W`, body says SUPERSEDED |
 | 24 | `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md` | **DELIVERED** | `crm7/src/pages/auth/callback.tsx:209` `setSession`; `crm7/src/__tests__/oauth-contract.test.ts`. Procedure still useful as a runbook | **Marker** — `W` on shipped work |
-| 25 | `20260808-standards-do-not-name-providers-FINDING-v1.00A.md` | **REFERENCE-ONLY** | Operator RULING 4.3; ships its own re-check commands | **Neither** — verified good |
+| 25 | `20260808-standards-do-not-name-providers-finding-v1.00A.md` | **REFERENCE-ONLY** | Operator RULING 4.3; ships its own re-check commands | **Neither** — verified good |
 
 **Marker defects total: 18 marker-wrong, 5 body-wrong, 2 clean** (18 + 5 + 2 = 25). The five
 body-wrong are documents 8, 16, 17, 19 and 22; **17 and 22 are the dangerous ones**, because a

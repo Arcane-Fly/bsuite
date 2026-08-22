@@ -62,7 +62,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260724-recurring-bugs-and-blindspots-v1.00W.md` | Recurring bug classes (R1–R12) + unexamined clusters (B1–B12) + next-5 investigations — discovery only after prompt-enhancer Standard refine |
 | `plans/20260725-docs-deadcode-archive-refined-v1.00D.md` | Prompt-enhanced plan: docs↔code audit, dead code, archive relocate |
 | `20260725-headroom-learn-notes-v1.00W.md` | Headroom learn on bsuite: 7.1% tool-fail rate; LLM extract blocked (Claude limit / litellm); Qwen 3.8 API 401 |
-| `20260723-Anytime-WorkforceOne-Admin-Guide.md` | Code House AnyTime/Workforce One Administrator Guide (competitor reference — full admin/timesheet/award surface) |
+| `20260723-anytime-workforceone-admin-guide-v1.00W.md` | Code House AnyTime/Workforce One Administrator Guide (competitor reference — full admin/timesheet/award surface) |
 
 ### Standards & doctrine
 

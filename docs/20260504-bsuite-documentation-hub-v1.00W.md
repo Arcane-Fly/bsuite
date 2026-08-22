@@ -64,7 +64,7 @@ Full list in `docs/README.md`. Canonical sources are split into **Living Authori
 | `../AGENTS.md` | Living | Agent/developer guide — project-wide conventions, auth topology, OAuth allowlist (ADR-0004 SSoT), pnpm lockfile recipe, AI Implementation Standards, Frontend Layout & Z-Index Standards |
 | `../CLAUDE.md` | Living | Claude-facing agent brief — mirrors AGENTS.md content |
 | `../MEMORY_PROTOCOL.md` | Living | QIG Memory API persistent session protocol |
-| `00-roadmap/20260112-master-roadmap-1.00W.md` | W (authoritative) | Master roadmap — SSoT for planning and delivery *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* |
+| `00-roadmap/20260112-master-roadmap-v1.00W.md` | W (authoritative) | Master roadmap — SSoT for planning and delivery *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* |
 | `20260425-bsuite-finish-line-roadmap-v1.00W.md` | W | Finish-line roadmap — 154-item P0/P1/P2 execution order |
 | `20260501-merged-execution-backlog-v1.00W.md` | W (active queue) | Active phase-ordered queue post-Phase-0 ratification — single execution queue |
 | `20260227-contributing-standards-guide-v1.01W.md` | W | Universal quality + doc standards (supersedes v1.00A) |
@@ -302,7 +302,7 @@ Every shared concern should be documented in each submodule where it applies, wi
 | Concern | Authoritative source | BSU | CRM7 | Conduit | Braden | R80.4 | Throughput |
 |---|---|:-:|:-:|:-:|:-:|:-:|:-:|
 | OUTSTANDING | `docs/OUTSTANDING.md` (SSoT — `docs/20260501-merged-execution-backlog-v1.00W.md` is the active execution queue) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488); `docs/reference/OUTSTANDING.md` is per-area audit and retained | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | `20260425-throughput-outstanding-v1.00W.md` (throughput-local, out of bsuite#488 scope) |
-| Roadmap | `docs/00-roadmap/20260112-master-roadmap-1.00W.md` *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250829-throughput-roadmap-v1.00W.md` ✅ |
+| Roadmap | `docs/00-roadmap/20260112-master-roadmap-v1.00W.md` *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250829-throughput-roadmap-v1.00W.md` ✅ |
 | Auth topology | `AGENTS.md` §Auth + `CLAUDE.md` mirror (archived snapshot: `archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md`) | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
 | Theme tokens | `@bsuite/theme` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
 | Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap (R80.4) | `20251014-throughput-navigation-ux-guide-v1.00W.md` ✅ |
@@ -447,7 +447,7 @@ Fast navigation for agents and contributors. Bookmark this section.
 
 ### Governance
 
-- [Master roadmap (SSoT)](./00-roadmap/20260112-master-roadmap-1.00W.md) *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*
+- [Master roadmap (SSoT)](./00-roadmap/20260112-master-roadmap-v1.00W.md) *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*
 - [Finish-line roadmap](archive/README.md) *(archived — was `20260425-bsuite-finish-line-roadmap-v1.00W.md`)*
 - [Active execution backlog](archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)*
 - [Tech-stack baseline](archive/README.md) *(archived — was `20260504-bsuite-tech-stack-alignment-v1.00W.md`)*
