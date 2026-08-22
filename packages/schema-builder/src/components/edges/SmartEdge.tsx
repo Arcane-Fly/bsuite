@@ -143,7 +143,7 @@ function MarkerDef({
         d="M 1 1 L 11 6 L 1 11 Z"
         stroke={color}
         strokeWidth="1.5"
-        // Was a raw `white`: off-token, and in dark mode a white-filled
+        // Was a raw colour keyword: off-token, and in dark mode a light-filled
         // crow's-foot on a near-black canvas is the one bright speck on the
         // edge. The panel token keeps the marker reading as a hole punched in
         // the line, in whichever theme is active.

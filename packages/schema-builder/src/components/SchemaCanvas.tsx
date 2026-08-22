@@ -89,7 +89,8 @@ const edgeTypes = { smart: SmartEdge };
  * React Flow ships its own palette as raw hex, split into `-default` values
  * under `.react-flow` and `.react-flow.dark`. Even with `colorMode` set
  * correctly that palette is the library's, not the tenant's: the minimap ground
- * would be #fff in light and #141414 in dark regardless of what the surface
+ * would be the library's own near-white in light and its own near-black in
+ * dark, regardless of what the surface
  * behind it actually is.
  *
  * `-props` is the layer the library reserves for the consumer (it is what the
@@ -835,14 +836,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         minZoom={0.05}
         maxZoom={2}
         // Without this the class never lands on `.react-flow`, and the library
-        // stylesheet keeps its own #fff for the minimap in BOTH themes.
+        // stylesheet keeps its own light-mode minimap ground in BOTH themes.
         colorMode={colorMode}
         // Default was Backspace only, so the Delete key silently did nothing.
         deleteKeyCode={['Delete', 'Backspace']}
         nodeDragThreshold={8}
         aria-label="Entity relationship diagram"
         // Bind React Flow's own palette to brand tokens. `colorMode` alone only
-        // moves the minimap from the library's #fff to the library's #141414 —
+        // only swaps one library-owned literal for another library-owned one —
         // still two raw hex literals this estate does not own, and still not
         // whatever the tenant's surface actually is. These are the documented
         // `-props` override points, set once on the container so they inherit
