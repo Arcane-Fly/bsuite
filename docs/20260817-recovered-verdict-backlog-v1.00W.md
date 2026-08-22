@@ -94,7 +94,7 @@ edited silently — the correction is recorded in the banners and here.
 ### The inversion, in one line
 
 **The rejected vendor is live in production; the selected replacement was deleted from CRM7.**
-`crm7#1665` removed `src/lib/documentSigner.ts` and `src/components/documents/SignDocumentFlow.tsx`
+`crm7#1665` removed `conduit/src/lib/esign/documentSigner.ts` and `conduit/src/components/esign/SignDocumentFlow.tsx`
 as *"the unreachable signing UI"*. The surviving self-hosted implementation is in **Conduit**
 (`conduit/src/lib/esign/documentSigner.ts`), not CRM7 — which also means the `A`-status
 2026-03-17 architecture document cites two evidence files that no longer exist.

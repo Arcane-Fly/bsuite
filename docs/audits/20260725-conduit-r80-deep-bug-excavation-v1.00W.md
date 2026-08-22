@@ -123,7 +123,7 @@
 
 ## 5. R80.3 — Payroll / Payday Super
 
-**Area:** `R80.3/src/services/paydaySuperService.ts` + `src/services/publicHolidays.ts` + `src/services/payrollTaxService.ts` + `src/services/awardRulesEngine.ts`
+**Area:** `R80.3/src/services/paydaySuperService.ts` + `crm7/src/lib/training/publicHolidays.ts` + `src/services/payrollTaxService.ts` + `src/services/awardRulesEngine.ts`
 
 ### 5.1 Payroll tax rates pinned to FY2025-26 — stale as of 1 July 2026
 

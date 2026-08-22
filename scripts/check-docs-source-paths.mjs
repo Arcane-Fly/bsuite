@@ -167,8 +167,14 @@ for (const [k,v] of miss) { const [f,p] = k.split('|'); if(!byFile.has(f)) byFil
   else if (v.generic) { genericN++; byFile.get(f).push(`AMBIG  ${p} — generic basename, not resolvable (line ${v.line})`) }
   else { goneN++; byFile.get(f).push(`GONE   ${p} (line ${v.line})`) } }
 console.log(`  of those: MOVED (unique basename, real move) ${movedN}, AMBIGUOUS (generic name) ${genericN}, GONE ${goneN}\n`)
-for (const [f,ps] of [...byFile].sort((a,b)=>b[1].length-a[1].length).slice(0,14)) {
+// `--all` prints every doc and every reference. The default truncates to 14 docs and 4
+// references each, which is right for a terminal and wrong for anything that PARSES this
+// output: a fixer reading the report applied 10 of 15 MOVED references and then reported
+// "0 applied" on every subsequent pass, because the remaining 5 were behind "…N more" and
+// had never been printed at all. A truncated measurement reads as a complete one.
+const ALL = process.argv.includes('--all')
+for (const [f,ps] of [...byFile].sort((a,b)=>b[1].length-a[1].length).slice(0, ALL ? Infinity : 14)) {
   console.log(`### ${f}  (${ps.length})`)
-  ps.slice(0,4).forEach(p=>console.log(`  - ${p}`))
-  if (ps.length>4) console.log(`  - …${ps.length-4} more`)
+  ps.slice(0, ALL ? Infinity : 4).forEach(p=>console.log(`  - ${p}`))
+  if (!ALL && ps.length>4) console.log(`  - …${ps.length-4} more (run with --all)`)
 }
