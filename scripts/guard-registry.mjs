@@ -121,6 +121,22 @@ export const GUARDS = [
       'stale pointers as app findings. A clean pass prints the guarded/total ' +
       'step counts and the files scanned; finding zero setup-node steps, or ' +
       'fewer than the floor, is a hard failure rather than a pass.',
+    id: 'parent-component-mounts',
+    label: 'toast() callers require a mounted toast surface',
+    repo: '.',
+    command: ['node', 'scripts/check-component-mounts.mjs'],
+    ciWorkflow: '.github/workflows/component-mount-gate.yml',
+    mode: 'run',
+    notes:
+      'braden shipped 54 files calling toast() with NOT ONE <Toaster> mounted ' +
+      'anywhere in the app tree (fixed in braden #437). Nothing errored and ' +
+      'nothing logged, so every confirmation and error on braden.com.au was ' +
+      'discarded silently. Parses the TSX AST rather than grepping: a grep ' +
+      'counts the fix commit\'s own comment (\'Neither <Toaster> was mounted\') ' +
+      'as a mount, and would also miss braden\'s real mounts, which are ' +
+      'aliased (<SonnerToaster/>, <RadixToaster/>). Mounts resolve through ' +
+      'import bindings, not tag names. A clean pass prints per-app file, ' +
+      'caller and mount counts; scanning zero files is a hard failure.',
   },
 
   {
@@ -560,27 +576,28 @@ export const GUARDS = [
   },
   {
     id: 'parent-verify-esm-imports',
-    label: 'Published package entry points import cleanly under Node ESM',
+    label: 'Every built @bsuite/* package imports cleanly under Node ESM',
     repo: '.',
     command: ['bash', 'scripts/verify-esm-imports.sh'],
     ciWorkflow: '.github/workflows/theme-conformance.yml',
-    mode: 'run',
-    knownSilent: true,
-    knownSilentReason:
-      'Without its CI precondition (`pnpm -r --filter "./packages/**" ' +
-      'build` run first), this prints "PASS: all 0 built packages import ' +
-      'cleanly under Node ESM." — a stated ZERO denominator on a real PASS ' +
-      'line. In real CI the packages ARE built first (see ' +
-      'theme-conformance.yml "Install and build packages" step), so this ' +
-      'is not confirmed to fire in production — but the guard itself has ' +
-      'no floor check requiring a non-zero built-package count, unlike ' +
-      "check-secret-naming.sh's UNSCANNED refusal. If the build step were " +
-      'ever skipped, mistyped, or partially failed, this gate would ' +
-      'silently rubber-stamp it. Filed, not fixed in this pass.',
-    evidence:
-      '"PASS: all 0 built packages import cleanly under Node ESM." ' +
-      '(observed running the script directly, without the preceding ' +
-      "`pnpm -r build` CI does; see knownSilentReason).",
+    mode: 'skip',
+    skipReason:
+      'Needs its build precondition — `pnpm -r --filter "./packages/**" build` ' +
+      '(theme-conformance.yml, "Install and build packages"). Was knownSilent ' +
+      'until 2026-08-21: without that step every package landed in `skipped`, ' +
+      '`checked` stayed 0, and it printed "PASS: all 0 built packages import ' +
+      'cleanly under Node ESM" — exit 0, green tick, nothing imported. It now ' +
+      'REFUSES on a zero denominator, and distinguishes the two causes: no ' +
+      'packages found at all, versus packages present but none built (which ' +
+      'names the skip count and the missing build command). GOOD CITIZEN ' +
+      'while skipped: run without the build it exits 1 rather than passing. ' +
+      'Verified by fixture 2026-08-21 — zero packages: exit 1; two packages, ' +
+      'none built: exit 1 naming "2 package(s) exist, 0 were ' +
+      'importable-checked"; one package built: floor does NOT fire, reaches ' +
+      'the real check and prints "PASS: 1 subpath(s) across 1 package(s) ... ' +
+      '(0 skipped)". Against the real built tree it reports a genuine ' +
+      'pre-existing failure — @bsuite/ui/use-on-click-outside, 1 of 44 ' +
+      'subpaths — filed separately.',
   },
   {
     id: 'parent-check-script-parity',

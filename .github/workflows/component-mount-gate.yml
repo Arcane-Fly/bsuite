@@ -1,0 +1,98 @@
+name: Component mount gate
+
+# A component that is CALLED everywhere but MOUNTED nowhere does nothing, and
+# does it silently.
+#
+# Measured on braden 2026-08-20: 54 files called `toast(...)` and NOT ONE
+# `<Toaster>` was mounted anywhere in the app tree. All four primitives sat on
+# disk unrendered. Every confirmation and every error on braden.com.au — the
+# whole admin surface, both contact forms, the auth page, storage and upload
+# hooks — had been discarded since the primitives were added.
+#
+# Nothing failed. Nothing logged. No test, no type error and no lint rule had
+# anything to complain about, because the wiring was all present; it was simply
+# never rendered. To the operator it was indistinguishable from the app doing
+# nothing, which is the worst kind of defect — it reads as a product decision.
+#
+# Fixed in braden #437. This gate is so it cannot come back, there or anywhere.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+  schedule:
+    # Submodule pointers move outside PRs; a daily run catches a regression
+    # that arrives via a pointer bump rather than a source edit.
+    - cron: '50 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mounts:
+    name: Component mount gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 1
+          # The six app repos are PRIVATE. The default GITHUB_TOKEN cannot clone
+          # them, and the first run of this workflow died with
+          # "Repository not found ... Failed to clone 'crm7'". Same shape the
+          # rest of the estate uses, fork guard included: a PR from a fork must
+          # not be handed the org PAT.
+          token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+          # setup-node@v5 defaults `package-manager-cache: true`, which resolves
+          # the packageManager field's pnpm before corepack runs and dies with
+          # "Unable to locate executable file: pnpm". Enforced estate-wide by
+          # scripts/check-setup-node-pnpm-guard.mjs.
+          package-manager-cache: false
+
+      - name: Install typescript (the guard parses TSX, it does not grep it)
+        run: |
+          set -euo pipefail
+          corepack enable
+          # The guard hard-refuses to run without a real parser rather than
+          # degrading to a regex — same rule as check-own-package-freshness.mjs
+          # and for the same reason. A grep counts a COMMENT mentioning
+          # <Toaster> as a mount, and misses aliased mounts entirely.
+          npm i --no-save --no-audit --no-fund typescript@6
+
+      - name: Prove the checker can fail before trusting what it says
+        run: |
+          set -euo pipefail
+          test -f braden/src/App.tsx || { echo "::error::braden/src/App.tsx missing — submodules not checked out; the scan would be vacuous."; exit 1; }
+          cp braden/src/App.tsx /tmp/app-real.tsx
+          # Strip the real mounts, keep everything else — including the comment
+          # that mentions <Toaster>, which is exactly what a grep-based check
+          # would still count. The guard must reject this tree.
+          python3 - <<'PY'
+          import io, re
+          p = 'braden/src/App.tsx'
+          s = io.open(p, encoding='utf-8').read()
+          s2 = re.sub(r'^[ \t]*<[A-Za-z]*(?:Toaster|Sonner)[A-Za-z]*\b[^\n]*\n', '', s, flags=re.M)
+          removed = len(s.splitlines()) - len(s2.splitlines())
+          if removed == 0:
+              raise SystemExit('POSITIVE CONTROL SETUP FAILED: removed 0 mount lines — '
+                               'the control never ran, so a pass below would prove nothing.')
+          io.open(p, 'w', encoding='utf-8').write(s2)
+          print(f'control: removed {removed} mount line(s)')
+          PY
+          if node scripts/check-component-mounts.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — the guard passed a tree with every toast mount removed. Its clean passes mean nothing."
+            cp /tmp/app-real.tsx braden/src/App.tsx
+            exit 1
+          fi
+          cp /tmp/app-real.tsx braden/src/App.tsx
+          echo "positive control ok — guard rejects a tree whose mounts were removed"
+
+      - name: Check every app with toast() callers mounts a toast surface
+        run: node scripts/check-component-mounts.mjs
