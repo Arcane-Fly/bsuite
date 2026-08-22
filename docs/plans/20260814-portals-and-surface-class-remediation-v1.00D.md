@@ -31,7 +31,7 @@ shadcn/ui · Playwright · pnpm 10.30.3 / Node 24
 `docs/20260814-portals-operator-rulings-v1.00A.md` (D-93–D-98),
 `docs/20260813-operator-directive-notes-backlog-remediation-v1.00D.md` (D-59–D-92),
 `docs/20260813-portals-redesign-brainstorm-v1.00D.md`,
-`docs/20260723-Anytime-WorkforceOne-Admin-Guide.md`.
+`docs/20260723-anytime-workforceone-admin-guide-v1.00W.md`.
 
 ---
 

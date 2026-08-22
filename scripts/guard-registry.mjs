@@ -104,6 +104,42 @@ export const GUARDS = [
   // Parent monorepo
   // ---------------------------------------------------------------------
   {
+    id: 'parent-setup-node-pnpm-guard',
+    label: 'setup-node@v5 must set package-manager-cache: false',
+    repo: '.',
+    command: ['node', 'scripts/check-setup-node-pnpm-guard.mjs'],
+    ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
+    mode: 'run',
+    notes:
+      'setup-node@v5 defaults package-manager-cache: true and resolves the ' +
+      'packageManager field\'s pnpm BEFORE corepack runs, dying with ' +
+      '"Unable to locate executable file: pnpm". PR #2048 fixed this by hand ' +
+      'across 22 workflows and MISSED advance-submodule-pointers.yml, which ' +
+      'then failed 20 of 20 scheduled runs (2026-08-20 to 08-21) unnoticed. ' +
+      'That workflow is the estate\'s only WRITER of submodule gitlinks and ' +
+      'six workflows read them, so its silence made six green guards report ' +
+      'stale pointers as app findings. A clean pass prints the guarded/total ' +
+      'step counts and the files scanned; finding zero setup-node steps, or ' +
+      'fewer than the floor, is a hard failure rather than a pass.',
+    id: 'parent-component-mounts',
+    label: 'toast() callers require a mounted toast surface',
+    repo: '.',
+    command: ['node', 'scripts/check-component-mounts.mjs'],
+    ciWorkflow: '.github/workflows/component-mount-gate.yml',
+    mode: 'run',
+    notes:
+      'braden shipped 54 files calling toast() with NOT ONE <Toaster> mounted ' +
+      'anywhere in the app tree (fixed in braden #437). Nothing errored and ' +
+      'nothing logged, so every confirmation and error on braden.com.au was ' +
+      'discarded silently. Parses the TSX AST rather than grepping: a grep ' +
+      'counts the fix commit\'s own comment (\'Neither <Toaster> was mounted\') ' +
+      'as a mount, and would also miss braden\'s real mounts, which are ' +
+      'aliased (<SonnerToaster/>, <RadixToaster/>). Mounts resolve through ' +
+      'import bindings, not tag names. A clean pass prints per-app file, ' +
+      'caller and mount counts; scanning zero files is a hard failure.',
+  },
+
+  {
     id: 'parent-semgrep-sast',
     label: 'Semgrep SAST ratchet (ERROR-severity findings, per app)',
     repo: '.',
@@ -540,27 +576,28 @@ export const GUARDS = [
   },
   {
     id: 'parent-verify-esm-imports',
-    label: 'Published package entry points import cleanly under Node ESM',
+    label: 'Every built @bsuite/* package imports cleanly under Node ESM',
     repo: '.',
     command: ['bash', 'scripts/verify-esm-imports.sh'],
     ciWorkflow: '.github/workflows/theme-conformance.yml',
-    mode: 'run',
-    knownSilent: true,
-    knownSilentReason:
-      'Without its CI precondition (`pnpm -r --filter "./packages/**" ' +
-      'build` run first), this prints "PASS: all 0 built packages import ' +
-      'cleanly under Node ESM." — a stated ZERO denominator on a real PASS ' +
-      'line. In real CI the packages ARE built first (see ' +
-      'theme-conformance.yml "Install and build packages" step), so this ' +
-      'is not confirmed to fire in production — but the guard itself has ' +
-      'no floor check requiring a non-zero built-package count, unlike ' +
-      "check-secret-naming.sh's UNSCANNED refusal. If the build step were " +
-      'ever skipped, mistyped, or partially failed, this gate would ' +
-      'silently rubber-stamp it. Filed, not fixed in this pass.',
-    evidence:
-      '"PASS: all 0 built packages import cleanly under Node ESM." ' +
-      '(observed running the script directly, without the preceding ' +
-      "`pnpm -r build` CI does; see knownSilentReason).",
+    mode: 'skip',
+    skipReason:
+      'Needs its build precondition — `pnpm -r --filter "./packages/**" build` ' +
+      '(theme-conformance.yml, "Install and build packages"). Was knownSilent ' +
+      'until 2026-08-21: without that step every package landed in `skipped`, ' +
+      '`checked` stayed 0, and it printed "PASS: all 0 built packages import ' +
+      'cleanly under Node ESM" — exit 0, green tick, nothing imported. It now ' +
+      'REFUSES on a zero denominator, and distinguishes the two causes: no ' +
+      'packages found at all, versus packages present but none built (which ' +
+      'names the skip count and the missing build command). GOOD CITIZEN ' +
+      'while skipped: run without the build it exits 1 rather than passing. ' +
+      'Verified by fixture 2026-08-21 — zero packages: exit 1; two packages, ' +
+      'none built: exit 1 naming "2 package(s) exist, 0 were ' +
+      'importable-checked"; one package built: floor does NOT fire, reaches ' +
+      'the real check and prints "PASS: 1 subpath(s) across 1 package(s) ... ' +
+      '(0 skipped)". Against the real built tree it reports a genuine ' +
+      'pre-existing failure — @bsuite/ui/use-on-click-outside, 1 of 44 ' +
+      'subpaths — filed separately.',
   },
   {
     id: 'parent-check-script-parity',
@@ -619,20 +656,45 @@ export const GUARDS = [
     id: 'parent-check-migration-fk-indexes',
     label: 'FK-on-REFERENCES-needs-index lint (parent, real diff-scoped CI shape)',
     repo: '.',
-    command: ['node', 'scripts/check-migration-fk-indexes.mjs', '--changed-files='],
+    /* LANE-WATCHER requires a NON-ZERO examined count on a clean pass, and it
+     * is right to. The previous registry command was the empty shape
+     * (`--changed-files=`), which legitimately examines nothing — so even after
+     * the fix it still printed "0 file(s) examined" and was still classified a
+     * silent guard. Correctly: the entry must exercise the WORKING path, so it
+     * points at real migrations and reports how many it read. The empty shape
+     * is now self-describing (it names the count, the cause and the base ref)
+     * and is covered by the workflow's API cross-check rather than by this
+     * entry. */
+    command: [
+      'node',
+      'scripts/check-migration-fk-indexes.mjs',
+      '--changed-files=supabase/migrations/20260822000000_browse_schema_with_tenant_names.sql,supabase/migrations/20260827030000_tenant_settings_oncost_config.sql',
+      '--base-ref=origin/development',
+      '--require-files',
+    ],
     ciWorkflow: '.github/workflows/migration-fk-index-lint.yml',
     mode: 'run',
     diffScoped: true,
-    knownSilent: true,
-    knownSilentReason:
-      'Real CI shape (`--changed-files=` with the diff\'s file list, empty ' +
-      'on a PR touching no migrations) prints the bare line ' +
-      '"check-migration-fk-indexes: no files — OK" — no base ref named, no ' +
-      'count, nothing that would look different if the upstream diff ' +
-      'computation silently broke and always returned empty. The crm7 copy ' +
-      '(scripts/check-migration-fk-indexes.mjs) has the identical defect — ' +
-      'same lineage, filed together. Filed, not fixed in this pass.',
-    evidence: '"check-migration-fk-indexes: no files — OK"',
+    notes:
+      'FIXED 2026-08-21. Previously knownSilent: the real CI shape ' +
+      '(`--changed-files=` empty) printed the bare line ' +
+      '"check-migration-fk-indexes: no files — OK" — no base ref, no count, ' +
+      'and nothing that would have looked different if the upstream diff ' +
+      'computation silently broke and always returned empty. That gate would ' +
+      'have green-lit every migration in the estate while reading green. ' +
+      'Now the empty case states the count (0), names WHICH cause produced it ' +
+      '(flag-supplied-and-empty vs no-arguments-at-all) and names the base ' +
+      'ref, and a caller that knows files must exist can pass --require-files ' +
+      'to turn the empty case into a hard failure. A guard cannot validate ' +
+      'its own input, so migration-fk-index-lint.yml now cross-checks the ' +
+      'local git diff against the GitHub PR-files API and fails when they ' +
+      'disagree; --require-files is set from the API answer, which keeps a ' +
+      'script-only PR (legitimately zero migrations) passing. The crm7 copy ' +
+      'shares this lineage and is fixed in a companion PR.',
+    evidence:
+      '"check-migration-fk-indexes: 0 file(s) examined — --changed-files= was ' +
+      'supplied and resolved to ZERO paths, base ref origin/development. ' +
+      'Nothing was checked; this is not a pass over any migration."',
   },
   {
     id: 'parent-check-supabase-advisors',

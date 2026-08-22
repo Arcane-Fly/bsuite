@@ -119,7 +119,7 @@ rate view possible before that's resolved?
 
 ### 4.1 The table has a designed writer that was never built
 
-`docs/adr/20260423-calc-engine-single-source.md` names the intended data flow explicitly:
+`docs/adr/20260423-calc-engine-single-source-v1.00W.md` names the intended data flow explicitly:
 
 > Host charge rates | Written by R80.3 `crm7SyncService.ts` → `host_charge_rates` | CRM7 reads for
 > invoicing

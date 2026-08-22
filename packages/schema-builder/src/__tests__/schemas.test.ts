@@ -104,16 +104,27 @@ describe('DB alias translators', () => {
     const row = toDbRelation(sampleRel, { tenantId: 't1', appScope: 'crm7' });
     expect(row.id).toBe(sampleRel.id);
     expect(row.source_entity_id).toBe('orders');
-    expect(row.source_field_id).toBe('customer_id');
     expect(row.target_entity_id).toBe('customers');
-    expect(row.target_field_id).toBe('id');
     expect(row.relation_type).toBe('one_to_many');
-    expect(row.on_delete).toBe('SET NULL');
-    expect(row.on_update).toBe('CASCADE');
     expect(row.is_system).toBe(false);
     expect(row.source_label).toBe('OrderCustomer');
     expect(row.tenant_id).toBe('t1');
     expect(row.app_scope).toBe('crm7');
+  });
+
+  it('toDbRelation drops field-level anchors and referential actions', () => {
+    // `sampleRel` deliberately carries fieldId + onDelete/onUpdate. They are
+    // UI-model only; the columns were dropped by 20260503000001. Emitting them
+    // is what made PostgREST reject every insert (PGRST204) from 2026-05-03.
+    const row = toDbRelation(sampleRel, { tenantId: 't1', appScope: 'crm7' });
+    for (const dropped of [
+      'source_field_id',
+      'target_field_id',
+      'on_delete',
+      'on_update',
+    ]) {
+      expect(dropped in row).toBe(false);
+    }
   });
 
   it('toDbRelation strips applyAsPostgresFK one-shot intent', () => {
@@ -128,13 +139,9 @@ describe('DB alias translators', () => {
       tenant_id: 't1',
       source_entity_id: 'orders',
       target_entity_id: 'customers',
-      source_field_id: 'customer_id',
-      target_field_id: 'id',
       relation_type: 'one_to_many',
       source_label: 'OrderCustomer',
       target_label: null,
-      on_delete: 'CASCADE',
-      on_update: 'RESTRICT',
       is_system: true,
       app_scope: 'crm7',
       metadata: {},
@@ -143,30 +150,24 @@ describe('DB alias translators', () => {
     };
     const rel = fromDbRelation(dbRow);
     expect(rel.source.tableId).toBe('orders');
-    expect(rel.source.fieldId).toBe('customer_id');
     expect(rel.target.tableId).toBe('customers');
-    expect(rel.target.fieldId).toBe('id');
     expect(rel.metadata.cardinality).toBe('one_to_many');
-    expect(rel.metadata.onDelete).toBe('CASCADE');
-    expect(rel.metadata.onUpdate).toBe('RESTRICT');
     expect(rel.metadata.isSystem).toBe(true);
     // applyAsPostgresFK is never persisted — always re-defaults to false.
     expect(rel.metadata.applyAsPostgresFK).toBe(false);
   });
 
-  it('fromDbRelation tolerates NULL on_delete/on_update (legacy rows)', () => {
+  it('fromDbRelation defaults the un-persisted UI-model fields', () => {
+    // The database cannot answer these, so the re-hydrated relation must fall
+    // to defaults rather than inventing a column-level anchor that no row has.
     const dbRow: TenantEntityRelation = {
       id: '44444444-4444-4444-8444-444444444444',
       tenant_id: null,
       source_entity_id: 'a',
       target_entity_id: 'b',
-      source_field_id: null,
-      target_field_id: null,
       relation_type: 'many_to_many',
       source_label: null,
       target_label: null,
-      on_delete: null,
-      on_update: null,
       is_system: false,
       app_scope: 'all',
       metadata: null,
@@ -174,6 +175,8 @@ describe('DB alias translators', () => {
       updated_at: null,
     };
     const rel = fromDbRelation(dbRow);
+    expect(rel.source.fieldId).toBeUndefined();
+    expect(rel.target.fieldId).toBeUndefined();
     expect(rel.metadata.onDelete).toBe('SET NULL');
     expect(rel.metadata.onUpdate).toBe('CASCADE');
   });
@@ -184,14 +187,22 @@ describe('DB alias translators', () => {
       expect.arrayContaining([
         'id',
         'source_entity_id',
-        'source_field_id',
         'target_entity_id',
-        'target_field_id',
         'relation_type',
-        'on_delete',
-        'on_update',
         'is_system',
       ]),
     );
+  });
+
+  it('ZOD_TO_DB_ALIASES names no column the table does not have', () => {
+    const dbCols = ZOD_TO_DB_ALIASES.map(([, db]) => db);
+    for (const dropped of [
+      'source_field_id',
+      'target_field_id',
+      'on_delete',
+      'on_update',
+    ]) {
+      expect(dbCols).not.toContain(dropped);
+    }
   });
 });

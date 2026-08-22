@@ -128,7 +128,7 @@ export type OverheadType = 'flat' | 'percent';
  * remote/FIFO rosters, continuous-coverage requirements), many awards never
  * had RDOs at all, and part-time employees may opt out under cl.16.9(b). A
  * model that assumes RDOs is exactly as wrong as one that ignores them —
- * see docs/references/20260730-rdo-flexibility.md.
+ * see docs/references/20260730-rdo-flexibility-v1.00W.md.
  *
  * `enabled: false` (the default via `DEFAULT_RDO_CONFIG`) is a real, common,
  * fully-supported state — not an unfinished one. When disabled, worked hours

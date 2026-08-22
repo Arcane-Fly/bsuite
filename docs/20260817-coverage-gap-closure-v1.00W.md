@@ -155,7 +155,7 @@ runs the self-test **first** and fails the build if the self-test passes.
 
 ### 2.3 G5 — the live trap in `docs/recovered/`
 
-**The trap.** `20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md` is **2,342 lines** of
+**The trap.** `20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md` is **2,342 lines** of
 task-by-task instructions for building the document-signing system on **Adobe Acrobat Sign**. Adobe
 Sign was **rejected on 2026-03-04 — the same day that plan was written** — and the replacement,
 built in-house with no vendor at all, shipped on 2026-03-17. The plan was never revised.

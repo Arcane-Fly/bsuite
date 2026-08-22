@@ -8,6 +8,11 @@ vi.mock('@xyflow/react', () => ({
     <div data-testid="mock-handle" data-handle-id={id} data-handle-type={type} className={className} />
   ),
   Position: { Left: 'left', Right: 'right', Top: 'top', Bottom: 'bottom' },
+  // EntityNode reads the live zoom for level-of-detail. Tests that assert the
+  // FULL card must sit above the 0.7 field band, or they assert the collapsed
+  // card and pass for the wrong reason.
+  useStore: (selector: (s: { transform: [number, number, number] }) => unknown) =>
+    selector({ transform: [0, 0, 1] }),
 }));
 
 import { EntityNode } from '../components/EntityNode.js';

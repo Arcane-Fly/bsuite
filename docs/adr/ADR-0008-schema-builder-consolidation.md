@@ -133,6 +133,21 @@ this debt before any feature work lands.
 - **Migration drift** — the reference migration in the package must stay in
   sync with the BSU canonical copy. Mitigation: `check-migration-parity.sh`
   CI check added in Phase 6 per plan §5 item 7.
+
+  > **The mitigation named above did not exist until 2026-08-22.** This ADR carried a
+  > named control for its own top risk for nearly four months with nothing behind the
+  > name — and an ADR is precisely the document a later reader trusts without
+  > re-deriving it.
+  >
+  > It exists now: `scripts/check-migration-parity.sh`, run by
+  > `.github/workflows/estate-invariants.yml` on every push to `main` and `development`.
+  > All five dev-fixture migrations were measured in sync when it was built, so it banks
+  > a good state rather than reporting a bad one. That was luck.
+  >
+  > It compares executable content, not bytes. The two copies differ **by design** in
+  > their provenance headers — each states which one it is, so neither can be edited in
+  > the wrong place by accident — and a byte-compare gate would have been red on day one
+  > and switched off within the week.
 - **Realtime channel leak** — the `useRealtimeSubscription` hook owns
   cleanup via the effect's return. Verified by the Vitest suite's cleanup
   assertions.

@@ -103,9 +103,23 @@ The truth: **11 unqualified** submodule paths, **2 external** (the `~/.agents` h
 `scripts/check-doc-citations-resolve.mjs` with those three bugs as self-tests.
 
 The four never-written scripts — `pnpm-audit-all.sh`, `check-base-stack-only.sh`,
-`check-peer-deps.sh`, `check-plan-cross-links.sh` — stay reported rather than deleted
-from the docs. Whether to build those gates or drop the prescriptions is a judgment
-call and belongs here, visible.
+`check-peer-deps.sh`, `check-plan-cross-links.sh` — stayed reported rather than deleted
+from the docs, because whether to build those gates or drop the prescriptions is a
+judgment call and belongs visible.
+
+**Resolved 2026-08-22.** Three were prescriptions to drop and one was a real hole:
+
+| Prescribed | Disposition |
+|---|---|
+| ~~`pnpm-audit-all.sh`~~ | **Drop.** `.github/workflows/security-audit.yml` runs `pnpm audit --audit-level=high --prod` across every app on a daily cron — a tighter cadence than the weekly the plan asked for. |
+| ~~`check-peer-deps.sh`~~ | **Drop.** syncpack was never adopted. `check-unmet-peer-deps.mjs` and `check-published-peer-ranges.mjs` cover it from a stricter source: the registry, not the source tree. |
+| ~~`check-plan-cross-links.sh`~~ | **Drop.** `check-doc-citations-resolve.mjs` resolves doc citations across submodules and is already wired. |
+| ~~`check-base-stack-only.sh`~~ | **BUILT.** This was the real hole — a dependency policy that read as enforced for two and a half months. Shipped as `scripts/check-base-stack-only.mjs` + `.github/workflows/base-stack-only.yml`, allow-list seeded at 159 runtime deps. |
+
+The pattern is worth more than the four items. **Six of the seven obligations on that
+plan's list HAD shipped under different filenames**, and that is exactly what hid the
+seventh: a reader spot-checking a list finds most entries genuine and stops checking. A
+list of prescriptions is only as trustworthy as its least-checked row.
 
 ### W-5 — the reach gate exists, and its own count moved four times
 
@@ -246,7 +260,7 @@ a later view of events.
 | **R-1** | `leads` ownership — now a failing gate with both sites named, ratcheted at 2 |
 | **R-2…R-5** | unchanged |
 | **W-1** | `rate_adjustments` / `billing_cycles` still have zero application reach |
-| | `check-base-stack-only.sh` — nothing gates a new runtime dependency against an allow-list |
+| | ~~`check-base-stack-only.sh` — nothing gates a new runtime dependency against an allow-list~~ **CLOSED 2026-08-22** — built as `scripts/check-base-stack-only.mjs`, wired by `.github/workflows/base-stack-only.yml` |
 | | 124 tables ORPHANED: no app reach and no server-side write |
 | | A `[VERIFICATION]` complaint row sits in the GTO register; the page has no delete affordance |
 
@@ -323,3 +337,68 @@ which has a DROP migration.
 They are **not** reclassified as legacy, because no migration comment says so and the
 evidence bar for class A is an explicit statement. Retiring them the same way is a
 decision, not a deduction.
+
+---
+
+## 10. The estate gate audit, and where all 85 landed
+
+Every gate script in the parent was run: **85 total, 53 passing at the start.** The 13
+failures resolved into four classes, and only five were defects.
+
+### Real defects, fixed
+
+| Gate | What was wrong |
+|---|---|
+| `check-no-cookie-sso` | **Security.** Failing on manual prose reading *"never add `cookieStorage`"* — the sentence forbidding the thing |
+| `check-no-hex-in-dist` | Flagging `@xyflow/react`, `react-grid-layout` and Tailwind's `@layer properties` — third-party CSS the doctrine explicitly exempts. Fixing it then exposed a second defect: under `set -euo pipefail` a grep matching nothing exits 1, so the script died silently the moment an app came back clean |
+| `verify-esm-imports` | Reported a **stale local dist** as a broken export. The published package was correct all along. Three more packages with stale builds surfaced once staleness became visible |
+| `verify-submodule-scopes` | Correct — submodules were ahead of the recorded gitlinks. Fixed by advancing them |
+| `audit-oklch-lightness` | 13 near-pure-white violations. Now **0** |
+
+### Environmental — need an input this machine does not have
+
+`check-schema-lag` (a `migration-history.json` produced from the DB), `semgrep-sast`
+(semgrep binary; runs in CI as the `sast` checks), `audit-tables.sh` (live DB, several
+minutes).
+
+Each **fails loudly with instructions** rather than reporting clean, which is the
+correct behaviour and worth saying plainly.
+
+### Not gates
+
+`prerender.mjs` — a build step documented as expected to fail locally.
+`ship-all-apps.sh` — an operations script.
+
+### Resolved by other work
+
+`check-published-matches-source` now reports **"every published version matches the
+source that claims to be it"**, exit 0. It was the gate that started the whole publish
+investigation, reporting `@bsuite/dry-lint@1.0.1 — 2 differing`.
+
+### Still open
+
+`check-doc-naming` — pre-existing, and the subject of a reverted rename whose blast
+radius was 51 files across six submodules. It is a policy question (R-3), not a bug.
+
+## 11. Seven gates were reporting things that were not true
+
+Not seven unlucky scripts. One shape, seven times, in a single day:
+
+| Gate | Reported | Reality |
+|---|---|---|
+| `canvasColumns` | every page under 1200px fails | defect fixed 2026-08-17; page has no columns control |
+| `gluedCards` | marketing page "not draggable" | a marketing page has no canvas |
+| `audit-doc-completion` | 23 docs cite a deleted gate | evidence layer read the parent only |
+| `audit-one-shot` | *nothing, ever* | wired into no workflow |
+| `check-no-cookie-sso` | a cookie-SSO violation | the sentence forbidding cookie SSO |
+| `check-no-hex-in-dist` | BSuite hex in the bundle | third-party CSS |
+| `verify-esm-imports` | a broken export | a stale local dist |
+
+**Every one blocked or hid real work.** Under ruling V-3 any FAIL blocks a promotion,
+so an over-broad rule is not noise — it is a stopped pipeline. And a gate wired to
+nothing is worse: it reads as coverage and provides none.
+
+The estate's real defects were sitting behind that noise. `funding_offsets` is the
+clearest case: an operator ruling made on 2026-08-20, committed the same day, reached
+nothing that enforces it for two days — and the only signal was a red workflow run
+nobody looked at, in a publish that had been failing since 2026-08-17.

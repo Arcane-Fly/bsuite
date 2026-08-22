@@ -50,7 +50,7 @@ wave of issues that mostly close on contact would bury the one that matters.
 
 ## 2. The trap — and why it beat three separate correct decisions
 
-`20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md` is 2,342 lines of task-by-task
+`20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md` is 2,342 lines of task-by-task
 instructions for building on **Adobe Acrobat Sign**. Adobe was rejected on **2026-03-04, the same
 day the plan was written**. The plan was never revised.
 
@@ -109,31 +109,57 @@ about the code?
 
 | # | Document | Verdict | Evidence | Marker defect |
 |---|---|---|---|---|
-| 1 | `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md` | **SUPERSEDED** | Cascade/Windsurf tandem no longer exists; coordination is `AGENTS.md` + worktrees + issues | **Marker** — `A` reads as standing instruction on a dead board |
-| 2 | `20260226-prerender-seo-marketing-plan-v1.0.0.md` | **DELIVERED** | `crm7/scripts/prerender.mjs`, `braden/scripts/prerender.mjs`; `prerender` in 3 `package.json` | **Marker** — `v1.0.0`, no status letter at all |
-| 3 | `20260226-recruit7-candidate-sourcing-plan-v1.00D.md` | **NEVER-BUILT-AND-SHOULD-NOT-BE** | No `recruit7` in `.gitmodules` (6 submodules). Conduit owns recruitment: `conduit/src/lib/ai/tools/candidate-tools.ts` + `r7_*` tables | **Marker** — `D` implies pending; it is dead |
+| 1 | `20260225-cascade-claude-upgrade-coordination-plan-v1.00F.md` | **SUPERSEDED** | Cascade/Windsurf tandem no longer exists; coordination is `AGENTS.md` + worktrees + issues | **Marker** — `A` reads as standing instruction on a dead board |
+| 2 | `20260226-prerender-seo-marketing-plan-v1.0.0-v1.00F.md` | **DELIVERED** | `crm7/scripts/prerender.mjs`, `braden/scripts/prerender.mjs`; `prerender` in 3 `package.json` | **Marker** — `v1.0.0`, no status letter at all |
+| 3 | `20260226-recruit7-candidate-sourcing-plan-v1.00F.md` | **NEVER-BUILT-AND-SHOULD-NOT-BE** | No `recruit7` in `.gitmodules` (6 submodules). Conduit owns recruitment: `conduit/src/lib/ai/tools/candidate-tools.ts` + `r7_*` tables | **Marker** — `D` implies pending; it is dead |
 | 4 | `20260226-report-comprehensive-qa-v1.00A.md` | **REFERENCE-ONLY** | Body dated **October 14, 2025**; overtaken by the 2026-08-17 ledger | **Marker** — `A` on a stale severity list reads as an approved queue |
-| 5 | `20260226-report-implementation-summary-v1.00A.md` | **DELIVERED** | Retrospective of fixes shipped 2025-10-09 | **Marker** — `A` on a retrospective |
-| 6 | `20260227-ai-assistant-plugin-system-plan-v1.00W.md` | **DELIVERED** | `crm7/src/lib/ai/plugins/plugin-registry.ts`; `xero/xero-plugin.ts`; `crm7/src/components/ai/AIAssistant.tsx` | **Marker** — `W` on shipped work |
-| 7 | `20260227-e2e-flows-google-azure-setup-v1.00W.md` | **DELIVERED** | Live: `oauth-google-email` v93, `oauth-microsoft-email` v94, `email-token-refresh` v62 | **Marker** — `W` on shipped work |
+| 5 | `20260226-report-implementation-summary-v1.00F.md` | **DELIVERED** | Retrospective of fixes shipped 2025-10-09 | **Marker** — `A` on a retrospective |
+| 6 | `20260227-ai-assistant-plugin-system-plan-v1.00F.md` | **DELIVERED** | `crm7/src/lib/ai/plugins/plugin-registry.ts`; `xero/xero-plugin.ts`; `crm7/src/components/ai/AIAssistant.tsx` | **Marker** — `W` on shipped work |
+| 7 | `20260227-e2e-flows-google-azure-setup-v1.00F.md` | **DELIVERED** | Live: `oauth-google-email` v93, `oauth-microsoft-email` v94, `email-token-refresh` v62 | **Marker** — `W` on shipped work |
 | 8 | `20260227-email-capabilities-plan-v1.00W.md` | **STILL-WANTED** (partly) | Transport live (5 functions, 5 tables). **Signatures + branding absent estate-wide**; `email_templates` 0 rows | **Body** — presents as the complete email plan with zero signature/branding requirement |
-| 9 | `20260228-conduit-ai-tools-plan-v1.00W.md` | **DELIVERED** | `conduit/src/lib/ai/tools/` — 7 tool modules + tests | **Marker** — `W` on shipped work |
-| 10 | `20260301-phase1-coordination-plan.md` | **SUPERSEDED** | Two-agent split; work delivered (#11), protocol obsolete | **Marker** — no version or status marker at all |
-| 11 | `20260301-reconciliation-phase1-implementation.md` | **DELIVERED** | Live tables `apprentices`, `placements`, `training_providers`, `user_tenants`, `org_members`; `crm7/supabase/migrations/20260228000001_gto_foundation_tables.sql` | **Marker** — none in filename |
-| 12 | `20260302-vercel-deployment-fix-cc2-plan-v1.00W.md` | **DELIVERED** | All six apps deploy from CI; remedies target a 2026-03 toolchain — do not re-apply | **Marker** — `W` on shipped work |
-| 13 | `20260303-bsuite-launch-ready-design-v1.00D.md` | **SUPERSEDED** | By the 2026-08-17 ledger (scope) and `bsuite#635` design-language rollout (visual). Names R80.3, now retired for R80.4 | **Marker** — `D` on superseded work |
-| 14 | `20260304-crm7-comprehensive-audit-report-v1.00W.md` | **SUPERSEDED** | By the 2026-08-17 ledger + ~137 open `crm7` issues | **Marker** — `W` on a historical audit |
-| 15 | `20260304-crm7-comprehensive-gap-analysis-v1.00W.md` | **SUPERSEDED** | Same, plus WF1 parity doc (#21) for competitor scope | **Marker** — `W` on historical analysis |
-| 16 | `20260304-crm7-document-lifecycle-design-v1.00D.md` | **SUPERSEDED** | Adobe-era shape; replaced by the 2026-03-17 architecture + §2.4a template substrate | **Body** — solution names a rejected vendor |
-| 17 | **`20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md`** | **NEVER-BUILT-AND-SHOULD-NOT-BE** | **THE TRAP** — see §2. Adobe rejected same day; residue live in production | **Body** — 2,342 lines of instructions for a rejected vendor |
+| 9 | `20260228-conduit-ai-tools-plan-v1.00F.md` | **DELIVERED** | `conduit/src/lib/ai/tools/` — 7 tool modules + tests | **Marker** — `W` on shipped work |
+| 10 | `20260301-phase1-coordination-plan-v1.00F.md` | **SUPERSEDED** | Two-agent split; work delivered (#11), protocol obsolete | **Marker** — no version or status marker at all |
+| 11 | `20260301-reconciliation-phase1-implementation-v1.00F.md` | **DELIVERED** | Live tables `apprentices`, `placements`, `training_providers`, `user_tenants`, `org_members`; `crm7/supabase/migrations/20260228000001_gto_foundation_tables.sql` | **Marker** — none in filename |
+| 12 | `20260302-vercel-deployment-fix-cc2-plan-v1.00F.md` | **DELIVERED** | All six apps deploy from CI; remedies target a 2026-03 toolchain — do not re-apply | **Marker** — `W` on shipped work |
+| 13 | `20260303-bsuite-launch-ready-design-v1.00F.md` | **SUPERSEDED** | By the 2026-08-17 ledger (scope) and `bsuite#635` design-language rollout (visual). Names R80.3, now retired for R80.4 | **Marker** — `D` on superseded work |
+| 14 | `20260304-crm7-comprehensive-audit-report-v1.00F.md` | **SUPERSEDED** | By the 2026-08-17 ledger + ~137 open `crm7` issues | **Marker** — `W` on a historical audit |
+| 15 | `20260304-crm7-comprehensive-gap-analysis-v1.00F.md` | **SUPERSEDED** | Same, plus WF1 parity doc (#21) for competitor scope | **Marker** — `W` on historical analysis |
+| 16 | `20260304-crm7-document-lifecycle-design-v1.00F.md` | **SUPERSEDED** | Adobe-era shape; replaced by the 2026-03-17 architecture + §2.4a template substrate | **Body** — solution names a rejected vendor |
+| 17 | **`20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md`** | **NEVER-BUILT-AND-SHOULD-NOT-BE** | **THE TRAP** — see §2. Adobe rejected same day; residue live in production | **Body** — 2,342 lines of instructions for a rejected vendor |
 | 18 | `20260304-document-esign-best-practice-research-v1.00W.md` | **REFERENCE-ONLY** | This is the decision record that *rejected* Adobe (§9). It got it right | **Marker** — `W` on a settled ruling invites reopening it |
 | 19 | `20260304-gto-document-templates-guide-v1.00W.md` | **STILL-WANTED** (small) | `document_templates` = **1 row** vs ~20 GTO types. Its `source` column ships in a migration **below the `20260611000000` floor**, so it can never apply | **Body** — depends on a column that will never exist |
-| 20 | `20260305-wif-migration-plan-v1.00A.md` | **DELIVERED** | WIF live in `crm7/supabase/functions/crm7-generate-document/index.ts` | **Neither** — marker, body and code agree. The only one |
+| 20 | `20260305-wif-migration-plan-v1.00F.md` | **DELIVERED** | WIF live in `crm7/supabase/functions/crm7-generate-document/index.ts` | **Neither** — marker, body and code agree. The only one |
 | 21 | `20260306-workforce-one-parity-analysis-v1.00W.md` | **REFERENCE-ONLY** | Competitor research (Workforce One / Code House) | **Marker** — `W` on reference material implies pending work |
 | 22 | `20260317-document-esigning-architecture-v1.00A.md` | **SUPERSEDED** (evidence, not decision) | Decision still right. But 2 of its 3 cited files deleted by `crm7#1665`; its *"webhook retirement crm7#687 CLOSED"* claim is **false** — it is live | **Body** — an `A` marker over a falsified evidence block |
-| 23 | `20260425-universal-canvas-master-execution-plan-v1.00W.md` | **SUPERSEDED** | Already self-bannered 2026-05-01 — the only one that was. Confirmed accurate; related open work is ledger **G7** | **Marker** — filename says `W`, body says SUPERSEDED |
-| 24 | `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md` | **DELIVERED** | `crm7/src/pages/auth/callback.tsx:209` `setSession`; `crm7/src/__tests__/oauth-contract.test.ts`. Procedure still useful as a runbook | **Marker** — `W` on shipped work |
-| 25 | `20260808-standards-do-not-name-providers-FINDING-v1.00A.md` | **REFERENCE-ONLY** | Operator RULING 4.3; ships its own re-check commands | **Neither** — verified good |
+| 23 | `20260425-universal-canvas-master-execution-plan-v1.00F.md` | **SUPERSEDED** | Already self-bannered 2026-05-01 — the only one that was. Confirmed accurate; related open work is ledger **G7** | **Marker** — filename says `W`, body says SUPERSEDED |
+| 24 | `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md` | **DELIVERED** | `crm7/src/pages/auth/callback.tsx:209` `setSession`; `crm7/src/__tests__/oauth-contract.test.ts`. Procedure still useful as a runbook | **Marker** — `W` on shipped work |
+| 25 | `20260808-standards-do-not-name-providers-finding-v1.00A.md` | **REFERENCE-ONLY** | Operator RULING 4.3; ships its own re-check commands | **Neither** — verified good |
+
+> **APPLIED 2026-08-22 — all 18 marker-wrong documents are now `F`.**
+>
+> This section identified the defect on 2026-08-17 and prescribed the fix. Nothing acted
+> on it for five days, which is the same shape as every other finding this week: the
+> analysis was right, the correction never landed, and the wrong marker went on being
+> read as truth the whole time.
+>
+> The correct marker was already in the convention. `docs/20260227-contributing-standards-guide-v1.01W.md`
+> §4 defines **`F` — Frozen: finalized, immutable**, and of 306 status-suffixed documents
+> across the estate, **zero** used it. There was never a need to invent a `-COMPLETE`
+> suffix; the slot existed and stood empty.
+>
+> Four verdicts mean finished and were promoted: **DELIVERED** (9), **SUPERSEDED** (6),
+> **DEAD** (2), **NEVER** (1). The other seven were left alone — REFERENCE and CURRENT
+> TRUTH are still consulted, LIVE is current, and STILL means the work is open. The count
+> of 18 was derived independently by the freeze tool and matches this section's own
+> figure exactly.
+>
+> Limb (b) of the operator's bar was re-checked rather than taken on trust: every
+> artifact this table cites for a DELIVERED verdict still resolves, including
+> `crm7/src/pages/auth/callback.tsx:209` still carrying `setSession`.
+>
+> `docs/recovered/` now reads **18 F · 3 A · 4 W**, and the four remaining `W` are the two
+> STILL-WANTED items, the one LIVE research note, and one reference analysis — every one
+> of them genuinely unfinished or genuinely current.
 
 **Marker defects total: 18 marker-wrong, 5 body-wrong, 2 clean** (18 + 5 + 2 = 25). The five
 body-wrong are documents 8, 16, 17, 19 and 22; **17 and 22 are the dangerous ones**, because a

@@ -27,7 +27,7 @@ evidence:
 
 - **v1.07W (2026-05-05)** — Zero-workaround reconciliation per user directive. Updated the React ground-truth table to current code: all six web apps, mobile, and shared packages are on React 19-compatible dependency lines. Removed stale “Throughput React 18 deferred” language and converted deferred/optional polish into explicit backlog requirements: DBML/SQL DDL exporters, durable undo/redo history, and cross-app WYSIWYG parity are required for plan completion rather than nice-to-have work.
 - **v1.06W (2026-05-05)** — Documentation reconciliation after the WYSIWYG/layout-shift and Schema Builder Phase 3 waves. Added explicit current-status notes so the historical delivery sections are not mistaken for open work: Phase 1a consolidation shipped as `@bsuite/schema-builder@0.1.0`; Phase 1b/Airtable upgrades advanced through `@bsuite/schema-builder@0.5.1`; the schema-builder-specific Phase 3 follow-up plan (`docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-plan-v1.00W.md`) closed via `@bsuite/schema-builder@0.7.0` and `docs/archive/parent/2026-05-05-schema-builder-phase-3-verified/20260504-schema-builder-phase-3-signoff-v1.00W.md`. Also records the mandatory WYSIWYG primitive contract in §6.1 and the cross-app layout-shift remediation in the phase status notes.
-- **v1.05W (2026-05-01)** — Operational-rigour refresh per user direction (2026-05-01): *"use ship all apps skill to bring all changes including earlier and claude code and other changes into development branch… make sure development branch contains everything before commencing 1a and repeat this before each subsequent phase… inbuild skills to your plans and phases and ensure you include red-team skills/steps."* Three additive structural changes, no scope drift: **(1) new §4.−1 Pre-Phase Readiness Gate** — before any phase begins, run the `ship-all-apps` skill's sweep to pull every unmerged Claude-Code / other-agent branch that does not conflict into `development` across the parent bsuite repo and all 6 submodules (gate blocks if any PR is open + conflict-free + has passed its checks yet not merged); **(2) Skills per phase** — each phase §4.x now enumerates the exact session-loaded skills + MCP tools the executing agent must load before coding (pulled from the `master-orchestration` skill's allow-list, scoped to the BSuite silo, QIG skills explicitly excluded); **(3) Red-team per phase** — each phase now has a mandatory `multi-agent-red-team-implementation` pass after the main deliverables land but before the phase is marked complete, with explicit red-team lenses pre-chosen per phase. Archival of three divergent plan docs (`20260425-universal-canvas-master-execution-plan-v1.00W.md`, `20260422-entity-linkage-schema-builder-uplift-v1.02W.md`, `20260316-mermaid-ui-builder-reference-v1.00A.md`) lands in the same PR into `docs/archive/2026-05-01-wysiwyg-consolidation/` with SUPERSEDED-BY headers pointing at this plan — user approval 2026-05-01: *"archival plan approved"* + *"mermaid ui builder doc can be archived because if done correctly our end result will be better."*
+- **v1.05W (2026-05-01)** — Operational-rigour refresh per user direction (2026-05-01): *"use ship all apps skill to bring all changes including earlier and claude code and other changes into development branch… make sure development branch contains everything before commencing 1a and repeat this before each subsequent phase… inbuild skills to your plans and phases and ensure you include red-team skills/steps."* Three additive structural changes, no scope drift: **(1) new §4.−1 Pre-Phase Readiness Gate** — before any phase begins, run the `ship-all-apps` skill's sweep to pull every unmerged Claude-Code / other-agent branch that does not conflict into `development` across the parent bsuite repo and all 6 submodules (gate blocks if any PR is open + conflict-free + has passed its checks yet not merged); **(2) Skills per phase** — each phase §4.x now enumerates the exact session-loaded skills + MCP tools the executing agent must load before coding (pulled from the `master-orchestration` skill's allow-list, scoped to the BSuite silo, QIG skills explicitly excluded); **(3) Red-team per phase** — each phase now has a mandatory `multi-agent-red-team-implementation` pass after the main deliverables land but before the phase is marked complete, with explicit red-team lenses pre-chosen per phase. Archival of three divergent plan docs (`20260425-universal-canvas-master-execution-plan-v1.00F.md`, `20260422-entity-linkage-schema-builder-uplift-v1.02W.md`, `20260316-mermaid-ui-builder-reference-v1.00A.md`) lands in the same PR into `docs/archive/2026-05-01-wysiwyg-consolidation/` with SUPERSEDED-BY headers pointing at this plan — user approval 2026-05-01: *"archival plan approved"* + *"mermaid ui builder doc can be archived because if done correctly our end result will be better."*
 - **v1.04W (2026-05-01)** — Knowledge-currency refresh via `/best-practice-research` + skill sweep (`bsuite-brand-system`, `ui-ux-pro-max`, `dry-one-shot-architecture`, `dnd-kit`, `zustand`, `shadcn-ui`, `forms-and-validation`, `tanstack-query`, `tanstack-table`, `supabase`). Findings applied as surgical refinements — no structural changes, no new phases. Key updates: **Phase 0 marked ✅ Completed** (shipped via PRs #335 parent / #332 crm7 / #228 BSU on 2026-05-01); **Dagre pin bumped** `^1.1.x` → `^3.0.0` (verified current stable — the `@dagrejs/dagre` 3.x line is the active maintenance branch and what production React Flow integrations ship against in 2026); **OKLCH color-space mandate** added to §3.5 per `bsuite-brand-system` skill (D2C tokens are authored in OKLCH; the color picker must present OKLCH values even when the user picks a custom colour so brand compliance gates catch non-OKLCH drift); **TanStack Query `queryOptions` factory pattern** named explicitly in §3.7 as the canonical read-query shape used inside `useSchemaController` per `tanstack-query` skill v5 guidance; **Protected-branch workflow** documented in §7 (parent `bsuite/development` + `crm7/development` + `business-suite-unified/development` are protected — all work lands via PR branches, never direct push, even for maintainers); Q2 marked locked/resolved since Phase 0 has shipped.
 - **v1.03W (2026-05-01)** — Consolidated 15 refinements from v1.02W code review: dropped `useOptimistic` from Vite pattern (TanStack Query's native optimistic is transition-safe; `useOptimistic` in a TanStack Query callback throws in React 19); fixed dagre axis labels for `rankdir: 'LR'` (`ranksep` is horizontal between ranks, `nodesep` is vertical within a rank); added Zod↔DB alias table in §3.9 so `SchemaRelation.source.tableId` ↔ `tenant_entity_relations.source_entity_id` is explicit; split `metadata.isSystem` into two orthogonal flags (`isSystem` = reflects existing native FK, `applyAsPostgresFK` = one-shot intent to emit DDL); moved field-level FK migration into Phase 1a deliverable 0 (must land before any code work); Phase 0 aligns shared-package React devDependencies while keeping peer ranges liberal; reconciled page persistence with ADR-0001 so CRM7 `custom_pages` remains canonical and `tenant_page_layouts` is not resurrected; added §4.0 Phase dependency graph; locked Q5 + Q7 (plan body already answers them); clarified `cmdk` is shadcn-transitive (not a separate package.json entry); named `syncpack` explicitly as the peer-dep + base-stack enforcement tool; scoped Phase 1a Cmd+K subset down to `Find Entity` + `Go to <page-path>` only to prevent Phase 1a sprawl. Trailing `Next session entry point` footnote retained unchanged.
 - **v1.02W (2026-05-01)** — Integrated user's improvement notes (field-level React Flow handles, React 19 `useOptimistic` + TanStack Query / Server-Action mutation pattern, hybrid relational-registry + jsonb view-state storage, shared `useSchemaController` hook, strict React 19 peer enforcement, Cmd+K command palette via shadcn `cmdk`). New §§2.6 / 3.7 / 3.8 / 3.9 / 3.10 added; §3.2 package structure expanded; §3.5 color picker refined to store CSS variable **name** (`var(--accent-primary)`) rather than resolved hex so the same layout renders correctly across D2C and Corporate themes; §3.6 dagre config pinned (`rankdir: 'LR'`, `nodesep: 60`, `ranksep: 80`) and smart-edge routing file named (`edges/SmartEdge.tsx`); §4 Phase 1 starts with a 'Hot-Sync' carve-out that extracts the shared `useSchemaController` hook BEFORE layering Airtable upgrades; §5 extended with peer-dependency enforcement clause; `cmdk` + `tailwind-merge` added to §2.5 + §6 as already-in-base-stack (cmdk needs install in BSU / conduit / R80.3 via `pnpm dlx shadcn add command`). Trailing user-notes block removed — content now integrated into body.
@@ -926,15 +926,34 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
 7. Base-stack-only rule (per v1.02W §2.5): no new runtime dependency may
    be added to any app or shared package without updating §2.5 + §6 of
    the master plan in the same PR. A CI lint script
-   (`scripts/check-base-stack-only.sh`, delivered in Phase 6) diffs each
+   (~~`scripts/check-base-stack-only.sh`, delivered in Phase 6~~ — see the note
+   below: it shipped 2026-08-22 as `scripts/check-base-stack-only.mjs`) diffs each
    PR's package.json changes against the allow-list and blocks on violation.
 
-   > **STILL OPEN as at 2026-08-22 — this is the one item on this list that was not
-   > delivered under another name.** Nothing in `scripts/` or `.github/workflows/`
-   > gates a new runtime dependency against an allow-list; the only allow-list in the
-   > estate is `migration-collision-allowlist.txt`, which is unrelated. The rule is
-   > written down and unenforced, which is the weakest of the three possible states —
-   > weaker than having no rule, because a rule on paper reads as a control.
+   > **DELIVERED 2026-08-22 — it was the one item on this list that had not shipped
+   > under any name, and it stayed invisible for exactly that reason: six of the seven
+   > obligations here WERE real under different filenames, so a reader spot-checking the
+   > list finds most items genuine and stops checking.**
+   >
+   > For two and a half months the estate had a dependency policy that read as enforced
+   > and was not — the weakest of the three possible states, weaker than having no rule,
+   > because nobody looks for a control they believe they already have.
+   >
+   > Shipped as `scripts/check-base-stack-only.mjs` (not `.sh` — it parses 27 manifests,
+   > and a shell wrapper existing only to match a filename in this paragraph would be
+   > cargo cult), wired by `.github/workflows/base-stack-only.yml`, with the allow-list
+   > at `.github/base-stack-allowlist.txt`.
+   >
+   > **Seeded from reality, not from §2.5.** The table below describes the base stack as
+   > designed; the estate installs 159 distinct runtime dependencies as built. Gating
+   > against the designed list would fail every PR on day one and be switched off within
+   > a week. So the gate answers the question the rule actually asks — *is this
+   > dependency new?* — and presence on the allow-list means "already installed", never
+   > "reviewed and approved".
+   >
+   > It uses equality rather than a ceiling, like the estate's other ratchets: an entry
+   > still listed after the dependency was removed would let it return unnoticed.
+   > `--bank` rewrites the file, so satisfying the removal side costs one command.
    The script can reuse the same `pnpm dlx syncpack@latest list-mismatches`
    invocation used for peer-dep enforcement (item 8), extended with an
    allow-list check against the §2.5 + §6 tables so one tool catches both
@@ -948,9 +967,9 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
      - `.syncpackrc.json` at repo root declaring a single pinned version
        group for `react`, `react-dom`, `@types/react`, `@types/react-dom`
        (all pinned to the latest active major — currently `^19.2.x`)
-     - `scripts/check-peer-deps.sh` wrapping
+     - ~~`scripts/check-peer-deps.sh` wrapping
        `pnpm dlx syncpack@latest list-mismatches` with a non-zero exit on
-       any detected mismatch
+       any detected mismatch~~ — never written; superseded, see below
 
        > **DELIVERED by a different mechanism.** syncpack was never adopted — there is
        > no `.syncpackrc.json`. Peer-dependency enforcement ships as

@@ -58,6 +58,14 @@ jobs:
         with:
           node-version: '24'
 
+          # setup-node@v5 defaults `package-manager-cache: true`, which makes it
+          # resolve the `packageManager` field's pnpm BEFORE corepack has run —
+          # a hard "Unable to locate executable file: pnpm" at the setup-node
+          # step. PR #2048 guarded 21 workflows against this; this one was
+          # missed, and failed 20 of 20 scheduled runs (2026-08-20 → 08-21) as
+          # a result. scripts/check-setup-node-pnpm-guard.mjs now enforces it.
+          package-manager-cache: false
+
       # The script needs each submodule to be a git repo it can fetch, but NOT
       # a full recursive checkout — it only ever reads refs.
       - name: Initialise submodule repos (refs only)

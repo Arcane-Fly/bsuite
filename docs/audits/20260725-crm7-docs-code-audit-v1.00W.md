@@ -166,7 +166,7 @@ For each major documented feature, the codebase (`src/`, `api/`, `supabase/migra
 | CSP in `vercel.json` `headers[]` | `vercel.json:63` (`"key": "Content-Security-Policy"`), `:81` (second CSP header). ✓ |
 | Permissive baseline + locked-down items | Doc matches `vercel.json` content. ✓ |
 
-### 15. Host Employers Canonicalization — `adr/20260525-host-employer-table-canonicalization.md` → **IMPLEMENTED**
+### 15. Host Employers Canonicalization — `adr/20260525-host-employer-table-canonicalization-v1.00W.md` → **IMPLEMENTED**
 
 | Doc claim | Evidence |
 |---|---|
@@ -177,7 +177,7 @@ For each major documented feature, the codebase (`src/`, `api/`, `supabase/migra
 | `/whs/host-employers` reads from `employers` via `useHostEmployerStore` | `src/pages/whs/host-employers/` exists. ✓ |
 | 14-item implementation checklist | All files referenced exist. ✓ |
 
-### 16. Contacts/Clients/Leads Canonical Source — `adr/20260525-contacts-clients-leads-canonical-source.md` → **IMPLEMENTED**
+### 16. Contacts/Clients/Leads Canonical Source — `adr/20260525-contacts-clients-leads-canonical-source-v1.00W.md` → **IMPLEMENTED**
 
 | Doc claim | Evidence |
 |---|---|
@@ -185,7 +185,7 @@ For each major documented feature, the codebase (`src/`, `api/`, `supabase/migra
 | `leads.contact_id → contacts(id)` + `leads.client_id → clients(id)` FKs | Migration `20260422140000_phase1_golden_path_fks.sql` referenced. ✓ |
 | `/contacts` reads `contacts` directly, not filtered `lifecycle_stage` | `src/pages/contacts/index.tsx` + `useContactStore`. ✓ |
 
-### 17. GTO Master Plan + WS3-WS9 Implementation Plan — `plans/20260423-bsuite-gto-master-plan-v1.00W.md` + `plans/20260423-ws3-to-ws9-implementation-plan.md` → **SUBSTANTIVE-MATCH** (plan is "in flight"; most WS items shipped, some filenames differ)
+### 17. GTO Master Plan + WS3-WS9 Implementation Plan — `plans/20260423-bsuite-gto-master-plan-v1.00W.md` + `plans/20260423-ws3-to-ws9-implementation-plan-v1.00W.md` → **SUBSTANTIVE-MATCH** (plan is "in flight"; most WS items shipped, some filenames differ)
 
 | Plan claim | Code reality |
 |---|---|
@@ -237,9 +237,9 @@ ADR (status A). Documents the decision to use `xero-node` SDK in Deno Edge Funct
 | ADR | Status | Code backing |
 |---|---|---|
 | `0004-stp-xero-passthrough.md` | Decision record | `src/lib/pipelines/xeroPayrollAdapter.ts:1` + `src/lib/payroll/xeroAdapter.ts:1` implement STP Phase 2 via Xero. ✓ |
-| `20260423-calc-engine-single-source.md` | Decision record | `@bsuite/charge-calc` is the canonical engine; `src/lib/pipelines/` adapters wrap it. ✓ |
-| `20260525-contacts-clients-leads-canonical-source.md` | Accepted | See §16 above. ✓ |
-| `20260525-host-employer-table-canonicalization.md` | Accepted | See §15 above. ✓ |
+| `20260423-calc-engine-single-source-v1.00W.md` | Decision record | `@bsuite/charge-calc` is the canonical engine; `src/lib/pipelines/` adapters wrap it. ✓ |
+| `20260525-contacts-clients-leads-canonical-source-v1.00W.md` | Accepted | See §16 above. ✓ |
+| `20260525-host-employer-table-canonicalization-v1.00W.md` | Accepted | See §15 above. ✓ |
 
 ### 23. Operations — `operations/20260610-migration-history-post-baseline-drift-v1.00W.md` → **IMPLEMENTED** (audit report)
 
@@ -269,15 +269,15 @@ The email-entity-assignment doc (`20260726`) references `docs/plans/20260724-rec
 | 12 | BOOT Assessment UI | `reference/20260317-crm7-boot-assessment-ui-v1.00W.md` | **IMPLEMENTED** |
 | 13 | AI Sessions Schema | `architecture/20260316-crm7-ai-sessions-schema-v1.00W.md` | **IMPLEMENTED** (P2-2 UI gap is doc-acknowledged) |
 | 14 | CSP Policy | `20260519-csp-policy-reference-v1.00W.md` | **IMPLEMENTED** |
-| 15 | Host Employers ADR | `adr/20260525-host-employer-table-canonicalization.md` | **IMPLEMENTED** |
-| 16 | Contacts/Clients/Leads ADR | `adr/20260525-contacts-clients-leads-canonical-source.md` | **IMPLEMENTED** |
+| 15 | Host Employers ADR | `adr/20260525-host-employer-table-canonicalization-v1.00W.md` | **IMPLEMENTED** |
+| 16 | Contacts/Clients/Leads ADR | `adr/20260525-contacts-clients-leads-canonical-source-v1.00W.md` | **IMPLEMENTED** |
 | 17 | GTO Master Plan + WS3-WS9 | `plans/20260423-*-ws3-to-ws9-*` + `plans/20260423-bsuite-gto-master-plan-v1.00W.md` | **SUBSTANTIVE-MATCH** (6 file paths differ; all logic exists) |
 | 18 | AI Strategic Vision | `20260316-crm7-ai-strategic-vision-v1.00W.md` | **N/A** (vision doc, not a feature spec) |
 | 19 | Schema Builder | cross-repo plan reference | **SUBSTANTIVE-MATCH** (lives under `settings/` not `admin/`) |
 | 20 | Portal SSO Decision | `20260512-portal-cross-app-sso-architecture-decision-v1.00A.md` | **IMPLEMENTED** (ADR) |
 | 21 | xero-node SDK Deno Decision | `20260512-xero-node-sdk-deno-compat-decision-v1.00A.md` | **IMPLEMENTED** (ADR) |
 | 22 | STP/Xero Passthrough ADR | `adr/0004-stp-xero-passthrough.md` | **IMPLEMENTED** |
-| 23 | Calc Engine Single Source ADR | `adr/20260423-calc-engine-single-source.md` | **IMPLEMENTED** |
+| 23 | Calc Engine Single Source ADR | `adr/20260423-calc-engine-single-source-v1.00W.md` | **IMPLEMENTED** |
 | 24 | Handover-to-Employment | (referenced design doc + edge fn) | **IMPLEMENTED** |
 
 ---
@@ -294,7 +294,7 @@ The email-entity-assignment doc (`20260726`) references `docs/plans/20260724-rec
 
 3. **`20260316-crm7-document-storage-setup-v1.00W.md`** — Phase 1/2/3 tracking table says `OPEN` (crm7#1056–#1058) but the doc's own 2026-06-11 and 2026-06-17 evidence sections show all three phases shipped (backend + UI + automation + pgTAP). The gate is live-deploy UX evidence, not code. Update the table to "code-complete, pending deploy evidence" or close the issues.
 
-4. **`plans/20260423-ws3-to-ws9-implementation-plan.md`** / `plans/README.md` — claims "annual reconciliation report, AVETMISS variants, LLN UI remain." Code shows all three have implementations (`src/pages/billing/reconciliation.tsx`, `src/lib/avetmiss/stateExtracts.ts` + `stateVariants.ts`, `src/pages/compliance/lln-assessments/index.tsx`). The "remain" framing is stale — what remains is live-deploy verification, not implementation.
+4. **`plans/20260423-ws3-to-ws9-implementation-plan-v1.00W.md`** / `plans/README.md` — claims "annual reconciliation report, AVETMISS variants, LLN UI remain." Code shows all three have implementations (`src/pages/billing/reconciliation.tsx`, `src/lib/avetmiss/stateExtracts.ts` + `stateVariants.ts`, `src/pages/compliance/lln-assessments/index.tsx`). The "remain" framing is stale — what remains is live-deploy verification, not implementation.
 
 5. **`FEATURE-SURFACE.md`** — claims schema builder is at `src/pages/admin/schema-builder/*`; actual path is `src/pages/settings/schema-builder/index.tsx`.
 

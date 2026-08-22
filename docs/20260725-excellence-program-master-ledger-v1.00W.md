@@ -83,7 +83,7 @@
 
 ## Excellence close-out (2026-07-25 evening)
 
-Plan: `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-1.00W.md`
+Plan: `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md`
 
 - Host capacity + leave/FO Jodie: SHIPPED (crm7#1207)
 - Enterprise admin Jodie tools: this close-out

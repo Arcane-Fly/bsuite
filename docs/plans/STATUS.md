@@ -37,7 +37,7 @@ dependency status).
 > **Plans NOT in this register:** sibling submodule `docs/plans/STATUS.md` files
 > (crm7, conduit, business-suite-unified, R80.4, braden, throughput) carry the
 > per-app rows. The long-horizon planning reference is
-> [`docs/00-roadmap/20260112-master-roadmap-1.00W.md`](../00-roadmap/20260112-master-roadmap-1.00W.md)
+> [`docs/00-roadmap/20260112-master-roadmap-v1.00W.md`](../00-roadmap/20260112-master-roadmap-v1.00W.md)
 > *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*;
 > the phase-ordered queue `docs/20260501-merged-execution-backlog-v1.00W.md` is **archived out of
 > the repo** (`~/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/docs/archive/2026-07/`) —

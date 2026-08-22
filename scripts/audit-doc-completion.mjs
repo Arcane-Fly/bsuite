@@ -56,18 +56,65 @@ export function isCompletionMarked(filename) {
   return !PHRASE_PREFIX.test(before);
 }
 
-/** Artifacts a doc explicitly names. Naming is checkable; mentioning is not. */
+// A LINE THAT SAYS A GATE IS GONE IS NOT CITING IT AS EVIDENCE.
+//
+// The same shape as the prohibition guard in check-no-cookie-sso.mjs, and it bit
+// here for the same reason. `crm7/docs/audits/20260811-ci-guards-deferred-items-v1.00D.md`
+// exists TO RECORD that `quality.yml` was deleted; the sentence is
+// "`.github/workflows/quality.yml` is deleted". The auditor read the filename,
+// could not find the file, and reported the doc as citing a ghost — i.e. it
+// reported an accurate historical record as a defect.
+//
+// Seven of the thirteen dead citations were this. Left in, they train a reader to
+// skim the list, which is how the three REAL ones (a runbook pointing at a retired
+// cron, an ADR naming a mitigation that was never built, a plan claiming a script
+// was "delivered") would have stayed unfixed.
+//
+// Deliberately NARROW. It suppresses only when the same line declares the artifact
+// absent, proposed, or historical. A doc that merely SOUNDS negative elsewhere still
+// reports — see the control self-test.
+const ABSENT_ON_LINE = new RegExp(
+  '(~~|\\b(?:' +
+  'delet(?:e|ed|ion|ing)|remov(?:e|ed|al)|retir(?:e|ed|ement)|drop(?:ped)?|' +
+  'never[ -](?:written|existed|created|shipped|built)|no longer|' +
+  'does not exist|did not exist|non-existent|nonexistent|absent|missing|' +
+  'candidate|proposed|to be written|not yet written|would be|planned|' +
+  'disposition|superseded|replaced by|renamed' +
+  ')\\b)', 'i');
+
+/**
+ * Artifacts a doc explicitly names. Naming is checkable; mentioning is not.
+ *
+ * Line-aware, because the SENTENCE decides whether a name is a citation or a
+ * historical mention, and whole-text matching throws that away.
+ */
 export function citedArtifacts(text) {
-  const out = { gates: [], workflows: [], migrations: [], prs: [] };
-  for (const m of text.matchAll(/\b((?:check|audit|codemod|verify|lint)-[a-z0-9-]+\.(?:mjs|sh|py))\b/g)) out.gates.push(m[1]);
+  const out = { gates: [], workflows: [], migrations: [], prs: [], historical: [] };
+  // `\b` IS NOT A LEFT EDGE HERE — a hyphen is a non-word character, so `\baudit-all.sh`
+  // matches the TAIL of `pnpm-audit-all.sh` and invents a citation to a script nobody
+  // ever named. Third time this exact shape has bitten in a week (the last was a path
+  // regex matching the tail of a corrected path). Require a real left edge.
+  const GATE_RE = /(?<![A-Za-z0-9_-])((?:check|audit|codemod|verify|lint)-[a-z0-9-]+\.(?:mjs|sh|py))\b/g;
+  const WF_RE = /(?<![A-Za-z0-9_-])([a-z0-9][a-z0-9-]*\.ya?ml)\b/g;
   // Workflow citations only. A bare `.ya?ml` pattern also matches
   // pnpm-lock.yaml and pnpm-workspace.yaml, which are real files that simply do
   // not live in .github/workflows -- so they reported as DEAD gates, i.e. as
   // ghosts, i.e. as a finding. They are neither. Exclude the known non-workflow
   // YAML by name rather than by guessing at shape.
   const NOT_A_WORKFLOW = /^(pnpm-lock|pnpm-workspace|package-lock|docker-compose|vercel|supabase|tsconfig|\.?eslintrc|renovate)\b/i;
-  for (const m of text.matchAll(/\b([a-z0-9][a-z0-9-]*\.ya?ml)\b/g)) {
-    if (!NOT_A_WORKFLOW.test(m[1])) out.workflows.push(m[1]);
+  for (const line of text.split('\n')) {
+    // THE PROSE DECIDES, NOT THE NAME. Testing the raw line let an artifact called
+    // `check-deleted-thing.mjs` supply its own absence marker — the guard read the
+    // filename as the sentence's verdict and suppressed a real dead citation. The
+    // existing self-test caught it on the first run, which is the only reason this
+    // is a comment and not a defect. Blank the names out first.
+    const prose = line.replace(GATE_RE, ' ').replace(WF_RE, ' ');
+    const historical = ABSENT_ON_LINE.test(prose);
+    for (const m of line.matchAll(GATE_RE)) (historical ? out.historical : out.gates).push(m[1]);
+    for (const m of line.matchAll(WF_RE)) {
+      if (NOT_A_WORKFLOW.test(m[1])) continue;
+      (historical ? out.historical : out.workflows).push(m[1]);
+    }
   }
   for (const m of text.matchAll(/\b(\d{14})\b/g)) out.migrations.push(m[1]);
   for (const m of text.matchAll(/\b((?:bsuite|crm7|conduit|braden|throughput)#\d+)/g)) out.prs.push(m[1]);
@@ -75,7 +122,48 @@ export function citedArtifacts(text) {
   return out;
 }
 
-export function classify(text, filename, artifactsPresent) {
+// A DOC'S LOCATION CAN MAKE IT A RECORD RATHER THAN A CLAIM.
+//
+// `docs/archive/**` and `docs/plans/inputs/**` exist to preserve what was said at the
+// time. The archived plan-completion-dashboard README describes the cron that shipped
+// it — the dashboard was retired 2026-08-10, so of course the workflow is gone. Asking
+// an archive to cite live gates asks it to stop being an archive.
+//
+// This is NOT a general exemption: an archived doc also stops counting as BINDABLE, so
+// nothing can earn a completion marker by being filed away.
+const HISTORICAL_BY_PATH = /(^|\/)(archive|archived|inputs|superseded)(\/|$)/i;
+
+// A DOC CAN DECLARE ITSELF A SNAPSHOT, AND THEN IT IS ONE.
+//
+// The two crm7 CI-guard audits enumerate every workflow that existed on 2026-08-11 —
+// `quality.yml` among them — in tables. It was deleted the next day. Every row naming it
+// reported as a dead citation, but an audit dated 2026-08-11 that listed the state on
+// 2026-08-11 is not wrong; it is doing its job. Editing the tables to remove a workflow
+// that WAS there would falsify the record to satisfy a checker.
+//
+// Line-level suppression cannot reach this: the absence marker belongs to the whole
+// document, not to any row. So a banner near the top declaring the doc dated, superseded,
+// or a snapshot makes the document historical.
+//
+// Scoped to the opening lines on purpose. A supersession note buried in section 9
+// describes one item, not the document.
+const BANNER_LINES = 30;
+// FIRST CUT WAS FAR TOO WIDE. It accepted `Status: Draft`, which in this estate's
+// naming convention (`-1.00D`) marks a LIVE working document, and `predates`, which
+// appears in ordinary prose. 136 of 471 docs were reclassified as records and the
+// bindable count fell 47 -> 28 — the guard was quietly deleting the corpus it exists to
+// measure. Suppressing a real finding and suppressing a false one look identical from
+// the summary line, which is why the bindable count is the number to watch.
+//
+// Narrowed to declarations that can only mean "this document describes a past state".
+const HISTORICAL_BANNER =
+  /(\bstatus:\s*(superseded|historical|archived)\b|\bsuperseded (by|on)\b|\bpoint-in-time\b|\bhistorical record\b|\bsnapshot of the (state|estate)\b)/i;
+
+export function hasHistoricalBanner(text) {
+  return HISTORICAL_BANNER.test(text.split('\n').slice(0, BANNER_LINES).join('\n'));
+}
+
+export function classify(text, filename, artifactsPresent, relPath = filename) {
   const cited = citedArtifacts(text);
   const liveGates = cited.gates.filter((g) => artifactsPresent.has(g));
   const liveWorkflows = cited.workflows.filter((w) => artifactsPresent.has(w));
@@ -83,13 +171,15 @@ export function classify(text, filename, artifactsPresent) {
     ...cited.gates.filter((g) => !artifactsPresent.has(g)),
     ...cited.workflows.filter((w) => !artifactsPresent.has(w)),
   ];
+  const archival = HISTORICAL_BY_PATH.test(relPath) || hasHistoricalBanner(text);
   return {
+    archival,
     alreadyMarked: isCompletionMarked(filename),
     cited,
     liveGates,
     liveWorkflows,
-    deadCitations: dead,
-    bindable: liveGates.length > 0 || liveWorkflows.length > 0,
+    deadCitations: archival ? [] : dead,
+    bindable: !archival && (liveGates.length > 0 || liveWorkflows.length > 0),
   };
 }
 
@@ -133,6 +223,47 @@ const SELF_TESTS = [
   { name: 'a gate in NO root is still dead — the widening must not swallow real misses',
     t: 'Verified by `quality.yml`.', f: 'x.md', g: ['db-lint.yml'],
     expect: (r) => r.bindable === false && r.deadCitations.includes('quality.yml') },
+  { name: 'HISTORICAL: a line RECORDING that a gate was deleted is not citing it',
+    f: 'x.md', t: '`.github/workflows/quality.yml` is deleted and ci.yml absorbed it', g: ['ci.yml'],
+    expect: (r) => r.deadCitations.length === 0 && r.cited.historical.includes('quality.yml') },
+  { name: 'CONTROL: a plain assertion naming a gate that is gone STILL reports dead',
+    f: 'x.md', t: 'Parent CI guard: verify-silent-auth-wired.yml runs on every push.', g: ['ci.yml'],
+    expect: (r) => r.deadCitations.includes('verify-silent-auth-wired.yml') },
+  { name: 'the guard reads the PROSE, never the artifact name itself',
+    f: 'x.md', t: 'Mitigation: check-deleted-thing.mjs guards the drift.', g: [],
+    expect: (r) => r.deadCitations.includes('check-deleted-thing.mjs') },
+  { name: 'a CANDIDATE gate is a proposal, not a claim',
+    f: 'x.md', t: 'Candidate: scripts/check-lockfiles.mjs or a lint rule.', g: [],
+    expect: (r) => r.deadCitations.length === 0 },
+  { name: 'a LIVE gate on a historical line is still not counted as binding evidence',
+    f: 'x.md', t: 'ci.yml was renamed from the old runner.', g: ['ci.yml'],
+    expect: (r) => r.bindable === false && r.cited.historical.includes('ci.yml') },
+  { name: 'a gate name is never extracted from the TAIL of a longer name',
+    f: 'x.md', t: 'the never-written pnpm-audit-all.sh', g: [],
+    expect: (r) => r.deadCitations.length === 0 && r.cited.gates.length === 0 },
+  { name: 'ARCHIVED docs are records, not claims — and cannot bind either',
+    f: 'README.md', p: 'docs/archive/old-thing/README.md',
+    t: 'The deploy job (deploy-dashboard.yml) ships the artifact.', g: [],
+    expect: (r) => r.archival === true && r.deadCitations.length === 0 && r.bindable === false },
+  { name: 'a LIVE gate in an archived doc still does not earn a marker',
+    f: 'README.md', p: 'docs/archive/x/README.md', t: 'guarded by ci.yml', g: ['ci.yml'],
+    expect: (r) => r.bindable === false },
+  { name: 'CONTROL: the archive rule must not match a normal path containing the letters',
+    f: 'x.md', p: 'docs/plans/20260501-archival-strategy.md',
+    t: 'Parent CI guard: verify-silent-auth-wired.yml runs on every push.', g: [],
+    expect: (r) => r.archival === false && r.deadCitations.includes('verify-silent-auth-wired.yml') },
+  { name: 'CONTROL: a live doc with no banner still reports its dead citations',
+    f: 'x.md', t: '# Report\n\nParent CI guard: quality.yml runs on every push.', g: [],
+    expect: (r) => r.archival === false && r.deadCitations.includes('quality.yml') },
+  { name: 'CONTROL: a banner buried past the opening lines does not make a doc historical',
+    f: 'x.md', t: 'line\n'.repeat(40) + 'Superseded by the newer register.\nquality.yml runs on push.', g: [],
+    expect: (r) => r.archival === false && r.deadCitations.includes('quality.yml') },
+  { name: 'CONTROL: `Status: Draft` is a LIVE working doc here, never a record',
+    f: 'x.md', t: '# Audit\n\nStatus: Draft (D). Date: 2026-08-11.\n\nquality.yml runs on push.', g: [],
+    expect: (r) => r.archival === false && r.deadCitations.includes('quality.yml') },
+  { name: 'an explicit supersession banner DOES make a doc a record',
+    f: 'x.md', t: '# Audit\n\n> Superseded by the 2026-08-22 register.\n\nquality.yml runs on push.', g: [],
+    expect: (r) => r.archival === true && r.deadCitations.length === 0 },
   { name: 'migration versions and PRs are captured as corroboration',
     f: 'x.md', t: 'applied 20260831000000 via crm7#1894', g: [],
     expect: (r) => r.cited.migrations.includes('20260831000000') && r.cited.prs.includes('crm7#1894') },
@@ -141,7 +272,7 @@ const SELF_TESTS = [
 if (process.argv.includes('--self-test')) {
   let failed = 0;
   for (const t of SELF_TESTS) {
-    const r = classify(t.t, t.f, new Set(t.g));
+    const r = classify(t.t, t.f, new Set(t.g), t.p || t.f);
     const ok = t.expect(r);
     console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${t.name}`);
     if (!ok) { failed++; console.log(`        got: ${JSON.stringify(r)}`); }
@@ -193,7 +324,7 @@ function walk(dir, out = []) {
 const rows = [];
 for (const root of roots) {
   for (const p of walk(join(root, 'docs'))) {
-    rows.push({ path: p, ...classify(readFileSync(p, 'utf8'), p.split('/').pop(), artifactsPresent) });
+    rows.push({ path: p, ...classify(readFileSync(p, 'utf8'), p.split('/').pop(), artifactsPresent, p) });
   }
 }
 
@@ -208,6 +339,7 @@ console.log(`    ...of those, citing NO live gate             ${markedUnbindable
 console.log(`  CITE a gate or workflow that EXISTS            ${bindable.length}   <-- the only docs that can ever be marked`);
 console.log(`  cite a gate that NO LONGER EXISTS              ${dead.length}   <-- citing a ghost; reads as evidence`);
 console.log(`  cite nothing checkable                         ${rows.length - bindable.length - dead.length}`);
+console.log(`  historical records (by path or banner)         ${rows.filter((r) => r.archival).length}`);
 
 if (dead.length) {
   console.log('\n  DEAD CITATIONS — a doc pointing at a gate that was deleted:');

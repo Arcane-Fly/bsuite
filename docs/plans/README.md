@@ -23,7 +23,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 - [`../20260504-bsuite-documentation-hub-v1.00W.md`](../20260504-bsuite-documentation-hub-v1.00W.md) — Cross-submodule documentation hub (top-level index)
 - [`../../AGENTS.md`](../../AGENTS.md) — Stack floor and the ten tripwires (replaces the archived tech-stack-alignment doc)
 - [`../20260731-platform-operations-reference-v1.00W.md`](../20260731-platform-operations-reference-v1.00W.md) — Shared `@bsuite/*` package matrix, env vars, lockfile rules
-- `../00-roadmap/20260112-master-roadmap-1.00W.md` — Master roadmap — **SUPERSEDED**, see its banner
+- `../00-roadmap/20260112-master-roadmap-v1.00W.md` — Master roadmap — **SUPERSEDED**, see its banner
 - `../20260425-bsuite-finish-line-roadmap-v1.00W.md` — **archived out of the repo** (`~/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/docs/archive/2026-07/`)
 - `../20260501-merged-execution-backlog-v1.00W.md` — **archived out of the repo**, same path
 
@@ -41,20 +41,20 @@ register above, which is re-measured. Fifteen prompt-shaped documents currently 
 | File | Written |
 |------|---------|
 | `20260617-product-tails-continuation-prompt-v1.00W.md` | 2026-06-17 |
-| `20260629-remaining-work-continuation-prompt.md` | 2026-06-29 |
+| `20260629-remaining-work-continuation-prompt-v1.00W.md` | 2026-06-29 |
 | `20260709-hermes-deep-dive-audit-prompt-refined-v1.00W.md` | 2026-07-09 |
 | `20260723-completion-program-refined-v1.00D.md` | 2026-07-23 |
 | `20260724-recurring-bugs-blindspots-refined-v1.00D.md` | 2026-07-24 |
 | `20260725-docs-deadcode-archive-refined-v1.00D.md` | 2026-07-25 |
 | `20260725-gto-excellence-program-refined-v1.00D.md` | 2026-07-25 |
 | `20260727-escalation-council-multiapp-investigation-refined-v1.00W.md` | 2026-07-27 |
-| `20260728-billing-model-label-truthfulness-refined.md` | 2026-07-28 |
+| `20260728-billing-model-label-truthfulness-refined-v1.00W.md` | 2026-07-28 |
 | `20260729-unified-authoring-redteam-refined-v1.00W.md` | 2026-07-29 |
 | `20260802-d2c-theme-compliance-audit-refined.md` | 2026-08-02 |
-| `20260811-award-engine-to-zero-refined.md` | 2026-08-11 |
-| `20260811-dataplatform-completion-refined.md` | 2026-08-11 |
-| `20260811-feature-builder-world-class-refined.md` | 2026-08-11 |
-| `20260811-post-persona-execution-refined.md` | 2026-08-11 |
+| `20260811-award-engine-to-zero-refined-v1.00W.md` | 2026-08-11 |
+| `20260811-dataplatform-completion-refined-v1.00W.md` | 2026-08-11 |
+| `20260811-feature-builder-world-class-refined-v1.00W.md` | 2026-08-11 |
+| `20260811-post-persona-execution-refined-v1.00W.md` | 2026-08-11 |
 
 `20260423-gto-billing-reporting-refined-plan-v1.00A.md` is deliberately **not** in this table: it
 calls itself a refined prompt but was promoted to an Approved plan and is indexed as one below.

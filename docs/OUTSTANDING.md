@@ -25,8 +25,8 @@
 > | What is open? | `gh issue list` / `gh pr list` |
 > | What is in the database? | `supabase_migrations.schema_migrations` — better, assert the object: `to_regclass`, `pg_policies`, `information_schema` |
 > | Did a promotion apply? | The Supabase Migrations workflow run on `main` |
-> | What was decided, and why? | `docs/00-roadmap/20260808-operator-decision-register-1.00W.md` |
-> | What is the canonical roadmap? | `docs/00-roadmap/20260112-master-roadmap-1.00W.md` |
+> | What was decided, and why? | `docs/00-roadmap/20260808-operator-decision-register-v1.00W.md` |
+> | What is the canonical roadmap? | `docs/00-roadmap/20260112-master-roadmap-v1.00W.md` |
 > | Is irreplaceable data intact? | `scripts/verify-class-a-preservation.mjs` |
 >
 > The sections below are retained **as a dated 2026-07-08 snapshot** for historical
@@ -40,7 +40,7 @@
 >
 > **2026-07-28 repoint:** The 2026-06-29 doc referenced above was itself subordinated on 2026-07-27
 > to the suite-wide canonical. The **canonical master roadmap is now**
-> [`docs/00-roadmap/20260112-master-roadmap-1.00W.md`](./00-roadmap/20260112-master-roadmap-1.00W.md)
+> [`docs/00-roadmap/20260112-master-roadmap-v1.00W.md`](./00-roadmap/20260112-master-roadmap-v1.00W.md)
 > — go there directly rather than via the 0629 doc, which is retained for historical phase context
 > only.
 >
@@ -57,7 +57,7 @@
 **Audit authority:** See `docs/plans/README.md` for the plans-layer index.
 
 > **🧭 CANONICAL MASTER ROADMAP (repointed 2026-07-28):** The suite-wide canonical is
-> [`docs/00-roadmap/20260112-master-roadmap-1.00W.md`](./00-roadmap/20260112-master-roadmap-1.00W.md).
+> [`docs/00-roadmap/20260112-master-roadmap-v1.00W.md`](./00-roadmap/20260112-master-roadmap-v1.00W.md).
 > The previously-designated queue, [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md),
 > was subordinated to it on 2026-07-27 and is retained for historical phase context only. The
 > earlier `20260501-merged-execution-backlog-v1.00W.md` and `20260425-bsuite-finish-line-roadmap-v1.00W.md`
@@ -96,7 +96,7 @@ These are authoritative, continuously applicable documents. They evolve in place
 | File | Purpose |
 |------|---------|
 | `20260227-auth-map-reference-v1.00A.md` | Authentication topology across BSU, CRM7, R80.3, Braden — OAuth 2.1, session boundaries, token refresh chains |
-| `00-roadmap/20260112-master-roadmap-1.00W.md` | **Primary planning source of truth.** All sprints, P0–P3 gaps, audit sprint status, and recently-completed items live here. *(repointed 2026-07-28 — the previous entry here, `20260227-bsuite-master-roadmap-v5.00W.md`, was archived 2026-07-08; `20260415-roadmap-audit-delta-v1.00W.md` is retained for historical v5.0xW version-bump context only.)* |
+| `00-roadmap/20260112-master-roadmap-v1.00W.md` | **Primary planning source of truth.** All sprints, P0–P3 gaps, audit sprint status, and recently-completed items live here. *(repointed 2026-07-28 — the previous entry here, `20260227-bsuite-master-roadmap-v5.00W.md`, was archived 2026-07-08; `20260415-roadmap-audit-delta-v1.00W.md` is retained for historical v5.0xW version-bump context only.)* |
 | `20260227-contributing-standards-guide-v1.01W.md` | Universal code quality, documentation naming, and commit standards for all BSuite projects (supersedes v1.00A which is archived) |
 | `20260227-dry-one-shot-architecture-v1.04A.md` | DRY / one-shot data entry architecture; §1 Entity Ownership Map is the canonical cross-app ownership reference |
 | `20260228-d2c-theme-specification-v1.00A.md` | D2C Neon Electric theme specification — OKLCH palette, Tailwind token map, CSS variable contract |
@@ -123,7 +123,7 @@ Files with `.00W` (Working) or `.00D` (Draft) status that have open actions. Upd
 
 ### `plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` (added 2026-05-06)
 
-Index plan integrating Codehouse Workforce-One parity tracking with full Platform-360 capability/portal/role coverage. Companion files: 9 portal sub-plans + 1 visual feature builder spec under `plans/20260506-codehouse-parity/`; refined-prompt provenance at `plans/inputs/20260506-codehouse-parity-prompt-enhancer-output.md`.
+Index plan integrating Codehouse Workforce-One parity tracking with full Platform-360 capability/portal/role coverage. Companion files: 9 portal sub-plans + 1 visual feature builder spec under `plans/20260506-codehouse-parity/`; refined-prompt provenance at `plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md`.
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
@@ -344,7 +344,7 @@ fired.
 
 | File | Moved from | Archive reason |
 |------|-----------|----------------|
-| `20260423-phase5-schema-pagebuilder-implementation-v1.00W.md` | `docs/plans/` | 1528-line Phase 5 impl plan — all 7 PRs (5.0 → 5.6) landed; superseded by `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` |
+| `20260423-phase5-schema-pagebuilder-implementation-v1.00W.md` | `docs/plans/` | 1528-line Phase 5 impl plan — all 7 PRs (5.0 → 5.6) landed; superseded by `docs/20260425-universal-canvas-master-execution-plan-v1.00F.md` |
 | `20260316-mermaid-ui-builder-reference-v1.00A.md` | `docs/` | March 2026 legacy diagram-driven UI vision — superseded by universal-canvas architecture (PageGridLayout + @bsuite/schema-registry + TenantLayoutSlot) |
 
 ### 2026-04-23 bucket — `docs/archive/2026-04/`
@@ -353,7 +353,7 @@ fired.
 
 | File | Archive reason |
 |------|---------------|
-| `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md` | Historical coordination plan — work merged |
+| `20260225-cascade-claude-upgrade-coordination-plan-v1.00F.md` | Historical coordination plan — work merged |
 | `20260226-ux-oneshot-deep-dive-plan-v1.00W.md` | EntitySelector components built (7 exist); residual items tracked in `entity-crosswalk`; subsumed |
 | `20260227-bsuite-deep-audit-report-v1.00A.md` | Point-in-time audit report — superseded by gap reports v1 + v2 |
 | `20260301-crm7-page-inventory-v1.00A.md` | Superseded by live per-project inventories in crm7/docs |
@@ -379,7 +379,7 @@ fired.
 
 Re-ranked 2026-04-25 after Wave-1 → Wave-4 of the universal-canvas sweep
 landed. The universal-canvas master plan
-(`docs/20260425-universal-canvas-master-execution-plan-v1.00W.md`) is the
+(`docs/20260425-universal-canvas-master-execution-plan-v1.00F.md`) is the
 primary execution source; IDs below match the finish-line roadmap
 (`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`).
 

@@ -33,17 +33,17 @@
 > The equivalent is `employers.is_client` / `employers.is_host_employer`.
 >
 > **The superseding decision is recorded**, but was unreachable from either ADR index
-> until this correction — `crm7/docs/adr/20260525-host-employer-table-canonicalization.md`
+> until this correction — `crm7/docs/adr/20260525-host-employer-table-canonicalization-v1.00W.md`
 > ("ADR-002 · Canonicalize Host Employers to `public.employers`", Accepted 2026-05-25,
 > [crm7#866](https://github.com/GaryOcean428/crm7/issues/866)). It states plainly that
 > the `clients (type=host)` alignment is *"deferred to a future cross-app work stream
 > if ever needed"*.
 >
 > `crm7` is a submodule, so that path is a gitlink from this repo — browse it at
-> <https://github.com/GaryOcean428/crm7/blob/development/docs/adr/20260525-host-employer-table-canonicalization.md>.
+> <https://github.com/GaryOcean428/crm7/blob/development/docs/adr/20260525-host-employer-table-canonicalization-v1.00W.md>.
 >
 > **That file is also missing from crm7's own ADR index**, where it additionally
-> collides on the number "ADR-002" with `20260525-contacts-clients-leads-canonical-source.md`
+> collides on the number "ADR-002" with `20260525-contacts-clients-leads-canonical-source-v1.00W.md`
 > — the same defect as A-4, in a second repo. Fixing it needs a separate crm7 PR.
 >
 > Per estate convention, corrections stay visible: the original text below is
@@ -51,7 +51,7 @@
 
 **Status:** Accepted — contact half current; **organisation half superseded** (see banner)
 **Related:** `docs/20260227-dry-one-shot-architecture-v1.04A.md` §1 (`contacts`), §2 Flow E (Contact Reuse), §4 Auto-Population Rules; WS-E.1 Client↔Host Employer unification
-**Superseded in part by:** `crm7/docs/adr/20260525-host-employer-table-canonicalization.md`
+**Superseded in part by:** `crm7/docs/adr/20260525-host-employer-table-canonicalization-v1.00W.md`
 
 ---
 

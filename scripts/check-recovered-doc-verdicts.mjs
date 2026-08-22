@@ -16,7 +16,7 @@
  *
  * That reconciliation has a hole an agent walks straight through: **the warning
  * is in a different file from the trap.** `00-READ-THIS-FIRST` says, correctly,
- * that `20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md` is 2,342
+ * that `20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md` is 2,342
  * lines of instructions for a vendor rejected the same day it was written. But
  * an agent that greps for `document_signatories`, or opens the longest file in
  * the directory, or follows a link from another document, lands INSIDE the trap
@@ -86,8 +86,26 @@ const NOT_SUBJECT = new Map([
  */
 const MAX_UNVERDICTED = 8
 
+/**
+ * YAML FRONTMATTER IS NOT PART OF THE WINDOW.
+ *
+ * The window exists so the banner is the first thing a reader sees. Frontmatter does not
+ * compete with that — a markdown renderer hides it entirely, and a reader who opens the
+ * raw file reads past four metadata lines without effort. But it DOES consume the window.
+ *
+ * Classifying the 18 frozen documents with `kind: record` on 2026-08-22 pushed every one
+ * of their banners past line 6, and this gate went from 25 bannered to 7 in a single
+ * commit. Nothing had been removed. Two correct changes disagreed because one of them
+ * measured position instead of visibility.
+ */
+function stripFrontmatter(text) {
+  if (!text.startsWith('---')) return text;
+  const end = text.indexOf('\n---', 3);
+  return end === -1 ? text : text.slice(end + 4).replace(/^\n+/, '');
+}
+
 function hasVerdictBanner(text) {
-  const lines = text.split('\n').slice(0, BANNER_WINDOW)
+  const lines = stripFrontmatter(text).split('\n').slice(0, BANNER_WINDOW)
   for (const line of lines) {
     const t = line.trim()
     if (!t.startsWith('>')) continue

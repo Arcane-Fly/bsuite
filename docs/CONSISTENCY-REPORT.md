@@ -124,10 +124,31 @@ its boot path; every callback handles `error=login_required`.
 | conduit | 🟡 In flight | feat/auth-wire-silent-reauth-bsuite-auth-v0.2.0 |
 | business-suite-unified | ⊘ N/A | BSU is the OAuth Server, not a consumer |
 
-Parent CI guard: `.github/workflows/verify-silent-auth-wired.yml` runs on
+> **CORRECTED 2026-08-22 — the paragraph below claimed a guard that never existed, and
+> described an invariant that has since been superseded.** Both halves were wrong, and
+> the combination is the dangerous one: the doc supplied the confidence and there was
+> nothing to contradict it.
+>
+> `verify-silent-auth-wired.yml` was never written. And the assertion it was said to
+> make — that every consumer references `attemptSilentAuth` — is now the opposite of the
+> design: `throughput/src/__tests__/oauth-contract.test.ts` asserts that `AuthProvider`
+> does **not** call `attemptSilentAuth` on mount, and calls `startBSTokenRefresh()`
+> instead. Building the guard as specified would have gone red on the most correct app.
+>
+> **What is actually true, measured across all five consumers on 2026-08-22:** every one
+> starts BS OAuth token auto-refresh on boot, and every one handles
+> `error=login_required` at its callback. That pair IS the cross-app session — losing
+> either silently downgrades a signed-in user to a login screen, and nothing throws.
+>
+> That pair is now enforced by `scripts/check-oauth-boot-wiring.mjs`, run on every push
+> to `main` and `development` by `.github/workflows/estate-invariants.yml`. It detects
+> the OAuth server structurally (BSU ships the `oauth-*` edge functions) rather than by
+> name, because the name in this very report — `R80.3` — outlived the repo it named.
+
+~~Parent CI guard: `.github/workflows/verify-silent-auth-wired.yml` runs on
 every push to main + development and asserts every consumer's source tree
 references `attemptSilentAuth` in a `.ts` / `.tsx` file. Drift fails the
-guard — no consumer can quietly remove the wiring.
+guard — no consumer can quietly remove the wiring.~~
 
 Bootstrap migration (`crm7/supabase/migrations/20260506000100_bootstrap_profile_for_existing_users.sql`)
 shipped as part of Track A in crm7#487; application to Supabase is tracked

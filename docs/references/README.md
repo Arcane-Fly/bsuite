@@ -19,8 +19,8 @@ anything. Plans live in `docs/plans/`; rulings live in the register named by `do
 
 | File | What it is | Why it matters |
 |---|---|---|
-| `20260730-Elements-of-Rate-Calculation.md` | Captured rates-calculator source material (80K) | The element-by-element construction of a charge rate. Load-bearing for `@bsuite/charge-calc`. |
-| `20260730-rdo-flexibility.md` | RDO (Rostered Day Off) flexibility source material (24K) | RDO accrual/banking treatment feeding the ordinary-wage construction. |
+| `20260730-elements-of-rate-calculation-v1.00W.md` | Captured rates-calculator source material (80K) | The element-by-element construction of a charge rate. Load-bearing for `@bsuite/charge-calc`. |
+| `20260730-rdo-flexibility-v1.00W.md` | RDO (Rostered Day Off) flexibility source material (24K) | RDO accrual/banking treatment feeding the ordinary-wage construction. |
 | `20260730-gto-enquiry-to-billing-process-flow-v1.00D.md` | GTO enquiry→billing process flow, Draft (52K) | Our own mapping doc — the end-to-end commercial path. |
 | `20260730-gto-process-flow-v1.0.svg` | Rendered diagram of the above | The picture for the flow doc; keep the two in sync. |
 
@@ -33,7 +33,7 @@ anything. Plans live in `docs/plans/`; rulings live in the register named by `do
 
 | File | What it is |
 |---|---|
-| `20260729-Xero-API-docs.md` | Captured Xero API documentation (16K) |
+| `20260729-xero-api-docs-v1.00W.md` | Captured Xero API documentation (16K) |
 | `20260729-xero-field-map-v1.00D.md` | Draft field map — what rate data can come **from** Xero vs what we hardcode (40K) |
 
 ### Regulator guidance

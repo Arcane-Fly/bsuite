@@ -12,7 +12,7 @@ All 33 files were read **in full** on 2026-08-08. Findings below are from that r
 
 ## 1. There is a live trap in here. It will make you build the wrong thing.
 
-`20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md` is **2,342 lines** of
+`20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md` is **2,342 lines** of
 task-by-task instructions for building on **Adobe Acrobat Sign** — `adobeSignService.ts`,
 `buildParticipantSets`, `createAgreement`, an `adobe-sign-webhook` edge function, and a
 `document_signatories` table.
@@ -82,7 +82,7 @@ fresh.
 
 ## 5. What is verified-good in here
 
-`20260808-standards-do-not-name-providers-FINDING-v1.00A.md` — re-verified 2026-08-08, and
+`20260808-standards-do-not-name-providers-finding-v1.00A.md` — re-verified 2026-08-08, and
 the commands to re-check it are printed in the file.
 
 ---

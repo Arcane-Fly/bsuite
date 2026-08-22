@@ -61,10 +61,21 @@ export const EntityNodeDataSchema = z.object({
 export type EntityNodeData = z.infer<typeof EntityNodeDataSchema>;
 
 /**
- * One edge on the canvas = one FK (or inheritance / M:N) in the database.
- * The `source.fieldId` and `target.fieldId` fields become non-empty when the
- * user drags from a specific column handle (Phase 1b). Phase 1a writes
- * entity-level relations with field IDs left empty.
+ * One edge on the canvas = one documented relation between two ENTITIES.
+ *
+ * ⚠ `source.fieldId`, `target.fieldId`, `metadata.onDelete` and
+ * `metadata.onUpdate` are UI-MODEL ONLY and ARE NOT PERSISTED. The columns
+ * that backed them were dropped by migration 20260503000001 (see
+ * `TenantEntityRelation` in types.ts for the full history). `toDbRelation`
+ * deliberately does not emit them, and `relationInsertContract.test.ts` fails
+ * if it ever starts to again.
+ *
+ * They are retained on the Zod model so that the drag gesture can keep
+ * reporting which handle it started from, and so that re-applying
+ * 20260503000000 is a small diff rather than a rewrite. Do not read them back
+ * expecting a round trip — `fromDbRelation` leaves fieldId undefined and lets
+ * onDelete/onUpdate fall to their defaults, because the database has nothing to
+ * tell it.
  */
 export const SchemaRelationSchema = z.object({
   id: z.uuid(),
@@ -109,12 +120,8 @@ export const ZOD_TO_DB_ALIASES = [
   ['id', 'id'],
   ['name', 'source_label'],
   ['source.tableId', 'source_entity_id'],
-  ['source.fieldId', 'source_field_id'],
   ['target.tableId', 'target_entity_id'],
-  ['target.fieldId', 'target_field_id'],
   ['metadata.cardinality', 'relation_type'],
-  ['metadata.onDelete', 'on_delete'],
-  ['metadata.onUpdate', 'on_update'],
   ['metadata.isSystem', 'is_system'],
 ] as const;
 
@@ -137,13 +144,9 @@ export function toDbRelation(
     tenant_id: opts.tenantId,
     source_entity_id: relation.source.tableId,
     target_entity_id: relation.target.tableId,
-    source_field_id: relation.source.fieldId ?? null,
-    target_field_id: relation.target.fieldId ?? null,
     relation_type: relation.metadata.cardinality,
     source_label: relation.name ?? null,
     target_label: null,
-    on_delete: relation.metadata.onDelete,
-    on_update: relation.metadata.onUpdate,
     is_system: relation.metadata.isSystem,
     app_scope: opts.appScope as TenantEntityRelation['app_scope'],
     metadata: {},
@@ -157,18 +160,14 @@ export function fromDbRelation(row: TenantEntityRelation): SchemaRelation {
     name: row.source_label ?? undefined,
     source: {
       tableId: row.source_entity_id,
-      fieldId: row.source_field_id ?? undefined,
       handle: 'right',
     },
     target: {
       tableId: row.target_entity_id,
-      fieldId: row.target_field_id ?? undefined,
       handle: 'left',
     },
     metadata: {
       cardinality: row.relation_type,
-      onDelete: row.on_delete ?? 'SET NULL',
-      onUpdate: row.on_update ?? 'CASCADE',
       isSystem: row.is_system,
       applyAsPostgresFK: false,
     },

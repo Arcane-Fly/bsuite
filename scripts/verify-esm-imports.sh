@@ -41,6 +41,19 @@ for dir in packages/*/; do
   pkg="$(basename "$dir")"
   [[ -f "$dir/package.json" ]] || continue
   [[ -f "$dir/dist/index.js" ]] || { skipped+=("$pkg (no dist — not built)"); continue; }
+  # A STALE dist is not a broken export, and the difference matters.
+  #
+  # @bsuite/ui reported "FAIL @bsuite/ui/use-on-click-outside — Cannot find module
+  # dist/hooks/useOnClickOutside.js". The PUBLISHED package has that file and a correct
+  # exports entry; the local dist was simply 13 source files behind and had never
+  # emitted hooks/. The gate could tell "no dist at all" from "dist present" but not
+  # "dist present and stale", so it reported a build-artifact age as a packaging defect
+  # — and that reading cost a previous pass real time before the tarball settled it.
+  if [[ -n "$(find "$dir/src" -newer "$dir/dist/index.js" \( -name '*.ts' -o -name '*.tsx' \) -print -quit 2>/dev/null)" ]]; then
+    n=$(find "$dir/src" -newer "$dir/dist/index.js" \( -name '*.ts' -o -name '*.tsx' \) 2>/dev/null | wc -l)
+    skipped+=("$pkg (dist is STALE — $n src file(s) newer; run pnpm --filter $pkg build)")
+    continue
+  fi
   if printf '%s\n' "${BROWSER_ONLY[@]}" | grep -qx "$pkg"; then
     skipped+=("$pkg (browser-only: JS entry imports CSS)"); continue
   fi
@@ -86,4 +99,42 @@ if [[ $fail -gt 0 ]]; then
   echo "only gates how EXTERNAL consumers address a package."
   exit 1
 fi
-echo "PASS: all $checked built packages import cleanly under Node ESM."
+# A ZERO DENOMINATOR IS NOT A PASS.
+#
+# `checked` only increments for a package that has dist/index.js. This script's
+# CI precondition is `pnpm -r --filter "./packages/**" build` (theme-conformance
+# .yml, "Install and build packages"). If that step is ever skipped, mistyped,
+# or partially fails, EVERY package lands in `skipped` and this used to print
+#
+#     PASS: all 0 built packages import cleanly under Node ESM.
+#
+# — exit 0, green tick, nothing imported. LANE-WATCHER filed exactly that
+# (guard-registry knownSilentReason for parent-verify-esm-imports): the guard
+# had no floor requiring a non-zero built-package count, unlike
+# check-secret-naming.sh's UNSCANNED refusal.
+#
+# The number of packages that EXIST is the honest denominator to check against,
+# because "nothing was built" and "there are no packages" are different faults
+# and neither is a pass.
+present=0
+for dir in packages/*/; do [[ -f "$dir/package.json" ]] && present=$((present + 1)); done
+
+if [[ $present -eq 0 ]]; then
+  echo "REFUSING TO PASS: found no packages under packages/ at all."
+  echo "Either this is not the repo root, or the package tree is missing."
+  echo "A check that examined nothing has not verified anything."
+  exit 1
+fi
+
+if [[ $checked -eq 0 ]]; then
+  echo "REFUSING TO PASS: $present package(s) exist, 0 were importable-checked."
+  echo "Every one was skipped — ${#skipped[@]} skip(s) listed above."
+  echo
+  echo "This almost always means the build precondition did not run. This script"
+  echo "imports from dist/, so it needs \`pnpm -r --filter \"./packages/**\" build\`"
+  echo "first (theme-conformance.yml, \"Install and build packages\")."
+  echo "Passing here would rubber-stamp an unbuilt tree."
+  exit 1
+fi
+
+echo "PASS: $checked subpath(s) across $present package(s) import cleanly under Node ESM (${#skipped[@]} skipped)."
