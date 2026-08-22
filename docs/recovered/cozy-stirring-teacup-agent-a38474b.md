@@ -1,5 +1,14 @@
 # Verified Provider API Specifications (2026-02-10)
 
+> # VERDICT: REFERENCE — recorded 2026-08-22
+>
+> Provider API specifications verified on **2026-02-10**. Received knowledge about third-party
+> APIs, six months old and never re-verified — treat every version and endpoint in it as a
+> claim about February, not about now. Useful as a starting point, never as ground truth.
+>
+> The original document is unchanged below this banner.
+
+
 All specs sourced from official documentation fetched live. Each section notes the documentation URL and last-verified date.
 
 ---

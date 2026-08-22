@@ -1,5 +1,18 @@
 # Validate & Reorganize Railway Environment Variables
 
+> # VERDICT: NOT THIS ESTATE — recorded 2026-08-22
+>
+> A plan to reorganise **Railway** environment variables. BSuite does not deploy on Railway —
+> every app ships from Vercel (`vercel.json` in R80.4, braden, business-suite-unified and the
+> rest). The only `railway` string in estate source is an award ALLOWANCE term inside
+> `R80.4/src/awards/fixtures/ma000010-allowances.json`, which is a railway-worker allowance and
+> not a deployment platform.
+> >
+> Retained as a record of a recovered artefact, not as instruction. Nothing here applies.
+>
+> The original document is unchanged below this banner.
+
+
 ## Context
 
 The `.env.railway` file has naming inconsistencies and ambiguities, especially around MCP services. Copilot introduced wrong variables in the mcp-code-server block. The backend service block is missing entirely. The user wants validated, clean per-service copy-paste blocks.

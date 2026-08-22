@@ -1,5 +1,18 @@
 # Plan: Shared Cookie Domain for Cross-Subdomain Auth
 
+> # VERDICT: NOT THIS ESTATE — recorded 2026-08-22
+>
+> A shared-cookie-domain plan for **fastmonkey.au** subdomains. Same provenance as
+> `rustling-mapping-lemon.md` — a different product's auth architecture, recovered into this
+> directory.
+> >
+> Worth noting for anyone who reads it as guidance: BSuite's cross-app SSO is OIDC
+> `prompt=none`, explicitly **not** cookies (`docs/CONSISTENCY-REPORT.md`). Following this
+> plan here would reverse a standing architectural decision.
+>
+> The original document is unchanged below this banner.
+
+
 ## Context
 
 After authenticating on `fastmonkey.au` (monkey-oauth), users are redirected to `one.fastmonkey.au` (monkey1) or `coder.fastmonkey.au` (monkey-coder) but land on the **landing page** instead of the authenticated app.

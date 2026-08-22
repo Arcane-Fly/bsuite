@@ -1,5 +1,15 @@
 # Supabase OAuth 2.1 Server -- Comprehensive Research Document
 
+> # VERDICT: REFERENCE — recorded 2026-08-22
+>
+> Research into building a Supabase OAuth 2.1 server. **The estate went and built one** —
+> business-suite-unified is the authorization server and ships the `oauth-*` edge functions;
+> all five other apps are clients. Read this as the reasoning that preceded that work, never
+> as a description of it.
+>
+> The original document is unchanged below this banner.
+
+
 ## Table of Contents
 1. [Overview & Architecture](#1-overview--architecture)
 2. [Getting Started & Configuration](#2-getting-started--configuration)

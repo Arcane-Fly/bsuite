@@ -1,5 +1,14 @@
 # Validate & Reorganize Railway Environment Variables
 
+> # VERDICT: NOT THIS ESTATE — recorded 2026-08-22
+>
+> The second of two recovered Railway environment-variable plans (see
+> `gleaming-fluttering-coral.md`). BSuite deploys on Vercel. Retained as a record, not as
+> instruction.
+>
+> The original document is unchanged below this banner.
+
+
 ## Context
 
 The `.env.railway` file has naming inconsistencies and ambiguities, especially around MCP services. Copilot introduced wrong variables in the mcp-code-server block. The backend service block is missing entirely. The user wants validated, clean per-service copy-paste blocks.

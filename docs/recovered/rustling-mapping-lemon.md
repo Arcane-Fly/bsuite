@@ -1,5 +1,21 @@
 # Auth Alignment Plan: monkey-projects + Supabase OAuth 2.1
 
+> # VERDICT: NOT THIS ESTATE — recorded 2026-08-22
+>
+> An auth alignment plan for **monkey-projects / fastmonkey.au** — `monkey-oauth`, `monkey1`,
+> `coder.fastmonkey.au`. None of those repos are in this estate; the submodule set is crm7,
+> braden, business-suite-unified, conduit, throughput and R80.4.
+> >
+> FastMonkey appears in BSuite exactly twice, both in `AuthShell.tsx` COMMENTS describing an
+> aesthetic influence ("matching the FastMonkey dark-mode aesthetic"). That is a design
+> reference, not an integration.
+> >
+> Its unresolvable `monkey-oauth/...` source paths were being counted against this estate's
+> doc-to-code drift. They are not broken BSuite references — they were never BSuite references.
+>
+> The original document is unchanged below this banner.
+
+
 ## Context
 
 The FastMonkey auth architecture (single Supabase project, RS256 JWTs, cross-subdomain cookies on `.fastmonkey.au`, OAuth 2.1 consent flow) is well-designed but has consistency gaps across the three repos. monkey-oauth (Vercel) is the auth hub with working OAuth 2.1 consent; monkey1 and monkey-coder (Railway) consume it but have unsafe `getSession()` calls without `getClaims()` validation, outdated SDK versions, and missing OAuth 2.1 consumer features. This plan brings everything into alignment.

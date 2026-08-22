@@ -1,5 +1,27 @@
 # Workforce One OTS Parity — Implementation Plan
 
+> # VERDICT: DELIVERED — recorded 2026-08-22
+>
+> A seven-phase Workforce One parity plan. Every phase's central artefact is present in
+> crm7 today, spot-checked rather than assumed:
+>
+> - **Phase 1 (schema)** — `pay_periods` is live;
+>   `20260716110000_timesheets_attachments_and_pay_period_id.sql` and
+>   `20260716140000_fix_pay_periods_admin_write_role_check.sql` are in the migration set
+> - **Phase 2 (timesheet entry)** — `src/lib/timesheetValidation.ts` + its test suite
+> - **Phase 3–4 (pay periods, missing timesheets)** — both surfaces present in `src/`
+> - **Phase 6 (workflow)** — `timesheetWorkflow` present
+>
+> **Read the file paths as a suggestion, never as a contract.** This plan names specific
+> destinations and the logic did not always land at them — `timesheetStateMachine.ts` was
+> planned, `timesheetWorkflow.ts` shipped. Grep for the SYMBOL, not the path.
+>
+> Retained as a record of what was planned and why, not as instruction. Anything still
+> wanted from it belongs in a live register, not here.
+>
+> The original document is unchanged below this banner.
+
+
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
 > Paths under `R80.3/` below are HISTORICAL — the originals are in
