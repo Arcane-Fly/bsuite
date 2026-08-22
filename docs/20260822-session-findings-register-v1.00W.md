@@ -28,13 +28,13 @@ finding with no owner and no next action is indistinguishable from a finding nob
 
 ## 2. Real work, unowned — no ruling needed, just not done
 
-| # | Finding | Measured |
-|---|---|---|
-| **W-1** | `rate_adjustments` and `billing_cycles` have **zero application reach** | Both created and applied 2026-08-22. Each appears in exactly **two files, both SQL**. No store, service, hook, type, page or edge function in any app. The 8 RLS policies and `has_tenant_role()` gate a surface that does not exist. Raised by the Datum lane as **W5**. |
-| **W-2** | `gto_complaints.external_referral` is unread | Column now exists. `external_referral` appears only in migrations, and in `src/schemas/welfareReport.ts` — which is a **different table** (`welfare_reports`). `gtoComplaintStore.ts` and `ComplaintSelector.tsx`: **0** references. |
-| **W-3** | 22 docs cite a gate that no longer exists | `ci.yml`, `quality.yml`, `db-lint.yml`, `e2e.yml`, `verify.yml`, `check-unscoped-select-policies.mjs`, `check-migration-parity.sh`, `check-lockfiles.mjs` and others. A doc naming a deleted gate **reads as evidence**. Only `audit-applied-tokens.sh → .mjs` had an unambiguous replacement; that one is fixed. |
-| **W-4** | R80.4 deployed without `--frozen-lockfile` | `vercel.json` declared no `installCommand`, so Vercel ran a plain `pnpm install` — free to resolve past the lockfile pins. **Fixed** on branch `fix/vercel-frozen-lockfile` in R80.4; that is R8's repo so the branch is left for their lane. |
-| **W-5** | No gate detects a table with no application reach | The phantom-migration gate catches *recorded but not created*. Nothing catches *created but unreached* — W-1 is the current example and it is this session's own work. A first probe found 16 of 28 sampled tables "zero reach" and **at least 2 of those were the probe being wrong**, so this needs building properly, not quickly. |
+| # | Finding | Status | Measured |
+|---|---|---|---|
+| **W-1** | `rate_adjustments` and `billing_cycles` have **zero application reach** | **OPEN** | Both created and applied 2026-08-22. Each appears in exactly **two files, both SQL**. No store, service, hook, type, page or edge function in any app. The 8 RLS policies and `has_tenant_role()` gate a surface that does not exist. Raised by the Datum lane as **W5**. |
+| **W-2** | `gto_complaints.external_referral` is unread | **OPEN** | Column now exists. `external_referral` appears only in migrations, and in `src/schemas/welfareReport.ts` — which is a **different table** (`welfare_reports`). `gtoComplaintStore.ts` and `ComplaintSelector.tsx`: **0** references. |
+| **W-3** | 22 docs cite a gate that no longer exists | **CLOSED** #2246 | `ci.yml`, `quality.yml`, `db-lint.yml`, `e2e.yml`, `verify.yml`, `check-unscoped-select-policies.mjs`, `check-migration-parity.sh`, `check-lockfiles.mjs` and others. A doc naming a deleted gate **reads as evidence**. Only `audit-applied-tokens.sh → .mjs` had an unambiguous replacement; that one is fixed. |
+| **W-4** | R80.4 deployed without `--frozen-lockfile` | **PR OPEN** R80.4#169 | `vercel.json` declared no `installCommand`, so Vercel ran a plain `pnpm install` — free to resolve past the lockfile pins. **Fixed** on branch `fix/vercel-frozen-lockfile` in R80.4; that is R8's repo so the branch is left for their lane. |
+| **W-5** | No gate detects a table with no application reach | **CLOSED** #2243 | The phantom-migration gate catches *recorded but not created*. Nothing catches *created but unreached* — W-1 is the current example and it is this session's own work. A first probe found 16 of 28 sampled tables "zero reach" and **at least 2 of those were the probe being wrong**, so this needs building properly, not quickly. |
 
 ---
 
@@ -82,3 +82,78 @@ a citation. An empty list vacuously passing. A gate whose `continue` made a whol
 Each was caught by a control that had to pass, or by a command that actually ran — never by
 re-reading the output. **The fix is not more care; it is a control that fails when the measurement
 is dead.**
+
+---
+
+## 4. Resolved 2026-08-22, and what the numbers turned out to be
+
+### W-3 — the "22 dead gates" was wrong in three separate ways
+
+**Not one gate had been deleted.** The question was measured four times and the first
+three answers were each wrong:
+
+| Answer | The bug |
+|---|---|
+| 19 dead | `existsSync` was tried only at the parent root, so every submodule script read as deleted |
+| 6 absent | The extension alternation let `.json` be cut to `.js`, inventing `scripts/hook-suppression-baseline.js` — a file nothing had ever cited |
+| 11 stuck | After the docs were **fixed**, the same 11 still failed: `\bscripts/dod.mjs` matches inside `R80.4/scripts/dod.mjs`, because a slash is a word boundary |
+
+The truth: **11 unqualified** submodule paths, **2 external** (the `~/.agents` hub),
+**4 never written**. Closed by #2246, which fixed the 11 and added
+`scripts/check-doc-citations-resolve.mjs` with those three bugs as self-tests.
+
+The four never-written scripts — `pnpm-audit-all.sh`, `check-base-stack-only.sh`,
+`check-peer-deps.sh`, `check-plan-cross-links.sh` — stay reported rather than deleted
+from the docs. Whether to build those gates or drop the prescriptions is a judgment
+call and belongs here, visible.
+
+### W-5 — the reach gate exists, and its own count moved four times
+
+`scripts/check-table-reach.mjs` (#2243). **462 tables, 4,057 source files, 164
+unreached.** It reports rather than fails, because most of the 164 are legitimate.
+
+The W-5 row above warned this needed building properly rather than quickly, and it was
+right — the count went **212 → 196 → 165 → 164** and every step was the detector's own
+bug, not an estate change:
+
+- A backreference in `grep -oE` returned **zero** across all six apps.
+- Stripping `$$ … $$` cleared eleven English words scraped from SQL comments, and
+  silently lost two real tables created inside `DO $$` blocks. **A `DO` block runs real
+  DDL; only a FUNCTION body is inert.**
+- crm7 reaches 40 tables through `createEntityStore<T>('x', …)` — 364 call sites — not
+  through `.from()`.
+- braden reaches tables through a union type fed to a generic CRUD service.
+
+All four are now regression tests. What it still cannot see is stated in its output: a
+table whose name is **computed at runtime**.
+
+## 5. Found while doing the above
+
+| # | Finding | Status |
+|---|---|---|
+| **X-1** | R80.4 — the wage calculator — had neither `AGENTS.md` nor `CLAUDE.md`. The other five apps have both, making the highest-stakes app the least-governed | **PR OPEN** R80.4#170 |
+| **X-2** | The funding `method` values were recorded wrong. Source has **two** axes: `PASS_THROUGH` = `reduce \| passPercent \| none`, and `FUNDING_MODE` = `term \| perYear`. `passThrough` exists only inside a drift test | **CORRECTED** in R80.4#170 |
+| **X-3** | 514 lines of Datum research existed **only as untracked files in a worktree** — one `rm -rf` from gone | **CLOSED** #2244 |
+| **X-4** | 4.3 GB across 11 stale worktrees. Proven safe first: development's ledger is a strict superset (82 rows to their 80, none unique) and all three code fixes they claimed are already on development | **CLOSED** — removed, nothing lost |
+| **X-5** | The classification gate charged full price for a typo fix — it blocked a PR whose entire content was fixing three dead citations | **CLOSED** #2245 |
+
+### A non-finding, recorded so it is not re-raised
+
+"Three of six submodules have no `.claude/`" is **not a defect**. The `.claude/`
+directories that exist hold only auto-generated `agent-memory/` and `worktrees/`, both
+git-ignored; the parent tracks **zero** files under `.claude/` because `.gitignore:49`
+ignores it, and the 16 `bsuite-*` skills are **symlinks into `~/.agents/skills/`**.
+Hub-canonical is the chosen architecture. Creating empty `.claude/` directories in
+braden, conduit and throughput would be cargo cult.
+
+## 6. The pattern, now measured
+
+Across two days this session produced **eight measurement errors of one shape**: a tool
+returned a confident number over something it could not see.
+
+Every one was caught by a control that had to pass — never by re-reading the output.
+That is why each gate shipped here carries a positive control that exits 3 rather than
+printing a short, clean-looking list, and why the four table-reach bugs and the three
+citation bugs are self-tests rather than commit-message anecdotes.
+
+**A number is a hypothesis until a control confirms it.**
