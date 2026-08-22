@@ -226,9 +226,9 @@ failure this work exists to end.
 sort it out:
 
 ```
-node scripts/reencrypt-sensitive-documents.mjs              # shows what it would do
-node scripts/reencrypt-sensitive-documents.mjs --limit 1 --apply   # do one, check it opens
-node scripts/reencrypt-sensitive-documents.mjs --apply            # the rest
+node crm7/scripts/reencrypt-sensitive-documents.mjs              # shows what it would do
+node crm7/scripts/reencrypt-sensitive-documents.mjs --limit 1 --apply   # do one, check it opens
+node crm7/scripts/reencrypt-sensitive-documents.mjs --apply            # the rest
 ```
 
 It encrypts each file, immediately decrypts it, and compares the result to the

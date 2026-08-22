@@ -16,8 +16,10 @@ are Vite.
 > R80.4 is what serves `r8.crm7.app` today — verified live 2026-08-17: the deployed title is
 > *GTO Charge Rate Calculator v9.2*, matching `R80.4/package.json@9.2.0`.
 >
-> **117 documents under `docs/` still say R80.3 — 42 of them at the top level.** (The register filed
-> this as 40; re-measured 2026-08-17 it is marginally *worse*, not better.) They have not been
+> **132 documents under `docs/` still say R80.3 — 49 of them at the top level.** Re-measure with
+> `grep -rl 'R80\.3' docs/ | wc -l`, because this line has gone stale twice: the register filed 40,
+> 2026-08-17 measured 117/42, and 2026-08-22 measures 132/49. It grows because new dated records
+> correctly cite historical R80.3 work — that is the system behaving, not decaying. They have not been
 > rewritten and will not be:
 > almost all are dated audits, plans and RCAs that were *correct when written*, and back-dating them
 > would destroy the record this estate relies on. Treat "R80.3" in any document dated before
