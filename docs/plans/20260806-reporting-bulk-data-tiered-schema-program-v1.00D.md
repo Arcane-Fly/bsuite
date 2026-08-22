@@ -525,7 +525,7 @@ an invoice is a broken product. B6 forbids the shortcut of hand-granting rows to
 ### A retraction
 
 I first recorded that this plan's mandatory catalog drift check "was never built". **That was
-wrong.** `scripts/check-report-catalog-drift.mjs` is wired into `db-lint.yml` as the required
+wrong.** `crm7/scripts/check-report-catalog-drift.mjs` is wired into `db-lint.yml` as the required
 check `report_catalog_* drift vs live schema`, and is in several respects better than my first
 draft. I grepped workflow *filenames*, not contents, then asserted an absence from it. What
 survives is genuinely distinct: that script can only measure the CI replay; nothing measured
