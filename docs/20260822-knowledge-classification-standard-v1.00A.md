@@ -94,8 +94,19 @@ comments. Those are historical records. The blast radius exceeded the benefit.
 So:
 
 1. **Today's docs are legacy.** No mass rename, no mass frontmatter backfill.
-2. **New or substantively edited docs must classify.** Enforced by
-   `scripts/check-doc-classification.mjs` on changed files only.
+2. **New docs always classify; existing docs classify on a substantive edit.** A doc
+   that is *added* must carry frontmatter — it is cheap at creation and it is the only
+   thing the ratchet needs in order to hold. A doc that is *modified* is enforced only
+   past 20 changed lines.
+
+   That threshold exists because the first version of this gate blocked a PR whose
+   entire content was fixing three dead citations. Demanding full classification for a
+   few characters makes small maintenance edits expensive, and the rational response is
+   to stop making them — or to paste in frontmatter nobody thought about. Both are
+   worse than the debt. Rewriting a doc is the moment its kind and authority are
+   actually in your head; fixing a link is not.
+
+   Enforced by `scripts/check-doc-classification.mjs`.
 3. **The count may never rise.** A committed baseline holds the unclassified count; the
    gate fails if it grows. Debt shrinks or holds — it cannot expand.
 4. **Backfill is opportunistic.** A doc gets frontmatter when someone is already editing
