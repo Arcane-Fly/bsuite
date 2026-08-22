@@ -248,11 +248,117 @@ function lineContaining(text, matchIndex) {
   return text.slice(start, end === -1 ? text.length : end).trim()
 }
 
+/**
+ * THE LAUNDERED WAIVER — a guard that SKIPPED is reported as one that PASSED.
+ *
+ * Broadcast by the R80.4 lane on 2026-08-22 and it applies to every lane, so it is
+ * checked here rather than fixed once: `dod.mjs` marked a self-waived benchmark
+ * `pass: true, waived: true`, the roll-up filtered on `!x.pass`, and the waived rows
+ * fell on the floor. Twenty-one awards printed CLEAN while two of eighteen benchmarks
+ * had measured NOTHING. It survived five days because the PER-SUBJECT report was honest
+ * — it printed WAIVE — and the AGGREGATE is the line anyone actually quotes.
+ *
+ * That defect passes the denominator check above untouched: the guard still states a
+ * positive count of things examined. What it does not state is how many it DECLINED to
+ * examine. So the count is true and the impression is false.
+ *
+ * Their three-question test, applied here to every guard in the estate at once:
+ *   1. does the output have a skip / waive / N/A path?
+ *   2. does that path reach the same exit code as a real pass?  (it did — we are in
+ *      the exit-0 branch)
+ *   3. does the summary distinguish them?
+ *
+ * Only 3 needs measuring, and it is measurable: if the output names a waiver, some line
+ * must also carry a COUNT of them. Make the absent measurement louder than the pass
+ * count, because it is the surprising fact.
+ */
+// A WAIVER WORD MUST STAND ALONE. `\b` matches inside a hyphenated compound, so
+// `below-floor-excluded` — the NAME of a self-test case — read as a waiver claim, and
+// check-schema-lag was reported for laundering a waiver it does not have. Two of the
+// four findings on this rule's first run were that; the other two counted their skips
+// with the number AFTER the noun. Every one of the four was this rule's own bug.
+const WAIVER_WORDS = /(?<![A-Za-z0-9-])(skip|skips|skipped|skipping|waive|waived|waiver|waivers|not applicable|n\/a|excluded|exempt|exempted|unevaluable)(?![A-Za-z0-9-])/i;
+const WAIVER_NOUNS = new Set(['skip', 'skips', 'skipped', 'waiver', 'waivers', 'waived', 'exempt', 'exempted', 'exemption', 'exemptions', 'excluded', 'unevaluable', 'unknown']);
+
+/**
+ * A PER-CASE RESULT LINE IS NOT A WAIVER CLAIM.
+ *
+ * `test-theme-audit-gates.sh` prints `ok  oklch(from …) is skipped (count=4, exit=1)` —
+ * the NAME of a self-test case, describing what the gate was proven to do. Reading that
+ * as "this run waived something" flagged two guards that waive nothing at all.
+ *
+ * R804's finding is explicitly about the AGGREGATE — "the line anyone actually quotes".
+ * So the per-case lines come out before the test, and what remains is the summary prose
+ * where a laundered waiver would actually mislead.
+ */
+const CASE_LINE = /^\s*(?:[-*]\s*)?(?:ok|OK|✓|✗|×|PASS|FAIL|SKIP|skip)\b/;
+export function summaryProse(text) {
+  return text.split('\n').filter((l) => !CASE_LINE.test(l)).join('\n');
+}
+
+export function waiverWithoutCount(raw) {
+  const text = summaryProse(raw);
+  if (!WAIVER_WORDS.test(text)) return false;
+  const tokens = tokenOffsets(text);
+  // TOKEN SHAPES A COUNT ACTUALLY TAKES. `positiveCount` deliberately rejects a bare
+  // zero, which is right for a denominator and wrong here — "0 waived" is the most
+  // honest possible statement. `sync-inline-eslint-rules` prints a whole WAIVER BUDGET
+  // section reading `0/0 waived` per rule, and this rule reported that model citizen as
+  // a launderer because it could not parse `0/0`. Accept the ratio and `count=N` forms.
+  const isCount = (t) =>
+    positiveCount(t) ||
+    /^\d+[,.:;)]*$/.test(t) ||          // any bare integer, zero included
+    /^\d+\/\d+[,.:;)]*$/.test(t) ||     // a ratio: 0/0, 16/18
+    /^[a-z_]+[=:]\d+/i.test(t);         // count=4, total:12
+  let sawCountedWaiver = false;
+  let sawWaiverNoun = false;
+  for (let i = 0; i < tokens.length; i += 1) {
+    const w = tokens[i].text.toLowerCase().replace(/[^a-z/]/g, '');
+    if (!WAIVER_NOUNS.has(w)) continue;
+    sawWaiverNoun = true;
+    // A COUNT MAY SIT ON EITHER SIDE OF ITS NOUN. English puts it before ("5 skipped")
+    // and a report line puts it after ("skipped as HISTORICAL: 50"). The first version
+    // looked forward only and called two honest guards dishonest.
+    const lo = Math.max(0, i - 7), hi = Math.min(tokens.length, i + 8);
+    for (let j = lo; j < hi; j += 1) {
+      if (j !== i && isCount(tokens[j].text)) { sawCountedWaiver = true; break; }
+    }
+  }
+  // ANY counted waiver mention makes the output honest — do NOT return on the first
+  // UNcounted one. `sync-inline-eslint-rules` prints a section HEADER, "WAIVER BUDGET
+  // (per rule — a waived copy is a submodule running a rule the monorepo did not
+  // sanction):", and then the counts on the three lines beneath it. Returning at the
+  // header reported a guard that publishes a whole waiver budget as one that hides
+  // waivers, which is precisely backwards.
+  //
+  // R804's test is "does your top-line summary DISTINGUISH them?" — a budget section
+  // distinguishes them. This is deliberately the forgiving reading: the cost of a false
+  // FAIL is a blocked promotion on a guard telling the truth, and this rule has now
+  // produced five of those against zero real finds.
+  if (!sawWaiverNoun) return false;   // waiver LANGUAGE but no waiver NOUN
+  return !sawCountedWaiver;
+}
+// KNOWN LIMIT, stated rather than papered over: adjacency cannot tell which noun a count
+// belongs to. "6 apps scanned. Two were exempt." reads as counted, because `6` falls in
+// the window around `exempt` — and a spelled-out "Two" is not a count this can see.
+// Deliberately left as a false NEGATIVE. The other direction blocks a promotion on a
+// guard that is telling the truth, and this rule's first run produced four of those.
+// findDenominator carries the same ambiguity for the same reason.
+
 function classifyOutput(combinedOutput, { diffScoped }) {
   const trimmed = combinedOutput.trim()
   if (trimmed === '') return { ok: false, reason: 'exited 0 with zero output' }
   const denomAt = findDenominator(combinedOutput)
   if (denomAt !== -1) {
+    if (waiverWithoutCount(combinedOutput)) {
+      return {
+        ok: false,
+        reason:
+          'stated a count of what it examined, but names a skip/waive/exempt path ' +
+          'without ever counting it — the laundered waiver (R80.4 broadcast 2026-08-22). ' +
+          'A reader quotes the aggregate, not the per-subject lines.',
+      }
+    }
     return { ok: true, evidence: lineContaining(combinedOutput, denomAt) }
   }
   if (diffScoped) {
@@ -336,6 +442,37 @@ if (canaryVerdict.ok) {
   )
   process.exit(1)
 }
+
+// SECOND CANARY — a different defect needs a different control.
+//
+// The silent canary above proves the watcher can spot a guard that examined NOTHING.
+// It cannot prove anything about a guard that examined MOST things and let the rest fall
+// on the floor: that guard states a real count and sails through the denominator check.
+// So the laundered-waiver rule gets its own positive control, or it is a rule nobody has
+// ever seen fire.
+const launderFixture = path.join(REPO_ROOT, 'scripts/__fixtures__/laundered-waiver-canary-guard.sh')
+if (!fs.existsSync(launderFixture)) {
+  console.error(
+    `guard-self-reporting: BOOTSTRAP FAILURE — laundered-waiver canary missing at ${launderFixture}. ` +
+      'The watcher cannot show that its waiver rule still fires, so it refuses to certify anything.',
+  )
+  process.exit(1)
+}
+const launderRun = runGuard({ repo: '.', command: ['bash', 'scripts/__fixtures__/laundered-waiver-canary-guard.sh'] })
+const launderVerdict =
+  launderRun.executed && launderRun.exitCode === 0
+    ? classifyOutput(launderRun.output, { diffScoped: false })
+    : { ok: true, reason: 'fixture did not run cleanly' }
+if (launderVerdict.ok) {
+  console.error(
+    'guard-self-reporting: BOOTSTRAP FAILURE — the laundered-waiver canary ' +
+      '(scripts/__fixtures__/laundered-waiver-canary-guard.sh) was classified as a PASS. ' +
+      'It states a real count AND names a waiver it never counts, which is exactly the ' +
+      'shape R80.4 broadcast on 2026-08-22. The waiver rule has stopped firing.',
+  )
+  process.exit(1)
+}
+console.log('guard-self-reporting (LANE-WATCHER): laundered-waiver canary correctly caught.')
 
 // Canary correctly caught. Proceed to the real registry.
 const results = []
