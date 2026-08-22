@@ -1,4 +1,27 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: not-this-estate
+---
+
 # Auth Alignment Plan: monkey-projects + Supabase OAuth 2.1
+
+> # VERDICT: NOT THIS ESTATE — recorded 2026-08-22
+>
+> An auth alignment plan for **monkey-projects / fastmonkey.au** — `monkey-oauth`, `monkey1`,
+> `coder.fastmonkey.au`. None of those repos are in this estate; the submodule set is crm7,
+> braden, business-suite-unified, conduit, throughput and R80.4.
+> >
+> FastMonkey appears in BSuite exactly twice, both in `AuthShell.tsx` COMMENTS describing an
+> aesthetic influence ("matching the FastMonkey dark-mode aesthetic"). That is a design
+> reference, not an integration.
+> >
+> Its unresolvable `monkey-oauth/...` source paths were being counted against this estate's
+> doc-to-code drift. They are not broken BSuite references — they were never BSuite references.
+>
+> The original document is unchanged below this banner.
+
 
 ## Context
 

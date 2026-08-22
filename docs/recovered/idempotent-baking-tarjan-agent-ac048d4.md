@@ -1,4 +1,20 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: reference
+---
+
 # Supabase Authentication Research for JavaScript/TypeScript Applications
+
+> # VERDICT: REFERENCE — recorded 2026-08-22
+>
+> Supabase authentication research. Background reading, not a plan and not a decision record.
+> Where it conflicts with `docs/CONSISTENCY-REPORT.md` or the shipped `@bsuite/auth`, the
+> shipped code wins.
+>
+> The original document is unchanged below this banner.
+
 
 **Research Date:** 2026-02-12
 **supabase-js version:** v2.94.0 (latest as of Feb 2026)

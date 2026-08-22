@@ -1,5 +1,12 @@
 # Deep Bug Excavation — conduit + R80.3 (Read-Only)
 
+> ## ⚠ POINT-IN-TIME RECORD — 2026-07-25, and it names a repo that has since left
+> R80.3 departed the submodule set on 2026-08-06 (`5e000c35`, operator directive) and
+> R80.4 took its place. Paths under `R80.3/` below are HISTORICAL. Source paths that no
+> longer resolve are correct for the date they describe and are deliberately not
+> rewritten: a restructure is not a rename, so repointing them would swap a visibly
+> stale reference for one that looks current and is still wrong.
+
 > **File:** `20260725-conduit-r80-deep-bug-excavation-v1.00W.md`
 > **Status:** W (Working) · **Mode:** READ-ONLY (no source files modified)
 > **Date:** 2026-07-25
