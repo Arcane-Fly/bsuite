@@ -103,9 +103,23 @@ The truth: **11 unqualified** submodule paths, **2 external** (the `~/.agents` h
 `scripts/check-doc-citations-resolve.mjs` with those three bugs as self-tests.
 
 The four never-written scripts — `pnpm-audit-all.sh`, `check-base-stack-only.sh`,
-`check-peer-deps.sh`, `check-plan-cross-links.sh` — stay reported rather than deleted
-from the docs. Whether to build those gates or drop the prescriptions is a judgment
-call and belongs here, visible.
+`check-peer-deps.sh`, `check-plan-cross-links.sh` — stayed reported rather than deleted
+from the docs, because whether to build those gates or drop the prescriptions is a
+judgment call and belongs visible.
+
+**Resolved 2026-08-22.** Three were prescriptions to drop and one was a real hole:
+
+| Prescribed | Disposition |
+|---|---|
+| ~~`pnpm-audit-all.sh`~~ | **Drop.** `.github/workflows/security-audit.yml` runs `pnpm audit --audit-level=high --prod` across every app on a daily cron — a tighter cadence than the weekly the plan asked for. |
+| ~~`check-peer-deps.sh`~~ | **Drop.** syncpack was never adopted. `check-unmet-peer-deps.mjs` and `check-published-peer-ranges.mjs` cover it from a stricter source: the registry, not the source tree. |
+| ~~`check-plan-cross-links.sh`~~ | **Drop.** `check-doc-citations-resolve.mjs` resolves doc citations across submodules and is already wired. |
+| ~~`check-base-stack-only.sh`~~ | **BUILT.** This was the real hole — a dependency policy that read as enforced for two and a half months. Shipped as `scripts/check-base-stack-only.mjs` + `.github/workflows/base-stack-only.yml`, allow-list seeded at 159 runtime deps. |
+
+The pattern is worth more than the four items. **Six of the seven obligations on that
+plan's list HAD shipped under different filenames**, and that is exactly what hid the
+seventh: a reader spot-checking a list finds most entries genuine and stops checking. A
+list of prescriptions is only as trustworthy as its least-checked row.
 
 ### W-5 — the reach gate exists, and its own count moved four times
 
@@ -246,7 +260,7 @@ a later view of events.
 | **R-1** | `leads` ownership — now a failing gate with both sites named, ratcheted at 2 |
 | **R-2…R-5** | unchanged |
 | **W-1** | `rate_adjustments` / `billing_cycles` still have zero application reach |
-| | `check-base-stack-only.sh` — nothing gates a new runtime dependency against an allow-list |
+| | ~~`check-base-stack-only.sh` — nothing gates a new runtime dependency against an allow-list~~ **CLOSED 2026-08-22** — built as `scripts/check-base-stack-only.mjs`, wired by `.github/workflows/base-stack-only.yml` |
 | | 124 tables ORPHANED: no app reach and no server-side write |
 | | A `[VERIFICATION]` complaint row sits in the GTO register; the page has no delete affordance |
 
