@@ -43,9 +43,14 @@ function walk(d, out=[]) { let e; try { e = readdirSync(d) } catch { return out 
 // that used to be real. conduit's handover feature is the case: four tested modules were
 // deleted by `cbf7631` ("ownership moved to crm7") and the doc recorded it, in a section
 // 100 lines BELOW the table people copy paths out of.
-const CORRECTION = /(NO LONGER TRUE|SUPERSEDED|Corrected \d|re-measured|RETIRED|used to |previously|Deleted outright|does not exist|absent|ownership moved|moved to crm7|no longer exists (?:in|here))/i
+const CORRECTION = /(NO LONGER TRUE|SUPERSEDED|Corrected \d|re-measured|RETIRED|used to |previously|Deleted outright|does not exist|absent|ownership moved|moved to crm7|no longer exists (?:in|here)|replaced [`'\"]?(?:src|packages|supabase|scripts)\/)/i
 // A doc REPORTING a file's absence is not a doc with a broken reference.
 // Audit tables mark them ❌ GONE / MISSING; plans mark proposals (NEW).
+// A LINE THAT INTRODUCES A PATH AS SOMETHING TO BUILD is naming a destination, not making
+// a claim. `New file:`, `Scaffold`, `add UI` and `Candidate:` all say so in as many words;
+// treating them as broken references reports a plan as stale when it is simply unbuilt.
+// Narrow on purpose — each phrase has to introduce the path, not merely appear on the line.
+const PROPOSES = /(New file:|Scaffold\s+[`'"]|add UI\s+[`'"]|Candidate:|introduces\s+[`'"])/
 const REPORTS_ABSENCE = /(❌|\bGONE\b|\bMISSING\b|Not standalone|\(NEW\)|never created|does not exist|no such file)/
 // A path inside backticks, rooted at a known source dir, with a real extension.
 const PATH_RE = /`((?:src|supabase|scripts|packages|api)\/[A-Za-z0-9_./\[\]-]+\.(?:ts|tsx|js|jsx|mjs|sql|css|json))`/g
@@ -164,6 +169,11 @@ for (const f of files) {
   const lines = raw.split('\n')
   lines.forEach((ln,i) => {
     if (ln.trimStart().startsWith('>')) return
+    // A PATH INSIDE A STRIKETHROUGH IS ALREADY MARKED NOT-CURRENT. `~~...~~` is the
+    // plainest correction notation markdown has, and it travels WITH the citation rather
+    // than sitting in a note two lines away — which is exactly what the ±2-line window
+    // below cannot reach when the explanation is a paragraph above a struck block.
+    if (/~~/.test(ln)) return
     if (CORRECTION.test(lines.slice(Math.max(0,i-2), i+3).join('\n'))) return
     if (REPORTS_ABSENCE.test(ln)) return
     for (const m of ln.matchAll(PATH_RE)) {
@@ -183,7 +193,7 @@ for (const f of files) {
       if (hits.length === 1) moved = relative(ROOT, hits[0])   // unique => a real move
       else if (hits.length > 1) moved = null                    // ambiguous => not evidence
       const key = `${relf}|${p}`
-      if (!miss.has(key)) miss.set(key, { line: i+1, moved, proposal })
+      if (!miss.has(key)) miss.set(key, { line: i+1, moved, proposal: proposal || PROPOSES.test(ln) })
     }
   })
 }
