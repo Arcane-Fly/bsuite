@@ -39,7 +39,7 @@ The FastMonkey auth architecture (single Supabase project, RS256 JWTs, cross-sub
 | `packages/frontend/src/features/auth/components/ExtensionAuthBridge.tsx` | 139 | Add `getClaims()` before `getSession()` |
 | `packages/frontend/src/shared/lib/supabase.ts` | 51 | Add `getClaims()` before `getSession()` |
 | `packages/frontend/src/shared/lib/sse/SSEConnectionManager.tsx` | 39 | Add `getClaims()` before `getSession()` |
-| `packages/frontend/src/features/billing/hooks/useSubscription.ts` | 66 | Add `getClaims()` before `getSession()` |
+| `business-suite-unified/src/hooks/useSubscription.ts` | 66 | Add `getClaims()` before `getSession()` |
 
 **Pattern:**
 ```typescript

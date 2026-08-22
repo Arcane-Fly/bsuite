@@ -124,8 +124,8 @@ For each major documented feature, the codebase (`src/`, `api/`, `supabase/migra
 
 | Doc claim | Evidence |
 |---|---|
-| `src/lib/documentSigner.ts` | `src/lib/documentSigner.ts:1` (pdf-lib + SHA-256). ✓ |
-| `src/components/documents/SignDocumentFlow.tsx` | `src/components/documents/SignDocumentFlow.tsx:1`. ✓ |
+| `conduit/src/lib/esign/documentSigner.ts` | `conduit/src/lib/esign/documentSigner.ts:1` (pdf-lib + SHA-256). ✓ |
+| `conduit/src/components/esign/SignDocumentFlow.tsx` | `conduit/src/components/esign/SignDocumentFlow.tsx:1`. ✓ |
 | `src/pages/documents/signatures.tsx` | `src/pages/documents/signatures.tsx:1`. ✓ |
 | `supabase/migrations/20260304000005_document_signing_audit.sql` | `supabase/migrations/20260304000005_document_signing_audit.sql:1`. ✓ |
 | `supabase/functions/generate-document/index.ts` | `supabase/functions/generate-document/index.ts:1`. ✓ |
