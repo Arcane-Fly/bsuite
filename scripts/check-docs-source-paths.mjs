@@ -37,7 +37,13 @@ function walk(d, out=[]) { let e; try { e = readdirSync(d) } catch { return out 
   for (const x of e) { if (SKIP.has(x)) continue; const p = join(d,x); let s; try { s = statSync(p) } catch { continue }
     s.isDirectory() ? walk(p,out) : x.endsWith('.md') && out.push(p) } return out }
 
-const CORRECTION = /(NO LONGER TRUE|SUPERSEDED|Corrected \d|re-measured|RETIRED|used to |previously|Deleted outright|does not exist|absent)/i
+// AN OWNERSHIP MOVE IS A CORRECTION. A doc that says "this path no longer exists here,
+// the code moved to <other repo>" is not carrying a broken reference — it is carrying an
+// accurate one with its disposition attached, which is the best possible state for a path
+// that used to be real. conduit's handover feature is the case: four tested modules were
+// deleted by `cbf7631` ("ownership moved to crm7") and the doc recorded it, in a section
+// 100 lines BELOW the table people copy paths out of.
+const CORRECTION = /(NO LONGER TRUE|SUPERSEDED|Corrected \d|re-measured|RETIRED|used to |previously|Deleted outright|does not exist|absent|ownership moved|moved to crm7|no longer exists (?:in|here))/i
 // A doc REPORTING a file's absence is not a doc with a broken reference.
 // Audit tables mark them ❌ GONE / MISSING; plans mark proposals (NEW).
 const REPORTS_ABSENCE = /(❌|\bGONE\b|\bMISSING\b|Not standalone|\(NEW\)|never created|does not exist|no such file)/
