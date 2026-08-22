@@ -30,7 +30,32 @@ function resolveTheme(mode: ThemeMode): ResolvedTheme {
   return mode
 }
 
-function applyThemeClass(resolved: ResolvedTheme) {
+/**
+ * Write BOTH theme signals, because the estate reads both and they had different
+ * owners.
+ *
+ * This function used to set only the `light` / `dark` CLASS. The pre-React FOUC
+ * script in each app's index.html sets the class AND `data-theme`, so the two
+ * agreed exactly until this provider mounted and moved one of them.
+ *
+ * Measured on d.crm.crm7.app 2026-08-22:
+ *
+ *     <html class="notranslate light" data-theme="dark">
+ *
+ * That is not cosmetic. crm7's tailwind.config.js declares
+ * `darkMode: ['class', '[data-theme="dark"]']`, where the custom selector
+ * REPLACES `.dark` — so every `dark:` utility keys on `data-theme`, while the
+ * colour custom properties in theme.css key on the `.dark` class. Light tokens
+ * active, dark utilities applying, at the same time.
+ *
+ * The visible symptom was every card rendering flat: `dark:shadow-card-glow`
+ * applied in light mode, resolving `--glow-card` to its LIGHT value of `none`,
+ * which set `--tw-shadow: none` and cancelled the light shadow underneath it.
+ * Shadows are only where it showed. Every `dark:` utility in the app was affected.
+ *
+ * One writer, both signals, so they cannot drift again.
+ */
+export function applyTheme(resolved: ResolvedTheme) {
   if (typeof document === 'undefined') return
   const root = document.documentElement
   if (resolved === 'dark') {
@@ -40,6 +65,7 @@ function applyThemeClass(resolved: ResolvedTheme) {
     root.classList.add('light')
     root.classList.remove('dark')
   }
+  root.setAttribute('data-theme', resolved)
 }
 
 export function ThemeProvider({
@@ -68,7 +94,7 @@ export function ThemeProvider({
   useEffect(() => {
     const next = resolveTheme(theme)
     setResolvedTheme(next)
-    applyThemeClass(next)
+    applyTheme(next)
   }, [theme])
 
   useEffect(() => {
@@ -77,7 +103,7 @@ export function ThemeProvider({
     const listener = () => {
       const next: ResolvedTheme = mq.matches ? 'dark' : 'light'
       setResolvedTheme(next)
-      applyThemeClass(next)
+      applyTheme(next)
     }
     mq.addEventListener('change', listener)
     return () => mq.removeEventListener('change', listener)
