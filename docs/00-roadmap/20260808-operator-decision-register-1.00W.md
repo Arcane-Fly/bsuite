@@ -55,8 +55,8 @@ default, round-trip verified before it overwrites anything. It needs the migrati
 first, because it reads the category settings those migrations create.
 
 ```
-node scripts/reencrypt-sensitive-documents.mjs           # shows what it would touch
-node scripts/reencrypt-sensitive-documents.mjs --apply
+node crm7/scripts/reencrypt-sensitive-documents.mjs           # shows what it would touch
+node crm7/scripts/reencrypt-sensitive-documents.mjs --apply
 ```
 
 **Do not trust a clean result without checking the count.** An earlier version of that script

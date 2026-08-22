@@ -115,7 +115,7 @@ invoice or line item. The standing rule is *"never display mock data in the UI, 
 financial or account-related information."* This is that rule's worst case, live.
 
 **4. R80.4 cannot reach the Fair Work API at all, so every wage it quotes is a bundled snapshot.**
-`scripts/api-availability.mjs MA000020` returns **HTTP 401 on all five MAPD endpoints** with a
+`R80.4/scripts/api-availability.mjs MA000020` returns **HTTP 401 on all five MAPD endpoints** with a
 well-formed key present. The repo's own definition-of-done gate reports `NOT DONE — 21 award(s)
 failing something unbaselined`. The governing operator ruling is *"the amounts are pulled from the
 api."* They are not. This is a compliance exposure and it is new to this register.
@@ -149,7 +149,7 @@ punishable direction**, and three of the top four err that way.
 | # | Item | Evidence | Size |
 |---|---|---|---|
 | W-1 | **20 of 21 awards are priced with an empty penalty table.** `charge-calculator-v9-2.tsx:3848` sets `penalties = []` for every award except MA000020. No overtime, weekend, shift or public-holiday loading enters `calculate()`. The UI's own instruction ("Press Load Pay Rates then Replace Penalty Table … that path is real and works today") is a dead end — live FWC returns **0 penalty rows for MA000036** | `resolvePenalties` has zero occurrences repo-wide | L |
-| W-2 | **The award engine is unreachable from the calculator.** Transitive closure from `src/main.tsx`: 67 of 179 modules reachable, 112 unreachable, **all** in `src/awards/`. 19 of 21 awards have zero runtime-reachable engine modules; **20 of 21 have no reachable rate constructor**. The repo's own gate prints it: *"21 awards are MODELLED and one is REACHABLE"* | `scripts/reachability.mjs:127`; `resolveOrdinaryRate`'s only importer is an unreachable barrel | L |
+| W-2 | **The award engine is unreachable from the calculator.** Transitive closure from `src/main.tsx`: 67 of 179 modules reachable, 112 unreachable, **all** in `src/awards/`. 19 of 21 awards have zero runtime-reachable engine modules; **20 of 21 have no reachable rate constructor**. The repo's own gate prints it: *"21 awards are MODELLED and one is REACHABLE"* | `R80.4/scripts/reachability.mjs:127`; `resolveOrdinaryRate`'s only importer is an unreachable barrel | L |
 | W-3 | **MA000017 offers 0 of its 26 allowances**, including the all-purpose Instructor allowance that belongs in the ordinary wage — so it is also missing from the base of every multiplier struck on it. **Fixed on `development` (`718cebd`), still live on `main`** | `allowance-catalogue.ts:98` `r.sector === sector`, no alias; all 26 MA000017 allowances are sector-tagged in a vocabulary the UI cannot produce | S — merge |
 | W-4 | **School-based apprentices under MA000020 are priced at a lower stage than the award requires.** cl.19.7(b) advances on competency **or** 12 months, *whichever is earlier*; `schoolBasedStage()` implements only the time limb. This one **is** reachable | `contingent-costs.ts`, imported at `charge-calculator-v9-2.tsx:45` | M |
 | W-5 | **Provenance is unenforceable — 5 of 6 rungs are never stamped.** `mapd_api`, `mapd_db_cache`, `db_instrument`, `pay_guide`, `manual_override` are produced nowhere reachable. A bundled-table quote is indistinguishable from a live one | `rate-source.ts:84`; only `bundled_fallback` emitted | L |

@@ -1,0 +1,67 @@
+name: Base stack only
+
+# NO NEW RUNTIME DEPENDENCY WITHOUT A DECISION.
+#
+# The rule is the operator's, from 2026-05-01: *"we have these skills already and the
+# base. we've just diverted recently."* It was written into
+# docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md §5 item 7, which said a CI
+# lint enforcing it was "delivered in Phase 6".
+#
+# It was not. Not under that name and not under any other. Six of the seven obligations
+# on that list HAD shipped under different filenames, and that is precisely what hid the
+# seventh — a reader spot-checking the list finds most items real and stops checking.
+# For two and a half months the estate had a dependency policy that read as enforced and
+# was not, which is weaker than having no policy: nobody looks for a control they believe
+# they already have.
+#
+# NO `paths:` FILTER, for the two reasons every other estate-wide gate here records:
+#
+#   1. Under-triggering. A new dependency arrives inside a SUBMODULE, and the parent
+#      tree holds only a gitlink for each submodule, so a path filter can never match it.
+#   2. Required-check deadlock. A path-filtered required check never reports on a PR
+#      that misses the filter, and the PR waits forever. This is a file scan; it is
+#      finished in seconds.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: base-stack-only-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  base-stack-only:
+    name: No new runtime dependency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the apps that install things ARE the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
+          # `submodules: recursive` fails at checkout. Same fallback chain every other
+          # submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects. Run the
+      # checker's own self-test FIRST so a pass below is known to come from a checker
+      # that can still fail — including its two positive controls, which assert that an
+      # unlisted dependency reports ADDED and an uninstalled allow-list entry reports STALE.
+      - name: Self-test the checker
+        run: node scripts/check-base-stack-only.mjs --self-test
+
+      # The script carries its own minimum-manifest control and exits 3 rather than 0
+      # when the submodules did not populate — an empty scan must never read as clean.
+      - name: Check every runtime dependency against the allow-list
+        run: node scripts/check-base-stack-only.mjs

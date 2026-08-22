@@ -44,7 +44,7 @@
   > | braden | wired, PR open | braden#383 — grep workflow replaced |
   > | R80.4 | wired, PR open | R80.4#36 — dependency added first; gate added where none existed |
   >
-  > A second guard failed the same way. `.github/workflows/verify-bs-oauth-session-sync.yml` asserted four fragments with `grep -rq` over `src/`, and **in crm7 it passed on a tree that had already lost both real `setSession()` call sites** — satisfied by a single doc comment. In throughput and braden the same greps returned to PASS after adding **one comment line** to a tree with zero real bridge calls. R80.4 already carries a doc comment (`src/lib/supabase.ts:33`) that would have satisfied them from day one. All replaced by a TypeScript AST walk carrying a self-test that runs before every scan.
+  > A second guard failed the same way. `*/.github/workflows/verify-bs-oauth-session-sync.yml` — one copy per app, which is the point of the finding — asserted four fragments with `grep -rq` over `src/`, and **in crm7 it passed on a tree that had already lost both real `setSession()` call sites** — satisfied by a single doc comment. In throughput and braden the same greps returned to PASS after adding **one comment line** to a tree with zero real bridge calls. R80.4 already carries a doc comment (`src/lib/supabase.ts:33`) that would have satisfied them from day one. All replaced by a TypeScript AST walk carrying a self-test that runs before every scan.
   >
   > **Standing lesson for anyone citing a compliance verdict from this document:** *documented* is not *wired*, *wired* is not *running*, and a per-app count is worthless until the app list itself is verified. Re-measure with the instrument that observes behaviour, not the one that reads text.
 

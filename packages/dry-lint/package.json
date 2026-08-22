@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/dry-lint",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ESLint plugin enforcing BSuite one-shot architecture (single-owner Supabase entity tables) and the OAuth callback bridge contract.",
   "type": "module",
   "license": "UNLICENSED",

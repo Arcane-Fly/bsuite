@@ -1,0 +1,62 @@
+name: Doc citations resolve
+
+# A doc that cites a path nobody can follow is a doc with no evidence, however
+# confident it reads. The classification standard makes `evidence` the binding between
+# a claim and the gate that proves it; that binding is worth nothing if the cited path
+# does not resolve from where the reader is standing.
+#
+# ONLY THE UNQUALIFIED CLASS FAILS. A citation naming a file outside this repo (the
+# ~/.agents skills hub) is correct, and a citation to something never written is
+# usually a proposal whose own line says so — judging that needs a human read, not an
+# exit code. Failing on either would train everyone to ignore this.
+#
+# WHY THE SELF-TEST IS NOT OPTIONAL HERE. The same question was measured FOUR times
+# and every answer was wrong:
+#
+#   19 dead   — existsSync was tried only at the parent root, so every submodule
+#               script read as deleted
+#    6 absent — the extension alternation let `.json` be cut to `.js`, inventing a
+#               file nothing had ever cited
+#   11 stuck  — after the docs were FIXED the same 11 still failed, because
+#               `\bscripts/dod.mjs` matches inside `R80.4/scripts/dod.mjs`: a slash
+#               is a word boundary
+#
+# The truth was 11 unqualified paths, 2 external, and 4 never written. Not one gate
+# had been deleted. Each of those three bugs is now a self-test.
+#
+# NO `paths:` FILTER — the docs that matter live beside submodule gitlinks the filter
+# cannot see, and a path-filtered required check never reports on a PR that misses the
+# filter, leaving it to wait forever.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doc-citations-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  doc-citations:
+    name: Cited scripts and workflows resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Self-test the resolver
+        run: node scripts/check-doc-citations-resolve.mjs --self-test
+
+      - name: Every citation resolves, is external, or is openly unresolved
+        run: node scripts/check-doc-citations-resolve.mjs
