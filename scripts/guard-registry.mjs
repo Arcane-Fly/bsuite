@@ -559,27 +559,28 @@ export const GUARDS = [
   },
   {
     id: 'parent-verify-esm-imports',
-    label: 'Published package entry points import cleanly under Node ESM',
+    label: 'Every built @bsuite/* package imports cleanly under Node ESM',
     repo: '.',
     command: ['bash', 'scripts/verify-esm-imports.sh'],
     ciWorkflow: '.github/workflows/theme-conformance.yml',
-    mode: 'run',
-    knownSilent: true,
-    knownSilentReason:
-      'Without its CI precondition (`pnpm -r --filter "./packages/**" ' +
-      'build` run first), this prints "PASS: all 0 built packages import ' +
-      'cleanly under Node ESM." — a stated ZERO denominator on a real PASS ' +
-      'line. In real CI the packages ARE built first (see ' +
-      'theme-conformance.yml "Install and build packages" step), so this ' +
-      'is not confirmed to fire in production — but the guard itself has ' +
-      'no floor check requiring a non-zero built-package count, unlike ' +
-      "check-secret-naming.sh's UNSCANNED refusal. If the build step were " +
-      'ever skipped, mistyped, or partially failed, this gate would ' +
-      'silently rubber-stamp it. Filed, not fixed in this pass.',
-    evidence:
-      '"PASS: all 0 built packages import cleanly under Node ESM." ' +
-      '(observed running the script directly, without the preceding ' +
-      "`pnpm -r build` CI does; see knownSilentReason).",
+    mode: 'skip',
+    skipReason:
+      'Needs its build precondition — `pnpm -r --filter "./packages/**" build` ' +
+      '(theme-conformance.yml, "Install and build packages"). Was knownSilent ' +
+      'until 2026-08-21: without that step every package landed in `skipped`, ' +
+      '`checked` stayed 0, and it printed "PASS: all 0 built packages import ' +
+      'cleanly under Node ESM" — exit 0, green tick, nothing imported. It now ' +
+      'REFUSES on a zero denominator, and distinguishes the two causes: no ' +
+      'packages found at all, versus packages present but none built (which ' +
+      'names the skip count and the missing build command). GOOD CITIZEN ' +
+      'while skipped: run without the build it exits 1 rather than passing. ' +
+      'Verified by fixture 2026-08-21 — zero packages: exit 1; two packages, ' +
+      'none built: exit 1 naming "2 package(s) exist, 0 were ' +
+      'importable-checked"; one package built: floor does NOT fire, reaches ' +
+      'the real check and prints "PASS: 1 subpath(s) across 1 package(s) ... ' +
+      '(0 skipped)". Against the real built tree it reports a genuine ' +
+      'pre-existing failure — @bsuite/ui/use-on-click-outside, 1 of 44 ' +
+      'subpaths — filed separately.',
   },
   {
     id: 'parent-check-script-parity',
