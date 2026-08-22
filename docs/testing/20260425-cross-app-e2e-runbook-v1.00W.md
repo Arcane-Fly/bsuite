@@ -3,7 +3,7 @@
 **Date:** 2026-04-25
 **Status:** W (Working — manual verification procedure for must-have #5)
 **Owner:** Subagent W3-D (Universal Canvas Wave-3)
-**Covers:** `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` §2 must-have #5
+**Covers:** `docs/20260425-universal-canvas-master-execution-plan-v1.00F.md` §2 must-have #5
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.

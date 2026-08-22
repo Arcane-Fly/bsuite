@@ -81,7 +81,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | 20260629-bsuite-world-class-audit-tracker-v1.00W.md | Vercel + world-class audit tracker | I | Rows "In progress"; Batch E "pending deploy"; merge "BLOCKED" | keep |
 | 20260629-bsuite-world-class-feature-inventory-v1.00W.md | Cross-app feature/entity/role inventory | L | Standing reference (WC-008…012 verified) | keep (living) |
 | 20260629-vercel-production-launch-runbook-v1.00W.md | Vercel Pro launch/incident/rollback runbook | L | Runbook; PARTIAL rows (CSP, Sentry, rate limiting) | keep (living) |
-| 20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md | OAuth→setSession bridge yields 200 RLS reads | C | `conduit/src/app/auth/callback/page.tsx:119-177` (setSession+poll+throw) | archive |
+| 20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md | OAuth→setSession bridge yields 200 RLS reads | C | `conduit/src/app/auth/callback/page.tsx:119-177` (setSession+poll+throw) | archive |
 | 20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md | 5/5 apps PASS auth bridge validation | C | `conduit/src/app/auth/callback/page.tsx:119-177` | archive |
 | 20260722-developer-portal-investigation-v1.00W.md | Read-only investigation of 5 dev-portal pages | I | "No code changes"; FeatureBuilder "3/8 live" finding STALE (`FeatureBuilder/index.tsx:39-46` all `live:true`) | keep |
 | 20260722-visual-qa-d-apps-v1.00W.md | Visual QA sweep; "ALL ITEMS CLOSED" | C | `conduit/src/services/pipelineService.ts:64-68`; `useAIChat.ts:76`; PRs crm7#1191/conduit#368/BSU#576/R80#342/throughput#250 | archive |

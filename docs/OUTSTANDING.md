@@ -344,7 +344,7 @@ fired.
 
 | File | Moved from | Archive reason |
 |------|-----------|----------------|
-| `20260423-phase5-schema-pagebuilder-implementation-v1.00W.md` | `docs/plans/` | 1528-line Phase 5 impl plan — all 7 PRs (5.0 → 5.6) landed; superseded by `docs/20260425-universal-canvas-master-execution-plan-v1.00W.md` |
+| `20260423-phase5-schema-pagebuilder-implementation-v1.00W.md` | `docs/plans/` | 1528-line Phase 5 impl plan — all 7 PRs (5.0 → 5.6) landed; superseded by `docs/20260425-universal-canvas-master-execution-plan-v1.00F.md` |
 | `20260316-mermaid-ui-builder-reference-v1.00A.md` | `docs/` | March 2026 legacy diagram-driven UI vision — superseded by universal-canvas architecture (PageGridLayout + @bsuite/schema-registry + TenantLayoutSlot) |
 
 ### 2026-04-23 bucket — `docs/archive/2026-04/`
@@ -353,7 +353,7 @@ fired.
 
 | File | Archive reason |
 |------|---------------|
-| `20260225-cascade-claude-upgrade-coordination-plan-v1.00A.md` | Historical coordination plan — work merged |
+| `20260225-cascade-claude-upgrade-coordination-plan-v1.00F.md` | Historical coordination plan — work merged |
 | `20260226-ux-oneshot-deep-dive-plan-v1.00W.md` | EntitySelector components built (7 exist); residual items tracked in `entity-crosswalk`; subsumed |
 | `20260227-bsuite-deep-audit-report-v1.00A.md` | Point-in-time audit report — superseded by gap reports v1 + v2 |
 | `20260301-crm7-page-inventory-v1.00A.md` | Superseded by live per-project inventories in crm7/docs |
@@ -379,7 +379,7 @@ fired.
 
 Re-ranked 2026-04-25 after Wave-1 → Wave-4 of the universal-canvas sweep
 landed. The universal-canvas master plan
-(`docs/20260425-universal-canvas-master-execution-plan-v1.00W.md`) is the
+(`docs/20260425-universal-canvas-master-execution-plan-v1.00F.md`) is the
 primary execution source; IDs below match the finish-line roadmap
 (`docs/20260425-bsuite-finish-line-roadmap-v1.00W.md`).
 
