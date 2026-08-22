@@ -48,7 +48,7 @@
  * row on every node drag.
  */
 
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useStore } from '@xyflow/react';
 import { Key, Pencil } from 'lucide-react';
 import { memo } from 'react';
 
@@ -68,8 +68,47 @@ export interface FieldRowProps {
   isSystemEntity?: boolean;
 }
 
+/**
+ * CONNECT TARGET SIZING — WCAG 2.5.8 (AA, 24x24 minimum).
+ *
+ * These were `!h-3 !w-3`: 12 CSS px, which at the canvas's effective zoom of
+ * 0.5 rendered as SIX DEVICE PIXELS. Four times below the floor. Drag-to-relate
+ * was correctly wired the whole time — the gesture worked — but the target was
+ * essentially unhittable, which is why the surface read as having no primary
+ * action at all.
+ *
+ * The fix separates the HIT AREA from the PAINTED DOT. A 6px dot with a 24px
+ * transparent hit box is easy to hit and still looks like a small connector;
+ * growing the dot itself to 24px would have put a large blob on every field of
+ * every card.
+ *
+ * Both are divided by the live zoom so the numbers hold in DEVICE pixels rather
+ * than CSS pixels — the unit the user's finger and the success criterion both
+ * actually work in. The hit box is clamped so it cannot grow wide enough to
+ * overlap the neighbouring row's target when zoomed out.
+ */
+const HIT_TARGET_DEVICE_PX = 24;
+const DOT_DEVICE_PX = 10;
+const MAX_HIT_CSS_PX = 34;
+
+export function handleSizing(zoom: number): {
+  hit: number;
+  dot: number;
+} {
+  const safeZoom = zoom > 0 ? zoom : 1;
+  const hit = Math.min(HIT_TARGET_DEVICE_PX / safeZoom, MAX_HIT_CSS_PX);
+  // The dot needs the same clamp as the hit box, and for the same reason.
+  // Inverse-scaling it alone meant that once `hit` hit its ceiling the dot kept
+  // growing past it — at zoom 0.05 a 200px dot inside a 34px target. Capping it
+  // at half the hit box keeps the painted dot inside the thing being aimed at
+  // at every zoom, which is the invariant that makes the split meaningful.
+  const dot = Math.min(DOT_DEVICE_PX / safeZoom, hit / 2);
+  return { hit, dot };
+}
+
+/** Transparent, larger than the dot, and the thing the pointer actually hits. */
 const HANDLE_CLASS =
-  '!h-3 !w-3 !bg-role-primary !border-2 !border-card !opacity-80 hover:!opacity-100';
+  '!bg-transparent !border-0 !rounded-full !opacity-100 group/handle';
 
 function truncateType(t: string, max = 12): string {
   if (t.length <= max) return t;
@@ -97,6 +136,12 @@ function dispatchReorderEvent(
 }
 
 function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
+  // Subscribe to the zoom scalar only. `handleSizing` converts the WCAG floor,
+  // which is stated in device px, into the CSS px this element must declare.
+  const zoom = useStore((s) => s.transform[2]);
+  const { hit, dot } = handleSizing(zoom);
+  const hitStyle = { width: `${hit}px`, height: `${hit}px` };
+  const dotStyle = { width: `${dot}px`, height: `${dot}px` };
   const baseId = `${entityId}.${field.id}`;
   const showNotNull = !field.isNullable && !field.isPrimary;
   // Primary keys and system entities are read-only; they don't get the
@@ -154,7 +199,14 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         className={HANDLE_CLASS}
         aria-hidden="true"
         title={`Drop a relationship onto ${field.name}`}
-      />
+              style={hitStyle}
+      >
+        <span
+          aria-hidden="true"
+          style={dotStyle}
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-card bg-role-primary opacity-80 transition-transform group-hover/handle:scale-150 group-hover/handle:opacity-100"
+        />
+      </Handle>
       <Handle
         type="source"
         position={Position.Left}
@@ -162,7 +214,14 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         className={HANDLE_CLASS}
         aria-hidden="true"
         title={`Drag from ${field.name} to create a relationship`}
-      />
+              style={hitStyle}
+      >
+        <span
+          aria-hidden="true"
+          style={dotStyle}
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-card bg-role-primary opacity-80 transition-transform group-hover/handle:scale-150 group-hover/handle:opacity-100"
+        />
+      </Handle>
 
       <span className="inline-flex w-4 shrink-0 items-center justify-center">
         {field.isPrimary ? (
@@ -211,7 +270,14 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         className={HANDLE_CLASS}
         aria-hidden="true"
         title={`Drop a relationship onto ${field.name}`}
-      />
+              style={hitStyle}
+      >
+        <span
+          aria-hidden="true"
+          style={dotStyle}
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-card bg-role-primary opacity-80 transition-transform group-hover/handle:scale-150 group-hover/handle:opacity-100"
+        />
+      </Handle>
       <Handle
         type="source"
         position={Position.Right}
@@ -219,7 +285,14 @@ function FieldRowImpl({ entityId, field, isSystemEntity }: FieldRowProps) {
         className={HANDLE_CLASS}
         aria-hidden="true"
         title={`Drag from ${field.name} to create a relationship`}
-      />
+              style={hitStyle}
+      >
+        <span
+          aria-hidden="true"
+          style={dotStyle}
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-card bg-role-primary opacity-80 transition-transform group-hover/handle:scale-150 group-hover/handle:opacity-100"
+        />
+      </Handle>
     </div>
   );
 }

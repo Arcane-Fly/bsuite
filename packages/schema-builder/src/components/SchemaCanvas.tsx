@@ -19,7 +19,15 @@ import {
   applyNodeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { AlertTriangle, Info, Link2, MousePointer2, Workflow, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Info,
+  Link2,
+  MousePointer2,
+  Plus,
+  Workflow,
+  X,
+} from 'lucide-react';
 import {
   forwardRef,
   useCallback,
@@ -31,6 +39,7 @@ import {
 } from 'react';
 
 import { useDismissOnOutsideOrEscape } from '../hooks/useDismissOnOutsideOrEscape.js';
+import { useDocumentColorMode } from '../hooks/useDocumentColorMode.js';
 import type { SchemaController } from '../hooks/useSchemaController.js';
 import type { RenamePhysicalColumnResult } from '../service.js';
 import type {
@@ -63,35 +72,52 @@ const RELATION_LABELS: Record<RelationType, string> = {
 const nodeTypes = { entity: EntityNode };
 const edgeTypes = { smart: SmartEdge };
 
-/**
- * Pattern: `${entityId}.${fieldId|'entity'}.${side}-${kind}`.
- * Valid sides: left|right|top|bottom. Valid kinds: source|target.
- * The literal `entity` as the fieldId component indicates an entity-level
- * fallback handle; field-level relations are only created when fieldId is not
- * that literal.
+/*
+ * `parseHandleId` and HANDLE_ID_RE lived here and pulled the fieldId out of a
+ * `${entityId}.${fieldId|'entity'}.${side}-${kind}` handle so it could be
+ * persisted as source_field_id / target_field_id. Those columns no longer
+ * exist (migration 20260503000001), so the parse had no consumer left and is
+ * removed rather than kept warm — carrying dead code that mirrors a dropped
+ * schema is precisely how the phantom-column bug survived three and a half
+ * months. Recover it from git history if 20260503000000 is ever re-applied.
+ *
+ * The handle-id FORMAT is unchanged and still produced by EntityNode/FieldRow;
+ * only the persistence-side parse is gone.
  */
-const HANDLE_ID_RE =
-  /^(?<entityId>.+)\.(?<fieldId>[^.]+)\.(?<side>left|right|top|bottom)-(?<kind>source|target)$/;
 
-function parseHandleId(handleId: string | null | undefined): {
-  entityId?: string;
-  fieldId?: string;
-} {
-  if (!handleId) return {};
-  const match = handleId.match(HANDLE_ID_RE);
-  if (!match?.groups) return {};
-  const { entityId, fieldId } = match.groups;
-  return {
-    entityId,
-    fieldId: fieldId === 'entity' ? undefined : fieldId,
-  };
-}
+/**
+ * React Flow ships its own palette as raw hex, split into `-default` values
+ * under `.react-flow` and `.react-flow.dark`. Even with `colorMode` set
+ * correctly that palette is the library's, not the tenant's: the minimap ground
+ * would be the library's own near-white in light and its own near-black in
+ * dark, regardless of what the surface
+ * behind it actually is.
+ *
+ * `-props` is the layer the library reserves for the consumer (it is what the
+ * component props write to), so overriding it here does not fight the
+ * stylesheet's own cascade. Every value is a role token, so both themes and any
+ * tenant branding follow automatically and nothing here needs a dark variant.
+ */
+const XY_TOKEN_BINDINGS = {
+  '--xy-minimap-background-color-props': 'var(--role-bg-panel)',
+  '--xy-minimap-mask-background-color-props': 'var(--role-bg-body)',
+  '--xy-minimap-mask-stroke-color-props': 'var(--role-border-interactive)',
+  '--xy-minimap-node-background-color-props': 'var(--role-primary)',
+  '--xy-minimap-node-stroke-color-props': 'var(--role-border-interactive)',
+  '--xy-controls-button-background-color-props': 'var(--role-bg-panel)',
+  '--xy-controls-button-background-color-hover-props': 'var(--role-bg-body)',
+  '--xy-controls-button-color-props': 'var(--role-text-body)',
+  '--xy-controls-button-color-hover-props': 'var(--role-text-body)',
+  '--xy-controls-button-border-color-props': 'var(--role-border-interactive)',
+} as React.CSSProperties;
 
 function stylesForRelation(type: RelationType) {
   return {
+    // Must stay in step with `strokeStyle` in edges/SmartEdge.tsx — see the
+    // 1.4.11 note there for why this is the -text sibling, not --role-secondary.
     stroke:
       type === 'inherits_from'
-        ? 'var(--role-secondary)'
+        ? 'var(--role-secondary-text)'
         : 'var(--role-primary)',
     strokeWidth: 2,
   };
@@ -158,6 +184,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       Edge
     > | null>(null);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
+    const colorMode = useDocumentColorMode();
 
     useDismissOnOutsideOrEscape(quickStartRef, quickStartVisible, () =>
       setQuickStartVisible(false),
@@ -242,12 +269,13 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         )
         .map((rel) => {
           const styling = stylesForRelation(rel.relation_type);
-          const baseSource = rel.source_field_id
-            ? `${rel.source_entity_id}.${rel.source_field_id}.right-source`
-            : `${rel.source_entity_id}.entity.bottom-source`;
-          const baseTarget = rel.target_field_id
-            ? `${rel.target_entity_id}.${rel.target_field_id}.left-target`
-            : `${rel.target_entity_id}.entity.top-target`;
+          // Entity-level anchors only. The columns that carried field-level
+          // anchors were dropped by migration 20260503000001, so a stored
+          // relation cannot name a column — see types.ts:TenantEntityRelation.
+          // Column-anchored edges (spec §6.5.1) need those columns back and are
+          // blocked on that decision.
+          const baseSource = `${rel.source_entity_id}.entity.bottom-source`;
+          const baseTarget = `${rel.target_entity_id}.entity.top-target`;
           return {
             id: rel.id,
             source: rel.source_entity_id,
@@ -263,7 +291,10 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             style: styling,
             data: {
               cardinality: rel.relation_type,
-              onDelete: rel.on_delete,
+              // Not persisted — the column is gone. Left null rather than
+              // guessed, so the dashed stroke never implies a referential
+              // action nobody recorded.
+              onDelete: null,
               stroke: styling.stroke,
             },
           };
@@ -345,22 +376,21 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         if (!params || !params.source || !params.target) return;
         setIsRelationDialogOpen(false);
 
-        const { fieldId: sourceFieldId } = parseHandleId(params.sourceHandle);
-        const { fieldId: targetFieldId } = parseHandleId(params.targetHandle);
-
+        // The drag may well have started on a specific column handle, but a
+        // relation row has nowhere to record that: migration 20260503000001
+        // dropped source_field_id / target_field_id. Sending them is what
+        // PGRST204-rejected every insert for three and a half months. The
+        // relation is entity-to-entity; the handle only decides where the edge
+        // is drawn this session.
         try {
           const newRelation = await controller.createRelation({
             id: crypto.randomUUID(),
             tenant_id: tenantId,
             source_entity_id: params.source,
             target_entity_id: params.target,
-            source_field_id: sourceFieldId ?? null,
-            target_field_id: targetFieldId ?? null,
             relation_type: config.relation_type,
             source_label: config.source_label,
             target_label: config.target_label,
-            on_delete: 'SET NULL',
-            on_update: 'CASCADE',
             is_system: false,
             app_scope: appScope,
             metadata: {},
@@ -381,7 +411,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                 style: styling,
                 data: {
                   cardinality: newRelation.relation_type,
-                  onDelete: newRelation.on_delete,
+                  onDelete: null,
                   stroke: styling.stroke,
                 },
               } as Edge<SmartEdgeData>,
@@ -687,20 +717,28 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       return () => window.removeEventListener('bsuite-edit-field', handler);
     }, []);
 
+    // Hoisted out of the imperative handle so the empty state can call the same
+    // function. It previously existed ONLY on the ref, and crm7 never attached
+    // one — so on a zero-entity tenant the screen said "Create your first
+    // entity" and shipped no way to do it. A surface must not depend on a
+    // consumer remembering to wire a ref for its primary action to exist.
+    const openCreateEntity = useCallback(() => {
+      setSelectedEntity(null);
+      setIsPanelOpen(true);
+    }, []);
+
     useImperativeHandle(
       ref,
       () => ({
         focusEntity: focusEntityById,
-        openCreateEntity: () => {
-          setSelectedEntity(null);
-          setIsPanelOpen(true);
-        },
+        openCreateEntity,
         tidyUp: handleTidyUp,
         exportPng: handleExportPng,
         addFieldToSelectedEntity,
       }),
       [
         focusEntityById,
+        openCreateEntity,
         handleTidyUp,
         handleExportPng,
         addFieldToSelectedEntity,
@@ -766,6 +804,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         <p className="max-w-sm px-4 text-center text-xs text-muted-foreground">
           Create your first entity to start building the schema.
         </p>
+        <button
+          type="button"
+          onClick={openCreateEntity}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-role-primary px-4 text-sm font-medium text-text-on-primary hover:bg-role-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Create entity
+        </button>
       </div>
     ) : (
       <ReactFlow
@@ -782,8 +828,27 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           flowRef.current = inst;
         }}
         fitView
+        // React Flow's default minZoom is 0.5 and `fitView` will not go below
+        // it. 44 entities are ~1540px wide and thousands tall, so fitView hit
+        // the clamp, gave up, and showed roughly a third of the diagram at a
+        // scale where field text rendered at 4.5-7 device px. Measured
+        // viewport transform before this line existed: exactly scale(0.5).
+        minZoom={0.05}
+        maxZoom={2}
+        // Without this the class never lands on `.react-flow`, and the library
+        // stylesheet keeps its own light-mode minimap ground in BOTH themes.
+        colorMode={colorMode}
+        // Default was Backspace only, so the Delete key silently did nothing.
+        deleteKeyCode={['Delete', 'Backspace']}
         nodeDragThreshold={8}
         aria-label="Entity relationship diagram"
+        // Bind React Flow's own palette to brand tokens. `colorMode` alone only
+        // only swaps one library-owned literal for another library-owned one —
+        // still two raw hex literals this estate does not own, and still not
+        // whatever the tenant's surface actually is. These are the documented
+        // `-props` override points, set once on the container so they inherit
+        // to the minimap, the controls and the attribution together.
+        style={XY_TOKEN_BINDINGS}
       >
         <Background gap={16} />
         <Controls showInteractive={false} />
@@ -851,7 +916,12 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                   ref={quickStartRef}
                   role="note"
                   aria-label="Schema Builder quick start"
-                  className="absolute bottom-3 left-3 z-10 max-w-sm rounded-lg border border-role-primary/40 bg-card/95 p-3 text-xs text-text-secondary shadow-sm backdrop-blur"
+                  // `left-3` put this directly on top of React Flow's
+                  // <Controls>, which also sits bottom-left and at a LOWER
+                  // z-index (5 vs 10) — so the note won, and zoom/fit were
+                  // covered by a tip telling the user how to use the canvas.
+                  // The controls column is ~28px wide; left-16 clears it.
+                  className="absolute bottom-3 left-16 z-10 max-w-sm rounded-lg border border-role-primary/40 bg-card/95 p-3 text-xs text-text-secondary shadow-sm backdrop-blur"
                 >
                   <div className="flex items-start gap-2">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />

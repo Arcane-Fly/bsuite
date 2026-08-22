@@ -1,6 +1,6 @@
 import type { Node, NodeProps } from '@xyflow/react';
-import { Handle, Position } from '@xyflow/react';
-import { Database, FileText, GripVertical, Link2, PlusSquare } from 'lucide-react';
+import { Handle, Position, useStore } from '@xyflow/react';
+import { Database, FileText, GripVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { EntityNodeData as ZodEntityNodeData } from '../schemas.js';
@@ -25,10 +25,37 @@ export type EntityNodeData = {
 
 export type EntityNodeType = Node<EntityNodeData, 'entity'>;
 
+/**
+ * LEVEL OF DETAIL — what the card draws, by zoom band.
+ *
+ * There was none of this before, and the consequence was the operator's
+ * headline complaint. 44 entities do not fit a 900px viewport at any zoom the
+ * library will allow, so `fitView` bottomed out at scale 0.5 and every card
+ * rendered its full detail at half size: card title 7 device px, field name
+ * 5.5, field type 5, the NOT NULL badge 4.5. All of it unreadable, and one of
+ * those strings was mis-transcribed in the original defect report — at 5px
+ * even a careful reader guesses.
+ *
+ * Shrinking type is not the answer to a crowded diagram; drawing LESS is. Below
+ * the thresholds a card stops pretending to show rows it cannot show, and
+ * spends its pixels on the one thing that is legible and useful at that scale —
+ * its name.
+ *
+ * The bands are expressed in RENDERED px: a 10px label at zoom 0.4 is 4 device
+ * px, which is the number that actually matters.
+ */
+const LOD_FIELDS_VISIBLE = 0.7;
+const LOD_META_VISIBLE = 0.35;
+
 export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
   const entity = data.entity;
   const [isRenaming, setIsRenaming] = useState(false);
   const [draftLabel, setDraftLabel] = useState(entity.label);
+  // transform is [x, y, zoom]. Subscribing to just the scalar keeps this from
+  // re-rendering 44 cards on every pan.
+  const zoom = useStore((s) => s.transform[2]);
+  const showFields = zoom >= LOD_FIELDS_VISIBLE;
+  const showMeta = zoom >= LOD_META_VISIBLE;
 
   // Reset draft when the entity's label changes externally (e.g. Realtime
   // update from another tab), but only if the user isn't mid-edit.
@@ -91,10 +118,15 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
       aria-current={selected ? 'true' : undefined}
       tabIndex={0}
       title="Click to inspect fields. Drag the header grip to move. Drag a blue connector dot to another entity to create a relationship."
+      // `border-border` measured 2.26:1 dark and 1.27:1 light against the
+      // canvas — below 1.4.11's 3:1, i.e. the card edge was not reliably
+      // visible at all. This card is an interactive object (click, drag,
+      // connect), so it belongs on the interactive boundary token, which
+      // measures 5.95:1 dark / 4.39:1 light.
       className={`relative min-w-[240px] rounded-xl border bg-card shadow-md transition-all ${
         selected
           ? 'border-transparent ring-2 ring-ring ring-offset-2'
-          : 'border-border'
+          : 'border-border-interactive'
       }`}
     >
       {/* Entity-level fallback handles. Used when user drags from the card
@@ -166,11 +198,24 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         ) : null}
       </div>
 
-      <div className="truncate border-b border-border px-3 py-1 font-mono text-[10px] text-muted-foreground">
-        {entity.name}
-      </div>
+      {showMeta ? (
+        <div className="truncate border-b border-border px-3 py-1 font-mono text-[10px] text-muted-foreground">
+          {entity.name}
+        </div>
+      ) : null}
 
-      {hasFields ? (
+      {!showFields ? (
+        // Zoomed out. Rows would be sub-pixel noise that inflate the card and
+        // therefore the diagram that already will not fit, so summarise
+        // instead. The count still answers "is there anything in here".
+        showMeta ? (
+          <div className="px-3 py-2 text-xs text-muted-foreground">
+            {hasFields
+              ? `${fields.length} ${fields.length === 1 ? 'field' : 'fields'}`
+              : 'No custom fields yet'}
+          </div>
+        ) : null
+      ) : hasFields ? (
         <div
           className="divide-y divide-border"
           role="list"
@@ -192,30 +237,20 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
         </div>
       )}
 
-      <div className="rounded-b-xl bg-card p-2">
-        <div className="mb-2 rounded-md border border-role-primary/40 bg-role-primary/10 px-2 py-1 text-[10px] text-primary-text">
-          <span className="inline-flex items-center gap-1 font-medium">
-            <Link2 className="h-3 w-3" aria-hidden="true" />
-            Drag blue dots to connect entities.
-          </span>
-        </div>
-        <button
-          type="button"
-          title={`Add ${entity.label} as a widget to a custom page layout`}
-          className="inline-flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-border bg-card text-xs font-medium text-text-secondary hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 dark:hover:bg-muted dark:focus:ring-offset-background"
-          onClick={(event) => {
-            event.stopPropagation();
-            window.dispatchEvent(
-              new CustomEvent('bsuite-add-entity-widget', {
-                detail: { entityType: entity.name, label: entity.label },
-              }),
-            );
-          }}
-        >
-          <PlusSquare className="h-3 w-3" />
-          Add to Page
-        </button>
-      </div>
+      {/* This footer used to carry two things, both removed.
+       *
+       * "Drag blue dots to connect entities." was rendered on EVERY card — 44
+       * copies of one sentence, at 5 device px where it could not be read, each
+       * adding height to a diagram that already overflowed. One instruction
+       * belongs in one place; it now lives on the toolbar.
+       *
+       * "Add to Page" dispatched a `bsuite-add-entity-widget` CustomEvent that
+       * NOTHING listens for — verified across every package and all six apps.
+       * Its unit test asserted only that dispatch was called, which is true and
+       * meaningless. A control wired to nothing is worse than no control: it
+       * spends the user's attention and returns silence. It comes back when a
+       * listener exists.
+       */}
 
       <Handle
         type="source"

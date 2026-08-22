@@ -265,6 +265,19 @@
   /* Pair for --role-info. Every other semantic role had a -text token; info
      was the only gap, which forced apps to invent a local copy (R80.4). */
   --role-info-text:    oklch(0.468 0.120 192);    /* 4.96:1 tint · 5.44:1 body ✓ AA */
+  /* Pair for --role-secondary, and the last gap in this family.
+     --role-secondary is a FILL: light text sits ON it, so it is tuned dark
+     (L 0.380) and measures 9.81:1 against --text-on-light-fill. Used as a
+     STROKE on a dark canvas it inverts into the problem — 1.78:1 against
+     --role-bg-panel, failing 1.4.11's 3:1 for a graphical object. The
+     schema-builder inherits_from edge drew exactly that, in dark mode.
+     Lightening --role-secondary itself was measured and rejected: at L 0.60 the
+     stroke clears (4.56:1) but every secondary BUTTON's label drops to 3.82:1,
+     trading a non-text failure for a worse text one across the estate. A
+     stroke-safe sibling costs nothing and moves no existing surface.
+     Both variants are existing NAMED palette entries rather than new values —
+     the whitelist audit rejected two hand-tuned literals here, correctly. */
+  --role-secondary-text: var(--neon-electric-indigo); /* 5.23:1 sunken · 5.96:1 surface ✓ AA */
 
   /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
      measured against --role-bg-body (the conservative floor); all tiers
@@ -676,6 +689,7 @@
   --role-warning-text: var(--neon-electric-amber);/* 10.10:1 ✓ AAA */
   --role-success-text: oklch(0.671 0.130 195);    /*  6.99:1 ✓ AAA */
   --role-info-text:    oklch(0.780 0.120 192);    /*  7.0:1 ✓ AAA on dark panel */
+  --role-secondary-text: var(--neon-electric-lavender); /* 6.78:1 input · 7.62:1 panel ✓ AAA */
 
   /* Glow/shadow scale up in dark mode */
   --glow-strength:   0.6;

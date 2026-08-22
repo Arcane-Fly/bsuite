@@ -75,8 +75,12 @@ export function buildSmartEdgeStyle(
   override?: CSSProperties,
 ): CSSProperties {
   const isInherits = cardinality === 'inherits_from';
+  // `--role-secondary` is a FILL token, tuned dark so light text can sit on it.
+  // As a 2px stroke on the dark canvas it measured 1.78:1 — below 1.4.11's 3:1
+  // for a graphical object. `--role-secondary-text` is the stroke-safe sibling
+  // and measures 6.53-7.33:1 dark, 5.63-6.41:1 light.
   const defaultStroke = isInherits
-    ? 'var(--role-secondary)'
+    ? 'var(--role-secondary-text)'
     : 'var(--role-primary)';
   return {
     stroke: override?.stroke ?? defaultStroke,
@@ -139,7 +143,11 @@ function MarkerDef({
         d="M 1 1 L 11 6 L 1 11 Z"
         stroke={color}
         strokeWidth="1.5"
-        fill="white"
+        // Was a raw colour keyword: off-token, and in dark mode a light-filled
+        // crow's-foot on a near-black canvas is the one bright speck on the
+        // edge. The panel token keeps the marker reading as a hole punched in
+        // the line, in whichever theme is active.
+        fill="var(--role-bg-panel)"
       />
     </marker>
   );
