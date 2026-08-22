@@ -321,7 +321,13 @@
 
 **Files:**
 - Modify or create: parent CI/workflow or script if missing.
-- Candidate: `.github/workflows/package-lockfile-hygiene.yml` or `scripts/check-lockfiles.mjs`.
+- Candidate: `.github/workflows/package-lockfile-hygiene.yml` or `scripts/check-lockfiles.mjs`
+  - **DELIVERED as `scripts/check-lockfile-hygiene.mjs`** — neither candidate name was
+    used. Its own header cites "Production-readiness plan Workstream A, Task A2", which
+    is this plan. It fails when an app's `pnpm-lock.yaml` is workspace-poisoned:
+    lockfiles generated inside the bsuite tree embed `../packages/*` importers and break
+    Vercel standalone builds with `ERR_PNPM_OUTDATED_LOCKFILE`. A correct lockfile has
+    `.:` as its only importer..
 
 **Steps:**
 1. Add or reuse a script that fails if any app lockfile contains workspace importers or `../packages`.

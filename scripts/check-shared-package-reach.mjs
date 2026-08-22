@@ -554,6 +554,18 @@ for (const app of APPS) {
   const lockText = readFileSync(lockPath, 'utf8')
 
   for (const [name, repoVersion] of repoPackages) {
+    // `continue` here is CORRECT for this loop -- it compares an app's PIN against
+    // the repo version, and an app that does not declare the package has no pin to
+    // compare. But it means this loop can only ever measure STALENESS OF EDGES
+    // THAT ALREADY EXIST. A package NO app declares is invisible to it by
+    // construction, so the guard reports green over its own blind spot.
+    //
+    // Reported by the Datum lane 2026-08-21 and confirmed: @bsuite/jodie is
+    // published to npm (1.0.0, 3 versions, its own publish-jodie.yml) and appears
+    // in ZERO package.json files and ZERO lockfiles across all six apps. This
+    // guard has never had anything to say about it.
+    //
+    // The zero-consumer case is handled after this loop, in reportUnconsumed().
     if (!deps.has(name)) continue // not a consumer of this package
     const pin = readLockPin(lockText, name)
     if (pin.kind === null) {
@@ -576,6 +588,64 @@ if (edgesExamined < REQUIRE_EDGES) {
       `${REQUIRE_EDGES}. A clean result on a tree that was not scanned is meaningless, not clean.`,
   )
   process.exit(1)
+}
+
+/*
+ * ZERO-CONSUMER REACH — the case the per-app loop above cannot see.
+ *
+ * That loop skips any package an app does not declare, which is correct for
+ * comparing pins but means a package NO app declares is invisible to it. The
+ * guard then reports green over its own blind spot — and says so in its own
+ * summary line: it counts EDGES, and a package with no edges contributes none.
+ *
+ * Reported by the Datum lane 2026-08-21 and confirmed here: @bsuite/jodie is
+ * published to npm with its own publish-jodie.yml and appears in ZERO
+ * package.json files and ZERO lockfiles across all six apps. A published
+ * package nobody consumes is either a missing dependency edge or a publish that
+ * should not be running — and until now nothing in this repo could say which,
+ * because nothing could see it at all.
+ *
+ * Counted from BOTH package.json and the lockfile: a package can be declared
+ * and unresolved, or resolved transitively without being declared. Requiring
+ * both to be empty keeps this from firing on something reachable by one path.
+ */
+const consumers = new Map()
+for (const name of repoPackages.keys()) consumers.set(name, [])
+for (const app of APPS) {
+  const pkgPath2 = join(ROOT, app, 'package.json')
+  const lockPath2 = join(ROOT, app, 'pnpm-lock.yaml')
+  if (!existsSync(pkgPath2)) continue
+  const appPkg2 = JSON.parse(readFileSync(pkgPath2, 'utf8'))
+  const declared = new Set(Object.keys({ ...appPkg2.dependencies, ...appPkg2.devDependencies, ...appPkg2.optionalDependencies }))
+  const lockText2 = existsSync(lockPath2) ? readFileSync(lockPath2, 'utf8') : ''
+  for (const name of repoPackages.keys()) {
+    if (declared.has(name) || lockText2.includes(name + ':') || lockText2.includes(name + '@')) {
+      consumers.get(name).push(app)
+    }
+  }
+}
+const unconsumed = [...consumers.entries()].filter(([, a]) => a.length === 0).map(([n]) => n)
+const totalEdges = [...consumers.values()].reduce((n, a) => n + a.length, 0)
+
+// Positive control. If NOTHING resolves a consumer the counter is broken, and
+// every package would report unconsumed — which reads as a dramatic finding and
+// is actually a dead scan.
+if (repoPackages.size > 0 && totalEdges === 0) {
+  console.error(`FAIL: consumer scan found 0 edges across ${repoPackages.size} package(s) and ${APPS.length} app(s).`)
+  console.error('That is a broken scan, not a finding. Refusing to report every package as unconsumed.')
+  process.exit(3)
+}
+
+if (unconsumed.length) {
+  console.log('')
+  console.log(`PUBLISHED-UNCONSUMED: ${unconsumed.length} package(s) reach no app at all`)
+  for (const n of unconsumed) {
+    console.log(`  ${n} @ ${repoPackages.get(n)} — declared by 0 apps, absent from all ${APPS.length} lockfiles`)
+  }
+  console.log('  Either an app should depend on it, or it should not be publishing.')
+  console.log('  REPORTED, not failed: the answer is a product decision, not a lint verdict.')
+} else {
+  console.log(`\nreach: every published package has a consumer (${totalEdges} edge(s), ${repoPackages.size} package(s))`)
 }
 
 // npm lookups — informational only, never load-bearing for the FAIL verdict.

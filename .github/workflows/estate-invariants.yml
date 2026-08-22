@@ -1,0 +1,79 @@
+name: Estate invariants
+
+# TWO CONTROLS THAT DOCUMENTS CLAIMED AND NOBODY BUILT.
+#
+# Both were found the same way, on 2026-08-22, by auditing which docs cite a gate that
+# does not exist. Both had been asserted in the present tense for months:
+#
+#   docs/adr/ADR-0008-schema-builder-consolidation.md  (Accepted, still in force)
+#     names `check-migration-parity.sh` as the mitigation for its OWN top risk —
+#     the schema-builder dev-fixture migrations drifting from the BSU canonical copies.
+#     Never written. The five files happen to be in sync; that is luck, not a control.
+#
+#   docs/CONSISTENCY-REPORT.md
+#     described `verify-silent-auth-wired.yml` as running on every push and asserting
+#     every consumer references `attemptSilentAuth`. Never written — AND the invariant
+#     was superseded: throughput's own contract test asserts the opposite. The gate here
+#     holds what is actually true across all five consumers instead.
+#
+# A doc naming a control that does not exist is worse than a doc naming none. The doc
+# supplies the confidence and nothing contradicts it, so nobody looks.
+#
+# NO `paths:` FILTER — the same two reasons every estate-wide gate here records:
+# a change arrives inside a SUBMODULE (the parent holds only a gitlink, so no path
+# filter can match it), and a path-filtered required check never reports at all on a PR
+# that misses the filter, deadlocking it. Both jobs are file scans measured in seconds.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: estate-invariants-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migration-parity:
+    name: schema-builder fixtures match BSU canonical
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # Self-test first. A gate whose pass and no-op states look identical hides defects,
+      # and this one has a real chance of it: the comparison deliberately ignores the
+      # provenance headers, so an over-broad stripper would ignore everything.
+      - name: Self-test the checker
+        run: bash scripts/check-migration-parity.sh --self-test
+
+      - name: Compare dev-fixture migrations against the canonical copies
+        run: bash scripts/check-migration-parity.sh
+
+  oauth-boot-wiring:
+    name: every @bsuite/auth consumer keeps its session wiring
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Self-test the checker
+        run: node scripts/check-oauth-boot-wiring.mjs --self-test
+
+      # Exits 3 rather than 0 when the submodules did not populate, when no consumer is
+      # found, or when the count of OAuth servers is not exactly 1 — each of which would
+      # otherwise produce a clean-looking result from a scan that proved nothing.
+      - name: Check the boot path of every consumer
+        run: node scripts/check-oauth-boot-wiring.mjs

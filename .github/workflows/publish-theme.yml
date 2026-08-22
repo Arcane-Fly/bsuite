@@ -90,7 +90,22 @@ jobs:
           VIEW_RC=$?
           set -e
 
-          if [ "$VIEW_RC" -eq 0 ] && [ "$VIEW_OUT" = "$PKG_VERSION" ]; then
+          # `npm view … 2>&1` folds STDERR into the value. npm currently emits
+          #   npm warn Unknown user config "always-auth". …
+          # on every invocation, so VIEW_OUT is "npm warn …\n1.0.1" and an equality
+          # test against "1.0.1" is FALSE. The check then falls to its fail-closed
+          # branch and the publish dies with "Cannot determine whether … is published"
+          # while npm is answering perfectly well.
+          #
+          # It only bites when the version IS already on npm -- i.e. exactly when the
+          # content changed and the version did not, which is when the clean "skip,
+          # already published" message matters most. @bsuite/dry-lint failed this way
+          # on every run from 2026-08-17 to 2026-08-22 and nobody saw it, because a
+          # failed publish looks like nothing happening.
+          #
+          # Compare the VERSION LINE, not the whole stream.
+          VIEW_VER=$(printf '%s\n' "$VIEW_OUT" | grep -vE '^npm (warn|notice|WARN)' | tail -1 | tr -d '[:space:]')
+          if [ "$VIEW_RC" -eq 0 ] && [ "$VIEW_VER" = "$PKG_VERSION" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::@bsuite/theme@${PKG_VERSION} is already on npm — skipping publish"
           elif printf '%s' "$VIEW_OUT" | grep -q 'E404'; then

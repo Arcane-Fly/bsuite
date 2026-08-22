@@ -44,6 +44,7 @@
         "gto_assessment_summary(p_tenant_id uuid, p_year smallint)",
         "gto_self_assessment_log_history()",
         "has_parent_admin_access(target_tenant_id uuid)",
+        "has_tenant_role(p_tenant_id uuid, required_roles text[])",
         "invite_team_member_guarded(p_team_id uuid, p_email text, p_role text, p_invited_by uuid)",
         "is_archive_recovery_authorized(p_tenant_id uuid)",
         "is_demo_write_blocked()",
