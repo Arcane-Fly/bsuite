@@ -92,12 +92,16 @@ const NOT_A_TABLE = new Set(['if', 'not', 'exists', 'as', 'select', 'public', 't
 export function tablesInSql(sql) {
   const out = new Set();
   const clean = stripNonSql(sql);
-  const re = /create\s+(?:(?:global|local)\s+)?(?:temp(?:orary)?\s+|unlogged\s+)?table\s+(?:if\s+not\s+exists\s+)?(?:"?([a-z_][a-z0-9_]*)"?\.)?"?([a-z_][a-z0-9_]*)"?/gi;
+  // TEMP tables are NOT persistent schema. `_he_remap` is a CREATE TEMP TABLE dropped
+  // in the same migration file, and it was sitting in the orphan list as though it
+  // were a real table nobody reads.
+  const re = /create\s+(?:(?:global|local)\s+)?(temp(?:orary)?\s+|unlogged\s+)?table\s+(?:if\s+not\s+exists\s+)?(?:"?([a-z_][a-z0-9_]*)"?\.)?"?([a-z_][a-z0-9_]*)"?/gi;
   let m;
   while ((m = re.exec(clean))) {
-    const schema = (m[1] || 'public').toLowerCase();
+    if (m[1] && /temp/i.test(m[1])) continue;    // a temp table is not persistent schema
+    const schema = (m[2] || 'public').toLowerCase();
     if (schema !== 'public') continue;           // non-public schemas are not app surface
-    const name = m[2].toLowerCase();
+    const name = m[3].toLowerCase();
     if (NOT_A_TABLE.has(name)) continue;
     out.add(name);
   }
@@ -124,6 +128,42 @@ export function tablesReferenced(src) {
     let m;
     while ((m = re.exec(src))) out.add(m[1].toLowerCase());
   }
+
+  // CONST INDIRECTION. The `.from()` patterns above only match a LITERAL string
+  // argument. Four apps instead name the table once and pass the identifier:
+  //
+  //     export const WIC_TABLE = "wic_rate_lookup"
+  //     supabase.from(WIC_TABLE).select(...)
+  //
+  // That is real reach and this gate reported all four as ORPHANED — the most
+  // actionable class it has, so a false positive there is expensive. Found by peer
+  // review of the 124-row orphan list, not by this script.
+  //
+  // Resolve within the file: collect `const NAME = 'table'`, then credit any
+  // `.from(NAME)` / `.rpc(NAME)` that uses one. Scoped to string-literal consts so an
+  // arbitrary identifier cannot invent a table.
+  const constTable = new Map();
+  const cdecl = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=]+)?=\s*['"`]([a-z_][a-z0-9_]*)['"`]/g;
+  let cd;
+  while ((cd = cdecl.exec(src))) constTable.set(cd[1], cd[2]);
+  if (constTable.size) {
+    const byIdent = /\.(?:from|rpc)\(\s*([A-Za-z_$][\w$]*)\s*[),]/g;
+    let m2;
+    while ((m2 = byIdent.exec(src))) {
+      const t = constTable.get(m2[1]);
+      if (t) out.add(t);
+    }
+  }
+
+  // A DB-PROXY ALLOWLIST is reach. crm7 exposes a REST proxy at api/db/[...path].ts
+  // guarded by `const ALLOWED_TABLES = new Set([...])`, and callers reach a table by
+  // URL — `apiCall('/api/db/gto_standards_clauses?...')` — never through the JS
+  // client. A table in that allowlist is deliberately exposed; the 404 for anything
+  // absent from it is what makes the allowlist authoritative.
+  const allow = /ALLOWED_TABLES\s*=\s*new Set\(\[([\s\S]*?)\]\)/;
+  const am = src.match(allow);
+  if (am) for (const lit of am[1].match(/['"`][a-z_][a-z0-9_]*['"`]/g) || []) out.add(lit.replace(/['"`]/g, ''));
+  for (const m3 of src.matchAll(/\/api\/db\/([a-z_][a-z0-9_]*)/g)) out.add(m3[1]);
 
   // A union type of table names fed to a generic CRUD service is real reach.
   // braden does exactly this: `type UntypedTableName = 'staff' | 'tasks' | 'emails'`.
@@ -196,6 +236,33 @@ export function serverWritten(sql) {
   return out;
 }
 
+/**
+ * Tables that STOPPED EXISTING under the name CREATE TABLE gave them.
+ *
+ * The scan reads CREATE TABLE across all migration history and never applied what
+ * came after, so a table renamed or dropped years later still sat in the orphan list
+ * under its original name — reported as "created and nothing reads it", when the
+ * honest answer is "it isn't there".
+ *
+ * Measured: `collaborative_documents` was renamed to
+ * `collaborative_documents_legacy_unused` (20260808140000, Monaco editor retired),
+ * `custom_fields` and `workers` likewise. `contracts`, `api_keys`,
+ * `vet_training_packages` and `employee_imports` each have an explicit DROP migration.
+ * Seven rows of the actionable class that were not findings at all.
+ *
+ * A rename is followed to its new name, so the successor is still audited.
+ */
+export function renamedOrDropped(sql) {
+  const clean = stripNonSql(sql);
+  const gone = new Map(); // old name -> new name, or null when dropped
+  const ren = /alter\s+table\s+(?:if\s+exists\s+)?(?:"?public"?\.)?"?([a-z_][a-z0-9_]*)"?\s+rename\s+to\s+"?([a-z_][a-z0-9_]*)"?/gi;
+  let m;
+  while ((m = ren.exec(clean))) gone.set(m[1].toLowerCase(), m[2].toLowerCase());
+  const drop = /drop\s+table\s+(?:if\s+exists\s+)?(?:"?public"?\.)?"?([a-z_][a-z0-9_]*)"?/gi;
+  while ((m = drop.exec(clean))) gone.set(m[1].toLowerCase(), null);
+  return gone;
+}
+
 const SELF_TESTS = [
   { n: 'CREATE TABLE is found', f: () => tablesInSql('CREATE TABLE public.foo (id int);').has('foo') },
   { n: 'IF NOT EXISTS is found', f: () => tablesInSql('create table if not exists bar (id int);').has('bar') },
@@ -203,8 +270,12 @@ const SELF_TESTS = [
   { n: 'a NON-public schema is excluded — not app surface',
     f: () => !tablesInSql('CREATE TABLE audit.events (id int);').has('events') },
   { n: 'CREATE TABLE AS is still a table', f: () => tablesInSql('CREATE TABLE t2 AS SELECT 1;').has('t2') },
-  { n: 'TEMP / UNLOGGED qualifiers do not become the name',
-    f: () => tablesInSql('CREATE TEMP TABLE scratch (id int);').has('scratch') },
+  // Was: "CREATE TEMP TABLE scratch" must yield `scratch`. That asserted the old
+  // contract and now contradicts the corrected one — a TEMP table is not persistent
+  // schema and does not belong in an orphan list. UNLOGGED is different: it IS
+  // persistent, merely not crash-safe, so it must still be parsed.
+  { n: 'an UNLOGGED table is persistent and the qualifier does not become the name',
+    f: () => tablesInSql('CREATE UNLOGGED TABLE scratch (id int);').has('scratch') },
 
   // Each of these reported a real false positive on the gate's FIRST run. A detector
   // whose first output is its own bugs is the recurring shape; each one is now a test.
@@ -241,6 +312,26 @@ const SELF_TESTS = [
     f: () => tablesReferenced("useX({ table: 'system_notices' })").has('system_notices') },
   { n: "tableName: 'x' counts as well",
     f: () => tablesReferenced("{ tableName: 'candidates' }").has('candidates') },
+  // The four blind spots peer review found in the 124-row orphan list.
+  { n: 'BLIND SPOT: const indirection is reach — .from(WIC_TABLE), not .from("...")',
+    f: () => tablesReferenced('export const WIC_TABLE = "wic_rate_lookup";\nsupabase.from(WIC_TABLE).select()').has('wic_rate_lookup') },
+  { n: 'BLIND SPOT: a table in the db-proxy ALLOWED_TABLES set is reach',
+    f: () => tablesReferenced("const ALLOWED_TABLES = new Set([\n  'people',\n  'gto_standards_clauses',\n])").has('gto_standards_clauses') },
+  { n: 'a /api/db/<table> URL is reach even with no JS client call',
+    f: () => tablesReferenced("await apiCall(`/api/db/gto_self_assessments?${params}`)").has('gto_self_assessments') },
+  { n: 'a const holding a NON-table string does not invent a table',
+    f: () => !tablesReferenced("const MODE = 'dark';\nfoo(MODE)").has('dark') },
+  { n: 'BLIND SPOT: a CREATE TEMP TABLE is not persistent schema',
+    f: () => !tablesInSql('CREATE TEMP TABLE _he_remap (id int);').has('_he_remap') },
+  { n: 'but a plain CREATE TABLE still counts',
+    f: () => tablesInSql('CREATE TABLE _he_remap (id int);').has('_he_remap') },
+  { n: 'BLIND SPOT: a RENAMED table is followed to its new name',
+    f: () => renamedOrDropped('ALTER TABLE public.collaborative_documents RENAME TO collaborative_documents_legacy_unused;').get('collaborative_documents') === 'collaborative_documents_legacy_unused' },
+  { n: 'BLIND SPOT: a DROPPED table is recorded as gone',
+    f: () => renamedOrDropped('DROP TABLE IF EXISTS public.contracts;').get('contracts') === null },
+  { n: 'a DROP inside a comment does not retire a live table',
+    f: () => renamedOrDropped('-- drop table public.clients\n').size === 0 },
+
   { n: 'a union type of table names fed to a generic CRUD service is reach',
     f: () => tablesReferenced("type UntypedTableName = 'staff' | 'tasks' | 'emails';").has('staff') },
   { n: 'an unrelated string union does NOT leak in — the alias must name a table',
@@ -302,6 +393,7 @@ const apps = readFileSync('.gitmodules', 'utf8')
 
 const created = new Map();   // table -> [migration files]
 const serverTouched = new Set(); // written by a function body, trigger, or cron command
+const retired = new Map();       // renamed away (-> new name) or dropped (-> null)
 const reached = new Map();   // table -> Set(app)
 let sqlFiles = 0, srcFiles = 0;
 
@@ -315,6 +407,7 @@ for (const app of [...apps, '.']) {
         created.get(t).push(f);
       }
       for (const t of serverWritten(sql)) serverTouched.add(t);
+      for (const [from, to] of renamedOrDropped(sql)) retired.set(from, to);
     }
   }
 }
@@ -336,6 +429,15 @@ if (sqlFiles < 50) { console.error(`  POSITIVE CONTROL FAILED: only ${sqlFiles} 
 if (srcFiles < 500) { console.error(`  POSITIVE CONTROL FAILED: only ${srcFiles} source file(s) scanned.`); process.exit(3); }
 if (created.size < 50) { console.error(`  POSITIVE CONTROL FAILED: only ${created.size} table(s) parsed from ${sqlFiles} migrations.`); process.exit(3); }
 if (reached.size < 20) { console.error(`  POSITIVE CONTROL FAILED: only ${reached.size} table(s) referenced by ${srcFiles} source files — the reference patterns are broken.`); process.exit(3); }
+
+// A table renamed away or dropped no longer exists under the name CREATE TABLE gave
+// it. Reporting it as "created and nothing reads it" is answering about a table that
+// is not there. A rename is FOLLOWED, so the successor is still audited.
+for (const [from, to] of retired) {
+  if (!created.has(from)) continue;
+  created.delete(from);
+  if (to && !created.has(to)) created.set(to, [`renamed from ${from}`]);
+}
 
 const unreached = [...created.keys()].filter((t) => !reached.has(t)).sort();
 const server = unreached.filter((t) => serverTouched.has(t));
