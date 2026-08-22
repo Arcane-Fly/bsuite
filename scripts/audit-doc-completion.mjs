@@ -321,13 +321,14 @@ function walk(dir, out = []) {
   return out;
 }
 
-const rows = [];
+const rows_ = [];
 for (const root of roots) {
   for (const p of walk(join(root, 'docs'))) {
-    rows.push({ path: p, ...classify(readFileSync(p, 'utf8'), p.split('/').pop(), artifactsPresent, p) });
+    rows_.push({ path: p, ...classify(readFileSync(p, 'utf8'), p.split('/').pop(), artifactsPresent, p) });
   }
 }
 
+const rows = rows_;
 const marked = rows.filter((r) => r.alreadyMarked);
 const bindable = rows.filter((r) => r.bindable);
 const dead = rows.filter((r) => r.deadCitations.length > 0);
@@ -352,6 +353,33 @@ if (bindable.length) {
     console.log(`        ${[...r.liveGates, ...r.liveWorkflows].slice(0, 5).join(', ')}`);
   }
 }
+// FULL INVENTORY MODE — the summary counts, per document.
+//
+// The console output above truncates to the first 15/25 rows because a 471-row dump is
+// unreadable in a terminal. That truncation is fine for a gate and useless for the
+// question the operator actually asks: "which docs, and what would move each one?"
+// `--inventory` emits every row as markdown, so the corpus can be READ rather than
+// summarised, and regenerated instead of going stale as a hand-written snapshot.
+if (process.argv.includes('--inventory')) {
+  const state = (r) =>
+    r.deadCitations.length ? 'DEAD-CITATION'
+    : r.archival ? 'RECORD'
+    : r.bindable ? 'BINDABLE'
+    : 'UNBOUND';
+  const order = { 'DEAD-CITATION': 0, BINDABLE: 1, UNBOUND: 2, RECORD: 3 };
+  const rows = [...rows_].sort((a, b) => (order[state(a)] - order[state(b)]) || a.path.localeCompare(b.path));
+  const out = [];
+  out.push('| doc | state | marked | cites |');
+  out.push('|---|---|---|---|');
+  for (const r of rows) {
+    const cites = [...r.liveGates, ...r.liveWorkflows].slice(0, 3).join(', ')
+      || (r.deadCitations.slice(0, 2).join(', ') || '—');
+    out.push(`| \`${r.path}\` | ${state(r)} | ${r.alreadyMarked ? 'yes' : ''} | ${cites} |`);
+  }
+  console.log('\n<!-- INVENTORY -->');
+  console.log(out.join('\n'));
+}
+
 console.log('\n  NOTHING WAS RENAMED. Eligibility is not a verdict — the cited gates must be RUN.');
 console.log('  AND: eligibility is only LIMB (b) of the operator bar. Limb (a) — that a doc is');
 console.log('  SUPERSEDED, or described a non-best-practice since corrected — is a judgement about');
