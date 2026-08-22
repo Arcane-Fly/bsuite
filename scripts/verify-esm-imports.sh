@@ -41,6 +41,19 @@ for dir in packages/*/; do
   pkg="$(basename "$dir")"
   [[ -f "$dir/package.json" ]] || continue
   [[ -f "$dir/dist/index.js" ]] || { skipped+=("$pkg (no dist — not built)"); continue; }
+  # A STALE dist is not a broken export, and the difference matters.
+  #
+  # @bsuite/ui reported "FAIL @bsuite/ui/use-on-click-outside — Cannot find module
+  # dist/hooks/useOnClickOutside.js". The PUBLISHED package has that file and a correct
+  # exports entry; the local dist was simply 13 source files behind and had never
+  # emitted hooks/. The gate could tell "no dist at all" from "dist present" but not
+  # "dist present and stale", so it reported a build-artifact age as a packaging defect
+  # — and that reading cost a previous pass real time before the tarball settled it.
+  if [[ -n "$(find "$dir/src" -newer "$dir/dist/index.js" \( -name '*.ts' -o -name '*.tsx' \) -print -quit 2>/dev/null)" ]]; then
+    n=$(find "$dir/src" -newer "$dir/dist/index.js" \( -name '*.ts' -o -name '*.tsx' \) 2>/dev/null | wc -l)
+    skipped+=("$pkg (dist is STALE — $n src file(s) newer; run pnpm --filter $pkg build)")
+    continue
+  fi
   if printf '%s\n' "${BROWSER_ONLY[@]}" | grep -qx "$pkg"; then
     skipped+=("$pkg (browser-only: JS entry imports CSS)"); continue
   fi
