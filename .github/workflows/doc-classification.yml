@@ -1,0 +1,70 @@
+name: Doc classification
+
+# Every doc must declare WHAT IT IS and WHAT PROVES IT.
+#
+# Measured 2026-08-22: 463 docs, 158 gates, 34 docs citing a gate. Docs assert
+# things, gates measure reality, and almost nothing binds the two. Answering
+# "what is actually finished?" cost a full session and came back ZERO.
+#
+# And one directory holds knowledge with FOUR DIFFERENT AUTHORITIES — 38 docs
+# touch Fair Work awards, 74 touch the D2C theme, and they share a filename
+# shape. An agent cannot tell which it is permitted to edit. Editing an award to
+# make a test pass is a compliance event, not a tidy-up.
+#
+# THIS IS A RATCHET, NOT A MIGRATION. A big-bang rename was attempted for doc
+# NAMING and reverted: 51 files across six submodules, including applied
+# migrations and pgTAP tests citing doc paths in comments. So this gate enforces
+# on CHANGED files only and fails only if the unclassified COUNT RISES.
+#
+# NO `paths:` FILTER, for the same two reasons as the sibling doc gates:
+#   1. Under-triggering — docs change inside SUBMODULES, and the parent tree
+#      holds only a gitlink, so a path filter can never match those.
+#   2. Required-check deadlock — a path-filtered required check never reports
+#      on a PR that misses the filter, and the PR waits forever. This is a file
+#      scan that finishes in seconds.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doc-classification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  doc-classification:
+    name: Docs declare kind, authority and evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states look identical hides defects. Run the
+      # checker's own self-test FIRST, so a pass below is known to come from a
+      # checker that can still fail — including the three cases that matter: a
+      # plan with no evidence FAILS, a law claiming engineering authority FAILS,
+      # and an unknown kind is rejected rather than silently accepted.
+      - name: Self-test the checker
+        run: node scripts/check-doc-classification.mjs --self-test
+
+      # Enforce on the docs this PR actually touched. Backfill stays
+      # opportunistic — a doc gets frontmatter when someone is already editing
+      # it, never in a sweep.
+      - name: Classify changed docs, and hold the ratchet
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$BASE" ]; then BASE=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD); fi
+          CHANGED=$(git diff --name-only --diff-filter=d "$BASE" HEAD -- 'docs/**/*.md' | tr '\n' ' ')
+          echo "changed docs: ${CHANGED:-<none>}"
+          # No args still runs the ratchet check and the <20-doc positive control.
+          node scripts/check-doc-classification.mjs $CHANGED
