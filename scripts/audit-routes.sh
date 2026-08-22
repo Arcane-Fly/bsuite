@@ -42,12 +42,17 @@
 #
 # HONEST SCOPE, STATED AT THE HEAD
 # The inventory below covers crm7, braden, throughput, conduit and
-# business-suite-unified (V-9, 2026-08-19) — every app with a working
-# tests/e2e/auth.setup.ts. R80.4 is the one remaining gap: it bridges auth via
-# a `bs_*` pair of a different shape than the other five, and porting it was
-# not attempted in this pass. It is named as NOT COVERED in the head block
-# every run, because a gap that is printed is a gap someone can close, and a
-# gap that is merely absent from a route list reads as coverage.
+# business-suite-unified and R80.4 — every app, as of 2026-08-22.
+#
+# R80.4 was the last one out, and the line this file printed about it was WRONG in a
+# way worth keeping: "porting that one file ... is what unlocks a signed-in sweep
+# there". The file was the smaller half. R8 had no `@playwright/test`, no config and no
+# `tests/` directory at all, so anyone who followed that instruction would have added a
+# file, found nothing ran, and been left to work out why. Closed by R80.4#187.
+#
+# The habit that got it closed is worth keeping too: a gap that is PRINTED is a gap
+# someone can close, and a gap merely absent from a route list reads as coverage. That
+# is why the else-branch below still names the covered count rather than saying nothing.
 #
 # Usage:
 #   scripts/audit-routes.sh                       # full sweep, mints a session
@@ -78,6 +83,7 @@ declare -A BASE_URL=(
   [throughput]="${THEME_GATE_BASE_URL_THROUGHPUT:-https://d.ideas.crm7.app}"
   [conduit]="${THEME_GATE_BASE_URL_CONDUIT:-https://d.conduit.crm7.app}"
   [business-suite-unified]="${THEME_GATE_BASE_URL_BSU:-https://d.suite.crm7.app}"
+  [R80.4]="${THEME_GATE_BASE_URL_R804:-https://d.r8.crm7.app}"
 )
 
 # Public routes. `/auth/login` is deliberately absent for the OAuth CLIENT
@@ -97,6 +103,10 @@ declare -A PUBLIC_ROUTES=(
   [throughput]="/pricing /login"
   [conduit]="/auth/register /portal/candidate /portal/careers /pricing"
   [business-suite-unified]="/auth/login /auth/reset-password"
+  # R8's router is a plain path switch in src/main.tsx, not a route tree: /auth/login and
+  # /auth/callback are the only paths outside AuthGate, and everything else is a 404 by
+  # design. A short list here is the whole app, not a sample of it.
+  [R80.4]="/auth/login"
 )
 
 # Authenticated routes — the coverage this lane adds. Small, not exhaustive:
@@ -121,12 +131,15 @@ declare -A AUTH_ROUTES=(
   [throughput]="/ /analytics /ideas/new /launch /monitoring"
   [conduit]="/ /analytics /candidates /admin/templates"
   [business-suite-unified]="/ /admin /admin/branding /billing /analytics /branding"
+  # CALCULATOR_PATHS in src/main.tsx — `/` and `/calculate` are the same page, and the
+  # trailing-slash variant is deliberately honoured too. Both are behind AuthGate.
+  [R80.4]="/ /calculate"
 )
 
-APP_ORDER=(crm7 braden throughput conduit business-suite-unified)
+APP_ORDER=(crm7 braden throughput conduit business-suite-unified R80.4)
 
 # Named so the hole is visible in the output rather than implied by silence.
-UNCOVERED="R80.4"
+UNCOVERED=""
 
 # ─── arguments ──────────────────────────────────────────────────────────────
 ONLY_APP=''
@@ -172,10 +185,12 @@ n_apps=${#APPS[@]}
 # it examined is treated as having examined nothing.
 echo
 echo "audit-routes: $n_total route(s) across $n_apps app(s) — $n_public public, $n_auth authenticated"
-echo "  NOT COVERED: $UNCOVERED"
-echo "  (no auth.setup.ts there, so no session can be minted; porting that one"
-echo "   file — the pattern crm7/braden/throughput/conduit/business-suite-"
-echo "   unified all now share — is what unlocks a signed-in sweep there)"
+if [[ -n $UNCOVERED ]]; then
+  echo "  NOT COVERED: $UNCOVERED"
+  echo "  (no tests/e2e/auth.setup.ts there, so no session can be minted)"
+else
+  echo "  COVERED: all $n_apps app(s) — every one can mint a signed-in session"
+fi
 echo "───────────────────────────────────────────────────────────────"
 
 # ─── inventory validation ───────────────────────────────────────────────────

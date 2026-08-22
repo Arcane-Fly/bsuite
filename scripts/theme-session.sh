@@ -43,11 +43,17 @@
 # fallback (see business-suite-unified/tests/e2e/auth.setup.ts) so it does not
 # need a brand-new secret to be useful here.
 #
-# R80.4 remains OUT OF SCOPE: it bridges auth via a `bs_*` localStorage/cookie
-# pair of a different shape than any of the above, and porting it was not
-# attempted in this pass — see APPS below, which does not list it. Requesting
-# `--app R80.4` fails with a clear "not supported" message rather than
-# pretending to try.
+# R80.4 JOINED ON 2026-08-22 (R80.4#187). It was the last app out, and the note that
+# used to sit here said it bridges auth via a `bs_*` pair "of a different shape". That
+# was true and it was not the obstacle: R8 does keep `bs_oauth_*` keys, but its Supabase
+# session lives under `sb-r8-auth` — it is the ONLY app in the estate that overrides
+# `storageKey`, where the other five let supabase-js fall back to
+# `sb-<project-ref>-auth-token`. Seed the default key there and you write a session the
+# app never reads, which looks exactly like a sign-in that quietly failed.
+#
+# The real obstacle was that R8 had no `@playwright/test`, no config and no `tests/`
+# directory at all — so the "port one file" advice this estate printed on every route
+# sweep could never have worked.
 #
 # CREDENTIALS ARE SHARED ON PURPOSE. Every app below reads CRM7_E2E_EMAIL /
 # CRM7_E2E_PASSWORD (business-suite-unified falls back to them; the other four
@@ -93,13 +99,14 @@ done
 
 # Per-app producer config: Playwright project name, the storageState file that
 # project writes (relative to the app dir), and the default deployed base URL.
-# R80.4 is deliberately absent — see the header note above.
+# R80.4 joined on 2026-08-22 (R80.4#187) — see the header note above.
 declare -A PROJECT_NAME=(
   [crm7]=auth-setup
   [braden]=auth-setup
   [throughput]=auth-setup
   [conduit]=auth-setup
   [business-suite-unified]=setup
+  [R80.4]=setup
 )
 declare -A STATE_REL=(
   [crm7]=playwright/.auth/user.json
@@ -107,6 +114,7 @@ declare -A STATE_REL=(
   [throughput]=playwright/.auth/user.json
   [conduit]=playwright/.auth/user.json
   [business-suite-unified]=playwright/.auth/developer.json
+  [R80.4]=playwright/.auth/user.json
 )
 declare -A DEFAULT_BASE_URL=(
   [crm7]=https://d.crm.crm7.app
@@ -114,6 +122,7 @@ declare -A DEFAULT_BASE_URL=(
   [throughput]=https://d.ideas.crm7.app
   [conduit]=https://d.conduit.crm7.app
   [business-suite-unified]=https://d.suite.crm7.app
+  [R80.4]=https://d.r8.crm7.app
 )
 
 if [[ -z ${PROJECT_NAME[$APP]:-} ]]; then
