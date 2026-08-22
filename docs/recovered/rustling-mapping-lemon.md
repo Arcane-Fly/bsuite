@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: not-this-estate
+---
+
 # Auth Alignment Plan: monkey-projects + Supabase OAuth 2.1
 
 > # VERDICT: NOT THIS ESTATE — recorded 2026-08-22

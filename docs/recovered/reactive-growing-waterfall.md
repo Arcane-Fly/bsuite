@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: not-this-estate
+---
+
 # Plan: Shared Cookie Domain for Cross-Subdomain Auth
 
 > # VERDICT: NOT THIS ESTATE — recorded 2026-08-22

@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: reference
+---
+
 # Verified Provider API Specifications (2026-02-10)
 
 > # VERDICT: REFERENCE — recorded 2026-08-22

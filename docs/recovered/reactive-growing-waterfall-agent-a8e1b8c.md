@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: reference
+---
+
 # Supabase OAuth 2.1 Server -- Comprehensive Research Document
 
 > # VERDICT: REFERENCE — recorded 2026-08-22

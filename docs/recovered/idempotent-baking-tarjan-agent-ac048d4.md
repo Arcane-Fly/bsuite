@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: reference
+---
+
 # Supabase Authentication Research for JavaScript/TypeScript Applications
 
 > # VERDICT: REFERENCE — recorded 2026-08-22

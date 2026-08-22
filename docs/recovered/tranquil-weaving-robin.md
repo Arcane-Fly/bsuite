@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: not-this-estate
+---
+
 # Validate & Reorganize Railway Environment Variables
 
 > # VERDICT: NOT THIS ESTATE — recorded 2026-08-22

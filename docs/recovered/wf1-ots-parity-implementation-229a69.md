@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: delivered
+---
+
 # Workforce One OTS Parity — Implementation Plan
 
 > # VERDICT: DELIVERED — recorded 2026-08-22
