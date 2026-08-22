@@ -153,7 +153,7 @@ test still passes.
 
 ### 0.3 — Rotate the Fair Work API key, then determine whether production is affected
 
-`scripts/api-availability.mjs MA000020` returns 401 on all five MAPD endpoints with a well-formed
+`R80.4/scripts/api-availability.mjs MA000020` returns 401 on all five MAPD endpoints with a well-formed
 key present, and R80.4's own definition-of-done gate is red across all 21 awards. **Before assuming
 the key is dead, distinguish local from production:** call
 `https://r8.crm7.app/api/fwc?path=%2Fawards%2FMA000020%2Fpay-rates` with a valid bearer token. A 200
