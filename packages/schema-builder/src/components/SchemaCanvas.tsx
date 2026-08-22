@@ -63,29 +63,18 @@ const RELATION_LABELS: Record<RelationType, string> = {
 const nodeTypes = { entity: EntityNode };
 const edgeTypes = { smart: SmartEdge };
 
-/**
- * Pattern: `${entityId}.${fieldId|'entity'}.${side}-${kind}`.
- * Valid sides: left|right|top|bottom. Valid kinds: source|target.
- * The literal `entity` as the fieldId component indicates an entity-level
- * fallback handle; field-level relations are only created when fieldId is not
- * that literal.
+/*
+ * `parseHandleId` and HANDLE_ID_RE lived here and pulled the fieldId out of a
+ * `${entityId}.${fieldId|'entity'}.${side}-${kind}` handle so it could be
+ * persisted as source_field_id / target_field_id. Those columns no longer
+ * exist (migration 20260503000001), so the parse had no consumer left and is
+ * removed rather than kept warm — carrying dead code that mirrors a dropped
+ * schema is precisely how the phantom-column bug survived three and a half
+ * months. Recover it from git history if 20260503000000 is ever re-applied.
+ *
+ * The handle-id FORMAT is unchanged and still produced by EntityNode/FieldRow;
+ * only the persistence-side parse is gone.
  */
-const HANDLE_ID_RE =
-  /^(?<entityId>.+)\.(?<fieldId>[^.]+)\.(?<side>left|right|top|bottom)-(?<kind>source|target)$/;
-
-function parseHandleId(handleId: string | null | undefined): {
-  entityId?: string;
-  fieldId?: string;
-} {
-  if (!handleId) return {};
-  const match = handleId.match(HANDLE_ID_RE);
-  if (!match?.groups) return {};
-  const { entityId, fieldId } = match.groups;
-  return {
-    entityId,
-    fieldId: fieldId === 'entity' ? undefined : fieldId,
-  };
-}
 
 function stylesForRelation(type: RelationType) {
   return {
@@ -242,12 +231,13 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         )
         .map((rel) => {
           const styling = stylesForRelation(rel.relation_type);
-          const baseSource = rel.source_field_id
-            ? `${rel.source_entity_id}.${rel.source_field_id}.right-source`
-            : `${rel.source_entity_id}.entity.bottom-source`;
-          const baseTarget = rel.target_field_id
-            ? `${rel.target_entity_id}.${rel.target_field_id}.left-target`
-            : `${rel.target_entity_id}.entity.top-target`;
+          // Entity-level anchors only. The columns that carried field-level
+          // anchors were dropped by migration 20260503000001, so a stored
+          // relation cannot name a column — see types.ts:TenantEntityRelation.
+          // Column-anchored edges (spec §6.5.1) need those columns back and are
+          // blocked on that decision.
+          const baseSource = `${rel.source_entity_id}.entity.bottom-source`;
+          const baseTarget = `${rel.target_entity_id}.entity.top-target`;
           return {
             id: rel.id,
             source: rel.source_entity_id,
@@ -263,7 +253,10 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             style: styling,
             data: {
               cardinality: rel.relation_type,
-              onDelete: rel.on_delete,
+              // Not persisted — the column is gone. Left null rather than
+              // guessed, so the dashed stroke never implies a referential
+              // action nobody recorded.
+              onDelete: null,
               stroke: styling.stroke,
             },
           };
@@ -345,22 +338,21 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         if (!params || !params.source || !params.target) return;
         setIsRelationDialogOpen(false);
 
-        const { fieldId: sourceFieldId } = parseHandleId(params.sourceHandle);
-        const { fieldId: targetFieldId } = parseHandleId(params.targetHandle);
-
+        // The drag may well have started on a specific column handle, but a
+        // relation row has nowhere to record that: migration 20260503000001
+        // dropped source_field_id / target_field_id. Sending them is what
+        // PGRST204-rejected every insert for three and a half months. The
+        // relation is entity-to-entity; the handle only decides where the edge
+        // is drawn this session.
         try {
           const newRelation = await controller.createRelation({
             id: crypto.randomUUID(),
             tenant_id: tenantId,
             source_entity_id: params.source,
             target_entity_id: params.target,
-            source_field_id: sourceFieldId ?? null,
-            target_field_id: targetFieldId ?? null,
             relation_type: config.relation_type,
             source_label: config.source_label,
             target_label: config.target_label,
-            on_delete: 'SET NULL',
-            on_update: 'CASCADE',
             is_system: false,
             app_scope: appScope,
             metadata: {},
@@ -381,7 +373,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                 style: styling,
                 data: {
                   cardinality: newRelation.relation_type,
-                  onDelete: newRelation.on_delete,
+                  onDelete: null,
                   stroke: styling.stroke,
                 },
               } as Edge<SmartEdgeData>,
