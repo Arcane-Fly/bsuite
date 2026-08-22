@@ -119,11 +119,45 @@ console.log();
 console.log(`TOTAL cross-app writes: ${total}`);
 if (process.argv.includes('--list') && hits.length) { console.log(); hits.forEach((h) => console.log(h)); }
 console.log();
+/*
+ * RATCHET, because this gate ran nowhere.
+ *
+ * The one-shot policy is named directly in the operator's standing brief, and until
+ * 2026-08-22 `audit-one-shot.mjs` was wired into NO workflow. A policy measured by a
+ * script nobody runs is a policy on paper -- the weakest of the three possible states,
+ * weaker than having no policy, because it reads as a control.
+ *
+ * It cannot simply be wired as-is: it currently finds 2 real violations, both status
+ * updates on `leads` (CRM7-owned) from braden and business-suite-unified. Wiring it
+ * red would block every PR in the estate on a question that needs a product ruling,
+ * and a gate that cannot pass is a gate people route around.
+ *
+ * So it holds a committed baseline and fails only when the count RISES. Existing
+ * violations stay visible and counted; new ones are refused today.
+ */
+const BASELINE_FILE = '.github/one-shot-baseline.txt';
+const baseline = existsSync(BASELINE_FILE)
+  ? Number(readFileSync(BASELINE_FILE, 'utf8').trim())
+  : null;
+
 if (total > 0) {
   console.log('An app writing a table it does not own has forked the entity.');
   console.log('Fix by linking to the owning app\'s form, or selecting the existing record.');
   console.log(`If it is the approved lifecycle handover (§1), annotate with '${MARKER}: <reason>'.`);
   console.log('Run with --list to see every site.');
+}
+
+if (baseline === null) {
+  console.log(`\nno baseline at ${BASELINE_FILE} — write ${total} there to arm the ratchet`);
+  process.exit(total > 0 ? 1 : 0);
+}
+if (total > baseline) {
+  console.log(`\nRATCHET BROKEN: baseline ${baseline}, now ${total}. A NEW app has forked an entity it does not own.`);
   process.exit(1);
 }
-console.log('OK: no app writes an entity another app owns.');
+if (total < baseline) {
+  console.log(`\nratchet ok: baseline ${baseline}, now ${total} (${baseline - total} paid down — update ${BASELINE_FILE})`);
+  process.exit(0);
+}
+console.log(`\nratchet ok: baseline ${baseline}, now ${total}. Debt may shrink or hold, never rise.`);
+if (total === 0) console.log('OK: no app writes an entity another app owns.');
