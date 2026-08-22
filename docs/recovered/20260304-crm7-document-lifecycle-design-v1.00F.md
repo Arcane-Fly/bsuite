@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: dead
+---
+
 > # ⛔ VERDICT: DEAD — superseded design for a rejected vendor
 >
 > **Verdicted 2026-08-17 against live code and the live production database.**

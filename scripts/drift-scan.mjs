@@ -1247,12 +1247,12 @@ function selfTest() {
     // hatch. The archive necessarily names retired models and removed auth patterns
     // because it records what was decided in 2026-02/03.
     { name: 'SELF-SCAN — docs/recovered/ NOT flagged for a retired model (frozen archive)', framework: 'unknown', repoName: 'bsuite',
-      addedByFile: { 'docs/recovered/20260228-conduit-ai-tools-plan-v1.00W.md': [
+      addedByFile: { 'docs/recovered/20260228-conduit-ai-tools-plan-v1.00F.md': [
         "| **Model** | `xai/grok-4.1-fast-reasoning` default |",
       ] },
       expect: (hits) => hits.length === 0 },
     { name: 'SELF-SCAN — docs/recovered/ NOT flagged for removed cookie SSO (frozen archive)', framework: 'unknown', repoName: 'bsuite',
-      addedByFile: { 'docs/recovered/20260301-phase1-coordination-plan-v1.00W.md': [
+      addedByFile: { 'docs/recovered/20260301-phase1-coordination-plan-v1.00F.md': [
         "        storageKey: 'business_suite_auth',",
       ] },
       expect: (hits) => hits.length === 0 },
