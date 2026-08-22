@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+---
+
 # Session findings register — 2026-08-21/22
 
 **Date:** 2026-08-22
