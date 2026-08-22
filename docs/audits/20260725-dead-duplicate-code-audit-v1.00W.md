@@ -187,8 +187,8 @@ The following shadcn/ui primitive components are duplicated between `braden` and
 
 | Component | crm7 path | R80.3 path |
 |---|---|---|
-| `AwardRateSelector.tsx` | `src/components/entity/selectors/AwardRateSelector.tsx` | `src/components/AwardRateSelector.tsx` |
-| `FairWorkUpdateNotification.tsx` | `src/components/fair-work/FairWorkUpdateNotification.tsx` | `src/components/FairWorkUpdateNotification.tsx` |
+| `AwardRateSelector.tsx` | `src/components/entity/selectors/AwardRateSelector.tsx` | `crm7/src/components/entity/selectors/AwardRateSelector.tsx` |
+| `FairWorkUpdateNotification.tsx` | `src/components/fair-work/FairWorkUpdateNotification.tsx` | `crm7/src/components/fair-work/FairWorkUpdateNotification.tsx` |
 | `SourcePicker.tsx` | `src/components/chargeCalc/SourcePicker.tsx` | `src/components/chargeCalc/SourcePicker.tsx` |
 
 ---
