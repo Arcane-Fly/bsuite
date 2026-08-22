@@ -104,6 +104,23 @@ export const GUARDS = [
   // Parent monorepo
   // ---------------------------------------------------------------------
   {
+    id: 'parent-setup-node-pnpm-guard',
+    label: 'setup-node@v5 must set package-manager-cache: false',
+    repo: '.',
+    command: ['node', 'scripts/check-setup-node-pnpm-guard.mjs'],
+    ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
+    mode: 'run',
+    notes:
+      'setup-node@v5 defaults package-manager-cache: true and resolves the ' +
+      'packageManager field\'s pnpm BEFORE corepack runs, dying with ' +
+      '"Unable to locate executable file: pnpm". PR #2048 fixed this by hand ' +
+      'across 22 workflows and MISSED advance-submodule-pointers.yml, which ' +
+      'then failed 20 of 20 scheduled runs (2026-08-20 to 08-21) unnoticed. ' +
+      'That workflow is the estate\'s only WRITER of submodule gitlinks and ' +
+      'six workflows read them, so its silence made six green guards report ' +
+      'stale pointers as app findings. A clean pass prints the guarded/total ' +
+      'step counts and the files scanned; finding zero setup-node steps, or ' +
+      'fewer than the floor, is a hard failure rather than a pass.',
     id: 'parent-component-mounts',
     label: 'toast() callers require a mounted toast surface',
     repo: '.',
