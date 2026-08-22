@@ -256,8 +256,44 @@ for (const a of args) {
   }
 }
 
+/* An empty file list has TWO causes that used to print the same line:
+ *   (a) a PR legitimately touching no migrations, and
+ *   (b) the upstream diff computation silently returning nothing.
+ * `check-migration-fk-indexes: no files — OK` named no base ref and no count,
+ * so nothing would have looked different if (b) happened on every run — the
+ * gate would rubber-stamp every migration in the estate and read as green.
+ * LANE-WATCHER filed exactly this (guard-registry knownSilentReason).
+ *
+ * Two changes: the line now states the count AND where the emptiness came
+ * from, and callers that KNOW files must exist can demand it. The workflow
+ * knows: migration-fk-index-lint.yml only triggers on a paths filter of
+ * `**​/supabase/migrations/**.sql`, so if it fired at all, migrations changed
+ * — an empty delta there is a contradiction, not a no-op. */
+const sawChangedFilesFlag = args.some((a) => a.startsWith('--changed-files='))
+const requireFiles = args.includes('--require-files')
+const baseRefArg = args.find((a) => a.startsWith('--base-ref='))
+const baseRef = baseRefArg ? baseRefArg.slice('--base-ref='.length) : null
+
 if (files.length === 0) {
-  console.log('check-migration-fk-indexes: no files — OK')
+  const provenance = sawChangedFilesFlag
+    ? '--changed-files= was supplied and resolved to ZERO paths'
+    : 'no file arguments were supplied at all'
+  const refNote = baseRef ? `, base ref ${baseRef}` : ', no base ref named'
+
+  if (requireFiles) {
+    console.error(
+      `check-migration-fk-indexes: REFUSING TO PASS — ${provenance}${refNote}.\n` +
+        '  The caller asserted files must exist (--require-files), so an empty\n' +
+        '  list means the diff that produced it is broken, not that the PR is\n' +
+        '  clean. Passing here would green-light every migration in the change.',
+    )
+    process.exit(1)
+  }
+
+  console.log(
+    `check-migration-fk-indexes: 0 file(s) examined — ${provenance}${refNote}. ` +
+      'Nothing was checked; this is not a pass over any migration.',
+  )
   process.exit(0)
 }
 
