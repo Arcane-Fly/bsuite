@@ -157,3 +157,95 @@ printing a short, clean-looking list, and why the four table-reach bugs and the 
 citation bugs are self-tests rather than commit-message anecdotes.
 
 **A number is a hypothesis until a control confirms it.**
+
+---
+
+## 7. Second pass, 2026-08-22 — the theme defect and what it exposed
+
+### The estate-wide defect, shipped to production
+
+crm7 rendered `<html class="notranslate light" data-theme="dark">` — light and dark at
+once. Colour tokens key on the `.dark` class; every Tailwind `dark:` utility keyed on
+`[data-theme="dark"]`, because `darkMode: ['class', <selector>]` **replaces** the
+default selector rather than adding to it. The boot script wrote both signals;
+`ThemeProvider` wrote only the class. They agreed at boot and diverged permanently on
+the first theme change.
+
+**Every `dark:` utility in crm7 applied while the light tokens were active.**
+
+It hid for months because a `dark:` utility with a *literal* value looks fine in light
+mode — only `var()`-resolved ones expose it. The single symptom it produced was
+*"the borders look hard without shadow or glow"*.
+
+Fixed twice, deliberately: `@bsuite/theme` 1.0.2 makes the provider write both
+(repair), and crm7's `darkMode` drops to `['class']` (removal, so it cannot recur).
+crm7 was the **only** app with the attribute selector; that is why the bug was
+crm7-only.
+
+Shipped the whole chain: published → six lockfiles → six promotions → **all six
+production branches on 1.0.2**, verified live.
+
+### R-1 is no longer a question, it is a measured failing gate
+
+`audit-one-shot.mjs` finds exactly two cross-app writes, both on `leads`:
+
+| Site | Write |
+|---|---|
+| `business-suite-unified/src/pages/Developer/Website.tsx:367` | `update` on `leads` |
+| `braden/src/components/admin/kanban/LeadsKanban.tsx:106` | `update` on `leads` |
+
+`leads` is CRM7-owned. The ownership map grants braden exactly one role —
+*"marketing capture via crm7 lead-capture path"* — and lists BSU nowhere on that
+entity. Both are status transitions on existing leads.
+
+**Not covered by the lifecycle-handover exception**, which was read rather than
+assumed: that clause permits an immutable **copy of evidence artifacts** when a record
+changes ownership domain. It is about copying documents, not about one app updating
+another's records.
+
+So the ruling R-1 needs is narrow and now fully evidenced: *does braden.com.au manage
+leads, or hand them to crm7?* Everything needed to answer it is above.
+
+### Four gates were reporting defects that did not exist
+
+Each blocked promotions permanently under ruling V-3, which is how gates get routed
+around.
+
+| Gate | The bug |
+|---|---|
+| `canvasColumns` | Failed on container **width alone**, for a defect page-builder fixed 2026-08-17 — then two lines later said it could not evaluate because the page has no columns control |
+| `gluedCards` | Failed **marketing pages** for having no canvas. Its guard checked whether react-grid-layout's *stylesheet* is loaded — an app-level fact in a SPA |
+| `audit-doc-completion` | Built its evidence layer from the **parent only** while finding docs estate-wide, so submodule gates read as deleted. 164 → 264 artifacts; dead citations 23 → **13** |
+| `audit-one-shot` | Correct, and **wired into no workflow at all**. Its baseline file had existed since 2026-08-17 and nothing read it |
+
+`canvasColumns` was retired by interaction test at a **730px container** — below the
+very threshold it failed on — where the slider correctly rescales the persisted layout
+(`cols` 12→4→24, card `w` 12→4→24, `minW` 3→1→6).
+
+### One finding I filed and had to withdraw
+
+I wrote up the `gluedCards` hit as a card-resize ruling violation **before opening the
+page**. `suite.crm7.app/` is the public marketing page. Retracted on the PR.
+
+### What the remaining 13 dead citations actually are
+
+Almost none are defects. Five cite `quality.yml`, **deliberately deleted** in crm7 —
+and two of those five are the CI-guard audits that led to its deletion. Two are an
+archive of the dashboard retired 2026-08-10. One is this register, citing dead gates
+*because they are its subject*. About five are genuine dangling references, already
+documented in #2248.
+
+A historical record naming a gate that was later retired is correct. Under the
+classification standard those are `kind: record`, and a record is never edited to suit
+a later view of events.
+
+## 8. Still open after this pass
+
+| | |
+|---|---|
+| **R-1** | `leads` ownership — now a failing gate with both sites named, ratcheted at 2 |
+| **R-2…R-5** | unchanged |
+| **W-1** | `rate_adjustments` / `billing_cycles` still have zero application reach |
+| | `check-base-stack-only.sh` — nothing gates a new runtime dependency against an allow-list |
+| | 124 tables ORPHANED: no app reach and no server-side write |
+| | A `[VERIFICATION]` complaint row sits in the GTO register; the page has no delete affordance |
