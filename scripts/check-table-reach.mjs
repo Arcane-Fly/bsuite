@@ -139,6 +139,63 @@ export function tablesReferenced(src) {
   return out;
 }
 
+/**
+ * Tables the DATABASE writes to at runtime — from inside a function body, a trigger,
+ * or a pg_cron command. These are legitimately unreached from TypeScript, and lumping
+ * them in with genuinely orphaned tables is what made the first report a wall of 164
+ * rows rather than a finding.
+ *
+ * The distinction that matters is RUNTIME vs SEED. A bare top-level `INSERT INTO x`
+ * in a migration is one-time seed data and proves nothing about ongoing use. An INSERT
+ * or UPDATE inside a dollar-quoted body runs whenever that function or trigger fires.
+ * Only the second counts.
+ */
+export function serverWritten(sql) {
+  const out = new Set();
+  const add = (name) => { if (name) out.add(name.toLowerCase().replace(/^public\./, '')); };
+
+  // 1. Writes inside a dollar-quoted body: function source, trigger source, DO block.
+  const bodies = sql.match(/\$\$[\s\S]*?\$\$/g) || [];
+  for (const raw of bodies) {
+    const body = raw.replace(/--[^\n]*/g, ' ');
+    for (const re of [
+      /\binsert\s+into\s+((?:public\.)?[a-z_][a-z0-9_]*)/gi,
+      /\bupdate\s+((?:public\.)?[a-z_][a-z0-9_]*)\s+set\b/gi,
+      /\bdelete\s+from\s+((?:public\.)?[a-z_][a-z0-9_]*)/gi,
+    ]) { let m; while ((m = re.exec(body))) add(m[1]); }
+  }
+
+  // 2. The table a trigger fires ON — EXCEPT a housekeeping timestamp trigger.
+  //
+  //    `updated_at` triggers are 192 of the estate's trigger definitions
+  //    (update_updated_at_column 90, handle_updated_at 82, set_updated_at 20) and they
+  //    prove NOTHING about use: they fire only when something else has already
+  //    written the row. Counting them classified rate_adjustments and billing_cycles
+  //    — the two tables that motivated this whole gate, with provably zero reach —
+  //    as server-written. The control caught it.
+  const HOUSEKEEPING = /(updated_at|update_timestamp|set_timestamp|moddatetime|modified_at)/i;
+  const trig = /create\s+(?:or\s+replace\s+)?(?:constraint\s+)?trigger\s+[a-z0-9_"]+\s+(?:before|after|instead\s+of)([\s\S]{0,300}?)\bon\s+((?:public\.)?[a-z_][a-z0-9_]*)([\s\S]{0,200}?);/gi;
+  let t;
+  while ((t = trig.exec(sql))) {
+    const fn = (t[3] || '').match(/execute\s+(?:function|procedure)\s+((?:public\.)?[a-z_][a-z0-9_]*)/i);
+    if (fn && HOUSEKEEPING.test(fn[1])) continue;
+    add(t[2]);
+  }
+
+  // 3. pg_cron command strings. The command is a quoted SQL literal, so it survives
+  //    outside a dollar-quote and has to be read separately.
+  const cron = /cron\.schedule\s*\(([\s\S]{0,600}?)\)\s*;/gi;
+  let c;
+  while ((c = cron.exec(sql))) {
+    for (const re of [
+      /\binsert\s+into\s+((?:public\.)?[a-z_][a-z0-9_]*)/gi,
+      /\bupdate\s+((?:public\.)?[a-z_][a-z0-9_]*)\s+set\b/gi,
+      /\bdelete\s+from\s+((?:public\.)?[a-z_][a-z0-9_]*)/gi,
+    ]) { let m; while ((m = re.exec(c[1]))) add(m[1]); }
+  }
+  return out;
+}
+
 const SELF_TESTS = [
   { n: 'CREATE TABLE is found', f: () => tablesInSql('CREATE TABLE public.foo (id int);').has('foo') },
   { n: 'IF NOT EXISTS is found', f: () => tablesInSql('create table if not exists bar (id int);').has('bar') },
@@ -190,6 +247,29 @@ const SELF_TESTS = [
     f: () => !tablesReferenced("type Status = 'open' | 'closed';").has('open') },
   { n: 'the backreference pattern that returned zero is not used here',
     f: () => tablesReferenced("supabase.from('a')").size === 1 },
+
+  // SERVER-WRITTEN. Without this class the report is a wall of 164 rows rather
+  // than a finding, because most of them are written by the database itself.
+  { n: 'an INSERT inside a function body is a server write',
+    f: () => serverWritten("CREATE FUNCTION f() AS $$ BEGIN INSERT INTO public.audit_log VALUES (1); END $$;").has('audit_log') },
+  { n: 'an UPDATE ... SET inside a body counts',
+    f: () => serverWritten("CREATE FUNCTION f() AS $$ UPDATE public.pay_runs SET x = 1; $$;").has('pay_runs') },
+  { n: 'a DELETE FROM inside a body counts',
+    f: () => serverWritten("$$ DELETE FROM retention_archive WHERE t < now(); $$").has('retention_archive') },
+  { n: 'a trigger ON a table marks that table server-touched',
+    f: () => serverWritten('CREATE TRIGGER t AFTER INSERT ON public.contacts FOR EACH ROW EXECUTE FUNCTION propagate_approval();').has('contacts') },
+  { n: 'an updated_at HOUSEKEEPING trigger does NOT — it fires only after someone else wrote',
+    f: () => !serverWritten('CREATE TRIGGER t BEFORE UPDATE ON public.rate_adjustments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();').has('rate_adjustments') },
+  { n: 'handle_updated_at is housekeeping too — 82 of them in this estate',
+    f: () => !serverWritten('CREATE TRIGGER t BEFORE UPDATE ON public.x FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();').has('x') },
+  { n: 'moddatetime is housekeeping',
+    f: () => !serverWritten('CREATE TRIGGER t BEFORE UPDATE ON public.y EXECUTE FUNCTION moddatetime(updated_at);').has('y') },
+  { n: 'a pg_cron command string is read — it sits OUTSIDE any dollar-quote',
+    f: () => serverWritten("SELECT cron.schedule('nightly','0 2 * * *', $q$ INSERT INTO public.fair_work_retention_runs (id) VALUES (1) $q$);").has('fair_work_retention_runs') },
+  { n: 'a BARE seed INSERT is NOT a server write — one-time data proves no ongoing use',
+    f: () => serverWritten("INSERT INTO public.awards (code) VALUES ('MA000025');").size === 0 },
+  { n: 'a comment inside a body does not create a server write',
+    f: () => serverWritten("$$ -- insert into public.nope\n $$").size === 0 },
 ];
 
 if (process.argv.includes('--self-test')) {
@@ -221,6 +301,7 @@ const apps = readFileSync('.gitmodules', 'utf8')
   .split('\n').filter((l) => l.includes('path =')).map((l) => l.split('=')[1].trim());
 
 const created = new Map();   // table -> [migration files]
+const serverTouched = new Set(); // written by a function body, trigger, or cron command
 const reached = new Map();   // table -> Set(app)
 let sqlFiles = 0, srcFiles = 0;
 
@@ -228,10 +309,12 @@ for (const app of [...apps, '.']) {
   for (const d of [join(app, 'supabase/migrations'), join(app, 'migrations')]) {
     for (const f of walk(d, [], (n) => n.endsWith('.sql'))) {
       sqlFiles++;
-      for (const t of tablesInSql(readFileSync(f, 'utf8'))) {
+      const sql = readFileSync(f, 'utf8');
+      for (const t of tablesInSql(sql)) {
         if (!created.has(t)) created.set(t, []);
         created.get(t).push(f);
       }
+      for (const t of serverWritten(sql)) serverTouched.add(t);
     }
   }
 }
@@ -255,17 +338,26 @@ if (created.size < 50) { console.error(`  POSITIVE CONTROL FAILED: only ${create
 if (reached.size < 20) { console.error(`  POSITIVE CONTROL FAILED: only ${reached.size} table(s) referenced by ${srcFiles} source files — the reference patterns are broken.`); process.exit(3); }
 
 const unreached = [...created.keys()].filter((t) => !reached.has(t)).sort();
+const server = unreached.filter((t) => serverTouched.has(t));
+const orphaned = unreached.filter((t) => !serverTouched.has(t));
+
 console.log(`  scanned ${sqlFiles} migrations (${created.size} tables) and ${srcFiles} source files (${reached.size} tables referenced)\n`);
-console.log(`  ${unreached.length} table(s) created with NO application reach:\n`);
-for (const t of unreached) {
+console.log(`  ${created.size - unreached.length} reached by app code`);
+console.log(`  ${server.length} unreached by app code but WRITTEN BY THE DATABASE (trigger, function body, or pg_cron) — legitimate`);
+console.log(`  ${orphaned.length} ORPHANED: nothing in any app, and nothing server-side either\n`);
+console.log(`  ORPHANED (${orphaned.length}):\n`);
+for (const t of orphaned) {
   const f = created.get(t)[0].replace(/^.*migrations\//, '');
   console.log(`    ${t.padEnd(42)} ${f}`);
 }
 console.log(`
-  Not every one is a defect. Legitimately unreached from TypeScript: audit logs written
-  by triggers, queue tables driven by pg_cron, join tables read only through an embed,
-  and anything whose name is COMPUTED at runtime, which no static scan can see.
+  An ORPHANED table is created, granted, policied — and nothing anywhere touches it.
+  That is the shape rate_adjustments and billing_cycles shipped in.
+
+  Still not every one is a defect. A join table read only through a PostgREST embed
+  never appears by name, and a table whose name is COMPUTED at runtime is invisible to
+  any static scan. Confirm by hand before treating an entry as dead.
 
   This reports so the list gets looked at. It does not fail the build — a gate that
-  fails on 164 mostly-legitimate rows teaches everyone to ignore it.`);
+  fails on rows a human has to judge teaches everyone to ignore it.`);
 process.exit(0);
