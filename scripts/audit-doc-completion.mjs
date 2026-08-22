@@ -101,6 +101,12 @@ const SELF_TESTS = [
   { name: 'VACUITY: a doc citing NOTHING is never eligible — an empty citation list has no failing gate',
     f: 'x.md', t: 'a doc with no citations at all', g: ['check-phantom-migrations.mjs'],
     expect: (r) => r.bindable === false && r.liveGates.length === 0 && r.liveWorkflows.length === 0 },
+  { name: 'a gate living in a SUBMODULE counts as live — the evidence layer is the estate',
+    t: 'Verified by `db-lint.yml`.', f: 'x.md', g: ['db-lint.yml'],
+    expect: (r) => r.bindable === true && r.deadCitations.length === 0 },
+  { name: 'a gate in NO root is still dead — the widening must not swallow real misses',
+    t: 'Verified by `quality.yml`.', f: 'x.md', g: ['db-lint.yml'],
+    expect: (r) => r.bindable === false && r.deadCitations.includes('quality.yml') },
   { name: 'migration versions and PRs are captured as corroboration',
     f: 'x.md', t: 'applied 20260831000000 via crm7#1894', g: [],
     expect: (r) => r.cited.migrations.includes('20260831000000') && r.cited.prs.includes('crm7#1894') },
@@ -121,9 +127,25 @@ if (process.argv.includes('--self-test')) {
 const roots = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 if (!roots.length) { console.error('usage: audit-doc-completion.mjs <repo-root...> [--self-test]'); process.exit(2); }
 
+// THE EVIDENCE LAYER IS THE WHOLE ESTATE, NOT THE PARENT.
+//
+// This used to read only the parent's `scripts/` and `.github/workflows/`, while the
+// `roots` argument above was used to find DOCS in every submodule. So a doc citing
+// `db-lint.yml` or `ci.yml` or `e2e.yml` was reported as CITING A DELETED GATE —
+// every one of those lives in business-suite-unified/.github/workflows/ and always
+// has. 23 docs were listed as pointing at ghosts; most of them point at real gates in
+// a sibling repo.
+//
+// It also put this tool in direct disagreement with
+// scripts/check-doc-citations-resolve.mjs, which resolves into submodules and passes
+// clean on the same corpus. Two tools answering one question differently is worse than
+// either answer, because whichever you read last wins.
 const artifactsPresent = new Set();
-for (const d of ['scripts', '.github/workflows']) {
-  if (existsSync(d)) for (const f of readdirSync(d)) artifactsPresent.add(f);
+for (const root of roots) {
+  for (const d of ['scripts', '.github/workflows']) {
+    const dir = root === '.' ? d : join(root, d);
+    if (existsSync(dir)) for (const f of readdirSync(dir)) artifactsPresent.add(f);
+  }
 }
 if (artifactsPresent.size < 20) {
   console.error(`  POSITIVE CONTROL FAILED: only ${artifactsPresent.size} artifact(s) found.`);
