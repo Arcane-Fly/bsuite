@@ -104,6 +104,25 @@ export const GUARDS = [
   // Parent monorepo
   // ---------------------------------------------------------------------
   {
+    id: 'parent-component-mounts',
+    label: 'toast() callers require a mounted toast surface',
+    repo: '.',
+    command: ['node', 'scripts/check-component-mounts.mjs'],
+    ciWorkflow: '.github/workflows/component-mount-gate.yml',
+    mode: 'run',
+    notes:
+      'braden shipped 54 files calling toast() with NOT ONE <Toaster> mounted ' +
+      'anywhere in the app tree (fixed in braden #437). Nothing errored and ' +
+      'nothing logged, so every confirmation and error on braden.com.au was ' +
+      'discarded silently. Parses the TSX AST rather than grepping: a grep ' +
+      'counts the fix commit\'s own comment (\'Neither <Toaster> was mounted\') ' +
+      'as a mount, and would also miss braden\'s real mounts, which are ' +
+      'aliased (<SonnerToaster/>, <RadixToaster/>). Mounts resolve through ' +
+      'import bindings, not tag names. A clean pass prints per-app file, ' +
+      'caller and mount counts; scanning zero files is a hard failure.',
+  },
+
+  {
     id: 'parent-semgrep-sast',
     label: 'Semgrep SAST ratchet (ERROR-severity findings, per app)',
     repo: '.',
