@@ -57,14 +57,45 @@ jobs:
       - name: Self-test the checker
         run: node scripts/check-doc-classification.mjs --self-test
 
-      # Enforce on the docs this PR actually touched. Backfill stays
-      # opportunistic — a doc gets frontmatter when someone is already editing
-      # it, never in a sweep.
-      - name: Classify changed docs, and hold the ratchet
+      # WHICH DOCS ARE ENFORCED, and why it is not simply "the ones you touched".
+      #
+      # The first version enforced on every changed doc. It immediately blocked a PR
+      # whose entire content was FIXING THREE DEAD CITATIONS in two legacy docs — a
+      # few characters each. Demanding full classification for that makes small
+      # maintenance edits expensive, and the rational response is to stop making
+      # them, or to paste in frontmatter nobody thought about. Both are worse than
+      # the debt.
+      #
+      # So:
+      #   ADDED docs always classify. It is cheap at creation and it is the only
+      #   thing the ratchet needs in order to hold.
+      #
+      #   MODIFIED docs classify only on a SUBSTANTIVE edit — more than
+      #   SUBSTANTIVE_LINES changed lines. Rewriting a doc is the moment its kind
+      #   and authority are actually in your head; fixing a link is not.
+      #
+      # Backfill therefore stays opportunistic, and a typo fix stays a typo fix.
+      - name: Classify new and substantively-edited docs, and hold the ratchet
+        env:
+          SUBSTANTIVE_LINES: '20'
         run: |
           BASE="${{ github.event.pull_request.base.sha }}"
           if [ -z "$BASE" ]; then BASE=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD); fi
-          CHANGED=$(git diff --name-only --diff-filter=d "$BASE" HEAD -- 'docs/**/*.md' | tr '\n' ' ')
-          echo "changed docs: ${CHANGED:-<none>}"
-          # No args still runs the ratchet check and the <20-doc positive control.
-          node scripts/check-doc-classification.mjs $CHANGED
+
+          ADDED=$(git diff --name-only --diff-filter=A "$BASE" HEAD -- 'docs/**/*.md')
+          MODIFIED=$(git diff --name-only --diff-filter=M "$BASE" HEAD -- 'docs/**/*.md')
+
+          ENFORCE="$ADDED"
+          for f in $MODIFIED; do
+            n=$(git diff --numstat "$BASE" HEAD -- "$f" | awk '{print $1+$2}')
+            if [ "${n:-0}" -gt "$SUBSTANTIVE_LINES" ]; then
+              ENFORCE="$ENFORCE $f"
+              echo "substantive ($n lines): $f"
+            else
+              echo "minor edit ($n lines), not enforced: $f"
+            fi
+          done
+
+          echo "enforcing on: ${ENFORCE:-<none>}"
+          # With no args the ratchet check and the <20-doc positive control still run.
+          node scripts/check-doc-classification.mjs $ENFORCE
