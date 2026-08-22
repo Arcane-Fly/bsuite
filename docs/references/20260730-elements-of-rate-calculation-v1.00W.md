@@ -1,3 +1,12 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite-lane
+evidence:
+  - scripts/check-placement-rate-provenance.mjs
+  - scripts/check-placement-award-code.mjs
+---
+
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
 > Paths under `R80.3/` below are HISTORICAL — the originals are in
