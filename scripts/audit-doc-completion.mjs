@@ -37,7 +37,24 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
+// A completion word inside a HYPHENATED PHRASE is not a completion marker.
+// `20260805-portal-persona-jobs-to-be-done-v1.00W.md` was counted as "already marked
+// complete" because "done" sits between two hyphens — but "jobs-to-be-done" is a
+// compound noun, not a status. It inflated the very count used to judge whether the
+// estate marks docs honestly.
+//
+// Same shape as a colour literal in prose tripping a colour gate: the token matches,
+// the meaning does not.
 const COMPLETION_WORDS = /(^|[-_.])(complete|completed|done|final|superseded|closed|obsolete|retired|archived)([-_.]|$)/i;
+/** Words that, immediately before a completion word, make it part of a phrase. */
+const PHRASE_PREFIX = /(to-be|to_be|not|never|well|half|nearly|almost)-?$/i;
+
+export function isCompletionMarked(filename) {
+  const m = filename.match(COMPLETION_WORDS);
+  if (!m) return false;
+  const before = filename.slice(0, m.index + (m[1] ? m[1].length : 0));
+  return !PHRASE_PREFIX.test(before);
+}
 
 /** Artifacts a doc explicitly names. Naming is checkable; mentioning is not. */
 export function citedArtifacts(text) {
@@ -67,7 +84,7 @@ export function classify(text, filename, artifactsPresent) {
     ...cited.workflows.filter((w) => !artifactsPresent.has(w)),
   ];
   return {
-    alreadyMarked: COMPLETION_WORDS.test(filename),
+    alreadyMarked: isCompletionMarked(filename),
     cited,
     liveGates,
     liveWorkflows,
@@ -101,6 +118,15 @@ const SELF_TESTS = [
   { name: 'VACUITY: a doc citing NOTHING is never eligible — an empty citation list has no failing gate',
     f: 'x.md', t: 'a doc with no citations at all', g: ['check-phantom-migrations.mjs'],
     expect: (r) => r.bindable === false && r.liveGates.length === 0 && r.liveWorkflows.length === 0 },
+  { name: 'a completion word inside a hyphenated PHRASE is not a marker',
+    t: 'x', f: '20260805-portal-persona-jobs-to-be-done-v1.00W.md', g: [],
+    expect: (r) => r.alreadyMarked === false },
+  { name: 'but a real completion suffix still counts',
+    t: 'x', f: '20260227-feature-map-complete-v1.00W.md', g: [],
+    expect: (r) => r.alreadyMarked === true },
+  { name: 'and an ALL-CAPS marker still counts',
+    t: 'x', f: 'QUEUE-COMPLETE.md', g: [],
+    expect: (r) => r.alreadyMarked === true },
   { name: 'a gate living in a SUBMODULE counts as live — the evidence layer is the estate',
     t: 'Verified by `db-lint.yml`.', f: 'x.md', g: ['db-lint.yml'],
     expect: (r) => r.bindable === true && r.deadCitations.length === 0 },

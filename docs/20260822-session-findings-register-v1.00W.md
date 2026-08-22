@@ -249,3 +249,77 @@ a later view of events.
 | | `check-base-stack-only.sh` — nothing gates a new runtime dependency against an allow-list |
 | | 124 tables ORPHANED: no app reach and no server-side write |
 | | A `[VERIFICATION]` complaint row sits in the GTO register; the page has no delete affordance |
+
+---
+
+## 9. The orphaned-table backlog, triaged
+
+`scripts/check-table-reach.mjs` classifies every table declared across all six
+submodules' migrations. After five blind spots in the detector were found and fixed
+(see below), the measured state is:
+
+```
+451 tables declared      505 referenced
+301 reached by app code
+ 36 written by the database — trigger, function body, or pg_cron (legitimate)
+114 ORPHANED — nothing in any app, and nothing server-side
+```
+
+### Five blind spots in the detector itself
+
+The first run of that gate reported **124** orphaned. Ten were not findings at all —
+each a way of reaching a table the detector could not see:
+
+| # | Blind spot | Hid |
+|---|---|---|
+| 1 | `.from()` matched only a literal string | 4 tables reached via `const T = 'x'; .from(T)` |
+| 2 | No awareness of the db-proxy allowlist | a table reached by URL, guarded by `ALLOWED_TABLES` |
+| 3 | Renames never applied | 3 tables reported under names that no longer exist |
+| 4 | Drops never applied | 4 tables with an explicit `DROP TABLE` migration |
+| 5 | TEMP counted as schema | a `CREATE TEMP TABLE` dropped in the same file |
+
+**A detector is only as complete as the mechanisms its author knew about.** That gate
+shipped with a positive control and 37 self-tests and still had all five. Only an
+independent triage of its output against the code found them.
+
+### The 114, sorted
+
+| Class | Count | What it is |
+|---|---|---|
+| **A — legacy/superseded** | 9 | Named or commented as dead. Seven now auto-excluded by the rename/drop tracking |
+| **B — baseline-only** | 19 | Declared only in the 2026-08-07 production dump; history predates the estate's own migration record |
+| **C — feature never built** | 91 | Created by a dated feature migration, correct columns and RLS, no app ever referenced it. **The actionable class** |
+| **D — false positive** | 5 | Reached by const, or by the db-proxy allowlist. All five now read REACHED |
+
+### Class C, ranked by how completely it was built
+
+Score = RLS×10 + policies×3 + FKs×2 + inbound references. A table with real policies
+and foreign keys is more likely genuine intended work than a bare scratch table.
+
+| Table | Created | Policies / FKs / referenced-by |
+|---|---|---|
+| `labour_requirements` | 20260730 | 4 / 8 / 1 |
+| `apprenticeships` | 20250615 | 3 / 5 / 3 |
+| `report_catalog_derived_measures` | 20260812 | 4 / 4 / 0 |
+| `financial_period_annotations` | 20260812 | 5 / 2 / 0 |
+| `quotes` | 20260228 | 4 / 3 / 1 |
+| `qualification_occupation_links` | 20260729 | 4 / 3 / 0 |
+| `employment_history` | 20250615 | 3 / 3 / 1 |
+| `etp_pay_items` | 20260708 | 4 / 2 / 0 |
+| `financial_reports` | 20260311 | 4 / 2 / 0 |
+| `purchase_orders` | 20260708 | 4 / 2 / 0 |
+
+`rate_adjustments` (1 policy / 5 FKs) and `billing_cycles` (1 / 3) — the two that
+motivated the gate — remain in the middle tier, still orphaned.
+
+### One pattern worth an operator ruling
+
+`quotes` / `quote_line_items` (20260228) and `apprenticeships` / `employment_history` /
+`pay_rates` / `wage_records` (20250615) look like **early data models since
+superseded** — crm7's live workflows run through `charge_rate_quotes` and
+`training_contracts`. That is the same displacement already proven for `contracts`,
+which has a DROP migration.
+
+They are **not** reclassified as legacy, because no migration comment says so and the
+evidence bar for class A is an explicit statement. Retiring them the same way is a
+decision, not a deduction.
