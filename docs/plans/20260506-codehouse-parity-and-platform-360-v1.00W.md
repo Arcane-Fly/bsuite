@@ -3,6 +3,11 @@ name: codehouse-parity-and-platform-360-index
 description: Canonical index plan integrating Codehouse Workforce-One parity tracking with full Platform-360 capability/portal/role coverage across the BSuite repo and all six submodules.
 type: plan-index
 status: W
+kind: plan
+authority: engineering
+evidence:
+  - scripts/audit-routes.sh
+  - scripts/check-shared-package-reach.mjs
 created: 2026-05-06
 owner: GaryOcean428/bsuite (parent monorepo) + 6 submodule maintainers
 ---
