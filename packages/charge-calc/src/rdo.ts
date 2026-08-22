@@ -1,7 +1,7 @@
 /**
  * RDO (Rostered Day Off) accrual — worked-vs-paid hour conversion.
  *
- * Source of truth: docs/references/20260730-rdo-flexibility.md (bsuite parent
+ * Source of truth: docs/references/20260730-rdo-flexibility-v1.00W.md (bsuite parent
  * repo). MA000020 (Building and Construction General On-site Award 2020)
  * cl.16.2: "Ordinary working hours will be 8 hours in duration each day, of
  * which 0.4 of one hour of each day worked will accrue towards an RDO and 7.6
@@ -132,7 +132,7 @@ export function deriveRdoAccrual(
 /**
  * Billable hours for a single RDO day taken.
  *
- * RDOs ARE billable when taken (docs/references/20260730-rdo-flexibility.md):
+ * RDOs ARE billable when taken (docs/references/20260730-rdo-flexibility-v1.00W.md):
  * the host is billed for the worker's normal roster, RDO days included, so
  * an RDO day taken bills at the worker's normal WORKED hours for that day —
  * not the (lower) paid figure, and not zero.

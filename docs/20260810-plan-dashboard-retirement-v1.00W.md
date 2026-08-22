@@ -69,7 +69,7 @@ migrations had shipped when none had. Ask the live sources instead:
 | What is open? | `gh issue list` / `gh pr list` against the repo |
 | What is in the database? | `supabase_migrations.schema_migrations`, and better, assert the object — `to_regclass`, `pg_policy`, `information_schema` |
 | Did a promotion apply? | The Supabase Migrations workflow run on `main` |
-| What did we decide, and why? | [`docs/00-roadmap/20260808-operator-decision-register-1.00W.md`](00-roadmap/20260808-operator-decision-register-1.00W.md) |
+| What did we decide, and why? | [`docs/00-roadmap/20260808-operator-decision-register-v1.00W.md`](00-roadmap/20260808-operator-decision-register-v1.00W.md) |
 | What is outstanding? | [`docs/OUTSTANDING.md`](OUTSTANDING.md) and the weekly gap register |
 | Is irreplaceable data intact? | `scripts/verify-class-a-preservation.mjs --check <baseline>` |
 

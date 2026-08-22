@@ -82,12 +82,27 @@ jobs:
           BASE="${{ github.event.pull_request.base.sha }}"
           if [ -z "$BASE" ]; then BASE=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD); fi
 
-          ADDED=$(git diff --name-only --diff-filter=A "$BASE" HEAD -- 'docs/**/*.md')
-          MODIFIED=$(git diff --name-only --diff-filter=M "$BASE" HEAD -- 'docs/**/*.md')
+          # A RENAME IS NOT A CREATION.
+          #
+          # Without `-M`, git reports a renamed file as a delete plus an add, so a
+          # naming sweep demands full classification for every doc it touches — the
+          # exact expense this step's own comment refuses to impose on a link fix, and
+          # for even less reason: a renamed doc's kind and authority were not in
+          # anyone's head, because nobody read the doc.
+          #
+          # The 2026-08-22 convention sweep renamed 93 docs. This step then blocked the
+          # PR demanding frontmatter on one of them, chosen essentially at random by
+          # which rename git failed to pair up.
+          #
+          # `-M` pairs them, so a rename lands in neither ADDED nor MODIFIED.
+          ADDED=$(git diff -M --name-only --diff-filter=A "$BASE" HEAD -- 'docs/**/*.md')
+          MODIFIED=$(git diff -M --name-only --diff-filter=M "$BASE" HEAD -- 'docs/**/*.md')
+          RENAMED=$(git diff -M --name-only --diff-filter=R "$BASE" HEAD -- 'docs/**/*.md')
+          [ -n "$RENAMED" ] && echo "renamed, not treated as new: $(echo "$RENAMED" | wc -w) doc(s)"
 
           ENFORCE="$ADDED"
           for f in $MODIFIED; do
-            n=$(git diff --numstat "$BASE" HEAD -- "$f" | awk '{print $1+$2}')
+            n=$(git diff -M --numstat "$BASE" HEAD -- "$f" | awk '{print $1+$2}')
             if [ "${n:-0}" -gt "$SUBSTANTIVE_LINES" ]; then
               ENFORCE="$ENFORCE $f"
               echo "substantive ($n lines): $f"

@@ -551,4 +551,4 @@ first question asked of any "missing" capability.
 
 ---
 
-*Full technical plan: [`20260808-data-workspace-implementation-plan-1.00W.md`](./20260808-data-workspace-implementation-plan-1.00W.md)*
+*Full technical plan: [`20260808-data-workspace-implementation-plan-v1.00W.md`](./20260808-data-workspace-implementation-plan-v1.00W.md)*

@@ -11,7 +11,7 @@ This directory holds the authoritative decisions that govern cross-repo architec
 | [ADR-0003](ADR-0003-consumer-renderer-pattern.md) | Consumer-Renderer Pattern | Accepted | 2026-05-01 | — | — |
 | [ADR-0004](ADR-0004-oauth-allowlist-doctrine.md) | OAuth Allow-List Doctrine | Accepted | 2026-05-01 | — | Duplicate allow-lists in operator-handoff-v4 |
 | [ADR-0005](ADR-0005-rams-funding-authoring.md) | RAMS Funding Authoring | **Superseded** | 2026-05-01 | ❌ **never built — and must not be** | superseded by operator ruling 2026-08-06 (`crm7/src/lib/funding/index.ts`) |
-| [ADR-0006](ADR-0006-contact-propagation-doctrine.md) | Contact Propagation Doctrine | Accepted (**org half superseded**) | 2026-05-01 | ⚠️ contacts yes; `clients.type` **never existed** | org half superseded by `crm7/docs/adr/20260525-host-employer-table-canonicalization.md` |
+| [ADR-0006](ADR-0006-contact-propagation-doctrine.md) | Contact Propagation Doctrine | Accepted (**org half superseded**) | 2026-05-01 | ⚠️ contacts yes; `clients.type` **never existed** | org half superseded by `crm7/docs/adr/20260525-host-employer-table-canonicalization-v1.00W.md` |
 | [ADR-0007](ADR-0007-stripe-fdw-read-doctrine.md) | Stripe FDW Read Doctrine | Accepted — **retirement recommended** | 2026-05-12 | ❌ **never built** (no `wrappers` ext, no `stripe` schema, migration unapplied) | New Stripe read paths implemented as edge-function proxy chains |
 | [ADR-0008](ADR-0008-schema-builder-consolidation.md) | Schema Builder Consolidation — `@bsuite/schema-builder` | Accepted | 2026-05-01 | ✅ package published | — (**renumbered from ADR-0004** on 2026-08-17; duplicate-number collision) |
 
@@ -30,9 +30,9 @@ elsewhere. Known decisions held in other locations:
 |---|---|---|---|
 | Xero Payroll AU — STP Phase 2 path (Option B, passthrough) | [`docs/20260519-xero-payroll-au-stp-path-decision-v1.00A.md`](../20260519-xero-payroll-au-stp-path-decision-v1.00A.md) | **Approved** | ❌ prescribed path unbuilt — see banner in that file |
 | STP Xero Passthrough (`pay_runs` passthrough fields) | `crm7/docs/adr/0004-stp-xero-passthrough.md` | Accepted | ⚠️ columns exist; no submission path wired |
-| Canonicalize Host Employers to `public.employers` | `crm7/docs/adr/20260525-host-employer-table-canonicalization.md` | Accepted | ✅ live (`employers` + 4 role flags) |
-| `@bsuite/charge-calc` as single-source calc engine | `crm7/docs/adr/20260423-calc-engine-single-source.md` | Accepted | ✅ live |
-| Contacts / Clients / Leads three-table design | `crm7/docs/adr/20260525-contacts-clients-leads-canonical-source.md` | Accepted | ✅ live |
+| Canonicalize Host Employers to `public.employers` | `crm7/docs/adr/20260525-host-employer-table-canonicalization-v1.00W.md` | Accepted | ✅ live (`employers` + 4 role flags) |
+| `@bsuite/charge-calc` as single-source calc engine | `crm7/docs/adr/20260423-calc-engine-single-source-v1.00W.md` | Accepted | ✅ live |
+| Contacts / Clients / Leads three-table design | `crm7/docs/adr/20260525-contacts-clients-leads-canonical-source-v1.00W.md` | Accepted | ✅ live |
 
 ## Status values
 

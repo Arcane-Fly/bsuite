@@ -64,7 +64,7 @@ capture is in scope at all this quarter (§10 — it is the highest-risk item on
 
 **Yes. It was found and read in full.**
 
-`docs/20260723-Anytime-WorkforceOne-Admin-Guide.md` — 2,390 lines, "AnyTime User Guide for
+`docs/20260723-anytime-workforceone-admin-guide-v1.00W.md` — 2,390 lines, "AnyTime User Guide for
 Administrators", Code House, Level 1, 311 Angas Street Adelaide. It has been sitting in `docs/`
 since 23 July.
 
@@ -373,7 +373,7 @@ this pass.
 
 ## 7. What Code House actually does — the layout study D-82 asked for
 
-Read from `docs/20260723-Anytime-WorkforceOne-Admin-Guide.md`. Line references are to that file.
+Read from `docs/20260723-anytime-workforceone-admin-guide-v1.00W.md`. Line references are to that file.
 This is a 2022 web application, so I am not proposing we copy its looks. What is worth copying is
 its _structure_, and the structure is unusually disciplined.
 
@@ -694,7 +694,7 @@ Stated plainly so nothing here is read as more certain than it is.
 
 **Primary, per D-82:**
 
-- `docs/20260723-Anytime-WorkforceOne-Admin-Guide.md` — Code House, AnyTime User Guide for
+- `docs/20260723-anytime-workforceone-admin-guide-v1.00W.md` — Code House, AnyTime User Guide for
   Administrators, 2,390 lines. Read in full; line references throughout §7.
 
 **Prior work built on rather than repeated:**

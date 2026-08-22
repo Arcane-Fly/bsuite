@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: dead
+---
+
 > # ⛔ VERDICT: DEAD — DO NOT BUILD FROM THIS DOCUMENT
 >
 > **Verdicted 2026-08-17 against live code and the live production database.**
@@ -91,7 +98,7 @@
 
 **Architecture:** Google Docs API for template authoring + merge (replaceAllText), Adobe Sign REST v6 for e-signatures, Plate.js for in-app case notes/field reports, Supabase Storage for signed PDF archival. Zero new SaaS subscriptions — all tools already licensed or MIT.
 
-**Design Spec:** `docs/plans/20260304-crm7-document-lifecycle-design-v1.00D.md`
+**Design Spec:** `docs/plans/20260304-crm7-document-lifecycle-design-v1.00F.md`
 
 **Tech Stack:** React + Vite + wouter (CRM7), Supabase Edge Functions (Deno), Google APIs client (googleapis), Adobe Sign REST v6, Plate.js v48+, pdf-lib, shadcn/ui, Zod, TypeScript strict
 
@@ -2419,7 +2426,7 @@ git commit -m "feat(crm7): complete document lifecycle system — Google Docs + 
 
 ## Key Reference Files
 
-- Design spec: `docs/plans/20260304-crm7-document-lifecycle-design-v1.00D.md`
+- Design spec: `docs/plans/20260304-crm7-document-lifecycle-design-v1.00F.md`
 - `crm7/src/services/documentService.ts` — existing Storage service (14 buckets defined)
 - `crm7/src/stores/signatureRequestStore.ts` — existing DocuSign types (superseded by Adobe Sign)
 - `crm7/src/pages/people/[id].tsx` — reference for entity detail page patterns

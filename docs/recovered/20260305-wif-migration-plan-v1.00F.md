@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: delivered
+---
+
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
@@ -277,8 +284,8 @@ Replace the `GOOGLE_SERVICE_ACCOUNT_JSON` entry with the new WIF config vars.
 
 | File | Change |
 |------|--------|
-| `docs/plans/20260304-crm7-document-lifecycle-design-v1.00D.md` | Replace service account key references with WIF architecture |
-| `docs/plans/20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md` | Update Google auth setup steps |
+| `docs/plans/20260304-crm7-document-lifecycle-design-v1.00F.md` | Replace service account key references with WIF architecture |
+| `docs/plans/20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md` | Update Google auth setup steps |
 | `docs/plans/20260304-gto-document-templates-guide-v1.00W.md` | Update "share with service account" instructions (still share with same SA email — that doesn't change) |
 | `docs/plans/20260304-document-esign-best-practice-research-v1.00W.md` | Update Google credentials section |
 | `AGENTS.md` (root) | Add WIF enforcement rule under a new "Google Cloud Authentication" section |
@@ -333,8 +340,8 @@ Replace the `GOOGLE_SERVICE_ACCOUNT_JSON` entry with the new WIF config vars.
 
 ### Docs
 
-- `docs/plans/20260304-crm7-document-lifecycle-design-v1.00D.md`
-- `docs/plans/20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md`
+- `docs/plans/20260304-crm7-document-lifecycle-design-v1.00F.md`
+- `docs/plans/20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md`
 - `docs/plans/20260304-gto-document-templates-guide-v1.00W.md`
 - `docs/plans/20260304-document-esign-best-practice-research-v1.00W.md`
 

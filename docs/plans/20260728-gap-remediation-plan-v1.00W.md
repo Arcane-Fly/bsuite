@@ -81,7 +81,7 @@ run will attempt to re-apply them.
 
 Three documented claims contradict verified reality:
 - `docs/20260728-overnight-worldclass-closeout-v1.00W.md:256` — "Grace invites from seat-cap path write durable rows". The table now exists, but the write is still fire-and-forget (Task 1 fixes that). Correct the claim to match reality as of this commit.
-- `docs/00-roadmap/20260112-master-roadmap-1.00W.md:38` — seat caps marked `[x]` complete. Server-side enforcement landed after that tick; verify and restate accurately rather than just re-ticking.
+- `docs/00-roadmap/20260112-master-roadmap-v1.00W.md:38` — seat caps marked `[x]` complete. Server-side enforcement landed after that tick; verify and restate accurately rather than just re-ticking.
 - `docs/20260728-overnight-worldclass-closeout-v1.00W.md:245` — "~65 open across repos"; actual is 85.
 
 Also add a short "verified live" status block to `docs/20260728-weekly-gap-register-v1.00W.md`

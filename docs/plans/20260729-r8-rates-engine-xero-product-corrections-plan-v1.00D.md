@@ -19,7 +19,7 @@ since — treat every number here as of that date, not as current.
 ## Context
 
 Five inputs converged: the operator's reference calculator, a completed Xero audit, Hermes's hand-back,
-the `20260729-Xero-API-docs.md` brief, and a live UX inspection of `r8.crm7.app`.
+the `20260729-xero-api-docs-v1.00W.md` brief, and a live UX inspection of `r8.crm7.app`.
 
 **Governing finding:** the charge-rate *maths* is already correct — `packages/charge-calc/calculate.ts`
 is a port of the operator's reference and cites its line numbers. Every problem below is **wiring, data

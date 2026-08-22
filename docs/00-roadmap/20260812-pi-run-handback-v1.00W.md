@@ -175,7 +175,7 @@ heartbeat obligation.
 
 > **Decision C was made and applied on 2026-08-12: `quality.yml` was deleted.** The
 > paragraph below is preserved as the corrected briefing the ruling was made on, not as
-> an open question. `crm7/docs/audits/20260811-ci-guards-deferred-items-1.00D.md` records
+> an open question. `crm7/docs/audits/20260811-ci-guards-deferred-items-v1.00D.md` records
 > the application.
 
 **`quality.yml`'s evidence was wrong** and you were about to rule on it — the workflow was subsequently deleted, so this reads as the corrected briefing behind that ruling: it *did* have a trigger

@@ -3,7 +3,7 @@
 **Status:** Draft (D) — for operator review before merge
 **Author:** Research lane D0b (Claude Code, read-only research pass)
 **Date:** 2026-07-29
-**Source of truth for the link list:** `docs/references/20260729-Xero-API-docs.md`
+**Source of truth for the link list:** `docs/references/20260729-xero-api-docs-v1.00W.md`
 **Fetch method:** `r.jina.ai` proxy (renders Xero's JS-heavy docs to markdown) via plain `curl`, verified working after `WebFetch` timed out twice per the lane brief. All 47 in-scope URLs were fetched successfully (two required a one-time retry after landing on a cookie-consent-only render; both retries succeeded — see §6). No page in scope failed to load. Raw fetched pages are cached at `/tmp/claude-1000/.../scratchpad/xero/*.md` (session-local, not committed).
 
 **Hard rule applied:** every claim below is either (a) a direct quote/paraphrase of a specific Xero doc page, cited inline by URL, or (b) explicitly marked as inference from our own codebase, never blended silently. Where a previous pass asserted "payroll tax is categorically absent from Xero's API surface" without reading a single page, this pass opened every Payroll AU page, the Accounting TaxRates page, and grepped the full corpus of 47 fetched pages for the literal strings `payroll tax` / `payrolltax` (case-insensitive) — zero hits anywhere. That is the evidence, not a repeated assumption. See §1.2.

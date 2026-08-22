@@ -1,9 +1,16 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: dead
+---
+
 > # ⛔ VERDICT: DEAD — superseded design for a rejected vendor
 >
 > **Verdicted 2026-08-17 against live code and the live production database.**
 >
 > This is the design specification for the Adobe Acrobat Sign build described in
-> [`20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md`](./20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md).
+> [`20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md`](./20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md).
 > **Adobe Sign was rejected on 2026-03-04, the day both documents were written.** Neither was
 > revised.
 >
@@ -38,7 +45,7 @@
 
 **Status:** D (Draft) · **Version:** 1.00 · **Date:** 2026-03-04
 **Author:** Braden + Claude Code
-**Related Plans:** `20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md`
+**Related Plans:** `20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md`
 
 ---
 

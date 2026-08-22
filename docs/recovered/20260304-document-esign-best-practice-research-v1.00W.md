@@ -4,8 +4,8 @@
 >
 > **§9 of this document is where Adobe Acrobat Sign was rejected**, on 2026-03-04. It is the
 > reason the two sibling documents dated the same day
-> ([implementation plan](./20260304-crm7-document-lifecycle-implementation-plan-v1.00W.md),
-> [design](./20260304-crm7-document-lifecycle-design-v1.00D.md)) are dead. Both were written
+> ([implementation plan](./20260304-crm7-document-lifecycle-implementation-plan-v1.00F.md),
+> [design](./20260304-crm7-document-lifecycle-design-v1.00F.md)) are dead. Both were written
 > before the reversal landed and neither was revised.
 >
 > The research itself remains sound. The decision it reached was implemented in

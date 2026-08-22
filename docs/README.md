@@ -62,7 +62,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260724-recurring-bugs-and-blindspots-v1.00W.md` | Recurring bug classes (R1–R12) + unexamined clusters (B1–B12) + next-5 investigations — discovery only after prompt-enhancer Standard refine |
 | `plans/20260725-docs-deadcode-archive-refined-v1.00D.md` | Prompt-enhanced plan: docs↔code audit, dead code, archive relocate |
 | `20260725-headroom-learn-notes-v1.00W.md` | Headroom learn on bsuite: 7.1% tool-fail rate; LLM extract blocked (Claude limit / litellm); Qwen 3.8 API 401 |
-| `20260723-Anytime-WorkforceOne-Admin-Guide.md` | Code House AnyTime/Workforce One Administrator Guide (competitor reference — full admin/timesheet/award surface) |
+| `20260723-anytime-workforceone-admin-guide-v1.00W.md` | Code House AnyTime/Workforce One Administrator Guide (competitor reference — full admin/timesheet/award surface) |
 
 ### Standards & doctrine
 
@@ -125,7 +125,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260629-bsuite-role-rls-subscription-parity-matrix-v1.00W.md` | Role / RLS / subscription parity matrix (WC-008…WC-012 resolutions) |
 | `20260629-batch-e-rbac-parity-dev-deploy-test-plan-v1.00W.md` | **Archived out of the repo** — `~/Desktop/Dev/archived-repos-docs/20260727-docs-archive-pass/docs/`. Batch E RBAC parity (WC-008…012) dev-deploy validation test plan. |
 | `20260629-batch-e-rbac-parity-dev-deploy-test-report-v1.00W.md` | **Archived out of the repo** — same path. Batch E RBAC parity dev-deploy validation report (conduit Team `joined_at` fix). |
-| `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md` | **Partially recovered** — the plan is in-repo at [`recovered/20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md`](recovered/20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md) (5 `d.*` apps). |
+| `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md` | **Partially recovered** — the plan is in-repo at [`recovered/20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md`](recovered/20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md) (5 `d.*` apps). |
 | `20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md` | **Archived out of the repo** — `~/Desktop/Dev/archived-repos-docs/20260727-docs-archive-pass/docs/`. Cross-app auth validation dev-deploy report (OAuth 2.1 + PKCE + JWKS, 5/5 pass). |
 | `20260427-dev-main-fork-rca-v1.00W.md` | dev ↔ main fork RCA (parent + crm7) — pre-reconcile gate analysis (recovered from a stash 2026-08-05) |
 | `20260506-supabase-linter-action-plan-v1.00W.md` | Supabase linter action plan — Phases 1+2 ready, Phase 3 deferred (recovered from a stash 2026-08-05; re-run the advisor before acting) |

@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: superseded
+---
+
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
@@ -6,7 +13,7 @@
 > # ⚠️ VERDICT: SUPERSEDED — dead coordination board
 >
 > Two-agent parallel task split ("Claude Code + Claude 2") for the reconciliation sweep. The work
-> it coordinates is **delivered** (see the sibling `20260301-reconciliation-phase1-implementation.md`
+> it coordinates is **delivered** (see the sibling `20260301-reconciliation-phase1-implementation-v1.00F.md`
 > banner); the coordination protocol is obsolete.
 >
 > Its `DO NOT TOUCH — Auth is Working` fence refers to a 2026-03 auth state that has since been
@@ -30,7 +37,7 @@
 
 **Goal:** Execute Phase 1 (Foundation) of the reconciliation sweep with two agents working in parallel on independent tracks.
 
-**Full Spec:** `docs/plans/20260301-reconciliation-phase1-implementation.md`
+**Full Spec:** `docs/plans/20260301-reconciliation-phase1-implementation-v1.00F.md`
 **Design Doc:** `docs/plans/20260301-reconciliation-sweep-information-flow-design-v1.00W.md`
 
 ---
@@ -109,7 +116,7 @@ C2:  [Task 2: BSU perms] → [Task 3: role mapping]    → [Task 6: Zod schemas 
 ## Task Details
 
 Full step-by-step instructions for each task are in the implementation plan:
-`docs/plans/20260301-reconciliation-phase1-implementation.md`
+`docs/plans/20260301-reconciliation-phase1-implementation-v1.00F.md`
 
 Read your assigned tasks from that file. Each task has:
 - Exact file paths to create/modify

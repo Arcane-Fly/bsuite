@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: delivered
+---
+
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (DELIVERED) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
@@ -10,7 +17,7 @@
 > **Evidence, live project `tuybltdrdefjblnplpqo` (2026-08-17):** edge functions
 > `oauth-google-email` (v93, ACTIVE) and `oauth-microsoft-email` (v94, ACTIVE), with
 > `email-token-refresh` (v62) handling rotation. Google Workload Identity Federation replaced the
-> static service-account key (see `20260305-wif-migration-plan-v1.00A.md`).
+> static service-account key (see `20260305-wif-migration-plan-v1.00F.md`).
 >
 > **Marker defect:** `W` on delivered work.
 >

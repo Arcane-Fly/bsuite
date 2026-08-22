@@ -1,7 +1,7 @@
 /**
  * RDO (Rostered Day Off) worked-vs-paid modelling.
  *
- * Source of truth: docs/references/20260730-rdo-flexibility.md. MA000020
+ * Source of truth: docs/references/20260730-rdo-flexibility-v1.00W.md. MA000020
  * cl.16.2: 8h worked / 7.6h paid / 0.4h banked per day, 19-worked-day cycle.
  * Coverage required by the RDO deliverable brief:
  *   1. no-RDO (worked == paid)

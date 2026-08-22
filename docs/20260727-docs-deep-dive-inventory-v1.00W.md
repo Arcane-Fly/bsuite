@@ -81,11 +81,11 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | 20260629-bsuite-world-class-audit-tracker-v1.00W.md | Vercel + world-class audit tracker | I | Rows "In progress"; Batch E "pending deploy"; merge "BLOCKED" | keep |
 | 20260629-bsuite-world-class-feature-inventory-v1.00W.md | Cross-app feature/entity/role inventory | L | Standing reference (WC-008…012 verified) | keep (living) |
 | 20260629-vercel-production-launch-runbook-v1.00W.md | Vercel Pro launch/incident/rollback runbook | L | Runbook; PARTIAL rows (CSP, Sentry, rate limiting) | keep (living) |
-| 20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00W.md | OAuth→setSession bridge yields 200 RLS reads | C | `conduit/src/app/auth/callback/page.tsx:119-177` (setSession+poll+throw) | archive |
+| 20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md | OAuth→setSession bridge yields 200 RLS reads | C | `conduit/src/app/auth/callback/page.tsx:119-177` (setSession+poll+throw) | archive |
 | 20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md | 5/5 apps PASS auth bridge validation | C | `conduit/src/app/auth/callback/page.tsx:119-177` | archive |
 | 20260722-developer-portal-investigation-v1.00W.md | Read-only investigation of 5 dev-portal pages | I | "No code changes"; FeatureBuilder "3/8 live" finding STALE (`FeatureBuilder/index.tsx:39-46` all `live:true`) | keep |
 | 20260722-visual-qa-d-apps-v1.00W.md | Visual QA sweep; "ALL ITEMS CLOSED" | C | `conduit/src/services/pipelineService.ts:64-68`; `useAIChat.ts:76`; PRs crm7#1191/conduit#368/BSU#576/R80#342/throughput#250 | archive |
-| 20260723-Anytime-WorkforceOne-Admin-Guide.md | Competitor (Code House AnyTime) admin guide | L | Static crawled competitor reference | keep (living) |
+| 20260723-anytime-workforceone-admin-guide-v1.00W.md | Competitor (Code House AnyTime) admin guide | L | Static crawled competitor reference | keep (living) |
 | 20260723-bsuite-capability-matrix-v1.00W.md | Competitor capability matrix + ledger | I | P0 resolved; P1/P2 open; watch `crm7/package.json:61` schema-builder `^0.7.3` | keep |
 | 20260724-bsuite-vercel-env-inventory-v1.00W.md | Per-app Vercel prod env-var inventory | L | Inventory; email-ingestion env "not yet present" | keep (living) |
 | 20260724-oneshot-cross-cutting-audit-v1.00W.md | One-shot DRY audit; 5 violations fixed | I | crm7#469/#470/#471 open; bsuite#1610 LocalisedDateInput open | keep |
@@ -99,9 +99,9 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | NEW_ISSUES_FOUND.md | Append-only pre-existing-issue ledger | L | Append-only ledger | keep (living) |
 | OUTSTANDING.md | Single outstanding-work index (SSoT) | L | "Updated 2026-07-08" SSoT | keep (living) |
 | README.md | Parent docs navigation index | L | Nav hub | keep (living) |
-| 00-roadmap/20260112-master-roadmap-1.00W.md | Master planning roadmap | L | Last updated 2026-07-26/27; active checkboxes | keep (living) |
-| 00-roadmap/20260725-excellence-closeout-implementation-plan-1.00W.md | Excellence close-out impl plan (T0–Tn) | I | Unchecked AC boxes; explicit DEFER items | keep |
-| 00-roadmap/20260725-qwen-excellence-integration-plan-1.00W.md | Qwen excellence integration plan (W1–W6) | I | Status W; DEFER list | keep |
+| 00-roadmap/20260112-master-roadmap-v1.00W.md | Master planning roadmap | L | Last updated 2026-07-26/27; active checkboxes | keep (living) |
+| 00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md | Excellence close-out impl plan (T0–Tn) | I | Unchecked AC boxes; explicit DEFER items | keep |
+| 00-roadmap/20260725-qwen-excellence-integration-plan-v1.00W.md | Qwen excellence integration plan (W1–W6) | I | Status W; DEFER list | keep |
 | adr/ADR-0001-page-builder-ownership.md | CRM7 custom_pages canonical; BSU layouts dropped | L | `business-suite-unified/supabase/migrations/20260502000000_drop_tenant_page_layouts.sql` | keep (living) |
 | adr/ADR-0002-schema-builder-ownership.md | CRM7 owns tenant_entities/field_definitions | L | Decision doc | keep (living) |
 | adr/ADR-0003-consumer-renderer-pattern.md | Per-app renderers, no shared npm package | L | Decision doc | keep (living) |
@@ -137,7 +137,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | plans/20260504-typescript-6-migration-evaluation-v1.00A.md | TS 5→6 migration across 6 apps (bsuite#211) | C | TS `~6.0.3`/`^6.0.3` in crm7:198, R80.3:126, conduit:108, braden:143, throughput:94, BSU:158 | archive |
 | plans/20260506-codehouse-parity-and-platform-360-v1.00W.md | Index for 35 parity gaps + Platform-360 | I | §2 "delivers WS-A1+A4+D scaffolding+E spec only"; rest deferred | keep |
 | plans/20260506-codehouse-parity/20260506-portal-*.md (9 files: braden-marketing, bsu-admin, bsu-tenant-admin, conduit-candidate, conduit-careers, conduit-employer, conduit-recruiter, crm7-internal, r80-3-calculator) | Per-portal gap specs | I | Pervasive `(TODO: audit)` RLS rows; missing tables + unshipped edge fns (`sms-dispatcher`, `stp-submit`, `verify-right-to-work`, `e-sign-offer`) | keep |
-| plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec.md | WS-E dev-only `/dev/feature-builder` spec | I | `status: W`; paths "(planned)"; route not built | keep |
+| plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md | WS-E dev-only `/dev/feature-builder` spec | I | `status: W`; paths "(planned)"; route not built | keep |
 | plans/20260506-codehouse-parity/README.md | Index of 9 portal sub-plans + spec | L | Pure INDEX | keep (living) |
 | plans/20260507-feature-builder-ux-red-team-v1.00W.md | FB UX red-team + Phase 0.5 | I | "under review"; §3 P1 frictions open | keep |
 | plans/20260510-universal-canvas-capability-implementation-v1.00W.md | Systemic canvas/drag fix across 6 apps | I | `status: W (not yet executed)` | keep |
@@ -151,7 +151,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | plans/20260617-product-tails-continuation-prompt-v1.00W.md | Handoff prompt for remaining product tails | I | Open scope table | keep |
 | plans/20260618-recruitment-comms-rams-cluster-plan-v1.00A.md | Cluster SHIPPED + prod-verified 2026-06-24 | I | conduit#221/#225/#227/#229 CLOSED; §4 ADMS APIM-key / RAMS final-lodgement gap open | keep |
 | plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md | Subordinated remaining-work roadmap | I | CRM7 wizards #659-#662 blocked; R80.3#320 OPEN; #1322/#479 operator-blocked | keep |
-| plans/20260629-remaining-work-continuation-prompt.md | Continuation prompt for 0629 roadmap | I | Points at open items | keep |
+| plans/20260629-remaining-work-continuation-prompt-v1.00W.md | Continuation prompt for 0629 roadmap | I | Points at open items | keep |
 | plans/20260701-docs-plans-closure-audit-v1.00W.md | Working closure audit + execution log | I | conduit#218/#219/#231 + crm7#1090 CLOSED; §12.3 deploy fix pending | keep |
 | plans/20260703-gto-e2e-gap-map-v1.00W.md | W1 file-grounded gap map of GTO cycle | I | `boot_assessments`/`charge_rate_audit_log`/`award_rate_cache` missing live; stages 3/6 MISSING | keep |
 | plans/20260703-unified-authoring-surface-plan-v1.03A.md | In-context authoring surface; Phase-1 authorized | I | §11 BLOCKING pre-work + §10 open; not executed | keep |
@@ -166,7 +166,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | plans/20260724-recurring-bugs-blindspots-refined-v1.00D.md | Refined prompt for recurring-bugs ledger | I | Analysis-only | keep |
 | plans/20260725-docs-deadcode-archive-refined-v1.00D.md · plans/20260725-gto-excellence-program-refined-v1.00D.md · plans/20260725-gto-persona-excellence-design-v1.00D.md | Refined prompts / persona design (Draft) | I | Prompt/design artifacts; not closure exports | keep |
 | plans/codehouse-parity/PARITY-569-pay-item-groups-spec.md | Pay Item Groups parity spec; PR-A–F merged | I | PR-A–F merged (crm7#950-#955); PR-G "npm publish blocked" (bsuite#1363) | keep |
-| plans/inputs/20260506-codehouse-parity-prompt-enhancer-output.md | prompt-enhancer provenance output | I | One-off prompt output | keep |
+| plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md | prompt-enhancer provenance output | I | One-off prompt output | keep |
 | plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md | Loop contract for GTO E2E cycle W0-W7 | I | W2-W7 success conditions unmet | keep |
 | plans/loop-contracts/recruitment-comms-rams-loop-contract.md | Loop contract for recruitment cluster | I | STATE table stale; RAMS/ADMS gap | keep |
 | plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md | Unified design-language doctrine (Approved) | L | Doctrine cited by INDEX + Reports W2 | keep (living) |
@@ -243,19 +243,19 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | 20260724-org-documents-feature-v1.00W.md | Org-admin documents + assignment + ack | C | migration `20260724090000_org_documents.sql`, `orgDocumentService.ts`(+test), `pages/settings/org-documents.tsx`, `portal/org-documents.tsx` | archive |
 | 20260726-email-entity-assignment-feature-v1.00W.md | Link emails to entities via join table | C | migration `20260726090000_email_message_links.sql`, `emailLinkService.ts`, `email-link-tools.ts` | archive |
 | adr/0004-stp-xero-passthrough.md | CRM7 delegates STP to Xero | L | `src/lib/pipelines/xeroPayrollAdapter.ts:29 XERO_BATCH_SIZE=50`, `:245-246` | keep (living) |
-| adr/20260423-calc-engine-single-source.md | charge-calc single-source engine | L | `src/utils/crmCalcBridge.ts`(+test) | keep (living) |
-| adr/20260525-contacts-clients-leads-canonical-source.md · adr/20260525-host-employer-table-canonicalization.md | 3-table retention / host-employer canonicalization | L | ADRs; `20260525120000_canonicalize_host_employers_to_employers.sql` | keep (living) |
+| adr/20260423-calc-engine-single-source-v1.00W.md | charge-calc single-source engine | L | `src/utils/crmCalcBridge.ts`(+test) | keep (living) |
+| adr/20260525-contacts-clients-leads-canonical-source-v1.00W.md · adr/20260525-host-employer-table-canonicalization-v1.00W.md | 3-table retention / host-employer canonicalization | L | ADRs; `20260525120000_canonicalize_host_employers_to_employers.sql` | keep (living) |
 | adr/README.md | ADR index | L | Lists 3 ADRs but 4 exist; two labeled "ADR-002" (collision) | keep (living); fix |
 | architecture/20260316-crm7-ai-sessions-schema-v1.00W.md | `ai_sessions`/`ai_messages` schema | I | Tables exist (`20260312000000_create_ai_sessions_messages.sql`); "UI cost tracking P2-2 not implemented" | keep |
 | architecture/README.md · archive/README.md · deployment/README.md · guides/README.md · operations/README.md · plans/README.md · plans/STATUS.md · reference/README.md · troubleshooting/README.md | Indexes / mount points | L | Index/pointer docs | keep (living) |
 | operations/20260610-migration-history-post-baseline-drift-v1.00W.md | Migration-history drift audit + hotfix | I | "#831 not closed by this hotfix"; pre-baseline reconciliation outstanding | keep |
-| plans/20260423-bsuite-gto-master-plan-v1.00W.md · plans/20260423-ws3-to-ws9-implementation-plan.md | 8-workstream GTO master plan + WS-3..9 detail | I | STATUS = IN-PROGRESS; billing/funding carry residual money bugs; AVETMISS variants, LLN UI, annual reconciliation remain | keep |
+| plans/20260423-bsuite-gto-master-plan-v1.00W.md · plans/20260423-ws3-to-ws9-implementation-plan-v1.00W.md | 8-workstream GTO master plan + WS-3..9 detail | I | STATUS = IN-PROGRESS; billing/funding carry residual money bugs; AVETMISS variants, LLN UI, annual reconciliation remain | keep |
 | reference/20260310-crm7-magicui-pattern-guide-v1.00W.md · reference/20260310-crm7-reference-surface-pack-v1.00W.md | Magic UI patterns / 5 reference surfaces | L | Design standard; `src/pages/Dashboard.tsx`, `reports/index.tsx` | keep (living) |
 | reference/20260317-crm7-boot-assessment-ui-v1.00W.md | BOOT assessment UI reference | L | `bootAssessmentStore.ts`, `pages/compliance/boot/`, `lib/rates/bootGate.ts`; cites charge-calc `^0.2.0` (actual `^0.5.0`) | keep (living); fix version |
 | reference/20260317-crm7-feature-flags-v1.00W.md | LAUNCH_FLAGS registry reference | L | DRIFT: claims `xero_integration:false` but `useFeatureFlags.ts:73 xero_integration:true`; "36 flags" stale | keep (living); fix |
 | reference/20260317-crm7-xero-integration-v1.00W.md | Xero OAuth + payroll reference | L | Partly superseded by 20260706 doc; plaintext-vs-Vault contradiction | keep (living); mark supersession |
-| 00-roadmap/20260226-crm7-master-roadmap-v1.00WA.md | CRM7 master roadmap | I | Banner "ARCHIVED 2026-03-16" contradicts `00-roadmap/README.md` "LIVE"; stale Feb-2026 snapshot | keep; resolve contradiction |
-| 00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md · 00-roadmap/README.md | Combined foundations + GTO overlay / index | I/L | Status "1.00W (Working)"; 5-phase plan in flight | keep |
+| 00-roadmap/20260226-crm7-master-roadmap-v1.00A.md | CRM7 master roadmap | I | Banner "ARCHIVED 2026-03-16" contradicts `00-roadmap/README.md` "LIVE"; stale Feb-2026 snapshot | keep; resolve contradiction |
+| 00-roadmap/20260424-bsuite-combined-foundations-and-gto-v1.00W.md · 00-roadmap/README.md | Combined foundations + GTO overlay / index | I/L | Status "1.00W (Working)"; 5-phase plan in flight | keep |
 
 ### INCOMPLETE ledger (crm7) — by leverage
 

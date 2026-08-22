@@ -1,3 +1,10 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: superseded
+---
+
 <!-- G5-VERDICT-BANNER -->
 > **VERDICT (SUPERSEDED) recorded 2026-08-17** — full reasoning and evidence in
 > [`docs/20260817-recovered-verdict-backlog-v1.00W.md`](../20260817-recovered-verdict-backlog-v1.00W.md).
@@ -22,7 +29,7 @@
 
 # BSuite Launch-Ready Design — Compete Immediately
 
-**Document ID:** 20260303-bsuite-launch-ready-design-v1.00D.md
+**Document ID:** 20260303-bsuite-launch-ready-design-v1.00F.md
 **Status:** Draft
 **Date:** 2026-03-03
 **Author:** Claude Code (Opus 4.6)

@@ -137,4 +137,4 @@ assumption.
 
 Nothing deletes anything today: confirm the cron schedule is registered before assuming data is
 already ageing out — three cleanup functions in this database are scheduled on zero jobs
-(`20260811-scheduled-job-coverage-investigation-1.00W.md`).
+(`20260811-scheduled-job-coverage-investigation-v1.00W.md`).

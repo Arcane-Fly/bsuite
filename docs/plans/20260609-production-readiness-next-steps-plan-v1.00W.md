@@ -654,7 +654,7 @@ Use this inventory before any report-page, report-template, report-delivery, or 
 ### CRM7 docs/plans
 
 - `crm7/docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md` - CRM7 GTO master plan.
-- `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-1.00W.md` - combined foundations/GTO roadmap.
+- `crm7/docs/00-roadmap/20260424-bsuite-combined-foundations-and-gto-v1.00W.md` - combined foundations/GTO roadmap.
 - `crm7/docs/CONSISTENCY-REPORT.md` - CRM7 consistency report.
 - Historical CRM7 reporting archive docs under:
   - `crm7/docs/archive/20251015-report-implementation-complete-v1.00A.md`
