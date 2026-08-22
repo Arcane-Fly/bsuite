@@ -48,6 +48,25 @@ async function walk(dir) {
     const lines = content.split(/\r?\n/);
     lines.forEach((line, index) => {
       if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
+      // A line that FORBIDS the pattern is not an implementation of it.
+      //
+      // This gate already skips oauth-contract.test.ts for the same reason its own
+      // comment gives: "the test files necessarily contain the literals. They are the
+      // guard, not a violation." That is one instance of a general shape, and here is
+      // the second — business-suite-unified/src/lib/manuals/blocks/shared.ts:88 is
+      // MANUAL PROSE that reads:
+      //
+      //   'Redirect URIs are exact-match `{origin}/auth/callback`; never add
+      //    `cookieStorage` or `domain=.crm7.app`.'
+      //
+      // The security gate was failing on the sentence that forbids the thing. A
+      // security gate that cries wolf on its own documentation gets ignored, and then
+      // a real cookieStorage walks past it.
+      //
+      // Narrow on purpose: the prohibition word must be on the SAME line, so an actual
+      // config line cannot be excused by a "never" elsewhere in the file. It also
+      // catches trailing comments, which the full-line check above does not.
+      if (/\b(never|do not|don't|must not|forbidden|deprecated|banned|no longer)\b/i.test(line)) return;
       forbidden.forEach(({ label, pattern }) => {
         pattern.lastIndex = 0;
         if (pattern.test(line)) {
