@@ -59,7 +59,7 @@ follow this layout:
 
 | Submodule | Status | Evidence |
 |-----------|--------|----------|
-| crm7 | ✅ Clean | `scripts/phase7-5-dialog-title-sweep.mjs` returns 0 findings; static-test `wcag-static.test.ts` enforces parity going forward |
+| crm7 | ✅ Clean | `crm7/scripts/phase7-5-dialog-title-sweep.mjs` returns 0 findings; static-test `wcag-static.test.ts` enforces parity going forward |
 | conduit | ✅ Clean | `src/test/wcag-static.test.ts` enforces DialogTitle parity in CI |
 | business-suite-unified | ✅ Fixed | PR `fix/wcag-dialog-titles-2026-05-04` (#285) — hoisted `InviteDialog` title out of conditional form mount |
 | R80.3 | ⊘ N/A | No Radix Dialog/Sheet usage in this app |

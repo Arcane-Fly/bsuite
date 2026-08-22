@@ -1,0 +1,68 @@
+name: Table reach
+
+# A table that exists and nothing reads is invisible work.
+#
+# 2026-08-22: `rate_adjustments` and `billing_cycles` were created in production with
+# correct columns, correct RLS, and four per-operation policies each — and NO
+# APPLICATION REFERENCES EITHER. The migration was green, the schema was right, and no
+# user could reach a single row.
+#
+# That is the estate's dominant failure mode in its database form: built, correct, and
+# not reaching the screen. Every existing gate measured whether a migration APPLIED.
+# None measured whether anything then USED it.
+#
+# THIS GATE REPORTS; IT DOES NOT FAIL THE BUILD. 164 of 462 tables are currently
+# unreached and most are legitimate — audit logs written by triggers, queue tables
+# driven by pg_cron, join tables read only through an embed. A gate that fails on 164
+# mostly-legitimate rows teaches everyone to ignore it.
+#
+# The self-test DOES fail the build, because a broken detector reporting zero is worse
+# than no detector: it reads as a clean estate.
+#
+# NO `paths:` FILTER — same two reasons as the sibling gates. The change that matters
+# lands inside a SUBMODULE and the parent tree holds only a gitlink, so a path filter
+# can never match it; and a path-filtered required check never reports on a PR that
+# misses the filter, leaving it to wait forever.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: table-reach-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  table-reach:
+    name: Tables created with no application reach
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
+          # `submodules: recursive` fails at checkout. Same fallback chain the other
+          # submodule-consuming workflows here use.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # 27 self-tests, of which 13 are regressions for false positives and false
+      # negatives this detector produced on its own first four runs. The count moved
+      # 212 -> 196 -> 165 -> 164 and every step was a detector bug, not an estate
+      # change. This step failing means the scan below cannot be believed.
+      - name: Self-test the detector
+        run: node scripts/check-table-reach.mjs --self-test
+
+      # Positive controls inside the script exit 3 if the migration tree, the source
+      # tree, the parsed-table count or the referenced-table count come back too small
+      # — each of which would otherwise produce a short, clean-looking list.
+      - name: Report tables with no application reach
+        run: node scripts/check-table-reach.mjs

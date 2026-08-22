@@ -1,3 +1,14 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite-platform
+evidence:
+  - .github/workflows/security-audit.yml
+  - scripts/check-unmet-peer-deps.mjs
+  - scripts/check-published-peer-ranges.mjs
+  - scripts/check-lockfile-hygiene.mjs
+---
+
 # Universal WYSIWYG + Schema UX Master Plan — v1.07W
 
 **Date:** 2026-05-01 (revised 2026-05-05, seventh pass)
@@ -906,11 +917,24 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
    `scripts/pnpm-audit-all.sh`. High-severity issues are fixed within
    48 hours; moderate within 7 days.
 
+   > **DELIVERED 2026-08-22, under a different name and on a tighter cadence.**
+   > `scripts/pnpm-audit-all.sh` was never written. `.github/workflows/security-audit.yml`
+   > runs `pnpm audit --audit-level=high --prod` across every submodule app on a
+   > **daily** cron (`0 2 * * *`), not weekly. The obligation is met; the filename in
+   > this item is not the thing that meets it.
+
 7. Base-stack-only rule (per v1.02W §2.5): no new runtime dependency may
    be added to any app or shared package without updating §2.5 + §6 of
    the master plan in the same PR. A CI lint script
    (`scripts/check-base-stack-only.sh`, delivered in Phase 6) diffs each
    PR's package.json changes against the allow-list and blocks on violation.
+
+   > **STILL OPEN as at 2026-08-22 — this is the one item on this list that was not
+   > delivered under another name.** Nothing in `scripts/` or `.github/workflows/`
+   > gates a new runtime dependency against an allow-list; the only allow-list in the
+   > estate is `migration-collision-allowlist.txt`, which is unrelated. The rule is
+   > written down and unenforced, which is the weakest of the three possible states —
+   > weaker than having no rule, because a rule on paper reads as a control.
    The script can reuse the same `pnpm dlx syncpack@latest list-mismatches`
    invocation used for peer-dep enforcement (item 8), extended with an
    allow-list check against the §2.5 + §6 tables so one tool catches both
@@ -927,6 +951,14 @@ Per user direction (2026-05-01): *"Before building new features, consolidate the
      - `scripts/check-peer-deps.sh` wrapping
        `pnpm dlx syncpack@latest list-mismatches` with a non-zero exit on
        any detected mismatch
+
+       > **DELIVERED by a different mechanism.** syncpack was never adopted — there is
+       > no `.syncpackrc.json`. Peer-dependency enforcement ships as
+       > `scripts/check-unmet-peer-deps.mjs` (an app must satisfy each `@bsuite/*`
+       > package's peers at a version that package accepts) and
+       > `scripts/check-published-peer-ranges.mjs` (which reads what the REGISTRY
+       > serves rather than what the source says). Same obligation, stricter source
+       > of truth.
      - Husky `.husky/pre-push` hook calling the script for fast local
        fail-before-push
      - GitHub Actions required status check `peer-deps-aligned` calling

@@ -33,8 +33,8 @@ Each was invisible to the eye and obvious to a script.
 | **G2** | Only contract colours in `packages/` | `scripts/audit-palette-whitelist.py` | **0** |
 | **G3** | No palette bypasses in app source | `scripts/audit-d2c-theme.sh` (C3 col) | **0** real per app |
 | **G4** | No app redeclares a package-owned token | `scripts/audit-token-ownership.sh` | **0** |
-| **G5** | Heading ramp reaches the DOM | `scripts/audit-applied-tokens.sh` | h1–h6 all resolve to distinct `--role-h*` |
-| **G6** | One font family, from the contract | `scripts/audit-applied-tokens.sh` | Geist (D2C) / Open Sans (Corporate), no Inter |
+| **G5** | Heading ramp reaches the DOM | `scripts/audit-applied-tokens.mjs` | h1–h6 all resolve to distinct `--role-h*` |
+| **G6** | One font family, from the contract | `scripts/audit-applied-tokens.mjs` | Geist (D2C) / Open Sans (Corporate), no Inter |
 | **G7** | Every app builds | `pnpm build` × 6 | exit 0 |
 | **G8** | Every suite passes | `pnpm test` × 6 + packages | exit 0 |
 | **G9** | Shared packages import under Node ESM | `scripts/verify-esm-imports.sh` | PASS |

@@ -692,14 +692,14 @@ Each of these passed every static gate available.
 > complete (§11.3). It is held because regeneration has a consequence neither PI nor I anticipated
 > — it silently drops every migration-seeded row (§11.7) — and closing that requires a per-table
 > privacy ruling on which reference rows may be committed to git. The gate script
-> (`scripts/replay-schema-diff.sh`) IS merged, so the finding is reproducible on demand and nothing
+> (`crm7/scripts/replay-schema-diff.sh`) IS merged, so the finding is reproducible on demand and nothing
 > is lost by waiting.
 
 Assigned by PI to the supervisor lane after §9.2/§9.3, with the gate stated as: *a regenerated
 baseline must be proven by a **full replay into an empty database** producing a schema that matches
 live, **with the diff shown** — not "it applied cleanly".*
 
-### 11.1 The instrument came first — `crm7 scripts/replay-schema-diff.sh`
+### 11.1 The instrument came first — `crm7 crm7/scripts/replay-schema-diff.sh`
 
 Throwaway Docker Postgres 17, own port, removed on exit; never touches production or a local
 Supabase. Applies the baseline, marks its versions, replays every post-baseline migration, then
