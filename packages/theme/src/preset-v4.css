@@ -68,6 +68,12 @@
   --color-bg-input:      var(--role-bg-input);
   --color-bg-sunken:     var(--role-bg-sunken);
   --color-border-strong: var(--role-border-strong);
+  /* `--role-border-interactive` was minted for bsuite#1958 and bound to
+     shadcn's `--input` in vars.css, but never given a Tailwind utility here —
+     so `border-interactive` did not exist and anything reaching for it fell
+     back to `border-border` at 2.26:1 dark / 1.27:1 light. Exposing it is what
+     lets an interactive boundary actually be picked. */
+  --color-border-interactive: var(--role-border-interactive);
 
   /* ============================================================
      LAYER 3 — Text scale
@@ -102,6 +108,7 @@
   --color-warning-text: var(--role-warning-text);
   --color-success-text: var(--role-success-text);
   --color-info-text:    var(--role-info-text);
+  --color-secondary-text: var(--role-secondary-text);
 
   /* Informational scale — CATEGORICAL, never state. `bg-info-3`, `text-info-5`.
      Numbered because they are interchangeable slots with no meaning of their
@@ -363,4 +370,35 @@
 @keyframes shine {
   0%   { transform: translateX(-100%) skewX(-15deg); }
   100% { transform: translateX(200%)  skewX(-15deg); }
+}
+
+/* ============================================================
+   NATIVE <dialog> — restore the centring Preflight removes.
+
+   A modal dialog is centred by the user-agent stylesheet, via two rules
+   working together:
+
+     dialog        { margin: auto; }
+     dialog:modal  { position: fixed; inset: 0; }
+
+   `inset: 0` alone would stretch the box; it is `margin: auto` that resolves
+   the free space equally on both axes and centres it. Tailwind Preflight
+   emits `*, ::before, ::after, ::backdrop { margin: 0 }` from the AUTHOR
+   origin, which beats the user-agent origin, so the margin collapses and every
+   `showModal()` dialog resolves to the top-left corner of the viewport.
+
+   Measured on the deployed schema builder before this rule existed: the
+   relationship dialog sat at x:0, y:0 with `margin: 0px`, on top of the
+   settings nav. A synthetic dialog injected with the same class string and
+   nothing else measured identically, which isolates the cause to the cascade
+   rather than to any component. All five native dialogs in
+   @bsuite/schema-builder were affected.
+
+   `dialog:modal` is specificity (0,1,1) against Preflight's (0,0,0), so this
+   wins on specificity and does not depend on import order. Scoped to `:modal`
+   so a non-modal `dialog` used as an inline popover or an edge-anchored drawer
+   keeps whatever positioning its author gave it.
+   ============================================================ */
+dialog:modal {
+  margin: auto;
 }

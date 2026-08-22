@@ -31,6 +31,7 @@ import {
 } from 'react';
 
 import { useDismissOnOutsideOrEscape } from '../hooks/useDismissOnOutsideOrEscape.js';
+import { useDocumentColorMode } from '../hooks/useDocumentColorMode.js';
 import type { SchemaController } from '../hooks/useSchemaController.js';
 import type { RenamePhysicalColumnResult } from '../service.js';
 import type {
@@ -76,11 +77,38 @@ const edgeTypes = { smart: SmartEdge };
  * only the persistence-side parse is gone.
  */
 
+/**
+ * React Flow ships its own palette as raw hex, split into `-default` values
+ * under `.react-flow` and `.react-flow.dark`. Even with `colorMode` set
+ * correctly that palette is the library's, not the tenant's: the minimap ground
+ * would be #fff in light and #141414 in dark regardless of what the surface
+ * behind it actually is.
+ *
+ * `-props` is the layer the library reserves for the consumer (it is what the
+ * component props write to), so overriding it here does not fight the
+ * stylesheet's own cascade. Every value is a role token, so both themes and any
+ * tenant branding follow automatically and nothing here needs a dark variant.
+ */
+const XY_TOKEN_BINDINGS = {
+  '--xy-minimap-background-color-props': 'var(--role-bg-panel)',
+  '--xy-minimap-mask-background-color-props': 'var(--role-bg-body)',
+  '--xy-minimap-mask-stroke-color-props': 'var(--role-border-interactive)',
+  '--xy-minimap-node-background-color-props': 'var(--role-primary)',
+  '--xy-minimap-node-stroke-color-props': 'var(--role-border-interactive)',
+  '--xy-controls-button-background-color-props': 'var(--role-bg-panel)',
+  '--xy-controls-button-background-color-hover-props': 'var(--role-bg-body)',
+  '--xy-controls-button-color-props': 'var(--role-text-body)',
+  '--xy-controls-button-color-hover-props': 'var(--role-text-body)',
+  '--xy-controls-button-border-color-props': 'var(--role-border-interactive)',
+} as React.CSSProperties;
+
 function stylesForRelation(type: RelationType) {
   return {
+    // Must stay in step with `strokeStyle` in edges/SmartEdge.tsx — see the
+    // 1.4.11 note there for why this is the -text sibling, not --role-secondary.
     stroke:
       type === 'inherits_from'
-        ? 'var(--role-secondary)'
+        ? 'var(--role-secondary-text)'
         : 'var(--role-primary)',
     strokeWidth: 2,
   };
@@ -147,6 +175,7 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
       Edge
     > | null>(null);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
+    const colorMode = useDocumentColorMode();
 
     useDismissOnOutsideOrEscape(quickStartRef, quickStartVisible, () =>
       setQuickStartVisible(false),
@@ -774,8 +803,27 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           flowRef.current = inst;
         }}
         fitView
+        // React Flow's default minZoom is 0.5 and `fitView` will not go below
+        // it. 44 entities are ~1540px wide and thousands tall, so fitView hit
+        // the clamp, gave up, and showed roughly a third of the diagram at a
+        // scale where field text rendered at 4.5-7 device px. Measured
+        // viewport transform before this line existed: exactly scale(0.5).
+        minZoom={0.05}
+        maxZoom={2}
+        // Without this the class never lands on `.react-flow`, and the library
+        // stylesheet keeps its own #fff for the minimap in BOTH themes.
+        colorMode={colorMode}
+        // Default was Backspace only, so the Delete key silently did nothing.
+        deleteKeyCode={['Delete', 'Backspace']}
         nodeDragThreshold={8}
         aria-label="Entity relationship diagram"
+        // Bind React Flow's own palette to brand tokens. `colorMode` alone only
+        // moves the minimap from the library's #fff to the library's #141414 —
+        // still two raw hex literals this estate does not own, and still not
+        // whatever the tenant's surface actually is. These are the documented
+        // `-props` override points, set once on the container so they inherit
+        // to the minimap, the controls and the attribution together.
+        style={XY_TOKEN_BINDINGS}
       >
         <Background gap={16} />
         <Controls showInteractive={false} />
