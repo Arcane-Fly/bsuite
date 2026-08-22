@@ -1,5 +1,10 @@
 # BSU + braden + throughput — Documentation-vs-Code Audit
 
+> ## ⚠ POINT-IN-TIME RECORD — the state of three apps on 2026-07-25
+> A READ-ONLY audit records what it found on its date. Source paths cited below that no
+> longer resolve are correct for the date they describe and are deliberately not
+> rewritten. Read it as history, never as a live file list.
+
 **Audit date:** 2026-07-25
 **Scope:** `business-suite-unified`, `braden`, `throughput` (non-archive docs only)
 **Mode:** READ-ONLY — no code changes, no git operations

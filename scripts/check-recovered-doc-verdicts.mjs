@@ -84,7 +84,12 @@ const NOT_SUBJECT = new Map([
  * Raising it requires an operator ruling, because raising it means a document
  * was added to an authoritative directory without a verdict.
  */
-const MAX_UNVERDICTED = 8
+// ZERO, as of 2026-08-22 — all 33 are verdicted. The ratchet's own instruction is to lower
+// the ceiling in the commit that banners a document, and this is the commit that banners
+// the last eight. At 0 the gate stops being a ratchet and becomes absolute: a new document
+// arriving in this authoritative-but-untrusted directory without a verdict fails
+// immediately, with no headroom to absorb it.
+const MAX_UNVERDICTED = 0
 
 /**
  * YAML FRONTMATTER IS NOT PART OF THE WINDOW.

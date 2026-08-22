@@ -109,6 +109,29 @@ let checked = 0
  * docs and dated audits. Counting them buries the citations that ARE
  * actionable, which is the only reason to run this at all.
  */
+/**
+ * A SPECIFICATION NAMES FILES IT PROPOSES TO CREATE. Those are not citations.
+ *
+ * `docs/20260507-admin-parity-spec-v1.00W.md` declares itself in its own header:
+ * "research-lane specification, NOT YET IMPLEMENTED". Its eight unresolved paths are the
+ * destinations it proposes — `src/pages/settings/citb.tsx` and the rest — and reporting
+ * them as broken references says the spec is stale when what it actually is, is unbuilt.
+ *
+ * The distinction matters because the two want opposite responses. A stale citation should
+ * be repointed or removed; a proposed path should be left exactly as written until someone
+ * builds the thing or drops the plan. Editing a spec's file list to match a tree that does
+ * not contain it yet would destroy the only record of what was intended.
+ *
+ * NOT SUPPRESSED — counted and reported in its own line. A guard that quietly drops a
+ * category is the laundered waiver this estate broadcast about on 2026-08-22.
+ */
+const DECLARES_UNBUILT =
+  /\b(not yet implemented|not implemented|yet to be (?:built|implemented)|to be (?:built|created)|proposed (?:design|schema|structure)|research-lane specification)\b/i;
+
+export function isProposal(text) {
+  return DECLARES_UNBUILT.test(text.split('\n').slice(0, 12).join('\n'));
+}
+
 function isHistorical(text) {
   const head = text.split('\n').slice(0, 14)
   for (const l of head) {
@@ -131,6 +154,7 @@ for (const f of files) {
   const owner = APPS.find(a => relf.startsWith(a + '/')) || ''
   const raw = readFileSync(f,'utf8')
   if (isHistorical(raw)) { skippedHistorical++; continue }
+  const proposal = isProposal(raw)
   const lines = raw.split('\n')
   lines.forEach((ln,i) => {
     if (ln.trimStart().startsWith('>')) return
@@ -148,12 +172,12 @@ for (const f of files) {
       // a basename that is UNIQUE estate-wide, and not generic, is evidence.
       let moved = null
       const GENERIC = /^(index|types|utils|constants|helpers|config|schema|client|README|\[id\]|\[\.\.\.[a-z]+\])\.(ts|tsx|js|jsx|mjs|sql|css|json|md)$/i
-      if (GENERIC.test(base)) { const key0 = `${relf}|${p}`; if (!miss.has(key0)) miss.set(key0, { line: i+1, moved: null, generic: true }); continue }
+      if (GENERIC.test(base)) { const key0 = `${relf}|${p}`; if (!miss.has(key0)) miss.set(key0, { line: i+1, moved: null, generic: true, proposal }); continue }
       const hits = findAll(ROOT, base)
       if (hits.length === 1) moved = relative(ROOT, hits[0])   // unique => a real move
       else if (hits.length > 1) moved = null                    // ambiguous => not evidence
       const key = `${relf}|${p}`
-      if (!miss.has(key)) miss.set(key, { line: i+1, moved })
+      if (!miss.has(key)) miss.set(key, { line: i+1, moved, proposal })
     }
   })
 }
@@ -161,12 +185,21 @@ console.log(`documents skipped as HISTORICAL (verdict-bannered / dated-audit): $
 console.log(`source-path references checked: ${checked}`)
 console.log(`UNRESOLVED: ${miss.size}\n`)
 const byFile = new Map()
-let movedN = 0, goneN = 0, genericN = 0
+let movedN = 0, goneN = 0, genericN = 0, proposedN = 0
 for (const [k,v] of miss) { const [f,p] = k.split('|'); if(!byFile.has(f)) byFile.set(f,[])
-  if (v.moved) { movedN++; byFile.get(f).push(`MOVED  ${p} -> ${v.moved} (line ${v.line})`) }
+  if (v.proposal) { proposedN++; byFile.get(f).push(`PROPOSED ${p} — a spec naming a file it proposes to CREATE (line ${v.line})`) }
+  else if (v.moved) { movedN++; byFile.get(f).push(`MOVED  ${p} -> ${v.moved} (line ${v.line})`) }
   else if (v.generic) { genericN++; byFile.get(f).push(`AMBIG  ${p} — generic basename, not resolvable (line ${v.line})`) }
   else { goneN++; byFile.get(f).push(`GONE   ${p} (line ${v.line})`) } }
-console.log(`  of those: MOVED (unique basename, real move) ${movedN}, AMBIGUOUS (generic name) ${genericN}, GONE ${goneN}\n`)
+console.log(`  of those: MOVED (unique basename, real move) ${movedN}, AMBIGUOUS (generic name) ${genericN}, GONE ${goneN}, PROPOSED (unbuilt spec) ${proposedN}\n`)
+// PROPOSED is COUNTED, not dropped. A guard that quietly removes a category is the
+// laundered waiver the R80.4 lane broadcast about on 2026-08-22 — the aggregate is the
+// line anyone quotes, so the absent measurement has to be louder than the pass count.
+if (proposedN) {
+  console.log(`  ${proposedN} of the ${miss.size} are PROPOSED paths in specs that declare themselves unbuilt.`)
+  console.log('  Those are destinations, not citations. They resolve when the thing is built or')
+  console.log('  the plan is dropped — never by editing the spec to match a tree without it.\n')
+}
 // `--all` prints every doc and every reference. The default truncates to 14 docs and 4
 // references each, which is right for a terminal and wrong for anything that PARSES this
 // output: a fixer reading the report applied 10 of 15 MOVED references and then reported

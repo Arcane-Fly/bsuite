@@ -1,5 +1,12 @@
 # crm7 Docs↔Code Audit — v1.00W
 
+> ## ⚠ POINT-IN-TIME RECORD — the state of crm7 on 2026-07-25
+> A READ-ONLY audit records what it found on its date. Several source paths cited below
+> no longer resolve: files moved out to `conduit` and `packages/data-grid`, and others
+> were deleted outright. Those citations are CORRECT FOR THE DATE THEY DESCRIBE and are
+> deliberately not rewritten — editing an audit to match today would falsify the record
+> it exists to preserve. Read it as history, never as a live file list.
+
 **Date:** 2026-07-25
 **Scope:** `bsuite/crm7` — `docs/` (excluding `archive/`) and `docs/plans/` only
 **Mode:** READ-ONLY. No app source was mutated. Only this audit markdown was written (under parent `bsuite/docs/audits/`).

@@ -1,4 +1,20 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+verdict: not-this-estate
+---
+
 # Validate & Reorganize Railway Environment Variables
+
+> # VERDICT: NOT THIS ESTATE — recorded 2026-08-22
+>
+> The second of two recovered Railway environment-variable plans (see
+> `gleaming-fluttering-coral.md`). BSuite deploys on Vercel. Retained as a record, not as
+> instruction.
+>
+> The original document is unchanged below this banner.
+
 
 ## Context
 
