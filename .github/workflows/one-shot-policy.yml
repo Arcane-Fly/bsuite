@@ -1,0 +1,57 @@
+name: One-shot entity ownership
+
+# Every entity has exactly one owning app that provides the create/edit UI. Other apps
+# may READ it but never create or edit it independently
+# (docs/20260227-dry-one-shot-architecture-v1.04A.md §1).
+#
+# THIS SCRIPT EXISTED AND RAN NOWHERE. `audit-one-shot.mjs` was wired into no workflow
+# until 2026-08-22, while the one-shot policy sits in the operator's standing brief. A
+# policy measured by a script nobody runs is a policy on paper — the weakest of the
+# three possible states, weaker than having no policy, because it reads as a control.
+#
+# IT IS A RATCHET, NOT A BLOCKER. It currently finds 2 real violations, both status
+# updates on `leads` (CRM7-owned) from braden and business-suite-unified. Wiring it red
+# would block every PR in the estate on a question that needs a product ruling, and a
+# gate that cannot pass is a gate people route around. Baseline 2; fails only if the
+# count RISES.
+#
+# Proven in all three directions before wiring:
+#   baseline 2, count 2  -> exit 0
+#   baseline 1, count 2  -> exit 1, "RATCHET BROKEN: … A NEW app has forked an entity"
+#   baseline 3, count 2  -> exit 0, "1 paid down"
+#
+# NO `paths:` FILTER — the writes it looks for live inside SUBMODULES and the parent
+# tree holds only a gitlink, so a path filter can never match them; and a path-filtered
+# required check never reports on a PR that misses the filter.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: one-shot-policy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  one-shot:
+    name: No app writes an entity another app owns
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # The script exits 2 if the policy doc is missing or parses to zero entities —
+      # a scan over no ownership map would report zero violations and read as clean.
+      - name: Audit entity ownership
+        run: node scripts/audit-one-shot.mjs --list
