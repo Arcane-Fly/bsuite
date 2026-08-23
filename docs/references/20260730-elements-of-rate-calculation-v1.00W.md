@@ -1,3 +1,12 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite-lane
+evidence:
+  - scripts/check-placement-rate-provenance.mjs
+  - scripts/check-placement-award-code.mjs
+---
+
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
 > Paths under `R80.3/` below are HISTORICAL — the originals are in
@@ -592,10 +601,19 @@ Retrieve all penalty rate adjustments.
 
 # Cache & Fallback Architecture
 
-Source: `src/services/fairworkApi.ts`
-Tests: `src/tests/fairworkIntegration.test.ts` (happy path) and
-`src/tests/fairworkCacheFallback.test.ts` (cache + fallback behaviour, added in
-[PR #48](https://github.com/GaryOcean428/R80.3/pull/48)).
+> **Paths corrected 2026-08-22.** The three below were R80.3-era and no file of any of
+> those names exists anywhere in the estate today — `fairworkApi.ts` was replaced, not
+> renamed. The PR link is to `GaryOcean428/R80.3`, a repo that left the submodule set on
+> 2026-08-06, which is the tell.
+>
+> What serves this layer now: `crm7/src/services/fairworkEnhancedService.ts` on the app
+> side, and `business-suite-unified/supabase/functions/_shared/fairwork-client.ts` behind
+> the `fairwork-enhanced` and `fairwork-webhook` edge functions.
+
+~~Source: `src/services/fairworkApi.ts`~~
+~~Tests: `src/tests/fairworkIntegration.test.ts` (happy path) and~~
+~~`src/tests/fairworkCacheFallback.test.ts` (cache + fallback behaviour, added in~~
+~~[PR #48](https://github.com/GaryOcean428/R80.3/pull/48)).~~
 
 ## Why this layer exists
 
@@ -720,7 +738,7 @@ returns `[]` rather than throwing — the same code path as a real DB miss.
 
 The table summarises what each public function does at each layer. Every row
 is exercised by at least one test in
-[`src/tests/fairworkCacheFallback.test.ts`](../src/tests/fairworkCacheFallback.test.ts).
+~~`src/tests/fairworkCacheFallback.test.ts`~~ — **path retired: replaced, not renamed. See the correction at §Cache & Fallback Architecture.**.
 
 | Function                            | Layer 2 (live API)                                                                                              | Layer 3 (DB cache)                                                                                                                              | Final empty result    |
 |-------------------------------------|-----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------|
@@ -808,7 +826,7 @@ Around 1 July each year:
 
 ## Related references
 
-- [`src/services/fairworkApi.ts`](../src/services/fairworkApi.ts) — implementation
-- [`src/tests/fairworkCacheFallback.test.ts`](../src/tests/fairworkCacheFallback.test.ts) — fallback behaviour suite (PR #48)
-- [`src/tests/fairworkIntegration.test.ts`](../src/tests/fairworkIntegration.test.ts) — happy-path integration suite
+- ~~`src/services/fairworkApi.ts`~~ — **path retired: replaced, not renamed. See the correction at §Cache & Fallback Architecture.** — implementation
+- ~~`src/tests/fairworkCacheFallback.test.ts`~~ — **path retired: replaced, not renamed. See the correction at §Cache & Fallback Architecture.** — fallback behaviour suite (PR #48)
+- ~~`src/tests/fairworkIntegration.test.ts`~~ — **path retired: replaced, not renamed. See the correction at §Cache & Fallback Architecture.** — happy-path integration suite
 - [`docs/20260304-r80-external-wage-sources-reference-v1.00W.md`](../archive/README.md) *(archived — was `20260304-r80-external-wage-sources-reference-v1.00W.md`)* — alternative wage sources when neither layer is available
