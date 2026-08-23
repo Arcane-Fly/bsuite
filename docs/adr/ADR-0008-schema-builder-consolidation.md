@@ -37,7 +37,7 @@ Four near-identical React Flow schema builders existed across the BSuite:
 | crm7 (canonical) | `crm7/src/pages/settings/schema-builder/*` | ~1 620 |
 | business-suite-unified | `src/pages/Settings/SchemaBuilder.tsx` | ~480 |
 | conduit | `src/app/(dashboard)/settings/schema-builder/_view.tsx` | ~480 |
-| R80.3 | `src/components/SchemaBuilderView.tsx` | ~440 |
+| R80.3 | ~~`src/components/SchemaBuilderView.tsx`~~ (R80.3 path — that repo left the submodule set on 2026-08-06; this row is the pre-consolidation record) | ~440 |
 
 All four implemented the same drag-to-connect, relationship dialog, smoothstep
 edges, position persistence, and delete handling. None implemented field-level

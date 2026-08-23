@@ -109,8 +109,8 @@ There is **no bulk-update path anywhere** in any app, for any tier.
 Meanwhile the same repo already ships:
 
 - `supabase/functions/platform-kit-proxy/index.ts` (618 lines) exposing `/db/tables`, `/db/rows`, **`/db/columns`**, **`/db/indexes`**, **`/db/policies`**, and a `/dynamic-tables/*` entity browser — with a pinned project ref, a destructive-endpoint blocklist, and `assertPublicTable()` validation. `Tables.tsx` calls only the two weakest routes.
-- `src/pages/Admin/PlatformKitDatabase.tsx` — a 4-tab Columns/Rows/Indexes/**Policies** browser with a left rail and query history.
-- `src/pages/Admin/PlatformKitDynamicTables.tsx` — entity/FK browser.
+- New file: `src/pages/Admin/PlatformKitDatabase.tsx` (the PlatformKit family is real — PlatformKit, …AuthPanel, …Logs, …Secrets, …Storage all exist in BSU; these two do not yet) — a 4-tab Columns/Rows/Indexes/**Policies** browser with a left rail and query history.
+- New file: `src/pages/Admin/PlatformKitDynamicTables.tsx` — entity/FK browser.
 - `src/components/uplift/DataTable.tsx` — TanStack Table + shadcn, sortable, column visibility, bulk select, CSV export.
 
 **The capability is 70% built and simply not joined up.** This is the cheapest large win in the whole plan.

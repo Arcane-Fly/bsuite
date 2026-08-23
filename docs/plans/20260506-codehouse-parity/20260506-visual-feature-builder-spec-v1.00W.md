@@ -88,8 +88,8 @@ flowchart TD
 - `business-suite-unified/src/pages/dev/feature-builder/{entity,page,ai}-panel.tsx` — three panels
 - `business-suite-unified/src/pages/dev/feature-builder/preview.tsx` — live combined preview
 - `business-suite-unified/supabase/functions/feature-bundle-export/` — edge fn
-- `packages/schema-builder/src/exporters/migration.ts` — entity → migration SQL
-- `packages/schema-builder/src/exporters/rls.ts` — entity → default RLS policy bundle
+- New file: `packages/schema-builder/src/exporters/migration.ts` — entity → migration SQL
+- New file: `packages/schema-builder/src/exporters/rls.ts` — entity → default RLS policy bundle
 
 ## Acceptance criteria
 
