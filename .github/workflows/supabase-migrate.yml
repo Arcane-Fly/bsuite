@@ -452,3 +452,57 @@ jobs:
           done < <(find supabase/migrations -name "*.nontx.sql" -print0 | sort -z)
 
           echo "Done: ${APPLIED_COUNT} non-transactional migration(s) applied."
+
+      # ─────────────────────────────────────────────────────────────────────
+      # POST-APPLY OBJECT VERIFICATION — the ledger is not evidence.
+      #
+      # A row in schema_migrations says a file was PROCESSED. It does not say the
+      # objects exist. Measured 2026-08-21: `20260304090001` was recorded and all
+      # three features it defines were absent — to_regclass('public.rate_adjustments')
+      # NULL, to_regclass('public.billing_cycles') NULL, gto_complaints.external_referral
+      # absent. Five months, 742 recorded migrations, nothing noticed, because a table
+      # that was never created looks EXACTLY like a feature nobody has built yet.
+      #
+      # check-phantom-migrations.mjs already answers this and already runs daily and
+      # on migration PRs. What it did not do was run at the ONE moment the answer is
+      # most actionable — immediately after an apply, in the run that did it, while
+      # the person who dispatched it is still watching. Reusing it rather than
+      # writing a second implementation: one capability living in two files with
+      # nothing asserting they agree is how this estate's gates drift apart.
+      #
+      # Runs even when this scope applied nothing, deliberately: a phantom created by
+      # an EARLIER run is exactly the thing nobody goes looking for.
+      - name: Verify the objects each recorded migration creates actually exist
+        if: always() && steps.resolve-dir.outputs.has_migrations == 'true'
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+          WORKDIR: ${{ steps.resolve-dir.outputs.workdir }}
+        run: |
+          set -euo pipefail
+          command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA > db-state.json <<'SQL'
+          SELECT json_build_object(
+            'applied',   (SELECT COALESCE(json_agg(version), '[]'::json)
+                            FROM supabase_migrations.schema_migrations),
+            'tables',    (SELECT COALESCE(json_agg(schemaname||'.'||tablename), '[]'::json)
+                            FROM pg_tables WHERE schemaname NOT IN ('pg_catalog','information_schema')),
+            'functions', (SELECT COALESCE(json_agg(DISTINCT n.nspname||'.'||p.proname), '[]'::json)
+                            FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+                           WHERE n.nspname NOT IN ('pg_catalog','information_schema')),
+            'columns',   (SELECT COALESCE(json_agg(table_schema||'.'||table_name||'.'||column_name), '[]'::json)
+                            FROM information_schema.columns
+                           WHERE table_schema NOT IN ('pg_catalog','information_schema'))
+          );
+          SQL
+
+          # An empty snapshot would make every migration look phantom, or none.
+          # Both read as a confident answer, so refuse rather than report either.
+          test -s db-state.json || { echo "::error::db-state.json is empty — refusing to report a verification that read nothing."; exit 1; }
+
+          node "$GITHUB_WORKSPACE/scripts/check-phantom-migrations.mjs" \
+            --db-state=db-state.json \
+            "${WORKDIR}/supabase/migrations"
