@@ -5,6 +5,41 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.0.4] — 2026-08-25 — Changing the column count destroyed the saved layout
+
+Changing the canvas column count rewrote the stored layout and offered no undo.
+Driving the deployed crm7 dashboard through 11 → 4 → 8 → 2 → 11 flattened a
+three-across arrangement into a single stacked column, permanently — and it
+survived a cold browser context, because the layout is per-user server state.
+
+Measured against `rescaleLayout` directly:
+
+| | |
+|---|---|
+| before | `a(w4 @x0) b(w3 @x4) c(w4 @x7)` / `d(w6 @x0) e(w5 @x6)` |
+| after | `a,b,c,d,e` — all w6, all x0, one per row |
+
+The rescale is lossy at the **narrow** end: every item clamps to the one-column
+minimum and the row-packer puts one per row, so coming back up cannot recover an
+arrangement that no longer exists. Widening and returning *is* lossless — the
+damage is done by any pass through a column count too small to hold the layout.
+
+Two places wrote it back: `handleColumnChange`, and an effect firing on every
+render where `baseCols !== layoutCols`. Both are gone. `currentLayouts` already
+derived the display at `layoutCols` from the authored layout at `baseCols`, and
+that path was always correct — so leaving storage alone makes the column control
+a **view**, and the round trip exact.
+
+Storage now moves only when the user edits. `commitLayout` and the new
+`commitItems` are the only two places that persist, and the only two that re-base
+`baseCols`.
+
+**Consumer impact: none at the call site.** `handleColumnChange` keeps its
+signature and still changes what is rendered. What changes is that it no longer
+writes, so a user who explores column counts and returns gets their layout back.
+
+---
+
 ## [1.0.3] — 2026-08-20 — Auto-height cards were one margin short, and clipped their own content
 
 The operator's report was a screenshot of crm7's Add Client page: *"IS THIS WHAT
