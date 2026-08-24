@@ -143,11 +143,20 @@ A bare `<a href={appUrl}>` link from one BSuite app to another lands the user **
 Every cross-app launcher MUST route through the destination's `/auth/login` entry point:
 
 ```tsx
-// ✅ CORRECT — user lands authenticated on /dashboard (or custom return_path).
+// ✅ FRONT DOOR — the destination declares where it opens.
+import { buildAppLaunchUrl } from '@bsuite/nav-core'
+
+<a href={buildAppLaunchUrl('crm7', app.url)}>Open CRM7</a>
+<a href={buildAppLaunchUrl('r8', app.url)}>Open R8</a>   // lands on '/', not '/dashboard'
+
+// ✅ DEEP LINK — the path is the point of the link, so pass it.
 import { buildLaunchUrl } from '@bsuite/nav-core'
 
-<a href={buildLaunchUrl('https://crm.crm7.app')}>Open CRM7</a>
 <a href={buildLaunchUrl(app.url, '/admin/users')}>Open CRM7 admin</a>
+
+// ⚠️ buildLaunchUrl(url) with NO path defaults to '/dashboard' — correct for
+// bsu and crm7, a 404 on r8, and a silent bounce to the public home page on
+// conduit, throughput and braden. Use buildAppLaunchUrl for front doors.
 ```
 
 `buildLaunchUrl` produces:
@@ -202,6 +211,15 @@ export function buildLaunchUrl(
   const base = appUrl.replace(/\/+$/, '');
   return `${base}/auth/login?return_path=${encodeURIComponent(returnPath)}`;
 }
+
+// The front-door form. The default comes from the DESTINATION, not the caller.
+export function buildAppLaunchUrl(
+  appKey: BSuiteAppKey,
+  appUrl: string,
+  returnPath: string = BSUITE_APP_LANDING_PATHS[appKey],
+): string {
+  return buildLaunchUrl(appUrl, returnPath);
+}
 ```
 
 App-level helpers (e.g. `business-suite-unified/src/lib/supabase.ts::getCrossAppLoginUrl`, `AppLauncherTile.tsx::buildLaunchUrl`) MUST delegate to this implementation. Two implementations of one rule is a drift risk — enforced by code review + the dedupe PR (#524).
@@ -210,14 +228,34 @@ App-level helpers (e.g. `business-suite-unified/src/lib/supabase.ts::getCrossApp
 
 Every BSuite app MUST expose a `/auth/login` route that auto-fires `signInWithBusinessSuite()`. Without this route, any launcher pointing at the app 404s, leaving the user stranded with no recovery path. Throughput aliases `/auth/login → /login` (the same `LoginContent` page served at both paths) for backward compatibility with internal links and external integrations.
 
-| App | `/auth/login` source | Default return_path |
+| App | `/auth/login` source | Landing path |
 |---|---|---|
 | `business-suite-unified` (suite) | `src/pages/auth/login.tsx` | `/dashboard` |
 | `crm7` | `src/pages/auth/login.tsx` | `/dashboard` |
 | `conduit` | `src/app/auth/login/page.tsx` | `/` |
-| `R80.3` (r8) | `src/pages/AuthLogin.tsx` (via `main.tsx` path router) | `/dashboard` |
+| `R80.4` (r8) | `src/pages/AuthLogin.tsx` (via `main.tsx` path router) | `/` |
 | `throughput` | `src/pages/Login.tsx` (registered at `/login` AND `/auth/login`) | `/` |
 | `braden` | `src/pages/auth/Login.tsx` | `/admin/branding` |
+
+**The launcher must use this column.** It is not a per-app preference — it is a
+fact about each destination's router, and only two of the six answer
+`/dashboard`. This table said `/dashboard` for `R80.3 (r8)` until 2026-08-24,
+which was wrong twice over: R80.3 was retired on 2026-08-13 and R80.4 has never
+served `/dashboard`. The consequence was live in production — BSU's sidebar "R8
+Calculator" row pointed at
+`https://r8.crm7.app/auth/login?return_path=%2Fdashboard`, the OAuth round trip
+completed, and R8 then rendered its not-found page. Conduit and Throughput hid
+the same mistake behind a catch-all route that bounces unknown paths to their
+public home page.
+
+`sanitizeReturnPath` does not catch this. `/dashboard` is a well-formed
+same-origin path, so it passes the filter and is faithfully navigated to; the
+filter defends against open redirects, not against a path the destination has
+never had.
+
+The machine-readable copy is `BSUITE_APP_LANDING_PATHS` in `@bsuite/nav-core`
+(1.1.0), consumed via `buildAppLaunchUrl(appKey, appUrl)`. Change this table and
+that map together.
 
 ### Open-redirect defense on every `/auth/login`
 
@@ -295,6 +333,10 @@ A `bsuite/no-bare-cross-app-href` ESLint rule will AST-check any `<a href={...}>
 | 2026-05-27 | `braden` | new `/auth/login` route mirroring crm7 pattern (default `return_path=/admin/branding`) | braden#306 |
 | 2026-05-27 | `throughput` | register `/auth/login` as route alias of `/login` | throughput#192 |
 | 2026-05-27 | `business-suite-unified` | route `throughputIdeaEditUrl` + `throughputNewIdeaUrl` through `getCrossAppLoginUrl` | bsu#525 |
+| 2026-08-24 | `@bsuite/nav-core` | `BSUITE_APP_LANDING_PATHS` + `buildAppLaunchUrl`; `AppSwitcher` stops sending every app to `/dashboard` | 1.1.0 |
+| 2026-08-24 | `business-suite-unified` | `APP_LANDING_PATHS` drives `SUITE_SERVICES`, `UnifiedDashboard` and `AppLauncherTile` (new required `appKey` prop) | — |
+| 2026-08-24 | `crm7` / `conduit` | sidebar "R8 Calculator" and the charge-rate "Open R8 calculator" button land on `/` | — |
+| 2026-08-24 | `R80.4` | `/dashboard` forwarded to `/` for launchers built before nav-core 1.1.0, and for bookmarks | — |
 
 ## Per-app OAuth client IDs
 

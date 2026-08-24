@@ -16,7 +16,8 @@
 
 import { ChevronDown as ChevronDownRaw } from 'lucide-react'
 import { type ElementType, useEffect, useRef, useState } from 'react'
-import { buildLaunchUrl } from './launchUrl.js'
+import { isBSuiteAppKey } from './apps.js'
+import { buildAppLaunchUrl, buildLaunchUrl } from './launchUrl.js'
 import type { IconComponent } from './types.js'
 
 // Cast through unknown to dodge React 18 vs 19 @types/react conflicts —
@@ -46,6 +47,17 @@ export interface AppSwitcherProps {
   apps: AppEntry[]
   currentApp?: string
   className?: string
+}
+
+/**
+ * Cross-app href for one row. Known apps get their own landing path; an app
+ * this package does not know keeps the generic `/dashboard` default, because
+ * guessing a stranger's routes is exactly the mistake this map exists to undo.
+ */
+function launchHref(app: AppEntry): string {
+  return isBSuiteAppKey(app.key)
+    ? buildAppLaunchUrl(app.key, app.url)
+    : buildLaunchUrl(app.url)
 }
 
 export function AppSwitcher({ apps, currentApp, className = '' }: AppSwitcherProps) {
@@ -106,8 +118,16 @@ export function AppSwitcher({ apps, currentApp, className = '' }: AppSwitcherPro
                    isolation means the destination origin has no session
                    token under its own key. The `app.key === currentApp`
                    case still uses bare app.url because that's a same-origin
-                   click — the user is already in that app's localStorage. */
-                href={app.key === currentApp ? app.url : buildLaunchUrl(app.url)}
+                   click — the user is already in that app's localStorage.
+
+                   buildAppLaunchUrl, not buildLaunchUrl (2026-08-24): the
+                   generic helper defaults every destination to /dashboard, a
+                   path only bsu and crm7 serve. This menu's R8 row therefore
+                   landed on R80.4's not-found page after a SUCCESSFUL sign-in,
+                   and its throughput and braden rows were silently bounced to
+                   those apps' public home pages. The key is right here — use
+                   it, and let the destination declare where it opens. */
+                href={app.key === currentApp ? app.url : launchHref(app)}
                 data-app-key={app.key}
                 role="menuitem"
                 className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent ${
