@@ -28,7 +28,29 @@ name: No prerelease on a production path
 
 on:
   pull_request:
-    branches: [main]
+    # BOTH BRANCHES, AND `development` IS NOT DECORATION.
+    #
+    # Two reasons, and the second is the one that bit.
+    #
+    # 1. This file's own header says "P4 runs on ANY ref, because a mis-tagged
+    #    registry is wrong everywhere". With `branches: [main]` that was simply
+    #    untrue for pull requests: a prerelease sitting on dist-tags.latest was
+    #    invisible to every PR in the estate until something targeted main or the
+    #    nightly fired. The documented design and the trigger disagreed, and the
+    #    header was the one telling the truth about what it should do.
+    #
+    # 2. A guard that does not run on PRs into `development` CANNOT VERIFY ITS
+    #    OWN EDITS, because that is where its edits land. The fix in this very
+    #    commit — making the self-test refuse to skip its fixture control under
+    #    CI — could not be exercised by the pull request that introduces it. Same
+    #    shape as a1eca16b, which added dist-tag-wiring.yml's own PATH to its
+    #    trigger after a fix to that guard made the check vanish rather than
+    #    re-run. Here the blind spot is the BRANCH filter rather than the path.
+    #
+    # On a `development` target, P1-P3 correctly report "not applicable on this
+    # ref" and only P4 runs — cheap, honest, and enough to keep the checker
+    # exercised on every change to it.
+    branches: [main, development]
   push:
     branches: [main]
   schedule:
@@ -80,6 +102,27 @@ jobs:
       # Prove each of P1-P4 fails on a planted prerelease AND passes on the
       # legitimate case that most resembles it, before believing a clean run.
       - name: Self-test the guard (proves it can fail)
+        env:
+          # WITHOUT THIS THE MOST VALUABLE CONTROL SILENTLY DOES NOT RUN.
+          #
+          # The self-test has two halves. The pure half checks the DECISIONS on
+          # data handed to them, and needs nothing. The fixture half builds a
+          # temp tree with a planted 1.1.1-next.0 in six app manifests and six
+          # real pnpm-lock.yaml files and requires the READERS to find it — and
+          # that half needs `yaml`, because the guard refuses to parse a lockfile
+          # any other way.
+          #
+          # This step originally omitted the variable, so `yaml` was unresolvable,
+          # the fixture control skipped, and CI proved only that the decisions were
+          # right — never that the code which READS the tree works. That is the
+          # exact gap the fixture control exists to close: a wrong verdict is loud,
+          # a reader that finds nothing is silent and reports a clean tree.
+          #
+          # It was caught only because the self-test says "fixture control SKIPPED"
+          # out loud instead of quietly running 19 assertions instead of 30. A skip
+          # nobody can see is how a checker stops covering a whole class while still
+          # reporting a pass.
+          BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
         run: node scripts/check-no-prerelease-in-production.mjs --self-test
 
       - name: No prerelease reaches production
