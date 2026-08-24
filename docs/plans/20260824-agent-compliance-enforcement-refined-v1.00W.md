@@ -1,3 +1,15 @@
+---
+kind: record
+authority: none
+owner: cowork-coordinator
+---
+
+> **POINT-IN-TIME RECORD — 2026-08-24.** This is what one session's prompt-refinement
+> pass produced and found, kept verbatim so the reasoning survives. It asserts nothing
+> about the estate's current state and cites no gate, because it is not a claim to be
+> checked — it is a transcript of a decision. Do not read a status from it; read the
+> registers for that.
+
 # Agent Compliance Enforcement — Refined Prompt
 
 **Refined:** 2026-08-24 · **Tier:** Heavy (5 passes) · **Refiner:** cowork-coordinator

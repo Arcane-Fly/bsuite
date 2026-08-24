@@ -1,3 +1,14 @@
+---
+kind: plan
+authority: engineering
+owner: estate-supervisor
+evidence:
+  - scripts/audit-one-shot.mjs
+  - scripts/check-doc-naming.mjs
+  - scripts/audit-doc-completion.mjs
+  - .github/workflows/publish-eslint-config.yml
+---
+
 # Estate execution backlog — v1.00W
 
 **Generated 2026-08-24. This is an execution queue, not a report.**
