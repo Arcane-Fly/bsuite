@@ -155,11 +155,35 @@ export function parseRolePermissions(usePermissionsSrc, constants, allPermission
 /* ── Live grants ──────────────────────────────────────────────────────────── */
 
 async function fetchGrants() {
+  /* CI has no service-role key — only SUPABASE_DB_PASSWORD and a project id, the
+   * same pair every other live-DB gate here uses through the Supavisor pooler.
+   * So CI queries with psql and hands the rows over as a file; a local run with
+   * a service key can still use REST directly.
+   *
+   * Falling back to the ANON key was considered and rejected: RLS on
+   * role_capabilities requires a member of the tenant, so anon reads zero rows,
+   * and zero rows produces zero divergence — the precise false-clean the
+   * self-tests exist to prevent. A gate that cannot see its input must fail. */
+  const file = process.env.ROLE_CAPABILITIES_JSON
+  if (file) {
+    if (!existsSync(file)) throw new Error(`ROLE_CAPABILITIES_JSON=${file} does not exist`)
+    const payload = JSON.parse(readFileSync(file, 'utf8'))
+    const rows = payload.rows ?? payload
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error(
+        `${file} contained no role_capabilities rows. The table is not empty; ` +
+          'an empty read means the query or its credentials failed. Refusing to report zero.',
+      )
+    }
+    const tenants = payload.tenants ?? Object.fromEntries(rows.map((r) => [r.tenant_id, r.tenant ?? r.tenant_id]))
+    return { rows, tenants }
+  }
+
   const url = process.env.SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) {
     throw new Error(
-      'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required. ' +
+      'Provide ROLE_CAPABILITIES_JSON (CI, via psql) or SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (local). ' +
         'Refusing to report a divergence of zero against a database I never reached.',
     )
   }
