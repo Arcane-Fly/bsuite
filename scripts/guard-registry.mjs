@@ -104,6 +104,28 @@ export const GUARDS = [
   // Parent monorepo
   // ---------------------------------------------------------------------
   {
+    id: 'parent-workflow-expressions',
+    label: 'no workflow contains a malformed Actions expression',
+    repo: '.',
+    command: ['node', 'scripts/check-workflow-expressions.mjs'],
+    ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
+    mode: 'run',
+    notes:
+      'GitHub evaluates ${…} expressions everywhere in a workflow, INCLUDING inside ' +
+      'shell comments in a run: block — the expression engine gets there before bash ' +
+      'does. A malformed one is not a step failure, it is a PARSE failure: the run has ' +
+      'no jobs, no logs and no retry button, and reads in the PR list as an ordinary ' +
+      'red check. dist-tag-wiring.yml carried an EMPTY delimiter pair inside a comment ' +
+      'warning against exactly that, and had never once executed on development. ' +
+      'yaml.safe_load parsed the file perfectly — YAML validity says nothing about ' +
+      'expression validity. The checker distinguishes YAML comments (stripped, safe) ' +
+      'from block-scalar text (evaluated), and handles multi-line expressions in folded ' +
+      'scalars, which an earlier draft flagged as unclosed across five healthy workflows. ' +
+      'Validated against GitHub own parser as the oracle: exactly one finding on the ' +
+      'tree GitHub refused, zero across 76 files once fixed.',
+  },
+
+  {
     id: 'parent-setup-node-pnpm-guard',
     label: 'setup-node@v5 must set package-manager-cache: false',
     repo: '.',
@@ -1363,7 +1385,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 63
+export const GUARD_FLOOR = 64
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
