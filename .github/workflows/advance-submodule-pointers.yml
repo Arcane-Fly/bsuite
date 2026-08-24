@@ -219,15 +219,26 @@ jobs:
           echo "standing PR state: $PR_STATE"
           if [ "$PR_STATE" = "OPEN" ]; then
             echo "standing PR already open — its branch was force-updated"
-          elif [ "$PR_STATE" = "CLOSED" ]; then
-            # Reopen rather than open a second one, so the review history survives.
-            if gh pr reopen "$BR"; then
-              echo "standing PR was closed and has been reopened onto the refreshed branch"
-            else
-              echo "::error title=Standing PR is closed and could not be reopened::The pointer advances are pushed to '$BR' and are correct. Reopen or re-create the PR by hand."
-              exit 1
-            fi
+          elif [ "$PR_STATE" = "CLOSED" ] && gh pr reopen "$BR" 2>/dev/null; then
+            echo "standing PR was closed and has been reopened onto the refreshed branch"
           else
+            # Reopen is PREFERRED (it keeps the review history) but GitHub refuses it in
+            # cases it does not enumerate — observed on run 32711675959, where the branch
+            # had been force-updated after the PR was closed:
+            #
+            #     standing PR state: CLOSED
+            #     API call failed: GraphQL: Could not open the pull request. (reopenPullRequest)
+            #
+            # Failing there left four correct gitlink advances on a pushed branch with no
+            # PR, which is the state this whole workflow exists to prevent. A refused
+            # reopen is not a reason to give up; it is a reason to open a new one.
+            #  is load-bearing: under  a bare  whose test
+            # is FALSE fails the statement and aborts the step. That would turn the
+            # ordinary "no PR exists yet" path into a hard failure.
+            if [ "$PR_STATE" = "CLOSED" ]; then
+              echo "reopen refused by GitHub — opening a fresh PR instead"
+            fi
+
             {
               echo "Maintained automatically by \`.github/workflows/advance-submodule-pointers.yml\`."
               echo
