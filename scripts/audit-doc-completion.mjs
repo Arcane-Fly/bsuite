@@ -49,7 +49,29 @@ const COMPLETION_WORDS = /(^|[-_.])(complete|completed|done|final|superseded|clo
 /** Words that, immediately before a completion word, make it part of a phrase. */
 const PHRASE_PREFIX = /(to-be|to_be|not|never|well|half|nearly|almost)-?$/i;
 
+/**
+ * THE STATUS CODE IS THE MARKER, AND IT OUTRANKS A WORD IN THE TITLE.
+ *
+ * `docs/…/20260227-feature-map-complete-v1.00W.md` is "Complete AI Feature Map" —
+ * `complete` describes the MAP's coverage, not the work's state. The body says so
+ * outright and carries a 2026-08-17 marker correction explaining that `Final` was
+ * wrong and `Working` is truthful.
+ *
+ * The estate's vocabulary is W/D/R/A/F, and the completion marker is **F**
+ * (Frozen). A filename that ends in `-vN.NNW` has already declared itself Working;
+ * reading a title word as a competing status claim invents a contradiction the
+ * document does not contain, and inflates the very count used to judge whether the
+ * estate marks docs honestly.
+ *
+ * So an explicit non-F status code wins. Only `F` — or no status code at all —
+ * leaves a title word able to read as a completion claim.
+ */
+const STATUS_CODE = /-v\d+\.\d+([WDRAF])(?:\.[a-z]+)?$/i;
+
 export function isCompletionMarked(filename) {
+  const stem = filename.replace(/\.md$/i, '');
+  const status = stem.match(STATUS_CODE);
+  if (status && status[1].toUpperCase() !== 'F') return false;
   const m = filename.match(COMPLETION_WORDS);
   if (!m) return false;
   const before = filename.slice(0, m.index + (m[1] ? m[1].length : 0));
@@ -89,13 +111,28 @@ const ABSENT_ON_LINE = new RegExp(
  * historical mention, and whole-text matching throws that away.
  */
 export function citedArtifacts(text) {
-  const out = { gates: [], workflows: [], migrations: [], prs: [], historical: [] };
+  const out = { gates: [], workflows: [], migrations: [], prs: [], historical: [], candidates: [] };
   // `\b` IS NOT A LEFT EDGE HERE — a hyphen is a non-word character, so `\baudit-all.sh`
   // matches the TAIL of `pnpm-audit-all.sh` and invents a citation to a script nobody
   // ever named. Third time this exact shape has bitten in a week (the last was a path
   // regex matching the tail of a corrected path). Require a real left edge.
   const GATE_RE = /(?<![A-Za-z0-9_-])((?:check|audit|codemod|verify|lint)-[a-z0-9-]+\.(?:mjs|sh|py))\b/g;
   const WF_RE = /(?<![A-Za-z0-9_-])([a-z0-9][a-z0-9-]*\.ya?ml)\b/g;
+  // A GATE THAT DOES NOT FOLLOW THE NAMING CONVENTION IS STILL A GATE.
+  //
+  // GATE_RE only sees check-/audit-/codemod-/verify-/lint- prefixes, which is the
+  // parent's convention and not a rule any submodule agreed to. R80.4's award
+  // Definition-of-Done runner is `scripts/dod.mjs`. QUEUE-COMPLETE.md cites it by
+  // name, runs it over 21 awards against an EMPTY baseline, and is one of the few
+  // completion records in the estate with real evidence behind it — and this tool
+  // reported it as "the claim rests on nothing", because the name did not match a
+  // prefix list. A detector only sees the mechanisms its author knew.
+  //
+  // These are CANDIDATES, not citations: a candidate counts as evidence only if the
+  // evidence layer actually contains that file. A missing candidate is IGNORED, never
+  // reported as a ghost — otherwise every `.mjs` mentioned in prose becomes a dead
+  // citation, and the ghost count (currently a true zero) stops meaning anything.
+  const CANDIDATE_RE = /(?<![A-Za-z0-9_-])([a-z0-9][a-z0-9-]*\.(?:mjs|sh|py))\b/g;
   // Workflow citations only. A bare `.ya?ml` pattern also matches
   // pnpm-lock.yaml and pnpm-workspace.yaml, which are real files that simply do
   // not live in .github/workflows -- so they reported as DEAD gates, i.e. as
@@ -114,6 +151,12 @@ export function citedArtifacts(text) {
     for (const m of line.matchAll(WF_RE)) {
       if (NOT_A_WORKFLOW.test(m[1])) continue;
       (historical ? out.historical : out.workflows).push(m[1]);
+    }
+    if (!historical) {
+      for (const m of line.matchAll(CANDIDATE_RE)) {
+        if (!GATE_RE.test(m[1])) out.candidates.push(m[1]);
+        GATE_RE.lastIndex = 0;
+      }
     }
   }
   for (const m of text.matchAll(/\b(\d{14})\b/g)) out.migrations.push(m[1]);
@@ -165,7 +208,11 @@ export function hasHistoricalBanner(text) {
 
 export function classify(text, filename, artifactsPresent, relPath = filename) {
   const cited = citedArtifacts(text);
-  const liveGates = cited.gates.filter((g) => artifactsPresent.has(g));
+  const liveGates = [
+    ...cited.gates.filter((g) => artifactsPresent.has(g)),
+    // Conventionless names count ONLY when the evidence layer really has them.
+    ...cited.candidates.filter((c) => artifactsPresent.has(c)),
+  ];
   const liveWorkflows = cited.workflows.filter((w) => artifactsPresent.has(w));
   const dead = [
     ...cited.gates.filter((g) => !artifactsPresent.has(g)),
@@ -211,8 +258,20 @@ const SELF_TESTS = [
   { name: 'a completion word inside a hyphenated PHRASE is not a marker',
     t: 'x', f: '20260805-portal-persona-jobs-to-be-done-v1.00W.md', g: [],
     expect: (r) => r.alreadyMarked === false },
+  // WAS: this asserted `…-feature-map-complete-v1.00W.md` IS marked complete, which
+  // is the behaviour the status-code rule corrects. The file is "Complete AI Feature
+  // Map" — `complete` describes the map's coverage — and `W` says Working, in the
+  // document's own name. A test asserting the old constant locks in the defect it
+  // was named to protect, so it is repaired rather than deleted: a real completion
+  // suffix with NO competing status code still counts.
   { name: 'but a real completion suffix still counts',
+    t: 'x', f: '20260817-portal-rollout-complete.md', g: [],
+    expect: (r) => r.alreadyMarked === true },
+  { name: 'a W/D/R/A status code OUTRANKS a completion word in the title',
     t: 'x', f: '20260227-feature-map-complete-v1.00W.md', g: [],
+    expect: (r) => r.alreadyMarked === false },
+  { name: 'and F — the estate\'s actual completion marker — does NOT suppress it',
+    t: 'x', f: '20260227-feature-map-complete-v1.00F.md', g: [],
     expect: (r) => r.alreadyMarked === true },
   { name: 'and an ALL-CAPS marker still counts',
     t: 'x', f: 'QUEUE-COMPLETE.md', g: [],
@@ -267,6 +326,26 @@ const SELF_TESTS = [
   { name: 'migration versions and PRs are captured as corroboration',
     f: 'x.md', t: 'applied 20260831000000 via crm7#1894', g: [],
     expect: (r) => r.cited.migrations.includes('20260831000000') && r.cited.prs.includes('crm7#1894') },
+
+    // R80.4's `dod.mjs` follows no parent naming convention and is a real gate.
+    { name: 'a gate outside the check-/audit- convention still binds when it EXISTS',
+      f: 'x.md', t: 'Twenty-one awards, each passing `node scripts/dod.mjs <AWARD>`.', g: ['dod.mjs'],
+      expect: (r) => r.bindable === true && r.liveGates.includes('dod.mjs') },
+
+    // The dangerous half: this must not turn every .mjs in prose into a ghost.
+    { name: 'a conventionless name that does NOT exist is ignored, never a ghost',
+      f: 'x.md', t: 'We considered writing thing.mjs but did not.', g: [],
+      expect: (r) => r.bindable === false && r.deadCitations.length === 0 },
+
+    // A convention-named gate that is gone MUST still report as a ghost.
+    { name: 'the ghost rule is unchanged for convention-named gates',
+      f: 'x.md', t: 'Enforced by check-gone-thing.mjs.', g: [],
+      expect: (r) => r.deadCitations.includes('check-gone-thing.mjs') },
+
+    // An absence sentence must suppress a candidate the same way it suppresses a gate.
+    { name: 'a candidate named on an ABSENCE line is not evidence',
+      f: 'x.md', t: 'dod.mjs was deleted and no longer exists.', g: ['dod.mjs'],
+      expect: (r) => r.bindable === false },
 ];
 
 if (process.argv.includes('--self-test')) {
