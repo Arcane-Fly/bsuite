@@ -66,10 +66,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       # There is no SUPABASE_DB_URL and no service-role key in this repo. Supavisor
-      # tenants sit on a numbered cluster per region — newer projects on aws-1,
-      # older on aws-0 — and the wrong one answers "tenant/user not found". Same
-      # probe the schema-lag and phantom-migration gates use. No cluster accepting
-      # the connection is a HARD failure, never a quiet pass.
+      # tenants sit on a numbered cluster — newer projects on aws-1, older on
+      # aws-0 — and the wrong one answers "tenant/user not found". No cluster
+      # accepting the connection is a HARD failure, never a quiet pass.
+      #
+      # The host string is copied VERBATIM from phantom-migrations.yml, which has
+      # succeeded every day this week. The first version of this step paraphrased
+      # it and guessed `ap-southeast-2` from the tenant's timezone; the region is
+      # `us-east-1` and the probe found no cluster. Copy a working predicate, do
+      # not re-derive one.
       - name: Resolve pooler host
         id: pooler
         env:
@@ -78,7 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           for CLUSTER in aws-1 aws-0; do
-            HOST="${CLUSTER}-ap-southeast-2.pooler.supabase.com"
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
             if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
                  -c "SELECT 1" >/dev/null 2>&1; then
               echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
