@@ -46,12 +46,32 @@ jobs:
     name: Advance submodule pointers
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout parent (submodules as gitlinks, not contents)
+      - name: Checkout parent AND the submodules it must read
         uses: actions/checkout@v5
         with:
           ref: development
           fetch-depth: 0
-          submodules: false
+
+          # WHY THIS IS `true` AND CARRIES A TOKEN — 141 CONSECUTIVE FAILURES
+          #
+          # This used to be `submodules: false` plus a hand-rolled
+          # `git submodule update … || true`. The submodules are PRIVATE sibling
+          # repos, and the default GITHUB_TOKEN is scoped to bsuite alone, so every
+          # clone died with:
+          #
+          #     fatal: could not read Username for 'https://github.com'
+          #
+          # `|| true` swallowed it, leaving six EMPTY directories. The script then ran
+          # `git -C crm7 rev-parse origin/development` — which does not fail on an
+          # empty directory: git walks UP and answers from the PARENT repo. All six
+          # submodules came back with the parent's own head, and every run reported
+          # six "history divergence" findings against apps that were perfectly fine.
+          #
+          # `token:` is what makes checkout install the credential in each submodule's
+          # config too, so the script's own `git fetch` inside them works. Same
+          # fallback chain every other submodule-consuming workflow here uses.
+          submodules: true
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - uses: actions/setup-node@v5
@@ -66,13 +86,31 @@ jobs:
           # a result. scripts/check-setup-node-pnpm-guard.mjs now enforces it.
           package-manager-cache: false
 
-      # The script needs each submodule to be a git repo it can fetch, but NOT
-      # a full recursive checkout — it only ever reads refs.
-      - name: Initialise submodule repos (refs only)
+      # checkout@v5 above has already cloned and credentialed every submodule. What
+      # remains is to PROVE it, loudly, before the script runs.
+      #
+      # The 141-failure incident was not caused by a missing check downstream — the
+      # script's forward-only rule refused every bogus move exactly as designed. It
+      # was caused by a checkout failure that produced no signal. A step that can
+      # leave the job in a state the next step will misread must assert its own
+      # postcondition.
+      - name: Prove every submodule is its own git repository
         run: |
           set -euo pipefail
-          git submodule init
-          git submodule update --depth 50 --single-branch || true
+          missing=0
+          examined=0
+          for app in crm7 business-suite-unified conduit R80.4 braden throughput; do
+            examined=$((examined + 1))
+            top=$(git -C "$app" rev-parse --show-toplevel 2>/dev/null || echo "")
+            want="$(pwd)/$app"
+            if [ "$top" != "$want" ]; then
+              echo "::error::$app is NOT its own git repository (rev-parse --show-toplevel gave '${top:-<none>}', expected '$want'). git would answer this submodule's refs from the PARENT repo, which is how six identical shas were once reported as six history divergences."
+              missing=$((missing + 1))
+            fi
+          done
+          # HEAD LINE FIRST — the denominator before the verdict.
+          echo "[submodule-checkout] ${examined} submodule(s) examined; ${missing} not initialised as their own repository."
+          [ "$missing" -eq 0 ] || exit 1
 
       - name: Prove the checker can fail before trusting what it says
         run: node scripts/advance-submodule-pointers.mjs --self-test
