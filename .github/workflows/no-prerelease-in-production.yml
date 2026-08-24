@@ -80,6 +80,27 @@ jobs:
       # Prove each of P1-P4 fails on a planted prerelease AND passes on the
       # legitimate case that most resembles it, before believing a clean run.
       - name: Self-test the guard (proves it can fail)
+        env:
+          # WITHOUT THIS THE MOST VALUABLE CONTROL SILENTLY DOES NOT RUN.
+          #
+          # The self-test has two halves. The pure half checks the DECISIONS on
+          # data handed to them, and needs nothing. The fixture half builds a
+          # temp tree with a planted 1.1.1-next.0 in six app manifests and six
+          # real pnpm-lock.yaml files and requires the READERS to find it — and
+          # that half needs `yaml`, because the guard refuses to parse a lockfile
+          # any other way.
+          #
+          # This step originally omitted the variable, so `yaml` was unresolvable,
+          # the fixture control skipped, and CI proved only that the decisions were
+          # right — never that the code which READS the tree works. That is the
+          # exact gap the fixture control exists to close: a wrong verdict is loud,
+          # a reader that finds nothing is silent and reports a clean tree.
+          #
+          # It was caught only because the self-test says "fixture control SKIPPED"
+          # out loud instead of quietly running 19 assertions instead of 30. A skip
+          # nobody can see is how a checker stops covering a whole class while still
+          # reporting a pass.
+          BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
         run: node scripts/check-no-prerelease-in-production.mjs --self-test
 
       - name: No prerelease reaches production
