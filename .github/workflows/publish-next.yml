@@ -1,0 +1,268 @@
+# Publish PRERELEASES from `development` to the `next` dist-tag.
+#
+# THE OTHER HALF OF THE DEADLOCK CUT
+# ───────────────────────────────────────────────────────────────────────────
+# `scripts/publish-dist-tag.mjs` made a prerelease SAFE — it decides the tag
+# explicitly, so a prerelease never takes `latest` on any ref, and a release is
+# refused anywhere but main. What it did not do is make a prerelease HAPPEN.
+# All fifteen `publish-*.yml` still trigger only on `push: branches: [main]`,
+# so on `development` nothing publishes and the loop stayed shut:
+#
+#     a package fix needs a publish
+#       -> publishing needs main
+#         -> main needs the visual gate green
+#           -> the gate measures a d.* preview host
+#             -> which installs from the registry with --frozen-lockfile
+#               -> which does not have the fix
+#
+# This workflow opens it. A push to `development` that touches `packages/**`
+# publishes every changed package whose version carries a prerelease, under the
+# `next` dist-tag. An app's `development` branch can then name that exact
+# version, regenerate its lockfile, and its d.* preview installs a real,
+# published, immutable artifact containing the fix. `--frozen-lockfile` is
+# satisfied, not relaxed, because the lockfile resolves a genuine registry
+# version rather than a workspace symlink — which matters, because a visual
+# gate's verdict is only worth something if the preview is faithful.
+#
+# `main` remains the sole gate for production releases. Nothing here weakens it:
+# `latest` still moves only through a push to main, and a prerelease is resolved
+# by NOBODY unless a lockfile names it exactly.
+#
+# WHY IT DISPATCHES THE EXISTING WORKFLOWS INSTEAD OF BUILDING ANYTHING
+# ───────────────────────────────────────────────────────────────────────────
+# The fifteen publish workflows are not interchangeable. page-builder installs
+# filtered against its own lockfile because the root workspace pins a vite that
+# breaks plugin-react@6; ui, schema-registry and page-builder must build their
+# `workspace:` siblings before typechecking against them; several run tests and
+# a dry-run publish, theme and tsconfig run neither.
+#
+# Restating that here would be one capability living in two files with nothing
+# asserting they agree — the exact drift that left theme-conformance.yml and
+# scripts/theme-session.sh disagreeing until the sweep died twelve minutes in
+# naming `playwright` rather than the app-list entry nobody added. So the
+# PRERELEASE PATH RUNS THE RELEASE PATH: same steps, same tests, same dry run,
+# same tag decision. The only difference is the ref, which is the only thing
+# that is actually different.
+#
+# Dispatching with the automatic GITHUB_TOKEN works here and is not a loophole:
+# events triggered by GITHUB_TOKEN do not create new workflow runs, and
+# `workflow_dispatch` and `repository_dispatch` are the documented exceptions —
+# they always do. `permissions: actions: write` is what makes it allowed, and
+# it is scoped to this workflow.
+#
+# AND IT WAITS. A dispatcher that fires and exits reports success for a publish
+# that may have failed thirty seconds later, which is #1966 wearing a new hat.
+# Every dispatched run is watched to completion and its conclusion is this
+# job's conclusion.
+#
+# Runbook: docs/20260824-preview-canary-publishing-standard-v1.00A.md
+
+name: Publish prereleases (development → next)
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - 'packages/**'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'changed = only packages changed in the last push; all = every package carrying an unpublished prerelease'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - changed
+
+permissions:
+  contents: read
+  actions: write   # dispatch the per-package publish workflows (see header)
+
+concurrency:
+  # Serialised deliberately. Two overlapping runs would race to dispatch the
+  # same publish workflow for the same version; the loser's publish 403s on an
+  # already-published version, which reads as a broken pipeline rather than a
+  # duplicate. Never cancel-in-progress — a cancelled run may have already
+  # dispatched some packages and not others, and nothing would say which.
+  group: publish-next
+  cancel-in-progress: false
+
+jobs:
+  select:
+    name: Select prereleases to publish
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.pick.outputs.matrix }}
+      count: ${{ steps.pick.outputs.count }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Two commits is enough for before..after on a push, but a merge
+          # commit's first parent is not always `github.event.before` when the
+          # branch moved by more than one commit. Fetch enough to diff honestly.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          # setup-node@v5 defaults package-manager-cache: true, which resolves
+          # the packageManager field's pnpm BEFORE corepack has run. This job
+          # runs no pnpm install at all, so there is nothing to cache.
+          package-manager-cache: false
+
+      # PROVE THE SELECTOR CAN FAIL BEFORE BELIEVING IT WHEN IT SELECTS NOTHING.
+      # "no prereleases to publish" and "the selector is broken" produce the
+      # same empty matrix and the same green run. The self-test separates them,
+      # and it runs FIRST so a broken selector is named as a broken selector.
+      - name: Self-test the selector (proves it can fail)
+        run: node scripts/select-prerelease-publishes.mjs --self-test
+
+      - name: Collect changed paths
+        id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+          SCOPE: ${{ github.event.inputs.scope }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "workflow_dispatch" ] && [ "${SCOPE:-all}" = "all" ]; then
+            echo "mode=all" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A first push to a branch, or a force-push, reports an all-zero
+          # `before`. Diffing against it fails outright; falling back to HEAD~1
+          # is honest and narrow.
+          if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "::notice::no usable 'before' commit ($BEFORE) — diffing HEAD~1..HEAD"
+            git diff --name-only HEAD~1 HEAD > "$RUNNER_TEMP/changed.txt"
+          else
+            git diff --name-only "$BEFORE" "$AFTER" > "$RUNNER_TEMP/changed.txt"
+          fi
+          echo "mode=changed" >> "$GITHUB_OUTPUT"
+          echo "changed paths: $(wc -l < "$RUNNER_TEMP/changed.txt")"
+
+      - name: Select
+        id: pick
+        env:
+          MODE: ${{ steps.changed.outputs.mode }}
+        run: |
+          set -euo pipefail
+          if [ "$MODE" = "all" ]; then
+            node scripts/select-prerelease-publishes.mjs --all
+          else
+            node scripts/select-prerelease-publishes.mjs --changed "$RUNNER_TEMP/changed.txt"
+          fi
+
+  publish:
+    name: ${{ matrix.entry.package }}@${{ matrix.entry.version }}
+    needs: select
+    if: needs.select.outputs.count != '0'
+    runs-on: ubuntu-latest
+    strategy:
+      # One at a time. These share an npm org and an OIDC identity, and a
+      # readable log per package is worth more than the minutes.
+      max-parallel: 1
+      # One package failing must not hide the state of the others.
+      fail-fast: false
+      matrix:
+        entry: ${{ fromJson(needs.select.outputs.matrix) }}
+    steps:
+      - name: Dispatch the package's own publish workflow on this ref, and wait
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WF: ${{ matrix.entry.workflow }}
+          REF: ${{ github.ref_name }}
+          PKG: ${{ matrix.entry.package }}
+          VERSION: ${{ matrix.entry.version }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          latest_dispatch_id() {
+            gh run list --workflow "$WF" --branch "$REF" --event workflow_dispatch \
+              --limit 1 --json databaseId --jq '.[0].databaseId // 0'
+          }
+
+          BEFORE_ID=$(latest_dispatch_id)
+          echo "most recent prior workflow_dispatch run of $WF on $REF: $BEFORE_ID"
+
+          gh workflow run "$WF" --ref "$REF"
+
+          # The dispatch API returns 204 with no run id, so the new run has to be
+          # found by polling. Comparing against the PREVIOUS id (rather than
+          # taking whatever is newest) is what stops a slow dispatch from being
+          # "confirmed" by an unrelated older run.
+          RUN_ID=0
+          for i in $(seq 1 40); do
+            sleep 5
+            CANDIDATE=$(latest_dispatch_id)
+            if [ "$CANDIDATE" != "$BEFORE_ID" ] && [ "$CANDIDATE" != "0" ]; then
+              RUN_ID=$CANDIDATE
+              break
+            fi
+          done
+
+          if [ "$RUN_ID" = "0" ]; then
+            echo "::error::dispatched $WF on $REF but no new run appeared within 200s."
+            echo "::error::Refusing to report success for a publish that may not exist."
+            exit 1
+          fi
+
+          URL="https://github.com/$GH_REPO/actions/runs/$RUN_ID"
+          echo "watching $URL"
+          echo "- [$PKG@$VERSION]($URL) — $WF" >> "$GITHUB_STEP_SUMMARY"
+
+          # --exit-status makes this job's conclusion the dispatched run's
+          # conclusion. Without it a failed publish leaves this green.
+          gh run watch "$RUN_ID" --exit-status --interval 10
+
+      - name: Confirm the version is actually on the registry under `next`
+        env:
+          PKG: ${{ matrix.entry.package }}
+          VERSION: ${{ matrix.entry.version }}
+        run: |
+          set -euo pipefail
+
+          # THE PUBLISH SAYING IT SUCCEEDED IS NOT THE SAME AS THE ARTIFACT
+          # EXISTING. `publish-eslint-config.yml` reported success on runs 7, 8
+          # and 9 while @bsuite/eslint-config has never existed on npm
+          # (bsuite#1908). A dispatcher that trusts a green run inherits that.
+          #
+          # Ask the registry. It is the only thing that actually knows.
+          for i in $(seq 1 12); do
+            TAG=$(npm view "$PKG" dist-tags.next 2>/dev/null | tr -d '[:space:]' || true)
+            VER=$(npm view "$PKG@$VERSION" version 2>/dev/null | grep -vE '^npm (warn|notice)' | tail -1 | tr -d '[:space:]' || true)
+            if [ "$VER" = "$VERSION" ]; then
+              echo "::notice::$PKG@$VERSION is on the registry; dist-tags.next = ${TAG:-<unset>}"
+              if [ "$TAG" != "$VERSION" ]; then
+                echo "::warning::dist-tags.next is '${TAG:-<unset>}', not $VERSION — a later prerelease may have moved it."
+              fi
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "::error::$PKG@$VERSION is NOT on the registry two minutes after a green publish run."
+          echo "::error::That is the bsuite#1908 shape — a publish workflow reporting success having published nothing."
+          exit 1
+
+  # A matrix with zero entries produces zero jobs and a green workflow, which is
+  # indistinguishable from a workflow that ran and published. Say which.
+  report-empty:
+    name: Nothing to publish
+    needs: select
+    if: needs.select.outputs.count == '0'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "### No prerelease publishes selected" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "No changed package carries an unpublished \`-next.N\` version." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "If you expected a preview publish, the package's version is probably still a" >> "$GITHUB_STEP_SUMMARY"
+          echo "RELEASE version — bump it to \`x.y.z-next.0\` and push again. See the runbook:" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`docs/20260824-preview-canary-publishing-standard-v1.00A.md\`." >> "$GITHUB_STEP_SUMMARY"

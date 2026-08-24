@@ -37,8 +37,10 @@ export {
   BSUITE_PROD_URLS,
   BSUITE_DEV_PORTS,
   BSUITE_APP_METADATA,
+  BSUITE_APP_LANDING_PATHS,
+  isBSuiteAppKey,
 } from './apps.js';
 export type { BSuiteAppKey, BSuiteTenantAppKey, AppMetadata } from './apps.js';
 
-export { buildLaunchUrl } from './launchUrl.js';
+export { buildLaunchUrl, buildAppLaunchUrl } from './launchUrl.js';
 export { sanitizeReturnPath } from './sanitizeReturnPath.js';
