@@ -116,7 +116,7 @@ crm7/
 → `src/lib/ai/tools/` (TypeScript)
 
 **Adding a new workflow action?**
-→ `src/lib/workflows/actions.ts` (TypeScript)
+→ ~~`src/lib/workflows/actions.ts`~~ (no file of this name exists anywhere in the estate) (TypeScript)
 
 **Adding a new UI component?**
 → `src/components/ai/` or `src/components/workflows/`

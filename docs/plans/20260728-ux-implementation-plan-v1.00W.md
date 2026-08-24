@@ -66,7 +66,7 @@ hierarchy exactly; a test asserts the junior/adult + year-12 options resolve to 
 ## Task 2 — Funding Offsets + Training Hours inside the calculation (register #9c, #10)
 
 Repo: `R80.3`. Both are currently separate pages; the operator wants them available *inside* the
-calculation. `src/components/FundingOffsets.tsx`'s own header admits the charge engine is not re-run
+calculation. ~~`src/components/FundingOffsets.tsx`~~ (no file of this name exists; funding UI lives under `crm7/src/components/funding/`)'s own header admits the charge engine is not re-run
 there. Move/surface them into the calculation flow so the displayed charge rate reflects them live.
 
 Acceptance: setting a funding offset inside the calculation changes the displayed charge rate in the
