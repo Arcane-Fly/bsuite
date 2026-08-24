@@ -104,6 +104,28 @@ export const GUARDS = [
   // Parent monorepo
   // ---------------------------------------------------------------------
   {
+    id: 'parent-workflow-path-reachability',
+    label: 'no workflow watches a path a parent diff can never contain',
+    repo: '.',
+    command: ['node', 'scripts/check-workflow-path-reachability.mjs'],
+    ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
+    mode: 'run',
+    notes:
+      'A submodule appears in the PARENT diff as the bare path (crm7), never as ' +
+      'crm7/**. Measured on PR #2322, whose entire file list was ' +
+      '[business-suite-unified, crm7, docs/nav/route-inventory.json]. So an Actions ' +
+      'paths: filter reaching inside a submodule cannot match a pointer bump, and the ' +
+      'workflow is green because it never runs. edge-function-typecheck.yml watched a ' +
+      'star-rooted supabase/functions glob and last ran 2026-08-16 — eight days across ' +
+      'many gitlink bumps with no app edge function type-checked. Six workflows carried ' +
+      'the defect. NOTE the checker only flags a block that lacks the bare gitlink path: ' +
+      'crm7/** alongside crm7 is correct and stays, because it matches when the workflow ' +
+      'runs inside the app repo. And git PATHSPECS are a different language from Actions ' +
+      'globs — `git diff -- crm7/` DOES match a gitlink, verified on 72dae8c7 — so ' +
+      'diff-based detectors inside these workflows needed no change.',
+  },
+
+  {
     id: 'parent-workflow-expressions',
     label: 'no workflow contains a malformed Actions expression',
     repo: '.',
@@ -1406,7 +1428,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 64
+export const GUARD_FLOOR = 65
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 

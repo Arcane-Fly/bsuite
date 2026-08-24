@@ -78,6 +78,12 @@ on:
       - development
       - main
     paths:
+      # Gitlink paths. A submodule appears in the PARENT's diff as the bare path
+      # (`crm7`), never as `crm7/**` — so every filter below that reaches INSIDE a
+      # submodule is unmatchable from the parent and the workflow simply does not run
+      # when an app's pointer moves. The inside-submodule filters are kept: they match
+      # when this workflow is run from inside the submodule's own repo.
+      - 'business-suite-unified'
       - 'packages/schema-builder/supabase/migrations/**'
       - 'business-suite-unified/supabase/migrations/**'
       - '.github/workflows/schema-builder-migration-parity.yml'
