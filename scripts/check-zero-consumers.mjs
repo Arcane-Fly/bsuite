@@ -326,21 +326,55 @@ function main() {
       `emit them as utilities — never counted as unused).`,
   )
 
+  // WHICH TOKEN DECLARATIONS ARE NEW IN THIS DIFF?
+  //
+  // A token's consumers live in APP source, and the apps are submodules — so whether a
+  // token is "used" depends on which gitlinks are checked out. My local run and CI
+  // disagreed by one token for exactly that reason, and chasing parity would have meant
+  // regenerating the baseline on every pointer advance.
+  //
+  // The doctrine was never "no token may be unreferenced". It is "a token MINTED and not
+  // consumed" — --role-border-interactive was created and 173 files stayed on the old
+  // border. So a token is fatal only when its DECLARATION IS NEW IN THIS DIFF.
+  //
+  // TWO dots, not three. `base...HEAD` diffs from the MERGE BASE, so once a branch merges
+  // its base in — which every long-lived branch here does — everything the base added
+  // since the fork reads as "added by this branch". That is how `--input`, a token this
+  // branch never touched, was reported as newly minted and failed CI.
+  const newTokenDecls = new Set()
+  {
+    const base = process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : 'origin/development'
+    const diff = sh('git', ['diff', '--unified=0', base, 'HEAD', '--', 'packages/theme', 'packages/design-tokens'])
+    for (const t of newDeclsFromDiff(diff)) newTokenDecls.add(t)
+  }
+
   let failed = 0
   for (const kind of ['package', 'hook', 'token']) {
     const known = new Set(baseline[kind] ?? [])
     const now = new Set(findings[kind])
     for (const n of findings[kind]) {
-      if (known.has(n)) console.log(`  known   ${kind}: ${n} has no consumer`)
-      else {
-        console.error(`::error::NEW zero-consumer ${kind}: '${n}' exists and nothing uses it. Wire it, or remove it — there is no third state.`)
-        failed++
+      if (known.has(n)) { console.log(`  known   ${kind}: ${n} has no consumer`); continue }
+      if (kind === 'token' && !newTokenDecls.has(n)) {
+        console.log(`::warning::token '${n}' has no consumer and is not in the baseline. Not fatal: it was not declared in this diff, and token reach moves with the submodule pointers. Extend or trim the baseline with --write-baseline.`)
+        continue
       }
+      const minted = kind === 'token'
+        ? ' It is declared in THIS diff — a token minted and not consumed is the exact pattern this gate exists for.'
+        : ''
+      console.error(`::error::NEW zero-consumer ${kind}: '${n}' exists and nothing uses it.${minted} Wire it, or remove it — there is no third state.`)
+      failed++
     }
     for (const n of known) {
       if (!now.has(n)) {
-        console.error(`::error::${BASELINE} still lists ${kind} '${n}', but it now HAS a consumer. Remove the entry — this list may only shrink.`)
-        failed++
+        // Token reach moves with the submodule pointers, so a newly-USED token would
+        // otherwise fail every pointer-advance PR for doing its job. Packages and hooks
+        // live in this repo's own tree, so a stale entry there is real and stays fatal.
+        if (kind === 'token') {
+          console.log(`::warning::${BASELINE} still lists token '${n}', but it now has a consumer. Trim it with --write-baseline when convenient.`)
+        } else {
+          console.error(`::error::${BASELINE} still lists ${kind} '${n}', but it now HAS a consumer. Remove the entry — this list may only shrink.`)
+          failed++
+        }
       }
     }
   }
