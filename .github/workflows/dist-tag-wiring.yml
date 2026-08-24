@@ -1,0 +1,97 @@
+name: Publish workflows decide their dist-tag
+
+# `npm publish` applies the 'latest' dist-tag unless `--tag` is given — including for a
+# version carrying a semver prerelease. npm does NOT infer it from the version string.
+#
+# That default is what made the promotion deadlock unbreakable safely. Packages publish
+# on push to `main`, and every app installs with `--frozen-lockfile`, so a fix inside
+# `packages/**` could not reach any preview host until it was already on main:
+#
+#     the fix needs a publish -> publishing needs main -> main needs the gate green
+#       -> the gate measures a preview host -> which installs from the registry
+#         -> which does not have the fix
+#
+# Publishing a PRERELEASE from `development` cuts that loop — a real published artifact
+# an app's lockfile can pin, so the preview host serves the fix and the gate finally has
+# something truthful to measure. But that is only safe while a prerelease can never take
+# 'latest'. One workflow that forgets `--tag` puts a release candidate in front of every
+# consumer on `^1.2.0`, in production, silently.
+#
+# Fifteen publish workflows were wired at once. The sixteenth — added next month for a
+# new package, by copying an older file — is what this guard exists for.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/publish-*.yml'
+      - 'scripts/publish-dist-tag.mjs'
+      - 'scripts/check-publish-dist-tag-wiring.mjs'
+      - 'scripts/guard-registry.mjs'
+  push:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/publish-*.yml'
+      - 'scripts/publish-dist-tag.mjs'
+      - 'scripts/check-publish-dist-tag-wiring.mjs'
+  # A publish workflow can be edited by a merge that touched none of the paths above
+  # (a revert, or a submodule pointer bump that carries a workflow change). The daily
+  # run is the backstop for that.
+  schedule:
+    - cron: '50 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wiring:
+    name: Publish workflows decide their dist-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          # setup-node@v5 defaults package-manager-cache: true, which resolves the
+          # packageManager field's pnpm before corepack runs and dies at this step.
+          package-manager-cache: false
+
+      - name: Prove the decision logic can fail before trusting what it says
+        run: node scripts/publish-dist-tag.mjs --self-test
+
+      - name: Prove the checker can fail before trusting what it says
+        # A fixture self-test is not enough on its own: it only exercises strings this
+        # file wrote. Plant the defect in a REAL publish workflow and require a non-zero
+        # exit, so the control tests the tree that actually ships rather than a
+        # paraphrase of it.
+        run: |
+          set -euo pipefail
+          cp .github/workflows/publish-ui.yml /tmp/publish-ui.bak
+          sed -i 's| --tag "${{ steps.dist-tag.outputs.tag }}"||' .github/workflows/publish-ui.yml
+          if node scripts/check-publish-dist-tag-wiring.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — the checker passed a real publish workflow with --tag removed. Its clean passes mean nothing."
+            cp /tmp/publish-ui.bak .github/workflows/publish-ui.yml
+            exit 1
+          fi
+          cp /tmp/publish-ui.bak .github/workflows/publish-ui.yml
+          echo "positive control ok — checker detects a planted omission in a real workflow"
+
+      - name: Every publish workflow decides its dist-tag, before using it
+        run: node scripts/check-publish-dist-tag-wiring.mjs
+
+      - name: The guard registry has not silently lost an entry
+        # A missing '},' + '{' merges two entries into one and JavaScript reports
+        # nothing. That is how parent-setup-node-pnpm-guard went unwatched.
+        run: |
+          set -euo pipefail
+          node -e "
+            import('./scripts/guard-registry.mjs').then((m) => {
+              const problems = m.validateRegistry()
+              console.log('[guard-registry] ' + m.GUARDS.length + ' guard(s) exposed; floor ' + m.GUARD_FLOOR + '; ' + problems.length + ' structural problem(s).')
+              if (problems.length) { for (const p of problems) console.error('::error::' + p); process.exit(1) }
+            })
+          "

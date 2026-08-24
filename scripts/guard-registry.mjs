@@ -121,6 +121,28 @@ export const GUARDS = [
       'stale pointers as app findings. A clean pass prints the guarded/total ' +
       'step counts and the files scanned; finding zero setup-node steps, or ' +
       'fewer than the floor, is a hard failure rather than a pass.',
+  },
+
+  {
+    id: 'parent-publish-dist-tag-wiring',
+    label: 'every publish workflow decides its npm dist-tag explicitly',
+    repo: '.',
+    command: ['node', 'scripts/check-publish-dist-tag-wiring.mjs'],
+    ciWorkflow: '.github/workflows/dist-tag-wiring.yml',
+    mode: 'run',
+    notes:
+      '`npm publish` applies the \'latest\' dist-tag unless --tag is given, INCLUDING ' +
+      'for a version carrying a semver prerelease. All fifteen publish workflows ran ' +
+      'bare `npm publish --access public`, so bumping a package to 1.2.0-rc.1 to get a ' +
+      'fix onto a preview host would have handed every consumer on ^1.2.0 a release ' +
+      'candidate in production. Prerelease publishing is what breaks the promotion ' +
+      'deadlock (a package fix could not reach a preview host before the promotion its ' +
+      'verification was meant to authorise), so the tag decision is load-bearing, not ' +
+      'cosmetic. A clean pass prints the workflow count examined; zero matches is a ' +
+      'hard failure rather than a pass.',
+  },
+
+  {
     id: 'parent-component-mounts',
     label: 'toast() callers require a mounted toast surface',
     repo: '.',
@@ -1295,4 +1317,56 @@ export const GUARDS = [
 
 export function findGuard(id) {
   return GUARDS.find((g) => g.id === id)
+}
+
+/**
+ * A missing `},` + `{` between two entries is INVISIBLE in JavaScript.
+ *
+ * Object literals accept duplicate keys and keep the last one, so two entries that
+ * run together parse cleanly and silently collapse into one — the earlier guard is
+ * simply gone from the registry, and every consumer, including the LANE-WATCHER,
+ * reports a healthy run over a list that is one guard shorter than the file looks.
+ *
+ * That is not hypothetical. `parent-setup-node-pnpm-guard` was swallowed exactly this
+ * way and sat unwatched (registry exposed 60 entries for 61 written blocks). The guard
+ * it silently removed is the one whose own notes record a hand-applied sweep missing a
+ * workflow that then failed 20 of 20 runs unnoticed. A guard registry that can lose a
+ * guard without saying so is the same defect class the registry exists to catch.
+ *
+ * REQUIRED_FIELDS is the detector; GUARD_FLOOR is the ratchet. The floor may only ever
+ * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
+ * and say why, so a deletion is a decision rather than an accident.
+ */
+export const GUARD_FLOOR = 62
+
+const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
+
+export function validateRegistry(guards = GUARDS) {
+  const problems = []
+
+  if (guards.length < GUARD_FLOOR) {
+    problems.push(
+      `registry exposes ${guards.length} guard(s) but the floor is ${GUARD_FLOOR}. ` +
+        `Entries do not vanish by accident in a way JavaScript will report — check for a ` +
+        `missing '},' + '{' between two entries, which merges them silently.`,
+    )
+  }
+
+  const seen = new Map()
+  guards.forEach((g, i) => {
+    for (const f of REQUIRED_FIELDS) {
+      if (g[f] === undefined) problems.push(`entry ${i} (${g.id ?? 'no id'}) is missing '${f}'`)
+    }
+    if (g.id) {
+      if (seen.has(g.id)) problems.push(`duplicate id '${g.id}' at entries ${seen.get(g.id)} and ${i}`)
+      else seen.set(g.id, i)
+    }
+  })
+
+  const canaries = guards.filter((g) => g.mode === 'canary')
+  if (canaries.length !== 1) {
+    problems.push(`expected exactly 1 canary entry, found ${canaries.length}`)
+  }
+
+  return problems
 }

@@ -65,7 +65,7 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { GUARDS } from './guard-registry.mjs'
+import { GUARDS, GUARD_FLOOR, validateRegistry } from './guard-registry.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(__dirname, '..')
@@ -404,6 +404,22 @@ function runGuard(guard) {
 // Main
 // ---------------------------------------------------------------------------
 const jsonMode = process.argv.includes('--json')
+
+// STRUCTURAL INTEGRITY FIRST. A registry entry can be swallowed by a missing '},' +
+// '{' — JavaScript keeps the last duplicate key and reports nothing — so this watcher
+// would happily certify a run over a list one guard shorter than the file looks. That
+// is exactly how `parent-setup-node-pnpm-guard` went unwatched. Check the shape of the
+// list before drawing any conclusion from its contents.
+const registryProblems = validateRegistry(GUARDS)
+if (registryProblems.length > 0) {
+  console.error(
+    `guard-self-reporting: BOOTSTRAP FAILURE — guard-registry.mjs is structurally unsound ` +
+      `(${GUARDS.length} entries exposed, floor ${GUARD_FLOOR}). A watcher cannot certify a ` +
+      `registry it cannot trust:`,
+  )
+  for (const problem of registryProblems) console.error(`  - ${problem}`)
+  process.exit(1)
+}
 
 const canaryEntry = GUARDS.find((g) => g.mode === 'canary')
 if (!canaryEntry) {
