@@ -97,3 +97,13 @@ jobs:
 
       - name: No workflow contains a malformed Actions expression
         run: node scripts/check-workflow-expressions.mjs
+
+      # Third failure mode on the same surface: a `paths:` filter naming a file INSIDE
+      # a submodule can never match, because the parent's diff contains only the bare
+      # gitlink. edge-function-typecheck.yml watched `<star>/supabase/functions/**` and had
+      # not run since 2026-08-16 — green because it never fired.
+      - name: Prove the reachability checker can fail before trusting what it says
+        run: node scripts/check-workflow-path-reachability.mjs --self-test
+
+      - name: No workflow watches a path a parent diff can never contain
+        run: node scripts/check-workflow-path-reachability.mjs

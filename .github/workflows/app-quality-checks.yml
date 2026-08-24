@@ -3,6 +3,16 @@ name: App Quality Checks
 on:
   pull_request:
     paths:
+      # Gitlink paths. A submodule appears in the PARENT's diff as the bare path
+      # (`crm7`), never as `crm7/**` — so every filter below that reaches INSIDE a
+      # submodule is unmatchable from the parent and the workflow simply does not run
+      # when an app's pointer moves. The inside-submodule filters are kept: they match
+      # when this workflow is run from inside the submodule's own repo.
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'crm7'
       - 'crm7/**'
       - 'conduit/**'
       - 'R80.4/**'
@@ -14,6 +24,16 @@ on:
       - main
       - development
     paths:
+      # Gitlink paths. A submodule appears in the PARENT's diff as the bare path
+      # (`crm7`), never as `crm7/**` — so every filter below that reaches INSIDE a
+      # submodule is unmatchable from the parent and the workflow simply does not run
+      # when an app's pointer moves. The inside-submodule filters are kept: they match
+      # when this workflow is run from inside the submodule's own repo.
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'crm7'
       - 'crm7/**'
       - 'conduit/**'
       - 'R80.4/**'
@@ -84,6 +104,25 @@ jobs:
             exit 0
           fi
 
+          # NOTE — two different glob engines, and they disagree about a gitlink.
+          #
+          # GitHub Actions `paths:` filters and git PATHSPECS are not the same language.
+          # Verified on commit 72dae8c7 (a crm7 gitlink bump, whose entire diff is the
+          # single path `crm7`):
+          #
+          #   git diff --name-only 72dae8c7^ 72dae8c7 -- 'crm7/'   ->  crm7
+          #   git diff --name-only 72dae8c7^ 72dae8c7 -- 'crm7'    ->  crm7
+          #
+          # git's pathspec matches the submodule entry either way, so THIS DETECTOR IS
+          # CORRECT AS WRITTEN and needs no change. The Actions filter `crm7/**` does
+          # NOT match — which is why the `paths:` block above gained the bare gitlink
+          # paths and this loop did not.
+          #
+          # Recorded because the opposite mistake is already on the board:
+          # supabase-functions-deploy.yml:149 records a trigger widened without its
+          # detector — "the run fired, matched nothing, set matrix=[], deployed zero
+          # functions and reported SUCCESS". Checking that here was worth the minute;
+          # changing it would have been a fix to something that was never broken.
           CHANGED=()
           for dir in crm7 conduit R80.4 business-suite-unified braden; do
             if git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- "$dir/" | grep -q .; then

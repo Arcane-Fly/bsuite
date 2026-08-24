@@ -26,6 +26,17 @@ name: Semgrep SAST
 on:
   pull_request:
     paths:
+      # Gitlink paths. A submodule appears in the PARENT's diff as the bare path
+      # (`crm7`), never as `crm7/**` — so every filter below that reaches INSIDE a
+      # submodule is unmatchable from the parent and the workflow simply does not run
+      # when an app's pointer moves. The inside-submodule filters are kept: they match
+      # when this workflow is run from inside the submodule's own repo.
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'crm7'
+      - 'throughput'
       - 'crm7/**'
       - 'conduit/**'
       - 'R80.4/**'
