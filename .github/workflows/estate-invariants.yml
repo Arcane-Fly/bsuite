@@ -77,3 +77,27 @@ jobs:
       # otherwise produce a clean-looking result from a scan that proved nothing.
       - name: Check the boot path of every consumer
         run: node scripts/check-oauth-boot-wiring.mjs
+
+  silent-zero-row-writes:
+    name: no mutation reports an RLS denial as "not found"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone the sibling PRIVATE repos, and
+          # a failed clone leaves an EMPTY DIRECTORY, not an error the scan sees.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # The checker must prove it can tell the shapes apart before its count is
+      # trusted — a scanner blind to a construct reports ABSENCE, which reads as
+      # clean.
+      - name: Self-test the checker
+        run: node scripts/check-silent-zero-row-writes.mjs --selftest
+
+      - name: Ratchet — the count may fall, never rise
+        run: node scripts/check-silent-zero-row-writes.mjs
