@@ -12,6 +12,33 @@ export interface ColumnHeaderCellProps<TRow> {
 }
 
 /**
+ * WCAG 1.4.3 — the drag handle is CONTENT TEXT on a functional control, so it
+ * carries the 4.5:1 normal-text floor, not the 3:1 large-text one.
+ *
+ * It used to be `text-text-subtle`, which @bsuite/theme's own source documents as
+ * AA-large-only against the measured table in `src/css/vars.css`:
+ *
+ *     --light-text-subtle   3.52:1   AA large only (3:1)  —  FAILS AA normal
+ *     --dark-text-subtle    4.14:1   AA large only        —  FAILS AA normal
+ *     --light-text-muted    4.92:1   AA normal
+ *     --dark-text-muted     6.69:1   AA normal
+ *
+ * The cell renders at `text-xs`, so the glyph is normal-size text by WCAG's
+ * definition, and the handle is the only pointer affordance for reordering a
+ * column — it is not decoration. `text-muted` is the lowest tier that clears
+ * 4.5:1 in BOTH themes, so it is the smallest change that is actually correct.
+ * Hover stays `text-secondary`, so reaching for it still brightens.
+ *
+ * The two remaining `text-subtle` uses in this monorepo are both
+ * `placeholder:text-text-subtle` in @bsuite/schema-builder. Those are left alone
+ * deliberately: the token's declared purpose IS placeholders (the dark scale says
+ * so inline), and whether placeholder text must clear 4.5:1 is a brand decision
+ * about the token, not a defect in a consumer of it.
+ */
+const DRAG_HANDLE_CLASS =
+  'cursor-grab touch-none text-text-muted hover:text-text-secondary active:cursor-grabbing';
+
+/**
  * A single sticky-header cell: sort-on-click label, a drag handle wired to
  * @dnd-kit/sortable for column reorder (the monorepo already depends on
  * @dnd-kit via packages/page-builder — reused here rather than adding a
@@ -50,7 +77,7 @@ export function ColumnHeaderCell<TRow>(props: ColumnHeaderCellProps<TRow>): Reac
         <button
           type="button"
           aria-label={`Reorder column ${header.isPlaceholder ? '' : String(column.columnDef.header)}`}
-          className="cursor-grab touch-none text-text-subtle hover:text-text-secondary active:cursor-grabbing"
+          className={DRAG_HANDLE_CLASS}
           {...sortable.attributes}
           {...sortable.listeners}
         >
