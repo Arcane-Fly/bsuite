@@ -143,6 +143,27 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-content-contrast-tier',
+    label: 'shared packages clear WCAG AA for content text',
+    repo: '.',
+    command: ['node', 'scripts/check-content-contrast-tier.mjs'],
+    ciWorkflow: '.github/workflows/estate-invariants.yml',
+    mode: 'run',
+    notes:
+      "@bsuite/theme's own measured table marks two tiers below the 4.5:1 normal-text " +
+      'floor — subtle at 3.52:1 light / 4.14:1 dark, disabled at 2.21:1 / 2.48:1 — and ' +
+      'annotates them as such in vars.css. Nothing stopped a package painting CONTENT ' +
+      "text with them anyway: @bsuite/data-grid's column drag handle did, at text-xs, on " +
+      'a functional control, on every grid, unhovered. placeholder: and disabled: ' +
+      'variants are exempt by VARIANT PREFIX rather than by filename, because a path ' +
+      'allowlist dies loudly on a rename and silently on a delete. It scans STRING ' +
+      'LITERALS ONLY via a hand-written state machine: the first version scanned raw ' +
+      'source and flagged the very component it had been written to fix, because the doc ' +
+      'comment naming the banned utility matched. A clean pass prints the file count; ' +
+      'scanning fewer files than the floor exits 2 rather than passing.',
+  },
+
+  {
     id: 'parent-no-prerelease-in-production',
     label: 'no -next prerelease reaches a production path',
     repo: '.',
@@ -1363,7 +1384,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 63
+export const GUARD_FLOOR = 64
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
