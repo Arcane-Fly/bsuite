@@ -450,7 +450,7 @@ placement without review. Orders land where the pipeline lives — crm7#1687.
 2. **`AGENTS.md` says `@bsuite/page-builder ^0.2.0 (latest 0.2.2)`.** It is **0.8.0** — four minors
    stale, and that table is what an agent consults before a bump.
 3. **`docs/OUTSTANDING.md` calls itself "single source of truth"** while its own header repoints
-   twice. `docs/20260810-plan-dashboard-retirement-v1.00W.md` retired the last thing claiming that
+   twice. `docs/20260810-plan-dashboard-retirement-v1.00F.md` retired the last thing claiming that
    title, for exactly this reason. Regenerate or demote it.
 
 ### Task 6.2 — Close the inert-`Closes` class

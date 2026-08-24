@@ -11,7 +11,7 @@
 >   telling you to read something else is an index, not a truth.
 >
 > That is the same failure shape as the plan-completion dashboard retired on 2026-08-10
-> (`docs/20260810-plan-dashboard-retirement-v1.00W.md`), which was "named 'source of
+> (`docs/20260810-plan-dashboard-retirement-v1.00F.md`), which was "named 'source of
 > truth' in this file for three months while being wrong." Its lesson applies verbatim
 > here: **a status surface must show only what it derives at render time. Anything it
 > cannot recompute belongs in a dated document, where its age is visible.**
