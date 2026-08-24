@@ -71,7 +71,18 @@ jobs:
         run: |
           set -euo pipefail
           cp .github/workflows/publish-ui.yml /tmp/publish-ui.bak
-          sed -i 's| --tag "${{ steps.dist-tag.outputs.tag }}"||' .github/workflows/publish-ui.yml
+          # Match the flag by PATTERN, never by writing the expression literally.
+          # `${{ … }}` in a run block is interpolated by Actions BEFORE bash sees it,
+          # so the literal form became `s| --tag ""||`, matched nothing, left the file
+          # untouched — and this control correctly refused to certify a checker it had
+          # not actually exercised. Which is the control working; but the probe has to
+          # land for the proof to mean anything.
+          sed -i 's| --tag "[^"]*"||' .github/workflows/publish-ui.yml
+          if grep -q -- '--tag' .github/workflows/publish-ui.yml; then
+            echo "::error::the probe did not land — publish-ui.yml still contains --tag, so the control below would prove nothing."
+            cp /tmp/publish-ui.bak .github/workflows/publish-ui.yml
+            exit 1
+          fi
           if node scripts/check-publish-dist-tag-wiring.mjs; then
             echo "::error::POSITIVE CONTROL FAILED — the checker passed a real publish workflow with --tag removed. Its clean passes mean nothing."
             cp /tmp/publish-ui.bak .github/workflows/publish-ui.yml
