@@ -148,6 +148,28 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-package-publication',
+    label: 'every publishable package is actually on the registry',
+    repo: '.',
+    command: ['node', 'scripts/check-package-publication.mjs'],
+    ciWorkflow: '.github/workflows/package-publication.yml',
+    mode: 'run',
+    notes:
+      'bsuite#1908. Publish @bsuite/eslint-config reported SUCCESS on runs 7, 8 and 9 ' +
+      'while the package 404s on npm, and has done for four months. The workflow is not ' +
+      'lying — it probes, finds a definitive E404, and skips with a ::notice:: because the ' +
+      'publish token can push to an EXISTING package but cannot CREATE one. But a notice ' +
+      'is not a signal, it is GREEN, and green is indistinguishable from a working ' +
+      'publish. @bsuite/tsconfig is in the same state and nobody had counted it. This ' +
+      'makes absence a declared state with a reason, ratcheted in both directions, and ' +
+      'fails CLOSED on any registry answer that is not a conclusive 200 or 404 — an ' +
+      'outage must never read as absence, which is the same conflation the gate is named ' +
+      'for. It also asserts a publishable package has a publish workflow and a private ' +
+      'one does not, because a new package added without its workflow publishes nothing ' +
+      'and says nothing.',
+  },
+
+  {
     id: 'parent-zero-consumers',
     label: 'nothing ships with zero consumers',
     repo: '.',
@@ -611,6 +633,9 @@ export const GUARDS = [
     evidence:
       '"33 files examined in docs/recovered — 4 carry a verdict banner, 29 do not ' +
       '(ceiling 29)"; --self-test exits 1',
+  },
+
+  {
     // The suppression counter. Every other lint ratchet in this estate counts
     // what SURVIVES the linter; this one counts what was switched off before
     // the linter ever spoke. R80.4/eslint-baseline.json is the worked example
@@ -700,6 +725,9 @@ export const GUARDS = [
       '`--inventory --require-authenticated 99` exits 1 with "only 6 ' +
       'authenticated route(s) declared, floor is 99"; and the sweep itself run ' +
       'as `--no-session` exits 1 with "6 route(s) UNAUDITED" per auditor.',
+  },
+
+  {
     // The parser that decides WHICH ISSUES GET CLOSED AUTOMATICALLY when a
     // pull request merges into `development` (register V-10 — GitHub only
     // auto-closes on a merge to the default branch, and all seven repos
@@ -1451,12 +1479,69 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 65
+export const GUARD_FLOOR = 70
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
-export function validateRegistry(guards = GUARDS) {
+/**
+ * THE COUNT FLOOR CANNOT SEE A MERGE THAT PREDATES IT.
+ *
+ * A missing `},` + `{` merges two entries; JavaScript keeps the last duplicate key and
+ * reports nothing. GUARD_FLOOR catches a guard vanishing AFTER the floor was set — but if
+ * the floor was recorded from an already-reduced list, the loss is baked in and invisible
+ * forever. That is exactly what happened: one merge was repaired and the floor set from
+ * the result, while TWO more were still merged and the file read as healthy.
+ *
+ *   written `id:` lines   69
+ *   exposed GUARDS        67
+ *
+ * The invariant is not "at least N". It is "every entry written is an entry exposed".
+ * This reads the source and compares, so a merge is caught the moment it appears,
+ * whatever the floor happens to say.
+ *
+ * Pure over the source text, so it is testable without touching the filesystem.
+ */
+export function findMergedEntries(sourceText) {
   const problems = []
+  const start = sourceText.indexOf('export const GUARDS = [')
+  if (start === -1) return [{ line: 0, ids: [], message: 'GUARDS array not found in the source' }]
+
+  let i = sourceText.indexOf('[', start) + 1
+  let depth = 0
+  let objStart = -1
+  const objects = []
+  while (i < sourceText.length) {
+    const c = sourceText[i]
+    if (c === '{') { if (depth === 0) objStart = i; depth++ }
+    else if (c === '}') { depth--; if (depth === 0) objects.push([objStart, sourceText.slice(objStart, i + 1)]) }
+    else if (c === ']' && depth === 0) break
+    i++
+  }
+
+  for (const [pos, body] of objects) {
+    const ids = [...body.matchAll(/(?:^|\n)\s{4}id:\s*'([^']+)'/g)].map((m) => m[1])
+    if (ids.length > 1) {
+      const line = sourceText.slice(0, pos).split('\n').length
+      problems.push({
+        line,
+        ids,
+        message:
+          `line ${line}: one object literal holds ${ids.length} \`id:\` keys — ` +
+          `${ids.join(', ')}. JavaScript keeps the LAST, so only '${ids[ids.length - 1]}' ` +
+          `exists and the others are gone with no error. A missing '},' + '{' between two ` +
+          `entries does this silently.`,
+      })
+    }
+  }
+  return problems
+}
+
+export function validateRegistry(guards = GUARDS, sourceText = null) {
+  const problems = []
+
+  // Source-level check first: a merged entry is invisible to every check that only
+  // looks at the parsed array, because by then the swallowed entry does not exist.
+  if (sourceText) for (const p of findMergedEntries(sourceText)) problems.push(p.message)
 
   if (guards.length < GUARD_FLOOR) {
     problems.push(

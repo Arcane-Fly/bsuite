@@ -231,6 +231,21 @@ jobs:
           echo "✓ All ${TOTAL} pg_cron job(s) healthy or deliberately inactive."
 
       - name: Never-succeeded sweep — the failures a 24h window cannot see
+        # RUNS EVEN WHEN THE SWEEP ABOVE FAILED, deliberately.
+        #
+        # Without this, the detector sits BEHIND a step that fails on any non-healthy job
+        # — and it is dark for exactly as long as that job stays unhealthy. Observed on
+        # run 32715696105, the first run after the self-test was repaired: the sweep
+        # correctly failed on document-retention-sweep-daily, and this step was SKIPPED.
+        #
+        # That job is blocked on an operator seeding a vault secret, so "as long as it
+        # stays unhealthy" is days. The window-independent detector — the only thing that
+        # can see sync-award-rates-weekly, whose single lifetime run FAILED while
+        # cron_job_health(24) calls it healthy — would have been dark that whole time.
+        #
+        # Fixing the self-test moved the blockage one step down rather than removing it.
+        # A detector must not be gated on another detector finding nothing.
+        if: always() && steps.pooler.outputs.db_host != ''
         # public.cron_job_health(N) judges liveness inside an N-hour window. A WEEKLY job
         # runs once every 168 hours, so for six days in seven its window contains no runs,
         # failures_in_window is 0, and the verdict is 'healthy'.

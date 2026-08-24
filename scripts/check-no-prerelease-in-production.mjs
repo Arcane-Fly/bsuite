@@ -346,11 +346,32 @@ function selfTest() {
   // with a real pnpm-lock.yaml, and require that the readers SEE it.
   const YAML = loadDep('yaml')
   if (!YAML) {
+    // A SKIP IS ONLY ACCEPTABLE WHERE A HUMAN CAN SEE IT.
+    //
+    // CI ran this self-test for its first two days with `yaml` unresolvable,
+    // because the workflow step that runs it did not pass
+    // BSUITE_GUARD_NODE_MODULES while the step after it did. The fixture control
+    // — the only half that exercises the code which READS the tree — quietly did
+    // not run, and the job went green on 19 assertions where 30 were written.
+    //
+    // Setting the variable fixed that instance. This makes the CLASS unrepeatable:
+    // under CI, an unexercised control is a FAILURE, not a notice. Locally it stays
+    // a notice, because a developer without the parser installed still gets useful
+    // signal from the pure half and can see exactly what was not covered.
+    const inCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true'
     console.error(
       '  ! fixture control SKIPPED — `yaml` is not resolvable here, so readApps() was ' +
-        'not exercised. CI always provides it (see no-prerelease-in-production.yml); a ' +
-        'local run without it has tested the decisions and NOT the reading.',
+        'not exercised. The decisions were tested; the READING was not.',
     )
+    if (inCI) {
+      console.error(
+        '::error::Running under CI with the fixture control skipped. That is the ' +
+          'silent-coverage-loss this guard exists to prevent, inside the guard itself. ' +
+          'Pass BSUITE_GUARD_NODE_MODULES to the self-test step (see ' +
+          'no-prerelease-in-production.yml). Refusing to report a self-test pass.',
+      )
+      return 1
+    }
   } else {
     const fixture = mkdtempSync(join(tmpdir(), 'no-prerelease-fixture-'))
     try {

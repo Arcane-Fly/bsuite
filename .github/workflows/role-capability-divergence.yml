@@ -1,0 +1,118 @@
+name: role_capabilities divergence
+
+# `public.role_capabilities` holds 1,296 hand-edited rows and currently decides
+# nothing, because its resolver — crm7 migration 20260905000000,
+# `user_has_capability()` — is merged but has never been APPLIED. The applier
+# reads main's submodule gitlink and main's crm7 pointer predates it.
+#
+# That makes this table a loaded gun rather than a live hole. The day the
+# pointer advances, the resolver appears and every row in it starts answering
+# authorisation questions. This gate measures what would happen on that day, so
+# the answer is known before it is load-bearing rather than after.
+#
+# It ratchets on ESCALATIONS: write-shaped capabilities the table grants and the
+# hardcoded checks deny. It does not ratchet on total divergence, because a
+# divergence can legitimately be resolved in EITHER direction and forcing that
+# number down would reward changing whichever side is easier rather than
+# whichever side is right.
+
+on:
+  pull_request:
+    branches: [development, main]
+    paths:
+      - 'crm7'
+      - 'scripts/audit-role-capability-divergence.mjs'
+      - 'scripts/role-capability-divergence-baseline.json'
+      - '.github/workflows/role-capability-divergence.yml'
+  schedule:
+    # The data changes without any PR — the matrix is edited from a live admin
+    # screen, and the most recent edit when this was written was the same day.
+    # A PR-only trigger would never see that.
+    - cron: '35 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: role-capability-divergence-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # The script hard-fails on a missing submodule rather than reporting a
+      # clean zero, but failing here first gives a clearer message.
+      - name: crm7 must be checked out
+        run: |
+          test -f crm7/src/hooks/usePermissions.ts \
+            || { echo "::error::crm7 submodule missing — this gate cannot measure anything"; exit 1; }
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          # Deliberately NOT package-manager-cache: this job runs no install, and
+          # setup-node resolves the packageManager pnpm before corepack has run.
+          # That is issue #2226, ~40 consecutive failures on another workflow.
+          package-manager-cache: false
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # There is no SUPABASE_DB_URL and no service-role key in this repo. Supavisor
+      # tenants sit on a numbered cluster — newer projects on aws-1, older on
+      # aws-0 — and the wrong one answers "tenant/user not found". No cluster
+      # accepting the connection is a HARD failure, never a quiet pass.
+      #
+      # The host string is copied VERBATIM from phantom-migrations.yml, which has
+      # succeeded every day this week. The first version of this step paraphrased
+      # it and guessed `ap-southeast-2` from the tenant's timezone; the region is
+      # `us-east-1` and the probe found no cluster. Copy a working predicate, do
+      # not re-derive one.
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::no Supavisor cluster accepted the connection; refusing to measure nothing"
+          exit 1
+
+      - name: Read role_capabilities
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres" -At -c "
+            select json_build_object(
+              'rows', coalesce((select json_agg(json_build_object(
+                  'role', rc.role, 'capability', rc.capability,
+                  'granted', rc.granted, 'tenant_id', rc.tenant_id))
+                from public.role_capabilities rc), '[]'::json),
+              'tenants', coalesce((select json_object_agg(t.id::text, t.name)
+                from public.tenants t), '{}'::json))" > /tmp/role_caps.json
+          test -s /tmp/role_caps.json || { echo '::error::empty read'; exit 1; }
+
+      - name: Measure divergence
+        env:
+          ROLE_CAPABILITIES_JSON: /tmp/role_caps.json
+          BSUITE_ROOT: ${{ github.workspace }}
+        run: node scripts/audit-role-capability-divergence.mjs

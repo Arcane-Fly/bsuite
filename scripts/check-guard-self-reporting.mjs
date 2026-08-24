@@ -410,7 +410,12 @@ const jsonMode = process.argv.includes('--json')
 // would happily certify a run over a list one guard shorter than the file looks. That
 // is exactly how `parent-setup-node-pnpm-guard` went unwatched. Check the shape of the
 // list before drawing any conclusion from its contents.
-const registryProblems = validateRegistry(GUARDS)
+// The SOURCE is passed, not just the parsed array. A merged entry is invisible to any
+// check that only sees GUARDS, because by then the swallowed entry does not exist — and
+// the count floor cannot help either when the floor was recorded from an already-reduced
+// list, which is exactly how two guards stayed dark after the first one was repaired.
+const registrySource = fs.readFileSync(path.join(__dirname, 'guard-registry.mjs'), 'utf8')
+const registryProblems = validateRegistry(GUARDS, registrySource)
 if (registryProblems.length > 0) {
   console.error(
     `guard-self-reporting: BOOTSTRAP FAILURE — guard-registry.mjs is structurally unsound ` +

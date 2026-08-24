@@ -408,6 +408,38 @@ const CENSUS_QUERIES = {
       WHERE NOT t.tgisinternal
         AND n.nspname NOT IN ('pg_catalog','information_schema','supabase_migrations')
     ) q`,
+
+  /* ENUM VALUES — the category whose absence made a correct migration
+     unmergeable.
+
+     `crm7/supabase/migrations/20260903000000_field_manager_gto_role_enum_value.sql`
+     is one line:
+
+         ALTER TYPE public.gto_role ADD VALUE IF NOT EXISTS 'field_manager';
+
+     It is effective — the live enum is (gto_admin, gto_staff, field_officer,
+     host_supervisor, apprentice) and has no field_manager — and this rehearsal
+     called it `noop` and failed the PR. Not because the migration did nothing,
+     but because NOTHING HERE COULD SEE IT: the seven categories above cover
+     tables, functions, policies, indexes, constraints, comments and triggers,
+     and an enum value is none of those.
+
+     A detector that cannot observe a change reports its absence, and absence
+     reads as "this migration is dead code". That is the most expensive possible
+     way to be wrong about a migration, because the recommended fix — delete it
+     — is the one that loses the change.
+
+     Ordered by enumsortorder, not by label: ADD VALUE ... BEFORE/AFTER inserts
+     into the middle, and sorting alphabetically would hide a reordering. */
+  enums: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
+      SELECT n.nspname || '.' || t.typname || ' = ' ||
+             string_agg(e.enumlabel, ',' ORDER BY e.enumsortorder) AS x
+      FROM pg_type t
+      JOIN pg_enum e ON e.enumtypid = t.oid
+      JOIN pg_namespace n ON n.oid = t.typnamespace
+      WHERE n.nspname NOT IN ('pg_catalog','information_schema','supabase_migrations')
+      GROUP BY n.nspname, t.typname
+    ) q`,
 };
 
 function takeCensus(dbUrl) {
@@ -536,6 +568,41 @@ function runSelfTest(dbUrl, tmpDir) {
       // mislabel what it cannot see is how a class stops being checked.
       name: 'GOOD — function ACL hardening ONLY, on an existing function',
       sql: `REVOKE ALL ON FUNCTION ${SELF_TEST_SCHEMA}.acl_probe() FROM PUBLIC;\n`,
+      expect: 'pass',
+    },
+    {
+      // Setup for the enum fixture below. SEPARATE on purpose, for the same
+      // reason the ACL pair is split: if CREATE TYPE and ADD VALUE shared one
+      // case, the type's creation alone would move the census and the case
+      // would pass whether or not the enums probe exists — the fixture would
+      // not detect the regression it is for. ADD VALUE also cannot run in the
+      // same transaction that creates the type.
+      name: 'GOOD — creates an enum type (setup for the enum-value fixture)',
+      sql:
+        `CREATE SCHEMA IF NOT EXISTS ${SELF_TEST_SCHEMA};\n` +
+        `DO $do$ BEGIN\n` +
+        `  IF to_regtype('${SELF_TEST_SCHEMA}.enum_probe') IS NULL THEN\n` +
+        `    CREATE TYPE ${SELF_TEST_SCHEMA}.enum_probe AS ENUM ('first');\n` +
+        `  END IF;\n` +
+        `END $do$;\n`,
+      expect: 'pass',
+    },
+    {
+      // THE REGRESSION FIXTURE for the 2026-08-24 census gap. A pure enum-value
+      // addition on an ALREADY-EXISTING type — no new object, nothing but a new
+      // label.
+      //
+      // Before the `enums` probe was added, this exact shape applied cleanly,
+      // moved nothing the census watched, and was rejected as a no-op. It cost
+      // crm7 migration 20260903000000 (adding 'field_manager' to gto_role) a
+      // rehearsal failure while that migration was doing precisely what it said.
+      //
+      // The wrong fix was available and tempting: declare such migrations DATA
+      // ONLY. They are not data, and doing so would exempt every future
+      // ALTER TYPE ADD VALUE from verification permanently — the same trap the
+      // function-ACL comment above describes.
+      name: 'GOOD — ALTER TYPE ADD VALUE only, on an existing enum',
+      sql: `ALTER TYPE ${SELF_TEST_SCHEMA}.enum_probe ADD VALUE IF NOT EXISTS 'added_by_self_test';\n`,
       expect: 'pass',
     },
     {

@@ -76,7 +76,54 @@ const APP_CANDIDATES = [
       'throughput/src/lib/supabase.ts',
     ],
   },
+  {
+    // CONDUIT WAS ABSENT FROM THIS LIST ENTIRELY until 2026-08-24 — the one app that
+    // legitimately manages auth cookies, and therefore the one whose client config is
+    // most worth checking.
+    app: 'conduit',
+    candidates: [
+      'conduit/src/lib/supabase/client.ts',
+      'conduit/src/lib/supabase.ts',
+    ],
+  },
+  {
+    // mobile/ is a REAL, NON-GITLINK directory in this repo, so unlike every entry above
+    // it is present in every checkout — including the one build-and-test.yml makes. It was
+    // declared "out of scope", and mobile/lib/supabase.ts was sitting without
+    // flowType: 'pkce' while the other four apps all declare it.
+    //
+    // ExpoSecureStore as the storage adapter is correct for a native app and is NOT the
+    // forbidden sessionStorage case; the required options are the same everywhere.
+    app: 'mobile',
+    candidates: [
+      'mobile/lib/supabase.ts',
+    ],
+  },
 ];
+
+/**
+ * WHICH FACTORY IS THIS FILE USING? The answer changes what may be demanded of it.
+ *
+ * Read from the INSTALLED source, not from memory:
+ *
+ *   supabase-js 2.x  dist/main/lib/constants.js
+ *     DEFAULT_AUTH_OPTIONS = { autoRefreshToken: true, persistSession: true,
+ *                              detectSessionInUrl: true, flowType: 'implicit' }
+ *     -> flowType defaults to IMPLICIT. Declaring 'pkce' explicitly is load-bearing.
+ *
+ *   @supabase/ssr 0.12.3  dist/main/createBrowserClient.js:40-43
+ *     flowType: "pkce"                                        <- hardcoded, always
+ *     autoRefreshToken: options?.auth?.autoRefreshToken ?? isBrowser()
+ *     persistSession:   options?.auth?.persistSession ?? true
+ *     -> all three are already correct, and a caller CANNOT get them wrong by omission.
+ *
+ * Demanding the literal strings of an ssr browser client is asking it to restate library
+ * defaults. conduit was reported non-compliant on exactly that basis when this app was
+ * first added to the list — a false finding, and the kind of over-strict guard that earns
+ * its way into being switched off. The FORBIDDEN patterns still apply to both: those are
+ * things a caller can actively do wrong.
+ */
+const SSR_BROWSER_FACTORY = /createBrowserClient\s*[<(]/;
 
 /** Options that MUST appear in the createClient auth config block. */
 const REQUIRED = [
@@ -148,11 +195,23 @@ for (const { app, candidates } of APP_CANDIDATES) {
 
   const { filePath, content } = found;
   const issues = [];
+  const notes = [];
 
   // 1. Check required options are present (search whole file content).
-  for (const { label, pattern } of REQUIRED) {
-    if (!pattern.test(content)) {
-      issues.push(`MISSING required option: ${label}`);
+  //
+  // Skipped for an @supabase/ssr browser client: that factory HARDCODES flowType 'pkce'
+  // and defaults persistSession and autoRefreshToken to true, so a caller cannot get any
+  // of the three wrong by omission. See SSR_BROWSER_FACTORY above for the installed-source
+  // evidence. The FORBIDDEN checks below still run — those are things a caller can
+  // actively do wrong.
+  const isSsrBrowserClient = SSR_BROWSER_FACTORY.test(content);
+  if (isSsrBrowserClient) {
+    notes.push('@supabase/ssr browser client — required options are library-guaranteed');
+  } else {
+    for (const { label, pattern } of REQUIRED) {
+      if (!pattern.test(content)) {
+        issues.push(`MISSING required option: ${label}`);
+      }
     }
   }
 
@@ -219,6 +278,35 @@ console.log(
     (skipped > 0 ? ` (${skipped} skipped — submodule not checked out)` : '') +
     '\n',
 );
+
+// A SKIP IS NOT A PASS (D-92).
+//
+// This guard's merge-blocking gate is build-and-test.yml, whose checkout carried no
+// `submodules:` key — so every candidate path resolved to nothing and it printed
+//
+//     Result: 0/0 apps passed (5 skipped — submodule not checked out)
+//
+// and exited 0 on every pull request. The guard registry's recorded evidence
+// "Result: 5/5 apps passed" was measured under LANE-WATCHER, which DOES check out
+// submodules — so the watcher was certifying a shape the merge-blocking gate never ran.
+//
+// Failing only on a ZERO denominator is not enough, and adding mobile/ (a real
+// non-gitlink path) proved it: the same broken checkout then reported
+// "1/1 apps passed (6 skipped)" and exited 0. One app of seven, reading as green.
+//
+// Every app in this list is expected to be present. A skip means the CHECKOUT is wrong,
+// not that there is nothing to check.
+if (skipped > 0) {
+  console.error(
+    `\n${skipped} of ${results.length} app(s) were SKIPPED because their submodule was not ` +
+      'checked out.\n' +
+      'A skip is "could not check", not "found nothing" — refusing to report a pass on the ' +
+      'remainder.\n' +
+      'The workflow running this needs `submodules: recursive` and a cross-repo token:\n' +
+      '    token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}\n',
+  );
+  process.exit(2);
+}
 
 if (hasViolation) {
   console.error(
