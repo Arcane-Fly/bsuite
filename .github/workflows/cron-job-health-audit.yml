@@ -106,6 +106,26 @@ jobs:
         # indistinguishable from a clean sweep from a healthy estate, and the whole point of
         # this workflow is that "looks fine" was never evidence. Everything happens inside a
         # transaction that is ALWAYS rolled back — no cron row is ever really written.
+        #
+        # WHY THIS IS AN INCREMENT AND NOT `FIRED=1`
+        #
+        # The assertion used to be `grep -q '^FIRED=1$'`. FIRED counts EVERY job whose
+        # verdict is 'failing' — not just the synthetic one. So the moment a real job
+        # started failing, FIRED became 2, the assertion failed, and the job exited
+        # BEFORE its own sweep. The detector was fine; the assertion was wrong, and it
+        # masked the finding it was standing in front of.
+        #
+        # Measured 2026-08-24: one genuinely failing job, so every run produced FIRED=2
+        # and this workflow had not completed a sweep since that job started failing.
+        # An audit that stops working the first time it has something to report is worse
+        # than no audit, because its redness reads as a broken pipeline rather than a
+        # broken estate.
+        #
+        # The correct assertion is that the count goes UP BY EXACTLY ONE. That holds no
+        # matter how many jobs are genuinely failing. It also needs the probe to land on
+        # a job that is not ALREADY failing, or the count would not move and a healthy
+        # detector would look broken — so the target is chosen from the healthy set, and
+        # the run asserts a target was found at all.
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
@@ -116,15 +136,26 @@ jobs:
 
           OUT=$(psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL'
           BEGIN;
-          -- A synthetic FAILED run for whichever job sorts first. Its verdict must flip
-          -- to 'failing'.
-          INSERT INTO cron.job_run_details
-                 (jobid, runid, job_pid, database, username, command, status,
-                  return_message, start_time, end_time)
-          SELECT jobid, -999999, 0, current_database(), current_user, 'health-audit probe',
-                 'failed', 'synthetic probe — rolled back', now(), now()
-            FROM cron.job ORDER BY jobid LIMIT 1;
-          SELECT 'FIRED=' || count(*) FROM public.cron_job_health(24) WHERE verdict = 'failing';
+          SELECT 'BEFORE=' || count(*) FROM public.cron_job_health(24) WHERE verdict = 'failing';
+          -- Probe a job that is NOT already failing, so the count has somewhere to move.
+          WITH target AS (
+            SELECT j.jobid
+              FROM cron.job j
+             WHERE j.jobname IN (SELECT jobname FROM public.cron_job_health(24)
+                                  WHERE verdict IN ('healthy', 'inactive'))
+             ORDER BY j.jobid
+             LIMIT 1
+          ), ins AS (
+            INSERT INTO cron.job_run_details
+                   (jobid, runid, job_pid, database, username, command, status,
+                    return_message, start_time, end_time)
+            SELECT jobid, -999999, 0, current_database(), current_user, 'health-audit probe',
+                   'failed', 'synthetic probe — rolled back', now(), now()
+              FROM target
+            RETURNING 1
+          )
+          SELECT 'PROBED=' || count(*) FROM ins;
+          SELECT 'AFTER=' || count(*) FROM public.cron_job_health(24) WHERE verdict = 'failing';
           -- ...and the rest of the estate must NOT have been dragged along with it, or the
           -- detector flags everything, which is the same as flagging nothing.
           SELECT 'CLEAN=' || count(*) FROM public.cron_job_health(24)
@@ -133,16 +164,24 @@ jobs:
           SQL
           )
           echo "$OUT"
-          echo "$OUT" | grep -q '^FIRED=1$' || {
-            echo "::error::cron_job_health() did NOT report the synthetic failed run. The detector is broken and any clean sweep below is meaningless."
+          BEFORE=$(echo "$OUT" | sed -n 's/^BEFORE=//p')
+          AFTER=$(echo "$OUT"  | sed -n 's/^AFTER=//p')
+          PROBED=$(echo "$OUT" | sed -n 's/^PROBED=//p')
+          CLEAN=$(echo "$OUT"  | sed -n 's/^CLEAN=//p')
+
+          [ "${PROBED:-0}" -eq 1 ] || {
+            echo "::error::the synthetic probe inserted ${PROBED:-0} row(s), not 1. Every job is already failing, or cron.job is empty — either way this self-test proves nothing and must not be read as a pass."
             exit 1
           }
-          CLEAN=$(echo "$OUT" | sed -n 's/^CLEAN=//p')
+          [ "$((AFTER - BEFORE))" -eq 1 ] || {
+            echo "::error::cron_job_health() reported ${BEFORE} failing before the synthetic run and ${AFTER} after. It must go up by exactly 1. The detector is broken and any sweep below is meaningless."
+            exit 1
+          }
           [ "${CLEAN:-0}" -gt 0 ] || {
             echo "::error::cron_job_health() classified NOTHING as healthy while one synthetic failure was present. It is flagging everything, which is the same as flagging nothing."
             exit 1
           }
-          echo "✓ Fired on the synthetic failure, left ${CLEAN} job(s) healthy, rolled back."
+          echo "✓ Failing count moved ${BEFORE} -> ${AFTER} on one synthetic failure, left ${CLEAN} job(s) healthy, rolled back."
 
       - name: Sweep — every pg_cron job's health
         env:
@@ -164,7 +203,7 @@ jobs:
 
           TOTAL=$(grep -c . health.txt || true)
           if [ "${TOTAL:-0}" -eq 0 ]; then
-            echo "::error::public.cron_job_health() returned 0 rows. That means 'could not measure', not 'no jobs' — this database has 14 active pg_cron jobs. Refusing to report a pass."
+            echo "::error::public.cron_job_health() returned 0 rows. That means 'could not measure', not 'no jobs' — this database has 22 active pg_cron jobs (measured 2026-08-24). Refusing to report a pass."
             exit 1
           fi
           BAD=$(awk -F'|' '$4 != "healthy" && $4 != "inactive"' health.txt | wc -l | tr -d ' ')
@@ -190,3 +229,98 @@ jobs:
             exit 1
           fi
           echo "✓ All ${TOTAL} pg_cron job(s) healthy or deliberately inactive."
+
+      - name: Never-succeeded sweep — the failures a 24h window cannot see
+        # public.cron_job_health(N) judges liveness inside an N-hour window. A WEEKLY job
+        # runs once every 168 hours, so for six days in seven its window contains no runs,
+        # failures_in_window is 0, and the verdict is 'healthy'.
+        #
+        # Measured 2026-08-24: sync-award-rates-weekly had exactly ONE lifetime run, it
+        # FAILED, and the sweep above reported it healthy. A window-relative verdict
+        # structurally cannot see a failure of any job whose period exceeds the window —
+        # today that is every weekly, monthly and annual job, and any added later.
+        #
+        # This check is window-independent: a job that has run and has never once
+        # succeeded is failing, whatever the window says. Known cases are acknowledged in
+        # .github/cron-never-succeeded-baseline.json, which may only SHRINK — an
+        # unacknowledged one fails the run, and so does a stale entry for a job that has
+        # since succeeded.
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -F'|' <<'SQL' > never.txt
+          SELECT j.jobname,
+                 count(*)                                        AS runs,
+                 count(*) FILTER (WHERE d.status = 'succeeded')   AS successes,
+                 replace(replace(coalesce(left(max(d.return_message), 160), ''), '|', '/'), E'\n', ' ')
+            FROM cron.job j
+            JOIN cron.job_run_details d ON d.jobid = j.jobid
+           GROUP BY j.jobid, j.jobname
+          HAVING count(*) FILTER (WHERE d.status = 'succeeded') = 0
+           ORDER BY j.jobname;
+          SQL
+
+          # Jobs WITH at least one success, so a stale baseline entry can be detected.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL' > succeeded.txt
+          SELECT j.jobname
+            FROM cron.job j
+            JOIN cron.job_run_details d ON d.jobid = j.jobid
+           GROUP BY j.jobid, j.jobname
+          HAVING count(*) FILTER (WHERE d.status = 'succeeded') > 0;
+          SQL
+
+          NEVER=$(grep -c . never.txt || true)
+          EXAMINED=$(( NEVER + $(grep -c . succeeded.txt || true) ))
+
+          # HEAD LINE FIRST — the denominator before any verdict. A zero examined count is
+          # "could not measure", not "nothing to measure".
+          echo "[cron-never-succeeded] ${EXAMINED} pg_cron job(s) with run history examined; ${NEVER} have never succeeded."
+          if [ "${EXAMINED}" -eq 0 ]; then
+            echo "::error::no pg_cron job has any run history at all. That is 'could not measure', not a clean bill. Refusing to report a pass."
+            exit 1
+          fi
+
+          BASELINE=.github/cron-never-succeeded-baseline.json
+          ACK=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$BASELINE','utf8')).jobs.map(j=>j.jobname).join('\n'))")
+
+          unacknowledged=0
+          while IFS='|' read -r name runs successes msg; do
+            [ -z "$name" ] && continue
+            if printf '%s\n' "$ACK" | grep -qx -- "$name"; then
+              echo "::notice::pg_cron job ${name} has never succeeded in ${runs} run(s) — acknowledged in ${BASELINE}. ${msg}"
+            else
+              echo "::error::pg_cron job ${name} has run ${runs} time(s) and NEVER succeeded, and is not acknowledged in ${BASELINE}. A 24h window cannot see this for any job whose period exceeds it. ${msg}"
+              unacknowledged=$((unacknowledged + 1))
+            fi
+          done < never.txt
+
+          # The other direction: an entry that is no longer true must be deleted, or the
+          # list becomes a place failures go to be forgotten.
+          stale=0
+          while IFS= read -r name; do
+            [ -z "$name" ] && continue
+            if grep -qx -- "$name" succeeded.txt; then
+              echo "::error::${BASELINE} still lists ${name}, but it has since succeeded. Remove the entry — this list may only shrink."
+              stale=$((stale + 1))
+            fi
+          done <<< "$ACK"
+
+          {
+            echo "## pg_cron never-succeeded sweep"
+            echo
+            echo "${EXAMINED} job(s) with run history examined; ${NEVER} have never succeeded (${unacknowledged} unacknowledged, ${stale} stale baseline entr(y/ies))."
+            echo
+            echo "| job | runs | successes | last message |"
+            echo "|---|---:|---:|---|"
+            awk -F'|' 'NF{printf "| `%s` | %s | %s | %s |\n", $1,$2,$3,$4}' never.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$unacknowledged" -ne 0 ] || [ "$stale" -ne 0 ]; then
+            exit 1
+          fi
+          echo "✓ ${NEVER} never-succeeded job(s), all acknowledged; no stale baseline entries."

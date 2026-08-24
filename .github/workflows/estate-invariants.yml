@@ -77,3 +77,58 @@ jobs:
       # otherwise produce a clean-looking result from a scan that proved nothing.
       - name: Check the boot path of every consumer
         run: node scripts/check-oauth-boot-wiring.mjs
+
+  silent-zero-row-writes:
+    name: no mutation reports an RLS denial as "not found"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone the sibling PRIVATE repos, and
+          # a failed clone leaves an EMPTY DIRECTORY, not an error the scan sees.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # The checker must prove it can tell the shapes apart before its count is
+      # trusted — a scanner blind to a construct reports ABSENCE, which reads as
+      # clean.
+      - name: Self-test the checker
+        run: node scripts/check-silent-zero-row-writes.mjs --selftest
+
+      - name: Ratchet — the count may fall, never rise
+        run: node scripts/check-silent-zero-row-writes.mjs
+
+  content-contrast-tier:
+    name: shared packages clear WCAG AA for content text
+    runs-on: ubuntu-latest
+    steps:
+      # No submodules needed — this scans packages/ in THIS repo, which is where
+      # the shared components live. Keeping the checkout shallow keeps the job in
+      # seconds, which is the reason estate-invariants can afford no paths filter.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          # NOTE: no `package-manager-cache: false` here. That input exists on
+          # setup-node@v5, not @v4, and this file is on v4 like its sibling jobs.
+          # v4 does not resolve a package manager unless `cache:` is set, so there
+          # is nothing to turn off. actionlint catches the mismatch; GitHub does not.
+
+      # A rule that scans the wrong thing reports a clean tree over nothing. This
+      # one has a specific way of going wrong: it deliberately ignores COMMENTS,
+      # so an over-broad comment stripper would ignore the whole file. The
+      # self-test proves each banned tier fails, each allowed tier and exempt
+      # variant passes, and the comment-versus-string state machine handles the
+      # four cases that decide it.
+      - name: Self-test the checker
+        run: node scripts/check-content-contrast-tier.mjs --self-test
+
+      # Exits 2, not 0, when it scans fewer files than its floor — a broken read
+      # must not be reportable as a clean tree.
+      - name: No content text is painted below 4.5:1
+        run: node scripts/check-content-contrast-tier.mjs

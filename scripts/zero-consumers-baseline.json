@@ -1,0 +1,59 @@
+{
+  "_comment": [
+    "Artifacts that exist with ZERO consumers, already known. This list may only SHRINK.",
+    "A NEW zero-consumer artifact fails the gate; an entry here that has since gained a",
+    "consumer ALSO fails, so this cannot become a place findings go to be forgotten.",
+    "Regenerate deliberately with --write-baseline; never to make a red run green."
+  ],
+  "package": [
+    "@bsuite/eslint-config",
+    "@bsuite/jodie",
+    "@bsuite/theme-codemod",
+    "@bsuite/tsconfig"
+  ],
+  "hook": [
+    "useLocale"
+  ],
+  "token": [
+    "--accent-foreground",
+    "--black",
+    "--braden-bronze",
+    "--braden-forest",
+    "--braden-indigo",
+    "--braden-lavender",
+    "--braden-red-light",
+    "--braden-sky",
+    "--braden-slate",
+    "--card-foreground",
+    "--destructive-foreground",
+    "--dot-color",
+    "--dot-radius",
+    "--dot-size",
+    "--grid-color",
+    "--grid-size",
+    "--light-hover",
+    "--panel-hairline",
+    "--popover",
+    "--popover-foreground",
+    "--primary-foreground",
+    "--ring",
+    "--role-code-bg",
+    "--role-code-text",
+    "--role-kbd-bg",
+    "--role-kbd-border",
+    "--role-link",
+    "--role-link-hover",
+    "--role-link-visited",
+    "--role-mark-bg",
+    "--role-mark-text",
+    "--role-quote-rule",
+    "--role-quote-text",
+    "--role-text-emphasis",
+    "--role-text-strong",
+    "--row-pad",
+    "--secondary",
+    "--secondary-foreground",
+    "--track-body",
+    "--track-heading"
+  ]
+}

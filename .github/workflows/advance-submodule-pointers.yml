@@ -46,12 +46,32 @@ jobs:
     name: Advance submodule pointers
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout parent (submodules as gitlinks, not contents)
+      - name: Checkout parent AND the submodules it must read
         uses: actions/checkout@v5
         with:
           ref: development
           fetch-depth: 0
-          submodules: false
+
+          # WHY THIS IS `true` AND CARRIES A TOKEN — 141 CONSECUTIVE FAILURES
+          #
+          # This used to be `submodules: false` plus a hand-rolled
+          # `git submodule update … || true`. The submodules are PRIVATE sibling
+          # repos, and the default GITHUB_TOKEN is scoped to bsuite alone, so every
+          # clone died with:
+          #
+          #     fatal: could not read Username for 'https://github.com'
+          #
+          # `|| true` swallowed it, leaving six EMPTY directories. The script then ran
+          # `git -C crm7 rev-parse origin/development` — which does not fail on an
+          # empty directory: git walks UP and answers from the PARENT repo. All six
+          # submodules came back with the parent's own head, and every run reported
+          # six "history divergence" findings against apps that were perfectly fine.
+          #
+          # `token:` is what makes checkout install the credential in each submodule's
+          # config too, so the script's own `git fetch` inside them works. Same
+          # fallback chain every other submodule-consuming workflow here uses.
+          submodules: true
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - uses: actions/setup-node@v5
@@ -66,16 +86,38 @@ jobs:
           # a result. scripts/check-setup-node-pnpm-guard.mjs now enforces it.
           package-manager-cache: false
 
-      # The script needs each submodule to be a git repo it can fetch, but NOT
-      # a full recursive checkout — it only ever reads refs.
-      - name: Initialise submodule repos (refs only)
+      # checkout@v5 above has already cloned and credentialed every submodule. What
+      # remains is to PROVE it, loudly, before the script runs.
+      #
+      # The 141-failure incident was not caused by a missing check downstream — the
+      # script's forward-only rule refused every bogus move exactly as designed. It
+      # was caused by a checkout failure that produced no signal. A step that can
+      # leave the job in a state the next step will misread must assert its own
+      # postcondition.
+      - name: Prove every submodule is its own git repository
         run: |
           set -euo pipefail
-          git submodule init
-          git submodule update --depth 50 --single-branch || true
+          missing=0
+          examined=0
+          for app in crm7 business-suite-unified conduit R80.4 braden throughput; do
+            examined=$((examined + 1))
+            top=$(git -C "$app" rev-parse --show-toplevel 2>/dev/null || echo "")
+            want="$(pwd)/$app"
+            if [ "$top" != "$want" ]; then
+              echo "::error::$app is NOT its own git repository (rev-parse --show-toplevel gave '${top:-<none>}', expected '$want'). git would answer this submodule's refs from the PARENT repo, which is how six identical shas were once reported as six history divergences."
+              missing=$((missing + 1))
+            fi
+          done
+          # HEAD LINE FIRST — the denominator before the verdict.
+          echo "[submodule-checkout] ${examined} submodule(s) examined; ${missing} not initialised as their own repository."
+          [ "$missing" -eq 0 ] || exit 1
 
       - name: Prove the checker can fail before trusting what it says
         run: node scripts/advance-submodule-pointers.mjs --self-test
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Advance the pointers
         id: advance
@@ -88,10 +130,53 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # THE ROUTE INVENTORY IS DERIVED FROM THE APPS AT THE RECORDED GITLINKS, so the
+      # commit that moves a gitlink is the commit that invalidates it. Leaving them in
+      # separate commits guarantees a window where route-inventory.yml fails on drift —
+      # which is exactly what happened to the first PR this workflow produced (#2331):
+      # four correct pointer advances, and a red `check-inventory` complaining about
+      # line numbers in crm7/src/App.tsx that had moved underneath it.
+      #
+      # It cannot be fixed by hand on the standing branch either: this job
+      # `git push -f`es that branch every run, so any hand commit there is destroyed by
+      # the next tick. The regeneration has to happen HERE, in the same commit.
+      - name: Regenerate the route inventory the moved pointers invalidate
+        if: steps.advance.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          python3 docs/nav/build-inventory.py
+          git add docs/nav/route-inventory.json
+          # The BSU copy is VENDORED INSIDE the submodule, so the parent cannot commit
+          # it — advancing that gitlink is what carries it. Report if it drifted rather
+          # than staying quiet: a stale vendored copy is what the BSU Route Inspector
+          # actually renders.
+          if [ -n "$(git -C business-suite-unified status --porcelain -- src/data/route-inventory.json 2>/dev/null)" ]; then
+            echo "::warning title=Vendored route inventory is stale::business-suite-unified/src/data/route-inventory.json differs from the regenerated inventory. It lives inside the submodule, so it needs a BSU-side commit; the parent cannot carry it."
+          fi
+
       - name: Open or refresh the standing PR
         if: steps.advance.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          # NOT `github.token`. The built-in Actions token is refused by
+          #     GraphQL: GitHub Actions is not permitted to create or approve pull
+          #     requests (createPullRequest)
+          # whenever the repository or org has "Allow GitHub Actions to create and
+          # approve pull requests" switched off, which is the safe default and is how
+          # this repo is configured.
+          #
+          # That is a repository SETTING, not a code defect, and it is the last thing
+          # standing between this workflow and a green run: the 2026-08-24 dispatch
+          # cloned all six submodules, read their real heads, staged four genuine
+          # gitlink advances, committed and pushed the branch — and then died on the
+          # final `gh pr create`. The whole job was reported as a failure, with the
+          # work sitting on a pushed branch nobody was told about.
+          #
+          # The cross-repo PAT is not "GitHub Actions" to that check, and this repo
+          # already relies on it for every submodule-consuming checkout. Falling back
+          # to github.token keeps the workflow runnable in a fork or wherever the PAT
+          # is absent — it will fail the same way there, loudly, rather than silently
+          # doing nothing.
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
         run: |
           set -euo pipefail
           BR=chore/auto-advance-submodule-pointers
@@ -119,9 +204,41 @@ jobs:
           git commit -F /tmp/commit-msg.txt
           git push -f origin "$BR"
 
-          if gh pr view "$BR" --json number >/dev/null 2>&1; then
+          # `gh pr view <branch>` EXITS 0 FOR A CLOSED PR. The old test only asked
+          # whether a PR existed, so once the standing PR was closed the workflow
+          # printed "standing PR already open", opened nothing, and reported SUCCESS —
+          # with the pointer advances sitting on a pushed branch forever.
+          #
+          # Observed 2026-08-24 on run 32710462485: every step green, four correct
+          # gitlink advances committed and pushed, #2331 CLOSED, and no PR. A false
+          # green is worse than the 141 red runs it replaced, because nothing draws
+          # the eye to it.
+          #
+          # Ask for the STATE, not for existence.
+          PR_STATE="$(gh pr view "$BR" --json state -q .state 2>/dev/null || echo NONE)"
+          echo "standing PR state: $PR_STATE"
+          if [ "$PR_STATE" = "OPEN" ]; then
             echo "standing PR already open — its branch was force-updated"
+          elif [ "$PR_STATE" = "CLOSED" ] && gh pr reopen "$BR" 2>/dev/null; then
+            echo "standing PR was closed and has been reopened onto the refreshed branch"
           else
+            # Reopen is PREFERRED (it keeps the review history) but GitHub refuses it in
+            # cases it does not enumerate — observed on run 32711675959, where the branch
+            # had been force-updated after the PR was closed:
+            #
+            #     standing PR state: CLOSED
+            #     API call failed: GraphQL: Could not open the pull request. (reopenPullRequest)
+            #
+            # Failing there left four correct gitlink advances on a pushed branch with no
+            # PR, which is the state this whole workflow exists to prevent. A refused
+            # reopen is not a reason to give up; it is a reason to open a new one.
+            #  is load-bearing: under  a bare  whose test
+            # is FALSE fails the statement and aborts the step. That would turn the
+            # ordinary "no PR exists yet" path into a hard failure.
+            if [ "$PR_STATE" = "CLOSED" ]; then
+              echo "reopen refused by GitHub — opening a fresh PR instead"
+            fi
+
             {
               echo "Maintained automatically by \`.github/workflows/advance-submodule-pointers.yml\`."
               echo
@@ -136,9 +253,16 @@ jobs:
               echo "recorded one is REFUSED, not reset — a backward move silently reverts the"
               echo "app for everything that reads the gitlink."
             } > /tmp/pr-body.md
-            gh pr create --base development --head "$BR" \
-              --title "chore(submodules): advance pointers onto current development heads" \
-              --body-file /tmp/pr-body.md
+            if ! gh pr create --base development --head "$BR" \
+                 --title "chore(submodules): advance pointers onto current development heads" \
+                 --body-file /tmp/pr-body.md; then
+              # The pointer work is ALREADY PUSHED at this point. Dying here reports the
+              # whole run as a failure and says nothing about the branch that is sitting
+              # there with real, correct advances on it — which is exactly what happened
+              # on 2026-08-24. Name it.
+              echo "::error title=Pointers advanced but the PR could not be opened::The gitlink advances are pushed to '$BR' and are correct. Only 'gh pr create' failed — open the PR by hand from that branch. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', the BSUITE_CROSS_REPO_PAT secret is missing or expired."
+              exit 1
+            fi
           fi
 
       - name: Say so even when there is nothing to do

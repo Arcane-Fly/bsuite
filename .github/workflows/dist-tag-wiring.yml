@@ -1,0 +1,133 @@
+name: Publish workflows decide their dist-tag
+
+# `npm publish` applies the 'latest' dist-tag unless `--tag` is given — including for a
+# version carrying a semver prerelease. npm does NOT infer it from the version string.
+#
+# That default is what made the promotion deadlock unbreakable safely. Packages publish
+# on push to `main`, and every app installs with `--frozen-lockfile`, so a fix inside
+# `packages/**` could not reach any preview host until it was already on main:
+#
+#     the fix needs a publish -> publishing needs main -> main needs the gate green
+#       -> the gate measures a preview host -> which installs from the registry
+#         -> which does not have the fix
+#
+# Publishing a PRERELEASE from `development` cuts that loop — a real published artifact
+# an app's lockfile can pin, so the preview host serves the fix and the gate finally has
+# something truthful to measure. But that is only safe while a prerelease can never take
+# 'latest'. One workflow that forgets `--tag` puts a release candidate in front of every
+# consumer on `^1.2.0`, in production, silently.
+#
+# Fifteen publish workflows were wired at once. The sixteenth — added next month for a
+# new package, by copying an older file — is what this guard exists for.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/publish-*.yml'
+      # This workflow's OWN path, deliberately. Without it, a change to the guard does
+      # not re-run the guard: the first push of this file failed its positive control,
+      # the fix touched only this file, and the check simply vanished from the PR rollup
+      # instead of re-running and going green. A guard that cannot verify its own edits
+      # is exactly the shape it exists to catch.
+      - '.github/workflows/dist-tag-wiring.yml'
+      - 'scripts/publish-dist-tag.mjs'
+      - 'scripts/check-publish-dist-tag-wiring.mjs'
+      - 'scripts/guard-registry.mjs'
+  push:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/publish-*.yml'
+      - '.github/workflows/dist-tag-wiring.yml'
+      - 'scripts/publish-dist-tag.mjs'
+      - 'scripts/check-publish-dist-tag-wiring.mjs'
+  # A publish workflow can be edited by a merge that touched none of the paths above
+  # (a revert, or a submodule pointer bump that carries a workflow change). The daily
+  # run is the backstop for that.
+  schedule:
+    - cron: '50 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wiring:
+    name: Publish workflows decide their dist-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          # setup-node@v5 defaults package-manager-cache: true, which resolves the
+          # packageManager field's pnpm before corepack runs and dies at this step.
+          package-manager-cache: false
+
+      - name: Prove the decision logic can fail before trusting what it says
+        run: node scripts/publish-dist-tag.mjs --self-test
+
+      - name: Prove the checker can fail before trusting what it says
+        # A fixture self-test is not enough on its own: it only exercises strings this
+        # file wrote. Plant the defect in a REAL publish workflow and require a non-zero
+        # exit, so the control tests the tree that actually ships rather than a
+        # paraphrase of it.
+        run: |
+          set -euo pipefail
+          TARGET=.github/workflows/publish-ui.yml
+          cp "$TARGET" /tmp/publish-ui.bak
+          # Restore on ANY exit path, including the failures below. A control
+          # that leaves the tree modified turns one red check into several.
+          trap 'cp /tmp/publish-ui.bak "$TARGET"' EXIT
+
+          # NO ACTIONS EXPRESSION IN THIS PATTERN, and none in this comment either.
+          #
+          # The first version of this control interpolated the dist-tag step's
+          # output into the sed pattern. The Actions expression engine evaluated
+          # it BEFORE bash ever saw it, and there is no dist-tag step in THIS job,
+          # so it resolved to the empty string and the command that actually ran
+          # searched for a --tag argument with an empty value. That matches
+          # nothing. The sed was a silent no-op, the checker
+
+          # correctly passed an unmodified file, and the control then declared
+          # itself failed — reporting a broken checker while proving only that
+          # it had planted no defect.
+          #
+          # Strip the --tag argument whatever its value, on the npm publish line.
+          sed -i -E '/npm publish/ s/ --tag "[^"]*"//' "$TARGET"
+
+          # AND CHECK THE PLANT LANDED. This is the assertion whose absence let
+          # the bug above masquerade as a finding: "the checker failed" only
+          # means something if a defect was actually introduced. A control that
+          # cannot tell "I planted a defect" from "my pattern did not match" is
+          # the same checked-nothing-vs-found-nothing shape it exists to catch.
+          if cmp -s /tmp/publish-ui.bak "$TARGET"; then
+            echo "::error::POSITIVE CONTROL INERT — the edit did not change $TARGET, so NO defect was planted."
+            echo "::error::Nothing below could have been proven. Fix the pattern, do not trust the verdict."
+            exit 1
+          fi
+
+          if node scripts/check-publish-dist-tag-wiring.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — the checker passed a real publish workflow with --tag removed. Its clean passes mean nothing."
+            exit 1
+          fi
+          echo "positive control ok — a real defect was planted in $TARGET and the checker caught it"
+
+      - name: Every publish workflow decides its dist-tag, before using it
+        run: node scripts/check-publish-dist-tag-wiring.mjs
+
+      - name: The guard registry has not silently lost an entry
+        # A missing '},' + '{' merges two entries into one and JavaScript reports
+        # nothing. That is how parent-setup-node-pnpm-guard went unwatched.
+        run: |
+          set -euo pipefail
+          node -e "
+            import('./scripts/guard-registry.mjs').then((m) => {
+              const problems = m.validateRegistry()
+              console.log('[guard-registry] ' + m.GUARDS.length + ' guard(s) exposed; floor ' + m.GUARD_FLOOR + '; ' + problems.length + ' structural problem(s).')
+              if (problems.length) { for (const p of problems) console.error('::error::' + p); process.exit(1) }
+            })
+          "

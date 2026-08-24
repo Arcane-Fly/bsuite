@@ -84,3 +84,26 @@ jobs:
 
       - name: Check every setup-node@v5 step is guarded
         run: node scripts/check-setup-node-pnpm-guard.mjs
+
+      # Same surface, same trigger, different failure mode — and a far nastier one.
+      # A malformed `${{ … }}` makes the WHOLE workflow fail to parse: no jobs, no
+      # logs, no retry button, and a red check that looks exactly like an ordinary
+      # failure. dist-tag-wiring.yml sat that way on development having never once
+      # executed. This lives here rather than in a 77th workflow file because this
+      # job already triggers on every `.github/workflows/**` change and already
+      # scans every workflow file.
+      - name: Prove the expression checker can fail before trusting what it says
+        run: node scripts/check-workflow-expressions.mjs --self-test
+
+      - name: No workflow contains a malformed Actions expression
+        run: node scripts/check-workflow-expressions.mjs
+
+      # Third failure mode on the same surface: a `paths:` filter naming a file INSIDE
+      # a submodule can never match, because the parent's diff contains only the bare
+      # gitlink. edge-function-typecheck.yml watched `<star>/supabase/functions/**` and had
+      # not run since 2026-08-16 — green because it never fired.
+      - name: Prove the reachability checker can fail before trusting what it says
+        run: node scripts/check-workflow-path-reachability.mjs --self-test
+
+      - name: No workflow watches a path a parent diff can never contain
+        run: node scripts/check-workflow-path-reachability.mjs

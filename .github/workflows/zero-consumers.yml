@@ -1,0 +1,75 @@
+name: Nothing ships with zero consumers
+
+# THE GATE FOR THE ESTATE'S MOST-REPEATED FAILURE.
+#
+# Of the ten things this estate documented and never delivered, SIX share one shape: the
+# machinery was built and the wiring never happened.
+#
+#   --role-border-interactive minted, 173 files still on the old resting border
+#   the RAMS funding matrix ratified as an ADR, to_regclass returns null
+#   @bsuite/jodie, @bsuite/eslint-config, @bsuite/tsconfig published, zero apps
+#   a hook published and lockfiled, imported by nobody
+#   an RPC and a pg_cron poller built, and useSiteEditor.ts:139 still reads
+#     "// Your existing publish logic here"
+#
+# It does not read as half-finished because nothing shipped. It reads that way because
+# the last 10% — the wiring — is where work stops, and NO GATE MEASURED WIRING.
+#
+# SUBMODULES ARE NOT OPTIONAL HERE. Every consumer of a shared package lives in an app,
+# and the apps are submodules. The first run of this checker, in a parent worktree with
+# empty submodule directories, reported 14 of 16 packages unused — including @bsuite/ui
+# and @bsuite/theme, which every app depends on. The checker now refuses to run in that
+# state, and this workflow gives it a populated tree.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+  schedule:
+    # Daily backstop: adoption can lapse without any parent diff touching these paths.
+    - cron: '25 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zero-consumers:
+    name: Nothing ships with zero consumers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # the minted-token rule diffs against the base branch
+          submodules: recursive
+          # The submodules are PRIVATE; the default GITHUB_TOKEN cannot clone siblings.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Prove the checker can fail before trusting what it says
+        run: node scripts/check-zero-consumers.mjs --self-test
+
+      - name: Positive control — a planted orphan package must be detected
+        # A fixture self-test only exercises strings this repo wrote. Plant a real
+        # package with no dependents and require a non-zero exit, so the control tests
+        # the tree that actually ships.
+        run: |
+          set -euo pipefail
+          mkdir -p packages/__zero_consumer_probe__
+          printf '{"name":"@bsuite/__zero_consumer_probe__","version":"0.0.0"}\n' \
+            > packages/__zero_consumer_probe__/package.json
+          if node scripts/check-zero-consumers.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — a package with no dependents was not detected. Clean passes from this gate mean nothing."
+            rm -rf packages/__zero_consumer_probe__
+            exit 1
+          fi
+          rm -rf packages/__zero_consumer_probe__
+          echo "positive control ok — an orphan package is detected"
+
+      - name: Nothing ships with zero consumers
+        run: node scripts/check-zero-consumers.mjs

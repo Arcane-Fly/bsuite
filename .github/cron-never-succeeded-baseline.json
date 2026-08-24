@@ -1,0 +1,39 @@
+{
+  "_comment": [
+    "Jobs that have run at least once and have NEVER succeeded, which are ALREADY KNOWN and",
+    "are blocked on something outside CI. Being on this list downgrades a job from a hard",
+    "failure to a reported exception. It does NOT make it fine.",
+    "",
+    "THIS LIST MAY ONLY SHRINK. The audit fails if a job that has never succeeded is absent",
+    "from it (an unacknowledged never-successful job), AND it fails if a job on the list has",
+    "since succeeded (a stale entry that must be deleted). Both directions are enforced, so",
+    "the list cannot quietly become a place where failures go to be forgotten.",
+    "",
+    "Why this check exists at all: public.cron_job_health(N) judges liveness inside an N-hour",
+    "window. A weekly job runs once every 168 hours, so for six days in seven its window",
+    "contains no runs at all, failures_in_window is 0, and the verdict is 'healthy'. Measured",
+    "2026-08-24: sync-award-rates-weekly had exactly one lifetime run, it FAILED, and the",
+    "audit reported it healthy. A window-relative verdict structurally cannot see a failure",
+    "of any job whose period exceeds the window. This check is window-independent."
+  ],
+  "jobs": [
+    {
+      "jobname": "document-retention-sweep-daily",
+      "runs": 6,
+      "successes": 0,
+      "first_seen": "2026-08-24",
+      "reason": "vault entries document_retention_sweep_url and document_retention_sweep_secret were never seeded; migration 20260822080000 created the job but the secrets need real values.",
+      "blocked_on": "operator — vault.create_secret() needs the actual endpoint URL and token",
+      "impact": "Document retention is a compliance obligation and has never once executed."
+    },
+    {
+      "jobname": "sync-award-rates-weekly",
+      "runs": 1,
+      "successes": 0,
+      "first_seen": "2026-08-24",
+      "reason": "vault entries sync_award_rates_url and sync_award_rates_token were never seeded. The job refuses to POST to a null endpoint rather than reporting a false success, which is correct behaviour.",
+      "blocked_on": "operator — same vault seeding, and B-2 (the FAIRWORK_API_KEY repository secret) upstream of it",
+      "impact": "Award rates are never refreshed from source; every rate quoted is a bundled snapshot with no provenance stamp."
+    }
+  ]
+}

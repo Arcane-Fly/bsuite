@@ -3923,7 +3923,7 @@
         "group": "My Workforce",
         "label": "Workers on Site",
         "icon": "Building2",
-        "order": 111
+        "order": 112
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6289,7 +6289,7 @@
         "group": "Dashboard",
         "label": "Dashboard",
         "icon": "LayoutDashboard",
-        "order": 114
+        "order": 115
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6913,7 +6913,7 @@
         "group": "Field Officer Contacts",
         "label": "Field Officer Contacts",
         "icon": "MapPin",
-        "order": 123
+        "order": 124
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7407,7 +7407,7 @@
         "group": "Financial",
         "label": "Financial",
         "icon": "DollarSign",
-        "order": 115
+        "order": 116
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7485,7 +7485,7 @@
         "group": "Reports & Billing",
         "label": "Invoicing",
         "icon": "BarChart3",
-        "order": 114
+        "order": 115
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8187,7 +8187,7 @@
         "group": "Reports & Billing",
         "label": "Monthly Reports",
         "icon": "BarChart3",
-        "order": 113
+        "order": 114
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9201,7 +9201,7 @@
         "group": "Leave",
         "label": "Leave",
         "icon": "CalendarOff",
-        "order": 121
+        "order": 122
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9747,7 +9747,7 @@
         "group": "Timesheets",
         "label": "Timesheet History",
         "icon": "Clock",
-        "order": 109
+        "order": 110
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9773,7 +9773,7 @@
         "group": "My Workforce",
         "label": "People",
         "icon": "Building2",
-        "order": 112
+        "order": 113
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10267,7 +10267,7 @@
         "group": "My Workforce",
         "label": "Placements",
         "icon": "Building2",
-        "order": 112
+        "order": 113
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10371,7 +10371,7 @@
         "group": "Portal",
         "label": "Portal",
         "icon": "Globe",
-        "order": 118
+        "order": 119
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10423,7 +10423,7 @@
         "group": "Training",
         "label": "My Progress Reports",
         "icon": "GraduationCap",
-        "order": 109
+        "order": 110
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10475,7 +10475,7 @@
         "group": "Portal Home",
         "label": "Portal Home",
         "icon": "LayoutDashboard",
-        "order": 122
+        "order": 123
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10501,7 +10501,7 @@
         "group": "My Documents",
         "label": "My Documents",
         "icon": "FileText",
-        "order": 110
+        "order": 111
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10553,7 +10553,7 @@
         "group": "My Documents",
         "label": "Manuals & Policies",
         "icon": "FileText",
-        "order": 111
+        "order": 112
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10605,7 +10605,7 @@
         "group": "Portal Home",
         "label": "Portal Home",
         "icon": "LayoutDashboard",
-        "order": 120
+        "order": 121
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10683,7 +10683,7 @@
         "group": "WHS & Compliance",
         "label": "Progress Reviews",
         "icon": "ShieldCheck",
-        "order": 113
+        "order": 114
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11229,7 +11229,7 @@
         "group": "Settings",
         "label": "Settings",
         "icon": "Settings",
-        "order": 119
+        "order": 120
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11667,13 +11667,13 @@
         "feature_flags": []
       },
       "nav": {
-        "surface": "none",
-        "group": null,
-        "label": null,
-        "icon": null,
-        "order": null
+        "surface": "sidebar",
+        "group": "Settings",
+        "label": "Email Accounts",
+        "icon": "Settings",
+        "order": 107
       },
-      "reachable_via": "in_page_nav",
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -12087,7 +12087,7 @@
         "group": "Settings",
         "label": "Payroll Remittance Identity",
         "icon": "Settings",
-        "order": 107
+        "order": 108
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12685,7 +12685,7 @@
         "group": "Timesheets",
         "label": "Submit Timesheet",
         "icon": "Clock",
-        "order": 108
+        "order": 109
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12945,7 +12945,7 @@
         "group": "VET & Training",
         "label": "VET & Training",
         "icon": "BookOpen",
-        "order": 117
+        "order": 118
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13439,7 +13439,7 @@
         "group": "WHS & Compliance",
         "label": "WHS & Compliance",
         "icon": "ShieldCheck",
-        "order": 116
+        "order": 117
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13491,7 +13491,7 @@
         "group": "WHS & Compliance",
         "label": "WHS Incidents",
         "icon": "ShieldCheck",
-        "order": 112
+        "order": 113
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13751,7 +13751,7 @@
         "group": "WHS & Compliance",
         "label": "Risk Assessments",
         "icon": "ShieldCheck",
-        "order": 112
+        "order": 113
       },
       "reachable_via": "sidebar",
       "portal": null,

@@ -149,13 +149,29 @@ jobs:
             exit 1
           fi
 
+      # THE PROMOTION DEADLOCK CUT — see scripts/publish-dist-tag.mjs for the full
+      # loop this breaks. A RELEASE version may only publish from main and takes
+      # 'latest'; a PRERELEASE may publish from any ref and takes 'next', which
+      # nothing resolves unless a lockfile names that exact version. Bare
+      # `npm publish` applies 'latest' even to a prerelease, so the tag is passed
+      # explicitly below and is never left to npm's default.
+      #
+      # This runs BEFORE the dry run, not just before the real publish: the dry run
+      # exercises the same command shape, so it needs the same decided tag.
+      - name: Decide the dist-tag (and refuse a release off main)
+        id: dist-tag
+        if: steps.version-check.outputs.skip == 'false'
+        run: node "$GITHUB_WORKSPACE/scripts/publish-dist-tag.mjs" --version "$PKG_VERSION" --ref "$GITHUB_REF" --package "$(node -p "require('./package.json').name")"
+        env:
+          PKG_VERSION: ${{ steps.version-check.outputs.version }}
+
       - name: Dry-run publish (catches missing files or bad exports)
         if: steps.version-check.outputs.skip == 'false'
-        run: npm publish --dry-run --access public
+        run: npm publish --dry-run --access public --tag "${{ steps.dist-tag.outputs.tag }}"
 
       - name: Publish to npm
         if: steps.version-check.outputs.skip == 'false'
-        run: npm publish --access public
+        run: npm publish --access public --tag "${{ steps.dist-tag.outputs.tag }}"
 
       - name: Job summary
         if: always()

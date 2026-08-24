@@ -104,6 +104,73 @@ export const GUARDS = [
   // Parent monorepo
   // ---------------------------------------------------------------------
   {
+    id: 'parent-workflow-path-reachability',
+    label: 'no workflow watches a path a parent diff can never contain',
+    repo: '.',
+    command: ['node', 'scripts/check-workflow-path-reachability.mjs'],
+    ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
+    mode: 'run',
+    notes:
+      'A submodule appears in the PARENT diff as the bare path (crm7), never as ' +
+      'crm7/**. Measured on PR #2322, whose entire file list was ' +
+      '[business-suite-unified, crm7, docs/nav/route-inventory.json]. So an Actions ' +
+      'paths: filter reaching inside a submodule cannot match a pointer bump, and the ' +
+      'workflow is green because it never runs. edge-function-typecheck.yml watched a ' +
+      'star-rooted supabase/functions glob and last ran 2026-08-16 — eight days across ' +
+      'many gitlink bumps with no app edge function type-checked. Six workflows carried ' +
+      'the defect. NOTE the checker only flags a block that lacks the bare gitlink path: ' +
+      'crm7/** alongside crm7 is correct and stays, because it matches when the workflow ' +
+      'runs inside the app repo. And git PATHSPECS are a different language from Actions ' +
+      'globs — `git diff -- crm7/` DOES match a gitlink, verified on 72dae8c7 — so ' +
+      'diff-based detectors inside these workflows needed no change.',
+  },
+
+  {
+    id: 'parent-workflow-expressions',
+    label: 'no workflow contains a malformed Actions expression',
+    repo: '.',
+    command: ['node', 'scripts/check-workflow-expressions.mjs'],
+    ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
+    mode: 'run',
+    notes:
+      'GitHub evaluates ${…} expressions everywhere in a workflow, INCLUDING inside ' +
+      'shell comments in a run: block — the expression engine gets there before bash ' +
+      'does. A malformed one is not a step failure, it is a PARSE failure: the run has ' +
+      'no jobs, no logs and no retry button, and reads in the PR list as an ordinary ' +
+      'red check. dist-tag-wiring.yml carried an EMPTY delimiter pair inside a comment ' +
+      'warning against exactly that, and had never once executed on development. ' +
+      'yaml.safe_load parsed the file perfectly — YAML validity says nothing about ' +
+      'expression validity. The checker distinguishes YAML comments (stripped, safe) ' +
+      'from block-scalar text (evaluated), and handles multi-line expressions in folded ' +
+      'scalars, which an earlier draft flagged as unclosed across five healthy workflows. ' +
+      'Validated against GitHub own parser as the oracle: exactly one finding on the ' +
+      'tree GitHub refused, zero across 76 files once fixed.',
+  },
+
+  {
+    id: 'parent-zero-consumers',
+    label: 'nothing ships with zero consumers',
+    repo: '.',
+    command: ['node', 'scripts/check-zero-consumers.mjs'],
+    ciWorkflow: '.github/workflows/zero-consumers.yml',
+    mode: 'run',
+    notes:
+      'Six of the ten documented-but-undelivered items share one shape: the machinery ' +
+      'was built and the wiring never happened — a token minted and not consumed, a hook ' +
+      'published and imported by nobody, three packages published to zero apps. No gate ' +
+      'measured wiring. This is that gate. It independently rediscovered B-19 exactly ' +
+      '(@bsuite/eslint-config, @bsuite/jodie, @bsuite/tsconfig reach zero apps) plus ' +
+      '@bsuite/theme-codemod and the hook useLocale. Ratcheted in BOTH directions against ' +
+      'scripts/zero-consumers-baseline.json. It REFUSES to run with unpopulated ' +
+      'submodules: every consumer lives in an app, so an empty tree makes every package ' +
+      'look unused — the first run reported 14 of 16, including @bsuite/ui. Tokens ' +
+      'declared in an @theme block are UNVERIFIABLE, never unused, because Tailwind v4 ' +
+      'emits them as utilities with no var() reference. Database functions are ' +
+      'deliberately NOT judged: SQL reach needs pg_proc.prosrc, and this estate has ' +
+      'already mistaken zero-policy-references for unused and broken an RPC inner call.',
+  },
+
+  {
     id: 'parent-setup-node-pnpm-guard',
     label: 'setup-node@v5 must set package-manager-cache: false',
     repo: '.',
@@ -121,6 +188,75 @@ export const GUARDS = [
       'stale pointers as app findings. A clean pass prints the guarded/total ' +
       'step counts and the files scanned; finding zero setup-node steps, or ' +
       'fewer than the floor, is a hard failure rather than a pass.',
+  },
+
+  {
+    id: 'parent-publish-dist-tag-wiring',
+    label: 'every publish workflow decides its npm dist-tag explicitly',
+    repo: '.',
+    command: ['node', 'scripts/check-publish-dist-tag-wiring.mjs'],
+    ciWorkflow: '.github/workflows/dist-tag-wiring.yml',
+    mode: 'run',
+    notes:
+      '`npm publish` applies the \'latest\' dist-tag unless --tag is given, INCLUDING ' +
+      'for a version carrying a semver prerelease. All fifteen publish workflows ran ' +
+      'bare `npm publish --access public`, so bumping a package to 1.2.0-rc.1 to get a ' +
+      'fix onto a preview host would have handed every consumer on ^1.2.0 a release ' +
+      'candidate in production. Prerelease publishing is what breaks the promotion ' +
+      'deadlock (a package fix could not reach a preview host before the promotion its ' +
+      'verification was meant to authorise), so the tag decision is load-bearing, not ' +
+      'cosmetic. A clean pass prints the workflow count examined; zero matches is a ' +
+      'hard failure rather than a pass.',
+  },
+
+  {
+    id: 'parent-content-contrast-tier',
+    label: 'shared packages clear WCAG AA for content text',
+    repo: '.',
+    command: ['node', 'scripts/check-content-contrast-tier.mjs'],
+    ciWorkflow: '.github/workflows/estate-invariants.yml',
+    mode: 'run',
+    notes:
+      "@bsuite/theme's own measured table marks two tiers below the 4.5:1 normal-text " +
+      'floor — subtle at 3.52:1 light / 4.14:1 dark, disabled at 2.21:1 / 2.48:1 — and ' +
+      'annotates them as such in vars.css. Nothing stopped a package painting CONTENT ' +
+      "text with them anyway: @bsuite/data-grid's column drag handle did, at text-xs, on " +
+      'a functional control, on every grid, unhovered. placeholder: and disabled: ' +
+      'variants are exempt by VARIANT PREFIX rather than by filename, because a path ' +
+      'allowlist dies loudly on a rename and silently on a delete. It scans STRING ' +
+      'LITERALS ONLY via a hand-written state machine: the first version scanned raw ' +
+      'source and flagged the very component it had been written to fix, because the doc ' +
+      'comment naming the banned utility matched. A clean pass prints the file count; ' +
+      'scanning fewer files than the floor exits 2 rather than passing.',
+  },
+
+  {
+    id: 'parent-no-prerelease-in-production',
+    label: 'no -next prerelease reaches a production path',
+    repo: '.',
+    command: ['node', 'scripts/check-no-prerelease-in-production.mjs', '--registry-only'],
+    ciWorkflow: '.github/workflows/no-prerelease-in-production.yml',
+    mode: 'run',
+    notes:
+      'The CONSUMER half of the dist-tag rule. publish-dist-tag.mjs stops a prerelease ' +
+      'taking the `latest` tag; this stops one riding into production the other way — an ' +
+      'app pins an exact -next.N on development so its d.* preview can install the fix, ' +
+      'that branch promotes to main, and --frozen-lockfile then installs the release ' +
+      'candidate in production forever, because a lockfile pin does not expire. Four ' +
+      'assertions: no package manifest declares a prerelease version (P1), no app range ' +
+      'contains one (P2), no app lockfile RESOLVES one (P3), and the registry\'s own ' +
+      'dist-tags.latest is not one (P4). P3 is the load-bearing one and the one nobody ' +
+      'reads — the estate has already been burned by drift living entirely in the ' +
+      'lockfile\'s resolved column while package.json looked correct. P1 exists because ' +
+      'the producer-side guard WORKING is what makes its absence invisible: a prerelease ' +
+      'left on main means `latest` silently stops advancing while every freshness check ' +
+      'reports the apps current. The registered command is --registry-only (P4), which is ' +
+      'meaningful on any ref; P1-P3 need a submodule checkout and run in CI on the ' +
+      'promotion PR. Each assertion is proven to FAIL on a planted prerelease and to PASS ' +
+      'on the legitimate case that most resembles it.',
+  },
+
+  {
     id: 'parent-component-mounts',
     label: 'toast() callers require a mounted toast surface',
     repo: '.',
@@ -137,6 +273,32 @@ export const GUARDS = [
       'aliased (<SonnerToaster/>, <RadixToaster/>). Mounts resolve through ' +
       'import bindings, not tag names. A clean pass prints per-app file, ' +
       'caller and mount counts; scanning zero files is a hard failure.',
+  },
+
+  {
+    id: 'parent-theme-gate-app-lists',
+    label: 'the visual gate installs every app it then tries to drive',
+    repo: '.',
+    command: ['node', 'scripts/check-theme-gate-app-lists.mjs'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"PASS: 4 app list(s) in .github/workflows/theme-conformance.yml each ' +
+      'cover all 6 apps scripts/theme-session.sh can mint a session for ' +
+      '(crm7, braden, throughput, conduit, business-suite-unified, R80.4)."',
+    notes:
+      'R80.4 joined the signed-in sweep on 2026-08-22 (R80.4#187) with an ' +
+      'auth.setup.ts, a playwright config and an entry in theme-session.sh — ' +
+      'but not in the three app lists in theme-conformance.yml that install ' +
+      'each app. The sweep reached R80.4, ran `pnpm exec playwright` where ' +
+      'nothing was installed, and died with `Command "playwright" not found` ' +
+      'on EVERY development run from that day. The red X was the smaller ' +
+      'half: R80.4\'s authenticated routes went unchecked while the job name ' +
+      'went on claiming otherwise. One capability across two files, added to ' +
+      'one — this asserts they agree in BOTH directions, so an app installed ' +
+      'but unmintable is a failure too. A clean pass prints how many lists ' +
+      'were compared and how many apps each must cover; either count reaching ' +
+      'zero is a broken parse, not an empty estate, and exits 1.',
   },
 
   {
@@ -1269,4 +1431,56 @@ export const GUARDS = [
 
 export function findGuard(id) {
   return GUARDS.find((g) => g.id === id)
+}
+
+/**
+ * A missing `},` + `{` between two entries is INVISIBLE in JavaScript.
+ *
+ * Object literals accept duplicate keys and keep the last one, so two entries that
+ * run together parse cleanly and silently collapse into one — the earlier guard is
+ * simply gone from the registry, and every consumer, including the LANE-WATCHER,
+ * reports a healthy run over a list that is one guard shorter than the file looks.
+ *
+ * That is not hypothetical. `parent-setup-node-pnpm-guard` was swallowed exactly this
+ * way and sat unwatched (registry exposed 60 entries for 61 written blocks). The guard
+ * it silently removed is the one whose own notes record a hand-applied sweep missing a
+ * workflow that then failed 20 of 20 runs unnoticed. A guard registry that can lose a
+ * guard without saying so is the same defect class the registry exists to catch.
+ *
+ * REQUIRED_FIELDS is the detector; GUARD_FLOOR is the ratchet. The floor may only ever
+ * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
+ * and say why, so a deletion is a decision rather than an accident.
+ */
+export const GUARD_FLOOR = 65
+
+const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
+
+export function validateRegistry(guards = GUARDS) {
+  const problems = []
+
+  if (guards.length < GUARD_FLOOR) {
+    problems.push(
+      `registry exposes ${guards.length} guard(s) but the floor is ${GUARD_FLOOR}. ` +
+        `Entries do not vanish by accident in a way JavaScript will report — check for a ` +
+        `missing '},' + '{' between two entries, which merges them silently.`,
+    )
+  }
+
+  const seen = new Map()
+  guards.forEach((g, i) => {
+    for (const f of REQUIRED_FIELDS) {
+      if (g[f] === undefined) problems.push(`entry ${i} (${g.id ?? 'no id'}) is missing '${f}'`)
+    }
+    if (g.id) {
+      if (seen.has(g.id)) problems.push(`duplicate id '${g.id}' at entries ${seen.get(g.id)} and ${i}`)
+      else seen.set(g.id, i)
+    }
+  })
+
+  const canaries = guards.filter((g) => g.mode === 'canary')
+  if (canaries.length !== 1) {
+    problems.push(`expected exactly 1 canary entry, found ${canaries.length}`)
+  }
+
+  return problems
 }
