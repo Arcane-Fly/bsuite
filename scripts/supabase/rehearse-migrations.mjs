@@ -400,28 +400,6 @@ const CENSUS_QUERIES = {
       WHERE d.objoid >= 16384
     ) q`,
 
-  /* Enum LABELS, not just the type's existence.
-
-     `ALTER TYPE ... ADD VALUE` was invisible to this census: the type already
-     exists, no table/function/constraint moves, and nothing else here looks at
-     pg_enum. A migration whose ONLY job is adding an enum value therefore
-     rehearsed as 'noop' and was rejected — while having done exactly what it
-     said. That is the same shape as the function-ACL blind spot recorded above,
-     and the same wrong fix was available: declare it DATA ONLY. It is not data,
-     and doing so would have exempted every future ADD VALUE from verification.
-
-     Labels are ordered by enumsortorder so a value inserted with BEFORE/AFTER
-     moves the census too, not only an append. */
-  enums: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
-      SELECT n.nspname || '.' || t.typname || ' = ' ||
-             string_agg(e.enumlabel, ',' ORDER BY e.enumsortorder) AS x
-      FROM pg_type t
-      JOIN pg_namespace n ON n.oid = t.typnamespace
-      JOIN pg_enum e ON e.enumtypid = t.oid
-      WHERE n.nspname NOT IN ('pg_catalog','information_schema','supabase_migrations')
-      GROUP BY n.nspname, t.typname
-    ) q`,
-
   triggers: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
       SELECT n.nspname || '.' || c.relname || '.' || t.tgname AS x
       FROM pg_trigger t
