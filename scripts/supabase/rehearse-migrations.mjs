@@ -400,6 +400,28 @@ const CENSUS_QUERIES = {
       WHERE d.objoid >= 16384
     ) q`,
 
+  /* Enum LABELS, not just the type's existence.
+
+     `ALTER TYPE ... ADD VALUE` was invisible to this census: the type already
+     exists, no table/function/constraint moves, and nothing else here looks at
+     pg_enum. A migration whose ONLY job is adding an enum value therefore
+     rehearsed as 'noop' and was rejected — while having done exactly what it
+     said. That is the same shape as the function-ACL blind spot recorded above,
+     and the same wrong fix was available: declare it DATA ONLY. It is not data,
+     and doing so would have exempted every future ADD VALUE from verification.
+
+     Labels are ordered by enumsortorder so a value inserted with BEFORE/AFTER
+     moves the census too, not only an append. */
+  enums: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
+      SELECT n.nspname || '.' || t.typname || ' = ' ||
+             string_agg(e.enumlabel, ',' ORDER BY e.enumsortorder) AS x
+      FROM pg_type t
+      JOIN pg_namespace n ON n.oid = t.typnamespace
+      JOIN pg_enum e ON e.enumtypid = t.oid
+      WHERE n.nspname NOT IN ('pg_catalog','information_schema','supabase_migrations')
+      GROUP BY n.nspname, t.typname
+    ) q`,
+
   triggers: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
       SELECT n.nspname || '.' || c.relname || '.' || t.tgname AS x
       FROM pg_trigger t
@@ -536,6 +558,41 @@ function runSelfTest(dbUrl, tmpDir) {
       // mislabel what it cannot see is how a class stops being checked.
       name: 'GOOD — function ACL hardening ONLY, on an existing function',
       sql: `REVOKE ALL ON FUNCTION ${SELF_TEST_SCHEMA}.acl_probe() FROM PUBLIC;\n`,
+      expect: 'pass',
+    },
+    {
+      // Setup for the enum fixture below. SEPARATE on purpose, for the same
+      // reason the ACL pair is split: if CREATE TYPE and ADD VALUE shared one
+      // case, the type's creation alone would move the census and the case
+      // would pass whether or not the enums probe exists — the fixture would
+      // not detect the regression it is for. ADD VALUE also cannot run in the
+      // same transaction that creates the type.
+      name: 'GOOD — creates an enum type (setup for the enum-value fixture)',
+      sql:
+        `CREATE SCHEMA IF NOT EXISTS ${SELF_TEST_SCHEMA};\n` +
+        `DO $do$ BEGIN\n` +
+        `  IF to_regtype('${SELF_TEST_SCHEMA}.enum_probe') IS NULL THEN\n` +
+        `    CREATE TYPE ${SELF_TEST_SCHEMA}.enum_probe AS ENUM ('first');\n` +
+        `  END IF;\n` +
+        `END $do$;\n`,
+      expect: 'pass',
+    },
+    {
+      // THE REGRESSION FIXTURE for the 2026-08-24 census gap. A pure enum-value
+      // addition on an ALREADY-EXISTING type — no new object, nothing but a new
+      // label.
+      //
+      // Before the `enums` probe was added, this exact shape applied cleanly,
+      // moved nothing the census watched, and was rejected as a no-op. It cost
+      // crm7 migration 20260903000000 (adding 'field_manager' to gto_role) a
+      // rehearsal failure while that migration was doing precisely what it said.
+      //
+      // The wrong fix was available and tempting: declare such migrations DATA
+      // ONLY. They are not data, and doing so would exempt every future
+      // ALTER TYPE ADD VALUE from verification permanently — the same trap the
+      // function-ACL comment above describes.
+      name: 'GOOD — ALTER TYPE ADD VALUE only, on an existing enum',
+      sql: `ALTER TYPE ${SELF_TEST_SCHEMA}.enum_probe ADD VALUE IF NOT EXISTS 'added_by_self_test';\n`,
       expect: 'pass',
     },
     {
