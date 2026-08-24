@@ -14,7 +14,28 @@ evidence:
   - .github/workflows/no-prerelease-in-production.yml
 ---
 
-# Getting a package fix onto a preview host
+# The BSuite release model — `next` and `latest`
+
+> **STATUS: IN FORCE. Implemented and proven end to end on 2026-08-24.**
+> The model was ruled in force by the operator; this document records the
+> implementation, not the decision. It is not open for re-litigation — if you
+> believe it needs changing, raise it as a new ruling rather than working
+> around it.
+>
+> Proof, not assertion. A package fix travelled the whole path in one session:
+>
+> | step | evidence |
+> |---|---|
+> | fix lands on `development` with a `-next.N` bump | `@bsuite/data-grid` 1.0.0 → 1.0.1-next.0 |
+> | `publish-next.yml` publishes it to `next` | `dist-tags {"latest":"1.0.0","next":"1.0.1-next.0"}` — `latest` did **not** move |
+> | an app pins it and its preview installs it | crm7 lockfile `specifier 1.0.1-next.0 → version 1.0.1-next.0` |
+> | the `d.*` host serves the fix | `d.crm.crm7.app` @ deploy `d82709d7`, 862-chunk crawl, exactly one drag-handle class, the corrected tier |
+> | promotion finalises and publishes to `latest` | `dist-tags {"latest":"1.0.1","next":"1.0.1-next.0"}` |
+>
+> The first publish attempt **failed**, and that is the better evidence: the
+> dispatched run died on a real typecheck defect that the parent's PR gate does
+> not run, and `publish-next.yml` failed with it rather than reporting success.
+
 
 ## The deadlock this replaces
 
@@ -150,16 +171,30 @@ the convention, not a trap.
    moves, every app still resolving the prerelease is `STALE-BUT-IN-RANGE`, which is a
    hard failure and not a warning.
 
-## The two paths, and what stops them being confused
+## Which branch publishes which tag — the whole model on one page
 
 | | Preview | Production |
 |---|---|---|
 | Branch | `development` | `main` |
-| Package version | `1.1.1-next.N` | `1.1.1` |
+| Package version | `x.y.z-next.N` | `x.y.z` |
 | dist-tag | `next` | `latest` |
-| Resolved by | a lockfile naming the exact version | any `^1.1.0` consumer |
+| Publishes via | `publish-next.yml` (push to `development`) | `publish-<pkg>.yml` (push to `main`) |
+| Resolved by | **only** a lockfile naming that exact version | any consumer on `^x.y.z` |
 | Host | `d.crm.crm7.app`, `d.r8.crm7.app`, … | `crm.crm7.app`, `r8.crm7.app`, … |
-| Publishes on | push to `development` (`publish-next.yml`) | push to `main` (`publish-<pkg>.yml`) |
+| Install flag | `--frozen-lockfile` | `--frozen-lockfile` |
+
+`--frozen-lockfile` is **satisfied on both paths, relaxed on neither**. The
+preview resolves a genuine, immutable, published registry version — not a
+workspace symlink — which is the point: a visual gate's verdict is only worth
+something if the preview is faithful to what would ship.
+
+**Nothing here weakens the production path.** `latest` still moves only through
+a push to `main`, behind the same promotion gate as before.
+
+## What stops the two paths being confused
+
+The model is tabulated once, further down under *Which branch publishes which
+tag*. This section is the enforcement.
 
 Both ends are guarded, because each fails in a different direction.
 
@@ -187,7 +222,110 @@ invisible: a prerelease version sitting on `main` means `publish-<pkg>.yml` corr
 declines to move `latest`, and then `latest` silently stops advancing while every
 freshness check reports the apps current against a stale tag.
 
+## What happens to the whole estate when a promotion publishes
+
+**Every open PR goes red, and that is the model working.** Know this before it
+happens to you, because the natural reaction is to assume it is your branch.
+
+Measured 2026-08-24. `bsuite#2341` merged at 09:57Z and published
+`@bsuite/nav-core 1.1.0` and `@bsuite/data-grid 1.0.1` to `latest`. Within two
+minutes `own-package-freshness` was failing on every open PR in the estate:
+
+```
+✗ business-suite-unified  @bsuite/nav-core 1.0.1 < 1.1.0   STALE-BUT-IN-RANGE
+✗ braden / conduit / crm7 / R80.4 / throughput  … same
+✗ crm7                    @bsuite/data-grid 1.0.0 < 1.0.1
+```
+
+It is attributable to **no PR**. It arrives with **no diff at all** — the
+registry moves underneath every branch simultaneously. That is exactly the class
+the guard was written for, and the proof it is not your branch is that the same
+workflow succeeded at 09:46Z and failed at 09:59Z on one unchanged branch.
+
+**Treat it as a P0 until cleared, and say so where people will see it.** Not
+because the failure is dangerous — the packages are fine — but because a
+permanently red gate trains people to ignore it, and an ignored gate is a
+deleted gate. This one is the only thing making apps actually consume what we
+publish.
+
+**THE POINTER COUNT GROWS AS YOU CLEAR IT, AND THAT IS NOT A FAILURE.** Every app
+whose lockfile PR merges adds one more submodule needing a pointer advance. Run
+`advance-submodule-pointers.mjs` mid-sweep and the number goes *up*:
+
+```
+2 of 6 apps merged  ->  4 to advance
+5 of 6 apps merged  ->  6 to advance
+```
+
+Anyone advancing pointers while the sweep is still landing will keep finding the
+count has grown under them and will read it as their work being undone. It is
+not. **The P0 cannot clear until the LAST app merges AND all six pointers move** —
+so advance pointers once, at the end, never incrementally.
+
+**Clearing it is TWO STEPS, not one.** `check-shared-package-reach` and
+`own-package-freshness` read each app **at the parent gitlink**, so a green
+result needs *both*:
+
+1. the app's own lockfile refresh merged (in the app repo), **and**
+2. the parent's gitlink advanced onto that commit.
+
+Expect a second round of red between those two steps. That is not a regression;
+it is the second half not being done yet.
+
+| the app declares | what it needs |
+|---|---|
+| a caret range (`^1.0.0` already admits `1.1.0`) | lockfile-only refresh |
+| an **exact** prerelease pin | `EXACT-PINNED-BEHIND` — needs the `package.json` edit too |
+
+The exact pin is deliberate. A caret on a canary would silently absorb the
+released version and nobody would ever notice the app was still nominally on a
+release candidate; the exact pin turns that into a hard failure that must be
+answered.
+
+
+### Regenerating the route inventory during a sweep
+
+`docs/nav/build-inventory.py` reads the submodule **WORKING TREES**. It does not
+read the gitlinks you are about to commit. **If the two disagree, you generate an
+inventory for a tree you are not recording** — and every parent worktree and every
+lane shares those working trees, so they disagree often.
+
+Measured 2026-08-24. A change intended to move **one** pointer regenerated as
+**928 lines**. Nothing failed and nothing warned. The extra 926 lines were `crm7`
+evidence shifts: the shared `crm7` checkout was sitting ahead of the `crm7`
+gitlink recorded in the parent, so the generator faithfully described a tree the
+commit did not contain.
+
+The subtlety worth keeping, because the obvious lesson is the wrong one: the
+output was not corrupt. Regenerating **#2342**'s inventory in isolation at its own
+three moved pointers reproduces its committed file **byte-for-byte**, 928 lines
+and all — so 928 is the *correct* size for a three-pointer move. The defect was
+never the number. It was that the number described a different tree from the one
+being committed, and there is no signal that tells you which you got.
+
+Regenerate in an **isolated tree** instead — local `--shared` clones of the parent
+and each submodule at explicit SHAs, generator run there, the real checkout
+untouched. About ten seconds. Prove it with both controls before trusting a
+result:
+
+| control | expected |
+|---|---|
+| regenerate at the **current** gitlinks | **zero** changed files |
+| regenerate with **one** pointer moved | exactly that app's evidence lines, and nothing else |
+
+A harness that cannot produce a null result on a null input cannot be trusted to
+produce a real one.
+
+**`check-inventory` in CI is the arbiter, not your local walk.** That job checks
+out clean **at the recorded gitlinks**, regenerates, and diffs — so it compares
+the inventory against the tree the commit actually contains, which is exactly the
+thing a local walk cannot guarantee. If it passes on your head SHA, your
+inventory is right regardless of what your working trees were doing. The isolated
+harness is for getting it right *before* you push; CI is what proves it.
+
 ## Why not the alternatives
+
+
 
 - **Relaxing `--frozen-lockfile` for previews.** Makes preview builds irreproducible and
   lets a preview pass against a dependency tree production will never install. It trades
