@@ -408,6 +408,38 @@ const CENSUS_QUERIES = {
       WHERE NOT t.tgisinternal
         AND n.nspname NOT IN ('pg_catalog','information_schema','supabase_migrations')
     ) q`,
+
+  /* ENUM VALUES — the category whose absence made a correct migration
+     unmergeable.
+
+     `crm7/supabase/migrations/20260903000000_field_manager_gto_role_enum_value.sql`
+     is one line:
+
+         ALTER TYPE public.gto_role ADD VALUE IF NOT EXISTS 'field_manager';
+
+     It is effective — the live enum is (gto_admin, gto_staff, field_officer,
+     host_supervisor, apprentice) and has no field_manager — and this rehearsal
+     called it `noop` and failed the PR. Not because the migration did nothing,
+     but because NOTHING HERE COULD SEE IT: the seven categories above cover
+     tables, functions, policies, indexes, constraints, comments and triggers,
+     and an enum value is none of those.
+
+     A detector that cannot observe a change reports its absence, and absence
+     reads as "this migration is dead code". That is the most expensive possible
+     way to be wrong about a migration, because the recommended fix — delete it
+     — is the one that loses the change.
+
+     Ordered by enumsortorder, not by label: ADD VALUE ... BEFORE/AFTER inserts
+     into the middle, and sorting alphabetically would hide a reordering. */
+  enums: `SELECT coalesce(string_agg(x, E'\\n' ORDER BY x), '') FROM (
+      SELECT n.nspname || '.' || t.typname || ' = ' ||
+             string_agg(e.enumlabel, ',' ORDER BY e.enumsortorder) AS x
+      FROM pg_type t
+      JOIN pg_enum e ON e.enumtypid = t.oid
+      JOIN pg_namespace n ON n.oid = t.typnamespace
+      WHERE n.nspname NOT IN ('pg_catalog','information_schema','supabase_migrations')
+      GROUP BY n.nspname, t.typname
+    ) q`,
 };
 
 function takeCensus(dbUrl) {
