@@ -378,7 +378,7 @@ internal engineering bot that is NOT the same "Jodie".**
   stubs.
 - `conduit/src/app/(dashboard)/{jobs,candidates,pipeline,interviews,offers,onboarding,compliance,talent-pools}` —
   substantial dashboard route coverage confirmed present.
-- `docs/plans/loop-contracts/recruitment-comms-rams-loop-contract.md`
+- `docs/plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00W.md`
   confirmed present at the expected path.
 - **Gap:** did not trace whether `jodie-persona.ts`'s tool set is actually
   wired into a chat UI route in this pass (file-existence + real-query

@@ -165,10 +165,10 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | plans/20260724-recruitment-employment-handover-design-v1.00D.md | Draft recruitment→employment handover design | I | W1-W3 not built; "RECORD ONLY" | keep |
 | plans/20260724-recurring-bugs-blindspots-refined-v1.00D.md | Refined prompt for recurring-bugs ledger | I | Analysis-only | keep |
 | plans/20260725-docs-deadcode-archive-refined-v1.00D.md · plans/20260725-gto-excellence-program-refined-v1.00D.md · plans/20260725-gto-persona-excellence-design-v1.00D.md | Refined prompts / persona design (Draft) | I | Prompt/design artifacts; not closure exports | keep |
-| plans/codehouse-parity/PARITY-569-pay-item-groups-spec.md | Pay Item Groups parity spec; PR-A–F merged | I | PR-A–F merged (crm7#950-#955); PR-G "npm publish blocked" (bsuite#1363) | keep |
+| plans/codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W.md | Pay Item Groups parity spec; PR-A–F merged | I | PR-A–F merged (crm7#950-#955); PR-G "npm publish blocked" (bsuite#1363) | keep |
 | plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md | prompt-enhancer provenance output | I | One-off prompt output | keep |
 | plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md | Loop contract for GTO E2E cycle W0-W7 | I | W2-W7 success conditions unmet | keep |
-| plans/loop-contracts/recruitment-comms-rams-loop-contract.md | Loop contract for recruitment cluster | I | STATE table stale; RAMS/ADMS gap | keep |
+| plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00W.md | Loop contract for recruitment cluster | I | STATE table stale; RAMS/ADMS gap | keep |
 | plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md | Unified design-language doctrine (Approved) | L | Doctrine cited by INDEX + Reports W2 | keep (living) |
 | plans/uplift/INDEX.md | Uplift 9-wave tracker/index | L | Wave index (W0/W1 done, W2-W8 open); bsuite#635 | keep (living) |
 | references/codehouse_kb_crawl_results.md · references/codehouse-knowledgebase-crawl.md | Code House WfO KB crawl data | L | Reference crawl data | keep (living) |
@@ -203,7 +203,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 20. **plans/20260716-bsuite-completion-program-plan + 20260723-completion-program-refined** — clusters A-F open; W1 publish chain blocked on operator npm login.
 21. **20260428-operator-verification/03,04,05** — open operator actions; live Supabase secret/DB state needs MCP `execute_sql` re-verification.
 22. **ai/features/20260227-feature-map-complete** — 49-tool registry claim; Phases 3-6 unchecked; model superseded; no impl evidence.
-23. **plans/codehouse-parity/PARITY-569-pay-item-groups-spec** — PR-G npm publish blocked (bsuite#1363).
+23. **plans/codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W** — PR-G npm publish blocked (bsuite#1363).
 24. **plans/20260618-recruitment-comms-rams-cluster-plan + loop-contract** — ADMS APIM key / final RAMS lodgement gap; STATE table stale.
 25. **plans/20260521-reports-w2-uplift** — only Task 3a (Stepper extraction) Deferred. Low leverage.
 26. **plans/20260701-docs-plans-closure-audit** — §12.3 deployed-domain evidence pending; "Not Archive-Ready" rows.
@@ -290,8 +290,8 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | FEATURE-SURFACE.md | Mirror (RBAC ✅, EntitySelector ❌) | L | Stale "App Router co-existence with cookie SSO"; EntitySelector ❌ accurate | keep (living); fix cookie line |
 | INDEX.md | Navigation hub | L | Broken refs: `20260512-bsu-crm-domain-migration-doctrine` (MISSING), relocated archive links | keep (living); repair |
 | PARENT-DOCS.md | Nav bridge to parent | L | Malformed absolute-path links from archive relocation | keep (living); repair |
-| plans/2026-05-04-adopt-entity-selectors.md | OPEN plan: adopt Person/Host/Contact selectors | I | `src/components/entity/` does NOT exist | keep |
-| plans/2026-05-04-shadcn-init.md | OPEN plan: shadcn init | I | `conduit/components.json` now EXISTS; `src/components/ui/` 13 primitives. "OPEN" stale | keep; verify a page uses shadcn Form |
+| plans/20260504-adopt-entity-selectors-v1.00F.md | OPEN plan: adopt Person/Host/Contact selectors | I | `src/components/entity/` does NOT exist | keep |
+| plans/20260504-shadcn-init-v1.00F.md | OPEN plan: shadcn init | I | `conduit/components.json` now EXISTS; `src/components/ui/` 13 primitives. "OPEN" stale | keep; verify a page uses shadcn Form |
 | plans/STATUS.md · README.md · STACK-AUDIT.md · UNIFIED-ROADMAP.md | Status/index/stack/roadmap mirrors | L | Stale: shadcn-init "components.json absent" (now exists); cookie-SSO refs | keep (living); refresh |
 
 ### INCOMPLETE ledger (conduit) — by leverage
@@ -299,8 +299,8 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 1. **20260726-recruitment-employment-handover-feature** (highest — actively misleading): "What ships" + "42 tests" cite `handoverDocuments/Emails/RequiredDocs/Contract.ts` + `handover-to-employment` fn that were REMOVED from conduit (moved to crm7). Missing: rewrite to state conduit owns only handoff-token augmentation (`candidates/[id]/actions.ts:103,105,429-430`, verified shipped).
 2. **20260725-training-contract-status-email-ingestion-feature** — all code shipped but not deployed/live-verified. Missing: apply migrations, seed vault secrets, deploy `sta-email-watch`, live `d.*` signed-in flow (§12.3), confirm STA sender domains.
 3. **20260723-schema-builder-registry-consolidation-chore** — code shipped (shim + `^1.0.0` + pkg 1.0.0) so the "blocked" blocker is resolved, but doc un-updated (still W). Missing: W→A, typecheck/lint/build green, live-verify Schema Builder route.
-4. **plans/2026-05-04-shadcn-init** — `components.json` + 13 primitives exist; "OPEN" stale. Missing: confirm a page replaces a hand-written form with shadcn Form + RHF + Zod, green typecheck/lint.
-5. **plans/2026-05-04-adopt-entity-selectors** — genuinely OPEN; `src/components/entity/` absent.
+4. **plans/20260504-shadcn-init-v1.00F** — `components.json` + 13 primitives exist; "OPEN" stale. Missing: confirm a page replaces a hand-written form with shadcn Form + RHF + Zod, green typecheck/lint.
+5. **plans/20260504-adopt-entity-selectors-v1.00F** — genuinely OPEN; `src/components/entity/` absent.
 
 No COMPLETE-archive verdicts: every feature/chore doc carries open deployment/live-verification or stale-rewrite items. No conduit doc claims the conduit#223 assessment capability or conduit#381 cards.
 
@@ -327,9 +327,9 @@ No COMPLETE-archive verdicts: every feature/chore doc carries open deployment/li
 | FEATURE-SURFACE.md | BSU feature-surface mirror | L (two stale cells) | dnd-kit "1" → now 3 files; Cmd+K primitive exists (`uplift/CommandPalette.tsx`) but not wired; EntitySelector ❌ accurate | keep (living); update |
 | UNIFIED-ROADMAP.md · STACK-AUDIT.md · CONSISTENCY-REPORT.md | Roadmap/stack/consistency mirrors | L (CONSISTENCY partly stale) | CONSISTENCY CON-8 dnd "1 file" → 3; CON-7 Cmd+K primitive present; **"cookie SSO ✅" deprecated** | keep (living); remove cookie-SSO line |
 | plans/STATUS.md | BSU plans status board | L | Consistent with source | keep (living) |
-| plans/2026-05-04-adopt-dnd-dashboard.md | Adopt: per-user `dashboard_layouts` persistence | L (open) | No `dashboard_layouts` migration; dnd-kit present but not persisted-dashboard pattern | keep (living/open) |
-| plans/2026-05-04-adopt-entity-selectors.md | Adopt: replace BSU forms with EntitySelectors | L (open) | 0 selector matches in `src/` | keep (living/open) |
-| plans/feature-builder-execution-sequence.md | 8-phase Feature Builder roadmap | L (partly superseded) | Phase 0 present; Phases 2-6 partly delivered by 20260723 pass | keep (living); reconcile |
+| plans/20260504-adopt-dnd-dashboard-v1.00F.md | Adopt: per-user `dashboard_layouts` persistence | L (open) | No `dashboard_layouts` migration; dnd-kit present but not persisted-dashboard pattern | keep (living/open) |
+| plans/20260504-adopt-entity-selectors-v1.00F.md | Adopt: replace BSU forms with EntitySelectors | L (open) | 0 selector matches in `src/` | keep (living/open) |
+| plans/20260507-feature-builder-execution-sequence-v1.00W.md | 8-phase Feature Builder roadmap | L (partly superseded) | Phase 0 present; Phases 2-6 partly delivered by 20260723 pass | keep (living); reconcile |
 | archive/README.md | Archive relocation pointer | L | Pointer | keep (living) |
 | AGENTS.md · CLAUDE.md · CONTRIBUTING.md · README.md (top-level) | Standards/README | L | Living guides | keep (living) |
 
