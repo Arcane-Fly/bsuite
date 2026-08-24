@@ -377,6 +377,17 @@ export const GUARDS = [
     evidence: '"Result: 5/5 apps passed"',
   },
   {
+    id: 'parent-cross-tenant-duplicate-objects',
+    label: 'Document byte-sequences shared across tenants (live DB)',
+    repo: '.',
+    // The measurement needs the live database; only the reader runs here. CI pipes
+    // psql output into it. `--self-test` is what this registry can verify locally.
+    command: ['node', 'scripts/audit-cross-tenant-duplicate-objects.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/cross-tenant-duplicate-objects.yml',
+    mode: 'run',
+    evidence: '"cross-tenant-duplicate-objects self-test: 14/14 pass"',
+  },
+  {
     id: 'parent-check-doc-naming',
     label: 'Documentation filename classification (all files, not just dated ones)',
     repo: '.',
