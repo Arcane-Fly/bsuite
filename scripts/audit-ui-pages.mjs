@@ -241,6 +241,27 @@ for (const url of urls) {
       // U6 — accessible names, and controls you can actually SEE.
       for (const el of document.querySelectorAll('button, a[href], input, select, textarea')) {
         if (!vis(el)) continue;
+        // A CONTROL REMOVED FROM THE ACCESSIBILITY TREE CANNOT HAVE AN
+        // ACCESSIBLE NAME, and does not need one — asking it for a name is
+        // asking the wrong question.
+        //
+        // The pattern that exposed this: a custom date field keeps a native
+        // picker off-screen to open the browser's calendar, and marks it
+        // exactly as the platform says to —
+        //
+        //   <input type="date" aria-hidden="true" tabindex="-1"
+        //          style="width:1px;height:1px;opacity:0;pointer-events:none">
+        //
+        // It is unreachable by keyboard, unannounced by a screen reader, and
+        // invisible. R80.4's calculator carries four, and this check reported
+        // all four as U6 failures on the first run that could reach its
+        // authenticated routes (2026-08-24). `audit-legibility` has skipped
+        // `[inert], [aria-hidden="true"]` from the start; this check simply
+        // never learned the same thing.
+        //
+        // `closest`, not a own-attribute test: aria-hidden is INHERITED down the
+        // subtree, so a control inside a hidden container is hidden too.
+        if (el.closest('[inert], [aria-hidden="true"]')) continue;
         // An accessible name can come from a <label for>, an aria-labelledby
         // target, or a nested control — not just the element's own attributes.
         // BSU's locale radios carry id={inputId} with a sibling <Label htmlFor>,
