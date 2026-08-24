@@ -1,3 +1,13 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+evidence:
+  - scripts/audit-doc-completion.mjs
+  - scripts/check-shared-package-reach.mjs
+  - scripts/check-doc-classification.mjs
+---
+
 # Why no document can be marked complete yet — measured, 2026-08-24
 
 **Status:** W (Working) · **Author:** bsuite-lane
