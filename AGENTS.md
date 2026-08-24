@@ -99,7 +99,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 | AI SDK standards, multi-file refactor tooling, reusable code patterns | [`docs/20260731-agent-engineering-patterns-v1.00W.md`](docs/20260731-agent-engineering-patterns-v1.00W.md) |
 | Layout, z-index scale, DOM autopsy | [`docs/20260731-frontend-layout-zindex-standards-v1.00W.md`](docs/20260731-frontend-layout-zindex-standards-v1.00W.md) |
 | Theme tokens, both brands | `packages/theme/README.md` + the `bsuite-brand-system` skill |
-| Status: what is open, shipped, applied | Ask the live source — `gh issue list`, `gh pr list`, `schema_migrations`. The plan dashboard was **retired 2026-08-10**: [`docs/20260810-plan-dashboard-retirement-v1.00W.md`](docs/20260810-plan-dashboard-retirement-v1.00W.md) |
+| Status: what is open, shipped, applied | Ask the live source — `gh issue list`, `gh pr list`, `schema_migrations`. The plan dashboard was **retired 2026-08-10**: [`docs/20260810-plan-dashboard-retirement-v1.00F.md`](docs/20260810-plan-dashboard-retirement-v1.00F.md) |
 | E2E testing status | [`docs/testing/README.md`](docs/testing/README.md) |
 | Dependency bumps | [`docs/20260506-dependency-bump-checklist-v1.00A.md`](docs/20260506-dependency-bump-checklist-v1.00A.md) |
 | Anything else | [`docs/README.md`](docs/README.md) → `docs/20260504-bsuite-documentation-hub-v1.00W.md` |

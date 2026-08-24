@@ -8,7 +8,7 @@ Supabase SQL. No verdict rests on a doc claim, a changelog line, or a PR title.
 **Sources reviewed:** `bsuite notes.docx` (4 dated sections, 67 screenshots, ~90 defects),
 `docs/20260813-operator-directive-notes-backlog-remediation-v1.00D.md` (D-59…D-92),
 `docs/20260813-portals-redesign-brainstorm-v1.00D.md`, `docs/20260813-bsuite-world-class-brainstorm-v1.00D.md`,
-`docs/20260810-plan-dashboard-retirement-v1.00W.md`, `docs/20260806-schema-authoring-and-tenancy-scope-v1.00A.md`,
+`docs/20260810-plan-dashboard-retirement-v1.00F.md`, `docs/20260806-schema-authoring-and-tenancy-scope-v1.00A.md`,
 `docs/20260802-d2c-theme-compliance-audit-v1.00A.md`, `docs/plans/20260803…20260811-*`,
 the open claude.ai thread, and the seven live repositories.
 
@@ -495,6 +495,6 @@ Three docs actively mislead the next agent:
 2. **`AGENTS.md` says `@bsuite/page-builder ^0.2.0 (latest 0.2.2)`.** The real version is **0.8.0** —
    four minors stale, and the version table is what an agent consults before a bump.
 3. **`docs/OUTSTANDING.md` calls itself "single source of truth"** while its own header repoints
-   twice to other documents. `docs/20260810-plan-dashboard-retirement-v1.00W.md` retired the last
+   twice to other documents. `docs/20260810-plan-dashboard-retirement-v1.00F.md` retired the last
    thing that claimed that title, for exactly this reason — *"It was doctrine … It had not been true
    since May."* OUTSTANDING.md is the same shape and should either be regenerated or demoted.
