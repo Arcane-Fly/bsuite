@@ -571,6 +571,41 @@ function runSelfTest(dbUrl, tmpDir) {
       expect: 'pass',
     },
     {
+      // Setup for the enum fixture below. SEPARATE on purpose, for the same
+      // reason the ACL pair is split: if CREATE TYPE and ADD VALUE shared one
+      // case, the type's creation alone would move the census and the case
+      // would pass whether or not the enums probe exists — the fixture would
+      // not detect the regression it is for. ADD VALUE also cannot run in the
+      // same transaction that creates the type.
+      name: 'GOOD — creates an enum type (setup for the enum-value fixture)',
+      sql:
+        `CREATE SCHEMA IF NOT EXISTS ${SELF_TEST_SCHEMA};\n` +
+        `DO $do$ BEGIN\n` +
+        `  IF to_regtype('${SELF_TEST_SCHEMA}.enum_probe') IS NULL THEN\n` +
+        `    CREATE TYPE ${SELF_TEST_SCHEMA}.enum_probe AS ENUM ('first');\n` +
+        `  END IF;\n` +
+        `END $do$;\n`,
+      expect: 'pass',
+    },
+    {
+      // THE REGRESSION FIXTURE for the 2026-08-24 census gap. A pure enum-value
+      // addition on an ALREADY-EXISTING type — no new object, nothing but a new
+      // label.
+      //
+      // Before the `enums` probe was added, this exact shape applied cleanly,
+      // moved nothing the census watched, and was rejected as a no-op. It cost
+      // crm7 migration 20260903000000 (adding 'field_manager' to gto_role) a
+      // rehearsal failure while that migration was doing precisely what it said.
+      //
+      // The wrong fix was available and tempting: declare such migrations DATA
+      // ONLY. They are not data, and doing so would exempt every future
+      // ALTER TYPE ADD VALUE from verification permanently — the same trap the
+      // function-ACL comment above describes.
+      name: 'GOOD — ALTER TYPE ADD VALUE only, on an existing enum',
+      sql: `ALTER TYPE ${SELF_TEST_SCHEMA}.enum_probe ADD VALUE IF NOT EXISTS 'added_by_self_test';\n`,
+      expect: 'pass',
+    },
+    {
       name: 'NO-OP — CREATE TABLE IF NOT EXISTS on an existing table',
       sql: `CREATE TABLE IF NOT EXISTS ${SELF_TEST_SCHEMA}.probe (id integer PRIMARY KEY, note text, column_that_will_never_appear text);\n`,
       expect: 'noop',
