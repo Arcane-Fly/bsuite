@@ -1,0 +1,186 @@
+{
+  "total": 68,
+  "files": 45,
+  "sites": [
+    {
+      "path": "crm7/src/contexts/DataContextSupabase.tsx",
+      "count": 5
+    },
+    {
+      "path": "crm7/src/services/payItemGroupService.ts",
+      "count": 4
+    },
+    {
+      "path": "crm7/src/lib/standDown/standDownService.ts",
+      "count": 3
+    },
+    {
+      "path": "crm7/src/services/adminParityService.ts",
+      "count": 3
+    },
+    {
+      "path": "crm7/src/services/fundingService.ts",
+      "count": 3
+    },
+    {
+      "path": "crm7/src/services/schemaBuilderService.ts",
+      "count": 3
+    },
+    {
+      "path": "throughput/src/lib/db.ts",
+      "count": 3
+    },
+    {
+      "path": "braden/src/services/pagesService.ts",
+      "count": 2
+    },
+    {
+      "path": "conduit/src/lib/ai/tools/candidate-tools.ts",
+      "count": 2
+    },
+    {
+      "path": "crm7/src/services/apprenticePlacementService.ts",
+      "count": 2
+    },
+    {
+      "path": "crm7/src/services/customFieldsService.ts",
+      "count": 2
+    },
+    {
+      "path": "crm7/src/services/payItemRuleService.ts",
+      "count": 2
+    },
+    {
+      "path": "crm7/src/services/picklistService.ts",
+      "count": 2
+    },
+    {
+      "path": "braden/src/services/notes.ts",
+      "count": 1
+    },
+    {
+      "path": "business-suite-unified/src/stores/featureBuilderStore.ts",
+      "count": 1
+    },
+    {
+      "path": "conduit/src/app/(dashboard)/jobs/[id]/distribute/actions.ts",
+      "count": 1
+    },
+    {
+      "path": "conduit/src/app/(dashboard)/jobs/actions.ts",
+      "count": 1
+    },
+    {
+      "path": "conduit/src/app/admin/templates/actions.ts",
+      "count": 1
+    },
+    {
+      "path": "conduit/src/lib/ai/tools/interview-tools.ts",
+      "count": 1
+    },
+    {
+      "path": "conduit/src/lib/ai/tools/pipeline-tools.ts",
+      "count": 1
+    },
+    {
+      "path": "conduit/src/lib/ai/tools/triage-tools.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/components/entity/selectors/QuickCreateRtoDialog.tsx",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/components/rates/RateApprovalWorkflow.tsx",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/lib/data/trainingQueries.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/lib/integrations/aass/aassAdapter.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/lib/integrations/usi/usiService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/lib/training/trainingPlanVersionService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/lib/workflows/placementWorkflow.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/pages/contracts/training/[id]/index.tsx",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/pages/documents/templates/editor.tsx",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/pages/field-officers/competency/assess.tsx",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/pages/payroll/index.tsx",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/apprenticeRateConfigService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/customPageService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/dashboardService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/dataImportJobService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/engagementService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/formLayoutService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/interpretationRulesService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/orgDocumentService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/savedViewService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/timeCreditService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/services/uiConfigService.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/stores/chargeRateStore.ts",
+      "count": 1
+    },
+    {
+      "path": "crm7/src/stores/createEntityStore.ts",
+      "count": 1
+    }
+  ]
+}
