@@ -380,6 +380,56 @@ if (process.argv.includes('--inventory')) {
   console.log(out.join('\n'));
 }
 
+// ── THE UNBOUND RATCHET ─────────────────────────────────────────────────────
+//
+// 425 docs cite nothing checkable. That number cannot be driven to zero by this tool or
+// by any tool: binding a doc means NAMING the artifact that proves it, and choosing that
+// artifact is a judgement about the document's CONTENT.
+//
+// THE OBVIOUS SHORTCUT IS A RECORDED FAILURE OF THIS EXACT FILE. The first version matched
+// keywords and reported 437 of 463 bindable — the word "route" being common, dressed up as
+// a finding. Auto-binding the 425 now would manufacture 425 false completions, which is
+// precisely what the operator's bar exists to prevent.
+//
+// So the system gets finished even though the judgements cannot be:
+//
+//   1. THE COUNT MAY ONLY FALL. A committed baseline, equality-checked like every other
+//      ratchet in this estate — a ceiling with slack is a ceiling written down wrong.
+//   2. THE PILE CANNOT GROW. A doc ADDED to the corpus must cite something or declare
+//      itself a record. It is cheap at creation and impossible to reconstruct later, which
+//      is exactly the argument the classification gate already makes for frontmatter.
+//
+// An open-ended backlog becomes a monotonically shrinking one. That is the finishable
+// shape, and it is the only honest one.
+const UNBOUND_BASELINE_FILE = 'docs/.unbound-baseline';
+const unboundNow = rows.length - bindable.length - dead.length;
+let ratchetFailed = false;
+if (existsSync(UNBOUND_BASELINE_FILE)) {
+  const base = Number(readFileSync(UNBOUND_BASELINE_FILE, 'utf8').trim());
+  if (!Number.isFinite(base)) {
+    console.error(`\n  ${UNBOUND_BASELINE_FILE} is not a number.`);
+    ratchetFailed = true;
+  } else if (unboundNow > base) {
+    console.error(`\n  UNBOUND RATCHET BROKEN: baseline ${base}, now ${unboundNow}.`);
+    console.error('  A new doc that cites nothing checkable can never be shown complete, and');
+    console.error('  the backlog it joins is the one nobody can finish. Name the gate, workflow');
+    console.error('  or migration that would prove it — or, if it records what happened rather');
+    console.error('  than claiming anything, file it under docs/archive/ or give it a');
+    console.error('  point-in-time banner and it counts as a RECORD instead.');
+    ratchetFailed = true;
+  } else if (unboundNow < base) {
+    console.error(`\n  UNBOUND fell ${base} -> ${unboundNow}. Bank it:`);
+    console.error(`      echo ${unboundNow} > ${UNBOUND_BASELINE_FILE}`);
+    console.error('  Equality, not a ceiling — slack between the committed number and the');
+    console.error('  measured one lets the backlog grow back unnoticed (bsuite D-87).');
+    ratchetFailed = true;
+  } else {
+    console.log(`\n  unbound ratchet ok: baseline ${base}, now ${unboundNow}`);
+  }
+} else {
+  console.log(`\n  no unbound baseline yet — write ${unboundNow} to ${UNBOUND_BASELINE_FILE} to arm the ratchet`);
+}
+
 console.log('\n  NOTHING WAS RENAMED. Eligibility is not a verdict — the cited gates must be RUN.');
 console.log('  AND: eligibility is only LIMB (b) of the operator bar. Limb (a) — that a doc is');
 console.log('  SUPERSEDED, or described a non-best-practice since corrected — is a judgement about');
@@ -387,3 +437,5 @@ console.log('  the document CONTENT. Nothing here reads that, and no marker may 
 console.log('  VACUITY: a doc citing zero gates has zero FAILING gates. That is not a pass. Scoring');
 console.log('  code downstream of this tool MUST require at least one PASSING citation, not merely');
 console.log('  the absence of a failing one.');
+
+if (ratchetFailed) process.exit(1);
