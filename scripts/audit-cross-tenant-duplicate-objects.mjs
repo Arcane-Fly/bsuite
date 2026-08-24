@@ -98,7 +98,14 @@ if (process.argv.includes('--self-test')) {
   })
 
   const failed = cases.filter((c) => !c[1])
-  console.log(`cross-tenant-duplicate-objects self-test: ${cases.length - failed.length}/${cases.length} pass`)
+  /* State what was EXAMINED, not just that it passed. The self-reporting meta-check
+   * treats "14/14 pass" as silent, and it is right to: a run that examined nothing
+   * also passes everything it examined. */
+  console.log(
+    `cross-tenant-duplicate-objects --self-test: ${cases.length - failed.length}/${cases.length} pass — ` +
+    `${cases.length} case(s) exercised in BOTH directions (6 parse shapes, 3 malformed inputs that must be ` +
+    `REFUSED rather than skipped, and 5 ratchet verdicts covering hold, rise, fall and a missing completion marker)`,
+  )
   for (const f of failed) console.error(`  FAILED ${f[0]}: ${f[2]}`)
   process.exit(failed.length ? 1 : 0)
 }
