@@ -1,0 +1,93 @@
+name: Cross-tenant duplicate documents
+
+# A document byte-sequence that exists under more than one tenant.
+#
+# On 2026-07-15 a bulk import copied a real tenant's document set onto fabricated
+# identities in another tenant. Nothing caught it, and nothing would catch it
+# recurring — row-level security was never breached, because every row's tenant_id
+# agreed with its person's. No authorisation gate had anything to say. The defect is
+# that the rows were CREATED, and the only signal is that the bytes match.
+#
+# The measurement is the storage object's eTag (its MD5). Filenames do not work:
+# `Passport.pdf` is generic, and name+size alone over-counted the known case by 28.
+#
+# RATCHET, not a hard gate. The existing 158 are a known, contained condition — the
+# receiving tenant has two members and both are the operator's own accounts. Failing
+# all of them on day one makes a permanently red gate, which is how a rule gets
+# disarmed. A NEW one turns it red; the number may only fall.
+
+on:
+  pull_request:
+    branches: [development, main]
+    paths:
+      - 'scripts/audit-cross-tenant-duplicate-objects.mjs'
+      - 'scripts/sql/cross-tenant-duplicate-objects.sql'
+      - 'scripts/cross-tenant-duplicate-objects-baseline.json'
+      - '.github/workflows/cross-tenant-duplicate-objects.yml'
+  schedule:
+    # Documents arrive without any PR. A PR-only trigger would never see the import
+    # that caused this in the first place.
+    - cron: '15 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-tenant-duplicate-objects-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          # Deliberately NOT package-manager-cache: this job runs no install, and
+          # setup-node resolves the packageManager pnpm before corepack has run.
+          package-manager-cache: false
+
+      # Run the parser's own tests before trusting its verdict.
+      - name: Self-test the reader
+        run: node scripts/audit-cross-tenant-duplicate-objects.mjs --self-test
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # Supavisor tenants sit on a numbered cluster — newer projects on aws-1, older
+      # on aws-0 — and the wrong one answers "tenant/user not found". No cluster
+      # accepting the connection is a HARD failure, never a quiet pass. Host string
+      # copied verbatim from role-capability-divergence.yml, which works; do not
+      # re-derive the region from the tenant's timezone (it is us-east-1).
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::no Supavisor cluster accepted the connection; refusing to measure nothing"
+          exit 1
+
+      - name: Measure and ratchet
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres" \
+            -At -F $'\t' -f scripts/sql/cross-tenant-duplicate-objects.sql \
+            | node scripts/audit-cross-tenant-duplicate-objects.mjs
