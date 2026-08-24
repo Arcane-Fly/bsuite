@@ -1,3 +1,12 @@
+---
+kind: plan
+authority: engineering
+owner: permissions-authz-lane
+evidence:
+  - scripts/check-table-reach.mjs
+  - scripts/check-zero-consumers.mjs
+---
+
 # role_capabilities — 1,296 rows, 918 human edits, zero consumers
 
 **Status:** DRAFT — needs an owner and a ruling. Measured 2026-08-24 against
@@ -112,6 +121,40 @@ capability. The app maps have no such distinction.
 
 ---
 
+## CORRECTION, same day: the "retire it" option is largely foreclosed
+
+Written before checking for an active lane, which was a gap in the original
+draft. There is one, and it changes the answer.
+
+`crm7/supabase/migrations/20260904000000_tenant_roles_clone_and_user_overrides.sql`
+on branch `feat/tenant-roles-and-user-overrides` builds **clone-then-customise
+roles and per-user capability overrides on top of `role_capabilities`**, citing
+operator rulings given on 2026-08-24:
+
+> "ability to clon then customiz a role as desired"
+> "a field officer may be working in higher duties ... how do we keep the user
+> type default permissions but assign permissions for individual users"
+> "generally roles will be unique to the organisation ... customizable in the UI
+> for each tenant owner"
+
+That is the operator commissioning work **on this table**, so phase 0 below is
+effectively answered: it is the intended store, not scenery to remove. The
+sizing keeps the retire column only because the *enforcement* half is still
+unwired — a role you can clone and customise still gates nothing until
+something reads it.
+
+That lane also independently measured 1,296 rows across 3 tenants, matching
+this document exactly, and identified a different root cause for the same
+symptom: `loadTenantRoles()` was told by the W4 spec to read a `user_roles`
+table **that was never created**, so tenant-defined roles could never appear.
+Their `tenant_roles` registry is the real fix. The change this lane shipped on
+2026-08-24 — reading `portal_role` as well as `role` — makes the canonical
+roles visible and is a **stopgap that their registry supersedes**, not a
+competing design. Whoever lands `tenant_roles` should repoint `loadTenantRoles`
+at it.
+
+**Neither lane knew about the other while both were measuring the same table.**
+
 ## Proposed shape of the work
 
 Not a recommendation to build — a sizing, so the ruling has numbers under it.
@@ -135,13 +178,44 @@ the editor state on screen that it records intent and does not yet gate
 anything. One paragraph. It stops the count of well-intentioned wrong edits
 growing while the ruling is pending — 918 already exist.
 
-## Proposed owner
+## Proposed owner — now identifiable by name
 
-The **permissions/authz lane**, not the lane that found it. This is squarely
-the T4 permission-product line of work (crm7#1481, closed by crm7#1508), and
-`data_access_grants` from that same lane is the estate's one *working* example
-of a grant that actually narrows access — whoever owns that owns the precedent
-for what "a permission" means here.
+The lane building `feat/tenant-roles-and-user-overrides`. They are already
+inside this table, already acting on operator rulings about it, and already
+creating the registry it has always been missing. This finding is the
+enforcement half of the work they are doing, and it should be handed to them
+rather than opened as a parallel effort.
+
+Failing that, the T4 permission-product lane (crm7#1481 → #1508), whose
+`data_access_grants` is the estate's one *working* example of a grant that
+actually narrows access.
+
+Explicitly **not** the lane that found this. Finding it does not qualify anyone
+to rule on it.
+
+## How to re-measure this
+
+Every number above is reproducible. Counts in this estate drift hourly, so
+re-run rather than quoting this document back.
+
+- `check-table-reach.mjs` is the gate for this exact class — it was written
+  after `rate_adjustments` and `billing_cycles` shipped correct and unreachable.
+  **It does not currently flag `role_capabilities`**, and that is worth knowing
+  rather than treating as a clean bill: the table *is* referenced, by its own
+  editor, so a reference-counting scan sees reach. The reach is circular. A
+  table whose only reader is the screen that writes it passes a static
+  reachability check and still governs nothing.
+- `check-zero-consumers.mjs` is the sibling gate for the package form of the
+  same defect.
+- The row counts, the 918 edits and FutureBuild's 324 denials come from
+  `public.role_capabilities` and `public.capability_catalogue` directly — group
+  by `tenant_id, role` and compare `updated_at` against `created_at`.
+- The 599 call sites and six hardcoded maps come from grepping each app's
+  source for permission checks; they are listed by file in the table above.
+
+**The blind spot is the finding's own strongest evidence.** If the gate that
+exists for "built and unreachable" cannot see the largest instance of it, that
+gate needs a notion of reach that excludes a surface reading its own writes.
 
 ## Precedent
 
