@@ -235,13 +235,24 @@ export function usePageGridLayout({
     return resolved;
   }, [rawLayouts, baseCols, layoutCols, defaultAutoHeight]);
 
-  useEffect(() => {
-    if (baseCols !== layoutCols) {
-      const rescaled = rescaleLayout(rawLayouts, baseCols, layoutCols);
-      setSavedLayout(rescaled);
-      setBaseCols(layoutCols);
-    }
-  }, [baseCols, layoutCols, rawLayouts, setBaseCols, setSavedLayout]);
+  /*
+   * THERE IS DELIBERATELY NO EFFECT HERE.
+   *
+   * This used to rescale the stored layout to the new column count and write it
+   * back, which made a column change DESTRUCTIVE and unrecoverable. Measured on
+   * `rescaleLayout` directly: an 11 -> 2 -> 11 round trip takes
+   *
+   *   a(w4 @x0) b(w3 @x4) c(w4 @x7) / d(w6 @x0) e(w5 @x6)
+   *
+   * to five items of w6 stacked one per row at x0. Everything narrows to the
+   * one-column minimum on the way down, the row-packer puts one item per row,
+   * and coming back up cannot recover an arrangement that no longer exists.
+   * That is what flattened the operator's dashboard.
+   *
+   * `currentLayouts` above already derives the DISPLAY at `layoutCols` from the
+   * authored layout at `baseCols`. Leaving storage alone makes the column
+   * control a view, and the round trip exact.
+   */
 
   const activeCols = useMemo(
     () => ({ lg: layoutCols, md: layoutCols, sm: layoutCols, xs: layoutCols, xxs: layoutCols }),
@@ -472,14 +483,25 @@ export function usePageGridLayout({
     return next;
   }, []);
 
+  /**
+   * Persist a layout the USER authored, and re-base the column count to the one
+   * they authored it at.
+   *
+   * Re-basing belongs here and ONLY here. A column-count change is a view
+   * operation and must not touch storage — see `handleColumnChange`. An edit is
+   * the one moment the stored arrangement and the stored column count are known
+   * to agree, so it is the one moment `baseCols` may move.
+   */
   const commitLayout = useCallback(
     (layouts: GridLayouts) => {
       const canonical = canonicaliseLayoutForPersist(layouts);
       if (!canonical) return;
       setSavedLayout(stripAutoHeightRows(canonical));
+      setBaseCols(layoutCols);
     },
-    [canonicaliseLayoutForPersist, setSavedLayout, stripAutoHeightRows],
+    [canonicaliseLayoutForPersist, layoutCols, setBaseCols, setSavedLayout, stripAutoHeightRows],
   );
+
 
   const onLayoutChange = useCallback(
     (_layout: unknown, layouts: unknown) => {
@@ -515,14 +537,20 @@ export function usePageGridLayout({
     };
   }, []);
 
+  /**
+   * Change how many columns the canvas is DISPLAYED at.
+   *
+   * This writes nothing to storage. `currentLayouts` rescales the authored
+   * layout for display on every render, so switching 11 -> 2 -> 11 returns the
+   * user to exactly what they authored. The previous version persisted the
+   * rescale, which destroyed the arrangement at the narrow end and offered no
+   * undo. Storage moves only when the user actually edits — see `commitLayout`.
+   */
   const handleColumnChange = useCallback(
     (newCols: number) => {
-      const rescaled = rescaleLayout(currentLayouts, layoutCols, newCols);
-      setSavedLayout(rescaled);
       setLayoutCols(newCols);
-      setBaseCols(newCols);
     },
-    [currentLayouts, layoutCols, setBaseCols, setLayoutCols, setSavedLayout],
+    [setLayoutCols],
   );
 
   /**
@@ -544,6 +572,14 @@ export function usePageGridLayout({
     },
     [currentLayouts],
   );
+  /** Persist a bare `lg` item list from a mutator, re-basing the same way. */
+  const commitItems = useCallback(
+    (items: GridLayoutItem[]) => {
+      setSavedLayout(layoutsWithLg(items));
+      setBaseCols(layoutCols);
+    },
+    [layoutCols, layoutsWithLg, setBaseCols, setSavedLayout],
+  );
 
   const handleCompact = useCallback(() => {
     if (!currentLayouts.lg) return;
@@ -559,8 +595,8 @@ export function usePageGridLayout({
       placed.push(compacted);
       return compacted;
     });
-    startTransition(() => setSavedLayout(layoutsWithLg(result)));
-  }, [currentLayouts, layoutsWithLg, setSavedLayout]);
+    startTransition(() => commitItems(result));
+  }, [currentLayouts, commitItems]);
 
   const handleReset = useCallback(() => {
     startTransition(() => {
@@ -582,7 +618,7 @@ export function usePageGridLayout({
         minW: initialSize?.minW,
         minH: initialSize?.minH,
       };
-      startTransition(() => setSavedLayout(layoutsWithLg([...(currentLayouts.lg ?? []), newItem])));
+      startTransition(() => commitItems([...(currentLayouts.lg ?? []), newItem]));
     },
     [currentLayouts, layoutCols, layoutsWithLg, setSavedLayout],
   );
@@ -601,7 +637,7 @@ export function usePageGridLayout({
         moved,
         ...withoutMoved.slice(targetIndex),
       ];
-      startTransition(() => setSavedLayout(layoutsWithLg(nextItems)));
+      startTransition(() => commitItems(nextItems));
     },
     [currentLayouts, layoutsWithLg, setSavedLayout],
   );
@@ -617,7 +653,7 @@ export function usePageGridLayout({
           isResizable: !locked,
         };
       });
-      startTransition(() => setSavedLayout(layoutsWithLg(nextItems)));
+      startTransition(() => commitItems(nextItems));
     },
     [currentLayouts, layoutsWithLg, setSavedLayout],
   );
@@ -625,7 +661,7 @@ export function usePageGridLayout({
   const removeWidget = useCallback(
     (widgetKey: string) => {
       const nextItems = (currentLayouts.lg ?? []).filter((item) => item.i !== widgetKey);
-      startTransition(() => setSavedLayout(layoutsWithLg(nextItems)));
+      startTransition(() => commitItems(nextItems));
     },
     [currentLayouts, layoutsWithLg, setSavedLayout],
   );
