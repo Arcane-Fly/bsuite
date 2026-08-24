@@ -125,8 +125,9 @@ jobs:
         run: |
           set -euo pipefail
           node -e "
+            const src = require('node:fs').readFileSync('scripts/guard-registry.mjs', 'utf8')
             import('./scripts/guard-registry.mjs').then((m) => {
-              const problems = m.validateRegistry()
+              const problems = m.validateRegistry(m.GUARDS, src)
               console.log('[guard-registry] ' + m.GUARDS.length + ' guard(s) exposed; floor ' + m.GUARD_FLOOR + '; ' + problems.length + ' structural problem(s).')
               if (problems.length) { for (const p of problems) console.error('::error::' + p); process.exit(1) }
             })
