@@ -285,13 +285,23 @@ answered.
 
 ### Regenerating the route inventory during a sweep
 
-`docs/nav/build-inventory.py` walks the submodule **working trees**, which every
-parent worktree and every lane shares. Running it while another lane is checking
-out submodules produces **a plausible larger diff, not an error** — measured
-2026-08-24: a two-line pointer move regenerated as **928 lines**, because a
-neighbouring lane moved R80.4 mid-walk. Nothing failed, nothing warned. It was
-caught only because the magnitude was wrong for the change being made; anyone who
-did not already know the expected size would have committed it.
+`docs/nav/build-inventory.py` reads the submodule **WORKING TREES**. It does not
+read the gitlinks you are about to commit. **If the two disagree, you generate an
+inventory for a tree you are not recording** — and every parent worktree and every
+lane shares those working trees, so they disagree often.
+
+Measured 2026-08-24. A change intended to move **one** pointer regenerated as
+**928 lines**. Nothing failed and nothing warned. The extra 926 lines were `crm7`
+evidence shifts: the shared `crm7` checkout was sitting ahead of the `crm7`
+gitlink recorded in the parent, so the generator faithfully described a tree the
+commit did not contain.
+
+The subtlety worth keeping, because the obvious lesson is the wrong one: the
+output was not corrupt. Regenerating **#2342**'s inventory in isolation at its own
+three moved pointers reproduces its committed file **byte-for-byte**, 928 lines
+and all — so 928 is the *correct* size for a three-pointer move. The defect was
+never the number. It was that the number described a different tree from the one
+being committed, and there is no signal that tells you which you got.
 
 Regenerate in an **isolated tree** instead — local `--shared` clones of the parent
 and each submodule at explicit SHAs, generator run there, the real checkout
@@ -305,6 +315,13 @@ result:
 
 A harness that cannot produce a null result on a null input cannot be trusted to
 produce a real one.
+
+**`check-inventory` in CI is the arbiter, not your local walk.** That job checks
+out clean **at the recorded gitlinks**, regenerates, and diffs — so it compares
+the inventory against the tree the commit actually contains, which is exactly the
+thing a local walk cannot guarantee. If it passes on your head SHA, your
+inventory is right regardless of what your working trees were doing. The isolated
+harness is for getting it right *before* you push; CI is what proves it.
 
 ## Why not the alternatives
 
