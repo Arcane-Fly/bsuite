@@ -85,8 +85,29 @@ A grep for supersession *language* matches 50 of the 70. That is a hypothesis,
 not a verdict: most are live working registers that mention superseded things
 without being superseded. Marking documents on that basis is precisely the
 false-complete the auditor exists to prevent — the estate already carries
-**133 filenames containing "final", "complete" or "done"** with no evidence any
-of them met a bar.
+**one** filename carrying a completion marker — and it is the one document with
+real evidence behind it.
+
+> **Correction, 2026-08-24.** This paragraph first said *"133 filenames
+> containing final, complete or done, with no evidence any met a bar"*. That
+> number was inherited from this task's opening brief and repeated here without
+> being measured. **It is wrong by two orders of magnitude.**
+>
+> Measured across all 481 documents: **3** filenames contain a completion word at
+> all. Two are suppressed by their own status code — `-v1.00W` says Working, and
+> the estate's completion marker is `F`. **One** is an actual marker,
+> `R80.4/docs/QUEUE-COMPLETE.md`, which cites `dod.mjs` over 21 awards against an
+> empty baseline.
+>
+> Widening to every `*.md` in the tree gives 21, of which **17 are
+> `.remember/*.done.md` daily journal files** and not documents at all. No reading
+> of the corpus produces 133.
+>
+> The estate does not have a false-completion problem. It has an
+> **unfalsifiable-claim** problem — 407 documents citing nothing checkable — which
+> is a different defect needing a different remedy. The wrong number pointed at
+> the wrong one, and I propagated it into a PR body and two reports before
+> checking it.
 
 ## What actually moves the number
 
@@ -103,4 +124,4 @@ of them met a bar.
 
 Until at least 1, 2 and 4 are done, "mark the docs complete" cannot be executed
 honestly for any document, and marking one anyway would add a 134th unfounded
-completion claim to the 133 already here.
+completion claim where the corpus holds exactly one, and that one is earned.
