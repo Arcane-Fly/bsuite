@@ -447,11 +447,55 @@ console.log(`  scanned ${sqlFiles} migrations (${created.size} tables) and ${src
 console.log(`  ${created.size - unreached.length} reached by app code`);
 console.log(`  ${server.length} unreached by app code but WRITTEN BY THE DATABASE (trigger, function body, or pg_cron) — legitimate`);
 console.log(`  ${orphaned.length} ORPHANED: nothing in any app, and nothing server-side either\n`);
-console.log(`  ORPHANED (${orphaned.length}):\n`);
-for (const t of orphaned) {
+// A TABLE FROM A MIGRATION THAT CANNOT RUN IS NOT AN ORPHAN — IT IS ABSENT.
+//
+// This scan reads migration FILES, so it reports every table any migration would create.
+// Two whole classes of those never reach the database at all:
+//
+//   PRE-FLOOR   the migration is below MIGRATION_FLOOR (20260611000000) and the applier
+//               skips it by design — but the BASELINE DUMP may have created the table
+//               anyway. NOT a de-prioritisation. See the warning below.
+//   PENDING     the migration is dated in the FUTURE and has not been applied yet.
+//
+// Measured against production on 2026-08-23: of 114 reported orphans, 67 exist in the
+// database and 47 do not. Sending a human to judge 114 rows when 41% are not there is how
+// a report earns the shrug this file's own closing paragraph worries about.
+//
+// THE PRE-FLOOR BUCKET IS NOT "PROBABLY ABSENT", AND THE FIRST VERSION OF THIS SPLIT
+// IMPLIED IT WAS. Measured: 15 of the 62 pre-floor tables ARE LIVE, created by the
+// baseline dump rather than by the migration the applier skipped. Two of those fifteen are
+// `rate_adjustments` and `billing_cycles` — the exact pair this file's closing paragraph
+// names as the shape it exists to catch. A bucket that reads as "safe to ignore" would
+// have buried the motivating case. It is a bucket about PROVENANCE, never about risk.
+const MIGRATION_FLOOR = '20260611000000';
+const NOW_STAMP = new Date().toISOString().slice(0, 10).replace(/-/g, '') + '000000';
+const stampOf = (f) => (f.match(/(\d{8,14})/) || [])[1] || '';
+const pad14 = (v) => (v + '00000000000000').slice(0, 14);
+const bucketOf = (t) => {
   const f = created.get(t)[0].replace(/^.*migrations\//, '');
-  console.log(`    ${t.padEnd(42)} ${f}`);
-}
+  const v = stampOf(f);
+  if (!v) return 'live';                                   // baseline dumps carry no stamp
+  if (pad14(v) < MIGRATION_FLOOR) return 'preFloor';
+  if (pad14(v) > pad14(NOW_STAMP)) return 'pending';
+  return 'live';
+};
+const buckets = { live: [], preFloor: [], pending: [] };
+for (const t of orphaned) buckets[bucketOf(t)].push(t);
+
+const show = (label, list, note) => {
+  if (!list.length) return;
+  console.log(`  ${label} (${list.length}) — ${note}\n`);
+  for (const t of list) {
+    console.log(`    ${t.padEnd(42)} ${created.get(t)[0].replace(/^.*migrations\//, '')}`);
+  }
+  console.log('');
+};
+show('ORPHANED, AND THE MIGRATION HAS RUN', buckets.live,
+     'these are the ones worth a human\'s time');
+show('PRE-FLOOR — STILL NEEDS JUDGING', buckets.preFloor,
+     `migration is below MIGRATION_FLOOR ${MIGRATION_FLOOR} so the applier skips it, BUT the baseline dump may have created the table regardless. Measured 2026-08-23: 15 of 62 were live, including rate_adjustments and billing_cycles. Do not read this bucket as absent`);
+show('PENDING', buckets.pending,
+     'migration is dated in the future and has not been applied — absent, not orphaned');
 console.log(`
   An ORPHANED table is created, granted, policied — and nothing anywhere touches it.
   That is the shape rate_adjustments and billing_cycles shipped in.
