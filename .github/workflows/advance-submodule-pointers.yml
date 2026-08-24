@@ -129,7 +129,26 @@ jobs:
       - name: Open or refresh the standing PR
         if: steps.advance.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          # NOT `github.token`. The built-in Actions token is refused by
+          #     GraphQL: GitHub Actions is not permitted to create or approve pull
+          #     requests (createPullRequest)
+          # whenever the repository or org has "Allow GitHub Actions to create and
+          # approve pull requests" switched off, which is the safe default and is how
+          # this repo is configured.
+          #
+          # That is a repository SETTING, not a code defect, and it is the last thing
+          # standing between this workflow and a green run: the 2026-08-24 dispatch
+          # cloned all six submodules, read their real heads, staged four genuine
+          # gitlink advances, committed and pushed the branch — and then died on the
+          # final `gh pr create`. The whole job was reported as a failure, with the
+          # work sitting on a pushed branch nobody was told about.
+          #
+          # The cross-repo PAT is not "GitHub Actions" to that check, and this repo
+          # already relies on it for every submodule-consuming checkout. Falling back
+          # to github.token keeps the workflow runnable in a fork or wherever the PAT
+          # is absent — it will fail the same way there, loudly, rather than silently
+          # doing nothing.
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
         run: |
           set -euo pipefail
           BR=chore/auto-advance-submodule-pointers
@@ -174,9 +193,16 @@ jobs:
               echo "recorded one is REFUSED, not reset — a backward move silently reverts the"
               echo "app for everything that reads the gitlink."
             } > /tmp/pr-body.md
-            gh pr create --base development --head "$BR" \
-              --title "chore(submodules): advance pointers onto current development heads" \
-              --body-file /tmp/pr-body.md
+            if ! gh pr create --base development --head "$BR" \
+                 --title "chore(submodules): advance pointers onto current development heads" \
+                 --body-file /tmp/pr-body.md; then
+              # The pointer work is ALREADY PUSHED at this point. Dying here reports the
+              # whole run as a failure and says nothing about the branch that is sitting
+              # there with real, correct advances on it — which is exactly what happened
+              # on 2026-08-24. Name it.
+              echo "::error title=Pointers advanced but the PR could not be opened::The gitlink advances are pushed to '$BR' and are correct. Only 'gh pr create' failed — open the PR by hand from that branch. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', the BSUITE_CROSS_REPO_PAT secret is missing or expired."
+              exit 1
+            fi
           fi
 
       - name: Say so even when there is nothing to do
