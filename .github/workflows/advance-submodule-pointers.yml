@@ -115,6 +115,10 @@ jobs:
       - name: Prove the checker can fail before trusting what it says
         run: node scripts/advance-submodule-pointers.mjs --self-test
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Advance the pointers
         id: advance
         run: |
@@ -124,6 +128,30 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # THE ROUTE INVENTORY IS DERIVED FROM THE APPS AT THE RECORDED GITLINKS, so the
+      # commit that moves a gitlink is the commit that invalidates it. Leaving them in
+      # separate commits guarantees a window where route-inventory.yml fails on drift —
+      # which is exactly what happened to the first PR this workflow produced (#2331):
+      # four correct pointer advances, and a red `check-inventory` complaining about
+      # line numbers in crm7/src/App.tsx that had moved underneath it.
+      #
+      # It cannot be fixed by hand on the standing branch either: this job
+      # `git push -f`es that branch every run, so any hand commit there is destroyed by
+      # the next tick. The regeneration has to happen HERE, in the same commit.
+      - name: Regenerate the route inventory the moved pointers invalidate
+        if: steps.advance.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          python3 docs/nav/build-inventory.py
+          git add docs/nav/route-inventory.json
+          # The BSU copy is VENDORED INSIDE the submodule, so the parent cannot commit
+          # it — advancing that gitlink is what carries it. Report if it drifted rather
+          # than staying quiet: a stale vendored copy is what the BSU Route Inspector
+          # actually renders.
+          if [ -n "$(git -C business-suite-unified status --porcelain -- src/data/route-inventory.json 2>/dev/null)" ]; then
+            echo "::warning title=Vendored route inventory is stale::business-suite-unified/src/data/route-inventory.json differs from the regenerated inventory. It lives inside the submodule, so it needs a BSU-side commit; the parent cannot carry it."
           fi
 
       - name: Open or refresh the standing PR
