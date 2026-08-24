@@ -204,8 +204,29 @@ jobs:
           git commit -F /tmp/commit-msg.txt
           git push -f origin "$BR"
 
-          if gh pr view "$BR" --json number >/dev/null 2>&1; then
+          # `gh pr view <branch>` EXITS 0 FOR A CLOSED PR. The old test only asked
+          # whether a PR existed, so once the standing PR was closed the workflow
+          # printed "standing PR already open", opened nothing, and reported SUCCESS —
+          # with the pointer advances sitting on a pushed branch forever.
+          #
+          # Observed 2026-08-24 on run 32710462485: every step green, four correct
+          # gitlink advances committed and pushed, #2331 CLOSED, and no PR. A false
+          # green is worse than the 141 red runs it replaced, because nothing draws
+          # the eye to it.
+          #
+          # Ask for the STATE, not for existence.
+          PR_STATE="$(gh pr view "$BR" --json state -q .state 2>/dev/null || echo NONE)"
+          echo "standing PR state: $PR_STATE"
+          if [ "$PR_STATE" = "OPEN" ]; then
             echo "standing PR already open — its branch was force-updated"
+          elif [ "$PR_STATE" = "CLOSED" ]; then
+            # Reopen rather than open a second one, so the review history survives.
+            if gh pr reopen "$BR"; then
+              echo "standing PR was closed and has been reopened onto the refreshed branch"
+            else
+              echo "::error title=Standing PR is closed and could not be reopened::The pointer advances are pushed to '$BR' and are correct. Reopen or re-create the PR by hand."
+              exit 1
+            fi
           else
             {
               echo "Maintained automatically by \`.github/workflows/advance-submodule-pointers.yml\`."
