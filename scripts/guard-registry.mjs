@@ -140,6 +140,32 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-theme-gate-app-lists',
+    label: 'the visual gate installs every app it then tries to drive',
+    repo: '.',
+    command: ['node', 'scripts/check-theme-gate-app-lists.mjs'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"PASS: 4 app list(s) in .github/workflows/theme-conformance.yml each ' +
+      'cover all 6 apps scripts/theme-session.sh can mint a session for ' +
+      '(crm7, braden, throughput, conduit, business-suite-unified, R80.4)."',
+    notes:
+      'R80.4 joined the signed-in sweep on 2026-08-22 (R80.4#187) with an ' +
+      'auth.setup.ts, a playwright config and an entry in theme-session.sh — ' +
+      'but not in the three app lists in theme-conformance.yml that install ' +
+      'each app. The sweep reached R80.4, ran `pnpm exec playwright` where ' +
+      'nothing was installed, and died with `Command "playwright" not found` ' +
+      'on EVERY development run from that day. The red X was the smaller ' +
+      'half: R80.4\'s authenticated routes went unchecked while the job name ' +
+      'went on claiming otherwise. One capability across two files, added to ' +
+      'one — this asserts they agree in BOTH directions, so an app installed ' +
+      'but unmintable is a failure too. A clean pass prints how many lists ' +
+      'were compared and how many apps each must cover; either count reaching ' +
+      'zero is a broken parse, not an empty estate, and exits 1.',
+  },
+
+  {
     id: 'parent-semgrep-sast',
     label: 'Semgrep SAST ratchet (ERROR-severity findings, per app)',
     repo: '.',

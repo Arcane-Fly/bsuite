@@ -677,6 +677,18 @@ jobs:
       # stopped being true on 2026-08-22 (R80.4#187 added
       # R80.4/tests/e2e/auth.setup.ts and registered R80.4 in
       # scripts/theme-session.sh). The note outlived the fact by two days.
+      #
+      # THE LISTS AND THE SESSION PRODUCER ARE NOW TIED TOGETHER. Two lanes fixed
+      # the same missing R80.4 entries independently on 2026-08-24, which is the
+      # clearest evidence that one capability living in two files with nothing
+      # asserting they agree will keep drifting. The guard below compares this
+      # file's app lists against scripts/theme-session.sh in BOTH directions, and
+      # runs BEFORE the installs: the divergence otherwise surfaces as
+      # `Command "playwright" not found` twelve minutes into the sweep, naming
+      # playwright rather than the list entry nobody added.
+      - name: Assert the app lists here match the apps theme-session.sh supports
+        run: node scripts/check-theme-gate-app-lists.mjs
+
       - name: Assert every covered app's auth helper is present
         run: |
           set -uo pipefail
@@ -689,7 +701,7 @@ jobs:
             echo "Set BSUITE_CROSS_REPO_PAT (repo: read on each app)."
             exit 1
           fi
-          echo "auth helper present in all five covered apps"
+          echo "auth helper present in all six covered apps"
 
       # Fail CLOSED on missing credentials, before anything else runs.
       #
