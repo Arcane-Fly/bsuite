@@ -1,0 +1,70 @@
+name: role_capabilities divergence
+
+# `public.role_capabilities` holds 1,296 hand-edited rows and currently decides
+# nothing, because its resolver — crm7 migration 20260905000000,
+# `user_has_capability()` — is merged but has never been APPLIED. The applier
+# reads main's submodule gitlink and main's crm7 pointer predates it.
+#
+# That makes this table a loaded gun rather than a live hole. The day the
+# pointer advances, the resolver appears and every row in it starts answering
+# authorisation questions. This gate measures what would happen on that day, so
+# the answer is known before it is load-bearing rather than after.
+#
+# It ratchets on ESCALATIONS: write-shaped capabilities the table grants and the
+# hardcoded checks deny. It does not ratchet on total divergence, because a
+# divergence can legitimately be resolved in EITHER direction and forcing that
+# number down would reward changing whichever side is easier rather than
+# whichever side is right.
+
+on:
+  pull_request:
+    branches: [development, main]
+    paths:
+      - 'crm7'
+      - 'scripts/audit-role-capability-divergence.mjs'
+      - 'scripts/role-capability-divergence-baseline.json'
+      - '.github/workflows/role-capability-divergence.yml'
+  schedule:
+    # The data changes without any PR — the matrix is edited from a live admin
+    # screen, and the most recent edit when this was written was the same day.
+    # A PR-only trigger would never see that.
+    - cron: '35 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: role-capability-divergence-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # The script hard-fails on a missing submodule rather than reporting a
+      # clean zero, but failing here first gives a clearer message.
+      - name: crm7 must be checked out
+        run: |
+          test -f crm7/src/hooks/usePermissions.ts \
+            || { echo "::error::crm7 submodule missing — this gate cannot measure anything"; exit 1; }
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          # Deliberately NOT package-manager-cache: this job runs no install, and
+          # setup-node resolves the packageManager pnpm before corepack has run.
+          # That is issue #2226, ~40 consecutive failures on another workflow.
+          package-manager-cache: false
+
+      - name: Measure divergence
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BSUITE_ROOT: ${{ github.workspace }}
+        run: node scripts/audit-role-capability-divergence.mjs
