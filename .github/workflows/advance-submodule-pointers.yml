@@ -144,8 +144,37 @@ jobs:
         if: steps.advance.outputs.changed == 'true'
         run: |
           set -euo pipefail
+
+          # MOVE THE WORKING TREES FIRST. `git update-index --cacheinfo` writes the new
+          # gitlink into the INDEX and does not touch the submodule checkouts, so the
+          # app sources on disk are still at the OLD commits. Regenerating from those
+          # reproduces the OLD inventory byte for byte, stages nothing, and the run
+          # reports success.
+          #
+          # Observed on #2348 — the first PR this workflow opened by itself: four correct
+          # gitlink advances, "4 files changed", no inventory, and check-inventory red
+          # with exactly the line-number drift the regeneration was added to prevent.
+          # The step RAN (it printed "crm7 nav entries: 125"); it just read the wrong tree.
+          for app in crm7 business-suite-unified conduit R80.4 braden throughput; do
+            staged="$(git ls-files -s -- "$app" | awk '{print $2}')"
+            [ -n "$staged" ] || continue
+            current="$(git -C "$app" rev-parse HEAD 2>/dev/null || echo '')"
+            if [ "$staged" != "$current" ]; then
+              echo "  moving $app working tree ${current:0:8} -> ${staged:0:8} so the inventory reads the tree being shipped"
+              git -C "$app" checkout -q "$staged"
+            fi
+          done
+
           python3 docs/nav/build-inventory.py
           git add docs/nav/route-inventory.json
+
+          # Say whether it actually changed. "The step ran" and "the step did something"
+          # are different claims, and conflating them is what hid this for a whole run.
+          if git diff --cached --quiet -- docs/nav/route-inventory.json; then
+            echo "  route inventory unchanged by these pointer moves"
+          else
+            echo "  route inventory regenerated and staged: $(git diff --cached --numstat -- docs/nav/route-inventory.json | awk '{print $1" insertions, "$2" deletions"}')"
+          fi
           # The BSU copy is VENDORED INSIDE the submodule, so the parent cannot commit
           # it — advancing that gitlink is what carries it. Report if it drifted rather
           # than staying quiet: a stale vendored copy is what the BSU Route Inspector

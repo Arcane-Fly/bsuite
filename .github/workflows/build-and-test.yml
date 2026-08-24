@@ -16,6 +16,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # WITHOUT THIS, THE MERGE-BLOCKING GATE CHECKED NOTHING.
+          #
+          # check-supabase-client-init.mjs resolves five candidate paths that all live
+          # inside submodules. A bare checkout leaves those directories empty, so the
+          # guard printed
+          #
+          #     Result: 0/0 apps passed (5 skipped — submodule not checked out)
+          #
+          # and exited 0 on every pull request. The guard registry's recorded evidence
+          # "Result: 5/5 apps passed" was measured under LANE-WATCHER, which DOES set
+          # `submodules: recursive` — so the watcher certified a shape this gate never ran.
+          #
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos; same fallback
+          # chain every other submodule-consuming workflow here uses.
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Validate workspace metadata
         shell: bash
