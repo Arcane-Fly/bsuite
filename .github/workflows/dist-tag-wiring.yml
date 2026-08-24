@@ -25,6 +25,12 @@ on:
     branches: [main, development]
     paths:
       - '.github/workflows/publish-*.yml'
+      # This workflow's OWN path, deliberately. Without it a change to the guard does
+      # not re-run the guard: when its first push failed a positive control and the fix
+      # touched only this file, the check did not re-run — it vanished from the PR's
+      # rollup entirely, and the PR read as clean with the guard never having passed.
+      # A guard that cannot verify its own edits is the shape it exists to catch.
+      - '.github/workflows/dist-tag-wiring.yml'
       - 'scripts/publish-dist-tag.mjs'
       - 'scripts/check-publish-dist-tag-wiring.mjs'
       - 'scripts/guard-registry.mjs'
@@ -32,6 +38,7 @@ on:
     branches: [main, development]
     paths:
       - '.github/workflows/publish-*.yml'
+      - '.github/workflows/dist-tag-wiring.yml'
       - 'scripts/publish-dist-tag.mjs'
       - 'scripts/check-publish-dist-tag-wiring.mjs'
   # A publish workflow can be edited by a merge that touched none of the paths above
