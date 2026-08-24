@@ -108,6 +108,21 @@ export function hookConsumers(hooks, sources) {
  * A token declared inside an `@theme` block becomes a Tailwind utility, so absence of
  * `var(--x)` proves nothing about it. Those are UNVERIFIABLE, never "unused".
  */
+/**
+ * Which token DECLARATIONS were added in this diff? Pure, so the self-test exercises the
+ * real parser: a `+` line adding `--x:` is a mint; a `-` line, or a `+` line that merely
+ * REFERENCES a token via var(), is not.
+ */
+export function newDeclsFromDiff(diffText) {
+  const out = new Set()
+  for (const line of diffText.split('\n')) {
+    if (!line.startsWith('+') || line.startsWith('+++')) continue
+    const m = line.match(/^\+\s*(--[a-z0-9][a-z0-9-]*)\s*:/i)
+    if (m) out.add(m[1])
+  }
+  return out
+}
+
 export function classifyToken(name, definedInThemeBlock, varRefs) {
   if (varRefs > 0) return 'used'
   if (definedInThemeBlock) return 'unverifiable'
@@ -155,11 +170,30 @@ function selfTest() {
       fail('an @theme token with no var() must be UNVERIFIABLE — Tailwind turns it into a utility')
   }
 
+  // minted-token diff parsing
+  {
+    const d = [
+      '--- a/packages/theme/src/x.css',
+      '+++ b/packages/theme/src/x.css',
+      '+  --newly-minted: #123;',
+      '-  --removed-token: #456;',
+      '+  color: var(--already-there);',
+      '   --untouched: #789;',
+    ].join('\n')
+    const got = newDeclsFromDiff(d)
+    if (!got.has('--newly-minted')) fail('an added token declaration was not detected as minted')
+    if (got.has('--removed-token')) fail('a REMOVED token was counted as minted')
+    if (got.has('--already-there')) fail('a var() REFERENCE on an added line was counted as a declaration')
+    if (got.has('--untouched')) fail('an unchanged context line was counted as minted')
+    if (got.size !== 1) fail(`minted set should hold exactly 1, holds ${got.size}`)
+  }
+
   console.log(
-    'check-zero-consumers --self-test: 9 assertions across three detectors — package ' +
+    'check-zero-consumers --self-test: 14 assertions across four detectors — package ' +
       'consumer counting including the self-reference trap, hook counting including the ' +
       'definition-is-not-a-use and substring traps, and token classification including ' +
-      'the Tailwind @theme case that must never be called unused.',
+      'the Tailwind @theme case that must never be called unused, and minted-token diff ' +
+      'parsing including the removed-token and var()-reference-on-an-added-line traps.',
   )
   return bad
 }

@@ -41,6 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          fetch-depth: 0   # the minted-token rule diffs against the base branch
           submodules: recursive
           # The submodules are PRIVATE; the default GITHUB_TOKEN cannot clone siblings.
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
