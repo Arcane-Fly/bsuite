@@ -377,6 +377,21 @@ export const GUARDS = [
     evidence: '"Result: 5/5 apps passed"',
   },
   {
+    id: 'parent-cross-tenant-duplicate-objects',
+    label: 'Document byte-sequences shared across tenants (live DB)',
+    repo: '.',
+    // The measurement needs the live database; only the reader runs here. CI pipes
+    // psql output into it. `--self-test` is what this registry can verify locally.
+    command: ['node', 'scripts/audit-cross-tenant-duplicate-objects.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/cross-tenant-duplicate-objects.yml',
+    mode: 'run',
+    evidence:
+      '"cross-tenant-duplicate-objects --self-test: 14/14 pass — 14 case(s) exercised ' +
+      'in BOTH directions (6 parse shapes, 3 malformed inputs that must be REFUSED ' +
+      'rather than skipped, and 5 ratchet verdicts covering hold, rise, fall and a ' +
+      'missing completion marker)"',
+  },
+  {
     id: 'parent-check-doc-naming',
     label: 'Documentation filename classification (all files, not just dated ones)',
     repo: '.',
@@ -1221,12 +1236,14 @@ export const GUARDS = [
     command: ['bash', 'scripts/lint-rls-jwt-claims.sh'],
     ciWorkflow: 'crm7/.github/workflows/rls-jwt-lint.yml',
     mode: 'run',
-    knownSilent: true,
-    knownSilentReason:
-      'Prints "✅ No banned JWT claim patterns found in ' +
-      'supabase/migrations/" on a clean run — no count of files or ' +
-      'policies scanned. Filed, not fixed in this pass.',
-    evidence: '"✅ No banned JWT claim patterns found in supabase/migrations/"',
+    // knownSilent removed 2026-08-25: the guard fixed itself and this flag did not
+    // notice. It now prints "653 migration file(s) scanned ... (14 allowlisted)", so
+    // it states a non-zero examined count and the meta-check reports it STALE. A
+    // waiver left in place after the thing it waived was fixed is how a real silent
+    // guard hides in the noise of stale ones.
+    evidence:
+      '"✅ No banned JWT claim patterns found — 653 migration file(s) scanned ' +
+      'in scripts/../supabase/migrations (14 allowlisted)."',
   },
   {
     id: 'crm7-check-report-catalog-drift',
