@@ -83,13 +83,15 @@ jobs:
           # that leaves the tree modified turns one red check into several.
           trap 'cp /tmp/publish-ui.bak "$TARGET"' EXIT
 
-          # NO `${{ }}` IN THIS PATTERN. The first version of this control read
-          #     sed -i 's| --tag "${{ steps.dist-tag.outputs.tag }}"||' ...
-          # and the Actions expression engine evaluated that expression BEFORE
-          # bash ever saw it. There is no `dist-tag` step in THIS job, so it
-          # resolved to the empty string and the command that actually ran was
-          #     sed -i 's| --tag ""||'
-          # which matches nothing. The sed was a silent no-op, the checker
+          # NO ACTIONS EXPRESSION IN THIS PATTERN, and none in this comment either.
+          #
+          # The first version of this control interpolated the dist-tag step's
+          # output into the sed pattern. The Actions expression engine evaluated
+          # it BEFORE bash ever saw it, and there is no dist-tag step in THIS job,
+          # so it resolved to the empty string and the command that actually ran
+          # searched for a --tag argument with an empty value. That matches
+          # nothing. The sed was a silent no-op, the checker
+
           # correctly passed an unmodified file, and the control then declared
           # itself failed — reporting a broken checker while proving only that
           # it had planted no defect.
