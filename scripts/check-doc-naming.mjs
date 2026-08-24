@@ -172,6 +172,7 @@ if (selfTest) {
 
 const counts = {}
 const violations = []
+const adrs = []   /* { dir, num, file } — for the collision + index checks below */
 let scanned = 0
 
 function walk(dir, segs) {
@@ -188,6 +189,10 @@ function walk(dir, segs) {
       walk(p, [ent.name, ...segs])
     } else if (ent.isFile() && ent.name.endsWith('.md')) {
       const fam = classify(ent.name, segs)
+      if (fam === 'adr') {
+        const m = ent.name.match(/^(?:ADR-)?(\d{4})-/i)
+        if (m) adrs.push({ dir, num: m[1], file: ent.name })
+      }
       counts[fam] = (counts[fam] || 0) + 1
       if (fam === 'skip') continue
       scanned += 1
@@ -236,7 +241,43 @@ for (const [k, v] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
 const byFam = {}
 for (const v of violations) (byFam[v.fam] = byFam[v.fam] || []).push(v.p)
 
-if (violations.length) {
+/* ---------------- ADR numbering and index integrity ----------------
+ * ADR-0008 was ratified under the number 0004, collided with the real ADR-0004,
+ * LOST ITS INDEX ROW, and was unreachable for three months. Two invariants would
+ * have caught it on the day, and neither was enforced anywhere. Numbers are scoped
+ * PER DIRECTORY, because crm7 keeps its own adr/ with its own sequence. */
+const adrProblems = []
+const byDir = {}
+for (const a of adrs) (byDir[a.dir] = byDir[a.dir] || []).push(a)
+
+for (const [dir, list] of Object.entries(byDir)) {
+  const seen = {}
+  for (const a of list) (seen[a.num] = seen[a.num] || []).push(a.file)
+  for (const [num, files] of Object.entries(seen)) {
+    if (files.length > 1) adrProblems.push(`${dir}: number ${num} used by ${files.length} files — ${files.join(', ')}`)
+  }
+  const indexFile = ['README.md', 'index.md', 'INDEX.md'].map((n) => path.join(dir, n)).find((p2) => fs.existsSync(p2))
+  if (!indexFile) {
+    adrProblems.push(`${dir}: no README.md / index.md — an ADR nobody can find is an ADR nobody reads`)
+    continue
+  }
+  const index = fs.readFileSync(indexFile, 'utf8')
+  for (const a of list) {
+    const stem = a.file.replace(/\.md$/, '')
+    if (!index.includes(stem)) adrProblems.push(`${indexFile}: no row for ${a.file}`)
+  }
+}
+
+if (adrProblems.length) {
+  console.error(`\nADR integrity (${adrProblems.length}):`)
+  for (const p2 of adrProblems) console.error(`  - ${p2}`)
+  console.error('\n  ADR-0008 was ratified as "ADR-0004", collided, lost its index row and was')
+  console.error('  unreachable for three months. These two invariants are what would have caught it.')
+} else if (adrs.length) {
+  console.log(`  ADR integrity: ${adrs.length} record(s) across ${Object.keys(byDir).length} directory(ies) — no number collisions, every one indexed`)
+}
+
+if (violations.length || adrProblems.length) {
   /* No baseline, no ratchet, no allowance. The estate measured ZERO violations
    * across 415 files on 2026-08-25, and a floor of zero needs no bookkeeping —
    * a ratchet file here would only be a place for the number to drift upward.
