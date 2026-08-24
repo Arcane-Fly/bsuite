@@ -1,0 +1,15 @@
+{
+  "_comment": [
+    "Off-palette colour literals that are KNOWN and banked, per file.",
+    "The count may only SHRINK. A new file fails; a file that grows fails; and a",
+    "file that shrinks fails too, until the ceiling here is lowered to match \u2014 so",
+    "the number cannot drift quietly in either direction.",
+    "Regenerate deliberately with --write-baseline. Never to make a red run green."
+  ],
+  "ceilings": {
+    "mobile/components/ui/Button.tsx": 1,
+    "mobile/components/ui/Toast.tsx": 1,
+    "mobile/lib/constants.ts": 10,
+    "mobile/tailwind.config.js": 28
+  }
+}

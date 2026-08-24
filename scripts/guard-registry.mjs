@@ -148,6 +148,28 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-package-publication',
+    label: 'every publishable package is actually on the registry',
+    repo: '.',
+    command: ['node', 'scripts/check-package-publication.mjs'],
+    ciWorkflow: '.github/workflows/package-publication.yml',
+    mode: 'run',
+    notes:
+      'bsuite#1908. Publish @bsuite/eslint-config reported SUCCESS on runs 7, 8 and 9 ' +
+      'while the package 404s on npm, and has done for four months. The workflow is not ' +
+      'lying — it probes, finds a definitive E404, and skips with a ::notice:: because the ' +
+      'publish token can push to an EXISTING package but cannot CREATE one. But a notice ' +
+      'is not a signal, it is GREEN, and green is indistinguishable from a working ' +
+      'publish. @bsuite/tsconfig is in the same state and nobody had counted it. This ' +
+      'makes absence a declared state with a reason, ratcheted in both directions, and ' +
+      'fails CLOSED on any registry answer that is not a conclusive 200 or 404 — an ' +
+      'outage must never read as absence, which is the same conflation the gate is named ' +
+      'for. It also asserts a publishable package has a publish workflow and a private ' +
+      'one does not, because a new package added without its workflow publishes nothing ' +
+      'and says nothing.',
+  },
+
+  {
     id: 'parent-zero-consumers',
     label: 'nothing ships with zero consumers',
     repo: '.',
@@ -1457,7 +1479,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 69
+export const GUARD_FLOOR = 70
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 

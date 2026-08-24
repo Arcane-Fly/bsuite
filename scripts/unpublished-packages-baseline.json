@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "Packages that are DELIBERATELY not on the npm registry. Being listed here downgrades",
+    "a 404 from a hard failure to a reported exception. It does NOT make it fine.",
+    "",
+    "This list may only SHRINK. An unlisted package that 404s fails the gate, and a listed",
+    "package that has since been published ALSO fails, so it cannot become a place absent",
+    "packages go to be forgotten.",
+    "",
+    "Why these two are here: the publish token can push to an EXISTING package but cannot",
+    "CREATE one — a 404 on PUT means authenticated-but-unauthorised. Creating them needs a",
+    "token with create rights, or an npm Trusted Publisher configured per package. Both are",
+    "operator actions. They also reach zero consumers (B-19), so whether they should exist",
+    "at all is an open question, not a foregone one."
+  ],
+  "unpublished": [
+    "@bsuite/eslint-config",
+    "@bsuite/tsconfig"
+  ]
+}

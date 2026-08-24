@@ -1,0 +1,85 @@
+name: Every publishable package is actually published
+
+# bsuite#1908 — a publish workflow that reports SUCCESS while its package does not exist
+# on the registry is not a publish workflow. It is scenery.
+#
+#   Publish @bsuite/eslint-config   runs #7, #8, #9   ALL SUCCESS
+#   https://registry.npmjs.org/@bsuite/eslint-config  404
+#
+# That workflow was made honest in 2026-08-13: it probes the bare package name, finds a
+# definitive E404 and SKIPS with a ::notice:: explaining that the publish token can push
+# to an EXISTING package but cannot CREATE one. That was the right call — the alternative
+# was a permanently-red step, and a step that is always red is a step everyone learns to
+# scroll past.
+#
+# But a ::notice:: is not a signal. It is GREEN. "Publish @bsuite/eslint-config — success"
+# is indistinguishable from a working publish and has been for four months.
+# @bsuite/tsconfig is in the same state and nobody had counted it.
+#
+# This makes absence a DECLARED state with a reason and an owner, or a failure. It also
+# checks the two halves match: a publishable package needs a publish workflow, and a
+# private one must not have it — a new package added without its workflow publishes
+# nothing and says nothing, which is how this class starts.
+
+on:
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'packages/*/package.json'
+      - '.github/workflows/publish-*.yml'
+      - '.github/workflows/package-publication.yml'
+      - 'scripts/check-package-publication.mjs'
+      - 'scripts/unpublished-packages-baseline.json'
+  push:
+    branches: [main, development]
+    paths:
+      - 'packages/*/package.json'
+      - '.github/workflows/publish-*.yml'
+      - 'scripts/check-package-publication.mjs'
+  # The registry is not in this repo. A package can be unpublished, or a create-capable
+  # token finally used, with no diff here at all — so the daily run is the real detector
+  # and the path triggers are the fast path.
+  schedule:
+    - cron: '35 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publication:
+    name: Every publishable package is actually published
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Prove the checker can fail before trusting what it says
+        run: node scripts/check-package-publication.mjs --self-test
+
+      - name: Positive control — an unacknowledged absent package must be detected
+        # Plant a REAL publishable package that cannot exist on the registry, with its
+        # publish workflow present so the wiring check is not what fires. If the gate
+        # passes this, its clean runs mean nothing.
+        run: |
+          set -euo pipefail
+          DIR=packages/__publication_probe__
+          WF=.github/workflows/publish-__publication_probe__.yml
+          trap 'rm -rf "$DIR" "$WF"' EXIT
+          mkdir -p "$DIR"
+          printf '{"name":"@bsuite/__publication_probe__","version":"0.0.0","private":false}\n' > "$DIR/package.json"
+          printf 'name: probe\non:\n  workflow_dispatch:\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "true"\n' > "$WF"
+          if node scripts/check-package-publication.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — a publishable package that is absent from the registry was not detected."
+            exit 1
+          fi
+          echo "positive control ok — an unacknowledged absent package is detected"
+
+      - name: Every publishable package is on the registry or acknowledged absent
+        run: node scripts/check-package-publication.mjs

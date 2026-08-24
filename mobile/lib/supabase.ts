@@ -40,6 +40,16 @@ const ExpoSecureStoreAdapter = {
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: ExpoSecureStoreAdapter,
+    // supabase-js DEFAULTS flowType to 'implicit' — see its own
+    // dist/main/lib/constants.js: DEFAULT_AUTH_OPTIONS. Omitting this does not fall back
+    // to PKCE; it silently selects the implicit flow, which returns tokens in a URL
+    // fragment and is the wrong choice for a native app holding a secure store.
+    //
+    // Every other client in the estate declares it, and @supabase/ssr hardcodes it. This
+    // file was the only one running implicit, and the guard that should have caught it
+    // was skipping mobile/ as "out of scope" while its own gate checked out no
+    // submodules and passed 0/0.
+    flowType: 'pkce',
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
