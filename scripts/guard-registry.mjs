@@ -143,6 +143,32 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-no-prerelease-in-production',
+    label: 'no -next prerelease reaches a production path',
+    repo: '.',
+    command: ['node', 'scripts/check-no-prerelease-in-production.mjs', '--registry-only'],
+    ciWorkflow: '.github/workflows/no-prerelease-in-production.yml',
+    mode: 'run',
+    notes:
+      'The CONSUMER half of the dist-tag rule. publish-dist-tag.mjs stops a prerelease ' +
+      'taking the `latest` tag; this stops one riding into production the other way — an ' +
+      'app pins an exact -next.N on development so its d.* preview can install the fix, ' +
+      'that branch promotes to main, and --frozen-lockfile then installs the release ' +
+      'candidate in production forever, because a lockfile pin does not expire. Four ' +
+      'assertions: no package manifest declares a prerelease version (P1), no app range ' +
+      'contains one (P2), no app lockfile RESOLVES one (P3), and the registry\'s own ' +
+      'dist-tags.latest is not one (P4). P3 is the load-bearing one and the one nobody ' +
+      'reads — the estate has already been burned by drift living entirely in the ' +
+      'lockfile\'s resolved column while package.json looked correct. P1 exists because ' +
+      'the producer-side guard WORKING is what makes its absence invisible: a prerelease ' +
+      'left on main means `latest` silently stops advancing while every freshness check ' +
+      'reports the apps current. The registered command is --registry-only (P4), which is ' +
+      'meaningful on any ref; P1-P3 need a submodule checkout and run in CI on the ' +
+      'promotion PR. Each assertion is proven to FAIL on a planted prerelease and to PASS ' +
+      'on the legitimate case that most resembles it.',
+  },
+
+  {
     id: 'parent-component-mounts',
     label: 'toast() callers require a mounted toast surface',
     repo: '.',
@@ -1337,7 +1363,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 62
+export const GUARD_FLOOR = 63
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 

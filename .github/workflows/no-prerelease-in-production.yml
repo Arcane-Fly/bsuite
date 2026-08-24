@@ -1,0 +1,113 @@
+name: No prerelease on a production path
+
+# A `-next.N` prerelease exists so a package fix can reach a d.* PREVIEW host
+# before the promotion its verification is meant to authorise. It must never
+# arrive anywhere else.
+#
+# `scripts/publish-dist-tag.mjs` guards the producer — a prerelease never takes
+# the `latest` dist-tag on any ref. This guards the CONSUMER, which is where a
+# prerelease actually reaches a customer: an app pins an exact `-next.N` on its
+# `development` branch so its preview can install it, that branch is promoted to
+# `main`, and `--frozen-lockfile` faithfully installs the release candidate in
+# production forever, because a lockfile pin does not expire.
+#
+# Four assertions, described in full in the script:
+#   P1  no package manifest under packages/ declares a prerelease version
+#   P2  no app package.json declares an @bsuite/* range containing a prerelease
+#   P3  no app pnpm-lock.yaml RESOLVES an @bsuite/* to a prerelease
+#   P4  the registry's own dist-tags.latest is not a prerelease  (checked on EVERY ref)
+#
+# P1-P3 are production-path assertions and run when the target is `main`. P4
+# runs everywhere, because a mis-tagged registry is wrong regardless of what
+# branch you are on and no file in this repo can see it.
+#
+# WHY IT RUNS ON PUSH TO MAIN AS WELL AS ON THE PR
+# A PR-only gate cannot see the class of failure that arrives with no diff at
+# all: publishing a prerelease and mis-tagging it makes production wrong without
+# touching a single file here. Same reasoning as own-package-freshness.yml.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    # 19:40 UTC daily — ~03:40 AWST, half an hour after own-package-freshness,
+    # so a registry-side mis-tag is found within a day even if nothing merges.
+    - cron: '40 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: no-prerelease-in-production-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  no-prerelease-in-production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — the six apps ARE the subject of P2/P3)
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
+          # bare `submodules: recursive` fails at checkout. Same fallback chain
+          # every other submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          # This job runs no pnpm install, so there is nothing to cache — and
+          # leaving the default on makes setup-node resolve pnpm before corepack
+          # has run, which has broken several workflows in this repo.
+          package-manager-cache: false
+
+      # The guard parses pnpm-lock.yaml with a real YAML parser and REFUSES to
+      # run without one rather than degrading to grepping it. `npm install`
+      # inside a pnpm workspace root would rewrite the checkout's node_modules,
+      # so it goes into a scratch prefix — the contract
+      # check-own-package-freshness.yml already established.
+      - name: Install the parser (scratch prefix, not the repo)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/guard-deps" \
+            --no-save --no-package-lock --no-audit --no-fund \
+            yaml@^2.9.0
+
+      # A gate whose pass and no-op states are indistinguishable hides defects.
+      # Prove each of P1-P4 fails on a planted prerelease AND passes on the
+      # legitimate case that most resembles it, before believing a clean run.
+      - name: Self-test the guard (proves it can fail)
+        run: node scripts/check-no-prerelease-in-production.mjs --self-test
+
+      - name: No prerelease reaches production
+        env:
+          BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
+          # On a pull_request this is the BASE branch (`main` for a promotion).
+          # On a push it is the branch pushed to. On a schedule it is the default
+          # branch. In every case it is the ref whose production-ness we mean.
+          TARGET: ${{ github.base_ref || github.ref_name }}
+        run: node scripts/check-no-prerelease-in-production.mjs --target "$TARGET"
+
+      # The unblock path, printed where the person reading a red check will see
+      # it — a gate that blocks without naming the exact command to clear it is
+      # a gate people learn to route around.
+      - name: How to clear this if it blocked you
+        if: failure()
+        run: |
+          {
+            echo "### A prerelease is on a production path"
+            echo ""
+            echo "In order — the order is not negotiable:"
+            echo ""
+            echo '1. `node scripts/finalise-prereleases.mjs` — strips `-next.N` from the package manifests'
+            echo "2. Promote. Pushing to \`main\` publishes the released versions to \`latest\`."
+            echo "3. Repoint each app onto the released version and regenerate its lockfile."
+            echo ""
+            echo "Doing 3 before 2 pins the apps to a version that does not exist yet, and"
+            echo "\`--frozen-lockfile\` fails with a 404 that reads like a registry outage."
+            echo ""
+            echo "Runbook: \`docs/20260824-preview-canary-publishing-standard-v1.00A.md\`"
+          } >> "$GITHUB_STEP_SUMMARY"
