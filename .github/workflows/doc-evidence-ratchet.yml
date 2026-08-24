@@ -1,0 +1,68 @@
+name: Doc evidence ratchet
+
+# A DOC THAT CITES NOTHING CHECKABLE CAN NEVER BE SHOWN COMPLETE.
+#
+# 425 of 475 docs are in that state. That number cannot be driven to zero by any tool:
+# binding a doc means NAMING the artifact that proves it, and choosing that artifact is a
+# judgement about the document's CONTENT.
+#
+# THE OBVIOUS SHORTCUT IS A RECORDED FAILURE OF THE VERY SCRIPT THIS RUNS. Its first
+# version matched keywords and reported 437 of 463 bindable — the word "route" being
+# common, dressed up as a finding. Auto-binding the 425 would manufacture 425 false
+# completions, which is exactly what the operator's bar exists to prevent.
+#
+# So this gate finishes the SYSTEM instead of the judgements: the count may only fall, and
+# the pile cannot grow. An open-ended backlog becomes a monotonically shrinking one.
+#
+# UNTIL TODAY audit-doc-completion.mjs WAS WIRED TO NOTHING. It has been run by hand all
+# week and its numbers quoted in commit messages, which is the same shape as the one-shot
+# policy found this morning: a gate nothing invokes reads as coverage and provides none.
+#
+# NO `paths:` FILTER — the same two reasons every estate-wide gate here records. Docs
+# arrive inside SUBMODULES, where the parent holds only a gitlink and no path filter can
+# match; and a path-filtered required check never reports on a PR that misses the filter,
+# deadlocking it. This is a file scan measured in seconds.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doc-evidence-ratchet-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  doc-evidence-ratchet:
+    name: Docs cite something checkable
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — most of the corpus lives there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
+          # `submodules: recursive` fails at checkout. Same fallback chain every other
+          # submodule-consuming workflow here uses.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # A gate whose pass and no-op states are indistinguishable hides defects. Its 27
+      # self-tests include the controls that matter here: that MENTIONING a topic does not
+      # bind, that a dead citation is never a binding, and that an archived doc cannot earn
+      # a marker by being filed away.
+      - name: Self-test the auditor
+        run: node scripts/audit-doc-completion.mjs --self-test
+
+      # Exits 3 rather than 0 if the evidence layer is missing — without it every doc reads
+      # UNBINDABLE, which looks like a careful answer and is a broken one.
+      - name: Hold the ratchet
+        run: node scripts/audit-doc-completion.mjs . crm7 business-suite-unified conduit braden throughput R80.4
