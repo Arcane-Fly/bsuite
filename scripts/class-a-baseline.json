@@ -1,0 +1,42 @@
+{
+  "captured_at": "2026-08-24T10:11:05.159Z",
+  "absent": [
+    "acknowledgements",
+    "contracts",
+    "collaborative_documents"
+  ],
+  "counts": {
+    "apprentices": 20,
+    "charge_rate_quotes": 13,
+    "clients": 1189,
+    "collaborative_documents_legacy_unused": 1,
+    "communications": 5,
+    "contacts": 1227,
+    "data_change_set_items": 17,
+    "data_change_sets": 21,
+    "document_access_log": 0,
+    "document_metadata": 425,
+    "document_verification_events": 0,
+    "documents": 0,
+    "employers": 17,
+    "host_agreements": 0,
+    "host_contracts": 0,
+    "invoice_line_items": 5,
+    "invoices": 3,
+    "org_members": 8,
+    "organisation_audit_events": 0,
+    "people": 50,
+    "placements": 34,
+    "profiles": 14,
+    "r7_offers": 0,
+    "signature_requests": 5,
+    "sites": 14,
+    "tenant_switch_audit": 36,
+    "tenants": 7,
+    "timesheets": 14,
+    "training_contracts": 343,
+    "training_plan_units": 195,
+    "training_plans": 19,
+    "user_tenants": 13
+  }
+}
