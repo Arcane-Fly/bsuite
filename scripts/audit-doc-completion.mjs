@@ -71,7 +71,18 @@ const STATUS_CODE = /-v\d+\.\d+([WDRAF])(?:\.[a-z]+)?$/i;
 export function isCompletionMarked(filename) {
   const stem = filename.replace(/\.md$/i, '');
   const status = stem.match(STATUS_CODE);
-  if (status && status[1].toUpperCase() !== 'F') return false;
+  // `F` IS THE MARKER. The contributing standards guide defines the vocabulary as
+  // W/D/R/A/F with F = "Frozen — finalized, immutable", so a filename ending
+  // `-vN.NNF` is a completion claim whether or not it also contains a word from
+  // the list below.
+  //
+  // Without this the tool could not see the estate's own marker. The first
+  // document to earn it — the dashboard retirement, frozen 2026-08-24 — reported
+  // as UNMARKED, because "retirement" is not "retired" and nothing else matched.
+  // A detector that cannot see the convention it exists to police is not policing
+  // it.
+  if (status && status[1].toUpperCase() === 'F') return true;
+  if (status) return false;
   const m = filename.match(COMPLETION_WORDS);
   if (!m) return false;
   const before = filename.slice(0, m.index + (m[1] ? m[1].length : 0));
@@ -176,6 +187,24 @@ export function citedArtifacts(text) {
 // nothing can earn a completion marker by being filed away.
 const HISTORICAL_BY_PATH = /(^|\/)(archive|archived|inputs|superseded)(\/|$)/i;
 
+// A DOCUMENT THAT DECLARES ITSELF A RECORD IS ONE — the frontmatter outranks the
+// directory name.
+//
+// `docs/recovered/**` holds 18 documents carrying `kind: record` / `authority:
+// none` and an adjudicated `verdict:`. The classification standard's own rule is
+// that `kind: record` MUST have `authority: none` because "a dated record is
+// history, not a live document". They are the same category as docs/archive/**,
+// and only the directory name differs.
+//
+// Without this they read as eighteen unevidenced completion claims, because each
+// is frozen at `-v1.00F` — which is CORRECT usage for an immutable record and
+// wrong to score as a claim about live production code. Path lists cannot keep up
+// with directory names; the declared classification can.
+function declaresItselfARecord(text) {
+  const fm = text.slice(0, 600);
+  return /^kind:\s*record\s*$/m.test(fm) && /^authority:\s*none\s*$/m.test(fm);
+}
+
 // A DOC CAN DECLARE ITSELF A SNAPSHOT, AND THEN IT IS ONE.
 //
 // The two crm7 CI-guard audits enumerate every workflow that existed on 2026-08-11 —
@@ -218,7 +247,8 @@ export function classify(text, filename, artifactsPresent, relPath = filename) {
     ...cited.gates.filter((g) => !artifactsPresent.has(g)),
     ...cited.workflows.filter((w) => !artifactsPresent.has(w)),
   ];
-  const archival = HISTORICAL_BY_PATH.test(relPath) || hasHistoricalBanner(text);
+  const archival =
+    HISTORICAL_BY_PATH.test(relPath) || hasHistoricalBanner(text) || declaresItselfARecord(text);
   return {
     archival,
     alreadyMarked: isCompletionMarked(filename),
@@ -411,7 +441,15 @@ const rows = rows_;
 const marked = rows.filter((r) => r.alreadyMarked);
 const bindable = rows.filter((r) => r.bindable);
 const dead = rows.filter((r) => r.deadCitations.length > 0);
-const markedUnbindable = marked.filter((r) => !r.bindable);
+// A RECORD MARKED `F` IS NOT A CLAIM RESTING ON NOTHING — it is an immutable
+// historical artefact, and `F` is the correct marker for one. Only a LIVE
+// document marked complete with no runnable evidence is the defect this line
+// exists to count.
+//
+// Counting archival docs here made the number report 18 unevidenced completions
+// when the real answer is the one live document that carries the marker, and it
+// earns it.
+const markedUnbindable = marked.filter((r) => !r.bindable && !r.archival);
 
 console.log(`\n  ${rows.length} doc(s); ${artifactsPresent.size} gate/workflow file(s) form the evidence layer\n`);
 console.log(`  already marked complete in the filename        ${marked.length}`);
@@ -495,7 +533,15 @@ if (process.argv.includes('--inventory')) {
 // An open-ended backlog becomes a monotonically shrinking one. That is the finishable
 // shape, and it is the only honest one.
 const UNBOUND_BASELINE_FILE = 'docs/.unbound-baseline';
-const unboundNow = rows.length - bindable.length - dead.length;
+// UNBOUND means a LIVE document whose claim nothing can check. An ARCHIVAL
+// record is neither — it preserves what was said at the time and is not making a
+// claim about production, which is why `bindable` already excludes it.
+//
+// Leaving records in this total double-counts them as a debt they cannot pay: a
+// doc reclassified from live to record would RAISE the number, and the honest
+// reading of that reclassification is that the backlog shrank by one.
+const archivalCount = rows.filter((r) => r.archival).length;
+const unboundNow = rows.length - bindable.length - dead.length - archivalCount;
 let ratchetFailed = false;
 if (existsSync(UNBOUND_BASELINE_FILE)) {
   const base = Number(readFileSync(UNBOUND_BASELINE_FILE, 'utf8').trim());

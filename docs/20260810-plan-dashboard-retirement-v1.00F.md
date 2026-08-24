@@ -2,6 +2,22 @@
 
 **Decision:** Braden, 2026-08-10. **Status:** done in this change.
 
+> **FROZEN 2026-08-24 (W -> F).** `F` is the estate's completion marker — *Finalized, immutable* — and this is the first document to earn it.
+>
+> The operator's bar has two limbs and both are met, measured rather than asserted:
+>
+> **(a) It described something that was not best practice, and best practice has since been implemented.** The dashboard was named **"source of truth"** in every `AGENTS.md` and `CLAUDE.md` across the parent and five submodules, and had not been true since May. Today **zero** files make that claim: all ten that still mention it say it *was retired*. The doctrine was corrected, not merely the page removed.
+>
+> **(b) What it describes is proven, by direct measurement of its own three claims** — not by a citation standing in for one:
+>
+> | the doc asserts | measured 2026-08-24 |
+> |---|---|
+> | the URL no longer exists | `HTTP 404` |
+> | the page is archived at the stated path | present, 6 files |
+> | the three publishing workflows are deleted | 0 remain |
+>
+> Frozen means immutable. If any of those four measurements ever stops holding, this document is wrong and the marker must come off — that is the contract `F` carries.
+
 `https://garyocean428.github.io/bsuite/` no longer exists. GitHub Pages is disabled
 for this repository, the three workflows that published it are deleted, and the
 page itself is archived under
