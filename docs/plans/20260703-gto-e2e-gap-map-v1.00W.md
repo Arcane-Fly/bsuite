@@ -24,7 +24,7 @@ inference alone.
 Two competing "quote" schemas exist in crm7 code. Only one is live:
 
 - `quotes` / `quote_line_items` (opportunity-style CRM quote — `pages/quotes/*`,
-  `src/lib/quoteLifecycle.ts`, `useQuoteStore`) — migration files
+  ~~`src/lib/quoteLifecycle.ts`~~ (no file of this name exists; quoting now lives in `crm7/src/services/requoteOnRiseService.ts` and `crm7/src/lib/quoteInclusions.ts`), `useQuoteStore`) — migration files
   `supabase/migrations/20260228120000_create_quotes.sql` and
   `20260301100800_create_charge_rate_quotes.sql` exist but **the `quotes` /
   `quote_line_items` tables are NOT in the live schema** (verified via
@@ -51,7 +51,7 @@ live schema**:
 - `charge_rate_audit_log` — queried by `pages/charge-rates/[id]/index.tsx`
   (line ~230). No migration file for this table exists anywhere in
   `supabase/migrations/` — it was never even drafted, let alone applied.
-- `award_rate_cache` — queried by `src/lib/rates/awardRateCacheService.ts`
+- `award_rate_cache` — queried by ~~`src/lib/rates/awardRateCacheService.ts`~~ (no file of this name exists anywhere in the estate)
   (3 call sites). Live schema instead has `award_rates` (a different table).
   The cache-then-fallback-to-fairwork-enhanced logic in this service will
   hard-fail on every cold call.

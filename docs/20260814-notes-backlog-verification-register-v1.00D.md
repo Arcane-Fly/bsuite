@@ -144,7 +144,7 @@ Contrary to the directive, this is the **best-executed** section. Verified again
 | No MA000036 trade selector | **FIXED** | Two-option trade select with mutual exclusion, `:5310-5330`. #42 closed, PR #62 |
 | Plumbing award shows B&C content | **FIXED** | #43 closed |
 | No commercial construction sector | **FIXED in code**, #44 still open | `SECTORS` now has 5 entries incl. `commercial_construction` — cl.17.1 shifts + cl.22.1(a) $67.15, exactly your spec |
-| Award selection doesn't sync between the two cards | **FIXED in code**, #47 open | `src/lib/award-sync.ts` `syncPanelAward`, unit-tested, wired both directions |
+| Award selection doesn't sync between the two cards | **FIXED in code**, #47 open | ~~`src/lib/award-sync.ts`~~ (no file of this name exists anywhere in the estate — the row above says FIXED in code, but not at this path) `syncPanelAward`, unit-tested, wired both directions |
 | Standard Rate / % / Source don't update on award change | **FIXED in code**, #49 open | `usePctWages` re-derives on award change, `:1364-1372` |
 | Occupation & Qualification not settable | **FIXED in code**, #50 open | Dedicated "Award, Trade & Qualification" panel, `:5130` |
 | No quote export | **FIXED in code**, #51 open | `doDownloadCsv` → `quoteToCsv`; JSON+CSV for participants / host_billing / accounts, `:6599-6627` |

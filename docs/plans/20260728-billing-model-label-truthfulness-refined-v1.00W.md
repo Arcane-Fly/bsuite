@@ -66,7 +66,7 @@ self-describing labels are correct and must NOT be changed.
 ## The refined prompt
 
 In `R80.3` (compliance-critical wage/charge calculator), fix `billingModelDisplayLabel` in
-`src/services/invoicingService.ts` so the **Standard** billing model no longer asserts a fixed week
+~~`src/services/invoicingService.ts`~~ (no file of this name exists; invoicing lives under `crm7/src/components/invoicing/`) so the **Standard** billing model no longer asserts a fixed week
 count on invoices.
 
 Preferred solution, if the data is available at that render point: show the **actual computed
