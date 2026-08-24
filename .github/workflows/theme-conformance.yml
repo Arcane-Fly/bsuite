@@ -672,14 +672,29 @@ jobs:
       # An uninitialised submodule is an EMPTY DIRECTORY and an empty directory
       # passes `-d`. Test for the FILE this job consumes, or the sweep degrades
       # into "no session producer found" and reads like a scoping decision
-      # rather than a broken checkout. Five apps now (V-9, 2026-08-19) — R80.4
-      # is deliberately absent, it has no auth.setup.ts (see scripts/audit-
-      # routes.sh's UNCOVERED note).
+      # rather than a broken checkout.
+      #
+      # SIX APPS SINCE 2026-08-22. This comment used to say five, and that
+      # "R80.4 is deliberately absent, it has no auth.setup.ts". R80.4#187 gave
+      # it one — plus @playwright/test and a config — and scripts/theme-session.sh
+      # was updated the same day to mint its session. The three app lists in THIS
+      # file were not, so the sweep reached R80.4, ran `pnpm exec playwright` in a
+      # directory where nothing had been installed, and died with
+      # `Command "playwright" not found`. Every run of this gate on development
+      # has failed that way since 2026-08-22 — which also means R80.4's
+      # authenticated routes have not actually been checked since then.
+      # BEFORE the installs, not after: the divergence this catches surfaces
+      # otherwise as `Command "playwright" not found` TWELVE MINUTES into the
+      # sweep, naming playwright rather than the list entry nobody added. Fail
+      # in two seconds, naming the app.
+      - name: Assert the app lists here match the apps theme-session.sh supports
+        run: node scripts/check-theme-gate-app-lists.mjs
+
       - name: Assert every covered app's auth helper is present
         run: |
           set -uo pipefail
           missing=""
-          for a in crm7 braden throughput conduit business-suite-unified; do
+          for a in crm7 braden throughput conduit business-suite-unified R80.4; do
             [ -f "$a/tests/e2e/auth.setup.ts" ] || missing="$missing $a"
           done
           if [ -n "$missing" ]; then
@@ -687,7 +702,7 @@ jobs:
             echo "Set BSUITE_CROSS_REPO_PAT (repo: read on each app)."
             exit 1
           fi
-          echo "auth helper present in all five covered apps"
+          echo "auth helper present in all six covered apps"
 
       # Fail CLOSED on missing credentials, before anything else runs.
       #
@@ -764,7 +779,7 @@ jobs:
       - name: Install each covered app (Playwright lives in each)
         run: |
           set -uo pipefail
-          for a in crm7 braden throughput conduit business-suite-unified; do
+          for a in crm7 braden throughput conduit business-suite-unified R80.4; do
             echo "::group::pnpm install -- $a"
             ( cd "$a" && pnpm install --frozen-lockfile )
             echo "::endgroup::"
@@ -789,7 +804,7 @@ jobs:
       - name: Install the Chromium browser binary for each covered app
         run: |
           set -uo pipefail
-          for a in crm7 braden throughput conduit business-suite-unified; do
+          for a in crm7 braden throughput conduit business-suite-unified R80.4; do
             echo "::group::playwright install (browser only) -- $a"
             ( cd "$a" && pnpm exec playwright install chromium )
             echo "::endgroup::"
