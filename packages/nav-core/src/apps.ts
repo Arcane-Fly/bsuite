@@ -112,3 +112,70 @@ export const BSUITE_APP_METADATA: Record<BSuiteAppKey, AppMetadata> = {
     description: 'Corporate site',
   },
 }
+
+/**
+ * Where a cross-app launch should LAND in each destination app.
+ *
+ * ═══ WHY THIS MAP EXISTS ═══
+ *
+ * `buildLaunchUrl` defaulted `return_path` to `/dashboard` for every
+ * destination, because the first two apps wired up (bsu, crm7) both serve
+ * `/dashboard`. They are the only two that do.
+ *
+ * The operator hit the consequence on 2026-08-24: the "R8 Calculator" row in
+ * BSU's sidebar pointed at
+ * `https://r8.crm7.app/auth/login?return_path=%2Fdashboard`, the OAuth round
+ * trip completed correctly, and R8 then rendered its not-found page — because
+ * R80.4's router (`main.tsx::Root`) serves the calculator at `/` and 404s
+ * everything it does not recognise. Sign-in worked; the landing did not.
+ *
+ * The other two mismatches were quieter and would have stayed hidden: both
+ * `throughput` and `braden` catch unknown paths with
+ * `<Route path="*" element={<Navigate to="/" replace />} />`, so a launch to
+ * their `/dashboard` silently drops the user on the public home page instead
+ * of the authenticated surface the link promised.
+ *
+ * A per-destination landing path is not a preference — it is a property of the
+ * destination's own router, so it belongs beside that app's URL and metadata
+ * rather than in each of the six callers that link to it. Prefer
+ * `buildAppLaunchUrl(key, url)` over `buildLaunchUrl(url)` wherever the app key
+ * is known; the two-argument `buildLaunchUrl(url, path)` stays for content
+ * deep-links, which target a specific page rather than an app's front door.
+ *
+ * Sourced from each app's own `/auth/login` default, and cross-checked against
+ * its router:
+ *   - bsu        `src/pages/auth/login.tsx`  → `/dashboard` (route exists)
+ *   - crm7       `src/pages/auth/login.tsx`  → `/dashboard` (route exists)
+ *   - conduit    `src/app/auth/login/page.tsx` → `/`
+ *   - r8         `src/pages/AuthLogin.tsx`   → `/`  (R80.4 has NO `/dashboard`)
+ *   - throughput `src/pages/Login.tsx`       → `/`
+ *   - braden     `src/pages/auth/Login.tsx`  → `/admin/branding`
+ *
+ * Keep this in sync with the per-app table in AUTH_CANONICAL.md §"/auth/login
+ * route on every consuming app". A `Record<BSuiteAppKey, string>` is deliberate:
+ * adding a key to `BSUITE_APP_KEYS` without deciding where launches land is a
+ * type error, not a 404 discovered in production.
+ */
+export const BSUITE_APP_LANDING_PATHS: Record<BSuiteAppKey, string> = {
+  bsu: '/dashboard',
+  crm7: '/dashboard',
+  conduit: '/',
+  r8: '/',
+  throughput: '/',
+  braden: '/admin/branding',
+}
+
+/**
+ * Narrow an arbitrary string to a `BSuiteAppKey`.
+ *
+ * `AppEntry.key` is typed `string`, not `BSuiteAppKey` — deliberately, so a
+ * consumer can list an app this package does not know about. That means
+ * `AppSwitcher` cannot index `BSUITE_APP_LANDING_PATHS` directly: an unknown
+ * key would yield `undefined` and serialise into `?return_path=undefined`,
+ * which every destination's `sanitizeReturnPath` then discards — a silent
+ * fallback that looks like it worked. Narrow first, and let an unknown app keep
+ * the generic launch URL.
+ */
+export function isBSuiteAppKey(value: string): value is BSuiteAppKey {
+  return (BSUITE_APP_KEYS as readonly string[]).includes(value)
+}

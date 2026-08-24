@@ -56,7 +56,7 @@ describe('AppSwitcher', () => {
       { key: 'r8', name: 'R8 Calculator', shortName: 'R8', icon: MockIcon, url: 'https://r8.crm7.app/', description: 'Calc' },
     ]
 
-    it('routes non-current apps through /auth/login?return_path=%2Fdashboard', () => {
+    it('routes non-current apps through the destination /auth/login', () => {
       render(<AppSwitcher apps={crossAppApps} currentApp="bsu" />)
       fireEvent.click(screen.getByRole('button'))
       const crm7Link = screen.getByRole('menuitem', { name: /CRM7/i })
@@ -66,13 +66,32 @@ describe('AppSwitcher', () => {
       )
     })
 
-    it('trims trailing slash on appUrl before appending /auth/login', () => {
+    /* This test used to assert `return_path=%2Fdashboard` for the R8 row, which
+       froze the exact defect the operator reported on 2026-08-24: R8 has no
+       `/dashboard` and 404s it, so the menu completed a sign-in and then showed
+       a not-found page. Its real subject is the trailing-slash trim on
+       `https://r8.crm7.app/` — that is what it still asserts, now against R8's
+       own landing path. */
+    it('trims trailing slash on appUrl and lands on the destination own path', () => {
       render(<AppSwitcher apps={crossAppApps} currentApp="bsu" />)
       fireEvent.click(screen.getByRole('button'))
       const r8Link = screen.getByRole('menuitem', { name: /R8 Calculator/i })
       expect(r8Link).toHaveAttribute(
         'href',
-        'https://r8.crm7.app/auth/login?return_path=%2Fdashboard',
+        'https://r8.crm7.app/auth/login?return_path=%2F',
+      )
+    })
+
+    it('falls back to the generic default for an app nav-core does not know', () => {
+      const withStranger = [
+        ...crossAppApps,
+        { key: 'not-a-bsuite-app', name: 'Stranger', shortName: 'STR', icon: MockIcon, url: 'https://example.com', description: 'Unknown' },
+      ]
+      render(<AppSwitcher apps={withStranger} currentApp="bsu" />)
+      fireEvent.click(screen.getByRole('button'))
+      expect(screen.getByRole('menuitem', { name: /Stranger/i })).toHaveAttribute(
+        'href',
+        'https://example.com/auth/login?return_path=%2Fdashboard',
       )
     })
 
