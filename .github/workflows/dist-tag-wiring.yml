@@ -70,15 +70,42 @@ jobs:
         # paraphrase of it.
         run: |
           set -euo pipefail
-          cp .github/workflows/publish-ui.yml /tmp/publish-ui.bak
-          sed -i 's| --tag "${{ steps.dist-tag.outputs.tag }}"||' .github/workflows/publish-ui.yml
-          if node scripts/check-publish-dist-tag-wiring.mjs; then
-            echo "::error::POSITIVE CONTROL FAILED — the checker passed a real publish workflow with --tag removed. Its clean passes mean nothing."
-            cp /tmp/publish-ui.bak .github/workflows/publish-ui.yml
+          TARGET=.github/workflows/publish-ui.yml
+          cp "$TARGET" /tmp/publish-ui.bak
+          # Restore on ANY exit path, including the failures below. A control
+          # that leaves the tree modified turns one red check into several.
+          trap 'cp /tmp/publish-ui.bak "$TARGET"' EXIT
+
+          # NO `${{ }}` IN THIS PATTERN. The first version of this control read
+          #     sed -i 's| --tag "${{ steps.dist-tag.outputs.tag }}"||' ...
+          # and the Actions expression engine evaluated that expression BEFORE
+          # bash ever saw it. There is no `dist-tag` step in THIS job, so it
+          # resolved to the empty string and the command that actually ran was
+          #     sed -i 's| --tag ""||'
+          # which matches nothing. The sed was a silent no-op, the checker
+          # correctly passed an unmodified file, and the control then declared
+          # itself failed — reporting a broken checker while proving only that
+          # it had planted no defect.
+          #
+          # Strip the --tag argument whatever its value, on the npm publish line.
+          sed -i -E '/npm publish/ s/ --tag "[^"]*"//' "$TARGET"
+
+          # AND CHECK THE PLANT LANDED. This is the assertion whose absence let
+          # the bug above masquerade as a finding: "the checker failed" only
+          # means something if a defect was actually introduced. A control that
+          # cannot tell "I planted a defect" from "my pattern did not match" is
+          # the same checked-nothing-vs-found-nothing shape it exists to catch.
+          if cmp -s /tmp/publish-ui.bak "$TARGET"; then
+            echo "::error::POSITIVE CONTROL INERT — the edit did not change $TARGET, so NO defect was planted."
+            echo "::error::Nothing below could have been proven. Fix the pattern, do not trust the verdict."
             exit 1
           fi
-          cp /tmp/publish-ui.bak .github/workflows/publish-ui.yml
-          echo "positive control ok — checker detects a planted omission in a real workflow"
+
+          if node scripts/check-publish-dist-tag-wiring.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — the checker passed a real publish workflow with --tag removed. Its clean passes mean nothing."
+            exit 1
+          fi
+          echo "positive control ok — a real defect was planted in $TARGET and the checker caught it"
 
       - name: Every publish workflow decides its dist-tag, before using it
         run: node scripts/check-publish-dist-tag-wiring.mjs
