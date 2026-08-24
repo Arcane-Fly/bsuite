@@ -371,8 +371,33 @@ for (const url of urls) {
       for (const [k, v] of Object.entries(byWhat)) console.log(`    OCCLUDED x${v.length} by ${k} :: ${v.slice(0,2).join(' | ')}`);
     }
     if (occluded) skipped += occluded;
+
+    // AN ELEMENT AT OPACITY 0 PAINTS NOTHING, so "its contrast" is a
+    // measurement of the backdrop against itself — 1:1, ΔE 0, reported as
+    // INVISIBLE. That is the SAME false positive the sr-only skip-link rule
+    // above already retires, in its other common form: a control revealed on
+    // hover or focus.
+    //
+    // Found the day this gate could first reach R80.4's authenticated routes
+    // (2026-08-24). Its calculator carries 32 of them — the per-card reorder
+    // (⠿) and resize (⤢) buttons, `opacity-0 group-hover:opacity-100
+    // focus:opacity-100`. Every one has a real aria-label and a focus variant,
+    // so it is keyboard reachable and screen-reader announced; it simply is not
+    // painted until you reach for it. Measured at rest they are all failures,
+    // and they are all wrong.
+    //
+    // `s.op` is the PRODUCT of the element's own opacity and every ancestor's,
+    // computed above — so a child of an opacity-0 group is caught too, which is
+    // exactly how these render.
+    //
+    // SKIPPED AND COUNTED, never silently. A skip nobody can see is how an
+    // auditor stops covering a whole class while still reporting a clean pass.
+    const hiddenByOpacity = samples.filter((s) => !s.occluded && s.op === 0).length;
+    if (hiddenByOpacity) skipped += hiddenByOpacity;
+
     for (const s of samples) {
       if (s.occluded) continue;
+      if (s.op === 0) continue;
       const bg = [s.bg[0], s.bg[1], s.bg[2]];
       // fg over bg, including its own alpha and every inherited opacity
       const alpha = s.fg[3] * s.op;
@@ -388,7 +413,7 @@ for (const url of urls) {
     bad.sort((a, b) => a.ratio - b.ratio);
     if (bad.length) failed += bad.length;
     if (bad.length && (!worst || bad[0].ratio < worst.ratio)) worst = bad[0];
-    report.push({ url, theme, count: bad.length, findings: bad.slice(0, 8) });
+    report.push({ url, theme, count: bad.length, findings: bad.slice(0, 8), hiddenByOpacity });
   }
 }
 await browser.close();
@@ -400,8 +425,9 @@ else {
     const path = r.url ? new URL(r.url).pathname : r.url;
     if (r.skipped) { console.log(`  – ${path}  SKIPPED (${r.skipped})`); continue; }
     if (r.error) { console.log(`  ! ${path}  ${r.error}`); continue; }
-    if (!r.count) { console.log(`  ✓ ${path} [${r.theme}]`); continue; }
-    console.log(`  ✗ ${path} [${r.theme}] — ${r.count} below AA`);
+    const hidden = r.hiddenByOpacity ? `  (${r.hiddenByOpacity} not painted — opacity 0, revealed on hover/focus)` : '';
+    if (!r.count) { console.log(`  ✓ ${path} [${r.theme}]${hidden}`); continue; }
+    console.log(`  ✗ ${path} [${r.theme}] — ${r.count} below AA${hidden}`);
     for (const f of r.findings) {
       const tag = f.invisible ? 'INVISIBLE' : 'low';
       console.log(`      ${String(f.ratio).padStart(5)}:1 (need ${f.floor})  ΔE ${String(f.dE).padStart(5)}  ${tag}  ${f.size}px  "${f.text}"`);
