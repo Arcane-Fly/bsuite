@@ -148,6 +148,29 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-zero-consumers',
+    label: 'nothing ships with zero consumers',
+    repo: '.',
+    command: ['node', 'scripts/check-zero-consumers.mjs'],
+    ciWorkflow: '.github/workflows/zero-consumers.yml',
+    mode: 'run',
+    notes:
+      'Six of the ten documented-but-undelivered items share one shape: the machinery ' +
+      'was built and the wiring never happened — a token minted and not consumed, a hook ' +
+      'published and imported by nobody, three packages published to zero apps. No gate ' +
+      'measured wiring. This is that gate. It independently rediscovered B-19 exactly ' +
+      '(@bsuite/eslint-config, @bsuite/jodie, @bsuite/tsconfig reach zero apps) plus ' +
+      '@bsuite/theme-codemod and the hook useLocale. Ratcheted in BOTH directions against ' +
+      'scripts/zero-consumers-baseline.json. It REFUSES to run with unpopulated ' +
+      'submodules: every consumer lives in an app, so an empty tree makes every package ' +
+      'look unused — the first run reported 14 of 16, including @bsuite/ui. Tokens ' +
+      'declared in an @theme block are UNVERIFIABLE, never unused, because Tailwind v4 ' +
+      'emits them as utilities with no var() reference. Database functions are ' +
+      'deliberately NOT judged: SQL reach needs pg_proc.prosrc, and this estate has ' +
+      'already mistaken zero-policy-references for unused and broken an RPC inner call.',
+  },
+
+  {
     id: 'parent-setup-node-pnpm-guard',
     label: 'setup-node@v5 must set package-manager-cache: false',
     repo: '.',
