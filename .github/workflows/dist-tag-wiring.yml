@@ -76,8 +76,19 @@ jobs:
           # that leaves the tree modified turns one red check into several.
           trap 'cp /tmp/publish-ui.bak "$TARGET"' EXIT
 
-          # NO `${{ }}` IN THIS PATTERN. The first version of this control read
-          #     sed -i 's| --tag "${{ steps.dist-tag.outputs.tag }}"||' ...
+          # NO ACTIONS EXPRESSION IN THIS PATTERN. The first version of this control read
+          #     sed -i 's| --tag "<the dist-tag step's output expression>"||' ...
+          #
+          # The literal token is deliberately NOT written anywhere in this file, not even
+          # inside a comment. Actions evaluates expressions in a `run:` block BEFORE the
+          # shell sees it, comments included — and the warning that used to live here
+          # contained a bare, EMPTY expression delimiter pair, which is not a valid
+          # expression. The whole workflow then failed to PARSE:
+          #
+          #     (Line: 71, Col: 14): An expression was expected
+          #
+          # producing a run with no jobs, no logs and no retry button, while reading in
+          # the PR list as an ordinary red check. The gate had never once executed.
           # and the Actions expression engine evaluated that expression BEFORE
           # bash ever saw it. There is no `dist-tag` step in THIS job, so it
           # resolved to the empty string and the command that actually ran was
