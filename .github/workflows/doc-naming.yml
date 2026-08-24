@@ -1,7 +1,14 @@
 name: Doc naming convention
 
-# bsuite#1606 — warn (non-blocking) until backlog renamed.
-# Exit 0 always when --warn-only; logs violations for visibility.
+# bsuite#1606 — the naming convention for documentation filenames.
+#
+# This ran `--warn-only` from the day it was written "until backlog renamed",
+# and then stayed that way. Combined with the scanner's own `^\d{8}-` skip, the
+# job reported "scanned 350 dated markdown files / OK" while 65 files were never
+# looked at and 12 were genuinely wrong. A gate that cannot fail is a log line.
+#
+# The backlog IS renamed now — 415 files across seven repos, zero violations —
+# so this blocks outright. A floor of zero needs no ratchet file.
 
 on:
   pull_request:
@@ -24,11 +31,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The classifier covers every docs root INCLUDING the submodules', and
+          # refuses to report when a root contributes nothing. An uninitialised
+          # submodule is an empty directory that passes every existence check,
+          # and the parent's own 276 files clear any global floor on their own —
+          # so six unmeasured roots would otherwise read as a clean estate.
+          #
+          # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos; same
+          # fallback chain every other submodule-consuming workflow here uses.
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24.14.0'
-      - name: Check dated doc filenames (warn-only)
-        run: node scripts/check-doc-naming.mjs --warn-only
+
+      # Run the classifier's own tests before trusting its verdict. Its first
+      # version reported OK over 12 genuinely-wrong filenames because it never
+      # looked at them; 30 cases now pin what each family accepts and rejects.
+      - name: Self-test the classifier before trusting it
+        run: node scripts/check-doc-naming.mjs --self-test
+
+      - name: Classify every documentation filename
+        run: node scripts/check-doc-naming.mjs --all
 
       # docs/recovered/ is authoritative by operator RULING 1.2 and untrusted by
       # RULING 1.3 at the same time. The reconciliation lives in
@@ -41,8 +66,8 @@ jobs:
       # A RATCHET, not a hard gate: 29 documents still need a verdict against
       # code, and a gate that fails all of them on day one is permanently red —
       # which is how the colour rule got disarmed the first time. Blocking,
-      # unlike the warn-only step above, because the ceiling is already
-      # satisfied: only a NEW unverdicted document can turn it red.
+      # because the ceiling is already satisfied: only a NEW unverdicted document
+      # can turn it red.
       - name: Recovered-doc verdict banners (ratchet)
         run: node scripts/check-recovered-doc-verdicts.mjs
 

@@ -378,12 +378,12 @@ export const GUARDS = [
   },
   {
     id: 'parent-check-doc-naming',
-    label: 'Dated-doc naming convention',
+    label: 'Documentation filename classification (all files, not just dated ones)',
     repo: '.',
-    command: ['node', 'scripts/check-doc-naming.mjs', '--warn-only'],
+    command: ['node', 'scripts/check-doc-naming.mjs', '--all'],
     ciWorkflow: '.github/workflows/doc-naming.yml',
     mode: 'run',
-    evidence: '"check-doc-naming: scanned 299 dated markdown files"',
+    evidence: '"check-doc-naming: classified 415 markdown file(s) across 7 docs root(s)"',
   },
   {
     id: 'parent-sync-inline-eslint-rules',

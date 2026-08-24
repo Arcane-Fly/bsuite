@@ -205,9 +205,9 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `business-suite-unified/docs/FEATURE-SURFACE.md` | UNBOUND |  | — |
 | `business-suite-unified/docs/INDEX.md` | UNBOUND |  | — |
 | `business-suite-unified/docs/PARENT-DOCS.md` | UNBOUND |  | — |
-| `business-suite-unified/docs/plans/2026-05-04-adopt-dnd-dashboard.md` | UNBOUND |  | — |
-| `business-suite-unified/docs/plans/2026-05-04-adopt-entity-selectors.md` | UNBOUND |  | — |
-| `business-suite-unified/docs/plans/feature-builder-execution-sequence.md` | UNBOUND |  | — |
+| `business-suite-unified/docs/plans/20260504-adopt-dnd-dashboard-v1.00F.md` | UNBOUND |  | — |
+| `business-suite-unified/docs/plans/20260504-adopt-entity-selectors-v1.00F.md` | UNBOUND |  | — |
+| `business-suite-unified/docs/plans/20260507-feature-builder-execution-sequence-v1.00W.md` | UNBOUND |  | — |
 | `business-suite-unified/docs/plans/STATUS.md` | UNBOUND |  | — |
 | `business-suite-unified/docs/README.md` | UNBOUND |  | — |
 | `business-suite-unified/docs/STACK-AUDIT.md` | UNBOUND |  | — |
@@ -222,8 +222,8 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `conduit/docs/FEATURE-SURFACE.md` | UNBOUND |  | — |
 | `conduit/docs/INDEX.md` | UNBOUND |  | — |
 | `conduit/docs/PARENT-DOCS.md` | UNBOUND |  | — |
-| `conduit/docs/plans/2026-05-04-adopt-entity-selectors.md` | UNBOUND |  | — |
-| `conduit/docs/plans/2026-05-04-shadcn-init.md` | UNBOUND |  | — |
+| `conduit/docs/plans/20260504-adopt-entity-selectors-v1.00F.md` | UNBOUND |  | — |
+| `conduit/docs/plans/20260504-shadcn-init-v1.00F.md` | UNBOUND |  | — |
 | `conduit/docs/plans/STATUS.md` | UNBOUND |  | — |
 | `conduit/docs/README.md` | UNBOUND |  | — |
 | `conduit/docs/STACK-AUDIT.md` | UNBOUND |  | — |
@@ -436,9 +436,9 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/plans/20260811-feature-builder-world-class-refined-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/20260811-post-persona-execution-refined-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/20260817-estate-completion-plan-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/codehouse-parity/PARITY-569-pay-item-groups-spec.md` | UNBOUND |  | — |
+| `docs/plans/codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/loop-contracts/recruitment-comms-rams-loop-contract.md` | UNBOUND |  | — |
+| `docs/plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/README.md` | UNBOUND |  | — |
 | `docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md` | UNBOUND |  | — |
 | `docs/plans/uplift/INDEX.md` | UNBOUND |  | — |
