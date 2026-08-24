@@ -248,6 +248,20 @@ permanently red gate trains people to ignore it, and an ignored gate is a
 deleted gate. This one is the only thing making apps actually consume what we
 publish.
 
+**THE POINTER COUNT GROWS AS YOU CLEAR IT, AND THAT IS NOT A FAILURE.** Every app
+whose lockfile PR merges adds one more submodule needing a pointer advance. Run
+`advance-submodule-pointers.mjs` mid-sweep and the number goes *up*:
+
+```
+2 of 6 apps merged  ->  4 to advance
+5 of 6 apps merged  ->  6 to advance
+```
+
+Anyone advancing pointers while the sweep is still landing will keep finding the
+count has grown under them and will read it as their work being undone. It is
+not. **The P0 cannot clear until the LAST app merges AND all six pointers move** —
+so advance pointers once, at the end, never incrementally.
+
 **Clearing it is TWO STEPS, not one.** `check-shared-package-reach` and
 `own-package-freshness` read each app **at the parent gitlink**, so a green
 result needs *both*:
@@ -268,6 +282,29 @@ released version and nobody would ever notice the app was still nominally on a
 release candidate; the exact pin turns that into a hard failure that must be
 answered.
 
+
+### Regenerating the route inventory during a sweep
+
+`docs/nav/build-inventory.py` walks the submodule **working trees**, which every
+parent worktree and every lane shares. Running it while another lane is checking
+out submodules produces **a plausible larger diff, not an error** — measured
+2026-08-24: a two-line pointer move regenerated as **928 lines**, because a
+neighbouring lane moved R80.4 mid-walk. Nothing failed, nothing warned. It was
+caught only because the magnitude was wrong for the change being made; anyone who
+did not already know the expected size would have committed it.
+
+Regenerate in an **isolated tree** instead — local `--shared` clones of the parent
+and each submodule at explicit SHAs, generator run there, the real checkout
+untouched. About ten seconds. Prove it with both controls before trusting a
+result:
+
+| control | expected |
+|---|---|
+| regenerate at the **current** gitlinks | **zero** changed files |
+| regenerate with **one** pointer moved | exactly that app's evidence lines, and nothing else |
+
+A harness that cannot produce a null result on a null input cannot be trusted to
+produce a real one.
 
 ## Why not the alternatives
 
