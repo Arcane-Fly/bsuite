@@ -421,16 +421,30 @@ console.log(`  cite a gate that NO LONGER EXISTS              ${dead.length}   <
 console.log(`  cite nothing checkable                         ${rows.length - bindable.length - dead.length}`);
 console.log(`  historical records (by path or banner)         ${rows.filter((r) => r.archival).length}`);
 
+// A SILENT CAP IS THE DEFECT, NOT THE CAP.
+//
+// This printed 25 of 70 BINDABLE rows and said nothing about the other 45, so
+// anything reading the output — a person or a script — saw a complete list. The
+// same shape cost four passes chasing a MOVED-reference fixer that reported
+// "0 applied" because its report truncated at 4 refs per doc.
+//
+// `--all` prints every row; without it the omission is STATED.
+const SHOW_ALL = process.argv.includes('--all');
+const capped = (rows, n) => (SHOW_ALL ? rows : rows.slice(0, n));
+const omitted = (rows, n) => (SHOW_ALL ? 0 : Math.max(0, rows.length - n));
+
 if (dead.length) {
   console.log('\n  DEAD CITATIONS — a doc pointing at a gate that was deleted:');
-  for (const r of dead.slice(0, 15)) console.log(`    ${r.path}\n        ${r.deadCitations.slice(0, 4).join(', ')}`);
+  for (const r of capped(dead, 15)) console.log(`    ${r.path}\n        ${r.deadCitations.slice(0, 4).join(', ')}`);
+  if (omitted(dead, 15)) console.log(`    … ${omitted(dead, 15)} more NOT SHOWN — re-run with --all`);
 }
 if (bindable.length) {
   console.log('\n  BINDABLE — these name a gate that exists, so their claim is checkable:');
-  for (const r of bindable.slice(0, 25)) {
+  for (const r of capped(bindable, 25)) {
     console.log(`    ${r.path}`);
     console.log(`        ${[...r.liveGates, ...r.liveWorkflows].slice(0, 5).join(', ')}`);
   }
+  if (omitted(bindable, 25)) console.log(`    … ${omitted(bindable, 25)} more NOT SHOWN — re-run with --all`);
 }
 // FULL INVENTORY MODE — the summary counts, per document.
 //
