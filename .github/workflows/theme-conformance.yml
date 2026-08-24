@@ -672,14 +672,16 @@ jobs:
       # An uninitialised submodule is an EMPTY DIRECTORY and an empty directory
       # passes `-d`. Test for the FILE this job consumes, or the sweep degrades
       # into "no session producer found" and reads like a scoping decision
-      # rather than a broken checkout. Five apps now (V-9, 2026-08-19) — R80.4
-      # is deliberately absent, it has no auth.setup.ts (see scripts/audit-
-      # routes.sh's UNCOVERED note).
+      # rather than a broken checkout. SIX apps since 2026-08-24. R80.4 was
+      # listed here as "deliberately absent, it has no auth.setup.ts" until that
+      # stopped being true on 2026-08-22 (R80.4#187 added
+      # R80.4/tests/e2e/auth.setup.ts and registered R80.4 in
+      # scripts/theme-session.sh). The note outlived the fact by two days.
       - name: Assert every covered app's auth helper is present
         run: |
           set -uo pipefail
           missing=""
-          for a in crm7 braden throughput conduit business-suite-unified; do
+          for a in crm7 braden throughput conduit business-suite-unified R80.4; do
             [ -f "$a/tests/e2e/auth.setup.ts" ] || missing="$missing $a"
           done
           if [ -n "$missing" ]; then
@@ -754,6 +756,21 @@ jobs:
         # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
         with: { node-version: '24.14.0' }
 
+      # R80.4 ADDED 2026-08-24, TO ALL THREE LISTS IN THIS FILE. It joined the
+      # sweep on 2026-08-22 (R80.4#187) via scripts/theme-session.sh, and this
+      # workflow was updated in NONE of its three places: the presence assertion
+      # still called it "deliberately absent", and neither install loop named it.
+      # The sweep therefore reached "minting a session for R80.4" and died on
+      # `Command "playwright" not found` — R80.4's install had never run.
+      #
+      # This workflow then failed on EVERY run for two days — on main's schedule
+      # and on every PR branch — and PRs merged past it. The comment below
+      # already promised that adding an app "is a one-line change to the app
+      # list". That is precisely the line that was missed, three times over.
+      #
+      # If you add a seventh app to scripts/theme-session.sh, add it to ALL
+      # THREE lists here in the SAME commit.
+      #
       # Every covered app has its OWN pnpm lockfile and its OWN pinned
       # @playwright/test version (crm7 1.62.0, throughput ^1.60.0, etc.) — a
       # single shared install cannot stand in for five independent apps, so
@@ -764,7 +781,7 @@ jobs:
       - name: Install each covered app (Playwright lives in each)
         run: |
           set -uo pipefail
-          for a in crm7 braden throughput conduit business-suite-unified; do
+          for a in crm7 braden throughput conduit business-suite-unified R80.4; do
             echo "::group::pnpm install -- $a"
             ( cd "$a" && pnpm install --frozen-lockfile )
             echo "::endgroup::"
@@ -789,7 +806,7 @@ jobs:
       - name: Install the Chromium browser binary for each covered app
         run: |
           set -uo pipefail
-          for a in crm7 braden throughput conduit business-suite-unified; do
+          for a in crm7 braden throughput conduit business-suite-unified R80.4; do
             echo "::group::playwright install (browser only) -- $a"
             ( cd "$a" && pnpm exec playwright install chromium )
             echo "::endgroup::"
