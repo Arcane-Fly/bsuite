@@ -1,0 +1,9 @@
+{
+  "measured_at": "2026-08-24T13:05Z",
+  "measured_against": "production tuybltdrdefjblnplpqo",
+  "escalations": 28,
+  "divergence": 72,
+  "comparable_cells": 168,
+  "note": "escalations is the ratchet. It counts write-shaped capabilities the table grants and the hardcoded checks deny — each one becomes a real privilege the day crm7 migration 20260905000000 is applied and user_has_capability() starts answering. The ratchet only shrinks: a rise fails the gate, and a fall fails it too until re-banked, because a ratchet nobody re-banks stops ratcheting.",
+  "not_a_defect_count": "A divergence is a question, not a defect. Either the table is wrong or the hardcoded check is, and deciding that is reconciliation work. This number sizes the work; it does not accuse either side."
+}
