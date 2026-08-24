@@ -97,3 +97,40 @@ jobs:
         # The named form also fixes what the count could never express: seven
         # scopes present is not the same claim as the RIGHT seven present.
         run: node scripts/check-migration-version-collisions.mjs --require-all-scopes
+
+  gitlink-migration-lag:
+    name: No migration is stranded behind a stale gitlink
+    runs-on: ubuntu-latest
+    steps:
+      # SAME CHECKOUT SHAPE AS THE JOB ABOVE, and for the same reason: this gate
+      # compares each submodule's RECORDED GITLINK against that submodule's own
+      # default branch, so it needs the submodules actually present. The default
+      # GITHUB_TOKEN cannot clone sibling PRIVATE repos.
+      - name: Checkout (with submodules — the gitlink IS the subject)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # Fetch each submodule's own branches. `actions/checkout` leaves a submodule
+      # at the recorded commit with no branch refs, and this gate's whole question
+      # is "what exists on the branch that the gitlink does not have" — which is
+      # unanswerable without them. Without this it would report a clean pass over
+      # a comparison it could not make; the checker exits 2 rather than allow that,
+      # so a missing fetch fails loudly instead of quietly.
+      - name: Fetch submodule branch refs
+        run: git submodule foreach 'git fetch origin --quiet || true'
+
+      # Prove it can fail before believing a clean run: lag detected, gitlink-ahead
+      # NOT mistaken for lag, below-floor exempted, floor boundary inclusive.
+      - name: Self-test the checker
+        run: node scripts/check-gitlink-migration-lag.mjs --self-test
+
+      - name: Every migration on a submodule branch is reachable at its gitlink
+        run: node scripts/check-gitlink-migration-lag.mjs
