@@ -9,10 +9,16 @@
 
 ## The answer in one line
 
-**No document in the estate currently qualifies for a completion marker.** Six came close enough to
-adjudicate individually. All six failed, each for a specific, named, re-runnable reason.
+**Two documents qualify. Four do not.** Six came close enough to adjudicate individually; four
+failed for specific, named, re-runnable reasons, and two passed once a blocking gate was fixed.
 
-That is not a failure of the audit. It is the audit working.
+> **UPDATED 2026-08-26 ~06:50 AWST.** This document originally said **no** document qualified. That
+> was true when written and is no longer true, and it changed because of work done between the two
+> readings rather than because the bar moved. `check-shared-package-reach.mjs` was failing on
+> `@bsuite/page-builder` `UNREACHABLE-FIX`; every consumer has since been migrated to 2.0.0 and the
+> gate now reports *53 edge(s) examined, none unreachable*. The two documents that cite it thereby
+> earned limb (b). Corrected in place rather than appended — a stale verdict that confidently states
+> a wrong number is worse than no verdict.
 
 ---
 
@@ -47,7 +53,7 @@ controls**. `audit-doc-supersession.mjs` answers limb (a).
 Limb (a) signals, each a claim made **by a document**, not by me: **20 self-declared** superseded,
 6 same-slug, 2 declared in frontmatter, 2 stated in prose.
 
-**Six documents satisfy both limbs.** Those six are the entire candidate set.
+**Six documents satisfy both limbs.** Those six are the entire candidate set. **Two now carry `F`.**
 
 ---
 
@@ -61,7 +67,8 @@ Eligibility is not a verdict. The tool says so itself: *the cited gates must be 
 | `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md` | `publish-ui.yml` | **No runs exist.** Absence of a failing run is not a pass. |
 | `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | `ci.yml` | `ci.yml` resolves to three different submodule workflows. Not proven from here. |
 | `docs/20260817-estate-remaining-work-register-v3.00W.md` | `api-availability.mjs`, `reachability.mjs`, `prerender.mjs`, `ci.yml` | `prerender.mjs` **fails locally by documented design** (Supabase OAuth 400 on a localhost redirect URI). Cannot be shown passing here. |
-| `docs/20260821-airtable-class-data-surface-plan-v1.00D.md` | `check-shared-package-reach.mjs`, `check-table-reach.mjs` | `check-table-reach` **passes**; `check-shared-package-reach` **FAILS** — 5 of 53 consumer edges `UNREACHABLE-FIX`. |
+| `docs/20260821-airtable-class-data-surface-plan-v1.00F.md` | `check-shared-package-reach.mjs`, `check-table-reach.mjs` | **PASSES BOTH.** Marked `F`. `check-shared-package-reach` was failing 5 of 53 edges when this was written; the page-builder 2.0.0 migration cleared it. |
+| `docs/20260821-atmosphere-evaluation-v1.00F.md` | `check-shared-package-reach.mjs` | **PASSES.** Marked `F`. Declared superseded by two separate newer documents. |
 | `R80.4/docs/00-roadmap/20260820-datum-directive-to-r8-lane-v1.00W.md` | `dod.mjs` | **FAILS**, exit 1. |
 
 Gates that **did** pass when run: `check-doc-naming.mjs`, `check-table-reach.mjs`,
@@ -108,8 +115,10 @@ that is the backlog nobody can finish.
 The lever is **citations**. A document earns the right to be adjudicated by naming the gate,
 workflow or migration that would prove it. Three concrete unblocks, in order of leverage:
 
-1. **Migrate the `@bsuite/page-builder` consumers to 2.0.0** — unblocks two of the six candidates
-   and the parent gitlink PR.
+1. ~~**Migrate the `@bsuite/page-builder` consumers to 2.0.0**~~ — **DONE 2026-08-26.** All five
+   consumers moved; `check-shared-package-reach` went from 5 unreachable edges to zero. This is what
+   earned the two markers above, and it is the shape of the lever: fix the gate, and the documents
+   that cite it become adjudicable.
 2. **Make `audit-routes.sh` terminate**, or replace its citation with a gate that does. It is cited
    by the master roadmap and cannot currently prove anything.
 3. **Run `publish-ui.yml` at least once.** A workflow that has never run is not evidence.
@@ -128,5 +137,9 @@ Intersecting the two lists requires `LC_ALL=C sort` before `comm`. Without it `c
 "input is not in sorted order" and silently produces a wrong intersection — it did exactly that on
 the first attempt here.
 
-**Nothing was renamed.** Under-claiming costs a re-review; a false completion costs the truth of the
-whole corpus, permanently, in a filename every future reader trusts at a glance.
+**Two documents were renamed, `D` → `F`, and ten inbound references were updated in the same
+commit** — two of them the `supersedes:` frontmatter entries that establish limb (a), which a
+rename would otherwise have broken. The other four were left alone.
+
+Under-claiming costs a re-review; a false completion costs the truth of the whole corpus,
+permanently, in a filename every future reader trusts at a glance.
