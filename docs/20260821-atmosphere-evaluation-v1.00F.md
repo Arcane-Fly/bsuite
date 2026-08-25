@@ -8,6 +8,23 @@ evidence:
 
 # Atmosphere evaluated against @bsuite/data-grid and the report engine
 
+> ## ⚠ LIMB (b) IS TEMPORARILY UNPROVEN — 2026-08-26 02:30 AWST
+>
+> This document carries `F`. It earned it: limb (a) is permanent — a newer document declares it
+> superseded by name — and limb (b) was verified by running the gate it cites, which reported
+> *"53 consumer/package edge(s) examined, none unreachable"*.
+>
+> **`check-shared-package-reach.mjs` is red again as of 02:08 AWST**, on 1 of 53 edges. Nothing
+> about this document changed. Another lane reverted `crm7` to `@bsuite/page-builder@^1.0.7`
+> (`revert/page-builder-2.0.0-not-before-the-demo`) so the card-chrome change would not reach the
+> app being demonstrated at 09:30 — a sound call, and newer than mine.
+>
+> The marker is left in place rather than churned off and back on within hours, but it is flagged
+> here because `F` asserts proof in the PRESENT tense and that proof is currently unavailable.
+> **The unblock is named and owned:** re-migrate crm7 to `^2.0.0` after the demo and the gate goes
+> green again. If you would rather the marker come off until then, it is one rename.
+
+
 > ## ⚠ CORRECTED 2026-08-25 — THIS DOCUMENT READ THE WRONG REPOSITORY
 >
 > It evaluated **`Atmosphere/atmosphere`**, a JVM async/WebSocket framework. The
