@@ -63,7 +63,8 @@
 import { isBradenSubmoduleFile } from './_shared.js'
 
 const FORBIDDEN_RE = /(?<![a-z:-])text-(white|black)(?!-)\b/g
-const PREFIXED_EXEMPT_RE = /\b(hover|focus|focus-visible|dark|group-hover|group-focus):text-(white|black)\b/g
+const PREFIXED_EXEMPT_RE =
+  /\b(hover|focus|focus-visible|dark|group-hover|group-focus):text-(white|black)\b/g
 
 export const noTextWhite = {
   meta: {
@@ -84,8 +85,8 @@ export const noTextWhite = {
       // simpler and cannot rot. Same class as a colour literal in a comment tripping
       // the C1/C2 gates: a gate matching the token in prose ABOUT the token is a
       // recurring cost, and the cheap side of it is the prose.
-        description:
-          'Disallow standalone white and black text utilities. Use text-foreground instead.',
+      description:
+        'Disallow standalone white and black text utilities. Use text-foreground instead.',
       recommended: true,
     },
     schema: [],
