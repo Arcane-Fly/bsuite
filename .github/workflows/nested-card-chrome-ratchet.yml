@@ -1,7 +1,7 @@
 # .github/workflows/nested-card-chrome-ratchet.yml
 #
-# Nested card chrome (V-C5) — a ratchet, not a flat zero
-# =====================================================
+# Card surfaces: a nested-chrome ratchet, plus a card-heading report
+# ==================================================================
 # `PageGridLayout` paints every grid item as a card. 332 files across the six
 # apps then render their OWN card inside it: 28px inside 24px, two 1px borders.
 # That is the misshapen corner and the fat bottom edge in every card screenshot
@@ -108,7 +108,10 @@ jobs:
         # produce one on a known-good input. Running the gate without this is
         # trusting a measurement instrument nobody checked.
         shell: bash
-        run: pnpm --filter @bsuite/page-builder exec vitest run src/__tests__/cardSurfaceScanner.test.ts
+        run: |
+          pnpm --filter @bsuite/page-builder exec vitest run \
+            src/__tests__/cardSurfaceScanner.test.ts \
+            src/__tests__/cardHeadingScanner.test.ts
 
       - name: Scan
         id: scan
@@ -121,6 +124,26 @@ jobs:
             echo "nested=$(node -e 'const d=require("/tmp/nested.json");console.log(d.totalNested)')"
             echo "unknown=$(node -e 'const d=require("/tmp/nested.json");console.log(d.totalUnknown)')"
           } >> "$GITHUB_OUTPUT"
+
+      # REPORT ONLY, deliberately no exit code. The gradient sweep has not
+      # happened, so 274 card headings without a gradient is the CURRENT STATE
+      # and not a regression — gating on it would make this job permanently red
+      # and the whole workflow would be switched off, taking the chrome ratchet
+      # with it.
+      #
+      # It runs here rather than nowhere because a measurement that lives only
+      # in a PR body goes stale the day after it is written, and because a
+      # script nothing invokes is an artifact pretending to be a tool. Whoever
+      # picks up the propagation gets the live number and the live hazard list
+      # from the most recent run instead of re-deriving them.
+      - name: Card headings — report the gradient gap (no gate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/scan-card-headings.mjs
+          echo
+          echo "Headings whose own classes fight \`width: fit-content\` — decide these by hand, never by codemod:"
+          node scripts/scan-card-headings.mjs --risky
 
       - name: Compare against the baseline
         shell: bash
