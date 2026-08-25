@@ -138,7 +138,9 @@ describe('the grid reflow that a column change causes is not a user gesture', ()
     act(() => result.current.setIsEditing?.(true));
     act(() => result.current.handleColumnChange(4));
     // exactly what the grid emits after reflowing: the layout it just rendered
-    act(() => result.current.onLayoutChange(null, result.current.currentLayouts));
+    // false = no pointer gesture produced this. That is what the grid reports for
+    // a reflow, and it is the only thing that distinguishes one.
+    act(() => result.current.onLayoutChange(null, result.current.currentLayouts, false));
     await act(async () => { await nextFrame(); });
     expect(shape(saved('dash'))).toBe(before);
   });
@@ -155,7 +157,7 @@ describe('the grid reflow that a column change causes is not a user gesture', ()
         i.i === 'a' ? { ...i, y: i.y + 5 } : i,
       ),
     };
-    act(() => result.current.onLayoutChange(null, moved));
+    act(() => result.current.onLayoutChange(null, moved, true));
     await act(async () => { await nextFrame(); });
     expect(shape(saved('dash'))).not.toBe(before);
   });
@@ -219,8 +221,16 @@ describe('an auto-height card re-measuring is not a resize gesture', () => {
     expect(shape(saved('dash'))).not.toBe(before);
   });
 
-  /** A width change is unambiguous — it commits with or without the flag. */
-  it('a width change commits even when reported as a non-gesture', async () => {
+  /**
+   * A NON-GESTURE NEVER COMMITS, however different the layout looks.
+   *
+   * This test asserted the opposite until 1.0.7, and that assumption is exactly
+   * what kept the bug alive: react-grid-layout COMPACTS after a reflow, so its
+   * emission legitimately differs in x/y/w from what we rendered. Treating "it
+   * looks different" as "the user did it" is what wrote the rescaled arrangement
+   * over the authored one, three releases running.
+   */
+  it('a width change reported as a non-gesture does NOT commit', async () => {
     const before = shape(saved('dash'));
     const { result } = mount();
     act(() => result.current.setIsEditing?.(true));
@@ -229,6 +239,11 @@ describe('an auto-height card re-measuring is not a resize gesture', () => {
       lg: (result.current.currentLayouts.lg ?? []).map((i) => (i.i === 'b' ? { ...i, w: i.w + 1 } : i)),
     };
     act(() => result.current.onLayoutChange(null, widened, false));
+    await act(async () => { await nextFrame(); });
+    expect(shape(saved('dash'))).toBe(before);
+
+    // ...and the SAME emission, reported as a gesture, does commit.
+    act(() => result.current.onLayoutChange(null, widened, true));
     await act(async () => { await nextFrame(); });
     expect(shape(saved('dash'))).not.toBe(before);
   });
