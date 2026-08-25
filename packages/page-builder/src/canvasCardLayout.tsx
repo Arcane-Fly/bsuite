@@ -24,7 +24,7 @@ export const CANVAS_GRID_COLUMNS = 12;
 /**
  * The width a `CanvasCard` gets when its author does not say.
  *
- * SIX, i.e. half the grid — changed from twelve in 1.1.0. Twelve on a
+ * SIX, i.e. half the grid — changed from twelve in 2.0.0. Twelve on a
  * twelve-column grid means every card that omits `w` renders full width and
  * the page becomes a single vertical stack. Measured across the estate on
  * 2026-08-25: **1,068 of 1,729 CanvasCard usages omit `w`** (BSU and conduit

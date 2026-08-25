@@ -23,7 +23,7 @@ function surface(container: HTMLElement) {
   return el as HTMLElement;
 }
 
-describe('grid-item chrome is OFF by default (the 1.1.0 inversion)', () => {
+describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
   it('paints NO border, radius or background on a default grid item', () => {
     const { container } = render(
       <PageGridLayout
@@ -71,7 +71,7 @@ describe('grid-item chrome is OFF by default (the 1.1.0 inversion)', () => {
 });
 
 describe('chrome is opt-in, at two levels, and per-item wins', () => {
-  it('the app-level `itemChrome` prop restores the pre-1.1.0 surface exactly', () => {
+  it('the app-level `itemChrome` prop restores the pre-2.0.0 surface exactly', () => {
     const { container } = render(
       <PageGridLayout
         pageKey="chrome-app"
