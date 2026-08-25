@@ -186,7 +186,7 @@ All four under the pre-authorised rulings, all reversible on your word. Detail i
 | Card layout inversion | **finished, deliberately unadopted** | Your eyes, in daylight, across six apps |
 | Package version correction | in review | Publishes on the next promotion |
 | Tests writing to production | mitigated twice, not solved | §1.2 — your decision |
-| 35 deployed programs with no caller | **counted, not classified** | Several are legitimately run on a schedule. Saying which is real work nobody has done. |
+| Deployed programs nothing calls | **CLOSED — it is 6, not 35** | The 35 counted only what a *screen* reaches. A wider sweep found 16 called from services or other functions, 9 on a schedule, 3 by outside systems, 1 an OAuth redirect. **Six are reached by nothing** — four built and never wired, and two still *running in production whose source has been deleted from the repository* (`mapd-sync`, `timesheet-reminders`). |
 | 82 tables that are empty and unread | recorded | About a fifth of the schema is scaffolding. Several are money-shaped. |
 
 ---

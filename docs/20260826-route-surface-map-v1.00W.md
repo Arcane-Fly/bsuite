@@ -63,16 +63,47 @@ edge functions · whether each edge function is actually deployed · tenant-scop
 
 ## §3 — THE ASYMMETRIES. Every one of these is a mismatch between two halves that should agree.
 
-### 3.1 — An edge function with no caller: **35 of 74 deployed functions**
+### 3.1 — An edge function with no caller: **6, not 35. The 35 was my measurement, not the estate.**
 
-Seventy-four edge functions are deployed and running on production. **Forty have a caller somewhere
-in the six apps. Thirty-five do not.** The known example (`r8-charge-rate-push`) is one of thirty-five.
+**CLOSED 2026-08-26 00:12. This section previously said "35 of 74 deployed functions have no caller"
+and named the classification as OUTSTANDING. The classification is now done, and it moved the number
+by a factor of six.**
 
-This is not automatically waste — several are legitimately called by a schedule, a webhook from an
-outside system (Xero, Adobe Sign, Fair Work), or by another edge function, and those are not
-"uncalled". **That separation is the outstanding work on this finding, and it is named as
-outstanding rather than reported as a result.** What is certain is the count: 35 deployed programs
-have no caller in any app's front end.
+Seventy-four edge functions are deployed on production. My first pass counted callers **only in code
+a route can reach** — because that is what the route walker looks at. That is the wrong denominator
+for a question about edge functions, and it is exactly the shape of error §7 catalogues.
+
+The second probe was a reference sweep over *all* source — services, hooks, other edge functions,
+workflows and SQL — plus the live `cron.job` table.
+
+| how it is actually reached | count |
+|---|---:|
+| a route reaches it | 39 |
+| other source reaches it — a service, a hook, or **another edge function** | 16 |
+| a **schedule** invokes it (`pg_cron` → `pg_net`) | 9 |
+| an **outside system** calls it (Xero, Adobe Sign, Fair Work webhooks) | 3 |
+| an **OAuth provider redirects** to it | 1 |
+| **nothing reaches it at all** | **6** |
+
+**The six, and they are two different problems:**
+
+*Built and never wired* — source is present, nothing calls it, no schedule runs it:
+`classify-issue` · `encrypt-email-tokens` · `send-confirmation` · `update-wage-rates`
+
+*Deployed, and the source has been deleted* — the inverse asymmetry, and the more surprising one:
+`mapd-sync` · `timesheet-reminders`
+
+Those last two are running programs in production that no longer exist in the repository. Nothing
+calls them, nothing schedules them, and nothing would show up in a code review if they broke.
+
+**`r8-charge-rate-push` is not among the six** — the case that started this. It IS referenced, at
+`crm7/src/pages/charge-rates/import-r8/importR80Payload.ts` and in a shared edge-function helper.
+The original finding — that R8 itself never calls it because R8 has no server side — stands, and it
+is a different statement from "nothing references it".
+
+**What this probe still cannot see:** a function invoked by an outside system nobody documented, and
+one invoked from a Supabase Dashboard schedule rather than `pg_cron`. Neither would leave a trace in
+this repository or that table.
 
 ### 3.2 — A caller with no function: **1, and it is a dead branch, not a live failure**
 
