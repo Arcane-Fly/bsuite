@@ -329,6 +329,30 @@ for (const r of inv.routes) {
   rows.push(row);
 }
 
+// ---------------------------------------------------------------- SANITY GATE
+// A builder that cannot see the apps still produces a full-length file — 555
+// rows, every one UNRESOLVED — and that artefact is indistinguishable from a
+// real map until someone reads the verdict column. It happened the first time
+// this was run inside a parent worktree: the apps are SUBMODULES, an
+// uninitialised one is an empty directory that passes every existence check, and
+// the map came out 91% UNRESOLVED while exiting 0.
+//
+// Refuse to write in that case. "Checked nothing" must not be able to overwrite
+// a good map with a plausible-looking bad one.
+const unresolved = rows.filter(r => r.verdict === 'UNRESOLVED').length;
+const live = rows.filter(r => r.status !== 'redirect').length;
+const unresolvedShare = live ? unresolved / live : 1;
+if (unresolvedShare > 0.15) {
+  console.error(`\nREFUSING TO WRITE: ${unresolved} of ${live} live routes are UNRESOLVED ` +
+    `(${Math.round(unresolvedShare * 100)}%).`);
+  console.error('  That is not a measurement, it is a builder that could not see the apps.');
+  console.error('  The apps are git SUBMODULES. In a parent worktree they are empty directories');
+  console.error('  that pass every existence check. Run this from a tree where they are checked');
+  console.error('  out, or `git submodule update --init --recursive` first.');
+  console.error('  Expected share on a healthy run: about 2%.');
+  process.exit(1);
+}
+
 // deployed-with-no-caller
 const noCaller = [...deployed].filter(f => !fnCallers.has(f)).sort();
 
