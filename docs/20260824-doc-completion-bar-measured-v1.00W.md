@@ -75,7 +75,7 @@ way to state it:
 
 > **Exactly ONE document in 477 declares `supersedes:` in its frontmatter.**
 
-Its target is `docs/20260821-atmosphere-evaluation-v1.00D.md`, and the document
+Its target is `docs/20260821-atmosphere-evaluation-v1.00F.md`, and the document
 that supersedes it — `20260822-data-surface-consolidation-decision-v1.00D.md` —
 is itself **status D, explicitly not ratified**, and is not committed. So even
 the single expressible supersession in the estate does not currently carry

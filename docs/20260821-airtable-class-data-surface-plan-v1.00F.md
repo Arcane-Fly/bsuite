@@ -29,7 +29,7 @@ evidence:
 > code and remain accurate.
 
 **Date:** 2026-08-21 · **Status:** D (Draft) · **Author:** Datum
-**Supersedes nothing. Companion to:** `claude/20260821-atmosphere-evaluation-v1.00D.md` (the adoption verdict)
+**Supersedes nothing. Companion to:** `claude/20260821-atmosphere-evaluation-v1.00F.md` (the adoption verdict)
 
 ---
 
