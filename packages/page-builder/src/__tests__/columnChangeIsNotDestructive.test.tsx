@@ -160,3 +160,76 @@ describe('the grid reflow that a column change causes is not a user gesture', ()
     expect(shape(saved('dash'))).not.toBe(before);
   });
 });
+
+describe('an auto-height card re-measuring is not a resize gesture', () => {
+  const autoAuthored: GridLayouts = {
+    lg: [
+      { i: 'a', x: 0, y: 0, w: 4, h: 8, autoHeight: true },
+      { i: 'b', x: 4, y: 0, w: 3, h: 8, autoHeight: true },
+      { i: 'c', x: 7, y: 0, w: 4, h: 8, autoHeight: true },
+    ],
+  };
+  const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
+
+  beforeEach(() => {
+    store.clear();
+    store.set('page:dash_grid_layouts', structuredClone(autoAuthored));
+  });
+
+  const mount = () =>
+    renderHook(() =>
+      usePageGridLayout({ pageKey: 'dash', defaultLayouts: autoAuthored, preferenceAdapter: durableAdapter }),
+    );
+
+  /**
+   * THE DEFECT 1.0.5 STILL HAD, and the third one this bug produced.
+   *
+   * Narrow an auto-height card and its content rewraps taller, so the
+   * ResizeObserver emits a new `h`. That emission differs from what was rendered,
+   * so a shape comparison calls it a gesture — and commits the RESCALED WIDTHS
+   * riding along with it. Authored w=4,3,4 came back w=1,1,1 after nothing but a
+   * height re-measure.
+   */
+  it('a height-only re-measure after a column change persists NOTHING', async () => {
+    const before = shape(saved('dash'));
+    const { result } = mount();
+    act(() => result.current.setIsEditing?.(true));
+    act(() => result.current.handleColumnChange(4));
+    const remeasured = {
+      ...result.current.currentLayouts,
+      lg: (result.current.currentLayouts.lg ?? []).map((i, n) => (n === 0 ? { ...i, h: i.h + 3 } : i)),
+    };
+    act(() => result.current.onLayoutChange(null, remeasured, false));
+    await act(async () => { await nextFrame(); });
+    expect(shape(saved('dash'))).toBe(before);
+  });
+
+  /** The control. Suppressing a real resize would reopen crm7#744. */
+  it('the SAME emission WITH a gesture does persist', async () => {
+    const before = shape(saved('dash'));
+    const { result } = mount();
+    act(() => result.current.setIsEditing?.(true));
+    act(() => result.current.handleColumnChange(4));
+    const dragged = {
+      ...result.current.currentLayouts,
+      lg: (result.current.currentLayouts.lg ?? []).map((i, n) => (n === 0 ? { ...i, h: i.h + 3 } : i)),
+    };
+    act(() => result.current.onLayoutChange(null, dragged, true));
+    await act(async () => { await nextFrame(); });
+    expect(shape(saved('dash'))).not.toBe(before);
+  });
+
+  /** A width change is unambiguous — it commits with or without the flag. */
+  it('a width change commits even when reported as a non-gesture', async () => {
+    const before = shape(saved('dash'));
+    const { result } = mount();
+    act(() => result.current.setIsEditing?.(true));
+    const widened = {
+      ...result.current.currentLayouts,
+      lg: (result.current.currentLayouts.lg ?? []).map((i) => (i.i === 'b' ? { ...i, w: i.w + 1 } : i)),
+    };
+    act(() => result.current.onLayoutChange(null, widened, false));
+    await act(async () => { await nextFrame(); });
+    expect(shape(saved('dash'))).not.toBe(before);
+  });
+});

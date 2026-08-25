@@ -5,6 +5,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.0.6] — 2026-08-25 — An auto-height card re-measuring is not a resize gesture
+
+The third and last writer in this bug. 1.0.4 removed the writes from
+`handleColumnChange`; 1.0.5 stopped the grid's reflow emission committing; and the
+layout was **still** destroyed on the deployed app.
+
+Narrow an auto-height card and its content rewraps taller, so the ResizeObserver
+emits a new `h`. That emission *differs* from what was rendered, so 1.0.5's shape
+comparison called it a gesture — and committed the **rescaled widths riding along
+with it**. Three cards authored `w=4,3,4` came back `w=1,1,1` after nothing but a
+height re-measure.
+
+**Nothing in the layout distinguishes the two cases**, and an attempt to do it by
+shape was wrong in the other direction: a user CAN drag an auto-height card taller
+(crm7#744), and excluding those heights silently dropped that. Two existing tests
+said so within a minute.
+
+So the caller answers instead. The grid knows whether a pointer gesture just
+ended — react-grid-layout emits `onLayoutChange` *after* `onDragStop`/
+`onResizeStop`, so the component carries that across the gap in a ref and passes
+it. `onLayoutChange` gains an optional third argument, **defaulting to `true`**,
+so every existing caller behaves exactly as before.
+
+Getting this wrong is expensive in both directions, and the tests pin both: a
+height-only re-measure reported as a non-gesture persists nothing; the *same*
+emission reported as a gesture does persist; and a width change commits either
+way, because that one is unambiguous.
+
+---
+
 ## [1.0.5] — 2026-08-25 — The column-change fix was incomplete; the grid reflow was still writing
 
 1.0.4 removed the writes from `handleColumnChange`, and the layout was still

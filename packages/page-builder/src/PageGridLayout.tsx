@@ -457,8 +457,18 @@ export function PageGridLayout({
     isInteractingRef.current = true;
   }, []);
 
+  /*
+   * A pointer gesture just ended. react-grid-layout emits `onLayoutChange` AFTER
+   * `onDragStop`/`onResizeStop`, so `isInteractingRef` is already false by then —
+   * this ref is what carries "a gesture produced the next emission" across that
+   * gap, and the hook needs it to tell a deliberate resize of an auto-height card
+   * from the ResizeObserver re-measuring one that a column change just narrowed.
+   */
+  const gestureJustEndedRef = useRef(false);
+
   const handleInteractionStop = useCallback<EventCallback>(() => {
     isInteractingRef.current = false;
+    gestureJustEndedRef.current = true;
     if (pendingAutoHeightRef.current.size > 0 && autoHeightFrameRef.current === null) {
       autoHeightFrameRef.current = scheduleFrame(flushAutoHeightUpdates);
     }
@@ -1135,7 +1145,11 @@ export function PageGridLayout({
             layouts={activeLayouts}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             rowHeight={DEFAULT_ROW_HEIGHT}
-            onLayoutChange={onLayoutChange}
+            onLayoutChange={(layout, layouts) => {
+              const wasGesture = isInteractingRef.current || gestureJustEndedRef.current;
+              gestureJustEndedRef.current = false;
+              onLayoutChange(layout, layouts, wasGesture);
+            }}
             // Tells the hook which breakpoint a gesture belongs to, so the edit
             // is folded back onto `lg` instead of into a derived breakpoint
             // that is regenerated (and therefore discarded) on the next render.

@@ -207,7 +207,7 @@ export interface UsePageGridLayoutResult {
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
   activeCols: Record<string, number>;
   activeCompactor: Compactor;
-  onLayoutChange: (_layout: unknown, layouts: unknown) => void;
+  onLayoutChange: (_layout: unknown, layouts: unknown, wasGesture?: boolean) => void;
   handleColumnChange: (newCols: number) => void;
   /**
    * Wire to `<Responsive onBreakpointChange>`. The hook needs to know which
