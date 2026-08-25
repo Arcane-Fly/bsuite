@@ -283,6 +283,84 @@ or the resolver deliberately, with the visual gate on two tenants, or leave it a
 
 ---
 
+## §6c — THE DEFAULT GRADIENT ALREADY EXISTS. crm7 IS THE REFERENCE.
+
+**Operator, 2026-08-25:** *"default gradients are already applied in the D2C theme skills and docs.
+crm7 has it right on dashboard. so use that for default everywhere."*
+
+Correct, and measured. **Do not invent a gradient. Do not author a new utility.**
+
+### The reference
+
+`@bsuite/theme` → `packages/theme/src/css/utilities.css:122` → **`.text-gradient-accent`**
+
+crm7 `src/pages/Dashboard.tsx:486`:
+
+```jsx
+<h1 className="text-gradient-accent text-3xl font-bold text-(--role-text-heading)">
+```
+
+The solid `text-(--role-text-heading)` sits UNDER the gradient class as the fallback layer. Copy
+that pairing, not just the gradient class.
+
+### Adoption — this is the whole D2C gap in one table
+
+| app | files using `text-gradient-accent` |
+|---|---:|
+| **crm7** | **175** (184 occurrences) |
+| conduit | 33 |
+| throughput | 3 |
+| **business-suite-unified** | **1** |
+| braden | **1** |
+| R80.4 | **0** |
+
+That is why the operator's BSU dashboard screenshot has flat headings and crm7's does not. **G2 is
+a propagation job, not a design job.**
+
+### TWO TRAPS, both documented in the utility itself — read it before propagating
+
+1. **`width: fit-content` is load-bearing.** Its own comment: *"background-clip: text paints the
+   gradient across the ELEMENT BOX, not the glyphs. A block-level h1 spans its container, so a
+   short word samples only the first ~15% of the gradient and the far stop never reaches the
+   screen — it renders as a flat colour, **which is indistinguishable from the bug this
+   replaces**."* Anything that overrides width silently kills the gradient **while looking
+   applied**. A visual probe that only checks "is the class present" will pass a dead gradient.
+2. **It uses `--gradient-heading`, NOT `--gradient-accent`,** deliberately: the raw accent gradient
+   ends in cyan at **1.76:1** on the light background — half the word unreadable. `--gradient-heading`
+   is built from the AA-verified `*-text` variants and is correct in both modes. **Do not "simplify"
+   it to the accent gradient.**
+
+### THE ONE-LINE CHANGE THAT RECONCILES §6b AND §6c — do this FIRST in Silo A
+
+The two instructions — *"use crm7's default everywhere"* and *"don't wreck white-label"* — meet at
+exactly one line, and today they conflict:
+
+| var | set by | read by |
+|---|---|---|
+| `--heading-gradient` | `useBranding.ts:300`, from tenant/platform `heading_gradient` | BSU's local `.gradient-text` only |
+| `--gradient-heading` | theme default, `vars.css:445` | **`text-gradient-accent`** |
+
+`text-gradient-accent` reads **only the theme default**, so a tenant's `heading_gradient` never
+reaches it. Propagating it as-is delivers consistent defaults **and silently disables white-label
+headings**.
+
+```css
+/* packages/theme/src/css/utilities.css — .text-gradient-accent */
+background-image: var(--heading-gradient, var(--gradient-heading));
+```
+
+**Tenant first, theme default second.** Both instructions satisfied in one line.
+
+**And it is PROVABLY a no-op today** — measured on production 2026-08-25: **zero** rows in either
+`platform_branding` or `tenant_branding` have `heading_gradient` set, so the var is unset and the
+fallback resolves to exactly today's value. **Zero visual change now; white-label works the moment
+anyone sets one.** That measurement is what makes this safe to ship first rather than last.
+
+BSU's local `.gradient-text` already has the correct chain and can then be retired in favour of the
+shared utility — one implementation, not two.
+
+---
+
 ## §7 — PRE-AUTHORISED RULINGS. Braden is asleep. These ARE his answers.
 
 Every one is **reversible on his word**. Record each application via the precedent clerk.
