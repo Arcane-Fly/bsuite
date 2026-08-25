@@ -1,3 +1,15 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - scripts/check-doc-naming.mjs
+  - scripts/audit-doc-supersession.mjs
+  - scripts/audit-routes.sh
+  - crm7/supabase/functions/tga-units-sync/index.ts
+  - crm7/src/services/documentTemplateImport.ts
+---
+
 # OVERNIGHT CLEARANCE DIRECTIVE — the 90 outstanding operator items
 
 **Status:** A (Active) · **Issued:** 2026-08-25 · **Operator:** Braden
