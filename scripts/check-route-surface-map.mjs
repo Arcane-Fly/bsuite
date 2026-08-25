@@ -20,8 +20,12 @@
  *       nothing" must never share an output. A blank verdict is a FAIL, not a pass.
  *
  *   R3  Every edge-function slug invoked from app source is in the deployed list.
- *       This is the live class: throughput/src/pages/Export.tsx:106 invokes
- *       `export`, which is not deployed, so that button fails for every user.
+ *       throughput/src/pages/Export.tsx:106 invokes `export`, which is not among
+ *       the 74 deployed. That branch is currently UNREACHABLE — throughput PR #333
+ *       disabled the three affected format buttons and it is live — so it is a
+ *       latent trap, not a live failure: it becomes one the day somebody removes
+ *       an `unavailable` marker without checking what is behind it. This gate is
+ *       the thing that would notice.
  *       A slug can be a literal, a template literal, or a raw fetch of
  *       `/functions/v1/<slug>` — matching only the first form is how this stayed
  *       invisible.
@@ -60,8 +64,10 @@ const VERDICTS = new Set([
  * a ratchet that is never tightened is a permanent exemption wearing a gate's name.
  */
 const R3_KNOWN_UNDEPLOYED = new Set([
-  // throughput/src/pages/Export.tsx:106 — owned by the Silo B lane, 2026-08-26.
-  // Remove this entry the moment that PR lands; the gate then blocks any recurrence.
+  // throughput/src/pages/Export.tsx:106 — a dead branch, not a live failure: PR #333
+  // disabled the three affected format buttons and that is live on production, so
+  // nothing reaches the call. Remove this entry the moment the branch itself goes;
+  // the gate then blocks any recurrence.
   'export',
 ]);
 

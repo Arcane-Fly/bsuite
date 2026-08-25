@@ -74,11 +74,26 @@ outside system (Xero, Adobe Sign, Fair Work), or by another edge function, and t
 outstanding rather than reported as a result.** What is certain is the count: 35 deployed programs
 have no caller in any app's front end.
 
-### 3.2 — A caller with no function: **1, and it is a live bug**
+### 3.2 — A caller with no function: **1, and it is a dead branch, not a live failure**
 
-`throughput/src/pages/Export.tsx:106` calls an edge function named `export`. **No function by that
-name is deployed.** The export control on `/ideas/:id/export` therefore fails for every user, every
-time. A fix is in flight tonight.
+**CORRECTED 2026-08-26 01:50. My first version of this said the export control "fails for every
+user, every time". That was wrong, and another lane caught it with better evidence than I had.**
+
+`throughput/src/pages/Export.tsx:106` calls an edge function named `export`, and **no function by
+that name is deployed** — that half stands, re-verified against the live list of 74. What I got
+wrong is the consequence. throughput PR #333 already marked the PDF, DOCX and PPTX formats
+unavailable and **disabled their buttons**, and that fix is live in production: the shipped bundle
+carries the disabled predicate and the message *"Not available yet — no document generator is
+deployed for this format."* Nobody can reach line 106.
+
+So this is a **dead branch behind a disabled control** — a latent trap that becomes a live failure
+the day somebody removes an `unavailable` marker without checking what is behind it. Worth closing,
+not worth alarm.
+
+**Why I got it wrong:** I read the call site and the deployed list, and inferred the user-visible
+consequence from those two facts. I never opened the page or the shipped bundle. *A static read of
+a call site cannot see a guard placed in the component that renders the control* — the guard was one
+component away, which is the same shape as every other measurement artefact in §7.
 
 ### 3.3 — A data path no screen reaches: **99 tables, narrowed to 82**
 
@@ -96,11 +111,27 @@ scaffolding that was built and never wired up. Several are money-shaped — `inv
 `r80_margin_policies`. An empty unread table is not itself a defect; it is a promise the product
 has not kept yet, and it is the honest size of the gap between the schema and the working product.
 
-### 3.4 — RLS enabled with zero policies, and RLS off entirely: **ZERO of both**
+### 3.4 — RLS off entirely: **ZERO. RLS on with no policies: 11, and they are correct.**
 
-Checked, and this one is clean. **All 423 tables have row level security switched on.** Not one
-table is left open. This is a negative result and it is worth stating plainly, because it is the
+**CORRECTED 2026-08-26 01:50. My first version said "zero of both". The first half is right and the
+second was false** — I ran a query that counted RLS-off tables and then wrote a sentence about a
+category it had not measured.
+
+**All 423 tables have row level security switched on.** Not one table is left open — and that is the
 category that would have been most serious.
+
+**Eleven have it switched on with no policies at all**, which means they are readable and writable
+only by the trusted server key:
+
+`anon_signing_attempts` · `contact_merge_snapshots` · `edge_rate_limit_buckets` ·
+`people_portal_invite_accept_attempts` · `people_portal_invites` · `person_merge_snapshots` ·
+`quote_handoff_redeem_attempts` · `quote_handoff_tokens` · `r7_talent_pool_redeem_attempts` ·
+`tenant_encryption_keys` · `xero_tax_rate_cache`
+
+Read the list and the intent is obvious: signing attempts, invite tokens, rate-limit buckets,
+encryption keys. **These are exactly the tables that should be reachable only by the server.** Deny-all
+is the right posture and this is not a finding — but it is eleven, not zero, and the difference
+matters because "zero" invites nobody to check.
 
 ### 3.5 — Permission granted to the anonymous (logged-out) role: **not the finding it looks like**
 
@@ -176,6 +207,22 @@ wrapper) · `R80.4` — `/`
 **Nine of the twelve are logged-out or link-authenticated routes** — the contract-signing and
 invitation links. Those are precisely the addresses a route inventory that says "Unknown" has never
 examined, which is why they are being resolved rather than closed.
+
+---
+
+## §6b — THREE THINGS I GOT WRONG AND ANOTHER LANE CORRECTED
+
+Recorded in the document rather than quietly edited out, because the corrections are more useful
+than the claims were.
+
+| I wrote | it is actually | how I got it wrong |
+|---|---|---|
+| the inventory is "schema 3" | `schema_version` is **1.1** | I read the field's *type* and never printed its *value*, then wrote a number from memory |
+| the export button "fails for every user, every time" | the branch is **unreachable** — the buttons were disabled by throughput PR #333, live on prod | I inferred a user-visible consequence from a call site and a deployed list, and never opened the page or the shipped bundle |
+| "RLS enabled with zero policies: **zero**" | **eleven**, and all eleven are correctly deny-all | I ran a query that counted RLS-**off** tables and then wrote a sentence about a category it had not measured |
+
+None of the three changes a decision. All three would have made this document less trustworthy the
+next time somebody relied on it.
 
 ---
 
