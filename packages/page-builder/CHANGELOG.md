@@ -5,6 +5,41 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.0.7] — 2026-08-25 — Only a pointer gesture may commit a layout
+
+The fix. 1.0.4, 1.0.5 and 1.0.6 each tried to classify the grid's emission by
+SHAPE, each shipped with a green suite, and each still destroyed the layout on the
+deployed app.
+
+**Shape can never work, and the reason is structural: react-grid-layout COMPACTS
+after a reflow.** Its emission is therefore legitimately different from what we
+rendered — in `x` and `y`, not only in measured heights — so every comparison
+against `currentLayouts` concludes "a user did this" and commits the rescaled
+arrangement. Measured on `d.crm.crm7.app` with 1.0.6 confirmed present in the
+served bundle: a `12 → 4 → 8 → 2 → 12` round trip produced **thirteen writes** and
+turned widths `4,4,4,7,5,5,12` into `6,6,6,6,6,6,6`.
+
+The grid knows the one thing that cannot be inferred: whether a **pointer gesture**
+produced the emission. `onDragStart`/`onResizeStart` set it, `onDragStop`/
+`onResizeStop` carry it across the gap before `onLayoutChange` fires, and the
+component passes it. That signal is now the whole rule — `onLayoutChange` commits
+if and only if a gesture produced it. The 55 lines of comparison helpers are gone.
+
+Unaffected: `addWidget`, remove, compact and reset commit directly and never went
+through this path; a deliberate resize of an auto-height card (crm7#744) IS a
+gesture; `wasGesture` defaults to `true`, so any caller not passing it behaves
+exactly as before.
+
+**Why the suite never caught it, stated plainly.** Every test drove the hook with
+no grid attached, so none instantiated the object doing the writing. The remedy —
+an integration test clicking the real control — cannot live in this package:
+`PageGridLayout` renders **no editor chrome at all**, measured (zero `<button>`
+elements with `canEditPage` set). That chrome is the host's. So the round trip is
+verified against the deploy, on a VARIED layout, because a uniform one round-trips
+even when the code is broken.
+
+---
+
 ## [1.0.6] — 2026-08-25 — An auto-height card re-measuring is not a resize gesture
 
 The third and last writer in this bug. 1.0.4 removed the writes from

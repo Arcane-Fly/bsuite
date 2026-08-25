@@ -83,61 +83,6 @@ export interface PageGridEditingEventDetail {
   editing: boolean;
 }
 
-/**
- * Do two layout SETS describe the same arrangement, at every breakpoint?
- *
- * Compares only the five fields that place an item. Anything else react-grid-layout
- * attaches (`moved`, `static`, `isDraggable`, measured heights) is noise here, and
- * comparing it would make every reflow look like a change.
- *
- * EVERY breakpoint, not just `lg`. A gesture made while the canvas is at `md`
- * leaves `lg` untouched, so an `lg`-only comparison reads that real gesture as a
- * reflow and silently drops it. That is not hypothetical — it broke the D-75
- * "folds a gesture made at md back onto lg" test the moment the comparison was
- * introduced.
- */
-function sameArrangement(a: GridLayouts | undefined, b: GridLayouts | undefined): boolean {
-  return compare(a, b, false);
-}
-
-/** Same, but blind to the height of items whose height is MEASURED, not authored. */
-function samePlacement(a: GridLayouts | undefined, b: GridLayouts | undefined): boolean {
-  return compare(a, b, true);
-}
-
-function compare(a: GridLayouts | undefined, b: GridLayouts | undefined, ignoreDerivedHeight: boolean): boolean {
-  if (!a || !b) return false;
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  /*
-   * `h` is EXCLUDED for an autoHeight item, and that exclusion is the whole point.
-   *
-   * An autoHeight card's height is MEASURED, not authored: change the column count,
-   * the card gets narrower, its content rewraps taller, and the ResizeObserver
-   * emits a new `h`. That emission differs from what was rendered, so a comparison
-   * including `h` calls it a gesture — and commits the RESCALED WIDTHS riding along
-   * with it. Measured: three cards authored w=4,3,4 came back w=1,1,1 after nothing
-   * but a height re-measure.
-   *
-   * NARROWED, because the first version was too broad and two existing tests said
-   * so: a user CAN drag an autoHeight card's height, and that stamps `hUserSet`.
-   * Once stamped, the height IS a choice and must be compared like any other. So
-   * `h` is excluded only where it is purely derived — autoHeight AND not user-set.
-   * A real resize changes `w`, or stamps `hUserSet`, or both; none of those are
-   * hidden by this.
-   */
-  const fingerprint = (items: GridLayoutItem[] | undefined) =>
-    (items ?? [])
-      .map((i) =>
-        `${i.i}:${i.x}:${i.y}:${i.w}:${ignoreDerivedHeight && i.autoHeight ? 'auto' : i.h}`,
-      )
-      .sort()
-      .join('|');
-  for (const k of keys) {
-    if (fingerprint(a[k]) !== fingerprint(b[k])) return false;
-  }
-  return true;
-}
-
 export function usePageGridLayout({
   pageKey,
   defaultLayouts,
@@ -580,29 +525,33 @@ export function usePageGridLayout({
        * Identified by comparison rather than by a flag, so it needs no event
        * ordering to be correct.
        */
-      const emitted = layouts as GridLayouts;
-
-      /* Identical to what was just rendered: a pure reflow, nothing to commit. */
-      if (sameArrangement(emitted, currentLayouts)) return;
-
       /*
-       * DIFFERS ONLY IN THE HEIGHT OF AN autoHeight ITEM — and that is ambiguous
-       * by shape alone. A user CAN drag such a card taller (crm7#744), and the
-       * ResizeObserver ALSO emits a new height when the card is narrowed by a
-       * column change, because the content rewraps. Both arrive as a bare `h`.
+       * ONLY A POINTER GESTURE MAY COMMIT A LAYOUT. Nothing else.
        *
-       * Nothing in the layout distinguishes them, so the caller must: the grid
-       * knows whether a pointer gesture just ended. Default TRUE keeps every
-       * existing caller behaving exactly as before; `PageGridLayout` passes the
-       * real answer.
+       * Three attempts tried to classify the emission by SHAPE and all three
+       * shipped and all three failed on the deployed app:
        *
-       * Getting this wrong in either direction is expensive. Treat a re-measure
-       * as a gesture and the RESCALED WIDTHS ride along into storage — measured:
-       * three cards authored w=4,3,4 came back w=1,1,1 after nothing but a height
-       * re-measure. Treat a gesture as a re-measure and a deliberate resize is
-       * silently dropped, which is crm7#744 reopened.
+       *   1.0.4  removed the writes in handleColumnChange   — the grid still emitted
+       *   1.0.5  skipped an emission equal to what we rendered
+       *   1.0.6  ...ignoring measured heights as well
+       *
+       * Shape can never work, and the reason is structural: react-grid-layout
+       * COMPACTS after a reflow. Its emission is therefore legitimately different
+       * from `currentLayouts` in x and y, so every comparison against what we
+       * rendered says "this is a gesture" and commits the rescaled arrangement.
+       * Measured on d.crm.crm7.app with 1.0.6 confirmed in the served bundle: a
+       * 12 -> 4 -> 8 -> 2 -> 12 round trip produced THIRTEEN writes and turned
+       * widths 4,4,4,7,5,5,12 into 6,6,6,6,6,6,6.
+       *
+       * The grid knows what we cannot infer: whether a pointer gesture produced
+       * this emission. That is the only sound signal, so it is the whole rule.
+       *
+       * Every other mutation — add, remove, compact, reset — calls `commitItems`
+       * directly and is unaffected. A deliberate resize of an auto-height card
+       * (crm7#744) IS a gesture and still commits. `wasGesture` defaults to true,
+       * so any caller that does not pass it behaves exactly as before.
        */
-      if (!wasGesture && samePlacement(emitted, currentLayouts)) return;
+      if (!wasGesture) return;
 
       pendingLayoutRef.current = layouts as GridLayouts;
       if (layoutCommitFrameRef.current !== null) return;
