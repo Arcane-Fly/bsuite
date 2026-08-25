@@ -8,6 +8,25 @@ evidence:
 
 # Atmosphere evaluated against @bsuite/data-grid and the report engine
 
+> ## ⚠ CORRECTED 2026-08-25 — THIS DOCUMENT READ THE WRONG REPOSITORY
+>
+> It evaluated **`Atmosphere/atmosphere`**, a JVM async/WebSocket framework. The
+> repository that matters is **`GaryOcean428/atmosphere`** — the operator's own,
+> TypeScript, described as *"A Free & Self-hostable Airtable Alternative"*, and pushed
+> two days before this was written.
+>
+> That repository is a **rebranded NocoDB** (nine packages, nine matches, NocoDB's
+> tagline verbatim) still carrying **`"license": "Sustainable Use License"`** in its root
+> `package.json` — and the ruling that this licence bars BSuite use was recorded on
+> **2026-08-08, thirteen days before this document.**
+>
+> The verdict below — *do not adopt* — happens to be right, and its reasoning does not
+> reach the repository in question. See
+> **`docs/20260825-atmosphere-is-nocodb-and-the-licence-already-ruled-v1.00A.md`**.
+>
+> Findings about **our own report engine** in this document were measured against our
+> code and remain accurate.
+
 **Date:** 2026-08-21 · **Status:** D (Draft) · **Author:** Datum
 **Subject:** https://github.com/Atmosphere/atmosphere — can it benefit data-grid or reports?
 **Verdict:** No. Wrong runtime. But the question surfaced a real gap, and the capability
