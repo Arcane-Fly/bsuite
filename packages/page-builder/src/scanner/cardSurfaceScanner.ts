@@ -123,6 +123,27 @@ export interface CardSurfaceScannerConfig {
   nestedChromeTags?: string[];
   /** file -> reason. A nested-chrome file listed here is allowed. */
   nestedChromeExclusions?: Record<string, string>;
+  /**
+   * Does the GRID ITEM paint card chrome in the version this app resolves?
+   *
+   * TRUE for `@bsuite/page-builder` <= 1.0.7, where every grid item painted
+   * `rounded-3xl bg-card border border-border` unconditionally and there was
+   * no way to turn it off. On those versions a nested card is ALWAYS a double
+   * frame, so every nesting slot is a finding.
+   *
+   * FALSE from 1.1.0, where chrome is opt-in. A nested card then becomes the
+   * CORRECT shape — it is the only surface — and the defect narrows to a slot
+   * that opts back INTO chrome (`itemChrome`, or `chrome` on the item or the
+   * CanvasCard) AND still nests a card.
+   *
+   * DEFAULTS TO TRUE, i.e. it assumes the pre-inversion package until an app
+   * says otherwise. A shared-package fix that four consumers receive and one
+   * does not is this estate's recorded failure mode (conduit sat on a
+   * minor-locked `^0.6.3` while the fix shipped in 0.8.0, and nothing
+   * reported it), so each app must DECLARE which side of the inversion it is
+   * on rather than inherit an optimistic default.
+   */
+  gridItemPaintsChrome?: boolean;
 }
 
 export interface CardSurfaceScanResult {
@@ -499,6 +520,23 @@ export function elementDeclaresCardChrome(
   return null;
 }
 
+/**
+ * Does this grid slot paint chrome of its OWN, post-inversion?
+ *
+ * Three ways to opt in, and all three have to be visible to the scanner or a
+ * re-chromed slot goes unnoticed: `itemChrome` on the grid component (whole
+ * app/page), `chrome: true` on the layout item, and `chrome` on the CanvasCard.
+ */
+export function slotOptsIntoChrome(fileSource: string, slotBody: string): boolean {
+  const openTag = /^<CanvasCard[\s\S]*?>/.exec(slotBody)?.[0] ?? '';
+  if (/\bchrome\s*(?:=\s*\{?\s*true\b|\}|[\s/>])/.test(openTag) &&
+      !/\bchrome\s*=\s*\{\s*false\s*\}/.test(openTag))
+    return true;
+  if (/\bitemChrome\b(?!\s*=\s*\{\s*false\s*\})/.test(fileSource)) return true;
+  if (/\bchrome\s*:\s*true\b/.test(fileSource)) return true;
+  return false;
+}
+
 /** The first nested-chrome element inside one grid slot, or null. */
 export function findNestedChrome(
   slotBody: string,
@@ -656,7 +694,9 @@ export function scanCardSurfaces(
     for (const slot of slots) {
       // --- V-C5 nested chrome: ONE card inside ONE slot is still a double
       // frame, and V-C4 below cannot see it (it needs 2+).
-      if (!nestedChromeReported && !config.nestedChromeExclusions?.[rel]) {
+      const gridItemChromed =
+        (config.gridItemPaintsChrome ?? true) || slotOptsIntoChrome(src, slot.body);
+      if (gridItemChromed && !nestedChromeReported && !config.nestedChromeExclusions?.[rel]) {
         const chrome = findNestedChrome(slot.body, config);
         if (chrome) {
           nestedChromeReported = true;

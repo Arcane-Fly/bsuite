@@ -131,6 +131,20 @@ type GridItemProps = {
    * Resize-bug fix, 2026-05-12 (operator-flagged 50+ times).
    */
   children?: React.ReactNode;
+  /**
+   * Paint this grid item as a card — border, radius, background, shadow.
+   *
+   * DEFAULT FALSE, and that is an inversion of the behaviour shipped up to
+   * 1.0.7. Every grid item used to paint card chrome unconditionally, and
+   * 332 files across six apps render their OWN card inside it: 28px inside
+   * 24px, two 1px borders, a fat bottom edge. Nesting was the norm at 90%,
+   * so the grid item was the wrong side of the argument.
+   *
+   * The slot keeps its LAYOUT either way — `h-full w-full flex flex-col` and
+   * the internal scroll container are unchanged. Only the painted surface is
+   * conditional, so turning chrome off cannot move anything.
+   */
+  chrome?: boolean;
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'content'>;
 
 const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(function GridItem({
@@ -141,6 +155,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   onHide,
   autoHeight,
   onAutoHeightChange,
+  chrome = false,
   children: injectedChildren,
   className: injectedClassName,
   style: injectedStyle,
@@ -305,7 +320,22 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             </button>
           )}
           <div
-            className="h-full w-full rounded-3xl transition-all flex flex-col bg-card border border-border shadow-sm dark:shadow-[var(--glow-card,none)]"
+            data-slot="grid-item-surface"
+            data-chrome={chrome ? 'on' : 'off'}
+            className={
+              chrome
+                ? // ONE radius token, read by the grid item AND available to any
+                  // app card that opts into the same surface. Two surfaces
+                  // reading the SAME var is what makes their corners align, and
+                  // it is also what keeps the radius tenant-configurable —
+                  // a literal here would align them and lock white-label out.
+                  // `--radius-card` defaults to today's value (1.5rem =
+                  // rounded-3xl), so this is byte-identical until a tenant sets
+                  // one.
+                  'h-full w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border border-border shadow-sm dark:shadow-[var(--glow-card,none)]'
+                : // Chrome OFF: layout only. Identical box, no paint.
+                  'h-full w-full transition-all flex flex-col'
+            }
             style={{ contain: 'layout style' }}
           >
             {/*
@@ -371,6 +401,11 @@ export function PageGridLayout({
   resizeHandles = DEFAULT_RESIZE_HANDLES,
   tenantId,
   defaultAutoHeight,
+  // CHROME OFF BY DEFAULT — the inversion. See `GridItemProps.chrome`.
+  // An app that is not ready to migrate its own card surfaces passes
+  // `itemChrome` to get the pre-1.1.0 behaviour back for every slot, and
+  // migrates page by page with the per-item `chrome` flag.
+  itemChrome = false,
   addEntityWidgetEventNames = DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES,
   createEntityWidget,
   onRegisterEntityWidget,
@@ -1195,6 +1230,7 @@ export function PageGridLayout({
                   onHide={hideLayer}
                   autoHeight={layoutItem.autoHeight}
                   onAutoHeightChange={handleAutoHeightChange}
+                  chrome={layoutItem.chrome ?? itemChrome}
                 />
               );
             })}

@@ -572,3 +572,73 @@ describe('stripComments must not delete real code', () => {
     expect(out).not.toContain('a real JSX comment');
   });
 });
+
+describe('the detector survives the inversion it was built to justify', () => {
+  it('post-1.1.0 (`gridItemPaintsChrome: false`), a nested card is the CORRECT shape and is not flagged', () => {
+    // Once the grid item stops painting chrome, the app's own card is the only
+    // surface. A detector that kept flagging those 332 files would fail forever
+    // on code that is now right — and would be switched off, which is how gates
+    // die.
+    write(
+      'src/pages/post-inversion.tsx',
+      `export const P = () => <CanvasCard cardKey="a"><Card>body</Card></CanvasCard>`,
+    );
+    const r = scanCardSurfaces({
+      ...BASE,
+      projectRoot: root,
+      gridItemPaintsChrome: false,
+    });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/post-inversion.tsx',
+      ),
+    ).toBe(false);
+  });
+
+  it('post-1.1.0, a slot that opts BACK INTO chrome and still nests a card IS the defect', () => {
+    write(
+      'src/pages/re-chromed.tsx',
+      `export const P = () => <CanvasCard cardKey="a" chrome><Card>body</Card></CanvasCard>`,
+    );
+    const r = scanCardSurfaces({
+      ...BASE,
+      projectRoot: root,
+      gridItemPaintsChrome: false,
+    });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/re-chromed.tsx',
+      ),
+    ).toBe(true);
+  });
+
+  it('post-1.1.0, an app-level `itemChrome` re-chromes every slot in the file', () => {
+    write(
+      'src/pages/app-chromed.tsx',
+      `export const P = () => (
+        <PageGridLayout pageKey="/x" itemChrome widgets={{ a: <Card>body</Card> }} />
+      )`,
+    );
+    const r = scanCardSurfaces({
+      ...BASE,
+      projectRoot: root,
+      gridItemPaintsChrome: false,
+    });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/app-chromed.tsx',
+      ),
+    ).toBe(true);
+  });
+
+  it('DEFAULTS to the pre-inversion package — an app must DECLARE which side it is on', () => {
+    // conduit sat on a minor-locked `^0.6.3` while the fix shipped in 0.8.0 and
+    // nothing reported it. An optimistic default would repeat that exactly.
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/post-inversion.tsx',
+      ),
+    ).toBe(true);
+  });
+});

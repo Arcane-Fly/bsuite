@@ -5,6 +5,7 @@ export {
   elementDeclaresCardChrome,
   findNestedChrome,
   parseConfidence,
+  slotOptsIntoChrome,
 } from './cardSurfaceScanner.js';
 export type {
   CardSurfaceScannerConfig,

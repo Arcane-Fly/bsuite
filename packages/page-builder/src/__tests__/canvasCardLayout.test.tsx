@@ -186,7 +186,12 @@ describe('buildCanvasCardLayout', () => {
     expect(layouts.lg[0].autoHeight).toBeUndefined();
   });
 
-  it('defaults to full width and applies the documented minW/minH/h defaults', () => {
+  it('defaults to HALF width, not full — the 1.1.0 inversion', () => {
+    // Twelve on a twelve-column grid meant every card that omitted `w` filled
+    // the row and the page became one vertical stack. 1,068 of 1,729 usages
+    // across the estate omit `w`, so 62% of BSuite's cards were stacked by a
+    // default rather than by a decision. That is the operator's "the cards
+    // don't use the available space" report.
     const { layouts } = buildCanvasCardLayout(
       <CanvasCard cardKey="a">A</CanvasCard>,
     );
@@ -194,11 +199,38 @@ describe('buildCanvasCardLayout', () => {
       i: 'a',
       x: 0,
       y: 0,
-      w: 12,
+      w: 6,
       h: 6,
       minW: 4,
       minH: 2,
     });
+  });
+
+  it('flows two default-width cards SIDE BY SIDE on one row', () => {
+    // The behaviour the width default exists to produce. Asserting the number
+    // alone would pass on a default of 6 that still stacked because of a wrap
+    // bug, so assert the geometry the user actually sees.
+    const { layouts } = buildCanvasCardLayout([
+      <CanvasCard key="a" cardKey="a">A</CanvasCard>,
+      <CanvasCard key="b" cardKey="b">B</CanvasCard>,
+    ]);
+    expect(layouts.lg[0]).toMatchObject({ i: 'a', x: 0, y: 0, w: 6 });
+    expect(layouts.lg[1]).toMatchObject({ i: 'b', x: 6, y: 0, w: 6 });
+  });
+
+  it('an EXPLICIT w={12} still wins — 661 usages already say so', () => {
+    const { layouts } = buildCanvasCardLayout(
+      <CanvasCard cardKey="a" w={12}>A</CanvasCard>,
+    );
+    expect(layouts.lg[0]).toMatchObject({ i: 'a', w: 12 });
+  });
+
+  it('an app not ready for the new default can restore the old one', () => {
+    const { layouts } = buildCanvasCardLayout(
+      <CanvasCard cardKey="a">A</CanvasCard>,
+      { defaultWidth: 12 },
+    );
+    expect(layouts.lg[0]).toMatchObject({ i: 'a', w: 12 });
   });
 
   it('flows cards left-to-right and wraps at the 12-column boundary', () => {
