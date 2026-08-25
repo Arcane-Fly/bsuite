@@ -5,6 +5,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.0.5] — 2026-08-25 — The column-change fix was incomplete; the grid reflow was still writing
+
+1.0.4 removed the writes from `handleColumnChange`, and the layout was still
+destroyed. **react-grid-layout reflows when the column count changes and emits
+`onLayoutChange` with the rescaled display**, which `commitLayout` then wrote
+straight over the authored layout. The handler was inert and the damage
+continued through the back door.
+
+The unit tests could not see it: they call the handler directly, with no grid
+attached. **Driving the deployed app is what found it** — the persisted widths
+still marched `2,2,2 → 4,4,4 → 1,1,1` after 1.0.4 shipped.
+
+`onLayoutChange` now ignores an emission that matches what was just rendered. A
+reflow emits exactly `currentLayouts`; any real gesture differs from it, and a
+gesture that does not differ has nothing to commit anyway — so the suppression
+cannot swallow one. It is identified by comparison, not by a flag, so it needs no
+event ordering to be correct.
+
+The comparison covers **every breakpoint, not just `lg`**. A gesture made while
+the canvas is at `md` leaves `lg` untouched, so an `lg`-only comparison reads
+that real gesture as a reflow and drops it — which broke the D-75 "folds a
+gesture made at md back onto lg" test the moment the comparison was introduced.
+
+Two tests pin it, and they discriminate: the reflow test fails against 1.0.4, and
+a control asserts a real gesture is still persisted. Both await the trailing
+commit frame — without that they pass vacuously, because nothing has been written
+yet either way.
+
+---
+
 ## [1.0.4] — 2026-08-25 — Changing the column count destroyed the saved layout
 
 Changing the canvas column count rewrote the stored layout and offered no undo.

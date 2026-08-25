@@ -83,6 +83,33 @@ export interface PageGridEditingEventDetail {
   editing: boolean;
 }
 
+/**
+ * Do two layout SETS describe the same arrangement, at every breakpoint?
+ *
+ * Compares only the five fields that place an item. Anything else react-grid-layout
+ * attaches (`moved`, `static`, `isDraggable`, measured heights) is noise here, and
+ * comparing it would make every reflow look like a change.
+ *
+ * EVERY breakpoint, not just `lg`. A gesture made while the canvas is at `md`
+ * leaves `lg` untouched, so an `lg`-only comparison reads that real gesture as a
+ * reflow and silently drops it. That is not hypothetical — it broke the D-75
+ * "folds a gesture made at md back onto lg" test the moment the comparison was
+ * introduced.
+ */
+function sameArrangement(a: GridLayouts | undefined, b: GridLayouts | undefined): boolean {
+  if (!a || !b) return false;
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  const fingerprint = (items: GridLayoutItem[] | undefined) =>
+    (items ?? [])
+      .map((i) => `${i.i}:${i.x}:${i.y}:${i.w}:${i.h}`)
+      .sort()
+      .join('|');
+  for (const k of keys) {
+    if (fingerprint(a[k]) !== fingerprint(b[k])) return false;
+  }
+  return true;
+}
+
 export function usePageGridLayout({
   pageKey,
   defaultLayouts,
@@ -506,6 +533,27 @@ export function usePageGridLayout({
   const onLayoutChange = useCallback(
     (_layout: unknown, layouts: unknown) => {
       if (!isEditing) return;
+
+      /*
+       * A COLUMN-COUNT CHANGE MAKES REACT-GRID-LAYOUT REFLOW AND EMIT HERE, and
+       * that emission is not a user gesture. Committing it copies the rescaled
+       * DISPLAY back over the authored layout — which is the data loss this
+       * whole path exists to prevent, arriving through the back door.
+       *
+       * Removing the writes from `handleColumnChange` was not enough, and the
+       * unit tests did not catch it because they call the handler directly with
+       * no grid attached. Driving the deployed app is what found it: the
+       * persisted widths still marched 2,2,2 -> 4,4,4 -> 1,1,1 with the
+       * handler already inert.
+       *
+       * A reflow emits exactly `currentLayouts`, because that is what was just
+       * rendered. Any real gesture differs from it — and a gesture that does
+       * NOT differ has nothing to commit anyway, so this cannot swallow one.
+       * Identified by comparison rather than by a flag, so it needs no event
+       * ordering to be correct.
+       */
+      if (sameArrangement(layouts as GridLayouts, currentLayouts)) return;
+
       pendingLayoutRef.current = layouts as GridLayouts;
       if (layoutCommitFrameRef.current !== null) return;
       if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
@@ -522,7 +570,7 @@ export function usePageGridLayout({
         }
       });
     },
-    [commitLayout, isEditing],
+    [commitLayout, currentLayouts, isEditing],
   );
 
   useEffect(() => {
