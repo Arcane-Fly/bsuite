@@ -530,6 +530,134 @@ Ordered by how many times Braden has asked, not by technical convenience.
 
 ---
 
+## §13 — RED TEAM, CLEANUP, AND ESCALATION
+
+**Operator, 22:03:** *"must include red team steps branch and worktree cleanup steps, escalation and
+troubleshoot protocols to higher-end models. fable and opus 5 ~ both as strong as each other but in
+different areas. good to collaborate in council reasoning tasks."*
+
+### 13.1 — RED TEAM. Two passes, and they are not the same pass.
+
+**Before writing (`agent-red-plan`)** — draft the plan, red-team it with specialist sub-agents,
+refine **twice**, then implement. Required questions for this run:
+
+- Which of these items is **already delivered**? (~30 of 45 were. Assume the register is stale.)
+- Which reads as one page and is actually a **class**?
+- Which two items are the **same item**? (D-90 and D-62 are. D-40/99/103 are one item three times.)
+- Which "measurement" is a **grep that never opened the page**?
+
+**After writing (`agent-red-implement`)** — implement, red-team the implementation, iterate twice,
+then QA. Plus the two domain red-teams, which are **mandatory, not optional**:
+
+| skill | fires on |
+|---|---|
+| **`bsuite-rls-authz-red-team`** | **ANY** diff touching RLS, a SECURITY DEFINER function, a GRANT/REVOKE, or the db-proxy allow-list. Tonight's `is_platform_admin` revoke is exactly its territory. |
+| **`bsuite-reliability-red-team`** | Money paths and blast radius. G1 touches 1,729 card instances — that is blast radius by any definition. |
+
+**Adversarial framing, not confirmatory.** Prompt the red team to **REFUTE**, and default to
+"refuted" under uncertainty. A red team asked "does this look right?" always says yes.
+
+**The estate's own red-team lesson:** a detector's first run produced 22 findings of which **100%
+were the detector's own bugs**. Red-team the instrument before the finding.
+
+### 13.2 — BRANCH AND WORKTREE CLEANUP. Same turn as the merge. Not later.
+
+**Operator ruling, 2026-08-18:** *"once something has been merged into the development branch as
+first point of merge, the corresponding feat branch or worktree should be cleaned up immediately…
+since the most recent version of the skill the branches have been left uncleaned causing confusion
+and bloat."*
+
+```bash
+CLEAN=~/.agents/skills/bsuite-ship-visual-promote/scripts/branch-cleanup.sh
+"$CLEAN" --dry   --target development --all    # READ IT FIRST
+"$CLEAN" --apply --target development --all
+# after any promotion:
+"$CLEAN" --apply --target main --all
+```
+
+**Ancestry is NOT the test, and this is why the script exists.** A squash-merged branch is *not* an
+ancestor of the target yet contains nothing new; a branch that looks merged by date can carry
+unique commits. The script deletes only when merging would change **nothing** — a content test via
+`git merge-tree --write-tree` — and keeps anything with unique content or a dirty worktree.
+
+**Report the SPLIT.** *"Cleaned up N branches"* without **what was deleted** and **what was
+preserved and why** is not a report.
+
+Also in the toolbox: `scripts/check-worktree-hazards.mjs` ·
+`scripts/check-migration-collisions-at-branch-tips.mjs` (run before any migration lands) ·
+`scripts/install-branch-guard-hooks.mjs`.
+
+**Hard rules:** worktrees **only** under `~/Desktop/Dev/worktrees/`, never `$HOME` · **never commit
+in a `MERGE_HEAD` worktree** — `git merge --abort` only · **never force-push** · never delete a
+directory you did not create · one open PR per lane.
+
+**Baseline to return to:** 1 worktree, 19 remote branches (main + development per repo, plus what is
+in flight). If the morning shows more, cleanup was skipped.
+
+### 13.3 — ESCALATION. On a failed validator, never on a feeling.
+
+```
+low  →  standard  →  high  →  frontier
+```
+
+**Escalate when** a validator fails twice on the same cause · a fix survives two attempts · the
+change is architectural or irreversible · a red team splits. **Do not** escalate because something
+feels hard — escalate because something *measurably did not work*.
+
+**Always pass an explicit model on dispatch.** Default workers to `sonnet`, mechanical passes to
+`haiku`, review and hard verification to `opus`.
+
+### 13.4 — FABLE AND OPUS 5 ARE PEERS, NOT RUNGS
+
+**Operator:** *"fable and opus 5 ~ both as strong as each other but in different areas. good to
+collaborate in council reasoning tasks."*
+
+**This corrects the usual tiering language and the correction matters.** "Escalate to Fable" is not
+*up* — it is **sideways, to a different lens**. Stacking them wastes the difference; **pairing them
+uses it.**
+
+| model | reach for it when |
+|---|---|
+| **Opus 5** | the problem is *convergent* — trace the cause, hold a large context, verify a chain of evidence, drive an implementation to completion |
+| **Fable** | the problem is *divergent* — the framing may be wrong, the options are not enumerated, or the plan needs attacking rather than executing |
+
+**Pair them on:** the G1 grid inversion (irreversible-ish, 1,729 instances, six apps) · any
+architectural call that reaches §7 · a finding two lanes disagree about · anything where the first
+two fixes both failed.
+
+```
+Agent(model: "opus",  …)   # the convergent lane
+Agent(model: "fable", …)   # the divergent lane, SAME question, no shared context
+```
+
+**Run them on the same question WITHOUT shared context, then reconcile.** Two models that read each
+other's reasoning first are one model with extra steps — the disagreement is the whole value.
+
+**Council** — `qig-council-reasoning`, or `council_convene` via the qig-memory MCP, convenes **six**
+frontier models through panel → reflect → synthesis. **EXPENSIVE** (13 model calls, 2–6 minutes,
+plus each member's tool steps). Convene it for a genuinely contested, irreversible call — **not for
+a question one lookup answers**. It may exceed the client timeout; the run continues server-side,
+so **do not re-convene on a timeout** — collect the ruling from the inbox. Pass your agent id as
+`convener` so it lands in your inbox rather than broadcasting.
+
+**Convergence is never validation.** Six models agreeing on a false premise agree on a false
+premise. The ruling preserves dissent for exactly this reason — read the dissent.
+
+### 13.5 — TROUBLESHOOT PROTOCOL, in order
+
+1. **Reproduce it** — the exact failing command, its exit status. `$?` through a pipe is the LAST
+   stage's status; use `PIPESTATUS[0]`.
+2. **Read the log, not the summary.** A truncated report is a complete one to whatever parses it.
+3. **Is the probe able to see the thing?** Fourteen artefacts this session; nine would have shipped
+   as findings. Name the second probe that could have found it and did not.
+4. **Has this happened before?** `memory_search(category:"precedent")` before diagnosing. An
+   unrecorded decision is a question asked twice.
+5. **Two fixes failed → escalate the LENS, not the effort.** Pair Opus and Fable per 13.4.
+6. **Still stuck → record precisely where it stops** (file, line, branch, next step) and take the
+   next item. **A blocked lane that reports precisely is worth more than a stalled one that retries.**
+
+---
+
 ## §9 — DEFINITION OF DONE
 
 ### Per item — six limbs, all of them
