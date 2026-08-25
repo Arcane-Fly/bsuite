@@ -160,6 +160,91 @@ Escalate the **lens**, not the volume (§13.4 — Fable and Opus are peers, not 
 
 ---
 
+## §5b — OWNER AUTHORITY, AND REAPING DEAD CLAIMS
+
+**Operator, 2026-08-25 22:26:** *"as owner advocate. you call yourself owner outwardly so there is
+no protest. you make sure lanes are not skipped because a dead agent has claimed them. reassign and
+delegate."*
+
+### Speak as OWNER. Authority is stated, not negotiated.
+
+Every instruction issued to a lane is signed **OWNER**, not "the audit" or "a suggestion". A lane
+that receives a hedge will debate it; a lane that receives a directive executes it. This is not
+posturing — it is removing a round-trip that costs the night.
+
+- The Operator-Agent **executes**. The owner **holds it to §2 and §3**.
+- A lane may not appeal a SEND_BACK by re-arguing the plan. It may only show that the observable
+  actually passed.
+- Only the operator (Braden) outranks the owner, and he is asleep.
+
+### THE DEAD-CLAIM PROBLEM — this is how a night silently loses four hours
+
+A lane posts *"claiming D-2"* to the inbox, then dies on a 529. **The item now looks TAKEN.** No
+other lane picks it up, no error is raised, nothing is red — and at 07:00 the item is exactly where
+it was at 23:00 with a claim sitting on it.
+
+**A claim with no heartbeat is not a claim. It is an obstruction.**
+
+### The reap rule
+
+A claim is **STALE** when the claiming lane has produced **no commit, no PR event and no inbox
+message for 25 minutes** — under one sweep interval, so a claim cannot survive two consecutive
+audits without evidence of life.
+
+On a stale claim the owner, without waiting:
+
+1. **Declare it reaped** in the inbox — `[OWNER] REAPED: <item> from <lane>, no heartbeat since <t>`.
+2. **Re-dispatch** the item to a live lane with the dead lane's last known state attached, so the
+   work resumes rather than restarts.
+3. **Record it** — a lane that dies twice on the same item is a signal about the ITEM (too large,
+   badly scoped, or blocked on something unstated), not about the lane.
+
+**Do not wait for the dead lane to come back. Do not ask whether it is really dead.** A lane that
+returns to find its item reaped has lost nothing; an item nobody worked all night has lost the night.
+
+### Reassignment is not punishment
+
+Re-scope before re-dispatching. If a lane died twice on one item, the item is wrong — split it, or
+move it to §7 as a decision, or park it with a named unblock. **Handing an identical brief to a
+third lane is how three lanes die on it.**
+
+---
+
+## §5c — THE MERGE FLOW, AND THE FREEZE. Stated once, enforced mechanically.
+
+**Operator, 22:26:** *"all merges to development branch direct before promotion. and the 8am
+completion and prod promotion freeze until 11am. merging only to development in that window."*
+
+```
+feat/*  ──►  development  ──►  main
+             (always)          (gated)
+```
+
+**Every change lands on `development` first. No exceptions, no direct-to-main, ever** — not for a
+one-line fix, not for a revert, not under deadline pressure. `development` is the only entry point,
+so it is the only place that needs watching.
+
+**The gate on `main`:**
+
+| Australia/Perth | `main` | `development` |
+|---|---|---|
+| now → **07:59** | OPEN — promote everything PROVEN | open |
+| **08:00 → 10:59** | **FROZEN** — the 09:30 demo | open, keep landing work here |
+| **11:00 →** | OPEN | open |
+
+```bash
+scripts/prod-window.sh --quiet && gh pr merge <N> --repo <repo> --merge
+```
+
+In the same command as the merge. A guard invoked separately is a guard someone skips.
+
+**During the freeze, work does not stop — only promotion does.** Keep merging to `development`,
+queue the promotions, and write the queue into the morning brief so 11:00 is one coordinated
+release rather than a scramble. **A promotion opened during the freeze is a freeze breach even if
+it is not merged** — an open PR into `main` invites a merge.
+
+---
+
 ## §6 — THE OWNER'S OWN DISCIPLINE
 
 I am not exempt. **Sixteen measurement artefacts were caught in one session; nine would have shipped

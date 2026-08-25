@@ -36,8 +36,16 @@ fi
 say "prod window: $WIN"
 
 # 2. Estate shape ------------------------------------------------------------
+#    A RAW COUNT IS THE WRONG MEASURE and cried wolf on its first live run: the
+#    baseline of 1 was recorded BEFORE the lanes started, so every legitimate lane
+#    worktree read as "cleanup skipped". What actually matters is WHERE they are
+#    and whether they are on a real branch — a lane working is not a deviation, a
+#    worktree outside the allowed root is.
 WT=$(git worktree list | wc -l)
-[ "$WT" -gt 1 ] && flag "$WT worktrees (baseline 1) — cleanup skipped?"
+BADWT=$(git worktree list | awk 'NR>1 {print $1}' | grep -vc '^/home/braden/Desktop/Dev/worktrees/' || true)
+[ "${BADWT:-0}" -gt 0 ] && flag "$BADWT worktree(s) OUTSIDE ~/Desktop/Dev/worktrees/ — hard rule breach"
+DETACHED=$(git worktree list | grep -c 'detached' || true)
+[ "${DETACHED:-0}" -gt 0 ] && flag "$DETACHED detached-HEAD worktree(s) — a push there reports up-to-date and lands nothing"
 
 BR=0
 for r in "${REPOS[@]}"; do
@@ -85,11 +93,43 @@ for r in crm7 business-suite-unified conduit braden throughput R80.4; do
   n=$(gh pr list --repo "GaryOcean428/$r" --state open --json number --jq 'length' 2>/dev/null || echo 0)
   [ "${n:-0}" -gt 1 ] && flag "$r has $n open PRs (submodule budget: 1)"
 done
+#    Open PRs are only a problem if they are STALLING. A lane that opens one and
+#    lands it is the system working; the signal is a PR sitting red or untouched,
+#    not the count. Flag the OLD ones, not the many.
 np=$(gh pr list --repo GaryOcean428/bsuite --state open --json number --jq 'length' 2>/dev/null || echo 0)
-say "parent open PRs: $np (multi-lane; flagged above 4)"
-[ "${np:-0}" -gt 4 ] && flag "parent has $np open PRs — lanes are accumulating, not landing"
+say "parent open PRs: $np"
+STALLED=$(gh pr list --repo GaryOcean428/bsuite --state open --json number,updatedAt \
+  --jq --arg cut "$(date -u -d '90 minutes ago' +%Y-%m-%dT%H:%M:%SZ)" \
+  '[.[] | select(.updatedAt < $cut)] | length' 2>/dev/null || echo 0)
+[ "${STALLED:-0}" -gt 0 ] && flag "$STALLED parent PR(s) untouched for 90+ min — stalled, not in flight"
 
-# 6. Named, not skipped ------------------------------------------------------
+# 6. FREEZE BREACH — an OPEN PR into main during the freeze is a breach --------
+#    even unmerged. An open promotion invites a merge, and the whole point of the
+#    window is that nothing is pending against main while the operator inspects it.
+if [ "$WIN" = "FROZEN" ]; then
+  for r in bsuite crm7 business-suite-unified conduit braden throughput R80.4; do
+    n=$(gh pr list --repo "GaryOcean428/$r" --state open --base main --json number --jq 'length' 2>/dev/null || echo 0)
+    [ "${n:-0}" -gt 0 ] && flag "FREEZE BREACH: $r has $n open PR(s) targeting main during the 08:00-11:00 freeze"
+  done
+fi
+
+# 7. Heartbeats — a lane with a claim and no recent commit is a DEAD CLAIM -----
+#    A claim with no heartbeat is not a claim, it is an obstruction: the item
+#    looks TAKEN so no other lane picks it up, nothing goes red, and at 07:00 it
+#    is exactly where it was at 23:00. 25 minutes is deliberately UNDER one sweep
+#    interval so a claim cannot survive two consecutive audits without life.
+STALE_MIN=25
+say "heartbeats (commits in the last ${STALE_MIN}m, per repo):"
+for r in "${REPOS[@]}"; do
+  name=$(basename "$(cd "$r" && pwd)")
+  n=$(git -C "$r" log --since="${STALE_MIN} minutes ago" --oneline origin/development 2>/dev/null | wc -l)
+  printf '    %-24s %s\n' "$name" "$n"
+done
+say "  -> cross-check against inbox claims: any claimed item whose lane shows 0"
+say "     here for two consecutive sweeps is STALE. Reap it (§5b): announce, "
+say "     re-dispatch with last known state, re-scope if it has died twice."
+
+# 8. Named, not skipped ------------------------------------------------------
 say "NOT checked here (needs Supabase MCP, run them in-session):"
 say "  · FutureBuild row counts — 8 placements / 8 people / 8 training_contracts / 13 contacts / 3 timesheets"
 say "  · advisor sweep ERROR count"
