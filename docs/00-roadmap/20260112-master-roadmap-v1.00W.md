@@ -1,10 +1,44 @@
 # Master roadmap — BSuite (planning layer)
 
-> ## ⚠ SUPERSEDED — 2026-08-17
+> ## ⚠ SUPERSEDED — 2026-08-17, superseded again 2026-08-25
 >
 > **This roadmap is no longer the planning source of truth.** It calls itself "Canonical" two lines
 > below; that line is now false and is left visible rather than deleted, because the estate's
 > convention is to show corrections, not to rewrite history.
+>
+> ### Current authority, in order (2026-08-25)
+>
+> 1. **[`../20260825-estate-consolidated-findings-v1.00W.md`](../20260825-estate-consolidated-findings-v1.00W.md)**
+>    — the four-lane roadmap now lives there (§5). Consolidates all 15 dispatch lanes, the scheduled
+>    supervisor and 7 CLI agents; **verified against production before landing**.
+> 2. **[`../20260825-operator-notes-register-d1-d103-v1.00W.md`](../20260825-operator-notes-register-d1-d103-v1.00W.md)**
+>    — the operator's own 103 asks, D-1…D-103.
+> 3. **[`../20260824-estate-execution-backlog-v1.00W.md`](../20260824-estate-execution-backlog-v1.00W.md)**
+>    — the execution queue the supervisor routes from (partially superseded; see its own banner).
+> 4. **[`../20260817-estate-remaining-work-register-v3.00W.md`](../20260817-estate-remaining-work-register-v3.00W.md)**
+>    — **v3, not v2.** The pointer below to v2 is one version stale and is left visible as a correction.
+>
+> ### What the 2026-08-25 consolidation superseded in this file
+>
+> | This roadmap says | Superseded by | Why |
+> |---|---|---|
+> | *"Current authority: …register-**v2**.00W.md"* | **v3** | v3 supersedes v2 in full, including three of its own findings it proved wrong. Same date; v3 supersedes by explicit statement and re-measurement |
+> | Plans work against **R80.3** in four places (N5, X5, X5b, W-9 + the calculator row) | **The 2026-08-06 restructure** (`5e000c35`) | R80.3 left the submodule set and was replaced by R80.4, a different codebase. **Those items have no owner as written** |
+> | BSU#620 seat-cap — *"(P0, open). Do not re-tick `[x]`"* | **The migration** | `20260728180000_t7_01_revoke_direct_insert_team.sql` dropped `team_members_admin_insert` the same day. This line is stale by hours. Note the fix is *revocation*, not a cap in the policy |
+> | *Operator notes batch, 2026-07-27* — the batch is `[x]` around three unshipped "NEXT" items | **D-6, D-7, D-8** in the 103-item register | Schema-builder UX redesign, in-place widget adding (**his annotation: a regression**), and portal share links. 29 days. Portal share links still has **no issue in any repo** |
+>
+> **New lane structure (see the 08-25 document §5), replacing this file's phase plan:**
+> **Lane 0** restore the instruments *(nothing measured above it is trustworthy — GPG signing is P0)* ·
+> **Lane 1** security & correctness · **Lane 2** repeatedly requested, sequenced by his own count ·
+> **Lane 3** architecture, strictly serial **T → C → S** · **Lane 4** roles, caseload, personas.
+>
+> **Agent-tooling findings are deliberately NOT in this roadmap.** Skills, session channels and lane
+> accountability live in `~/.agents/docs/20260825-agent-operating-environment-findings-v1.00W.md`.
+> The `bsuite-*` skill prefix means *"about bsuite"*, not *"part of bsuite"*.
+>
+> ---
+>
+> *Original 2026-08-17 supersession notice follows.*
 >
 > **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md)
 > — re-measured against live SQL, live GitHub state and the six repos at `development` HEAD.

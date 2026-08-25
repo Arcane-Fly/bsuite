@@ -552,3 +552,139 @@ first question asked of any "missing" capability.
 ---
 
 *Full technical plan: [`20260808-data-workspace-implementation-plan-v1.00W.md`](./20260808-data-workspace-implementation-plan-v1.00W.md)*
+
+---
+
+# 2026-08-25 — consolidation intake
+
+Folded in from `docs/20260825-estate-consolidated-findings-v1.00W.md` (all 15 dispatch lanes,
+the scheduled supervisor, 7 CLI agents; verified against production before landing).
+**Precedent rule applied: newer binds. What each item superseded is recorded, not overwritten.**
+
+## A. Rulings made — these close open questions
+
+### RULING 25.1 — A report is a read-only saved question. The data explorer is the editable grid.
+
+- **A report** is a read-only saved question over the semantic layer, scoped by `report_scope`,
+  schedulable, deliverable.
+- **The data explorer** is an editable grid over records, with **one owning surface**.
+- A report may **deep-link** to the owning app's editor. **It never embeds one.**
+
+**Supersedes:** **B-1**, open since 2026-08-13 — *"is a report an editable VIEW of records, or a
+read-only saved question?"*, first put in `crm7/docs/20260813-report-builder-design-v1.00D.md` §0
+with the note *"This is the whole question, and it has never actually been put to you."*
+**It gated ~15,500 LOC and 17 requirements for 12 days.**
+
+**Consequence:** this collapses the six duplicated reporting/data surfaces into **two**, and
+unblocks the consolidation ADR (Lane 3 item C). *Braden to confirm acceptance.*
+
+### RULING 25.2 — Licensing, personas and seats
+
+- **`user_tenants.role` = licensing + authority.** `owner|admin|manager|staff` consume a seat.
+  **`guest` consumes none.**
+- **`user_tenants.portal_role` = persona only.** No licensing meaning.
+- **Platform/developer** = `profiles.platform_role='developer'` — uncapped, unbilled.
+- **Every external portal user must be `guest`.** A non-guest external user is a billing defect
+  *and* a privilege defect simultaneously.
+- **A field officer is staff** — internal, seat-consuming, never `guest`. *"Portal"* denotes
+  **form factor**, not an external boundary.
+- **Caseload is a database rule, never a page filter.**
+
+**Supersedes:** the field-officer precedent record, which was superseded **by a changed product
+requirement, not by its own trigger condition**. A review-trigger that never fired is not
+evidence a record is still correct.
+
+**Live violation this creates work for:** seat counting measures one selected team's
+`team_members` rows, not tenant-wide `user_tenants` (S-5 / N-2).
+
+### RULING 25.3 — Candidates, pool and tenancy
+
+- Job activity is **tenant-gated**. A GTO must not see another GTO's postings from the inside.
+- **Anything public — a job ad that can be applied for — is pool-worthy.**
+- **Two separate consents, both the candidate's:** (1) first entry gates them to the GTO applied
+  to; (2) election to see the pool *and* be visible to other organisations.
+- **On employment, everything gates to the tenant.**
+- **School-based and trainees are variants of apprenticeships**, differing on duration,
+  qualifications and training method. **School-based has a school attached** — no school relation
+  exists today; that is a **modelling gap, not wiring**.
+- **Self-managed enterprise** = GTO/labour-hire equivalent **except it cannot bill external
+  clients**. An **entitlement** (`tenant_features`), not a role.
+
+**Live violations this creates work for:** `r7_jobs` carries a cross-tenant public job-board limb
+(S-3), and the three candidate consent columns on `r7_candidates` are **referenced by no policy** —
+**withdrawal currently enforces nothing** (Z-2).
+
+### RULING 25.4 — Closure discipline
+
+A closure **enumerates every acceptance criterion**, each marked met or explicitly carried forward.
+**Zero consumers is not done.** `INCOMPLETE` is not a `PASS`. **Pre-existing is not nothing.**
+**Verify behaviour, not presence.** A DONE claim is unverified until a lane **other than the
+claimant** checks it. **Ownership is assigned, never self-declared.**
+
+**Written from:** an adversarial re-check that reopened **25%** of a closure pass (10 of 40).
+Evidence true, scope wrong. **No CI gate enforces this today — that is precisely why it failed.**
+
+## B. Corrections — where this estate's own registers were wrong
+
+### CORRECTION 25.A — `tenant_encryption_keys` was a false positive. Closed.
+
+**Superseded:** `20260817-estate-remaining-work-register-v3.00W.md` **P0-1** and
+`20260824-estate-execution-backlog-v1.00W.md` **Lane 1.1**, both asserting *"grants full CRUD to
+`anon` and `authenticated`… `relforcerowsecurity=false`"*.
+
+**Measured on production 2026-08-25 — both limbs false:**
+`relacl = {postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}` (no `anon`/`authenticated`
+grant of any kind; `has_table_privilege` false for both) and `relforcerowsecurity = **true**`.
+The row was carried from v2 unchanged, without re-measurement.
+
+**This matters beyond the correction: refusing to "fix" it was right.** With RLS on, zero policies
+*is* the denial. Adding a policy would have **widened** access. Replaced by the narrower **N-1** —
+`browse.tenant_encryption_keys` grants `SELECT` on `wrapped_key` to `authenticated` and is safe
+only via `reloptions={security_invoker=true}`; that needs a tripwire test, at P2.
+
+### CORRECTION 25.B — The operator notes register is 103 items, not 20.
+
+**Superseded:** `20260824-estate-execution-backlog-v1.00W.md` §4 Lane 3, which carried a
+**20-item subset** of `bsuite notes.docx` as though it were the whole document.
+Full register: `docs/20260825-operator-notes-register-d1-d103-v1.00W.md` (D-1…D-103).
+
+**Six items in it are regressions he says previously worked** — D-7, D-27, D-56, D-57, D-59,
+D-62, D-64 — five of them in R8 during the sub-module merge. He calls two *"Unacceptable"*.
+**Permissions default-checked is D-51, D-97 and D-103 — three separate raises.**
+
+### CORRECTION 25.C — Withdrawn findings
+
+| Withdrawn | Why |
+|---|---|
+| **S-4** `boot_assessments` role/portal_role mismatch | **Refuted.** `field_officer` is granted via `check_user_portal_role()`, which reads `portal_role` correctly. `auth_tenant_id_with_role` is only ever passed `owner/admin/manager` |
+| **I-8** `wic_rate_lookup` index absent | **Stale.** Three indexes present; the named one landed via `R80.4/…/20260901010000_wic_rate_lookup_tenant_id_fk_index.sql` |
+| **I-4** pg_cron self-test asserts `FIRED=1` | **Stale.** The self-test was already repaired; run 32794921123 measured `BEFORE=1 AFTER=2` — it passed. The audit now fails **correctly**, on a real job |
+| **Z-1** *"1,296 rows, nothing reads it"* | **Restated.** 1,404 rows, and **one** reader (`saveRoleCapabilities.ts:29` → `PermissionsEditor.tsx`). Not zero-consumer — **zero-*authority***, which is worse: it looks live |
+| **S-3** *"unconditional public limb"* | **Restated.** The limb is `status='open' AND published_at IS NOT NULL` — conditional, but **cross-tenant** |
+
+## C. Open decisions — awaiting Braden
+
+| # | Decision | Cost of delay | Superseded / new |
+|---|---|---|---|
+| **B-2** | **Fair Work API key** — absent from the repo and all 7 environments (verified) | Entire compliance lane parked. **No authority conjures a secret** | carried |
+| **B-3** | **Vault secret for `document-retention-sweep-daily`** — the job has never succeeded | **Document retention is a compliance obligation and is currently unmet** | **new** (N-3) |
+| **D-1** | **Commit signing** — enforce, or accept silent Vercel cancellations? Every `development` tip is `%G?`=`E`; **R80.4 is 0 signed of 75** | **Every green gate result is suspect** — an unsigned commit may have had its deploy cancelled, so the gate read a stale build | **new**, P0 |
+| **D-3** | **Roles: enum-by-migration, or data-driven via `role_capabilities`?** | Blocks custom user types in the UI. Informed by Z-1: 1,404 rows, one reader, zero authorisation decisions | carried |
+| **D-4** | **Candidates: inside the tenancy model as `guest`, or separate?** If separate, document why | Conduit continues to feel like a separate product | carried |
+| **D-5** | **390px vs 360px** | Two standards conflict; bites hardest on the field officer's phone | carried |
+| **D-6** | **Gmail scopes** — `gmail.send` only (no CASA) vs `gmail.modify` (annual paid assessment). The schema implies inbound sync, so this may already be committed — **confirm it was deliberate** | Blocks the email lane's shape | carried |
+| **D-7** | **Sydney Supabase project** — abandoned, or a planned data-residency move? `yhwlnehzclclnkpxjepc`, ap-southeast-2, ACTIVE_HEALTHY, **0 public tables** — and the local CLI is linked to it | **A `db push` would target the empty project and report success** | **new** (S-7) |
+
+**Not in this register:** the lane-marker decision. It manifests in this estate's git history but
+the remedy is agent-side; it lives as **AE-D-1** in
+`~/.agents/docs/20260825-agent-operating-environment-findings-v1.00W.md`.
+
+## D. What the campaign established, in one line
+
+**In six of ten long-standing complaints the machinery was built and the wiring was never done** —
+a token minted and never consumed, an RPC with zero callers, 1,404 permission rows read by one
+admin editor and consulted by no authorisation decision, consent columns no policy references.
+**The estate is not unbuilt. It is half-wired.** The single highest-leverage gate available is one
+that fails when a package, token, hook, RPC or table ships with zero consumers.
+
+*Intake recorded 2026-08-25. Uncommitted, for review.*
