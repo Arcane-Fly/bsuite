@@ -70,8 +70,22 @@ export const noTextWhite = {
     type: 'suggestion',
     fixable: 'code',
     docs: {
-      // eslint-disable-next-line bsuite/no-text-white -- theme-audit-ok: the rule description has to name the two utilities it bans, and PURE_TAILWIND_RE (no-hardcoded-colours) now matches them too
-      description: 'Disallow the text-white/text-black utilities as standalone text colours. Use text-foreground instead.',
+      // The description deliberately does NOT quote the utilities it bans.
+      //
+      // It used to, behind a disable directive naming `bsuite/no-text-white` — and
+      // that directive was wrong twice over. The rule it named does not fire here, so
+      // ESLint reported it as an UNUSED disable; the rule that actually fires on that
+      // line is `bsuite/no-hardcoded-colours`, whose PURE_TAILWIND_RE matches the
+      // literal wherever it appears, prose included. Proven by removing the directive:
+      // `no-text-white` stayed silent and `no-hardcoded-colours` fired.
+      //
+      // Naming the right rule would have worked, and would still have been a
+      // suppression that has to stay correct forever. Not writing the literal is
+      // simpler and cannot rot. Same class as a colour literal in a comment tripping
+      // the C1/C2 gates: a gate matching the token in prose ABOUT the token is a
+      // recurring cost, and the cheap side of it is the prose.
+        description:
+          'Disallow standalone white and black text utilities. Use text-foreground instead.',
       recommended: true,
     },
     schema: [],
