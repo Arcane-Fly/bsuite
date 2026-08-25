@@ -21,6 +21,27 @@ import type { GridLayouts } from './types.js';
 /** The 12-column grid every BSuite page canvas is laid out against. */
 export const CANVAS_GRID_COLUMNS = 12;
 
+/**
+ * The width a `CanvasCard` gets when its author does not say.
+ *
+ * SIX, i.e. half the grid — changed from twelve in 1.1.0. Twelve on a
+ * twelve-column grid means every card that omits `w` renders full width and
+ * the page becomes a single vertical stack. Measured across the estate on
+ * 2026-08-25: **1,068 of 1,729 CanvasCard usages omit `w`** (BSU and conduit
+ * omit it 100% of the time), so 62% of every card surface in BSuite was
+ * stacked by a DEFAULT, not by a layout decision. That is the operator's
+ * long-standing "the cards don't use the available space" report, and it is
+ * one number in one file rather than 1,068 page edits.
+ *
+ * Six rather than four: at a 1680px container half the grid is still ~820px,
+ * which comfortably holds a data table. Four would have traded a stacking
+ * complaint for a cramping one.
+ *
+ * A page that genuinely wants a full-width card still says `w={12}` — an
+ * explicit width always wins, and 661 usages already do exactly that.
+ */
+export const DEFAULT_CANVAS_CARD_WIDTH = 6;
+
 export function isCanvasCardElement(
   node: ReactNode,
 ): node is ReactElement<CanvasCardProps> {
@@ -118,7 +139,9 @@ export interface CanvasCardLayoutResult {
  */
 export function buildCanvasCardLayout(
   children: ReactNode,
+  options: { defaultWidth?: number } = {},
 ): CanvasCardLayoutResult {
+  const defaultWidth = clampColumns(options.defaultWidth ?? DEFAULT_CANVAS_CARD_WIDTH);
   const widgets: Record<string, ReactNode> = {};
   const lg: GridLayouts['lg'] = [];
   let x = 0;
@@ -137,7 +160,7 @@ export function buildCanvasCardLayout(
       children: body,
     } = child.props;
     const normalizedMinW = clampColumns(minW);
-    const width = clampColumns(child.props.w ?? CANVAS_GRID_COLUMNS, normalizedMinW);
+    const width = clampColumns(child.props.w ?? defaultWidth, normalizedMinW);
     if (x + width > CANVAS_GRID_COLUMNS) {
       y += rowHeight;
       x = 0;

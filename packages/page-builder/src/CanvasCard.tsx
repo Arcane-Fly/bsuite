@@ -3,7 +3,14 @@ import type { ReactNode } from 'react';
 export interface CanvasCardProps {
   /** Stable widget key used by PageGridLayout for layout persistence. Required. */
   cardKey: string;
-  /** Default grid width in columns (12-col grid). Defaults to 12. */
+  /**
+   * Grid width in columns on the 12-column grid.
+   *
+   * Defaults to **6** — half the grid, two cards per row. It defaulted to 12
+   * up to 1.0.7, which meant every card that omitted `w` rendered full width
+   * and stacked; 1,068 of 1,729 usages across the estate omit it. Say `w={12}`
+   * when a card genuinely wants the full row.
+   */
   w?: 2 | 3 | 4 | 6 | 8 | 12;
   /** Minimum width in columns when the user resizes. Defaults to 4. */
   minW?: 2 | 3 | 4 | 6 | 8 | 12;

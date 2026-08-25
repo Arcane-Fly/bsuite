@@ -120,7 +120,21 @@
    to resolve produces INVISIBLE text rather than an ugly one. Both stops
    therefore come from tokens the package itself defines. */
 .text-gradient-accent {
-  background-image: var(--gradient-heading);
+  /* TENANT FIRST, THEME DEFAULT SECOND.
+
+     --heading-gradient is what the branding resolver (useBranding.ts) writes
+     from `platform_branding.heading_gradient` / `tenant_branding.heading_gradient`.
+     --gradient-heading is this package's own default. Reading ONLY the default
+     meant a tenant's configured heading gradient could never reach this
+     utility, so propagating it estate-wide would have delivered consistent
+     defaults AND silently disabled white-label headings — a var with no reader
+     reads as working, because the default looks right.
+
+     PROVABLY A NO-OP TODAY: measured on production 2026-08-25, ZERO rows in
+     either branding table have heading_gradient set, so the first var is unset
+     and the fallback resolves to exactly today's value. Zero visual change now;
+     white-label works the moment anyone sets one. */
+  background-image: var(--heading-gradient, var(--gradient-heading));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

@@ -510,6 +510,27 @@
   --card-glow-source: var(--app-accent, var(--role-accent));
   --glow-card:         none;
   --glow-card-hover:   none;
+
+  /* ============================================================
+     CARD CORNER RADIUS — ONE var, read by BOTH card surfaces.
+
+     `@bsuite/page-builder`'s grid item and an app's own card must agree on a
+     radius or their corners misalign — 28px inside 24px is the "misshapen
+     corner" report. Aligning them on a LITERAL would fix the corner and lock
+     white-label out at the same time, so they align on a var instead.
+
+     1.5rem is exactly the `rounded-3xl` this replaces: no visual change.
+
+     NOT WIRED TO A TENANT YET, deliberately. `--radius-preset` is written by
+     THREE branding resolvers (crm7 useBranding.ts:354, BSU :302, braden
+     useTenantBranding.ts:64) and read by NOTHING — measured across the whole
+     estate 2026-08-25, zero readers. It also carries a preset NAME ('md'), not
+     a length, so `border-radius: md` is what a naive wiring would produce.
+     Wiring it needs the resolver to emit a length and a visual gate on two
+     tenants; doing it blind is how a live white-label gets wrecked. Recorded,
+     not guessed.
+     ============================================================ */
+  --radius-card: 1.5rem;
 }
 
 /* ============================================================

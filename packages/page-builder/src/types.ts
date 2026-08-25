@@ -17,6 +17,17 @@ export interface GridLayoutItem extends LayoutItem {
    */
   autoHeight?: boolean;
   /**
+   * Paint THIS item as a card — border, radius, background, shadow.
+   *
+   * Undefined falls back to `PageGridLayout`'s `itemChrome`, which is FALSE.
+   * Up to 1.0.7 every grid item painted chrome unconditionally and there was
+   * no way to turn it off; 332 files across six apps render their own card
+   * inside it. Set this true on a slot whose content is BARE — a heading, a
+   * chart, a list with no surface of its own — and leave it alone everywhere
+   * the content already is a card.
+   */
+  chrome?: boolean;
+  /**
    * True once the user has resized this item with the SE handle.
    *
    * The floor above says "never discard a height the user chose". Until this
@@ -167,6 +178,15 @@ export interface PageGridLayoutProps extends UsePageGridLayoutOptions {
   widgetMeta?: Record<string, WidgetMeta>;
   className?: string;
   isResizable?: boolean;
+  /**
+   * Paint every grid item as a card unless the item says otherwise.
+   *
+   * DEFAULT FALSE. This is the app-level migration lever for the 1.1.0 chrome
+   * inversion: an app that has not yet migrated its bare slots passes
+   * `itemChrome` and gets the pre-1.1.0 look back exactly, then flips slot by
+   * slot with `GridLayoutItem.chrome`. Per-item always wins.
+   */
+  itemChrome?: boolean;
   resizeHandles?: readonly ResizeHandleAxis[];
   /**
    * The signed-in caller's tenant. Threaded into every widget-factory call

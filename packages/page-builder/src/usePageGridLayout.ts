@@ -58,10 +58,17 @@ export const PAGE_GRID_EDITING_EVENT = 'bsuite-page-grid-editing';
  * was additionally polluted with frozen derived breakpoints, so all of them
  * reset once to the corrected defaults.
  *
+ * 1000 -> 2000 (2026-08-25, V-C5/G1): two more all-grids defaults changed in
+ * one release — the grid item no longer paints card chrome, and a `CanvasCard`
+ * that omits `w` is now half the grid rather than all of it. Every stored
+ * layout was written under the old width default, so a saved `w: 12` would
+ * fight the new default forever and the page would keep stacking. An epoch
+ * bump is the only lever that reaches every consumer at once.
+ *
  * Per-page `layoutVersion` bumps keep working on top; this only moves the
  * floor.
  */
-export const PACKAGE_LAYOUT_EPOCH = 1000;
+export const PACKAGE_LAYOUT_EPOCH = 2000;
 
 /**
  * Default for `GridLayoutItem.autoHeight` when an item does not state one.

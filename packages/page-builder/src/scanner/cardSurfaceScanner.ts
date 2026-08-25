@@ -50,7 +50,20 @@ export type CardSurfaceIdiom =
   /** autoHeight opt-out on a card that is not a virtualized list. */
   | 'autoheight-optout'
   /** autoHeight={false} with a seed height so small the card must clip. */
-  | 'clipped-card';
+  | 'clipped-card'
+  /**
+   * V-C5. A grid item whose child re-declares card chrome — border + radius +
+   * background — inside the chrome the grid item already paints. 28px inside
+   * 24px, two 1px borders. This is the idiom V-C4 (`glued-widget`) cannot see:
+   * ONE card in ONE slot is not glue, and it is still a double frame.
+   */
+  | 'nested-chrome'
+  /**
+   * The file could not be parsed with confidence. NOT a clean verdict. A gate
+   * that cannot tell "checked nothing" from "found nothing" is not a gate
+   * (D-92), so an unparseable file gets its own idiom and its own exit path.
+   */
+  | 'unparseable';
 
 export interface CardSurfaceFinding {
   file: string;
@@ -101,6 +114,36 @@ export interface CardSurfaceScannerConfig {
   autoHeightEscapeHatch?: RegExp;
   /** File extensions to scan. Defaults to .tsx. */
   extensions?: string[];
+  /**
+   * Extra component names that count as CARD CHROME when they appear inside a
+   * grid slot — a component that paints its own border + radius + background.
+   * `cardTags` is always included; this is for app-local chrome components the
+   * glue check does not need (BSU `MagicCard`, conduit `CounterCard`, …).
+   */
+  nestedChromeTags?: string[];
+  /** file -> reason. A nested-chrome file listed here is allowed. */
+  nestedChromeExclusions?: Record<string, string>;
+  /**
+   * Does the GRID ITEM paint card chrome in the version this app resolves?
+   *
+   * TRUE for `@bsuite/page-builder` <= 1.0.7, where every grid item painted
+   * `rounded-3xl bg-card border border-border` unconditionally and there was
+   * no way to turn it off. On those versions a nested card is ALWAYS a double
+   * frame, so every nesting slot is a finding.
+   *
+   * FALSE from 1.1.0, where chrome is opt-in. A nested card then becomes the
+   * CORRECT shape — it is the only surface — and the defect narrows to a slot
+   * that opts back INTO chrome (`itemChrome`, or `chrome` on the item or the
+   * CanvasCard) AND still nests a card.
+   *
+   * DEFAULTS TO TRUE, i.e. it assumes the pre-inversion package until an app
+   * says otherwise. A shared-package fix that four consumers receive and one
+   * does not is this estate's recorded failure mode (conduit sat on a
+   * minor-locked `^0.6.3` while the fix shipped in 0.8.0, and nothing
+   * reported it), so each app must DECLARE which side of the inversion it is
+   * on rather than inherit an optimistic default.
+   */
+  gridItemPaintsChrome?: boolean;
 }
 
 export interface CardSurfaceScanResult {
@@ -110,6 +153,14 @@ export interface CardSurfaceScanResult {
   scanRootsResolved: string[];
   /** Exclusion-ledger keys that no longer match any finding — stale entries. */
   staleExclusions: string[];
+  /**
+   * Files the scanner could NOT parse with confidence. These are UNKNOWN, not
+   * clean. A caller that treats an empty `findings` array as a pass while this
+   * array is non-empty has reproduced the exact defect D-92 names.
+   */
+  unknownFiles: string[];
+  /** Distinct files carrying at least one `nested-chrome` finding. */
+  nestedChromeFiles: string[];
   /** Human-readable account of how the verdict was reached. */
   summary: string;
 }
@@ -132,8 +183,17 @@ const DEFAULT_GRID_PRIMITIVES = [
  */
 export function stripComments(source: string): string {
   return source
-    .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '') // {/* JSX comment */}
-    .replace(/\/\*[\s\S]*?\*\//g, '') // /* block */
+    // {/* JSX comment */} — TEMPERED so the match cannot span a `*​/` it did
+    // not open. The naive lazy form `\{\s*\/\*[\s\S]*?\*\/\s*\}` backtracks
+    // past the comment's own terminator whenever the next character is not
+    // `}` — e.g. an ordinary block comment sitting at the head of an object
+    // literal — and then matches the NEXT `*​/}` anywhere later in the file,
+    // DELETING every line between. crm7 `src/pages/people/new/worker.tsx` lost
+    // 37 lines and two whole `<CanvasCard>` blocks to exactly that, which the
+    // UNKNOWN gate below caught as unbalanced tags. Code silently deleted
+    // before matching is a scanner that under-reports and calls it clean.
+    .replace(/\{\s*\/\*(?:(?!\*\/)[\s\S])*\*\/\s*\}/g, '')
+    .replace(/\/\*(?:(?!\*\/)[\s\S])*\*\//g, '') // /* block */
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1'); // // line, but not http://
 }
 
@@ -244,6 +304,295 @@ function extractWidgetEntries(source: string): { key: string; body: string }[] {
   return out;
 }
 
+/* ==========================================================================
+ * V-C5 — NESTED CHROME
+ *
+ * `PageGridLayout` paints EVERY grid item as a card:
+ *
+ *   h-full w-full rounded-3xl transition-all flex flex-col
+ *   bg-card border border-border shadow-sm dark:shadow-[var(--glow-card,none)]
+ *
+ * When the slot's own content re-declares that surface — border + radius +
+ * background — the user sees 28px inside 24px and two 1px borders. V-C4
+ * (`glued-widget`) cannot see this: ONE card in ONE slot is not glue, and it
+ * is still a double frame. That is why 316 files across the estate render a
+ * card inside a card and every existing gate reads green.
+ * ========================================================================== */
+
+/** Components that paint their own card chrome. */
+const DEFAULT_NESTED_CHROME_TAGS = [
+  'Card',
+  'MagicCard',
+  'GlassCard',
+  'NeonCard',
+  'StatCard',
+  'SummaryCard',
+  'ServiceCard',
+  'CounterCard',
+  'MetricCard',
+  'InfoCard',
+];
+
+/**
+ * Elements that are CONTROLS, not surfaces.
+ *
+ * A bordered, rounded, tinted `<button>` is a button. A `<Badge>` is a pill.
+ * Counting them as nested chrome is how a detector inflates: throughput's
+ * `Teams.tsx` carries `border … rounded … text-…` on a filter button, which is
+ * correct styling and not a second card. Chrome on a control is never the
+ * double-frame defect, so controls are excluded BY TAG rather than by tuning
+ * the class thresholds until the number looks right.
+ */
+const CONTROL_TAGS = new Set([
+  'button',
+  'a',
+  'input',
+  'select',
+  'textarea',
+  'label',
+  'summary',
+  'Button',
+  'Input',
+  'Select',
+  'SelectTrigger',
+  'SelectContent',
+  'Textarea',
+  'Badge',
+  'Avatar',
+  'AvatarFallback',
+  'Switch',
+  'Checkbox',
+  'Progress',
+  'Slider',
+  'Toggle',
+  'ToggleGroup',
+  'ToggleGroupItem',
+  'TabsList',
+  'TabsTrigger',
+  'Skeleton',
+  'Tooltip',
+  'TooltipContent',
+  'DropdownMenuContent',
+  'PopoverContent',
+]);
+
+const RADIUS_CLASS = /(?:^|[\s'"`])rounded(?:-[a-z0-9[\]().\-/]+)?(?=$|[\s'"`])/;
+const BORDER_CLASS = /(?:^|[\s'"`])border(?:-[a-z0-9[\]().\-/]+)?(?=$|[\s'"`])/;
+const BG_CLASS =
+  /(?:^|[\s'"`])(?:bg-[a-z0-9[\]().\-/]+|glass-card|neon-card|card-surface)(?=$|[\s'"`])/;
+
+/**
+ * Composite classes that are a WHOLE card surface on their own.
+ *
+ * BSU's `.glass-card` (business-suite-unified/src/index.css:760) declares
+ * `background-color` AND `border: 1px solid` AND a shadow. `glass-card
+ * rounded-xl` is therefore already border + radius + background — the full
+ * double frame — while carrying no `border-*` utility for a class matcher to
+ * find. Requiring three separate Tailwind utilities makes every composite-class
+ * card invisible; BSU `Government.tsx` is exactly that shape.
+ */
+const COMPOSITE_CARD_CLASS = /(?:^|[\s'"`])(?:glass-card|neon-card|card-surface)(?=$|[\s'"`])/;
+
+const RADIUS_STYLE = /\bborder-?[Rr]adius\b/;
+const BORDER_STYLE = /\bborder(?:Color|Width|Style)?\s*:/;
+const BG_STYLE = /\b(?:background|backgroundColor|backgroundImage)\s*:/;
+
+/**
+ * Every opening tag in a JSX body, with its raw attribute text.
+ *
+ * Hand-rolled rather than regex-only because an attribute value can contain
+ * `>` inside a string, a template literal or a `{…}` expression — three of the
+ * five hand-rolled copies this module replaced were defeated by exactly that.
+ */
+export function openingTags(body: string): { tag: string; attrs: string }[] {
+  const out: { tag: string; attrs: string }[] = [];
+  for (let i = 0; i < body.length; i++) {
+    if (body[i] !== '<') continue;
+    const nameMatch = /^<([A-Za-z][A-Za-z0-9._-]*)/.exec(body.slice(i, i + 64));
+    if (!nameMatch) continue;
+    let j = i + nameMatch[0].length;
+    let depth = 0;
+    let quote: string | null = null;
+    let closed = false;
+    for (; j < body.length; j++) {
+      const c = body[j];
+      if (quote) {
+        if (c === quote && body[j - 1] !== '\\') quote = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') {
+        quote = c;
+        continue;
+      }
+      if (c === '{') depth++;
+      else if (c === '}') depth--;
+      else if (c === '>' && depth === 0) {
+        closed = true;
+        break;
+      }
+    }
+    if (!closed) continue;
+    out.push({ tag: nameMatch[1], attrs: body.slice(i + nameMatch[0].length, j) });
+    i = j;
+  }
+  return out;
+}
+
+/** Every className value on one element — string, template literal or `cn(...)`. */
+function classValues(attrs: string): string[] {
+  const out: string[] = [];
+  const re = /class(?:Name)?\s*=\s*(?:"([^"]*)"|'([^']*)'|\{([\s\S]*)\})/;
+  const m = re.exec(attrs);
+  if (!m) return out;
+  if (m[1] !== undefined) out.push(m[1]);
+  else if (m[2] !== undefined) out.push(m[2]);
+  else if (m[3] !== undefined) {
+    // `{cn('a', cond && 'b')}` / `{`a ${x}`}` — take every literal inside.
+    const lit = /(?:"([^"]*)"|'([^']*)'|`([^`]*)`)/g;
+    let l: RegExpExecArray | null;
+    while ((l = lit.exec(m[3])) !== null) out.push(l[1] ?? l[2] ?? l[3] ?? '');
+  }
+  return out;
+}
+
+/** The raw text of an inline `style={{ … }}` attribute, if present. */
+function styleValue(attrs: string): string | null {
+  const i = attrs.indexOf('style');
+  if (i < 0) return null;
+  const m = /style\s*=\s*\{/.exec(attrs.slice(i));
+  if (!m) return null;
+  let depth = 0;
+  const start = i + m.index + m[0].length - 1;
+  for (let j = start; j < attrs.length; j++) {
+    if (attrs[j] === '{') depth++;
+    else if (attrs[j] === '}') {
+      depth--;
+      if (depth === 0) return attrs.slice(start, j + 1);
+    }
+  }
+  return null;
+}
+
+/**
+ * Does this element paint its OWN card chrome?
+ *
+ * Chrome means all three of border, radius and background, because that is
+ * exactly what `PageGridLayout` already paints on the slot. Two of the three is
+ * a tinted panel or a divider, not a second card — requiring all three is what
+ * separates BSU's `glass-card rounded-2xl border-primary/30` (a real double
+ * frame) from a `rounded-lg bg-muted` inline chip (not one).
+ *
+ * Chrome declared through `style={{ background, border, borderRadius }}` counts
+ * the same as chrome declared through classes. BSU's `Settings.tsx` is chrome
+ * entirely in inline style; a class-only detector calls that file clean, which
+ * is how a nested card hides from a gate that only reads Tailwind.
+ */
+export function elementDeclaresCardChrome(
+  el: { tag: string; attrs: string },
+  chromeTags: Set<string>,
+): string | null {
+  if (chromeTags.has(el.tag)) return `<${el.tag}> paints its own card chrome`;
+  if (CONTROL_TAGS.has(el.tag)) return null;
+
+  for (const value of classValues(el.attrs)) {
+    const composite = COMPOSITE_CARD_CLASS.test(value);
+    const hasBorder = composite || BORDER_CLASS.test(value);
+    const hasBg = composite || BG_CLASS.test(value);
+    if (RADIUS_CLASS.test(value) && hasBorder && hasBg)
+      return `<${el.tag}> className declares border + radius + background ("${value.replace(/\s+/g, ' ').trim().slice(0, 80)}")`;
+  }
+
+  const style = styleValue(el.attrs);
+  if (style && RADIUS_STYLE.test(style) && BORDER_STYLE.test(style) && BG_STYLE.test(style))
+    return `<${el.tag}> inline style declares border + radius + background`;
+
+  // Mixed: radius as a class, border+background as inline style. BSU
+  // `Settings.tsx` is exactly this shape.
+  if (style) {
+    const classText = classValues(el.attrs).join(' ');
+    const composite = COMPOSITE_CARD_CLASS.test(classText);
+    const hasRadius = RADIUS_CLASS.test(classText) || RADIUS_STYLE.test(style);
+    const hasBorder = composite || BORDER_CLASS.test(classText) || BORDER_STYLE.test(style);
+    const hasBg = composite || BG_CLASS.test(classText) || BG_STYLE.test(style);
+    if (hasRadius && hasBorder && hasBg)
+      return `<${el.tag}> declares border + radius + background across className and inline style`;
+  }
+  return null;
+}
+
+/**
+ * Does this grid slot paint chrome of its OWN, post-inversion?
+ *
+ * Three ways to opt in, and all three have to be visible to the scanner or a
+ * re-chromed slot goes unnoticed: `itemChrome` on the grid component (whole
+ * app/page), `chrome: true` on the layout item, and `chrome` on the CanvasCard.
+ */
+export function slotOptsIntoChrome(fileSource: string, slotBody: string): boolean {
+  const openTag = /^<CanvasCard[\s\S]*?>/.exec(slotBody)?.[0] ?? '';
+  if (/\bchrome\s*(?:=\s*\{?\s*true\b|\}|[\s/>])/.test(openTag) &&
+      !/\bchrome\s*=\s*\{\s*false\s*\}/.test(openTag))
+    return true;
+  if (/\bitemChrome\b(?!\s*=\s*\{\s*false\s*\})/.test(fileSource)) return true;
+  if (/\bchrome\s*:\s*true\b/.test(fileSource)) return true;
+  return false;
+}
+
+/** The first nested-chrome element inside one grid slot, or null. */
+export function findNestedChrome(
+  slotBody: string,
+  config: Pick<CardSurfaceScannerConfig, 'cardTags' | 'nestedChromeTags'>,
+): string | null {
+  const chromeTags = new Set([
+    ...config.cardTags,
+    ...(config.nestedChromeTags ?? DEFAULT_NESTED_CHROME_TAGS),
+  ]);
+  // Skip the slot's own opening tag — `<CanvasCard>` is the grid item, not a
+  // child of it.
+  const inner = slotBody.replace(/^<CanvasCard[\s\S]*?>/, '');
+  for (const el of openingTags(inner)) {
+    const hit = elementDeclaresCardChrome(el, chromeTags);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/**
+ * Can this file be parsed with confidence?
+ *
+ * Returns a reason when it CANNOT. Every `<CanvasCard` must pair with a
+ * `</CanvasCard>` the block regex can reach, and every `widgets={{` must close
+ * before EOF. A file that fails either is UNKNOWN — it is not reported clean,
+ * and it is not silently skipped. "Checked nothing" and "found nothing" do not
+ * share an exit code here.
+ */
+export function parseConfidence(src: string): string | null {
+  const opens = (src.match(/<CanvasCard[\s/>]/g) ?? []).length;
+  const selfClosing = (src.match(/<CanvasCard[^<>]*\/>/g) ?? []).length;
+  const closes = (src.match(/<\/CanvasCard>/g) ?? []).length;
+  if (opens - selfClosing !== closes)
+    return `unbalanced CanvasCard tags: ${opens} opening (${selfClosing} self-closing) vs ${closes} closing`;
+  const blocks = extractCanvasCardBlocks(src).length;
+  if (blocks !== closes)
+    return `CanvasCard block extraction recovered ${blocks} of ${closes} blocks (nested or dynamically composed CanvasCards)`;
+
+  const widgetStarts = (src.match(/widgets=\{\{/g) ?? []).length;
+  if (widgetStarts > 0) {
+    const re = /widgets=\{\{/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src)) !== null) {
+      let depth = 2;
+      let i = m.index + m[0].length;
+      while (i < src.length && depth > 0) {
+        if (src[i] === '{') depth++;
+        else if (src[i] === '}') depth--;
+        i++;
+      }
+      if (depth !== 0) return 'widgets={{ … }} object literal never closes before EOF';
+    }
+  }
+  return null;
+}
+
 function walk(dir: string, extensions: string[], acc: string[]): void {
   for (const entry of readdirSync(dir)) {
     if (entry === 'node_modules' || entry === 'dist' || entry === '.git') continue;
@@ -263,6 +612,7 @@ export function scanCardSurfaces(
   const findings: CardSurfaceFinding[] = [];
   const files: string[] = [];
   const scanRootsResolved: string[] = [];
+  const unknownFiles: string[] = [];
 
   // D-92: assert the inputs were present BEFORE reporting any verdict. A
   // missing scan root must fail loudly, not produce a confident zero.
@@ -310,15 +660,57 @@ export function scanCardSurfaces(
 
   for (const file of files) {
     const rel = relative(config.projectRoot, file);
-    const raw = readFileSync(file, 'utf8');
+    let raw: string;
+    try {
+      raw = readFileSync(file, 'utf8');
+    } catch (err) {
+      // A file we could not READ is UNKNOWN, never clean.
+      unknownFiles.push(rel);
+      findings.push({
+        file: rel,
+        idiom: 'unparseable',
+        detail: `could not be read: ${(err as Error).message}`,
+      });
+      continue;
+    }
     const src = stripComments(raw);
+
+    // D-92 fail-closed: decide whether this file can be parsed with confidence
+    // BEFORE reporting any verdict about it. An UNKNOWN file is recorded as
+    // UNKNOWN and still scanned on a best-effort basis — what it must never do
+    // is contribute a silent "clean".
+    const unparseable = parseConfidence(src);
+    if (unparseable) {
+      unknownFiles.push(rel);
+      findings.push({ file: rel, idiom: 'unparseable', detail: unparseable });
+    }
 
     // --- glued widget: 2+ cards inside ONE grid slot -----------------------
     const slots: { label: string; body: string }[] = [
       ...extractCanvasCardBlocks(src).map((b, i) => ({ label: `CanvasCard#${i + 1}`, body: b })),
       ...extractWidgetEntries(src).map((e) => ({ label: `widgets.${e.key}`, body: e.body })),
     ];
+    let nestedChromeReported = false;
     for (const slot of slots) {
+      // --- V-C5 nested chrome: ONE card inside ONE slot is still a double
+      // frame, and V-C4 below cannot see it (it needs 2+).
+      const gridItemChromed =
+        (config.gridItemPaintsChrome ?? true) || slotOptsIntoChrome(src, slot.body);
+      if (gridItemChromed && !nestedChromeReported && !config.nestedChromeExclusions?.[rel]) {
+        const chrome = findNestedChrome(slot.body, config);
+        if (chrome) {
+          nestedChromeReported = true;
+          findings.push({
+            file: rel,
+            idiom: 'nested-chrome',
+            detail:
+              `${slot.label} ${chrome}. The grid item already paints ` +
+              `rounded-3xl + bg-card + border-border, so this renders a card inside a card — ` +
+              `mismatched corners and a doubled 1px edge.`,
+          });
+        }
+      }
+
       const n = countCardTags(slot.body, config);
       const mapped = hasMappedCards(slot.body, config);
       if (n > 1 || mapped) {
@@ -384,13 +776,26 @@ export function scanCardSurfaces(
       (f) => !hit.has(`ungridded-multi-card:${f}`),
     ),
   ];
+  const nestedChromeFiles = [
+    ...new Set(findings.filter((f) => f.idiom === 'nested-chrome').map((f) => f.file)),
+  ];
 
   const summary =
     `scanned ${files.length} files across ${scanRootsResolved.length} root(s) [${scanRootsResolved.join(', ')}] ` +
     `with cardTags [${config.cardTags.join(', ')}]` +
     `${config.classSurfaces?.length ? ` + ${config.classSurfaces.length} class surface pattern(s)` : ''}; ` +
-    `${findings.length} finding(s); ${Object.keys(config.blindSpots ?? {}).length} declared blind spot(s); ` +
-    `${staleExclusions.length} stale exclusion(s).`;
+    `${findings.length} finding(s) incl. ${nestedChromeFiles.length} nested-chrome file(s); ` +
+    `${Object.keys(config.blindSpots ?? {}).length} declared blind spot(s); ` +
+    `${staleExclusions.length} stale exclusion(s); ` +
+    `${unknownFiles.length} UNKNOWN file(s) — an UNKNOWN is not a clean file.`;
 
-  return { findings, filesScanned: files.length, scanRootsResolved, staleExclusions, summary };
+  return {
+    findings,
+    filesScanned: files.length,
+    scanRootsResolved,
+    staleExclusions,
+    unknownFiles,
+    nestedChromeFiles,
+    summary,
+  };
 }
