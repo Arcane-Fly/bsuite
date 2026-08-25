@@ -106,6 +106,52 @@ describe('the width-dependent flag — `fit-content` is load-bearing AND a hazar
     expect(f?.widthDependentClasses.sort()).toEqual(['flex-1', 'truncate']);
   });
 
+  it('FLAGS a CENTRED card heading — fit-content leaves nothing to centre', () => {
+    write(
+      'src/pages/centred.tsx',
+      `export const P = () => (<Card><h2 className="text-center text-lg">Centred</h2></Card>)`,
+    );
+    const r = scanCardHeadings({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.find((x) => x.file === 'src/pages/centred.tsx')?.widthDependentClasses,
+    ).toContain('text-center');
+  });
+
+  it('FLAGS a card heading that paints its OWN border or background', () => {
+    // The most visible of the three hazard families and the easiest to miss in
+    // a diff: a rule or tinted strip that spanned the card suddenly ends at the
+    // last letter.
+    write(
+      'src/pages/own-paint.tsx',
+      `export const P = () => (<Card><h3 className="border-b bg-muted pb-2">Painted</h3></Card>)`,
+    );
+    const r = scanCardHeadings({ ...BASE, projectRoot: root });
+    const hits =
+      r.findings.find((x) => x.file === 'src/pages/own-paint.tsx')?.widthDependentClasses ?? [];
+    expect(hits).toContain('border-b');
+    expect(hits).toContain('bg-muted');
+  });
+
+  it('reads the HEADING\'S OWN attributes, not a nearby line', () => {
+    // An early ad-hoc measurement took a three-line window around the heading
+    // and reported ~26 hazards estate-wide. Reading the heading's own
+    // attributes reports 2: the window was matching SIBLING elements. A grep
+    // count is a hypothesis; the probe is the measurement.
+    write(
+      'src/pages/sibling-classes.tsx',
+      `export const P = () => (
+        <Card>
+          <div className="text-center border bg-muted">
+            <h2 className="text-lg font-semibold">Not centred itself</h2>
+          </div>
+        </Card>)`,
+    );
+    const r = scanCardHeadings({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.find((x) => x.file === 'src/pages/sibling-classes.tsx')?.widthDependentClasses,
+    ).toEqual([]);
+  });
+
   it('does NOT flag an ordinary card heading', () => {
     const r = scanCardHeadings({ ...BASE, projectRoot: root });
     const f = r.findings.find((x) => x.file === 'src/pages/in-card.tsx');

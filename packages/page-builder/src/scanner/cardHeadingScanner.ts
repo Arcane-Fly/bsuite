@@ -82,8 +82,45 @@ export interface CardHeadingScannerConfig {
 
 const DEFAULT_HEADINGS = ['h2', 'h3'];
 const DEFAULT_GRADIENT_CLASSES = ['text-gradient-accent', 'gradient-text'];
-const WIDTH_DEPENDENT = ['truncate', 'flex-1', 'w-full', 'grow', 'flex-grow'];
-const WIDTH_DEPENDENT_PREFIXES = ['line-clamp-', 'basis-'];
+/**
+ * Classes whose effect DEPENDS on the heading filling its box.
+ *
+ * `.text-gradient-accent` sets `width: fit-content`, and that is load-bearing —
+ * `background-clip: text` paints across the ELEMENT BOX, so a block-level
+ * heading spanning its container samples only the first slice of the gradient
+ * and renders flat, indistinguishable from having no gradient at all. Shrinking
+ * the box is therefore not optional; it is the effect.
+ *
+ * But shrinking the box is VISIBLE wherever the box itself is visible or
+ * positioned. Three families, and the first was the only one measured on the
+ * first pass:
+ *
+ *   1. SIZE — `truncate`, `flex-1`, `w-full`, `line-clamp-*`. Fit-content never
+ *      truncates and never fills.
+ *   2. POSITION — `text-center`, `mx-auto`. A centred heading stops centring the
+ *      moment its box hugs the glyphs, because there is nothing left to centre
+ *      the text inside.
+ *   3. PAINT — the heading's OWN `border-*` or `bg-*`. A rule or a tinted strip
+ *      that used to span the card suddenly ends at the last letter. This is the
+ *      most visible of the three and the easiest to miss in a diff.
+ *
+ * A first, loose measurement over a three-line window put family 1 at 2 and
+ * implied the sweep was nearly free. Reading the heading's OWN attributes puts
+ * the full hazard set an order of magnitude higher. The loose number was the
+ * kind that makes a codemod look safe.
+ */
+const WIDTH_DEPENDENT = [
+  'truncate',
+  'flex-1',
+  'w-full',
+  'grow',
+  'flex-grow',
+  'text-center',
+  'mx-auto',
+];
+const WIDTH_DEPENDENT_PREFIXES = ['line-clamp-', 'basis-', 'w-', 'min-w-', 'max-w-'];
+/** The heading paints its own box — a border or a background of its own. */
+const OWN_PAINT = /(?:^|\s)(?:border(?:-[a-z0-9[\]().\-/]+)?|bg-[a-z0-9[\]().\-/]+)(?=$|\s)/;
 
 /** Void HTML elements never carry a closing tag. */
 const VOID_TAGS = new Set([
@@ -174,11 +211,15 @@ function classText(attrs: string): string {
 
 function widthDependent(classes: string): string[] {
   const tokens = classes.split(/\s+/).filter(Boolean);
-  return tokens.filter(
+  const hits = tokens.filter(
     (t) =>
       WIDTH_DEPENDENT.includes(t) ||
       WIDTH_DEPENDENT_PREFIXES.some((p) => t.startsWith(p)),
   );
+  // A heading that paints its own box: shrinking the box moves the paint.
+  for (const t of tokens)
+    if (OWN_PAINT.test(` ${t} `) && !hits.includes(t)) hits.push(t);
+  return hits;
 }
 
 function walk(dir: string, extensions: string[], acc: string[]): void {
