@@ -18,34 +18,54 @@ evidence:
 
 ---
 
-## THE THIRTY-SECOND VERSION
+## THE THIRTY-SECOND VERSION — final, 06:00
 
-**Your demo data is safe.** FutureBuild Academy is back to exactly what it was at 22:00: 13 contacts,
-8 placements, 8 people, 8 training contracts, 3 timesheets. Placements and people **never moved at
-any point.** All eight placements were confirmed rendering **with their fields populated**, in light
-and dark, at two screen widths.
+**Your demo data is safe and your demo fixes are live.** FutureBuild Academy is exactly as it was at
+22:00: 13 contacts, 8 placements, 8 people, 8 training contracts, 3 timesheets, 0 incidents.
+Placements and people **never moved at any point tonight.**
 
-**Two things need you.** One is a question I could not answer, one is a decision I would not make
-alone. Both are in §1.
+**Everything that needed to reach production before the freeze did, and I checked the behaviour
+rather than the merge:**
 
-**The biggest thing found tonight was not on any list:** your continuous-integration test suite
-writes to the **live production database**, and which client's records it writes into depends on what
-somebody else did seconds earlier. That is how 12 fake rows got into FutureBuild. They have been
-removed. The underlying cause has not.
+- switching to a client now shows **that client's** logo and name, both light and dark — verified live
+- **"0 apprentices placed" now reads 8** over your 8 real apprentices
+- **"Total Contracts"** agrees with the list underneath it instead of counting the whole estate
+- **two admin screens that returned an error for everyone** — team invitations and tester licences —
+  now work
+- six tables anyone signed in could read across clients are **scoped**, verified policy by policy
+
+**One thing nearly went into production that should not have**, and it was caught: a shared layout
+package with a breaking change was adopted by five apps at 01:10. It would have discarded every
+saved layout across 1,729 cards. **Production never took it** — every app still runs the old version.
+
+**Two things still want you** (§1), and neither is urgent enough to have woken you.
 
 ---
-
 ## §1 — THE TWO THINGS THAT NEED YOU
 
-### 1.1 — Did you delete the 12 fake rows? *(a question, not a decision)*
+### 1.1 — Did you delete the 12 fake rows? *(now answered as far as the data can answer it)*
 
-Between 23:14 and 23:33 the 10 fake contacts and 2 fake training contracts vanished from FutureBuild.
-The tenant is now back to its exact original counts, and **nothing real was touched** — every
-surviving contact was created in May–August, none tonight.
+The tenant's own audit trail reads, in order:
 
-**Three lanes have each stated it was not them.** I did not do it. So either you did, or a lane did
-it without saying so. If it was you, this is closed and it was the right call. If it was not, then
-something deleted from a real client's tenant unattended, and that is worth knowing about.
+```
+14:40:14  INSERT  training_contracts  user = the shared test account (super admin / developer)
+14:45:33  INSERT  training_contracts  user = the shared test account
+15:23:51  DELETE  training_contracts  user = NULL
+15:23:51  DELETE  training_contracts  user = NULL
+```
+
+**The deletions carry no user at all.** That means they ran on a direct database connection — the
+Supabase console or a `psql` session — **not through the application**. Three lanes have each said it
+was not them, and it was not me. If it was you at the console, this is closed and it was the right
+call.
+
+**A finding in its own right:** `contacts` has **no audit trigger**, so the 10 contact deletions left
+no trace whatsoever. Only the 2 training contracts were recorded. **Deletions from your contacts
+table are currently unauditable** — worth fixing, and not tonight's job.
+
+**A second unattributed write**, same shape: a lane reports `profiles.current_tenant_id` was moved by
+a direct `UPDATE` at 23:48 — **eight minutes after another lane had explicitly withdrawn that exact
+statement as unsafe.** Also nobody's. Two service-role writes tonight that no lane claims.
 
 ### 1.2 — Your test suite writes to the live database. *(a decision)*
 
@@ -158,6 +178,61 @@ guess, hours before you demo on it.
 
 ---
 
+## §4c — THE ONE THAT NEARLY WENT WRONG, AND HOW IT WAS CAUGHT
+
+**Nothing here reached production. This is a near-miss, written up because the near-miss is the
+useful part.**
+
+The shared layout package was rebuilt so cards stop drawing a box inside a box — the thing you have
+asked about repeatedly. It is a **breaking** change: it turns card frames off by default, halves the
+default card width, and **discards every saved layout**, across 1,729 cards in six apps.
+
+It was deliberately held back, by the lane that built it and by me, so it could be looked at in
+daylight.
+
+**At 01:10 an app adopted it anyway** — not carelessly. It was clearing a red gate, and the gate's
+own advice says the fix is *"zero risk"*. **The gate says that because the version number told it
+so.** A checker that reads version numbers cannot see that a major release is a redesign. **Three
+separate lanes were pointed at that same advice tonight.**
+
+Within the hour four more apps had followed. All five had it on their working branches.
+
+**What caught it:** crm7 has a contract test that fails when the *definition of a card* changes. It
+flagged two files — neither of which had been edited since March. *The files did not change; the
+definition of a card did.* **The other four apps went green**, because nothing in them can see that
+kind of change. Their green meant nothing.
+
+**What I did:** reverted crm7, blocked the two pull requests that would have carried the rest into
+production, and re-checked every app's production branch by hand. **All five still run the old
+version.** Production never took it.
+
+**The real fix is not a stricter instruction.** A standing "do not do this" was already written, and
+three lanes walked past it — because the tool told each of them it was safe. The gate needs to know
+that a major version bump on a package with 1,729 consumers is never routine. **That is a daylight
+job and it is the most useful thing to come out of tonight.**
+
+**Still binding until then:** please do not run a dependency install or lockfile refresh in crm7,
+business-suite-unified, conduit, braden or throughput.
+
+---
+
+## §4d — WHAT IS IN PRODUCTION AND PROVEN BY BEHAVIOUR, NOT BY MERGE
+
+Re-checked at 06:00, on the live database and the live site.
+
+| what | how it was proved |
+|---|---|
+| **The client's logo and name** now follow the client you are viewing | resolver queried live as a developer acting as FutureBuild: returns **FutureBuild Academy**, with **both** light and dark logos |
+| **"0 apprentices placed" → 8** | all 8 of their placements carry the identifier the tile now reads |
+| **"Total Contracts"** matches its list | measured as a real tenant user, not as an operator whose reach hides the bug |
+| **Team invitations + tester licences** work | the read that used to fail for *every* role now returns rows |
+| **Six cross-client-readable tables** scoped | every SELECT rule re-read from the live database, one by one |
+| **Migrations actually applied** | the ledger, not the green run — a merged-but-unapplied migration left two screens dead for hours tonight |
+| **Data intact** | 13 · 8 · 8 · 8 · 3 · 0, identical to 22:00 |
+| **Site up** | production returning 200, no runtime errors |
+
+---
+
 ## §5 — WHAT I GOT WRONG
 
 Recorded because it is the part worth reading.
@@ -170,6 +245,12 @@ Recorded because it is the part worth reading.
 | `created_by` being empty proves a script wrote those rows | It proves nothing — that column has no default, so the ordinary screens leave it empty too | Another lane caught it. I spent an hour on the wrong suspect. |
 | A guard requiring tenant membership before showing branding | Would have **broken the exact case it was meant to fix** — a platform developer supporting a client is *supposed* to act as a tenant they do not belong to | My negative test asserted the wrong behaviour and passed convincingly while doing it |
 | My branding fix was needed | **It duplicated another lane's**, used the wrong tenant resolver of three, shipped no tests, and had a higher version number so it would have silently overwritten the better one | I never checked for an in-flight change to the same function. Closed. |
+
+| a guard requiring tenant membership before showing branding | would have **broken the exact case it was meant to fix** | a platform developer supporting a client is *supposed* to act as a tenant they do not belong to. My negative test asserted the wrong behaviour and passed convincingly while doing it. |
+| my branding fix was needed | it **duplicated another lane's**, used the wrong tenant resolver of three, shipped no tests, and had a **higher version number** so it would have silently overwritten the better one | I never ran `gh pr list` before writing a migration against the same function |
+| "35 edge functions have no caller" | **6** | I counted callers only in code a *screen* can reach — the wrong denominator for a question about background programs |
+| 26 rows in the route map needed review | **15**, and I nearly dismissed all 26 | I listed every rule appearing on those rows and saw benign ones. None of them were the rules that actually drove the verdict. Filtering the way the check itself filters left three tables, one of them a genuine defect. |
+| the wordmark's low contrast was a defect | **it is exempt** | brand names have no contrast requirement, and you set that colour deliberately in July. I had the fix written and did not ship it. |
 
 **And a collision I caused:** two migrations were written with the same version number. This estate
 keys them on the number alone, so the second would have looked applied and silently never run — a
@@ -218,6 +299,37 @@ All four under the pre-authorised rulings, all reversible on your word. Detail i
 | 82 tables that are empty and unread | recorded | About a fifth of the schema is scaffolding. Several are money-shaped. |
 
 ---
+
+## §7b — MEASURED, AND DELIBERATELY NOT CHANGED
+
+Four things were found, verified, and left alone. Each is a sentence away from being done if you
+disagree.
+
+- **The footer says "A Braden Group Company" on a white-labelled client's screen.** That is a
+  commercial decision about your brand and your contract, not a technical one. One condition fixes it.
+- **The wordmark's gradient measures below the accessibility threshold in light mode.** Brand names
+  are **exempt** from that rule, and you chose that colour in an explicit directive in July.
+- **American spellings in the interface** — "organization-wide settings" sits directly under a card
+  correctly titled "Organisation Settings". Real, but **11+ instances**, and my search only reads
+  visible text, not button labels — so 11 is a floor. Fixing two of eleven is the failure your own
+  D-62 ruling names.
+- **An install prompt reported as covering a list.** It is anchored to the *bottom* and its placement
+  already carries four tests written to keep it clear of things. I could not reproduce the report, and
+  replacing a considered design with a guess before a demo is the wrong trade.
+
+## §7c — THE RESIDUE, STATED HONESTLY
+
+- **~36 further screens** with the same "counts the whole estate" shape as the tiles that were fixed,
+  plus **~50 files** where a count comes from the length of a list rather than a count query —
+  invisible to the search that found the others, and explicitly **unaudited**.
+- **6 background programs nothing calls.** Four were built and never wired up. **Two are still
+  running in production and their source has been deleted from the repository** — nothing would show
+  up in a code review if they broke.
+- **82 tables that are empty and unread.** About a fifth of the schema is scaffolding; several are
+  money-shaped.
+- **A live "acting as" setting** pins your super-admin account to **bsuite Platform until 11:00** —
+  through the demo. Switching tenants in the app clears it. Worth doing before 09:30 rather than
+  discovering at 09:29.
 
 ## §8 — HOW TO CHECK ME
 
