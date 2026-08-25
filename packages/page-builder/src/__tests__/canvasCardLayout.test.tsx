@@ -186,7 +186,7 @@ describe('buildCanvasCardLayout', () => {
     expect(layouts.lg[0].autoHeight).toBeUndefined();
   });
 
-  it('defaults to HALF width, not full — the 1.1.0 inversion', () => {
+  it('defaults to HALF width, not full — the 2.0.0 inversion', () => {
     // Twelve on a twelve-column grid meant every card that omitted `w` filled
     // the row and the page became one vertical stack. 1,068 of 1,729 usages
     // across the estate omit `w`, so 62% of BSuite's cards were stacked by a
