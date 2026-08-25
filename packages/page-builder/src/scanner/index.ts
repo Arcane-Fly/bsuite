@@ -13,3 +13,10 @@ export type {
   CardSurfaceFinding,
   CardSurfaceIdiom,
 } from './cardSurfaceScanner.js';
+
+export { scanCardHeadings, jsxTags } from './cardHeadingScanner.js';
+export type {
+  CardHeadingScannerConfig,
+  CardHeadingScanResult,
+  CardHeadingFinding,
+} from './cardHeadingScanner.js';
