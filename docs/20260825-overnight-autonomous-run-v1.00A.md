@@ -23,6 +23,76 @@ outcome.**
 
 ---
 
+## §0 — THE CLOCK. This outranks every other section in this document.
+
+**Operator, 2026-08-25 22:02 AWST:**
+> *"Run this autonomously and everything that can be done by 8am merged to prod and tested. no
+> missing placements or UI bugs or functionality bugs permitted on prod. after 8am only merge to
+> development branch until 11am then open again to prod. I have a demo at 9:30 am so i want to give
+> meself time to spot check before the demo."*
+
+### The window
+
+| Australia/Perth | `main` (production) | `development` |
+|---|---|---|
+| **now → 07:59** | **OPEN** — merge and prove everything you can | open |
+| **08:00 → 10:59** | **FROZEN** | open — keep shipping here |
+| **11:00 →** | **OPEN** again | open |
+
+**The 09:30 demo sits inside the freeze.** The freeze is not administrative: it exists so he can
+spot-check a production that nothing is changing underneath him.
+
+### Enforced, not remembered
+
+```bash
+scripts/prod-window.sh          # exit 0 = prod OPEN, exit 1 = FROZEN
+scripts/prod-window.sh --quiet  # exit code only, for gating
+```
+
+**Call it immediately before EVERY merge into `main`, in the same command as the merge:**
+
+```bash
+scripts/prod-window.sh --quiet && gh pr merge <N> --repo <repo> --merge
+```
+
+A freeze written only in prose is enforced by whoever remembers it at 07:58. This one exits
+non-zero. Self-tested at every boundary: 07:59 OPEN · 08:00 FROZEN · 09:30 FROZEN · 10:59 FROZEN ·
+11:00 OPEN.
+
+During the freeze: **merge to `development`, queue the promotion, do not open it.** Write the
+queued promotions into the morning brief so 11:00 is a single coordinated release, not a scramble.
+
+### The quality bar is RAISED tonight, not lowered by the deadline
+
+> *"no missing placements or UI bugs or functionality bugs permitted on prod"*
+
+**A deadline is not a reason to promote something unproven. It is a reason to promote LESS.**
+
+Before any promotion between now and 08:00, all of these hold or it stays on `development`:
+
+1. The **visual gate** actually ran — route × theme × width × account — and returned PASS, not
+   INCOMPLETE. Service worker unregistered first.
+2. **Two tenants** for anything role-, licence-, tenant-branded or RLS-scoped. Braden Pty Ltd and
+   FutureBuild Academy both carry `border_radius_preset`, so a single-tenant pass proves the
+   default path only (see §6b).
+3. **Placements render with data.** A grid can render every row with every cell empty — that is a
+   recorded failure in this estate, and "no missing placements" is the operator naming it.
+4. **The live SHA equals the pushed SHA** before you inspect anything.
+5. Production deploy reaches **READY**, and runtime logs are clean.
+
+**If a change cannot clear that by 07:59, it does not go to prod. It waits for 11:00.** Shipping a
+broken card into a 09:30 demo costs more than every item on the priority list combined.
+
+### The order this implies
+
+Front-load what is **provable**: the security fix already in flight, the marker PRs, the gitlink
+advances, and Silo B items that are small and independently verifiable. **G1 — the grid inversion —
+is the highest-risk change in this document.** It touches 1,729 card instances across six apps.
+Ship it before 08:00 **only** if Storybook (§3) exists and the visual gate is genuinely green on
+both tenants. Otherwise it lands on `development`, and 11:00 is its window — with him awake.
+
+---
+
 ## §1 — GOAL
 
 **Every card in every app, on every page, renders correctly to the D2C brand — and stays that way
