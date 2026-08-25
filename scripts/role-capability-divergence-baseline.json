@@ -1,9 +1,17 @@
 {
-  "measured_at": "2026-08-24T13:05Z",
+  "measured_at": "2026-08-25T08:40Z",
   "measured_against": "production tuybltdrdefjblnplpqo",
-  "escalations": 28,
-  "divergence": 72,
-  "comparable_cells": 168,
-  "note": "escalations is the ratchet. It counts write-shaped capabilities the table grants and the hardcoded checks deny — each one becomes a real privilege the day crm7 migration 20260905000000 is applied and user_has_capability() starts answering. The ratchet only shrinks: a rise fails the gate, and a fall fails it too until re-banked, because a ratchet nobody re-banks stops ratcheting.",
-  "not_a_defect_count": "A divergence is a question, not a defect. Either the table is wrong or the hardcoded check is, and deciding that is reconciliation work. This number sizes the work; it does not accuse either side."
+  "escalations": 24,
+  "divergence": 79,
+  "comparable_cells": 196,
+  "note": "escalations is the ratchet. It counts write-shaped capabilities the table grants and the hardcoded checks deny. The ratchet only shrinks: a rise fails the gate, and a fall fails it too until re-banked, because a ratchet nobody re-banks stops ratcheting.\n\n2026-08-25 RE-BANK, 28 -> 24. It went 28 -> 34 first, and that rise was NOT data drift: the rows were unchanged and 6bbdae50 (the field-officer caseload UI) rewrote crm7's src/hooks/usePermissions.ts after the previous bank, tightening the hardcoded model so six previously-matched grants became denied. crm7 migration 20260912000000 then revoked the ten capabilities that were not a question — every '.write' held by the role literally named 'viewer', 20 rows across both tenants — which took it to 24, below the old bank.\n\nCOMPARABLE CELLS ROSE 168 -> 196 in the same window, because the same commit added roles to the shared set. So the ratio improved more than the raw number suggests: 28/168 to 24/196.",
+  "not_a_defect_count": "A divergence is a question, not a defect. Either the table is wrong or the hardcoded check is, and deciding that is reconciliation work. This number sizes the work; it does not accuse either side.",
+  "what_the_24_are": {
+    "member": "10 — arguable. A member writing contacts is a product question, not a defect.",
+    "gto_staff": "4 — probably correct; day-to-day GTO operators do write.",
+    "field_manager": "5 — arguably SHOULD be granted. The operator's own description of the role is that it edits caseloads across field officers, so the hardcoded side may be the one that is behind.",
+    "field_officer": "5 — same shape as field_manager.",
+    "viewer": "0 — settled 2026-08-25. A role named 'viewer' holding a write was indefensible under any model, so it was the only group revoked without asking."
+  },
+  "deliberately_not_reconciled": "The remaining 24 are Braden's authorisation model. Clearing a red check is not a reason to change it, and this file exists to SIZE that work rather than to license doing it unilaterally."
 }
