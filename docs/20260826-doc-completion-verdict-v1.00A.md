@@ -1,3 +1,12 @@
+---
+kind: record
+authority: engineering
+owner: operator-agent-overnight
+evidence:
+  - scripts/audit-doc-completion.mjs
+  - scripts/audit-doc-supersession.mjs
+---
+
 # Doc completion verdict — measured against the operator bar, 2026-08-26
 
 **Document:** 20260826-doc-completion-verdict-v1.00A
