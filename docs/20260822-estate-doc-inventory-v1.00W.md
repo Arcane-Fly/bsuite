@@ -37,7 +37,7 @@ Two self-inflicted defects while producing it, both worth the space:
   cite nothing checkable                         426
   historical records (by path or banner)         43
   BINDABLE — these name a gate that exists, so their claim is checkable:
-    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md
+    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md
         publish-ui.yml
     docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00W.md
         verify-class-a-preservation.mjs
@@ -120,7 +120,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 |---|---|---|---|
 | `crm7/docs/audits/20260811-colour-drift-full-tree-audit-v1.00D.md` | BINDABLE |  | lint-ratchet.mjs |
 | `crm7/docs/audits/20260811-pgtap-evidence-integrity-v1.00D.md` | BINDABLE |  | pgtap.yml |
-| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md` | BINDABLE |  | publish-ui.yml |
+| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | BINDABLE |  | publish-ui.yml |
 | `docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00W.md` | BINDABLE |  | verify-class-a-preservation.mjs |
 | `docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md` | BINDABLE |  | verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs |
 | `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | BINDABLE |  | ci.yml |
