@@ -130,6 +130,34 @@ refresh in crm7, business-suite-unified, conduit, braden or throughput until thi
 
 ---
 
+## §4b — TWO DEMO-VISIBLE THINGS I DELIBERATELY DID NOT CHANGE
+
+Both are cosmetic, both were reported, and in both cases changing them at 00:00 would have been the
+wrong call for a reason worth stating.
+
+**The footer says "A Braden Group Company" on a white-labelled client's screen.**
+`crm7/src/components/layout/CRM7Footer.tsx:79` — hardcoded, linked to braden.com.au, with no
+awareness of tenant branding at all. On FutureBuild's own view, your company name appears on their
+system.
+
+**That is a commercial decision, not a technical one.** Plenty of software shows vendor attribution
+deliberately, and whether yours should disappear when a client white-labels is your call about your
+brand and your contract — not something to settle unattended. The fix is one condition (*suppress it
+when the tenant has its own company name set*) and it takes minutes once you have decided. **Say the
+word and it is done.**
+
+**The install prompt was reported as covering the first row of a list.** I looked, and it is
+anchored to the **bottom** — `bottom-20` on mobile, `lg:bottom-6 lg:left-[17rem]` on desktop — and
+that placement already carries four tests, written deliberately to keep it off the bottom-right
+submit corner and off the sidebar. Somebody has already thought about this carefully.
+
+So either the report was from a narrow viewport where a bottom overlay still covers content, or it
+was something else on screen. **Changing a tested, deliberate placement on the strength of a report I
+could not reproduce would be the wrong trade** — I would be replacing a considered design with a
+guess, hours before you demo on it.
+
+---
+
 ## §5 — WHAT I GOT WRONG
 
 Recorded because it is the part worth reading.
