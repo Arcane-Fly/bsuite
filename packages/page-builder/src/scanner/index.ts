@@ -1,4 +1,11 @@
-export { scanCardSurfaces, stripComments } from './cardSurfaceScanner.js';
+export {
+  scanCardSurfaces,
+  stripComments,
+  openingTags,
+  elementDeclaresCardChrome,
+  findNestedChrome,
+  parseConfidence,
+} from './cardSurfaceScanner.js';
 export type {
   CardSurfaceScannerConfig,
   CardSurfaceScanResult,

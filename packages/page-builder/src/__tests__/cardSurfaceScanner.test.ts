@@ -55,6 +55,15 @@ describe('D-92 — the scanner asserts its inputs before reporting a verdict', (
   });
 });
 
+/**
+ * NOTE on `.find(...)` vs `.filter(x => x.idiom === …)` below.
+ *
+ * A file can carry MORE THAN ONE idiom, and since V-C5 landed it usually does:
+ * two `<Card>`s in one slot are both GLUE (V-C4) and a DOUBLE FRAME (V-C5).
+ * Reporting both is correct — suppressing one to keep an old assertion green
+ * would hide a real defect — so every assertion here selects the idiom it is
+ * actually about. Every app-level consumer already does the same.
+ */
 describe('glued-widget — 2+ cards inside ONE grid slot', () => {
   it('CATCHES two cards packed into one CanvasCard', () => {
     write(
@@ -65,7 +74,9 @@ describe('glued-widget — 2+ cards inside ONE grid slot', () => {
         </DraggableCardPage>)`,
     );
     const r = scanCardSurfaces({ ...BASE, projectRoot: root });
-    const f = r.findings.find((x) => x.file.endsWith('glued.tsx'));
+    const f = r.findings.find(
+      (x) => x.file.endsWith('glued.tsx') && x.idiom === 'glued-widget',
+    );
     expect(f?.idiom).toBe('glued-widget');
     expect(f?.cardCount).toBe(2);
   });
@@ -77,7 +88,9 @@ describe('glued-widget — 2+ cards inside ONE grid slot', () => {
         <PageGridLayout pageKey="/y" widgets={{ content: (<div><Card>a</Card><Card>b</Card></div>) }} />)`,
     );
     const r = scanCardSurfaces({ ...BASE, projectRoot: root });
-    const f = r.findings.find((x) => x.file.endsWith('single-widget.tsx'));
+    const f = r.findings.find(
+      (x) => x.file.endsWith('single-widget.tsx') && x.idiom === 'glued-widget',
+    );
     expect(f?.idiom).toBe('glued-widget');
     expect(f?.detail).toContain('widgets.content');
   });
@@ -92,7 +105,15 @@ describe('glued-widget — 2+ cards inside ONE grid slot', () => {
         </DraggableCardPage>)`,
     );
     const r = scanCardSurfaces({ ...BASE, projectRoot: root });
-    expect(r.findings.some((x) => x.file.endsWith('correct.tsx'))).toBe(false);
+    expect(
+      r.findings.some((x) => x.file.endsWith('correct.tsx') && x.idiom === 'glued-widget'),
+    ).toBe(false);
+    // …and it is STILL a nested-chrome file: one `<Card>` per slot is correct
+    // glue-wise and is still a card inside the grid item's card. That is the
+    // whole V-C5 finding, and it is why 316 files read clean before tonight.
+    expect(
+      r.findings.some((x) => x.file.endsWith('correct.tsx') && x.idiom === 'nested-chrome'),
+    ).toBe(true);
   });
 });
 
@@ -169,7 +190,9 @@ describe('.map() rendering cards', () => {
         </DraggableCardPage>)`,
     );
     const r = scanCardSurfaces({ ...BASE, projectRoot: root });
-    const f = r.findings.find((x) => x.file.endsWith('mapped-bare.tsx'));
+    const f = r.findings.find(
+      (x) => x.file.endsWith('mapped-bare.tsx') && x.idiom === 'glued-widget',
+    );
     expect(f?.idiom).toBe('glued-widget');
     expect(f?.detail).toContain('.map()');
   });
@@ -254,7 +277,15 @@ describe('exclusion ledgers are claims, not facts', () => {
       projectRoot: root,
       gluedExclusions: { 'src/pages/glued.tsx': 'tabs share form state' },
     });
-    expect(r.findings.some((x) => x.file.endsWith('glued.tsx'))).toBe(false);
+    expect(
+      r.findings.some((x) => x.file.endsWith('glued.tsx') && x.idiom === 'glued-widget'),
+    ).toBe(false);
+    // A GLUE waiver is not a CHROME waiver. `nestedChromeExclusions` is a
+    // separate ledger on purpose: "these tabs share form state" says nothing
+    // about whether the slot paints a second border.
+    expect(
+      r.findings.some((x) => x.file.endsWith('glued.tsx') && x.idiom === 'nested-chrome'),
+    ).toBe(true);
   });
 
   it('reports a STALE exclusion whose defect no longer exists', () => {
@@ -322,6 +353,222 @@ describe('stripComments', () => {
        export const P = () => <CanvasCard cardKey="x"><Card/></CanvasCard>`,
     );
     const r = scanCardSurfaces({ ...BASE, projectRoot: root });
-    expect(r.findings.some((x) => x.file.endsWith('commented-example.tsx'))).toBe(false);
+    expect(
+      r.findings.some(
+        (x) => x.file.endsWith('commented-example.tsx') && x.idiom === 'glued-widget',
+      ),
+    ).toBe(false);
+  });
+});
+
+/* ==========================================================================
+ * V-C5 — NESTED CHROME
+ *
+ * DEFECT INJECTION, per the doctrine at the head of this file. A detector that
+ * reports zero on a known-broken estate is broken itself, so every case below
+ * writes a fixture that IS the defect and asserts the scanner catches it, then
+ * writes the corrected form and asserts it passes.
+ * ========================================================================== */
+describe('nested-chrome (V-C5) — a card inside the grid item\'s own card', () => {
+  it('CATCHES a Card component inside a CanvasCard (the crm7 shape, 304 files)', () => {
+    write(
+      'src/pages/nested-component.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a"><Card><div>body</div></Card></CanvasCard>
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    const f = r.findings.filter(
+      (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/nested-component.tsx',
+    );
+    expect(f).toHaveLength(1);
+    expect(f[0].detail).toMatch(/paints its own card chrome/);
+  });
+
+  it('CATCHES class-declared chrome — border + radius + background on a plain div', () => {
+    write(
+      'src/pages/nested-class.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a">
+          <div className="bg-background p-4 rounded-lg border border-light-border h-full">x</div>
+        </CanvasCard>
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/nested-class.tsx',
+      ),
+    ).toBe(true);
+  });
+
+  it('CATCHES a COMPOSITE card class — `glass-card rounded-xl` carries border+bg in the class itself', () => {
+    // business-suite-unified/src/index.css:760 — `.glass-card` declares
+    // background-color AND `border: 1px solid`. A detector demanding three
+    // separate Tailwind utilities calls BSU `Government.tsx` clean.
+    write(
+      'src/pages/nested-composite.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a"><div className="glass-card rounded-xl px-4 py-3">x</div></CanvasCard>
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/nested-composite.tsx',
+      ),
+    ).toBe(true);
+  });
+
+  it('CATCHES chrome declared entirely in an inline style object (BSU Settings.tsx shape)', () => {
+    write(
+      'src/pages/nested-style.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a">
+          <div className="rounded-3xl p-4"
+            style={{ background: 'var(--bg-shell-elevated)', border: '1px solid var(--border-shell)' }}>x</div>
+        </CanvasCard>
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/nested-style.tsx',
+      ),
+    ).toBe(true);
+  });
+
+  it('CATCHES nested chrome inside a raw `widgets={{ … }}` slot, not only inside CanvasCard', () => {
+    // conduit has ZERO CanvasCard usage and six double-framed grid items. A
+    // CanvasCard-only detector is structurally blind to that whole app.
+    write(
+      'src/pages/nested-widget.tsx',
+      `export const P = () => (
+        <PageGridLayout pageKey="/x" widgets={{ summary: <Card>a</Card> }} />
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    const f = r.findings.filter(
+      (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/nested-widget.tsx',
+    );
+    expect(f).toHaveLength(1);
+    expect(f[0].detail).toMatch(/^widgets\.summary/);
+  });
+
+  it('NEGATIVE CONTROL: a bare child in a CanvasCard is clean — the fixture the detector must NOT flag', () => {
+    write(
+      'src/pages/clean-bare.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a"><div className="flex flex-col gap-2"><h2>Title</h2></div></CanvasCard>
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.some((x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/clean-bare.tsx'),
+    ).toBe(false);
+  });
+
+  it('NEGATIVE CONTROL: a bordered, rounded, tinted BUTTON is a button, not a second card', () => {
+    // throughput Teams.tsx: a filter control carrying border+rounded+bg. Chrome
+    // on a control is never the double-frame defect. Excluded by TAG, not by
+    // tuning the class thresholds until the number looked right.
+    write(
+      'src/pages/clean-control.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a">
+          <button className="bg-muted border border-border rounded-lg px-4 py-2">Filter</button>
+        </CanvasCard>
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/clean-control.tsx',
+      ),
+    ).toBe(false);
+  });
+
+  it('NEGATIVE CONTROL: two of the three chrome signals is a tinted panel, not a card', () => {
+    write(
+      'src/pages/clean-two-of-three.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a"><div className="rounded-lg bg-muted p-3">note</div></CanvasCard>
+      )`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/clean-two-of-three.tsx',
+      ),
+    ).toBe(false);
+  });
+
+  it('reports ONE finding per file, so the count is a FILE count and not an occurrence count', () => {
+    write(
+      'src/pages/nested-many.tsx',
+      `export const P = () => (<>
+        <CanvasCard cardKey="a"><Card>1</Card></CanvasCard>
+        <CanvasCard cardKey="b"><Card>2</Card></CanvasCard>
+        <CanvasCard cardKey="c"><Card>3</Card></CanvasCard>
+      </>)`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(
+      r.findings.filter(
+        (x) => x.idiom === 'nested-chrome' && x.file === 'src/pages/nested-many.tsx',
+      ),
+    ).toHaveLength(1);
+    expect(r.nestedChromeFiles).toContain('src/pages/nested-many.tsx');
+  });
+});
+
+describe('D-92 — "checked nothing" and "found nothing" do not share an exit code', () => {
+  it('marks a file it cannot parse UNKNOWN, and does NOT report it clean', () => {
+    write(
+      'src/pages/unparseable.tsx',
+      `export const P = () => (
+        <CanvasCard cardKey="a"><Card>only an opening tag, no close`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: root });
+    expect(r.unknownFiles).toContain('src/pages/unparseable.tsx');
+    expect(
+      r.findings.some(
+        (x) => x.idiom === 'unparseable' && x.file === 'src/pages/unparseable.tsx',
+      ),
+    ).toBe(true);
+    expect(r.summary).toMatch(/UNKNOWN file\(s\)/);
+  });
+
+  it('a clean tree reports ZERO unknowns — the UNKNOWN channel is not always-on noise', () => {
+    const solo = mkdtempSync(join(tmpdir(), 'card-scanner-solo-'));
+    mkdirSync(join(solo, 'src/pages'), { recursive: true });
+    writeFileSync(
+      join(solo, 'src/pages/fine.tsx'),
+      `export const P = () => <CanvasCard cardKey="a"><h2>Title</h2></CanvasCard>`,
+    );
+    const r = scanCardSurfaces({ ...BASE, projectRoot: solo });
+    expect(r.unknownFiles).toEqual([]);
+    expect(r.nestedChromeFiles).toEqual([]);
+    rmSync(solo, { recursive: true, force: true });
+  });
+});
+
+describe('stripComments must not delete real code', () => {
+  it('does NOT swallow the file from a block comment at the head of an object literal to the next `*/}`', () => {
+    // crm7 src/pages/people/new/worker.tsx lost 37 lines and two <CanvasCard>
+    // blocks to the lazy `{...*​/}` form, which then read as clean.
+    const src = [
+      'const cfg = {',
+      '  /* an ordinary block comment, NOT a JSX comment container */',
+      '  a: 1,',
+      '}',
+      'const El = () => (<CanvasCard cardKey="x"><Card>kept</Card></CanvasCard>)',
+      'const J = () => (<div>{/* a real JSX comment */}</div>)',
+    ].join('\n');
+    const out = stripComments(src);
+    expect(out).toContain('<CanvasCard cardKey="x">');
+    expect(out).toContain('<Card>kept</Card>');
+    expect(out).not.toContain('ordinary block comment');
+    expect(out).not.toContain('a real JSX comment');
   });
 });
