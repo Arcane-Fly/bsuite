@@ -14,7 +14,7 @@
 # fails on any INCREASE. The number can only shrink.
 #
 # It shrinks in two ways, and both are legitimate: an app removes an inner card,
-# or an app upgrades to @bsuite/page-builder >= 1.1.0 (where the grid item no
+# or an app upgrades to @bsuite/page-builder >= 2.0.0 (where the grid item no
 # longer paints chrome) and declares `gridItemPaintsChrome: false`. Lower the
 # baseline in the same PR that does either. `node scripts/scan-nested-chrome.mjs`
 # prints the current numbers.

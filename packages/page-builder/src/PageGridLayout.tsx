@@ -403,7 +403,7 @@ export function PageGridLayout({
   defaultAutoHeight,
   // CHROME OFF BY DEFAULT — the inversion. See `GridItemProps.chrome`.
   // An app that is not ready to migrate its own card surfaces passes
-  // `itemChrome` to get the pre-1.1.0 behaviour back for every slot, and
+  // `itemChrome` to get the pre-2.0.0 behaviour back for every slot, and
   // migrates page by page with the per-item `chrome` flag.
   itemChrome = false,
   addEntityWidgetEventNames = DEFAULT_ADD_ENTITY_WIDGET_EVENT_NAMES,

@@ -181,9 +181,9 @@ export interface PageGridLayoutProps extends UsePageGridLayoutOptions {
   /**
    * Paint every grid item as a card unless the item says otherwise.
    *
-   * DEFAULT FALSE. This is the app-level migration lever for the 1.1.0 chrome
+   * DEFAULT FALSE. This is the app-level migration lever for the 2.0.0 chrome
    * inversion: an app that has not yet migrated its bare slots passes
-   * `itemChrome` and gets the pre-1.1.0 look back exactly, then flips slot by
+   * `itemChrome` and gets the pre-2.0.0 look back exactly, then flips slot by
    * slot with `GridLayoutItem.chrome`. Per-item always wins.
    */
   itemChrome?: boolean;

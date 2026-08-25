@@ -119,7 +119,7 @@ export type DraggableCardPageProps = Omit<
    * Width, in grid columns, for cards that do not set `w` themselves.
    *
    * Defaults to `DEFAULT_CANVAS_CARD_WIDTH` (6 — half the grid, two cards per
-   * row) as of 1.1.0. Pass 12 to restore the pre-1.1.0 full-width stack while
+   * row) as of 2.0.0. Pass 12 to restore the pre-2.0.0 full-width stack while
    * an app migrates its pages.
    */
   defaultCardWidth?: number;

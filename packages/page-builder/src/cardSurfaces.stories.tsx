@@ -11,7 +11,7 @@ import type { GridLayouts } from './types.js'
  * inversion has something to be checked against that is not a number.
  *
  * Read them in pairs: the story named "…(the defect)" is what shipped up to
- * 1.0.7, and the one beside it is what 1.1.0 renders.
+ * 1.0.7, and the one beside it is what 2.0.0 renders.
  */
 /**
  * Plain CSF, no `Meta`/`StoryObj` type imports.
@@ -71,9 +71,9 @@ export const NestedCardDoubleFrame: Story = {
   ),
 }
 
-/** The same content on 1.1.0 defaults: ONE border, ONE radius. */
+/** The same content on 2.0.0 defaults: ONE border, ONE radius. */
 export const NestedCardSingleFrame: Story = {
-  name: 'Nested card — ONE frame (1.1.0 default)',
+  name: 'Nested card — ONE frame (2.0.0 default)',
   render: () => (
     <div className="p-8">
       <PageGridLayout
