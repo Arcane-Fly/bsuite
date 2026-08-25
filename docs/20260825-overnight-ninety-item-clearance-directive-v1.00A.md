@@ -10,6 +10,13 @@ evidence:
   - crm7/src/services/documentTemplateImport.ts
 ---
 
+> **SUPERSEDED IN ITS COUNTS, 2026-08-25 evening — see
+> [`20260825-remeasured-clearance-brief-v1.00A.md`](./20260825-remeasured-clearance-brief-v1.00A.md).**
+> The method, landmarks, roles and completion bar below all stand. **The headline number does not.**
+> ~45 items were probed properly; **~30 were already delivered**. The genuinely open set is ~15,
+> four of which need an operator decision rather than engineering. Do not run a ninety-item fleet
+> against this document.
+
 # OVERNIGHT CLEARANCE DIRECTIVE — the 90 outstanding operator items
 
 **Status:** A (Active) · **Issued:** 2026-08-25 · **Operator:** Braden
