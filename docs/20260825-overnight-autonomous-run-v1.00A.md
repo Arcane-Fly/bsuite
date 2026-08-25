@@ -361,6 +361,61 @@ shared utility — one implementation, not two.
 
 ---
 
+## §6d — WHY HE KEEPS ASKING: the gradient is a PAGE-TITLE convention, and he means CARD headings
+
+**Operator, 2026-08-25, on crm7's own dashboard:** *"Quick Actions, Communication Centre and like
+card Headings also require a gradient similar to the underline under bradengroup. and look how much
+unused space there is on screen. a persistent request is also allowing the cards to utilise all
+available space."*
+
+### Measured — and this is the cleanest statement of the D2C gap in the estate
+
+| app | h1 page titles with gradient | **card headings (h2/h3) with gradient** |
+|---|---:|---:|
+| crm7 | **183 / 235 (78%)** | **0 / 310** |
+| conduit | 36 / 43 (84%) | **0 / 85** |
+| business-suite-unified | 25 / 53 (47%) | 12 / 150 (8%) |
+| braden | 1 / 32 (3%) | **0 / 124** |
+| throughput | 0 / 17 (0%) | 3 / 82 |
+| **estate** | | **15 / 753** |
+
+**The gradient was implemented as a PAGE-TITLE convention. Card headings were never in scope.**
+
+That is why the request is "persistent". On the very page he screenshotted, `Dashboard` (h1) HAS
+the gradient and `Quick Actions`, `Communication Center` and `Pipeline Overview` (h2/h3) do not.
+The work was done, declared complete, and covered a **different element** than the one he is
+looking at. This is `zero_consumer_is_not_done` and `fix_the_class_not_the_page` in one artefact:
+78% adoption on one element, **0% on the element the operator actually means**.
+
+**G2 scope is therefore h2/h3 CARD headings — 738 of them — not the h1s that are already done.**
+braden (1/32 h1) and throughput (0/17 h1) additionally have almost no gradient at all and need both.
+
+### The other half — "cards utilise all available space" — is TWO different causes
+
+Do not treat these as one job; they are in different files and only one is shared.
+
+1. **crm7 only — the page container is capped.** `src/layouts/MainLayout.tsx:202` and `:229`:
+   ```
+   mx-auto w-full max-w-[1680px] px-4 py-6 pb-20 sm:px-6 lg:px-8 lg:pb-8
+   ```
+   On a 2388px screen, minus the sidebar, ~500px is dead — split into the two empty margins in his
+   screenshot. **No other app constrains its page container.** Two class occurrences.
+
+   **CLASSNAME ONLY. NEVER CHANGE THE TREE SHAPE.** The comment directly above it records why:
+   `useChromeless` once toggled a flag that changed the subtree, which UNMOUNTED the page, whose
+   cleanup reset the flag, which reverted the structure, which remounted it — *"`/settings/schema-builder`
+   never reached a load state and four e2e specs timed out on exactly that route."* The two divs
+   must stay in the same positions; only `className` and `style` may differ.
+
+2. **Everywhere — cards default to full width, so they stack.** `CanvasCard.w` defaults to **12**
+   on a 12-column grid; **1,068 of 1,729 usages omit `w`** (BSU and conduit 100%). That is the BSU
+   screenshot: one service card per row, vertical space wasted. Same root as §2.
+
+**Both must ship, or he will see the complaint half-fixed and ask again** — which is the pattern
+this whole document exists to end.
+
+---
+
 ## §7 — PRE-AUTHORISED RULINGS. Braden is asleep. These ARE his answers.
 
 Every one is **reversible on his word**. Record each application via the precedent clerk.
