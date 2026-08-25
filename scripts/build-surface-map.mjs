@@ -329,6 +329,36 @@ for (const r of inv.routes) {
   rows.push(row);
 }
 
+// ---------------------------------------------------------------- SANITY GATE
+// A builder that cannot see the apps still produces a full-length file — 555
+// rows, every one UNRESOLVED — and that artefact is indistinguishable from a
+// real map until somebody reads the verdict column. It happened on 2026-08-26:
+// run inside a PARENT worktree this emitted 555 rows, 502 of them UNRESOLVED,
+// and EXITED 0.
+//
+// The apps are git SUBMODULES. In a parent worktree they are empty directories
+// that pass every existence check, so the import walker found no component files
+// and recorded that as a measurement. The output would then have overwritten a
+// good map with a bad one that looks fine.
+//
+// Refuse to write in that case. "Checked nothing" must not be able to overwrite
+// "found something". This is the rule the CHECKER already carries, applied to the
+// thing that WRITES the artefact — a gate on the reader does not help if the
+// writer can quietly produce garbage.
+const unresolved = rows.filter(r => r.verdict === 'UNRESOLVED').length;
+const live = rows.filter(r => r.status !== 'redirect').length;
+const unresolvedShare = live ? unresolved / live : 1;
+if (unresolvedShare > 0.15) {
+  console.error(`\nREFUSING TO WRITE: ${unresolved} of ${live} live routes are UNRESOLVED ` +
+    `(${Math.round(unresolvedShare * 100)}%).`);
+  console.error('  That is not a measurement, it is a builder that could not see the apps.');
+  console.error('  The apps are git SUBMODULES. In a parent worktree they are empty directories');
+  console.error('  that pass every existence check. Run this from a tree where they are checked');
+  console.error('  out, or `git submodule update --init --recursive` first.');
+  console.error('  Expected share on a healthy run: about 2%.');
+  process.exit(1);
+}
+
 // deployed-with-no-caller
 const noCaller = [...deployed].filter(f => !fnCallers.has(f)).sort();
 
