@@ -1,0 +1,179 @@
+# .github/workflows/nested-card-chrome-ratchet.yml
+#
+# Card surfaces: a nested-chrome ratchet, plus a card-heading report
+# ==================================================================
+# `PageGridLayout` paints every grid item as a card. 332 files across the six
+# apps then render their OWN card inside it: 28px inside 24px, two 1px borders.
+# That is the misshapen corner and the fat bottom edge in every card screenshot
+# the operator has ever sent.
+#
+# WHY A RATCHET AND NOT A GATE. 332 is the state of the estate today, and it is
+# not a backlog anyone can burn down in a night. A gate demanding zero would be
+# red on every PR from the moment it merged, and a gate that is always red is a
+# gate that gets switched off. So this compares against a committed baseline and
+# fails on any INCREASE. The number can only shrink.
+#
+# It shrinks in two ways, and both are legitimate: an app removes an inner card,
+# or an app upgrades to @bsuite/page-builder >= 1.1.0 (where the grid item no
+# longer paints chrome) and declares `gridItemPaintsChrome: false`. Lower the
+# baseline in the same PR that does either. `node scripts/scan-nested-chrome.mjs`
+# prints the current numbers.
+#
+# WHY IT FAILS ON UNKNOWN AT ANY COUNT. An UNKNOWN file is one the scanner could
+# not parse with confidence. It is not clean, and it must not be silently folded
+# into a passing total — "checked nothing" and "found nothing" do not share an
+# exit code (D-92). The baseline is zero and it stays zero.
+#
+# WHY IT RUNS ON SUBMODULE POINTER CHANGES. A pointer bump is the ONLY change
+# that moves this gate's inputs, and a `paths:` filter over `**/*.tsx` cannot
+# see one. The sibling theme-conformance.yml carries the same list for the same
+# reason, and its ledger records the near-pure gate sitting green for weeks
+# because of exactly this. A gate that cannot see the change that moves its
+# inputs is a decoration.
+
+name: Nested card chrome
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main, master, development]
+    paths:
+      - '**/*.tsx'
+      - '**/*.ts'
+      - 'packages/page-builder/src/scanner/**'
+      - 'scripts/scan-nested-chrome.mjs'
+      - '.github/workflows/nested-card-chrome-ratchet.yml'
+      - 'docs/nested-card-chrome-baseline.json'
+      # The submodule gitlinks. See the header.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'R80.4'
+      - 'braden'
+      - 'throughput'
+
+jobs:
+  nested-chrome:
+    name: No new card inside a card
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Every app is a PRIVATE submodule, so the default GITHUB_TOKEN cannot
+      # clone them and fails with a bare "Repository not found".
+      - name: Checkout (with submodules — the apps live there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # Without the PAT the submodules are absent and the scanner would report a
+      # LOW count for the missing apps — a false pass, which is worse than a
+      # failure. The scanner itself also refuses to run against a missing app,
+      # but check here too so the error names the cause rather than the symptom.
+      - name: Assert the submodules actually checked out
+        shell: bash
+        run: |
+          set -uo pipefail
+          missing=""
+          for a in crm7 conduit business-suite-unified R80.4 throughput braden; do
+            [ -d "$a/src" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::submodules missing:$missing — the scan would report a LOW count, which is a FALSE PASS."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (repo: read on each app)."
+            exit 1
+          fi
+          echo "all six submodules present"
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        # Explicit major: actions/setup-node with node-version-file was observed
+        # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
+        with: { node-version: '24.14.0' }
+
+      - name: Build the scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --filter @bsuite/page-builder... --ignore-scripts
+          pnpm --filter @bsuite/page-builder build
+
+      - name: Self-test the scanner before trusting it
+        # A detector that reports zero on a known-broken estate is broken
+        # itself. The defect-injection suite proves it can produce a non-zero
+        # on a known-bad input, and the negative controls prove it does not
+        # produce one on a known-good input. Running the gate without this is
+        # trusting a measurement instrument nobody checked.
+        shell: bash
+        run: |
+          pnpm --filter @bsuite/page-builder exec vitest run \
+            src/__tests__/cardSurfaceScanner.test.ts \
+            src/__tests__/cardHeadingScanner.test.ts
+
+      - name: Scan
+        id: scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/scan-nested-chrome.mjs --json > /tmp/nested.json
+          node scripts/scan-nested-chrome.mjs
+          {
+            echo "nested=$(node -e 'const d=require("/tmp/nested.json");console.log(d.totalNested)')"
+            echo "unknown=$(node -e 'const d=require("/tmp/nested.json");console.log(d.totalUnknown)')"
+          } >> "$GITHUB_OUTPUT"
+
+      # REPORT ONLY, deliberately no exit code. The gradient sweep has not
+      # happened, so 274 card headings without a gradient is the CURRENT STATE
+      # and not a regression — gating on it would make this job permanently red
+      # and the whole workflow would be switched off, taking the chrome ratchet
+      # with it.
+      #
+      # It runs here rather than nowhere because a measurement that lives only
+      # in a PR body goes stale the day after it is written, and because a
+      # script nothing invokes is an artifact pretending to be a tool. Whoever
+      # picks up the propagation gets the live number and the live hazard list
+      # from the most recent run instead of re-deriving them.
+      - name: Card headings — report the gradient gap (no gate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/scan-card-headings.mjs
+          echo
+          echo "Headings whose own classes fight \`width: fit-content\` — decide these by hand, never by codemod:"
+          node scripts/scan-card-headings.mjs --risky
+
+      - name: Compare against the baseline
+        shell: bash
+        env:
+          NESTED: ${{ steps.scan.outputs.nested }}
+          UNKNOWN: ${{ steps.scan.outputs.unknown }}
+        run: |
+          set -euo pipefail
+          base_nested=$(node -e 'console.log(require("./docs/nested-card-chrome-baseline.json").nested)')
+          base_unknown=$(node -e 'console.log(require("./docs/nested-card-chrome-baseline.json").unknown)')
+          echo "nested  measured=$NESTED  baseline=$base_nested"
+          echo "UNKNOWN measured=$UNKNOWN baseline=$base_unknown"
+
+          fail=0
+          if [ "$UNKNOWN" -gt "$base_unknown" ]; then
+            echo "::error::$UNKNOWN file(s) UNKNOWN, baseline $base_unknown. An UNKNOWN file is NOT a clean file — the scanner could not parse it, so it proved nothing about it."
+            fail=1
+          fi
+          if [ "$NESTED" -gt "$base_nested" ]; then
+            echo "::error::$NESTED file(s) render a card inside the grid item's card, baseline $base_nested. This PR ADDS $((NESTED - base_nested)). The grid item already paints rounded + bg-card + border-border; do not paint a second one inside it."
+            fail=1
+          fi
+
+          # A ratchet whose baseline can drift from what a clean run measures is
+          # not a ratchet. The theme baseline sat at a number measured against
+          # the wrong tree for weeks. So a DECREASE is reported loudly and must
+          # be committed, rather than quietly tolerated.
+          if [ "$NESTED" -lt "$base_nested" ]; then
+            echo "::notice::nested chrome DROPPED to $NESTED from $base_nested. Lower the baseline in docs/nested-card-chrome-baseline.json in THIS PR, or the gate stops being a ratchet."
+          fi
+
+          [ "$fail" -eq 0 ] || exit 1
+          echo "PASS — no new card inside a card, no new UNKNOWN."
