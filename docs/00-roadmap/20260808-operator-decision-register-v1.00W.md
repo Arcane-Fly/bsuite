@@ -1,3 +1,9 @@
+---
+kind: decision
+authority: operator
+owner: bsuite
+---
+
 # Operator Decision Register — 2026-08-08
 
 **This file exists because the register was living in agent memory, which Braden cannot

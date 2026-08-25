@@ -1,3 +1,13 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/check-doc-naming.mjs
+  - scripts/audit-doc-completion.mjs
+  - scripts/audit-routes.sh
+---
+
 # Master roadmap — BSuite (planning layer)
 
 > ## ⚠ SUPERSEDED — 2026-08-17, superseded again 2026-08-25
