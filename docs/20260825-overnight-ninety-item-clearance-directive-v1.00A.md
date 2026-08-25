@@ -12,25 +12,65 @@ after it is the detail that prompt refers to.
 ## §0 — THE PROMPT
 
 > You own the entire BSuite estate this session. Every other lane and branch has been closed by the
-> operator — there is no one else to hand anything to, and nothing is anyone else's.
+> operator — there is no one else to hand anything to, and nothing is anyone else's. You are the
+> **Operator Agent acting with Braden's authority**; lane leads act as PIs within their lane.
 >
-> **The goal: clear the ~90 outstanding operator items in `bsuite_docx_register_20260824` +
-> `bsuite_docx_register_20260825_delta`, merged into `development` and promoted to production
-> `main`, by morning.** Braden has been raising this list for weeks. It is the only thing that counts.
+> **The goal: close the ~90 outstanding operator items in `bsuite_docx_register_20260824` +
+> `bsuite_docx_register_20260825_delta`, merged to `development` and promoted to `main`.**
+> Braden has been raising most of this list for weeks. It is the only thing that counts.
 >
-> Run `/agent-run-master` first, then work the landmarks L0→L9 in
-> `docs/20260825-overnight-ninety-item-clearance-directive-v1.00A.md`. Do not skip a landmark
-> and do not re-plan them. Use `/agent-run-subagents` and `/agent-cli-cc-subagents` to run many
-> hands in parallel worktrees, `/agent-red-plan` once at L2 and `/agent-red-implement` per lane at
-> L5, `/agent-skl-find` at L0 to bind each item class to the skill that already exists for it, and
-> `/agent-mem-comms` as the single coordination channel (namespace `bsuite`). Extract the
-> precedent book via `/agent-mem-precedent-rule` and `/agent-mem-precedent-clerk` into the binding
-> principles sheet at L1, and rule from it rather than waking Braden.
+> **MEASURE BEFORE YOU BUILD. This is the most expensive failure in this estate and it has already
+> been committed against THIS list.** A P0 was restated across three documents after a fourth had
+> closed it, its evidence column reading *"carried from v2, unchanged"* — read
+> `bsuite_correction_20260825_p0_1_was_already_fixed`. The phrase *"carried forward unchanged"* is a
+> **trigger, not a provenance note**. A prior directive for this same night asserted RAMS was
+> unbuilt on the strength of one table name, and asserted every repo tip was unsigned on the
+> strength of a `%G?` letter it misread. Both were wrong. **For every item: verify against the live
+> system first. If it is already done, close it with evidence and move on. Where a document and the
+> live system disagree, the live system wins.**
 >
-> One Operator-Agent acts as Braden and rules; one PI per app runs its lane; workers implement.
-> Nothing is marked done by the lane that did it.
+> Run `/agent-run-master` first, then work landmarks L0→L9 in
+> `docs/20260825-overnight-ninety-item-clearance-directive-v1.00A.md`. Do not skip a landmark and do
+> not re-plan them. `/agent-skl-find` at L0 binds each item class to the skill that already exists.
+> `/agent-mem-precedent-rule` + `/agent-mem-precedent-clerk` at L1 extract the standing rules as
+> **principles** and apply them to cases they do not literally name; record new precedent as you go.
+> `/agent-red-plan` once at L2. `/agent-run-subagents` + `/agent-cli-cc-subagents` to fan out at L4.
+> `/agent-red-implement` per lane at L5. `/agent-mem-comms` (namespace `bsuite`) is the only
+> coordination channel — claim ownership in the inbox before starting, and report continuously.
 >
-> Post the L9 morning brief to the inbox and leave `development` in sync with `main`.
+> **Landmark checkpoint after every skill and every MCP call: state what you invoked, what it
+> returned, and what you concluded. A skill invoked without a recorded outcome did not happen.**
+>
+> One Operator-Agent rules from precedent rather than waking Braden. One PI per app. Workers
+> implement in isolated worktrees and never merge. **Nothing is marked done by the lane that did it.**
+>
+> By morning Braden reads ONE ledger. Every item is `VERIFIED-DONE` (checked by another lane),
+> `CLAIMED-DONE`, `IN-PROGRESS`, or `BLOCKED` with a named unblock. **Nothing at CLAIMED-DONE may be
+> written as done. A short honest list beats a long false one — he has had weeks of the latter.**
+
+---
+
+## §0b — FOUR CLAIMS THAT ARE ALREADY REFUTED. DO NOT ACT ON THEM.
+
+Measured 2026-08-25 against the live system. A prior directive for this night asserted each.
+
+| Asserted | Measured |
+|---|---|
+| RAMS is unbuilt — `to_regclass('public.rams_funding_matrix')` is null, 111 days past a ratified ADR, funding hand-keyed | **FALSE.** Eight funding tables exist (`funding_claims` 45 cols, `funding_claim_items`, `funding_milestones`, `funding_programs`, `funding_offsets`, `funding_sources`, `engagement_funding_sources`, `incentive_claims`). The RAM/ADMS claim path landed **2026-08-06, crm7 PR #1436**: `admsAdapter.ts` 1006 lines, `claims/new.tsx` 1156, `submitFundingClaim.ts` 311, `ramAuthClient.ts` 165, plus `SubmitClaimDialog.tsx`, `govt-integrations.tsx`, `admsParticulars.ts`, `fundingClaimStore.ts`. **The task is to VERIFY it end to end and find what is genuinely missing — not to build it.** The tables are near-empty, which is expected with no live billing; empty is not unbuilt. |
+| Commit signing is broken — `%G?` = `E` on every tip, R80.4 0 of 75, Vercel silently cancelling deploys, so treat no green check as evidence | **FALSE.** `E` = *signature cannot be verified locally*, not *unsigned*. The key on every `E` is `B5690EEEBB952194` — **GitHub's web-flow key**, signing GitHub-created merge commits, absent from the local keyring. **Zero `N` (genuinely unsigned) commits exist.** GitHub returns `githubCommitVerification: verified` on every deployment, and all 20 recent R80.4 deploys are `READY`. **Do NOT spend the night reconfiguring GPG, and do NOT enable required-signature branch protection — it would block every agent commit in the estate.** |
+| 166 branches through production without disposal | **STALE.** 26 remote estate-wide (parent 4 + submodules 22). 32 stale *local* parent refs, harmless. The branch budget below still binds. |
+| Three crm7 worktrees landmined with `MERGE_HEAD` | **STALE.** Zero extra worktrees exist in any repo. The never-commit-in-a-MERGE_HEAD-worktree rule still binds if one reappears. |
+
+**Partly true, and the true half is a real finding:** `email_integrations` still carries plaintext
+`access_token` and `refresh_token` beside `access_token_vault_id` / `refresh_token_vault_id`, and
+the one live row is **dual-written** — the Expand-Migrate-Contract is stuck before the contract.
+But `smtp_password` and `imap_password` are **already vault-only**; that limb of the claim is wrong.
+Finish the contract on the two token columns; do not "fix" the two that are done.
+
+**Confirmed and actionable:** PermissionsEditor has zero default logic · dnd-kit is 25 files across
+5 apps · Michael Chen is duplicated across two tenants and absent from the one he belongs to ·
+crm7 is a PWA whose service worker serves Supabase reads, so block it in Playwright or the gate is
+fiction · **RULING 25.1 unblocks the reporting family** (see L3).
 
 ---
 
@@ -109,7 +149,11 @@ its named skill having run is not reached.
   irreversible, or a product choice with no precedent — goes to Braden as **one message, once,
   at the start of the night**, each as a lay brief: what it is in one plain sentence, what
   changes on yes vs no, one recommendation.
-- Known candidates: B-1 (the reporting-surface direction gating D-30/D-74/D-101/D-106),
+- **The reporting family is NO LONGER BLOCKED.** `bsuite_todos_20260825_operator` carries
+  **PI RULING 25.1**: *a report is a read-only saved question over the semantic layer; the data
+  explorer is an editable grid; a report may deep-link to the owning app's editor but never embeds
+  one.* Build D-30/D-74/D-101/D-106 to that. Do not re-escalate it.
+- Remaining candidates:
   D-31 (multi-repo architecture ADR), D-38 (funding claim shape), D-43 (the 12 frozen
   `bsuite Platform` placement rows), the 162 duplicated Braden Group documents.
 - **Do not trickle these.** A second wake-up is a defect. Everything not in this batch is ruled
@@ -250,3 +294,25 @@ status, not the command's.
 - Never force-push.
 - Migrations: author from a lane, apply by workflow dispatch on `--ref main`.
 - Colour literals in prose trip the C1/C2 grep gates — describe, do not quote them.
+
+---
+
+## §8 — WHAT DATUM'S VERSION GOT RIGHT, AND KEPT HERE
+
+A parallel directive was drafted for this same night. Four of its factual claims are refuted in
+§0b; these five are better than what this document originally said, and are adopted:
+
+1. **MEASURE BEFORE YOU BUILD as the headline instruction**, not a footnote. It is now §0.
+2. **Order by how many times Braden has asked, not by technical convenience.** §4 is re-read in
+   that order: D-2 email first, then permissions defaults, then dnd-kit, then reporting.
+3. **RULING 25.1 unblocks the reporting family** — this document had it as blocked on B-1. It is not.
+4. **The D-2 email diagnosis is specific and correct:** the Google consent screen returning to the
+   wrong app with the popup still open is a `redirect_uri` / authorised-origin mismatch — start
+   there. And the scope decision is real: `gmail.send` alone avoids Google's CASA assessment;
+   inbound sync commits to it. **Record that decision before building, because it is irreversible
+   in effort.** Insecure-but-working and secure-but-broken are both failures.
+5. **A lane whose transcript stops growing is treated as dead and revived.** Sessions die on API
+   529 overloads, not on decisions. Poll lane liveness; do not assume silence means work.
+
+Its branch-budget and hard-honesty sections say the same thing as §5 and L9 here, in stronger
+words, and those words are kept.
