@@ -51,6 +51,24 @@ on:
       - 'conduit'
       - 'throughput'
 
+  # A stranded gitlink is created by a SUBMODULE-side promotion — an event the
+  # parent repo never sees as a push OR a pull_request. On 2026-08-26 crm7 was
+  # promoted to its own main carrying two migrations (a branding tenant-resolution
+  # fix and an RLS read-half closure) and the parent pointer was not advanced.
+  # Neither migration was ever OFFERED to the applier, and this gate — which was
+  # written for exactly that defect and detects it correctly — stayed silent for
+  # eleven hours.
+  #
+  # The reason is the trigger, not the checker. `pull_request` can only observe a
+  # PR's merge RESULT, and every parent PR it ran on was a gitlink advance, i.e.
+  # one that FIXED the lag. So it read green while the defect existed and green
+  # while it was repaired: a perfectly inverted detector. `push: [main]` would not
+  # have helped either — the parent had no push to make.
+  #
+  # Only a time trigger can observe a state created in another repository.
+  schedule:
+    - cron: '37 */3 * * *'
+
 permissions:
   contents: read
 
