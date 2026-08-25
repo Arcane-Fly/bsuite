@@ -151,6 +151,77 @@ works.
 
 ---
 
+## §0c — THERE IS NO ESCALATION PATH. Every "escalate to Braden" in this document is DEAD.
+
+**Operator, 2026-08-25 22:38, final handoff:**
+> *"you wont be able to wake me. i cant hear you. its on you buddy… check the docs, check
+> precedent, extrapolate to new areas like a lawyer would… I value cutting edge, best long term
+> solution, reasoning through problems, highest most intuitive UI and UX, interoperability,
+> cross cutting, the oneshot policy, dry, clean, organised, beautiful, powerful, and future focused."*
+
+**This supersedes every escalation instruction in this document, including §0b's.** An instruction
+to halt and escalate, given to an agent that cannot escalate, is an instruction to halt. That is
+worse than a considered decision, because it burns the night AND makes no decision.
+
+### What replaces escalation
+
+**Reason it out like a lawyer.** Read the docs, read the precedent book, and extrapolate from the
+nearest ruling to the new facts — the operator is a lawyer and asked for exactly this. A precedent
+that does not name your situation still binds by its RATIO. Find the reason the rule exists and
+apply it.
+
+**Then rule, record, and continue.** `agent-mem-precedent-clerk` the ruling the same turn. A ruling
+recorded can be overturned in the morning; a night spent stopped cannot be recovered.
+
+### THE ONE THING THAT CANNOT BE RULED: another company's data
+
+§0b said a FutureBuild breach wakes him. It cannot. **The replacement is not escalation — it is the
+conservative branch, taken immediately and without deliberation:**
+
+1. **STOP the offending lane only.** Not the run. One lane's error is not the estate's.
+2. **RESTORE.** Revert the change. Re-query the counts —
+   `8 placements · 8 people · 8 training_contracts · 13 contacts · 3 timesheets`. They must match
+   exactly before anything else proceeds.
+3. **RECORD forensically** — what ran, what changed, what restored, with the before/after counts.
+4. **DO NOT re-attempt.** That item is BLOCKED until he wakes. **No decision about another
+   company's records is made in his absence** — not by him, not by precedent, not by the owner.
+   This is the single boundary where "rule and continue" does not apply, because the authority to
+   change a client's data was never delegated.
+5. **Everything else continues.** Halting the run to mark a boundary nobody can cross is theatre.
+
+### HIS DECISION PROFILE — the standing answer when a fork appears
+
+From the precedent book and eighteen hours of rulings, in his own repeated words:
+
+| he values | so when you fork |
+|---|---|
+| **cutting edge · best long-term solution · future focused** | take the option that is right in a year, not the one that is quickest tonight. `20260822__best_long_term_option_is_a_standing_answer` — it IS the standing answer, apply it rather than asking. |
+| **reasoning through problems** | show the reasoning and the rejected option (B6). A conclusion with no visible alternative reads as a guess. |
+| **highest, most intuitive UI and UX** | `20260812__autonomous_forks_resolve_to_securest_best_ux_world_class`. An inert control is worse than an absent one. |
+| **interoperability · cross-cutting** | fix the CLASS. `bsuite-fix-the-class-not-the-page`. One page fixed and its siblings left is the complaint he has made most. |
+| **one-shot policy · DRY** | `general-dry-one-shot-architecture` · `20260804__shared-module-plus-private-copy` — where a shared module and a private copy both exist, **the copy is the defect**. |
+| **clean · organised** | `20260812__dead_code_is_deleted_without_a_ruling` · `20260824__zero_consumer_is_not_done` — WIRE IT or REMOVE IT, no third state. |
+| **beautiful** | D2C is not decoration to him. `20260802__theme_conformance_is_absolute`. |
+| **powerful** | build the capability, not the demo of it. |
+
+**And the meta-rule he has given more than once:** *"none of the things i have classed as standing
+rules are new standing rules. they are existing and none of your questions needed to be asked
+because you already had the answer."* — 2026-08-12, after a four-hour run handed back four
+"decisions waiting on Braden" that were all already ruled.
+
+**Before ruling anything: `memory_search(category:"precedent")` with TWO OR THREE terms, and read
+`precedent__index__bsuite`'s OPEN list.** The OPEN list is load-bearing — it names where the book
+is SILENT, and silence means run the novel-situation protocol rather than assume coverage.
+
+### The bar this sets on the owner
+
+He is a lawyer, a developer and a physicist, and he will read the morning brief that way: he will
+look for the reasoning, the rejected alternative, and the measurement — not the conclusion. **A
+brief that states outcomes without the reasoning that produced them will be taken apart.** Write it
+for that reader.
+
+---
+
 ## §1 — GOAL
 
 **Every card in every app, on every page, renders correctly to the D2C brand — and stays that way
