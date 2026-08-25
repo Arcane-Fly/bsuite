@@ -93,6 +93,64 @@ both tenants. Otherwise it lands on `development`, and 11:00 is its window — w
 
 ---
 
+## §0b — FUTUREBUILD ACADEMY IS A REAL CLIENT. Treat its data as production.
+
+**Operator, 2026-08-25 22:05:**
+> *"the only thing we must be careful of is futurebuild is REAL user data from a real client.
+> everything like placements and people and clients and hosts must be 100% perfect."*
+
+**This outranks every cosmetic item in this document.** A gradient that does not render is
+embarrassing. A placement that does not render is a real apprentice missing from a real GTO's
+system.
+
+### What is actually there — measured 2026-08-25
+
+| entity | FutureBuild rows |
+|---|---:|
+| contacts | 13 |
+| **placements** | **8** |
+| **people** | **8** |
+| training_contracts | 8 |
+| user_tenants | 3 |
+| timesheets | 3 |
+
+Small volumes. **Eight real apprentices with eight real placements and eight real training
+contracts.** Volume is not the measure of consequence here.
+
+### THE RULES — binding on every lane, every silo, all night
+
+1. **NEVER WRITE TO FUTUREBUILD DATA.** No backfill, no seed, no "fix the data", no test fixture,
+   no `UPDATE`, no `DELETE`. Not to demonstrate a fix, not to reproduce a bug. If a fix appears to
+   need a data change on that tenant, **it is BLOCKED and goes in the morning brief** — §7's
+   pre-authorised rulings do **not** extend to writing another company's records.
+2. **READ-ONLY is the testing posture.** FutureBuild is the tenant that proves rendering is correct
+   *with real data*. Open its placements, people, contacts and training contracts and confirm they
+   render **populated** — that is the point of testing against it.
+3. **"No missing placements" is the acceptance test, and it is literal.** A grid can render every
+   row with every cell empty — a recorded failure in this estate. Eight placements must appear, with
+   their fields, not eight empty rows. Count them.
+4. **Every migration is checked against it before it lands.** Any DDL touching `placements`,
+   `people`, `contacts`, `training_contracts`, `timesheets` or their RLS must be rehearsed, and the
+   FutureBuild row counts above re-queried **after** the dispatch. **A count that moves is a
+   rollback, not a finding.**
+5. **RLS work is the highest-risk category here.** A policy change that hides FutureBuild's rows
+   from its own three users is indistinguishable, from the outside, from data loss. Any RLS diff
+   goes through `bsuite-rls-authz-red-team` (§13.1) and is verified as **that tenant's user**, not
+   as a platform operator whose reach hides the bug.
+6. **Never print its PII.** Shapes and counts only — as in the table above. Names, emails, addresses
+   and USIs do not appear in a report, a PR, a commit message or the morning brief.
+
+### Why this changes the two-tenant rule
+
+§6b said "two tenants minimum" for tenant-scoped work. **The reason is now stronger and different:**
+the second tenant is not a branding variant — **it is the one holding a real client's workforce.**
+A visual gate that passes on `bsuite Platform` and never opens FutureBuild has proven the demo data
+works.
+
+**If anything in this run cannot be verified safe against FutureBuild, it does not ship tonight.**
+
+---
+
 ## §1 — GOAL
 
 **Every card in every app, on every page, renders correctly to the D2C brand — and stays that way
@@ -311,16 +369,48 @@ tiers.**
 | tier | heading_gradient | card_gradient | border_radius_preset |
 |---|---|---|---|
 | platform (BSuite) | null | null | null |
-| tenant × 4 (incl. Braden Pty Ltd, FutureBuild Academy) | null | null | **`md`** |
+| tenant × 4 (incl. Braden Pty Ltd, FutureBuild Academy) | null | null | `md` |
 
-**Read this carefully, because the two rows say opposite things about risk.**
+**TWO CORRECTIONS, 2026-08-25 22:05 and 22:07. The operator caught both. Read the final table, not
+the earlier claims — this section has been wrong twice tonight in opposite directions.**
 
-- **No gradient is set anywhere.** So G2's gradient work cannot wreck a tenant's gradient today —
-  there is none to wreck. It CAN wreck the *ability* to set one, and that is the thing to protect.
-- **Every tenant HAS a radius preset (`md`).** Radius is **live, tenant-controlled configuration**
-  flowing to `--radius-preset`. **Hardcoding 24px or 28px to "align the corners" would break
-  white-label radius on all four tenants immediately.** That is the wreck the operator is warning
-  about, and it is one careless commit away.
+**Correction 1 — radius is NOT tenant-configured.** An earlier version claimed radius was *"live,
+tenant-controlled configuration"* because all four rows read `md`. It is a **COLUMN DEFAULT**:
+
+```
+border_radius_preset   column_default   'md'::text
+```
+
+Nobody set it. Reading a column default as a deliberate user choice is the same class of error as
+reading a grep count as a finding.
+
+**Correction 2 — but branding IS configured, and by the REAL CLIENT.** The correction above then
+over-corrected to *"nobody has configured branding at all"*. **That was wrong too**, because it
+generalised from three columns to a whole feature. Measured across the full branding surface:
+
+| tenant | logo_url | logo_light | logo_dark | company_name | primary | accent | heading_gradient | radius |
+|---|---|---|---|---|---|---|---|---|
+| **FutureBuild Academy** | **✓** | **✓** | **✓** | **✓** | **✓** | **✓** | null | default |
+| Braden Group | ✓ | ✓ | — | ✓ | ✓ | ✓ | null | default |
+| (2 rows, `tenant_id` resolves to null) | — | — | — | — | — | — | null | default |
+
+**FutureBuild Academy carries the fullest white-label configuration of any tenant in the estate** —
+all three logo variants, company name, primary and accent colour. **White-label is live, in
+production, for a real client** (§0b).
+
+**What is finally true:**
+
+- **Logos and colours ARE set, by the real client.** Theme work CAN wreck a live white-label.
+  This is the highest-consequence branding risk in the run.
+- **Gradients are NOT set anywhere.** G2 cannot wreck an existing gradient — only the ability to set
+  one (§6c's one-line fix protects that).
+- **Radius is NOT set** — every row shows the column default. The mechanism is real; the urgency is not.
+- **Two `tenant_branding` rows resolve to a null tenant.** Orphaned branding. Not tonight's job, but
+  record it — a branding row with no tenant is a row nothing can ever read.
+
+**The testing consequence:** any theme change must be verified against **FutureBuild** specifically —
+its logo must still render, in light AND dark (it has both variants), and its primary/accent colours
+must still apply. A gate that passes on a tenant with no branding has proven the **unbranded** path.
 
 ### THE RULES — binding on G1, G2 and G3
 
