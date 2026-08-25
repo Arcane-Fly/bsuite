@@ -459,6 +459,18 @@ export const GUARDS = [
       'never imported by design, not dead application code.',
   },
   {
+    id: 'parent-check-migration-scope-coverage',
+    label: 'Every migration-shaped SQL is in a scope the applier can read',
+    repo: '.',
+    command: ['node', 'scripts/check-migration-scope-coverage.mjs'],
+    ciWorkflow: '.github/workflows/migration-version-collision-lint.yml',
+    mode: 'run',
+    evidence:
+      '"check-migration-scope-coverage: N tracked .sql file(s); N inside the 8 declared scope(s); ' +
+      'N allowlisted outside them" — and it names every allowlisted file that DROPs or TRUNCATEs, ' +
+      'because a file kept out of a scope for safety is still one paste away from running.',
+  },
+  {
     id: 'parent-check-migration-version-collisions',
     label: 'Migration version collisions across all scopes',
     repo: '.',
@@ -1496,7 +1508,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 70
+export const GUARD_FLOOR = 72
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
