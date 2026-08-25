@@ -215,6 +215,74 @@ returning to the wrong app is a redirect_uri / authorised-origin problem)* ·
 
 ---
 
+## §6b — BRANDING IS NOT YOURS TO HARDCODE. This constrains ALL of Silo A.
+
+**Operator, 2026-08-25:** *"the developer platform branding and organisation level app branding need
+to be considered so they dont get wrecked and still allow enterprises to white label."*
+
+He is right, and the risk is live — **not theoretical**.
+
+### The three tiers, as built
+
+```
+Tier 1  platform_branding    developer/owner defaults, SINGLETON
+Tier 2  tenant_branding      per-tenant override  <-- THIS IS WHITE-LABEL
+Tier 3  sub-organisation     inherits
+        platform_branding.force_override_tenant_ids  -> Tier 1 beats 2 and 3 for listed tenants
+        platform_branding_public                     -> the anonymous view marketing pages read
+```
+
+`useBranding.ts` resolves them with `firstNonNull` and writes CSS custom properties via
+`setOrClear`. **`heading_gradient`, `card_gradient` and `border_radius_preset` are columns in BOTH
+tiers.**
+
+### Measured on production, 2026-08-25
+
+| tier | heading_gradient | card_gradient | border_radius_preset |
+|---|---|---|---|
+| platform (BSuite) | null | null | null |
+| tenant × 4 (incl. Braden Pty Ltd, FutureBuild Academy) | null | null | **`md`** |
+
+**Read this carefully, because the two rows say opposite things about risk.**
+
+- **No gradient is set anywhere.** So G2's gradient work cannot wreck a tenant's gradient today —
+  there is none to wreck. It CAN wreck the *ability* to set one, and that is the thing to protect.
+- **Every tenant HAS a radius preset (`md`).** Radius is **live, tenant-controlled configuration**
+  flowing to `--radius-preset`. **Hardcoding 24px or 28px to "align the corners" would break
+  white-label radius on all four tenants immediately.** That is the wreck the operator is warning
+  about, and it is one careless commit away.
+
+### THE RULES — binding on G1, G2 and G3
+
+1. **Never hardcode a gradient, colour, radius, shadow or logo.** Resolve through the CSS var the
+   branding resolver sets. `.gradient-text` already models this correctly:
+   `var(--heading-gradient, var(--gradient-heading, <estate default>))` — tenant first, estate
+   second, hardcoded last.
+2. **The corner-alignment fix must go through `--radius-preset`,** not a literal. Both surfaces
+   (grid item and inner card) read the SAME var; that is what makes them align, and it is also what
+   keeps them tenant-configurable.
+3. **Do not remove a var read to "simplify".** A var with no reader is white-label silently
+   disabled — and it will read as working, because the default looks right.
+4. **Test with a tenant that has branding set.** Braden Pty Ltd and FutureBuild Academy both carry
+   `border_radius_preset`. A visual gate run only against a tenant with null branding proves the
+   DEFAULT path, not the white-label path. **Two tenants minimum, per the ship skill, and this is
+   exactly why.**
+5. **Respect `force_override_tenant_ids`.** A tenant in that array must show PLATFORM branding, not
+   its own. If the theme work bypasses the resolver, that override stops working and a platform
+   lockdown silently fails open.
+6. **`platform_branding_public` is the anonymous path.** Marketing/public routes read it. Anything
+   that assumes an authenticated branding fetch breaks logged-out pages.
+
+### A related defect already confirmed, do not "fix" it blind
+
+`platform_branding` has `platform_name` and **no `company_name`**; `tenant_branding` has **both**.
+So `mergeBranding` resolves `company_name` to null at Tier 1, and two live `tenant_branding` rows
+have it null as well. `CRM7Header` documents this. **It is a schema asymmetry, not a rendering bug
+— changing the resolver to paper over it would break tenant branding estate-wide.** Fix the schema
+or the resolver deliberately, with the visual gate on two tenants, or leave it and record it.
+
+---
+
 ## §7 — PRE-AUTHORISED RULINGS. Braden is asleep. These ARE his answers.
 
 Every one is **reversible on his word**. Record each application via the precedent clerk.
