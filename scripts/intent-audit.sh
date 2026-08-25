@@ -89,9 +89,12 @@ done
 #    on the parent every sweep and train the reader to ignore it. Submodules are
 #    one lane each; the parent gets headroom and is only flagged when it is
 #    clearly accumulating.
+#    A PROMOTION IS NOT A LANE. development->main coexisting with a feature PR is
+#    the pipeline working, not a budget breach — the first version of this check
+#    flagged exactly that and was wrong. Count only PRs targeting `development`.
 for r in crm7 business-suite-unified conduit braden throughput R80.4; do
-  n=$(gh pr list --repo "GaryOcean428/$r" --state open --json number --jq 'length' 2>/dev/null || echo 0)
-  [ "${n:-0}" -gt 1 ] && flag "$r has $n open PRs (submodule budget: 1)"
+  n=$(gh pr list --repo "GaryOcean428/$r" --state open --base development --json number --jq 'length' 2>/dev/null || echo 0)
+  [ "${n:-0}" -gt 1 ] && flag "$r has $n open feature PRs into development (lane budget: 1)"
 done
 #    Open PRs are only a problem if they are STALLING. A lane that opens one and
 #    lands it is the system working; the signal is a PR sitting red or untouched,
@@ -129,7 +132,58 @@ say "  -> cross-check against inbox claims: any claimed item whose lane shows 0"
 say "     here for two consecutive sweeps is STALE. Reap it (§5b): announce, "
 say "     re-dispatch with last known state, re-scope if it has died twice."
 
-# 8. Named, not skipped ------------------------------------------------------
+# 8. LOCAL MEMORY — an overnight run that OOMs is a dead run --------------------
+#    Operator, 22:29: "keep an eye on local memory and check for anything eating
+#    it that isn't needed. only vscode is currently open."
+#
+#    THE HAZARD IS KILLING THE WRONG THING. Earlier tonight a loose pattern nearly
+#    took Braden's own Chrome, and the overnight lanes run INSIDE VS Code — the
+#    same binary as this audit. So this section REPORTS candidates and refuses to
+#    kill anything itself. Tracing ancestry to a session is a judgement call; a
+#    cron job should not be making it unattended.
+AVAIL=$(free -m | awk 'NR==2{print $7}')
+SWAP=$(free -m | awk 'NR==3{print $3}')
+say "memory: ${AVAIL}MB available, ${SWAP}MB swap in use"
+[ "${AVAIL:-99999}" -lt 4096 ] && flag "only ${AVAIL}MB available — lanes will start failing"
+[ "${SWAP:-0}" -gt 16384 ] && flag "${SWAP}MB swap in use — sustained memory pressure"
+
+#    Candidates = NOT under VS Code and NOT this estate's own tooling.
+#    AGE IS NOT ORPHANHOOD, and the first version of this check proved it the
+#    hard way: it flagged 3 "day-old orphaned browsers" that were the LIVE
+#    @playwright/mcp servers for this session and the overnight run. Killing them
+#    would have broken the visual gate for the whole night. A long-lived process
+#    under a live session is a long-lived process, not a leak.
+#
+#    So: walk each candidate's ancestry. If it reaches a running `claude` under
+#    VS Code, it belongs to somebody and is NOT a candidate.
+owned_by_live_session() {
+  local pid=$1 i
+  for i in 1 2 3 4 5 6; do
+    [ -z "$pid" ] || [ "$pid" -le 1 ] 2>/dev/null && return 1
+    case "$(ps -o args= -p "$pid" 2>/dev/null)" in
+      *.vscode/extensions/anthropic.claude-code*) return 0 ;;
+      */usr/share/code/code*)                     return 0 ;;
+    esac
+    pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+  done
+  return 1
+}
+
+ORPH=0
+for pid in $(pgrep -f 'claude-desktop' 2>/dev/null); do
+  owned_by_live_session "$pid" || ORPH=$((ORPH+1))
+done
+[ "$ORPH" -gt 0 ] && flag "$ORPH claude-desktop process(es) running — the operator closed it; it is not meant to run"
+
+STALEPW=0
+for pid in $(pgrep -f 'chrome-headless|playwright-mcp' 2>/dev/null); do
+  owned_by_live_session "$pid" && continue
+  age=$(ps -o etime= -p "$pid" 2>/dev/null | tr -d ' ')
+  case "$age" in *-*) STALEPW=$((STALEPW+1)) ;; esac
+done
+[ "$STALEPW" -gt 0 ] && flag "$STALEPW headless-browser process(es) >1 day old AND not owned by a live session — genuinely orphaned"
+
+# 9. Named, not skipped ------------------------------------------------------
 say "NOT checked here (needs Supabase MCP, run them in-session):"
 say "  · FutureBuild row counts — 8 placements / 8 people / 8 training_contracts / 13 contacts / 3 timesheets"
 say "  · advisor sweep ERROR count"
