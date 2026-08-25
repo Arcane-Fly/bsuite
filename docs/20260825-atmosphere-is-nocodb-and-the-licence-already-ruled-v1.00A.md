@@ -3,8 +3,8 @@ kind: decision
 authority: engineering
 owner: datum-lane
 supersedes:
-  - docs/20260821-atmosphere-evaluation-v1.00D.md
-  - docs/20260821-airtable-class-data-surface-plan-v1.00D.md
+  - docs/20260821-atmosphere-evaluation-v1.00F.md
+  - docs/20260821-airtable-class-data-surface-plan-v1.00F.md
 evidence:
   - scripts/check-shared-package-reach.mjs
 ---
@@ -23,8 +23,8 @@ evidence:
 
 | Document | Read | Should have read |
 |---|---|---|
-| `20260821-atmosphere-evaluation-v1.00D.md` | `Atmosphere/atmosphere` — a JVM async/WebSocket framework | `GaryOcean428/atmosphere` |
-| `20260821-airtable-class-data-surface-plan-v1.00D.md` | the same JVM project | the same |
+| `20260821-atmosphere-evaluation-v1.00F.md` | `Atmosphere/atmosphere` — a JVM async/WebSocket framework | `GaryOcean428/atmosphere` |
+| `20260821-airtable-class-data-surface-plan-v1.00F.md` | the same JVM project | the same |
 
 The second one is the more expensive mistake, because it **explicitly reassures the
 reader that the premise was checked**:

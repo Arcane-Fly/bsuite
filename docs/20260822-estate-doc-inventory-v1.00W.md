@@ -81,9 +81,9 @@ Two self-inflicted defects while producing it, both worth the space:
         ci.yml
     docs/20260819-built-unlanded-and-unwired-register-v1.00W.md
         check-hook-suppression-ratchet.mjs, audit-routes.sh, check-placement-rate-provenance.mjs, cron-job-health-audit.yml, hook-suppression-ratchet.yml
-    docs/20260821-airtable-class-data-surface-plan-v1.00D.md
+    docs/20260821-airtable-class-data-surface-plan-v1.00F.md
         check-shared-package-reach.mjs, check-table-reach.mjs
-    docs/20260821-atmosphere-evaluation-v1.00D.md
+    docs/20260821-atmosphere-evaluation-v1.00F.md
         check-shared-package-reach.mjs
     docs/20260822-border-elevation-token-system-spec-v1.00D.md
         audit-oklch-lightness.py, theme-conformance.yml, dark-variant-strategy-lint.yml, tailwind-source-registration-lint.yml
@@ -142,8 +142,8 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260817-estate-completion-ledger-v1.00W.md` | BINDABLE |  | db-lint.yml |
 | `docs/20260817-estate-remaining-work-register-v3.00W.md` | BINDABLE |  | ci.yml |
 | `docs/20260819-built-unlanded-and-unwired-register-v1.00W.md` | BINDABLE |  | check-hook-suppression-ratchet.mjs, audit-routes.sh, check-placement-rate-provenance.mjs |
-| `docs/20260821-airtable-class-data-surface-plan-v1.00D.md` | BINDABLE |  | check-shared-package-reach.mjs, check-table-reach.mjs |
-| `docs/20260821-atmosphere-evaluation-v1.00D.md` | BINDABLE |  | check-shared-package-reach.mjs |
+| `docs/20260821-airtable-class-data-surface-plan-v1.00F.md` | BINDABLE |  | check-shared-package-reach.mjs, check-table-reach.mjs |
+| `docs/20260821-atmosphere-evaluation-v1.00F.md` | BINDABLE |  | check-shared-package-reach.mjs |
 | `docs/20260822-border-elevation-token-system-spec-v1.00D.md` | BINDABLE |  | audit-oklch-lightness.py, theme-conformance.yml, dark-variant-strategy-lint.yml |
 | `docs/20260822-data-surface-consolidation-decision-v1.00D.md` | BINDABLE |  | check-doc-classification.mjs |
 | `docs/20260822-estate-doc-inventory-v1.00W.md` | BINDABLE |  | audit-doc-completion.mjs, verify-class-a-preservation.mjs, verify-esm-imports.sh |
