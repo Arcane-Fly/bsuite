@@ -307,9 +307,25 @@ for (const r of inv.routes) {
     if (!fnCallers.has(f)) fnCallers.set(f, []);
     fnCallers.get(f).push(`${r.app}${r.path}`);
   }
+  // OWNER-SCOPING IS TIGHTER THAN TENANT-SCOPING, NOT WEAKER.
+  // `RLS_ON_OWNER_SCOPED` on a table that happens to carry tenant_id means the
+  // caller sees only their OWN rows — a strict subset of their tenant's. Counting
+  // that as "partial tenancy" put 11 rows in REVIEW that were never defects
+  // (app_notifications, projects), which is how a verdict column earns the habit
+  // of being ignored.
+  //
+  // The measurement that settled it, and the mistake worth recording: my first
+  // pass listed EVERY non-tenant-scoped posture on the REVIEW rows and concluded
+  // they were all benign — audit_logs, profiles, awards, qualification_units and
+  // the rest. But none of those carry tenant_id, so none of them drive this
+  // verdict at all. Filtering to tenant-columned tables left exactly THREE, and
+  // 15 of the 26 rows point at a genuine one: financial_viability_snapshots,
+  // whose read predicate is the tenant-BLIND is_gto_admin(). Dismissing the
+  // whole set would have thrown away a real finding.
   const tenantTables = row.tables.filter(t => dbTables.get(t)?.has_tenant_id);
+  const SCOPED_ENOUGH = ['RLS_ON_TENANT_SCOPED', 'RLS_ON_MIXED', 'RLS_ON_OWNER_SCOPED'];
   row.tenant_scoped = tenantTables.length === 0 ? 'n/a'
-    : tenantTables.every(t => ['RLS_ON_TENANT_SCOPED', 'RLS_ON_MIXED'].includes(row.rls[t])) ? 'yes'
+    : tenantTables.every(t => SCOPED_ENOUGH.includes(row.rls[t])) ? 'yes'
     : 'PARTIAL';
 
   const postures = Object.values(row.rls);
