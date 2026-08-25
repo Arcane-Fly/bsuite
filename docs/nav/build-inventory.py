@@ -50,6 +50,227 @@ def line_number_of(text, char_offset):
     return text[:char_offset].count("\n") + 1
 
 
+# ---------------------------------------------------------------------------
+# component -> file resolution
+#
+# A component NAME on its own is not actionable. "Unknown" and "AcceptInvite"
+# are equally hard to open: one says nothing, the other says a symbol without
+# saying where it lives, and in an estate with six apps and repeated page names
+# that is a search, not a citation. `component_file` closes it.
+#
+# It is deliberately NULLABLE and deliberately NOT guessed. A route whose file
+# cannot be resolved records null — never a plausible-looking path. "Checked and
+# found nothing" and "could not check" must not share an output (D-92); the
+# resolver only ever returns a path it has confirmed exists on disk.
+# ---------------------------------------------------------------------------
+
+# Components that name a ROUTING MECHANISM rather than a page. There is no file
+# to point at for these, and inventing one would be the exact failure this field
+# exists to fix.
+#
+# "Index" IS NOT IN THIS SET, and the first draft of it wrongly was. React
+# Router's index ROUTES are matched by the `index` attribute, never by a
+# component of that name — and braden's home page is a real component literally
+# called `Index`, imported from braden/src/pages/Index.tsx. Listing it here
+# blanked a genuine page's file and the output still looked clean, because a
+# route in the structural set is EXPECTED to resolve to null. A detector only
+# sees the mechanisms its author happened to know; assert_structural_are_structural()
+# below is what turns that guess into something checked.
+STRUCTURAL_COMPONENTS = {
+    "Unknown", "Outlet", "Navigate", "Redirect", "RedirectTo",
+}
+
+_IMPORT_MAP_CACHE = {}
+
+
+def _resolve_module_path(route_file, spec):
+    """
+    Resolve an import specifier as written in `route_file` to a repo-relative
+    path, or None. Only returns paths that EXIST — a bare package specifier
+    ('react', '@tanstack/react-query') resolves to None, as does a file that
+    moved out from under a stale import.
+    """
+    if spec.startswith("@/"):
+        # Every app in this estate aliases '@' to its own src/. Anchor on the
+        # ROUTE FILE's app rather than a lookup table, so a new app needs no
+        # entry here and a wrong entry cannot silently point across a submodule
+        # boundary.
+        app_dir = route_file.split("/")[0]
+        base = os.path.join(app_dir, "src", spec[2:])
+    elif spec.startswith("."):
+        base = os.path.normpath(os.path.join(os.path.dirname(route_file), spec))
+    else:
+        return None
+
+    if base.startswith(".."):
+        return None  # escaped the repo — not ours to cite
+
+    candidates = [base]
+    # A specifier may already carry its extension (R80.4 imports
+    # '../charge-calculator-v9-2.tsx' with it).
+    if not re.search(r'\.(tsx|ts|jsx|js)$', base):
+        candidates += [base + ext for ext in (".tsx", ".ts", ".jsx", ".js")]
+        candidates += [os.path.join(base, "index" + ext)
+                       for ext in (".tsx", ".ts", ".jsx", ".js")]
+
+    for cand in candidates:
+        if os.path.isfile(os.path.join(REPO_ROOT, cand)):
+            return cand.replace(os.sep, "/")
+    return None
+
+
+def build_import_map(route_file):
+    """
+    component name -> repo-relative file, for one route file.
+
+    Handles the three forms this estate actually uses, INCLUDING the two that a
+    line-oriented regex misses:
+
+      const X = lazy(() => import('./pages/x'))                 single line
+      const X = lazy(() =>                                      wrapped, and
+        retryImport(() => import('./pages/x')),                 behind a helper
+      )
+      import X from './pages/x'                                 default
+      import { X, Y as Z } from './pages/x'                     named
+
+    crm7 alone wraps 300+ of its imports in `retryImport`, so a pattern that
+    only understands `lazy(() => import(...))` resolves almost nothing there.
+    Rather than enumerate wrapper helpers, this takes the FIRST `import('...')`
+    inside the lazy() call whatever surrounds it.
+    """
+    if route_file in _IMPORT_MAP_CACHE:
+        return _IMPORT_MAP_CACHE[route_file]
+
+    text = read_file(route_file)
+    mapping = {}
+
+    # lazy(...) — scan to the matching close paren so a wrapped/multi-line body
+    # is read in full instead of being cut at the first newline.
+    for m in re.finditer(r'\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*(?:React\.)?lazy\(', text):
+        name = m.group(1)
+        i = m.end() - 1
+        depth = 0
+        end = len(text)
+        while i < len(text):
+            if text[i] == "(":
+                depth += 1
+            elif text[i] == ")":
+                depth -= 1
+                if depth == 0:
+                    end = i
+                    break
+            i += 1
+        body = text[m.end():end]
+        im = re.search(r'''import\(\s*['"]([^'"]+)['"]''', body)
+        if im:
+            resolved = _resolve_module_path(route_file, im.group(1))
+            if resolved:
+                mapping[name] = resolved
+
+    # default imports
+    for m in re.finditer(
+        r'''^\s*import\s+([A-Za-z_$][\w$]*)\s*(?:,\s*\{[^}]*\})?\s+from\s+['"]([^'"]+)['"]''',
+        text, re.M,
+    ):
+        resolved = _resolve_module_path(route_file, m.group(2))
+        if resolved:
+            mapping.setdefault(m.group(1), resolved)
+
+    # named imports (including `as` aliases — the LOCAL name is what the JSX uses)
+    for m in re.finditer(
+        r'''^\s*import\s+\{([^}]*)\}\s+from\s+['"]([^'"]+)['"]''',
+        text, re.M | re.S,
+    ):
+        resolved = _resolve_module_path(route_file, m.group(2))
+        if not resolved:
+            continue
+        for part in m.group(1).split(","):
+            part = part.strip()
+            if not part:
+                continue
+            local = part.split(" as ")[-1].strip()
+            if re.fullmatch(r'[A-Za-z_$][\w$]*', local):
+                mapping.setdefault(local, resolved)
+
+    _IMPORT_MAP_CACHE[route_file] = mapping
+    return mapping
+
+
+def resolve_component_file(route_file, component):
+    """
+    Repo-relative file for `component` as referenced from `route_file`, or None.
+    None is a real answer here, not a failure to try — see STRUCTURAL_COMPONENTS.
+    """
+    if not component or component in STRUCTURAL_COMPONENTS:
+        return None
+
+    # conduit is Next.js app-router: the route file IS the page/handler, and the
+    # synthetic component names ("Page", "ApiRoute") never appear as imports.
+    if component in ("Page", "ApiRoute"):
+        return route_file if os.path.isfile(os.path.join(REPO_ROOT, route_file)) else None
+
+    hit = build_import_map(route_file).get(component)
+    if hit:
+        return hit
+
+    # Declared in the route file itself (crm7's RedirectTo, R80.4's AuthGate).
+    text = read_file(route_file)
+    if re.search(r'\b(?:function|const|class)\s+' + re.escape(component) + r'\b', text):
+        return route_file
+
+    return None
+
+
+def assert_structural_are_structural(routes):
+    """
+    Fail loudly if a name in STRUCTURAL_COMPONENTS turns out to be a real,
+    imported page component in some app.
+
+    Membership of that set is an ASSUMPTION about what a name means, and a wrong
+    assumption there is invisible in the output: the field is supposed to be null
+    for a structural route, so a misclassified page reads as correctly handled.
+    That is precisely how `Index` — braden's actual home page — was silently
+    blanked. This turns the assumption into a measurement.
+    """
+    wrong = []
+    for r in routes:
+        if r["component"] not in STRUCTURAL_COMPONENTS:
+            continue
+        hit = build_import_map(r["route_file"]).get(r["component"])
+        if hit:
+            wrong.append(f"{r['app']} {r['path']}: '{r['component']}' is imported from {hit}")
+    if wrong:
+        raise SystemExit(
+            "STRUCTURAL_COMPONENTS misclassification — these names are real "
+            "imported components, so blanking their component_file hides a page:\n  "
+            + "\n  ".join(sorted(set(wrong)))
+            + "\nRemove the name from STRUCTURAL_COMPONENTS in docs/nav/build-inventory.py."
+        )
+
+
+def annotate_component_files(routes):
+    """Attach `component_file` to every route, and say so when it is structural."""
+    for r in routes:
+        r["component_file"] = resolve_component_file(r["route_file"], r["component"])
+
+        # An `Outlet` route is a layout-only parent: it renders whichever child
+        # matched, so there is no page behind it and naming one would be a lie.
+        # Say that in the record instead of leaving a bare component name that
+        # reads like a missing page.
+        if r["component"] == "Outlet" and not r.get("note"):
+            child = next(
+                (c["component"] for c in routes
+                 if c["app"] == r["app"]
+                 and c["path"] == r["path"].rstrip("/") + "/"
+                 and c["component"] not in STRUCTURAL_COMPONENTS),
+                None,
+            )
+            r["note"] = (
+                "structural: layout-only parent, renders <Outlet /> for its children"
+                + (f"; its index child is {child}" if child else "")
+            )
+
+
 def make_route(*, app, path, route_file, component, layout, auth_type,
                permissions=None, feature_flags=None,
                nav_surface="none", nav_group=None, nav_label=None,
@@ -61,6 +282,11 @@ def make_route(*, app, path, route_file, component, layout, auth_type,
         "path": path,
         "route_file": route_file,
         "component": component,
+        # Repo-relative file the component resolves to, or null. Populated by
+        # annotate_component_files() once every route is built — null means
+        # either "structural, there is no page" or "could not be resolved", and
+        # the two are told apart by `component` and `note`, never guessed.
+        "component_file": None,
         "layout": layout,
         "auth": {
             "type": auth_type,
@@ -410,31 +636,51 @@ def extract_crm7_routes(nav_map):
         pub_end = len(text)
     public_text = text[pub_start:pub_end]
 
-    # Match plain <Route path="..." component={...} />
-    route_pat = re.compile(
-        r'<Route\s[^>]*?path=["\']([^"\']+)["\'][^>]*?>',
-        re.DOTALL
-    )
-
-    for m in route_pat.finditer(public_text):
-        path = m.group(0)
-        path_match = re.search(r'path=["\']([^"\']+)["\']', path)
+    # USE THE BRACE-AWARE TAG FINDER, NOT A `[^>]*?>` REGEX.
+    #
+    # Every one of crm7's twelve public routes reported component "Unknown"
+    # until 2026-08-25, and all twelve failed for the same reason. The old
+    # pattern was:
+    #
+    #     r'<Route\s[^>]*?path=["\']([^"\']+)["\'][^>]*?>'
+    #
+    # `[^>]` cannot cross a `>`, and every public route here is written as
+    #
+    #     <Route path="/" component={() => <S component={MarketingHome} />} />
+    #
+    # whose value contains `=>`. The match therefore ended at the `>` of the
+    # ARROW, capturing `<Route path="/" component={() =>` — a fragment with no
+    # closing brace, so the follow-up `component=\{(.+?)\}` found nothing and
+    # extract_component_name() fell through to its "Unknown" return.
+    #
+    # A parser blind to a syntax form reports ABSENCE, not a gap: the inventory
+    # did not say "twelve routes I could not parse", it said "twelve routes with
+    # component Unknown", which reads like a finding about the app rather than
+    # about the parser. Nine of the twelve are unauthenticated or token-
+    # authenticated entry points — the routes a route inventory most needs to
+    # have looked at.
+    #
+    # The multi-line second pass that used to follow was dead code for the same
+    # reason: it skipped any path the broken first pass had already appended,
+    # and the broken first pass matched every route.
+    #
+    # find_jsx_tags() tracks brace depth, so `>` inside `{...}` cannot end the
+    # tag. It is the same helper the BSU extractor already used.
+    for (tag_start, attrs, _is_self_closing) in find_jsx_tags(public_text, "Route"):
+        path_match = re.search(r'path=["\']([^"\']+)["\']', attrs)
         if not path_match:
             continue
         route_path = path_match.group(1)
 
-        # Find the component attr
-        comp_match = re.search(r'component=\{(.+?)\}', path, re.DOTALL)
-        component = extract_component_name(comp_match.group(0) if comp_match else "")
+        comp_match = re.search(r'component=\{(.+)\}', attrs, re.DOTALL)
+        component = extract_component_name(
+            "component={" + (comp_match.group(1) if comp_match else "") + "}"
+        )
 
-        # Check for redirect inside: look forward for RedirectTo
-        block_start = pub_start + m.start()
-        block_end = text.find(">", pub_start + m.end())
-        # Simple Route that contains <RedirectTo>
-        redirect_check = text[pub_start + m.start(): pub_start + m.start() + 300]
-        is_redirect = "RedirectTo" in redirect_check or "Redirect" in component
+        is_redirect = "RedirectTo" in attrs or "Redirect" in component
+        to_match = re.search(r'to=["\']([^"\']+)["\']', attrs)
 
-        line = line_number_of(text, pub_start + m.start())
+        line = line_number_of(text, pub_start + tag_start)
 
         nav_entry = nav_map.get(route_path, {})
         routes.append(make_route(
@@ -453,36 +699,7 @@ def extract_crm7_routes(nav_map):
             nav_order=nav_entry.get("order"),
             status="redirect" if is_redirect else "live",
             evidence=f"{route_file}:{line}",
-        ))
-
-    # Also catch multi-line public Route blocks with closing tag on next line
-    # Pattern: <Route\n  path="..."\n  component={...}\n/>
-    route_ml_pat = re.compile(
-        r'<Route\s*\n\s*path=["\']([^"\']+)["\']\s*\n\s*component=\{(.+?)\}\s*\n\s*/>',
-        re.DOTALL
-    )
-    existing_pub_paths = {r["path"] for r in routes if r["auth"]["type"] == "public"}
-    for m in route_ml_pat.finditer(public_text):
-        route_path = m.group(1)
-        if route_path in existing_pub_paths:
-            continue
-        component = extract_component_name("component={" + m.group(2) + "}")
-        line = line_number_of(text, pub_start + m.start())
-        nav_entry = nav_map.get(route_path, {})
-        routes.append(make_route(
-            app="crm7",
-            path=route_path,
-            route_file=route_file,
-            component=component,
-            layout="none",
-            auth_type="public",
-            nav_surface=nav_entry.get("surface", "none"),
-            nav_group=nav_entry.get("group"),
-            nav_label=nav_entry.get("label"),
-            nav_icon=nav_entry.get("icon"),
-            nav_order=nav_entry.get("order"),
-            status="live",
-            evidence=f"{route_file}:{line}",
+            note=f"→ {to_match.group(1)}" if (is_redirect and to_match) else None,
         ))
 
     # ---- Protected routes (AppRoutes component) ----
@@ -660,8 +877,22 @@ def extract_bsu_routes(nav_map):
                 continue
             route_path = path_match.group(1)
 
-            # Navigate = redirect
-            is_redirect = bool(re.search(r'element=\{<Navigate[\s/]', attrs))
+            # Navigate = redirect.
+            #
+            # `\s*` after the brace is load-bearing. `/settings/branding` is the
+            # one BSU redirect written across several lines —
+            #
+            #     element={
+            #       <Navigate to="/branding" replace />
+            #     }
+            #
+            # — and the old `element=\{<Navigate` required the tag to sit
+            # immediately against the brace, so that route alone came out
+            # status:"live" with component "Navigate": a record claiming a page
+            # exists at a path that only bounces. Its `note` already read
+            # "→ /branding", because the separate `to=` search never cared about
+            # the layout — the two halves of the same record disagreed.
+            is_redirect = bool(re.search(r'element=\{\s*<Navigate[\s/]', attrs))
             to_match = re.search(r'to=["\']([^"\']+)["\']', attrs)
             redirect_target = to_match.group(1) if to_match else None
 
@@ -852,30 +1083,109 @@ def extract_conduit_routes(nav_map):
 
 def extract_r80_routes(nav_map):
     """
-    R80.4/src/main.tsx uses plain if-statements on CURRENT_PATH.
-    Four routes: /auth/callback, /auth/login, / (calculator), * (NotFound).
+    R80.4/src/main.tsx hand-rolls its router: a `Root()` function of plain
+    if-statements over a normalised path.
+
+    THIS USED TO BE A HARDCODED TABLE, AND ALL THREE OF ITS ROWS HAD GONE STALE.
+
+    The table asserted ("/", "ChargeRateCalculator", "authenticated", 205).
+    Every field of that row was wrong by 2026-08-25:
+
+      * the component identifier is `ChargeCalculator`, not
+        `ChargeRateCalculator` — no such symbol exists in the app;
+      * `/` is PUBLIC. Operator ruling 2026-08-18 removed the sign-in redirect
+        (`AuthGate` renders the calculator whatever the session state is, see
+        the long comment in main.tsx); the table still said `authenticated`;
+      * line 205 is inside a DOC COMMENT. The line finder searched for
+        `CURRENT_PATH === "..."`, but Root() switches on `ROUTE_PATH` — it has
+        since the legacy `/dashboard` alias landed — so the regex matched
+        nothing for every row and each one silently fell back to its hardcoded
+        `approx_line`. Three fabricated evidence citations that all pointed at
+        prose.
+
+    It also under-reported: `/calculate` is a live alias in CALCULATOR_PATHS and
+    had no record at all, and the NotFound branch was undocumented.
+
+    So this now DERIVES from the source. A hardcoded table cannot go stale
+    loudly — it goes stale silently and keeps printing, which is worse than not
+    covering the app at all.
     """
     route_file = "R80.4/src/main.tsx"
     text = read_file(route_file)
 
-    # Find the Root function and its if-statements
     root_start = text.find("function Root()")
     if root_start == -1:
         root_start = 0
+    root_end = text.find("\n}", root_start)
+    root_text = text[root_start:root_end if root_end != -1 else len(text)]
 
-    routes_data = [
-        ("/auth/callback", "AuthCallback", "public", "none", "live", 202),
-        ("/auth/login", "AuthLogin", "public", "none", "live", 203),
-        ("/", "ChargeRateCalculator", "authenticated", "AppShell", "live", 205),
-    ]
+    def line_of(pattern, fallback_offset=root_start):
+        m = re.search(pattern, root_text)
+        return line_number_of(text, root_start + m.start()) if m else line_number_of(text, fallback_offset)
+
+    routes_data = []
+
+    # 1. The explicit `if (ROUTE_PATH === '<path>') return <Component />;` arms.
+    #    Accept either identifier so a future rename of the routing variable
+    #    does not silently re-open the stale-line hole this replaced.
+    arm_pat = re.compile(
+        r'if\s*\(\s*(?:ROUTE_PATH|CURRENT_PATH)\s*===\s*["\']([^"\']+)["\']\s*\)\s*'
+        r'return\s*<\s*([A-Z]\w*)'
+    )
+    for m in arm_pat.finditer(root_text):
+        routes_data.append((
+            m.group(1), m.group(2), "public", "none", "live",
+            line_number_of(text, root_start + m.start()), None,
+        ))
+
+    # 2. The calculator set. `if (!CALCULATOR_PATHS.has(ROUTE_PATH)) return
+    #    <NotFound />; return <AuthGate />;` — so every member of the set
+    #    renders AuthGate, which renders the lazily-imported calculator inside
+    #    AppShell. The RENDERED page is what belongs in a route inventory, not
+    #    the gate wrapper, so resolve one hop through it.
+    calc_component = "AuthGate"
+    gate_m = re.search(r'function\s+AuthGate\s*\(\)', text)
+    if gate_m:
+        gate_end = text.find("\n}", gate_m.start())
+        gate_body = text[gate_m.start():gate_end if gate_end != -1 else len(text)]
+        inner = re.findall(r'<([A-Z]\w+)\s*/>', gate_body)
+        for tag in inner:
+            if tag not in ("Suspense", "AppShell"):
+                calc_component = tag
+                break
+
+    calc_set_m = re.search(r'CALCULATOR_PATHS\s*=\s*new\s+Set\(\[(.*?)\]\)', text, re.DOTALL)
+    calc_paths = []
+    if calc_set_m:
+        calc_paths = re.findall(r'["\']([^"\']+)["\']', calc_set_m.group(1))
+    calc_line = line_of(r'CALCULATOR_PATHS\.has')
+    seen_calc = set()
+    for p in calc_paths:
+        # '/calculate/' and '/calculate' are the same route: normalisePath()
+        # strips the trailing slash before Root() ever sees it. Record the
+        # normalised form once rather than inventing a second route.
+        norm = p[:-1] if len(p) > 1 and p.endswith("/") else p
+        if norm in seen_calc:
+            continue
+        seen_calc.add(norm)
+        routes_data.append((
+            norm, calc_component, "public", "AppShell", "live", calc_line,
+            None if norm == "/" else "alias of / — both members of CALCULATOR_PATHS",
+        ))
+
+    # 3. The catch-all. Recorded because an app whose not-found route is absent
+    #    from the inventory is an app whose 404 nobody probes — the exact defect
+    #    NotFound.tsx was written to close.
+    nf_m = re.search(r'return\s*<NotFound\s*/>', root_text)
+    if nf_m:
+        routes_data.append((
+            "*", "NotFound", "public", "none", "live",
+            line_number_of(text, root_start + nf_m.start()),
+            "catch-all: any path outside CALCULATOR_PATHS and the two auth paths",
+        ))
 
     routes = []
-    for path, component, auth_type, layout, status, approx_line in routes_data:
-        # Find the actual line
-        if_pat = re.compile(r'if\s*\(\s*CURRENT_PATH\s*===\s*["\']' + re.escape(path) + r'["\']')
-        m = if_pat.search(text[root_start:])
-        line = line_number_of(text, root_start + m.start()) if m else approx_line
-
+    for path, component, auth_type, layout, status, line, note in routes_data:
         nav_entry = nav_map.get(path, {})
         routes.append(make_route(
             app="r80",
@@ -892,6 +1202,7 @@ def extract_r80_routes(nav_map):
             nav_order=nav_entry.get("order"),
             status=status,
             evidence=f"{route_file}:{line}",
+            note=note,
         ))
 
     return routes
@@ -1290,11 +1601,18 @@ def main():
     # Dedup
     all_routes = dedup_routes(all_routes)
 
+    # After dedup, so the Outlet lookup sees the surviving records.
+    assert_structural_are_structural(all_routes)
+    annotate_component_files(all_routes)
+
     # Sort by (app, path) — both alphabetically
     all_routes.sort(key=lambda r: (r["app"], r["path"]))
 
     output = {
-        "schema_version": "1.1",
+        # 1.2 adds the nullable `component_file` to every route. Additive only —
+        # no field was renamed or removed, so an existing consumer that ignores
+        # it keeps working.
+        "schema_version": "1.2",
         "routes": all_routes,
     }
 
