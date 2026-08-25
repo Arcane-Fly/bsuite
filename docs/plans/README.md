@@ -23,7 +23,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 - [`../20260504-bsuite-documentation-hub-v1.00W.md`](../20260504-bsuite-documentation-hub-v1.00W.md) — Cross-submodule documentation hub (top-level index)
 - [`../../AGENTS.md`](../../AGENTS.md) — Stack floor and the ten tripwires (replaces the archived tech-stack-alignment doc)
 - [`../20260731-platform-operations-reference-v1.00W.md`](../20260731-platform-operations-reference-v1.00W.md) — Shared `@bsuite/*` package matrix, env vars, lockfile rules
-- `../00-roadmap/20260112-master-roadmap-v1.00W.md` — Master roadmap — **SUPERSEDED**, see its banner
+- `../00-roadmap/20260112-master-roadmap-v1.00F.md` — Master roadmap — **SUPERSEDED**, see its banner
 - `../20260425-bsuite-finish-line-roadmap-v1.00W.md` — **archived out of the repo** (`~/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/docs/archive/2026-07/`)
 - `../20260501-merged-execution-backlog-v1.00W.md` — **archived out of the repo**, same path
 

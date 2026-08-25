@@ -99,7 +99,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | NEW_ISSUES_FOUND.md | Append-only pre-existing-issue ledger | L | Append-only ledger | keep (living) |
 | OUTSTANDING.md | Single outstanding-work index (SSoT) | L | "Updated 2026-07-08" SSoT | keep (living) |
 | README.md | Parent docs navigation index | L | Nav hub | keep (living) |
-| 00-roadmap/20260112-master-roadmap-v1.00W.md | Master planning roadmap | L | Last updated 2026-07-26/27; active checkboxes | keep (living) |
+| 00-roadmap/20260112-master-roadmap-v1.00F.md | Master planning roadmap | L | Last updated 2026-07-26/27; active checkboxes | keep (living) |
 | 00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md | Excellence close-out impl plan (T0–Tn) | I | Unchecked AC boxes; explicit DEFER items | keep |
 | 00-roadmap/20260725-qwen-excellence-integration-plan-v1.00W.md | Qwen excellence integration plan (W1–W6) | I | Status W; DEFER list | keep |
 | adr/ADR-0001-page-builder-ownership.md | CRM7 custom_pages canonical; BSU layouts dropped | L | `business-suite-unified/supabase/migrations/20260502000000_drop_tenant_page_layouts.sql` | keep (living) |
