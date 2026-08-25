@@ -89,6 +89,23 @@ const DIGIT_0 = '0'.charCodeAt(0);
 const DIGIT_9 = '9'.charCodeAt(0);
 const VERSION_LENGTH = 14;
 const DATA_ONLY_MARKER = '-- rehearsal: data-only';
+/**
+ * A migration whose effect is GUARDED on an object that does not exist on a
+ * rebuild-from-baseline, and which therefore legitimately moves no catalog here
+ * while moving one on production.
+ *
+ * Added 2026-08-25 for 20260913000000_revoke_public_execute_on_is_platform_admin:
+ * it revokes PUBLIC EXECUTE on `is_platform_admin(uuid)`, a function created by a
+ * QUARANTINED migration. On production the function exists and the revoke moves
+ * the ACL census; on the rehearsal database it does not exist, the `to_regprocedure`
+ * guard skips, and nothing moves — correctly, because there is nothing to protect.
+ *
+ * `data-only` was the only marker available and would have been a FALSE CLAIM in
+ * the diff: this migration touches privileges, not rows. The marker's whole value
+ * is that it is an author's claim a reviewer can check, so a second, accurate
+ * marker is cheaper than one inaccurate one.
+ */
+const GUARDED_NOOP_MARKER = '-- rehearsal: guarded-no-op';
 
 /* ───────────────────────── parsing (no regex) ───────────────────────── */
 
@@ -129,6 +146,23 @@ function declaresDataOnly(sqlText) {
     if (line.trim() === DATA_ONLY_MARKER) return true;
   }
   return false;
+}
+
+/** True when any line of the file, trimmed, is exactly the guarded-no-op marker. */
+function declaresGuardedNoOp(sqlText) {
+  for (const line of sqlText.split('\n')) {
+    if (line.trim() === GUARDED_NOOP_MARKER) return true;
+  }
+  return false;
+}
+
+/**
+ * Either marker excuses a census that did not move. They are deliberately
+ * SEPARATE constants rather than one loose match: each is a different claim, and
+ * a reviewer reading the diff should see which one the author made.
+ */
+function declaresLegitimateNoOp(sqlText) {
+  return declaresDataOnly(sqlText) || declaresGuardedNoOp(sqlText);
 }
 
 /* ───────────────────────── scope + file discovery ───────────────────────── */
@@ -708,7 +742,7 @@ function replay(dbUrl, migrations, options) {
     }
 
     const sqlText = fs.readFileSync(migration.abs, 'utf8');
-    if (declaresDataOnly(sqlText)) {
+    if (declaresLegitimateNoOp(sqlText)) {
       results.push({ ...migration, status: 'applied-data-only', changed: true });
     } else {
       results.push({
@@ -716,8 +750,12 @@ function replay(dbUrl, migrations, options) {
         status: 'noop',
         changed: true,
         error:
-          'applied cleanly but the catalog census did not move. If this migration only ' +
-          `touches DATA, declare it with a line reading exactly "${DATA_ONLY_MARKER}".`,
+          'applied cleanly but the catalog census did not move. Declare WHICH kind of ' +
+          'legitimate no-op this is, on its own line, exactly: ' +
+          `"${DATA_ONLY_MARKER}" if it only touches rows, or ` +
+          `"${GUARDED_NOOP_MARKER}" if its effect is guarded on an object that does not ` +
+          'exist on a rebuild-from-baseline (it moves the census on production, not here). ' +
+          'Pick the one that is TRUE — the marker is a claim a reviewer checks.',
       });
     }
   }

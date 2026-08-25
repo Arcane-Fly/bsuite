@@ -116,6 +116,14 @@ export type DraggableCardPageProps = Omit<
    */
   onDroppedChildren?: (dropped: string[], pageKey: string) => void;
   /**
+   * Width, in grid columns, for cards that do not set `w` themselves.
+   *
+   * Defaults to `DEFAULT_CANVAS_CARD_WIDTH` (6 — half the grid, two cards per
+   * row) as of 1.1.0. Pass 12 to restore the pre-1.1.0 full-width stack while
+   * an app migrates its pages.
+   */
+  defaultCardWidth?: number;
+  /**
    * CanvasCard children. Falsy entries are ignored. Fragments are flattened so
    * a conditional multi-card branch still registers each CanvasCard.
    */

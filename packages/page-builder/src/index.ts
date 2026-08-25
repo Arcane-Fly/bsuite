@@ -6,6 +6,7 @@ export { DraggableCardPage } from './DraggableCardPage.js';
 export type { DraggableCardPageProps } from './DraggableCardPage.js';
 export {
   buildCanvasCardLayout,
+  DEFAULT_CANVAS_CARD_WIDTH,
   flattenCanvasCards,
   isCanvasCardElement,
   describeNode,
