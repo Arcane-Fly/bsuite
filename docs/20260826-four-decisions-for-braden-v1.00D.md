@@ -3,6 +3,8 @@ kind: decision
 authority: operator
 owner: bsuite
 evidence:
+  - scripts/audit-role-capability-divergence.mjs
+  - scripts/check-route-surface-map.mjs
   - crm7/src/features/
   - crm7/src/hooks/useRoleCapabilities.ts
   - crm7/supabase/functions/r8-charge-rate-push/index.ts
@@ -62,6 +64,10 @@ it**, and show:
 Nothing is granted until a human presses Save. **No `role_capabilities` rows were seeded on any real
 tenant, and none will be.**
 
+**The gate that proves this:** `scripts/audit-role-capability-divergence.mjs` — it refuses to
+report a divergence of zero against a database it never reached, which is why the numbers above are
+a measurement rather than an assumption.
+
 ### What you actually need to decide
 Only this: **should a brand-new client start at read-only, or should they inherit Braden Group's
 matrix as the house default?** Read-only is the safe answer and is what shipped. Inheriting is the
@@ -105,7 +111,8 @@ Nothing, unless you disagree. Say the word and it comes back in one command.
 
 `r8-charge-rate-push` is deployed on production, secured with a shared secret, and **R8 never calls
 it — because R8 has no server side at all.** It is one of 35 deployed functions with no caller
-(see `docs/20260826-route-surface-map-v1.00W.md` §3.1).
+(see `docs/20260826-route-surface-map-v1.00W.md` §3.1, enforced by
+`scripts/check-route-surface-map.mjs`).
 
 This is D-90 and D-62, which are **the same item recorded twice**.
 

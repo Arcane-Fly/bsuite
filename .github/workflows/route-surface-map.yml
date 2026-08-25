@@ -1,0 +1,77 @@
+name: Route surface map stays true
+
+# Every screen joined to the data behind it — and kept joined.
+#
+# `docs/nav/route-inventory.json` (schema 3) declared `data_tables` and
+# `owned_entities` on every one of its 553 routes. Measured 2026-08-25: BOTH WERE
+# EMPTY ON ALL 553. The fields existed, so every consumer read the file as though
+# the join existed, and the last sweep — 47 routes, 8% — was described as
+# coverage. Nothing noticed for as long as the file had existed, because nothing
+# checked.
+#
+# The join is now filled (`docs/nav/route-surface-map.json`). This workflow is
+# what stops it rotting the next time a route is added: a document records a
+# state, a gate holds one.
+
+on:
+  pull_request:
+    paths:
+      - 'docs/nav/route-inventory.json'
+      - 'docs/nav/route-surface-map.json'
+      - 'docs/nav/edge-functions-deployed.json'
+      - 'scripts/check-route-surface-map.mjs'
+      - 'scripts/build-surface-map.mjs'
+      - '.github/workflows/route-surface-map.yml'
+      - 'crm7'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'braden'
+      - 'throughput'
+      - 'R80.4'
+  push:
+    branches: [main, development]
+    paths:
+      - 'docs/nav/**'
+      - 'scripts/check-route-surface-map.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  route-surface-map:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # R3 walks the APPS' source for edge-function call sites, and the apps
+          # are submodules. An uninitialised submodule is an empty directory that
+          # passes every existence check, so without this the gate would scan
+          # nothing, find nothing, and report OK — the exact shape of failure this
+          # estate keeps re-learning. The gate prints a NOTE when it sees zero
+          # call sites for precisely that reason; do not let that NOTE become the
+          # normal output.
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.0'
+
+      # Run the gate's own tests before trusting its verdict. Three known-bad
+      # fixtures — an unmapped route, a blank verdict, a missing input file — and
+      # it must reject all three. A gate that has never been shown to fail is not
+      # evidence that anything passed.
+      - name: Self-test the gate (proves it can fail)
+        run: node scripts/check-route-surface-map.mjs --self-test
+
+      # R1 every inventory route is mapped · R2 every row carries a verdict from
+      # the closed vocabulary, with UNRESOLVED as a real answer rather than a
+      # blank · R3 every edge-function slug invoked from app source is deployed.
+      #
+      # R3 is RATCHETED, not off. It is red on one real bug today
+      # (throughput/src/pages/Export.tsx:106 invokes `export`, which is not
+      # deployed, so that button fails for every user). A NEW un-deployed slug
+      # fails immediately, and the gate ALSO fails if a known one gets fixed and
+      # the ratchet is not tightened — a ratchet nobody tightens is a permanent
+      # exemption wearing a gate's name.
+      - name: Every route mapped, every verdict stated, every edge caller deployed
+        run: node scripts/check-route-surface-map.mjs

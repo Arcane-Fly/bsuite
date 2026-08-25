@@ -3,6 +3,8 @@ kind: measurement
 authority: agent
 owner: bsuite
 evidence:
+  - scripts/check-route-surface-map.mjs
+  - .github/workflows/route-surface-map.yml
   - docs/nav/route-surface-map.json
   - docs/nav/route-surface-map.csv
   - scripts/build-surface-map.mjs
@@ -200,11 +202,38 @@ to be red-teamed in both directions, not only for false alarms.
 
 ---
 
-## §8 — HOW TO RE-RUN IT
+## §8 — THIS IS A GATE NOW, NOT A SNAPSHOT
+
+A document records a state; only a gate holds one. `scripts/check-route-surface-map.mjs`
+runs on every pull request via `.github/workflows/route-surface-map.yml` and enforces three things:
+
+| | what it holds |
+|---|---|
+| **R1** | Every route in the inventory has a row in the map. A route added without being mapped is a screen nobody has traced to its data — and it is invisible *because* it is new. |
+| **R2** | Every row carries a verdict from the closed vocabulary, and an unresolvable row says `UNRESOLVED`. **A blank verdict is a FAIL, not a pass.** |
+| **R3** | Every edge-function slug invoked from app source is in the deployed list. This is the live class — the `export` bug above. |
+
+**It self-tests before it is trusted.** Three known-bad fixtures — an unmapped route, a blank
+verdict, a missing input file — and it must reject all three. A gate that has never been shown to
+fail is not evidence that anything passed.
+
+**R3 is ratcheted, not switched off.** It is red on one real bug today. A *new* un-deployed slug
+fails immediately; the known one is counted and tolerated until it is fixed. And the gate **also
+fails if the known bug is fixed and the ratchet is not tightened** — a ratchet nobody tightens is a
+permanent exemption wearing a gate's name.
+
+**What the gate deliberately does not check:** RLS posture and table reachability need live database
+credentials, which CI does not have. Checking them there would mean committing a stale copy of
+production's security state, or skipping silently — and *a gate that skips what it cannot reach
+reports coverage it does not have*. Those stay in `scripts/build-surface-map.mjs`, run by hand.
+
+### Re-running it
 
 ```bash
-scripts/build-surface-map.mjs     # walks the routes, joins to live DB metadata
-scripts/export-surface-map.mjs    # writes docs/nav/route-surface-map.{json,csv}
+node scripts/build-surface-map.mjs      # walks the routes, joins to live DB metadata
+node scripts/export-surface-map.mjs     # writes docs/nav/route-surface-map.{json,csv}
+node scripts/check-route-surface-map.mjs --self-test
+node scripts/check-route-surface-map.mjs
 ```
 
 The CSV opens in a spreadsheet: 553 rows, one per route, sortable by verdict.
