@@ -574,7 +574,7 @@ describe('stripComments must not delete real code', () => {
 });
 
 describe('the detector survives the inversion it was built to justify', () => {
-  it('post-1.1.0 (`gridItemPaintsChrome: false`), a nested card is the CORRECT shape and is not flagged', () => {
+  it('post-2.0.0 (`gridItemPaintsChrome: false`), a nested card is the CORRECT shape and is not flagged', () => {
     // Once the grid item stops painting chrome, the app's own card is the only
     // surface. A detector that kept flagging those 332 files would fail forever
     // on code that is now right — and would be switched off, which is how gates
@@ -595,7 +595,7 @@ describe('the detector survives the inversion it was built to justify', () => {
     ).toBe(false);
   });
 
-  it('post-1.1.0, a slot that opts BACK INTO chrome and still nests a card IS the defect', () => {
+  it('post-2.0.0, a slot that opts BACK INTO chrome and still nests a card IS the defect', () => {
     write(
       'src/pages/re-chromed.tsx',
       `export const P = () => <CanvasCard cardKey="a" chrome><Card>body</Card></CanvasCard>`,
@@ -612,7 +612,7 @@ describe('the detector survives the inversion it was built to justify', () => {
     ).toBe(true);
   });
 
-  it('post-1.1.0, an app-level `itemChrome` re-chromes every slot in the file', () => {
+  it('post-2.0.0, an app-level `itemChrome` re-chromes every slot in the file', () => {
     write(
       'src/pages/app-chromed.tsx',
       `export const P = () => (

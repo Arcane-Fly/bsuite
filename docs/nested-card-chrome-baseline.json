@@ -1,0 +1,25 @@
+{
+  "$comment": [
+    "Baseline for .github/workflows/nested-card-chrome-ratchet.yml.",
+    "`nested` is the number of FILES that render their own card inside the card",
+    "PageGridLayout already paints on every grid item. It may only ever go DOWN.",
+    "`unknown` is files the scanner could not parse with confidence. An UNKNOWN",
+    "is not a clean file, so this stays at 0 — a gate that cannot tell 'checked",
+    "nothing' from 'found nothing' is not a gate (D-92).",
+    "Measured 2026-08-25 against origin/development with all six submodules at",
+    "their recorded gitlinks: crm7 304, business-suite-unified 12, conduit 6,",
+    "braden 1, throughput 9, R80.4 0. Reproduce with",
+    "`node scripts/scan-nested-chrome.mjs`."
+  ],
+  "nested": 332,
+  "unknown": 0,
+  "measured": "2026-08-25",
+  "perApp": {
+    "crm7": 304,
+    "business-suite-unified": 12,
+    "conduit": 6,
+    "braden": 1,
+    "throughput": 9,
+    "R80.4": 0
+  }
+}

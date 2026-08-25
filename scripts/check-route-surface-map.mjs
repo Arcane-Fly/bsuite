@@ -64,11 +64,18 @@ const VERDICTS = new Set([
  * a ratchet that is never tightened is a permanent exemption wearing a gate's name.
  */
 const R3_KNOWN_UNDEPLOYED = new Set([
-  // throughput/src/pages/Export.tsx:106 — a dead branch, not a live failure: PR #333
-  // disabled the three affected format buttons and that is live on production, so
-  // nothing reaches the call. Remove this entry the moment the branch itself goes;
-  // the gate then blocks any recurrence.
-  'export',
+  // EMPTY, AND IT MUST STAY EMPTY UNLESS SOMETHING NEW BREAKS.
+  //
+  // This held 'export' — throughput/src/pages/Export.tsx invoked a slug that was
+  // never deployed. throughput#365 deleted the call and #367 fixed the comment
+  // that replaced it: the first version quoted the deleted call verbatim, and
+  // since invokedSlugs() matches raw file text with no comment stripping, the
+  // gate went on reporting a caller for a call that no longer existed. The
+  // ratchet could not have been tightened until that comment changed.
+  //
+  // The ratchet tightened the day the bug went, which is the whole point of a
+  // ratchet — an exemption that outlives its defect is a permanent exemption
+  // wearing a gate's name.
 ]);
 
 const APP_SRC = [

@@ -131,7 +131,7 @@ export interface CardSurfaceScannerConfig {
    * no way to turn it off. On those versions a nested card is ALWAYS a double
    * frame, so every nesting slot is a finding.
    *
-   * FALSE from 1.1.0, where chrome is opt-in. A nested card then becomes the
+   * FALSE from 2.0.0, where chrome is opt-in. A nested card then becomes the
    * CORRECT shape — it is the only surface — and the defect narrows to a slot
    * that opts back INTO chrome (`itemChrome`, or `chrome` on the item or the
    * CanvasCard) AND still nests a card.
