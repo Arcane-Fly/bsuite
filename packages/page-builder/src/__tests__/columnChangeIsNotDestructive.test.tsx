@@ -107,3 +107,56 @@ describe('handleColumnChange', () => {
     expect(Math.max(...narrowWidths)).toBeLessThanOrEqual(2);
   });
 });
+
+describe('the grid reflow that a column change causes is not a user gesture', () => {
+  beforeEach(() => {
+    store.clear();
+    store.set('page:dash_grid_layouts', structuredClone(authored));
+  });
+
+  /**
+   * THE DEFECT THE FIRST FIX MISSED, AND THE DEPLOYED APP CAUGHT.
+   *
+   * Removing the writes from `handleColumnChange` was not enough. react-grid-layout
+   * REFLOWS when the column count changes and emits `onLayoutChange` with the
+   * rescaled display — which `commitLayout` then wrote straight over the authored
+   * layout. The unit tests passed because they call the handler directly with no
+   * grid attached. Driving `d.crm.crm7.app` is what found it: the persisted widths
+   * still marched 2,2,2 -> 4,4,4 -> 1,1,1 with the handler already inert.
+   */
+  /* The commit path is onLayoutChange -> trailing rAF -> commitLayout. Without
+   * awaiting that frame BOTH tests below pass vacuously, because nothing has been
+   * written yet either way — which would make the suppression test unfalsifiable.
+   * The gesture test is the control that proves the frame really flushes. */
+  const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
+
+  it('does not persist the layout react-grid-layout emits after a column change', async () => {
+    const before = shape(saved('dash'));
+    const { result } = renderHook(() =>
+      usePageGridLayout({ pageKey: 'dash', defaultLayouts: authored, preferenceAdapter: durableAdapter }),
+    );
+    act(() => result.current.setIsEditing?.(true));
+    act(() => result.current.handleColumnChange(4));
+    // exactly what the grid emits after reflowing: the layout it just rendered
+    act(() => result.current.onLayoutChange(null, result.current.currentLayouts));
+    await act(async () => { await nextFrame(); });
+    expect(shape(saved('dash'))).toBe(before);
+  });
+
+  it('STILL persists a real gesture — a suppression that swallowed those would be worse', async () => {
+    const before = shape(saved('dash'));
+    const { result } = renderHook(() =>
+      usePageGridLayout({ pageKey: 'dash', defaultLayouts: authored, preferenceAdapter: durableAdapter }),
+    );
+    act(() => result.current.setIsEditing?.(true));
+    const moved = {
+      ...result.current.currentLayouts,
+      lg: (result.current.currentLayouts.lg ?? []).map((i) =>
+        i.i === 'a' ? { ...i, y: i.y + 5 } : i,
+      ),
+    };
+    act(() => result.current.onLayoutChange(null, moved));
+    await act(async () => { await nextFrame(); });
+    expect(shape(saved('dash'))).not.toBe(before);
+  });
+});
