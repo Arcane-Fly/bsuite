@@ -1,3 +1,14 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite
+evidence:
+  - R80.4/src/awards/apprentice-ladder-manifest.test.ts
+  - R80.4/src/awards/allowance-amounts.test.ts
+  - R80.4/public/sw.js
+  - scripts/audit-doc-completion.mjs
+---
+
 # R80.4 carry-over register — what the old standalone session left open
 
 **Date:** 2026-08-10 · **Status:** 1.00W (working) · **Source:** the former
