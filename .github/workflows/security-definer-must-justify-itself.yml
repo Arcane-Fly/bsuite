@@ -57,6 +57,30 @@ jobs:
       - name: Self-test the checker
         run: node scripts/__tests__/check-added-security-definer.test.mjs
 
+      # The diff-gate above stops the backlog GROWING. This one classifies the
+      # backlog that already exists, and its classifier is what a reviewer will
+      # trust when it says a function is unguarded — so it is self-tested here
+      # even though the live scan needs a database this job does not have.
+      #
+      # Its first live run produced two false positives, and both are now
+      # regression cases in the self-test: a guard TWO calls away (one-hop
+      # resolution reported it as a finding) and an RLS helper (which MUST be
+      # DEFINER and MUST NOT check its caller).
+      - name: Self-test the transitive guard auditor
+        run: node scripts/audit-security-definer-guards.mjs --self-test
+
+      # A scan with no rows must say so rather than print a zero that reads as
+      # clean. Asserting it here means nobody has to trust that it does.
+      - name: A scan with no input reports ABSENT, not clean
+        shell: bash
+        run: |
+          out=$(printf '' | node scripts/audit-security-definer-guards.mjs)
+          echo "$out"
+          case "$out" in
+            *"ABSENT result"*) echo "ok — empty input is reported as absent" ;;
+            *) echo "::error::empty input did not report an absent result"; exit 1 ;;
+          esac
+
       - name: Check what this PR adds
         shell: bash
         # `github.base_ref` is a BRANCH NAME, and a branch name is attacker-supplied.
