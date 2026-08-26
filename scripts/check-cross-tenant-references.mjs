@@ -94,8 +94,18 @@ import { execFileSync } from 'node:child_process'
  * list; never extend it without recording why in the same commit.
  */
 const BASELINE = {
-  'aass_registrations.apprentice_id->apprentices': 19,
-  'leads.contact_id->contacts': 20,
+  // RE-BANKED 2026-08-26, measured against production, because the gate asked:
+  // "FELL and the baseline was not re-banked. Bank the gain, or the next rise
+  // back to 19 passes silently." A baseline left above the true figure is a
+  // ratchet with slack in it — the gain is real and unprotected until banked.
+  //
+  //   aass_registrations.apprentice_id->apprentices   19 -> 0
+  //   leads.contact_id->contacts                      20 -> 1
+  //
+  // Zero is now the floor for aass_registrations: any reappearance is a finding
+  // rather than a return to a tolerated number.
+  'aass_registrations.apprentice_id->apprentices': 0,
+  'leads.contact_id->contacts': 1,
   'training_contracts.qualification_id->qualifications': 8,
   'training_plans.qualification_id->qualifications': 8,
   'charge_rate_snapshots.charge_rate_quote_id->charge_rate_quotes': 3,
