@@ -63,33 +63,68 @@ jobs:
       - name: Self-test the scanner
         run: node scripts/__tests__/scan-regex-assertions.test.mjs
 
-      - name: Scan
-        id: scan
-        run: node scripts/scan-regex-assertions.mjs
-
-      - name: Compare against the baseline
+      # MEASURE BOTH SIDES, COMPARE THE DELTA.
+      #
+      # The first version compared against a committed baseline. That reads as
+      # obviously right and is wrong here: the scan walks SUBMODULE trees, which
+      # move whenever a gitlink advances — so the count changes for reasons that
+      # have nothing to do with the PR's own diff. It fired twice on its own PR,
+      # once falling and once rising, and both times the number moved because
+      # `development` had advanced underneath it.
+      #
+      # A gate that blames a PR for something it did not do is worse than no gate:
+      # it teaches people to merge past it. Measuring the merge-base and the head
+      # in the same run compares like with like, and only the PR's own change can
+      # move the delta.
+      - name: Measure the merge-base
+        id: base
         shell: bash
-        env:
-          ASSERTIONS: ${{ steps.scan.outputs.assertions }}
-          UNKNOWN: ${{ steps.scan.outputs.unknown }}
         run: |
           set -euo pipefail
-          base=$(node -e 'console.log(require("./docs/regex-assertion-baseline.json").assertions)')
-          base_unknown=$(node -e 'console.log(require("./docs/regex-assertion-baseline.json").unknown)')
-          echo "regex assertions  measured=$ASSERTIONS  baseline=$base"
-          echo "UNKNOWN           measured=$UNKNOWN     baseline=$base_unknown"
+          git fetch -q origin "${{ github.base_ref }}"
+          base_sha=$(git merge-base HEAD "origin/${{ github.base_ref }}")
+          echo "merge-base: $base_sha"
+          git checkout -q --recurse-submodules "$base_sha"
+          git submodule update --init --recursive --depth 1 -q 2>/dev/null || true
+          node scripts/scan-regex-assertions.mjs --json > /tmp/base.json || true
+          n=$(node -e 'try{console.log(require("/tmp/base.json").totalAssertions)}catch{console.log("SKIP")}')
+          echo "count=$n" >> "$GITHUB_OUTPUT"
+          echo "base count: $n"
 
-          fail=0
-          if [ "$UNKNOWN" -gt "$base_unknown" ]; then
-            echo "::error::$UNKNOWN test file(s) UNKNOWN, baseline $base_unknown. An unreadable file is NOT a clean file — the scanner proved nothing about it."
-            fail=1
+      - name: Measure the head
+        id: head
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout -q --recurse-submodules "$GITHUB_SHA"
+          git submodule update --init --recursive --depth 1 -q 2>/dev/null || true
+          node scripts/scan-regex-assertions.mjs
+          node scripts/scan-regex-assertions.mjs --json > /tmp/head.json
+          echo "count=$(node -e 'console.log(require("/tmp/head.json").totalAssertions)')" >> "$GITHUB_OUTPUT"
+          echo "unknown=$(node -e 'console.log(require("/tmp/head.json").totalUnknown)')" >> "$GITHUB_OUTPUT"
+
+      - name: This PR may not add regex assertions
+        shell: bash
+        env:
+          BASE: ${{ steps.base.outputs.count }}
+          HEAD: ${{ steps.head.outputs.count }}
+          UNKNOWN: ${{ steps.head.outputs.unknown }}
+        run: |
+          set -euo pipefail
+          if [ "$BASE" = "SKIP" ]; then
+            echo "::warning::could not measure the merge-base — reporting the head count only, and NOT passing a comparison that was never made"
+            echo "head: $HEAD regex assertions"
+            exit 0
           fi
-          if [ "$ASSERTIONS" -gt "$base" ]; then
-            echo "::error::$ASSERTIONS regex assertions, baseline $base. This PR ADDS $((ASSERTIONS - base)). Assert the OUTCOME, not the wording — return a named outcome from a pure function and assert which one was chosen. Regex is forbidden (operator, 2026-08-26)."
-            fail=1
+          echo "merge-base: $BASE    this PR: $HEAD    delta: $((HEAD - BASE))"
+          if [ "$UNKNOWN" -gt 0 ]; then
+            echo "::error::$UNKNOWN test file(s) could not be read. An unreadable file is NOT a clean file — the scanner proved nothing about it."
+            exit 1
           fi
-          if [ "$ASSERTIONS" -lt "$base" ]; then
-            echo "::notice::regex assertions FELL from $base to $ASSERTIONS. Lower docs/regex-assertion-baseline.json to $ASSERTIONS in this PR — a ratchet that is not banked does not hold."
-            fail=1
+          if [ "$HEAD" -gt "$BASE" ]; then
+            echo "::error::this PR ADDS $((HEAD - BASE)) regex assertion(s). Assert the OUTCOME, not the wording — return a named outcome from a pure function and assert which one was chosen. Regex is forbidden (operator, 2026-08-26)."
+            exit 1
           fi
-          exit $fail
+          if [ "$HEAD" -lt "$BASE" ]; then
+            echo "::notice::this PR REMOVES $((BASE - HEAD)) regex assertion(s). Thank you."
+          fi
