@@ -299,3 +299,82 @@ describe('the defect this whole module exists to prevent', () => {
     expect(layouts.lg.length).toBeGreaterThan(1);
   });
 });
+
+// ── `chrome` reaches the layout item (2.1.0) ────────────────────────────────
+//
+// 2.0.0 inverted the grid-item chrome default and documented
+// `GridLayoutItem.chrome` as the per-slot escape hatch. It was real for the
+// handful of pages that hand-author a layout array, and UNREACHABLE for the
+// ~1,729 CanvasCard usages that are how BSuite pages are actually written:
+// `CanvasCardProps` never declared it and this builder destructured a fixed
+// field list, so a `chrome` written on a CanvasCard was dropped here, silently,
+// before it could become a layout item. crm7's 2.0.0 adoption shipped a comment
+// promising the opt-out and zero call sites able to use it.
+describe('buildCanvasCardLayout — per-card chrome', () => {
+  const itemFor = (layouts: { lg: { i: string; chrome?: boolean }[] }, key: string) =>
+    layouts.lg.find((item) => item.i === key);
+
+  it('threads chrome={false} onto the layout item', () => {
+    const { layouts } = buildCanvasCardLayout(
+      <CanvasCard cardKey="hero" chrome={false}>
+        marketing section
+      </CanvasCard>,
+    );
+    expect(layouts.lg).toHaveLength(1);
+    expect(itemFor(layouts, 'hero')?.chrome).toBe(false);
+  });
+
+  it('threads chrome={true} onto the layout item', () => {
+    const { layouts } = buildCanvasCardLayout(
+      <CanvasCard cardKey="bare" chrome>
+        a bare list
+      </CanvasCard>,
+    );
+    expect(itemFor(layouts, 'bare')?.chrome).toBe(true);
+  });
+
+  it('leaves the key ABSENT when the card says nothing, so `chrome ?? itemChrome` falls through', () => {
+    // Not `undefined` — absent. `layoutItem.chrome ?? itemChrome` cannot tell
+    // the difference, but a structural comparison across a gesture can, and
+    // `stripAutoHeightRows` does exactly that.
+    const { layouts } = buildCanvasCardLayout(
+      <CanvasCard cardKey="quiet">ordinary card</CanvasCard>,
+    );
+    const item = itemFor(layouts, 'quiet');
+    expect(item, 'the item must exist or the next assertion is vacuous').toBeTruthy();
+    expect(item && 'chrome' in item).toBe(false);
+  });
+
+  it('carries a MIXED page — each card decides independently', () => {
+    const { layouts } = buildCanvasCardLayout(
+      <>
+        <CanvasCard cardKey="a" chrome={false}>
+          a
+        </CanvasCard>
+        <CanvasCard cardKey="b" chrome>
+          b
+        </CanvasCard>
+        <CanvasCard cardKey="c">c</CanvasCard>
+      </>,
+    );
+    expect(layouts.lg).toHaveLength(3);
+    expect(layouts.lg.map((item) => item.chrome)).toEqual([false, true, undefined]);
+  });
+
+  it('does not disturb the other per-card fields', () => {
+    const { layouts } = buildCanvasCardLayout(
+      <CanvasCard cardKey="both" chrome={false} w={12} h={9} minW={4} minH={3} autoHeight={false}>
+        x
+      </CanvasCard>,
+    );
+    expect(itemFor(layouts, 'both')).toMatchObject({
+      i: 'both',
+      w: 12,
+      h: 9,
+      minW: 4,
+      minH: 3,
+      chrome: false,
+    });
+    expect(itemFor(layouts, 'both') as { autoHeight?: boolean }).not.toHaveProperty('autoHeight');
+  });
+});

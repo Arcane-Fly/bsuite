@@ -1,0 +1,61 @@
+name: Migration versions in flight
+
+# THE WINDOW NEITHER OTHER GATE COVERS.
+#
+# `migration-version-collision-lint.yml` reads the TREE at the recorded
+# gitlinks — a snapshot of the past, and blind whenever a pointer is stale
+# (on 2026-08-26 all six were, and it went blind for exactly that reason).
+#
+# `migration-collision-branch-tips.yml` reads the six `development` tips. Its
+# own header says it plainly: "unmerged feature branches collide with each
+# other invisibly here."
+#
+# So two migrations sitting on two OPEN pull requests are invisible to both.
+# That is how crm7 #1985 and #1987 both came to carry 20260914000000 on
+# 2026-08-26, and it is the window this workflow closes.
+#
+# WHY A COLLISION IS THE WORST SHAPE A MIGRATION DEFECT CAN TAKE
+# `supabase_migrations.schema_migrations` is ONE table shared by every scope,
+# keyed on the 14-digit version ALONE. The second file at a version never runs,
+# leaves no error, and is recorded as APPLIED — the evidence of the problem is
+# a ledger row saying there is no problem. The estate has lost two security
+# migrations this way (bsuite#1913 an `anon` REVOKE, crm7#1715 a platform-scope
+# lockdown), both while the pipeline read green.
+
+on:
+  pull_request:
+    paths:
+      - '**/supabase/migrations/**'
+      - 'scripts/check-migration-versions-in-flight.mjs'
+      - '.github/workflows/migration-versions-in-flight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  in-flight-collisions:
+    name: Migration versions in flight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Watched to catch a planted collision AND watched not to flag a version
+      # that only looks like one. Both, or it cannot tell found-nothing from
+      # checked-nothing.
+      - name: Self-test the checker
+        run: node scripts/check-migration-versions-in-flight.mjs --self-test
+
+      - name: Check open pull requests for a shared migration version
+        # GH_TOKEN through env, never ${{ }} inside the run block — a
+        # `run-shell-injection` ERROR was fixed in this repo on 2026-08-26.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-migration-versions-in-flight.mjs
