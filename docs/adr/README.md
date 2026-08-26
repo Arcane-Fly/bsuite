@@ -14,6 +14,8 @@ This directory holds the authoritative decisions that govern cross-repo architec
 | [ADR-0006](ADR-0006-contact-propagation-doctrine.md) | Contact Propagation Doctrine | Accepted (**org half superseded**) | 2026-05-01 | ⚠️ contacts yes; `clients.type` **never existed** | org half superseded by `crm7/docs/adr/20260525-host-employer-table-canonicalization-v1.00W.md` |
 | [ADR-0007](ADR-0007-stripe-fdw-read-doctrine.md) | Stripe FDW Read Doctrine | Accepted — **retirement recommended** | 2026-05-12 | ❌ **never built** (no `wrappers` ext, no `stripe` schema, migration unapplied) | New Stripe read paths implemented as edge-function proxy chains |
 | [ADR-0008](ADR-0008-schema-builder-consolidation.md) | Schema Builder Consolidation — `@bsuite/schema-builder` | Accepted | 2026-05-01 | ✅ package published | — (**renumbered from ADR-0004** on 2026-08-17; duplicate-number collision) |
+| [ADR-0009](ADR-0009-funding-refinement-semantics.md) | Funding Refinement Semantics — the placement-time look at funding REPLACES, it does not add | Accepted | 2026-08-26 | ✅ live in crm7 (separate-ledger model); ❌ contradicted by one unwired R80.4 module | — |
+| [ADR-0010](ADR-0010-fix-the-class-not-the-page.md) | Fix the class, not the page — platform-wide defects are closed platform-wide or not at all | Accepted | 2026-08-26 | ⚠️ policy; enforcement exists (D8.1 + `bsuite_feature_index.sibling_class`), nine classes still open | — |
 
 > **The `Built?` column is mandatory.** It was added on 2026-08-17 after an audit found
 > that three ratified ADRs had never been implemented and the index gave no way to tell.
