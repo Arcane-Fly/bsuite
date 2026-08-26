@@ -232,7 +232,7 @@ blocker is worse than no verdict, because the blocker reads as a live reason to 
 | blocker, as stated above | re-tested | now |
 |---|---|---|
 | `publish-ui.yml` — *"No runs exist. Absence of a failing run is not a pass."* | `gh run list --workflow=publish-ui.yml` | **WRONG.** It has run **8 times**, **5 successful**, most recently **2026-08-25 15:22, success, on main**. It has been running since 2026-08-17. |
-| `dod.mjs` — *"FAILS, exit 1."* | `node scripts/dod.mjs` in R80.4 | **PASSES.** All **18 benchmarks**, exit **0** — including D14 "No regex — BSuite house rule", 486 production files parsed clean. |
+| `dod.mjs` — *"FAILS, exit 1."* | `node R80.4/scripts/dod.mjs` | **PASSES.** All **18 benchmarks**, exit **0** — including D14 "No regex — BSuite house rule", 486 production files parsed clean. |
 | `audit-routes.sh` — *"killed at 420s… A gate that cannot finish cannot prove anything."* | bsuite#2501 | **TERMINATES**, with a stated ceiling printed before any work: `TERMINATES — ceiling 3h 8m (47 route(s) x 4 auditors x 60s/route)`. A timeout is now its own reported outcome, never a pass. |
 
 ### The r8-lane row was stale twice over
