@@ -74,7 +74,7 @@ Eligibility is not a verdict. The tool says so itself: *the cited gates must be 
 |---|---|---|
 | `docs/00-roadmap/20260112-master-roadmap-v1.00F.md` | `check-doc-naming.mjs`, `audit-doc-completion.mjs`, `audit-routes.sh` | **`audit-routes.sh` could not complete** — killed at 420s. It is recorded as having once run 2h20m. A gate that cannot finish cannot prove anything. |
 | `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | `publish-ui.yml` | **No runs exist.** Absence of a failing run is not a pass. |
-| `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | `ci.yml` | `ci.yml` resolves to three different submodule workflows. Not proven from here. |
+| `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | `ci.yml` | `ci.yml` resolves to three different submodule workflows. Not proven from here. |
 | `docs/20260817-estate-remaining-work-register-v3.00W.md` | `api-availability.mjs`, `reachability.mjs`, `prerender.mjs`, `ci.yml` | `prerender.mjs` **fails locally by documented design** (Supabase OAuth 400 on a localhost redirect URI). Cannot be shown passing here. |
 | `docs/20260821-airtable-class-data-surface-plan-v1.00F.md` | `check-shared-package-reach.mjs`, `check-table-reach.mjs` | **PASSES BOTH.** Marked `F`. `check-shared-package-reach` was failing 5 of 53 edges when this was written; the page-builder 2.0.0 migration cleared it. |
 | `docs/20260821-atmosphere-evaluation-v1.00F.md` | `check-shared-package-reach.mjs` | **PASSES.** Marked `F`. Declared superseded by two separate newer documents. |
@@ -212,7 +212,7 @@ and the mirror error is to read a supersession relationship as evidence about th
 | document | cites | why not marked |
 |---|---|---|
 | `docs/OUTSTANDING.md` | `verify-class-a-preservation.mjs` | gate needs `DATABASE_URL`; cannot be shown passing from a checkout |
-| `00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | `ci.yml`, `quality.yml`, `supabase-migration-rehearsal.yml` | `ci.yml` resolves to three different submodule workflows |
+| `00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | `ci.yml`, `quality.yml`, `supabase-migration-rehearsal.yml` | `ci.yml` resolves to three different submodule workflows |
 | `20260817` / `20260819-built-unlanded-and-unwired-register` | `audit-routes.sh` + others | `audit-routes.sh` still cannot be shown to terminate |
 
 **Nothing was renamed by this pass.** Under-claiming costs a re-review; a false

@@ -1,5 +1,20 @@
 # Estate remaining work — the consolidated register
 
+> **SUPERSEDED — FROZEN 2026-08-26. Do not work from this file.**
+>
+> The consolidated register is now
+> [`docs/20260817-estate-remaining-work-register-v3.00W.md`](./20260817-estate-remaining-work-register-v3.00W.md),
+> which carries a VERDICT per row against live sources. This one was written as a
+> list of FINDINGS with no verdicts, so a reader cannot tell which rows are still
+> true — and on 2026-08-26 an audit of the two most recent registers found that
+> **eight of ten "outstanding" claims had already been fixed in code**, several of
+> them months earlier. A stale register does not merely go quiet; it actively
+> points lanes at problems that no longer exist while the real ones go unread.
+>
+> Kept rather than deleted because the rows record what was true on its date, and
+> several later documents cite it. Frozen means exactly that: accurate as history,
+> not as a work list.
+
 > ## ⚠ SUPERSEDED FOR STATUS — 2026-08-17
 >
 > **Every verdict and count below is superseded by
@@ -33,10 +48,10 @@
 >
 > Read this document for *evidence and item definitions*. Read the ledger for *status*.
 
-**Document:** `docs/20260814-estate-remaining-work-register-v2.00W.md`
+**Document:** `docs/20260814-estate-remaining-work-register-v2.00F.md`
 **Date:** 2026-08-14 · **Version:** 2.00W · **Status:** W — Working
 **Superseded for status by:** `docs/20260817-estate-completion-ledger-v1.00W.md` (2026-08-17)
-**Supersedes:** `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` (v1) and, for their remaining-work content, every register listed in §9.
+**Supersedes:** `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` (v1) and, for their remaining-work content, every register listed in §9.
 
 **Method.** ~~All **264 non-archive documents** under `docs/` were read and classified.~~
 **Corrected 2026-08-17 — the count was 266, and "read and classified" overstates the coverage.**
@@ -315,7 +330,7 @@ These are cheap and they are the reason agents keep re-deriving the same wrong t
 
 ## 9. Registers this supersedes
 
-For remaining-work purposes, this document replaces: `00-roadmap/20260812-estate-remaining-work-register-v1.00W.md`,
+For remaining-work purposes, this document replaces: `00-roadmap/20260812-estate-remaining-work-register-v1.00F.md`,
 `00-roadmap/20260811-crm7-full-spectrum-review-register-v1.00W.md`,
 `00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md`,
 `00-roadmap/20260810-r804-carryover-register-v1.00W.md`, `docs/OUTSTANDING.md` (already self-demoted),

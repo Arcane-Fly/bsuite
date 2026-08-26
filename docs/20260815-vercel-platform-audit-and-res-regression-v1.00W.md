@@ -5,7 +5,7 @@
 > **This document's findings were originally numbered `V-1`…`V-8`. They are now `VP-1`…`VP-8`.**
 > Renumbering is 1:1 and order-preserving — `V-3` here became `VP-3`, and so on for all eight.
 >
-> **Why.** `docs/20260814-estate-remaining-work-register-v2.00W.md` uses `V-1`…`V-11` for its
+> **Why.** `docs/20260814-estate-remaining-work-register-v2.00F.md` uses `V-1`…`V-11` for its
 > *verification-integrity* items, and that register is the estate's canonical remaining-work
 > index. Two live registers were sharing one identifier namespace: a bare "V-3" meant the dead
 > production migration-history audit in one document and Enterprise-only WAF managed rulesets in

@@ -19,7 +19,7 @@
 
 **Document:** `docs/20260817-estate-remaining-work-register-v3.00W.md`
 **Date:** 2026-08-17 · **Version:** 3.00W · **Status:** W — Working
-**Supersedes:** `docs/20260814-estate-remaining-work-register-v2.00W.md` in full, including three of its
+**Supersedes:** `docs/20260814-estate-remaining-work-register-v2.00F.md` in full, including three of its
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.

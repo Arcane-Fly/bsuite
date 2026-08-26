@@ -50,7 +50,7 @@ evidence:
 >
 > *Original 2026-08-17 supersession notice follows.*
 >
-> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md)
+> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md)
 > — re-measured against live SQL, live GitHub state and the six repos at `development` HEAD.
 >
 > Two things date it beyond recovery:

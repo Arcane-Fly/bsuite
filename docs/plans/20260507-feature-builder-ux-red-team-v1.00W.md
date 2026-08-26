@@ -6,7 +6,7 @@
 > `@bsuite/schema-builder` is at **1.3.0** (this plan predates 1.0), and the operator re-scoped the
 > surface in the 2026-08-11 *"make it genuinely no-code"* direction.
 >
-> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md);
+> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md);
 > the newer framing is in `20260811-feature-builder-world-class-refined-v1.00W.md` (a **one-shot prompt**,
 > not a plan — see `README.md`).
 >
