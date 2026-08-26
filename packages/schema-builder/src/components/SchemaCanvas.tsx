@@ -100,32 +100,43 @@ const edgeTypes = { smart: SmartEdge };
  */
 const XY_TOKEN_BINDINGS = {
   /*
-   * SIZE THE CANVAS. Without these two the diagram does not render at all.
+   * TOKEN BINDINGS ONLY. DO NOT PUT SIZING HERE — IT IS SILENTLY DISCARDED.
    *
-   * `@xyflow/react` v12's stylesheet sizes `.react-flow__container` but NEVER
-   * `.react-flow` itself — grep it: the only height/width rules are on
-   * `__container`, `__handle`, `__controls-button` and friends. The root is a
-   * plain block div whose children are all absolutely positioned, so with no
-   * height of its own it collapses to ZERO and every node is laid out inside a
-   * 0px box. Measured on the deployed app: `.react-flow` 1184x0 with 45 nodes
-   * present in the DOM and a toolbar cheerfully reporting "45 entities".
+   * `@xyflow/react` v12 builds its root element as:
    *
-   * The component does apply its own `width/height: 100%` inline — but passing
-   * a `style` prop REPLACES that, so binding the tokens here silently removed
-   * the only sizing there was. And restoring `height: 100%` is not enough on
-   * its own: it resolves against a parent whose CSS height is `auto`
-   * (`flex-1` + `min-h-[420px]` give a USED height, not a definite one), so it
-   * computes back to zero. The sibling pipeline-flow canvas in crm7 keeps the
-   * library defaults and is broken the same way, which is how we know.
+   *     const wrapperStyle = {
+   *       width: '100%', height: '100%', overflow: 'hidden',
+   *       position: 'relative', zIndex: 0,
+   *     };
+   *     <div ... style={{ ...style, ...wrapperStyle }} className={cc(['react-flow', ...])}>
    *
-   * Absolute + inset sidesteps the percentage-resolution problem entirely: the
-   * containing block is the nearest positioned ancestor, and this component's
-   * wrapper is already `relative`. Verified in the live DOM before it was
-   * written — setting exactly these two properties took the canvas from 0px to
-   * 420px and 45 nodes from invisible to visible.
+   * `wrapperStyle` is spread AFTER the caller's `style`, so `width`, `height`,
+   * `overflow`, `position` and `zIndex` passed through this prop are always
+   * overwritten. Only keys the library does not set — the custom properties
+   * below, and `inset` — survive. That is the whole reason this file previously
+   * carried `position: 'absolute', inset: 0` and production STILL rendered a
+   * zero-height canvas: `position` was overwritten back to `relative`, `inset: 0`
+   * survived, and `inset` on a `relative` element does nothing at all.
+   *
+   * The sizing problem it was trying to solve is real. React Flow's own
+   * `height: 100%` resolves against this component's wrapper, whose specified
+   * height is itself `100%` of an indefinite chain. `min-h-[420px]` gives that
+   * wrapper a USED height of 420px — which `getComputedStyle().height` reports,
+   * and which is why the wrapper LOOKS definite when you inspect it — but a
+   * percentage on a descendant resolves against the SPECIFIED height, and a
+   * min-height never makes that definite. So `100%` collapses to auto, i.e. 0.
+   *
+   * The fix therefore has to live on a div we own, where no library can
+   * overwrite it: `canvasContent` is rendered inside an `absolute inset-0`
+   * child of the already-`relative` wrapper. Absolute positioning resolves
+   * against the containing block's USED size, so it gets the real 420px, and
+   * React Flow's `height: 100%` then resolves against something definite.
+   *
+   * The earlier fix was "verified in the live DOM" by setting these two
+   * properties directly on the element, which does work — a direct write is not
+   * subject to the spread. What was never verified was the DELIVERY PATH. The
+   * mechanism was right and the prop was the wrong way to deliver it.
    */
-  position: 'absolute',
-  inset: 0,
   '--xy-minimap-background-color-props': 'var(--role-bg-panel)',
   '--xy-minimap-mask-background-color-props': 'var(--role-bg-body)',
   '--xy-minimap-mask-stroke-color-props': 'var(--role-border-interactive)',
@@ -936,7 +947,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             participate in that percentage-of-auto collapse, so it holds the
             floor regardless of what the consumer's own layout does.
           */}
-          {canvasContent}
+          {/*
+            `absolute inset-0` is load-bearing and must stay on a div WE own.
+            React Flow overwrites width/height/position passed via its `style`
+            prop (see XY_TOKEN_BINDINGS), so the canvas can only be given a
+            definite box from outside it. This div resolves against the
+            wrapper's USED height, which the min-h floor above guarantees.
+          */}
+          <div className="absolute inset-0">{canvasContent}</div>
           {showToolbar ? (
             <>
               <SchemaToolbar
