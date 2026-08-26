@@ -99,6 +99,44 @@ const edgeTypes = { smart: SmartEdge };
  * tenant branding follow automatically and nothing here needs a dark variant.
  */
 const XY_TOKEN_BINDINGS = {
+  /*
+   * TOKEN BINDINGS ONLY. DO NOT PUT SIZING HERE — IT IS SILENTLY DISCARDED.
+   *
+   * `@xyflow/react` v12 builds its root element as:
+   *
+   *     const wrapperStyle = {
+   *       width: '100%', height: '100%', overflow: 'hidden',
+   *       position: 'relative', zIndex: 0,
+   *     };
+   *     <div ... style={{ ...style, ...wrapperStyle }} className={cc(['react-flow', ...])}>
+   *
+   * `wrapperStyle` is spread AFTER the caller's `style`, so `width`, `height`,
+   * `overflow`, `position` and `zIndex` passed through this prop are always
+   * overwritten. Only keys the library does not set — the custom properties
+   * below, and `inset` — survive. That is the whole reason this file previously
+   * carried `position: 'absolute', inset: 0` and production STILL rendered a
+   * zero-height canvas: `position` was overwritten back to `relative`, `inset: 0`
+   * survived, and `inset` on a `relative` element does nothing at all.
+   *
+   * The sizing problem it was trying to solve is real. React Flow's own
+   * `height: 100%` resolves against this component's wrapper, whose specified
+   * height is itself `100%` of an indefinite chain. `min-h-[420px]` gives that
+   * wrapper a USED height of 420px — which `getComputedStyle().height` reports,
+   * and which is why the wrapper LOOKS definite when you inspect it — but a
+   * percentage on a descendant resolves against the SPECIFIED height, and a
+   * min-height never makes that definite. So `100%` collapses to auto, i.e. 0.
+   *
+   * The fix therefore has to live on a div we own, where no library can
+   * overwrite it: `canvasContent` is rendered inside an `absolute inset-0`
+   * child of the already-`relative` wrapper. Absolute positioning resolves
+   * against the containing block's USED size, so it gets the real 420px, and
+   * React Flow's `height: 100%` then resolves against something definite.
+   *
+   * The earlier fix was "verified in the live DOM" by setting these two
+   * properties directly on the element, which does work — a direct write is not
+   * subject to the spread. What was never verified was the DELIVERY PATH. The
+   * mechanism was right and the prop was the wrong way to deliver it.
+   */
   '--xy-minimap-background-color-props': 'var(--role-bg-panel)',
   '--xy-minimap-mask-background-color-props': 'var(--role-bg-body)',
   '--xy-minimap-mask-stroke-color-props': 'var(--role-border-interactive)',
@@ -828,11 +866,21 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           flowRef.current = inst;
         }}
         fitView
-        // React Flow's default minZoom is 0.5 and `fitView` will not go below
-        // it. 44 entities are ~1540px wide and thousands tall, so fitView hit
-        // the clamp, gave up, and showed roughly a third of the diagram at a
-        // scale where field text rendered at 4.5-7 device px. Measured
-        // viewport transform before this line existed: exactly scale(0.5).
+        // THE OPENING VIEW MUST BE LEGIBLE. `minZoom={0.05}` below exists so a
+        // user CAN zoom out to the whole diagram; it was never meant to be
+        // where the page opens.
+        //
+        // Without a floor on the INITIAL fit, 44 entities (~1540px wide and
+        // thousands tall) drag the opening zoom down until field text renders
+        // at 4.5-7 device pixels — the state the operator described as "so
+        // confusing it was not functional". Showing everything illegibly is not
+        // better than showing some of it legibly; both were tried and neither
+        // is a usable default.
+        //
+        // So the initial fit stops at 0.75, and the toolbar's "Fit" button —
+        // which passes its own options and is a deliberate act — stays free to
+        // go all the way out. Open readable, overview one click away.
+        fitViewOptions={{ padding: 0.2, minZoom: 0.75, maxZoom: 1.2 }}
         minZoom={0.05}
         maxZoom={2}
         // Without this the class never lands on `.react-flow`, and the library
@@ -899,7 +947,14 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
             participate in that percentage-of-auto collapse, so it holds the
             floor regardless of what the consumer's own layout does.
           */}
-          {canvasContent}
+          {/*
+            `absolute inset-0` is load-bearing and must stay on a div WE own.
+            React Flow overwrites width/height/position passed via its `style`
+            prop (see XY_TOKEN_BINDINGS), so the canvas can only be given a
+            definite box from outside it. This div resolves against the
+            wrapper's USED height, which the min-h floor above guarantees.
+          */}
+          <div className="absolute inset-0">{canvasContent}</div>
           {showToolbar ? (
             <>
               <SchemaToolbar

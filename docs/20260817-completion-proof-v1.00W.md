@@ -205,7 +205,7 @@ Also parked here: **PF-4(c)** — a legacy table with 0 rows, 4 security rules, 
 | **PO-5** | Gated by M-7. The host charge-rate table exists, holds 0 rows, and is referenced by no page. Nothing customer-facing can sit on top of an empty rate table. |
 | **D-3** | Six files still quote the page-builder package at 0.2.0 or 0.4.0. It is 0.9.0 everywhere. The rulebook itself is now correct; `knowledge.md` and five near-identical sub-repository files are not. |
 | **D-6** | 44 top-level documents still name the retired R80.3 calculator. The rulebook now carries one authoritative correction and instructs agents not to mass-rewrite dated history. **If that convention stands, this is as fixed as it gets.** If you want a lower per-file count, that is a separate and much larger job. |
-| **D-10** | Five Throughput component documents are still unfilled `[Describe what…]` templates, and the Braden theme document claims Tailwind v3 while the app runs v4. |
+| **D-10** | **Nothing — resolved 2026-08-17, verified 2026-08-27.** All five Throughput component documents were written from source (314–337 lines each, on `origin/development`); the sweep was matching each file's provenance banner quoting the token it replaced. The Braden theme document was corrected to Tailwind v4 in the same pass (`braden/package.json` declares `^4.3.0`). |
 
 ---
 

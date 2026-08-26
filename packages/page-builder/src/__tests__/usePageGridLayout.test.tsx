@@ -10,7 +10,7 @@ const noopPreferenceAdapter: PageGridPreferenceFactory = (_key, fallback) => ({
 });
 
 describe('usePageGridLayout', () => {
-  it('derives single-column stacks for sm/xs/xxs from an lg-only defaultLayouts', () => {
+  it('derives a single-column stack at xxs only, from an lg-only defaultLayouts', () => {
     const lgOnly: GridLayouts = {
       lg: [
         { i: 'a', x: 0, y: 0, w: 3, h: 4 },
@@ -38,7 +38,14 @@ describe('usePageGridLayout', () => {
     expect(layouts.sm).toHaveLength(3);
     expect(layouts.sm.map((item) => item.w)).toEqual(lgOnly.lg.map((item) => item.w));
 
-    for (const bp of ['xs', 'xxs'] as const) {
+    // ...and xs too, from 2026-08-26. The 2026-08-13 fix stopped at sm, but a
+    // 1024px laptop with the sidebar open presents a 664px CONTAINER, which
+    // resolves to xs — measured on production, sidebar collapsed vs expanded
+    // at one viewport as a two-way control.
+    expect(layouts.xs).toHaveLength(3);
+    expect(layouts.xs.map((item) => item.w)).toEqual(lgOnly.lg.map((item) => item.w));
+
+    for (const bp of ['xxs'] as const) {
       const stacked = layouts[bp];
       expect(stacked).toHaveLength(3);
       for (const item of stacked) {
@@ -98,7 +105,7 @@ describe('usePageGridLayout', () => {
     }
   });
 
-  it('keeps a consumer-supplied sm layout intact while still deriving xs/xxs', () => {
+  it('keeps a consumer-supplied sm layout intact while still deriving xxs', () => {
     const layouts: GridLayouts = {
       lg: [
         { i: 'a', x: 0, y: 0, w: 6, h: 4 },
@@ -120,7 +127,8 @@ describe('usePageGridLayout', () => {
 
     const out = result.current.currentLayouts;
     expect(out.sm?.[1]).toMatchObject({ x: 6, w: 6 });
-    expect(out.xs?.every((item) => item.x === 0 && item.w === 12)).toBe(true);
+    // xs mirrors lg now, so it keeps the two-up arrangement.
+    expect(out.xs?.[1]).toMatchObject({ x: 6, w: 6 });
     expect(out.xxs?.every((item) => item.x === 0 && item.w === 12)).toBe(true);
   });
 
@@ -234,20 +242,21 @@ describe('usePageGridLayout', () => {
       );
 
       act(() => result.current.setIsEditing(true));
-      act(() => result.current.handleBreakpointChange('xs'));
+      act(() => result.current.handleBreakpointChange('xxs'));
       const before = JSON.stringify(store.get('page:persist-from-xs_grid_layouts'));
 
       act(() =>
         result.current.onLayoutChange(null, {
           lg: lgOnly.lg,
-          xs: [{ i: 'b', x: 0, y: 0, w: 12, h: 4 }, { i: 'a', x: 0, y: 4, w: 12, h: 4 }],
+          xxs: [{ i: 'b', x: 0, y: 0, w: 12, h: 4 }, { i: 'a', x: 0, y: 4, w: 12, h: 4 }],
         } as GridLayouts),
       );
       await flushLayoutCommit();
 
-      // A phone renders a full-width stack, so the gesture carries only a
-      // vertical order. Writing it to lg would flatten a multi-column desktop
-      // arrangement the user cannot even see on that device.
+      // A phone (xxs, < 480px container) renders a full-width stack, so the
+      // gesture carries only a vertical order. Writing it to lg would flatten a
+      // multi-column desktop arrangement the user cannot even see there. xs is
+      // NO LONGER such a breakpoint — it mirrors lg and is canonicalisable.
       expect(JSON.stringify(store.get('page:persist-from-xs_grid_layouts'))).toBe(before);
     });
 

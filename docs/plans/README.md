@@ -19,7 +19,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 > repository, including the one labelled "Active phase-ordered queue". An agent opening this index
 > to find the queue found nothing.
 
-- [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md) — **Canonical remaining-work register.** Start here; it supersedes the finish-line roadmap and the merged execution backlog.
+- [`../20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md) — **Canonical remaining-work register.** Start here; it supersedes the finish-line roadmap and the merged execution backlog.
 - [`../20260504-bsuite-documentation-hub-v1.00W.md`](../20260504-bsuite-documentation-hub-v1.00W.md) — Cross-submodule documentation hub (top-level index)
 - [`../../AGENTS.md`](../../AGENTS.md) — Stack floor and the ten tripwires (replaces the archived tech-stack-alignment doc)
 - [`../20260731-platform-operations-reference-v1.00W.md`](../20260731-platform-operations-reference-v1.00W.md) — Shared `@bsuite/*` package matrix, env vars, lockfile rules

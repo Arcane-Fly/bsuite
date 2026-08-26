@@ -1,7 +1,7 @@
 # PI orchestration brief — paste this as the opening prompt of a new session
 
 **Created** 2026-08-12 · **Status** Working
-**Companion:** `20260812-estate-remaining-work-register-v1.00W.md` — that file is the work; this
+**Companion:** `20260812-estate-remaining-work-register-v1.00F.md` — that file is the work; this
 file is how to run it.
 
 ---
@@ -354,7 +354,7 @@ Braden cannot read the memory MCP, so a memory-only record is not a handback. It
 1. `memory_list({ keysOnly: true, prefix: "bsuite_" })` — restore context.
 2. `inbox_list({ namespace: "bsuite", include_broadcast: true })` — read what the lanes left.
    Their handovers contain corrections you must not re-derive.
-3. Read `20260812-estate-remaining-work-register-v1.00W.md`.
+3. Read `20260812-estate-remaining-work-register-v1.00F.md`.
 4. **Verify G0 before dispatching anyone.**
 5. Run Rule 0 yourself, once, and post the credential key names (names only) to the channel so no
    lane repeats the mistake.

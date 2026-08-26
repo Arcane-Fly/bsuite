@@ -38,9 +38,37 @@ function objectIdentity(lint) {
   return m.name ?? lint.cache_key ?? lint.detail?.slice(0, 80) ?? 'unknown';
 }
 
+const VALID_MODES = new Set(['accepted', 'tracked']);
+
+/**
+ * Load the allowlist, refusing any rule whose `mode` we do not recognise.
+ *
+ * `categorize` routes on `mode === 'tracked'` and sends everything else to
+ * `accepted`. That default is the permissive branch: it suppresses the CI
+ * failure AND suppresses the tracking issue. So a rule written `mode:
+ * "track"` — or `"Tracked"`, or omitted entirely — silently stops being
+ * tracked by anyone while still reading, in the file, as though it is.
+ * Nothing downstream can tell that apart from a deliberate acceptance.
+ *
+ * Refusing at load is the only place the difference is still visible.
+ */
 function loadAllowlist() {
   const doc = JSON.parse(readFileSync(ALLOWLIST_PATH, 'utf8'));
-  return doc.rules ?? [];
+  const rules = doc.rules ?? [];
+  const bad = rules
+    .map((r, i) => ({ i, lint: r.lint, mode: r.mode }))
+    .filter((r) => !VALID_MODES.has(r.mode));
+  if (bad.length) {
+    for (const r of bad) {
+      console.error(
+        `::error::allowlist rule ${r.i} (${r.lint}) has mode ${JSON.stringify(r.mode)}; ` +
+          `expected one of ${[...VALID_MODES].join(', ')}. An unrecognised mode is treated ` +
+          `as 'accepted', which suppresses both the failure and the tracking issue.`,
+      );
+    }
+    process.exit(2);
+  }
+  return rules;
 }
 
 function matchRule(rules, lint) {
@@ -235,7 +263,35 @@ const summaryLines = [
   `| performance | ${data.performance.length} | **${newPerf.length}** | ${perf.accepted.length} | ${perf.tracked.length} | ${perf.info.length} |`,
   '',
   report.tracked.length ? `Tracked findings owned by: ${[...new Set(report.tracked.map((t) => t.tracked_in))].join(', ')}` : '',
+
 ];
+
+/*
+ * NAME THE FINDINGS IN THE SUMMARY, NOT ONLY IN ANNOTATIONS.
+ *
+ * The block above is a five-column scoreboard. Every individual finding was
+ * emitted ONLY as a `::error`/`::warning` run annotation — and GitHub caps
+ * annotations at TEN PER STEP. When this gate went red on 17 unallowlisted
+ * SECURITY DEFINER functions, seven of them were invisible: the summary said
+ * "17" and the annotations showed ten, so nobody could act on the rest without
+ * downloading advisor-report.json from the artifacts.
+ *
+ * A total tells you a number. It does not tell you what to fix. The step
+ * summary has no cap, so the names belong here.
+ */
+function findingList(title, lints) {
+  if (lints.length === 0) return [];
+  return [
+    '',
+    `### ${title} (${lints.length})`,
+    '',
+    ...lints.map((l) => `- \`${l.name}\` — ${objectIdentity(l)}`),
+  ];
+}
+summaryLines.push(
+  ...findingList('New unallowlisted SECURITY findings', newSecurity),
+  ...findingList('New unallowlisted PERFORMANCE findings', newPerf),
+);
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summaryLines.join('\n') + '\n');
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `perf_findings=${newPerf.length > 0}\n`);

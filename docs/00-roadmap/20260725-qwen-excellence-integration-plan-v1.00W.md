@@ -6,7 +6,7 @@
 > 2026-08-06 (`5e000c35`, operator directive) and was replaced by **R80.4** — a different codebase.
 > Every R80.3 work item here is aimed at a repository this monorepo no longer builds or deploys.
 >
-> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md).
+> **Current authority:** [`../20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md).
 >
 > Retained as the record of what the 2026-07-25 excellence loop decided and shipped. If you need an
 > item from here, re-measure it against R80.4 first — do not assume it carries over.

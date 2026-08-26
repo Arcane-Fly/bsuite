@@ -74,7 +74,7 @@ Eligibility is not a verdict. The tool says so itself: *the cited gates must be 
 |---|---|---|
 | `docs/00-roadmap/20260112-master-roadmap-v1.00F.md` | `check-doc-naming.mjs`, `audit-doc-completion.mjs`, `audit-routes.sh` | **`audit-routes.sh` could not complete** — killed at 420s. It is recorded as having once run 2h20m. A gate that cannot finish cannot prove anything. |
 | `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | `publish-ui.yml` | **No runs exist.** Absence of a failing run is not a pass. |
-| `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | `ci.yml` | `ci.yml` resolves to three different submodule workflows. Not proven from here. |
+| `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | `ci.yml` | `ci.yml` resolves to three different submodule workflows. Not proven from here. |
 | `docs/20260817-estate-remaining-work-register-v3.00W.md` | `api-availability.mjs`, `reachability.mjs`, `prerender.mjs`, `ci.yml` | `prerender.mjs` **fails locally by documented design** (Supabase OAuth 400 on a localhost redirect URI). Cannot be shown passing here. |
 | `docs/20260821-airtable-class-data-surface-plan-v1.00F.md` | `check-shared-package-reach.mjs`, `check-table-reach.mjs` | **PASSES BOTH.** Marked `F`. `check-shared-package-reach` was failing 5 of 53 edges when this was written; the page-builder 2.0.0 migration cleared it. |
 | `docs/20260821-atmosphere-evaluation-v1.00F.md` | `check-shared-package-reach.mjs` | **PASSES.** Marked `F`. Declared superseded by two separate newer documents. |
@@ -152,3 +152,120 @@ rename would otherwise have broken. The other four were left alone.
 
 Under-claiming costs a re-review; a false completion costs the truth of the whole corpus,
 permanently, in a filename every future reader trusts at a glance.
+
+---
+
+## RE-ADJUDICATED 2026-08-26 ~05:30 AWST — still two, and the reason is worth keeping
+
+Re-run after a day of gate work, because two of the blockers named above were
+cleared. The verdict does not move: **the same two documents carry `F`, and nothing
+else qualifies.**
+
+### What changed underneath
+
+`check-shared-package-reach` now reports **OK — 54 consumer/package edge(s)
+examined, none unreachable**. The last unreachable edge was crm7 pinning
+`@bsuite/page-builder@^1.0.7` against a published 2.0.0, and a caret range never
+crosses a major. crm7 adopted 2.0.0 today (crm7#2041/#2042), so that edge closed.
+
+`check-doc-classification` also passes (baseline 254, now 254) after the morning
+ledger was classified.
+
+### The intersection, and why 11 is not 11
+
+Both limbs, sorted with `LC_ALL=C` before `comm`:
+
+    limb (a) superseded / self-declared ...... 29
+    limb (b) bindable (cites a live gate) .... 81
+    intersection ............................. 11
+
+**Eleven is not eleven candidates.** The supersession audit reports a
+*relationship*, so it names BOTH ends — the superseded document and the one doing
+the superseding. Filtering the intersection for docs that are actually superseded
+leaves far fewer, and of those the gates must still be RUN.
+
+Two survived that far and both are already marked:
+
+- `docs/20260821-atmosphere-evaluation-v1.00F.md`
+- `docs/20260821-airtable-class-data-surface-plan-v1.00F.md`
+
+### The two I nearly marked, and why that would have been wrong
+
+`20260825-atmosphere-is-nocodb-and-the-licence-already-ruled-v1.00A.md` and
+`20260822-data-surface-consolidation-decision-v1.00D.md` both appeared in the
+intersection with a PASSING gate. Neither qualifies:
+
+- They are the **superseders**, not the superseded — each carries `supersedes:`
+  frontmatter naming the documents above. Limb (a) asks whether a doc *has been*
+  superseded, and the answer for both is no; they are the current truth.
+- `…-v1.00D.md` states its own status plainly: **"D (Draft — Proposed, NOT
+  ratified)"**. Marking a draft complete is the exact failure the bar exists to
+  prevent.
+
+This is the operator's `F means frozen` ruling seen from the other side. That
+ruling settled that `F` on a predecessor does not outrank `A` on its successor —
+and the mirror error is to read a supersession relationship as evidence about the
+*successor*. The tool reports the edge; only the direction makes it a verdict.
+
+### Where the remaining candidates stand
+
+| document | cites | why not marked |
+|---|---|---|
+| `docs/OUTSTANDING.md` | `verify-class-a-preservation.mjs` | gate needs `DATABASE_URL`; cannot be shown passing from a checkout |
+| `00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | `ci.yml`, `quality.yml`, `supabase-migration-rehearsal.yml` | `ci.yml` resolves to three different submodule workflows |
+| `20260817` / `20260819-built-unlanded-and-unwired-register` | `audit-routes.sh` + others | `audit-routes.sh` still cannot be shown to terminate |
+
+**Nothing was renamed by this pass.** Under-claiming costs a re-review; a false
+completion costs the truth of the whole corpus, permanently, in a filename every
+future reader trusts at a glance.
+
+
+
+---
+
+## RE-TESTED 2026-08-26 ~17:20 AWST — THREE of the six blockers above were STALE
+
+Every blocker in the tables above was re-run rather than re-read. **Three had already
+changed**, and one of them had been wrong for a week. A verdict that carries a stale
+blocker is worse than no verdict, because the blocker reads as a live reason to stop.
+
+| blocker, as stated above | re-tested | now |
+|---|---|---|
+| `publish-ui.yml` — *"No runs exist. Absence of a failing run is not a pass."* | `gh run list --workflow=publish-ui.yml` | **WRONG.** It has run **8 times**, **5 successful**, most recently **2026-08-25 15:22, success, on main**. It has been running since 2026-08-17. |
+| `dod.mjs` — *"FAILS, exit 1."* | `node R80.4/scripts/dod.mjs` | **PASSES.** All **18 benchmarks**, exit **0** — including D14 "No regex — BSuite house rule", 486 production files parsed clean. |
+| `audit-routes.sh` — *"killed at 420s… A gate that cannot finish cannot prove anything."* | bsuite#2501 | **TERMINATES**, with a stated ceiling printed before any work: `TERMINATES — ceiling 3h 8m (47 route(s) x 4 auditors x 60s/route)`. A timeout is now its own reported outcome, never a pass. |
+
+### The r8-lane row was stale twice over
+
+The table above cites `R80.4/docs/00-roadmap/20260820-datum-directive-to-r8-lane-v1.00W.md`.
+**That path no longer exists.** The file is now `…-v1.00F.md`, and it is marked correctly —
+it carries a SUPERSEDED banner naming `…-v1.00A.md` as the live directive, so limb (a) is
+satisfied by supersession and limb (b) by `dod.mjs` now passing. It is a **same-slug pair**
+where the `F` marks the frozen predecessor and the `A` is current. That is the shape the
+"`F` means frozen" ruling describes, working as intended — not the duplicate it looks like
+from a filename listing.
+
+### `audit-routes.sh` moved, but did not clear
+
+Termination was the stated blocker and it is fixed. **The gate still cannot carry a document
+to completion**, for a different and better-stated reason: crm7 `1332cf47` (2026-08-26 12:09)
+added a project guard that **refuses to run a row-creating suite against production**, on the
+measured ground that this configuration wrote **381 synthetic rows across 7 tables** into the
+production project over **37 CI runs**. `audit-routes.sh` covers 47 routes, **29 of them
+authenticated** — so 62% of its inventory is now unexaminable until a non-production Supabase
+project exists.
+
+That guard is correct and must not be weakened to clear this. The dependency is the one
+already on the board: `supabase-business-suite-sydney` exists but holds **zero tables**, and
+`CRM7_E2E_SUPABASE_URL` is unset.
+
+So the master roadmap stays unmarked — but the reason has changed from *"we do not know
+whether it finishes"* to *"it finishes, and it correctly declines to test authenticated routes
+against a production database."* That is a real gain in what we know, and it is not completion.
+
+### Nothing was renamed by this pass either
+
+The count stands at **two** documents marked `F` by this verdict's own adjudication. What
+changed is the accuracy of the reasons — and a re-test that should have been run before the
+blockers were written down, not a day after. The lesson is the cheap one: **re-run a blocker
+before citing it**, because the estate moves faster than a verdict does.

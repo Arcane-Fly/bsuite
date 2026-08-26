@@ -38,9 +38,7 @@ returns nothing at all — so there is no label, no placeholder, no "pick an awa
 invisible rather than disabled. `charge-calculator-v9-2.tsx:4514`, gated on `selectedAward` which
 starts empty at line 3380.
 
-**Recommendation:** change that empty branch to say *"Select an award first — the trade list is
-award-specific."* One line. This complaint has now been raised three times (05 Aug, 06 Aug, 10 Aug);
-each time the control was present and each time it was unfindable.
+**FIXED 2026-08-26.** The `: null` fallback is gone. With no award chosen the control now renders *"Pick an award above first. The trade list is award-specific, so there is nothing to choose from until one is selected"*; with a non-MA000020/MA000036 award it names which award's list it would be. It is on a fresh visitor's default screen — `"trade"` is first in `DASH_DEFAULT_ORDER` and rendered unconditionally, with `selectedAward` initialised empty. Confirmed in the DEPLOYED bundle, not just the ref: the production asset contains the new copy once, as the terminal branch of the minified `selectedAward` chain, against a 4-hit positive control on the same file. **Caveat kept:** no browser render was measured — presence in a bundle is not visibility on screen.
 
 **Second thing worth knowing:** the trade selector is deliberately MA000020-only. The trades, the
 allowance bands and the clauses are that award's; offering a bricklayer's tool allowance against the
@@ -80,7 +78,7 @@ update fails, and the old one stays. Forever.
   reload. Or open it in a private window.
 - **The real fix:** ship a self-destroying `public/sw.js` in R80.4 that clears the caches, unregisters
   itself and reloads the tab. Small, safe, and it repairs every affected browser automatically.
-  **Not yet done — recommend doing it first, before any other R80.4 work.**
+  **FIXED 2026-08-26, verified live.** `R80.4/public/sw.js` on `origin/main` is a kill switch: `skipWaiting()`, deletes every cache, `registration.unregister()`, then re-navigates open clients — each step separately try/caught so a cache failure cannot skip the unregister. The transport defect that made the old worker unkillable is closed too: `R80.4/vercel.json` excludes `sw.js` from the SPA rewrite and serves it `no-store` as `application/javascript`. Verified against the deployed origin, not just git — `curl -D- https://r8.crm7.app/sw.js` returns HTTP 200, `content-type: application/javascript`, byte-identical to the `origin/main` blob — and reproduced in a browser with a positive control: a synthetic stale worker registered against production reproduced the exact reported symptom (title present, `body.innerText.length === 0`), and on the next plain navigation with no user action came back `{registrations:0, caches:[], textLen:17004}`.
 
 This also explains why "the existing r8 UI still looks the same" felt true on 06 Aug: for a returning
 browser, the old app really was still being served.
@@ -94,7 +92,7 @@ browser, the old app really was still being served.
 | Item | State |
 |---|---|
 | **D11 extended to schedules** breaks 20 of 21 awards | Needs your ruling. D1–D10 and D12–D18 pass 21/21. The 79 schedules it fails on are honestly marked partial, so this may be the gate being right rather than the engine being wrong. |
-| **MA000009 Schedule B adult apprentices** — engine $16.20 vs published $23.56 | **45% understatement.** Highest-dollar open defect. |
+| **MA000009 Schedule B adult apprentices** — engine $16.20 vs published $23.56 | **45% understatement.** Highest-dollar open defect. **FIXED 2026-08-26 (R80.4#234), and it was THREE years, not one.** The awards library was always right; the shipped calculator never imported it — zero `ma000009*` references against a 4-hit `MA000009` control — and priced adult apprentices through a generic two-limb floor the MA000009 preset gave nothing to compare against. Measured: year 1 $16.20 vs $23.56 (-45%), year 2 $19.14 vs $25.74 (-34%), year 3 $23.56 vs $25.74 (-9%); year 4 was already correct. cl.19.5's floor limb CHANGES BY YEAR — 80% of standard in year 1, the Table 3 Introductory row from year 2 — which is why the obvious fix of adding a single `lowestClassRate` would have OVERSTATED year 1 by $2.18. `adultFloor` moved to `src/awards/adult-apprentice-floor.ts` because it lived in a `.tsx` that bare node cannot load, so no test could reach it, which is how a correct library and a green test coexisted with a wrong number on screen. |
 | **NTW schooling table indexed without its wage level** | Up to $29/wk wrong; shared Schedule E defect. |
 | **Supported Wage System** modelled in 0 of 21 awards | The $113/wk floor binds above the percentage. |
 | **School-based** unmodelled in 19 of 20 awards | |
@@ -115,15 +113,28 @@ browser, the old app really was still being served.
 
 ### Cross-app
 
-- **crm7 still hardcodes `payRate: 0`** at `src/pages/charge-rates/index.tsx:192`. Verified still
-  present today. No charge rate reaches the apprentice record.
+- ~~**crm7 still hardcodes `payRate: 0`** at `src/pages/charge-rates/index.tsx:192`~~
+  **BOTH HALVES NOW CLOSED, and the file:line in this row was dead.** The LIST page was fixed
+  earlier: `resolvePayRate()` reads `placements.hourly_rate`, falling back to the snapshot's
+  `hourly_wage`, and renders "Not set" rather than a number when neither is on file. The
+  DETAIL page one click away was missed entirely until 2026-08-26 (crm7#2079) and was worse
+  than this row describes: it typed `payRate` non-nullable, computed
+  `totalCost / ANNUAL_BILLABLE_HOURS : 0`, and printed **`$0.00/hr` into the print/PDF export a
+  client receives**. It also assigned that same value to `costPerHour`, so the page showed one
+  number twice under two different labels — and the one called "Pay Rate" was the fully loaded
+  cost, not a wage, so the two surfaces disagreed even when the data was complete.
+  Now: `number | null` threaded all the way to the PDF component, "Not on file" at every render
+  site, and — the part that matters more than the display — push-to-payroll and
+  invoice-generation **refuse** rather than sending a fabricated wage downstream.
+  **Not measured:** how many live quotes actually lack `source_provenance.inputs`, and no
+  browser probe of the rendered PDF.
 - crm7 was never given the deep-link contract into R80.4's panel.
 - **Payroll records must come out of R8** — your 06 Aug directive: "anything that is valuable from a
   payroll standpoint does not belong in r8". Not yet actioned.
 - **Job boards — Seek first**, then Indeed and LinkedIn. Flagged pressing on 29 Jul; belongs in
   conduit, which owns recruitment. Untouched.
 - **AVETMISS behind a feature flag, defaulted off, as a paid RTO add-on.** Backend already deployed
-  (table, security policy, export function); the page is still unrouted. Untouched.
+  (table, security policy, export function); **the "unrouted" claim is FALSE — verified 2026-08-26.** `crm7/src/App.tsx` lazy-imports the page and registers `<ProtectedRoute path="/compliance/avetmiss" permission="view_compliance">`, identical at crm7 `origin/development`, `origin/main` AND at the crm7 SHA the parent's `origin/main` gitlink records — i.e. what production runs. The gate is real rather than a decorative prop: the route component renders an access-denied card when the capability is absent and redirects unauthenticated users first, and `view_compliance` is a real constant. It is reachable from a rendered entry point, linked from the Compliance Areas grid. What is genuinely absent is the FEATURE FLAG this row asked for — the page is permission-gated, not flag-gated, so it is not defaulted off as a paid add-on.
 
 ---
 

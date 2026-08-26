@@ -1,3 +1,12 @@
+---
+kind: record
+authority: none
+owner: bsuite
+evidence:
+  - scripts/check-docs-table-cells.mjs
+  - packages/dates/src/react.tsx
+---
+
 # Dead & Duplicate Code Audit — BSuite Monorepo (Read-Only Inventory)
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
@@ -50,6 +59,43 @@
 | business-suite-unified | `src/components/ui/localised-date-input.tsx` |
 | conduit | `src/components/ui/localised-date-input.tsx` |
 | throughput | `src/components/ui/localised-date-input.tsx` |
+
+**RE-MEASURED 2026-08-27 — the copies are NOT equivalent, and `@bsuite/dates` does not
+cover them. Both facts change what "consolidate" means here.**
+
+R80.3 has since been archived out of the submodules, so five copies remain live. They export
+an identical API — `LocalisedDateInputProps` and `LocalisedDateInput` — and are otherwise a
+**quality gradient**, not five copies of one thing:
+
+| | throughput | conduit | braden | BSU | crm7 |
+|---|---|---|---|---|---|
+| bytes | 4,558 | 4,773 | 5,861 | 6,751 | **16,597** |
+| `aria-` attributes | 2 | 2 | 4 | 4 | **6** |
+| `onBlur` handling | 4 | 4 | 4 | **1** | **7** |
+| `dd/mm` handling | 1 | 2 | 1 | 2 | **5** |
+
+So a user entering a date on throughput or conduit gets **a third of the accessibility
+attributes** a crm7 user gets, on the same control, for the same task. BSU's blur handling is
+the thinnest of all five. That is not a DRY problem with a cosmetic fix — it is five different
+levels of correctness shipped under one component name.
+
+**`@bsuite/dates` exists but does not export this.** Its `./react` entrypoint exports
+`LocaleProvider` and `useLocale` only — no `LocalisedDateInput`, no `useDateFormatPreference`.
+So the apps are not ignoring an available shared component; there isn't one. Any earlier
+reading of this row as "just import the package" is wrong.
+
+**What consolidating actually requires**, in order:
+1. Promote **crm7's** implementation into `@bsuite/dates/react` — it is the superset on every
+   axis measured above, so four apps GAIN accessibility and none regresses.
+2. Publish, then migrate the five apps one at a time behind the visual gate. A date field is a
+   form control on data-entry paths; swapping it is a UX change, not a refactor.
+3. Delete the local copies only after each app is measured on a preview.
+
+Doing step 1 alone would add an export nothing imports — the built-and-unwired shape this
+estate already carries too much of. The steps go together or not at all.
+
+**Not measured:** no browser probe of any of the five. The divergence is byte-level and
+attribute-level, read from source, not observed as a rendering difference.
 
 **Companion hook** — `useDateFormatPreference.ts` duplicated across **5 apps**:
 

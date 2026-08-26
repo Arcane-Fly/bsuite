@@ -19,7 +19,7 @@
 
 **Document:** `docs/20260817-estate-remaining-work-register-v3.00W.md`
 **Date:** 2026-08-17 · **Version:** 3.00W · **Status:** W — Working
-**Supersedes:** `docs/20260814-estate-remaining-work-register-v2.00W.md` in full, including three of its
+**Supersedes:** `docs/20260814-estate-remaining-work-register-v2.00F.md` in full, including three of its
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
@@ -350,8 +350,11 @@ R80.4 8, parent 12** — **71 documents**, roughly one in six of the estate.
 4. **Delete the "the table does not exist, every operation errors" phrasing in crm7's documents-UX
    doc** — it invites deletion of a table whose DDL is in the repo. Replace with M-1's framing: the
    DDL exists, the migration was never applied.
-5. **Fill or delete throughput's five empty component templates** — they still contain
-   `[Describe what the component does…]` verbatim.
+5. ~~**Fill or delete throughput's five empty component templates.**~~ **Done 2026-08-17,
+   verified 2026-08-27.** All five were filled from `src/components/ui/*.tsx` and are on
+   `origin/development` at 314–337 lines each. Do **not** act on the "delete" branch — it would
+   destroy 1,637 lines of accurate documentation. What tripped the sweep was each file's own
+   provenance banner quoting the token it had replaced.
 
 **Index integrity is broken in every repo.** crm7's README links seven documents that do not exist;
 BSU's links three plus a dangling archive path; conduit's links three; throughput's four; R80.4's
