@@ -23,18 +23,38 @@ export type ResponsiveBreakpoint = (typeof RESPONSIVE_BREAKPOINTS)[number];
  * and the SE resize handle could not widen a card that was already at the grid
  * bound nor narrow one whose `minW` had been clamped up to `cols`.
  *
- * `md` and `sm` therefore mirror `lg`: at a container width of 768px and above
- * there is room for the arrangement the user chose, and honouring their choice
- * is the whole point of the control. Genuine phone widths (`xs` < 768px
- * container, `xxs` < 480px) still stack, which is what that code was for.
+ * `md` and `sm` therefore mirror `lg`. So does `xs`, as of 2026-08-26 — the
+ * 2026-08-13 fix stopped ONE BREAKPOINT SHORT of the sessions D-75 was reported
+ * from, and the operator kept reporting it.
+ *
+ * MEASURED on production crm.crm7.app/dashboard, signed in, with a positive
+ * control in both directions at a SINGLE viewport (1024x1000) where the only
+ * variable is the sidebar:
+ *
+ *   sidebar expanded  -> container 664px -> `xs` -> the columns control was
+ *                        INERT: presets 2/4/12 each produced the identical
+ *                        single-column layout.
+ *   sidebar collapsed -> container 872px -> `sm` -> the control ACTED: three
+ *                        presets, three distinct layouts.
+ *
+ * Same page, same viewport, same control. And in the inert case the control
+ * stayed fully interactive — it accepted the click and updated its own
+ * `aria-pressed`/`data-active` while nothing on screen moved.
+ *
+ * `xs` spans a 480-768px container. At 664px a two-column arrangement is ~330px
+ * a side, which is not the "unreadable sliver" the stacking rule was written to
+ * prevent; that rationale was about phones, and a 1024px laptop with a sidebar
+ * open is not a phone. Only `xxs` (< 480px container) genuinely is, so only
+ * `xxs` still stacks.
  */
-export const MIRRORED_BREAKPOINTS = ['md', 'sm'] as const;
+export const MIRRORED_BREAKPOINTS = ['md', 'sm', 'xs'] as const;
 
 /**
  * Breakpoints derived as a single full-width stack — narrow enough that a
- * multi-column arrangement cannot be read.
+ * multi-column arrangement genuinely cannot be read. Below a 480px container
+ * even two columns are ~230px a side before margins, which is the sliver case.
  */
-export const STACKED_BREAKPOINTS = ['xs', 'xxs'] as const;
+export const STACKED_BREAKPOINTS = ['xxs'] as const;
 
 /**
  * Every breakpoint this module DERIVES from `lg`.
@@ -74,10 +94,11 @@ export interface BuildResponsiveLayoutsOptions {
 /**
  * Stack items into one full-width column, preserving reading order.
  *
- * `w: cols` is deliberate at the breakpoints this is used for (`xs`/`xxs`):
- * the container is narrower than 768px, so a card occupies the whole grid
- * whatever the column count. Do NOT reach for this at wider breakpoints — that
- * was D-75.
+ * `w: cols` is deliberate at the breakpoint this is used for (`xxs`): the
+ * container is narrower than 480px, so a card occupies the whole grid whatever
+ * the column count. Do NOT reach for this at wider breakpoints — that was D-75,
+ * twice: once for `md`/`sm` in August 2026, and again for `xs`, which is where
+ * a 1024px laptop with an open sidebar actually lands.
  */
 function stackToSingleColumn(items: GridLayoutItem[], cols: number): GridLayoutItem[] {
   const sorted = [...items].sort((a, b) => (a.y !== b.y ? a.y - b.y : a.x - b.x));
@@ -99,10 +120,11 @@ function stackToSingleColumn(items: GridLayoutItem[], cols: number): GridLayoutI
  * Ensure a GridLayouts object has entries for all responsive breakpoints
  * (lg, md, sm, xs, xxs).
  *
- * - `md` and `sm` mirror `lg` so the user's chosen column arrangement survives
- *   every desktop and tablet container width (see {@link MIRRORED_BREAKPOINTS}).
- * - `xs` and `xxs` are derived as a single-column stack so a phone viewport
- *   never squashes cards into unreadable slivers.
+ * - `md`, `sm` and `xs` mirror `lg` so the user's chosen column arrangement
+ *   survives every desktop, laptop and tablet container width (see
+ *   {@link MIRRORED_BREAKPOINTS}).
+ * - `xxs` is derived as a single-column stack so a phone viewport never
+ *   squashes cards into unreadable slivers.
  * - Consumer-supplied breakpoints are preserved verbatim. Supplying one opts
  *   that breakpoint OUT of tracking `lg`, including out of the columns slider —
  *   prefer not to.
