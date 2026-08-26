@@ -150,7 +150,27 @@ export function citedArtifacts(text) {
   // ghosts, i.e. as a finding. They are neither. Exclude the known non-workflow
   // YAML by name rather than by guessing at shape.
   const NOT_A_WORKFLOW = /^(pnpm-lock|pnpm-workspace|package-lock|docker-compose|vercel|supabase|tsconfig|\.?eslintrc|renovate)\b/i;
+  //
+  // A QUOTED CITATION BELONGS TO THE DOCUMENT IT NAMES, NOT TO THIS ONE.
+  //
+  // A doc that AUDITS other docs tabulates their citations. Read naively, every
+  // gate in that table becomes a citation by the auditing doc — so the audit
+  // inherits its subjects' dead citations and is reported as resting on a ghost.
+  //
+  // Measured 2026-08-26: docs/20260826-doc-completion-verdict-v1.00A.md was the
+  // estate's ONLY dead citation, for `quality.yml`, which it names in a table row
+  // recording that ANOTHER document cites it. The verdict cites nothing of its own
+  // there. The ghost count is meant to be a true zero, and one false entry makes it
+  // stop meaning anything.
+  //
+  // The tell is structural, not linguistic: a markdown table row whose FIRST cell
+  // names a `.md` file is attributing the rest of the row to that file. That is
+  // narrow on purpose — it does not reach prose, headings, lists, or a table whose
+  // first cell is anything else, so a doc cannot launder its own citation by
+  // putting it in a table.
+  const QUOTES_ANOTHER_DOC = /^\s*\|[^|]*\.md[^|]*\|/;
   for (const line of text.split('\n')) {
+    if (QUOTES_ANOTHER_DOC.test(line)) continue;
     // THE PROSE DECIDES, NOT THE NAME. Testing the raw line let an artifact called
     // `check-deleted-thing.mjs` supply its own absence marker — the guard read the
     // filename as the sentence's verdict and suppressed a real dead citation. The
@@ -279,6 +299,19 @@ const SELF_TESTS = [
   { name: 'a workflow citation binds when the workflow exists',
     f: 'x.md', t: 'enforced by phantom-migrations.yml', g: ['phantom-migrations.yml'],
     expect: (r) => r.bindable === true },
+  { name: 'a table row naming ANOTHER .md attributes its citations to THAT doc, not this one',
+    f: 'verdict.md',
+    t: '| `some/other-doc-v1.00W.md` | `quality.yml`, `ci.yml` | could not be shown to run |',
+    g: ['ci.yml'],
+    expect: (r) => r.cited.workflows.length === 0 && r.deadCitations.length === 0 },
+  { name: 'NEGATIVE CONTROL — a table row NOT naming a .md still cites normally',
+    f: 'x.md', t: '| the routes gate | `check-phantom-migrations.mjs` | passes |',
+    g: ['check-phantom-migrations.mjs'],
+    expect: (r) => r.bindable === true && r.liveGates.length === 1 },
+  { name: 'NEGATIVE CONTROL — a doc cannot launder its OWN dead citation into a table',
+    f: 'x.md', t: '| the gate | `check-deleted-thing.mjs` | gone |',
+    g: ['check-phantom-migrations.mjs'],
+    expect: (r) => r.deadCitations.includes('check-deleted-thing.mjs') },
   { name: 'pnpm-lock.yaml is NOT a workflow citation — it is a real file elsewhere',
     f: 'x.md', t: 'we refreshed pnpm-lock.yaml and pnpm-workspace.yaml', g: [],
     expect: (r) => r.deadCitations.length === 0 && r.cited.workflows.length === 0 },
