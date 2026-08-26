@@ -1,0 +1,95 @@
+# REGEX ASSERTIONS IN TESTS MAY ONLY GO DOWN.
+#
+# Operator, 2026-08-26: "Regex is forbidden for being brittle."
+#
+# The brittleness is specific, and the dangerous half is not the obvious one:
+#
+#   expect(t.title).not.toMatch(/invitation sent/i)
+#
+#   - reword the COPY            -> a correct implementation starts failing;
+#   - reword the FAILURE message -> the assertion stops matching and PASSES,
+#                                   while the UI still lies to the user.
+#
+# A test that guards a phrase guards nothing once the phrase moves, and it stops
+# guarding silently. That is why this is a gate rather than a lint preference.
+#
+# WHY A RATCHET AND NOT A BAN. There are 679 of these across 1042 test files. No
+# single PR should sweep them, and a hard ban would simply be switched off. The
+# ratchet lets the backlog be worked off while making it impossible to grow —
+# `feedback_when_a_backlog_cannot_be_finished_ratchet_it`.
+#
+# The replacement is not "delete the assertion". It is to assert the OUTCOME
+# instead of the wording: return a named outcome from a pure function, map outcome
+# to copy in a table, and assert which outcome was chosen. Measured on crm7#2019,
+# that rewrite was strictly STRONGER — disabling the guarded branch turned 5 of 9
+# assertions red where the regex version caught 3 of 6.
+name: Regex assertion ratchet
+
+on:
+  pull_request:
+    branches: [main, development]
+  workflow_dispatch:
+
+jobs:
+  ratchet:
+    name: No new regex assertions in tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # A missing submodule reports a LOW count, which reads as an improvement.
+      # Assert the inputs before measuring anything.
+      - name: Assert every app is populated
+        shell: bash
+        run: |
+          set -euo pipefail
+          for m in crm7 business-suite-unified conduit throughput braden R80.4; do
+            if [ ! -d "$m/src" ]; then
+              echo "::error::submodule $m is empty — the sweep would silently scan fewer files and report a FALLING count, which reads as progress"
+              exit 1
+            fi
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The scanner is watched to catch a planted defect AND watched not to flag
+      # its own documentation. Both, or it cannot tell found-nothing from
+      # checked-nothing.
+      - name: Self-test the scanner
+        run: node scripts/__tests__/scan-regex-assertions.test.mjs
+
+      - name: Scan
+        id: scan
+        run: node scripts/scan-regex-assertions.mjs
+
+      - name: Compare against the baseline
+        shell: bash
+        env:
+          ASSERTIONS: ${{ steps.scan.outputs.assertions }}
+          UNKNOWN: ${{ steps.scan.outputs.unknown }}
+        run: |
+          set -euo pipefail
+          base=$(node -e 'console.log(require("./docs/regex-assertion-baseline.json").assertions)')
+          base_unknown=$(node -e 'console.log(require("./docs/regex-assertion-baseline.json").unknown)')
+          echo "regex assertions  measured=$ASSERTIONS  baseline=$base"
+          echo "UNKNOWN           measured=$UNKNOWN     baseline=$base_unknown"
+
+          fail=0
+          if [ "$UNKNOWN" -gt "$base_unknown" ]; then
+            echo "::error::$UNKNOWN test file(s) UNKNOWN, baseline $base_unknown. An unreadable file is NOT a clean file — the scanner proved nothing about it."
+            fail=1
+          fi
+          if [ "$ASSERTIONS" -gt "$base" ]; then
+            echo "::error::$ASSERTIONS regex assertions, baseline $base. This PR ADDS $((ASSERTIONS - base)). Assert the OUTCOME, not the wording — return a named outcome from a pure function and assert which one was chosen. Regex is forbidden (operator, 2026-08-26)."
+            fail=1
+          fi
+          if [ "$ASSERTIONS" -lt "$base" ]; then
+            echo "::notice::regex assertions FELL from $base to $ASSERTIONS. Lower docs/regex-assertion-baseline.json to $ASSERTIONS in this PR — a ratchet that is not banked does not hold."
+            fail=1
+          fi
+          exit $fail
