@@ -322,6 +322,32 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
           <div
             data-slot="grid-item-surface"
             data-chrome={chrome ? 'on' : 'off'}
+            /*
+             * WHICH SLOT IS THIS? The grid item carried no answer until now, and
+             * that absence has cost this estate two voided measurement datasets.
+             *
+             * `data-chrome` already tells an auditor WHAT the surface is doing.
+             * Nothing told them WHICH slot it was doing it to — the rendered item
+             * exposed only a transform and a class, so the only way to identify a
+             * slot was to ENTER EDIT MODE and read the `Hide <label>` button's
+             * aria-label. That is a three-click path through a launcher, a dialog
+             * and a collapsed disclosure, and every one of those steps is a way to
+             * measure the wrong thing: a create dialog that intercepts the click, a
+             * route that navigates mid-sequence, a permission gate that renders a
+             * plausible placeholder instead.
+             *
+             * Worse, entering edit mode is not free. It is the mode in which a
+             * gesture WRITES `user_preferences`, which is keyed by USER and shared
+             * across environments — so the act of identifying a slot put a real
+             * person's saved layout at risk.
+             *
+             * These two attributes make a slot identifiable from a READ-ONLY page
+             * load. `label` is the human name; `id` is the stable cardKey a fix has
+             * to be written against. Neither is styling and neither is behaviour —
+             * they are the identity the DOM should always have carried.
+             */
+            data-card-key={id}
+            data-card-label={label}
             className={
               chrome
                 ? // ONE radius token, read by the grid item AND available to any
