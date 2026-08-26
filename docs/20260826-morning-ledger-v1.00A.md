@@ -4,6 +4,18 @@ authority: engineering
 owner: bsuite-lane
 ---
 
+> **POINT-IN-TIME RECORD — as at 2026-08-26 08:00 AWST. Not maintained.**
+>
+> An account of what was and was not on production at one moment, written for a
+> 09:30 demo. It asserts nothing about the present and cites no gate deliberately:
+> no check could pass or fail to keep it true, because what it describes has
+> already happened.
+>
+> Everything it names was addressed the same day — the promotion it was waiting on
+> merged, and the card-frame regression it reports was fixed and verified live
+> across nine pages. Read it as history.
+
+
 # Morning ledger — 2026-08-26, 08:00 AWST
 
 Written for Braden. Demo at 09:30. Read the first section and nothing else if you are short of time.
