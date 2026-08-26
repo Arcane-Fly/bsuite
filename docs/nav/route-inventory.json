@@ -639,7 +639,7 @@
         "group": "Admin",
         "label": "Overview",
         "icon": "ShieldCheck",
-        "order": 10
+        "order": 9
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -666,7 +666,7 @@
         "group": "Admin",
         "label": "App Branding",
         "icon": "Palette",
-        "order": 14
+        "order": 13
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -693,7 +693,7 @@
         "group": "Admin",
         "label": "Permissions",
         "icon": "KeyRound",
-        "order": 13
+        "order": 12
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -909,7 +909,7 @@
         "group": "Admin",
         "label": "Sub-organisations",
         "icon": "Building2",
-        "order": 11
+        "order": 10
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -936,7 +936,7 @@
         "group": "Admin",
         "label": "Team Members",
         "icon": "Users",
-        "order": 12
+        "order": 11
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -1071,7 +1071,7 @@
         "group": "Billing",
         "label": "Billing",
         "icon": "CreditCard",
-        "order": 8
+        "order": 7
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -1095,10 +1095,10 @@
       },
       "nav": {
         "surface": "sidebar",
-        "group": "Workspace",
+        "group": "Settings",
         "label": "Organisation Branding",
         "icon": "Palette",
-        "order": 5
+        "order": 16
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -2155,7 +2155,7 @@
         "group": "Compliance",
         "label": "Government",
         "icon": "Landmark",
-        "order": 7
+        "order": 6
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -2182,7 +2182,7 @@
         "group": "Compliance",
         "label": "GTO Standards",
         "icon": "ShieldCheck",
-        "order": 6
+        "order": 5
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -2425,7 +2425,7 @@
         "group": "Billing",
         "label": "Pricing",
         "icon": "CreditCard",
-        "order": 9
+        "order": 8
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -2506,7 +2506,7 @@
         "group": "Settings",
         "label": "General",
         "icon": "Settings",
-        "order": 15
+        "order": 14
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -2529,13 +2529,13 @@
         "feature_flags": []
       },
       "nav": {
-        "surface": "sidebar",
-        "group": "Settings",
-        "label": "Organisation Branding",
-        "icon": "Palette",
-        "order": 17
+        "surface": "none",
+        "group": null,
+        "label": null,
+        "icon": null,
+        "order": null
       },
-      "reachable_via": "sidebar",
+      "reachable_via": "redirect",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -2560,7 +2560,7 @@
         "group": "Settings",
         "label": "Locale",
         "icon": "Globe",
-        "order": 18
+        "order": 17
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -2587,7 +2587,7 @@
         "group": "Settings",
         "label": "Organization",
         "icon": "Building2",
-        "order": 16
+        "order": 15
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -2614,7 +2614,7 @@
         "group": "Settings",
         "label": "Schema Builder",
         "icon": "UserCog",
-        "order": 19
+        "order": 18
       },
       "reachable_via": "sidebar",
       "portal": null,
