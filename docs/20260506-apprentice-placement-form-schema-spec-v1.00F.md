@@ -422,7 +422,7 @@ crm7/
 2. ✓ All citations verified — `apprentice_placements` schema queried live; L2 service + L6 canon referenced by PR #
 3. ✓ No placeholders without owner+ETA
 4. ✓ Conventional commit `docs(crm7):` prefix
-5. ✓ Naming `20260506-apprentice-placement-form-schema-spec-v1.00W.md`
+5. ✓ Naming `20260506-apprentice-placement-form-schema-spec-v1.00F.md`
 
 ## §17 mutual-reminder (cross-validation by claude-code requested)
 

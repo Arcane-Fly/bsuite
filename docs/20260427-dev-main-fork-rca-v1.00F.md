@@ -318,7 +318,7 @@ enforcement gap)`
 Frozen decision #1 in `docs/20260227-contributing-standards-guide-v1.00A.md` requires that all
 work flow `feature → development → main`, with main only ever updated via PR from `development`.
 
-The 2026-04-27 RCA (`docs/20260427-dev-main-fork-rca-v1.00W.md`) confirmed this rule has been
+The 2026-04-27 RCA (`docs/20260427-dev-main-fork-rca-v1.00F.md`) confirmed this rule has been
 silently violated across both `bsuite` parent and `crm7` for the entire current development
 cycle, producing 406 / 1212 commits of divergence on main vs dev — most of it being identical
 content with mismatched SHAs because of dual-merge force-pushes.

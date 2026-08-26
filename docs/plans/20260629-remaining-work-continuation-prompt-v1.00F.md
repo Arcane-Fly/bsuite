@@ -15,7 +15,7 @@ You are continuing autonomous BSuite work. The recruitment-comms + RAMS cluster 
 
 ## Read first (truth sources — verify, don't trust memory)
 
-- Roadmap: `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md` (prioritised Now/Next/Later/Backlog + per-task owner/acceptance/validation/skills).
+- Roadmap: `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md` (prioritised Now/Next/Later/Backlog + per-task owner/acceptance/validation/skills).
 - Live truth: the dashboard `docs/dashboard/` + `gh issue list --repo GaryOcean428/<repo>` for all 7 repos. Use `gh api repos/GaryOcean428/<repo>/branches/<b> --jq .commit.sha` for authoritative SHAs (local refs lag).
 - **Parent gitlink verification (CRITICAL — prior session had a silent regression here):** also verify `gh api repos/GaryOcean428/bsuite/contents/<submodule-path> --jq '.sha'` matches each app-repo's HEAD SHA. Branch SHA equality alone does NOT prove the parent gitlink points at the app HEAD — these are two different axes. Check BOTH every cycle.
 - Memory: `project_recruitment_cluster_built_20260623`, `feedback_prod_validation_catches_empty-data_bugs`, `feedback_parent_pointer_reconcile_gotchas`, `feedback_cron_vault_secret_seeding`, `feedback_squash_loses_parent_linkage`, `feedback_supabase_migrate_pipeline_model`, `feedback_grep_env_first`, `feedback_subagent_model_tiering`.

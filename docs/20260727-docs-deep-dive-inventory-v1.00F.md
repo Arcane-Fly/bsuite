@@ -55,8 +55,8 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | 20260424-env-var-contributing-rules-v1.00W.md | Env-var naming/scoping rules | L | "Status W (living document)" | keep (living) |
 | 20260504-bsuite-documentation-hub-v1.00W.md | Cross-submodule doc hub | L | Canonical doc index | keep (living) |
 | 20260505-bsuite-dependency-refresh-ts6-migration-v1.00W.md | TS 5.9→6.0 migration record | C | `packages/auth/tsconfig.build.json:8`; TS `~6.0.3` `crm7/package.json:198` | archive |
-| 20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md | NAT00120 termination-code mapping | L | NCVER reference; no `*avetmiss*` export hook | keep (living) |
-| 20260506-apprentice-placement-form-schema-spec-v1.00W.md | Placement form + Zod schema | L | `crm7/src/components/apprentices/ApprenticePlacementForm.tsx:10,108` | keep (living) |
+| 20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00F.md | NAT00120 termination-code mapping | L | NCVER reference; no `*avetmiss*` export hook | keep (living) |
+| 20260506-apprentice-placement-form-schema-spec-v1.00F.md | Placement form + Zod schema | L | `crm7/src/components/apprentices/ApprenticePlacementForm.tsx:10,108` | keep (living) |
 | 20260506-apprentice-placement-state-machine-canon-v1.00W.md | 13-state + 5-state machines | L | `crm7/src/lib/workflows/placementWorkflow.ts`, `apprenticePlacementWorkflow.ts:117` | keep (living) |
 | 20260506-cross-app-auth-bug-rca-v1.00A.md | Cross-app auth RCA + remediation | L | RCA (Status A); OIDC silent re-auth "tracked" open | keep (living) |
 | 20260506-dependency-bump-checklist-v1.00A.md | `@bsuite/*` bump ceremony | L | v1.00A canonical ceremony | keep (living) |
@@ -64,7 +64,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | 20260506-integrations-parity-spec-v1.00W.md | Idibu/Onboarded/Calendly adapters (5 gaps) | I | No `vendor_integrations` migration; webhook fns absent | keep |
 | 20260506-leave-parity-spec-v1.00W.md | Leave persistence + calendar/cash-out (5 gaps) | I | `20260228120200_create_leave.sql:16,89`; `leave_types` absent; cash-out/CoInvest/DV unbuilt | keep |
 | 20260506-pay-periods-parity-spec-v1.00W.md | Pay-period streams/lock + reminder (4 gaps) | I | `20260707000020_pay_periods_table.sql:5`; streams/lock/reminder unverified | keep |
-| 20260506-reports-parity-spec-v1.00W.md | 7 report pages (superseded) | L | Header redirects to `plans/20260521-reports-w2-uplift…` | keep (living) |
+| 20260506-reports-parity-spec-v1.00F.md | 7 report pages (superseded) | L | Header redirects to `plans/20260521-reports-w2-uplift…` | keep (living) |
 | 20260506-timesheet-entry-parity-spec-v1.00W.md | 3 tables + 4 cols + WHS (8 gaps) | I | `company_settings` table not found | keep |
 | 20260507-admin-parity-spec-v1.00W.md | 14 admin/payroll-tax gaps | I | `public_holiday_groups`/`purchase_orders`/`hiring_divisions`/`citb_levy`/`pay_items` absent | keep |
 | 20260507-comms-parity-spec-v1.00W.md | SMS dispatcher + login popup (3 gaps) | I | `crm7/src/lib/smsAdapter.ts:4` exists; no dispatcher edge fn | keep |
@@ -88,11 +88,11 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | 20260723-anytime-workforceone-admin-guide-v1.00W.md | Competitor (Code House AnyTime) admin guide | L | Static crawled competitor reference | keep (living) |
 | 20260723-bsuite-capability-matrix-v1.00W.md | Competitor capability matrix + ledger | I | P0 resolved; P1/P2 open; watch `crm7/package.json:61` schema-builder `^0.7.3` | keep |
 | 20260724-bsuite-vercel-env-inventory-v1.00W.md | Per-app Vercel prod env-var inventory | L | Inventory; email-ingestion env "not yet present" | keep (living) |
-| 20260724-oneshot-cross-cutting-audit-v1.00W.md | One-shot DRY audit; 5 violations fixed | I | crm7#469/#470/#471 open; bsuite#1610 LocalisedDateInput open | keep |
+| 20260724-oneshot-cross-cutting-audit-v1.00F.md | One-shot DRY audit; 5 violations fixed | I | crm7#469/#470/#471 open; bsuite#1610 LocalisedDateInput open | keep |
 | 20260724-recurring-bugs-and-blindspots-v1.00W.md | Recurring bug classes + blindspots | I | §9 OPEN: SQL linter #1175/#1158, flake #1159, Advisor/SECDEF/CSP #1261/#1542/#1139 | keep |
 | 20260725-backlog-closeout-loop-v1.00A.md | Close-out loop; host capacity + Jodie shipped | I | `crm7/src/lib/hostCapacityGate.ts:51` wired `placements/create.tsx:295`; gaps remain | keep |
-| 20260725-excellence-program-master-ledger-v1.00W.md | Excellence program master ledger | I | STA BLOCKED, WHS deferred, Sydney scheduled, Billing.tsx "next lane" | keep |
-| 20260725-headroom-learn-notes-v1.00W.md | Headroom `learn` run notes | I | "--apply not run"; litellm unconfigured; Qwen key 401 | keep |
+| 20260725-excellence-program-master-ledger-v1.00F.md | Excellence program master ledger | I | STA BLOCKED, WHS deferred, Sydney scheduled, Billing.tsx "next lane" | keep |
+| 20260725-headroom-learn-notes-v1.00F.md | Headroom `learn` run notes | I | "--apply not run"; litellm unconfigured; Qwen key 401 | keep |
 | 20260725-sta-email-samples-checklist-v1.00W.md | STA email sample checklist for PROVEN_STATES | I | All 6 state sample rows blank | keep |
 | 20260725-sydney-migration-readiness-v1.00W.md | Sydney region migration readiness (#1322) | I | RUNBOOK_READY only; cutover approval + dry-run unchecked | keep |
 | CONSISTENCY-REPORT.md | Cross-app consistency tracker | L | "Last updated 2026-07-07" | keep (living) |
@@ -101,7 +101,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | README.md | Parent docs navigation index | L | Nav hub | keep (living) |
 | 00-roadmap/20260112-master-roadmap-v1.00F.md | Master planning roadmap | L | Last updated 2026-07-26/27; active checkboxes | keep (living) |
 | 00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md | Excellence close-out impl plan (T0–Tn) | I | Unchecked AC boxes; explicit DEFER items | keep |
-| 00-roadmap/20260725-qwen-excellence-integration-plan-v1.00W.md | Qwen excellence integration plan (W1–W6) | I | Status W; DEFER list | keep |
+| 00-roadmap/20260725-qwen-excellence-integration-plan-v1.00F.md | Qwen excellence integration plan (W1–W6) | I | Status W; DEFER list | keep |
 | adr/ADR-0001-page-builder-ownership.md | CRM7 custom_pages canonical; BSU layouts dropped | L | `business-suite-unified/supabase/migrations/20260502000000_drop_tenant_page_layouts.sql` | keep (living) |
 | adr/ADR-0002-schema-builder-ownership.md | CRM7 owns tenant_entities/field_definitions | L | Decision doc | keep (living) |
 | adr/ADR-0003-consumer-renderer-pattern.md | Per-app renderers, no shared npm package | L | Decision doc | keep (living) |
@@ -116,15 +116,15 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | ai/architecture/README.md · ai/development/README.md · ai/diagrams/README.md · ai/integrations/README.md · ai/pricing/README.md · ai/reference/README.md | Stubs — planned, not populated | L | Placeholders | keep (living) |
 | ai/features/20260227-feature-map-complete-v1.00W.md | "49 tools", Phase 1 ✅, full feature map | I | Phases 3-6 unchecked; model Grok 4.1 superseded; no tool-registry impl evidence | keep |
 | ai/features/README.md | Index of features docs | L | Filename drift (cites v1.0.0.md, actual v1.00W.md) | keep (living) |
-| audits/20260725-action-plan-from-audits-v1.00W.md | Audit-driven action plan; STA BLOCKED | I | STA 6-state parsers BLOCKED + 3 open NEXT items | keep |
+| audits/20260725-action-plan-from-audits-v1.00F.md | Audit-driven action plan; STA BLOCKED | I | STA 6-state parsers BLOCKED + 3 open NEXT items | keep |
 | audits/20260725-bsu-braden-throughput-deep-bug-excavation-v1.00W.md | 12 bugs (3 CRIT/HIGH) | I | BUG-01 raw `custom_css` injection; BUG-06 dead `Lock` (`FeatureBuilder/index.tsx:13,146-170`) | keep |
 | audits/20260725-bsu-braden-throughput-docs-code-audit-v1.00W.md | 46 docs audited; 23 STALE, 5 PARTIAL | I | 23 STALE verdicts unresolved | keep |
 | audits/20260725-conduit-r80-deep-bug-excavation-v1.00W.md | conduit/R80 bugs; HIGH non-atomic confirm-flow | I | HIGH: `staEmailActions.ts:120-155` 3 writes, no RPC/txn | keep |
-| audits/20260725-conduit-r80-docs-code-audit-v1.00W.md | conduit+R80 docs↔code audit (36 docs) | I | SUBSTANTIVE-MATCH/PARTIAL pending closure | keep |
-| audits/20260725-crm7-deep-bug-excavation-v1.00W.md | crm7 P0–P3 bug hunt | I | P0 open: `get_email_integration_token` RPC absent; `emailService.ts:584-625` | keep |
-| audits/20260725-crm7-docs-code-audit-v1.00W.md | crm7 feature docs↔code verdicts | I | STALE-DOC: xero ref (`useFeatureFlags.ts:73`); doc-storage OPEN (crm7#1056-#1058) | keep |
+| audits/20260725-conduit-r80-docs-code-audit-v1.00F.md | conduit+R80 docs↔code audit (36 docs) | I | SUBSTANTIVE-MATCH/PARTIAL pending closure | keep |
+| audits/20260725-crm7-deep-bug-excavation-v1.00F.md | crm7 P0–P3 bug hunt | I | P0 open: `get_email_integration_token` RPC absent; `emailService.ts:584-625` | keep |
+| audits/20260725-crm7-docs-code-audit-v1.00F.md | crm7 feature docs↔code verdicts | I | STALE-DOC: xero ref (`useFeatureFlags.ts:73`); doc-storage OPEN (crm7#1056-#1058) | keep |
 | audits/20260725-dead-duplicate-code-audit-v1.00W.md | Dead/dup code inventory | I | DUPLICATE_CONSOLIDATE (LocalisedDateInput ×6) not extracted | keep |
-| audits/20260725-jodie-parity-matrix-v1.00W.md | Jodie UI-action→tool parity matrix | I | MISSING/PARTIAL rows; stale re: leave/FO | keep |
+| audits/20260725-jodie-parity-matrix-v1.00F.md | Jodie UI-action→tool parity matrix | I | MISSING/PARTIAL rows; stale re: leave/FO | keep |
 | dashboard/README.md | Plan dashboard architecture/refresh | L | Dashboard live per AGENTS.md §10 | keep (living) |
 | email-templates/README.md | Supabase auth email templates + theme | L | README; raw hex vs OKLCH (minor) | keep (living) |
 | operator-screenshots/README.md | Screenshot capture protocol | L | Protocol README | keep (living) |
@@ -137,36 +137,36 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | plans/20260504-typescript-6-migration-evaluation-v1.00A.md | TS 5→6 migration across 6 apps (bsuite#211) | C | TS `~6.0.3`/`^6.0.3` in crm7:198, R80.3:126, conduit:108, braden:143, throughput:94, BSU:158 | archive |
 | plans/20260506-codehouse-parity-and-platform-360-v1.00W.md | Index for 35 parity gaps + Platform-360 | I | §2 "delivers WS-A1+A4+D scaffolding+E spec only"; rest deferred | keep |
 | plans/20260506-codehouse-parity/20260506-portal-*.md (9 files: braden-marketing, bsu-admin, bsu-tenant-admin, conduit-candidate, conduit-careers, conduit-employer, conduit-recruiter, crm7-internal, r80-3-calculator) | Per-portal gap specs | I | Pervasive `(TODO: audit)` RLS rows; missing tables + unshipped edge fns (`sms-dispatcher`, `stp-submit`, `verify-right-to-work`, `e-sign-offer`) | keep |
-| plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md | WS-E dev-only `/dev/feature-builder` spec | I | `status: W`; paths "(planned)"; route not built | keep |
+| plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md | WS-E dev-only `/dev/feature-builder` spec | I | `status: W`; paths "(planned)"; route not built | keep |
 | plans/20260506-codehouse-parity/README.md | Index of 9 portal sub-plans + spec | L | Pure INDEX | keep (living) |
-| plans/20260507-feature-builder-ux-red-team-v1.00W.md | FB UX red-team + Phase 0.5 | I | "under review"; §3 P1 frictions open | keep |
-| plans/20260510-universal-canvas-capability-implementation-v1.00W.md | Systemic canvas/drag fix across 6 apps | I | `status: W (not yet executed)` | keep |
+| plans/20260507-feature-builder-ux-red-team-v1.00F.md | FB UX red-team + Phase 0.5 | I | "under review"; §3 P1 frictions open | keep |
+| plans/20260510-universal-canvas-capability-implementation-v1.00F.md | Systemic canvas/drag fix across 6 apps | I | `status: W (not yet executed)` | keep |
 | plans/20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md | O.11 theme centralisation + O.12/O.13 | I | "O.11 POC first" forward-looking | keep |
 | plans/20260513-bsuite-consolidated-hardening-v1.00W.md | 7-phase hardening, ~25-35 PRs | I | Phase 0 step 0.2 "NEXT"; Phase 1.5 SMTP "DEFERRED → bsuite#1505" | keep |
 | plans/20260513-hf4-pgtap-rls-harness-v1.00A.md | pgTAP anon-context RLS harness (bsuite#866) | C | `crm7/supabase/tests/database/00_harness_helpers.sql`…`06_payroll_records_rls.sql`; CRM7 PR #949 | archive |
 | plans/20260513-ws4-timesheet-state-vocab-alignment-v1.00A.md | Align TS TimesheetState to 7-state DB enum (HF-2) | C | `crm7/src/types/entities.ts:466-467`; transition map :454-459; CRM7 PR #948 | archive |
-| plans/20260521-reports-w2-uplift-implementation-v1.00W.md | W2 Airtable-style reports uplift (Tasks 1–9) | I | Tasks 1–9 mostly Merged (crm7#840…#987) but "Task 3a Deferred" open | keep |
+| plans/20260521-reports-w2-uplift-implementation-v1.00F.md | W2 Airtable-style reports uplift (Tasks 1–9) | I | Tasks 1–9 mostly Merged (crm7#840…#987) but "Task 3a Deferred" open | keep |
 | plans/20260609-production-readiness-next-steps-plan-v1.00W.md | Active production-readiness umbrella | I | Open bsuite#1505, crm7#661/#662/#530; STATUS.md ACTIVE | keep |
 | plans/20260611-docs-roadmap-closure-audit-v1.00A.md | One-off closure audit; 37 archived + 6 renamed | C | PR bsuite#1520 + #1523 merged 2026-06-11 | archive |
-| plans/20260617-product-tails-continuation-prompt-v1.00W.md | Handoff prompt for remaining product tails | I | Open scope table | keep |
+| plans/20260617-product-tails-continuation-prompt-v1.00F.md | Handoff prompt for remaining product tails | I | Open scope table | keep |
 | plans/20260618-recruitment-comms-rams-cluster-plan-v1.00A.md | Cluster SHIPPED + prod-verified 2026-06-24 | I | conduit#221/#225/#227/#229 CLOSED; §4 ADMS APIM-key / RAMS final-lodgement gap open | keep |
-| plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md | Subordinated remaining-work roadmap | I | CRM7 wizards #659-#662 blocked; R80.3#320 OPEN; #1322/#479 operator-blocked | keep |
-| plans/20260629-remaining-work-continuation-prompt-v1.00W.md | Continuation prompt for 0629 roadmap | I | Points at open items | keep |
-| plans/20260701-docs-plans-closure-audit-v1.00W.md | Working closure audit + execution log | I | conduit#218/#219/#231 + crm7#1090 CLOSED; §12.3 deploy fix pending | keep |
-| plans/20260703-gto-e2e-gap-map-v1.00W.md | W1 file-grounded gap map of GTO cycle | I | `boot_assessments`/`charge_rate_audit_log`/`award_rate_cache` missing live; stages 3/6 MISSING | keep |
+| plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md | Subordinated remaining-work roadmap | I | CRM7 wizards #659-#662 blocked; R80.3#320 OPEN; #1322/#479 operator-blocked | keep |
+| plans/20260629-remaining-work-continuation-prompt-v1.00F.md | Continuation prompt for 0629 roadmap | I | Points at open items | keep |
+| plans/20260701-docs-plans-closure-audit-v1.00F.md | Working closure audit + execution log | I | conduit#218/#219/#231 + crm7#1090 CLOSED; §12.3 deploy fix pending | keep |
+| plans/20260703-gto-e2e-gap-map-v1.00F.md | W1 file-grounded gap map of GTO cycle | I | `boot_assessments`/`charge_rate_audit_log`/`award_rate_cache` missing live; stages 3/6 MISSING | keep |
 | plans/20260703-unified-authoring-surface-plan-v1.03A.md | In-context authoring surface; Phase-1 authorized | I | §11 BLOCKING pre-work + §10 open; not executed | keep |
-| plans/20260709-hermes-deep-dive-audit-prompt-refined-v1.00W.md | Refined prompt for Hermes audit instructions | I | Prompt artifact | keep |
-| plans/20260716-bsuite-completion-program-plan-v1.00W.md | Completion program orchestration + CC Directive | I | Clusters A-F open; W4/W5/W9/W10 unexecuted | keep |
+| plans/20260709-hermes-deep-dive-audit-prompt-refined-v1.00F.md | Refined prompt for Hermes audit instructions | I | Prompt artifact | keep |
+| plans/20260716-bsuite-completion-program-plan-v1.00F.md | Completion program orchestration + CC Directive | I | Clusters A-F open; W4/W5/W9/W10 unexecuted | keep |
 | plans/20260723-bsuite-documentation-program-design-v1.00A.md | Two-layer docs program design (Approved) | I | Build lanes L1-L4 not executed | keep |
-| plans/20260723-completion-program-refined-v1.00D.md | Refined prompt for completion program | I | W1 publish chain "blocked on operator npm login" | keep |
+| plans/20260723-completion-program-refined-v1.00F.md | Refined prompt for completion program | I | W1 publish chain "blocked on operator npm login" | keep |
 | plans/20260724-bsuite-1322-region-migration-runbook-v1.00D.md · plans/20260724-bsuite-1322-supabase-region-migration-scope-v1.00D.md | Draft Sydney runbook + scope | I | "won't execute without explicit go"; bsuite#1322 OPEN | keep |
-| plans/20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00D.md | Draft email-ingestion build scope for #338 | I | Status D; open design questions | keep |
-| plans/20260724-email-funding-expansion-scope-v1.00D.md | Draft email/funding expansion scope | I | W1-W3 "NOT MODELLED"/"PARTIAL" | keep |
-| plans/20260724-recruitment-employment-handover-design-v1.00D.md | Draft recruitment→employment handover design | I | W1-W3 not built; "RECORD ONLY" | keep |
-| plans/20260724-recurring-bugs-blindspots-refined-v1.00D.md | Refined prompt for recurring-bugs ledger | I | Analysis-only | keep |
-| plans/20260725-docs-deadcode-archive-refined-v1.00D.md · plans/20260725-gto-excellence-program-refined-v1.00D.md · plans/20260725-gto-persona-excellence-design-v1.00D.md | Refined prompts / persona design (Draft) | I | Prompt/design artifacts; not closure exports | keep |
+| plans/20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00F.md | Draft email-ingestion build scope for #338 | I | Status D; open design questions | keep |
+| plans/20260724-email-funding-expansion-scope-v1.00F.md | Draft email/funding expansion scope | I | W1-W3 "NOT MODELLED"/"PARTIAL" | keep |
+| plans/20260724-recruitment-employment-handover-design-v1.00F.md | Draft recruitment→employment handover design | I | W1-W3 not built; "RECORD ONLY" | keep |
+| plans/20260724-recurring-bugs-blindspots-refined-v1.00F.md | Refined prompt for recurring-bugs ledger | I | Analysis-only | keep |
+| plans/20260725-docs-deadcode-archive-refined-v1.00F.md · plans/20260725-gto-excellence-program-refined-v1.00F.md · plans/20260725-gto-persona-excellence-design-v1.00F.md | Refined prompts / persona design (Draft) | I | Prompt/design artifacts; not closure exports | keep |
 | plans/codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W.md | Pay Item Groups parity spec; PR-A–F merged | I | PR-A–F merged (crm7#950-#955); PR-G "npm publish blocked" (bsuite#1363) | keep |
-| plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md | prompt-enhancer provenance output | I | One-off prompt output | keep |
+| plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md | prompt-enhancer provenance output | I | One-off prompt output | keep |
 | plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md | Loop contract for GTO E2E cycle W0-W7 | I | W2-W7 success conditions unmet | keep |
 | plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00W.md | Loop contract for recruitment cluster | I | STATE table stale; RAMS/ADMS gap | keep |
 | plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md | Unified design-language doctrine (Approved) | L | Doctrine cited by INDEX + Reports W2 | keep (living) |

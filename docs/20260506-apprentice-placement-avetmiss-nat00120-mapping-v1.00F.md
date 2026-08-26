@@ -252,7 +252,7 @@ export function mapPlacementToOutcomeIdNational(
 2. ✓ All external URL citations checked — NCVER spec sources verified live (RTO Grow / NSW eReporting webinar / NAT File Guidelines / NSW common errors guide)
 3. ✓ No placeholders without owner+ETA
 4. ✓ Conventional commit `docs(crm7):` prefix
-5. ✓ Naming `20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md`
+5. ✓ Naming `20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00F.md`
 
 ## §17 mutual-reminder (cross-validation by claude-code requested)
 

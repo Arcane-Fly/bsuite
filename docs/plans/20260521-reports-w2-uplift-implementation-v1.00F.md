@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19 + Vite + wouter + TanStack Query + Supabase RPC/views + shadcn + `@bsuite/data-export` + uplift primitives (StepperShell, EmptyState, PermissionMatrix, EntityPicker, FilterBar).
 
-**Frozen Fact:** `FF-REPORTS-W2-20260521`. Supersedes `docs/20260506-reports-parity-spec-v1.00W.md` for any conflicting recommendation (parity spec's 7 bespoke pages → seeded templates instead).
+**Frozen Fact:** `FF-REPORTS-W2-20260521`. Supersedes `docs/20260506-reports-parity-spec-v1.00F.md` for any conflicting recommendation (parity spec's 7 bespoke pages → seeded templates instead).
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
@@ -768,7 +768,7 @@ test(e2e): W2 reports — full scope hierarchy matrix (platform/enterprise/tenan
 **Files:**
 - Modify: `docs/dashboard/data/dashboard-data.json` — add `reports_w2_status` section with progress
 - Modify: `docs/OUTSTANDING.md` — link this plan
-- Modify: `docs/20260506-reports-parity-spec-v1.00W.md` — add superseded-by header pointing to this plan
+- Modify: `docs/20260506-reports-parity-spec-v1.00F.md` — add superseded-by header pointing to this plan
 
 **Step 1: Bump dashboard schema**
 

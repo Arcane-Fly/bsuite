@@ -14,7 +14,7 @@
 > documents, one namespace. A bare "P0-4" means *grace-invite audit write is fire-and-forget* here
 > and *`profiles` INSERT column grant survives for `anon`* there. **Always cite `P0-n` with its
 > source document.** Two other live documents
-> (`20260728-migration-idempotency-audit-v1.00W.md`, `plans/20260728-gap-remediation-plan-v1.00W.md`)
+> (`20260728-migration-idempotency-audit-v1.00F.md`, `plans/20260728-gap-remediation-plan-v1.00F.md`)
 > cite this register's `P0-2` and `P0-4`, and those citations mean *this* document's items.
 >
 > Read this for its evidence trail and its 2026-07-28 measurements. Do not read its counts or
@@ -29,7 +29,7 @@
 
 Method: 8 scoped read-only assessors (subagent-driven-development) + controller live verification
 against the production Supabase project (`tuybltdrdefjblnplpqo`), Vercel, and GitHub Actions.
-Workspace: `.superpowers/sdd/20260728-weekly-gap-assessment-plan-v1.00W/`.
+Workspace: `.superpowers/sdd/20260728-weekly-gap-assessment-plan-v1.00F/`.
 
 **Coverage: 5 of 8 assessment areas COMPLETE. 3 areas INCOMPLETE** — the session hit its usage
 limit and killed the shared-packages, security-verification, and frontend/backend-mapping

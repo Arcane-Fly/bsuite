@@ -36,7 +36,7 @@
 **Generated:** 2026-04-24 (docs reconciliation pass — top-level `docs/*.md` + plan indexes)
 **Content last reconciled:** 2026-07-08 — pointers updated to the then-current execution queue; leave/pay-periods/admin-parity parity tables marked DONE (see §Updates).
 
-> **2026-07-08 pointer update:** The execution queue reference below points to `docs/20260501-merged-execution-backlog-v1.00W.md` which is now archived (`docs/archive/2026-07/`). The **current** active execution queue is [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md). For GTO-specific work, see [`docs/plans/20260703-gto-e2e-gap-map-v1.00W.md`](./plans/20260703-gto-e2e-gap-map-v1.00W.md).
+> **2026-07-08 pointer update:** The execution queue reference below points to `docs/20260501-merged-execution-backlog-v1.00W.md` which is now archived (`docs/archive/2026-07/`). The **current** active execution queue is [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md). For GTO-specific work, see [`docs/plans/20260703-gto-e2e-gap-map-v1.00F.md`](./plans/20260703-gto-e2e-gap-map-v1.00F.md).
 >
 > **2026-07-28 repoint:** The 2026-06-29 doc referenced above was itself subordinated on 2026-07-27
 > to the suite-wide canonical. The **canonical master roadmap is now**
@@ -58,7 +58,7 @@
 
 > **🧭 CANONICAL MASTER ROADMAP (repointed 2026-07-28):** The suite-wide canonical is
 > [`docs/00-roadmap/20260112-master-roadmap-v1.00F.md`](./00-roadmap/20260112-master-roadmap-v1.00F.md).
-> The previously-designated queue, [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md),
+> The previously-designated queue, [`docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md`](./plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md),
 > was subordinated to it on 2026-07-27 and is retained for historical phase context only. The
 > earlier `20260501-merged-execution-backlog-v1.00W.md` and `20260425-bsuite-finish-line-roadmap-v1.00W.md`
 > remain archived in `docs/archive/2026-07/`. This index remains a per-file status tracker for each
@@ -123,7 +123,7 @@ Files with `.00W` (Working) or `.00D` (Draft) status that have open actions. Upd
 
 ### `plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` (added 2026-05-06)
 
-Index plan integrating Codehouse Workforce-One parity tracking with full Platform-360 capability/portal/role coverage. Companion files: 9 portal sub-plans + 1 visual feature builder spec under `plans/20260506-codehouse-parity/`; refined-prompt provenance at `plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md`.
+Index plan integrating Codehouse Workforce-One parity tracking with full Platform-360 capability/portal/role coverage. Companion files: 9 portal sub-plans + 1 visual feature builder spec under `plans/20260506-codehouse-parity/`; refined-prompt provenance at `plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md`.
 
 | # | Remaining action | Owner |
 |---|-----------------|-------|
@@ -135,7 +135,7 @@ Index plan integrating Codehouse Workforce-One parity tracking with full Platfor
 | 6 | Red-team review across all 9 portal sub-plans before flipping plan W→A | multi-agent-red-team-planning |
 | 7 | Continue bsuite#570 after the adapter/credential/settings/status/EOFY-provider-request slices — crm7#988 merged MYOB/Astute export adapters, crm7#989 merged Vault-backed provider credential storage plus Astute DB provider support, crm7#990 surfaced those credentials in Settings, crm7#991 added ADR-compatible provider-passthrough STP/EOFY status tracking on payroll runs, and crm7#992 added the guarded EOFY provider request confirmation flow. Remaining work is provider API acknowledgement sync beyond the tracked handoff; direct ATO lodgement remains blocked by ADR 0004 unless superseded. | CRM7 implementer |
 
-### `plans/20260521-reports-w2-uplift-implementation-v1.00W.md` (added 2026-05-21)
+### `plans/20260521-reports-w2-uplift-implementation-v1.00F.md` (added 2026-05-21)
 
 Reports W2 uplift execution ledger for Codehouse parity reports. Tasks 4, 6.1-6.6, Task 7, and Task 9 are merged on `development`; remaining work is the deferred Task 3a stepper extraction reuse guardrail and follow-on scheduling UI.
 

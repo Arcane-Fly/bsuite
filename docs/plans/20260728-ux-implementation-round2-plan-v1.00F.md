@@ -1,7 +1,7 @@
 # UX Implementation — Round 2 — 2026-07-28
 
 Implements the remaining VERIFIED-OPEN items from
-`docs/20260728-operator-ux-bug-register-v1.00W.md` after Round 1 merged Tasks 1–5.
+`docs/20260728-operator-ux-bug-register-v1.00F.md` after Round 1 merged Tasks 1–5.
 
 Same verifier-gated loop contract as Round 1: binary success per task, verifier ≠ maker,
 max 3 fix rounds, no-progress → escalate.

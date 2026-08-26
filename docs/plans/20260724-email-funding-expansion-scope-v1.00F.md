@@ -1,6 +1,6 @@
 # Email + Funding Expansion — Scope
 
-> **Naming:** `20260724-email-funding-expansion-scope-v1.00D.md` · Status **D** (Draft — brainstorm per `agents/brainstorming`, needs operator design approval before build) · Operator directives 2026-07-24.
+> **Naming:** `20260724-email-funding-expansion-scope-v1.00F.md` · Status **D** (Draft — brainstorm per `agents/brainstorming`, needs operator design approval before build) · Operator directives 2026-07-24.
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.

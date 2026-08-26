@@ -2,7 +2,7 @@
 
 > **Recovery note (2026-07-28):** authored untracked and destroyed by a concurrent agent's git
 > operation before being committed. Restored from the surviving task briefs in
-> `.superpowers/sdd/20260728-gap-remediation-plan-v1.00W/` and the controller ledger.
+> `.superpowers/sdd/20260728-gap-remediation-plan-v1.00F/` and the controller ledger.
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
@@ -11,7 +11,7 @@
 > restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
 > looks current and is still broken. Authority: `docs/README.md`.
 
-Fixes the residue of [20260728-weekly-gap-register-v1.00W.md](../20260728-weekly-gap-register-v1.00W.md)
+Fixes the residue of [20260728-weekly-gap-register-v1.00F.md](../20260728-weekly-gap-register-v1.00F.md)
 after re-verification. Hermes closed most P0s between the assessment and this plan; only the items
 below remained open, each re-confirmed live at 2026-07-28T07:45Z.
 
@@ -84,7 +84,7 @@ Three documented claims contradict verified reality:
 - `docs/00-roadmap/20260112-master-roadmap-v1.00F.md:38` — seat caps marked `[x]` complete. Server-side enforcement landed after that tick; verify and restate accurately rather than just re-ticking.
 - `docs/20260728-overnight-worldclass-closeout-v1.00W.md:245` — "~65 open across repos"; actual is 85.
 
-Also add a short "verified live" status block to `docs/20260728-weekly-gap-register-v1.00W.md`
+Also add a short "verified live" status block to `docs/20260728-weekly-gap-register-v1.00F.md`
 recording which register items are now closed and by which commit. Do not rewrite the register's
 findings — append status only.
 

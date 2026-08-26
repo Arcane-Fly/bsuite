@@ -625,7 +625,7 @@ Every numbered step in §4 has a Skill column and an MCP column. No step has `�
 except trivial Bash invocations. Audit:
 
 ```
-$ grep -E '^\| [A-Z]\.' docs/plans/20260510-universal-canvas-capability-implementation-v1.00W.md \
+$ grep -E '^\| [A-Z]\.' docs/plans/20260510-universal-canvas-capability-implementation-v1.00F.md \
     | awk -F'|' 'NF>=5 { if ($4 ~ /^ *— *$/ && $5 ~ /^ *— *$/) print "MISSING:", $2 }'
 ```
 

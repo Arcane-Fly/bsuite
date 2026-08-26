@@ -7,7 +7,7 @@
 > restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
 > looks current and is still broken. Authority: `docs/README.md`.
 
-`20260703-gto-e2e-gap-map-v1.00W.md` · Status W · Loop contract:
+`20260703-gto-e2e-gap-map-v1.00F.md` · Status W · Loop contract:
 [`docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md`](./loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md)
 
 **Method:** single-threaded research (no subagent fan-out — W1 retry after the

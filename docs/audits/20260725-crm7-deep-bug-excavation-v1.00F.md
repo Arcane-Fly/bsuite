@@ -1,6 +1,6 @@
 # Deep Bug Excavation — crm7 (Read-Only)
 
-> **File:** `20260725-crm7-deep-bug-excavation-v1.00W.md`  
+> **File:** `20260725-crm7-deep-bug-excavation-v1.00F.md`  
 > **Status:** W (Working) · **Mode:** READ-ONLY (no source files modified)  
 > **Date:** 2026-07-25  
 > **Scope:** Implementation bugs in `crm7` only. STRICTLY BSuite.  

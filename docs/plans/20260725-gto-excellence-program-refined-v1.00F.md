@@ -51,7 +51,7 @@ Drive BSuite from “shipped features” to **world-class GTO product**: (1) exc
 ```
 STRICTLY BSuite. Execute excellence program:
 
-1) WRITE brainstorm design: docs/plans/20260725-gto-persona-excellence-design-v1.00D.md
+1) WRITE brainstorm design: docs/plans/20260725-gto-persona-excellence-design-v1.00F.md
    Personas: platform_developer, enterprise_admin, org_admin, field_officer, payroll_finance,
    employee_gto_staff, apprentice, host_employer, aasn (if present). For each: goals, must-view,
    must-act, Jodie parity, friction points.

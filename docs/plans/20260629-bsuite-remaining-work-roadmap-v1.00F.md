@@ -2,7 +2,7 @@
 
 > **SUBORDINATED (2026-07-27):** The canonical master is `docs/00-roadmap/20260112-master-roadmap-v1.00F.md`. This 0629 doc is retained for historical phase context only; its open items have been re-validated in the 2026-07-27 full close-out sweep. Do not execute from this doc without checking the master first.
 
-> **Naming:** `20260629-bsuite-remaining-work-roadmap-v1.00W.md` · Status **W** (Working) · Authority for "what's left" across all 7 repos as of 2026-06-29.
+> **Naming:** `20260629-bsuite-remaining-work-roadmap-v1.00F.md` · Status **W** (Working) · Authority for "what's left" across all 7 repos as of 2026-06-29.
 > **Source-of-truth pairing:** this doc curates the prioritised plan; the live dashboard (`docs/dashboard/`) + `gh issue list` per repo are the machine-truth. Reconcile both when items move.
 > **Skill to execute each item:** `executing-plans` / `subagent-driven-development`; per-item skills are named inline. Every DB item = floor-gated migration + `get_advisors` triage; every user-facing item = §12.3 deployed signed-in verify.
 > **Staleness note (2026-06-29 post-regression):** §0 state claims were written before the submodule-pointer regression was discovered and fixed (PR #1558/#1559). Re-verify all alignment claims before relying on them. The verification recipe must check BOTH branch SHAs AND parent gitlinks — see continuation prompt.

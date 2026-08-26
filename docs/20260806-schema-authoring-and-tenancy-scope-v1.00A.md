@@ -358,6 +358,6 @@ Stated plainly rather than filled in from memory:
 
 - `docs/20260507-admin-parity-spec-v1.00W.md` — adjacent (admin/settings parity), does not cover this
 - `docs/20260722-developer-portal-investigation-v1.00W.md` — branding tiers, read-only
-- `docs/20260727-schema-package-pin-plan-v1.00W.md` — **STALE**: targets `@bsuite/schema-builder@1.0.1`; live is `1.0.3`
+- `docs/20260727-schema-package-pin-plan-v1.00F.md` — **STALE**: targets `@bsuite/schema-builder@1.0.1`; live is `1.0.3`
 - `crm7/supabase/migrations/20260805230000_tenant_field_definitions_allow_platform_rows.sql` — fixed the policy half of §2.4
 - `crm7/supabase/migrations/20260806160000_platform_admin_act_as_tenant.sql` — the act-as mechanism this model builds on

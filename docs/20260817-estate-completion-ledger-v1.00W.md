@@ -1017,7 +1017,7 @@ citations of the register's `V-n` in this ledger alone. A distinct prefix was ch
 renumbering into `V-12…V-19` so the two namespaces are structurally disjoint rather than merely
 non-overlapping today.
 
-**A second collision of the same shape, also resolved.** `20260728-weekly-gap-register-v1.00W.md`
+**A second collision of the same shape, also resolved.** `20260728-weekly-gap-register-v1.00F.md`
 defines **P0-1…P0-8** for an entirely different set than the register's **P0-1…P0-8** — exactly
 overlapping ranges, and two other live documents cite its `P0-2` and `P0-4`. That register was
 already superseded by §9 of the 2026-08-14 register but carried no marker on its own face, so a

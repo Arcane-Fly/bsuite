@@ -7,7 +7,7 @@
 > restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
 > looks current and is still broken. Authority: `docs/README.md`.
 
-Implements the VERIFIED-OPEN items from `docs/20260728-operator-ux-bug-register-v1.00W.md`.
+Implements the VERIFIED-OPEN items from `docs/20260728-operator-ux-bug-register-v1.00F.md`.
 Executed as a verifier-gated loop (loop-engineering) via subagent-driven-development.
 
 ## Loop contract

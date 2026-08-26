@@ -33,7 +33,7 @@ The careers portal is unauthenticated. Codehouse offers no public job-board (mat
 | Role | Auth source | JWT claim / RLS reference |
 |---|---|---|
 | `public` | none (anonymous Supabase anon-key reads) | `auth.role() = 'anon'` — RLS allows SELECT on `jobs WHERE published=true AND tenant_id = <derived from subdomain or query>` (TODO: audit) |
-| `candidate` (post-application) | Conduit Supabase Native Auth (auto-created on first apply) | becomes `candidate` role per [`20260506-portal-conduit-candidate-v1.00W.md`](./20260506-portal-conduit-candidate-v1.00W.md) |
+| `candidate` (post-application) | Conduit Supabase Native Auth (auto-created on first apply) | becomes `candidate` role per [`20260506-portal-conduit-candidate-v1.00F.md`](./20260506-portal-conduit-candidate-v1.00F.md) |
 
 ## Capability matrix
 

@@ -22,7 +22,7 @@
 **Last updated:** 2026-07-24 (v1.04A — Leads/Funding Offsets/Org Documents added to §1; lifecycle-handover exception class documented)
 
 **Changelog (top):**
-- 2026-07-24 (v1.04A): Added Leads (CRM7-owned, braden captures via lead-capture path), Funding Offsets (R8-owned), Org Documents (CRM7-owned) to §1. Documented the lifecycle-handover exception: one-time ownership-domain transitions may take an immutable evidence copy with provenance (a migration, not a mirror) — approved for the recruitment→employment handover. Full cross-cutting audit report at `docs/20260724-oneshot-cross-cutting-audit-v1.00W.md`.
+- 2026-07-24 (v1.04A): Added Leads (CRM7-owned, braden captures via lead-capture path), Funding Offsets (R8-owned), Org Documents (CRM7-owned) to §1. Documented the lifecycle-handover exception: one-time ownership-domain transitions may take an immutable evidence copy with provenance (a migration, not a mirror) — approved for the recruitment→employment handover. Full cross-cutting audit report at `docs/20260724-oneshot-cross-cutting-audit-v1.00F.md`.
 - 2026-05-25 (v1.03A): Updated §1 Entity Ownership Map Host Employers row from `clients` (type=host) to `employers` to match current production implementation.
 
 ---
@@ -81,7 +81,7 @@ Other apps may READ the entity but NEVER create or edit it independently.
 | **Funding Offsets** | R8 | Funding-offset form | CRM7 (placement ref), BSU (reporting) | `funding_offsets` |
 | **Org Documents** | CRM7 | Org document editor | Assigned users (read/ack) | `org_documents` |
 
-> **Lifecycle-handover exception (approved 2026-07-24):** the one-shot rule targets *data-entry duplication and live mirrors*, not one-time lifecycle transitions. When a record changes ownership domain (e.g. a Conduit **candidate** becomes a CRM7 **apprentice** on offer acceptance), the receiving domain may take an **immutable copy** of evidence artifacts (documents) with provenance markers — this is a *migration*, not a mirror, and is not a violation. Live ongoing access remains a DRY read; only the transition event copies, and only for legal-evidence artifacts where deletion-independence is required (design: `docs/plans/20260724-recruitment-employment-handover-design-v1.00D.md` §W2 Option A, operator-approved).
+> **Lifecycle-handover exception (approved 2026-07-24):** the one-shot rule targets *data-entry duplication and live mirrors*, not one-time lifecycle transitions. When a record changes ownership domain (e.g. a Conduit **candidate** becomes a CRM7 **apprentice** on offer acceptance), the receiving domain may take an **immutable copy** of evidence artifacts (documents) with provenance markers — this is a *migration*, not a mirror, and is not a violation. Live ongoing access remains a DRY read; only the transition event copies, and only for legal-evidence artifacts where deletion-independence is required (design: `docs/plans/20260724-recruitment-employment-handover-design-v1.00F.md` §W2 Option A, operator-approved).
 
 ---
 

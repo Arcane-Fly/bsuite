@@ -1,6 +1,6 @@
 # BSuite Docs + Plans Closure Audit
 
-> **Naming:** `20260701-docs-plans-closure-audit-v1.00W.md` · Status **W** (Working) · Created 2026-07-01.
+> **Naming:** `20260701-docs-plans-closure-audit-v1.00F.md` · Status **W** (Working) · Created 2026-07-01.
 > **Scope:** Parent `bsuite` plus submodule docs/plans for `business-suite-unified`, `crm7`, `conduit`, `braden`, `R80.3`, and `throughput`.
 > **Validation loop:** §9.1 output-equivalence/status-equivalence. Claims below are tied to Git state, package manifests, file presence, and current GitHub issue/PR state.
 

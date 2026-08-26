@@ -61,7 +61,7 @@
 ```
 STRICTLY BSuite. Work through WS H → D (parallel) → C → A → I (scoped) → R.
 
-1) HEADROOM: env -u PYTHONPATH headroom learn on bsuite; if LLM backend fails, retry --model glm-5.2 or qwen. Summarize failure patterns; write short note to docs/20260725-headroom-learn-notes-v1.00W.md if any signal.
+1) HEADROOM: env -u PYTHONPATH headroom learn on bsuite; if LLM backend fails, retry --model glm-5.2 or qwen. Summarize failure patterns; write short note to docs/20260725-headroom-learn-notes-v1.00F.md if any signal.
 
 2) DOCS↔CODE AUDIT (6 parallel read-only agents, one per app). For each repo:
    - Sample docs/ and docs/plans/ (non-archive) for features/requirements

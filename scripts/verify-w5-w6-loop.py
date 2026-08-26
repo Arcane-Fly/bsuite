@@ -23,7 +23,7 @@ def sections(text):
             out.setdefault(m.group(1), seg)
     return out
 
-M = (ROOT / 'docs/audits/20260725-jodie-parity-matrix-v1.00W.md').read_text()
+M = (ROOT / 'docs/audits/20260725-jodie-parity-matrix-v1.00F.md').read_text()
 EA = sections((ROOT / 'business-suite-unified/src/lib/manuals/manuals/enterprise-admin.ts').read_text())
 EM = sections((ROOT / 'business-suite-unified/src/lib/manuals/manuals/employee.ts').read_text())
 FO = sections((ROOT / 'business-suite-unified/src/lib/manuals/manuals/field-officer.ts').read_text())
