@@ -32,8 +32,16 @@ vi.mock('@xyflow/react', () => ({
   MiniMap: () => null,
   // Reflect the style prop into the DOM the way the real component does, so
   // the assertion sees what a browser would be handed.
-  ReactFlow: ({ children, style }: { children?: React.ReactNode; style?: React.CSSProperties }) => (
-    <div data-testid="mock-reactflow" style={style}>
+  ReactFlow: ({ children, style, fitViewOptions, minZoom }: {
+    children?: React.ReactNode; style?: React.CSSProperties;
+    fitViewOptions?: { minZoom?: number; maxZoom?: number }; minZoom?: number;
+  }) => (
+    <div
+      data-testid="mock-reactflow"
+      style={style}
+      data-fit-min-zoom={fitViewOptions?.minZoom ?? ''}
+      data-canvas-min-zoom={minZoom ?? ''}
+    >
       {children}
     </div>
   ),
@@ -130,3 +138,48 @@ describe('hasDefiniteBox — the predicate itself', () => {
     expect(hasDefiniteBox(s('height: 420px'))).toBe(true);
   });
 });
+
+
+/**
+ * THE OPENING VIEW MUST BE LEGIBLE.
+ *
+ * `minZoom={0.05}` on the canvas exists so a user CAN zoom out to the whole
+ * diagram. It was never meant to be where the page OPENS. Without a floor on
+ * the initial fit, 44 entities drag the opening zoom down until field text
+ * renders at 4.5-7 device pixels — the state the operator described as "so
+ * confusing it was not functional".
+ *
+ * These assert the RELATIONSHIP, not the numbers. Any initial floor that keeps
+ * text legible passes, and the canvas floor must stay lower so the deliberate
+ * "Fit" overview is still reachable. Pinning 0.75 as a literal would be the
+ * kind of test that locks in today's value and fails the next honest tuning.
+ */
+describe('SchemaCanvas opening zoom', () => {
+  const renderPopulated = () =>
+    render(
+      <SchemaCanvas
+        controller={populatedController()}
+        tenantId="t1"
+        appScope="crm7"
+        onError={noop}
+      />,
+    )
+
+  it('floors the INITIAL fit at a zoom where labels are still readable', () => {
+    renderPopulated()
+    const flow = screen.getByTestId('mock-reactflow')
+    const fitMin = Number(flow.getAttribute('data-fit-min-zoom'))
+    expect(Number.isFinite(fitMin)).toBe(true)
+    // 0.5 is where the operator measured 4.5-7px text. The floor must be above it.
+    expect(fitMin).toBeGreaterThan(0.5)
+  })
+
+  it('still lets the user zoom further out than the opening view', () => {
+    renderPopulated()
+    const flow = screen.getByTestId('mock-reactflow')
+    const fitMin = Number(flow.getAttribute('data-fit-min-zoom'))
+    const canvasMin = Number(flow.getAttribute('data-canvas-min-zoom'))
+    // If these were equal, "Fit to see everything" would be unreachable.
+    expect(canvasMin).toBeLessThan(fitMin)
+  })
+})

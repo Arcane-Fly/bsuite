@@ -855,11 +855,21 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
           flowRef.current = inst;
         }}
         fitView
-        // React Flow's default minZoom is 0.5 and `fitView` will not go below
-        // it. 44 entities are ~1540px wide and thousands tall, so fitView hit
-        // the clamp, gave up, and showed roughly a third of the diagram at a
-        // scale where field text rendered at 4.5-7 device px. Measured
-        // viewport transform before this line existed: exactly scale(0.5).
+        // THE OPENING VIEW MUST BE LEGIBLE. `minZoom={0.05}` below exists so a
+        // user CAN zoom out to the whole diagram; it was never meant to be
+        // where the page opens.
+        //
+        // Without a floor on the INITIAL fit, 44 entities (~1540px wide and
+        // thousands tall) drag the opening zoom down until field text renders
+        // at 4.5-7 device pixels — the state the operator described as "so
+        // confusing it was not functional". Showing everything illegibly is not
+        // better than showing some of it legibly; both were tried and neither
+        // is a usable default.
+        //
+        // So the initial fit stops at 0.75, and the toolbar's "Fit" button —
+        // which passes its own options and is a deliberate act — stays free to
+        // go all the way out. Open readable, overview one click away.
+        fitViewOptions={{ padding: 0.2, minZoom: 0.75, maxZoom: 1.2 }}
         minZoom={0.05}
         maxZoom={2}
         // Without this the class never lands on `.react-flow`, and the library
