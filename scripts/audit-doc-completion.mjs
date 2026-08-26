@@ -489,8 +489,32 @@ console.log(`  already marked complete in the filename        ${marked.length}`)
 console.log(`    ...of those, citing NO live gate             ${markedUnbindable.length}   <-- the claim rests on nothing`);
 console.log(`  CITE a gate or workflow that EXISTS            ${bindable.length}   <-- the only docs that can ever be marked`);
 console.log(`  cite a gate that NO LONGER EXISTS              ${dead.length}   <-- citing a ghost; reads as evidence`);
-console.log(`  cite nothing checkable                         ${rows.length - bindable.length - dead.length}`);
+// COUNTED FROM THE SET, NOT BY SUBTRACTION — for the same reason the ratchet is.
+// `bindable` and `dead` OVERLAP: a doc citing one gate that exists and another that
+// does not is in both, so `rows - bindable - dead` subtracts it twice. It reads
+// correct today only because `dead` happens to be empty; it is wrong the moment a
+// gate is deleted, and wrong quietly, which is the worst way for a number to be
+// wrong. Fixing the ratchet and leaving this line is fixing the instance, not the
+// class.
+const citeNothing = rows.filter((r) => !r.bindable && r.deadCitations.length === 0);
+console.log(`  cite nothing checkable                         ${citeNothing.length}`);
 console.log(`  historical records (by path or banner)         ${rows.filter((r) => r.archival).length}`);
+
+// NAME THE UNEVIDENCED COMPLETIONS.
+//
+// "55 of 100 marked complete cite no live gate" is the single most actionable
+// number this tool produces and it was printed without a single filename. A
+// completion marker is a claim that the work is done and provable; one that cites
+// nothing is a claim resting on nothing, and it is indistinguishable from a real
+// completion to anyone reading the file list. Left unnamed it cannot be triaged —
+// each is either a doc that should cite its gate, or a marker that was not earned.
+if (markedUnbindable.length > 0) {
+  console.log(`\n  MARKED COMPLETE, CITING NOTHING RUNNABLE — ${markedUnbindable.length} live doc(s).`);
+  console.log('  Each is either missing its citation or wearing a marker it did not earn:');
+  for (const r of [...markedUnbindable].sort((a, b) => a.path.localeCompare(b.path))) {
+    console.log(`    ${r.path}`);
+  }
+}
 
 // A SILENT CAP IS THE DEFECT, NOT THE CAP.
 //
