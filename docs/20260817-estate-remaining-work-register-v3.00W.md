@@ -350,8 +350,11 @@ R80.4 8, parent 12** — **71 documents**, roughly one in six of the estate.
 4. **Delete the "the table does not exist, every operation errors" phrasing in crm7's documents-UX
    doc** — it invites deletion of a table whose DDL is in the repo. Replace with M-1's framing: the
    DDL exists, the migration was never applied.
-5. **Fill or delete throughput's five empty component templates** — they still contain
-   `[Describe what the component does…]` verbatim.
+5. ~~**Fill or delete throughput's five empty component templates.**~~ **Done 2026-08-17,
+   verified 2026-08-27.** All five were filled from `src/components/ui/*.tsx` and are on
+   `origin/development` at 314–337 lines each. Do **not** act on the "delete" branch — it would
+   destroy 1,637 lines of accurate documentation. What tripped the sweep was each file's own
+   provenance banner quoting the token it had replaced.
 
 **Index integrity is broken in every repo.** crm7's README links seven documents that do not exist;
 BSU's links three plus a dangling archive path; conduit's links three; throughput's four; R80.4's
