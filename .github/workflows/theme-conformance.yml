@@ -629,8 +629,92 @@ jobs:
       - name: Inventory + authenticated-coverage ratchet
         run: scripts/audit-routes.sh --inventory --require-authenticated 25
 
+  # WHICH DATABASE the signed-in sweep below is allowed to write to — decided
+  # BEFORE that job even starts, not inside it.
+  #
+  # WHY THIS JOB EXISTS (2026-08-26). per-page-authenticated used to feed
+  # `secrets.VITE_SUPABASE_URL` / `secrets.VITE_SUPABASE_ANON_KEY` — the
+  # PRODUCTION Supabase project `tuybltdrdefjblnplpqo`, holding real client
+  # data (FutureBuild Academy) — to crm7's own auth.setup.ts, which the sweep
+  # runs via scripts/theme-session.sh to mint a signed-in session. That mint
+  # creates rows. crm7/tests/e2e/support/project-guard.ts now calls
+  # `assertNonProductionProject()` from inside auth.setup.ts and refuses to
+  # run against a project in PRODUCTION_PROJECT_REFS — its own error text
+  # records that this exact configuration "wrote 381 synthetic rows across 7
+  # tables into it over 37 CI runs" on 2026-08-26 (crm7's incident; caught
+  # here in run 32968236558/job/98175589272 once the parent's stale crm7
+  # gitlink was advanced past the guard). The guard is correct and is NOT
+  # weakened here — this job exists so the parent stops handing it a
+  # production URL at all.
+  #
+  # crm7 closed its OWN equivalent gate this way (crm7#2046, crm7 e2e.yml):
+  # give each PR a Supabase Branching preview database, resolved from
+  # `github.head_ref` via crm7/scripts/ci/resolve-supabase-branch.sh. That
+  # resolver depends on the Supabase GitHub integration recognising
+  # `HEAD_REF` as an actual git branch IN THE `GaryOcean428/crm7` REPOSITORY
+  # — it matches branches by `git_branch`, a field that integration
+  # populates. crm7's own PRs satisfy this because their head ref IS a crm7
+  # branch. A PARENT (bsuite) PR's head ref is a bsuite-only branch name with
+  # no corresponding crm7 branch, so the same resolver cannot produce a
+  # branch database that actually replays the migrations the parent's crm7
+  # gitlink is pinned to — it would either fail outright or, worse, silently
+  # create an orphaned, content-mismatched branch nothing ever cleans up, on
+  # every bsuite PR run. That is a workaround, not a fix, so it is not
+  # attempted here.
+  #
+  # crm7's OTHER supported path — a dedicated long-lived disposable project
+  # named by `CRM7_E2E_SUPABASE_URL` / `CRM7_E2E_SUPABASE_PUBLISHABLE_KEY`,
+  # an "escape hatch" that bypasses branch resolution entirely — has not been
+  # configured anywhere in the estate: neither GaryOcean428/crm7 nor
+  # GaryOcean428/bsuite holds that secret today (`gh secret list`, checked
+  # 2026-08-26). And wiring a PERSISTENT branch database at the parent/estate
+  # level was already proposed and explicitly DECLINED — bsuite#1892 Option
+  # 1, operator ruling 2026-08-15, recorded in
+  # .github/workflows/supabase-preview-db.yml's "Native branching operator
+  # gate" step (`SUPABASE_BRANCHING_REQUIRED: false`).
+  #
+  # So today there is NO non-production database this job can reach from a
+  # parent-repo trigger — pull_request, schedule or workflow_dispatch alike.
+  # The honest outcome is to SKIP loudly rather than either hit production
+  # (the bug this fixes) or invent a new mechanism (forbidden — fix the path
+  # the workflow actually uses). The moment CRM7_E2E_SUPABASE_URL /
+  # CRM7_E2E_SUPABASE_PUBLISHABLE_KEY (+ CRM7_E2E_WRITABLE_PROJECT_REFS) are
+  # configured on GaryOcean428/bsuite against a genuinely disposable project,
+  # this job picks them up automatically and the sweep resumes for real — no
+  # further workflow change required.
+  resolve-e2e-database:
+    name: Resolve a non-production database for the signed-in sweep
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+    outputs:
+      db_available: ${{ steps.resolve.outputs.db_available }}
+    steps:
+      - name: Check for a configured non-production e2e database
+        id: resolve
+        env:
+          CRM7_E2E_SUPABASE_URL: ${{ secrets.CRM7_E2E_SUPABASE_URL }}
+        run: |
+          set -uo pipefail
+          if [ -n "${CRM7_E2E_SUPABASE_URL:-}" ]; then
+            echo "db_available=true" >> "$GITHUB_OUTPUT"
+            echo "CRM7_E2E_SUPABASE_URL is configured — the signed-in sweep will run against that project (never production)."
+          else
+            echo "db_available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SKIPPING the signed-in route sweep (per-page-authenticated) — no non-production e2e database is configured for this parent-repo run. This is DELIBERATE, not a bug: crm7's project-guard.ts refuses to mint a signed-in session against the production Supabase project (tuybltdrdefjblnplpqo — 381 synthetic rows across 7 tables landed there over 37 CI runs on 2026-08-26), crm7's Supabase-Branching resolution (crm7#2046) only works for crm7's own PRs (their head ref is a real crm7 git branch; a bsuite PR's is not), and a persistent branch wired at the parent level was already proposed and declined (bsuite#1892 Option 1, operator ruling 2026-08-15). Set CRM7_E2E_SUPABASE_URL + CRM7_E2E_SUPABASE_PUBLISHABLE_KEY (and CRM7_E2E_WRITABLE_PROJECT_REFS) on GaryOcean428/bsuite to a genuinely disposable, non-production Supabase project to resume this sweep — never the production ref."
+          fi
+
   per-page-authenticated:
     name: Per-page checks on SIGNED-IN routes
+    needs: resolve-e2e-database
+    # GATED ON resolve-e2e-database ABOVE, not on its own repeated checks —
+    # see that job's header comment for the full account (why fork PRs are
+    # excluded, and the 2026-08-26 fix that stopped this job from being able
+    # to resolve to the production database at all).
+    #
     # RUNS ON SAME-REPO PULL REQUESTS TOO (V-9, 2026-08-18).
     #
     # It used to be `github.event_name != 'pull_request'`, copied from the
@@ -648,16 +732,16 @@ jobs:
     # defects — a 2.76:1 demo-banner string and two unnamed controls. Both had
     # been merged past a green PR.
     #
-    # FORK PRs ARE STILL EXCLUDED, and that exclusion is load-bearing rather
-    # than cautious: `secrets.*` are not exposed to a workflow triggered by a
-    # fork PR, so the four credentials would resolve EMPTY, the "Assert the
-    # E2E credentials resolved" step would fail, and a contributor's first PR
-    # would show a red required check they cannot fix. Skipping is the honest
-    # outcome there — an unmeasured route is missing coverage, and the
-    # scheduled run still covers it after merge.
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+    # FORK PRs ARE STILL EXCLUDED (enforced by resolve-e2e-database's own
+    # `if:`, inherited here through `needs`), and that exclusion is
+    # load-bearing rather than cautious: `secrets.*` are not exposed to a
+    # workflow triggered by a fork PR, so the four credentials would resolve
+    # EMPTY, the "Assert the E2E credentials resolved" step would fail, and a
+    # contributor's first PR would show a red required check they cannot fix.
+    # Skipping is the honest outcome there — an unmeasured route is missing
+    # coverage, and the scheduled run still covers it after merge (once a
+    # non-production database exists for it to run against).
+    if: needs.resolve-e2e-database.outputs.db_available == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -714,15 +798,22 @@ jobs:
       # the suite reported green over 125 self-skipping specs.
       #
       # These four secrets live on GaryOcean428/crm7 already; this job needs
-      # them on the parent too. VITE_SUPABASE_ANON_KEY is exported under the
-      # name the app actually reads (VITE_SUPABASE_PUBLISHABLE_KEY) — the same
-      # rename crm7/.github/workflows/e2e.yml performs, and for the same reason.
+      # them on the parent too. VITE_SUPABASE_PUBLISHABLE_KEY is exported
+      # under the name the app actually reads, the same rename
+      # crm7/.github/workflows/e2e.yml performs, and for the same reason —
+      # but its SOURCE is CRM7_E2E_SUPABASE_URL /
+      # CRM7_E2E_SUPABASE_PUBLISHABLE_KEY, not the production
+      # VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY secrets. See
+      # resolve-e2e-database's header comment (above, in this file) for why:
+      # this job must never be able to resolve the production project, in
+      # any trigger context, and resolve-e2e-database already guarantees this
+      # step only runs when CRM7_E2E_SUPABASE_URL names something else.
       - name: Assert the E2E credentials resolved
         env:
           CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}
           CRM7_E2E_PASSWORD: ${{ secrets.CRM7_E2E_PASSWORD }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.CRM7_E2E_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.CRM7_E2E_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -uo pipefail
           missing=""
@@ -839,12 +930,19 @@ jobs:
       - name: Self-test the hittability auditor
         run: node scripts/audit-hittable-actions.mjs --self-test
 
+      # NOT `secrets.VITE_SUPABASE_URL` / `secrets.VITE_SUPABASE_ANON_KEY` —
+      # those name the PRODUCTION project. This job only reaches this step
+      # when resolve-e2e-database has confirmed CRM7_E2E_SUPABASE_URL names a
+      # disposable, non-production project; CRM7_E2E_WRITABLE_PROJECT_REFS is
+      # forwarded too, because crm7's project-guard.ts denies by default and
+      # needs the resolved ref on its allow-list to clear a write session.
       - name: Walk the route inventory
         env:
           CRM7_E2E_EMAIL: ${{ secrets.CRM7_E2E_EMAIL }}
           CRM7_E2E_PASSWORD: ${{ secrets.CRM7_E2E_PASSWORD }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.CRM7_E2E_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.CRM7_E2E_SUPABASE_PUBLISHABLE_KEY }}
+          CRM7_E2E_WRITABLE_PROJECT_REFS: ${{ vars.CRM7_E2E_WRITABLE_PROJECT_REFS }}
         run: scripts/audit-routes.sh
 
   # NOT run on pull_request, deliberately.
