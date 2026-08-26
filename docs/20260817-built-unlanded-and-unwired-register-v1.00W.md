@@ -1,5 +1,23 @@
 # Built but unlanded, built but unwired — a machine sweep
 
+> **THIS REGISTER FORKED. Read `20260819-built-unlanded-and-unwired-register-v1.00W.md` too.**
+>
+> Two files carry this same slug and NEITHER is a superset. Discovered 2026-08-26.
+> The filename dates mislead: this file has been updated through 20 August (§9.10, §9.11),
+> so the file *named* 08-19 is not the newer one — it is a fork that received different edits.
+>
+> **Already ported here from that fork, verified line-by-line:** §3.3, §4.4 and §4.5
+> (the 2026-08-19 resolution passes) and the **NX-7 correction**, which REVERSES the meaning
+> of its own row — `wage_snapshots` does exist.
+>
+> **NOT yet ported, and the reason this banner exists rather than a merge:** that fork's §9 is a
+> different pass from this file's §9, and it carries corrections this file does not — BU-9 closed,
+> a "there is no such cron job" reversal, and an `awards` 156-row ingestion finding. Merging two
+> divergent §9 sections is an editorial judgement, not a mechanical port, and half-merging it
+> would silently drop corrections. That is the failure this whole register is about.
+>
+> Until someone reconciles §9 deliberately, **both files are live and both must be read.**
+
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
 **Date:** 2026-08-17 · §9 added 2026-08-19 · §9.10–§9.11 added 2026-08-20 · **Version:** 1.03W · **Status:** W — Working
 **Scope:** every git work tree on this laptop, every source module and edge function in the six apps,
@@ -197,6 +215,63 @@ imports — one script, and it retires all three of these plus any future instan
 
 ---
 
+### 3.3 Resolution — 2026-08-19
+
+Every one of the 29 feature-code rows above (§3.1, including the 3 named again in §3.2) got exactly
+one of the three verdicts the operator's ledger requires. Evidence for each is the whole-estate
+`git grep -w` on every exported symbol plus the extension-less path, and (where a live counterpart
+was suspected) reading that counterpart's actual imports — not re-running the original stem scan.
+Register corrections are called out inline; **braden's count is 16 files, not 17** — the summary
+table in §3 could not be reconciled to a 17th file by name and is treated as an off-by-one in the
+original count, not a hidden finding.
+
+| App | Module | Verdict | Evidence |
+|---|---|---|---|
+| braden | `DndLayoutEditor.tsx` | REMOVE IT (ask) | Live equivalent: `SiteEditorLayout` → `ComponentsTab` → `ComponentLibrary.tsx`. Predates/superseded by the "Admin Portal Moved" consolidation onto the BSU Developer Portal (`#426`, 2026-08-19) |
+| braden | `useMediaManager.ts` | REMOVE IT (ask) | Live equivalent: `MediaLibrary.tsx` via `MediaTab.tsx` |
+| braden | `AdminLayout.tsx` | REMOVE IT (ask) | No route mounts it; `/admin/*` now resolves to `PortalMoved` except `branding`/`page-builder`/`marketing` (`Routes.tsx`) |
+| braden | `blob-storage.ts` | **KEEP, MARKED UNRELEASED** | Real `@vercel/blob` client, dependency installed for it, live media path still Supabase Storage. Header added |
+| braden | `MediaUploader.tsx` | REMOVE IT (ask) | Same cluster as `useMediaManager.ts` |
+| braden | `StoragePolicyAudit.tsx` | REMOVE IT (ask) | Real, working RLS-audit tool — no live route mounts it, and adding a new braden admin route would contradict the Admin-Portal-Moved consolidation. Worth re-implementing in the BSU Developer Portal, not braden |
+| braden | `schemaBuilderService.ts` | REMOVE IT (ask) | Zero importers even post-`@bsuite/schema-registry` consolidation (braden's own `docs/20260723-...`); braden does not ship the dynamic-entity feature this exists for |
+| braden | `MediaGallery.tsx` | REMOVE IT (ask) | Same cluster as `useMediaManager.ts` |
+| braden | `ClientsCard.tsx`/`EmailsCard.tsx`/`LeadsCard.tsx`/`StaffCard.tsx` | REMOVE IT (ask), all 4 | `src/pages/admin/{Clients,Emails,Leads,Staff}.tsx` are the live equivalents, using `@/services/adminCrudService` directly — do not import these Card components |
+| braden | `Projects.tsx` | REMOVE IT (ask) | Duplicate of the live `Services.tsx` — same `id="work"`/"Our Services" content, not rendered on `Index.tsx` |
+| braden | `useBannerOffset.ts` | **KEEP, MARKED UNRELEASED** | Correct ResizeObserver hook; `CookieConsent.tsx` solves an adjacent problem with a hardcoded `140px` on a *different* CSS var (`--cookie-banner-h`, not `--banner-offset`) — suggestive, not confirmed as the intended target. Header added |
+| braden | `emailService.ts` | REMOVE IT (ask) | Self-documented mock ("Mock implementation..."); live confirmation email flow is `lead-capture` (cross-app, sourced from **crm7**) → `email-dispatcher`, server-side |
+| braden | `ThemeToggle.tsx` | **WIRE IT — done** | Dark mode live app-wide (`ThemeProvider`), no manual toggle existed. Added to desktop nav header. PR [`braden#432`](https://github.com/GaryOcean428/braden/pull/432) |
+| crm7 | `report-form-dialog.tsx` | REMOVE IT (ask) | `/financial/reports/*` explicitly retired 2026-08-13, operator directive **D-79** (crm7#1568/#1656, documented in `App.tsx:433`) — this dialog is the one piece of that retirement nobody deleted |
+| crm7 | `InvoiceLineItemBuilder.tsx` | REMOVE IT (ask) | Superseded: live `invoice-form-dialog.tsx` uses `generateInvoiceFromTimesheets` (`@/lib/billingEngine`), an automated generator, not this manual UI builder |
+| crm7 | `wageSnapshotService.ts` | **KEEP, MARKED UNRELEASED** (pre-existing) | Register NX-7's own worked example — already marked on `development` as of this sweep. Confirmed present, no change needed |
+| crm7 | `smsAdapter.ts` | REMOVE IT (ask) | "OTS Parity — Phase 8" infra; its sibling `communicationSender.ts` (same phase) was already removed as SAFE_DELETE in `bbd04af3` (2026-07-25 dead-code audit) — this one was missed by that sweep, not spared by it |
+| crm7 | `FairWorkUpdateNotification.tsx` | **WIRE IT — done** | Null-safe award-update banner; data source (`fetchAwardUpdates` → `fairwork-enhanced`) confirmed live (NX-8: 6 crm7 callers). Mounted on `/payroll/award-rates` as its own `CanvasCard`. PR [`crm7#1861`](https://github.com/GaryOcean428/crm7/pull/1861) |
+| crm7 | `configSchema.ts` | **KEEP, MARKED UNRELEASED** | Complete Zod validation ported for `fairworkEnhancedService`'s config; wiring it means retrofitting a 1,400+ line, 6-caller live service — out of scope for this sweep. Header added |
+| crm7 | `permission-guard.tsx` | REMOVE IT (ask) | Self-documented `@deprecated` — "Use `PermissionGate` instead", which is confirmed live (imported by `award-rates/index.tsx` among others) |
+| business-suite-unified | `notificationService.ts` | REMOVE IT (ask) | Both halves superseded: inbound (in-app bell) is `notificationStore.ts` (`app_notifications` table, live `NotificationCenter.tsx`); outbound (`send-notification` edge fn) is called directly from `stripe-webhook/index.ts`, bypassing this wrapper entirely |
+| throughput | `user-management.ts` | REMOVE IT (ask) | Superseded: live `TeamManagement.tsx` + `teams`/`team_workspaces` tables. **Also carries §3.2's disabled `bsuite/no-cross-app-write` guard on `profiles`/`team_members`/`team_invitations` writes — highest-priority item in this whole register to resolve, per the register's own §3.2 framing** |
+| throughput | `baseAgent.ts` | **KEEP, MARKED UNRELEASED — done** | Real, current `@langchain/core`/`@langchain/langgraph` deps; built on `LangChainGatewayClient`, which IS live (`useConversation.ts`, `conversationContext.ts`) and correctly routed through the sanctioned AI Gateway proxy. No concrete `BaseAgent` subclass exists yet. PR [`throughput#334`](https://github.com/GaryOcean428/throughput/pull/334) |
+| throughput | `useTodos.ts` | REMOVE IT (ask) | Superseded: `lib/db.ts` and `pages/Page.tsx` already call `.from('todos')` inline |
+| conduit | `AuthShell.tsx` | **WIRE IT — done** | Built on live design tokens (`--bg-shell*`, `--border-shell` — WCAG-tested elsewhere) and a `magicui` component with no other consumer. Wired into `/auth/login` and `/auth/register`. PR [`conduit#514`](https://github.com/GaryOcean428/conduit/pull/514) |
+
+**The 35 vendored shadcn/magicui UI primitives (per-app counts in the §3 table) are a distinct
+class, deliberately not given individual per-file verdicts.** Spot-verified (braden's `magicui/*`
+and `ui/drawer.tsx`) as genuinely zero-importer, but shadcn's and magicui's own delivery model is
+"copy the component source into the repo whether or not it is used yet" — every app here has a
+`src/components/ui/` (shadcn) and, in 4 of 5, a `src/components/magicui/` folder holding more
+primitives than any one feature currently consumes. Giving each of the 35 an "UNRELEASED — blocked
+on a feature needing this" banner would misdescribe a scaffold as a stalled feature. Recorded here
+as **KEEP — vendored design-system primitives, available by design, no gate to mark**; flagged
+plainly so the operator can override this call per app if the intent differs from what shadcn's
+convention implies. No source files in this class were modified.
+
+**REMOVE IT verdicts above are recommendations only — none were deleted.** Per this task's
+constraint, deleting pre-existing work is the operator's call. 20 modules are listed as REMOVE IT
+across the 5 apps (13 braden, 4 crm7, 1 business-suite-unified, 2 throughput); asking is this
+document's job, not a separate step.
+
+---
+
+
 ## 4. Built and unwired — 9 edge functions with no caller
 
 Cross-referenced against in-app invocations **and** the live `cron.job` table (16 jobs) **and** the
@@ -249,6 +324,142 @@ This sweep cannot see Adobe's configuration or a workflow in another repository,
 as **unverified**, not as dead. Settling them takes one look at each external configuration.
 
 ---
+
+### 4.4 Resolution — 2026-08-19
+
+All 9 edge functions got a verdict — the 6 in §4.1, `update-wage-rates` from §4.2, and the 2 in
+§4.3. Three questions were asked of each, per §4.1's own framing: an app caller, a `cron.job` row,
+and an external webhook — the third confirmed by reading the function's own auth model (a real
+signature/secret check against an external party's credential is evidence *for* the
+external-caller theory; the register does not claim to see the far end). `sync-award-rates` is a
+10th row below, added for completeness even though the original §4.1 count did not list it — it is
+*reachable* (via the callee side of `refresh-award-rates`, and now directly via cron), which is
+exactly why it needs the §4.2 correction rather than a WIRE/REMOVE/KEEP-MARKED verdict of its own.
+
+| App | Function | Verdict | Evidence |
+|---|---|---|---|
+| crm7 | `refresh-award-rates` | REMOVE IT (ask) | Genuinely orphaned as of the 20260822040000 migration — the new cron calls `sync-award-rates` directly, bypassing this wrapper. Its consecutive-failure tracking (`system_settings`) is real functionality the direct-cron approach does not replicate; flagged, not built, since re-routing the cron through it is a migrations-lane call |
+| crm7 | `tga-organisation-sync` | Root cause documented, not fixed | Scheduling migration (`20260504031000`) silently NOTICE'd and skipped its `cron.schedule()` because pg_cron/pg_net were not installed when it first ran (2026-04-22); nothing has re-triggered it since both extensions went live. Fix is 2 migrations-lane steps (GUC seeding + re-schedule). Header added to `index.ts` |
+| crm7 | `encrypt-email-tokens` | **Special case — not a defect** | Confirmed genuine "service-role-only one-shot migration utility" (register's own test-file comment). Its job (plaintext → vault-encrypted email tokens) is DONE — `ISSUE_VALIDATION_REPORT.md` #454 marked FIXED, columns deprecated, REVOKE applied. Unreachable *by design*, same as a SQL migration file after it applies. Does not map cleanly onto WIRE/REMOVE/KEEP-MARKED-UNRELEASED; recorded as-is, no action |
+| business-suite-unified | `process-webhook-queue` | Root cause documented, not fixed | The receiving half (`fairwork-webhook`) is live and enqueues into `mapd_webhook_queue` today; this processor has never run to drain it — corroborated by a since-applied migration dropping `idx_mapd_webhook_queue_status` as unused. Header added |
+| business-suite-unified | `email-token-refresh` | Root cause documented, not fixed | `supabase/config.toml` documents it as the intended periodic caller of `oauth-google-email`'s `/refresh` route; nothing schedules it. Header added |
+| braden | `send-confirmation` | REMOVE IT (ask) | Superseded: the live contact-form flow calls `lead-capture` (sourced from **crm7**, a cross-app edge-function dependency neither repo declares — worth naming as its own class, not fixed here), which already sends the submitter confirmation via `email-dispatcher` from its service-role context |
+| crm7 | `sync-award-rates` | **Reachable (partially) — register corrected** | See §4.2 correction above. Has a live cron caller (job 175) that has never successfully fired (unseeded secrets); even fully working, does not populate `award_rates`/`award_classifications`. Header added documenting all of this in-repo |
+| crm7 | `update-wage-rates` | REMOVE IT (ask) | Confirmed deprecated proxy, register's own recommendation stands |
+| crm7 | `adobe-sign-webhook` | **RETIRED — settled 2026-08-19, was never UNKNOWN** | Adobe Sign left this estate on **2026-03-17**, replaced by the in-house e-sign flow in conduit. The live DB says so itself, in the column comment on `r7_offers.esign_flow_id`. Tombstoned to a 410 Gone in crm7#1862. See §4.5 |
+| business-suite-unified | `jodie-pr-notify` | **UNREACHED — settled 2026-08-19, was never UNKNOWN** | No GitHub webhook exists on any estate repo, and `JODIE_WEBHOOK_SECRET` is not set as an edge secret — so it could not verify a delivery even if one arrived. Its upstream `jodie_bug_reports` holds **0 rows**, so nothing has ever been waiting on it. See §4.5 |
+
+**Pattern across 3 of the 6 §4.1 unreachable functions** (`tga-organisation-sync`,
+`process-webhook-queue`, `email-token-refresh`) plus `sync-award-rates`'s partial case: built,
+deployed, correctly authored — and never scheduled. None of these are code defects; all four need a
+cron-scheduling migration (and in two cases, vault-secret seeding) from the migrations lane, which
+this sweep does not own. Documented in-repo on each function so the next reader does not have to
+re-derive it.
+
+---
+
+### 4.5 Both "unverifiable" functions settled — 2026-08-19
+
+The operator read §4.3 and asked why Adobe was a consideration at all. It should not have been, and
+the answer took four queries. **Neither function was unverifiable; the sweep simply stopped at the
+repository boundary and wrote that boundary up as a property of the world.**
+
+**`crm7/adobe-sign-webhook` — retired 2026-03-17, recovered in error 2026-08-16.**
+
+The retirement is recorded *inside the live database*, in the column comment on
+`public.r7_offers.esign_flow_id`: *"In-house @xyflow/react document-flow id (Adobe Sign removed
+2026-03-17). Signer completions write the `*_signed_at` columns."* Adobe Sign was replaced by
+conduit's own e-sign flow — `src/lib/esign/documentSigner.ts` (196 lines) and
+`src/components/esign/SignDocumentFlow.tsx` (333 lines), consumed by
+`src/components/offers/OfferProgressDialog.tsx`.
+
+Five months later, bsuite#1955 found the function deployed with no source in any repository,
+reconstructed 320 lines of Adobe webhook handling to match the deployed behaviour, hardened it
+properly (constant-time client-id comparison, SSRF-safe agreement-id validation, a 256 KB body cap,
+migration onto the shared rate limiter) and landed it as a live function. Every one of those steps
+was correct work on infrastructure that should not have existed.
+
+| Measured on live, 2026-08-19 | Result |
+|---|---|
+| `public.document_signatories` | **0 rows** |
+| ... with `adobe_participant_id` not null | **0 rows** |
+| `public.signature_requests` (the in-house flow) | **5 rows** |
+| `document_records.adobe_agreement_id` | **column does not exist on live** |
+| Edge invocations, retained log window | **0** |
+| Callers in crm7 application code | **0** |
+
+The recovered function queries `document_records.adobe_agreement_id`. That column is absent from
+live, so it could not have processed a webhook at any point after the retirement — non-functional
+as well as unwanted. Tombstoned to a self-describing 410 Gone in **crm7#1862**; the empty
+`adobe_participant_id` column dropped by `20260829030000`. The directory is not deleted — that
+needs the operator's go-ahead, and the tombstone is what stops a fourth recovery.
+
+**`business-suite-unified/jodie-pr-notify` — unreached, and its upstream has never produced a row.**
+
+| Measured 2026-08-19 | Result |
+|---|---|
+| GitHub webhooks on `bsuite`, `business-suite-unified`, `crm7` | **none, on any of the three** |
+| `JODIE_WEBHOOK_SECRET` in the project's edge secrets | **not set** |
+| `public.jodie_bug_reports` | **0 rows** |
+
+So the function cannot verify a delivery, no delivery is configured, and nothing upstream has ever
+needed notifying. This is not a webhook receiver waiting on an external configuration — it is an
+unfinished feature whose last mile was never done. Note that `jodie-bug-create` already tells a
+reporter *"you will be notified by `jodie-pr-notify` when your PR opens and again when it merges"* —
+a promise the platform currently cannot keep. Zero rows means no user has been told it yet.
+
+**The class, and it is the register's own:** *"cannot verify from the repo"* is a statement about
+where you looked, not about the system. Both of these were answerable from outside the repo in
+minutes — one column comment, one `gh api .../hooks` call, one `supabase secrets list`, one row
+count. Recording an unchecked boundary as an inherent unknown is how Adobe stayed a live
+consideration for five months after it was retired, and it is the same failure as
+[V-3](../.claude/skills/bsuite-ship-visual-promote/SKILL.md): **unevaluable is UNKNOWN only after
+you have tried to evaluate it.**
+
+
+## 4B. braden's admin Site Editor — unwired, and it would CRASH if wired (2026-08-27)
+
+Found while extrapolating the `useBranding` hard-throw class (bsuite#2521) across the estate.
+Sixteen files carry the `must be used within` throw pattern. Most are correct: `useChart`,
+`useCarousel` and `useSidebar` are shadcn primitives, only reachable by a developer misusing
+them, and a throw there is a build-time error rather than a user-facing one.
+
+**braden is different, and it has two theme contexts.**
+
+| | |
+|---|---|
+| Mounted at the root | `src/components/theme/ThemeProvider.tsx` — `App.tsx:2, :35` |
+| Mounted **nowhere** | `src/context/theme/ThemeContext.tsx`, which exports its own `ThemeProvider` **and** its own `useTheme` |
+
+`src/context/theme/ThemeContext.tsx:23-29` throws `useTheme must be used within a
+ThemeProvider` when its context is undefined — and its provider is never mounted. Every
+consumer of that second `useTheme` therefore throws on first render:
+
+    src/hooks/useThemeEditor.ts:4,7   → useTheme() from '@/context/theme'
+      ← src/components/admin/editor/ThemeEditor.tsx
+        ← src/components/admin/editor/tabs/ThemeTab.tsx
+          ← src/components/admin/SiteEditorLayout.tsx  (and a second copy, below)
+            ← src/pages/admin/SiteEditor.tsx
+
+**It is not a live crash, because the chain is UNREACHABLE.** `src/pages/admin/SiteEditor.tsx`
+is not registered on any route in `App.tsx` — a `SiteEditor` grep against that file returns
+nothing. So this is a built-and-unwired surface carrying a latent crash, which is precisely
+what this register exists to catch: **wiring it up as-is would ship a white screen, and the
+person who wires it will believe they only added a route.**
+
+**A third finding in the same chain:** `SiteEditorLayout` exists TWICE and the copies have
+diverged — `src/components/admin/SiteEditorLayout.tsx` (134 lines) and
+`src/components/admin/editor/SiteEditorLayout.tsx` (118 lines). Both import `ThemeTab`, both
+render it. Whoever wires the editor must first decide which is canonical.
+
+**What closes this row:** either delete the unreached `src/context/theme` provider-and-hook
+pair and point its consumers at the mounted one, or mount it. Deleting is the smaller change
+and is probably right — the root already has a working theme provider, and two theme signals
+with two owners is a shape this estate has been bitten by before. Either way the duplicate
+layout needs resolving in the same pass, or the next reader inherits the same ambiguity.
+
+**Not measured:** no browser probe. The chain is traced statically, and its unreachability
+rests on `SiteEditor` being absent from `App.tsx` rather than on a 404 observed in a browser.
 
 ## 5. One hazard found on the way
 
@@ -397,6 +608,40 @@ Any future run of that scan must glob the repository root as well.
 | **NX-8** | `fairwork-enhanced` (the 503 in the note) lives in **business-suite-unified** and is called from **six crm7 files** | `business-suite-unified/supabase/functions/fairwork-enhanced/`; callers in `crm7/src/components/{awards,common,fair-work}/…` and `crm7/src/lib/awards/index.ts`. A cross-app runtime dependency that neither repository declares — a class worth naming, not a one-off |
 | **NX-9** | Airtable-class reporting still absent; platform-level reporting still offered to non-developers | Completion-plan Phase 3 and ruling D-66; register D1 unanswered since 2026-08-06 |
 | **NX-10** | Cards on a shared backing card, resize regression, half-cut cards — raised "innumerable times", fixed page by page | This is D-62 stated by the operator in their own words. It is the completion plan's `## Class sweep` discipline, and it is the single most-repeated item in the notes |
+
+> **NX-7 was CORRECTED on 2026-08-19, and the correction reverses its meaning.**
+> The row above still reads as dead code against a table nobody built. It is the opposite.
+> Ported here from the forked `20260819-` copy of this register, which carried the
+> correction while this file carried the later 20 August entries — so a reader got a
+> different answer depending on which file they opened.
+
+#### NX-7 in full, because the corrected version changes what it means
+
+The original row read as dead code against a table nobody built. It is the opposite: **the
+table was built, the migration was applied, the service was written — and nothing calls it.**
+
+`wageSnapshotService.ts` states its own purpose in its header: write an immutable
+`wage_calculation_snapshots` row *"at timesheet-approval time so later edits to award rates /
+MAPD data / apprentice_rate_configs never retroactively change what was billed or paid."*
+
+**That guarantee is not in force.** Zero rows exist, so nothing today protects a billed amount
+from a later rate change. In a payroll and compliance context that is the whole point of the
+feature.
+
+**The wiring point is identified and the work is correctly sized as a feature, not a fix.**
+`src/lib/timesheetWorkflow.ts:48` transitions `pending_gto_review → approved` via `gtoApprove`;
+that is where a snapshot belongs. But `createWageSnapshot` requires the **complete calculation
+result** — `awardCode`, `apprenticeType`, `yearOfTrade`, `baseRateHourly`, `oteRateHourly`,
+`superRate`, `calcConfig`, `calcResult`, `appliedRules`, `calcEngineVersion` — which means the
+approval path must have *run* a charge calculation before it can record one.
+
+**So NX-7 is gated on the money chain, not independent of it.** It needs what M-5 ("the award
+engine is not wired to the calculator") and M-7 (`award_rates` empty, 156 awards) are for. Doing
+NX-7 first would write snapshots of a calculation that cannot yet be trusted, which is worse
+than writing none.
+
+Recorded rather than started, for that reason.
+
 
 ### 9.2 Already fixed — do not re-file
 
