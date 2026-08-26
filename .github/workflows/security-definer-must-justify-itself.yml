@@ -1,0 +1,72 @@
+# A NEW SECURITY DEFINER FUNCTION MUST SAY WHY IT NEEDS TO BE ONE.
+#
+# SECURITY DEFINER runs with the DEFINER's privileges, so it is the one place in
+# the schema where the caller's own RLS does not apply. That is often exactly
+# right — an RLS helper called from a policy USING clause would be useless as
+# INVOKER — and occasionally an IDOR waiting to be found. The difference is not
+# visible from the signature; it has to be stated.
+#
+# The estate already decided how. Phase 2.1A/2.1B annotated every SECURITY
+# DEFINER function with `@SD-JUSTIFICATION` / `@SD-CATEGORY` / `@SD-AUDIT`, and
+# Phase 2.3 then revoked public EXECUTE on the categories that did not need it.
+# See supabase/migrations/README.md.
+#
+# MEASURED 2026-08-26 against production:
+#
+#   SECURITY DEFINER executable by `authenticated` .... 137
+#     …carrying @SD-JUSTIFICATION ...................... 62
+#     …never justified ................................. 75
+#   executable by `anon` .............................. 7   (all 7 unannotated)
+#
+# The 75 were added after Phase 2.1, when nothing asked them to justify
+# themselves. This gate does not fix them. It stops them becoming 76 — the only
+# move available when a backlog is larger than any single change should touch.
+#
+# Two of the scariest-looking names were checked before assuming the worst:
+# `admin_revoke_user_sessions(p_user_id)` and `xero_lock_and_get_refresh_token`
+# are NOT executable by `authenticated` or `anon` at all. A name is not a finding.
+#
+# WHY THE DIFF AND NOT A COUNT — a total measured across submodule trees moves
+# whenever a gitlink advances, so a count-based gate blames a PR for changes it
+# did not make. That was learned the expensive way on the regex ratchet earlier
+# today, twice, before it was corrected to a diff.
+name: SECURITY DEFINER must justify itself
+
+on:
+  pull_request:
+    branches: [main, development]
+  workflow_dispatch:
+
+jobs:
+  justify:
+    name: No new unjustified SECURITY DEFINER
+    runs-on: ubuntu-latest
+    steps:
+      # No submodules: the diff is a parent-repo artefact and submodule content
+      # cannot change what THIS diff added.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Watched to catch a planted defect AND watched not to flag a correctly
+      # justified one. Both, or it cannot tell found-nothing from checked-nothing.
+      - name: Self-test the checker
+        run: node scripts/__tests__/check-added-security-definer.test.mjs
+
+      - name: Check what this PR adds
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch -q origin "${{ github.base_ref }}"
+          base=$(git merge-base HEAD "origin/${{ github.base_ref }}")
+          echo "diffing $base..HEAD over *.sql"
+          if git diff --unified=3 "$base"..HEAD -- '*.sql' | grep -q .; then
+            git diff --unified=3 "$base"..HEAD -- '*.sql' \
+              | node scripts/check-added-security-definer.mjs
+          else
+            echo "this PR touches no SQL — nothing to check"
+          fi
