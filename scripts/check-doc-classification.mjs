@@ -31,6 +31,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { isNavigational } from './lib/doc-conventions.mjs';
 
 const KINDS = ['law', 'obligation', 'decision', 'standard', 'plan', 'record'];
 const AUTHORITIES = ['external', 'operator', 'engineering', 'none'];
@@ -135,7 +136,10 @@ function walk(d, out = []) {
   return out;
 }
 
-const all = walk('docs');
+/* The navigational-file set lives in ONE place — see scripts/lib/doc-conventions.mjs
+   for why this is a shared module rather than a copy in each gate. */
+
+const all = walk('docs').filter((p) => !isNavigational(p));
 const unclassified = all.filter((p) => !parseFrontmatter(readFileSync(p, 'utf8'))?.kind);
 
 // Positive control: an empty scan would report zero unclassified, which reads as a
@@ -146,9 +150,13 @@ if (all.length < 20) {
 }
 
 let failed = false;
-if (changed.length) {
-  console.log(`  enforcing on ${changed.length} changed doc(s):\n`);
-  for (const p of changed) {
+const changedDocs = changed.filter((p) => !isNavigational(p));
+if (changed.length !== changedDocs.length) {
+  console.log(`  ${changed.length - changedDocs.length} navigational file(s) not enforced (README/STATUS/INDEX are indexes, not documents)`);
+}
+if (changedDocs.length) {
+  console.log(`  enforcing on ${changedDocs.length} changed doc(s):\n`);
+  for (const p of changedDocs) {
     if (!existsSync(p)) continue;
     const errs = validate(parseFrontmatter(readFileSync(p, 'utf8')));
     if (errs.length) {

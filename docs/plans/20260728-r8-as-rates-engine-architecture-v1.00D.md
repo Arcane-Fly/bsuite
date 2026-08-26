@@ -23,7 +23,7 @@
 
 ## Changelog
 
-- 2026-07-28 (v1.00D): Initial draft. Synthesizes RatesCalc's captured API surface (`.superpowers/sdd/20260728-gap-remediation-plan-v1.00W/rc_api_data.json`), four WorkforceOne analysis documents, an archived RatesCalc-style calculator (`crm7r/lib/services/rates-calc.ts`), the operator's preferred UI reference (`charge-calculator-mapd.jsx`), and a fresh capability audit of R80.3 `development` + crm7 `development`.
+- 2026-07-28 (v1.00D): Initial draft. Synthesizes RatesCalc's captured API surface (`.superpowers/sdd/20260728-gap-remediation-plan-v1.00F/rc_api_data.json`), four WorkforceOne analysis documents, an archived RatesCalc-style calculator (`crm7r/lib/services/rates-calc.ts`), the operator's preferred UI reference (`charge-calculator-mapd.jsx`), and a fresh capability audit of R80.3 `development` + crm7 `development`.
 
 ---
 

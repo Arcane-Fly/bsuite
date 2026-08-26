@@ -11,7 +11,7 @@ neg() { # neg "desc" pattern file — pattern must NOT appear
   if grep -q "$2" "$3" 2>/dev/null; then echo "FAIL: $1"; FAIL=1; else echo "PASS: $1"; fi
 }
 
-M=docs/audits/20260725-jodie-parity-matrix-v1.00W.md
+M=docs/audits/20260725-jodie-parity-matrix-v1.00F.md
 EA=business-suite-unified/src/lib/manuals/manuals/enterprise-admin.ts
 EM=business-suite-unified/src/lib/manuals/manuals/employee.ts
 FO=business-suite-unified/src/lib/manuals/manuals/field-officer.ts

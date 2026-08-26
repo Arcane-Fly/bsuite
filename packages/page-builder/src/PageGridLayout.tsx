@@ -147,6 +147,62 @@ type GridItemProps = {
   chrome?: boolean;
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'content'>;
 
+/* A ZERO MEASUREMENT IS DISCARDED SILENTLY, AND THAT IS HOW A CARD GOES INVISIBLE.
+ *
+ * `reportRows` is guarded by `contentPx > 0` — correctly, because a zero reading
+ * during mount would converge the card to nothing. But a card whose content
+ * genuinely measures zero then keeps whatever row count it had, inside a wrapper
+ * that is `overflow-hidden`. The card renders. The content does not. Nothing
+ * fails, and nothing says so.
+ *
+ * The reachable cause is a percentage height. The measuring div is deliberately
+ * UNCONSTRAINED so the observer reads intrinsic height rather than the clipped
+ * flex box — that is the whole reason it exists. An unconstrained parent has
+ * `height: auto`, and a child asking for `height: 100%` against `auto` resolves
+ * to auto, i.e. its own content height. A chart, a canvas or a map that sizes
+ * itself from its parent therefore collapses to nothing, and the taller the
+ * intended element the more invisible it is. The same CSS rule produced a
+ * 1184x0 schema-builder canvas in production with 45 laid-out nodes inside it.
+ *
+ * This does NOT change layout. Constraining the wrapper would break the
+ * measurement it exists to take, and changing the autoHeight default is how
+ * page-builder 2.0.0 discarded every saved layout across 1,729 cards. It makes
+ * the silent case audible in development and leaves production untouched, which
+ * is the same trade @bsuite/theme 1.3.0 made for its missing-provider warning.
+ */
+let warnedAboutCollapsedContent = false;
+function warnOnceAboutCollapsedContent(el: HTMLElement): void {
+  if (warnedAboutCollapsedContent) return;
+  /* THE SIGNATURE, not merely "height is zero".
+   *
+   * Requiring childElementCount > 0 is not enough, and jsdom is why: it has no
+   * layout engine, so getBoundingClientRect().height is 0 for EVERY element in
+   * every test. A warning keyed on that fires on every mounted card in the suite
+   * and means nothing — the recorded lesson is that jsdom cannot model the bug
+   * this exists to catch, so the check must not pretend it can.
+   *
+   * The real defect has a distinctive shape, measured in production: laid-out
+   * content inside a zero-height box — scrollHeight 1938 against clientHeight 0.
+   * Requiring scrollHeight > 0 selects exactly that, and jsdom reports 0 for
+   * both, so it stays silent there rather than crying wolf. */
+  if (el.scrollHeight <= 0) return;
+  const isDev =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as { env?: { DEV?: boolean } }).env?.DEV === true;
+  if (!isDev) return;
+  warnedAboutCollapsedContent = true;
+  console.error(
+    '[@bsuite/page-builder] An autoHeight card measured 0px with content inside it, '
+      + 'so its height was left unchanged and the content is clipped by overflow-hidden — '
+      + 'the card looks empty rather than broken. The usual cause is a child sized with '
+      + 'height:100% (a chart, canvas or map): the measuring wrapper is intentionally '
+      + 'unconstrained so the observer can read intrinsic height, and a percentage height '
+      + 'against an auto-height parent resolves to auto. Give the child an intrinsic height '
+      + '(an aspect ratio, a px/rem height, or min-height), or pass autoHeight={false} on '
+      + 'this card so it renders into the constrained scrollable wrapper instead.',
+  );
+}
+
 const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(function GridItem({
   id,
   content,
@@ -237,6 +293,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       const contentPx = el.getBoundingClientRect().height;
       latestContentPxRef.current = contentPx;
       if (contentPx > 0) reportRows(contentPx);
+      else warnOnceAboutCollapsedContent(el);
     }, [autoHeight, onAutoHeightChange, reportRows]);
 
     useEffect(() => {
@@ -322,6 +379,32 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
           <div
             data-slot="grid-item-surface"
             data-chrome={chrome ? 'on' : 'off'}
+            /*
+             * WHICH SLOT IS THIS? The grid item carried no answer until now, and
+             * that absence has cost this estate two voided measurement datasets.
+             *
+             * `data-chrome` already tells an auditor WHAT the surface is doing.
+             * Nothing told them WHICH slot it was doing it to — the rendered item
+             * exposed only a transform and a class, so the only way to identify a
+             * slot was to ENTER EDIT MODE and read the `Hide <label>` button's
+             * aria-label. That is a three-click path through a launcher, a dialog
+             * and a collapsed disclosure, and every one of those steps is a way to
+             * measure the wrong thing: a create dialog that intercepts the click, a
+             * route that navigates mid-sequence, a permission gate that renders a
+             * plausible placeholder instead.
+             *
+             * Worse, entering edit mode is not free. It is the mode in which a
+             * gesture WRITES `user_preferences`, which is keyed by USER and shared
+             * across environments — so the act of identifying a slot put a real
+             * person's saved layout at risk.
+             *
+             * These two attributes make a slot identifiable from a READ-ONLY page
+             * load. `label` is the human name; `id` is the stable cardKey a fix has
+             * to be written against. Neither is styling and neither is behaviour —
+             * they are the identity the DOM should always have carried.
+             */
+            data-card-key={id}
+            data-card-label={label}
             className={
               chrome
                 ? // ONE radius token, read by the grid item AND available to any

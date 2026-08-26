@@ -442,7 +442,7 @@ These braden admin components have zero importers outside their own files:
 | `crm7/src/lib/avetmiss/formatNat00130.ts` | 1,298 |
 | `crm7/src/lib/avetmiss/nat00100.ts` | 2,808 |
 
-**Evidence:** These files are only imported by `crm7/src/lib/avetmiss/__tests__/formatters.test.ts`. No production code imports them. No `index.ts` barrel exists in the `avetmiss/` directory. The AVETMISS feature is documented in `docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md` but the export pipeline is not wired into any page or service.
+**Evidence:** These files are only imported by `crm7/src/lib/avetmiss/__tests__/formatters.test.ts`. No production code imports them. No `index.ts` barrel exists in the `avetmiss/` directory. The AVETMISS feature is documented in `docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00F.md` but the export pipeline is not wired into any page or service.
 
 **Classification:** `NOT_DEAD_IMPLEMENT` — code is written and tested but the feature is incomplete (no production consumer). Do NOT delete without confirming the AVETMISS export feature is abandoned.
 

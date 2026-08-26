@@ -69,7 +69,7 @@ usually not the ones being served.
 
 ## This was already known
 
-`S-4` in [`docs/20260728-weekly-gap-register-v1.00W.md`](20260728-weekly-gap-register-v1.00W.md)
+`S-4` in [`docs/20260728-weekly-gap-register-v1.00F.md`](20260728-weekly-gap-register-v1.00F.md)
 recorded it on 2026-07-28: *"Dashboard — the doctrinal 'source of truth' — is
 structurally unable to be true."* It sat for thirteen days. Retiring the page is
 what closes S-4; there is no version of it that survives the finding.

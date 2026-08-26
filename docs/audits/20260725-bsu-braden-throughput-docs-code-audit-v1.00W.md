@@ -123,7 +123,7 @@
 | `docs/README.md` | **STALE** | Lines 9, 11, 13, 24-26, 46 reference 4 archived/relocated docs as canonical. |
 | `docs/OUTSTANDING.md` | **PARTIAL** | Acknowledges archive (lines 7, 21) and points to current execution queue ✅. But line 42 still cites `20260227-dry-one-shot-architecture-v1.04A.md` for the one-shot compliance gate — actual file is `v1.02A`. |
 | `docs/20260504-bsuite-documentation-hub-v1.00W.md` | **STALE** | References `20260504-bsuite-tech-stack-alignment-v1.00W.md` as companion (archived). References master-roadmap, finish-line-roadmap, merged-execution-backlog as canonical (all archived/relocated). |
-| `docs/20260724-oneshot-cross-cutting-audit-v1.00W.md` | **VALIDATED** | Audit findings reference real code paths verified during this audit. |
+| `docs/20260724-oneshot-cross-cutting-audit-v1.00F.md` | **VALIDATED** | Audit findings reference real code paths verified during this audit. |
 | `docs/20260724-recurring-bugs-and-blindspots-v1.00W.md` | **VALIDATED** | Findings are discovery-only and reference current code state. |
 | `docs/20260723-bsuite-capability-matrix-v1.00W.md` | **VALIDATED** | References `20260723-anytime-workforceone-admin-guide-v1.00W.md` ✅. |
 | `docs/adr/README.md` | **STALE** | Cross-reference convention cites `docs/20260227-dry-one-shot-architecture-v1.04A.md` (actual: `v1.02A`), `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` (archived), `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` (not found anywhere), `docs/20260501-merged-execution-backlog-v1.00W.md` (archived). |
@@ -135,7 +135,7 @@ The actual file is `20260227-dry-one-shot-architecture-v1.04A.md`. **8 non-archi
 
 | File | Location |
 |------|----------|
-| `docs/plans/20260510-universal-canvas-capability-implementation-v1.00W.md` | parent docs/plans |
+| `docs/plans/20260510-universal-canvas-capability-implementation-v1.00F.md` | parent docs/plans |
 | `docs/adr/ADR-0001-page-builder-ownership.md` | parent docs/adr |
 | `docs/adr/ADR-0002-schema-builder-ownership.md` | parent docs/adr |
 | `docs/adr/ADR-0006-contact-propagation-doctrine.md` | parent docs/adr |
@@ -169,7 +169,7 @@ Each item carries: doc path, missing/stale artifact, evidence, proposed disposit
 | # | Doc | Issue | Evidence | Proposed disposition |
 |---|-----|-------|----------|---------------------|
 | 1 | `PARENT-DOCS.md` (all 6 submodules) | 4 dead parent-doc links | `find docs/ -name '*'` — files not at referenced paths; found at external archive | Update PARENT-DOCS.md shared section to point to `docs/archive/README.md` or current canonical replacements |
-| 2 | `docs/README.md` (parent) | 4 dead canonical doc links (lines 9, 11, 13, 24-26, 46) | Same as #1 | Replace with `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md` and other current docs |
+| 2 | `docs/README.md` (parent) | 4 dead canonical doc links (lines 9, 11, 13, 24-26, 46) | Same as #1 | Replace with `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md` and other current docs |
 | 3 | `docs/adr/README.md` | Stale cross-references: v1.01A, finish-line, merged-backlog, outstanding-work-ledger | `grep` confirms 4 stale refs | Update cross-reference convention section |
 | 4 | `docs/20260504-bsuite-documentation-hub-v1.00W.md` | References 4 archived docs as canonical | `grep` confirms 10+ references to missing files | Update hub to reference current canonicals or archive the hub itself |
 | 5 | throughput `docs/STACK-AUDIT.md` | Every stack version is stale (React, Vite, Zod, lucide, TanStack Query, dnd-kit, clsx/cva, components.json) | `cat package.json` — all versions differ | Rewrite or archive; stack modernization is complete |
@@ -184,7 +184,7 @@ Each item carries: doc path, missing/stale artifact, evidence, proposed disposit
 | 14 | BSU `docs/FEATURE-SURFACE.md` | dnd-kit "🟡 1" → actual 3; TanStack Query "38" → actual 61 | `grep -rl @dnd-kit src/`; `grep -rl @tanstack/react-query src/` | Update counts |
 | 15 | ADR-0004 collision | Two files share ADR number 0004 | `ls docs/adr/ADR-0004*` → 2 files | Renumber schema-builder consolidation to ADR-0008; add to README index |
 | 16 | Cross-ref: `v1.01A` → `v1.02A` | 8 files reference stale version | `grep -rl 'v1.01A'` | Bulk find-replace v1.01A → v1.02A across non-archived docs |
-| 17 | BSU `docs/plans/STATUS.md` | References archived merged-execution-backlog | `ls docs/20260501-merged-execution-backlog*` → not found | Update to reference `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md` |
+| 17 | BSU `docs/plans/STATUS.md` | References archived merged-execution-backlog | `ls docs/20260501-merged-execution-backlog*` → not found | Update to reference `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md` |
 
 ---
 

@@ -176,7 +176,7 @@ levels unstyled, no dnd-kit page editor at all."
 | No filters on Field Officer Portal (region, job) | conduit | open |
 | Logo is not the one uploaded in BSU branding | crm7 | crm7 landing page fixed `2fb338f6`; conduit's portal branding fixed `155358d`. Worth a re-look on the pages you saw it. |
 
-### From the operator UX bug register (`docs/20260728-operator-ux-bug-register-v1.00W.md`)
+### From the operator UX bug register (`docs/20260728-operator-ux-bug-register-v1.00F.md`)
 
 Its own closing line lists what was never implemented: **#1** emails cannot be opened or read (the
 Sent/SMS/Internal/All tabs have no row-click and no detail view — a new component is required),

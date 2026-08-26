@@ -2982,7 +2982,7 @@
     "schema_version": "1.5",
     "added_at": "2026-05-22T05:30Z",
     "frozen_fact": "FF-REPORTS-W2-20260521",
-    "plan_doc": "docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md",
+    "plan_doc": "docs/plans/20260521-reports-w2-uplift-implementation-v1.00F.md",
     "phase": "Phase 1 - Foundation + Data Plumbing",
     "phase_status": "complete",
     "target_branch": "crm7@development",
