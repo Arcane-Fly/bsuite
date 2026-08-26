@@ -72,6 +72,35 @@ FLOOR_LINE = re.compile(r"^\s*MIGRATION_FLOOR:\s*'([0-9]+)'\s*$", re.MULTILINE)
 # files where the real tree has 690.
 EXCLUDED_PARTS = {".claude", "node_modules", ".vercel", "dist", "build", ".git"}
 
+# A Supabase Branching replay root is DELIBERATELY below the floor: production
+# already holds that schema, and the applier must never run it there. Branch
+# databases provision empty and replay from it. So "below the floor" is the
+# whole point, and failing it would force the author to break branching to make
+# a gate green.
+#
+# The exemption is a MARKER IN THE FILE, not a path allowlist. An allowlist
+# grows silently and nobody re-reads it; a marker makes the author write down
+# why, in the artefact, where the next reader is already looking. It also keeps
+# the gate honest about scope — anything without the marker still fails.
+FLOOR_EXEMPT_MARKER = "@migration-floor-exempt:"
+
+
+def branching_baseline_reason(path):
+    """The declared reason a sub-floor file is deliberate, or None.
+
+    Only the header is read (first 80 lines). A marker buried inside 68k lines
+    of dumped DDL is far more likely to be a coincidence in dumped data than a
+    declaration by the author.
+    """
+    try:
+        with path.open(encoding="utf-8", errors="replace") as fh:
+            for _, line in zip(range(80), fh):
+                if FLOOR_EXEMPT_MARKER in line:
+                    return line.strip().lstrip("-").strip()
+    except OSError:
+        return None
+    return None
+
 
 def floor_in(path: Path) -> str | None:
     if not path.is_file():
@@ -250,13 +279,27 @@ def main() -> int:
 
     if args.base:
         for path in below:
+            marker = branching_baseline_reason(path)
+            if marker:
+                print(
+                    f"BELOW FLOOR, DECLARED: {path.relative_to(REPO_ROOT)}\n"
+                    f"    {marker}\n"
+                    f"    Accepted: a Supabase Branching replay root is SUPPOSED to sit\n"
+                    f"    below the floor, because production already has that schema and\n"
+                    f"    the applier must never run it there. Branch databases replay it\n"
+                    f"    from empty; the floor is what keeps it away from production.\n"
+                )
+                continue
             failures.append(
                 f"BELOW FLOOR: {path.relative_to(REPO_ROOT)}\n"
                 f"    version {version_of(path)} < floor {floor}, so the applier "
                 f"skips it on EVERY deploy, forever.\n"
                 f"    Fix: re-stamp above the floor. Do NOT edit the original file "
                 f"in place if it is already merged — the floor excludes it "
-                f"regardless of its contents."
+                f"regardless of its contents.\n"
+                f"    If it is a Supabase Branching replay root and is MEANT to sit "
+                f"below the floor, say so in the file:\n"
+                f"      -- @migration-floor-exempt: branching-baseline <why>"
             )
     elif below:
         # The pre-existing backlog is known and owned by the
