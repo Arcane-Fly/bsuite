@@ -1,7 +1,7 @@
 # Docs ↔ Code Audit — conduit + R80.3 (Read-Only)
 
 > **File:** `20260725-conduit-r80-docs-code-audit-v1.00F.md`
-> **Status:** W (Working) · **Mode:** READ-ONLY (no files modified)
+> **Status:** F (Frozen) · **Mode:** READ-ONLY (no files modified)
 > **Date:** 2026-07-25
 
 > ## ⚠ §4 AUDITS A REPOSITORY THAT NO LONGER EXISTS — re-measured 2026-08-18

@@ -1,6 +1,6 @@
 # BSuite Docs Deep-Dive Inventory — 2026-07-27
 
-**Status:** W (Working) · **Lane:** DOCS · **Scope:** parent `docs/` + all six submodule `docs/` trees
+**Status:** F (Frozen) · **Lane:** DOCS · **Scope:** parent `docs/` + all six submodule `docs/` trees
 **Method:** Read-only audit. Every capability/feature/standard claim verified against source (`grep`/`read_file`) before a verdict was assigned. No doc was moved or edited; this report is the only file written.
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set

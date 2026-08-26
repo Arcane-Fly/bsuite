@@ -1,6 +1,6 @@
 # GTO enquiry-to-billing walk — results
 
-**Date:** 2026-07-31 · **Status:** Working
+**Date:** 2026-07-31 · **Status:** Frozen
 **Plan:** `~/.claude/plans/lazy-hopping-nest.md` (Amendment B — the end-to-end walk)
 **Method:** driven **through the UI in a real signed-in browser** on `d.crm.crm7.app`
 (operator's dev account, BS OAuth flow), with every UI observation paired with a

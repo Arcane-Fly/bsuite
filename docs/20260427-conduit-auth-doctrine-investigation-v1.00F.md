@@ -1,6 +1,6 @@
 # Conduit Auth Doctrine vs Reality Investigation
 
-**Status:** Working (W)
+**Status:** Frozen (F)
 **Date:** 2026-04-27
 **Author:** Claude (investigation subagent for WS-J finish-line review)
 **Trigger:** WS-J smoke test (2026-04-25) reported "Conduit smoke shows 'Sign in with BSuite' + redirects through BSU `/login`" — appearing to contradict frozen-decision #5: *"Conduit remains Supabase SSR/native auth only."*

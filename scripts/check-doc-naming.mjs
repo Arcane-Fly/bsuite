@@ -175,7 +175,46 @@ if (selfTest) {
 const counts = {}
 const violations = []
 const adrs = []   /* { dir, num, file } — for the collision + index checks below */
+/* { p, fromName, fromBody } — the filename says one status, the document says another. */
+const statusDisagree = []
 let scanned = 0
+
+/* A RENAME THAT LEAVES THE BODY BEHIND IS A DOCUMENT THAT CONTRADICTS ITSELF.
+ *
+ * The status lives in TWO places — the filename suffix (…-v1.00F.md) and a
+ * "**Status:**" line near the top — and only the filename is mechanically checked.
+ * So freezing a document with `git mv` leaves the body saying "Working", and the
+ * file then asserts both. Sixteen documents were in that state on 2026-08-27, nine
+ * from a single freeze pass: the rename is the visible step, and the body edit is
+ * the one nobody has a reason to remember.
+ *
+ * Which side is right is not knowable here, so this reports the pair rather than
+ * rewriting either. Deliberately tolerant about FORM: the estate writes this line
+ * at least eight ways — "Working (W)", "W (Working — …)", "Working (v1.00W)",
+ * inside a blockquote, after a Date field — and a check that understood only one
+ * of them would report agreement for every document it could not parse.
+ * Unparseable means SKIPPED, never PASSED. */
+const STATUS_WORD = { working: 'W', draft: 'D', review: 'R', approved: 'A', frozen: 'F' }
+function checkStatusAgreement(p, name) {
+  const n = name.match(/-v\d+\.\d+([WDRAF])\.md$/)
+  if (!n) return
+  let head
+  try {
+    head = fs.readFileSync(p, 'utf8').split('\n').slice(0, 15).join('\n')
+  } catch {
+    return
+  }
+  let fromBody = null
+  for (const m of head.matchAll(/\*\*(?:Status|Version)[^*]*\*\*\s*[:|]?\s*([^\n|·]{0,30})/gi)) {
+    const seg = m[1].trim()
+    const w = seg.match(/\b(Working|Draft|Review|Approved|Frozen)\b/i)
+    if (w) { fromBody = STATUS_WORD[w[1].toLowerCase()]; break }
+    const v = seg.match(/\d+\.\d+([WDRAF])\b/)
+    if (v) { fromBody = v[1]; break }
+  }
+  if (!fromBody) return                    /* no readable status line — skipped, not passed */
+  if (fromBody !== n[1]) statusDisagree.push({ p, fromName: n[1], fromBody })
+}
 
 function walk(dir, segs) {
   let entries
@@ -196,6 +235,7 @@ function walk(dir, segs) {
         if (m) adrs.push({ dir, num: m[1], file: ent.name })
       }
       counts[fam] = (counts[fam] || 0) + 1
+      checkStatusAgreement(p, ent.name)
       if (fam === 'skip') continue
       scanned += 1
       if (fam.startsWith('!')) violations.push({ p, fam })
@@ -279,7 +319,42 @@ if (adrProblems.length) {
   console.log(`  ADR integrity: ${adrs.length} record(s) across ${Object.keys(byDir).length} directory(ies) — no number collisions, every one indexed`)
 }
 
-if (violations.length || adrProblems.length) {
+/* TWO-WAY RATCHET, not a hard zero. Seven of the sixteen live inside submodules,
+ * which this repo cannot edit — a hard fail would block every parent PR on work
+ * that has to happen in another repository. It refuses a RISE and refuses SLACK
+ * equally: banking a number above the measurement leaves room for the next rename
+ * to go unnoticed, which is the entire failure mode. */
+const AGREE_BASELINE = path.join(root, 'docs/.doc-status-agreement-baseline')
+let statusRatchetFailed = false
+{
+  const now = statusDisagree.length
+  let base = null
+  try { base = parseInt(fs.readFileSync(AGREE_BASELINE, 'utf8').trim(), 10) } catch { /* unset */ }
+  if (now > 0) {
+    console.error(`\nFILENAME AND BODY DISAGREE ABOUT STATUS (${now}):`)
+    for (const d of [...statusDisagree].sort((a, b) => a.p.localeCompare(b.p))) {
+      console.error(`  ${d.p}  filename says ${d.fromName}, document says ${d.fromBody}`)
+    }
+    console.error('  A rename moves the suffix; the "**Status:**" line does not follow on its own.')
+  }
+  if (base === null || Number.isNaN(base)) {
+    console.error(`\n  No baseline. Bank the measurement:  echo ${now} > docs/.doc-status-agreement-baseline`)
+    statusRatchetFailed = true
+  } else if (now > base) {
+    console.error(`\n  STATUS-AGREEMENT RATCHET BROKEN: baseline ${base}, now ${now}. It may shrink or hold, never rise.`)
+    statusRatchetFailed = true
+  } else if (now < base) {
+    console.error(`\n  Fell ${base} -> ${now}. Bank it:  echo ${now} > docs/.doc-status-agreement-baseline`)
+    console.error('  Equality, not a ceiling — slack lets the count grow back unnoticed (D-87).')
+    statusRatchetFailed = true
+  } else if (now === 0) {
+    console.log('  status agreement: every status-suffixed doc agrees with its own filename')
+  } else {
+    console.log(`  status agreement: ${now} known disagreement(s), holding at baseline ${base}`)
+  }
+}
+
+if (violations.length || adrProblems.length || statusRatchetFailed) {
   /* No baseline, no ratchet, no allowance. The estate measured ZERO violations
    * across 415 files on 2026-08-25, and a floor of zero needs no bookkeeping —
    * a ratchet file here would only be a place for the number to drift upward.

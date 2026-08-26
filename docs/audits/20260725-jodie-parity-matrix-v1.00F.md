@@ -1,6 +1,6 @@
 # Jodie Parity Matrix — v1.00W
 
-> **Status:** Working (W) — READ-ONLY audit. No code modified.
+> **Status:** Frozen (F) — READ-ONLY audit. No code modified.
 > **Date:** 2026-07-25
 > **Scope:** STRICTLY BSuite. Enumerates every Jodie tool factory in `crm7/src/lib/ai/tools/index.ts` (the `createToolRegistry` aggregator) and the R80.3 funding tool factory (`R80.3/src/lib/ai/fundingOffsetTool.ts` → `createFundingTools`), then maps each user-visible "Ask Jodie" UI action — as authored in the role manuals under `business-suite-unified/src/lib/manuals/` — to the tool that implements it.
 > **Method:** Every `askJodie:` string in the manuals is treated as one user-visible UI action. Each is mapped to the closest named Jodie tool. Status is `FULL` (a tool directly performs the action end-to-end), `PARTIAL` (a tool overlaps but does not cover the whole action, or only an adjacent step exists), or `MISSING` (no Jodie tool covers the action at all).
