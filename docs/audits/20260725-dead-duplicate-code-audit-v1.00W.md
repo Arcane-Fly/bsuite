@@ -1,3 +1,12 @@
+---
+kind: record
+authority: none
+owner: bsuite
+evidence:
+  - scripts/check-docs-table-cells.mjs
+  - packages/dates/src/react.tsx
+---
+
 # Dead & Duplicate Code Audit — BSuite Monorepo (Read-Only Inventory)
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
