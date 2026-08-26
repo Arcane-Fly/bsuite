@@ -16,12 +16,14 @@ on:
       - 'docs/**'
       - '**/docs/**'
       - 'scripts/check-doc-naming.mjs'
+      - 'scripts/generate-docs-directory-index.mjs'
       - '.github/workflows/doc-naming.yml'
   push:
     branches: [main, development]
     paths:
       - 'docs/**'
       - 'scripts/check-doc-naming.mjs'
+      - 'scripts/generate-docs-directory-index.mjs'
 
 permissions:
   contents: read
@@ -54,6 +56,15 @@ jobs:
 
       - name: Classify every documentation filename
         run: node scripts/check-doc-naming.mjs --all
+
+      # An index of documents is how anyone finds one. The estate's standard is
+      # "Every docs/ folder has a README.md index", and it was enforced for ADR
+      # directories ONLY — the reasoning there ("an ADR nobody can find is an ADR
+      # nobody reads") was never specific to ADRs. Eleven directories holding 70
+      # documents had drifted without one, the largest being docs/00-roadmap with
+      # 28. --check writes nothing; it names the directories and fails.
+      - name: Every docs directory has an index
+        run: node scripts/generate-docs-directory-index.mjs --check docs
 
       # docs/recovered/ is authoritative by operator RULING 1.2 and untrusted by
       # RULING 1.3 at the same time. The reconciliation lives in
