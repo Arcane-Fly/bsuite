@@ -204,5 +204,36 @@ if (base === null) {
   failed = true;
 } else {
   console.log(`  ratchet ok: baseline ${base}, now ${unclassified.length}${unclassified.length < base ? ` (${base - unclassified.length} paid down — update the baseline)` : ''}`);
+  /*
+   * THE RATCHET MUST REFUSE BOTH DIRECTIONS, not just upward.
+   *
+   * A baseline left ABOVE the true count is slack: it silently re-permits
+   * exactly as much debt as was just paid off, so the next doc to lose its
+   * frontmatter passes unnoticed. That is the estate's own recorded rule —
+   * precedent 20260809__two_directional_ratchet — and this gate did not
+   * implement its downward half. It reported "ratchet ok" with a baseline
+   * seven above the truth.
+   *
+   * Refusing here costs one line in a commit that already lowered the count,
+   * and it is the only moment the slack is visible.
+   */
+  /* Compare the COMMITTED count. Another lane's untracked drafts inflate the
+     local number and would otherwise mask a re-bank that CI, which sees only
+     the committed tree, is about to demand. */
+  let committed = unclassified.length;
+  try {
+    const others = execFileSync('git', ['ls-files', '--others', '--exclude-standard', 'docs'],
+      { encoding: 'utf8' }).split('\n').filter(Boolean);
+    committed -= unclassified.filter((u) =>
+      others.includes(typeof u === 'string' ? u : u.path ?? u.file ?? '')).length;
+  } catch { /* not a git tree — fall back to the raw count */ }
+
+  if (committed < base) {
+    console.log(
+      `  RE-BANK REQUIRED: the committed count fell to ${committed} but ${BASELINE} still reads ${base}. ` +
+        `A baseline above the truth re-permits the debt you just paid off — write ${committed} to it.`,
+    );
+    failed = true;
+  }
 }
 process.exit(failed ? 1 : 0);
