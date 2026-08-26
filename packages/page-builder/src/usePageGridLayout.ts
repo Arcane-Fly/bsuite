@@ -387,7 +387,34 @@ export function usePageGridLayout({
       const baseByKey = new Map(baseItems.map((item) => [item.i, item]));
       result[bp] = (layouts[bp] ?? []).map((item) => {
         const baseItem = baseByKey.get(item.i);
-        if (!baseItem?.autoHeight) return item;
+
+        /**
+         * Carry `chrome` back onto EVERY item, autoHeight or not.
+         *
+         * react-grid-layout hands `onLayoutChange` its own item objects, which
+         * carry only the fields it models (`i/x/y/w/h/minW/minH/…`). Every
+         * custom field is gone. The pre-existing `autoHeight`/`hUserSet`
+         * restore below is the same mechanism — it just lived inside the
+         * `autoHeight` branch, so it only ever protected autoHeight items.
+         *
+         * `chrome` cannot live in that branch. It is meaningful on items that
+         * are NOT autoHeight, and losing it is not a cosmetic regression that
+         * heals on reload: `rawLayouts` prefers a saved item over the authored
+         * default for every key it already has, so the first drag on a page
+         * writes a chrome-less layout to user_preferences and the slot falls
+         * back to the app's `itemChrome` permanently, for that user only. A
+         * marketing page deliberately set frameless would silently re-frame
+         * itself the first time someone nudged a card, and nothing would ever
+         * put it back.
+         *
+         * Three-valued on purpose: `undefined` must stay ABSENT so
+         * `layoutItem.chrome ?? itemChrome` still falls through to the app
+         * default. Only an explicit true/false is restored.
+         */
+        const withChrome = <T extends GridLayoutItem>(next: T): T =>
+          baseItem?.chrome === undefined ? next : { ...next, chrome: baseItem.chrome };
+
+        if (!baseItem?.autoHeight) return withChrome(item);
 
         const measuredRows = measured[item.i];
         // MUST mirror `activeLayouts` in PageGridLayout.tsx exactly, including
@@ -408,25 +435,25 @@ export function usePageGridLayout({
           // for the same reason `autoHeight` is: react-grid-layout does not
           // round-trip custom item props, so anything not restored here is
           // silently dropped on the next commit.
-          return {
+          return withChrome({
             ...item,
             autoHeight: true,
             h: baseItem.h,
             minH: baseItem.minH,
             ...(baseItem.hUserSet ? { hUserSet: true } : {}),
-          };
+          });
         }
         // A deliberate resize (bigger or smaller than the base) — keep it,
         // still floored by the measured content height. This is the only
         // moment in the system where a height is known to be a CHOICE rather
         // than an authored seed, so it is where that fact gets recorded.
-        return {
+        return withChrome({
           ...item,
           autoHeight: true,
           hUserSet: true,
           h: measuredRows === undefined ? item.h : Math.max(item.h, measuredRows),
           minH: measuredRows ?? baseItem.minH,
-        };
+        });
       });
     }
     return result;

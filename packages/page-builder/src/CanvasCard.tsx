@@ -36,6 +36,34 @@ export interface CanvasCardProps {
    * and was swept. Do not reintroduce it on a plain card or table.
    */
   autoHeight?: boolean;
+  /**
+   * Whether the GRID ITEM paints a card around this slot — border, radius,
+   * background, shadow. Threaded through to {@link GridLayoutItem.chrome} by
+   * `buildCanvasCardLayout`, and per-item always beats the page-level
+   * `itemChrome` prop in either direction.
+   *
+   * Leave it undefined and the app's `itemChrome` decides. Say `chrome={false}`
+   * on a slot whose content is NOT a card — a marketing section, a page
+   * heading, a chart that supplies its own surface — in an app that has set
+   * `itemChrome` true; say `chrome` on a BARE slot in an app that has not.
+   *
+   * WHY IT EXISTS AT ALL (2.1.0). 2.0.0 inverted the grid-item chrome default
+   * and offered `GridLayoutItem.chrome` as the per-slot escape hatch. That
+   * hatch was real for the handful of pages that hand-author a layout array,
+   * and UNREACHABLE for the ~1,700 CanvasCard usages that are how BSuite pages
+   * are actually written: `CanvasCardProps` did not declare the prop and
+   * `buildCanvasCardLayout` destructured a fixed set of fields, so a `chrome`
+   * written on a CanvasCard was dropped before it could reach a layout item.
+   * crm7's 2.0.0 adoption shipped a comment promising the opt-out and zero
+   * call sites able to use it. Declaring it here is what makes the promise
+   * true.
+   *
+   * Unlike `autoHeight`, this is not a hint the grid may override: a slot that
+   * says false is never framed. It also survives a drag — see the `chrome`
+   * restore in `stripAutoHeightRows`, which exists because react-grid-layout
+   * does not round-trip custom item props.
+   */
+  chrome?: boolean;
   /** Card body — typically a single card or page-header element. */
   children: ReactNode;
 }

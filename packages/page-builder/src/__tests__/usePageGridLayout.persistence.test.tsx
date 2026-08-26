@@ -420,3 +420,112 @@ describe('usePageGridLayout persistence (bsuite#1588)', () => {
     });
   });
 });
+
+// ── `chrome` must survive a drag ────────────────────────────────────────────
+//
+// react-grid-layout does not round-trip custom item props: its `cloneLayout`
+// rebuilds every item from a fixed field list, so anything the package added
+// is gone by the time `onLayoutChange` fires. `autoHeight` and `hUserSet` were
+// already hand-restored for that reason; `chrome` (2.1.0) was not, and the
+// loss is worse than a cosmetic flicker because `rawLayouts` prefers a SAVED
+// item over the authored default for every key it already holds. One drag on a
+// deliberately frameless page therefore wrote a chrome-less layout to
+// user_preferences and re-framed the page permanently, for that user, with no
+// path back.
+//
+// Every assertion here is paired with a POSITIVE CONTROL that proves the
+// stripper actually strips. A restore test whose input still carried the field
+// would pass against a completely unfixed build.
+describe('custom item props survive a react-grid-layout commit', () => {
+  beforeEach(() => store.clear());
+
+  const chromeOf = (layout: GridLayoutItem[], id: string) =>
+    layout.find((item) => item.i === id)?.chrome;
+
+  /** RGL's OWN cloner — the real mechanism, not a hand-written stand-in. */
+  const asRglWouldEcho = (layouts: GridLayouts): GridLayouts => ({
+    ...layouts,
+    lg: cloneLayout(layouts.lg as never) as unknown as GridLayoutItem[],
+  });
+
+  const frameless: GridLayouts = {
+    lg: [
+      { i: 'marketingHero', x: 0, y: 0, w: 12, h: 6, chrome: false },
+      { i: 'bareChart', x: 0, y: 6, w: 6, h: 6, autoHeight: true, minH: 6, chrome: true },
+      { i: 'saysNothing', x: 6, y: 6, w: 6, h: 6 },
+    ],
+  };
+
+  it('POSITIVE CONTROL — react-grid-layout really does drop `chrome` (if this fails the restore tests below prove nothing)', () => {
+    const echoed = asRglWouldEcho(frameless);
+    expect(chromeOf(echoed.lg, 'marketingHero'), 'cloneLayout must drop chrome').toBeUndefined();
+    expect(chromeOf(echoed.lg, 'bareChart'), 'cloneLayout must drop chrome').toBeUndefined();
+    // Guard the count: an empty or short array would make every `every()` below
+    // vacuously true.
+    expect(echoed.lg).toHaveLength(3);
+    expect(echoed.lg.every((item) => item.chrome === undefined)).toBe(true);
+  });
+
+  it('restores `chrome: false` on a NON-autoHeight item — the case the old restore could not reach', async () => {
+    const { result, rerender } = renderGrid('chrome-survives-drag', frameless);
+    act(() => {
+      result.current.setIsEditing(true);
+    });
+
+    const echoed = asRglWouldEcho(result.current.currentLayouts);
+    // Move it, so this is a real gesture and not a no-op commit.
+    const hero = echoed.lg.find((item) => item.i === 'marketingHero');
+    if (hero) hero.y = 12;
+
+    await act(async () => {
+      result.current.onLayoutChange([], echoed);
+      await nextFrame();
+    });
+    rerender();
+
+    const persisted = savedLayoutsFor('chrome-survives-drag')?.lg ?? [];
+    expect(persisted.length, 'a zero-length layout would make the next line vacuous').toBe(3);
+    expect(chromeOf(persisted, 'marketingHero')).toBe(false);
+    // …and the value the grid is handed on the next render, which is what
+    // actually decides the paint.
+    expect(chromeOf(result.current.currentLayouts.lg, 'marketingHero')).toBe(false);
+  });
+
+  it('restores `chrome: true` on an autoHeight item without disturbing the height restore', async () => {
+    const { result, rerender } = renderGrid('chrome-survives-autoheight', frameless);
+    act(() => {
+      result.current.setIsEditing(true);
+    });
+
+    const echoed = asRglWouldEcho(result.current.currentLayouts);
+    await act(async () => {
+      result.current.onLayoutChange([], echoed);
+      await nextFrame();
+    });
+    rerender();
+
+    const persisted = savedLayoutsFor('chrome-survives-autoheight')?.lg ?? [];
+    expect(persisted.length).toBe(3);
+    expect(chromeOf(persisted, 'bareChart')).toBe(true);
+    expect(persisted.find((item) => item.i === 'bareChart')?.autoHeight).toBe(true);
+  });
+
+  it('leaves an item that never declared `chrome` ABSENT, so `?? itemChrome` still falls through', async () => {
+    const { result, rerender } = renderGrid('chrome-stays-absent', frameless);
+    act(() => {
+      result.current.setIsEditing(true);
+    });
+
+    await act(async () => {
+      result.current.onLayoutChange([], asRglWouldEcho(result.current.currentLayouts));
+      await nextFrame();
+    });
+    rerender();
+
+    const persisted = savedLayoutsFor('chrome-stays-absent')?.lg ?? [];
+    expect(persisted.length).toBe(3);
+    const item = persisted.find((entry) => entry.i === 'saysNothing');
+    expect(item, 'the item must exist for the next assertion to mean anything').toBeTruthy();
+    expect(item && 'chrome' in item).toBe(false);
+  });
+});
