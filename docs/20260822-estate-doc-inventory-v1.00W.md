@@ -37,7 +37,7 @@ Two self-inflicted defects while producing it, both worth the space:
   cite nothing checkable                         426
   historical records (by path or banner)         43
   BINDABLE — these name a gate that exists, so their claim is checkable:
-    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md
+    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md
         publish-ui.yml
     docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00W.md
         verify-class-a-preservation.mjs
@@ -81,9 +81,9 @@ Two self-inflicted defects while producing it, both worth the space:
         ci.yml
     docs/20260819-built-unlanded-and-unwired-register-v1.00W.md
         check-hook-suppression-ratchet.mjs, audit-routes.sh, check-placement-rate-provenance.mjs, cron-job-health-audit.yml, hook-suppression-ratchet.yml
-    docs/20260821-airtable-class-data-surface-plan-v1.00D.md
+    docs/20260821-airtable-class-data-surface-plan-v1.00F.md
         check-shared-package-reach.mjs, check-table-reach.mjs
-    docs/20260821-atmosphere-evaluation-v1.00D.md
+    docs/20260821-atmosphere-evaluation-v1.00F.md
         check-shared-package-reach.mjs
     docs/20260822-border-elevation-token-system-spec-v1.00D.md
         audit-oklch-lightness.py, theme-conformance.yml, dark-variant-strategy-lint.yml, tailwind-source-registration-lint.yml
@@ -120,7 +120,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 |---|---|---|---|
 | `crm7/docs/audits/20260811-colour-drift-full-tree-audit-v1.00D.md` | BINDABLE |  | lint-ratchet.mjs |
 | `crm7/docs/audits/20260811-pgtap-evidence-integrity-v1.00D.md` | BINDABLE |  | pgtap.yml |
-| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md` | BINDABLE |  | publish-ui.yml |
+| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | BINDABLE |  | publish-ui.yml |
 | `docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00W.md` | BINDABLE |  | verify-class-a-preservation.mjs |
 | `docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md` | BINDABLE |  | verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs |
 | `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | BINDABLE |  | ci.yml |
@@ -142,8 +142,8 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260817-estate-completion-ledger-v1.00W.md` | BINDABLE |  | db-lint.yml |
 | `docs/20260817-estate-remaining-work-register-v3.00W.md` | BINDABLE |  | ci.yml |
 | `docs/20260819-built-unlanded-and-unwired-register-v1.00W.md` | BINDABLE |  | check-hook-suppression-ratchet.mjs, audit-routes.sh, check-placement-rate-provenance.mjs |
-| `docs/20260821-airtable-class-data-surface-plan-v1.00D.md` | BINDABLE |  | check-shared-package-reach.mjs, check-table-reach.mjs |
-| `docs/20260821-atmosphere-evaluation-v1.00D.md` | BINDABLE |  | check-shared-package-reach.mjs |
+| `docs/20260821-airtable-class-data-surface-plan-v1.00F.md` | BINDABLE |  | check-shared-package-reach.mjs, check-table-reach.mjs |
+| `docs/20260821-atmosphere-evaluation-v1.00F.md` | BINDABLE |  | check-shared-package-reach.mjs |
 | `docs/20260822-border-elevation-token-system-spec-v1.00D.md` | BINDABLE |  | audit-oklch-lightness.py, theme-conformance.yml, dark-variant-strategy-lint.yml |
 | `docs/20260822-data-surface-consolidation-decision-v1.00D.md` | BINDABLE |  | check-doc-classification.mjs |
 | `docs/20260822-estate-doc-inventory-v1.00W.md` | BINDABLE |  | audit-doc-completion.mjs, verify-class-a-preservation.mjs, verify-esm-imports.sh |
@@ -269,7 +269,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `crm7/docs/STACK-AUDIT.md` | UNBOUND |  | — |
 | `crm7/docs/troubleshooting/README.md` | UNBOUND |  | — |
 | `crm7/docs/UNIFIED-ROADMAP.md` | UNBOUND |  | — |
-| `docs/00-roadmap/20260112-master-roadmap-v1.00W.md` | UNBOUND |  | — |
+| `docs/00-roadmap/20260112-master-roadmap-v1.00F.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260725-qwen-excellence-integration-plan-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260808-data-workspace-implementation-plan-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260808-intake-and-onboarding-findings-v1.00W.md` | UNBOUND |  | — |

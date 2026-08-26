@@ -308,7 +308,7 @@ These are cheap and they are the reason agents keep re-deriving the same wrong t
 | D-8 | **`20260428-operator-verification/README.md` links to five files that do not exist**; `docs/references/` has no README index, contrary to the standards guide | — |
 | D-9 | **Nine consumed one-shot prompts sit in the plans index as though they were plans**; `plans/STATUS.md` is six weeks stale and is the first file an agent opens; `plans/README.md` carries three false claims | — |
 | D-10 | **Five throughput component docs are unfilled templates** (`[Describe what…]`); braden's theme reference claims Tailwind v3 against an installed v4.3 | — |
-| D-11 | **Mark as SUPERSEDED:** `00-roadmap/20260112-master-roadmap-v1.00W.md`, both `20260725-*` excellence plans (they target the archived R80.3), the nine `20260506-codehouse-parity/` portal sub-plans (superseded by D-93–D-98), `20260510-universal-canvas` (shipped as page-builder 0.9.0), `20260507-feature-builder-ux-red-team`, `20260519-rpc-report-page-security-review` (the `report_catalog_*` family won) | — |
+| D-11 | **Mark as SUPERSEDED:** `00-roadmap/20260112-master-roadmap-v1.00F.md`, both `20260725-*` excellence plans (they target the archived R80.3), the nine `20260506-codehouse-parity/` portal sub-plans (superseded by D-93–D-98), `20260510-universal-canvas` (shipped as page-builder 0.9.0), `20260507-feature-builder-ux-red-team`, `20260519-rpc-report-page-security-review` (the `report_catalog_*` family won) | — |
 | D-12 | **`00-roadmap/20260812-pi-run-handback-v1.00W.md` §1 and §13 are actively misleading** — they rest on "nothing is promoted", which stopped being true on 2026-08-14. Banner it; the estate's convention is to leave corrections visible | — |
 
 ---

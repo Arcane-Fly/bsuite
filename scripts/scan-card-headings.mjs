@@ -48,6 +48,19 @@ if (!existsSync(entry)) {
   process.exit(2);
 }
 const { scanCardHeadings } = await import(entry);
+// A MISSING dist is caught above with a build hint. A STALE one is not: the file
+// exists, the import resolves, and the destructure quietly yields undefined — then
+// line ~77 dies on `scanCardHeadings is not a function`, which names neither the
+// cause nor the fix. Measured 2026-08-26: a page-builder dist 17 source files old
+// still satisfied existsSync and exported nothing. Fail with the SAME hint the
+// missing-file branch gives, because it is the same remedy.
+if (typeof scanCardHeadings !== 'function') {
+  console.error(
+    `[scan-card-headings] ${entry} exists but does not export scanCardHeadings — the build is STALE.\n` +
+      `Rebuild it: pnpm --filter @bsuite/page-builder build`,
+  );
+  process.exit(2);
+}
 
 const CHROME = [
   'Card', 'MagicCard', 'GlassCard', 'NeonCard', 'StatCard',

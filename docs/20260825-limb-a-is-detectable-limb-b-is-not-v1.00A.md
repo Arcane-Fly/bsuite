@@ -74,7 +74,7 @@ The three were adjudicated individually rather than in a batch:
 - **`OUTSTANDING.md`** — already banners itself *"HISTORICAL SNAPSHOT — not a source of
   truth"*. It is a **record**, and marking a record complete is a category error, not a
   promotion.
-- **`20260821-atmosphere-evaluation-v1.00D.md`** — superseded, but it answered the wrong
+- **`20260821-atmosphere-evaluation-v1.00F.md`** — superseded, but it answered the wrong
   question entirely (see `20260825-atmosphere-is-nocodb-and-the-licence-already-ruled`).
   A document that was never right is corrected, not completed.
 - **`20260812-estate-remaining-work-register-v1.00W.md`** — superseded by v3, but limb (b)

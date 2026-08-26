@@ -47,9 +47,16 @@ BADWT=$(git worktree list | awk 'NR>1 {print $1}' | grep -vc '^/home/braden/Desk
 DETACHED=$(git worktree list | grep -c 'detached' || true)
 [ "${DETACHED:-0}" -gt 0 ] && flag "$DETACHED detached-HEAD worktree(s) — a push there reports up-to-date and lands nothing"
 
+# Count what is ACTUALLY on the remote, not local remote-tracking refs.
+# refs/remotes/origin/* SURVIVE a branch being deleted upstream until someone
+# runs `git fetch --prune`, so a session that cleans up its branches leaves this
+# metric reading high and the audit flags drift that does not exist. Measured
+# 2026-08-26: 59 tracking refs against 25 real branches — 34 of them stale, and
+# the flag fired at a >26 threshold purely on the corpses. `git ls-remote` asks
+# the remote, so it cannot be fooled by a stale local ref.
 BR=0
 for r in "${REPOS[@]}"; do
-  n=$(git -C "$r" for-each-ref --format='%(refname)' refs/remotes/origin 2>/dev/null | grep -vc HEAD)
+  n=$(git -C "$r" ls-remote --heads origin 2>/dev/null | wc -l)
   BR=$((BR+n))
 done
 say "remote branches: $BR   worktrees: $WT"
@@ -185,7 +192,7 @@ done
 
 # 9. Named, not skipped ------------------------------------------------------
 say "NOT checked here (needs Supabase MCP, run them in-session):"
-say "  · FutureBuild row counts — 8 placements / 8 people / 8 training_contracts / 13 contacts / 3 timesheets"
+say "  · FutureBuild row counts — 8 placements / 8 people / 8 training_contracts / 13 contacts / 3 timesheets / 5 clients / 0 incidents / 0 reminders (clients+incidents+reminders ADDED to the watch 2026-08-25: the E2E incident polluted 3 tables this list did not cover)"
 say "  · advisor sweep ERROR count"
 say "NOT checked here (needs the lane transcripts): lane liveness"
 

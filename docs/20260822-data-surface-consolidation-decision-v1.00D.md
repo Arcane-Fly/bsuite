@@ -7,7 +7,7 @@ evidence:
   - packages/data-grid/src/lib/selection.test.ts
   - scripts/check-doc-classification.mjs
   - docs/plans/20260817-estate-completion-plan-v1.00D.md (Gate G1)
-supersedes: docs/20260821-atmosphere-evaluation-v1.00D.md
+supersedes: docs/20260821-atmosphere-evaluation-v1.00F.md
 review_by: 2026-09-05
 ---
 
@@ -37,7 +37,7 @@ developer database console. The estate's own diagnosis is the accurate one:
 
 > *"crm7 is much closer to Airtable than it feels. The reason it feels far away is not
 > absence. **It is that every piece exists two or three times and none of them compose.**"*
-> — `docs/20260821-airtable-class-data-surface-plan-v1.00D.md` §0, 2026-08-21
+> — `docs/20260821-airtable-class-data-surface-plan-v1.00F.md` §0, 2026-08-21
 
 **Recommendation: Option 1 — consolidate onto one surface and complete it, reusing the
 parts that already work.** Not because it is ambitious, but because it is the only one of
@@ -394,7 +394,7 @@ a standalone route, four of the five grid components, `report-form-dialog.tsx` (
 
 ## 5. THE REFERENCE — what atmosphere actually demonstrates
 
-**Finding that supersedes `docs/20260821-atmosphere-evaluation-v1.00D.md`:** that document
+**Finding that supersedes `docs/20260821-atmosphere-evaluation-v1.00F.md`:** that document
 evaluated `Atmosphere/atmosphere`, a JVM agent runtime. **That is the wrong repository.**
 `github.com/GaryOcean428/atmosphere` is a **fork of `nocodb/nocodb`, renamed by
 find-and-replace.** Evidence: `Merge pull request #1 from nocodb/develop` (2026-08-18)
@@ -736,7 +736,7 @@ recommendation, not decorations:
 | **B-9** | **ADR filing convention.** This document follows the dated `docs/` convention as instructed. The estate also has `docs/adr/ADR-NNNN-kebab-case-title.md` (next free: **ADR-0009**) with a mandatory index row. Should this be re-filed as ADR-0009? **Note the history:** ADR-0008 was ratified as "ADR-0004", collided, **lost its index row and was unreachable for three months.** | | No |
 | **B-10** | **The `/settings/data` Browse gap.** `browseDataService.ts:1-12` names both `/admin/data` and `/settings/data` as targets; only `/admin/data` was wired. Is the org-admin tier meant to have Browse (R-32), or was S4 deliberately import-only? | | No |
 
-**Also flagged, not a ruling but a correction:** `docs/20260821-atmosphere-evaluation-v1.00D.md`
+**Also flagged, not a ruling but a correction:** `docs/20260821-atmosphere-evaluation-v1.00F.md`
 evaluated the wrong repository (the JVM `Atmosphere/atmosphere`, not
 `GaryOcean428/atmosphere`). Its conclusions about JVM adoption are irrelevant to the
 question asked. Its §3 findings about the report engine — inline "queued" path, nothing
