@@ -99,6 +99,33 @@ const edgeTypes = { smart: SmartEdge };
  * tenant branding follow automatically and nothing here needs a dark variant.
  */
 const XY_TOKEN_BINDINGS = {
+  /*
+   * SIZE THE CANVAS. Without these two the diagram does not render at all.
+   *
+   * `@xyflow/react` v12's stylesheet sizes `.react-flow__container` but NEVER
+   * `.react-flow` itself — grep it: the only height/width rules are on
+   * `__container`, `__handle`, `__controls-button` and friends. The root is a
+   * plain block div whose children are all absolutely positioned, so with no
+   * height of its own it collapses to ZERO and every node is laid out inside a
+   * 0px box. Measured on the deployed app: `.react-flow` 1184x0 with 45 nodes
+   * present in the DOM and a toolbar cheerfully reporting "45 entities".
+   *
+   * The component does apply its own `width/height: 100%` inline — but passing
+   * a `style` prop REPLACES that, so binding the tokens here silently removed
+   * the only sizing there was. And restoring `height: 100%` is not enough on
+   * its own: it resolves against a parent whose CSS height is `auto`
+   * (`flex-1` + `min-h-[420px]` give a USED height, not a definite one), so it
+   * computes back to zero. The sibling pipeline-flow canvas in crm7 keeps the
+   * library defaults and is broken the same way, which is how we know.
+   *
+   * Absolute + inset sidesteps the percentage-resolution problem entirely: the
+   * containing block is the nearest positioned ancestor, and this component's
+   * wrapper is already `relative`. Verified in the live DOM before it was
+   * written — setting exactly these two properties took the canvas from 0px to
+   * 420px and 45 nodes from invisible to visible.
+   */
+  position: 'absolute',
+  inset: 0,
   '--xy-minimap-background-color-props': 'var(--role-bg-panel)',
   '--xy-minimap-mask-background-color-props': 'var(--role-bg-body)',
   '--xy-minimap-mask-stroke-color-props': 'var(--role-border-interactive)',
