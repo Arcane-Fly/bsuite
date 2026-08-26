@@ -152,3 +152,70 @@ rename would otherwise have broken. The other four were left alone.
 
 Under-claiming costs a re-review; a false completion costs the truth of the whole corpus,
 permanently, in a filename every future reader trusts at a glance.
+
+---
+
+## RE-ADJUDICATED 2026-08-26 ~05:30 AWST — still two, and the reason is worth keeping
+
+Re-run after a day of gate work, because two of the blockers named above were
+cleared. The verdict does not move: **the same two documents carry `F`, and nothing
+else qualifies.**
+
+### What changed underneath
+
+`check-shared-package-reach` now reports **OK — 54 consumer/package edge(s)
+examined, none unreachable**. The last unreachable edge was crm7 pinning
+`@bsuite/page-builder@^1.0.7` against a published 2.0.0, and a caret range never
+crosses a major. crm7 adopted 2.0.0 today (crm7#2041/#2042), so that edge closed.
+
+`check-doc-classification` also passes (baseline 254, now 254) after the morning
+ledger was classified.
+
+### The intersection, and why 11 is not 11
+
+Both limbs, sorted with `LC_ALL=C` before `comm`:
+
+    limb (a) superseded / self-declared ...... 29
+    limb (b) bindable (cites a live gate) .... 81
+    intersection ............................. 11
+
+**Eleven is not eleven candidates.** The supersession audit reports a
+*relationship*, so it names BOTH ends — the superseded document and the one doing
+the superseding. Filtering the intersection for docs that are actually superseded
+leaves far fewer, and of those the gates must still be RUN.
+
+Two survived that far and both are already marked:
+
+- `docs/20260821-atmosphere-evaluation-v1.00F.md`
+- `docs/20260821-airtable-class-data-surface-plan-v1.00F.md`
+
+### The two I nearly marked, and why that would have been wrong
+
+`20260825-atmosphere-is-nocodb-and-the-licence-already-ruled-v1.00A.md` and
+`20260822-data-surface-consolidation-decision-v1.00D.md` both appeared in the
+intersection with a PASSING gate. Neither qualifies:
+
+- They are the **superseders**, not the superseded — each carries `supersedes:`
+  frontmatter naming the documents above. Limb (a) asks whether a doc *has been*
+  superseded, and the answer for both is no; they are the current truth.
+- `…-v1.00D.md` states its own status plainly: **"D (Draft — Proposed, NOT
+  ratified)"**. Marking a draft complete is the exact failure the bar exists to
+  prevent.
+
+This is the operator's `F means frozen` ruling seen from the other side. That
+ruling settled that `F` on a predecessor does not outrank `A` on its successor —
+and the mirror error is to read a supersession relationship as evidence about the
+*successor*. The tool reports the edge; only the direction makes it a verdict.
+
+### Where the remaining candidates stand
+
+| document | cites | why not marked |
+|---|---|---|
+| `docs/OUTSTANDING.md` | `verify-class-a-preservation.mjs` | gate needs `DATABASE_URL`; cannot be shown passing from a checkout |
+| `00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | `ci.yml`, `quality.yml`, `supabase-migration-rehearsal.yml` | `ci.yml` resolves to three different submodule workflows |
+| `20260817` / `20260819-built-unlanded-and-unwired-register` | `audit-routes.sh` + others | `audit-routes.sh` still cannot be shown to terminate |
+
+**Nothing was renamed by this pass.** Under-claiming costs a re-review; a false
+completion costs the truth of the whole corpus, permanently, in a filename every
+future reader trusts at a glance.
+
