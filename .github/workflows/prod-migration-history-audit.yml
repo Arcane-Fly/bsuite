@@ -3,7 +3,7 @@
 # Read-only drift detector for supabase_migrations.schema_migrations. This is
 # a PARENT-repo revival of crm7's "Production Migration History Audit", which
 # failed every run since creation (SUPABASE_DB_URL was never provisioned in
-# crm7 — see docs/20260728-weekly-gap-register-v1.00W.md finding S-1). The
+# crm7 — see docs/20260728-weekly-gap-register-v1.00F.md finding S-1). The
 # crm7 workflow has been removed; this is now the only copy of this control.
 #
 # Why the parent and not crm7: supabase_migrations.schema_migrations is ONE

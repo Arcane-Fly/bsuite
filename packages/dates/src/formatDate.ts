@@ -9,7 +9,7 @@
  * each consumer reinventing format options.
  *
  * Phase F scaffold — see plan
- * `docs/plans/20260510-universal-canvas-capability-implementation-v1.00W.md`.
+ * `docs/plans/20260510-universal-canvas-capability-implementation-v1.00F.md`.
  */
 
 /**
