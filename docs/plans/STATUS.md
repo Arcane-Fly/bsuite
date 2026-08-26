@@ -9,7 +9,7 @@
 > promoted to production several times since, most recently 2026-08-17.
 >
 > **For what is actually outstanding, read
-> [`../20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md)** —
+> [`../20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md)** —
 > the canonical register, re-measured against live SQL, live GitHub state and the six repos at
 > `development` HEAD. It explicitly supersedes seven earlier registers, and this board is the same
 > class of artifact.
@@ -42,7 +42,7 @@ dependency status).
 > the phase-ordered queue `docs/20260501-merged-execution-backlog-v1.00W.md` is **archived out of
 > the repo** (`~/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/docs/archive/2026-07/`) —
 > its sequencing was absorbed by
-> [`docs/20260814-estate-remaining-work-register-v2.00W.md`](../20260814-estate-remaining-work-register-v2.00W.md).
+> [`docs/20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md).
 > Cross-app a11y / dependency / auth status lives in
 > [`docs/CONSISTENCY-REPORT.md`](../CONSISTENCY-REPORT.md).
 

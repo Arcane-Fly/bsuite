@@ -77,7 +77,7 @@ The three were adjudicated individually rather than in a batch:
 - **`20260821-atmosphere-evaluation-v1.00F.md`** — superseded, but it answered the wrong
   question entirely (see `20260825-atmosphere-is-nocodb-and-the-licence-already-ruled`).
   A document that was never right is corrected, not completed.
-- **`20260812-estate-remaining-work-register-v1.00W.md`** — superseded by v3, but limb (b)
+- **`20260812-estate-remaining-work-register-v1.00F.md`** — superseded by v3, but limb (b)
   fails on evidence: of its three cited workflows only one runs on this branch, and the
   carry-forward test was **vacuous** — v1 contains zero `X-N` item identifiers, so "0 of v1's
   ids missing from v3" proves nothing at all. A zero from a pattern that matches nothing is

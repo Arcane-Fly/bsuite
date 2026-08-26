@@ -1,5 +1,20 @@
 # Estate remaining-work register
 
+> **SUPERSEDED — FROZEN 2026-08-26. Do not work from this file.**
+>
+> The consolidated register is now
+> [`docs/20260817-estate-remaining-work-register-v3.00W.md`](../20260817-estate-remaining-work-register-v3.00W.md),
+> which carries a VERDICT per row against live sources. This one was written as a
+> list of FINDINGS with no verdicts, so a reader cannot tell which rows are still
+> true — and on 2026-08-26 an audit of the two most recent registers found that
+> **eight of ten "outstanding" claims had already been fixed in code**, several of
+> them months earlier. A stale register does not merely go quiet; it actively
+> points lanes at problems that no longer exist while the real ones go unread.
+>
+> Kept rather than deleted because the rows record what was true on its date, and
+> several later documents cite it. Frozen means exactly that: accurate as history,
+> not as a work list.
+
 **Created** 2026-08-12 · **Status** Working · **Owner** unassigned (all lanes handed over)
 
 Every outstanding item across the six submodules and the parent, collected from seven lane

@@ -3,7 +3,7 @@
 > ## ⚠ SUPERSEDED — 2026-08-14 · AND ITS `P0-n` ARE NOT THE ESTATE'S `P0-n`
 >
 > **Superseded for remaining-work purposes by
-> [`docs/20260814-estate-remaining-work-register-v2.00W.md`](20260814-estate-remaining-work-register-v2.00W.md)**
+> [`docs/20260814-estate-remaining-work-register-v2.00F.md`](20260814-estate-remaining-work-register-v2.00F.md)**
 > (see its §9), whose status is in turn carried by
 > [`docs/20260817-estate-completion-ledger-v1.00W.md`](20260817-estate-completion-ledger-v1.00W.md).
 > That supersession was declared on 2026-08-14; this banner was added 2026-08-17 because the
