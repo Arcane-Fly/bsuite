@@ -29,6 +29,7 @@
  */
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
 const KINDS = ['law', 'obligation', 'decision', 'standard', 'plan', 'record'];
@@ -164,7 +165,42 @@ console.log(`\n  unclassified: ${unclassified.length} of ${all.length} doc(s)`);
 if (base === null) {
   console.log(`  no baseline yet — write ${unclassified.length} to ${BASELINE} to arm the ratchet`);
 } else if (unclassified.length > base) {
+  /*
+   * NAME THE UNTRACKED ONES BEFORE CRYING BROKEN.
+   *
+   * This walks the working tree, so an unlanded draft from another lane counts
+   * toward the debt while CI — which only ever sees committed files — stays
+   * green. That has now produced the same false alarm twice, and both times the
+   * next person had to stash files, re-run, and reason it out from scratch.
+   *
+   * The ratchet still FAILS: an uncommitted doc is real debt the moment it
+   * lands, and a gate that quietly forgave it would be the vacuous kind. What
+   * changes is that the output says WHICH files are untracked and what the
+   * count would be without them, so "another lane has drafts open" is
+   * distinguishable at a glance from "someone added unclassified debt".
+   */
+  let untracked = [];
+  try {
+    untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard', 'docs'],
+      { encoding: 'utf8' })
+      .split('\n').map((l) => l.trim()).filter((l) => l.endsWith('.md'));
+  } catch {
+    // Not a git checkout, or git is unavailable. Fall through: the ratchet
+    // still reports, it just cannot attribute. Never silently pass.
+    untracked = [];
+  }
+  const untrackedUnclassified = unclassified.filter((u) =>
+    untracked.includes(typeof u === 'string' ? u : u.path ?? u.file ?? ''));
   console.log(`  RATCHET BROKEN: baseline ${base}, now ${unclassified.length}. Debt may shrink or hold, never rise.`);
+  if (untrackedUnclassified.length > 0) {
+    const wouldBe = unclassified.length - untrackedUnclassified.length;
+    console.log(`\n  ${untrackedUnclassified.length} of those are UNTRACKED — not committed, so CI does not see them:`);
+    for (const u of untrackedUnclassified) console.log(`      ${typeof u === 'string' ? u : u.path ?? u.file}`);
+    console.log(`  Without them the count is ${wouldBe} against a baseline of ${base}` +
+      `${wouldBe <= base ? ' — the COMMITTED tree is within the ratchet.' : '.'}`);
+    console.log('  This still fails: an uncommitted doc is debt the moment it lands.');
+    console.log('  If they are not yours, ask their author to land them with kind/authority/evidence.');
+  }
   failed = true;
 } else {
   console.log(`  ratchet ok: baseline ${base}, now ${unclassified.length}${unclassified.length < base ? ` (${base - unclassified.length} paid down — update the baseline)` : ''}`);
