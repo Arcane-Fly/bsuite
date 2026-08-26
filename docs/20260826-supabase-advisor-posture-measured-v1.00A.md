@@ -89,3 +89,46 @@ all `tenant_encryption_keys`.
 - Any app gaining a direct `.from()` read of one of the 13 deny-all tables: that is the
   silent-empty defect, and it will not raise an error anywhere.
 - An ERROR-level advisor appearing at all — there are currently none.
+
+## What was actually red, and what closed it
+
+The **Advisor sweep** gate compares live findings against
+[`docs/security/supabase-advisor-allowlist.json`](security/supabase-advisor-allowlist.json)
+and fails on any SECURITY WARN/ERROR that is not matched. Of the 146 WARN findings,
+**exactly two** were unmatched — both minted the same day by another lane:
+
+- `mint_r8_quote_return_ticket(p_placement_id uuid)`
+- `redeem_r8_quote_return_ticket(p_token text)`
+
+They were read in full rather than accepted on their own `@SD-JUSTIFICATION` annotations,
+because `mint` takes a caller-supplied id and that is the IDOR shape. It closes it: the
+tenant is read off the placement **row** after proving membership through
+`auth_tenant_id_with_role`, with `IN (SELECT …)` rather than a scalar assignment — the
+helper `RETURNS SETOF uuid`, and a user may hold several memberships, so a scalar would
+compare whichever came back first. `redeem` takes only an opaque token, rate-limits with an
+atomic upsert where the increment **is** the check, refuses by `RETURN` rather than `RAISE`
+so the counter survives the refusal, locks the ticket `FOR UPDATE` against a concurrent
+double-redeem, and treats the tenant as a property of the **ticket** — a wrong-tenant holder
+gets the identical `invalid_or_expired` reply, so trying is not a tenant oracle.
+
+Both are correct. Allowlisted `accepted`, with that reasoning recorded in the rule.
+
+**After: security 159 total → 0 unallowlisted (146 accepted, 13 info); performance 1172 → 0
+unallowlisted (157 tracked, 1015 info). The gate is green.**
+
+## A latent hole in the allowlist itself
+
+`categorize()` routes on `mode === 'tracked'` and sends **everything else** to `accepted`.
+That default is the permissive branch — it suppresses the CI failure *and* the tracking
+issue. So a rule written `mode: "track"`, or `"Tracked"`, or with the field omitted, stops
+being tracked by anyone while still reading in the file as though it is, and nothing
+downstream can distinguish that from a deliberate acceptance.
+
+One rule in the file was already written `mode: "accept"`. It was harmless — `"accept"` and
+`"accepted"` both fall to the same branch — but it is the same slip one keystroke away from
+mattering.
+
+`loadAllowlist()` now refuses any unrecognised mode at load and exits 2, naming the rule
+index, its lint and the offending value. Verified with a control that must come back
+positive: setting a rule to `mode: "track"` exits **2**; restoring it exits **0**. The
+typo was normalised to `"accepted"`.
