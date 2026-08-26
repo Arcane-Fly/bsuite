@@ -38,9 +38,37 @@ function objectIdentity(lint) {
   return m.name ?? lint.cache_key ?? lint.detail?.slice(0, 80) ?? 'unknown';
 }
 
+const VALID_MODES = new Set(['accepted', 'tracked']);
+
+/**
+ * Load the allowlist, refusing any rule whose `mode` we do not recognise.
+ *
+ * `categorize` routes on `mode === 'tracked'` and sends everything else to
+ * `accepted`. That default is the permissive branch: it suppresses the CI
+ * failure AND suppresses the tracking issue. So a rule written `mode:
+ * "track"` — or `"Tracked"`, or omitted entirely — silently stops being
+ * tracked by anyone while still reading, in the file, as though it is.
+ * Nothing downstream can tell that apart from a deliberate acceptance.
+ *
+ * Refusing at load is the only place the difference is still visible.
+ */
 function loadAllowlist() {
   const doc = JSON.parse(readFileSync(ALLOWLIST_PATH, 'utf8'));
-  return doc.rules ?? [];
+  const rules = doc.rules ?? [];
+  const bad = rules
+    .map((r, i) => ({ i, lint: r.lint, mode: r.mode }))
+    .filter((r) => !VALID_MODES.has(r.mode));
+  if (bad.length) {
+    for (const r of bad) {
+      console.error(
+        `::error::allowlist rule ${r.i} (${r.lint}) has mode ${JSON.stringify(r.mode)}; ` +
+          `expected one of ${[...VALID_MODES].join(', ')}. An unrecognised mode is treated ` +
+          `as 'accepted', which suppresses both the failure and the tracking issue.`,
+      );
+    }
+    process.exit(2);
+  }
+  return rules;
 }
 
 function matchRule(rules, lint) {

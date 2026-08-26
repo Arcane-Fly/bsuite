@@ -214,10 +214,23 @@ function isSameScopeCollision(entries) {
 function describeCollision({ version, entries, unpinned, pinMismatch }) {
   const files = entries.map((e) => `${e.scope}:${e.file}`).join(' and ')
   if (pinMismatch) {
+    // SAY WHICH DIRECTION. The count can move both ways and the two mean
+    // opposite things, but this message used to assert "a new migration has
+    // landed" for both — so a group that SHRANK sent the reader hunting a new
+    // file that did not exist. Measured 2026-08-26: crm7 moved 656 historical
+    // migrations into supabase/migrations/archive/ for the Supabase Branching
+    // baseline, two allowlisted groups went three-way to two-way, and the
+    // message named the wrong cause for both.
+    const grew = pinMismatch.actual > pinMismatch.expected
+    const cause = grew
+      ? `a new migration has LANDED on an already-excused version`
+      : `a file has LEFT the group — moved, archived or renamed. Nothing new landed. ` +
+        `Check for an archive/ or baseline/ restructure before assuming a deletion, ` +
+        `and confirm the tree's total file count did not drop`
     return (
       `${version} is ALLOWLISTED for ${pinMismatch.expected} colliding file(s) but now has ` +
       `${pinMismatch.actual}. The entry was verified against a different set, so it does not ` +
-      `excuse what is there now — a new migration has landed on an already-excused version. ` +
+      `excuse what is there now — ${cause}. ` +
       `Re-verify the group, then update the \`n=\` count on this entry in ` +
       `${ALLOWLIST_RELATIVE_PATH}: ${files}`
     )
