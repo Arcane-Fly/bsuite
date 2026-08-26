@@ -541,7 +541,39 @@ const UNBOUND_BASELINE_FILE = 'docs/.unbound-baseline';
 // doc reclassified from live to record would RAISE the number, and the honest
 // reading of that reclassification is that the backlog shrank by one.
 const archivalCount = rows.filter((r) => r.archival).length;
-const unboundNow = rows.length - bindable.length - dead.length - archivalCount;
+
+// NAME THEM. The ratchet used to report only a number, and a number is not
+// actionable: "baseline 336, now 337" tells you a doc crossed the line and not
+// WHICH, across a 578-document corpus spanning six submodules. Finding the one
+// that moved took an hour of bisecting by date, by submodule, and by gitlink
+// range — and still did not isolate it, because every candidate turned out to be
+// bindable or archival.
+//
+// A gate whose diagnostic cannot be acted on gets banked around rather than
+// fixed, which is precisely how a ratchet stops ratcheting. The same fault exists
+// in check-doc-classification, which reports "255 of 314" and no path.
+const bindableSet = new Set(bindable.map((r) => r.path));
+const deadSet = new Set(dead.map((r) => r.path));
+const unboundRows = rows.filter(
+  (r) => !bindableSet.has(r.path) && !deadSet.has(r.path) && !r.archival,
+);
+
+// COUNTED FROM THE SET, NOT BY SUBTRACTION.
+//
+// This was `rows.length - bindable.length - dead.length - archivalCount`, and
+// those three categories OVERLAP: a doc citing one gate that exists and another
+// that does not is in `bindable` AND `dead`, so it was subtracted twice.
+// Measured on the parent corpus: 4 such docs, arithmetic 194 vs the true 198.
+//
+// The consequence is worse than a wrong total. The overlap moves whenever a gate
+// script is added or deleted, so the ratchet number changed with NO document
+// having changed — which is exactly the phantom "+1 over baseline" that cost an
+// hour of bisecting by date, by submodule and by gitlink range before the
+// listing above made the discrepancy visible.
+//
+// A ratchet must move only when the thing it measures moves.
+const unboundNow = unboundRows.length;
+
 let ratchetFailed = false;
 if (existsSync(UNBOUND_BASELINE_FILE)) {
   const base = Number(readFileSync(UNBOUND_BASELINE_FILE, 'utf8').trim());
@@ -555,6 +587,22 @@ if (existsSync(UNBOUND_BASELINE_FILE)) {
     console.error('  or migration that would prove it — or, if it records what happened rather');
     console.error('  than claiming anything, file it under docs/archive/ or give it a');
     console.error('  point-in-time banner and it counts as a RECORD instead.');
+    // Show the most recently DATED first: a ratchet breaks because of something
+    // recent, and the full list is hundreds of lines nobody reads.
+    //
+    // Sorted on the `YYYYMMDD-` filename prefix, not on the path — sorting by path
+    // is reverse-ALPHABETICAL and puts whichever submodule sorts last at the top,
+    // which reads as "newest" and is not. Undated docs sort last rather than
+    // being dropped: a doc with no date prefix is still unbound.
+    const dateKey = (r) => (String(r.path).match(/(\d{8})-/)?.[1] ?? '00000000');
+    const newest = [...unboundRows]
+      .sort((a, b) => dateKey(b).localeCompare(dateKey(a)) || String(a.path).localeCompare(String(b.path)))
+      .slice(0, 15);
+    console.error(`\n  The ${unboundRows.length} unbound doc(s), most recently dated first (showing ${newest.length}):`);
+    for (const r of newest) console.error(`      ${r.path}`);
+    if (unboundRows.length > newest.length) {
+      console.error(`      … ${unboundRows.length - newest.length} more — re-run with --all for the full list.`);
+    }
     ratchetFailed = true;
   } else if (unboundNow < base) {
     console.error(`\n  UNBOUND fell ${base} -> ${unboundNow}. Bank it:`);
