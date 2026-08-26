@@ -86,11 +86,35 @@ nothing without a control, so the same pattern was run against tables known to b
 directly: `profiles` → 51 call sites, `placements` → 27, `r7_jobs` → 25. The pattern works;
 the zero is real.
 
-The 13 are five `*_attempts` brute-force counters, four one-time token/invite/ticket stores,
-two merge-undo snapshots, `edge_rate_limit_buckets`, and `tenant_encryption_keys`. All are
-written and read exclusively by `SECURITY DEFINER` functions, which bypass RLS by
-definition. **Adding a policy to any of them would be a weakening, not a fix** — most of
-all `tenant_encryption_keys`.
+All 13, named — because a summary that groups them is where one goes missing, and one did:
+
+| Table | Why deny-all is correct |
+|---|---|
+| `anon_signing_attempts` | brute-force counter |
+| `people_portal_invite_accept_attempts` | brute-force counter |
+| `quote_handoff_redeem_attempts` | brute-force counter |
+| `r7_talent_pool_redeem_attempts` | brute-force counter |
+| `r8_quote_return_redeem_attempts` | brute-force counter |
+| `people_portal_invites` | one-time token store |
+| `quote_handoff_tokens` | one-time token store |
+| `r8_quote_return_tickets` | one-time token store |
+| `contact_merge_snapshots` | merge-undo snapshot |
+| `person_merge_snapshots` | merge-undo snapshot |
+| `edge_rate_limit_buckets` | rate-limit state |
+| `tenant_encryption_keys` | encryption keys — the one that must never be readable |
+| `xero_tax_rate_cache` | service-role cache |
+
+An earlier version of this paragraph said "four one-time token/invite/ticket stores". There
+are **three**. The fourth slot silently absorbed `xero_tax_rate_cache`, which is not a token
+store at all — it is a cache written by `crm7/supabase/functions/_shared/xero-tax-rates.ts`
+through the service-role connection, which bypasses RLS entirely. The class verdict still
+covered it, so nothing was wrong with the conclusion; what was wrong is that a reader
+checking the list against the database would have found a name that appears nowhere in the
+prose. **A grouped count is where a row goes missing. Name them.**
+
+All 13 are written and read exclusively by `SECURITY DEFINER` functions or the service-role
+connection, both of which bypass RLS by definition. **Adding a policy to any of them would be
+a weakening, not a fix** — most of all `tenant_encryption_keys`.
 
 ## What would change this verdict
 
