@@ -263,7 +263,35 @@ const summaryLines = [
   `| performance | ${data.performance.length} | **${newPerf.length}** | ${perf.accepted.length} | ${perf.tracked.length} | ${perf.info.length} |`,
   '',
   report.tracked.length ? `Tracked findings owned by: ${[...new Set(report.tracked.map((t) => t.tracked_in))].join(', ')}` : '',
+
 ];
+
+/*
+ * NAME THE FINDINGS IN THE SUMMARY, NOT ONLY IN ANNOTATIONS.
+ *
+ * The block above is a five-column scoreboard. Every individual finding was
+ * emitted ONLY as a `::error`/`::warning` run annotation — and GitHub caps
+ * annotations at TEN PER STEP. When this gate went red on 17 unallowlisted
+ * SECURITY DEFINER functions, seven of them were invisible: the summary said
+ * "17" and the annotations showed ten, so nobody could act on the rest without
+ * downloading advisor-report.json from the artifacts.
+ *
+ * A total tells you a number. It does not tell you what to fix. The step
+ * summary has no cap, so the names belong here.
+ */
+function findingList(title, lints) {
+  if (lints.length === 0) return [];
+  return [
+    '',
+    `### ${title} (${lints.length})`,
+    '',
+    ...lints.map((l) => `- \`${l.name}\` — ${objectIdentity(l)}`),
+  ];
+}
+summaryLines.push(
+  ...findingList('New unallowlisted SECURITY findings', newSecurity),
+  ...findingList('New unallowlisted PERFORMANCE findings', newPerf),
+);
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summaryLines.join('\n') + '\n');
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `perf_findings=${newPerf.length > 0}\n`);
