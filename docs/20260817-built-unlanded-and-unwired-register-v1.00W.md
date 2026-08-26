@@ -417,6 +417,50 @@ consideration for five months after it was retired, and it is the same failure a
 you have tried to evaluate it.**
 
 
+## 4B. braden's admin Site Editor — unwired, and it would CRASH if wired (2026-08-27)
+
+Found while extrapolating the `useBranding` hard-throw class (bsuite#2521) across the estate.
+Sixteen files carry the `must be used within` throw pattern. Most are correct: `useChart`,
+`useCarousel` and `useSidebar` are shadcn primitives, only reachable by a developer misusing
+them, and a throw there is a build-time error rather than a user-facing one.
+
+**braden is different, and it has two theme contexts.**
+
+| | |
+|---|---|
+| Mounted at the root | `src/components/theme/ThemeProvider.tsx` — `App.tsx:2, :35` |
+| Mounted **nowhere** | `src/context/theme/ThemeContext.tsx`, which exports its own `ThemeProvider` **and** its own `useTheme` |
+
+`src/context/theme/ThemeContext.tsx:23-29` throws `useTheme must be used within a
+ThemeProvider` when its context is undefined — and its provider is never mounted. Every
+consumer of that second `useTheme` therefore throws on first render:
+
+    src/hooks/useThemeEditor.ts:4,7   → useTheme() from '@/context/theme'
+      ← src/components/admin/editor/ThemeEditor.tsx
+        ← src/components/admin/editor/tabs/ThemeTab.tsx
+          ← src/components/admin/SiteEditorLayout.tsx  (and a second copy, below)
+            ← src/pages/admin/SiteEditor.tsx
+
+**It is not a live crash, because the chain is UNREACHABLE.** `src/pages/admin/SiteEditor.tsx`
+is not registered on any route in `App.tsx` — a `SiteEditor` grep against that file returns
+nothing. So this is a built-and-unwired surface carrying a latent crash, which is precisely
+what this register exists to catch: **wiring it up as-is would ship a white screen, and the
+person who wires it will believe they only added a route.**
+
+**A third finding in the same chain:** `SiteEditorLayout` exists TWICE and the copies have
+diverged — `src/components/admin/SiteEditorLayout.tsx` (134 lines) and
+`src/components/admin/editor/SiteEditorLayout.tsx` (118 lines). Both import `ThemeTab`, both
+render it. Whoever wires the editor must first decide which is canonical.
+
+**What closes this row:** either delete the unreached `src/context/theme` provider-and-hook
+pair and point its consumers at the mounted one, or mount it. Deleting is the smaller change
+and is probably right — the root already has a working theme provider, and two theme signals
+with two owners is a shape this estate has been bitten by before. Either way the duplicate
+layout needs resolving in the same pass, or the next reader inherits the same ambiguity.
+
+**Not measured:** no browser probe. The chain is traced statically, and its unreachability
+rests on `SiteEditor` being absent from `App.tsx` rather than on a 404 observed in a browser.
+
 ## 5. One hazard found on the way
 
 `Desktop/Dev/worktrees/bsuite-wage-audit` is checked out on **`development`**, is 8 commits behind
