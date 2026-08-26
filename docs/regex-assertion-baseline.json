@@ -17,9 +17,14 @@
     "",
     "To lower it: replace the assertion with one on the OUTCOME rather than the",
     "wording, then lower this file in the same PR.",
-    "`unknown` is files that could not be read. It is not clean. It may not grow."
+    "`unknown` is files that could not be read. It is not clean. It may not grow.",
+    "",
+    "BANKED 679 -> 678 on 2026-08-26: CI measured one fewer than the local",
+    "reading. The ratchet is two-way and refused the unbanked improvement, which",
+    "is the behaviour it was written for \u2014 an improvement nobody banks is a",
+    "ceiling that quietly drifts back up."
   ],
-  "assertions": 679,
+  "assertions": 678,
   "unknown": 0,
   "measured": "2026-08-26",
   "testFilesScanned": 1042,
