@@ -1,3 +1,9 @@
+---
+kind: record
+authority: engineering
+owner: bsuite-lane
+---
+
 # Morning ledger — 2026-08-26, 08:00 AWST
 
 Written for Braden. Demo at 09:30. Read the first section and nothing else if you are short of time.
