@@ -219,3 +219,53 @@ and the mirror error is to read a supersession relationship as evidence about th
 completion costs the truth of the whole corpus, permanently, in a filename every
 future reader trusts at a glance.
 
+
+
+---
+
+## RE-TESTED 2026-08-26 ~17:20 AWST — THREE of the six blockers above were STALE
+
+Every blocker in the tables above was re-run rather than re-read. **Three had already
+changed**, and one of them had been wrong for a week. A verdict that carries a stale
+blocker is worse than no verdict, because the blocker reads as a live reason to stop.
+
+| blocker, as stated above | re-tested | now |
+|---|---|---|
+| `publish-ui.yml` — *"No runs exist. Absence of a failing run is not a pass."* | `gh run list --workflow=publish-ui.yml` | **WRONG.** It has run **8 times**, **5 successful**, most recently **2026-08-25 15:22, success, on main**. It has been running since 2026-08-17. |
+| `dod.mjs` — *"FAILS, exit 1."* | `node scripts/dod.mjs` in R80.4 | **PASSES.** All **18 benchmarks**, exit **0** — including D14 "No regex — BSuite house rule", 486 production files parsed clean. |
+| `audit-routes.sh` — *"killed at 420s… A gate that cannot finish cannot prove anything."* | bsuite#2501 | **TERMINATES**, with a stated ceiling printed before any work: `TERMINATES — ceiling 3h 8m (47 route(s) x 4 auditors x 60s/route)`. A timeout is now its own reported outcome, never a pass. |
+
+### The r8-lane row was stale twice over
+
+The table above cites `R80.4/docs/00-roadmap/20260820-datum-directive-to-r8-lane-v1.00W.md`.
+**That path no longer exists.** The file is now `…-v1.00F.md`, and it is marked correctly —
+it carries a SUPERSEDED banner naming `…-v1.00A.md` as the live directive, so limb (a) is
+satisfied by supersession and limb (b) by `dod.mjs` now passing. It is a **same-slug pair**
+where the `F` marks the frozen predecessor and the `A` is current. That is the shape the
+"`F` means frozen" ruling describes, working as intended — not the duplicate it looks like
+from a filename listing.
+
+### `audit-routes.sh` moved, but did not clear
+
+Termination was the stated blocker and it is fixed. **The gate still cannot carry a document
+to completion**, for a different and better-stated reason: crm7 `1332cf47` (2026-08-26 12:09)
+added a project guard that **refuses to run a row-creating suite against production**, on the
+measured ground that this configuration wrote **381 synthetic rows across 7 tables** into the
+production project over **37 CI runs**. `audit-routes.sh` covers 47 routes, **29 of them
+authenticated** — so 62% of its inventory is now unexaminable until a non-production Supabase
+project exists.
+
+That guard is correct and must not be weakened to clear this. The dependency is the one
+already on the board: `supabase-business-suite-sydney` exists but holds **zero tables**, and
+`CRM7_E2E_SUPABASE_URL` is unset.
+
+So the master roadmap stays unmarked — but the reason has changed from *"we do not know
+whether it finishes"* to *"it finishes, and it correctly declines to test authenticated routes
+against a production database."* That is a real gain in what we know, and it is not completion.
+
+### Nothing was renamed by this pass either
+
+The count stands at **two** documents marked `F` by this verdict's own adjudication. What
+changed is the accuracy of the reasons — and a re-test that should have been run before the
+blockers were written down, not a day after. The lesson is the cheap one: **re-run a blocker
+before citing it**, because the estate moves faster than a verdict does.
