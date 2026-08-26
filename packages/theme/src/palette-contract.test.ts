@@ -79,8 +79,17 @@ maybe('palette whitelist — the estate near-white and near-black', () => {
     const out = permitted()
     // Positive control first. If the script ever degrades to printing nothing,
     // every "is not permitted" assertion below would pass vacuously.
-    expect(out).toMatch(/^\d+ oklch \+ \d+ hex permitted/m)
-    const [, oklchCount, hexCount] = out.match(/^(\d+) oklch \+ (\d+) hex permitted/m)!
+    /* Plain string work — D14 bans regex repo-wide, and a pattern is exactly
+       what made the sibling assertion in this file break on a message reshape
+       while the audit itself stayed green. */
+    const MARKER = ' oklch + '
+    const TAIL = ' hex permitted'
+    const line = out.split('\n').find((l) => l.includes(MARKER) && l.includes(TAIL))
+    expect(line).toBeDefined()
+    const oklchCount = line!.slice(0, line!.indexOf(MARKER)).trim().split(' ').pop()
+    const hexCount = line!
+      .slice(line!.indexOf(MARKER) + MARKER.length, line!.indexOf(TAIL))
+      .trim()
     expect(Number(oklchCount)).toBeGreaterThan(100)
     expect(Number(hexCount)).toBeGreaterThan(10)
     // Primary blue — in the contract since 0.7.0. Proves the harvest works, so
@@ -128,6 +137,26 @@ maybe('palette whitelist — the estate near-white and near-black', () => {
       encoding: 'utf8',
       timeout: 120_000,
     })
-    expect(out).toContain('Off-palette colour literals in packages/: 0')
+
+    /* The EXIT CODE is the gate — execFileSync above throws on non-zero, so
+       reaching this line already means the audit passed. What follows guards the
+       other half: that it passed because it looked, not because it did not.
+
+       This used to read `expect(out).toContain('Off-palette colour literals in
+       packages/: 0')`, an assertion on the script's WORDING. When mobile/ joined
+       the scan the summary line changed shape and this test went red while the
+       audit itself still exited 0 — the gate was fine and the assertion was the
+       thing that was wrong. Assert the outcome, not the phrasing. */
+    /* Plain string work, no regex: D14 bans it repo-wide, and a pattern here
+       would be the same brittleness that broke the assertion this replaces. */
+    const MARKER = 'file(s) examined'
+    const at = out.indexOf(MARKER)
+    expect(at).toBeGreaterThan(-1)
+    const digits = out
+      .slice(0, at)
+      .trimEnd()
+      .split(' ')
+      .pop()
+    expect(Number(digits)).toBeGreaterThan(0)
   })
 })
