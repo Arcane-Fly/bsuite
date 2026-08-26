@@ -35,6 +35,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
+import { NAVIGATIONAL_FILES as SKIP_FILE } from './lib/doc-conventions.mjs'
 
 const argv = process.argv.slice(2)
 const warnOnly = argv.includes('--warn-only')
@@ -54,7 +55,8 @@ const ADR = /^(ADR-)?\d{4}-[a-z0-9][a-z0-9.-]*\.md$/i
 const STANDING = /^[A-Z][A-Z0-9_]*(-[A-Z0-9_]+)*\.md$/
 
 const SKIP_DIR = new Set(['archive', 'node_modules', 'dist', '.git', 'dashboard'])
-const SKIP_FILE = new Set(['readme.md', 'status.md', 'contributing.md', 'index.md', 'parent-docs.md'])
+/* The navigational-file set is shared with check-doc-classification — one definition,
+   so the two gates cannot disagree about what counts as an authored document. */
 /** Directories whose contents are external or verbatim material, not authored docs. */
 const FREEFORM_DIR = new Set(['references', 'reference', 'recovered', 'nav'])
 /** A directory that carries the date itself: docs/20260428-operator-verification/03-x.md.

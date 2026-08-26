@@ -31,6 +31,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { isNavigational } from './lib/doc-conventions.mjs';
 
 const KINDS = ['law', 'obligation', 'decision', 'standard', 'plan', 'record'];
 const AUTHORITIES = ['external', 'operator', 'engineering', 'none'];
@@ -135,21 +136,8 @@ function walk(d, out = []) {
   return out;
 }
 
-/*
- * NAVIGATIONAL FILES ARE NOT AUTHORED DOCUMENTS, and the estate already said so.
- *
- * `scripts/check-doc-naming.mjs` carries this exact set as SKIP_FILE — a README,
- * a STATUS, a CONTRIBUTING, an INDEX is an index of documents, not a document
- * that declares a kind, an authority and evidence. This gate had no skip list,
- * so the two gates disagreed about what a document IS over the same corpus: one
- * exempted 22 files, the other counted every one of them as classification debt
- * and demanded frontmatter the moment a link inside them was updated.
- *
- * A pure reference sweep across an index is not authorship. Kept in sync with
- * check-doc-naming by hand; if that list grows, grow this one.
- */
-const SKIP_FILE = new Set(['readme.md', 'status.md', 'contributing.md', 'index.md', 'parent-docs.md']);
-const isNavigational = (p) => SKIP_FILE.has(p.split('/').pop().toLowerCase());
+/* The navigational-file set lives in ONE place — see scripts/lib/doc-conventions.mjs
+   for why this is a shared module rather than a copy in each gate. */
 
 const all = walk('docs').filter((p) => !isNavigational(p));
 const unclassified = all.filter((p) => !parseFrontmatter(readFileSync(p, 'utf8'))?.kind);
