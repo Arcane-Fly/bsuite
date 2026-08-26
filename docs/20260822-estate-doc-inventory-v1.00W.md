@@ -43,7 +43,7 @@ Two self-inflicted defects while producing it, both worth the space:
         verify-class-a-preservation.mjs
     docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md
         verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs
-    docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md
+    docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md
         ci.yml
     docs/00-roadmap/20260812-pi-run-handback-v1.00W.md
         ci.yml
@@ -123,7 +123,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | BINDABLE |  | publish-ui.yml |
 | `docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00W.md` | BINDABLE |  | verify-class-a-preservation.mjs |
 | `docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md` | BINDABLE |  | verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs |
-| `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00W.md` | BINDABLE |  | ci.yml |
+| `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | BINDABLE |  | ci.yml |
 | `docs/00-roadmap/20260812-pi-run-handback-v1.00W.md` | BINDABLE |  | ci.yml |
 | `docs/20260227-contributing-standards-guide-v1.01W.md` | BINDABLE |  | development-merge-issue-closer.yml |
 | `docs/20260227-dry-one-shot-architecture-v1.04A.md` | BINDABLE |  | audit-one-shot.mjs, dry-lint.yml |
@@ -568,7 +568,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `crm7/docs/guides/README.md` | RECORD |  | — |
 | `crm7/docs/plans/archive/README.md` | RECORD |  | — |
 | `docs/00-roadmap/20260809-shipped-to-production-v1.00W.md` | RECORD |  | — |
-| `docs/20260814-estate-remaining-work-register-v2.00W.md` | RECORD |  | audit-d2c-theme.sh, theme-conformance.yml |
+| `docs/20260814-estate-remaining-work-register-v2.00F.md` | RECORD |  | audit-d2c-theme.sh, theme-conformance.yml |
 | `docs/adr/ADR-0005-rams-funding-authoring.md` | RECORD |  | — |
 | `docs/adr/ADR-0008-schema-builder-consolidation.md` | RECORD |  | check-migration-parity.sh, estate-invariants.yml |
 | `docs/adr/README.md` | RECORD |  | — |

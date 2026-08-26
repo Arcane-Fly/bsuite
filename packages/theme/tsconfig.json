@@ -10,8 +10,16 @@
     "isolatedModules": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "lib": ["ES2020", "DOM"],
-    "jsx": "react-jsx"
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
+    "jsx": "react-jsx",
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

@@ -322,7 +322,7 @@
 > promotion, not about the submodule. Measure adoption at `origin/development`, and re-measure at
 > the pin only to explain a disagreement.
 >
-> **This supersedes `docs/20260814-estate-remaining-work-register-v2.00W.md` for status purposes.**
+> **This supersedes `docs/20260814-estate-remaining-work-register-v2.00F.md` for status purposes.**
 > That register's *evidence* and *item numbering* remain the reference — this ledger keeps its 87
 > identifiers unchanged so nothing has to be re-mapped. What this document replaces is every
 > **verdict and count** in it. Where the two disagree, this one is current.

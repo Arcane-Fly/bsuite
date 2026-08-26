@@ -1,5 +1,21 @@
 # Built but unlanded, built but unwired — a machine sweep
 
+> **THIS REGISTER FORKED. Read `20260817-built-unlanded-and-unwired-register-v1.00W.md` too.**
+>
+> Two files carry this same slug and NEITHER is a superset. Discovered 2026-08-26.
+> Despite the later date in this filename, the 08-17 file is the one that kept being updated —
+> it carries §9.10 and §9.11 (the 20 August entries), which this file does not.
+>
+> **Already ported OUT of this file into 08-17:** §3.3, §4.4, §4.5 and the NX-7 correction.
+>
+> **Still unique to this file:** its §9 is a different pass, carrying BU-9's closure, the
+> "there is no such cron job" reversal, and the `awards` 156-row ingestion finding. Those have
+> NOT been merged, because reconciling two divergent §9 sections is an editorial judgement and
+> half-merging drops corrections silently.
+>
+> **Not frozen, precisely because it still holds content 08-17 lacks.** Freezing it would bury
+> live corrections behind a status marker, which is worse than the fork.
+
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
 **Date:** 2026-08-17, §9 added 2026-08-19, §3.3/§4.4 resolution added 2026-08-19 · **Version:** 1.02W
 · **Status:** W — Working
