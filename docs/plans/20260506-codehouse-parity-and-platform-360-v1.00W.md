@@ -31,7 +31,7 @@ This plan was generated from the heavy-tier `prompt-enhancer` output produced on
 
 | Provenance artefact | Location | Purpose |
 |---|---|---|
-| Refined prompt (heavy-tier, 5-pass, 192 lines) | [`docs/plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md`](./inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md) | Workstream decomposition (WS-A through WS-F), best-practice citations, blindspot register, skills/MCPs list |
+| Refined prompt (heavy-tier, 5-pass, 192 lines) | [`docs/plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md`](./inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md) | Workstream decomposition (WS-A through WS-F), best-practice citations, blindspot register, skills/MCPs list |
 | Parity matrix (540 lines, 142 rows, 21 domains) | external (operator workspace) — `~/workspace/competitor/parity-matrix.md` | Per-feature evidence with file:line citations. **Referenced by row number from this plan; NOT restated.** |
 | BSuite inventory (306 lines, file:line evidence) | external (operator workspace) — `~/workspace/competitor/bsuite-inventory.md` | Code-verified evidence of what exists in BSuite today |
 | Codehouse FAQ + PDF corpus | external (operator workspace) — `~/workspace/competitor/codehouse-*` | Codehouse Workforce-One + AnyTime + OTS canonical sources (5 PDFs, 142 pages; 221 FAQ articles) |
@@ -130,21 +130,21 @@ Nine portal sub-plans, each ≤200 lines, each with role × capability × route 
 
 | # | Portal | Sub-plan | Owner app | RLS audit |
 |---|---|---|---|---|
-| 1 | BSU admin (platform) | [`20260506-portal-bsu-admin-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-bsu-admin-v1.00W.md) | business-suite-unified | W |
-| 2 | CRM7 internal (consultant/coordinator) | [`20260506-portal-crm7-internal-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-crm7-internal-v1.00W.md) | crm7 | W |
-| 3 | Conduit recruiter | [`20260506-portal-conduit-recruiter-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-conduit-recruiter-v1.00W.md) | conduit | W |
-| 4 | Conduit candidate | [`20260506-portal-conduit-candidate-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-conduit-candidate-v1.00W.md) | conduit | W |
-| 5 | Conduit employer | [`20260506-portal-conduit-employer-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-conduit-employer-v1.00W.md) | conduit | W |
-| 6 | Conduit careers (public) | [`20260506-portal-conduit-careers-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-conduit-careers-v1.00W.md) | conduit | W |
-| 7 | BSU tenant admin | [`20260506-portal-bsu-tenant-admin-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-bsu-tenant-admin-v1.00W.md) | business-suite-unified | W |
-| 8 | R80.3 calculator user | [`20260506-portal-r80-3-calculator-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-r80-3-calculator-v1.00W.md) | R80.3 | W |
-| 9 | Braden marketing | [`20260506-portal-braden-marketing-v1.00W.md`](./20260506-codehouse-parity/20260506-portal-braden-marketing-v1.00W.md) | braden | W |
+| 1 | BSU admin (platform) | [`20260506-portal-bsu-admin-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-bsu-admin-v1.00F.md) | business-suite-unified | W |
+| 2 | CRM7 internal (consultant/coordinator) | [`20260506-portal-crm7-internal-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-crm7-internal-v1.00F.md) | crm7 | W |
+| 3 | Conduit recruiter | [`20260506-portal-conduit-recruiter-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-conduit-recruiter-v1.00F.md) | conduit | W |
+| 4 | Conduit candidate | [`20260506-portal-conduit-candidate-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-conduit-candidate-v1.00F.md) | conduit | W |
+| 5 | Conduit employer | [`20260506-portal-conduit-employer-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-conduit-employer-v1.00F.md) | conduit | W |
+| 6 | Conduit careers (public) | [`20260506-portal-conduit-careers-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-conduit-careers-v1.00F.md) | conduit | W |
+| 7 | BSU tenant admin | [`20260506-portal-bsu-tenant-admin-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-bsu-tenant-admin-v1.00F.md) | business-suite-unified | W |
+| 8 | R80.3 calculator user | [`20260506-portal-r80-3-calculator-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-r80-3-calculator-v1.00F.md) | R80.3 | W |
+| 9 | Braden marketing | [`20260506-portal-braden-marketing-v1.00F.md`](./20260506-codehouse-parity/20260506-portal-braden-marketing-v1.00F.md) | braden | W |
 
 ---
 
 ## 6. Visual feature builder
 
-Spec: [`20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md).
+Spec: [`20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md).
 
 **Goal:** dev-account-only `/dev/feature-builder` route in BSU gated to `platform_role IN ('developer', 'platform_admin')`. Three panels: Entity (schema-builder), Page (page-builder), AI section (Vercel AI Gateway + AI SDK 5 `generateObject` + Zod). Output: a "feature bundle" exported as a PR — migration SQL + page layout JSON + RLS policy + route registration diff.
 
@@ -233,9 +233,9 @@ Issue numbers were supplied by the issue-filer subagent as bsuite#567–#579. Ea
 This index plan is considered "shipped at status W" when ALL of the following are verifiable:
 
 1. ✅ This file exists at `docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` and is ≤300 lines.
-2. ✅ The refined-prompt copy-in exists at `docs/plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md` and is byte-identical to the source.
+2. ✅ The refined-prompt copy-in exists at `docs/plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md` and is byte-identical to the source.
 3. ✅ All 9 portal sub-plans exist under `docs/plans/20260506-codehouse-parity/20260506-portal-*.md`, each ≤250 lines.
-4. ✅ Visual-feature-builder spec exists at `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md` and is ≤250 lines.
+4. ✅ Visual-feature-builder spec exists at `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md` and is ≤250 lines.
 5. ✅ `find docs/plans -name "20260506-*" -type f | sort` returns exactly 12 files (1 index + 1 inputs + 9 portals + 1 spec).
 6. ✅ Every YAML frontmatter block in the 12 files has `name`, `description`, and `type` keys per `documentation-compliance` skill.
 7. ✅ Master roadmap (`docs/20260227-bsuite-master-roadmap-v5.00W.md`) gains the new "Codehouse Parity & Platform 360" section linking to this file.
@@ -259,8 +259,8 @@ Status flips W→A only after operator approval AND red-team review of all 9 por
 
 ## Related documents
 
-- [`./inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md`](./inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md) — refined prompt (heavy-tier)
+- [`./inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md`](./inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md) — refined prompt (heavy-tier)
 - [`../20260227-bsuite-master-roadmap-v5.00W.md`](../archive/README.md) *(archived — was `20260227-bsuite-master-roadmap-v5.00W.md`)* — master roadmap
 - [`../20260501-merged-execution-backlog-v1.00W.md`](../archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)* — single execution queue
 - [`../../AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) — auth reference (BS OAuth 2.1 PKCE + Supabase RLS)
-- [`./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md) — WS-E spec
+- [`./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md) — WS-E spec

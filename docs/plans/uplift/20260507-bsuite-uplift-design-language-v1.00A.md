@@ -32,11 +32,11 @@
 - Any future PR that ships a new admin surface without applying this language.
 
 **References (do NOT restate, link only):**
-- `bsuite/docs/plans/20260507-feature-builder-ux-red-team-v1.00W.md` — the existing red-team plan (Claude-authored, captures Q1–Q3 strategic questions, Supabase Studio bar, Airtable cmdk pattern, role × operation matrix). This document operationalises that plan.
+- `bsuite/docs/plans/20260507-feature-builder-ux-red-team-v1.00F.md` — the existing red-team plan (Claude-authored, captures Q1–Q3 strategic questions, Supabase Studio bar, Airtable cmdk pattern, role × operation matrix). This document operationalises that plan.
 - `bsuite/docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` — index plan covering 21 parity domains across 9 portals.
 - `bsuite/docs/plans/20260506-codehouse-parity/` — 9 portal sub-plans + visual feature builder spec.
-- `bsuite/docs/20260506-reports-parity-spec-v1.00W.md` — Reports parity spec (4 standard reports + Consultant KPI + LSL + Pay Items by Employee).
-- `bsuite/docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md` — Apprentice placement L4 spec.
+- `bsuite/docs/20260506-reports-parity-spec-v1.00F.md` — Reports parity spec (4 standard reports + Consultant KPI + LSL + Pay Items by Employee).
+- `bsuite/docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00F.md` — Apprentice placement L4 spec.
 - `bsuite-state/20260507-red-team-ux-doctrine-v1.0ACTIVE.md` — UX-DX agent doctrine + 16-item checklist.
 
 ---
@@ -394,7 +394,7 @@ This section names every pattern that has shown up in the recent merged work and
 This document is itself subject to the doctrine. Before promotion W → A, it must:
 
 1. Be reviewed by the operator (ground-truth check).
-2. Be cross-referenced by claude-code-local against the existing `20260507-feature-builder-ux-red-team-v1.00W.md` plan to confirm no conflict.
+2. Be cross-referenced by claude-code-local against the existing `20260507-feature-builder-ux-red-team-v1.00F.md` plan to confirm no conflict.
 3. Be cross-referenced by perplexity-computer against the 9 portal sub-plans + reports parity spec to confirm no conflict.
 4. Be tested mentally against the operator's furious-rejection criteria from §1.
 

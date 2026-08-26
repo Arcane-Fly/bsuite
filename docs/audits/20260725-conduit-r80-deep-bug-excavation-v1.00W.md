@@ -234,4 +234,4 @@
 - Evidence cited as `file:line` is accurate as of the audit date; line numbers may drift.
 - "Test coverage" columns were verified by `grep` over the relevant `__tests__/` and `src/tests/` directories.
 - The `packages/charge-calc` engine was treated as BSuite-owned for the purpose of the trainingFees finding (it lives in the BSuite monorepo at `packages/charge-calc/`); no third-party npm packages were audited for their own correctness.
-- The prior docs↔code audit (`20260725-conduit-r80-docs-code-audit-v1.00W.md`) found divergences between docs and code; this audit finds bugs in the CODE itself that the docs do not necessarily cover.
+- The prior docs↔code audit (`20260725-conduit-r80-docs-code-audit-v1.00F.md`) found divergences between docs and code; this audit finds bugs in the CODE itself that the docs do not necessarily cover.

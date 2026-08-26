@@ -118,7 +118,7 @@ function isSelfScanExcluded(file) {
   //
   // Named explicitly rather than glob-excluding docs/: a document that
   // INSTRUCTS someone to use cookieStorage is real drift and must still fail.
-  if (file === 'docs/20260427-conduit-auth-doctrine-investigation-v1.00W.md') return true;
+  if (file === 'docs/20260427-conduit-auth-doctrine-investigation-v1.00F.md') return true;
   // docs/recovered/ is a FROZEN ARCHIVE of superseded requirements documents,
   // dated 2026-02 to 2026-03 and tracked (2026-08-08) under operator RULINGs 1.2
   // and 1.3. Its contents are historical by declaration: every file is covered by
@@ -1232,7 +1232,7 @@ function selfTest() {
       addedByFile: { 'scripts/migrate-users.mjs': ["  auth: { flowType: 'implicit' }"] },
       expect: (hits) => hits.some((h) => h.signal === 'NON-PKCE-FLOW') },
     { name: 'SELF-SCAN — the conduit auth investigation doc NOT flagged (quotes the breach as evidence)', framework: 'unknown', repoName: 'bsuite',
-      addedByFile: { 'docs/20260427-conduit-auth-doctrine-investigation-v1.00W.md': [
+      addedByFile: { 'docs/20260427-conduit-auth-doctrine-investigation-v1.00F.md': [
         "src/lib/supabase/client.ts:22:        storageKey: 'business_suite_auth',",
       ] },
       expect: (hits) => hits.length === 0 },

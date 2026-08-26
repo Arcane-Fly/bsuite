@@ -215,7 +215,7 @@
 
 ### Gate 1a - CRM7 reporting schema/load triage
 
-**Files/issues:** `crm7#1031`, `docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md`, `docs/20260506-reports-parity-spec-v1.00W.md`, `docs/20260519-rpc-report-page-security-review-v1.00A.md`, `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md`, `crm7/src/services/reportTemplateQueries.ts`, `crm7/supabase/migrations/20260604051244_report_deliveries_reliability.sql`, `crm7/supabase/tests/database/18_report_deliveries_reliability.sql`.
+**Files/issues:** `crm7#1031`, `docs/plans/20260521-reports-w2-uplift-implementation-v1.00F.md`, `docs/20260506-reports-parity-spec-v1.00F.md`, `docs/20260519-rpc-report-page-security-review-v1.00A.md`, `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md`, `crm7/src/services/reportTemplateQueries.ts`, `crm7/supabase/migrations/20260604051244_report_deliveries_reliability.sql`, `crm7/supabase/tests/database/18_report_deliveries_reliability.sql`.
 
 **Skills/MCPs:** `documentation-compliance`, `supabase`, `supabase-postgres-best-practices`, `schema-consistency`, `frontend-backend-mapping`, `security-audit`, `qa-and-verification`, Supabase MCP/SQL, Chrome DevTools MCP, GitHub.
 
@@ -643,8 +643,8 @@ Use this inventory before any report-page, report-template, report-delivery, or 
 
 ### Current parent docs/plans
 
-- `docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md` - active Reports W2 uplift implementation plan.
-- `docs/20260506-reports-parity-spec-v1.00W.md` - reports parity specification.
+- `docs/plans/20260521-reports-w2-uplift-implementation-v1.00F.md` - active Reports W2 uplift implementation plan.
+- `docs/20260506-reports-parity-spec-v1.00F.md` - reports parity specification.
 - `docs/20260519-rpc-report-page-security-review-v1.00A.md` - report page/RPC security review.
 - `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md` - approved GTO billing/reporting plan.
 - `docs/archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` - broader gap report with reporting context.

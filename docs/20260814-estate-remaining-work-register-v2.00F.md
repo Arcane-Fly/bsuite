@@ -334,7 +334,7 @@ For remaining-work purposes, this document replaces: `00-roadmap/20260812-estate
 `00-roadmap/20260811-crm7-full-spectrum-review-register-v1.00W.md`,
 `00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md`,
 `00-roadmap/20260810-r804-carryover-register-v1.00W.md`, `docs/OUTSTANDING.md` (already self-demoted),
-`20260728-weekly-gap-register-v1.00W.md`, `20260728-operator-ux-bug-register-v1.00W.md`, and
+`20260728-weekly-gap-register-v1.00F.md`, `20260728-operator-ux-bug-register-v1.00F.md`, and
 `validation/20260805-operator-notes-defect-register-v1.00W.md`.
 
 Their *evidence* remains valuable; their *counts* are stale. Several were measurably wrong:
