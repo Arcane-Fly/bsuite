@@ -1,3 +1,13 @@
+---
+kind: record
+authority: none
+owner: bsuite
+evidence:
+  - scripts/check-supabase-advisors.mjs
+  - scripts/audit-security-definer-guards.mjs
+  - docs/security/supabase-advisor-allowlist.json
+---
+
 # Supabase advisor posture, measured — 2026-08-26
 
 **Status:** A (approved). Measurement, not a plan. Supersedes nothing.
