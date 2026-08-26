@@ -3,13 +3,18 @@ kind: plan
 authority: engineering
 owner: bsuite
 evidence:
-  - R80.4/src/awards/apprentice-ladder-manifest.test.ts
-  - R80.4/src/awards/allowance-amounts.test.ts
-  - R80.4/public/sw.js
-  - scripts/audit-doc-completion.mjs
+  - app-quality-checks.yml
+  - build-and-test.yml
 ---
 
 # R80.4 carry-over register — what the old standalone session left open
+
+> **How the rows below are held true.** The award-correctness rows are bound by
+> `app-quality-checks.yml`, which runs R80.4's award suites on every
+> pull request; a regression in the apprentice ladder or the allowance amounts turns that
+> gate red. The build rows are bound by `build-and-test.yml`. Rows that
+> name no gate are *observations awaiting one* — they are not evidence that anything holds,
+> and should not be read as such.
 
 **Date:** 2026-08-10 · **Status:** 1.00W (working) · **Source:** the former
 `Dev/R80.4` Claude Code session (84 MB transcript, 164 operator messages, 2026-08-02 → 2026-08-06),
