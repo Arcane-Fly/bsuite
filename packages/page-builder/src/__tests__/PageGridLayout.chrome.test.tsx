@@ -2,6 +2,8 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { PageGridLayout } from '../PageGridLayout.js';
+import { CanvasCard } from '../CanvasCard.js';
+import { buildCanvasCardLayout } from '../canvasCardLayout.js';
 import type { GridLayouts } from '../types.js';
 
 /**
@@ -137,5 +139,73 @@ describe('the chrome radius is tenant-configurable, not a literal', () => {
     const el = surface(container);
     expect(el.className).toMatch(/rounded-\[var\(--radius-card,1\.5rem\)\]/);
     expect(el.className, 'no hardcoded radius may remain').not.toMatch(/\brounded-3xl\b/);
+  });
+});
+
+// ── The CanvasCard authoring path can reach the opt-out (2.1.0) ─────────────
+//
+// This is the assertion whose ABSENCE let 2.0.0 ship an escape hatch nobody
+// could use. `GridLayoutItem.chrome` was tested above and worked; what was
+// never tested is the path that ~1,729 pages across six apps actually take —
+// `<CanvasCard>` → `buildCanvasCardLayout` → `defaultLayouts` → the painted
+// surface. It rendered nothing of the sort, and the PR that promised the hatch
+// said so in a comment instead of in a test.
+//
+// Every case here renders the REAL grid and reads the REAL `data-chrome`
+// attribute for a NAMED slot, so a change to the default flips these red.
+describe('a CanvasCard can opt out of chrome (the path 1,729 usages take)', () => {
+  const surfaces = (container: HTMLElement) =>
+    [...container.querySelectorAll('[data-slot="grid-item-surface"]')] as HTMLElement[];
+
+  /** `data-chrome` for one slot, addressed by the widget text it wraps. */
+  const chromeFor = (container: HTMLElement, text: string) => {
+    const el = surfaces(container).find((surface) => surface.textContent?.includes(text));
+    expect(el, `no grid-item surface rendered around "${text}"`).toBeTruthy();
+    return el!.dataset.chrome;
+  };
+
+  function renderPage(node: React.ReactNode, itemChrome: boolean) {
+    const { widgets, layouts: built } = buildCanvasCardLayout(node);
+    return render(
+      <PageGridLayout
+        pageKey={`canvas-chrome-${itemChrome ? 'on' : 'off'}`}
+        defaultLayouts={built}
+        itemChrome={itemChrome}
+        widgets={widgets}
+      />,
+    );
+  }
+
+  const page = (
+    <>
+      <CanvasCard cardKey="hero" chrome={false}>
+        Marketing hero
+      </CanvasCard>
+      <CanvasCard cardKey="bare" chrome>
+        Bare list
+      </CanvasCard>
+      <CanvasCard cardKey="quiet">Ordinary card</CanvasCard>
+    </>
+  );
+
+  it('chrome={false} beats an app that sets itemChrome — the /pricing case', () => {
+    const { container } = renderPage(page, true);
+    expect(surfaces(container), 'all three slots must render or the rest is vacuous').toHaveLength(3);
+    expect(chromeFor(container, 'Marketing hero')).toBe('off');
+    // …and the slot next to it is untouched, so this is an OPT-OUT and not a
+    // page-wide flip.
+    expect(chromeFor(container, 'Ordinary card')).toBe('on');
+  });
+
+  it('chrome beats an app that leaves itemChrome off — the bare-slot case', () => {
+    const { container } = renderPage(page, false);
+    expect(surfaces(container)).toHaveLength(3);
+    expect(chromeFor(container, 'Bare list')).toBe('on');
+    expect(chromeFor(container, 'Ordinary card')).toBe('off');
+  });
+
+  it('a card that says nothing follows itemChrome in BOTH directions', () => {
+    expect(chromeFor(renderPage(page, true).container, 'Ordinary card')).toBe('on');
+    expect(chromeFor(renderPage(page, false).container, 'Ordinary card')).toBe('off');
   });
 });

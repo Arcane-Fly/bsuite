@@ -157,6 +157,7 @@ export function buildCanvasCardLayout(
       minH = 2,
       minW = 4,
       autoHeight = true,
+      chrome,
       children: body,
     } = child.props;
     const normalizedMinW = clampColumns(minW);
@@ -178,6 +179,16 @@ export function buildCanvasCardLayout(
       minW: normalizedMinW,
       minH,
       ...(autoHeight ? { autoHeight: true } : {}),
+      // `chrome` is THREE-VALUED and only two of those values are the card's
+      // own: true and false both have to reach the layout item, and undefined
+      // has to stay absent so `layoutItem.chrome ?? itemChrome` can fall
+      // through to the app default. Writing `chrome: chrome` unconditionally
+      // would put an explicit `undefined` on every item, which is still absent
+      // to `??` but is NOT absent to a structural comparison — and
+      // `stripAutoHeightRows` compares items across a gesture. Spreading only
+      // when the author said something keeps the item shape identical to what
+      // 2.0.0 produced for the 1,729 cards that say nothing.
+      ...(chrome === undefined ? {} : { chrome }),
     });
     x += width;
     rowHeight = Math.max(rowHeight, h);
