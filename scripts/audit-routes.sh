@@ -147,6 +147,17 @@ SESSION="${THEME_GATE_SESSION:-}"
 NO_SESSION=0
 INVENTORY_ONLY=0
 REQUIRE_AUTH=1
+# Per-ROUTE wall-clock budget. One auditor over a batch of N routes gets
+# N x this (with a floor), so the ceiling scales with the work rather than
+# being one flat number that is either too tight for a big app or meaningless
+# for a small one.
+#
+# Without any bound a single hung Playwright run stalls the sweep forever, which
+# is why this script could never answer "does it terminate" — and documents
+# citing it as evidence stayed unadjudicable for exactly that reason. The
+# observed full-estate run is ~2h20m; the ceiling below sits above that.
+AUDITOR_SECONDS_PER_ROUTE="${AUDIT_ROUTES_SECONDS_PER_ROUTE:-60}"
+AUDITOR_TIMEOUT_FLOOR="${AUDIT_ROUTES_TIMEOUT_FLOOR:-120}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --app)        ONLY_APP=${2:?--app needs a value}; shift 2 ;;
@@ -154,6 +165,7 @@ while [[ $# -gt 0 ]]; do
     --no-session) NO_SESSION=1; shift ;;
     --inventory)  INVENTORY_ONLY=1; shift ;;
     --require-authenticated) REQUIRE_AUTH=${2:?--require-authenticated needs a value}; shift 2 ;;
+    --seconds-per-route) AUDITOR_SECONDS_PER_ROUTE=${2:?--seconds-per-route needs a value}; shift 2 ;;
     *) echo "audit-routes: unknown argument '$1'" >&2; exit 2 ;;
   esac
 done
@@ -185,6 +197,14 @@ n_apps=${#APPS[@]}
 # it examined is treated as having examined nothing.
 echo
 echo "audit-routes: $n_total route(s) across $n_apps app(s) — $n_public public, $n_auth authenticated"
+# STATE THE CEILING. Four auditors over at most two batches per app, each capped
+# at AUDITOR_TIMEOUT, so the sweep has a computable worst case rather than an
+# open-ended one. This line is the answer to "can this gate be shown to
+# terminate" — previously it could not be, and documents citing it as evidence
+# were unadjudicable for exactly that reason.
+n_bound=$(( n_total * 4 * AUDITOR_SECONDS_PER_ROUTE ))
+printf 'audit-routes: TERMINATES — ceiling %sh %sm (%s route(s) x 4 auditors x %ss/route)\n' \
+  "$(( n_bound / 3600 ))" "$(( (n_bound % 3600) / 60 ))" "$n_total" "$AUDITOR_SECONDS_PER_ROUTE"
 if [[ -n $UNCOVERED ]]; then
   echo "  NOT COVERED: $UNCOVERED"
   echo "  (no tests/e2e/auth.setup.ts there, so no session can be minted)"
@@ -283,10 +303,21 @@ declare -a FAILED=()
 # their verdicts, only their SKIP lines, which they emit while exiting 0.
 run_auditor() { # $1=label $2=app $3=storage-or-empty $4..=urls
   local label=$1 app=$2 storage=$3; shift 3
-  local -a cmd=(node "scripts/$label.mjs" "$@" --app "$app")
+  local budget=$(( $# * AUDITOR_SECONDS_PER_ROUTE ))
+  [[ $budget -lt $AUDITOR_TIMEOUT_FLOOR ]] && budget=$AUDITOR_TIMEOUT_FLOOR
+  local -a cmd=(timeout --kill-after=30s "$budget" node "scripts/$label.mjs" "$@" --app "$app")
   [[ $label == audit-legibility ]] && cmd+=(--theme both)
   [[ -n $storage ]] && cmd+=(--storage "$storage")
   AUDIT_OUT=$("${cmd[@]}" 2>&1); AUDIT_RC=$?
+  # 124 is `timeout`'s own code, and it must NEVER read as either a pass or an
+  # ordinary finding: a finding names a route, a timeout names nothing and
+  # leaves the remaining routes in that batch unexamined. Saying so is the
+  # difference between "clean" and "not measured".
+  AUDIT_TIMED_OUT=0
+  if [[ $AUDIT_RC -eq 124 || $AUDIT_RC -eq 137 ]]; then
+    AUDIT_TIMED_OUT=1
+    AUDIT_OUT="TIMEOUT after ${budget}s — batch abandoned, routes in it were NOT examined"$'\n'"$AUDIT_OUT"
+  fi
 }
 
 for app in "${APPS[@]}"; do
@@ -317,8 +348,15 @@ for app in "${APPS[@]}"; do
       n_skipped=$(printf '%s\n' "$AUDIT_OUT" | grep -c 'SKIPPED' || true)
 
       if [[ $AUDIT_RC -ne 0 ]]; then
-        fail=$((fail + 1)); FAILED+=("$app $kind — $auditor")
-        printf '      \033[31m✗\033[0m %s\n' "$auditor"
+        fail=$((fail + 1))
+        if [[ $AUDIT_TIMED_OUT -eq 1 ]]; then
+          FAILED+=("$app $kind — $auditor (TIMEOUT, ${#targets[@]} route(s) unexamined)")
+          printf '      \033[31m✗\033[0m %s — TIMEOUT, %s route(s) NOT examined\n' \
+            "$auditor" "${#targets[@]}"
+        else
+          FAILED+=("$app $kind — $auditor")
+          printf '      \033[31m✗\033[0m %s\n' "$auditor"
+        fi
 
         # STATE WHAT WAS FOUND, ALWAYS. The filter below matches an auditor's
         # FINDING lines ("  ✗ /dashboard [dark] — 3 below AA", "  3.21:1 …").
