@@ -489,13 +489,31 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * because pointer/wheel events bubble up only when the inner one
              * is at its scroll edge.
              *
-             * `autoHeight` items get `overflow-hidden` instead of
-             * `overflow-auto` — the card is sized to fit all of the content
-             * (see the ResizeObserver above), so there's nothing to
-             * manually scroll; `content` is additionally wrapped in an
-             * unconstrained `measureRef` div so the observer reads the
-             * content's true intrinsic height rather than the (currently
-             * clipped) height of this flex-1 wrapper.
+             * `autoHeight` items get `overflow-visible`, not `overflow-auto`
+             * and no longer `overflow-hidden` — the card is sized to fit all of
+             * the content (see the ResizeObserver above), so there is nothing to
+             * manually scroll AND nothing that needs clipping; `content` is
+             * additionally wrapped in an unconstrained `measureRef` div so the
+             * observer reads the content's true intrinsic height.
+             *
+             * WHY NOT `overflow-hidden` (2.4.1). Until 2.4.0 this wrapper was
+             * `flex-1`, so it stretched to fill a slot that Math.ceil had already
+             * rounded UP — several px of slack, which happened to absorb any glyph
+             * painting outside its own box. 2.4.0 made it `flex-none` to stop the
+             * chrome painting that same remainder as a second bottom border, and
+             * the wrapper became exactly content height. `overflow-hidden` then
+             * started CUTTING what the slack used to hide: measured on production
+             * BSU, an `h2.text-4xl` heading overflowed its box by 3px and was
+             * clipped at every breakpoint.
+             *
+             * A height fix cannot solve that — the 3px is a glyph painting outside
+             * its own line box, not a box that is too short. So the clip goes.
+             * What `overflow-hidden` bought was a single frame during the
+             * measure-then-grow cycle where taller content could spill; a
+             * one-frame spill is a far smaller defect than a permanently
+             * decapitated heading, and only the fixed-height branch — where the
+             * user chose a height and content genuinely must be contained — still
+             * needs a scroll container.
              */}
             {/*
              * `flex-1` makes this wrapper claim all remaining vertical space. For a
@@ -507,7 +525,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             <div
               className={cn(
                 'min-h-0',
-                autoHeight ? 'flex-none overflow-hidden' : 'flex-1 overflow-auto',
+                autoHeight ? 'flex-none overflow-visible' : 'flex-1 overflow-auto',
               )}
             >
               {autoHeight ? <div ref={measureRef}>{content}</div> : content}

@@ -152,6 +152,63 @@ describe('a manually-resized slot still fills the height the user chose', () => 
   });
 });
 
+describe('hugging the content must not CLIP it (the 2.4.1 regression)', () => {
+  /**
+   * 2.4.0 made the inner wrapper `flex-none` so the chrome would stop painting the
+   * Math.ceil remainder as a second bottom border. That was right, and it had a cost
+   * nobody measured until the visual gate ran against production BSU:
+   *
+   *   FAIL clippedHeading: heading text is CLIPPED — overflows its box by 0x3px
+   *   and it is cut by div.min-h-0.flex-none.overflow-hidden
+   *
+   * Until 2.4.0 the wrapper was `flex-1`, stretching to fill a slot Math.ceil had
+   * already rounded UP. That slack happened to hide any glyph painting outside its
+   * own line box. Made exact, `overflow-hidden` started CUTTING what the slack hid.
+   *
+   * A height fix cannot solve it — 3px of glyph outside a line box is not a short
+   * box — so the clip goes on the autoHeight branch. The fixed-height branch keeps
+   * its scroll container, because there the user chose a height and the content
+   * genuinely must be contained.
+   */
+  it('an autoHeight slot does not clip its own content', () => {
+    const { container } = render(
+      <PageGridLayout
+        pageKey="dbl-noclip"
+        defaultLayouts={{ lg: [{ ...layouts.lg![0], autoHeight: true }] }}
+        defaultAutoHeight
+        itemChrome
+        widgets={{ alpha: <h2>Alpha</h2> }}
+      />,
+    );
+    const el = inner(container);
+    expect(
+      el.classList.contains('overflow-hidden'),
+      'overflow-hidden on a flex-none wrapper cuts any glyph that paints outside its ' +
+        'own line box — measured at 3px on a production h2',
+    ).toBe(false);
+    expect(el.classList.contains('overflow-visible')).toBe(true);
+    // ...and it must still hug, or this would pass by reverting the border fix.
+    expect(el.classList.contains('flex-none'), 'the wrapper must still hug its content').toBe(true);
+  });
+
+  it('a manually-resized slot STILL contains and scrolls its content', () => {
+    // NEGATIVE CONTROL. Without this, removing overflow everywhere would pass the
+    // case above while breaking every card the user resized smaller than its content.
+    const { container } = render(
+      <PageGridLayout
+        pageKey="dbl-noclip-manual"
+        defaultLayouts={{ lg: [{ ...layouts.lg![0], autoHeight: false }] }}
+        defaultAutoHeight={false}
+        itemChrome
+        widgets={{ alpha: <h2>Alpha</h2> }}
+      />,
+    );
+    const el = inner(container);
+    expect(el.classList.contains('overflow-auto'), 'a fixed-height card must still scroll').toBe(true);
+    expect(el.classList.contains('overflow-visible')).toBe(false);
+  });
+});
+
 describe('the fix does not depend on chrome being on', () => {
   it('a chrome-off autoHeight slot also hugs, so nesting stays consistent', () => {
     const { container } = render(
