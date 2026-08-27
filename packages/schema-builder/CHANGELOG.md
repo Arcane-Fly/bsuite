@@ -6,6 +6,83 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.6.2] — 2026-08-27 — Tidy stopped stacking cards on top of each other
+
+Operator report **D-6**: *"Schema builder makes no sense. I have no idea how to
+use it. Selecting 'tidy' icon just puts the schema cards into a column. Super
+un-usefull. 'Fit' icon does nothing."*
+
+### What was actually still broken, measured rather than assumed
+
+Measured on `crm.crm7.app/settings/schema-builder`, signed in, 1440x900,
+2026-08-27:
+
+| Sub-complaint | State on production today |
+| --- | --- |
+| Canvas renders at zero height | **Already fixed.** `.react-flow` is 1184x836. Shipped in 1.6.0. |
+| "'Fit' icon does nothing" | **Already fixed.** Pressing Fit moves the viewport transform from `scale(0.282)` to `scale(0.338)`; 44 of 44 cards framed. |
+| "Tidy just puts the cards into a column" | **STILL BROKEN — this release.** |
+
+At the canvas's opening zoom of 0.75 — the band where `EntityNode` still draws
+field rows — the 44 cards sitting on `computeGridLayout`'s persisted output had
+**69 of their 946 pairs physically overlapping**, the worst intruding 257px into
+its neighbour. Cards stacked five deep on a 220px pitch do not read as a grid.
+They read as a column, which is the word the operator used.
+
+### Fixed
+
+- **`computeGridLayout` sizes rows from the tallest card in the row, and columns
+  from the widest card anywhere.** It was `(i % columns) * 320` by
+  `floor(i / columns) * 220` — a fixed pitch, against cards whose measured
+  heights on that tenant run from 103px to 1275px and whose widths reach 351px.
+  Every row buried the row beneath it and every column clipped its neighbour.
+  Card size now comes from React Flow's `measured` dimensions when it has them
+  and from `estimateCardHeight(fieldCount)` before that, which is the same
+  estimate `computeDefaultGridPositions` has always used — one model of how tall
+  a card is, not two that can drift.
+
+  Verified on the production card sizes: **69 overlapping pairs → 0**.
+
+  `gapX`/`gapY` are replaced by `gutterX`/`gutterY` rather than retuned. The old
+  names meant PITCH, the new ones mean GUTTER; keeping the names would silently
+  change what a caller's number does. Nothing outside this package could call
+  it — it is not re-exported from `utils/index.ts` or the package root.
+
+- **Why this survived every previous check.** Tidy ends with a `fitView`, which
+  for 44 cards settles at zoom 0.28 — below `LOD_FIELDS_VISIBLE` (0.7), so the
+  cards collapse to header-only and stop overlapping. The damage is invisible at
+  the zoom Tidy leaves you at and appears the moment you zoom in far enough to
+  read anything. A screenshot taken straight after pressing Tidy shows a clean
+  grid. The old unit test made the same mistake from the other end: it asserted
+  the exact pitch constants on nodes given no size at all, and nodes with no
+  size cannot overlap. It is now an outcome assertion — no two cards share
+  space — so retuning the gutters is free and reintroducing the bug is not.
+
+- **The canvas no longer opens in the middle of the diagram.** React Flow's
+  `fitView` centres the bounding box, and when `fitViewOptions.minZoom` stops
+  everything from fitting, centring guarantees clipping on all four sides and
+  hides the top-left corner — the one landmark that says where the diagram
+  begins. Measured: opening translate `(122.875, -445.625)` at zoom 0.75, with
+  14 of 44 cards rendered whole and the rest sliced by the frame. New
+  `computeOpeningViewport` keeps the library's zoom exactly — the legibility
+  floor is unchanged and deliberately so — and anchors any axis that overflows
+  to the content's leading edge, one padding in. An axis with room to spare is
+  still centred. The control for that test is `getViewportForBounds` imported
+  from the installed `@xyflow/react`, not a paraphrase of it.
+
+### Sibling surfaces
+
+Four React Flow canvases in the estate, enumerated by
+`git grep -l ReactFlow origin/development -- '*.tsx'` in each of the six app
+submodules plus `grep -rl '@xyflow/react' packages/*/src` in the monorepo —
+reading each repo's `origin/development` ref, not a local working tree. Only
+this one has an auto-layout at all. `crm7`'s `pipeline-flow-inner.tsx` uses a
+fixed 260px pitch against a 180px `minWidth` node with no maximum, which is the
+same class with a much smaller blast radius and follows separately in its own
+repo. BSU's `RelationshipCanvas` and `SchemaVisualizer` derive no positions.
+
+---
+
 ## [1.4.0] — 2026-08-20 — Quick-start tip is dismissible; canvas gets a height floor
 
 An operator report against conduit's Schema Builder page showed the "Schema
