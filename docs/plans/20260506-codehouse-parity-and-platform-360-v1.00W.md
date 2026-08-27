@@ -144,7 +144,7 @@ Nine portal sub-plans, each ≤200 lines, each with role × capability × route 
 
 ## 6. Visual feature builder
 
-Spec: [`20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md).
+Spec: [`20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md).
 
 **Goal:** dev-account-only `/dev/feature-builder` route in BSU gated to `platform_role IN ('developer', 'platform_admin')`. Three panels: Entity (schema-builder), Page (page-builder), AI section (Vercel AI Gateway + AI SDK 5 `generateObject` + Zod). Output: a "feature bundle" exported as a PR — migration SQL + page layout JSON + RLS policy + route registration diff.
 
@@ -235,7 +235,7 @@ This index plan is considered "shipped at status W" when ALL of the following ar
 1. ✅ This file exists at `docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` and is ≤300 lines.
 2. ✅ The refined-prompt copy-in exists at `docs/plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md` and is byte-identical to the source.
 3. ✅ All 9 portal sub-plans exist under `docs/plans/20260506-codehouse-parity/20260506-portal-*.md`, each ≤250 lines.
-4. ✅ Visual-feature-builder spec exists at `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md` and is ≤250 lines.
+4. ✅ Visual-feature-builder spec exists at `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md` and is ≤250 lines.
 5. ✅ `find docs/plans -name "20260506-*" -type f | sort` returns exactly 12 files (1 index + 1 inputs + 9 portals + 1 spec).
 6. ✅ Every YAML frontmatter block in the 12 files has `name`, `description`, and `type` keys per `documentation-compliance` skill.
 7. ✅ Master roadmap (`docs/20260227-bsuite-master-roadmap-v5.00W.md`) gains the new "Codehouse Parity & Platform 360" section linking to this file.
@@ -263,4 +263,4 @@ Status flips W→A only after operator approval AND red-team review of all 9 por
 - [`../20260227-bsuite-master-roadmap-v5.00W.md`](../archive/README.md) *(archived — was `20260227-bsuite-master-roadmap-v5.00W.md`)* — master roadmap
 - [`../20260501-merged-execution-backlog-v1.00W.md`](../archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)* — single execution queue
 - [`../../AUTH_CANONICAL.md`](../../AUTH_CANONICAL.md) — auth reference (BS OAuth 2.1 PKCE + Supabase RLS)
-- [`./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md) — WS-E spec
+- [`./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md`](./20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md) — WS-E spec

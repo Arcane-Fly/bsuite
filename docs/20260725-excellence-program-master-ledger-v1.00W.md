@@ -35,7 +35,7 @@
 
 ## Persona + compliance (see linked docs)
 
-- Design: `docs/plans/20260725-gto-persona-excellence-design-v1.00F.md`  
+- Design: `docs/plans/20260725-gto-persona-excellence-design-v1.00D.md`  
 - Research: `docs/research/20260725-gto-compliance-ux-research-v1.00W.md`  
 - Jodie parity: `docs/audits/20260725-jodie-parity-matrix-v1.00F.md`  
 - Bugs: `docs/audits/20260725-*-deep-bug-excavation-v1.00W.md`
@@ -83,7 +83,7 @@
 
 ## Excellence close-out (2026-07-25 evening)
 
-Plan: `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md`
+Plan: `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md`
 
 - Host capacity + leave/FO Jodie: SHIPPED (crm7#1207)
 - Enterprise admin Jodie tools: this close-out

@@ -49,7 +49,7 @@
 **Goal:** Align ledger, parity matrix, OUTSTANDING pointers with shipped reality.  
 **Files:**  
 - `docs/audits/20260725-jodie-parity-matrix-v1.00F.md`  
-- `docs/20260725-excellence-program-master-ledger-v1.00F.md`  
+- `docs/20260725-excellence-program-master-ledger-v1.00W.md`  
 - `docs/00-roadmap/*` (this plan + master roadmap)  
 **AC:**
 - [ ] Leave tools + FO case note + host capacity marked FULL in parity matrix  

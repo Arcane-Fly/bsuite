@@ -27,7 +27,7 @@
 > It was not rewritten because back-dating an evidence log destroys the only record of what was
 > verified when.
 
-**Last updated:** 2026-07-01 (post-Throughput display-order DB apply + docs/plans closure sweep; see `20260701-docs-plans-closure-audit-v1.00F.md`)
+**Last updated:** 2026-07-01 (post-Throughput display-order DB apply + docs/plans closure sweep; see `20260701-docs-plans-closure-audit-v1.00W.md`)
 
 This is a quick-reference status board for the cross-app tracking issues
 in the parent `bsuite` repo. It complements `docs/OUTSTANDING.md`

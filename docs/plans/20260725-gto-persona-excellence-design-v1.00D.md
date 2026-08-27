@@ -1,6 +1,6 @@
 # GTO Persona Excellence Design
 
-> **Naming:** `20260725-gto-persona-excellence-design-v1.00F.md` · Status **D**  
+> **Naming:** `20260725-gto-persona-excellence-design-v1.00D.md` · Status **D**  
 > Brainstorm output for BSuite excellence program. Grounded in manuals roles, portal routes, Jodie tool registry, National GTO Standards themes.
 
 ## Approaches considered

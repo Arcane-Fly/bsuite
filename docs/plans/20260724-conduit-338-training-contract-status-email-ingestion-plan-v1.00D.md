@@ -1,6 +1,6 @@
 # conduit#338 — Training-Contract Status Signal (Email Ingestion) — Build Scope
 
-> **Naming:** `20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00F.md` · Status **D** (Draft — pending per-state portal map from research lane) · Operator-corrected model 2026-07-24.
+> **Naming:** `20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00D.md` · Status **D** (Draft — pending per-state portal map from research lane) · Operator-corrected model 2026-07-24.
 
 ## The correct model (operator ruling)
 

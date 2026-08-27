@@ -1,6 +1,6 @@
 # Recurring Bugs & Unexamined Blindspots — Refined Prompt
 
-> **Naming:** `20260724-recurring-bugs-blindspots-refined-v1.00F.md` · Status **D** · prompt-enhancer Standard tier (3 passes). Input: "what are recurring bugs and issues you have found in this codebase. what should we be looking into but haven't." Silo: BSuite.
+> **Naming:** `20260724-recurring-bugs-blindspots-refined-v1.00D.md` · Status **D** · prompt-enhancer Standard tier (3 passes). Input: "what are recurring bugs and issues you have found in this codebase. what should we be looking into but haven't." Silo: BSuite.
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.
