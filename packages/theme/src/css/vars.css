@@ -252,19 +252,36 @@
      that setting — error worst at 3.64:1 live. A token can be AA in the
      context it was measured in and fail in the context it ships in.
 
-     Each is now dropped in lightness until it clears 4.5:1 on its own /10
-     tint with margin. Darkening only ever RAISES contrast against a light
+     Each is now dropped in lightness until it clears 4.5:1 on its own tint
+     with margin. Darkening only ever RAISES contrast against a light
      backdrop, so the original page-background figures improve rather than
      regress; both are quoted below. Dark mode is untouched — its variants sit
-     at L 0.67-0.79 and already measure clean on tint (7:1+ AAA). */
-  --role-primary-text: oklch(0.499 0.215 262.9);  /* 4.96:1 tint · 5.66:1 body ✓ AA */
-  --role-accent-text:  oklch(0.468 0.132 191.7);  /* 4.96:1 tint · 5.32:1 body ✓ AA */
-  --role-error-text:   oklch(0.482 0.230  25);    /* 4.96:1 tint · 5.83:1 body ✓ AA */
-  --role-warning-text: oklch(0.509 0.150  75);    /* 4.96:1 tint · 5.24:1 body ✓ AA */
-  --role-success-text: oklch(0.463 0.130 195);    /* 4.97:1 tint · 5.46:1 body ✓ AA */
+     at L 0.67-0.79 and already measure clean on tint (7:1+ AAA).
+
+     RETUNED 2026-08-27, and the reason is the same short-list failure one axis
+     over. The figures above were taken at ONE alpha (/10) against ONE surface
+     (the panel). The estate ships three alphas — 103 sites at /10, 28 at /15
+     and 27 at /20 — over five surfaces, and a heavier wash on a DARKER surface
+     is strictly worse. Measured across that full cross product, 12 of the 21
+     role x alpha cells were below 4.5:1: every role failed at /20, and
+     --role-secondary failed even at /10 (4.44:1). The worst reading was
+     secondary at /20 on --role-bg-sunken, 3.72:1.
+
+     --role-secondary-text also stopped aliasing --neon-electric-indigo and
+     carries a tuned triple like its six siblings. Aliasing a brand colour meant
+     it could not be corrected without moving the brand, and it was the only one
+     of the seven that could not be tuned in place.
+
+     The figures quoted are now the WORST cell across all five surfaces and all
+     three alphas, not the comfortable one. Gate: src/text-contrast.test.ts. */
+  --role-primary-text: oklch(0.471 0.215 262.9);  /* 4.62:1 worst tint · 6.43:1 body ✓ AA */
+  --role-accent-text:  oklch(0.456 0.132 191.7);  /* 4.61:1 worst tint · 5.61:1 body ✓ AA */
+  --role-error-text:   oklch(0.430 0.230  25);    /* 4.61:1 worst tint · 6.83:1 body ✓ AA */
+  --role-warning-text: oklch(0.501 0.150  75);    /* 4.61:1 worst tint · 5.44:1 body ✓ AA */
+  --role-success-text: oklch(0.436 0.130 195);    /* 4.61:1 worst tint · 6.11:1 body ✓ AA */
   /* Pair for --role-info. Every other semantic role had a -text token; info
      was the only gap, which forced apps to invent a local copy (R80.4). */
-  --role-info-text:    oklch(0.468 0.120 192);    /* 4.96:1 tint · 5.44:1 body ✓ AA */
+  --role-info-text:    oklch(0.462 0.120 192);    /* 4.60:1 worst tint · 5.59:1 body ✓ AA */
   /* Pair for --role-secondary, and the last gap in this family.
      --role-secondary is a FILL: light text sits ON it, so it is tuned dark
      (L 0.380) and measures 9.81:1 against --text-on-light-fill. Used as a
@@ -277,7 +294,7 @@
      stroke-safe sibling costs nothing and moves no existing surface.
      Both variants are existing NAMED palette entries rather than new values —
      the whitelist audit rejected two hand-tuned literals here, correctly. */
-  --role-secondary-text: var(--neon-electric-indigo); /* 5.23:1 sunken · 5.96:1 surface ✓ AA */
+  --role-secondary-text: oklch(0.463 0.230 277);  /* 4.61:1 worst tint · 6.95:1 body ✓ AA */
 
   /* Text roles — six-tier scale (W3 §3.1 contract). Every tier below is
      measured against --role-bg-body (the conservative floor); all tiers
