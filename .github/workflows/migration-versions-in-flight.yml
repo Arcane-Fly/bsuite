@@ -41,7 +41,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # The checker reads <root>/supabase/migrations for all seven roots, so the
+          # apps must be present. They are PRIVATE submodules and the default
+          # GITHUB_TOKEN cannot clone them — it fails with a bare "repository not
+          # found", which is why this workflow failed at checkout on 2 of 2 runs
+          # since it was created and has never once run its check.
+          #
+          # No presence assertion here on purpose: the checker itself now REFUSES on
+          # a partial tree and names the unreadable roots. One place, not two.
           submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
