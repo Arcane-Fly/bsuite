@@ -224,12 +224,19 @@ jobs:
           package-manager-cache: false
 
       - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v2
+        uses: supabase/setup-cli@3c2f5e2ae34c34e428e8e206e2c4d21fa2d20fbf # v2.1.1
         with:
           version: 2.105.0
 
       - name: Install psql client
         run: |
+          # GitHub's runner image ships a Microsoft apt repo this estate never reads. It
+          # intermittently answers 403 / "no longer signed", and under `set -euo pipefail`
+          # that makes `apt-get update` fatal. schema-lag died on exactly that at 21:26 on
+          # 2026-08-27 while phantom-migrations, running the same install a minute earlier,
+          # passed - so it presents as flake, not as a broken workflow, and gets re-run
+          # rather than fixed. Dropping the lists removes the dependency instead.
+          sudo rm -f /etc/apt/sources.list.d/*microsoft* /etc/apt/sources.list.d/*azure* || true
           sudo apt-get update
           sudo apt-get install -y postgresql-client
           psql --version

@@ -55,7 +55,15 @@ jobs:
         run: node scripts/audit-cross-tenant-duplicate-objects.mjs --self-test
 
       - name: Install psql client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        run: |
+          # GitHub's runner image ships a Microsoft apt repo this estate never reads. It
+          # intermittently answers 403 / "no longer signed", which makes `apt-get update`
+          # fatal. schema-lag died on exactly that at 21:26 on 2026-08-27 while
+          # phantom-migrations, running the same install a minute earlier, passed - so it
+          # presents as flake rather than as a broken workflow, and gets re-run rather than
+          # fixed. Dropping the lists removes the dependency instead.
+          sudo rm -f /etc/apt/sources.list.d/*microsoft* /etc/apt/sources.list.d/*azure* || true
+          sudo apt-get update && sudo apt-get install -y postgresql-client
 
       # Supavisor tenants sit on a numbered cluster — newer projects on aws-1, older
       # on aws-0 — and the wrong one answers "tenant/user not found". No cluster

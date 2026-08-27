@@ -109,3 +109,6 @@ jobs:
       # reported as a well-behaved guard. Run it as its own blocking step too.
       - name: Every submodule scanner refuses an empty tree
         run: node scripts/check-submodule-scan-guards.mjs
+
+      - name: No workflow runs an unmitigated apt-get update
+        run: node scripts/check-apt-repo-hygiene.mjs

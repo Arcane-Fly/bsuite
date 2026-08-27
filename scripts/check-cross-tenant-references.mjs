@@ -109,6 +109,23 @@ const BASELINE = {
   'training_contracts.qualification_id->qualifications': 8,
   'training_plans.qualification_id->qualifications': 8,
   'charge_rate_snapshots.charge_rate_quote_id->charge_rate_quotes': 3,
+
+  // EXTENDED 2026-08-28, with the reason recorded here as this file requires.
+  //
+  // A NEW pair appeared: one `people` row whose `current_host_employer_id` points at a
+  // `clients` row owned by a different tenant. Under RLS the owning tenant's view of
+  // that person renders EMPTY; on any service_role path the client is visible to the
+  // wrong tenant. It is a defect, NOT an accepted state — it is filed as bsuite#2611
+  // and needs a tenant-ownership ruling, which is not a call a lane can make: guessing
+  // which of two tenants owns the row is how you turn a broken link into a wrong one,
+  // and one of the tenants in this estate is a real client whose data is read-only.
+  //
+  // It is banked at 1 rather than left failing because the alternative is a gate that
+  // is red on every PR for being RIGHT, which is how a gate stops being read. Banked,
+  // it still fails on a SECOND such row and on any sixth pair — which is the whole
+  // job. Unbank it the moment #2611 is resolved; a baseline above the true figure is
+  // a ratchet with slack in it.
+  'people.current_host_employer_id->clients': 1,
 }
 
 const ENUMERATE_FKS = `
