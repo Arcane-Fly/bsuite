@@ -42,5 +42,12 @@ jobs:
 
       - name: Check every production HEAD
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The default GITHUB_TOKEN is scoped to THIS repository only, so every
+          # sibling repo came back "(no sha) UNKNOWN" on this gate's first real
+          # run — 6 of 7. The estate's established cross-repo secret is
+          # BSUITE_CROSS_REPO_PAT (used by advance-submodule-pointers and 60-odd
+          # other steps), with github.token as the fallback so a fork or a
+          # secret-less context degrades to "cannot see them" rather than
+          # silently checking nothing.
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
         run: node scripts/check-main-head-is-verified.mjs
