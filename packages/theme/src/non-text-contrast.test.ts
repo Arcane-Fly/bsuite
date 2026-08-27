@@ -1,7 +1,14 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-
 import { describe, expect, it } from 'vitest'
+
+import {
+  DARK,
+  ROOT,
+  SURFACES,
+  contrast,
+  oklchToSrgb,
+  resolve_,
+  round2,
+} from './contrast-instrument'
 
 /**
  * WCAG 1.4.11 NON-TEXT CONTRAST — the border roles, measured, not asserted.
@@ -30,108 +37,6 @@ import { describe, expect, it } from 'vitest'
  * and are an operator call to change, not this file's to assert.
  */
 
-const VARS = resolve(__dirname, 'css/vars.css')
-
-/* ── OKLCH -> sRGB -> WCAG relative luminance ──────────────────────────────
- * Ottosson's OKLab matrices, then the sRGB transfer function, then WCAG 2.x
- * relative luminance. Identical pipeline to scripts/audit-legibility.mjs; the
- * self-test below pins it against values this repo has independently recorded.
- */
-const DEG = Math.PI / 180
-
-function oklchToSrgb(L: number, C: number, H: number): [number, number, number] {
-  const a = C * Math.cos(H * DEG)
-  const b = C * Math.sin(H * DEG)
-  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3
-  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3
-  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3
-  const linear = [
-    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-  ]
-  return linear.map((x) => {
-    const enc = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055
-    return Math.min(1, Math.max(0, enc))
-  }) as [number, number, number]
-}
-
-const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-
-const luminance = ([r, g, b]: [number, number, number]) =>
-  0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
-
-function contrast(a: [number, number, number], b: [number, number, number]) {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((p, q) => q - p)
-  return (hi + 0.05) / (lo + 0.05)
-}
-
-const round2 = (n: number) => Math.round(n * 100) / 100
-
-/* ── Read the live token values out of the stylesheet ─────────────────────
- * Blocks, not the whole file: `:root` and `.dark` redefine the same names and
- * a whole-file scan would silently take whichever came last.
- */
-/* Comments are stripped ONCE, up front. vars.css's prose quotes token values
- * constantly (including the pre-TH-5 numbers this file self-tests against), and
- * a scan that reads them would resolve a token to whatever a sentence mentioned. */
-const CSS = readFileSync(VARS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
-
-/**
- * Every top-level block whose selector list contains `selector`, concatenated
- * in source order.
- *
- * NOT the first one. vars.css declares `:root` twice and `.dark` twice — the
- * second pair is where the role aliases live. Taking `indexOf` gave the dark
- * border roles their LIGHT values and the suite reported light-mode ratios
- * under a dark-mode heading: every dark assertion was measuring the wrong
- * colour and three of them still passed, which is the worse half.
- */
-function blocks(selector: string): string {
-  const out: string[] = []
-  const re = /([^{}]*)\{/g
-  let m: RegExpExecArray | null
-  while ((m = re.exec(CSS))) {
-    const sel = m[1].trim()
-    const open = m.index + m[0].length - 1
-    let depth = 0
-    let close = -1
-    for (let i = open; i < CSS.length; i++) {
-      if (CSS[i] === '{') depth++
-      else if (CSS[i] === '}' && --depth === 0) {
-        close = i
-        break
-      }
-    }
-    if (close === -1) throw new Error(`unterminated block for "${sel}"`)
-    if (sel.split(',').some((s) => s.trim() === selector)) out.push(CSS.slice(open + 1, close))
-    re.lastIndex = close
-  }
-  if (!out.length) throw new Error(`selector ${selector} not found in vars.css`)
-  return out.join('\n')
-}
-
-const ROOT = blocks(':root')
-const DARK = blocks('.dark')
-
-/** Resolve `--name` inside a block, following at most one `var(--other)` hop. */
-function resolve_(name: string, scope: string): [number, number, number] {
-  const read = (n: string, where: string) => {
-    // LAST declaration wins — the same cascade the browser applies, and the
-    // reason a first-match read is not good enough here.
-    const all = [...where.matchAll(new RegExp(`--${n}\\s*:\\s*([^;]+);`, 'g'))]
-    return all.length ? all[all.length - 1][1].trim() : null
-  }
-  let value = read(name, scope) ?? read(name, ROOT)
-  if (!value) throw new Error(`--${name} not declared`)
-  const hop = value.match(/^var\(\s*--([a-z0-9-]+)\s*\)$/i)
-  if (hop) value = read(hop[1], scope) ?? read(hop[1], ROOT) ?? ''
-  const ok = value.match(/oklch\(\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s*\)/i)
-  if (!ok) throw new Error(`--${name} does not resolve to a bare oklch triple: "${value}"`)
-  return oklchToSrgb(Number(ok[1]), Number(ok[2]), Number(ok[3]))
-}
-
-const SURFACES = ['role-bg-body', 'role-bg-surface', 'role-bg-panel', 'role-bg-input', 'role-bg-sunken']
 const FLOOR = 3.0
 
 describe('contrast pipeline self-test', () => {

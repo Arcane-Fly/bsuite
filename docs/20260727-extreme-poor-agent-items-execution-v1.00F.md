@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite-lane
+---
+
 # Extreme-poor agent items — ground-up execution log (2026-07-27)
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
