@@ -37,7 +37,7 @@ Two self-inflicted defects while producing it, both worth the space:
   cite nothing checkable                         426
   historical records (by path or banner)         43
   BINDABLE — these name a gate that exists, so their claim is checkable:
-    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md
+    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md
         publish-ui.yml
     docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00F.md
         verify-class-a-preservation.mjs
@@ -120,7 +120,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 |---|---|---|---|
 | `crm7/docs/audits/20260811-colour-drift-full-tree-audit-v1.00D.md` | BINDABLE |  | lint-ratchet.mjs |
 | `crm7/docs/audits/20260811-pgtap-evidence-integrity-v1.00D.md` | BINDABLE |  | pgtap.yml |
-| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | BINDABLE |  | publish-ui.yml |
+| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md` | BINDABLE |  | publish-ui.yml |
 | `docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00F.md` | BINDABLE |  | verify-class-a-preservation.mjs |
 | `docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md` | BINDABLE |  | verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs |
 | `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | BINDABLE |  | ci.yml |
@@ -326,9 +326,9 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260723-anytime-workforceone-admin-guide-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260723-bsuite-capability-matrix-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260724-bsuite-vercel-env-inventory-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260724-oneshot-cross-cutting-audit-v1.00F.md` | UNBOUND |  | — |
+| `docs/20260724-oneshot-cross-cutting-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260725-backlog-closeout-loop-v1.00A.md` | UNBOUND |  | — |
-| `docs/20260725-excellence-program-master-ledger-v1.00F.md` | UNBOUND |  | — |
+| `docs/20260725-excellence-program-master-ledger-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260725-headroom-learn-notes-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260725-sta-email-samples-checklist-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260725-sydney-migration-readiness-v1.00W.md` | UNBOUND |  | — |
@@ -374,7 +374,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/ai/pricing/README.md` | UNBOUND |  | — |
 | `docs/ai/README.md` | UNBOUND |  | — |
 | `docs/ai/reference/README.md` | UNBOUND |  | — |
-| `docs/audits/20260725-action-plan-from-audits-v1.00F.md` | UNBOUND |  | — |
+| `docs/audits/20260725-action-plan-from-audits-v1.00A.md` | UNBOUND |  | — |
 | `docs/audits/20260725-bsu-braden-throughput-deep-bug-excavation-v1.00W.md` | UNBOUND |  | — |
 | `docs/audits/20260725-bsu-braden-throughput-docs-code-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/audits/20260725-conduit-r80-deep-bug-excavation-v1.00W.md` | UNBOUND |  | — |
@@ -390,7 +390,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/operator-screenshots/README.md` | UNBOUND |  | — |
 | `docs/plans/20260302-r80-crm7-integration-audit-v1.00A.md` | UNBOUND |  | — |
 | `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md` | UNBOUND |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/20260506-codehouse-parity/README.md` | UNBOUND |  | — |
 | `docs/plans/20260507-feature-builder-ux-red-team-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260510-universal-canvas-capability-implementation-v1.00F.md` | UNBOUND |  | — |
@@ -401,22 +401,22 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/plans/20260618-recruitment-comms-rams-cluster-plan-v1.00A.md` | UNBOUND |  | — |
 | `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260629-remaining-work-continuation-prompt-v1.00F.md` | UNBOUND |  | — |
-| `docs/plans/20260701-docs-plans-closure-audit-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260701-docs-plans-closure-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/20260703-gto-e2e-gap-map-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260703-unified-authoring-surface-plan-v1.03A.md` | UNBOUND |  | — |
 | `docs/plans/20260709-hermes-deep-dive-audit-prompt-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260716-bsuite-completion-program-plan-v1.00F.md` | UNBOUND |  | — |
-| `docs/plans/20260723-bsuite-documentation-program-design-v1.00A.md` | UNBOUND |  | — |
+| `docs/plans/20260723-bsuite-documentation-program-design-v1.00D.md` | UNBOUND |  | — |
 | `docs/plans/20260723-completion-program-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260724-bsuite-1322-region-migration-runbook-v1.00D.md` | UNBOUND |  | — |
 | `docs/plans/20260724-bsuite-1322-supabase-region-migration-scope-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00F.md` | UNBOUND |  | — |
-| `docs/plans/20260724-email-funding-expansion-scope-v1.00F.md` | UNBOUND |  | — |
-| `docs/plans/20260724-recruitment-employment-handover-design-v1.00F.md` | UNBOUND |  | — |
-| `docs/plans/20260724-recurring-bugs-blindspots-refined-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00D.md` | UNBOUND |  | — |
+| `docs/plans/20260724-email-funding-expansion-scope-v1.00D.md` | UNBOUND |  | — |
+| `docs/plans/20260724-recruitment-employment-handover-design-v1.00D.md` | UNBOUND |  | — |
+| `docs/plans/20260724-recurring-bugs-blindspots-refined-v1.00D.md` | UNBOUND |  | — |
 | `docs/plans/20260725-docs-deadcode-archive-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260725-gto-excellence-program-refined-v1.00F.md` | UNBOUND |  | — |
-| `docs/plans/20260725-gto-persona-excellence-design-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260725-gto-persona-excellence-design-v1.00D.md` | UNBOUND |  | — |
 | `docs/plans/20260727-escalation-council-multiapp-investigation-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260728-billing-model-label-truthfulness-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260728-r8-as-rates-engine-architecture-v1.00D.md` | UNBOUND |  | — |

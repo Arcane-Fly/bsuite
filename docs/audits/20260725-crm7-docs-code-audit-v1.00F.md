@@ -254,7 +254,7 @@ This is itself an audit/evidence doc, not a feature doc. It references migration
 
 ### 24. Handover-to-Employment (email/funding expansion design)
 
-The email-entity-assignment doc (`20260726`) references `docs/plans/20260724-recruitment-employment-handover-design-v1.00F.md` as its design parent. That design doc is **not in `docs/plans/`** (it's referenced but not present in the non-archive docs scanned). The handover edge function **is** implemented: `supabase/functions/handover-to-employment/index.ts:1` + `helpers.ts:1` + `__tests__/helpers.test.ts:1`. The `from-candidate.tsx` page (`src/pages/apprentices/from-candidate.tsx:1`) consumes it. **IMPLEMENTED** (edge function exists; the design doc is referenced but lives outside the scanned scope or doesn't exist yet).
+The email-entity-assignment doc (`20260726`) references `docs/plans/20260724-recruitment-employment-handover-design-v1.00D.md` as its design parent. That design doc is **not in `docs/plans/`** (it's referenced but not present in the non-archive docs scanned). The handover edge function **is** implemented: `supabase/functions/handover-to-employment/index.ts:1` + `helpers.ts:1` + `__tests__/helpers.test.ts:1`. The `from-candidate.tsx` page (`src/pages/apprentices/from-candidate.tsx:1`) consumes it. **IMPLEMENTED** (edge function exists; the design doc is referenced but lives outside the scanned scope or doesn't exist yet).
 
 ---
 

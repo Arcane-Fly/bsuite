@@ -26,7 +26,7 @@ Sub-plans of the parent index [`../20260506-codehouse-parity-and-platform-360-v1
 | [`20260506-portal-crm7-internal-v1.00F.md`](./20260506-portal-crm7-internal-v1.00F.md) | portal-sub-plan | crm7 | Internal portal for consultants/coordinators/payroll officers — timesheets, placements, pay-item groups, BOOT compliance, AI assistant, offline-first PWA. |
 | [`20260506-portal-r80-3-calculator-v1.00F.md`](./20260506-portal-r80-3-calculator-v1.00F.md) | portal-sub-plan | R80.3 | Wage calculator portal — apprentice wage / charge / margin / BOOT preview. Compliance-critical (Fair Work Act). Reader-only on CRM7-owned apprentice records. |
 | [`20260506-portal-braden-marketing-v1.00F.md`](./20260506-portal-braden-marketing-v1.00F.md) | portal-sub-plan | braden | Corporate marketing site (braden.com.au) — public CMS-driven content + CSP-hardened. Corporate red/gold branding — D2C theme NOT applied. |
-| [`20260506-visual-feature-builder-spec-v1.00F.md`](./20260506-visual-feature-builder-spec-v1.00F.md) | spec | business-suite-unified | WS-E spec for the dev-account-only `/dev/feature-builder` route in BSU. Three panels (Entity / Page / AI). Output is a "feature bundle" exported as a PR. |
+| [`20260506-visual-feature-builder-spec-v1.00W.md`](./20260506-visual-feature-builder-spec-v1.00W.md) | spec | business-suite-unified | WS-E spec for the dev-account-only `/dev/feature-builder` route in BSU. Three panels (Entity / Page / AI). Output is a "feature bundle" exported as a PR. |
 
 ## Cross-references
 

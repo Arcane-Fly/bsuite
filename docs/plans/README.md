@@ -44,7 +44,7 @@ register above, which is re-measured. Fifteen prompt-shaped documents currently 
 | `20260629-remaining-work-continuation-prompt-v1.00F.md` | 2026-06-29 |
 | `20260709-hermes-deep-dive-audit-prompt-refined-v1.00F.md` | 2026-07-09 |
 | `20260723-completion-program-refined-v1.00F.md` | 2026-07-23 |
-| `20260724-recurring-bugs-blindspots-refined-v1.00F.md` | 2026-07-24 |
+| `20260724-recurring-bugs-blindspots-refined-v1.00D.md` | 2026-07-24 |
 | `20260725-docs-deadcode-archive-refined-v1.00F.md` | 2026-07-25 |
 | `20260725-gto-excellence-program-refined-v1.00F.md` | 2026-07-25 |
 | `20260727-escalation-council-multiapp-investigation-refined-v1.00F.md` | 2026-07-27 |
@@ -80,7 +80,7 @@ Four of these name **R80.3** or a pre-2026-08-06 app set; R80.3 left the submodu
 | `20260513-bsuite-consolidated-hardening-v1.00W.md` | W | Consolidated hardening multi-cycle plan (open tails tracked via bsuite#1505 et al.) |
 | `20260521-reports-w2-uplift-implementation-v1.00F.md` | W | Reports W2 uplift — Phase 1 shipped (crm7 PRs #840–#844 merged 2026-05-22); Phases 3a/3b/4/6/7 outstanding |
 | `20260609-production-readiness-next-steps-plan-v1.00W.md` | W | **Umbrella production-readiness plan** — package consumer rollout, visual smoke triage, TCID/WAAMS, placement identity bridge, block-release calendar, workstreams E–H; remains active until bsuite#1506, crm7#1066, storage phases, and E–H tails close |
-| `20260701-docs-plans-closure-audit-v1.00F.md` | W | Current closure audit across parent + six submodules; records archive candidates, stale status corrections, and remaining work by repo |
+| `20260701-docs-plans-closure-audit-v1.00W.md` | W | Current closure audit across parent + six submodules; records archive candidates, stale status corrections, and remaining work by repo |
 
 ### Completed Plans (re-marked A, retained in place)
 

@@ -7,7 +7,7 @@
 | Document | Status | Dated |
 |---|---|---|
 | [BSuite — what "world class" actually requires](20260813-bsuite-world-class-brainstorm-v1.00D.md) | Draft | 2026-08-13 |
-| [Action plan from docs↔code + dead-code audits (2026-07-25)](20260725-action-plan-from-audits-v1.00F.md) | Frozen | 2026-07-25 |
+| [Action plan from docs↔code + dead-code audits (2026-07-25)](20260725-action-plan-from-audits-v1.00A.md) | Frozen | 2026-07-25 |
 | [BSU + braden + throughput — Deep Bug Excavation](20260725-bsu-braden-throughput-deep-bug-excavation-v1.00W.md) | Working | 2026-07-25 |
 | [BSU + braden + throughput — Documentation-vs-Code Audit](20260725-bsu-braden-throughput-docs-code-audit-v1.00W.md) | Working | 2026-07-25 |
 | [Deep Bug Excavation — conduit + R80.3 (Read-Only)](20260725-conduit-r80-deep-bug-excavation-v1.00W.md) | Working | 2026-07-25 |

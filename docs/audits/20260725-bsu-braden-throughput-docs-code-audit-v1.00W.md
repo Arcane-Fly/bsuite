@@ -123,7 +123,7 @@
 | `docs/README.md` | **STALE** | Lines 9, 11, 13, 24-26, 46 reference 4 archived/relocated docs as canonical. |
 | `docs/OUTSTANDING.md` | **PARTIAL** | Acknowledges archive (lines 7, 21) and points to current execution queue ✅. But line 42 still cites `20260227-dry-one-shot-architecture-v1.04A.md` for the one-shot compliance gate — actual file is `v1.02A`. |
 | `docs/20260504-bsuite-documentation-hub-v1.00W.md` | **STALE** | References `20260504-bsuite-tech-stack-alignment-v1.00W.md` as companion (archived). References master-roadmap, finish-line-roadmap, merged-execution-backlog as canonical (all archived/relocated). |
-| `docs/20260724-oneshot-cross-cutting-audit-v1.00F.md` | **VALIDATED** | Audit findings reference real code paths verified during this audit. |
+| `docs/20260724-oneshot-cross-cutting-audit-v1.00W.md` | **VALIDATED** | Audit findings reference real code paths verified during this audit. |
 | `docs/20260724-recurring-bugs-and-blindspots-v1.00W.md` | **VALIDATED** | Findings are discovery-only and reference current code state. |
 | `docs/20260723-bsuite-capability-matrix-v1.00W.md` | **VALIDATED** | References `20260723-anytime-workforceone-admin-guide-v1.00W.md` ✅. |
 | `docs/adr/README.md` | **STALE** | Cross-reference convention cites `docs/20260227-dry-one-shot-architecture-v1.04A.md` (actual: `v1.02A`), `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` (archived), `docs/20260427-roadmaps-audits-plans-outstanding-work-ledger-v1.00W.md` (not found anywhere), `docs/20260501-merged-execution-backlog-v1.00W.md` (archived). |

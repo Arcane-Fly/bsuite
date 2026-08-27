@@ -29,7 +29,7 @@
 | [BSuite Data Workspace — Implementation Plan v1.00W](20260808-data-workspace-implementation-plan-v1.00W.md) | Working | 2026-08-08 |
 | [Applicant flow, apprentice documents, direct onboard — what I found and what I changed](20260808-intake-and-onboarding-findings-v1.00W.md) | Working | 2026-08-08 |
 | [Operator Decision Register — 2026-08-08](20260808-operator-decision-register-v1.00W.md) | Working | 2026-08-08 |
-| [Excellence close-out — implementation plan](20260725-excellence-closeout-implementation-plan-v1.00F.md) | Frozen | 2026-07-25 |
+| [Excellence close-out — implementation plan](20260725-excellence-closeout-implementation-plan-v1.00W.md) | Frozen | 2026-07-25 |
 | [Qwen excellence integration plan (post impl-RT)](20260725-qwen-excellence-integration-plan-v1.00F.md) | Frozen | 2026-07-25 |
 | [Master roadmap — BSuite (planning layer)](20260112-master-roadmap-v1.00F.md) | Frozen | 2026-01-12 |
 | [BSuite platform — feature index](BSUITE-FEATURE-INDEX.md) | — | — |
