@@ -102,7 +102,19 @@ jobs:
             *) echo "::error::empty input did not report an absent result"; exit 1 ;;
           esac
 
+      # PULL REQUESTS ONLY. `github.base_ref` is set on pull_request events and is
+      # EMPTY on schedule and workflow_dispatch, so on a scheduled run this step ran
+      #   git merge-base HEAD "origin/"
+      # and died with `fatal: Not a valid object name origin/`, exit 128. Measured
+      # 2026-08-28: 19 of 19 pull_request runs green, and the scheduled run failing
+      # every time — a gate red for a reason that has nothing to do with what it
+      # checks, which is how a gate stops being read.
+      #
+      # Only THIS step is gated, not the job. The self-tests above it prove the
+      # checker can still fail, and that is worth running on a schedule; asking
+      # "what does this PR add" when there is no PR is not.
       - name: Check what this PR adds
+        if: github.event_name == 'pull_request'
         shell: bash
         # `github.base_ref` is a BRANCH NAME, and a branch name is attacker-supplied.
         # Interpolated with ${{ }} it is pasted into the shell before bash ever sees
