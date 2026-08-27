@@ -152,10 +152,22 @@ jobs:
       # applied migrations exits 3, because a phantom scan against an empty state
       # says either that everything is missing or that nothing is — and both read
       # as a confident answer.
+      #
+      # That control guards the DATABASE side only. --require-examined guards the
+      # TREE side, which was the remaining hole: a fully populated db-state against
+      # an unpopulated submodule checkout printed
+      #
+      #     examined 0 recorded migration(s) ... 0 phantom(s)
+      #
+      # and exited 0. Measured 2026-08-27 across all six trees: 76 examined. The
+      # floor is 50 — comfortably under the real figure, and the number only grows
+      # as migrations land, so it does not need chasing unless MIGRATION_FLOOR is
+      # raised.
       - name: Check every recorded migration's objects exist
         run: |
           node scripts/check-phantom-migrations.mjs \
             --db-state=db-state.json \
+            --require-examined=50 \
             crm7/supabase/migrations \
             business-suite-unified/supabase/migrations \
             conduit/supabase/migrations \

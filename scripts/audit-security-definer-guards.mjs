@@ -57,9 +57,58 @@ export const GUARD_TOKENS = [
 /** The argument IS the credential — these are unauthenticated BY DESIGN. */
 export const TOKEN_ARG = /\bp_token\b|\btoken\b/i
 
-export function isSelfGuarded(def) {
+/**
+ * The part of a CREATE FUNCTION text where a guard can actually live: the BODY,
+ * with comments removed.
+ *
+ * Matching the whole statement cleared three functions that were not guarded at all:
+ *
+ *   - `is_platform_admin` matched the token `is_platform_admin` in its OWN
+ *     `CREATE FUNCTION public.is_platform_admin(` line. The gate read the
+ *     function's name as evidence that the function checks the caller.
+ *   - the same function matched `auth.uid()` in `uid uuid DEFAULT auth.uid()`. A
+ *     default is not a guard — the whole point of a default is that the caller
+ *     may override it, which is exactly the attack.
+ *   - `is_platform_developer`'s body comment discusses `auth.uid() = id` in prose.
+ *     A comment ABOUT a guard is not a guard.
+ *
+ * All three are the same root cause, so all three are fixed in one place.
+ */
+export function guardSurface(def) {
   const d = String(def)
-  return GUARD_TOKENS.some((t) => d.includes(t))
+  const m = d.match(/\bAS\s+(\$[A-Za-z_0-9]*\$)/)
+  let body = d
+  if (m) {
+    const open = d.indexOf(m[1], m.index) + m[1].length
+    const close = d.lastIndexOf(m[1])
+    body = close > open ? d.slice(open, close) : d.slice(open)
+  }
+  return body.replace(/--[^\n]*/g, ' ')
+}
+
+export function isSelfGuarded(def, selfName) {
+  const surface = guardSurface(def)
+  // A token that IS this function's own name proves nothing about who called it.
+  return GUARD_TOKENS.some((t) => t !== selfName && surface.includes(t))
+}
+
+/** An @SD-JUSTIFICATION that claims policy use, on a function no policy names. */
+export const CLAIMS_RLS_HELPER = /@SD-JUSTIFICATION:[^\n]*rls-helper/i
+
+/**
+ * An annotation is a CLAIM, and this one is checkable against live policy text.
+ *
+ * `classify` used to return ANNOTATED before looking at anything else, so a
+ * comment asserting "called from policy USING/WITH-CHECK clauses" bought a
+ * permanent pass. Measured 2026-08-27: that claim was FALSE for
+ * get_user_tenant_context, check_user_tenant_access and check_module_access —
+ * zero live policies referenced any of them, and all three were direct IDORs
+ * granted to `authenticated`. The gate reported a clean run over all three.
+ */
+export function annotationIsStale(fn, policyRefs) {
+  if (!fn || !fn.annotated) return false
+  if (!CLAIMS_RLS_HELPER.test(String(fn.def))) return false
+  return !policyRefs.has(fn.name)
 }
 
 /**
@@ -85,7 +134,7 @@ export function guardedCallees(def, guardedNames, selfName) {
  * as a finding. It is not one.
  */
 export function guardedClosure(fns) {
-  const guarded = new Set(fns.filter((f) => isSelfGuarded(f.def)).map((f) => f.name))
+  const guarded = new Set(fns.filter((f) => isSelfGuarded(f.def, f.name)).map((f) => f.name))
   for (let pass = 0; pass < 12; pass++) {
     let grew = false
     for (const f of fns) {
@@ -98,14 +147,23 @@ export function guardedClosure(fns) {
 }
 
 export function classify(fn, guarded, policyRefs = new Set()) {
-  if (fn.annotated) return { verdict: 'ANNOTATED', why: 'carries @SD-JUSTIFICATION' }
-  if (isSelfGuarded(fn.def)) return { verdict: 'GUARDED', why: 'checks the caller itself' }
+  // An annotation still short-circuits — but only once its own claim survives a
+  // check against live policy text. A claim nothing corroborates is not evidence.
+  const stale = annotationIsStale(fn, policyRefs)
+  if (fn.annotated && !stale) return { verdict: 'ANNOTATED', why: 'carries @SD-JUSTIFICATION' }
+  if (isSelfGuarded(fn.def, fn.name)) return { verdict: 'GUARDED', why: 'checks the caller itself' }
   const via = guardedCallees(fn.def, [...guarded], fn.name)
   if (via.length) return { verdict: 'GUARDED-VIA', why: `reaches a caller check through ${via.slice(0, 3).join(', ')}` }
   // Checked BEFORE token-gating and before UNGUARDED: an RLS helper is required
   // to be DEFINER and required NOT to check its caller.
   if (policyRefs.has(fn.name)) return { verdict: 'RLS-HELPER', why: 'called from a policy expression — DEFINER is mandatory here' }
   if (TOKEN_ARG.test(fn.args)) return { verdict: 'TOKEN-GATED', why: 'the argument is the credential — confirm expiry and single-use by hand' }
+  if (stale) {
+    return {
+      verdict: 'ANNOTATION-STALE',
+      why: 'its @SD-JUSTIFICATION claims it is called from policy clauses, but no live policy references it — and nothing else guards it',
+    }
+  }
   return { verdict: 'UNGUARDED', why: 'neither it nor anything it calls checks the caller' }
 }
 
@@ -174,6 +232,72 @@ function selfTest() {
   t('closure does not over-clear',
     guardedClosure([{ name: 'lonely', def: 'select 1 from t' }]).has('lonely'), false)
 
+  // ── The three ways this gate cleared a function that was not guarded ────────
+  //
+  // Each case below is written from a REAL function that production granted to
+  // `authenticated` on 2026-08-27, and each one passed this gate before the fix.
+  // They are stated as outcomes ("is it guarded?"), never as assertions about
+  // wording, per the 2026-08-26 ruling.
+
+  // 1. The function's own NAME is in GUARD_TOKENS, and appeared in its own
+  //    signature. `is_platform_admin` vouched for itself.
+  const selfNamed = [
+    'CREATE OR REPLACE FUNCTION public.is_platform_admin(uid uuid DEFAULT auth.uid())',
+    ' RETURNS boolean',
+    'AS $function$',
+    '  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = uid AND platform_role = $$admin$$);',
+    '$function$',
+  ].join('\n')
+  t('a function does not guard itself by being named after a guard',
+    isSelfGuarded(selfNamed, 'is_platform_admin'), false)
+
+  // 2. `auth.uid()` appeared ONLY as an argument default. A default is not a
+  //    guard: overriding it is the attack.
+  t('auth.uid() in an argument DEFAULT is not a guard',
+    guardSurface(selfNamed).includes('auth.uid()'), false)
+
+  // 3. A body COMMENT discussing a guard is not a guard.
+  const commentOnly = [
+    'CREATE FUNCTION public.reader(p_user_id uuid)',
+    'AS $function$',
+    '  -- safe because every caller passes auth.uid() already',
+    '  SELECT * FROM secrets WHERE owner = p_user_id;',
+    '$function$',
+  ].join('\n')
+  t('a comment about a guard is not a guard', isSelfGuarded(commentOnly, 'reader'), false)
+
+  // …and the body still counts when the guard is REAL, or the three cases above
+  // would pass on a function that simply never matches anything.
+  const reallyGuarded = [
+    'CREATE FUNCTION public.reader2(p_user_id uuid)',
+    'AS $function$',
+    '  SELECT * FROM secrets WHERE owner = p_user_id AND p_user_id = auth.uid();',
+    '$function$',
+  ].join('\n')
+  t('POSITIVE CONTROL: a real body guard is still found',
+    isSelfGuarded(reallyGuarded, 'reader2'), true)
+
+  // 4. An @SD-JUSTIFICATION claiming policy use, on a function no policy names.
+  const staleFn = {
+    name: 'get_user_tenant_context',
+    args: 'p_user_id uuid',
+    annotated: true,
+    def: [
+      'CREATE FUNCTION public.get_user_tenant_context(p_user_id uuid)',
+      'AS $function$',
+      '-- @SD-JUSTIFICATION: rls-helper, called from policy USING/WITH-CHECK clauses',
+      '  SELECT * FROM user_tenants WHERE user_id = p_user_id;',
+      '$function$',
+    ].join('\n'),
+  }
+  t('an unreferenced rls-helper claim does not buy a pass',
+    classify(staleFn, new Set(), new Set()).verdict, 'ANNOTATION-STALE')
+  // POSITIVE CONTROL: the SAME function, once a policy really does name it,
+  // classifies as the helper it claims to be. Without this the case above would
+  // pass on a gate that had simply stopped trusting annotations altogether.
+  t('POSITIVE CONTROL: a corroborated rls-helper claim still passes',
+    classify(staleFn, new Set(), new Set(['get_user_tenant_context'])).verdict, 'ANNOTATED')
+
   const bad = cases.filter((c) => !c.ok)
   for (const c of cases) console.log(`  ${c.ok ? 'ok  ' : 'FAIL'} ${c.name}${c.ok ? '' : ` — got ${JSON.stringify(c.got)}, want ${JSON.stringify(c.want)}`}`)
   console.log(`\naudit-security-definer-guards: ${cases.length - bad.length}/${cases.length} self-test(s) passed`)
@@ -222,7 +346,7 @@ async function main() {
   const out = secdef.map((f) => ({ name: f.name, args: f.args, anon: f.anon, ...classify(f, guarded, policyRefs) }))
   const by = (v) => out.filter((o) => o.verdict === v)
 
-  if (argv.includes('--json')) { console.log(JSON.stringify(out, null, 2)); process.exit(by('UNGUARDED').length ? 1 : 0) }
+  if (argv.includes('--json')) { console.log(JSON.stringify(out, null, 2)); process.exit(by('UNGUARDED').length + by('ANNOTATION-STALE').length ? 1 : 0) }
 
   console.log(`audit-security-definer-guards: ${secdef.length} SECURITY DEFINER function(s) reachable by anon or authenticated`)
   console.log(`  ANNOTATED    ${by('ANNOTATED').length}`)
@@ -230,10 +354,12 @@ async function main() {
   console.log(`  GUARDED-VIA  ${by('GUARDED-VIA').length}   delegate to something that does — the 6:1 false-positive class`)
   console.log(`  RLS-HELPER   ${by('RLS-HELPER').length}   called from a policy — DEFINER is mandatory, do not "fix" these`)
   console.log(`  TOKEN-GATED  ${by('TOKEN-GATED').length}   the argument IS the credential; confirm expiry + single use by hand`)
+  console.log(`  ANN-STALE    ${by('ANNOTATION-STALE').length}   the @SD-JUSTIFICATION claims policy use; no live policy names it`)
   console.log(`  UNGUARDED    ${by('UNGUARDED').length}`)
   for (const o of by('TOKEN-GATED')) console.log(`    token   ${o.name}(${o.args.slice(0, 40)})${o.anon ? '  [anon]' : ''}`)
+  for (const o of by('ANNOTATION-STALE')) console.log(`    \x1b[31mANN-STALE\x1b[0m ${o.name}(${o.args.slice(0, 50)})${o.anon ? '  [anon]' : ''}`)
   for (const o of by('UNGUARDED')) console.log(`    \x1b[31mUNGUARDED\x1b[0m ${o.name}(${o.args.slice(0, 50)})${o.anon ? '  [anon]' : ''}`)
-  process.exit(by('UNGUARDED').length ? 1 : 0)
+  process.exit(by('UNGUARDED').length + by('ANNOTATION-STALE').length ? 1 : 0)
 }
 
 main().catch((e) => { console.error(e); process.exit(2) })
