@@ -123,7 +123,24 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
       // visible at all. This card is an interactive object (click, drag,
       // connect), so it belongs on the interactive boundary token, which
       // measures 5.95:1 dark / 4.39:1 light.
-      className={`relative min-w-[240px] rounded-xl border bg-card shadow-md transition-all ${
+      // `shadow-md` is ACHROMATIC INK. In dark mode it resolves to ambient
+      // shadow at chroma 0.0166 — below the 0.05 floor a glow has to clear to
+      // read as separation — so all 45 entity cards sat flat against the
+      // canvas with only their border to distinguish them. A shadow tuned for
+      // a light canvas does nothing on a dark one; it is not a weaker effect,
+      // it is no effect.
+      //
+      // `--glow-card` is the estate's answer and is already the pattern in
+      // @bsuite/page-builder's grid surface. It is accent-derived via
+      // color-mix on `--card-glow-source`, so a tenant's BrandingProvider
+      // override re-colours it automatically, and it is `none` at :root — so
+      // light mode keeps `shadow-md` untouched and the utility degrades safely
+      // wherever the dark class is absent.
+      //
+      // Composes with the selected ring: Tailwind v4 gives `shadow-[…]` the
+      // `--tw-shadow` slot and `ring-2` the `--tw-ring-shadow` slot, so a
+      // selected card in dark mode paints both, not one instead of the other.
+      className={`relative min-w-[240px] rounded-xl border bg-card shadow-md dark:shadow-[var(--glow-card,none)] transition-all ${
         selected
           ? 'border-transparent ring-2 ring-ring ring-offset-2'
           : 'border-border-interactive'

@@ -142,6 +142,31 @@ const XY_TOKEN_BINDINGS = {
   '--xy-minimap-mask-stroke-color-props': 'var(--role-border-interactive)',
   '--xy-minimap-node-background-color-props': 'var(--role-primary)',
   '--xy-minimap-node-stroke-color-props': 'var(--role-border-interactive)',
+  /*
+   * BOTH SPELLINGS, DELIBERATELY — and only for this one property.
+   *
+   * `@xyflow/react` 12.11.2 does NOT chain the `-props` layer for the Controls
+   * button's BASE background. Read from the installed stylesheet, not from the
+   * docs:
+   *
+   *   background: var(--xy-controls-button-background-color,
+   *                   var(--xy-controls-button-background-color-default))
+   *
+   * No `-props`. Its HOVER counterpart DOES chain it, and so do all five
+   * minimap properties and the button's colour and border-color — which is
+   * exactly what made this so easy to miss: nine of the ten bindings in this
+   * object work, and the tenth silently rendered the library default
+   * (#fefefe light / #2b2b2b dark) while the token sat here looking applied.
+   *
+   * AUDITED, all ten, against the installed stylesheet: this is the only gap.
+   * `SchemaCanvas.tokenBindings.test.tsx` now re-runs that audit so the next
+   * xyflow bump cannot reopen it silently.
+   *
+   * Same failure shape as the zero-height canvas above: a styling fix routed
+   * through a mechanism the library never reads is INERT, and inert is
+   * indistinguishable from applied unless you measure the rendered result.
+   */
+  '--xy-controls-button-background-color': 'var(--role-bg-panel)',
   '--xy-controls-button-background-color-props': 'var(--role-bg-panel)',
   '--xy-controls-button-background-color-hover-props': 'var(--role-bg-body)',
   '--xy-controls-button-color-props': 'var(--role-text-body)',
