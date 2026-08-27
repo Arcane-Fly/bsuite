@@ -162,8 +162,38 @@ function main() {
     if (!byRoute.has(r)) byRoute.set(r, [])
     byRoute.get(r).push(f)
   }
+  /*
+   * MATCHING ON ROUTES ALONE WAS THE WRONG SHAPE, and it made the index look far emptier than it is.
+   *
+   * The first version reported 65 of 139 operator asks as unmapped and I read that as 65 holes in
+   * the index. It was not. 62 of those 65 carry a surface that is NOT A ROUTE — "r8 root",
+   * "licence/grace", "suite root", "estate", "auth". The operator names the AREA he is standing in,
+   * because that is how a person describes where they were. A route matcher can never match that,
+   * so it reported absence where there was only a vocabulary mismatch.
+   *
+   * The index already carries `module` and `capability_area`. Matching those as well is not a
+   * loosening of the check — it is the check finally reading the field the ask was written against.
+   * A genuine hole is an ask that matches NO route, NO module and NO capability area, and that is a
+   * much smaller and much more useful number.
+   */
+  const byModule = new Map()
+  const byArea = new Map()
+  for (const f of index) {
+    const m = String(f.module || '').toLowerCase()
+    if (m) { if (!byModule.has(m)) byModule.set(m, []); byModule.get(m).push(f) }
+    const a = String(f.capability_area || '').toLowerCase()
+    if (a) { if (!byArea.has(a)) byArea.set(a, []); byArea.get(a).push(f) }
+  }
+  // The operator's words for an app, mapped to the index's module names.
+  const APP_WORDS = {
+    r8: 'r80.4', 'r8.04': 'r80.4', r804: 'r80.4', 'r80.3': 'r80.4',
+    suite: 'business-suite-unified', bsu: 'business-suite-unified', bsuite: 'business-suite-unified',
+    crm7: 'crm7', conduit: 'conduit', braden: 'braden', throughput: 'throughput',
+  }
+
   const gapText = JSON.stringify(gaps).toLowerCase()
   const unmapped = []
+  const crossCuttingAsks = []
   for (const it of register) {
     const surfaces = String(it.surface).split(/[,;]| and /).map((s) => s.trim()).filter((s) => s.startsWith('/'))
     let hit = false
@@ -174,9 +204,38 @@ function main() {
       if (byRoute.has(base)) { hit = true; break }
     }
     if (!hit) {
+      // No route matched. Try the AREA the ask was actually written against.
+      const hay = `${it.surface} ${it.app}`.toLowerCase()
+      for (const [word, mod] of Object.entries(APP_WORDS)) {
+        if (new RegExp(`\\b${word}\\b`).test(hay) && byModule.has(mod)) { hit = true; break }
+      }
+      if (!hit) {
+        for (const area of byArea.keys()) {
+          // Match on a distinctive word from the area name, not the whole label — the operator
+          // writes "auth", the index writes "Authentication & access".
+          const words = area.split(/[^a-z0-9]+/).filter((w) => w.length > 3)
+          if (words.some((w) => hay.includes(w))) { hit = true; break }
+        }
+      }
+    }
+    if (!hit) {
       // A journey gap is a legitimate reason for an ask to have no index row.
       const asJourneyGap = gapText.includes(String(it.id).toLowerCase())
-      if (!asJourneyGap) unmapped.push(it)
+      /*
+       * A THIRD LEGITIMATE CATEGORY, and leaving it out manufactured four fake holes.
+       *
+       * "all headers", "all apps", "all card surfaces", "all list surfaces" — these are
+       * CROSS-CUTTING asks. They do not fail to name a feature; they name EVERY feature. Filing
+       * them as unmapped invites someone to close the gap by inventing a row for something that
+       * is deliberately estate-wide, and these are the operator's most-repeated class of ask, so
+       * getting the category wrong here is expensive.
+       *
+       * They are still counted and printed — a cross-cutting ask is real work — but under their
+       * own heading, so "no index row" keeps meaning "nobody has indexed this".
+       */
+      const crossCutting = /\b(all|every|estate[- ]wide|platform[- ]wide|everywhere)\b/i.test(it.surface)
+      if (!asJourneyGap && !crossCutting) unmapped.push(it)
+      else if (crossCutting) crossCuttingAsks.push(it)
     }
   }
   if (unmapped.length) {
@@ -185,7 +244,12 @@ function main() {
 
   const report = {
     index: { features: index.length, anchorsChecked },
-    register: { path: registerPath, items: register.length, unmappedToIndex: unmapped.length },
+    register: {
+      path: registerPath,
+      items: register.length,
+      unmappedToIndex: unmapped.length,
+      crossCutting: crossCuttingAsks.length,
+    },
     dod: index.reduce((acc, f) => {
       const s = typeof f.dod_status === 'string' ? f.dod_status : (f.dod_status && f.dod_status.state) || 'malformed'
       acc[s] = (acc[s] || 0) + 1
@@ -210,6 +274,10 @@ function main() {
       console.log(`\n  ${c}: ${vs.length}`)
       for (const v of vs.slice(0, 12)) console.log(`    ${v.feature || ''} ${v.detail}`)
       if (vs.length > 12) console.log(`    … and ${vs.length - 12} more (use --json for all)`)
+    }
+    if (crossCuttingAsks.length) {
+      console.log(`\n  CROSS-CUTTING ASKS (${crossCuttingAsks.length}) — these name EVERY feature, not a missing one:`)
+      for (const c of crossCuttingAsks) console.log(`    ${c.id}  [${c.surface}]  ${c.asks.slice(0, 72)}`)
     }
     if (unmapped.length) {
       console.log(`\n  UNMAPPED OPERATOR ASKS (${unmapped.length}) — each is a hole in the index:`)
