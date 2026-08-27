@@ -54,6 +54,10 @@ import {
   isDisconnectedGraph,
 } from '../utils/gridLayout.js';
 import { exportCanvasToPng } from '../utils/exportPng.js';
+import {
+  boundsOfNodes,
+  computeOpeningViewport,
+} from '../utils/openingViewport.js';
 import { EntityNode, type EntityNodeData } from './EntityNode.js';
 import { EntityPropertiesPanel } from './EntityPropertiesPanel.js';
 import { FieldCreateDialog } from './FieldCreateDialog.js';
@@ -173,6 +177,36 @@ const XY_TOKEN_BINDINGS = {
   '--xy-controls-button-color-hover-props': 'var(--role-text-body)',
   '--xy-controls-button-border-color-props': 'var(--role-border-interactive)',
 } as React.CSSProperties;
+
+/**
+ * How the canvas frames itself when it first opens.
+ *
+ * ONE OBJECT, TWO READERS, DELIBERATELY. It is handed to React Flow as
+ * `fitViewOptions` and to `computeOpeningViewport` in the re-anchor effect
+ * below. They must agree about zoom or the view visibly jumps between the
+ * library's fit and ours on first paint; sharing the literal is the only way
+ * that stays true when someone retunes it.
+ *
+ * `minZoom: 0.75` is a legibility floor, and it is not free to change without
+ * re-reading the note on `fitViewOptions` at the `<ReactFlow>` call site: at 44
+ * entities an unclamped fit renders field text at 4.5-7 device pixels. The
+ * canvas-wide `minZoom={0.05}` is a different number for a different job — it
+ * is how far a user MAY zoom out, not where the page opens.
+ */
+const OPENING_FIT = { padding: 0.2, minZoom: 0.75, maxZoom: 1.2 } as const;
+
+/**
+ * How many animation frames to wait for React Flow to measure its nodes before
+ * giving up on re-anchoring the opening view.
+ *
+ * Node sizes arrive from a ResizeObserver, not from the render that creates
+ * them, so `getNodes()` reports no dimensions for the first frame or two and
+ * the bounding box is unusable until it does. ~20 frames is a third of a second
+ * at 60Hz — long enough for a 44-card canvas on a slow machine, short enough
+ * that a canvas which never measures (a hidden tab, a zero-size container) is
+ * abandoned rather than polled forever.
+ */
+const OPENING_VIEWPORT_MAX_FRAMES = 20;
 
 function stylesForRelation(type: RelationType) {
   return {
@@ -385,6 +419,55 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
     useEffect(() => {
       setLocalEdges(edges);
     }, [edges]);
+
+    /*
+     * WHERE THE CANVAS OPENS. Full reasoning in utils/openingViewport.ts; the
+     * short version is that React Flow's fit CENTRES the bounding box, and when
+     * the zoom floor stops everything from fitting, centring means the user
+     * lands in the middle of the diagram with every visible card sliced by the
+     * frame. Measured on crm.crm7.app 2026-08-27: 8 of 44 cards on screen, all
+     * eight clipped, viewport translate y = -520.625.
+     *
+     * This runs ONCE per mount, after React Flow has measured its nodes, and
+     * only re-anchors — the zoom it computes is the library's own, from the
+     * same OPENING_FIT literal the `fitViewOptions` prop is given. If the
+     * measurements never arrive we leave the library's viewport alone, so the
+     * worst case here is exactly today's behaviour rather than a broken one.
+     */
+    const openingViewportSettled = useRef(false);
+    useEffect(() => {
+      if (openingViewportSettled.current) return;
+      if (localNodes.length === 0) return;
+
+      let frame = 0;
+      let raf = 0;
+      const attempt = () => {
+        const flow = flowRef.current;
+        const el = wrapperRef.current?.querySelector<HTMLElement>('.react-flow');
+        if (flow && el) {
+          const rect = el.getBoundingClientRect();
+          const bounds = boundsOfNodes(flow.getNodes());
+          if (bounds && rect.width > 0 && rect.height > 0) {
+            const viewport = computeOpeningViewport(
+              bounds,
+              { width: rect.width, height: rect.height },
+              OPENING_FIT,
+            );
+            if (viewport) {
+              openingViewportSettled.current = true;
+              flow.setViewport(viewport);
+              return;
+            }
+          }
+        }
+        frame += 1;
+        if (frame < OPENING_VIEWPORT_MAX_FRAMES) {
+          raf = requestAnimationFrame(attempt);
+        }
+      };
+      raf = requestAnimationFrame(attempt);
+      return () => cancelAnimationFrame(raf);
+    }, [localNodes]);
 
     // Inline rename from EntityNode (§3.6 item 7). CustomEvent-based to avoid
     // prop drilling; SchemaCanvas is the only listener per mount.
@@ -905,7 +988,13 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
         // So the initial fit stops at 0.75, and the toolbar's "Fit" button —
         // which passes its own options and is a deliberate act — stays free to
         // go all the way out. Open readable, overview one click away.
-        fitViewOptions={{ padding: 0.2, minZoom: 0.75, maxZoom: 1.2 }}
+        //
+        // The ANCHOR is a separate question from the ZOOM and was never ruled
+        // on — centring is React Flow's default, inherited rather than chosen,
+        // and it is the wrong default once this floor bites. The effect near
+        // the top of this component re-anchors to the content's leading edge
+        // using this same literal, so the two agree about zoom by construction.
+        fitViewOptions={OPENING_FIT}
         minZoom={0.05}
         maxZoom={2}
         // Without this the class never lands on `.react-flow`, and the library
