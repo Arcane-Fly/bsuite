@@ -283,6 +283,38 @@ for (const [k, v] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
 const byFam = {}
 for (const v of violations) (byFam[v.fam] = byFam[v.fam] || []).push(v.p)
 
+/* THE GATE KNEW WHICH FILES FAILED AND TOLD NOBODY.
+ *
+ * `byFam` has been built here since this script was written and was never printed.
+ * A run that rejected a filename reported one tally line — `!unclassified   2` —
+ * and exited 1. The count is the symptom; the path is the fix, and the path was
+ * sitting in a variable seventy lines above the exit.
+ *
+ * Measured cost: bsuite#2549 went red on `!unclassified 2` with no indication of
+ * which two of 438 files were meant. Reading it required fetching the branch and
+ * re-running the classifier by hand — which is the work this gate exists to do.
+ *
+ * Same shape as audit-doc-completion.mjs, fixed the same day: a gate that cannot
+ * tell "checked nothing" from "found nothing" is not a gate, and one that cannot
+ * say WHAT it found is only half of one. */
+const FAMILY_REMEDY = {
+  '!unclassified':
+    'no declared family accepts this name. Use the dated form 20260827-some-slug-v1.00W.md, or — for a standing document regenerated in place — SCREAMING-KEBAB.md.',
+  '!dated-malformed':
+    'starts with 8 digits but does not match the dated form. It needs a lowercase slug and a version suffix: 20260827-some-slug-v1.00W.md.',
+  '!near-miss-date':
+    'reads as dated to a person but not to a scanner. Drop the separators from the date: 2026-08-27-x.md becomes 20260827-x-v1.00W.md.',
+}
+
+if (violations.length) {
+  console.log('')
+  console.log(`FILENAMES NO DECLARED FAMILY ACCEPTS (${violations.length}):`)
+  for (const [fam, paths] of Object.entries(byFam).sort()) {
+    console.log(`  ${fam} — ${FAMILY_REMEDY[fam] ?? 'see classify() for the accepted families.'}`)
+    for (const q of paths.sort()) console.log(`    ${q}`)
+  }
+}
+
 /* ---------------- ADR numbering and index integrity ----------------
  * ADR-0008 was ratified under the number 0004, collided with the real ADR-0004,
  * LOST ITS INDEX ROW, and was unreachable for three months. Two invariants would

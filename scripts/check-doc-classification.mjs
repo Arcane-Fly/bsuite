@@ -200,6 +200,31 @@ if (base === null) {
   const untrackedUnclassified = unclassified.filter((u) =>
     untracked.includes(typeof u === 'string' ? u : u.path ?? u.file ?? ''));
   console.log(`  RATCHET BROKEN: baseline ${base}, now ${unclassified.length}. Debt may shrink or hold, never rise.`);
+
+  /* NAME THEM. The block below has always named the UNTRACKED offenders, and named
+   * nothing else — so a run where every offender was committed printed a bare
+   * "232 of 298" and left you to find the two that moved.
+   *
+   * Measured: bsuite#2549 broke this ratchet 230 -> 232 with both new docs committed,
+   * so the untracked block stayed silent and the output named no file at all. The
+   * paths were in `unclassified` the whole time.
+   *
+   * Newest-first, capped — the same idiom audit-doc-completion.mjs uses for the
+   * unbound list, and for the same reason: a ratchet breaks by a handful, and the
+   * docs that broke it are the ones just added, so they sort to the top. Printing
+   * all 232 would bury the two that matter. */
+  const pathOf = (u) => (typeof u === 'string' ? u : (u.path ?? u.file ?? String(u)));
+  const dateKey = (f) => (f.match(/(\d{8})-/)?.[1] ?? '00000000');
+  const newestFirst = [...unclassified].sort((a, b) => {
+    const d = dateKey(pathOf(b)).localeCompare(dateKey(pathOf(a)));
+    return d !== 0 ? d : pathOf(a).localeCompare(pathOf(b));
+  });
+  const SHOW = 15;
+  console.log(`\n  Undeclared doc(s), most recently dated first (showing ${Math.min(SHOW, newestFirst.length)} of ${newestFirst.length}):`);
+  for (const u of newestFirst.slice(0, SHOW)) console.log(`      ${pathOf(u)}`);
+  if (newestFirst.length > SHOW) console.log(`      … ${newestFirst.length - SHOW} more.`);
+  console.log('\n  Each needs kind / authority / evidence in its frontmatter. An undated');
+  console.log('  standing document sorts last here and is easy to miss — check those too.');
   if (untrackedUnclassified.length > 0) {
     const wouldBe = unclassified.length - untrackedUnclassified.length;
     console.log(`\n  ${untrackedUnclassified.length} of those are UNTRACKED — not committed, so CI does not see them:`);
