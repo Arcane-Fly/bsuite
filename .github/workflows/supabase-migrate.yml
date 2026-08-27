@@ -114,6 +114,9 @@ jobs:
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 2
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - id: set-matrix
         env:
           DISPATCH_INPUT: ${{ github.event.inputs.submodule }}
@@ -260,6 +263,9 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
 
       - name: Resolve working directory
         id: resolve-dir

@@ -65,6 +65,9 @@ jobs:
           # other submodule-consuming workflow here uses.
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:

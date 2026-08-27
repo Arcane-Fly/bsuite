@@ -115,6 +115,9 @@ jobs:
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           submodules: recursive
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - name: Check 1 — every package dev-fixture has a BSU canonical twin
         id: check-pkg-to-bsu
         continue-on-error: true

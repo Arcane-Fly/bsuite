@@ -29,6 +29,9 @@ jobs:
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

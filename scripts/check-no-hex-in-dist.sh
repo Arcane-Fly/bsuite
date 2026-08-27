@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
-# Phase 5 CI: verify no hex literals survived into built CSS bundles.
-# Run after `pnpm build` in each app.
-# Exits 1 if any hex found (fails CI).
+# Verify no BSuite-authored hex literals survived into built CSS bundles.
+#
+# WIRING STATUS: a MANUAL post-build tool. No workflow invokes it, deliberately — the
+# parent has no job that builds the apps (build-and-test.yml runs static checks only),
+# and adding five Vite builds to gate a warn-level check that `bsuite/no-hardcoded-colours`
+# already catches at source is out of proportion. Source is the gate; this is the
+# leak detector you run by hand when a hex reaches a bundle anyway. Tracked: bsuite#228.
+#
+# It previously SKIPPED any app with no dist/ and still exited 0, so running it on an
+# unbuilt tree printed five warnings and reported success — a pass over nothing, the
+# same class the empty-tree guard exists to kill. It now refuses when it measured
+# nothing, and states the count it did measure.
+#
+# Exits 1 if any hex found, 2 if it measured nothing.
 #
 # Usage:
 #   bash scripts/check-no-hex-in-dist.sh
@@ -16,6 +27,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 APPS=(business-suite-unified crm7 R80.4 conduit throughput)
 FAIL=0
+MEASURED=0
 
 for app in "${APPS[@]}"; do
   DIST="$REPO_ROOT/$app/dist"
@@ -23,6 +35,7 @@ for app in "${APPS[@]}"; do
     echo "⚠️  $app/dist not found — skipping (run pnpm build first)"
     continue
   fi
+  MEASURED=$((MEASURED + 1))
 
   # WHAT THIS GATE IS FOR, and what it kept flagging instead.
   #
@@ -66,4 +79,13 @@ for app in "${APPS[@]}"; do
   fi
 done
 
+# A gate that cannot tell "checked nothing" from "found nothing" is not a gate.
+if [ "$MEASURED" -eq 0 ]; then
+  echo "check-no-hex-in-dist: REFUSING — 0 of ${#APPS[@]} apps had a dist/ to read." >&2
+  echo "  Every app was skipped, so this run measured nothing. Build first:" >&2
+  echo "    pnpm --filter <app> build   # then re-run" >&2
+  exit 2
+fi
+
+echo "check-no-hex-in-dist: measured $MEASURED of ${#APPS[@]} app bundle(s)."
 exit $FAIL

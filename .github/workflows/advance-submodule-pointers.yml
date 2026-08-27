@@ -74,6 +74,9 @@ jobs:
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - uses: actions/setup-node@v5
         with:
           node-version: '24'

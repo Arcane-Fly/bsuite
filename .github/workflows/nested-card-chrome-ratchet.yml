@@ -69,6 +69,9 @@ jobs:
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       # Without the PAT the submodules are absent and the scanner would report a
       # LOW count for the missing apps — a false pass, which is worse than a
       # failure. The scanner itself also refuses to run against a missing app,

@@ -42,6 +42,9 @@ jobs:
           # theme-conformance.yml and shared-package-contract.yml.
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       # D-92: assert the inputs BEFORE generating anything. build-inventory.py
       # walks each submodule's src/; if a submodule were absent it would emit a
       # SHORT inventory and the drift check below would then "fail" for a reason

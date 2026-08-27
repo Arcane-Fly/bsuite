@@ -79,6 +79,9 @@ jobs:
           # workflows (see supabase-functions-deploy.yml).
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - name: Reject new migrations below MIGRATION_FLOOR
         # base_ref goes through env, not ${{ }} interpolation into the shell:
         # a branch name is attacker-controlled on a fork PR and would otherwise
