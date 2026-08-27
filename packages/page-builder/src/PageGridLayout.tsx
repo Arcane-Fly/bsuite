@@ -398,13 +398,39 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * across environments — so the act of identifying a slot put a real
              * person's saved layout at risk.
              *
-             * These two attributes make a slot identifiable from a READ-ONLY page
-             * load. `label` is the human name; `id` is the stable cardKey a fix has
-             * to be written against. Neither is styling and neither is behaviour —
-             * they are the identity the DOM should always have carried.
+             * ONE attribute, and deliberately NOT the human label.
+             *
+             * `id` is the stable cardKey a fix has to be written against. It is
+             * authored in code — `quickActions`, `card1` — never by a user.
+             *
+             * A `data-card-label` was added alongside it and REMOVED before any
+             * consumer took it, because it was a PII egress. Sentry Session Replay
+             * masks exactly three attributes by default —
+             *   maskAttributes = ['title', 'placeholder', 'aria-label']
+             * — while `maskAllText` masks TEXT NODES and `maskAllInputs` masks INPUT
+             * VALUES. Neither touches an arbitrary `data-*`, so a label attribute
+             * ships verbatim to a third-party processor.
+             *
+             * The label is not a static string. `PageGridLayout` resolves it as
+             * `layerNames[i] || widgetMeta?.[i]?.label || i`, and `layerNames` is
+             * FREE TEXT THE USER TYPES into the layer-rename input, persisted to
+             * `user_preferences`. That input is masked by `maskAllInputs`. Copying
+             * its value into a data attribute moved it from a masked channel to an
+             * unmasked one — and made it permanent, because the label previously
+             * reached the DOM only while `isEditing`.
+             *
+             * The irony is worth keeping: the ONLY prior way to identify a slot was
+             * the `Hide <label>` button's `aria-label`, which is one of the three
+             * attributes Sentry masks. The convenience attribute defeated the very
+             * masking the awkward path had for free.
+             *
+             * NAMED `data-grid-slot-key`, not `data-card-key`, because crm7's
+             * InPlaceCardEditing.tsx:396 already renders `data-card-key={cardKey}`
+             * INSIDE each grid item. Sharing the name would make
+             * `querySelector('[data-card-key="X"]')` match two nested elements and
+             * silently return whichever came first in document order.
              */
-            data-card-key={id}
-            data-card-label={label}
+            data-grid-slot-key={id}
             className={
               chrome
                 ? // ONE radius token, read by the grid item AND available to any
