@@ -11,6 +11,35 @@ owner: bsuite
 **Built?** ✅ live in crm7 (separate-ledger model); ❌ contradicted by one unwired R80.4 module — see Consequences
 **Related:** [ADR-0005](ADR-0005-rams-funding-authoring.md) (superseded — established that calculation belongs to R80.4 and crm7 records rather than decides); `crm7/docs/adr/20260423-calc-engine-single-source-v1.00W.md`; migration `crm7/supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql`
 
+## How this is checked, and where it is NOT
+
+Stated honestly, because an ADR that names an enforcement it does not have is worse
+than one that admits the gap — see
+`docs/adr/ADR-0010-fix-the-class-not-the-page.md`, whose own enforcement claim was
+found to be inert on 2026-08-27.
+
+**Covered.** The placement-rate limb — that a placement's wage knows where it came
+from, and that the invoice prices off `placements.charge_rate` rather than
+re-deriving it — is watched by `check-placement-rate-provenance.mjs`, run by
+`.github/workflows/schema-lag.yml`. That guard exists precisely because the obvious
+assertion (`award_rate_resolution_status is never 'unresolved'`) is vacuous: a CHECK
+constraint makes the state unreachable, so it would report green over a table where
+not one placement has ever resolved a wage from an award rate.
+
+**NOT covered, and this is the load-bearing half.** Nothing mechanically enforces
+the holding itself — that the placement-time look at funding **replaces** rather
+than **adds**. `applyPlacementFunding` in `R80.4 src/awards/quotes.ts` still
+implements the additive model, and the only thing currently stopping it reaching a
+quote is that `cfg.funding` falls through to empty because neither
+`ChargeRateCard.tsx` nor `create.tsx` wires it. That is an accident of wiring, not a
+guard: wire the field and the contradiction ships.
+
+**What a real gate would assert.** That no path from a placement to a charge rate
+sums a funding offset into the rate — i.e. that `applyPlacementFunding`'s additive
+branch is unreachable from every `calculateChargeRate` call site, batch helpers
+included. Until that exists, this ADR is enforced by review, and this section is the
+record that it is.
+
 ## Context
 
 ADR-0005's superseding ruling settled *who* calculates funding: R80.4 owns it, crm7 records
