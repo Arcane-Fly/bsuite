@@ -33,6 +33,27 @@
 name: SECURITY DEFINER must justify itself
 
 on:
+  # SCHEDULE, added 2026-08-27, and it is the whole point of this change.
+  #
+  # Until now this workflow ran on `pull_request` only. It self-tested the auditor
+  # and checked WHAT THE PR ADDS — a diff-only check. It has never once looked at
+  # the live database.
+  #
+  # A SECURITY DEFINER function can be created without any event in this repository:
+  # through the Supabase dashboard, through MCP, or by a migration applied
+  # out-of-band. The defect is born in the DATABASE, and no event trigger here can
+  # observe it. Measured 2026-08-27: five functions granted to `authenticated`,
+  # taking their subject as an unchecked argument — direct IDORs — had survived
+  # months of green runs on this very workflow, because it was never asked.
+  #
+  # precedent__bsuite__20260802__a_gate_must_prove_it_executed, fifth shape:
+  # "a state created in another repository can only be observed on a clock", and
+  # a database is another repository for this purpose.
+  #
+  # :51 is offset from the history audit (:17), pg_cron health (:29) and the
+  # policy-drift audit (:43) so the four never contend for the pooler.
+  schedule:
+    - cron: '51 */6 * * *'
   pull_request:
     branches: [main, development]
   workflow_dispatch:
@@ -105,3 +126,77 @@ jobs:
           else
             echo "this PR touches no SQL — nothing to check"
           fi
+
+  live-definer-scan:
+    name: Every live SECURITY DEFINER function is guarded
+    # Only on the clock (or by hand). The PR job above answers "does this diff add
+    # an unjustified one"; this answers "is the DATABASE clean right now", which is
+    # a different question with a different failure mode and no event to hang off.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Guard — require project ref
+        env:
+          SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_PROJECT_ID:-}" ]; then
+            echo "::error::SUPABASE_PROJECT_ID is empty — refusing to report a false 'no unguarded functions'."
+            exit 1
+          fi
+
+      - name: Install psql client
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection — refusing to report a false clean scan."
+          exit 1
+
+      # BEFORE the scan, deliberately. A clean scan from a broken classifier is
+      # indistinguishable from a clean scan of a healthy database, and this
+      # classifier was demonstrably broken until 2026-08-27: it read a function's
+      # own NAME as proof the function checked its caller, counted `auth.uid()`
+      # appearing in an argument DEFAULT, matched guard tokens in COMMENTS, and
+      # let a stale @SD-JUSTIFICATION short-circuit the whole verdict.
+      - name: Self-test the classifier — prove it can still fail
+        run: node scripts/audit-security-definer-guards.mjs --self-test
+
+      - name: Scan every live SECURITY DEFINER function reachable by anon or authenticated
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          node scripts/audit-security-definer-guards.mjs --print-query > /tmp/sd.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -f /tmp/sd.sql > /tmp/sd.json
+          # An EMPTY result is ABSENT, not clean — the checker exits 0 and says so on
+          # no stdin, which would read as a pass. Refuse it here.
+          test -s /tmp/sd.json || { echo "::error::the query returned nothing — that is an ABSENT result, not a clean one."; exit 1; }
+          node scripts/audit-security-definer-guards.mjs < /tmp/sd.json
