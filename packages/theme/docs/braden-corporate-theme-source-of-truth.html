@@ -137,12 +137,12 @@
   correction the D2C palette took on 2026-08-27, one axis further out than its
   own 2026-08-05 revision; the brand FILLS are untouched, only the derived text
   renderings whose entire purpose is to hit the floor.</em>
-  --role-primary-text: oklch(0.542 0.170  17.6); /* 4.61:1 worst tint · AA */
-  --role-accent-text:  oklch(0.544 0.092  89.9); /* aliased by --role-accent-text-base */
-  --role-error-text:   oklch(0.482 0.230  25);   /* 5.50:1 worst tint — AA (ruling 2026-08-10) */
-  --role-warning-text: oklch(0.521 0.092  89.9); /* 4.61:1 worst tint · AA */
-  --role-success-text: oklch(0.490 0.130 198);   /* 4.61:1 worst tint · AA */
-  --role-info-text:    oklch(0.495 0.140 220);   /* 4.61:1 worst tint · AA */
+  --role-primary-text: oklch(0.467 0.170  17.6); /* 4.60:1 worst tint · AA */
+  --role-accent-text:  oklch(0.495 0.092  89.9); /* 4.61:1 worst tint · AA — via --role-accent-text-base */
+  --role-error-text:   oklch(0.432 0.230  25);   /* 4.61:1 worst tint — AA (ruling 2026-08-10, hue unchanged) */
+  --role-warning-text: oklch(0.495 0.092  89.9); /* 4.61:1 worst tint · AA */
+  --role-success-text: oklch(0.466 0.130 198);   /* 4.61:1 worst tint · AA */
+  --role-info-text:    oklch(0.430 0.140 220);   /* 4.61:1 worst tint · AA */
 
   /* ── inverse text on fills (never pure white) ──────────── */
   --text-on-light-fill: oklch(0.980 0.006  50);
@@ -291,10 +291,10 @@
   --role-kbd-border:     oklch(0.400 0.022 250);
 
   --role-primary-text: oklch(0.704 0.170  17.6); /* 7.00:1 AAA */
-  --role-accent-text:  oklch(0.683 0.092  89.9); /* 6.99:1 AAA */
+  --role-accent-text:  oklch(0.733 0.092  89.9); /* 4.61:1 worst tint · AA (was 0.683 = 3.83 on its own tint) */
   --role-error-text:   oklch(0.786 0.230  25);   /* 7.24:1 body · 6.51:1 panel — AA (ruling 2026-08-10) */
-  --role-warning-text: oklch(0.683 0.092  89.9);
-  --role-success-text: oklch(0.662 0.130 198);   /* 7.00:1 AAA */
+  --role-warning-text: oklch(0.733 0.092  89.9); /* 4.61:1 worst tint · AA (was 0.683 = 3.83) */
+  --role-success-text: oklch(0.730 0.130 198);   /* 4.61:1 worst tint · AA (was 0.662 = 3.64 on its own tint) */
   --role-info-text:    oklch(0.667 0.140 220);   /* 7.01:1 AAA */
 
   /* Gold separation glow — deliberately quieter than D2C's neon ring */
