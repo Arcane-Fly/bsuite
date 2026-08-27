@@ -42,22 +42,48 @@ describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
   });
 
   it('keeps the LAYOUT identical with chrome off — only the paint is conditional', () => {
-    // If turning chrome off also dropped `h-full w-full flex flex-col`, every
-    // card in the estate would change size, and the inversion would be a
-    // layout change wearing a styling change's clothes.
-    const { container } = render(
+    // If turning chrome off also changed the box, every card in the estate would
+    // change size, and the inversion would be a layout change wearing a styling
+    // change's clothes.
+    //
+    // ASSERTED AS AN INVARIANT, NOT AS A CONSTANT. This used to hardcode `h-full`.
+    // The height class is now conditional on `autoHeight` — an autoHeight slot's
+    // chrome HUGS its content so it cannot paint the Math.ceil row remainder as a
+    // second bottom border (D-46/D-98/D-136). Hardcoding the old value made this
+    // test fail on the fix for a defect it was never about, which is what a test
+    // asserting a constant always eventually does.
+    //
+    // What actually matters is that chrome-on and chrome-off produce the SAME box.
+    // Comparing them directly says that, and keeps saying it whatever the height
+    // class becomes.
+    const layoutClasses = (el: HTMLElement) =>
+      el.className
+        .split(/\s+/)
+        .filter((c) => /^(h-|w-|flex|flex-col|flex-1|flex-none|min-h-)/.test(c))
+        .sort()
+        .join(' ');
+
+    const off = render(
       <PageGridLayout
         pageKey="chrome-off-layout"
         defaultLayouts={layouts}
         widgets={{ alpha: <div>Alpha</div> }}
       />,
     );
-    const el = surface(container);
-    for (const cls of ['h-full', 'w-full', 'flex', 'flex-col']) {
-      expect(el.className, `layout class ${cls} must survive chrome removal`).toMatch(
-        new RegExp(`\\b${cls}\\b`),
-      );
-    }
+    const on = render(
+      <PageGridLayout
+        pageKey="chrome-on-layout"
+        defaultLayouts={layouts}
+        itemChrome
+        widgets={{ alpha: <div>Alpha</div> }}
+      />,
+    );
+
+    const offClasses = layoutClasses(surface(off.container));
+    expect(offClasses, 'the surface must carry real layout classes, or this compares nothing')
+      .not.toBe('');
+    expect(layoutClasses(surface(on.container)), 'chrome must change the PAINT, never the BOX')
+      .toBe(offClasses);
   });
 
   it('still renders the widget content — chrome off is not content off', () => {
