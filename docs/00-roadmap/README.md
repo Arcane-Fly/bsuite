@@ -32,5 +32,5 @@
 | [Excellence close-out — implementation plan](20260725-excellence-closeout-implementation-plan-v1.00F.md) | Frozen | 2026-07-25 |
 | [Qwen excellence integration plan (post impl-RT)](20260725-qwen-excellence-integration-plan-v1.00F.md) | Frozen | 2026-07-25 |
 | [Master roadmap — BSuite (planning layer)](20260112-master-roadmap-v1.00F.md) | Frozen | 2026-01-12 |
-| [BSuite platform — feature index](bsuite-feature-index.md) | — | — |
-| [BSuite per-feature Definition-of-Done enforcement prompt](dod-enforcement-prompt.md) | — | — |
+| [BSuite platform — feature index](BSUITE-FEATURE-INDEX.md) | — | — |
+| [BSuite per-feature Definition-of-Done enforcement prompt](DOD-ENFORCEMENT-PROMPT.md) | — | — |

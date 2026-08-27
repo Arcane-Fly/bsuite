@@ -104,3 +104,19 @@ __pycache__/
 !.env*.example
 !.env*.template
 !.env*.sample
+
+# ── Agent scratch — IGNORED HERE, DELETED BY scripts/reclaim-ephemera.mjs ──────
+# Ignoring is only half of it. An ignored file is INVISIBLE, which is worse than
+# a tracked one: nobody ever sees it again to remove it. Measured 2026-08-27:
+# 4.2 GB of session scratchpads accumulating at ~600 MB/day, 222 MB of Playwright
+# output, 36 MB of loose scratch — none of which .gitignore would ever reclaim.
+# Run `node scripts/reclaim-ephemera.mjs --apply` to actually free the disk.
+.vg-tmp/
+audit-out-*/
+output/playwright/
+output/xfer/
+.agent-drive/
+*.tsv
+*.tgz
+*.har
+*.jsonl
