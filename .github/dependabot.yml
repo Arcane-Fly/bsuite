@@ -43,3 +43,28 @@ updates:
 
     commit-message:
       prefix: "chore(deps)"
+
+  # GITHUB-ACTIONS, ADDED 2026-08-28 BECAUSE THE ACTIONS ARE NOW PINNED TO SHAs.
+  #
+  # All 52 third-party action references across the estate's seven repositories were
+  # on mutable tags (`@v2`, `@v4`) and none on a SHA, so the action's owner - or
+  # anyone who took their account - could change what runs in CI with GITHUB_TOKEN in
+  # scope. They are now pinned to the commit each tag resolved to.
+  #
+  # A pin with no bump mechanism is a freeze, and a frozen action goes stale and
+  # unpatched. This block is the other half of that change: dependabot bumps the SHA
+  # and the trailing version comment together, as a reviewable diff.
+  #
+  # Majors excluded for the same reason as npm above: a version number cannot tell you
+  # a major is a redesign. Proven here while doing the pinning - pnpm/action-setup's
+  # `v4.4.0` release tag sits on the SAME commit as `v5.0.0`, while the moving `v4`
+  # pointer is still on v4.3.0. Pinning to the release that merely SOUNDED current
+  # would have shipped v5 to twenty workflows as a no-op "pin".
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

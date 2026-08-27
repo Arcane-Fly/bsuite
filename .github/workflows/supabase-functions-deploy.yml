@@ -243,7 +243,7 @@ jobs:
           DIRS=$("${GITHUB_WORKSPACE}/scripts/verify-submodule-scopes.sh" "${GITHUB_WORKSPACE}")
           echo "dirs=${DIRS}" >> "$GITHUB_OUTPUT"
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
         with:
           version: latest
 
@@ -540,7 +540,7 @@ jobs:
     env:
       SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
     steps:
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
         with:
           version: latest
 
