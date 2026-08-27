@@ -37,6 +37,24 @@ import {
  * (a) all five surface roles and (b) its OWN hue's tint at each alpha in use,
  * in BOTH modes. A future author cannot pass it by measuring the comfortable
  * pairs, and cannot add a fourth alpha without adding it here.
+ *
+ * SCOPE, and a live finding it deliberately does not assert. This gate reads
+ * `css/vars.css` — the D2C palette — only. `css/braden.css` is a standalone
+ * Corporate entry point with its own `--role-*` layer, generated from the
+ * Corporate source-of-truth document, and the non-text gate already records that
+ * changing those values is an operator call rather than this suite's to make.
+ *
+ * Measured on braden.com.au (production, 2026-08-28) with the same method used
+ * here, worst tint composite per role:
+ *
+ *     primary 3.01   info 3.21   accent 3.73   warning 3.73
+ *     success 3.79   error 3.95   (secondary has no -text token at all)
+ *
+ * All six below the 4.5:1 floor. The non-text gate's note says "both of its
+ * border roles are currently below 3:1"; this extends that to the TEXT roles,
+ * which had not been quantified. Recorded here rather than asserted, because a
+ * gate that is red by design on values nobody in this repo may change is an
+ * unread gate.
  */
 
 const FLOOR = 4.5 // WCAG 1.4.3 AA, normal-weight body text
