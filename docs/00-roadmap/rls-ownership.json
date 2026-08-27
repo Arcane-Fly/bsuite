@@ -1,0 +1,100 @@
+[
+  {
+    "table": "award_rates",
+    "writers": [],
+    "readers": [
+      {
+        "file": "crm7/src/components/entity/selectors/AwardRateSelector.tsx",
+        "index_row_ids": ["crm7.placements.crud"],
+        "note": "EntitySelector wraps a plain supabase.from('award_rates').select(...) read used to pick an award_rate_id when creating a placement (src/pages/placements/create.tsx)."
+      },
+      {
+        "file": "crm7/src/stores/awardStore.ts",
+        "index_row_ids": [],
+        "note": "Exports useAwardStore(createEntityStore('award_rates', ...)) with its own doc comment 'CRM7 is READ-ONLY for this table'. Confirmed via search: useAwardStore is imported only by the barrel src/stores/index.ts — zero page/component calls it. Effectively dead code, not tied to any live index row."
+      }
+    ],
+    "owner_row_ids": [],
+    "no_writer_found": true,
+    "confidence": "high",
+    "note": "No .insert/.update/.delete against award_rates exists anywhere reachable from a UI surface. src/services/importExportService.ts's importToSupabase() CAN insert/upsert into award_rates (ENTITY_TABLE_MAP.awards = 'award_rates'), but it has zero callers anywhere in the app (only its own module/tests and the services barrel) — no import wizard page wires entityType:'awards' to it. src/pages/payroll/award-rates/{index,create}.tsx (the index row most plausibly 'owning' this table by name) write to a DIFFERENT table, rate_schedules, not award_rates. This matches the migration's own admission that award_rates has 'zero live rows' and (per src/services/requoteOnRiseService.ts's comment) 'no writer anywhere in BSuite'."
+  },
+  {
+    "table": "charge_calculations",
+    "writers": [],
+    "readers": [],
+    "owner_row_ids": [],
+    "no_writer_found": true,
+    "confidence": "high",
+    "note": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX — 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all — the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row."
+  },
+  {
+    "table": "host_contracts",
+    "writers": [],
+    "readers": [],
+    "owner_row_ids": [],
+    "no_writer_found": true,
+    "confidence": "high",
+    "note": "Zero .from('host_contracts') calls anywhere in crm7 TS/TSX (searched both quote styles). The only two hits are (1) a code COMMENT in crm7/src/pages/contracts/index.tsx explaining that host_contracts was deliberately REMOVED from that page's aggregation at crm7#1577 ('doesn't belong on a contracts page... still live, still readable... whether it is retired or wired to whatever was meant to read it is still an open question') and (2) a matching comment in crm7/src/pages/contracts/index.test.tsx. The migration's own comment ('host_contracts is referenced by a live page, crm7/src/pages/contracts/index.tsx') is stale/incorrect against the current code — that page fetches only training_contracts and host_agreements now. host_contracts is an orphaned pricing table with no live reader or writer anywhere in crm7."
+  },
+  {
+    "table": "whs_records",
+    "writers": [
+      {
+        "file": "crm7/src/pages/whs/incidents/new.tsx",
+        "index_row_ids": ["crm7.whs.incidents"],
+        "note": "Confirmed: calls store.create(payload) via useWhsStore() (createEntityStore('whs_records', ...)), an unauthenticated-tenant INSERT."
+      },
+      {
+        "file": "crm7/src/pages/field-officers/incidents/create.tsx",
+        "index_row_ids": ["crm7.field-officers.incidents"],
+        "note": "Confirmed: calls store.create({...}) via useWhsStore() — same underlying INSERT path as whs/incidents/new.tsx, a second live surface writing this table."
+      },
+      {
+        "file": "crm7/src/pages/field-officers/incidents/[id]/edit.tsx",
+        "index_row_ids": ["crm7.field-officers.incidents"],
+        "note": "Imports and instantiates useWhsStore() (confirmed via search); file naming/route ('edit') and sibling create.tsx's pattern make an update() call to whs_records highly likely, not independently re-read line-by-line."
+      }
+    ],
+    "readers": [
+      {
+        "file": "crm7/src/pages/whs/incidents/index.tsx",
+        "index_row_ids": ["crm7.whs.incidents"],
+        "note": "Same useWhsStore(); list page calls store.fetch()."
+      },
+      {
+        "file": "crm7/src/components/whs/enhanced-host-employer-manager.tsx",
+        "index_row_ids": ["crm7.whs.host-employers"],
+        "note": "Direct supabase.from('whs_records').select('*')... limit(50). Mapping to crm7.whs.host-employers is inferred from the component's name/route match (/whs/host-employers), not a verified import trace into that page file."
+      }
+    ],
+    "owner_row_ids": ["crm7.whs.incidents", "crm7.field-officers.incidents"],
+    "no_writer_found": false,
+    "confidence": "high",
+    "note": "Two distinct, code-confirmed live features insert incident rows into whs_records via the shared useWhsStore. Matches the migration comment's warning that 8 files reach this table through whsStore, invisible to a bare .from() grep."
+  },
+  {
+    "table": "financial_viability_snapshots",
+    "writers": [
+      {
+        "file": "crm7/src/pages/compliance/financial-viability/index.tsx",
+        "index_row_ids": ["crm7.compliance.financial-viability"]
+      }
+    ],
+    "readers": [
+      {
+        "file": "crm7/src/pages/compliance/financial-viability/index.tsx",
+        "index_row_ids": ["crm7.compliance.financial-viability"]
+      },
+      {
+        "file": "crm7/src/pages/compliance/index.tsx",
+        "index_row_ids": ["crm7.compliance.overview"],
+        "note": "Dashboard summary tile: .select('fiscal_year, period_quarter, current_ratio, solvency_declared').order('snapshot_date',...).limit(1)."
+      }
+    ],
+    "owner_row_ids": ["crm7.compliance.financial-viability"],
+    "no_writer_found": false,
+    "confidence": "high",
+    "note": "Single, unambiguous owner. Directly confirmed supabase.from('financial_viability_snapshots').insert({...data}) in this page — the same file the migration's header calls out by name and line for the tenant_id-from-app_metadata authorization issue that blocked scoping the write policy."
+  }
+]
