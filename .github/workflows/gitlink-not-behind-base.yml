@@ -30,6 +30,21 @@ name: Gitlink not behind base
 on:
   pull_request:
     branches: [main]
+  # DISPATCHABLE ON PURPOSE. Scoped to PRs into `main`, this gate cannot run on the PR
+  # that introduces it — so it would ship never once exercised in CI, and its first real
+  # run would be on a promotion, which is the worst moment to discover a runtime bug.
+  # See a gate that failed at checkout on 2 of 2 runs since birth and was read as merely
+  # red (migration-versions-in-flight, fixed the same day).
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Ref whose gitlinks are the floor (default: origin/main)'
+        required: false
+        default: 'origin/main'
+      head:
+        description: 'Ref whose gitlinks are checked against it (default: origin/development)'
+        required: false
+        default: 'origin/development'
 
 permissions:
   contents: read
@@ -72,8 +87,23 @@ jobs:
           set -uo pipefail
           git submodule foreach --recursive 'git fetch --unshallow origin 2>/dev/null || git fetch origin || true'
 
+      # Refs reach the shell through env: and are quoted, never interpolated into the
+      # run block. A dispatch input is operator-supplied text and must be treated as
+      # such even when the operator is us.
       - name: Compare this PR's gitlinks against what main already pins
+        if: github.event_name == 'pull_request'
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node scripts/check-gitlink-not-behind-base.mjs "$BASE_SHA" HEAD
+
+      - name: Compare two refs on demand
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          BASE_REF: ${{ inputs.base }}
+          HEAD_REF: ${{ inputs.head }}
+        run: |
+          set -uo pipefail
+          git fetch origin --quiet || true
+          node scripts/check-gitlink-not-behind-base.mjs "$BASE_REF" "$HEAD_REF"
