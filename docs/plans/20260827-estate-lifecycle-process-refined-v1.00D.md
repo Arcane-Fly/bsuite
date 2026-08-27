@@ -12,6 +12,22 @@ evidence:
 **Tier: HEAVY** · 6 workstreams · destructive stakes (archive deletes from the codebase)
 **Produced by `plan-prompt-enhancer`, 2026-08-27. Grounded in measurement, not assumption.**
 
+## How this is checked
+
+This plan is not self-attesting. The reconciliation step it describes is enforced
+mechanically, and these are the artefacts that would fail if the loop skipped a step:
+
+| artefact | what it proves |
+|---|---|
+| `.github/workflows/estate-alignment.yml` | runs the reconciler on every PR touching a register or `docs/00-roadmap/`, and nightly on `development` |
+| `check-doc-naming.mjs` | every document this loop produces carries a declared family |
+| `check-doc-classification.mjs` | every document declares kind, authority and evidence |
+| `audit-doc-completion.mjs` | no document produced here can claim completion while citing nothing runnable |
+
+The reconciler itself (`scripts/estate-align.mjs --strict`) resolves code anchors,
+requires a well-formed `dod_status`, requires an APPROVE to carry evidence, and
+requires every operator ask to map to a feature row.
+
 ## Intent
 
 Braden captures defects progressively in a Google Doc, downloads it to `~/Downloads` as
