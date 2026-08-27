@@ -42,6 +42,58 @@ const GAPS_PATH = join(ROOT, 'docs/00-roadmap/journey-gap-register.json')
 
 const DOD_STATES = new Set(['not-evaluated', 'in-progress', 'approved', 'send-back', 'waived'])
 
+/** The declared state of a row, whether dod_status is a bare string or an object. */
+export function dodState(s) { return typeof s === 'string' ? s : (s && s.state) }
+
+/* ADR-0010 — FIX THE CLASS, NOT THE PAGE — MECHANISED.
+ *
+ * The ADR was ratified 2026-08-26 by operator ruling and its own header claimed
+ * "enforcement mechanism exists (D8.1 + bsuite_feature_index.sibling_class)".
+ * `sibling_class` is present on all 659 rows across 111 classes — and on
+ * 2026-08-27 NOTHING under scripts/ or .github/workflows/ read the field. It was
+ * carried, indexed, and inert: the exact "built but nothing invokes it" shape the
+ * ADR exists to name, sitting inside the ADR's own enforcement claim.
+ *
+ * The rule, stated as the ADR states it: a platform-wide defect is closed
+ * platform-wide or not at all. So the moment ANY row in a sibling class is
+ * `approved`, no row in that class may still read `not-evaluated`. Approving one
+ * page of a class and leaving its siblings unlooked-at is precisely the thing the
+ * operator raised 26 repeat findings about.
+ *
+ * A class of one has no siblings and cannot violate this — 55 of the 111 classes
+ * are singletons and they are silent here by construction, not by exemption.
+ *
+ * Today every row is `not-evaluated`, so this passes VACUOUSLY. That is expected
+ * and is not a reason to weaken it: it binds on the first APPROVE anyone writes,
+ * which is the moment it needs to.
+ */
+export function siblingClassViolations(index) {
+  const byClass = new Map()
+  for (const f of index || []) {
+    const c = f && f.sibling_class
+    if (!c) continue
+    if (!byClass.has(c)) byClass.set(c, [])
+    byClass.get(c).push(f)
+  }
+  const out = []
+  for (const [cls, rows] of byClass) {
+    if (rows.length < 2) continue
+    const approved = rows.filter((r) => dodState(r.dod_status) === 'approved')
+    if (approved.length === 0) continue
+    const unevaluated = rows.filter((r) => dodState(r.dod_status) === 'not-evaluated')
+    for (const r of unevaluated) {
+      out.push({
+        check: 'E-sibling-class',
+        feature: r.id,
+        detail: `sibling class "${cls}" has ${approved.length} approved row(s) (e.g. ${approved[0].id}) `
+          + `but this one is still not-evaluated — ADR-0010: a class is closed class-wide or not at all `
+          + `(${rows.length} rows in this class)`,
+      })
+    }
+  }
+  return out
+}
+
 /** The operator-notes register is a dated doc; find the newest rather than pinning a filename. */
 export function findRegister(docsDir) {
   if (!existsSync(docsDir)) return null
@@ -153,6 +205,9 @@ function main() {
       violations.push({ check: 'C-dod-evidence', feature: f.id, detail: 'dod_status approved with no evidence pointer — an APPROVE nobody can check is a claim, not a verdict' })
     }
   }
+
+  // ---- E. ADR-0010: a sibling class is closed class-wide, or not at all ----
+  violations.push(...siblingClassViolations(index))
 
   // ---- B/D. register <-> index, both directions ----
   const byRoute = new Map()
@@ -305,6 +360,23 @@ if (process.argv.includes('--self-test')) {
   t('anchor: repo-relative resolves', anchorResolves(ROOT, 'scripts/estate-align.mjs', 'scripts'), true)
   t('anchor: module-relative resolves via the module field', anchorResolves(ROOT, 'src', 'crm7'), true)
   t('anchor: a genuine miss still fails', anchorResolves(ROOT, 'src/definitely/not/here', 'crm7'), false)
+  // ---- E. sibling-class closure, both directions ----
+  const cls = (id, sibling_class, state) => ({ id, sibling_class, dod_status: state })
+  t('sibling: an approved row with an unevaluated sibling is a violation',
+    siblingClassViolations([cls('a', 'entity-crud', 'approved'), cls('b', 'entity-crud', 'not-evaluated')]).length, 1)
+  t('sibling: a fully evaluated class is clean',
+    siblingClassViolations([cls('a', 'entity-crud', 'approved'), cls('b', 'entity-crud', 'send-back')]).length, 0)
+  t('sibling: nothing approved yet means nothing to enforce',
+    siblingClassViolations([cls('a', 'entity-crud', 'not-evaluated'), cls('b', 'entity-crud', 'not-evaluated')]).length, 0)
+  t('sibling: a class of one has no siblings and cannot violate',
+    siblingClassViolations([cls('a', 'lonely', 'approved')]).length, 0)
+  t('sibling: TWO unevaluated siblings report TWICE, one per page left behind',
+    siblingClassViolations([cls('a', 'x', 'approved'), cls('b', 'x', 'not-evaluated'), cls('c', 'x', 'not-evaluated')]).length, 2)
+  t('sibling: classes do not leak into each other',
+    siblingClassViolations([cls('a', 'x', 'approved'), cls('b', 'y', 'not-evaluated')]).length, 0)
+  t('sibling: object-form dod_status is read the same as the string form',
+    siblingClassViolations([cls('a', 'x', { state: 'approved', evidence: 'e' }), cls('b', 'x', 'not-evaluated')]).length, 1)
+
   const bad = cases.filter((c) => !c.ok)
   for (const b of bad) console.error(`FAIL ${b.n}: expected ${JSON.stringify(b.e)}, got ${JSON.stringify(b.a)}`)
   if (bad.length) process.exit(1)

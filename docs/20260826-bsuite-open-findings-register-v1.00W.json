@@ -1,0 +1,3083 @@
+{
+ "generated": "2026-08-26",
+ "security": {
+  "finding": "write-side RLS left unscoped on five crm7 tables",
+  "migration": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql",
+  "attributable": [
+   {
+    "table": "whs_records",
+    "owner_row_ids": [
+     "crm7.whs.incidents",
+     "crm7.field-officers.incidents"
+    ]
+   },
+   {
+    "table": "financial_viability_snapshots",
+    "owner_row_ids": [
+     "crm7.compliance.financial-viability"
+    ]
+   }
+  ],
+  "unattributable": [
+   {
+    "table": "award_rates",
+    "why": "No .insert/.update/.delete against award_rates exists anywhere reachable from a UI surface. src/services/importExportService.ts's importToSupabase() CAN insert/upsert into award_rates (ENTITY_TABLE_MAP.awards = 'award_rates'), but it has zero callers anywhere in the app (only its own module/tests and the services barrel) \u2014 no import wizard page wires entityType:'awards' to it. src/pages/payroll/award-rates/{index,create}.tsx (the index row most plausibly 'owning' this table by name) write to a DIFFERENT table, rate_schedules, not award_rates. This matches the migration's own admission that award_rates has 'zero live rows' and (per src/services/requoteOnRiseService.ts's comment) 'no writer anywhere in BSuite'.",
+    "no_writer_found": true
+   },
+   {
+    "table": "charge_calculations",
+    "why": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX \u2014 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all \u2014 the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row.",
+    "no_writer_found": true
+   },
+   {
+    "table": "host_contracts",
+    "why": "Zero .from('host_contracts') calls anywhere in crm7 TS/TSX (searched both quote styles). The only two hits are (1) a code COMMENT in crm7/src/pages/contracts/index.tsx explaining that host_contracts was deliberately REMOVED from that page's aggregation at crm7#1577 ('doesn't belong on a contracts page... still live, still readable... whether it is retired or wired to whatever was meant to read it is still an open question') and (2) a matching comment in crm7/src/pages/contracts/index.test.tsx. The migration's own comment ('host_contracts is referenced by a live page, crm7/src/pages/contracts/index.tsx') is stale/incorrect against the current code \u2014 that page fetches only training_contracts and host_agreements now. host_contracts is an orphaned pricing table with no live reader or writer anywhere in crm7.",
+    "no_writer_found": true
+   }
+  ],
+  "all_five_tables_hold_zero_rows": true,
+  "correction_20260826": {
+   "what_was_wrong": "award_rates, host_contracts and whs_records were classified 'no writer anywhere' on the strength of finding no .insert/.update/.delete against them in source.",
+   "what_is_true": "All three are is_active, tenant_scope=tenant_column entries in public.report_catalog_entities, which is the allowlist the generic bulk import/update engine at /settings/data writes through. Any tenant owner/admin can pick them from a dropdown and write rows.",
+   "why_the_method_failed": "bulk_data_import/bulk_data_update resolve the target table from a DATABASE ROW and issue dynamic EXECUTE format(...). The table name is never in TypeScript. Invisible to source grep and to dry-lint's AST-based cross-app-write rule.",
+   "second_order": "Cuts the other way on severity: the bulk_data_* functions are SECURITY DEFINER and never evaluate RLS, so the unscoped write policy is not in that path. Its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping (pgTAP 46). The unscoped policy matters for DIRECT client writes only.",
+   "charge_calculations_and_financial_viability_snapshots": "absent from report_catalog_entities \u2014 those two remain without a bulk-engine writer",
+   "method_rule": "For 'does anything write table X', ask the database first: report_catalog_entities allowlist; pg_proc.prosrc for dynamic SQL; view defs + security_invoker; pg_trigger; pg_constraint FKs; pg_policies on OTHER tables naming X. Only then read source.",
+   "source": "bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep (crm7#2053 write-side RLS lane, 2026-08-26)"
+  }
+ },
+ "rls_ownership": [
+  {
+   "table": "award_rates",
+   "writers": [],
+   "readers": [
+    {
+     "file": "crm7/src/components/entity/selectors/AwardRateSelector.tsx",
+     "index_row_ids": [
+      "crm7.placements.crud"
+     ],
+     "note": "EntitySelector wraps a plain supabase.from('award_rates').select(...) read used to pick an award_rate_id when creating a placement (src/pages/placements/create.tsx)."
+    },
+    {
+     "file": "crm7/src/stores/awardStore.ts",
+     "index_row_ids": [],
+     "note": "Exports useAwardStore(createEntityStore('award_rates', ...)) with its own doc comment 'CRM7 is READ-ONLY for this table'. Confirmed via search: useAwardStore is imported only by the barrel src/stores/index.ts \u2014 zero page/component calls it. Effectively dead code, not tied to any live index row."
+    }
+   ],
+   "owner_row_ids": [],
+   "no_writer_found": false,
+   "confidence": "high (corrected 2026-08-26)",
+   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' \u2014 the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
+   "runtime_writer": {
+    "surface": "crm7.settings.data-tools (/settings/data)",
+    "mechanism": "bulk_data_import / bulk_data_update RPC resolves the target table from public.report_catalog_entities at run time and issues dynamic EXECUTE format('INSERT INTO %I.%I ...')",
+    "why_missed": "the table name never appears in TypeScript; no grep of any pattern over the source could find it",
+    "rls_in_path": false,
+    "rls_note": "the bulk RPCs are SECURITY DEFINER and never evaluate RLS"
+   }
+  },
+  {
+   "table": "charge_calculations",
+   "writers": [],
+   "readers": [],
+   "owner_row_ids": [],
+   "no_writer_found": true,
+   "confidence": "high",
+   "note": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX \u2014 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all \u2014 the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row."
+  },
+  {
+   "table": "host_contracts",
+   "writers": [],
+   "readers": [],
+   "owner_row_ids": [],
+   "no_writer_found": false,
+   "confidence": "high (corrected 2026-08-26)",
+   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' \u2014 the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
+   "runtime_writer": {
+    "surface": "crm7.settings.data-tools (/settings/data)",
+    "mechanism": "bulk_data_import / bulk_data_update RPC resolves the target table from public.report_catalog_entities at run time and issues dynamic EXECUTE format('INSERT INTO %I.%I ...')",
+    "why_missed": "the table name never appears in TypeScript; no grep of any pattern over the source could find it",
+    "rls_in_path": false,
+    "rls_note": "the bulk RPCs are SECURITY DEFINER and never evaluate RLS"
+   }
+  },
+  {
+   "table": "whs_records",
+   "writers": [
+    {
+     "file": "crm7/src/pages/whs/incidents/new.tsx",
+     "index_row_ids": [
+      "crm7.whs.incidents"
+     ],
+     "note": "Confirmed: calls store.create(payload) via useWhsStore() (createEntityStore('whs_records', ...)), an unauthenticated-tenant INSERT."
+    },
+    {
+     "file": "crm7/src/pages/field-officers/incidents/create.tsx",
+     "index_row_ids": [
+      "crm7.field-officers.incidents"
+     ],
+     "note": "Confirmed: calls store.create({...}) via useWhsStore() \u2014 same underlying INSERT path as whs/incidents/new.tsx, a second live surface writing this table."
+    },
+    {
+     "file": "crm7/src/pages/field-officers/incidents/[id]/edit.tsx",
+     "index_row_ids": [
+      "crm7.field-officers.incidents"
+     ],
+     "note": "Imports and instantiates useWhsStore() (confirmed via search); file naming/route ('edit') and sibling create.tsx's pattern make an update() call to whs_records highly likely, not independently re-read line-by-line."
+    }
+   ],
+   "readers": [
+    {
+     "file": "crm7/src/pages/whs/incidents/index.tsx",
+     "index_row_ids": [
+      "crm7.whs.incidents"
+     ],
+     "note": "Same useWhsStore(); list page calls store.fetch()."
+    },
+    {
+     "file": "crm7/src/components/whs/enhanced-host-employer-manager.tsx",
+     "index_row_ids": [
+      "crm7.whs.host-employers"
+     ],
+     "note": "Direct supabase.from('whs_records').select('*')... limit(50). Mapping to crm7.whs.host-employers is inferred from the component's name/route match (/whs/host-employers), not a verified import trace into that page file."
+    }
+   ],
+   "owner_row_ids": [
+    "crm7.whs.incidents",
+    "crm7.field-officers.incidents"
+   ],
+   "no_writer_found": false,
+   "confidence": "high (corrected 2026-08-26)",
+   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' \u2014 the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
+   "runtime_writer": {
+    "surface": "crm7.settings.data-tools (/settings/data)",
+    "mechanism": "bulk_data_import / bulk_data_update RPC resolves the target table from public.report_catalog_entities at run time and issues dynamic EXECUTE format('INSERT INTO %I.%I ...')",
+    "why_missed": "the table name never appears in TypeScript; no grep of any pattern over the source could find it",
+    "rls_in_path": false,
+    "rls_note": "the bulk RPCs are SECURITY DEFINER and never evaluate RLS"
+   }
+  },
+  {
+   "table": "financial_viability_snapshots",
+   "writers": [
+    {
+     "file": "crm7/src/pages/compliance/financial-viability/index.tsx",
+     "index_row_ids": [
+      "crm7.compliance.financial-viability"
+     ]
+    }
+   ],
+   "readers": [
+    {
+     "file": "crm7/src/pages/compliance/financial-viability/index.tsx",
+     "index_row_ids": [
+      "crm7.compliance.financial-viability"
+     ]
+    },
+    {
+     "file": "crm7/src/pages/compliance/index.tsx",
+     "index_row_ids": [
+      "crm7.compliance.overview"
+     ],
+     "note": "Dashboard summary tile: .select('fiscal_year, period_quarter, current_ratio, solvency_declared').order('snapshot_date',...).limit(1)."
+    }
+   ],
+   "owner_row_ids": [
+    "crm7.compliance.financial-viability"
+   ],
+   "no_writer_found": false,
+   "confidence": "high",
+   "note": "Single, unambiguous owner. Directly confirmed supabase.from('financial_viability_snapshots').insert({...data}) in this page \u2014 the same file the migration's header calls out by name and line for the tenant_id-from-app_metadata authorization issue that blocked scoping the write policy."
+  }
+ ],
+ "journey_gaps": {
+  "source": "pass 5 round 5 \u2014 journey walk, not artifact enumeration",
+  "note": "These are product gaps: steps a user must perform with no surface at all. They are NOT index rows \u2014 there is no artifact to index. They belong in the backlog.",
+  "journey_gaps": [
+   {
+    "rank": 1,
+    "journey": "a / c -- host billing",
+    "gap": "Invoicing hard-blocks on any overtime hour. billingEngine.ts's fetchTimesheetGroups() explicitly refuses to price overtime (throws 'Cannot generate invoice: overtime hours cannot be priced for ...') because it has no OT-tier breakdown to work from -- charge_rate_snapshots.calc_result.rates has the correct ot15/ot20/ot25/ph/night rates already computed, but nothing wires them into billing, and the intended fix path (populate `timesheet_groups`, the work-type -> pay-item-group lookup) has ZERO rows in practice per the code's own 2026-08-05 comment. The only workarounds are both manual and outside the system: record the hours as ordinary (silently under-bills the host) or price the overtime by hand.",
+    "manual_work_imposed": "Every host invoice touching an apprentice who logged overtime cannot be generated through the product at all until an operator either mis-codes the hours or computes and enters the OT amount manually outside crm7.",
+    "evidence": "src/lib/billingEngine.ts (crm7, sha 62fd36e7941a55eb44163e2f10a4e6e22c255f88), fetchTimesheetGroups() and its inline 2026-08-05 comment block."
+   },
+   {
+    "rank": 2,
+    "journey": "a -- opportunity to host employer",
+    "gap": "No conversion action exists from a closed_won Opportunity (or its linked Client) to a Host Employer. src/pages/hosts/create.tsx only offers a ContactSelector (pre-fills contact name/email/phone); company name, industry, and address -- already captured on the Opportunity/Client -- must be retyped from scratch. Grepping the crm7 tree for any 'convert' file returns nothing.",
+    "manual_work_imposed": "Every won deal requires the operator to manually re-key the company's core details a second time into a separate form, with no cross-check against what's already on file.",
+    "evidence": "src/pages/hosts/create.tsx (crm7); src/lib/opportunities.ts (no host/employer conversion function); grep for 'convert' across crm7 tree returns zero files."
+   },
+   {
+    "rank": 3,
+    "journey": "d -- bulk candidate intake",
+    "gap": "Conduit (the ATS) has no bulk/CSV import, bulk edit, or export surface anywhere -- confirmed by a full-tree grep for bulk/import/export/csv returning zero files, versus crm7 which has a dedicated bulk-data engine (src/services/bulkDataService.ts, /settings/data).",
+    "manual_work_imposed": "A GTO onboarding a batch of candidates (career fair, mass intake) must create every candidate one at a time via /candidates/new; no CSV path exists.",
+    "evidence": "grep -iE 'bulk|import|export|csv' across conduit.txt (540 files) -- zero matches."
+   },
+   {
+    "rank": 4,
+    "journey": "a / d -- vacancy/job seam",
+    "gap": "crm7's host-employer vacancies (src/schemas/vacancy.ts, /hosts/vacancies) and conduit's candidate-facing job postings (src/stores/jobStore.ts, /jobs) are two entirely disconnected systems. crm7's vacancy schema has an `application_count` field that implies applications should flow into it, but nothing populates it; conduit's job schema has no `vacancy_id` or `host_employer_id` field.",
+    "manual_work_imposed": "A recruiter must manually track which crm7 vacancy corresponds to which conduit job ad and manually keep vacancy status/application counts in sync -- there is no data path between the two.",
+    "evidence": "src/schemas/vacancy.ts (crm7): application_count field with no writer found. GitHub code search org-wide for 'vacancy_id' OR 'host_employer_id' in conduit's jobStore.ts: zero hits."
+   }
+  ],
+  "config_without_editor": [
+   {
+    "item": "Compliance alert-scanner thresholds",
+    "detail": "src/lib/compliance/alertScanner.ts SCANNER_RULES hardcodes lookAhead/lookBehind day windows for all 5 compliance scanners (document expiry 30/7, overdue site visits 28, training delay 90, host agreement expiry 60/7, visa expiry 90/7) plus TRAINING_PROGRESS_THRESHOLD=75%. No settings page edits any of these -- grep for rot-threshold/scanner-config/compliance-thresholds/alert-thresholds across the crm7 tree returns nothing.",
+    "evidence": "src/lib/compliance/alertScanner.ts (crm7, sha 62fd36e7941a55eb44163e2f10a4e6e22c255f88)"
+   },
+   {
+    "item": "Deal-rotting thresholds (orphaned, not user-facing -- noted for completeness)",
+    "detail": "src/lib/deal-rotting.ts DEFAULT_ROT_THRESHOLDS (per-stage day thresholds), WARNING_THRESHOLD_RATIO=0.5, CRITICAL_THRESHOLD_RATIO=1.5 are hardcoded with no settings surface -- but this library is not wired to any page (see missing_from_index_note), so this is a config gap on dead code, not a live one. Downgraded to informational.",
+    "evidence": "src/lib/deal-rotting.ts (crm7)"
+   },
+   {
+    "item": "billingEngine.ts payment terms drift from tenant settings",
+    "detail": "billingEngine.ts hardcodes PAYMENT_TERMS_DAYS=30 with no tenant override, while the parallel src/lib/pipelines/chargeToBilling.ts reads tenantSettings.paymentTermsDays with the same 30-day default as a fallback. Two invoice-generation code paths in the same app disagree on whether payment terms are tenant-configurable.",
+    "evidence": "src/lib/billingEngine.ts vs src/lib/pipelines/chargeToBilling.ts (crm7)"
+   }
+  ],
+  "bulk_gaps": [
+   {
+    "entity": "Conduit candidates / jobs / offers",
+    "detail": "Zero bulk-import, bulk-edit, or export surfaces anywhere in the conduit repo. Every other repo with a comparable high-volume entity (crm7 people/apprentices) has a dedicated bulk-data engine; conduit has none.",
+    "evidence": "grep -iE 'bulk|import|export|csv' conduit.txt -- 0 matches out of 540 files."
+   }
+  ],
+  "seam_gaps": [
+   {
+    "seam": "crm7 host-employer vacancies <-> conduit candidate-facing job postings",
+    "detail": "No shared key, no sync job, no cross-link field either direction. See journey_gaps #4 for full evidence.",
+    "evidence": "src/schemas/vacancy.ts (crm7) application_count with no writer; conduit jobStore.ts has no vacancy_id/host_employer_id field (org-wide code search, 0 hits)."
+   }
+  ],
+  "journeys_walked": [
+   {
+    "journey": "a. New host employer: first enquiry -> signed agreement -> first placement",
+    "steps": [
+     "1. Lead captured (web form / manual) -> crm7 /leads, public/embed/lead-form.html, supabase/functions/lead-capture -- SURFACE",
+     "2. Lead qualified -> Opportunity created, linked via opportunities.client_id -> crm7 /opportunities -- SURFACE",
+     "3. Opportunity reaches closed_won -- SURFACE (stage enum), but NO automated or single-click path to create the Host Employer record from the won opportunity/client -- NO SURFACE (see journey_gaps #1)",
+     "4. Host employer created -> crm7 /hosts/create (ContactSelector auto-fills contact fields only; company/industry/address re-keyed by hand) -- SURFACE (partial -- see gap)",
+     "5. Host site(s) added -> crm7 HostSitesPanel.tsx, /hosts sites -- SURFACE",
+     "6. WHS / capacity assessment -> /hosts/capacity-assessment, host-employer-whs-manager.tsx -- SURFACE",
+     "7. Host agreement generated & sent for signature -> /hosts/agreements/new, SendHostAgreementForSignatureDialog, supabase/functions/host-agreement-dispatch -- SURFACE",
+     "8. Agreement signed (token-based) -> /hosts/agreements/sign/[token] -- SURFACE",
+     "9. Vacancy posted against the host -> /hosts/vacancies/new -- SURFACE, but this record is NOT linked to any conduit job posting -- NO SURFACE for the seam (see seam_gaps #1)",
+     "10. Apprentice placed at the host -> /placements/create, placement workflow -- SURFACE",
+     "11. Timesheets approved -> host billed -> billingEngine.generateInvoiceFromTimesheets -- SURFACE, but BLOCKS with a thrown error the moment any overtime hour appears, because timesheet_groups (work-type -> pay-item-group lookup) ships with zero rows and nothing forces it to be populated before go-live -- NO SURFACE for the missing prerequisite step (see journey_gaps #2, the highest-manual-effort gap found this round)"
+    ],
+    "verdict": "Fully surfaced end-to-end except two real gaps: no lead/opportunity->host conversion, and invoicing silently requires unenforced upstream config."
+   },
+   {
+    "journey": "b. Apprentice: application through completion/handover",
+    "steps": [
+     "1. Front-door intake -> crm7 /people/new, /people/new/worker -- SURFACE",
+     "2. Placement created & tracked -> /placements, ApprenticePlacementForm -- SURFACE",
+     "3. Training plan / progress tracked -> /people/progress, training_plans -- SURFACE",
+     "4. Compliance scanning (doc expiry, site visits, training delay, agreement expiry, visa expiry) -> src/lib/compliance/alertScanner.ts, cron-driven -- SURFACE, but every threshold (30/28/90/60/90 days, 75% progress) is a hardcoded constant with no admin editor (see config_without_editor #1)",
+     "5. Change-of-year processing -> /admin/change-of-year -- SURFACE",
+     "6. Completion/withdrawal/cancellation tracked -> /people/completion (already indexed under crm7.people.compliance-progress code_anchors -- verified, not a miss) -- SURFACE",
+     "7. Handover to employment -> supabase/functions/handover-to-employment, scripts/e2e-rehearsal/handover-to-employment.mjs -- SURFACE"
+    ],
+    "verdict": "Fully surfaced end-to-end. No gaps found on this journey this round."
+   },
+   {
+    "journey": "c. Charge rate: award selection -> quote -> invoice",
+    "steps": [
+     "1. Award/occupation selection & rate calculation -> R80.4 calculator (public, no login required) -- SURFACE",
+     "2. Quote saved, templated, thread-grouped, compared -> r80.quote.* rows (save-local, server-sync, templates, compare-two-quotes) -- SURFACE",
+     "3. Quote handed off to crm7 via single-use token -> r80.quote.handoff-crm7, crm7.quote.r8-return-ticket round trip -- SURFACE",
+     "4. Charge rate applied to a placement -> ChargeRateCard, rateState.ts, rateProvenance.ts -- SURFACE",
+     "5. Timesheet -> invoice generation -> billingEngine.ts -- SURFACE, same overtime-pricing dead end as journey (a) step 11"
+    ],
+    "verdict": "Fully surfaced; the one real defect (overtime pricing block) is shared with journey (a), not journey-specific."
+   },
+   {
+    "journey": "d. Candidate: job ad -> application -> onboarded worker",
+    "steps": [
+     "1. Job ad posted publicly -> conduit /portal/careers, jobPostingJsonLd.ts (SEO) -- SURFACE, but conduit's job postings carry NO field linking back to a crm7 vacancy/host_employer_id -- NO SURFACE for the seam (same gap as journey a step 9, seam_gaps #1)",
+     "2. Application submitted -> /portal/careers/[jobId]/apply -- SURFACE",
+     "3. Screening / interview -> /interviews, InterviewScorecardDialog -- SURFACE",
+     "4. Offer generated & e-signed -> /offers, OfferSignModal, offerStateMachine.ts -- SURFACE",
+     "5. Onboarding -> /onboarding -- SURFACE",
+     "6. Convert to apprentice (cross-app handoff to crm7) -> _convert-to-apprentice-button.tsx mints a token, crm7 /apprentices/from-candidate consumes it -- SURFACE (confirmed both sides wired; already indexed both ends)",
+     "7. Once in crm7, re-enters journey (a)/(b) at placement creation -- SURFACE",
+     "8. Bulk intake of candidates (career fair, GTO batch onboarding of e.g. 200 apprentices) -- NO SURFACE anywhere in conduit: zero bulk/CSV/import/export files found in the entire conduit tree (see bulk_gaps #1)"
+    ],
+    "verdict": "Well surfaced for the one-at-a-time path; no bulk path exists at all."
+   }
+  ],
+  "not_yet_walked": [
+   "mentor assignment lifecycle",
+   "WHS incident to resolution",
+   "field officer visit cycle",
+   "payroll run end to end"
+  ]
+ },
+ "funding_ruling": {
+  "ruling": "R80.4's funding calculation is the only acceptable method of calculation. The placement-time look at funding refines a broad category estimate into an individual-specific amount \u2014 it replaces, it does not add a second set of funding. Funding is claimed from the funding body and tracked in its own ledger; it does not reduce what the host is charged.",
+  "stated_by": "Braden Lang, 2026-08-26",
+  "already_encoded_in": "crm7/supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql",
+  "consequence_for_index": "claim.B.0035 reclassified from 'funding double-count defect' to 'funding-model mismatch in unwired R80.4 module'; severity high->medium; money_impact under-quote->none-in-production"
+ },
+ "operator_testing_findings": {
+  "source": "bsuite notes (6).docx, 2026-08-26",
+  "count": 135,
+  "repeat_offences": 26,
+  "themes": [
+   {
+    "theme": "Cards are individually un-draggable and un-resizable because every card set shares one backing card, and fixes only ever land on one page at a time",
+    "finding_ids": [
+     "note.004",
+     "note.005",
+     "note.006",
+     "note.034",
+     "note.045",
+     "note.046",
+     "note.081"
+    ],
+    "module_scope": [
+     "crm7",
+     "business-suite-unified",
+     "platform"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Give every card its own backing element so cards can be dragged and resized independently everywhere, as a platform-wide fix, not a page-by-page patch."
+   },
+   {
+    "theme": "Reports, funding-source, training-provider, and every other row-listing screen still don't look or behave like the planned Airtable-style spreadsheet view",
+    "finding_ids": [
+     "note.035",
+     "note.037",
+     "note.050",
+     "note.085",
+     "note.108",
+     "note.114",
+     "note.132",
+     "note.134",
+     "note.135"
+    ],
+    "module_scope": [
+     "crm7",
+     "business-suite-unified"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Ship the Airtable-style, filterable spreadsheet view that's already been researched and specced, and reuse it everywhere a list of rows appears."
+   },
+   {
+    "theme": "R80.4 charge-calculator values (standard rate, per-year wages, apprentice %, allowances, Adult classification) don't actually recompute from the selected award \u2014 they show fixed demo numbers",
+    "finding_ids": [
+     "note.056",
+     "note.057",
+     "note.062",
+     "note.063",
+     "note.077",
+     "note.094",
+     "note.112",
+     "note.126"
+    ],
+    "module_scope": [
+     "R80.4"
+    ],
+    "owner_says_repeat": false,
+    "one_line_ask": "Make every figure in the charge calculator genuinely recompute from the selected award instead of displaying hardcoded values left over from the demo build."
+   },
+   {
+    "theme": "Platform-level admin surfaces (permissions, branding, platform kit, custom reporting) leak into tenant/enterprise accounts, and permission checkboxes never reflect or persist what's actually granted",
+    "finding_ids": [
+     "note.036",
+     "note.051",
+     "note.052",
+     "note.053",
+     "note.106",
+     "note.109"
+    ],
+    "module_scope": [
+     "business-suite-unified",
+     "crm7"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Gate every platform-level admin surface to developer accounts only, and make permission checkboxes load pre-checked to actual state and persist edits."
+   },
+   {
+    "theme": "The D2C dark/gradient theme isn't applied consistently \u2014 pure white/black surfaces, missing gradients, and missing glows recur across every app",
+    "finding_ids": [
+     "note.039",
+     "note.071",
+     "note.082",
+     "note.083",
+     "note.084"
+    ],
+    "module_scope": [
+     "platform",
+     "business-suite-unified",
+     "R80.4"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Apply the D2C gradient/glow theme to every card, header, and button across every app, and eliminate pure-white/pure-black surfaces for good."
+   },
+   {
+    "theme": "Card borders render wrong (doubled, blurry, or cut off) because the visual edge is a box-shadow ring rather than a real CSS border",
+    "finding_ids": [
+     "note.031",
+     "note.045",
+     "note.100",
+     "note.107",
+     "note.133"
+    ],
+    "module_scope": [
+     "crm7",
+     "business-suite-unified"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Replace the box-shadow-as-border hack with a real border so card edges stop rendering doubled or blurry, across the app."
+   },
+   {
+    "theme": "There is no working export-to-PDF / save-template / push-to-record / send-for-eSigning flow for quotes, contracts, or documents",
+    "finding_ids": [
+     "note.097",
+     "note.121",
+     "note.123",
+     "note.125",
+     "note.131"
+    ],
+    "module_scope": [
+     "R80.4",
+     "crm7"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Build one working export/save-template/push-to-record/eSign flow and reuse it everywhere a quote or contract needs to leave the app."
+   },
+   {
+    "theme": "There is still no way for a client to connect and use their own email account inside CRM7",
+    "finding_ids": [
+     "note.002",
+     "note.118"
+    ],
+    "module_scope": [
+     "crm7"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Ship a working, correctly-scoped OAuth flow so clients can connect and send from their own SMTP/Google/Azure mailbox, and close the auth popup properly."
+   },
+   {
+    "theme": "The same piece of data has to be entered or selected more than once instead of propagating (one-shot policy violations)",
+    "finding_ids": [
+     "note.019",
+     "note.028",
+     "note.075"
+    ],
+    "module_scope": [
+     "crm7",
+     "R80.4"
+    ],
+    "owner_says_repeat": true,
+    "one_line_ask": "Enforce the one-shot data policy end to end: entering or selecting something once should carry through to every place that needs it."
+   }
+  ],
+  "findings": [
+   {
+    "id": "note.001",
+    "url": "https://crm.crm7.app/communications",
+    "module": "crm7",
+    "surface": "Communications inbox",
+    "finding": "Emails can't be opened and read.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "emails, cant be opened and read.",
+    "evidence": null
+   },
+   {
+    "id": "note.002",
+    "url": "https://crm.crm7.app/communications",
+    "module": "crm7",
+    "surface": "Connecting an email account",
+    "finding": "There is no clear way to connect SMTP, Google, or Azure email accounts; clients on the platform should be able to connect and send email from their own accounts. Raised in excess of 20 times.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.5"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Mentioned in excess of 20 times, there is no clear way to connect stmp, or google or azure emails. Clients who sign up and use the bsuite platform should be able to connect and send emails from their stmp or azure/google email accounts.",
+    "evidence": null
+   },
+   {
+    "id": "note.003",
+    "url": "https://crm.crm7.app/communications/compose",
+    "module": "crm7",
+    "surface": "Compose page load",
+    "finding": "The fairwork-enhanced edge function returns a 503 when loading the compose page.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Failed to load resource: the server responded with a status of 503 ()",
+    "evidence": "tuybltdrdefjblnplpqo.supabase.co/functions/v1/fairwork-enhanced:1 \u2014 503"
+   },
+   {
+    "id": "note.004",
+    "url": "https://crm.crm7.app/communications/compose",
+    "module": "crm7",
+    "surface": "Total Messages / Sent / Delivered / Failed stat cards",
+    "finding": "The stat cards share one backing card so they can't be moved individually in edit mode.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Should be individual cards not linked by the same common backing card, i.e. should be able to be moved individually in edit mode.",
+    "evidence": null
+   },
+   {
+    "id": "note.005",
+    "url": "https://crm.crm7.app/communications/compose",
+    "module": "crm7",
+    "surface": "Compose page cards",
+    "finding": "Cards are half cut off when the page opens.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Cards are half cut off when page opened.",
+    "evidence": null
+   },
+   {
+    "id": "note.006",
+    "url": "https://crm.crm7.app/communications/compose",
+    "module": "platform",
+    "surface": "Card/DnD architecture across the app",
+    "finding": "Cards not being individually draggable is a platform-wide problem that keeps getting fixed page-by-page instead of everywhere, despite being flagged repeatedly as a platform-wide consideration.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "These issues are persistent across the app and have been flagged to be fixed across the full app many times. Typically the fixing agent fixes that page i've pointed to but i have always said it is a platform wide consideration that needs addressing.",
+    "evidence": null
+   },
+   {
+    "id": "note.007",
+    "url": "https://crm.crm7.app/payroll/award-rates",
+    "module": "crm7",
+    "surface": "Award rates page",
+    "finding": "No wages are visible, the period column just says \"percent\", and there is no description visible.",
+    "kind": "data-gap",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1",
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "No wages are visible",
+    "evidence": null
+   },
+   {
+    "id": "note.008",
+    "url": "https://crm.crm7.app/settings/schema-builder",
+    "module": "crm7",
+    "surface": "Schema builder",
+    "finding": "Schema builder is incomprehensible to the owner; no idea how to use it.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Schema builder makes no sense. I have no idea how to use it.",
+    "evidence": null
+   },
+   {
+    "id": "note.009",
+    "url": "https://crm.crm7.app/settings/schema-builder",
+    "module": "crm7",
+    "surface": "Schema builder \"tidy\"/\"fit\" icons",
+    "finding": "The \"tidy\" icon just stacks schema cards into a column (not useful) and the \"fit\" icon does nothing.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.2",
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Selecting \"tidy\" icon just puts the schema cards into a column. Super un-usefull. \"Fit\" icon does nothing.",
+    "evidence": null
+   },
+   {
+    "id": "note.010",
+    "url": "https://crm.crm7.app/dashboard",
+    "module": "crm7",
+    "surface": "Dashboard edit / page builder",
+    "finding": "Editing the dashboard sends you to a separate page-builder screen that only creates a brand-new page; the ability to add elements directly to the live page in edit mode existed recently and is now missing again.",
+    "kind": "regression",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4",
+     "D8.5"
+    ],
+    "repeat_offence": true,
+    "verbatim": "We did recently have the ability to add new elements on page but this is now missing again.",
+    "evidence": null
+   },
+   {
+    "id": "note.011",
+    "url": "https://crm.crm7.app/dashboard",
+    "module": "crm7",
+    "surface": "Dashboard edit options",
+    "finding": "Every option reachable from the dashboard should be editable in place, not force a new-page flow, unless a genuinely new page is intended.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Every option here shouldbe editable on the page i'm on unless a completely new page is wanted and intended",
+    "evidence": null
+   },
+   {
+    "id": "note.012",
+    "url": "https://crm.crm7.app/portal",
+    "module": "crm7",
+    "surface": "Client/worker portal entry",
+    "finding": "/portal just redirects to the dashboard; there is no way to send clients, host employers, workers, apprentices, or trainees their own personal portal.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Just re-directs to dashboard. No way to send clients, host employers or workers,apprentice and trainee's their personal portal.",
+    "evidence": null
+   },
+   {
+    "id": "note.013",
+    "url": "https://crm.crm7.app/leads/create",
+    "module": "crm7",
+    "surface": "Leads create form",
+    "finding": "Can't create a new company from the leads form, only select an existing one, which breaks the user flow.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Cant create new company in leads, can only select existing. This wrecks user flow. They should be able to create a new company/client from here",
+    "evidence": null
+   },
+   {
+    "id": "note.014",
+    "url": "https://r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "General R8 card layout",
+    "finding": "UI crams too much into small cards despite plenty of available page space.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Generally UI is trying to squeeze too much into a small card when there is plenty of available page space to structure this far better and be able to view far more on the screen at once.",
+    "evidence": null
+   },
+   {
+    "id": "note.015",
+    "url": "https://r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Update Pay rate \"Standard\" option / hierarchy",
+    "finding": "The \"Standard\" pay-rate option and its relationship to the year-12 / adult / school-based hierarchy is unclear; a personal demo file shows a far better visual arrangement of the same calculation.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3",
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Update Pay rate \"Standard\" option is unclear? ... /home/braden/Downloads/charge-calculator-mapd.jsx has a far better visual arrangement.",
+    "evidence": null
+   },
+   {
+    "id": "note.016",
+    "url": "https://r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Training Hours page",
+    "finding": "Training hours should be part of the calculation screen, not a separate page; unclear where the advanced configuration values come from or why they can't be edited, and selection can't be confirmed.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2",
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Where are the advanced configuration values coming from? Why can't these be edited. ... Can't confirm selection.",
+    "evidence": null
+   },
+   {
+    "id": "note.017",
+    "url": "https://crm.crm7.app/training/plans/create",
+    "module": "crm7",
+    "surface": "Training plan progress",
+    "finding": "Progress should be a real calculation of units of competency completed vs. remaining, not a static value.",
+    "kind": "data-gap",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This Progress should be a calculation based of units of competency completed vs those remaining",
+    "evidence": null
+   },
+   {
+    "id": "note.018",
+    "url": "https://crm.crm7.app/vet/qualifications/6e25b04b-701a-401a-8dfa-5a4d79d89d70/edit",
+    "module": "crm7",
+    "surface": "Qualification units",
+    "finding": "Can't import units of competency; should pull from the TGA API the same way the qualification itself does.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Why can't I import units? Should be pulled from the TGA API like the qualification",
+    "evidence": null
+   },
+   {
+    "id": "note.019",
+    "url": "https://crm.crm7.app/training/plans/1bb52a9c-8087-4836-a292-a9af0def5916",
+    "module": "crm7",
+    "surface": "Training plan / units cross-linking",
+    "finding": "A training plan shows units associated with the apprentice, but the platform's cross-cutting and one-shot data policy isn't applied here.",
+    "kind": "data-gap",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "appears to have units associated to the apprentice, so we need cross cuttings and one shot policy applied.",
+    "evidence": null
+   },
+   {
+    "id": "note.020",
+    "url": "https://suite.crm7.app/docs/enterprise-admin",
+    "module": "business-suite-unified",
+    "surface": "Platform documentation",
+    "finding": "Docs should include screenshots; the same applies to all docs.",
+    "kind": "ux",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Should include screen shots. Same for all docs.",
+    "evidence": null
+   },
+   {
+    "id": "note.021",
+    "url": "https://crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2/edit",
+    "module": "crm7",
+    "surface": "Placement hourly rate field",
+    "finding": "Unclear whether the hourly rate is pay rate or charge rate; should be pullable from R8 when the placement is linked.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Hourly rate is unclear whether its pay rate or charge rate. Should also be able to be pulled from R8 if chosen to link it.",
+    "evidence": null
+   },
+   {
+    "id": "note.022",
+    "url": "https://crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2?tab=documents",
+    "module": "crm7",
+    "surface": "Placement documents tab",
+    "finding": "No document upload capability on the placement documents tab.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Requires document upload capability",
+    "evidence": null
+   },
+   {
+    "id": "note.023",
+    "url": "https://suite.crm7.app/admin (licence grace seats)",
+    "module": "business-suite-unified",
+    "surface": "Enterprise licence grace seats \u2014 events list",
+    "finding": "Grace invite events fail to load because the backing table doesn't exist.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Failed to load events: Could not find the table 'public.enterprise_licence_events' in the schema cache",
+    "evidence": "missing table public.enterprise_licence_events"
+   },
+   {
+    "id": "note.024",
+    "url": "https://suite.crm7.app/admin (licence grace seats)",
+    "module": "business-suite-unified",
+    "surface": "Grace seat notifications",
+    "finding": "Needs an email and in-app notice via the notices system when a grace invite happens, a countdown to when grace ends, an auto-generated Xero invoice, a place to set price per additional seat, and subscription-type selection on grace sign-up.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2",
+     "D8.7"
+    ],
+    "repeat_offence": false,
+    "verbatim": "I need to receive an email and in app notice via the notices system to alert me to grace invites. Grace users should have a date to notify when grace is ending.",
+    "evidence": null
+   },
+   {
+    "id": "note.025",
+    "url": "https://suite.crm7.app/branding",
+    "module": "business-suite-unified",
+    "surface": "Branding settings save",
+    "finding": "Branding changes only save after clicking \"show preview\" first.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Will only save after \"show preview\"",
+    "evidence": null
+   },
+   {
+    "id": "note.026",
+    "url": "https://suite.crm7.app/branding",
+    "module": "business-suite-unified",
+    "surface": "Jodie AI logo",
+    "finding": "Jodie AI logo image is missing on suite.crm7.app; should match crm7's.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Suite.crm7.app - jodie AI logo image missing. Should be same as crm7.",
+    "evidence": null
+   },
+   {
+    "id": "note.027",
+    "url": "https://crm.crm7.app/portal/worker",
+    "module": "crm7",
+    "surface": "Worker/job application link",
+    "finding": "Should generate a shareable application link for job ads, or post directly to Seek and others for profile scraping/import.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This should create a link that can be placed in the job add and take candidates through to the application. Or post directly to seek and others for seek profile scraping and import of application.",
+    "evidence": null
+   },
+   {
+    "id": "note.028",
+    "url": "https://crm.crm7.app/portal/worker",
+    "module": "crm7",
+    "surface": "Client-to-host update propagation",
+    "finding": "Updating a client doesn't propagate to the corresponding host record \u2014 a one-shot-policy compliance bug.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Client update to host bug. Leads to clients and host employer one shot policy compliance.",
+    "evidence": null
+   },
+   {
+    "id": "note.029",
+    "url": "https://crm.crm7.app/pipeline/kanban",
+    "module": "crm7",
+    "surface": "Pipeline kanban",
+    "finding": "Should be able to pull data from Conduit.",
+    "kind": "integration",
+    "severity": "low",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Should be able to be pulled from conduit",
+    "evidence": null
+   },
+   {
+    "id": "note.030",
+    "url": "https://crm.crm7.app/settings/module-visibility",
+    "module": "crm7",
+    "surface": "Module visibility settings",
+    "finding": "Page says \"2 hidden modules\" but doesn't show which modules are hidden or let you select/enable them; a 404 also fires on this page.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2",
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Says 2 hidden modules but no modules that show they are not visible. I.e. how can i enable modules without being able to select them?",
+    "evidence": "Failed to load resource: the server responded with a status of 404 ()"
+   },
+   {
+    "id": "note.031",
+    "url": "https://d.crm.crm7.app/financial and https://crm.crm7.app/financial",
+    "module": "crm7",
+    "surface": "Statcard background/border rendering",
+    "finding": "Statcards render pure white instead of off-white, and the visible \"border\" is actually a blurry box-shadow ring rather than a real border.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "background-color: lab(100 0 0 / 0.96) ... 100 lightness renders as pure white regardless of opacity.",
+    "evidence": "computed background-color lab(100 0 0 / 0.96); border-width 0px with a box-shadow ring 0 0 0 1px used as the visible edge; parent background lab(95.3104 -0.479668 -4.87884)"
+   },
+   {
+    "id": "note.032",
+    "url": "https://d.crm.crm7.app/funding-sources/list and https://crm.crm7.app/funding-sources/list",
+    "module": "crm7",
+    "surface": "RAMS/ADMS funding claims",
+    "finding": "Unclear how client organisations use the RAMS/ADMS connection to claim funding for their apprentices; needs research into ADMS federal data specs; existing templates can't be selected/applied.",
+    "kind": "architecture-question",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.1",
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "We have rams set up for use with ADMS - how to client organisations use our connection to then claim for their apprentices? Needs research into ADMS federal gov data specs. And the existing templates cant be selected/applied",
+    "evidence": null
+   },
+   {
+    "id": "note.033",
+    "url": "https://d.crm.crm7.app/funding-sources/list and https://crm.crm7.app/funding-sources/list",
+    "module": "crm7",
+    "surface": "Funding sources data currency",
+    "finding": "Unclear how funding data is continuously validated/updated as funding priorities and sources evolve over time.",
+    "kind": "architecture-question",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "How is this funding continuously validated and updated as funding priorities and sources evolve overtime?",
+    "evidence": null
+   },
+   {
+    "id": "note.034",
+    "url": "https://d.crm.crm7.app/funding-sources/new and https://crm.crm7.app/funding-sources/new",
+    "module": "crm7",
+    "surface": "Funding-sources \"new\" cards",
+    "finding": "All top-level cards share one backing card so drag-and-drop moves them together instead of individually, matching the same dnd-kit defect seen elsewhere; the card-resize regression is still unresolved for all cards.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Dnd kit issue, all top level cards attached to the same backing card which means they are all dnd together instead of individually like they should be.",
+    "evidence": null
+   },
+   {
+    "id": "note.035",
+    "url": "https://d.crm.crm7.app/financial/reports/new and https://crm.crm7.app/reports/custom/create",
+    "module": "crm7",
+    "surface": "Financial reports / custom report builder",
+    "finding": "Reports don't present in the required Airtable-style format despite being mapped out, planned, and directed to fix many times.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Financial reports and Analytics and Reports do not present as the required airtable style reporting - mapped out, planned, and directed to fix many times.",
+    "evidence": null
+   },
+   {
+    "id": "note.036",
+    "url": "https://crm.crm7.app/reports/custom/create",
+    "module": "crm7",
+    "surface": "Custom report builder permissions",
+    "finding": "Logging in as a client org (e.g. FutureBuild) shows the option for platform-wide reporting, which should be gated to enterprise/sub-orgs only; no one but a developer account should see platform-level reporting.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Noone but a developer account should have platform level reporting.",
+    "evidence": null
+   },
+   {
+    "id": "note.037",
+    "url": "https://crm.crm7.app/reports/custom/create",
+    "module": "crm7",
+    "surface": "Airtable-style report builder",
+    "finding": "The Airtable-style report builder that was already documented and planned is nowhere visible.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "And the airtable style report builder is nowhere visible. There is plenty of docs outlining and planning this.",
+    "evidence": null
+   },
+   {
+    "id": "note.038",
+    "url": null,
+    "module": "platform",
+    "surface": "Multi-repo / multi-app architecture (CRM + reports as one app)",
+    "finding": "Owner is researching how to make separate repos (CRM, an Airtable-style reports app) present as one seamless app gated by subscription \u2014 comparing Vite Module Federation vs. multi-zone routing, and how each aligns with Supabase's OAuth 2.1 server. This is an open architecture question the owner is exploring, not a filed defect.",
+    "kind": "architecture-question",
+    "severity": "medium",
+    "d8_rows": [],
+    "repeat_offence": false,
+    "verbatim": "How to have several repos that present as a single app... if i have crm and reports subscription the crm has an additional reports navigation link and i access the reports from what still feels like i'm in the crm environment.",
+    "evidence": null
+   },
+   {
+    "id": "note.039",
+    "url": null,
+    "module": "platform",
+    "surface": "Dark/light theme consistency (\"All apps\")",
+    "finding": "Pure white text on dark screens doesn't match the D2C theme; dark headers should use the gradient shown on the crm7 logotype, glow should match the accent colour, nav should match the tenant-switcher underline gradient, and no card should ever render pure white or pure black.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Pure white text on dark screen not matching the styling per d2c theme... No light theme cards to be pure white.",
+    "evidence": null
+   },
+   {
+    "id": "note.040",
+    "url": "https://r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Worker type coverage",
+    "finding": "No UI option exists for workers who aren't apprentices or trainees \u2014 casual, ABN, full/part-time skilled, or labour hire.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "No option in the UI for workers that are not apprentices or trainee. How do i quite for a casual or ABN, or full or parttime skilled worker i.e. Someone who already has completed their qualification.",
+    "evidence": null
+   },
+   {
+    "id": "note.041",
+    "url": "https://d.conduit.crm7.app/portal/field-officer",
+    "module": "conduit",
+    "surface": "External portals (host/worker/employee/apprentice/trainee)",
+    "finding": "Navigation and UX across the external portals are badly broken; needs a persona-based redesign for each external user type.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Navigation f-cking sucks, UX sucks, the portals basically suck.",
+    "evidence": null
+   },
+   {
+    "id": "note.042",
+    "url": "https://d.conduit.crm7.app/portal/field-officer",
+    "module": "conduit",
+    "surface": "Field officer portal purpose",
+    "finding": "Unclear what the field officer portal is meant to accomplish.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "I'm not sure what the filed officer portal archives.",
+    "evidence": null
+   },
+   {
+    "id": "note.043",
+    "url": "https://r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Overall R8 tool",
+    "finding": "Overall assessment that R8 is unusable.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Honestly - what is this shit: https://r8.crm7.app/ This is aweful",
+    "evidence": null
+   },
+   {
+    "id": "note.044",
+    "url": "https://crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2/edit",
+    "module": "crm7",
+    "surface": "Placement supervisor selection",
+    "finding": "Supervisors from other hosts are selectable on a placement; pay rate shows with no charge, no allowances, no linked quote, and no agreed charge.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1",
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Why are supervisors from other hosts available to select? Why is pay rate there by itself? No charge no nothing? No allowances no, charge rates, no linked quote and agreed charge.",
+    "evidence": null
+   },
+   {
+    "id": "note.045",
+    "url": "https://crm.crm7.app/people/5465b63c-3340-4c9c-8828-25390a944e69",
+    "module": "crm7",
+    "surface": "People card borders",
+    "finding": "Borders on the people card are still messed up.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Borders on people card are still all messed up.",
+    "evidence": null
+   },
+   {
+    "id": "note.046",
+    "url": "https://crm.crm7.app/people/5465b63c-3340-4c9c-8828-25390a944e69",
+    "module": "crm7",
+    "surface": "Training contract cards",
+    "finding": "Training-contract cards share a common backing card so dnd-kit drag is useless; the training-plans card shows a stray \"/u\" and clicking it doesn't navigate to training plans.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2",
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Cards like training contracts are all on common backing cards so dnd kit is useless. Training plans card has /u visible and clicking doesnt take me to training plans.",
+    "evidence": null
+   },
+   {
+    "id": "note.047",
+    "url": "https://crm.crm7.app/engagements/create",
+    "module": "crm7",
+    "surface": "AVETMISS funding on engagements",
+    "finding": "AVETMISS funding doesn't make sense; GTOs need to record funding available to employers, not just for training.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Avetmiss funding makes no sense. GTO needs to be able to record funding available to employers not for training.",
+    "evidence": null
+   },
+   {
+    "id": "note.048",
+    "url": "https://crm.crm7.app/funding-sources/fa5eaa41-b395-4747-aba9-2c3a6a4804eb",
+    "module": "crm7",
+    "surface": "Funding claim mechanics",
+    "finding": "Unclear how the system \"creates a claim\" when the actual claim happens on the funder's own portal (e.g. CTF); only federal funding has a direct ADMS connection; no way to enter funding amount, payment timeframes/dates, or how it should be applied (pass-through to host, offset rates, top-up wages, custom priority categories).",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "How does the system \"create a claim\" when the claim is on CTF's portal? Same for other funding types. The only one with direct connection is federal ones via ADMS connection.",
+    "evidence": null
+   },
+   {
+    "id": "note.049",
+    "url": "https://crm.crm7.app/funding-sources/fa5eaa41-b395-4747-aba9-2c3a6a4804eb",
+    "module": "crm7",
+    "surface": "Overall navigation/orientation",
+    "finding": "Constantly moving in and out of pages to re-orient; overall UX described as terrible.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4",
+     "D8.6"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Generally, I'm having to go in an out of pages and re-orient myself. The whole ux is terrible.",
+    "evidence": null
+   },
+   {
+    "id": "note.050",
+    "url": "https://crm.crm7.app/financial/reports",
+    "module": "crm7",
+    "surface": "Financial reports cards",
+    "finding": "Cards are still visually broken and the page still doesn't resemble the Airtable-style reporting repeatedly directed and already specced in docs.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Cards still messed up. AND this look nothing like the repeatedly directed to fix airtable style reports we researched and have specs in docs. You have got to be kidding me.",
+    "evidence": null
+   },
+   {
+    "id": "note.051",
+    "url": "https://d.suite.crm7.app/admin/permissions",
+    "module": "business-suite-unified",
+    "surface": "Admin permissions page",
+    "finding": "Default permission checkboxes aren't pre-checked; this page is visible to enterprise tenants/users who should never be able to edit global/universal developer permissions.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This page is visible to enterprises tenants and users. None of them should be able to edit my global and universal developer permissions.",
+    "evidence": null
+   },
+   {
+    "id": "note.052",
+    "url": "https://d.suite.crm7.app/admin/branding",
+    "module": "business-suite-unified",
+    "surface": "Platform branding visibility",
+    "finding": "Platform-level branding should only be visible to developers, not enterprises/orgs (who should only see their own tenant branding); needs a full sweep across the app for similar over-exposure.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Platform branding should not be visible to anyone but developers. So lives in Developer portal which already holds this capability... Worth a sweep of this throughout all features everywhere.",
+    "evidence": null
+   },
+   {
+    "id": "note.053",
+    "url": "https://d.suite.crm7.app/admin/platform-kit",
+    "module": "business-suite-unified",
+    "surface": "Platform kit visibility",
+    "finding": "Platform kit should move into the developer portal, for the same reason as branding.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Platform kit, move to developer portal. Same reasoning as platform kit above.",
+    "evidence": null
+   },
+   {
+    "id": "note.054",
+    "url": "https://crm.crm7.app/placements/*",
+    "module": "crm7",
+    "surface": "Placement charge-rate CHECK constraint (award_rate_resolution_status)",
+    "finding": "A 31 July migration added a NOT VALID CHECK constraint requiring award_rate_resolution_status whenever charge_rate is set. NOT VALID only skipped the initial scan; every subsequent UPDATE to any column on an existing violating row now fails, and no application code has ever written that field, so those rows can never satisfy it. All 8 of FutureBuild's placements are frozen (client Caris gets an opaque constraint error, her \"placements not found\"), plus 12 bsuite Platform rows and 1 Braden Group row.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1",
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Every UPDATE afterwards is checked. So those rows aren't tolerated, they're frozen \u2014 and not just against rate edits. Any change to any column fails.",
+    "evidence": "CHECK (charge_rate IS NULL OR (award_rate_resolution_status IS NOT NULL AND award_rate_resolution_status <> 'unresolved')) added NOT VALID on 31 July; 12 bsuite Platform rows (unresolved, $32-45), 8 FutureBuild rows (NULL, $35-36.50) \u2014 the live problem, 1 Braden Group row (NULL, $57.30); reproduced by updating only updated_at on row 23514"
+   },
+   {
+    "id": "note.055",
+    "url": "https://crm.crm7.app/documents/collaborative/14510e79-1174-43a6-b6af-5de990fcbc5a",
+    "module": "crm7",
+    "surface": "Collaborative document editor",
+    "finding": "Users shouldn't need to know markdown/code; need to be able to upload and edit an existing Word doc and insert merge fields with a full non-technical UX.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Users shouldnt have to know coding even markdown is too much How can I upload an existing word or similar document and edit it and insert a merge field etc?",
+    "evidence": null
+   },
+   {
+    "id": "note.056",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Apprentice % of Standard Rate card",
+    "finding": "The card always shows $29.54 regardless of which award is loaded (e.g. plumbing shows the building & construction award). This worked correctly before R80.4 moved into the sub-modules.",
+    "kind": "regression",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "apprentice % of Standard Rate card always displays $29.54 no matter the award loaded... The original R80.4 had this sorted before it moved into the sub modules.",
+    "evidence": "value fixed at $29.54 regardless of award selected"
+   },
+   {
+    "id": "note.057",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Wages per apprenticeship year card",
+    "finding": "The card always shows the same four hardcoded per-year values (Yr1 $14.725, Yr2 $17.67, Yr3 $20.615, Yr4 $26.505) no matter what award is selected.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Wages (Per Apprenticeship year) card always displays Yr 1 - 14.725 Yr 2 - 17.67 Yr 3 \u2212 20.615 Yr 4 - $26.505 No matter what award is selected.",
+    "evidence": "hardcoded per-year wage values not tied to the selected award"
+   },
+   {
+    "id": "note.058",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Occupation/trade & qualification selection",
+    "finding": "Occupation/qualification should be settable in the UI and everything affecting the calculation grouped in one clear card; currently it's unclear that setting occupation/trade is what distinguishes trades like bricklaying vs. carpentry. This worked before the sub-module merge.",
+    "kind": "regression",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Unacceptable and it was done before the merge into the sub modules.",
+    "evidence": null
+   },
+   {
+    "id": "note.059",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "MA000036 penalty table",
+    "finding": "Rows shown for MA000036 are actually MA000020's clause references because MA000036 has no penalty table wired; award-specific multipliers and minimum engagements differ and aren't correctly represented.",
+    "kind": "data-gap",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "These rows and their clause references are MA000020's, shown as a starting point because MA000036 has no penalty table wired here yet.",
+    "evidence": "MA000036 penalty table not wired; MA000020 data substituted as a placeholder"
+   },
+   {
+    "id": "note.060",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Payroll tax exemption on suspended contracts",
+    "finding": "The payroll-tax exemption runs only while a contract is registered; WA withdraws it while a contract is SUSPENDED (those wages become taxable), and this is easy to miss on a stood-down apprentice.",
+    "kind": "data-gap",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "WA expressly withdraws the exemption while a contract is SUSPENDED \u2014 those wages must be declared as taxable. Easy to miss on a stood-down apprentice.",
+    "evidence": null
+   },
+   {
+    "id": "note.061",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Contract status label",
+    "finding": "\"Unsuspended\" isn't a real status word; should be \"Active\" or \"Suspended\".",
+    "kind": "ux",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "\"Unsuspended\" isnt a word. You mean \"Active\" or Suspended.",
+    "evidence": null
+   },
+   {
+    "id": "note.062",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Apprentice share percentage",
+    "finding": "Apprentice share always shows 100% regardless of the award, even though it should be pulled from the award API and R80.4 already references it.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "All say 100% on apprentice sare, yet this can be pulled from the award api, and is referenced in the R80.4/awards/*",
+    "evidence": null
+   },
+   {
+    "id": "note.063",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Award allowances",
+    "finding": "Allowances are always shown as building-and-construction regardless of the award selected. This used to work.",
+    "kind": "regression",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "All award allowances are always building and construction. This WAS working!.",
+    "evidence": null
+   },
+   {
+    "id": "note.064",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Funding milestones",
+    "finding": "Funding milestones shouldn't come pre-populated by default, just placeholder text for the milestone name; also the \"Yrs\" control overflows past its button.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Funding milestones should not be pre-populated by default. Just text that says milestone name. Yrs overflows over button",
+    "evidence": null
+   },
+   {
+    "id": "note.065",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Zeroing payroll tax",
+    "finding": "Unclear how to zero out payroll tax for exempt apprenticeships.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "It is unclear how to zero out payroll tax for exempt apprenticeships.",
+    "evidence": null
+   },
+   {
+    "id": "note.066",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "MA000036 trade selector",
+    "finding": "There is no trade selector for MA000036 \u2014 its trade list, allowance bands, and clauses are all MA000020's and don't carry over.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Unacceptable: No trade selector for MA000036 \u2014 the trade list, the allowance bands and the clauses behind them are MA000020's, and they do not carry to another award.",
+    "evidence": null
+   },
+   {
+    "id": "note.067",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "R80.4 calculation display / quote export",
+    "finding": "Base rate, ordinary hours, and their contributing allowances (e.g. industry/tool allowance), plus header info for occupation/qualification and a quote export, used to work and have regressed.",
+    "kind": "regression",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Much of what was working before beeing R8.4 was working and is not not working. Unacceptable.",
+    "evidence": null
+   },
+   {
+    "id": "note.068",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Shift loading / industry allowance by sector",
+    "finding": "Shift-loading and industry-allowance figures are wrong for the sector combination actually needed: commercial construction should use residential-style shift hours but civil-style industry allowance, and that mapping isn't there.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This is incorrect. \"Shift loadings differ by sector: general building pays 1.25 ... civil construction pays 1.15 ... shifts are the same as residential, but the industry allowances is the same as civil.\"",
+    "evidence": "general building 1.25/1.5 vs. civil construction 1.15 shift loading; $67.15 industry allowance under cl.22.1(a) groups general building with metal/engineering construction"
+   },
+   {
+    "id": "note.069",
+    "url": "https://d.crm.crm7.app/charge-rates/import-r8",
+    "module": "crm7",
+    "surface": "R8 rate import",
+    "finding": "Import UX forces the user to hand-code, and R8 itself doesn't export in that format \u2014 should pull straight from R8 instead.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This is horrible UX, its forcing the USER to code again, and r8 doesnt export like this. It should be able to pull in from R8.",
+    "evidence": null
+   },
+   {
+    "id": "note.070",
+    "url": "https://d.crm.crm7.app/charge-rates/import-r8",
+    "module": "R80.4",
+    "surface": "R8 branding/naming",
+    "finding": "Internally the repo is named r80.4 (version 0.4) but the UI should only ever display it as \"R8\".",
+    "kind": "ux",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "also its R8 in the UI the repo is r80.4 since its version 0.4 but it should only ever be displayed as R8.",
+    "evidence": null
+   },
+   {
+    "id": "note.071",
+    "url": "https://d.crm.crm7.app/charge-rates/import-r8",
+    "module": "crm7",
+    "surface": "Rate display on placements + D2C compliance",
+    "finding": "Rates that apply to hosts/apprentices/trainees/workers should display in full on their placement, and this area still renders pure white, which the D2C branding forbids.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "And pure white displayed which is forbidden by D2C branding.",
+    "evidence": null
+   },
+   {
+    "id": "note.072",
+    "url": "https://d.crm.crm7.app/charge-rates/import-r8",
+    "module": "crm7",
+    "surface": "ID display",
+    "finding": "The raw database ID is shown in full as the record's ID instead of a proper Employee ID / Training Contract ID / USI once those exist.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Why is database ID displaying in full as their ID? Once Placed an Employee ID created. Training Contract ID should also be available as a primary identifier once set. Same with USI.",
+    "evidence": null
+   },
+   {
+    "id": "note.073",
+    "url": "https://d.r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Commercial construction sector option",
+    "finding": "Still no option for commercial construction, which shares residential hours/penalty conditions but civil's industry allowance.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Still no option for commercial construction. Commercial construction has same hours and penalty conditions as residential but same industry allowance as civil.",
+    "evidence": null
+   },
+   {
+    "id": "note.074",
+    "url": "https://d.r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Apprenticeship length / worker type options",
+    "finding": "Only 3- or 4-year apprenticeship options exist \u2014 no way to price a traineeship or a labour-hire worker.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "There is only an option for 3 or 4 year apprenticeships. What if we're pricing a traineeship or labour hire worker?",
+    "evidence": null
+   },
+   {
+    "id": "note.075",
+    "url": "https://d.r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Award selection sync between cards",
+    "finding": "Selecting an award in the \"Award, Trade & Qualification\" card doesn't populate the Fair Work MAPD card's award and vice versa, forcing duplicate entry. Restated later in the notes as still unresolved.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.7"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Selecting an award in the \"award, trade & qualification\" card does not pre-populate the Award in the \"Fairwork MAPD\" award and vice versa.",
+    "evidence": null
+   },
+   {
+    "id": "note.076",
+    "url": "https://d.r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Fairwork MAPD card leftover demo fields",
+    "finding": "The Fairwork MAPD card still shows Proxy URL, proxy token, and subscription key in the UI.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Fairwork MAPD card still has Proxy URL, proxy token, and subscription key visible in ui.",
+    "evidence": null
+   },
+   {
+    "id": "note.077",
+    "url": "https://d.r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Standard Rate card reactivity",
+    "finding": "Apprentice % of Standard Rate, Standard rate, and Source don't update when the award selection changes.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Apprentice % of Standard Rate, Standard rate and Source do not update with award selection and should.",
+    "evidence": null
+   },
+   {
+    "id": "note.078",
+    "url": "https://d.r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Competency-based progression in the calculator",
+    "finding": "A \"competency based progression\" feature was added without approval and should be removed \u2014 the owner has said many times this isn't the calculator's job, since the calculation is meant to be point-in-time only.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Competency based progression. Remove. I did not ok this. An actually have said many times that this is not the job of the calculator.",
+    "evidence": null
+   },
+   {
+    "id": "note.079",
+    "url": "https://d.r8.crm7.app/",
+    "module": "crm7",
+    "surface": "Change-of-year wage tracking",
+    "finding": "CRM7 placement records need to track apprentice/trainee change-of-year wage progression with reminders and notices to apprentice/trainee/host at wage anniversaries \u2014 but this belongs on the person/host record, not in the calculator.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.7"
+    ],
+    "repeat_offence": false,
+    "verbatim": "CRM7 in the placement record does need to keep change of year records with reminders and to send out change of year notices to apprentice/trainee and host employer, and notices for the same when a new wage anniversary is reached.",
+    "evidence": null
+   },
+   {
+    "id": "note.080",
+    "url": "https://d.r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Allowances list UX",
+    "finding": "Allowances shouldn't all show by default; defaults contributing to ordinary hours should be clearly marked, and other allowances should be added on demand from a dropdown sourced from the API/EBA/custom.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Allowances shouldnt all be visible. Clearly marked which are added by default to base wage to calculate the ordinary hours.",
+    "evidence": null
+   },
+   {
+    "id": "note.081",
+    "url": "https://suite.crm7.app/",
+    "module": "business-suite-unified",
+    "surface": "Card DnD across every app (developer/tenant cards)",
+    "finding": "Cards like \"CRM7 Professional\" and \"Conduit ATS\" should each be independently draggable but all share one backing card; this is a repeated issue raised innumerable times, where one page gets fixed and the rest don't.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "This is a repeated issue and has been raised innumerable times. Usually one page gets fixed but not all even when all are a requirement of the task.",
+    "evidence": null
+   },
+   {
+    "id": "note.082",
+    "url": "https://suite.crm7.app/",
+    "module": "business-suite-unified",
+    "surface": "Card heading gradient / D2C compliance",
+    "finding": "Card headings (e.g. \"CRM7 Professional\") should render in the D2C gradient text style.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Each Card e.g. CRM7 Professional, Conduit ATS\u2026 should be appropriately compliant with the D2C theme.",
+    "evidence": null
+   },
+   {
+    "id": "note.083",
+    "url": "https://suite.crm7.app/developer/*",
+    "module": "business-suite-unified",
+    "surface": "Developer portal buttons",
+    "finding": "Every page in the developer portal has unstyled/unthemed buttons and is generally not D2C-compliant.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Every page in the developer portal has unstyled/themed buttons, and is generally not compliant to the D2C theme.",
+    "evidence": null
+   },
+   {
+    "id": "note.084",
+    "url": "https://suite.crm7.app/developer/*",
+    "module": "platform",
+    "surface": "Theme consistency across all apps",
+    "finding": "Theme consistency is a platform-wide concern \u2014 pure white/black, missing gradients, text cut off by borders, missing glows/shadows per accent colour; should be consistent even for Conduit (Next.js) despite its different stack.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.4"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Theme consistency and completeness on every app is a concern, with pure white and black, missing gradients, text cut off by borders, missing glows and shadows per each apps accent colour with all else to be as consistent as possible.",
+    "evidence": null
+   },
+   {
+    "id": "note.085",
+    "url": "https://crm.crm7.app/settings/data",
+    "module": "crm7",
+    "surface": "Data table views vs. Airtable",
+    "finding": "Still doesn't look like Airtable; should look like a spreadsheet with more power, expandable to full screen.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Still doesnt look like airtable. Should look pretty much like a spreadsheet with more power and capability and be able to be expanded to get a full screen view.",
+    "evidence": null
+   },
+   {
+    "id": "note.086",
+    "url": "https://crm.crm7.app/settings/data and https://crm.crm7.app/admin/data",
+    "module": "crm7",
+    "surface": "Entity field picker",
+    "finding": "Can't select all entities \u2014 e.g. picking \"person\" exposes person_id from Supabase but not the person's name, and there's no way to add the person's name as an available field.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Cant select all entities. E.g. selecting person shows the person_id from supabase but not the persons name and there is no way to select the persons name in the available fields when \"add field\"",
+    "evidence": null
+   },
+   {
+    "id": "note.087",
+    "url": "https://crm.crm7.app/admin/data",
+    "module": "crm7",
+    "surface": "Date formatting",
+    "finding": "Dates should always default to Australian format (DD/MM/YYYY) and respect the local setting, not US format.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Dates should default to Australian dates always and respect local setting in BSU i.e. today's date is 19/08/2026 not 08/19/2026",
+    "evidence": null
+   },
+   {
+    "id": "note.088",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "\"Qualification not captured\" messaging",
+    "finding": "Text reading \"qualification not captured\" must be removed; qualification data was already required to be captured (needed for quotes) and was discussed and directed in a past session.",
+    "kind": "regression",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Text displaying \"qualification not captured\" must go. And qualification was required to be captured since people will want to use it on quotes. Work in a past sessions had detailed instructions and discussion on this or check memory mcp.",
+    "evidence": null
+   },
+   {
+    "id": "note.089",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Proxy connection settings text",
+    "finding": "Leftover demo-era proxy/subscription-key explanation text must be removed now that proper Supabase edge-function secrets are in use.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": true,
+    "verbatim": "This is left over from the demo single file R80.4 mvp now we use proper supbase edge function secrets.",
+    "evidence": null
+   },
+   {
+    "id": "note.090",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Explanatory text clutter on calculator cards",
+    "finding": "Cards are being filled up with explanatory text (shift/industry allowance clauses etc.); should be minimizable or shifted to a collapsible right panel and exportable as a quote appendix.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Each card is being filled up with explanatory text. E.g. the shiftwork and industry allowance clauses etc. all of this stuff should be either minimizable or shifted to a right collapsable panel and exportable as an appendix on the exportable quote and eSigning of quotes.",
+    "evidence": null
+   },
+   {
+    "id": "note.091",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Left panel (quote/thread)",
+    "finding": "Left panel should be collapsible, and should save quote-thread history, groupable and savable as templates.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4",
+     "D8.7"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Left panel should save quat thread history and be able to be grouped and saved as templates by the user.",
+    "evidence": null
+   },
+   {
+    "id": "note.092",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "\"rates at\" duplicated text",
+    "finding": "The phrase \"rates at\" appears duplicated multiple times throughout the page.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "There date duplication throughout \"rates at\" appears several times.",
+    "evidence": null
+   },
+   {
+    "id": "note.093",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Fairwork MAPD search",
+    "finding": "Searching for an award in the Fairwork MAPD card throws a JSON parse error, indicating the endpoint returns an HTML error page instead of JSON.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Searching for an award in Farwork MAPD card throws this \" Unexpected token '<', \"<!doctype \"... is not valid JSON\"",
+    "evidence": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+   },
+   {
+    "id": "note.094",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Hardcoded values across calculations",
+    "finding": "Every calculation should be cross-checked for hardcoded values \u2014 a crosscutting concern given how many hardcoded figures have already turned up in this calculator.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Crosscut every calculation and be very weary of hardcoved values.",
+    "evidence": null
+   },
+   {
+    "id": "note.095",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Oncosts card terminology",
+    "finding": "The Oncosts card labels an item as applying to \"all wages\" rather than just the super base, mixing terminology with how super is actually calculated on ordinary wage.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Oncosts card says WA on all wages (not just super base) confusing. Mixes terminology.",
+    "evidence": null
+   },
+   {
+    "id": "note.096",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Apprentice % pre-population from award",
+    "finding": "Percentages/standard rate should pre-populate from MAPD by employment type (the award text already has these), while still flagging a per-financial-year recheck; same applies to penalty/overtime rates.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "We still should pre-populate based on the percentage for their employment type. We have the percentages from the award text to use for 3 and 4 year and year 12 no year 12 and adult calcs.",
+    "evidence": null
+   },
+   {
+    "id": "note.097",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Quote export / eSign / push-to-placement",
+    "finding": "Export to PDF, push to CRM7 placement, and send for eSigning via CRM7 email are all required and still missing.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Export to pdf, push to crm7 placement, and send for eSigning via crm7's email cality all required.",
+    "evidence": null
+   },
+   {
+    "id": "note.098",
+    "url": "https://crm.crm7.app/vet/qualifications/*",
+    "module": "crm7",
+    "surface": "Qualification units of competency",
+    "finding": "No units of competency available for qualifications; they need to be linked to the qualification and to the training providers who offer them.",
+    "kind": "data-gap",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "No units of competency available for the qualifications. They need to be linked together, along with training providers who offer them",
+    "evidence": null
+   },
+   {
+    "id": "note.099",
+    "url": "https://crm.crm7.app/hosts/vacancies/new",
+    "module": "crm7",
+    "surface": "Vacancy \u2192 job posting / host linkage",
+    "finding": "Unclear whether a vacancy can be posted to Conduit as a job, or linked to a specific host vs. kept generic for common roles.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Can this be posted to conduit as a job? Can this be linked to a host.",
+    "evidence": null
+   },
+   {
+    "id": "note.100",
+    "url": "https://crm.crm7.app/hosts/vacancies/new",
+    "module": "crm7",
+    "surface": "Vacancy heading style",
+    "finding": "Heading text has no gradient and is almost cut off by the border.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Heading text no gradient and almost cut off by border",
+    "evidence": null
+   },
+   {
+    "id": "note.101",
+    "url": "https://crm.crm7.app/placements/aaaaaaaa-0000-4000-8000-000000000003",
+    "module": "crm7",
+    "surface": "Pulling a rate from R8 into a placement",
+    "finding": "Can't easily pull a rate from R8 or manually enter charges/wages/allowances; unclear how to even do it.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Cant easily pull in a rate from R8 or manually put in charges and wages/allowances, unclear how to even do this",
+    "evidence": null
+   },
+   {
+    "id": "note.102",
+    "url": "https://crm.crm7.app/placements/aaaaaaaa-0000-4000-8000-000000000003",
+    "module": "crm7",
+    "surface": "Pay rate vs. charge rate labeling",
+    "finding": "Pay rate / charge rate labeling is confusing and misleading \u2014 \"pay rate\" reads as ordinary wage while \"charge rate\" is what's billed on billable hours.",
+    "kind": "ux",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This is confusing and misleading. Pay rate usually would be read as ordinary wage. Charge rate is what is billed on billable hours.",
+    "evidence": null
+   },
+   {
+    "id": "note.103",
+    "url": "https://r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "\"Offline\" award list label",
+    "finding": "The 21-trade-award curated list is labeled \"Offline \u2014 no Fair Work API call\" even though the Fair Work API is actually connected via the MAPD card; also no path exists for entering an EBA, custom award, or an award outside the curated 21.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "why does it say \"offline\" if the api to fairwork is connected? And what do users do if they want to enter an eba, custom or award off the 21 list?",
+    "evidence": null
+   },
+   {
+    "id": "note.104",
+    "url": "https://r8.crm7.app/",
+    "module": "R80.4",
+    "surface": "Card ordering / dependency layout",
+    "finding": "The award/trade/qualification card should default to the top of the page since it drives the whole calculator; this \"dependees sit below what they depend on\" principle should apply to all cards.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Dependee's should sit lower than that which they depend on.",
+    "evidence": null
+   },
+   {
+    "id": "note.105",
+    "url": "https://suite.crm7.app/ (header/branding/permissions)",
+    "module": "business-suite-unified",
+    "surface": "Header logo",
+    "finding": "Header logo should come from platform branding or the tenant's white-label setting rather than being fixed.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Logo in header should be the logo set in the platform branding or the logo set in white label section per the relevant tenant.",
+    "evidence": null
+   },
+   {
+    "id": "note.106",
+    "url": "https://suite.crm7.app/ (header/branding/permissions)",
+    "module": "business-suite-unified",
+    "surface": "Permission checkboxes default state",
+    "finding": "Permission checkboxes should be pre-selected to what's already granted (defaulting to all-unchecked hides existing state from admins/developers); should be savable/persistent with a reset-to-default option \u2014 insisted on many times.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.3"
+    ],
+    "repeat_offence": true,
+    "verbatim": "This is something I have insisted on many times.",
+    "evidence": null
+   },
+   {
+    "id": "note.107",
+    "url": "https://suite.crm7.app/ (header/branding/permissions)",
+    "module": "business-suite-unified",
+    "surface": "Card borders",
+    "finding": "Cards still look bad in relation to their borders.",
+    "kind": "bug",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Still that cards are looking shit in relation to the borders.",
+    "evidence": null
+   },
+   {
+    "id": "note.108",
+    "url": "https://d.crm.crm7.app/reports/*, /settings/data, /admin/data, https://suite.crm7.app/developer/database, https://d.suite.crm7.app/developer/database",
+    "module": "platform",
+    "surface": "Reports/data tooling sprawl",
+    "finding": "Reporting/data tooling is messy and duplicative across many near-identical pages; needs consolidation, possibly via a Storybook-like system or by adopting an external \"atmosphere\" project that already does what's been asked for and documented throughout.",
+    "kind": "architecture-question",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "what i have been asking for and documented this whole time. And all I've got is tise mess of half arsed half complete not fully working attempts that are now confusing and very very duplicative.",
+    "evidence": null
+   },
+   {
+    "id": "note.109",
+    "url": "https://crm.crm7.app/settings/role-overrides and https://suite.crm7.app/admin/permissions",
+    "module": "crm7",
+    "surface": "Permissions interoperability",
+    "finding": "Permissions across role-overrides and admin/permissions need interoperability analysis; admin/permissions still shows nothing checked by default, restating the earlier ask.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Further as stated above. Permissions in admin/permissions should be pre populated and display checked boxes for default permissions out of the gate. At present nothing is ticked by default and its confusing.",
+    "evidence": null
+   },
+   {
+    "id": "note.110",
+    "url": "https://d.crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2",
+    "module": "crm7",
+    "surface": "\"Back to placement\" link styling",
+    "finding": "\"Back to placement\" and other detail-page nav links should be buttons, everywhere, not just this instance.",
+    "kind": "ux",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Back to placement link should be a button... This is specific example but this should be a button for all.",
+    "evidence": null
+   },
+   {
+    "id": "note.111",
+    "url": "https://d.crm.crm7.app/engagements/create",
+    "module": "crm7",
+    "surface": "Margin terminology",
+    "finding": "\"Margin\" should read as profit derived from the R8 calc, not simplistically as charge minus wage.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Margin is profit pretty much. Its not charge less, wage. Should reflect the calc done in R8.",
+    "evidence": null
+   },
+   {
+    "id": "note.112",
+    "url": "https://d.crm.crm7.app/engagements/create",
+    "module": "crm7",
+    "surface": "Hardcoded funding on engagements",
+    "finding": "Funding on the engagement is hardcoded, a violation of requirements \u2014 should reflect how R8 computes funding per individual, since engagement-level detail lets funding be allocated more precisely than R8's broad quoting defaults.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Hardcoded funding. Violation of requirements. Funding in the engagement should reflect how R8 does funding.",
+    "evidence": null
+   },
+   {
+    "id": "note.113",
+    "url": "https://d.crm.crm7.app/engagements/create",
+    "module": "crm7",
+    "surface": "Person record \u2194 placements/engagements",
+    "finding": "A person's record should list all placements and engagements associated with them.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Person record should have a list of all placements and engagements we have records for.",
+    "evidence": null
+   },
+   {
+    "id": "note.114",
+    "url": "https://d.crm.crm7.app/training-providers",
+    "module": "crm7",
+    "surface": "Training providers list view",
+    "finding": "Should be a filterable, Airtable-style table (like reports); any page listing rows of data should follow this pattern.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This should be presented in a filterable list/table preferably airtable style list similar to reports.",
+    "evidence": null
+   },
+   {
+    "id": "note.115",
+    "url": "https://d.crm.crm7.app/training-providers",
+    "module": "crm7",
+    "surface": "Training provider visibility per org",
+    "finding": "Orgs should be able to mark training providers visible/hidden for them (e.g. a Perth-metro client shouldn't be bothered by a remote-QLD provider); the \"Active\" filter is ambiguous \u2014 it should mean \"marked active by this org\", not registration status generally.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Active means Active for us as in the org marking them active. It doesn't mean Active generally. That would be classed as registered and deregistered.",
+    "evidence": null
+   },
+   {
+    "id": "note.116",
+    "url": "https://d.crm.crm7.app/training-providers",
+    "module": "crm7",
+    "surface": "RTO name data",
+    "finding": "RTO 22613 shows with no name in the platform despite having a full record on training.gov.au.",
+    "kind": "data-gap",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "RTO 22613 says (no name) but it has a record: https://training.gov.au/organisation/details/22613/summary",
+    "evidence": "RTO 22613 missing name field despite existing TGA record"
+   },
+   {
+    "id": "note.117",
+    "url": null,
+    "module": "crm7",
+    "surface": "Signatory selection / tenant data isolation",
+    "finding": "A signatory from a different host org (Michael Chen, ADCO Constructions) is selectable for an unrelated company (\"Example Constructions Pty Ltd\"). Data from the initial FutureBuild import landed in the owner's own tenant instead of being reassigned to the FutureBuild tenant, creating confusing cross-tenant duplicates.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Why is Michael Chen from ADCO Constructions an available Signatory for the Selected \"Example Constructions Pty Ltd\"... they should have been reassigned to futurebuild not entered again causing confusing duplicates.",
+    "evidence": null
+   },
+   {
+    "id": "note.118",
+    "url": "https://crm.crm7.app (Gmail connection)",
+    "module": "crm7",
+    "surface": "Gmail connection OAuth flow",
+    "finding": "Connecting Gmail leaves the auth popup open and returns to the bsuite UI instead of the email-accounts screen in crm7, and doesn't close the popup; Microsoft shows as unverified despite the manifest being set up.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "the google auth screen returns me to the bsuite ui with popup still open rather than the email-accounts screen in crm7 and closing the popup. Microsoft is unverified even though we have set up the manifest?",
+    "evidence": null
+   },
+   {
+    "id": "note.119",
+    "url": "https://crm.crm7.app/admin/data",
+    "module": "crm7",
+    "surface": "Member list",
+    "finding": "Known member caris@mbawa.com is missing from the list.",
+    "kind": "data-gap",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Missing known member caris@mbawa.com and has .json.",
+    "evidence": null
+   },
+   {
+    "id": "note.120",
+    "url": "https://crm.crm7.app/admin/data",
+    "module": "crm7",
+    "surface": "JSON-only workflows",
+    "finding": "Anything reachable via raw JSON should also be reachable through a non-coding UI path \u2014 a long-standing directive.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Advanced json ok, but anything available via json should be done through non-coding means. This is always and has been a long standing directive",
+    "evidence": null
+   },
+   {
+    "id": "note.121",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Save template / save as default",
+    "finding": "\"Save template\" and \"save as default\" don't work; \"save as default\" doesn't persist across a page refresh.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Save template and save as default dont currently work... Save as default button also needs to work. Doesnt currently save on page refresh.",
+    "evidence": null
+   },
+   {
+    "id": "note.122",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "\"Quotes\" tab",
+    "finding": "The small \"quotes\" tab is confusing; the regular left panel with threads should be used instead.",
+    "kind": "ux",
+    "severity": "low",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "The little tab \"quotes\" is confusing. Just the left regular panel should be used and create threads.",
+    "evidence": null
+   },
+   {
+    "id": "note.123",
+    "url": "https://crm.crm7.app (R80.4 charge calculator)",
+    "module": "R80.4",
+    "surface": "Export/eSign/push to record",
+    "finding": "Still no way to export to PDF, email for eSigning, or push to an apprentice/host record, or import a template/quote back from R8.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.5"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Still no way to export to pdf, email for esigning, or push to an apprentice or host record.",
+    "evidence": null
+   },
+   {
+    "id": "note.124",
+    "url": "https://crm.crm7.app/admin/data",
+    "module": "crm7",
+    "surface": "Interacting with data / import-export",
+    "finding": "Must be able to actually interact with data here (permissions allowing, always for developers) \u2014 import/export CSV/XLSX and downloadable/re-uploadable import templates are required.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Must be able to import and export csv and xlxs and create import templates to download and use to re-upload.",
+    "evidence": null
+   },
+   {
+    "id": "note.125",
+    "url": "https://r8.crm7.app/ (general notes)",
+    "module": "R80.4",
+    "surface": "R8 save / save template",
+    "finding": "R8 can't save and can't save a template.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": true,
+    "verbatim": "R8 cant save and cant save template.",
+    "evidence": null
+   },
+   {
+    "id": "note.126",
+    "url": "https://r8.crm7.app/ (general notes)",
+    "module": "R80.4",
+    "surface": "\"Adult\" classification wages",
+    "finding": "Selecting \"Adult\" doesn't change the wages shown in the wages card.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Adult doesnt change the wages in the wages card.",
+    "evidence": null
+   },
+   {
+    "id": "note.127",
+    "url": "https://r8.crm7.app/ (general notes)",
+    "module": "R80.4",
+    "surface": "Action feedback",
+    "finding": "Needs confirmation notices for actions like save.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.7"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Needs notices for actions you take e.g. save.",
+    "evidence": null
+   },
+   {
+    "id": "note.128",
+    "url": "https://r8.crm7.app/ (general notes)",
+    "module": "crm7",
+    "surface": "Leads \u2192 contact/client conversion",
+    "finding": "Converting a lead should carry the relevant sections through to contact and client via the opportunity chain.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.5"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Leads convert relevant sections to contact and client through opportunity etc chain.",
+    "evidence": null
+   },
+   {
+    "id": "note.129",
+    "url": "https://r8.crm7.app/ (general notes)",
+    "module": "crm7",
+    "surface": "Caseload assignment",
+    "finding": "Any subscribed user of a tenant should be assignable a caseload of apprentices by the admin, including shared/multiple assignment for supervisors over field staff.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Any subscribed user of a tenant should be able to be afforded permissions by the admin and assigned a caseload of apprentices.",
+    "evidence": null
+   },
+   {
+    "id": "note.130",
+    "url": "https://r8.crm7.app/ (general notes)",
+    "module": "platform",
+    "surface": "Overall app performance",
+    "finding": "The UI across the apps is slow; needs investigation into optimization/modularization, or confirmation that it's just a hardware ceiling.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.7"
+    ],
+    "repeat_offence": false,
+    "verbatim": "The UI across the apps is pretty slow. Investigate if their optimization, modularization or anything else that can be done to speed it up for the user or let me know if its good and just needs a bigger machine.",
+    "evidence": null
+   },
+   {
+    "id": "note.131",
+    "url": "https://crm.crm7.app/contracts/training/e-signatures",
+    "module": "crm7",
+    "surface": "Training contract e-signatures",
+    "finding": "The page doesn't make sense \u2014 training contracts are created by the State Training Authority as scanned PDFs; e-signing would need to take the STA's clean PDF and layer a customizable signature block for all parties. The same need applies to host contracts, employment contracts, WHS risk assessments, site-visit attendance, quotes, and rate/charge confirmations. The current implementation is limited and non-functional even for its narrow intended purpose.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "This page makes no sense... this needs to be thought through rather than being so limited and even now unfunctional for is semi miss intended purpose.",
+    "evidence": null
+   },
+   {
+    "id": "note.132",
+    "url": "https://crm.crm7.app/hosts",
+    "module": "crm7",
+    "surface": "Hosts list view",
+    "finding": "Should list all placements in a filterable table (active/past/pending) with customizable columns, matching the pattern used on /clients.",
+    "kind": "missing-capability",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "https://crm.crm7.app/hosts should lsit all placements in a table filterable all active and past and pending etc. customizable columns.",
+    "evidence": null
+   },
+   {
+    "id": "note.133",
+    "url": "https://crm.crm7.app/hosts",
+    "module": "crm7",
+    "surface": "Card borders (final restatement)",
+    "finding": "Bottom border on cards is still doubled \u2014 raised hundreds of times.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Bottom border still double for cards which we have raised 100s of times now.",
+    "evidence": null
+   },
+   {
+    "id": "note.134",
+    "url": "https://crm.crm7.app/clients/*",
+    "module": "crm7",
+    "surface": "Linked entities display",
+    "finding": "Linked entities shown as plain links look amateurish; hosts and clients should each show a filterable table of all associated placements/contacts/records below them, same pattern as /clients.",
+    "kind": "ux",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.4"
+    ],
+    "repeat_offence": false,
+    "verbatim": "Linked entities with a link looks amaturise. Hosts and clients each should displace in a table below all placements contacts, all records associated with them easily and filterable in tables.",
+    "evidence": null
+   },
+   {
+    "id": "note.135",
+    "url": "https://crm.crm7.app/clients",
+    "module": "crm7",
+    "surface": "Airtable-style listing everywhere",
+    "finding": "Every list/row view across the platform should be brought up to the (still sub-par) Airtable-style design, taking inspiration from the external \"atmosphere\" project rebuilt in React.",
+    "kind": "missing-capability",
+    "severity": "high",
+    "d8_rows": [
+     "D8.4",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "Likely also anything that lists rows like this needs to be brought up to the airtable style design which is still itself sub par. Take inspiration from the GaryOcean428/atmosphere setup",
+    "evidence": null
+   }
+  ]
+ },
+ "issues_filed": {
+  "comments_posted": [
+   {
+    "repo": "bsuite",
+    "number": 2334,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "bsuite",
+    "number": 1996,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1686,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "bsuite",
+    "number": 1960,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1705,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1685,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1687,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1615,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1675,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1613,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1681,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1692,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1693,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1690,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1684,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1702,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1611,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1696,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1698,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "R80.4",
+    "number": 46,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "R80.4",
+    "number": 57,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 526,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1688,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1682,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "R80.4",
+    "number": 37,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1476,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 1645,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "bsuite",
+    "number": 483,
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "bsuite",
+    "number": 1684,
+    "ok": true,
+    "error": null
+   }
+  ],
+  "issues_created": [
+   {
+    "repo": "R80.4",
+    "number": 229,
+    "title": "Every headline figure in the charge calculator is hardcoded and does not recompute from the selected award",
+    "url": "https://github.com/GaryOcean428/R80.4/issues/229",
+    "labels_applied": [
+     "bug",
+     "class-one-shot"
+    ],
+    "labels_dropped": [
+     "p1"
+    ],
+    "covers_finding_ids": [
+     "note.043",
+     "note.056",
+     "note.057",
+     "note.059",
+     "note.060",
+     "note.062",
+     "note.063",
+     "note.065",
+     "note.066",
+     "note.068",
+     "note.073",
+     "note.075",
+     "note.077",
+     "note.093",
+     "note.094",
+     "note.096",
+     "note.126"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "R80.4",
+    "number": 230,
+    "title": "R80.4 calculator: unauthorized feature, stale demo copy, and missing UX polish across the card set",
+    "url": "https://github.com/GaryOcean428/R80.4/issues/230",
+    "labels_applied": [
+     "bug"
+    ],
+    "labels_dropped": [
+     "ux",
+     "tech-debt"
+    ],
+    "covers_finding_ids": [
+     "note.061",
+     "note.064",
+     "note.070",
+     "note.078",
+     "note.080",
+     "note.088",
+     "note.090",
+     "note.091",
+     "note.092",
+     "note.095",
+     "note.103",
+     "note.122",
+     "note.127"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "R80.4",
+    "number": 231,
+    "title": "No working save-template / save-as-default / export-to-PDF / push-to-record / eSign flow for quotes, contracts, or documents",
+    "url": "https://github.com/GaryOcean428/R80.4/issues/231",
+    "labels_applied": [
+     "bug"
+    ],
+    "labels_dropped": [
+     "p1",
+     "cross-app"
+    ],
+    "covers_finding_ids": [
+     "note.097",
+     "note.121",
+     "note.123",
+     "note.125",
+     "note.131"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2054,
+    "title": "Communications inbox: emails cannot be opened, and compose 503s on the fairwork-enhanced edge function",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2054",
+    "labels_applied": [
+     "bug",
+     "p1"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.001",
+     "note.003"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2055,
+    "title": "Award rates page shows no wages, mislabeled columns, and forces hand-coded JSON import instead of pulling from R8",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2055",
+    "labels_applied": [
+     "bug",
+     "p2"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.007",
+     "note.069"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2056,
+    "title": "Schema builder is incomprehensible, and its \"tidy\"/\"fit\" layout icons don't do anything useful",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2056",
+    "labels_applied": [
+     "ux",
+     "bug"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.008",
+     "note.009"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2057,
+    "title": "Dashboard editing forces a new-page flow instead of in-place editing, and overall in-app navigation loses orientation",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2057",
+    "labels_applied": [
+     "bug",
+     "ux",
+     "p1"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.010",
+     "note.011",
+     "note.049"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2058,
+    "title": "/portal has no invitation flow \u2014 clients, hosts, workers, apprentices and trainees cannot be sent their own portal",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2058",
+    "labels_applied": [
+     "bug",
+     "p1"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.012"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2059,
+    "title": "Leads flow: cannot create a new company from the leads form, and conversion doesn't carry sections through to contact/client",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2059",
+    "labels_applied": [
+     "bug",
+     "ux"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.013",
+     "note.128"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "R80.4",
+    "number": 232,
+    "title": "R80.4 layout: cards cram content into small tiles, Training Hours is stranded on a separate page, and quote export drops the calculation breakdown",
+    "url": "https://github.com/GaryOcean428/R80.4/issues/232",
+    "labels_applied": [
+     "bug"
+    ],
+    "labels_dropped": [
+     "ux"
+    ],
+    "covers_finding_ids": [
+     "note.014",
+     "note.016",
+     "note.067"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "business-suite-unified",
+    "number": 891,
+    "title": "BSU branding: settings only save after clicking preview, Jodie AI logo missing, header logo not sourced from platform/tenant branding, and docs lack screenshots",
+    "url": "https://github.com/GaryOcean428/business-suite-unified/issues/891",
+    "labels_applied": [
+     "bug"
+    ],
+    "labels_dropped": [
+     "ux"
+    ],
+    "covers_finding_ids": [
+     "note.020",
+     "note.025",
+     "note.026",
+     "note.105"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "business-suite-unified",
+    "number": 892,
+    "title": "Enterprise licence grace-seat invites: events list fails because the backing table doesn't exist, and there's no notification/countdown system",
+    "url": "https://github.com/GaryOcean428/business-suite-unified/issues/892",
+    "labels_applied": [
+     "bug",
+     "p1"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.023",
+     "note.024"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "conduit",
+    "number": 577,
+    "title": "External portals (host/worker/apprentice/trainee/field-officer) need a persona-based redesign \u2014 navigation and UX are badly broken",
+    "url": "https://github.com/GaryOcean428/conduit/issues/577",
+    "labels_applied": [
+     "bug",
+     "p1"
+    ],
+    "labels_dropped": [
+     "ux"
+    ],
+    "covers_finding_ids": [
+     "note.041",
+     "note.042"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2060,
+    "title": "Placement charge-rate rows frozen by a NOT VALID CHECK constraint \u2014 21 placements across three tenants cannot be updated at all",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2060",
+    "labels_applied": [
+     "bug",
+     "database",
+     "p1"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.054"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2061,
+    "title": "Record-display papercuts: raw database IDs shown instead of names/labels, unstyled nav links, missing member, and no placements/engagements list on the person record",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2061",
+    "labels_applied": [
+     "ux",
+     "bug"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.072",
+     "note.086",
+     "note.110",
+     "note.113",
+     "note.119"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2062,
+    "title": "JSON-only / API-only workflows have no non-coding UI path for import, export, or data interaction",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2062",
+    "labels_applied": [
+     "ux",
+     "bug"
+    ],
+    "labels_dropped": [
+     "tech-debt"
+    ],
+    "covers_finding_ids": [
+     "note.120",
+     "note.124"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2063,
+    "title": "No caseload assignment mechanism \u2014 apprentices cannot be assigned to a subscribed user's caseload",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2063",
+    "labels_applied": [
+     "enhancement",
+     "ux"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.129"
+    ],
+    "ok": true,
+    "error": null
+   },
+   {
+    "repo": "crm7",
+    "number": 2064,
+    "title": "Placement documents tab has no document upload capability",
+    "url": "https://github.com/GaryOcean428/crm7/issues/2064",
+    "labels_applied": [
+     "bug"
+    ],
+    "labels_dropped": [],
+    "covers_finding_ids": [
+     "note.022"
+    ],
+    "ok": true,
+    "error": null
+   }
+  ],
+  "failures": [],
+  "totals": {
+   "comments_planned": 29,
+   "comments_posted": 29,
+   "issues_planned": 18,
+   "issues_created": 18
+  }
+ }
+}
