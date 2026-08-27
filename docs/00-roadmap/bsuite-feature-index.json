@@ -6468,18 +6468,47 @@
   "compliance_risk": [
    {
     "kind": "rls-write-unscoped",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
     "table": "whs_records",
-    "detail": "`whs_records` has no tenant scope on write \u2014 any authenticated user in any tenant can INSERT/UPDATE/DELETE. This row is a confirmed writer.",
-    "provenance": "verified against migration SQL and code call sites",
+    "detail": "`whs_records` \u2014 Write-side RLS is unscoped on this table (20260917000000 closed the READ half only). SCOPE CORRECTION 2026-08-26: the bulk-import path (crm7.settings.data-tools -> bulk_data_import/bulk_data_update) is SECURITY DEFINER and never evaluates RLS, so the unscoped policy neither protects nor breaks that path \u2014 its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping, covered by pgTAP 46. The unscoped policy therefore matters only for DIRECT client writes.",
+    "provenance": "verified against migration SQL, code call sites, and report_catalog_entities (production)",
     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
     "mitigating": "table currently holds 0 rows"
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "rls-write-unscoped",
+     "severity": "high",
+     "state": "open",
+     "table": "whs_records",
+     "detail": "`whs_records` has no tenant scope on write \u2014 any authenticated user in any tenant can INSERT/UPDATE/DELETE. This row is a confirmed writer.",
+     "provenance": "verified against migration SQL and code call sites",
+     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
+     "mitigating": "table currently holds 0 rows"
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "rls-write-unscoped",
+     "severity": "medium",
+     "state": "open",
+     "table": "whs_records",
+     "detail": "`whs_records` \u2014 Write-side RLS is unscoped on this table (20260917000000 closed the READ half only). SCOPE CORRECTION 2026-08-26: the bulk-import path (crm7.settings.data-tools -> bulk_data_import/bulk_data_update) is SECURITY DEFINER and never evaluates RLS, so the unscoped policy neither protects nor breaks that path \u2014 its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping, covered by pgTAP 46. The unscoped policy therefore matters only for DIRECT client writes.",
+     "provenance": "verified against migration SQL, code call sites, and report_catalog_entities (production)",
+     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
+     "mitigating": "table currently holds 0 rows"
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "crm7.incidents.crud-duplicate",
@@ -7451,18 +7480,47 @@
   "compliance_risk": [
    {
     "kind": "rls-write-unscoped",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
     "table": "financial_viability_snapshots",
-    "detail": "`financial_viability_snapshots` has no tenant scope on write \u2014 any authenticated user in any tenant can INSERT/UPDATE/DELETE. This row is a confirmed writer.",
-    "provenance": "verified against migration SQL and code call sites",
+    "detail": "`financial_viability_snapshots` \u2014 Write-side RLS is unscoped on this table (20260917000000 closed the READ half only). SCOPE CORRECTION 2026-08-26: the bulk-import path (crm7.settings.data-tools -> bulk_data_import/bulk_data_update) is SECURITY DEFINER and never evaluates RLS, so the unscoped policy neither protects nor breaks that path \u2014 its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping, covered by pgTAP 46. The unscoped policy therefore matters only for DIRECT client writes.",
+    "provenance": "verified against migration SQL, code call sites, and report_catalog_entities (production)",
     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
     "mitigating": "table currently holds 0 rows"
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "rls-write-unscoped",
+     "severity": "high",
+     "state": "open",
+     "table": "financial_viability_snapshots",
+     "detail": "`financial_viability_snapshots` has no tenant scope on write \u2014 any authenticated user in any tenant can INSERT/UPDATE/DELETE. This row is a confirmed writer.",
+     "provenance": "verified against migration SQL and code call sites",
+     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
+     "mitigating": "table currently holds 0 rows"
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "rls-write-unscoped",
+     "severity": "medium",
+     "state": "open",
+     "table": "financial_viability_snapshots",
+     "detail": "`financial_viability_snapshots` \u2014 Write-side RLS is unscoped on this table (20260917000000 closed the READ half only). SCOPE CORRECTION 2026-08-26: the bulk-import path (crm7.settings.data-tools -> bulk_data_import/bulk_data_update) is SECURITY DEFINER and never evaluates RLS, so the unscoped policy neither protects nor breaks that path \u2014 its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping, covered by pgTAP 46. The unscoped policy therefore matters only for DIRECT client writes.",
+     "provenance": "verified against migration SQL, code call sites, and report_catalog_entities (production)",
+     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
+     "mitigating": "table currently holds 0 rows"
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "crm7.compliance.gto-dashboard",
@@ -11047,18 +11105,47 @@
   "compliance_risk": [
    {
     "kind": "rls-write-unscoped",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
     "table": "whs_records",
-    "detail": "`whs_records` has no tenant scope on write \u2014 any authenticated user in any tenant can INSERT/UPDATE/DELETE. This row is a confirmed writer.",
-    "provenance": "verified against migration SQL and code call sites",
+    "detail": "`whs_records` \u2014 Write-side RLS is unscoped on this table (20260917000000 closed the READ half only). SCOPE CORRECTION 2026-08-26: the bulk-import path (crm7.settings.data-tools -> bulk_data_import/bulk_data_update) is SECURITY DEFINER and never evaluates RLS, so the unscoped policy neither protects nor breaks that path \u2014 its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping, covered by pgTAP 46. The unscoped policy therefore matters only for DIRECT client writes.",
+    "provenance": "verified against migration SQL, code call sites, and report_catalog_entities (production)",
     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
     "mitigating": "table currently holds 0 rows"
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "rls-write-unscoped",
+     "severity": "high",
+     "state": "open",
+     "table": "whs_records",
+     "detail": "`whs_records` has no tenant scope on write \u2014 any authenticated user in any tenant can INSERT/UPDATE/DELETE. This row is a confirmed writer.",
+     "provenance": "verified against migration SQL and code call sites",
+     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
+     "mitigating": "table currently holds 0 rows"
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "rls-write-unscoped",
+     "severity": "medium",
+     "state": "open",
+     "table": "whs_records",
+     "detail": "`whs_records` \u2014 Write-side RLS is unscoped on this table (20260917000000 closed the READ half only). SCOPE CORRECTION 2026-08-26: the bulk-import path (crm7.settings.data-tools -> bulk_data_import/bulk_data_update) is SECURITY DEFINER and never evaluates RLS, so the unscoped policy neither protects nor breaks that path \u2014 its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping, covered by pgTAP 46. The unscoped policy therefore matters only for DIRECT client writes.",
+     "provenance": "verified against migration SQL, code call sites, and report_catalog_entities (production)",
+     "code_evidence": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql closes the READ half only; writers confirmed in this row's own anchors",
+     "mitigating": "table currently holds 0 rows"
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "crm7.field-officers.site-visits",
@@ -14257,7 +14344,11 @@
    "crm7/src/pages/settings/data-management",
    "crm7/src/pages/settings/data-sharing"
   ],
-  "db_objects": [],
+  "db_objects": [
+   "report_catalog_entities",
+   "rpc:bulk_data_import",
+   "rpc:bulk_data_update"
+  ],
   "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "documented",
@@ -14353,7 +14444,7 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [],
   "origin": "pass1-code-truth",
-  "notes": "",
+  "notes": "| pass-6 correction: this is the RUNTIME WRITER for any table listed is_active in report_catalog_entities. It resolves the target table from a DB row and issues dynamic EXECUTE format('INSERT INTO %I.%I'), so the table name never appears in TypeScript \u2014 invisible to every source grep and to packages/dry-lint's AST-based cross-app-write rule. award_rates, host_contracts and whs_records are all is_active here.",
   "dod_status": "not-evaluated"
  },
  {
@@ -39319,20 +39410,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "Refuses to save a quote with any unpriced line.",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.server-sync",
@@ -39374,20 +39500,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "Signed-out users still save to this browser only; the panel states which state applies via quoteMirrorStatus().",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.history-list",
@@ -39428,20 +39589,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.thread-grouping",
@@ -39553,20 +39749,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "Threads are derived views over stored quotes, not a separate record.",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.templates",
@@ -39590,20 +39821,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "localStorage only (r80_quote_templates_v1); refuses for quotes saved before input-snapshot capture existed.",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.restore-inputs",
@@ -39645,20 +39911,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "Refuses (not partial-restores) an old-shape or missing input snapshot.",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.export-payload",
@@ -39697,20 +39998,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "Never transmits itself; three EXPORT_TARGET shapes (participants/host_billing/accounts).",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.export-csv",
@@ -39749,20 +40085,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.pdf-naming",
@@ -39801,20 +40172,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.handoff-crm7",
@@ -39864,20 +40270,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "15-minute single-use token; falls back to copy/download messaging on any failure. Requires signed-in Supabase session.",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.deep-link-round-trip",
@@ -39916,20 +40357,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "Deep links are query params (window.location.search), never extra path segments.",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.quote.compare-two-quotes",
@@ -39955,20 +40431,55 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [
    {
-    "kind": "money-correctness",
+    "kind": "funding-model-mismatch",
     "claim_id": "claim.B.0035",
-    "severity": "high",
+    "severity": "medium",
     "state": "open",
-    "money_impact": "under-quote",
-    "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
-    "provenance": "doc-claim, verified against code at 8e74a61",
-    "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
-    "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    "money_impact": "none-in-production",
+    "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+    "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+    "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+    "not_in_production": true,
+    "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+    "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
    }
   ],
   "origin": "pass1-code-truth",
   "notes": "Aligns by cohort key rather than headline totals; states rows present in only one quote rather than treating them as zero.",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "compliance_risk_reconciliation": {
+   "state": "adopted-later-pass",
+   "earlier_pass": [
+    {
+     "kind": "money-correctness",
+     "claim_id": "claim.B.0035",
+     "severity": "high",
+     "state": "open",
+     "money_impact": "under-quote",
+     "detail": "The placement funding anti-double-count guard does not hold: the field the placement reads for 'already priced into the quote' funding (quote.meta.fundingProgramIds) is declared and read but never written anywhere, so it resolves to [] and a program already priced into a quote can be re-elected and subtracted a second time at placement.",
+     "provenance": "doc-claim, verified against code at 8e74a61",
+     "code_evidence": "src/awards/quotes.ts: `QuoteMeta.fundingProgramIds` is declared, and convertToPlacement() reads `inheritedProgramIds: quote.meta?.fundingProgramIds ?? []`. A repo-wide search for any assignment to `fundingProgramIds` (github search_code, query `fundingProgramIds`) returns only the declaration and this one read site \u2014 no call site anywhere in the repo sets it on a quote's meta when building/issuing a quote, so it is always `[]` and applyPlacementFunding()'s inherited-vs-additional split can never actually exclude a quote-scope program from being re-counted at placement.",
+     "caveat": "Owner reports the calculator prices correctly in the cases he has tested. This is a specific unguarded path, not a general correctness claim. Production was 13 PRs behind development as of 20 Aug \u2014 verify on the deployed host before acting."
+    }
+   ],
+   "later_pass": [
+    {
+     "kind": "funding-model-mismatch",
+     "claim_id": "claim.B.0035",
+     "severity": "medium",
+     "state": "open",
+     "money_impact": "none-in-production",
+     "detail": "R80.4's `applyPlacementFunding` implements funding as an ADDITIVE deduction on a rate that already had quote funding netted out, guarded by an `inheritedProgramIds` exclusion list that is always empty. The operator's model is REPLACEMENT: the placement's second look refines a broad category estimate into an individual-specific amount, it is not a second set of funding. So the module implements the wrong model, not merely a broken guard \u2014 writing `fundingProgramIds` would not make it correct.",
+     "provenance": "verified against code at 8e74a61 (R80.4) and 62fd36e (crm7)",
+     "code_evidence": "R80.4 src/awards/calculate.ts nets funding at quote time (`funded: quoted - fundingPH`); src/awards/quotes.ts applyPlacementFunding subtracts again (`placement.hourly - additionalPerHour`). The whole FundingProgram path is unwired \u2014 zero call sites in the shipped UI, which prices via FundingScheme.",
+     "not_in_production": true,
+     "why_not_in_production": "The live calculator never calls applyPlacementFunding. In crm7 \u2014 where placements and invoicing actually live \u2014 funding is a SEPARATE LEDGER: funding_claims/funding_milestones claim from the funding body and never touch placements.charge_rate. The placement rate is overwritten wholesale from the approved quote (charge_rate_quotes_propagate_approval), and billingEngine prices the wages line straight off it. The one mechanism that did net funding against a charge rate, `funding_offsets`, was deliberately retired by supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql under the standing ruling that \"R80.4's funding calculation is the only acceptable method of calculation\".",
+     "recommended_action": "Re-spec to replacement semantics, or delete the module \u2014 crm7 already owns the second look and already keeps it off the charge rate. Do NOT fix by writing fundingProgramIds."
+    }
+   ],
+   "why": "Adopted the later pass. Its reasoning is recorded in docs/00-roadmap/security-register.json CORRECTION_20260826: all five affected tables hold ZERO rows, and the bulk_data_* writers are SECURITY DEFINER so they never evaluate RLS \u2014 scoping the write half neither breaks nor protects that path. Both readings are kept here because a risk DOWNGRADE must stay visible; if the tables ever hold rows, revisit.",
+   "adjudicated": "2026-08-27 by content diff + the security register, NOT by filename or mtime (both files were written in the same millisecond)"
+  }
  },
  {
   "id": "r80.ai.jodie-rate-review",
