@@ -91,7 +91,7 @@ jobs:
           # document_categories.origin and died on 23502 — which is precisely
           # why this was dry-run against the live schema before shipping rather
           # than discovered by the workflow's first scheduled run.
-          DELTA=$(psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL'
+          DELTA_RAW=$(psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL'
           BEGIN;
           CREATE TEMP TABLE _b AS SELECT count(*) AS n FROM public.documents_pending_encryption;
           INSERT INTO public.document_categories
@@ -108,8 +108,28 @@ jobs:
           ROLLBACK;
           SQL
           )
+          # psql prints a COMMAND TAG for every non-SELECT statement, so $DELTA
+          # holds the whole transcript, not the number:
+          #
+          #     BEGIN / SELECT 1 / INSERT 0 1 / INSERT 0 1 / 1 / ROLLBACK
+          #
+          # `tr -d [:space:]` then glues that into "BEGINSELECT1INSERT01..."
+          # which can never equal "1". This job had therefore FAILED on every
+          # run since it was created — 11 of 11 — and a watch that has never
+          # once been green is not a watch, it is a permanently red light
+          # nobody reads any more.
+          #
+          # Take the last line that is a bare integer. That is the SELECT's
+          # value regardless of how many tags surround it, and it does not
+          # depend on -q suppressing tags (which varies by psql build).
+          DELTA=$(printf '%s\n' "$DELTA_RAW" | grep -E '^-?[0-9]+$' | tail -1)
           echo "self-test delta: ${DELTA}"
-          if [ "$(echo "$DELTA" | tr -d '[:space:]')" != "1" ]; then
+          if [ -z "$DELTA" ]; then
+            echo "::error::The self-test produced NO numeric line at all, so the detector was never exercised. That is an ABSENT result, not a clean one. Raw psql output follows:"
+            printf '%s\n' "$DELTA_RAW"
+            exit 1
+          fi
+          if [ "$DELTA" != "1" ]; then
             echo "::error::Self-test delta was '${DELTA}', expected 1. The pending-encryption query does not detect an unencrypted document in an encrypt_at_rest category. A clean report from it would be meaningless, so this job fails rather than reporting one."
             exit 1
           fi
