@@ -1,0 +1,128 @@
+{
+ "source": "pass 5 round 5 \u2014 journey walk, not artifact enumeration",
+ "note": "These are product gaps: steps a user must perform with no surface at all. They are NOT index rows \u2014 there is no artifact to index. They belong in the backlog.",
+ "journey_gaps": [
+  {
+   "rank": 1,
+   "journey": "a / c -- host billing",
+   "gap": "Invoicing hard-blocks on any overtime hour. billingEngine.ts's fetchTimesheetGroups() explicitly refuses to price overtime (throws 'Cannot generate invoice: overtime hours cannot be priced for ...') because it has no OT-tier breakdown to work from -- charge_rate_snapshots.calc_result.rates has the correct ot15/ot20/ot25/ph/night rates already computed, but nothing wires them into billing, and the intended fix path (populate `timesheet_groups`, the work-type -> pay-item-group lookup) has ZERO rows in practice per the code's own 2026-08-05 comment. The only workarounds are both manual and outside the system: record the hours as ordinary (silently under-bills the host) or price the overtime by hand.",
+   "manual_work_imposed": "Every host invoice touching an apprentice who logged overtime cannot be generated through the product at all until an operator either mis-codes the hours or computes and enters the OT amount manually outside crm7.",
+   "evidence": "src/lib/billingEngine.ts (crm7, sha 62fd36e7941a55eb44163e2f10a4e6e22c255f88), fetchTimesheetGroups() and its inline 2026-08-05 comment block."
+  },
+  {
+   "rank": 2,
+   "journey": "a -- opportunity to host employer",
+   "gap": "No conversion action exists from a closed_won Opportunity (or its linked Client) to a Host Employer. src/pages/hosts/create.tsx only offers a ContactSelector (pre-fills contact name/email/phone); company name, industry, and address -- already captured on the Opportunity/Client -- must be retyped from scratch. Grepping the crm7 tree for any 'convert' file returns nothing.",
+   "manual_work_imposed": "Every won deal requires the operator to manually re-key the company's core details a second time into a separate form, with no cross-check against what's already on file.",
+   "evidence": "src/pages/hosts/create.tsx (crm7); src/lib/opportunities.ts (no host/employer conversion function); grep for 'convert' across crm7 tree returns zero files."
+  },
+  {
+   "rank": 3,
+   "journey": "d -- bulk candidate intake",
+   "gap": "Conduit (the ATS) has no bulk/CSV import, bulk edit, or export surface anywhere -- confirmed by a full-tree grep for bulk/import/export/csv returning zero files, versus crm7 which has a dedicated bulk-data engine (src/services/bulkDataService.ts, /settings/data).",
+   "manual_work_imposed": "A GTO onboarding a batch of candidates (career fair, mass intake) must create every candidate one at a time via /candidates/new; no CSV path exists.",
+   "evidence": "grep -iE 'bulk|import|export|csv' across conduit.txt (540 files) -- zero matches."
+  },
+  {
+   "rank": 4,
+   "journey": "a / d -- vacancy/job seam",
+   "gap": "crm7's host-employer vacancies (src/schemas/vacancy.ts, /hosts/vacancies) and conduit's candidate-facing job postings (src/stores/jobStore.ts, /jobs) are two entirely disconnected systems. crm7's vacancy schema has an `application_count` field that implies applications should flow into it, but nothing populates it; conduit's job schema has no `vacancy_id` or `host_employer_id` field.",
+   "manual_work_imposed": "A recruiter must manually track which crm7 vacancy corresponds to which conduit job ad and manually keep vacancy status/application counts in sync -- there is no data path between the two.",
+   "evidence": "src/schemas/vacancy.ts (crm7): application_count field with no writer found. GitHub code search org-wide for 'vacancy_id' OR 'host_employer_id' in conduit's jobStore.ts: zero hits."
+  }
+ ],
+ "config_without_editor": [
+  {
+   "item": "Compliance alert-scanner thresholds",
+   "detail": "src/lib/compliance/alertScanner.ts SCANNER_RULES hardcodes lookAhead/lookBehind day windows for all 5 compliance scanners (document expiry 30/7, overdue site visits 28, training delay 90, host agreement expiry 60/7, visa expiry 90/7) plus TRAINING_PROGRESS_THRESHOLD=75%. No settings page edits any of these -- grep for rot-threshold/scanner-config/compliance-thresholds/alert-thresholds across the crm7 tree returns nothing.",
+   "evidence": "src/lib/compliance/alertScanner.ts (crm7, sha 62fd36e7941a55eb44163e2f10a4e6e22c255f88)"
+  },
+  {
+   "item": "Deal-rotting thresholds (orphaned, not user-facing -- noted for completeness)",
+   "detail": "src/lib/deal-rotting.ts DEFAULT_ROT_THRESHOLDS (per-stage day thresholds), WARNING_THRESHOLD_RATIO=0.5, CRITICAL_THRESHOLD_RATIO=1.5 are hardcoded with no settings surface -- but this library is not wired to any page (see missing_from_index_note), so this is a config gap on dead code, not a live one. Downgraded to informational.",
+   "evidence": "src/lib/deal-rotting.ts (crm7)"
+  },
+  {
+   "item": "billingEngine.ts payment terms drift from tenant settings",
+   "detail": "billingEngine.ts hardcodes PAYMENT_TERMS_DAYS=30 with no tenant override, while the parallel src/lib/pipelines/chargeToBilling.ts reads tenantSettings.paymentTermsDays with the same 30-day default as a fallback. Two invoice-generation code paths in the same app disagree on whether payment terms are tenant-configurable.",
+   "evidence": "src/lib/billingEngine.ts vs src/lib/pipelines/chargeToBilling.ts (crm7)"
+  }
+ ],
+ "bulk_gaps": [
+  {
+   "entity": "Conduit candidates / jobs / offers",
+   "detail": "Zero bulk-import, bulk-edit, or export surfaces anywhere in the conduit repo. Every other repo with a comparable high-volume entity (crm7 people/apprentices) has a dedicated bulk-data engine; conduit has none.",
+   "evidence": "grep -iE 'bulk|import|export|csv' conduit.txt -- 0 matches out of 540 files."
+  }
+ ],
+ "seam_gaps": [
+  {
+   "seam": "crm7 host-employer vacancies <-> conduit candidate-facing job postings",
+   "detail": "No shared key, no sync job, no cross-link field either direction. See journey_gaps #4 for full evidence.",
+   "evidence": "src/schemas/vacancy.ts (crm7) application_count with no writer; conduit jobStore.ts has no vacancy_id/host_employer_id field (org-wide code search, 0 hits)."
+  }
+ ],
+ "journeys_walked": [
+  {
+   "journey": "a. New host employer: first enquiry -> signed agreement -> first placement",
+   "steps": [
+    "1. Lead captured (web form / manual) -> crm7 /leads, public/embed/lead-form.html, supabase/functions/lead-capture -- SURFACE",
+    "2. Lead qualified -> Opportunity created, linked via opportunities.client_id -> crm7 /opportunities -- SURFACE",
+    "3. Opportunity reaches closed_won -- SURFACE (stage enum), but NO automated or single-click path to create the Host Employer record from the won opportunity/client -- NO SURFACE (see journey_gaps #1)",
+    "4. Host employer created -> crm7 /hosts/create (ContactSelector auto-fills contact fields only; company/industry/address re-keyed by hand) -- SURFACE (partial -- see gap)",
+    "5. Host site(s) added -> crm7 HostSitesPanel.tsx, /hosts sites -- SURFACE",
+    "6. WHS / capacity assessment -> /hosts/capacity-assessment, host-employer-whs-manager.tsx -- SURFACE",
+    "7. Host agreement generated & sent for signature -> /hosts/agreements/new, SendHostAgreementForSignatureDialog, supabase/functions/host-agreement-dispatch -- SURFACE",
+    "8. Agreement signed (token-based) -> /hosts/agreements/sign/[token] -- SURFACE",
+    "9. Vacancy posted against the host -> /hosts/vacancies/new -- SURFACE, but this record is NOT linked to any conduit job posting -- NO SURFACE for the seam (see seam_gaps #1)",
+    "10. Apprentice placed at the host -> /placements/create, placement workflow -- SURFACE",
+    "11. Timesheets approved -> host billed -> billingEngine.generateInvoiceFromTimesheets -- SURFACE, but BLOCKS with a thrown error the moment any overtime hour appears, because timesheet_groups (work-type -> pay-item-group lookup) ships with zero rows and nothing forces it to be populated before go-live -- NO SURFACE for the missing prerequisite step (see journey_gaps #2, the highest-manual-effort gap found this round)"
+   ],
+   "verdict": "Fully surfaced end-to-end except two real gaps: no lead/opportunity->host conversion, and invoicing silently requires unenforced upstream config."
+  },
+  {
+   "journey": "b. Apprentice: application through completion/handover",
+   "steps": [
+    "1. Front-door intake -> crm7 /people/new, /people/new/worker -- SURFACE",
+    "2. Placement created & tracked -> /placements, ApprenticePlacementForm -- SURFACE",
+    "3. Training plan / progress tracked -> /people/progress, training_plans -- SURFACE",
+    "4. Compliance scanning (doc expiry, site visits, training delay, agreement expiry, visa expiry) -> src/lib/compliance/alertScanner.ts, cron-driven -- SURFACE, but every threshold (30/28/90/60/90 days, 75% progress) is a hardcoded constant with no admin editor (see config_without_editor #1)",
+    "5. Change-of-year processing -> /admin/change-of-year -- SURFACE",
+    "6. Completion/withdrawal/cancellation tracked -> /people/completion (already indexed under crm7.people.compliance-progress code_anchors -- verified, not a miss) -- SURFACE",
+    "7. Handover to employment -> supabase/functions/handover-to-employment, scripts/e2e-rehearsal/handover-to-employment.mjs -- SURFACE"
+   ],
+   "verdict": "Fully surfaced end-to-end. No gaps found on this journey this round."
+  },
+  {
+   "journey": "c. Charge rate: award selection -> quote -> invoice",
+   "steps": [
+    "1. Award/occupation selection & rate calculation -> R80.4 calculator (public, no login required) -- SURFACE",
+    "2. Quote saved, templated, thread-grouped, compared -> r80.quote.* rows (save-local, server-sync, templates, compare-two-quotes) -- SURFACE",
+    "3. Quote handed off to crm7 via single-use token -> r80.quote.handoff-crm7, crm7.quote.r8-return-ticket round trip -- SURFACE",
+    "4. Charge rate applied to a placement -> ChargeRateCard, rateState.ts, rateProvenance.ts -- SURFACE",
+    "5. Timesheet -> invoice generation -> billingEngine.ts -- SURFACE, same overtime-pricing dead end as journey (a) step 11"
+   ],
+   "verdict": "Fully surfaced; the one real defect (overtime pricing block) is shared with journey (a), not journey-specific."
+  },
+  {
+   "journey": "d. Candidate: job ad -> application -> onboarded worker",
+   "steps": [
+    "1. Job ad posted publicly -> conduit /portal/careers, jobPostingJsonLd.ts (SEO) -- SURFACE, but conduit's job postings carry NO field linking back to a crm7 vacancy/host_employer_id -- NO SURFACE for the seam (same gap as journey a step 9, seam_gaps #1)",
+    "2. Application submitted -> /portal/careers/[jobId]/apply -- SURFACE",
+    "3. Screening / interview -> /interviews, InterviewScorecardDialog -- SURFACE",
+    "4. Offer generated & e-signed -> /offers, OfferSignModal, offerStateMachine.ts -- SURFACE",
+    "5. Onboarding -> /onboarding -- SURFACE",
+    "6. Convert to apprentice (cross-app handoff to crm7) -> _convert-to-apprentice-button.tsx mints a token, crm7 /apprentices/from-candidate consumes it -- SURFACE (confirmed both sides wired; already indexed both ends)",
+    "7. Once in crm7, re-enters journey (a)/(b) at placement creation -- SURFACE",
+    "8. Bulk intake of candidates (career fair, GTO batch onboarding of e.g. 200 apprentices) -- NO SURFACE anywhere in conduit: zero bulk/CSV/import/export files found in the entire conduit tree (see bulk_gaps #1)"
+   ],
+   "verdict": "Well surfaced for the one-at-a-time path; no bulk path exists at all."
+  }
+ ],
+ "not_yet_walked": [
+  "mentor assignment lifecycle",
+  "WHS incident to resolution",
+  "field officer visit cycle",
+  "payroll run end to end"
+ ]
+}
