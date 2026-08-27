@@ -43784,7 +43784,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "bsuite#2560"
+  }
  },
  {
   "id": "pkg.page-builder.wysiwyg-contract",
@@ -43870,7 +43873,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "bsuite#2542"
+  }
  },
  {
   "id": "pkg.schema-builder.canvas-ui",
