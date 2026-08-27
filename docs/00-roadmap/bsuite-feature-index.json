@@ -16275,7 +16275,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Hero + accessible/locked service cards + subscription tier cards as CanvasCards",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "BSU#937 - gradient headings clipped their own glyphs; fixed as a class across 4 utilities (.gradient-text, .neon-text, .neon-text-purple, .hero-title-accent). VERIFIED on live dev deploy 3b7fa342: the 'Business Suite' background-clip:text overflow is GONE (clippedHeading 2 -> 1 per cell). Not approved: / still BLOCKs on ServiceCard tier badge 4.36:1 (a @bsuite/theme token question) and a 3px CanvasCard container clip (a @bsuite/page-builder question)."
+  }
  },
  {
   "id": "bsu.core.app-switcher",
@@ -19197,7 +19200,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "BSU#938 - POPULAR badge 1.64:1 -> 9.38:1 (bg-role-accent paired with text-text-on-accent). VERIFIED on live dev deploy 3b7fa342 (Vercel dpl_Dx4D2Ti, READY, verified): /billing dark contrast FAILs 1 -> 0, cell BLOCK -> INCOMPLETE. Not approved: the route still returns INCOMPLETE because the probe cannot evaluate contrast on elements painting their own gradient background."
+  }
  },
  {
   "id": "bsu.documents.manager",
