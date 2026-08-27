@@ -1,0 +1,109 @@
+# A PROMOTION MAY NOT MOVE A SUBMODULE POINTER BACKWARDS.
+#
+# Added 2026-08-27, after every one of the six gitlinks on `development` was found
+# DIVERGED from what `main` already pinned — and behind it as well as ahead:
+#
+#     crm7        ahead=6 BEHIND=1        braden      ahead=2 BEHIND=2
+#     BSU         ahead=5 BEHIND=1        throughput  ahead=3 BEHIND=6
+#     conduit     ahead=3 BEHIND=1        R80.4       ahead=1 BEHIND=49
+#
+# Promoting would have moved production's R80.4 pointer back FORTY-NINE commits, and
+# every gitlink-reading workflow — supabase-migrate, supabase-functions-deploy,
+# route-inventory, own-package-freshness, migration-collision-branch-tips, the advisor
+# sweep — would then have read a tree from before those commits landed. Nothing would
+# have gone red. That is the expensive direction.
+#
+# WHY IT DRIFTED, AND WHY A RULE IN SOMEONE'S HEAD WAS NOT ENOUGH
+#
+# Two conventions are both live and both correct for their own branch.
+# `advance-submodule-pointers.mjs` targets each app's origin/DEVELOPMENT, which is right
+# for parent `development`. But the deploy and the applier read the gitlinks OF THE REF
+# THEY RUN ON, so on `main` those must be app MAIN SHAs. bsuite#2556 and #2562 re-pointed
+# to mains immediately before promoting — and neither wrote that step down, so it drifted
+# back within the hour. Two lanes working at once will not hold an unwritten rule.
+#
+# This gate is that step, enforced rather than remembered. It does not care which
+# convention produced the pointer. It asks: is what `main` already pins an ANCESTOR of
+# what this PR would pin? Equal is fine. Ahead is fine. Behind or diverged is a refusal.
+name: Gitlink not behind base
+
+on:
+  pull_request:
+    branches: [main]
+  # DISPATCHABLE ON PURPOSE. Scoped to PRs into `main`, this gate cannot run on the PR
+  # that introduces it — so it would ship never once exercised in CI, and its first real
+  # run would be on a promotion, which is the worst moment to discover a runtime bug.
+  # See a gate that failed at checkout on 2 of 2 runs since birth and was read as merely
+  # red (migration-versions-in-flight, fixed the same day).
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Ref whose gitlinks are the floor (default: origin/main)'
+        required: false
+        default: 'origin/main'
+      head:
+        description: 'Ref whose gitlinks are checked against it (default: origin/development)'
+        required: false
+        default: 'origin/development'
+
+permissions:
+  contents: read
+
+jobs:
+  gitlink-descendancy:
+    name: No gitlink moves production backwards
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 because the check runs `git merge-base --is-ancestor` inside each
+      # submodule, and a shallow clone cannot answer an ancestry question.
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          # Every app is a PRIVATE submodule; the default GITHUB_TOKEN cannot clone them
+          # and fails with a bare "repository not found", which reads like a typo rather
+          # than a permission. House pattern is the PAT with a GITHUB_TOKEN fallback.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          # setup-node@v5 resolves the packageManager field's pnpm before corepack runs
+          # and fails with "Unable to locate executable file: pnpm".
+          package-manager-cache: false
+
+      # A checker whose own logic is broken makes every verdict below meaningless.
+      # Both directions are exercised: a backwards move must refuse, a fast-forward
+      # must pass. A control that only ever comes back negative proves nothing.
+      - name: Self-test the checker
+        run: node scripts/check-gitlink-not-behind-base.mjs --self-test
+
+      # Deepen the submodules explicitly. `submodules: recursive` above can leave them
+      # shallow, and `merge-base --is-ancestor` then answers "no" for a commit that IS
+      # an ancestor — which would refuse a perfectly good promotion.
+      - name: Unshallow the submodules so ancestry is answerable
+        shell: bash
+        run: |
+          set -uo pipefail
+          git submodule foreach --recursive 'git fetch --unshallow origin 2>/dev/null || git fetch origin || true'
+
+      # Refs reach the shell through env: and are quoted, never interpolated into the
+      # run block. A dispatch input is operator-supplied text and must be treated as
+      # such even when the operator is us.
+      - name: Compare this PR's gitlinks against what main already pins
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-gitlink-not-behind-base.mjs "$BASE_SHA" HEAD
+
+      - name: Compare two refs on demand
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          BASE_REF: ${{ inputs.base }}
+          HEAD_REF: ${{ inputs.head }}
+        run: |
+          set -uo pipefail
+          git fetch origin --quiet || true
+          node scripts/check-gitlink-not-behind-base.mjs "$BASE_REF" "$HEAD_REF"
