@@ -46,6 +46,9 @@ jobs:
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - name: Assert submodules are actually present
         # An uninitialised submodule is an EMPTY DIRECTORY, which passes `-d`.
         # Checking the dir exists is not enough; check for the file the gates read.

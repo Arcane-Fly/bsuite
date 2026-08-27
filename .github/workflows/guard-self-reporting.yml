@@ -51,6 +51,9 @@ jobs:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       # Several registered guards are diff-scoped and default to comparing
       # against `origin/main` (see guard-registry.mjs). `submodules: recursive`
       # does not guarantee every remote branch is fetched inside each
@@ -100,3 +103,9 @@ jobs:
         env:
           BSUITE_GUARD_NODE_MODULES: ${{ runner.temp }}/guard-deps
         run: node scripts/check-guard-self-reporting.mjs
+
+      # Registration alone makes the watcher EXECUTE this guard, but the watcher
+      # judges self-reporting, not exit status — a ratchet that broke would be
+      # reported as a well-behaved guard. Run it as its own blocking step too.
+      - name: Every submodule scanner refuses an empty tree
+        run: node scripts/check-submodule-scan-guards.mjs

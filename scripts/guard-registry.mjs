@@ -100,6 +100,35 @@ export const GUARDS = [
       'BOOTSTRAP FAILURE of the watcher itself, not a normal finding.',
   },
 
+  {
+    id: 'submodule-scan-guards',
+    label: 'Every static scanner over submodules refuses an empty tree (ratchet)',
+    repo: '.',
+    command: ['node', 'scripts/check-submodule-scan-guards.mjs'],
+    ciWorkflow: '.github/workflows/guard-self-reporting.yml',
+    mode: 'ratchet',
+    notes:
+      'The estate had 47 workflows that check out submodules, scan their trees, ' +
+      'and would exit 0 over an absent checkout — an empty tree is ' +
+      'indistinguishable from a clean one to a grep. All 49 now call ' +
+      'assert-app-trees-present.sh; the baseline is 0 and this gate fails if it ' +
+      'rises. Its clean pass states the number of workflows EXAMINED, not only ' +
+      'the number found, so it satisfies the watcher it is registered with.',
+  },
+
+  {
+    id: 'app-trees-present',
+    label: 'The shared empty-tree guard itself',
+    repo: '.',
+    command: ['bash', 'scripts/assert-app-trees-present.sh'],
+    ciWorkflow: '.github/workflows/guard-self-reporting.yml',
+    mode: 'assertion',
+    notes:
+      'Called as the first step of every submodule-scanning workflow. Registered ' +
+      'here because a guard that silently stopped checking would re-open all 49 ' +
+      'at once, and nothing else would notice.',
+  },
+
   // ---------------------------------------------------------------------
   // Parent monorepo
   // ---------------------------------------------------------------------

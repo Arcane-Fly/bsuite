@@ -67,6 +67,9 @@ jobs:
           # prod-migration-history-audit.yml, secret-naming-drift.yml).
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -108,6 +111,9 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
 
       - name: Setup Node
         uses: actions/setup-node@v4

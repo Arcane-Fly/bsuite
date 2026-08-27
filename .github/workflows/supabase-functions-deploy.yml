@@ -100,6 +100,9 @@ jobs:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - id: set-matrix
         name: Build deployment matrix
         # `github` context values go through env, never straight into `run:`.
@@ -208,6 +211,9 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
 
       # ───────────────────────────────────────────────────────────────────────
       # Fail CLOSED on an incomplete checkout.
