@@ -125,12 +125,24 @@
   --role-info:        var(--braden-teal-deep);
 
   /* AA-safe text renderings on light surfaces */
-  --role-primary-text: oklch(0.566 0.170  17.6); /* 4.69:1 AA */
-  --role-accent-text:  oklch(0.544 0.092  89.9); /* 4.71:1 AA */
-  --role-error-text:   oklch(0.482 0.230  25);   /* 6.18:1 body · 6.44:1 panel — AA (ruling 2026-08-10) */
-  --role-warning-text: oklch(0.544 0.092  89.9); /* 4.71:1 AA */
-  --role-success-text: oklch(0.515 0.130 198);   /* 4.69:1 AA */
-  --role-info-text:    oklch(0.519 0.140 220);   /* 4.71:1 AA */
+  <em>Revised 2026-08-28. The figures below were measured against the PAGE
+  BACKGROUND. These tokens also ship on a TINT of their own hue — a status pill,
+  a callout, a badge — and a wash pulls the backdrop toward the text. Measured
+  across five surface roles x alphas 1.0/.15/.20, four of them fell below 4.5:1:
+  primary 4.16, success 4.17, warning 4.18, info 4.18. Error was already clear
+  at 5.50 and is unchanged; dark mode measured 5.69-5.89 throughout and is
+  untouched. Each failing token is dropped 0.023-0.025 in lightness until its
+  WORST cell clears 4.5 with margin — darkening only ever raises contrast on a
+  light backdrop, so the page-background figures improve too. This is the same
+  correction the D2C palette took on 2026-08-27, one axis further out than its
+  own 2026-08-05 revision; the brand FILLS are untouched, only the derived text
+  renderings whose entire purpose is to hit the floor.</em>
+  --role-primary-text: oklch(0.542 0.170  17.6); /* 4.61:1 worst tint · AA */
+  --role-accent-text:  oklch(0.544 0.092  89.9); /* aliased by --role-accent-text-base */
+  --role-error-text:   oklch(0.482 0.230  25);   /* 5.50:1 worst tint — AA (ruling 2026-08-10) */
+  --role-warning-text: oklch(0.521 0.092  89.9); /* 4.61:1 worst tint · AA */
+  --role-success-text: oklch(0.490 0.130 198);   /* 4.61:1 worst tint · AA */
+  --role-info-text:    oklch(0.495 0.140 220);   /* 4.61:1 worst tint · AA */
 
   /* ── inverse text on fills (never pure white) ──────────── */
   --text-on-light-fill: oklch(0.980 0.006  50);
