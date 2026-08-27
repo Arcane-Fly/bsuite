@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Visual Feature Builder — UX Red-Team & Phase 0.5 Plan (v1.00W)
 
 > ## ⚠ SUPERSEDED — 2026-08-17

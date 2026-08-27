@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # What was found and fixed on 2026-08-19, and how each one was proved
 
 **Document:** `docs/20260819-estate-session-evidence-v1.00F.md`
