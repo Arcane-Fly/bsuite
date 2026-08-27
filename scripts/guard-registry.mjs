@@ -117,6 +117,22 @@ export const GUARDS = [
   },
 
   {
+    id: 'apt-repo-hygiene',
+    label: 'No workflow runs an unmitigated apt-get update (ratchet)',
+    repo: '.',
+    command: ['node', 'scripts/check-apt-repo-hygiene.mjs'],
+    ciWorkflow: '.github/workflows/guard-self-reporting.yml',
+    mode: 'ratchet',
+    notes:
+      "GitHub's runner images ship a Microsoft apt repo this estate never reads, " +
+      'which intermittently answers 403 and makes apt-get update fatal. It stayed ' +
+      'unfixed because it alternates: schema-lag died on it while phantom-migrations, ' +
+      'running the same install a minute earlier, passed. A failure that alternates ' +
+      'reads as flake, and flake gets re-run rather than fixed. 13 workflows were ' +
+      'rolling a die on every run; baseline is 0.',
+  },
+
+  {
     id: 'app-trees-present',
     label: 'The shared empty-tree guard itself',
     repo: '.',
