@@ -1,0 +1,46 @@
+name: Production HEAD is a verified commit
+
+# A cancelled deployment is not a failed one. When main's HEAD is unsigned,
+# Vercel cancels the deploy BEFORE the build starts — no red check, no build
+# log, nothing for an agent to find. The tree on main is correct and production
+# simply never moves.
+#
+# GitHub's REBASE merge replays and rewrites commits, and the replayed ones
+# carry no signature. Merge and squash are created and signed by GitHub itself.
+# So: promote with --squash or --merge, never --rebase.
+#
+# Runs on a schedule as well as on promotion, because the failure this catches
+# is a state production is left IN, not an event a push produces.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verified-head:
+    name: Production HEAD is a verified commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The self-test runs FIRST and independently of the network. If the API
+      # call fails, the classifier has still been proven to reject an unsigned
+      # head — otherwise a green run could mean "the gate is broken" rather
+      # than "every head is signed".
+      - name: Self-test the classifier
+        run: node scripts/check-main-head-is-verified.mjs --self-test
+
+      - name: Check every production HEAD
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-main-head-is-verified.mjs
