@@ -290,4 +290,33 @@ for (const x of findings) {
 console.log(`\n  examined ${examined} recorded migration(s) at or above floor ${FLOOR}`);
 console.log(`  ${skippedBelowFloor} below the floor (the applier ignores them too), ${notRecorded} not yet recorded (that is schema-lag's job, not this gate's)`);
 console.log(`  ${findings.length} phantom(s)`);
+
+// POSITIVE CONTROL. A scan that examines nothing also reports zero phantoms, and
+// this gate had no way to tell those apart: `examined 0 ... 0 phantom(s)` exits 0
+// and reads, in a green check mark, exactly like a clean estate. The likeliest
+// cause is an unpopulated submodule checkout — an empty directory produces a
+// confident pass — and the second likeliest is a --db-state JSON that came back
+// empty because the query failed.
+//
+// Mirrors --require-fields in check-required-field-markers.mjs, which exists for
+// the same reason and is wired at 150.
+const floorArg = args.find((a) => a.startsWith('--require-examined='));
+if (floorArg) {
+  const floor = Number(floorArg.split('=')[1]);
+  if (!Number.isFinite(floor)) {
+    console.error(`  --require-examined needs a number, got "${floorArg.split('=')[1]}"`);
+    process.exit(2);
+  }
+  if (examined < floor) {
+    console.error(
+      `\n  POSITIVE CONTROL FAILED: examined ${examined} recorded migration(s), expected at least ${floor}.`,
+    );
+    console.error('  Either the migration trees did not populate, or --db-state carried no applied');
+    console.error('  versions. A clean result here would be meaningless, not clean — nothing was');
+    console.error('  actually compared. Fix the input before reading the findings above.');
+    process.exit(3);
+  }
+  console.log(`  positive control: ${examined} >= ${floor} recorded migration(s) — the comparison really ran`);
+}
+
 process.exit(findings.length ? 1 : 0);
