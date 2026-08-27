@@ -220,8 +220,27 @@ const HISTORICAL_BY_PATH = /(^|\/)(archive|archived|inputs|superseded)(\/|$)/i;
 // is frozen at `-v1.00F` — which is CORRECT usage for an immutable record and
 // wrong to score as a claim about live production code. Path lists cannot keep up
 // with directory names; the declared classification can.
+// ...AND A DECISION RECORD IS THE SAME CATEGORY, BY THE SAME REASONING.
+//
+// Three of the flagged documents declare `kind: decision` — two with
+// `authority: operator`, one `authority: engineering`. They record WHAT WAS DECIDED,
+// on a date, by someone with the authority to decide it. Asking such a document to
+// cite a runnable gate is a category error: the operator's ruling IS the evidence, and
+// no CI job can re-earn it. docs/00-roadmap/20260810-dashboard-scope-ruling is the
+// clearest case — it quotes Braden's ruling verbatim and is frozen because a record of
+// what was said must not drift.
+//
+// This also follows the operator ruling of 2026-08-26 that F MEANS FROZEN — it governs
+// the document's MUTABILITY and is "not a claim that the work it describes is the
+// current truth". Scoring an immutable decision record as an unevidenced completion
+// claim applies the reading that ruling superseded.
+//
+// `authority` is deliberately NOT constrained here. `record` requires `authority: none`
+// because the classification standard says so; a decision by definition has an author
+// with authority, so requiring `none` would exempt exactly the decisions nobody made.
 function declaresItselfARecord(text) {
   const fm = text.slice(0, 600);
+  if (/^kind:\s*decision\s*$/m.test(fm)) return true;
   return /^kind:\s*record\s*$/m.test(fm) && /^authority:\s*none\s*$/m.test(fm);
 }
 
@@ -281,6 +300,15 @@ export function classify(text, filename, artifactsPresent, relPath = filename) {
 }
 
 const SELF_TESTS = [
+  // A DECISION RECORD IS HISTORY, NOT AN UNEVIDENCED CLAIM. Both directions.
+  { name: 'a doc declaring `kind: decision` is historical, marker or not',
+    t: '---\nkind: decision\nauthority: operator\n---\n# A ruling\n',
+    f: '20260810-some-ruling-v1.00F.md', g: [],
+    expect: (r) => r.archival === true },
+  { name: 'CONTROL — the same doc WITHOUT the kind line is not historical',
+    t: '---\nauthority: operator\n---\n# A ruling\n',
+    f: '20260810-some-ruling-v1.00F.md', g: [],
+    expect: (r) => r.archival !== true },
   { name: 'a filename already claiming completion is detected',
     f: 'x-COMPLETE.md', t: '', g: [],
     expect: (r) => r.alreadyMarked === true },
