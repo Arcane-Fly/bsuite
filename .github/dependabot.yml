@@ -1,0 +1,45 @@
+version: 2
+
+# TARGET-BRANCH IS NOT OPTIONAL HERE.
+#
+# Dependabot opens against the repository's DEFAULT branch when `target-branch` is
+# absent, and every repository in this estate defaults to `main`. Operator ruling
+# 2026-08-26: the process is feature -> development -> production, ALWAYS. Without the
+# line below, every dependency PR would arrive straight at production and the rule
+# would be broken weekly, by a bot, on a schedule.
+#
+# Measured 2026-08-27 across all seven dependabot surfaces in the estate — the four
+# open PRs adding a config (bsuite, conduit, throughput, R80.4) and the three configs
+# already on development (crm7, business-suite-unified, braden). NONE of the seven set
+# it, and all seven repositories default to main.
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+
+    # MAJORS ARE EXCLUDED, AND THIS IS THE EXPENSIVE LESSON, NOT A PREFERENCE.
+    #
+    # A freshness check that reads version NUMBERS cannot see that a major release is a
+    # REDESIGN. @bsuite/page-builder 2.0.0 was taken as a routine refresh and discarded
+    # every saved layout across 1,729 cards. A grouped `patterns: ["*"]` update makes
+    # that worse than an ungrouped one: the breaking major arrives in the same PR as
+    # thirty harmless patches, and the review that would have caught it is a diff
+    # nobody can read.
+    #
+    # Patch and minor group freely. A major gets a human, deliberately.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+    groups:
+      patch-and-minor:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+
+    commit-message:
+      prefix: "chore(deps)"

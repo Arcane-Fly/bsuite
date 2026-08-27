@@ -39,7 +39,7 @@ Two self-inflicted defects while producing it, both worth the space:
   BINDABLE — these name a gate that exists, so their claim is checkable:
     docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md
         publish-ui.yml
-    docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00W.md
+    docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00F.md
         verify-class-a-preservation.mjs
     docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md
         verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs
@@ -121,7 +121,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `crm7/docs/audits/20260811-colour-drift-full-tree-audit-v1.00D.md` | BINDABLE |  | lint-ratchet.mjs |
 | `crm7/docs/audits/20260811-pgtap-evidence-integrity-v1.00D.md` | BINDABLE |  | pgtap.yml |
 | `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | BINDABLE |  | publish-ui.yml |
-| `docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00W.md` | BINDABLE |  | verify-class-a-preservation.mjs |
+| `docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00F.md` | BINDABLE |  | verify-class-a-preservation.mjs |
 | `docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md` | BINDABLE |  | verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs |
 | `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | BINDABLE |  | ci.yml |
 | `docs/00-roadmap/20260812-pi-run-handback-v1.00W.md` | BINDABLE |  | ci.yml |
@@ -275,10 +275,10 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/00-roadmap/20260808-intake-and-onboarding-findings-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260808-operator-decision-register-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260809-autonomous-run-report-v1.00W.md` | UNBOUND |  | — |
-| `docs/00-roadmap/20260809-pre-apply-capture-bsuite-1845-v1.00W.md` | UNBOUND |  | — |
+| `docs/00-roadmap/20260809-pre-apply-capture-bsuite-1845-v1.00F.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260810-crm7-audit-remediation-decision-record-v1.00W.md` | UNBOUND |  | — |
-| `docs/00-roadmap/20260810-dashboard-scope-ruling-v1.00W.md` | UNBOUND |  | — |
-| `docs/00-roadmap/20260810-document-provenance-who-creates-what-v1.00D.md` | UNBOUND |  | — |
+| `docs/00-roadmap/20260810-dashboard-scope-ruling-v1.00F.md` | UNBOUND |  | — |
+| `docs/00-roadmap/20260810-document-provenance-who-creates-what-v1.00F.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260810-four-axis-identity-model-and-backlog-sequence-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260810-r804-carryover-register-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260811-crm7-full-spectrum-review-register-v1.00W.md` | UNBOUND |  | — |
@@ -355,7 +355,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260817-operator-notes-backlog-d59-d92-status-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260817-po-portal-verification-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260817-recovered-verdict-backlog-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260819-estate-session-evidence-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260819-estate-session-evidence-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260820-datum-directive-to-bsuite-lane-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260822-schema-builder-ux-remediation-spec-v1.00D.md` | UNBOUND |  | — |
 | `docs/adr/ADR-0001-page-builder-ownership.md` | UNBOUND |  | — |
@@ -438,7 +438,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/plans/20260817-estate-completion-plan-v1.00D.md` | UNBOUND |  | — |
 | `docs/plans/codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/README.md` | UNBOUND |  | — |
 | `docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md` | UNBOUND |  | — |
 | `docs/plans/uplift/INDEX.md` | UNBOUND |  | — |

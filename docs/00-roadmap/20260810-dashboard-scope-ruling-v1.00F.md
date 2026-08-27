@@ -1,6 +1,6 @@
 # Dashboards — the operator's scope ruling, and what it means for the build
 
-**Date:** 2026-08-10 · **Status:** 1.00W · **Ruling by:** Braden, 19:57 AWST
+**Date:** 2026-08-10 · **Status:** 1.00F · **Ruling by:** Braden, 19:57 AWST
 
 ## The ruling, verbatim in substance
 

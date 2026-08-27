@@ -1,0 +1,59 @@
+{
+  "finding": "write-side RLS left unscoped on five crm7 tables",
+  "migration": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql",
+  "attributable": [
+    {
+      "table": "whs_records",
+      "owner_row_ids": [
+        "crm7.whs.incidents",
+        "crm7.field-officers.incidents"
+      ]
+    },
+    {
+      "table": "financial_viability_snapshots",
+      "owner_row_ids": [
+        "crm7.compliance.financial-viability"
+      ]
+    }
+  ],
+  "unattributable": [
+    {
+      "table": "award_rates",
+      "why": "No .insert/.update/.delete against award_rates exists anywhere reachable from a UI surface. src/services/importExportService.ts's importToSupabase() CAN insert/upsert into award_rates (ENTITY_TABLE_MAP.awards = 'award_rates'), but it has zero callers anywhere in the app (only its own module/tests and the services barrel) \u2014 no import wizard page wires entityType:'awards' to it. src/pages/payroll/award-rates/{index,create}.tsx (the index row most plausibly 'owning' this table by name) write to a DIFFERENT table, rate_schedules, not award_rates. This matches the migration's own admission that award_rates has 'zero live rows' and (per src/services/requoteOnRiseService.ts's comment) 'no writer anywhere in BSuite'.",
+      "no_writer_found": true
+    },
+    {
+      "table": "charge_calculations",
+      "why": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX \u2014 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all \u2014 the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row.",
+      "no_writer_found": true
+    },
+    {
+      "table": "host_contracts",
+      "why": "Zero .from('host_contracts') calls anywhere in crm7 TS/TSX (searched both quote styles). The only two hits are (1) a code COMMENT in crm7/src/pages/contracts/index.tsx explaining that host_contracts was deliberately REMOVED from that page's aggregation at crm7#1577 ('doesn't belong on a contracts page... still live, still readable... whether it is retired or wired to whatever was meant to read it is still an open question') and (2) a matching comment in crm7/src/pages/contracts/index.test.tsx. The migration's own comment ('host_contracts is referenced by a live page, crm7/src/pages/contracts/index.tsx') is stale/incorrect against the current code \u2014 that page fetches only training_contracts and host_agreements now. host_contracts is an orphaned pricing table with no live reader or writer anywhere in crm7.",
+      "no_writer_found": true
+    }
+  ],
+  "all_five_tables_hold_zero_rows": true,
+  "CORRECTION_20260826": {
+    "supersedes": "unattributable[].why for award_rates and host_contracts",
+    "status": "the 'no writer found' conclusion was WRONG for award_rates and host_contracts",
+    "writer": "/settings/data -> bulk_data_import / bulk_data_update",
+    "why_the_grep_missed_it": "Those RPCs resolve WHICH table to write from report_catalog_entities at run time and issue a dynamic INSERT INTO %I.%I. The table name never appears in TypeScript, so no source grep of any pattern could have found it. Absence of a .insert() call site is not absence of a writer.",
+    "measured_on_production": {
+      "is_active_true": [
+        "award_rates",
+        "host_contracts",
+        "whs_records"
+      ],
+      "absent_from_report_catalog_entities": [
+        "charge_calculations",
+        "financial_viability_snapshots"
+      ],
+      "consequence": "any tenant owner/admin can write award_rates and host_contracts rows today"
+    },
+    "counter_fact": "All five bulk_data_* functions are SECURITY DEFINER and therefore never evaluate RLS, so scoping the write half neither breaks nor protects that particular path.",
+    "action_taken": "crm7#2053 scopes all three; revokes none. crm7#2052 owns whs_records + financial_viability_snapshots.",
+    "recorded_by": "session 08108081 (branch chore/advance-gitlinks-onto-the-canvas-fix), 2026-08-26",
+    "note": "Additive correction only - the original unattributable[] entries are left intact so the reasoning that failed stays visible."
+  }
+}

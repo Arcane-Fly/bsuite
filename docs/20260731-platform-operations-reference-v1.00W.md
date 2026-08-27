@@ -37,6 +37,42 @@ Environment variables: copy `.env.example` to `.env.local` and fill in Supabase 
 
 Always regenerate lockfiles from an isolated directory **outside** the bsuite tree:
 
+> **THE COMMAND BELOW CANNOT UPGRADE A SATISFIED RANGE — corrected 2026-08-27.**
+>
+> `pnpm install --lockfile-only` RE-RESOLVES; it does not UPGRADE. An entry that
+> already satisfies its range is left exactly where it is, so a lockfile pinning
+> `2.2.0` under a `^2.1.0` specifier is satisfied, install keeps `2.2.0`, and it
+> reports success. Measured on throughput, identical inputs, same temp lab:
+>
+> | command | result |
+> | --- | --- |
+> | `pnpm install --lockfile-only --no-frozen-lockfile` | **2.2.0 — no change** |
+> | `pnpm install --lockfile-only --resolution-mode=highest` | **2.2.0 — no change** |
+> | `pnpm update '@bsuite/*' --lockfile-only` | **2.3.1** |
+>
+> This is why five apps sat a published privacy fix behind for hours while three
+> separate checks reported the drift: detection said stale, the remedy reported
+> current, and the estate believed the remedy.
+>
+> `pnpm update` also **rewrites the range in package.json** (`^2.1.0` → `^2.3.1`)
+> and records it as the lockfile's `specifier:`, which then disagrees with
+> package.json unless you handle it — and `--frozen-lockfile` rejects exactly
+> that. Narrowing what an app declares it requires is a decision; it must not
+> ride in unnoticed on a lockfile refresh.
+>
+> **Use `scripts/regen-consumer-lockfile.mjs`**, which does the two passes and
+> all three verifications:
+>
+> ```bash
+> node scripts/regen-consumer-lockfile.mjs --app=crm7           # dry run
+> node scripts/regen-consumer-lockfile.mjs --app=crm7 --write   # apply
+> node scripts/regen-consumer-lockfile.mjs --all --write         # every consumer
+> ```
+>
+> The steps below remain accurate for WHICH FILES must be copied (all five — a
+> missing `pnpm-workspace.yaml` silently drops every override). Only the
+> resolution command was wrong.
+
 ```bash
 # Example for crm7 — same pattern for all projects
 mkdir ~/crm7_lockgen

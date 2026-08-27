@@ -6,5 +6,5 @@
 
 | Document | Status | Dated |
 |---|---|---|
-| [Loop Contract — Recruitment-Comms + RAMS Cluster](20260817-recruitment-comms-rams-loop-contract-v1.00W.md) | Working | 2026-08-17 |
+| [Loop Contract — Recruitment-Comms + RAMS Cluster](20260817-recruitment-comms-rams-loop-contract-v1.00F.md) | Working | 2026-08-17 |
 | [GTO End-to-End Cycle — Loop Contract](20260703-gto-e2e-cycle-loop-contract-v1.00W.md) | Working | 2026-07-03 |
