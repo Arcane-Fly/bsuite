@@ -59,7 +59,7 @@ Two self-inflicted defects while producing it, both worth the space:
         check-migration-fk-indexes.mjs, migration-fk-index-lint.yml
     docs/20260724-recurring-bugs-and-blindspots-v1.00W.md
         check-migration-fk-indexes.mjs, check-doc-naming.mjs, db-lint.yml
-    docs/20260727-docs-deep-dive-inventory-v1.00W.md
+    docs/20260727-docs-deep-dive-inventory-v1.00F.md
         e2e.yml
     docs/20260731-platform-operations-reference-v1.00W.md
         check-own-package-freshness.mjs, check-shared-package-reach.mjs, check-shared-package-reach.py, shared-package-reach-lint.yml
@@ -131,7 +131,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260629-bsuite-world-class-feature-inventory-v1.00W.md` | BINDABLE |  | check-vercel-production-readiness.mjs |
 | `docs/20260724-migration-fk-index-checklist-v1.00W.md` | BINDABLE |  | check-migration-fk-indexes.mjs, migration-fk-index-lint.yml |
 | `docs/20260724-recurring-bugs-and-blindspots-v1.00W.md` | BINDABLE |  | check-migration-fk-indexes.mjs, check-doc-naming.mjs, db-lint.yml |
-| `docs/20260727-docs-deep-dive-inventory-v1.00W.md` | BINDABLE |  | e2e.yml |
+| `docs/20260727-docs-deep-dive-inventory-v1.00F.md` | BINDABLE |  | e2e.yml |
 | `docs/20260731-platform-operations-reference-v1.00W.md` | BINDABLE |  | check-own-package-freshness.mjs, check-shared-package-reach.mjs, check-shared-package-reach.py |
 | `docs/20260802-d2c-theme-compliance-audit-v1.00A.md` | BINDABLE |  | audit-d2c-theme.sh, publish-eslint-config.yml |
 | `docs/20260810-plan-dashboard-retirement-v1.00F.md` | BINDABLE |  | verify-class-a-preservation.mjs |
@@ -154,7 +154,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md` | BINDABLE |  | check-unmet-peer-deps.mjs, check-published-peer-ranges.mjs, check-lockfile-hygiene.mjs |
 | `docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md` | BINDABLE |  | audit-routes.sh, check-shared-package-reach.mjs |
 | `docs/plans/20260513-bsuite-consolidated-hardening-v1.00W.md` | BINDABLE |  | check-supabase-client-init.mjs |
-| `docs/plans/20260728-gap-remediation-plan-v1.00W.md` | BINDABLE |  | prod-migration-history-audit.yml |
+| `docs/plans/20260728-gap-remediation-plan-v1.00F.md` | BINDABLE |  | prod-migration-history-audit.yml |
 | `docs/plans/20260803-theme-conformance-dod-v1.00W.md` | BINDABLE |  | audit-d2c-theme.sh, audit-palette-whitelist.py, audit-token-ownership.sh |
 | `docs/plans/20260805-plan-triage-open-work-register-v1.00W.md` | BINDABLE |  | audit-applied-tokens.mjs, audit-routes.sh |
 | `docs/plans/20260806-reporting-bulk-data-tiered-schema-program-v1.00D.md` | BINDABLE |  | check-report-catalog-drift.mjs, db-lint.yml |
@@ -270,7 +270,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `crm7/docs/troubleshooting/README.md` | UNBOUND |  | — |
 | `crm7/docs/UNIFIED-ROADMAP.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260112-master-roadmap-v1.00F.md` | UNBOUND |  | — |
-| `docs/00-roadmap/20260725-qwen-excellence-integration-plan-v1.00W.md` | UNBOUND |  | — |
+| `docs/00-roadmap/20260725-qwen-excellence-integration-plan-v1.00F.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260808-data-workspace-implementation-plan-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260808-intake-and-onboarding-findings-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260808-operator-decision-register-v1.00W.md` | UNBOUND |  | — |
@@ -290,16 +290,16 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/00-roadmap/20260812-pi-orchestration-brief-v1.00W.md` | UNBOUND |  | — |
 | `docs/00-roadmap/20260813-colour-gate-operator-items-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260424-env-var-contributing-rules-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260427-conduit-auth-doctrine-investigation-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260427-dev-main-fork-rca-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260427-conduit-auth-doctrine-investigation-v1.00F.md` | UNBOUND |  | — |
+| `docs/20260427-dev-main-fork-rca-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260427-security-definer-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260428-operator-verification/03-oauth-state-secret.md` | UNBOUND |  | — |
 | `docs/20260428-operator-verification/04-tga-gucs.md` | UNBOUND |  | — |
 | `docs/20260428-operator-verification/05-tga-sync-enabled.md` | UNBOUND |  | — |
 | `docs/20260428-operator-verification/README.md` | UNBOUND |  | — |
 | `docs/20260504-bsuite-documentation-hub-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260506-apprentice-placement-form-schema-spec-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00F.md` | UNBOUND |  | — |
+| `docs/20260506-apprentice-placement-form-schema-spec-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260506-apprentice-placement-state-machine-canon-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260506-cross-app-auth-bug-rca-v1.00A.md` | UNBOUND |  | — |
 | `docs/20260506-dependency-bump-checklist-v1.00A.md` | UNBOUND |  | — |
@@ -307,7 +307,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260506-integrations-parity-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260506-leave-parity-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260506-pay-periods-parity-spec-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260506-reports-parity-spec-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260506-reports-parity-spec-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260506-supabase-linter-action-plan-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260506-table-usage-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260506-timesheet-entry-parity-spec-v1.00W.md` | UNBOUND |  | — |
@@ -326,19 +326,19 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260723-anytime-workforceone-admin-guide-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260723-bsuite-capability-matrix-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260724-bsuite-vercel-env-inventory-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260724-oneshot-cross-cutting-audit-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260724-oneshot-cross-cutting-audit-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260725-backlog-closeout-loop-v1.00A.md` | UNBOUND |  | — |
-| `docs/20260725-excellence-program-master-ledger-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260725-headroom-learn-notes-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260725-excellence-program-master-ledger-v1.00F.md` | UNBOUND |  | — |
+| `docs/20260725-headroom-learn-notes-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260725-sta-email-samples-checklist-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260725-sydney-migration-readiness-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260727-extreme-poor-agent-items-execution-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260727-extreme-poor-agent-items-execution-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260727-multiapp-agent-blindspot-investigation-ledger-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260727-schema-package-pin-plan-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260728-migration-idempotency-audit-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260728-operator-ux-bug-register-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260727-schema-package-pin-plan-v1.00F.md` | UNBOUND |  | — |
+| `docs/20260728-migration-idempotency-audit-v1.00F.md` | UNBOUND |  | — |
+| `docs/20260728-operator-ux-bug-register-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260728-overnight-worldclass-closeout-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260728-weekly-gap-register-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260728-weekly-gap-register-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260729-unified-authoring-qa-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260730-competitor-parity-matrix-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260731-agent-engineering-patterns-v1.00W.md` | UNBOUND |  | — |
@@ -374,15 +374,15 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/ai/pricing/README.md` | UNBOUND |  | — |
 | `docs/ai/README.md` | UNBOUND |  | — |
 | `docs/ai/reference/README.md` | UNBOUND |  | — |
-| `docs/audits/20260725-action-plan-from-audits-v1.00W.md` | UNBOUND |  | — |
+| `docs/audits/20260725-action-plan-from-audits-v1.00F.md` | UNBOUND |  | — |
 | `docs/audits/20260725-bsu-braden-throughput-deep-bug-excavation-v1.00W.md` | UNBOUND |  | — |
 | `docs/audits/20260725-bsu-braden-throughput-docs-code-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/audits/20260725-conduit-r80-deep-bug-excavation-v1.00W.md` | UNBOUND |  | — |
-| `docs/audits/20260725-conduit-r80-docs-code-audit-v1.00W.md` | UNBOUND |  | — |
-| `docs/audits/20260725-crm7-deep-bug-excavation-v1.00W.md` | UNBOUND |  | — |
-| `docs/audits/20260725-crm7-docs-code-audit-v1.00W.md` | UNBOUND |  | — |
+| `docs/audits/20260725-conduit-r80-docs-code-audit-v1.00F.md` | UNBOUND |  | — |
+| `docs/audits/20260725-crm7-deep-bug-excavation-v1.00F.md` | UNBOUND |  | — |
+| `docs/audits/20260725-crm7-docs-code-audit-v1.00F.md` | UNBOUND |  | — |
 | `docs/audits/20260725-dead-duplicate-code-audit-v1.00W.md` | UNBOUND |  | — |
-| `docs/audits/20260725-jodie-parity-matrix-v1.00W.md` | UNBOUND |  | — |
+| `docs/audits/20260725-jodie-parity-matrix-v1.00F.md` | UNBOUND |  | — |
 | `docs/audits/20260813-bsuite-world-class-brainstorm-v1.00D.md` | UNBOUND |  | — |
 | `docs/email-templates/README.md` | UNBOUND |  | — |
 | `docs/nav/findings.md` | UNBOUND |  | — |
@@ -390,42 +390,42 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/operator-screenshots/README.md` | UNBOUND |  | — |
 | `docs/plans/20260302-r80-crm7-integration-audit-v1.00A.md` | UNBOUND |  | — |
 | `docs/plans/20260423-gto-billing-reporting-refined-plan-v1.00A.md` | UNBOUND |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260506-codehouse-parity/README.md` | UNBOUND |  | — |
-| `docs/plans/20260507-feature-builder-ux-red-team-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260510-universal-canvas-capability-implementation-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260507-feature-builder-ux-red-team-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260510-universal-canvas-capability-implementation-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260521-reports-w2-uplift-implementation-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260521-reports-w2-uplift-implementation-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260609-production-readiness-next-steps-plan-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260617-product-tails-continuation-prompt-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260617-product-tails-continuation-prompt-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260618-recruitment-comms-rams-cluster-plan-v1.00A.md` | UNBOUND |  | — |
-| `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260629-remaining-work-continuation-prompt-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260701-docs-plans-closure-audit-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260703-gto-e2e-gap-map-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260629-remaining-work-continuation-prompt-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260701-docs-plans-closure-audit-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260703-gto-e2e-gap-map-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260703-unified-authoring-surface-plan-v1.03A.md` | UNBOUND |  | — |
-| `docs/plans/20260709-hermes-deep-dive-audit-prompt-refined-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260716-bsuite-completion-program-plan-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260709-hermes-deep-dive-audit-prompt-refined-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260716-bsuite-completion-program-plan-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260723-bsuite-documentation-program-design-v1.00A.md` | UNBOUND |  | — |
-| `docs/plans/20260723-completion-program-refined-v1.00D.md` | UNBOUND |  | — |
+| `docs/plans/20260723-completion-program-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260724-bsuite-1322-region-migration-runbook-v1.00D.md` | UNBOUND |  | — |
 | `docs/plans/20260724-bsuite-1322-supabase-region-migration-scope-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260724-email-funding-expansion-scope-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260724-recruitment-employment-handover-design-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260724-recurring-bugs-blindspots-refined-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260725-docs-deadcode-archive-refined-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260725-gto-excellence-program-refined-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260725-gto-persona-excellence-design-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260727-escalation-council-multiapp-investigation-refined-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260728-billing-model-label-truthfulness-refined-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260724-email-funding-expansion-scope-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260724-recruitment-employment-handover-design-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260724-recurring-bugs-blindspots-refined-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260725-docs-deadcode-archive-refined-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260725-gto-excellence-program-refined-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260725-gto-persona-excellence-design-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260727-escalation-council-multiapp-investigation-refined-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260728-billing-model-label-truthfulness-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260728-r8-as-rates-engine-architecture-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260728-ux-implementation-plan-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260728-ux-implementation-round2-plan-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260728-weekly-gap-assessment-plan-v1.00W.md` | UNBOUND |  | — |
-| `docs/plans/20260729-qa-backlog-execution-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260728-ux-implementation-plan-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260728-ux-implementation-round2-plan-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260728-weekly-gap-assessment-plan-v1.00F.md` | UNBOUND |  | — |
+| `docs/plans/20260729-qa-backlog-execution-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260729-r8-rates-engine-xero-product-corrections-plan-v1.00D.md` | UNBOUND |  | — |
-| `docs/plans/20260729-unified-authoring-redteam-refined-v1.00W.md` | UNBOUND |  | — |
+| `docs/plans/20260729-unified-authoring-redteam-refined-v1.00F.md` | UNBOUND |  | — |
 | `docs/plans/20260730-gto-enquiry-to-billing-make-rates-real-plan-v1.00D.md` | UNBOUND |  | — |
 | `docs/plans/20260802-d2c-theme-compliance-audit-refined-v1.00W.md` | UNBOUND |  | — |
 | `docs/plans/20260805-operator-register-completion-program-v1.00W.md` | UNBOUND |  | — |
@@ -492,7 +492,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/testing/20260513-e2e-integration-autonoma-removal-v1.00W.md` | UNBOUND |  | — |
 | `docs/testing/README.md` | UNBOUND |  | — |
 | `docs/validation/20260731-gto-e2e-walk-cleanup-ledger-v1.00W.md` | UNBOUND |  | — |
-| `docs/validation/20260731-gto-enquiry-to-billing-walk-results-v1.00W.md` | UNBOUND |  | — |
+| `docs/validation/20260731-gto-enquiry-to-billing-walk-results-v1.00F.md` | UNBOUND |  | — |
 | `docs/validation/20260804-operator-notes-defect-register-v1.00W.md` | UNBOUND |  | — |
 | `docs/validation/20260804-plans-closure-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/validation/20260805-operator-notes-defect-register-v1.00W.md` | UNBOUND |  | — |
@@ -576,16 +576,16 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/archive/20260506-plan-completion-dashboard/README.md` | RECORD |  | — |
 | `docs/archive/20260805-stash-cleanup-manifest-v1.00W.md` | RECORD |  | — |
 | `docs/archive/README.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-braden-marketing-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-bsu-admin-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-bsu-tenant-admin-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-candidate-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-careers-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-employer-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-recruiter-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-crm7-internal-v1.00W.md` | RECORD |  | — |
-| `docs/plans/20260506-codehouse-parity/20260506-portal-r80-3-calculator-v1.00W.md` | RECORD |  | — |
-| `docs/plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00W.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-braden-marketing-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-bsu-admin-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-bsu-tenant-admin-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-candidate-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-careers-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-employer-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-conduit-recruiter-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-crm7-internal-v1.00F.md` | RECORD |  | — |
+| `docs/plans/20260506-codehouse-parity/20260506-portal-r80-3-calculator-v1.00F.md` | RECORD |  | — |
+| `docs/plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md` | RECORD |  | — |
 | `docs/plans/inputs/20260814-portals-lane-kickoff-prompt-v1.00W.md` | RECORD |  | theme-conformance.yml |
 | `docs/recovered/20260303-bsuite-launch-ready-design-v1.00F.md` | RECORD |  | — |
 | `docs/recovered/20260304-crm7-comprehensive-audit-report-v1.00F.md` | RECORD |  | — |

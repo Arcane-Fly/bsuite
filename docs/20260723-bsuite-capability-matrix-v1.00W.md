@@ -1,6 +1,6 @@
 # BSuite vs Competitors — Capability Matrix & Completion Ledger
 
-> **Naming:** `20260723-bsuite-capability-matrix-v1.00W.md` · Status **W** (Working) · Feeds the completion program (`docs/plans/20260723-completion-program-refined-v1.00D.md`).
+> **Naming:** `20260723-bsuite-capability-matrix-v1.00W.md` · Status **W** (Working) · Feeds the completion program (`docs/plans/20260723-completion-program-refined-v1.00F.md`).
 > **Sources (evidence-linked, no unsourced claims):** Code House AnyTime/Workforce One Admin Guide (local `docs/20260723-anytime-workforceone-admin-guide-v1.00W.md`, 70+ capabilities), Code House knowledgebase (205 articles, 17 S3 PDFs — `codehouse-knowledgebase-crawl.md`), ReadyTech public site (Ready Recruit/Apprentice/Workforce/Pay), aXcelerate public site, roadmap sweep (125 open items).
 > **Legend:** ✅ full · 🟡 partial/parallel · ❌ absent · ❓ unverified publicly
 

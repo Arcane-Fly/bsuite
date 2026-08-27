@@ -270,7 +270,7 @@ row raises `23505`. Each shown failing first.
 - Tool denylist snapshot test (forbid `*migration*`/raw-SQL tool names — SEC-08) · **stored prompt-injection fencing** for LLM-read user content (case notes etc. — S9) · CSS adversarial allowlist suite (SEC-05) · **CSP report-only headers all 6 apps** (S10, promoted) · linter false-greens #1175 + #1158 · flake #1159 · STA dual-site PROVEN constant (R11) · advisor live-baseline doc (R10/#1542) · **role-gate alignment sweep beyond platform-kit** (route gates vs edge-fn gates across all admin surfaces — N0 class).
 
 ### X7. Hygiene
-- Subordinate `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00W.md` to this master (coverage lane: 16/22 items missing there) · SECDEF handoff #1261 consolidation.
+- Subordinate `docs/plans/20260629-bsuite-remaining-work-roadmap-v1.00F.md` to this master (coverage lane: 16/22 items missing there) · SECDEF handoff #1261 consolidation.
 
 ## Planned — LATER (2–4 weeks)
 

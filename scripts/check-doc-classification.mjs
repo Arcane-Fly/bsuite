@@ -31,6 +31,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { isNavigational } from './lib/doc-conventions.mjs';
 
 const KINDS = ['law', 'obligation', 'decision', 'standard', 'plan', 'record'];
 const AUTHORITIES = ['external', 'operator', 'engineering', 'none'];
@@ -135,7 +136,10 @@ function walk(d, out = []) {
   return out;
 }
 
-const all = walk('docs');
+/* The navigational-file set lives in ONE place — see scripts/lib/doc-conventions.mjs
+   for why this is a shared module rather than a copy in each gate. */
+
+const all = walk('docs').filter((p) => !isNavigational(p));
 const unclassified = all.filter((p) => !parseFrontmatter(readFileSync(p, 'utf8'))?.kind);
 
 // Positive control: an empty scan would report zero unclassified, which reads as a
@@ -146,9 +150,13 @@ if (all.length < 20) {
 }
 
 let failed = false;
-if (changed.length) {
-  console.log(`  enforcing on ${changed.length} changed doc(s):\n`);
-  for (const p of changed) {
+const changedDocs = changed.filter((p) => !isNavigational(p));
+if (changed.length !== changedDocs.length) {
+  console.log(`  ${changed.length - changedDocs.length} navigational file(s) not enforced (README/STATUS/INDEX are indexes, not documents)`);
+}
+if (changedDocs.length) {
+  console.log(`  enforcing on ${changedDocs.length} changed doc(s):\n`);
+  for (const p of changedDocs) {
     if (!existsSync(p)) continue;
     const errs = validate(parseFrontmatter(readFileSync(p, 'utf8')));
     if (errs.length) {
@@ -204,5 +212,36 @@ if (base === null) {
   failed = true;
 } else {
   console.log(`  ratchet ok: baseline ${base}, now ${unclassified.length}${unclassified.length < base ? ` (${base - unclassified.length} paid down — update the baseline)` : ''}`);
+  /*
+   * THE RATCHET MUST REFUSE BOTH DIRECTIONS, not just upward.
+   *
+   * A baseline left ABOVE the true count is slack: it silently re-permits
+   * exactly as much debt as was just paid off, so the next doc to lose its
+   * frontmatter passes unnoticed. That is the estate's own recorded rule —
+   * precedent 20260809__two_directional_ratchet — and this gate did not
+   * implement its downward half. It reported "ratchet ok" with a baseline
+   * seven above the truth.
+   *
+   * Refusing here costs one line in a commit that already lowered the count,
+   * and it is the only moment the slack is visible.
+   */
+  /* Compare the COMMITTED count. Another lane's untracked drafts inflate the
+     local number and would otherwise mask a re-bank that CI, which sees only
+     the committed tree, is about to demand. */
+  let committed = unclassified.length;
+  try {
+    const others = execFileSync('git', ['ls-files', '--others', '--exclude-standard', 'docs'],
+      { encoding: 'utf8' }).split('\n').filter(Boolean);
+    committed -= unclassified.filter((u) =>
+      others.includes(typeof u === 'string' ? u : u.path ?? u.file ?? '')).length;
+  } catch { /* not a git tree — fall back to the raw count */ }
+
+  if (committed < base) {
+    console.log(
+      `  RE-BANK REQUIRED: the committed count fell to ${committed} but ${BASELINE} still reads ${base}. ` +
+        `A baseline above the truth re-permits the debt you just paid off — write ${committed} to it.`,
+    );
+    failed = true;
+  }
 }
 process.exit(failed ? 1 : 0);

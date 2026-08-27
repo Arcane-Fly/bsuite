@@ -14,8 +14,8 @@
 | `bsuite_overnight_closeout_state` (Memory API) | Live machine state: current wave, open PRs, blockers |
 | `bsuite_session_latest_v2` | Session pointer for multi-agent handoff |
 | Extreme ledger | `20260727-multiapp-agent-blindspot-investigation-ledger-v1.00W.md` |
-| Extreme execution | `20260727-extreme-poor-agent-items-execution-v1.00W.md` |
-| Schema pin plan | `20260727-schema-package-pin-plan-v1.00W.md` |
+| Extreme execution | `20260727-extreme-poor-agent-items-execution-v1.00F.md` |
+| Schema pin plan | `20260727-schema-package-pin-plan-v1.00F.md` |
 | OUTSTANDING + remaining-work roadmap | Living docs (not archive) |
 
 ### Item schema (every backlog row)

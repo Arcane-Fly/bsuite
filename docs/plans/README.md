@@ -40,16 +40,16 @@ register above, which is re-measured. Fifteen prompt-shaped documents currently 
 
 | File | Written |
 |------|---------|
-| `20260617-product-tails-continuation-prompt-v1.00W.md` | 2026-06-17 |
-| `20260629-remaining-work-continuation-prompt-v1.00W.md` | 2026-06-29 |
-| `20260709-hermes-deep-dive-audit-prompt-refined-v1.00W.md` | 2026-07-09 |
-| `20260723-completion-program-refined-v1.00D.md` | 2026-07-23 |
-| `20260724-recurring-bugs-blindspots-refined-v1.00D.md` | 2026-07-24 |
-| `20260725-docs-deadcode-archive-refined-v1.00D.md` | 2026-07-25 |
-| `20260725-gto-excellence-program-refined-v1.00D.md` | 2026-07-25 |
-| `20260727-escalation-council-multiapp-investigation-refined-v1.00W.md` | 2026-07-27 |
-| `20260728-billing-model-label-truthfulness-refined-v1.00W.md` | 2026-07-28 |
-| `20260729-unified-authoring-redteam-refined-v1.00W.md` | 2026-07-29 |
+| `20260617-product-tails-continuation-prompt-v1.00F.md` | 2026-06-17 |
+| `20260629-remaining-work-continuation-prompt-v1.00F.md` | 2026-06-29 |
+| `20260709-hermes-deep-dive-audit-prompt-refined-v1.00F.md` | 2026-07-09 |
+| `20260723-completion-program-refined-v1.00F.md` | 2026-07-23 |
+| `20260724-recurring-bugs-blindspots-refined-v1.00F.md` | 2026-07-24 |
+| `20260725-docs-deadcode-archive-refined-v1.00F.md` | 2026-07-25 |
+| `20260725-gto-excellence-program-refined-v1.00F.md` | 2026-07-25 |
+| `20260727-escalation-council-multiapp-investigation-refined-v1.00F.md` | 2026-07-27 |
+| `20260728-billing-model-label-truthfulness-refined-v1.00F.md` | 2026-07-28 |
+| `20260729-unified-authoring-redteam-refined-v1.00F.md` | 2026-07-29 |
 | `20260802-d2c-theme-compliance-audit-refined.md` | 2026-08-02 |
 | `20260811-award-engine-to-zero-refined-v1.00W.md` | 2026-08-11 |
 | `20260811-dataplatform-completion-refined-v1.00W.md` | 2026-08-11 |
@@ -70,17 +70,17 @@ Four of these name **R80.3** or a pre-2026-08-06 app set; R80.3 left the submodu
 | `20260814-portals-and-surface-class-remediation-v1.00D.md` | D | **Seven-phase programme** closing the two classes the operator has raised most often — scope enforced in the UI instead of the database, and cards/theme fixed one page at a time — then the portals per rulings D-93…D-98. Phase 0 DELIVERED (crm7#1731, BSU#726 — see `../20260814-phase0-scope-remediation-delivery-v1.00W.md`). Declares four explicit boundaries with the concurrent nav-route lane; one is a live collision on `/portal/field-officer`. Phase 5 is gated on R8 award coverage. |
 | `20260807-data-platform-completion-program-v1.00D.md` | D | Data-platform completion: report catalog covers 23 of 363 tables (crm7-only, zero conduit/BSU/throughput/braden); four P4/P5 persistence surfaces at 0 rows; one live silent data-loss bug on `/settings/custom-fields`. Supersedes `20260806-reporting-bulk-data-tiered-schema-program-v1.00D.md` **as the execution plan** — its own P1–P9 were delivered 2026-08-07 (catalogue 23 → 84 entities). **Its decisions D1–D7 remain required, and are NOT the same seven questions as the 2026-08-06 document's D1–D7 — always cite the date.** |
 | `20260806-reporting-bulk-data-tiered-schema-program-v1.00D.md` | D | Reporting, bulk import/update and tiered schema control — the fuller analysis behind the 2026-08-07 execution plan. **Rescued from untracked 2026-08-10** (it had sat uncommitted since 2026-08-06 under a machine-generated filename). Superseded as a plan, retained as the analysis: its §1.1 finding is still live — there is no query engine, so "billable hours per month" remains a migration rather than a configuration. Carries its own unanswered **D1–D7**, chief among them D1, the grid technology. |
-| `20260729-qa-backlog-execution-v1.00W.md` | W | QA backlog execution plan — full red-team completion of the unified-authoring audit findings |
+| `20260729-qa-backlog-execution-v1.00F.md` | W | QA backlog execution plan — full red-team completion of the unified-authoring audit findings |
 | `20260423-gto-billing-reporting-refined-plan-v1.00A.md` | A | Production billing, STP Phase 2, Payday Super, regulatory reporting (Approved; Xero lane blocked on app registration) |
 | `20260501-universal-wysiwyg-schema-ux-v1.00W.md` | W | Universal WYSIWYG + schema-driven UX (Phase 0 + Schema Builder Phase 1a/1b + schema-builder-specific Phase 3 complete; page/form/custom authoring phases active) |
 | `20260506-codehouse-parity-and-platform-360-v1.00W.md` | W | Codehouse Workforce-One parity + Platform-360 capability spec (index plan + 9 portal sub-plans + 1 visual feature builder spec under `20260506-codehouse-parity/`; refined-prompt provenance under `inputs/`). Permissions remain AUTH_CANONICAL.md + Supabase RLS + BSuite SSO — no new RBAC/ABAC framework. |
-| `20260507-feature-builder-ux-red-team-v1.00W.md` | W | Visual Feature Builder UX red-team + Phase 0.5 plan (FF-FB-UX-REDTEAM-20260507) |
-| `20260510-universal-canvas-capability-implementation-v1.00W.md` | W | Universal canvas capability implementation (red-team amendments applied; not yet executed) |
+| `20260507-feature-builder-ux-red-team-v1.00F.md` | W | Visual Feature Builder UX red-team + Phase 0.5 plan (FF-FB-UX-REDTEAM-20260507) |
+| `20260510-universal-canvas-capability-implementation-v1.00F.md` | W | Universal canvas capability implementation (red-team amendments applied; not yet executed) |
 | `20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md` | W | Part O.11 theme centralisation + enterprise white-label POC, O.12 feature-placement audit, and O.13 docs-coherence handoff |
 | `20260513-bsuite-consolidated-hardening-v1.00W.md` | W | Consolidated hardening multi-cycle plan (open tails tracked via bsuite#1505 et al.) |
-| `20260521-reports-w2-uplift-implementation-v1.00W.md` | W | Reports W2 uplift — Phase 1 shipped (crm7 PRs #840–#844 merged 2026-05-22); Phases 3a/3b/4/6/7 outstanding |
+| `20260521-reports-w2-uplift-implementation-v1.00F.md` | W | Reports W2 uplift — Phase 1 shipped (crm7 PRs #840–#844 merged 2026-05-22); Phases 3a/3b/4/6/7 outstanding |
 | `20260609-production-readiness-next-steps-plan-v1.00W.md` | W | **Umbrella production-readiness plan** — package consumer rollout, visual smoke triage, TCID/WAAMS, placement identity bridge, block-release calendar, workstreams E–H; remains active until bsuite#1506, crm7#1066, storage phases, and E–H tails close |
-| `20260701-docs-plans-closure-audit-v1.00W.md` | W | Current closure audit across parent + six submodules; records archive candidates, stale status corrections, and remaining work by repo |
+| `20260701-docs-plans-closure-audit-v1.00F.md` | W | Current closure audit across parent + six submodules; records archive candidates, stale status corrections, and remaining work by repo |
 
 ### Completed Plans (re-marked A, retained in place)
 

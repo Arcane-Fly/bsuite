@@ -57,11 +57,11 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `NEW_ISSUES_FOUND.md` | Append-only ledger of pre-existing issues discovered mid-task (Five-Wave Stabilization) |
 | `20260723-bsuite-capability-matrix-v1.00W.md` | Competitor capability matrix (Code House WfO/AnyTime, ReadyTech Ready Recruit, aXcelerate) + prioritised completion ledger + user-manual program seed |
 | `20260724-bsuite-vercel-env-inventory-v1.00W.md` | Vercel production env-var inventory across all 6 apps (per-app matrix, gap notes) — captured via vercel CLI 2026-07-24 |
-| `20260724-oneshot-cross-cutting-audit-v1.00W.md` | Full cross-cutting DRY one-shot audit (2026-07-22→24 ship window) — 5 violations fixed, 4 ownership-map gaps closed, lifecycle-handover exception codified |
+| `20260724-oneshot-cross-cutting-audit-v1.00F.md` | Full cross-cutting DRY one-shot audit (2026-07-22→24 ship window) — 5 violations fixed, 4 ownership-map gaps closed, lifecycle-handover exception codified |
 | `20260724-migration-fk-index-checklist-v1.00W.md` | Every new FK column needs a same-migration btree index (pgTAP A1 / R1); CI script check-migration-fk-indexes.mjs |
 | `20260724-recurring-bugs-and-blindspots-v1.00W.md` | Recurring bug classes (R1–R12) + unexamined clusters (B1–B12) + next-5 investigations — discovery only after prompt-enhancer Standard refine |
-| `plans/20260725-docs-deadcode-archive-refined-v1.00D.md` | Prompt-enhanced plan: docs↔code audit, dead code, archive relocate |
-| `20260725-headroom-learn-notes-v1.00W.md` | Headroom learn on bsuite: 7.1% tool-fail rate; LLM extract blocked (Claude limit / litellm); Qwen 3.8 API 401 |
+| `plans/20260725-docs-deadcode-archive-refined-v1.00F.md` | Prompt-enhanced plan: docs↔code audit, dead code, archive relocate |
+| `20260725-headroom-learn-notes-v1.00F.md` | Headroom learn on bsuite: 7.1% tool-fail rate; LLM extract blocked (Claude limit / litellm); Qwen 3.8 API 401 |
 | `20260723-anytime-workforceone-admin-guide-v1.00W.md` | Code House AnyTime/Workforce One Administrator Guide (competitor reference — full admin/timesheet/award surface) |
 
 ### Standards & doctrine
@@ -87,7 +87,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File | Description |
 |------|-------------|
-| `20260427-conduit-auth-doctrine-investigation-v1.00W.md` | Conduit auth doctrine vs reality investigation (recovered from a stash 2026-08-05 — historical, predates the 2026-04-28 BS OAuth migration) |
+| `20260427-conduit-auth-doctrine-investigation-v1.00F.md` | Conduit auth doctrine vs reality investigation (recovered from a stash 2026-08-05 — historical, predates the 2026-04-28 BS OAuth migration) |
 | `20260427-security-definer-audit-v1.00W.md` | SECURITY DEFINER privilege-escalation audit — `public.is_team_admin` + WS-G helpers (recovered from a stash 2026-08-05; verify findings against the live catalog before acting) |
 | `20260506-cross-app-auth-bug-rca-v1.00A.md` | BSU→CRM7 logged-out incident RCA — authority for the OAuth session-bridge frozen-fact correction |
 | `20260519-rpc-report-page-security-review-v1.00A.md` | Report page / RPC security review (Approved) |
@@ -100,14 +100,14 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 | File | Description |
 |------|-------------|
-| `20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00W.md` | AVETMISS NAT00120 export research + termination-code mapping |
-| `20260506-apprentice-placement-form-schema-spec-v1.00W.md` | Apprentice placement create/edit form Zod + RHF spec |
+| `20260506-apprentice-placement-avetmiss-nat00120-mapping-v1.00F.md` | AVETMISS NAT00120 export research + termination-code mapping |
+| `20260506-apprentice-placement-form-schema-spec-v1.00F.md` | Apprentice placement create/edit form Zod + RHF spec |
 | `20260506-apprentice-placement-state-machine-canon-v1.00W.md` | Apprentice placement state machine canonical reference |
 | `20260506-file-export-adapters-parity-spec-v1.00W.md` | File export adapters parity spec |
 | `20260506-integrations-parity-spec-v1.00W.md` | Integrations parity spec |
 | `20260506-leave-parity-spec-v1.00W.md` | Leave parity spec |
 | `20260506-pay-periods-parity-spec-v1.00W.md` | Pay periods parity spec |
-| `20260506-reports-parity-spec-v1.00W.md` | Reports parity spec |
+| `20260506-reports-parity-spec-v1.00F.md` | Reports parity spec |
 | `20260506-timesheet-entry-parity-spec-v1.00W.md` | Timesheet entry parity spec |
 | `20260507-admin-parity-spec-v1.00W.md` | Admin parity spec |
 | `20260507-comms-parity-spec-v1.00W.md` | Comms parity spec |
@@ -127,7 +127,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260629-batch-e-rbac-parity-dev-deploy-test-report-v1.00W.md` | **Archived out of the repo** — same path. Batch E RBAC parity dev-deploy validation report (conduit Team `joined_at` fix). |
 | `20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md` | **Partially recovered** — the plan is in-repo at [`recovered/20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md`](recovered/20260630-cross-app-auth-validation-dev-deploy-test-plan-v1.00F.md) (5 `d.*` apps). |
 | `20260630-cross-app-auth-validation-dev-deploy-test-report-v1.00W.md` | **Archived out of the repo** — `~/Desktop/Dev/archived-repos-docs/20260727-docs-archive-pass/docs/`. Cross-app auth validation dev-deploy report (OAuth 2.1 + PKCE + JWKS, 5/5 pass). |
-| `20260427-dev-main-fork-rca-v1.00W.md` | dev ↔ main fork RCA (parent + crm7) — pre-reconcile gate analysis (recovered from a stash 2026-08-05) |
+| `20260427-dev-main-fork-rca-v1.00F.md` | dev ↔ main fork RCA (parent + crm7) — pre-reconcile gate analysis (recovered from a stash 2026-08-05) |
 | `20260506-supabase-linter-action-plan-v1.00W.md` | Supabase linter action plan — Phases 1+2 ready, Phase 3 deferred (recovered from a stash 2026-08-05; re-run the advisor before acting) |
 | `20260506-table-usage-audit-v1.00W.md` | Table usage audit — conclusions stand, but each drop recommendation needs human sign-off (recovered from a stash 2026-08-05). **Counts are stale**: 229 tables recorded, **402 live** (re-measured 2026-08-17 — the doc now carries a banner saying so) |
 | `20260722-developer-portal-investigation-v1.00W.md` | Developer Portal surface investigation — tenant_navigation, platform_branding, feature_builder, and schema-builder tables audit |
@@ -165,13 +165,13 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 
 - [20260727 multi-app agent blindspot investigation ledger](./20260727-multiapp-agent-blindspot-investigation-ledger-v1.00W.md) — escalation council 45-item ranked backlog
 
-- [20260727 extreme-poor agent items execution](./20260727-extreme-poor-agent-items-execution-v1.00W.md)
+- [20260727 extreme-poor agent items execution](./20260727-extreme-poor-agent-items-execution-v1.00F.md)
 
-- [20260727 schema package pin plan](./20260727-schema-package-pin-plan-v1.00W.md)
+- [20260727 schema package pin plan](./20260727-schema-package-pin-plan-v1.00F.md)
 
 - [20260728 overnight world-class close-out](./20260728-overnight-worldclass-closeout-v1.00W.md)
 
-- [20260728 migration idempotency audit](./20260728-migration-idempotency-audit-v1.00W.md) — gap-remediation Task 3 (P0-2): verdicts for the 17 above-floor migrations flagged as unrecorded; all SAFE, no guards needed; documents that the ledger gap has since substantially closed
+- [20260728 migration idempotency audit](./20260728-migration-idempotency-audit-v1.00F.md) — gap-remediation Task 3 (P0-2): verdicts for the 17 above-floor migrations flagged as unrecorded; all SAFE, no guards needed; documents that the ledger gap has since substantially closed
 
 - [20260729 unified authoring QA audit](./20260729-unified-authoring-qa-audit-v1.00W.md) — comprehensive QA audit across unified authoring, invites, Jodie and the platform kit
 
