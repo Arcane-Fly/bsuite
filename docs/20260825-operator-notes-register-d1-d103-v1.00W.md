@@ -213,3 +213,57 @@ seven in R8 during the sub-module merge. He calls two of them *"Unacceptable"*.
 ---
 
 *Compiled 2026-08-25 from the operator's own document. Uncommitted, for review.*
+
+---
+
+## Addendum — D-104 … D-139, from `bsuite notes (6).docx`
+
+**Added 2026-08-27.** `bsuite notes (6).docx` (37,203,139 B, mtime 2026-08-26 19:35, 378 paragraphs)
+is this register's source document **plus ten paragraphs** dated 25/08 and 26/08. Nothing was
+removed: a set difference against `bsuite notes.docx` returns **10 new paragraphs and 0 dropped**.
+
+Those ten paragraphs carry **36 distinct asks**, none of which were registered anywhere before
+today. They are numbered D-104 … D-139 below on the same basis as D-1 … D-103 — one distinct ask
+per row, adjacent sentences about the same surface merged.
+
+**None of these carry a status.** This register records what was asked, not what was done; a
+status column here would be the false-completion surface the estate keeps rebuilding.
+
+| ID | Verbatim (his words) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-104 | ""Back to placement link should be a button… this should be a button for all."" | Back-links render as buttons, estate-wide not one page | /placements/:id | CRM7 | ux |
+| D-105 | ""Margin is profit pretty much. Its not charge less, wage. Should reflect the calc done in R8."" | Margin computed as R8 computes it, not charge−wage | /engagements/create | CRM7/R8 | compliance-calc |
+| D-106 | ""Hardcoded funding. Violation of requirements."" | Engagement funding sourced, not hardcoded | /engagements/create | CRM7 | compliance-calc |
+| D-107 | ""Funding in the engagement should reflect how R8 does funding… during engagement we learn the person's particulars and can more closely allocate all funding that individual attracts."" | Per-individual funding allocation at engagement time | /engagements/create | CRM7/R8 | compliance-calc |
+| D-108 | ""Engagements should be renamed to training engagements."" | Rename the entity and every label | engagements | CRM7 | ux |
+| D-109 | ""Person record should have a list of all placements and engagements we have records for."" | Person detail lists all placements + engagements | /people/:id | CRM7 | data-reporting |
+| D-110 | ""This should be presented in a filterable list/table preferably airtable style… filterable by attribute."" | Training providers as an Airtable-style filterable table | /training-providers | CRM7 | data-reporting |
+| D-111 | ""they should be able to mark training providers they want visible and hidden. Search all, search Active. Active means Active for us… not Active generally."" | Per-tenant visible/hidden marking; tenant-Active distinct from registered/deregistered | /training-providers | CRM7 | data-reporting |
+| D-112 | ""RTO 22613 says (no name) but it has a record… check all like concerns."" | Backfill RTO names from TGA; sweep the whole class | /training-providers | CRM7 | integration |
+| D-113 | ""Why is Michael Chen from ADCO Constructions an available Signatory for the Selected 'Example Constructions Pty Ltd'"" | Signatory list scoped to the correct employer | /contracts | CRM7 | security |
+| D-114 | ""they should have been reassigned to futurebuild not entered again causing confusing duplicates."" | Reassign the mis-tenanted FutureBuild imports; remove duplicates | tenancy | CRM7 | data-reporting |
+| D-115 | ""the google auth screen returns me to the bsuite ui with popup still open rather than the email-accounts screen in crm7 and closing the popup."" | Gmail connect returns to /settings/email-accounts and closes the popup | /settings/email-accounts | CRM7 | integration |
+| D-116 | ""Microsoft is unverified even though we have set up the manifest?"" | Microsoft app verified so Azure mail connect works | /settings/email-accounts | CRM7 | integration |
+| D-117 | ""Missing known member caris@mbawa.com"" | Known member appears in the members list | /admin/permissions | suite | data-reporting |
+| D-118 | ""anything available via json should be done through non-coding means. This is always and has been a long standing directive"" | Every JSON-only capability has a non-coding UI | /admin/* | suite | architecture |
+| D-119 | ""Save template and save as default dont currently work… Doesnt currently save on page refresh."" | Save template + save-as-default persist across reload | quotes | R8 | regression |
+| D-120 | ""The little tab 'quotes' is confusing. Just the left regular panel should be used and create threads."" | Drop the quotes tab; use the left panel with threads | quotes | R8 | ux |
+| D-121 | ""Still no way to export to pdf, email for esigning, or push to an apprentice or host record."" | Quote export to PDF, send for e-sign, push to record | quotes | R8 | integration |
+| D-122 | ""And corresponding import a template or quote from R8"" | Import a template/quote from R8 into CRM7 | quotes | CRM7/R8 | integration |
+| D-123 | ""Must be able to actually interact with data here if permissions allows. Developer always."" | /admin/data is interactive for permitted roles | /admin/data | CRM7 | ux |
+| D-124 | ""Must be able to import and export csv and xlxs and create import templates to download and use to re-upload."" | CSV/XLSX import+export and downloadable import templates | /admin/data | CRM7 | data-reporting |
+| D-125 | ""R8 cant save and cant save template."" | R8 save + save-template work | R8 calculator | R8 | regression |
+| D-126 | ""Adult doesnt change the wages in the wages card."" | Adult selection recalculates the wages card | R8 calculator | R8 | compliance-calc |
+| D-127 | ""Needs notices for actions you take e.g. save."" | Action feedback/toasts on save and similar | R8 | R8 | ux |
+| D-128 | ""Needs export and send for esigning and as email."" | R8 export, e-sign send, email send | R8 | R8 | integration |
+| D-129 | ""Leads convert relevant sections to contact and client through opportunity etc chain."" | Lead→opportunity→contact/client conversion carries data | /leads | CRM7 | ux |
+| D-130 | ""Any subscribed user of a tenant should be able to be afforded permissions by the admin and assigned a caseload of apprentices. Even several over the same… or a supervisor over their field staff."" | Caseload assignment, shared and supervisory | /admin/permissions | CRM7 | security |
+| D-131 | ""The UI across the apps is pretty slow. Investigate if their optimization, modularization or anything else… or let me know if its good and just needs a bigger machine."" | Measure UI performance and answer the question | all apps | all apps | architecture |
+| D-132 | ""training contracts are created by the State Training Authority in PDF form and scanned. This page makes no sense."" | Rethink e-signatures around scanned STA PDFs | /contracts/training/e-signatures | CRM7 | architecture |
+| D-133 | ""Many things like host contracts, employment contracts, WHS risk assessment site visit attendance quotes, and placement confirmation of rates and charges… will need e-signatures."" | E-signature support across those document classes | /contracts | CRM7 | integration |
+| D-134 | ""https://crm.crm7.app/hosts should lsit all placements in a table filterable all active and past and pending etc. customizable columns."" | Hosts list all placements, filterable, customisable columns | /hosts | CRM7 | data-reporting |
+| D-135 | ""This should provide option to like from other areas like the existing contacts mor leads or the like violates one shot policy."" | Link existing contacts/leads instead of re-keying (one-shot) | /hosts | CRM7 | architecture |
+| D-136 | ""Bottom border still double for cards which we have raised 100s of times now."" | Doubled bottom border gone, estate-wide | all card surfaces | all apps | **REGRESSION** |
+| D-137 | ""Linked entities with a link looks amaturise."" | Replace the bare link treatment on client detail | /clients/:id | CRM7 | ux |
+| D-138 | ""Hosts and clients each should displace in a table below all placements contacts, all records associated with them easily and filterable in tables."" | Related-records tables on host and client detail | /hosts/:id, /clients/:id | CRM7 | data-reporting |
+| D-139 | ""anything that lists rows like this needs to be brought up to the airtable style design which is still itself sub par. Take inspiration from the GaryOcean428/atmosphere setup."" | Airtable-style list design everywhere rows are listed; atmosphere as the reference | all list surfaces | all apps | data-reporting |

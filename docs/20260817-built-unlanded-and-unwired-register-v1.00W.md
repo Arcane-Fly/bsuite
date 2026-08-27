@@ -1,22 +1,28 @@
 # Built but unlanded, built but unwired — a machine sweep
 
-> **THIS REGISTER FORKED. Read `20260819-built-unlanded-and-unwired-register-v1.00W.md` too.**
+> ## THE FORK IS CLOSED — this file is the canonical register. 2026-08-27.
 >
-> Two files carry this same slug and NEITHER is a superset. Discovered 2026-08-26.
-> The filename dates mislead: this file has been updated through 20 August (§9.10, §9.11),
-> so the file *named* 08-19 is not the newer one — it is a fork that received different edits.
+> Two files carried this slug from 2026-08-17 and neither was a superset, so a reader of
+> either got a partial answer. `20260819-built-unlanded-and-unwired-register-v1.00F.md` is
+> now **superseded** and carries a banner saying so; nothing is lost by reading only this file.
 >
-> **Already ported here from that fork, verified line-by-line:** §3.3, §4.4 and §4.5
-> (the 2026-08-19 resolution passes) and the **NX-7 correction**, which REVERSES the meaning
-> of its own row — `wage_snapshots` does exist.
+> **What was ported in to close it**, verified line by line rather than by section heading:
 >
-> **NOT yet ported, and the reason this banner exists rather than a merge:** that fork's §9 is a
-> different pass from this file's §9, and it carries corrections this file does not — BU-9 closed,
-> a "there is no such cron job" reversal, and an `awards` 156-row ingestion finding. Merging two
-> divergent §9 sections is an editorial judgement, not a mechanical port, and half-merging it
-> would silently drop corrections. That is the failure this whole register is about.
+> - **§4.2 in full** — the 2026-08-19 correction reversing *"there is no such cron job"*.
+>   `cron.job` id 175 exists and is active, has **never successfully run** because
+>   `sync_award_rates_url` and `sync_award_rates_token` are unseeded, and seeding them would
+>   still not close the gap, because `sync-award-rates` never writes `award_rates` or
+>   `award_classifications`. The superseded claim is kept struck through, not deleted.
+> - **§4.3** — the 08-19 pass, a strict superset of what stood here.
+> - **§3.2** — the caveat that the retiring script was *not* built by that resolution pass.
+> - **BU-9** — closed on 2026-08-19; this file still carried it open.
 >
-> Until someone reconciles §9 deliberately, **both files are live and both must be read.**
+> **What was deliberately NOT taken:** NX-1 and NX-7, where this file already holds the later
+> state (NX-1 struck through, NX-7 carrying the correction with its own provenance note), and
+> §9.10/§9.11 — the 20 August entries the other file never had.
+>
+> Measured after the port: **zero** substantive lines remain only in the 08-19 file, excluding
+> its own banner, its metadata line, and the two rows above where this file is newer.
 
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
 **Date:** 2026-08-17 · §9 added 2026-08-19 · §9.10–§9.11 added 2026-08-20 · **Version:** 1.03W · **Status:** W — Working
@@ -211,7 +217,8 @@ the removal happened months earlier in a file nobody reads during a feature revi
 
 **The class, not the file:** a lint exemption should not be able to outlive its subject's last import.
 The durable fix is a guard that fails when `eslint.config.js` names a path that no tracked file
-imports — one script, and it retires all three of these plus any future instance.
+imports — one script, and it retires all three of these plus any future instance. **Not built by
+this resolution pass** (out of scope for a per-item verdict sweep; flagged for a follow-up PR).
 
 ---
 
@@ -300,30 +307,47 @@ vault secret names those jobs dereference (`jodie_error_scan_url`, `tga_sync_url
 
 > `refresh-award-rates / sync-award-rates: invoked by pg_cron`
 
-**There is no such cron job.** The live `cron.job` table holds 16 entries; none references an award
-rate, and no vault secret exists for one. `sync-award-rates` is invoked by `refresh-award-rates`
-(its own header comment says so, `index.ts:81`), and `refresh-award-rates` is invoked by nothing.
-The chain is complete and unreached from end to end.
+~~**There is no such cron job.**~~ **CORRECTED 2026-08-19 — a cron job now exists, and closing it
+proved the deeper claim in this section was still right for a different reason.** Migration
+`20260822040000_schedule_sync_award_rates.sql` (renamed from `20260822010000` mid-collision, authored
+2026-08-17) scheduled `sync-award-rates-weekly` directly against `sync-award-rates` — **bypassing
+`refresh-award-rates` entirely**, which the paragraph above (correctly, at the time) named as the
+caller. Live: `cron.job` id **175**, active. It has **never successfully run** — its two vault
+secrets, `sync_award_rates_url` and `sync_award_rates_token`, are unseeded, so every weekly fire hits
+the migration's own `RAISE EXCEPTION` guard rather than POSTing to a null endpoint.
+
+**Seeding those secrets would not close the gap this section is actually about.** Read the
+scheduling migration's own assertion block: *"It populates `award_rate_cache` only —
+`award_classifications` remains empty and the vacancy dropdown with it."* `sync-award-rates` writes
+`award_rate_cache` and `award_templates` — it **never** writes `award_rates` or
+`award_classifications`, which is what `award_rates` **0 rows** / `award_classifications` **0 rows**
+(against `awards` **156 rows**) actually means: those two tables have **no ingestion path at all**,
+scheduled or not. `refresh-award-rates` is now genuinely orphaned (superseded by the direct cron, not
+merely unwired) — see §3.3/§4.4 resolution below for the verdict on both functions. Documented
+in-repo on `sync-award-rates/index.ts` so this does not have to be re-derived again.
 
 This is not a tidy-up item. The completion plan's Phase 5 is the calculation engine, and the FWC
 Annual Wage Review 2026 became operative on **1 July 2026** — six weeks ago — with a **non-uniform**
 C13/C14 structural adjustment that no flat-percentage path can absorb. A refresh function that never
 runs cannot make rates stale-detectable, and a comment asserting a scheduler that does not exist is
 worse than no comment, because it answers the question "is this wired?" incorrectly for anyone who
-greps for it.
+greps for it. As of this correction the scheduler exists and the comment is still wrong about what
+running it would fix — the same lesson, one layer deeper.
 
 `update-wage-rates` (123 lines) is the benign case in the same family: the repo describes it as
 "a deprecated proxy with no authority of its own", which is consistent with having no caller. It
-should be deleted rather than explained.
+should be deleted rather than explained — recommended REMOVE IT below, not deleted by this sweep
+(operator approval required; see resolution section).
 
 ### 4.3 Plausibly reached from outside — flagged, not claimed
+
+> **Superseded 2026-08-19 — both were settled, and neither was reached from outside.** The text
+> below is kept as written because the *reasoning error* it contains is the finding. See §4.5.
 
 `crm7/adobe-sign-webhook` (320) and `business-suite-unified/jodie-pr-notify` (239) have no in-app
 caller and no cron job, which is exactly what a webhook receiver and a CI notifier should look like.
 This sweep cannot see Adobe's configuration or a workflow in another repository, so they are recorded
 as **unverified**, not as dead. Settling them takes one look at each external configuration.
-
----
 
 ### 4.4 Resolution — 2026-08-19
 
@@ -521,7 +545,7 @@ input to one or a small standalone class.
 | **BU-6** | `throughput/src/lib/user-management.ts` — 552 lines, cross-app writes, guard disabled, no importer | Phase 0 | Deleted, or re-enabled under the guard and imported. Not left inert with the rail off |
 | **BU-7** | `bsuite-wage-audit` work tree stages 3,104 deletions of live guard infrastructure on `development` | Immediate | Work tree removed; `git worktree list` no longer shows it |
 | **BU-8** | 35 vendored UI primitives across four apps are never used | Phase 6, low priority | Removed, or a stated policy that the shadcn/magicui set is vendored whole. Either is fine; silence is not |
-| **BU-9** | Two edge functions are unverifiable from inside the estate (`adobe-sign-webhook`, `jodie-pr-notify`) | Phase 7 (doc repair) | Each has a line in its own header naming its external caller, or it is deleted |
+| **BU-9** | ~~Two edge functions are unverifiable from inside the estate~~ — **CLOSED 2026-08-19.** Neither was unverifiable. `adobe-sign-webhook` was retired 2026-03-17 and recovered in error 2026-08-16; `jodie-pr-notify` has no webhook, no secret and a 0-row upstream | Phase 7 (doc repair) | **Met.** Adobe tombstoned to a 410 in crm7#1862 + empty column dropped; jodie's real gap named in §4.5. The finding that outlived it: "cannot verify from the repo" describes where you looked, not the system |
 
 ### The class behind BU-2, BU-3 and BU-5
 
