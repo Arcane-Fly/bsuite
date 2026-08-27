@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Deep Bug Excavation — crm7 (Read-Only)
 
 > **File:** `20260725-crm7-deep-bug-excavation-v1.00F.md`  

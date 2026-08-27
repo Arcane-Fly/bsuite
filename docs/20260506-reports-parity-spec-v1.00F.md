@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Reports parity spec — close 4 Codehouse gaps (issue #574)
 
 > **Superseded for implementation tracking:** use [`docs/plans/20260521-reports-w2-uplift-implementation-v1.00F.md`](./plans/20260521-reports-w2-uplift-implementation-v1.00F.md) for the active execution/evidence ledger. This spec remains retained as the parity source/provenance document.

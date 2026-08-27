@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Docs ↔ Code Audit — conduit + R80.3 (Read-Only)
 
 > **File:** `20260725-conduit-r80-docs-code-audit-v1.00F.md`

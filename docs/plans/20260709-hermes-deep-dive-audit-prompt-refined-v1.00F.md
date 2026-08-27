@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Refined Prompt — Hermes Status Correction + Deep-Dive Docs-vs-Code Audit (2026-07-09)
 
 ## Intent

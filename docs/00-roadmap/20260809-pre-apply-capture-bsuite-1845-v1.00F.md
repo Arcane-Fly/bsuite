@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Pre-apply capture — bsuite#1845 promotion
 
 **Captured:** 2026-08-09, before the crm7 promotion applies

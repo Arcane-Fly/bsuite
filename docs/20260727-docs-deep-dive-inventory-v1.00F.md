@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # BSuite Docs Deep-Dive Inventory — 2026-07-27
 
 **Status:** F (Frozen) · **Lane:** DOCS · **Scope:** parent `docs/` + all six submodule `docs/` trees
