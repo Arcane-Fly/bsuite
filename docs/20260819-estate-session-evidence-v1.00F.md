@@ -1,7 +1,7 @@
 # What was found and fixed on 2026-08-19, and how each one was proved
 
-**Document:** `docs/20260819-estate-session-evidence-v1.00W.md`
-**Date:** 2026-08-19 · **Version:** 1.00W · **Status:** W — Working
+**Document:** `docs/20260819-estate-session-evidence-v1.00F.md`
+**Date:** 2026-08-19 · **Version:** 1.00F · **Status:** F — Working
 **Audience:** the operator. Written in plain language; every acronym is glossed on first use.
 
 This is the evidence record for one working session. It exists because "it's fixed" is a claim

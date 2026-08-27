@@ -109,6 +109,7 @@
  *   node scripts/check-shared-package-reach.mjs --require-edges=40
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { join, resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -533,6 +534,59 @@ for (const dir of existsSync(packagesDir) ? readdirSync(packagesDir).sort() : []
   repoPackages.set(pkg.name, pkg.version)
 }
 
+/*
+ * WHICH TREE DID THIS ACTUALLY READ?
+ *
+ * `readFileSync(join(ROOT, app, 'pnpm-lock.yaml'))` reads the WORKING TREE, not
+ * the gitlink the parent records and not the app's `development`. In CI with
+ * `submodules: recursive` those coincide, so the distinction is invisible there
+ * — and on a developer's machine they routinely do not, because a submodule
+ * sits on whatever branch someone last checked out.
+ *
+ * MEASURED 2026-08-27. A local crm7 parked on an unrelated lane's branch made
+ * this check report `crm7 pins @bsuite/page-builder@2.1.0`. crm7's actual
+ * `development` had 2.2.0 and had done for fifteen commits. Three packages were
+ * reported stale across two apps; ONE was genuinely stale across five. The
+ * numbers were acted on before anyone asked which tree produced them.
+ *
+ * The check was not wrong about the bytes it read. It was silent about WHOSE
+ * bytes they were, and a finding you cannot attribute to a tree is not a
+ * finding — it is a coincidence with a table around it. `LANE-WATCHER — every
+ * guard states what it examined` is already a required check in this repo; this
+ * one did not meet its own estate's bar.
+ *
+ * So: state the tree, every run, for every app, and say plainly when the
+ * working tree is not the recorded gitlink. Cheap, and it converts a false
+ * finding into a visible one.
+ */
+function git(args, cwd) {
+  try {
+    return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+  } catch {
+    return null
+  }
+}
+
+function describeTree(app, appDir) {
+  const head = git(['rev-parse', 'HEAD'], appDir)
+  const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], appDir)
+  const dirty = git(['status', '--porcelain', '--', 'pnpm-lock.yaml'], appDir)
+  // The gitlink the PARENT records for this submodule, which is what a promotion
+  // actually ships and what CI checks out.
+  const lsTree = git(['ls-tree', 'HEAD', app], ROOT)
+  const gitlink = lsTree ? lsTree.split(/\s+/)[2] : null
+  return {
+    app,
+    head,
+    branch,
+    gitlink,
+    matchesGitlink: Boolean(head && gitlink && head === gitlink),
+    lockDirty: Boolean(dirty),
+  }
+}
+
+const provenance = []
+
 const rows = []
 const notes = []
 
@@ -552,6 +606,7 @@ for (const app of APPS) {
   const appPkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
   const deps = new Set(Object.keys({ ...appPkg.dependencies, ...appPkg.devDependencies, ...appPkg.optionalDependencies }))
   const lockText = readFileSync(lockPath, 'utf8')
+  provenance.push(describeTree(app, appDir))
 
   for (const [name, repoVersion] of repoPackages) {
     // `continue` here is CORRECT for this loop -- it compares an app's PIN against
@@ -683,6 +738,36 @@ const ON_PRODUCTION_BRANCH = (() => {
 
 let failures = 0
 console.log(`check-shared-package-reach: ${repoPackages.size} published @bsuite/* package(s), ${APPS.length} app(s)`)
+console.log('')
+// A disclosure that can silently become empty is worse than none, because the
+// table below still prints and still looks authoritative. If we measured edges
+// we must be able to name the trees they came from.
+if (rows.length > 0 && provenance.length === 0) {
+  console.error('HARNESS-FAIL: rows were measured but no tree provenance was captured — refusing to print findings that cannot be attributed to a tree.')
+  process.exit(1)
+}
+console.log('TREES EXAMINED — every lockfile below was read from these working trees:')
+for (const t of provenance) {
+  const sha = t.head ? t.head.slice(0, 8) : '????????'
+  const drift = t.matchesGitlink
+    ? 'matches recorded gitlink'
+    : `DIFFERS from recorded gitlink ${t.gitlink ? t.gitlink.slice(0, 8) : '????????'}`
+  const dirty = t.lockDirty ? ', pnpm-lock.yaml MODIFIED' : ''
+  // Branch names in this estate are deliberately sentence-like and routinely
+  // exceed any sane column, so pad to a floor and ALWAYS emit a separator —
+  // padEnd alone silently butts a 48-char branch against the verdict.
+  const branch = String(t.branch || '(detached)')
+  console.log(`  ${t.app.padEnd(25)}${sha}  ${branch.padEnd(44)}  ${drift}${dirty}`)
+}
+const drifted = provenance.filter((t) => !t.matchesGitlink)
+if (drifted.length > 0) {
+  console.log('')
+  console.log(
+    `  ${drifted.length} of ${provenance.length} working tree(s) are NOT the gitlink the parent records. ` +
+      'Findings below describe THOSE trees, not what a promotion would ship. ' +
+      'On a developer machine this is usually a submodule left on another branch; in CI it should never happen.',
+  )
+}
 console.log('')
 console.log(
   `${'APP'.padEnd(25)}${'PACKAGE'.padEnd(24)}${'REPO'.padEnd(10)}${'LOCK-PIN'.padEnd(12)}${'NPM-LATEST'.padEnd(12)}STATUS`,

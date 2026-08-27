@@ -10,7 +10,7 @@ evidence:
 
 # Why no document can be marked complete yet — measured, 2026-08-24
 
-**Status:** W (Working) · **Author:** bsuite-lane
+**Status:** F (Frozen) · **Author:** bsuite-lane
 
 The operator's bar has two limbs, and a document may only be marked complete if
 it clears **both**:

@@ -17,14 +17,14 @@
 | [Scheduled jobs — what runs, what doesn't, and what to do about it](20260811-scheduled-job-coverage-investigation-v1.00W.md) | Working | 2026-08-11 |
 | [Security signals — what we detect, and what nobody reads](20260811-security-signal-analysis-v1.00W.md) | Working | 2026-08-11 |
 | [crm7 deep-audit remediation — decision record](20260810-crm7-audit-remediation-decision-record-v1.00W.md) | Working | 2026-08-10 |
-| [Dashboards — the operator's scope ruling, and what it means for the build](20260810-dashboard-scope-ruling-v1.00W.md) | Working | 2026-08-10 |
-| [Who creates each document — and what that changes](20260810-document-provenance-who-creates-what-v1.00D.md) | Draft | 2026-08-10 |
+| [Dashboards — the operator's scope ruling, and what it means for the build](20260810-dashboard-scope-ruling-v1.00F.md) | Working | 2026-08-10 |
+| [Who creates each document — and what that changes](20260810-document-provenance-who-creates-what-v1.00F.md) | Draft | 2026-08-10 |
 | [The four-axis identity model, and how we work through the backlog](20260810-four-axis-identity-model-and-backlog-sequence-v1.00W.md) | Working | 2026-08-10 |
 | [R80.4 carry-over register — what the old standalone session left open](20260810-r804-carryover-register-v1.00W.md) | Working | 2026-08-10 |
 | [Theme, UI and UX — what is still outstanding](20260810-theme-ui-ux-outstanding-register-v1.00W.md) | Working | 2026-08-10 |
 | [What happened while you were out — 2026-08-09](20260809-autonomous-run-report-v1.00W.md) | Working | 2026-08-09 |
-| [Class A baseline — taken before the 20-migration batch applies](20260809-class-a-baseline-before-the-batch-v1.00W.md) | Working | 2026-08-09 |
-| [Pre-apply capture — bsuite#1845 promotion](20260809-pre-apply-capture-bsuite-1845-v1.00W.md) | Working | 2026-08-09 |
+| [Class A baseline — taken before the 20-migration batch applies](20260809-class-a-baseline-before-the-batch-v1.00F.md) | Working | 2026-08-09 |
+| [Pre-apply capture — bsuite#1845 promotion](20260809-pre-apply-capture-bsuite-1845-v1.00F.md) | Working | 2026-08-09 |
 | [Shipped to production — 2026-08-09](20260809-shipped-to-production-v1.00W.md) | Working | 2026-08-09 |
 | [BSuite Data Workspace — Implementation Plan v1.00W](20260808-data-workspace-implementation-plan-v1.00W.md) | Working | 2026-08-08 |
 | [Applicant flow, apprentice documents, direct onboard — what I found and what I changed](20260808-intake-and-onboarding-findings-v1.00W.md) | Working | 2026-08-08 |

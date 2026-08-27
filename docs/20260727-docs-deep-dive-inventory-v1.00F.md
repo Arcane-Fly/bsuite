@@ -168,7 +168,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | plans/codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W.md | Pay Item Groups parity spec; PR-A–F merged | I | PR-A–F merged (crm7#950-#955); PR-G "npm publish blocked" (bsuite#1363) | keep |
 | plans/inputs/20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md | prompt-enhancer provenance output | I | One-off prompt output | keep |
 | plans/loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md | Loop contract for GTO E2E cycle W0-W7 | I | W2-W7 success conditions unmet | keep |
-| plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00W.md | Loop contract for recruitment cluster | I | STATE table stale; RAMS/ADMS gap | keep |
+| plans/loop-contracts/20260817-recruitment-comms-rams-loop-contract-v1.00F.md | Loop contract for recruitment cluster | I | STATE table stale; RAMS/ADMS gap | keep |
 | plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md | Unified design-language doctrine (Approved) | L | Doctrine cited by INDEX + Reports W2 | keep (living) |
 | plans/uplift/INDEX.md | Uplift 9-wave tracker/index | L | Wave index (W0/W1 done, W2-W8 open); bsuite#635 | keep (living) |
 | references/codehouse_kb_crawl_results.md · references/codehouse-knowledgebase-crawl.md | Code House WfO KB crawl data | L | Reference crawl data | keep (living) |

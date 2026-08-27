@@ -1,0 +1,217 @@
+# PUBLISHING A PACKAGE MUST REACH ITS CONSUMERS.
+#
+# All seventeen `publish-*.yml` end at "Published to npm" and tell nobody. An app
+# installs with `--frozen-lockfile`, so a fix sits on the registry — reachable by
+# the app's own caret specifier — and never ships. This estate had THREE checks
+# that DETECT that drift (check-shared-package-reach, check-lockfile-hygiene,
+# check-table-reach) and, until scripts/regen-consumer-lockfile.mjs, ZERO that
+# fix it. Detection without a remedy just moves the manual step to whoever reads
+# the log, and on 2026-08-27 that step had not been taken for five apps.
+#
+# WHY IT WAS NEVER JUST FORGOTTEN. The documented remedy could not work.
+# `pnpm install --lockfile-only` RE-RESOLVES rather than UPGRADES, so a lockfile
+# already satisfying its range is left alone and the command reports success.
+# Anyone who followed the runbook saw an unchanged lockfile and correctly
+# concluded there was nothing to do. That is why this needs automation and not a
+# reminder: the reminder pointed at a command that returns "already current".
+#
+# WHAT THIS DOES. After any publish workflow succeeds on main, and nightly as a
+# backstop, it asks scripts/regen-consumer-lockfile.mjs whether each consumer's
+# lockfile can reach the published versions, and opens ONE PR per app that can.
+# It changes lockfiles only — never package.json, because narrowing a declared
+# range is a decision, not a refresh.
+#
+# IT DOES NOT MERGE ANYTHING. A lockfile bump is a real change to what an app
+# installs and it goes through review and the app's own CI like any other.
+name: Consumer lockfile reach
+
+on:
+  workflow_run:
+    # EVERY publish workflow, including the three with no consumers today
+    # (eslint-config, jodie, tsconfig) and the prerelease path. Listing all of
+    # them costs nothing — a package no app declares simply reports "already
+    # current" for every consumer — and it removes the standing hazard of two
+    # lists that must agree. `workflow_run` matches on the workflow's `name:`,
+    # NOT its filename, and a name that matches nothing fires nothing, silently.
+    # Verified against every publish-*.yml `name:` when this was written.
+    # A NEWLY ADDED publish workflow is still missed until added here; the
+    # nightly schedule below is the backstop for exactly that.
+    workflows:
+      - Publish @bsuite/auth
+      - Publish @bsuite/charge-calc
+      - Publish @bsuite/data-export
+      - Publish @bsuite/data-grid
+      - Publish @bsuite/dates
+      - Publish @bsuite/dry-lint
+      - Publish @bsuite/eslint-config
+      - Publish @bsuite/jodie
+      - Publish @bsuite/nav-core
+      - Publish @bsuite/page-builder
+      - Publish @bsuite/schema-builder
+      - Publish @bsuite/schema-registry
+      - Publish @bsuite/theme
+      - Publish @bsuite/tsconfig
+      - Publish @bsuite/ui
+      - Publish prereleases (development → next)
+    types: [completed]
+  schedule:
+    # Backstop. A publish that raced a checkout, or a workflow renamed out of the
+    # list above, would otherwise go unnoticed until someone read a lint log.
+    - cron: '17 19 * * *'
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Comma-separated app list, or "all"'
+        default: all
+        required: false
+
+concurrency:
+  group: consumer-lockfile-reach
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  reach:
+    # A failed publish has nothing to propagate; a scheduled or manual run always does.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout parent + submodules
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          # `token:` is what makes checkout install a credential inside EVERY
+          # submodule, which is what lets the push below work at all. Same
+          # mechanism advance-submodule-pointers.yml relies on.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          # `cache: pnpm` would in fact work here — pnpm/action-setup@v4 runs on the
+          # line above, so the binary exists by the time setup-node shells out for the
+          # store path. It is still removed, because this was the ONLY setup-node@v5
+          # step in the estate not carrying the guard, and check-setup-node-pnpm-guard
+          # enforces it across all 31 others. Widening a gate to admit one defensible
+          # exception is how the exception becomes the rule; the cache it buys back is
+          # seconds on a workflow that runs on workflow_run, not per push.
+          package-manager-cache: false
+
+      - name: Regeneration script self-test
+        # If the script's own parsing is broken, every "already current" below is
+        # meaningless. Fail here rather than open zero PRs and call it clean.
+        run: node scripts/regen-consumer-lockfile.mjs --self-test
+
+      - name: Put every submodule on its own development branch
+        # THE CHECKOUT LANDS EACH SUBMODULE AT THE PARENT'S RECORDED GITLINK,
+        # WHICH IS NOT ITS development. On 2026-08-27 crm7's gitlink was fifteen
+        # commits behind, and a reach check reading it reported a version crm7
+        # had not had for a fortnight. A PR opened from a detached gitlink would
+        # revert whatever landed since. So: name the branch explicitly.
+        run: |
+          set -euo pipefail
+          for app in $(git config --file .gitmodules --get-regexp path | awk '{print $2}'); do
+            [ -d "$app/.git" ] || [ -f "$app/.git" ] || continue
+            git -C "$app" fetch origin development --depth=1 || continue
+            git -C "$app" checkout -B development origin/development
+            echo "$app -> $(git -C "$app" rev-parse --short HEAD) (development)"
+          done
+
+      - name: Regenerate every consumer lockfile that can reach a published version
+        id: regen
+        env:
+          APPS: ${{ github.event.inputs.apps || 'all' }}
+        run: |
+          set -uo pipefail
+          if [ "$APPS" = "all" ]; then
+            node scripts/regen-consumer-lockfile.mjs --all --write --json > /tmp/reach.json
+          else
+            : > /tmp/reach.json
+            for a in ${APPS//,/ }; do
+              node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json
+            done
+          fi
+          rc=$?
+          cat /tmp/reach.json
+          # rc 1 is a genuine verification failure and must fail the job. rc 2 is
+          # "would change", which cannot occur with --write.
+          if [ "$rc" = "1" ]; then
+            echo "::error title=A lockfile failed verification::One or more regenerated lockfiles failed the importer, overrides or frozen-install check. Nothing was written for those apps; see the JSON above."
+            exit 1
+          fi
+
+      - name: Open one PR per app whose lockfile moved
+        env:
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+        run: |
+          set -uo pipefail
+          owner=$(git remote get-url origin | sed -n 's|.*github.com[:/]\([^/]*\)/.*|\1|p')
+          opened=0; skipped=0
+          for app in $(git config --file .gitmodules --get-regexp path | awk '{print $2}'); do
+            [ -d "$app" ] || continue
+            if git -C "$app" diff --quiet -- pnpm-lock.yaml; then skipped=$((skipped+1)); continue; fi
+            # REFUSE to carry anything but the lockfile. package.json must not move:
+            # narrowing a declared range is a decision, not a refresh.
+            others=$(git -C "$app" diff --name-only | grep -v '^pnpm-lock.yaml$' || true)
+            if [ -n "$others" ]; then
+              echo "::error title=$app: unexpected files changed::$others"
+              exit 1
+            fi
+            br="chore/lockfile-reach"
+            moved=$(git -C "$app" diff -U0 -- pnpm-lock.yaml \
+                    | grep -E "^\+ +'@bsuite/" \
+                    | sed "s/.*'\(@bsuite[^']*\)'.*/\1/" | sort -u | tr '\n' ' ')
+            # Built with printf so every line stays inside this YAML block scalar.
+            # A bare multi-line string here dedents to column 0 and breaks the file.
+            printf '%s\n' \
+              "A published @bsuite/* fix could not reach this app: the caret specifier already admitted it, only the lockfile was behind." \
+              "" \
+              "**Moved:** ${moved:-see the diff}" \
+              "" \
+              "Lockfile only — \`package.json\` is untouched, because narrowing a declared range is a decision and must not arrive as a side effect of a refresh." \
+              "" \
+              "Verified by \`scripts/regen-consumer-lockfile.mjs\` before this PR was opened:" \
+              "- single \`.\` importer, no \`..\` escape (a lockfile with one breaks the Vercel build)" \
+              "- \`overrides:\` count unchanged (a silent drop is usually a missing \`pnpm-workspace.yaml\`, and those entries are usually security pins)" \
+              "- \`pnpm install --frozen-lockfile\` **succeeds**, not merely parses" \
+              "" \
+              "Not auto-merged. A lockfile bump changes what this app installs and goes through review and CI like anything else." \
+              > /tmp/reach-body.md
+            printf '%s\n' \
+              "chore(deps): reach the published @bsuite/* versions" \
+              "" \
+              "Opened by .github/workflows/consumer-lockfile-reach.yml. Publishing a" \
+              "package told this app nothing; its caret specifier already admitted these" \
+              "versions and only the lockfile was behind." \
+              "" \
+              "Moved: ${moved:-see diff}" \
+              "" \
+              "Lockfile ONLY - package.json is untouched. Verified by" \
+              "scripts/regen-consumer-lockfile.mjs: single '.' importer, overrides count" \
+              "unchanged, and pnpm install --frozen-lockfile actually succeeds." \
+              > /tmp/reach-msg.txt
+            git -C "$app" checkout -B "$br"
+            git -C "$app" add pnpm-lock.yaml
+            git -C "$app" -c user.name='BSuite CI' -c user.email='braden.lang77@gmail.com' \
+              commit -F /tmp/reach-msg.txt
+            git -C "$app" push -f origin "$br"
+            if gh pr view "$br" -R "$owner/$app" >/dev/null 2>&1; then
+              echo "$app: PR already open on $br, updated in place"
+            elif gh pr create -R "$owner/$app" --base development --head "$br" \
+                 --title "chore(deps): reach the published @bsuite/* versions" \
+                 --body-file /tmp/reach-body.md; then
+              opened=$((opened+1))
+            else
+              echo "::error title=$app: branch pushed but PR not created::The change is on '$br' and is correct; only 'gh pr create' failed. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', BSUITE_CROSS_REPO_PAT is missing or expired."
+              exit 1
+            fi
+          done
+          echo "### Consumer lockfile reach" >> "$GITHUB_STEP_SUMMARY"
+          echo "PRs opened/updated: $opened - already current: $skipped" >> "$GITHUB_STEP_SUMMARY"
