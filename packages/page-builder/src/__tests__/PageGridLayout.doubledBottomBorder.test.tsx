@@ -38,6 +38,11 @@ import type { GridLayouts } from '../types.js';
  * surface carries. `h-full` fills the remainder; `h-fit` does not. Asserting the
  * class is asserting the defect, not a proxy for it.
  *
+ * Asserted with `classList.contains`, never a regex. Operator ruling 2026-08-26 bans
+ * regex assertions, and it is the better instrument here anyway: classList is EXACT
+ * token matching, so it cannot be fooled by `h-fullscreen` or by word-boundary
+ * subtleties the way /\bh-full\b/ can.
+ *
  * Both directions are exercised. A test that only checked the autoHeight case
  * would pass if someone removed `h-full` everywhere, which would break every
  * manually-resized slot.
@@ -75,16 +80,16 @@ describe('an autoHeight slot must not paint the ceil remainder', () => {
     // The regression, stated as the operator sees it: a painted surface that is
     // taller than its content shows a second bottom border.
     expect(
-      el.className,
+      el.classList.contains('h-full'),
       'h-full makes the chrome fill the Math.ceil remainder, and its bottom border ' +
         'is then drawn below the content card\'s — this is the doubled bottom border',
-    ).not.toMatch(/\bh-full\b/);
-    expect(el.className).toMatch(/\bh-fit\b/);
+    ).toBe(false);
+    expect(el.classList.contains('h-fit'), 'the chrome must hug its content').toBe(true);
 
     // ...and the surface must still actually be painting, or this test would
     // pass on a slot with no chrome at all and prove nothing.
     expect(el.dataset.chrome).toBe('on');
-    expect(el.className).toMatch(/\bborder\b/);
+    expect(el.classList.contains('border'), 'the surface must still be painting').toBe(true);
   });
 
   it('the inner wrapper does not stretch, which would re-create the gap inside the surface', () => {
@@ -99,11 +104,11 @@ describe('an autoHeight slot must not paint the ceil remainder', () => {
     );
     const el = inner(container);
     expect(
-      el.className,
+      el.classList.contains('flex-1'),
       'flex-1 claims all remaining vertical space, so the wrapper stretches to the ' +
         'over-allocated height and the surface hugs THAT — undoing the fix',
-    ).not.toMatch(/\bflex-1\b/);
-    expect(el.className).toMatch(/\bflex-none\b/);
+    ).toBe(false);
+    expect(el.classList.contains('flex-none')).toBe(true);
   });
 });
 
@@ -127,10 +132,10 @@ describe('a manually-resized slot still fills the height the user chose', () => 
     );
     const el = surface(container);
     expect(
-      el.className,
+      el.classList.contains('h-full'),
       'the user picked this height; the chrome must fill it, not hug the content',
-    ).toMatch(/\bh-full\b/);
-    expect(el.className).not.toMatch(/\bh-fit\b/);
+    ).toBe(true);
+    expect(el.classList.contains('h-fit')).toBe(false);
   });
 
   it('keeps flex-1 on the inner wrapper when autoHeight is off', () => {
@@ -143,7 +148,7 @@ describe('a manually-resized slot still fills the height the user chose', () => 
         widgets={{ alpha: <div>Alpha</div> }}
       />,
     );
-    expect(inner(container).className).toMatch(/\bflex-1\b/);
+    expect(inner(container).classList.contains('flex-1')).toBe(true);
   });
 });
 
@@ -159,7 +164,7 @@ describe('the fix does not depend on chrome being on', () => {
     );
     const el = surface(container);
     expect(el.dataset.chrome).toBe('off');
-    expect(el.className).not.toMatch(/\bh-full\b/);
-    expect(el.className).toMatch(/\bh-fit\b/);
+    expect(el.classList.contains('h-full')).toBe(false);
+    expect(el.classList.contains('h-fit')).toBe(true);
   });
 });
