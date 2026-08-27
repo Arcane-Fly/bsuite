@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { resolve as pathResolve } from 'node:path'
+
 import {
   DARK,
   ROOT,
@@ -9,6 +11,7 @@ import {
   over,
   resolve_,
   round2,
+  sheet,
   type Rgb,
 } from './contrast-instrument'
 
@@ -38,23 +41,21 @@ import {
  * in BOTH modes. A future author cannot pass it by measuring the comfortable
  * pairs, and cannot add a fourth alpha without adding it here.
  *
- * SCOPE, and a live finding it deliberately does not assert. This gate reads
- * `css/vars.css` — the D2C palette — only. `css/braden.css` is a standalone
- * Corporate entry point with its own `--role-*` layer, generated from the
- * Corporate source-of-truth document, and the non-text gate already records that
- * changing those values is an operator call rather than this suite's to make.
+ * SCOPE — BOTH stylesheets now, and it took a wrong answer to get here.
  *
- * Measured on braden.com.au (production, 2026-08-28) with the same method used
- * here, worst tint composite per role:
+ * This gate read `css/vars.css` only. `css/braden.css` — the Corporate entry point,
+ * a standalone `--role-*` layer at a different hue — was out of scope, and the
+ * instrument was hardcoded to vars.css, so there was no trusted way to measure it.
  *
- *     primary 3.01   info 3.21   accent 3.73   warning 3.73
- *     success 3.79   error 3.95   (secondary has no -text token at all)
+ * The result on 2026-08-28: three throwaway readers written in one session, each
+ * handling `var()` differently, each returning a different verdict for the same file
+ * (4.16 / 3.33 / "all pass"), and one of those reaching a PR description before a
+ * live-page measurement contradicted it. Corporate had SIX roles below 4.5:1 in light
+ * and THREE in dark, and none of it was caught here because none of it was read here.
  *
- * All six below the 4.5:1 floor. The non-text gate's note says "both of its
- * border roles are currently below 3:1"; this extends that to the TEXT roles,
- * which had not been quantified. Recorded here rather than asserted, because a
- * gate that is red by design on values nobody in this repo may change is an
- * unread gate.
+ * `sheet(path)` in contrast-instrument.ts fixed the readability half. This block is
+ * the other half: the Corporate palette is now asserted by the same cross product as
+ * D2C, so it cannot drift back to being measured by whoever writes a reader that day.
  */
 
 const FLOOR = 4.5 // WCAG 1.4.3 AA, normal-weight body text
@@ -102,6 +103,35 @@ describe('WCAG 1.4.3 — every -text role clears 4.5:1 on its OWN tint', () => {
           })
         }
       }
+    }
+  }
+})
+
+/**
+ * THE CORPORATE PALETTE — same cross product, second stylesheet.
+ *
+ * `css/braden.css` is measured with `sheet()`, which is the same parser, the same
+ * last-declaration-wins cascade and the same alias resolution this file already uses
+ * for D2C. Both modes, because Corporate failed in BOTH — light darkened, dark
+ * lightened, and a light-only sweep would have declared it done.
+ */
+describe('WCAG 1.4.3 — the CORPORATE palette clears 4.5:1 on its own tints too', () => {
+  const B = sheet(pathResolve(__dirname, 'css/braden.css'))
+  const CORP = ['primary', 'accent', 'warning', 'success', 'info', 'error'] as const
+  for (const [name, scope] of [['light', B.root], ['dark', B.blocks('.dark')]] as const) {
+    for (const role of CORP) {
+      it(`${name}: --role-${role}-text on every surface and its own tint`, () => {
+        const t = B.resolve(`role-${role}-text`, scope)
+        const fill = B.resolve(`role-${role}`, scope)
+        const worst = Math.min(
+          ...SURFACES.flatMap((s) => {
+            const bg = B.resolve(s, scope)
+            const alphas: number[] = [1, ...ALPHAS]
+            return alphas.map((a) => contrast(t, a === 1 ? bg : over(fill, bg, a)))
+          }),
+        )
+        expect(round2(worst)).toBeGreaterThanOrEqual(FLOOR)
+      })
     }
   }
 })
