@@ -1,0 +1,89 @@
+# CROSS-TENANT FOREIGN-KEY REFERENCES — the gate that existed and never ran.
+#
+# WHY THIS FILE EXISTS. `scripts/check-cross-tenant-references.mjs` was referenced
+# by exactly one thing in the estate: a line in docs/00-roadmap/bsuite-feature-index.json.
+# No workflow invoked it. It had therefore never executed against the database in CI,
+# while its SIBLING — audit-cross-tenant-duplicate-objects — has had a workflow and a
+# nightly schedule all along. One of a pair wired, one not.
+#
+# Run by hand on 2026-08-28 with production credentials it found, immediately:
+#
+#     297 foreign-key pair(s) examined, 5 carrying cross-tenant rows, 21 row(s) total
+#     [X1] NEW: people.current_host_employer_id->clients — 1 row
+#
+# A child row pointing at a parent owned by a DIFFERENT tenant. Under RLS the owning
+# tenant sees an empty parent; on any service_role path it is visible to the wrong
+# tenant. That is the whole reason the gate was written, and nothing was running it.
+#
+# It is scheduled as well as PR-triggered because the defect is created by DATA, not by
+# a diff: a row can cross tenants at any time with no commit in this repo
+# (precedent__bsuite__20260802__a_gate_must_prove_it_executed, fifth shape).
+
+name: Cross-tenant foreign-key references
+
+on:
+  pull_request:
+    branches: [development, main]
+    paths:
+      - 'scripts/check-cross-tenant-references.mjs'
+      - '.github/workflows/cross-tenant-references.yml'
+  schedule:
+    - cron: '35 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-tenant-references-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          package-manager-cache: false
+
+      # The reader is exercised first, so a green run cannot mean "the logic never ran".
+      - name: Self-test the evaluator
+        run: node scripts/check-cross-tenant-references.mjs --self-test
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # Same two-cluster probe the duplicate-objects workflow uses: Supavisor moves
+      # projects between clusters, and a hardcoded host fails as "no rows" rather than
+      # as a connection error — which would read as a clean estate.
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::no Supavisor cluster accepted the connection; refusing to measure nothing"
+          exit 1
+
+      - name: Measure and ratchet
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          SUPABASE_DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres" \
+            node scripts/check-cross-tenant-references.mjs
