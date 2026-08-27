@@ -95,7 +95,14 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
-          cache: pnpm
+          # `cache: pnpm` would in fact work here — pnpm/action-setup@v4 runs on the
+          # line above, so the binary exists by the time setup-node shells out for the
+          # store path. It is still removed, because this was the ONLY setup-node@v5
+          # step in the estate not carrying the guard, and check-setup-node-pnpm-guard
+          # enforces it across all 31 others. Widening a gate to admit one defensible
+          # exception is how the exception becomes the rule; the cache it buys back is
+          # seconds on a workflow that runs on workflow_run, not per push.
+          package-manager-cache: false
 
       - name: Regeneration script self-test
         # If the script's own parsing is broken, every "already current" below is
