@@ -6,7 +6,7 @@ owner: bsuite
 
 # Headroom learn notes — bsuite (2026-07-25)
 
-> **Naming:** `20260725-headroom-learn-notes-v1.00F.md` · Status **W**
+> **Naming:** `20260725-headroom-learn-notes-v1.00F.md` · Status **F** (Frozen)
 
 ## Run
 

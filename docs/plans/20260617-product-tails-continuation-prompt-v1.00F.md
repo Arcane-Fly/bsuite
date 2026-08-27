@@ -1,6 +1,15 @@
+---
+kind: record
+authority: none
+---
+
 # Product Tails — Continuation Prompt (2026-06-17)
 
-> **Status: W (Working handoff).** Continuation prompt for the remaining BSuite product-tail features after the document-storage lane shipped + closed. Hand this to a fresh autonomous session.
+> **Status: F (Frozen record).** Was a continuation prompt for the remaining BSuite
+> product-tail features after the document-storage lane shipped and closed. It is now a
+> RECORD of what was asked on 2026-06-17, not a live handoff — do not hand it to a fresh
+> session. Its own note below says why: it predates the R80.3 -> R80.4 restructure and its
+> paths were deliberately left unrewritten.
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.

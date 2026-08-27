@@ -14,6 +14,7 @@
         "bulk_data_import(p_entity_key text, p_tenant_id uuid, p_rows jsonb, p_update_existing boolean, p_dry_run boolean, p_import_job_id uuid)",
         "bulk_data_undo(p_change_set_id uuid)",
         "bulk_data_update(p_entity_key text, p_tenant_id uuid, p_row_ids uuid[], p_field_updates jsonb, p_dry_run boolean)",
+        "caller_org_ids()",
         "can_write_role_capability(p_tenant_id uuid, p_capability text)",
         "check_archive_recovery_needed(p_source_table text, p_tenant_id uuid, p_from timestamp with time zone, p_to timestamp with time zone)",
         "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
