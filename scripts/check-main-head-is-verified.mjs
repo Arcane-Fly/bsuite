@@ -84,8 +84,18 @@ async function headVerification(repo) {
     ], { maxBuffer: 1024 * 1024 })
     const parsed = JSON.parse(stdout)
     return { sha: parsed.sha, verification: parsed.v }
-  } catch {
-    return { sha: null, verification: null }
+  } catch (e) {
+    // A TOKEN that cannot see the repo and a repo whose HEAD is unsigned are
+    // completely different problems with completely different remedies, and on
+    // this gate's first real run they looked identical: 6 of 7 repos reported
+    // UNKNOWN because the default GITHUB_TOKEN is scoped to its own repository.
+    // Both still FAIL — an unreadable repo is unchecked, not clean — but the
+    // message must not send someone hunting for a signature problem that does
+    // not exist.
+    const msg = String((e && (e.stderr || e.message)) || e)
+    const denied = msg.includes('Not Found') || msg.includes('404')
+      || msg.includes('Bad credentials') || msg.includes('401') || msg.includes('403')
+    return { sha: null, verification: null, unreadable: denied ? msg.trim().split('\n')[0].slice(0, 120) : null }
   }
 }
 
@@ -106,6 +116,12 @@ function selfTest() {
   t('UNKNOWN fails the run', shouldFail([{ verdict: 'UNKNOWN' }]), true)
   t('UNVERIFIED fails the run', shouldFail([{ verdict: 'UNVERIFIED' }]), true)
   t('all verified passes', shouldFail([{ verdict: 'VERIFIED' }, { verdict: 'VERIFIED' }]), false)
+  // NO-ACCESS is what a too-narrowly-scoped token produces. It must fail exactly as
+  // hard as an unsigned head — an unreadable repo is UNCHECKED, not clean — while
+  // reading differently, so nobody hunts for a signature problem that does not exist.
+  t('NO-ACCESS fails the run', shouldFail([{ verdict: 'NO-ACCESS' }]), true)
+  t('NO-ACCESS does not sneak past as verified',
+    shouldFail([{ verdict: 'VERIFIED' }, { verdict: 'NO-ACCESS' }]), true)
   // NEGATIVE CONTROL: an empty result set is not a pass either at the call site —
   // main() refuses it separately, because "no repos examined" reads as green here.
   t('an empty set does not itself fail', shouldFail([]), false)
@@ -123,8 +139,14 @@ async function main() {
 
   const results = []
   for (const repo of REPOS) {
-    const { sha, verification } = await headVerification(repo)
-    results.push({ repo, sha, ...classify(verification) })
+    const { sha, verification, unreadable } = await headVerification(repo)
+    const verdict = classify(verification)
+    if (unreadable) {
+      verdict.verdict = 'NO-ACCESS'
+      verdict.why = `cannot read this repo — ${unreadable}. The token is scoped too narrowly; ` +
+        'set BSUITE_CROSS_REPO_PAT. This is NOT a signature finding, and it is NOT a pass.'
+    }
+    results.push({ repo, sha, ...verdict })
   }
 
   // "Nothing examined" is not "nothing wrong".
