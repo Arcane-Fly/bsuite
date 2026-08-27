@@ -252,16 +252,16 @@
    LAYER 3 — AA-SAFE TEXT RENDERINGS OF THE SATURATED ROLES
    A saturated fill colour is not a legible text colour.
    ============================================================ */
-  --role-primary-text: oklch(0.566 0.170 17.6);
+  --role-primary-text: oklch(0.542 0.170 17.6);
   --role-accent-text-base: oklch(0.544 0.092 89.9);
   --role-accent-text:  var(--role-accent-text-base);
   /* Red, per the 2026-08-10 ruling. Measured on Corporate's own light
      surfaces, not inherited from D2C's: 6.18:1 on --role-bg-body,
      6.44:1 on --role-bg-panel. Both ✓ AA. */
   --role-error-text:   oklch(0.482 0.230  25);
-  --role-warning-text: oklch(0.544 0.092 89.9);
-  --role-success-text: oklch(0.515 0.130 198);
-  --role-info-text:    oklch(0.519 0.140 220);
+  --role-warning-text: oklch(0.521 0.092 89.9);
+  --role-success-text: oklch(0.490 0.130 198);
+  --role-info-text:    oklch(0.495 0.140 220);
 
 /* ============================================================
    LAYER 3 — INVERSE TEXT ON COLOURED FILLS
