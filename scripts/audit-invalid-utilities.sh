@@ -51,8 +51,30 @@ V3_FLEX='["'"'"'` ]flex-(shrink|grow)(-[0-9]+)?["'"'"'` ]'
 fail=0
 check() { # $1=label $2=regex $3=hint
   local n out
+  # HONOUR `theme-audit-ok`, as audit-palette-whitelist.py, audit-oklch-lightness.py,
+  # audit-legibility.mjs and check-colour-ban-reaches-converters.mjs already do. This
+  # script was the one theme gate that did not, and it cost a real red: G10 failed on
+  #
+  #   packages/page-builder/src/scanner/cardHeadingScanner.ts:117:  'flex-grow',
+  #
+  # which is a DETECTOR'S VOCABULARY — a list of width-dependent class names the
+  # scanner looks FOR in other people's markup. Nothing applies it. A gate that
+  # cannot tell a class in use from a class being named is matching the token in
+  # code ABOUT the token, and every other theme gate here already had the answer.
+  #
+  # The marker is accepted on the matching line OR the line immediately above, so a
+  # long line can carry its exemption on its own line rather than being reformatted.
   out=$(grep -rEn "$2" "${APPS[@]}" "${INC[@]}" "${EXCLUDE[@]}" 2>/dev/null \
-        | grep -viE '__snapshots__|\.test\.|\.spec\.')
+        | grep -viE '__snapshots__|\.test\.|\.spec\.' \
+        | while IFS= read -r hit; do
+            f=${hit%%:*}; rest=${hit#*:}; ln=${rest%%:*}
+            case "$hit" in *theme-audit-ok*) continue;; esac
+            if [ "$ln" -gt 1 ] 2>/dev/null &&
+               sed -n "$((ln-1))p" "$f" 2>/dev/null | grep -q 'theme-audit-ok'; then
+              continue
+            fi
+            printf '%s\n' "$hit"
+          done)
   n=$(printf '%s' "$out" | grep -c . || true)
   printf '  %-34s %s\n' "$1" "$n"
   if [[ $n -gt 0 ]]; then
