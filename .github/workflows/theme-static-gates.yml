@@ -44,6 +44,31 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: recursive
+          # The submodules are PRIVATE. Without the PAT `git clone` returns
+          # "Repository not found" — a 404, not a permission error — and the
+          # checkout aborts. Observed on the first run of this workflow.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # WITHOUT THIS THE GATES BELOW WOULD FALSE-PASS. Every one is a static scan
+      # over the app directories; if the submodules are absent they scan nothing,
+      # find nothing, and exit 0. An empty tree is indistinguishable from a clean
+      # one to a grep. theme-conformance.yml learned this and carries the same
+      # guard — this is that lesson applied rather than rediscovered.
+      - name: Refuse to scan an empty tree
+        run: |
+          set -euo pipefail
+          missing=""
+          for app in crm7 conduit business-suite-unified R80.4 throughput braden; do
+            [ -d "$app/src" ] || missing="$missing $app"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "Every gate below is a static scan; over an empty tree they all pass."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (repo: read on each app)."
+            exit 1
+          fi
+          echo "all six app trees present"
 
       - name: G4 — no app redeclares a package-owned token
         run: bash scripts/audit-token-ownership.sh
