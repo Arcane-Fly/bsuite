@@ -1,0 +1,80 @@
+# THE THREE STATIC THEME GATES THAT NOTHING RAN.
+#
+# `scripts/theme-gates.sh` registers eleven scripts. `theme-conformance.yml` runs six,
+# and only two overlap. Tracing every invocation path — workflow, test file, package.json
+# script — three of the runner's gates turned out to be invoked by NOTHING:
+#
+#   audit-invalid-utilities.sh   G10  no silently-dropped Tailwind utilities
+#   audit-token-ownership.sh     G4   no app redeclares a package-owned token
+#   theme-gates-browser.sh            (needs a browser + a deployed target — NOT wired
+#                                      here; see bsuite#2613 for why wiring a visual
+#                                      gate without credentials is worse than not)
+#
+# The runner itself is referenced nowhere in .github/, so running it locally was the
+# only way any of them executed. G10 was RED on `'flex-grow'` in a scanner's own
+# vocabulary list and had been for as long as nobody looked.
+#
+# G12 is new: an AA-tuned `-text` token must not carry an opacity modifier. Measured
+# 2026-08-28, /80 puts five of seven roles below 4.5:1 and /70 puts all seven there.
+# 21 sites carried one; a live 3.56:1 on BSU /settings/organization was the first found.
+#
+# These are pure static scans — no database, no browser, no secrets — so there is no
+# reason for them to have been unwired and none for them to be anything but required.
+
+name: Theme static gates
+
+on:
+  pull_request:
+    branches: [development, main]
+  push:
+    branches: [development, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: theme-static-gates-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          # The submodules are PRIVATE. Without the PAT `git clone` returns
+          # "Repository not found" — a 404, not a permission error — and the
+          # checkout aborts. Observed on the first run of this workflow.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # WITHOUT THIS THE GATES BELOW WOULD FALSE-PASS. Every one is a static scan
+      # over the app directories; if the submodules are absent they scan nothing,
+      # find nothing, and exit 0. An empty tree is indistinguishable from a clean
+      # one to a grep. theme-conformance.yml learned this and carries the same
+      # guard — this is that lesson applied rather than rediscovered.
+      - name: Refuse to scan an empty tree
+        run: |
+          set -euo pipefail
+          missing=""
+          for app in crm7 conduit business-suite-unified R80.4 throughput braden; do
+            [ -d "$app/src" ] || missing="$missing $app"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "Every gate below is a static scan; over an empty tree they all pass."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (repo: read on each app)."
+            exit 1
+          fi
+          echo "all six app trees present"
+
+      - name: G4 — no app redeclares a package-owned token
+        run: bash scripts/audit-token-ownership.sh
+
+      - name: G10 — no silently-dropped Tailwind utilities
+        run: bash scripts/audit-invalid-utilities.sh
+
+      - name: G12 — no AA-tuned text token carries an opacity modifier
+        run: bash scripts/check-dimmed-text-tokens.sh
