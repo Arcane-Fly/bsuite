@@ -47,6 +47,9 @@ jobs:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       # Self-test first. A gate whose pass and no-op states look identical hides defects,
       # and this one has a real chance of it: the comparison deliberately ignores the
       # provenance headers, so an over-broad stripper would ignore everything.
@@ -64,6 +67,9 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
 
       - uses: actions/setup-node@v4
         with:
@@ -88,6 +94,9 @@ jobs:
           # The default GITHUB_TOKEN cannot clone the sibling PRIVATE repos, and
           # a failed clone leaves an EMPTY DIRECTORY, not an error the scan sees.
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
 
       - uses: actions/setup-node@v4
         with:

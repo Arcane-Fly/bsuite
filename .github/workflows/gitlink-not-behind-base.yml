@@ -65,6 +65,9 @@ jobs:
           # than a permission. House pattern is the PAT with a GITHUB_TOKEN fallback.
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version

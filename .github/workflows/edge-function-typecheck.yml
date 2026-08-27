@@ -62,6 +62,9 @@ jobs:
           # same failure route-inventory.yml hit on its first real run.
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       # Assert the inputs BEFORE checking anything. An uninitialised submodule is
       # an EMPTY DIRECTORY, so test for a file inside it — never `-d`, which an
       # empty dir passes while containing no functions to check.

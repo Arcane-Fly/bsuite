@@ -39,6 +39,9 @@ jobs:
           # on every one of them and the job dies before its first real step.
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
       - name: Setup Node
         if: ${{ !inputs.dry_run }}
         uses: actions/setup-node@v4
