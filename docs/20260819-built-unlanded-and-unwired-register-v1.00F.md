@@ -1,23 +1,21 @@
 # Built but unlanded, built but unwired — a machine sweep
 
-> **THIS REGISTER FORKED. Read `20260817-built-unlanded-and-unwired-register-v1.00W.md` too.**
+> ## SUPERSEDED 2026-08-27 — read `20260817-built-unlanded-and-unwired-register-v1.00W.md`
 >
-> Two files carry this same slug and NEITHER is a superset. Discovered 2026-08-26.
-> Despite the later date in this filename, the 08-17 file is the one that kept being updated —
-> it carries §9.10 and §9.11 (the 20 August entries), which this file does not.
+> This file was one half of a fork. Every substantive finding it carried has been ported into
+> the 08-17 file, which is now the canonical register: §4.2 in full (the correction reversing
+> *"there is no such cron job"*), §4.3, the §3.2 follow-up-PR caveat, and BU-9's closure.
 >
-> **Already ported OUT of this file into 08-17:** §3.3, §4.4, §4.5 and the NX-7 correction.
+> Verified by line-level containment, not by comparing section headings — heading comparison
+> is what made this look mergeable twice before and it is not sufficient: the two §9 sections
+> had the same title and different content.
 >
-> **Still unique to this file:** its §9 is a different pass, carrying BU-9's closure, the
-> "there is no such cron job" reversal, and the `awards` 156-row ingestion finding. Those have
-> NOT been merged, because reconciling two divergent §9 sections is an editorial judgement and
-> half-merging drops corrections silently.
->
-> **Not frozen, precisely because it still holds content 08-17 lacks.** Freezing it would bury
-> live corrections behind a status marker, which is worse than the fork.
+> **Kept, not deleted.** The history of a finding — that it was once stated one way, and why it
+> changed — is the part that stops the same ground being re-litigated. Frozen rather than
+> archived so it stays findable next to its sibling.
 
 **Document:** `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md`
-**Date:** 2026-08-17, §9 added 2026-08-19, §3.3/§4.4 resolution added 2026-08-19 · **Version:** 1.02W
+**Date:** 2026-08-17, §9 added 2026-08-19, §3.3/§4.4 resolution added 2026-08-19 · **Version:** 1.02F
 · **Status:** W — Working
 **Scope:** every git work tree on this laptop, every source module and edge function in the six apps,
 and (from 2026-08-19, §9) the operator's running notes file `bsuite notes.docx`
