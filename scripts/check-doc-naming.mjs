@@ -101,6 +101,10 @@ function docRoots() {
 
 /* ---------------- self-tests ---------------- */
 
+/* Hoisted above the self-test block: the status-reader cases run there and would
+ * otherwise hit the temporal dead zone. */
+const STATUS_WORD = { working: 'W', draft: 'D', review: 'R', approved: 'A', frozen: 'F' }
+
 if (selfTest) {
   const cases = [
     /* the convention */
@@ -159,6 +163,34 @@ if (selfTest) {
   const roots = docRoots()
   if (!roots.includes('docs')) fails.push('  docRoots() lost the parent docs root')
   if (roots.length < 2) fails.push('  docRoots() found no submodule roots — derivation is broken')
+  /* ---- the status reader, all three formats plus the ways it must NOT match ---- */
+  const sCases = [
+    /* 1. bolded LABEL — the only form the old matcher saw */
+    ['**Status:** W (Working)', 'W'],
+    ['**Status:** Frozen', 'F'],
+    ['**Version:** 1.00D', 'D'],
+    /* 2. bolded VALUE — invisible to the old matcher, and the common form in practice */
+    ['Status **W** (Working)', 'W'],
+    ['Status: **Draft**', 'D'],
+    ['**Status:** Frozen (F) | **Version:** 1.00W', 'F'],
+    /* 3. YAML frontmatter — also invisible before */
+    ['---\nkind: plan\nstatus: W\n---', 'W'],
+    ['---\nstatus: approved\n---', 'A'],
+    /* MUST NOT MATCH — a widened matcher that over-matches is worse than a narrow one */
+    ['the **W** in the corner means Working', null],
+    ['we discussed status: whatever came up in the meeting', null],
+    ['This document has no status line at all.', null],
+    ['Statuses vary **W** across the estate', null],
+  ]
+  let sPass = 0
+  for (const [text, want] of sCases) {
+    const got = readDeclaredStatus(text)
+    if (got === want) sPass++
+    else console.error(`FAIL status-reader: ${JSON.stringify(text).slice(0, 60)} expected ${want}, got ${got}`)
+  }
+  console.log(`check-doc-naming self-test: ${sPass}/${sCases.length} status-reader cases pass`)
+  if (sPass !== sCases.length) process.exit(1)
+
   console.log(`check-doc-naming self-test: ${pass}/${cases.length} classification cases pass`)
   if (fails.length) {
     console.error('FAILED:')
@@ -194,7 +226,62 @@ let scanned = 0
  * inside a blockquote, after a Date field — and a check that understood only one
  * of them would report agreement for every document it could not parse.
  * Unparseable means SKIPPED, never PASSED. */
-const STATUS_WORD = { working: 'W', draft: 'D', review: 'R', approved: 'A', frozen: 'F' }
+/* THIS SAW ONE FORMAT OF THREE, AND REPORTED ZERO DISAGREEMENTS BECAUSE OF IT.
+ *
+ * The original pattern required the LABEL to be bolded — `**Status:**` or `**Status**`.
+ * Two other forms are at least as common in this estate and were invisible:
+ *
+ *   Status **W** (Working)     <- the VALUE is bolded, not the label
+ *   status: W                  <- YAML frontmatter
+ *
+ * Measured 2026-08-27: three independent triage passes over 46 documents marked `-v1.00F`
+ * found at least twelve whose own body declares `Status **W**`, `Status **A**` or
+ * `status: W`. One lane's summary: "these were swept into F by a batch rename operation
+ * that never touched the document body." This check existed precisely to catch that, was
+ * banked at a baseline of ZERO, and reported clean throughout.
+ *
+ * That is worse than not having the check. A gate reporting zero is read as evidence of
+ * absence, and it stopped anyone looking.
+ *
+ * DELIBERATELY STILL TOLERANT. An unreadable status is SKIPPED, never PASSED — a document
+ * with no status line at all makes no claim to contradict. The widening adds formats; it
+ * does not turn silence into a verdict.
+ */
+export function readDeclaredStatus(head) {
+  const wordToLetter = (w) => STATUS_WORD[w.toLowerCase()]
+
+  /* 1. Bolded LABEL: `**Status:** W (Working)` / `**Version:** 1.00W` */
+  for (const m of head.matchAll(/\*\*(?:Status|Version)[^*]*\*\*\s*[:|]?\s*([^\n|·]{0,30})/gi)) {
+    const seg = m[1].trim()
+    const w = seg.match(/\b(Working|Draft|Review|Approved|Frozen)\b/i)
+    if (w) return wordToLetter(w[1])
+    const v = seg.match(/\d+\.\d+([WDRAF])\b/)
+    if (v) return v[1]
+  }
+
+  /* 2. Bolded VALUE: `Status **W** (Working)` / `Status: **Draft**`.
+   *    Anchored on the word Status so a stray `**W**` in prose cannot match. */
+  for (const m of head.matchAll(/\bStatus\b\s*[:|]?\s*\*\*\s*([^*\n]{1,20})\*\*/gi)) {
+    const seg = m[1].trim()
+    const w = seg.match(/\b(Working|Draft|Review|Approved|Frozen)\b/i)
+    if (w) return wordToLetter(w[1])
+    const letter = seg.match(/^([WDRAF])\b/)
+    if (letter) return letter[1]
+  }
+
+  /* 3. YAML frontmatter: `status: W` / `status: working`. Line-anchored, so a sentence
+   *    containing "status: something" mid-paragraph does not qualify. */
+  for (const m of head.matchAll(/^status:\s*([^\n#]{1,20})$/gim)) {
+    const seg = m[1].trim()
+    const w = seg.match(/^(Working|Draft|Review|Approved|Frozen)$/i)
+    if (w) return wordToLetter(w[1])
+    const letter = seg.match(/^([WDRAF])$/)
+    if (letter) return letter[1]
+  }
+
+  return null
+}
+
 function checkStatusAgreement(p, name) {
   const n = name.match(/-v\d+\.\d+([WDRAF])\.md$/)
   if (!n) return
@@ -204,14 +291,7 @@ function checkStatusAgreement(p, name) {
   } catch {
     return
   }
-  let fromBody = null
-  for (const m of head.matchAll(/\*\*(?:Status|Version)[^*]*\*\*\s*[:|]?\s*([^\n|·]{0,30})/gi)) {
-    const seg = m[1].trim()
-    const w = seg.match(/\b(Working|Draft|Review|Approved|Frozen)\b/i)
-    if (w) { fromBody = STATUS_WORD[w[1].toLowerCase()]; break }
-    const v = seg.match(/\d+\.\d+([WDRAF])\b/)
-    if (v) { fromBody = v[1]; break }
-  }
+  const fromBody = readDeclaredStatus(head)
   if (!fromBody) return                    /* no readable status line — skipped, not passed */
   if (fromBody !== n[1]) statusDisagree.push({ p, fromName: n[1], fromBody })
 }
