@@ -1,0 +1,54 @@
+# THE REGISTERS MUST AGREE WITH THE CODE AND WITH EACH OTHER.
+#
+# Added 2026-08-27, after the estate's four source-of-truth artifacts were found UNTRACKED —
+# present on one laptop, in no repository, referenced by none of the 221 skills, with
+# `dod_status: not-evaluated` on all 659 feature rows. Nothing was broken; nothing was connected.
+#
+# This runs the reconciler in --strict mode, so a PR cannot leave the index describing files that
+# do not exist, a `dod_status` nobody can parse, an APPROVE with no evidence pointer, or an
+# operator ask that maps to no feature row.
+name: Estate alignment
+
+on:
+  pull_request:
+    paths:
+      - 'docs/00-roadmap/**'
+      - 'docs/*operator-notes-register*'
+      - 'scripts/estate-align.mjs'
+      - '.github/workflows/estate-alignment.yml'
+  push:
+    branches: [development, main]
+    paths:
+      - 'docs/00-roadmap/**'
+      - 'docs/*operator-notes-register*'
+      - 'scripts/estate-align.mjs'
+  schedule:
+    # Nightly on whatever development holds, so drift arriving by merge is caught without a PR.
+    - cron: '41 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The reconciler resolves code anchors against real files, so the submodules must be
+          # present. Without them every anchor "fails" and the check becomes noise nobody reads.
+          submodules: recursive
+          fetch-depth: 1
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - name: Reconciler self-test
+        # If its own parsing is broken, every verdict below is meaningless. Fail here rather than
+        # report a clean estate from a checker that stopped matching.
+        run: node scripts/estate-align.mjs --self-test
+      - name: Reconcile registers against the code
+        run: node scripts/estate-align.mjs --strict
+      - name: Report (always, so the numbers are visible even on failure)
+        if: always()
+        run: node scripts/estate-align.mjs >> "$GITHUB_STEP_SUMMARY"
