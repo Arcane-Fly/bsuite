@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Qwen excellence integration plan (post impl-RT)
 
 > ## ⚠ SUPERSEDED — 2026-08-17

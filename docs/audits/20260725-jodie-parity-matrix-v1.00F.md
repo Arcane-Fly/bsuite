@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Jodie Parity Matrix — v1.00W
 
 > **Status:** Frozen (F) — READ-ONLY audit. No code modified.

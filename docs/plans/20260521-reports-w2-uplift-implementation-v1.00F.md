@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Reports W2 Uplift Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task. Reference doctrine `docs/plans/uplift/20260507-bsuite-uplift-design-language-v1.00A.md` §6.2.

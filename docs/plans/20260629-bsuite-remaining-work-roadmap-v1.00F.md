@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # BSuite Remaining-Work Roadmap
 
 > **SUBORDINATED (2026-07-27):** The canonical master is `docs/00-roadmap/20260112-master-roadmap-v1.00F.md`. This 0629 doc is retained for historical phase context only; its open items have been re-validated in the 2026-07-27 full close-out sweep. Do not execute from this doc without checking the master first.

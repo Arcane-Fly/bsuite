@@ -14,23 +14,107 @@ import type { Node } from '@xyflow/react';
 export interface GridLayoutOptions {
   /** Columns in the grid (default 4). */
   columns?: number;
-  /** Horizontal gap between cards (default 320). */
-  gapX?: number;
-  /** Vertical gap between cards (default 220). */
-  gapY?: number;
+  /** Space BETWEEN columns, on top of the widest card (default 60). */
+  gutterX?: number;
+  /** Space BETWEEN rows, on top of the tallest card in that row (default 80). */
+  gutterY?: number;
 }
 
+/**
+ * Card size for layout purposes.
+ *
+ * React Flow writes the rendered size onto `measured` once its ResizeObserver
+ * has seen the node, so by the time a user can press Tidy the real numbers are
+ * there. `estimateCardHeight(fields.length)` is the fallback for the frames
+ * before that and for unit tests, and it is the same estimate
+ * `computeDefaultGridPositions` uses — one model of how tall a card is, not
+ * two that can drift.
+ */
+function cardSize(node: {
+  measured?: { width?: number | null; height?: number | null };
+  width?: number | null;
+  height?: number | null;
+  data?: unknown;
+}): { width: number; height: number } {
+  const fields = (node.data as { fields?: unknown[] } | undefined)?.fields;
+  const fieldCount = Array.isArray(fields) ? fields.length : 0;
+  return {
+    width: node.measured?.width ?? node.width ?? CARD_MAX_WIDTH,
+    height:
+      node.measured?.height ?? node.height ?? estimateCardHeight(fieldCount),
+  };
+}
+
+/**
+ * Lay cards out in a grid that they actually FIT IN.
+ *
+ * WHY THIS IS NOT `(i % columns) * 320, floor(i / columns) * 220`.
+ *
+ * It was, and that is the whole of operator report D-6: "Selecting 'tidy' icon
+ * just puts the schema cards into a column. Super un-usefull."
+ *
+ * MEASURED on crm.crm7.app 2026-08-27, at the canvas's opening zoom of 0.75
+ * where field rows are still drawn: 44 cards sitting on the persisted output of
+ * this function, on x = 0/320/640/960 and y = 0/220/440/880/1320 — and **69 of
+ * the 946 card pairs physically overlapping**. Card heights ran from 603px to
+ * 1275px against a 220px row pitch, and card width is 340px against a 320px
+ * column pitch. Every row buried the row beneath it and every column clipped
+ * its neighbour. Cards stacked five deep on a 220px pitch do not read as a
+ * grid; they read as a column, which is exactly the word the operator used.
+ *
+ * WHY IT SURVIVED EVERY CHECK. Tidy ends with a `fitView`, which for 44 cards
+ * settles at zoom 0.28 — below `LOD_FIELDS_VISIBLE` (0.7) in EntityNode, so the
+ * cards collapse to header-only and stop overlapping. The damage is invisible
+ * at the zoom Tidy leaves you at and appears the moment you zoom in far enough
+ * to read anything. A screenshot taken straight after pressing Tidy shows a
+ * clean grid. Measure at the OPENING zoom, not the fitted one.
+ *
+ * The fix is not new thinking: `computeDefaultGridPositions` below already
+ * solves this exact problem, and its docblock already records the same bug
+ * being measured on 2026-08-06. This function was added afterwards and repeated
+ * the mistake the file was already documenting. A row's pitch comes from the
+ * TALLEST card in that row; a column's pitch clears the WIDEST card anywhere,
+ * so columns stay aligned down the whole canvas.
+ *
+ * `gapX`/`gapY` are gone rather than renamed. They meant PITCH — the distance
+ * between origins — and the replacements mean GUTTER — the space left over.
+ * Keeping the old names for the new meaning would silently change what every
+ * existing caller's number does. Nothing outside this package could call it:
+ * it is not re-exported from `utils/index.ts` or the package root.
+ *
+ * Same return contract as `computeDagreLayout`: a NEW nodes array with updated
+ * `position` fields; unrelated properties preserved.
+ */
 export function computeGridLayout<NodeData extends Record<string, unknown> = Record<string, unknown>>(
   nodes: Node<NodeData>[],
   options: GridLayoutOptions = {},
 ): Node<NodeData>[] {
   if (nodes.length === 0) return nodes;
-  const { columns = 4, gapX = 320, gapY = 220 } = options;
+  const { columns = 4, gutterX = 60, gutterY = 80 } = options;
+  const cols = Math.max(1, Math.floor(columns));
+
+  const sizes = nodes.map((node) => cardSize(node));
+
+  // One column pitch for the whole canvas, from the widest card anywhere, so
+  // columns line up from the first row to the last instead of ragging inward
+  // wherever a row happens to hold only narrow cards.
+  const colPitch = Math.max(...sizes.map((s) => s.width)) + gutterX;
+
+  // Row tops accumulate: each row starts below the tallest card in the row
+  // above it, which is the one thing a fixed pitch can never know.
+  const rowTops: number[] = [];
+  let top = 0;
+  for (let start = 0; start < nodes.length; start += cols) {
+    rowTops.push(top);
+    const rowHeights = sizes.slice(start, start + cols).map((s) => s.height);
+    top += Math.max(...rowHeights) + gutterY;
+  }
+
   return nodes.map((node, i) => ({
     ...node,
     position: {
-      x: (i % columns) * gapX,
-      y: Math.floor(i / columns) * gapY,
+      x: (i % cols) * colPitch,
+      y: rowTops[Math.floor(i / cols)],
     },
   }));
 }

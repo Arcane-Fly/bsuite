@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # GTO enquiry-to-billing walk — results
 
 **Date:** 2026-07-31 · **Status:** Frozen

@@ -1,6 +1,6 @@
 # One-Shot Cross-Cutting Audit — 2026-07-24
 
-> **Naming:** `20260724-oneshot-cross-cutting-audit-v1.00F.md` · Status **W** · Full cross-cutting DRY one-shot compliance audit of everything shipped 2026-07-22→24 (Documentation Program, STA email ingestion, bug-hunt fixes, email/funding expansion). Policy: `20260227-dry-one-shot-architecture-v1.04A.md`.
+> **Naming:** `20260724-oneshot-cross-cutting-audit-v1.00W.md` · Status **W** · Full cross-cutting DRY one-shot compliance audit of everything shipped 2026-07-22→24 (Documentation Program, STA email ingestion, bug-hunt fixes, email/funding expansion). Policy: `20260227-dry-one-shot-architecture-v1.04A.md`.
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.

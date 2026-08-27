@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Weekly Gap Register — work of 2026-07-21 → 2026-07-28
 
 > ## ⚠ SUPERSEDED — 2026-08-14 · AND ITS `P0-n` ARE NOT THE ESTATE'S `P0-n`
