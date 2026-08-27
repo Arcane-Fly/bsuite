@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Weekly Gap Assessment — 2026-07-21 → 2026-07-28
 
 > **Recovery note (2026-07-28):** this file was authored untracked and destroyed by a concurrent

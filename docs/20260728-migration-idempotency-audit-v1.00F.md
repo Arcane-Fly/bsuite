@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Migration Idempotency Audit — 2026-07-28
 
 **Task:** Gap Remediation Plan Task 3 (P0-2) — reconcile the migration ledger.

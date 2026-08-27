@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Conduit Auth Doctrine vs Reality Investigation
 
 **Status:** Frozen (F)
