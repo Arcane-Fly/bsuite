@@ -1,0 +1,65 @@
+name: No two open PRs claim one migration version
+
+# THE WINDOW THIS CLOSES, AND THE GATE THAT SAYS IT IS OPEN.
+#
+# `migration-collision-branch-tips.yml` documents its own blind spot, honestly:
+#
+#   "OPEN PR BRANCHES in the submodules. Two migrations authored on two unmerged
+#    feature branches collide with each other invisibly here. The gate only sees
+#    them once the first one merges to its `development` — at which point the
+#    second one's own parent PR fails. That is a real narrowing of the window
+#    (hours instead of never), NOT closure of it."
+#
+# It happened. 2026-08-27: business-suite-unified#935 (email signatures) and #940
+# (an RLS privilege-escalation fix) both claimed `20260928000000`, both open at
+# once, with the promotion PR already raised carrying both. Every scope shares ONE
+# `supabase_migrations.schema_migrations` keyed on the version string alone, so
+# whichever file the applier reached SECOND would have been recorded as applied and
+# silently skipped — its DDL never running while the pipeline reported success. The
+# coin-flip was between an email feature and a live privilege-escalation fix. It was
+# caught by hand, after both had merged.
+#
+# WHY A CLOCK. The colliding state is created when someone opens a PR in a
+# SUBMODULE. This repository has no event for that.
+# precedent__bsuite__20260802__a_gate_must_prove_it_executed, fifth shape:
+# "a state created in another repository can only be observed on a clock."
+#
+# This does NOT replace the branch-tip gate, which answers a different question
+# cheaply on the right event. It answers one no event here can pose.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # :07 — clear of the history audit (:17), pg_cron health (:29), policy drift
+    # (:43) and the live definer scan (:51).
+    - cron: '7 */3 * * *'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  open-pr-collisions:
+    name: No two open PRs claim one migration version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # FIRST, and without the network. A clean scan from a broken parser is
+      # indistinguishable from a clean scan of a healthy estate. Nine cases,
+      # including the real 935/940 collision and three negative controls — a PR
+      # listing one file twice must NOT fire, or the gate cries wolf and is ignored.
+      - name: Self-test the collision logic
+        run: node scripts/check-migration-collisions-across-open-prs.mjs --self-test
+
+      - name: Scan every open PR branch across all six submodules
+        env:
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+        run: node scripts/check-migration-collisions-across-open-prs.mjs
