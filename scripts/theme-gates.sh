@@ -55,6 +55,7 @@ run G3 "no palette bypass in app source" bash -c '
 run G4 "no app redeclares a package token" scripts/audit-token-ownership.sh
 run G10 "no silently-dropped utilities" scripts/audit-invalid-utilities.sh
 run G12 "no AA-tuned text token carries an opacity modifier" scripts/check-dimmed-text-tokens.sh
+run G13 "fill-token-as-text does not grow" scripts/check-fill-token-as-text.sh
 # R1 — the per-page checklist in § 2 of the DoD pointed at scripts/audit-routes.sh
 # for two weeks while no such file existed, so none of it ran. This asserts the
 # inventory that file now owns is still there and still non-empty: a sweep over

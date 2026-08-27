@@ -252,16 +252,16 @@
    LAYER 3 — AA-SAFE TEXT RENDERINGS OF THE SATURATED ROLES
    A saturated fill colour is not a legible text colour.
    ============================================================ */
-  --role-primary-text: oklch(0.566 0.170 17.6);
-  --role-accent-text-base: oklch(0.544 0.092 89.9);
+  --role-primary-text: oklch(0.467 0.170 17.6);
+  --role-accent-text-base: oklch(0.495 0.092 89.9);
   --role-accent-text:  var(--role-accent-text-base);
   /* Red, per the 2026-08-10 ruling. Measured on Corporate's own light
      surfaces, not inherited from D2C's: 6.18:1 on --role-bg-body,
      6.44:1 on --role-bg-panel. Both ✓ AA. */
-  --role-error-text:   oklch(0.482 0.230  25);
-  --role-warning-text: oklch(0.544 0.092 89.9);
-  --role-success-text: oklch(0.515 0.130 198);
-  --role-info-text:    oklch(0.519 0.140 220);
+  --role-error-text:   oklch(0.432 0.230  25);
+  --role-warning-text: oklch(0.495 0.092 89.9);
+  --role-success-text: oklch(0.466 0.130 198);
+  --role-info-text:    oklch(0.430 0.140 220);
 
 /* ============================================================
    LAYER 3 — INVERSE TEXT ON COLOURED FILLS
@@ -391,13 +391,13 @@
   --role-kbd-bg:         oklch(0.250 0.020 250);
   --role-kbd-border:     oklch(0.400 0.022 250);
   --role-primary-text:   oklch(0.704 0.170 17.6);
-  --role-accent-text-base: oklch(0.683 0.092 89.9);
+  --role-accent-text-base: oklch(0.733 0.092 89.9);
   --role-accent-text:    var(--role-accent-text-base);
   /* Red, per the 2026-08-10 ruling. 7.24:1 on --role-bg-body,
      6.51:1 on --role-bg-panel. Both ✓ AA. */
   --role-error-text:     oklch(0.786 0.230  25);
-  --role-warning-text:   oklch(0.683 0.092 89.9);
-  --role-success-text:   oklch(0.662 0.130 198);
+  --role-warning-text:   oklch(0.733 0.092 89.9);
+  --role-success-text:   oklch(0.730 0.130 198);
   --role-info-text:      oklch(0.667 0.140 220);
   --shadow-xs:           0 1px 2px oklch(0.07 0.01 252 / 0.5);
   --shadow-sm:           0 1px 3px oklch(0.07 0.01 252 / 0.55);

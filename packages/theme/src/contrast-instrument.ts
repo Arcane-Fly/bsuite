@@ -20,6 +20,8 @@ const VARS = resolve(__dirname, 'css/vars.css')
  */
 const DEG = Math.PI / 180
 
+const MAX_HOPS = 8
+
 export type Rgb = [number, number, number]
 
 export function oklchToSrgb(L: number, C: number, H: number): Rgb {
@@ -73,6 +75,69 @@ export function over(fg: Rgb, bg: Rgb, alpha: number): Rgb {
 const CSS = readFileSync(VARS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 
 /**
+ * THE SAME READER, POINTED AT ANOTHER STYLESHEET.
+ *
+ * This module used to be hardcoded to `css/vars.css`, so there was NO trusted way to
+ * measure `css/braden.css` — the Corporate palette. On 2026-08-28 that gap cost three
+ * separate hand-rolled readers in one session, each handling `var()` differently, each
+ * returning a different verdict for the same file (4.16 / 3.33 / "all pass"), and one
+ * of them reached a PR description before the live page contradicted it.
+ *
+ * A measurement tool that covers one of two stylesheets guarantees the second gets
+ * measured by whatever the reader writes that day. So: same parser, same cascade rules,
+ * same alias resolution, any file.
+ */
+export function sheet(absPath: string) {
+  const raw = readFileSync(absPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const blocksIn = (selector: string): string => {
+    const out: string[] = []
+    const re = /([^{}]*)\{/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(raw))) {
+      const sel = m[1].trim()
+      const open = m.index + m[0].length - 1
+      let depth = 0
+      let close = -1
+      for (let i = open; i < raw.length; i++) {
+        if (raw[i] === '{') depth++
+        else if (raw[i] === '}' && --depth === 0) { close = i; break }
+      }
+      if (close === -1) throw new Error(`unterminated block for "${sel}" in ${absPath}`)
+      if (sel.split(',').some((x) => x.trim() === selector)) out.push(raw.slice(open + 1, close))
+      re.lastIndex = close
+    }
+    if (!out.length) throw new Error(`selector ${selector} not found in ${absPath}`)
+    return out.join('\n')
+  }
+  const root = blocksIn(':root')
+  const read = (n: string, where: string): string | null => {
+    const all = [...where.matchAll(new RegExp(`--${n}\\s*:\\s*([^;]+);`, 'g'))]
+    return all.length ? all[all.length - 1][1].trim() : null
+  }
+  /** Resolve within THIS sheet, following aliases to a fixed point, throwing on failure. */
+  const resolveIn = (name: string, scope: string): Rgb => {
+    const first: string | null = read(name, scope) ?? read(name, root)
+    if (first === null) throw new Error(`--${name} not declared in ${absPath}`)
+    let value: string = first
+    const seen: string[] = [name]
+    for (let i = 0; i < MAX_HOPS; i++) {
+      const hop: RegExpMatchArray | null = value.match(/^var\(\s*--([a-z0-9-]+)\s*\)$/i)
+      if (hop === null) break
+      const next: string = hop[1]
+      if (seen.includes(next)) throw new Error(`--${name} cycles: ${seen.join(' -> ')} -> ${next}`)
+      seen.push(next)
+      const v: string | null = read(next, scope) ?? read(next, root)
+      if (v === null) throw new Error(`--${name} aliases --${next}, not declared in ${absPath}`)
+      value = v
+    }
+    const ok = value.match(/oklch\(\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s*\)/i)
+    if (!ok) throw new Error(`--${name} does not resolve to a bare oklch triple (via ${seen.join(' -> ')}): "${value}"`)
+    return oklchToSrgb(Number(ok[1]), Number(ok[2]), Number(ok[3]))
+  }
+  return { blocks: blocksIn, resolve: resolveIn, root }
+}
+
+/**
  * Every top-level block whose selector list contains `selector`, concatenated
  * in source order — NOT the first one. vars.css declares `:root` twice and
  * `.dark` twice, and the second pair is where the role aliases live.
@@ -104,19 +169,55 @@ export function blocks(selector: string): string {
 export const ROOT = blocks(':root')
 export const DARK = blocks('.dark')
 
-/** Resolve `--name` inside a block, following at most one `var(--other)` hop. */
+/**
+ * Resolve `--name` inside a block, following `var()` aliases TO A FIXED POINT.
+ *
+ * IT USED TO FOLLOW EXACTLY ONE HOP, and that was enough for `css/vars.css`, where
+ * `--role-primary` is a bare `oklch()`. It is not enough for `css/braden.css`, where
+ * `--role-primary: var(--braden-red)` and `--role-accent-text:
+ * var(--role-accent-text-base)`. On 2026-08-28 that cost a false measurement: callers
+ * that swallowed the throw treated the unresolved fill as "no tint" and graded every
+ * aliased role against plain surfaces only — dropping the /15 and /20 composites,
+ * which are the cells that fail. Six Corporate roles read as PASS and the live page
+ * said 3.01-3.95.
+ *
+ * So: loop, with a bounded depth so a cycle cannot hang, and THROW on anything that
+ * does not land on a bare oklch triple. Throwing is the point — a resolver that
+ * returns null hands its caller a value that is easy to mistake for "nothing to
+ * check", and that is precisely how half a cross product went ungraded.
+ */
 export function resolve_(name: string, scope: string): Rgb {
-  const read = (n: string, where: string) => {
+  const read = (n: string, where: string): string | null => {
     // LAST declaration wins — the same cascade the browser applies.
     const all = [...where.matchAll(new RegExp(`--${n}\\s*:\\s*([^;]+);`, 'g'))]
     return all.length ? all[all.length - 1][1].trim() : null
   }
-  let value = read(name, scope) ?? read(name, ROOT)
-  if (!value) throw new Error(`--${name} not declared`)
-  const hop = value.match(/^var\(\s*--([a-z0-9-]+)\s*\)$/i)
-  if (hop) value = read(hop[1], scope) ?? read(hop[1], ROOT) ?? ''
+  const first: string | null = read(name, scope) ?? read(name, ROOT)
+  if (first === null) throw new Error(`--${name} not declared`)
+
+  let value: string = first
+  const seen: string[] = [name]
+  for (let i = 0; i < MAX_HOPS; i++) {
+    const hop: RegExpMatchArray | null = value.match(/^var\(\s*--([a-z0-9-]+)\s*\)$/i)
+    if (hop === null) break
+    const next: string = hop[1]
+    if (seen.includes(next)) {
+      throw new Error(`--${name} resolves in a cycle: ${seen.join(' -> ')} -> ${next}`)
+    }
+    seen.push(next)
+    const v: string | null = read(next, scope) ?? read(next, ROOT)
+    if (v === null) throw new Error(`--${name} aliases --${next}, which is not declared`)
+    value = v
+  }
+
   const ok = value.match(/oklch\(\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s*\)/i)
-  if (!ok) throw new Error(`--${name} does not resolve to a bare oklch triple: "${value}"`)
+  if (!ok) {
+    throw new Error(
+      `--${name} does not resolve to a bare oklch triple` +
+        (seen.length > 1 ? ` (via ${seen.join(' -> ')})` : '') +
+        `: "${value}"`,
+    )
+  }
   return oklchToSrgb(Number(ok[1]), Number(ok[2]), Number(ok[3]))
 }
 
