@@ -37,6 +37,7 @@
  *   node scripts/advance-submodule-pointers.mjs --self-test
  */
 
+import { readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 
@@ -201,6 +202,27 @@ function selfTest() {
     return ''
   }, APPS)
   const sixResult = evaluate(sixUncloned)
+  // ---- the refusal allowlist, both directions and the ways it must NOT fire ----
+  {
+    const A = loadAllowedRefusals('{"refusals":[{"app":"R80.4","reason":"standing divergence"}]}')
+    let ok = true
+    const chk = (name, got, want) => { if (got !== want) { ok = false; console.error(`  FAIL allowlist: ${name} got ${got}, want ${want}`) } }
+    chk('a listed app is allowed', A.has('R80.4'), true)
+    // NEGATIVE CONTROL: an app NOT listed must still fail, or the allowlist is a waiver.
+    chk('an unlisted app is not allowed', A.has('crm7'), false)
+    // An entry with no reason is not an entry — a waiver with no stated reason is a
+    // waiver nobody can review.
+    chk('a reasonless entry is ignored',
+      loadAllowedRefusals('{"refusals":[{"app":"crm7","reason":"  "}]}').has('crm7'), false)
+    chk('a missing reason field is ignored',
+      loadAllowedRefusals('{"refusals":[{"app":"crm7"}]}').has('crm7'), false)
+    // An unreadable allowlist must allow NOTHING — refusals then fail, the safe direction.
+    chk('unparseable json allows nothing', loadAllowedRefusals('{not json').size, 0)
+    chk('an empty doc allows nothing', loadAllowedRefusals('{}').size, 0)
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'} refusal-allowlist cases`)
+    if (!ok) return 1
+  }
+
   if (sixResult.refuse.length !== APPS.length) {
     console.error(`  FAIL positive control: wanted ${APPS.length} refusals, got ${sixResult.refuse.length}`)
     bad++
@@ -293,6 +315,26 @@ export function collect(git = realGit, apps = APPS) {
   return entries
 }
 
+/** Standing refusals that are the CORRECT answer, keyed app -> reason. */
+export function loadAllowedRefusals(raw) {
+  const m = new Map()
+  try {
+    const doc = typeof raw === 'string' ? JSON.parse(raw) : raw
+    for (const r of doc?.refusals || []) {
+      if (r && typeof r.app === 'string' && typeof r.reason === 'string' && r.reason.trim()) {
+        m.set(r.app, r.reason)
+      }
+    }
+  } catch { /* an unreadable allowlist allows nothing — refusals then fail, which is the safe direction */ }
+  return m
+}
+
+const ALLOWED_REFUSALS = (() => {
+  try {
+    return loadAllowedRefusals(readFileSync(new URL('./gitlink-refusal-allowlist.json', import.meta.url), 'utf8'))
+  } catch { return new Map() }
+})()
+
 function main() {
   if (process.argv.includes('--self-test')) process.exit(selfTest() === 0 ? 0 : 1)
   const write = process.argv.includes('--write')
@@ -309,7 +351,13 @@ function main() {
     console.log(`    ADVANCE  ${a.app.padEnd(24)} ${a.from.slice(0, 8)} -> ${a.to.slice(0, 8)}  (${a.behind} commit(s))`)
   }
   for (const a of already) console.log(`    current  ${a}`)
-  for (const r of refuse) console.error(`::error::REFUSED ${r.app} — ${r.why}`)
+  for (const r of refuse) {
+    // An allowlisted refusal must not emit ::error::. GitHub renders that as an error
+    // annotation even on a passing job, and an annotation nobody can act on is the
+    // same noise as a red check nobody reads.
+    if (ALLOWED_REFUSALS.has(r.app)) console.log(`    REFUSED ${r.app} — ${r.why}`)
+    else console.error(`::error::REFUSED ${r.app} — ${r.why}`)
+  }
 
   if (write) {
     for (const a of advance) {
@@ -318,8 +366,32 @@ function main() {
     console.log(`  staged ${advance.length} gitlink(s)`)
   }
 
-  // A refusal is a real finding and must fail. Nothing-to-do is success.
-  process.exit(ok ? 0 : 1)
+  // A refusal is a real finding and must fail — UNLESS it is a standing one that
+  // cannot be resolved from here.
+  //
+  // R80.4 has been refused on every run since its development picked up a duplicate
+  // of main's commit, and the refusal is CORRECT: the parent pins its main exactly,
+  // which is where the promotion invariant wants the pointer. But a correct refusal
+  // that fails the job leaves this workflow permanently red, and a workflow that has
+  // been red for weeks is one nobody reads — which is precisely how a genuinely NEW
+  // refusal arrives looking exactly like the old one.
+  //
+  // Allowlisted refusals are REPORTED and do not fail. Everything else still fails.
+  const unexpected = refuse.filter((r) => !ALLOWED_REFUSALS.has(r.app))
+  const expected = refuse.filter((r) => ALLOWED_REFUSALS.has(r.app))
+  for (const r of expected) {
+    console.log(`    (allowlisted refusal) ${r.app} — ${ALLOWED_REFUSALS.get(r.app)}`)
+  }
+  // A DEAD ENTRY IS NOT HARMLESS. An app that has stopped being refused but is still
+  // listed here silently pre-authorises the next divergence in that app, which is how
+  // a per-item allowlist rots into a blanket waiver.
+  const refusedApps = new Set(refuse.map((r) => r.app))
+  const dead = [...ALLOWED_REFUSALS.keys()].filter((a) => !refusedApps.has(a))
+  if (dead.length) {
+    console.error(`::error::allowlisted refusal(s) no longer refused: ${dead.join(', ')} — remove them from scripts/gitlink-refusal-allowlist.json`)
+  }
+
+  process.exit(unexpected.length || dead.length ? 1 : 0)
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main()
