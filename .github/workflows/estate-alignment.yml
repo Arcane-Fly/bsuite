@@ -40,9 +40,39 @@ jobs:
           # present. Without them every anchor "fails" and the check becomes noise nobody reads.
           submodules: recursive
           fetch-depth: 1
+          # Every app is a PRIVATE submodule, so the default GITHUB_TOKEN cannot clone them.
+          # It fails with a bare "repository not found", which reads like a typo rather than a
+          # permissions problem — this job did exactly that on bsuite#2549, on crm7 and conduit.
+          # House pattern is the cross-repo PAT with a GITHUB_TOKEN fallback.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # The comment above says an absent submodule makes every anchor fail. That is the LOUD
+      # failure. The quiet one is worse and is the reason this step exists: a reconciler that
+      # walks an empty directory finds no rows to reconcile and reports a clean estate. Assert
+      # presence explicitly rather than trusting a number that cannot distinguish "checked
+      # nothing" from "found nothing".
+      - name: Assert the submodules actually checked out
+        shell: bash
+        run: |
+          set -uo pipefail
+          missing=""
+          for a in crm7 conduit business-suite-unified R80.4 throughput braden; do
+            [ -d "$a/src" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (repo: read on each app)."
+            exit 1
+          fi
+          echo "all six submodules present"
+
       - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          # setup-node@v5 resolves the packageManager field's pnpm BEFORE corepack runs and
+          # fails with "Unable to locate executable file: pnpm". Enforced by
+          # check-setup-node-pnpm-guard.mjs, which this workflow was failing.
+          package-manager-cache: false
       - name: Reconciler self-test
         # If its own parsing is broken, every verdict below is meaningless. Fail here rather than
         # report a clean estate from a checker that stopped matching.

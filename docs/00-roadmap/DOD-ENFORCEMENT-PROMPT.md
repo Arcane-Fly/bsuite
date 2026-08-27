@@ -1,3 +1,12 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/estate-align.mjs
+  - .github/workflows/estate-alignment.yml
+---
+
 # BSuite per-feature Definition-of-Done enforcement prompt
 
 **v1.00W · 2026-08-26 · parameterised master template**

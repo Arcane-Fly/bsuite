@@ -1,3 +1,12 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/estate-align.mjs
+  - .github/workflows/estate-alignment.yml
+---
+
 # BSuite platform — feature index
 
 **v1.00W · 2026-08-26 · 659 features across 13 modules**

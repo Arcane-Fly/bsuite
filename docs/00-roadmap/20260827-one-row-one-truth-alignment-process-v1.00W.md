@@ -1,7 +1,10 @@
 ---
-kind: process
-authority: operative
+kind: standard
+authority: engineering
 owner: bsuite
+evidence:
+  - scripts/estate-align.mjs
+  - .github/workflows/estate-alignment.yml
 ---
 
 # One row, one truth — the alignment process

@@ -3,8 +3,8 @@
  * ONE ROW, ONE TRUTH — reconcile the estate's registers against each other and against disk.
  *
  * WHY THIS EXISTS. On 2026-08-27 the four artifacts that are supposed to be this estate's
- * source of truth — bsuite-feature-index.{json,md}, journey-gap-register.json,
- * dod-enforcement-prompt.md — were UNTRACKED. They existed on exactly one laptop. No CI could
+ * source of truth — bsuite-feature-index.json, BSUITE-FEATURE-INDEX.md, journey-gap-register.json,
+ * DOD-ENFORCEMENT-PROMPT.md — were UNTRACKED. They existed on exactly one laptop. No CI could
  * read them, no other lane could see them, and a disk failure would have taken 659 indexed
  * features with it. That is also why NO SKILL referenced them: they did not exist anywhere a
  * skill could point.
