@@ -1,3 +1,9 @@
+---
+kind: decision
+authority: operator
+owner: bsuite-lane
+---
+
 # Who creates each document — and what that changes
 
 **Operator ruling, 2026-08-10.** Recorded, then applied to all 83 document
