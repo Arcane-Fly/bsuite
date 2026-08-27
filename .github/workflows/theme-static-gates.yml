@@ -78,3 +78,10 @@ jobs:
 
       - name: G12 — no AA-tuned text token carries an opacity modifier
         run: bash scripts/check-dimmed-text-tokens.sh
+
+      # G13 is a RATCHET, not a ban: 176 sites use a fill token where a `-text`
+      # token belongs, across six repos, and some sit on washes whose composite
+      # must be re-checked individually. The count may fall, never rise. When it
+      # reaches zero it becomes a ban like G12.
+      - name: G13 — fill-token-as-text does not grow
+        run: bash scripts/check-fill-token-as-text.sh
