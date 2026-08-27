@@ -441,9 +441,34 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                   // `--radius-card` defaults to today's value (1.5rem =
                   // rounded-3xl), so this is byte-identical until a tenant sets
                   // one.
-                  'h-full w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border border-border shadow-sm dark:shadow-[var(--glow-card,none)]'
+                  cn(
+                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border border-border shadow-sm dark:shadow-[var(--glow-card,none)]',
+                    // THE DOUBLED BOTTOM BORDER, AND WHY THE ARITHMETIC COULD NEVER FIX IT.
+                    //
+                    // computeAutoHeightRows uses Math.ceil to round content height up to
+                    // whole rows, because react-grid-layout only accepts integer row units.
+                    // So an autoHeight slot is up to (rowHeight + marginY - 1)px TALLER than
+                    // its content — measured on /placements: 6.6px at 1440 and 768, 28.6px
+                    // at 1024. That remainder is unavoidable; it is what "whole rows" means.
+                    //
+                    // With `h-full` the painted surface FILLS the remainder, so its bottom
+                    // border is drawn below the content's own bottom edge. When the content
+                    // also paints a Card — which ~90% of slots do — the user sees TWO
+                    // bottom borders with a few px of card background between them.
+                    //
+                    // Raised as D-46, D-98 and D-136 ("Bottom border still double for cards
+                    // which we have raised 100s of times now"), and 2.3.1 did not fix it
+                    // because 2.3.1 changed the row ARITHMETIC. No arithmetic removes a ceil
+                    // remainder. The fix has to be in the PAINT.
+                    //
+                    // So for autoHeight the surface HUGS its content and the remainder
+                    // becomes transparent space below the card, which nobody can see. For a
+                    // manually-resized slot h-full is still right: the user chose that
+                    // height and the chrome should fill it.
+                    autoHeight ? 'h-fit' : 'h-full',
+                  )
                 : // Chrome OFF: layout only. Identical box, no paint.
-                  'h-full w-full transition-all flex flex-col'
+                  cn('w-full transition-all flex flex-col', autoHeight ? 'h-fit' : 'h-full')
             }
             style={{ contain: 'layout style' }}
           >
@@ -472,7 +497,19 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * content's true intrinsic height rather than the (currently
              * clipped) height of this flex-1 wrapper.
              */}
-            <div className={cn('flex-1 min-h-0', autoHeight ? 'overflow-hidden' : 'overflow-auto')}>
+            {/*
+             * `flex-1` makes this wrapper claim all remaining vertical space. For a
+             * manually-resized slot that is exactly right. For an autoHeight slot it
+             * re-creates the very gap the `h-fit` above removes — the surface would hug
+             * the wrapper, and the wrapper would stretch to the over-allocated height.
+             * So autoHeight uses `flex-none` and the wrapper is content-sized.
+             */}
+            <div
+              className={cn(
+                'min-h-0',
+                autoHeight ? 'flex-none overflow-hidden' : 'flex-1 overflow-auto',
+              )}
+            >
               {autoHeight ? <div ref={measureRef}>{content}</div> : content}
             </div>
           </div>

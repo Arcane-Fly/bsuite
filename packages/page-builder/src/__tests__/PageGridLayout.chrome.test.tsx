@@ -36,28 +36,59 @@ describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
     );
     const el = surface(container);
     expect(el.dataset.chrome).toBe('off');
-    expect(el.className).not.toMatch(/\bbg-card\b/);
-    expect(el.className).not.toMatch(/\bborder\b/);
-    expect(el.className).not.toMatch(/\brounded/);
+    expect(el.classList.contains('bg-card'), 'chrome off must not paint a background').toBe(false);
+    expect(el.classList.contains('border'), 'chrome off must not paint a border').toBe(false);
+    expect(
+      [...el.classList].some((c) => c.startsWith('rounded')),
+      'chrome off must not round the corners',
+    ).toBe(false);
   });
 
   it('keeps the LAYOUT identical with chrome off — only the paint is conditional', () => {
-    // If turning chrome off also dropped `h-full w-full flex flex-col`, every
-    // card in the estate would change size, and the inversion would be a
-    // layout change wearing a styling change's clothes.
-    const { container } = render(
+    // If turning chrome off also changed the box, every card in the estate would
+    // change size, and the inversion would be a layout change wearing a styling
+    // change's clothes.
+    //
+    // ASSERTED AS AN INVARIANT, NOT AS A CONSTANT. This used to hardcode `h-full`.
+    // The height class is now conditional on `autoHeight` — an autoHeight slot's
+    // chrome HUGS its content so it cannot paint the Math.ceil row remainder as a
+    // second bottom border (D-46/D-98/D-136). Hardcoding the old value made this
+    // test fail on the fix for a defect it was never about, which is what a test
+    // asserting a constant always eventually does.
+    //
+    // What actually matters is that chrome-on and chrome-off produce the SAME box.
+    // Comparing them directly says that, and keeps saying it whatever the height
+    // class becomes.
+    // No regex (operator ruling 2026-08-26). Exact token prefixes, checked with
+    // startsWith — which is also what "a layout class" actually means here.
+    const LAYOUT_PREFIXES = ['h-', 'w-', 'flex', 'min-h-'];
+    const layoutClasses = (el: HTMLElement) =>
+      [...el.classList]
+        .filter((c) => LAYOUT_PREFIXES.some((prefix) => c.startsWith(prefix)))
+        .sort()
+        .join(' ');
+
+    const off = render(
       <PageGridLayout
         pageKey="chrome-off-layout"
         defaultLayouts={layouts}
         widgets={{ alpha: <div>Alpha</div> }}
       />,
     );
-    const el = surface(container);
-    for (const cls of ['h-full', 'w-full', 'flex', 'flex-col']) {
-      expect(el.className, `layout class ${cls} must survive chrome removal`).toMatch(
-        new RegExp(`\\b${cls}\\b`),
-      );
-    }
+    const on = render(
+      <PageGridLayout
+        pageKey="chrome-on-layout"
+        defaultLayouts={layouts}
+        itemChrome
+        widgets={{ alpha: <div>Alpha</div> }}
+      />,
+    );
+
+    const offClasses = layoutClasses(surface(off.container));
+    expect(offClasses, 'the surface must carry real layout classes, or this compares nothing')
+      .not.toBe('');
+    expect(layoutClasses(surface(on.container)), 'chrome must change the PAINT, never the BOX')
+      .toBe(offClasses);
   });
 
   it('still renders the widget content — chrome off is not content off', () => {
@@ -84,10 +115,9 @@ describe('chrome is opt-in, at two levels, and per-item wins', () => {
     );
     const el = surface(container);
     expect(el.dataset.chrome).toBe('on');
-    expect(el.className).toMatch(/\bbg-card\b/);
-    expect(el.className).toMatch(/\bborder\b/);
-    expect(el.className).toMatch(/\bborder-border\b/);
-    expect(el.className).toMatch(/\bshadow-sm\b/);
+    for (const cls of ['bg-card', 'border', 'border-border', 'shadow-sm']) {
+      expect(el.classList.contains(cls), `chrome on must paint ${cls}`).toBe(true);
+    }
   });
 
   it('a per-item `chrome` flag turns ONE slot back on while the app default stays off', () => {
@@ -137,8 +167,11 @@ describe('the chrome radius is tenant-configurable, not a literal', () => {
       />,
     );
     const el = surface(container);
-    expect(el.className).toMatch(/rounded-\[var\(--radius-card,1\.5rem\)\]/);
-    expect(el.className, 'no hardcoded radius may remain').not.toMatch(/\brounded-3xl\b/);
+    expect(
+      el.classList.contains('rounded-[var(--radius-card,1.5rem)]'),
+      'the radius must read the token so a tenant can set it',
+    ).toBe(true);
+    expect(el.classList.contains('rounded-3xl'), 'no hardcoded radius may remain').toBe(false);
   });
 });
 
