@@ -105,6 +105,50 @@ function docRoots() {
  * otherwise hit the temporal dead zone. */
 const STATUS_WORD = { working: 'W', draft: 'D', review: 'R', approved: 'A', frozen: 'F' }
 
+/* Hoisted above the self-test block: its cases run there and would otherwise hit the
+ * temporal dead zone. */
+/* A PROMPT DOCUMENT IS A RECORD, OR IT IS NOT COMPLETE.
+ *
+ * The operator's completion bar is "the thing it describes is 100% proven production
+ * code". A prompt describes an INTENDED FUTURE ACTION — at the moment it is written,
+ * the thing it describes does not exist. So a prompt has exactly two honest end states:
+ *
+ *   kind: record / authority: none   the work shipped; the document is now history,
+ *                                    and F is correct because the RECORD is closed
+ *   W or D                           the work is outstanding; the marker was not earned
+ *
+ * There is no third state in which a prompt is a live, complete, non-record document.
+ *
+ * Measured 2026-08-27: 11 of 22 prompt-named documents wore -v1.00F. Four independent
+ * triage passes read 60 F-marked documents and EVERY prompt among them fell to "marker
+ * not earned" or "genuinely a record" — the live-complete category is empty by
+ * construction, not by coincidence.
+ *
+ * Reading it any other way makes the marker mean "this prompt is well written", which is
+ * a different assertion in the same field, and is how a completion register stops
+ * carrying information.
+ */
+export const PROMPT_SHAPE = /(?:^|[-_])(?:refined|prompt)(?:[-_]|-v\d)/i
+
+/* The estate already treats these directories as preserving what was said at the time —
+ * audit-doc-completion.mjs calls it HISTORICAL_BY_PATH and excludes them from the
+ * bindable set for the same reason. A prompt filed under one of them IS a record, and
+ * failing it here would be two gates disagreeing about the same document. */
+export const HISTORICAL_DIR = /(^|\/)(archive|archived|inputs|superseded)(\/|$)/i
+
+export function promptMarkerViolation(name, fmWindow, relPath) {
+  const m = name.match(/-v\d+\.\d+([WDRAF])\.md$/)
+  if (!m || m[1] !== 'F') return null
+  if (!PROMPT_SHAPE.test(name)) return null
+  if (relPath && HISTORICAL_DIR.test(relPath)) return null
+  /* A record IS allowed to be F — its F means the record is closed. Same predicate
+   * audit-doc-completion uses, kept in sync deliberately. */
+  const fm = fmWindow
+  const isRecord = /^kind:\s*record\s*$/m.test(fm) && /^authority:\s*none\s*$/m.test(fm)
+  if (isRecord) return null
+  return 'a prompt marked F must declare `kind: record` / `authority: none`, or carry W/D'
+}
+
 if (selfTest) {
   const cases = [
     /* the convention */
@@ -188,6 +232,38 @@ if (selfTest) {
     if (got === want) sPass++
     else console.error(`FAIL status-reader: ${JSON.stringify(text).slice(0, 60)} expected ${want}, got ${got}`)
   }
+  /* ---- the prompt-marker rule, both directions and the ways it must NOT fire ---- */
+  const REC = '---\nkind: record\nauthority: none\n---\n'
+  const pCases = [
+    /* FIRES: a prompt wearing F with no record declaration */
+    ['20260725-gto-excellence-program-refined-v1.00F.md', '# anything', true],
+    ['20260617-product-tails-continuation-prompt-v1.00F.md', '# anything', true],
+    ['20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md', '# anything', true],
+    /* DOES NOT FIRE inside an archival directory — the estate already treats these as
+     * preserving what was said at the time, and two gates must not disagree. */
+    ['20260506-codehouse-parity-prompt-enhancer-output-v1.00F.md', '# anything', false, 'docs/plans/inputs/x.md'],
+    ['20260725-gto-excellence-program-refined-v1.00F.md', '# anything', false, 'docs/archive/y.md'],
+    /* DOES NOT FIRE: a prompt that declares itself a record — its F means the RECORD is closed */
+    ['20260709-hermes-deep-dive-audit-prompt-refined-v1.00F.md', REC + '# anything', false],
+    /* DOES NOT FIRE: a prompt correctly marked W or D */
+    ['20260724-recurring-bugs-blindspots-refined-v1.00W.md', '# anything', false],
+    ['20260725-gto-persona-excellence-design-refined-v1.00D.md', '# anything', false],
+    /* DOES NOT FIRE: a NON-prompt wearing F — this rule is about prompts only */
+    ['20260810-plan-dashboard-retirement-v1.00F.md', '# anything', false],
+    ['20260728-migration-idempotency-audit-v1.00F.md', '# anything', false],
+    /* MUST NOT over-match on a word that merely CONTAINS the token */
+    ['20260810-unrefinedxyz-v1.00F.md', '# anything', false],
+    ['20260810-promptly-shipped-v1.00F.md', '# anything', false],
+  ]
+  let pPass = 0
+  for (const [name, head, want, relPath] of pCases) {
+    const got = promptMarkerViolation(name, head, relPath) !== null
+    if (got === want) pPass++
+    else console.error(`FAIL prompt-marker: ${name} expected ${want}, got ${got}`)
+  }
+  console.log(`check-doc-naming self-test: ${pPass}/${pCases.length} prompt-marker cases pass`)
+  if (pPass !== pCases.length) process.exit(1)
+
   console.log(`check-doc-naming self-test: ${sPass}/${sCases.length} status-reader cases pass`)
   if (sPass !== sCases.length) process.exit(1)
 
@@ -209,6 +285,8 @@ const violations = []
 const adrs = []   /* { dir, num, file } — for the collision + index checks below */
 /* { p, fromName, fromBody } — the filename says one status, the document says another. */
 const statusDisagree = []
+const promptMarked = []
+
 let scanned = 0
 
 /* A RENAME THAT LEAVES THE BODY BEHIND IS A DOCUMENT THAT CONTRADICTS ITSELF.
@@ -291,6 +369,17 @@ function checkStatusAgreement(p, name) {
   } catch {
     return
   }
+  /* BEFORE the status early-return, deliberately. A prompt with NO status line is
+   * exactly the case that needs this check most — `if (!fromBody) return` below would
+   * skip it silently, which is the shape of every blind gate fixed in this file. */
+  /* Read the frontmatter window SEPARATELY from `head`. Widening `head` would also
+   * change what readDeclaredStatus sees and could move the status-agreement ratchet —
+   * a banked number must not shift as a side effect of an unrelated check. */
+  let fmWindow = ''
+  try { fmWindow = fs.readFileSync(p, 'utf8').slice(0, 600) } catch { /* head already read; ignore */ }
+  const pv = promptMarkerViolation(name, fmWindow, p)
+  if (pv) promptMarked.push({ p, why: pv })
+
   const fromBody = readDeclaredStatus(head)
   if (!fromBody) return                    /* no readable status line — skipped, not passed */
   if (fromBody !== n[1]) statusDisagree.push({ p, fromName: n[1], fromBody })
@@ -463,6 +552,50 @@ let statusRatchetFailed = false
     console.log('  status agreement: every status-suffixed doc agrees with its own filename')
   } else {
     console.log(`  status agreement: ${now} known disagreement(s), holding at baseline ${base}`)
+  }
+}
+
+/* THE PROMPT-MARKER RATCHET.
+ *
+ * Ruled 2026-08-27: a prompt document is a RECORD, or it is not complete. It can never
+ * be a live F. Measured that day: 11 of 22 prompt-named documents wore -v1.00F, and
+ * four independent triage passes over 60 F-marked documents found NOT ONE live,
+ * complete prompt — the category is empty by construction.
+ *
+ * Ratcheted rather than failed outright, because the eleven need limb-(a) judgement
+ * one at a time: did the work each asked for actually ship? If yes the document is a
+ * record and F is honest; if no it is W or D. No script may decide that. What a script
+ * CAN do is stop the pile growing, which is the half that does not need a human.
+ */
+{
+  const PROMPT_BASELINE = path.join(root, 'docs/.prompt-marker-baseline')
+  let base = null
+  try { base = Number(fs.readFileSync(PROMPT_BASELINE, 'utf8').trim()) } catch { base = null }
+  const now = promptMarked.length
+
+  if (now > 0) {
+    console.error(`\nPROMPT DOCUMENTS WEARING A COMPLETION MARKER (${now}):`)
+    for (const d of [...promptMarked].sort((a, b) => a.p.localeCompare(b.p))) {
+      console.error(`  ${d.p}`)
+    }
+    console.error('  A prompt describes an INTENDED FUTURE ACTION, so at the moment it is written')
+    console.error('  the thing it describes does not exist. Two honest end states:')
+    console.error('    the work shipped   -> declare `kind: record` / `authority: none`; F is then correct')
+    console.error('    the work is open   -> W or D; the marker was never earned')
+  }
+  if (base === null || Number.isNaN(base)) {
+    console.error(`\n  No baseline. Bank the measurement:  echo ${now} > docs/.prompt-marker-baseline`)
+    statusRatchetFailed = true
+  } else if (now > base) {
+    console.error(`\n  PROMPT-MARKER RATCHET BROKEN: baseline ${base}, now ${now}. It may shrink or hold, never rise.`)
+    statusRatchetFailed = true
+  } else if (now < base) {
+    console.error(`\n  Fell ${base} -> ${now}. Bank it:  echo ${now} > docs/.prompt-marker-baseline`)
+    statusRatchetFailed = true
+  } else if (now === 0) {
+    console.log('  prompt markers: no prompt document wears an unearned completion marker')
+  } else {
+    console.log(`  prompt markers: ${now} known, holding at baseline ${base}`)
   }
 }
 
