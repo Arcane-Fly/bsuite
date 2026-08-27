@@ -590,6 +590,24 @@ if (process.argv.includes('--inventory')) {
 // An open-ended backlog becomes a monotonically shrinking one. That is the finishable
 // shape, and it is the only honest one.
 const UNBOUND_BASELINE_FILE = 'docs/.unbound-baseline';
+
+/* THE SECOND HALF OF THE OPERATOR'S BAR, RATCHETED THE SAME WAY.
+ *
+ * The unbound ratchet stops the backlog GROWING. It says nothing about the docs that
+ * already wear `-v1.00F` while citing nothing runnable — 60 of them on 2026-08-27, out
+ * of 108 marked complete. More than half of every completion marker in the estate rests
+ * on nothing checkable.
+ *
+ * Those 60 cannot be cleared tonight: each is a JUDGEMENT about document content —
+ * limb (a) of the bar, whether the doc is superseded or described a non-best-practice
+ * since corrected — and no script may make it. But an unmeasured pile of unearned
+ * markers is free to grow, and a marker that was not earned is indistinguishable from
+ * a real completion to anyone reading the file list.
+ *
+ * So: the count MAY ONLY FALL. Equality-checked, like every other ratchet here. An
+ * open-ended backlog becomes a monotonically shrinking one, which is the finishable
+ * shape and the only honest one. */
+const UNEARNED_BASELINE_FILE = 'docs/.unearned-marker-baseline';
 // UNBOUND means a LIVE document whose claim nothing can check. An ARCHIVAL
 // record is neither — it preserves what was said at the time and is not making a
 // claim about production, which is why `bindable` already excludes it.
@@ -672,6 +690,32 @@ if (existsSync(UNBOUND_BASELINE_FILE)) {
   }
 } else {
   console.log(`\n  no unbound baseline yet — write ${unboundNow} to ${UNBOUND_BASELINE_FILE} to arm the ratchet`);
+}
+
+const unearnedNow = markedUnbindable.length;
+if (existsSync(UNEARNED_BASELINE_FILE)) {
+  const base = Number(readFileSync(UNEARNED_BASELINE_FILE, 'utf8').trim());
+  if (!Number.isFinite(base)) {
+    console.error(`\n  ${UNEARNED_BASELINE_FILE} is not a number.`);
+    ratchetFailed = true;
+  } else if (unearnedNow > base) {
+    console.error(`\n  UNEARNED-MARKER RATCHET BROKEN: baseline ${base}, now ${unearnedNow}.`);
+    console.error('  A document gained a completion marker while citing nothing runnable.');
+    console.error('  The marker is a claim that the work is done AND provable. Either cite the');
+    console.error('  gate that proves it, or do not wear the marker. Every offender is named in');
+    console.error('  the MARKED COMPLETE section above — this ratchet adds no new list, it only');
+    console.error('  stops that list growing.');
+    ratchetFailed = true;
+  } else if (unearnedNow < base) {
+    console.error(`\n  UNEARNED MARKERS fell ${base} -> ${unearnedNow}. Bank it:`);
+    console.error(`      echo ${unearnedNow} > ${UNEARNED_BASELINE_FILE}`);
+    console.error('  Equality, not a ceiling. Slack lets the pile grow back unnoticed (bsuite D-87).');
+    ratchetFailed = true;
+  } else {
+    console.log(`\n  unearned-marker ratchet ok: baseline ${base}, now ${unearnedNow}`);
+  }
+} else {
+  console.log(`\n  no unearned-marker baseline yet — write ${unearnedNow} to ${UNEARNED_BASELINE_FILE} to arm the ratchet`);
 }
 
 console.log('\n  NOTHING WAS RENAMED. Eligibility is not a verdict — the cited gates must be RUN.');
