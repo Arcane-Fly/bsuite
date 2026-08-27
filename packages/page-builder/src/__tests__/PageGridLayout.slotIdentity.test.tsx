@@ -49,7 +49,7 @@ describe('a grid slot is identifiable from a read-only render', () => {
     const found = surfaces(container);
     // A vacuous pass is not a pass: assert the denominator before the property.
     expect(found.length, 'expected two rendered slots to assert against').toBe(2);
-    expect(found.map((el) => el.dataset.cardKey).sort()).toEqual(['alpha', 'beta']);
+    expect(found.map((el) => el.dataset.gridSlotKey).sort()).toEqual(['alpha', 'beta']);
   });
 
   it('gives each slot a DISTINCT key, so records cannot be conflated', () => {
@@ -60,7 +60,7 @@ describe('a grid slot is identifiable from a read-only render', () => {
         widgets={{ alpha: <div>Alpha</div>, beta: <div>Beta</div> }}
       />,
     );
-    const keys = surfaces(container).map((el) => el.dataset.cardKey);
+    const keys = surfaces(container).map((el) => el.dataset.gridSlotKey);
     expect(keys.length).toBe(2);
     expect(new Set(keys).size, 'two slots must not share one identity').toBe(2);
   });
@@ -82,7 +82,7 @@ describe('a grid slot is identifiable from a read-only render', () => {
       for (const el of found) {
         expect(el.dataset.chrome).toBe(itemChrome ? 'on' : 'off');
         expect(
-          el.dataset.cardKey,
+          el.dataset.gridSlotKey,
           `identity must survive chrome=${String(itemChrome)}`,
         ).toBeTruthy();
       }
@@ -90,17 +90,46 @@ describe('a grid slot is identifiable from a read-only render', () => {
     }
   });
 
-  it('exposes the human label too, so a reading is legible without the source', () => {
+  it('does NOT ship the human label — it is user free text and Sentry does not mask data-*', () => {
+    // Sentry Session Replay masks exactly ['title','placeholder','aria-label'].
+    // maskAllText masks TEXT NODES; maskAllInputs masks INPUT VALUES. An arbitrary
+    // data-* attribute ships verbatim to the processor. The label resolves as
+    // layerNames[i] || widgetMeta[i].label || i, and layerNames is FREE TEXT the
+    // user types into the layer-rename input — persisted to user_preferences and
+    // masked there by maskAllInputs. Copying it into a data attribute would move it
+    // from a masked channel to an unmasked one, permanently.
     const { container } = render(
       <PageGridLayout
-        pageKey="identity-label"
+        pageKey="identity-no-label"
         defaultLayouts={layouts}
-        widgetMeta={{ alpha: { label: 'Quick Actions' } }}
+        widgetMeta={{ alpha: { label: 'FutureBuild rates' } }}
         widgets={{ alpha: <div>Alpha</div>, beta: <div>Beta</div> }}
       />,
     );
-    const el = surfaces(container).find((s) => s.dataset.cardKey === 'alpha');
-    expect(el, 'the alpha slot must render').toBeTruthy();
-    expect(el!.dataset.cardLabel).toBe('Quick Actions');
+    const found = surfaces(container);
+    expect(found.length, 'expected two rendered slots to assert against').toBe(2);
+    for (const el of found) {
+      expect(el.dataset.cardLabel, 'no label attribute may reach the DOM').toBeUndefined();
+      expect(el.outerHTML).not.toContain('FutureBuild');
+    }
+  });
+
+  it('uses a name that does not collide with an app-level data-card-key', () => {
+    // crm7 InPlaceCardEditing.tsx:396 renders data-card-key={cardKey} INSIDE each
+    // grid item. Sharing the name makes querySelector('[data-card-key=X]') match two
+    // nested elements and silently return whichever is first in document order.
+    const { container } = render(
+      <PageGridLayout
+        pageKey="identity-no-collision"
+        defaultLayouts={layouts}
+        widgets={{ alpha: <div>Alpha</div>, beta: <div>Beta</div> }}
+      />,
+    );
+    const found = surfaces(container);
+    expect(found.length).toBe(2);
+    for (const el of found) {
+      expect(el.dataset.cardKey, 'must not claim the app-level attribute name').toBeUndefined();
+      expect(el.dataset.gridSlotKey).toBeTruthy();
+    }
   });
 });

@@ -68,7 +68,7 @@ describe('an autoHeight card whose content is laid out but measures zero', () =>
     renderCard();
     if (!dev()) return;
     const said = err.mock.calls.some(
-      (c) => String(c[0]).includes('@bsuite/page-builder') && String(c[0]).includes('measured 0px'),
+      (c: unknown[]) => String(c[0]).includes('@bsuite/page-builder') && String(c[0]).includes('measured 0px'),
     );
     expect(said).toBe(true);
   });
@@ -82,7 +82,7 @@ describe('an autoHeight card whose content is laid out but measures zero', () =>
       get() { return 0; },
     });
     renderCard();
-    const said = err.mock.calls.some((c) => String(c[0]).includes('measured 0px'));
+    const said = err.mock.calls.some((c: unknown[]) => String(c[0]).includes('measured 0px'));
     expect(said).toBe(false);
   });
 });
