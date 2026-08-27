@@ -109,12 +109,16 @@ const DEFAULT_GRADIENT_CLASSES = ['text-gradient-accent', 'gradient-text'];
  * the full hazard set an order of magnitude higher. The loose number was the
  * kind that makes a codemod look safe.
  */
+// theme-audit-ok: this is the scanner's VOCABULARY — class names it looks FOR in
+// other people's markup, not classes applied here. `flex-grow` is deliberately
+// listed alongside `grow` because the scanner must recognise both spellings in
+// source it did not write.
 const WIDTH_DEPENDENT = [
   'truncate',
   'flex-1',
   'w-full',
   'grow',
-  'flex-grow',
+  'flex-grow', // theme-audit-ok: vocabulary the scanner looks FOR, never applied
   'text-center',
   'mx-auto',
 ];
