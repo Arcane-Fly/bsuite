@@ -202,7 +202,15 @@ jobs:
             git -C "$app" -c user.name='BSuite CI' -c user.email='braden.lang77@gmail.com' \
               commit -F /tmp/reach-msg.txt
             git -C "$app" push -f origin "$br"
-            if gh pr view "$br" -R "$owner/$app" >/dev/null 2>&1; then
+            # STATE-FILTERED, and that is the whole point. `gh pr view "$br"`
+            # matches a PR on that branch in ANY state, so a previously CLOSED or
+            # MERGED reach PR reads as an open one and this step silently opens
+            # nothing. Every app has had a reach PR before, so on 2026-08-28 the
+            # @bsuite/theme 1.4.0 fix was pushed to five branches and PR'd on none
+            # of them — the one app that got a PR was the only one whose earlier
+            # PR happened to still be open. The workflow reported success.
+            if [ -n "$(gh pr list -R "$owner/$app" --state open --head "$br" \
+                       --json number --jq '.[0].number' 2>/dev/null)" ]; then
               echo "$app: PR already open on $br, updated in place"
             elif gh pr create -R "$owner/$app" --base development --head "$br" \
                  --title "chore(deps): reach the published @bsuite/* versions" \
