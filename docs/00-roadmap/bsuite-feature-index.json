@@ -15887,7 +15887,7 @@
   "entry_point": "public /auth/* routes, entry point for all unauthenticated users",
   "route": "/auth/login",
   "code_anchors": [
-   "crm7/src/pages/auth/AuthLogin",
+   "crm7/src/pages/auth/login",
    "crm7/src/pages/auth/accept-invite",
    "crm7/src/pages/auth/confirm",
    "crm7/src/pages/auth/reset-password"
@@ -44150,7 +44150,7 @@
   "entry_point": "consumed by crm7, business-suite-unified, braden, conduit, throughput, R80.3/R80.4",
   "route": null,
   "code_anchors": [
-   "packages/schema-registry/src/schemas/widgetProps.js"
+   "packages/schema-registry/src/schemas/widgetProps.ts"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -46732,7 +46732,7 @@
   "entry_point": "/ (unauthenticated root)",
   "route": "/",
   "code_anchors": [
-   "crm7/src/pages/MarketingHome.tsx"
+   "crm7/src/components/marketing/MarketingHome.tsx"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -46966,9 +46966,7 @@
   "surface_type": "page",
   "entry_point": "Login > Forgot password",
   "route": "/auth/forgot-password",
-  "code_anchors": [
-   "crm7/src/pages/auth/forgot-password.tsx"
-  ],
+  "code_anchors": [],
   "db_objects": [],
   "build_status": "live",
   "ui_touched": true,
@@ -47003,7 +47001,10 @@
   "compliance_risk": [],
   "origin": "pass5-adversarial",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "anchor_notes": {
+   "crm7/src/pages/auth/forgot-password.tsx": "No forgot-password page exists in crm7/src/pages/auth (verified 2026-08-27: the directory holds login, callback, confirm, accept-invite, XeroCallback and no forgot-password under any casing). Either the surface was removed or it was never built. Left recorded rather than silently dropped so the gap stays visible."
+  }
  },
  {
   "id": "crm7.auth.logout-sync",
@@ -47210,7 +47211,8 @@
   "entry_point": "Apprentice detail > Documents",
   "route": "/apprentices/:id/documents",
   "code_anchors": [
-   "crm7/src/pages/apprentices/[id]/documents.tsx"
+   "crm7/src/components/documents/DocumentHub.tsx",
+   "crm7/src/pages/apprentices/[id]/index.tsx"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -47322,7 +47324,7 @@
   "entry_point": "/login",
   "route": "/login",
   "code_anchors": [
-   "business-suite-unified/src/components/AuthScreen.tsx"
+   "business-suite-unified/src/components/auth/AuthScreen.tsx"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -47549,7 +47551,7 @@
    "supabase/functions/jodie-pr-notify/index.ts",
    "supabase/functions/jodie-bug-create/index.ts",
    "supabase/functions/jodie-error-log-scan/index.ts",
-   "business-suite-unified/src/components/JodieShell.tsx"
+   "business-suite-unified/src/components/ai/JodieShell.tsx"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -47666,8 +47668,8 @@
   "entry_point": "tenant admin",
   "route": null,
   "code_anchors": [
-   "crm7/crm7/supabase/migrations (4 migrations)",
-   "crm7/crm7/docs/20260818-sub-org-consent-links-design-v1.00W.md"
+   "crm7/supabase/migrations",
+   "crm7/docs/20260818-sub-org-consent-links-design-v1.00W.md"
   ],
   "db_objects": [
    "sub_org_links"
@@ -47709,8 +47711,8 @@
   "entry_point": "withFeatureGate wrapper on 57-78 routes",
   "route": null,
   "code_anchors": [
-   "crm7/src/hooks/useFeatureFlag.ts",
-   "crm7/src/config/launch-flags.ts"
+   "crm7/src/components/common/withFeatureGate.tsx",
+   "crm7/src/config/navigation.ts"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -47735,8 +47737,8 @@
   "entry_point": "Admin > Grants",
   "route": null,
   "code_anchors": [
-   "business-suite-unified/src/pages/admin/GrantsConsole.tsx",
-   "business-suite-unified/src/services/grantsService.ts"
+   "crm7/src/components/admin/GrantsConsole.tsx",
+   "crm7/src/services/grantsService.ts"
   ],
   "db_objects": [
    "data_access_grants"
@@ -52865,9 +52867,7 @@
   "surface_type": "data-asset",
   "entry_point": "schema only \u2014 no UI found",
   "route": null,
-  "code_anchors": [
-   "supabase/migrations (escalation_log)"
-  ],
+  "code_anchors": [],
   "db_objects": [
    "escalation_log"
   ],
@@ -52921,9 +52921,7 @@
   "surface_type": "data-asset",
   "entry_point": "schema only \u2014 FK'd forward to quotes and placements",
   "route": null,
-  "code_anchors": [
-   "supabase/migrations (labour_requirements)"
-  ],
+  "code_anchors": [],
   "db_objects": [
    "labour_requirements"
   ],
@@ -52977,9 +52975,7 @@
   "surface_type": "job",
   "entry_point": "daily pg_cron + human-review RPC",
   "route": null,
-  "code_anchors": [
-   "supabase/migrations (security_signals)"
-  ],
+  "code_anchors": [],
   "db_objects": [
    "security_signals"
   ],
@@ -53013,8 +53009,8 @@
   "entry_point": "global bug-report launcher",
   "route": null,
   "code_anchors": [
-   "business-suite-unified/src/components/support/BugReportModal.tsx",
-   "business-suite-unified/src/components/support/BugReportLauncher.tsx"
+   "business-suite-unified/src/components/bug-report/BugReportModal.tsx",
+   "business-suite-unified/src/components/bug-report/BugReportLauncher.tsx"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -53047,8 +53043,8 @@
   "entry_point": "Admin > Permissions > Clone role / Overrides",
   "route": null,
   "code_anchors": [
-   "business-suite-unified/src/components/admin/CloneRoleDialog.tsx",
-   "business-suite-unified/src/components/admin/UserOverridesPanel.tsx"
+   "business-suite-unified/src/components/admin/permissions/CloneRoleDialog.tsx",
+   "business-suite-unified/src/components/admin/permissions/UserOverridesPanel.tsx"
   ],
   "db_objects": [
    "user_capability_overrides"
@@ -53076,7 +53072,7 @@
   "route": null,
   "code_anchors": [
    "crm7/src/hooks/usePWA.ts",
-   "crm7/src/components/PWAUpdatePrompt.tsx"
+   "crm7/src/components/pwa/PWAUpdatePrompt.tsx"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -53788,9 +53784,7 @@
   "surface_type": "data-asset",
   "entry_point": "schema only \u2014 no UI found",
   "route": null,
-  "code_anchors": [
-   "supabase/migrations (tenant_settings.super_rate/wc_rate/wic_code)"
-  ],
+  "code_anchors": [],
   "db_objects": [
    "tenant_settings"
   ],
@@ -53900,9 +53894,7 @@
   "surface_type": "data-asset",
   "entry_point": "schema only \u2014 no UI found",
   "route": null,
-  "code_anchors": [
-   "supabase/migrations (enterprise_licence_events)"
-  ],
+  "code_anchors": [],
   "db_objects": [
    "enterprise_licence_events"
   ],
