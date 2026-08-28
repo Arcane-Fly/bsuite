@@ -1,0 +1,102 @@
+{
+  "crm7": {
+    "dead": 953,
+    "total": 1277,
+    "worst": [
+      {
+        "barrel": "src/schemas/index.ts",
+        "dead": 365,
+        "of": 396
+      },
+      {
+        "barrel": "src/services/index.ts",
+        "dead": 55,
+        "of": 67
+      },
+      {
+        "barrel": "src/lib/stp/phase2/index.ts",
+        "dead": 49,
+        "of": 49
+      }
+    ]
+  },
+  "business-suite-unified": {
+    "dead": 89,
+    "total": 114,
+    "worst": [
+      {
+        "barrel": "src/components/uplift/index.ts",
+        "dead": 45,
+        "of": 55
+      },
+      {
+        "barrel": "src/lib/manuals/index.ts",
+        "dead": 21,
+        "of": 25
+      },
+      {
+        "barrel": "src/lib/feature-builder/index.ts",
+        "dead": 13,
+        "of": 15
+      }
+    ]
+  },
+  "conduit": {
+    "dead": 91,
+    "total": 165,
+    "worst": [
+      {
+        "barrel": "src/components/ui/index.ts",
+        "dead": 18,
+        "of": 49
+      },
+      {
+        "barrel": "src/lib/events/index.ts",
+        "dead": 17,
+        "of": 17
+      },
+      {
+        "barrel": "src/lib/ai/index.ts",
+        "dead": 15,
+        "of": 17
+      }
+    ]
+  },
+  "braden": {
+    "dead": 7,
+    "total": 12,
+    "worst": [
+      {
+        "barrel": "src/hooks/theme/index.ts",
+        "dead": 4,
+        "of": 5
+      },
+      {
+        "barrel": "src/context/theme/index.ts",
+        "dead": 3,
+        "of": 7
+      }
+    ]
+  },
+  "throughput": {
+    "dead": 34,
+    "total": 47,
+    "worst": [
+      {
+        "barrel": "src/components/ui/index.ts",
+        "dead": 20,
+        "of": 29
+      },
+      {
+        "barrel": "src/components/navigation/index.ts",
+        "dead": 8,
+        "of": 8
+      },
+      {
+        "barrel": "src/components/dashboard/index.ts",
+        "dead": 4,
+        "of": 5
+      }
+    ]
+  }
+}
