@@ -12,7 +12,7 @@
 embedded screenshots at `/tmp/bsn/word/media/`. Read in full. Screenshots viewed where the text
 alone was ambiguous or where code inspection could not settle the question.
 
-**Previous register:** `docs/validation/20260804-operator-notes-defect-register-v1.00W.md` (2026-08-04).
+**Previous register:** `docs/validation/20260804-operator-notes-defect-register-v1.00F.md` (2026-08-04).
 Its verified findings are reused where the underlying code/table is unchanged; recurrences are called
 out in their own section at the end.
 
