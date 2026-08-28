@@ -1,5 +1,25 @@
 # Operator notes defect register — `bsuite notes.docx`, 2026-08-04
 
+> ## ⚠ SUPERSEDED — 2026-08-05
+>
+> **Status: Superseded.** `docs/validation/20260805-operator-notes-defect-register-v1.00W.md`
+> names this file *"Previous register"* in its own header. That is a DECLARED supersession
+> from the successor, not an inference from the filename slug or the date — the distinction
+> matters, because this estate has twice acted on a same-slug date inference that pointed the
+> wrong way.
+>
+> The two registers read DIFFERENT sources: this one is `bsuite notes.docx` (20.4 MB, 270
+> paragraphs, 38 embedded screenshots); the 08-05 register is `bsuite notes (2).docx` (312
+> lines, 49 screenshots). So the successor is not a rewrite of this file — it is the next
+> operator dump, and it claims this one's ground.
+>
+> **Frozen, not archived, and not deleted.** `F` states this document's MUTABILITY, not that
+> the work it describes is current truth (operator ruling 2026-08-26). The origin-URL table
+> below — which decides whether a screenshot shows a real defect or a production lag — is
+> still the clearest statement of that rule in the estate, and the defect history is what
+> stops the same ground being re-litigated.
+
+
 **Source:** `~/Downloads/bsuite notes.docx` (20.4 MB, modified 2026-08-04 11:18) — 270 text
 paragraphs + **38 embedded screenshots**, all read. `image2.png` (70 B) is a layout spacer and
 `image30.jpg` is a stock photo; the other 36 are app screenshots.

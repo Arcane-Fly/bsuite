@@ -493,7 +493,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/testing/README.md` | UNBOUND |  | — |
 | `docs/validation/20260731-gto-e2e-walk-cleanup-ledger-v1.00W.md` | UNBOUND |  | — |
 | `docs/validation/20260731-gto-enquiry-to-billing-walk-results-v1.00F.md` | UNBOUND |  | — |
-| `docs/validation/20260804-operator-notes-defect-register-v1.00W.md` | UNBOUND |  | — |
+| `docs/validation/20260804-operator-notes-defect-register-v1.00F.md` | UNBOUND |  | — |
 | `docs/validation/20260804-plans-closure-audit-v1.00W.md` | UNBOUND |  | — |
 | `docs/validation/20260805-operator-notes-defect-register-v1.00W.md` | UNBOUND |  | — |
 | `R80.4/docs/00-roadmap/20260811-developer-advocate-review-v1.00W.md` | UNBOUND |  | — |

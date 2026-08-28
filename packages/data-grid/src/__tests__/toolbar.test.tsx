@@ -10,6 +10,7 @@
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DataGridToolbar, ROW_HEIGHTS, rowHeightNameFor } from '../components/DataGridToolbar.js';
+import type { DataGridToolbarProps } from '../components/DataGridToolbar.js';
 import type { DataGridColumn } from '../types.js';
 
 interface Row {
@@ -23,8 +24,23 @@ const columns: DataGridColumn<Row>[] = [
   { id: 'started', header: 'Started', accessor: (r) => r.started },
 ];
 
-function renderToolbar(over: Partial<React.ComponentProps<typeof DataGridToolbar<Row>>> = {}) {
-  const props = {
+/*
+ * `DataGridToolbarProps<Row>` directly, not
+ * `React.ComponentProps<typeof DataGridToolbar<Row>>`.
+ *
+ * The instantiation-expression form did not resolve to an object type, so
+ * `Partial<...>` was not one either and the `...over` spread failed to compile
+ * with TS2698 — which broke `pnpm typecheck` in the publish workflow and blocked
+ * the 1.1.0 release. The props interface is exported; reaching for it through
+ * the component's type was the long way round to a type we already ship.
+ *
+ * Dropping `as never` on the spread matters just as much. That cast disabled
+ * type checking on the props this suite passes, so the test file could not have
+ * caught a prop being renamed or removed — the exact regression a component
+ * test exists to catch.
+ */
+function renderToolbar(over: Partial<DataGridToolbarProps<Row>> = {}) {
+  const props: DataGridToolbarProps<Row> = {
     columns,
     filter: '',
     onFilterChange: vi.fn(),
@@ -34,7 +50,7 @@ function renderToolbar(over: Partial<React.ComponentProps<typeof DataGridToolbar
     onRowHeightChange: vi.fn(),
     ...over,
   };
-  render(<DataGridToolbar<Row> {...(props as never)} />);
+  render(<DataGridToolbar<Row> {...props} />);
   return props;
 }
 
