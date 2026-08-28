@@ -117,12 +117,32 @@ function countTables(text) {
   return count;
 }
 
+/*
+ * `<` IS A BOUNDARY HERE, and leaving it out under-counted the thing this
+ * script exists to measure.
+ *
+ * The first real conversion was written `<DataGrid<TenantSwitchAuditRow>` --
+ * a generic type argument, which is idiomatic for a typed grid. The original
+ * boundary set was `> \n \t` and end-of-input, so that call site scored ZERO
+ * and adoption still read 1 after a table had genuinely been converted. A
+ * detector only sees the mechanisms its author happened to think of; this one
+ * failed on the very first row of real evidence.
+ */
 function countDataGrid(text) {
   let count = 0;
   let index = text.indexOf('<DataGrid');
   while (index !== -1) {
     const after = text['<DataGrid'.length + index];
-    if (after === undefined || after === '>' || after === ' ' || after === '\n' || after === '\t') count += 1;
+    if (
+      after === undefined ||
+      after === '>' ||
+      after === '<' ||
+      after === ' ' ||
+      after === '\n' ||
+      after === '\t'
+    ) {
+      count += 1;
+    }
     index = text.indexOf('<DataGrid', index + 1);
   }
   return count;
@@ -164,6 +184,8 @@ if (process.argv.includes('--self-test')) {
   }
   const gridCases = [
     ['<DataGrid columns={c} data={d} />', 1, 'a DataGrid render'],
+    ['<DataGrid<Row> columns={c} />', 1, 'a GENERIC DataGrid — missed by the first version'],
+    ['<DataGrid\n  columns={c}\n/>', 1, 'a DataGrid broken across lines'],
     ['<DataGridToolbar/>', 0, 'a different component sharing the prefix'],
   ];
   for (const [source, expected, why] of gridCases) {
