@@ -123,13 +123,29 @@ function walk(dir, out = []) {
  * make the baseline meaningless. The character after the tag name must be a
  * boundary.
  */
+/*
+ * What may follow a component name and still be that component.
+ *
+ * `<` is in this set for GENERIC TYPE ARGUMENTS — `<DataGrid<AuditRow>`. Its
+ * absence made the counter blind to four of the five DataGrid render sites in
+ * crm7, which is how a tree with five converted pages reported one.
+ *
+ * That was not merely a wrong statistic. `usesDataGrid()` gates the
+ * click-through check, so a protected file converted with a generic parameter
+ * read as "not converted" and skipped the check entirely — the gate would have
+ * stayed silent on exactly the loss it exists to catch. `<Table<Row>` is the
+ * same shape, so both counters use the same set.
+ *
+ * `s` is deliberately NOT here: `<Tables` is a different component.
+ */
+const NAME_DELIMITERS = new Set([undefined, '>', ' ', '\n', '\t', '\r', '/', '<']);
+
 function countTables(text) {
   let count = 0;
   for (const tag of ['table', 'Table']) {
     let index = text.indexOf(`<${tag}`);
     while (index !== -1) {
-      const after = text[index + tag.length + 1];
-      if (after === undefined || after === '>' || after === ' ' || after === '\n' || after === '\t') count += 1;
+      if (NAME_DELIMITERS.has(text[index + tag.length + 1])) count += 1;
       index = text.indexOf(`<${tag}`, index + 1);
     }
   }
@@ -140,8 +156,7 @@ function countDataGrid(text) {
   let count = 0;
   let index = text.indexOf('<DataGrid');
   while (index !== -1) {
-    const after = text['<DataGrid'.length + index];
-    if (after === undefined || after === '>' || after === ' ' || after === '\n' || after === '\t') count += 1;
+    if (NAME_DELIMITERS.has(text['<DataGrid'.length + index])) count += 1;
     index = text.indexOf('<DataGrid', index + 1);
   }
   return count;
@@ -171,6 +186,8 @@ if (process.argv.includes('--self-test')) {
     ['<TableHeader><TableHead/></TableHeader>', 0, 'header parts must NOT count'],
     ['<TableBody>', 0, 'body must NOT count'],
     ['const Tables = 5', 0, 'an identifier that merely starts with Table'],
+    ['<Table<Row> columns={c}>', 1, 'a generic type argument on Table'],
+    ['<Tables>', 0, 'a DIFFERENT component whose name merely starts with Table'],
     ['<table>\n<table>', 2, 'two tables in one file'],
   ];
   let failed = 0;
@@ -184,6 +201,8 @@ if (process.argv.includes('--self-test')) {
   const gridCases = [
     ['<DataGrid columns={c} data={d} />', 1, 'a DataGrid render'],
     ['<DataGridToolbar/>', 0, 'a different component sharing the prefix'],
+    ['<DataGrid<AuditRow>\n  columns={c}\n/>', 1, 'a GENERIC type argument — four of five real render sites look like this'],
+    ['<DataGrid/>', 1, 'a self-closing render'],
   ];
   for (const [source, expected, why] of gridCases) {
     const got = countDataGrid(source);
