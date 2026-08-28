@@ -586,7 +586,7 @@ and §5 as a recurring category, which is the only outcome worth the work.
 68 screenshots; 381 paragraphs of text) was read in full and every checkable claim measured
 against source, the live database, and the live deployments.
 
-`docs/20260814-notes-backlog-verification-register-v1.00D.md` already covers this document as it
+`docs/20260814-notes-backlog-verification-register-v1.00F.md` already covers this document as it
 stood on **14 August** (4 dated sections, 67 screenshots, ~90 defects, identifiers `D-59`…`D-92`).
 **This section covers only what is new or has changed since then**, plus every claim in the R8
 block, which that register did not reach. New identifiers are `NX-n` — a distinct prefix, for the

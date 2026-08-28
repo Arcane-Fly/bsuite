@@ -27,7 +27,7 @@ actively mislead agents, and adds the CI that stops all of it recurring.
 migrations) · `@bsuite/page-builder` (react-grid-layout v2) · `@bsuite/theme` · `@bsuite/auth` ·
 shadcn/ui · Playwright · pnpm 10.30.3 / Node 24
 
-**Source:** `docs/20260814-notes-backlog-verification-register-v1.00D.md` (the measured state),
+**Source:** `docs/20260814-notes-backlog-verification-register-v1.00F.md` (the measured state),
 `docs/20260814-portals-operator-rulings-v1.00A.md` (D-93–D-98),
 `docs/20260813-operator-directive-notes-backlog-remediation-v1.00D.md` (D-59–D-92),
 `docs/20260813-portals-redesign-brainstorm-v1.00D.md`,

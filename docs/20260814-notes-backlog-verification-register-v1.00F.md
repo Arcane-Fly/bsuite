@@ -1,8 +1,8 @@
 # Notes backlog — verification register
 
-**Document:** `docs/20260814-notes-backlog-verification-register-v1.00D.md`
+**Document:** `docs/20260814-notes-backlog-verification-register-v1.00F.md`
 **Date:** 2026-08-14
-**Status:** D — Draft, for operator review
+**Status:** F — Frozen. Superseded; see the banner below.
 **Method:** every verdict below is measured against source code, live GitHub issue state, or live
 Supabase SQL. No verdict rests on a doc claim, a changelog line, or a PR title.
 **Sources reviewed:** `bsuite notes.docx` (4 dated sections, 67 screenshots, ~90 defects),
@@ -13,6 +13,36 @@ Supabase SQL. No verdict rests on a doc claim, a changelog line, or a PR title.
 the open claude.ai thread, and the seven live repositories.
 
 ---
+
+> ## ⏹ FROZEN 2026-08-29 — SUPERSEDED, AND THE SUPERSESSION IS MEASURED
+>
+> This is a **point-in-time verification register dated 2026-08-14**. Its value is being an
+> accurate snapshot of that date, so it does not get edited — later work writes a NEW register
+> rather than revising this one. `F` states that immutability, not that the backlog it describes
+> is finished (operator ruling, 2026-08-26).
+>
+> **Limb (a) — superseded.** Every one of the **17 distinct D-numbers** this register assesses
+> (D-59…D-92) appears in `docs/20260825-operator-notes-register-d1-d103-v1.00W.md`, which spans
+> **D-1…D-145** and is the register `AGENTS.md` names as the source of truth. Measured with
+> `comm -23` over both files' D-number sets: **0 uncovered**. Read the newer register for current
+> state; read this one only for what was true on 14 August.
+>
+> **Limb (b) — the gate it cites still passes.** `theme-conformance.yml`, run 2026-08-29:
+>
+> | check | |
+> |---|---|
+> | `check-theme-gate-app-lists.mjs` | PASS — 4 app lists each cover all 6 |
+> | `audit-hittable-actions.mjs --self-test` | OK — 5 cases pass |
+> | `check-colour-ban-reaches-converters.mjs` | PASS |
+> | `check-content-contrast-tier.mjs` | 402 files, 0 violations |
+> | `check-dimmed-text-tokens.sh` | OK |
+> | `check-fill-token-as-text.sh` | ratchet holds at 176 |
+>
+> Baselines at freeze: C1 **0** · C2 **41** · near-pure **0**.
+>
+> **What this marker does NOT claim:** that every defect listed below is fixed. Several are open
+> and tracked in the newer register. It claims the DOCUMENT is final.
+
 
 ## 0. The headline
 
