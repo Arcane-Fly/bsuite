@@ -13,6 +13,22 @@ import { gridBounds, minMaxSize, minSize } from 'react-grid-layout/core';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { computeAutoHeightRows } from './autoHeight.js';
+import {
+  BORDER_STYLES,
+  BORDER_TONES,
+  BORDER_WIDTH_RANGE,
+  DEFAULT_CARD_STYLE,
+  PADDING_RANGE,
+  RADIUS_RANGE,
+  describeCardStyle,
+  isDefaultCardStyle,
+  normaliseCardStyle,
+  toCssVars,
+  type BorderStyle,
+  type BorderTone,
+  type CardStyle,
+  type Elevation,
+} from './cardStyle.js';
 import { defaultPreferenceAdapter } from './preferences.js';
 import { isRelationshipWritable } from './relationshipCatalog.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
@@ -145,6 +161,14 @@ type GridItemProps = {
    * conditional, so turning chrome off cannot move anything.
    */
   chrome?: boolean;
+  /**
+   * Operator-chosen card appearance, as CSS custom properties.
+   *
+   * Empty for a page nobody has restyled, and the chrome element's fallbacks
+   * are the values it used before this existed -- so an untouched page emits
+   * no extra CSS and renders byte-identically.
+   */
+  cardStyleVars?: React.CSSProperties;
 } & Omit<React.HTMLAttributes<HTMLDivElement>, 'content'>;
 
 /* A ZERO MEASUREMENT IS DISCARDED SILENTLY, AND THAT IS HOW A CARD GOES INVISIBLE.
@@ -212,6 +236,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   autoHeight,
   onAutoHeightChange,
   chrome = false,
+  cardStyleVars,
   children: injectedChildren,
   className: injectedClassName,
   style: injectedStyle,
@@ -442,7 +467,18 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                   // rounded-3xl), so this is byte-identical until a tenant sets
                   // one.
                   cn(
-                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border border-border shadow-sm dark:shadow-[var(--glow-card,none)]',
+                    // Border width, style and colour read custom properties
+                    // whose fallbacks are byte-identical to the `border
+                    // border-border` they replace, so an operator who has never
+                    // opened the card editor sees exactly the previous CSS.
+                    // The shadow deliberately keeps its ORIGINAL classes. An
+                    // elevation choice arrives as an inline `boxShadow`, which
+                    // beats the class without needing a fallback that restates
+                    // `shadow-sm`. Writing that fallback by hand was the first
+                    // attempt and it was wrong: elev-1 is CLOSE to shadow-sm
+                    // but not equal, so it would have silently restyled every
+                    // card on 305 pages the day this shipped.
+                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border-[length:var(--card-border-width,1px)] border-[color:var(--card-border-color,var(--border))] [border-style:var(--card-border-style,solid)] shadow-sm dark:shadow-[var(--glow-card,none)]',
                     // THE DOUBLED BOTTOM BORDER, AND WHY THE ARITHMETIC COULD NEVER FIX IT.
                     //
                     // computeAutoHeightRows uses Math.ceil to round content height up to
@@ -470,7 +506,23 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                 : // Chrome OFF: layout only. Identical box, no paint.
                   cn('w-full transition-all flex flex-col', autoHeight ? 'h-fit' : 'h-full')
             }
-            style={{ contain: 'layout style' }}
+            /*
+             * `cardStyleVars` carries ONLY the properties the operator changed
+             * (see cardStyle.ts). An untouched page spreads an empty object, so
+             * this attribute is identical to what it was before the card editor
+             * existed. `boxShadow` is set as a real declaration rather than a
+             * custom property because it has to beat the `shadow-sm` class.
+             */
+            style={{
+              contain: 'layout style',
+              ...cardStyleVars,
+              ...(cardStyleVars && '--card-shadow' in cardStyleVars
+                ? { boxShadow: (cardStyleVars as Record<string, string>)['--card-shadow'] }
+                : null),
+              ...(cardStyleVars && '--card-padding' in cardStyleVars
+                ? { padding: (cardStyleVars as Record<string, string>)['--card-padding'] }
+                : null),
+            }}
           >
             {/*
              * Internal scroll container so card content adapts to whatever
@@ -528,7 +580,31 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                 autoHeight ? 'flex-none overflow-visible' : 'flex-1 overflow-auto',
               )}
             >
-              {autoHeight ? <div ref={measureRef}>{content}</div> : content}
+              {/*
+               * `flow-root` is load-bearing, not cosmetic. This wrapper had no
+               * padding, border or formatting context of its own, and its parent
+               * is `overflow-visible` under autoHeight — so a last child's
+               * `margin-bottom` COLLAPSED THROUGH both and never reached
+               * `contentRect.height`. The observer then under-reported the
+               * content by exactly that margin, the grid allocated that many
+               * pixels too few, and the card rendered taller than its slot: the
+               * card's bottom border sat outside the item box. Measured on
+               * production /payroll/timesheets 2026-08-28 — a single `mb-8` on
+               * the card's only child put the surface 32px past its own border,
+               * which is 2rem, exactly the margin. 70 call sites across 45 files
+               * in crm7 alone start a CanvasCard with a margin-bearing child, so
+               * this is fixed HERE, in the measurement, rather than by deleting
+               * a margin on each page. `flow-root` establishes a block
+               * formatting context, which is the minimal thing that stops the
+               * collapse while changing nothing about how the content lays out.
+               */}
+              {autoHeight ? (
+                <div ref={measureRef} className="flow-root">
+                  {content}
+                </div>
+              ) : (
+                content
+              )}
             </div>
           </div>
         </div>
@@ -698,6 +774,22 @@ export function PageGridLayout({
   const { value: hiddenLayerIds, setValue: setHiddenLayerIds } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
     `page:${pageKey}_grid_hidden_layers`,
     {},
+  );
+  /*
+   * Card appearance, per page, persisted beside the layout.
+   *
+   * Same adapter and the same key shape as every other page preference, so it
+   * survives a reload, follows the operator across devices wherever the app
+   * backs the adapter with the database, and needs no new storage concept.
+   */
+  const { value: storedCardStyle, setValue: setStoredCardStyle } = (preferenceAdapter ?? defaultPreferenceAdapter)<
+    unknown
+  >(`page:${pageKey}_card_style`, DEFAULT_CARD_STYLE);
+  const cardStyle = useMemo(() => normaliseCardStyle(storedCardStyle), [storedCardStyle]);
+  const cardStyleVars = useMemo(() => toCssVars(cardStyle), [cardStyle]);
+  const updateCardStyle = useCallback(
+    (patch: Partial<CardStyle>) => setStoredCardStyle({ ...cardStyle, ...patch }),
+    [cardStyle, setStoredCardStyle],
   );
   const extraWidgets = useMemo(() => {
     const rendered: Record<string, React.ReactNode> = {};
@@ -1112,10 +1204,30 @@ export function PageGridLayout({
                 className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 aria-expanded={!controlsCollapsed}
                 aria-controls="page-grid-editor-controls-body"
+                /*
+                 * The accessible name says BOTH what the control does and what
+                 * is behind it. The visible text alone ("Columns, cards &
+                 * layers") reads well beside a chevron but drops the verb, and
+                 * a screen-reader user gets no cue that this expands anything.
+                 */
+                aria-label={controlsCollapsed ? 'Expand controls: columns, cards and layers' : 'Collapse controls'}
                 onClick={() => setControlsCollapsed((previous) => !previous)}
               >
                 {controlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                <span className="sr-only sm:not-sr-only">{controlsCollapsed ? 'Expand' : 'Collapse'}</span>
+                {/*
+                 * Name what is behind the disclosure, not the gesture.
+                 *
+                 * The body stays collapsed on entry deliberately (see above --
+                 * an expanded banner blocked the canvas). But "Expand" tells
+                 * the operator nothing about what expanding gets them, and
+                 * with card appearance now living in there, the control they
+                 * came for is invisible AND unnamed. Two lanes have already
+                 * lost a full measurement each to this disclosure without
+                 * realising the controls existed behind it.
+                 */}
+                <span className="sr-only sm:not-sr-only">
+                  {controlsCollapsed ? 'Columns, cards & layers' : 'Collapse'}
+                </span>
               </button>
               <button
                 type="button"
@@ -1166,6 +1278,141 @@ export function PageGridLayout({
                   {columnCount}
                 </button>
               ))}
+            </div>
+
+            {/*
+              * CARD APPEARANCE — the operator sets this, not an agent.
+              *
+              * Every control writes straight to the persisted style and the
+              * canvas repaints underneath, so the answer to "what will this
+              * look like" is the page itself rather than a preview pane. That
+              * is the D8.5 round-trip test: nothing here requires leaving the
+              * page, so nothing has to be carried back.
+              *
+              * The border colour is a closed set of THEME TOKENS. A colour
+              * picker here would let an operator write a literal into a
+              * preference and quietly opt their tenant out of white-labelling,
+              * which is why the obvious richer control is the wrong one.
+              */}
+            <div
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 w-full pt-2 border-t border-border"
+              role="group"
+              aria-label="Card appearance"
+            >
+              <span className="text-sm shrink-0 font-medium text-foreground">Card:</span>
+
+              <label className="flex items-center gap-1.5">
+                <span className="text-sm text-muted-foreground">Corners</span>
+                <input
+                  type="range"
+                  min={RADIUS_RANGE.min}
+                  max={RADIUS_RANGE.max}
+                  value={cardStyle.radius}
+                  onChange={(event) => updateCardStyle({ radius: Number(event.target.value) })}
+                  className="w-20 cursor-pointer accent-primary"
+                  aria-label="Card corner radius in pixels"
+                />
+                <span className="text-sm font-mono w-8 text-right tabular-nums">{cardStyle.radius}</span>
+              </label>
+
+              <label className="flex items-center gap-1.5">
+                <span className="text-sm text-muted-foreground">Border</span>
+                <input
+                  type="range"
+                  min={BORDER_WIDTH_RANGE.min}
+                  max={BORDER_WIDTH_RANGE.max}
+                  value={cardStyle.borderWidth}
+                  onChange={(event) => updateCardStyle({ borderWidth: Number(event.target.value) })}
+                  className="w-16 cursor-pointer accent-primary"
+                  aria-label="Card border width in pixels"
+                />
+                <span className="text-sm font-mono w-6 text-right tabular-nums">{cardStyle.borderWidth}</span>
+              </label>
+
+              <label className="flex items-center gap-1.5">
+                <span className="sr-only">Border colour</span>
+                <select
+                  value={cardStyle.borderTone}
+                  onChange={(event) => updateCardStyle({ borderTone: event.target.value as BorderTone })}
+                  className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Card border colour"
+                >
+                  {BORDER_TONES.map((tone) => (
+                    <option key={tone} value={tone}>
+                      {tone === 'border' ? 'default colour' : tone}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center gap-1.5">
+                <span className="sr-only">Border style</span>
+                <select
+                  value={cardStyle.borderStyle}
+                  onChange={(event) => updateCardStyle({ borderStyle: event.target.value as BorderStyle })}
+                  className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Card border style"
+                >
+                  {BORDER_STYLES.map((style) => (
+                    <option key={style} value={style}>
+                      {style}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center gap-1.5">
+                <span className="sr-only">Card shadow</span>
+                <select
+                  value={cardStyle.elevation === null ? 'default' : String(cardStyle.elevation)}
+                  onChange={(event) =>
+                    updateCardStyle({
+                      elevation:
+                        event.target.value === 'default' ? null : (Number(event.target.value) as Elevation),
+                    })
+                  }
+                  className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Card shadow depth"
+                >
+                  <option value="default">default shadow</option>
+                  {[0, 1, 2, 3, 4].map((level) => (
+                    <option key={level} value={level}>
+                      {level === 0 ? 'no shadow' : `shadow ${level}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center gap-1.5">
+                <span className="text-sm text-muted-foreground">Padding</span>
+                <input
+                  type="range"
+                  min={PADDING_RANGE.min}
+                  max={PADDING_RANGE.max}
+                  value={cardStyle.padding ?? 0}
+                  onChange={(event) => updateCardStyle({ padding: Number(event.target.value) })}
+                  className="w-16 cursor-pointer accent-primary"
+                  aria-label="Card inner padding in pixels"
+                />
+                <span className="text-sm font-mono w-8 text-right tabular-nums">
+                  {cardStyle.padding === null ? '\u2014' : cardStyle.padding}
+                </span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setStoredCardStyle({ ...DEFAULT_CARD_STYLE })}
+                disabled={isDefaultCardStyle(cardStyle)}
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset cards
+              </button>
+
+              {/* Live readout, in the operator's words rather than CSS. */}
+              <output className="text-sm text-muted-foreground" aria-live="polite">
+                {describeCardStyle(cardStyle)}
+              </output>
             </div>
 
             {hiddenWidgetKeys.length > 0 && (
@@ -1395,6 +1642,7 @@ export function PageGridLayout({
                   autoHeight={layoutItem.autoHeight}
                   onAutoHeightChange={handleAutoHeightChange}
                   chrome={layoutItem.chrome ?? itemChrome}
+                  cardStyleVars={cardStyleVars}
                 />
               );
             })}

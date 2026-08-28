@@ -1,0 +1,31 @@
+{
+  "_doc": "Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. Written by scripts/check-airtable-grid-adoption.mjs --update. Fails on any RISE (a new hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.",
+  "_measured": "1501 .tsx files examined across 5 apps",
+  "apps": {
+    "crm7": {
+      "handRolled": 168,
+      "dataGrid": 1,
+      "files": 113
+    },
+    "business-suite-unified": {
+      "handRolled": 28,
+      "dataGrid": 0,
+      "files": 25
+    },
+    "conduit": {
+      "handRolled": 5,
+      "dataGrid": 0,
+      "files": 4
+    },
+    "braden": {
+      "handRolled": 13,
+      "dataGrid": 0,
+      "files": 13
+    },
+    "throughput": {
+      "handRolled": 1,
+      "dataGrid": 0,
+      "files": 1
+    }
+  }
+}
