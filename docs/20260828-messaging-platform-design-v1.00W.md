@@ -280,3 +280,32 @@ for Stripe. They are one-off lines, not recurring.
 **Rationale for nominal.** $450 recovers roughly a half-day at a modest rate against a client
 saving ~$2,900 a month. It signals the configuration has value without becoming a reason to
 defer the decision.
+
+---
+
+## 15. Tracked in
+
+This feature shipped without a register row — a straight D3/D8.1 miss, fixed after the fact
+rather than avoided. It is now indexed. Do not re-derive either list below; extend them.
+
+**`docs/00-roadmap/bsuite-feature-index.json`** — seven rows:
+
+| ID | Covers |
+|---|---|
+| `crm7.messaging.bulk-send` | `<BulkMessageAction>` on apprentices, timesheets, hosts |
+| `crm7.messaging.setup` | `<MessagingSetup>` plan chooser — **send-back**, see below |
+| `crm7.messaging.number-provision` | The number-claiming screen, in progress |
+| `bsu.messaging.dispatch` | `email-dispatcher` channel:'sms' |
+| `bsu.messaging.inbound` | `sms-inbound` webhook |
+| `bsu.messaging.numbers-api` | `sms-numbers` edge function |
+| `bsu.messaging.quota` | `message_quotas` / `message_usage` |
+
+**`docs/20260825-operator-notes-register-d1-d103-v1.00W.md`** — D-140 through D-145, the six
+asks this design answers.
+
+**One real finding surfaced while indexing, not manufactured for this section.**
+`crm7.messaging.setup`'s plan chooser calls `onChosen?.(plan)`; `BulkMessageAction` wires that
+to `() => setNeedsPlan(null)` and nothing else. Choosing a plan clears the dialog and persists
+nothing — no `message_quotas` row, no number claim. §11's "inline plan selection… no round
+trip" is not built yet. `crm7.messaging.setup` carries `dod_status: send-back` with the file
+and line. `crm7.messaging.number-provision` is the screen meant to close it.
