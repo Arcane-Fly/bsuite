@@ -1204,10 +1204,30 @@ export function PageGridLayout({
                 className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 aria-expanded={!controlsCollapsed}
                 aria-controls="page-grid-editor-controls-body"
+                /*
+                 * The accessible name says BOTH what the control does and what
+                 * is behind it. The visible text alone ("Columns, cards &
+                 * layers") reads well beside a chevron but drops the verb, and
+                 * a screen-reader user gets no cue that this expands anything.
+                 */
+                aria-label={controlsCollapsed ? 'Expand controls: columns, cards and layers' : 'Collapse controls'}
                 onClick={() => setControlsCollapsed((previous) => !previous)}
               >
                 {controlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                <span className="sr-only sm:not-sr-only">{controlsCollapsed ? 'Expand' : 'Collapse'}</span>
+                {/*
+                 * Name what is behind the disclosure, not the gesture.
+                 *
+                 * The body stays collapsed on entry deliberately (see above --
+                 * an expanded banner blocked the canvas). But "Expand" tells
+                 * the operator nothing about what expanding gets them, and
+                 * with card appearance now living in there, the control they
+                 * came for is invisible AND unnamed. Two lanes have already
+                 * lost a full measurement each to this disclosure without
+                 * realising the controls existed behind it.
+                 */}
+                <span className="sr-only sm:not-sr-only">
+                  {controlsCollapsed ? 'Columns, cards & layers' : 'Collapse'}
+                </span>
               </button>
               <button
                 type="button"
