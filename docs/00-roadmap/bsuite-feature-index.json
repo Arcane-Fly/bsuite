@@ -54011,7 +54011,13 @@
   "entry_point": "Apprentices / Payroll Timesheets / Hosts list > row selection > Send message",
   "route": "/apprentices, /payroll/timesheets, /hosts",
   "code_anchors": [
-   "crm7/src/components/messaging/BulkMessageAction.tsx"
+   "crm7/src/components/messaging/BulkMessageAction",
+   "crm7/src/pages/apprentices/index",
+   "crm7/src/pages/hosts/index",
+   "crm7/src/pages/payroll/timesheets/index",
+   "crm7/src/pages/contacts/index",
+   "crm7/src/pages/people/index",
+   "crm7/src/pages/clients/index"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -54029,12 +54035,15 @@
   ],
   "doc_count": 1,
   "sibling_class": "bulk-message-action",
-  "sibling_count": 1,
-  "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
+  "sibling_count": 6,
+  "sibling_enumeration_method": "git grep -l BulkMessageAction origin/development -- src/pages, excluding __tests__; 6 list surfaces on 2026-08-28",
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "One component adopted per list surface rather than 46 bespoke bulk actions (design doc \u00a77 found 46 crm7 pages with row selection, 5 with any bulk action, 0 that could send SMS or email). send() awaits emailService.sendSms(), which POSTs to email-dispatcher with channel:'sms' \u2014 verified wired end to end, not a stub. On a NO_QUOTA refusal it opens MessagingSetup inline (see crm7.messaging.setup) rather than sending the user away; that inline plan choice does not itself provision anything \u2014 see that row's dod_status.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "approved",
+   "evidence": "crm7#2181/2182/2183/2188 \u2014 positive-control suite proves the dialog opens with mapped recipients on all three new surfaces, demonstrated failing when setMessageTargets is severed (crm7#2188)"
+  }
  },
  {
   "id": "crm7.messaging.setup",
@@ -54048,7 +54057,7 @@
    "crm7/src/components/messaging/MessagingSetup.tsx"
   ],
   "db_objects": [],
-  "build_status": "partial",
+  "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "documented",
   "docs": [
@@ -54069,8 +54078,8 @@
   "origin": "pass1-code-truth",
   "notes": "VERIFIED GAP, 2026-08-28: choose() calls onChosen?.(plan) and shows a toast; BulkMessageAction.tsx:299 wires onChosen={() => setNeedsPlan(null)}, which only clears local dialog state. Nothing creates a message_quotas row or claims a number \u2014 grep across crm7 and business-suite-unified shows message_quotas is only ever SELECTed (email-dispatcher/index.ts:343,371) and sms-numbers (the number-claiming API) has zero frontend call sites. The plan choice does not persist, so the round trip design doc \u00a711 requires ('inline plan selection... No round trip') is not wired yet. See crm7.messaging.number-provision, the screen meant to close this.",
   "dod_status": {
-   "state": "send-back",
-   "evidence": "crm7/src/components/messaging/BulkMessageAction.tsx:299 onChosen={() => setNeedsPlan(null)} plus grep of message_quotas / sms-numbers call sites across crm7 and business-suite-unified, 2026-08-28: plan selection dismisses the dialog only, no write or provisioning call exists anywhere"
+   "state": "approved",
+   "evidence": "crm7#2186 + business-suite-unified#1000 \u2014 the send-back recorded here was that onChosen closed the dialog and wrote nothing; message_quotas had zero writes estate-wide. set-message-plan now inserts/updates it (index.ts:118,144) and two positive controls fail against the old inert code"
   }
  },
  {
@@ -54082,10 +54091,12 @@
   "entry_point": "Settings > Messaging > Claim a number (planned)",
   "route": null,
   "code_anchors": [
-   "crm7/src/components/messaging/"
+   "crm7/src/components/messaging/SmsNumberProvisioning",
+   "crm7/src/lib/smsNumbers",
+   "crm7/src/pages/settings/messaging"
   ],
   "db_objects": [],
-  "build_status": "in-progress",
+  "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "documented",
   "docs": [
@@ -54104,7 +54115,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Being built in parallel with this backfill; only the crm7/src/components/messaging/ directory exists so far, no dedicated file, hence the directory-level anchor. bsu.messaging.numbers-api's own header comment already names it as \"the 'set up messaging' screen\" it calls \u2014 that call site does not exist yet (zero frontend references to sms-numbers, grep 2026-08-28). This is also the screen that should close the crm7.messaging.setup gap once it lands.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "approved",
+   "evidence": "crm7#2184 (inline claim, draft provably intact) + crm7#2187 (Settings > Messaging route the dispatcher already named, which existed in neither app)"
+  }
  },
  {
   "id": "bsu.messaging.dispatch",
