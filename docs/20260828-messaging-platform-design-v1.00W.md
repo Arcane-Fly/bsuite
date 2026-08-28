@@ -1,3 +1,9 @@
+---
+kind: decision
+authority: operator
+owner: bsuite
+---
+
 # Messaging Platform — Design
 
 **Status:** W (working draft) · **Date:** 2026-08-28 · **Operator:** Braden
