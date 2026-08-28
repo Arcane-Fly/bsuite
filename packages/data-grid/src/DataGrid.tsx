@@ -36,6 +36,7 @@ import { buildCopyText, buildPasteEdits, expandSingleCellPasteToSelection } from
 import { computeFillDownExtent, computeFillRange, mapFillTargetToSource, type FillResult } from './lib/fill.js';
 import { isPrintableEditTrigger, moveEnter, moveFocus, moveTab, type GridBounds } from './lib/keyboard.js';
 import { isCellInRange, normalizeRange, rangeToCells, type CellPosition, type CellRange } from './lib/selection.js';
+import type { LinkEdit } from './types.js';
 import { UndoStack } from './lib/undo.js';
 import type {
   CellEdit,
@@ -91,6 +92,7 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     columnVisibility: columnVisibilityProp,
     onColumnVisibilityChange,
     globalFilter,
+    onLinkEdit,
   } = props;
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -531,11 +533,38 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
 
   // ── Cell interaction ------------------------------------------------
 
+  /*
+   * A linked column with no `renderEditor` must NEVER open a text editor.
+   *
+   * Falling back to free text is the single worst failure available here: the
+   * cell looks editable, someone types a host name, and the row now holds a
+   * string where every other row holds a reference — the exact divergence the
+   * link exists to make unrepresentable. Refusing the edit is loud and
+   * recoverable; a silent text box is neither.
+   */
+  function canEditColumn(columnId: string): boolean {
+    const config = columnConfigById.get(columnId);
+    if (!config) return false;
+    if (config.editable === false) return false;
+    if (config.link && !config.renderEditor) {
+      onError({
+        message:
+          `column "${columnId}" declares link entity "${config.link.entity}" but supplies no renderEditor. ` +
+          'A linked cell must be edited through the app\'s own entity selector — the same one the form uses ' +
+          '(select, or add new). Refusing rather than falling back to a text input, which would let a name be ' +
+          'typed into one row while every other row holds a reference.',
+        phase: 'edit',
+        edits: [],
+      });
+      return false;
+    }
+    return true;
+  }
+
   function beginEditing(pos: CellPosition, seedChar?: string): void {
     const column = visibleColumns[pos.col];
     if (!column) return;
-    const config = columnConfigById.get(column.id);
-    if (config?.editable === false) return;
+    if (!canEditColumn(column.id)) return;
     setEditSeedChar(seedChar);
     setEditingCell(pos);
   }
@@ -550,10 +579,80 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     if (!row || !column) return;
     const previousValue = getEffectiveValue(row.index, column.id);
     if (Object.is(previousValue, nextValue)) return;
+
+    /*
+     * A LINKED cell stores a REFERENCE, so committing it re-points this row at
+     * a different record. It never writes a name.
+     *
+     * The value arriving from the editor is a record id, because the editor
+     * for a linked column is a picker over `options` and free text is refused.
+     * That refusal is the whole one-shot mechanism: a host name cannot be
+     * mistyped into a row, so two rows cannot hold different spellings of the
+     * same host, and correcting the host's name is done once on the record
+     * that owns it — every row follows because every row only ever held a
+     * pointer.
+     */
+    const config = columnConfigById.get(column.id);
+    if (config?.link) {
+      void commitLinkEdit({
+        entity: config.link.entity,
+        columnId: column.id,
+        rowIndex: row.index,
+        row: data[row.index],
+        previousRefId: config.link.refId(data[row.index]),
+        refId: nextValue === null || nextValue === undefined ? null : String(nextValue),
+      });
+      return;
+    }
+
     void commitEdits(
       [{ rowIndex: row.index, columnId: column.id, previousValue, value: nextValue, row: data[row.index] }],
       'edit',
     );
+  }
+
+  /*
+   * Persist a re-link, optimistically showing it first.
+   *
+   * A single row changes, because a link lives on the row. The referenced
+   * record is untouched — editing IT is the job of the surface that owns it,
+   * which is exactly why one correction there reaches every row here without
+   * this package propagating anything.
+   */
+  async function commitLinkEdit(edit: LinkEdit<TRow>): Promise<void> {
+    setOverlay((prev) => {
+      const next = new Map(prev);
+      next.set(overlayKey(edit.rowIndex, edit.columnId), edit.refId);
+      return next;
+    });
+    try {
+      if (!onLinkEdit) {
+        throw new Error(
+          `column "${edit.columnId}" declares link entity "${edit.entity}" but no onLinkEdit handler was supplied`,
+        );
+      }
+      await onLinkEdit(edit);
+    } catch (err) {
+      setOverlay((prev) => {
+        const next = new Map(prev);
+        next.delete(overlayKey(edit.rowIndex, edit.columnId));
+        return next;
+      });
+      onError({
+        message: err instanceof Error ? err.message : String(err),
+        cause: err,
+        phase: 'edit',
+        edits: [
+          {
+            rowIndex: edit.rowIndex,
+            columnId: edit.columnId,
+            previousValue: edit.previousRefId,
+            value: edit.refId,
+            row: edit.row,
+          },
+        ],
+      });
+    }
   }
 
   function handleEditorCancel(): void {

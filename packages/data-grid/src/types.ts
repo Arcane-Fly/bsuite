@@ -50,6 +50,54 @@ export interface DataGridColumn<TRow = unknown> {
   sortable?: boolean;
   /** Default true. Set false for a computed/read-only column. */
   editable?: boolean;
+  /**
+   * This cell is a LINK to another record, not a value typed into this row.
+   *
+   * Operator, 2026-08-28: "it was always meant to be applied to a cell. e.g.
+   * link a host to a placement it comes from linking and selecting the hosts
+   * record i dont type the same host name everytime. this is the oneshot
+   * policy."
+   *
+   * The estate's one-shot doctrine gives every entity exactly one owning
+   * surface for create/edit. A linked cell stores a REFERENCE; the text on
+   * screen is derived from the referenced record. Two consequences follow, and
+   * the grid enforces both rather than documenting them:
+   *
+   *  1. TYPING FILTERS, IT DOES NOT ENTER. The editor is a searchable picker:
+   *     you type to narrow the list of records — operator, 2026-08-28: "you
+   *     can type it to filter though" — and only a SELECTED record commits. An
+   *     arbitrary string is refused, so a host name cannot be mistyped into a
+   *     row and two rows cannot hold different spellings of the same host.
+   *
+   *  2. A TYPO IS FIXED ONCE, AT SOURCE, AND EVERY ROW FOLLOWS. Not because
+   *     the grid propagates anything — because there is only one copy. Three
+   *     placements showing the same host all change when the host record
+   *     changes, and no code in this package is involved.
+   *
+   * Fill-down IS allowed here and copies the REFERENCE, which is the ordinary
+   * "point these three placements at the same host" gesture. What it can never
+   * do is copy a string.
+   *
+   * `renderEditor` IS REQUIRED alongside this, and the grid refuses to edit the
+   * cell without it. The editor is the APP'S OWN entity selector — the same
+   * component the placement form uses to choose a host, with the same
+   * select-and-add-new behaviour (operator, 2026-08-28: "same as selecting a
+   * host record when entering the host on a placement form. same principle.
+   * select, add new."). crm7 ships 31 of these plus quick-create dialogs.
+   *
+   * This package deliberately does NOT implement a picker of its own. A second
+   * picker would be a second create/edit surface for the same entity, which is
+   * the one-shot violation this whole mechanism exists to prevent — and the
+   * failure mode if it were optional is the worst one available: the cell
+   * would silently fall back to a TEXT INPUT, and the first person to type a
+   * host name would reintroduce exactly the divergence the link prevents.
+   */
+  link?: {
+    /** The owning entity, for the audit trail and the host's dispatch. */
+    entity: string;
+    /** Which record this row currently points at. `null` = unlinked. */
+    refId: (row: TRow) => string | null;
+  };
   /** Escape hatch for a fully custom inline editor (e.g. an FK-lookup
    * picker). Not implemented in this package by design. */
   renderEditor?: (props: CellEditorProps<TRow>) => ReactNode;
@@ -59,6 +107,22 @@ export interface DataGridColumn<TRow = unknown> {
   /** Parse pasted/typed text back into a typed value. Defaults are
    * type-aware (see parseCellValue). */
   parseValue?: (raw: string, row: TRow) => unknown;
+}
+
+/**
+ * A row was pointed at a different record.
+ *
+ * This is a re-LINK, never a rename: the referenced record's own fields are
+ * edited on the surface that owns it, which is what makes one fix reach every
+ * row without this package doing anything.
+ */
+export interface LinkEdit<TRow = unknown> {
+  entity: string;
+  columnId: string;
+  rowIndex: number;
+  row: TRow;
+  previousRefId: string | null;
+  refId: string | null;
 }
 
 export interface CellEdit<TRow = unknown> {
@@ -138,6 +202,13 @@ export interface DataGridProps<TRow = unknown> {
    * stealing them would break the spreadsheet behaviour this grid exists for.
    */
   onRowClick?: (row: TRow, index: number) => void;
+  /**
+   * A row was pointed at a different record. REQUIRED if any column declares
+   * `link` — a grid that lets you re-link and then drops the write is worse
+   * than one that refuses the edit, because the screen shows the new host and
+   * the database keeps the old one.
+   */
+  onLinkEdit?: (edit: LinkEdit<TRow>) => void | Promise<void>;
   /**
    * Which columns are shown, by column id. Absent id = visible.
    *
