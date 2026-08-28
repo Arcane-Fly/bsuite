@@ -1,0 +1,86 @@
+# .github/workflows/dead-barrel-exports.yml
+#
+# A barrel that exports what nothing imports — a two-way ratchet
+# ==============================================================
+# An `index.ts` re-exporting a symbol nothing imports makes dead code look like
+# public API. Measured 2026-08-29 across five apps: 1,174 such exports. The
+# starkest is throughput's `src/components/navigation/index.ts` at 8 of 8 —
+# MegaMenu, TenantSwitcher, GlobalSearch, MobileBottomNav, EnhancedBreadcrumbs
+# and the EnhancedNavigation composite that renders them, 1,080 lines, none of
+# it mounted, while MainContent renders the plain 390-line <Navigation />.
+#
+# THIS GATE DOES NOT SAY "DELETE THESE". Some are deliberate public API
+# (`cardVariants`), some are a boundary someone intends to consume, and deleting
+# pre-existing work is the operator's call, not a gate's. It holds the LINE.
+#
+# WHY TWO-WAY. It fails on a RISE — a new unimported barrel export is dead code
+# wearing an API's clothes. It ALSO fails on an UNBANKED FALL, because "someone
+# wired it up" and "the matcher went blind" both look like good news, and this
+# estate has already banked a gate at zero over sixteen live contradictions.
+#
+# WHY IT RUNS ON SUBMODULE POINTER CHANGES. The apps are submodules, so a
+# pointer bump is the ONLY change to this repo that moves the inputs, and a
+# `paths:` filter over `**/*.ts` cannot see one. A path INSIDE a submodule never
+# appears in the parent's diff — the parent tracks a gitlink, not the files
+# beneath it, which is the same fact that left route-inventory.yml's drift check
+# structurally blind since the day it was written.
+#
+# R80.4 is deliberately absent: the scanner's APPS array does not include it, so
+# its pointer cannot move these numbers.
+
+name: Dead barrel exports
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main, master, development]
+    paths:
+      - '**/index.ts'
+      - '**/index.tsx'
+      - 'scripts/check-dead-barrel-exports.mjs'
+      - 'scripts/dead-barrel-exports-baseline.json'
+      - '.github/workflows/dead-barrel-exports.yml'
+      # The submodule gitlinks. See the header.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'braden'
+      - 'throughput'
+
+jobs:
+  barrels:
+    name: No new unimported barrel exports
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Every app is a PRIVATE submodule; the default GITHUB_TOKEN cannot clone
+      # them and fails with a bare "Repository not found" — a 404 that reads as
+      # a missing repo rather than as a permissions problem.
+      - name: Checkout (with submodules — the apps live there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # An absent app tree exports nothing, counts nothing, and pushes the total
+      # DOWN — which this ratchet would report as an unbanked fall: a true
+      # failure for a false reason. Name the real cause here instead.
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh crm7 business-suite-unified conduit braden throughput
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '24.14.0' }
+
+      # The controls that matter are the ones that must NOT count: a comment
+      # mentioning a symbol is not a use of it, and reading it as one is how this
+      # very measurement came back wrong three times in one session — including a
+      # comment explaining that nothing mounts EnhancedNavigation, counted as
+      # evidence that something did.
+      - name: Self-test the scanner before trusting it
+        run: node scripts/check-dead-barrel-exports.mjs --self-test
+
+      - name: Ratchet
+        run: node scripts/check-dead-barrel-exports.mjs
