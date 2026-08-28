@@ -25,6 +25,21 @@ function surface(container: HTMLElement) {
   return el as HTMLElement;
 }
 
+/**
+ * Does this element paint a border, whatever utility form expresses it?
+ *
+ * These assertions used to read `classList.contains('border')`. That is the
+ * MECHANISM, not the contract -- when the border width and colour became
+ * operator-editable custom properties the class became
+ * `border-[length:var(--card-border-width,1px)]` and the literal check went
+ * red on a surface that was still painting a 1px border exactly as before.
+ * The contract is "a border is painted"; this predicate states that, and stays
+ * true across any future utility spelling.
+ */
+function paintsBorder(el: Element): boolean {
+  return [...el.classList].some((c) => c === 'border' || c.startsWith('border-['));
+}
+
 describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
   it('paints NO border, radius or background on a default grid item', () => {
     const { container } = render(
@@ -37,7 +52,7 @@ describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
     const el = surface(container);
     expect(el.dataset.chrome).toBe('off');
     expect(el.classList.contains('bg-card'), 'chrome off must not paint a background').toBe(false);
-    expect(el.classList.contains('border'), 'chrome off must not paint a border').toBe(false);
+    expect(paintsBorder(el), 'chrome off must not paint a border').toBe(false);
     expect(
       [...el.classList].some((c) => c.startsWith('rounded')),
       'chrome off must not round the corners',
@@ -115,9 +130,23 @@ describe('chrome is opt-in, at two levels, and per-item wins', () => {
     );
     const el = surface(container);
     expect(el.dataset.chrome).toBe('on');
-    for (const cls of ['bg-card', 'border', 'border-border', 'shadow-sm']) {
+    /*
+     * `border` / `border-border` became
+     * `border-[length:var(--card-border-width,1px)]` /
+     * `border-[color:var(--card-border-color,var(--border))]` when card
+     * appearance became operator-editable. The fallbacks are 1px and
+     * `var(--border)`, so the RENDERED surface is unchanged -- which is what
+     * "restores the pre-2.0.0 surface exactly" actually claims. Assert the
+     * paint, not the spelling.
+     */
+    for (const cls of ['bg-card', 'shadow-sm']) {
       expect(el.classList.contains(cls), `chrome on must paint ${cls}`).toBe(true);
     }
+    expect(paintsBorder(el), 'chrome on must paint a border').toBe(true);
+    expect(
+      [...el.classList].some((c) => c.includes('--card-border-color')),
+      'the border colour must still resolve from the --border token',
+    ).toBe(true);
   });
 
   it('a per-item `chrome` flag turns ONE slot back on while the app default stays off', () => {

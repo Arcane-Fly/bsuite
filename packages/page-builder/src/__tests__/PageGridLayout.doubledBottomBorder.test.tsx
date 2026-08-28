@@ -64,6 +64,21 @@ function inner(container: HTMLElement) {
   return el as HTMLElement;
 }
 
+/**
+ * Does this element paint a border, whatever utility form expresses it?
+ *
+ * These assertions used to read `classList.contains('border')`. That is the
+ * MECHANISM, not the contract -- when the border width and colour became
+ * operator-editable custom properties the class became
+ * `border-[length:var(--card-border-width,1px)]` and the literal check went
+ * red on a surface that was still painting a 1px border exactly as before.
+ * The contract is "a border is painted"; this predicate states that, and stays
+ * true across any future utility spelling.
+ */
+function paintsBorder(el: Element): boolean {
+  return [...el.classList].some((c) => c === 'border' || c.startsWith('border-['));
+}
+
 describe('an autoHeight slot must not paint the ceil remainder', () => {
   it('the surface HUGS its content rather than filling the over-allocated row', () => {
     const { container } = render(
@@ -89,7 +104,7 @@ describe('an autoHeight slot must not paint the ceil remainder', () => {
     // ...and the surface must still actually be painting, or this test would
     // pass on a slot with no chrome at all and prove nothing.
     expect(el.dataset.chrome).toBe('on');
-    expect(el.classList.contains('border'), 'the surface must still be painting').toBe(true);
+    expect(paintsBorder(el), 'the surface must still be painting').toBe(true);
   });
 
   it('the inner wrapper does not stretch, which would re-create the gap inside the surface', () => {

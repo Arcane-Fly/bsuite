@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { PageGridLayout } from './PageGridLayout.js'
 import type { GridLayouts } from './types.js'
+import { DEFAULT_CARD_STYLE, describeCardStyle, toCssVars, type CardStyle } from './cardStyle.js'
 
 /**
  * The card-surface defect classes, made VISIBLE and DIFFABLE.
@@ -174,6 +175,99 @@ export const CardHeadingGradient: Story = {
           `text-gradient-accent` over the solid heading token.
         </p>
       </div>
+    </div>
+  ),
+}
+
+/* ------------------------------------------------------------------ *
+ * OPERATOR-EDITABLE CARD APPEARANCE
+ *
+ * The border, corners, shadow and padding are set by the operator in the
+ * canvas editor and persisted per page (see cardStyle.ts). These stories are
+ * the reference for what each setting actually paints, so a change to the
+ * chrome can be diffed against a picture rather than argued about.
+ *
+ * `toCssVars` returns ONLY the properties that differ from the default, so
+ * `Default` below emits no custom properties at all — it is the control, and
+ * it must look exactly like `BareContentOptsIn`. If those two ever diverge,
+ * the "costs nothing until you touch it" guarantee has been broken.
+ * ------------------------------------------------------------------ */
+
+/** Renders one slot with chrome on, under a given operator card style. */
+function StyledSurface({ style, note }: { style: Partial<CardStyle>; note: string }) {
+  const resolved: CardStyle = { ...DEFAULT_CARD_STYLE, ...style }
+  const vars = toCssVars(resolved) as Record<string, string>
+  return (
+    <div
+      className="p-8"
+      style={{
+        ...vars,
+        // The editor applies elevation and padding as real declarations,
+        // because each has to beat a class. Mirrored here so the story shows
+        // what the page shows.
+        ...('--card-shadow' in vars ? { ['--story-shadow' as string]: vars['--card-shadow'] } : null),
+      }}
+    >
+      <p className="mb-3 text-sm text-muted-foreground">{note}</p>
+      <p className="mb-3 text-sm font-medium text-foreground">{describeCardStyle(resolved)}</p>
+      <PageGridLayout
+        pageKey={`card-style-${note.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}
+        defaultLayouts={oneSlot}
+        itemChrome
+        widgets={{ a: <BareContent title="Operator-styled card" /> }}
+      />
+    </div>
+  )
+}
+
+export const CardStyleDefault: Story = {
+  name: 'Card style — default (emits no CSS)',
+  render: () => (
+    <StyledSurface style={{}} note="The control. No custom properties are emitted at all." />
+  ),
+}
+
+export const CardStyleThickBorder: Story = {
+  name: 'Card style — 4px border',
+  render: () => <StyledSurface style={{ borderWidth: 4 }} note="Border width is a slider, 0-8px." />,
+}
+
+export const CardStyleDashedAccent: Story = {
+  name: 'Card style — dashed accent border',
+  render: () => (
+    <StyledSurface
+      style={{ borderWidth: 2, borderStyle: 'dashed', borderTone: 'accent' }}
+      note="Colour comes from a THEME TOKEN, never a literal, so white-labelling still applies."
+    />
+  ),
+}
+
+export const CardStyleSquare: Story = {
+  name: 'Card style — square corners',
+  render: () => <StyledSurface style={{ radius: 0 }} note="Corner radius is a slider, 0-48px." />,
+}
+
+export const CardStyleBorderless: Story = {
+  name: 'Card style — no border',
+  render: () => (
+    <StyledSurface
+      style={{ borderStyle: 'none' }}
+      note="A borderless card still keeps its background and radius."
+    />
+  ),
+}
+
+export const CardStyleElevationLadder: Story = {
+  name: 'Card style — elevation 0 to 4',
+  render: () => (
+    <div className="space-y-2">
+      {([0, 1, 2, 3, 4] as const).map((level) => (
+        <StyledSurface
+          key={level}
+          style={{ elevation: level }}
+          note={`--shadow-elev-${level}, from @bsuite/theme.`}
+        />
+      ))}
     </div>
   ),
 }
