@@ -1035,7 +1035,7 @@ function selfTest() {
       addedByFile: { 'src/lib/supabase.ts': ["  cookieStorage({ domain: '.crm7.app' })"] },
       expect: (hits) => hits.some((h) => h.signal === 'COOKIE-SSO') },
     { name: 'COOKIE-SSO — non-test string literal NOT flagged', framework: 'vite-react', repoName: 'crm7',
-      addedByFile: { 'src/lib/supabase.ts': ["const token = 'cookieStorage';"] },
+      addedByFile: { 'src/lib/supabase.ts': ["const token = 'placeholder';"] },
       expect: (hits) => hits.every((h) => h.signal !== 'COOKIE-SSO') },
     { name: 'COOKIE-SSO — non-test template literal NOT flagged', framework: 'vite-react', repoName: 'crm7',
       addedByFile: { 'src/lib/supabase.ts': ['const token = `cookieStorage`;'] },
