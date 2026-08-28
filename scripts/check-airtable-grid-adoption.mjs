@@ -255,6 +255,12 @@ if (process.argv.includes('--self-test')) {
   const convCases = [
     ['<DataGrid columns={c} data={d} onRowClick={open} />', true, 'converted AND keeps click-through'],
     ['<DataGrid columns={c} data={d} />', false, 'converted and DROPPED click-through'],
+    [
+      '<DataGrid columns={c} data={d} />\n// wiring onRowClick matters here',
+      false,
+      'a COMMENT mentioning onRowClick must NOT satisfy the check — it did, and shipped green',
+    ],
+    ['<DataGrid onRowClick = {open} />', true, 'whitespace before the = is still a binding'],
   ];
   for (const [source, expected, why] of convCases) {
     const got = usesDataGrid(source) && hasRowClick(source);
@@ -300,8 +306,29 @@ if (process.argv.includes('--self-test')) {
 function usesDataGrid(text) {
   return countDataGrid(text) > 0;
 }
+/*
+ * The PROP, not the word.
+ *
+ * This was `text.includes('onRowClick')`, and a comment EXPLAINING why the prop
+ * matters satisfied it. Caught 2026-08-29 by a positive control on the first
+ * real conversion: I removed the prop, left the comment, and the gate passed —
+ * so a converted file could lose its navigation, keep the note about not losing
+ * it, and ship green. That is the exact defect this check exists to catch,
+ * hiding inside the check.
+ *
+ * A JSX prop is `onRowClick=` (with optional whitespace); prose is not. Fifth
+ * time in this estate that a matcher has fired on prose about its own token.
+ */
 function hasRowClick(text) {
-  return text.includes('onRowClick');
+  let i = text.indexOf('onRowClick');
+  while (i !== -1) {
+    // skip whitespace, then require `=` — the JSX binding, not a mention
+    let j = i + 'onRowClick'.length;
+    while (j < text.length && (text[j] === ' ' || text[j] === '\n' || text[j] === '\t')) j += 1;
+    if (text[j] === '=') return true;
+    i = text.indexOf('onRowClick', i + 1);
+  }
+  return false;
 }
 /*
  * The OPENING TAG of the element starting at `from`, or '' if it never closes.
