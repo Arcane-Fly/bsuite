@@ -76,7 +76,9 @@
       "workdir": "packages/schema-builder",
       "migrations_dir": "packages/schema-builder/supabase/migrations",
       "functions_dir": "packages/schema-builder/supabase/functions",
-      "owner": "shared-package"
+      "owner": "shared-package",
+      "dev_fixture": true,
+      "dev_fixture_note": "DEV-FIXTURE COPIES, not a migration set the applier runs. The canonical files live in business-suite-unified/supabase/migrations and .github/workflows/schema-builder-migration-parity.yml keeps the SQL below the @sync-boundary-below marker byte-identical. Flagging these as version collisions reports the very duplication another gate is enforcing."
     }
   ],
   "preview_database": {
