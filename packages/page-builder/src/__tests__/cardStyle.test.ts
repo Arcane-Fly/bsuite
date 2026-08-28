@@ -56,6 +56,11 @@ describe('border colour is a token, never a literal', () => {
     for (const tone of BORDER_TONES) {
       const emitted = vars({ ...DEFAULT_CARD_STYLE, borderTone: tone, radius: 8, borderWidth: 3 });
       for (const value of Object.values(emitted)) {
+        // No marker needed here: C2_HEX requires QUOTED hex DIGITS and C2_RGB
+        // requires `rgb(` followed by a digit, so these bare substrings never
+        // matched the gate. The line that actually tripped it was a
+        // backtick-quoted hex in a doc COMMENT — prose about the token, which
+        // is the fifth time that class has fired in this estate.
         expect(value.includes('#'), `${value} must not carry a hex literal`).toBe(false);
         expect(value.includes('rgb'), `${value} must not carry an rgb literal`).toBe(false);
         expect(value.includes('oklch'), `${value} must not carry an oklch literal`).toBe(false);
