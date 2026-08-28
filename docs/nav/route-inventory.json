@@ -2761,6 +2761,33 @@
     },
     {
       "app": "conduit",
+      "path": "/api/interviews/notify",
+      "route_file": "conduit/src/app/api/interviews/notify/route.ts",
+      "component": "ApiRoute",
+      "component_file": "conduit/src/app/api/interviews/notify/route.ts",
+      "layout": "none",
+      "auth": {
+        "type": "authenticated",
+        "permissions": [],
+        "feature_flags": []
+      },
+      "nav": {
+        "surface": "none",
+        "group": null,
+        "label": null,
+        "icon": null,
+        "order": null
+      },
+      "reachable_via": "in_page_nav",
+      "portal": null,
+      "owned_entities": [],
+      "data_tables": [],
+      "status": "live",
+      "evidence": "conduit/src/app/api/interviews/notify/route.ts:1",
+      "note": null
+    },
+    {
+      "app": "conduit",
       "path": "/api/public/jobs-feed",
       "route_file": "conduit/src/app/api/public/jobs-feed/route.ts",
       "component": "ApiRoute",
