@@ -47,6 +47,16 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+          # THE SUBMODULES ARE PRIVATE, SO THE DEFAULT TOKEN CANNOT CLONE THEM.
+          #
+          # This workflow already reads BSUITE_CROSS_REPO_PAT — but on the SCRIPT step's
+          # GH_TOKEN, not here. So the checkout ran unauthenticated and died with
+          #   remote: Repository not found.
+          #   fatal: clone of '.../R80.4.git' into submodule path '...' failed
+          # on every run since the workflow was created: 2 runs, 2 failures, never once
+          # green. A 404 is what GitHub returns for a private repo you cannot read, so
+          # this reads as "the repo is gone" rather than "the token is wrong".
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
