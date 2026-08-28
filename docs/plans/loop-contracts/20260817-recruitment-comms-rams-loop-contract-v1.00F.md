@@ -1,3 +1,17 @@
+---
+kind: record
+authority: none
+---
+
+> **This is the external memory of a loop that ran, kept as a record.** It is not a live
+> plan and makes no claim that the work it coordinated is current truth. Frozen (`F`)
+> because a record of what a loop was told must not drift; per the operator ruling of
+> 2026-08-26, `F` governs the document's mutability, not the state of the work.
+>
+> The live authority on whether those issues are closed is the issue tracker, not this
+> file. The classification standard requires `kind: record` to carry `authority: none`:
+> a dated record is history, not a live document.
+
 # Loop Contract — Recruitment-Comms + RAMS Cluster
 
 > **External memory** for the engineered loop completing conduit#225/#221/#227/#229.

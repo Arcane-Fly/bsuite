@@ -1,3 +1,26 @@
+---
+kind: record
+authority: none
+---
+
+> **This is dated research, kept as a record.** It investigated the AVETMISS NAT00120 export
+> and a termination-code mapping on 2026-05-06. Its own header still reads `1.00W`; this
+> banner resolves that against the `F` in the filename.
+>
+> **What shipped, and what this record does NOT claim.** The NAT00120 export exists —
+> `crm7/supabase/functions/avetmiss-export/index.ts` emits `NAT00120.txt` at the 185-character
+> record length, guarded by `scripts/check-edge-function-types.mjs`
+> (`edge-function-typecheck.yml`) and `scripts/check-edge-function-slug-collisions.mjs`.
+>
+> **The termination-code half is NOT evidenced here.** I looked for those codes in the export
+> and in `crm7/src` and could not tie them to an implementation. That is why this is filed as
+> research rather than given a completion banner: an evidence table with an empty row is a
+> claim, not a measurement. If the mapping did ship, a later dated document should supersede
+> this one and say where.
+>
+> The classification standard requires `kind: record` to carry `authority: none`: a dated
+> record is history, not a live document.
+
 # Apprentice placement — AVETMISS NAT00120 export research + termination-code mapping
 
 **Document version:** 1.00W

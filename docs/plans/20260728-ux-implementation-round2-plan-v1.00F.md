@@ -1,3 +1,20 @@
+---
+kind: record
+authority: none
+---
+
+> **This is a spent execution plan, kept as a record.** It was the Round 2 brief for the
+> same verifier-gated loop, covering the register items Round 1 did not reach.
+>
+> **It is not the authority on whether those items are closed — the register is**
+> (`docs/20260728-operator-ux-bug-register-v1.00F.md`). This file records what was asked of
+> the loop.
+>
+> The classification standard requires `kind: record` to carry `authority: none`: a dated
+> record is history, not a live document. Frozen (`F`) because a record of what was planned
+> must not drift; per the operator ruling of 2026-08-26, `F` governs the document's
+> mutability, not the state of the work.
+
 # UX Implementation — Round 2 — 2026-07-28
 
 Implements the remaining VERIFIED-OPEN items from

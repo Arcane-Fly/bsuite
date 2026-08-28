@@ -1,3 +1,22 @@
+---
+kind: record
+authority: none
+---
+
+> **This is a spent plan, kept as a record.** It planned the schema-package pin for
+> extreme #26 on 2026-07-27.
+>
+> **It is not the authority on which versions are pinned today** — `package.json` and the
+> lockfiles are, and `scripts/check-shared-package-reach.mjs` plus
+> `scripts/check-own-package-freshness.mjs` are the gates that keep them honest.
+>
+> Its `R80.3/` paths are historical and deliberately not rewritten.
+>
+> The classification standard requires `kind: record` to carry `authority: none`: a dated
+> record is history, not a live document. Frozen (`F`) because a record of what was planned
+> must not drift; per the operator ruling of 2026-08-26, `F` governs the document's
+> mutability, not the state of the work.
+
 # Schema package pin plan — extreme #26 (2026-07-27)
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set

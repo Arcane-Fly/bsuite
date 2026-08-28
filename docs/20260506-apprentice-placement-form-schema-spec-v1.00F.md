@@ -1,5 +1,26 @@
 # Apprentice placement create/edit form — Zod schema + RHF spec
 
+> ## FROZEN 2026-08-28 — status F, verified against live code
+>
+> This spec met the operator's two-limb bar, so the `F` its filename already carried is now
+> earned rather than asserted. The body below is unchanged — note its own header still reads
+> `1.00W`, which is the disagreement this banner resolves.
+>
+> **(a) Superseded by the implementation it specified.** A schema spec stops being the
+> authority the moment the schema exists; from then on the code is the truth and the spec is
+> the record of its design.
+>
+> **(b) What it describes is proven production code.**
+>
+> | Criterion | Measurement 2026-08-28 | Gate that would catch a regression |
+> |---|---|---|
+> | the Zod schema exists | `crm7/src/schemas/apprenticePlacementSchema.ts`, 22 Zod definitions | `build-and-test.yml` (required on crm7's protected branches) |
+> | it is exercised, not merely present | `crm7/src/schemas/placementSchema.test.ts`; sibling modules `placementSchema.ts`, `placementWorkflow.ts`, `lib/placementIdentity.ts` with its own test | `build-and-test.yml` — carries the coverage floor |
+> | its reads and writes match the live database | — | `crm7/scripts/lint-postgrest-columns.mjs` (`postgrest-column-lint.yml`, required) |
+>
+> Frozen means immutable. Do not edit the body below — supersede it with a new dated
+> document if the position changes.
+
 **Document version:** 1.00W
 **Date:** 2026-05-06
 **Author:** perplexity-computer (research + rigor lane per protocol §11)
