@@ -605,6 +605,33 @@ export const GUARDS = [
       '"audit-oklch-lightness: self-test OK (10 cases, 8 of them asserting the gate FAILS)"',
   },
   {
+    // WIRED HERE BECAUSE IT WAS WIRED NOWHERE. Nothing in CI, package.json or this
+    // registry ran it, and its default input path pointed at a SESSION SCRATCHPAD
+    // that no longer exists — so the only way to discover it was to run it and read
+    // an ENOENT naming a uuid. An artifact is WIRED or REMOVED; this one regenerates
+    // a committed artefact from a committed source, so it is worth keeping.
+    //
+    // It is a REGENERATOR, not a gate: `mode: 'report'`. The check it makes possible
+    // is that re-running it leaves the tree clean — if docs/nav/route-surface-map.csv
+    // differs afterwards, the CSV had drifted from the JSON.
+    id: 'parent-export-surface-map',
+    label: 'Route surface map CSV regenerates from the committed JSON (estate-wide)',
+    repo: '.',
+    command: ['node', 'scripts/export-surface-map.mjs'],
+    ciWorkflow: null,
+    mode: 'report',
+    evidence:
+      '"export-surface-map: 556 row(s) read from docs/nav/route-surface-map.json ' +
+      'across 17 column(s)" (2026-08-28) — an EXAMINED count, not a written one, ' +
+      'because check-guard-self-reporting failed the first version for printing ' +
+      '"rows written": a write count says nothing about whether the input was read. ' +
+      'It now refuses on zero rows. The regenerated ' +
+      'docs/nav/route-surface-map.csv is BYTE-IDENTICAL to the committed one — ' +
+      'which is what proves the round trip faithful, since this script also writes ' +
+      'the JSON it now reads. Refuses with exit 2 and a named path when run outside ' +
+      'the repo root, rather than the previous ENOENT on a dead session scratchpad.',
+  },
+  {
     // REACHABILITY, which is a different question from parity and from
     // armed-ness, and the only one of the three that would have caught the 17
     // pure whites in crm7's customer-facing PDFs (bsuite#1962).
@@ -650,8 +677,12 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"52 documents skipped as HISTORICAL; 666 source-path references checked; ' +
-      'UNRESOLVED 102 — MOVED 10, AMBIGUOUS 4, GONE 88" (2026-08-18). Refuses ' +
+      // Re-measured 2026-08-28: UNRESOLVED 102 -> 41. Recording the CURRENT
+      // output matters as much as recording that it once passed — a ten-day-old
+      // number reads as today's, and this one had improved by 60%.
+      '"773 source-path references checked; UNRESOLVED 41 — MOVED 0, ' +
+      'AMBIGUOUS 1, GONE 17, PROPOSED 23" (2026-08-28; was 102 UNRESOLVED on ' +
+      '2026-08-18). Refuses ' +
       'with exit 2 without submodules: the same run reports 240 unresolved in a ' +
       'bare worktree, so more than half those findings would be false.',
   },
@@ -663,9 +694,10 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"Files scanned: 392 live (52 more skipped as HISTORICAL) — ' +
-      'CHECKS-CLEAN 365, CHECKS-FAILED 27; RECORD pins set aside 69" ' +
-      '(2026-08-18). Actionable: 50 dangling link, 1 Tailwind (itself an audit ' +
+      // Re-measured 2026-08-28: CHECKS-FAILED 27 -> 12, TOTAL FINDINGS 19.
+      '"Files scanned: 442 (parent 333, six apps 109) — ' +
+      'CHECKS-CLEAN 430, CHECKS-FAILED 12; TOTAL FINDINGS 19" ' +
+      '(2026-08-28; was 27 failed on 2026-08-18). Actionable: dangling link, Tailwind (itself an audit ' +
       'REPORTING one), 0 authority pin, 0 template, 0 version. Refuses with ' +
       'exit 2 without submodules. TWO LIMBS WERE RETIRED AS PURE FALSE ' +
       'POSITIVES: the version limb emitted 12 findings and all twelve were ' +
@@ -1256,10 +1288,49 @@ export const GUARDS = [
     ciWorkflow: 'crm7/.github/workflows/db-lint.yml',
     mode: 'run',
     evidence:
-      '"[lint-migrations-revoke-anon] OK (full-tree mode): 181 in-scope ' +
-      'SECURITY DEFINER public function(s) scanned, 251 named REVOKE ' +
+      // 181/251 until 2026-08-28. The counts did not drift — the gate was RED
+      // for four months because crm7 filed 658 migrations into
+      // supabase/migrations/archive/ and the wildcard REVOKE went with them,
+      // out of a flat readdir's view. Recorded evidence is what proved the
+      // gate had once been green, which is how the regression was told apart
+      // from a gate that had always been broken.
+      '"[lint-migrations-revoke-anon] OK (full-tree mode): 211 in-scope ' +
+      'SECURITY DEFINER public function(s) scanned, 290 named REVOKE ' +
       'pair(s) tree-wide + wildcard REVOKE on schema public, 0 explicit ' +
       'allow-marker(s)."',
+  },
+  {
+    // BSU RUNS THE SAME SCRIPT AND HAD NO ROW HERE. Only crm7 was registered, so
+    // the estate's own guard inventory could not tell that BSU's copy full-tree
+    // exits 1 — and on 2026-08-28 it did, on four SECURITY DEFINER functions this
+    // repository defines and never revoked. A guard nobody registered is a guard
+    // nobody reads.
+    //
+    // It is `mode: 'run'` with a FAILING baseline recorded deliberately: the one
+    // remaining finding is public.rename_physical_column, whose migration
+    // (20260506000000) is RECORDED APPLIED while the function is absent from the
+    // live catalog. That is a phantom migration, not a grant defect, and writing
+    // a REVOKE for it would turn this gate green over an unrepaired ledger.
+    id: 'bsu-lint-migrations-revoke-anon',
+    label: 'REVOKE FROM anon pairing for SECURITY DEFINER functions (BSU, full-tree)',
+    repo: 'business-suite-unified',
+    command: ['node', 'scripts/lint-migrations-revoke-anon.mjs', 'supabase/migrations'],
+    ciWorkflow: 'business-suite-unified/.github/workflows/db-lint.yml',
+    mode: 'run',
+    evidence:
+      '"[lint-migrations-revoke-anon] FAIL (full-tree mode): 5 in-scope SECURITY ' +
+      'DEFINER public function(s) lack a REVOKE FROM anon / FROM public pair." ' +
+      '— grant_tester_license, handle_tester_license_on_signup, ' +
+      'set_payroll_super_due_date, reflect_entity_schema, rename_physical_column. ' +
+      'A DELIBERATE failing baseline, and the number is 5 rather than 1 because ' +
+      'business-suite-unified#982 reverted a migration that would have made it 1: ' +
+      'that migration was a no-op in BOTH production and the rehearsal database, ' +
+      'since crm7/supabase/migrations/20260101000000_prod_schema_baseline.sql (a ' +
+      'TOP-LEVEL file, not archived) already revokes these from PUBLIC. THE GATE IS ' +
+      'PER-REPO AND THE DATABASE IS ESTATE-WIDE: a REVOKE in crm7 protects a ' +
+      'function defined in BSU, and this gate cannot see across repos. Measured ' +
+      'live 2026-08-28: has_function_privilege(anon, ...) = false on all five. ' +
+      'Do NOT clear this by adding a migration — that was tried and reverted.',
   },
   {
     id: 'crm7-lint-migrations-secdef-search-path',
@@ -1482,7 +1553,7 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"RENAMED-LINK candidates: 1 distinct" (2026-08-18, after the scorer was ' +
+      '"RENAMED-LINK candidates: 2 distinct" (2026-08-28; 1 on 2026-08-18, after the scorer was ' +
       'corrected three times). Found and fixed: v1.02A -> v1.04A across five ' +
       'PARENT-DOCS copies, feature-map v1.0.0 -> v1.00W, boot-compliance ' +
       'v1.00W -> v1.00A, and 21 links in two crm7 roadmaps. THE SCORER WAS ' +

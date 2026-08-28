@@ -25,7 +25,7 @@
 #   `--pass 1` run will over-flag tables because app-side signals are absent.
 #
 #   This is the automated version of the manual audit documented in
-#   `docs/20260506-table-usage-audit-v1.00W.md`. Re-run quarterly or before any
+#   `docs/20260506-table-usage-audit-v1.00F.md`. Re-run quarterly or before any
 #   schema cleanup decision.
 #
 #   This script is diagnostic only — it NEVER runs DDL, UPDATE, INSERT, DELETE, or
@@ -58,7 +58,7 @@
 #   3  Missing required dependency (psql, rg, or python3).
 #
 # References:
-#   - docs/20260506-table-usage-audit-v1.00W.md              (methodology + verdicts)
+#   - docs/20260506-table-usage-audit-v1.00F.md              (methodology + verdicts)
 #   - docs/20260506-conduit-canonical-map-reconciliation-v1.00W.md  (r7_* vs conduit_*)
 #   - docs/20260227-dry-one-shot-architecture-v1.04A.md      (entity ownership)
 #
@@ -658,7 +658,7 @@ print_summary() {
     fi
   fi
 
-  printf '\n%sNext:%s review %s/audit-merged.tsv and consult docs/20260506-table-usage-audit-v1.00W.md.\n\n' "$C_BOLD" "$C_RESET" "$OUT_DIR"
+  printf '\n%sNext:%s review %s/audit-merged.tsv and consult docs/20260506-table-usage-audit-v1.00F.md.\n\n' "$C_BOLD" "$C_RESET" "$OUT_DIR"
 }
 
 # ---------- main ------------------------------------------------------------

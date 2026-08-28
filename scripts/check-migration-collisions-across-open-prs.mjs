@@ -90,7 +90,23 @@ function migrationsOnBranch(scope, root, branch) {
   try {
     sh('git', ['fetch', 'origin', branch, '--quiet'], dir)
     const listing = sh('git', ['ls-tree', '-r', '--name-only', 'FETCH_HEAD', 'supabase/migrations/'], dir)
-    return listing ? listing.split('\n').filter(Boolean) : []
+    // `archive/` IS NOT A MIGRATION SET. This gate asks what the applier will RUN,
+    // and `supabase db push` reads only the top level of supabase/migrations —
+    // subdirectories are history, filed away, already applied.
+    //
+    // Without this, crm7's 658 archived files each look like a live claim on their
+    // version. Measured 2026-08-28: two unrelated PRs, one in crm7 and one in BSU,
+    // were reported as colliding on 20260728120000 because crm7 carries an ARCHIVED
+    // copy of a migration BSU still has at the top level. Neither PR added a
+    // migration at all. A collision gate that fires on history teaches everyone to
+    // merge through it, which is exactly when it stops catching the real thing.
+    //
+    // (lint-migrations-revoke-anon.mjs is the opposite case and must KEEP reading
+    // archive/: a REVOKE that ran in June is still in force, so its question —
+    // what privileges does the database hold — is answered by the whole history.)
+    return listing
+      ? listing.split('\n').filter(Boolean).filter((f) => !f.includes('/archive/'))
+      : []
   } catch {
     return []
   }

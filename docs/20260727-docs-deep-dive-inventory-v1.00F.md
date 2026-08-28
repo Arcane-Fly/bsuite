@@ -78,7 +78,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | 20260507-red-team-ux-doctrine-v1.00A.md | Red-team + UX-DX doctrine | L | "AUTHORITATIVE for all BSuite crons" | keep (living) |
 | 20260507-timesheet-approval-parity-spec-v1.00W.md | Bulk-approve RPC + reminder (4 gaps) | I | `bulk_approve_timesheets` only as AI tool name (`crm7/src/lib/ai/tools/index.ts:145`); no RPC | keep |
 | 20260507-w4-permissions-editor-scoping-v1.00A.md | W4 Permissions Editor scoping | L | Scoping done (bsuite#679); W4 impl open (bsuite#635) | keep (living) |
-| 20260519-rpc-report-page-security-review-v1.00A.md | Approved spec for `rpc_report_page` | L | Header: SPEC ONLY/not implemented | keep (living) |
+| 20260519-rpc-report-page-security-review-v1.00F.md | Approved spec for `rpc_report_page` | L | Header: SPEC ONLY/not implemented | keep (living) |
 | 20260519-storage-rls-four-persona-matrix-v1.00A.md | Storage RLS four-persona matrix | L | `crm7/supabase/tests/database/25_storage_bucket_policy_coverage.sql:243-279` | keep (living) |
 | 20260519-xero-payroll-au-stp-path-decision-v1.00A.md | ADR: V1 = Xero Passthrough (Option B) | L | `xero-token-exchange`/`xero-invoice-submit`/`xero-webhook` exist; `xero-payroll-submit` unbuilt | keep (living) |
 | 20260629-batch-e-rbac-parity-dev-deploy-test-plan-v1.00W.md | Test plan WC-008…012 RBAC fixes | C | `crm7/supabase/migrations/20260629120000_wc008_remove_dead_super_admin_branch.sql`; `usePlatformRole.ts:214`; `conduit/src/lib/supabase/middleware.ts:199` | archive |
@@ -106,7 +106,7 @@ Verdict key: **C** = COMPLETE-archive · **I** = INCOMPLETE · **L** = LIVING.
 | OUTSTANDING.md | Single outstanding-work index (SSoT) | L | "Updated 2026-07-08" SSoT | keep (living) |
 | README.md | Parent docs navigation index | L | Nav hub | keep (living) |
 | 00-roadmap/20260112-master-roadmap-v1.00F.md | Master planning roadmap | L | Last updated 2026-07-26/27; active checkboxes | keep (living) |
-| 00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md | Excellence close-out impl plan (T0–Tn) | I | Unchecked AC boxes; explicit DEFER items | keep |
+| 00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md | Excellence close-out impl plan (T0–Tn) | I | Unchecked AC boxes; explicit DEFER items | keep |
 | 00-roadmap/20260725-qwen-excellence-integration-plan-v1.00F.md | Qwen excellence integration plan (W1–W6) | I | Status W; DEFER list | keep |
 | adr/ADR-0001-page-builder-ownership.md | CRM7 custom_pages canonical; BSU layouts dropped | L | `business-suite-unified/supabase/migrations/20260502000000_drop_tenant_page_layouts.sql` | keep (living) |
 | adr/ADR-0002-schema-builder-ownership.md | CRM7 owns tenant_entities/field_definitions | L | Decision doc | keep (living) |

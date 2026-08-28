@@ -31,7 +31,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
-import { isNavigational } from './lib/doc-conventions.mjs';
+import { isNavigational, isPointerFile } from './lib/doc-conventions.mjs';
 
 const KINDS = ['law', 'obligation', 'decision', 'standard', 'plan', 'record'];
 const AUTHORITIES = ['external', 'operator', 'engineering', 'none'];
@@ -139,7 +139,12 @@ function walk(d, out = []) {
 /* The navigational-file set lives in ONE place — see scripts/lib/doc-conventions.mjs
    for why this is a shared module rather than a copy in each gate. */
 
-const all = walk('docs').filter((p) => !isNavigational(p));
+/* A POINTER IS NOT A DOCUMENT — same predicate check-doc-naming uses, imported from
+   the same module, for the same reason NAVIGATIONAL_FILES lives there: a rule held in
+   two places diverges. Asking a signpost for `kind`, `authority` and `evidence` is
+   asking a link for authorship. Content-detected, never path- or name-detected. */
+const isPointer = (p) => { try { return isPointerFile(readFileSync(p, 'utf8')) } catch { return false } };
+const all = walk('docs').filter((p) => !isNavigational(p) && !isPointer(p));
 const unclassified = all.filter((p) => !parseFrontmatter(readFileSync(p, 'utf8'))?.kind);
 
 // Positive control: an empty scan would report zero unclassified, which reads as a
@@ -150,7 +155,7 @@ if (all.length < 20) {
 }
 
 let failed = false;
-const changedDocs = changed.filter((p) => !isNavigational(p));
+const changedDocs = changed.filter((p) => !isNavigational(p) && !isPointer(p));
 if (changed.length !== changedDocs.length) {
   console.log(`  ${changed.length - changedDocs.length} navigational file(s) not enforced (README/STATUS/INDEX are indexes, not documents)`);
 }

@@ -35,3 +35,28 @@ export const NAVIGATIONAL_FILES = new Set([
 export function isNavigational(p) {
   return NAVIGATIONAL_FILES.has(p.split('/').pop().toLowerCase());
 }
+
+/**
+ * A POINTER IS NOT A DOCUMENT — and both gates must agree on that, for the same
+ * reason NAVIGATIONAL_FILES lives here: a rule held in two places diverges.
+ *
+ * `check-doc-naming` exempts a pointer from the near-miss-date family, because the
+ * harm that rule prevents is a document going stale where no scanner can see it,
+ * and a pointer has no document content to go stale. `check-doc-classification`
+ * must exempt it for the same reason — asking a link for `kind`, `authority` and
+ * `evidence` is asking authorship of a signpost.
+ *
+ * Detected from CONTENT, never from the path or the filename. A per-file allowlist
+ * is the path-shaped exemption this estate keeps unpicking, and a name-shaped one
+ * would let any non-conforming filename claim the family.
+ *
+ * The declaration must appear within the opening lines, so a passing mention deep
+ * in a real document cannot claim it.
+ */
+export const POINTER_DECLARATION = 'this file is a pointer'
+const POINTER_SCAN_LINES = 12
+
+export function isPointerFile(text) {
+  if (typeof text !== 'string' || text === '') return false
+  return text.split('\n', POINTER_SCAN_LINES).join('\n').toLowerCase().includes(POINTER_DECLARATION)
+}
