@@ -19,7 +19,7 @@
  * TOKENS, NOT COLOURS. `borderTone` names a theme token, never a literal.
  * The estate bans hex/rgb in D2C apps (`bsuite/no-hardcoded-colours`) and the
  * whole point of `--border` is that a tenant can rebrand it. An editor that
- * wrote `#3b82f6` into a preference would be a white-label regression wearing
+ * wrote a raw hex value into a preference would be a white-label regression wearing
  * a feature's clothes, so the palette below is a closed set of token names and
  * the type makes an arbitrary string unrepresentable.
  */
