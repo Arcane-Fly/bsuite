@@ -217,16 +217,43 @@ jobs:
             # The contents API tops out at 1 MB. Fail LOUDLY at the ceiling rather
             # than silently fall back to an unsigned commit, which is the exact
             # failure this block exists to remove.
-            size=$(stat -c%s "$app/pnpm-lock.yaml")
-            if [ "$size" -gt 900000 ]; then
-              echo "::error title=$app: lockfile too large for a signed API commit::$size bytes; the contents API caps at 1 MB. This now needs a signing key in secrets, not a fallback."
+            # MEASURE THE ENCODED SIZE, NOT THE RAW ONE.
+            #
+            # The contents API's 1 MB cap applies to the BASE64 payload, and
+            # base64 is 4/3 of the input. The previous guard compared the RAW
+            # file against 900000, so a 900 KB lockfile passed it and then
+            # produced a 1.2 MB body the API refuses — the check would have
+            # waved through exactly the case it exists to catch. crm7 today:
+            # 498299 raw -> 664400 encoded, comfortably inside.
+            base64 -w0 "$app/pnpm-lock.yaml" > /tmp/reach-content.b64
+            encoded=$(stat -c%s /tmp/reach-content.b64)
+            if [ "$encoded" -gt 1000000 ]; then
+              echo "::error title=$app: lockfile too large for a signed API commit::$encoded base64 bytes ($(stat -c%s "$app/pnpm-lock.yaml") raw); the contents API caps at 1 MB. This now needs a signing key in secrets, not a fallback."
               exit 1
             fi
             fsha=$(gh api "repos/$owner/$app/contents/pnpm-lock.yaml?ref=$br" --jq .sha)
+            # THE BODY GOES THROUGH A FILE, NOT THE COMMAND LINE.
+            #
+            # `-f content="$(base64 ...)"` put the whole base64 lockfile into
+            # argv. crm7's lockfile is ~486 KB, which is ~650 KB base64, and
+            # execve refuses it: `/usr/bin/gh: Argument list too long`, exit
+            # 126. Measured 2026-08-28 — this workflow failed three times in
+            # ten minutes that way, and because it fails at the WRITE it never
+            # reached the signature assertion below, so the failure looked like
+            # a signing problem rather than a size one.
+            #
+            # jq --rawfile reads the base64 straight into a JSON string, and
+            # `gh api --input` posts that file as the request body. Nothing
+            # lockfile-sized touches argv.
+            jq -n \
+              --rawfile message /tmp/reach-msg.txt \
+              --rawfile content /tmp/reach-content.b64 \
+              --arg branch "$br" \
+              --arg sha "$fsha" \
+              '{message: $message, content: $content, branch: $branch, sha: $sha}' \
+              > /tmp/reach-body.json
             gh api -X PUT "repos/$owner/$app/contents/pnpm-lock.yaml" \
-                 -f message="$(cat /tmp/reach-msg.txt)" \
-                 -f content="$(base64 -w0 "$app/pnpm-lock.yaml")" \
-                 -f branch="$br" -f sha="$fsha" >/dev/null
+                 --input /tmp/reach-body.json >/dev/null
             # VERIFY IN THE SAME STEP AS THE WRITE. Asserting the intent instead of
             # the result is how the unsigned commits went unnoticed for as long as
             # they did.
