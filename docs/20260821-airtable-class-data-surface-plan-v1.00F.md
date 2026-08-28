@@ -9,21 +9,32 @@ evidence:
 
 # What to borrow from Atmosphere for crm7 reports + data manipulation
 
-> ## ⚠ LIMB (b) IS TEMPORARILY UNPROVEN — 2026-08-26 02:30 AWST
+> ## ✅ LIMB (b) RE-PROVEN — 2026-08-29 04:42 AWST
 >
-> This document carries `F`. It earned it: limb (a) is permanent — a newer document declares it
-> superseded by name — and limb (b) was verified by running the gate it cites, which reported
-> *"53 consumer/package edge(s) examined, none unreachable"*.
+> The 2026-08-26 banner this replaces flagged that `F` asserts proof in the PRESENT tense while
+> `check-shared-package-reach.mjs` was red on 1 of 53 edges. It named its own unblock:
+> *"re-migrate crm7 to `^2.0.0` after the demo and the gate goes green again."*
 >
-> **`check-shared-package-reach.mjs` is red again as of 02:08 AWST**, on 1 of 53 edges. Nothing
-> about this document changed. Another lane reverted `crm7` to `@bsuite/page-builder@^1.0.7`
-> (`revert/page-builder-2.0.0-not-before-the-demo`) so the card-chrome change would not reach the
-> app being demonstrated at 09:30 — a sound call, and newer than mine.
+> **That happened, and then some.** Measured on `development` at `85038eab`:
 >
-> The marker is left in place rather than churned off and back on within hours, but it is flagged
-> here because `F` asserts proof in the PRESENT tense and that proof is currently unavailable.
-> **The unblock is named and owned:** re-migrate crm7 to `^2.0.0` after the demo and the gate goes
-> green again. If you would rather the marker come off until then, it is one rename.
+> ```
+> node scripts/check-shared-package-reach.mjs
+> check-shared-package-reach: OK — 54 consumer/package edge(s) examined, none unreachable
+> exit 0
+> ```
+>
+> | | 2026-08-26 | 2026-08-29 |
+> |---|---|---|
+> | `@bsuite/page-builder` in crm7 | `^1.0.7` (pre-demo revert) | **`^2.5.0`**, lockfile resolves `2.5.0` |
+> | reach gate | red, 1 of 53 edges | **green, 0 of 54** |
+>
+> The last edge to close was a different package: `@bsuite/data-grid` published `1.1.0` while
+> crm7's lockfile still resolved `1.0.1`, so `onRowClick` was unreachable to every consumer.
+> Cleared by the gitlink advance in bsuite#2707 (crm7 `d4be689e7` → `eba373519`).
+>
+> **The marker was left in place through the red window rather than churned off and back on, and
+> that judgement is now vindicated** — but the reason it was safe is that the banner named the
+> unblock and the owner. A bare `F` over a red gate would not have been.
 
 
 > ## ⚠ CORRECTED 2026-08-25 — THIS DOCUMENT READ THE WRONG REPOSITORY

@@ -6,7 +6,13 @@
  * (@tanstack/react-table), cell-range selection, keyboard grid navigation,
  * a TSV clipboard round-trip, a fill handle, and an undo/redo stack.
  *
- * No consumer app is wired to this package yet — it ships standalone.
+ * FIRST CONSUMER, 2026-08-29: crm7 `/hr/disciplinary` (crm7#2205) — a read-and-open
+ * listing, 8 columns, `onRowClick` into the case record. It is the only one; the
+ * remaining ~155 crm7 tables are still hand-rolled, and `EnhancedDataTable` (43 pages)
+ * is NOT a one-edit conversion — its cell renderers read TanStack's `row.original`,
+ * which is not this package's `row`. See
+ * `docs/20260829-enhanceddatatable-is-not-a-one-edit-conversion-v1.00W.md`.
+ *
  * Import the pure logic (TSV, selection maths, fill maths, undo stack,
  * keyboard maths, clipboard glue) independently via `@bsuite/data-grid/lib`
  * if a host only needs the non-React pieces.
