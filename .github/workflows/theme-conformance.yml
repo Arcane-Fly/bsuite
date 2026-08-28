@@ -69,6 +69,27 @@ on:
       - '.github/theme-c2-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
       - '.github/workflows/theme-conformance.yml'
+      # THE SUBMODULE GITLINKS. Every app is a submodule, so a pointer bump is
+      # the ONLY change to this repo that moves this gate's inputs — and none of
+      # the globs above can see one. A gitlink is a single line in the tree, not
+      # a .tsx or .css file.
+      #
+      # Without these six lines the gate is a decoration on exactly the change
+      # it exists to police. Measured 2026-08-28: PR #2698 advanced the crm7 and
+      # conduit pointers and this workflow DID NOT RUN AT ALL — it was absent
+      # from the head SHA's 30 check-runs, and a check missing from the rollup
+      # reads as passing. A live near-pure violation
+      # (business-suite-unified Analytics.tsx, L=0.99) sat behind that silence.
+      #
+      # nested-card-chrome-ratchet.yml already carries this list and its header
+      # states that "the sibling theme-conformance.yml carries the same list for
+      # the same reason". It did not. That claim is now true.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'R80.4'
+      - 'braden'
+      - 'throughput'
       # The submodule GITLINKS, and they are NOT redundant with the globs above.
       #
       # Every job in this file measures the apps at the parent's PINNED gitlink
