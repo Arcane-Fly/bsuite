@@ -267,3 +267,24 @@ status column here would be the false-completion surface the estate keeps rebuil
 | D-137 | ""Linked entities with a link looks amaturise."" | Replace the bare link treatment on client detail | /clients/:id | CRM7 | ux |
 | D-138 | ""Hosts and clients each should displace in a table below all placements contacts, all records associated with them easily and filterable in tables."" | Related-records tables on host and client detail | /hosts/:id, /clients/:id | CRM7 | data-reporting |
 | D-139 | ""anything that lists rows like this needs to be brought up to the airtable style design which is still itself sub par. Take inspiration from the GaryOcean428/atmosphere setup."" | Airtable-style list design everywhere rows are listed; atmosphere as the reference | all list surfaces | all apps | data-reporting |
+
+## Addendum — D-140 … D-145, from the messaging-platform session transcript
+
+**Added 2026-08-28.** The messaging platform (Mobile Message SMS, `message_numbers` /
+`message_quotas` / `message_usage` / `message_consent` / `message_categories`, the
+`sms-inbound` and `sms-numbers` edge functions, and `email-dispatcher` channel:'sms') shipped
+this session with no register row of its own. These six asks, taken verbatim from that
+session's transcript, are the source the design doc (`docs/20260828-messaging-platform-design-v1.00W.md`)
+was built against.
+
+**None of these carry a status.** This register records what was asked, not what was done; a
+status column here would be the false-completion surface the estate keeps rebuilding.
+
+| ID | Verbatim (his words) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-140 | "Since I'm developer account you may as well enable this feature to my account on bsutie patform account under login for braden.lang77@gmail.com. also remember we should do conduit after. since candidates and interview scheduling should also be a consideration and benefit from sms." | Enable messaging on braden's own BSU developer account now; extend it to conduit next (candidates, interview scheduling) | BSU login (braden.lang77@gmail.com); conduit candidates/interviews | suite/conduit | integration |
+| D-141 | "they should be given and we would need to automate the creation of, a company core business sms number... thus no stop permitted. we must respect however right to disconnect off legistration and only send during reasonable hours" | Auto-provision each tenant's core-business SMS number with no STOP option, honouring right-to-disconnect legislation and reasonable-hours-only sending | tenant SMS number provisioning | suite | architecture |
+| D-142 | "each workplace will ahve varying working hours... e.g. you havent done your timesheet you're at risk of not being paid would likely be one that would be better to interupt" | Per-workplace contactable hours, with a pay-at-risk timesheet warning as a case that should interrupt those hours | tenant contact window / interrupt tiers | suite | architecture |
+| D-143 | "yes and flexibility to nominate who. drop downs or add both available" | Sender/number nomination by dropdown, with an add-new option as well | number-provision / send composer | CRM7 | ux |
+| D-144 | "this is a business so some customization will take time for me and provides value so for now so we have it build in a nominal proce to do this. also consider tagging of messages and merge fields." | Charge a nominal price for messaging customisation; support message tagging and merge fields | messaging setup / plan chooser; message composer | CRM7/suite | ux |
+| D-145 | "ensure UI and round trips are also key focus of yours" | Keep UI polish and round-trip flows (no dead ends) a first-class focus of the messaging build | messaging platform | CRM7/suite | ux |
