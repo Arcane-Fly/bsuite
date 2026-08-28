@@ -84,18 +84,30 @@ jobs:
       - name: Check for drift
         run: |
           set -euo pipefail
-          PATHS="docs/nav/route-inventory.json business-suite-unified/src/data/route-inventory.json"
+          # The second path lives INSIDE A SUBMODULE, and `git diff` run in the
+          # parent cannot see it: the parent tracks a gitlink, not the files under
+          # it, so `git diff --quiet -- business-suite-unified/...` reports clean no
+          # matter what that file contains. Verified 2026-08-29 with the file
+          # genuinely modified — parent reported 0 changed files while `git status`
+          # showed the submodule dirty. This check has therefore NEVER protected the
+          # vendored copy it was added to protect.
+          #
+          # Each path is now diffed in ITS OWN repository. Format: <repo>:<path>,
+          # where "." is the parent.
+          PATHS=".:docs/nav/route-inventory.json business-suite-unified:src/data/route-inventory.json"
           drift=0
-          for p in $PATHS; do
-            if ! git diff --quiet -- "$p"; then
-              echo "::error file=$p::Route inventory drifted. Regenerate with: python3 docs/nav/build-inventory.py"
-              git --no-pager diff --stat -- "$p" || true
+          for entry in $PATHS; do
+            repo="${entry%%:*}"
+            p="${entry#*:}"
+            if ! git -C "$repo" diff --quiet -- "$p"; then
+              echo "::error file=$repo/$p::Route inventory drifted. Regenerate with: python3 docs/nav/build-inventory.py"
+              git -C "$repo" --no-pager diff --stat -- "$p" || true
               # NOT `git diff | head -40`. Under `set -o pipefail`, head closing the
               # pipe early sends SIGPIPE to git and the step exits 141 instead of the
               # intended 1 — which is exactly what run 31787346283 reported, turning a
               # legitimate drift failure into an inscrutable "exit code 141". Capture
               # first, truncate the variable, never let a pipe carry the exit status.
-              diff_text="$(git --no-pager diff -- "$p" || true)"
+              diff_text="$(git -C "$repo" --no-pager diff -- "$p" || true)"
               printf '%s\n' "$diff_text" | awk 'NR<=40'
               lines=$(printf '%s\n' "$diff_text" | wc -l)
               if [ "$lines" -gt 40 ]; then
