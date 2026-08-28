@@ -16,10 +16,21 @@
 > `report_catalog_entity_tenant_scope` exist to answer — but verify any control against the live
 > catalog, never against this document.
 
+> **Status: Superseded.** This document describes a past state and will not be revised.
+>
+> **Marker corrected 2026-08-28: `v1.00A` → `v1.00F`.** The banner above is this document's own
+> declaration that it is closed; `A` said the opposite. Under the operator ruling of
+> 2026-08-26, **`F` means frozen** — a statement about this document's *mutability*, not a claim
+> that the work it describes is current and not a ranking of authority against its successor.
+> This supersedes the reasoning in the banner above, which kept `A` because it read `F` as a
+> completion claim. The 2026-08-26 ruling settles that: `F` is mutability, so the fact that the
+> spec *was approved* on 2026-05-19 is preserved by this note rather than by a letter that also
+> reads as "ready for use" on a spec the banner says must not be implemented.
+
 
 | Field | Value |
 | --- | --- |
-| Document version | v1.00A (Approved spec) — **and never implemented; superseded, see the banner above.** The `A` marker records that this spec *was approved* on 2026-05-19, which is a fact and is why the marker is unchanged. It does **not** mean the design is live: the `report_catalog_*` family was built instead. An Approved marker on unbuilt work is exactly how a superseded decision survives, so the banner, not the letter, carries the status. |
+| Document version | v1.00F (Frozen) — **approved 2026-05-19 and never implemented; superseded, see the banner above.** The letter was `A` until 2026-08-28 on the reasoning that it recorded the fact of approval. The operator's 2026-08-26 ruling replaced that: `F` states this document will not change again, which is true, while `A` also reads as *ready for use* on a spec that must not be built. The approval remains a fact and is recorded in this row; it is no longer carried by a letter that misstates the document's status. |
 | Date | 2026-05-19 |
 | Backlog ID | G-5 (`docs/20260501-merged-execution-backlog-v1.00W.md`) |
 | Issue | [bsuite#494](https://github.com/GaryOcean428/bsuite/issues/494) |
