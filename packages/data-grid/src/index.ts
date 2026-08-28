@@ -36,3 +36,6 @@ export type {
 } from './types.js';
 
 export type { CellPosition, CellRange } from './lib/selection.js';
+export { DataGridToolbar, ROW_HEIGHTS, rowHeightNameFor } from './components/DataGridToolbar.js';
+export type { DataGridToolbarProps, RowHeightName } from './components/DataGridToolbar.js';
+export type { LinkEdit } from './types.js';
