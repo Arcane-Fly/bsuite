@@ -528,7 +528,31 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                 autoHeight ? 'flex-none overflow-visible' : 'flex-1 overflow-auto',
               )}
             >
-              {autoHeight ? <div ref={measureRef}>{content}</div> : content}
+              {/*
+               * `flow-root` is load-bearing, not cosmetic. This wrapper had no
+               * padding, border or formatting context of its own, and its parent
+               * is `overflow-visible` under autoHeight — so a last child's
+               * `margin-bottom` COLLAPSED THROUGH both and never reached
+               * `contentRect.height`. The observer then under-reported the
+               * content by exactly that margin, the grid allocated that many
+               * pixels too few, and the card rendered taller than its slot: the
+               * card's bottom border sat outside the item box. Measured on
+               * production /payroll/timesheets 2026-08-28 — a single `mb-8` on
+               * the card's only child put the surface 32px past its own border,
+               * which is 2rem, exactly the margin. 70 call sites across 45 files
+               * in crm7 alone start a CanvasCard with a margin-bearing child, so
+               * this is fixed HERE, in the measurement, rather than by deleting
+               * a margin on each page. `flow-root` establishes a block
+               * formatting context, which is the minimal thing that stops the
+               * collapse while changing nothing about how the content lays out.
+               */}
+              {autoHeight ? (
+                <div ref={measureRef} className="flow-root">
+                  {content}
+                </div>
+              ) : (
+                content
+              )}
             </div>
           </div>
         </div>
