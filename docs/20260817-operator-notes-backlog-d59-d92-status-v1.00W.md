@@ -5,7 +5,7 @@
 
 > This is item **G1** in `docs/20260817-estate-completion-ledger-v1.00W.md` — the cluster that
 > ledger called *"the largest single omission"*. It closes that gap. It supersedes the status
-> columns of `docs/20260814-notes-backlog-verification-register-v1.00D.md`; that register's
+> columns of `docs/20260814-notes-backlog-verification-register-v1.00F.md`; that register's
 > evidence and numbering stay the reference, its verdicts are replaced by these.
 
 ---
