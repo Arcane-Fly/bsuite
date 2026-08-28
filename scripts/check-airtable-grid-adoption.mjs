@@ -66,10 +66,29 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, '..');
+/*
+ * The tree to scan. Normally the repo this script lives in.
+ *
+ * `AIRTABLE_GRID_SCAN_ROOT` overrides it, and exists for one specific job: the
+ * apps are SUBMODULES, so CI scans whatever the gitlinks point at, while a
+ * developer's checkout has each app on some feature branch. Those are different
+ * trees, and a baseline banked from the second is a floor the first can never
+ * meet — this estate has already banked a ratchet at a number measured against
+ * the wrong tree and spent weeks reading a red gate as merely red.
+ *
+ * Point it at a directory of the apps checked out at their gitlink SHAs to bank
+ * numbers CI can actually reproduce. The BASELINE path is deliberately NOT
+ * affected: the baseline belongs to the repo, not to the tree being measured.
+ */
+const ROOT = process.env.AIRTABLE_GRID_SCAN_ROOT
+  ? resolve(process.env.AIRTABLE_GRID_SCAN_ROOT)
+  : resolve(HERE, '..');
 const BASELINE = join(HERE, 'airtable-grid-adoption-baseline.json');
 
 const APPS = ['crm7', 'business-suite-unified', 'conduit', 'braden', 'throughput'];
+
+const ROW_TAGS = ['<TableRow', '<tr'];
+const TAG_DELIMITERS = new Set([' ', '\n', '\t', '\r', '>', '/']);
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '.next', 'coverage', '.vercel']);
 const isCounted = (name) =>
@@ -173,15 +192,158 @@ if (process.argv.includes('--self-test')) {
       failed += 1;
     }
   }
+
+  /*
+   * The click-through detector had no controls at all until 2026-08-28, which
+   * is how it came to be defined and never called. A detector nobody tested is
+   * the one most likely to be silently inert.
+   *
+   * The negative controls matter more than the positive ones here: an onClick
+   * on a CELL, or on a button inside a row, is not row-level click-through, and
+   * counting it would bank files into the protected set that never had the
+   * capability — making the gate fail later for a navigation that never existed.
+   */
+  const clickCases = [
+    ['<TableRow onClick={() => go(id)}>', true, 'onClick directly on the row'],
+    ['<TableRow className="cursor-pointer" onClick={f}>', true, 'cursor-pointer AND onClick'],
+    ['<TableRow className="cursor-pointer">', true, 'cursor-pointer alone still signals an interactive row'],
+    ['<TableRow>\n<TableCell onClick={f}/>\n</TableRow>', false, 'onClick on a CELL is not row-level'],
+    ['<TableRow>\n<Button onClick={f}/>\n</TableRow>', false, 'a button inside a row is not row-level'],
+    [
+      '<TableRow onMouseEnter={() => hover(id)} onClick={open}>',
+      true,
+      'an arrow function in an EARLIER prop must not truncate the tag at the > of =>',
+    ],
+    ['<TableRow onClick={() => go(id)}>', true, 'an arrow function in the onClick itself'],
+    ['<tr onClick={open}>', true, 'a plain <tr> row is click-through too'],
+    ['<tr className="cursor-pointer">', true, 'a plain <tr> marked interactive'],
+    ['<tr>\n<td onClick={f}/>\n</tr>', false, 'onClick on a <td> is not row-level'],
+    ['<track onClick={f}/>', false, '<track> must not be read as <tr>'],
+    ['<tr>', false, 'a plain non-interactive <tr>'],
+    ['<TableRow>', false, 'a plain row'],
+    ['<div onClick={f}>', false, 'a div outside any table'],
+  ];
+  for (const [source, expected, why] of clickCases) {
+    const got = hasRowLevelClickThrough(source);
+    if (got !== expected) {
+      console.error(`SELF-TEST FAIL: ${why} — expected ${expected}, got ${got}`);
+      failed += 1;
+    }
+  }
+
+  // The conversion check itself: a converted file WITHOUT onRowClick is the
+  // regression this whole mechanism exists to catch.
+  const convCases = [
+    ['<DataGrid columns={c} data={d} onRowClick={open} />', true, 'converted AND keeps click-through'],
+    ['<DataGrid columns={c} data={d} />', false, 'converted and DROPPED click-through'],
+  ];
+  for (const [source, expected, why] of convCases) {
+    const got = usesDataGrid(source) && hasRowClick(source);
+    if (got !== expected) {
+      console.error(`SELF-TEST FAIL: ${why} — expected ${expected}, got ${got}`);
+      failed += 1;
+    }
+  }
   if (failed > 0) {
     console.error(`\nSELF-TEST FAILED (${failed}). The counter is broken; its numbers must not be believed.`);
     process.exit(2);
   }
-  console.log(`self-test OK — ${cases.length + gridCases.length} controls, including ${cases.filter((c) => c[1] === 0).length} that must NOT count.`);
+  const negatives =
+    cases.filter((c) => c[1] === 0).length +
+    gridCases.filter((c) => c[1] === 0).length +
+    clickCases.filter((c) => c[1] === false).length +
+    convCases.filter((c) => c[1] === false).length;
+  console.log(
+    `self-test OK — ${cases.length + gridCases.length + clickCases.length + convCases.length} controls, ` +
+      `including ${negatives} that must NOT count.`,
+  );
   process.exit(0);
 }
 
+/*
+ * CLICK-THROUGH MUST SURVIVE THE CONVERSION.
+ *
+ * Operator, 2026-08-28: "make sure table that currently enable click through
+ * to a record still maintain this capability."
+ *
+ * A hand-rolled table opens its record with `<TableRow onClick>`. Converting
+ * that table to a grid without wiring `onRowClick` silently turns a working
+ * navigation into a dead list — and it reads as PROGRESS on the adoption
+ * count, because the table did move onto the grid. The ratchet would applaud
+ * a regression.
+ *
+ * So the files that had row-level click-through are recorded, and any of them
+ * that renders a DataGrid must also pass onRowClick. Recorded by PATH rather
+ * than re-derived, because once a file is converted the `<TableRow onClick>`
+ * evidence is GONE — a detector that recomputes the list would forget the file
+ * ever had the capability, which is precisely when it needs to remember.
+ */
+function usesDataGrid(text) {
+  return countDataGrid(text) > 0;
+}
+function hasRowClick(text) {
+  return text.includes('onRowClick');
+}
+/*
+ * The OPENING TAG of the element starting at `from`, or '' if it never closes.
+ *
+ * Naively taking everything up to the first `>` is wrong, and wrong in the
+ * direction that loses data: in
+ *
+ *     <TableRow onMouseEnter={() => hover(id)} onClick={open}>
+ *
+ * the first `>` is the one in `=>`, so the naive slice stops at
+ * `<TableRow onMouseEnter={() =` and the onClick is never seen. The row reads
+ * as non-interactive, never enters the protected set, and a later conversion
+ * drops its navigation with nothing to object. An arrow function in a prop
+ * BEFORE the onClick is ordinary React, not a corner case.
+ *
+ * So track brace depth and close the tag only at a `>` outside any `{...}`.
+ */
+function openingTag(text, from) {
+  let depth = 0;
+  for (let i = from; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === '{') depth += 1;
+    else if (ch === '}') depth -= 1;
+    else if (ch === '>' && depth === 0) return text.slice(from, i);
+  }
+  return '';
+}
+
+/*
+ * BOTH row elements, because the estate uses both.
+ *
+ * `<TableRow>` is the shadcn component; `<tr>` is the plain element used by the
+ * hand-rolled `<table>`s. Checking only the first looked complete — crm7 is
+ * almost entirely shadcn — and missed NINE files with working row click-through
+ * (four in crm7, five in business-suite-unified, whose 28 hand-rolled tables
+ * contain no `<TableRow>` at all). A gate is only as good as its narrowest
+ * axis, and a protected set that silently excludes an entire element is the
+ * narrow axis pretending to be the whole sweep.
+ *
+ * The `<tr` scan must not match `<track`, so require a delimiter after it.
+ */
+function hasRowLevelClickThrough(text) {
+  // ROW-level only: an onClick on a cell, or on a button inside the row, is a
+  // different control, and banking it would protect a navigation that never
+  // existed — so the gate would later fail over a loss that never happened.
+  for (const tagName of ROW_TAGS) {
+    let i = text.indexOf(tagName);
+    while (i !== -1) {
+      const next = text[i + tagName.length];
+      if (next !== undefined && TAG_DELIMITERS.has(next)) {
+        const tag = openingTag(text, i);
+        if (tag.includes('onClick') || tag.includes('cursor-pointer')) return true;
+      }
+      i = text.indexOf(tagName, i + 1);
+    }
+  }
+  return false;
+}
+
 const measured = {};
+const clickThroughByApp = {};
 let examinedFiles = 0;
 for (const app of APPS) {
   const src = join(ROOT, app, 'src');
@@ -190,6 +352,7 @@ for (const app of APPS) {
   let handRolled = 0;
   let dataGrid = 0;
   const sites = [];
+  const clickThrough = [];
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const t = countTables(text);
@@ -197,8 +360,10 @@ for (const app of APPS) {
     handRolled += t;
     dataGrid += d;
     if (t > 0) sites.push(relative(ROOT, file));
+    if (hasRowLevelClickThrough(text)) clickThrough.push(relative(ROOT, file));
   }
   measured[app] = { handRolled, dataGrid, files: sites.length };
+  clickThroughByApp[app] = clickThrough.sort();
 }
 
 /*
@@ -214,6 +379,33 @@ if (examinedFiles === 0) {
 
 const updating = process.argv.includes('--update');
 
+// Read first: --update needs the prior baseline to union the protected set, and
+// a missing one on a verify run is a hard failure below rather than a silent 0.
+let existingBaseline = null;
+try {
+  existingBaseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
+} catch {
+  existingBaseline = null;
+}
+
+/*
+ * THE PROTECTED SET IS A UNION, NEVER AN OVERWRITE.
+ *
+ * `hasRowLevelClickThrough` can only see a file that still renders
+ * `<TableRow>`. The moment a file is converted the evidence is gone and the
+ * measured set no longer contains it. So banking the measured set verbatim
+ * would REMOVE each file from protection on the very commit that converts it —
+ * the gate would forget the capability at the exact instant it became possible
+ * to lose it, and would then report a clean run forever.
+ *
+ * Union with what is already banked. The set only grows; a file leaves it by
+ * being deleted, and that is reported rather than assumed.
+ */
+function unionClickThrough(app) {
+  const prior = existingBaseline?.clickThrough?.[app] ?? [];
+  return [...new Set([...prior, ...clickThroughByApp[app]])].sort();
+}
+
 if (updating) {
   const banked = {
     _doc:
@@ -222,17 +414,22 @@ if (updating) {
       'table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind ' +
       'cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.',
     _measured: `${examinedFiles} .tsx files examined across ${APPS.length} apps`,
+    _clickThroughDoc:
+      'Files that HAD row-level click-through to a record. Recorded by PATH because a conversion ' +
+      'destroys the <TableRow onClick> evidence. Any file here that renders a DataGrid must pass ' +
+      'onRowClick, or the conversion turned a working navigation into a dead list. Operator ask ' +
+      '2026-08-28: "make sure table that currently enable click through to a record still maintain ' +
+      'this capability." The set is a UNION and only grows.',
     apps: measured,
+    clickThrough: Object.fromEntries(APPS.map((a) => [a, unionClickThrough(a)])),
   };
   writeFileSync(BASELINE, `${JSON.stringify(banked, null, 2)}\n`);
   console.log(`banked: ${JSON.stringify(measured)}`);
   process.exit(0);
 }
 
-let baseline;
-try {
-  baseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
-} catch {
+const baseline = existingBaseline;
+if (!baseline) {
   console.error(`FAIL: no baseline at ${relative(ROOT, BASELINE)}. Run with --update to bank the current counts.`);
   process.exit(2);
 }
@@ -258,6 +455,43 @@ for (const app of APPS) {
   }
 }
 
+/*
+ * The click-through check. This is the half of the gate that protects a
+ * CAPABILITY rather than a count — and the count alone would applaud its loss,
+ * because a converted table is progress by every other measure here.
+ */
+let protectedFiles = 0;
+let stillHandRolled = 0;
+for (const app of APPS) {
+  for (const rel of baseline.clickThrough?.[app] ?? []) {
+    protectedFiles += 1;
+    let text;
+    try {
+      text = readFileSync(join(ROOT, rel), 'utf8');
+    } catch {
+      // Deleted or renamed. Either may be legitimate, but neither may be
+      // guessed at: a rename that silently drops the file from the set is
+      // indistinguishable from a conversion that dropped the navigation.
+      problems.push(
+        `${rel} is in the click-through set but cannot be read. If it moved, re-bank with --update in ` +
+          'the same commit; if it was deleted, say so there too. Do not let it fall out silently.',
+      );
+      continue;
+    }
+    if (usesDataGrid(text)) {
+      if (!hasRowClick(text)) {
+        problems.push(
+          `${rel} opened a record on row click, and its DataGrid conversion does not pass onRowClick. ` +
+            'The list still renders, so every other check here reads this as progress — but the ' +
+            'navigation is gone. Wire onRowClick.',
+        );
+      }
+    } else {
+      stillHandRolled += 1;
+    }
+  }
+}
+
 const totalNow = APPS.reduce((sum, a) => sum + measured[a].handRolled, 0);
 const gridNow = APPS.reduce((sum, a) => sum + measured[a].dataGrid, 0);
 
@@ -271,4 +505,8 @@ if (problems.length > 0) {
 console.log(
   `Airtable-style grid adoption OK — examined ${examinedFiles} .tsx files; ` +
     `hand-rolled tables ${totalNow} (baseline holds), DataGrid ${gridNow}.`,
+);
+console.log(
+  `click-through: ${protectedFiles} file(s) protected, ${protectedFiles - stillHandRolled} converted and ` +
+    `keeping onRowClick, ${stillHandRolled} not yet converted.`,
 );
