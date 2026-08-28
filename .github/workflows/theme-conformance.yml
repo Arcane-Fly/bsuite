@@ -74,16 +74,27 @@ on:
       # the globs above can see one. A gitlink is a single line in the tree, not
       # a .tsx or .css file.
       #
-      # Without these six lines the gate is a decoration on exactly the change
-      # it exists to police. Measured 2026-08-28: PR #2698 advanced the crm7 and
-      # conduit pointers and this workflow DID NOT RUN AT ALL — it was absent
-      # from the head SHA's 30 check-runs, and a check missing from the rollup
-      # reads as passing. A live near-pure violation
-      # (business-suite-unified Analytics.tsx, L=0.99) sat behind that silence.
+      # THE CASE THIS ACTUALLY COVERS, stated precisely, because I first wrote
+      # something stronger and it was WRONG. GitHub evaluates `paths:` against
+      # the PR's WHOLE changeset, not the latest commit. So a mixed PR that also
+      # touches a .tsx or a script matches the globs above and this gate runs
+      # regardless of these six lines.
       #
-      # nested-card-chrome-ratchet.yml already carries this list and its header
-      # states that "the sibling theme-conformance.yml carries the same list for
-      # the same reason". It did not. That claim is now true.
+      # What these lines fix is the GITLINK-ONLY PR — and this estate creates
+      # those routinely, as `chore/advance-gitlinks-*` / `promote:` branches
+      # whose entire diff is six pointer lines. For those, nothing above can
+      # match, the gate never runs, and a check missing from the rollup reads as
+      # passing. That is the promotion PR: the exact moment a pointer carries a
+      # new violation into production.
+      #
+      # (The claim originally written here — that #2698 "did not run at all" —
+      # came from reading a check-runs response truncated at its 30-item default
+      # page. The real total was 77 and the gate had run, and failed, for the
+      # C2 reason. Corrected rather than deleted, because the wrong version is
+      # the more instructive half.)
+      #
+      # nested-card-chrome-ratchet.yml already carries this list; this file now
+      # matches it, which is what its header always claimed.
       - 'crm7'
       - 'conduit'
       - 'business-suite-unified'
