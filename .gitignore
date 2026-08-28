@@ -52,7 +52,6 @@ supabase/.temp/
 .smoke-artefacts/
 
 # Scratch files
-clinework.txt
 
 # Git worktrees
 .worktrees/
