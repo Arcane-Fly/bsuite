@@ -36,6 +36,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { isPointerFile } from './lib/doc-conventions.mjs';
 
 // A completion word inside a HYPHENATED PHRASE is not a completion marker.
 // `20260805-portal-persona-jobs-to-be-done-v1.00W.md` was counted as "already marked
@@ -494,7 +495,15 @@ function walk(dir, out = []) {
 const rows_ = [];
 for (const root of roots) {
   for (const p of walk(join(root, 'docs'))) {
-    rows_.push({ path: p, ...classify(readFileSync(p, 'utf8'), p.split('/').pop(), artifactsPresent, p) });
+    const text = readFileSync(p, 'utf8');
+    /* A POINTER IS NOT A DOCUMENT. It has no claim to bind and no content to go
+       stale — its only failure mode is a dangling link, which
+       check-docs-links-and-pins owns. Counting one as UNBOUND files a signpost in
+       the backlog of documents that can never be shown complete, which is the wrong
+       backlog. Same predicate check-doc-naming and check-doc-classification use,
+       imported from the same module so the three cannot disagree. */
+    if (isPointerFile(text)) continue;
+    rows_.push({ path: p, ...classify(text, p.split('/').pop(), artifactsPresent, p) });
   }
 }
 

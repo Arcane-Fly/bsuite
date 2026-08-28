@@ -35,7 +35,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
-import { NAVIGATIONAL_FILES as SKIP_FILE } from './lib/doc-conventions.mjs'
+import { NAVIGATIONAL_FILES as SKIP_FILE, isPointerFile } from './lib/doc-conventions.mjs'
 
 const argv = process.argv.slice(2)
 const warnOnly = argv.includes('--warn-only')
@@ -69,11 +69,33 @@ const NUMBERED_PART = /^\d{2,3}-[a-z0-9][a-z0-9.-]*\.md$/i
  * Classify one file. Returns a family name, or a violation code prefixed `!`.
  * `segs` is the path split into directory segments, nearest-first.
  */
-export function classify(name, segs = []) {
+/**
+ * A POINTER IS NOT A DOCUMENT, AND THE NEAR-MISS RULE'S HARM DOES NOT REACH IT.
+ *
+ * `!near-miss-date` exists for one reason, stated at the top of this file: a
+ * `2026-08-28-x.md` name reads as dated to a person and matches nothing to a
+ * scanner keying on `^\d{8}`, so the FILE'S CONTENT goes stale unseen. A file whose
+ * whole body is "the document lives over there" has no content that can go stale;
+ * its only failure mode is a dangling link, which check-docs-links-and-pins owns.
+ *
+ * WHY IT EXISTS. `plan-brainstorming` writes designs to
+ * `docs/plans/YYYY-MM-DD-<topic>-design.md` and the operator asked for that path by
+ * name (bsuite#2670); this gate requires `YYYYMMDD-<name>-v<version><STATUS>.md`.
+ * Both conventions are right. A byte-identical copy in both places satisfied
+ * neither and was correctly deleted once (#2667). A pointer satisfies both.
+ *
+ * IT RESCUES ONLY A NAME THAT WOULD OTHERWISE BE A VIOLATION. Checking it first
+ * classified a CONFORMING filename as a pointer — the self-test's control caught
+ * that, and it is the whole reason the control exists: a family that can override a
+ * good name is a family that can hide anything.
+ *
+ * The lasting fix is the SKILL's convention, not this gate.
+ */
+export function classify(name, segs = [], text = null) {
   const lower = name.toLowerCase()
   if (SKIP_FILE.has(lower)) return 'skip'
   if (segs.some((s) => FREEFORM_DIR.has(s.toLowerCase()))) return 'freeform'
-  if (NEAR_MISS_DATE.test(name)) return '!near-miss-date'
+  if (NEAR_MISS_DATE.test(name)) return isPointerFile(text) ? 'pointer' : '!near-miss-date'
   if (/^\d{8}-/.test(name)) return DATED.test(name) ? 'dated' : '!dated-malformed'
   if (segs.some((s) => s.toLowerCase() === 'adr') && ADR.test(name)) return 'adr'
   if (DATED_DIR.test(segs[0] || '') && NUMBERED_PART.test(name)) return 'dated-dir-part'
@@ -162,6 +184,20 @@ if (selfTest) {
     ['2026-05-04-adopt-dnd-dashboard.md', ['plans'], '!near-miss-date'],
     ['2026-05-04-shadcn-init.md', ['plans'], '!near-miss-date'],
     ['2026.05.04-thing.md', ['plans'], '!near-miss-date'],
+    /* THE POINTER FAMILY — content-detected, never name- or path-detected.
+       The negative control is the point: the SAME near-miss filename carrying
+       ordinary document content must STILL be a violation, or this family would
+       launder every near-miss name in the estate. */
+    ['2026-08-28-messaging-platform-design.md', ['plans'], 'pointer',
+      '# Messaging Platform\n\n**This file is a pointer. The design lives at [x](y).**\n'],
+    ['2026-08-28-messaging-platform-design.md', ['plans'], '!near-miss-date',
+      '# Messaging Platform\n\nThe design decision is to use Mobile Message.\n'],
+    /* the declaration must sit near the TOP — a mention buried in the body is not a claim */
+    ['2026-08-28-x.md', ['plans'], '!near-miss-date',
+      '# X\n' + '\n'.repeat(20) + 'this file is a pointer\n'],
+    /* a CONFORMING name is classified by its NAME; the family must not override it */
+    ['20260828-x-v1.00W.md', ['plans'], 'dated',
+      '**This file is a pointer.**\n'],
     /* a near-miss inside a freeform dir is still freeform — dir wins */
     ['2026-05-04-thing.md', ['references'], 'freeform'],
     /* ADR numbering, only inside an adr/ directory */
@@ -198,8 +234,8 @@ if (selfTest) {
   ]
   let pass = 0
   const fails = []
-  for (const [name, segs, want] of cases) {
-    const got = classify(name, segs)
+  for (const [name, segs, want, text] of cases) {
+    const got = classify(name, segs, text ?? null)
     if (got === want) pass++
     else fails.push(`  ${name} in [${segs}] -> ${got}, wanted ${want}`)
   }
@@ -398,7 +434,14 @@ function walk(dir, segs) {
       if (SKIP_DIR.has(ent.name.toLowerCase())) continue
       walk(p, [ent.name, ...segs])
     } else if (ent.isFile() && ent.name.endsWith('.md')) {
-      const fam = classify(ent.name, segs)
+      // Read the file only when its NAME is already a violation — the pointer
+      // family is the sole content-dependent branch, so reading every file
+      // would be ~450 needless opens per run.
+      let text = null
+      if (NEAR_MISS_DATE.test(ent.name)) {
+        try { text = fs.readFileSync(p, 'utf8') } catch { text = null }
+      }
+      const fam = classify(ent.name, segs, text)
       if (fam === 'adr') {
         const m = ent.name.match(/^(?:ADR-)?(\d{4})-/i)
         if (m) adrs.push({ dir, num: m[1], file: ent.name })
