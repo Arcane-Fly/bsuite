@@ -1256,10 +1256,39 @@ export const GUARDS = [
     ciWorkflow: 'crm7/.github/workflows/db-lint.yml',
     mode: 'run',
     evidence:
-      '"[lint-migrations-revoke-anon] OK (full-tree mode): 181 in-scope ' +
-      'SECURITY DEFINER public function(s) scanned, 251 named REVOKE ' +
+      // 181/251 until 2026-08-28. The counts did not drift — the gate was RED
+      // for four months because crm7 filed 658 migrations into
+      // supabase/migrations/archive/ and the wildcard REVOKE went with them,
+      // out of a flat readdir's view. Recorded evidence is what proved the
+      // gate had once been green, which is how the regression was told apart
+      // from a gate that had always been broken.
+      '"[lint-migrations-revoke-anon] OK (full-tree mode): 211 in-scope ' +
+      'SECURITY DEFINER public function(s) scanned, 290 named REVOKE ' +
       'pair(s) tree-wide + wildcard REVOKE on schema public, 0 explicit ' +
       'allow-marker(s)."',
+  },
+  {
+    // BSU RUNS THE SAME SCRIPT AND HAD NO ROW HERE. Only crm7 was registered, so
+    // the estate's own guard inventory could not tell that BSU's copy full-tree
+    // exits 1 — and on 2026-08-28 it did, on four SECURITY DEFINER functions this
+    // repository defines and never revoked. A guard nobody registered is a guard
+    // nobody reads.
+    //
+    // It is `mode: 'run'` with a FAILING baseline recorded deliberately: the one
+    // remaining finding is public.rename_physical_column, whose migration
+    // (20260506000000) is RECORDED APPLIED while the function is absent from the
+    // live catalog. That is a phantom migration, not a grant defect, and writing
+    // a REVOKE for it would turn this gate green over an unrepaired ledger.
+    id: 'bsu-lint-migrations-revoke-anon',
+    label: 'REVOKE FROM anon pairing for SECURITY DEFINER functions (BSU, full-tree)',
+    repo: 'business-suite-unified',
+    command: ['node', 'scripts/lint-migrations-revoke-anon.mjs', 'supabase/migrations'],
+    ciWorkflow: 'business-suite-unified/.github/workflows/db-lint.yml',
+    mode: 'run',
+    evidence:
+      '"[lint-migrations-revoke-anon] FAIL (full-tree mode): 1 in-scope SECURITY ' +
+      'DEFINER public function(s) lack a REVOKE FROM anon / FROM public pair." ' +
+      '— public.rename_physical_column, blocked on the 20260506000000 phantom.',
   },
   {
     id: 'crm7-lint-migrations-secdef-search-path',

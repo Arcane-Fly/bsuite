@@ -20,6 +20,15 @@
 > Re-running the 7-signal sweep over the full 402 is the outstanding work; this banner is not a
 > substitute for it.
 
+> **Status: Superseded.** This document describes a past state and will not be revised.
+>
+> **Marker corrected 2026-08-28: `v1.00W` → `v1.00F`.** The banner above is this document's own
+> declaration that it is closed; `W` said the opposite. Under the operator ruling of
+> 2026-08-26, **`F` means frozen** — a statement about this document's *mutability*, not a claim
+> that the work it describes is current and not a ranking of authority against its successor.
+> Re-running the 7-signal sweep over the full 402 tables produces a NEW document; this one is
+> the closed record of the 2026-05-06 pass and will not be revised.
+
 **Status:** Working (W) — per-table conclusions stand for the 2026-05-06 population; the population itself is superseded (see banner). Recommendations require per-table human sign-off before any drop migration is written.
 **DB Project:** `tuybltdrdefjblnplpqo` (shared CRM7 / BSU / R80.4 / throughput / conduit / braden Supabase instance — R80.3 was the submodule when this was written; it was replaced by R80.4 on 2026-08-06)
 **Scope:** All 229 `public.*` tables **as at 2026-05-06**, audited for usage across 7 independent signal dimensions. Live count 2026-08-17: **402**.

@@ -37,7 +37,7 @@ Two self-inflicted defects while producing it, both worth the space:
   cite nothing checkable                         426
   historical records (by path or banner)         43
   BINDABLE — these name a gate that exists, so their claim is checkable:
-    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md
+    docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md
         publish-ui.yml
     docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00F.md
         verify-class-a-preservation.mjs
@@ -120,7 +120,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 |---|---|---|---|
 | `crm7/docs/audits/20260811-colour-drift-full-tree-audit-v1.00D.md` | BINDABLE |  | lint-ratchet.mjs |
 | `crm7/docs/audits/20260811-pgtap-evidence-integrity-v1.00D.md` | BINDABLE |  | pgtap.yml |
-| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md` | BINDABLE |  | publish-ui.yml |
+| `docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md` | BINDABLE |  | publish-ui.yml |
 | `docs/00-roadmap/20260809-class-a-baseline-before-the-batch-v1.00F.md` | BINDABLE |  | verify-class-a-preservation.mjs |
 | `docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md` | BINDABLE |  | verify-esm-imports.sh, codemod-inline-colour-styles.mjs, audit-applied-tokens.mjs |
 | `docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md` | BINDABLE |  | ci.yml |
@@ -292,7 +292,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260424-env-var-contributing-rules-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260427-conduit-auth-doctrine-investigation-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260427-dev-main-fork-rca-v1.00F.md` | UNBOUND |  | — |
-| `docs/20260427-security-definer-audit-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260427-security-definer-audit-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260428-operator-verification/03-oauth-state-secret.md` | UNBOUND |  | — |
 | `docs/20260428-operator-verification/04-tga-gucs.md` | UNBOUND |  | — |
 | `docs/20260428-operator-verification/05-tga-sync-enabled.md` | UNBOUND |  | — |
@@ -309,7 +309,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260506-pay-periods-parity-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260506-reports-parity-spec-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260506-supabase-linter-action-plan-v1.00W.md` | UNBOUND |  | — |
-| `docs/20260506-table-usage-audit-v1.00W.md` | UNBOUND |  | — |
+| `docs/20260506-table-usage-audit-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260506-timesheet-entry-parity-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260507-admin-parity-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260507-comms-parity-spec-v1.00W.md` | UNBOUND |  | — |
@@ -317,7 +317,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260507-red-team-ux-doctrine-v1.00A.md` | UNBOUND |  | — |
 | `docs/20260507-timesheet-approval-parity-spec-v1.00W.md` | UNBOUND |  | — |
 | `docs/20260507-w4-permissions-editor-scoping-v1.00A.md` | UNBOUND |  | — |
-| `docs/20260519-rpc-report-page-security-review-v1.00A.md` | UNBOUND |  | — |
+| `docs/20260519-rpc-report-page-security-review-v1.00F.md` | UNBOUND |  | — |
 | `docs/20260519-storage-rls-four-persona-matrix-v1.00A.md` | UNBOUND |  | — |
 | `docs/20260519-xero-payroll-au-stp-path-decision-v1.00A.md` | UNBOUND |  | — |
 | `docs/20260629-bsuite-role-rls-subscription-parity-matrix-v1.00W.md` | UNBOUND |  | — |
@@ -506,7 +506,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `R80.4/docs/00-roadmap/20260820-r8-state-of-play-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/00-roadmap/20260822-rates-permission-and-delegation-model-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/20260807-award-modelling-next-stage-brief-v1.00W.md` | UNBOUND |  | — |
-| `R80.4/docs/handoff/20260804-r804-to-pi-v1.00W.md` | UNBOUND |  | — |
+| `R80.4/docs/handoff/20260804-r804-to-pi-v1.00F.md` | UNBOUND |  | — |
 | `R80.4/docs/methodology/20260802-award-pattern-matrix-reference-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/methodology/20260802-clause-tracing-methodology-guide-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/methodology/20260802-data-units-reference-v1.00A.md` | UNBOUND |  | — |

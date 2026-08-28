@@ -11,8 +11,17 @@
 > Retained as the record of what the 2026-07-25 excellence loop decided and shipped. If you need an
 > item from here, re-measure it against R80.4 first — do not assume it carries over.
 
+> **Status: Superseded.** This document describes a past state and will not be revised.
+>
+> **Marker corrected 2026-08-28: `v1.00W` → `v1.00F`.** The banner above is this document's own
+> declaration that it is closed; `W` said the opposite. Under the operator ruling of
+> 2026-08-26, **`F` means frozen** — a statement about this document's *mutability*, not a claim
+> that the work it describes is current and not a ranking of authority against its successor.
+> A superseded execution plan is history: it records what the 2026-07-25 loop decided, and the
+> register named above is the live authority.
 
-> Status **W** · 2026-07-25 · Red-team planning ×2 → implement via subagent-driven development  
+
+> Status **F** (frozen 2026-08-28; **W** while it was live) · 2026-07-25 · Red-team planning ×2 → implement via subagent-driven development  
 > Silo: `bsuite` · Index: `bsuite_project_truth_index`  
 > Objective lock: **Ship remaining shippable excellence gaps with binary verifiers; document operator-blocked items honestly; no Sydney cutover; no fake STA PROVEN promotion.**
 

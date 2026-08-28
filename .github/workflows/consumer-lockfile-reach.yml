@@ -197,11 +197,44 @@ jobs:
               "scripts/regen-consumer-lockfile.mjs: single '.' importer, overrides count" \
               "unchanged, and pnpm install --frozen-lockfile actually succeeds." \
               > /tmp/reach-msg.txt
-            git -C "$app" checkout -B "$br"
-            git -C "$app" add pnpm-lock.yaml
-            git -C "$app" -c user.name='BSuite CI' -c user.email='braden.lang77@gmail.com' \
-              commit -F /tmp/reach-msg.txt
-            git -C "$app" push -f origin "$br"
+            # THE COMMIT IS MADE THROUGH THE CONTENTS API, NOT `git commit`.
+            #
+            # A locally-made commit here is UNSIGNED, and an unsigned commit does
+            # not make Vercel FAIL the preview — it makes Vercel CANCEL it. A
+            # cancelled deploy leaves no red check, so the PR reads as healthy and
+            # simply has no preview to inspect. Every reach PR this workflow has
+            # ever opened was in that state.
+            #
+            # There is no GPG key in this repository's secrets to sign with, and
+            # `POST git/commits` will not sign for you — it only accepts a
+            # signature you supply. Commits created through the CONTENTS API are
+            # signed by GitHub itself, which is why the branch is built that way.
+            base=$(gh api "repos/$owner/$app/git/ref/heads/development" --jq .object.sha)
+            gh api -X PATCH "repos/$owner/$app/git/refs/heads/$br" \
+                 -f sha="$base" -F force=true >/dev/null 2>&1 \
+              || gh api -X POST "repos/$owner/$app/git/refs" \
+                   -f ref="refs/heads/$br" -f sha="$base" >/dev/null
+            # The contents API tops out at 1 MB. Fail LOUDLY at the ceiling rather
+            # than silently fall back to an unsigned commit, which is the exact
+            # failure this block exists to remove.
+            size=$(stat -c%s "$app/pnpm-lock.yaml")
+            if [ "$size" -gt 900000 ]; then
+              echo "::error title=$app: lockfile too large for a signed API commit::$size bytes; the contents API caps at 1 MB. This now needs a signing key in secrets, not a fallback."
+              exit 1
+            fi
+            fsha=$(gh api "repos/$owner/$app/contents/pnpm-lock.yaml?ref=$br" --jq .sha)
+            gh api -X PUT "repos/$owner/$app/contents/pnpm-lock.yaml" \
+                 -f message="$(cat /tmp/reach-msg.txt)" \
+                 -f content="$(base64 -w0 "$app/pnpm-lock.yaml")" \
+                 -f branch="$br" -f sha="$fsha" >/dev/null
+            # VERIFY IN THE SAME STEP AS THE WRITE. Asserting the intent instead of
+            # the result is how the unsigned commits went unnoticed for as long as
+            # they did.
+            head=$(gh api "repos/$owner/$app/git/ref/heads/$br" --jq .object.sha)
+            if [ "$(gh api "repos/$owner/$app/commits/$head" --jq .commit.verification.verified)" != "true" ]; then
+              echo "::error title=$app: the reach commit is UNSIGNED::Vercel cancels rather than fails the preview for an unsigned commit, so this would ship a PR with no deploy and no red check."
+              exit 1
+            fi
             # STATE-FILTERED, and that is the whole point. `gh pr view "$br"`
             # matches a PR on that branch in ANY state, so a previously CLOSED or
             # MERGED reach PR reads as an open one and this step silently opens

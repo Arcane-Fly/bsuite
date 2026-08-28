@@ -2,6 +2,8 @@
 
 > ## ⚠ POPULATION SUPERSEDED — re-measured 2026-08-17
 >
+> **Status: Superseded.** This document describes a past state and will not be revised.
+>
 > **This audit covered 59 `SECURITY DEFINER` functions. The live database now has 223.** Measured
 > against `tuybltdrdefjblnplpqo`:
 >
@@ -31,7 +33,14 @@
 > missing tenant predicate still returns another tenant's rows. Re-running the sweep over all 223
 > is the outstanding work.
 
-- **Doc id:** `20260427-security-definer-audit-v1.00W.md`
+> **Marker corrected 2026-08-28: `v1.00W` → `v1.00F`.** The banner above is this document's own
+> declaration that it is closed; `W` said the opposite. Under the operator ruling of
+> 2026-08-26, **`F` means frozen** — a statement about this document's *mutability*, not a claim
+> that the work it describes is current and not a ranking of authority against its successor.
+> Re-measuring the 164 unaudited functions produces a NEW document; this one is the closed
+> record of the 2026-04-27 pass and will not be revised.
+
+- **Doc id:** `20260427-security-definer-audit-v1.00F.md`
 - **Date:** 2026-04-27
 - **Auditor:** Claude Opus 4.7 (sub-agent run)
 - **Project:** Supabase `tuybltdrdefjblnplpqo` (BSuite shared backend)

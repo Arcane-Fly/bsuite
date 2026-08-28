@@ -7585,7 +7585,7 @@
     "status": "archived"
    },
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "name"
     ],
@@ -11952,7 +11952,7 @@
     "status": "current"
    },
    {
-    "path": "docs/20260506-table-usage-audit-v1.00W.md",
+    "path": "docs/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db"
     ],
@@ -11966,7 +11966,7 @@
     "status": "superseded"
    },
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db"
     ],
@@ -17746,7 +17746,7 @@
     "status": "current"
    },
    {
-    "path": "docs/20260506-table-usage-audit-v1.00W.md",
+    "path": "docs/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db",
      "route"
@@ -19132,7 +19132,7 @@
     "status": "current"
    },
    {
-    "path": "docs/20260506-table-usage-audit-v1.00W.md",
+    "path": "docs/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db",
      "route"
@@ -21036,7 +21036,7 @@
     "status": "historical"
    },
    {
-    "path": "docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00W.md",
+    "path": "docs/00-roadmap/20260725-excellence-closeout-implementation-plan-v1.00F.md",
     "why": [
      "db"
     ],
@@ -21840,7 +21840,7 @@
   "doc_coverage": "archive-only",
   "docs": [
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "name"
     ],
@@ -22960,7 +22960,7 @@
     "status": "current"
    },
    {
-    "path": "docs/20260506-table-usage-audit-v1.00W.md",
+    "path": "docs/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db"
     ],
@@ -23018,7 +23018,7 @@
     "status": "archived"
    },
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db"
     ],
@@ -32511,7 +32511,7 @@
     "status": "current"
    },
    {
-    "path": "docs/20260506-table-usage-audit-v1.00W.md",
+    "path": "docs/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db"
     ],
@@ -33867,7 +33867,7 @@
     "status": "current"
    },
    {
-    "path": "docs/20260506-table-usage-audit-v1.00W.md",
+    "path": "docs/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "db"
     ],
@@ -45494,7 +45494,7 @@
     "status": "archived"
    },
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "anchor"
     ],
@@ -49718,7 +49718,7 @@
     "status": "archived"
    },
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "anchor"
     ],
@@ -51222,7 +51222,7 @@
     "status": "archived"
    },
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "anchor"
     ],
@@ -51899,7 +51899,7 @@
     "status": "archived"
    },
    {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00W.md",
+    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260506-table-usage-audit-v1.00F.md",
     "why": [
      "anchor"
     ],
