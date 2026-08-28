@@ -230,4 +230,19 @@ comment on function public.reorder_entity_fields(uuid, uuid[]) is
   'fields of the entity — no missing, extra, or duplicate ids. See '
   'docs/20260504-schema-builder-phase-3-plan-v1.00W.md §3.A.';
 
+-- ---------------------------------------------------------------------------
+-- REVOKE, ADDED 2026-08-28.
+--
+-- The RPC above is SECURITY DEFINER and this file never revoked the default
+-- `GRANT EXECUTE ... TO PUBLIC` that PostgreSQL attaches on creation.
+--
+-- Safe to append rather than to supersede: this migration is NOT recorded in
+-- supabase_migrations.schema_migrations (checked 2026-08-28 on
+-- tuybltdrdefjblnplpqo) and public.reorder_entity_fields does not exist in the
+-- live catalog, so it has never run. The REVOKE will run WITH the CREATE
+-- whenever it does, which is the only ordering that is correct.
+-- ---------------------------------------------------------------------------
+REVOKE EXECUTE ON FUNCTION public.reorder_entity_fields(uuid, uuid[]) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.reorder_entity_fields(uuid, uuid[]) FROM public;
+
 COMMIT;

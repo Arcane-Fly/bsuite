@@ -650,8 +650,12 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"52 documents skipped as HISTORICAL; 666 source-path references checked; ' +
-      'UNRESOLVED 102 — MOVED 10, AMBIGUOUS 4, GONE 88" (2026-08-18). Refuses ' +
+      // Re-measured 2026-08-28: UNRESOLVED 102 -> 41. Recording the CURRENT
+      // output matters as much as recording that it once passed — a ten-day-old
+      // number reads as today's, and this one had improved by 60%.
+      '"773 source-path references checked; UNRESOLVED 41 — MOVED 0, ' +
+      'AMBIGUOUS 1, GONE 17, PROPOSED 23" (2026-08-28; was 102 UNRESOLVED on ' +
+      '2026-08-18). Refuses ' +
       'with exit 2 without submodules: the same run reports 240 unresolved in a ' +
       'bare worktree, so more than half those findings would be false.',
   },
@@ -663,9 +667,10 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"Files scanned: 392 live (52 more skipped as HISTORICAL) — ' +
-      'CHECKS-CLEAN 365, CHECKS-FAILED 27; RECORD pins set aside 69" ' +
-      '(2026-08-18). Actionable: 50 dangling link, 1 Tailwind (itself an audit ' +
+      // Re-measured 2026-08-28: CHECKS-FAILED 27 -> 12, TOTAL FINDINGS 19.
+      '"Files scanned: 442 (parent 333, six apps 109) — ' +
+      'CHECKS-CLEAN 430, CHECKS-FAILED 12; TOTAL FINDINGS 19" ' +
+      '(2026-08-28; was 27 failed on 2026-08-18). Actionable: dangling link, Tailwind (itself an audit ' +
       'REPORTING one), 0 authority pin, 0 template, 0 version. Refuses with ' +
       'exit 2 without submodules. TWO LIMBS WERE RETIRED AS PURE FALSE ' +
       'POSITIVES: the version limb emitted 12 findings and all twelve were ' +
@@ -1511,7 +1516,7 @@ export const GUARDS = [
     ciWorkflow: null,
     mode: 'report',
     evidence:
-      '"RENAMED-LINK candidates: 1 distinct" (2026-08-18, after the scorer was ' +
+      '"RENAMED-LINK candidates: 2 distinct" (2026-08-28; 1 on 2026-08-18, after the scorer was ' +
       'corrected three times). Found and fixed: v1.02A -> v1.04A across five ' +
       'PARENT-DOCS copies, feature-map v1.0.0 -> v1.00W, boot-compliance ' +
       'v1.00W -> v1.00A, and 21 links in two crm7 roadmaps. THE SCORER WAS ' +
