@@ -41,7 +41,27 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
-const SP = process.env.SP || '/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/08108081-3a6c-4f82-81b7-848dba9bb8bd/scratchpad';
+/*
+ * WHERE THE DB SNAPSHOT LIVES.
+ *
+ * This defaulted to a hard-coded path inside ONE AGENT SESSION'S scratchpad —
+ * `/tmp/claude-1000/.../08108081-.../scratchpad` — a directory belonging to a
+ * session that ended long ago. The script therefore could not run AT ALL for
+ * anyone, including in CI, and the failure was ENOENT on a path no reader
+ * would recognise as a scratchpad.
+ *
+ * That matters more than a broken script: `route-surface-map` tells you to fix
+ * its drift by running "node scripts/build-surface-map.mjs", so the REMEDY the
+ * gate prescribes was itself broken. A gate whose prescribed fix cannot run is
+ * a gate that can only ever be silenced, not satisfied. (The sibling
+ * export-surface-map.mjs carried the same defect and was corrected earlier;
+ * this one was missed because only the export path was searched.)
+ *
+ * Now: an explicit SP env var still wins, then a repo-relative snapshot
+ * directory, and if neither exists the script says exactly which files it
+ * needs rather than dying inside a readFileSync.
+ */
+const SP = process.env.SP || path.join(ROOT, 'docs', 'nav', 'db-snapshot');
 
 const APP_DIR = {
   crm7: 'crm7', bsu: 'business-suite-unified', conduit: 'conduit',
@@ -207,7 +227,24 @@ function walk(entry, appDir) {
 }
 
 // ---------------------------------------------------------------- db metadata
-const J = f => JSON.parse(fs.readFileSync(path.join(SP, 'db', f), 'utf8'));
+const J = f => {
+  // Two shapes accepted: <SP>/db/<file> (the original scratchpad layout) and
+  // <SP>/<file> (a plain snapshot directory), so an existing snapshot keeps
+  // working wherever it sits.
+  const candidates = [path.join(SP, 'db', f), path.join(SP, f)];
+  const hit = candidates.find(c => fs.existsSync(c));
+  if (!hit) {
+    console.error(
+      `build-surface-map: cannot find "${f}".\n` +
+      `  Looked in: ${candidates.join('\n             ')}\n` +
+      `  This script needs a DB snapshot (tables.json, policies.json, functions.json).\n` +
+      `  Point it somewhere with SP=/path/to/snapshot, or place the files in\n` +
+      `  docs/nav/db-snapshot/. Refusing rather than reading a stale map.`
+    );
+    process.exit(2);
+  }
+  return JSON.parse(fs.readFileSync(hit, 'utf8'));
+};
 const dbTables = new Map(J('tables.json').map(t => [t.table_name, t]));
 const dbPolicies = J('policies.json');
 const dbFns = new Map(J('functions.json').map(f => [f.proname, f]));
