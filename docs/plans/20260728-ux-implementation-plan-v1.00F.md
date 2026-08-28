@@ -1,3 +1,26 @@
+---
+kind: record
+authority: none
+---
+
+> **This is a spent execution plan, kept as a record.** It was the Round 1 brief for a
+> verifier-gated loop on 2026-07-28, implementing the VERIFIED-OPEN items from
+> `docs/20260728-operator-ux-bug-register-v1.00F.md`.
+>
+> **It is not the authority on whether those items are closed — the register is.** This file
+> records what was asked of the loop, which is why it can be frozen while the register stays
+> live. Round 2 (`docs/plans/20260728-ux-implementation-round2-plan-v1.00F.md`) supersedes it
+> for every item Round 2 picked up.
+>
+> Its `R80.3/` paths are historical and deliberately not rewritten — R80.4 is a restructure,
+> not a rename, so rewriting would swap a visibly stale pointer for one that looks current
+> and is still broken.
+>
+> The classification standard requires `kind: record` to carry `authority: none`: a dated
+> record is history, not a live document. Frozen (`F`) because a record of what was planned
+> must not drift; per the operator ruling of 2026-08-26, `F` governs the document's
+> mutability, not the state of the work.
+
 # UX / Feature Implementation Plan — 2026-07-28
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set

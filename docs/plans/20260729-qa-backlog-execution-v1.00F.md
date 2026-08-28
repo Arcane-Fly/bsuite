@@ -1,3 +1,19 @@
+---
+kind: record
+authority: none
+---
+
+> **This is a spent execution plan, kept as a record.** It was the brief for the QA backlog
+> red-team loop of 2026-07-29 — its lane assignments, contention doctrine and ship path.
+>
+> **It is not the authority on whether the backlog is clear.** The live sources are the issue
+> trackers and the estate's own gates; this file records how the loop was organised.
+>
+> The classification standard requires `kind: record` to carry `authority: none`: a dated
+> record is history, not a live document. Frozen (`F`) because a record of what was planned
+> must not drift; per the operator ruling of 2026-08-26, `F` governs the document's
+> mutability, not the state of the work.
+
 # QA Backlog Execution Plan — Full Red-Team Completion
 
 **Status:** Frozen (v1.00F)  
