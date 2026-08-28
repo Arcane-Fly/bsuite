@@ -14051,13 +14051,13 @@
   "module": "crm7",
   "capability_area": "HR workflows",
   "surface_type": "page",
-  "entry_point": "orphan route /hr",
+  "entry_point": "Nav > HR & Employment > HR Hub",
   "route": "/hr",
   "code_anchors": [
    "crm7/src/pages/hr/index"
   ],
   "db_objects": [],
-  "build_status": "unwired",
+  "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "undocumented",
   "docs": [],
@@ -14076,14 +14076,14 @@
   "module": "crm7",
   "capability_area": "HR workflows",
   "surface_type": "page",
-  "entry_point": "orphan route /hr/disciplinary",
+  "entry_point": "Nav > HR & Employment > Disciplinary Management",
   "route": "/hr/disciplinary",
   "code_anchors": [
    "crm7/src/pages/hr/disciplinary",
    "crm7/src/pages/hr/disciplinary/[id]"
   ],
   "db_objects": [],
-  "build_status": "unwired",
+  "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "documented",
   "docs": [
@@ -14187,14 +14187,14 @@
   "module": "crm7",
   "capability_area": "HR workflows",
   "surface_type": "page",
-  "entry_point": "orphan route /hr/probation-completion",
+  "entry_point": "Nav > HR & Employment > Probation Completion",
   "route": "/hr/probation-completion",
   "code_anchors": [
    "crm7/src/pages/hr/probation-completion",
    "crm7/src/pages/hr/probation-completion-record"
   ],
   "db_objects": [],
-  "build_status": "unwired",
+  "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "documented",
   "docs": [
@@ -14264,13 +14264,13 @@
   "module": "crm7",
   "capability_area": "HR workflows",
   "surface_type": "wizard",
-  "entry_point": "orphan route /hr/termination",
+  "entry_point": "Nav > HR & Employment > Termination Process",
   "route": "/hr/termination",
   "code_anchors": [
    "crm7/src/pages/hr/termination"
   ],
   "db_objects": [],
-  "build_status": "unwired",
+  "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "documented",
   "docs": [
