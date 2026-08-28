@@ -195,3 +195,82 @@ Specific D8 obligations:
 
 **Branch discipline:** feature branches off `development`, merged back to `development`,
 promoted to `main` by PR. Never direct to production.
+
+---
+
+## 12. Merge fields
+
+Reuse the estate's existing `{{variable}}` syntax. `email_templates.variables` (jsonb)
+already declares what a template needs.
+
+### The defect this must not inherit
+
+`substituteVariables` in `email-dispatcher/index.ts:821` reads:
+
+```ts
+template.replace(/\{\{(\w+)\}\}/g, (match, key) => data[key] || match)
+```
+
+**A missing variable leaves the literal in the message.** On email that is embarrassing. On
+a 2,000-recipient SMS burst it sends 2,000 texts reading "Hi {{first\_name}}" and charges for
+every one. Bulk SMS has no proofreading step between compose and send.
+
+Three changes:
+
+1. **Declared fallbacks** — `{{first_name|there}}`. No fallback and no value is an error.
+2. **Unresolved variables block the send**, with the offending field and the affected
+   recipients named. Failing 2,000 sends costs nothing; sending them costs money and standing.
+3. **Dotted paths** — `{{placement.host_name}}`, `{{timesheet.week_ending}}`.
+
+### Field surface
+
+| Namespace | Examples |
+|---|---|
+| `person` | `first_name`, `last_name`, `preferred_name`, `mobile` |
+| `placement` | `host_name`, `supervisor`, `site`, `start_date` |
+| `timesheet` | `week_ending`, `hours`, `due_date`, `status` |
+| `training` | `course`, `date`, `location`, `rto` |
+| `payroll` | `pay_date`, `period_end` |
+
+### D8 — preview is not optional
+
+The compose surface previews the message **resolved against a real recipient** before a bulk
+send, and names any recipient missing a required field. A merge field that silently degrades
+is worse than one that fails.
+
+---
+
+## 13. Tagging
+
+`message_usage.tags text[]`, GIN indexed. Templates carry default tags; the sender may add more.
+
+Tags answer the question the usage view exists for: **what did timesheet chasing cost us this
+month.** Volume alone cannot.
+
+`email_templates.category` already does part of this. Tags extend it rather than duplicating
+it — a message carries many tags, a template has one category.
+
+Tags also drive policy. A `timesheet-overdue` tag implies the `interrupt` tier and the
+essential category, so the sender does not set three fields that always agree.
+
+---
+
+## 14. Customisation and setup fees
+
+Configuration is real work and takes operator time: provisioning numbers, setting the
+contactable window per class, building templates, wiring consent, training the client. It is
+billable and should be nominal rather than a barrier.
+
+| Item | Fee | Covers |
+|---|---|---|
+| **Onboarding** | **$450** one-off | Core number, contactable window per class, consent flow, up to 5 templates, handover |
+| **Additional dedicated number** | **$45** setup | Provisioning and routing. No ongoing fee — the provider supplies the number free |
+| **Template build** | **$95** each | Beyond the 5 included |
+| **Custom sender ID** | **$95** setup + pass-through | Deferred with ACMA (§9). Any ACMA or carrier fee passes through at cost |
+
+Setup fees bill through the same path as usage — `invoice_line_items` for Xero, invoice items
+for Stripe. They are one-off lines, not recurring.
+
+**Rationale for nominal.** $450 recovers roughly a half-day at a modest rate against a client
+saving ~$2,900 a month. It signals the configuration has value without becoming a reason to
+defer the decision.
