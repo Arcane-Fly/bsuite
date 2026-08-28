@@ -1,11 +1,12 @@
 {
   "_doc": "Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. Written by scripts/check-airtable-grid-adoption.mjs --update. Fails on any RISE (a new hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.",
-  "_measured": "1501 .tsx files examined across 5 apps",
+  "_measured": "1504 .tsx files examined across 5 apps",
+  "_clickThroughDoc": "Files that HAD row-level click-through to a record. Recorded by PATH because a conversion destroys the <TableRow onClick> evidence. Any file here that renders a DataGrid must pass onRowClick, or the conversion turned a working navigation into a dead list. Operator ask 2026-08-28: \"make sure table that currently enable click through to a record still maintain this capability.\" The set is a UNION and only grows.",
   "apps": {
     "crm7": {
-      "handRolled": 168,
-      "dataGrid": 1,
-      "files": 113
+      "handRolled": 165,
+      "dataGrid": 5,
+      "files": 110
     },
     "business-suite-unified": {
       "handRolled": 28,
@@ -27,5 +28,33 @@
       "dataGrid": 0,
       "files": 1
     }
+  },
+  "clickThrough": {
+    "crm7": [
+      "crm7/src/components/common/DataTable/DataTable.tsx",
+      "crm7/src/components/common/DataTable/EnhancedDataTable.tsx",
+      "crm7/src/components/uplift/DataTable.tsx",
+      "crm7/src/components/workflows/WorkflowExecutionLog.tsx",
+      "crm7/src/pages/claims/list.tsx",
+      "crm7/src/pages/competencies/index.tsx",
+      "crm7/src/pages/contracts/index.tsx",
+      "crm7/src/pages/contracts/training/index.tsx",
+      "crm7/src/pages/funding-sources/list.tsx",
+      "crm7/src/pages/hr/disciplinary.tsx",
+      "crm7/src/pages/hr/probation-completion.tsx",
+      "crm7/src/pages/pipeline/forecast.tsx",
+      "crm7/src/pages/settings/audit-log.tsx",
+      "crm7/src/pages/whs/return-to-work/index.tsx"
+    ],
+    "business-suite-unified": [
+      "business-suite-unified/src/pages/Admin/PlatformKitLogs.tsx",
+      "business-suite-unified/src/pages/Admin/UserManagement.tsx",
+      "business-suite-unified/src/pages/Admin/platform-kit/_shared/ResultsTable.tsx",
+      "business-suite-unified/src/pages/Developer/Functions.tsx",
+      "business-suite-unified/src/pages/Developer/Website.tsx"
+    ],
+    "conduit": [],
+    "braden": [],
+    "throughput": []
   }
 }

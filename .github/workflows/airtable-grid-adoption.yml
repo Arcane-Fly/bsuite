@@ -1,0 +1,93 @@
+# .github/workflows/airtable-grid-adoption.yml
+#
+# Every list is a window on records — a two-way ratchet on hand-rolled tables
+# ==========================================================================
+# Operator, 2026-08-28: "anything that is listed and presented in a table SHOULD
+# be in the airtable style." 203 hand-rolled <table>/<Table> render sites across
+# five apps say that is not true yet, and it is not a backlog anyone burns down
+# in one night. So this compares against a committed baseline rather than
+# demanding zero, which a gate would do on every PR until someone switched it
+# off.
+#
+# WHY TWO-WAY. It fails on a RISE, because a new hand-rolled table is a page
+# somebody must convert later. It ALSO fails on an UNBANKED FALL, because the
+# only two explanations for a drop are "you converted them" and "the matcher has
+# gone blind", and a one-way ratchet reads both as good news. This estate has
+# already banked a gate at zero over sixteen live contradictions; a fall you did
+# not deliberately record is the shape that hid it.
+#
+# WHY IT RUNS ON SUBMODULE POINTER CHANGES. The apps are submodules, so a pointer
+# bump is the ONLY change to this repo that moves the gate's inputs, and a
+# `paths:` filter over `**/*.tsx` cannot see one. Same reasoning, verbatim, as
+# nested-card-chrome-ratchet.yml and theme-conformance.yml — whose ledger records
+# a near-pure gate sitting green for weeks because of exactly this omission.
+#
+# R80.4 is deliberately ABSENT from the gitlink list: the scanner's APPS array
+# does not include it, so its pointer cannot move these numbers. Listing it would
+# wake the job on a change it is structurally unable to measure.
+#
+# WHY CLICK-THROUGH IS PART OF THE SAME GATE. Converting a table that opened a
+# record on row click, without wiring `onRowClick`, turns a working navigation
+# into a dead list — and it reads as PROGRESS, because the table really did move
+# onto the grid. The baseline records those files BY PATH, because once converted
+# the `<TableRow onClick>` evidence is gone and a detector that recomputed the
+# list would forget the file ever had the capability.
+
+name: Airtable-style grid adoption
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main, master, development]
+    paths:
+      - '**/*.tsx'
+      - 'scripts/check-airtable-grid-adoption.mjs'
+      - 'scripts/airtable-grid-adoption-baseline.json'
+      - '.github/workflows/airtable-grid-adoption.yml'
+      # The submodule gitlinks. See the header.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'braden'
+      - 'throughput'
+
+jobs:
+  adoption:
+    name: No new hand-rolled tables
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Every app is a PRIVATE submodule, so the default GITHUB_TOKEN cannot
+      # clone them and fails with a bare "Repository not found" — a 404, which
+      # reads as a missing repo rather than as a permissions problem.
+      - name: Checkout (with submodules — the apps live there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # An absent app tree scans nothing, counts nothing, and pushes the total
+      # DOWN. The two-way ratchet would then fail with "you converted them
+      # without banking" — a true failure for a false reason, which costs
+      # whoever reads it an hour. Name the real cause here instead.
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh crm7 business-suite-unified conduit braden throughput
+
+      - uses: actions/setup-node@v4
+        # Explicit major: actions/setup-node with node-version-file was observed
+        # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
+        with: { node-version: '24.14.0' }
+
+      # A detector nobody checked is not a measurement. The controls include
+      # four inputs that must NOT count — a <table> inside a comment, a string
+      # mentioning the word, a .test.tsx fixture, and an already-converted grid
+      # — because a matcher that counts those would read a clean tree as dirty
+      # and, far worse, a blinded matcher as clean.
+      - name: Self-test the scanner before trusting it
+        run: node scripts/check-airtable-grid-adoption.mjs --self-test
+
+      - name: Ratchet
+        run: node scripts/check-airtable-grid-adoption.mjs
