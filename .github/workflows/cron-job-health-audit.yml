@@ -64,6 +64,21 @@ jobs:
     name: pg_cron job health
     runs-on: ubuntu-latest
     steps:
+      # THIS JOB READS A FILE FROM THE REPOSITORY AND NEVER CHECKED IT OUT.
+      #
+      # The never-succeeded sweep reads .github/cron-never-succeeded-baseline.json by
+      # relative path, in a job with no checkout step, so the file could not exist in the
+      # runner's workspace. It has died on
+      #   ENOENT: open '.github/cron-never-succeeded-baseline.json'
+      # on every run since that step was added — 36 failures against 3 successes, and all
+      # three successes predate the step.
+      #
+      # A gate that has never once been green is not a gate anybody reads; it is a red
+      # square people learn to scroll past, and it took the whole pg_cron audit down with
+      # it. No submodules: the only file this job reads is the parent's own baseline.
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Guard — require project ref
         env:
           SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}

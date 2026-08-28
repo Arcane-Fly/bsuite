@@ -160,7 +160,6 @@ note() {
 ALLOWLIST=(
   # ---- braden check-env scripts (utility, not bundled to client) ----
   'braden/scripts/check-env.cjs:*'
-  'braden/scripts/check-env.js:*'
   'braden/cypress.config.ts:*'
   'braden/test-admin-post-migration.js:*'
   'braden/test-admin.js:*'
